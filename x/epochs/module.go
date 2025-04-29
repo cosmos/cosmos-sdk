@@ -33,14 +33,12 @@ const ConsensusVersion = 1
 
 // AppModule implements the AppModule interface for the epochs module.
 type AppModule struct {
-	cdc    codec.Codec
 	keeper keeper.Keeper
 }
 
 // NewAppModule creates a new AppModule object.
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
+func NewAppModule(keeper keeper.Keeper) AppModule {
 	return AppModule{
-		cdc:    cdc,
 		keeper: keeper,
 	}
 }
@@ -73,8 +71,8 @@ func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
 }
 
 // DefaultGenesis returns the epochs module's default genesis state.
-func (am AppModule) DefaultGenesis(_ codec.JSONCodec) json.RawMessage {
-	data, err := am.cdc.MarshalJSON(types.DefaultGenesis())
+func (am AppModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+	data, err := cdc.MarshalJSON(types.DefaultGenesis())
 	if err != nil {
 		panic(err)
 	}
@@ -82,9 +80,9 @@ func (am AppModule) DefaultGenesis(_ codec.JSONCodec) json.RawMessage {
 }
 
 // ValidateGenesis performs genesis state validation for the epochs module.
-func (am AppModule) ValidateGenesis(_ codec.JSONCodec, _ client.TxEncodingConfig, bz json.RawMessage) error {
+func (am AppModule) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingConfig, bz json.RawMessage) error {
 	var gs types.GenesisState
-	if err := am.cdc.UnmarshalJSON(bz, &gs); err != nil {
+	if err := cdc.UnmarshalJSON(bz, &gs); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 
@@ -92,9 +90,9 @@ func (am AppModule) ValidateGenesis(_ codec.JSONCodec, _ client.TxEncodingConfig
 }
 
 // InitGenesis performs the epochs module's genesis initialization
-func (am AppModule) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, bz json.RawMessage) {
+func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) {
 	var gs types.GenesisState
-	err := am.cdc.UnmarshalJSON(bz, &gs)
+	err := cdc.UnmarshalJSON(bz, &gs)
 	if err != nil {
 		panic(fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err))
 	}
@@ -105,13 +103,13 @@ func (am AppModule) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, bz json.RawM
 }
 
 // ExportGenesis returns the epochs module's exported genesis state as raw JSON bytes.
-func (am AppModule) ExportGenesis(ctx sdk.Context, _ codec.JSONCodec) json.RawMessage {
+func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
 	gs, err := am.keeper.ExportGenesis(ctx)
 	if err != nil {
 		panic(err)
 	}
 
-	bz, err := am.cdc.MarshalJSON(gs)
+	bz, err := cdc.MarshalJSON(gs)
 	if err != nil {
 		panic(err)
 	}

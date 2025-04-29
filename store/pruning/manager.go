@@ -123,7 +123,7 @@ func (m *Manager) HandleSnapshotHeight(height int64) {
 
 	// flush the max height to store so that they are not lost if a crash happens.
 	// only the max height matters as there are no in-flight snapshots after a restart
-	if err := m.db.SetSync(pruneSnapshotHeightsKey, int64SliceToBytes(slices.Max(m.pruneSnapshotHeights))); err != nil {
+	if err := storePruningSnapshotHeight(m.db, slices.Max(m.pruneSnapshotHeights)); err != nil {
 		panic(err)
 	}
 }
@@ -193,6 +193,10 @@ func (m *Manager) LoadSnapshotHeights(db dbm.DB) error {
 	m.pruneSnapshotHeights = []int64{slices.Max(loadedPruneSnapshotHeights)}
 	m.initFromStore = true
 	return nil
+}
+
+func storePruningSnapshotHeight(db dbm.DB, val int64) error {
+	return db.SetSync(pruneSnapshotHeightsKey, int64SliceToBytes(val))
 }
 
 func loadPruningSnapshotHeights(db dbm.DB) ([]int64, error) {

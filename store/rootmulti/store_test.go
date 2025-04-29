@@ -657,14 +657,14 @@ func TestMultiStore_PruningWithIntervalUpdates(t *testing.T) {
 		do             func(t *testing.T, ms *Store, commitSnapN func(n int, snapshotInterval uint64) int64)
 		expPruneHeight int64
 	}{
-		" snap height sequential - constant interval": {
+		"snap height sequential - constant interval": {
 			do: func(t *testing.T, ms *Store, commitSnapN func(n int, snapshotInterval uint64) int64) {
 				t.Helper()
 				commitSnapN(20, initialSnapshotInterval)
 			},
 			expPruneHeight: 14, // 20 - 5 (keep) -1
 		},
-		" snap out of order - constant interval": {
+		"snap out of order - constant interval": {
 			do: func(t *testing.T, ms *Store, commitSnapN func(n int, snapshotInterval uint64) int64) {
 				t.Helper()
 				commitSnapN(20, initialSnapshotInterval)
@@ -672,7 +672,7 @@ func TestMultiStore_PruningWithIntervalUpdates(t *testing.T) {
 			},
 			expPruneHeight: 14, // 20 - 5 (keep) -1
 		},
-		" snap height sequential - snap interval increased": {
+		"snap height sequential - snap interval increased": {
 			do: func(t *testing.T, ms *Store, commitSnapN func(n int, snapshotInterval uint64) int64) {
 				t.Helper()
 				commitSnapN(10, initialSnapshotInterval)
@@ -682,7 +682,7 @@ func TestMultiStore_PruningWithIntervalUpdates(t *testing.T) {
 			},
 			expPruneHeight: 24, // 30 -5 (keep) -1
 		},
-		" snap out of order - snap interval increased": {
+		"snap out of order - snap interval increased": {
 			do: func(t *testing.T, ms *Store, commitSnapN func(n int, snapshotInterval uint64) int64) {
 				t.Helper()
 				commitSnapN(10, initialSnapshotInterval)
@@ -691,7 +691,7 @@ func TestMultiStore_PruningWithIntervalUpdates(t *testing.T) {
 			},
 			expPruneHeight: 29, // 10 (legacy state not cleared) + 20 - 1
 		},
-		" snap height sequential - snap interval decreased": {
+		"snap height sequential - snap interval decreased": {
 			do: func(t *testing.T, ms *Store, commitSnapN func(n int, snapshotInterval uint64) int64) {
 				t.Helper()
 				commitSnapN(10, initialSnapshotInterval)
@@ -699,7 +699,7 @@ func TestMultiStore_PruningWithIntervalUpdates(t *testing.T) {
 			},
 			expPruneHeight: 14, // 20 -5 (keep) -1
 		},
-		" snap out of order - snap interval decreased": {
+		"snap out of order - snap interval decreased": {
 			do: func(t *testing.T, ms *Store, commitSnapN func(n int, snapshotInterval uint64) int64) {
 				t.Helper()
 				commitSnapN(10, initialSnapshotInterval)

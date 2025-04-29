@@ -184,7 +184,7 @@ require (
 	go.opentelemetry.io/otel/sdk v1.34.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v1.34.0 // indirect
 	go.opentelemetry.io/otel/trace v1.34.0 // indirect
-	go.uber.org/mock v0.5.1 // indirect
+	go.uber.org/mock v0.5.2 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.15.0 // indirect
 	golang.org/x/crypto v0.37.0 // indirect

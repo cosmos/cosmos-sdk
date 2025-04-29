@@ -110,8 +110,9 @@ func TestStrategies(t *testing.T) {
 			for curHeight := int64(0); curHeight < 110000; curHeight++ {
 				if tc.snapshotInterval != 0 {
 					if curHeight > int64(tc.snapshotInterval) && curHeight%int64(tc.snapshotInterval) == int64(tc.snapshotInterval)-1 {
-						manager.AnnounceSnapshotHeight(curHeight - int64(tc.snapshotInterval) + 1)
-						manager.HandleSnapshotHeight(curHeight - int64(tc.snapshotInterval) + 1)
+						snapHeight := curHeight - int64(tc.snapshotInterval) + 1
+						manager.AnnounceSnapshotHeight(snapHeight)
+						manager.HandleSnapshotHeight(snapHeight)
 						snHeight = curHeight
 					}
 				}

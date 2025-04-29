@@ -17,18 +17,18 @@ import (
 // determining when to prune old heights of the store
 // based on the strategy described by the pruning options.
 type Manager struct {
-	db     dbm.DB
-	logger log.Logger
-	opts   types.PruningOptions
+	db               dbm.DB
+	logger           log.Logger
+	opts             types.PruningOptions
+	snapshotInterval uint64
 	// Snapshots are taken in a separate goroutine from the regular execution
 	// and can be delivered asynchronously via HandleSnapshotHeight.
-	// Therefore, we sync access to pruneSnapshotHeights, snapshotInterval and initFromDB with this mutex.
+	// Therefore, we sync access to pruneSnapshotHeights, inflightSnapshotHeights and initFromStore with this mutex.
 	pruneSnapshotHeightsMx sync.RWMutex
 	// These are the heights that are multiples of snapshotInterval and kept for state sync snapshots.
 	// The heights are added to be pruned when a snapshot is complete.
 	pruneSnapshotHeights    []int64
 	inflightSnapshotHeights []int64
-	snapshotInterval        uint64
 	initFromStore           bool
 }
 
@@ -94,12 +94,13 @@ func (m *Manager) HandleSnapshotHeight(height int64) {
 	defer m.pruneSnapshotHeightsMx.Unlock()
 
 	// remove from the in-flight list
-	if pos := slices.Index(m.inflightSnapshotHeights, height); pos != -1 {
-		m.inflightSnapshotHeights = append(m.inflightSnapshotHeights[:pos], m.inflightSnapshotHeights[pos+1:]...)
+	if position := slices.Index(m.inflightSnapshotHeights, height); position != -1 {
+		m.inflightSnapshotHeights = append(m.inflightSnapshotHeights[:position], m.inflightSnapshotHeights[position+1:]...)
 	}
 
 	if m.initFromStore {
-		// drop the legacy state
+		// drop the legacy state as it may belong to a different interval or an outdated snapshot
+		// that is not in sequence with the current one
 		m.pruneSnapshotHeights = m.pruneSnapshotHeights[1:]
 		m.initFromStore = false
 	}
@@ -107,27 +108,28 @@ func (m *Manager) HandleSnapshotHeight(height int64) {
 	m.pruneSnapshotHeights = append(m.pruneSnapshotHeights, height)
 	sort.Slice(m.pruneSnapshotHeights, func(i, j int) bool { return m.pruneSnapshotHeights[i] < m.pruneSnapshotHeights[j] })
 
+	// in-flight snapshots may land out of order due to the concurrent nature of the snapshotter.
+	// we need to detect them to prevent pruning their heights while the snapshots are still in progress.
 	k := 1
 	for ; k < len(m.pruneSnapshotHeights); k++ {
-		// anyone missing in the sequence means they are still in flight
 		if m.pruneSnapshotHeights[k] != m.pruneSnapshotHeights[k-1]+int64(m.snapshotInterval) {
+			// gap detected, snapshot is in-flight
 			break
 		}
 	}
-	// compact the height list when in-flight snapshots have landed, keep last height
+	// compact the height list for the snapshots in sequence
+	// the last snapshot height is used to allow pruning up to the next interval height
 	m.pruneSnapshotHeights = m.pruneSnapshotHeights[k-1:]
 
-	if n := len(m.pruneSnapshotHeights); n > 100 {
-		m.logger.Warn("Snapshot heights state in pruning manager grows unexpected ", "total", height)
-	}
-
-	// flush the max height to disk so that they are not lost if crash happens.
+	// flush the max height to store so that they are not lost if a crash happens.
+	// only the max height matters as there are no in-flight snapshots after a restart
 	if err := m.db.SetSync(pruneSnapshotHeightsKey, int64SliceToBytes(slices.Max(m.pruneSnapshotHeights))); err != nil {
 		panic(err)
 	}
 }
 
 // SetSnapshotInterval sets the interval at which the snapshots are taken.
+// This value should be set on startup. Concurrent modifications are not supported.
 func (m *Manager) SetSnapshotInterval(snapshotInterval uint64) {
 	m.snapshotInterval = snapshotInterval
 }

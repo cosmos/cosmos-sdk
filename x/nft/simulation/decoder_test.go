@@ -6,10 +6,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/x/nft"
-	"cosmossdk.io/x/nft/keeper"
-	"cosmossdk.io/x/nft/module"
-	"cosmossdk.io/x/nft/simulation"
+	"cosmossdk.io/x/nft"            //nolint:staticcheck // deprecated and to be removed
+	"cosmossdk.io/x/nft/keeper"     //nolint:staticcheck // deprecated and to be removed
+	"cosmossdk.io/x/nft/module"     //nolint:staticcheck // deprecated and to be removed
+	"cosmossdk.io/x/nft/simulation" //nolint:staticcheck // deprecated and to be removed
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"

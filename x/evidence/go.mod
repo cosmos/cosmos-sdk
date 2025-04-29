@@ -13,7 +13,7 @@ require (
 	cosmossdk.io/store v1.1.2
 	github.com/cometbft/cometbft v0.38.17
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
-	github.com/cosmos/cosmos-sdk v0.53.0-rc.4
+	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/golang/protobuf v1.5.4
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
@@ -158,6 +158,3 @@ require (
 	pgregory.net/rapid v1.2.0 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
-
-// Temporary replace until the next 0.53 tag
-replace github.com/cosmos/cosmos-sdk => ../..

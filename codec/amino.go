@@ -13,6 +13,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
+// test
+
 // LegacyAmino defines a wrapper for an Amino codec that properly
 // handles protobuf types with Any's. Deprecated.
 type LegacyAmino struct {

@@ -6,11 +6,11 @@ sidebar_position: 1
 
 :::note Pre-requisite Readings
 
-* [Depinject Documentation](../packages/01-depinject.md)
+* [Depinject Package](https://github.com/cosmos/cosmos-sdk/tree/main/depinject)
 
 :::
 
-[`depinject`](../packages/01-depinject.md) is used to wire any module in `app.go`.
+[`depinject`](https://github.com/cosmos/cosmos-sdk/tree/main/depinject) is used to wire any module in `app.go`.
 All core modules are already configured to support dependency injection.
 
 To work with `depinject` a module must define its configuration and requirements so that `depinject` can provide the right dependencies.
@@ -208,4 +208,4 @@ The module is now ready to be used with `depinject` by a chain developer.
 
 ## Integrate in an application
 
-The App Wiring is done in `app_config.go` / `app.yaml` and `app_di.go` and is explained in detail in the [overview of `app_di.go`](../building-apps/01-app-go-di.md).
+The App Wiring is done in `app_config.go` / `app.yaml` and `app_di.go` and is explained in detail in the [overview of `app_di.go`](https://github.com/cosmos/cosmos-sdk/blob/main/docs/docs/build/building-apps/01-app-go-di.md).

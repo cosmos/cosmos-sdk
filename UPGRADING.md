@@ -244,7 +244,7 @@ Required wiring:
 
 This release introduces the ability to configure a custom mint function in `x/mint`. The minting logic is now abstracted as a `MintFn` with a default implementation that can be overridden.
 
-### What's New
+### What’s New
 
 - **Configurable Mint Function:**  
   A new `MintFn` abstraction is introduced. By default, the module uses `DefaultMintFn`, but you can supply your own implementation.
@@ -260,7 +260,7 @@ This release introduces the ability to configure a custom mint function in `x/mi
 
 1. **Using the Default Minting Function**
 
-   No action is needed if you're happy with the default behavior. Make sure your application wiring initializes the MintKeeper like this:
+   No action is needed if you’re happy with the default behavior. Make sure your application wiring initializes the MintKeeper like this:
 
 ```go
    mintKeeper := mintkeeper.NewKeeper(

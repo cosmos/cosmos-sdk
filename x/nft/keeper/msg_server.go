@@ -5,7 +5,7 @@ import (
 	"context"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/x/nft"
+	"cosmossdk.io/x/nft" //nolint:staticcheck // deprecated and to be removed
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

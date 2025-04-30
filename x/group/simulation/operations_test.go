@@ -23,9 +23,9 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/group"
-	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
-	"github.com/cosmos/cosmos-sdk/x/group/simulation"
+	"github.com/cosmos/cosmos-sdk/x/group"                    //nolint:staticcheck // deprecated and to be removed
+	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper" //nolint:staticcheck // deprecated and to be removed
+	"github.com/cosmos/cosmos-sdk/x/group/simulation"         //nolint:staticcheck // deprecated and to be removed
 	grouptestutil "github.com/cosmos/cosmos-sdk/x/group/testutil"
 )
 

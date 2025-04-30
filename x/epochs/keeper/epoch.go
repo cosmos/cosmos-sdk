@@ -33,7 +33,7 @@ func (k *Keeper) AddEpochInfo(ctx sdk.Context, epoch types.EpochInfo) error {
 	if epoch.StartTime.IsZero() {
 		epoch.StartTime = ctx.BlockTime()
 	}
-	if epoch.CurrentEpochStartHeight == 0 {
+	if epoch.CurrentEpochStartHeight == 0 && !epoch.StartTime.After(ctx.BlockTime()) {
 		epoch.CurrentEpochStartHeight = ctx.BlockHeight()
 	}
 	return k.EpochInfo.Set(ctx, epoch.Identifier, epoch)
@@ -41,7 +41,7 @@ func (k *Keeper) AddEpochInfo(ctx sdk.Context, epoch types.EpochInfo) error {
 
 // AllEpochInfos iterate through epochs to return all epochs info.
 func (k *Keeper) AllEpochInfos(ctx sdk.Context) ([]types.EpochInfo, error) {
-	epochs := []types.EpochInfo{}
+	var epochs []types.EpochInfo
 	err := k.EpochInfo.Walk(
 		ctx,
 		nil,
@@ -62,5 +62,9 @@ func (k *Keeper) NumBlocksSinceEpochStart(ctx sdk.Context, identifier string) (i
 	if err != nil {
 		return 0, fmt.Errorf("epoch with identifier %s not found", identifier)
 	}
+	if ctx.BlockTime().Before(epoch.StartTime) {
+		return 0, fmt.Errorf("epoch with identifier %s has not started yet: start time: %s", identifier, epoch.StartTime)
+	}
+
 	return ctx.BlockHeight() - epoch.CurrentEpochStartHeight, nil
 }

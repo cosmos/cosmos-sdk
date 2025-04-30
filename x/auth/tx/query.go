@@ -42,7 +42,7 @@ func QueryTxsByEvents(clientCtx client.Context, page, limit int, query, orderBy 
 		return nil, err
 	}
 
-	resTxs, err := node.TxSearch(clientCtx.GetCmdContextOr(context.Background()), query, false, &page, &limit, orderBy)
+	resTxs, err := node.TxSearch(clientCtx.GetCmdContextWithFallback(), query, false, &page, &limit, orderBy)
 	if err != nil {
 		return nil, fmt.Errorf("failed to search for txs: %w", err)
 	}
@@ -75,7 +75,7 @@ func QueryTx(clientCtx client.Context, hashHexStr string) (*sdk.TxResponse, erro
 
 	// TODO: this may not always need to be proven
 	// https://github.com/cosmos/cosmos-sdk/issues/6807
-	resTx, err := node.Tx(clientCtx.GetCmdContextOr(context.Background()), hash, true)
+	resTx, err := node.Tx(clientCtx.GetCmdContextWithFallback(), hash, true)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +117,7 @@ func getBlocksForTxResults(clientCtx client.Context, resTxs []*coretypes.ResultT
 
 	for _, resTx := range resTxs {
 		if _, ok := resBlocks[resTx.Height]; !ok {
-			resBlock, err := node.Block(clientCtx.GetCmdContextOr(context.Background()), &resTx.Height)
+			resBlock, err := node.Block(clientCtx.GetCmdContextWithFallback(), &resTx.Height)
 			if err != nil {
 				return nil, err
 			}

@@ -126,7 +126,7 @@ func BroadcastTx(clientCtx client.Context, txf Factory, msgs ...sdk.Msg) error {
 		}
 	}
 
-	if err = Sign(clientCtx.GetCmdContextOr(context.Background()), txf, clientCtx.FromName, tx, true); err != nil {
+	if err = Sign(clientCtx.GetCmdContextWithFallback(), txf, clientCtx.FromName, tx, true); err != nil {
 		return err
 	}
 

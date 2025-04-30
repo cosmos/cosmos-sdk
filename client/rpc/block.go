@@ -20,7 +20,7 @@ func GetChainHeight(clientCtx client.Context) (int64, error) {
 		return -1, err
 	}
 
-	status, err := node.Status(clientCtx.GetCmdContextOr(context.Background()))
+	status, err := node.Status(clientCtx.GetCmdContextWithFallback())
 	if err != nil {
 		return -1, err
 	}
@@ -53,7 +53,7 @@ func QueryBlocks(clientCtx client.Context, page, limit int, query, orderBy strin
 		return nil, err
 	}
 
-	resBlocks, err := node.BlockSearch(clientCtx.GetCmdContextOr(context.Background()), query, &page, &limit, orderBy)
+	resBlocks, err := node.BlockSearch(clientCtx.GetCmdContextWithFallback(), query, &page, &limit, orderBy)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func GetBlockByHeight(clientCtx client.Context, height *int64) (*cmt.Block, erro
 	// header -> BlockchainInfo
 	// header, tx -> Block
 	// results -> BlockResults
-	resBlock, err := node.Block(clientCtx.GetCmdContextOr(context.Background()), height)
+	resBlock, err := node.Block(clientCtx.GetCmdContextWithFallback(), height)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +104,7 @@ func GetBlockByHash(clientCtx client.Context, hashHexString string) (*cmt.Block,
 		return nil, err
 	}
 
-	resBlock, err := node.BlockByHash(clientCtx.GetCmdContextOr(context.Background()), hash)
+	resBlock, err := node.BlockByHash(clientCtx.GetCmdContextWithFallback(), hash)
 
 	if err != nil {
 		return nil, err

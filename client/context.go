@@ -308,13 +308,13 @@ func (ctx Context) WithPreprocessTxHook(preprocessFn PreprocessTxFn) Context {
 	return ctx
 }
 
-// GetCmdContextOr returns the CmdContext if it is not nil, otherwise it returns the
-// provided context.
-func (ctx Context) GetCmdContextOr(goctx context.Context) context.Context {
+// GetCmdContextWithFallback returns the CmdContext if it is not nil, otherwise it
+// returns context.Background()
+func (ctx Context) GetCmdContextWithFallback() context.Context {
 	if ctx.CmdContext != nil {
 		return ctx.CmdContext
 	}
-	return goctx
+	return context.Background()
 }
 
 // PrintString prints the raw string to ctx.Output if it's defined, otherwise to os.Stdout

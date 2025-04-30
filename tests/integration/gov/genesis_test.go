@@ -75,7 +75,7 @@ func TestImportExportQueues(t *testing.T) {
 	ctx := s1.app.NewContext(false)
 	addrs := simtestutil.AddTestAddrs(s1.BankKeeper, s1.StakingKeeper, ctx, 1, valTokens)
 
-	_, err = s1.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err = s1.app.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Height: s1.app.LastBlockHeight() + 1,
 	})
 	assert.NilError(t, err)
@@ -140,7 +140,7 @@ func TestImportExportQueues(t *testing.T) {
 	assert.NilError(t, err)
 
 	_, err = s2.app.InitChain(
-		&abci.RequestInitChain{
+		&abci.InitChainRequest{
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: simtestutil.DefaultConsensusParams,
 			AppStateBytes:   stateBytes,
@@ -148,12 +148,12 @@ func TestImportExportQueues(t *testing.T) {
 	)
 	assert.NilError(t, err)
 
-	_, err = s2.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err = s2.app.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Height: s2.app.LastBlockHeight() + 1,
 	})
 	assert.NilError(t, err)
 
-	_, err = s2.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err = s2.app.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Height: s2.app.LastBlockHeight() + 1,
 	})
 	assert.NilError(t, err)

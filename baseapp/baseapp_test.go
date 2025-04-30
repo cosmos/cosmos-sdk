@@ -5,7 +5,9 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
+	"io"
 	"math/rand"
+	"os"
 	"testing"
 	"time"
 
@@ -48,10 +50,9 @@ var (
 
 type (
 	BaseAppSuite struct {
-		baseApp   *baseapp.BaseApp
-		cdc       *codec.ProtoCodec
-		txConfig  client.TxConfig
-		logBuffer *bytes.Buffer
+		baseApp  *baseapp.BaseApp
+		cdc      *codec.ProtoCodec
+		txConfig client.TxConfig
 	}
 
 	SnapshotsConfig struct {
@@ -71,8 +72,7 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
 	db := dbm.NewMemDB()
-	logBuffer := new(bytes.Buffer)
-	logger := log.NewLogger(logBuffer, log.ColorOption(false))
+	logger := log.NewLogger(os.Stdout, log.ColorOption(false))
 
 	app := baseapp.NewBaseApp(t.Name(), logger, db, txConfig.TxDecoder(), opts...)
 	require.Equal(t, t.Name(), app.Name())
@@ -88,10 +88,9 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 	require.Nil(t, app.LoadLatestVersion())
 
 	return &BaseAppSuite{
-		baseApp:   app,
-		cdc:       cdc,
-		txConfig:  txConfig,
-		logBuffer: logBuffer,
+		baseApp:  app,
+		cdc:      cdc,
+		txConfig: txConfig,
 	}
 }
 
@@ -687,9 +686,30 @@ func TestBaseAppPostHandler(t *testing.T) {
 	tx = wonkyMsg(t, suite.txConfig, tx)
 	txBytes, err = suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
-	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+
+	output := captureStdout(t, func() {
+		_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+		require.NoError(t, err)
+	})
+	// Check the captured output
+	require.NotContains(t, output, "panic recovered in runTx")
+}
+
+func captureStdout(t *testing.T, fn func()) string {
+	t.Helper()
+	oldStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	fn()
+
+	w.Close()
+	os.Stdout = oldStdout
+
+	var buf bytes.Buffer
+	_, err := io.Copy(&buf, r)
 	require.NoError(t, err)
-	require.NotContains(t, suite.logBuffer.String(), "panic recovered in runTx")
+	return buf.String()
 }
 
 func TestBaseAppPostHandlerErrorHandling(t *testing.T) {

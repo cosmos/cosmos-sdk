@@ -147,13 +147,9 @@ func TestInitGenesis(t *testing.T) {
 }
 
 func TestDuplicateGrantsInGenesis(t *testing.T) {
-	f := initFixture(t)
-
-	addrCdc := f.accountKeeper.AddressCodec()
-	granter, err := addrCdc.BytesToString(granterAddr.Bytes())
-	assert.NilError(t, err)
-	grantee, err := addrCdc.BytesToString(granteeAddr.Bytes())
-	assert.NilError(t, err)
+	// Use String() method directly on sdk.AccAddress type instead of explicit conversion
+	granter := granterAddr.String()
+	grantee := granteeAddr.String()
 
 	allowance := &feegrant.BasicAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewCoin("foo", math.NewInt(100))),

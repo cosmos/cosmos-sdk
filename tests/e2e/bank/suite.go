@@ -209,7 +209,7 @@ func (s *E2ETestSuite) TestNewSendTxCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(1))).String()),
 			},
-			false,
+			true,
 			sdkerrors.ErrInsufficientFee.ABCICode(),
 			&sdk.TxResponse{},
 		},
@@ -227,7 +227,7 @@ func (s *E2ETestSuite) TestNewSendTxCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 				"--gas=10",
 			},
-			false,
+			true,
 			sdkerrors.ErrOutOfGas.ABCICode(),
 			&sdk.TxResponse{},
 		},
@@ -342,7 +342,7 @@ func (s *E2ETestSuite) TestNewMultiSendTxCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(1))).String()),
 			},
-			false,
+			true,
 			sdkerrors.ErrInsufficientFee.ABCICode(),
 			&sdk.TxResponse{},
 		},
@@ -360,7 +360,7 @@ func (s *E2ETestSuite) TestNewMultiSendTxCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 				"--gas=10",
 			},
-			false,
+			true,
 			sdkerrors.ErrOutOfGas.ABCICode(),
 			&sdk.TxResponse{},
 		},
@@ -383,11 +383,6 @@ func (s *E2ETestSuite) TestNewMultiSendTxCmd() {
 			}
 		})
 	}
-}
-
-func NewCoin(denom string, amount math.Int) *sdk.Coin {
-	coin := sdk.NewCoin(denom, amount)
-	return &coin
 }
 
 func MsgMultiSendExec(clientCtx client.Context, from sdk.AccAddress, to []sdk.AccAddress, amount fmt.Stringer, extraArgs ...string) (testutil.BufferWriter, error) {

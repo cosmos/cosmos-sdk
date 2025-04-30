@@ -23,7 +23,7 @@ Clients that use this feature may now submit their transactions in a fire-and-fo
 To submit an unordered transaction, clients must set the `unordered` flag to
 `true` and ensure a reasonable `timeout_timestamp` is set. The `timeout_timestamp` is
 used as a TTL for the transaction and provides replay protection. Each transaction's `timeout_timestamp` must be
-unique to the account; however, the difference may be as small as a nanosecond. See [ADR-070](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-070-unordered-transactions.md) for more details.
+unique to the account; however, the difference may be as small as a nanosecond. See [Architecture Decision Records](https://github.com/cosmos/cosmos-sdk/tree/main/docs/architecture) for more details.
 
 Note that unordered transactions require sequence values to be zero, and will **FAIL** if a non-zero sequence value is set. 
 Please ensure no sequence value is set when submitting an unordered transaction.

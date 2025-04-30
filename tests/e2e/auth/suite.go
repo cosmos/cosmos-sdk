@@ -106,6 +106,7 @@ func (s *E2ETestSuite) TestCLISignGenOnly() {
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly), // shouldn't break if we use keyname with --generate-only flag
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 	}
 	generatedStd, err := clitestutil.ExecTestCLICmd(val.ClientCtx, bank.NewSendTxCmd(addresscodec.NewBech32Codec("cosmos")), args)
 	s.Require().NoError(err)
@@ -183,21 +184,23 @@ func (s *E2ETestSuite) TestCLISignGenOnly() {
 	}
 
 	for _, tc := range cases {
-		cmd := authcli.GetSignCommand()
-		cmd.PersistentFlags().String(flags.FlagHome, val.ClientCtx.HomeDir, "directory for config and data")
-		out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, append(tc.args, commonArgs...))
-		if tc.expErr {
-			s.Require().Error(err)
-			s.Require().Contains(err.Error(), tc.errMsg)
-		} else {
-			s.Require().NoError(err)
-			func() {
-				signedTx := testutil.WriteToNewTempFile(s.T(), out.String())
-				defer signedTx.Close()
-				_, err := authclitestutil.TxBroadcastExec(val.ClientCtx, signedTx.Name())
+		s.Run(tc.name, func() {
+			cmd := authcli.GetSignCommand()
+			cmd.PersistentFlags().String(flags.FlagHome, val.ClientCtx.HomeDir, "directory for config and data")
+			out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, append(tc.args, commonArgs...))
+			if tc.expErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.errMsg)
+			} else {
 				s.Require().NoError(err)
-			}()
-		}
+				func() {
+					signedTx := testutil.WriteToNewTempFile(s.T(), out.String())
+					defer signedTx.Close()
+					_, err := authclitestutil.TxBroadcastExec(val.ClientCtx, signedTx.Name())
+					s.Require().NoError(err, out.String())
+				}()
+			}
+		})
 	}
 }
 

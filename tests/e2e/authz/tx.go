@@ -567,8 +567,12 @@ func (s *E2ETestSuite) TestNewExecGrantAuthorized() {
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			switch {
 			case tc.expectErrMsg != "":
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-				s.Require().Contains(response.RawLog, tc.expectErrMsg)
+				if err != nil {
+					s.Require().Contains(err.Error(), tc.expectErrMsg)
+				} else {
+					s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
+					s.Require().Contains(response.RawLog, tc.expectErrMsg)
+				}
 
 			case tc.expectErr:
 				s.Require().Error(err)

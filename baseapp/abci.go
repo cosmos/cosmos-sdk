@@ -43,7 +43,9 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 		return nil, fmt.Errorf("invalid chain-id on InitChain; expected: %s, got: %s", app.chainID, req.ChainId)
 	}
 
-	app.StateManager = new(state2.Manager)
+	if app.StateManager == nil {
+		app.StateManager = new(state2.Manager)
+	}
 
 	// On a new chain, we consider the init chain block height as 0, even though
 	// req.InitialHeight is 1 by default.

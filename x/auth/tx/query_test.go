@@ -10,20 +10,35 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
-func TestQueryTxCancellation(t *testing.T) {
-	cmdCtx, cancel := context.WithCancel(context.Background())
-	cancel()
+func TestContextCancellation(t *testing.T) {
+	testCases := []struct {
+		name  string
+		query func(ctx client.Context) error
+	}{
+		{
+			name: "query tx cancellation",
+			query: func(ctx client.Context) error {
+				_, err := tx.QueryTx(ctx, "")
+				return err
+			},
+		},
+		{
+			name: "query txs by events cancellation",
+			query: func(ctx client.Context) error {
+				_, err := tx.QueryTxsByEvents(ctx, 1, 100, "query", "")
+				return err
+			},
+		},
+	}
 
-	ctx := client.Context{}.WithClient(client.MockClient{}).WithCmdContext(cmdCtx)
-	_, err := tx.QueryTx(ctx, "")
-	require.ErrorIs(t, err, context.Canceled)
-}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			cmdCtx, cancel := context.WithCancel(context.Background())
+			cancel()
 
-func TestQueryTxsByEventsCancellation(t *testing.T) {
-	cmdCtx, cancel := context.WithCancel(context.Background())
-	cancel()
-
-	ctx := client.Context{}.WithClient(client.MockClient{}).WithCmdContext(cmdCtx)
-	_, err := tx.QueryTxsByEvents(ctx, 1, 100, "query", "")
-	require.ErrorIs(t, err, context.Canceled)
+			ctx := client.Context{}.WithClient(client.MockClient{}).WithCmdContext(cmdCtx)
+			err := tc.query(ctx)
+			require.ErrorIs(t, err, context.Canceled)
+		})
+	}
 }

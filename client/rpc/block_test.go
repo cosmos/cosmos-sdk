@@ -10,39 +10,50 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 )
 
-func TestGetChainHeightCancellation(t *testing.T) {
-	cmdCtx, cancel := context.WithCancel(context.Background())
-	cancel()
+func TestContextCancellation(t *testing.T) {
+	testCases := []struct {
+		name  string
+		query func(ctx client.Context) error
+	}{
+		{
+			name: "get chain height cancellation",
+			query: func(ctx client.Context) error {
+				_, err := rpc.GetChainHeight(ctx)
+				return err
+			},
+		},
+		{
+			name: "query blocks cancellation",
+			query: func(ctx client.Context) error {
+				_, err := rpc.QueryBlocks(ctx, 1, 100, "", "")
+				return err
+			},
+		},
+		{
+			name: "get block by height cancellation",
+			query: func(ctx client.Context) error {
+				height := int64(1)
+				_, err := rpc.GetBlockByHeight(ctx, &height)
+				return err
+			},
+		},
+		{
+			name: "get block by hash cancellation",
+			query: func(ctx client.Context) error {
+				_, err := rpc.GetBlockByHash(ctx, "")
+				return err
+			},
+		},
+	}
 
-	ctx := client.Context{}.WithClient(client.MockClient{}).WithCmdContext(cmdCtx)
-	_, err := rpc.GetChainHeight(ctx)
-	require.ErrorIs(t, err, context.Canceled)
-}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			cmdCtx, cancel := context.WithCancel(context.Background())
+			cancel()
 
-func TestQueryBlocksCancellation(t *testing.T) {
-	cmdCtx, cancel := context.WithCancel(context.Background())
-	cancel()
-
-	ctx := client.Context{}.WithClient(client.MockClient{}).WithCmdContext(cmdCtx)
-	_, err := rpc.QueryBlocks(ctx, 1, 100, "", "")
-	require.ErrorIs(t, err, context.Canceled)
-}
-
-func TestGetBlockByHeightCancellation(t *testing.T) {
-	cmdCtx, cancel := context.WithCancel(context.Background())
-	cancel()
-
-	ctx := client.Context{}.WithClient(client.MockClient{}).WithCmdContext(cmdCtx)
-	height := int64(1)
-	_, err := rpc.GetBlockByHeight(ctx, &height)
-	require.ErrorIs(t, err, context.Canceled)
-}
-
-func TestGetBlockByHashCancellation(t *testing.T) {
-	cmdCtx, cancel := context.WithCancel(context.Background())
-	cancel()
-
-	ctx := client.Context{}.WithClient(client.MockClient{}).WithCmdContext(cmdCtx)
-	_, err := rpc.GetBlockByHash(ctx, "")
-	require.ErrorIs(t, err, context.Canceled)
+			ctx := client.Context{}.WithClient(client.MockClient{}).WithCmdContext(cmdCtx)
+			err := tc.query(ctx)
+			require.ErrorIs(t, err, context.Canceled)
+		})
+	}
 }

@@ -3,9 +3,15 @@ package keeper_test
 import (
 	"testing"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttime "github.com/cometbft/cometbft/types/time"
+	gogotypes "github.com/cosmos/gogoproto/types"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/core/store"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -32,6 +38,17 @@ var (
 	randomPermAcc = types.NewEmptyModuleAccount(randomPerm, "random")
 )
 
+func getMaccPerms() map[string][]string {
+	return map[string][]string{
+		"fee_collector":          nil,
+		"mint":                   {"minter"},
+		"bonded_tokens_pool":     {"burner", "staking"},
+		"not_bonded_tokens_pool": {"burner", "staking"},
+		multiPerm:                {"burner", "minter", "staking"},
+		randomPerm:               {"random"},
+	}
+}
+
 type KeeperTestSuite struct {
 	suite.Suite
 
@@ -51,20 +68,11 @@ func (suite *KeeperTestSuite) SetupTest() {
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{})
 
-	maccPerms := map[string][]string{
-		"fee_collector":          nil,
-		"mint":                   {"minter"},
-		"bonded_tokens_pool":     {"burner", "staking"},
-		"not_bonded_tokens_pool": {"burner", "staking"},
-		multiPerm:                {"burner", "minter", "staking"},
-		randomPerm:               {"random"},
-	}
-
 	suite.accountKeeper = keeper.NewAccountKeeper(
 		suite.encCfg.Codec,
 		storeService,
 		types.ProtoBaseAccount,
-		maccPerms,
+		getMaccPerms(),
 		authcodec.NewBech32Codec("cosmos"),
 		"cosmos",
 		types.NewModuleAddress("gov").String(),
@@ -214,4 +222,105 @@ func (suite *KeeperTestSuite) TestInitGenesis() {
 	nextNum = suite.accountKeeper.NextAccountNumber(ctx)
 	// we expect nextNum to be 2 because we initialize fee_collector as account number 1
 	suite.Require().Equal(2, int(nextNum))
+}
+
+func setupAccountKeeper(t *testing.T) (sdk.Context, keeper.AccountKeeper, store.KVStoreService) {
+	t.Helper()
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
+	encCfg := moduletestutil.MakeTestEncodingConfig()
+
+	ak := keeper.NewAccountKeeper(
+		encCfg.Codec,
+		storeService,
+		types.ProtoBaseAccount,
+		getMaccPerms(),
+		authcodec.NewBech32Codec("cosmos"),
+		"cosmos",
+		types.NewModuleAddress("gov").String(),
+	)
+
+	return ctx, ak, storeService
+}
+
+func TestNextAccountNumber(t *testing.T) {
+	const newNum = uint64(100)
+	const legacyNum = uint64(50)
+	legacyVal := &gogotypes.UInt64Value{Value: legacyNum}
+	ctx, ak, storeService := setupAccountKeeper(t)
+	testCases := []struct {
+		name    string
+		setup   func()
+		onNext  func()
+		expects []uint64
+	}{
+		{
+			name: "reset account number to 0 after using legacy key",
+			setup: func() {
+				data, err := legacyVal.Marshal()
+				require.NoError(t, err)
+				store := storeService.OpenKVStore(ctx)
+				err = store.Set(types.LegacyGlobalAccountNumberKey, data)
+				require.NoError(t, err)
+			},
+			onNext: func() {
+				num := uint64(0)
+				err := ak.AccountNumber.Set(ctx, num)
+				require.NoError(t, err)
+			},
+			expects: []uint64{legacyNum, 0},
+		},
+		{
+			name:    "no keys set, account number starts at 0",
+			setup:   func() {},
+			expects: []uint64{0, 1},
+		},
+		{
+			name: "fallback to legacy key when new key is unset",
+			setup: func() {
+				data, err := legacyVal.Marshal()
+				require.NoError(t, err)
+				store := storeService.OpenKVStore(ctx)
+				err = store.Set(types.LegacyGlobalAccountNumberKey, data)
+				require.NoError(t, err)
+
+				// unset new key
+				err = (collections.Item[uint64])(ak.AccountNumber).Remove(ctx)
+				require.NoError(t, err)
+			},
+			expects: []uint64{legacyNum, legacyNum + 1},
+		},
+		{
+			name: "new key takes precedence over legacy key",
+			setup: func() {
+				data, err := legacyVal.Marshal()
+				require.NoError(t, err)
+				store := storeService.OpenKVStore(ctx)
+				err = store.Set(types.LegacyGlobalAccountNumberKey, data)
+				require.NoError(t, err)
+
+				err = ak.AccountNumber.Set(ctx, newNum)
+				require.NoError(t, err)
+			},
+			expects: []uint64{newNum, newNum + 1},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, ak, storeService = setupAccountKeeper(t)
+			tc.setup()
+			nextNum := ak.NextAccountNumber(ctx)
+			require.Equal(t, tc.expects[0], nextNum)
+
+			if tc.onNext != nil {
+				tc.onNext()
+			}
+
+			nextNum = ak.NextAccountNumber(ctx)
+			require.Equal(t, tc.expects[1], nextNum)
+		})
+	}
 }

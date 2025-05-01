@@ -13,9 +13,9 @@ import (
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/errors"
-	"cosmossdk.io/x/nft"
-	"cosmossdk.io/x/nft/keeper"
-	"cosmossdk.io/x/nft/simulation"
+	"cosmossdk.io/x/nft"            //nolint:staticcheck // deprecated and to be removed
+	"cosmossdk.io/x/nft/keeper"     //nolint:staticcheck // deprecated and to be removed
+	"cosmossdk.io/x/nft/simulation" //nolint:staticcheck // deprecated and to be removed
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

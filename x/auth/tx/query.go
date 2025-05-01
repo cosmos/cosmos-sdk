@@ -1,7 +1,6 @@
 package tx
 
 import (
-	"context"
 	"encoding/hex"
 	"errors"
 	"fmt"

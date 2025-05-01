@@ -1,7 +1,6 @@
 package rpc
 
 import (
-	"context"
 	"encoding/hex"
 	"fmt"
 	"time"

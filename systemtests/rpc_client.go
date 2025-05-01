@@ -30,7 +30,7 @@ type RPCClient struct {
 // NewRPCClient constructor
 func NewRPCClient(t *testing.T, addr string) RPCClient {
 	t.Helper()
-	httpClient, err := client.New(addr, "/websocket")
+	httpClient, err := client.New(addr)
 	require.NoError(t, err)
 	require.NoError(t, httpClient.Start())
 	t.Cleanup(func() { _ = httpClient.Stop() })
@@ -70,7 +70,7 @@ func (r RPCClient) Invoke(ctx context.Context, method string, req, reply interfa
 		}
 	}
 
-	abciReq := abci.RequestQuery{
+	abciReq := abci.QueryRequest{
 		Path:   method,
 		Data:   reqBz,
 		Height: height,

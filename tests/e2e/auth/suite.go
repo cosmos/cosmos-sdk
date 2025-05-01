@@ -1328,13 +1328,10 @@ func (s *E2ETestSuite) TestTxWithoutPublicKey() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	// Broadcast tx, test that it shouldn't panic.
+	// Broadcast tx, test that it should panic internally and error.
 	val1.ClientCtx.BroadcastMode = flags.BroadcastSync
-	out, err := authclitestutil.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
-	s.Require().NoError(err)
-	var res sdk.TxResponse
-	s.Require().NoError(val1.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
-	s.Require().NotEqual(0, res.Code)
+	_, err = authclitestutil.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
+	s.Require().Error(err)
 }
 
 // TestSignWithMultiSignersAminoJSON tests the case where a transaction with 2

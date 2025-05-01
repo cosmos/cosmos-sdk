@@ -1085,6 +1085,11 @@ func (s *E2ETestSuite) TestSignBatchMultisig() {
 
 	addr, err := multisigRecord.GetAddress()
 	s.Require().NoError(err)
+
+	// val may not have processed last tx yet
+	s.Require().NoError(s.network.WaitForNextBlock())
+	s.Require().NoError(s.network.WaitForNextBlock())
+
 	// Send coins from validator to multisig.
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
 	_, err = s.createBankMsg(
@@ -1151,6 +1156,11 @@ func (s *E2ETestSuite) TestMultisignBatch() {
 
 	addr, err := multisigRecord.GetAddress()
 	s.Require().NoError(err)
+
+	// val may not have processed last tx yet
+	s.Require().NoError(s.network.WaitForNextBlock())
+	s.Require().NoError(s.network.WaitForNextBlock())
+
 	// Send coins from validator to multisig.
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 1000)
 	_, err = s.createBankMsg(
@@ -1314,6 +1324,10 @@ func (s *E2ETestSuite) TestTxWithoutPublicKey() {
 	defer signedTxFile.Close()
 	s.Require().True(strings.Contains(string(txJSON), "\"public_key\":null"))
 
+	// val may not have processed last tx yet
+	s.Require().NoError(s.network.WaitForNextBlock())
+	s.Require().NoError(s.network.WaitForNextBlock())
+
 	// Broadcast tx, test that it shouldn't panic.
 	val1.ClientCtx.BroadcastMode = flags.BroadcastSync
 	out, err := authclitestutil.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
@@ -1377,6 +1391,10 @@ func (s *E2ETestSuite) TestSignWithMultiSignersAminoJSON() {
 	require.NoError(err)
 	signedTxFile := testutil.WriteToNewTempFile(s.T(), signedTx.String())
 	defer signedTxFile.Close()
+
+	// val may not have processed last tx yet
+	s.Require().NoError(s.network.WaitForNextBlock())
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	res, err := authclitestutil.TxBroadcastExec(
 		val0.ClientCtx,

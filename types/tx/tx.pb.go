@@ -373,6 +373,10 @@ type TxBody struct {
 	// Note, when set to true, the existing 'timeout_timestamp' value must
 	// be set and will be used to correspond to a timestamp in which the transaction is deemed
 	// valid.
+	//
+	// When true, the sequence value MUST be 0, and any transaction with unordered=true and a non-zero sequence value will
+	// be rejected.
+	// External services that make assumptions about sequence values may need to be updated because of this.
 	Unordered bool `protobuf:"varint,4,opt,name=unordered,proto3" json:"unordered,omitempty"`
 	// timeout_timestamp is the block time after which this transaction will not
 	// be processed by the chain.

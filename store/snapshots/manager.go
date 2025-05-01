@@ -8,6 +8,7 @@ import (
 	"io"
 	"math"
 	"os"
+	"slices"
 	"sort"
 	"sync"
 
@@ -493,12 +494,7 @@ func (m *Manager) sortedExtensionNames() []string {
 
 // IsFormatSupported returns if the snapshotter supports restoration from given format.
 func IsFormatSupported(snapshotter types.ExtensionSnapshotter, format uint32) bool {
-	for _, i := range snapshotter.SupportedFormats() {
-		if i == format {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(snapshotter.SupportedFormats(), format)
 }
 
 // SnapshotIfApplicable takes a snapshot of the current state if we are on a snapshot height.

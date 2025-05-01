@@ -57,7 +57,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	}
 
 	k := keeper.NewKeeper(in.Codec, in.StoreService, in.AccountKeeper, in.BankKeeper, authorityAddr)
-	m := NewAppModule(in.Codec, k, in.AccountKeeper, in.BankKeeper)
+	m := NewAppModule(k, in.AccountKeeper, in.BankKeeper)
 
 	return ModuleOutputs{
 		Keeper: k,

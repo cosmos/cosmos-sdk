@@ -139,7 +139,7 @@ func (s *TestSuite) TestKeeper() {
 	s.Require().Error(err)
 
 	s.T().Log("verify removing non existing authorization returns error with grant key in hex")
-	err = s.authzKeeper.DeleteGrant(ctx, granterAddr, granteeAddr, "abcd")	
+	err = s.authzKeeper.DeleteGrant(ctx, granterAddr, granteeAddr, "abcd")
 	s.Require().Equal("failed to delete grant with key 0114a58856f0fd53bf058b4909a21aec019107ba610114a58856f0fd53bf058b4909a21aec019107ba610061626364: authorization not found", err.Error())
 }
 

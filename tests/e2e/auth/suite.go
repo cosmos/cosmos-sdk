@@ -1328,7 +1328,7 @@ func (s *E2ETestSuite) TestTxWithoutPublicKey() {
 	s.Require().NoError(s.network.WaitForNextBlock())
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	// Broadcast tx, test that it should panic internally and error.
+	// Broadcast tx, test that it should panic internally, recover and error.
 	val1.ClientCtx.BroadcastMode = flags.BroadcastSync
 	_, err = authclitestutil.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
 	s.Require().Error(err)

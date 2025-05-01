@@ -352,7 +352,7 @@ func (app *BaseApp) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, er
 	}
 
 	if app.checkTxHandler == nil {
-		gInfo, result, anteEvents, err := app.runTx(mode, req.Tx, nil)
+		gInfo, result, anteEvents, err := app.RunTx(mode, req.Tx, nil, nil, nil)
 		if err != nil {
 			return sdkerrors.ResponseCheckTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, anteEvents, app.trace), nil
 		}
@@ -368,7 +368,7 @@ func (app *BaseApp) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, er
 
 	// Create wrapper to avoid users overriding the execution mode
 	runTx := func(txBytes []byte, tx sdk.Tx) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) {
-		return app.runTx(mode, txBytes, tx)
+		return app.RunTx(mode, txBytes, tx, nil, nil)
 	}
 
 	return app.checkTxHandler(runTx, req)
@@ -798,34 +798,10 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 	//
 	// NOTE: Not all raw transactions may adhere to the sdk.Tx interface, e.g.
 	// vote extensions, so skip those.
-	txResults := make([]*abci.ExecTxResult, 0, len(req.Txs))
-	for _, rawTx := range req.Txs {
-		var response *abci.ExecTxResult
-
-		if _, err := app.txDecoder(rawTx); err == nil {
-			response = app.deliverTx(rawTx)
-		} else {
-			// In the case where a transaction included in a block proposal is malformed,
-			// we still want to return a default response to comet. This is because comet
-			// expects a response for each transaction included in a block proposal.
-			response = sdkerrors.ResponseExecTxResultWithEvents(
-				sdkerrors.ErrTxDecode,
-				0,
-				0,
-				nil,
-				false,
-			)
-		}
-
-		// check after every tx if we should abort
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		default:
-			// continue
-		}
-
-		txResults = append(txResults, response)
+	txResults, err := app.executeTxsWithExecutor(ctx, req.Txs)
+	if err != nil {
+		// usually due to canceled
+		return nil, err
 	}
 
 	if app.finalizeBlockState.ms.TracingEnabled() {
@@ -854,6 +830,18 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 		ValidatorUpdates:      endBlock.ValidatorUpdates,
 		ConsensusParamUpdates: &cp,
 	}, nil
+}
+
+func (app *BaseApp) executeTxsWithExecutor(ctx context.Context, txs [][]byte) ([]*abci.ExecTxResult, error) {
+	if app.executor == nil {
+		app.executor = DefaultExecutor{
+			ctx:       ctx,
+			txDecoder: app.txDecoder,
+			deliverTx: func(txs []byte) *abci.ExecTxResult { return app.deliverTx(txs, nil, nil) },
+		}
+	}
+
+	return app.executor.run(txs)
 }
 
 // FinalizeBlock will execute the block proposal provided by RequestFinalizeBlock.

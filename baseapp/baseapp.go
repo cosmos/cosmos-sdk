@@ -26,6 +26,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/oe"
+	"github.com/cosmos/cosmos-sdk/baseapp/state"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -123,10 +124,10 @@ type BaseApp struct {
 	// NOTE: The states should be accessed via getter and setter to avoid race conditions.
 	// - getter: getState
 	// - setter: setState and clearState
-	checkState           *state
-	prepareProposalState *state
-	processProposalState *state
-	finalizeBlockState   *state
+	checkState           *state.State
+	prepareProposalState *state.State
+	processProposalState *state.State
+	finalizeBlockState   *state.State
 	stateMut             sync.RWMutex
 
 	// An inter-block write-through cache provided to the context during the ABCI
@@ -504,12 +505,12 @@ func (app *BaseApp) setState(mode execMode, h cmtproto.Header) {
 		ChainID: h.ChainID,
 		AppHash: h.AppHash,
 	}
-	baseState := &state{
-		ms: ms,
-		ctx: sdk.NewContext(ms, h, false, app.logger).
+	baseState := state.NewState(
+		sdk.NewContext(ms, h, false, app.logger).
 			WithStreamingManager(app.streamingManager).
 			WithHeaderInfo(headerInfo),
-	}
+		ms,
+	)
 
 	app.stateMut.Lock()
 	defer app.stateMut.Unlock()
@@ -675,7 +676,7 @@ func validateBasicTxMsgs(msgs []sdk.Msg) error {
 	return nil
 }
 
-func (app *BaseApp) getState(mode execMode) *state {
+func (app *BaseApp) getState(mode execMode) *state.State {
 	app.stateMut.RLock()
 	defer app.stateMut.RUnlock()
 

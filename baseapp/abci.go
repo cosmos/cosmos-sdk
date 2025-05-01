@@ -20,6 +20,7 @@ import (
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp/state"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -834,8 +835,8 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 		txResults = append(txResults, response)
 	}
 
-	if finalizeState.ms.TracingEnabled() {
-		finalizeState.ms = finalizeState.ms.SetTracingContext(nil).(storetypes.CacheMultiStore)
+	if finalizeState.MultiStore.TracingEnabled() {
+		finalizeState.MultiStore = finalizeState.MultiStore.SetTracingContext(nil).(storetypes.CacheMultiStore)
 	}
 
 	endBlock, err := app.endBlock(finalizeState.Context())
@@ -999,7 +1000,7 @@ func (app *BaseApp) workingHash() []byte {
 	// Write the FinalizeBlock state into branched storage and commit the MultiStore.
 	// The write to the FinalizeBlock state writes all state transitions to the root
 	// MultiStore (app.cms) so when Commit() is called it persists those values.
-	app.getState(execModeFinalize).ms.Write()
+	app.getState(execModeFinalize).MultiStore.Write()
 
 	// Get the hash of all writes in order to return the apphash to the comet in finalizeBlock.
 	commitHash := app.cms.WorkingHash()
@@ -1246,13 +1247,13 @@ func (app *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, check
 
 	var header *cmtproto.Header
 	isLatest := height == 0
-	for _, state := range []*state{
+	for _, appState := range []*state.State{
 		app.getState(execModeCheck),
 		app.getState(execModeFinalize),
 	} {
-		if state != nil {
+		if appState != nil {
 			// branch the commit multi-store for safety
-			h := state.Context().BlockHeader()
+			h := appState.Context().BlockHeader()
 			if isLatest {
 				lastBlockHeight = qms.LatestVersion()
 			}
@@ -1356,7 +1357,7 @@ func (app *BaseApp) GetBlockRetentionHeight(commitHeight int64) int64 {
 	var retentionHeight int64
 
 	// Define the number of blocks needed to protect against misbehaving validators
-	// which allows light clients to operate safely. Note, we piggy back of the
+	// which allows light clients to operate safely. Note, we piggyback of the
 	// evidence parameters instead of computing an estimated number of blocks based
 	// on the unbonding period and block commitment time as the two should be
 	// equivalent.

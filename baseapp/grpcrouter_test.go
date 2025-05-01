@@ -2,6 +2,13 @@ package baseapp_test
 
 import (
 	"context"
+	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
+	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
+	"cosmossdk.io/core/address"
+	"cosmossdk.io/depinject/appconfig"
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"sync"
 	"testing"
 
@@ -11,7 +18,6 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -98,7 +104,7 @@ func TestGRPCRouterHybridHandlers(t *testing.T) {
 }
 
 func TestRegisterQueryServiceTwice(t *testing.T) {
-	// Setup baseapp.
+	// Setup
 	var appBuilder *runtime.AppBuilder
 	err := depinject.Inject(
 		depinject.Configs(
@@ -221,4 +227,26 @@ func testQueryDataRacesSameHandler(t *testing.T, makeClientConn func(*baseapp.GR
 			require.Equal(t, spot, res3.HasAnimal.Animal.GetCachedValue())
 		}()
 	}
+}
+
+func makeMinimalConfig() depinject.Config {
+	var (
+		mempoolOpt            = baseapp.SetMempool(mempool.NewSenderNonceMempool())
+		addressCodec          = func() address.Codec { return addresscodec.NewBech32Codec("cosmos") }
+		validatorAddressCodec = func() runtime.ValidatorAddressCodec { return addresscodec.NewBech32Codec("cosmosvaloper") }
+		consensusAddressCodec = func() runtime.ConsensusAddressCodec { return addresscodec.NewBech32Codec("cosmosvalcons") }
+	)
+
+	return depinject.Configs(
+		depinject.Supply(mempoolOpt, addressCodec, validatorAddressCodec, consensusAddressCodec),
+		appconfig.Compose(&appv1alpha1.Config{
+			Modules: []*appv1alpha1.ModuleConfig{
+				{
+					Name: "runtime",
+					Config: appconfig.WrapAny(&runtimev1alpha1.Module{
+						AppName: "BaseAppApp",
+					}),
+				},
+			},
+		}))
 }

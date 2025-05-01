@@ -2,6 +2,7 @@ package baseapp_test
 
 import (
 	"bytes"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"sort"
 	"testing"
 
@@ -21,7 +22,6 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/baseapp/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/client"

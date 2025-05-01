@@ -63,9 +63,9 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 	}
 
 	// initialize states with a correct header
-	app.setState(execModeFinalize, initHeader)
-	app.setState(execModeCheck, initHeader)
-	finalizeState := app.getState(execModeFinalize)
+	app.stateManager.SetState(execModeFinalize, app.cms, initHeader, app.logger, app.streamingManager)
+	app.stateManager.SetState(execModeCheck, app.cms, initHeader, app.logger, app.streamingManager)
+	finalizeState := app.stateManager.GetState(execModeFinalize)
 
 	// Store the consensus params in the BaseApp's param store. Note, this must be
 	// done after the finalizeBlockState and context have been set as it's persisted
@@ -83,7 +83,7 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 		// handler, the block height is zero by default. However, after Commit is called
 		// the height needs to reflect the true block height.
 		initHeader.Height = req.InitialHeight
-		checkState := app.getState(execModeCheck)
+		checkState := app.stateManager.GetState(execModeCheck)
 		checkState.SetContext(checkState.Context().WithBlockHeader(initHeader).
 			WithHeaderInfo(coreheader.Info{
 				ChainID: req.ChainId,
@@ -405,7 +405,7 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 		NextValidatorsHash: req.NextValidatorsHash,
 		AppHash:            app.LastCommitID().Hash,
 	}
-	app.setState(execModePrepareProposal, header)
+	app.stateManager.SetState(execModePrepareProposal, app.cms, header, app.logger, app.streamingManager)
 
 	// CometBFT must never call PrepareProposal with a height of 0.
 	//
@@ -414,7 +414,7 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 		return nil, errors.New("PrepareProposal called with invalid height")
 	}
 
-	prepareProposalState := app.getState(execModePrepareProposal)
+	prepareProposalState := app.stateManager.GetState(execModePrepareProposal)
 	prepareProposalState.SetContext(app.getContextForProposal(prepareProposalState.Context(), req.Height).
 		WithVoteInfos(toVoteInfo(req.LocalLastCommit.Votes)). // this is a set of votes that are not finalized yet, wait for commit
 		WithBlockHeight(req.Height).
@@ -490,7 +490,7 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 		NextValidatorsHash: req.NextValidatorsHash,
 		AppHash:            app.LastCommitID().Hash,
 	}
-	app.setState(execModeProcessProposal, header)
+	app.stateManager.SetState(execModeProcessProposal, app.cms, header, app.logger, app.streamingManager)
 
 	// Since the application can get access to FinalizeBlock state and write to it,
 	// we must be sure to reset it in case ProcessProposal timeouts and is called
@@ -500,10 +500,10 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 	if req.Height > app.initialHeight {
 		// abort any running OE
 		app.optimisticExec.Abort()
-		app.setState(execModeFinalize, header)
+		app.stateManager.SetState(execModeFinalize, app.cms, header, app.logger, app.streamingManager)
 	}
 
-	processProposalState := app.getState(execModeProcessProposal)
+	processProposalState := app.stateManager.GetState(execModeProcessProposal)
 	processProposalState.SetContext(app.getContextForProposal(processProposalState.Context(), req.Height).
 		WithVoteInfos(req.ProposedLastCommit.Votes). // this is a set of votes that are not finalized yet, wait for commit
 		WithBlockHeight(req.Height).
@@ -575,7 +575,7 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 	// finalizeBlockState context, otherwise we don't get the uncommitted data
 	// from InitChain.
 	if req.Height == app.initialHeight {
-		ctx, _ = app.getState(execModeFinalize).Context().CacheContext()
+		ctx, _ = app.stateManager.GetState(execModeFinalize).Context().CacheContext()
 	} else {
 		emptyHeader := cmtproto.Header{ChainID: app.chainID, Height: req.Height}
 		ms := app.cms.CacheMultiStore()
@@ -650,7 +650,7 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 	// finalizeBlockState context, otherwise we don't get the uncommitted data
 	// from InitChain.
 	if req.Height == app.initialHeight {
-		ctx, _ = app.getState(execModeFinalize).Context().CacheContext()
+		ctx, _ = app.stateManager.GetState(execModeFinalize).Context().CacheContext()
 	} else {
 		emptyHeader := cmtproto.Header{ChainID: app.chainID, Height: req.Height}
 		ms := app.cms.CacheMultiStore()
@@ -705,7 +705,7 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 
 // internalFinalizeBlock executes the block, called by the Optimistic
 // Execution flow or by the FinalizeBlock ABCI method. The context received is
-// only used to handle early cancellation, for anything related to state app.getState(execModeFinalize).Context()
+// only used to handle early cancellation, for anything related to state app.stateManager.GetState(execModeFinalize).Context()
 // must be used.
 func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
 	var events []abci.Event
@@ -736,10 +736,10 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 	// finalizeBlockState should be set on InitChain or ProcessProposal. If it is
 	// nil, it means we are replaying this block and we need to set the state here
 	// given that during block replay ProcessProposal is not executed by CometBFT.
-	finalizeState := app.getState(execModeFinalize)
+	finalizeState := app.stateManager.GetState(execModeFinalize)
 	if finalizeState == nil {
-		app.setState(execModeFinalize, header)
-		finalizeState = app.getState(execModeFinalize)
+		app.stateManager.SetState(execModeFinalize, app.cms, header, app.logger, app.streamingManager)
+		finalizeState = app.stateManager.GetState(execModeFinalize)
 	}
 
 	// Context is now updated with Header information.
@@ -767,7 +767,7 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 	gasMeter := app.getBlockGasMeter(finalizeState.Context())
 	finalizeState.SetContext(finalizeState.Context().WithBlockGasMeter(gasMeter))
 
-	if checkState := app.getState(execModeCheck); checkState != nil {
+	if checkState := app.stateManager.GetState(execModeCheck); checkState != nil {
 		checkState.SetContext(checkState.Context().
 			WithBlockGasMeter(gasMeter).
 			WithHeaderHash(req.Hash))
@@ -880,7 +880,7 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 		}
 		// call the streaming service hooks with the FinalizeBlock messages
 		for _, streamingListener := range app.streamingManager.ABCIListeners {
-			if err := streamingListener.ListenFinalizeBlock(app.getState(execModeFinalize).Context(), *req, *res); err != nil {
+			if err := streamingListener.ListenFinalizeBlock(app.stateManager.GetState(execModeFinalize).Context(), *req, *res); err != nil {
 				app.logger.Error("ListenFinalizeBlock listening hook failed", "height", req.Height, "err", err)
 			}
 		}
@@ -902,7 +902,7 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 		}
 
 		// if it was aborted, we need to reset the state
-		app.clearState(execModeFinalize)
+		app.stateManager.ClearState(execModeFinalize)
 		app.optimisticExec.Reset()
 	}
 
@@ -941,7 +941,7 @@ func (app *BaseApp) checkHalt(height int64, time time.Time) error {
 // against that height and gracefully halt if it matches the latest committed
 // height.
 func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
-	finalizeState := app.getState(execModeFinalize)
+	finalizeState := app.stateManager.GetState(execModeFinalize)
 	header := finalizeState.Context().BlockHeader()
 	retainHeight := app.GetBlockRetentionHeight(header.Height)
 
@@ -977,12 +977,12 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 	//
 	// NOTE: This is safe because CometBFT holds a lock on the mempool for
 	// Commit. Use the header from this latest block.
-	app.setState(execModeCheck, header)
+	app.stateManager.SetState(execModeCheck, app.cms, header, app.logger, app.streamingManager)
 
-	app.clearState(execModeFinalize)
+	app.stateManager.ClearState(execModeFinalize)
 
 	if app.prepareCheckStater != nil {
-		app.prepareCheckStater(app.getState(execModeCheck).Context())
+		app.prepareCheckStater(app.stateManager.GetState(execModeCheck).Context())
 	}
 
 	// The SnapshotIfApplicable method will create the snapshot by starting the goroutine
@@ -1000,7 +1000,7 @@ func (app *BaseApp) workingHash() []byte {
 	// Write the FinalizeBlock state into branched storage and commit the MultiStore.
 	// The write to the FinalizeBlock state writes all state transitions to the root
 	// MultiStore (app.cms) so when Commit() is called it persists those values.
-	app.getState(execModeFinalize).MultiStore.Write()
+	app.stateManager.GetState(execModeFinalize).MultiStore.Write()
 
 	// Get the hash of all writes in order to return the apphash to the comet in finalizeBlock.
 	commitHash := app.cms.WorkingHash()
@@ -1147,7 +1147,7 @@ func (app *BaseApp) FilterPeerByID(info string) *abci.ResponseQuery {
 // access any state changes made in InitChain.
 func (app *BaseApp) getContextForProposal(ctx sdk.Context, height int64) sdk.Context {
 	if height == app.initialHeight {
-		ctx, _ = app.getState(execModeFinalize).Context().CacheContext()
+		ctx, _ = app.stateManager.GetState(execModeFinalize).Context().CacheContext()
 
 		// clear all context data set during InitChain to avoid inconsistent behavior
 		ctx = ctx.WithBlockHeader(cmtproto.Header{}).WithHeaderInfo(coreheader.Info{})
@@ -1207,26 +1207,26 @@ func checkNegativeHeight(height int64) error {
 
 // CreateQueryContext creates a new sdk.Context for a query, taking as args
 // the block height and whether the query needs a proof or not.
-func (app *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, error) {
-	return app.CreateQueryContextWithCheckHeader(height, prove, true)
+func (bapp *BaseApp) CreateQueryContext(height int64, prove bool) (sdk.Context, error) {
+	return bapp.CreateQueryContextWithCheckHeader(height, prove, true)
 }
 
 // CreateQueryContextWithCheckHeader creates a new sdk.Context for a query, taking as args
 // the block height, whether the query needs a proof or not, and whether to check the header or not.
-func (app *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, checkHeader bool) (sdk.Context, error) {
+func (bapp *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, checkHeader bool) (sdk.Context, error) {
 	if err := checkNegativeHeight(height); err != nil {
 		return sdk.Context{}, err
 	}
 
 	// use custom query multi-store if provided
-	qms := app.qms
+	qms := bapp.qms
 	if qms == nil {
-		qms = app.cms.(storetypes.MultiStore)
+		qms = bapp.cms.(storetypes.MultiStore)
 	}
 
 	lastBlockHeight := qms.LatestVersion()
 	if lastBlockHeight == 0 {
-		return sdk.Context{}, errorsmod.Wrapf(sdkerrors.ErrInvalidHeight, "%s is not ready; please wait for first block", app.Name())
+		return sdk.Context{}, errorsmod.Wrapf(sdkerrors.ErrInvalidHeight, "%s is not ready; please wait for first block", bapp.Name())
 	}
 
 	if height > lastBlockHeight {
@@ -1248,8 +1248,8 @@ func (app *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, check
 	var header *cmtproto.Header
 	isLatest := height == 0
 	for _, appState := range []*state.State{
-		app.getState(execModeCheck),
-		app.getState(execModeFinalize),
+		bapp.stateManager.GetState(execModeCheck),
+		bapp.stateManager.GetState(execModeFinalize),
 	} {
 		if appState != nil {
 			// branch the commit multi-store for safety
@@ -1287,14 +1287,14 @@ func (app *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, check
 	}
 
 	// branch the commit multi-store for safety
-	ctx := sdk.NewContext(cacheMS, *header, true, app.logger).
-		WithMinGasPrices(app.minGasPrices).
-		WithGasMeter(storetypes.NewGasMeter(app.queryGasLimit)).
+	ctx := sdk.NewContext(cacheMS, *header, true, bapp.logger).
+		WithMinGasPrices(bapp.gasConfig.MinGasPrices).
+		WithGasMeter(storetypes.NewGasMeter(bapp.gasConfig.QueryGasLimit)).
 		WithBlockHeader(*header).
 		WithBlockHeight(height)
 
 	if !isLatest {
-		rms, ok := app.cms.(*rootmulti.Store)
+		rms, ok := bapp.cms.(*rootmulti.Store)
 		if ok {
 			cInfo, err := rms.GetCommitInfo(height)
 			if cInfo != nil && err == nil {
@@ -1361,7 +1361,7 @@ func (app *BaseApp) GetBlockRetentionHeight(commitHeight int64) int64 {
 	// evidence parameters instead of computing an estimated number of blocks based
 	// on the unbonding period and block commitment time as the two should be
 	// equivalent.
-	cp := app.GetConsensusParams(app.getState(execModeFinalize).Context())
+	cp := app.GetConsensusParams(app.stateManager.GetState(execModeFinalize).Context())
 	if cp.Evidence != nil && cp.Evidence.MaxAgeNumBlocks > 0 {
 		retentionHeight = commitHeight - cp.Evidence.MaxAgeNumBlocks
 	}

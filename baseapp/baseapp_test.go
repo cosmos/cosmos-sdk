@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"io"
 	"math/rand"
 	"os"
@@ -26,7 +27,6 @@ import (
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -40,12 +40,7 @@ import (
 )
 
 var (
-	capKey1 = storetypes.NewKVStoreKey("key1")
 	capKey2 = storetypes.NewKVStoreKey("key2")
-
-	// testTxPriority is the CheckTx priority that we set in the test
-	// AnteHandler.
-	testTxPriority = int64(42)
 )
 
 type (
@@ -594,7 +589,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	require.Empty(t, res.Events)
 	require.False(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
 
-	ctx := getFinalizeBlockStateCtx(suite.baseApp)
+	ctx := suite.baseApp.stateManager.GetState(execModeFinalize).Context()
 	store := ctx.KVStore(capKey1)
 	require.Equal(t, int64(0), getIntFromStore(t, store, anteKey))
 
@@ -611,7 +606,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	require.Empty(t, res.Events)
 	require.False(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
 
-	ctx = getFinalizeBlockStateCtx(suite.baseApp)
+	ctx = suite.baseApp.stateManager.GetState(execModeFinalize).Context()
 	store = ctx.KVStore(capKey1)
 	require.Equal(t, int64(1), getIntFromStore(t, store, anteKey))
 	require.Equal(t, int64(0), getIntFromStore(t, store, deliverKey))
@@ -628,7 +623,7 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	require.NotEmpty(t, res.TxResults[0].Events)
 	require.True(t, res.TxResults[0].IsOK(), fmt.Sprintf("%v", res))
 
-	ctx = getFinalizeBlockStateCtx(suite.baseApp)
+	ctx = suite.baseApp.stateManager.GetState(execModeFinalize).Context()
 	store = ctx.KVStore(capKey1)
 	require.Equal(t, int64(2), getIntFromStore(t, store, anteKey))
 	require.Equal(t, int64(1), getIntFromStore(t, store, deliverKey))
@@ -847,199 +842,4 @@ func TestABCI_CreateQueryContextWithCheckHeader(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestABCI_CreateQueryContext_Before_Set_CheckState(t *testing.T) {
-	t.Parallel()
-
-	db := dbm.NewMemDB()
-	name := t.Name()
-	var height int64 = 2
-	var headerHeight int64 = 1
-
-	t.Run("valid height with different initial height", func(t *testing.T) {
-		app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
-
-		_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
-		require.NoError(t, err)
-		_, err = app.Commit()
-		require.NoError(t, err)
-
-		_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 2})
-		require.NoError(t, err)
-
-		var queryCtx *sdk.Context
-		var queryCtxErr error
-		app.SetStreamingManager(storetypes.StreamingManager{
-			ABCIListeners: []storetypes.ABCIListener{
-				&mockABCIListener{
-					ListenCommitFn: func(context.Context, abci.ResponseCommit, []*storetypes.StoreKVPair) error {
-						qCtx, qErr := app.CreateQueryContext(0, true)
-						queryCtx = &qCtx
-						queryCtxErr = qErr
-						return nil
-					},
-				},
-			},
-		})
-		_, err = app.Commit()
-		require.NoError(t, err)
-		require.NoError(t, queryCtxErr)
-		require.Equal(t, height, queryCtx.BlockHeight())
-		_, err = app.InitChain(&abci.RequestInitChain{
-			InitialHeight: headerHeight,
-		})
-		require.NoError(t, err)
-	})
-}
-
-func TestSetMinGasPrices(t *testing.T) {
-	minGasPrices := sdk.DecCoins{sdk.NewInt64DecCoin("stake", 5000)}
-	suite := NewBaseAppSuite(t, baseapp.SetMinGasPrices(minGasPrices.String()))
-
-	ctx := getCheckStateCtx(suite.baseApp)
-	require.Equal(t, minGasPrices, ctx.MinGasPrices())
-}
-
-type ctxType string
-
-const (
-	QueryCtx   ctxType = "query"
-	CheckTxCtx ctxType = "checkTx"
-)
-
-var ctxTypes = []ctxType{QueryCtx, CheckTxCtx}
-
-func (c ctxType) GetCtx(t *testing.T, bapp *baseapp.BaseApp) sdk.Context {
-	t.Helper()
-	switch c {
-	case QueryCtx:
-		ctx, err := bapp.CreateQueryContext(1, false)
-		require.NoError(t, err)
-		return ctx
-	case CheckTxCtx:
-		return getCheckStateCtx(bapp)
-	}
-	// TODO: Not supported yet
-	return getFinalizeBlockStateCtx(bapp)
-}
-
-func TestQueryGasLimit(t *testing.T) {
-	testCases := []struct {
-		queryGasLimit   uint64
-		gasActuallyUsed uint64
-		shouldQueryErr  bool
-	}{
-		{queryGasLimit: 100, gasActuallyUsed: 50, shouldQueryErr: false},  // Valid case
-		{queryGasLimit: 100, gasActuallyUsed: 150, shouldQueryErr: true},  // gasActuallyUsed > queryGasLimit
-		{queryGasLimit: 0, gasActuallyUsed: 50, shouldQueryErr: false},    // fuzzing with queryGasLimit = 0
-		{queryGasLimit: 0, gasActuallyUsed: 0, shouldQueryErr: false},     // both queryGasLimit and gasActuallyUsed are 0
-		{queryGasLimit: 200, gasActuallyUsed: 200, shouldQueryErr: false}, // gasActuallyUsed == queryGasLimit
-		{queryGasLimit: 100, gasActuallyUsed: 1000, shouldQueryErr: true}, // gasActuallyUsed > queryGasLimit
-	}
-
-	for _, tc := range testCases {
-		for _, ctxType := range ctxTypes {
-			t.Run(fmt.Sprintf("%s: %d - %d", ctxType, tc.queryGasLimit, tc.gasActuallyUsed), func(t *testing.T) {
-				app := getQueryBaseapp(t)
-				baseapp.SetQueryGasLimit(tc.queryGasLimit)(app)
-				ctx := ctxType.GetCtx(t, app)
-
-				// query gas limit should have no effect when CtxType != QueryCtx
-				if tc.shouldQueryErr && ctxType == QueryCtx {
-					require.Panics(t, func() { ctx.GasMeter().ConsumeGas(tc.gasActuallyUsed, "test") })
-				} else {
-					require.NotPanics(t, func() { ctx.GasMeter().ConsumeGas(tc.gasActuallyUsed, "test") })
-				}
-			})
-		}
-	}
-}
-
-func TestGetMaximumBlockGas(t *testing.T) {
-	suite := NewBaseAppSuite(t)
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{})
-	require.NoError(t, err)
-
-	ctx := suite.baseApp.NewContext(true)
-
-	require.NoError(t, suite.baseApp.StoreConsensusParams(ctx, cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: 0}}))
-	require.Equal(t, uint64(0), suite.baseApp.GetMaximumBlockGas(ctx))
-
-	require.NoError(t, suite.baseApp.StoreConsensusParams(ctx, cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: -1}}))
-	require.Equal(t, uint64(0), suite.baseApp.GetMaximumBlockGas(ctx))
-
-	require.NoError(t, suite.baseApp.StoreConsensusParams(ctx, cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: 5000000}}))
-	require.Equal(t, uint64(5000000), suite.baseApp.GetMaximumBlockGas(ctx))
-
-	require.NoError(t, suite.baseApp.StoreConsensusParams(ctx, cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: -5000000}}))
-	require.Panics(t, func() { suite.baseApp.GetMaximumBlockGas(ctx) })
-}
-
-func TestGetEmptyConsensusParams(t *testing.T) {
-	suite := NewBaseAppSuite(t)
-	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{})
-	require.NoError(t, err)
-	ctx := suite.baseApp.NewContext(true)
-
-	cp := suite.baseApp.GetConsensusParams(ctx)
-	require.Equal(t, cmtproto.ConsensusParams{}, cp)
-	require.Equal(t, uint64(0), suite.baseApp.GetMaximumBlockGas(ctx))
-}
-
-func TestLoadVersionPruning(t *testing.T) {
-	logger := log.NewNopLogger()
-	pruningOptions := pruningtypes.NewCustomPruningOptions(10, 15)
-	pruningOpt := baseapp.SetPruning(pruningOptions)
-	db := dbm.NewMemDB()
-	name := t.Name()
-	app := baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
-
-	// make a cap key and mount the store
-	capKey := storetypes.NewKVStoreKey("key1")
-	app.MountStores(capKey)
-
-	err := app.LoadLatestVersion() // needed to make stores non-nil
-	require.Nil(t, err)
-
-	emptyHash := sha256.Sum256([]byte{})
-	emptyCommitID := storetypes.CommitID{
-		Hash: emptyHash[:],
-	}
-
-	// fresh store has zero/empty last commit
-	lastHeight := app.LastBlockHeight()
-	lastID := app.LastCommitID()
-	require.Equal(t, int64(0), lastHeight)
-	require.Equal(t, emptyCommitID, lastID)
-
-	var lastCommitID storetypes.CommitID
-
-	// Commit seven blocks, of which 7 (latest) is kept in addition to 6, 5
-	// (keep recent) and 3 (keep every).
-	for i := int64(1); i <= 7; i++ {
-		res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: i})
-		require.NoError(t, err)
-		_, err = app.Commit()
-		require.NoError(t, err)
-		lastCommitID = storetypes.CommitID{Version: i, Hash: res.AppHash}
-	}
-
-	for _, v := range []int64{1, 2, 4} {
-		_, err = app.CommitMultiStore().CacheMultiStoreWithVersion(v)
-		require.NoError(t, err)
-	}
-
-	for _, v := range []int64{3, 5, 6, 7} {
-		_, err = app.CommitMultiStore().CacheMultiStoreWithVersion(v)
-		require.NoError(t, err)
-	}
-
-	// reload with LoadLatestVersion, check it loads last version
-	app = baseapp.NewBaseApp(name, logger, db, nil, pruningOpt)
-	app.MountStores(capKey)
-
-	err = app.LoadLatestVersion()
-	require.Nil(t, err)
-	testLoadVersionHelper(t, app, int64(7), lastCommitID)
 }

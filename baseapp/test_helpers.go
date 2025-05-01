@@ -54,17 +54,17 @@ func (app *BaseApp) SimTxFinalizeBlock(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.
 // SimWriteState is an entrypoint for simulations only. They are not executed during the normal ABCI finalize
 // block step but later. Therefor an extra call to the root multi-store (app.cms) is required to write the changes.
 func (app *BaseApp) SimWriteState() {
-	app.finalizeBlockState.ms.Write()
+	app.StateManager.GetState(sdk.ExecModeFinalize).CacheMultiStore().Write()
 }
 
 // NewContextLegacy returns a new sdk.Context with the provided header
 func (app *BaseApp) NewContextLegacy(isCheckTx bool, header cmtproto.Header) sdk.Context {
 	if isCheckTx {
-		return sdk.NewContext(app.getState(execModeCheck).ms, header, true, app.logger).
+		return sdk.NewContext(app.StateManager.GetState(sdk.ExecMode(execModeCheck)).CacheMultiStore(), header, true, app.logger).
 			WithMinGasPrices(app.minGasPrices)
 	}
 
-	return sdk.NewContext(app.getState(execModeFinalize).ms, header, false, app.logger)
+	return sdk.NewContext(app.StateManager.GetState(sdk.ExecMode(execModeFinalize)).CacheMultiStore(), header, false, app.logger)
 }
 
 // NewContext returns a new sdk.Context with a empty header

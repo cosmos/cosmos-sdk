@@ -17,7 +17,8 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	protov2 "google.golang.org/protobuf/proto"
 
-	"cosmossdk.io/core/header"
+	state2 "github.com/cosmos/cosmos-sdk/baseapp/state"
+
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
@@ -100,34 +101,7 @@ type BaseApp struct {
 	// manages snapshots, i.e. dumps of app state at certain intervals
 	snapshotManager *snapshots.Manager
 
-	// volatile states:
-	//
-	// - checkState is set on InitChain and reset on Commit
-	// - finalizeBlockState is set on InitChain and FinalizeBlock and set to nil
-	// on Commit.
-	//
-	// - checkState: Used for CheckTx, which is set based on the previous block's
-	// state. This state is never committed.
-	//
-	// - prepareProposalState: Used for PrepareProposal, which is set based on the
-	// previous block's state. This state is never committed. In case of multiple
-	// consensus rounds, the state is always reset to the previous block's state.
-	//
-	// - processProposalState: Used for ProcessProposal, which is set based on the
-	// the previous block's state. This state is never committed. In case of
-	// multiple rounds, the state is always reset to the previous block's state.
-	//
-	// - finalizeBlockState: Used for FinalizeBlock, which is set based on the
-	// previous block's state. This state is committed.
-	//
-	// NOTE: The states should be accessed via getter and setter to avoid race conditions.
-	// - getter: getState
-	// - setter: setState and clearState
-	checkState           *state
-	prepareProposalState *state
-	processProposalState *state
-	finalizeBlockState   *state
-	stateMut             sync.RWMutex
+	StateManager *state2.Manager
 
 	// An inter-block write-through cache provided to the context during the ABCI
 	// FinalizeBlock call.
@@ -448,8 +422,12 @@ func (app *BaseApp) Init() error {
 
 	emptyHeader := cmtproto.Header{ChainID: app.chainID}
 
+	if app.StateManager == nil {
+		app.StateManager = new(state2.Manager)
+	}
+
 	// needed for the export command which inits from store but never calls initchain
-	app.setState(execModeCheck, emptyHeader)
+	app.StateManager.SetState(sdk.ExecModeCheck, app.cms.CacheMultiStore(), emptyHeader, app.logger, app.streamingManager, app.minGasPrices)
 	app.Seal()
 
 	return app.cms.GetPruning().Validate()
@@ -492,68 +470,6 @@ func (app *BaseApp) Seal() { app.sealed = true }
 
 // IsSealed returns true if the BaseApp is sealed and false otherwise.
 func (app *BaseApp) IsSealed() bool { return app.sealed }
-
-// setState sets the BaseApp's state for the corresponding mode with a branched
-// multi-store (i.e. a CacheMultiStore) and a new Context with the same
-// multi-store branch, and provided header.
-func (app *BaseApp) setState(mode execMode, h cmtproto.Header) {
-	ms := app.cms.CacheMultiStore()
-	headerInfo := header.Info{
-		Height:  h.Height,
-		Time:    h.Time,
-		ChainID: h.ChainID,
-		AppHash: h.AppHash,
-	}
-	baseState := &state{
-		ms: ms,
-		ctx: sdk.NewContext(ms, h, false, app.logger).
-			WithStreamingManager(app.streamingManager).
-			WithHeaderInfo(headerInfo),
-	}
-
-	app.stateMut.Lock()
-	defer app.stateMut.Unlock()
-
-	switch mode {
-	case execModeCheck:
-		baseState.SetContext(baseState.Context().WithIsCheckTx(true).WithMinGasPrices(app.minGasPrices))
-		app.checkState = baseState
-
-	case execModePrepareProposal:
-		app.prepareProposalState = baseState
-
-	case execModeProcessProposal:
-		app.processProposalState = baseState
-
-	case execModeFinalize:
-		app.finalizeBlockState = baseState
-
-	default:
-		panic(fmt.Sprintf("invalid runTxMode for setState: %d", mode))
-	}
-}
-
-func (app *BaseApp) clearState(mode execMode) {
-	app.stateMut.Lock()
-	defer app.stateMut.Unlock()
-
-	switch mode {
-	case execModeCheck:
-		app.checkState = nil
-
-	case execModePrepareProposal:
-		app.prepareProposalState = nil
-
-	case execModeProcessProposal:
-		app.processProposalState = nil
-
-	case execModeFinalize:
-		app.finalizeBlockState = nil
-
-	default:
-		panic(fmt.Sprintf("invalid runTxMode for clearState: %d", mode))
-	}
-}
 
 // SetCircuitBreaker sets the circuit breaker for the BaseApp.
 // The circuit breaker is checked on every message execution to verify if a transaction should be executed or not.
@@ -675,25 +591,6 @@ func validateBasicTxMsgs(msgs []sdk.Msg) error {
 	return nil
 }
 
-func (app *BaseApp) getState(mode execMode) *state {
-	app.stateMut.RLock()
-	defer app.stateMut.RUnlock()
-
-	switch mode {
-	case execModeFinalize:
-		return app.finalizeBlockState
-
-	case execModePrepareProposal:
-		return app.prepareProposalState
-
-	case execModeProcessProposal:
-		return app.processProposalState
-
-	default:
-		return app.checkState
-	}
-}
-
 func (app *BaseApp) getBlockGasMeter(ctx sdk.Context) storetypes.GasMeter {
 	if app.disableBlockGasMeter {
 		return noopGasMeter{}
@@ -711,7 +608,7 @@ func (app *BaseApp) getContextForTx(mode execMode, txBytes []byte) sdk.Context {
 	app.mu.Lock()
 	defer app.mu.Unlock()
 
-	modeState := app.getState(mode)
+	modeState := app.StateManager.GetState(sdk.ExecMode(mode))
 	if modeState == nil {
 		panic(fmt.Sprintf("state is nil for mode %v", mode))
 	}
@@ -757,7 +654,7 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 func (app *BaseApp) preBlock(req *abci.RequestFinalizeBlock) ([]abci.Event, error) {
 	var events []abci.Event
 	if app.preBlocker != nil {
-		finalizeState := app.getState(execModeFinalize)
+		finalizeState := app.StateManager.GetState(sdk.ExecMode(execModeFinalize))
 		ctx := finalizeState.Context().WithEventManager(sdk.NewEventManager())
 		rsp, err := app.preBlocker(ctx, req)
 		if err != nil {
@@ -784,7 +681,7 @@ func (app *BaseApp) beginBlock(_ *abci.RequestFinalizeBlock) (sdk.BeginBlock, er
 	)
 
 	if app.beginBlocker != nil {
-		resp, err = app.beginBlocker(app.getState(execModeFinalize).Context())
+		resp, err = app.beginBlocker(app.StateManager.GetState(sdk.ExecMode(execModeFinalize)).Context())
 		if err != nil {
 			return resp, err
 		}
@@ -846,7 +743,7 @@ func (app *BaseApp) endBlock(_ context.Context) (sdk.EndBlock, error) {
 	var endblock sdk.EndBlock
 
 	if app.endBlocker != nil {
-		eb, err := app.endBlocker(app.getState(execModeFinalize).Context())
+		eb, err := app.endBlocker(app.StateManager.GetState(sdk.ExecMode(execModeFinalize)).Context())
 		if err != nil {
 			return endblock, err
 		}

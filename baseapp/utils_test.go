@@ -8,10 +8,8 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"reflect"
 	"strconv"
 	"testing"
-	"unsafe"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
@@ -324,17 +322,11 @@ func testLoadVersionHelper(t *testing.T, app *baseapp.BaseApp, expectedHeight in
 }
 
 func getCheckStateCtx(app *baseapp.BaseApp) sdk.Context {
-	v := reflect.ValueOf(app).Elem()
-	f := v.FieldByName("checkState")
-	rf := reflect.NewAt(f.Type(), unsafe.Pointer(f.UnsafeAddr())).Elem()
-	return rf.MethodByName("Context").Call(nil)[0].Interface().(sdk.Context)
+	return app.StateManager.GetState(sdk.ExecModeCheck).Context()
 }
 
 func getFinalizeBlockStateCtx(app *baseapp.BaseApp) sdk.Context {
-	v := reflect.ValueOf(app).Elem()
-	f := v.FieldByName("finalizeBlockState")
-	rf := reflect.NewAt(f.Type(), unsafe.Pointer(f.UnsafeAddr())).Elem()
-	return rf.MethodByName("Context").Call(nil)[0].Interface().(sdk.Context)
+	return app.StateManager.GetState(sdk.ExecModeFinalize).Context()
 }
 
 func parseTxMemo(t *testing.T, tx sdk.Tx) (counter int64, failOnAnte bool) {

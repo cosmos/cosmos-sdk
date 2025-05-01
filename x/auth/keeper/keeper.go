@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	gogotypes "github.com/cosmos/gogoproto/types"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/core/address"
@@ -91,6 +93,10 @@ type AccountKeeper struct {
 	permAddrs    map[string]types.PermissionsForAddress
 	bech32Prefix string
 
+	// enableUnorderedTxs enables unordered transaction support.
+	// This boolean helps sigverify ante handlers to determine if they should process unordered transactions.
+	enableUnorderedTxs bool
+
 	// The prototypical AccountI constructor.
 	proto func() sdk.AccountI
 
@@ -106,6 +112,17 @@ type AccountKeeper struct {
 	UnorderedNonces collections.KeySet[collections.Pair[int64, []byte]]
 }
 
+type InitOption func(*AccountKeeper)
+
+// WithUnorderedTransactions enables unordered transaction support.
+// When true, sigverify ante handlers will validate and process unordered transactions.
+// When false, sigverify ante handlers will reject unordered transactions.
+func WithUnorderedTransactions(enable bool) InitOption {
+	return func(ak *AccountKeeper) {
+		ak.enableUnorderedTxs = enable
+	}
+}
+
 var _ AccountKeeperI = &AccountKeeper{}
 
 // NewAccountKeeper returns a new AccountKeeperI that uses go-amino to
@@ -116,7 +133,7 @@ var _ AccountKeeperI = &AccountKeeper{}
 // may use auth.Keeper to access the accounts permissions map.
 func NewAccountKeeper(
 	cdc codec.BinaryCodec, storeService store.KVStoreService, proto func() sdk.AccountI,
-	maccPerms map[string][]string, ac address.Codec, bech32Prefix, authority string,
+	maccPerms map[string][]string, ac address.Codec, bech32Prefix, authority string, opts ...InitOption,
 ) AccountKeeper {
 	permAddrs := make(map[string]types.PermissionsForAddress)
 	for name, perms := range maccPerms {
@@ -143,7 +160,15 @@ func NewAccountKeeper(
 		panic(err)
 	}
 	ak.Schema = schema
+
+	for _, opt := range opts {
+		opt(&ak)
+	}
 	return ak
+}
+
+func (ak AccountKeeper) UnorderedTransactionsEnabled() bool {
+	return ak.enableUnorderedTxs
 }
 
 // GetAuthority returns the x/auth module's authority.
@@ -181,13 +206,39 @@ func (ak AccountKeeper) GetSequence(ctx context.Context, addr sdk.AccAddress) (u
 	return acc.GetSequence(), nil
 }
 
+func (ak AccountKeeper) getAccountNumberLegacy(ctx context.Context) (uint64, error) {
+	store := ak.storeService.OpenKVStore(ctx)
+	b, err := store.Get(types.LegacyGlobalAccountNumberKey)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get legacy account number: %w", err)
+	}
+	v := new(gogotypes.UInt64Value)
+	if err := v.Unmarshal(b); err != nil {
+		return 0, fmt.Errorf("failed to unmarshal legacy account number: %w", err)
+	}
+	return v.Value, nil
+}
+
 // NextAccountNumber returns and increments the global account number counter.
 // If the global account number is not set, it initializes it with value 0.
 func (ak AccountKeeper) NextAccountNumber(ctx context.Context) uint64 {
-	n, err := ak.AccountNumber.Next(ctx)
+	n, err := collections.Item[uint64](ak.AccountNumber).Get(ctx)
+	if err != nil && errors.Is(err, collections.ErrNotFound) {
+		// this won't happen in the tip of production network,
+		// but can happen when query historical states,
+		// fallback to old key for backward-compatibility.
+		// for more info, see https://github.com/cosmos/cosmos-sdk/issues/23741
+		n, err = ak.getAccountNumberLegacy(ctx)
+	}
+
 	if err != nil {
 		panic(err)
 	}
+
+	if err := ak.AccountNumber.Set(ctx, n+1); err != nil {
+		panic(err)
+	}
+
 	return n
 }
 

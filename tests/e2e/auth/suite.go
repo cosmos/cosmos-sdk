@@ -1274,7 +1274,7 @@ func TestGetBroadcastCommandWithoutOfflineFlag(t *testing.T) {
 }
 
 // TestTxWithoutPublicKey makes sure sending a proto tx message without the
-// public key doesn't cause any error in the RPC layer (broadcast).
+// public key causes an error - node will panic but recover.
 // See https://github.com/cosmos/cosmos-sdk/issues/7585 for more details.
 func (s *E2ETestSuite) TestTxWithoutPublicKey() {
 	val1 := s.network.Validators[0]

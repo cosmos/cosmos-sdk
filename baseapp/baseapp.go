@@ -427,7 +427,7 @@ func (app *BaseApp) Init() error {
 	}
 
 	// needed for the export command which inits from store but never calls initchain
-	app.StateManager.SetState(sdk.ExecModeCheck, app.cms.CacheMultiStore(), emptyHeader, app.logger, app.streamingManager, app.minGasPrices)
+	app.StateManager.ResetState(sdk.ExecModeCheck, app.cms.CacheMultiStore(), emptyHeader, app.logger, app.streamingManager, app.minGasPrices)
 	app.Seal()
 
 	return app.cms.GetPruning().Validate()
@@ -668,6 +668,7 @@ func (app *BaseApp) preBlock(req *abci.RequestFinalizeBlock) ([]abci.Event, erro
 			gasMeter := app.getBlockGasMeter(ctx)
 			ctx = ctx.WithBlockGasMeter(gasMeter)
 			finalizeState.SetContext(ctx)
+			app.StateManager.SetState(sdk.ExecModeFinalize, finalizeState)
 		}
 		events = ctx.EventManager().ABCIEvents()
 	}
@@ -681,7 +682,7 @@ func (app *BaseApp) beginBlock(_ *abci.RequestFinalizeBlock) (sdk.BeginBlock, er
 	)
 
 	if app.beginBlocker != nil {
-		resp, err = app.beginBlocker(app.StateManager.GetState(sdk.ExecMode(execModeFinalize)).Context())
+		resp, err = app.beginBlocker(app.StateManager.GetState(sdk.ExecModeFinalize).Context())
 		if err != nil {
 			return resp, err
 		}

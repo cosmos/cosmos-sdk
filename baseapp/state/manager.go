@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"cosmossdk.io/core/header"
@@ -39,7 +40,29 @@ func (m *Manager) GetState(mode sdk.ExecMode) *State {
 	}
 }
 
-func (m *Manager) SetState(mode sdk.ExecMode, ms types.CacheMultiStore, h cmtproto.Header, logger log.Logger, sm types.StreamingManager, minGasPrices sdk.DecCoins) {
+func (m *Manager) SetState(mode sdk.ExecMode, state *State) {
+	m.mut.Lock()
+	defer m.mut.Unlock()
+
+	switch mode {
+	case sdk.ExecModeCheck:
+		m.checkState = state
+
+	case sdk.ExecModePrepareProposal:
+		m.prepareProposalState = state
+
+	case sdk.ExecModeProcessProposal:
+		m.processProposalState = state
+
+	case sdk.ExecModeFinalize:
+		m.finalizeBlockState = state
+
+	default:
+		panic(fmt.Sprintf("invalid runTxMode for clearState: %d", mode))
+	}
+}
+
+func (m *Manager) ResetState(mode sdk.ExecMode, ms types.CacheMultiStore, h cmtproto.Header, logger log.Logger, sm types.StreamingManager, minGasPrices sdk.DecCoins) {
 	headerInfo := header.Info{
 		Height:  h.Height,
 		Time:    h.Time,

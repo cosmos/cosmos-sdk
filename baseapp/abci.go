@@ -66,8 +66,8 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 	}
 
 	// initialize states with a correct header
-	app.StateManager.SetState(sdk.ExecModeFinalize, app.cms.CacheMultiStore(), initHeader, app.logger, app.streamingManager, app.minGasPrices)
-	app.StateManager.SetState(sdk.ExecModeCheck, app.cms.CacheMultiStore(), initHeader, app.logger, app.streamingManager, app.minGasPrices)
+	app.StateManager.ResetState(sdk.ExecModeFinalize, app.cms.CacheMultiStore(), initHeader, app.logger, app.streamingManager, app.minGasPrices)
+	app.StateManager.ResetState(sdk.ExecModeCheck, app.cms.CacheMultiStore(), initHeader, app.logger, app.streamingManager, app.minGasPrices)
 	finalizeState := app.StateManager.GetState(sdk.ExecModeFinalize)
 
 	// Store the consensus params in the BaseApp's param store. Note, this must be
@@ -99,6 +99,8 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 				Height:  req.InitialHeight,
 				Time:    req.Time,
 			}))
+		app.StateManager.SetState(sdk.ExecModeFinalize, finalizeState)
+		app.StateManager.SetState(sdk.ExecModeCheck, checkState)
 	}()
 
 	if app.initChainer == nil {
@@ -106,9 +108,8 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 	}
 
 	// add block gas meter for any genesis transactions (allow infinite gas)
-	finalizeState.SetContext(finalizeState.Context().WithBlockGasMeter(storetypes.NewInfiniteGasMeter()))
-
-	res, err := app.initChainer(finalizeState.Context(), req)
+	ctx := finalizeState.Context().WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
+	res, err := app.initChainer(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -408,7 +409,7 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 		NextValidatorsHash: req.NextValidatorsHash,
 		AppHash:            app.LastCommitID().Hash,
 	}
-	app.StateManager.SetState(sdk.ExecModePrepareProposal, app.cms.CacheMultiStore(), header, app.logger, app.streamingManager, app.minGasPrices)
+	app.StateManager.ResetState(sdk.ExecModePrepareProposal, app.cms.CacheMultiStore(), header, app.logger, app.streamingManager, app.minGasPrices)
 
 	// CometBFT must never call PrepareProposal with a height of 0.
 	//
@@ -434,6 +435,8 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 	prepareProposalState.SetContext(prepareProposalState.Context().
 		WithConsensusParams(app.GetConsensusParams(prepareProposalState.Context())).
 		WithBlockGasMeter(app.getBlockGasMeter(prepareProposalState.Context())))
+
+	app.StateManager.SetState(sdk.ExecModePrepareProposal, prepareProposalState)
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -493,7 +496,7 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 		NextValidatorsHash: req.NextValidatorsHash,
 		AppHash:            app.LastCommitID().Hash,
 	}
-	app.StateManager.SetState(sdk.ExecModeProcessProposal, app.cms.CacheMultiStore(), header, app.logger, app.streamingManager, app.minGasPrices)
+	app.StateManager.ResetState(sdk.ExecModeProcessProposal, app.cms.CacheMultiStore(), header, app.logger, app.streamingManager, app.minGasPrices)
 
 	// Since the application can get access to FinalizeBlock state and write to it,
 	// we must be sure to reset it in case ProcessProposal timeouts and is called
@@ -503,7 +506,7 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 	if req.Height > app.initialHeight {
 		// abort any running OE
 		app.optimisticExec.Abort()
-		app.StateManager.SetState(sdk.ExecModeFinalize, app.cms.CacheMultiStore(), header, app.logger, app.streamingManager, app.minGasPrices)
+		app.StateManager.ResetState(sdk.ExecModeFinalize, app.cms.CacheMultiStore(), header, app.logger, app.streamingManager, app.minGasPrices)
 	}
 
 	processProposalState := app.StateManager.GetState(sdk.ExecMode(execModeProcessProposal))
@@ -525,6 +528,7 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 		WithConsensusParams(app.GetConsensusParams(processProposalState.Context())).
 		WithBlockGasMeter(app.getBlockGasMeter(processProposalState.Context())))
 
+	app.StateManager.SetState(sdk.ExecModeProcessProposal, processProposalState)
 	defer func() {
 		if err := recover(); err != nil {
 			app.logger.Error(
@@ -741,7 +745,7 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 	// given that during block replay ProcessProposal is not executed by CometBFT.
 	finalizeState := app.StateManager.GetState(sdk.ExecMode(execModeFinalize))
 	if finalizeState == nil {
-		app.StateManager.SetState(sdk.ExecModeFinalize, app.cms.CacheMultiStore(), header, app.logger, app.streamingManager, app.minGasPrices)
+		app.StateManager.ResetState(sdk.ExecModeFinalize, app.cms.CacheMultiStore(), header, app.logger, app.streamingManager, app.minGasPrices)
 		finalizeState = app.StateManager.GetState(sdk.ExecModeFinalize)
 	}
 
@@ -765,6 +769,7 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 			ProposerAddress: req.ProposerAddress,
 			LastCommit:      req.DecidedLastCommit,
 		}))
+	app.StateManager.SetState(sdk.ExecModeFinalize, finalizeState)
 
 	// GasMeter must be set after we get a context with updated consensus params.
 	gasMeter := app.getBlockGasMeter(finalizeState.Context())
@@ -774,6 +779,7 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 		checkState.SetContext(checkState.Context().
 			WithBlockGasMeter(gasMeter).
 			WithHeaderHash(req.Hash))
+		app.StateManager.SetState(sdk.ExecModeCheck, checkState)
 	}
 
 	preblockEvents, err := app.preBlock(req)
@@ -802,6 +808,7 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 	// Reset the gas meter so that the AnteHandlers aren't required to
 	gasMeter = app.getBlockGasMeter(finalizeState.Context())
 	finalizeState.SetContext(finalizeState.Context().WithBlockGasMeter(gasMeter))
+	app.StateManager.SetState(sdk.ExecModeFinalize, finalizeState)
 
 	// Iterate over all raw transactions in the proposal and attempt to execute
 	// them, gathering the execution results.
@@ -982,7 +989,7 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 	//
 	// NOTE: This is safe because CometBFT holds a lock on the mempool for
 	// Commit. Use the header from this latest block.
-	app.StateManager.SetState(sdk.ExecModeCheck, app.cms.CacheMultiStore(), header, app.logger, app.streamingManager, app.minGasPrices)
+	app.StateManager.ResetState(sdk.ExecModeCheck, app.cms.CacheMultiStore(), header, app.logger, app.streamingManager, app.minGasPrices)
 
 	app.StateManager.ClearState(sdk.ExecModeFinalize)
 

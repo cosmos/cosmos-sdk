@@ -9,7 +9,7 @@ These tests have different goals and are used at different stages of the develop
 We advice, as a general rule, to use tests at all stages of the development cycle.
 It is adviced, as a chain developer, to test your application and modules in a similar way than the SDK.
 
-The rationale behind testing can be found in [ADR-59](https://docs.cosmos.network/main/architecture/adr-059-test-scopes.html).
+The rationale behind testing can be found in [ADR-59](https://docs.cosmos.network/main/build/architecture/adr-059-test-scopes).
 
 ## Unit Tests
 

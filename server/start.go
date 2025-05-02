@@ -611,7 +611,7 @@ func startApp(svrCtx *Context, appCreator types.AppCreator, opts StartCmdOptions
 	}
 
 	if isTestnet, ok := svrCtx.Viper.Get(KeyIsTestnet).(bool); ok && isTestnet {
-		app, err = testnetify(svrCtx, appCreator, db, traceWriter)
+		app, err = Testnetify(svrCtx, appCreator, db, traceWriter)
 		if err != nil {
 			return app, traceCleanupFn, err
 		}
@@ -726,9 +726,9 @@ you want to test the upgrade handler itself.
 	return cmd
 }
 
-// testnetify modifies both state and blockStore, allowing the provided operator address and local validator key to control the network
+// Testnetify modifies both state and blockStore, allowing the provided operator address and local validator key to control the network
 // that the state in the data folder represents. The chainID of the local genesis file is modified to match the provided chainID.
-func testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB, traceWriter io.WriteCloser) (types.Application, error) {
+func Testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB, traceWriter io.WriteCloser) (types.Application, error) {
 	config := ctx.Config
 
 	newChainID, ok := ctx.Viper.Get(KeyNewChainID).(string)
@@ -852,6 +852,7 @@ func testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB, tra
 
 	block.ChainID = newChainID
 	state.ChainID = newChainID
+	genDoc.ChainID = newChainID
 
 	block.LastBlockID = state.LastBlockID
 	block.LastCommit.BlockID = state.LastBlockID
@@ -886,6 +887,7 @@ func testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB, tra
 	seenCommit := blockStore.LoadSeenCommit(state.LastBlockHeight)
 	seenCommit.BlockID = state.LastBlockID
 	seenCommit.Round = vote.Round
+	seenCommit.Signatures[0].BlockIDFlag = cmttypes.BlockIDFlagCommit // in case validator 0 vote was absent in this commit
 	seenCommit.Signatures[0].Signature = vote.Signature
 	seenCommit.Signatures[0].ValidatorAddress = validatorAddress
 	seenCommit.Signatures[0].Timestamp = vote.Timestamp

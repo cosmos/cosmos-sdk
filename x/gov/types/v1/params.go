@@ -227,13 +227,7 @@ func (p Params) ValidateBasic() error {
 // based on a desired proposal duration, interpolating between the normal and expedited values.
 func (p Params) CalculateThresholdAndMinDeposit(duration time.Duration) (threshold string, minDeposit []types.Coin) {
 	// Ensure voting period ranges make sense
-	totalRange := p.VotingPeriod.Seconds() - p.ExpeditedVotingPeriod.Seconds()
-	var rate float64
-	if totalRange <= 0 {
-		// Fallback: use expedited values
-		return p.ExpeditedThreshold, p.ExpeditedMinDeposit
-	}
-	rate = (duration.Seconds() - p.ExpeditedVotingPeriod.Seconds()) / totalRange
+	rate := (duration.Seconds() - p.ExpeditedVotingPeriod.Seconds()) / (p.VotingPeriod.Seconds() - p.ExpeditedVotingPeriod.Seconds())
 	// Clamp between 0 and 1
 	if rate < 0 {
 		rate = 0

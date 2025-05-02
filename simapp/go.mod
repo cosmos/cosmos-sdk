@@ -4,7 +4,7 @@ go 1.23.2
 
 require (
 	cosmossdk.io/api v0.9.2
-	cosmossdk.io/client/v2 v2.0.0-beta.5.0.20241121152743-3dad36d9a29e
+	cosmossdk.io/client/v2 v2.0.0-beta.9
 	cosmossdk.io/collections v1.2.0 // indirect
 	cosmossdk.io/core v0.11.3
 	cosmossdk.io/depinject v1.2.0
@@ -12,16 +12,16 @@ require (
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/store v1.1.2
 	cosmossdk.io/tools/confix v0.1.2
-	cosmossdk.io/x/circuit v0.2.0-rc.2
-	cosmossdk.io/x/evidence v0.2.0-rc.2
-	cosmossdk.io/x/feegrant v0.2.0-rc.2
-	cosmossdk.io/x/nft v0.2.0-rc.2
+	cosmossdk.io/x/circuit v0.2.0
+	cosmossdk.io/x/evidence v0.2.0
+	cosmossdk.io/x/feegrant v0.2.0
+	cosmossdk.io/x/nft v0.2.0
 	cosmossdk.io/x/tx v0.14.0
-	cosmossdk.io/x/upgrade v0.2.0-rc.2
+	cosmossdk.io/x/upgrade v0.2.0
 	github.com/cometbft/cometbft v0.38.17
 	github.com/cosmos/cosmos-db v1.1.1
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
-	github.com/cosmos/cosmos-sdk v0.53.0-rc.4
+	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/spf13/cast v1.7.1
 	github.com/spf13/cobra v1.9.1
@@ -225,11 +225,6 @@ require (
 // replace (
 // 	<temporary replace>
 // )
-
-replace (
-	cosmossdk.io/client/v2 => ../client/v2
-	cosmossdk.io/x/circuit => ../x/circuit
-)
 
 // Below are the long-lived replace of the SimApp
 replace (

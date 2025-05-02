@@ -3,6 +3,7 @@ package errors
 import (
 	stdlib "errors"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/pkg/errors"
@@ -261,6 +262,16 @@ func (s *errorsTestSuite) TestGRPCStatus() {
 }
 
 func (s *errorsTestSuite) TestDoubleRegister() {
+	s.Require().NotPanics(func() {
+		_ = Register(testCodespace, 50, "Internal IO error")
+		_ = Register(testCodespace, 50, "Internal IO error")
+	})
+}
+
+func (s *errorsTestSuite) TestDoubleRegisteDuplicateErrorRegistration() {
+	os.Setenv(EnvSuppressErrorDuplicateRegister, "true")
+	defer os.Unsetenv(EnvSuppressErrorDuplicateRegister)
+
 	s.Require().NotPanics(func() {
 		_ = Register(testCodespace, 50, "Internal IO error")
 		_ = Register(testCodespace, 50, "Internal IO error")

@@ -77,6 +77,8 @@ type (
 	TxWithTimeoutTimeStamp interface {
 		Tx
 
+		// GetTimeoutTimeStamp gets the timeout timestamp for the tx.
+		// IMPORTANT: when the uint value is needed here, you MUST use UnixNano.
 		GetTimeoutTimeStamp() time.Time
 	}
 

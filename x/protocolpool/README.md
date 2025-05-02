@@ -10,6 +10,8 @@ sidebar_position: 1
 
 This module is `supplemental`; it is not required to run a Cosmos SDK chain. `x/protocolpool` enhances the community pool functionality provided by `x/distribution` and enables custom modules to further extend the community pool.
 
+Note: _as long as an external commmunity pool keeper (here, `x/protocolpool`) is wired in DI configs, `x/distribution` will automatically use it for its external pool._
+
 ## Usage Limitations
 
 The following `x/distribution` handlers will now return an error when the `protocolpool` module is used with `x/distribution`:

@@ -2,7 +2,7 @@ package module
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/group/keeper"
+	"github.com/cosmos/cosmos-sdk/x/group/keeper" //nolint:staticcheck // deprecated and to be removed
 )
 
 // EndBlocker called at every block, updates proposal's `FinalTallyResult` and

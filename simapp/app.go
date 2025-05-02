@@ -8,9 +8,6 @@ import (
 	"io"
 	"maps"
 
-	"io"
-	"maps"
-
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"

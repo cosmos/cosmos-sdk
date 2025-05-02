@@ -971,6 +971,8 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 	// Commit. Use the header from this latest block.
 	app.setState(execModeCheck, header)
 
+	app.rs.Store(newRunState(header))               // atomically publish new state
+
 	app.finalizeBlockState = nil
 
 	if app.prepareCheckStater != nil {
@@ -1239,6 +1241,7 @@ func (app *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, check
 
 	var header *cmtproto.Header
 	isLatest := height == 0
+	
 	for _, state := range []*state{
 		app.checkState,
 		app.finalizeBlockState,

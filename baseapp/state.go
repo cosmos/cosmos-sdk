@@ -6,6 +6,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 )
 
 type state struct {
@@ -33,4 +34,17 @@ func (st *state) Context() sdk.Context {
 	st.mtx.RLock()
 	defer st.mtx.RUnlock()
 	return st.ctx
+}
+
+// runState is stored in an atomic.Pointer to prevent data races between Commit and CreateQueryContext
+type runState struct {
+	header cmtproto.Header
+	// additional fields, if necessary
+}
+
+// newRunState creates new runState
+func newRunState(header cmtproto.Header) *runState {
+	return &runState{
+		header: header,
+	}
 }

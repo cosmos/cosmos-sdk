@@ -181,7 +181,6 @@ type BaseApp struct {
 func NewBaseApp(
 	name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
 ) *BaseApp {
-
 	app := &BaseApp{
 		logger:           logger.With(log.ModuleKey, "baseapp"),
 		name:             name,

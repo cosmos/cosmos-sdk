@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/baseapp/state"
 	"net/url"
 	"reflect"
 	"strconv"
@@ -29,6 +28,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/baseapp/state"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -323,6 +323,8 @@ func testLoadVersionHelper(t *testing.T, app *baseapp.BaseApp, expectedHeight in
 	require.Equal(t, expectedHeight, lastHeight)
 	require.Equal(t, expectedID, lastID)
 }
+
+// note: we use reflection in this test because we do not want to make the baseapp state publicly available
 
 func reflectGetStateCtx(app *baseapp.BaseApp, mode state.ExecMode) sdk.Context {
 	v := reflect.ValueOf(app).Elem()

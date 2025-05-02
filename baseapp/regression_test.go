@@ -1,8 +1,6 @@
 package baseapp
 
 import (
-	"github.com/cosmos/cosmos-sdk/baseapp/config"
-	"github.com/cosmos/cosmos-sdk/baseapp/state"
 	"testing"
 
 	dbm "github.com/cosmos/cosmos-db"
@@ -11,6 +9,9 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	storemetrics "cosmossdk.io/store/metrics"
+
+	"github.com/cosmos/cosmos-sdk/baseapp/config"
+	"github.com/cosmos/cosmos-sdk/baseapp/state"
 )
 
 // Ensures that error checks are performed before sealing the app.

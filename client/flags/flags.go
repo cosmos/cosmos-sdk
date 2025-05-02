@@ -150,6 +150,8 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 		GasFlagAuto, GasFlagAuto, FlagFees, DefaultGasLimit))
 
 	cmd.MarkFlagsMutuallyExclusive(FlagTimeoutHeight, TimeoutDuration)
+	// unordered transactions must not have sequence values.
+	cmd.MarkFlagsMutuallyExclusive(FlagUnordered, FlagSequence)
 	cmd.MarkFlagsRequiredTogether(FlagUnordered, TimeoutDuration)
 
 	AddKeyringFlags(f)

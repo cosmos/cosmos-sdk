@@ -15,10 +15,12 @@ import (
 // of their initial conditions, and subsequent block height / times.
 func (suite *KeeperTestSuite) TestEpochInfoBeginBlockChanges() {
 	block1Time := time.Unix(1656907200, 0).UTC()
-	const defaultIdentifier = "hourly"
-	const defaultDuration = time.Hour
-	// eps is short for epsilon - in this case a negligible amount of time.
-	const eps = time.Nanosecond
+	const (
+		defaultIdentifier = "hourly"
+		defaultDuration   = time.Hour
+		// eps is short for epsilon - in this case a negligible amount of time.
+		eps = time.Nanosecond
+	)
 
 	tests := map[string]struct {
 		// if identifier, duration is not set, we make it defaultIdentifier and defaultDuration.
@@ -69,8 +71,8 @@ func (suite *KeeperTestSuite) TestEpochInfoBeginBlockChanges() {
 		},
 		"StartTime in future won't get ticked on first block": {
 			initialEpochInfo: types.EpochInfo{StartTime: block1Time.Add(time.Second), CurrentEpoch: 0, CurrentEpochStartTime: time.Time{}},
-			// currentEpochStartHeight is 1 because that's when the timer was created on-chain
-			expEpochInfo: types.EpochInfo{StartTime: block1Time.Add(time.Second), CurrentEpoch: 0, CurrentEpochStartTime: time.Time{}, CurrentEpochStartHeight: 1},
+			// currentEpochStartHeight is 0 since it hasn't started or been triggered
+			expEpochInfo: types.EpochInfo{StartTime: block1Time.Add(time.Second), CurrentEpoch: 0, CurrentEpochStartTime: time.Time{}, CurrentEpochStartHeight: 0},
 		},
 		"StartTime in past will get ticked on first block": {
 			initialEpochInfo: types.EpochInfo{StartTime: block1Time.Add(-time.Second), CurrentEpoch: 0, CurrentEpochStartTime: time.Time{}},

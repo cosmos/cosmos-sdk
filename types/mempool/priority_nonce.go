@@ -2,7 +2,6 @@ package mempool
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"math"
 	"sync"
@@ -222,15 +221,9 @@ func (mp *PriorityNonceMempool[C]) Insert(ctx context.Context, tx sdk.Tx) error 
 	sig := sigs[0]
 	sender := sig.Signer.String()
 	priority := mp.cfg.TxPriority.GetTxPriority(ctx, tx)
-	nonce := sig.Sequence
-
-	// if it's an unordered tx, we use the timeout timestamp instead of the nonce
-	if unordered, ok := tx.(sdk.TxWithUnordered); ok && unordered.GetUnordered() {
-		timestamp := unordered.GetTimeoutTimeStamp().UnixNano()
-		if timestamp < 0 {
-			return errors.New("invalid timestamp value")
-		}
-		nonce = uint64(timestamp)
+	nonce, err := ChooseNonce(sig.Sequence, tx)
+	if err != nil {
+		return err
 	}
 
 	key := txMeta[C]{nonce: nonce, priority: priority, sender: sender}
@@ -467,15 +460,9 @@ func (mp *PriorityNonceMempool[C]) Remove(tx sdk.Tx) error {
 
 	sig := sigs[0]
 	sender := sig.Signer.String()
-	nonce := sig.Sequence
-
-	// if it's an unordered tx, we use the timeout timestamp instead of the nonce
-	if unordered, ok := tx.(sdk.TxWithUnordered); ok && unordered.GetUnordered() {
-		timestamp := unordered.GetTimeoutTimeStamp().UnixNano()
-		if timestamp < 0 {
-			return errors.New("invalid timestamp value")
-		}
-		nonce = uint64(timestamp)
+	nonce, err := ChooseNonce(sig.Sequence, tx)
+	if err != nil {
+		return err
 	}
 
 	scoreKey := txMeta[C]{nonce: nonce, sender: sender}

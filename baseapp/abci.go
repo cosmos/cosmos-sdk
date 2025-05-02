@@ -95,14 +95,14 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 			}))
 	}()
 
-	if app.initChainer == nil {
+	if app.abciHandlers.InitChainer == nil {
 		return &abci.ResponseInitChain{}, nil
 	}
 
 	// add block gas meter for any genesis transactions (allow infinite gas)
 	app.finalizeBlockState.SetContext(app.finalizeBlockState.Context().WithBlockGasMeter(storetypes.NewInfiniteGasMeter()))
 
-	res, err := app.initChainer(app.finalizeBlockState.Context(), req)
+	res, err := app.abciHandlers.InitChainer(app.finalizeBlockState.Context(), req)
 	if err != nil {
 		return nil, err
 	}
@@ -351,7 +351,7 @@ func (app *BaseApp) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, er
 		return nil, fmt.Errorf("unknown RequestCheckTx type: %s", req.Type)
 	}
 
-	if app.checkTxHandler == nil {
+	if app.abciHandlers.CheckTxHandler == nil {
 		gInfo, result, anteEvents, err := app.runTx(mode, req.Tx, nil)
 		if err != nil {
 			return sdkerrors.ResponseCheckTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, anteEvents, app.trace), nil
@@ -371,7 +371,7 @@ func (app *BaseApp) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, er
 		return app.runTx(mode, txBytes, tx)
 	}
 
-	return app.checkTxHandler(runTx, req)
+	return app.abciHandlers.CheckTxHandler(runTx, req)
 }
 
 // PrepareProposal implements the PrepareProposal ABCI method and returns a
@@ -388,7 +388,7 @@ func (app *BaseApp) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, er
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/cometbft/cometbft/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abci.ResponsePrepareProposal, err error) {
-	if app.prepareProposal == nil {
+	if app.abciHandlers.PrepareProposalHandler == nil {
 		return nil, errors.New("PrepareProposal handler not set")
 	}
 
@@ -441,7 +441,7 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 		}
 	}()
 
-	resp, err = app.prepareProposal(app.prepareProposalState.Context(), req)
+	resp, err = app.abciHandlers.PrepareProposalHandler(app.prepareProposalState.Context(), req)
 	if err != nil {
 		app.logger.Error("failed to prepare proposal", "height", req.Height, "time", req.Time, "err", err)
 		return &abci.ResponsePrepareProposal{Txs: req.Txs}, nil
@@ -466,7 +466,7 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/cometbft/cometbft/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abci.ResponseProcessProposal, err error) {
-	if app.processProposal == nil {
+	if app.abciHandlers.ProcessProposalHandler == nil {
 		return nil, errors.New("ProcessProposal handler not set")
 	}
 
@@ -530,7 +530,7 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 		}
 	}()
 
-	resp, err = app.processProposal(app.processProposalState.Context(), req)
+	resp, err = app.abciHandlers.ProcessProposalHandler(app.processProposalState.Context(), req)
 	if err != nil {
 		app.logger.Error("failed to process proposal", "height", req.Height, "time", req.Time, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
 		return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
@@ -577,7 +577,7 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 		ctx = sdk.NewContext(ms, emptyHeader, false, app.logger).WithStreamingManager(app.streamingManager)
 	}
 
-	if app.extendVote == nil {
+	if app.abciHandlers.ExtendVoteHandler == nil {
 		return nil, errors.New("application ExtendVote handler not set")
 	}
 
@@ -619,7 +619,7 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 		}
 	}()
 
-	resp, err = app.extendVote(ctx, req)
+	resp, err = app.abciHandlers.ExtendVoteHandler(ctx, req)
 	if err != nil {
 		app.logger.Error("failed to extend vote", "height", req.Height, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
 		return &abci.ResponseExtendVote{VoteExtension: []byte{}}, nil
@@ -635,7 +635,7 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 // phase. The response MUST be deterministic. An error is returned if vote
 // extensions are not enabled or if verifyVoteExt fails or panics.
 func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (resp *abci.ResponseVerifyVoteExtension, err error) {
-	if app.verifyVoteExt == nil {
+	if app.abciHandlers.VerifyVoteExtensionHandler == nil {
 		return nil, errors.New("application VerifyVoteExtension handler not set")
 	}
 
@@ -689,7 +689,7 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 			Hash:    req.Hash,
 		})
 
-	resp, err = app.verifyVoteExt(ctx, req)
+	resp, err = app.abciHandlers.VerifyVoteExtensionHandler(ctx, req)
 	if err != nil {
 		app.logger.Error("failed to verify vote extension", "height", req.Height, "err", err)
 		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
@@ -937,8 +937,8 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 	header := app.finalizeBlockState.Context().BlockHeader()
 	retainHeight := app.GetBlockRetentionHeight(header.Height)
 
-	if app.precommiter != nil {
-		app.precommiter(app.finalizeBlockState.Context())
+	if app.abciHandlers.Precommiter != nil {
+		app.abciHandlers.Precommiter(app.finalizeBlockState.Context())
 	}
 
 	rms, ok := app.cms.(*rootmulti.Store)
@@ -973,8 +973,8 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 
 	app.finalizeBlockState = nil
 
-	if app.prepareCheckStater != nil {
-		app.prepareCheckStater(app.checkState.Context())
+	if app.abciHandlers.PrepareCheckStater != nil {
+		app.abciHandlers.PrepareCheckStater(app.checkState.Context())
 	}
 
 	// The SnapshotIfApplicable method will create the snapshot by starting the goroutine

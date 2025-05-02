@@ -38,6 +38,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+
+* (x/bank) [#24660](https://github.com/cosmos/cosmos-sdk/pull/24660) Improve performance of the `GetAllBalances` and `GetAccountsBalances` keeper methods.
+
 ### Deprecated
 
 * (x/nft) [#24575](https://github.com/cosmos/cosmos-sdk/pull/24575) Deprecate the `x/nft` module in the Cosmos SDK repository.  This module will not be maintained to the extent that our core modules will and will be kept in a [legacy repo](https://github.com/cosmos/cosmos-legacy).
@@ -90,7 +94,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (server) [#24072](https://github.com/cosmos/cosmos-sdk/pull/24072) Return BlockHeader by shallow copy in server Context.
 * (x/bank) [#24053](https://github.com/cosmos/cosmos-sdk/pull/24053) Resolve a foot-gun by swapping send restrictions check in `InputOutputCoins` before coin deduction.
 * (codec/types) [#24336](https://github.com/cosmos/cosmos-sdk/pull/24336) Most types definitions were moved to `github.com/cosmos/gogoproto/types/any` with aliases to these left in `codec/types` so that there should be no breakage to existing code. This allows protobuf generated code to optionally reference the SDK's custom `Any` type without a direct dependency on the SDK. This can be done by changing the `protoc` `M` parameter for `any.proto` to `Mgoogle/protobuf/any.proto=github.com/cosmos/gogoproto/types/any`.
-* (x/bank) [#24148](https://github.com/cosmos/cosmos-sdk/pull/24148) Improve performance of the `GetAllBalances` and `GetAccountsBalances` keeper methods.
 
 ### Bug Fixes
 

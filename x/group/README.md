@@ -4,6 +4,8 @@ sidebar_position: 1
 
 # `x/group`
 
+⚠️ **DEPRECATED**: This package is deprecated and will be removed in the next major release.  The `x/group` module will be moved to a separate repo `github.com/cosmos/cosmos-sdk-legacy`.
+
 ## Abstract
 
 The following documents specify the group module.

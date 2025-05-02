@@ -56,8 +56,7 @@ type AnteTestSuite struct {
 	encCfg         moduletestutil.TestEncodingConfig
 }
 
-// SetupTest setups a new test, with new app, context, and anteHandler.
-func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
+func setupSuite(t *testing.T, isCheckTx, enableUnorderedTxs bool) *AnteTestSuite {
 	t.Helper()
 
 	suite := &AnteTestSuite{}
@@ -82,7 +81,7 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 
 	suite.accountKeeper = keeper.NewAccountKeeper(
 		suite.encCfg.Codec, runtime.NewKVStoreService(key), types.ProtoBaseAccount, maccPerms, authcodec.NewBech32Codec("cosmos"),
-		sdk.Bech32MainPrefix, types.NewModuleAddress("gov").String(),
+		sdk.Bech32MainPrefix, types.NewModuleAddress("gov").String(), keeper.WithUnorderedTransactions(enableUnorderedTxs),
 	)
 	suite.accountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)
 	err := suite.accountKeeper.Params.Set(suite.ctx, types.DefaultParams())
@@ -112,6 +111,18 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
 	return suite
+}
+
+// SetupTest setups a new test, with new app, context, and anteHandler.
+func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
+	t.Helper()
+	return setupSuite(t, isCheckTx, false)
+}
+
+// SetupTest setups a new test, with new app, context, and anteHandler.
+func SetupTestSuiteWithUnordered(t *testing.T, isCheckTx, enableUnorderedTxs bool) *AnteTestSuite {
+	t.Helper()
+	return setupSuite(t, isCheckTx, enableUnorderedTxs)
 }
 
 func (suite *AnteTestSuite) CreateTestAccounts(numAccs int) []TestAccount {
@@ -216,63 +227,10 @@ func (suite *AnteTestSuite) RunTestCase(t *testing.T, tc TestCase, args TestCase
 }
 
 // CreateTestTx is a helper function to create a tx given multiple inputs.
-func (suite *AnteTestSuite) CreateTestTx(
+func (suite *AnteTestSuite) createTx(
 	ctx sdk.Context, privs []cryptotypes.PrivKey,
 	accNums, accSeqs []uint64,
-	chainID string, signMode signing.SignMode,
-) (xauthsigning.Tx, error) {
-	// First round: we gather all the signer infos. We use the "set empty
-	// signature" hack to do that.
-	var sigsV2 []signing.SignatureV2
-	for i, priv := range privs {
-		sigV2 := signing.SignatureV2{
-			PubKey: priv.PubKey(),
-			Data: &signing.SingleSignatureData{
-				SignMode:  signMode,
-				Signature: nil,
-			},
-			Sequence: accSeqs[i],
-		}
-
-		sigsV2 = append(sigsV2, sigV2)
-	}
-	err := suite.txBuilder.SetSignatures(sigsV2...)
-	if err != nil {
-		return nil, err
-	}
-
-	// Second round: all signer infos are set, so each signer can sign.
-	sigsV2 = []signing.SignatureV2{}
-	for i, priv := range privs {
-		signerData := xauthsigning.SignerData{
-			Address:       sdk.AccAddress(priv.PubKey().Address()).String(),
-			ChainID:       chainID,
-			AccountNumber: accNums[i],
-			Sequence:      accSeqs[i],
-			PubKey:        priv.PubKey(),
-		}
-		sigV2, err := tx.SignWithPrivKey(
-			ctx, signMode, signerData,
-			suite.txBuilder, priv, suite.clientCtx.TxConfig, accSeqs[i])
-		if err != nil {
-			return nil, err
-		}
-
-		sigsV2 = append(sigsV2, sigV2)
-	}
-	err = suite.txBuilder.SetSignatures(sigsV2...)
-	if err != nil {
-		return nil, err
-	}
-
-	return suite.txBuilder.GetTx(), nil
-}
-
-func (suite *AnteTestSuite) CreateTestUnorderedTx(
-	ctx sdk.Context, privs []cryptotypes.PrivKey,
-	accNums, accSeqs []uint64,
-	chainID string, signMode signing.SignMode,
-	unordered bool, unorderedTimeout time.Time,
+	chainID string, signMode signing.SignMode, unordered bool, unorderedTimeout time.Time,
 ) (xauthsigning.Tx, error) {
 	suite.txBuilder.SetUnordered(unordered)
 	suite.txBuilder.SetTimeoutTimestamp(unorderedTimeout)
@@ -322,4 +280,22 @@ func (suite *AnteTestSuite) CreateTestUnorderedTx(
 	}
 
 	return suite.txBuilder.GetTx(), nil
+}
+
+// CreateTestTx is a helper function to create a tx given multiple inputs.
+func (suite *AnteTestSuite) CreateTestTx(
+	ctx sdk.Context, privs []cryptotypes.PrivKey,
+	accNums, accSeqs []uint64,
+	chainID string, signMode signing.SignMode,
+) (xauthsigning.Tx, error) {
+	return suite.createTx(ctx, privs, accNums, accSeqs, chainID, signMode, false, time.Time{})
+}
+
+func (suite *AnteTestSuite) CreateTestUnorderedTx(
+	ctx sdk.Context, privs []cryptotypes.PrivKey,
+	accNums, accSeqs []uint64,
+	chainID string, signMode signing.SignMode,
+	unordered bool, unorderedTimeout time.Time,
+) (xauthsigning.Tx, error) {
+	return suite.createTx(ctx, privs, accNums, accSeqs, chainID, signMode, unordered, unorderedTimeout)
 }

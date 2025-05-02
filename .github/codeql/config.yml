@@ -8,4 +8,4 @@ paths-ignore:
   - api
   - '**/*_test.go'
   - '**/*.pulsar.go'
-  - '**/*.pb.gp'
+  - '**/*.pb.go'

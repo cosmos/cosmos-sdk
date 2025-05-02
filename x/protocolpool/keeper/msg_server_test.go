@@ -366,7 +366,7 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 			expErrMsg: "decoding bech32 failed:",
 		},
 		{
-			name: "remove a continuous fund that already was removed - no error",
+			name: "remove a continuous fund that already was removed - error does not exist",
 			msg: &types.MsgCancelContinuousFund{
 				Authority: validAuthority,
 				Recipient: validRecipient.String(),
@@ -377,7 +377,7 @@ func (suite *KeeperTestSuite) TestCancelContinuousFund() {
 				// Ensure the continuous fund is not set so that Remove fails.
 				_ = suite.poolKeeper.ContinuousFunds.Remove(suite.ctx, validRecipient)
 			},
-			expErr: false,
+			expErr: true,
 		},
 		{
 			name: "valid cancel continuous fund",

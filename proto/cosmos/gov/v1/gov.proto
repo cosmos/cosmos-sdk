@@ -104,7 +104,7 @@ message Proposal {
   // this field that can be used to set a desired proposal duration which
   // will be used to generate the required quorum for passing
   google.protobuf.Duration duration = 16
-      [(gogoproto.stdduration) = true, (gogoproto.jsontag) = "max_deposit_period,omitempty"];
+      [(gogoproto.stdduration) = true, (cosmos_proto.field_added_in) = "cosmos-sdk 0.54"];
 }
 
 // ProposalStatus enumerates the valid statuses of a proposal.

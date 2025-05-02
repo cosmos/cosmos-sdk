@@ -1,4 +1,4 @@
-package baseapp
+package baseapp_test
 
 import (
 	"context"
@@ -11,6 +11,7 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 )
 
@@ -41,13 +42,13 @@ var distKey1 = storetypes.NewKVStoreKey("distKey1")
 
 func TestABCI_MultiListener_StateChanges(t *testing.T) {
 	anteKey := []byte("ante-key")
-	anteOpt := func(bapp *BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
-	distOpt := func(bapp *BaseApp) { bapp.MountStores(distKey1) }
+	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
+	distOpt := func(bapp *baseapp.BaseApp) { bapp.MountStores(distKey1) }
 	mockListener1 := NewMockABCIListener("lis_1")
 	mockListener2 := NewMockABCIListener("lis_2")
 	streamingManager := storetypes.StreamingManager{ABCIListeners: []storetypes.ABCIListener{&mockListener1, &mockListener2}}
-	streamingManagerOpt := func(bapp *BaseApp) { bapp.SetStreamingManager(streamingManager) }
-	addListenerOpt := func(bapp *BaseApp) { bapp.CommitMultiStore().AddListeners([]storetypes.StoreKey{distKey1}) }
+	streamingManagerOpt := func(bapp *baseapp.BaseApp) { bapp.SetStreamingManager(streamingManager) }
+	addListenerOpt := func(bapp *baseapp.BaseApp) { bapp.CommitMultiStore().AddListeners([]storetypes.StoreKey{distKey1}) }
 	suite := NewBaseAppSuite(t, anteOpt, distOpt, streamingManagerOpt, addListenerOpt)
 
 	_, err := suite.baseApp.InitChain(
@@ -81,7 +82,7 @@ func TestABCI_MultiListener_StateChanges(t *testing.T) {
 
 			sKey := fmt.Appendf(nil, "distKey%d", i)
 			sVal := fmt.Appendf(nil, "distVal%d", i)
-			store := suite.baseApp.stateManager.GetState(execModeFinalize).Context().KVStore(distKey1)
+			store := getFinalizeBlockStateCtx(suite.baseApp).KVStore(distKey1)
 			store.Set(sKey, sVal)
 
 			expectedChangeSet = append(expectedChangeSet, &storetypes.StoreKVPair{
@@ -116,8 +117,8 @@ func Test_Ctx_with_StreamingManager(t *testing.T) {
 	mockListener2 := NewMockABCIListener("lis_2")
 	listeners := []storetypes.ABCIListener{&mockListener1, &mockListener2}
 	streamingManager := storetypes.StreamingManager{ABCIListeners: listeners, StopNodeOnErr: true}
-	streamingManagerOpt := func(bapp *BaseApp) { bapp.SetStreamingManager(streamingManager) }
-	addListenerOpt := func(bapp *BaseApp) { bapp.CommitMultiStore().AddListeners([]storetypes.StoreKey{distKey1}) }
+	streamingManagerOpt := func(bapp *baseapp.BaseApp) { bapp.SetStreamingManager(streamingManager) }
+	addListenerOpt := func(bapp *baseapp.BaseApp) { bapp.CommitMultiStore().AddListeners([]storetypes.StoreKey{distKey1}) }
 	suite := NewBaseAppSuite(t, streamingManagerOpt, addListenerOpt)
 
 	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
@@ -125,7 +126,7 @@ func Test_Ctx_with_StreamingManager(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	ctx := suite.baseApp.stateManager.GetState(execModeFinalize).Context()
+	ctx := getFinalizeBlockStateCtx(suite.baseApp)
 	sm := ctx.StreamingManager()
 	require.NotNil(t, sm, fmt.Sprintf("nil StreamingManager: %v", sm))
 	require.Equal(t, listeners, sm.ABCIListeners, fmt.Sprintf("should contain same listeners: %v", listeners))
@@ -138,7 +139,7 @@ func Test_Ctx_with_StreamingManager(t *testing.T) {
 		_, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: int64(blockN) + 1})
 		require.NoError(t, err)
 
-		ctx := suite.baseApp.stateManager.GetState(execModeFinalize).Context()
+		ctx := getFinalizeBlockStateCtx(suite.baseApp)
 		sm := ctx.StreamingManager()
 		require.NotNil(t, sm, fmt.Sprintf("nil StreamingManager: %v", sm))
 		require.Equal(t, listeners, sm.ABCIListeners, fmt.Sprintf("should contain same listeners: %v", listeners))

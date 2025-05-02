@@ -7,22 +7,32 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/baseapp/state"
+	"net/url"
+	"reflect"
+	"strconv"
+	"testing"
+	"unsafe"
+
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/stretchr/testify/require"
-	"net/url"
-	"strconv"
-	"testing"
 
+	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
+	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
+	"cosmossdk.io/core/address"
+	"cosmossdk.io/core/appconfig"
+	"cosmossdk.io/depinject"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
@@ -30,6 +40,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
@@ -43,14 +54,7 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
 )
 
-var (
-	ParamStoreKey = []byte("paramstore")
-	capKey1       = storetypes.NewKVStoreKey("key1")
-
-	// testTxPriority is the CheckTx priority that we set in the test
-	// AnteHandler.
-	testTxPriority = int64(42)
-)
+var ParamStoreKey = []byte("paramstore")
 
 // GenesisStateWithSingleValidator initializes GenesisState with a single validator and genesis accounts
 // that also act as delegators.
@@ -83,11 +87,33 @@ func GenesisStateWithSingleValidator(t *testing.T, codec codec.Codec, builder *r
 	return genesisState
 }
 
+func makeMinimalConfig() depinject.Config {
+	var (
+		mempoolOpt            = baseapp.SetMempool(mempool.NewSenderNonceMempool())
+		addressCodec          = func() address.Codec { return addresscodec.NewBech32Codec("cosmos") }
+		validatorAddressCodec = func() runtime.ValidatorAddressCodec { return addresscodec.NewBech32Codec("cosmosvaloper") }
+		consensusAddressCodec = func() runtime.ConsensusAddressCodec { return addresscodec.NewBech32Codec("cosmosvalcons") }
+	)
+
+	return depinject.Configs(
+		depinject.Supply(mempoolOpt, addressCodec, validatorAddressCodec, consensusAddressCodec),
+		appconfig.Compose(&appv1alpha1.Config{
+			Modules: []*appv1alpha1.ModuleConfig{
+				{
+					Name: "runtime",
+					Config: appconfig.WrapAny(&runtimev1alpha1.Module{
+						AppName: "BaseAppApp",
+					}),
+				},
+			},
+		}))
+}
+
 type MsgKeyValueImpl struct{}
 
 func (m MsgKeyValueImpl) Set(ctx context.Context, msg *baseapptestutil.MsgKeyValue) (*baseapptestutil.MsgCreateKeyValueResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.KVStore(capKey1).Set(msg.Key, msg.Value)
+	sdkCtx.KVStore(capKey2).Set(msg.Key, msg.Value)
 	return &baseapptestutil.MsgCreateKeyValueResponse{}, nil
 }
 
@@ -296,6 +322,23 @@ func testLoadVersionHelper(t *testing.T, app *baseapp.BaseApp, expectedHeight in
 	lastID := app.LastCommitID()
 	require.Equal(t, expectedHeight, lastHeight)
 	require.Equal(t, expectedID, lastID)
+}
+
+func reflectGetStateCtx(app *baseapp.BaseApp, mode state.ExecMode) sdk.Context {
+	v := reflect.ValueOf(app).Elem()
+	f := v.FieldByName("stateManager")
+	rf := reflect.NewAt(f.Type(), unsafe.Pointer(f.UnsafeAddr())).Elem()
+	arg := reflect.ValueOf(mode)
+	st := rf.MethodByName("GetState").Call([]reflect.Value{arg})[0].Interface().(*state.State)
+	return st.Context()
+}
+
+func getCheckStateCtx(app *baseapp.BaseApp) sdk.Context {
+	return reflectGetStateCtx(app, state.ExecModeCheck)
+}
+
+func getFinalizeBlockStateCtx(app *baseapp.BaseApp) sdk.Context {
+	return reflectGetStateCtx(app, state.ExecModeFinalize)
 }
 
 func parseTxMemo(t *testing.T, tx sdk.Tx) (counter int64, failOnAnte bool) {

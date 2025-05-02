@@ -1,4 +1,4 @@
-package baseapp
+package baseapp_test
 
 import (
 	"bytes"
@@ -33,6 +33,7 @@ import (
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/baseapp/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -72,7 +73,7 @@ func TestABCI_Info(t *testing.T) {
 }
 
 func TestABCI_First_block_Height(t *testing.T) {
-	suite := NewBaseAppSuite(t, SetChainID("test-chain-id"))
+	suite := NewBaseAppSuite(t, baseapp.SetChainID("test-chain-id"))
 	app := suite.baseApp
 
 	_, err := app.InitChain(&abci.RequestInitChain{
@@ -92,7 +93,7 @@ func TestABCI_InitChain(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
 	logger := log.NewTestLogger(t)
-	app := NewBaseApp(name, logger, db, nil, SetChainID("test-chain-id"))
+	app := baseapp.NewBaseApp(name, logger, db, nil, baseapp.SetChainID("test-chain-id"))
 
 	capKey := storetypes.NewKVStoreKey("main")
 	capKey2 := storetypes.NewKVStoreKey("key2")
@@ -143,10 +144,10 @@ func TestABCI_InitChain(t *testing.T) {
 	require.Equal(t, appHash, initChainRes.AppHash)
 
 	// assert that chainID is set correctly in InitChain
-	chainID := app.stateManager.GetState(execModeFinalize).Context().ChainID()
+	chainID := getFinalizeBlockStateCtx(app).ChainID()
 	require.Equal(t, "test-chain-id", chainID, "ChainID in deliverState not set correctly in InitChain")
 
-	chainID = app.stateManager.GetState(execModeCheck).Context().ChainID()
+	chainID = getCheckStateCtx(app).ChainID()
 	require.Equal(t, "test-chain-id", chainID, "ChainID in checkState not set correctly in InitChain")
 
 	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
@@ -164,7 +165,7 @@ func TestABCI_InitChain(t *testing.T) {
 	require.Equal(t, value, resQ.Value)
 
 	// reload app
-	app = NewBaseApp(name, logger, db, nil)
+	app = baseapp.NewBaseApp(name, logger, db, nil)
 	app.SetInitChainer(initChainer)
 	app.MountStores(capKey, capKey2)
 	err = app.LoadLatestVersion() // needed to make stores non-nil
@@ -190,7 +191,7 @@ func TestABCI_InitChain(t *testing.T) {
 func TestABCI_InitChain_WithInitialHeight(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
-	app := NewBaseApp(name, log.NewTestLogger(t), db, nil)
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	_, err := app.InitChain(
 		&abci.RequestInitChain{
@@ -207,7 +208,7 @@ func TestABCI_InitChain_WithInitialHeight(t *testing.T) {
 func TestABCI_FinalizeBlock_WithInitialHeight(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
-	app := NewBaseApp(name, log.NewTestLogger(t), db, nil)
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	_, err := app.InitChain(
 		&abci.RequestInitChain{
@@ -230,7 +231,7 @@ func TestABCI_FinalizeBlock_WithInitialHeight(t *testing.T) {
 func TestABCI_FinalizeBlock_WithBeginAndEndBlocker(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
-	app := NewBaseApp(name, log.NewTestLogger(t), db, nil)
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	app.SetBeginBlocker(func(ctx sdk.Context) (sdk.BeginBlock, error) {
 		return sdk.BeginBlock{
@@ -297,7 +298,7 @@ func TestABCI_FinalizeBlock_WithBeginAndEndBlocker(t *testing.T) {
 func TestABCI_ExtendVote(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
-	app := NewBaseApp(name, log.NewTestLogger(t), db, nil)
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	app.SetExtendVoteHandler(func(ctx sdk.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
 		voteExt := "foo" + hex.EncodeToString(req.Hash) + strconv.FormatInt(req.Height, 10)
@@ -380,7 +381,7 @@ func TestABCI_ExtendVote(t *testing.T) {
 func TestABCI_OnlyVerifyVoteExtension(t *testing.T) {
 	name := t.Name()
 	db := dbm.NewMemDB()
-	app := NewBaseApp(name, log.NewTestLogger(t), db, nil)
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
 
 	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
 		// do some kind of verification here
@@ -433,7 +434,7 @@ func TestABCI_OnlyVerifyVoteExtension(t *testing.T) {
 }
 
 func TestABCI_GRPCQuery(t *testing.T) {
-	grpcQueryOpt := func(bapp *BaseApp) {
+	grpcQueryOpt := func(bapp *baseapp.BaseApp) {
 		testdata.RegisterQueryServer(
 			bapp.GRPCQueryRouter(),
 			testdata.QueryImpl{},
@@ -479,14 +480,14 @@ func TestABCI_GRPCQuery(t *testing.T) {
 }
 
 func TestABCI_P2PQuery(t *testing.T) {
-	addrPeerFilterOpt := func(bapp *BaseApp) {
+	addrPeerFilterOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAddrPeerFilter(func(addrport string) *abci.ResponseQuery {
 			require.Equal(t, "1.1.1.1:8000", addrport)
 			return &abci.ResponseQuery{Code: uint32(3)}
 		})
 	}
 
-	idPeerFilterOpt := func(bapp *BaseApp) {
+	idPeerFilterOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetIDPeerFilter(func(id string) *abci.ResponseQuery {
 			require.Equal(t, "testid", id)
 			return &abci.ResponseQuery{Code: uint32(4)}
@@ -521,7 +522,7 @@ func TestBaseApp_PrepareCheckState(t *testing.T) {
 		},
 	}
 
-	app := NewBaseApp(name, logger, db, nil)
+	app := baseapp.NewBaseApp(name, logger, db, nil)
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 	_, err := app.InitChain(&abci.RequestInitChain{
 		ConsensusParams: cp,
@@ -550,7 +551,7 @@ func TestBaseApp_Precommit(t *testing.T) {
 		},
 	}
 
-	app := NewBaseApp(name, logger, db, nil)
+	app := baseapp.NewBaseApp(name, logger, db, nil)
 	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
 	_, err := app.InitChain(&abci.RequestInitChain{
 		ConsensusParams: cp,
@@ -573,7 +574,7 @@ func TestABCI_CheckTx(t *testing.T) {
 	// current counter. This ensures changes to the KVStore persist across
 	// successive CheckTx runs.
 	counterKey := []byte("counter-key")
-	anteOpt := func(bapp *BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, counterKey)) }
+	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, counterKey)) }
 	suite := NewBaseAppSuite(t, anteOpt)
 
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, capKey1, counterKey})
@@ -595,7 +596,7 @@ func TestABCI_CheckTx(t *testing.T) {
 		require.Empty(t, r.GetEvents())
 	}
 
-	checkStateStore := suite.baseApp.stateManager.GetState(execModeCheck).Context().KVStore(capKey1)
+	checkStateStore := getCheckStateCtx(suite.baseApp).KVStore(capKey1)
 	storedCounter := getIntFromStore(t, checkStateStore, counterKey)
 
 	// ensure AnteHandler ran
@@ -608,20 +609,20 @@ func TestABCI_CheckTx(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	require.NotNil(t, suite.baseApp.stateManager.GetState(execModeCheck).Context().BlockGasMeter(), "block gas meter should have been set to checkState")
-	require.NotEmpty(t, suite.baseApp.stateManager.GetState(execModeCheck).Context().HeaderHash())
+	require.NotNil(t, getCheckStateCtx(suite.baseApp).BlockGasMeter(), "block gas meter should have been set to checkState")
+	require.NotEmpty(t, getCheckStateCtx(suite.baseApp).HeaderHash())
 
 	_, err = suite.baseApp.Commit()
 	require.NoError(t, err)
 
-	checkStateStore = suite.baseApp.stateManager.GetState(execModeCheck).Context().KVStore(capKey1)
+	checkStateStore = getCheckStateCtx(suite.baseApp).KVStore(capKey1)
 	storedBytes := checkStateStore.Get(counterKey)
 	require.Nil(t, storedBytes)
 }
 
 func TestABCI_FinalizeBlock_DeliverTx(t *testing.T) {
 	anteKey := []byte("ante-key")
-	anteOpt := func(bapp *BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
+	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
 	suite := NewBaseAppSuite(t, anteOpt)
 
 	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
@@ -671,7 +672,7 @@ func TestABCI_FinalizeBlock_DeliverTx(t *testing.T) {
 
 func TestABCI_FinalizeBlock_MultiMsg(t *testing.T) {
 	anteKey := []byte("ante-key")
-	anteOpt := func(bapp *BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
+	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }
 	suite := NewBaseAppSuite(t, anteOpt)
 
 	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
@@ -697,7 +698,7 @@ func TestABCI_FinalizeBlock_MultiMsg(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	store := suite.baseApp.stateManager.GetState(execModeFinalize).Context().KVStore(capKey1)
+	store := getFinalizeBlockStateCtx(suite.baseApp).KVStore(capKey1)
 
 	// tx counter only incremented once
 	txCounter := getIntFromStore(t, store, anteKey)
@@ -729,7 +730,7 @@ func TestABCI_FinalizeBlock_MultiMsg(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	store = suite.baseApp.stateManager.GetState(execModeFinalize).Context().KVStore(capKey1)
+	store = getFinalizeBlockStateCtx(suite.baseApp).KVStore(capKey1)
 
 	// tx counter only incremented once
 	txCounter = getIntFromStore(t, store, anteKey)
@@ -746,7 +747,7 @@ func TestABCI_FinalizeBlock_MultiMsg(t *testing.T) {
 
 func TestABCI_Query_SimulateTx(t *testing.T) {
 	gasConsumed := uint64(5)
-	anteOpt := func(bapp *BaseApp) {
+	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 			newCtx = ctx.WithGasMeter(storetypes.NewGasMeter(gasConsumed))
 			return
@@ -807,7 +808,7 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 }
 
 func TestABCI_InvalidTransaction(t *testing.T) {
-	anteOpt := func(bapp *BaseApp) {
+	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 			return
 		})
@@ -933,7 +934,7 @@ func TestABCI_InvalidTransaction(t *testing.T) {
 
 func TestABCI_TxGasLimits(t *testing.T) {
 	gasGranted := uint64(10)
-	anteOpt := func(bapp *BaseApp) {
+	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 			newCtx = ctx.WithGasMeter(storetypes.NewGasMeter(gasGranted))
 
@@ -1029,7 +1030,7 @@ func TestABCI_TxGasLimits(t *testing.T) {
 
 func TestABCI_MaxBlockGasLimits(t *testing.T) {
 	gasGranted := uint64(10)
-	anteOpt := func(bapp *BaseApp) {
+	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 			newCtx = ctx.WithGasMeter(storetypes.NewGasMeter(gasGranted))
 
@@ -1097,7 +1098,7 @@ func TestABCI_MaxBlockGasLimits(t *testing.T) {
 
 			_, result, err := suite.baseApp.SimDeliver(suite.txConfig.TxEncoder(), tx)
 
-			ctx := suite.baseApp.stateManager.GetState(execModeFinalize).Context()
+			ctx := getFinalizeBlockStateCtx(suite.baseApp)
 
 			// check for failed transactions
 			if tc.fail && (j+1) > tc.failAfterDeliver {
@@ -1126,7 +1127,7 @@ func TestABCI_MaxBlockGasLimits(t *testing.T) {
 
 func TestABCI_GasConsumptionBadTx(t *testing.T) {
 	gasWanted := uint64(5)
-	anteOpt := func(bapp *BaseApp) {
+	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 			newCtx = ctx.WithGasMeter(storetypes.NewGasMeter(gasWanted))
 
@@ -1183,7 +1184,7 @@ func TestABCI_GasConsumptionBadTx(t *testing.T) {
 
 func TestABCI_Query(t *testing.T) {
 	key, value := []byte("hello"), []byte("goodbye")
-	anteOpt := func(bapp *BaseApp) {
+	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 			store := ctx.KVStore(capKey1)
 			store.Set(key, value)
@@ -1253,93 +1254,93 @@ func TestABCI_GetBlockRetentionHeight(t *testing.T) {
 	require.NoError(t, err)
 
 	testCases := map[string]struct {
-		bapp         *BaseApp
+		bapp         *baseapp.BaseApp
 		maxAgeBlocks int64
 		commitHeight int64
 		expected     int64
 	}{
 		"defaults": {
-			bapp:         NewBaseApp(name, logger, db, nil),
+			bapp:         baseapp.NewBaseApp(name, logger, db, nil),
 			maxAgeBlocks: 0,
 			commitHeight: 499000,
 			expected:     0,
 		},
 		"pruning unbonding time only": {
-			bapp:         NewBaseApp(name, logger, db, nil, SetMinRetainBlocks(1)),
+			bapp:         baseapp.NewBaseApp(name, logger, db, nil, baseapp.SetMinRetainBlocks(1)),
 			maxAgeBlocks: 362880,
 			commitHeight: 499000,
 			expected:     136120,
 		},
 		"pruning iavl snapshot only": {
-			bapp: NewBaseApp(
+			bapp: baseapp.NewBaseApp(
 				name, logger, db, nil,
-				SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing)),
-				SetMinRetainBlocks(1),
-				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(10000, 1)),
+				baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing)),
+				baseapp.SetMinRetainBlocks(1),
+				baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(10000, 1)),
 			),
 			maxAgeBlocks: 0,
 			commitHeight: 499000,
 			expected:     489000,
 		},
 		"pruning state sync snapshot only": {
-			bapp: NewBaseApp(
+			bapp: baseapp.NewBaseApp(
 				name, logger, db, nil,
-				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
-				SetMinRetainBlocks(1),
+				baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
+				baseapp.SetMinRetainBlocks(1),
 			),
 			maxAgeBlocks: 0,
 			commitHeight: 499000,
 			expected:     349000,
 		},
 		"pruning min retention only": {
-			bapp: NewBaseApp(
+			bapp: baseapp.NewBaseApp(
 				name, logger, db, nil,
-				SetMinRetainBlocks(400000),
+				baseapp.SetMinRetainBlocks(400000),
 			),
 			maxAgeBlocks: 0,
 			commitHeight: 499000,
 			expected:     99000,
 		},
 		"pruning all conditions": {
-			bapp: NewBaseApp(
+			bapp: baseapp.NewBaseApp(
 				name, logger, db, nil,
-				SetPruning(pruningtypes.NewCustomPruningOptions(0, 0)),
-				SetMinRetainBlocks(400000),
-				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
+				baseapp.SetPruning(pruningtypes.NewCustomPruningOptions(0, 0)),
+				baseapp.SetMinRetainBlocks(400000),
+				baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
 			),
 			maxAgeBlocks: 362880,
 			commitHeight: 499000,
 			expected:     99000,
 		},
 		"no pruning due to no persisted state": {
-			bapp: NewBaseApp(
+			bapp: baseapp.NewBaseApp(
 				name, logger, db, nil,
-				SetPruning(pruningtypes.NewCustomPruningOptions(0, 0)),
-				SetMinRetainBlocks(400000),
-				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
+				baseapp.SetPruning(pruningtypes.NewCustomPruningOptions(0, 0)),
+				baseapp.SetMinRetainBlocks(400000),
+				baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
 			),
 			maxAgeBlocks: 362880,
 			commitHeight: 10000,
 			expected:     0,
 		},
 		"no pruning due to min retain blocks equal to commit height": {
-			bapp:         NewBaseApp(name, logger, db, nil, SetMinRetainBlocks(499000)),
+			bapp:         baseapp.NewBaseApp(name, logger, db, nil, baseapp.SetMinRetainBlocks(499000)),
 			maxAgeBlocks: 362880,
 			commitHeight: 499000,
 			expected:     0,
 		},
 		"no pruning due to min retain blocks greater than commit height": {
-			bapp:         NewBaseApp(name, logger, db, nil, SetMinRetainBlocks(499001)),
+			bapp:         baseapp.NewBaseApp(name, logger, db, nil, baseapp.SetMinRetainBlocks(499001)),
 			maxAgeBlocks: 362880,
 			commitHeight: 499000,
 			expected:     0,
 		},
 		"disable pruning": {
-			bapp: NewBaseApp(
+			bapp: baseapp.NewBaseApp(
 				name, logger, db, nil,
-				SetPruning(pruningtypes.NewCustomPruningOptions(0, 0)),
-				SetMinRetainBlocks(0),
-				SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
+				baseapp.SetPruning(pruningtypes.NewCustomPruningOptions(0, 0)),
+				baseapp.SetMinRetainBlocks(0),
+				baseapp.SetSnapshot(snapshotStore, snapshottypes.NewSnapshotOptions(50000, 3)),
 			),
 			maxAgeBlocks: 362880,
 			commitHeight: 499000,
@@ -1372,7 +1373,7 @@ func TestPrepareCheckStateCalledWithCheckState(t *testing.T) {
 	logger := log.NewTestLogger(t)
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := NewBaseApp(name, logger, db, nil)
+	app := baseapp.NewBaseApp(name, logger, db, nil)
 
 	wasPrepareCheckStateCalled := false
 	app.SetPrepareCheckStater(func(ctx sdk.Context) {
@@ -1395,7 +1396,7 @@ func TestPrecommiterCalledWithDeliverState(t *testing.T) {
 	logger := log.NewTestLogger(t)
 	db := dbm.NewMemDB()
 	name := t.Name()
-	app := NewBaseApp(name, logger, db, nil)
+	app := baseapp.NewBaseApp(name, logger, db, nil)
 
 	wasPrecommiterCalled := false
 	app.SetPrecommiter(func(ctx sdk.Context) {
@@ -1415,11 +1416,11 @@ func TestPrecommiterCalledWithDeliverState(t *testing.T) {
 func TestABCI_Proposal_HappyPath(t *testing.T) {
 	anteKey := []byte("ante-key")
 	pool := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(5000))
-	anteOpt := func(bapp *BaseApp) {
+	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
 	}
 
-	suite := NewBaseAppSuite(t, anteOpt, SetMempool(pool))
+	suite := NewBaseAppSuite(t, anteOpt, baseapp.SetMempool(pool))
 	baseapptestutil.RegisterKeyValueServer(suite.baseApp.MsgServiceRouter(), MsgKeyValueImpl{})
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
 
@@ -1484,14 +1485,14 @@ func TestABCI_Proposal_HappyPath(t *testing.T) {
 func TestABCI_Proposal_Read_State_PrepareProposal(t *testing.T) {
 	someKey := []byte("some-key")
 
-	setInitChainerOpt := func(bapp *BaseApp) {
+	setInitChainerOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetInitChainer(func(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
 			ctx.KVStore(capKey1).Set(someKey, []byte("foo"))
 			return &abci.ResponseInitChain{}, nil
 		})
 	}
 
-	prepareOpt := func(bapp *BaseApp) {
+	prepareOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetPrepareProposal(func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
 			value := ctx.KVStore(capKey1).Get(someKey)
 			// We should be able to access any state written in InitChain
@@ -1530,13 +1531,13 @@ func TestABCI_Proposal_Read_State_PrepareProposal(t *testing.T) {
 func TestABCI_Proposals_WithVE(t *testing.T) {
 	someVoteExtension := []byte("some-vote-extension")
 
-	setInitChainerOpt := func(bapp *BaseApp) {
+	setInitChainerOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetInitChainer(func(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
 			return &abci.ResponseInitChain{}, nil
 		})
 	}
 
-	prepareOpt := func(bapp *BaseApp) {
+	prepareOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetPrepareProposal(func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
 			// Inject the vote extension to the beginning of the proposal
 			txs := make([][]byte, len(req.Txs)+1)
@@ -1594,11 +1595,11 @@ func TestABCI_Proposals_WithVE(t *testing.T) {
 func TestABCI_PrepareProposal_ReachedMaxBytes(t *testing.T) {
 	anteKey := []byte("ante-key")
 	pool := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(5000))
-	anteOpt := func(bapp *BaseApp) {
+	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
 	}
 
-	suite := NewBaseAppSuite(t, anteOpt, SetMempool(pool))
+	suite := NewBaseAppSuite(t, anteOpt, baseapp.SetMempool(pool))
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
 
 	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
@@ -1624,11 +1625,11 @@ func TestABCI_PrepareProposal_ReachedMaxBytes(t *testing.T) {
 func TestABCI_PrepareProposal_BadEncoding(t *testing.T) {
 	anteKey := []byte("ante-key")
 	pool := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(5000))
-	anteOpt := func(bapp *BaseApp) {
+	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
 	}
 
-	suite := NewBaseAppSuite(t, anteOpt, SetMempool(pool))
+	suite := NewBaseAppSuite(t, anteOpt, baseapp.SetMempool(pool))
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
 
 	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
@@ -1651,7 +1652,7 @@ func TestABCI_PrepareProposal_BadEncoding(t *testing.T) {
 
 func TestABCI_PrepareProposal_OverGasUnderBytes(t *testing.T) {
 	pool := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(5000))
-	suite := NewBaseAppSuite(t, SetMempool(pool))
+	suite := NewBaseAppSuite(t, baseapp.SetMempool(pool))
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
 
 	// set max block gas limit to 99, this will allow 9 txs of 10 gas each.
@@ -1692,7 +1693,7 @@ func TestABCI_PrepareProposal_OverGasUnderBytes(t *testing.T) {
 
 func TestABCI_PrepareProposal_MaxGas(t *testing.T) {
 	pool := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(5000))
-	suite := NewBaseAppSuite(t, SetMempool(pool))
+	suite := NewBaseAppSuite(t, baseapp.SetMempool(pool))
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
 
 	// set max block gas limit to 100
@@ -1731,11 +1732,11 @@ func TestABCI_PrepareProposal_MaxGas(t *testing.T) {
 func TestABCI_PrepareProposal_Failures(t *testing.T) {
 	anteKey := []byte("ante-key")
 	pool := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(5000))
-	anteOpt := func(bapp *BaseApp) {
+	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey))
 	}
 
-	suite := NewBaseAppSuite(t, anteOpt, SetMempool(pool))
+	suite := NewBaseAppSuite(t, anteOpt, baseapp.SetMempool(pool))
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
 
 	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
@@ -1772,7 +1773,7 @@ func TestABCI_PrepareProposal_Failures(t *testing.T) {
 }
 
 func TestABCI_PrepareProposal_PanicRecovery(t *testing.T) {
-	prepareOpt := func(app *BaseApp) {
+	prepareOpt := func(app *baseapp.BaseApp) {
 		app.SetPrepareProposal(func(ctx sdk.Context, rpp *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
 			panic(errors.New("test"))
 		})
@@ -1813,12 +1814,12 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 	valStore.EXPECT().GetPubKeyByConsAddr(gomock.Any(), consAddr.Bytes()).Return(tmPk, nil)
 
 	// set up baseapp
-	prepareOpt := func(bapp *BaseApp) {
+	prepareOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetPrepareProposal(func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
 			ctx = ctx.WithBlockHeight(req.Height).WithChainID(bapp.ChainID())
 			_, info := extendedCommitToLastCommit(req.LocalLastCommit)
 			ctx = ctx.WithCometInfo(info)
-			err := ValidateVoteExtensions(ctx, valStore, 0, "", req.LocalLastCommit)
+			err := baseapp.ValidateVoteExtensions(ctx, valStore, 0, "", req.LocalLastCommit)
 			if err != nil {
 				return nil, err
 			}
@@ -1924,7 +1925,7 @@ func TestABCI_PrepareProposal_VoteExtensions(t *testing.T) {
 }
 
 func TestABCI_ProcessProposal_PanicRecovery(t *testing.T) {
-	processOpt := func(app *BaseApp) {
+	processOpt := func(app *baseapp.BaseApp) {
 		app.SetProcessProposal(func(ctx sdk.Context, rpp *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
 			panic(errors.New("test"))
 		})
@@ -1950,7 +1951,7 @@ func TestABCI_ProcessProposal_PanicRecovery(t *testing.T) {
 func TestABCI_Proposal_Reset_State_Between_Calls(t *testing.T) {
 	someKey := []byte("some-key")
 
-	prepareOpt := func(bapp *BaseApp) {
+	prepareOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetPrepareProposal(func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
 			// This key should not exist given that we reset the state on every call.
 			require.False(t, ctx.KVStore(capKey1).Has(someKey))
@@ -1959,7 +1960,7 @@ func TestABCI_Proposal_Reset_State_Between_Calls(t *testing.T) {
 		})
 	}
 
-	processOpt := func(bapp *BaseApp) {
+	processOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetProcessProposal(func(ctx sdk.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
 			// This key should not exist given that we reset the state on every call.
 			require.False(t, ctx.KVStore(capKey1).Has(someKey))
@@ -2023,7 +2024,7 @@ func TestABCI_HaltChain(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			suite := NewBaseAppSuite(t, SetHaltHeight(tc.haltHeight), SetHaltTime(tc.haltTime))
+			suite := NewBaseAppSuite(t, baseapp.SetHaltHeight(tc.haltHeight), baseapp.SetHaltTime(tc.haltTime))
 			_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
 				ConsensusParams: &cmtproto.ConsensusParams{},
 				InitialHeight:   tc.blockHeight,
@@ -2050,7 +2051,7 @@ func TestBaseApp_PreBlocker(t *testing.T) {
 	name := t.Name()
 	logger := log.NewTestLogger(t)
 
-	app := NewBaseApp(name, logger, db, nil)
+	app := baseapp.NewBaseApp(name, logger, db, nil)
 	_, err := app.InitChain(&abci.RequestInitChain{})
 	require.NoError(t, err)
 
@@ -2070,7 +2071,7 @@ func TestBaseApp_PreBlocker(t *testing.T) {
 	require.Equal(t, "preblockertest", res.Events[0].Type)
 
 	// Now try erroring
-	app = NewBaseApp(name, logger, db, nil)
+	app = baseapp.NewBaseApp(name, logger, db, nil)
 	_, err = app.InitChain(&abci.RequestInitChain{})
 	require.NoError(t, err)
 
@@ -2108,7 +2109,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 		valStore.EXPECT().GetPubKeyByConsAddr(gomock.Any(), val).Return(tmPk, nil)
 	}
 
-	baseappOpts := func(app *BaseApp) {
+	baseappOpts := func(app *baseapp.BaseApp) {
 		app.SetExtendVoteHandler(func(sdk.Context, *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
 			// here we would have a process to get the price from an external source
 			price := 10000000 + rand.Int63n(1000000)
@@ -2133,7 +2134,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 			ctx = ctx.WithBlockHeight(req.Height).WithChainID(app.ChainID())
 			_, info := extendedCommitToLastCommit(req.LocalLastCommit)
 			ctx = ctx.WithCometInfo(info)
-			if err := ValidateVoteExtensions(ctx, valStore, 0, "", req.LocalLastCommit); err != nil {
+			if err := baseapp.ValidateVoteExtensions(ctx, valStore, 0, "", req.LocalLastCommit); err != nil {
 				return nil, err
 			}
 			// add all VE as txs (in a real scenario we would need to check signatures too)
@@ -2233,7 +2234,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 	}
 	require.Equal(t, 10, successful)
 
-	var extVotes []abci.ExtendedVoteInfo
+	extVotes := []abci.ExtendedVoteInfo{}
 	for _, val := range vals {
 		extVotes = append(extVotes, abci.ExtendedVoteInfo{
 			VoteExtension:      allVEs[0],
@@ -2282,7 +2283,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 
 	// The average price will be nil during the first block, given that we don't have
 	// any vote extensions on block 1 in PrepareProposal
-	avgPrice := suite.baseApp.stateManager.GetState(execModeFinalize).Context().KVStore(capKey1).Get([]byte("avgPrice"))
+	avgPrice := getFinalizeBlockStateCtx(suite.baseApp).KVStore(capKey1).Get([]byte("avgPrice"))
 	require.Nil(t, avgPrice)
 	_, err = suite.baseApp.Commit()
 	require.NoError(t, err)
@@ -2328,7 +2329,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 	require.NoError(t, err)
 
 	// Check if the average price was available in FinalizeBlock's context
-	avgPrice = suite.baseApp.stateManager.GetState(execModeFinalize).Context().KVStore(capKey1).Get([]byte("avgPrice"))
+	avgPrice = getFinalizeBlockStateCtx(suite.baseApp).KVStore(capKey1).Get([]byte("avgPrice"))
 	require.NotNil(t, avgPrice)
 	require.GreaterOrEqual(t, binary.BigEndian.Uint64(avgPrice), uint64(10000000))
 	require.Less(t, binary.BigEndian.Uint64(avgPrice), uint64(11000000))
@@ -2342,7 +2343,7 @@ func TestBaseApp_VoteExtensions(t *testing.T) {
 }
 
 func TestABCI_PrepareProposal_Panic(t *testing.T) {
-	prepareOpt := func(bapp *BaseApp) {
+	prepareOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetPrepareProposal(func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
 			if len(req.Txs) == 3 {
 				panic("i don't like number 3, panic")
@@ -2379,7 +2380,7 @@ func TestABCI_PrepareProposal_Panic(t *testing.T) {
 }
 
 func TestOptimisticExecution(t *testing.T) {
-	suite := NewBaseAppSuite(t, SetOptimisticExecution())
+	suite := NewBaseAppSuite(t, baseapp.SetOptimisticExecution())
 
 	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
 		ConsensusParams: &cmtproto.ConsensusParams{},
@@ -2426,7 +2427,7 @@ func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
 		SignerExtractor: mempool.NewDefaultSignerExtractionAdapter(),
 	})
 
-	anteOpt := func(bapp *BaseApp) {
+	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
 			// always fail on recheck, just to test the recheck logic
 			if ctx.IsReCheckTx() {
@@ -2437,7 +2438,7 @@ func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
 		})
 	}
 
-	suite := NewBaseAppSuite(t, anteOpt, SetMempool(pool))
+	suite := NewBaseAppSuite(t, anteOpt, baseapp.SetMempool(pool))
 	baseapptestutil.RegisterKeyValueServer(suite.baseApp.MsgServiceRouter(), MsgKeyValueImpl{})
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), NoopCounterServerImpl{})
 
@@ -2521,7 +2522,7 @@ func TestABCI_Proposal_FailReCheckTx(t *testing.T) {
 }
 
 func TestFinalizeBlockDeferResponseHandle(t *testing.T) {
-	suite := NewBaseAppSuite(t, SetHaltHeight(1), func(ba *BaseApp) {
+	suite := NewBaseAppSuite(t, baseapp.SetHaltHeight(1), func(ba *baseapp.BaseApp) {
 		ba.SetStreamingManager(storetypes.StreamingManager{
 			ABCIListeners: []storetypes.ABCIListener{
 				&mockABCIListener{},
@@ -2537,7 +2538,7 @@ func TestFinalizeBlockDeferResponseHandle(t *testing.T) {
 }
 
 func TestABCI_Race_Commit_Query(t *testing.T) {
-	suite := NewBaseAppSuite(t, SetChainID("test-chain-id"))
+	suite := NewBaseAppSuite(t, baseapp.SetChainID("test-chain-id"))
 	app := suite.baseApp
 
 	_, err := app.InitChain(&abci.RequestInitChain{

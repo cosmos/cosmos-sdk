@@ -2,7 +2,6 @@ package baseapp_test
 
 import (
 	"context"
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"math"
 	"testing"
 
@@ -112,7 +111,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 				key:          bapp.UnsafeFindStoreKey(banktypes.ModuleName),
 			})
 
-			genState := baseapp.GenesisStateWithSingleValidator(t, cdc, appBuilder)
+			genState := GenesisStateWithSingleValidator(t, cdc, appBuilder)
 			stateBytes, err := cmtjson.MarshalIndent(genState, "", " ")
 			require.NoError(t, err)
 			_, err = bapp.InitChain(&abci.RequestInitChain{

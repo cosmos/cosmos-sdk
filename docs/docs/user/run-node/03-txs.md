@@ -147,7 +147,7 @@ priv3, _, addr3 := testdata.KeyTestPubAddr()
 Populating the `TxBuilder` can be done via its methods:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/client/tx_config.go#L39-L57
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/client/tx_config.go#L39-L57
 ```
 
 ```go

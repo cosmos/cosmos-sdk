@@ -308,6 +308,15 @@ func (ctx Context) WithPreprocessTxHook(preprocessFn PreprocessTxFn) Context {
 	return ctx
 }
 
+// GetCmdContextWithFallback returns the CmdContext if it is not nil, otherwise it
+// returns context.Background()
+func (ctx Context) GetCmdContextWithFallback() context.Context {
+	if ctx.CmdContext != nil {
+		return ctx.CmdContext
+	}
+	return context.Background()
+}
+
 // PrintString prints the raw string to ctx.Output if it's defined, otherwise to os.Stdout
 func (ctx Context) PrintString(str string) error {
 	return ctx.PrintBytes([]byte(str))

@@ -62,7 +62,7 @@ func SignTx(txFactory tx.Factory, clientCtx client.Context, name string, txBuild
 		}
 	}
 
-	return tx.Sign(clientCtx.CmdContext, txFactory, name, txBuilder, overwriteSig)
+	return tx.Sign(clientCtx.GetCmdContextWithFallback(), txFactory, name, txBuilder, overwriteSig)
 }
 
 // SignTxWithSignerAddress attaches a signature to a transaction.
@@ -85,7 +85,7 @@ func SignTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, add
 		}
 	}
 
-	return tx.Sign(clientCtx.CmdContext, txFactory, name, txBuilder, overwrite)
+	return tx.Sign(clientCtx.GetCmdContextWithFallback(), txFactory, name, txBuilder, overwrite)
 }
 
 // Read and decode a StdTx from the given filename. Can pass "-" to read from stdin.

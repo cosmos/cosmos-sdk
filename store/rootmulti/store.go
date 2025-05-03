@@ -176,9 +176,15 @@ func (rs *Store) GetCommitStore(key types.StoreKey) types.CommitStore {
 // GetCommitKVStore returns a mounted CommitKVStore for a given StoreKey. If the
 // store is wrapped in an inter-block cache, it will be unwrapped before returning.
 func (rs *Store) GetCommitKVStore(key types.StoreKey) types.CommitKVStore {
-	store, ok := rs.GetCommitStore(key).(types.CommitKVStore)
+	cs := rs.GetCommitStore(key)
+	if cs == nil {
+		// support behavior of the upstream SDK store - return nil if the store is not mounted
+		return nil
+	}
+
+	store, ok := cs.(types.CommitKVStore)
 	if !ok {
-		panic(fmt.Sprintf("store with key %v is not CommitKVStore", key))
+		panic(fmt.Sprintf("store with key %v is not CommitKVStore (got: %T)", key, cs))
 	}
 
 	return store

@@ -17,6 +17,7 @@ import (
 	sdkmaps "cosmossdk.io/store/internal/maps"
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
+	"cosmossdk.io/store/tracekv"
 	"cosmossdk.io/store/types"
 )
 
@@ -100,15 +101,18 @@ func TestCacheMultiStoreWithVersion(t *testing.T) {
 	require.Equal(t, kvStore.Get(k), v)
 
 	// add new module stores (store4 and store5) to multi stores and commit
-	ms.MountStoreWithDB(types.NewKVStoreKey("store4"), types.StoreTypeIAVL, nil)
-	ms.MountStoreWithDB(types.NewKVStoreKey("store5"), types.StoreTypeIAVL, nil)
+	key4, key5 := types.NewKVStoreKey("store4"), types.NewKVStoreKey("store5")
+	ms.MountStoreWithDB(key4, types.StoreTypeIAVL, nil)
+	ms.MountStoreWithDB(key5, types.StoreTypeIAVL, nil)
 	err = ms.LoadLatestVersionAndUpgrade(&types.StoreUpgrades{Added: []string{"store4", "store5"}})
 	require.NoError(t, err)
 	ms.Commit()
 
 	// cache multistore of version before adding store4 should works
-	_, err = ms.CacheMultiStoreWithVersion(1)
+	cms2, err := ms.CacheMultiStoreWithVersion(1)
 	require.NoError(t, err)
+
+	require.Empty(t, cms2.GetKVStore(key4).Get([]byte("key")))
 
 	// require we cannot commit (write) to a cache-versioned multi-store
 	require.Panics(t, func() {
@@ -531,14 +535,18 @@ func TestMultiStore_Pruning(t *testing.T) {
 				ms.Commit()
 			}
 
+			for _, v := range tc.deleted {
+				// Ensure async pruning is done
+				checkErr := func() bool {
+					_, err := ms.CacheMultiStoreWithVersion(v)
+					return err != nil
+				}
+				require.Eventually(t, checkErr, 1*time.Second, 10*time.Millisecond, "expected error when loading height: %d", v)
+			}
+
 			for _, v := range tc.saved {
 				_, err := ms.CacheMultiStoreWithVersion(v)
 				require.NoError(t, err, "expected no error when loading height: %d", v)
-			}
-
-			for _, v := range tc.deleted {
-				_, err := ms.CacheMultiStoreWithVersion(v)
-				require.Error(t, err, "expected error when loading height: %d", v)
 			}
 		})
 	}
@@ -563,16 +571,6 @@ func TestMultiStore_Pruning_SameHeightsTwice(t *testing.T) {
 
 	require.Equal(t, numVersions, lastCommitInfo.Version)
 
-	for v := int64(1); v < numVersions-int64(keepRecent); v++ {
-		err := ms.LoadVersion(v)
-		require.Error(t, err, "expected error when loading pruned height: %d", v)
-	}
-
-	for v := (numVersions - int64(keepRecent)); v < numVersions; v++ {
-		err := ms.LoadVersion(v)
-		require.NoError(t, err, "expected no error when loading height: %d", v)
-	}
-
 	// Get latest
 	err := ms.LoadVersion(numVersions - 1)
 	require.NoError(t, err)
@@ -587,6 +585,17 @@ func TestMultiStore_Pruning_SameHeightsTwice(t *testing.T) {
 	// Ensure that can commit one more height with no panic
 	lastCommitInfo = ms.Commit()
 	require.Equal(t, numVersions+1, lastCommitInfo.Version)
+	isPruned := func() bool {
+		ls := ms.Commit() // to flush the batch with the pruned heights
+		for v := int64(1); v < numVersions-int64(keepRecent); v++ {
+			if err := ms.LoadVersion(v); err == nil {
+				require.NoError(t, ms.LoadVersion(ls.Version)) // load latest
+				return false
+			}
+		}
+		return true
+	}
+	require.Eventually(t, isPruned, 1000*time.Second, 10*time.Millisecond, "expected error when loading pruned heights")
 }
 
 func TestMultiStore_PruningRestart(t *testing.T) {
@@ -617,10 +626,42 @@ func TestMultiStore_PruningRestart(t *testing.T) {
 	actualHeightToPrune = ms.pruningManager.GetPruningHeight(ms.LatestVersion())
 	require.Equal(t, int64(8), actualHeightToPrune)
 
-	for v := int64(1); v <= actualHeightToPrune; v++ {
-		_, err := ms.CacheMultiStoreWithVersion(v)
-		require.Error(t, err, "expected error when loading height: %d", v)
+	// Ensure async pruning is done
+	isPruned := func() bool {
+		ms.Commit() // to flush the batch with the pruned heights
+		for v := int64(1); v <= actualHeightToPrune; v++ {
+			if _, err := ms.CacheMultiStoreWithVersion(v); err == nil {
+				return false
+			}
+		}
+		return true
 	}
+
+	require.Eventually(t, isPruned, 1*time.Second, 10*time.Millisecond, "expected error when loading pruned heights")
+}
+
+var _ types.PausablePruner = &pauseableCommitKVStoreStub{}
+
+type pauseableCommitKVStoreStub struct {
+	types.CommitKVStore
+	pauseCalled []bool
+}
+
+func (p *pauseableCommitKVStoreStub) PausePruning(b bool) {
+	p.pauseCalled = append(p.pauseCalled, b)
+}
+
+func TestPausePruningOnCommit(t *testing.T) {
+	store := NewStore(dbm.NewMemDB(), log.NewNopLogger(), metrics.NewNoOpMetrics())
+	store.SetPruning(pruningtypes.NewCustomPruningOptions(2, 11))
+	store.MountStoreWithDB(testStoreKey1, types.StoreTypeIAVL, nil)
+	require.NoError(t, store.LoadLatestVersion())
+	myStub := &pauseableCommitKVStoreStub{CommitKVStore: store.stores[testStoreKey1].(types.CommitKVStore)}
+	store.stores[testStoreKey1] = myStub
+	// when
+	store.Commit()
+	// then
+	require.Equal(t, []bool{true, false}, myStub.pauseCalled)
 }
 
 // TestUnevenStoresHeightCheck tests if loading root store correctly errors when
@@ -710,7 +751,7 @@ func TestTraceConcurrency(t *testing.T) {
 
 	cms := multi.CacheMultiStore()
 	store1 := cms.GetKVStore(key)
-	cw := store1.CacheWrapWithTrace(b, tc)
+	cw := tracekv.NewStore(store1, b, tc).CacheWrap()
 	_ = cw
 	require.NotNil(t, store1)
 
@@ -788,6 +829,7 @@ var (
 	testStoreKey1 = types.NewKVStoreKey("store1")
 	testStoreKey2 = types.NewKVStoreKey("store2")
 	testStoreKey3 = types.NewKVStoreKey("store3")
+	testStoreKey4 = types.NewKVStoreKey("store4")
 )
 
 func newMultiStoreWithMounts(db dbm.DB, pruningOpts pruningtypes.PruningOptions) *Store {
@@ -860,7 +902,7 @@ func getExpectedCommitID(store *Store, ver int64) types.CommitID {
 	}
 }
 
-func hashStores(stores map[types.StoreKey]types.CommitKVStore) []byte {
+func hashStores(stores map[types.StoreKey]types.CommitStore) []byte {
 	m := make(map[string][]byte, len(stores))
 	for key, store := range stores {
 		name := key.Name()
@@ -915,35 +957,40 @@ func TestStateListeners(t *testing.T) {
 	require.Empty(t, ms.PopStateCache())
 }
 
-type commitKVStoreStub struct {
-	types.CommitKVStore
+type commitStoreStub struct {
+	types.CommitStore
 	Committed int
 }
 
-func (stub *commitKVStoreStub) Commit() types.CommitID {
-	commitID := stub.CommitKVStore.Commit()
+func (stub *commitStoreStub) Commit() types.CommitID {
+	commitID := stub.CommitStore.Commit()
 	stub.Committed++
 	return commitID
 }
 
-func prepareStoreMap() (map[types.StoreKey]types.CommitKVStore, error) {
+func prepareStoreMap() (map[types.StoreKey]types.CommitStore, error) {
 	var db dbm.DB = dbm.NewMemDB()
 	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl1"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewKVStoreKey("iavl2"), types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(types.NewTransientStoreKey("trans1"), types.StoreTypeTransient, nil)
+	store.MountStoreWithDB(types.NewMemoryStoreKey("mem1"), types.StoreTypeMemory, nil)
+	store.MountStoreWithDB(types.NewObjectStoreKey("obj1"), types.StoreTypeObject, nil)
 	if err := store.LoadLatestVersion(); err != nil {
 		return nil, err
 	}
-	return map[types.StoreKey]types.CommitKVStore{
-		testStoreKey1: &commitKVStoreStub{
-			CommitKVStore: store.GetStoreByName("iavl1").(types.CommitKVStore),
+	return map[types.StoreKey]types.CommitStore{
+		testStoreKey1: &commitStoreStub{
+			CommitStore: store.GetStoreByName("iavl1").(types.CommitStore),
 		},
-		testStoreKey2: &commitKVStoreStub{
-			CommitKVStore: store.GetStoreByName("iavl2").(types.CommitKVStore),
+		testStoreKey2: &commitStoreStub{
+			CommitStore: store.GetStoreByName("iavl2").(types.CommitStore),
 		},
-		testStoreKey3: &commitKVStoreStub{
-			CommitKVStore: store.GetStoreByName("trans1").(types.CommitKVStore),
+		testStoreKey3: &commitStoreStub{
+			CommitStore: store.GetStoreByName("trans1").(types.CommitStore),
+		},
+		testStoreKey4: &commitStoreStub{
+			CommitStore: store.GetStoreByName("obj1").(types.CommitStore),
 		},
 	}, nil
 }
@@ -974,7 +1021,7 @@ func TestCommitStores(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			storeMap, err := prepareStoreMap()
 			require.NoError(t, err)
-			store := storeMap[testStoreKey1].(*commitKVStoreStub)
+			store := storeMap[testStoreKey1].(*commitStoreStub)
 			for i := tc.committed; i > 0; i-- {
 				store.Commit()
 			}

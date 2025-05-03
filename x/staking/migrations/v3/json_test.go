@@ -36,6 +36,7 @@ func TestMigrateJSON(t *testing.T) {
 
 	// Make sure about new param MinCommissionRate.
 	expected := `{
+	"allowed_delegation_transfer_receivers": [],
 	"delegations": [],
 	"exported": false,
 	"last_total_power": "0",

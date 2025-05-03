@@ -15,6 +15,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	legacy.RegisterAminoMsg(cdc, &MsgCreateValidator{}, "cosmos-sdk/MsgCreateValidator")
 	legacy.RegisterAminoMsg(cdc, &MsgEditValidator{}, "cosmos-sdk/MsgEditValidator")
 	legacy.RegisterAminoMsg(cdc, &MsgDelegate{}, "cosmos-sdk/MsgDelegate")
+	legacy.RegisterAminoMsg(cdc, &MsgTransferDelegation{}, "cosmos-sdk/MsgTransferDelegation")
 	legacy.RegisterAminoMsg(cdc, &MsgUndelegate{}, "cosmos-sdk/MsgUndelegate")
 	legacy.RegisterAminoMsg(cdc, &MsgBeginRedelegate{}, "cosmos-sdk/MsgBeginRedelegate")
 	legacy.RegisterAminoMsg(cdc, &MsgCancelUnbondingDelegation{}, "cosmos-sdk/MsgCancelUnbondingDelegation")
@@ -33,6 +34,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgCreateValidator{},
 		&MsgEditValidator{},
 		&MsgDelegate{},
+		&MsgTransferDelegation{},
 		&MsgUndelegate{},
 		&MsgBeginRedelegate{},
 		&MsgCancelUnbondingDelegation{},

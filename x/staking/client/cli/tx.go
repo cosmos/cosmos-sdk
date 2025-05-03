@@ -50,6 +50,7 @@ func NewTxCmd(valAddrCodec, ac address.Codec) *cobra.Command {
 		NewRedelegateCmd(valAddrCodec, ac),
 		NewUnbondCmd(valAddrCodec, ac),
 		NewCancelUnbondingDelegation(valAddrCodec, ac),
+		NewTransferDelegationCmd(valAddrCodec, ac),
 	)
 
 	return stakingTxCmd
@@ -369,6 +370,62 @@ $ %s tx staking cancel-unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake
 			}
 
 			msg := types.NewMsgCancelUnbondingDelegation(delAddr, args[0], creationHeight, amount)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewTransferDelegationCmd returns a CLI command handler for creating a MsgTransferDelegation transaction.
+func NewTransferDelegationCmd(valAddrCodec, ac address.Codec) *cobra.Command {
+	bech32PrefixValAddr := sdk.GetConfig().GetBech32ValidatorAddrPrefix()
+
+	cmd := &cobra.Command{
+		Use:   "transfer-delegation [validator-addr] [receiver-addr] [amount]",
+		Short: "Transfer delegation from the sender to the receiver",
+		Args:  cobra.ExactArgs(3),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Transfer delegation from the sender's account to the receiver's account.
+The sender must have an existing delegation to the specified validator.
+
+Example:
+$ %s tx staking transfer-delegation %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj cosmos1... 100stake --from mykey
+`,
+				version.AppName, bech32PrefixValAddr,
+			),
+		),
+		Example: fmt.Sprintf(`$ %s tx staking transfer-delegation %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj cosmos1... 100stake --from mykey`,
+			version.AppName, bech32PrefixValAddr),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			delAddr, err := ac.BytesToString(clientCtx.GetFromAddress())
+			if err != nil {
+				return err
+			}
+
+			_, err = valAddrCodec.StringToBytes(args[0]) // validator address
+			if err != nil {
+				return err
+			}
+
+			_, err = ac.StringToBytes(args[1]) // receiver address
+			if err != nil {
+				return sdkerrors.ErrInvalidAddress.Wrapf("invalid receiver address: %s", err)
+			}
+
+			amount, err := sdk.ParseCoinNormalized(args[2])
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgTransferDelegation(delAddr, args[0], args[1], amount)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

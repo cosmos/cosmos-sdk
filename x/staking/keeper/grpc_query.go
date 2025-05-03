@@ -380,6 +380,13 @@ func (k Querier) DelegatorUnbondingDelegations(ctx context.Context, req *types.Q
 	}, nil
 }
 
+func (k Querier) AllowedDelegationTransferReceivers(ctx context.Context, _ *types.QueryAllowedDelegationTransferReceiversRequest) (*types.QueryAllowedDelegationTransferReceiversResponse, error) {
+	resp := &types.QueryAllowedDelegationTransferReceiversResponse{
+		Addresses: k.GetAllAllowedDelegationTransferReceivers(ctx),
+	}
+	return resp, nil
+}
+
 // HistoricalInfo queries the historical info for given height
 func (k Querier) HistoricalInfo(ctx context.Context, req *types.QueryHistoricalInfoRequest) (*types.QueryHistoricalInfoResponse, error) {
 	if req == nil {

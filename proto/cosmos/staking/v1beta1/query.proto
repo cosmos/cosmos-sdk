@@ -111,6 +111,13 @@ service Query {
                                                  "{validator_addr}";
   }
 
+  // AllowedDelegationTransferReceivers queries the allowed delegation transfer receivers.
+  rpc AllowedDelegationTransferReceivers(QueryAllowedDelegationTransferReceiversRequest)
+      returns (QueryAllowedDelegationTransferReceiversResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/cosmos/staking/v1beta1/allowed_delegation_transfer_receivers";
+  }
+
   // HistoricalInfo queries the historical info for given height.
   rpc HistoricalInfo(QueryHistoricalInfoRequest) returns (QueryHistoricalInfoResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
@@ -352,6 +359,16 @@ message QueryDelegatorValidatorRequest {
 message QueryDelegatorValidatorResponse {
   // validator defines the validator info.
   Validator validator = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+// QueryAllowedDelegationTransferReceiversRequest is request type for the
+// Query/AllowedDelegationTransferReceivers RPC method.
+message QueryAllowedDelegationTransferReceiversRequest {}
+
+// QueryAllowedDelegationTransferReceiversResponse response type for the
+// Query/AllowedDelegationTransferReceivers RPC method.
+message QueryAllowedDelegationTransferReceiversResponse {
+  repeated string addresses = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // QueryHistoricalInfoRequest is request type for the Query/HistoricalInfo RPC

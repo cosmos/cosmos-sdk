@@ -16,6 +16,7 @@ var (
 	_ codectypes.UnpackInterfacesMessage = (*MsgCreateValidator)(nil)
 	_ sdk.Msg                            = &MsgEditValidator{}
 	_ sdk.Msg                            = &MsgDelegate{}
+	_ sdk.Msg                            = &MsgTransferDelegation{}
 	_ sdk.Msg                            = &MsgUndelegate{}
 	_ sdk.Msg                            = &MsgBeginRedelegate{}
 	_ sdk.Msg                            = &MsgCancelUnbondingDelegation{}
@@ -134,6 +135,16 @@ func NewMsgDelegate(delAddr, valAddr string, amount sdk.Coin) *MsgDelegate {
 	return &MsgDelegate{
 		DelegatorAddress: delAddr,
 		ValidatorAddress: valAddr,
+		Amount:           amount,
+	}
+}
+
+// NewMsgDelegateMsgTransferDelegation creates a new MsgTransferDelegation instance.
+func NewMsgTransferDelegation(delAddr, valAddr, receiverAddr string, amount sdk.Coin) *MsgTransferDelegation {
+	return &MsgTransferDelegation{
+		DelegatorAddress: delAddr,
+		ValidatorAddress: valAddr,
+		ReceiverAddress:  receiverAddr,
 		Amount:           amount,
 	}
 }

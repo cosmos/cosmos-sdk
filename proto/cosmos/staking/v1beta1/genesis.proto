@@ -40,6 +40,11 @@ message GenesisState {
 
   // exported defines a bool to identify whether the chain dealing with exported or initialized genesis.
   bool exported = 8;
+
+  // allowed_delegation_transfer_receivers defines the list of addresses that are allowed to receive delegation
+  // transfers.
+  repeated string allowed_delegation_transfer_receivers = 9
+      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // LastValidatorPower required for validator set update logic.

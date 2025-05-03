@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 	"strconv"
 	"time"
@@ -310,6 +311,100 @@ func (k msgServer) Delegate(ctx context.Context, msg *types.MsgDelegate) (*types
 	})
 
 	return &types.MsgDelegateResponse{}, nil
+}
+
+func (k msgServer) TransferDelegation(ctx context.Context, msg *types.MsgTransferDelegation) (*types.MsgTransferDelegationResponse, error) {
+	valAddr, valErr := k.validatorAddressCodec.StringToBytes(msg.ValidatorAddress)
+	if valErr != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", valErr)
+	}
+
+	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(msg.DelegatorAddress)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
+	}
+
+	receiverAddress, err := k.authKeeper.AddressCodec().StringToBytes(msg.ReceiverAddress)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid receiver address: %s", err)
+	}
+
+	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid shares amount")
+	}
+
+	// Check if delegator and receiver are different
+	if bytes.Equal(delegatorAddress, receiverAddress) {
+		return nil, sdkerrors.ErrInvalidAddress.Wrap("delegator and receiver cannot be the same address")
+	}
+
+	// Check if receiver is allowed
+	if !k.IsAllowedDelegationTransferReceiver(ctx, receiverAddress) {
+		return nil, sdkerrors.ErrUnauthorized.Wrap("receiver not in allowed receivers list")
+	}
+
+	bondDenom, err := k.BondDenom(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if msg.Amount.Denom != bondDenom {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid coin denomination: got %s, expected %s", msg.Amount.Denom, bondDenom)
+	}
+
+	transferShares, err := k.ValidateUnbondAmount(
+		ctx, delegatorAddress, valAddr, msg.Amount.Amount,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	validator, err := k.GetValidator(ctx, valAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	if validator.Status != types.Bonded {
+		return nil, sdkerrors.ErrUnauthorized.Wrapf("validator %s must be bonded", msg.ValidatorAddress)
+	}
+
+	returnAmount, err := k.Unbond(ctx, delegatorAddress, valAddr, transferShares)
+	if err != nil {
+		return nil, err
+	}
+
+	if returnAmount.IsZero() {
+		return nil, types.ErrTinyRedelegationAmount
+	}
+
+	validator, err = k.GetValidator(ctx, valAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	// enforce that the validator is still bonded after unbonding, for security/simplicity
+	if validator.Status != types.Bonded {
+		return nil, sdkerrors.ErrUnauthorized.Wrapf("validator %s must be bonded", msg.ValidatorAddress)
+	}
+
+	// Add shares to the receiver - this will handle the destination delegation hooks internally
+	_, err = k.Keeper.Delegate(ctx, receiverAddress, returnAmount, validator.GetStatus(), validator, false)
+	if err != nil {
+		return nil, err
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			types.EventTypeTransferDelegation,
+			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
+			sdk.NewAttribute(types.AttributeKeySrcDelegator, msg.DelegatorAddress),
+			sdk.NewAttribute(types.AttributeKeyDstDelegator, msg.ReceiverAddress),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
+		),
+	})
+
+	return &types.MsgTransferDelegationResponse{}, nil
 }
 
 // BeginRedelegate defines a method for performing a redelegation of coins from a source validator to a destination validator of given delegator

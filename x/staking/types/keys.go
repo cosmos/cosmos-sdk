@@ -55,7 +55,8 @@ var (
 
 	ParamsKey = []byte{0x51} // prefix for parameters for module x/staking
 
-	DelegationByValIndexKey = []byte{0x71} // key for delegations by a validator
+	DelegationByValIndexKey        = []byte{0x71} // key for delegations by a validator
+	DelegationTransferReceiversKey = []byte{0x72} // prefix for allowed delegation transfer receivers
 )
 
 // UnbondingType defines the type of unbonding operation

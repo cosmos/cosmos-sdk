@@ -270,7 +270,7 @@ func NewSimApp(
 	}
 
 	tkeys := storetypes.NewTransientStoreKeys(paramstypes.TStoreKey, banktypes.TStoreKey)
-	okeys := storetypes.NewObjectStoreKeys(banktypes.ObjectKey)
+	okeys := storetypes.NewObjectStoreKeys(banktypes.ObjectStoreKey)
 	app := &SimApp{
 		BaseApp:           bApp,
 		legacyAmino:       legacyAmino,
@@ -295,6 +295,7 @@ func NewSimApp(
 		appCodec,
 		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
 		runtime.NewTransientKVStoreService(tkeys[banktypes.TStoreKey]),
+		okeys[banktypes.ObjectStoreKey],
 		app.AccountKeeper,
 		BlockedAddresses(),
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),

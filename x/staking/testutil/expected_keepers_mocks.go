@@ -10,7 +10,7 @@ import (
 
 	address "cosmossdk.io/core/address"
 	math "cosmossdk.io/math"
-	crypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
+	crypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 	types "github.com/cosmos/cosmos-sdk/types"
 	types0 "github.com/cosmos/cosmos-sdk/x/staking/types"
 	gomock "github.com/golang/mock/gomock"

@@ -204,7 +204,7 @@ newly committed state and `finalizeBlockState` is set to `nil` to be reset on `F
 
 ## ParamStore
 
-During `InitChain`, the `RequestInitChain` provides `ConsensusParams` which contains parameters
+During `InitChain`, the `InitChainRequest` provides `ConsensusParams` which contains parameters
 related to block execution such as maximum gas and size in addition to evidence parameters. If these
 parameters are non-nil, they are set in the BaseApp's `ParamStore`. Behind the scenes, the `ParamStore`
 is managed by an `x/consensus_params` module. This allows the parameters to be tweaked via
@@ -432,7 +432,7 @@ The [`InitChain` ABCI message](https://github.com/cometbft/cometbft/blob/v0.37.x
 * [`checkState` and `finalizeBlockState`](#state-updates) via `setState`.
 * The [block gas meter](../beginner/04-gas-fees.md#block-gas-meter), with infinite gas to process genesis transactions.
 
-Finally, the `InitChain(req abci.RequestInitChain)` method of `BaseApp` calls the [`initChainer()`](../beginner/00-app-anatomy.md#initchainer) of the application in order to initialize the main state of the application from the `genesis file` and, if defined, call the [`InitGenesis`](../../build/building-modules/08-genesis.md#initgenesis) function of each of the application's modules.
+Finally, the `InitChain(req abci.InitChainRequest)` method of `BaseApp` calls the [`initChainer()`](../beginner/00-app-anatomy.md#initchainer) of the application in order to initialize the main state of the application from the `genesis file` and, if defined, call the [`InitGenesis`](../../build/building-modules/08-genesis.md#initgenesis) function of each of the application's modules.
 
 
 ### FinalizeBlock

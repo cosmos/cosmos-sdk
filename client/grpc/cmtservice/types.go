@@ -4,10 +4,10 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 )
 
-// ToABCIRequestQuery converts a gRPC ABCIQueryRequest type to an ABCI
-// RequestQuery type.
-func (req *ABCIQueryRequest) ToABCIRequestQuery() *abci.RequestQuery {
-	return &abci.RequestQuery{
+// ToABCIQueryRequest converts a gRPC ABCIQueryRequest type to an ABCI
+// QueryRequest type.
+func (req *ABCIQueryRequest) ToABCIQueryRequest() *abci.QueryRequest {
+	return &abci.QueryRequest{
 		Data:   req.Data,
 		Path:   req.Path,
 		Height: req.Height,
@@ -15,9 +15,9 @@ func (req *ABCIQueryRequest) ToABCIRequestQuery() *abci.RequestQuery {
 	}
 }
 
-// FromABCIResponseQuery converts an ABCI ResponseQuery type to a gRPC
+// FromABCIQueryResponse converts an ABCI QueryResponse type to a gRPC
 // ABCIQueryResponse type.
-func FromABCIResponseQuery(res *abci.ResponseQuery) *ABCIQueryResponse {
+func FromABCIQueryResponse(res *abci.QueryResponse) *ABCIQueryResponse {
 	var proofOps *ProofOps
 
 	if res.ProofOps != nil {

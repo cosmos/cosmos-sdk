@@ -81,6 +81,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * [#19039](https://github.com/cosmos/cosmos-sdk/pull/19039) Add support for pubkey in autocli.
+* [#20266](https://github.com/cosmos/cosmos-sdk/pull/20266) Ability to override the short description in AutoCLI-generated top-level commands.
 
 ### Improvements
 

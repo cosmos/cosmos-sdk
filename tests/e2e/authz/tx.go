@@ -570,9 +570,9 @@ func (s *E2ETestSuite) TestNewExecGrantAuthorized() {
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
 			switch {
 			case tc.expectErrMsg != "":
-				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response), out.String())
-				s.Require().Contains(response.RawLog, tc.expectErrMsg)
-
+				// workaround to check error code since CometBFT v1.0.1 CheckTx errors are propagated.
+				// see https://github.com/cometbft/cometbft/pull/4040
+				s.Require().Contains(out.String(), tc.expectErrMsg)
 			case tc.expectErr:
 				s.Require().Error(err)
 

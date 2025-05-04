@@ -19,20 +19,21 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Query_Validators_FullMethodName                    = "/cosmos.staking.v1beta1.Query/Validators"
-	Query_Validator_FullMethodName                     = "/cosmos.staking.v1beta1.Query/Validator"
-	Query_ValidatorDelegations_FullMethodName          = "/cosmos.staking.v1beta1.Query/ValidatorDelegations"
-	Query_ValidatorUnbondingDelegations_FullMethodName = "/cosmos.staking.v1beta1.Query/ValidatorUnbondingDelegations"
-	Query_Delegation_FullMethodName                    = "/cosmos.staking.v1beta1.Query/Delegation"
-	Query_UnbondingDelegation_FullMethodName           = "/cosmos.staking.v1beta1.Query/UnbondingDelegation"
-	Query_DelegatorDelegations_FullMethodName          = "/cosmos.staking.v1beta1.Query/DelegatorDelegations"
-	Query_DelegatorUnbondingDelegations_FullMethodName = "/cosmos.staking.v1beta1.Query/DelegatorUnbondingDelegations"
-	Query_Redelegations_FullMethodName                 = "/cosmos.staking.v1beta1.Query/Redelegations"
-	Query_DelegatorValidators_FullMethodName           = "/cosmos.staking.v1beta1.Query/DelegatorValidators"
-	Query_DelegatorValidator_FullMethodName            = "/cosmos.staking.v1beta1.Query/DelegatorValidator"
-	Query_HistoricalInfo_FullMethodName                = "/cosmos.staking.v1beta1.Query/HistoricalInfo"
-	Query_Pool_FullMethodName                          = "/cosmos.staking.v1beta1.Query/Pool"
-	Query_Params_FullMethodName                        = "/cosmos.staking.v1beta1.Query/Params"
+	Query_Validators_FullMethodName                         = "/cosmos.staking.v1beta1.Query/Validators"
+	Query_Validator_FullMethodName                          = "/cosmos.staking.v1beta1.Query/Validator"
+	Query_ValidatorDelegations_FullMethodName               = "/cosmos.staking.v1beta1.Query/ValidatorDelegations"
+	Query_ValidatorUnbondingDelegations_FullMethodName      = "/cosmos.staking.v1beta1.Query/ValidatorUnbondingDelegations"
+	Query_Delegation_FullMethodName                         = "/cosmos.staking.v1beta1.Query/Delegation"
+	Query_UnbondingDelegation_FullMethodName                = "/cosmos.staking.v1beta1.Query/UnbondingDelegation"
+	Query_DelegatorDelegations_FullMethodName               = "/cosmos.staking.v1beta1.Query/DelegatorDelegations"
+	Query_DelegatorUnbondingDelegations_FullMethodName      = "/cosmos.staking.v1beta1.Query/DelegatorUnbondingDelegations"
+	Query_Redelegations_FullMethodName                      = "/cosmos.staking.v1beta1.Query/Redelegations"
+	Query_DelegatorValidators_FullMethodName                = "/cosmos.staking.v1beta1.Query/DelegatorValidators"
+	Query_DelegatorValidator_FullMethodName                 = "/cosmos.staking.v1beta1.Query/DelegatorValidator"
+	Query_AllowedDelegationTransferReceivers_FullMethodName = "/cosmos.staking.v1beta1.Query/AllowedDelegationTransferReceivers"
+	Query_HistoricalInfo_FullMethodName                     = "/cosmos.staking.v1beta1.Query/HistoricalInfo"
+	Query_Pool_FullMethodName                               = "/cosmos.staking.v1beta1.Query/Pool"
+	Query_Params_FullMethodName                             = "/cosmos.staking.v1beta1.Query/Params"
 )
 
 // QueryClient is the client API for Query service.
@@ -86,6 +87,8 @@ type QueryClient interface {
 	// DelegatorValidator queries validator info for given delegator validator
 	// pair.
 	DelegatorValidator(ctx context.Context, in *QueryDelegatorValidatorRequest, opts ...grpc.CallOption) (*QueryDelegatorValidatorResponse, error)
+	// AllowedDelegationTransferReceivers queries the allowed delegation transfer receivers.
+	AllowedDelegationTransferReceivers(ctx context.Context, in *QueryAllowedDelegationTransferReceiversRequest, opts ...grpc.CallOption) (*QueryAllowedDelegationTransferReceiversResponse, error)
 	// HistoricalInfo queries the historical info for given height.
 	HistoricalInfo(ctx context.Context, in *QueryHistoricalInfoRequest, opts ...grpc.CallOption) (*QueryHistoricalInfoResponse, error)
 	// Pool queries the pool info.
@@ -201,6 +204,15 @@ func (c *queryClient) DelegatorValidator(ctx context.Context, in *QueryDelegator
 	return out, nil
 }
 
+func (c *queryClient) AllowedDelegationTransferReceivers(ctx context.Context, in *QueryAllowedDelegationTransferReceiversRequest, opts ...grpc.CallOption) (*QueryAllowedDelegationTransferReceiversResponse, error) {
+	out := new(QueryAllowedDelegationTransferReceiversResponse)
+	err := c.cc.Invoke(ctx, Query_AllowedDelegationTransferReceivers_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *queryClient) HistoricalInfo(ctx context.Context, in *QueryHistoricalInfoRequest, opts ...grpc.CallOption) (*QueryHistoricalInfoResponse, error) {
 	out := new(QueryHistoricalInfoResponse)
 	err := c.cc.Invoke(ctx, Query_HistoricalInfo_FullMethodName, in, out, opts...)
@@ -279,6 +291,8 @@ type QueryServer interface {
 	// DelegatorValidator queries validator info for given delegator validator
 	// pair.
 	DelegatorValidator(context.Context, *QueryDelegatorValidatorRequest) (*QueryDelegatorValidatorResponse, error)
+	// AllowedDelegationTransferReceivers queries the allowed delegation transfer receivers.
+	AllowedDelegationTransferReceivers(context.Context, *QueryAllowedDelegationTransferReceiversRequest) (*QueryAllowedDelegationTransferReceiversResponse, error)
 	// HistoricalInfo queries the historical info for given height.
 	HistoricalInfo(context.Context, *QueryHistoricalInfoRequest) (*QueryHistoricalInfoResponse, error)
 	// Pool queries the pool info.
@@ -324,6 +338,9 @@ func (UnimplementedQueryServer) DelegatorValidators(context.Context, *QueryDeleg
 }
 func (UnimplementedQueryServer) DelegatorValidator(context.Context, *QueryDelegatorValidatorRequest) (*QueryDelegatorValidatorResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DelegatorValidator not implemented")
+}
+func (UnimplementedQueryServer) AllowedDelegationTransferReceivers(context.Context, *QueryAllowedDelegationTransferReceiversRequest) (*QueryAllowedDelegationTransferReceiversResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AllowedDelegationTransferReceivers not implemented")
 }
 func (UnimplementedQueryServer) HistoricalInfo(context.Context, *QueryHistoricalInfoRequest) (*QueryHistoricalInfoResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method HistoricalInfo not implemented")
@@ -545,6 +562,24 @@ func _Query_DelegatorValidator_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_AllowedDelegationTransferReceivers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryAllowedDelegationTransferReceiversRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).AllowedDelegationTransferReceivers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_AllowedDelegationTransferReceivers_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).AllowedDelegationTransferReceivers(ctx, req.(*QueryAllowedDelegationTransferReceiversRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Query_HistoricalInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryHistoricalInfoRequest)
 	if err := dec(in); err != nil {
@@ -649,6 +684,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DelegatorValidator",
 			Handler:    _Query_DelegatorValidator_Handler,
+		},
+		{
+			MethodName: "AllowedDelegationTransferReceivers",
+			Handler:    _Query_AllowedDelegationTransferReceivers_Handler,
 		},
 		{
 			MethodName: "HistoricalInfo",

@@ -18,13 +18,13 @@ var _ client.CometRPC = (*MockCometRPC)(nil)
 type MockCometRPC struct {
 	rpcclientmock.Client
 
-	responseQuery abci.ResponseQuery
+	QueryResponse abci.QueryResponse
 }
 
 // NewMockCometRPC returns a mock CometBFT RPC implementation.
 // It is used for CLI testing.
-func NewMockCometRPC(respQuery abci.ResponseQuery) MockCometRPC {
-	return MockCometRPC{responseQuery: respQuery}
+func NewMockCometRPC(respQuery abci.QueryResponse) MockCometRPC {
+	return MockCometRPC{QueryResponse: respQuery}
 }
 
 func (MockCometRPC) BroadcastTxSync(context.Context, cmttypes.Tx) (*coretypes.ResultBroadcastTx, error) {
@@ -37,5 +37,5 @@ func (m MockCometRPC) ABCIQueryWithOptions(
 	_ cmtbytes.HexBytes,
 	_ rpcclient.ABCIQueryOptions,
 ) (*coretypes.ResultABCIQuery, error) {
-	return &coretypes.ResultABCIQuery{Response: m.responseQuery}, nil
+	return &coretypes.ResultABCIQuery{Response: m.QueryResponse}, nil
 }

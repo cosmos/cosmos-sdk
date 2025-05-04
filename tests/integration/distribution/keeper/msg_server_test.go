@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	cmtabcitypes "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
@@ -75,7 +75,7 @@ func initFixture(t testing.TB) *fixture {
 		t.Fatalf("failed to load latest version: %v", err)
 	}
 
-	newCtx := sdk.NewContext(cms, types.Header{}, true, logger)
+	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)
 
 	authority := authtypes.NewModuleAddress("gov")
 
@@ -98,6 +98,7 @@ func initFixture(t testing.TB) *fixture {
 	blockedAddresses := map[string]bool{
 		accountKeeper.GetAuthority(): false,
 	}
+
 	bankKeeper := bankkeeper.NewBaseKeeper(
 		cdc,
 		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
@@ -131,7 +132,7 @@ func initFixture(t testing.TB) *fixture {
 				Address: valAddr,
 				Power:   100,
 			},
-			BlockIdFlag: types.BlockIDFlagCommit,
+			BlockIdFlag: cmtproto.BlockIDFlagCommit,
 		},
 	})
 

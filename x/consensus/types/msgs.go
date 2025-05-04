@@ -3,7 +3,7 @@ package types
 import (
 	"errors"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmttypes "github.com/cometbft/cometbft/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,10 +31,16 @@ func (msg MsgUpdateParams) ToProtoConsensusParams() (cmtproto.ConsensusParams, e
 		},
 		Version: cmttypes.DefaultConsensusParams().ToProto().Version, // Version is stored in x/upgrade
 	}
-
-	if msg.Abci != nil {
-		cp.Abci = &cmtproto.ABCIParams{
-			VoteExtensionsEnableHeight: msg.Abci.VoteExtensionsEnableHeight,
+	if msg.Feature != nil && msg.Feature.VoteExtensionsEnableHeight != nil && msg.Feature.PbtsEnableHeight != nil {
+		cp.Feature = &cmtproto.FeatureParams{
+			VoteExtensionsEnableHeight: msg.Feature.VoteExtensionsEnableHeight,
+			PbtsEnableHeight:           msg.Feature.PbtsEnableHeight,
+		}
+	}
+	if msg.Synchrony != nil {
+		cp.Synchrony = &cmtproto.SynchronyParams{
+			Precision:    msg.Synchrony.Precision,
+			MessageDelay: msg.Synchrony.MessageDelay,
 		}
 	}
 

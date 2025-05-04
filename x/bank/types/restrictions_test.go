@@ -503,6 +503,7 @@ func TestSendRestriction_Then(t *testing.T) {
 	addr2 := sdk.AccAddress("2addr_______________")
 	addr3 := sdk.AccAddress("3addr_______________")
 	addr4 := sdk.AccAddress("4addr_______________")
+	// SendRestrictionFn only takes one coin since https://github.com/InjectiveLabs/cosmos-sdk/commit/59f4bfe90556ee3b13f6a99fb27759d1ceedfa49
 	coins := sdk.NewCoins(sdk.NewInt64Coin("ecoin", 32))
 
 	h := NewSendRestrictionTestHelper()
@@ -658,6 +659,7 @@ func TestComposeSendRestrictions(t *testing.T) {
 	addr2 := sdk.AccAddress("2addr_______________")
 	addr3 := sdk.AccAddress("3addr_______________")
 	addr4 := sdk.AccAddress("4addr_______________")
+	// SendRestrictionFn only takes one coin since https://github.com/InjectiveLabs/cosmos-sdk/commit/59f4bfe90556ee3b13f6a99fb27759d1ceedfa49
 	coins := sdk.NewCoins(sdk.NewInt64Coin("gcoin", 128))
 
 	h := NewSendRestrictionTestHelper()

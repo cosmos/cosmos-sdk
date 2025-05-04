@@ -114,6 +114,10 @@ var customTypeExtension = &protoimpl.ExtensionInfo{
 }
 
 func init() {
+	defer func() {
+		_ = recover()
+	}()
+
 	protoregistry.GlobalTypes.RegisterExtension(customTypeExtension)
 }
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
@@ -243,6 +244,11 @@ func (s *E2ETestSuite) TestNewSendTxCmd() {
 			bz, err := clitestutil.MsgSendExec(clientCtx, tc.from, tc.to, tc.amount, addresscodec.NewBech32Codec("cosmos"), tc.args...)
 			if tc.expectErr {
 				s.Require().Error(err)
+			} else if tc.expectedCode != 0 {
+				// workaround to check error code since CometBFT v1.0.1 CheckTx errors are propagated.
+				// see https://github.com/cometbft/cometbft/pull/4040
+				errMsg := bz.String()
+				s.Require().Contains(errMsg, strconv.Itoa(int(tc.expectedCode)))
 			} else {
 				s.Require().NoError(err)
 
@@ -378,6 +384,11 @@ func (s *E2ETestSuite) TestNewMultiSendTxCmd() {
 			bz, err := MsgMultiSendExec(clientCtx, tc.from, tc.to, tc.amount, tc.args...)
 			if tc.expectErr {
 				s.Require().Error(err)
+			} else if tc.expectedCode != 0 {
+				// workaround to check error code since CometBFT v1.0.1 CheckTx errors are propagated.
+				// see https://github.com/cometbft/cometbft/pull/4040
+				errMsg := bz.String()
+				s.Require().Contains(errMsg, strconv.Itoa(int(tc.expectedCode)))
 			} else {
 				s.Require().NoError(err)
 

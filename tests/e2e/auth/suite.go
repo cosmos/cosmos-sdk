@@ -106,6 +106,7 @@ func (s *E2ETestSuite) TestCLISignGenOnly() {
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly), // shouldn't break if we use keyname with --generate-only flag
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, "10stake"),
 	}
 	generatedStd, err := clitestutil.ExecTestCLICmd(val.ClientCtx, bank.NewSendTxCmd(addresscodec.NewBech32Codec("cosmos")), args)
 	s.Require().NoError(err)
@@ -1153,6 +1154,7 @@ func (s *E2ETestSuite) TestMultisignBatch() {
 	s.Require().NoError(err)
 	// Send coins from validator to multisig.
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 1000)
+	s.Require().NoError(s.network.WaitForNextBlock())
 	_, err = s.createBankMsg(
 		val,
 		addr,
@@ -1313,14 +1315,12 @@ func (s *E2ETestSuite) TestTxWithoutPublicKey() {
 	signedTxFile := testutil.WriteToNewTempFile(s.T(), string(txJSON))
 	defer signedTxFile.Close()
 	s.Require().True(strings.Contains(string(txJSON), "\"public_key\":null"))
-
 	// Broadcast tx, test that it shouldn't panic.
 	val1.ClientCtx.BroadcastMode = flags.BroadcastSync
-	out, err := authclitestutil.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
-	s.Require().NoError(err)
-	var res sdk.TxResponse
-	s.Require().NoError(val1.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
-	s.Require().NotEqual(0, res.Code)
+	_, err = authclitestutil.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
+	// returns an error since CometBFT v1.0.1 propagates CheckTx errors.
+	// See https://github.com/cometbft/cometbft/pull/4040
+	s.Require().Contains(err.Error(), "broadcast error on transaction validation")
 }
 
 // TestSignWithMultiSignersAminoJSON tests the case where a transaction with 2

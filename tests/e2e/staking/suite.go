@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 	"github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/stretchr/testify/suite"
 
@@ -128,7 +127,7 @@ func (s *E2ETestSuite) TestBlockResults() {
 	require.NoError(s.network.WaitForNextBlock())
 
 	// Create a HTTP rpc client.
-	rpcClient, err := http.New(val.RPCAddress, "/websocket")
+	rpcClient, err := http.New(val.RPCAddress)
 	require.NoError(err)
 
 	// Loop until we find a block result with the correct validator updates.
@@ -147,7 +146,7 @@ func (s *E2ETestSuite) TestBlockResults() {
 
 		valUpdate := res.ValidatorUpdates[0]
 		require.Equal(
-			valUpdate.GetPubKey().Sum.(*crypto.PublicKey_Ed25519).Ed25519,
+			valUpdate.PubKeyBytes,
 			val.PubKey.Bytes(),
 		)
 

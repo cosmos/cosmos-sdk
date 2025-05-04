@@ -11,7 +11,7 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -37,7 +37,7 @@ func initChain(
 	}
 	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, config)
 	consensusParams := randomConsensusParams(r, appState, cdc, blockMaxGas)
-	req := abci.RequestInitChain{
+	req := abci.InitChainRequest{
 		AppStateBytes:   appState,
 		ChainId:         chainID,
 		ConsensusParams: consensusParams,
@@ -131,7 +131,7 @@ func SimulateFromSeed(
 		stopEarly = true
 	}()
 
-	finalizeBlockReq := RandomRequestFinalizeBlock(
+	finalizeBlockReq := RandomFinalizeBlockRequest(
 		r,
 		params,
 		validators,
@@ -241,7 +241,7 @@ func SimulateFromSeed(
 
 		// Generate a random RequestBeginBlock with the current validator set
 		// for the next block
-		finalizeBlockReq = RandomRequestFinalizeBlock(r, params, validators, pastTimes, pastVoteInfos, eventStats.Tally, blockHeight, blockTime, proposerAddress)
+		finalizeBlockReq = RandomFinalizeBlockRequest(r, params, validators, pastTimes, pastVoteInfos, eventStats.Tally, blockHeight, blockTime, proposerAddress)
 
 		// Update the validator set, which will be reflected in the application
 		// on the next block

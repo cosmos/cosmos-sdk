@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 

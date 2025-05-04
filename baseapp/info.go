@@ -145,7 +145,7 @@ func (m misbehaviorWrapper) TotalVotingPower() int64 {
 }
 
 type prepareProposalInfo struct {
-	*abci.RequestPrepareProposal
+	*abci.PrepareProposalRequest
 }
 
 var _ comet.BlockInfo = (*prepareProposalInfo)(nil)
@@ -159,11 +159,11 @@ func (r prepareProposalInfo) GetValidatorsHash() []byte {
 }
 
 func (r prepareProposalInfo) GetProposerAddress() []byte {
-	return r.RequestPrepareProposal.ProposerAddress
+	return r.PrepareProposalRequest.ProposerAddress
 }
 
 func (r prepareProposalInfo) GetLastCommit() comet.CommitInfo {
-	return extendedCommitInfoWrapper{r.RequestPrepareProposal.LocalLastCommit}
+	return extendedCommitInfoWrapper{r.PrepareProposalRequest.LocalLastCommit}
 }
 
 var _ comet.BlockInfo = (*prepareProposalInfo)(nil)

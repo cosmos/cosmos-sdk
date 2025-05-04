@@ -23,7 +23,7 @@ import (
 
 const TimeoutFlag = "timeout"
 
-func newTxResponseCheckTx(res *coretypes.ResultBroadcastTxCommit) *sdk.TxResponse {
+func newTxCheckTxResponse(res *coretypes.ResultBroadcastTxCommit) *sdk.TxResponse {
 	if res == nil {
 		return nil
 	}
@@ -83,7 +83,7 @@ func newResponseFormatBroadcastTxCommit(res *coretypes.ResultBroadcastTxCommit) 
 	}
 
 	if !res.CheckTx.IsOK() {
-		return newTxResponseCheckTx(res)
+		return newTxCheckTxResponse(res)
 	}
 
 	return newTxResponseDeliverTx(res)
@@ -119,7 +119,7 @@ $ %[1]s tx [flags] | %[1]s q wait-tx
 				return err
 			}
 
-			c, err := rpchttp.New(clientCtx.NodeURI, "/websocket")
+			c, err := rpchttp.New(clientCtx.NodeURI)
 			if err != nil {
 				return err
 			}

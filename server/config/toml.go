@@ -51,7 +51,7 @@ halt-time = {{ .BaseConfig.HaltTime }}
 # MinRetainBlocks defines the minimum block height offset from the current
 # block being committed, such that all blocks past this offset are pruned
 # from CometBFT. It is used as part of the process of determining the
-# ResponseCommit.RetainHeight value during ABCI Commit. A value of 0 indicates
+# CommitResponse.RetainHeight value during ABCI Commit. A value of 0 indicates
 # that no blocks should be pruned.
 #
 # This configuration value is only responsible for pruning CometBFT blocks.
@@ -61,7 +61,7 @@ halt-time = {{ .BaseConfig.HaltTime }}
 # Note: CometBFT block pruning is dependant on this parameter in conjunction
 # with the unbonding (safety threshold) period, state pruning and state sync
 # snapshot parameters to determine the correct minimum value of
-# ResponseCommit.RetainHeight.
+# CommitResponse.RetainHeight.
 min-retain-blocks = {{ .BaseConfig.MinRetainBlocks }}
 
 # InterBlockCache enables inter-block caching.

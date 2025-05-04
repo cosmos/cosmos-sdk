@@ -65,6 +65,11 @@ type Context struct {
 	streamingManager     storetypes.StreamingManager
 	cometInfo            comet.BlockInfo
 	headerInfo           header.Info
+
+	// the index of the current tx in the block, -1 means not in finalize block context
+	txIndex int
+	// the index of the current msg in the tx, -1 means not in finalize block context
+	msgIndex int
 }
 
 // Proposed rename, not done to avoid API breakage
@@ -93,6 +98,8 @@ func (c Context) TransientKVGasConfig() storetypes.GasConfig    { return c.trans
 func (c Context) StreamingManager() storetypes.StreamingManager { return c.streamingManager }
 func (c Context) CometInfo() comet.BlockInfo                    { return c.cometInfo }
 func (c Context) HeaderInfo() header.Info                       { return c.headerInfo }
+func (c Context) TxIndex() int                                  { return c.txIndex }
+func (c Context) MsgIndex() int                                 { return c.msgIndex }
 
 // clone the header before returning
 func (c Context) BlockHeader() cmtproto.Header {
@@ -140,6 +147,8 @@ func NewContext(ms storetypes.MultiStore, header cmtproto.Header, isCheckTx bool
 		eventManager:         NewEventManager(),
 		kvGasConfig:          storetypes.KVGasConfig(),
 		transientKVGasConfig: storetypes.TransientGasConfig(),
+		txIndex:              -1,
+		msgIndex:             -1,
 	}
 }
 
@@ -319,6 +328,16 @@ func (c Context) WithHeaderInfo(headerInfo header.Info) Context {
 	return c
 }
 
+func (c Context) WithTxIndex(txIndex int) Context {
+	c.txIndex = txIndex
+	return c
+}
+
+func (c Context) WithMsgIndex(msgIndex int) Context {
+	c.msgIndex = msgIndex
+	return c
+}
+
 // TODO: remove???
 func (c Context) IsZero() bool {
 	return c.ms == nil
@@ -349,6 +368,11 @@ func (c Context) KVStore(key storetypes.StoreKey) storetypes.KVStore {
 // TransientStore fetches a TransientStore from the MultiStore.
 func (c Context) TransientStore(key storetypes.StoreKey) storetypes.KVStore {
 	return gaskv.NewStore(c.ms.GetKVStore(key), c.gasMeter, c.transientKVGasConfig)
+}
+
+// ObjectStore fetches an object store from the MultiStore,
+func (c Context) ObjectStore(key storetypes.StoreKey) storetypes.ObjKVStore {
+	return gaskv.NewObjStore(c.ms.GetObjKVStore(key), c.gasMeter, c.transientKVGasConfig)
 }
 
 // CacheContext returns a new Context with the multi-store cached and a new

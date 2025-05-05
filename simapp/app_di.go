@@ -14,7 +14,7 @@ import (
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
 	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
-	nftkeeper "cosmossdk.io/x/nft/keeper"
+	nftkeeper "cosmossdk.io/x/nft/keeper" //nolint:staticcheck // deprecated and to be removed
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"

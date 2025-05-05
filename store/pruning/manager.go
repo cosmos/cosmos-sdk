@@ -129,7 +129,7 @@ func (m *Manager) HandleSnapshotHeight(height int64) {
 }
 
 // SetSnapshotInterval sets the interval at which the snapshots are taken.
-// This value should be set on startup. Concurrent modifications are not supported.
+// This value should be set on startup and not exceed max int64 (2^63-1). Concurrent modifications are not supported.
 func (m *Manager) SetSnapshotInterval(snapshotInterval uint64) {
 	m.snapshotInterval = snapshotInterval
 }

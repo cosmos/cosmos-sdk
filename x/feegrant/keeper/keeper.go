@@ -313,7 +313,9 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*feegrant.GenesisState, erro
 func (k Keeper) RemoveExpiredAllowances(ctx context.Context, limit int32) error {
 	exp := sdk.UnwrapSDKContext(ctx).BlockTime()
 	rng := collections.NewPrefixUntilTripleRange[time.Time, sdk.AccAddress, sdk.AccAddress](exp)
+	count := int32(0)
 
+	keysToRemove := []collections.Triple[time.Time, sdk.AccAddress, sdk.AccAddress]{}
 	err := k.FeeAllowanceQueue.Walk(ctx, rng, func(key collections.Triple[time.Time, sdk.AccAddress, sdk.AccAddress], value bool) (stop bool, err error) {
 		grantee, granter := key.K2(), key.K3()
 
@@ -321,8 +323,11 @@ func (k Keeper) RemoveExpiredAllowances(ctx context.Context, limit int32) error 
 			return true, err
 		}
 
-		if err := k.FeeAllowanceQueue.Remove(ctx, key); err != nil {
-			return true, err
+		keysToRemove = append(keysToRemove, key)
+
+		count++
+		if count == limit {
+			return true, nil
 		}
 
 		return false, nil
@@ -330,6 +335,12 @@ func (k Keeper) RemoveExpiredAllowances(ctx context.Context, limit int32) error 
 
 	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
 		return err
+	}
+
+	for _, key := range keysToRemove {
+		if err := k.FeeAllowanceQueue.Remove(ctx, key); err != nil {
+			return err
+		}
 	}
 
 	return nil

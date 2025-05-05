@@ -56,4 +56,4 @@ retract v1.1.0
 // replace (
 // 	<temporary replace>
 // )
-replace github.com/cosmos/cosmos-db => github.com/mmsqe/cosmos-db v0.0.0-20250411095840-e08e5aabf171
+replace github.com/cosmos/cosmos-db => github.com/cosmos/cosmos-db v0.0.0-20250505172547-38785e92904d

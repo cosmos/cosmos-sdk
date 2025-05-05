@@ -9,9 +9,9 @@ import (
 	"go.uber.org/mock/gomock"
 
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/nft"
-	"cosmossdk.io/x/nft/keeper"
-	"cosmossdk.io/x/nft/module"
+	"cosmossdk.io/x/nft"        //nolint:staticcheck // deprecated and to be removed
+	"cosmossdk.io/x/nft/keeper" //nolint:staticcheck // deprecated and to be removed
+	"cosmossdk.io/x/nft/module" //nolint:staticcheck // deprecated and to be removed
 	nfttestutil "cosmossdk.io/x/nft/testutil"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"

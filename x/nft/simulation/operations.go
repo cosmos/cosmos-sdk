@@ -3,8 +3,8 @@ package simulation
 import (
 	"math/rand"
 
-	"cosmossdk.io/x/nft"
-	"cosmossdk.io/x/nft/keeper"
+	"cosmossdk.io/x/nft"        //nolint:staticcheck // deprecated and to be removed
+	"cosmossdk.io/x/nft/keeper" //nolint:staticcheck // deprecated and to be removed
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"

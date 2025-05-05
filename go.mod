@@ -17,7 +17,7 @@ require (
 	github.com/bits-and-blooms/bitset v1.22.0
 	github.com/chzyer/readline v1.5.1
 	github.com/cockroachdb/apd/v2 v2.0.2
-	github.com/cockroachdb/errors v1.11.3
+	github.com/cockroachdb/errors v1.12.0
 	github.com/cometbft/cometbft v0.38.17
 	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/cosmos-db v1.1.1

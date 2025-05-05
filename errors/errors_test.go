@@ -53,10 +53,6 @@ func TestErrorsTestSuite(t *testing.T) {
 	suite.Run(t, new(errorsTestSuite))
 }
 
-func (s *errorsTestSuite) SetupSuite() {
-	s.T().Parallel()
-}
-
 func (s *errorsTestSuite) TestCause() {
 	std := stdlib.New("this is a stdlib error")
 

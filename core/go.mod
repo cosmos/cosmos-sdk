@@ -60,8 +60,3 @@ require (
 retract v0.12.0
 
 retract v1.0.0
-
-// replace (
-// 	<temporary replace>
-// )
-replace github.com/cosmos/cosmos-db => github.com/cosmos/cosmos-db v0.0.0-20250505172547-38785e92904d

@@ -238,8 +238,3 @@ replace (
 	// replace broken goleveldb
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
-
-replace (
-	cosmossdk.io/collections => ../collections
-	github.com/cosmos/cosmos-db => github.com/cosmos/cosmos-db v0.0.0-20250505172547-38785e92904d
-)

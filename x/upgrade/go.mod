@@ -209,11 +209,3 @@ require (
 // Fix upstream GHSA-h395-qcrw-5vmq and GHSA-3vp4-m3rf-835h vulnerabilities.
 // TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
-
-// replace (
-// 	<temporary replace>
-// )
-replace (
-	cosmossdk.io/collections => ../../collections
-	github.com/cosmos/cosmos-db => github.com/cosmos/cosmos-db v0.0.0-20250505172547-38785e92904d
-)

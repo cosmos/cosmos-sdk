@@ -3,8 +3,8 @@ package simulation
 import (
 	"context"
 
-	"cosmossdk.io/x/nft"
-	"cosmossdk.io/x/nft/keeper"
+	"cosmossdk.io/x/nft"        //nolint:staticcheck // deprecated and to be removed
+	"cosmossdk.io/x/nft/keeper" //nolint:staticcheck // deprecated and to be removed
 
 	"github.com/cosmos/cosmos-sdk/testutil/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"

@@ -26,7 +26,7 @@ In the Cosmos SDK, `gas` is a special unit that is used to track the consumption
 In the Cosmos SDK, `gas` is a simple alias for `uint64`, and is managed by an object called a _gas meter_. Gas meters implement the `GasMeter` interface
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/store/types/gas.go#L40-L51
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/store/types/gas.go#L40-L51
 ```
 
 where:
@@ -84,13 +84,13 @@ The anteHandler is not implemented in the core Cosmos SDK but in a module. That 
 * Verify that the transactions are of the correct type. Transaction types are defined in the module that implements the `anteHandler`, and they follow the transaction interface:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/tx_msg.go#L51-L56
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/types/tx_msg.go#L53-L58
 ```
 
   This enables developers to play with various types for the transaction of their application. In the default `auth` module, the default transaction type is `Tx`: 
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/tx/v1beta1/tx.proto#L14-L27
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/proto/cosmos/tx/v1beta1/tx.proto#L15-L28
 ```
 
 * Verify signatures for each [`message`](../../build/building-modules/02-messages-and-queries.md#messages) contained in the transaction. Each `message` should be signed by one or multiple sender(s), and these signatures must be verified in the `anteHandler`.

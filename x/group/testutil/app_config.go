@@ -8,7 +8,7 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/bank"           // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"      // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"        // import as blank for app wiring
-	_ "github.com/cosmos/cosmos-sdk/x/group/module"   // import as blank for app wiring
+	_ "github.com/cosmos/cosmos-sdk/x/group/module"   //nolint:staticcheck // deprecated and to be removed   // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/mint"           // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/params"         // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/staking"        // import as blank for app wiring

@@ -121,4 +121,4 @@ The module is now ready to be used with `depinject` by a chain developer.
 
 ## Integrate in an application
 
-The App Wiring is done in `app_config.go` / `app.yaml` and `app_v2.go` and is explained in detail in the [overview of `app_v2.go`](../building-apps/01-app-go-di.md).
+The App Wiring is done in `app_config.go` / `app.yaml` and `app_di.go` and is explained in detail in the [overview of `app_di.go`](../building-apps/01-app-go-di.md).

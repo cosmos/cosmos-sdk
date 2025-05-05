@@ -1130,8 +1130,9 @@ func (s *coinTestSuite) TestSearch() {
 			require.Equal(math.NewInt(tc.amountOfGAS), tc.coins.AmountOf("gas"), i)
 			require.Equal(math.NewInt(tc.amountOfMINERAL), tc.coins.AmountOf("mineral"), i)
 			require.Equal(math.NewInt(tc.amountOfTREE), tc.coins.AmountOf("tree"), i)
+			require.Equal(math.NewInt(tc.amountOfTREE), tc.coins.AmountOf("tree"), i)
 		}
-		require.Panics(func() { amountOfCases[0].coins.AmountOf("10Invalid") })
+		require.Equal(math.ZeroInt(), amountOfCases[0].coins.AmountOf("10InvalidDenom"))
 	})
 
 	zeroCoin := sdk.Coin{}

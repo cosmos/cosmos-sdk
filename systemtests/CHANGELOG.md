@@ -36,7 +36,7 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 ## [Unreleased]
 
-## [v1.1.0] -  2025-04-24
+## [v1.2.0] -  2025-04-24
 
 * SDK v0.53.x support.
 

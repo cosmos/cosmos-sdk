@@ -3,7 +3,6 @@ package errors
 import (
 	stdlib "errors"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/pkg/errors"
@@ -268,9 +267,8 @@ func (s *errorsTestSuite) TestDoubleRegister() {
 	})
 }
 
-func (s *errorsTestSuite) TestDoubleRegisteDuplicateErrorRegistration() {
-	os.Setenv(EnvSuppressErrorDuplicateRegister, "true")
-	defer os.Unsetenv(EnvSuppressErrorDuplicateRegister)
+func (s *errorsTestSuite) TestDoubleRegisterDuplicateErrorRegistration() {
+	s.T().Setenv(EnvSuppressErrorDuplicateRegister, "true")
 
 	s.Require().NotPanics(func() {
 		_ = Register(testCodespace, 50, "Internal IO error")

@@ -246,12 +246,12 @@ func (p Params) CalculateThresholdAndMinDeposit(duration time.Duration) (thresho
 	normalCoins := p.MinDeposit
 	expeditedCoins := p.ExpeditedMinDeposit
 	minDeposit = make([]sdk.Coin, 0, len(expeditedCoins))
-	for i, nc := range expeditedCoins {
-		ec := normalCoins[i]
-		diff := nc.Amount.Sub(ec.Amount)
+	for i, ex := range expeditedCoins {
+		nc := normalCoins[i]
+		diff := ex.Amount.Sub(nc.Amount)
 		scaled := sdkmath.LegacyNewDecFromInt(diff).Mul(rateDec).TruncateInt()
-		newAmt := nc.Amount.Sub(scaled)
-		minDeposit = append(minDeposit, sdk.NewCoin(nc.Denom, newAmt))
+		newAmt := ex.Amount.Sub(scaled)
+		minDeposit = append(minDeposit, sdk.NewCoin(ex.Denom, newAmt))
 	}
 	return
 }

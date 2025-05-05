@@ -40,13 +40,8 @@ require (
 	github.com/prometheus/client_model v0.2.1-0.20210607210712-147c58e9608a // indirect
 	github.com/prometheus/common v0.32.1 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
-<<<<<<< HEAD
-	github.com/rogpeppe/go-internal v1.9.0 // indirect
-	github.com/spf13/cast v1.7.1 // indirect
-=======
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/spf13/cast v1.8.0 // indirect
->>>>>>> da8344709 (build(deps): Bump github.com/cockroachdb/errors from 1.11.3 to 1.12.0 (#24675))
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 // indirect
 	golang.org/x/exp v0.0.0-20230626212559-97b1e661b5df // indirect
 	golang.org/x/sys v0.32.0 // indirect

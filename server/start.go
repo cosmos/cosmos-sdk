@@ -180,12 +180,12 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 
 			_, err := GetPruningOptionsFromFlags(serverCtx.Viper)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get pruning options: %w", err)
 			}
 
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get client context: %w", err)
 			}
 
 			withCMT, _ := cmd.Flags().GetBool(flagWithComet)
@@ -217,18 +217,18 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 func start(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreator, withCmt bool, opts StartCmdOptions) error {
 	svrCfg, err := getAndValidateConfig(svrCtx)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get and validate config: %w", err)
 	}
 
 	app, appCleanupFn, err := startApp(svrCtx, appCreator, opts)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to start app: %w", err)
 	}
 	defer appCleanupFn()
 
 	metrics, err := startTelemetry(svrCfg)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to start telemetry: %w", err)
 	}
 
 	emitServerInfoMetrics()
@@ -275,12 +275,12 @@ func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clie
 
 	grpcSrv, clientCtx, err := startGrpcServer(ctx, g, svrCfg.GRPC, clientCtx, svrCtx, app)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to start grpc server: %w", err)
 	}
 
 	err = startAPIServer(ctx, g, svrCfg, clientCtx, svrCtx, app, svrCtx.Config.RootDir, grpcSrv, metrics)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to start api server: %w", err)
 	}
 
 	if opts.PostSetupStandalone != nil {
@@ -341,12 +341,12 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 
 	grpcSrv, clientCtx, err := startGrpcServer(ctx, g, svrCfg.GRPC, clientCtx, svrCtx, app)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to start grpc server: %w", err)
 	}
 
 	err = startAPIServer(ctx, g, svrCfg, clientCtx, svrCtx, app, cmtCfg.RootDir, grpcSrv, metrics)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to start api server: %w", err)
 	}
 
 	if opts.PostSetup != nil {
@@ -369,13 +369,13 @@ func startCmtNode(
 ) (tmNode *node.Node, cleanupFn func(), err error) {
 	nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
 	if err != nil {
-		return nil, cleanupFn, err
+		return nil, cleanupFn, fmt.Errorf("failed to load or generate node key: %w", err)
 	}
 
 	// CometBFT uses the ed25519 key generator as default if the given generator function is nil.
 	pv, err := pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile(), nil)
 	if err != nil {
-		return nil, cleanupFn, err
+		return nil, cleanupFn, fmt.Errorf("failed to load or generate priv_validator: %w", err)
 	}
 
 	cmtApp := NewCometABCIWrapper(app)
@@ -391,11 +391,11 @@ func startCmtNode(
 		servercmtlog.CometLoggerWrapper{Logger: svrCtx.Logger},
 	)
 	if err != nil {
-		return tmNode, cleanupFn, err
+		return tmNode, cleanupFn, fmt.Errorf("failed to create new comet node: %w", err)
 	}
 
 	if err := tmNode.Start(); err != nil {
-		return tmNode, cleanupFn, err
+		return tmNode, cleanupFn, fmt.Errorf("failed to start comet node: %w", err)
 	}
 
 	cleanupFn = func() {

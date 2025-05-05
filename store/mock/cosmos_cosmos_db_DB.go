@@ -113,10 +113,10 @@ func (mr *MockDBMockRecorder) Has(key any) *gomock.Call {
 }
 
 // Iterator mocks base method.
-func (m *MockDB) Iterator(start, end []byte) (db.IIterator, error) {
+func (m *MockDB) Iterator(start, end []byte) (db.IteratorI, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Iterator", start, end)
-	ret0, _ := ret[0].(db.IIterator)
+	ret0, _ := ret[0].(db.IteratorI)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -128,10 +128,10 @@ func (mr *MockDBMockRecorder) Iterator(start, end any) *gomock.Call {
 }
 
 // NewBatch mocks base method.
-func (m *MockDB) NewBatch() db.IBatch {
+func (m *MockDB) NewBatch() db.BatchI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NewBatch")
-	ret0, _ := ret[0].(db.IBatch)
+	ret0, _ := ret[0].(db.BatchI)
 	return ret0
 }
 
@@ -142,10 +142,10 @@ func (mr *MockDBMockRecorder) NewBatch() *gomock.Call {
 }
 
 // NewBatchWithSize mocks base method.
-func (m *MockDB) NewBatchWithSize(arg0 int) db.IBatch {
+func (m *MockDB) NewBatchWithSize(arg0 int) db.BatchI {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NewBatchWithSize", arg0)
-	ret0, _ := ret[0].(db.IBatch)
+	ret0, _ := ret[0].(db.BatchI)
 	return ret0
 }
 
@@ -170,10 +170,10 @@ func (mr *MockDBMockRecorder) Print() *gomock.Call {
 }
 
 // ReverseIterator mocks base method.
-func (m *MockDB) ReverseIterator(start, end []byte) (db.IIterator, error) {
+func (m *MockDB) ReverseIterator(start, end []byte) (db.IteratorI, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ReverseIterator", start, end)
-	ret0, _ := ret[0].(db.IIterator)
+	ret0, _ := ret[0].(db.IteratorI)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

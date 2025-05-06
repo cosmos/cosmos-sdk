@@ -212,3 +212,5 @@ replace github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
 
 // Temporary replace until the next 0.53 tag
 replace github.com/cosmos/cosmos-sdk => ../..
+
+replace cosmossdk.io/log => ../../log

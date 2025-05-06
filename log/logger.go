@@ -62,6 +62,14 @@ type Logger interface {
 	Impl() any
 }
 
+// VerboseModeLogger is an extension interface of Logger which allows verbosity to be configured.
+type VerboseModeLogger interface {
+	Logger
+	// SetVerboseMode configures whether the logger enters an increased verbose mode or not for
+	// special operations where increased observability is desired (such as chain upgrades).
+	SetVerboseMode(bool)
+}
+
 // WithJSONMarshal configures zerolog global json encoding.
 func WithJSONMarshal(marshaler func(v any) ([]byte, error)) {
 	zerolog.InterfaceMarshalFunc = func(i any) ([]byte, error) {
@@ -80,6 +88,8 @@ func WithJSONMarshal(marshaler func(v any) ([]byte, error)) {
 
 type zeroLogWrapper struct {
 	*zerolog.Logger
+	regularLevel zerolog.Level
+	verboseLevel zerolog.Level
 }
 
 // NewLogger returns a new logger that writes to the given destination.
@@ -129,12 +139,16 @@ func NewLogger(dst io.Writer, options ...Option) Logger {
 
 	logger = logger.Hook(logCfg.Hooks...)
 
-	return zeroLogWrapper{&logger}
+	return zeroLogWrapper{
+		Logger:       &logger,
+		regularLevel: logCfg.Level,
+		verboseLevel: logCfg.VerboseLevel,
+	}
 }
 
 // NewCustomLogger returns a new logger with the given zerolog logger.
 func NewCustomLogger(logger zerolog.Logger) Logger {
-	return zeroLogWrapper{&logger}
+	return zeroLogWrapper{Logger: &logger}
 }
 
 // Info takes a message and a set of key/value pairs and logs with level INFO.
@@ -164,13 +178,13 @@ func (l zeroLogWrapper) Debug(msg string, keyVals ...interface{}) {
 // With returns a new wrapped logger with additional context provided by a set.
 func (l zeroLogWrapper) With(keyVals ...interface{}) Logger {
 	logger := l.Logger.With().Fields(keyVals).Logger()
-	return zeroLogWrapper{&logger}
+	return zeroLogWrapper{Logger: &logger}
 }
 
 // WithContext returns a new wrapped logger with additional context provided by a set.
 func (l zeroLogWrapper) WithContext(keyVals ...interface{}) any {
 	logger := l.Logger.With().Fields(keyVals).Logger()
-	return zeroLogWrapper{&logger}
+	return zeroLogWrapper{Logger: &logger}
 }
 
 // Impl returns the underlying zerolog logger.
@@ -178,6 +192,20 @@ func (l zeroLogWrapper) WithContext(keyVals ...interface{}) any {
 func (l zeroLogWrapper) Impl() interface{} {
 	return l.Logger
 }
+
+func (l zeroLogWrapper) SetVerboseMode(enable bool) {
+	var nextLevel zerolog.Level
+	if enable {
+		nextLevel = l.verboseLevel
+	} else {
+		nextLevel = l.regularLevel
+	}
+	if nextLevel != zerolog.NoLevel {
+		*l.Logger = l.Logger.Level(nextLevel)
+	}
+}
+
+var _ VerboseModeLogger = zeroLogWrapper{}
 
 // NewNopLogger returns a new logger that does nothing.
 func NewNopLogger() Logger {

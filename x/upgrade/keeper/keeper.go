@@ -15,9 +15,10 @@ import (
 
 	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
+
+	"cosmossdk.io/log"
 	xp "cosmossdk.io/x/upgrade/exported"
 	"cosmossdk.io/x/upgrade/types"
 
@@ -461,9 +462,21 @@ func (k Keeper) ApplyUpgrade(ctx context.Context, plan types.Plan) error {
 		return err
 	}
 
+	// Enable verbose mode logging, if possible
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	verboseLogger, haveVerboseLogger := sdkCtx.Logger().(log.VerboseModeLogger)
+	if haveVerboseLogger {
+		verboseLogger.SetVerboseMode(true)
+	}
+
 	updatedVM, err := handler(ctx, plan, vm)
 	if err != nil {
 		return err
+	}
+
+	// Disable verbose mode logging
+	if haveVerboseLogger {
+		verboseLogger.SetVerboseMode(false)
 	}
 
 	err = k.SetModuleVersionMap(ctx, updatedVM)

@@ -171,9 +171,7 @@ require (
 
 // Here are the short-lived replace from the Cosmos SDK
 // Replace here are pending PRs, or version to be tagged
-// replace (
-// 	<temporary replace>
-// )
+replace cosmossdk.io/log => ./log
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (

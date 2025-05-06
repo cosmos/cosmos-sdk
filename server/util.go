@@ -24,11 +24,12 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 
-	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
+
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -177,6 +178,15 @@ func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 		log.ColorOption(!ctx.Viper.GetBool(flags.FlagLogNoColor)),
 		// We use CometBFT flag (cmtcli.TraceFlag) for trace logging.
 		log.TraceOption(ctx.Viper.GetBool(FlagTrace)))
+
+	upgradeLogLvlStr := ctx.Viper.GetString(flags.FlagUpgradeLogLevel)
+	if upgradeLogLvlStr != "" {
+		upgradeLogLvl, err := zerolog.ParseLevel(upgradeLogLvlStr)
+		if err != nil {
+			return nil, fmt.Errorf("invalid upgrade log level: %s: %w", upgradeLogLvlStr, err)
+		}
+		opts = append(opts, log.VerboseLevelOption(upgradeLogLvl))
+	}
 
 	// check and set filter level or keys for the logger if any
 	logLvlStr := ctx.Viper.GetString(flags.FlagLogLevel)

@@ -19,13 +19,14 @@ var defaultConfig = Config{
 
 // Config defines configuration for the logger.
 type Config struct {
-	Level      zerolog.Level
-	Filter     FilterFunc
-	OutputJSON bool
-	Color      bool
-	StackTrace bool
-	TimeFormat string
-	Hooks      []zerolog.Hook
+	Level        zerolog.Level
+	VerboseLevel zerolog.Level
+	Filter       FilterFunc
+	OutputJSON   bool
+	Color        bool
+	StackTrace   bool
+	TimeFormat   string
+	Hooks        []zerolog.Hook
 }
 
 type Option func(*Config)
@@ -42,6 +43,14 @@ func FilterOption(filter FilterFunc) Option {
 func LevelOption(level zerolog.Level) Option {
 	return func(cfg *Config) {
 		cfg.Level = level
+	}
+}
+
+// VerboseLevelOption sets the verbose level for the Logger.
+// When verbose mode is enabled, the logger will be switched to this level.
+func VerboseLevelOption(level zerolog.Level) Option {
+	return func(cfg *Config) {
+		cfg.VerboseLevel = level
 	}
 }
 

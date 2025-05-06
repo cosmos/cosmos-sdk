@@ -39,7 +39,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/group/mod
   Taking `group` as example, a chain developer is able to decide, thanks to `uint64 max_metadata_len`, what the maximum metadata length allowed for a group proposal is.
 
   ```go reference
-  https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/app_config.go#L228-L234
+  https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/app_config.go#L256-L262
   ```
 
 That message is generated using [`pulsar`](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/scripts/protocgen-pulsar.sh) (by running `make proto-gen`).
@@ -48,7 +48,7 @@ In the case of the `group` module, this file is generated here: https://github.c
 The part that is relevant for the module configuration is:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/api/cosmos/group/module/v1/module.pulsar.go#L515-L527
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/api/cosmos/group/module/v1/module.pulsar.go#L515-L526
 ```
 
 :::note
@@ -67,20 +67,20 @@ All methods, structs and their fields must be public for `depinject`.
 1. Import the module configuration generated package:
 
     ```go reference
-    https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/group/module/module.go#L12-L14
+    https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/group/module/module.go#L11-L13
     ```
 
     Define an `init()` function for defining the `providers` of the module configuration:  
     This registers the module configuration message and the wiring of the module.
 
     ```go reference
-    https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/group/module/module.go#L194-L199
+    https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/group/module/module.go#L198-L203
     ```
 
 2. Ensure that the module implements the `appmodule.AppModule` interface:
 
     ```go reference
-    https://github.com/cosmos/cosmos-sdk/blob/v0.47.0/x/group/module/module.go#L58-L64
+    https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/group/module/module.go#L62-L66
     ```
 
 3. Define a struct that inherits `depinject.In` and define the module inputs (i.e. module dependencies):
@@ -92,14 +92,14 @@ All methods, structs and their fields must be public for `depinject`.
     :::
 
     ```go reference
-    https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/group/module/module.go#L201-L211
+    https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/group/module/module.go#L205-L214
     ```
 
 4. Define the module outputs with a public struct that inherits `depinject.Out`:
    The module outputs are the dependencies that the module provides to other modules. It is usually the module itself and its keeper.
 
     ```go reference
-    https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/group/module/module.go#L213-L218
+    https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/group/module/module.go#L217-L221
     ```
 
 5. Create a function named `ProvideModule` (as called in 1.) and use the inputs for instantiating the module outputs.

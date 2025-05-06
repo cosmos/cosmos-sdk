@@ -31,7 +31,7 @@ It is also possible to include code snippets from GitHub files by referencing th
 
 ```md
     ```go reference
-    https://github.com/cosmos/cosmos-sdk/blob/v0.46.0/server/types/app.go#L57-L59
+    https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/server/types/app.go#L68-L69
     ```
 ```
 

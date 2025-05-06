@@ -19,7 +19,7 @@ It also defines a structure for providing downloadable artifacts involved in an 
 The `upgrade` module in conjunction with Cosmovisor are designed to facilitate and automate a blockchain's transition from one version to another.
 
 Users submit a software upgrade governance proposal containing an upgrade `Plan`.
-The [Plan](https://github.com/cosmos/cosmos-sdk/blob/v0.44.5/proto/cosmos/upgrade/v1beta1/upgrade.proto#L12) currently contains the following fields:
+The [Plan](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/upgrade/v1beta1/upgrade.proto#L14) currently contains the following fields:
 
 * `name`: A short string identifying the new version.
 * `height`: The chain height at which the upgrade is to be performed.

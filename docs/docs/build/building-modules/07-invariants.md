@@ -19,7 +19,7 @@ An invariant is a property of the application that should always be true. In the
 An `Invariant` is a function that checks for a particular invariant within a module. Module `Invariant`s must follow the `Invariant` type:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/invariant.go#L9
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/types/invariant.go#L9
 ```
 
 The `string` return value is the invariant message, which can be used when printing logs, and the `bool` return value is the actual result of the invariant check.
@@ -70,13 +70,13 @@ The `InvariantRegistry` is a registry where the `Invariant`s of all the modules 
 At its core, the `InvariantRegistry` is defined in the Cosmos SDK as an interface:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/types/invariant.go#L14-L17
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/types/invariant.go#L14-L17
 ```
 
 Typically, this interface is implemented in the `keeper` of a specific module. The most used implementation of an `InvariantRegistry` can be found in the `crisis` module:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/crisis/keeper/keeper.go#L48-L50
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/crisis/keeper/keeper.go#L51-L53
 ```
 
 The `InvariantRegistry` is therefore typically instantiated by instantiating the `keeper` of the `crisis` module in the [application's constructor function](../../learn/beginner/00-app-anatomy.md#constructor-function).
@@ -84,7 +84,7 @@ The `InvariantRegistry` is therefore typically instantiated by instantiating the
 `Invariant`s can be checked manually via [`message`s](./02-messages-and-queries.md), but most often they are checked automatically at the end of each block. Here is an example from the `crisis` module:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/crisis/abci.go#L13-L23
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/crisis/abci.go#L12-L21
 ```
 
 In both cases, if one of the `Invariant`s returns false, the `InvariantRegistry` can trigger special logic (e.g. have the application panic and print the `Invariant`s message in the log).

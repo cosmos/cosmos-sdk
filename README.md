@@ -47,7 +47,7 @@ on modules, see our [introduction doc](./x/README.md).
 
 ## Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for details on how to contribute.
+See TODO NEW CONTRIBUTING GUIDE.
 
 ## Tools and Frameworks
 

@@ -9,6 +9,10 @@ CHECKED = set()
 REPORT = []
 WEB_TASKS = []
 LINK_RE = re.compile(r'\[.*?\]\((.*?)\)')
+HEADER_RE = re.compile(r'^#+\s+(.*)')
+
+def slugify(header):
+    return re.sub(r'[^a-z0-9\- ]', '', header.lower()).replace(' ', '-').strip('-')
 
 def check_web_link(link):
     try:
@@ -21,12 +25,39 @@ def check_web_link(link):
     except Exception as e:
         return (link, "⚠️ Error (web)", str(e))
 
+def extract_headings(file_path):
+    headings = set()
+    with open(file_path, 'r', encoding='utf-8') as f:
+        for line in f:
+            match = HEADER_RE.match(line)
+            if match:
+                headings.add(slugify(match.group(1)))
+    return headings
+
 def check_local_path(link, base_path):
-    resolved = (base_path.parent / link).resolve()
-    if resolved.exists():
-        return (link, "✅ Exists (local)", "✓")
+    if link.startswith('#'):
+        headings = extract_headings(base_path)
+        slug = link[1:]
+        if slug in headings:
+            return (link, "✅ Exists (heading)", "✓")
+        else:
+            return (link, "❌ Missing (heading)", "anchor not found")
+    elif '#' in link:
+        file_part, anchor = link.split('#', 1)
+        target = (base_path.parent / file_part).resolve()
+        if not target.exists():
+            return (link, "❌ Missing (file)", "file not found")
+        headings = extract_headings(target)
+        if slugify(anchor) in headings:
+            return (link, "✅ Exists (file+heading)", "✓")
+        else:
+            return (link, "❌ Missing (heading)", "anchor not found")
     else:
-        return (link, "❌ Missing (local)", "file not found")
+        resolved = (base_path.parent / link).resolve()
+        if resolved.exists():
+            return (link, "✅ Exists (local)", "✓")
+        else:
+            return (link, "❌ Missing (local)", "file not found")
 
 def check_links_in_file(path):
     print(f"🔗 Checking: {path}")
@@ -64,6 +95,11 @@ def main():
                     REPORT.append((src, url, "⚠️ Thread error", str(e)))
 
     if REPORT:
+        # Count successes and failures
+        passed = sum(1 for r in REPORT if r[2].startswith("✅"))
+        failed = len(REPORT) - passed
+        print("\n✅ Passed: {} | ❌ Failed: {}\n".format(passed, failed))
+
         with open("docs_links_status.md", "w") as f:
             f.write("| File | Link | Status | Detail |\n")
             f.write("|------|------|--------|--------|\n")

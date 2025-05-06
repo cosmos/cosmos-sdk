@@ -16,6 +16,10 @@ LINK_RE = re.compile(
 ERROR_LOG = []
 DRY_RUN = '--dry-run' in sys.argv
 
+from functools import lru_cache
+import subprocess
+
+@lru_cache(maxsize=1024)  # tune size as needed
 def get_file_at_version(version, filepath):
     try:
         result = subprocess.run(
@@ -27,7 +31,6 @@ def get_file_at_version(version, filepath):
         return result.stdout.splitlines()
     except subprocess.CalledProcessError:
         return None
-
 def normalize_lines(lines):
     return [re.sub(r'\s+', ' ', line.strip()) for line in lines if line.strip()]
 

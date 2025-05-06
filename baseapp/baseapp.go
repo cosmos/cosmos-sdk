@@ -80,17 +80,7 @@ type BaseApp struct {
 	anteHandler sdk.AnteHandler // ante handler for fee and auth
 	postHandler sdk.PostHandler // post handler, optional
 
-	checkTxHandler     sdk.CheckTxHandler             // ABCI CheckTx handler
-	initChainer        sdk.InitChainer                // ABCI InitChain handler
-	preBlocker         sdk.PreBlocker                 // logic to run before BeginBlocker
-	beginBlocker       sdk.BeginBlocker               // (legacy ABCI) BeginBlock handler
-	endBlocker         sdk.EndBlocker                 // (legacy ABCI) EndBlock handler
-	processProposal    sdk.ProcessProposalHandler     // ABCI ProcessProposal handler
-	prepareProposal    sdk.PrepareProposalHandler     // ABCI PrepareProposal
-	extendVote         sdk.ExtendVoteHandler          // ABCI ExtendVote handler
-	verifyVoteExt      sdk.VerifyVoteExtensionHandler // ABCI VerifyVoteExtension handler
-	prepareCheckStater sdk.PrepareCheckStater         // logic to run during commit using the checkState
-	precommiter        sdk.Precommiter                // logic to run during commit using the deliverState
+	abciHandlers sdk.ABCIHandlers
 
 	addrPeerFilter sdk.PeerFilter // filter peers by address and port
 	idPeerFilter   sdk.PeerFilter // filter peers by node ID
@@ -230,16 +220,16 @@ func NewBaseApp(
 
 	abciProposalHandler := NewDefaultProposalHandler(app.mempool, app)
 
-	if app.prepareProposal == nil {
+	if app.abciHandlers.PrepareProposalHandler == nil {
 		app.SetPrepareProposal(abciProposalHandler.PrepareProposalHandler())
 	}
-	if app.processProposal == nil {
+	if app.abciHandlers.ProcessProposalHandler == nil {
 		app.SetProcessProposal(abciProposalHandler.ProcessProposalHandler())
 	}
-	if app.extendVote == nil {
+	if app.abciHandlers.ExtendVoteHandler == nil {
 		app.SetExtendVoteHandler(NoOpExtendVote())
 	}
-	if app.verifyVoteExt == nil {
+	if app.abciHandlers.VerifyVoteExtensionHandler == nil {
 		app.SetVerifyVoteExtensionHandler(NoOpVerifyVoteExtensionHandler())
 	}
 	if app.interBlockCache != nil {
@@ -723,9 +713,9 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 
 func (app *BaseApp) preBlock(req *abci.RequestFinalizeBlock) ([]abci.Event, error) {
 	var events []abci.Event
-	if app.preBlocker != nil {
+	if app.abciHandlers.PreBlocker != nil {
 		ctx := app.finalizeBlockState.Context().WithEventManager(sdk.NewEventManager())
-		rsp, err := app.preBlocker(ctx, req)
+		rsp, err := app.abciHandlers.PreBlocker(ctx, req)
 		if err != nil {
 			return nil, err
 		}
@@ -749,8 +739,8 @@ func (app *BaseApp) beginBlock(_ *abci.RequestFinalizeBlock) (sdk.BeginBlock, er
 		err  error
 	)
 
-	if app.beginBlocker != nil {
-		resp, err = app.beginBlocker(app.finalizeBlockState.Context())
+	if app.abciHandlers.BeginBlocker != nil {
+		resp, err = app.abciHandlers.BeginBlocker(app.finalizeBlockState.Context())
 		if err != nil {
 			return resp, err
 		}
@@ -811,8 +801,8 @@ func (app *BaseApp) deliverTx(tx []byte) *abci.ExecTxResult {
 func (app *BaseApp) endBlock(_ context.Context) (sdk.EndBlock, error) {
 	var endblock sdk.EndBlock
 
-	if app.endBlocker != nil {
-		eb, err := app.endBlocker(app.finalizeBlockState.Context())
+	if app.abciHandlers.EndBlocker != nil {
+		eb, err := app.abciHandlers.EndBlocker(app.finalizeBlockState.Context())
 		if err != nil {
 			return endblock, err
 		}

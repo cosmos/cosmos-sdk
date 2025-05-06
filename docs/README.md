@@ -20,17 +20,6 @@ It is built using the following stack:
       },
   ```
 
-* GitHub Pages
-
-## Docs Build Workflow
-
-The docs are built and deployed automatically on GitHub Pages by a [GitHub Action workflow](../.github/workflows/deploy-docs.yml).
-The workflow is triggered on every push to the `main` and `release/v**` branches, every time documentations or specs are modified.
-
-### How It Works
-
-There is a GitHub Action listening for changes in the `/docs` directory for the `main` branch and each supported version branch (e.g. `release/v0.46.x`). Any updates to files in the `/docs` directory will automatically trigger a website deployment. Under the hood, the private website repository has a `make build-docs` target consumed by a Github Action within that repository.
-
 ## How to Build the Docs Locally
 
 Go to the `docs` directory and run the following commands:
@@ -40,7 +29,7 @@ cd docs
 npm install
 ```
 
-For starting only the current documentation, run:
+To start only the current documentation, run:
 
 ```shell
 npm start
@@ -49,7 +38,7 @@ npm start
 It runs `pre.sh` scripts to get all the docs that are not already in the `docs/docs` folder.
 It also runs `post.sh` scripts to clean up the docs and remove unnecessary files when quitting.
 
-Note, the command above only build the docs for the current versions.
+Note, the command above only builds the docs for the current versions.
 With the drawback that none of the redirections works. So, you'll need to go to /main to see the docs.
 
 To build all the docs (including versioned documentation), run:

@@ -76,6 +76,12 @@ def update_links_in_file(file_path):
         nonlocal changed
         old_version, path, start_line_str, end_line_str = match.groups()
 
+        # Guard: if the path starts with the version (likely overmatched), skip
+        if path.startswith(old_version + '/'):
+            reason = f"Skipped malformed match: path includes version prefix — {path}"
+            print(f"⚠️  {reason}")
+            return match.group(0)
+
         # Skip already-correct version
         if old_version == TARGET_VERSION:
             return match.group(0)

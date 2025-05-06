@@ -178,7 +178,7 @@ func (s *SystemUnderTest) StartChain(t *testing.T, xargs ...string) {
 	s.Log("Start chain\n")
 	s.ChainStarted = true
 	// HACK: force db_backend
-	s.startNodesAsync(t, append([]string{"start", "--log_level=info", "--log_no_color", "db_backend=goleveldb"}, xargs...)...)
+	s.startNodesAsync(t, append([]string{"start", "--log_level=info", "--log_no_color", "--db_backend=goleveldb"}, xargs...)...)
 
 	s.AwaitNodeUp(t, s.rpcAddr)
 

@@ -113,7 +113,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/auth/tx/builder.go#L346-L365
 ```
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/tx/v1beta1/tx.proto#L203-L224
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/tx/v1beta1/tx.proto#L221-L240
 ```
 
 Example cmd:

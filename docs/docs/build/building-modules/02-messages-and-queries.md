@@ -98,7 +98,7 @@ Queries should be defined using [Protobuf services](https://developers.google.co
 Here's an example of such a `Query` service definition:
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/auth/v1beta1/query.proto#L14-L89
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/auth/v1beta1/query.proto#L5-L78
 ```
 
 As `proto.Message`s, generated `Response` types implement by default `String()` method of [`fmt.Stringer`](https://pkg.go.dev/fmt#Stringer).

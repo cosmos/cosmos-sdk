@@ -7,7 +7,7 @@ from operator import itemgetter
 
 TARGET_VERSION = "v0.53.0"
 REPO = "cosmos/cosmos-sdk"
-FUZZY_THRESHOLD = 0.80
+FUZZY_THRESHOLD = 0.70
 
 LINK_RE = re.compile(
     rf"https://github.com/{REPO}/blob/([^/]+)/(.+?)#L(\d+)(?:-L(\d+))?"

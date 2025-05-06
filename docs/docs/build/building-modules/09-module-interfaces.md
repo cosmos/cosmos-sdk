@@ -156,7 +156,7 @@ Applications need to support web services that use HTTP requests (e.g. a web wal
 Modules that want to expose REST queries should add `google.api.http` annotations to their `rpc` methods, such as in the example below from the `x/auth` module:
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/auth/v1beta1/query.proto#L14-L89
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/auth/v1beta1/query.proto#L5-L78
 ```
 
 gRPC gateway is started in-process along with the application and CometBFT. It can be enabled or disabled by setting gRPC Configuration `enable` in [`app.toml`](../run-node/01-run-node.md#configuring-the-node-using-apptoml-and-configtoml).

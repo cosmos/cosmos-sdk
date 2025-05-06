@@ -119,7 +119,7 @@ We are maintaining a queue for authz pruning. Whenever a grant is created, an it
 In `EndBlock` (which runs for every block) we continuously check and prune the expired grants by forming a prefix key with current blocktime that passed the stored expiration in `GrantQueue`, we iterate through all the matched records from `GrantQueue` and delete them from the `GrantQueue` & `Grant`s store.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/5f4ddc6f80f9707320eec42182184207fff3833a/x/authz/keeper/keeper.go#L378-L403
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/authz/keeper/keeper.go#L415-L442
 ```
 
 * GrantQueue: `0x02 | expiration_bytes | granter_address_len (1 byte) | granter_address_bytes | grantee_address_len (1 byte) | grantee_address_bytes -> ProtocalBuffer(GrantQueueItem)`

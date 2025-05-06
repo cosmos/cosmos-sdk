@@ -94,7 +94,7 @@ it can be updated with governance or the address with authority.
 * Params: `mint/params -> legacy_amino(params)`
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/mint/v1beta1/mint.proto#L26-L59
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/mint/v1beta1/mint.proto#L22-L50
 ```
 
 ## Begin-Block

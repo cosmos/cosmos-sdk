@@ -68,7 +68,7 @@ This section is being rewritten. Refer to [AutoCLI](https://docs.cosmos.network/
 [Queries](./02-messages-and-queries.md#queries) allow users to gather information about the application or network state; they are routed by the application and processed by the module in which they are defined. Query commands typically have their own `query.go` file in the module's `./client/cli` folder. Like transaction commands, they are specified in getter functions. Here is an example of a query command from the `x/auth` module:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/auth/client/cli/query.go#L86-L128
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/auth/client/cli/query.go#L74-L116
 ```
 
 In the example, `GetAccountCmd()` creates and returns a query command that returns the state of an account based on the provided account address.

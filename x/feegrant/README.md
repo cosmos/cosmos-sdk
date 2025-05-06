@@ -105,7 +105,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/client/cmd.go#L242-L263
 ```
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/client/tx/tx.go#L109-L109
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/client/tx/tx.go#L129
 ```
 
 ```go reference

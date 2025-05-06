@@ -81,7 +81,7 @@ rather than working as a functional test of interdependent module behavior.
 Integration tests define and exercise relationships between an arbitrary number of modules
 and/or application subsystems.
 
-Wiring for integration tests is provided by `depinject` and some [helper code](https://github.com/cosmos/cosmos-sdk/blob/2bec9d2021918650d3938c3ab242f84289daef80/testutil/sims/app_helpers.go#L95) starts up
+Wiring for integration tests is provided by `depinject` and some [helper code](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/testutil/sims/app_helpers.go#L139) starts up
 a running application. A section of the running application may then be tested. Certain
 inputs during different phases of the application life cycle are expected to produce
 invariant outputs without too much concern for component internals. This type of black box
@@ -93,7 +93,7 @@ startup, genesis and query time. It also exercises the fitness of the client and
 server without putting bytes on the wire through the use of [QueryServiceTestHelper](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/baseapp/grpcrouter_helpers.go#L21-L31).
 
 Example 2 `x/evidence` Keeper integration tests - Starts up an application composed of [8
-modules](https://github.com/cosmos/cosmos-sdk/blob/2bec9d2021918650d3938c3ab242f84289daef80/x/evidence/testutil/app.yaml#L1) with [5 keepers](https://github.com/cosmos/cosmos-sdk/blob/2bec9d2021918650d3938c3ab242f84289daef80/x/evidence/keeper/keeper_test.go#L101-L106) used in the integration test suite. One test in the suite
+modules](https://github.com/cosmos/cosmos-sdk/blob/2bec9d2021918650d3938c3ab242f84289daef80/x/evidence/testutil/app.yaml#L1) with [5 keepers](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/evidence/keeper/keeper_test.go#L111-L112) used in the integration test suite. One test in the suite
 exercises [HandleEquivocationEvidence](https://github.com/cosmos/cosmos-sdk/blob/2bec9d2021918650d3938c3ab242f84289daef80/x/evidence/keeper/infraction_test.go#L42) which contains many interactions with the staking
 keeper.
 

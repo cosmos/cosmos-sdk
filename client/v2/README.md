@@ -138,7 +138,7 @@ By default, `autocli` generates a command for each method in your gRPC service. 
 This example shows how to use the `autocliv1.ServiceCommandDescriptor` struct to group related commands together and specify subcommands in your gRPC service by defining an instance of `autocliv1.ModuleOptions` in your `autocli.go`.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-beta.0/x/gov/autocli.go#L94-L97
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/gov/autocli.go#L15-L16
 ```
 
 ### Positional Arguments

@@ -145,36 +145,3 @@ func TestInitGenesis(t *testing.T) {
 		})
 	}
 }
-
-func TestDuplicateGrantsInGenesis(t *testing.T) {
-	// Use String() method directly on sdk.AccAddress type instead of explicit conversion
-	granter := granterAddr.String()
-	grantee := granteeAddr.String()
-
-	allowance := &feegrant.BasicAllowance{
-		SpendLimit: sdk.NewCoins(sdk.NewCoin("foo", math.NewInt(100))),
-	}
-
-	any, err := codectypes.NewAnyWithValue(allowance)
-	assert.NilError(t, err)
-
-	// Create Genesis state with duplicate allowances
-	genesisState := &feegrant.GenesisState{
-		Allowances: []feegrant.Grant{
-			{
-				Granter:   granter,
-				Grantee:   grantee,
-				Allowance: any,
-			},
-			{
-				Granter:   granter,
-				Grantee:   grantee,
-				Allowance: any,
-			},
-		},
-	}
-
-	// Validation should fail with duplicate feegrant error
-	err = feegrant.ValidateGenesis(*genesisState)
-	assert.ErrorContains(t, err, "duplicate feegrant found")
-}

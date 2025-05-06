@@ -105,7 +105,7 @@ def update_links_in_file(file_path):
 
         result, score = fuzzy_match_range(old_segment, new_lines)
         if result:
-            new_start, new_end = result
+            new_start, new_end = sorted(result)
             suffix = f"#L{new_start}-L{new_end}" if new_start != new_end else f"#L{new_start}"
             new_url = f"https://github.com/{REPO}/blob/{TARGET_VERSION}/{path}{suffix}"
             print(f"✅ Updated (fuzzy {score:.2f}): {match.group(0)} → {new_url}")

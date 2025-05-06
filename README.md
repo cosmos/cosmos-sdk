@@ -47,8 +47,7 @@ on modules, see our [introduction doc](./x/README.md).
 
 ## Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for details on how to contribute and participate in our [dev calls](./CONTRIBUTING.md#teams-dev-calls).
-If you want to follow the updates or learn more about the latest design then join our [Discord](https://discord.com/invite/cosmosnetwork).
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for details on how to contribute.
 
 ## Tools and Frameworks
 

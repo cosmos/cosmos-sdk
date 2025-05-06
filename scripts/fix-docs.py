@@ -59,7 +59,7 @@ def fuzzy_match_range(old_lines, new_lines, threshold=FUZZY_THRESHOLD):
     best_range = None
     old_str = "\n".join(old_lines)
     old_len = len(old_lines)
-    window_range = range(old_len - 2, old_len + 3)  # ±2 lines
+    window_range = range(old_len - 5, old_len + 6)
 
     for window_size in window_range:
         if window_size <= 0:
@@ -96,54 +96,37 @@ def update_links_in_file(file_path):
 
         if not old_lines or not new_lines:
             reason = f"Could not fetch {path} at {old_version} or {TARGET_VERSION}"
-            ERROR_LOG.append({
-                "url": match.group(0),
-                "file": str(file_path),
-                "reason": reason,
-                "score": None
-            })
-            print(f"⚠️  {reason}")
+            ERROR_LOG.append({"url": match.group(0), "file": str(file_path), "reason": reason, "score": None})
+            print(f"\u26a0\ufe0f  {reason}")
             return match.group(0)
 
         old_segment = get_lines_range(old_lines, start_line, end_line)
         if not old_segment:
             reason = f"Invalid range {start_line}-{end_line} in {path} at {old_version}"
-            ERROR_LOG.append({
-                "url": match.group(0),
-                "file": str(file_path),
-                "reason": reason,
-                "score": None
-            })
-            print(f"⚠️  {reason}")
+            ERROR_LOG.append({"url": match.group(0), "file": str(file_path), "reason": reason, "score": None})
+            print(f"\u26a0\ufe0f  {reason}")
             return match.group(0)
 
-        # Try ordered match
         new_start, new_end = find_range_in_new_version(old_segment, new_lines)
         if new_start and new_end:
             suffix = f"#L{new_start}-L{new_end}" if new_start != new_end else f"#L{new_start}"
             new_url = f"https://github.com/{REPO}/blob/{TARGET_VERSION}/{path}{suffix}"
-            print(f"✅ Updated (windowed): {match.group(0)} → {new_url}")
+            print(f"\u2705 Updated (windowed): {match.group(0)} → {new_url}")
             changed = True
             return new_url
 
-        # Fuzzy match fallback
         fuzzy_result, score = fuzzy_match_range(old_segment, new_lines)
         if fuzzy_result:
             new_start, new_end = fuzzy_result
             suffix = f"#L{new_start}-L{new_end}" if new_start != new_end else f"#L{new_start}"
             new_url = f"https://github.com/{REPO}/blob/{TARGET_VERSION}/{path}{suffix}"
-            print(f"✅ Updated (fuzzy {score:.2f}): {match.group(0)} → {new_url}")
+            print(f"\u2705 Updated (fuzzy {score:.2f}): {match.group(0)} → {new_url}")
             changed = True
             return new_url
 
         reason = f"Fuzzy match failed in {path} — best score: {score:.2f}"
-        ERROR_LOG.append({
-            "url": match.group(0),
-            "file": str(file_path),
-            "reason": reason,
-            "score": round(score, 2)
-        })
-        print(f"⚠️  {reason}")
+        ERROR_LOG.append({"url": match.group(0), "file": str(file_path), "reason": reason, "score": round(score, 2)})
+        print(f"\u26a0\ufe0f  {reason}")
         return match.group(0)
 
     new_content = LINK_RE.sub(replacer, content)
@@ -151,16 +134,10 @@ def update_links_in_file(file_path):
     if changed and not DRY_RUN:
         with open(file_path, 'w') as f:
             f.write(new_content)
-        print(f"📝 File updated: {file_path}")
+        print(f"🗘️ File updated: {file_path}")
 
 def summarize_errors(errors):
-    summary = {
-        "Fuzzy Fail": 0,
-        "Invalid Range": 0,
-        "File Not Found": 0,
-        "Other": 0
-    }
-
+    summary = {"Fuzzy Fail": 0, "Invalid Range": 0, "File Not Found": 0, "Other": 0}
     for e in errors:
         r = e["reason"]
         if "Invalid range" in r:
@@ -217,7 +194,7 @@ def main():
 
         write_markdown_report(sorted_errors)
         summarize_errors(sorted_errors)
-        print("\n🧾 Wrote failure log to `docs_todo.log` and markdown report to `docs_report.md`")
+        print("\n📟 Wrote failure log to `docs_todo.log` and markdown report to `docs_report.md`")
 
 if __name__ == "__main__":
     main()

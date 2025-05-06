@@ -52,7 +52,9 @@ vagrant
 .dir-locals.el
 .vscode
 
+# docs updating scripting
 .venv
+docs_report.md
 
 # Depinject & Graphviz
 dependency-graph.png

@@ -24,7 +24,7 @@ The first four strings specify the command:
 
 * The root command for the entire application `simd`.
 * The subcommand `tx`, which contains all commands that let users create transactions.
-* The subcommand `bank` to indicate which module to route the command to ([`x/bank`](../../build/modules/bank/README.md) module in this case).
+* The subcommand `bank` to indicate which module to route the command to ([`x/bank`](../../../../x/bank/README.md) module in this case).
 * The type of transaction `send`.
 
 The next two strings are arguments: the `from_address` the user wishes to send from, the `to_address` of the recipient, and the `amount` they want to send. Finally, the last few strings of the command are optional flags to indicate how much the user is willing to pay in fees (calculated using the amount of gas used to execute the transaction and the gas prices provided by the user).
@@ -101,7 +101,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/simd/cmd/root_v2.go#L22
 
 This `txCommand` function adds all the transaction available to end-users for the application. This typically includes:
 
-* **Sign command** from the [`auth`](../../build/modules/auth/README.md) module that signs messages in a transaction. To enable multisig, add the `auth` module's `MultiSign` command. Since every transaction requires some sort of signature in order to be valid, the signing command is necessary for every application.
+* **Sign command** from the [`auth`](../../../../x/auth/README.md) module that signs messages in a transaction. To enable multisig, add the `auth` module's `MultiSign` command. Since every transaction requires some sort of signature in order to be valid, the signing command is necessary for every application.
 * **Broadcast command** from the Cosmos SDK client tools, to broadcast transactions.
 * **All [module transaction commands](../../build/building-modules/09-module-interfaces.md#transaction-commands)** the application is dependent on, retrieved by using the [basic module manager's](../../build/building-modules/01-module-manager.md#basic-manager) `AddTxCommands()` function, or enhanced by [AutoCLI](https://docs.cosmos.network/main/core/autocli).
 

@@ -1,0 +1,75 @@
+import re
+import requests
+from pathlib import Path
+from urllib.parse import urlparse
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+TIMEOUT = 5
+CHECKED = set()
+REPORT = []
+WEB_TASKS = []
+LINK_RE = re.compile(r'\[.*?\]\((.*?)\)')
+
+def check_web_link(link):
+    try:
+        response = requests.head(link, allow_redirects=True, timeout=TIMEOUT)
+        status = response.status_code
+        if 200 <= status < 400:
+            return (link, "✅ Valid (web)", status)
+        else:
+            return (link, "❌ Invalid (web)", status)
+    except Exception as e:
+        return (link, "⚠️ Error (web)", str(e))
+
+def check_local_path(link, base_path):
+    resolved = (base_path.parent / link).resolve()
+    if resolved.exists():
+        return (link, "✅ Exists (local)", "✓")
+    else:
+        return (link, "❌ Missing (local)", "file not found")
+
+def check_links_in_file(path):
+    print(f"🔗 Checking: {path}")
+    with open(path, 'r', encoding='utf-8') as f:
+        content = f.read()
+        links = LINK_RE.findall(content)
+        for link in links:
+            if link in CHECKED:
+                continue
+            CHECKED.add(link)
+            if link.startswith("http://") or link.startswith("https://"):
+                WEB_TASKS.append((link, str(path)))
+            else:
+                result = check_local_path(link, path)
+                if result:
+                    REPORT.append((str(path), *result))
+
+def main():
+    print("🔍 Checking links in markdown files...")
+    md_files = list(Path('.').rglob('*.md'))
+    for idx, file_path in enumerate(md_files, 1):
+        print(f"📄 Progress: {idx}/{len(md_files)}")
+        check_links_in_file(file_path)
+
+    if WEB_TASKS:
+        print(f"🌐 Checking {len(WEB_TASKS)} web links in parallel...")
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            futures = {executor.submit(check_web_link, url): (url, src) for url, src in WEB_TASKS}
+            for future in as_completed(futures):
+                url, src = futures[future]
+                try:
+                    link, status, detail = future.result()
+                    REPORT.append((src, link, status, detail))
+                except Exception as e:
+                    REPORT.append((src, url, "⚠️ Thread error", str(e)))
+
+    if REPORT:
+        with open("docs_links_status.md", "w") as f:
+            f.write("| File | Link | Status | Detail |\n")
+            f.write("|------|------|--------|--------|\n")
+            for file, link, status, detail in REPORT:
+                f.write(f"| `{file}` | `{link}` | {status} | {detail} |\n")
+        print("🧾 Wrote link report to docs_links_status.md")
+
+if __name__ == "__main__":
+    main()

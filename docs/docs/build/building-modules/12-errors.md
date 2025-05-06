@@ -43,7 +43,7 @@ execution.
 Example:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/bank/keeper/keeper.go#L141-L182
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/bank/keeper/keeper.go#L112-L163
 ```
 
 Regardless if an error is wrapped or not, the Cosmos SDK's `errors` package provides a function to determine if

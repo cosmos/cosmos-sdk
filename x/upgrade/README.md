@@ -103,7 +103,7 @@ the `Plan`, which targets a specific `Handler`, is persisted and scheduled. The
 upgrade can be delayed or hastened by updating the `Plan.Height` in a new proposal.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/upgrade/v1beta1/tx.proto#L29-L41
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/upgrade/v1beta1/tx.proto#L28-L39
 ```
 
 #### Cancelling Upgrade Proposals
@@ -115,7 +115,7 @@ Of course this requires that the upgrade was known to be a bad idea well before 
 upgrade itself, to allow time for a vote.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/upgrade/v1beta1/tx.proto#L48-L57
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/upgrade/v1beta1/tx.proto#L46-L54
 ```
 
 If such a possibility is desired, the upgrade height is to be

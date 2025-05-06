@@ -20,7 +20,7 @@ The `context` is a data structure intended to be passed from function to functio
 The Cosmos SDK `Context` is a custom data structure that contains Go's stdlib [`context`](https://pkg.go.dev/context) as its base, and has many additional types within its definition that are specific to the Cosmos SDK. The `Context` is integral to transaction processing in that it allows modules to easily access their respective [store](./04-store.md#base-layer-kvstores) in the [`multistore`](./04-store.md#multistore) and retrieve transactional context such as the block header and gas meter.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/types/context.go#L40-L67
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/types/context.go#L30-L67
 ```
 
 * **Base Context:** The base type is a Go [Context](https://pkg.go.dev/context), which is explained further in the [Go Context Package](#go-context-package) section below.
@@ -41,8 +41,8 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/types/context.go#L40-L67
 * **KV `GasConfig`:** Enables applications to set a custom `GasConfig` for the `KVStore`.
 * **Transient KV `GasConfig`:** Enables applications to set a custom `GasConfig` for the transiant `KVStore`.
 * **StreamingManager:** The streamingManager field provides access to the streaming manager, which allows modules to subscribe to state changes emitted by the blockchain. The streaming manager is used by the state listening API, which is described in [ADR 038](https://docs.cosmos.network/main/architecture/adr-038-state-listening).
-* **CometInfo:** A lightweight field that contains information about the current block, such as the block height, time, and hash. This information can be used for validating evidence, providing historical data, and enhancing the user experience. For further details see [here](https://github.com/cosmos/cosmos-sdk/blob/main/core/comet/service.go#L14).
-* **HeaderInfo:** The `headerInfo` field contains information about the current block header, such as the chain ID, gas limit, and timestamp. For further details see [here](https://github.com/cosmos/cosmos-sdk/blob/main/core/header/service.go#L14).
+* **CometInfo:** A lightweight field that contains information about the current block, such as the block height, time, and hash. This information can be used for validating evidence, providing historical data, and enhancing the user experience. For further details see [here](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/core/comet/service.go#L4-L14).
+* **HeaderInfo:** The `headerInfo` field contains information about the current block header, such as the chain ID, gas limit, and timestamp. For further details see [here](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/core/header/service.go#L4-L14).
 
 ## Go Context Package
 

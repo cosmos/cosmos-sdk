@@ -37,10 +37,10 @@ The Cosmos SDK suggests organizing your simulation related code in a `x/<module>
 To integrate with the Cosmos SDK `SimulationManager`, app modules must implement the `AppModuleSimulation` interface.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/3c6deab626648e47de752c33dac5d06af83e3ee3/types/module/simulation.go#L16-L27
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/types/module/simulation.go#L6-L27
 ```
 
-See an example implementation of these methods from `x/distribution` [here](https://github.com/cosmos/cosmos-sdk/blob/b55b9e14fb792cc8075effb373be9d26327fddea/x/distribution/module.go#L170-L194).
+See an example implementation of these methods from `x/distribution` [here](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/distribution/module.go#L160-L194).
 
 ## SimsX
 
@@ -48,23 +48,23 @@ Cosmos SDK v0.53.0 introduced a new package, `simsx`, providing improved DevX fo
 
 It exposes the following extension interfaces that modules may implement to integrate with the new `simsx` runner.
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/main/testutil/simsx/runner.go#L223-L234
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/testutil/simsx/runner.go#L213-L234
 ```
 
 These methods allow constructing randomized messages and/or proposal messages.
 
 :::tip
 Note that modules should **not** implement both `HasWeightedOperationsX` and `HasWeightedOperationsXWithProposals`.
-See the runner code [here](https://github.com/cosmos/cosmos-sdk/blob/main/testutil/simsx/runner.go#L330-L339) for details
+See the runner code [here](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/testutil/simsx/runner.go#L320-L339) for details
 
 If the module does **not** have message handlers or governance proposal handlers, these interface methods do **not** need to be implemented.
 :::
 
 ### Example Implementations
 
-- `HasWeightedOperationsXWithProposals`: [x/gov](https://github.com/cosmos/cosmos-sdk/blob/main/x/gov/module.go#L242-L261)
-- `HasWeightedOperationsX`: [x/bank](https://github.com/cosmos/cosmos-sdk/blob/main/x/bank/module.go#L199-L203)
-- `HasProposalMsgsX`: [x/bank](https://github.com/cosmos/cosmos-sdk/blob/main/x/bank/module.go#L194-L197)
+- `HasWeightedOperationsXWithProposals`: [x/gov](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/gov/module.go#L232-L261)
+- `HasWeightedOperationsX`: [x/bank](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/bank/module.go#L189-L203)
+- `HasProposalMsgsX`: [x/bank](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/bank/module.go#L184-L197)
 
 ## Store decoders
 
@@ -75,7 +75,7 @@ In particular, it matches the key to a concrete type and then unmarshalls the va
 Modules using [collections](https://github.com/cosmos/cosmos-sdk/blob/main/collections/README.md) can use the `NewStoreDecoderFuncFromCollectionsSchema` function that builds the decoder for you:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/main/x/bank/module.go#L181-L184
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/bank/module.go#L171-L184
 ```
 
 Modules not using collections must manually build the store decoder.
@@ -87,10 +87,10 @@ The simulator tests different scenarios and values for genesis parameters.
 App modules must implement a `GenerateGenesisState` method to generate the initial random `GenesisState` from a given seed.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/main/types/module/simulation.go#L20
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/types/module/simulation.go#L10-L20
 ```
 
-See an example from `x/auth` [here](https://github.com/cosmos/cosmos-sdk/blob/main/x/auth/module.go#L169-L172).
+See an example from `x/auth` [here](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/auth/module.go#L159-L172).
 
 Once the module's genesis parameters are generated randomly (or with the key and
 values defined in a `params` file), they are marshaled to JSON format and added
@@ -112,7 +112,7 @@ Simsx introduces the ability to define a `MsgFactory` for each of a module's mes
 These factories are registered in `WeightedOperationsX` and/or `ProposalMsgsX`.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/main/x/distribution/module.go#L196-L206
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/distribution/module.go#L186-L206
 ```
 
 Note that the name passed in to `weights.Get` must match the name of the operation set in the `WeightedOperations`.
@@ -136,7 +136,7 @@ sm *module.SimulationManager
 Within the constructor of the application, construct the simulation manager using the modules from `ModuleManager` and call the `RegisterStoreDecoders` method.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/main/simapp/app.go#L650-L660
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/app.go#L640-L660
 ```
 
 Note that you may override some modules.
@@ -158,13 +158,13 @@ To run the simulation, use the `simsx` runner.
 Call the following function from the `simsx` package to begin simulating with a default seed:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/main/testutil/simsx/runner.go#L69-L88
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/testutil/simsx/runner.go#L59-L88
 ```
 
 If a custom seed is desired, tests should use `RunWithSeed`:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/b55b9e14fb792cc8075effb373be9d26327fddea/testutil/simsx/runner.go#L151-L168
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/testutil/simsx/runner.go#L141-L168
 ```
 
 These functions should be called in tests (i.e., app_test.go, app_sim_test.go, etc.)
@@ -172,5 +172,5 @@ These functions should be called in tests (i.e., app_test.go, app_sim_test.go, e
 Example:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/main/simapp/sim_test.go#L53-L65
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/sim_test.go#L43-L65
 ```

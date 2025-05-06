@@ -66,7 +66,7 @@ The SDK provides small helpers for quickly setting up an integration tests. Thes
 ### Example
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/a2f73a7dd37bea0ab303792c55fa1e4e1db3b898/testutil/integration/example_test.go#L30-L116
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/testutil/integration/example_test.go#L20-L116
 ```
 
 ## Deterministic and Regression tests	

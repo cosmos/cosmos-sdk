@@ -61,7 +61,7 @@ rapidly build up many illustrative cases demonstrating behavioral rules without 
 
 Example 2 [depinject table driven tests](https://github.com/cosmos/cosmos-sdk/blob/main/depinject/provider_desc_test.go)
 
-Example 3 [Bank keeper tests](https://github.com/cosmos/cosmos-sdk/blob/2bec9d2021918650d3938c3ab242f84289daef80/x/bank/keeper/keeper_test.go#L94-L105) - A mock implementation of `AccountKeeper` is supplied to the keeper constructor.
+Example 3 [Bank keeper tests](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/bank/keeper/keeper_test.go#L140-L151) - A mock implementation of `AccountKeeper` is supplied to the keeper constructor.
 
 #### Limitations
 
@@ -87,10 +87,10 @@ inputs during different phases of the application life cycle are expected to pro
 invariant outputs without too much concern for component internals. This type of black box
 testing has a larger scope than unit testing.
 
-Example 1 [client/grpc_query_test/TestGRPCQuery](https://github.com/cosmos/cosmos-sdk/blob/2bec9d2021918650d3938c3ab242f84289daef80/client/grpc_query_test.go#L111-L129) - This test is misplaced in `/client`,
+Example 1 [client/grpc_query_test/TestGRPCQuery](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/client/grpc_query_test.go#L116-L134) - This test is misplaced in `/client`,
 but tests the life cycle of (at least) `runtime` and `bank` as they progress through
 startup, genesis and query time. It also exercises the fitness of the client and query
-server without putting bytes on the wire through the use of [QueryServiceTestHelper](https://github.com/cosmos/cosmos-sdk/blob/2bec9d2021918650d3938c3ab242f84289daef80/baseapp/grpcrouter_helpers.go#L31).
+server without putting bytes on the wire through the use of [QueryServiceTestHelper](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/baseapp/grpcrouter_helpers.go#L21-L31).
 
 Example 2 `x/evidence` Keeper integration tests - Starts up an application composed of [8
 modules](https://github.com/cosmos/cosmos-sdk/blob/2bec9d2021918650d3938c3ab242f84289daef80/x/evidence/testutil/app.yaml#L1) with [5 keepers](https://github.com/cosmos/cosmos-sdk/blob/2bec9d2021918650d3938c3ab242f84289daef80/x/evidence/keeper/keeper_test.go#L101-L106) used in the integration test suite. One test in the suite
@@ -120,7 +120,7 @@ fail the simulation. Since `crisis` is included in simapp and the simulation run
 EndBlockers at the end of each block any module invariant violations will also fail
 the simulation.
 
-Modules must implement [AppModuleSimulation.WeightedOperations](https://github.com/cosmos/cosmos-sdk/blob/2bec9d2021918650d3938c3ab242f84289daef80/types/module/simulation.go#L31) to define their
+Modules must implement [AppModuleSimulation.WeightedOperations](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/types/module/simulation.go#L16-L26) to define their
 simulation operations. Note that not all modules implement this which may indicate a
 gap in current simulation test coverage.
 

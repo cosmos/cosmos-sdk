@@ -16,7 +16,7 @@ The companion service protocol for the `ABCIListener` interface is described bel
 See [proto/cosmos/store/streaming/abci/grpc.proto](https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/store/streaming/abci/grpc.proto) for full details.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/6cee22df52eb0cbb30e351fbb41f66d26c1f8300/proto/cosmos/store/streaming/abci/grpc.proto#L1-L36
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/store/streaming/abci/grpc.proto#L1-L36
 ```
 
 ### Generating the Code
@@ -48,13 +48,13 @@ The `BaseApp` `ABCIListener` interface will be what will define the plugins capa
 Boilerplate RPC implementation example of the `ABCIListener` interface. ([store/streaming/abci/grpc.go](https://github.com/cosmos/cosmos-sdk/blob/main/store/streaming/abci/grpc.go))
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/f851e188b3b9d46e7c63fa514ad137e6d558fdd9/store/streaming/abci/grpc.go#L13-L79
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/store/streaming/abci/grpc.go#L3-L79
 ```
 
 Our `ABCIlistener` service plugin. ([store/streaming/plugins/abci/v1/interface.go](interface.go))
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/f851e188b3b9d46e7c63fa514ad137e6d558fdd9/store/streaming/abci/interface.go#L13-L45
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/store/streaming/abci/interface.go#L3-L45
 ```
 
 #### Plugin Implementation

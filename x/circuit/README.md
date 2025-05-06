@@ -17,7 +17,7 @@ https://github.com/cosmos/cosmos-sdk/blob/x/circuit/v0.1.0/x/circuit/ante/circui
 * With a [message router check](https://docs.cosmos.network/main/learn/advanced/baseapp#msg-service-router):
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.1/baseapp/msg_service_router.go#L104-L115
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/baseapp/msg_service_router.go#L94-L115
 ``` 
 
 :::note
@@ -100,7 +100,7 @@ Reset is called by an authorized account to enable execution for a specific msgU
 ### MsgAuthorizeCircuitBreaker
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/circuit/v1/tx.proto#L25-L75
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/circuit/v1/tx.proto#L15-L75
 ```
 
 This message is expected to fail if:

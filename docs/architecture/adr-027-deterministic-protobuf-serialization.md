@@ -30,9 +30,9 @@ the same serialization of a `SignDoc` as defined in
 [ADR-020](./adr-020-protobuf-transaction-encoding.md) without transmitting the
 serialization.
 
-Currently, for block signatures we are using a workaround: we create a new [TxRaw](https://github.com/cosmos/cosmos-sdk/blob/9e85e81e0e8140067dd893421290c191529c148c/proto/cosmos/tx/v1beta1/tx.proto#L30)
+Currently, for block signatures we are using a workaround: we create a new [TxRaw](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/tx/v1beta1/tx.proto#L25-L35)
 instance (as defined in [adr-020-protobuf-transaction-encoding](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-020-protobuf-transaction-encoding.md#transactions))
-by converting all [Tx](https://github.com/cosmos/cosmos-sdk/blob/9e85e81e0e8140067dd893421290c191529c148c/proto/cosmos/tx/v1beta1/tx.proto#L13)
+by converting all [Tx](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/tx/v1beta1/tx.proto#L6-L16)
 fields to bytes on the client side. This adds an additional manual
 step when sending and signing transactions.
 

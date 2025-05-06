@@ -48,7 +48,7 @@ As a result of this architecture, building a Cosmos SDK application usually revo
 Modules have the ability to perform actions that are not available to regular users. This is because modules are given sudo permissions by the state machine. Modules can reject another modules desire to execute a function but this logic must be explicit. Examples of this can be seen when modules create functions to modify parameters:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/61da5d1c29c16a1eb5bb5488719fde604ec07b10/x/bank/keeper/msg_server.go#L147-L149
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/bank/keeper/msg_server.go#L152-L154
 ```
 
 ## How to Approach Building Modules as a Developer

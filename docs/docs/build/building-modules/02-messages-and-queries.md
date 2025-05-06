@@ -34,7 +34,7 @@ Each `Msg` service method must have exactly one argument, which must implement t
 See an example of a `Msg` service definition from `x/bank` module:
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/bank/v1beta1/tx.proto#L13-L36
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/bank/v1beta1/tx.proto#L11-L32
 ```
 
 ### `sdk.Msg` Interface
@@ -44,7 +44,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/bank/v1be
 To attach a `ValidateBasic()` method to a message then you must add methods to the type adhereing to the `HasValidateBasic`.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/9c1e8b247cd47b5d3decda6e86fbc3bc996ee5d7/types/tx_msg.go#L84-L88
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/types/tx_msg.go#L94-L108
 ```
 
 In 0.50+ signers from the `GetSigners()` call is automated via a protobuf annotation. 
@@ -52,7 +52,7 @@ In 0.50+ signers from the `GetSigners()` call is automated via a protobuf annota
 Read more about the signer field [here](./05-protobuf-annotations.md).
 
 ```protobuf reference 
-https://github.com/cosmos/cosmos-sdk/blob/e6848d99b55a65d014375b295bdd7f9641aac95e/proto/cosmos/bank/v1beta1/tx.proto#L40
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/bank/v1beta1/tx.proto#L30-L40
 ```
 
 If there is a need for custom signers then there is an alternative path which can be taken. A function which returns `signing.CustomGetSigner` for a specific message can be defined. 
@@ -133,5 +133,5 @@ Store queries query directly for store keys. They use `clientCtx.QueryABCI(req a
 See following examples:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/abci.go#L864-L894
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/baseapp/abci.go#L1037-L1077
 ```

@@ -100,7 +100,7 @@ Let us go through the methods:
 `HasGenesis` is an extension interface for allowing modules to implement genesis functionalities.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/6ce2505/types/module/module.go#L184-L189
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/types/module/module.go#L175-L190
 ```
 
 #### `module.HasABCIGenesis`
@@ -108,7 +108,7 @@ https://github.com/cosmos/cosmos-sdk/blob/6ce2505/types/module/module.go#L184-L1
 `HasABCIGenesis` is an extension interface for allowing modules to implement genesis functionalities and returns validator set updates.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/6ce2505/types/module/module.go#L191-L196
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/types/module/module.go#L182-L197
 ```
 
 #### `appmodule.HasGenesis`
@@ -118,7 +118,7 @@ https://github.com/cosmos/cosmos-sdk/blob/6ce2505/types/module/module.go#L191-L1
 :::
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/6ce2505/core/appmodule/genesis.go#L8-L25
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/core/appmodule/genesis.go#L1-L25
 ```
 
 ### `AppModule`
@@ -129,7 +129,7 @@ The `AppModule` interface defines a module. Modules can declare their functional
 #### `appmodule.AppModule`
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/6afece6/core/appmodule/module.go#L11-L20
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/core/appmodule/module.go#L1-L20
 ```
 
 #### `module.AppModule`
@@ -159,7 +159,7 @@ This interface defines one method. It allows to checks if a module can register 
 #### `appmodule.HasService`
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/6afece6/core/appmodule/module.go#L22-L40
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/core/appmodule/module.go#L12-L40
 ```
 
 #### `module.HasServices`

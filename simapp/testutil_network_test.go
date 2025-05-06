@@ -4,11 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/suite"
-
 	"cosmossdk.io/simapp"
-
 	"github.com/cosmos/cosmos-sdk/testutil/network"
+	"github.com/stretchr/testify/suite"
 )
 
 type IntegrationTestSuite struct {

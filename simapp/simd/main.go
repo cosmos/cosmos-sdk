@@ -7,7 +7,6 @@ import (
 	clientv2helpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/simapp"
 	"cosmossdk.io/simapp/simd/cmd"
-
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 )
 

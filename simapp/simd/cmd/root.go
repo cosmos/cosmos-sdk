@@ -9,8 +9,6 @@ import (
 	"cosmossdk.io/simapp"
 	"cosmossdk.io/simapp/params"
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/spf13/cobra"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
@@ -20,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtxconfig "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/spf13/cobra"
 )
 
 // NewRootCmd creates a new root command for simd. It is called once in the

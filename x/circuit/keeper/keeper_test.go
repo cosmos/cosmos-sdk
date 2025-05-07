@@ -10,15 +10,15 @@ import (
 
 	"cosmossdk.io/core/address"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/cosmos/cosmos-sdk/x/circuit"
-	"github.com/cosmos/cosmos-sdk/x/circuit/keeper"
-	"github.com/cosmos/cosmos-sdk/x/circuit/types"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/circuit"
+	"github.com/cosmos/cosmos-sdk/x/circuit/keeper"
+	"github.com/cosmos/cosmos-sdk/x/circuit/types"
 )
 
 var addresses = []string{

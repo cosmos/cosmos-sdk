@@ -9,10 +9,6 @@ import (
 	"go.uber.org/mock/gomock"
 
 	storetypes "cosmossdk.io/store/types"
-	"github.com/cosmos/cosmos-sdk/x/nft"
-	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
-	"github.com/cosmos/cosmos-sdk/x/nft/module"
-	nfttestutil "github.com/cosmos/cosmos-sdk/x/nft/testutil"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -21,6 +17,10 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/nft"
+	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
+	"github.com/cosmos/cosmos-sdk/x/nft/module"
+	nfttestutil "github.com/cosmos/cosmos-sdk/x/nft/testutil"
 )
 
 const (

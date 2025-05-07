@@ -5,10 +5,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/circuit/keeper"
 	"github.com/cosmos/cosmos-sdk/x/circuit/types"
-
-	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 func TestQueryAccount(t *testing.T) {

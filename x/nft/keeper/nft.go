@@ -5,10 +5,10 @@ import (
 
 	"cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
-	"github.com/cosmos/cosmos-sdk/x/nft"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/nft"
 )
 
 // Mint defines a method for minting a new nft

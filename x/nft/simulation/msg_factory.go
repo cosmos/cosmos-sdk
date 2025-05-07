@@ -3,11 +3,10 @@ package simulation
 import (
 	"context"
 
-	"github.com/cosmos/cosmos-sdk/x/nft"
-	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
-
 	"github.com/cosmos/cosmos-sdk/testutil/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/nft"
+	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
 )
 
 func MsgSendFactory(k keeper.Keeper) simsx.SimMsgFactoryFn[*nft.MsgSend] {

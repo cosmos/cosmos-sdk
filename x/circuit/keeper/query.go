@@ -3,9 +3,8 @@ package keeper
 import (
 	"context"
 
-	"github.com/cosmos/cosmos-sdk/x/circuit/types"
-
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/circuit/types"
 )
 
 var _ types.QueryServer = QueryServer{}

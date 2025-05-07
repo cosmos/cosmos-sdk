@@ -6,7 +6,7 @@ import (
 	store "cosmossdk.io/core/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/x/nft"
+	"github.com/cosmos/cosmos-sdk/x/nft" //nolint:staticcheck // deprecated and to be removed
 )
 
 // Keeper of the nft store

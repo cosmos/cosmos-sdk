@@ -10,9 +10,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/nft"
-	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
-	"github.com/cosmos/cosmos-sdk/x/nft/module"
+	"github.com/cosmos/cosmos-sdk/x/nft"        //nolint:staticcheck // deprecated and to be removed
+	"github.com/cosmos/cosmos-sdk/x/nft/keeper" //nolint:staticcheck // deprecated and to be removed
+	"github.com/cosmos/cosmos-sdk/x/nft/module" //nolint:staticcheck // deprecated and to be removed
 	"github.com/cosmos/cosmos-sdk/x/nft/simulation"
 )
 

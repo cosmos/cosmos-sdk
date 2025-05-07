@@ -21,8 +21,8 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	"github.com/cosmos/cosmos-sdk/x/nft"
-	nftkeeper "github.com/cosmos/cosmos-sdk/x/nft/keeper"
+	"github.com/cosmos/cosmos-sdk/x/nft"                  //nolint:staticcheck // deprecated and to be removed
+	nftkeeper "github.com/cosmos/cosmos-sdk/x/nft/keeper" //nolint:staticcheck // deprecated and to be removed
 	"github.com/cosmos/cosmos-sdk/x/nft/simulation"
 	"github.com/cosmos/cosmos-sdk/x/nft/testutil"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"

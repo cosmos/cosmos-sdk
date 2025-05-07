@@ -17,9 +17,9 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/nft"
+	"github.com/cosmos/cosmos-sdk/x/nft" //nolint:staticcheck // deprecated and to be removed
 	"github.com/cosmos/cosmos-sdk/x/nft/keeper"
-	"github.com/cosmos/cosmos-sdk/x/nft/module"
+	"github.com/cosmos/cosmos-sdk/x/nft/module" //nolint:staticcheck // deprecated and to be removed
 	nfttestutil "github.com/cosmos/cosmos-sdk/x/nft/testutil"
 )
 

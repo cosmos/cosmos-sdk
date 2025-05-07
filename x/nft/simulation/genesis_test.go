@@ -13,8 +13,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/nft"
-	nftmodule "github.com/cosmos/cosmos-sdk/x/nft/module"
+	"github.com/cosmos/cosmos-sdk/x/nft"                  //nolint:staticcheck // deprecated and to be removed
+	nftmodule "github.com/cosmos/cosmos-sdk/x/nft/module" //nolint:staticcheck // deprecated and to be removed
 	"github.com/cosmos/cosmos-sdk/x/nft/simulation"
 )
 

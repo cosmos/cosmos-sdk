@@ -65,8 +65,9 @@ type Logger interface {
 // VerboseModeLogger is an extension interface of Logger which allows verbosity to be configured.
 type VerboseModeLogger interface {
 	Logger
-	// SetVerboseMode configures whether the logger enters an increased verbose mode or not for
-	// special operations where increased observability is desired (such as chain upgrades).
+	// SetVerboseMode configures whether the logger enters verbose mode or not for
+	// special operations where increased observability of log messages is desired
+	// (such as chain upgrades).
 	SetVerboseMode(bool)
 }
 
@@ -88,8 +89,9 @@ func WithJSONMarshal(marshaler func(v any) ([]byte, error)) {
 
 type zeroLogWrapper struct {
 	*zerolog.Logger
-	regularLevel zerolog.Level
-	verboseLevel zerolog.Level
+	regularLevel  zerolog.Level
+	verboseLevel  zerolog.Level
+	disableFilter *bool
 }
 
 // NewLogger returns a new logger that writes to the given destination.
@@ -115,8 +117,14 @@ func NewLogger(dst io.Writer, options ...Option) Logger {
 		}
 	}
 
+	var disableFilter *bool
 	if logCfg.Filter != nil {
-		output = NewFilterWriter(output, logCfg.Filter)
+		disableFilter = new(bool)
+		output = &filterWriter{
+			parent:        output,
+			filter:        logCfg.Filter,
+			disableFilter: disableFilter,
+		}
 	}
 
 	logger := zerolog.New(output)
@@ -133,16 +141,14 @@ func NewLogger(dst io.Writer, options ...Option) Logger {
 		logger = logger.With().Timestamp().Logger()
 	}
 
-	if logCfg.Level != zerolog.NoLevel {
-		logger = logger.Level(logCfg.Level)
-	}
-
+	logger = logger.Level(logCfg.Level)
 	logger = logger.Hook(logCfg.Hooks...)
 
 	return zeroLogWrapper{
-		Logger:       &logger,
-		regularLevel: logCfg.Level,
-		verboseLevel: logCfg.VerboseLevel,
+		Logger:        &logger,
+		regularLevel:  logCfg.Level,
+		verboseLevel:  logCfg.VerboseLevel,
+		disableFilter: disableFilter,
 	}
 }
 
@@ -193,15 +199,18 @@ func (l zeroLogWrapper) Impl() interface{} {
 	return l.Logger
 }
 
+// SetVerboseMode implements VerboseModeLogger interface.
 func (l zeroLogWrapper) SetVerboseMode(enable bool) {
-	var nextLevel zerolog.Level
-	if enable {
-		nextLevel = l.verboseLevel
+	if enable && l.verboseLevel != zerolog.NoLevel {
+		*l.Logger = l.Logger.Level(l.verboseLevel)
+		if l.disableFilter != nil {
+			*l.disableFilter = true
+		}
 	} else {
-		nextLevel = l.regularLevel
-	}
-	if nextLevel != zerolog.NoLevel {
-		*l.Logger = l.Logger.Level(nextLevel)
+		*l.Logger = l.Logger.Level(l.regularLevel)
+		if l.disableFilter != nil {
+			*l.disableFilter = false
+		}
 	}
 }
 

@@ -21,6 +21,10 @@ import (
 // Transaction command flags
 const (
 	FlagDelayed = "delayed"
+	FlagDest    = "dest"
+	FlagLockup  = "lockup"
+	FlagMerge   = "merge"
+	FlagVesting = "vesting"
 )
 
 // GetTxCmd returns vesting module's transaction commands.
@@ -175,36 +179,14 @@ func NewMsgCreatePeriodicVestingAccountCmd(ac address.Codec) *cobra.Command {
 				return err
 			}
 
-			contents, err := os.ReadFile(args[1])
+			startTime, periods, err := readScheduleFile(args[1])
 			if err != nil {
 				return err
 			}
 
-			var vestingData VestingData
+			merge, _ := cmd.Flags().GetBool(FlagMerge)
 
-			err = json.Unmarshal(contents, &vestingData)
-			if err != nil {
-				return err
-			}
-
-			var periods []types.Period
-
-			for i, p := range vestingData.Periods {
-
-				amount, err := sdk.ParseCoinsNormalized(p.Coins)
-				if err != nil {
-					return err
-				}
-
-				if p.Length < 0 {
-					return fmt.Errorf("invalid period length of %d in period %d, length must be greater than 0", p.Length, i)
-				}
-
-				period := types.Period{Length: p.Length, Amount: amount}
-				periods = append(periods, period)
-			}
-
-			msg := types.NewMsgCreatePeriodicVestingAccount(clientCtx.GetFromAddress(), toAddr, vestingData.StartTime, periods)
+			msg := types.NewMsgCreatePeriodicVestingAccount(clientCtx.GetFromAddress(), toAddr, startTime, periods, merge)
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -212,4 +194,214 @@ func NewMsgCreatePeriodicVestingAccountCmd(ac address.Codec) *cobra.Command {
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
+}
+
+// NewMsgCreateClawbackVestingAccountCmd returns a CLI command handler for creating a
+// MsgCreateClawbackVestingAccount transaction.
+func NewMsgCreateClawbackVestingAccountCmd(ac address.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "create-clawback-vesting-account [to_address]",
+		Short: "Create a new vesting account funded with an allocation of tokens, subject to clawback.",
+		Long: `Must provide a lockup periods file (--lockup), a vesting periods file (--vesting), or both.
+If both files are given, they must describe schedules for the same total amount.
+If one file is omitted, it will default to a schedule that immediately unlocks or vests the entire amount.
+The described amount of coins will be transferred from the --from address to the vesting account.
+Unvested coins may be "clawed back" by the funder with the clawback command.
+Coins may not be transferred out of the account if they are locked or unvested, but may be staked.
+Staking rewards are subject to a proportional vesting encumbrance.
+
+A periods file is a JSON object describing a sequence of unlocking or vesting events,
+with a start time and an array of coins strings and durations relative to the start or previous event.`,
+		Example: `Sample period file contents:
+		{ "start_time": 1625204910,
+	      "period": [
+			  {
+				  "coins": "10test",
+				  "length_seconds": 2592000 //30 days
+			  },
+			  {
+				"coins": "10test",
+				"length_seconds": 2592000 //30 days
+			}
+		]}
+	    `,
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			toAddr, err := ac.StringToBytes(args[0])
+			if err != nil {
+				return err
+			}
+
+			lockupFile, _ := cmd.Flags().GetString(FlagLockup)
+			vestingFile, _ := cmd.Flags().GetString(FlagVesting)
+			if lockupFile == "" && vestingFile == "" {
+				return fmt.Errorf("must specify at least one of %s or %s", FlagLockup, FlagVesting)
+			}
+			var lockupStart, vestingStart int64
+			var lockupPeriods, vestingPeriods []types.Period
+			if lockupFile != "" {
+				lockupStart, lockupPeriods, err = readScheduleFile(lockupFile)
+				if err != nil {
+					return err
+				}
+			}
+			if vestingFile != "" {
+				vestingStart, vestingPeriods, err = readScheduleFile(vestingFile)
+				if err != nil {
+					return err
+				}
+			}
+
+			commonStart, _ := types.AlignSchedules(lockupStart, vestingStart, lockupPeriods, vestingPeriods)
+
+			merge, _ := cmd.Flags().GetBool(FlagMerge)
+
+			msg := types.NewMsgCreateClawbackVestingAccount(clientCtx.GetFromAddress(), toAddr, commonStart, lockupPeriods, vestingPeriods, merge)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	cmd.Flags().Bool(FlagMerge, false, "Merge new amount and schedule with existing ClawbackVestingAccount, if any")
+	cmd.Flags().String(FlagLockup, "", "path to file containing unlocking periods")
+	cmd.Flags().String(FlagVesting, "", "path to file containing vesting periods")
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// NewMsgClawbackCmd returns a CLI command handler for creating a
+// MsgClawback transaction.
+func NewMsgClawbackCmd(ac address.Codec) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "clawback [address]",
+		Short: "Transfer unvested amount out of a ClawbackVestingAccount.",
+		Long: `Must be requested by the original funder address (--from).
+May provide a destination address (--dest), otherwise the coins return to the funder.
+Delegated or undelegating staking tokens will be transferred in the delegated (undelegating) state.
+The recipient is vulnerable to slashing, and must act to unbond the tokens if desired.`,
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			addr, err := ac.StringToBytes(args[0])
+			if err != nil {
+				return err
+			}
+
+			var dest sdk.AccAddress
+			destString, _ := cmd.Flags().GetString(FlagDest)
+			if destString != "" {
+				dest, err = ac.StringToBytes(destString)
+				if err != nil {
+					return fmt.Errorf("bad dest address: %w", err)
+				}
+			}
+
+			msg := types.NewMsgClawback(clientCtx.GetFromAddress(), addr, dest)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	cmd.Flags().String(FlagDest, "", "address of destination (defaults to funder)")
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// NewMsgReturnGrantsCmd returns a CLI command handler for creating a
+// MsgReturnGrantsCmd transaction.
+func NewMsgReturnGrantsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "return-grants",
+		Short: "Transfer grants out of a vesting account.",
+		Long: `Must be authorized by the vesting account itself.
+All granted assets, including delegated and undelegating, vested and unvested,
+are transferred to the original funder of the account. Might not be complete if
+some vested assets have been transferred out of the account.
+Currently only supported for ClawbackVestingAccount.`,
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgReturnGrants(clientCtx.GetFromAddress())
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// readScheduleFile reads the file at path and unmarshals it to get the schedule.
+
+// Returrns start time, periods, and error.
+
+func readScheduleFile(path string) (int64, []types.Period, error) {
+
+	contents, err := os.ReadFile(path)
+
+	if err != nil {
+
+		return 0, nil, err
+
+	}
+
+	var data VestingData
+
+	err = json.Unmarshal(contents, &data)
+
+	if err != nil {
+
+		return 0, nil, err
+
+	}
+
+	startTime := data.StartTime
+
+	var periods []types.Period
+
+	for i, p := range data.Periods {
+
+		amount, err := sdk.ParseCoinsNormalized(p.Coins)
+
+		if err != nil {
+
+			return 0, nil, err
+
+		}
+
+		if p.Length < 1 {
+
+			return 0, nil, fmt.Errorf("invalid period length of %d in period %d, length must be greater than 0", p.Length, i)
+
+		}
+
+		period := types.Period{Length: p.Length, Amount: amount}
+
+		periods = append(periods, period)
+
+	}
+
+	return startTime, periods, nil
+
 }

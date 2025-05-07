@@ -3,8 +3,10 @@ package baseapp
 import (
 	"context"
 	"fmt"
+	"os"
 	"sort"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/cockroachdb/errors"
@@ -159,8 +161,17 @@ func (app *BaseApp) Query(_ context.Context, req *abci.RequestQuery) (resp *abci
 	}()
 
 	// when a client did not provide a query height, manually inject the latest
+	//[AGORIC] sanity check required for parallel Query https://github.com/agoric-labs/cosmos-sdk/pull/111
+	lastHeight := app.LastBlockHeight()
 	if req.Height == 0 {
-		req.Height = app.LastBlockHeight()
+		req.Height = lastHeight
+	}
+	if req.Height > lastHeight {
+		return sdkerrors.QueryResult(
+			errorsmod.Wrapf(sdkerrors.ErrInvalidHeight,
+				"given height %d is greater than latest height %d", req.Height, lastHeight),
+			app.trace,
+		), nil
 	}
 
 	telemetry.IncrCounter(1, "query", "count")
@@ -835,6 +846,9 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 	events = append(events, endBlock.Events...)
 	cp := app.GetConsensusParams(app.finalizeBlockState.Context())
 
+	// [AGORIC] Clear the event history after each block.
+	app.finalizeBlockState.eventHistory = sdk.Events{}
+
 	return &abci.ResponseFinalizeBlock{
 		Events:                events,
 		TxResults:             txResults,
@@ -903,11 +917,20 @@ func (app *BaseApp) checkHalt(height int64, time time.Time) error {
 		halt = true
 	}
 
-	if halt {
-		return fmt.Errorf("halt per configuration height %d time %d", app.haltHeight, app.haltTime)
+	if !halt {
+		return nil
 	}
-
-	return nil
+	// [AGORIC] Make a best-effort attempt to kill our process.
+	p, err := os.FindProcess(os.Getpid())
+	if err == nil {
+		// attempt cascading signals in case SIGINT fails (os dependent)
+		_ = p.Signal(syscall.SIGINT)
+		_ = p.Signal(syscall.SIGTERM)
+		// Errors in these signal calls are not meaningful to us.  We tried our
+		// best, but we don't care (and can't tell) if or how the signal handler
+		// responds.
+	}
+	return fmt.Errorf("halt per configuration height %d time %d", app.haltHeight, app.haltTime)
 }
 
 // Commit implements the ABCI interface. It will commit all state that exists in

@@ -118,15 +118,6 @@ $ %[1]s tx [flags] | %[1]s q wait-tx
 				return err
 			}
 
-			//c, err := rpchttp.New(clientCtx.NodeURI, "/websocket")
-			//if err != nil {
-			//	return err
-			//}
-			//if err := c.Start(); err != nil {
-			//	return err
-			//}
-			//defer c.Stop() //nolint:errcheck // ignore stop error
-
 			ctx, cancel := context.WithTimeout(context.Background(), timeout)
 			defer cancel()
 

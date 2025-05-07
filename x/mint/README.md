@@ -76,8 +76,10 @@ app.MintKeeper = mintkeeper.NewKeeper(
 
 #### Custom Minter DI Example
 
-Define a function that takes your minter dependencies and returns the custom mint function. For this example,
-we will build a dummy linter that simply doubles the supply of `foo` coin.
+Below is a simple approach to creating a custom mint function with extra dependencies in DI configurations.
+For this basic example, we will make the minter simply double the supply of `foo` coin.
+
+First, we will define a function that takes our required dependencies, and returns a `MintFn`.
 
 ```go
 // MyCustomMintFunction is a custom mint function that doubles the supply of `foo` coin.
@@ -93,7 +95,7 @@ func MyCustomMintFunction(bank bankkeeper.BaseKeeper) mintkeeper.MintFn {
 }
 ```
 
-This function can then be passed into the `depinject` supply function with the required dependencies.
+Then, pass the function defined above into the `depinject.Supply` function with the required dependencies.
 
 ```go
 // NewSimApp returns a reference to an initialized SimApp.
@@ -121,7 +123,6 @@ func NewSimApp(
 	// ...
 }
 ```
-
 
 ## State
 

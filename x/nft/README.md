@@ -4,6 +4,8 @@ sidebar_position: 1
 
 # `x/nft`
 
+⚠️ **DEPRECATED**: This package is deprecated and will be removed in the next major release.  The `x/nft` module will be moved to a separate repo `github.com/cosmos/cosmos-sdk-legacy`.
+
 ## Contents
 
 ## Abstract

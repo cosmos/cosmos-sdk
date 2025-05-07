@@ -4,7 +4,6 @@ import (
 	"errors"
 	"io"
 
-	confixcmd "cosmossdk.io/tools/confix/cmd"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
@@ -12,6 +11,7 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
+	confixcmd "cosmossdk.io/tools/confix/cmd"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/debug"

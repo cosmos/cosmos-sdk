@@ -89,7 +89,7 @@ const (
 	FlagOutput = "output"
 	// Logging flags
 	FlagLogLevel        = "log_level"
-	FlagUpgradeLogLevel = "upgrade_log_level"
+	FlagVerboseLogLevel = "verbose_log_level"
 	FlagLogFormat       = "log_format"
 	FlagLogNoColor      = "log_no_color"
 )

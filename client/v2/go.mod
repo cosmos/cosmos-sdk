@@ -155,3 +155,9 @@ require (
 	nhooyr.io/websocket v1.8.6 // indirect
 	pgregory.net/rapid v1.1.0 // indirect
 )
+
+replace (
+	cosmossdk.io/api => ../../api
+	cosmossdk.io/core => ../../core
+	cosmossdk.io/depinject => ../../depinject
+)

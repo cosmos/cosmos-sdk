@@ -27,6 +27,9 @@ const (
 	// BroadcastAsync defines a tx broadcasting mode where the client returns
 	// immediately.
 	BroadcastAsync = "async"
+	// [AGORIC]: BroadcastBlock is an emulated compatibility mode which uses
+	// event subscription to wait until the tx is committed in a block.
+	BroadcastBlock = "block"
 
 	// SignModeDirect is the value of the --sign-mode flag for SIGN_MODE_DIRECT
 	SignModeDirect = "direct"

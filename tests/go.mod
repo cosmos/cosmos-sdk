@@ -157,7 +157,7 @@ require (
 	github.com/rs/zerolog v1.33.0 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
-	github.com/sasha-s/go-deadlock v0.3.1 // indirect
+	github.com/sasha-s/go-deadlock v0.3.5 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cast v1.7.1 // indirect
@@ -206,8 +206,16 @@ require (
 // Below are the long-lived replace for tests.
 replace (
 	// We always want to test against the latest version of the simapp.
+	cosmossdk.io/api => ../api
+	cosmossdk.io/core => ../core
+	cosmossdk.io/depinject => ../depinject
+	cosmossdk.io/errors => ../errors
+	cosmossdk.io/math => ../math
 	cosmossdk.io/simapp => ../simapp
+	cosmossdk.io/tools/rosetta => ../tools/rosetta
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
+	// use cometbft
+	github.com/cometbft/cometbft => github.com/agoric-labs/cometbft v0.37.15-alpha.agoric.1
 	// We always want to test against the latest version of the SDK.
 	github.com/cosmos/cosmos-sdk => ../.
 	// Fix upstream GHSA-h395-qcrw-5vmq and GHSA-3vp4-m3rf-835h vulnerabilities.

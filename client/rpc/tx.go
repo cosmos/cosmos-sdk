@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/spf13/cobra"
@@ -119,14 +118,14 @@ $ %[1]s tx [flags] | %[1]s q wait-tx
 				return err
 			}
 
-			c, err := rpchttp.New(clientCtx.NodeURI, "/websocket")
-			if err != nil {
-				return err
-			}
-			if err := c.Start(); err != nil {
-				return err
-			}
-			defer c.Stop() //nolint:errcheck // ignore stop error
+			//c, err := rpchttp.New(clientCtx.NodeURI, "/websocket")
+			//if err != nil {
+			//	return err
+			//}
+			//if err := c.Start(); err != nil {
+			//	return err
+			//}
+			//defer c.Stop() //nolint:errcheck // ignore stop error
 
 			ctx, cancel := context.WithTimeout(context.Background(), timeout)
 			defer cancel()
@@ -154,16 +153,6 @@ $ %[1]s tx [flags] | %[1]s q wait-tx
 				hash = hashByt
 			}
 
-			// subscribe to websocket events
-			query := fmt.Sprintf("%s='%s' AND %s='%X'", tmtypes.EventTypeKey, tmtypes.EventTx, tmtypes.TxHashKey, hash)
-			const subscriber = "subscriber"
-			eventCh, err := c.Subscribe(ctx, subscriber, query)
-			if err != nil {
-				return fmt.Errorf("failed to subscribe to tx: %w", err)
-			}
-			defer c.UnsubscribeAll(context.Background(), subscriber) //nolint:errcheck // ignore unsubscribe error
-
-			// return immediately if tx is already included in a block
 			res, err := c.Tx(ctx, hash, false)
 			if err == nil {
 				// tx already included in a block
@@ -175,24 +164,24 @@ $ %[1]s tx [flags] | %[1]s q wait-tx
 				return clientCtx.PrintProto(newResponseFormatBroadcastTxCommit(res))
 			}
 
-			// tx not yet included in a block, wait for event on websocket
-			select {
-			case evt := <-eventCh:
-				if txe, ok := evt.Data.(tmtypes.EventDataTx); ok {
-					res := &coretypes.ResultBroadcastTxCommit{
-						TxResult: txe.Result,
-						Hash:     tmtypes.Tx(txe.Tx).Hash(),
-						Height:   txe.Height,
-					}
-					return clientCtx.PrintProto(newResponseFormatBroadcastTxCommit(res))
-				}
-			case <-ctx.Done():
-				return errors.ErrLogic.Wrapf("timed out waiting for transaction %X to be included in a block", hash)
+			waitTxCh := client.WaitTx(ctx, clientCtx.NodeURI, hash)
+			waitTxResult := <-waitTxCh
+			if waitTxResult.Err != nil {
+				return waitTxResult.Err
 			}
-			return nil
+
+			txe := waitTxResult.BlockInclusion
+
+			res := &coretypes.ResultBroadcastTxCommit{
+				TxResult: txe.Result,
+				Hash:     tmtypes.Tx(txe.Tx).Hash(),
+				Height:   txe.Height,
+			}
+
+			// Propagate the printing error, if any.
+			return clientCtx.PrintProto(newResponseFormatBroadcastTxCommit(res))
 		},
 	}
-
 	cmd.Flags().Duration(TimeoutFlag, 15*time.Second, "The maximum time to wait for the transaction to be included in a block")
 	flags.AddQueryFlagsToCmd(cmd)
 

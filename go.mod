@@ -2,6 +2,8 @@ go 1.21
 
 module github.com/cosmos/cosmos-sdk
 
+go 1.22.7
+
 require (
 	cosmossdk.io/api v0.7.6
 	cosmossdk.io/collections v0.4.0
@@ -142,7 +144,7 @@ require (
 	github.com/rs/cors v1.11.1 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
-	github.com/sasha-s/go-deadlock v0.3.1 // indirect
+	github.com/sasha-s/go-deadlock v0.3.5 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
@@ -171,8 +173,19 @@ require (
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (
+	cosmossdk.io/api => ./api
+	cosmossdk.io/core => ./core
+	cosmossdk.io/depinject => ./depinject
+	cosmossdk.io/errors => ./errors
+	cosmossdk.io/math => ./math
+	cosmossdk.io/simapp => ./simapp
+	cosmossdk.io/tools/rosetta => ./tools/rosetta
+
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
+	// use cometbft
+	github.com/cometbft/cometbft => github.com/agoric-labs/cometbft v0.37.15-alpha.agoric.1
+	github.com/confio/ics23/go => github.com/cosmos/ics23/go v0.11.0
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
 	// TODO: remove it: https://github.com/cosmos/cosmos-sdk/issues/13134
 	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt/v4 v4.4.2

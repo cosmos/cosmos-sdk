@@ -26,6 +26,8 @@ type Keeper struct {
 	// should be the x/gov module account.
 	authority string
 
+	hooks []types.DistributionHooks
+
 	Schema  collections.Schema
 	Params  collections.Item[types.Params]
 	FeePool collections.Item[types.FeePool]
@@ -51,6 +53,7 @@ func NewKeeper(
 		authKeeper:       ak,
 		bankKeeper:       bk,
 		stakingKeeper:    sk,
+		hooks:            []types.DistributionHooks{},
 		feeCollectorName: feeCollectorName,
 		authority:        authority,
 		Params:           collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
@@ -74,6 +77,14 @@ func (k Keeper) GetAuthority() string {
 func (k Keeper) Logger(ctx context.Context) log.Logger {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	return sdkCtx.Logger().With(log.ModuleKey, "x/"+types.ModuleName)
+}
+
+// AddHooks adds a hooks object to be called upon certain events.
+func (k *Keeper) AddHooks(h types.DistributionHooks) *Keeper {
+	if h != nil {
+		k.hooks = append(k.hooks, h)
+	}
+	return k
 }
 
 // SetWithdrawAddr sets a new address that will receive the rewards upon withdrawal
@@ -172,6 +183,9 @@ func (k Keeper) WithdrawValidatorCommission(ctx context.Context, valAddr sdk.Val
 
 		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, withdrawAddr, commission)
 		if err != nil {
+			for _, h := range k.hooks {
+				h.AfterDelegationReward(ctx, accAddr, withdrawAddr, commission)
+			}
 			return nil, err
 		}
 	}

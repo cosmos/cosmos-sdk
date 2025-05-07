@@ -47,6 +47,7 @@ func TestBroadcastError(t *testing.T) {
 	modes := []string{
 		flags.BroadcastAsync,
 		flags.BroadcastSync,
+		flags.BroadcastBlock,
 	}
 
 	txBytes := []byte{0xA, 0xB}

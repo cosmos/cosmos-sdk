@@ -212,6 +212,55 @@ func (mr *MockBankKeeperMockRecorder) SpendableCoins(ctx, addr interface{}) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SpendableCoins", reflect.TypeOf((*MockBankKeeper)(nil).SpendableCoins), ctx, addr)
 }
 
+// MockDistributionHooks is a mock of DistributionHooks interface.
+type MockDistributionHooks struct {
+	ctrl     *gomock.Controller
+	recorder *MockDistributionHooksMockRecorder
+}
+
+// MockDistributionHooksMockRecorder is the mock recorder for MockDistributionHooks.
+type MockDistributionHooksMockRecorder struct {
+	mock *MockDistributionHooks
+}
+
+// NewMockDistributionHooks creates a new mock instance.
+func NewMockDistributionHooks(ctrl *gomock.Controller) *MockDistributionHooks {
+	mock := &MockDistributionHooks{ctrl: ctrl}
+	mock.recorder = &MockDistributionHooksMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockDistributionHooks) EXPECT() *MockDistributionHooksMockRecorder {
+	return m.recorder
+}
+
+// AfterDelegationReward mocks base method.
+func (m *MockDistributionHooks) AfterDelegationReward(ctx types.Context, delAddr, withdrawAddr types.AccAddress, reward types.Coins) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "AfterDelegationReward", ctx, delAddr, withdrawAddr, reward)
+}
+
+// AfterDelegationReward indicates an expected call of AfterDelegationReward.
+func (mr *MockDistributionHooksMockRecorder) AfterDelegationReward(ctx, delAddr, withdrawAddr, reward interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AfterDelegationReward", reflect.TypeOf((*MockDistributionHooks)(nil).AfterDelegationReward), ctx, delAddr, withdrawAddr, reward)
+}
+
+// AllowWithdrawAddr mocks base method.
+func (m *MockDistributionHooks) AllowWithdrawAddr(ctx types.Context, delAddr types.AccAddress) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AllowWithdrawAddr", ctx, delAddr)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// AllowWithdrawAddr indicates an expected call of AllowWithdrawAddr.
+func (mr *MockDistributionHooksMockRecorder) AllowWithdrawAddr(ctx, delAddr interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AllowWithdrawAddr", reflect.TypeOf((*MockDistributionHooks)(nil).AllowWithdrawAddr), ctx, delAddr)
+}
+
 // MockStakingKeeper is a mock of StakingKeeper interface.
 type MockStakingKeeper struct {
 	ctrl     *gomock.Controller

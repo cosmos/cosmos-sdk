@@ -13,8 +13,17 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+// [AGORIC] Valid values for FlagAbciClientType
+const (
+	AbciClientTypeCommitting = "committing"
+	AbciClientTypeLocal      = "local"
+)
+
 const (
 	defaultMinGasPrices = ""
+
+	// DefaultABCIClientType defines the default ABCI client type to use with cometbft.
+	DefaultABCIClientType = AbciClientTypeCommitting // [AGORIC]
 
 	// DefaultAPIAddress defines the default address to bind the API server to.
 	DefaultAPIAddress = "tcp://localhost:1317"

@@ -79,13 +79,16 @@ type AppModule struct {
 
 	accountKeeper keeper.AccountKeeper
 	bankKeeper    types.BankKeeper
+	stakingKeeper types.StakingKeeper
 }
 
-func NewAppModule(ak keeper.AccountKeeper, bk types.BankKeeper) AppModule {
+// NewAppModule returns a new vesting AppModule.
+func NewAppModule(ak keeper.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{ac: ak.AddressCodec()},
 		accountKeeper:  ak,
 		bankKeeper:     bk,
+		stakingKeeper:  sk,
 	}
 }
 
@@ -97,7 +100,7 @@ func (am AppModule) IsAppModule() {}
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
-	types.RegisterMsgServer(registrar, NewMsgServerImpl(am.accountKeeper, am.bankKeeper))
+	types.RegisterMsgServer(registrar, NewMsgServerImpl(am.accountKeeper, am.bankKeeper, am.stakingKeeper))
 	return nil
 }
 
@@ -129,6 +132,7 @@ type ModuleInputs struct {
 
 	AccountKeeper keeper.AccountKeeper
 	BankKeeper    types.BankKeeper
+	StakingKeeper types.StakingKeeper
 }
 
 type ModuleOutputs struct {
@@ -138,7 +142,7 @@ type ModuleOutputs struct {
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
-	m := NewAppModule(in.AccountKeeper, in.BankKeeper)
+	m := NewAppModule(in.AccountKeeper, in.BankKeeper, in.StakingKeeper)
 
 	return ModuleOutputs{Module: m}
 }

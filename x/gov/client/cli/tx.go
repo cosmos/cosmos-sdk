@@ -59,17 +59,17 @@ func NewTxCmd(legacyPropCmds []*cobra.Command) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmdSubmitLegacyProp := NewCmdSubmitLegacyProposal()
+	cmdSubmitProp := NewCmdSubmitProposal()
 	for _, propCmd := range legacyPropCmds {
 		flags.AddTxFlagsToCmd(propCmd)
-		cmdSubmitLegacyProp.AddCommand(propCmd)
+		cmdSubmitProp.AddCommand(propCmd)
 	}
 
 	govTxCmd.AddCommand(
 		NewCmdDeposit(),
 		NewCmdVote(),
 		NewCmdWeightedVote(),
-		NewCmdSubmitProposal(),
+		cmdSubmitProp,
 		NewCmdDraftProposal(),
 		NewCmdCancelProposal(),
 
@@ -81,11 +81,16 @@ func NewTxCmd(legacyPropCmds []*cobra.Command) *cobra.Command {
 }
 
 // NewCmdSubmitProposal implements submitting a proposal transaction command.
+// NOTE: This command has been modified from its original to subsume both
+// the "legacy" and the new (as of v0.46) invocation patterns. This modification
+// will be dropped once all legacy call sites have been updated to either
+// use the new pattern or call the legacy command explicitly.
 func NewCmdSubmitProposal() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "submit-proposal [path/to/proposal.json]",
-		Short: "Submit a proposal along with some messages, metadata and deposit",
-		Args:  cobra.ExactArgs(1),
+		Use:     "submit-proposal [path/to/proposal.json]",
+		Short:   "Submit a proposal along with some messages, metadata and deposit",
+		Aliases: []string{"submit-legacy-proposal"},
+		Args:    cobra.MaximumNArgs(1),
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Submit a proposal along with some messages, metadata and deposit.
 They should be defined in a JSON file.
@@ -208,7 +213,7 @@ Which is equivalent to:
 
 $ %s tx gov submit-legacy-proposal --title="Test Proposal" --description="My awesome proposal" --type="Text" --deposit="10test" --from mykey
 `,
-				version.AppName, version.AppName,
+				version.AppName, version.AppName, version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -217,22 +222,39 @@ $ %s tx gov submit-legacy-proposal --title="Test Proposal" --description="My awe
 				return err
 			}
 
+			// try to interpret as a legacy submit-proposal call
 			proposal, err := parseSubmitLegacyProposal(cmd.Flags())
-			if err != nil {
-				return fmt.Errorf("failed to parse proposal: %w", err)
+			if err == nil {
+				amount, err := sdk.ParseCoinsNormalized(proposal.Deposit)
+				if err != nil {
+					return err
+				}
+
+				content, ok := v1beta1.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
+				if !ok {
+					return fmt.Errorf("failed to create proposal content: unknown proposal type %s", proposal.Type)
+				}
+
+				msg, err := v1beta1.NewMsgSubmitProposal(content, amount, clientCtx.GetFromAddress())
+				if err != nil {
+					return fmt.Errorf("invalid message: %w", err)
+				}
+
+				return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 			}
 
-			amount, err := sdk.ParseCoinsNormalized(proposal.Deposit)
+			// otherwise try to interpret as a new (0.46) submit-proposal
+			err = cobra.ExactArgs(1)(cmd, args)
 			if err != nil {
 				return err
 			}
 
-			content, ok := v1beta1.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
-			if !ok {
-				return fmt.Errorf("failed to create proposal content: unknown proposal type %s", proposal.Type)
+			msgs, metadata, title, summary, deposit, err := parseSubmitProposal(clientCtx.Codec, args[0])
+			if err != nil {
+				return err
 			}
 
-			msg, err := v1beta1.NewMsgSubmitProposal(content, amount, clientCtx.GetFromAddress())
+			msg, err := v1.NewMsgSubmitProposal(msgs, deposit, clientCtx.GetFromAddress().String(), metadata, title, summary)
 			if err != nil {
 				return fmt.Errorf("invalid message: %w", err)
 			}
@@ -249,6 +271,13 @@ $ %s tx gov submit-legacy-proposal --title="Test Proposal" --description="My awe
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
+}
+
+// NewCmdSubmitLegacyProposal implements submitting a proposal transaction command.
+// Deprecated: please use NewCmdSubmitProposal instead.
+// Preserved for tests.
+func NewCmdSubmitLegacyProposal() *cobra.Command {
+	return NewCmdSubmitProposal()
 }
 
 // NewCmdDeposit implements depositing tokens for an active proposal.

@@ -20,22 +20,30 @@ type TxFeeChecker func(ctx sdk.Context, tx sdk.Tx) (sdk.Coins, int64, error)
 // Call next AnteHandler if fees successfully deducted.
 // CONTRACT: Tx must implement FeeTx interface to use DeductFeeDecorator
 type DeductFeeDecorator struct {
-	accountKeeper  AccountKeeper
-	bankKeeper     types.BankKeeper
-	feegrantKeeper FeegrantKeeper
-	txFeeChecker   TxFeeChecker
+	accountKeeper    AccountKeeper
+	bankKeeper       types.BankKeeper
+	feegrantKeeper   FeegrantKeeper
+	txFeeChecker     TxFeeChecker
+	feeCollectorName string
 }
 
 func NewDeductFeeDecorator(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKeeper, tfc TxFeeChecker) DeductFeeDecorator {
+	return NewDeductFeeDecoratorWithName(ak, bk, fk, tfc, types.FeeCollectorName)
+}
+
+// NewDeductFeeDecoratorWithName returns a DeductFeeDecorator using a custom fee collector module account.
+// Agoric note: for collecting fees in the reserve account.
+func NewDeductFeeDecoratorWithName(ak AccountKeeper, bk types.BankKeeper, fk FeegrantKeeper, tfc TxFeeChecker, feeCollectorName string) DeductFeeDecorator {
 	if tfc == nil {
 		tfc = checkTxFeeWithValidatorMinGasPrices
 	}
 
 	return DeductFeeDecorator{
-		accountKeeper:  ak,
-		bankKeeper:     bk,
-		feegrantKeeper: fk,
-		txFeeChecker:   tfc,
+		accountKeeper:    ak,
+		bankKeeper:       bk,
+		feegrantKeeper:   fk,
+		txFeeChecker:     tfc,
+		feeCollectorName: feeCollectorName,
 	}
 }
 
@@ -76,8 +84,8 @@ func (dfd DeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee 
 		return errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
-	if addr := dfd.accountKeeper.GetModuleAddress(types.FeeCollectorName); addr == nil {
-		return fmt.Errorf("fee collector module account (%s) has not been set", types.FeeCollectorName)
+	if addr := dfd.accountKeeper.GetModuleAddress(dfd.feeCollectorName); addr == nil {
+		return fmt.Errorf("fee collector module account (%s) has not been set", dfd.feeCollectorName)
 	}
 
 	feePayer := feeTx.FeePayer()
@@ -108,7 +116,7 @@ func (dfd DeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee 
 
 	// deduct the fees
 	if !fee.IsZero() {
-		err := DeductFees(dfd.bankKeeper, ctx, deductFeesFromAcc, fee)
+		err := DeductFees(dfd.bankKeeper, ctx, deductFeesFromAcc, fee, dfd.feeCollectorName)
 		if err != nil {
 			return err
 		}
@@ -127,12 +135,12 @@ func (dfd DeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx, fee 
 }
 
 // DeductFees deducts fees from the given account.
-func DeductFees(bankKeeper types.BankKeeper, ctx sdk.Context, acc sdk.AccountI, fees sdk.Coins) error {
+func DeductFees(bankKeeper types.BankKeeper, ctx sdk.Context, acc sdk.AccountI, fees sdk.Coins, feeCollectorName string) error {
 	if !fees.IsValid() {
 		return errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "invalid fee amount: %s", fees)
 	}
 
-	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), types.FeeCollectorName, fees)
+	err := bankKeeper.SendCoinsFromAccountToModule(ctx, acc.GetAddress(), feeCollectorName, fees)
 	if err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, err.Error())
 	}

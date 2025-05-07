@@ -6,6 +6,8 @@ import (
 	"net"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health"
+	"google.golang.org/grpc/health/grpc_health_v1"
 
 	"cosmossdk.io/log"
 
@@ -39,6 +41,8 @@ func NewGRPCServer(clientCtx client.Context, app types.Application, cfg config.G
 	)
 
 	app.RegisterGRPCServer(grpcSrv)
+	// Respond to health checks.
+	grpc_health_v1.RegisterHealthServer(grpcSrv, health.NewServer())
 
 	// Reflection allows consumers to build dynamic clients that can write to any
 	// Cosmos SDK application without relying on application packages at compile

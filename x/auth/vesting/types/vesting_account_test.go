@@ -796,6 +796,257 @@ func TestTrackUndelegationPermLockedVestingAcc(t *testing.T) {
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 25)}, plva.DelegatedVesting)
 }
 
+func TestGetVestedCoinsClawbackVestingAcc(t *testing.T) {
+	now := tmtime.Now()
+	endTime := now.Add(24 * time.Hour)
+	lockupPeriods := types.Periods{
+		types.Period{Length: int64(16 * 60 * 60), Amount: sdk.NewCoins(sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100))},
+	}
+	vestingPeriods := types.Periods{
+		types.Period{Length: int64(12 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}},
+		types.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 250), sdk.NewInt64Coin(stakeDenom, 25)}},
+		types.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 250), sdk.NewInt64Coin(stakeDenom, 25)}},
+	}
+
+	bacc, origCoins := initBaseAccount()
+	va := types.NewClawbackVestingAccount(bacc, sdk.AccAddress([]byte("funder")), origCoins, now.Unix(), lockupPeriods, vestingPeriods)
+
+	// require no coins vested at the beginning of the vesting schedule
+	vestedCoins := va.GetVestedCoins(now)
+	require.Nil(t, vestedCoins)
+
+	// require all coins vested at the end of the vesting schedule
+	vestedCoins = va.GetVestedCoins(endTime)
+	require.Equal(t, origCoins, vestedCoins)
+
+	// require no coins vested during first vesting period
+	vestedCoins = va.GetVestedCoins(now.Add(6 * time.Hour))
+	require.Nil(t, vestedCoins)
+
+	// require no coins vested after period1 before unlocking
+	vestedCoins = va.GetVestedCoins(now.Add(14 * time.Hour))
+	require.Nil(t, vestedCoins)
+
+	// require 50% of coins vested after period 1 at unlocking
+	vestedCoins = va.GetVestedCoins(now.Add(16 * time.Hour))
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}, vestedCoins)
+
+	// require period 2 coins don't vest until period is over
+	vestedCoins = va.GetVestedCoins(now.Add(17 * time.Hour))
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}, vestedCoins)
+
+	// require 75% of coins vested after period 2
+	vestedCoins = va.GetVestedCoins(now.Add(18 * time.Hour))
+	require.Equal(t,
+		sdk.Coins{
+			sdk.NewInt64Coin(feeDenom, 750), sdk.NewInt64Coin(stakeDenom, 75),
+		}, vestedCoins)
+
+	// require 100% of coins vested
+	vestedCoins = va.GetVestedCoins(now.Add(48 * time.Hour))
+	require.Equal(t, origCoins, vestedCoins)
+}
+
+func TestGetVestingCoinsClawbackVestingAcc(t *testing.T) {
+	now := tmtime.Now()
+	endTime := now.Add(24 * time.Hour)
+	lockupPeriods := types.Periods{
+		types.Period{Length: int64(16 * 60 * 60), Amount: sdk.NewCoins(sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100))},
+	}
+	vestingPeriods := types.Periods{
+		types.Period{Length: int64(12 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}},
+		types.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 250), sdk.NewInt64Coin(stakeDenom, 25)}},
+		types.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 250), sdk.NewInt64Coin(stakeDenom, 25)}},
+	}
+
+	bacc, origCoins := initBaseAccount()
+	va := types.NewClawbackVestingAccount(bacc, sdk.AccAddress([]byte("funder")), origCoins, now.Unix(), lockupPeriods, vestingPeriods)
+
+	// require all coins vesting at the beginning of the vesting schedule
+	vestingCoins := va.GetVestingCoins(now)
+	require.Equal(t, origCoins, vestingCoins)
+
+	// require no coins vesting at the end of the vesting schedule
+	vestingCoins = va.GetVestingCoins(endTime)
+	// sdk.Coins{}
+	require.Equal(t, sdk.Coins{}, vestingCoins)
+
+	// require all coins vesting at first vesting event
+	vestingCoins = va.GetVestingCoins(now.Add(12 * time.Hour))
+	require.Equal(t, origCoins, vestingCoins)
+
+	// require all coins vesting after period 1 before unlocking
+	vestingCoins = va.GetVestingCoins(now.Add(15 * time.Hour))
+	require.Equal(t, origCoins, vestingCoins)
+
+	// require 50% of coins vesting after period 1 at unlocking
+	vestingCoins = va.GetVestingCoins(now.Add(16 * time.Hour))
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}, vestingCoins)
+
+	// require 50% of coins vesting after period 1, after unlocking
+	vestingCoins = va.GetVestingCoins(now.Add(17 * time.Hour))
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}, vestingCoins)
+
+	// require 25% of coins vesting after period 2
+	vestingCoins = va.GetVestingCoins(now.Add(18 * time.Hour))
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 250), sdk.NewInt64Coin(stakeDenom, 25)}, vestingCoins)
+
+	// require 0% of coins vesting after vesting complete
+	vestingCoins = va.GetVestingCoins(now.Add(48 * time.Hour))
+	require.Equal(t, sdk.Coins{}, vestingCoins)
+}
+
+func TestSpendableCoinsClawbackVestingAcc(t *testing.T) {
+	now := tmtime.Now()
+	endTime := now.Add(24 * time.Hour)
+	lockupPeriods := types.Periods{
+		types.Period{Length: int64(16 * 60 * 60), Amount: sdk.NewCoins(sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100))},
+	}
+	vestingPeriods := types.Periods{
+		types.Period{Length: int64(12 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}},
+		types.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 250), sdk.NewInt64Coin(stakeDenom, 25)}},
+		types.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 250), sdk.NewInt64Coin(stakeDenom, 25)}},
+	}
+
+	bacc, origCoins := initBaseAccount()
+	va := types.NewClawbackVestingAccount(bacc, sdk.AccAddress([]byte("funder")), origCoins, now.Unix(), lockupPeriods, vestingPeriods)
+
+	// require that there exist no spendable coins at the beginning of the
+	// vesting schedule
+	lockedCoins := va.LockedCoins(now)
+	require.Equal(t, origCoins, lockedCoins)
+
+	// require that all original coins are spendable at the end of the vesting
+	// schedule
+	lockedCoins = va.LockedCoins(endTime)
+	require.Equal(t, sdk.NewCoins(), lockedCoins)
+
+	// require that all still vesting coins (50%) are locked
+	lockedCoins = va.LockedCoins(now.Add(17 * time.Hour))
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}, lockedCoins)
+}
+
+func TestTrackDelegationClawbackVestingAcc(t *testing.T) {
+	now := tmtime.Now()
+	endTime := now.Add(24 * time.Hour)
+	lockupPeriods := types.Periods{
+		types.Period{Length: int64(16 * 60 * 60), Amount: sdk.NewCoins(sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100))},
+	}
+	vestingPeriods := types.Periods{
+		types.Period{Length: int64(12 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}},
+		types.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 250), sdk.NewInt64Coin(stakeDenom, 25)}},
+		types.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 250), sdk.NewInt64Coin(stakeDenom, 25)}},
+	}
+
+	bacc, origCoins := initBaseAccount()
+
+	// require the ability to delegate all vesting coins
+	va := types.NewClawbackVestingAccount(bacc, sdk.AccAddress([]byte("funder")), origCoins, now.Unix(), lockupPeriods, vestingPeriods)
+	va.TrackDelegation(now, origCoins, origCoins)
+	require.Equal(t, origCoins, va.DelegatedVesting)
+	require.Nil(t, va.DelegatedFree)
+
+	// require the ability to delegate all vested coins
+	va = types.NewClawbackVestingAccount(bacc, sdk.AccAddress([]byte("funder")), origCoins, now.Unix(), lockupPeriods, vestingPeriods)
+	va.TrackDelegation(endTime, origCoins, origCoins)
+	require.Nil(t, va.DelegatedVesting)
+	require.Equal(t, origCoins, va.DelegatedFree)
+
+	// delegate half of vesting coins
+	va = types.NewClawbackVestingAccount(bacc, sdk.AccAddress([]byte("funder")), origCoins, now.Unix(), lockupPeriods, vestingPeriods)
+	va.TrackDelegation(now, origCoins, vestingPeriods[0].Amount)
+	// require that all delegated coins are delegated vesting
+	require.Equal(t, va.DelegatedVesting, vestingPeriods[0].Amount)
+	require.Nil(t, va.DelegatedFree)
+
+	// delegate 75% of coins, split between vested and vesting
+	va = types.NewClawbackVestingAccount(bacc, sdk.AccAddress([]byte("funder")), origCoins, now.Unix(), lockupPeriods, vestingPeriods)
+	va.TrackDelegation(now.Add(17*time.Hour), origCoins, vestingPeriods[0].Amount.Add(vestingPeriods[1].Amount...))
+	// require that the maximum possible amount of vesting coins are chosen for delegation.
+	require.Equal(t, va.DelegatedFree, vestingPeriods[1].Amount)
+	require.Equal(t, va.DelegatedVesting, vestingPeriods[0].Amount)
+
+	// require the ability to delegate all vesting coins (50%) and all vested coins (50%)
+	va = types.NewClawbackVestingAccount(bacc, sdk.AccAddress([]byte("funder")), origCoins, now.Unix(), lockupPeriods, vestingPeriods)
+	va.TrackDelegation(now.Add(17*time.Hour), origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)}, va.DelegatedVesting)
+	require.Nil(t, va.DelegatedFree)
+
+	va.TrackDelegation(now.Add(17*time.Hour), origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)}, va.DelegatedVesting)
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)}, va.DelegatedFree)
+
+	// require no modifications when delegation amount is zero or not enough funds
+	va = types.NewClawbackVestingAccount(bacc, sdk.AccAddress([]byte("funder")), origCoins, now.Unix(), lockupPeriods, vestingPeriods)
+	require.Panics(t, func() {
+		va.TrackDelegation(endTime, origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 1000000)})
+	})
+	require.Nil(t, va.DelegatedVesting)
+	require.Nil(t, va.DelegatedFree)
+}
+
+func TestTrackUndelegationClawbackVestingAcc(t *testing.T) {
+	now := tmtime.Now()
+	endTime := now.Add(24 * time.Hour)
+	lockupPeriods := types.Periods{
+		types.Period{Length: int64(16 * 60 * 60), Amount: sdk.NewCoins(sdk.NewInt64Coin(feeDenom, 1000), sdk.NewInt64Coin(stakeDenom, 100))},
+	}
+	vestingPeriods := types.Periods{
+		types.Period{Length: int64(12 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 500), sdk.NewInt64Coin(stakeDenom, 50)}},
+		types.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 250), sdk.NewInt64Coin(stakeDenom, 25)}},
+		types.Period{Length: int64(6 * 60 * 60), Amount: sdk.Coins{sdk.NewInt64Coin(feeDenom, 250), sdk.NewInt64Coin(stakeDenom, 25)}},
+	}
+
+	bacc, origCoins := initBaseAccount()
+
+	// require the ability to undelegate all vesting coins at the beginning of vesting
+	va := types.NewClawbackVestingAccount(bacc, sdk.AccAddress([]byte("funder")), origCoins, now.Unix(), lockupPeriods, vestingPeriods)
+	va.TrackDelegation(now, origCoins, origCoins)
+	va.TrackUndelegation(origCoins)
+	var expectedEmptyCoins sdk.Coins
+	require.Equal(t, expectedEmptyCoins, va.DelegatedFree)
+	require.Equal(t, sdk.Coins{}, va.DelegatedVesting)
+
+	// require the ability to undelegate all vested coins at the end of vesting
+	va = types.NewClawbackVestingAccount(bacc, sdk.AccAddress([]byte("funder")), origCoins, now.Unix(), lockupPeriods, vestingPeriods)
+
+	va.TrackDelegation(endTime, origCoins, origCoins)
+	va.TrackUndelegation(origCoins)
+	require.Equal(t, sdk.Coins{}, va.DelegatedFree)
+	require.Equal(t, expectedEmptyCoins, va.DelegatedVesting)
+
+	// require the ability to undelegate half of coins
+	va = types.NewClawbackVestingAccount(bacc, sdk.AccAddress([]byte("funder")), origCoins, now.Unix(), lockupPeriods, vestingPeriods)
+	va.TrackDelegation(endTime, origCoins, vestingPeriods[0].Amount)
+	va.TrackUndelegation(vestingPeriods[0].Amount)
+	require.Equal(t, sdk.Coins{}, va.DelegatedFree)
+	require.Equal(t, expectedEmptyCoins, va.DelegatedVesting)
+
+	// require no modifications when the undelegation amount is zero
+	va = types.NewClawbackVestingAccount(bacc, sdk.AccAddress([]byte("funder")), origCoins, now.Unix(), lockupPeriods, vestingPeriods)
+
+	require.Panics(t, func() {
+		va.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(stakeDenom, 0)})
+	})
+	require.Equal(t, expectedEmptyCoins, va.DelegatedFree)
+	require.Equal(t, expectedEmptyCoins, va.DelegatedVesting)
+
+	// vest 50% and delegate to two validators
+	va = types.NewClawbackVestingAccount(bacc, sdk.AccAddress([]byte("funder")), origCoins, now.Unix(), lockupPeriods, vestingPeriods)
+	va.TrackDelegation(now.Add(17*time.Hour), origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+	va.TrackDelegation(now.Add(17*time.Hour), origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+
+	// undelegate from one validator that got slashed 50%
+	va.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(stakeDenom, 25)})
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 25)}, va.DelegatedFree)
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)}, va.DelegatedVesting)
+
+	// undelegate from the other validator that did not get slashed
+	va.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+	require.Equal(t, sdk.Coins{}, va.DelegatedFree)
+	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 25)}, va.DelegatedVesting)
+}
+
 func TestGenesisAccountValidate(t *testing.T) {
 	pubkey := secp256k1.GenPrivKey().PubKey()
 	addr := sdk.AccAddress(pubkey.Address())
@@ -872,6 +1123,88 @@ func TestGenesisAccountValidate(t *testing.T) {
 		{
 			"invalid positive end time for permanently locked vest account",
 			&types.PermanentLockedAccount{BaseVestingAccount: baseVestingWithCoins},
+			true,
+		},
+		{
+			"valid clawback vesting account",
+			types.NewClawbackVestingAccount(baseAcc, sdk.AccAddress([]byte("the funder")), initialVesting, 0,
+				types.Periods{types.Period{Length: 101, Amount: initialVesting}},
+				types.Periods{types.Period{Length: 201, Amount: initialVesting}}),
+			false,
+		},
+		{
+			"invalid clawback vesting end",
+			&types.ClawbackVestingAccount{
+				BaseVestingAccount: &types.BaseVestingAccount{
+					BaseAccount:     baseAcc,
+					OriginalVesting: initialVesting,
+					EndTime:         50,
+				},
+				FunderAddress:  "funder",
+				StartTime:      100,
+				LockupPeriods:  types.Periods{types.Period{Length: 10, Amount: initialVesting}},
+				VestingPeriods: types.Periods{types.Period{Length: 10, Amount: initialVesting}},
+			},
+			true,
+		},
+		{
+			"invalid clawback long lockup",
+			&types.ClawbackVestingAccount{
+				BaseVestingAccount: &types.BaseVestingAccount{
+					BaseAccount:     baseAcc,
+					OriginalVesting: initialVesting,
+					EndTime:         60,
+				},
+				FunderAddress:  "funder",
+				StartTime:      50,
+				LockupPeriods:  types.Periods{types.Period{Length: 20, Amount: initialVesting}},
+				VestingPeriods: types.Periods{types.Period{Length: 10, Amount: initialVesting}},
+			},
+			true,
+		},
+		{
+			"invalid clawback lockup coins",
+			&types.ClawbackVestingAccount{
+				BaseVestingAccount: &types.BaseVestingAccount{
+					BaseAccount:     baseAcc,
+					OriginalVesting: initialVesting,
+					EndTime:         120,
+				},
+				FunderAddress:  "funder",
+				StartTime:      100,
+				LockupPeriods:  types.Periods{types.Period{Length: 10, Amount: initialVesting.Add(initialVesting...)}},
+				VestingPeriods: types.Periods{types.Period{Length: 10, Amount: initialVesting}},
+			},
+			true,
+		},
+		{
+			"invalid clawback long vesting",
+			&types.ClawbackVestingAccount{
+				BaseVestingAccount: &types.BaseVestingAccount{
+					BaseAccount:     baseAcc,
+					OriginalVesting: initialVesting,
+					EndTime:         110,
+				},
+				FunderAddress:  "funder",
+				StartTime:      100,
+				LockupPeriods:  types.Periods{types.Period{Length: 10, Amount: initialVesting}},
+				VestingPeriods: types.Periods{types.Period{Length: 20, Amount: initialVesting}},
+			},
+			true,
+		},
+		{
+			"invalid clawback vesting coins",
+			&types.ClawbackVestingAccount{
+				BaseVestingAccount: &types.BaseVestingAccount{
+					BaseAccount:     baseAcc,
+					OriginalVesting: initialVesting,
+					EndTime:         120,
+				},
+				FunderAddress:  "funder",
+				StartTime:      100,
+				LockupPeriods:  types.Periods{types.Period{Length: 10, Amount: initialVesting}},
+				VestingPeriods: types.Periods{types.Period{Length: 10, Amount: initialVesting.Add(initialVesting...)}},
+			},
 			true,
 		},
 	}

@@ -153,6 +153,9 @@ func (m *DelayedVestingAccount) XXX_DiscardUnknown() {
 var xxx_messageInfo_DelayedVestingAccount proto.InternalMessageInfo
 
 // Period defines a length of time and amount of coins that will vest.
+// A sequence of periods defines a sequence of vesting events, with the
+// first period relative to an externally-provided start time,
+// and subsequent periods relatie to their predecessor.
 type Period struct {
 	// Period duration in seconds.
 	Length int64                                    `protobuf:"varint,1,opt,name=length,proto3" json:"length,omitempty"`
@@ -289,6 +292,53 @@ func (m *PermanentLockedAccount) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_PermanentLockedAccount proto.InternalMessageInfo
 
+// ClawbackVestingAccount implements the VestingAccount interface. It provides
+// an account that can hold contributions subject to "lockup" (like a
+// PeriodicVestingAccount), or vesting which is subject to clawback
+// of unvested tokens, or a combination (tokens vest, but are still locked).
+type ClawbackVestingAccount struct {
+	*BaseVestingAccount `protobuf:"bytes,1,opt,name=base_vesting_account,json=baseVestingAccount,proto3,embedded=base_vesting_account" json:"base_vesting_account,omitempty"`
+	// funder_address specifies the account which can perform clawback.
+	FunderAddress string `protobuf:"bytes,2,opt,name=funder_address,json=funderAddress,proto3" json:"funder_address,omitempty" yaml:"funder_address"`
+	StartTime     int64  `protobuf:"varint,3,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty" yaml:"start_time"`
+	// unlocking schedule relative to the BaseVestingAccount start_time.
+	LockupPeriods []Period `protobuf:"bytes,4,rep,name=lockup_periods,json=lockupPeriods,proto3" json:"lockup_periods" yaml:"lockup_periods"`
+	// vesting (i.e. immunity from clawback) schedule relative to the BaseVestingAccount start_time.
+	VestingPeriods []Period `protobuf:"bytes,5,rep,name=vesting_periods,json=vestingPeriods,proto3" json:"vesting_periods" yaml:"vesting_periods"`
+}
+
+func (m *ClawbackVestingAccount) Reset()      { *m = ClawbackVestingAccount{} }
+func (*ClawbackVestingAccount) ProtoMessage() {}
+func (*ClawbackVestingAccount) Descriptor() ([]byte, []int) {
+	return fileDescriptor_89e80273ca606d6e, []int{6}
+}
+func (m *ClawbackVestingAccount) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ClawbackVestingAccount) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ClawbackVestingAccount.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ClawbackVestingAccount) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ClawbackVestingAccount.Merge(m, src)
+}
+func (m *ClawbackVestingAccount) XXX_Size() int {
+	return m.Size()
+}
+func (m *ClawbackVestingAccount) XXX_DiscardUnknown() {
+	xxx_messageInfo_ClawbackVestingAccount.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ClawbackVestingAccount proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*BaseVestingAccount)(nil), "cosmos.vesting.v1beta1.BaseVestingAccount")
 	proto.RegisterType((*ContinuousVestingAccount)(nil), "cosmos.vesting.v1beta1.ContinuousVestingAccount")
@@ -296,6 +346,7 @@ func init() {
 	proto.RegisterType((*Period)(nil), "cosmos.vesting.v1beta1.Period")
 	proto.RegisterType((*PeriodicVestingAccount)(nil), "cosmos.vesting.v1beta1.PeriodicVestingAccount")
 	proto.RegisterType((*PermanentLockedAccount)(nil), "cosmos.vesting.v1beta1.PermanentLockedAccount")
+	proto.RegisterType((*ClawbackVestingAccount)(nil), "cosmos.vesting.v1beta1.ClawbackVestingAccount")
 }
 
 func init() {
@@ -632,6 +683,81 @@ func (m *PermanentLockedAccount) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	return len(dAtA) - i, nil
 }
 
+func (m *ClawbackVestingAccount) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ClawbackVestingAccount) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ClawbackVestingAccount) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.VestingPeriods) > 0 {
+		for iNdEx := len(m.VestingPeriods) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.VestingPeriods[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintVesting(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x2a
+		}
+	}
+	if len(m.LockupPeriods) > 0 {
+		for iNdEx := len(m.LockupPeriods) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.LockupPeriods[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintVesting(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x22
+		}
+	}
+	if m.StartTime != 0 {
+		i = encodeVarintVesting(dAtA, i, uint64(m.StartTime))
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.FunderAddress) > 0 {
+		i -= len(m.FunderAddress)
+		copy(dAtA[i:], m.FunderAddress)
+		i = encodeVarintVesting(dAtA, i, uint64(len(m.FunderAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.BaseVestingAccount != nil {
+		{
+			size, err := m.BaseVestingAccount.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintVesting(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintVesting(dAtA []byte, offset int, v uint64) int {
 	offset -= sovVesting(v)
 	base := offset
@@ -755,6 +881,38 @@ func (m *PermanentLockedAccount) Size() (n int) {
 	if m.BaseVestingAccount != nil {
 		l = m.BaseVestingAccount.Size()
 		n += 1 + l + sovVesting(uint64(l))
+	}
+	return n
+}
+
+func (m *ClawbackVestingAccount) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.BaseVestingAccount != nil {
+		l = m.BaseVestingAccount.Size()
+		n += 1 + l + sovVesting(uint64(l))
+	}
+	l = len(m.FunderAddress)
+	if l > 0 {
+		n += 1 + l + sovVesting(uint64(l))
+	}
+	if m.StartTime != 0 {
+		n += 1 + sovVesting(uint64(m.StartTime))
+	}
+	if len(m.LockupPeriods) > 0 {
+		for _, e := range m.LockupPeriods {
+			l = e.Size()
+			n += 1 + l + sovVesting(uint64(l))
+		}
+	}
+	if len(m.VestingPeriods) > 0 {
+		for _, e := range m.VestingPeriods {
+			l = e.Size()
+			n += 1 + l + sovVesting(uint64(l))
+		}
 	}
 	return n
 }
@@ -1467,6 +1625,211 @@ func (m *PermanentLockedAccount) Unmarshal(dAtA []byte) error {
 				m.BaseVestingAccount = &BaseVestingAccount{}
 			}
 			if err := m.BaseVestingAccount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipVesting(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthVesting
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ClawbackVestingAccount) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowVesting
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ClawbackVestingAccount: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ClawbackVestingAccount: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BaseVestingAccount", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVesting
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthVesting
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthVesting
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.BaseVestingAccount == nil {
+				m.BaseVestingAccount = &BaseVestingAccount{}
+			}
+			if err := m.BaseVestingAccount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FunderAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVesting
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthVesting
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthVesting
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.FunderAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StartTime", wireType)
+			}
+			m.StartTime = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVesting
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.StartTime |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LockupPeriods", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVesting
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthVesting
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthVesting
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.LockupPeriods = append(m.LockupPeriods, Period{})
+			if err := m.LockupPeriods[len(m.LockupPeriods)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VestingPeriods", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVesting
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthVesting
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthVesting
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VestingPeriods = append(m.VestingPeriods, Period{})
+			if err := m.VestingPeriods[len(m.VestingPeriods)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

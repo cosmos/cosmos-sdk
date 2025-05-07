@@ -15,7 +15,7 @@ run:
 linters:
   disable-all: true
   enable:
-    - depguard
+    # - depguard
     - dogsled
     - exportloopref
     - goconst
@@ -27,8 +27,9 @@ linters:
     - govet
     - ineffassign
     - misspell
-    - nakedret
-    - nolintlint
+    # - nakedret
+    # [AGORIC] Caused false-positives
+    # - nolintlint
     - staticcheck
     - revive
     - stylecheck

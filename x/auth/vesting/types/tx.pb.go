@@ -264,6 +264,10 @@ type MsgCreatePeriodicVestingAccount struct {
 	// start of vesting as unix time (in seconds).
 	StartTime      int64    `protobuf:"varint,3,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
 	VestingPeriods []Period `protobuf:"bytes,4,rep,name=vesting_periods,json=vestingPeriods,proto3" json:"vesting_periods"`
+	// If true, merge this new grant into an existing PeriodicVestingAccount,
+	// or create it if it does not exist. If false, creates a new account,
+	// or fails if an account already exists
+	Merge bool `protobuf:"varint,5,opt,name=merge,proto3" json:"merge,omitempty"`
 }
 
 func (m *MsgCreatePeriodicVestingAccount) Reset()         { *m = MsgCreatePeriodicVestingAccount{} }
@@ -327,6 +331,13 @@ func (m *MsgCreatePeriodicVestingAccount) GetVestingPeriods() []Period {
 	return nil
 }
 
+func (m *MsgCreatePeriodicVestingAccount) GetMerge() bool {
+	if m != nil {
+		return m.Merge
+	}
+	return false
+}
+
 // MsgCreateVestingAccountResponse defines the Msg/CreatePeriodicVestingAccount
 // response type.
 //
@@ -369,6 +380,327 @@ func (m *MsgCreatePeriodicVestingAccountResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCreatePeriodicVestingAccountResponse proto.InternalMessageInfo
 
+// MsgCreateClawbackVestingAccount defines a message that enables creating a ClawbackVestingAccount.
+type MsgCreateClawbackVestingAccount struct {
+	// Address of the account providing the funds, which must also sign the request.
+	FromAddress string `protobuf:"bytes,1,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty" yaml:"from_address"`
+	// Address of the account to receive the funds.
+	ToAddress string `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty" yaml:"to_address"`
+	// Start time of the vesting. Periods start relative to this time.
+	StartTime int64 `protobuf:"varint,3,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty" yaml:"start_time"`
+	// Unlocking events as a sequence of durations and amounts, starting relative to start_time.
+	LockupPeriods []Period `protobuf:"bytes,4,rep,name=lockup_periods,json=lockupPeriods,proto3" json:"lockup_periods"`
+	// Vesting events as a sequence of durations and amounts, starting relative to start_time.
+	VestingPeriods []Period `protobuf:"bytes,5,rep,name=vesting_periods,json=vestingPeriods,proto3" json:"vesting_periods"`
+	// If true, merge this new grant into an existing ClawbackVestingAccount,
+	// or create it if it does not exist. If false, creates a new account.
+	// New grants to an existing account must be from the same from_address.
+	Merge bool `protobuf:"varint,6,opt,name=merge,proto3" json:"merge,omitempty"`
+}
+
+func (m *MsgCreateClawbackVestingAccount) Reset()         { *m = MsgCreateClawbackVestingAccount{} }
+func (m *MsgCreateClawbackVestingAccount) String() string { return proto.CompactTextString(m) }
+func (*MsgCreateClawbackVestingAccount) ProtoMessage()    {}
+func (*MsgCreateClawbackVestingAccount) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5338ca97811f9792, []int{6}
+}
+func (m *MsgCreateClawbackVestingAccount) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreateClawbackVestingAccount) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreateClawbackVestingAccount.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreateClawbackVestingAccount) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreateClawbackVestingAccount.Merge(m, src)
+}
+func (m *MsgCreateClawbackVestingAccount) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreateClawbackVestingAccount) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreateClawbackVestingAccount.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreateClawbackVestingAccount proto.InternalMessageInfo
+
+func (m *MsgCreateClawbackVestingAccount) GetFromAddress() string {
+	if m != nil {
+		return m.FromAddress
+	}
+	return ""
+}
+
+func (m *MsgCreateClawbackVestingAccount) GetToAddress() string {
+	if m != nil {
+		return m.ToAddress
+	}
+	return ""
+}
+
+func (m *MsgCreateClawbackVestingAccount) GetStartTime() int64 {
+	if m != nil {
+		return m.StartTime
+	}
+	return 0
+}
+
+func (m *MsgCreateClawbackVestingAccount) GetLockupPeriods() []Period {
+	if m != nil {
+		return m.LockupPeriods
+	}
+	return nil
+}
+
+func (m *MsgCreateClawbackVestingAccount) GetVestingPeriods() []Period {
+	if m != nil {
+		return m.VestingPeriods
+	}
+	return nil
+}
+
+func (m *MsgCreateClawbackVestingAccount) GetMerge() bool {
+	if m != nil {
+		return m.Merge
+	}
+	return false
+}
+
+// MsgCreateClawbackVestingAccountResponse defines the MsgCreateClawbackVestingAccount response type.
+type MsgCreateClawbackVestingAccountResponse struct {
+}
+
+func (m *MsgCreateClawbackVestingAccountResponse) Reset() {
+	*m = MsgCreateClawbackVestingAccountResponse{}
+}
+func (m *MsgCreateClawbackVestingAccountResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgCreateClawbackVestingAccountResponse) ProtoMessage()    {}
+func (*MsgCreateClawbackVestingAccountResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5338ca97811f9792, []int{7}
+}
+func (m *MsgCreateClawbackVestingAccountResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreateClawbackVestingAccountResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreateClawbackVestingAccountResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreateClawbackVestingAccountResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreateClawbackVestingAccountResponse.Merge(m, src)
+}
+func (m *MsgCreateClawbackVestingAccountResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreateClawbackVestingAccountResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreateClawbackVestingAccountResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreateClawbackVestingAccountResponse proto.InternalMessageInfo
+
+// MsgClawback defines a message that removes unvested tokens from a ClawbackVestingAccount.
+type MsgClawback struct {
+	// funder_address is the address which funded the account
+	FunderAddress string `protobuf:"bytes,1,opt,name=funder_address,json=funderAddress,proto3" json:"funder_address,omitempty"`
+	// address is the address of the ClawbackVestingAccount to claw back from.
+	Address string `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
+	// dest_address specifies where the clawed-back tokens should be transferred.
+	// If empty, the tokens will be transferred back to the original funder of the account.
+	DestAddress string `protobuf:"bytes,3,opt,name=dest_address,json=destAddress,proto3" json:"dest_address,omitempty"`
+}
+
+func (m *MsgClawback) Reset()         { *m = MsgClawback{} }
+func (m *MsgClawback) String() string { return proto.CompactTextString(m) }
+func (*MsgClawback) ProtoMessage()    {}
+func (*MsgClawback) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5338ca97811f9792, []int{8}
+}
+func (m *MsgClawback) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgClawback) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgClawback.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgClawback) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgClawback.Merge(m, src)
+}
+func (m *MsgClawback) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgClawback) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgClawback.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgClawback proto.InternalMessageInfo
+
+func (m *MsgClawback) GetFunderAddress() string {
+	if m != nil {
+		return m.FunderAddress
+	}
+	return ""
+}
+
+func (m *MsgClawback) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
+func (m *MsgClawback) GetDestAddress() string {
+	if m != nil {
+		return m.DestAddress
+	}
+	return ""
+}
+
+// MsgClawbackResponse defines the MsgClawback response type.
+type MsgClawbackResponse struct {
+}
+
+func (m *MsgClawbackResponse) Reset()         { *m = MsgClawbackResponse{} }
+func (m *MsgClawbackResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgClawbackResponse) ProtoMessage()    {}
+func (*MsgClawbackResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5338ca97811f9792, []int{9}
+}
+func (m *MsgClawbackResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgClawbackResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgClawbackResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgClawbackResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgClawbackResponse.Merge(m, src)
+}
+func (m *MsgClawbackResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgClawbackResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgClawbackResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgClawbackResponse proto.InternalMessageInfo
+
+// MsgReturnGrants defines a message for a grantee to return all granted assets,
+// including delegated, undelegated and unbonding, vested and unvested,
+// are transferred to the original funder of the account. Might not be complete if
+// some vested assets have been transferred out of the account. Currently only applies to
+// ClawbackVesting accounts.
+type MsgReturnGrants struct {
+	// address is the address of the grantee account returning the grant.
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+}
+
+func (m *MsgReturnGrants) Reset()         { *m = MsgReturnGrants{} }
+func (m *MsgReturnGrants) String() string { return proto.CompactTextString(m) }
+func (*MsgReturnGrants) ProtoMessage()    {}
+func (*MsgReturnGrants) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5338ca97811f9792, []int{10}
+}
+func (m *MsgReturnGrants) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgReturnGrants) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgReturnGrants.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgReturnGrants) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgReturnGrants.Merge(m, src)
+}
+func (m *MsgReturnGrants) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgReturnGrants) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgReturnGrants.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgReturnGrants proto.InternalMessageInfo
+
+func (m *MsgReturnGrants) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
+// MsgReturnGrantsResponse defines the ReturnGrants response type.
+type MsgReturnGrantsResponse struct {
+}
+
+func (m *MsgReturnGrantsResponse) Reset()         { *m = MsgReturnGrantsResponse{} }
+func (m *MsgReturnGrantsResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgReturnGrantsResponse) ProtoMessage()    {}
+func (*MsgReturnGrantsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5338ca97811f9792, []int{11}
+}
+func (m *MsgReturnGrantsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgReturnGrantsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgReturnGrantsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgReturnGrantsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgReturnGrantsResponse.Merge(m, src)
+}
+func (m *MsgReturnGrantsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgReturnGrantsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgReturnGrantsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgReturnGrantsResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgCreateVestingAccount)(nil), "cosmos.vesting.v1beta1.MsgCreateVestingAccount")
 	proto.RegisterType((*MsgCreateVestingAccountResponse)(nil), "cosmos.vesting.v1beta1.MsgCreateVestingAccountResponse")
@@ -376,6 +708,12 @@ func init() {
 	proto.RegisterType((*MsgCreatePermanentLockedAccountResponse)(nil), "cosmos.vesting.v1beta1.MsgCreatePermanentLockedAccountResponse")
 	proto.RegisterType((*MsgCreatePeriodicVestingAccount)(nil), "cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccount")
 	proto.RegisterType((*MsgCreatePeriodicVestingAccountResponse)(nil), "cosmos.vesting.v1beta1.MsgCreatePeriodicVestingAccountResponse")
+	proto.RegisterType((*MsgCreateClawbackVestingAccount)(nil), "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccount")
+	proto.RegisterType((*MsgCreateClawbackVestingAccountResponse)(nil), "cosmos.vesting.v1beta1.MsgCreateClawbackVestingAccountResponse")
+	proto.RegisterType((*MsgClawback)(nil), "cosmos.vesting.v1beta1.MsgClawback")
+	proto.RegisterType((*MsgClawbackResponse)(nil), "cosmos.vesting.v1beta1.MsgClawbackResponse")
+	proto.RegisterType((*MsgReturnGrants)(nil), "cosmos.vesting.v1beta1.MsgReturnGrants")
+	proto.RegisterType((*MsgReturnGrantsResponse)(nil), "cosmos.vesting.v1beta1.MsgReturnGrantsResponse")
 }
 
 func init() { proto.RegisterFile("cosmos/vesting/v1beta1/tx.proto", fileDescriptor_5338ca97811f9792) }
@@ -528,6 +866,13 @@ type MsgClient interface {
 	//
 	// Since: cosmos-sdk 0.46
 	CreatePeriodicVestingAccount(ctx context.Context, in *MsgCreatePeriodicVestingAccount, opts ...grpc.CallOption) (*MsgCreatePeriodicVestingAccountResponse, error)
+	// CreateClawbackVestingAccount defines a method that enables creating a
+	// vesting account that is subject to clawback.
+	CreateClawbackVestingAccount(ctx context.Context, in *MsgCreateClawbackVestingAccount, opts ...grpc.CallOption) (*MsgCreateClawbackVestingAccountResponse, error)
+	// Clawback removes the unvested tokens from a ClawbackVestingAccount.
+	Clawback(ctx context.Context, in *MsgClawback, opts ...grpc.CallOption) (*MsgClawbackResponse, error)
+	// ReturnGrants returns vesting grants to the funder.
+	ReturnGrants(ctx context.Context, in *MsgReturnGrants, opts ...grpc.CallOption) (*MsgReturnGrantsResponse, error)
 }
 
 type msgClient struct {
@@ -565,6 +910,33 @@ func (c *msgClient) CreatePeriodicVestingAccount(ctx context.Context, in *MsgCre
 	return out, nil
 }
 
+func (c *msgClient) CreateClawbackVestingAccount(ctx context.Context, in *MsgCreateClawbackVestingAccount, opts ...grpc.CallOption) (*MsgCreateClawbackVestingAccountResponse, error) {
+	out := new(MsgCreateClawbackVestingAccountResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.vesting.v1beta1.Msg/CreateClawbackVestingAccount", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) Clawback(ctx context.Context, in *MsgClawback, opts ...grpc.CallOption) (*MsgClawbackResponse, error) {
+	out := new(MsgClawbackResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.vesting.v1beta1.Msg/Clawback", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) ReturnGrants(ctx context.Context, in *MsgReturnGrants, opts ...grpc.CallOption) (*MsgReturnGrantsResponse, error) {
+	out := new(MsgReturnGrantsResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.vesting.v1beta1.Msg/ReturnGrants", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// CreateVestingAccount defines a method that enables creating a vesting
@@ -580,6 +952,13 @@ type MsgServer interface {
 	//
 	// Since: cosmos-sdk 0.46
 	CreatePeriodicVestingAccount(context.Context, *MsgCreatePeriodicVestingAccount) (*MsgCreatePeriodicVestingAccountResponse, error)
+	// CreateClawbackVestingAccount defines a method that enables creating a
+	// vesting account that is subject to clawback.
+	CreateClawbackVestingAccount(context.Context, *MsgCreateClawbackVestingAccount) (*MsgCreateClawbackVestingAccountResponse, error)
+	// Clawback removes the unvested tokens from a ClawbackVestingAccount.
+	Clawback(context.Context, *MsgClawback) (*MsgClawbackResponse, error)
+	// ReturnGrants returns vesting grants to the funder.
+	ReturnGrants(context.Context, *MsgReturnGrants) (*MsgReturnGrantsResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -594,6 +973,15 @@ func (*UnimplementedMsgServer) CreatePermanentLockedAccount(ctx context.Context,
 }
 func (*UnimplementedMsgServer) CreatePeriodicVestingAccount(ctx context.Context, req *MsgCreatePeriodicVestingAccount) (*MsgCreatePeriodicVestingAccountResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreatePeriodicVestingAccount not implemented")
+}
+func (*UnimplementedMsgServer) CreateClawbackVestingAccount(ctx context.Context, req *MsgCreateClawbackVestingAccount) (*MsgCreateClawbackVestingAccountResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateClawbackVestingAccount not implemented")
+}
+func (*UnimplementedMsgServer) Clawback(ctx context.Context, req *MsgClawback) (*MsgClawbackResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Clawback not implemented")
+}
+func (*UnimplementedMsgServer) ReturnGrants(ctx context.Context, req *MsgReturnGrants) (*MsgReturnGrantsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReturnGrants not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -654,6 +1042,61 @@ func _Msg_CreatePeriodicVestingAccount_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_CreateClawbackVestingAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreateClawbackVestingAccount)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CreateClawbackVestingAccount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.vesting.v1beta1.Msg/CreateClawbackVestingAccount",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CreateClawbackVestingAccount(ctx, req.(*MsgCreateClawbackVestingAccount))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_Clawback_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgClawback)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).Clawback(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.vesting.v1beta1.Msg/Clawback",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).Clawback(ctx, req.(*MsgClawback))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_ReturnGrants_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgReturnGrants)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ReturnGrants(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.vesting.v1beta1.Msg/ReturnGrants",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ReturnGrants(ctx, req.(*MsgReturnGrants))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var Msg_serviceDesc = _Msg_serviceDesc
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.vesting.v1beta1.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -669,6 +1112,18 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreatePeriodicVestingAccount",
 			Handler:    _Msg_CreatePeriodicVestingAccount_Handler,
+		},
+		{
+			MethodName: "CreateClawbackVestingAccount",
+			Handler:    _Msg_CreateClawbackVestingAccount_Handler,
+		},
+		{
+			MethodName: "Clawback",
+			Handler:    _Msg_Clawback_Handler,
+		},
+		{
+			MethodName: "ReturnGrants",
+			Handler:    _Msg_ReturnGrants_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -858,6 +1313,16 @@ func (m *MsgCreatePeriodicVestingAccount) MarshalToSizedBuffer(dAtA []byte) (int
 	_ = i
 	var l int
 	_ = l
+	if m.Merge {
+		i--
+		if m.Merge {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x28
+	}
 	if len(m.VestingPeriods) > 0 {
 		for iNdEx := len(m.VestingPeriods) - 1; iNdEx >= 0; iNdEx-- {
 			{
@@ -910,6 +1375,229 @@ func (m *MsgCreatePeriodicVestingAccountResponse) MarshalTo(dAtA []byte) (int, e
 }
 
 func (m *MsgCreatePeriodicVestingAccountResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgCreateClawbackVestingAccount) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreateClawbackVestingAccount) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreateClawbackVestingAccount) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Merge {
+		i--
+		if m.Merge {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x30
+	}
+	if len(m.VestingPeriods) > 0 {
+		for iNdEx := len(m.VestingPeriods) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.VestingPeriods[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x2a
+		}
+	}
+	if len(m.LockupPeriods) > 0 {
+		for iNdEx := len(m.LockupPeriods) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.LockupPeriods[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x22
+		}
+	}
+	if m.StartTime != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.StartTime))
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.ToAddress) > 0 {
+		i -= len(m.ToAddress)
+		copy(dAtA[i:], m.ToAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.ToAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.FromAddress) > 0 {
+		i -= len(m.FromAddress)
+		copy(dAtA[i:], m.FromAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.FromAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgCreateClawbackVestingAccountResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreateClawbackVestingAccountResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreateClawbackVestingAccountResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgClawback) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgClawback) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgClawback) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.DestAddress) > 0 {
+		i -= len(m.DestAddress)
+		copy(dAtA[i:], m.DestAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.DestAddress)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.FunderAddress) > 0 {
+		i -= len(m.FunderAddress)
+		copy(dAtA[i:], m.FunderAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.FunderAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgClawbackResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgClawbackResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgClawbackResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgReturnGrants) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgReturnGrants) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgReturnGrants) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgReturnGrantsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgReturnGrantsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgReturnGrantsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1021,10 +1709,109 @@ func (m *MsgCreatePeriodicVestingAccount) Size() (n int) {
 			n += 1 + l + sovTx(uint64(l))
 		}
 	}
+	if m.Merge {
+		n += 2
+	}
 	return n
 }
 
 func (m *MsgCreatePeriodicVestingAccountResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgCreateClawbackVestingAccount) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.FromAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.ToAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.StartTime != 0 {
+		n += 1 + sovTx(uint64(m.StartTime))
+	}
+	if len(m.LockupPeriods) > 0 {
+		for _, e := range m.LockupPeriods {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	if len(m.VestingPeriods) > 0 {
+		for _, e := range m.VestingPeriods {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	if m.Merge {
+		n += 2
+	}
+	return n
+}
+
+func (m *MsgCreateClawbackVestingAccountResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgClawback) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.FunderAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.DestAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgClawbackResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgReturnGrants) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgReturnGrantsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1620,6 +2407,26 @@ func (m *MsgCreatePeriodicVestingAccount) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Merge", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Merge = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])
@@ -1668,6 +2475,605 @@ func (m *MsgCreatePeriodicVestingAccountResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgCreatePeriodicVestingAccountResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgCreateClawbackVestingAccount) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreateClawbackVestingAccount: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreateClawbackVestingAccount: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FromAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.FromAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ToAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ToAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field StartTime", wireType)
+			}
+			m.StartTime = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.StartTime |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LockupPeriods", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.LockupPeriods = append(m.LockupPeriods, Period{})
+			if err := m.LockupPeriods[len(m.LockupPeriods)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VestingPeriods", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VestingPeriods = append(m.VestingPeriods, Period{})
+			if err := m.VestingPeriods[len(m.VestingPeriods)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Merge", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Merge = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgCreateClawbackVestingAccountResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreateClawbackVestingAccountResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreateClawbackVestingAccountResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgClawback) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgClawback: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgClawback: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FunderAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.FunderAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DestAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DestAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgClawbackResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgClawbackResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgClawbackResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgReturnGrants) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgReturnGrants: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgReturnGrants: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgReturnGrantsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgReturnGrantsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgReturnGrantsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

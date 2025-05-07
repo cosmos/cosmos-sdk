@@ -29,3 +29,5 @@ jobs:
         with:
           input: "proto"
           against: "https://github.com/${{ github.repository }}.git#branch=${{ github.event.pull_request.base.ref }},ref=HEAD~1,subdir=proto"
+          buf_input_https_username: ${{ github.actor }}
+          buf_input_https_password: ${{ github.token }}

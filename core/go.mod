@@ -54,5 +54,13 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
+replace (
+	cosmossdk.io/api => ../api
+	cosmossdk.io/depinject => ../depinject
+	cosmos
+
 // Version tagged too early and incompatible with v0.50 (latest at the time of tagging)
 retract v0.12.0
+
+sdk.io/math => ../math
+)

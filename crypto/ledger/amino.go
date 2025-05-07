@@ -1,6 +1,8 @@
 package ledger
 
 import (
+	"io"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptoAmino "github.com/cosmos/cosmos-sdk/crypto/codec"
 )
@@ -16,4 +18,10 @@ func init() {
 func RegisterAmino(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(PrivKeyLedgerSecp256k1{},
 		"tendermint/PrivKeyLedgerSecp256k1", nil)
+}
+
+// PrintRegisteredTypes prints all the types registered with the Amino codec to
+// the given writer.
+func PrintRegisteredTypes(stream io.Writer) error {
+	return cdc.PrintTypes(stream)
 }

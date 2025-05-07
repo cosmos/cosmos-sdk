@@ -39,6 +39,7 @@ type VestingTestSuite struct {
 	ctx           sdk.Context
 	accountKeeper authkeeper.AccountKeeper
 	bankKeeper    *vestingtestutil.MockBankKeeper
+	stakingKeeper *vestingtestutil.MockStakingKeeper
 	msgServer     vestingtypes.MsgServer
 }
 
@@ -62,10 +63,11 @@ func (s *VestingTestSuite) SetupTest() {
 		"cosmos",
 		authtypes.NewModuleAddress("gov").String(),
 	)
+	s.stakingKeeper = vestingtestutil.NewMockStakingKeeper(ctrl)
 
 	vestingtypes.RegisterInterfaces(encCfg.InterfaceRegistry)
 	authtypes.RegisterInterfaces(encCfg.InterfaceRegistry)
-	s.msgServer = vesting.NewMsgServerImpl(s.accountKeeper, s.bankKeeper)
+	s.msgServer = vesting.NewMsgServerImpl(s.accountKeeper, s.bankKeeper, s.stakingKeeper)
 }
 
 func (s *VestingTestSuite) TestCreateVestingAccount() {
@@ -178,7 +180,7 @@ func (s *VestingTestSuite) TestCreateVestingAccount() {
 				to3Addr,
 				sdk.Coins{fooCoin},
 				time.Now().Unix(),
-				false,
+				true,
 			),
 			expErr:    false,
 			expErrMsg: "",
@@ -404,6 +406,7 @@ func (s *VestingTestSuite) TestCreatePeriodicVestingAccount() {
 						Amount: sdk.NewCoins(periodCoin),
 					},
 				},
+				true,
 			),
 			expErr:    true,
 			expErrMsg: "already exists",
@@ -427,6 +430,7 @@ func (s *VestingTestSuite) TestCreatePeriodicVestingAccount() {
 						Amount: sdk.NewCoins(fooCoin),
 					},
 				},
+				true,
 			),
 			expErr:    true,
 			expErrMsg: "not allowed to receive funds",
@@ -452,6 +456,7 @@ func (s *VestingTestSuite) TestCreatePeriodicVestingAccount() {
 						Amount: sdk.NewCoins(fooCoin),
 					},
 				},
+				true,
 			),
 			expErr:    false,
 			expErrMsg: "",

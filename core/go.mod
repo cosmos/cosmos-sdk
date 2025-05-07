@@ -21,7 +21,7 @@ require (
 	github.com/cockroachdb/pebble v0.0.0-20230525220056-bb4fc9527b3b // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
-	github.com/cosmos/gogoproto v1.5.0 // indirect
+	github.com/cosmos/gogoproto v1.7.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/getsentry/sentry-go v0.23.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
@@ -57,10 +57,8 @@ require (
 replace (
 	cosmossdk.io/api => ../api
 	cosmossdk.io/depinject => ../depinject
-	cosmos
+	cosmossdk.io/math => ../math
+)
 
 // Version tagged too early and incompatible with v0.50 (latest at the time of tagging)
 retract v0.12.0
-
-sdk.io/math => ../math
-)

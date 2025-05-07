@@ -8,7 +8,7 @@ import (
 
 // defaultConfig has all the options disabled, except Color and TimeFormat
 var defaultConfig = Config{
-	Level:      zerolog.NoLevel,
+	Level:      zerolog.TraceLevel, // this is the default level that zerolog initializes new Logger's with
 	Filter:     nil,
 	OutputJSON: false,
 	Color:      true,

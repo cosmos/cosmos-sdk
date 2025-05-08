@@ -210,7 +210,7 @@ type AppModule interface {
 // Deprecated: this will be removed in the next Cosmos SDK release.
 type HasInvariants interface {
 	// RegisterInvariants registers module invariants.
-	RegisterInvariants(sdk.InvariantRegistry)
+	RegisterInvariants(sdk.InvariantRegistry) // nolint: staticcheck // deprecated interface
 }
 
 // HasServices is the interface for modules to register services.
@@ -268,6 +268,8 @@ func (GenesisOnlyAppModule) IsOnePerModuleType() {}
 func (GenesisOnlyAppModule) IsAppModule() {}
 
 // RegisterInvariants is a placeholder function register no invariants
+//
+// Deprecated: this function will be removed when x/crisis and invariants are removed from the cosmos SDK.
 func (GenesisOnlyAppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // ConsensusVersion implements AppModule/ConsensusVersion.

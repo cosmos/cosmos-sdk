@@ -38,6 +38,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+
+* [#24207](https://github.com/cosmos/cosmos-sdk/pull/24207) Avoid decoding tx for in PrepareProposal if it's NoOpMempool.
+
 ### Bug Fixes
 
 * (x/authz) [#24638](https://github.com/cosmos/cosmos-sdk/pull/24638) Fixed a minor bug where the grant key was cast as a string and dumped directly into the error message leading to an error string possibly containing invalid UTF-8.
@@ -100,8 +104,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (server) [#24072](https://github.com/cosmos/cosmos-sdk/pull/24072) Return BlockHeader by shallow copy in server Context.
 * (x/bank) [#24053](https://github.com/cosmos/cosmos-sdk/pull/24053) Resolve a foot-gun by swapping send restrictions check in `InputOutputCoins` before coin deduction.
 * (codec/types) [#24336](https://github.com/cosmos/cosmos-sdk/pull/24336) Most types definitions were moved to `github.com/cosmos/gogoproto/types/any` with aliases to these left in `codec/types` so that there should be no breakage to existing code. This allows protobuf generated code to optionally reference the SDK's custom `Any` type without a direct dependency on the SDK. This can be done by changing the `protoc` `M` parameter for `any.proto` to `Mgoogle/protobuf/any.proto=github.com/cosmos/gogoproto/types/any`.
-* [#24207](https://github.com/cosmos/cosmos-sdk/pull/24207) Avoid decoding tx for in PrepareProposal if it's NoOpMempool.
-
 
 ### Bug Fixes
 

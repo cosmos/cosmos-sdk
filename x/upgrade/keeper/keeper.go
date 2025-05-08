@@ -469,6 +469,8 @@ func (k Keeper) ApplyUpgrade(ctx context.Context, plan types.Plan) error {
 		verboseLogger.SetVerboseMode(true)
 	}
 
+	verboseLogger.Info("Starting upgrade", "name", plan.Name, "height", plan.Height)
+
 	updatedVM, err := handler(ctx, plan, vm)
 	if err != nil {
 		return err

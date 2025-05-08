@@ -3,6 +3,7 @@ package types
 import (
 	"errors"
 	"fmt"
+	"math"
 )
 
 // PruningOptions defines the pruning strategy used when determining which
@@ -56,6 +57,7 @@ var (
 	ErrPruningIntervalZero       = errors.New("'pruning-interval' must not be 0. If you want to disable pruning, select pruning = \"nothing\"")
 	ErrPruningIntervalTooSmall   = fmt.Errorf("'pruning-interval' must not be less than %d. For the most aggressive pruning, select pruning = \"everything\"", pruneEverythingInterval)
 	ErrPruningKeepRecentTooSmall = fmt.Errorf("'pruning-keep-recent' must not be less than %d. For the most aggressive pruning, select pruning = \"everything\"", pruneEverythingKeepRecent)
+	ErrPruningKeepRecentTooBig   = errors.New("'pruning-keep-recent' must not be greater than 2^63-1. Select pruning = \"nothing\"")
 )
 
 func NewPruningOptions(pruningStrategy PruningStrategy) PruningOptions {
@@ -109,6 +111,9 @@ func (po PruningOptions) Validate() error {
 	}
 	if po.KeepRecent < pruneEverythingKeepRecent {
 		return ErrPruningKeepRecentTooSmall
+	}
+	if po.KeepRecent > math.MaxInt64 {
+		return ErrPruningKeepRecentTooBig
 	}
 	return nil
 }

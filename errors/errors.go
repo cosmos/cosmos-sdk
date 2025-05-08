@@ -2,6 +2,8 @@ package errors
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"reflect"
 
 	"github.com/pkg/errors"
@@ -10,7 +12,11 @@ import (
 )
 
 // UndefinedCodespace when we explicitly declare no codespace
-const UndefinedCodespace = "undefined"
+const (
+	UndefinedCodespace = "undefined"
+	// EnvSuppressErrorDuplicateRegister can be set to 'true' to suppress any logging when errors are double-registered.
+	EnvSuppressErrorDuplicateRegister = "COSMOS_SDK_SUPPRESS_DUPLICATE_ERROR_CODE_LOG"
+)
 
 var (
 	// errInternal should never be exposed, but we reserve this code for non-specified errors
@@ -19,7 +25,7 @@ var (
 	// ErrStopIterating is used to break out of an iteration
 	ErrStopIterating = Register(UndefinedCodespace, 2, "stop iterating")
 
-	// ErrPanic should only be set when we recovering from a panic
+	// ErrPanic should only be set when recovering from a panic
 	ErrPanic = Register(UndefinedCodespace, 111222, "panic")
 )
 
@@ -38,9 +44,13 @@ func Register(codespace string, code uint32, description string) *Error {
 // RegisterWithGRPCCode is a version of Register that associates a gRPC error
 // code with a registered error.
 func RegisterWithGRPCCode(codespace string, code uint32, grpcCode grpccodes.Code, description string) *Error {
-	// TODO - uniqueness is (codespace, code) combo
 	if e := getUsed(codespace, code); e != nil {
-		panic(fmt.Sprintf("error with code %d is already registered: %q", code, e.desc))
+		if os.Getenv(EnvSuppressErrorDuplicateRegister) != "true" {
+			_, err := io.WriteString(os.Stderr, "error with code "+errorID(codespace, code)+" is already registered: "+e.desc+". Overwriting with current error...\n")
+			if err != nil {
+				panic(err)
+			}
+		}
 	}
 
 	err := &Error{codespace: codespace, code: code, desc: description, grpcCode: grpcCode}

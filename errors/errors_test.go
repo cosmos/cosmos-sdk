@@ -11,16 +11,46 @@ import (
 	grpcstatus "google.golang.org/grpc/status"
 )
 
+const testCodespace = "testtesttest"
+
+var (
+	ErrTxDecode                = Register(testCodespace, 2, "tx parse error")
+	ErrInvalidSequence         = Register(testCodespace, 3, "invalid sequence")
+	ErrUnauthorized            = Register(testCodespace, 4, "unauthorized")
+	ErrInsufficientFunds       = Register(testCodespace, 5, "insufficient funds")
+	ErrUnknownRequest          = Register(testCodespace, 6, "unknown request")
+	ErrInvalidAddress          = Register(testCodespace, 7, "invalid address")
+	ErrInvalidPubKey           = Register(testCodespace, 8, "invalid pubkey")
+	ErrUnknownAddress          = Register(testCodespace, 9, "unknown address")
+	ErrInvalidCoins            = Register(testCodespace, 10, "invalid coins")
+	ErrOutOfGas                = Register(testCodespace, 11, "out of gas")
+	ErrInsufficientFee         = Register(testCodespace, 13, "insufficient fee")
+	ErrTooManySignatures       = Register(testCodespace, 14, "maximum number of signatures exceeded")
+	ErrNoSignatures            = Register(testCodespace, 15, "no signatures supplied")
+	ErrJSONMarshal             = Register(testCodespace, 16, "failed to marshal JSON bytes")
+	ErrJSONUnmarshal           = Register(testCodespace, 17, "failed to unmarshal JSON bytes")
+	ErrInvalidRequest          = Register(testCodespace, 18, "invalid request")
+	ErrMempoolIsFull           = Register(testCodespace, 20, "mempool is full")
+	ErrTxTooLarge              = Register(testCodespace, 21, "tx too large")
+	ErrKeyNotFound             = Register(testCodespace, 22, "key not found")
+	ErrorInvalidSigner         = Register(testCodespace, 24, "tx intended signer does not match the given signer")
+	ErrInvalidChainID          = Register(testCodespace, 28, "invalid chain-id")
+	ErrInvalidType             = Register(testCodespace, 29, "invalid type")
+	ErrUnknownExtensionOptions = Register(testCodespace, 31, "unknown extension options")
+	ErrPackAny                 = Register(testCodespace, 33, "failed packing protobuf message to Any")
+	ErrLogic                   = Register(testCodespace, 35, "internal logic error")
+	ErrConflict                = RegisterWithGRPCCode(testCodespace, 36, codes.FailedPrecondition, "conflict")
+	ErrNotSupported            = RegisterWithGRPCCode(testCodespace, 37, codes.Unimplemented, "feature not supported")
+	ErrNotFound                = RegisterWithGRPCCode(testCodespace, 38, codes.NotFound, "not found")
+	ErrIO                      = Register(testCodespace, 39, "Internal IO error")
+)
+
 type errorsTestSuite struct {
 	suite.Suite
 }
 
 func TestErrorsTestSuite(t *testing.T) {
 	suite.Run(t, new(errorsTestSuite))
-}
-
-func (s *errorsTestSuite) SetupSuite() {
-	s.T().Parallel()
 }
 
 func (s *errorsTestSuite) TestCause() {
@@ -226,36 +256,18 @@ func (s *errorsTestSuite) TestGRPCStatus() {
 	s.Require().Equal("codespace testtesttest code 38: not found: test", status.Message())
 }
 
-const testCodespace = "testtesttest"
+func (s *errorsTestSuite) TestDoubleRegister() {
+	s.Require().NotPanics(func() {
+		_ = Register(testCodespace, 50, "Internal IO error")
+		_ = Register(testCodespace, 50, "Internal IO error")
+	})
+}
 
-var (
-	ErrTxDecode                = Register(testCodespace, 2, "tx parse error")
-	ErrInvalidSequence         = Register(testCodespace, 3, "invalid sequence")
-	ErrUnauthorized            = Register(testCodespace, 4, "unauthorized")
-	ErrInsufficientFunds       = Register(testCodespace, 5, "insufficient funds")
-	ErrUnknownRequest          = Register(testCodespace, 6, "unknown request")
-	ErrInvalidAddress          = Register(testCodespace, 7, "invalid address")
-	ErrInvalidPubKey           = Register(testCodespace, 8, "invalid pubkey")
-	ErrUnknownAddress          = Register(testCodespace, 9, "unknown address")
-	ErrInvalidCoins            = Register(testCodespace, 10, "invalid coins")
-	ErrOutOfGas                = Register(testCodespace, 11, "out of gas")
-	ErrInsufficientFee         = Register(testCodespace, 13, "insufficient fee")
-	ErrTooManySignatures       = Register(testCodespace, 14, "maximum number of signatures exceeded")
-	ErrNoSignatures            = Register(testCodespace, 15, "no signatures supplied")
-	ErrJSONMarshal             = Register(testCodespace, 16, "failed to marshal JSON bytes")
-	ErrJSONUnmarshal           = Register(testCodespace, 17, "failed to unmarshal JSON bytes")
-	ErrInvalidRequest          = Register(testCodespace, 18, "invalid request")
-	ErrMempoolIsFull           = Register(testCodespace, 20, "mempool is full")
-	ErrTxTooLarge              = Register(testCodespace, 21, "tx too large")
-	ErrKeyNotFound             = Register(testCodespace, 22, "key not found")
-	ErrorInvalidSigner         = Register(testCodespace, 24, "tx intended signer does not match the given signer")
-	ErrInvalidChainID          = Register(testCodespace, 28, "invalid chain-id")
-	ErrInvalidType             = Register(testCodespace, 29, "invalid type")
-	ErrUnknownExtensionOptions = Register(testCodespace, 31, "unknown extension options")
-	ErrPackAny                 = Register(testCodespace, 33, "failed packing protobuf message to Any")
-	ErrLogic                   = Register(testCodespace, 35, "internal logic error")
-	ErrConflict                = RegisterWithGRPCCode(testCodespace, 36, codes.FailedPrecondition, "conflict")
-	ErrNotSupported            = RegisterWithGRPCCode(testCodespace, 37, codes.Unimplemented, "feature not supported")
-	ErrNotFound                = RegisterWithGRPCCode(testCodespace, 38, codes.NotFound, "not found")
-	ErrIO                      = Register(testCodespace, 39, "Internal IO error")
-)
+func (s *errorsTestSuite) TestDoubleRegisterDuplicateErrorRegistration() {
+	s.T().Setenv(EnvSuppressErrorDuplicateRegister, "true")
+
+	s.Require().NotPanics(func() {
+		_ = Register(testCodespace, 50, "Internal IO error")
+		_ = Register(testCodespace, 50, "Internal IO error")
+	})
+}

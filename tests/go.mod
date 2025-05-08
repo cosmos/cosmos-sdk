@@ -233,3 +233,5 @@ replace (
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
 )
+
+replace cosmossdk.io/store => github.com/hyphacoop/cosmos-sdk/store v0.0.0-20250429164929-acbbfb9baf40

@@ -168,3 +168,5 @@ require (
 	pgregory.net/rapid v1.2.0 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
+
+replace cosmossdk.io/store => github.com/hyphacoop/cosmos-sdk/store v0.0.0-20250429164929-acbbfb9baf40

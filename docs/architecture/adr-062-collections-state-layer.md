@@ -78,7 +78,7 @@ These default implementations also offer safety around proper lexicographic orde
 
 Examples of the collections API can be found here:
 - introduction: https://github.com/NibiruChain/collections/tree/main/examples
-- usage in nibiru: [x/oracle](https://github.com/NibiruChain/nibiru/blob/master/x/oracle/keeper/keeper.go#L32), [x/perp](https://github.com/NibiruChain/nibiru/blob/master/x/perp/keeper/keeper.go#L31)
+- usage in nibiru: [x/oracle](https://github.com/NibiruChain/nibiru/blob/master/x/oracle/keeper/keeper.go#L32)
 - cosmos-sdk's x/staking migrated: https://github.com/testinginprod/cosmos-sdk/pull/22
 
 

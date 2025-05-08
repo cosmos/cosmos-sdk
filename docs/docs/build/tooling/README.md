@@ -9,8 +9,8 @@ This includes tools for development, operating a node, and ease of use of a Cosm
 
 ## CLI Tools
 
-* [Cosmovisor](./01-cosmovisor.md)
-* [Confix](./02-confix.md)
+* [Cosmovisor](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/tools/cosmovisor/README.md)
+* [Confix](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/tools/confix/README.md)
 
 ## Other Tools
 

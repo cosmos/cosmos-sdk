@@ -258,7 +258,7 @@ We change the storage layout of the state machine, a storage hard fork and netwo
 
 ## Alternative designs
 
-Most of the alternative designs were evaluated in [state commitments and storage report](https://paper.dropbox.com/published/State-commitments-and-storage-review--BDvA1MLwRtOx55KRihJ5xxLbBw-KeEB7eOd11pNrZvVtqUgL3h).
+Most of the alternative designs were evaluated in [state commitments and storage report](https://github.com/cosmos/cosmos-sdk/discussions/8297).
 
 Ethereum research published [Verkle Trie](https://dankradfeist.de/ethereum/2021/06/18/verkle-trie-for-eth1.html) - an idea of combining polynomial commitments with merkle tree in order to reduce the tree height. This concept has a very good potential, but we think it's too early to implement it. The current, SMT based design could be easily updated to the Verkle Trie once other research implement all necessary libraries. The main advantage of the design described in this ADR is the separation of state commitments from the data storage and designing a more powerful interface.
 
@@ -270,20 +270,19 @@ We verified existing databases KV databases for evaluating snapshot support. The
 
 ### RDBMS
 
-Use of RDBMS instead of simple KV store for state. Use of RDBMS will require a Cosmos SDK API breaking change (`KVStore` interface) and will allow better data extraction and indexing solutions. Instead of saving an object as a single blob of bytes, we could save it as record in a table in the state storage layer, and as a `hash(key, protobuf(object))` in the SMT as outlined above. To verify that an object registered in RDBMS is same as the one committed to SMT, one will need to load it from RDBMS, marshal using protobuf, hash and do SMT search.
+Use of RDBMS instead of a simple KV store for state. Use of RDBMS will require a Cosmos SDK API breaking change (`KVStore` interface) and will allow better data extraction and indexing solutions. Instead of saving an object as a single blob of bytes, we could save it as record in a table in the state storage layer, and as a `hash(key, protobuf(object))` in the SMT as outlined above. To verify that an object registered in RDBMS is same as the one committed to SMT, one will need to load it from RDBMS, marshal using protobuf, hash and do SMT search.
 
 ### Off Chain Store
 
-We were discussing use case where modules can use a support database, which is not automatically committed. Module will responsible for having a sound storage model and can optionally use the feature discussed in __Committing to an object without saving it_ section.
+We were discussing a use case where modules can use a support database, which is not automatically committed. Module will responsible for having a sound storage model and can optionally use the feature discussed in __Committing to an object without saving it_ section.
 
 ## References
 
 * [IAVL What's Next?](https://github.com/cosmos/cosmos-sdk/issues/7100)
-* [IAVL overview](https://docs.google.com/document/d/16Z_hW2rSAmoyMENO-RlAhQjAG3mSNKsQueMnKpmcBv0/edit#heading=h.yd2th7x3o1iv) of it's state v0.15
-* [State commitments and storage report](https://paper.dropbox.com/published/State-commitments-and-storage-review--BDvA1MLwRtOx55KRihJ5xxLbBw-KeEB7eOd11pNrZvVtqUgL3h)
+* [IAVL overview](https://docs.google.com/document/d/16Z_hW2rSAmoyMENO-RlAhQjAG3mSNKsQueMnKpmcBv0/edit#heading=h.yd2th7x3o1iv) of its state v0.15
 * [Celestia (LazyLedger) SMT](https://github.com/lazyledger/smt)
 * Facebook Diem (Libra) SMT [design](https://developers.diem.com/papers/jellyfish-merkle-tree/2021-01-14.pdf)
 * [Trillian Revocation Transparency](https://github.com/google/trillian/blob/master/docs/papers/RevocationTransparency.pdf), [Trillian Verifiable Data Structures](https://github.com/google/trillian/blob/master/docs/papers/VerifiableDataStructures.pdf).
 * Design and implementation [discussion](https://github.com/cosmos/cosmos-sdk/discussions/8297).
-* [How to Upgrade IBC Chains and their Clients](https://github.com/cosmos/ibc-go/blob/main/docs/ibc/upgrades/quick-guide.md)
+* [How to Upgrade IBC Chains and their Clients](https://github.com/cosmos/ibc-go/tree/main/docs)
 * [ADR-40 Effect on IBC](https://github.com/cosmos/ibc-go/discussions/256)

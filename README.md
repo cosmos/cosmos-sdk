@@ -30,7 +30,7 @@ The Cosmos SDK is a framework for building blockchain applications. [CometBFT (B
 
 **WARNING**: The Cosmos SDK has mostly stabilized, but we are still making some breaking changes.
 
-**Note**: We advise to always use the latest maintained [Go](https://go.dev/dl) version for building Cosmos SDK applications.
+**Note**: We advise to always use the latest maintained [Go](https://go.dev) version for building Cosmos SDK applications.
 
 ## Quick Start
 
@@ -47,8 +47,7 @@ on modules, see our [introduction doc](./x/README.md).
 
 ## Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for details on how to contribute and participate in our [dev calls](./CONTRIBUTING.md#teams-dev-calls).
-If you want to follow the updates or learn more about the latest design then join our [Discord](https://discord.com/invite/cosmosnetwork).
+See TODO NEW CONTRIBUTING GUIDE.
 
 ## Tools and Frameworks
 

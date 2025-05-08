@@ -52,7 +52,7 @@ If your services depend on this functionality from `x/distribution`, please upda
 
 :::
 
-### Manual Wiring
+### ProtocolPool Manual Wiring
 
 Import the following:
 
@@ -159,7 +159,7 @@ app.ModuleManager.SetOrderInitGenesis(
 )
 ```
 
-### DI Wiring
+### ProtocolPool DI Wiring
 
 Note: _as long as an external community pool keeper (here, `x/protocolpool`) is wired in DI configs, `x/distribution` will automatically use it for its external pool._
 
@@ -262,7 +262,7 @@ Lastly, add an entry for protocolpool in the ModuleConfig.
 
 ## Adding Epochs Module **OPTIONAL**
 
-### Manual Wiring
+### Epochs Manual Wiring
 
 Import the following:
 
@@ -337,7 +337,7 @@ app.ModuleManager.SetOrderInitGenesis(
 )
 ```
 
-### DI Wiring
+### Epochs DI Wiring
 
 First, set up the keeper for the application.
 

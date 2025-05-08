@@ -22,7 +22,7 @@ The SDK uses `mockgen` to generate mocks for keepers:
 https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/scripts/mockgen.sh#L3-L6
 ```
 
-You can read more about mockgen [here](https://go.uber.org/mock).
+You can read more about mockgen [here](https://pkg.go.dev/go.uber.org/mock).
 
 ### Example
 
@@ -116,9 +116,9 @@ Here are some examples:
 * Osmosis E2E tests: <https://github.com/osmosis-labs/osmosis/tree/main/tests/e2e>.
 
 :::note warning
-The SDK is in the process of creating its E2E tests, as defined in [ADR-59](https://docs.cosmos.network/main/architecture/adr-059-test-scopes.html). This page will eventually be updated with better examples.
+The SDK is in the process of creating its E2E tests, as defined in [ADR-59](https://docs.cosmos.network/main/build/architecture/adr-059-test-scopes). This page will eventually be updated with better examples.
 :::
 
 ## Learn More
 
-Learn more about testing scope in [ADR-59](https://docs.cosmos.network/main/architecture/adr-059-test-scopes.html).
+Learn more about testing scope in [ADR-59](https://docs.cosmos.network/main/build/architecture/adr-059-test-scopes).

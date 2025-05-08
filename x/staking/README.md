@@ -7,7 +7,7 @@ sidebar_position: 1
 ## Abstract
 
 This paper specifies the Staking module of the Cosmos SDK that was first
-described in the [Cosmos Whitepaper](https://cosmos.network/about/whitepaper)
+described in the [Cosmos Whitepaper](https://cosmos.network/whitepaper)
 in June 2016.
 
 The module enables Cosmos SDK-based blockchain to support an advanced
@@ -49,7 +49,7 @@ network.
     * [Historical Info Tracking](#historical-info-tracking)
 * [End-Block](#end-block)
     * [Validator Set Changes](#validator-set-changes)
-    * [Queues](#queues-1)
+    * [Queues](#queues)
 * [Hooks](#hooks)
 * [Events](#events)
     * [EndBlocker](#endblocker)

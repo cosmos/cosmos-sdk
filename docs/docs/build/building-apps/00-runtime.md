@@ -133,8 +133,6 @@ An application only needs to call `AppBuilder.Build` to create a fully configure
 https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/runtime/builder.go#L26-L57
 ```
 
-More information on building applications can be found in the [next section](./02-app-building.md).
-
 ## Best Practices
 
 1. **Module Order**: Carefully consider the order of modules in begin_blockers, end_blockers, and pre_blockers.

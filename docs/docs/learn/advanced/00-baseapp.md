@@ -165,8 +165,7 @@ The function uses the `Select()` method of the mempool to iterate over the trans
 which encodes and validates each transaction and from there the `AnteHandler` is executed. 
 If successful, valid transactions are returned inclusive of the events, tags, and data generated 
 during the execution of the proposal. 
-The described behavior is that of the default handler, applications have the flexibility to define their own 
-[custom mempool handlers](https://docs.cosmos.network/main/building-apps/app-mempool#custom-mempool-handlers).
+The described behavior is that of the default handler, applications have the flexibility to define their own custom mempool handlers.
 
 ![ProcessProposal](./baseapp_state-prepareproposal.png)
 
@@ -177,7 +176,7 @@ from the root store and is used to process a signed proposal received from a val
 In this state, `runTx` is called and the `AnteHandler` is executed and the context used in this state is built with information 
 from the header and the main state, including the minimum gas prices, which are also set. 
 Again we want to highlight that the described behavior is that of the default handler and applications have the flexibility to define their own
-[custom mempool handlers](https://docs.cosmos.network/main/building-apps/app-mempool#custom-mempool-handlers).
+custom mempool handlers.
 
 ![ProcessProposal](./baseapp_state-processproposal.png)
 
@@ -228,7 +227,7 @@ Similar to `sdk.Msg`s, [`queries`](../../build/building-modules/02-messages-and-
 
 Just like the `msgServiceRouter`, the `grpcQueryRouter` is initialized with all the query routes using the application's [module manager](../../build/building-modules/01-module-manager.md) (via the `RegisterServices` method), which itself is initialized with all the application's modules in the application's [constructor](../beginner/00-app-anatomy.md#app-constructor).
 
-## Main ABCI 2.0 Messages
+## Main ABCI Messages
 
 The [Application-Blockchain Interface](https://github.com/cometbft/cometbft/blob/v0.37.x/spec/abci/abci++_basic_concepts.md) (ABCI) is a generic interface that connects a state-machine with a consensus engine to form a functional full-node. It can be wrapped in any language, and needs to be implemented by each application-specific blockchain built on top of an ABCI-compatible consensus engine like CometBFT.
 

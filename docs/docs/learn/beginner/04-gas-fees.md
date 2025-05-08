@@ -46,7 +46,7 @@ The gas meter is generally held in [`ctx`](../advanced/02-context.md), and consu
 ctx.GasMeter().ConsumeGas(amount, "description")
 ```
 
-By default, the Cosmos SDK makes use of two different gas meters, the [main gas meter](#main-gas-metter) and the [block gas meter](#block-gas-meter).
+By default, the Cosmos SDK makes use of two different gas meters, the [main gas meter](#main-gas-meter) and the [block gas meter](#block-gas-meter).
 
 ### Main Gas Meter
 
@@ -58,7 +58,7 @@ Gas consumption can be done manually, generally by the module developer in the [
 
 `ctx.BlockGasMeter()` is the gas meter used to track gas consumption per block and make sure it does not go above a certain limit. 
 
-During the genesis phase, gas consumption is unlimited to accommodate initialisation transactions. 
+During the genesis phase, gas consumption is unlimited to accommodate initialization transactions. 
 
 ```go
 app.finalizeBlockState.SetContext(app.finalizeBlockState.Context().WithBlockGasMeter(storetypes.NewInfiniteGasMeter()))

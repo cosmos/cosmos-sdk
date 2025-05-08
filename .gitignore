@@ -52,7 +52,14 @@ vagrant
 .dir-locals.el
 .vscode
 
+# python
 .venv
+bin
+lib
+pyvenv.cfg
+
+#docs scripting
+docs_links_status.md
 
 # Depinject & Graphviz
 dependency-graph.png

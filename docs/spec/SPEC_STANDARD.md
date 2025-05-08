@@ -52,7 +52,7 @@ The section may have any or all of the following subsections, as appropriate to 
 
 A specification should include a history section, listing any inspiring documents and a plaintext log of significant changes.
 
-See an example history section [below](#history-1).
+See an example history section [below](#history).
 
 ### Copyright
 

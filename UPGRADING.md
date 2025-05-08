@@ -12,7 +12,7 @@ Unordered transactions, `x/protocolpool`, and `x/epoch` are the major new featur
 
 We also added the ability to add a `CheckTx` handler and enabled ed25519 signature verification.
 
-For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/CHANGELOG.md).
+For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/CHANGELOG.md).
 
 ### Unordered Transactions
 
@@ -23,7 +23,7 @@ Clients that use this feature may now submit their transactions in a fire-and-fo
 To submit an unordered transaction, clients must set the `unordered` flag to
 `true` and ensure a reasonable `timeout_timestamp` is set. The `timeout_timestamp` is
 used as a TTL for the transaction and provides replay protection. Each transaction's `timeout_timestamp` must be
-unique to the account; however, the difference may be as small as a nanosecond. See [ADR-070](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-070-unordered-transactions.md) for more details.
+unique to the account; however, the difference may be as small as a nanosecond. See [ADR-070](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-070-unordered-account.md) for more details.
 
 Note that unordered transactions require sequence values to be zero, and will **FAIL** if a non-zero sequence value is set. 
 Please ensure no sequence value is set when submitting an unordered transaction.
@@ -100,7 +100,7 @@ That's it.
 ### New Modules
 
 Below are some **optional** new modules you can include in your chain. 
-To see a full example of wiring these modules, please check out the [SimApp](https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/simapp/app.go).
+To see a full example of wiring these modules, please check out the [SimApp](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/app.go).
 
 #### Epochs
 

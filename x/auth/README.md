@@ -32,7 +32,7 @@ This module is used in the Cosmos Hub.
 
 ## Concepts
 
-**Note:** The auth module is different from the [authz module](../modules/authz/).
+**Note:** The auth module is different from the [authz module](../authz/).
 
 The differences are:
 

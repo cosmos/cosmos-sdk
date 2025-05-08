@@ -127,8 +127,6 @@ func TestVerboseMode(t *testing.T) {
 		verboseLevel zerolog.Level
 		filter       string
 		expected     string
-		//expectedRegular string
-		//expectedVerbose string
 	}{
 		{
 			name:         "verbose mode simple case",

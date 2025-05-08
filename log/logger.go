@@ -202,12 +202,12 @@ func (l zeroLogWrapper) Impl() interface{} {
 // SetVerboseMode implements VerboseModeLogger interface.
 func (l zeroLogWrapper) SetVerboseMode(enable bool) {
 	if enable && l.verboseLevel != zerolog.NoLevel {
-		*l.Logger = l.Logger.Level(l.verboseLevel)
+		*l.Logger = l.Level(l.verboseLevel)
 		if l.disableFilter != nil {
 			*l.disableFilter = true
 		}
 	} else {
-		*l.Logger = l.Logger.Level(l.regularLevel)
+		*l.Logger = l.Level(l.regularLevel)
 		if l.disableFilter != nil {
 			*l.disableFilter = false
 		}

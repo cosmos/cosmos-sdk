@@ -95,7 +95,7 @@ func TestParseLogLevel(t *testing.T) {
 }
 
 func TestVerboseMode(t *testing.T) {
-	var logMessages = []struct {
+	logMessages := []struct {
 		level   zerolog.Level
 		module  string
 		message string
@@ -121,7 +121,7 @@ func TestVerboseMode(t *testing.T) {
 			"msg 4",
 		},
 	}
-	var tt = []struct {
+	tt := []struct {
 		name         string
 		level        zerolog.Level
 		verboseLevel zerolog.Level

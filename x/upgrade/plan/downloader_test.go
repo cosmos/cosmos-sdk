@@ -90,7 +90,7 @@ func (z TestZip) SaveAs(path string) error {
 	return zipper.Close()
 }
 
-// saveTestZip saves a TestZip in this test's Home/src directory with the given name.
+// saveSrcTestZip saves a TestZip in this test's Home/src directory with the given name.
 // The full path to the saved archive is returned.
 func (s *DownloaderTestSuite) saveSrcTestZip(name string, z TestZip) string {
 	fullName := filepath.Join(s.Home, "src", name)
@@ -127,7 +127,7 @@ func requireFileEquals(t *testing.T, path string, tf *TestFile) {
 	require.Equal(t, string(tf.Contents), string(file), "file contents")
 }
 
-// makeFileUrl converts the given path to a URL with the correct checksum query parameter.
+// makeFileURL converts the given path to a URL with the correct checksum query parameter.
 func makeFileURL(t *testing.T, path string) string {
 	t.Helper()
 	f, err := os.Open(path)

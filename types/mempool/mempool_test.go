@@ -153,7 +153,7 @@ func (s *MempoolTestSuite) TestDefaultMempool() {
 	txCount := 1000
 	var txs []testTx
 
-	for i := 0; i < txCount; i++ {
+	for i := range txCount {
 		acc := accounts[i%len(accounts)]
 		tx := testTx{
 			nonce:    0,

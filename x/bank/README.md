@@ -275,7 +275,7 @@ Both functions compose the provided restriction with any previously provided res
 `PrependSendRestriction` adds the restriction to be run before any previously provided send restrictions.
 The composition will short-circuit when an error is encountered. I.e. if the first one returns an error, the second is not run.
 
-During `SendCoins`, the send restriction is applied after coins are removed from the from address, but before adding them to the to address.
+During `SendCoins`, the send restriction is applied before coins are removed from the from address and adding them to the to address.
 During `InputOutputCoins`, the send restriction is applied after the input coins are removed and once for each output before the funds are added.
 
 A send restriction function should make use of a custom value in the context to allow bypassing that specific restriction.

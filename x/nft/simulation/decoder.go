@@ -1,11 +1,12 @@
+// Deprecated: This package is deprecated and will be removed in the next major release. The `x/nft` module will be moved to a separate repo `github.com/cosmos/cosmos-sdk-legacy`.
 package simulation
 
 import (
 	"bytes"
 	"fmt"
 
-	"cosmossdk.io/x/nft"
-	"cosmossdk.io/x/nft/keeper"
+	"cosmossdk.io/x/nft"        //nolint:staticcheck // deprecated and to be removed
+	"cosmossdk.io/x/nft/keeper" //nolint:staticcheck // deprecated and to be removed
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"

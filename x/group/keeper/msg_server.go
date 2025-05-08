@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 
 	errorsmod "cosmossdk.io/errors"
@@ -14,7 +15,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/group"
+	"github.com/cosmos/cosmos-sdk/x/group" //nolint:staticcheck // deprecated and to be removed
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
@@ -1163,13 +1164,7 @@ func (k Keeper) validateMembers(members []group.MemberRequest) error {
 
 // isProposer checks that an address is a proposer of a given proposal.
 func isProposer(proposal group.Proposal, address string) bool {
-	for _, proposer := range proposal.Proposers {
-		if proposer == address {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(proposal.Proposers, address)
 }
 
 func validateMsgs(msgs []sdk.Msg) error {

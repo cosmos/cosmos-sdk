@@ -68,6 +68,16 @@ func (coin Coin) IsZero() bool {
 	return coin.Amount.IsZero()
 }
 
+// IsGT returns true if they are the same type and the receiver is
+// a greater value
+func (coin Coin) IsGT(other Coin) bool {
+	if coin.Denom != other.Denom {
+		panic(fmt.Sprintf("invalid coin denominations; %s, %s", coin.Denom, other.Denom))
+	}
+
+	return coin.Amount.GT(other.Amount)
+}
+
 // IsGTE returns true if they are the same type and the receiver is
 // an equal or greater value
 func (coin Coin) IsGTE(other Coin) bool {
@@ -666,7 +676,7 @@ func (coins Coins) Equal(coinsB Coins) bool {
 	coins = coins.Sort()
 	coinsB = coinsB.Sort()
 
-	for i := 0; i < len(coins); i++ {
+	for i := range coins {
 		if !coins[i].Equal(coinsB[i]) {
 			return false
 		}
@@ -680,19 +690,19 @@ func (coins Coins) Empty() bool {
 	return len(coins) == 0
 }
 
-// AmountOf returns the amount of a denom from coins
+// AmountOf returns the amount of a denom from coins. The denom is not validated.
 func (coins Coins) AmountOf(denom string) math.Int {
-	mustValidateDenom(denom)
-	return coins.AmountOfNoDenomValidation(denom)
-}
-
-// AmountOfNoDenomValidation returns the amount of a denom from coins
-// without validating the denomination.
-func (coins Coins) AmountOfNoDenomValidation(denom string) math.Int {
 	if ok, c := coins.Find(denom); ok {
 		return c.Amount
 	}
 	return math.ZeroInt()
+}
+
+// AmountOfNoDenomValidation returns the amount of a denom from coins
+// without validating the denomination.
+// Deprecated: use AmountOf
+func (coins Coins) AmountOfNoDenomValidation(denom string) math.Int {
+	return coins.AmountOf(denom)
 }
 
 // Find returns true and coin if the denom exists in coins. Otherwise it returns false
@@ -867,12 +877,6 @@ func ValidateDenom(denom string) error {
 		return fmt.Errorf("invalid denom: %s", denom)
 	}
 	return nil
-}
-
-func mustValidateDenom(denom string) {
-	if err := ValidateDenom(denom); err != nil {
-		panic(err)
-	}
 }
 
 // ParseCoinNormalized parses and normalize a cli input for one coin type, returning errors if invalid or on an empty string

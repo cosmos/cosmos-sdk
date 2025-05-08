@@ -1,3 +1,4 @@
+// Deprecated: This package is deprecated and will be removed in the next major release. The `x/group` module will be moved to a separate repo `github.com/cosmos/cosmos-sdk-legacy`.
 package module
 
 import (
@@ -18,13 +19,14 @@ import (
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/testutil/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/group"
-	"github.com/cosmos/cosmos-sdk/x/group/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/group/keeper"
-	"github.com/cosmos/cosmos-sdk/x/group/simulation"
+	"github.com/cosmos/cosmos-sdk/x/group"            //nolint:staticcheck // deprecated and to be removed
+	"github.com/cosmos/cosmos-sdk/x/group/client/cli" //nolint:staticcheck // deprecated and to be removed
+	"github.com/cosmos/cosmos-sdk/x/group/keeper"     //nolint:staticcheck // deprecated and to be removed
+	"github.com/cosmos/cosmos-sdk/x/group/simulation" //nolint:staticcheck // deprecated and to be removed
 )
 
 // ConsensusVersion defines the current x/group module consensus version.
@@ -161,12 +163,33 @@ func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
+// migrate to WeightedOperationsX. This method is ignored when WeightedOperationsX exists and will be removed in the future
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations(
 		am.registry,
 		simState.AppParams, simState.Cdc, simState.TxConfig,
 		am.accKeeper, am.bankKeeper, am.keeper, am.cdc,
 	)
+}
+
+// WeightedOperationsX registers weighted group module operations for simulation.
+func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Registry) {
+	s := simulation.NewSharedState()
+	// note: using old keys for backwards compatibility
+	reg.Add(weights.Get("msg_create_group", 100), simulation.MsgCreateGroupFactory())
+	reg.Add(weights.Get("msg_update_group_admin", 5), simulation.MsgUpdateGroupAdminFactory(am.keeper, s))
+	reg.Add(weights.Get("msg_update_group_metadata", 5), simulation.MsgUpdateGroupMetadataFactory(am.keeper, s))
+	reg.Add(weights.Get("msg_update_group_members", 5), simulation.MsgUpdateGroupMembersFactory(am.keeper, s))
+	reg.Add(weights.Get("msg_create_group_account", 50), simulation.MsgCreateGroupPolicyFactory(am.keeper, s))
+	reg.Add(weights.Get("msg_create_group_with_policy", 50), simulation.MsgCreateGroupWithPolicyFactory())
+	reg.Add(weights.Get("msg_update_group_account_admin", 5), simulation.MsgUpdateGroupPolicyAdminFactory(am.keeper, s))
+	reg.Add(weights.Get("msg_update_group_account_decision_policy", 5), simulation.MsgUpdateGroupPolicyDecisionPolicyFactory(am.keeper, s))
+	reg.Add(weights.Get("msg_update_group_account_metadata", 5), simulation.MsgUpdateGroupPolicyMetadataFactory(am.keeper, s))
+	reg.Add(weights.Get("msg_submit_proposal", 2*90), simulation.MsgSubmitProposalFactory(am.keeper, s))
+	reg.Add(weights.Get("msg_withdraw_proposal", 20), simulation.MsgWithdrawProposalFactory(am.keeper, s))
+	reg.Add(weights.Get("msg_vote", 90), simulation.MsgVoteFactory(am.keeper, s))
+	reg.Add(weights.Get("msg_exec", 90), simulation.MsgExecFactory(am.keeper, s))
+	reg.Add(weights.Get("msg_leave_group", 5), simulation.MsgLeaveGroupFactory(am.keeper, s))
 }
 
 //

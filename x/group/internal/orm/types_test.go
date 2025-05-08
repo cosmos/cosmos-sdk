@@ -34,7 +34,7 @@ func TestTypeSafeRowGetter(t *testing.T) {
 	specs := map[string]struct {
 		srcRowID     RowID
 		srcModelType reflect.Type
-		expObj       interface{}
+		expObj       any
 		expErr       *errorsmod.Error
 	}{
 		"happy path": {

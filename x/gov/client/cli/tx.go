@@ -27,6 +27,8 @@ const (
 	flagStatus    = "status"
 	FlagMetadata  = "metadata"
 	FlagSummary   = "summary"
+	FlagExpedited = "expedited"
+
 	// Deprecated: only used for v1beta1 legacy proposals.
 	FlagProposal = "proposal"
 	// Deprecated: only used for v1beta1 legacy proposals.

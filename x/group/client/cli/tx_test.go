@@ -25,9 +25,9 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/group"
-	groupcli "github.com/cosmos/cosmos-sdk/x/group/client/cli"
-	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
+	"github.com/cosmos/cosmos-sdk/x/group"                     //nolint:staticcheck // deprecated and to be removed
+	groupcli "github.com/cosmos/cosmos-sdk/x/group/client/cli" //nolint:staticcheck // deprecated and to be removed
+	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"  //nolint:staticcheck // deprecated and to be removed
 )
 
 var validMetadata = "metadata"
@@ -241,7 +241,7 @@ func (s *CLITestSuite) TestTxUpdateGroupAdmin() {
 	s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))
 
 	groupIDs := make([]string, 2)
-	for i := 0; i < 2; i++ {
+	for i := range 2 {
 		validMembers := fmt.Sprintf(`{"members": [{
 	  "address": "%s",
 		"weight": "1",
@@ -1208,7 +1208,7 @@ func (s *CLITestSuite) TestTxVote() {
 	cmd.SetOut(io.Discard)
 
 	ids := make([]string, 4)
-	for i := 0; i < len(ids); i++ {
+	for i := range ids {
 		ids[i] = fmt.Sprint(i + 1)
 	}
 

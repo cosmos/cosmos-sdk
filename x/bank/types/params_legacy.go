@@ -39,7 +39,7 @@ func GetSendEnabledParams(ctx sdk.Context, legacySubspace exported.Subspace) []*
 	return sendEnabled
 }
 
-func validateSendEnabledParams(i interface{}) error {
+func validateSendEnabledParams(i any) error {
 	params, ok := i.([]*SendEnabled)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -58,7 +58,7 @@ func validateSendEnabledParams(i interface{}) error {
 	return nil
 }
 
-func validateSendEnabled(i interface{}) error {
+func validateSendEnabled(i any) error {
 	param, ok := i.(SendEnabled)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

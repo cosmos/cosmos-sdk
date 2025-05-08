@@ -3,7 +3,7 @@ package store
 import dbm "github.com/cosmos/cosmos-db"
 
 // KVStore describes the basic interface for interacting with key-value stores.
-type KVStore interface {
+type KVStore = interface {
 	// Get returns nil iff key doesn't exist. Errors on nil key.
 	Get(key []byte) ([]byte, error)
 

@@ -47,7 +47,7 @@ func (lw *StandardLogWriter) PrintLogs() {
 	f := createLogFile(lw.Seed)
 	defer f.Close()
 
-	for i := 0; i < len(lw.OpEntries); i++ {
+	for i := range lw.OpEntries {
 		writeEntry := fmt.Sprintf("%s\n", (lw.OpEntries[i]).MustMarshal())
 		_, err := f.WriteString(writeEntry)
 		if err != nil {

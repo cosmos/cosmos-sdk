@@ -20,7 +20,7 @@ func TestEpochsExportGenesis(t *testing.T) {
 	require.Len(t, genesis.Epochs, 4)
 
 	expectedEpochs := types.DefaultGenesis().Epochs
-	for i := 0; i < len(expectedEpochs); i++ {
+	for i := range expectedEpochs {
 		expectedEpochs[i].CurrentEpochStartHeight = chainStartHeight
 		expectedEpochs[i].StartTime = chainStartTime
 	}

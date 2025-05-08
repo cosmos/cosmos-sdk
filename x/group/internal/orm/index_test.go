@@ -32,8 +32,8 @@ func TestNewIndex(t *testing.T) {
 
 	myTable, err := NewAutoUInt64Table(AutoUInt64TablePrefix, AutoUInt64TableSeqPrefix, &testdata.TableModel{}, cdc)
 	require.NoError(t, err)
-	indexer := func(val interface{}) ([]interface{}, error) {
-		return []interface{}{val.(*testdata.TableModel).Metadata}, nil
+	indexer := func(val any) ([]any, error) {
+		return []any{val.(*testdata.TableModel).Metadata}, nil
 	}
 
 	testCases := []struct {
@@ -41,7 +41,7 @@ func TestNewIndex(t *testing.T) {
 		table       Indexable
 		expectErr   bool
 		expectedErr string
-		indexKey    interface{}
+		indexKey    any
 	}{
 		{
 			name:        "nil indexKey",
@@ -90,13 +90,13 @@ func TestIndexPrefixScan(t *testing.T) {
 
 	tb, err := NewAutoUInt64Table(AutoUInt64TablePrefix, AutoUInt64TableSeqPrefix, &testdata.TableModel{}, cdc)
 	require.NoError(t, err)
-	idx, err := NewIndex(tb, AutoUInt64TableModelByMetadataPrefix, func(val interface{}) ([]interface{}, error) {
-		i := []interface{}{val.(*testdata.TableModel).Metadata}
+	idx, err := NewIndex(tb, AutoUInt64TableModelByMetadataPrefix, func(val any) ([]any, error) {
+		i := []any{val.(*testdata.TableModel).Metadata}
 		return i, nil
 	}, testdata.TableModel{}.Metadata)
 	require.NoError(t, err)
-	strIdx, err := NewIndex(tb, 0x1, func(val interface{}) ([]interface{}, error) {
-		i := []interface{}{val.(*testdata.TableModel).Name}
+	strIdx, err := NewIndex(tb, 0x1, func(val any) ([]any, error) {
+		i := []any{val.(*testdata.TableModel).Name}
 		return i, nil
 	}, testdata.TableModel{}.Name)
 	require.NoError(t, err)
@@ -125,11 +125,11 @@ func TestIndexPrefixScan(t *testing.T) {
 	}
 
 	specs := map[string]struct {
-		start, end interface{}
+		start, end any
 		expResult  []testdata.TableModel
 		expRowIDs  []RowID
 		expError   *errorsmod.Error
-		method     func(store storetypes.KVStore, start, end interface{}) (Iterator, error)
+		method     func(store storetypes.KVStore, start, end any) (Iterator, error)
 	}{
 		"exact match with a single result": {
 			start:     []byte("metadata-a"),
@@ -295,7 +295,7 @@ func TestUniqueIndex(t *testing.T) {
 
 	myTable, err := NewPrimaryKeyTable(PrimaryKeyTablePrefix, &testdata.TableModel{}, cdc)
 	require.NoError(t, err)
-	uniqueIdx, err := NewUniqueIndex(myTable, 0x10, func(val interface{}) (interface{}, error) {
+	uniqueIdx, err := NewUniqueIndex(myTable, 0x10, func(val any) (any, error) {
 		return []byte{val.(*testdata.TableModel).Metadata[0]}, nil
 	}, []byte{})
 	require.NoError(t, err)

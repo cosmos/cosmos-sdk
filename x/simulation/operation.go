@@ -144,7 +144,7 @@ func (ops WeightedOperations) getSelectOpFn() simulation.SelectOpFn {
 
 	return func(r *rand.Rand) simulation.Operation {
 		x := r.Intn(totalOpWeight)
-		for i := 0; i < len(ops); i++ {
+		for i := range ops {
 			if x <= ops[i].Weight() {
 				return ops[i].Op()
 			}

@@ -202,6 +202,12 @@ type CommitMultiStore interface {
 	// SetIAVLDisableFastNode enables/disables fastnode feature on iavl.
 	SetIAVLDisableFastNode(disable bool)
 
+	// SetIAVLSyncPruning set sync/async pruning on iavl.
+	// It is not recommended to use this option.
+	// It is here to enable the prune command to force this to true, allowing the command to wait
+	// for the pruning to finish before returning.
+	SetIAVLSyncPruning(sync bool)
+
 	// RollbackToVersion rollback the db to specific version(height).
 	RollbackToVersion(version int64) error
 

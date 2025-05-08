@@ -53,7 +53,7 @@ func getBlockSize(r *rand.Rand, params Params, lastBlockSizeState, avgBlockSize 
 	return state, blockSize
 }
 
-func mustMarshalJSONIndent(o interface{}) []byte {
+func mustMarshalJSONIndent(o any) []byte {
 	bz, err := json.MarshalIndent(o, "", "  ")
 	if err != nil {
 		panic(fmt.Sprintf("failed to JSON encode: %s", err))

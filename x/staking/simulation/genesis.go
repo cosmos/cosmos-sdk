@@ -1,8 +1,6 @@
 package simulation
 
 import (
-	"encoding/json"
-	"fmt"
 	"math/rand"
 	"time"
 
@@ -65,7 +63,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	valAddrs := make([]sdk.ValAddress, simState.NumBonded)
 
-	for i := 0; i < int(simState.NumBonded); i++ {
+	for i := range int(simState.NumBonded) {
 		valAddr := sdk.ValAddress(simState.Accounts[i].Address)
 		valAddrs[i] = valAddr
 
@@ -91,11 +89,5 @@ func RandomizedGenState(simState *module.SimulationState) {
 	}
 
 	stakingGenesis := types.NewGenesisState(params, validators, delegations)
-
-	bz, err := json.MarshalIndent(&stakingGenesis.Params, "", " ")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("Selected randomly generated staking parameters:\n%s\n", bz)
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(stakingGenesis)
 }

@@ -10,9 +10,9 @@ import (
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-	"cosmossdk.io/x/nft"
-	nftkeeper "cosmossdk.io/x/nft/keeper"
-	"cosmossdk.io/x/nft/simulation"
+	"cosmossdk.io/x/nft"                  //nolint:staticcheck // deprecated and to be removed
+	nftkeeper "cosmossdk.io/x/nft/keeper" //nolint:staticcheck // deprecated and to be removed
+	"cosmossdk.io/x/nft/simulation"       //nolint:staticcheck // deprecated and to be removed
 	"cosmossdk.io/x/nft/testutil"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -60,7 +60,7 @@ func (suite *SimTestSuite) SetupTest() {
 	suite.Require().NoError(err)
 
 	suite.app = app
-	suite.ctx = app.BaseApp.NewContext(false)
+	suite.ctx = app.NewContext(false)
 }
 
 func (suite *SimTestSuite) TestWeightedOperations() {

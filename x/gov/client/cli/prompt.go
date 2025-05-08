@@ -53,6 +53,8 @@ var suggestedProposalTypes = []proposalType{
 // Prompt prompts the user for all values of the given type.
 // data is the struct to be filled
 // namePrefix is the name to be displayed as "Enter <namePrefix> <field>"
+// TODO: when bringing this in autocli, use proto message instead
+// this will simplify the get address logic
 func Prompt[T any](data T, namePrefix string) (T, error) {
 	v := reflect.ValueOf(&data).Elem()
 	if v.Kind() == reflect.Interface {
@@ -62,7 +64,7 @@ func Prompt[T any](data T, namePrefix string) (T, error) {
 		}
 	}
 
-	for i := 0; i < v.NumField(); i++ {
+	for i := range v.NumField() {
 		// if the field is a struct skip or not slice of string or int then skip
 		switch v.Field(i).Kind() {
 		case reflect.Struct:

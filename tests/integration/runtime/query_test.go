@@ -56,9 +56,9 @@ func initFixture(t assert.TestingT) *fixture {
 	)
 	assert.NilError(t, err)
 
-	f.ctx = app.BaseApp.NewContext(false)
+	f.ctx = app.NewContext(false)
 	queryHelper := &baseapp.QueryServiceTestHelper{
-		GRPCQueryRouter: app.BaseApp.GRPCQueryRouter(),
+		GRPCQueryRouter: app.GRPCQueryRouter(),
 		Ctx:             f.ctx,
 	}
 	f.appQueryClient = appv1alpha1.NewQueryClient(queryHelper)

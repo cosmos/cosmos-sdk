@@ -2,6 +2,7 @@ package baseapp
 
 import (
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 
@@ -48,7 +49,7 @@ func (app *BaseApp) RegisterStreamingServices(appOpts servertypes.AppOptions, ke
 func (app *BaseApp) registerStreamingPlugin(
 	appOpts servertypes.AppOptions,
 	keys map[string]*storetypes.KVStoreKey,
-	streamingPlugin interface{},
+	streamingPlugin any,
 ) error {
 	v, ok := streamingPlugin.(storetypes.ABCIListener)
 	if !ok {
@@ -80,12 +81,7 @@ func (app *BaseApp) registerABCIListenerPlugin(
 }
 
 func exposeAll(list []string) bool {
-	for _, ele := range list {
-		if ele == "*" {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(list, "*")
 }
 
 func exposeStoreKeysSorted(keysStr []string, keys map[string]*storetypes.KVStoreKey) []storetypes.StoreKey {

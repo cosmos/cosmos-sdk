@@ -42,7 +42,7 @@ func ChainAnteDecorators(chain ...AnteDecorator) AnteHandler {
 	handlerChain[len(chain)] = func(ctx Context, tx Tx, simulate bool) (Context, error) {
 		return ctx, nil
 	}
-	for i := 0; i < len(chain); i++ {
+	for i := range chain {
 		ii := i
 		handlerChain[ii] = func(ctx Context, tx Tx, simulate bool) (Context, error) {
 			return chain[ii].AnteHandle(ctx, tx, simulate, handlerChain[ii+1])
@@ -70,7 +70,7 @@ func ChainPostDecorators(chain ...PostDecorator) PostHandler {
 	handlerChain[len(chain)] = func(ctx Context, tx Tx, simulate, success bool) (Context, error) {
 		return ctx, nil
 	}
-	for i := 0; i < len(chain); i++ {
+	for i := range chain {
 		ii := i
 		handlerChain[ii] = func(ctx Context, tx Tx, simulate, success bool) (Context, error) {
 			return chain[ii].PostHandle(ctx, tx, simulate, success, handlerChain[ii+1])

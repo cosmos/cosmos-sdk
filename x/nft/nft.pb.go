@@ -5,8 +5,8 @@ package nft
 
 import (
 	fmt "fmt"
-	types "github.com/cosmos/cosmos-sdk/codec/types"
 	proto "github.com/cosmos/gogoproto/proto"
+	any "github.com/cosmos/gogoproto/types/any"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -38,7 +38,7 @@ type Class struct {
 	// uri_hash is a hash of the document pointed by uri. Optional
 	UriHash string `protobuf:"bytes,6,opt,name=uri_hash,json=uriHash,proto3" json:"uri_hash,omitempty"`
 	// data is the app specific metadata of the NFT class. Optional
-	Data *types.Any `protobuf:"bytes,7,opt,name=data,proto3" json:"data,omitempty"`
+	Data *any.Any `protobuf:"bytes,7,opt,name=data,proto3" json:"data,omitempty"`
 }
 
 func (m *Class) Reset()         { *m = Class{} }
@@ -116,7 +116,7 @@ func (m *Class) GetUriHash() string {
 	return ""
 }
 
-func (m *Class) GetData() *types.Any {
+func (m *Class) GetData() *any.Any {
 	if m != nil {
 		return m.Data
 	}
@@ -134,7 +134,7 @@ type NFT struct {
 	// uri_hash is a hash of the document pointed by uri
 	UriHash string `protobuf:"bytes,4,opt,name=uri_hash,json=uriHash,proto3" json:"uri_hash,omitempty"`
 	// data is an app specific data of the NFT. Optional
-	Data *types.Any `protobuf:"bytes,10,opt,name=data,proto3" json:"data,omitempty"`
+	Data *any.Any `protobuf:"bytes,10,opt,name=data,proto3" json:"data,omitempty"`
 }
 
 func (m *NFT) Reset()         { *m = NFT{} }
@@ -198,7 +198,7 @@ func (m *NFT) GetUriHash() string {
 	return ""
 }
 
-func (m *NFT) GetData() *types.Any {
+func (m *NFT) GetData() *any.Any {
 	if m != nil {
 		return m.Data
 	}
@@ -710,7 +710,7 @@ func (m *Class) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Data == nil {
-				m.Data = &types.Any{}
+				m.Data = &any.Any{}
 			}
 			if err := m.Data.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -924,7 +924,7 @@ func (m *NFT) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Data == nil {
-				m.Data = &types.Any{}
+				m.Data = &any.Any{}
 			}
 			if err := m.Data.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err

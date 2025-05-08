@@ -1,7 +1,7 @@
 package v4
 
 import (
-	"sort"
+	"slices"
 
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
@@ -59,9 +59,7 @@ func migrateUBDEntries(ctx sdk.Context, store storetypes.KVStore, cdc codec.Bina
 		for k := range entriesAtSameCreationHeight {
 			creationHeights = append(creationHeights, k)
 		}
-
-		sort.Slice(creationHeights, func(i, j int) bool { return creationHeights[i] < creationHeights[j] })
-
+		slices.Sort(creationHeights)
 		ubd.Entries = make([]types.UnbondingDelegationEntry, 0, len(creationHeights))
 
 		for _, h := range creationHeights {

@@ -13,6 +13,6 @@ type (
 	//
 	// NOTE: This is used solely for migration of x/params managed parameters.
 	Subspace interface {
-		Get(ctx sdk.Context, key []byte, ptr interface{})
+		Get(ctx sdk.Context, key []byte, ptr any)
 	}
 )

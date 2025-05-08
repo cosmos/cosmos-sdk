@@ -49,12 +49,9 @@ type MsgClient interface {
 	Undelegate(ctx context.Context, in *MsgUndelegate, opts ...grpc.CallOption) (*MsgUndelegateResponse, error)
 	// CancelUnbondingDelegation defines a method for performing canceling the unbonding delegation
 	// and delegate back to previous validator.
-	//
-	// Since: cosmos-sdk 0.46
 	CancelUnbondingDelegation(ctx context.Context, in *MsgCancelUnbondingDelegation, opts ...grpc.CallOption) (*MsgCancelUnbondingDelegationResponse, error)
 	// UpdateParams defines an operation for updating the x/staking module
 	// parameters.
-	// Since: cosmos-sdk 0.47
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
 }
 
@@ -157,12 +154,9 @@ type MsgServer interface {
 	Undelegate(context.Context, *MsgUndelegate) (*MsgUndelegateResponse, error)
 	// CancelUnbondingDelegation defines a method for performing canceling the unbonding delegation
 	// and delegate back to previous validator.
-	//
-	// Since: cosmos-sdk 0.46
 	CancelUnbondingDelegation(context.Context, *MsgCancelUnbondingDelegation) (*MsgCancelUnbondingDelegationResponse, error)
 	// UpdateParams defines an operation for updating the x/staking module
 	// parameters.
-	// Since: cosmos-sdk 0.47
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }

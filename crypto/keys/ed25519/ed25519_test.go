@@ -139,7 +139,7 @@ func TestMarshalAmino(t *testing.T) {
 	testCases := []struct {
 		desc      string
 		msg       codec.AminoMarshaler
-		typ       interface{}
+		typ       any
 		expBinary []byte
 		expJSON   string
 	}{
@@ -195,9 +195,9 @@ func TestMarshalAmino_BackwardsCompatibility(t *testing.T) {
 
 	testCases := []struct {
 		desc      string
-		tmKey     interface{}
-		ourKey    interface{}
-		marshalFn func(o interface{}) ([]byte, error)
+		tmKey     any
+		ourKey    any
+		marshalFn func(o any) ([]byte, error)
 	}{
 		{
 			"ed25519 private key, binary",

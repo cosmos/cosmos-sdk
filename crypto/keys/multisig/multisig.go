@@ -68,7 +68,7 @@ func (m *LegacyAminoPubKey) VerifyMultisignature(getSignBytes multisigtypes.GetS
 	}
 	// index in the list of signatures which we are concerned with.
 	sigIndex := 0
-	for i := 0; i < size; i++ {
+	for i := range size {
 		if bitarray.GetIndex(i) {
 			si := sig.Signatures[sigIndex]
 			switch si := si.(type) {
@@ -108,7 +108,7 @@ func (m *LegacyAminoPubKey) VerifySignature(msg, sig []byte) bool {
 func (m *LegacyAminoPubKey) GetPubKeys() []cryptotypes.PubKey {
 	if m != nil {
 		pubKeys := make([]cryptotypes.PubKey, len(m.PubKeys))
-		for i := 0; i < len(m.PubKeys); i++ {
+		for i := range m.PubKeys {
 			pubKeys[i] = m.PubKeys[i].GetCachedValue().(cryptotypes.PubKey)
 		}
 		return pubKeys
@@ -130,7 +130,7 @@ func (m *LegacyAminoPubKey) Equals(key cryptotypes.PubKey) bool {
 		return false
 	}
 
-	for i := 0; i < len(pubKeys); i++ {
+	for i := range pubKeys {
 		if !pubKeys[i].Equals(otherPubKeys[i]) {
 			return false
 		}
@@ -163,7 +163,7 @@ func (m *LegacyAminoPubKey) UnpackInterfaces(unpacker types.AnyUnpacker) error {
 func packPubKeys(pubKeys []cryptotypes.PubKey) ([]*types.Any, error) {
 	anyPubKeys := make([]*types.Any, len(pubKeys))
 
-	for i := 0; i < len(pubKeys); i++ {
+	for i := range pubKeys {
 		any, err := types.NewAnyWithValue(pubKeys[i])
 		if err != nil {
 			return nil, err

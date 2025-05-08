@@ -17,6 +17,7 @@ import (
 )
 
 // Simulation operation weights constants
+// will be removed in the future
 const (
 	OpWeightMsgSend           = "op_weight_msg_send"
 	OpWeightMsgMultiSend      = "op_weight_msg_multisend"
@@ -25,6 +26,7 @@ const (
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
+// migrate to the msg factories instead, this method will be removed in the future
 func WeightedOperations(
 	appParams simtypes.AppParams,
 	cdc codec.JSONCodec,
@@ -55,6 +57,7 @@ func WeightedOperations(
 
 // SimulateMsgSend tests and runs a single msg send where both
 // accounts already exist.
+// migrate to the msg factories instead, this method will be removed in the future
 func SimulateMsgSend(
 	txGen client.TxConfig,
 	ak types.AccountKeeper,
@@ -94,6 +97,7 @@ func SimulateMsgSend(
 
 // SimulateMsgSendToModuleAccount tests and runs a single msg send where both
 // accounts already exist.
+// migrate to the msg factories instead, this method will be removed in the future
 func SimulateMsgSendToModuleAccount(
 	txGen client.TxConfig,
 	ak types.AccountKeeper,
@@ -183,6 +187,7 @@ func sendMsgSend(
 
 // SimulateMsgMultiSend tests and runs a single msg multisend, with randomized, capped number of inputs/outputs.
 // all accounts in msg fields exist in state
+// migrate to the msg factories instead, this method will be removed in the future
 func SimulateMsgMultiSend(txGen client.TxConfig, ak types.AccountKeeper, bk keeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
@@ -273,6 +278,7 @@ func SimulateMsgMultiSend(txGen client.TxConfig, ak types.AccountKeeper, bk keep
 }
 
 // SimulateMsgMultiSendToModuleAccount sends coins to Module Accounts
+// migrate to the msg factories instead, this method will be removed in the future
 func SimulateMsgMultiSendToModuleAccount(
 	txGen client.TxConfig,
 	ak types.AccountKeeper,
@@ -346,7 +352,7 @@ func sendMsgMultiSend(
 ) error {
 	accountNumbers := make([]uint64, len(msg.Inputs))
 	sequenceNumbers := make([]uint64, len(msg.Inputs))
-	for i := 0; i < len(msg.Inputs); i++ {
+	for i := range msg.Inputs {
 		addr, err := ak.AddressCodec().StringToBytes(msg.Inputs[i].Address)
 		if err != nil {
 			panic(err)
@@ -427,7 +433,7 @@ func randomSendFields(
 func getModuleAccounts(ak types.AccountKeeper, ctx sdk.Context, moduleAccCount int) []simtypes.Account {
 	moduleAccounts := make([]simtypes.Account, moduleAccCount)
 
-	for i := 0; i < moduleAccCount; i++ {
+	for i := range moduleAccCount {
 		acc := ak.GetModuleAccount(ctx, disttypes.ModuleName)
 		mAcc := simtypes.Account{
 			Address: acc.GetAddress(),

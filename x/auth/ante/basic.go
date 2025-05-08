@@ -1,6 +1,7 @@
 package ante
 
 import (
+	"slices"
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
@@ -168,10 +169,8 @@ func isIncompleteSignature(data signing.SignatureData) bool {
 		if len(data.Signatures) == 0 {
 			return true
 		}
-		for _, s := range data.Signatures {
-			if isIncompleteSignature(s) {
-				return true
-			}
+		if slices.ContainsFunc(data.Signatures, isIncompleteSignature) {
+			return true
 		}
 	}
 

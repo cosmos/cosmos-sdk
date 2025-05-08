@@ -2,7 +2,7 @@ package v4
 
 import (
 	"fmt"
-	"sort"
+	"slices"
 
 	corestoretypes "cosmossdk.io/core/store"
 	"cosmossdk.io/store/prefix"
@@ -100,7 +100,7 @@ func AddProposerAddressToProposal(ctx sdk.Context, storeService corestoretypes.K
 	}
 
 	// sort the proposalIDs
-	sort.Slice(proposalIDs, func(i, j int) bool { return proposalIDs[i] < proposalIDs[j] })
+	slices.Sort(proposalIDs)
 
 	store := runtime.KVStoreAdapter(storeService.OpenKVStore(ctx))
 

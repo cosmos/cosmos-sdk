@@ -142,6 +142,10 @@ func (ms multiStore) SetIAVLDisableFastNode(disable bool) {
 	panic("not implemented")
 }
 
+func (ms multiStore) SetIAVLSyncPruning(syncPruning bool) {
+	panic("not implemented")
+}
+
 func (ms multiStore) SetInitialVersion(version int64) error {
 	panic("not implemented")
 }

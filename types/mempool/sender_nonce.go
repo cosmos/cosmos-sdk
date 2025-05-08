@@ -4,9 +4,9 @@ import (
 	"context"
 	crand "crypto/rand" // #nosec // crypto/rand is used for seed generation
 	"encoding/binary"
-	"errors"
 	"fmt"
 	"math/rand" // #nosec // math/rand is used for random selection and seeded from crypto/rand
+	"slices"
 	"sync"
 
 	"github.com/huandu/skiplist"
@@ -138,15 +138,9 @@ func (snm *SenderNonceMempool) Insert(_ context.Context, tx sdk.Tx) error {
 
 	sig := sigs[0]
 	sender := sdk.AccAddress(sig.PubKey.Address()).String()
-	nonce := sig.Sequence
-
-	// if it's an unordered tx, we use the timeout timestamp instead of the nonce
-	if unordered, ok := tx.(sdk.TxWithUnordered); ok && unordered.GetUnordered() {
-		timestamp := unordered.GetTimeoutTimeStamp().Unix()
-		if timestamp < 0 {
-			return errors.New("invalid timestamp value")
-		}
-		nonce = uint64(timestamp)
+	nonce, err := ChooseNonce(sig.Sequence, tx)
+	if err != nil {
+		return err
 	}
 
 	senderTxs, found := snm.senders[sender]
@@ -235,15 +229,9 @@ func (snm *SenderNonceMempool) Remove(tx sdk.Tx) error {
 
 	sig := sigs[0]
 	sender := sdk.AccAddress(sig.PubKey.Address()).String()
-	nonce := sig.Sequence
-
-	// if it's an unordered tx, we use the timeout timestamp instead of the nonce
-	if unordered, ok := tx.(sdk.TxWithUnordered); ok && unordered.GetUnordered() {
-		timestamp := unordered.GetTimeoutTimeStamp().Unix()
-		if timestamp < 0 {
-			return errors.New("invalid timestamp value")
-		}
-		nonce = uint64(timestamp)
+	nonce, err := ChooseNonce(sig.Sequence, tx)
+	if err != nil {
+		return err
 	}
 
 	senderTxs, found := snm.senders[sender]
@@ -307,5 +295,5 @@ func (i *senderNonceMempoolIterator) Tx() sdk.Tx {
 }
 
 func removeAtIndex[T any](slice []T, index int) []T {
-	return append(slice[:index], slice[index+1:]...)
+	return slices.Delete(slice, index, index+1)
 }

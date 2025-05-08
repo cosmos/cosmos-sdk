@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	"github.com/cosmos/cosmos-sdk/testutils/sims"
+	"github.com/cosmos/cosmos-sdk/testutil/simsx"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
@@ -26,7 +26,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	b.ReportAllocs()
 
 	config := simcli.NewConfigFromFlags()
-	config.ChainID = sims.SimAppChainID
+	config.ChainID = simsx.SimAppChainID
 
 	db, dir, logger, skip, err := simtestutil.SetupSimulation(config, "goleveldb-app-sim", "Simulation", simcli.FlagVerboseValue, true)
 	if err != nil {
@@ -45,10 +45,10 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	appOptions := viper.New()
 	appOptions.SetDefault(flags.FlagHome, DefaultNodeHome)
 
-	app := NewSimApp(logger, db, nil, true, appOptions, interBlockCacheOpt(), baseapp.SetChainID(sims.SimAppChainID))
+	app := NewSimApp(logger, db, nil, true, appOptions, interBlockCacheOpt(), baseapp.SetChainID(simsx.SimAppChainID))
 
 	// run randomized simulation
-	simParams, simErr := simulation.SimulateFromSeedX(
+	simParams, _, simErr := simulation.SimulateFromSeedX(
 		b,
 		log.NewNopLogger(),
 		os.Stdout,

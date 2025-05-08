@@ -4,6 +4,21 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 )
 
+// ABCIHandlers aggregates all ABCI handlers needed for an application.
+type ABCIHandlers struct {
+	InitChainer
+	CheckTxHandler
+	PreBlocker
+	BeginBlocker
+	EndBlocker
+	ProcessProposalHandler
+	PrepareProposalHandler
+	ExtendVoteHandler
+	VerifyVoteExtensionHandler
+	PrepareCheckStater
+	Precommiter
+}
+
 // InitChainer initializes application state at genesis
 type InitChainer func(ctx Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error)
 
@@ -14,14 +29,16 @@ type PrepareCheckStater func(ctx Context)
 // Precommiter runs code during commit immediately before the `deliverState` is written to the `rootMultiStore`.
 type Precommiter func(ctx Context)
 
-// PeerFilter responds to p2p filtering queries from Tendermint
-type PeerFilter func(info string) *abci.ResponseQuery
-
 // ProcessProposalHandler defines a function type alias for processing a proposer
 type ProcessProposalHandler func(Context, *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error)
 
 // PrepareProposalHandler defines a function type alias for preparing a proposal
 type PrepareProposalHandler func(Context, *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error)
+
+// CheckTxHandler defines a function type alias for executing logic before transactions are executed.
+// `RunTx` is a function type alias for executing logic before transactions are executed.
+// The passed in runtx does not override antehandlers, the execution mode is not passed into runtx to avoid overriding the execution mode.
+type CheckTxHandler func(RunTx, *abci.RequestCheckTx) (*abci.ResponseCheckTx, error)
 
 // ExtendVoteHandler defines a function type alias for extending a pre-commit vote.
 type ExtendVoteHandler func(Context, *abci.RequestExtendVote) (*abci.ResponseExtendVote, error)
@@ -74,3 +91,8 @@ type ResponsePreBlock struct {
 func (r ResponsePreBlock) IsConsensusParamsChanged() bool {
 	return r.ConsensusParamsChanged
 }
+
+type RunTx = func(txBytes []byte, tx Tx) (gInfo GasInfo, result *Result, anteEvents []abci.Event, err error)
+
+// PeerFilter responds to p2p filtering queries from Tendermint
+type PeerFilter func(info string) *abci.ResponseQuery

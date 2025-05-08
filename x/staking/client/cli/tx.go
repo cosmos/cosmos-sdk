@@ -113,8 +113,6 @@ where we can get the pubkey using "%s tendermint show-validator"
 	cmd.Flags().String(FlagNodeID, "", "The node's ID")
 	flags.AddTxFlagsToCmd(cmd)
 
-	_ = cmd.MarkFlagRequired(flags.FlagFrom)
-
 	return cmd
 }
 

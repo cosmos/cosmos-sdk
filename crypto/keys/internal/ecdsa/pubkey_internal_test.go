@@ -67,5 +67,5 @@ func (suite *PKSuite) TestMarshal() {
 	pk := new(PubKey)
 	err = pk.Unmarshal(buffer, secp256r1, size)
 	require.NoError(err)
-	require.True(pk.PublicKey.Equal(&suite.pk.PublicKey))
+	require.True(pk.Equal(&suite.pk.PublicKey))
 }

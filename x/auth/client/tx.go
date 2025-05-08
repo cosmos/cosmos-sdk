@@ -62,7 +62,7 @@ func SignTx(txFactory tx.Factory, clientCtx client.Context, name string, txBuild
 		}
 	}
 
-	return tx.Sign(clientCtx.CmdContext, txFactory, name, txBuilder, overwriteSig)
+	return tx.Sign(clientCtx.GetCmdContextWithFallback(), txFactory, name, txBuilder, overwriteSig)
 }
 
 // SignTxWithSignerAddress attaches a signature to a transaction.
@@ -85,7 +85,7 @@ func SignTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, add
 		}
 	}
 
-	return tx.Sign(clientCtx.CmdContext, txFactory, name, txBuilder, overwrite)
+	return tx.Sign(clientCtx.GetCmdContextWithFallback(), txFactory, name, txBuilder, overwrite)
 }
 
 // Read and decode a StdTx from the given filename. Can pass "-" to read from stdin.
@@ -121,7 +121,7 @@ func ReadTxsFromInput(txCfg client.TxConfig, filenames ...string) (scanner *Batc
 				return nil, fmt.Errorf("couldn't read %s: %w", f, err)
 			}
 
-			if _, err := buf.WriteString(string(bytes)); err != nil {
+			if _, err := buf.Write(bytes); err != nil {
 				return nil, fmt.Errorf("couldn't write to merged file: %w", err)
 			}
 		}

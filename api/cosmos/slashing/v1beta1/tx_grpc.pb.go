@@ -35,8 +35,6 @@ type MsgClient interface {
 	Unjail(ctx context.Context, in *MsgUnjail, opts ...grpc.CallOption) (*MsgUnjailResponse, error)
 	// UpdateParams defines a governance operation for updating the x/slashing module
 	// parameters. The authority defaults to the x/gov module account.
-	//
-	// Since: cosmos-sdk 0.47
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
 }
 
@@ -80,8 +78,6 @@ type MsgServer interface {
 	Unjail(context.Context, *MsgUnjail) (*MsgUnjailResponse, error)
 	// UpdateParams defines a governance operation for updating the x/slashing module
 	// parameters. The authority defaults to the x/gov module account.
-	//
-	// Since: cosmos-sdk 0.47
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }

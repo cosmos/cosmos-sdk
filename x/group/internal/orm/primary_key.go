@@ -42,7 +42,7 @@ type PrimaryKeyed interface {
 	//
 	// IMPORTANT: []byte parts are encoded with a single byte length prefix,
 	// so cannot be longer than 255 bytes.
-	PrimaryKeyFields() []interface{}
+	PrimaryKeyFields() []any
 	proto.Message
 }
 
@@ -106,7 +106,7 @@ func (a PrimaryKeyTable) Has(store storetypes.KVStore, primaryKey RowID) bool {
 
 // Contains returns true when an object with same type and primary key is persisted in this table.
 func (a PrimaryKeyTable) Contains(store storetypes.KVStore, obj PrimaryKeyed) bool {
-	if err := assertCorrectType(a.table.model, obj); err != nil {
+	if err := assertCorrectType(a.model, obj); err != nil {
 		return false
 	}
 	return a.table.Has(store, PrimaryKey(obj))
@@ -159,6 +159,6 @@ func (a PrimaryKeyTable) Export(store storetypes.KVStore, dest ModelSlicePtr) (u
 
 // Import clears the table and initializes it from the given data interface{}.
 // data should be a slice of structs that implement PrimaryKeyed.
-func (a PrimaryKeyTable) Import(store storetypes.KVStore, data interface{}, seqValue uint64) error {
+func (a PrimaryKeyTable) Import(store storetypes.KVStore, data any, seqValue uint64) error {
 	return a.table.Import(store, data, seqValue)
 }

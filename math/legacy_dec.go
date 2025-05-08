@@ -305,7 +305,7 @@ func (d LegacyDec) assertInValidRange() {
 // IsInValidRange returns true when the value is between the upper limit of (2^256 * 10^18)
 // and the lower limit of -1*(2^256 * 10^18).
 func (d LegacyDec) IsInValidRange() bool {
-	return !(d.GT(upperLimit) || d.LT(lowerLimit))
+	return !d.GT(upperLimit) && !d.LT(lowerLimit)
 }
 
 // Mul multiplication

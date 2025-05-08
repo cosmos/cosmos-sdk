@@ -7,18 +7,19 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
 	systest "cosmossdk.io/systemtests"
+
+	"github.com/cosmos/cosmos-sdk/testutil"
 )
 
 func TestUnorderedTXDuplicate(t *testing.T) {
 	// scenario: test unordered tx duplicate
 	// given a running chain with a tx in the unordered tx pool
-	// when a new tx with the same hash is broadcasted
-	// then the new tx should be rejected
+	// when a new tx with the same unordered nonce is broadcasted,
+	// then the new tx should be rejected.
 
 	systest.Sut.ResetChain(t)
 	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
@@ -31,22 +32,29 @@ func TestUnorderedTXDuplicate(t *testing.T) {
 
 	systest.Sut.StartChain(t)
 
-	timeoutTimestamp := time.Now().Add(time.Minute)
 	// send tokens
-	cmd := []string{"tx", "bank", "send", account1Addr, account2Addr, "5000stake", "--from=" + account1Addr, "--fees=1stake", fmt.Sprintf("--timeout-timestamp=%v", timeoutTimestamp.Unix()), "--unordered", "--sequence=1", "--note=1"}
-	rsp1 := cli.Run(cmd...)
+	cmd := []string{"tx", "bank", "send", account1Addr, account2Addr, "5000stake", "--from=" + account1Addr, "--fees=1stake", "--timeout-duration=5m", "--unordered", "--note=1", "--chain-id=testing", "--generate-only"}
+	rsp1 := cli.RunCommandWithArgs(cmd...)
+	txFile := testutil.TempFile(t)
+	_, err := txFile.WriteString(rsp1)
+	require.NoError(t, err)
+
+	signCmd := []string{"tx", "sign", txFile.Name(), "--from=" + account1Addr, "--chain-id=testing"}
+	rsp1 = cli.RunCommandWithArgs(signCmd...)
+	signedFile := testutil.TempFile(t)
+	_, err = signedFile.WriteString(rsp1)
+	require.NoError(t, err)
+
+	cmd = []string{"tx", "broadcast", signedFile.Name(), "--chain-id=testing"}
+	rsp1 = cli.RunCommandWithArgs(cmd...)
 	systest.RequireTxSuccess(t, rsp1)
 
-	assertDuplicateErr := func(xt assert.TestingT, gotErr error, gotOutputs ...interface{}) bool {
-		require.Len(t, gotOutputs, 1)
-		output := gotOutputs[0].(string)
-		code := gjson.Get(output, "code")
-		require.True(t, code.Exists())
-		require.Equal(t, int64(19), code.Int()) // 19 == already in mempool.
-		return false                            // always abort
-	}
-	rsp2 := cli.WithRunErrorMatcher(assertDuplicateErr).Run(cmd...)
+	cmd = []string{"tx", "broadcast", signedFile.Name(), "--chain-id=testing"}
+	rsp2, _ := cli.RunOnly(cmd...)
 	systest.RequireTxFailure(t, rsp2)
+	code := gjson.Get(rsp2, "code")
+	require.True(t, code.Exists())
+	require.Equal(t, int64(19), code.Int())
 
 	require.Eventually(t, func() bool {
 		return cli.QueryBalance(account2Addr, "stake") == 5000
@@ -60,7 +68,6 @@ func TestTxBackwardsCompatability(t *testing.T) {
 	var (
 		denom                = "stake"
 		transferAmount int64 = 1000
-		testSeed             = "scene learn remember glide apple expand quality spawn property shoe lamp carry upset blossom draft reject aim file trash miss script joy only measure"
 	)
 	systest.Sut.ResetChain(t)
 
@@ -72,27 +79,10 @@ func TestTxBackwardsCompatability(t *testing.T) {
 	// generate a deterministic account. we'll use this seed again later in the v50 chain.
 	senderAddr := v53CLI.AddKeyFromSeed("account1", testSeed)
 
-	//// Now we're going to switch to a v.50 chain.
-	legacyBinary := systest.WorkDir + "/binaries/v0.50/simd"
-
-	// setup the v50 chain. v53 made some changes to testnet command, so we'll have to adjust here.
-	// this only uses 1 node.
-	legacySut := systest.NewSystemUnderTest("simd", systest.Verbose, 1, 1*time.Second)
-	// we need to explicitly set this here as the constructor infers the exec binary is in the "binaries" directory.
-	legacySut.SetExecBinary(legacyBinary)
-	legacySut.SetTestnetInitializer(systest.LegacyInitializerWithBinary(legacyBinary, legacySut))
-	legacySut.SetupChain()
-	v50CLI := systest.NewCLIWrapper(t, legacySut, systest.Verbose)
-	v50CLI.AddKeyFromSeed("account1", testSeed)
-	legacySut.ModifyGenesisCLI(t,
-		// add some bogus accounts because the v53 chain had 4 nodes which takes account numbers 1-4.
-		[]string{"genesis", "add-genesis-account", v50CLI.AddKey("foo"), "10000000000stake"},
-		[]string{"genesis", "add-genesis-account", v50CLI.AddKey("bar"), "10000000000stake"},
-		[]string{"genesis", "add-genesis-account", v50CLI.AddKey("baz"), "10000000000stake"},
-		// we need our sender to be account 5 because that's how it was signed in the v53 scenario.
-		[]string{"genesis", "add-genesis-account", senderAddr, "10000000000stake"},
-	)
-
+	v50CLI, legacySut := createLegacyBinary(t, initAccount{
+		address: senderAddr,
+		balance: "10000000000stake",
+	})
 	legacySut.StartChain(t)
 
 	bankSendCmdArgs := []string{"tx", "bank", "send", senderAddr, valAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--chain-id=" + v50CLI.ChainID(), "--fees=10stake", "--sign-mode=direct"}
@@ -104,7 +94,7 @@ func TestTxBackwardsCompatability(t *testing.T) {
 	code := gjson.Get(response, "code").Int()
 	require.Equal(t, int64(0), code)
 
-	bankSendCmdArgs = []string{"tx", "bank", "send", senderAddr, valAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--chain-id=" + v50CLI.ChainID(), "--fees=10stake", "--sign-mode=direct", "--unordered", "--timeout-timestamp=10000"}
+	bankSendCmdArgs = []string{"tx", "bank", "send", senderAddr, valAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--chain-id=" + v50CLI.ChainID(), "--fees=10stake", "--sign-mode=direct", "--unordered", "--timeout-duration=8m"}
 	res, ok = v53CLI.RunOnly(bankSendCmdArgs...)
 	require.True(t, ok)
 

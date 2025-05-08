@@ -100,7 +100,7 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		"submit proposal",
 	)
 
-	votingStarted, err := k.Keeper.AddDeposit(ctx, proposal.Id, proposer, msg.GetInitialDeposit())
+	votingStarted, err := k.AddDeposit(ctx, proposal.Id, proposer, msg.GetInitialDeposit())
 	if err != nil {
 		return nil, err
 	}
@@ -160,11 +160,11 @@ func (k msgServer) ExecLegacyContent(goCtx context.Context, msg *v1.MsgExecLegac
 	}
 
 	// Ensure that the content has a respective handler
-	if !k.Keeper.legacyRouter.HasRoute(content.ProposalRoute()) {
+	if !k.legacyRouter.HasRoute(content.ProposalRoute()) {
 		return nil, errors.Wrap(govtypes.ErrNoProposalHandlerExists, content.ProposalRoute())
 	}
 
-	handler := k.Keeper.legacyRouter.GetRoute(content.ProposalRoute())
+	handler := k.legacyRouter.GetRoute(content.ProposalRoute())
 	if err := handler(ctx, content); err != nil {
 		return nil, errors.Wrapf(govtypes.ErrInvalidProposalContent, "failed to run legacy handler %s, %+v", content.ProposalRoute(), err)
 	}
@@ -184,7 +184,7 @@ func (k msgServer) Vote(goCtx context.Context, msg *v1.MsgVote) (*v1.MsgVoteResp
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	err = k.Keeper.AddVote(ctx, msg.ProposalId, accAddr, v1.NewNonSplitVoteOption(msg.Option), msg.Metadata)
+	err = k.AddVote(ctx, msg.ProposalId, accAddr, v1.NewNonSplitVoteOption(msg.Option), msg.Metadata)
 	if err != nil {
 		return nil, err
 	}
@@ -229,7 +229,7 @@ func (k msgServer) VoteWeighted(goCtx context.Context, msg *v1.MsgVoteWeighted) 
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	err := k.Keeper.AddVote(ctx, msg.ProposalId, accAddr, msg.Options, msg.Metadata)
+	err := k.AddVote(ctx, msg.ProposalId, accAddr, msg.Options, msg.Metadata)
 	if err != nil {
 		return nil, err
 	}
@@ -249,7 +249,7 @@ func (k msgServer) Deposit(goCtx context.Context, msg *v1.MsgDeposit) (*v1.MsgDe
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	votingStarted, err := k.Keeper.AddDeposit(ctx, msg.ProposalId, accAddr, msg.Amount)
+	votingStarted, err := k.AddDeposit(ctx, msg.ProposalId, accAddr, msg.Amount)
 	if err != nil {
 		return nil, err
 	}

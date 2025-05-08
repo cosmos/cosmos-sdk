@@ -34,7 +34,7 @@ func genSequenceOfTxs(txGen client.TxConfig,
 	var err error
 
 	txs := make([]sdk.Tx, numToGenerate)
-	for i := 0; i < numToGenerate; i++ {
+	for i := range numToGenerate {
 		txs[i], err = simtestutil.GenSignedMockTx(
 			rand.New(rand.NewSource(time.Now().UnixNano())),
 			txGen,
@@ -50,7 +50,7 @@ func genSequenceOfTxs(txGen client.TxConfig,
 			break
 		}
 
-		for i := 0; i < len(initSeqNums); i++ {
+		for i := range initSeqNums {
 			initSeqNums[i]++
 		}
 	}

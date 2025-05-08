@@ -7,7 +7,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/colltest"
-	coretesting "cosmossdk.io/core/testing"
+	"cosmossdk.io/collections/internal/testutil"
 )
 
 func TestQuad(t *testing.T) {
@@ -19,8 +19,8 @@ func TestQuad(t *testing.T) {
 }
 
 func TestQuadRange(t *testing.T) {
-	ctx := coretesting.Context()
-	sk := coretesting.KVStoreService(ctx, "test")
+	ctx := testutil.Context()
+	sk := testutil.KVStoreService(ctx, "test")
 	schema := collections.NewSchemaBuilder(sk)
 	// this is a key composed of 4 parts: uint64, string, []byte, bool
 	kc := collections.QuadKeyCodec(collections.Uint64Key, collections.StringKey, collections.BytesKey, collections.BoolKey)

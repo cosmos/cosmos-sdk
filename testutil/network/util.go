@@ -128,7 +128,7 @@ func startInProcess(cfg Config, val *Validator) error {
 func collectGenFiles(cfg Config, vals []*Validator, outputDir string) error {
 	genTime := cmttime.Now()
 
-	for i := 0; i < cfg.NumValidators; i++ {
+	for i := range cfg.NumValidators {
 		cmtCfg := vals[i].Ctx.Config
 
 		nodeDir := filepath.Join(outputDir, vals[i].Moniker, "simd")
@@ -194,7 +194,7 @@ func initGenFiles(cfg Config, genAccounts []authtypes.GenesisAccount, genBalance
 	}
 
 	// generate empty genesis files for each validator and save
-	for i := 0; i < cfg.NumValidators; i++ {
+	for i := range cfg.NumValidators {
 		if err := appGenesis.SaveAs(genFiles[i]); err != nil {
 			return err
 		}

@@ -48,7 +48,7 @@ func TestMigrateJSON(t *testing.T) {
 	require.NoError(t, err)
 
 	// Indent the JSON bz correctly.
-	var jsonObj map[string]interface{}
+	var jsonObj map[string]any
 	err = json.Unmarshal(bz, &jsonObj)
 	require.NoError(t, err)
 	indentedBz, err := json.MarshalIndent(jsonObj, "", "\t")

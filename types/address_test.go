@@ -44,7 +44,7 @@ var invalidStrs = []string{
 	types.Bech32PrefixConsPub + "6789",
 }
 
-func (s *addressTestSuite) testMarshal(original, res interface{}, marshal func() ([]byte, error), unmarshal func([]byte) error) {
+func (s *addressTestSuite) testMarshal(original, res any, marshal func() ([]byte, error), unmarshal func([]byte) error) {
 	bz, err := marshal()
 	s.Require().Nil(err)
 	s.Require().Nil(unmarshal(bz))
@@ -94,7 +94,7 @@ func (s *addressTestSuite) TestRandBech32AccAddrConsistency() {
 	pubBz := make([]byte, ed25519.PubKeySize)
 	pub := &ed25519.PubKey{Key: pubBz}
 
-	for i := 0; i < 1000; i++ {
+	for range 1000 {
 		_, err := rand.Read(pub.Key)
 		s.Require().NoError(err)
 
@@ -207,7 +207,7 @@ func (s *addressTestSuite) TestValAddr() {
 	pubBz := make([]byte, ed25519.PubKeySize)
 	pub := &ed25519.PubKey{Key: pubBz}
 
-	for i := 0; i < 20; i++ {
+	for range 20 {
 		_, err := rand.Read(pub.Key)
 		s.Require().NoError(err)
 
@@ -249,7 +249,7 @@ func (s *addressTestSuite) TestConsAddress() {
 	pubBz := make([]byte, ed25519.PubKeySize)
 	pub := &ed25519.PubKey{Key: pubBz}
 
-	for i := 0; i < 20; i++ {
+	for range 20 {
 		_, err := rand.Read(pub.Key)
 		s.Require().NoError(err)
 

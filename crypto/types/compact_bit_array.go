@@ -147,7 +147,7 @@ func (bA *CompactBitArray) StringIndented(indent string) string {
 	lines := []string{}
 	bits := ""
 	size := bA.Count()
-	for i := 0; i < size; i++ {
+	for i := range size {
 		if bA.GetIndex(i) {
 			bits += "x"
 		} else {
@@ -184,7 +184,7 @@ func (bA *CompactBitArray) MarshalJSON() ([]byte, error) {
 
 	bits := `"`
 	size := bA.Count()
-	for i := 0; i < size; i++ {
+	for i := range size {
 		if bA.GetIndex(i) {
 			bits += `x`
 		} else {
@@ -222,7 +222,7 @@ func (bA *CompactBitArray) UnmarshalJSON(bz []byte) error {
 	// Construct new CompactBitArray and copy over.
 	numBits := len(bits)
 	bA2 := NewCompactBitArray(numBits)
-	for i := 0; i < numBits; i++ {
+	for i := range numBits {
 		if bits[i] == 'x' {
 			bA2.SetIndex(i, true)
 		}

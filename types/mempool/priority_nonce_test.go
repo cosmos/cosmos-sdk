@@ -497,7 +497,7 @@ func (s *MempoolTestSuite) TestPriorityTies() {
 		{p: 10, n: 2, a: sa},
 	}
 
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		s.mempool = mempool.DefaultPriorityMempool()
 		var shuffled []txSpec
 		for _, t := range txSet {
@@ -528,7 +528,7 @@ func (s *MempoolTestSuite) TestPriorityTies() {
 }
 
 func (s *MempoolTestSuite) TestRandomTxOrderManyTimes() {
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		s.Run("TestRandomGeneratedTxs", func() {
 			s.TestRandomGeneratedTxs()
 		})
@@ -663,7 +663,7 @@ func (s *MempoolTestSuite) TestRandomWalkTxs() {
 	require.Equal(t, len(ordered), len(selected))
 	var orderedStr, selectedStr string
 
-	for i := 0; i < s.numTxs; i++ {
+	for i := range s.numTxs {
 		otx := ordered[i]
 		stx := selected[i].(testTx)
 		orderedStr = fmt.Sprintf("%s\n%s, %d, %d; %d",
@@ -693,7 +693,7 @@ func genRandomTxs(seed int64, countTx, countAccount int) (res []testTx) {
 		accountNonces[account.Address.String()] = 0
 	}
 
-	for i := 0; i < countTx; i++ {
+	for i := range countTx {
 		addr := accounts[r.Intn(countAccount)].Address
 		priority := int64(r.Intn(maxPriority + 1))
 		nonce := accountNonces[addr.String()]
@@ -971,6 +971,14 @@ func TestNextSenderTx_TxReplacement(t *testing.T) {
 
 	iter := mp.Select(ctx, nil)
 	require.Equal(t, txs[3], iter.Tx())
+}
+
+func TestPriorityNonceMempool_UnorderedTx_FailsForSequence(t *testing.T) {
+	mp := mempool.DefaultPriorityMempool()
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 1)
+	tx := testTx{id: 1, priority: 0, address: accounts[0].Address, nonce: 1, unordered: true}
+	err := mp.Insert(sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger()), tx)
+	require.ErrorContains(t, err, "unordered txs must not have sequence set")
 }
 
 func TestPriorityNonceMempool_UnorderedTx(t *testing.T) {

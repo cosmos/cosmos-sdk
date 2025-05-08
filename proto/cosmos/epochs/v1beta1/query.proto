@@ -1,10 +1,10 @@
-// Since: cosmos-sdk 0.53
 syntax = "proto3";
 package cosmos.epochs.v1beta1;
 
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/epochs/v1beta1/genesis.proto";
+import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/epochs/types";
 
@@ -12,11 +12,13 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/epochs/types";
 service Query {
   // EpochInfos provide running epochInfos
   rpc EpochInfos(QueryEpochInfosRequest) returns (QueryEpochInfosResponse) {
-    option (google.api.http).get = "/cosmos/epochs/v1beta1/epochs";
+    option (google.api.http).get          = "/cosmos/epochs/v1beta1/epochs";
+    option (cosmos_proto.method_added_in) = "cosmos-sdk 0.53";
   }
   // CurrentEpoch provide current epoch of specified identifier
   rpc CurrentEpoch(QueryCurrentEpochRequest) returns (QueryCurrentEpochResponse) {
-    option (google.api.http).get = "/cosmos/epochs/v1beta1/current_epoch";
+    option (google.api.http).get          = "/cosmos/epochs/v1beta1/current_epoch";
+    option (cosmos_proto.method_added_in) = "cosmos-sdk 0.53";
   }
 }
 

@@ -1,6 +1,7 @@
 package v3_test
 
 import (
+	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -26,7 +27,7 @@ func TestMigrateStore(t *testing.T) {
 	ctx := testutil.DefaultContext(bankKey, storetypes.NewTransientStoreKey("transient_test"))
 	store := runtime.KVStoreAdapter(storeService.OpenKVStore(ctx))
 
-	addr := sdk.AccAddress([]byte("addr________________"))
+	addr := sdk.AccAddress("addr________________")
 	prefixAccStore := prefix.NewStore(store, v2.CreateAccountBalancesPrefix(addr))
 
 	balances := sdk.NewCoins(
@@ -94,7 +95,7 @@ func TestMigrateDenomMetaData(t *testing.T) {
 
 	for i := range []int{0, 1} {
 		// keys before 0.45 had denom two times in the key
-		key := append([]byte{}, []byte(metaData[i].Base)...)
+		key := slices.Clone([]byte(metaData[i].Base))
 		key = append(key, []byte(metaData[i].Base)...)
 		bz, err := encCfg.Codec.Marshal(&metaData[i])
 		require.NoError(t, err)

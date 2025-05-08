@@ -8,7 +8,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
-func checkAminoJSON(t *testing.T, src, dst interface{}, isNil bool) {
+func checkAminoJSON(t *testing.T, src, dst any, isNil bool) {
 	t.Helper()
 
 	// Marshal to JSON bytes.

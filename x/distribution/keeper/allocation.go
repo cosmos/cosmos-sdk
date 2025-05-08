@@ -141,3 +141,32 @@ func (k Keeper) AllocateTokensToValidator(ctx context.Context, val stakingtypes.
 	outstanding.Rewards = outstanding.Rewards.Add(tokens...)
 	return k.SetValidatorOutstandingRewards(ctx, valBz, outstanding)
 }
+
+// sendCommunityPoolToExternalPool does the following:
+//
+//	truncate the community pool value (DecCoins) to sdk.Coins
+//	distribute from the distribution module account to the external community pool account
+//	update the bookkept value in x/distribution
+func (k Keeper) sendCommunityPoolToExternalPool(ctx sdk.Context) error {
+	feePool, err := k.FeePool.Get(ctx)
+	if err != nil {
+		return err
+	}
+
+	if feePool.CommunityPool.IsZero() {
+		return nil
+	}
+
+	amt, remaining := feePool.CommunityPool.TruncateDecimal()
+	ctx.Logger().Debug(
+		"sending distribution community pool amount to external pool pool",
+		"pool", k.externalCommunityPool.GetCommunityPoolModule(),
+		"amount", amt.String(),
+		"remaining", remaining.String(),
+	)
+	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.externalCommunityPool.GetCommunityPoolModule(), amt); err != nil {
+		return err
+	}
+
+	return k.FeePool.Set(ctx, types.FeePool{CommunityPool: remaining})
+}

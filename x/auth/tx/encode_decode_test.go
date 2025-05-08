@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
+	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -189,14 +190,14 @@ func TestRejectNonADR027(t *testing.T) {
 	//
 	// Consume "BodyBytes" field.
 	_, _, m := protowire.ConsumeField(txBz)
-	bodyBz = append([]byte{}, txBz[:m]...)
+	bodyBz = slices.Clone(txBz[:m])
 	txBz = txBz[m:] // Skip over "BodyBytes" bytes.
 	// Consume "AuthInfoBytes" field.
 	_, _, m = protowire.ConsumeField(txBz)
-	authInfoBz = append([]byte{}, txBz[:m]...)
+	authInfoBz = slices.Clone(txBz[:m])
 	txBz = txBz[m:] // Skip over "AuthInfoBytes" bytes.
 	// Consume "Signature" field, it's the remaining bytes.
-	sigsBz := append([]byte{}, txBz...)
+	sigsBz := slices.Clone(txBz)
 
 	// bodyBz's length prefix is 5, with `5` as varint encoding. We also try a
 	// longer varint encoding for 5: `133 00`.

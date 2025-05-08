@@ -72,7 +72,7 @@ func TestImportExportQueues(t *testing.T) {
 	)
 	assert.NilError(t, err)
 
-	ctx := s1.app.BaseApp.NewContext(false)
+	ctx := s1.app.NewContext(false)
 	addrs := simtestutil.AddTestAddrs(s1.BankKeeper, s1.StakingKeeper, ctx, 1, valTokens)
 
 	_, err = s1.app.FinalizeBlock(&abci.RequestFinalizeBlock{
@@ -80,7 +80,7 @@ func TestImportExportQueues(t *testing.T) {
 	})
 	assert.NilError(t, err)
 
-	ctx = s1.app.BaseApp.NewContext(false)
+	ctx = s1.app.NewContext(false)
 	// Create two proposals, put the second into the voting period
 	proposal1, err := s1.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", "test", "description", addrs[0], false)
 	assert.NilError(t, err)
@@ -158,7 +158,7 @@ func TestImportExportQueues(t *testing.T) {
 	})
 	assert.NilError(t, err)
 
-	ctx2 := s2.app.BaseApp.NewContext(false)
+	ctx2 := s2.app.NewContext(false)
 
 	params, err = s2.GovKeeper.Params.Get(ctx2)
 	assert.NilError(t, err)

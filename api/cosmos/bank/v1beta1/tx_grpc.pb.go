@@ -37,15 +37,11 @@ type MsgClient interface {
 	MultiSend(ctx context.Context, in *MsgMultiSend, opts ...grpc.CallOption) (*MsgMultiSendResponse, error)
 	// UpdateParams defines a governance operation for updating the x/bank module parameters.
 	// The authority is defined in the keeper.
-	//
-	// Since: cosmos-sdk 0.47
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
 	// SetSendEnabled is a governance operation for setting the SendEnabled flag
 	// on any number of Denoms. Only the entries to add or update should be
 	// included. Entries that already exist in the store, but that aren't
 	// included in this message, will be left unchanged.
-	//
-	// Since: cosmos-sdk 0.47
 	SetSendEnabled(ctx context.Context, in *MsgSetSendEnabled, opts ...grpc.CallOption) (*MsgSetSendEnabledResponse, error)
 }
 
@@ -109,15 +105,11 @@ type MsgServer interface {
 	MultiSend(context.Context, *MsgMultiSend) (*MsgMultiSendResponse, error)
 	// UpdateParams defines a governance operation for updating the x/bank module parameters.
 	// The authority is defined in the keeper.
-	//
-	// Since: cosmos-sdk 0.47
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
 	// SetSendEnabled is a governance operation for setting the SendEnabled flag
 	// on any number of Denoms. Only the entries to add or update should be
 	// included. Entries that already exist in the store, but that aren't
 	// included in this message, will be left unchanged.
-	//
-	// Since: cosmos-sdk 0.47
 	SetSendEnabled(context.Context, *MsgSetSendEnabled) (*MsgSetSendEnabledResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }

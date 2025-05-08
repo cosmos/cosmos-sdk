@@ -36,7 +36,22 @@ Ref: https://github.com/commitizen/conventional-commit-types/blob/v3.0.0/index.j
 
 ## [Unreleased]
 
-## [math/v1.5.0](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.5.0) - 2025-01-06
+## [math/v1.5.3](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.5.3) - 2025-04-04
+
+* [#24375](https://github.com/cosmos/cosmos-sdk/pull/24375) Remove GDA decimal type.  NOTE: the previous v1.5.x family releases have been retracted as they were released with broken features.  This release sets `math` to support everything in the `v1.4.x` family  with testing improvements and dependency bumps
+
+## [RETRACTED math/v1.5.2](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.5.2) - 2025-03-31
+
+### Features
+
+* [#24343](https://github.com/cosmos/cosmos-sdk/pull/24343) feat(math/Dec): Add comparison and utility APIs MinDec, MaxDec, Neg(), Abs(), GT(), GTE(), LT(), LTE().
+* [#24229](https://github.com/cosmos/cosmos-sdk/pull/24229) Add `DecFromLegacyDec` migration function.
+
+## [RETRACTED math/v1.5.1](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.5.1) - 2025-03-28
+
+* [#24185](https://github.com/cosmos/cosmos-sdk/issues/24185) Minor dependency bumps
+
+## [RETRACTED math/v1.5.0](https://github.com/cosmos/cosmos-sdk/releases/tag/math/v1.5.0) - 2025-01-06
 
 * [#11783](https://github.com/cosmos/cosmos-sdk/issues/11783) Upstream GDA based decimal type
 

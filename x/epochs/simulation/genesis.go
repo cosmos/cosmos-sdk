@@ -18,7 +18,7 @@ func RandomizedEpochs(r *rand.Rand) []types.EpochInfo {
 	// Gen max 10 epoch
 	n := r.Intn(11)
 	var epochs []types.EpochInfo
-	for i := 0; i < n; i++ {
+	for i := range n {
 		identifier := "identifier-" + strconv.Itoa(i)
 		duration := GenDuration(r)
 		epoch := types.NewGenesisEpochInfo(identifier, duration)

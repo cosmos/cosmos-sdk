@@ -139,6 +139,9 @@ type GRPCConfig struct {
 	// MaxSendMsgSize defines the max message size in bytes the server can send.
 	// The default value is math.MaxInt32.
 	MaxSendMsgSize int `mapstructure:"max-send-msg-size"`
+
+	// SkipCheckHeader defines if the gRPC server should bypass check header.
+	SkipCheckHeader bool `mapstructure:"skip-check-header"`
 }
 
 // GRPCWebConfig defines configuration for the gRPC-web server.
@@ -244,10 +247,11 @@ func DefaultConfig() *Config {
 			RPCMaxBodyBytes:    1000000,
 		},
 		GRPC: GRPCConfig{
-			Enable:         true,
-			Address:        DefaultGRPCAddress,
-			MaxRecvMsgSize: DefaultGRPCMaxRecvMsgSize,
-			MaxSendMsgSize: DefaultGRPCMaxSendMsgSize,
+			Enable:          true,
+			Address:         DefaultGRPCAddress,
+			MaxRecvMsgSize:  DefaultGRPCMaxRecvMsgSize,
+			MaxSendMsgSize:  DefaultGRPCMaxSendMsgSize,
+			SkipCheckHeader: false,
 		},
 		GRPCWeb: GRPCWebConfig{
 			Enable: true,
@@ -279,7 +283,7 @@ func GetConfig(v *viper.Viper) (Config, error) {
 
 // ValidateBasic returns an error if min-gas-prices field is empty in BaseConfig. Otherwise, it returns nil.
 func (c Config) ValidateBasic() error {
-	if c.BaseConfig.MinGasPrices == "" {
+	if c.MinGasPrices == "" {
 		return sdkerrors.ErrAppConfig.Wrap("set min gas price in app.toml or flag or env variable")
 	}
 	if c.Pruning == pruningtypes.PruningOptionEverything && c.StateSync.SnapshotInterval > 0 {

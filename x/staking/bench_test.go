@@ -30,7 +30,7 @@ func benchmarkValidateGenesis(b *testing.B, n int) {
 
 	validators := make([]types.Validator, 0, n)
 	addressL, pubKeyL := makeRandomAddressesAndPublicKeys(n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		addr, pubKey := addressL[i], pubKeyL[i]
 		validator := testutil.NewValidator(b, addr, pubKey)
 		ni := int64(i + 1)
@@ -50,7 +50,7 @@ func benchmarkValidateGenesis(b *testing.B, n int) {
 }
 
 func makeRandomAddressesAndPublicKeys(n int) (accL []sdk.ValAddress, pkL []*ed25519.PubKey) {
-	for i := 0; i < n; i++ {
+	for range n {
 		pk := ed25519.GenPrivKey().PubKey().(*ed25519.PubKey)
 		pkL = append(pkL, pk)
 		accL = append(accL, sdk.ValAddress(pk.Address()))

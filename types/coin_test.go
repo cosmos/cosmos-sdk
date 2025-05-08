@@ -298,6 +298,56 @@ func (s *coinTestSuite) TestQuoIntCoins() {
 	}
 }
 
+func (s *coinTestSuite) TestIsGTCoin() {
+	cases := []struct {
+		name      string
+		inputOne  sdk.Coin
+		inputTwo  sdk.Coin
+		expected  bool
+		expPanics bool
+	}{
+		{
+			name:      "inputOne > inputTwo => true",
+			inputOne:  sdk.NewInt64Coin(testDenom1, 2),
+			inputTwo:  sdk.NewInt64Coin(testDenom1, 1),
+			expected:  true,
+			expPanics: false,
+		},
+		{
+			name:      "inputOne == inputTwo => false",
+			inputOne:  sdk.NewInt64Coin(testDenom1, 1),
+			inputTwo:  sdk.NewInt64Coin(testDenom1, 1),
+			expected:  false,
+			expPanics: false,
+		},
+		{
+			name:      "inputOne < inputTwo => false",
+			inputOne:  sdk.NewInt64Coin(testDenom1, 1),
+			inputTwo:  sdk.NewInt64Coin(testDenom1, 2),
+			expected:  false,
+			expPanics: false,
+		},
+		{
+			name:      "different denoms => error (invalid coin denominations)",
+			inputOne:  sdk.NewInt64Coin(testDenom1, 1),
+			inputTwo:  sdk.NewInt64Coin(testDenom2, 1),
+			expected:  false,
+			expPanics: true,
+		},
+	}
+
+	for tcIndex, tc := range cases {
+		s.Run(tc.name, func() {
+			if tc.expPanics {
+				s.Require().Panics(func() { tc.inputOne.IsGT(tc.inputTwo) })
+			} else {
+				res := tc.inputOne.IsGT(tc.inputTwo)
+				s.Require().Equal(tc.expected, res, "coin GT relation is incorrect, tc #%d", tcIndex)
+			}
+		})
+	}
+}
+
 func (s *coinTestSuite) TestIsGTECoin() {
 	cases := []struct {
 		inputOne sdk.Coin
@@ -651,7 +701,6 @@ func (s *coinTestSuite) TestSafeSubCoin() {
 	}
 
 	for _, tc := range cases {
-
 		res, err := tc.inputOne.SafeSub(tc.inputTwo)
 		if err != nil {
 			s.Require().Contains(err.Error(), tc.expErrMsg)
@@ -1081,8 +1130,9 @@ func (s *coinTestSuite) TestSearch() {
 			require.Equal(math.NewInt(tc.amountOfGAS), tc.coins.AmountOf("gas"), i)
 			require.Equal(math.NewInt(tc.amountOfMINERAL), tc.coins.AmountOf("mineral"), i)
 			require.Equal(math.NewInt(tc.amountOfTREE), tc.coins.AmountOf("tree"), i)
+			require.Equal(math.NewInt(tc.amountOfTREE), tc.coins.AmountOf("tree"), i)
 		}
-		require.Panics(func() { amountOfCases[0].coins.AmountOf("10Invalid") })
+		require.Equal(math.ZeroInt(), amountOfCases[0].coins.AmountOf("10InvalidDenom"))
 	})
 
 	zeroCoin := sdk.Coin{}
@@ -1282,7 +1332,6 @@ func (s *coinTestSuite) TestCoinValidate() {
 	}
 
 	for _, tc := range testCases {
-
 		t := s.T()
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.coin.Validate()

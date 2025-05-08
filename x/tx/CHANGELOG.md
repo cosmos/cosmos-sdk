@@ -33,6 +33,13 @@ Since v0.13.0, x/tx follows Cosmos SDK semver: https://github.com/cosmos/cosmos-
 
 ## [Unreleased]
 
+## [v0.14.0](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.14.0) - 2025-04-24
+
+* SDK v0.53.x support.
+* [#23708](https://github.com/cosmos/cosmos-sdk/pull/23708) Add unordered transaction support.
+* [#24408](https://github.com/cosmos/cosmos-sdk/pull/24408) Fix add feePayer as signer.
+* [#24409](https://github.com/cosmos/cosmos-sdk/pull/24409) Fallback to injected resolver for placeholder descriptors.
+
 ## [v0.13.8](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.13.8) - 2025-01-28
 
 * [#23513](https://github.com/cosmos/cosmos-sdk/pull/23513), [#23539](https://github.com/cosmos/cosmos-sdk/pull/23539) Add map marshalling support (as option) to Amino JSON encoder. 

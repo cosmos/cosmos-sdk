@@ -20,10 +20,10 @@ func BenchmarkCoinsAdditionIntersect(b *testing.B) {
 			coinsA := Coins(make([]Coin, numCoinsA))
 			coinsB := Coins(make([]Coin, numCoinsB))
 
-			for i := 0; i < numCoinsA; i++ {
+			for i := range numCoinsA {
 				coinsA[i] = NewCoin(coinName(i), math.NewInt(int64(i)))
 			}
-			for i := 0; i < numCoinsB; i++ {
+			for i := range numCoinsB {
 				coinsB[i] = NewCoin(coinName(i), math.NewInt(int64(i)))
 			}
 
@@ -36,7 +36,7 @@ func BenchmarkCoinsAdditionIntersect(b *testing.B) {
 	}
 
 	benchmarkSizes := [][]int{{1, 1}, {5, 5}, {5, 20}, {1, 1000}, {2, 1000}}
-	for i := 0; i < len(benchmarkSizes); i++ {
+	for i := range benchmarkSizes {
 		sizeA := benchmarkSizes[i][0]
 		sizeB := benchmarkSizes[i][1]
 		b.Run(fmt.Sprintf("sizes: A_%d, B_%d", sizeA, sizeB), benchmarkingFunc(sizeA, sizeB))
@@ -52,10 +52,10 @@ func BenchmarkCoinsAdditionNoIntersect(b *testing.B) {
 			coinsA := Coins(make([]Coin, numCoinsA))
 			coinsB := Coins(make([]Coin, numCoinsB))
 
-			for i := 0; i < numCoinsA; i++ {
+			for i := range numCoinsA {
 				coinsA[i] = NewCoin(coinName(numCoinsB+i), math.NewInt(int64(i)))
 			}
-			for i := 0; i < numCoinsB; i++ {
+			for i := range numCoinsB {
 				coinsB[i] = NewCoin(coinName(i), math.NewInt(int64(i)))
 			}
 
@@ -68,7 +68,7 @@ func BenchmarkCoinsAdditionNoIntersect(b *testing.B) {
 	}
 
 	benchmarkSizes := [][]int{{1, 1}, {5, 5}, {5, 20}, {1, 1000}, {2, 1000}, {1000, 2}}
-	for i := 0; i < len(benchmarkSizes); i++ {
+	for i := range benchmarkSizes {
 		sizeA := benchmarkSizes[i][0]
 		sizeB := benchmarkSizes[i][1]
 		b.Run(fmt.Sprintf("sizes: A_%d, B_%d", sizeA, sizeB), benchmarkingFunc(sizeA, sizeB))
@@ -87,14 +87,14 @@ func BenchmarkSumOfCoinAdds(b *testing.B) {
 			addCoins := make([]Coins, numAdds)
 			nonIntersectingCoins := coinsPerAdd - numIntersectingCoins
 
-			for i := 0; i < numAdds; i++ {
+			for i := range numAdds {
 				intersectCoins := make([]Coin, numIntersectingCoins)
 				num := math.NewInt(int64(i))
-				for j := 0; j < numIntersectingCoins; j++ {
+				for j := range numIntersectingCoins {
 					intersectCoins[j] = NewCoin(coinName(j+1_000_000_000), num)
 				}
 				addCoins[i] = intersectCoins
-				for j := 0; j < nonIntersectingCoins; j++ {
+				for j := range nonIntersectingCoins {
 					addCoins[i] = addCoins[i].Add(NewCoin(coinName(i*nonIntersectingCoins+j), num))
 				}
 			}
@@ -131,8 +131,8 @@ func BenchmarkSumOfCoinAdds(b *testing.B) {
 	}{
 		{"MapCoins", MapCoinsSumFn}, {"Coins", CoinsSumFn},
 	}
-	for i := 0; i < len(benchmarkSizes); i++ {
-		for j := 0; j < 2; j++ {
+	for i := range benchmarkSizes {
+		for j := range 2 {
 			coinsPerAdd := benchmarkSizes[i][0]
 			intersectingCoinsPerAdd := benchmarkSizes[i][1]
 			numAdds := benchmarkSizes[i][2]

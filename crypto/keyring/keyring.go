@@ -949,6 +949,10 @@ func (ks keystore) migrate(key string) (*Record, error) {
 	// 1. get the key.
 	item, err := ks.db.Get(key)
 	if err != nil {
+		if key == fmt.Sprintf(".%s", infoSuffix) {
+			return nil, errors.New("no key name or address provided; have you forgotten the --from flag?")
+		}
+
 		return nil, wrapKeyNotFound(err, key)
 	}
 

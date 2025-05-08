@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"bytes"
+	"slices"
 	"testing"
 	"time"
 
@@ -134,7 +135,7 @@ func (s *utilsTestSuite) TestAppendParseBytes() {
 	testByte2 := []byte(test2)
 
 	combinedBytes := sdk.AppendLengthPrefixedBytes(address.MustLengthPrefix(testByte1), address.MustLengthPrefix(testByte2))
-	testCombineBytes := append([]byte{}, address.MustLengthPrefix(testByte1)...)
+	testCombineBytes := slices.Clone(address.MustLengthPrefix(testByte1))
 	testCombineBytes = append(testCombineBytes, address.MustLengthPrefix(testByte2)...)
 	s.Require().Equal(combinedBytes, testCombineBytes)
 

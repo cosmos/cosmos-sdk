@@ -591,7 +591,7 @@ func (suite *KeeperTestSuite) TestGRPCDenomOwners() {
 	suite.mockMintCoins(mintAcc)
 	suite.Require().NoError(keeper.MintCoins(ctx, minttypes.ModuleName, initCoins))
 
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		addr := sdk.AccAddress(fmt.Sprintf("account-%d", i))
 
 		bal := sdk.NewCoins(sdk.NewCoin(
@@ -816,7 +816,7 @@ func (suite *KeeperTestSuite) TestGRPCDenomOwnersByQuery() {
 	suite.mockMintCoins(mintAcc)
 	suite.Require().NoError(keeper.MintCoins(ctx, minttypes.ModuleName, newCoins))
 
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		addr := sdk.AccAddress(fmt.Sprintf("account-%d", i))
 
 		bal := sdk.NewCoins(sdk.NewCoin(

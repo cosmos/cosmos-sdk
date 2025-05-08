@@ -53,7 +53,7 @@ func TestNewAnyWithCustomTypeURLWithErrorNoAllocation(t *testing.T) {
 	}
 }
 
-var sink interface{}
+var sink any
 
 func BenchmarkNewAnyWithCustomTypeURLWithErrorReturned(b *testing.B) {
 	b.ResetTimer()
@@ -71,5 +71,5 @@ func BenchmarkNewAnyWithCustomTypeURLWithErrorReturned(b *testing.B) {
 	if sink == nil {
 		b.Fatal("benchmark didn't run")
 	}
-	sink = (interface{})(nil)
+	sink = (any)(nil)
 }

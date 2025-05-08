@@ -10,6 +10,7 @@ import (
 	"io"
 	"os"
 	"sort"
+	"strings"
 
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"
@@ -115,6 +116,14 @@ func runAddCmdPrepare(cmd *cobra.Command, args []string) error {
 	return runAddCmd(clientCtx, cmd, args, buf)
 }
 
+func checkName(name string) error {
+	if strings.TrimSpace(name) == "" {
+		return errors.New("the provided name is invalid or empty after trimming whitespace")
+	}
+
+	return nil
+}
+
 /*
 input
   - bip39 mnemonic
@@ -129,6 +138,9 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 	var err error
 
 	name := args[0]
+	if err = checkName(name); err != nil {
+		return err
+	}
 	interactive, _ := cmd.Flags().GetBool(flagInteractive)
 	noBackup, _ := cmd.Flags().GetBool(flagNoBackup)
 	showMnemonic := !noBackup
@@ -172,8 +184,14 @@ func runAddCmd(ctx client.Context, cmd *cobra.Command, args []string, inBuf *buf
 				return err
 			}
 
-			for i, keyname := range multisigKeys {
-				k, err := kb.Key(keyname)
+			seenKeys := make(map[string]struct{})
+			for i, keyName := range multisigKeys {
+				if _, ok := seenKeys[keyName]; ok {
+					return fmt.Errorf("duplicate multisig keys: %s", keyName)
+				}
+				seenKeys[keyName] = struct{}{}
+
+				k, err := kb.Key(keyName)
 				if err != nil {
 					return err
 				}

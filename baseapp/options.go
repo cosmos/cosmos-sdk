@@ -180,11 +180,11 @@ func (app *BaseApp) SetInitChainer(initChainer sdk.InitChainer) {
 		panic("SetInitChainer() on sealed BaseApp")
 	}
 
-	app.initChainer = initChainer
+	app.abciHandlers.InitChainer = initChainer
 }
 
 func (app *BaseApp) PreBlocker() sdk.PreBlocker {
-	return app.preBlocker
+	return app.abciHandlers.PreBlocker
 }
 
 func (app *BaseApp) SetPreBlocker(preBlocker sdk.PreBlocker) {
@@ -192,7 +192,7 @@ func (app *BaseApp) SetPreBlocker(preBlocker sdk.PreBlocker) {
 		panic("SetPreBlocker() on sealed BaseApp")
 	}
 
-	app.preBlocker = preBlocker
+	app.abciHandlers.PreBlocker = preBlocker
 }
 
 func (app *BaseApp) SetBeginBlocker(beginBlocker sdk.BeginBlocker) {
@@ -200,7 +200,7 @@ func (app *BaseApp) SetBeginBlocker(beginBlocker sdk.BeginBlocker) {
 		panic("SetBeginBlocker() on sealed BaseApp")
 	}
 
-	app.beginBlocker = beginBlocker
+	app.abciHandlers.BeginBlocker = beginBlocker
 }
 
 func (app *BaseApp) SetEndBlocker(endBlocker sdk.EndBlocker) {
@@ -208,7 +208,7 @@ func (app *BaseApp) SetEndBlocker(endBlocker sdk.EndBlocker) {
 		panic("SetEndBlocker() on sealed BaseApp")
 	}
 
-	app.endBlocker = endBlocker
+	app.abciHandlers.EndBlocker = endBlocker
 }
 
 func (app *BaseApp) SetPrepareCheckStater(prepareCheckStater sdk.PrepareCheckStater) {
@@ -216,7 +216,7 @@ func (app *BaseApp) SetPrepareCheckStater(prepareCheckStater sdk.PrepareCheckSta
 		panic("SetPrepareCheckStater() on sealed BaseApp")
 	}
 
-	app.prepareCheckStater = prepareCheckStater
+	app.abciHandlers.PrepareCheckStater = prepareCheckStater
 }
 
 func (app *BaseApp) SetPrecommiter(precommiter sdk.Precommiter) {
@@ -224,7 +224,7 @@ func (app *BaseApp) SetPrecommiter(precommiter sdk.Precommiter) {
 		panic("SetPrecommiter() on sealed BaseApp")
 	}
 
-	app.precommiter = precommiter
+	app.abciHandlers.Precommiter = precommiter
 }
 
 func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
@@ -338,7 +338,7 @@ func (app *BaseApp) SetProcessProposal(handler sdk.ProcessProposalHandler) {
 	if app.sealed {
 		panic("SetProcessProposal() on sealed BaseApp")
 	}
-	app.processProposal = handler
+	app.abciHandlers.ProcessProposalHandler = handler
 }
 
 // SetPrepareProposal sets the prepare proposal function for the BaseApp.
@@ -347,16 +347,16 @@ func (app *BaseApp) SetPrepareProposal(handler sdk.PrepareProposalHandler) {
 		panic("SetPrepareProposal() on sealed BaseApp")
 	}
 
-	app.prepareProposal = handler
+	app.abciHandlers.PrepareProposalHandler = handler
 }
 
-// SetCheckTx sets the checkTx function for the BaseApp.
+// SetCheckTxHandler sets the checkTx function for the BaseApp.
 func (app *BaseApp) SetCheckTxHandler(handler sdk.CheckTxHandler) {
 	if app.sealed {
 		panic("SetCheckTxHandler() on sealed BaseApp")
 	}
 
-	app.checkTxHandler = handler
+	app.abciHandlers.CheckTxHandler = handler
 }
 
 func (app *BaseApp) SetExtendVoteHandler(handler sdk.ExtendVoteHandler) {
@@ -364,7 +364,7 @@ func (app *BaseApp) SetExtendVoteHandler(handler sdk.ExtendVoteHandler) {
 		panic("SetExtendVoteHandler() on sealed BaseApp")
 	}
 
-	app.extendVote = handler
+	app.abciHandlers.ExtendVoteHandler = handler
 }
 
 func (app *BaseApp) SetVerifyVoteExtensionHandler(handler sdk.VerifyVoteExtensionHandler) {
@@ -372,7 +372,7 @@ func (app *BaseApp) SetVerifyVoteExtensionHandler(handler sdk.VerifyVoteExtensio
 		panic("SetVerifyVoteExtensionHandler() on sealed BaseApp")
 	}
 
-	app.verifyVoteExt = handler
+	app.abciHandlers.VerifyVoteExtensionHandler = handler
 }
 
 // SetStoreMetrics sets the prepare proposal function for the BaseApp.

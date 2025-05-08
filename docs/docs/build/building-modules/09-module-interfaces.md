@@ -27,7 +27,7 @@ Transaction commands typically have their own `tx.go` file that lives within the
 Here is an example from the `x/bank` module:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/bank/client/cli/tx.go#L37-L76
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/bank/client/cli/tx.go#L39-L72
 ```
 
 In the example, `NewSendTxCmd()` creates and returns the transaction command for a transaction that wraps and delivers `MsgSend`. `MsgSend` is the message used to send tokens from one account to another.
@@ -49,13 +49,13 @@ In general, the getter function does the following:
 Each module can implement `NewTxCmd()`, which aggregates all of the transaction commands of the module. Here is an example from the `x/bank` module:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/bank/client/cli/tx.go#L20-L35
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/bank/client/cli/tx.go#L22-L35
 ```
 
 Each module then can also implement a `GetTxCmd()` method that simply returns `NewTxCmd()`. This allows the root command to easily aggregate all of the transaction commands for each module. Here is an example:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/bank/module.go#L84-L86
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/bank/module.go#L88-L90
 ```
 
 ### Query Commands
@@ -96,7 +96,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/auth/client/cli/quer
 Each module must also implement the `GetQueryCmd()` method for `AppModuleBasic` that returns the `GetQueryCmd()` function. This allows for the root command to easily aggregate all of the query commands for each module. Here is an example:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/bank/module.go#L84-L87
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/bank/module.go#L88-L90
 ```
 
 ### Flags
@@ -124,7 +124,7 @@ For more detailed information on creating flags, visit the [Cobra Documentation]
 As mentioned in [transaction commands](#transaction-commands), there is a set of flags that all transaction commands must add. This is done with the `AddTxFlagsToCmd` method defined in the Cosmos SDK's `./client/flags` package.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/client/flags/flags.go#L108-L138
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/client/flags/flags.go#L110-L138
 ```
 
 Since `AddTxFlagsToCmd(cmd *cobra.Command)` includes all of the basic flags required for a transaction command, module developers may choose not to add any of their own (specifying arguments instead may often be more appropriate).
@@ -132,7 +132,7 @@ Since `AddTxFlagsToCmd(cmd *cobra.Command)` includes all of the basic flags requ
 Similarly, there is a `AddQueryFlagsToCmd(cmd *cobra.Command)` to add common flags to a module query command.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/client/flags/flags.go#L95-L106```
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/client/flags/flags.go#L99-L108```
 -->
 
 ## gRPC
@@ -146,7 +146,7 @@ In order to do that, modules must implement `RegisterGRPCGatewayRoutes(clientCtx
 Here's an example from the `x/auth` module:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/auth/module.go#L71-L76
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/auth/module.go#L70-L74
 ```
 
 ## gRPC-gateway REST
@@ -156,7 +156,7 @@ Applications need to support web services that use HTTP requests (e.g. a web wal
 Modules that want to expose REST queries should add `google.api.http` annotations to their `rpc` methods, such as in the example below from the `x/auth` module:
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/auth/v1beta1/query.proto#L14-L89
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/auth/v1beta1/query.proto#L12-L78
 ```
 
 gRPC gateway is started in-process along with the application and CometBFT. It can be enabled or disabled by setting gRPC Configuration `enable` in [`app.toml`](../run-node/01-run-node.md#configuring-the-node-using-apptoml-and-configtoml).

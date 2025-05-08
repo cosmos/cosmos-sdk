@@ -84,7 +84,7 @@ If you know the `x/protocolpool` module account address, you can directly use ba
 :::
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/proto/cosmos/protocolpool/v1/tx.proto#L43-L53
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/protocolpool/v1/tx.proto#L43-L53
 ```
 
 * The msg will fail if the amount cannot be transferred from the sender to the `x/protocolpool` module account.
@@ -100,7 +100,7 @@ func (k Keeper) FundCommunityPool(ctx context.Context, amount sdk.Coins, sender 
 This message distributes funds from the `x/protocolpool` module account to the recipient using `DistributeFromCommunityPool` keeper method.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/proto/cosmos/protocolpool/v1/tx.proto#L58-L69
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/protocolpool/v1/tx.proto#L58-L69
 ```
 
 The message will fail under the following conditions:
@@ -119,7 +119,7 @@ func (k Keeper) DistributeFromCommunityPool(ctx context.Context, amount sdk.Coin
 This message is used to create a continuous fund for a specific recipient. The proposed percentage of funds will be distributed only on withdraw request for the recipient. This fund distribution continues until expiry time is reached or continuous fund request is canceled.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/proto/cosmos/protocolpool/v1/tx.proto#L114-L130
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/protocolpool/v1/tx.proto#L114-L130
 ```
 
 The message will fail under the following conditions:
@@ -133,7 +133,7 @@ If two continuous fund proposals to the same address are created, the previous C
 :::
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/x/protocolpool/keeper/msg_server.go#L103-L166
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/protocolpool/keeper/msg_server.go#L103-L166
 ```
 
 ### MsgCancelContinuousFund
@@ -141,7 +141,7 @@ https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/x/protocolpool/keeper/
 This message is used to cancel an existing continuous fund proposal for a specific recipient. Once canceled, the continuous fund will no longer distribute funds at each begin block, and the state object will be removed. 
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/x/protocolpool/proto/cosmos/protocolpool/v1/tx.proto#L136-L161
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/protocolpool/proto/cosmos/protocolpool/v1/tx.proto#L136-L161
 ```
 
 The message will fail under the following conditions:
@@ -150,7 +150,7 @@ The message will fail under the following conditions:
 - The ContinuousFund for the recipient does not exist.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/x/protocolpool/keeper/msg_server.go#L188-L226
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/protocolpool/keeper/msg_server.go#L188-L226
 ```
 
 ## Client
@@ -158,5 +158,5 @@ https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/x/protocolpool/keeper/
 It takes the advantage of `AutoCLI`
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/x/protocolpool/autocli.go
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/protocolpool/autocli.go
 ```

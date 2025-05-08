@@ -31,7 +31,7 @@ type App struct {
 Cosmos SDK applications should embed the `*runtime.App` struct to leverage the runtime module.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/simapp/app_di.go#L60-L61
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/app_di.go#L60-L61
 ```
 
 ### Configuration
@@ -58,7 +58,7 @@ However it provides a flexible store key configuration through:
 Example configuration:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/simapp/app_config.go#L133-L138
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/app_config.go#L133-L138
 ```
 
 ## Key Features
@@ -76,7 +76,7 @@ Runtime has built-in support for [`depinject`-enabled modules](../building-modul
 Such modules can be registered through the configuration file (often named `app_config.go`), with no additional code required.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/simapp/app_config.go#L210-L216
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/app_config.go#L210-L216
 ```
 
 Additionally, the runtime package facilitates manual module registration through the `RegisterModules` method. This is the primary integration point for modules not registered via configuration.
@@ -98,7 +98,7 @@ These services include `store`, `event manager`, `context`, and `logger`.
 Runtime ensures that services are scoped to their respective modules during the wiring process.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/runtime/module.go#L201-L235
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/runtime/module.go#L201-L235
 ```
 
 Additionally, runtime provides automatic registration of other essential (i.e., gRPC routes) services available to the App:
@@ -108,7 +108,7 @@ Additionally, runtime provides automatic registration of other essential (i.e., 
 * Custom module services
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/runtime/builder.go#L52-L54
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/runtime/builder.go#L52-L54
 ```
 
 ### 4. Application Building
@@ -116,7 +116,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/runtime/builder.go#L52-L5
 The `AppBuilder` type provides a structured way to build applications:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/runtime/builder.go#L14-L19
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/runtime/builder.go#L14-L19
 ```
 
 Key building steps:
@@ -130,7 +130,7 @@ Key building steps:
 An application only needs to call `AppBuilder.Build` to create a fully configured application (`runtime.App`).
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/runtime/builder.go#L26-L57
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/runtime/builder.go#L26-L57
 ```
 
 More information on building applications can be found in the [next section](./02-app-building.md).

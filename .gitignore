@@ -52,6 +52,8 @@ vagrant
 .dir-locals.el
 .vscode
 
+.venv
+
 # Depinject & Graphviz
 dependency-graph.png
 debug_container.dot

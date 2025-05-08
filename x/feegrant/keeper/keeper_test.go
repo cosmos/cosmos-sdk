@@ -290,7 +290,7 @@ func (suite *KeeperTestSuite) TestUseGrantedFee() {
 	// verify: feegrant is revoked
 	_, err = suite.feegrantKeeper.GetAllowance(ctx, suite.addrs[0], suite.addrs[2])
 	suite.Error(err)
-	suite.Contains(err.Error(), "fee-grant not found")
+	suite.Contains(err.Error(), "not found")
 }
 
 func (suite *KeeperTestSuite) TestIterateGrants() {
@@ -320,6 +320,7 @@ func (suite *KeeperTestSuite) TestIterateGrants() {
 func (suite *KeeperTestSuite) TestPruneGrants() {
 	eth := sdk.NewCoins(sdk.NewInt64Coin("eth", 123))
 	now := suite.ctx.BlockTime()
+	oneDay := now.AddDate(0, 0, 1)
 	oneYearExpiry := now.AddDate(1, 0, 0)
 
 	testCases := []struct {
@@ -333,24 +334,35 @@ func (suite *KeeperTestSuite) TestPruneGrants() {
 		postRun   func()
 	}{
 		{
-			name:    "grant not pruned from state",
-			ctx:     suite.ctx,
-			granter: suite.addrs[0],
-			grantee: suite.addrs[1],
+			name:      "grant pruned from state after a block: error",
+			ctx:       suite.ctx,
+			granter:   suite.addrs[0],
+			grantee:   suite.addrs[1],
+			expErrMsg: "not found",
 			allowance: &feegrant.BasicAllowance{
 				SpendLimit: suite.atom,
 				Expiration: &now,
 			},
 		},
 		{
-			name:      "grant pruned from state after a block: error",
+			name:    "grant not pruned from state before expiration: no error",
+			ctx:     suite.ctx,
+			granter: suite.addrs[2],
+			grantee: suite.addrs[1],
+			allowance: &feegrant.BasicAllowance{
+				SpendLimit: eth,
+				Expiration: &oneDay,
+			},
+		},
+		{
+			name:      "grant pruned from state after a day: error",
 			ctx:       suite.ctx.WithBlockTime(now.AddDate(0, 0, 1)),
-			granter:   suite.addrs[2],
-			grantee:   suite.addrs[1],
+			granter:   suite.addrs[1],
+			grantee:   suite.addrs[0],
 			expErrMsg: "not found",
 			allowance: &feegrant.BasicAllowance{
 				SpendLimit: eth,
-				Expiration: &now,
+				Expiration: &oneDay,
 			},
 		},
 		{
@@ -365,7 +377,7 @@ func (suite *KeeperTestSuite) TestPruneGrants() {
 		},
 		{
 			name:      "grant pruned from state after a year: error",
-			ctx:       suite.ctx.WithBlockTime(now.AddDate(1, 0, 1)),
+			ctx:       suite.ctx.WithBlockTime(now.AddDate(1, 0, 0)),
 			granter:   suite.addrs[1],
 			grantee:   suite.addrs[2],
 			expErrMsg: "not found",
@@ -381,7 +393,6 @@ func (suite *KeeperTestSuite) TestPruneGrants() {
 			grantee: suite.addrs[2],
 			allowance: &feegrant.BasicAllowance{
 				SpendLimit: eth,
-				Expiration: &oneYearExpiry,
 			},
 		},
 	}
@@ -401,6 +412,7 @@ func (suite *KeeperTestSuite) TestPruneGrants() {
 				suite.Error(err)
 				suite.Contains(err.Error(), tc.expErrMsg)
 			} else {
+				suite.NoError(err)
 				suite.NotNil(grant)
 			}
 			if tc.postRun != nil {

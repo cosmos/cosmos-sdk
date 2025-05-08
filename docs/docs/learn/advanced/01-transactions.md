@@ -95,7 +95,7 @@ There are also _expert_ screens, which will only be displayed if the user has ch
 
 Data is formatted using a set of `ValueRenderer` which the SDK provides defaults for all the known messages and value types. Chain developers can also opt to implement their own `ValueRenderer` for a type/message if they'd like to display information differently.
 
-If you wish to learn more, please refer to [ADR-050](../../build/architecture/adr-050-sign-mode-textual.md).
+If you wish to learn more, please refer to [ADR-050](../../../architecture/adr-050-sign-mode-textual.md).
 
 #### Custom Sign modes
 

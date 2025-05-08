@@ -4,13 +4,9 @@ sidebar_position: 1
 
 # Modules depinject-ready
 
-:::note Pre-requisite Readings
-
-* [Depinject Documentation](../packages/01-depinject.md)
-
 :::
 
-[`depinject`](../packages/01-depinject.md) is used to wire any module in `app.go`.
+[`depinject`](https://pkg.go.dev/cosmossdk.io/depinject) is used to wire any module in `app.go`.
 All core modules are already configured to support dependency injection.
 
 To work with `depinject` a module must define its configuration and requirements so that `depinject` can provide the right dependencies.

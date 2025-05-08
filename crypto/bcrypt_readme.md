@@ -2,9 +2,9 @@
 
 The present Bcrypt security parameter used is 12, which should take about a quarter of a second on midrange consumer hardware (see [Benchmarking](#benchmarking) section below).
 
-For some background into security parameter considerations, see [here](https://auth0.com/blog/hashing-in-action-understanding-bcrypt/) and [here](https://security.stackexchange.com/questions/3959/recommended-of-iterations-when-using-pkbdf2-sha256/3993#3993).
+For some background into security parameter considerations, see [here](https://auth0.com/blog/hashing-in-action-understanding-bcrypt/).
 
-Given our security model, where an attacker would need to already have access to a victim's computer and copy the `~/.gaiacli` directory (as opposed to e.g. web authentication), this parameter choice seems sufficient for the time being. Bcrypt always generates a 448-bit key, so the security in practice is determined by the length & complexity of a user's password and the time taken to generate a Bcrypt key from their password (which we can choose with the security parameter). Users would be well-advised to use difficult-to-guess passwords.
+Given our security model, where an attacker would need to already have access to a victim's computer and copy the `~/.gaia` directory (as opposed to e.g. web authentication), this parameter choice seems sufficient for the time being. Bcrypt always generates a 448-bit key, so the security in practice is determined by the length & complexity of a user's password and the time taken to generate a Bcrypt key from their password (which we can choose with the security parameter). Users would be well-advised to use difficult-to-guess passwords.
 
 ## Benchmarking
 

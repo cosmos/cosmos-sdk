@@ -16,8 +16,8 @@ sidebar_position: 1
     * [Class](#class)
     * [NFT](#nft)
 * [State](#state)
-    * [Class](#class-1)
-    * [NFT](#nft-1)
+    * [Class](#class)
+    * [NFT](#nft)
     * [NFTOfClassByOwner](#nftofclassbyowner)
     * [Owner](#owner)
     * [TotalSupply](#totalsupply)
@@ -88,4 +88,4 @@ The message handling should fail if:
 
 ## Events
 
-The nft module emits proto events defined in [the Protobuf reference](https://buf.build/cosmos/cosmos-sdk/docs/main:cosmos.nft.v1beta1).
+The nft module emits proto events defined in [the Proto](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/nft/v1beta1/event.proto).

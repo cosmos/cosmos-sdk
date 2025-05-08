@@ -289,7 +289,7 @@ More specifically, any special account address must not have a length equal to 2
 
 ## Appendix: Consulting session
 
-End of Dec 2020 we had a session with [Alan Szepieniec](https://scholar.google.be/citations?user=4LyZn8oAAAAJ&hl=en) to consult the approach presented above.
+End of Dec 2020 we had a session with [Alan Szepieniec](https://www.linkedin.com/in/alan-szepieniec-7b1957142) to consult the approach presented above.
 
 Alan general observations:
 

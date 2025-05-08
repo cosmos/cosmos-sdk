@@ -3,7 +3,7 @@
 This package introduces some new helper types to simplify message construction for simulations (sims).  The focus is on better dev UX for new message factories.
 Technically, they are adapters that build upon the existing sims framework.
 
-## [Message factory](https://github.com/cosmos/cosmos-sdk/blob/main/simsx/msg_factory.go)
+## [Message factory](https://github.com/cosmos/cosmos-sdk/blob/main/testutil/simsx/msg_factory.go)
 
 Simple functions as factories for dedicated sdk.Msgs. They have access to the context, reporter and test data environment. For example:
 
@@ -18,7 +18,7 @@ func MsgSendFactory() simsx.SimMsgFactoryFn[*types.MsgSend] {
 }
 ```
 
-## [Sims registry](https://github.com/cosmos/cosmos-sdk/blob/main/simsx/registry.go)
+## [Sims registry](https://github.com/cosmos/cosmos-sdk/blob/main/testutil/simsx/registry.go)
 
 A new helper to register message factories with a default weight value. They can be overwritten by a parameters file as before. The registry is passed to the AppModule type. For example:
 
@@ -29,7 +29,7 @@ func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Re
 }
 ```
 
-## [Reporter](https://github.com/cosmos/cosmos-sdk/blob/main/simsx/reporter.go)
+## [Reporter](https://github.com/cosmos/cosmos-sdk/blob/main/testutil/simsx/reporter.go)
 
 The reporter is a flow control structure that can be used in message factories to skip execution at any point. The idea is similar to the testing.T Skip in Go stdlib. Internally, it converts skip, success and failure events to legacy sim messages.
 The reporter also provides some capability to print an execution summary.
@@ -42,6 +42,6 @@ if reporter.IsSkipped() {
 }
 ```
 
-## [Test data environment](https://github.com/cosmos/cosmos-sdk/blob/main/simsx/environment.go)
+## [Test data environment](https://github.com/cosmos/cosmos-sdk/blob/main/testutil/simsx/environment.go)
 
 The test data environment provides simple access to accounts and other test data used in most message factories.  It also encapsulates some app internals like bank keeper or address codec.

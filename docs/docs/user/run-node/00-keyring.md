@@ -92,7 +92,7 @@ one you may want to use specifically to encrypt the password store.
 
 The `kwallet` backend uses `KDE Wallet Manager`, which comes installed by default on the
 GNU/Linux distributions that ships KDE as default desktop environment. Please refer to
-[KWallet Handbook](https://docs.kde.org/stable5/en/kdeutils/kwallet5/index.html) for more
+[KWallet Handbook](https://apps.kde.org/kwalletmanager5/) for more
 information.
 
 ### The `keyctl` backend

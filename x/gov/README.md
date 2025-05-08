@@ -7,10 +7,10 @@ sidebar_position: 1
 ## Abstract
 
 This paper specifies the Governance module of the Cosmos SDK, which was first
-described in the [Cosmos Whitepaper](https://cosmos.network/about/whitepaper) in
+described in the [Cosmos Whitepaper](https://cosmos.network/whitepaper) in
 June 2016.
 
-The module enables Cosmos SDK based blockchain to support an on-chain governance
+The module enables Cosmos SDK-based blockchain to support an on-chain governance
 system. In this system, holders of the native staking token of the chain can vote
 on proposals on a 1 token 1 vote basis. Next is a list of features the module
 currently supports:
@@ -36,19 +36,18 @@ staking token of the chain.
     * [Proposal submission](#proposal-submission)
     * [Deposit](#deposit)
     * [Vote](#vote)
-    * [Software Upgrade](#software-upgrade)
 * [State](#state)
     * [Proposals](#proposals)
     * [Parameters and base types](#parameters-and-base-types)
-    * [Deposit](#deposit-1)
+    * [Deposit](#deposit)
     * [ValidatorGovInfo](#validatorgovinfo)
     * [Stores](#stores)
     * [Proposal Processing Queue](#proposal-processing-queue)
     * [Legacy Proposal](#legacy-proposal)
 * [Messages](#messages)
-    * [Proposal Submission](#proposal-submission-1)
-    * [Deposit](#deposit-2)
-    * [Vote](#vote-1)
+    * [Proposal Submission](#proposal-submission)
+    * [Deposit](#deposit)
+    * [Vote](#vote)
 * [Events](#events)
     * [EndBlocker](#endblocker)
     * [Handlers](#handlers)
@@ -58,8 +57,8 @@ staking token of the chain.
     * [gRPC](#grpc)
     * [REST](#rest)
 * [Metadata](#metadata)
-    * [Proposal](#proposal-3)
-    * [Vote](#vote-5)
+    * [Proposal](#proposal)
+    * [Vote](#vote)
 * [Future Improvements](#future-improvements)
 
 ## Concepts

@@ -14,21 +14,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type (
-	ExecMode uint8
-)
-
-const (
-	ExecModeCheck               = ExecMode(sdk.ExecModeCheck)               // Check a transaction
-	ExecModeReCheck             = ExecMode(sdk.ExecModeReCheck)             // Recheck a (pending) transaction after a commit
-	ExecModeSimulate            = ExecMode(sdk.ExecModeSimulate)            // Simulate a transaction
-	ExecModePrepareProposal     = ExecMode(sdk.ExecModePrepareProposal)     // Prepare a block proposal
-	ExecModeProcessProposal     = ExecMode(sdk.ExecModeProcessProposal)     // Process a block proposal
-	ExecModeVoteExtension       = ExecMode(sdk.ExecModeVoteExtension)       // Extend or verify a pre-commit vote
-	ExecModeVerifyVoteExtension = ExecMode(sdk.ExecModeVerifyVoteExtension) // Verify a vote extension
-	ExecModeFinalize            = ExecMode(sdk.ExecModeFinalize)            // Finalize a block proposal
-)
-
 type Manager struct {
 	// volatile states:
 	//
@@ -64,18 +49,18 @@ func NewManager(gasConfig config.GasConfig) *Manager {
 	}
 }
 
-func (mgr *Manager) GetState(mode ExecMode) *State {
+func (mgr *Manager) GetState(mode sdk.ExecMode) *State {
 	mgr.stateMut.RLock()
 	defer mgr.stateMut.RUnlock()
 
 	switch mode {
-	case ExecModeFinalize:
+	case sdk.ExecModeFinalize:
 		return mgr.finalizeBlockState
 
-	case ExecModePrepareProposal:
+	case sdk.ExecModePrepareProposal:
 		return mgr.prepareProposalState
 
-	case ExecModeProcessProposal:
+	case sdk.ExecModeProcessProposal:
 		return mgr.processProposalState
 
 	default:
@@ -87,7 +72,7 @@ func (mgr *Manager) GetState(mode ExecMode) *State {
 // multi-store (i.e. a CacheMultiStore) and a new Context with the same
 // multi-store branch, and provided header.
 func (mgr *Manager) SetState(
-	mode ExecMode,
+	mode sdk.ExecMode,
 	unbranchedStore storetypes.CommitMultiStore,
 	h cmtproto.Header,
 	logger log.Logger,
@@ -111,17 +96,17 @@ func (mgr *Manager) SetState(
 	defer mgr.stateMut.Unlock()
 
 	switch mode {
-	case ExecModeCheck:
+	case sdk.ExecModeCheck:
 		baseState.SetContext(baseState.Context().WithIsCheckTx(true).WithMinGasPrices(mgr.gasConfig.MinGasPrices))
 		mgr.checkState = baseState
 
-	case ExecModePrepareProposal:
+	case sdk.ExecModePrepareProposal:
 		mgr.prepareProposalState = baseState
 
-	case ExecModeProcessProposal:
+	case sdk.ExecModeProcessProposal:
 		mgr.processProposalState = baseState
 
-	case ExecModeFinalize:
+	case sdk.ExecModeFinalize:
 		mgr.finalizeBlockState = baseState
 
 	default:
@@ -129,21 +114,21 @@ func (mgr *Manager) SetState(
 	}
 }
 
-func (mgr *Manager) ClearState(mode ExecMode) {
+func (mgr *Manager) ClearState(mode sdk.ExecMode) {
 	mgr.stateMut.Lock()
 	defer mgr.stateMut.Unlock()
 
 	switch mode {
-	case ExecModeCheck:
+	case sdk.ExecModeCheck:
 		mgr.checkState = nil
 
-	case ExecModePrepareProposal:
+	case sdk.ExecModePrepareProposal:
 		mgr.prepareProposalState = nil
 
-	case ExecModeProcessProposal:
+	case sdk.ExecModeProcessProposal:
 		mgr.processProposalState = nil
 
-	case ExecModeFinalize:
+	case sdk.ExecModeFinalize:
 		mgr.finalizeBlockState = nil
 
 	default:

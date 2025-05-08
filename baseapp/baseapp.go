@@ -38,8 +38,6 @@ import (
 )
 
 type (
-	execMode = state.ExecMode
-
 	// StoreLoader defines a customizable function to control how we load the
 	// CommitMultiStore from disk. This is useful for state migration, when
 	// loading a datastore written with an older version of the software. In
@@ -49,14 +47,14 @@ type (
 )
 
 const (
-	execModeCheck               = state.ExecModeCheck               // Check a transaction
-	execModeReCheck             = state.ExecModeReCheck             // Recheck a (pending) transaction after a commit
-	execModeSimulate            = state.ExecModeSimulate            // Simulate a transaction
-	execModePrepareProposal     = state.ExecModePrepareProposal     // Prepare a block proposal
-	execModeProcessProposal     = state.ExecModeProcessProposal     // Process a block proposal
-	execModeVoteExtension       = state.ExecModeVoteExtension       // Extend or verify a pre-commit vote
-	execModeVerifyVoteExtension = state.ExecModeVerifyVoteExtension // Verify a vote extension
-	execModeFinalize            = state.ExecModeFinalize            // Finalize a block proposal
+	execModeCheck               = sdk.ExecModeCheck               // Check a transaction
+	execModeReCheck             = sdk.ExecModeReCheck             // Recheck a (pending) transaction after a commit
+	execModeSimulate            = sdk.ExecModeSimulate            // Simulate a transaction
+	execModePrepareProposal     = sdk.ExecModePrepareProposal     // Prepare a block proposal
+	execModeProcessProposal     = sdk.ExecModeProcessProposal     // Process a block proposal
+	execModeVoteExtension       = sdk.ExecModeVoteExtension       // Extend or verify a pre-commit vote
+	execModeVerifyVoteExtension = sdk.ExecModeVerifyVoteExtension // Verify a vote extension
+	execModeFinalize            = sdk.ExecModeFinalize            // Finalize a block proposal
 )
 
 var _ servertypes.ABCI = (*BaseApp)(nil)
@@ -592,7 +590,7 @@ func (app *BaseApp) getBlockGasMeter(ctx sdk.Context) storetypes.GasMeter {
 }
 
 // retrieve the context for the tx w/ txBytes and other memoized values.
-func (app *BaseApp) getContextForTx(mode execMode, txBytes []byte) sdk.Context {
+func (app *BaseApp) getContextForTx(mode sdk.ExecMode, txBytes []byte) sdk.Context {
 	app.mu.Lock()
 	defer app.mu.Unlock()
 
@@ -615,7 +613,7 @@ func (app *BaseApp) getContextForTx(mode execMode, txBytes []byte) sdk.Context {
 
 	if mode == execModeSimulate {
 		ctx, _ = ctx.CacheContext()
-		ctx = ctx.WithExecMode(sdk.ExecMode(execModeSimulate))
+		ctx = ctx.WithExecMode(execModeSimulate)
 	}
 
 	return ctx
@@ -628,11 +626,9 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 	msCache := ms.CacheMultiStore()
 	if msCache.TracingEnabled() {
 		msCache = msCache.SetTracingContext(
-			storetypes.TraceContext(
-				map[string]any{
-					"txHash": fmt.Sprintf("%X", tmhash.Sum(txBytes)),
-				},
-			),
+			map[string]any{
+				"txHash": fmt.Sprintf("%X", tmhash.Sum(txBytes)),
+			},
 		).(storetypes.CacheMultiStore)
 	}
 
@@ -760,7 +756,7 @@ func (app *BaseApp) endBlock(_ context.Context) (sdk.EndBlock, error) {
 // and execute successfully. An error is returned otherwise.
 // both txbytes and the decoded tx are passed to runTx to avoid the state machine encoding the tx and decoding the transaction twice
 // passing the decoded tx to runTX is optional, it will be decoded if the tx is nil
-func (app *BaseApp) runTx(mode execMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) {
+func (app *BaseApp) runTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) {
 	// NOTE: GasWanted should be returned by the AnteHandler. GasUsed is
 	// determined by the GasMeter. We need access to the context to get the gas
 	// meter, so we initialize upfront.
@@ -949,7 +945,7 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.G
 // and DeliverTx. An error is returned if any single message fails or if a
 // Handler does not exist for a given message route. Otherwise, a reference to a
 // Result is returned. The caller must not commit state if an error is returned.
-func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Message, mode execMode) (*sdk.Result, error) {
+func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Message, mode sdk.ExecMode) (*sdk.Result, error) {
 	events := sdk.EmptyEvents()
 	var msgResponses []*codectypes.Any
 

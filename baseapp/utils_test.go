@@ -326,7 +326,7 @@ func testLoadVersionHelper(t *testing.T, app *baseapp.BaseApp, expectedHeight in
 
 // note: we use reflection in this test because we do not want to make the baseapp state publicly available
 
-func reflectGetStateCtx(app *baseapp.BaseApp, mode state.ExecMode) sdk.Context {
+func reflectGetStateCtx(app *baseapp.BaseApp, mode sdk.ExecMode) sdk.Context {
 	v := reflect.ValueOf(app).Elem()
 	f := v.FieldByName("stateManager")
 	rf := reflect.NewAt(f.Type(), unsafe.Pointer(f.UnsafeAddr())).Elem()
@@ -336,11 +336,11 @@ func reflectGetStateCtx(app *baseapp.BaseApp, mode state.ExecMode) sdk.Context {
 }
 
 func getCheckStateCtx(app *baseapp.BaseApp) sdk.Context {
-	return reflectGetStateCtx(app, state.ExecModeCheck)
+	return reflectGetStateCtx(app, sdk.ExecModeCheck)
 }
 
 func getFinalizeBlockStateCtx(app *baseapp.BaseApp) sdk.Context {
-	return reflectGetStateCtx(app, state.ExecModeFinalize)
+	return reflectGetStateCtx(app, sdk.ExecModeFinalize)
 }
 
 func parseTxMemo(t *testing.T, tx sdk.Tx) (counter int64, failOnAnte bool) {

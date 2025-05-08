@@ -339,9 +339,9 @@ func (app *BaseApp) ApplySnapshotChunk(req *abci.RequestApplySnapshotChunk) (*ab
 // and only the AnteHandler is executed. State is persisted to the BaseApp's
 // internal CheckTx state if the AnteHandler passes. Otherwise, the ResponseCheckTx
 // will contain relevant error information. Regardless of tx execution outcome,
-// the ResponseCheckTx will contain relevant gas execution context.
+// the ResponseCheckTx will contain the relevant gas execution context.
 func (app *BaseApp) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, error) {
-	var mode execMode
+	var mode sdk.ExecMode
 
 	switch req.Type {
 	case abci.CheckTxType_New:
@@ -355,14 +355,14 @@ func (app *BaseApp) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, er
 	}
 
 	if app.abciHandlers.CheckTxHandler == nil {
-		gInfo, result, anteEvents, err := app.runTx(mode, req.Tx, nil)
+		gasInfo, result, anteEvents, err := app.runTx(mode, req.Tx, nil)
 		if err != nil {
-			return sdkerrors.ResponseCheckTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, anteEvents, app.trace), nil
+			return sdkerrors.ResponseCheckTxWithEvents(err, gasInfo.GasWanted, gasInfo.GasUsed, anteEvents, app.trace), nil
 		}
 
 		return &abci.ResponseCheckTx{
-			GasWanted: int64(gInfo.GasWanted), // TODO: Should type accept unsigned ints?
-			GasUsed:   int64(gInfo.GasUsed),   // TODO: Should type accept unsigned ints?
+			GasWanted: int64(gasInfo.GasWanted), // TODO: Should type accept unsigned ints?
+			GasUsed:   int64(gasInfo.GasUsed),   // TODO: Should type accept unsigned ints?
 			Log:       result.Log,
 			Data:      result.Data,
 			Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),

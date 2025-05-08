@@ -53,12 +53,12 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
-
-replace (
-	cosmossdk.io/api => ../api
-	cosmossdk.io/depinject => ../depinject
-	cosmossdk.io/math => ../math
-)
+//
+//replace (
+//	cosmossdk.io/api => ../api
+//	cosmossdk.io/depinject => ../depinject
+//	cosmossdk.io/math => ../math
+//)
 
 // Version tagged too early and incompatible with v0.50 (latest at the time of tagging)
 retract v0.12.0

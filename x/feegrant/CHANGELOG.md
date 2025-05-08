@@ -25,6 +25,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Bug Fixes
+
+* [#24134](https://github.com/cosmos/cosmos-sdk/pull/24134) Add validation to prevent duplicate fee grants in genesis state.
+
 ## [v0.2.0](https://github.com/cosmos/cosmos-sdk/releases/tag/x/feegrant/v0.2.0) - 2025-04-24
 
 * SDK v0.53.x support.

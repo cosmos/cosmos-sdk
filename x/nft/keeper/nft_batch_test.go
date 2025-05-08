@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 
-	"cosmossdk.io/x/nft" //nolint:staticcheck // deprecated and to be removed
+	"github.com/cosmos/cosmos-sdk/x/nft" //nolint:staticcheck // deprecated and to be removed
 )
 
 func (s *TestSuite) TestBatchMint() {

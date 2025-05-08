@@ -5,10 +5,10 @@ import (
 
 	"cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
-	"cosmossdk.io/x/nft" //nolint:staticcheck // deprecated and to be removed
 
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/nft" //nolint:staticcheck // deprecated and to be removed
 )
 
 // Mint defines a method for minting a new nft

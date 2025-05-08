@@ -3,7 +3,7 @@ package keeper
 import (
 	context "context"
 
-	"cosmossdk.io/x/circuit/types"
+	"github.com/cosmos/cosmos-sdk/x/circuit/types"
 )
 
 func (k *Keeper) ExportGenesis(ctx context.Context) (data *types.GenesisState) {

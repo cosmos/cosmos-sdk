@@ -13,9 +13,6 @@ import (
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/errors"
-	"cosmossdk.io/x/nft"            //nolint:staticcheck // deprecated and to be removed
-	"cosmossdk.io/x/nft/keeper"     //nolint:staticcheck // deprecated and to be removed
-	"cosmossdk.io/x/nft/simulation" //nolint:staticcheck // deprecated and to be removed
 
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -24,6 +21,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/nft"            //nolint:staticcheck // deprecated and to be removed
+	"github.com/cosmos/cosmos-sdk/x/nft/keeper"     //nolint:staticcheck // deprecated and to be removed
+	"github.com/cosmos/cosmos-sdk/x/nft/simulation" //nolint:staticcheck // deprecated and to be removed
 )
 
 var (

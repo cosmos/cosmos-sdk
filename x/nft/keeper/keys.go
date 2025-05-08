@@ -3,11 +3,10 @@ package keeper
 import (
 	"bytes"
 
-	"cosmossdk.io/x/nft" //nolint:staticcheck // deprecated and to be removed
-	"cosmossdk.io/x/nft/internal/conv"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
+	"github.com/cosmos/cosmos-sdk/x/nft" //nolint:staticcheck // deprecated and to be removed
+	"github.com/cosmos/cosmos-sdk/x/nft/internal/conv"
 )
 
 var (

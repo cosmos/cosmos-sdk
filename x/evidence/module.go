@@ -15,11 +15,6 @@ import (
 	"cosmossdk.io/core/comet"
 	store "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
-	eviclient "cosmossdk.io/x/evidence/client"
-	"cosmossdk.io/x/evidence/client/cli"
-	"cosmossdk.io/x/evidence/keeper"
-	"cosmossdk.io/x/evidence/simulation"
-	"cosmossdk.io/x/evidence/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -27,6 +22,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	eviclient "github.com/cosmos/cosmos-sdk/x/evidence/client"
+	"github.com/cosmos/cosmos-sdk/x/evidence/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
+	"github.com/cosmos/cosmos-sdk/x/evidence/simulation"
+	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 var (

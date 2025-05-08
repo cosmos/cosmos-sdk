@@ -99,7 +99,7 @@ Finally, a few more important parameters:
 * `minGasPrices`: This parameter defines the minimum gas prices accepted by the node. This is a
   **local** parameter, meaning each full-node can set a different `minGasPrices`. It is used in the
   `AnteHandler` during [`CheckTx`](#checktx), mainly as a spam protection mechanism. The transaction
-  enters the [mempool](https://github.com/cometbft/cometbft/blob/v1.x-experimental/spec/abci/abci++_basic_concepts.md#mempool-methods)
+  enters the [mempool](https://github.com/cometbft/cometbft/blob/v1.x/spec/abci/abci++_basic_concepts.md#mempool-methods)
   only if the gas prices of the transaction are greater than one of the minimum gas price in
   `minGasPrices` (e.g. if `minGasPrices == 1uatom,1photon`, the `gas-price` of the transaction must be
   greater than `1uatom` OR `1photon`).
@@ -230,7 +230,7 @@ Just like the `msgServiceRouter`, the `grpcQueryRouter` is initialized with all 
 
 ## Main ABCI 2.0 Messages
 
-The [Application-Blockchain Interface](https://github.com/cometbft/cometbft/blob/v1.x-experimental/spec/abci/abci++_basic_concepts.md) (ABCI) is a generic interface that connects a state-machine with a consensus engine to form a functional full-node. It can be wrapped in any language, and needs to be implemented by each application-specific blockchain built on top of an ABCI-compatible consensus engine like CometBFT.
+The [Application-Blockchain Interface](https://github.com/cometbft/cometbft/blob/v1.x/spec/abci/abci++_basic_concepts.md) (ABCI) is a generic interface that connects a state-machine with a consensus engine to form a functional full-node. It can be wrapped in any language, and needs to be implemented by each application-specific blockchain built on top of an ABCI-compatible consensus engine like CometBFT.
 
 The consensus engine handles two main tasks:
 
@@ -264,7 +264,7 @@ Note that, unlike `CheckTx()`, `PrepareProposal` process `sdk.Msg`s, so it can d
 
 It's important to note that `PrepareProposal` complements the `ProcessProposal` method which is executed after this method. The combination of these two methods means that it is possible to guarantee that no invalid transactions are ever committed. Furthermore, such a setup can give rise to other interesting use cases such as Oracles, threshold decryption and more.
 
-`PrepareProposal` returns a response to the underlying consensus engine of type [`abci.ResponseCheckTx`](https://github.com/cometbft/cometbft/blob/v1.x-experimental/spec/abci/abci++_methods.md#processproposal). The response contains:
+`PrepareProposal` returns a response to the underlying consensus engine of type [`abci.ResponseCheckTx`](https://github.com/cometbft/cometbft/blob/v1.x/spec/abci/abci++_methods.md#processproposal). The response contains:
 
 *   `Code (uint32)`: Response Code. `0` if successful.
 *   `Data ([]byte)`: Result bytes, if any.
@@ -291,7 +291,7 @@ CometBFT calls it when it receives a proposal and the CometBFT algorithm has not
 
 However, developers must exercise greater caution when using these methods. Incorrectly coding these methods could affect liveness as CometBFT is unable to receive 2/3 valid precommits to finalize a block.
 
-`ProcessProposal` returns a response to the underlying consensus engine of type [`abci.ResponseCheckTx`](https://github.com/cometbft/cometbft/blob/v1.x-experimental/spec/abci/abci++_methods.md#processproposal). The response contains:
+`ProcessProposal` returns a response to the underlying consensus engine of type [`abci.ResponseCheckTx`](https://github.com/cometbft/cometbft/blob/v1.x/spec/abci/abci++_methods.md#processproposal). The response contains:
 
 *   `Code (uint32)`: Response Code. `0` if successful.
 *   `Data ([]byte)`: Result bytes, if any.
@@ -338,7 +338,7 @@ be rejected. In any case, the sender's account will not actually pay the fees un
 is actually included in a block, because `checkState` never gets committed to the main state. The
 `checkState` is reset to the latest state of the main state each time a blocks gets [committed](#commit).
 
-`CheckTx` returns a response to the underlying consensus engine of type [`abci.ResponseCheckTx`](https://github.com/cometbft/cometbft/blob/v1.x-experimental/spec/abci/abci++_methods.md#checktx).
+`CheckTx` returns a response to the underlying consensus engine of type [`abci.ResponseCheckTx`](https://github.com/cometbft/cometbft/blob/v1.x/spec/abci/abci++_methods.md#checktx).
 The response contains:
 
 * `Code (uint32)`: Response Code. `0` if successful.
@@ -426,9 +426,9 @@ Note, when `PostHandler`s fail, the state from `runMsgs` is also reverted, effec
 
 ### InitChain
 
-The [`InitChain` ABCI message](https://github.com/cometbft/cometbft/blob/v1.x-experimental/spec/abci/abci++_basic_concepts.md#method-overview) is sent from the underlying CometBFT engine when the chain is first started. It is mainly used to **initialize** parameters and state like:
+The [`InitChain` ABCI message](https://github.com/cometbft/cometbft/blob/v1.x/spec/abci/abci++_basic_concepts.md#method-overview) is sent from the underlying CometBFT engine when the chain is first started. It is mainly used to **initialize** parameters and state like:
 
-* [Consensus Parameters](https://github.com/cometbft/cometbft/blob/v1.x-experimental/spec/abci/abci++_app_requirements.md#consensus-parameters) via `setConsensusParams`.
+* [Consensus Parameters](https://github.com/cometbft/cometbft/blob/v1.x/spec/abci/abci++_app_requirements.md#consensus-parameters) via `setConsensusParams`.
 * [`checkState` and `finalizeBlockState`](#state-updates) via `setState`.
 * The [block gas meter](../beginner/04-gas-fees.md#block-gas-meter), with infinite gas to process genesis transactions.
 
@@ -437,7 +437,7 @@ Finally, the `InitChain(req abci.RequestInitChain)` method of `BaseApp` calls th
 
 ### FinalizeBlock
 
-The [`FinalizeBlock` ABCI message](https://github.com/cometbft/cometbft/blob/v1.x-experimental/spec/abci/abci++_basic_concepts.md#method-overview) is sent from the underlying CometBFT engine when a block proposal created by the correct proposer is received. The previous `BeginBlock, DeliverTx and Endblock` calls are private methods on the BaseApp struct.
+The [`FinalizeBlock` ABCI message](https://github.com/cometbft/cometbft/blob/v1.x/spec/abci/abci++_basic_concepts.md#method-overview) is sent from the underlying CometBFT engine when a block proposal created by the correct proposer is received. The previous `BeginBlock, DeliverTx and Endblock` calls are private methods on the BaseApp struct.
 
 
 ```go reference 
@@ -460,7 +460,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/baseapp/abci.go#L869
 
 * Initialize the [block gas meter](../beginner/04-gas-fees.md#block-gas-meter) with the `maxGas` limit. The `gas` consumed within the block cannot go above `maxGas`. This parameter is defined in the application's consensus parameters.
 * Run the application's [`beginBlocker()`](../beginner/00-app-anatomy.md#beginblocker-and-endblocker), which mainly runs the [`BeginBlocker()`](../../build/building-modules/06-beginblock-endblock.md#beginblock) method of each of the modules.
-* Set the [`VoteInfos`](https://github.com/cometbft/cometbft/blob/v1.x-experimental/spec/abci/abci++_methods.md#voteinfo) of the application, i.e. the list of validators whose _precommit_ for the previous block was included by the proposer of the current block. This information is carried into the [`Context`](./02-context.md) so that it can be used during transaction execution and EndBlock.
+* Set the [`VoteInfos`](https://github.com/cometbft/cometbft/blob/v1.x/spec/abci/abci++_methods.md#voteinfo) of the application, i.e. the list of validators whose _precommit_ for the previous block was included by the proposer of the current block. This information is carried into the [`Context`](./02-context.md) so that it can be used during transaction execution and EndBlock.
 
 #### Transaction Execution
 

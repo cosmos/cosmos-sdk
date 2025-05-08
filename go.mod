@@ -174,6 +174,12 @@ require (
 // replace (
 // 	<temporary replace>
 // )
+replace (
+	cosmossdk.io/api => ./api
+	cosmossdk.io/log => ./log
+)
+
+replace cosmossdk.io/store => ./store
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (

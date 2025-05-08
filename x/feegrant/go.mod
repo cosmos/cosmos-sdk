@@ -159,3 +159,10 @@ require (
 	pgregory.net/rapid v1.2.0 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
+
+replace (
+	cosmossdk.io/api => ../../api
+	cosmossdk.io/store => ../../store
+	// Temporary replace until the next 0.53 tag
+	github.com/cosmos/cosmos-sdk => ../..
+)

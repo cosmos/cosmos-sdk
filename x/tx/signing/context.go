@@ -301,6 +301,11 @@ func (c *Context) makeGetSignersFunc(descriptor protoreflect.MessageDescriptor) 
 				}
 				return arr, nil
 			}
+		case protoreflect.BytesKind:
+			fieldGetters[i] = func(msg proto.Message, arr [][]byte) ([][]byte, error) {
+				addrBz := msg.ProtoReflect().Get(field).Bytes()
+				return append(arr, addrBz), nil
+			}
 		default:
 			return nil, fmt.Errorf("unexpected field type %s for field %s in message %s", field.Kind(), fieldName, descriptor.FullName())
 		}

@@ -68,7 +68,7 @@ type BaseApp struct {
 	name              string                      // application name from abci.BlockInfo
 	db                dbm.DB                      // common DB backend
 	cms               storetypes.CommitMultiStore // Main (uncached) state
-	qms               storetypes.MultiStore       // Optional alternative multistore for querying only.
+	qms               storetypes.RootMultiStore   // Optional alternative multistore for querying only.
 	storeLoader       StoreLoader                 // function to handle store loading, may be overridden with SetStoreLoader()
 	grpcQueryRouter   *GRPCQueryRouter            // router for redirecting gRPC query calls
 	msgServiceRouter  *MsgServiceRouter           // router for redirecting Msg service messages
@@ -198,6 +198,9 @@ type BaseApp struct {
 	//
 	// SAFETY: it's safe to do if validators validate the total gas wanted in the `ProcessProposal`, which is the case in the default handler.
 	disableBlockGasMeter bool
+
+	// Optional alternative tx executor, used for block-stm parallel transaction execution.
+	txExecutor TxExecutor
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -318,6 +321,9 @@ func (app *BaseApp) MountStores(keys ...storetypes.StoreKey) {
 		case *storetypes.MemoryStoreKey:
 			app.MountStore(key, storetypes.StoreTypeMemory)
 
+		case *storetypes.ObjectStoreKey:
+			app.MountStore(key, storetypes.StoreTypeObject)
+
 		default:
 			panic(fmt.Sprintf("Unrecognized store key type :%T", key))
 		}
@@ -353,6 +359,16 @@ func (app *BaseApp) MountMemoryStores(keys map[string]*storetypes.MemoryStoreKey
 	for _, key := range skeys {
 		memKey := keys[key]
 		app.MountStore(memKey, storetypes.StoreTypeMemory)
+	}
+}
+
+// MountObjectStores mounts all transient object stores with the BaseApp's internal
+// commit multi-store.
+func (app *BaseApp) MountObjectStores(keys map[string]*storetypes.ObjectStoreKey) {
+	skeys := slices.Sorted(maps.Keys(keys))
+	for _, key := range skeys {
+		memKey := keys[key]
+		app.MountStore(memKey, storetypes.StoreTypeObject)
 	}
 }
 
@@ -674,7 +690,7 @@ func (app *BaseApp) getBlockGasMeter(ctx sdk.Context) storetypes.GasMeter {
 }
 
 // retrieve the context for the tx w/ txBytes and other memoized values.
-func (app *BaseApp) getContextForTx(mode execMode, txBytes []byte) sdk.Context {
+func (app *BaseApp) getContextForTx(mode execMode, txBytes []byte, txIndex int) sdk.Context {
 	app.mu.Lock()
 	defer app.mu.Unlock()
 
@@ -684,7 +700,8 @@ func (app *BaseApp) getContextForTx(mode execMode, txBytes []byte) sdk.Context {
 	}
 	ctx := modeState.Context().
 		WithTxBytes(txBytes).
-		WithGasMeter(storetypes.NewInfiniteGasMeter())
+		WithGasMeter(storetypes.NewInfiniteGasMeter()).
+		WithTxIndex(txIndex)
 	// WithVoteInfos(app.voteInfos) // TODO: identify if this is needed
 
 	ctx = ctx.WithIsSigverifyTx(app.sigverifyTx)
@@ -769,7 +786,11 @@ func (app *BaseApp) beginBlock(_ *abci.RequestFinalizeBlock) (sdk.BeginBlock, er
 	return resp, nil
 }
 
-func (app *BaseApp) deliverTx(tx []byte) *abci.ExecTxResult {
+func (app *BaseApp) deliverTx(tx []byte, memTx sdk.Tx, txIndex int) *abci.ExecTxResult {
+	return app.deliverTxWithMultiStore(tx, memTx, txIndex, nil, nil)
+}
+
+func (app *BaseApp) deliverTxWithMultiStore(tx []byte, memTx sdk.Tx, txIndex int, txMultiStore storetypes.MultiStore, incarnationCache map[string]any) *abci.ExecTxResult {
 	gInfo := sdk.GasInfo{}
 	resultStr := "successful"
 
@@ -782,7 +803,7 @@ func (app *BaseApp) deliverTx(tx []byte) *abci.ExecTxResult {
 		telemetry.SetGauge(float32(gInfo.GasWanted), "tx", "gas", "wanted")
 	}()
 
-	gInfo, result, anteEvents, err := app.runTx(execModeFinalize, tx, nil)
+	gInfo, result, anteEvents, err := app.runTxWithMultiStore(execModeFinalize, tx, memTx, txIndex, txMultiStore, incarnationCache)
 	if err != nil {
 		resultStr = "failed"
 		resp = sdkerrors.ResponseExecTxResultWithEvents(
@@ -842,12 +863,20 @@ func (app *BaseApp) endBlock(_ context.Context) (sdk.EndBlock, error) {
 // both txbytes and the decoded tx are passed to runTx to avoid the state machine encoding the tx and decoding the transaction twice
 // passing the decoded tx to runTX is optional, it will be decoded if the tx is nil
 func (app *BaseApp) runTx(mode execMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) {
+	return app.runTxWithMultiStore(mode, txBytes, tx, -1, nil, nil)
+}
+
+func (app *BaseApp) runTxWithMultiStore(mode execMode, txBytes []byte, tx sdk.Tx, txIndex int, txMultiStore storetypes.MultiStore, incarnationCache map[string]any) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) {
 	// NOTE: GasWanted should be returned by the AnteHandler. GasUsed is
 	// determined by the GasMeter. We need access to the context to get the gas
 	// meter, so we initialize upfront.
 	var gasWanted uint64
 
-	ctx := app.getContextForTx(mode, txBytes)
+	ctx := app.getContextForTx(mode, txBytes, txIndex)
+	ctx = ctx.WithIncarnationCache(incarnationCache)
+	if txMultiStore != nil {
+		ctx = ctx.WithMultiStore(txMultiStore)
+	}
 	ms := ctx.MultiStore()
 
 	// only run the tx if there is block gas remaining
@@ -957,7 +986,7 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.G
 
 	switch mode {
 	case execModeCheck:
-		err = app.mempool.Insert(ctx, tx)
+		err = app.mempool.InsertWithGasWanted(ctx, tx, gasWanted)
 		if err != nil {
 			return gInfo, nil, anteEvents, err
 		}
@@ -1039,6 +1068,8 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 		if mode != execModeFinalize && mode != execModeSimulate {
 			break
 		}
+
+		ctx = ctx.WithMsgIndex(i)
 
 		handler := app.msgServiceRouter.Handler(msg)
 		if handler == nil {
@@ -1151,18 +1182,18 @@ func (app *BaseApp) PrepareProposalVerifyTx(tx sdk.Tx) ([]byte, error) {
 // ProcessProposal state internally will be discarded. <nil, err> will be
 // returned if the transaction cannot be decoded. <Tx, nil> will be returned if
 // the transaction is valid, otherwise <Tx, err> will be returned.
-func (app *BaseApp) ProcessProposalVerifyTx(txBz []byte) (sdk.Tx, error) {
+func (app *BaseApp) ProcessProposalVerifyTx(txBz []byte) (sdk.Tx, uint64, error) {
 	tx, err := app.txDecoder(txBz)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	_, _, _, err = app.runTx(execModeProcessProposal, txBz, tx)
+	gInfo, _, _, err := app.runTx(execModeProcessProposal, txBz, tx)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return tx, nil
+	return tx, gInfo.GasWanted, nil
 }
 
 func (app *BaseApp) TxDecode(txBytes []byte) (sdk.Tx, error) {

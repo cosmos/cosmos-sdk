@@ -15,6 +15,7 @@ func TestDuplicateGrantsInGenesis(t *testing.T) {
 	granter := sdk.AccAddress("granter_address____").String()
 	grantee := sdk.AccAddress("grantee_address____").String()
 
+	// Create a BasicAllowance for testing
 	allowance := &BasicAllowance{
 		SpendLimit: sdk.NewCoins(sdk.NewCoin("foo", math.NewInt(100))),
 	}

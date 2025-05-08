@@ -44,7 +44,7 @@ func SetQueryGasLimit(queryGasLimit uint64) func(*BaseApp) {
 		queryGasLimit = math.MaxUint64
 	}
 
-	return func(bapp *BaseApp) { bapp.queryGasLimit = queryGasLimit }
+	return func(bapp *BaseApp) { bapp.gasConfig.QueryGasLimit = queryGasLimit }
 }
 
 // SetHaltHeight returns a BaseApp option function that sets the halt block height.

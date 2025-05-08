@@ -9,12 +9,16 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	storemetrics "cosmossdk.io/store/metrics"
+
+	"github.com/cosmos/cosmos-sdk/baseapp/config"
+	"github.com/cosmos/cosmos-sdk/baseapp/state"
 )
 
 // Ensures that error checks are performed before sealing the app.
 // Please see https://github.com/cosmos/cosmos-sdk/issues/18726
 func TestNilCmsCheckBeforeSeal(t *testing.T) {
 	app := new(BaseApp)
+	app.stateManager = state.NewManager(config.GasConfig{})
 
 	// 1. Invoking app.Init with a nil cms MUST not seal the app
 	// and should return an error firstly, which can later be reversed.

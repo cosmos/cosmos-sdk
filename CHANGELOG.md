@@ -38,8 +38,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+
+* (baseapp) [#24655](https://github.com/cosmos/cosmos-sdk/pull/24655) Add mutex locks for `state` and make `lastCommitInfo` atomic to prevent race conditions between `Commit` and `CreateQueryContext`.
+
 ### Bug Fixes
 
+* (client, client/rpc, x/auth/tx) [#24551](https://github.com/cosmos/cosmos-sdk/pull/24551) Handle cancellation properly when supplying context to client methods.
 * (x/authz) [#24638](https://github.com/cosmos/cosmos-sdk/pull/24638) Fixed a minor bug where the grant key was cast as a string and dumped directly into the error message leading to an error string possibly containing invalid UTF-8.
 
 ### Deprecated
@@ -47,10 +52,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/nft) [#24575](https://github.com/cosmos/cosmos-sdk/pull/24575) Deprecate the `x/nft` module in the Cosmos SDK repository.  This module will not be maintained to the extent that our core modules will and will be kept in a [legacy repo](https://github.com/cosmos/cosmos-legacy).
 * (x/group) [#24571](https://github.com/cosmos/cosmos-sdk/pull/24571) Deprecate the `x/group` module in the Cosmos SDK repository.  This module will not be maintained to the extent that our core modules will and will be kept in a [legacy repo](https://github.com/cosmos/cosmos-legacy).
 * (types) [#24664](https://github.com/cosmos/cosmos-sdk/pull/24664) Deprecate the `Invariant` type in the Cosmos SDK.
-
-### Bug Fixes
-
-* (client, client/rpc, x/auth/tx) [#24551](https://github.com/cosmos/cosmos-sdk/pull/24551) Handle cancellation properly when supplying context to client methods.
 
 ## [v0.53.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.0) - 2025-04-29
 

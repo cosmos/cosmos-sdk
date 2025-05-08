@@ -22,6 +22,8 @@ Each entry must include the Github issue reference in the following format:
 
 ## [Unreleased]
 
+* [#24720](https://github.com/cosmos/cosmos-sdk/pull/24720) add `VerboseModeLogger` extension interface and `VerboseLevel` configuration option for increasing log verbosity during sensitive operations such as upgrades.
+
 ## [v1.5.1](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v1.5.1) - 2025-03-07
 
 * [#23928](https://github.com/cosmos/cosmos-sdk/pull/23928) Bump sonic json library to [v1.3.1](https://github.com/bytedance/sonic/releases/tag/v1.13.1) for Go 1.24 compatibility.

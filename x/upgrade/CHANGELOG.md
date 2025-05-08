@@ -28,6 +28,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * [#24543](https://github.com/cosmos/cosmos-sdk/issues/24543) Use `telemetry.MetricKeyPreBlocker` metric key instead of `telemetry.MetricKeyBeginBlocker` in `PreBlocker`.
+* [#24720](https://github.com/cosmos/cosmos-sdk/pull/24720) switch to verbose mode logging when calling upgrading handlers.
+
 
 ## [v0.2.0](https://github.com/cosmos/cosmos-sdk/releases/tag/x/upgrade/v0.2.0) - 2025-04-24
 

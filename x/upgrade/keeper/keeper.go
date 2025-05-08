@@ -461,9 +461,23 @@ func (k Keeper) ApplyUpgrade(ctx context.Context, plan types.Plan) error {
 		return err
 	}
 
+	// Enable verbose mode logging, if possible
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	verboseLogger, haveVerboseLogger := sdkCtx.Logger().(log.VerboseModeLogger)
+	if haveVerboseLogger {
+		verboseLogger.SetVerboseMode(true)
+	}
+
+	verboseLogger.Info("Starting upgrade", "name", plan.Name, "height", plan.Height)
+
 	updatedVM, err := handler(ctx, plan, vm)
 	if err != nil {
 		return err
+	}
+
+	// Disable verbose mode logging
+	if haveVerboseLogger {
+		verboseLogger.SetVerboseMode(false)
 	}
 
 	err = k.SetModuleVersionMap(ctx, updatedVM)

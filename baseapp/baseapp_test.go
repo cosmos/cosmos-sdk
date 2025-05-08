@@ -6,7 +6,6 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"math/rand"
-	"sync"
 	"testing"
 	"time"
 
@@ -52,7 +51,7 @@ type (
 		baseApp   *baseapp.BaseApp
 		cdc       *codec.ProtoCodec
 		txConfig  client.TxConfig
-		logBuffer *safeBuffer
+		logBuffer *bytes.Buffer
 	}
 
 	SnapshotsConfig struct {
@@ -64,31 +63,6 @@ type (
 	}
 )
 
-type safeBuffer struct {
-	b  *bytes.Buffer
-	mu sync.Mutex
-}
-
-func newSafeBuffer() *safeBuffer {
-	return &safeBuffer{
-		b:  new(bytes.Buffer),
-		mu: sync.Mutex{},
-	}
-}
-
-func (b *safeBuffer) Write(p []byte) (n int, err error) {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	return b.b.Write(p)
-}
-
-// Add any other methods you need to access
-func (b *safeBuffer) String() string {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	return b.b.String()
-}
-
 func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite {
 	t.Helper()
 
@@ -97,7 +71,7 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
 	db := dbm.NewMemDB()
-	logBuffer := newSafeBuffer()
+	logBuffer := new(bytes.Buffer)
 	logger := log.NewLogger(logBuffer, log.ColorOption(false))
 
 	app := baseapp.NewBaseApp(t.Name(), logger, db, txConfig.TxDecoder(), opts...)

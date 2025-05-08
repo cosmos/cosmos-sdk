@@ -8,7 +8,7 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/core/appmodule"
@@ -204,10 +204,10 @@ func TestHandleDoubleSign(t *testing.T) {
 	assert.NilError(t, err)
 	oldTokens := val.GetTokens()
 
-	nci := NewCometInfo(abci.RequestFinalizeBlock{
+	nci := NewCometInfo(abci.FinalizeBlockRequest{
 		Misbehavior: []abci.Misbehavior{{
 			Validator: abci.Validator{Address: valpubkey.Address(), Power: power},
-			Type:      abci.MisbehaviorType_DUPLICATE_VOTE,
+			Type:      abci.MISBEHAVIOR_TYPE_DUPLICATE_VOTE,
 			Time:      time.Now().UTC(),
 			Height:    1,
 		}},
@@ -284,10 +284,10 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 	assert.NilError(t, err)
 	assert.DeepEqual(t, amt, val.GetBondedTokens())
 
-	nci := NewCometInfo(abci.RequestFinalizeBlock{
+	nci := NewCometInfo(abci.FinalizeBlockRequest{
 		Misbehavior: []abci.Misbehavior{{
 			Validator: abci.Validator{Address: valpubkey.Address(), Power: power},
-			Type:      abci.MisbehaviorType_DUPLICATE_VOTE,
+			Type:      abci.MISBEHAVIOR_TYPE_DUPLICATE_VOTE,
 			Time:      ctx.BlockTime(),
 			Height:    0,
 		}},
@@ -353,7 +353,7 @@ type CometService struct {
 	Evidence []abci.Misbehavior
 }
 
-func NewCometInfo(bg abci.RequestFinalizeBlock) comet.BlockInfo {
+func NewCometInfo(bg abci.FinalizeBlockRequest) comet.BlockInfo {
 	return CometService{
 		Evidence: bg.Misbehavior,
 	}

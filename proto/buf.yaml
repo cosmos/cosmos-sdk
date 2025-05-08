@@ -23,4 +23,5 @@ lint:
     - PACKAGE_VERSION_SUFFIX
     - RPC_REQUEST_STANDARD_NAME
   ignore:
+    - cometbft
     - tendermint

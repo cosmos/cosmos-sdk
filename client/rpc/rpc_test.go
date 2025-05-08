@@ -65,14 +65,14 @@ func (s *IntegrationTestSuite) TestQueryABCIHeight() {
 		reqHeight           int64
 		ctxHeight           int64
 		awaitMinChainHeight int64
-		assertFn            func(t *testing.T, latestHeightAtQuery int64, resp abci.ResponseQuery)
+		assertFn            func(t *testing.T, latestHeightAtQuery int64, resp abci.QueryResponse)
 	}{
 		{
 			name:                "request height set",
 			reqHeight:           2, // no proof when < 2
 			ctxHeight:           1,
 			awaitMinChainHeight: 3, // wait +1 block to be on the safe side
-			assertFn: func(t *testing.T, _ int64, resp abci.ResponseQuery) {
+			assertFn: func(t *testing.T, _ int64, resp abci.QueryResponse) {
 				t.Helper()
 				assert.Equal(t, int64(2), resp.Height)
 			},
@@ -82,7 +82,7 @@ func (s *IntegrationTestSuite) TestQueryABCIHeight() {
 			reqHeight:           0,
 			ctxHeight:           3,
 			awaitMinChainHeight: 4, // wait +1 block to be on the safe side
-			assertFn: func(t *testing.T, _ int64, resp abci.ResponseQuery) {
+			assertFn: func(t *testing.T, _ int64, resp abci.QueryResponse) {
 				t.Helper()
 				assert.Equal(t, int64(3), resp.Height)
 			},
@@ -92,7 +92,7 @@ func (s *IntegrationTestSuite) TestQueryABCIHeight() {
 			reqHeight:           0,
 			ctxHeight:           0,
 			awaitMinChainHeight: 2, // no proof when < 2
-			assertFn: func(t *testing.T, latestHeightAtQuery int64, resp abci.ResponseQuery) {
+			assertFn: func(t *testing.T, latestHeightAtQuery int64, resp abci.QueryResponse) {
 				t.Helper()
 				anyOf := []int64{latestHeightAtQuery, latestHeightAtQuery - 1}
 				assert.Contains(t, anyOf, resp.Height)
@@ -108,7 +108,7 @@ func (s *IntegrationTestSuite) TestQueryABCIHeight() {
 			clientCtx := val.ClientCtx
 			clientCtx = clientCtx.WithHeight(tc.ctxHeight)
 
-			req := abci.RequestQuery{
+			req := abci.QueryRequest{
 				Path:   fmt.Sprintf("store/%s/key", banktypes.StoreKey),
 				Height: tc.reqHeight,
 				Data:   address.MustLengthPrefix(val.Address),

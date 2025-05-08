@@ -72,7 +72,7 @@ The command-line is an easy way to interact with an application, but `Tx` can al
 ## Addition to Mempool
 
 Each full-node (running CometBFT) that receives a `Tx` sends an [ABCI message](https://docs.cometbft.com/v0.37/spec/p2p/messages/),
-`CheckTx`, to the application layer to check for validity, and receives an `abci.ResponseCheckTx`. If the `Tx` passes the checks, it is held in the node's
+`CheckTx`, to the application layer to check for validity, and receives an `abci.CheckTxResponse`. If the `Tx` passes the checks, it is held in the node's
 [**Mempool**](https://docs.cometbft.com/v0.37/spec/p2p/messages/mempool/), an in-memory pool of transactions unique to each node, pending inclusion in a block - honest nodes discard a `Tx` if it is found to be invalid. Prior to consensus, nodes continuously check incoming transactions and gossip them to their peers.
 
 ### Types of Checks

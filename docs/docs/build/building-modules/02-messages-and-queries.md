@@ -128,7 +128,7 @@ The `path` for each `query` must be defined by the module developer in the modul
 
 ### Store Queries
 
-Store queries query directly for store keys. They use `clientCtx.QueryABCI(req abci.RequestQuery)` to return the full `abci.ResponseQuery` with inclusion Merkle proofs.
+Store queries query directly for store keys. They use `clientCtx.QueryABCI(req abci.QueryRequest)` to return the full `abci.QueryResponse` with inclusion Merkle proofs.
 
 See following examples:
 

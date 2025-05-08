@@ -128,7 +128,7 @@ func TestSetLoader(t *testing.T) {
 			require.Equal(t, int64(1), oldApp.LastBlockHeight())
 
 			for i := int64(2); i <= upgradeHeight-1; i++ {
-				_, err = oldApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: i})
+				_, err = oldApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: i})
 				require.NoError(t, err)
 				_, err := oldApp.Commit()
 				require.NoError(t, err)
@@ -150,7 +150,7 @@ func TestSetLoader(t *testing.T) {
 			require.Equal(t, upgradeHeight-1, newApp.LastBlockHeight())
 
 			// "execute" one block
-			_, err = newApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: upgradeHeight})
+			_, err = newApp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: upgradeHeight})
 			require.NoError(t, err)
 			_, err = newApp.Commit()
 			require.NoError(t, err)

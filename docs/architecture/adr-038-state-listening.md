@@ -224,9 +224,9 @@ so that the service can group the state changes with the ABCI requests.
 // ABCIListener is the interface that we're exposing as a streaming service.
 type ABCIListener interface {
 	// ListenFinalizeBlock updates the streaming service with the latest FinalizeBlock messages
-	ListenFinalizeBlock(ctx context.Context, req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) error
+	ListenFinalizeBlock(ctx context.Context, req abci.FinalizeBlockRequest, res abci.FinalizeBlockResponse) error
 	// ListenCommit updates the steaming service with the latest Commit messages and state changes
-	ListenCommit(ctx context.Context, res abci.ResponseCommit, changeSet []*StoreKVPair) error
+	ListenCommit(ctx context.Context, res abci.CommitResponse, changeSet []*StoreKVPair) error
 }
 ```
 
@@ -267,16 +267,16 @@ We will modify the `FinalizeBlock` and `Commit` methods to pass ABCI requests an
 to any streaming service hooks registered with the `BaseApp`.
 
 ```go
-func (app *BaseApp) FinalizeBlock(req abci.RequestFinalizeBlock) abci.ResponseFinalizeBlock {
+func (app *BaseApp) FinalizeBlock(req abci.FinalizeBlockRequest) abci.FinalizeBlockResponse {
 
-    var abciRes abci.ResponseFinalizeBlock
+    var abciRes abci.FinalizeBlockResponse
     defer func() {
         // call the streaming service hook with the FinalizeBlock messages
         for _, abciListener := range app.abciListeners {
             ctx := app.finalizeState.ctx
             blockHeight := ctx.BlockHeight()
             if app.abciListenersAsync {
-                go func(req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) {
+                go func(req abci.FinalizeBlockRequest, res abci.FinalizeBlockResponse) {
                     if err := app.abciListener.FinalizeBlock(blockHeight, req, res); err != nil {
                         app.logger.Error("FinalizeBlock listening hook failed", "height", blockHeight, "err", err)
                     }
@@ -299,11 +299,11 @@ func (app *BaseApp) FinalizeBlock(req abci.RequestFinalizeBlock) abci.ResponseFi
 ```
 
 ```go
-func (app *BaseApp) Commit() abci.ResponseCommit {
+func (app *BaseApp) Commit() abci.CommitResponse {
 
     ...
 
-    res := abci.ResponseCommit{
+    res := abci.CommitResponse{
         Data:         commitID.Hash,
         RetainHeight: retainHeight,
     }
@@ -314,7 +314,7 @@ func (app *BaseApp) Commit() abci.ResponseCommit {
         blockHeight := ctx.BlockHeight()
         changeSet := app.cms.PopStateCache()
         if app.abciListenersAsync {
-            go func(res abci.ResponseCommit, changeSet []store.StoreKVPair) {
+            go func(res abci.CommitResponse, changeSet []store.StoreKVPair) {
                 if err := app.abciListener.ListenCommit(ctx, res, changeSet); err != nil {
                     app.logger.Error("ListenCommit listening hook failed", "height", blockHeight, "err", err)
                 }
@@ -433,13 +433,13 @@ type GRPCClient struct {
     client ABCIListenerServiceClient
 }
 
-func (m *GRPCClient) ListenFinalizeBlock(goCtx context.Context, req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) error {
+func (m *GRPCClient) ListenFinalizeBlock(goCtx context.Context, req abci.FinalizeBlockRequest, res abci.FinalizeBlockResponse) error {
     ctx := sdk.UnwrapSDKContext(goCtx)
     _, err := m.client.ListenDeliverTx(ctx, &ListenDeliverTxRequest{BlockHeight: ctx.BlockHeight(), Req: req, Res: res})
     return err
 }
 
-func (m *GRPCClient) ListenCommit(goCtx context.Context, res abci.ResponseCommit, changeSet []store.StoreKVPair) error {
+func (m *GRPCClient) ListenCommit(goCtx context.Context, res abci.CommitResponse, changeSet []store.StoreKVPair) error {
     ctx := sdk.UnwrapSDKContext(goCtx)
     _, err := m.client.ListenCommit(ctx, &ListenCommitRequest{BlockHeight: ctx.BlockHeight(), Res: res, ChangeSet: changeSet})
     return err
@@ -471,11 +471,11 @@ And the pre-compiled Go plugin `Impl`(*this is only used for plugins that are wr
 // ABCIListener is the implementation of the baseapp.ABCIListener interface
 type ABCIListener struct{}
 
-func (m *ABCIListenerPlugin) ListenFinalizeBlock(ctx context.Context, req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) error {
+func (m *ABCIListenerPlugin) ListenFinalizeBlock(ctx context.Context, req abci.FinalizeBlockRequest, res abci.FinalizeBlockResponse) error {
     // send data to external system
 }
 
-func (m *ABCIListenerPlugin) ListenCommit(ctx context.Context, res abci.ResponseCommit, changeSet []store.StoreKVPair) error {
+func (m *ABCIListenerPlugin) ListenCommit(ctx context.Context, res abci.CommitResponse, changeSet []store.StoreKVPair) error {
     // send data to external system
 }
 

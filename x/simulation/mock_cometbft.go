@@ -8,8 +8,8 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	"github.com/cometbft/cometbft/crypto/tmhash"
 )
 
 type mockValidator struct {
@@ -19,7 +19,7 @@ type mockValidator struct {
 
 func (mv mockValidator) String() string {
 	return fmt.Sprintf("mockValidator{%s power:%v state:%v}",
-		mv.val.PubKey.String(),
+		string(mv.val.PubKeyBytes),
 		mv.val.Power,
 		mv.livenessState)
 }
@@ -31,7 +31,7 @@ func newMockValidators(r *rand.Rand, abciVals []abci.ValidatorUpdate, params Par
 	validators := make(mockValidators)
 
 	for _, validator := range abciVals {
-		str := fmt.Sprintf("%X", validator.PubKey.GetEd25519())
+		str := fmt.Sprintf("%X", validator.PubKeyBytes)
 		liveliness := GetMemberOfInitialState(r, params.InitialLivenessWeightings())
 
 		validators[str] = mockValidator{
@@ -68,12 +68,8 @@ func (vals mockValidators) randomProposer(r *rand.Rand) []byte {
 	key := keys[r.Intn(len(keys))]
 
 	proposer := vals[key].val
-	pk, err := cryptoenc.PubKeyFromProto(proposer.PubKey)
-	if err != nil {
-		panic(err)
-	}
 
-	return pk.Address()
+	return tmhash.SumTruncated(proposer.PubKeyBytes)
 }
 
 // updateValidators mimics CometBFT's update logic.
@@ -88,7 +84,7 @@ func updateValidators(
 	tb.Helper()
 
 	for _, update := range updates {
-		str := fmt.Sprintf("%X", update.PubKey.GetEd25519())
+		str := fmt.Sprintf("%X", update.PubKeyBytes)
 
 		if update.Power == 0 {
 			if _, ok := current[str]; !ok {
@@ -125,9 +121,9 @@ func RandomRequestFinalizeBlock(
 	blockHeight int64,
 	time time.Time,
 	proposer []byte,
-) *abci.RequestFinalizeBlock {
+) *abci.FinalizeBlockRequest {
 	if len(validators) == 0 {
-		return &abci.RequestFinalizeBlock{
+		return &abci.FinalizeBlockRequest{
 			Height:          blockHeight,
 			Time:            time,
 			ProposerAddress: proposer,
@@ -161,14 +157,9 @@ func RandomRequestFinalizeBlock(
 			commitStatus = cmtproto.BlockIDFlagAbsent
 		}
 
-		pubkey, err := cryptoenc.PubKeyFromProto(mVal.val.PubKey)
-		if err != nil {
-			panic(err)
-		}
-
 		voteInfos[i] = abci.VoteInfo{
 			Validator: abci.Validator{
-				Address: pubkey.Address(),
+				Address: tmhash.SumTruncated(mVal.val.PubKeyBytes),
 				Power:   mVal.val.Power,
 			},
 			BlockIdFlag: commitStatus,
@@ -177,7 +168,7 @@ func RandomRequestFinalizeBlock(
 
 	// return if no past times
 	if len(pastTimes) == 0 {
-		return &abci.RequestFinalizeBlock{
+		return &abci.FinalizeBlockRequest{
 			Height:          blockHeight,
 			Time:            time,
 			ProposerAddress: proposer,
@@ -210,7 +201,7 @@ func RandomRequestFinalizeBlock(
 
 		evidence = append(evidence,
 			abci.Misbehavior{
-				Type:             abci.MisbehaviorType_DUPLICATE_VOTE,
+				Type:             abci.MISBEHAVIOR_TYPE_DUPLICATE_VOTE,
 				Validator:        validator,
 				Height:           height,
 				Time:             misbehaviorTime,
@@ -221,7 +212,7 @@ func RandomRequestFinalizeBlock(
 		event("begin_block", "evidence", "ok")
 	}
 
-	return &abci.RequestFinalizeBlock{
+	return &abci.FinalizeBlockRequest{
 		Height:          blockHeight,
 		Time:            time,
 		ProposerAddress: proposer,

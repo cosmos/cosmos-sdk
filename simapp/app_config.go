@@ -35,9 +35,9 @@ import (
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	"cosmossdk.io/x/feegrant"
 	_ "cosmossdk.io/x/feegrant/module" // import for side-effects
-	"cosmossdk.io/x/nft"
-	_ "cosmossdk.io/x/nft/module"
-	_ "cosmossdk.io/x/upgrade" // import for side-effects
+	"cosmossdk.io/x/nft"               //nolint:staticcheck // deprecated and to be removed
+	_ "cosmossdk.io/x/nft/module"      //nolint:staticcheck // deprecated and to be removed
+	_ "cosmossdk.io/x/upgrade"         // import for side-effects
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/runtime"

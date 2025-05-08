@@ -11,7 +11,7 @@ ABCI 2.0 (colloquially called ABCI++) allows an application to extend a pre-comm
 validator process. The Cosmos SDK defines [`baseapp.ExtendVoteHandler`](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/types/abci.go#L32):
 
 ```go
-type ExtendVoteHandler func(Context, *abci.RequestExtendVote) (*abci.ResponseExtendVote, error)
+type ExtendVoteHandler func(Context, *abci.ExtendVoteRequest) (*abci.ExtendVoteResponse, error)
 ```
 
 An application can set this handler in `app.go` via the `baseapp.SetExtendVoteHandler`
@@ -38,7 +38,7 @@ other validators when validating their pre-commits. For a given vote extension,
 this process MUST be deterministic. The Cosmos SDK defines [`sdk.VerifyVoteExtensionHandler`](https://github.com/cosmos/cosmos-sdk/blob/v0.50.1/types/abci.go#L29-L31):
 
 ```go
-type VerifyVoteExtensionHandler func(Context, *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error)
+type VerifyVoteExtensionHandler func(Context, *abci.VerifyVoteExtensionRequest) (*abci.VerifyVoteExtensionResponse, error)
 ```
 
 An application can set this handler in `app.go` via the `baseapp.SetVerifyVoteExtensionHandler`
@@ -78,7 +78,7 @@ will be available to the application during the subsequent `FinalizeBlock` call.
 An example of how a pre-FinalizeBlock hook could look like is shown below:
 
 ```go
-app.SetPreBlocker(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) error {
+app.SetPreBlocker(func(ctx sdk.Context, req *abci.FinalizeBlockRequest) error {
     allVEs := []VE{} // store all parsed vote extensions here
     for _, tx := range req.Txs {
         // define a custom function that tries to parse the tx as a vote extension

@@ -56,6 +56,9 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
+// Replace all unreleased direct deps upgraded to comet v1
+replace cosmossdk.io/api => ../api
+
 // Version tagged too early and incompatible with v0.50 (latest at the time of tagging)
 retract v0.12.0
 

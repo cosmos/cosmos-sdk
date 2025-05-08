@@ -16,7 +16,7 @@ process does NOT have to be deterministic, and the data returned can be unique t
 validator process. The Cosmos SDK defines `baseapp.ExtendVoteHandler`:
 
 ```go
-type ExtendVoteHandler func(Context, *abci.RequestExtendVote) (*abci.ResponseExtendVote, error)
+type ExtendVoteHandler func(Context, *abci.ExtendVoteRequest) (*abci.ExtendVoteResponse, error)
 ```
 
 An application can set this handler in `app.go` via the `baseapp.SetExtendVoteHandler`
@@ -77,7 +77,7 @@ will be available to the application during the subsequent `FinalizeBlock` call.
 An example of how a pre-FinalizeBlock hook could look like is shown below:
 
 ```go
-app.SetPreBlocker(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) error {
+app.SetPreBlocker(func(ctx sdk.Context, req *abci.FinalizeBlockRequest) error {
     allVEs := []VE{} // store all parsed vote extensions here
     for _, tx := range req.Txs {
         // define a custom function that tries to parse the tx as a vote extension

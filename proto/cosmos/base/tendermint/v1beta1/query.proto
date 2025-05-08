@@ -4,12 +4,12 @@ package cosmos.base.tendermint.v1beta1;
 import "gogoproto/gogo.proto";
 import "google/protobuf/any.proto";
 import "google/api/annotations.proto";
-import "tendermint/p2p/types.proto";
-import "tendermint/types/types.proto";
+import "cometbft/p2p/v1/types.proto";
+import "cometbft/types/v1/types.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/tendermint/v1beta1/types.proto";
 import "cosmos_proto/cosmos.proto";
-import "tendermint/types/block.proto";
+import "cometbft/types/v1/block.proto";
 import "amino/amino.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/client/grpc/cmtservice";
@@ -99,10 +99,10 @@ message GetBlockByHeightRequest {
 
 // GetBlockByHeightResponse is the response type for the Query/GetBlockByHeight RPC method.
 message GetBlockByHeightResponse {
-  .tendermint.types.BlockID block_id = 1;
+  cometbft.types.v1.BlockID block_id = 1;
 
   // Deprecated: please use `sdk_block` instead
-  .tendermint.types.Block block = 2;
+  cometbft.types.v1.Block block = 2;
 
   Block sdk_block = 3 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.47"];
 }
@@ -112,10 +112,10 @@ message GetLatestBlockRequest {}
 
 // GetLatestBlockResponse is the response type for the Query/GetLatestBlock RPC method.
 message GetLatestBlockResponse {
-  .tendermint.types.BlockID block_id = 1;
+  cometbft.types.v1.BlockID block_id = 1;
 
   // Deprecated: please use `sdk_block` instead
-  .tendermint.types.Block block = 2;
+  cometbft.types.v1.Block block = 2;
 
   Block sdk_block = 3 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.47"];
 }
@@ -133,7 +133,7 @@ message GetNodeInfoRequest {}
 
 // GetNodeInfoResponse is the response type for the Query/GetNodeInfo RPC method.
 message GetNodeInfoResponse {
-  .tendermint.p2p.DefaultNodeInfo default_node_info   = 1;
+  cometbft.p2p.v1.DefaultNodeInfo default_node_info   = 1;
   VersionInfo                     application_version = 2;
 }
 

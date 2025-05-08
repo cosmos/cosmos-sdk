@@ -9,8 +9,8 @@ import "google/protobuf/timestamp.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "amino/amino.proto";
-import "tendermint/types/types.proto";
-import "tendermint/abci/types.proto";
+import "cometbft/types/v1/types.proto";
+import "cometbft/abci/v1/types.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 
@@ -19,8 +19,8 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/staking/types";
 // recent HistoricalInfo
 // (`n` is set by the staking module's `historical_entries` parameter).
 message HistoricalInfo {
-  tendermint.types.Header header = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-  repeated Validator      valset = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  cometbft.types.v1.Header header = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  repeated Validator       valset = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // CommissionRates defines the initial commission rates to be used for creating
@@ -389,5 +389,5 @@ enum Infraction {
 // ValidatorUpdates defines an array of abci.ValidatorUpdate objects.
 // TODO: explore moving this to proto/cosmos/base to separate modules from tendermint dependence
 message ValidatorUpdates {
-  repeated tendermint.abci.ValidatorUpdate updates = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  repeated cometbft.abci.v1.ValidatorUpdate updates = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }

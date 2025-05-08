@@ -33,6 +33,10 @@ Since v0.13.0, x/tx follows Cosmos SDK semver: https://github.com/cosmos/cosmos-
 
 ## [Unreleased]
 
+### Improvements
+
+* [#21850](https://github.com/cosmos/cosmos-sdk/pull/21850) Support bytes field as signer.
+
 ## [v0.14.0](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v0.14.0) - 2025-04-24
 
 * SDK v0.53.x support.

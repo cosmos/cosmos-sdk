@@ -1369,7 +1369,7 @@ func (x *NestedSigner_Inner) ProtoReflect() protoreflect.Message {
 }
 
 func (x *NestedSigner_Inner) slowProtoReflect() protoreflect.Message {
-	mi := &file_signers_proto_msgTypes[11]
+	mi := &file_signers_proto_msgTypes[14]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2283,7 +2283,7 @@ func (x *RepeatedNestedSigner_Inner) ProtoReflect() protoreflect.Message {
 }
 
 func (x *RepeatedNestedSigner_Inner) slowProtoReflect() protoreflect.Message {
-	mi := &file_signers_proto_msgTypes[12]
+	mi := &file_signers_proto_msgTypes[15]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3184,7 +3184,7 @@ func (x *NestedRepeatedSigner_Inner) ProtoReflect() protoreflect.Message {
 }
 
 func (x *NestedRepeatedSigner_Inner) slowProtoReflect() protoreflect.Message {
-	mi := &file_signers_proto_msgTypes[13]
+	mi := &file_signers_proto_msgTypes[16]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4158,7 +4158,7 @@ func (x *RepeatedNestedRepeatedSigner_Inner) ProtoReflect() protoreflect.Message
 }
 
 func (x *RepeatedNestedRepeatedSigner_Inner) slowProtoReflect() protoreflect.Message {
-	mi := &file_signers_proto_msgTypes[14]
+	mi := &file_signers_proto_msgTypes[17]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5027,7 +5027,7 @@ func (x *DeeplyNestedSigner_InnerOne) ProtoReflect() protoreflect.Message {
 }
 
 func (x *DeeplyNestedSigner_InnerOne) slowProtoReflect() protoreflect.Message {
-	mi := &file_signers_proto_msgTypes[15]
+	mi := &file_signers_proto_msgTypes[18]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5462,7 +5462,7 @@ func (x *DeeplyNestedSigner_InnerOne_InnerTwo) ProtoReflect() protoreflect.Messa
 }
 
 func (x *DeeplyNestedSigner_InnerOne_InnerTwo) slowProtoReflect() protoreflect.Message {
-	mi := &file_signers_proto_msgTypes[16]
+	mi := &file_signers_proto_msgTypes[19]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6427,7 +6427,7 @@ func (x *DeeplyNestedRepeatedSigner_Inner) ProtoReflect() protoreflect.Message {
 }
 
 func (x *DeeplyNestedRepeatedSigner_Inner) slowProtoReflect() protoreflect.Message {
-	mi := &file_signers_proto_msgTypes[17]
+	mi := &file_signers_proto_msgTypes[20]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6921,7 +6921,7 @@ func (x *DeeplyNestedRepeatedSigner_Inner_Inner) ProtoReflect() protoreflect.Mes
 }
 
 func (x *DeeplyNestedRepeatedSigner_Inner_Inner) slowProtoReflect() protoreflect.Message {
-	mi := &file_signers_proto_msgTypes[18]
+	mi := &file_signers_proto_msgTypes[21]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7410,7 +7410,7 @@ func (x *DeeplyNestedRepeatedSigner_Inner_Inner_Bottom) ProtoReflect() protorefl
 }
 
 func (x *DeeplyNestedRepeatedSigner_Inner_Inner_Bottom) slowProtoReflect() protoreflect.Message {
-	mi := &file_signers_proto_msgTypes[19]
+	mi := &file_signers_proto_msgTypes[22]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7900,8 +7900,8 @@ func (x *fastReflection_BadSigner) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_BadSigner) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if len(x.Signer) != 0 {
-		value := protoreflect.ValueOfBytes(x.Signer)
+	if x.Signer != int32(0) {
+		value := protoreflect.ValueOfInt32(x.Signer)
 		if !f(fd_BadSigner_signer, value) {
 			return
 		}
@@ -7922,7 +7922,7 @@ func (x *fastReflection_BadSigner) Range(f func(protoreflect.FieldDescriptor, pr
 func (x *fastReflection_BadSigner) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "BadSigner.signer":
-		return len(x.Signer) != 0
+		return x.Signer != int32(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: BadSigner"))
@@ -7940,7 +7940,7 @@ func (x *fastReflection_BadSigner) Has(fd protoreflect.FieldDescriptor) bool {
 func (x *fastReflection_BadSigner) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "BadSigner.signer":
-		x.Signer = nil
+		x.Signer = int32(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: BadSigner"))
@@ -7959,7 +7959,7 @@ func (x *fastReflection_BadSigner) Get(descriptor protoreflect.FieldDescriptor) 
 	switch descriptor.FullName() {
 	case "BadSigner.signer":
 		value := x.Signer
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfInt32(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: BadSigner"))
@@ -7981,7 +7981,7 @@ func (x *fastReflection_BadSigner) Get(descriptor protoreflect.FieldDescriptor) 
 func (x *fastReflection_BadSigner) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "BadSigner.signer":
-		x.Signer = value.Bytes()
+		x.Signer = int32(value.Int())
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: BadSigner"))
@@ -8018,7 +8018,7 @@ func (x *fastReflection_BadSigner) Mutable(fd protoreflect.FieldDescriptor) prot
 func (x *fastReflection_BadSigner) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "BadSigner.signer":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfInt32(int32(0))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: BadSigner"))
@@ -8088,9 +8088,8 @@ func (x *fastReflection_BadSigner) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		l = len(x.Signer)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
+		if x.Signer != 0 {
+			n += 1 + runtime.Sov(uint64(x.Signer))
 		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
@@ -8121,12 +8120,10 @@ func (x *fastReflection_BadSigner) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if len(x.Signer) > 0 {
-			i -= len(x.Signer)
-			copy(dAtA[i:], x.Signer)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Signer)))
+		if x.Signer != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Signer))
 			i--
-			dAtA[i] = 0xa
+			dAtA[i] = 0x8
 		}
 		if input.Buf != nil {
 			input.Buf = append(input.Buf, dAtA...)
@@ -8178,10 +8175,10 @@ func (x *fastReflection_BadSigner) ProtoMethods() *protoiface.Methods {
 			}
 			switch fieldNum {
 			case 1:
-				if wireType != 2 {
+				if wireType != 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
 				}
-				var byteLen int
+				x.Signer = 0
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -8191,26 +8188,11 @@ func (x *fastReflection_BadSigner) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					x.Signer |= int32(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + byteLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Signer = append(x.Signer[:0], dAtA[iNdEx:postIndex]...)
-				if x.Signer == nil {
-					x.Signer = []byte{}
-				}
-				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -9088,6 +9070,1388 @@ func (x *fastReflection_ValidatorSigner) ProtoMethods() *protoiface.Methods {
 	}
 }
 
+var _ protoreflect.List = (*_ValidatorSigners_1_list)(nil)
+
+type _ValidatorSigners_1_list struct {
+	list *[]string
+}
+
+func (x *_ValidatorSigners_1_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_ValidatorSigners_1_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfString((*x.list)[i])
+}
+
+func (x *_ValidatorSigners_1_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.String()
+	concreteValue := valueUnwrapped
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_ValidatorSigners_1_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.String()
+	concreteValue := valueUnwrapped
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_ValidatorSigners_1_list) AppendMutable() protoreflect.Value {
+	panic(fmt.Errorf("AppendMutable can not be called on message ValidatorSigners at list field Signers as it is not of Message kind"))
+}
+
+func (x *_ValidatorSigners_1_list) Truncate(n int) {
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_ValidatorSigners_1_list) NewElement() protoreflect.Value {
+	v := ""
+	return protoreflect.ValueOfString(v)
+}
+
+func (x *_ValidatorSigners_1_list) IsValid() bool {
+	return x.list != nil
+}
+
+var (
+	md_ValidatorSigners         protoreflect.MessageDescriptor
+	fd_ValidatorSigners_signers protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_signers_proto_init()
+	md_ValidatorSigners = File_signers_proto.Messages().ByName("ValidatorSigners")
+	fd_ValidatorSigners_signers = md_ValidatorSigners.Fields().ByName("signers")
+}
+
+var _ protoreflect.Message = (*fastReflection_ValidatorSigners)(nil)
+
+type fastReflection_ValidatorSigners ValidatorSigners
+
+func (x *ValidatorSigners) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_ValidatorSigners)(x)
+}
+
+func (x *ValidatorSigners) slowProtoReflect() protoreflect.Message {
+	mi := &file_signers_proto_msgTypes[11]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_ValidatorSigners_messageType fastReflection_ValidatorSigners_messageType
+var _ protoreflect.MessageType = fastReflection_ValidatorSigners_messageType{}
+
+type fastReflection_ValidatorSigners_messageType struct{}
+
+func (x fastReflection_ValidatorSigners_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_ValidatorSigners)(nil)
+}
+func (x fastReflection_ValidatorSigners_messageType) New() protoreflect.Message {
+	return new(fastReflection_ValidatorSigners)
+}
+func (x fastReflection_ValidatorSigners_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_ValidatorSigners
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_ValidatorSigners) Descriptor() protoreflect.MessageDescriptor {
+	return md_ValidatorSigners
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_ValidatorSigners) Type() protoreflect.MessageType {
+	return _fastReflection_ValidatorSigners_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_ValidatorSigners) New() protoreflect.Message {
+	return new(fastReflection_ValidatorSigners)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_ValidatorSigners) Interface() protoreflect.ProtoMessage {
+	return (*ValidatorSigners)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_ValidatorSigners) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if len(x.Signers) != 0 {
+		value := protoreflect.ValueOfList(&_ValidatorSigners_1_list{list: &x.Signers})
+		if !f(fd_ValidatorSigners_signers, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_ValidatorSigners) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "ValidatorSigners.signers":
+		return len(x.Signers) != 0
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: ValidatorSigners"))
+		}
+		panic(fmt.Errorf("message ValidatorSigners does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_ValidatorSigners) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "ValidatorSigners.signers":
+		x.Signers = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: ValidatorSigners"))
+		}
+		panic(fmt.Errorf("message ValidatorSigners does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_ValidatorSigners) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "ValidatorSigners.signers":
+		if len(x.Signers) == 0 {
+			return protoreflect.ValueOfList(&_ValidatorSigners_1_list{})
+		}
+		listValue := &_ValidatorSigners_1_list{list: &x.Signers}
+		return protoreflect.ValueOfList(listValue)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: ValidatorSigners"))
+		}
+		panic(fmt.Errorf("message ValidatorSigners does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_ValidatorSigners) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "ValidatorSigners.signers":
+		lv := value.List()
+		clv := lv.(*_ValidatorSigners_1_list)
+		x.Signers = *clv.list
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: ValidatorSigners"))
+		}
+		panic(fmt.Errorf("message ValidatorSigners does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_ValidatorSigners) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "ValidatorSigners.signers":
+		if x.Signers == nil {
+			x.Signers = []string{}
+		}
+		value := &_ValidatorSigners_1_list{list: &x.Signers}
+		return protoreflect.ValueOfList(value)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: ValidatorSigners"))
+		}
+		panic(fmt.Errorf("message ValidatorSigners does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_ValidatorSigners) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "ValidatorSigners.signers":
+		list := []string{}
+		return protoreflect.ValueOfList(&_ValidatorSigners_1_list{list: &list})
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: ValidatorSigners"))
+		}
+		panic(fmt.Errorf("message ValidatorSigners does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_ValidatorSigners) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in ValidatorSigners", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_ValidatorSigners) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_ValidatorSigners) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_ValidatorSigners) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_ValidatorSigners) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*ValidatorSigners)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if len(x.Signers) > 0 {
+			for _, s := range x.Signers {
+				l = len(s)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*ValidatorSigners)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Signers) > 0 {
+			for iNdEx := len(x.Signers) - 1; iNdEx >= 0; iNdEx-- {
+				i -= len(x.Signers[iNdEx])
+				copy(dAtA[i:], x.Signers[iNdEx])
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Signers[iNdEx])))
+				i--
+				dAtA[i] = 0xa
+			}
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*ValidatorSigners)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: ValidatorSigners: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: ValidatorSigners: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Signers", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Signers = append(x.Signers, string(dAtA[iNdEx:postIndex]))
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_ValidatorByteSigner        protoreflect.MessageDescriptor
+	fd_ValidatorByteSigner_signer protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_signers_proto_init()
+	md_ValidatorByteSigner = File_signers_proto.Messages().ByName("ValidatorByteSigner")
+	fd_ValidatorByteSigner_signer = md_ValidatorByteSigner.Fields().ByName("signer")
+}
+
+var _ protoreflect.Message = (*fastReflection_ValidatorByteSigner)(nil)
+
+type fastReflection_ValidatorByteSigner ValidatorByteSigner
+
+func (x *ValidatorByteSigner) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_ValidatorByteSigner)(x)
+}
+
+func (x *ValidatorByteSigner) slowProtoReflect() protoreflect.Message {
+	mi := &file_signers_proto_msgTypes[12]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_ValidatorByteSigner_messageType fastReflection_ValidatorByteSigner_messageType
+var _ protoreflect.MessageType = fastReflection_ValidatorByteSigner_messageType{}
+
+type fastReflection_ValidatorByteSigner_messageType struct{}
+
+func (x fastReflection_ValidatorByteSigner_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_ValidatorByteSigner)(nil)
+}
+func (x fastReflection_ValidatorByteSigner_messageType) New() protoreflect.Message {
+	return new(fastReflection_ValidatorByteSigner)
+}
+func (x fastReflection_ValidatorByteSigner_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_ValidatorByteSigner
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_ValidatorByteSigner) Descriptor() protoreflect.MessageDescriptor {
+	return md_ValidatorByteSigner
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_ValidatorByteSigner) Type() protoreflect.MessageType {
+	return _fastReflection_ValidatorByteSigner_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_ValidatorByteSigner) New() protoreflect.Message {
+	return new(fastReflection_ValidatorByteSigner)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_ValidatorByteSigner) Interface() protoreflect.ProtoMessage {
+	return (*ValidatorByteSigner)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_ValidatorByteSigner) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if len(x.Signer) != 0 {
+		value := protoreflect.ValueOfBytes(x.Signer)
+		if !f(fd_ValidatorByteSigner_signer, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_ValidatorByteSigner) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "ValidatorByteSigner.signer":
+		return len(x.Signer) != 0
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: ValidatorByteSigner"))
+		}
+		panic(fmt.Errorf("message ValidatorByteSigner does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_ValidatorByteSigner) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "ValidatorByteSigner.signer":
+		x.Signer = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: ValidatorByteSigner"))
+		}
+		panic(fmt.Errorf("message ValidatorByteSigner does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_ValidatorByteSigner) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "ValidatorByteSigner.signer":
+		value := x.Signer
+		return protoreflect.ValueOfBytes(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: ValidatorByteSigner"))
+		}
+		panic(fmt.Errorf("message ValidatorByteSigner does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_ValidatorByteSigner) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "ValidatorByteSigner.signer":
+		x.Signer = value.Bytes()
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: ValidatorByteSigner"))
+		}
+		panic(fmt.Errorf("message ValidatorByteSigner does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_ValidatorByteSigner) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "ValidatorByteSigner.signer":
+		panic(fmt.Errorf("field signer of message ValidatorByteSigner is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: ValidatorByteSigner"))
+		}
+		panic(fmt.Errorf("message ValidatorByteSigner does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_ValidatorByteSigner) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "ValidatorByteSigner.signer":
+		return protoreflect.ValueOfBytes(nil)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: ValidatorByteSigner"))
+		}
+		panic(fmt.Errorf("message ValidatorByteSigner does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_ValidatorByteSigner) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in ValidatorByteSigner", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_ValidatorByteSigner) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_ValidatorByteSigner) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_ValidatorByteSigner) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_ValidatorByteSigner) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*ValidatorByteSigner)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Signer)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*ValidatorByteSigner)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Signer) > 0 {
+			i -= len(x.Signer)
+			copy(dAtA[i:], x.Signer)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Signer)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*ValidatorByteSigner)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: ValidatorByteSigner: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: ValidatorByteSigner: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
+				}
+				var byteLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					byteLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if byteLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + byteLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Signer = append(x.Signer[:0], dAtA[iNdEx:postIndex]...)
+				if x.Signer == nil {
+					x.Signer = []byte{}
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var _ protoreflect.List = (*_ValidatorByteSigners_1_list)(nil)
+
+type _ValidatorByteSigners_1_list struct {
+	list *[][]byte
+}
+
+func (x *_ValidatorByteSigners_1_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_ValidatorByteSigners_1_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfBytes((*x.list)[i])
+}
+
+func (x *_ValidatorByteSigners_1_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Bytes()
+	concreteValue := valueUnwrapped
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_ValidatorByteSigners_1_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Bytes()
+	concreteValue := valueUnwrapped
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_ValidatorByteSigners_1_list) AppendMutable() protoreflect.Value {
+	panic(fmt.Errorf("AppendMutable can not be called on message ValidatorByteSigners at list field Signers as it is not of Message kind"))
+}
+
+func (x *_ValidatorByteSigners_1_list) Truncate(n int) {
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_ValidatorByteSigners_1_list) NewElement() protoreflect.Value {
+	var v []byte
+	return protoreflect.ValueOfBytes(v)
+}
+
+func (x *_ValidatorByteSigners_1_list) IsValid() bool {
+	return x.list != nil
+}
+
+var (
+	md_ValidatorByteSigners         protoreflect.MessageDescriptor
+	fd_ValidatorByteSigners_signers protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_signers_proto_init()
+	md_ValidatorByteSigners = File_signers_proto.Messages().ByName("ValidatorByteSigners")
+	fd_ValidatorByteSigners_signers = md_ValidatorByteSigners.Fields().ByName("signers")
+}
+
+var _ protoreflect.Message = (*fastReflection_ValidatorByteSigners)(nil)
+
+type fastReflection_ValidatorByteSigners ValidatorByteSigners
+
+func (x *ValidatorByteSigners) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_ValidatorByteSigners)(x)
+}
+
+func (x *ValidatorByteSigners) slowProtoReflect() protoreflect.Message {
+	mi := &file_signers_proto_msgTypes[13]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_ValidatorByteSigners_messageType fastReflection_ValidatorByteSigners_messageType
+var _ protoreflect.MessageType = fastReflection_ValidatorByteSigners_messageType{}
+
+type fastReflection_ValidatorByteSigners_messageType struct{}
+
+func (x fastReflection_ValidatorByteSigners_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_ValidatorByteSigners)(nil)
+}
+func (x fastReflection_ValidatorByteSigners_messageType) New() protoreflect.Message {
+	return new(fastReflection_ValidatorByteSigners)
+}
+func (x fastReflection_ValidatorByteSigners_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_ValidatorByteSigners
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_ValidatorByteSigners) Descriptor() protoreflect.MessageDescriptor {
+	return md_ValidatorByteSigners
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_ValidatorByteSigners) Type() protoreflect.MessageType {
+	return _fastReflection_ValidatorByteSigners_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_ValidatorByteSigners) New() protoreflect.Message {
+	return new(fastReflection_ValidatorByteSigners)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_ValidatorByteSigners) Interface() protoreflect.ProtoMessage {
+	return (*ValidatorByteSigners)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_ValidatorByteSigners) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if len(x.Signers) != 0 {
+		value := protoreflect.ValueOfList(&_ValidatorByteSigners_1_list{list: &x.Signers})
+		if !f(fd_ValidatorByteSigners_signers, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_ValidatorByteSigners) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "ValidatorByteSigners.signers":
+		return len(x.Signers) != 0
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: ValidatorByteSigners"))
+		}
+		panic(fmt.Errorf("message ValidatorByteSigners does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_ValidatorByteSigners) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "ValidatorByteSigners.signers":
+		x.Signers = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: ValidatorByteSigners"))
+		}
+		panic(fmt.Errorf("message ValidatorByteSigners does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_ValidatorByteSigners) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "ValidatorByteSigners.signers":
+		if len(x.Signers) == 0 {
+			return protoreflect.ValueOfList(&_ValidatorByteSigners_1_list{})
+		}
+		listValue := &_ValidatorByteSigners_1_list{list: &x.Signers}
+		return protoreflect.ValueOfList(listValue)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: ValidatorByteSigners"))
+		}
+		panic(fmt.Errorf("message ValidatorByteSigners does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_ValidatorByteSigners) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "ValidatorByteSigners.signers":
+		lv := value.List()
+		clv := lv.(*_ValidatorByteSigners_1_list)
+		x.Signers = *clv.list
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: ValidatorByteSigners"))
+		}
+		panic(fmt.Errorf("message ValidatorByteSigners does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_ValidatorByteSigners) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "ValidatorByteSigners.signers":
+		if x.Signers == nil {
+			x.Signers = [][]byte{}
+		}
+		value := &_ValidatorByteSigners_1_list{list: &x.Signers}
+		return protoreflect.ValueOfList(value)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: ValidatorByteSigners"))
+		}
+		panic(fmt.Errorf("message ValidatorByteSigners does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_ValidatorByteSigners) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "ValidatorByteSigners.signers":
+		list := [][]byte{}
+		return protoreflect.ValueOfList(&_ValidatorByteSigners_1_list{list: &list})
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: ValidatorByteSigners"))
+		}
+		panic(fmt.Errorf("message ValidatorByteSigners does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_ValidatorByteSigners) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in ValidatorByteSigners", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_ValidatorByteSigners) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_ValidatorByteSigners) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_ValidatorByteSigners) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_ValidatorByteSigners) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*ValidatorByteSigners)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if len(x.Signers) > 0 {
+			for _, b := range x.Signers {
+				l = len(b)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*ValidatorByteSigners)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Signers) > 0 {
+			for iNdEx := len(x.Signers) - 1; iNdEx >= 0; iNdEx-- {
+				i -= len(x.Signers[iNdEx])
+				copy(dAtA[i:], x.Signers[iNdEx])
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Signers[iNdEx])))
+				i--
+				dAtA[i] = 0xa
+			}
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*ValidatorByteSigners)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: ValidatorByteSigners: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: ValidatorByteSigners: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Signers", wireType)
+				}
+				var byteLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					byteLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if byteLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + byteLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Signers = append(x.Signers, make([]byte, postIndex-iNdEx))
+				copy(x.Signers[len(x.Signers)-1], dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -9386,7 +10750,7 @@ type BadSigner struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Signer []byte `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
+	Signer int32 `protobuf:"varint,1,opt,name=signer,proto3" json:"signer,omitempty"`
 }
 
 func (x *BadSigner) Reset() {
@@ -9409,11 +10773,11 @@ func (*BadSigner) Descriptor() ([]byte, []int) {
 	return file_signers_proto_rawDescGZIP(), []int{8}
 }
 
-func (x *BadSigner) GetSigner() []byte {
+func (x *BadSigner) GetSigner() int32 {
 	if x != nil {
 		return x.Signer
 	}
-	return nil
+	return 0
 }
 
 type NoSignerOption struct {
@@ -9486,6 +10850,111 @@ func (x *ValidatorSigner) GetSigner() string {
 	return ""
 }
 
+type ValidatorSigners struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Signers []string `protobuf:"bytes,1,rep,name=signers,proto3" json:"signers,omitempty"`
+}
+
+func (x *ValidatorSigners) Reset() {
+	*x = ValidatorSigners{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_signers_proto_msgTypes[11]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ValidatorSigners) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ValidatorSigners) ProtoMessage() {}
+
+// Deprecated: Use ValidatorSigners.ProtoReflect.Descriptor instead.
+func (*ValidatorSigners) Descriptor() ([]byte, []int) {
+	return file_signers_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *ValidatorSigners) GetSigners() []string {
+	if x != nil {
+		return x.Signers
+	}
+	return nil
+}
+
+type ValidatorByteSigner struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Signer []byte `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
+}
+
+func (x *ValidatorByteSigner) Reset() {
+	*x = ValidatorByteSigner{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_signers_proto_msgTypes[12]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ValidatorByteSigner) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ValidatorByteSigner) ProtoMessage() {}
+
+// Deprecated: Use ValidatorByteSigner.ProtoReflect.Descriptor instead.
+func (*ValidatorByteSigner) Descriptor() ([]byte, []int) {
+	return file_signers_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *ValidatorByteSigner) GetSigner() []byte {
+	if x != nil {
+		return x.Signer
+	}
+	return nil
+}
+
+type ValidatorByteSigners struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Signers [][]byte `protobuf:"bytes,1,rep,name=signers,proto3" json:"signers,omitempty"`
+}
+
+func (x *ValidatorByteSigners) Reset() {
+	*x = ValidatorByteSigners{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_signers_proto_msgTypes[13]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ValidatorByteSigners) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ValidatorByteSigners) ProtoMessage() {}
+
+// Deprecated: Use ValidatorByteSigners.ProtoReflect.Descriptor instead.
+func (*ValidatorByteSigners) Descriptor() ([]byte, []int) {
+	return file_signers_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *ValidatorByteSigners) GetSigners() [][]byte {
+	if x != nil {
+		return x.Signers
+	}
+	return nil
+}
+
 type NestedSigner_Inner struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -9497,7 +10966,7 @@ type NestedSigner_Inner struct {
 func (x *NestedSigner_Inner) Reset() {
 	*x = NestedSigner_Inner{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_signers_proto_msgTypes[11]
+		mi := &file_signers_proto_msgTypes[14]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -9532,7 +11001,7 @@ type RepeatedNestedSigner_Inner struct {
 func (x *RepeatedNestedSigner_Inner) Reset() {
 	*x = RepeatedNestedSigner_Inner{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_signers_proto_msgTypes[12]
+		mi := &file_signers_proto_msgTypes[15]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -9567,7 +11036,7 @@ type NestedRepeatedSigner_Inner struct {
 func (x *NestedRepeatedSigner_Inner) Reset() {
 	*x = NestedRepeatedSigner_Inner{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_signers_proto_msgTypes[13]
+		mi := &file_signers_proto_msgTypes[16]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -9602,7 +11071,7 @@ type RepeatedNestedRepeatedSigner_Inner struct {
 func (x *RepeatedNestedRepeatedSigner_Inner) Reset() {
 	*x = RepeatedNestedRepeatedSigner_Inner{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_signers_proto_msgTypes[14]
+		mi := &file_signers_proto_msgTypes[17]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -9637,7 +11106,7 @@ type DeeplyNestedSigner_InnerOne struct {
 func (x *DeeplyNestedSigner_InnerOne) Reset() {
 	*x = DeeplyNestedSigner_InnerOne{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_signers_proto_msgTypes[15]
+		mi := &file_signers_proto_msgTypes[18]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -9672,7 +11141,7 @@ type DeeplyNestedSigner_InnerOne_InnerTwo struct {
 func (x *DeeplyNestedSigner_InnerOne_InnerTwo) Reset() {
 	*x = DeeplyNestedSigner_InnerOne_InnerTwo{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_signers_proto_msgTypes[16]
+		mi := &file_signers_proto_msgTypes[19]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -9707,7 +11176,7 @@ type DeeplyNestedRepeatedSigner_Inner struct {
 func (x *DeeplyNestedRepeatedSigner_Inner) Reset() {
 	*x = DeeplyNestedRepeatedSigner_Inner{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_signers_proto_msgTypes[17]
+		mi := &file_signers_proto_msgTypes[20]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -9742,7 +11211,7 @@ type DeeplyNestedRepeatedSigner_Inner_Inner struct {
 func (x *DeeplyNestedRepeatedSigner_Inner_Inner) Reset() {
 	*x = DeeplyNestedRepeatedSigner_Inner_Inner{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_signers_proto_msgTypes[18]
+		mi := &file_signers_proto_msgTypes[21]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -9777,7 +11246,7 @@ type DeeplyNestedRepeatedSigner_Inner_Inner_Bottom struct {
 func (x *DeeplyNestedRepeatedSigner_Inner_Inner_Bottom) Reset() {
 	*x = DeeplyNestedRepeatedSigner_Inner_Inner_Bottom{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_signers_proto_msgTypes[19]
+		mi := &file_signers_proto_msgTypes[22]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -9885,7 +11354,7 @@ var file_signers_proto_rawDesc = []byte{
 	0x05, 0x69, 0x6e, 0x6e, 0x65, 0x72, 0x3a, 0x0a, 0x82, 0xe7, 0xb0, 0x2a, 0x05, 0x69, 0x6e, 0x6e,
 	0x65, 0x72, 0x3a, 0x0a, 0x82, 0xe7, 0xb0, 0x2a, 0x05, 0x69, 0x6e, 0x6e, 0x65, 0x72, 0x22, 0x30,
 	0x0a, 0x09, 0x42, 0x61, 0x64, 0x53, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x12, 0x16, 0x0a, 0x06, 0x73,
-	0x69, 0x67, 0x6e, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x06, 0x73, 0x69, 0x67,
+	0x69, 0x67, 0x6e, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x06, 0x73, 0x69, 0x67,
 	0x6e, 0x65, 0x72, 0x3a, 0x0b, 0x82, 0xe7, 0xb0, 0x2a, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72,
 	0x22, 0x28, 0x0a, 0x0e, 0x4e, 0x6f, 0x53, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x4f, 0x70, 0x74, 0x69,
 	0x6f, 0x6e, 0x12, 0x16, 0x0a, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01,
@@ -9895,16 +11364,32 @@ var file_signers_proto_rawDesc = []byte{
 	0xb4, 0x2d, 0x1d, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61,
 	0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67,
 	0x52, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x3a, 0x0b, 0x82, 0xe7, 0xb0, 0x2a, 0x06, 0x73,
-	0x69, 0x67, 0x6e, 0x65, 0x72, 0x32, 0x4d, 0x0a, 0x10, 0x54, 0x65, 0x73, 0x74, 0x53, 0x69, 0x6d,
-	0x70, 0x6c, 0x65, 0x53, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x12, 0x32, 0x0a, 0x10, 0x54, 0x65, 0x73,
-	0x74, 0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x53, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x12, 0x0d, 0x2e,
-	0x53, 0x69, 0x6d, 0x70, 0x6c, 0x65, 0x53, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x1a, 0x0d, 0x2e, 0x53,
-	0x69, 0x6d, 0x70, 0x6c, 0x65, 0x53, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x22, 0x00, 0x1a, 0x05, 0x80,
-	0xe7, 0xb0, 0x2a, 0x01, 0x42, 0x3b, 0x42, 0x0c, 0x53, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x73, 0x50,
-	0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x29, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64,
-	0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x78, 0x2f, 0x74, 0x78, 0x2f, 0x74, 0x65, 0x78, 0x74, 0x75, 0x61,
-	0x6c, 0x2f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x74, 0x65, 0x73, 0x74, 0x70,
-	0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x69, 0x67, 0x6e, 0x65, 0x72, 0x22, 0x5d, 0x0a, 0x10, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74,
+	0x6f, 0x72, 0x53, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x73, 0x12, 0x3b, 0x0a, 0x07, 0x73, 0x69, 0x67,
+	0x6e, 0x65, 0x72, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x42, 0x21, 0xd2, 0xb4, 0x2d, 0x1d,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
+	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x07, 0x73,
+	0x69, 0x67, 0x6e, 0x65, 0x72, 0x73, 0x3a, 0x0c, 0x82, 0xe7, 0xb0, 0x2a, 0x07, 0x73, 0x69, 0x67,
+	0x6e, 0x65, 0x72, 0x73, 0x22, 0x3a, 0x0a, 0x13, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f,
+	0x72, 0x42, 0x79, 0x74, 0x65, 0x53, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x12, 0x16, 0x0a, 0x06, 0x73,
+	0x69, 0x67, 0x6e, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x06, 0x73, 0x69, 0x67,
+	0x6e, 0x65, 0x72, 0x3a, 0x0b, 0x82, 0xe7, 0xb0, 0x2a, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72,
+	0x22, 0x61, 0x0a, 0x14, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x42, 0x79, 0x74,
+	0x65, 0x53, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x73, 0x12, 0x3b, 0x0a, 0x07, 0x73, 0x69, 0x67, 0x6e,
+	0x65, 0x72, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0c, 0x42, 0x21, 0xd2, 0xb4, 0x2d, 0x1d, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x41,
+	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x07, 0x73, 0x69,
+	0x67, 0x6e, 0x65, 0x72, 0x73, 0x3a, 0x0c, 0x82, 0xe7, 0xb0, 0x2a, 0x07, 0x73, 0x69, 0x67, 0x6e,
+	0x65, 0x72, 0x73, 0x32, 0x4d, 0x0a, 0x10, 0x54, 0x65, 0x73, 0x74, 0x53, 0x69, 0x6d, 0x70, 0x6c,
+	0x65, 0x53, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x12, 0x32, 0x0a, 0x10, 0x54, 0x65, 0x73, 0x74, 0x53,
+	0x69, 0x6d, 0x70, 0x6c, 0x65, 0x53, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x12, 0x0d, 0x2e, 0x53, 0x69,
+	0x6d, 0x70, 0x6c, 0x65, 0x53, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x1a, 0x0d, 0x2e, 0x53, 0x69, 0x6d,
+	0x70, 0x6c, 0x65, 0x53, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x22, 0x00, 0x1a, 0x05, 0x80, 0xe7, 0xb0,
+	0x2a, 0x01, 0x42, 0x3b, 0x42, 0x0c, 0x53, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x73, 0x50, 0x72, 0x6f,
+	0x74, 0x6f, 0x50, 0x01, 0x5a, 0x29, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e,
+	0x69, 0x6f, 0x2f, 0x78, 0x2f, 0x74, 0x78, 0x2f, 0x74, 0x65, 0x78, 0x74, 0x75, 0x61, 0x6c, 0x2f,
+	0x69, 0x6e, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x2f, 0x74, 0x65, 0x73, 0x74, 0x70, 0x62, 0x62,
+	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -9919,7 +11404,7 @@ func file_signers_proto_rawDescGZIP() []byte {
 	return file_signers_proto_rawDescData
 }
 
-var file_signers_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
+var file_signers_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
 var file_signers_proto_goTypes = []interface{}{
 	(*SimpleSigner)(nil),                                  // 0: SimpleSigner
 	(*RepeatedSigner)(nil),                                // 1: RepeatedSigner
@@ -9932,26 +11417,29 @@ var file_signers_proto_goTypes = []interface{}{
 	(*BadSigner)(nil),                                     // 8: BadSigner
 	(*NoSignerOption)(nil),                                // 9: NoSignerOption
 	(*ValidatorSigner)(nil),                               // 10: ValidatorSigner
-	(*NestedSigner_Inner)(nil),                            // 11: NestedSigner.Inner
-	(*RepeatedNestedSigner_Inner)(nil),                    // 12: RepeatedNestedSigner.Inner
-	(*NestedRepeatedSigner_Inner)(nil),                    // 13: NestedRepeatedSigner.Inner
-	(*RepeatedNestedRepeatedSigner_Inner)(nil),            // 14: RepeatedNestedRepeatedSigner.Inner
-	(*DeeplyNestedSigner_InnerOne)(nil),                   // 15: DeeplyNestedSigner.InnerOne
-	(*DeeplyNestedSigner_InnerOne_InnerTwo)(nil),          // 16: DeeplyNestedSigner.InnerOne.InnerTwo
-	(*DeeplyNestedRepeatedSigner_Inner)(nil),              // 17: DeeplyNestedRepeatedSigner.Inner
-	(*DeeplyNestedRepeatedSigner_Inner_Inner)(nil),        // 18: DeeplyNestedRepeatedSigner.Inner.Inner
-	(*DeeplyNestedRepeatedSigner_Inner_Inner_Bottom)(nil), // 19: DeeplyNestedRepeatedSigner.Inner.Inner.Bottom
+	(*ValidatorSigners)(nil),                              // 11: ValidatorSigners
+	(*ValidatorByteSigner)(nil),                           // 12: ValidatorByteSigner
+	(*ValidatorByteSigners)(nil),                          // 13: ValidatorByteSigners
+	(*NestedSigner_Inner)(nil),                            // 14: NestedSigner.Inner
+	(*RepeatedNestedSigner_Inner)(nil),                    // 15: RepeatedNestedSigner.Inner
+	(*NestedRepeatedSigner_Inner)(nil),                    // 16: NestedRepeatedSigner.Inner
+	(*RepeatedNestedRepeatedSigner_Inner)(nil),            // 17: RepeatedNestedRepeatedSigner.Inner
+	(*DeeplyNestedSigner_InnerOne)(nil),                   // 18: DeeplyNestedSigner.InnerOne
+	(*DeeplyNestedSigner_InnerOne_InnerTwo)(nil),          // 19: DeeplyNestedSigner.InnerOne.InnerTwo
+	(*DeeplyNestedRepeatedSigner_Inner)(nil),              // 20: DeeplyNestedRepeatedSigner.Inner
+	(*DeeplyNestedRepeatedSigner_Inner_Inner)(nil),        // 21: DeeplyNestedRepeatedSigner.Inner.Inner
+	(*DeeplyNestedRepeatedSigner_Inner_Inner_Bottom)(nil), // 22: DeeplyNestedRepeatedSigner.Inner.Inner.Bottom
 }
 var file_signers_proto_depIdxs = []int32{
-	11, // 0: NestedSigner.inner:type_name -> NestedSigner.Inner
-	12, // 1: RepeatedNestedSigner.inner:type_name -> RepeatedNestedSigner.Inner
-	13, // 2: NestedRepeatedSigner.inner:type_name -> NestedRepeatedSigner.Inner
-	14, // 3: RepeatedNestedRepeatedSigner.inner:type_name -> RepeatedNestedRepeatedSigner.Inner
-	15, // 4: DeeplyNestedSigner.inner_one:type_name -> DeeplyNestedSigner.InnerOne
-	17, // 5: DeeplyNestedRepeatedSigner.inner:type_name -> DeeplyNestedRepeatedSigner.Inner
-	16, // 6: DeeplyNestedSigner.InnerOne.inner_two:type_name -> DeeplyNestedSigner.InnerOne.InnerTwo
-	18, // 7: DeeplyNestedRepeatedSigner.Inner.inner:type_name -> DeeplyNestedRepeatedSigner.Inner.Inner
-	19, // 8: DeeplyNestedRepeatedSigner.Inner.Inner.inner:type_name -> DeeplyNestedRepeatedSigner.Inner.Inner.Bottom
+	14, // 0: NestedSigner.inner:type_name -> NestedSigner.Inner
+	15, // 1: RepeatedNestedSigner.inner:type_name -> RepeatedNestedSigner.Inner
+	16, // 2: NestedRepeatedSigner.inner:type_name -> NestedRepeatedSigner.Inner
+	17, // 3: RepeatedNestedRepeatedSigner.inner:type_name -> RepeatedNestedRepeatedSigner.Inner
+	18, // 4: DeeplyNestedSigner.inner_one:type_name -> DeeplyNestedSigner.InnerOne
+	20, // 5: DeeplyNestedRepeatedSigner.inner:type_name -> DeeplyNestedRepeatedSigner.Inner
+	19, // 6: DeeplyNestedSigner.InnerOne.inner_two:type_name -> DeeplyNestedSigner.InnerOne.InnerTwo
+	21, // 7: DeeplyNestedRepeatedSigner.Inner.inner:type_name -> DeeplyNestedRepeatedSigner.Inner.Inner
+	22, // 8: DeeplyNestedRepeatedSigner.Inner.Inner.inner:type_name -> DeeplyNestedRepeatedSigner.Inner.Inner.Bottom
 	0,  // 9: TestSimpleSigner.TestSimpleSigner:input_type -> SimpleSigner
 	0,  // 10: TestSimpleSigner.TestSimpleSigner:output_type -> SimpleSigner
 	10, // [10:11] is the sub-list for method output_type
@@ -10100,7 +11588,7 @@ func file_signers_proto_init() {
 			}
 		}
 		file_signers_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*NestedSigner_Inner); i {
+			switch v := v.(*ValidatorSigners); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -10112,7 +11600,7 @@ func file_signers_proto_init() {
 			}
 		}
 		file_signers_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*RepeatedNestedSigner_Inner); i {
+			switch v := v.(*ValidatorByteSigner); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -10124,7 +11612,7 @@ func file_signers_proto_init() {
 			}
 		}
 		file_signers_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*NestedRepeatedSigner_Inner); i {
+			switch v := v.(*ValidatorByteSigners); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -10136,7 +11624,7 @@ func file_signers_proto_init() {
 			}
 		}
 		file_signers_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*RepeatedNestedRepeatedSigner_Inner); i {
+			switch v := v.(*NestedSigner_Inner); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -10148,7 +11636,7 @@ func file_signers_proto_init() {
 			}
 		}
 		file_signers_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DeeplyNestedSigner_InnerOne); i {
+			switch v := v.(*RepeatedNestedSigner_Inner); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -10160,7 +11648,7 @@ func file_signers_proto_init() {
 			}
 		}
 		file_signers_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DeeplyNestedSigner_InnerOne_InnerTwo); i {
+			switch v := v.(*NestedRepeatedSigner_Inner); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -10172,7 +11660,7 @@ func file_signers_proto_init() {
 			}
 		}
 		file_signers_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DeeplyNestedRepeatedSigner_Inner); i {
+			switch v := v.(*RepeatedNestedRepeatedSigner_Inner); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -10184,7 +11672,7 @@ func file_signers_proto_init() {
 			}
 		}
 		file_signers_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DeeplyNestedRepeatedSigner_Inner_Inner); i {
+			switch v := v.(*DeeplyNestedSigner_InnerOne); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -10196,6 +11684,42 @@ func file_signers_proto_init() {
 			}
 		}
 		file_signers_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DeeplyNestedSigner_InnerOne_InnerTwo); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_signers_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DeeplyNestedRepeatedSigner_Inner); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_signers_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DeeplyNestedRepeatedSigner_Inner_Inner); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_signers_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*DeeplyNestedRepeatedSigner_Inner_Inner_Bottom); i {
 			case 0:
 				return &v.state
@@ -10214,7 +11738,7 @@ func file_signers_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_signers_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   20,
+			NumMessages:   23,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

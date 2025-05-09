@@ -1,11 +1,13 @@
 package keeper_test
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -2472,6 +2474,207 @@ func (suite *KeeperTestSuite) TestGetAllSendEnabledEntries() {
 		actual := bankKeeper.GetAllSendEnabledEntries(ctx)
 		require.Len(actual, 0)
 	})
+}
+
+func (suite *KeeperTestSuite) TestGetAllBalances() {
+	addr0 := sdk.AccAddress("addr_0______________")
+	addr1 := sdk.AccAddress("addr_1______________")
+	addr2 := sdk.AccAddress("addr_2______________")
+	addr5 := sdk.AccAddress("addr_5______________")
+	addr20 := sdk.AccAddress("addr_20_____________")
+
+	bal0 := sdk.Coins(nil)
+	bal1 := sdk.NewCoins(sdk.NewInt64Coin("one", 111))
+	bal2 := sdk.NewCoins(sdk.NewInt64Coin("one", 222), sdk.NewInt64Coin("two", 234))
+	bal5 := sdk.NewCoins(
+		sdk.NewInt64Coin("one", 37), sdk.NewInt64Coin("two", 3), sdk.NewInt64Coin("three", 399),
+		sdk.NewInt64Coin("four", 3456), sdk.NewInt64Coin("five", 321),
+	)
+	bal20 := sdk.NewCoins(
+		sdk.NewInt64Coin("one", 4987), sdk.NewInt64Coin("two", 444), sdk.NewInt64Coin("three", 41),
+		sdk.NewInt64Coin("four", 442), sdk.NewInt64Coin("five", 443), sdk.NewInt64Coin("six", 46622),
+		sdk.NewInt64Coin("seven", 487), sdk.NewInt64Coin("eight", 4), sdk.NewInt64Coin("nine", 4991),
+		sdk.NewInt64Coin("ten", 40000000), sdk.NewInt64Coin("eleven", 4545), sdk.NewInt64Coin("twelve", 41212),
+		sdk.NewInt64Coin("thirteen", 41333), sdk.NewInt64Coin("fourteen", 401414), sdk.NewInt64Coin("fifteen", 47),
+		sdk.NewInt64Coin("sixteen", 400016), sdk.NewInt64Coin("seventeen", 404), sdk.NewInt64Coin("eighteen", 4454),
+		sdk.NewInt64Coin("ninteen", 41298), sdk.NewInt64Coin("twenty", 456789),
+	)
+
+	bals := []struct {
+		Addr  sdk.AccAddress
+		Coins sdk.Coins
+	}{
+		{Addr: addr0, Coins: bal0},
+		{Addr: addr1, Coins: bal1},
+		{Addr: addr2, Coins: bal2},
+		{Addr: addr5, Coins: bal5},
+		{Addr: addr20, Coins: bal20},
+	}
+
+	for _, bal := range bals {
+		if bal.Coins.IsZero() {
+			continue
+		}
+
+		suite.mockMintCoins(minterAcc)
+		suite.Require().NoError(suite.bankKeeper.MintCoins(suite.ctx, authtypes.Minter, bal.Coins),
+			"minting %s for %s", bal.Coins, string(bal.Addr))
+		suite.mockSendCoinsFromModuleToAccount(minterAcc, bal.Addr)
+		suite.Require().NoError(
+			suite.bankKeeper.SendCoinsFromModuleToAccount(suite.ctx, authtypes.Minter, bal.Addr, bal.Coins),
+			"sending freshly minted %s to %s", bal.Coins, string(bal.Addr),
+		)
+	}
+
+	tests := []struct {
+		name string
+		addr sdk.AccAddress
+		exp  sdk.Coins
+	}{
+		{name: "nil addr", addr: nil, exp: nil},
+		{name: "empty addr", addr: sdk.AccAddress{}, exp: nil},
+		{name: "addr without anything", addr: addr0, exp: bal0},
+		{name: "addr with one denom", addr: addr1, exp: bal1},
+		{name: "addr with two denom", addr: addr2, exp: bal2},
+		{name: "addr with five denom", addr: addr5, exp: bal5},
+		{name: "addr with twenty denom", addr: addr20, exp: bal20},
+	}
+
+	count := 100
+	for _, tc := range tests {
+		suite.Run(tc.name, func() {
+			var act sdk.Coins
+			testFunc := func() {
+				act = suite.bankKeeper.GetAllBalances(suite.ctx, tc.addr)
+			}
+			for i := 1; i <= count; i++ {
+				suite.Require().NotPanics(testFunc, "[%d/%d]: GetAllBalances", i, count)
+				if !suite.Assert().Equal(tc.exp.String(), act.String(), "[%d/%d]: GetAllBalances result", i, count) && i == 1 {
+					// If it fails on the first one, stop now since that probably means they'll all fail.
+					// If it's not the first, keep going so it's easier to see that it's not deterministic.
+					break
+				}
+				actSorted := copyAndSortCoins(act)
+				suite.Assert().Equal(actSorted, act,
+					"[%d/%d]: GetAllBalances result is not sorted.\nexpected: %s\nactual  : %s",
+					i, count, actSorted, act)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestGetAccountsBalances() {
+	addrNames := make(map[string]string)
+	balsToStrings := func(bals []banktypes.Balance) []string {
+		if bals == nil {
+			return nil
+		}
+		rv := make([]string, len(bals))
+		for i, bal := range bals {
+			rv[i] = fmt.Sprintf("%s (%s) = %s", bal.Address, addrNames[bal.Address], bal.Coins)
+		}
+		return rv
+	}
+
+	addrA := sdk.AccAddress("addr_a______________")
+	addrB := sdk.AccAddress("addr_b______________")
+	addrC := sdk.AccAddress("addr_c______________")
+	addrD := sdk.AccAddress("addr_d______________")
+	addrE := sdk.AccAddress("addr_e______________")
+	addrF := sdk.AccAddress("addr_f______________")
+	addrG := sdk.AccAddress("addr_g______________")
+
+	balA := sdk.NewCoins(sdk.NewInt64Coin("one", 111))
+	balB := sdk.NewCoins(
+		sdk.NewInt64Coin("one", 4987), sdk.NewInt64Coin("two", 444), sdk.NewInt64Coin("three", 41),
+		sdk.NewInt64Coin("four", 442), sdk.NewInt64Coin("five", 443), sdk.NewInt64Coin("six", 46622),
+		sdk.NewInt64Coin("seven", 487), sdk.NewInt64Coin("eight", 4), sdk.NewInt64Coin("nine", 4991),
+		sdk.NewInt64Coin("ten", 40000000), sdk.NewInt64Coin("eleven", 4545), sdk.NewInt64Coin("twelve", 41212),
+		sdk.NewInt64Coin("thirteen", 41333), sdk.NewInt64Coin("fourteen", 401414), sdk.NewInt64Coin("fifteen", 47),
+		sdk.NewInt64Coin("sixteen", 400016), sdk.NewInt64Coin("seventeen", 404), sdk.NewInt64Coin("eighteen", 4454),
+		sdk.NewInt64Coin("ninteen", 41298), sdk.NewInt64Coin("twenty", 456789),
+	)
+	balC := sdk.NewCoins(sdk.NewInt64Coin("one", 222), sdk.NewInt64Coin("two", 234))
+	balD := sdk.Coins(nil)
+	balE := sdk.NewCoins(sdk.NewInt64Coin("banana", 99), sdk.NewInt64Coin("six", 789))
+	balF := sdk.NewCoins(
+		sdk.NewInt64Coin("one", 37), sdk.NewInt64Coin("two", 3), sdk.NewInt64Coin("three", 399),
+		sdk.NewInt64Coin("four", 3456), sdk.NewInt64Coin("five", 321),
+	)
+	balG := sdk.NewCoins(sdk.NewInt64Coin("one", 543))
+
+	type addrCoins struct {
+		Addr  sdk.AccAddress
+		Coins sdk.Coins
+	}
+
+	bals := []addrCoins{
+		{Addr: addrA, Coins: balA},
+		{Addr: addrB, Coins: balB},
+		{Addr: addrC, Coins: balC},
+		{Addr: addrD, Coins: balD},
+		{Addr: addrE, Coins: balE},
+		{Addr: addrF, Coins: balF},
+		{Addr: addrG, Coins: balG},
+	}
+	slices.SortFunc(bals, func(a, b addrCoins) int {
+		return bytes.Compare(a.Addr, b.Addr)
+	})
+
+	expBals := make([]banktypes.Balance, 0, len(bals))
+
+	for _, bal := range bals {
+		addrNames[bal.Addr.String()] = string(bal.Addr)
+		if bal.Coins.IsZero() {
+			continue
+		}
+
+		suite.mockMintCoins(minterAcc)
+		suite.Require().NoError(suite.bankKeeper.MintCoins(suite.ctx, authtypes.Minter, bal.Coins),
+			"minting %s for %s", bal.Coins, string(bal.Addr))
+		suite.mockSendCoinsFromModuleToAccount(minterAcc, bal.Addr)
+		suite.Require().NoError(
+			suite.bankKeeper.SendCoinsFromModuleToAccount(suite.ctx, authtypes.Minter, bal.Addr, bal.Coins),
+			"sending freshly minted %s to %s", bal.Coins, string(bal.Addr),
+		)
+
+		expBals = append(expBals, banktypes.Balance{Address: bal.Addr.String(), Coins: bal.Coins})
+	}
+
+	expStrs := balsToStrings(expBals)
+	suite.Require().NotEmpty(expStrs, "The expected balance strings should not be empty after setup.")
+
+	var actBals []banktypes.Balance
+	testFunc := func() {
+		actBals = suite.bankKeeper.GetAccountsBalances(suite.ctx)
+	}
+
+	count := 1000
+	for i := 1; i <= count; i++ {
+		suite.Require().NotPanics(testFunc, "[%d/%d]: GetAccountsBalances", i, count)
+		actStrs := balsToStrings(actBals)
+		if !suite.Assert().Equal(expStrs, actStrs, "[%d/%d]: GetAccountsBalances result", i, count) && i == 1 {
+			// If it fails on the first one, stop now since that probably means it'll always fail.
+			// If it's not the first, keep going so it's easier to see that it's not deterministic.
+			break
+		}
+		for b, actBal := range actBals {
+			actBalSorted := copyAndSortCoins(actBal.Coins)
+			suite.Assert().Equal(actBalSorted, actBal.Coins,
+				"[%d/%d]: Balance[%d] is not sorted.\nexpected: %s\nactual  : %s",
+				i, count, b, actBalSorted, actBal.Coins)
+		}
+	}
+}
+
+// copyAndSortCoins returns a copy of the provided coins slice and sorts it.
+func copyAndSortCoins(coins sdk.Coins) sdk.Coins {
+	if coins == nil {
+		return nil
+	}
+	rv := make(sdk.Coins, len(coins))
+	copy(rv, coins)
+	return rv.Sort()
 }
 
 type mockSubspace struct {

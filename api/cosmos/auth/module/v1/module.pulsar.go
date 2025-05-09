@@ -1258,7 +1258,7 @@ type Module struct {
 	ModuleAccountPermissions []*ModuleAccountPermission `protobuf:"bytes,2,rep,name=module_account_permissions,json=moduleAccountPermissions,proto3" json:"module_account_permissions,omitempty"`
 	// authority defines the custom module authority. If not set, defaults to the governance module.
 	Authority string `protobuf:"bytes,3,opt,name=authority,proto3" json:"authority,omitempty"`
-	// enable_unordered_transactions determines whether unordered transactions should be processed or not.
+	// enable_unordered_transactions determines whether unordered transactions should be supported or not.
 	// When true, unordered transactions will be validated and processed.
 	// When false, unordered transactions will be rejected.
 	EnableUnorderedTransactions bool `protobuf:"varint,4,opt,name=enable_unordered_transactions,json=enableUnorderedTransactions,proto3" json:"enable_unordered_transactions,omitempty"`

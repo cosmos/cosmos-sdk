@@ -2549,11 +2549,15 @@ func (suite *KeeperTestSuite) TestGetAllBalances() {
 			}
 			for i := 1; i <= count; i++ {
 				suite.Require().NotPanics(testFunc, "[%d/%d]: GetAllBalances", i, count)
-				if !suite.Assert().Equal(tc.exp.String(), act.String(), "[%d/%d]: GetAllBalances", i, count) && i == 1 {
+				if !suite.Assert().Equal(tc.exp.String(), act.String(), "[%d/%d]: GetAllBalances result", i, count) && i == 1 {
 					// If it fails on the first one, stop now since that probably means they'll all fail.
 					// If it's not the first, keep going so it's easier to see that it's not deterministic.
 					break
 				}
+				actSorted := copyAndSortCoins(act)
+				suite.Assert().Equal(actSorted, act,
+					"[%d/%d]: GetAllBalances result is not sorted.\nexpected: %s\nactual  : %s",
+					i, count, actSorted, act)
 			}
 		})
 	}
@@ -2654,7 +2658,23 @@ func (suite *KeeperTestSuite) TestGetAccountsBalances() {
 			// If it's not the first, keep going so it's easier to see that it's not deterministic.
 			break
 		}
+		for b, actBal := range actBals {
+			actBalSorted := copyAndSortCoins(actBal.Coins)
+			suite.Assert().Equal(actBalSorted, actBal.Coins,
+				"[%d/%d]: Balance[%d] is not sorted.\nexpected: %s\nactual  : %s",
+				i, count, b, actBalSorted, actBal.Coins)
+		}
 	}
+}
+
+// copyAndSortCoins returns a copy of the provided coins slice and sorts it.
+func copyAndSortCoins(coins sdk.Coins) sdk.Coins {
+	if coins == nil {
+		return nil
+	}
+	rv := make(sdk.Coins, len(coins))
+	copy(rv, coins)
+	return rv.Sort()
 }
 
 type mockSubspace struct {

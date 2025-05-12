@@ -7,16 +7,14 @@ import (
 	migration "github.com/cosmos/cosmos-sdk/tools/migrate"
 )
 
-var (
-	complexReplacements = []migration.ComplexFunctionReplacement{
-		{
-			ImportPath:      "github.com/cometbft/cometbft/libs/os",
-			FuncName:        "Exit",
-			RequiredImports: []string{"fmt", "os"},
-			ReplacementFunc: replaceLibsOsExit,
-		},
-	}
-)
+var complexReplacements = []migration.ComplexFunctionReplacement{
+	{
+		ImportPath:      "github.com/cometbft/cometbft/libs/os",
+		FuncName:        "Exit",
+		RequiredImports: []string{"fmt", "os"},
+		ReplacementFunc: replaceLibsOsExit,
+	},
+}
 
 // replaceLibsOsExit converts cmtos.Exit("message") to:
 // fmt.Println("message")

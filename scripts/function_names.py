@@ -1,10 +1,11 @@
 import os
 import re
+from typing import List, Dict, Optional
 
 ALLOWED_PREFIXES = ["Deprecated:", "TODO:", "FIXME:"]
 
-def find_go_files(root_dir):
-    go_files = []
+def find_go_files(root_dir: str) -> List[str]:
+    go_files: List[str] = []
     for subdir, _, files in os.walk(root_dir):
         for file in files:
             if file.endswith(".go") and not (
@@ -15,36 +16,33 @@ def find_go_files(root_dir):
                 go_files.append(os.path.join(subdir, file))
     return go_files
 
-def check_func_comments(filepath):
+def check_func_comments(filepath: str) -> List[Dict[str, object]]:
     with open(filepath, 'r') as f:
         lines = f.readlines()
 
-    issues = []
+    issues: List[Dict[str, object]] = []
     i = 0
     while i < len(lines) - 1:
-        # Gather consecutive comment lines
-        comment_block = []
-        comment_start_line = None
+        comment_block: List[str] = []
+        comment_start_line: Optional[int] = None
+
         while i < len(lines) and lines[i].strip().startswith('//'):
             if comment_start_line is None:
                 comment_start_line = i
             comment_block.append(lines[i].strip())
             i += 1
 
-        # Look for a function declaration
         if i < len(lines):
             func_match = re.match(r'func\s+(\(\w+\s+\*?\w+\)\s+)?(\w+)', lines[i])
             if func_match and comment_block:
                 func_name = func_match.group(2)
 
-                # Get first meaningful comment line
                 for line in comment_block:
-                    comment_content = line[2:].strip()  # strip `//` and spaces
+                    comment_content = line[2:].strip()
                     if not comment_content:
                         continue
                     first_word = comment_content.split()[0]
 
-                    # Accept if it matches the function name or an allowed prefix
                     if first_word != func_name and not any(comment_content.startswith(prefix) for prefix in ALLOWED_PREFIXES):
                         issues.append({
                             "file": filepath,
@@ -52,15 +50,15 @@ def check_func_comments(filepath):
                             "expected": func_name,
                             "found": first_word
                         })
-                    break  # Only inspect the first relevant comment line
+                    break
         i += 1
     return issues
 
-def main():
-    root_dir = '.'  # Update as needed
+def main() -> None:
+    root_dir: str = '.'  # or any path
     go_files = find_go_files(root_dir)
 
-    all_issues = []
+    all_issues: List[Dict[str, object]] = []
     for file in go_files:
         issues = check_func_comments(file)
         all_issues.extend(issues)

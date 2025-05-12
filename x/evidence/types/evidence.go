@@ -14,6 +14,7 @@ import (
 )
 
 // Evidence type constants
+
 const RouteEquivocation = "equivocation"
 
 var _ exported.Evidence = &Equivocation{}

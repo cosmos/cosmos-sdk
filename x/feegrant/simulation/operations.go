@@ -31,11 +31,11 @@ var (
 	TypeMsgRevokeAllowance = sdk.MsgTypeURL(&feegrant.MsgRevokeAllowance{})
 )
 
-// will be removed in the future in favor of msg factory
+// WeightedOperations will be removed in the future in favor of msg factory
 func WeightedOperations(
 	registry codectypes.InterfaceRegistry,
 	appParams simtypes.AppParams,
-	cdc codec.JSONCodec,
+	_ codec.JSONCodec,
 	txConfig client.TxConfig,
 	ak feegrant.AccountKeeper,
 	bk feegrant.BankKeeper,

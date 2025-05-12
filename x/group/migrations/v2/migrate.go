@@ -17,7 +17,6 @@ import (
 const (
 	ModuleName = "group"
 
-	// Group Policy Table
 	GroupPolicyTablePrefix    byte = 0x20
 	GroupPolicyTableSeqPrefix byte = 0x21
 )

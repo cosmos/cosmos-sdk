@@ -134,7 +134,7 @@ func (sm *simpleMap) KVPairs() kv.Pairs {
 
 //----------------------------------------
 
-// A local extension to KVPair that can be hashed.
+// KVPair is a local extension to KVPair that can be hashed.
 // Key and value are length prefixed and concatenated,
 // then hashed.
 type KVPair kv.Pair

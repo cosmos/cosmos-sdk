@@ -77,11 +77,9 @@ func NewManager(store *Store, opts types.SnapshotOptions, multistore types.Snaps
 	if extensions == nil {
 		extensions = map[string]types.ExtensionSnapshotter{}
 	}
-	var snapAnnouncer types.SnapshotAnnouncer
+	var snapAnnouncer types.SnapshotAnnouncer = noopSnapshotAnnouncer{}
 	if v, ok := multistore.(types.SnapshotAnnouncer); ok {
 		snapAnnouncer = v
-	} else {
-		snapAnnouncer = noopSnapshotAnnouncer{}
 	}
 	return &Manager{
 		store:         store,

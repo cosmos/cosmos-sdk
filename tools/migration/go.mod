@@ -1,6 +1,6 @@
 module github.com/cosmos/cosmos-sdk/tools/migrate
 
-go 1.24.2
+go 1.23.2
 
 require (
 	github.com/rs/zerolog v1.34.0

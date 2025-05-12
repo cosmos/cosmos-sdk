@@ -1,6 +1,6 @@
 module github.com/cosmos/cosmos-sdk/tools/migration/cometv1
 
-go 1.24.2
+go 1.23.2
 
 replace github.com/cosmos/cosmos-sdk/tools/migrate => ../
 

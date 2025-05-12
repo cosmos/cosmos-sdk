@@ -62,6 +62,7 @@ linters:
   exclusions:
     generated: lax
     presets:
+      - comments # comment this out to get commenting link messages
       - common-false-positives
       - legacy
       - std-error-handling

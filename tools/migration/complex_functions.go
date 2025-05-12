@@ -1,4 +1,4 @@
-package main
+package migration
 
 import (
 	"go/ast"
@@ -20,55 +20,8 @@ type ComplexFunctionReplacement struct {
 // ReplaceFunc is a function that takes an *ast.CallExpr and returns a slice of replacement statements
 type ReplaceFunc func(call *ast.CallExpr) []ast.Stmt
 
-var (
-	complexReplacements = []ComplexFunctionReplacement{
-		{
-			ImportPath:      "github.com/cometbft/cometbft/libs/os",
-			FuncName:        "Exit",
-			RequiredImports: []string{"fmt", "os"},
-			ReplacementFunc: replaceLibsOsExit,
-		},
-	}
-)
-
-// replaceLibsOsExit converts cmtos.Exit("message") to:
-// fmt.Println("message")
-// os.Exit(1)
-func replaceLibsOsExit(call *ast.CallExpr) []ast.Stmt {
-	// extract the message argument from the original function call
-	args := call.Args
-
-	// create fmt.Println(message) statement
-	printlnCall := &ast.ExprStmt{
-		X: &ast.CallExpr{
-			Fun: &ast.SelectorExpr{
-				X:   &ast.Ident{Name: "fmt"},
-				Sel: &ast.Ident{Name: "Println"},
-			},
-			Args: args,
-		},
-	}
-
-	// create os.Exit(1) statement
-	exitCall := &ast.ExprStmt{
-		X: &ast.CallExpr{
-			Fun: &ast.SelectorExpr{
-				X:   &ast.Ident{Name: "os"},
-				Sel: &ast.Ident{Name: "Exit"},
-			},
-			Args: []ast.Expr{
-				&ast.BasicLit{
-					Kind:  token.INT,
-					Value: "1",
-				},
-			},
-		},
-	}
-
-	return []ast.Stmt{printlnCall, exitCall}
-}
-
-// updateComplexFunctions handles replacing function calls with multiple statements
+// updateComplexFunctions handles replacing function calls with multiple statements.
+// For example, cmtos.Exit("foo") -> fmt.Println("foo"); os.Exit(1)
 func updateComplexFunctions(fset *token.FileSet, node *ast.File, complexReplacements []ComplexFunctionReplacement) (bool, error) {
 	modified := false
 

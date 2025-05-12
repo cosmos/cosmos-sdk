@@ -9,7 +9,7 @@ These tests have different goals and are used at different stages of the develop
 We advice, as a general rule, to use tests at all stages of the development cycle.
 It is adviced, as a chain developer, to test your application and modules in a similar way than the SDK.
 
-The rationale behind testing can be found in [ADR-59](https://docs.cosmos.network/main/architecture/adr-059-test-scopes.html).
+The rationale behind testing can be found in [ADR-59](https://docs.cosmos.network/main/build/architecture/adr-059-test-scopes).
 
 ## Unit Tests
 
@@ -19,37 +19,37 @@ All packages and modules should have unit test coverage. Modules should have the
 The SDK uses `mockgen` to generate mocks for keepers:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/scripts/mockgen.sh#L3-L6
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/scripts/mockgen.sh#L3-L6
 ```
 
 You can read more about mockgen [here](https://go.uber.org/mock).
 
 ### Example
 
-As an example, we will walkthrough the [keeper tests](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/gov/keeper/keeper_test.go) of the `x/gov` module.
+As an example, we will walkthrough the [keeper tests](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/gov/keeper/keeper_test.go) of the `x/gov` module.
 
 The `x/gov` module has a `Keeper` type, which requires a few external dependencies (ie. imports outside `x/gov` to work properly).
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/gov/keeper/keeper.go#L22-L24
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/gov/keeper/keeper.go#L22-L24
 ```
 
 In order to only test `x/gov`, we mock the [expected keepers](https://docs.cosmos.network/v0.46/building-modules/keeper.html#type-definition) and instantiate the `Keeper` with the mocked dependencies. Note that we may need to configure the mocked dependencies to return the expected values:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/gov/keeper/common_test.go#L67-L81
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/gov/keeper/common_test.go#L68-L82
 ```
 
 This allows us to test the `x/gov` module without having to import other modules.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/gov/keeper/keeper_test.go#L3-L42
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/gov/keeper/keeper_test.go#L3-L42
 ```
 
 We can test then create unit tests using the newly created `Keeper` instance.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/gov/keeper/keeper_test.go#L83-L107
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/gov/keeper/keeper_test.go#L83-L107
 ```
 
 ## Integration Tests
@@ -81,7 +81,7 @@ Each query is tested using 2 methods:
 Here's an example of regression tests:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/tests/integration/bank/keeper/deterministic_test.go#L134-L151
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/tests/integration/bank/keeper/deterministic_test.go#L143-L160
 ```
 
 ## Simulations
@@ -89,17 +89,17 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/tests/integration/bank
 Simulations uses as well a minimal application, built with [`depinject`](../packages/01-depinject.md):
 
 :::note
-You can as well use the `AppConfig` `configurator` for creating an `AppConfig` [inline](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/slashing/app_test.go#L54-L62). There is no difference between those two ways, use whichever you prefer.
+You can as well use the `AppConfig` `configurator` for creating an `AppConfig` [inline](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/slashing/app_test.go#L54-L62). There is no difference between those two ways, use whichever you prefer.
 :::
 
 Following is an example for `x/gov/` simulations:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/gov/simulation/operations_test.go#L406-L430
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/gov/simulation/operations_test.go#L415-L441
 ```
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/gov/simulation/operations_test.go#L90-L132
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/gov/simulation/operations_test.go#L94-L136
 ```
 
 ## End-to-end Tests

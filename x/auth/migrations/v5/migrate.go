@@ -7,9 +7,11 @@ import (
 
 	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/core/store"
+
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-var LegacyGlobalAccountNumberKey = []byte("globalAccountNumber")
+var LegacyGlobalAccountNumberKey = authtypes.LegacyGlobalAccountNumberKey
 
 func Migrate(ctx context.Context, storeService storetypes.KVStoreService, sequence collections.Sequence) error {
 	store := storeService.OpenKVStore(ctx)

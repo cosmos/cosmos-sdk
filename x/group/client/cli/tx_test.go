@@ -25,9 +25,9 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/group"
-	groupcli "github.com/cosmos/cosmos-sdk/x/group/client/cli"
-	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
+	"github.com/cosmos/cosmos-sdk/x/group"                     //nolint:staticcheck // deprecated and to be removed
+	groupcli "github.com/cosmos/cosmos-sdk/x/group/client/cli" //nolint:staticcheck // deprecated and to be removed
+	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"  //nolint:staticcheck // deprecated and to be removed
 )
 
 var validMetadata = "metadata"

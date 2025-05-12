@@ -3,7 +3,7 @@ module cosmossdk.io/x/tx
 go 1.23.0
 
 require (
-	cosmossdk.io/api v0.9.0
+	cosmossdk.io/api v0.9.2
 	cosmossdk.io/core v0.11.3
 	cosmossdk.io/errors v1.0.2
 	cosmossdk.io/math v1.5.3
@@ -27,8 +27,8 @@ require (
 	golang.org/x/sys v0.32.0 // indirect
 	golang.org/x/text v0.24.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250324211829-b45e905df463 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250324211829-b45e905df463 // indirect
-	google.golang.org/grpc v1.71.1 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250422160041-2d3770c4ea7f // indirect
+	google.golang.org/grpc v1.72.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 

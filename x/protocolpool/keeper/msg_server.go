@@ -146,6 +146,15 @@ func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCance
 	canceledHeight := sdkCtx.BlockHeight()
 	canceledTime := sdkCtx.BlockTime()
 
+	has, err := k.ContinuousFunds.Has(sdkCtx, recipient)
+	if err != nil {
+		return nil, fmt.Errorf("cannot get continuous fund for recipient %w", err)
+	}
+
+	if !has {
+		return nil, fmt.Errorf("cannot cancel continuous fund for recipient %s - does not exist", msg.Recipient)
+	}
+
 	if err := k.ContinuousFunds.Remove(sdkCtx, recipient); err != nil {
 		return nil, fmt.Errorf("failed to remove continuous fund for recipient %s: %w", msg.Recipient, err)
 	}

@@ -1,3 +1,4 @@
+// Deprecated: This package is deprecated and will be removed in the next major release. The `x/group` module will be moved to a separate repo `github.com/cosmos/cosmos-sdk-legacy`.
 package simulation
 
 import (
@@ -14,8 +15,8 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/group"
-	"github.com/cosmos/cosmos-sdk/x/group/keeper"
+	"github.com/cosmos/cosmos-sdk/x/group"        //nolint:staticcheck // deprecated and to be removed
+	"github.com/cosmos/cosmos-sdk/x/group/keeper" //nolint:staticcheck // deprecated and to be removed
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 

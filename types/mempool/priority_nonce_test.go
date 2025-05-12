@@ -973,6 +973,14 @@ func TestNextSenderTx_TxReplacement(t *testing.T) {
 	require.Equal(t, txs[3], iter.Tx())
 }
 
+func TestPriorityNonceMempool_UnorderedTx_FailsForSequence(t *testing.T) {
+	mp := mempool.DefaultPriorityMempool()
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 1)
+	tx := testTx{id: 1, priority: 0, address: accounts[0].Address, nonce: 1, unordered: true}
+	err := mp.Insert(sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger()), tx)
+	require.ErrorContains(t, err, "unordered txs must not have sequence set")
+}
+
 func TestPriorityNonceMempool_UnorderedTx(t *testing.T) {
 	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 2)

@@ -18,6 +18,11 @@ message Module {
 
   // authority defines the custom module authority. If not set, defaults to the governance module.
   string authority = 3;
+
+  // enable_unordered_transactions determines whether unordered transactions should be supported or not.
+  // When true, unordered transactions will be validated and processed.
+  // When false, unordered transactions will be rejected.
+  bool enable_unordered_transactions = 4;
 }
 
 // ModuleAccountPermission represents permissions for a module account.

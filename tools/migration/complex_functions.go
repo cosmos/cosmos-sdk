@@ -46,8 +46,7 @@ func updateComplexFunctions(fset *token.FileSet, node *ast.File, complexReplacem
 	// find all statements that need to be replaced
 	ast.Inspect(node, func(n ast.Node) bool {
 		// we're only interested in statement-level nodes that might contain function calls
-		switch stmt := n.(type) {
-		case *ast.ExprStmt:
+		if stmt, ok := n.(*ast.ExprStmt); ok {
 			// check if the expression is a call expression
 			callExpr, ok := stmt.X.(*ast.CallExpr)
 			if !ok {

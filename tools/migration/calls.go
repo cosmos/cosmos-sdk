@@ -15,7 +15,6 @@ type FunctionArgUpdate struct {
 	FuncName    string // function name to update
 	OldArgCount int    // old number of arguments
 	NewArgCount int    // new number of arguments
-
 }
 
 // updateFunctionCalls finds and updates function calls that need argument changes.

@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-
 	"golang.org/x/sync/errgroup"
 )
 
@@ -56,24 +55,24 @@ func updateFiles(goFiles []string, args MigrateArgs) error {
 			fset := token.NewFileSet()
 			node, err := parser.ParseFile(fset, filePath, nil, parser.ParseComments)
 			if err != nil {
-				return fmt.Errorf("error parsing %s: %v", filePath, err)
+				return fmt.Errorf("error parsing %s: %w", filePath, err)
 			}
 
 			importsChanged, err := updateImports(node, args.ImportUpdates)
 			if err != nil {
-				return fmt.Errorf("error updating imports in %s: %v", filePath, err)
+				return fmt.Errorf("error updating imports in %s: %w", filePath, err)
 			}
 			structsChanged, err := updateStructs(node, args.TypeUpdates)
 			if err != nil {
-				return fmt.Errorf("error updating structs in %s: %v", filePath, err)
+				return fmt.Errorf("error updating structs in %s: %w", filePath, err)
 			}
 			callsChanged, err := updateFunctionCalls(node, args.ArgUpdates)
 			if err != nil {
-				return fmt.Errorf("error updating function calls in %s: %v", filePath, err)
+				return fmt.Errorf("error updating function calls in %s: %w", filePath, err)
 			}
 			complexCallsChanged, err := updateComplexFunctions(fset, node, args.ComplexUpdates)
 			if err != nil {
-				return fmt.Errorf("error updating complex function calls in %s: %v", filePath, err)
+				return fmt.Errorf("error updating complex function calls in %s: %w", filePath, err)
 			}
 
 			changed := importsChanged || structsChanged || callsChanged || complexCallsChanged
@@ -81,11 +80,11 @@ func updateFiles(goFiles []string, args MigrateArgs) error {
 				buf := new(bytes.Buffer)
 				err = format.Node(buf, fset, node)
 				if err != nil {
-					return fmt.Errorf("error formatting modified code: %v", err)
+					return fmt.Errorf("error formatting modified code: %w", err)
 				}
-				err = os.WriteFile(filePath, buf.Bytes(), 0600)
+				err = os.WriteFile(filePath, buf.Bytes(), 0o600)
 				if err != nil {
-					return fmt.Errorf("error writing modified code: %v", err)
+					return fmt.Errorf("error writing modified code: %w", err)
 				}
 			}
 			return nil

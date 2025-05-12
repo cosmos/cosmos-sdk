@@ -21,9 +21,9 @@ ARG UID=1000
 RUN adduser -u $UID -s /bin/sh $UNAME -D
 USER $UNAME
 
-ENV GOLANG_PROTOBUF_VERSION=1.28.1 \
+ENV GOLANG_PROTOBUF_VERSION=1.36.6 \
   GRPC_GATEWAY_VERSION=1.16.0 \
-  GRPC_GATEWAY_PROTOC_GEN_OPENAPIV2_VERSION=2.20.0
+  GRPC_GATEWAY_PROTOC_GEN_OPENAPIV2_VERSION=2.26.3
 
 RUN go install github.com/cosmos/cosmos-proto/cmd/protoc-gen-go-pulsar@latest && \
   go install google.golang.org/protobuf/cmd/protoc-gen-go@v${GOLANG_PROTOBUF_VERSION} && \

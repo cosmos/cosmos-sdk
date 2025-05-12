@@ -25,7 +25,7 @@ func newMerkleMap() *merkleMap {
 	}
 }
 
-// Set creates a kv.Pair from the provided key and value. The value is hashed prior
+// set creates a kv.Pair from the provided key and value. The value is hashed prior
 // to creating a kv.Pair. The created kv.Pair is appended to the MerkleMap's slice
 // of kv.Pairs. Whenever called, the MerkleMap must be resorted.
 func (sm *merkleMap) set(key string, value []byte) {
@@ -44,7 +44,7 @@ func (sm *merkleMap) set(key string, value []byte) {
 	})
 }
 
-// Hash returns the merkle root of items sorted by key. Note, it is unstable.
+// hash returns the merkle root of items sorted by key. Note, it is unstable.
 func (sm *merkleMap) hash() []byte {
 	sm.sort()
 	return hashKVPairs(sm.kvs)
@@ -120,7 +120,7 @@ func (sm *simpleMap) Sort() {
 	sm.sorted = true
 }
 
-// Returns a copy of sorted KVPairs.
+// KVPairs returns a copy of sorted KVPairs.
 // NOTE these contain the hashed key and value.
 func (sm *simpleMap) KVPairs() kv.Pairs {
 	sm.Sort()

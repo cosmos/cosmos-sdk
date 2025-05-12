@@ -134,17 +134,17 @@ func newPrefixIterator(prefix, start, end []byte, parent types.Iterator) *prefix
 	}
 }
 
-// Implements Iterator
+// Domain implements Iterator, returning the start and end keys of the prefixIterator.
 func (pi *prefixIterator) Domain() ([]byte, []byte) {
 	return pi.start, pi.end
 }
 
-// Implements Iterator
+// Valid implements Iterator, checking if the prefixIterator is valid and if the underlying iterator is valid.
 func (pi *prefixIterator) Valid() bool {
 	return pi.valid && pi.iter.Valid()
 }
 
-// Implements Iterator
+// Next implements Iterator, moving the underlying iterator to the next key/value pair that starts with the prefix.
 func (pi *prefixIterator) Next() {
 	if !pi.valid {
 		panic("prefixIterator invalid, cannot call Next()")
@@ -156,7 +156,7 @@ func (pi *prefixIterator) Next() {
 	}
 }
 
-// Implements Iterator
+// Key implements Iterator, returning the stripped prefix key
 func (pi *prefixIterator) Key() (key []byte) {
 	if !pi.valid {
 		panic("prefixIterator invalid, cannot call Key()")
@@ -177,7 +177,7 @@ func (pi *prefixIterator) Value() []byte {
 	return pi.iter.Value()
 }
 
-// Implements Iterator
+// Close implements Iterator, closing the underlying iterator.
 func (pi *prefixIterator) Close() error {
 	return pi.iter.Close()
 }
@@ -192,7 +192,7 @@ func (pi *prefixIterator) Error() error {
 	return nil
 }
 
-// copied from github.com/cometbft/cometbft/libs/db/prefix_db.go
+// stripPrefix is copied from github.com/cometbft/cometbft/libs/db/prefix_db.go
 func stripPrefix(key, prefix []byte) []byte {
 	if len(key) < len(prefix) || !bytes.Equal(key[:len(prefix)], prefix) {
 		panic("should not happen")
@@ -201,7 +201,7 @@ func stripPrefix(key, prefix []byte) []byte {
 	return key[len(prefix):]
 }
 
-// wrapping types.PrefixEndBytes
+// cpIncr wraps the bytes in types.PrefixEndBytes
 func cpIncr(bz []byte) []byte {
 	return types.PrefixEndBytes(bz)
 }

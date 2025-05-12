@@ -5,11 +5,12 @@ package cmd
 import (
 	"os"
 
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/spf13/cobra"
+
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
 	"cosmossdk.io/simapp/params"
-	dbm "github.com/cosmos/cosmos-db"
-	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"

@@ -1,9 +1,8 @@
 package keeper
 
 import (
-	v2 "cosmossdk.io/x/feegrant/migrations/v2"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	v2 "github.com/cosmos/cosmos-sdk/x/feegrant/migrations/v2"
 )
 
 // Migrator is a struct for handling in-place store migrations.

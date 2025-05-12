@@ -3,10 +3,12 @@ package feegrant
 import (
 	"testing"
 
+	"gotest.tools/v3/assert"
+
 	"cosmossdk.io/math"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"gotest.tools/v3/assert"
 )
 
 func TestDuplicateGrantsInGenesis(t *testing.T) {

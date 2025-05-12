@@ -83,7 +83,7 @@ func updateFiles(goFiles []string, args MigrateArgs) error {
 				if err != nil {
 					return fmt.Errorf("error formatting modified code: %v", err)
 				}
-				err = os.WriteFile(filePath, buf.Bytes(), 0644)
+				err = os.WriteFile(filePath, buf.Bytes(), 0600)
 				if err != nil {
 					return fmt.Errorf("error writing modified code: %v", err)
 				}

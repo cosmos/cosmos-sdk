@@ -128,7 +128,7 @@ func Test_encodeKey(t *testing.T) {
 	require.Equal(t, expectedKey, gotKey)
 }
 
-func TestMap_IterateRaw_PrefixBug(t *testing.T) {
+func TestMap_IterateRaw_Prefix(t *testing.T) {
 	sk, ctx := deps()
 	// safety check to ensure prefix boundaries are not crossed
 	require.NoError(t, sk.OpenKVStore(ctx).Set([]byte{0x0, 0x0}, []byte("before prefix")))

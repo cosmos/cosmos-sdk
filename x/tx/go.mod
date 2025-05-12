@@ -42,4 +42,5 @@ replace (
 	cosmossdk.io/api => ../api
 	cosmossdk.io/core => ../core
 	cosmossdk.io/math => ../math
+	cosmossdk.io/errors => ../errors
 )

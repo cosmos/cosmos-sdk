@@ -663,7 +663,7 @@ func (app *BaseApp) getBlockGasMeter(ctx sdk.Context) storetypes.GasMeter {
 	return storetypes.NewInfiniteGasMeter()
 }
 
-// retrieve the context for the tx w/ txBytes and other memoized values.
+// getContextForTx retrieves the context for the tx w/ txBytes and other memoized values.
 func (app *BaseApp) getContextForTx(mode execMode, txBytes []byte) sdk.Context {
 	app.mu.Lock()
 	defer app.mu.Unlock()

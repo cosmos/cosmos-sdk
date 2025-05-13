@@ -154,7 +154,12 @@ func NewLogger(dst io.Writer, options ...Option) Logger {
 
 // NewCustomLogger returns a new logger with the given zerolog logger.
 func NewCustomLogger(logger zerolog.Logger) Logger {
-	return zeroLogWrapper{Logger: &logger}
+	return zeroLogWrapper{
+		Logger:        &logger,
+		regularLevel:  logger.GetLevel(),
+		verboseLevel:  zerolog.NoLevel,
+		disableFilter: nil,
+	}
 }
 
 // Info takes a message and a set of key/value pairs and logs with level INFO.
@@ -184,13 +189,15 @@ func (l zeroLogWrapper) Debug(msg string, keyVals ...interface{}) {
 // With returns a new wrapped logger with additional context provided by a set.
 func (l zeroLogWrapper) With(keyVals ...interface{}) Logger {
 	logger := l.Logger.With().Fields(keyVals).Logger()
-	return zeroLogWrapper{Logger: &logger}
+	l.Logger = &logger
+	return l
 }
 
 // WithContext returns a new wrapped logger with additional context provided by a set.
 func (l zeroLogWrapper) WithContext(keyVals ...interface{}) any {
 	logger := l.Logger.With().Fields(keyVals).Logger()
-	return zeroLogWrapper{Logger: &logger}
+	l.Logger = &logger
+	return l
 }
 
 // Impl returns the underlying zerolog logger.

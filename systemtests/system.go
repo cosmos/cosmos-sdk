@@ -207,7 +207,7 @@ func (s *SystemUnderTest) IsDirty() bool {
 
 // watchLogs stores stdout/stderr in a file and in a ring buffer to output the last n lines on test error
 func (s *SystemUnderTest) watchLogs(node int, cmd *exec.Cmd) {
-	logfile, err := os.Create(filepath.Join(WorkDir, s.outputDir, fmt.Sprintf("node%d.out", node)))
+	logfile, err := os.Create(s.logfileName(node))
 	if err != nil {
 		panic(fmt.Sprintf("open logfile error %#+v", err))
 	}
@@ -228,6 +228,10 @@ func (s *SystemUnderTest) watchLogs(node int, cmd *exec.Cmd) {
 		close(stopRingBuffer)
 		_ = logfile.Close()
 	})
+}
+
+func (s *SystemUnderTest) logfileName(node int) string {
+	return filepath.Join(WorkDir, s.outputDir, fmt.Sprintf("node%d.out", node))
 }
 
 func appendToBuf(r io.Reader, b *ring.Ring, stop <-chan struct{}) {
@@ -789,6 +793,24 @@ func (s *SystemUnderTest) NodesCount() int {
 
 func (s *SystemUnderTest) BlockTime() time.Duration {
 	return s.blockTime
+}
+
+// FindLogMessage searches the logs of each node and returns a count of the number of
+// nodes that had a match for the provided regular expression.
+func (s *SystemUnderTest) FindLogMessage(regex *regexp.Regexp) int {
+	found := 0
+	for i := 0; i < s.nodesCount; i++ {
+		logfile := s.logfileName(i)
+		content, err := os.ReadFile(logfile)
+		if err != nil {
+			continue // skip if file cannot be read
+		}
+		if regex.Match(content) {
+			found++
+		}
+
+	}
+	return found
 }
 
 type Node struct {

@@ -92,7 +92,7 @@ message DeeplyNestedRepeatedSigner {
 
 message BadSigner {
   option (cosmos.msg.v1.signer) = "signer";
-  bytes signer                  = 1;
+  int32 signer                  = 1;
 }
 
 message NoSignerOption {
@@ -102,6 +102,21 @@ message NoSignerOption {
 message ValidatorSigner {
   option (cosmos.msg.v1.signer) = "signer";
   string signer                 = 1 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+}
+
+message ValidatorSigners {
+  option (cosmos.msg.v1.signer) = "signers";
+  repeated string signers       = 1 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+}
+
+message ValidatorByteSigner {
+  option (cosmos.msg.v1.signer) = "signer";
+  bytes signer                  = 1;
+}
+
+message ValidatorByteSigners {
+  option (cosmos.msg.v1.signer) = "signers";
+  repeated bytes signers        = 1 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
 }
 
 service TestSimpleSigner {

@@ -294,7 +294,7 @@ func (ctx Context) WithAux(isAux bool) Context {
 	return ctx
 }
 
-// WithLedgerHasProto returns the context with the provided boolean value, indicating
+// WithLedgerHasProtobuf returns the context with the provided boolean value, indicating
 // whether the target Ledger application can support Protobuf payloads.
 func (ctx Context) WithLedgerHasProtobuf(val bool) Context {
 	ctx.LedgerHasProtobuf = val

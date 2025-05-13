@@ -34,7 +34,7 @@ var (
 	initConfig sync.Once
 )
 
-// New returns a new Config with default values.
+// NewConfig returns a new Config with default values.
 func NewConfig() *Config {
 	return &Config{
 		sealedch: make(chan struct{}),
@@ -120,7 +120,7 @@ func (config *Config) SetAddressVerifier(addressVerifier func([]byte) error) {
 	config.addressVerifier = addressVerifier
 }
 
-// Set the FullFundraiserPath (BIP44Prefix) on the config.
+// SetFullFundraiserPath sets the FullFundraiserPath (BIP44Prefix) on the config.
 //
 // Deprecated: This method is supported for backward compatibility only and will be removed in a future release. Use SetPurpose and SetCoinType instead.
 func (config *Config) SetFullFundraiserPath(fullFundraiserPath string) {
@@ -128,13 +128,13 @@ func (config *Config) SetFullFundraiserPath(fullFundraiserPath string) {
 	config.fullFundraiserPath = fullFundraiserPath
 }
 
-// Set the BIP-0044 Purpose code on the config
+// SetPurpose sets the BIP-0044 Purpose code on the config
 func (config *Config) SetPurpose(purpose uint32) {
 	config.assertNotSealed()
 	config.purpose = purpose
 }
 
-// Set the BIP-0044 CoinType code on the config
+// SetCoinType sets the BIP-0044 CoinType code on the config
 func (config *Config) SetCoinType(coinType uint32) {
 	config.assertNotSealed()
 	config.coinType = coinType

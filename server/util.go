@@ -44,7 +44,6 @@ import (
 // a command's Context.
 const ServerContextKey = sdk.ContextKey("server.context")
 
-// server context
 type Context struct {
 	Viper  *viper.Viper
 	Config *cmtcfg.Config
@@ -311,7 +310,6 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 	return conf, nil
 }
 
-// add server commands
 func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator types.AppCreator, appExport types.AppExporter, addStartFlags types.ModuleInitFlags) {
 	cometCmd := &cobra.Command{
 		Use:     "comet",
@@ -378,6 +376,8 @@ func AddTestnetCreatorCommand(rootCmd *cobra.Command, appCreator types.AppCreato
 	rootCmd.AddCommand(testnetCreateCmd)
 }
 
+// ExternalIP gets the external IP address of the machine.
+//
 // https://stackoverflow.com/questions/23558425/how-do-i-get-the-local-ip-address-in-go
 // TODO there must be a better way to get external IP
 func ExternalIP() (string, error) {

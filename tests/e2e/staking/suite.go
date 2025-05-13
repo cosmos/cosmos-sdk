@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 	"github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/stretchr/testify/suite"
 
@@ -58,28 +57,44 @@ func (s *E2ETestSuite) SetupSuite() {
 		val2.ValAddress,
 		unbond,
 		fmt.Sprintf("--%s=%d", flags.FlagGas, 300000),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 	)
 	s.Require().NoError(err)
 	var txRes sdk.TxResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
 	s.Require().Equal(uint32(0), txRes.Code)
 	s.Require().NoError(s.network.WaitForNextBlock())
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	unbondingAmount := sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(5))
 
 	// unbonding the amount
-	out, err = MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbondingAmount)
+	out, err = MsgUnbondExec(
+		val.ClientCtx,
+		val.Address,
+		val.ValAddress,
+		unbondingAmount,
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+	)
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
 	s.Require().Equal(uint32(0), txRes.Code)
 	s.Require().NoError(s.network.WaitForNextBlock())
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// unbonding the amount
-	out, err = MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbondingAmount)
+	out, err = MsgUnbondExec(
+		val.ClientCtx,
+		val.Address,
+		val.ValAddress,
+		unbondingAmount,
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+	)
 	s.Require().NoError(err)
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
 	s.Require().Equal(uint32(0), txRes.Code)
+	s.Require().NoError(s.network.WaitForNextBlock())
 	s.Require().NoError(s.network.WaitForNextBlock())
 }
 
@@ -113,6 +128,7 @@ func (s *E2ETestSuite) TestBlockResults() {
 	)
 	require.NoError(err)
 	require.NoError(s.network.WaitForNextBlock())
+	require.NoError(s.network.WaitForNextBlock())
 
 	// Use CLI to create a delegation from the new account to validator `val`.
 	cmd := cli.NewDelegateCmd(addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"))
@@ -126,9 +142,10 @@ func (s *E2ETestSuite) TestBlockResults() {
 	})
 	require.NoError(err)
 	require.NoError(s.network.WaitForNextBlock())
+	require.NoError(s.network.WaitForNextBlock())
 
 	// Create a HTTP rpc client.
-	rpcClient, err := http.New(val.RPCAddress, "/websocket")
+	rpcClient, err := http.New(val.RPCAddress)
 	require.NoError(err)
 
 	// Loop until we find a block result with the correct validator updates.
@@ -147,7 +164,7 @@ func (s *E2ETestSuite) TestBlockResults() {
 
 		valUpdate := res.ValidatorUpdates[0]
 		require.Equal(
-			valUpdate.GetPubKey().Sum.(*crypto.PublicKey_Ed25519).Ed25519,
+			valUpdate.PubKeyBytes,
 			val.PubKey.Bytes(),
 		)
 

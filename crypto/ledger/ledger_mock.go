@@ -29,7 +29,7 @@ func init() {
 	initOptionsDefault()
 }
 
-type LedgerSECP256K1Mock struct{}
+type LedgerSECP256K1Mock struct{} //nolint: revive // we can ignore this, as this type is being used
 
 func (mock LedgerSECP256K1Mock) Close() error {
 	return nil

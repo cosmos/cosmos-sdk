@@ -152,7 +152,7 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 	return next(ctx, tx, simulate)
 }
 
-// Consume parameter-defined amount of gas for each signature according to the passed-in SignatureVerificationGasConsumer function
+// SigGasConsumeDecorator consumes parameter-defined amount of gas for each signature according to the passed-in SignatureVerificationGasConsumer function
 // before calling the next AnteHandler
 // CONTRACT: Pubkeys are set in context for all signers before this decorator runs
 // CONTRACT: Tx must implement SigVerifiableTx interface

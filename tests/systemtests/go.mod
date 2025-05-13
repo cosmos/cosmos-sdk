@@ -3,10 +3,10 @@ module cosmossdk.io/tests/systemtests
 go 1.23.5
 
 replace (
+	cosmossdk.io/log => ../../log
 	// always use latest versions in tests
 	cosmossdk.io/systemtests => ../../systemtests
 	github.com/cosmos/cosmos-sdk => ../..
-	cosmossdk.io/log => ../../log
 )
 
 require (

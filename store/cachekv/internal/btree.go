@@ -36,6 +36,7 @@ func NewBTree() BTree {
 	}
 }
 
+// Clear clears the tree.
 func (bt BTree) Clear() {
 	bt.tree.Clear()
 }

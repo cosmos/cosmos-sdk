@@ -620,17 +620,12 @@ func (app *BaseApp) getContextForTx(mode sdk.ExecMode, txBytes []byte) sdk.Conte
 	return ctx
 }
 
-type poolingStore interface {
-	storetypes.MultiStore
-	CacheMultiStorePooled() storetypes.PooledCacheMultiStore
-}
-
 // cacheTxContext returns a new context based off of the provided context with
 // a branched multi-store.
 func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context, storetypes.CacheMultiStore) {
 	ms := ctx.MultiStore()
 	var msCache storetypes.CacheMultiStore
-	if msPooled, ok := ms.(poolingStore); ok {
+	if msPooled, ok := ms.(storetypes.PoolingMultiStore); ok {
 		msCache = msPooled.CacheMultiStorePooled()
 	} else {
 		msCache = ms.CacheMultiStore()

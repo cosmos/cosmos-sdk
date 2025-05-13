@@ -34,13 +34,16 @@ type Store struct {
 	traceContext types.TraceContext
 }
 
+// PooledStore is a wrapper around Store that implements the PooledCacheKVStore interface.
+// It's used to avoid allocating new Store instances .
 type PooledStore struct {
 	Store
 }
 
-var _ types.CacheMultiStore = &Store{}
-
-var _ types.PooledCacheMultiStore = &PooledStore{}
+var (
+	_ types.CacheMultiStore       = &Store{}
+	_ types.PooledCacheMultiStore = &PooledStore{}
+)
 
 // NewFromKVStore creates a new Store object from a mapping of store keys to
 // CacheWrapper objects and a KVStore as the database. Each CacheWrapper store
@@ -91,6 +94,8 @@ var storePool = sync.Pool{
 	},
 }
 
+// newFromKVStorePooled returns a PooledStore object, populated with a mapping of store keys to
+// CacheWrapper objects and a KVStore as the database.
 func newFromKVStorePooled(
 	store types.KVStore, stores map[types.StoreKey]types.CacheWrap,
 	traceWriter io.Writer, traceContext types.TraceContext,
@@ -113,6 +118,7 @@ func newFromKVStorePooled(
 	return cms
 }
 
+// Release releases the PooledStore object back to the pool.
 func (cms *PooledStore) Release() {
 	// clear the stores map
 	for k, v := range cms.stores {
@@ -202,6 +208,7 @@ func (cms *Store) CacheMultiStore() types.CacheMultiStore {
 	return newCacheMultiStoreFromCMS(cms)
 }
 
+// CacheMultiStorePooled returns a PooledCacheMultiStore object from a pool.
 func (cms *Store) CacheMultiStorePooled() types.PooledCacheMultiStore {
 	return newFromKVStorePooled(cms.db, cms.stores, cms.traceWriter, cms.traceContext)
 }

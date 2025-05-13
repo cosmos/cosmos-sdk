@@ -32,6 +32,8 @@ type Store struct {
 	parent        types.KVStore
 }
 
+// PooledStore wraps a Store object and implements the types.PooledCacheKVStore interface,
+// which allows it to be pooled and reused without the overhead of allocation.
 type PooledStore struct {
 	Store
 }
@@ -60,6 +62,7 @@ var storePool = sync.Pool{
 	},
 }
 
+// Release releases the PooledStore object back to the pool.
 func (store *PooledStore) Release() {
 	store.resetCaches()
 	store.parent = nil
@@ -67,6 +70,7 @@ func (store *PooledStore) Release() {
 	storePool.Put(store)
 }
 
+// NewPooledStore gets a PooledStore object from the pool.
 func NewPooledStore(parent types.KVStore) *PooledStore {
 	store := storePool.Get().(*PooledStore)
 	store.parent = parent

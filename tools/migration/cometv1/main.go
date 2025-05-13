@@ -17,6 +17,7 @@ func main() {
 	}
 
 	args := migration.MigrateArgs{
+		GoModUpdates:   moduleUpdates,
 		ArgUpdates:     callUpdates,
 		ComplexUpdates: complexReplacements,
 		ImportUpdates:  importReplacements,

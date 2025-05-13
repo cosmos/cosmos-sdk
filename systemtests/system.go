@@ -795,9 +795,9 @@ func (s *SystemUnderTest) BlockTime() time.Duration {
 	return s.blockTime
 }
 
-// GrepLogs searches the logs of each node and returns a count of the number of
+// FindLogMessage searches the logs of each node and returns a count of the number of
 // nodes that had a match for the provided regular expression.
-func (s *SystemUnderTest) GrepLogs(regex *regexp.Regexp) int {
+func (s *SystemUnderTest) FindLogMessage(regex *regexp.Regexp) int {
 	found := 0
 	for i := 0; i < s.nodesCount; i++ {
 		logfile := s.logfileName(i)

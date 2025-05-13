@@ -128,7 +128,7 @@ func TestChainUpgrade(t *testing.T) {
 
 	regex, err := regexp.Compile("DBG this is a debug level message to test that verbose logging mode has properly been enabled during a chain upgrade")
 	require.NoError(t, err)
-	require.Equal(t, systest.Sut.NodesCount(), systest.Sut.GrepLogs(regex))
+	require.Equal(t, systest.Sut.NodesCount(), systest.Sut.FindLogMessage(regex))
 
 	// smoke test that new version runs
 	cli = systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)

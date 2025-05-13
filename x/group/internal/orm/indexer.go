@@ -10,7 +10,7 @@ import (
 // IndexerFunc creates one or multiple index keys for the source object.
 type IndexerFunc func(value any) ([]any, error)
 
-// IndexerFunc creates exactly one index key for the source object.
+// UniqueIndexerFunc creates exactly one index key for the source object.
 type UniqueIndexerFunc func(value any) (any, error)
 
 // Indexer manages the persistence of an Index based on searchable keys and operations.

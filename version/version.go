@@ -27,15 +27,13 @@ import (
 type ContextKey struct{}
 
 var (
-	// application's name
+	// Name is the application's name
 	Name = ""
-	// application binary name
+	// AppName is the application binary name
 	AppName = "<appd>"
-	// application's version string
-	Version = ""
-	// commit
-	Commit = ""
-	// build tags
+	// Version is the application's version string
+	Version   = ""
+	Commit    = ""
 	BuildTags = ""
 )
 

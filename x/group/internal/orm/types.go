@@ -19,7 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 
-// Unique identifier of a persistent table.
+// RowID is the unique identifier of a persistent table.
 type RowID []byte
 
 // Bytes returns raw bytes.

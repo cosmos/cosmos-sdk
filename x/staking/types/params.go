@@ -19,13 +19,13 @@ const (
 	// TODO: Justify our choice of default here.
 	DefaultUnbondingTime time.Duration = time.Hour * 24 * 7 * 3
 
-	// Default maximum number of bonded validators
+	// DefaultMaxValidators of bonded validators
 	DefaultMaxValidators uint32 = 100
 
-	// Default maximum entries in a UBD/RED pair
+	// DefaultMaxEntries in a UBD/RED pair
 	DefaultMaxEntries uint32 = 7
 
-	// DefaultHistorical entries is 10000. Apps that don't use IBC can ignore this
+	// DefaultHistoricalEntries entries is 10000. Apps that don't use IBC can ignore this
 	// value by not adding the staking module to the application module manager's
 	// SetOrderBeginBlockers.
 	DefaultHistoricalEntries uint32 = 10000
@@ -58,7 +58,7 @@ func DefaultParams() Params {
 	)
 }
 
-// unmarshal the current staking params value from store key or panic
+// MustUnmarshalParams unmarshals the current staking Params value from store key. Panics on error.
 func MustUnmarshalParams(cdc *codec.LegacyAmino, value []byte) Params {
 	params, err := UnmarshalParams(cdc, value)
 	if err != nil {
@@ -68,7 +68,7 @@ func MustUnmarshalParams(cdc *codec.LegacyAmino, value []byte) Params {
 	return params
 }
 
-// unmarshal the current staking params value from store key
+// UnmarshalParams unmarshals the current staking params value from store key
 func UnmarshalParams(cdc *codec.LegacyAmino, value []byte) (params Params, err error) {
 	err = cdc.Unmarshal(value, &params)
 	if err != nil {
@@ -78,7 +78,7 @@ func UnmarshalParams(cdc *codec.LegacyAmino, value []byte) (params Params, err e
 	return
 }
 
-// validate a set of params
+// Validate validates a set of Params
 func (p Params) Validate() error {
 	if err := validateUnbondingTime(p.UnbondingTime); err != nil {
 		return err

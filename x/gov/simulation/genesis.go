@@ -53,7 +53,7 @@ func GenExpeditedMinDeposit(r *rand.Rand, bondDenom string) sdk.Coins {
 	return sdk.NewCoins(sdk.NewInt64Coin(bondDenom, int64(simulation.RandIntBetween(r, 1e3/2, 1e3))))
 }
 
-// GenDepositMinInitialRatio returns randomized DepositMinInitialRatio
+// GenDepositMinInitialDepositRatio returns randomized DepositMinInitialRatio
 func GenDepositMinInitialDepositRatio(r *rand.Rand) sdkmath.LegacyDec {
 	return sdkmath.LegacyNewDec(int64(simulation.RandIntBetween(r, 0, 99))).Quo(sdkmath.LegacyNewDec(100))
 }

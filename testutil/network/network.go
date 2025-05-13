@@ -88,9 +88,9 @@ func init() {
 	}
 }
 
-// AppConstructor defines a function which accepts a network configuration and
-// creates an ABCI Application to provide to CometBFT.
 type (
+	// AppConstructor defines a function which accepts a network configuration and
+	// creates an ABCI Application to provide to CometBFT.
 	AppConstructor     = func(val ValidatorI) servertypes.Application
 	TestFixtureFactory = func() TestFixture
 )

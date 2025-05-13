@@ -15,7 +15,7 @@ type Invariant func(ctx Context) (string, bool)
 // Deprecated: the Invariants type is deprecated and will be removed once x/crisis is removed.
 type Invariants []Invariant
 
-// expected interface for registering invariants
+// InvariantRegistry is the expected interface for registering invariants
 //
 // Deprecated: the InvariantRegistry type is deprecated and will be removed once x/crisis is removed.
 type InvariantRegistry interface {

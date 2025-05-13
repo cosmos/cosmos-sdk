@@ -134,7 +134,7 @@ Once a result is received from the querier, `baseapp` begins the process of retu
 
 ## Response
 
-Since `Query()` is an ABCI function, `baseapp` returns the response as an [`abci.ResponseQuery`](https://docs.cometbft.com/master/spec/abci/abci.html#query-2) type. The `client.Context` `Query()` routine receives the response and.
+Since `Query()` is an ABCI function, `baseapp` returns the response as an [`abci.QueryResponse`](https://docs.cometbft.com/master/spec/abci/abci.html#query-2) type. The `client.Context` `Query()` routine receives the response and.
 
 ### CLI Response
 

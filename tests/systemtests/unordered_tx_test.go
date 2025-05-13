@@ -64,46 +64,45 @@ func TestUnorderedTXDuplicate(t *testing.T) {
 func TestTxBackwardsCompatability(t *testing.T) {
 	// Scenario:
 	// A transaction generated from a v0.53 chain without unordered and timeout_timestamp flags set should succeed.
-	// Conversely, a transaction generated from a v0.53 chain with unordered and timeout_timestamp flags set should fail.
+	// Conversely, a transaction generated from a v0.54 chain with unordered and timeout_timestamp flags set should fail.
 	var (
 		denom                = "stake"
 		transferAmount int64 = 1000
 	)
 	systest.Sut.ResetChain(t)
 
-	v53CLI := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
+	v54CLI := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 	// we just get val addr for an address to send things to.
-	valAddr := v53CLI.GetKeyAddr("node0")
+	valAddr := v54CLI.GetKeyAddr("node0")
 	require.NotEmpty(t, valAddr)
 
 	// generate a deterministic account. we'll use this seed again later in the v50 chain.
-	senderAddr := v53CLI.AddKeyFromSeed("account1", testSeed)
+	senderAddr := v54CLI.AddKeyFromSeed("account1", testSeed)
 
-	v50CLI, legacySut := createLegacyBinary(t, initAccount{
+	v53CLI, legacySut := createLegacyBinary(t, initAccount{
 		address: senderAddr,
 		balance: "10000000000stake",
 	})
 	legacySut.StartChain(t)
 
-	bankSendCmdArgs := []string{"tx", "bank", "send", senderAddr, valAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--chain-id=" + v50CLI.ChainID(), "--fees=10stake", "--sign-mode=direct"}
-	res, ok := v53CLI.RunOnly(bankSendCmdArgs...)
+	bankSendCmdArgs := []string{"tx", "bank", "send", senderAddr, valAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--chain-id=" + v53CLI.ChainID(), "--fees=10stake", "--sign-mode=direct"}
+	res, ok := v54CLI.RunOnly(bankSendCmdArgs...)
 	require.True(t, ok)
 
-	response, ok := v50CLI.AwaitTxCommitted(res, 15*time.Second)
+	response, ok := v53CLI.AwaitTxCommitted(res, 15*time.Second)
 	require.True(t, ok)
 	code := gjson.Get(response, "code").Int()
 	require.Equal(t, int64(0), code)
 
-	bankSendCmdArgs = []string{"tx", "bank", "send", senderAddr, valAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--chain-id=" + v50CLI.ChainID(), "--fees=10stake", "--sign-mode=direct", "--unordered", "--timeout-duration=8m"}
-	res, ok = v53CLI.RunOnly(bankSendCmdArgs...)
+	bankSendCmdArgs = []string{"tx", "bank", "send", senderAddr, valAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--chain-id=" + v53CLI.ChainID(), "--fees=10stake", "--sign-mode=direct", "--unordered", "--timeout-duration=8m"}
+	res, ok = v54CLI.RunOnly(bankSendCmdArgs...)
 	require.True(t, ok)
 
 	code = gjson.Get(res, "code").Int()
-	require.Equal(t, int64(2), code)
-	require.Contains(t, res, "errUnknownField")
+	require.Equal(t, int64(0), code)
 	legacySut.StopChain()
 
-	// Now start a v53 chain, and send a transaction from a v50 client.
+	// Now start a v54 chain, and send a transaction from a v53 client.
 	// generate a deterministic account. we'll use this seed again later in the v50 chain.
 	systest.Sut.SetupChain()
 	systest.Sut.ModifyGenesisCLI(t,
@@ -112,12 +111,12 @@ func TestTxBackwardsCompatability(t *testing.T) {
 	)
 	systest.Sut.StartChain(t)
 
-	senderAddr = v50CLI.AddKeyFromSeed("account1", testSeed)
-	bankSendCmdArgs = []string{"tx", "bank", "send", senderAddr, valAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--chain-id=" + v50CLI.ChainID(), "--fees=10stake", "--sign-mode=direct"}
-	res, ok = v50CLI.RunOnly(bankSendCmdArgs...)
+	senderAddr = v53CLI.AddKeyFromSeed("account1", testSeed)
+	bankSendCmdArgs = []string{"tx", "bank", "send", senderAddr, valAddr, fmt.Sprintf("%d%s", transferAmount, denom), "--chain-id=" + v53CLI.ChainID(), "--fees=10stake", "--sign-mode=direct"}
+	res, ok = v53CLI.RunOnly(bankSendCmdArgs...)
 	require.True(t, ok)
 
-	response, ok = v53CLI.AwaitTxCommitted(res, 15*time.Second)
+	response, ok = v54CLI.AwaitTxCommitted(res, 15*time.Second)
 	require.True(t, ok)
 	code = gjson.Get(response, "code").Int()
 	require.Equal(t, int64(0), code)

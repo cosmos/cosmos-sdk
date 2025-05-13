@@ -72,7 +72,6 @@ func TestChainUpgrade(t *testing.T) {
 
 	legacyBinary := systest.WorkDir + "/binaries/v0.53/simd"
 	systest.Sut.SetExecBinary(legacyBinary)
-	systest.Sut.SetTestnetInitializer(systest.NewModifyConfigYamlInitializer(legacyBinary, systest.Sut))
 	systest.Sut.SetupChain()
 
 	votingPeriod := 5 * time.Second // enough time to vote

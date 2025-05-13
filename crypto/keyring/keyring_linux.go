@@ -34,7 +34,7 @@ type Options struct {
 	LedgerDerivation func() (ledger.SECP256K1, error)
 	// LedgerCreateKey defines the Ledger key generation function
 	LedgerCreateKey func([]byte) types.PubKey
-	//LedgerAppName  defines Ledger app name
+	// LedgerAppName  defines Ledger app name
 	LedgerAppName string
 	// LedgerSigSkipDERConv indicates whether Ledger should skip DER Conversion on signature,
 	// depending on which format (DER or BER) the Ledger app returns signatures

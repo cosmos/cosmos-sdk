@@ -8,8 +8,6 @@ import (
 	"github.com/spf13/cobra"
 
 	addresscodec "cosmossdk.io/core/address"
-	"cosmossdk.io/x/upgrade/plan"
-	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -17,6 +15,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 const (

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"math/rand"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/cometbft/cometbft/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"

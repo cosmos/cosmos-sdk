@@ -13,7 +13,7 @@ import (
 	"testing"
 	"unsafe"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
@@ -28,6 +28,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/baseapp/state"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -323,18 +324,23 @@ func testLoadVersionHelper(t *testing.T, app *baseapp.BaseApp, expectedHeight in
 	require.Equal(t, expectedID, lastID)
 }
 
-func getCheckStateCtx(app *baseapp.BaseApp) sdk.Context {
+// note: we use reflection in this test because we do not want to make the baseapp state publicly available
+
+func reflectGetStateCtx(app *baseapp.BaseApp, mode sdk.ExecMode) sdk.Context {
 	v := reflect.ValueOf(app).Elem()
-	f := v.FieldByName("checkState")
+	f := v.FieldByName("stateManager")
 	rf := reflect.NewAt(f.Type(), unsafe.Pointer(f.UnsafeAddr())).Elem()
-	return rf.MethodByName("Context").Call(nil)[0].Interface().(sdk.Context)
+	arg := reflect.ValueOf(mode)
+	st := rf.MethodByName("GetState").Call([]reflect.Value{arg})[0].Interface().(*state.State)
+	return st.Context()
+}
+
+func getCheckStateCtx(app *baseapp.BaseApp) sdk.Context {
+	return reflectGetStateCtx(app, sdk.ExecModeCheck)
 }
 
 func getFinalizeBlockStateCtx(app *baseapp.BaseApp) sdk.Context {
-	v := reflect.ValueOf(app).Elem()
-	f := v.FieldByName("finalizeBlockState")
-	rf := reflect.NewAt(f.Type(), unsafe.Pointer(f.UnsafeAddr())).Elem()
-	return rf.MethodByName("Context").Call(nil)[0].Interface().(sdk.Context)
+	return reflectGetStateCtx(app, sdk.ExecModeFinalize)
 }
 
 func parseTxMemo(t *testing.T, tx sdk.Tx) (counter int64, failOnAnte bool) {

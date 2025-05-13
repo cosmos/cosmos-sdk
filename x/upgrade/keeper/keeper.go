@@ -17,10 +17,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
-
 	"cosmossdk.io/log"
-	xp "cosmossdk.io/x/upgrade/exported"
-	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -29,10 +26,14 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	xp "github.com/cosmos/cosmos-sdk/x/upgrade/exported"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-// Deprecated: UpgradeInfoFileName file to store upgrade information
+// UpgradeInfoFileName file to store upgrade information
 // use x/upgrade/types.UpgradeInfoFilename instead.
+//
+// Deprecated:will be removed in the future.
 const UpgradeInfoFileName string = "upgrade-info.json"
 
 type Keeper struct {

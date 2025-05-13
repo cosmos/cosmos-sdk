@@ -9,7 +9,7 @@ import (
 
 var _ GovHooks = MultiGovHooks{}
 
-// combine multiple governance hooks, all hook functions are run in array sequence
+// MultiGovHooks combines multiple governance hooks, all hook functions are run in array sequence
 type MultiGovHooks []GovHooks
 
 func NewMultiGovHooks(hooks ...GovHooks) MultiGovHooks {

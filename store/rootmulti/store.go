@@ -10,8 +10,9 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	gogotypes "github.com/cosmos/gogoproto/types"
@@ -59,7 +60,7 @@ func keysFromStoreKeyMap[V any](m map[types.StoreKey]V) []types.StoreKey {
 type Store struct {
 	db                  dbm.DB
 	logger              log.Logger
-	lastCommitInfo      *types.CommitInfo
+	lastCommitInfo      atomic.Pointer[types.CommitInfo]
 	pruningManager      *pruning.Manager
 	iavlCacheSize       int
 	iavlDisableFastNode bool
@@ -82,8 +83,9 @@ type Store struct {
 }
 
 var (
-	_ types.CommitMultiStore = (*Store)(nil)
-	_ types.Queryable        = (*Store)(nil)
+	_ types.CommitMultiStore          = (*Store)(nil)
+	_ types.Queryable                 = (*Store)(nil)
+	_ snapshottypes.SnapshotAnnouncer = (*Store)(nil)
 )
 
 // NewStore returns a reference to a new Store object with the provided DB. The
@@ -296,7 +298,7 @@ func (rs *Store) loadVersion(ver int64, upgrades *types.StoreUpgrades) error {
 		}
 	}
 
-	rs.lastCommitInfo = cInfo
+	rs.lastCommitInfo.Store(cInfo)
 	rs.stores = newStores
 
 	// load any snapshot heights we missed from disk to be pruned on the next run
@@ -334,7 +336,7 @@ func deleteKVStore(kv types.KVStore) error {
 	return nil
 }
 
-// we simulate move by a copy and delete
+// moveKVStoreData implements a move by a copy and delete.
 func moveKVStoreData(oldDB, newDB types.KVStore) error {
 	// we read from one and write to another
 	itr := oldDB.Iterator(nil, nil)
@@ -355,6 +357,10 @@ func moveKVStoreData(oldDB, newDB types.KVStore) error {
 // For other strategies, this height is persisted until the snapshot is operated.
 func (rs *Store) PruneSnapshotHeight(height int64) {
 	rs.pruningManager.HandleSnapshotHeight(height)
+}
+
+func (rs *Store) AnnounceSnapshotHeight(height int64) {
+	rs.pruningManager.AnnounceSnapshotHeight(height)
 }
 
 // SetInterBlockCache sets the Store's internal inter-block (persistent) cache.
@@ -445,7 +451,8 @@ func (rs *Store) LatestVersion() int64 {
 
 // LastCommitID implements Committer/CommitStore.
 func (rs *Store) LastCommitID() types.CommitID {
-	if rs.lastCommitInfo == nil {
+	info := rs.lastCommitInfo.Load()
+	if info == nil {
 		emptyHash := sha256.Sum256([]byte{})
 		appHash := emptyHash[:]
 		return types.CommitID{
@@ -453,22 +460,22 @@ func (rs *Store) LastCommitID() types.CommitID {
 			Hash:    appHash, // set empty apphash to sha256([]byte{}) if info is nil
 		}
 	}
-	if len(rs.lastCommitInfo.CommitID().Hash) == 0 {
+	if len(info.CommitID().Hash) == 0 {
 		emptyHash := sha256.Sum256([]byte{})
 		appHash := emptyHash[:]
 		return types.CommitID{
-			Version: rs.lastCommitInfo.Version,
+			Version: info.Version,
 			Hash:    appHash, // set empty apphash to sha256([]byte{}) if hash is nil
 		}
 	}
 
-	return rs.lastCommitInfo.CommitID()
+	return info.CommitID()
 }
 
 // Commit implements Committer/CommitStore.
 func (rs *Store) Commit() types.CommitID {
 	var previousHeight, version int64
-	if rs.lastCommitInfo.GetVersion() == 0 && rs.initialVersion > 1 {
+	if cInfo := rs.lastCommitInfo.Load(); (cInfo == nil || cInfo.Version == 0) && rs.initialVersion > 1 {
 		// This case means that no commit has been made in the store, we
 		// start from initialVersion.
 		version = rs.initialVersion
@@ -478,7 +485,11 @@ func (rs *Store) Commit() types.CommitID {
 		// case we increment the version from there,
 		// - or there was no previous commit, and initial version was not set,
 		// in which case we start at version 1.
-		previousHeight = rs.lastCommitInfo.GetVersion()
+		if cInfo != nil {
+			previousHeight = cInfo.Version
+		} else {
+			previousHeight = 0
+		}
 		version = previousHeight + 1
 	}
 
@@ -486,9 +497,11 @@ func (rs *Store) Commit() types.CommitID {
 		rs.logger.Debug("commit header and version mismatch", "header_height", rs.commitHeader.Height, "version", version)
 	}
 
-	rs.lastCommitInfo = commitStores(version, rs.stores, rs.removalMap)
-	rs.lastCommitInfo.Timestamp = rs.commitHeader.Time
-	defer rs.flushMetadata(rs.db, version, rs.lastCommitInfo)
+	cInfo := commitStores(version, rs.stores, rs.removalMap)
+	cInfo.Timestamp = rs.commitHeader.Time
+	rs.lastCommitInfo.Store(cInfo)
+
+	defer rs.flushMetadata(rs.db, version, cInfo)
 
 	// remove remnants of removed stores
 	for sk := range rs.removalMap {
@@ -511,7 +524,7 @@ func (rs *Store) Commit() types.CommitID {
 
 	return types.CommitID{
 		Version: version,
-		Hash:    rs.lastCommitInfo.Hash(),
+		Hash:    cInfo.Hash(),
 	}
 }
 
@@ -711,7 +724,7 @@ func (rs *Store) PruneStores(pruningHeight int64) (err error) {
 	return nil
 }
 
-// getStoreByName performs a lookup of a StoreKey given a store name typically
+// GetStoreByName performs a lookup of a StoreKey given a store name typically
 // provided in a path. The StoreKey is then used to perform a lookup and return
 // a Store. If the Store is wrapped in an inter-block cache, it will be unwrapped
 // prior to being returned. If the StoreKey does not exist, nil is returned.
@@ -762,8 +775,9 @@ func (rs *Store) Query(req *types.RequestQuery) (*types.ResponseQuery, error) {
 	// Otherwise, we query for the commit info from disk.
 	var commitInfo *types.CommitInfo
 
-	if res.Height == rs.lastCommitInfo.Version {
-		commitInfo = rs.lastCommitInfo
+	cInfo := rs.lastCommitInfo.Load()
+	if res.Height == cInfo.Version {
+		commitInfo = cInfo
 	} else {
 		commitInfo, err = rs.GetCommitInfo(res.Height)
 		if err != nil {
@@ -1171,7 +1185,7 @@ func GetLatestVersion(db dbm.DB) int64 {
 	return latestVersion
 }
 
-// Commits each store and returns a new commitInfo.
+// commitStores commits each store and returns a new commitInfo.
 func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore, removalMap map[types.StoreKey]bool) *types.CommitInfo {
 	storeInfos := make([]types.StoreInfo, 0, len(storeMap))
 	storeKeys := keysFromStoreKeyMap(storeMap)

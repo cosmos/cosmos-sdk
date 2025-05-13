@@ -4,12 +4,12 @@ import (
 	"context"
 
 	storetypes "cosmossdk.io/store/types"
-	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	epochstypes "github.com/cosmos/cosmos-sdk/x/epochs/types"
 	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // UpgradeName defines the on-chain upgrade name for the sample SimApp upgrade

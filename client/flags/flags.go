@@ -18,7 +18,6 @@ const (
 	DefaultGasLimit      = 200000
 	GasFlagAuto          = "auto"
 
-	// DefaultKeyringBackend
 	DefaultKeyringBackend = keyring.BackendOS
 
 	// BroadcastSync defines a tx broadcasting mode where the client waits for

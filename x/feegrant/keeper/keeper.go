@@ -11,13 +11,13 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/feegrant"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
 // Keeper manages state of all fee grants, as well as calculating approval.
@@ -59,7 +59,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, ak feeg
 	}
 }
 
-// Super ugly hack to not be breaking in v0.50 and v0.47
+// SetBankKeeper is a super ugly hack to not be breaking in v0.50 and v0.47
 // DO NOT USE.
 func (k Keeper) SetBankKeeper(bk feegrant.BankKeeper) Keeper {
 	k.bankKeeper = bk

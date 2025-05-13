@@ -210,6 +210,7 @@ func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 	return log.NewLogger(out, opts...), nil
 }
 
+// parseVerboseLogLevel parses the string "none" as zerolog.NoLevel and all other level strings using zerolog.ParseLevel.
 func parseVerboseLogLevel(verboseLogLevelStr string) (zerolog.Level, error) {
 	if verboseLogLevelStr == "none" {
 		return zerolog.NoLevel, nil

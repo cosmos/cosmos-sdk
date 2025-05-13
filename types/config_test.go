@@ -1,15 +1,11 @@
-package types_test
+package types
 
 import (
 	"errors"
-	"fmt"
-	"os"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type configTestSuite struct {
@@ -21,7 +17,7 @@ func TestConfigTestSuite(t *testing.T) {
 }
 
 func (s *configTestSuite) TestConfig_SetPurpose() {
-	config := sdk.NewConfig()
+	config := NewConfig()
 	config.SetPurpose(44)
 	s.Require().Equal(uint32(44), config.GetPurpose())
 
@@ -33,7 +29,7 @@ func (s *configTestSuite) TestConfig_SetPurpose() {
 }
 
 func (s *configTestSuite) TestConfig_SetCoinType() {
-	config := sdk.NewConfig()
+	config := NewConfig()
 	config.SetCoinType(1)
 	s.Require().Equal(uint32(1), config.GetCoinType())
 	config.SetCoinType(99)
@@ -45,11 +41,11 @@ func (s *configTestSuite) TestConfig_SetCoinType() {
 
 func (s *configTestSuite) TestConfig_SetTxEncoder() {
 	mockErr := errors.New("test")
-	config := sdk.NewConfig()
+	config := NewConfig()
 	s.Require().Nil(config.GetTxEncoder())
-	encFunc := sdk.TxEncoder(func(tx sdk.Tx) ([]byte, error) { return nil, mockErr })
+	encFunc := TxEncoder(func(tx Tx) ([]byte, error) { return nil, mockErr })
 	config.SetTxEncoder(encFunc)
-	_, err := config.GetTxEncoder()(sdk.Tx(nil))
+	_, err := config.GetTxEncoder()(Tx(nil))
 	s.Require().Equal(mockErr, err)
 
 	config.Seal()
@@ -57,7 +53,7 @@ func (s *configTestSuite) TestConfig_SetTxEncoder() {
 }
 
 func (s *configTestSuite) TestConfig_SetFullFundraiserPath() {
-	config := sdk.NewConfig()
+	config := NewConfig()
 	config.SetFullFundraiserPath("test/path")
 	s.Require().Equal("test/path", config.GetFullFundraiserPath())
 
@@ -69,55 +65,38 @@ func (s *configTestSuite) TestConfig_SetFullFundraiserPath() {
 }
 
 func (s *configTestSuite) TestKeyringServiceName() {
-	s.Require().Equal(sdk.DefaultKeyringServiceName, sdk.KeyringServiceName())
+	s.Require().Equal(DefaultKeyringServiceName, KeyringServiceName())
 }
 
 func (s *configTestSuite) TestConfig_ScopePerBinary_DefaultBehavior() {
-	cfg1 := sdk.GetConfig()
-	cfg2 := sdk.GetConfig()
+	cfg1 := GetConfig()
+	cfg2 := GetConfig()
 	s.Require().Equal(cfg1, cfg2, "configs should be identical in same binary by default")
 }
 
 func (s *configTestSuite) TestConfig_ScopePerBinary_EnvOverride() {
-	original := os.Getenv(sdk.EnvConfigScope)
-	defer os.Setenv(sdk.EnvConfigScope, original)
+	s.T().Setenv(EnvConfigScope, "test-scope-A")
+	cfgA := GetConfig()
 
-	s.Require().NoError(os.Setenv(sdk.EnvConfigScope, "test-scope-A"))
-	cfgA := sdk.GetConfig()
-
-	s.Require().NoError(os.Setenv(sdk.EnvConfigScope, "test-scope-B"))
-	cfgB := sdk.GetConfig()
+	s.T().Setenv(EnvConfigScope, "test-scope-B")
+	cfgB := GetConfig()
 
 	s.Require().NotEqual(cfgA, cfgB, "configs should differ for different env scopes")
 }
 
 func (s *configTestSuite) TestConfig_ScopePerBinary_EnvRestoration() {
-	envKey := sdk.EnvConfigScope
-	original := os.Getenv(envKey)
-	defer os.Setenv(envKey, original)
+	envKey := EnvConfigScope
 
-	s.Require().NoError(os.Setenv(envKey, "test-scope-Restore"))
-	cfg1 := sdk.GetConfig()
+	s.T().Setenv(envKey, "test-scope-Restore")
+	cfg1 := GetConfig()
 
-	s.Require().NoError(os.Setenv(envKey, "test-scope-Restore"))
-	cfg2 := sdk.GetConfig()
+	s.T().Setenv(envKey, "test-scope-Restore")
+	cfg2 := GetConfig()
 
 	s.Require().Equal(cfg1, cfg2, "config should remain stable with same env scope")
 }
 
 func (s *configTestSuite) TestConfig_ScopeKeyFormat() {
-	key := getTestConfigKey()
+	key := getConfigKey()
 	s.Require().True(strings.Count(key, "|") == 2, "scope key should have 2 pipe separators")
-}
-
-// getTestConfigKey replicates the internal key generation logic for testing visibility.
-func getTestConfigKey() string {
-	id := os.Getenv(sdk.EnvConfigScope)
-	if id != "" {
-		return id
-	}
-	exe, _ := os.Executable()
-	host, _ := os.Hostname()
-	pid := os.Getpid()
-	return fmt.Sprintf("%s|%s|%d", host, exe, pid)
 }

@@ -139,7 +139,6 @@ func (config *Config) SetPurpose(purpose uint32) {
 	config.purpose = purpose
 }
 
-
 // SetCoinType sets the BIP-0044 CoinType code on the config
 func (config *Config) SetCoinType(coinType uint32) {
 	config.assertNotSealed()
@@ -216,6 +215,7 @@ func KeyringServiceName() string {
 }
 
 // Optional: expose sealed config with timeout
+
 func GetSealedConfig(ctx context.Context) (*Config, error) {
 	config := GetConfig()
 	select {

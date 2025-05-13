@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/core v0.11.3
 	cosmossdk.io/depinject v1.2.0
 	cosmossdk.io/errors v1.0.2
-	cosmossdk.io/log v1.5.1
+	cosmossdk.io/log v1.6.0
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/simapp v0.0.0-20230620040119-e078f1a49e8b
 	cosmossdk.io/store v1.1.2
@@ -197,7 +197,7 @@ require (
 	go.opentelemetry.io/otel/sdk/metric v1.34.0 // indirect
 	go.opentelemetry.io/otel/trace v1.34.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/arch v0.15.0 // indirect
+	golang.org/x/arch v0.17.0 // indirect
 	golang.org/x/crypto v0.38.0 // indirect
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394 // indirect
 	golang.org/x/net v0.39.0 // indirect
@@ -222,18 +222,6 @@ require (
 // 	<temporary replace>
 // )
 
-<<<<<<< HEAD
-=======
-// Replace all unreleased direct deps upgraded to comet v1
-replace (
-	cosmossdk.io/api => ../api
-	cosmossdk.io/core => ../core
-	cosmossdk.io/log => ../log
-	cosmossdk.io/store => ../store
-	cosmossdk.io/x/tx => ../x/tx
-)
-
->>>>>>> be955efe2 (feat: verbose logging during upgrades (#24720))
 // Below are the long-lived replace for tests.
 replace (
 	// We always want to test against the latest version of the simapp.

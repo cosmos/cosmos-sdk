@@ -148,7 +148,7 @@ func NewMemoryStoreSchema(service core.MemoryStoreService) Schema {
 // function. Modules built against versions of the SDK which do not support
 // the cosmossdk.io/core/appmodule APIs should use this method.
 // Ex:
-
+//
 //	NewSchemaFromAccessor(func(ctx context.Context) store.KVStore {
 //			return sdk.UnwrapSDKContext(ctx).KVStore(kvStoreKey)
 //	}

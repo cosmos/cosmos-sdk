@@ -5,7 +5,7 @@ import (
 )
 
 // TxExtensionOptionI defines the interface for tx extension options
-type TxExtensionOptionI any
+type TxExtensionOptionI any //nolint: revive // we can ignore this, as this type is being used
 
 // unpackTxExtensionOptionsI unpacks Any's to TxExtensionOptionI's.
 func unpackTxExtensionOptionsI(unpacker types.AnyUnpacker, anys []*types.Any) error {

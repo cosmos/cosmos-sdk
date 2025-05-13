@@ -4,7 +4,6 @@ import (
 	"cosmossdk.io/store/types"
 )
 
-// Import cosmos-sdk/types/store.go for convenience.
 type (
 	Store            = types.Store
 	Committer        = types.Committer

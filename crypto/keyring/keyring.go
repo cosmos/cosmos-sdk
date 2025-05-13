@@ -105,7 +105,7 @@ type Keyring interface {
 	Migrator
 }
 
-type KeyringWithDB interface {
+type KeyringWithDB interface { //nolint: revive // we can ignore this, as this type is being used
 	Keyring
 
 	// Get the db keyring used in the keystore.

@@ -23,7 +23,7 @@ const (
 	QueryHistoricalInfo                = "historicalInfo"
 )
 
-// defines the params for the following queries:
+// QueryDelegatorParams defines the params for the following queries:
 // - 'custom/staking/delegatorDelegations'
 // - 'custom/staking/delegatorUnbondingDelegations'
 // - 'custom/staking/delegatorValidators'
@@ -37,7 +37,7 @@ func NewQueryDelegatorParams(delegatorAddr sdk.AccAddress) QueryDelegatorParams 
 	}
 }
 
-// defines the params for the following queries:
+// QueryValidatorParams defines the params for the following queries:
 // - 'custom/staking/validator'
 // - 'custom/staking/validatorDelegations'
 // - 'custom/staking/validatorUnbondingDelegations'
@@ -54,7 +54,7 @@ func NewQueryValidatorParams(validatorAddr sdk.ValAddress, page, limit int) Quer
 	}
 }
 
-// defines the params for the following queries:
+// QueryRedelegationParams defines the params for the following queries:
 // - 'custom/staking/redelegation'
 type QueryRedelegationParams struct {
 	DelegatorAddr    sdk.AccAddress

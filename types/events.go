@@ -268,7 +268,7 @@ const (
 )
 
 type (
-	// StringAttributes defines a slice of StringEvents objects.
+	// StringEvents defines a slice of StringEvents objects.
 	StringEvents []StringEvent
 )
 

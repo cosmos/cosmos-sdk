@@ -31,7 +31,7 @@ func hashFromByteSlices(sha hash.Hash, items [][]byte) []byte {
 	}
 }
 
-// returns tmhash(0x00 || leaf)
+// leafHashOpt returns tmhash(0x00 || leaf)
 func leafHashOpt(s hash.Hash, leaf []byte) []byte {
 	s.Reset()
 	s.Write(leafPrefix)
@@ -47,7 +47,7 @@ func innerHashOpt(s hash.Hash, left, right []byte) []byte {
 	return s.Sum(nil)
 }
 
-// returns tmhash(<empty>)
+// emptyHash returns tmhash(<empty>)
 func emptyHash() []byte {
 	h := sha256.Sum256([]byte{})
 	return h[:]

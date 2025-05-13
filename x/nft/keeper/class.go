@@ -5,9 +5,9 @@ import (
 
 	"cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/nft" //nolint:staticcheck // deprecated and to be removed
 
 	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/x/nft" //nolint:staticcheck // deprecated and to be removed
 )
 
 // SaveClass defines a method for creating a new nft class

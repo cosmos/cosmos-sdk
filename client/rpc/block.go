@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	cmt "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmt "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -33,11 +33,12 @@ func GetChainHeight(clientCtx client.Context) (int64, error) {
 //
 // To tell which events you want, you need to provide a query. query is a
 // string, which has a form: "condition AND condition ..." (no OR at the
-// 	moment). condition has a form: "key operation operand". key is a string with
-// 	a restricted set of possible symbols ( \t\n\r\\()"'=>< are not allowed).
-// 	operation can be "=", "<", "<=", ">", ">=", "CONTAINS" AND "EXISTS". operand
-// 	can be a string (escaped with single quotes), number, date or time.
-
+//
+//	moment). condition has a form: "key operation operand". key is a string with
+//	a restricted set of possible symbols ( \t\n\r\\()"'=>< are not allowed).
+//	operation can be "=", "<", "<=", ">", ">=", "CONTAINS" AND "EXISTS". operand
+//	can be a string (escaped with single quotes), number, date or time.
+//
 //	Examples:
 //		  tm.event = 'NewBlock'               # new blocks
 //		  tm.event = 'CompleteProposal'       # node got a complete proposal
@@ -67,7 +68,7 @@ func QueryBlocks(clientCtx client.Context, page, limit int, query, orderBy strin
 	return result, nil
 }
 
-// get block by height
+// GetBlockByHeight gets a block by height
 func GetBlockByHeight(clientCtx client.Context, height *int64) (*cmt.Block, error) {
 	// get the node
 	node, err := clientCtx.GetNode()

@@ -15,6 +15,7 @@ import (
 )
 
 // Linux-only backend options.
+
 const BackendKeyctl = "keyctl"
 
 func KeyctlScopeUser(options *Options)        { setKeyctlScope(options, "user") }
@@ -25,17 +26,17 @@ func KeyctlScopeThread(options *Options)      { setKeyctlScope(options, "thread"
 
 // Options define the options of the Keyring.
 type Options struct {
-	// supported signing algorithms for keyring
+	// SupportedAlgos is the supported signing algorithms for keyring
 	SupportedAlgos SigningAlgoList
-	// supported signing algorithms for Ledger
+	// SupportedAlgosLedger is the supported signing algorithms for Ledger
 	SupportedAlgosLedger SigningAlgoList
-	// define Ledger Derivation function
+	// LedgerDerivation defines the Ledger Derivation function
 	LedgerDerivation func() (ledger.SECP256K1, error)
-	// define Ledger key generation function
+	// LedgerCreateKey defines the Ledger key generation function
 	LedgerCreateKey func([]byte) types.PubKey
-	// define Ledger app name
+	// LedgerAppName  defines Ledger app name
 	LedgerAppName string
-	// indicate whether Ledger should skip DER Conversion on signature,
+	// LedgerSigSkipDERConv indicates whether Ledger should skip DER Conversion on signature,
 	// depending on which format (DER or BER) the Ledger app returns signatures
 	LedgerSigSkipDERConv bool
 	// KeyctlScope defines the scope of the keyctl's keyring.

@@ -4,10 +4,13 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"fmt"
+	"math/rand"
+	"sync"
 	"testing"
 	"time"
 
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/errors"
@@ -633,6 +636,121 @@ func TestMultiStore_PruningRestart(t *testing.T) {
 	}
 
 	require.Eventually(t, isPruned, 1*time.Second, 10*time.Millisecond, "expected error when loading pruned heights")
+}
+
+func TestMultiStore_PruningWithIntervalUpdates(t *testing.T) {
+	// scenarios
+	// snap height in sync - interval not changed
+	// snap height out of order - interval not changed
+	// snap height in flight - interval not changed
+
+	// snap height in sync - interval modified
+	// snap height out of order - interval modified
+	// snap height in flight - interval modified
+
+	const (
+		initialSnapshotInterval uint64 = 10
+		initialPruneInterval    uint64 = 10
+	)
+
+	specs := map[string]struct {
+		do             func(t *testing.T, ms *Store, commitSnapN func(n int, snapshotInterval uint64) int64)
+		expPruneHeight int64
+	}{
+		"snap height sequential - constant interval": {
+			do: func(t *testing.T, ms *Store, commitSnapN func(n int, snapshotInterval uint64) int64) {
+				t.Helper()
+				commitSnapN(20, initialSnapshotInterval)
+			},
+			expPruneHeight: 14, // 20 - 5 (keep) -1
+		},
+		"snap out of order - constant interval": {
+			do: func(t *testing.T, ms *Store, commitSnapN func(n int, snapshotInterval uint64) int64) {
+				t.Helper()
+				commitSnapN(20, initialSnapshotInterval)
+				ms.pruningManager.HandleSnapshotHeight(10)
+			},
+			expPruneHeight: 14, // 20 - 5 (keep) -1
+		},
+		"snap height sequential - snap interval increased": {
+			do: func(t *testing.T, ms *Store, commitSnapN func(n int, snapshotInterval uint64) int64) {
+				t.Helper()
+				commitSnapN(10, initialSnapshotInterval)
+				currHeight := commitSnapN(10, 20)
+				assert.Equal(t, int64(14), ms.pruningManager.GetPruningHeight(currHeight)) // 20 - 5 (keep) -1
+				commitSnapN(10, 20)
+			},
+			expPruneHeight: 24, // 30 -5 (keep) -1
+		},
+		"snap out of order - snap interval increased": {
+			do: func(t *testing.T, ms *Store, commitSnapN func(n int, snapshotInterval uint64) int64) {
+				t.Helper()
+				commitSnapN(10, initialSnapshotInterval)
+				commitSnapN(30, 20)
+				ms.pruningManager.HandleSnapshotHeight(10)
+			},
+			expPruneHeight: 29, // 10 (legacy state not cleared) + 20 - 1
+		},
+		"snap height sequential - snap interval decreased": {
+			do: func(t *testing.T, ms *Store, commitSnapN func(n int, snapshotInterval uint64) int64) {
+				t.Helper()
+				commitSnapN(10, initialSnapshotInterval)
+				commitSnapN(10, 6)
+			},
+			expPruneHeight: 14, // 20 -5 (keep) -1
+		},
+		"snap out of order - snap interval decreased": {
+			do: func(t *testing.T, ms *Store, commitSnapN func(n int, snapshotInterval uint64) int64) {
+				t.Helper()
+				commitSnapN(10, initialSnapshotInterval)
+				commitSnapN(10, 6)
+				ms.pruningManager.HandleSnapshotHeight(10)
+			},
+			expPruneHeight: 14, // 20 -5 (keep) -1
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			db := dbm.NewMemDB()
+			ms := newMultiStoreWithMounts(db, pruningtypes.NewCustomPruningOptions(5, initialPruneInterval))
+			ms.SetSnapshotInterval(initialSnapshotInterval)
+			require.NoError(t, ms.LoadLatestVersion())
+			rnd := rand.New(rand.NewSource(1))
+			commitSnapN := func(n int, snapshotInterval uint64) int64 {
+				ms.SetSnapshotInterval(snapshotInterval)
+				var wg sync.WaitGroup
+				for range n {
+					height := ms.Commit().Version
+					if height != 0 && snapshotInterval != 0 && uint64(height)%snapshotInterval == 0 {
+						ms.pruningManager.AnnounceSnapshotHeight(height)
+						wg.Add(1)
+						go func() { // random completion order
+							time.Sleep(time.Duration(rnd.Int31n(int32(time.Millisecond))))
+							ms.pruningManager.HandleSnapshotHeight(height)
+							wg.Done()
+						}()
+					}
+				}
+				wg.Wait()
+				return ms.LatestVersion()
+			}
+			spec.do(t, ms, commitSnapN)
+			actualHeightToPrune := ms.pruningManager.GetPruningHeight(ms.LatestVersion())
+			require.Equal(t, spec.expPruneHeight, actualHeightToPrune)
+
+			// Ensure async pruning is done
+			isPruned := func() bool {
+				ms.Commit() // to flush the batch with the pruned heights
+				for v := int64(1); v <= actualHeightToPrune; v++ {
+					if _, err := ms.CacheMultiStoreWithVersion(v); err == nil {
+						return false
+					}
+				}
+				return true
+			}
+			require.Eventually(t, isPruned, 1*time.Second, 10*time.Millisecond, "expected error when loading pruned heights")
+		})
+	}
 }
 
 // TestUnevenStoresHeightCheck tests if loading root store correctly errors when

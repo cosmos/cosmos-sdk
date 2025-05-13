@@ -32,6 +32,12 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
+// Replace all unreleased direct deps upgraded to comet v1
+replace (
+	cosmossdk.io/api => ../../api
+	cosmossdk.io/core => ../../core
+)
+
 // NOTE: we do not want to replace to the development version of cosmossdk.io/api yet
 // Until https://github.com/cosmos/cosmos-sdk/issues/19228 is resolved
 // We are tagging x/tx v0.14+ from main and v0.13 from release/v0.50.x and must keep using released versions of x/tx dependencies

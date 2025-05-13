@@ -15,6 +15,6 @@ func TestQueryABCICancellation(t *testing.T) {
 	cancel()
 
 	ctx := client.Context{}.WithClient(client.MockClient{}).WithCmdContext(cmdCtx)
-	_, err := ctx.QueryABCI(abci.RequestQuery{})
+	_, err := ctx.QueryABCI(abci.QueryRequest{})
 	require.ErrorIs(t, err, context.Canceled)
 }

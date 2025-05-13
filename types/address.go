@@ -208,10 +208,10 @@ func AccAddressFromBech32(address string) (addr AccAddress, err error) {
 		return nil, err
 	}
 
-	return AccAddress(bz), nil
+	return bz, nil
 }
 
-// Returns boolean for whether two AccAddresses are Equal
+// Equals returns boolean for whether two AccAddresses are Equal
 func (aa AccAddress) Equals(aa2 Address) bool {
 	if aa.Empty() && aa2.Empty() {
 		return true
@@ -220,7 +220,7 @@ func (aa AccAddress) Equals(aa2 Address) bool {
 	return bytes.Equal(aa.Bytes(), aa2.Bytes())
 }
 
-// Returns boolean for whether an AccAddress is empty
+// Empty returns boolean for whether an AccAddress is empty
 func (aa AccAddress) Empty() bool {
 	return len(aa) == 0
 }
@@ -373,7 +373,7 @@ func MustValAddressFromBech32(address string) ValAddress {
 	return addr
 }
 
-// Returns boolean for whether two ValAddresses are Equal
+// Equals returns boolean for whether two ValAddresses are Equal
 func (va ValAddress) Equals(va2 Address) bool {
 	if va.Empty() && va2.Empty() {
 		return true
@@ -382,7 +382,7 @@ func (va ValAddress) Equals(va2 Address) bool {
 	return bytes.Equal(va.Bytes(), va2.Bytes())
 }
 
-// Returns boolean for whether an ValAddress is empty
+// Empty returns boolean for whether an ValAddress is empty
 func (va ValAddress) Empty() bool {
 	return len(va) == 0
 }
@@ -501,6 +501,7 @@ func (va ValAddress) Format(s fmt.State, verb rune) {
 type ConsAddress []byte
 
 // ConsAddressFromHex creates a ConsAddress from a hex string.
+//
 // Deprecated: use ConsensusAddressCodec from Staking keeper
 func ConsAddressFromHex(address string) (addr ConsAddress, err error) {
 	bz, err := addressBytesFromHexString(address)
@@ -525,15 +526,15 @@ func ConsAddressFromBech32(address string) (addr ConsAddress, err error) {
 		return nil, err
 	}
 
-	return ConsAddress(bz), nil
+	return bz, nil
 }
 
-// get ConsAddress from pubkey
+// GetConsAddress  get ConsAddress from pubkey.
 func GetConsAddress(pubkey cryptotypes.PubKey) ConsAddress {
 	return ConsAddress(pubkey.Address())
 }
 
-// Returns boolean for whether two ConsAddress are Equal
+// Equals returns boolean for whether two ConsAddress are Equal
 func (ca ConsAddress) Equals(ca2 Address) bool {
 	if ca.Empty() && ca2.Empty() {
 		return true
@@ -542,7 +543,7 @@ func (ca ConsAddress) Equals(ca2 Address) bool {
 	return bytes.Equal(ca.Bytes(), ca2.Bytes())
 }
 
-// Returns boolean for whether an ConsAddress is empty
+// Empty returns boolean for whether an ConsAddress is empty
 func (ca ConsAddress) Empty() bool {
 	return len(ca) == 0
 }

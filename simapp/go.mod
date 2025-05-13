@@ -218,11 +218,10 @@ require (
 
 // Here are the short-lived replace from the SimApp
 // Replace here are pending PRs, or version to be tagged
- replace (
-// 	<temporary replace>
+replace (
+	// 	<temporary replace>
 	cosmossdk.io/log => ../log
-	cosmossdk.io/x/upgrade => ../x/upgrade
- )
+)
 
 // Replace all unreleased direct deps upgraded to comet v1
 replace (

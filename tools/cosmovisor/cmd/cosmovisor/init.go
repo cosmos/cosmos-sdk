@@ -11,7 +11,8 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/tools/cosmovisor"
-	"cosmossdk.io/x/upgrade/plan"
+
+	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
 )
 
 func NewInitCmd() *cobra.Command {

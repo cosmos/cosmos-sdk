@@ -33,11 +33,8 @@ import (
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	vestingapi "cosmossdk.io/api/cosmos/vesting/v1beta1"
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/evidence"
-	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/tx/signing/aminojson"
 	signing_testutil "cosmossdk.io/x/tx/signing/testutil"
-	"cosmossdk.io/x/upgrade"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	ed25519types "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -65,6 +62,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/consensus"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/cosmos/cosmos-sdk/x/evidence"
+	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	gov_v1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	gov_v1beta1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
@@ -75,6 +74,7 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/x/upgrade"
 )
 
 // TestAminoJSON_Equivalence tests that x/tx/Encoder encoding is equivalent to the legacy Encoder encoding.

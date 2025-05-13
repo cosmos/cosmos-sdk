@@ -11,11 +11,7 @@ require (
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/simapp v0.0.0-20230620040119-e078f1a49e8b
 	cosmossdk.io/store v1.1.2
-	cosmossdk.io/x/evidence v0.2.0
-	cosmossdk.io/x/feegrant v0.2.0
-	cosmossdk.io/x/nft v0.2.0 // indirect
 	cosmossdk.io/x/tx v0.14.0
-	cosmossdk.io/x/upgrade v0.2.0
 	github.com/cometbft/cometbft v1.0.1
 	github.com/cometbft/cometbft/api v1.0.0
 	github.com/cosmos/cosmos-db v1.1.1
@@ -46,7 +42,6 @@ require (
 	cosmossdk.io/client/v2 v2.0.0-beta.9 // indirect
 	cosmossdk.io/collections v1.2.0 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
-	cosmossdk.io/x/circuit v0.2.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
@@ -227,15 +222,8 @@ replace (
 	cosmossdk.io/api => ../api
 	cosmossdk.io/core => ../core
 	cosmossdk.io/store => ../store
-	cosmossdk.io/x/evidence => ../x/evidence
-	cosmossdk.io/x/feegrant => ../x/feegrant
-	cosmossdk.io/x/nft => ../x/nft
 	cosmossdk.io/x/tx => ../x/tx
-	cosmossdk.io/x/upgrade => ../x/upgrade
 )
-
-// Replace all unreleased indirect deps upgraded to comet v1
-replace cosmossdk.io/x/circuit => ../x/circuit
 
 // Below are the long-lived replace for tests.
 replace (

@@ -4,7 +4,6 @@ go 1.23.5
 
 require (
 	cosmossdk.io/log v1.5.1
-	cosmossdk.io/x/upgrade v0.1.4
 	github.com/cometbft/cometbft v1.0.1
 	github.com/cometbft/cometbft-db v1.0.4
 	github.com/cosmos/cosmos-sdk v0.53.0
@@ -206,10 +205,7 @@ require (
 )
 
 // Replace all unreleased direct deps upgraded to comet v1
-replace (
-	cosmossdk.io/x/upgrade => ../../x/upgrade
-	github.com/cosmos/cosmos-sdk => ../..
-)
+replace github.com/cosmos/cosmos-sdk => ../..
 
 // Replace all unreleased indirect deps upgraded to comet v1
 replace (

@@ -12,12 +12,7 @@ require (
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/store v1.1.2
 	cosmossdk.io/tools/confix v0.1.2
-	cosmossdk.io/x/circuit v0.2.0
-	cosmossdk.io/x/evidence v0.2.0
-	cosmossdk.io/x/feegrant v0.2.0
-	cosmossdk.io/x/nft v0.2.0
 	cosmossdk.io/x/tx v0.14.0
-	cosmossdk.io/x/upgrade v0.2.0
 	github.com/cometbft/cometbft v1.0.1
 	github.com/cosmos/cosmos-db v1.1.1
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
@@ -234,12 +229,7 @@ replace (
 	cosmossdk.io/core => ../core
 	cosmossdk.io/store => ../store
 	cosmossdk.io/tools/confix => ../tools/confix
-	cosmossdk.io/x/circuit => ../x/circuit
-	cosmossdk.io/x/evidence => ../x/evidence
-	cosmossdk.io/x/feegrant => ../x/feegrant
-	cosmossdk.io/x/nft => ../x/nft
 	cosmossdk.io/x/tx => ../x/tx
-	cosmossdk.io/x/upgrade => ../x/upgrade
 )
 
 // Below are the long-lived replace of the SimApp

@@ -17,11 +17,11 @@ func NewFilterWriter(parent io.Writer, filter FilterFunc) io.Writer {
 type filterWriter struct {
 	parent        io.Writer
 	filter        FilterFunc
-	disableFilter *bool
+	disableFilter bool
 }
 
 func (fw *filterWriter) Write(p []byte) (n int, err error) {
-	if fw.filter == nil || fw.disableFilter != nil && *fw.disableFilter {
+	if fw.filter == nil || fw.disableFilter {
 		return fw.parent.Write(p)
 	}
 

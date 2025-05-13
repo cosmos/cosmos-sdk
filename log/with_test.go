@@ -14,17 +14,17 @@ func TestLoggerWith(t *testing.T) {
 	logger := zerolog.New(&bytes.Buffer{})
 	regularLevel := zerolog.WarnLevel
 	verboseLevel := zerolog.InfoLevel
-	disableFilter := new(bool)
+	filterWriter := &filterWriter{}
 	wrapper := zeroLogWrapper{
-		Logger:        &logger,
-		regularLevel:  regularLevel,
-		verboseLevel:  verboseLevel,
-		disableFilter: disableFilter,
+		Logger:       &logger,
+		regularLevel: regularLevel,
+		verboseLevel: verboseLevel,
+		filterWriter: filterWriter,
 	}
 
 	wrapper2 := wrapper.With("x", "y").(zeroLogWrapper)
-	if wrapper2.disableFilter != disableFilter {
-		t.Fatalf("expected disableFilter to be copied, but it was not")
+	if wrapper2.filterWriter != filterWriter {
+		t.Fatalf("expected filterWriter to be copied, but it was not")
 	}
 	if wrapper2.regularLevel != regularLevel {
 		t.Fatalf("expected regularLevel to be copied, but it was not")
@@ -34,8 +34,8 @@ func TestLoggerWith(t *testing.T) {
 	}
 
 	wrapper3 := wrapper.WithContext("a", "b").(zeroLogWrapper)
-	if wrapper3.disableFilter != disableFilter {
-		t.Fatalf("expected disableFilter to be copied, but it was not")
+	if wrapper3.filterWriter != filterWriter {
+		t.Fatalf("expected filterWriter to be copied, but it was not")
 	}
 	if wrapper3.regularLevel != regularLevel {
 		t.Fatalf("expected regularLevel to be copied, but it was not")

@@ -89,9 +89,11 @@ func WithJSONMarshal(marshaler func(v any) ([]byte, error)) {
 
 type zeroLogWrapper struct {
 	*zerolog.Logger
-	regularLevel  zerolog.Level
-	verboseLevel  zerolog.Level
-	disableFilter *bool
+	regularLevel zerolog.Level
+	verboseLevel zerolog.Level
+	// this field is used to disable filtering during verbose logging
+	// and will only be non-nil when we have a filterWriter
+	filterWriter *filterWriter
 }
 
 // NewLogger returns a new logger that writes to the given destination.
@@ -117,14 +119,13 @@ func NewLogger(dst io.Writer, options ...Option) Logger {
 		}
 	}
 
-	var disableFilter *bool
+	var fltWtr *filterWriter
 	if logCfg.Filter != nil {
-		disableFilter = new(bool)
-		output = &filterWriter{
-			parent:        output,
-			filter:        logCfg.Filter,
-			disableFilter: disableFilter,
+		fltWtr = &filterWriter{
+			parent: output,
+			filter: logCfg.Filter,
 		}
+		output = fltWtr
 	}
 
 	logger := zerolog.New(output)
@@ -145,20 +146,20 @@ func NewLogger(dst io.Writer, options ...Option) Logger {
 	logger = logger.Hook(logCfg.Hooks...)
 
 	return zeroLogWrapper{
-		Logger:        &logger,
-		regularLevel:  logCfg.Level,
-		verboseLevel:  logCfg.VerboseLevel,
-		disableFilter: disableFilter,
+		Logger:       &logger,
+		regularLevel: logCfg.Level,
+		verboseLevel: logCfg.VerboseLevel,
+		filterWriter: fltWtr,
 	}
 }
 
 // NewCustomLogger returns a new logger with the given zerolog logger.
 func NewCustomLogger(logger zerolog.Logger) Logger {
 	return zeroLogWrapper{
-		Logger:        &logger,
-		regularLevel:  logger.GetLevel(),
-		verboseLevel:  zerolog.NoLevel,
-		disableFilter: nil,
+		Logger:       &logger,
+		regularLevel: logger.GetLevel(),
+		verboseLevel: zerolog.NoLevel,
+		filterWriter: nil,
 	}
 }
 
@@ -210,13 +211,13 @@ func (l zeroLogWrapper) Impl() interface{} {
 func (l zeroLogWrapper) SetVerboseMode(enable bool) {
 	if enable && l.verboseLevel != zerolog.NoLevel {
 		*l.Logger = l.Level(l.verboseLevel)
-		if l.disableFilter != nil {
-			*l.disableFilter = true
+		if l.filterWriter != nil {
+			l.filterWriter.disableFilter = true
 		}
 	} else {
 		*l.Logger = l.Level(l.regularLevel)
-		if l.disableFilter != nil {
-			*l.disableFilter = false
+		if l.filterWriter != nil {
+			l.filterWriter.disableFilter = false
 		}
 	}
 }

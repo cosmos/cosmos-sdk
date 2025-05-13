@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
@@ -63,6 +64,7 @@ func Migrate(directory string, args MigrateArgs) error {
 }
 
 func updateGoModules(goModFiles []string, updates GoModUpdate) error {
+	tidyMutex := sync.Mutex{}
 	eg := errgroup.Group{}
 	for _, filePath := range goModFiles {
 		eg.Go(func() error {
@@ -100,9 +102,11 @@ func updateGoModules(goModFiles []string, updates GoModUpdate) error {
 
 				// go mod tidy to fully update the mod file.
 				dir := filepath.Dir(filePath)
+				tidyMutex.Lock()
 				cmd := exec.Command("go", "mod", "tidy")
 				cmd.Dir = dir
 				output, err := cmd.CombinedOutput()
+				tidyMutex.Unlock()
 				if err != nil {
 					return fmt.Errorf("error running go mod tidy: %w, output: %s", err, output)
 				}

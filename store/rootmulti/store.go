@@ -12,7 +12,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	gogotypes "github.com/cosmos/gogoproto/types"
@@ -83,8 +83,9 @@ type Store struct {
 }
 
 var (
-	_ types.CommitMultiStore = (*Store)(nil)
-	_ types.Queryable        = (*Store)(nil)
+	_ types.CommitMultiStore          = (*Store)(nil)
+	_ types.Queryable                 = (*Store)(nil)
+	_ snapshottypes.SnapshotAnnouncer = (*Store)(nil)
 )
 
 // NewStore returns a reference to a new Store object with the provided DB. The
@@ -356,6 +357,10 @@ func moveKVStoreData(oldDB, newDB types.KVStore) error {
 // For other strategies, this height is persisted until the snapshot is operated.
 func (rs *Store) PruneSnapshotHeight(height int64) {
 	rs.pruningManager.HandleSnapshotHeight(height)
+}
+
+func (rs *Store) AnnounceSnapshotHeight(height int64) {
+	rs.pruningManager.AnnounceSnapshotHeight(height)
 }
 
 // SetInterBlockCache sets the Store's internal inter-block (persistent) cache.

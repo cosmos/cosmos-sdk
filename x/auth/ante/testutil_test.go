@@ -93,7 +93,7 @@ func setupSuite(t *testing.T, isCheckTx, enableUnorderedTxs bool) *AnteTestSuite
 
 	suite.clientCtx = client.Context{}.
 		WithTxConfig(suite.encCfg.TxConfig).
-		WithClient(clitestutil.NewMockCometRPC(abci.ResponseQuery{}))
+		WithClient(clitestutil.NewMockCometRPC(abci.QueryResponse{}))
 
 	anteHandler, err := ante.NewAnteHandler(
 		ante.HandlerOptions{

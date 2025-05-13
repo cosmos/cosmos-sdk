@@ -1,7 +1,7 @@
 syntax = "proto3";
 package cosmos.store.v1beta1;
 
-import "tendermint/abci/types.proto";
+import "cometbft/abci/v1/types.proto";
 import "cosmos_proto/cosmos.proto";
 
 option go_package = "cosmossdk.io/store/types";
@@ -20,9 +20,9 @@ message StoreKVPair {
 // BlockMetadata contains all the abci event data of a block
 // the file streamer dump them into files together with the state changes.
 message BlockMetadata {
-  tendermint.abci.ResponseCommit        response_commit         = 6;
-  tendermint.abci.RequestFinalizeBlock  request_finalize_block  = 7;
-  tendermint.abci.ResponseFinalizeBlock response_finalize_block = 8; // TODO: should we renumber this?
+  cometbft.abci.v1.CommitResponse        response_commit         = 6;
+  cometbft.abci.v1.FinalizeBlockRequest  request_finalize_block  = 7;
+  cometbft.abci.v1.FinalizeBlockResponse response_finalize_block = 8; // TODO: should we renumber this?
 
   reserved 1, 2, 3, 4, 5; // reserved for from previous use in comet <= 0.37
 }

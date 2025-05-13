@@ -54,7 +54,7 @@ func getConfigKey() string {
 	return fmt.Sprintf("%s|%s|%d", host, exe, pid)
 }
 
-// NewConfig creates a new Config instance with defaults.
+// NewConfig returns a new Config with default values.
 func NewConfig() *Config {
 	return &Config{
 		sealedch: make(chan struct{}),
@@ -125,16 +125,22 @@ func (config *Config) SetAddressVerifier(addressVerifier func([]byte) error) {
 	config.addressVerifier = addressVerifier
 }
 
+// SetFullFundraiserPath sets the FullFundraiserPath (BIP44Prefix) on the config.
+//
+// Deprecated: This method is supported for backward compatibility only and will be removed in a future release. Use SetPurpose and SetCoinType instead.
 func (config *Config) SetFullFundraiserPath(fullFundraiserPath string) {
 	config.assertNotSealed()
 	config.fullFundraiserPath = fullFundraiserPath
 }
 
+// SetPurpose sets the BIP-0044 Purpose code on the config
 func (config *Config) SetPurpose(purpose uint32) {
 	config.assertNotSealed()
 	config.purpose = purpose
 }
 
+
+// SetCoinType sets the BIP-0044 CoinType code on the config
 func (config *Config) SetCoinType(coinType uint32) {
 	config.assertNotSealed()
 	config.coinType = coinType

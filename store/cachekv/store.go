@@ -115,7 +115,7 @@ func (store *Store) resetCaches() {
 	store.sortedCache = internal.NewBTree()
 }
 
-// Implements Cachetypes.KVStore.
+// Write implements Cachetypes.KVStore.
 func (store *Store) Write() {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
@@ -292,7 +292,7 @@ const (
 
 const minSortSize = 1024
 
-// Constructs a slice of dirty items, to use w/ memIterator.
+// dirtyItems constructs a slice of dirty items, to use w/ memIterator.
 func (store *Store) dirtyItems(start, end []byte) {
 	startStr, endStr := conv.UnsafeBytesToStr(start), conv.UnsafeBytesToStr(end)
 	if end != nil && startStr > endStr {
@@ -394,7 +394,7 @@ func (store *Store) clearUnsortedCacheSubset(unsorted []*kv.Pair, sortState sort
 //----------------------------------------
 // etc
 
-// Only entrypoint to mutate store.cache.
+// setCacheValue is the only entrypoint to mutate store.cache.
 // A `nil` value means a deletion.
 func (store *Store) setCacheValue(key, value []byte, dirty bool) {
 	keyStr := conv.UnsafeBytesToStr(key)

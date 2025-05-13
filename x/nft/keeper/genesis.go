@@ -3,9 +3,8 @@ package keeper
 import (
 	"sort"
 
-	"cosmossdk.io/x/nft" //nolint:staticcheck // deprecated and to be removed
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/nft" //nolint:staticcheck // deprecated and to be removed
 )
 
 // InitGenesis initializes the nft module's genesis state from a given

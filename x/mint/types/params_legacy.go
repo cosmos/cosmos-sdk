@@ -19,14 +19,16 @@ var (
 	KeyBlocksPerYear       = []byte("BlocksPerYear")
 )
 
-// Deprecated: ParamTable for minting module.
+// ParamKeyTable is the parameter key table for mint.
+//
+// Deprecated: will be removed with x/params
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-// Implements params.ParamSet
+// ParamSetPairs implements params.ParamSet
 //
-// Deprecated.
+// Deprecated: will be removed with x/params
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyMintDenom, &p.MintDenom, validateMintDenom),

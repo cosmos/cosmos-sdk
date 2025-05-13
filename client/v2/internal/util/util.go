@@ -19,7 +19,7 @@ import (
 // later versions unsupported by the current version can be added
 var buildInfo, _ = debug.ReadBuildInfo()
 
-// DescriptorName returns the name of the descriptor in kebab case.
+// DescriptorKebabName returns the name of the descriptor in kebab case.
 func DescriptorKebabName(descriptor protoreflect.Descriptor) string {
 	return strcase.ToKebab(string(descriptor.Name()))
 }

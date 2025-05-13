@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
@@ -16,12 +16,6 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-	"cosmossdk.io/x/evidence"
-	evidencetypes "cosmossdk.io/x/evidence/types"
-	"cosmossdk.io/x/feegrant"
-	feegrantmodule "cosmossdk.io/x/feegrant/module"
-	"cosmossdk.io/x/upgrade"
-	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -43,6 +37,10 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/epochs"
 	epochstypes "github.com/cosmos/cosmos-sdk/x/epochs/types"
+	"github.com/cosmos/cosmos-sdk/x/evidence"
+	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
+	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
@@ -57,6 +55,8 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/x/upgrade"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {
@@ -85,7 +85,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	}
 
 	// finalize block so we have CheckTx state set
-	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Height: 1,
 	})
 	require.NoError(t, err)
@@ -134,7 +134,7 @@ func TestRunMigrations(t *testing.T) {
 	}
 
 	// Initialize the chain
-	_, err := app.InitChain(&abci.RequestInitChain{})
+	_, err := app.InitChain(&abci.InitChainRequest{})
 	require.NoError(t, err)
 	_, err = app.Commit()
 	require.NoError(t, err)

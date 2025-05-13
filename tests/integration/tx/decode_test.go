@@ -11,11 +11,8 @@ import (
 
 	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/evidence"
-	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/tx/decode"
 	txsigning "cosmossdk.io/x/tx/signing"
-	"cosmossdk.io/x/upgrade"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -32,12 +29,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/consensus"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
+	"github.com/cosmos/cosmos-sdk/x/evidence"
+	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module" //nolint:staticcheck // deprecated and to be removed
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	"github.com/cosmos/cosmos-sdk/x/upgrade"
 )
 
 // TestDecode tests that the tx decoder can decode all the txs in the test suite.

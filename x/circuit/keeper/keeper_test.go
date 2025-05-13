@@ -5,20 +5,20 @@ import (
 	context "context"
 	"testing"
 
-	cmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/address"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/circuit"
-	"cosmossdk.io/x/circuit/keeper"
-	"cosmossdk.io/x/circuit/types"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/circuit"
+	"github.com/cosmos/cosmos-sdk/x/circuit/keeper"
+	"github.com/cosmos/cosmos-sdk/x/circuit/types"
 )
 
 var addresses = []string{

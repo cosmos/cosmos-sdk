@@ -47,6 +47,7 @@ This patch introduces a state machine breaking change in `x/feegrant`. Revoking 
 ### Bug Fixes
 
 * (baseapp) [#25642](https://github.com/cosmos/cosmos-sdk/pull/25642) Mark pre-block events for indexing based on local configuration.
+* (store) [#24583](https://github.com/cosmos/cosmos-sdk/pull/24583) Fix height calculation in pruning manager and better restart handling. Backport that fixes pruning getting stuck after a `snapshot-interval` change ([#24917](https://github.com/cosmos/cosmos-sdk/issues/24917)).
 * (baseapp) [#23879](https://github.com/cosmos/cosmos-sdk/pull/23879) Ensure finalize block response is not empty in the defer check of FinalizeBlock to avoid panic by nil pointer.
 * (query) [#23884](https://github.com/cosmos/cosmos-sdk/pull/23884) Fix NPE in query pagination.
 * (x/feegrant) [#25541](https://github.com/cosmos/cosmos-sdk/pull/23884) Fix revocation cleanup by deleting expiration entries with the correct `prefix|granter|grantee` store key.

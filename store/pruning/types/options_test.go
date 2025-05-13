@@ -1,6 +1,7 @@
 package types
 
 import (
+	"math"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -21,6 +22,7 @@ func TestPruningOptions_Validate(t *testing.T) {
 		{NewCustomPruningOptions(2, 9), ErrPruningIntervalTooSmall},
 		{NewCustomPruningOptions(2, 0), ErrPruningIntervalZero},
 		{NewCustomPruningOptions(2, 0), ErrPruningIntervalZero},
+		{NewCustomPruningOptions(math.MaxInt64+1, 10), ErrPruningKeepRecentTooBig},
 	}
 
 	for _, tc := range testCases {

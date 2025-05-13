@@ -13,7 +13,7 @@ import (
 // sequenceStorageKey is a fix key to read/ write data on the storage layer
 var sequenceStorageKey = []byte{0x1}
 
-// sequence is a persistent unique key generator based on a counter.
+// Sequence is a persistent unique key generator based on a counter.
 type Sequence struct {
 	prefix byte
 }

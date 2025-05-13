@@ -124,10 +124,9 @@ func TestChainUpgrade(t *testing.T) {
 	systest.Sut.StartChain(t)
 
 	require.Equal(t, upgradeHeight+1, systest.Sut.CurrentHeight())
-	// cli = systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 
 	// smoke test that new version runs
-	// TODO: add once protocol pool is enabled
-	//	got := cli.Run("tx", "protocolpool", "fund-community-pool", "100stake", "--from=node0")
-	// systest.RequireTxSuccess(t, got)
+	cli = systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
+	got := cli.Run("tx", "protocolpool", "fund-community-pool", "100stake", "--from=node0")
+	systest.RequireTxSuccess(t, got)
 }

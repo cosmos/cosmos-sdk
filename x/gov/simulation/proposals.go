@@ -45,7 +45,7 @@ func ProposalContents() []simtypes.WeightedProposalContent {
 	}
 }
 
-// SimulateTextProposalContent returns a random text proposal content.
+// SimulateLegacyTextProposalContent returns a random text proposal content.
 //
 //nolint:staticcheck // used for legacy testing
 func SimulateLegacyTextProposalContent(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) simtypes.Content {

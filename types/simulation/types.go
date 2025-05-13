@@ -13,6 +13,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
+// WeightedProposalContent is a legacy type.
+//
 // Deprecated: Use WeightedProposalMsg instead.
 type WeightedProposalContent interface {
 	AppParamsKey() string                   // key used to retrieve the value of the weight from the simulation application params
@@ -20,9 +22,13 @@ type WeightedProposalContent interface {
 	ContentSimulatorFn() ContentSimulatorFn // content simulator function
 }
 
+// ContentSimulatorFn is a legacy type.
+//
 // Deprecated: Use MsgSimulatorFn instead.
 type ContentSimulatorFn func(r *rand.Rand, ctx sdk.Context, accs []Account) Content
 
+// Content is a legacy type.
+//
 // Deprecated: Use MsgSimulatorFn instead.
 type Content interface {
 	GetTitle() string
@@ -108,7 +114,7 @@ func NoOpMsg(moduleName, msgType, comment string) OperationMsg {
 	return NewOperationMsgBasic(moduleName, msgType, comment, false, nil)
 }
 
-// log entry text for this operation msg
+// String logs entry text for this operation msg
 func (om OperationMsg) String() string {
 	out, err := json.Marshal(om)
 	if err != nil {

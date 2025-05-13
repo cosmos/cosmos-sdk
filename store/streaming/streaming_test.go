@@ -9,7 +9,7 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -26,9 +26,9 @@ type PluginTestSuite struct {
 
 	workDir string
 
-	finalizeBlockReq abci.RequestFinalizeBlock
-	finalizeBlockRes abci.ResponseFinalizeBlock
-	commitRes        abci.ResponseCommit
+	finalizeBlockReq abci.FinalizeBlockRequest
+	finalizeBlockRes abci.FinalizeBlockResponse
+	commitRes        abci.CommitResponse
 
 	changeSet []*storetypes.StoreKVPair
 }
@@ -45,8 +45,7 @@ func (s *PluginTestSuite) SetupTest() {
 	s.workDir = path
 
 	pluginVersion := "abci"
-	// to write data to files, replace stdout/stdout => file/file
-	pluginPath := fmt.Sprintf("%s/abci/examples/stdout/stdout", s.workDir)
+	pluginPath := fmt.Sprintf("%s/abci/examples/file/file", s.workDir)
 	if err := os.Setenv(GetPluginEnvKey(pluginVersion), pluginPath); err != nil {
 		s.T().Fail()
 	}
@@ -67,14 +66,14 @@ func (s *PluginTestSuite) SetupTest() {
 
 	// test abci message types
 
-	s.finalizeBlockReq = abci.RequestFinalizeBlock{
+	s.finalizeBlockReq = abci.FinalizeBlockRequest{
 		Height:            s.loggerCtx.BlockHeight(),
 		Txs:               [][]byte{{1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}},
 		Misbehavior:       []abci.Misbehavior{},
 		Hash:              []byte{1, 2, 3, 4, 5, 6, 7, 8, 9},
 		DecidedLastCommit: abci.CommitInfo{},
 	}
-	s.finalizeBlockRes = abci.ResponseFinalizeBlock{
+	s.finalizeBlockRes = abci.FinalizeBlockResponse{
 		Events:                []abci.Event{},
 		ConsensusParamUpdates: &tmproto.ConsensusParams{},
 		ValidatorUpdates:      []abci.ValidatorUpdate{},
@@ -89,7 +88,7 @@ func (s *PluginTestSuite) SetupTest() {
 			Log:       "mockLog",
 		}},
 	}
-	s.commitRes = abci.ResponseCommit{}
+	s.commitRes = abci.CommitResponse{}
 
 	// test store kv pair types
 	for range [2000]int{} {

@@ -74,6 +74,56 @@ app.MintKeeper = mintkeeper.NewKeeper(
 	)
 ```
 
+#### Custom Minter DI Example
+
+Below is a simple approach to creating a custom mint function with extra dependencies in DI configurations.
+For this basic example, we will make the minter simply double the supply of `foo` coin.
+
+First, we will define a function that takes our required dependencies, and returns a `MintFn`.
+
+```go
+// MyCustomMintFunction is a custom mint function that doubles the supply of `foo` coin.
+func MyCustomMintFunction(bank bankkeeper.BaseKeeper) mintkeeper.MintFn {
+	return func(ctx sdk.Context, k *mintkeeper.Keeper) error {
+		supply := bank.GetSupply(ctx, "foo")
+		err := k.MintCoins(ctx, sdk.NewCoins(supply.Add(supply)))
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+}
+```
+
+Then, pass the function defined above into the `depinject.Supply` function with the required dependencies.
+
+```go
+// NewSimApp returns a reference to an initialized SimApp.
+func NewSimApp(
+    logger log.Logger,
+    db dbm.DB,
+    traceStore io.Writer,
+    loadLatest bool,
+    appOpts servertypes.AppOptions,
+    baseAppOptions ...func(*baseapp.BaseApp),
+) *SimApp {
+    var (
+        app        = &SimApp{}
+        appBuilder *runtime.AppBuilder
+        appConfig = depinject.Configs(
+            AppConfig,
+            depinject.Supply(
+                appOpts,
+                logger,
+                // our custom mint function with the necessary dependency passed in.
+                MyCustomMintFunction(app.BankKeeper),
+            ),
+        )
+	)
+	// ...
+}
+```
+
 ## State
 
 ### Minter

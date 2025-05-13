@@ -6,7 +6,7 @@ import (
 	"maps"
 	"slices"
 
-	"github.com/cometbft/cometbft/proto/tendermint/crypto"
+	crypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 	dbm "github.com/cosmos/cosmos-db"
 
 	"cosmossdk.io/store/metrics"
@@ -19,7 +19,7 @@ type Store interface {
 	CacheWrapper
 }
 
-// something that can persist to disk
+// Committer is an interface for functionality to persist to disk.
 type Committer interface {
 	Commit() CommitID
 	LastCommitID() CommitID
@@ -31,7 +31,7 @@ type Committer interface {
 	GetPruning() pruningtypes.PruningOptions
 }
 
-// Stores of MultiStore must implement CommitStore.
+// CommitStore is an interface for Commit and Store capabilities.
 type CommitStore interface {
 	Committer
 	Store
@@ -146,7 +146,7 @@ type MultiStore interface {
 	LatestVersion() int64
 }
 
-// From MultiStore.CacheMultiStore()....
+// CacheMultiStore extends MultiStore with a Write() method.
 type CacheMultiStore interface {
 	MultiStore
 	Write() // Writes operations to underlying KVStore
@@ -319,7 +319,7 @@ func (cid CommitID) String() string {
 //----------------------------------------
 // Store types
 
-// kind of store
+// StoreType is an enum for a kind of store.
 type StoreType int
 
 const (
@@ -415,7 +415,7 @@ type TransientStoreKey struct {
 	name string
 }
 
-// Constructs new TransientStoreKey
+// NewTransientStoreKey constructs new TransientStoreKey
 // Must return a pointer according to the ocap principle
 func NewTransientStoreKey(name string) *TransientStoreKey {
 	return &TransientStoreKey{
@@ -423,12 +423,12 @@ func NewTransientStoreKey(name string) *TransientStoreKey {
 	}
 }
 
-// Implements StoreKey
+// Name implements StoreKey, returning the key name.
 func (key *TransientStoreKey) Name() string {
 	return key.name
 }
 
-// Implements StoreKey
+// String implements StoreKey, returning a human-readable string representation of the key.
 func (key *TransientStoreKey) String() string {
 	return fmt.Sprintf("TransientStoreKey{%p, %s}", key, key.name)
 }

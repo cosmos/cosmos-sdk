@@ -7,9 +7,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/circuit"
-	"cosmossdk.io/x/circuit/keeper"
-	"cosmossdk.io/x/circuit/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -18,6 +15,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/circuit"
+	"github.com/cosmos/cosmos-sdk/x/circuit/keeper"
+	"github.com/cosmos/cosmos-sdk/x/circuit/types"
 )
 
 type GenesisTestSuite struct {

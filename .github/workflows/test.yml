@@ -445,6 +445,7 @@ jobs:
         if: env.GIT_DIFF
         run: |
           cd store
+          cd streaming/abci/examples/file && go build . && cd ../../../..
           go test -ldflags "-r /usr/local/lib" -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
 
   test-log:

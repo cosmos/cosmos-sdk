@@ -25,9 +25,10 @@ const (
 	RouterKey = ModuleName
 )
 
+// Keys for store prefixes
+// Last* values are constant during a block.
+
 var (
-	// Keys for store prefixes
-	// Last* values are constant during a block.
 	LastValidatorPowerKey = []byte{0x11} // prefix for each key to a validator index, for bonded validators
 	LastTotalPowerKey     = []byte{0x12} // prefix for the total power
 

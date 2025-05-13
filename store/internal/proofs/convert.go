@@ -28,7 +28,7 @@ func ConvertExistenceProof(p *cmtprotocrypto.Proof, key, value []byte) (*ics23.E
 	return proof, nil
 }
 
-// this is adapted from merkle/hash.go:leafHash()
+// convertLeafOp is adapted from merkle/hash.go:leafHash()
 // and merkle/simple_map.go:KVPair.Bytes()
 func convertLeafOp() *ics23.LeafOp {
 	prefix := []byte{0}

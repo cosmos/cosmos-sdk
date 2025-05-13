@@ -14,7 +14,7 @@ var KeyringContextKey struct{}
 
 var _ Keyring = &KeyringImpl{}
 
-type KeyringImpl struct {
+type KeyringImpl struct { //nolint: revive // we can ignore this, as this type is being used
 	k Keyring
 }
 

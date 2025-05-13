@@ -382,7 +382,7 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
-golangci_version=v2.1.5
+golangci_version=v2.1.6
 
 lint-install:
 	@echo "--> Installing golangci-lint $(golangci_version)"
@@ -405,7 +405,7 @@ lint-fix:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-protoVer=0.16.0
+protoVer=0.17.0
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 
@@ -413,7 +413,9 @@ proto-all: proto-format proto-lint proto-gen
 
 proto-gen:
 	@echo "Generating Protobuf files"
-	@$(protoImage) sh ./scripts/protocgen.sh
+	@$(protoImage) sh ./scripts/protocgen.sh 2>&1 | tee protocgen.log | \
+	awk '{print $$0} /contains the reserved field name/ && /tendermint/ {next} 1'
+
 
 proto-swagger-gen:
 	@echo "Generating Protobuf Swagger"

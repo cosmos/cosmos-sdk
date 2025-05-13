@@ -127,3 +127,33 @@ func Test_encodeKey(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, expectedKey, gotKey)
 }
+
+func TestMap_IterateRaw_Prefix(t *testing.T) {
+	sk, ctx := deps()
+	// safety check to ensure prefix boundaries are not crossed
+	require.NoError(t, sk.OpenKVStore(ctx).Set([]byte{0x0, 0x0}, []byte("before prefix")))
+	require.NoError(t, sk.OpenKVStore(ctx).Set([]byte{0x2, 0x0}, []byte("after prefix")))
+	sb := NewSchemaBuilder(sk)
+	// case 1. this is abnormal but easy to understand the problem
+	// prefix := make([]byte, 0, 10)
+	// prefix = append(prefix, 1)
+	// case 2. this is more common case, some modules can use this way
+	prefix := []byte{}
+	prefix = append(append(prefix, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10), 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+	t.Log(cap(prefix)) // cap is 32
+	m := NewMap(sb, prefix, "m", Uint64Key, Uint64Value)
+	require.NoError(t, m.Set(ctx, 0, 0))
+	require.NoError(t, m.Set(ctx, 1, 1))
+	require.NoError(t, m.Set(ctx, 2, 2))
+	// test non nil end in ascending order
+	oneBigEndian, err := EncodeKeyWithPrefix(nil, Uint64Key, 1)
+	require.NoError(t, err)
+	twoBigEndian, err := EncodeKeyWithPrefix(nil, Uint64Key, 2)
+	require.NoError(t, err)
+	iter, err := m.IterateRaw(ctx, oneBigEndian, twoBigEndian, OrderAscending)
+	require.NoError(t, err)
+	defer iter.Close()
+	keys, err := iter.Keys()
+	require.NoError(t, err)
+	require.Equal(t, []uint64{1}, keys)
+}

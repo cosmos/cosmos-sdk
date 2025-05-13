@@ -71,7 +71,7 @@ type StdTxConfig struct {
 	Cdc *codec.LegacyAmino
 }
 
-// MarshalTx implements TxConfig.MarshalTx
+// TxEncoder implements TxConfig.MarshalTx
 func (s StdTxConfig) TxEncoder() sdk.TxEncoder {
 	return DefaultTxEncoder(s.Cdc)
 }

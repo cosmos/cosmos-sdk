@@ -288,6 +288,12 @@ type CacheKVStore interface {
 	Write()
 }
 
+// PooledCacheKVStore is a CacheKVStore that can be pooled and reused without the overhead of allocation.
+type PooledCacheKVStore interface {
+	CacheKVStore
+	Release()
+}
+
 // CommitKVStore is an interface for MultiStore.
 type CommitKVStore interface {
 	Committer

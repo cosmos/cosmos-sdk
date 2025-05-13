@@ -38,7 +38,10 @@ type PooledStore struct {
 	Store
 }
 
-var _ types.CacheKVStore = (*Store)(nil)
+var (
+	_ types.CacheKVStore       = (*Store)(nil)
+	_ types.PooledCacheKVStore = (*PooledStore)(nil)
+)
 
 // NewStore creates a new Store object
 func NewStore(parent types.KVStore) *Store {
@@ -50,6 +53,10 @@ func NewStore(parent types.KVStore) *Store {
 	}
 }
 
+// storePool is a pool of PooledStore instances. It contains a set of objects
+// that can be reused instead of allocating new ones. It's thread safe.
+// Callers can use Get() to retrieve a store (or allocate a new one if none are available).
+// Callers should use Put() when done with the store to return it to the pool.
 var storePool = sync.Pool{
 	New: func() any {
 		return &PooledStore{

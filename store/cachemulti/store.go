@@ -83,6 +83,10 @@ func NewStore(
 	return NewFromKVStore(dbadapter.Store{DB: db}, stores, keys, traceWriter, traceContext)
 }
 
+// storePool is a pool of PooledStore instances. It contains a set of objects
+// that can be reused instead of allocating new ones. It's thread safe.
+// Callers can use Get() to retrieve a store (or allocate a new one if none are available).
+// Callers should use Put() when done with the store to return it to the pool.
 var storePool = sync.Pool{
 	New: func() any {
 		return &PooledStore{
@@ -122,7 +126,7 @@ func newFromKVStorePooled(
 func (cms *PooledStore) Release() {
 	// clear the stores map
 	for k, v := range cms.stores {
-		if pStore, ok := v.(*cachekv.PooledStore); ok {
+		if pStore, ok := v.(types.PooledCacheKVStore); ok {
 			pStore.Release()
 		}
 		delete(cms.stores, k)
@@ -130,7 +134,7 @@ func (cms *PooledStore) Release() {
 	for k := range cms.keys {
 		delete(cms.keys, k)
 	}
-	if pStoreDb, ok := cms.db.(*cachekv.PooledStore); ok {
+	if pStoreDb, ok := cms.db.(types.PooledCacheKVStore); ok {
 		pStoreDb.Release()
 	}
 	cms.db = nil

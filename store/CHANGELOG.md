@@ -23,6 +23,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## [Unreleased]
+
+### Improvements
+
+* [#24608](https://github.com/cosmos/cosmos-sdk/pull/24608) Introduced pooled versions of cache stores to avoid allocating new caches.
+
 ## v1.1.2 (March 31, 2025)
 
 ### Bug Fixes

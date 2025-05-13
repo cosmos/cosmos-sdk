@@ -19,6 +19,7 @@ var (
 	GrantKey         = []byte{0x01} // prefix for each key
 	GrantQueuePrefix = []byte{0x02}
 )
+
 // The lenTime default is 29.
 var lenTime = len(sdk.FormatTimeBytes(time.Date(2017, 7, 28, 0, 0, 0, 0, time.UTC)))
 

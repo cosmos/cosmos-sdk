@@ -722,6 +722,7 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM Ver
 		// 2. An existing chain is upgrading from version < 0.43 to v0.43+ for the first time.
 		// In this case, all modules have yet to be added to x/upgrade's VersionMap store.
 		if exists {
+			sdkCtx.Logger().Info(fmt.Sprintf("running migrations for module: %s", moduleName))
 			err := c.runModuleMigrations(sdkCtx, moduleName, fromVersion, toVersion)
 			if err != nil {
 				return nil, err

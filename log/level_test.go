@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/rs/zerolog"
-	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
 )
@@ -186,7 +185,9 @@ func TestVerboseMode(t *testing.T) {
 			}
 			if tc.filter != "" {
 				filter, err := log.ParseLogLevel(tc.filter)
-				require.NoError(t, err)
+				if err != nil {
+					t.Fatalf("failed to parse log level: %v", err)
+				}
 				opts = append(opts, log.FilterOption(filter))
 			}
 			logger := log.NewLogger(out, opts...)
@@ -210,8 +211,9 @@ func TestVerboseMode(t *testing.T) {
 			logger.Error("Start Verbose Mode")
 			logger.(log.VerboseModeLogger).SetVerboseMode(true)
 			writeMsgs()
-			t.Logf("output: %s", out.String())
-			require.Equal(t, tc.expected, out.String())
+			if tc.expected != out.String() {
+				t.Fatalf("expected:\n%s\ngot:\n%s", tc.expected, out.String())
+			}
 		})
 	}
 }

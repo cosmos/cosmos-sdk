@@ -74,7 +74,10 @@ func updateGoModules(goModFiles []string, updates GoModUpdate) error {
 				return err
 			}
 			modFile, err := modfile.Parse(filePath, file, nil)
-			var modified bool
+			if err != nil {
+				return fmt.Errorf("error parsing %s: %w", filePath, err)
+			}
+			modified := false
 			// loop through all the modules in the go.mod file.
 			// we don't care about indirect modules, we only want to update direct dependencies.
 			for _, module := range modFile.Require {

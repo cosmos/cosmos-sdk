@@ -94,7 +94,7 @@ func QueryEventForTxCmd() *cobra.Command {
 	return WaitTxCmd()
 }
 
-// WaitTx returns a CLI command that waits for a transaction with the given hash to be included in a block.
+// WaitTxCmd returns a CLI command that waits for a transaction with the given hash to be included in a block.
 func WaitTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "wait-tx [hash]",
@@ -119,7 +119,7 @@ $ %[1]s tx [flags] | %[1]s q wait-tx
 				return err
 			}
 
-			c, err := rpchttp.New(clientCtx.NodeURI, "/websocket")
+			c, err := rpchttp.New(clientCtx.NodeURI)
 			if err != nil {
 				return err
 			}

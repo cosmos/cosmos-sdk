@@ -8,17 +8,13 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/evidence"
-	"cosmossdk.io/x/evidence/exported"
-	"cosmossdk.io/x/evidence/keeper"
-	evidencetypes "cosmossdk.io/x/evidence/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -37,6 +33,10 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
+	"github.com/cosmos/cosmos-sdk/x/evidence"
+	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
+	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
+	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
@@ -204,10 +204,10 @@ func TestHandleDoubleSign(t *testing.T) {
 	assert.NilError(t, err)
 	oldTokens := val.GetTokens()
 
-	nci := NewCometInfo(abci.RequestFinalizeBlock{
+	nci := NewCometInfo(abci.FinalizeBlockRequest{
 		Misbehavior: []abci.Misbehavior{{
 			Validator: abci.Validator{Address: valpubkey.Address(), Power: power},
-			Type:      abci.MisbehaviorType_DUPLICATE_VOTE,
+			Type:      abci.MISBEHAVIOR_TYPE_DUPLICATE_VOTE,
 			Time:      time.Now().UTC(),
 			Height:    1,
 		}},
@@ -284,10 +284,10 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 	assert.NilError(t, err)
 	assert.DeepEqual(t, amt, val.GetBondedTokens())
 
-	nci := NewCometInfo(abci.RequestFinalizeBlock{
+	nci := NewCometInfo(abci.FinalizeBlockRequest{
 		Misbehavior: []abci.Misbehavior{{
 			Validator: abci.Validator{Address: valpubkey.Address(), Power: power},
-			Type:      abci.MisbehaviorType_DUPLICATE_VOTE,
+			Type:      abci.MISBEHAVIOR_TYPE_DUPLICATE_VOTE,
 			Time:      ctx.BlockTime(),
 			Height:    0,
 		}},
@@ -353,7 +353,7 @@ type CometService struct {
 	Evidence []abci.Misbehavior
 }
 
-func NewCometInfo(bg abci.RequestFinalizeBlock) comet.BlockInfo {
+func NewCometInfo(bg abci.FinalizeBlockRequest) comet.BlockInfo {
 	return CometService{
 		Evidence: bg.Misbehavior,
 	}

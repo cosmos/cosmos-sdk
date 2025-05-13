@@ -3,6 +3,8 @@ package server
 import (
 	"bufio"
 	"context"
+	"crypto/sha256"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -13,14 +15,14 @@ import (
 	"time"
 
 	"github.com/cometbft/cometbft/abci/server"
+	cmtstate "github.com/cometbft/cometbft/api/cometbft/state/v1"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
 	pvm "github.com/cometbft/cometbft/privval"
-	cmtstate "github.com/cometbft/cometbft/proto/tendermint/state"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cometbft/cometbft/proxy"
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/cometbft/cometbft/rpc/client/local"
@@ -51,8 +53,9 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
+// CometBFT full-node start flags
+
 const (
-	// CometBFT full-node start flags
 	flagWithComet          = "with-comet"
 	flagAddress            = "address"
 	flagTransport          = "transport"
@@ -78,10 +81,12 @@ const (
 	FlagShutdownGrace       = "shutdown-grace"
 
 	// state sync-related flags
+
 	FlagStateSyncSnapshotInterval   = "state-sync.snapshot-interval"
 	FlagStateSyncSnapshotKeepRecent = "state-sync.snapshot-keep-recent"
 
 	// api-related flags
+
 	FlagAPIEnable             = "api.enable"
 	FlagAPISwagger            = "api.swagger"
 	FlagAPIAddress            = "api.address"
@@ -92,6 +97,7 @@ const (
 	FlagAPIEnableUnsafeCORS   = "api.enabled-unsafe-cors"
 
 	// gRPC-related flags
+
 	flagGRPCOnly            = "grpc-only"
 	flagGRPCEnable          = "grpc.enable"
 	flagGRPCAddress         = "grpc.address"
@@ -99,9 +105,11 @@ const (
 	flagGRPCSkipCheckHeader = "grpc.skip-check-header"
 
 	// mempool flags
+
 	FlagMempoolMaxTxs = "mempool.max-txs"
 
 	// testnet keys
+
 	KeyIsTestnet             = "is-testnet"
 	KeyNewChainID            = "new-chain-ID"
 	KeyNewOpAddr             = "new-operator-addr"
@@ -178,12 +186,12 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 
 			_, err := GetPruningOptionsFromFlags(serverCtx.Viper)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get pruning options: %w", err)
 			}
 
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get client context: %w", err)
 			}
 
 			withCMT, _ := cmd.Flags().GetBool(flagWithComet)
@@ -215,18 +223,18 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 func start(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreator, withCmt bool, opts StartCmdOptions) error {
 	svrCfg, err := getAndValidateConfig(svrCtx)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get and validate config: %w", err)
 	}
 
 	app, appCleanupFn, err := startApp(svrCtx, appCreator, opts)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to start app: %w", err)
 	}
 	defer appCleanupFn()
 
 	metrics, err := startTelemetry(svrCfg)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to start telemetry: %w", err)
 	}
 
 	emitServerInfoMetrics()
@@ -257,7 +265,7 @@ func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clie
 	if svrCfg.API.Enable || svrCfg.GRPC.Enable {
 		// create tendermint client
 		// assumes the rpc listen address is where tendermint has its rpc server
-		rpcclient, err := rpchttp.New(svrCtx.Config.RPC.ListenAddress, "/websocket")
+		rpcclient, err := rpchttp.New(svrCtx.Config.RPC.ListenAddress)
 		if err != nil {
 			return err
 		}
@@ -273,12 +281,12 @@ func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clie
 
 	grpcSrv, clientCtx, err := startGrpcServer(ctx, g, svrCfg.GRPC, clientCtx, svrCtx, app)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to start grpc server: %w", err)
 	}
 
 	err = startAPIServer(ctx, g, svrCfg, clientCtx, svrCtx, app, svrCtx.Config.RootDir, grpcSrv, metrics)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to start api server: %w", err)
 	}
 
 	if opts.PostSetupStandalone != nil {
@@ -339,12 +347,12 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 
 	grpcSrv, clientCtx, err := startGrpcServer(ctx, g, svrCfg.GRPC, clientCtx, svrCtx, app)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to start grpc server: %w", err)
 	}
 
 	err = startAPIServer(ctx, g, svrCfg, clientCtx, svrCtx, app, cmtCfg.RootDir, grpcSrv, metrics)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to start api server: %w", err)
 	}
 
 	if opts.PostSetup != nil {
@@ -367,14 +375,20 @@ func startCmtNode(
 ) (tmNode *node.Node, cleanupFn func(), err error) {
 	nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
 	if err != nil {
-		return nil, cleanupFn, err
+		return nil, cleanupFn, fmt.Errorf("failed to load or generate node key: %w", err)
+	}
+
+	// CometBFT uses the ed25519 key generator as default if the given generator function is nil.
+	pv, err := pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile(), nil)
+	if err != nil {
+		return nil, cleanupFn, fmt.Errorf("failed to load or generate priv_validator: %w", err)
 	}
 
 	cmtApp := NewCometABCIWrapper(app)
-	tmNode, err = node.NewNodeWithContext(
+	tmNode, err = node.NewNode(
 		ctx,
 		cfg,
-		pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
+		pv,
 		nodeKey,
 		proxy.NewLocalClientCreator(cmtApp),
 		getGenDocProvider(cfg),
@@ -383,11 +397,11 @@ func startCmtNode(
 		servercmtlog.CometLoggerWrapper{Logger: svrCtx.Logger},
 	)
 	if err != nil {
-		return tmNode, cleanupFn, err
+		return tmNode, cleanupFn, fmt.Errorf("failed to create new comet node: %w", err)
 	}
 
 	if err := tmNode.Start(); err != nil {
-		return tmNode, cleanupFn, err
+		return tmNode, cleanupFn, fmt.Errorf("failed to start comet node: %w", err)
 	}
 
 	cleanupFn = func() {
@@ -411,15 +425,38 @@ func getAndValidateConfig(svrCtx *Context) (serverconfig.Config, error) {
 	return config, nil
 }
 
-// returns a function which returns the genesis doc from the genesis file.
-func getGenDocProvider(cfg *cmtcfg.Config) func() (*cmttypes.GenesisDoc, error) {
-	return func() (*cmttypes.GenesisDoc, error) {
-		appGenesis, err := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
-		if err != nil {
-			return nil, err
+// getGenDocProvider returns a function which returns the genesis doc from the genesis file.
+func getGenDocProvider(cfg *cmtcfg.Config) func() (node.ChecksummedGenesisDoc, error) {
+	return func() (node.ChecksummedGenesisDoc, error) {
+		defaultGenesisDoc := node.ChecksummedGenesisDoc{
+			Sha256Checksum: []byte{},
 		}
 
-		return appGenesis.ToGenesisDoc()
+		appGenesis, err := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
+		if err != nil {
+			return defaultGenesisDoc, err
+		}
+
+		gen, err := appGenesis.ToGenesisDoc()
+		if err != nil {
+			return defaultGenesisDoc, err
+		}
+
+		genbz, err := gen.AppState.MarshalJSON()
+		if err != nil {
+			return defaultGenesisDoc, err
+		}
+
+		bz, err := json.Marshal(genbz)
+		if err != nil {
+			return defaultGenesisDoc, err
+		}
+		sum := sha256.Sum256(bz)
+
+		return node.ChecksummedGenesisDoc{
+			GenesisDoc:     gen,
+			Sha256Checksum: sum[:],
+		}, nil
 	}
 }
 
@@ -775,7 +812,12 @@ func testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB, tra
 	defer blockStore.Close()
 	defer stateDB.Close()
 
-	privValidator := pvm.LoadOrGenFilePV(config.PrivValidatorKeyFile(), config.PrivValidatorStateFile())
+	// CometBFT uses the ed25519 key generator as default if the given generator function is nil.
+	privValidator, err := pvm.LoadOrGenFilePV(config.PrivValidatorKeyFile(), config.PrivValidatorStateFile(), nil)
+	if err != nil {
+		return nil, err
+	}
+
 	userPubKey, err := privValidator.GetPubKey()
 	if err != nil {
 		return nil, err
@@ -786,7 +828,7 @@ func testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB, tra
 		DiscardABCIResponses: config.Storage.DiscardABCIResponses,
 	})
 
-	state, genDoc, err := node.LoadStateFromDBOrGenesisDocProvider(stateDB, genDocProvider)
+	state, genDoc, err := node.LoadStateFromDBOrGenesisDocProvider(stateDB, genDocProvider, "")
 	if err != nil {
 		return nil, err
 	}
@@ -802,12 +844,12 @@ func testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB, tra
 	_, context := getCtx(ctx, true)
 	clientCreator := proxy.NewLocalClientCreator(cmtApp)
 	metrics := node.DefaultMetricsProvider(cmtcfg.DefaultConfig().Instrumentation)
-	_, _, _, _, proxyMetrics, _, _ := metrics(genDoc.ChainID)
+	_, _, _, _, _, proxyMetrics, _, _ := metrics(genDoc.ChainID) //nolint: dogsled // function from comet
 	proxyApp := proxy.NewAppConns(clientCreator, proxyMetrics)
 	if err := proxyApp.Start(); err != nil {
 		return nil, fmt.Errorf("error starting proxy app connections: %w", err)
 	}
-	res, err := proxyApp.Query().Info(context, proxy.RequestInfo)
+	res, err := proxyApp.Query().Info(context, proxy.InfoRequest)
 	if err != nil {
 		return nil, fmt.Errorf("error calling Info: %w", err)
 	}
@@ -821,7 +863,7 @@ func testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB, tra
 	var block *cmttypes.Block
 	switch {
 	case appHeight == blockStore.Height():
-		block = blockStore.LoadBlock(blockStore.Height())
+		block, _ = blockStore.LoadBlock(blockStore.Height())
 		// If the state's last blockstore height does not match the app and blockstore height, we likely stopped with the halt height flag.
 		if state.LastBlockHeight != appHeight {
 			state.LastBlockHeight = appHeight
@@ -840,10 +882,10 @@ func testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB, tra
 		if err != nil {
 			return nil, err
 		}
-		block = blockStore.LoadBlock(blockStore.Height())
+		block, _ = blockStore.LoadBlock(blockStore.Height())
 	default:
 		// If there is any other state, we just load the block
-		block = blockStore.LoadBlock(blockStore.Height())
+		block, _ = blockStore.LoadBlock(blockStore.Height())
 	}
 
 	block.ChainID = newChainID
@@ -866,7 +908,7 @@ func testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB, tra
 
 	// Sign the vote, and copy the proto changes from the act of signing to the vote itself
 	voteProto := vote.ToProto()
-	err = privValidator.SignVote(newChainID, voteProto)
+	err = privValidator.SignVote(newChainID, voteProto, false)
 	if err != nil {
 		return nil, err
 	}

@@ -1,4 +1,4 @@
-package pruning_test
+package pruning
 
 import (
 	"errors"
@@ -6,19 +6,19 @@ import (
 	"testing"
 
 	db "github.com/cosmos/cosmos-db"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/mock"
-	"cosmossdk.io/store/pruning"
 	"cosmossdk.io/store/pruning/types"
 )
 
 const dbErr = "db error"
 
 func TestNewManager(t *testing.T) {
-	manager := pruning.NewManager(db.NewMemDB(), log.NewNopLogger())
+	manager := NewManager(db.NewMemDB(), log.NewNopLogger())
 	require.NotNil(t, manager)
 	require.Equal(t, types.PruningNothing, manager.GetOptions().GetPruningStrategy())
 }
@@ -78,7 +78,7 @@ func TestStrategies(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			manager := pruning.NewManager(db.NewMemDB(), log.NewNopLogger())
+			manager := NewManager(db.NewMemDB(), log.NewNopLogger())
 			require.NotNil(t, manager)
 
 			curStrategy := tc.strategy
@@ -110,7 +110,9 @@ func TestStrategies(t *testing.T) {
 			for curHeight := int64(0); curHeight < 110000; curHeight++ {
 				if tc.snapshotInterval != 0 {
 					if curHeight > int64(tc.snapshotInterval) && curHeight%int64(tc.snapshotInterval) == int64(tc.snapshotInterval)-1 {
-						manager.HandleSnapshotHeight(curHeight - int64(tc.snapshotInterval) + 1)
+						snapHeight := curHeight - int64(tc.snapshotInterval) + 1
+						manager.AnnounceSnapshotHeight(snapHeight)
+						manager.HandleSnapshotHeight(snapHeight)
 						snHeight = curHeight
 					}
 				}
@@ -185,12 +187,163 @@ func TestPruningHeight_Inputs(t *testing.T) {
 
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
-			manager := pruning.NewManager(db.NewMemDB(), log.NewNopLogger())
-			require.NotNil(t, manager)
+			manager := NewManager(db.NewMemDB(), log.NewNopLogger())
 			manager.SetOptions(types.NewPruningOptions(tc.strategy))
 
 			pruningHeightActual := manager.GetPruningHeight(tc.height)
 			require.Equal(t, tc.expectedResult, pruningHeightActual)
+		})
+	}
+}
+
+func TestGetPruningHeight(t *testing.T) {
+	specs := map[string]struct {
+		initDBState int64
+		opts        types.PruningOptions
+		setup       func(manager *Manager)
+		exp         map[int64]int64
+	}{
+		"init from store - no snap": {
+			initDBState: 10,
+			opts:        types.PruningOptions{KeepRecent: 5, Interval: 10, Strategy: types.PruningCustom},
+			setup: func(mgr *Manager) {
+				mgr.SetSnapshotInterval(15)
+			},
+			exp: map[int64]int64{
+				20: 9, // initDBState - 1
+				30: 9, // initDBState - 1
+				45: 0, // not a prune height
+			},
+		},
+		"init from store - snap landed": {
+			initDBState: 10,
+			opts:        types.PruningOptions{KeepRecent: 5, Interval: 10, Strategy: types.PruningCustom},
+			setup: func(mgr *Manager) {
+				mgr.SetSnapshotInterval(15)
+				mgr.AnnounceSnapshotHeight(15)
+				mgr.HandleSnapshotHeight(15)
+			},
+			exp: map[int64]int64{
+				10: 4,  // 10 - 5 (keep) - 1
+				15: 0,  // not on prune interval
+				20: 14, // 20 - 5 (keep) - 1
+				30: 24, // 30 - 5 (keep) - 1
+				40: 29, // 15 (last completed snap) + 15 (snap interval) - 1
+			},
+		},
+		"init from store - snap in-flight": {
+			initDBState: 10,
+			opts:        types.PruningOptions{KeepRecent: 5, Interval: 10, Strategy: types.PruningCustom},
+			setup: func(mgr *Manager) {
+				mgr.SetSnapshotInterval(15)
+				mgr.AnnounceSnapshotHeight(15)
+			},
+			exp: map[int64]int64{
+				10: 4, // 10 - 5 (keep) - 1
+				20: 9, // 10 - 5 (keep) - 1
+			},
+		},
+		"init from store - delayed in-flight snap": {
+			initDBState: 10,
+			opts:        types.PruningOptions{KeepRecent: 5, Interval: 10, Strategy: types.PruningCustom},
+			setup: func(mgr *Manager) {
+				mgr.SetSnapshotInterval(15)
+				mgr.AnnounceSnapshotHeight(15)
+				mgr.AnnounceSnapshotHeight(30)
+				mgr.HandleSnapshotHeight(30)
+			},
+			exp: map[int64]int64{
+				10: 4,  // 10 - 5 (keep) - 1
+				20: 14, // 15 (in-flight) - 1
+				30: 14, // 15 (in-flight) - 1
+				40: 14, // 15 (in-flight) - 1
+			},
+		},
+		"empty store": {
+			opts: types.PruningOptions{KeepRecent: 5, Interval: 10, Strategy: types.PruningCustom},
+			setup: func(mgr *Manager) {
+				mgr.SetSnapshotInterval(15)
+			},
+			exp: map[int64]int64{
+				10: 4,  // 10 -5 (keep) -1
+				20: 14, // 20 -5 (keep) -1
+			},
+		},
+		"empty snap interval set": {
+			initDBState: 10,
+			opts:        types.PruningOptions{KeepRecent: 5, Interval: 10, Strategy: types.PruningCustom},
+			setup:       func(mgr *Manager) {},
+			exp: map[int64]int64{
+				10: 4,  // 10 -5 (keep) -1
+				20: 14, // 20 -5 (keep) -1
+			},
+		},
+		"prune nothing set": {
+			initDBState: 10,
+			opts:        types.PruningOptions{Strategy: types.PruningNothing, Interval: 10, KeepRecent: 5},
+			setup: func(mgr *Manager) {
+				mgr.SetSnapshotInterval(15)
+			},
+			exp: map[int64]int64{
+				10: 0, // nothing
+				20: 0, // nothing
+				30: 0, // nothing
+			},
+		},
+		"empty prune interval": {
+			initDBState: 10,
+			opts:        types.PruningOptions{Strategy: types.PruningCustom, KeepRecent: 5},
+			setup: func(mgr *Manager) {
+				mgr.SetSnapshotInterval(15)
+			},
+			exp: map[int64]int64{
+				10: 0, // interval required
+				20: 0, // interval required
+				30: 0, // interval required
+			},
+		},
+		"height <= keep": {
+			initDBState: 10,
+			opts:        types.PruningOptions{Strategy: types.PruningCustom, Interval: 1, KeepRecent: 5},
+			setup: func(mgr *Manager) {
+				mgr.SetSnapshotInterval(15)
+			},
+			exp: map[int64]int64{
+				0: 0, // interval required
+				4: 0, // interval required
+				5: 0, // interval required
+			},
+		},
+		"height not on prune interval": {
+			initDBState: 10,
+			opts:        types.PruningOptions{Strategy: types.PruningCustom, Interval: 2},
+			setup: func(mgr *Manager) {
+				mgr.SetSnapshotInterval(15)
+			},
+			exp: map[int64]int64{
+				0: 0, // excluded
+				1: 0, // not on prune interval
+				2: 1, // 2 - 1
+				3: 0, // not on prune interval
+				4: 3, // 2 - 1
+			},
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			memDB := db.NewMemDB()
+			if spec.initDBState != 0 {
+				require.NoError(t, storePruningSnapshotHeight(memDB, spec.initDBState))
+			}
+			mgr2 := NewManager(memDB, log.NewNopLogger())
+			mgr2.SetOptions(spec.opts)
+			require.NoError(t, mgr2.LoadSnapshotHeights(memDB))
+			spec.setup(mgr2)
+
+			for height, exp := range spec.exp {
+				gotHeight := mgr2.GetPruningHeight(height)
+				assert.Equal(t, exp, gotHeight, "height: %d", height)
+			}
 		})
 	}
 }
@@ -203,7 +356,8 @@ func TestHandleSnapshotHeight_DbErr_Panic(t *testing.T) {
 
 	dbMock.EXPECT().SetSync(gomock.Any(), gomock.Any()).Return(errors.New(dbErr)).Times(1)
 
-	manager := pruning.NewManager(dbMock, log.NewNopLogger())
+	manager := NewManager(dbMock, log.NewNopLogger())
+	manager.SetSnapshotInterval(1)
 	manager.SetOptions(types.NewPruningOptions(types.PruningEverything))
 	require.NotNil(t, manager)
 
@@ -221,7 +375,7 @@ func TestHandleSnapshotHeight_LoadFromDisk(t *testing.T) {
 
 	// Setup
 	db := db.NewMemDB()
-	manager := pruning.NewManager(db, log.NewNopLogger())
+	manager := NewManager(db, log.NewNopLogger())
 	require.NotNil(t, manager)
 
 	manager.SetOptions(types.NewPruningOptions(types.PruningEverything))
@@ -236,7 +390,7 @@ func TestHandleSnapshotHeight_LoadFromDisk(t *testing.T) {
 			expected = 1
 		}
 
-		loadedSnapshotHeights, err := pruning.LoadPruningSnapshotHeights(db)
+		loadedSnapshotHeights, err := loadPruningSnapshotHeights(db)
 		require.NoError(t, err)
 		require.Equal(t, expected, len(loadedSnapshotHeights), snapshotHeightStr)
 
@@ -244,7 +398,7 @@ func TestHandleSnapshotHeight_LoadFromDisk(t *testing.T) {
 		err = manager.LoadSnapshotHeights(db)
 		require.NoError(t, err)
 
-		loadedSnapshotHeights, err = pruning.LoadPruningSnapshotHeights(db)
+		loadedSnapshotHeights, err = loadPruningSnapshotHeights(db)
 		require.NoError(t, err)
 		require.Equal(t, expected, len(loadedSnapshotHeights), snapshotHeightStr)
 	}
@@ -252,7 +406,7 @@ func TestHandleSnapshotHeight_LoadFromDisk(t *testing.T) {
 
 func TestLoadPruningSnapshotHeights(t *testing.T) {
 	var (
-		manager = pruning.NewManager(db.NewMemDB(), log.NewNopLogger())
+		manager = NewManager(db.NewMemDB(), log.NewNopLogger())
 		err     error
 	)
 	require.NotNil(t, manager)
@@ -268,7 +422,7 @@ func TestLoadPruningSnapshotHeights(t *testing.T) {
 			getFlushedPruningSnapshotHeights: func() []int64 {
 				return []int64{5, -2, 3}
 			},
-			expectedResult: &pruning.NegativeHeightsError{Height: -2},
+			expectedResult: &NegativeHeightsError{Height: -2},
 		},
 		"non-negative - success": {
 			getFlushedPruningSnapshotHeights: func() []int64 {
@@ -282,7 +436,7 @@ func TestLoadPruningSnapshotHeights(t *testing.T) {
 			db := db.NewMemDB()
 
 			if tc.getFlushedPruningSnapshotHeights != nil {
-				err = db.Set(pruning.PruneSnapshotHeightsKey, pruning.Int64SliceToBytes(tc.getFlushedPruningSnapshotHeights()))
+				err = db.Set(pruneSnapshotHeightsKey, int64SliceToBytes(tc.getFlushedPruningSnapshotHeights()...))
 				require.NoError(t, err)
 			}
 
@@ -293,7 +447,7 @@ func TestLoadPruningSnapshotHeights(t *testing.T) {
 }
 
 func TestLoadSnapshotHeights_PruneNothing(t *testing.T) {
-	manager := pruning.NewManager(db.NewMemDB(), log.NewNopLogger())
+	manager := NewManager(db.NewMemDB(), log.NewNopLogger())
 	require.NotNil(t, manager)
 
 	manager.SetOptions(types.NewPruningOptions(types.PruningNothing))

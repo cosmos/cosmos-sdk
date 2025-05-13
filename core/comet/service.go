@@ -61,7 +61,7 @@ type VoteInfos interface {
 	Get(int) VoteInfo
 }
 
-// BlockIdFlag indicates which BlockID the signature is for
+// BlockIDFlag indicates which BlockID the signature is for
 type BlockIDFlag int32
 
 const (

@@ -150,7 +150,7 @@ func TestMsgService(t *testing.T) {
 		app.MsgServiceRouter(),
 		testdata.MsgServerImpl{},
 	)
-	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+	_, err = app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1})
 	require.NoError(t, err)
 
 	_, _, addr := testdata.KeyTestPubAddr()
@@ -196,7 +196,7 @@ func TestMsgService(t *testing.T) {
 	// Send the tx to the app
 	txBytes, err := txConfig.TxEncoder()(txBuilder.GetTx())
 	require.NoError(t, err)
-	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+	res, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1, Txs: [][]byte{txBytes}})
 	require.NoError(t, err)
 	require.Equal(t, abci.CodeTypeOK, res.TxResults[0].Code, "res=%+v", res)
 }

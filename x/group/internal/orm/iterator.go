@@ -45,7 +45,7 @@ func NewSingleValueIterator(rowID RowID, val []byte) Iterator {
 	})
 }
 
-// Iterator that return ErrORMInvalidIterator only.
+// NewInvalidIterator that return ErrORMInvalidIterator only.
 func NewInvalidIterator() Iterator {
 	return IteratorFunc(func(dest proto.Message) (RowID, error) {
 		return nil, errors.ErrORMInvalidIterator

@@ -16,7 +16,8 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/tools/cosmovisor"
-	upgradetypes "cosmossdk.io/x/upgrade/types"
+
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 var workDir string

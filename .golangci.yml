@@ -51,6 +51,9 @@ linters:
       rules:
         - name: redefines-builtin-id
           disabled: true
+        - name: exported
+          severity: error
+          disabled: false
     staticcheck:
       checks:
         - all
@@ -59,11 +62,16 @@ linters:
   exclusions:
     generated: lax
     presets:
-      - comments
       - common-false-positives
       - legacy
       - std-error-handling
     rules:
+      - linters:
+        - staticcheck
+        text: 'ST1000:'
+      - linters:
+         - revive
+        text: 'or be unexported' # don't report types that have no comments at all. there are way too many of these.
       - linters:
           - staticcheck
         text: 'ST1003:'
@@ -127,6 +135,7 @@ formatters:
     gofumpt:
       extra-rules: true
   exclusions:
+
     generated: lax
     paths:
       - server/grpc/gogoreflection/fix_registration.go

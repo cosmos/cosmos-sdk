@@ -18,7 +18,7 @@ func TestAminoJSON(t *testing.T) {
 	legacyAmino := codec.NewLegacyAmino()
 	feegrant.RegisterLegacyAminoCodec(legacyAmino)
 	legacytx.RegressionTestingAminoCodec = legacyAmino
-	tx := legacytx.StdTx{}
+	tx := legacytx.StdTx{} // nolint:staticcheck // legacy testing
 	var msg sdk.Msg
 	allowanceAny, err := codectypes.NewAnyWithValue(&feegrant.BasicAllowance{SpendLimit: sdk.NewCoins(sdk.NewCoin("foo", math.NewInt(100)))})
 	require.NoError(t, err)

@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	crypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
+	v1 "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -43,10 +43,10 @@ func (m *MockValidatorStore) EXPECT() *MockValidatorStoreMockRecorder {
 }
 
 // GetPubKeyByConsAddr mocks base method.
-func (m *MockValidatorStore) GetPubKeyByConsAddr(arg0 context.Context, arg1 types.ConsAddress) (crypto.PublicKey, error) {
+func (m *MockValidatorStore) GetPubKeyByConsAddr(arg0 context.Context, arg1 types.ConsAddress) (v1.PublicKey, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPubKeyByConsAddr", arg0, arg1)
-	ret0, _ := ret[0].(crypto.PublicKey)
+	ret0, _ := ret[0].(v1.PublicKey)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

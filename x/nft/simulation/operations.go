@@ -24,7 +24,7 @@ const (
 	WeightSend = 100
 )
 
-// will be removed in the future
+// TypeMsgSend will be removed in the future
 var TypeMsgSend = sdk.MsgTypeURL(&nft.MsgSend{})
 
 // WeightedOperations returns all the operations from the module with their respective weights

@@ -86,13 +86,17 @@ func StdSignBytes(chainID string, accnum, sequence, timeout uint64, fee StdFee, 
 	return mustSortJSON(bz)
 }
 
-// Deprecated: StdSignature represents a sig
+// StdSignature represents a sig
+//
+// Deprecated: will be removed in the future.
 type StdSignature struct {
 	cryptotypes.PubKey `json:"pub_key" yaml:"pub_key"` // optional
 	Signature          []byte                          `json:"signature" yaml:"signature"`
 }
 
-// Deprecated
+// NewStdSignature is a legacy function
+//
+// Deprecated: will be removed in the future.
 func NewStdSignature(pk cryptotypes.PubKey, sig []byte) StdSignature {
 	return StdSignature{PubKey: pk, Signature: sig}
 }

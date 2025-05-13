@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
+	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 	gogotypes "github.com/cosmos/gogoproto/types"
 
 	corestore "cosmossdk.io/core/store"
@@ -378,7 +378,7 @@ func (k Keeper) DeleteLastValidatorPower(ctx context.Context, operator sdk.ValAd
 	return store.Delete(types.GetLastValidatorPowerKey(operator))
 }
 
-// lastValidatorsIterator returns an iterator for the consensus validators in the last block
+// LastValidatorsIterator returns an iterator for the consensus validators in the last block
 func (k Keeper) LastValidatorsIterator(ctx context.Context) (corestore.Iterator, error) {
 	store := k.storeService.OpenKVStore(ctx)
 	return store.Iterator(types.LastValidatorPowerKey, storetypes.PrefixEndBytes(types.LastValidatorPowerKey))

@@ -59,7 +59,7 @@ func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, ak feeg
 	}
 }
 
-// Super ugly hack to not be breaking in v0.50 and v0.47
+// SetBankKeeper is a super ugly hack to not be breaking in v0.50 and v0.47
 // DO NOT USE.
 func (k Keeper) SetBankKeeper(bk feegrant.BankKeeper) Keeper {
 	k.bankKeeper = bk

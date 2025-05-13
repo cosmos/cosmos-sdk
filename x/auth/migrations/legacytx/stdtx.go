@@ -79,7 +79,8 @@ type StdTip struct {
 // StdTx is the legacy transaction format for wrapping a Msg with Fee and Signatures.
 // It only works with Amino, please prefer the new protobuf Tx in types/tx.
 // NOTE: the first signature is the fee payer (Signatures must not be nil).
-// Deprecated
+//
+// Deprecated: may be removed in the future.
 type StdTx struct {
 	Msgs          []sdk.Msg      `json:"msg" yaml:"msg"`
 	Fee           StdFee         `json:"fee" yaml:"fee"`
@@ -88,7 +89,9 @@ type StdTx struct {
 	TimeoutHeight uint64         `json:"timeout_height" yaml:"timeout_height"`
 }
 
-// Deprecated
+// NewStdTx is a legacy function.
+//
+// Deprecated: may be removed in the future.
 func NewStdTx(msgs []sdk.Msg, fee StdFee, sigs []StdSignature, memo string) StdTx {
 	return StdTx{
 		Msgs:       msgs,
@@ -146,7 +149,7 @@ func (tx StdTx) GetSignaturesV2() ([]signing.SignatureV2, error) {
 	return res, nil
 }
 
-// GetPubkeys returns the pubkeys of signers if the pubkey is included in the signature
+// GetPubKeys returns the pubkeys of signers if the pubkey is included in the signature
 // If pubkey is not included in the signature, then nil is in the slice instead
 func (tx StdTx) GetPubKeys() ([]cryptotypes.PubKey, error) {
 	pks := make([]cryptotypes.PubKey, len(tx.Signatures))

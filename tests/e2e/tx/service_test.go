@@ -923,11 +923,11 @@ func (s *E2ETestSuite) TestTxDecode_GRPCGateway() {
 	}
 }
 
-func (s *E2ETestSuite) readTestAminoTxJSON() ([]byte, *legacytx.StdTx) {
+func (s *E2ETestSuite) readTestAminoTxJSON() ([]byte, *legacytx.StdTx) { // nolint:staticcheck // legacy testing
 	val := s.network.Validators[0]
 	txJSONBytes, err := os.ReadFile("testdata/tx_amino1.json")
 	s.Require().NoError(err)
-	var stdTx legacytx.StdTx
+	var stdTx legacytx.StdTx // nolint:staticcheck // legacy testing
 	err = val.ClientCtx.LegacyAmino.UnmarshalJSON(txJSONBytes, &stdTx)
 	s.Require().NoError(err)
 	return txJSONBytes, &stdTx
@@ -960,7 +960,7 @@ func (s *E2ETestSuite) TestTxEncodeAmino_GRPC() {
 				s.Require().NoError(err)
 				s.Require().NotEmpty(res.GetAminoBinary())
 
-				var decodedTx legacytx.StdTx
+				var decodedTx legacytx.StdTx // nolint:staticcheck // legacy testing
 				err = val.ClientCtx.LegacyAmino.Unmarshal(res.AminoBinary, &decodedTx)
 				s.Require().NoError(err)
 				s.Require().Equal(decodedTx.GetMsgs(), stdTx.GetMsgs())
@@ -998,7 +998,7 @@ func (s *E2ETestSuite) TestTxEncodeAmino_GRPCGateway() {
 				err := val.ClientCtx.Codec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
 
-				var decodedTx legacytx.StdTx
+				var decodedTx legacytx.StdTx // nolint:staticcheck // legacy testing
 				err = val.ClientCtx.LegacyAmino.Unmarshal(result.AminoBinary, &decodedTx)
 				s.Require().NoError(err)
 				s.Require().Equal(decodedTx.GetMsgs(), stdTx.GetMsgs())
@@ -1007,11 +1007,11 @@ func (s *E2ETestSuite) TestTxEncodeAmino_GRPCGateway() {
 	}
 }
 
-func (s *E2ETestSuite) readTestAminoTxBinary() ([]byte, *legacytx.StdTx) {
+func (s *E2ETestSuite) readTestAminoTxBinary() ([]byte, *legacytx.StdTx) { // nolint:staticcheck // legacy testing
 	val := s.network.Validators[0]
 	txJSONBytes, err := os.ReadFile("testdata/tx_amino1.bin")
 	s.Require().NoError(err)
-	var stdTx legacytx.StdTx
+	var stdTx legacytx.StdTx // nolint:staticcheck // legacy testing
 	err = val.ClientCtx.LegacyAmino.Unmarshal(txJSONBytes, &stdTx)
 	s.Require().NoError(err)
 	return txJSONBytes, &stdTx
@@ -1045,7 +1045,7 @@ func (s *E2ETestSuite) TestTxDecodeAmino_GRPC() {
 				s.Require().NoError(err)
 				s.Require().NotEmpty(res.GetAminoJson())
 
-				var decodedTx legacytx.StdTx
+				var decodedTx legacytx.StdTx // nolint:staticcheck // legacy testing
 				err = s.network.Validators[0].ClientCtx.LegacyAmino.UnmarshalJSON([]byte(res.GetAminoJson()), &decodedTx)
 				s.Require().NoError(err)
 				s.Require().Equal(stdTx.GetMsgs(), decodedTx.GetMsgs())
@@ -1085,7 +1085,7 @@ func (s *E2ETestSuite) TestTxDecodeAmino_GRPCGateway() {
 				err := val.ClientCtx.Codec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err)
 
-				var decodedTx legacytx.StdTx
+				var decodedTx legacytx.StdTx // nolint:staticcheck // legacy testing
 				err = val.ClientCtx.LegacyAmino.UnmarshalJSON([]byte(result.AminoJson), &decodedTx)
 				s.Require().NoError(err)
 				s.Require().Equal(stdTx.GetMsgs(), decodedTx.GetMsgs())

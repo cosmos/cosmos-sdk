@@ -206,7 +206,7 @@ type ModuleInputs struct {
 	LegacySubspace exported.Subspace `optional:"true"`
 }
 
-// Dependency Injection Outputs
+// ModuleOutputs contains Dependency Injection Outputs
 type ModuleOutputs struct {
 	depinject.Out
 

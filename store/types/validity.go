@@ -1,9 +1,9 @@
 package types
 
 var (
-	// 128K - 1
+	// MaxKeyLength is 128K - 1
 	MaxKeyLength = (1 << 17) - 1
-	// 2G - 1
+	// MaxValueLength is 2G - 1
 	MaxValueLength = (1 << 31) - 1
 )
 

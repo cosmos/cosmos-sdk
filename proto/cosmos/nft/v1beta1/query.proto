@@ -5,7 +5,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "google/api/annotations.proto";
 import "cosmos/nft/v1beta1/nft.proto";
 
-option go_package = "cosmossdk.io/x/nft";
+option go_package = "github.com/cosmos/cosmos-sdk/x/nft";
 
 // Query defines the gRPC querier service.
 service Query {

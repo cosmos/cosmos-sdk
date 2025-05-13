@@ -9,7 +9,7 @@ import "amino/amino.proto";
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 
-option go_package = "cosmossdk.io/x/feegrant";
+option go_package = "github.com/cosmos/cosmos-sdk/x/feegrant";
 
 // BasicAllowance implements Allowance with a one-time grant of coins
 // that optionally expires. The grantee can use up to SpendLimit to cover fees.

@@ -130,8 +130,8 @@ message TestVersion2 {
   repeated TestVersion1 h = 9; // [(gogoproto.castrepeated) = "TestVersion1"];
   // google.protobuf.Timestamp i = 10;
   // google.protobuf.Timestamp j = 11; // [(gogoproto.stdtime) = true];
-  Customer1 k         = 12 [(gogoproto.embed) = true];
-  uint64    new_field = 25;
+  Customer1 k               = 12 [(gogoproto.embed) = true];
+  uint64    new_added_field = 25;
 }
 message TestVersion3 {
   int64                 x = 1;

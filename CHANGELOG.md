@@ -43,6 +43,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* [#24207](https://github.com/cosmos/cosmos-sdk/pull/24207) Avoid decoding tx for in PrepareProposal if it's NoOpMempool.
 * (baseapp) [#24655](https://github.com/cosmos/cosmos-sdk/pull/24655) Add mutex locks for `state` and make `lastCommitInfo` atomic to prevent race conditions between `Commit` and `CreateQueryContext`.
 * (proto) [#24161](https://github.com/cosmos/cosmos-sdk/pull/24161) Remove unnecessary annotations from `x/staking` authz proto.
 

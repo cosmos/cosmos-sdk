@@ -221,6 +221,7 @@ require (
 replace (
 	cosmossdk.io/api => ../api
 	cosmossdk.io/core => ../core
+	cosmossdk.io/log => ../log
 	cosmossdk.io/store => ../store
 	cosmossdk.io/x/tx => ../x/tx
 )

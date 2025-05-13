@@ -216,9 +216,7 @@ require (
 
 // Here are the short-lived replace from the Cosmos SDK
 // Replace here are pending PRs, or version to be tagged
-// replace (
-// 	<temporary replace>
-// )
+replace cosmossdk.io/log => ./log
 
 // Replace all unreleased direct deps upgraded to comet v1
 replace (

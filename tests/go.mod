@@ -222,6 +222,18 @@ require (
 // 	<temporary replace>
 // )
 
+<<<<<<< HEAD
+=======
+// Replace all unreleased direct deps upgraded to comet v1
+replace (
+	cosmossdk.io/api => ../api
+	cosmossdk.io/core => ../core
+	cosmossdk.io/log => ../log
+	cosmossdk.io/store => ../store
+	cosmossdk.io/x/tx => ../x/tx
+)
+
+>>>>>>> be955efe2 (feat: verbose logging during upgrades (#24720))
 // Below are the long-lived replace for tests.
 replace (
 	// We always want to test against the latest version of the simapp.

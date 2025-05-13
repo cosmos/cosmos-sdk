@@ -11,16 +11,17 @@ import (
 // If the filter is nil, the writer will pass all events through.
 // The filter function is called with the module and level of the event.
 func NewFilterWriter(parent io.Writer, filter FilterFunc) io.Writer {
-	return &filterWriter{parent, filter}
+	return &filterWriter{parent: parent, filter: filter}
 }
 
 type filterWriter struct {
-	parent io.Writer
-	filter FilterFunc
+	parent        io.Writer
+	filter        FilterFunc
+	disableFilter bool
 }
 
 func (fw *filterWriter) Write(p []byte) (n int, err error) {
-	if fw.filter == nil {
+	if fw.filter == nil || fw.disableFilter {
 		return fw.parent.Write(p)
 	}
 

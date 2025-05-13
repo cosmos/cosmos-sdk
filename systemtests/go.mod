@@ -161,3 +161,18 @@ require (
 	pgregory.net/rapid v1.2.0 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
+<<<<<<< HEAD
+=======
+
+// Replace all unreleased direct deps upgraded to comet v1
+replace github.com/cosmos/cosmos-sdk => ../.
+
+// Replace all unreleased indirect deps upgraded to comet v1
+replace (
+	cosmossdk.io/api => ../api
+	cosmossdk.io/core => ../core
+	cosmossdk.io/log => ../log
+	cosmossdk.io/store => ../store
+	cosmossdk.io/x/tx => ../x/tx
+)
+>>>>>>> be955efe2 (feat: verbose logging during upgrades (#24720))

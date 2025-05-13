@@ -3,6 +3,7 @@ module cosmossdk.io/tests/systemtests
 go 1.23.2
 
 replace (
+	cosmossdk.io/log => ../../log
 	// always use latest versions in tests
 	cosmossdk.io/systemtests => ../../systemtests
 	github.com/cosmos/cosmos-sdk => ../..

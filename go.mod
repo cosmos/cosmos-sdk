@@ -223,6 +223,8 @@ replace (
 	cosmossdk.io/core => ./core
 	cosmossdk.io/store => ./store
 	cosmossdk.io/x/tx => ./x/tx
+
+	github.com/cosmos/cosmos-sdk/math/v2 => ./math
 )
 
 // Below are the long-lived replace of the Cosmos SDK

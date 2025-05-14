@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/math/v2"
-
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 

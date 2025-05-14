@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections/colltest"
-	"github.com/cosmos/cosmos-sdk/math/v2"
 
+	"github.com/cosmos/cosmos-sdk/math/v2"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

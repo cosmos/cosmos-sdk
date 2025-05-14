@@ -7,6 +7,7 @@ import (
 	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 
 	sdkmaps "cosmossdk.io/store/internal/maps"
+
 	"github.com/cosmos/cosmos-sdk/math/v2/unsafe"
 )
 

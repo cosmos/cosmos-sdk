@@ -5,7 +5,6 @@ import (
 	"time"
 
 	sdkmath "github.com/cosmos/cosmos-sdk/math/v2"
-
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 

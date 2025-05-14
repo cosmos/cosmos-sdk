@@ -11,6 +11,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"cosmossdk.io/x/tx/signing/textual"
+
 	"github.com/cosmos/cosmos-sdk/math/v2"
 )
 

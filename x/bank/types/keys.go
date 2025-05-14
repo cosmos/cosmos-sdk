@@ -3,8 +3,8 @@ package types
 import (
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
-	"github.com/cosmos/cosmos-sdk/math/v2"
 
+	"github.com/cosmos/cosmos-sdk/math/v2"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

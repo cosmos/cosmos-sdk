@@ -27,8 +27,6 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	pruningtypes "cosmossdk.io/store/pruning/types"
-	sdkmath "github.com/cosmos/cosmos-sdk/math/v2"
-	"github.com/cosmos/cosmos-sdk/math/v2/unsafe"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -40,6 +38,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	sdkmath "github.com/cosmos/cosmos-sdk/math/v2"
+	"github.com/cosmos/cosmos-sdk/math/v2/unsafe"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"

@@ -15,8 +15,8 @@ import (
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
 	"cosmossdk.io/x/tx/signing/aminojson"
-	"github.com/cosmos/cosmos-sdk/math/v2"
 
+	"github.com/cosmos/cosmos-sdk/math/v2"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

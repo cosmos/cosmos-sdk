@@ -5,9 +5,8 @@ import (
 
 	"go.uber.org/mock/gomock"
 
-	sdkmath "github.com/cosmos/cosmos-sdk/math/v2"
-
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	sdkmath "github.com/cosmos/cosmos-sdk/math/v2"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"

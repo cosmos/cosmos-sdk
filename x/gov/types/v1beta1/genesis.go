@@ -3,9 +3,8 @@ package v1beta1
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/math/v2"
-
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/math/v2"
 )
 
 // NewGenesisState creates a new genesis state for the governance module

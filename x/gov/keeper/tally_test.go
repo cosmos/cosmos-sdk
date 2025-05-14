@@ -6,9 +6,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
-	"github.com/cosmos/cosmos-sdk/math/v2"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/math/v2"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )

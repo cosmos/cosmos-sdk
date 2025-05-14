@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	sdkmath "github.com/cosmos/cosmos-sdk/math/v2"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v4 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v4"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"

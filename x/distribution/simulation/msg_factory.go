@@ -5,8 +5,8 @@ import (
 	"errors"
 
 	"cosmossdk.io/collections"
-	sdkmath "github.com/cosmos/cosmos-sdk/math/v2"
 
+	sdkmath "github.com/cosmos/cosmos-sdk/math/v2"
 	"github.com/cosmos/cosmos-sdk/testutil/simsx"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"

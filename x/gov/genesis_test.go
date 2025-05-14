@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdkmath "github.com/cosmos/cosmos-sdk/math/v2"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"

@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/math/v2"
-
 	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 

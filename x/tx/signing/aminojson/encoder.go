@@ -12,6 +12,7 @@ import (
 
 	authapi "cosmossdk.io/api/cosmos/auth/v1beta1"
 	"cosmossdk.io/api/cosmos/crypto/multisig"
+
 	"github.com/cosmos/cosmos-sdk/math/v2"
 )
 

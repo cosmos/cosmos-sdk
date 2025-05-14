@@ -6,7 +6,6 @@ import (
 	context "context"
 
 	"github.com/cosmos/cosmos-sdk/math/v2"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"

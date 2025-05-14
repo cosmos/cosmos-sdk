@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	sdkmath "github.com/cosmos/cosmos-sdk/math/v2"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 )

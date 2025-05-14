@@ -7,8 +7,8 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/errors"
-	sdkmath "github.com/cosmos/cosmos-sdk/math/v2"
 
+	sdkmath "github.com/cosmos/cosmos-sdk/math/v2"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"

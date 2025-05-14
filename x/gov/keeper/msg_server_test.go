@@ -5,7 +5,6 @@ import (
 	"time"
 
 	sdkmath "github.com/cosmos/cosmos-sdk/math/v2"
-
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"

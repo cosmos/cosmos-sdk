@@ -9,9 +9,9 @@ replace (
 )
 
 require (
-	cosmossdk.io/math v1.5.3
 	cosmossdk.io/systemtests v1.2.1
 	github.com/cosmos/cosmos-sdk v0.53.0
+	github.com/cosmos/cosmos-sdk/math/v2 v2.0.0-00010101000000-000000000000
 	github.com/stretchr/testify v1.10.0
 	github.com/tidwall/gjson v1.18.0
 	github.com/tidwall/sjson v1.2.5
@@ -176,4 +176,5 @@ replace (
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/tx => ../../x/tx
+	github.com/cosmos/cosmos-sdk/math/v2 => ../../math
 )

@@ -5,8 +5,8 @@ go 1.23.0
 require (
 	cosmossdk.io/api v0.9.2
 	cosmossdk.io/depinject v1.2.0
-	cosmossdk.io/math v1.5.3
 	github.com/cosmos/cosmos-db v1.1.1
+	github.com/cosmos/cosmos-sdk/math/v2 v2.0.0-00010101000000-000000000000
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/grpc v1.72.0
 	google.golang.org/protobuf v1.36.6
@@ -58,6 +58,8 @@ require (
 
 // Replace all unreleased direct deps upgraded to comet v1
 replace cosmossdk.io/api => ../api
+
+replace github.com/cosmos/cosmos-sdk/math/v2 => ../math
 
 // Version tagged too early and incompatible with v0.50 (latest at the time of tagging)
 retract v0.12.0

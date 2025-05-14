@@ -3,9 +3,8 @@ package types
 import (
 	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 
-	"github.com/cosmos/cosmos-sdk/math/v2"
-
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/math/v2"
 )
 
 // DelegationI delegation bond for a delegated proof of stake system

@@ -7,9 +7,8 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	"gotest.tools/v3/assert"
 
-	"github.com/cosmos/cosmos-sdk/math/v2"
-
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/math/v2"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"

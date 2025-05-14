@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/depinject v1.2.0
 	cosmossdk.io/errors v1.0.2
 	cosmossdk.io/log v1.6.0
-	cosmossdk.io/math v1.5.3
+	cosmossdk.io/math v1.5.3 // indirect
 	cosmossdk.io/simapp v0.0.0-20230620040119-e078f1a49e8b
 	cosmossdk.io/store v1.1.2
 	cosmossdk.io/x/tx v0.14.0
@@ -29,6 +29,8 @@ require (
 	gotest.tools/v3 v3.5.2
 	pgregory.net/rapid v1.2.0
 )
+
+require github.com/cosmos/cosmos-sdk/math/v2 v2.0.0-00010101000000-000000000000
 
 require (
 	cel.dev/expr v0.20.0 // indirect
@@ -223,6 +225,8 @@ replace (
 	cosmossdk.io/core => ../core
 	cosmossdk.io/store => ../store
 	cosmossdk.io/x/tx => ../x/tx
+
+	github.com/cosmos/cosmos-sdk/math/v2 => ../math
 )
 
 // Below are the long-lived replace for tests.

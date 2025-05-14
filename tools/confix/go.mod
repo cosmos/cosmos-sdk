@@ -14,6 +14,7 @@ require (
 
 require (
 	github.com/cometbft/cometbft/api v1.0.0 // indirect
+	github.com/cosmos/cosmos-sdk/math/v2 v2.0.0-00010101000000-000000000000 // indirect
 	github.com/dgraph-io/ristretto/v2 v2.1.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/supranational/blst v0.3.13 // indirect
@@ -26,7 +27,6 @@ require (
 	cosmossdk.io/depinject v1.2.0 // indirect
 	cosmossdk.io/errors v1.0.2 // indirect
 	cosmossdk.io/log v1.6.0 // indirect
-	cosmossdk.io/math v1.5.3 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
 	cosmossdk.io/store v1.1.2 // indirect
 	cosmossdk.io/x/tx v0.14.0 // indirect
@@ -173,4 +173,5 @@ replace (
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/tx => ../../x/tx
+	github.com/cosmos/cosmos-sdk/math/v2 => ../../math
 )

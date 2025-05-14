@@ -11,7 +11,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// initialize rewards for a new validator
+// initializeValidator initializes rewards for a new validator
 func (k Keeper) initializeValidator(ctx context.Context, val stakingtypes.ValidatorI) error {
 	valBz, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(val.GetOperator())
 	if err != nil {
@@ -40,7 +40,7 @@ func (k Keeper) initializeValidator(ctx context.Context, val stakingtypes.Valida
 	return err
 }
 
-// increment validator period, returning the period just ended
+// IncrementValidatorPeriod increments validator period, returning the period just ended
 func (k Keeper) IncrementValidatorPeriod(ctx context.Context, val stakingtypes.ValidatorI) (uint64, error) {
 	valBz, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(val.GetOperator())
 	if err != nil {
@@ -116,7 +116,7 @@ func (k Keeper) IncrementValidatorPeriod(ctx context.Context, val stakingtypes.V
 	return rewards.Period, nil
 }
 
-// increment the reference count for a historical rewards value
+// incrementReferenceCount increments the reference count for a historical rewards value
 func (k Keeper) incrementReferenceCount(ctx context.Context, valAddr sdk.ValAddress, period uint64) error {
 	historical, err := k.GetValidatorHistoricalRewards(ctx, valAddr, period)
 	if err != nil {
@@ -131,7 +131,7 @@ func (k Keeper) incrementReferenceCount(ctx context.Context, valAddr sdk.ValAddr
 	return k.SetValidatorHistoricalRewards(ctx, valAddr, period, historical)
 }
 
-// decrement the reference count for a historical rewards value, and delete if zero references remain
+// decrementReferenceCount decrements the reference count for a historical rewards value, and delete if zero references remain
 func (k Keeper) decrementReferenceCount(ctx context.Context, valAddr sdk.ValAddress, period uint64) error {
 	historical, err := k.GetValidatorHistoricalRewards(ctx, valAddr, period)
 	if err != nil {

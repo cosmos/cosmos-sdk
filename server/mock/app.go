@@ -89,34 +89,32 @@ func KVStoreHandler(storeKey storetypes.StoreKey) bam.MsgServiceHandler {
 	}
 }
 
-// basic KV structure
 type KV struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
 }
 
-// What Genesis JSON is formatted as
 type GenesisJSON struct {
 	Values []KV `json:"values"`
 }
 
 // InitChainer returns a function that can initialize the chain
 // with key/value pairs
-func InitChainer(key storetypes.StoreKey) func(sdk.Context, *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
-	return func(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
+func InitChainer(key storetypes.StoreKey) func(sdk.Context, *abci.InitChainRequest) (*abci.InitChainResponse, error) {
+	return func(ctx sdk.Context, req *abci.InitChainRequest) (*abci.InitChainResponse, error) {
 		stateJSON := req.AppStateBytes
 
 		genesisState := new(GenesisJSON)
 		err := json.Unmarshal(stateJSON, genesisState)
 		if err != nil {
-			return &abci.ResponseInitChain{}, err
+			return &abci.InitChainResponse{}, err
 		}
 
 		for _, val := range genesisState.Values {
 			store := ctx.KVStore(key)
 			store.Set([]byte(val.Key), []byte(val.Value))
 		}
-		return &abci.ResponseInitChain{}, nil
+		return &abci.InitChainResponse{}, nil
 	}
 }
 
@@ -145,6 +143,7 @@ func AppGenStateEmpty(_ *codec.LegacyAmino, _ genutiltypes.AppGenesis, _ []json.
 }
 
 // Manually write the handlers for this custom message
+
 type MsgServer interface {
 	Test(ctx context.Context, msg *KVStoreTx) (*sdk.Result, error)
 }

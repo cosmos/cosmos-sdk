@@ -177,7 +177,8 @@ func (s *SystemUnderTest) StartChain(t *testing.T, xargs ...string) {
 	t.Helper()
 	s.Log("Start chain\n")
 	s.ChainStarted = true
-	s.startNodesAsync(t, append([]string{"start", "--log_level=info", "--log_no_color"}, xargs...)...)
+	// HACK: force db_backend
+	s.startNodesAsync(t, append([]string{"start", "--log_level=info", "--log_no_color", "--db_backend=goleveldb"}, xargs...)...)
 
 	s.AwaitNodeUp(t, s.rpcAddr)
 
@@ -206,7 +207,7 @@ func (s *SystemUnderTest) IsDirty() bool {
 
 // watchLogs stores stdout/stderr in a file and in a ring buffer to output the last n lines on test error
 func (s *SystemUnderTest) watchLogs(node int, cmd *exec.Cmd) {
-	logfile, err := os.Create(filepath.Join(WorkDir, s.outputDir, fmt.Sprintf("node%d.out", node)))
+	logfile, err := os.Create(s.logfileName(node))
 	if err != nil {
 		panic(fmt.Sprintf("open logfile error %#+v", err))
 	}
@@ -227,6 +228,10 @@ func (s *SystemUnderTest) watchLogs(node int, cmd *exec.Cmd) {
 		close(stopRingBuffer)
 		_ = logfile.Close()
 	})
+}
+
+func (s *SystemUnderTest) logfileName(node int) string {
+	return filepath.Join(WorkDir, s.outputDir, fmt.Sprintf("node%d.out", node))
 }
 
 func appendToBuf(r io.Reader, b *ring.Ring, stop <-chan struct{}) {
@@ -294,7 +299,7 @@ func (s *SystemUnderTest) AwaitNodeUp(t *testing.T, rpcAddr string) {
 	go func() { // query for a non empty block on status page
 		t.Logf("Checking node status: %s\n", rpcAddr)
 		for {
-			con, err := client.New(rpcAddr, "/websocket")
+			con, err := client.New(rpcAddr)
 			if err != nil || con.Start() != nil {
 				time.Sleep(time.Second)
 				continue
@@ -750,6 +755,7 @@ func (s *SystemUnderTest) AddFullnode(t *testing.T, beforeStart ...func(nodeNumb
 		"--log_level=info",
 		"--log_no_color",
 		"--home", nodePath,
+		"--db_backend", "goleveldb", // HACK: force db_backend
 	}
 	s.Logf("Execute `%s %s`\n", s.execBinary, strings.Join(args, " "))
 	cmd = exec.Command( //nolint:gosec // used by tests only
@@ -787,6 +793,24 @@ func (s *SystemUnderTest) NodesCount() int {
 
 func (s *SystemUnderTest) BlockTime() time.Duration {
 	return s.blockTime
+}
+
+// FindLogMessage searches the logs of each node and returns a count of the number of
+// nodes that had a match for the provided regular expression.
+func (s *SystemUnderTest) FindLogMessage(regex *regexp.Regexp) int {
+	found := 0
+	for i := 0; i < s.nodesCount; i++ {
+		logfile := s.logfileName(i)
+		content, err := os.ReadFile(logfile)
+		if err != nil {
+			continue // skip if file cannot be read
+		}
+		if regex.Match(content) {
+			found++
+		}
+
+	}
+	return found
 }
 
 type Node struct {
@@ -828,7 +852,7 @@ type EventListener struct {
 // NewEventListener event listener
 func NewEventListener(t *testing.T, rpcAddr string) *EventListener {
 	t.Helper()
-	httpClient, err := client.New(rpcAddr, "/websocket")
+	httpClient, err := client.New(rpcAddr)
 	require.NoError(t, err)
 	require.NoError(t, httpClient.Start())
 	return &EventListener{client: httpClient, t: t}

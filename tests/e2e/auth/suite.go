@@ -106,6 +106,7 @@ func (s *E2ETestSuite) TestCLISignGenOnly() {
 		fmt.Sprintf("--%s=true", flags.FlagGenerateOnly), // shouldn't break if we use keyname with --generate-only flag
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
 	}
 	generatedStd, err := clitestutil.ExecTestCLICmd(val.ClientCtx, bank.NewSendTxCmd(addresscodec.NewBech32Codec("cosmos")), args)
 	s.Require().NoError(err)
@@ -183,21 +184,23 @@ func (s *E2ETestSuite) TestCLISignGenOnly() {
 	}
 
 	for _, tc := range cases {
-		cmd := authcli.GetSignCommand()
-		cmd.PersistentFlags().String(flags.FlagHome, val.ClientCtx.HomeDir, "directory for config and data")
-		out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, append(tc.args, commonArgs...))
-		if tc.expErr {
-			s.Require().Error(err)
-			s.Require().Contains(err.Error(), tc.errMsg)
-		} else {
-			s.Require().NoError(err)
-			func() {
-				signedTx := testutil.WriteToNewTempFile(s.T(), out.String())
-				defer signedTx.Close()
-				_, err := authclitestutil.TxBroadcastExec(val.ClientCtx, signedTx.Name())
+		s.Run(tc.name, func() {
+			cmd := authcli.GetSignCommand()
+			cmd.PersistentFlags().String(flags.FlagHome, val.ClientCtx.HomeDir, "directory for config and data")
+			out, err := clitestutil.ExecTestCLICmd(val.ClientCtx, cmd, append(tc.args, commonArgs...))
+			if tc.expErr {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.errMsg)
+			} else {
 				s.Require().NoError(err)
-			}()
-		}
+				func() {
+					signedTx := testutil.WriteToNewTempFile(s.T(), out.String())
+					defer signedTx.Close()
+					_, err := authclitestutil.TxBroadcastExec(val.ClientCtx, signedTx.Name())
+					s.Require().NoError(err, out.String())
+				}()
+			}
+		})
 	}
 }
 
@@ -1082,6 +1085,11 @@ func (s *E2ETestSuite) TestSignBatchMultisig() {
 
 	addr, err := multisigRecord.GetAddress()
 	s.Require().NoError(err)
+
+	// val may not have processed last tx yet
+	s.Require().NoError(s.network.WaitForNextBlock())
+	s.Require().NoError(s.network.WaitForNextBlock())
+
 	// Send coins from validator to multisig.
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 10)
 	_, err = s.createBankMsg(
@@ -1148,6 +1156,11 @@ func (s *E2ETestSuite) TestMultisignBatch() {
 
 	addr, err := multisigRecord.GetAddress()
 	s.Require().NoError(err)
+
+	// val may not have processed last tx yet
+	s.Require().NoError(s.network.WaitForNextBlock())
+	s.Require().NoError(s.network.WaitForNextBlock())
+
 	// Send coins from validator to multisig.
 	sendTokens := sdk.NewInt64Coin(s.cfg.BondDenom, 1000)
 	_, err = s.createBankMsg(
@@ -1261,7 +1274,7 @@ func TestGetBroadcastCommandWithoutOfflineFlag(t *testing.T) {
 }
 
 // TestTxWithoutPublicKey makes sure sending a proto tx message without the
-// public key doesn't cause any error in the RPC layer (broadcast).
+// public key causes an error - node will panic but recover.
 // See https://github.com/cosmos/cosmos-sdk/issues/7585 for more details.
 func (s *E2ETestSuite) TestTxWithoutPublicKey() {
 	val1 := s.network.Validators[0]
@@ -1311,13 +1324,14 @@ func (s *E2ETestSuite) TestTxWithoutPublicKey() {
 	defer signedTxFile.Close()
 	s.Require().True(strings.Contains(string(txJSON), "\"public_key\":null"))
 
-	// Broadcast tx, test that it shouldn't panic.
+	// val may not have processed last tx yet
+	s.Require().NoError(s.network.WaitForNextBlock())
+	s.Require().NoError(s.network.WaitForNextBlock())
+
+	// Broadcast tx, test that it should panic internally, recover and error.
 	val1.ClientCtx.BroadcastMode = flags.BroadcastSync
-	out, err := authclitestutil.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
-	s.Require().NoError(err)
-	var res sdk.TxResponse
-	s.Require().NoError(val1.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &res))
-	s.Require().NotEqual(0, res.Code)
+	_, err = authclitestutil.TxBroadcastExec(val1.ClientCtx, signedTxFile.Name())
+	s.Require().Error(err)
 }
 
 // TestSignWithMultiSignersAminoJSON tests the case where a transaction with 2
@@ -1374,6 +1388,10 @@ func (s *E2ETestSuite) TestSignWithMultiSignersAminoJSON() {
 	require.NoError(err)
 	signedTxFile := testutil.WriteToNewTempFile(s.T(), signedTx.String())
 	defer signedTxFile.Close()
+
+	// val may not have processed last tx yet
+	s.Require().NoError(s.network.WaitForNextBlock())
+	s.Require().NoError(s.network.WaitForNextBlock())
 
 	res, err := authclitestutil.TxBroadcastExec(
 		val0.ClientCtx,

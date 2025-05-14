@@ -143,7 +143,7 @@ func (acc BaseAccount) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return unpacker.UnpackAny(acc.PubKey, &pubKey)
 }
 
-// NewModuleAddressOrAddress gets an input string and returns an AccAddress.
+// NewModuleAddressOrBech32Address gets an input string and returns an AccAddress.
 // If the input is a valid address, it returns the address.
 // If the input is a module name, it returns the module address.
 func NewModuleAddressOrBech32Address(input string) sdk.AccAddress {

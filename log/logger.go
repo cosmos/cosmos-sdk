@@ -62,6 +62,15 @@ type Logger interface {
 	Impl() any
 }
 
+// VerboseModeLogger is an extension interface of Logger which allows verbosity to be configured.
+type VerboseModeLogger interface {
+	Logger
+	// SetVerboseMode configures whether the logger enters verbose mode or not for
+	// special operations where increased observability of log messages is desired
+	// (such as chain upgrades).
+	SetVerboseMode(bool)
+}
+
 // WithJSONMarshal configures zerolog global json encoding.
 func WithJSONMarshal(marshaler func(v any) ([]byte, error)) {
 	zerolog.InterfaceMarshalFunc = func(i any) ([]byte, error) {
@@ -80,6 +89,11 @@ func WithJSONMarshal(marshaler func(v any) ([]byte, error)) {
 
 type zeroLogWrapper struct {
 	*zerolog.Logger
+	regularLevel zerolog.Level
+	verboseLevel zerolog.Level
+	// this field is used to disable filtering during verbose logging
+	// and will only be non-nil when we have a filterWriter
+	filterWriter *filterWriter
 }
 
 // NewLogger returns a new logger that writes to the given destination.
@@ -105,8 +119,13 @@ func NewLogger(dst io.Writer, options ...Option) Logger {
 		}
 	}
 
+	var fltWtr *filterWriter
 	if logCfg.Filter != nil {
-		output = NewFilterWriter(output, logCfg.Filter)
+		fltWtr = &filterWriter{
+			parent: output,
+			filter: logCfg.Filter,
+		}
+		output = fltWtr
 	}
 
 	logger := zerolog.New(output)
@@ -123,18 +142,25 @@ func NewLogger(dst io.Writer, options ...Option) Logger {
 		logger = logger.With().Timestamp().Logger()
 	}
 
-	if logCfg.Level != zerolog.NoLevel {
-		logger = logger.Level(logCfg.Level)
-	}
-
+	logger = logger.Level(logCfg.Level)
 	logger = logger.Hook(logCfg.Hooks...)
 
-	return zeroLogWrapper{&logger}
+	return zeroLogWrapper{
+		Logger:       &logger,
+		regularLevel: logCfg.Level,
+		verboseLevel: logCfg.VerboseLevel,
+		filterWriter: fltWtr,
+	}
 }
 
 // NewCustomLogger returns a new logger with the given zerolog logger.
 func NewCustomLogger(logger zerolog.Logger) Logger {
-	return zeroLogWrapper{&logger}
+	return zeroLogWrapper{
+		Logger:       &logger,
+		regularLevel: logger.GetLevel(),
+		verboseLevel: zerolog.NoLevel,
+		filterWriter: nil,
+	}
 }
 
 // Info takes a message and a set of key/value pairs and logs with level INFO.
@@ -164,13 +190,15 @@ func (l zeroLogWrapper) Debug(msg string, keyVals ...interface{}) {
 // With returns a new wrapped logger with additional context provided by a set.
 func (l zeroLogWrapper) With(keyVals ...interface{}) Logger {
 	logger := l.Logger.With().Fields(keyVals).Logger()
-	return zeroLogWrapper{&logger}
+	l.Logger = &logger
+	return l
 }
 
 // WithContext returns a new wrapped logger with additional context provided by a set.
 func (l zeroLogWrapper) WithContext(keyVals ...interface{}) any {
 	logger := l.Logger.With().Fields(keyVals).Logger()
-	return zeroLogWrapper{&logger}
+	l.Logger = &logger
+	return l
 }
 
 // Impl returns the underlying zerolog logger.
@@ -178,6 +206,23 @@ func (l zeroLogWrapper) WithContext(keyVals ...interface{}) any {
 func (l zeroLogWrapper) Impl() interface{} {
 	return l.Logger
 }
+
+// SetVerboseMode implements VerboseModeLogger interface.
+func (l zeroLogWrapper) SetVerboseMode(enable bool) {
+	if enable && l.verboseLevel != zerolog.NoLevel {
+		*l.Logger = l.Level(l.verboseLevel)
+		if l.filterWriter != nil {
+			l.filterWriter.disableFilter = true
+		}
+	} else {
+		*l.Logger = l.Level(l.regularLevel)
+		if l.filterWriter != nil {
+			l.filterWriter.disableFilter = false
+		}
+	}
+}
+
+var _ VerboseModeLogger = zeroLogWrapper{}
 
 // NewNopLogger returns a new logger that does nothing.
 func NewNopLogger() Logger {

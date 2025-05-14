@@ -10,10 +10,6 @@ import (
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-	"cosmossdk.io/x/nft"                  //nolint:staticcheck // deprecated and to be removed
-	nftkeeper "cosmossdk.io/x/nft/keeper" //nolint:staticcheck // deprecated and to be removed
-	"cosmossdk.io/x/nft/simulation"       //nolint:staticcheck // deprecated and to be removed
-	"cosmossdk.io/x/nft/testutil"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -25,6 +21,10 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	"github.com/cosmos/cosmos-sdk/x/nft"                  //nolint:staticcheck // deprecated and to be removed
+	nftkeeper "github.com/cosmos/cosmos-sdk/x/nft/keeper" //nolint:staticcheck // deprecated and to be removed
+	"github.com/cosmos/cosmos-sdk/x/nft/simulation"
+	"github.com/cosmos/cosmos-sdk/x/nft/testutil"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 )
 
@@ -124,7 +124,7 @@ func (suite *SimTestSuite) TestSimulateMsgSend() {
 	ctx := suite.ctx.WithBlockTime(blockTime)
 
 	// begin new block
-	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err := suite.app.FinalizeBlock(&abci.FinalizeBlockRequest{
 		Height: suite.app.LastBlockHeight() + 1,
 		Hash:   suite.app.LastCommitID().Hash,
 	})

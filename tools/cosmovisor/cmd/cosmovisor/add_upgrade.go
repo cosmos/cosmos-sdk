@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"path"
@@ -10,7 +9,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/tools/cosmovisor"
-	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
 func NewAddUpgradeCmd() *cobra.Command {
@@ -64,22 +62,15 @@ func addUpgrade(cfg *cosmovisor.Config, force bool, upgradeHeight int64, upgrade
 	logger.Info(fmt.Sprintf("Upgrade binary located at %s", cfg.UpgradeBin(upgradeName)))
 
 	if upgradeHeight > 0 {
-		plan := upgradetypes.Plan{Name: upgradeName, Height: upgradeHeight}
+		plan := cosmovisor.ManualUpgradePlan{
+			Name:   upgradeName,
+			Height: upgradeHeight,
+		}
 		if err := plan.ValidateBasic(); err != nil {
-			panic(fmt.Errorf("something is wrong with cosmovisor: %w", err))
+			panic(fmt.Errorf("invalid manual upgrade plan: %w", err))
 		}
 
-		// create upgrade-info.json file
-		planData, err := json.Marshal(plan)
-		if err != nil {
-			return fmt.Errorf("failed to marshal upgrade plan: %w", err)
-		}
-
-		if err := saveOrAbort(upgradeInfoPath, planData, force); err != nil {
-			return err
-		}
-
-		logger.Info(fmt.Sprintf("%s created, %s upgrade binary will switch at height %d", upgradeInfoPath, upgradeName, upgradeHeight))
+		logger.Info(fmt.Sprintf("added manual upgrade, node will be set to halt at height %d, and binary for upgrade %q will be activated", upgradeHeight, upgradeName))
 	}
 
 	return nil

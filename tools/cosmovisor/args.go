@@ -111,6 +111,11 @@ func (cfg *Config) UpgradeInfoFilePath() string {
 	return filepath.Join(cfg.Home, "data", upgradetypes.UpgradeInfoFilename)
 }
 
+// UpgradeInfoFilePath is the expected upgrade-info filename created by `x/upgrade/keeper`.
+func (cfg *Config) ManualUpgradesFilePath() string {
+	return filepath.Join(cfg.Home, "data", ManualUpgradesFilename)
+}
+
 // UpgradeInfoBatchFilePath is the same as UpgradeInfoFilePath but with a batch suffix.
 func (cfg *Config) UpgradeInfoBatchFilePath() string {
 	return cfg.UpgradeInfoFilePath() + ".batch"

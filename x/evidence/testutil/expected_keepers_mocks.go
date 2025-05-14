@@ -16,8 +16,8 @@ import (
 
 	address "cosmossdk.io/core/address"
 	comet "cosmossdk.io/core/comet"
-	math "github.com/cosmos/cosmos-sdk/math/v2"
 	types "github.com/cosmos/cosmos-sdk/crypto/types"
+	math "github.com/cosmos/cosmos-sdk/math/v2"
 	types0 "github.com/cosmos/cosmos-sdk/types"
 	types1 "github.com/cosmos/cosmos-sdk/x/staking/types"
 	gomock "go.uber.org/mock/gomock"

@@ -14,8 +14,8 @@ import (
 	reflect "reflect"
 
 	address "cosmossdk.io/core/address"
-	math "github.com/cosmos/cosmos-sdk/math/v2"
 	v1 "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
+	math "github.com/cosmos/cosmos-sdk/math/v2"
 	types "github.com/cosmos/cosmos-sdk/types"
 	types0 "github.com/cosmos/cosmos-sdk/x/staking/types"
 	gomock "go.uber.org/mock/gomock"

@@ -39,10 +39,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ## [Unreleased]
 
 ### Features
+
 * (server) [#24720](https://github.com/cosmos/cosmos-sdk/pull/24720) add `verbose_log_level` flag for configuring the log level when switching to verbose logging mode during sensitive operations (such as chain upgrades).
 
 ### Improvements
 
+* (types) [#24668](https://github.com/cosmos/cosmos-sdk/pull/24668) Scope the global config to a particular binary so that multiple SDK binaries can be properly run on the same machine.
 * (baseapp) [#24655](https://github.com/cosmos/cosmos-sdk/pull/24655) Add mutex locks for `state` and make `lastCommitInfo` atomic to prevent race conditions between `Commit` and `CreateQueryContext`.
 * (proto) [#24161](https://github.com/cosmos/cosmos-sdk/pull/24161) Remove unnecessary annotations from `x/staking` authz proto.
 

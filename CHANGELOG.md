@@ -38,7 +38,15 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Breaking Changes
+
+Note: breaking changes will be easily migrated using our [migrate](TODO LINK) tool.
+
+* (all) [#24114](https://github.com/cosmos/cosmos-sdk/pull/24114) Update to CometBFT v1.
+* (all) [#24758](https://github.com/cosmos/cosmos-sdk/pull/24758) Migrate all `cosmossdk.io/*` imports to `github.com/cosmos/cosmos-sdk/*`.
+
 ### Features
+
 * (server) [#24720](https://github.com/cosmos/cosmos-sdk/pull/24720) add `verbose_log_level` flag for configuring the log level when switching to verbose logging mode during sensitive operations (such as chain upgrades).
 
 ### Improvements

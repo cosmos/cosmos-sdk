@@ -48,7 +48,7 @@ func NewKeeper(storeService corestoretypes.KVStoreService, cdc codec.Codec, rout
 	}
 }
 
-// Super ugly hack to not be breaking in v0.50 and v0.47
+// SetBankKeeper is a super ugly hack to not be breaking in v0.50 and v0.47
 // DO NOT USE.
 func (k Keeper) SetBankKeeper(bk authz.BankKeeper) Keeper {
 	k.bankKeeper = bk

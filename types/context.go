@@ -5,7 +5,7 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/header"
@@ -67,9 +67,11 @@ type Context struct {
 }
 
 // Proposed rename, not done to avoid API breakage
+
 type Request = Context
 
 // Read-only accessors
+
 func (c Context) Context() context.Context                      { return c.baseCtx }
 func (c Context) MultiStore() storetypes.MultiStore             { return c.ms }
 func (c Context) BlockHeight() int64                            { return c.header.Height }
@@ -98,7 +100,7 @@ func (c Context) BlockHeader() cmtproto.Header {
 	return c.header
 }
 
-// HeaderHash returns a copy of the header hash obtained during abci.RequestBeginBlock
+// HeaderHash returns a copy of the header hash obtained during abci.BeginBlockRequest
 func (c Context) HeaderHash() []byte {
 	hash := make([]byte, len(c.headerHash))
 	copy(hash, c.headerHash)
@@ -121,7 +123,6 @@ func (c Context) Err() error {
 	return c.baseCtx.Err()
 }
 
-// create a new context
 func NewContext(ms storetypes.MultiStore, header cmtproto.Header, isCheckTx bool, logger log.Logger) Context {
 	// https://github.com/gogo/protobuf/issues/519
 	header.Time = header.Time.UTC()
@@ -250,7 +251,7 @@ func (c Context) WithIsCheckTx(isCheckTx bool) Context {
 	return c
 }
 
-// WithIsRecheckTx called with true will also set true on checkTx in order to
+// WithIsReCheckTx called with true will also set true on checkTx in order to
 // enforce the invariant that if recheckTx = true then checkTx = true as well.
 func (c Context) WithIsReCheckTx(isRecheckTx bool) Context {
 	if isRecheckTx {
@@ -318,6 +319,7 @@ func (c Context) WithHeaderInfo(headerInfo header.Info) Context {
 }
 
 // TODO: remove???
+
 func (c Context) IsZero() bool {
 	return c.ms == nil
 }

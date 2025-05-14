@@ -48,7 +48,7 @@ func NewProposal(messages []sdk.Msg, id uint64, submitTime, depositEndTime time.
 	return p, nil
 }
 
-// GetMessages returns the proposal messages
+// GetMsgs returns the proposal messages
 func (p Proposal) GetMsgs() ([]sdk.Msg, error) {
 	return sdktx.GetMsgs(p.Messages, "sdk.MsgProposal")
 }

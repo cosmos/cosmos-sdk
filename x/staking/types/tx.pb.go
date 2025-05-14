@@ -5,7 +5,7 @@ package types
 
 import (
 	context "context"
-	cosmossdk_io_math "cosmossdk.io/math"
+	cosmossdk_io_math "github.com/cosmos/cosmos-sdk/math/v2"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	types "github.com/cosmos/cosmos-sdk/types"
@@ -42,7 +42,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type MsgCreateValidator struct {
 	Description       Description           `protobuf:"bytes,1,opt,name=description,proto3" json:"description"`
 	Commission        CommissionRates       `protobuf:"bytes,2,opt,name=commission,proto3" json:"commission"`
-	MinSelfDelegation cosmossdk_io_math.Int `protobuf:"bytes,3,opt,name=min_self_delegation,json=minSelfDelegation,proto3,customtype=cosmossdk.io/math.Int" json:"min_self_delegation"`
+	MinSelfDelegation cosmossdk_io_math.Int `protobuf:"bytes,3,opt,name=min_self_delegation,json=minSelfDelegation,proto3,customtype=github.com/cosmos/cosmos-sdk/math/v2.Int" json:"min_self_delegation"`
 	// Deprecated: Use of Delegator Address in MsgCreateValidator is deprecated.
 	// The validator address bytes and delegator address bytes refer to the same account while creating validator (defer
 	// only in bech32 notation).
@@ -130,8 +130,8 @@ type MsgEditValidator struct {
 	// it's not mandatory to update. If not updated, the deserialized rate will be
 	// zero with no way to distinguish if an update was intended.
 	// REF: #2373
-	CommissionRate    *cosmossdk_io_math.LegacyDec `protobuf:"bytes,3,opt,name=commission_rate,json=commissionRate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"commission_rate,omitempty"`
-	MinSelfDelegation *cosmossdk_io_math.Int       `protobuf:"bytes,4,opt,name=min_self_delegation,json=minSelfDelegation,proto3,customtype=cosmossdk.io/math.Int" json:"min_self_delegation,omitempty"`
+	CommissionRate    *cosmossdk_io_math.LegacyDec `protobuf:"bytes,3,opt,name=commission_rate,json=commissionRate,proto3,customtype=github.com/cosmos/cosmos-sdk/math/v2.LegacyDec" json:"commission_rate,omitempty"`
+	MinSelfDelegation *cosmossdk_io_math.Int       `protobuf:"bytes,4,opt,name=min_self_delegation,json=minSelfDelegation,proto3,customtype=github.com/cosmos/cosmos-sdk/math/v2.Int" json:"min_self_delegation,omitempty"`
 }
 
 func (m *MsgEditValidator) Reset()         { *m = MsgEditValidator{} }

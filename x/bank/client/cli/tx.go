@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/core/address"
-	sdkmath "cosmossdk.io/math"
+	sdkmath "github.com/cosmos/cosmos-sdk/math/v2"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

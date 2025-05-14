@@ -5,7 +5,7 @@ package testpb
 
 import (
 	context "context"
-	cosmossdk_io_math "cosmossdk.io/math"
+	cosmossdk_io_math "github.com/cosmos/cosmos-sdk/math/v2"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
@@ -222,7 +222,7 @@ func (m *TestNullableFields) GetNonNullableDontOmitempty() Streng {
 }
 
 type IntAsString struct {
-	IntAsString cosmossdk_io_math.Int `protobuf:"bytes,1,opt,name=int_as_string,json=intAsString,proto3,customtype=cosmossdk.io/math.Int" json:"int_as_string"`
+	IntAsString cosmossdk_io_math.Int `protobuf:"bytes,1,opt,name=int_as_string,json=intAsString,proto3,customtype=github.com/cosmos/cosmos-sdk/math/v2.Int" json:"int_as_string"`
 }
 
 func (m *IntAsString) Reset()         { *m = IntAsString{} }
@@ -259,7 +259,7 @@ func (m *IntAsString) XXX_DiscardUnknown() {
 var xxx_messageInfo_IntAsString proto.InternalMessageInfo
 
 type IntAsBytes struct {
-	IntAsBytes cosmossdk_io_math.Int `protobuf:"bytes,1,opt,name=int_as_bytes,json=intAsBytes,proto3,customtype=cosmossdk.io/math.Int" json:"int_as_bytes"`
+	IntAsBytes cosmossdk_io_math.Int `protobuf:"bytes,1,opt,name=int_as_bytes,json=intAsBytes,proto3,customtype=github.com/cosmos/cosmos-sdk/math/v2.Int" json:"int_as_bytes"`
 }
 
 func (m *IntAsBytes) Reset()         { *m = IntAsBytes{} }

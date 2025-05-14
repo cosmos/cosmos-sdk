@@ -26,9 +26,9 @@ import (
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/math/unsafe"
 	pruningtypes "cosmossdk.io/store/pruning/types"
+	sdkmath "github.com/cosmos/cosmos-sdk/math/v2"
+	"github.com/cosmos/cosmos-sdk/math/v2/unsafe"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"

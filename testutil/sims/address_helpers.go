@@ -8,7 +8,7 @@ import (
 	"strconv"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/math/v2"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"

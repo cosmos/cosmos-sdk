@@ -9,7 +9,7 @@ import (
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/math/v2"
 )
 
 // NewIntValueRenderer returns a ValueRenderer for uint32, uint64, int32 and

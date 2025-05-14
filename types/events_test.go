@@ -8,7 +8,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/math/v2"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	testdata "github.com/cosmos/cosmos-sdk/testutil/testdata"

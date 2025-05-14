@@ -13,8 +13,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
-	sdkmath "cosmossdk.io/math"
 	pruningtypes "cosmossdk.io/store/pruning/types"
+	sdkmath "github.com/cosmos/cosmos-sdk/math/v2"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"

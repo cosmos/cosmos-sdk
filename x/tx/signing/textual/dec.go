@@ -8,7 +8,7 @@ import (
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/math/v2"
 )
 
 // NewDecValueRenderer returns a ValueRenderer for encoding math.Dec cosmos

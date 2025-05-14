@@ -4,7 +4,7 @@ import (
 	"context"
 
 	addresscodec "cosmossdk.io/core/address"
-	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/math/v2"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"

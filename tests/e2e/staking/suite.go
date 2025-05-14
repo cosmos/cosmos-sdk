@@ -9,7 +9,7 @@ import (
 	"github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/math/v2"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"

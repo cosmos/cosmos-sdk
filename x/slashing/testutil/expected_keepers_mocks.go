@@ -14,7 +14,7 @@ import (
 	reflect "reflect"
 
 	address "cosmossdk.io/core/address"
-	math "cosmossdk.io/math"
+	math "github.com/cosmos/cosmos-sdk/math/v2"
 	types "github.com/cosmos/cosmos-sdk/types"
 	types0 "github.com/cosmos/cosmos-sdk/x/params/types"
 	types1 "github.com/cosmos/cosmos-sdk/x/staking/types"

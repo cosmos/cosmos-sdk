@@ -7,8 +7,8 @@ import (
 
 	"gotest.tools/v3/assert"
 
-	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/simapp"
+	sdkmath "github.com/cosmos/cosmos-sdk/math/v2"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"

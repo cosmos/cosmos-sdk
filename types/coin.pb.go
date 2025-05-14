@@ -4,7 +4,7 @@
 package types
 
 import (
-	cosmossdk_io_math "cosmossdk.io/math"
+	cosmossdk_io_math "github.com/cosmos/cosmos-sdk/math/v2"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
@@ -32,7 +32,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // signatures required by gogoproto.
 type Coin struct {
 	Denom  string                `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
-	Amount cosmossdk_io_math.Int `protobuf:"bytes,2,opt,name=amount,proto3,customtype=cosmossdk.io/math.Int" json:"amount"`
+	Amount cosmossdk_io_math.Int `protobuf:"bytes,2,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/math/v2.Int" json:"amount"`
 }
 
 func (m *Coin) Reset()      { *m = Coin{} }
@@ -80,7 +80,7 @@ func (m *Coin) GetDenom() string {
 // signatures required by gogoproto.
 type DecCoin struct {
 	Denom  string                      `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
-	Amount cosmossdk_io_math.LegacyDec `protobuf:"bytes,2,opt,name=amount,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"amount"`
+	Amount cosmossdk_io_math.LegacyDec `protobuf:"bytes,2,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/math/v2.LegacyDec" json:"amount"`
 }
 
 func (m *DecCoin) Reset()      { *m = DecCoin{} }
@@ -125,7 +125,7 @@ func (m *DecCoin) GetDenom() string {
 // IntProto defines a Protobuf wrapper around an Int object.
 // Deprecated: Prefer to use math.Int directly. It supports binary Marshal and Unmarshal.
 type IntProto struct {
-	Int cosmossdk_io_math.Int `protobuf:"bytes,1,opt,name=int,proto3,customtype=cosmossdk.io/math.Int" json:"int"`
+	Int cosmossdk_io_math.Int `protobuf:"bytes,1,opt,name=int,proto3,customtype=github.com/cosmos/cosmos-sdk/math/v2.Int" json:"int"`
 }
 
 func (m *IntProto) Reset()      { *m = IntProto{} }
@@ -163,7 +163,7 @@ var xxx_messageInfo_IntProto proto.InternalMessageInfo
 // DecProto defines a Protobuf wrapper around a Dec object.
 // Deprecated: Prefer to use math.LegacyDec directly. It supports binary Marshal and Unmarshal.
 type DecProto struct {
-	Dec cosmossdk_io_math.LegacyDec `protobuf:"bytes,1,opt,name=dec,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"dec"`
+	Dec cosmossdk_io_math.LegacyDec `protobuf:"bytes,1,opt,name=dec,proto3,customtype=github.com/cosmos/cosmos-sdk/math/v2.LegacyDec" json:"dec"`
 }
 
 func (m *DecProto) Reset()      { *m = DecProto{} }

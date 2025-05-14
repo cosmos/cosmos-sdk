@@ -8,7 +8,7 @@ import (
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/errors"
-	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/math/v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

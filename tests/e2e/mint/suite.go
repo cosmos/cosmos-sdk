@@ -3,7 +3,7 @@ package mint
 import (
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/math/v2"
 
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"

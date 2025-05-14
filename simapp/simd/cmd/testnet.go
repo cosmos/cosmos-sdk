@@ -14,9 +14,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"cosmossdk.io/math"
-	"cosmossdk.io/math/unsafe"
 	"cosmossdk.io/simapp"
+	"github.com/cosmos/cosmos-sdk/math/v2"
+	"github.com/cosmos/cosmos-sdk/math/v2/unsafe"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

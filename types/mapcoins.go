@@ -1,6 +1,6 @@
 package types
 
-import "cosmossdk.io/math"
+import "github.com/cosmos/cosmos-sdk/math/v2"
 
 // MapCoins is a map representation of sdk.Coins
 // intended solely for use in bulk additions.

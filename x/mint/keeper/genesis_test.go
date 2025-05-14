@@ -7,8 +7,8 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/math/v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"

@@ -5,7 +5,7 @@ package types
 
 import (
 	context "context"
-	cosmossdk_io_math "cosmossdk.io/math"
+	cosmossdk_io_math "github.com/cosmos/cosmos-sdk/math/v2"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
@@ -156,7 +156,7 @@ var xxx_messageInfo_QueryInflationRequest proto.InternalMessageInfo
 // method.
 type QueryInflationResponse struct {
 	// inflation is the current minting inflation value.
-	Inflation cosmossdk_io_math.LegacyDec `protobuf:"bytes,1,opt,name=inflation,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"inflation"`
+	Inflation cosmossdk_io_math.LegacyDec `protobuf:"bytes,1,opt,name=inflation,proto3,customtype=github.com/cosmos/cosmos-sdk/math/v2.LegacyDec" json:"inflation"`
 }
 
 func (m *QueryInflationResponse) Reset()         { *m = QueryInflationResponse{} }
@@ -234,7 +234,7 @@ var xxx_messageInfo_QueryAnnualProvisionsRequest proto.InternalMessageInfo
 // Query/AnnualProvisions RPC method.
 type QueryAnnualProvisionsResponse struct {
 	// annual_provisions is the current minting annual provisions value.
-	AnnualProvisions cosmossdk_io_math.LegacyDec `protobuf:"bytes,1,opt,name=annual_provisions,json=annualProvisions,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"annual_provisions"`
+	AnnualProvisions cosmossdk_io_math.LegacyDec `protobuf:"bytes,1,opt,name=annual_provisions,json=annualProvisions,proto3,customtype=github.com/cosmos/cosmos-sdk/math/v2.LegacyDec" json:"annual_provisions"`
 }
 
 func (m *QueryAnnualProvisionsResponse) Reset()         { *m = QueryAnnualProvisionsResponse{} }

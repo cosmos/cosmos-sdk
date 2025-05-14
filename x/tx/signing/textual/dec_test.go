@@ -11,8 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"cosmossdk.io/math"
 	"cosmossdk.io/x/tx/signing/textual"
+	"github.com/cosmos/cosmos-sdk/math/v2"
 )
 
 func TestDecJSONTestcases(t *testing.T) {

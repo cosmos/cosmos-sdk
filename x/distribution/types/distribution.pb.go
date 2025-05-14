@@ -4,7 +4,7 @@
 package types
 
 import (
-	cosmossdk_io_math "cosmossdk.io/math"
+	cosmossdk_io_math "github.com/cosmos/cosmos-sdk/math/v2"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
@@ -30,13 +30,13 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // Params defines the set of params for the distribution module.
 type Params struct {
-	CommunityTax cosmossdk_io_math.LegacyDec `protobuf:"bytes,1,opt,name=community_tax,json=communityTax,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"community_tax"`
+	CommunityTax cosmossdk_io_math.LegacyDec `protobuf:"bytes,1,opt,name=community_tax,json=communityTax,proto3,customtype=github.com/cosmos/cosmos-sdk/math/v2.LegacyDec" json:"community_tax"`
 	// Deprecated: The base_proposer_reward field is deprecated and is no longer used
 	// in the x/distribution module's reward mechanism.
-	BaseProposerReward cosmossdk_io_math.LegacyDec `protobuf:"bytes,2,opt,name=base_proposer_reward,json=baseProposerReward,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"base_proposer_reward"` // Deprecated: Do not use.
+	BaseProposerReward cosmossdk_io_math.LegacyDec `protobuf:"bytes,2,opt,name=base_proposer_reward,json=baseProposerReward,proto3,customtype=github.com/cosmos/cosmos-sdk/math/v2.LegacyDec" json:"base_proposer_reward"` // Deprecated: Do not use.
 	// Deprecated: The bonus_proposer_reward field is deprecated and is no longer used
 	// in the x/distribution module's reward mechanism.
-	BonusProposerReward cosmossdk_io_math.LegacyDec `protobuf:"bytes,3,opt,name=bonus_proposer_reward,json=bonusProposerReward,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"bonus_proposer_reward"` // Deprecated: Do not use.
+	BonusProposerReward cosmossdk_io_math.LegacyDec `protobuf:"bytes,3,opt,name=bonus_proposer_reward,json=bonusProposerReward,proto3,customtype=github.com/cosmos/cosmos-sdk/math/v2.LegacyDec" json:"bonus_proposer_reward"` // Deprecated: Do not use.
 	WithdrawAddrEnabled bool                        `protobuf:"varint,4,opt,name=withdraw_addr_enabled,json=withdrawAddrEnabled,proto3" json:"withdraw_addr_enabled,omitempty"`
 }
 
@@ -298,7 +298,7 @@ func (m *ValidatorOutstandingRewards) GetRewards() github_com_cosmos_cosmos_sdk_
 // for delegations which are withdrawn after a slash has occurred.
 type ValidatorSlashEvent struct {
 	ValidatorPeriod uint64                      `protobuf:"varint,1,opt,name=validator_period,json=validatorPeriod,proto3" json:"validator_period,omitempty"`
-	Fraction        cosmossdk_io_math.LegacyDec `protobuf:"bytes,2,opt,name=fraction,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"fraction"`
+	Fraction        cosmossdk_io_math.LegacyDec `protobuf:"bytes,2,opt,name=fraction,proto3,customtype=github.com/cosmos/cosmos-sdk/math/v2.LegacyDec" json:"fraction"`
 }
 
 func (m *ValidatorSlashEvent) Reset()         { *m = ValidatorSlashEvent{} }
@@ -489,7 +489,7 @@ var xxx_messageInfo_CommunityPoolSpendProposal proto.InternalMessageInfo
 // thus sdk.Dec is used.
 type DelegatorStartingInfo struct {
 	PreviousPeriod uint64                      `protobuf:"varint,1,opt,name=previous_period,json=previousPeriod,proto3" json:"previous_period,omitempty"`
-	Stake          cosmossdk_io_math.LegacyDec `protobuf:"bytes,2,opt,name=stake,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"stake"`
+	Stake          cosmossdk_io_math.LegacyDec `protobuf:"bytes,2,opt,name=stake,proto3,customtype=github.com/cosmos/cosmos-sdk/math/v2.LegacyDec" json:"stake"`
 	Height         uint64                      `protobuf:"varint,3,opt,name=height,proto3" json:"creation_height"`
 }
 

@@ -11,7 +11,7 @@ import (
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/pflag"
 
-	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/math/v2"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

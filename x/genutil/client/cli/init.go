@@ -14,7 +14,7 @@ import (
 	"github.com/spf13/cobra"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/math/unsafe"
+	"github.com/cosmos/cosmos-sdk/math/v2/unsafe"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

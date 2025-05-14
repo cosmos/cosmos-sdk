@@ -14,7 +14,7 @@ import (
 
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/math/v2"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	ed25519 "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"

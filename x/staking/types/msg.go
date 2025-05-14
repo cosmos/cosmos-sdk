@@ -3,7 +3,7 @@ package types
 import (
 	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/math/v2"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"

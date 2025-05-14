@@ -12,8 +12,8 @@ import (
 	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/core/genesis"
-	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/math/v2"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/testutil"

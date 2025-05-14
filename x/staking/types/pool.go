@@ -1,7 +1,7 @@
 package types
 
 import (
-	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/math/v2"
 )
 
 // names used as root for pool module accounts:

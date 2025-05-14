@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections/colltest"
-	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/math/v2"
 )
 
 func TestIntValue(t *testing.T) {

@@ -14,7 +14,7 @@ import (
 
 	_ "cosmossdk.io/api/cosmos/feegrant/v1beta1"
 	_ "cosmossdk.io/api/cosmos/gov/v1beta1"
-	sdkmath "cosmossdk.io/math"
+	sdkmath "github.com/cosmos/cosmos-sdk/math/v2"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

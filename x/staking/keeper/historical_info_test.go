@@ -3,7 +3,7 @@ package keeper_test
 import (
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 
-	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/math/v2"
 
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"

@@ -3,7 +3,7 @@ package types
 import (
 	"time"
 
-	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/math/v2"
 )
 
 // NewCommissionRates returns an initialized validator commission rates.

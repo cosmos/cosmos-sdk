@@ -12,7 +12,7 @@ import (
 
 	authapi "cosmossdk.io/api/cosmos/auth/v1beta1"
 	"cosmossdk.io/api/cosmos/crypto/multisig"
-	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/math/v2"
 )
 
 // cosmosIntEncoder provides legacy compatible encoding for cosmos.Int types. In gogo messages these are sometimes

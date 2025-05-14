@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/math/v2"
 )
 
 // DefaultParams returns default distribution parameters

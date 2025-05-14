@@ -6,7 +6,7 @@ import (
 
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
-	sdkmath "cosmossdk.io/math"
+	sdkmath "github.com/cosmos/cosmos-sdk/math/v2"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"

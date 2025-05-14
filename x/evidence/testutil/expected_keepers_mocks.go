@@ -16,7 +16,7 @@ import (
 
 	address "cosmossdk.io/core/address"
 	comet "cosmossdk.io/core/comet"
-	math "cosmossdk.io/math"
+	math "github.com/cosmos/cosmos-sdk/math/v2"
 	types "github.com/cosmos/cosmos-sdk/crypto/types"
 	types0 "github.com/cosmos/cosmos-sdk/types"
 	types1 "github.com/cosmos/cosmos-sdk/x/staking/types"

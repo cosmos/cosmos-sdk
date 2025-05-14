@@ -5,7 +5,7 @@ package types
 
 import (
 	context "context"
-	cosmossdk_io_math "cosmossdk.io/math"
+	cosmossdk_io_math "github.com/cosmos/cosmos-sdk/math/v2"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
@@ -223,7 +223,7 @@ type MsgCreateContinuousFund struct {
 	// Recipient address of the account receiving funds.
 	Recipient string `protobuf:"bytes,2,opt,name=recipient,proto3" json:"recipient,omitempty"`
 	// Percentage is the percentage of funds to be allocated from Community pool.
-	Percentage cosmossdk_io_math.LegacyDec `protobuf:"bytes,3,opt,name=percentage,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"percentage"`
+	Percentage cosmossdk_io_math.LegacyDec `protobuf:"bytes,3,opt,name=percentage,proto3,customtype=github.com/cosmos/cosmos-sdk/math/v2.LegacyDec" json:"percentage"`
 	// Optional, if expiry is set, removes the state object when expired.
 	Expiry *time.Time `protobuf:"bytes,4,opt,name=expiry,proto3,stdtime" json:"expiry,omitempty"`
 }

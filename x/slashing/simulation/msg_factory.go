@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	sdkmath "cosmossdk.io/math"
+	sdkmath "github.com/cosmos/cosmos-sdk/math/v2"
 
 	"github.com/cosmos/cosmos-sdk/testutil/simsx"
 	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"

@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"cosmossdk.io/errors"
-	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/math/v2"
 )
 
 // ----------------------------------------------------------------------------

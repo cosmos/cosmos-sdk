@@ -7,10 +7,10 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/math/unsafe"
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/math/v2/unsafe"
 )
 
 func newCacheKVStore() types.CacheKVStore {

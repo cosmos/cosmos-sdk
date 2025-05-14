@@ -11,8 +11,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/math"
 	"cosmossdk.io/simapp"
+	"github.com/cosmos/cosmos-sdk/math/v2"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

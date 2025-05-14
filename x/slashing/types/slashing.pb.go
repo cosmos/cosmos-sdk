@@ -4,7 +4,7 @@
 package types
 
 import (
-	cosmossdk_io_math "cosmossdk.io/math"
+	cosmossdk_io_math "github.com/cosmos/cosmos-sdk/math/v2"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
@@ -130,10 +130,10 @@ func (m *ValidatorSigningInfo) GetMissedBlocksCounter() int64 {
 // Params represents the parameters used for by the slashing module.
 type Params struct {
 	SignedBlocksWindow      int64                       `protobuf:"varint,1,opt,name=signed_blocks_window,json=signedBlocksWindow,proto3" json:"signed_blocks_window,omitempty"`
-	MinSignedPerWindow      cosmossdk_io_math.LegacyDec `protobuf:"bytes,2,opt,name=min_signed_per_window,json=minSignedPerWindow,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"min_signed_per_window"`
+	MinSignedPerWindow      cosmossdk_io_math.LegacyDec `protobuf:"bytes,2,opt,name=min_signed_per_window,json=minSignedPerWindow,proto3,customtype=github.com/cosmos/cosmos-sdk/math/v2.LegacyDec" json:"min_signed_per_window"`
 	DowntimeJailDuration    time.Duration               `protobuf:"bytes,3,opt,name=downtime_jail_duration,json=downtimeJailDuration,proto3,stdduration" json:"downtime_jail_duration"`
-	SlashFractionDoubleSign cosmossdk_io_math.LegacyDec `protobuf:"bytes,4,opt,name=slash_fraction_double_sign,json=slashFractionDoubleSign,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"slash_fraction_double_sign"`
-	SlashFractionDowntime   cosmossdk_io_math.LegacyDec `protobuf:"bytes,5,opt,name=slash_fraction_downtime,json=slashFractionDowntime,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"slash_fraction_downtime"`
+	SlashFractionDoubleSign cosmossdk_io_math.LegacyDec `protobuf:"bytes,4,opt,name=slash_fraction_double_sign,json=slashFractionDoubleSign,proto3,customtype=github.com/cosmos/cosmos-sdk/math/v2.LegacyDec" json:"slash_fraction_double_sign"`
+	SlashFractionDowntime   cosmossdk_io_math.LegacyDec `protobuf:"bytes,5,opt,name=slash_fraction_downtime,json=slashFractionDowntime,proto3,customtype=github.com/cosmos/cosmos-sdk/math/v2.LegacyDec" json:"slash_fraction_downtime"`
 }
 
 func (m *Params) Reset()         { *m = Params{} }

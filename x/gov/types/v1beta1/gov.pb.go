@@ -4,7 +4,7 @@
 package v1beta1
 
 import (
-	cosmossdk_io_math "cosmossdk.io/math"
+	cosmossdk_io_math "github.com/cosmos/cosmos-sdk/math/v2"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
@@ -128,7 +128,7 @@ type WeightedVoteOption struct {
 	// option defines the valid vote options, it must not contain duplicate vote options.
 	Option VoteOption `protobuf:"varint,1,opt,name=option,proto3,enum=cosmos.gov.v1beta1.VoteOption" json:"option,omitempty"`
 	// weight is the vote weight associated with the vote option.
-	Weight cosmossdk_io_math.LegacyDec `protobuf:"bytes,2,opt,name=weight,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"weight"`
+	Weight cosmossdk_io_math.LegacyDec `protobuf:"bytes,2,opt,name=weight,proto3,customtype=github.com/cosmos/cosmos-sdk/math/v2.LegacyDec" json:"weight"`
 }
 
 func (m *WeightedVoteOption) Reset()         { *m = WeightedVoteOption{} }
@@ -310,13 +310,13 @@ var xxx_messageInfo_Proposal proto.InternalMessageInfo
 // TallyResult defines a standard tally for a governance proposal.
 type TallyResult struct {
 	// yes is the number of yes votes on a proposal.
-	Yes cosmossdk_io_math.Int `protobuf:"bytes,1,opt,name=yes,proto3,customtype=cosmossdk.io/math.Int" json:"yes"`
+	Yes cosmossdk_io_math.Int `protobuf:"bytes,1,opt,name=yes,proto3,customtype=github.com/cosmos/cosmos-sdk/math/v2.Int" json:"yes"`
 	// abstain is the number of abstain votes on a proposal.
-	Abstain cosmossdk_io_math.Int `protobuf:"bytes,2,opt,name=abstain,proto3,customtype=cosmossdk.io/math.Int" json:"abstain"`
+	Abstain cosmossdk_io_math.Int `protobuf:"bytes,2,opt,name=abstain,proto3,customtype=github.com/cosmos/cosmos-sdk/math/v2.Int" json:"abstain"`
 	// no is the number of no votes on a proposal.
-	No cosmossdk_io_math.Int `protobuf:"bytes,3,opt,name=no,proto3,customtype=cosmossdk.io/math.Int" json:"no"`
+	No cosmossdk_io_math.Int `protobuf:"bytes,3,opt,name=no,proto3,customtype=github.com/cosmos/cosmos-sdk/math/v2.Int" json:"no"`
 	// no_with_veto is the number of no with veto votes on a proposal.
-	NoWithVeto cosmossdk_io_math.Int `protobuf:"bytes,4,opt,name=no_with_veto,json=noWithVeto,proto3,customtype=cosmossdk.io/math.Int" json:"no_with_veto"`
+	NoWithVeto cosmossdk_io_math.Int `protobuf:"bytes,4,opt,name=no_with_veto,json=noWithVeto,proto3,customtype=github.com/cosmos/cosmos-sdk/math/v2.Int" json:"no_with_veto"`
 }
 
 func (m *TallyResult) Reset()         { *m = TallyResult{} }
@@ -485,12 +485,12 @@ var xxx_messageInfo_VotingParams proto.InternalMessageInfo
 type TallyParams struct {
 	// Minimum percentage of total stake needed to vote for a result to be
 	// considered valid.
-	Quorum cosmossdk_io_math.LegacyDec `protobuf:"bytes,1,opt,name=quorum,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"quorum,omitempty"`
+	Quorum cosmossdk_io_math.LegacyDec `protobuf:"bytes,1,opt,name=quorum,proto3,customtype=github.com/cosmos/cosmos-sdk/math/v2.LegacyDec" json:"quorum,omitempty"`
 	// Minimum proportion of Yes votes for proposal to pass. Default value: 0.5.
-	Threshold cosmossdk_io_math.LegacyDec `protobuf:"bytes,2,opt,name=threshold,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"threshold,omitempty"`
+	Threshold cosmossdk_io_math.LegacyDec `protobuf:"bytes,2,opt,name=threshold,proto3,customtype=github.com/cosmos/cosmos-sdk/math/v2.LegacyDec" json:"threshold,omitempty"`
 	// Minimum value of Veto votes to Total votes ratio for proposal to be
 	// vetoed. Default value: 1/3.
-	VetoThreshold cosmossdk_io_math.LegacyDec `protobuf:"bytes,3,opt,name=veto_threshold,json=vetoThreshold,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"veto_threshold,omitempty"`
+	VetoThreshold cosmossdk_io_math.LegacyDec `protobuf:"bytes,3,opt,name=veto_threshold,json=vetoThreshold,proto3,customtype=github.com/cosmos/cosmos-sdk/math/v2.LegacyDec" json:"veto_threshold,omitempty"`
 }
 
 func (m *TallyParams) Reset()         { *m = TallyParams{} }

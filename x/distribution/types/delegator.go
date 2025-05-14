@@ -1,6 +1,6 @@
 package types
 
-import sdkmath "cosmossdk.io/math"
+import sdkmath "github.com/cosmos/cosmos-sdk/math/v2"
 
 // NewDelegatorStartingInfo creates a new DelegatorStartingInfo
 func NewDelegatorStartingInfo(previousPeriod uint64, stake sdkmath.LegacyDec, height uint64) DelegatorStartingInfo {

@@ -7,7 +7,7 @@ import "google/protobuf/timestamp.proto";
 import "cosmos_proto/cosmos.proto";
 import "amino/amino.proto";
 
-option go_package                      = "cosmossdk.io/x/upgrade/types";
+option go_package                      = "github.com/cosmos/cosmos-sdk/x/upgrade/types";
 option (gogoproto.goproto_getters_all) = false;
 
 // Plan specifies information about a planned upgrade and when it should occur.

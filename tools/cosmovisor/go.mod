@@ -3,7 +3,7 @@ module cosmossdk.io/tools/cosmovisor
 go 1.23.5
 
 require (
-	cosmossdk.io/log v1.5.1
+	cosmossdk.io/log v1.6.0
 	github.com/cometbft/cometbft v1.0.1
 	github.com/cometbft/cometbft-db v1.0.4
 	github.com/cosmos/cosmos-sdk v0.53.0
@@ -26,7 +26,7 @@ require (
 	cloud.google.com/go/monitoring v1.22.1 // indirect
 	cloud.google.com/go/storage v1.50.0 // indirect
 	cosmossdk.io/api v0.9.2 // indirect
-	cosmossdk.io/collections v1.2.0 // indirect
+	cosmossdk.io/collections v1.2.1 // indirect
 	cosmossdk.io/core v0.11.3 // indirect
 	cosmossdk.io/depinject v1.2.0 // indirect
 	cosmossdk.io/errors v1.0.2 // indirect
@@ -182,7 +182,7 @@ require (
 	go.opentelemetry.io/otel/sdk/metric v1.34.0 // indirect
 	go.opentelemetry.io/otel/trace v1.34.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/arch v0.15.0 // indirect
+	golang.org/x/arch v0.17.0 // indirect
 	golang.org/x/crypto v0.38.0 // indirect
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394 // indirect
 	golang.org/x/net v0.39.0 // indirect

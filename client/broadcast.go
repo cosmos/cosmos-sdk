@@ -138,7 +138,7 @@ func (ctx Context) BroadcastTxCommit(txBytes []byte) (*sdk.TxResponse, error) {
 
 	// Process the event data and return the commit response.
 	if evt := waitTx.BlockInclusion; evt != nil {
-		evtHash := fmt.Sprintf("%X", tmtypes.Tx(evt.Tx).Hash())
+		evtHash := fmt.Sprintf("%X", cmttypes.Tx(evt.Tx).Hash())
 		if evtHash != txHash {
 			return syncRes, fmt.Errorf("tx hash did not match: got %s, expected %s", evtHash, txHash)
 		}
@@ -236,7 +236,7 @@ func normalizeBroadcastMode(mode tx.BroadcastMode) string {
 }
 
 type WaitTxResult struct {
-	BlockInclusion *tmtypes.EventDataTx
+	BlockInclusion *cmttypes.EventDataTx
 	Err            error
 }
 
@@ -250,7 +250,7 @@ func WaitTx(ctx context.Context, nodeURI, hash string) <-chan WaitTxResult {
 
 	// We wrap the return results in a function to ensure that we will run the
 	// deferrals only when we are producing the result channel.
-	result := func(res *tmtypes.EventDataTx, err error) <-chan WaitTxResult {
+	result := func(res *cmttypes.EventDataTx, err error) <-chan WaitTxResult {
 		// Ensure our deferrals are run before the caller gets its hands on the
 		// result channel.
 		defer func() {
@@ -280,7 +280,7 @@ func WaitTx(ctx context.Context, nodeURI, hash string) <-chan WaitTxResult {
 	deferral(func() { c.Stop() }) //nolint:errcheck // ignore stop error
 
 	// Subscribe to the tx event.
-	query := fmt.Sprintf("%s='%s' AND %s='%s'", tmtypes.EventTypeKey, tmtypes.EventTx, tmtypes.TxHashKey, hash)
+	query := fmt.Sprintf("%s='%s' AND %s='%s'", cmttypes.EventTypeKey, cmttypes.EventTx, cmttypes.TxHashKey, hash)
 	const subscriber = "subscriber"
 	eventCh, err := c.Subscribe(ctx, subscriber, query)
 	if err != nil {
@@ -293,7 +293,7 @@ func WaitTx(ctx context.Context, nodeURI, hash string) <-chan WaitTxResult {
 	go func() <-chan WaitTxResult {
 		select {
 		case evt := <-eventCh:
-			if txe, ok := evt.Data.(tmtypes.EventDataTx); ok {
+			if txe, ok := evt.Data.(cmttypes.EventDataTx); ok {
 				return result(&txe, nil)
 			}
 			return result(nil, sdkerrors.ErrLogic.Wrapf("unsupported event data type %T", evt.Data))

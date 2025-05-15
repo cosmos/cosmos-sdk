@@ -793,7 +793,7 @@ func (m *Manager) EndBlock(ctx sdk.Context) (sdk.EndBlock, error) {
 	// [AGORIC] Reset the EventManager, preserving any existing event history.
 	eventHistory := []sdk.Event{}
 	if oldEm := ctx.EventManager(); oldEm != nil {
-		abciEvents := oldEm.ABCIEventsHistory()
+		abciEvents := oldEm.ABCIEventHistory()
 		eventHistory = make(sdk.Events, len(abciEvents))
 		for i, event := range abciEvents {
 			eventHistory[i] = sdk.Event(event)

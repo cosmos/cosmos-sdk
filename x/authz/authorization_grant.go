@@ -5,9 +5,8 @@ import (
 
 	proto "github.com/cosmos/gogoproto/proto"
 
-	errorsmod "cosmossdk.io/errors"
-
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 

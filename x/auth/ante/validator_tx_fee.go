@@ -3,8 +3,7 @@ package ante
 import (
 	"math"
 
-	errorsmod "cosmossdk.io/errors"
-
+	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
 	sdkmath "github.com/cosmos/cosmos-sdk/math/v2"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

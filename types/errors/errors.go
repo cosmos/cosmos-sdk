@@ -1,7 +1,7 @@
 package errors
 
 import (
-	errorsmod "cosmossdk.io/errors"
+	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
 )
 
 // RootCodespace is the codespace for all errors defined in this package

@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"cosmossdk.io/core/address"
-	errorsmod "cosmossdk.io/errors"
 
+	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

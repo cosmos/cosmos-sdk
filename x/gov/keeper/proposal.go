@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"cosmossdk.io/collections"
-	errorsmod "cosmossdk.io/errors"
 
+	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"

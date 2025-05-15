@@ -3,9 +3,8 @@ package group
 import (
 	"fmt"
 
-	errorsmod "cosmossdk.io/errors"
-
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 

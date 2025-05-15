@@ -1,4 +1,4 @@
-module cosmossdk.io/errors
+module github.com/cosmos/cosmos-sdk/errors/v3
 
 go 1.23.0
 

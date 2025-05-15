@@ -3,8 +3,7 @@ package baseapp
 import (
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 
-	errorsmod "cosmossdk.io/errors"
-
+	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )

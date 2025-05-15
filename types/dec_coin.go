@@ -5,8 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"cosmossdk.io/errors"
-
+	"github.com/cosmos/cosmos-sdk/errors/v3"
 	"github.com/cosmos/cosmos-sdk/math/v2"
 )
 

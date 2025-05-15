@@ -3,8 +3,7 @@ package orm
 import (
 	"fmt"
 
-	errorsmod "cosmossdk.io/errors"
-
+	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )
 

@@ -16,11 +16,12 @@ import (
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/stretchr/testify/require"
 
-	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	"cosmossdk.io/store/types"
+
+	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
 )
 
 func checksums(slice [][]byte) [][]byte {

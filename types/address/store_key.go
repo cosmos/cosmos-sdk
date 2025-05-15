@@ -1,8 +1,7 @@
 package address
 
 import (
-	errorsmod "cosmossdk.io/errors"
-
+	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 

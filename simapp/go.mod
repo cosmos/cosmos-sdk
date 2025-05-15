@@ -5,9 +5,7 @@ go 1.23.5
 require (
 	cosmossdk.io/api v0.9.2
 	cosmossdk.io/client/v2 v2.0.0-beta.9
-	cosmossdk.io/collections v1.2.1 // indirect
 	cosmossdk.io/core v0.11.3
-	cosmossdk.io/depinject v1.2.0
 	cosmossdk.io/log v1.6.0
 	cosmossdk.io/store v1.1.2
 	cosmossdk.io/tools/confix v0.1.2
@@ -28,6 +26,7 @@ require (
 
 require (
 	github.com/cometbft/cometbft/api v1.0.0
+	github.com/cosmos/cosmos-sdk/depinject/v2 v2.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-sdk/math/v2 v2.0.0-00010101000000-000000000000
 )
 
@@ -40,6 +39,7 @@ require (
 	cloud.google.com/go/iam v1.2.2 // indirect
 	cloud.google.com/go/monitoring v1.21.2 // indirect
 	cloud.google.com/go/storage v1.49.0 // indirect
+	cosmossdk.io/collections v1.2.1 // indirect
 	cosmossdk.io/errors v1.0.2 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -198,7 +198,7 @@ require (
 	golang.org/x/arch v0.17.0 // indirect
 	golang.org/x/crypto v0.38.0 // indirect
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394 // indirect
-	golang.org/x/net v0.39.0 // indirect
+	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/oauth2 v0.27.0 // indirect
 	golang.org/x/sync v0.14.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
@@ -232,6 +232,7 @@ replace (
 	cosmossdk.io/store => ../store
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/x/tx => ../x/tx
+	github.com/cosmos/cosmos-sdk/depinject/v2 => ../depinject
 
 	github.com/cosmos/cosmos-sdk/math/v2 => ../math
 

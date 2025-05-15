@@ -10,11 +10,11 @@ import (
 
 	"gotest.tools/v3/assert"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/depinject/appconfig"
-	internal "cosmossdk.io/depinject/internal/appconfig"
-	"cosmossdk.io/depinject/internal/appconfig/testpb"
-	testpbgogo "cosmossdk.io/depinject/internal/appconfiggogo/testpb"
+	"github.com/cosmos/cosmos-sdk/depinject/v2"
+	"github.com/cosmos/cosmos-sdk/depinject/v2/appconfig"
+	internal "github.com/cosmos/cosmos-sdk/depinject/v2/internal/appconfig"
+	"github.com/cosmos/cosmos-sdk/depinject/v2/internal/appconfig/testpb"
+	testpbgogo "github.com/cosmos/cosmos-sdk/depinject/v2/internal/appconfiggogo/testpb"
 )
 
 func expectContainerErrorContains(t *testing.T, option depinject.Config, contains string) {

@@ -5,10 +5,10 @@ go 1.23.5
 require (
 	cosmossdk.io/api v0.9.2
 	cosmossdk.io/core v0.11.3
-	cosmossdk.io/depinject v1.2.0
 	cosmossdk.io/log v1.6.0
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/cosmos/cosmos-sdk v0.53.0
+	github.com/cosmos/cosmos-sdk/depinject/v2 v2.0.0-00010101000000-000000000000
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/spf13/cobra v1.9.1
@@ -139,7 +139,7 @@ require (
 	golang.org/x/arch v0.17.0 // indirect
 	golang.org/x/crypto v0.38.0 // indirect
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394 // indirect
-	golang.org/x/net v0.39.0 // indirect
+	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/sync v0.14.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/term v0.32.0 // indirect
@@ -160,8 +160,10 @@ replace (
 	cosmossdk.io/api => ../../api
 	cosmossdk.io/core => ../../core
 	github.com/cosmos/cosmos-sdk => ../..
+	github.com/cosmos/cosmos-sdk/depinject/v2 => ../../depinject
 
 	github.com/cosmos/cosmos-sdk/math/v2 => ../../math
+
 )
 
 // Replace all unreleased indirect deps upgraded to comet v1

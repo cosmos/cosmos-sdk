@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"cosmossdk.io/depinject/internal/graphviz"
+	"github.com/cosmos/cosmos-sdk/depinject/v2/internal/graphviz"
 )
 
 // ManyPerContainerType marks a type which automatically gets grouped together. For an ManyPerContainerType T,

@@ -5,9 +5,9 @@ import (
 
 	"gotest.tools/v3/assert"
 
-	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 
+	"github.com/cosmos/cosmos-sdk/depinject/v2"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"

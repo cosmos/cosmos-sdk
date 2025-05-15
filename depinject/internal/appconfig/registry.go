@@ -11,7 +11,7 @@ import (
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"cosmossdk.io/depinject/appconfig/v1alpha1"
+	"github.com/cosmos/cosmos-sdk/depinject/v2/appconfig/v1alpha1"
 )
 
 // ModuleRegistry is the registry of module initializers indexed by their golang

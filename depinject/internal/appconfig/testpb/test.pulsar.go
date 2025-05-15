@@ -2,7 +2,7 @@
 package testpb
 
 import (
-	_ "cosmossdk.io/depinject/appconfig/v1alpha1"
+	_ "github.com/cosmos/cosmos-sdk/depinject/v2/appconfig/v1alpha1"
 	fmt "fmt"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"

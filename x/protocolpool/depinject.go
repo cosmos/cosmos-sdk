@@ -4,10 +4,10 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/protocolpool/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/depinject/appconfig"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/depinject/v2"
+	"github.com/cosmos/cosmos-sdk/depinject/v2/appconfig"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/protocolpool/keeper"

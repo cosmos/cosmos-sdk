@@ -4,8 +4,8 @@ go 1.23.0
 
 require (
 	cosmossdk.io/api v0.9.2
-	cosmossdk.io/depinject v1.2.0
 	github.com/cosmos/cosmos-db v1.1.1
+	github.com/cosmos/cosmos-sdk/depinject/v2 v2.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-sdk/math/v2 v2.0.0-00010101000000-000000000000
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/grpc v1.72.0
@@ -60,6 +60,8 @@ require (
 replace cosmossdk.io/api => ../api
 
 replace github.com/cosmos/cosmos-sdk/math/v2 => ../math
+
+replace github.com/cosmos/cosmos-sdk/depinject/v2 => ../depinject
 
 // Version tagged too early and incompatible with v0.50 (latest at the time of tagging)
 retract v0.12.0

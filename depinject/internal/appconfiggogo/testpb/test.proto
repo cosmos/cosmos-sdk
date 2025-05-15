@@ -4,7 +4,7 @@ package testpb;
 
 import "cosmos/app/v1alpha1/module.proto";
 
-option go_package = "cosmossdk.io/depinject/internal/appconfiggogo/testpb";
+option go_package = "github.com/cosmos/cosmos-sdk/depinject/v2/internal/appconfiggogo/testpb";
 
 message TestModuleGogo {
   option (cosmos.app.v1alpha1.module) = {

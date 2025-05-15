@@ -14,9 +14,9 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 	"sigs.k8s.io/yaml"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/depinject/appconfig/v1alpha1"
-	internal "cosmossdk.io/depinject/internal/appconfig"
+	"github.com/cosmos/cosmos-sdk/depinject/v2"
+	"github.com/cosmos/cosmos-sdk/depinject/v2/appconfig/v1alpha1"
+	internal "github.com/cosmos/cosmos-sdk/depinject/v2/internal/appconfig"
 )
 
 // LoadJSON loads an app config in JSON format.

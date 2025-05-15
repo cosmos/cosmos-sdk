@@ -13,7 +13,7 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
-	"cosmossdk.io/depinject"
+	"github.com/cosmos/cosmos-sdk/depinject/v2"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

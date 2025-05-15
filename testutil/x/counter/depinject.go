@@ -7,9 +7,9 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/depinject/appconfig"
 
+	"github.com/cosmos/cosmos-sdk/depinject/v2"
+	"github.com/cosmos/cosmos-sdk/depinject/v2/appconfig"
 	"github.com/cosmos/cosmos-sdk/testutil/x/counter/keeper"
 	"github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
 )

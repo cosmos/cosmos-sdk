@@ -1,14 +1,14 @@
 package appmodule
 
 import (
-	depinjectappconfig "cosmossdk.io/depinject/appconfig"
+	depinjectappconfig "github.com/cosmos/cosmos-sdk/depinject/v2/appconfig"
 )
 
 // Option is a functional option for implementing modules.
 type Option = depinjectappconfig.Option
 
 // Provide registers providers with the dependency injection system that will be
-// run within the module scope. See cosmossdk.io/depinject for
+// run within the module scope. See github.com/cosmos/cosmos-sdk/depinject/v2 for
 // documentation on the dependency injection system.
 var Provide = depinjectappconfig.Provide
 

@@ -22,7 +22,7 @@ By using `depinject`, developers can achieve:
 * Improved modularity and maintainability.
 * A more maintainable and modular structure for their blockchain applications, ultimately enhancing development velocity and code quality.
 
-* [Go Doc](https://pkg.go.dev/cosmossdk.io/depinject)
+* [Go Doc](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/depinject/v2)
 
 ## Usage
 
@@ -40,7 +40,7 @@ package main
 import (
  "fmt"
 
- "cosmossdk.io/depinject"
+ "github.com/cosmos/cosmos-sdk/depinject/v2"
 )
 
 type AnotherInt int

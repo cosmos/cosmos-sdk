@@ -6,6 +6,7 @@ import (
 	"net"
 	"testing"
 
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -27,7 +28,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/gogoproto/proto"
 )
 
 type fixture struct {
@@ -74,11 +74,9 @@ func initFixture(t *testing.T) *fixture {
 
 	conn := &testClientConn{ClientConn: clientConn}
 
+	// using merged registry to get pulsar + gogo files
 	mergedFiles, err := proto.MergedRegistry()
-	if err != nil {
-		t.Log("failed to get merged files, using global files")
-		mergedFiles = protoregistry.GlobalFiles
-	}
+	assert.NilError(t, err)
 
 	b := &Builder{
 		Builder: flag.Builder{

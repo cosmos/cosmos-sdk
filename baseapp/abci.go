@@ -847,7 +847,7 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 	cp := app.GetConsensusParams(app.finalizeBlockState.Context())
 
 	// [AGORIC] Clear the event history after each block.
-	app.finalizeBlockState.eventHistory = sdk.Events{}
+	app.finalizeBlockState.eventHistory = []abci.Event{}
 
 	return &abci.ResponseFinalizeBlock{
 		Events:                events,

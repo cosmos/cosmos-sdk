@@ -125,7 +125,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [v0.2.0](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.2.0)
 
-* [#12020](https://github.com/cosmos/cosmos-sdk/pull/12020) Use cosmossdk.io/depinject instead of container.
+* [#12020](https://github.com/cosmos/cosmos-sdk/pull/12020) Use github.com/cosmos/cosmos-sdk/depinject/v2 instead of container.
 * [#12367](https://github.com/cosmos/cosmos-sdk/pull/12367) Add support for golang_bindings in app.yaml.
 
 ## [v0.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.1.0)

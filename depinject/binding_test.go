@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/depinject"
+	"github.com/cosmos/cosmos-sdk/depinject/v2"
 )
 
 type Duck interface {
@@ -79,7 +79,7 @@ func ProvideModuleDuck(duck Duck, key depinject.OwnModuleKey) DuckWrapper {
 func ResolvePond(ducks []DuckWrapper) Pond { return Pond{Ducks: ducks} }
 
 func fullTypeName(typeName string) string {
-	return fmt.Sprintf("cosmossdk.io/depinject_test/depinject_test.%s", typeName)
+	return fmt.Sprintf("github.com/cosmos/cosmos-sdk/depinject/v2_test/depinject_test.%s", typeName)
 }
 
 func TestProvideNoBinding(t *testing.T) {

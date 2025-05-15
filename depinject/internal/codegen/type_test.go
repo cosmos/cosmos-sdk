@@ -10,7 +10,7 @@ import (
 
 	"gotest.tools/v3/assert"
 
-	"cosmossdk.io/depinject/internal/graphviz"
+	"github.com/cosmos/cosmos-sdk/depinject/v2/internal/graphviz"
 )
 
 type MyInt int

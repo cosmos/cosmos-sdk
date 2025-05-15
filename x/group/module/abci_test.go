@@ -10,11 +10,11 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/depinject/v2"
 	"github.com/cosmos/cosmos-sdk/math/v2"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"

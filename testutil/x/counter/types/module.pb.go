@@ -4,8 +4,8 @@
 package types
 
 import (
-	_ "cosmossdk.io/depinject/appconfig/v1alpha1"
 	fmt "fmt"
+	_ "github.com/cosmos/cosmos-sdk/depinject/v2/appconfig/v1alpha1"
 	proto "github.com/cosmos/gogoproto/proto"
 	io "io"
 	math "math"

@@ -5,7 +5,6 @@ go 1.23.5
 require (
 	cosmossdk.io/api v0.9.2
 	cosmossdk.io/core v0.11.3
-	cosmossdk.io/depinject v1.2.0
 	cosmossdk.io/errors v1.0.2
 	cosmossdk.io/log v1.6.0
 	cosmossdk.io/math v1.5.3 // indirect
@@ -30,7 +29,10 @@ require (
 	pgregory.net/rapid v1.2.0
 )
 
-require github.com/cosmos/cosmos-sdk/math/v2 v2.0.0-00010101000000-000000000000
+require (
+	github.com/cosmos/cosmos-sdk/depinject/v2 v2.0.0-00010101000000-000000000000
+	github.com/cosmos/cosmos-sdk/math/v2 v2.0.0-00010101000000-000000000000
+)
 
 require (
 	cel.dev/expr v0.20.0 // indirect
@@ -43,6 +45,7 @@ require (
 	cloud.google.com/go/storage v1.49.0 // indirect
 	cosmossdk.io/client/v2 v2.0.0-beta.9 // indirect
 	cosmossdk.io/collections v1.2.1 // indirect
+	cosmossdk.io/depinject v1.2.0 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -197,7 +200,7 @@ require (
 	golang.org/x/arch v0.17.0 // indirect
 	golang.org/x/crypto v0.38.0 // indirect
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394 // indirect
-	golang.org/x/net v0.39.0 // indirect
+	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/oauth2 v0.27.0 // indirect
 	golang.org/x/sync v0.14.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
@@ -225,6 +228,7 @@ replace (
 	cosmossdk.io/core => ../core
 	cosmossdk.io/store => ../store
 	cosmossdk.io/x/tx => ../x/tx
+	github.com/cosmos/cosmos-sdk/depinject/v2 => ../depinject
 
 	github.com/cosmos/cosmos-sdk/math/v2 => ../math
 )

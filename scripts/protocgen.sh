@@ -33,9 +33,11 @@ echo "Generating tests proto code"
 
 # move proto files to the right places
 echo "Moving proto files"
+# handle the depinject path properly
+cp -r github.com/cosmos/cosmos-sdk/depinject/v2/* ./depinject/
 cp -r github.com/cosmos/cosmos-sdk/* ./
 cp -r cosmossdk.io/** ./
-rm -rf github.com cosmossdk.io
+rm -rf github.com cosmossdk.io depinject/v2
 
 echo "Generating pulsar proto code"
 ./scripts/protocgen-pulsar.sh

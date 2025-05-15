@@ -108,8 +108,8 @@ func invoke(ctr *container, key *moduleKey, invokers []interface{}) error {
 //
 // BindInterface(
 //
-//	"cosmossdk.io/depinject_test/depinject_test.Duck",
-//	"cosmossdk.io/depinject_test/depinject_test.Canvasback")
+//	"github.com/cosmos/cosmos-sdk/depinject/v2_test/depinject_test.Duck",
+//	"github.com/cosmos/cosmos-sdk/depinject/v2_test/depinject_test.Canvasback")
 func BindInterface(inTypeName, outTypeName string) Config {
 	return containerConfig(func(ctr *container) error {
 		return bindInterface(ctr, inTypeName, outTypeName, "")
@@ -124,8 +124,8 @@ func BindInterface(inTypeName, outTypeName string) Config {
 // BindInterfaceInModule(
 //
 //	 "moduleFoo",
-//		"cosmossdk.io/depinject_test/depinject_test.Duck",
-//		"cosmossdk.io/depinject_test/depinject_test.Canvasback")
+//		"github.com/cosmos/cosmos-sdk/depinject/v2_test/depinject_test.Duck",
+//		"github.com/cosmos/cosmos-sdk/depinject/v2_test/depinject_test.Canvasback")
 func BindInterfaceInModule(moduleName, inTypeName, outTypeName string) Config {
 	return containerConfig(func(ctr *container) error {
 		return bindInterface(ctr, inTypeName, outTypeName, moduleName)

@@ -3,7 +3,7 @@ package depinject
 import (
 	"reflect"
 
-	"cosmossdk.io/depinject/internal/graphviz"
+	"github.com/cosmos/cosmos-sdk/depinject/v2/internal/graphviz"
 )
 
 type moduleDepProvider struct {

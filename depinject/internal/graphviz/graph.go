@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 
-	"cosmossdk.io/depinject/internal/util"
+	"github.com/cosmos/cosmos-sdk/depinject/v2/internal/util"
 )
 
 // Graph represents a graphviz digraph.

@@ -122,7 +122,7 @@ When using `depinject.Inject`, the injected types must be pointers.
 
 In advanced cases, it is possible to inject extra (module) configuration in a way that is not (yet) supported by `AppConfig`.  
 In this case, use `depinject.Configs` for combining the extra configuration, and `AppConfig` and `depinject.Supply` for providing the extra configuration.
-More information on how `depinject.Configs` and `depinject.Supply` function can be found in the [`depinject` documentation](https://pkg.go.dev/cosmossdk.io/depinject).
+More information on how `depinject.Configs` and `depinject.Supply` function can be found in the [`depinject` documentation](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/depinject/v2).
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/simapp/app_di.go#L114-L162

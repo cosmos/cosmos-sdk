@@ -2,4 +2,4 @@ version: v1
 plugins:
   - name: gocosmos
     out: .
-    opt: paths=source_relative,Mcosmos/app/v1alpha1/module.proto=cosmossdk.io/depinject/appconfig/v1alpha1
+    opt: paths=source_relative,Mcosmos/app/v1alpha1/module.proto=github.com/cosmos/cosmos-sdk/depinject/v2/appconfig/v1alpha1

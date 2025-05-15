@@ -568,7 +568,7 @@ import (
 	"testing"
 
 	"cosmossdk.io/core/intermodule"
-	"cosmossdk.io/depinject"
+	"github.com/cosmos/cosmos-sdk/depinject/v2"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protodesc"

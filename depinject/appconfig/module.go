@@ -6,7 +6,7 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
-	internal "cosmossdk.io/depinject/internal/appconfig"
+	internal "github.com/cosmos/cosmos-sdk/depinject/v2/internal/appconfig"
 )
 
 var Register = RegisterModule
@@ -85,7 +85,7 @@ func (f funcOption) apply(initializer *internal.ModuleInitializer) error {
 }
 
 // Provide registers providers with the dependency injection system that will be
-// run within the module scope (depinject.ProvideInModule). See cosmossdk.io/depinject for
+// run within the module scope (depinject.ProvideInModule). See github.com/cosmos/cosmos-sdk/depinject/v2 for
 // documentation on the dependency injection system.
 func Provide(providers ...interface{}) Option {
 	return funcOption(func(initializer *internal.ModuleInitializer) error {

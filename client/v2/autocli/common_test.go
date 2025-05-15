@@ -16,6 +16,7 @@ import (
 	reflectionv2alpha1 "cosmossdk.io/api/cosmos/base/reflection/v2alpha1"
 	"cosmossdk.io/client/v2/autocli/flag"
 	"cosmossdk.io/client/v2/internal/testpb"
+	"cosmossdk.io/client/v2/internal/testpbgogo"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -23,8 +24,10 @@ import (
 	sdkkeyring "github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 type fixture struct {
@@ -57,6 +60,7 @@ func initFixture(t *testing.T) *fixture {
 
 	interfaceRegistry := encodingConfig.Codec.InterfaceRegistry()
 	banktypes.RegisterInterfaces(interfaceRegistry)
+	msgservice.RegisterMsgServiceDesc(interfaceRegistry, &testpbgogo.MsgGogoOnly_serviceDesc)
 
 	clientCtx := client.Context{}.
 		WithKeyring(kr).
@@ -69,10 +73,17 @@ func initFixture(t *testing.T) *fixture {
 		WithChainID("autocli-test")
 
 	conn := &testClientConn{ClientConn: clientConn}
+
+	mergedFiles, err := proto.MergedRegistry()
+	if err != nil {
+		t.Log("failed to get merged files, using global files")
+		mergedFiles = protoregistry.GlobalFiles
+	}
+
 	b := &Builder{
 		Builder: flag.Builder{
 			TypeResolver:          protoregistry.GlobalTypes,
-			FileResolver:          protoregistry.GlobalFiles,
+			FileResolver:          mergedFiles,
 			AddressCodec:          addresscodec.NewBech32Codec("cosmos"),
 			ValidatorAddressCodec: addresscodec.NewBech32Codec("cosmosvaloper"),
 			ConsensusAddressCodec: addresscodec.NewBech32Codec("cosmosvalcons"),

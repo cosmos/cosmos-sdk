@@ -16,7 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
@@ -144,7 +143,7 @@ $ %[1]s tx [flags] | %[1]s q wait-tx
 				hash = hashByt
 			}
 
-			res, err := c.Tx(ctx, hash, false)
+			res, err := clientCtx.Client.Tx(ctx, hash, false)
 			if err == nil {
 				// tx already included in a block
 				res := &coretypes.ResultBroadcastTxCommit{
@@ -155,7 +154,7 @@ $ %[1]s tx [flags] | %[1]s q wait-tx
 				return clientCtx.PrintProto(newResponseFormatBroadcastTxCommit(res))
 			}
 
-			waitTxCh := client.WaitTx(ctx, clientCtx.NodeURI, hash)
+			waitTxCh := client.WaitTx(ctx, clientCtx.NodeURI, string(hash))
 			waitTxResult := <-waitTxCh
 			if waitTxResult.Err != nil {
 				return waitTxResult.Err
@@ -163,14 +162,14 @@ $ %[1]s tx [flags] | %[1]s q wait-tx
 
 			txe := waitTxResult.BlockInclusion
 
-			res := &coretypes.ResultBroadcastTxCommit{
+			broadcastRes := &coretypes.ResultBroadcastTxCommit{
 				TxResult: txe.Result,
 				Hash:     tmtypes.Tx(txe.Tx).Hash(),
 				Height:   txe.Height,
 			}
 
 			// Propagate the printing error, if any.
-			return clientCtx.PrintProto(newResponseFormatBroadcastTxCommit(res))
+			return clientCtx.PrintProto(newResponseFormatBroadcastTxCommit(broadcastRes))
 		},
 	}
 	cmd.Flags().Duration(TimeoutFlag, 15*time.Second, "The maximum time to wait for the transaction to be included in a block")

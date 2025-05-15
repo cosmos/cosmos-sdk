@@ -215,7 +215,7 @@ func (k BaseKeeper) DenomMetadata(c context.Context, req *types.QueryDenomMetada
 
 	metadata, found := k.GetDenomMetaData(ctx, req.Denom)
 	if !found {
-		return nil, status.Errorf(codes.NotFound, "client metadata for denom %s", req.Denom)
+		return nil, status.Errorf(codes.NotFound, "no metadata found for denom %s", req.Denom)
 	}
 
 	return &types.QueryDenomMetadataResponse{
@@ -301,7 +301,7 @@ func (k BaseKeeper) SendEnabled(goCtx context.Context, req *types.QuerySendEnabl
 	return resp, nil
 }
 
-// DenomOwnersByQuery is identical to DenomOwner query, but receives denom values via query string.
+// DenomOwnersByQuery is identical to DenomOwners query, but receives denom values via query string.
 func (k BaseKeeper) DenomOwnersByQuery(ctx context.Context, req *types.QueryDenomOwnersByQueryRequest) (*types.QueryDenomOwnersByQueryResponse, error) {
 	if req == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "empty request")

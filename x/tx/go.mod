@@ -39,8 +39,8 @@ require (
 // We are tagging x/tx v0.14+ from main and v0.13 from release/v0.50.x and must keep using released versions of x/tx dependencies
 
 replace (
-	cosmossdk.io/api => ../api
-	cosmossdk.io/core => ../core
-	cosmossdk.io/math => ../math
-	cosmossdk.io/errors => ../errors
+	// cosmossdk.io/api => ../api
+	// cosmossdk.io/core => ../core
+	// cosmossdk.io/math => ../math
+	// cosmossdk.io/errors => ../errors
 )

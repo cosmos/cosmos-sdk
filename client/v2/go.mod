@@ -157,7 +157,7 @@ require (
 )
 
 replace (
-	cosmossdk.io/api => ../../api
-	cosmossdk.io/core => ../../core
-	cosmossdk.io/depinject => ../../depinject
+	// cosmossdk.io/api => ../../api
+	// cosmossdk.io/core => ../../core
+	// cosmossdk.io/depinject => ../../depinject
 )

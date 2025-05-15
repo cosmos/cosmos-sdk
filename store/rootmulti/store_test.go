@@ -14,14 +14,14 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/store/cachemulti"
-	"cosmossdk.io/store/iavl"
-	sdkmaps "cosmossdk.io/store/internal/maps"
-	"cosmossdk.io/store/metrics"
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	"cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/errors/v3"
+	"github.com/cosmos/cosmos-sdk/store/v2/cachemulti"
+	"github.com/cosmos/cosmos-sdk/store/v2/iavl"
+	sdkmaps "github.com/cosmos/cosmos-sdk/store/v2/internal/maps"
+	"github.com/cosmos/cosmos-sdk/store/v2/metrics"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 func TestStoreType(t *testing.T) {

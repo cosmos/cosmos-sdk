@@ -17,11 +17,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/store/snapshots"
-	snapshottypes "cosmossdk.io/store/snapshots/types"
-	"cosmossdk.io/store/types"
 
 	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
+	"github.com/cosmos/cosmos-sdk/store/v2/snapshots"
+	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 func checksums(slice [][]byte) [][]byte {

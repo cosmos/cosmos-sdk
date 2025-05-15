@@ -7,7 +7,8 @@ import (
 
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
-	storetypes "cosmossdk.io/store/types"
+
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 // WithCollectionPaginationPairPrefix applies a prefix to a collection, whose key is a collection.Pair,

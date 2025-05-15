@@ -17,6 +17,7 @@ require (
 	github.com/cosmos/cosmos-sdk/depinject/v2 v2.0.0-00010101000000-000000000000 // indirect
 	github.com/cosmos/cosmos-sdk/errors/v3 v3.0.0-00010101000000-000000000000 // indirect
 	github.com/cosmos/cosmos-sdk/math/v2 v2.0.0-00010101000000-000000000000 // indirect
+	github.com/cosmos/cosmos-sdk/store/v2 v2.0.0-00010101000000-000000000000 // indirect
 	github.com/dgraph-io/ristretto/v2 v2.1.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/supranational/blst v0.3.13 // indirect
@@ -28,7 +29,6 @@ require (
 	cosmossdk.io/core v0.11.3 // indirect
 	cosmossdk.io/log v1.6.0 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
-	cosmossdk.io/store v1.1.2 // indirect
 	cosmossdk.io/x/tx v0.14.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -171,10 +171,10 @@ replace github.com/cosmos/cosmos-sdk => ../..
 replace (
 	cosmossdk.io/api => ../../api
 	cosmossdk.io/core => ../../core
-	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/tx => ../../x/tx
 	github.com/cosmos/cosmos-sdk/depinject/v2 => ../../depinject
 	github.com/cosmos/cosmos-sdk/errors/v3 => ../../errors
 	github.com/cosmos/cosmos-sdk/math/v2 => ../../math
+	github.com/cosmos/cosmos-sdk/store/v2 => ../../store
 
 )

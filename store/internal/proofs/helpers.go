@@ -6,9 +6,8 @@ import (
 
 	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 
-	sdkmaps "cosmossdk.io/store/internal/maps"
-
 	"github.com/cosmos/cosmos-sdk/math/v2/unsafe"
+	sdkmaps "github.com/cosmos/cosmos-sdk/store/v2/internal/maps"
 )
 
 // SimpleResult contains a merkle.SimpleProof along with all data needed to build the confio/proof

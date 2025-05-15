@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"testing"
 
-	"cosmossdk.io/store/cachekv/internal"
+	"github.com/cosmos/cosmos-sdk/store/v2/cachekv/internal"
 )
 
 func BenchmarkLargeUnsortedMisses(b *testing.B) {

@@ -7,7 +7,6 @@ require (
 	cosmossdk.io/client/v2 v2.0.0-beta.9
 	cosmossdk.io/core v0.11.3
 	cosmossdk.io/log v1.6.0
-	cosmossdk.io/store v1.1.2
 	cosmossdk.io/tools/confix v0.1.2
 	cosmossdk.io/x/tx v0.14.0
 	github.com/cometbft/cometbft v1.0.1
@@ -28,6 +27,7 @@ require (
 	github.com/cometbft/cometbft/api v1.0.0
 	github.com/cosmos/cosmos-sdk/depinject/v2 v2.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-sdk/math/v2 v2.0.0-00010101000000-000000000000
+	github.com/cosmos/cosmos-sdk/store/v2 v2.0.0-00010101000000-000000000000
 )
 
 require (
@@ -229,12 +229,12 @@ replace (
 	cosmossdk.io/api => ../api
 	cosmossdk.io/client/v2 => ../client/v2
 	cosmossdk.io/core => ../core
-	cosmossdk.io/store => ../store
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/x/tx => ../x/tx
 	github.com/cosmos/cosmos-sdk/depinject/v2 => ../depinject
 	github.com/cosmos/cosmos-sdk/errors/v3 => ../errors
 	github.com/cosmos/cosmos-sdk/math/v2 => ../math
+	github.com/cosmos/cosmos-sdk/store/v2 => ../store
 
 )
 

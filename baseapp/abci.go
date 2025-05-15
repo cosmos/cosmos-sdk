@@ -15,13 +15,13 @@ import (
 	grpcstatus "google.golang.org/grpc/status"
 
 	coreheader "cosmossdk.io/core/header"
-	"cosmossdk.io/store/rootmulti"
-	snapshottypes "cosmossdk.io/store/snapshots/types"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/state"
 	"github.com/cosmos/cosmos-sdk/codec"
 	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
+	"github.com/cosmos/cosmos-sdk/store/v2/rootmulti"
+	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

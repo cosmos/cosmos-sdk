@@ -6,8 +6,7 @@ import (
 
 	"github.com/spf13/viper"
 
-	pruningtypes "cosmossdk.io/store/pruning/types"
-
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

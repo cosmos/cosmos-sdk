@@ -11,15 +11,15 @@ import (
 	ics23 "github.com/cosmos/ics23/go"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/store/cachekv"
-	"cosmossdk.io/store/internal/kv"
-	"cosmossdk.io/store/metrics"
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	"cosmossdk.io/store/tracekv"
-	"cosmossdk.io/store/types"
-	"cosmossdk.io/store/wrapper"
 
 	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
+	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/v2/internal/kv"
+	"github.com/cosmos/cosmos-sdk/store/v2/metrics"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/tracekv"
+	"github.com/cosmos/cosmos-sdk/store/v2/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/wrapper"
 )
 
 const (

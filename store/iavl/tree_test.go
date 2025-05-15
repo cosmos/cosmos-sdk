@@ -8,7 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/store/wrapper"
+
+	"github.com/cosmos/cosmos-sdk/store/v2/wrapper"
 )
 
 func TestImmutableTreePanics(t *testing.T) {

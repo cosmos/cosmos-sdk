@@ -14,10 +14,9 @@ import (
 	db "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
 
-	"cosmossdk.io/store/snapshots/types"
-	storetypes "cosmossdk.io/store/types"
-
 	"github.com/cosmos/cosmos-sdk/errors/v3"
+	"github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 const (

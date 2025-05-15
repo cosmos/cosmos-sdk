@@ -8,13 +8,12 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 
-	"cosmossdk.io/store/cachekv/internal"
-	"cosmossdk.io/store/internal/conv"
-	"cosmossdk.io/store/internal/kv"
-	"cosmossdk.io/store/tracekv"
-	"cosmossdk.io/store/types"
-
 	"github.com/cosmos/cosmos-sdk/math/v2"
+	"github.com/cosmos/cosmos-sdk/store/v2/cachekv/internal"
+	"github.com/cosmos/cosmos-sdk/store/v2/internal/conv"
+	"github.com/cosmos/cosmos-sdk/store/v2/internal/kv"
+	"github.com/cosmos/cosmos-sdk/store/v2/tracekv"
+	"github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 // cValue represents a cached value.

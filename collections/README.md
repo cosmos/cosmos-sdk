@@ -43,7 +43,7 @@ package collections
 
 import (
     "cosmossdk.io/collections"
-    storetypes "cosmossdk.io/store/types"
+    storetypes "github.com/cosmos/cosmos-sdk/store/v2"
     sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -168,7 +168,7 @@ package collections
 
 import (
 	"cosmossdk.io/collections"
-	storetypes "cosmossdk.io/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -205,7 +205,7 @@ package collections
 
 import (
 	"cosmossdk.io/collections"
-	storetypes "cosmossdk.io/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -253,7 +253,7 @@ package collections
 
 import (
 	"cosmossdk.io/collections"
-	storetypes "cosmossdk.io/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -352,7 +352,7 @@ package collections
 
 import (
 	"cosmossdk.io/collections"
-	storetypes "cosmossdk.io/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -435,7 +435,7 @@ package collections
 
 import (
 	"cosmossdk.io/collections"
-	storetypes "cosmossdk.io/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
@@ -505,7 +505,7 @@ package collections
 
 import (
 	"cosmossdk.io/collections"
-	storetypes "cosmossdk.io/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -659,7 +659,7 @@ package collections
 import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -927,7 +927,7 @@ package docs
 import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
-	storetypes "cosmossdk.io/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -986,7 +986,7 @@ package docs
 import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
-	storetypes "cosmossdk.io/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -1094,7 +1094,7 @@ package example
 
 import (
     "cosmossdk.io/collections"
-    storetypes "cosmossdk.io/store/types"
+    storetypes "github.com/cosmos/cosmos-sdk/store/v2"
     "github.com/cosmos/cosmos-sdk/codec"
     sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -1143,7 +1143,7 @@ import (
  "context"
 
  "cosmossdk.io/collections"
- storetypes "cosmossdk.io/store/types"
+ storetypes "github.com/cosmos/cosmos-sdk/store/v2"
  "github.com/cosmos/cosmos-sdk/codec"
 )
 

@@ -9,10 +9,9 @@ import (
 	tmproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/stretchr/testify/require"
 
-	storetypes "cosmossdk.io/store/types"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 var _ storetypes.ABCIListener = (*MockABCIListener)(nil)

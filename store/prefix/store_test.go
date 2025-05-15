@@ -9,12 +9,13 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/store/cachekv"
-	"cosmossdk.io/store/dbadapter"
-	"cosmossdk.io/store/gaskv"
-	"cosmossdk.io/store/iavl"
-	"cosmossdk.io/store/types"
-	"cosmossdk.io/store/wrapper"
+
+	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/v2/dbadapter"
+	"github.com/cosmos/cosmos-sdk/store/v2/gaskv"
+	"github.com/cosmos/cosmos-sdk/store/v2/iavl"
+	"github.com/cosmos/cosmos-sdk/store/v2/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/wrapper"
 )
 
 // copied from iavl/store_test.go

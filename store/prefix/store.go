@@ -5,9 +5,9 @@ import (
 	"errors"
 	"io"
 
-	"cosmossdk.io/store/cachekv"
-	"cosmossdk.io/store/tracekv"
-	"cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/cachekv"
+	"github.com/cosmos/cosmos-sdk/store/v2/tracekv"
+	"github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 var _ types.KVStore = Store{}

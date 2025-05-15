@@ -19,20 +19,20 @@ import (
 	iavltree "github.com/cosmos/iavl"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/store/cachemulti"
-	"cosmossdk.io/store/dbadapter"
-	"cosmossdk.io/store/iavl"
-	"cosmossdk.io/store/listenkv"
-	"cosmossdk.io/store/mem"
-	"cosmossdk.io/store/metrics"
-	"cosmossdk.io/store/pruning"
-	pruningtypes "cosmossdk.io/store/pruning/types"
-	snapshottypes "cosmossdk.io/store/snapshots/types"
-	"cosmossdk.io/store/tracekv"
-	"cosmossdk.io/store/transient"
-	"cosmossdk.io/store/types"
 
 	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
+	"github.com/cosmos/cosmos-sdk/store/v2/cachemulti"
+	"github.com/cosmos/cosmos-sdk/store/v2/dbadapter"
+	"github.com/cosmos/cosmos-sdk/store/v2/iavl"
+	"github.com/cosmos/cosmos-sdk/store/v2/listenkv"
+	"github.com/cosmos/cosmos-sdk/store/v2/mem"
+	"github.com/cosmos/cosmos-sdk/store/v2/metrics"
+	"github.com/cosmos/cosmos-sdk/store/v2/pruning"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/v2/pruning/types"
+	snapshottypes "github.com/cosmos/cosmos-sdk/store/v2/snapshots/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/tracekv"
+	"github.com/cosmos/cosmos-sdk/store/v2/transient"
+	"github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 const (

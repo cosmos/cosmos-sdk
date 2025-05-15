@@ -7,8 +7,8 @@ import (
 	"github.com/cometbft/cometbft/crypto/merkle"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 
-	"cosmossdk.io/store/internal/kv"
-	"cosmossdk.io/store/internal/tree"
+	"github.com/cosmos/cosmos-sdk/store/v2/internal/kv"
+	"github.com/cosmos/cosmos-sdk/store/v2/internal/tree"
 )
 
 // merkleMap defines a merkle-ized tree from a map. Leave values are treated as

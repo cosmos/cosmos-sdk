@@ -1,4 +1,4 @@
-module cosmossdk.io/store
+module github.com/cosmos/cosmos-sdk/store/v2
 
 go 1.23.5
 
@@ -81,9 +81,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/cosmos/cosmos-sdk/math/v2 => ../math
-
 replace (
 	github.com/cosmos/cosmos-sdk/errors/v3 => ../errors
-
+	github.com/cosmos/cosmos-sdk/math/v2 => ../math
 )

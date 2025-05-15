@@ -9,11 +9,11 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/store/dbadapter"
-	"cosmossdk.io/store/internal/kv"
-	"cosmossdk.io/store/prefix"
-	"cosmossdk.io/store/tracekv"
-	"cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/store/v2/dbadapter"
+	"github.com/cosmos/cosmos-sdk/store/v2/internal/kv"
+	"github.com/cosmos/cosmos-sdk/store/v2/prefix"
+	"github.com/cosmos/cosmos-sdk/store/v2/tracekv"
+	"github.com/cosmos/cosmos-sdk/store/v2/types"
 )
 
 func bz(s string) []byte { return []byte(s) }

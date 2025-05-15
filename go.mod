@@ -7,7 +7,6 @@ require (
 	cosmossdk.io/collections v1.2.1
 	cosmossdk.io/core v0.11.3
 	cosmossdk.io/log v1.6.0
-	cosmossdk.io/store v1.1.2
 	cosmossdk.io/x/tx v0.14.0
 	github.com/99designs/keyring v1.2.1
 	github.com/bgentry/speakeasy v0.2.0
@@ -23,6 +22,7 @@ require (
 	github.com/cosmos/cosmos-sdk/depinject/v2 v2.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-sdk/errors/v3 v3.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-sdk/math/v2 v2.0.0-00010101000000-000000000000
+	github.com/cosmos/cosmos-sdk/store/v2 v2.0.0-00010101000000-000000000000
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogogateway v1.2.0
 	github.com/cosmos/gogoproto v1.7.0
@@ -221,11 +221,11 @@ require (
 replace (
 	cosmossdk.io/api => ./api
 	cosmossdk.io/core => ./core
-	cosmossdk.io/store => ./store
 	cosmossdk.io/x/tx => ./x/tx
 	github.com/cosmos/cosmos-sdk/depinject/v2 => ./depinject
 	github.com/cosmos/cosmos-sdk/errors/v3 => ./errors
 	github.com/cosmos/cosmos-sdk/math/v2 => ./math
+	github.com/cosmos/cosmos-sdk/store/v2 => ./store
 
 )
 

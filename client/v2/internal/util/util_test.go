@@ -29,15 +29,15 @@ func TestIsSupportedVersion(t *testing.T) {
 		expected    bool
 	}{
 		{
-			messageName: "testpb.Msg.Send",
+			messageName: "testpbpulsar.Msg.Send",
 			expected:    true,
 		},
 		{
-			messageName: "testpb.Query.Echo",
+			messageName: "testpbpulsar.Query.Echo",
 			expected:    true,
 		},
 		{
-			messageName: "testpb.Msg.Clawback",
+			messageName: "testpbpulsar.Msg.Clawback",
 			expected:    false,
 		},
 	}

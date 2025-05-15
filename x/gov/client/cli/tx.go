@@ -72,9 +72,6 @@ func NewTxCmd(legacyPropCmds []*cobra.Command) *cobra.Command {
 		cmdSubmitProp,
 		NewCmdDraftProposal(),
 		NewCmdCancelProposal(),
-
-		// Deprecated
-		cmdSubmitLegacyProp,
 	)
 
 	return govTxCmd
@@ -244,17 +241,20 @@ $ %s tx gov submit-legacy-proposal --title="Test Proposal" --description="My awe
 			}
 
 			// otherwise try to interpret as a new (0.46) submit-proposal
+			amount, err := sdk.ParseCoinsNormalized(proposal.Deposit)
+			if err != nil {
+				return err
+			}
 			err = cobra.ExactArgs(1)(cmd, args)
 			if err != nil {
 				return err
 			}
-
-			msgs, metadata, title, summary, deposit, err := parseSubmitProposal(clientCtx.Codec, args[0])
-			if err != nil {
-				return err
+			content, ok := v1beta1.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
+			if !ok {
+				return fmt.Errorf("failed to create proposal content: unknown proposal type %s", proposal.Type)
 			}
 
-			msg, err := v1.NewMsgSubmitProposal(msgs, deposit, clientCtx.GetFromAddress().String(), metadata, title, summary)
+			msg, err := v1beta1.NewMsgSubmitProposal(content, amount, clientCtx.GetFromAddress())
 			if err != nil {
 				return fmt.Errorf("invalid message: %w", err)
 			}
@@ -273,17 +273,17 @@ $ %s tx gov submit-legacy-proposal --title="Test Proposal" --description="My awe
 	return cmd
 }
 
-// NewCmdSubmitLegacyProposal implements submitting a proposal transaction command.
-// Deprecated: please use NewCmdSubmitProposal instead.
-// Preserved for tests.
-func NewCmdSubmitLegacyProposal() *cobra.Command {
-	return NewCmdSubmitProposal()
-}
+// // NewCmdSubmitLegacyProposal implements submitting a proposal transaction command.
+// // Deprecated: please use NewCmdSubmitProposal instead.
+// // Preserved for tests.
+// func NewCmdSubmitLegacyProposal() *cobra.Command {
+// 	return NewCmdSubmitProposal()
+// }
 
 // NewCmdDeposit implements depositing tokens for an active proposal.
 func NewCmdDeposit() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "deposit [proposal-id] [deposit]",
+		Use:   "deposit [proxposal-id] [deposit]",
 		Args:  cobra.ExactArgs(2),
 		Short: "Deposit tokens for an active proposal",
 		Long: strings.TrimSpace(

@@ -125,7 +125,7 @@ aforementioned state:
 
 ## Params
 
-The bank module stores it's params in state with the prefix of `0x05`,
+The bank module stores its params in state with the prefix of `0x05`,
 it can be updated with governance or the address with authority.
 
 * Params: `0x05 | ProtocolBuffer(Params)`
@@ -906,7 +906,7 @@ Example Output:
         "denom": "stake",
         "amount": "5000000000"
       }
-    },
+    }
   ],
   "pagination": {
     "total": "2"
@@ -1002,7 +1002,7 @@ Example Output:
 
 ### SendEnabled
 
-The `SendEnabled` enpoints allows users to query the SendEnabled entries of the `bank` module.
+The `SendEnabled` endpoints allows users to query the SendEnabled entries of the `bank` module.
 
 Any denominations NOT returned, use the `Params.DefaultSendEnabled` value.
 

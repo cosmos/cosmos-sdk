@@ -3,10 +3,9 @@ package legacytx
 import (
 	"fmt"
 
-	"cosmossdk.io/errors"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/types/multisig"
+	"github.com/cosmos/cosmos-sdk/errors/v3"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 

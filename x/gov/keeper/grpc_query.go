@@ -7,8 +7,8 @@ import (
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/errors"
 
+	"github.com/cosmos/cosmos-sdk/errors/v3"
 	sdkmath "github.com/cosmos/cosmos-sdk/math/v2"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"

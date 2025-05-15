@@ -1,11 +1,10 @@
 package legacytx
 
 import (
-	errorsmod "cosmossdk.io/errors"
-
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
 	"github.com/cosmos/cosmos-sdk/math/v2"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"

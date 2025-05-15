@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/errors"
 
+	"github.com/cosmos/cosmos-sdk/errors/v3"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"

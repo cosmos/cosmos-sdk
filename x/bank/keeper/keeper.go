@@ -5,10 +5,10 @@ import (
 	"fmt"
 
 	"cosmossdk.io/core/store"
-	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
 	"github.com/cosmos/cosmos-sdk/math/v2"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

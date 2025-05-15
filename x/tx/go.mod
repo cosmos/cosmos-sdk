@@ -5,8 +5,8 @@ go 1.23.0
 require (
 	cosmossdk.io/api v0.9.2
 	cosmossdk.io/core v0.11.3
-	cosmossdk.io/errors v1.0.2
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
+	github.com/cosmos/cosmos-sdk/errors/v3 v3.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-sdk/math/v2 v2.0.0-00010101000000-000000000000
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/google/go-cmp v0.7.0
@@ -36,8 +36,10 @@ require (
 replace (
 	cosmossdk.io/api => ../../api
 	cosmossdk.io/core => ../../core
+	github.com/cosmos/cosmos-sdk/errors/v3 => ../../errors
 
 	github.com/cosmos/cosmos-sdk/math/v2 => ../../math
+
 )
 
 // NOTE: we do not want to replace to the development version of cosmossdk.io/api yet

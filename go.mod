@@ -6,7 +6,6 @@ require (
 	cosmossdk.io/api v0.9.2
 	cosmossdk.io/collections v1.2.1
 	cosmossdk.io/core v0.11.3
-	cosmossdk.io/errors v1.0.2
 	cosmossdk.io/log v1.6.0
 	cosmossdk.io/store v1.1.2
 	cosmossdk.io/x/tx v0.14.0
@@ -22,6 +21,7 @@ require (
 	github.com/cosmos/cosmos-db v1.1.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk/depinject/v2 v2.0.0-00010101000000-000000000000
+	github.com/cosmos/cosmos-sdk/errors/v3 v3.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-sdk/math/v2 v2.0.0-00010101000000-000000000000
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogogateway v1.2.0
@@ -224,7 +224,9 @@ replace (
 	cosmossdk.io/store => ./store
 	cosmossdk.io/x/tx => ./x/tx
 	github.com/cosmos/cosmos-sdk/depinject/v2 => ./depinject
+	github.com/cosmos/cosmos-sdk/errors/v3 => ./errors
 	github.com/cosmos/cosmos-sdk/math/v2 => ./math
+
 )
 
 // Below are the long-lived replace of the Cosmos SDK

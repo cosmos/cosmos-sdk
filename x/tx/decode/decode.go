@@ -7,8 +7,9 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	v1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/x/tx/signing"
+
+	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
 )
 
 // DecodedTx contains the decoded transaction, its signers, and other flags.

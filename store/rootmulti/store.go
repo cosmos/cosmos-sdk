@@ -18,7 +18,6 @@ import (
 	gogotypes "github.com/cosmos/gogoproto/types"
 	iavltree "github.com/cosmos/iavl"
 
-	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/cachemulti"
 	"cosmossdk.io/store/dbadapter"
@@ -32,6 +31,8 @@ import (
 	"cosmossdk.io/store/tracekv"
 	"cosmossdk.io/store/transient"
 	"cosmossdk.io/store/types"
+
+	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
 )
 
 const (

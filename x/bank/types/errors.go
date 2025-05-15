@@ -1,6 +1,6 @@
 package types
 
-import "cosmossdk.io/errors"
+import "github.com/cosmos/cosmos-sdk/errors/v3"
 
 // x/bank module sentinel errors
 var (

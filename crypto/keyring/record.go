@@ -3,11 +3,10 @@ package keyring
 import (
 	"github.com/cockroachdb/errors"
 
-	errorsmod "cosmossdk.io/errors"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
 	"github.com/cosmos/cosmos-sdk/types"
 )
 

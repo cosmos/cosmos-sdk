@@ -14,12 +14,12 @@ import (
 	"github.com/hashicorp/go-metrics"
 
 	corestore "cosmossdk.io/core/store"
-	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"

@@ -5,7 +5,6 @@ go 1.23.5
 require (
 	cosmossdk.io/api v0.9.2
 	cosmossdk.io/core v0.11.3
-	cosmossdk.io/errors v1.0.2
 	cosmossdk.io/log v1.6.0
 	cosmossdk.io/math v1.5.3 // indirect
 	cosmossdk.io/simapp v0.0.0-20230620040119-e078f1a49e8b
@@ -31,6 +30,7 @@ require (
 
 require (
 	github.com/cosmos/cosmos-sdk/depinject/v2 v2.0.0-00010101000000-000000000000
+	github.com/cosmos/cosmos-sdk/errors/v3 v3.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-sdk/math/v2 v2.0.0-00010101000000-000000000000
 )
 
@@ -229,7 +229,7 @@ replace (
 	cosmossdk.io/store => ../store
 	cosmossdk.io/x/tx => ../x/tx
 	github.com/cosmos/cosmos-sdk/depinject/v2 => ../depinject
-
+	github.com/cosmos/cosmos-sdk/errors/v3 => ../errors
 	github.com/cosmos/cosmos-sdk/math/v2 => ../math
 )
 

@@ -4,7 +4,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	proto "github.com/cosmos/gogoproto/proto"
 
-	"cosmossdk.io/errors"
+	"github.com/cosmos/cosmos-sdk/errors/v3"
 )
 
 // SnapshotFromABCI converts an ABCI snapshot to a snapshot. Mainly to decode the SDK metadata.

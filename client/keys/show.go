@@ -7,14 +7,13 @@ import (
 	"github.com/mdp/qrterminal/v3"
 	"github.com/spf13/cobra"
 
-	errorsmod "cosmossdk.io/errors"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/ledger"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerr "github.com/cosmos/cosmos-sdk/types/errors"
 )

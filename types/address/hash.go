@@ -8,8 +8,7 @@ import (
 
 	"github.com/cometbft/cometbft/crypto"
 
-	"cosmossdk.io/errors"
-
+	"github.com/cosmos/cosmos-sdk/errors/v3"
 	"github.com/cosmos/cosmos-sdk/internal/conv"
 )
 

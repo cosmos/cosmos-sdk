@@ -3,9 +3,9 @@ package keeper
 import (
 	"context"
 
-	"cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/errors/v3"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/x/nft" //nolint:staticcheck // deprecated and to be removed
 )

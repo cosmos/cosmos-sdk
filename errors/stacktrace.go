@@ -48,9 +48,9 @@ func trimInternal(st errors.StackTrace) errors.StackTrace {
 	// manual error creation, or runtime for caught panics
 	for matchesFunc(st[0],
 		// where we create errors
-		"cosmossdk.io/errors.Wrap",
-		"cosmossdk.io/errors.Wrapf",
-		"cosmossdk.io/errors.WithType",
+		"github.com/cosmos/cosmos-sdk/errors/v3.Wrap",
+		"github.com/cosmos/cosmos-sdk/errors/v3.Wrapf",
+		"github.com/cosmos/cosmos-sdk/errors/v3.WithType",
 		// runtime are added on panics
 		"runtime.",
 		// _test is defined in coverage tests, causing failure

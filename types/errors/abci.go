@@ -3,7 +3,7 @@ package errors
 import (
 	abci "github.com/cometbft/cometbft/abci/types"
 
-	errorsmod "cosmossdk.io/errors"
+	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
 )
 
 // ResponseCheckTxWithEvents returns an ABCI ResponseCheckTx object with fields filled in

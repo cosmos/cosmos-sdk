@@ -3,12 +3,12 @@ module cosmossdk.io/store
 go 1.23.5
 
 require (
-	cosmossdk.io/errors v1.0.2
 	cosmossdk.io/log v1.6.0
 	github.com/cometbft/cometbft v1.0.1
 	github.com/cometbft/cometbft/api v1.0.0
 	github.com/cosmos/cosmos-db v1.1.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
+	github.com/cosmos/cosmos-sdk/errors/v3 v3.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-sdk/math/v2 v2.0.0-00010101000000-000000000000
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/cosmos/iavl v1.2.0
@@ -82,3 +82,8 @@ require (
 )
 
 replace github.com/cosmos/cosmos-sdk/math/v2 => ../math
+
+replace (
+	github.com/cosmos/cosmos-sdk/errors/v3 => ../errors
+
+)

@@ -10,11 +10,10 @@ import (
 	types "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/errors"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/errors/v3"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"

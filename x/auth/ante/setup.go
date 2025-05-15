@@ -3,9 +3,9 @@ package ante
 import (
 	"fmt"
 
-	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 
+	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )

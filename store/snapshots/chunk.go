@@ -5,9 +5,10 @@ import (
 	"io"
 	"math"
 
-	sdkerrors "cosmossdk.io/errors"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/errors/v3"
 )
 
 // ChunkWriter reads an input stream, splits it into fixed-size chunks, and writes them to a

@@ -17,7 +17,6 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	protov2 "google.golang.org/protobuf/proto"
 
-	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	storemetrics "cosmossdk.io/store/metrics"
@@ -29,6 +28,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp/state"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"

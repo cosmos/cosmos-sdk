@@ -6,7 +6,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"cosmossdk.io/errors"
+	"github.com/cosmos/cosmos-sdk/errors/v3"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"

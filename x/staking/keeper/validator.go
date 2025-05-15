@@ -11,9 +11,9 @@ import (
 	gogotypes "github.com/cosmos/gogoproto/types"
 
 	corestore "cosmossdk.io/core/store"
-	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 
+	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
 	"github.com/cosmos/cosmos-sdk/math/v2"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"

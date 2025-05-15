@@ -5,8 +5,7 @@ import (
 	"errors"
 	"strings"
 
-	errorsmod "cosmossdk.io/errors"
-
+	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/authz"

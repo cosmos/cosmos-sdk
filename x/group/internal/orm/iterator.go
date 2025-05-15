@@ -6,8 +6,7 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
-	errorsmod "cosmossdk.io/errors"
-
+	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 )

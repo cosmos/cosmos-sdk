@@ -21,7 +21,6 @@ require (
 	cosmossdk.io/api v0.9.2 // indirect
 	cosmossdk.io/collections v1.2.1 // indirect
 	cosmossdk.io/core v0.11.3 // indirect
-	cosmossdk.io/errors v1.0.2 // indirect
 	cosmossdk.io/log v1.6.0 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
 	cosmossdk.io/store v1.1.2 // indirect
@@ -51,6 +50,7 @@ require (
 	github.com/cosmos/cosmos-db v1.1.1 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
 	github.com/cosmos/cosmos-sdk/depinject/v2 v2.0.0-00010101000000-000000000000 // indirect
+	github.com/cosmos/cosmos-sdk/errors/v3 v3.0.0-00010101000000-000000000000 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/gogoproto v1.7.0 // indirect
@@ -177,5 +177,7 @@ replace (
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/tx => ../../x/tx
 	github.com/cosmos/cosmos-sdk/depinject/v2 => ../../depinject
+	github.com/cosmos/cosmos-sdk/errors/v3 => ../../errors
 	github.com/cosmos/cosmos-sdk/math/v2 => ../../math
+
 )

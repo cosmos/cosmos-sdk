@@ -9,9 +9,9 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	cosmosmsg "cosmossdk.io/api/cosmos/msg/v1"
-	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )

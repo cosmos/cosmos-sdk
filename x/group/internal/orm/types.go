@@ -9,11 +9,11 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
-	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/group/errors"

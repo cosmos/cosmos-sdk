@@ -6,13 +6,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	errorsmod "cosmossdk.io/errors"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectestutil "github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
 	sdkmath "github.com/cosmos/cosmos-sdk/math/v2"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"

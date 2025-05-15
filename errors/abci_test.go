@@ -125,7 +125,7 @@ func (s *abciTestSuite) TestABCIInfoStacktrace() {
 		},
 	}
 
-	const thisTestSrc = "cosmossdk.io/errors.(*abciTestSuite).TestABCIInfoStacktrace"
+	const thisTestSrc = "github.com/cosmos/cosmos-sdk/errors/v3.(*abciTestSuite).TestABCIInfoStacktrace"
 
 	for testName, tc := range cases {
 		s.T().Run(testName, func(t *testing.T) {

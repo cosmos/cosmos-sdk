@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/iavl"
 	ics23 "github.com/cosmos/ics23/go"
 
-	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/internal/kv"
@@ -19,6 +18,8 @@ import (
 	"cosmossdk.io/store/tracekv"
 	"cosmossdk.io/store/types"
 	"cosmossdk.io/store/wrapper"
+
+	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
 )
 
 const (

@@ -4,10 +4,10 @@ import (
 	"github.com/bits-and-blooms/bitset"
 	gogotypes "github.com/cosmos/gogoproto/types"
 
-	"cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/errors/v3"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )

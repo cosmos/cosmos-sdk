@@ -1,6 +1,6 @@
 package decode
 
-import "cosmossdk.io/errors"
+import "github.com/cosmos/cosmos-sdk/errors/v3"
 
 const (
 	txCodespace = "tx"

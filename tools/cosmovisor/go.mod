@@ -13,7 +13,7 @@ require (
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.20.1
 	github.com/stretchr/testify v1.10.0
-	google.golang.org/grpc v1.72.0
+	google.golang.org/grpc v1.72.1
 )
 
 require (

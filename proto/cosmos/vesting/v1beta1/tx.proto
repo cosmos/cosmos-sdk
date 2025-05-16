@@ -114,6 +114,8 @@ message MsgCreatePeriodicVestingAccountResponse {}
 
 // MsgCreateClawbackVestingAccount defines a message that enables creating a ClawbackVestingAccount.
 message MsgCreateClawbackVestingAccount {
+  option (cosmos.msg.v1.signer) = "from_address";
+  option (amino.name)           = "cosmos-sdk/MsgCreateClawbackVestingAccount";
   option (gogoproto.equal) = false;
 
   // Address of the account providing the funds, which must also sign the request.
@@ -137,6 +139,7 @@ message MsgCreateClawbackVestingAccountResponse {}
 
 // MsgClawback defines a message that removes unvested tokens from a ClawbackVestingAccount.
 message MsgClawback {
+  option (amino.name)           = "cosmos-sdk/MsgClawback";
   // funder_address is the address which funded the account
   string funder_address = 1;
   // address is the address of the ClawbackVestingAccount to claw back from.
@@ -155,6 +158,7 @@ message MsgClawbackResponse {}
 // some vested assets have been transferred out of the account. Currently only applies to
 // ClawbackVesting accounts.
 message MsgReturnGrants {
+  option (amino.name)           = "cosmos-sdk/MsgReturnGrants";
   // address is the address of the grantee account returning the grant.
   string address = 1;
 }

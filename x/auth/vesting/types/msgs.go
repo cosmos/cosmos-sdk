@@ -1,7 +1,14 @@
 package types
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+// Error types
+var (
+	ErrInvalidAddress = errorsmod.Register(ModuleName, 1, "invalid address")
+	ErrInvalidRequest = errorsmod.Register(ModuleName, 2, "invalid request")
 )
 
 // TypeMsgCreateVestingAccount defines the type value for a MsgCreateVestingAccount.
@@ -96,12 +103,6 @@ func (msg MsgCreateClawbackVestingAccount) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{from}
 }
 
-// GetSignBytes returns the bytes all expected signers must sign over for a
-// MsgCreateClawbackVestingAccount.
-func (msg MsgCreateClawbackVestingAccount) GetSignBytes() []byte {
-	return sdk.MustSortJSON(amino.MustMarshalJSON(&msg))
-}
-
 // ValidateBasic Implements Msg.
 func (msg MsgCreateClawbackVestingAccount) ValidateBasic() error {
 	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
@@ -113,20 +114,20 @@ func (msg MsgCreateClawbackVestingAccount) ValidateBasic() error {
 		return err
 	}
 	if err := sdk.VerifyAddressFormat(from); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address: %s", err)
+		return errorsmod.Wrapf(ErrInvalidAddress, "invalid sender address: %s", err)
 	}
 
 	if err := sdk.VerifyAddressFormat(to); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid recipient address: %s", err)
+		return errorsmod.Wrapf(ErrInvalidAddress, "invalid recipient address: %s", err)
 	}
 
 	lockupCoins := sdk.NewCoins()
 	for i, period := range msg.LockupPeriods {
 		if period.Length < 1 {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid period length of %d in period %d, length must be greater than 0", period.Length, i)
+			return errorsmod.Wrapf(ErrInvalidRequest, "invalid period length of %d in period %d, length must be greater than 0", period.Length, i)
 		}
 		if !period.Amount.IsValid() {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid period amount in period %d: %s", i, err)
+			return errorsmod.Wrapf(ErrInvalidRequest, "invalid period amount in period %d: %s", i, err)
 		}
 		lockupCoins = lockupCoins.Add(period.Amount...)
 	}
@@ -134,10 +135,10 @@ func (msg MsgCreateClawbackVestingAccount) ValidateBasic() error {
 	vestingCoins := sdk.NewCoins()
 	for i, period := range msg.VestingPeriods {
 		if period.Length < 1 {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid period length of %d in period %d, length must be greater than 0", period.Length, i)
+			return errorsmod.Wrapf(ErrInvalidRequest, "invalid period length of %d in period %d, length must be greater than 0", period.Length, i)
 		}
 		if !period.Amount.IsValid() {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid period amount in period %d: %s", i, err)
+			return errorsmod.Wrapf(ErrInvalidRequest, "invalid period amount in period %d: %s", i, err)
 		}
 		vestingCoins = vestingCoins.Add(period.Amount...)
 	}
@@ -146,7 +147,7 @@ func (msg MsgCreateClawbackVestingAccount) ValidateBasic() error {
 	// IsEqual can panic, so use (a == b) <=> (a <= b && b <= a).
 	if len(msg.LockupPeriods) > 0 && len(msg.VestingPeriods) > 0 &&
 		!(lockupCoins.IsAllLTE(vestingCoins) && vestingCoins.IsAllLTE(lockupCoins)) {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "vesting and lockup schedules must have same total coins")
+		return errorsmod.Wrapf(ErrInvalidRequest, "vesting and lockup schedules must have same total coins")
 	}
 
 	return nil
@@ -168,12 +169,6 @@ func NewMsgClawback(funder, addr, dest sdk.AccAddress) *MsgClawback {
 	}
 }
 
-// Route returns the message route for a MsgClawback.
-func (msg MsgClawback) Route() string { return RouterKey }
-
-// Type returns the message type for a MsgClawback.
-func (msg MsgClawback) Type() string { return TypeMsgClawback }
-
 // GetSigners returns the expected signers for a MsgClawback.
 func (msg MsgClawback) GetSigners() []sdk.AccAddress {
 	funder, err := sdk.AccAddressFromBech32(msg.FunderAddress)
@@ -183,12 +178,6 @@ func (msg MsgClawback) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{funder}
 }
 
-// GetSignBytes returns the bytes all expected signers must sign over for a
-// MsgClawback.
-func (msg MsgClawback) GetSignBytes() []byte {
-	return sdk.MustSortJSON(amino.MustMarshalJSON(&msg))
-}
-
 // ValidateBasic Implements Msg.
 func (msg MsgClawback) ValidateBasic() error {
 	funder, err := sdk.AccAddressFromBech32(msg.GetFunderAddress())
@@ -196,7 +185,7 @@ func (msg MsgClawback) ValidateBasic() error {
 		return err
 	}
 	if err := sdk.VerifyAddressFormat(funder); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid funder address: %s", err)
+		return errorsmod.Wrapf(ErrInvalidAddress, "invalid funder address: %s", err)
 	}
 
 	addr, err := sdk.AccAddressFromBech32(msg.GetAddress())
@@ -204,7 +193,7 @@ func (msg MsgClawback) ValidateBasic() error {
 		return err
 	}
 	if err := sdk.VerifyAddressFormat(addr); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid account address: %s", err)
+		return errorsmod.Wrapf(ErrInvalidAddress, "invalid account address: %s", err)
 	}
 
 	if msg.GetDestAddress() != "" {
@@ -213,7 +202,7 @@ func (msg MsgClawback) ValidateBasic() error {
 			return err
 		}
 		if err := sdk.VerifyAddressFormat(dest); err != nil {
-			return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid destination address: %s", err)
+			return errorsmod.Wrapf(ErrInvalidAddress, "invalid destination address: %s", err)
 		}
 	}
 
@@ -244,12 +233,6 @@ func (msg MsgReturnGrants) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{addr}
 }
 
-// GetSignBytes returns the bytes all expected signers must sign over for a
-// MsgReturnGrants.
-func (msg MsgReturnGrants) GetSignBytes() []byte {
-	return sdk.MustSortJSON(amino.MustMarshalJSON(&msg))
-}
-
 // ValidateBasic Implements Msg.
 func (msg MsgReturnGrants) ValidateBasic() error {
 	addr, err := sdk.AccAddressFromBech32(msg.GetAddress())
@@ -257,7 +240,7 @@ func (msg MsgReturnGrants) ValidateBasic() error {
 		return err
 	}
 	if err := sdk.VerifyAddressFormat(addr); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid account address: %s", err)
+		return errorsmod.Wrapf(ErrInvalidAddress, "invalid account address: %s", err)
 	}
 	return nil
 }

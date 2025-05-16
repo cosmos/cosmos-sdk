@@ -6,11 +6,11 @@ require (
 	cosmossdk.io/api v0.9.2
 	cosmossdk.io/core v0.11.3
 	cosmossdk.io/depinject v1.2.0
-	cosmossdk.io/math v1.5.3
 	cosmossdk.io/x/tx v0.14.0
 	github.com/cockroachdb/errors v1.12.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.53.0
+	github.com/cosmos/cosmos-sdk/math/v2 v2.0.0-00010101000000-000000000000
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/pflag v1.0.6
@@ -167,6 +167,9 @@ replace (
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/x/tx => ../../x/tx
 	github.com/cosmos/cosmos-sdk => ../..
+
+	github.com/cosmos/cosmos-sdk/math/v2 => ../../math
+
 )
 
 // Replace all unreleased indirect deps upgraded to comet v1

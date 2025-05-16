@@ -9,7 +9,6 @@ require (
 	cosmossdk.io/core v0.11.3
 	cosmossdk.io/depinject v1.2.0
 	cosmossdk.io/log v1.6.0
-	cosmossdk.io/math v1.5.3
 	cosmossdk.io/store v1.1.2
 	cosmossdk.io/tools/confix v0.1.2
 	cosmossdk.io/x/tx v0.14.0
@@ -27,7 +26,10 @@ require (
 	google.golang.org/protobuf v1.36.6
 )
 
-require github.com/cometbft/cometbft/api v1.0.0
+require (
+	github.com/cometbft/cometbft/api v1.0.0
+	github.com/cosmos/cosmos-sdk/math/v2 v2.0.0-00010101000000-000000000000
+)
 
 require (
 	cel.dev/expr v0.20.0 // indirect
@@ -230,6 +232,9 @@ replace (
 	cosmossdk.io/store => ../store
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/x/tx => ../x/tx
+
+	github.com/cosmos/cosmos-sdk/math/v2 => ../math
+
 )
 
 // Below are the long-lived replace of the SimApp

@@ -135,7 +135,7 @@ func (enc Encoder) getFieldEncoder(field protoreflect.FieldDescriptor) FieldEnco
 		// https://github.com/cosmos/cosmos-sdk/blob/9076487d035e43d39fe54e8498da1ce31b9c845c/x/gov/proto/cosmos/gov/v1/gov.proto#L274
 		if scalar == cosmosDecType {
 			customType := proto.GetExtension(opts, customTypeExtension)
-			if customType != "cosmossdk.io/math.LegacyDec" {
+			if customType != "github.com/cosmos/cosmos-sdk/math/v2.LegacyDec" {
 				return nil
 			}
 		}

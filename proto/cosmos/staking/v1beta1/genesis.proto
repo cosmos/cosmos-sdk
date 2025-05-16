@@ -17,7 +17,7 @@ message GenesisState {
   // the previous end block.
   bytes last_total_power = 2 [
     (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/math/v2.Int",
     (gogoproto.nullable)   = false,
     (amino.dont_omitempty) = true
   ];

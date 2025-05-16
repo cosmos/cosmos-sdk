@@ -6,7 +6,8 @@ import (
 
 	"cosmossdk.io/collections"
 	collcodec "cosmossdk.io/collections/codec"
-	"cosmossdk.io/math"
+
+	"github.com/cosmos/cosmos-sdk/math/v2"
 )
 
 var (

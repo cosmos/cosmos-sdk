@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 
-	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/math/v2"
 )
 
 //-----------------------------------------------------------------------------

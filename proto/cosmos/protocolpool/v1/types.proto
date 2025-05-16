@@ -14,7 +14,7 @@ message ContinuousFund {
   // Percentage is the percentage of funds to be allocated from Community pool.
   string percentage = 2 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
-    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/math/v2.LegacyDec",
     (gogoproto.nullable)   = false
   ];
   // Optional, if expiry is set, removes the state object when expired.

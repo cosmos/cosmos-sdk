@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	math "cosmossdk.io/math"
+	math "github.com/cosmos/cosmos-sdk/math/v2"
 	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "go.uber.org/mock/gomock"
 )

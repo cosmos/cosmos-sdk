@@ -1,7 +1,7 @@
 package types
 
 import (
-	sdkmath "cosmossdk.io/math"
+	sdkmath "github.com/cosmos/cosmos-sdk/math/v2"
 )
 
 // ValidatorUpdateDelay is the delay, in blocks, between when validator updates are returned to the

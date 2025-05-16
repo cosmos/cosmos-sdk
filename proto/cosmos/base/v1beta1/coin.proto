@@ -19,7 +19,7 @@ message Coin {
   string denom  = 1;
   string amount = 2 [
     (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/math/v2.Int",
     (gogoproto.nullable)   = false,
     (amino.dont_omitempty) = true
   ];
@@ -35,7 +35,7 @@ message DecCoin {
   string denom  = 1;
   string amount = 2 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
-    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/math/v2.LegacyDec",
     (gogoproto.nullable)   = false
   ];
 }
@@ -45,7 +45,7 @@ message DecCoin {
 message IntProto {
   string int = 1 [
     (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/math/v2.Int",
     (gogoproto.nullable)   = false
   ];
 }
@@ -55,7 +55,7 @@ message IntProto {
 message DecProto {
   string dec = 1 [
     (cosmos_proto.scalar)  = "cosmos.Dec",
-    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/math/v2.LegacyDec",
     (gogoproto.nullable)   = false
   ];
 }

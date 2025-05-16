@@ -3,7 +3,7 @@ package types
 import (
 	context "context"
 
-	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/math/v2"
 )
 
 // InflationCalculationFn defines the function required to calculate inflation rate during

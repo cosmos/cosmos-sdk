@@ -369,12 +369,9 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		}
 
 		// retrieve signer data
-		genesis := ctx.BlockHeight() == 0
 		chainID := ctx.ChainID()
-		var accNum uint64
-		if !genesis {
-			accNum = acc.GetAccountNumber()
-		}
+		// Always use the account's actual account number, even at genesis
+		accNum := acc.GetAccountNumber()
 
 		// no need to verify signatures on recheck tx
 		if !simulate && !ctx.IsReCheckTx() && ctx.IsSigverifyTx() {

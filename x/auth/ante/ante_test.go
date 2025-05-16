@@ -320,7 +320,7 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
-					accNums: []uint64{0},
+					accNums: []uint64{accs[0].acc.GetAccountNumber()}, // use the actual account number
 					accSeqs: []uint64{0},
 					msgs:    []sdk.Msg{msg},
 					privs:   []cryptotypes.PrivKey{accs[0].priv},
@@ -331,14 +331,14 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 			nil,
 		},
 		{
-			"new tx from wrong account number",
+			"new tx with wrong account number",
 			func(suite *AnteTestSuite) TestCaseArgs {
 				accs := suite.CreateTestAccounts(1)
 				msg := testdata.NewTestMsg(accs[0].acc.GetAddress())
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
-					accNums: []uint64{1}, // wrong account number
+					accNums: []uint64{accs[0].acc.GetAccountNumber() + 1}, // wrong account number
 					accSeqs: []uint64{0},
 					msgs:    []sdk.Msg{msg},
 					privs:   []cryptotypes.PrivKey{accs[0].priv},
@@ -357,8 +357,12 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), accs[0].acc.GetAddress(), gomock.Any(), gomock.Any()).Return(nil)
 
+				// Use wrong account numbers
+				accNum0 := accs[0].acc.GetAccountNumber() + 1
+				accNum1 := accs[1].acc.GetAccountNumber() + 1
+
 				return TestCaseArgs{
-					accNums: []uint64{1, 0}, // wrong account numbers
+					accNums: []uint64{accNum0, accNum1}, // wrong account numbers
 					accSeqs: []uint64{0, 0},
 					msgs:    []sdk.Msg{msg1, msg2},
 					privs:   []cryptotypes.PrivKey{accs[0].priv, accs[1].priv},
@@ -378,7 +382,7 @@ func TestAnteHandlerAccountNumbersAtBlockHeightZero(t *testing.T) {
 				suite.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), accs[0].acc.GetAddress(), gomock.Any(), gomock.Any()).Return(nil)
 
 				return TestCaseArgs{
-					accNums: []uint64{0, 0}, // correct account numbers
+					accNums: []uint64{accs[0].acc.GetAccountNumber(), accs[1].acc.GetAccountNumber()}, // correct account numbers
 					accSeqs: []uint64{0, 0},
 					msgs:    []sdk.Msg{msg1, msg2},
 					privs:   []cryptotypes.PrivKey{accs[0].priv, accs[1].priv},

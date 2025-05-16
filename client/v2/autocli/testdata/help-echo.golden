@@ -13,7 +13,7 @@ Flags:
       --a-bool                                                               
       --a-coin cosmos.base.v1beta1.Coin                                      some random coin
       --a-consensus-address account address or key name                      
-      --a-message testpb.AMessage (json)                                     
+      --a-message testpbpulsar.AMessage (json)                               
       --a-validator-address account address or key name                      
       --an-address account address or key name                               
       --an-enum Enum (unspecified | one | two | five | neg-three)             (default unspecified)
@@ -42,7 +42,7 @@ Flags:
       --page-offset uint                                                     
       --page-reverse                                                         
   -s, --shorthand-deprecated-field string                                     (DEPRECATED: bad idea)
-      --some-messages testpb.AMessage (json) (repeated)                      
+      --some-messages testpbpulsar.AMessage (json) (repeated)                
       --str string                                                           
       --strings strings                                                      
       --timestamp timestamp (RFC 3339)                                       

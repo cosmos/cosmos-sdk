@@ -1,26 +1,19 @@
 syntax = "proto3";
 
-package testpb;
+package testpbpulsar;
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/v1beta1/coin.proto";
-import "testpb/query.proto";
 
-service Msg {
-  // Send a request and returns the request as a response.
-  rpc Send(MsgRequest) returns (MsgResponse) {
-    option (cosmos_proto.method_added_in) = "cosmos-sdk v0.50.0";
-  };
-
-  rpc Clawback(MsgClawbackRequest) returns (MsgClawbackResponse) {
-    option (cosmos_proto.method_added_in) = "cosmos-sdk v0.51.0";
-  }
+service Query {
+  // Echo returns the request in the response
+  rpc Echo(EchoRequest) returns (EchoResponse);
 }
 
-message MsgRequest {
+message EchoRequest {
   // u32 is an uint32
   uint32                                u32        = 1;
   uint64                                u64        = 2;
@@ -31,32 +24,47 @@ message MsgRequest {
   int32                                 i32        = 7;
   int64                                 i64        = 10;
   bool                                  a_bool     = 15;
-  testpb.Enum                           an_enum    = 16;
-  testpb.AMessage                       a_message  = 17;
+  Enum                                  an_enum    = 16;
+  AMessage                              a_message  = 17;
   cosmos.base.v1beta1.Coin              a_coin     = 18;
   string                                an_address = 19 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   cosmos.base.query.v1beta1.PageRequest page       = 20;
   repeated bool                         bools      = 21;
   repeated uint32                       uints      = 22;
   repeated string                       strings    = 23;
-  repeated testpb.Enum enums                       = 24;
+  repeated Enum                         enums      = 24;
   repeated google.protobuf.Duration durations      = 25;
-  repeated testpb.AMessage some_messages           = 26;
+  repeated AMessage                 some_messages  = 26;
 
   int32    positional1                                  = 27;
   string   positional2                                  = 28;
   repeated cosmos.base.v1beta1.Coin positional3_varargs = 29;
 
-  string deprecated_field           = 30;
-  string shorthand_deprecated_field = 31;
-  bool   hidden_bool                = 32;
-  string a_validator_address        = 33 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+  string                                deprecated_field           = 30;
+  string                                shorthand_deprecated_field = 31;
+  bool                                  hidden_bool                = 32;
+  map<string, string>                   map_string_string          = 33;
+  map<string, uint32>                   map_string_uint32          = 34;
+  map<string, cosmos.base.v1beta1.Coin> map_string_coin            = 35;
+  string a_validator_address = 36 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+  string a_consensus_address = 37 [(cosmos_proto.scalar) = "cosmos.ConsensusAddressString"];
+
+  repeated cosmos.base.v1beta1.Coin coins = 38;
 }
 
-message MsgResponse {
-  MsgRequest request = 1;
+enum Enum {
+  ENUM_UNSPECIFIED = 0;
+  ENUM_ONE         = 1;
+  ENUM_TWO         = 2;
+  ENUM_FIVE        = 5;
+  ENUM_NEG_THREE   = -3;
 }
 
-message MsgClawbackRequest {}
+message AMessage {
+  string bar = 1;
+  int32  baz = 2;
+}
 
-message MsgClawbackResponse {}
+message EchoResponse {
+  EchoRequest request = 1;
+}

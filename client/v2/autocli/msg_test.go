@@ -15,7 +15,8 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-	"cosmossdk.io/client/v2/internal/testpb"
+	"cosmossdk.io/client/v2/internal/testpbgogo"
+	testpb "cosmossdk.io/client/v2/internal/testpbpulsar"
 
 	"github.com/cosmos/cosmos-sdk/client"
 )
@@ -122,6 +123,31 @@ func TestMsg(t *testing.T) {
 	)
 	assert.NilError(t, err)
 	assertNormalizedJSONEqual(t, out.Bytes(), goldenLoad(t, "msg-output.golden"))
+}
+
+// TestMsgGogo set same as previous, but the message are only gogoproto generated.
+// There are no protov2 files registered in the global registry for those types.
+func TestMsgGogo(t *testing.T) {
+	fixture := initFixture(t)
+	out, err := runCmd(fixture, buildCustomModuleMsgCommand(&autocliv1.ServiceCommandDescriptor{
+		Service: testpbgogo.MsgGogoOnly_serviceDesc.ServiceName, // using gogoproto only test msg
+		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+			{
+				RpcMethod:      "Send",
+				Use:            "send [a_coin] [str] [flags]",
+				Short:          "Send coins from one account to another",
+				PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "a_coin"}, {ProtoField: "str"}},
+				// an_address should be automatically added
+			},
+		},
+	}), "send",
+		"1foo", "henlo",
+		"--from", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk",
+		"--generate-only",
+		"--output", "json",
+	)
+	assert.NilError(t, err)
+	golden.Assert(t, out.String(), "msg-gogo-output.golden")
 }
 
 func TestMsgWithFlattenFields(t *testing.T) {

@@ -41,7 +41,7 @@ type Keeper struct {
 For example, here is the type definition of the `keeper` from the `staking` module:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/staking/keeper/keeper.go#L23-L31
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/staking/keeper/keeper.go#L24-L31
 ```
 
 Let us go through the different parameters:

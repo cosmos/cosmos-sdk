@@ -150,7 +150,7 @@ To add positional arguments to a command, use the `autocliv1.PositionalArgDescri
 Here's an example of how to define a positional argument for the `Account` method of the `auth` service:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-beta.0/x/auth/autocli.go#L25-L30
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/auth/autocli.go#L25-L30
 ```
 
 Then the command can be used as follows, instead of having to specify the `--address` flag:

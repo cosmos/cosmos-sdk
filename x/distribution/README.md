@@ -174,7 +174,7 @@ type DecCoin struct {
 ```
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/distribution/v1beta1/distribution.proto#L116-L123
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/distribution/v1beta1/distribution.proto#L117-L124
 ```
 
 ### Validator Distribution
@@ -219,7 +219,7 @@ it can be updated with governance or the address with authority.
 * Params: `0x09 | ProtocolBuffer(Params)`
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/distribution/v1beta1/distribution.proto#L12-L42
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/distribution/v1beta1/distribution.proto#L12-L38
 ```
 
 ## Begin Block
@@ -355,7 +355,7 @@ The withdraw address cannot be any of the module accounts. These accounts are bl
 Response:
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/distribution/v1beta1/tx.proto#L49-L60
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/distribution/v1beta1/tx.proto#L60-L69
 ```
 
 ```go
@@ -407,7 +407,7 @@ The final calculated stake is equivalent to the actual staked coins in the deleg
 Response:
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/distribution/v1beta1/tx.proto#L66-L77
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/distribution/v1beta1/tx.proto#L76-L85
 ```
 
 ### WithdrawValidatorCommission
@@ -484,7 +484,7 @@ func (k Keeper) initializeDelegation(ctx context.Context, val sdk.ValAddress, de
 Distribution module params can be updated through `MsgUpdateParams`, which can be done using governance proposal and the signer will always be gov module account address.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/distribution/v1beta1/tx.proto#L133-L147
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/distribution/v1beta1/tx.proto#L146-L158
 ```
 
 The message handling can fail if:

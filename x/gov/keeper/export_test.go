@@ -10,5 +10,5 @@ func (k Keeper) ValidateInitialDeposit(ctx sdk.Context, initialDeposit sdk.Coins
 		return err
 	}
 
-	return k.validateInitialDeposit(ctx, params, initialDeposit, expedited)
+	return k.validateInitialDeposit(ctx, params, initialDeposit, expedited, nil)
 }

@@ -210,7 +210,7 @@ Which is equivalent to:
 
 $ %s tx gov submit-legacy-proposal --title="Test Proposal" --description="My awesome proposal" --type="Text" --deposit="10test" --from mykey
 `,
-				version.AppName, version.AppName, version.AppName,
+				version.AppName, version.AppName,
 			),
 		),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -220,16 +220,16 @@ $ %s tx gov submit-legacy-proposal --title="Test Proposal" --description="My awe
 			}
 
 			// try to interpret as a legacy submit-proposal call
-			proposal, err := parseSubmitLegacyProposal(cmd.Flags())
+			legacyProposal, err := parseSubmitLegacyProposal(cmd.Flags())
 			if err == nil {
-				amount, err := sdk.ParseCoinsNormalized(proposal.Deposit)
+				amount, err := sdk.ParseCoinsNormalized(legacyProposal.Deposit)
 				if err != nil {
 					return err
 				}
 
-				content, ok := v1beta1.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
+				content, ok := v1beta1.ContentFromProposalType(legacyProposal.Title, legacyProposal.Description, legacyProposal.Type)
 				if !ok {
-					return fmt.Errorf("failed to create proposal content: unknown proposal type %s", proposal.Type)
+					return fmt.Errorf("failed to create proposal content: unknown proposal type %s", legacyProposal.Type)
 				}
 
 				msg, err := v1beta1.NewMsgSubmitProposal(content, amount, clientCtx.GetFromAddress())
@@ -240,23 +240,14 @@ $ %s tx gov submit-legacy-proposal --title="Test Proposal" --description="My awe
 				return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 			}
 
-			// otherwise try to interpret as a new (0.46) submit-proposal
-			amount, err := sdk.ParseCoinsNormalized(proposal.Deposit)
+			// otherwise try to interpret as a new post (0.46) submit-proposal
+			proposal, msgs, deposit, err := parseSubmitProposal(clientCtx.Codec, args[0])
 			if err != nil {
 				return err
 			}
-			err = cobra.ExactArgs(1)(cmd, args)
+			msg, err := v1.NewMsgSubmitProposal(msgs, deposit, clientCtx.GetFromAddress().String(), proposal.Metadata, proposal.Title, proposal.Summary, proposal.Expedited)
 			if err != nil {
 				return err
-			}
-			content, ok := v1beta1.ContentFromProposalType(proposal.Title, proposal.Description, proposal.Type)
-			if !ok {
-				return fmt.Errorf("failed to create proposal content: unknown proposal type %s", proposal.Type)
-			}
-
-			msg, err := v1beta1.NewMsgSubmitProposal(content, amount, clientCtx.GetFromAddress())
-			if err != nil {
-				return fmt.Errorf("invalid message: %w", err)
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)

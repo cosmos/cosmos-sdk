@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/client/cli"
 )
@@ -87,7 +89,7 @@ func TestDivision(t *testing.T) {
 		}},
 	} {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := divide(sdk.NewInt(tt.total), tt.divisions)
+			got, err := divide(sdkmath.NewInt(tt.total), tt.divisions)
 			if err != nil {
 				if tt.want != nil {
 					t.Fatalf("divide got error %v", err)
@@ -98,16 +100,16 @@ func TestDivision(t *testing.T) {
 				t.Fatalf("divide returned wrong size: got %d, want %d", len(got), len(tt.want))
 			}
 			for i := 0; i < len(got); i++ {
-				if !got[i].Equal(sdk.NewInt(tt.want[i])) {
+				if !got[i].Equal(sdkmath.NewInt(tt.want[i])) {
 					t.Errorf("divide got %v, want %v", got, tt.want)
 				}
 			}
 			if got != nil {
-				sum := sdk.NewInt(0)
+				sum := sdkmath.NewInt(0)
 				for _, x := range got {
 					sum = sum.Add(x)
 				}
-				if !sum.Equal(sdk.NewInt(tt.total)) {
+				if !sum.Equal(sdkmath.NewInt(tt.total)) {
 					t.Errorf("divide total got %v, want %v", sum, tt.total)
 				}
 			}

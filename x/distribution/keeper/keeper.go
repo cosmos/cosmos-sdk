@@ -183,8 +183,9 @@ func (k Keeper) WithdrawValidatorCommission(ctx context.Context, valAddr sdk.Val
 
 		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, withdrawAddr, commission)
 		if err != nil {
+			sdkCtx := sdk.UnwrapSDKContext(ctx)
 			for _, h := range k.hooks {
-				h.AfterDelegationReward(ctx, accAddr, withdrawAddr, commission)
+				h.AfterDelegationReward(sdkCtx, accAddr, withdrawAddr, commission)
 			}
 			return nil, err
 		}

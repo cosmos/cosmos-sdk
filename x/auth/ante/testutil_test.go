@@ -34,6 +34,7 @@ import (
 	txtestutil "github.com/cosmos/cosmos-sdk/x/auth/tx/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 // TestAccount represents an account used in the tests in x/auth/ante.

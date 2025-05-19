@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 )
 
 func TestDeductFeeDecorator_ZeroGas(t *testing.T) {
@@ -41,7 +42,9 @@ func TestDeductFeeDecorator_ZeroGas(t *testing.T) {
 	require.NoError(t, err)
 
 	// Get the signer's address from the transaction
-	signerAddr := tx.GetSigners()[0]
+	signers, err := tx.GetSigners()
+	require.NoError(t, err)
+	signerAddr := sdk.AccAddress(signers[0])
 	fmt.Printf("Signer address: %s\n", signerAddr.String())
 
 	// Set IsCheckTx to true
@@ -80,7 +83,9 @@ func TestEnsureMempoolFees(t *testing.T) {
 	require.NoError(t, err)
 
 	// Get the signer's address from the transaction
-	signerAddr := tx.GetSigners()[0]
+	signers, err := tx.GetSigners()
+	require.NoError(t, err)
+	signerAddr := sdk.AccAddress(signers[0])
 	fmt.Printf("Signer address: %s\n", signerAddr.String())
 
 	// Set high gas price so standard test fee fails
@@ -141,7 +146,9 @@ func TestDeductFees(t *testing.T) {
 	require.NoError(t, err)
 
 	// Get the signer's address from the transaction
-	signerAddr := tx.GetSigners()[0]
+	signers, err := tx.GetSigners()
+	require.NoError(t, err)
+	signerAddr := sdk.AccAddress(signers[0])
 	fmt.Printf("Signer address: %s\n", signerAddr.String())
 
 	dfd := ante.NewDeductFeeDecorator(s.accountKeeper, s.bankKeeper, nil, nil)
@@ -175,17 +182,19 @@ func TestDeductFees_WithName(t *testing.T) {
 
 	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
 
-	tx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
+	tx, err := s.CreateTestTx(s.ctx, privs, accNums, accSeqs, s.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, err)
 
 	// Get the signer's address from the transaction
-	signerAddr := tx.GetSigners()[0]
+	signers, err := tx.GetSigners()
+	require.NoError(t, err)
+	signerAddr := sdk.AccAddress(signers[0])
 	fmt.Printf("Signer address: %s\n", signerAddr.String())
 
 	s.accountKeeper.SetAccount(s.ctx, authtypes.NewBaseAccountWithAddress(signerAddr))
 
 	// Set up initial account with coins
-	coins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(200)))
+	coins := sdk.NewCoins(sdk.NewCoin("atom", math.NewInt(200)))
 
 	// Using mock bank keeper
 	s.bankKeeper.EXPECT().MintCoins(s.ctx, types.FeeCollectorName, coins).Return(nil)
@@ -240,17 +249,19 @@ func TestDeductFees_WithName_Table(t *testing.T) {
 			s.txBuilder.SetGasLimit(gasLimit)
 
 			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-			tx, err := s.CreateTestTx(privs, accNums, accSeqs, s.ctx.ChainID())
+			tx, err := s.CreateTestTx(s.ctx, privs, accNums, accSeqs, s.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 			require.NoError(t, err)
 
 			// Get the signer's address from the transaction
-			signerAddr := tx.GetSigners()[0]
+			signers, err := tx.GetSigners()
+			require.NoError(t, err)
+			signerAddr := sdk.AccAddress(signers[0])
 			fmt.Printf("Signer address: %s\n", signerAddr.String())
 
 			s.accountKeeper.SetAccount(s.ctx, authtypes.NewBaseAccountWithAddress(signerAddr))
 
 			// Set up initial account with coins
-			coins := sdk.NewCoins(sdk.NewCoin("atom", sdk.NewInt(200)))
+			coins := sdk.NewCoins(sdk.NewCoin("atom", math.NewInt(200)))
 
 			// Using mock bank keeper
 			s.bankKeeper.EXPECT().MintCoins(s.ctx, types.FeeCollectorName, coins).Return(nil)

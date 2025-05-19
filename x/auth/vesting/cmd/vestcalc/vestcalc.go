@@ -43,7 +43,7 @@ func divide(total sdkmath.Int, divisor int) ([]sdkmath.Int, error) {
 	// truncated and slices of the remainder to form the divisions.
 	truncated := total.QuoRaw(div64)
 	remainder := total.ModRaw(div64)
-	cumulative := sdk.NewInt(0) // portion of remainder which has been doled out
+	cumulative := sdkmath.NewInt(0) // portion of remainder which has been doled out
 	for i := int64(0); i < div64; i++ {
 		// multiply will not overflow since remainder and div64 are < 2^63
 		nextCumulative := remainder.MulRaw(i + 1).QuoRaw(div64)
@@ -52,7 +52,7 @@ func divide(total sdkmath.Int, divisor int) ([]sdkmath.Int, error) {
 	}
 
 	// Integrity check
-	sum := sdk.NewInt(0)
+	sum := sdkmath.NewInt(0)
 	for _, x := range divisions {
 		sum = sum.Add(x)
 	}
@@ -90,7 +90,7 @@ func divideCoins(coins sdk.Coins, divisor int) ([]sdk.Coins, error) {
 	for _, c := range divisions {
 		sum = sum.Add(c...)
 	}
-	if !sum.IsEqual(coins) {
+	if !sum.Equal(coins) {
 		return nil, fmt.Errorf("failed integrity check: divisions of %v sum to %s, should be %s", divisions, sum, coins)
 	}
 	return divisions, nil
@@ -209,7 +209,7 @@ func applyCliff(events []event, cliff time.Time) ([]event, error) {
 	for _, e := range newEvents {
 		newTotal = newTotal.Add(e.Coins...)
 	}
-	if !oldTotal.IsEqual(newTotal) {
+	if !oldTotal.Equal(newTotal) {
 		return nil, fmt.Errorf("applying vesting cliff changed total from %s to %s", oldTotal, newTotal)
 	}
 

@@ -8,6 +8,8 @@ import (
 	context "context"
 	reflect "reflect"
 
+	math "cosmossdk.io/math"
+
 	types "github.com/cosmos/cosmos-sdk/types"
 	types0 "github.com/cosmos/cosmos-sdk/x/auth/types"
 	types1 "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -213,10 +215,10 @@ func (mr *MockStakingKeeperMockRecorder) BondDenom(ctx interface{}) *gomock.Call
 }
 
 // GetDelegatorBonded mocks base method.
-func (m *MockStakingKeeper) GetDelegatorBonded(ctx types.Context, delegator types.AccAddress) types.Int {
+func (m *MockStakingKeeper) GetDelegatorBonded(ctx types.Context, delegator types.AccAddress) math.Int {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDelegatorBonded", ctx, delegator)
-	ret0, _ := ret[0].(types.Int)
+	ret0, _ := ret[0].(math.Int)
 	return ret0
 }
 
@@ -241,10 +243,10 @@ func (mr *MockStakingKeeperMockRecorder) GetDelegatorDelegations(ctx, delegator,
 }
 
 // GetDelegatorUnbonding mocks base method.
-func (m *MockStakingKeeper) GetDelegatorUnbonding(ctx types.Context, delegator types.AccAddress) types.Int {
+func (m *MockStakingKeeper) GetDelegatorUnbonding(ctx types.Context, delegator types.AccAddress) math.Int {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDelegatorUnbonding", ctx, delegator)
-	ret0, _ := ret[0].(types.Int)
+	ret0, _ := ret[0].(math.Int)
 	return ret0
 }
 
@@ -284,10 +286,10 @@ func (mr *MockStakingKeeperMockRecorder) GetValidator(ctx, valAddr interface{}) 
 }
 
 // TransferDelegation mocks base method.
-func (m *MockStakingKeeper) TransferDelegation(ctx types.Context, fromAddr, toAddr types.AccAddress, valAddr types.ValAddress, wantShares types.Dec) types.Dec {
+func (m *MockStakingKeeper) TransferDelegation(ctx types.Context, fromAddr, toAddr types.AccAddress, valAddr types.ValAddress, wantShares math.LegacyDec) math.LegacyDec {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "TransferDelegation", ctx, fromAddr, toAddr, valAddr, wantShares)
-	ret0, _ := ret[0].(types.Dec)
+	ret0, _ := ret[0].(math.LegacyDec)
 	return ret0
 }
 
@@ -298,10 +300,10 @@ func (mr *MockStakingKeeperMockRecorder) TransferDelegation(ctx, fromAddr, toAdd
 }
 
 // TransferUnbonding mocks base method.
-func (m *MockStakingKeeper) TransferUnbonding(ctx types.Context, fromAddr, toAddr types.AccAddress, valAddr types.ValAddress, wantAmt types.Int) types.Int {
+func (m *MockStakingKeeper) TransferUnbonding(ctx types.Context, fromAddr, toAddr types.AccAddress, valAddr types.ValAddress, wantAmt math.Int) math.Int {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "TransferUnbonding", ctx, fromAddr, toAddr, valAddr, wantAmt)
-	ret0, _ := ret[0].(types.Int)
+	ret0, _ := ret[0].(math.Int)
 	return ret0
 }
 

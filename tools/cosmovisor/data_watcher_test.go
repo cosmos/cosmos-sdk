@@ -2,6 +2,7 @@ package cosmovisor
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
@@ -10,23 +11,35 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestPollWatcher(t *testing.T) {
+type TestData struct {
+	X int    `json:"x"`
+	Y string `json:"y"`
+}
+
+func TestDataWatcher(t *testing.T) {
 	dir, err := os.MkdirTemp("", "watcher")
 	require.NoError(t, err)
-	filename := filepath.Join(dir, "testfile")
+	filename := filepath.Join(dir, "testfile.json")
 
 	ctx, cancel := context.WithCancel(context.Background())
-	watcher := NewPollWatcher(ctx, filename, time.Millisecond*100)
-	expectedContent := []byte("test")
+	pollWatcher := NewPollWatcher(ctx, filename, time.Millisecond*100)
+	dataWatcher := NewDataWatcher[TestData](ctx, pollWatcher)
+
+	expectedContent := TestData{
+		X: 10,
+		Y: "testtesttest",
+	}
 	go func() {
 		// write some dummy data to the file
 		time.Sleep(time.Second)
-		err = os.WriteFile(filename, []byte("unexpected content - should be updated later"), 0644)
+		err = os.WriteFile(filename, []byte("unexpected content - should be ignored"), 0644)
 		require.NoError(t, err)
 
 		// write the expected content to the file
 		time.Sleep(time.Second)
-		err := os.WriteFile(filename, expectedContent, 0644)
+		bz, err := json.Marshal(expectedContent)
+		require.NoError(t, err)
+		err = os.WriteFile(filename, bz, 0644)
 		require.NoError(t, err)
 
 		// wait a bit to ensure the watcher has time to pick up the change
@@ -35,18 +48,19 @@ func TestPollWatcher(t *testing.T) {
 		cancel()
 	}()
 
-	var actualContent []byte
+	var actualContext *TestData
+
 	// we check all the channels in a function which we'll return from whenever
 	// a channel is closed or we get the done signal
 	func() {
 		for {
 			select {
-			case bz, ok := <-watcher.Updated():
+			case content, ok := <-dataWatcher.Updated():
 				if !ok {
 					return
 				}
-				actualContent = bz
-			case err, ok := <-watcher.Errors():
+				actualContext = &content
+			case err, ok := <-dataWatcher.Errors():
 				if !ok {
 					return
 				}
@@ -58,12 +72,12 @@ func TestPollWatcher(t *testing.T) {
 	}()
 
 	// check we have the expected context
-	require.Equal(t, expectedContent, actualContent)
+	require.Equal(t, expectedContent, *actualContext)
 
 	// check that all the channels are closed
-	_, open := <-watcher.Updated()
+	_, open := <-dataWatcher.Updated()
 	require.False(t, open)
-	_, open = <-watcher.Errors()
+	_, open = <-dataWatcher.Errors()
 	require.False(t, open)
 
 }

@@ -31,6 +31,9 @@ echo "Generating tests proto code"
 (cd baseapp/testutil; buf generate)
 (cd tests/integration/tx/internal; make codegen)
 
+echo "Generate DepInject Test Data"
+(cd depinject/internal/appconfiggogo; buf generate --template buf.gen.gogo.yaml)
+
 # move proto files to the right places
 echo "Moving proto files"
 # handle the depinject path properly
@@ -48,3 +51,6 @@ echo "All Protobuf code generation steps completed"
 echo "Last step: running go mod tidy"
 echo
 go mod tidy
+
+rm -rf cosmossdk.io github.com
+

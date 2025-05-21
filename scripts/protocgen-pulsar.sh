@@ -12,3 +12,7 @@ echo "Generate Pulsar Test Data"
 
 echo "Generate x/tx"
 (cd x/tx; make codegen)
+
+echo "Generate DepInject Test Data"
+(cd depinject/internal/appconfig; buf generate --template buf.gen.pulsar.yaml)
+rm -rf cosmossdk.io github.com

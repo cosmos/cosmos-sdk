@@ -11,9 +11,9 @@ import (
 	"github.com/spf13/viper"
 
 	modulev1 "cosmossdk.io/api/cosmos/upgrade/module/v1"
-	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/store"
+	"github.com/cosmos/cosmos-sdk/core/v2/address"
+	"github.com/cosmos/cosmos-sdk/core/v2/appmodule"
+	"github.com/cosmos/cosmos-sdk/core/v2/store"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"

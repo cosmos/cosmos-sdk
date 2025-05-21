@@ -1,7 +1,7 @@
 package nft
 
 import (
-	"cosmossdk.io/core/address"
+	"github.com/cosmos/cosmos-sdk/core/v2/address"
 )
 
 // ValidateGenesis checks that the given genesis state has no integrity issues

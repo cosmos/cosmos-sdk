@@ -7,8 +7,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
+	"github.com/cosmos/cosmos-sdk/core/v2/header"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/depinject/v2"

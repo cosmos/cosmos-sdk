@@ -8,8 +8,8 @@ import (
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
-	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
+	"github.com/cosmos/cosmos-sdk/core/v2/appmodule"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"

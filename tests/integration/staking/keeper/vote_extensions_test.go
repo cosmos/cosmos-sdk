@@ -12,8 +12,8 @@ import (
 	gogotypes "github.com/cosmos/gogoproto/types"
 	"gotest.tools/v3/assert"
 
-	"cosmossdk.io/core/comet"
-	"cosmossdk.io/core/header"
+	"github.com/cosmos/cosmos-sdk/core/v2/comet"
+	"github.com/cosmos/cosmos-sdk/core/v2/header"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	ed25519 "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"

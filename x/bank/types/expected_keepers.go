@@ -3,7 +3,7 @@ package types
 import (
 	context "context"
 
-	"cosmossdk.io/core/address"
+	"github.com/cosmos/cosmos-sdk/core/v2/address"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"

@@ -6,7 +6,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/cosmos/gogoproto/proto"
 
-	"cosmossdk.io/core/address"
+	"github.com/cosmos/cosmos-sdk/core/v2/address"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

@@ -11,9 +11,9 @@ import (
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"gotest.tools/v3/assert"
 
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/comet"
 	"cosmossdk.io/log"
+	"github.com/cosmos/cosmos-sdk/core/v2/appmodule"
+	"github.com/cosmos/cosmos-sdk/core/v2/comet"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"

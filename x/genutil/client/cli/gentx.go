@@ -11,7 +11,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	address "cosmossdk.io/core/address"
+	address "github.com/cosmos/cosmos-sdk/core/v2/address"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

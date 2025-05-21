@@ -11,7 +11,7 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 
-	coreheader "cosmossdk.io/core/header"
+	coreheader "github.com/cosmos/cosmos-sdk/core/v2/header"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"

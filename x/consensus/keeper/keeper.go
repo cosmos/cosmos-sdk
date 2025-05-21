@@ -9,8 +9,8 @@ import (
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/event"
-	storetypes "cosmossdk.io/core/store"
+	"github.com/cosmos/cosmos-sdk/core/v2/event"
+	storetypes "github.com/cosmos/cosmos-sdk/core/v2/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/errors/v3"

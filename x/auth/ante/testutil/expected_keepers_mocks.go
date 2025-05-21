@@ -14,7 +14,7 @@ import (
 	reflect "reflect"
 	time "time"
 
-	address "cosmossdk.io/core/address"
+	address "github.com/cosmos/cosmos-sdk/core/v2/address"
 	types "github.com/cosmos/cosmos-sdk/types"
 	types0 "github.com/cosmos/cosmos-sdk/x/auth/types"
 	gomock "go.uber.org/mock/gomock"

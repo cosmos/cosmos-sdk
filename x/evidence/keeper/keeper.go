@@ -7,10 +7,10 @@ import (
 	"strings"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/comet"
-	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
+	"github.com/cosmos/cosmos-sdk/core/v2/address"
+	"github.com/cosmos/cosmos-sdk/core/v2/comet"
+	"github.com/cosmos/cosmos-sdk/core/v2/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/errors/v3"

@@ -14,7 +14,7 @@ For more information on SDK tooling, see the [Tooling](https://docs.cosmos.netwo
 
 ## Core
 
-* [Core](https://pkg.go.dev/cosmossdk.io/core) - Core library defining SDK interfaces ([ADR-063](https://docs.cosmos.network/main/architecture/adr-063-core-module-api))
+* [Core](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/core/v2) - Core library defining SDK interfaces ([ADR-063](https://docs.cosmos.network/main/architecture/adr-063-core-module-api))
 * [API](https://pkg.go.dev/cosmossdk.io/api) - API library containing generated SDK Pulsar API
 * [Store](https://pkg.go.dev/cosmossdk.io/store) - Implementation of the Cosmos SDK store
 

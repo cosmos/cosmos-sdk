@@ -14,8 +14,8 @@ import (
 	"go.uber.org/mock/gomock"
 	"google.golang.org/grpc"
 
-	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
+	"github.com/cosmos/cosmos-sdk/core/v2/appmodule"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"

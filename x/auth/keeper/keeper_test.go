@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/header"
-	"cosmossdk.io/core/store"
+	"github.com/cosmos/cosmos-sdk/core/v2/header"
+	"github.com/cosmos/cosmos-sdk/core/v2/store"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

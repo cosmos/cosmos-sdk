@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	address "cosmossdk.io/core/address"
+	address "github.com/cosmos/cosmos-sdk/core/v2/address"
 	math "github.com/cosmos/cosmos-sdk/math/v2"
 	types "github.com/cosmos/cosmos-sdk/types"
 	query "github.com/cosmos/cosmos-sdk/types/query"

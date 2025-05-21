@@ -41,7 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* [#24081](https://github.com/cosmos/cosmos-sdk/pull/24081) Remove `cosmossdk.io/core` dependency.
+* [#24081](https://github.com/cosmos/cosmos-sdk/pull/24081) Remove `github.com/cosmos/cosmos-sdk/core/v2` dependency.
 
 ## [v1.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/collections%2Fv1.1.0)
 

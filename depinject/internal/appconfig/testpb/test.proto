@@ -8,25 +8,25 @@ option go_package = "github.com/cosmos/cosmos-sdk/depinject/v2/internal/appconfi
 
 message TestRuntimeModule {
   option (cosmos.app.v1alpha1.module) = {
-    go_import: "cosmossdk.io/core/internal/testpb"
+    go_import: "github.com/cosmos/cosmos-sdk/core/v2/internal/testpb"
   };
 }
 
 message TestModuleA {
   option (cosmos.app.v1alpha1.module) = {
-    go_import: "cosmossdk.io/core/internal/testpb"
+    go_import: "github.com/cosmos/cosmos-sdk/core/v2/internal/testpb"
   };
 }
 
 message TestModuleB {
   option (cosmos.app.v1alpha1.module) = {
-    go_import: "cosmossdk.io/core/internal/testpb"
+    go_import: "github.com/cosmos/cosmos-sdk/core/v2/internal/testpb"
   };
 }
 
 message TestUnregisteredModule {
   option (cosmos.app.v1alpha1.module) = {
-    go_import: "cosmossdk.io/core/internal/testpb"
+    go_import: "github.com/cosmos/cosmos-sdk/core/v2/internal/testpb"
   };
 }
 

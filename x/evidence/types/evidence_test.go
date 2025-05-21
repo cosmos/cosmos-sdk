@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/comet"
+	"github.com/cosmos/cosmos-sdk/core/v2/comet"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	sdk "github.com/cosmos/cosmos-sdk/types"

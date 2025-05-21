@@ -7,8 +7,8 @@ import (
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	"github.com/google/go-cmp/cmp"
 
-	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
+	"github.com/cosmos/cosmos-sdk/core/v2/appmodule"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"

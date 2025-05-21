@@ -11,8 +11,8 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/gogoproto/proto"
 
-	corestoretypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
+	corestoretypes "github.com/cosmos/cosmos-sdk/core/v2/store"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"

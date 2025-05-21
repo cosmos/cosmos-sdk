@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	_ "cosmossdk.io/api/cosmos/authz/v1beta1"
-	"cosmossdk.io/core/address"
+	"github.com/cosmos/cosmos-sdk/core/v2/address"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

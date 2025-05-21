@@ -1,7 +1,7 @@
 package v3
 
 import (
-	"cosmossdk.io/core/store"
+	"github.com/cosmos/cosmos-sdk/core/v2/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdkmath "github.com/cosmos/cosmos-sdk/math/v2"

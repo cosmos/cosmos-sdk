@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"io"
 
-	"cosmossdk.io/core/appmodule"
+	"github.com/cosmos/cosmos-sdk/core/v2/appmodule"
 )
 
 // RawJSONTarget returns a struct which encapsulates a genesis target that is

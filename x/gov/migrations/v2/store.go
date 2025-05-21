@@ -3,7 +3,7 @@ package v2
 import (
 	"fmt"
 
-	corestoretypes "cosmossdk.io/core/store"
+	corestoretypes "github.com/cosmos/cosmos-sdk/core/v2/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"

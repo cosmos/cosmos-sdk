@@ -3,7 +3,7 @@ package slashing
 import (
 	"context"
 
-	"cosmossdk.io/core/comet"
+	"github.com/cosmos/cosmos-sdk/core/v2/comet"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"

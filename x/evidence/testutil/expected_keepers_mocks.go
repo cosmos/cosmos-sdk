@@ -14,8 +14,8 @@ import (
 	reflect "reflect"
 	time "time"
 
-	address "cosmossdk.io/core/address"
-	comet "cosmossdk.io/core/comet"
+	address "github.com/cosmos/cosmos-sdk/core/v2/address"
+	comet "github.com/cosmos/cosmos-sdk/core/v2/comet"
 	types "github.com/cosmos/cosmos-sdk/crypto/types"
 	math "github.com/cosmos/cosmos-sdk/math/v2"
 	types0 "github.com/cosmos/cosmos-sdk/types"

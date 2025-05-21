@@ -5,7 +5,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
-	"cosmossdk.io/core/comet"
+	"github.com/cosmos/cosmos-sdk/core/v2/comet"
 )
 
 // NewBlockInfo returns a new BlockInfo instance

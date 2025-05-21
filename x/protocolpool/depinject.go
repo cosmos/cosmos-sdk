@@ -2,8 +2,8 @@ package protocolpool
 
 import (
 	modulev1 "cosmossdk.io/api/cosmos/protocolpool/module/v1"
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/store"
+	"github.com/cosmos/cosmos-sdk/core/v2/appmodule"
+	"github.com/cosmos/cosmos-sdk/core/v2/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/depinject/v2"

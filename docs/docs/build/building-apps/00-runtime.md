@@ -93,7 +93,7 @@ The SDK recommends using the declarative approach with `depinject` for module re
 
 ### 3. Service Registration
 
-Runtime registers all [core services](https://pkg.go.dev/cosmossdk.io/core) required by modules.
+Runtime registers all [core services](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/core/v2) required by modules.
 These services include `store`, `event manager`, `context`, and `logger`.
 Runtime ensures that services are scoped to their respective modules during the wiring process.
 

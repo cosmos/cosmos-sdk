@@ -14,7 +14,7 @@ import (
 	"cosmossdk.io/client/v2/autocli/flag"
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
-	addresscodec "cosmossdk.io/core/address"
+	addresscodec "github.com/cosmos/cosmos-sdk/core/v2/address"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"

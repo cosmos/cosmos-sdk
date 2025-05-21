@@ -16,9 +16,9 @@ import (
 	"cosmossdk.io/api/cosmos/crypto/secp256k1"
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/directaux"
+	"github.com/cosmos/cosmos-sdk/core/v2/address"
 )
 
 func TestDirectAuxHandler(t *testing.T) {

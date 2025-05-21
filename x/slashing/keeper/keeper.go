@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
+	storetypes "github.com/cosmos/cosmos-sdk/core/v2/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"

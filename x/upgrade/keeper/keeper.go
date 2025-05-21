@@ -13,8 +13,8 @@ import (
 
 	"github.com/hashicorp/go-metrics"
 
-	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
+	corestore "github.com/cosmos/cosmos-sdk/core/v2/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"

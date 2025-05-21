@@ -8,8 +8,8 @@ import (
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	dbm "github.com/cosmos/cosmos-db"
 
-	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
+	"github.com/cosmos/cosmos-sdk/core/v2/appmodule"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"

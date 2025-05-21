@@ -6,8 +6,8 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
-	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
+	"github.com/cosmos/cosmos-sdk/core/v2/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"

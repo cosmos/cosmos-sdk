@@ -8,8 +8,8 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/flag"
-	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/appmodule"
+	"github.com/cosmos/cosmos-sdk/core/v2/address"
+	"github.com/cosmos/cosmos-sdk/core/v2/appmodule"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdkflags "github.com/cosmos/cosmos-sdk/client/flags"

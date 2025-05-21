@@ -3,7 +3,7 @@ package counter
 import (
 	"google.golang.org/grpc"
 
-	"cosmossdk.io/core/appmodule"
+	"github.com/cosmos/cosmos-sdk/core/v2/appmodule"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/x/counter/keeper"

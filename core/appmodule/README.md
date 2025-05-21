@@ -35,7 +35,7 @@ message Module {
 
 ## 2. Register module depinject providers and invokers
 
-Once we have a module config object, we need to register depinject providers and invokers for the module using the `cosmossdk.io/core/appmodule` package.
+Once we have a module config object, we need to register depinject providers and invokers for the module using the `github.com/cosmos/cosmos-sdk/core/v2/appmodule` package.
 
 At the most basic level, we must define an `init` function in the package listed as the `go_import` in the module descriptor. This `init` function must call `appmodule.Register` with an empty instance of the config object and some options for initializing the module, ex:
 

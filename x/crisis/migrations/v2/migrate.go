@@ -1,7 +1,7 @@
 package v2
 
 import (
-	storetypes "cosmossdk.io/core/store"
+	storetypes "github.com/cosmos/cosmos-sdk/core/v2/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"

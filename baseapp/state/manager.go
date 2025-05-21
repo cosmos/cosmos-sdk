@@ -6,8 +6,8 @@ import (
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 
-	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
+	"github.com/cosmos/cosmos-sdk/core/v2/header"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/config"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"

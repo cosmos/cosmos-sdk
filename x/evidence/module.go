@@ -10,10 +10,10 @@ import (
 	"google.golang.org/grpc"
 
 	modulev1 "cosmossdk.io/api/cosmos/evidence/module/v1"
-	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/comet"
-	store "cosmossdk.io/core/store"
+	"github.com/cosmos/cosmos-sdk/core/v2/address"
+	"github.com/cosmos/cosmos-sdk/core/v2/appmodule"
+	"github.com/cosmos/cosmos-sdk/core/v2/comet"
+	store "github.com/cosmos/cosmos-sdk/core/v2/store"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

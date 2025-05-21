@@ -5,7 +5,7 @@ import (
 
 	"google.golang.org/protobuf/runtime/protoiface"
 
-	"cosmossdk.io/core/event"
+	"github.com/cosmos/cosmos-sdk/core/v2/event"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

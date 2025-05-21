@@ -15,7 +15,7 @@ import (
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/proto"
 
-	"cosmossdk.io/core/comet"
+	"github.com/cosmos/cosmos-sdk/core/v2/comet"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"

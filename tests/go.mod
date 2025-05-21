@@ -4,7 +4,6 @@ go 1.23.5
 
 require (
 	cosmossdk.io/api v0.9.2
-	cosmossdk.io/core v0.11.3
 	cosmossdk.io/log v1.6.0
 	cosmossdk.io/math v1.5.3 // indirect
 	cosmossdk.io/simapp v0.0.0-20230620040119-e078f1a49e8b
@@ -28,6 +27,7 @@ require (
 )
 
 require (
+	github.com/cosmos/cosmos-sdk/core/v2 v2.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-sdk/depinject/v2 v2.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-sdk/errors/v3 v3.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-sdk/math/v2 v2.0.0-00010101000000-000000000000
@@ -45,6 +45,7 @@ require (
 	cloud.google.com/go/storage v1.49.0 // indirect
 	cosmossdk.io/client/v2 v2.0.0-beta.9 // indirect
 	cosmossdk.io/collections v1.2.1 // indirect
+	cosmossdk.io/core v0.11.3 // indirect
 	cosmossdk.io/depinject v1.2.0 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -225,8 +226,8 @@ require (
 // Replace all unreleased direct deps upgraded to comet v1
 replace (
 	cosmossdk.io/api => ../api
-	cosmossdk.io/core => ../core
 	cosmossdk.io/x/tx => ../x/tx
+	github.com/cosmos/cosmos-sdk/core/v2 => ../core
 	github.com/cosmos/cosmos-sdk/depinject/v2 => ../depinject
 	github.com/cosmos/cosmos-sdk/errors/v3 => ../errors
 	github.com/cosmos/cosmos-sdk/math/v2 => ../math

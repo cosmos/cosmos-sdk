@@ -3,7 +3,7 @@ package group
 import (
 	context "context"
 
-	"cosmossdk.io/core/address"
+	"github.com/cosmos/cosmos-sdk/core/v2/address"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

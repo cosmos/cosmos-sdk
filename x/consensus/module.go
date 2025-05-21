@@ -7,9 +7,9 @@ import (
 	"google.golang.org/grpc"
 
 	modulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/event"
-	storetypes "cosmossdk.io/core/store"
+	"github.com/cosmos/cosmos-sdk/core/v2/appmodule"
+	"github.com/cosmos/cosmos-sdk/core/v2/event"
+	storetypes "github.com/cosmos/cosmos-sdk/core/v2/store"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"

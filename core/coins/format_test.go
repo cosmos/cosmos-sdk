@@ -9,7 +9,7 @@ import (
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-	"cosmossdk.io/core/coins"
+	"github.com/cosmos/cosmos-sdk/core/v2/coins"
 )
 
 // coinsJsonTest is the type of test cases in the coin.json file.

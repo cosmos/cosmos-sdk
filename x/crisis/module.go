@@ -10,9 +10,9 @@ import (
 	"github.com/spf13/cobra"
 
 	modulev1 "cosmossdk.io/api/cosmos/crisis/module/v1"
-	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/store"
+	"github.com/cosmos/cosmos-sdk/core/v2/address"
+	"github.com/cosmos/cosmos-sdk/core/v2/appmodule"
+	"github.com/cosmos/cosmos-sdk/core/v2/store"
 	"github.com/cosmos/cosmos-sdk/depinject/v2"
 
 	"github.com/cosmos/cosmos-sdk/client"

@@ -463,7 +463,7 @@ to be served by a single SDK module.
 ### Introspecting Minor API Revisions
 
 In order for modules to introspect the minor API revision of peer modules, we propose adding the following method
-to `cosmossdk.io/core/intermodule.Client`:
+to `github.com/cosmos/cosmos-sdk/core/v2/intermodule.Client`:
 
 ```go
 ServiceRevision(ctx context.Context, serviceName string) uint64
@@ -503,7 +503,7 @@ Because a single go binary may contain different versions of the same generated 
 global protobuf registry to contain the correct `FileDescriptor`s. Because `appconfig` module configuration is itself
 written in protobuf, we would like to load the `FileDescriptor`s for a module before loading a module itself. So we
 will provide ways to register `FileDescriptor`s at module registration time before instantiation. We propose the
-following `cosmossdk.io/core/appmodule.Option` constructors for the various cases of how `FileDescriptor`s may be
+following `github.com/cosmos/cosmos-sdk/core/v2/appmodule.Option` constructors for the various cases of how `FileDescriptor`s may be
 packaged:
 
 ```go
@@ -567,7 +567,7 @@ import (
 	"context"
 	"testing"
 
-	"cosmossdk.io/core/intermodule"
+	"github.com/cosmos/cosmos-sdk/core/v2/intermodule"
 	"github.com/cosmos/cosmos-sdk/depinject/v2"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
@@ -697,7 +697,7 @@ the migration overhead.
 
 ### Neutral
 
-* the `cosmossdk.io/core/appconfig` framework will play a more central role in terms of how modules are defined, this
+* the `github.com/cosmos/cosmos-sdk/core/v2/appconfig` framework will play a more central role in terms of how modules are defined, this
   is likely generally a good thing but does mean additional changes for users wanting to stick to the pre-depinject way
   of wiring up modules
 * `depinject` is somewhat less needed or maybe even obviated because of the full ADR 033 approach. If we adopt the

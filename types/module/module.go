@@ -40,8 +40,8 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/genesis"
+	"github.com/cosmos/cosmos-sdk/core/v2/appmodule"
+	"github.com/cosmos/cosmos-sdk/core/v2/genesis"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -319,7 +319,7 @@ func NewManager(modules ...AppModule) *Manager {
 }
 
 // NewManagerFromMap creates a new Manager object from a map of module names to module implementations.
-// This method should be used for apps and modules which have migrated to the cosmossdk.io/core.appmodule.AppModule API.
+// This method should be used for apps and modules which have migrated to the github.com/cosmos/cosmos-sdk/core/v2.appmodule.AppModule API.
 func NewManagerFromMap(moduleMap map[string]appmodule.AppModule) *Manager {
 	simpleModuleMap := make(map[string]any)
 	modulesStr := make([]string, 0, len(simpleModuleMap))

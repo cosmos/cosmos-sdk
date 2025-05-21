@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/core/header"
+	"github.com/cosmos/cosmos-sdk/core/v2/header"
 
 	sdkmath "github.com/cosmos/cosmos-sdk/math/v2"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"

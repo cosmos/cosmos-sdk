@@ -6,9 +6,9 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
-	addresscodec "cosmossdk.io/core/address"
-	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
+	addresscodec "github.com/cosmos/cosmos-sdk/core/v2/address"
+	storetypes "github.com/cosmos/cosmos-sdk/core/v2/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/math/v2"

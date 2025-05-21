@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/gogoproto/types"
 
 	"cosmossdk.io/collections"
-	storetypes "cosmossdk.io/core/store"
+	storetypes "github.com/cosmos/cosmos-sdk/core/v2/store"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )

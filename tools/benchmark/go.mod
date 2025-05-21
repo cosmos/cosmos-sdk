@@ -4,10 +4,10 @@ go 1.23.5
 
 require (
 	cosmossdk.io/api v0.9.2
-	cosmossdk.io/core v0.11.3
 	cosmossdk.io/log v1.6.0
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/cosmos/cosmos-sdk v0.53.0
+	github.com/cosmos/cosmos-sdk/core/v2 v2.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-sdk/depinject/v2 v2.0.0-00010101000000-000000000000
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
@@ -158,8 +158,8 @@ require (
 // Replace all unreleased direct deps upgraded to comet v1
 replace (
 	cosmossdk.io/api => ../../api
-	cosmossdk.io/core => ../../core
 	github.com/cosmos/cosmos-sdk => ../..
+	github.com/cosmos/cosmos-sdk/core/v2 => ../../core
 	github.com/cosmos/cosmos-sdk/depinject/v2 => ../../depinject
 	github.com/cosmos/cosmos-sdk/errors/v3 => ../../errors
 

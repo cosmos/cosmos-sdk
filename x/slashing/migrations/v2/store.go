@@ -3,7 +3,7 @@ package v2
 import (
 	"context"
 
-	storetypes "cosmossdk.io/core/store"
+	storetypes "github.com/cosmos/cosmos-sdk/core/v2/store"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
 	v2distribution "github.com/cosmos/cosmos-sdk/x/distribution/migrations/v2"

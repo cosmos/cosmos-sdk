@@ -1,8 +1,8 @@
 package v3
 
 import (
-	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
+	"github.com/cosmos/cosmos-sdk/core/v2/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"

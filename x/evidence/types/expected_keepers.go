@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/comet"
+	"github.com/cosmos/cosmos-sdk/core/v2/address"
+	"github.com/cosmos/cosmos-sdk/core/v2/comet"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/math/v2"

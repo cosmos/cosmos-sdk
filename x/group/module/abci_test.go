@@ -9,8 +9,8 @@ import (
 	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/log"
+	"github.com/cosmos/cosmos-sdk/core/v2/address"
 
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"

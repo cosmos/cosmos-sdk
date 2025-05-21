@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/store"
+	"github.com/cosmos/cosmos-sdk/core/v2/store"
 
 	"github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"

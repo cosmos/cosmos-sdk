@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/log"
+	"github.com/cosmos/cosmos-sdk/core/v2/address"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"

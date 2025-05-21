@@ -18,9 +18,9 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	"cosmossdk.io/core/comet"
-	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
+	"github.com/cosmos/cosmos-sdk/core/v2/comet"
+	"github.com/cosmos/cosmos-sdk/core/v2/header"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"

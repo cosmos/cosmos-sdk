@@ -8,8 +8,8 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	modulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
-	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/core/genesis"
+	"github.com/cosmos/cosmos-sdk/core/v2/appmodule"
+	"github.com/cosmos/cosmos-sdk/core/v2/genesis"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

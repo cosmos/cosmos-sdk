@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	coreaddress "cosmossdk.io/core/address"
+	coreaddress "github.com/cosmos/cosmos-sdk/core/v2/address"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"

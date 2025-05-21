@@ -10,7 +10,7 @@ import (
 	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 	gogotypes "github.com/cosmos/gogoproto/types"
 
-	corestore "cosmossdk.io/core/store"
+	corestore "github.com/cosmos/cosmos-sdk/core/v2/store"
 
 	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
 	"github.com/cosmos/cosmos-sdk/math/v2"

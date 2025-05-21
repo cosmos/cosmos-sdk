@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/store"
+	"github.com/cosmos/cosmos-sdk/core/v2/store"
 )
 
 func TestCollectionPagination(t *testing.T) {

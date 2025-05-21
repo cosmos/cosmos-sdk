@@ -79,7 +79,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/store"
+	"github.com/cosmos/cosmos-sdk/core/v2/store"
 )
 
 var (

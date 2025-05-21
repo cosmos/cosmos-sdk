@@ -14,7 +14,7 @@ import (
 	json "encoding/json"
 	reflect "reflect"
 
-	appmodule "cosmossdk.io/core/appmodule"
+	appmodule "github.com/cosmos/cosmos-sdk/core/v2/appmodule"
 	types "github.com/cometbft/cometbft/abci/types"
 	client "github.com/cosmos/cosmos-sdk/client"
 	codec "github.com/cosmos/cosmos-sdk/codec"

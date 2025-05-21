@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"io"
 
-	"cosmossdk.io/core/appmodule"
+	"github.com/cosmos/cosmos-sdk/core/v2/appmodule"
 )
 
 // SourceFromRawJSON returns a genesis source based on a raw JSON message.

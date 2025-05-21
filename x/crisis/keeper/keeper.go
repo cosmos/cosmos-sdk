@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/address"
-	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
+	"github.com/cosmos/cosmos-sdk/core/v2/address"
+	storetypes "github.com/cosmos/cosmos-sdk/core/v2/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"

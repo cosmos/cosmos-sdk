@@ -1,4 +1,4 @@
-module cosmossdk.io/core
+module github.com/cosmos/cosmos-sdk/core/v2
 
 go 1.23.0
 
@@ -64,6 +64,5 @@ replace github.com/cosmos/cosmos-sdk/math/v2 => ../math
 replace github.com/cosmos/cosmos-sdk/depinject/v2 => ../depinject
 
 // Version tagged too early and incompatible with v0.50 (latest at the time of tagging)
-retract v0.12.0
-
-retract v1.0.0
+// retract v0.12.0
+// retract v1.0.0

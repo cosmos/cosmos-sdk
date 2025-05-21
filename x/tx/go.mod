@@ -4,8 +4,8 @@ go 1.23.0
 
 require (
 	cosmossdk.io/api v0.9.2
-	cosmossdk.io/core v0.11.3
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
+	github.com/cosmos/cosmos-sdk/core/v2 v2.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-sdk/errors/v3 v3.0.0-00010101000000-000000000000
 	github.com/cosmos/cosmos-sdk/math/v2 v2.0.0-00010101000000-000000000000
 	github.com/cosmos/gogoproto v1.7.0
@@ -35,7 +35,7 @@ require (
 // Replace all unreleased direct deps upgraded to comet v1
 replace (
 	cosmossdk.io/api => ../../api
-	cosmossdk.io/core => ../../core
+	github.com/cosmos/cosmos-sdk/core/v2 => ../../core
 	github.com/cosmos/cosmos-sdk/errors/v3 => ../../errors
 
 	github.com/cosmos/cosmos-sdk/math/v2 => ../../math

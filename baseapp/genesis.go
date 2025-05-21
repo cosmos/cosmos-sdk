@@ -5,13 +5,13 @@ import (
 
 	"github.com/cometbft/cometbft/abci/types"
 
-	"cosmossdk.io/core/genesis"
+	"github.com/cosmos/cosmos-sdk/core/v2/genesis"
 )
 
 var _ genesis.TxHandler = (*BaseApp)(nil)
 
 // ExecuteGenesisTx implements genesis.GenesisState from
-// cosmossdk.io/core/genesis to set initial state in genesis
+// github.com/cosmos/cosmos-sdk/core/v2/genesis to set initial state in genesis
 func (ba *BaseApp) ExecuteGenesisTx(tx []byte) error {
 	res := ba.deliverTx(tx)
 

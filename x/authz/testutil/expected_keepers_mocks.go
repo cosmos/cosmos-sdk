@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	address "cosmossdk.io/core/address"
+	address "github.com/cosmos/cosmos-sdk/core/v2/address"
 	types "github.com/cosmos/cosmos-sdk/types"
 	gomock "go.uber.org/mock/gomock"
 )

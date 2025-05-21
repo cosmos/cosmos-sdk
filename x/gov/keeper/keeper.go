@@ -7,10 +7,10 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/log"
-	corestoretypes "github.com/cosmos/cosmos-sdk/core/v2/store"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	corestoretypes "github.com/cosmos/cosmos-sdk/core/v2/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"

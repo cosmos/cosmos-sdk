@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/cosmos/cosmos-sdk/core/v2/comet"
-
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"

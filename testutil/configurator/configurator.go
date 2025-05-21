@@ -22,8 +22,8 @@ import (
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
-	"github.com/cosmos/cosmos-sdk/core/v2/appconfig"
 
+	"github.com/cosmos/cosmos-sdk/core/v2/appconfig"
 	"github.com/cosmos/cosmos-sdk/depinject/v2"
 	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )

@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"cosmossdk.io/log"
-	"github.com/cosmos/cosmos-sdk/core/v2/address"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/core/v2/address"
 	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"

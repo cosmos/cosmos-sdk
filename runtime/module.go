@@ -15,6 +15,11 @@ import (
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/log"
 	"cosmossdk.io/x/tx/signing"
+
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/core/v2/address"
 	"github.com/cosmos/cosmos-sdk/core/v2/appmodule"
 	"github.com/cosmos/cosmos-sdk/core/v2/comet"
@@ -22,11 +27,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/core/v2/genesis"
 	"github.com/cosmos/cosmos-sdk/core/v2/header"
 	"github.com/cosmos/cosmos-sdk/core/v2/store"
-
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/depinject/v2"
 	"github.com/cosmos/cosmos-sdk/std"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"

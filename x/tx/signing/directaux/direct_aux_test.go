@@ -18,6 +18,7 @@ import (
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/directaux"
+
 	"github.com/cosmos/cosmos-sdk/core/v2/address"
 )
 

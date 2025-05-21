@@ -9,11 +9,11 @@ import (
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/log"
-	"github.com/cosmos/cosmos-sdk/core/v2/appmodule"
-	"github.com/cosmos/cosmos-sdk/core/v2/comet"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/core/v2/appmodule"
+	"github.com/cosmos/cosmos-sdk/core/v2/comet"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"

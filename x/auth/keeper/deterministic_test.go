@@ -9,10 +9,9 @@ import (
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/core/v2/header"
 	corestore "github.com/cosmos/cosmos-sdk/core/v2/store"
-
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"

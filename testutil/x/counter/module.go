@@ -3,9 +3,8 @@ package counter
 import (
 	"google.golang.org/grpc"
 
-	"github.com/cosmos/cosmos-sdk/core/v2/appmodule"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/core/v2/appmodule"
 	"github.com/cosmos/cosmos-sdk/testutil/x/counter/keeper"
 	"github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
 )

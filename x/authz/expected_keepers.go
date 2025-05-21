@@ -4,7 +4,6 @@ import (
 	context "context"
 
 	"github.com/cosmos/cosmos-sdk/core/v2/address"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

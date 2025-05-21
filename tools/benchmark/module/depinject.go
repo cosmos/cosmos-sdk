@@ -6,9 +6,9 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/benchmark/module/v1"
 	"cosmossdk.io/log"
 	gen "cosmossdk.io/tools/benchmark/generator"
+
 	"github.com/cosmos/cosmos-sdk/core/v2/appmodule"
 	"github.com/cosmos/cosmos-sdk/core/v2/store"
-
 	"github.com/cosmos/cosmos-sdk/depinject/v2"
 	"github.com/cosmos/cosmos-sdk/depinject/v2/appconfig"
 )

@@ -3,9 +3,8 @@ package v2
 import (
 	"context"
 
-	corestoretypes "github.com/cosmos/cosmos-sdk/core/v2/store"
-
 	"github.com/cosmos/cosmos-sdk/codec"
+	corestoretypes "github.com/cosmos/cosmos-sdk/core/v2/store"
 	"github.com/cosmos/cosmos-sdk/internal/conv"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/store/v2/prefix"

@@ -11,11 +11,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	address "github.com/cosmos/cosmos-sdk/core/v2/address"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	address "github.com/cosmos/cosmos-sdk/core/v2/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/errors/v3"
 	"github.com/cosmos/cosmos-sdk/server"

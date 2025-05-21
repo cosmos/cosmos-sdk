@@ -8,12 +8,12 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 
 	modulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
-	"github.com/cosmos/cosmos-sdk/core/v2/appmodule"
-	store "github.com/cosmos/cosmos-sdk/core/v2/store"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/core/v2/appmodule"
+	store "github.com/cosmos/cosmos-sdk/core/v2/store"
 	"github.com/cosmos/cosmos-sdk/depinject/v2"
 	"github.com/cosmos/cosmos-sdk/testutil/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"

@@ -8,10 +8,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	address "github.com/cosmos/cosmos-sdk/core/v2/address"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	address "github.com/cosmos/cosmos-sdk/core/v2/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"

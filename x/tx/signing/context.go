@@ -13,6 +13,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
+
 	"github.com/cosmos/cosmos-sdk/core/v2/address"
 )
 

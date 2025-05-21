@@ -11,6 +11,7 @@ import (
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	groupv1 "cosmossdk.io/api/cosmos/group/v1"
 	"cosmossdk.io/x/tx/internal/testpb"
+
 	"github.com/cosmos/cosmos-sdk/core/v2/address"
 )
 

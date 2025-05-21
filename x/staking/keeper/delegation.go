@@ -8,7 +8,6 @@ import (
 	"time"
 
 	corestore "github.com/cosmos/cosmos-sdk/core/v2/store"
-
 	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
 	"github.com/cosmos/cosmos-sdk/math/v2"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"

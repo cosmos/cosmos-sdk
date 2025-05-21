@@ -2,7 +2,6 @@ package module_test
 
 import (
 	"github.com/cosmos/cosmos-sdk/core/v2/appmodule"
-
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 

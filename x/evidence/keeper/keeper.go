@@ -8,11 +8,11 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/log"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/core/v2/address"
 	"github.com/cosmos/cosmos-sdk/core/v2/comet"
 	"github.com/cosmos/cosmos-sdk/core/v2/store"
-
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/errors/v3"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence/exported"

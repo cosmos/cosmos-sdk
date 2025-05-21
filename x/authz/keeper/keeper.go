@@ -12,11 +12,11 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/log"
-	corestoretypes "github.com/cosmos/cosmos-sdk/core/v2/store"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	corestoretypes "github.com/cosmos/cosmos-sdk/core/v2/store"
 	errorsmod "github.com/cosmos/cosmos-sdk/errors/v3"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"

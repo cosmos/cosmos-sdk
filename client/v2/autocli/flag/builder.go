@@ -19,8 +19,8 @@ import (
 	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
-	"github.com/cosmos/cosmos-sdk/core/v2/address"
 
+	"github.com/cosmos/cosmos-sdk/core/v2/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
 )
 

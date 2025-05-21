@@ -13,11 +13,11 @@ import (
 	"cosmossdk.io/tools/benchmark"
 	"cosmossdk.io/tools/benchmark/client/cli"
 	gen "cosmossdk.io/tools/benchmark/generator"
-	"github.com/cosmos/cosmos-sdk/core/v2/appmodule"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/core/v2/appmodule"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"

@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	"cosmossdk.io/log"
-	storetypes "github.com/cosmos/cosmos-sdk/core/v2/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	storetypes "github.com/cosmos/cosmos-sdk/core/v2/store"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdkmath "github.com/cosmos/cosmos-sdk/math/v2"
 	sdk "github.com/cosmos/cosmos-sdk/types"

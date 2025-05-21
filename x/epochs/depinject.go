@@ -6,10 +6,10 @@ import (
 	"slices"
 
 	modulev1 "cosmossdk.io/api/cosmos/epochs/module/v1"
-	"github.com/cosmos/cosmos-sdk/core/v2/appmodule"
-	"github.com/cosmos/cosmos-sdk/core/v2/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/core/v2/appmodule"
+	"github.com/cosmos/cosmos-sdk/core/v2/store"
 	"github.com/cosmos/cosmos-sdk/depinject/v2"
 	"github.com/cosmos/cosmos-sdk/depinject/v2/appconfig"
 	"github.com/cosmos/cosmos-sdk/x/epochs/keeper"

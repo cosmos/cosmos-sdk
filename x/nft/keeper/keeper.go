@@ -2,10 +2,9 @@
 package keeper
 
 import (
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/core/v2/address"
 	store "github.com/cosmos/cosmos-sdk/core/v2/store"
-
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/nft" //nolint:staticcheck // deprecated and to be removed
 )
 

@@ -2,10 +2,10 @@ package protocolpool
 
 import (
 	modulev1 "cosmossdk.io/api/cosmos/protocolpool/module/v1"
-	"github.com/cosmos/cosmos-sdk/core/v2/appmodule"
-	"github.com/cosmos/cosmos-sdk/core/v2/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/core/v2/appmodule"
+	"github.com/cosmos/cosmos-sdk/core/v2/store"
 	"github.com/cosmos/cosmos-sdk/depinject/v2"
 	"github.com/cosmos/cosmos-sdk/depinject/v2/appconfig"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"

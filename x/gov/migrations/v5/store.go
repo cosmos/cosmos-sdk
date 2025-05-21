@@ -2,9 +2,9 @@ package v5
 
 import (
 	"cosmossdk.io/collections"
-	corestoretypes "github.com/cosmos/cosmos-sdk/core/v2/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	corestoretypes "github.com/cosmos/cosmos-sdk/core/v2/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v4 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v4"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"

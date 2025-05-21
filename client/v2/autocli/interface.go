@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+
 	"github.com/cosmos/cosmos-sdk/core/v2/appmodule"
 )
 

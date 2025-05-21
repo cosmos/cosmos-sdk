@@ -4,13 +4,15 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/epochs"
 	"github.com/cosmos/cosmos-sdk/x/epochs/keeper"
 	"github.com/cosmos/cosmos-sdk/x/epochs/types"
-	"github.com/stretchr/testify/require"
 )
 
 type testEpochHooks struct{}

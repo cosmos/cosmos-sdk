@@ -1,7 +1,7 @@
 syntax = "proto3";
 package cosmos.circuit.v1;
 
-option go_package = "cosmossdk.io/x/circuit/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/circuit/types";
 
 // Permissions are the permissions that an account has to trip
 // or reset the circuit breaker.

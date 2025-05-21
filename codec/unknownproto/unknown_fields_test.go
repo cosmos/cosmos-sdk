@@ -59,7 +59,7 @@ func TestRejectUnknownFieldsRepeated(t *testing.T) {
 							{
 								Sum: &testdata.TestVersion2_F{
 									F: &testdata.TestVersion2{
-										NewField: 411,
+										NewAddedField: 411,
 									},
 								},
 							},
@@ -114,7 +114,7 @@ func TestRejectUnknownFieldsRepeated(t *testing.T) {
 							{
 								Sum: &testdata.TestVersion2_F{
 									F: &testdata.TestVersion2{
-										NewField: 411,
+										NewAddedField: 411,
 									},
 								},
 							},
@@ -390,7 +390,7 @@ func TestRejectUnknownFieldsNested(t *testing.T) {
 					Value: mustMarshal(&testdata.TestVersion2{
 						Sum: &testdata.TestVersion2_F{
 							F: &testdata.TestVersion2{
-								NewField: 999,
+								NewAddedField: 999,
 							},
 						},
 					}),
@@ -411,7 +411,7 @@ func TestRejectUnknownFieldsNested(t *testing.T) {
 						Value: mustMarshal(&testdata.TestVersion2{
 							Sum: &testdata.TestVersion2_F{
 								F: &testdata.TestVersion2{
-									NewField: 999,
+									NewAddedField: 999,
 								},
 							},
 						}),

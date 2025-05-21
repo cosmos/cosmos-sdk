@@ -54,7 +54,7 @@ modules:
   config:
     "@type": testpb.TestUnregisteredModule
 `))
-	expectContainerErrorContains(t, opt, "did you forget to import github.com/cosmos/cosmos-sdk/core/v2/internal/testpb")
+	expectContainerErrorContains(t, opt, "did you forget to import github.com/cosmos/cosmos-sdk/depinject/v2/internal/testpb")
 	expectContainerErrorContains(t, opt, "registered modules are")
 	expectContainerErrorContains(t, opt, "testpb.TestModuleA")
 

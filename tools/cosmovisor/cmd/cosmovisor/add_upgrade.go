@@ -70,6 +70,10 @@ func addUpgrade(cfg *cosmovisor.Config, force bool, upgradeHeight int64, upgrade
 			panic(fmt.Errorf("invalid manual upgrade plan: %w", err))
 		}
 
+		if err := cosmovisor.AddManualUpgrade(cfg, plan, force); err != nil {
+			panic(fmt.Errorf("failed to add manual upgrade: %w", err))
+		}
+
 		logger.Info(fmt.Sprintf("added manual upgrade, node will be set to halt at height %d, and binary for upgrade %q will be activated", upgradeHeight, upgradeName))
 	}
 

@@ -174,6 +174,17 @@ func (k msgServer) DepositValidatorRewardsPool(ctx context.Context, msg *types.M
 		return nil, err
 	}
 
+	bondDenom, err := k.stakingKeeper.BondDenom(ctx)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to get bond denom")
+	}
+
+	for _, coin := range msg.Amount {
+		if coin.Denom != bondDenom {
+			return nil, errors.Wrapf(sdkerrors.ErrInvalidCoins, "not a bond token denom: %s", coin.Denom)
+		}
+	}
+
 	// deposit coins from depositor's account to the distribution module
 	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, depositor, types.ModuleName, msg.Amount); err != nil {
 		return nil, err

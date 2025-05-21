@@ -942,12 +942,14 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 			},
 		},
 		{
-			name: "happy path (non-staking token)",
+			name: "invalid coins (non-staking token)",
 			msg: &distrtypes.MsgDepositValidatorRewardsPool{
 				Depositor:        addr.String(),
 				ValidatorAddress: valAddr1.String(),
 				Amount:           amt,
 			},
+			expErr:    true,
+			expErrMsg: "invalid coins",
 		},
 		{
 			name: "invalid validator",

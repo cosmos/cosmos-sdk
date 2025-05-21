@@ -227,8 +227,10 @@ github.com/DataDog/sketches-go v1.4.2 h1:gppNudE9d19cQ98RYABOetxIhpTCl4m7CnbRZjv
 github.com/DataDog/sketches-go v1.4.2/go.mod h1:xJIXldczJyyjnbDop7ZZcLxJdV3+7Kra7H1KMgpgkLk=
 github.com/DataDog/zstd v1.5.6 h1:LbEglqepa/ipmmQJUDnSsfvA8e8IStVcGaFWDuxvGOY=
 github.com/DataDog/zstd v1.5.6/go.mod h1:g4AWEaM3yOg3HYfnJ3YIawPnVdXJh9QME85blwSAmyw=
-github.com/InjectiveLabs/cometbft v1.0.1-inj h1:RWOknL0elsUNrYSk8tJ1UKCe0CCeOMQ80u25hucvpIs=
-github.com/InjectiveLabs/cometbft v1.0.1-inj/go.mod h1:RgHHndb7wdtm9etmVj4tDn1NynC9YKIEJW9UUI3FCn4=
+github.com/InjectiveLabs/cometbft v1.0.1-inj.2 h1:Dyx74SGOk/RGzwr7oAiAZgKjcGA0Q5fbxQOFlqC0I5w=
+github.com/InjectiveLabs/cometbft v1.0.1-inj.2/go.mod h1:RgHHndb7wdtm9etmVj4tDn1NynC9YKIEJW9UUI3FCn4=
+github.com/InjectiveLabs/cometbft/api v1.0.0-inj.2 h1:uXsmBVeBickTjZ2GqPNYXShoboRw1m2Cq1bKv4QCe0o=
+github.com/InjectiveLabs/cometbft/api v1.0.0-inj.2/go.mod h1:Ivh6nSCTJPQOyfQo8dgnyu/T88it092sEqSrZSmTQN8=
 github.com/InjectiveLabs/metrics v0.0.10 h1:BoOwXnCtRRIPmq06jcI20pXZYE758eusaCI5jDOoN4U=
 github.com/InjectiveLabs/metrics v0.0.10/go.mod h1:eYu++0DVUjk/jjV9WgvCo8gQU+16Yoyhp1iu+ghKNME=
 github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible/go.mod h1:r7JcOSlj0wfOMncg0iLm8Leh48TZaKVeNIfJntJ2wa0=
@@ -718,8 +720,6 @@ github.com/inconshreveable/mousetrap v1.0.0/go.mod h1:PxqpIevigyE2G7u3NXJIT2ANyt
 github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2s0bqwp9tc8=
 github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
 github.com/influxdata/influxdb1-client v0.0.0-20191209144304-8bf82d3c094d/go.mod h1:qj24IKcXYK6Iy9ceXlo3Tc+vtHo9lIhSX5JddghvEPo=
-github.com/injectivelabs/cometbft/api v1.0.1-0.20250315062455-e9e4c8a0ecb9 h1:CF4i7hDq39uQaRDBChTiYfGSFGz3KxH5EhJbG9zsOOI=
-github.com/injectivelabs/cometbft/api v1.0.1-0.20250315062455-e9e4c8a0ecb9/go.mod h1:Ivh6nSCTJPQOyfQo8dgnyu/T88it092sEqSrZSmTQN8=
 github.com/jhump/protoreflect v1.15.3 h1:6SFRuqU45u9hIZPJAoZ8c28T3nK64BNdp9w6jFonzls=
 github.com/jhump/protoreflect v1.15.3/go.mod h1:4ORHmSBmlCW8fh3xHmJMGyul1zNqZK4Elxc8qKP+p1k=
 github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af/go.mod h1:Nht3zPeWKUH0NzdCt2Blrr5ys8VGpn0CEB0cQHVjt7k=

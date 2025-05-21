@@ -11,6 +11,7 @@ import (
 	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
+	cmttypes "github.com/cometbft/cometbft/types"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/proto" //nolint: gci // ignore this line for this linter
 
@@ -488,7 +489,7 @@ func (ts *defaultTxSelector) Clear() {
 }
 
 func (ts *defaultTxSelector) SelectTxForProposal(_ context.Context, maxTxBytes, maxBlockGas uint64, memTx sdk.Tx, txBz []byte) bool {
-	txSize := uint64(len(txBz))
+	txSize := uint64(cmttypes.ComputeProtoSizeForTxs([]cmttypes.Tx{txBz}))
 
 	var txGasLimit uint64
 	if memTx != nil {

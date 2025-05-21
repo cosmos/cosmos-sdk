@@ -92,7 +92,7 @@ message DeeplyNestedRepeatedSigner {
 
 message BadSigner {
   option (cosmos.msg.v1.signer) = "signer";
-  bytes signer                  = 1;
+  float signer                  = 1;
 }
 
 message NoSignerOption {

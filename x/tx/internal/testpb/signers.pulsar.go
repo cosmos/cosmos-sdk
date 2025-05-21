@@ -3,6 +3,7 @@ package testpb
 
 import (
 	_ "cosmossdk.io/api/cosmos/msg/v1"
+	binary "encoding/binary"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
@@ -10,6 +11,7 @@ import (
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	io "io"
+	math "math"
 	reflect "reflect"
 	sync "sync"
 )
@@ -7900,8 +7902,8 @@ func (x *fastReflection_BadSigner) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_BadSigner) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if len(x.Signer) != 0 {
-		value := protoreflect.ValueOfBytes(x.Signer)
+	if x.Signer != float32(0) || math.Signbit(float64(x.Signer)) {
+		value := protoreflect.ValueOfFloat32(x.Signer)
 		if !f(fd_BadSigner_signer, value) {
 			return
 		}
@@ -7922,7 +7924,7 @@ func (x *fastReflection_BadSigner) Range(f func(protoreflect.FieldDescriptor, pr
 func (x *fastReflection_BadSigner) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "BadSigner.signer":
-		return len(x.Signer) != 0
+		return x.Signer != float32(0) || math.Signbit(float64(x.Signer))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: BadSigner"))
@@ -7940,7 +7942,7 @@ func (x *fastReflection_BadSigner) Has(fd protoreflect.FieldDescriptor) bool {
 func (x *fastReflection_BadSigner) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "BadSigner.signer":
-		x.Signer = nil
+		x.Signer = float32(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: BadSigner"))
@@ -7959,7 +7961,7 @@ func (x *fastReflection_BadSigner) Get(descriptor protoreflect.FieldDescriptor) 
 	switch descriptor.FullName() {
 	case "BadSigner.signer":
 		value := x.Signer
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfFloat32(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: BadSigner"))
@@ -7981,7 +7983,7 @@ func (x *fastReflection_BadSigner) Get(descriptor protoreflect.FieldDescriptor) 
 func (x *fastReflection_BadSigner) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "BadSigner.signer":
-		x.Signer = value.Bytes()
+		x.Signer = float32(value.Float())
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: BadSigner"))
@@ -8018,7 +8020,7 @@ func (x *fastReflection_BadSigner) Mutable(fd protoreflect.FieldDescriptor) prot
 func (x *fastReflection_BadSigner) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "BadSigner.signer":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfFloat32(float32(0))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: BadSigner"))
@@ -8088,9 +8090,8 @@ func (x *fastReflection_BadSigner) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		l = len(x.Signer)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
+		if x.Signer != 0 || math.Signbit(float64(x.Signer)) {
+			n += 5
 		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
@@ -8121,12 +8122,11 @@ func (x *fastReflection_BadSigner) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if len(x.Signer) > 0 {
-			i -= len(x.Signer)
-			copy(dAtA[i:], x.Signer)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Signer)))
+		if x.Signer != 0 || math.Signbit(float64(x.Signer)) {
+			i -= 4
+			binary.LittleEndian.PutUint32(dAtA[i:], uint32(math.Float32bits(float32(x.Signer))))
 			i--
-			dAtA[i] = 0xa
+			dAtA[i] = 0xd
 		}
 		if input.Buf != nil {
 			input.Buf = append(input.Buf, dAtA...)
@@ -8178,39 +8178,16 @@ func (x *fastReflection_BadSigner) ProtoMethods() *protoiface.Methods {
 			}
 			switch fieldNum {
 			case 1:
-				if wireType != 2 {
+				if wireType != 5 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Signer", wireType)
 				}
-				var byteLen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					byteLen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if byteLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + byteLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
+				var v uint32
+				if (iNdEx + 4) > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Signer = append(x.Signer[:0], dAtA[iNdEx:postIndex]...)
-				if x.Signer == nil {
-					x.Signer = []byte{}
-				}
-				iNdEx = postIndex
+				v = uint32(binary.LittleEndian.Uint32(dAtA[iNdEx:]))
+				iNdEx += 4
+				x.Signer = float32(math.Float32frombits(v))
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -9386,7 +9363,7 @@ type BadSigner struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Signer []byte `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`
+	Signer float32 `protobuf:"fixed32,1,opt,name=signer,proto3" json:"signer,omitempty"`
 }
 
 func (x *BadSigner) Reset() {
@@ -9409,11 +9386,11 @@ func (*BadSigner) Descriptor() ([]byte, []int) {
 	return file_signers_proto_rawDescGZIP(), []int{8}
 }
 
-func (x *BadSigner) GetSigner() []byte {
+func (x *BadSigner) GetSigner() float32 {
 	if x != nil {
 		return x.Signer
 	}
-	return nil
+	return 0
 }
 
 type NoSignerOption struct {
@@ -9885,7 +9862,7 @@ var file_signers_proto_rawDesc = []byte{
 	0x05, 0x69, 0x6e, 0x6e, 0x65, 0x72, 0x3a, 0x0a, 0x82, 0xe7, 0xb0, 0x2a, 0x05, 0x69, 0x6e, 0x6e,
 	0x65, 0x72, 0x3a, 0x0a, 0x82, 0xe7, 0xb0, 0x2a, 0x05, 0x69, 0x6e, 0x6e, 0x65, 0x72, 0x22, 0x30,
 	0x0a, 0x09, 0x42, 0x61, 0x64, 0x53, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x12, 0x16, 0x0a, 0x06, 0x73,
-	0x69, 0x67, 0x6e, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x06, 0x73, 0x69, 0x67,
+	0x69, 0x67, 0x6e, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x02, 0x52, 0x06, 0x73, 0x69, 0x67,
 	0x6e, 0x65, 0x72, 0x3a, 0x0b, 0x82, 0xe7, 0xb0, 0x2a, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72,
 	0x22, 0x28, 0x0a, 0x0e, 0x4e, 0x6f, 0x53, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x4f, 0x70, 0x74, 0x69,
 	0x6f, 0x6e, 0x12, 0x16, 0x0a, 0x06, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01,

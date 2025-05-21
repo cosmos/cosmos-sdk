@@ -531,7 +531,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 		},
 		"large max tx bytes len calculation": {
 			ctx: s.ctx,
-			req: &abci.RequestPrepareProposal{
+			req: &abci.PrepareProposalRequest{
 				Txs:        [][]byte{txBz, txBz, txBz, txBz, txBz},
 				MaxTxBytes: 456,
 			},

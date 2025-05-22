@@ -1,4 +1,4 @@
-package cosmovisor
+package watchers
 
 import (
 	"context"
@@ -7,14 +7,14 @@ import (
 	"time"
 )
 
-type pollWatcher struct {
+type PollWatcher struct {
 	outChan chan []byte
 	errChan chan error
 }
 
-var _ watcher[[]byte] = (*pollWatcher)(nil)
+var _ Watcher[[]byte] = (*PollWatcher)(nil)
 
-func newPollWatcher(ctx context.Context, filename string, pollInterval time.Duration) *pollWatcher {
+func NewPollWatcher(ctx context.Context, filename string, pollInterval time.Duration) *PollWatcher {
 	outChan := make(chan []byte, 1)
 	errChan := make(chan error, 1)
 	ticker := time.NewTicker(pollInterval)
@@ -44,16 +44,16 @@ func newPollWatcher(ctx context.Context, filename string, pollInterval time.Dura
 			}
 		}
 	}()
-	return &pollWatcher{
+	return &PollWatcher{
 		outChan: outChan,
 		errChan: errChan,
 	}
 }
 
-func (w *pollWatcher) Updated() <-chan []byte {
+func (w *PollWatcher) Updated() <-chan []byte {
 	return w.outChan
 }
 
-func (w *pollWatcher) Errors() <-chan error {
+func (w *PollWatcher) Errors() <-chan error {
 	return w.errChan
 }

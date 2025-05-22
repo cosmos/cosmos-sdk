@@ -1,6 +1,7 @@
 package cosmovisor
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,10 +16,21 @@ import (
 	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/store"
 
+	"cosmossdk.io/tools/cosmovisor/internal/watchers"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 var errUntestAble = errors.New("untestable")
+
+func initWatcher[T any](ctx context.Context, cfg *Config, dirWatcher *watchers.FSNotifyWatcher, filename string) watchers.Watcher[T] {
+	if dirWatcher != nil {
+		hybridWatcher := watchers.NewHybridWatcher(ctx, dirWatcher, filename, cfg.PollInterval)
+		return watchers.NewDataWatcher[T](ctx, hybridWatcher)
+	} else {
+		pollWatcher := watchers.NewPollWatcher(ctx, filename, cfg.PollInterval)
+		return watchers.NewDataWatcher[T](ctx, pollWatcher)
+	}
+}
 
 type fileWatcher struct {
 	daemonHome string

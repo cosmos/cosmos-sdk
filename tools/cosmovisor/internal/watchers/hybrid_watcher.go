@@ -1,19 +1,19 @@
-package cosmovisor
+package watchers
 
 import (
 	"context"
 	"time"
 )
 
-type hybridWatcher struct {
+type HybridWatcher struct {
 	outChan chan []byte
 	errChan chan error
 }
 
-var _ watcher[[]byte] = &hybridWatcher{}
+var _ Watcher[[]byte] = &HybridWatcher{}
 
-func newHybridWatcher(ctx context.Context, dirWatcher *fsNotifyWatcher, filename string, backupPollInterval time.Duration) *hybridWatcher {
-	pollWatcher := newPollWatcher(ctx, filename, backupPollInterval)
+func NewHybridWatcher(ctx context.Context, dirWatcher *FSNotifyWatcher, filename string, backupPollInterval time.Duration) *HybridWatcher {
+	pollWatcher := NewPollWatcher(ctx, filename, backupPollInterval)
 	outChan := make(chan []byte, 1)
 	errChan := make(chan error, 1)
 
@@ -50,16 +50,16 @@ func newHybridWatcher(ctx context.Context, dirWatcher *fsNotifyWatcher, filename
 		}
 	}()
 
-	return &hybridWatcher{
+	return &HybridWatcher{
 		outChan: outChan,
 		errChan: errChan,
 	}
 }
 
-func (h hybridWatcher) Updated() <-chan []byte {
+func (h HybridWatcher) Updated() <-chan []byte {
 	return h.outChan
 }
 
-func (h hybridWatcher) Errors() <-chan error {
+func (h HybridWatcher) Errors() <-chan error {
 	return h.errChan
 }

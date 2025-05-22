@@ -8,20 +8,20 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
-type FSNotifyWatcher struct {
+type fsNotifyWatcher struct {
 	watcher *fsnotify.Watcher
-	outChan chan FileUpdate
+	outChan chan fileUpdate
 	errChan chan error
 }
 
-var _ Watcher[FileUpdate] = (*FSNotifyWatcher)(nil)
+var _ watcher[fileUpdate] = (*fsNotifyWatcher)(nil)
 
-type FileUpdate struct {
+type fileUpdate struct {
 	Filename string
 	Contents []byte
 }
 
-func NewFSNotifyWatcher(ctx context.Context, dir string, filenames []string) (*FSNotifyWatcher, error) {
+func newFSNotifyWatcher(ctx context.Context, dir string, filenames []string) (*fsNotifyWatcher, error) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return nil, err
@@ -38,7 +38,7 @@ func NewFSNotifyWatcher(ctx context.Context, dir string, filenames []string) (*F
 		filenameSet[filename] = struct{}{}
 	}
 
-	outChan := make(chan FileUpdate, 1)
+	outChan := make(chan fileUpdate, 1)
 	errChan := make(chan error, 1)
 	go func() {
 		// close the watcher and channels
@@ -64,7 +64,7 @@ func NewFSNotifyWatcher(ctx context.Context, dir string, filenames []string) (*F
 					if err != nil {
 						errChan <- fmt.Errorf("failed to read file %s: %w", filename, err)
 					} else {
-						outChan <- FileUpdate{Filename: filename, Contents: bz}
+						outChan <- fileUpdate{Filename: filename, Contents: bz}
 					}
 				}
 			case err, ok := <-watcher.Errors:
@@ -76,17 +76,17 @@ func NewFSNotifyWatcher(ctx context.Context, dir string, filenames []string) (*F
 		}
 	}()
 
-	return &FSNotifyWatcher{
+	return &fsNotifyWatcher{
 		watcher: watcher,
 		outChan: outChan,
 		errChan: errChan,
 	}, nil
 }
 
-func (w *FSNotifyWatcher) Updated() <-chan FileUpdate {
+func (w *fsNotifyWatcher) Updated() <-chan fileUpdate {
 	return w.outChan
 }
 
-func (w *FSNotifyWatcher) Errors() <-chan error {
+func (w *fsNotifyWatcher) Errors() <-chan error {
 	return w.errChan
 }

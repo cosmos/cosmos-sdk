@@ -1,6 +1,6 @@
 package cosmovisor
 
-type Watcher[T any] interface {
+type watcher[T any] interface {
 	Updated() <-chan T
 	Errors() <-chan error
 }

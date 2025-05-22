@@ -1,22 +1,22 @@
-# CometV1 Migration
+# v54 Migration
 
-This code provides a simple binary to make all necessary changes to a codebase to update a Cosmos SDK repo to use comet v1.0.1.
+This code provides a simple binary to make all necessary changes to a codebase to update an application to use comet v1.0.1 and Cosmos SDK v54.
 
 # Installation
 
 ```shell
-go install github.com/cosmos/cosmos-sdk/tools/migration/cometv1
+go install github.com/cosmos/cosmos-sdk/tools/migration/v54
 ```
 
 # Execution
 
 Running in current directory:
 ```shell
-cometv1 .
+v54 .
 ```
 
 Running in specified directory
 
 ```shell
-cometv1 path/to/dir
+v54 path/to/dir
 ```

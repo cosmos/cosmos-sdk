@@ -207,6 +207,7 @@ func (l Launcher) Run(args []string, stdin io.Reader, stdout, stderr io.Writer) 
 	ctx, cancel := context.WithCancel(context.Background())
 	var wg sync.WaitGroup
 	wg.Add(1)
+	// TODO: replace BatchUpgradeWatcher
 	go func() {
 		defer wg.Done()
 		BatchUpgradeWatcher(ctx, l.cfg, l.logger)
@@ -264,6 +265,7 @@ func (l Launcher) Run(args []string, stdin io.Reader, stdout, stderr io.Writer) 
 // It returns (false, nil) if the process exited normally without triggering an upgrade. This is very unlikely
 // to happen with "start" but may happen with short-lived commands like `simd genesis export ...`
 func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
+	// TODO we shouldn't be getting any current upgrade because we're only using upgrade-info.json to receive signals from the node
 	currentUpgrade, err := l.cfg.UpgradeInfo()
 	if err != nil {
 		// upgrade info not found do nothing
@@ -276,6 +278,8 @@ func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 	}()
 
 	select {
+	// TODO add manual-upgrades watcher
+	// TODO replace with upgrade-info.json watcher
 	case <-l.fw.MonitorUpdate(currentUpgrade):
 		// upgrade - kill the process and restart
 		l.logger.Info("daemon shutting down in an attempt to restart")

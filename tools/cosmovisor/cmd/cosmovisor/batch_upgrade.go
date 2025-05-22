@@ -84,6 +84,7 @@ func processUpgradeList(cfg *cosmovisor.Config, upgradeList [][]string) error {
 		}
 		upgradeInfoPath := cfg.UpgradeInfoFilePath() + "." + upgradeName
 		upgradeInfoPaths = append(upgradeInfoPaths, upgradeInfoPath)
+		// TODO we shouldn't be calling this to create a file and then later read it back!
 		if err := addUpgrade(cfg, true, upgradeHeight, upgradeName, upgradePath, upgradeInfoPath); err != nil {
 			return err
 		}
@@ -112,6 +113,7 @@ func processUpgradeList(cfg *cosmovisor.Config, upgradeList [][]string) error {
 		return fmt.Errorf("error marshaling combined JSON: %w", err)
 	}
 
+	// TODO batch-upgrade and add-upgrade should write to the same batch file
 	// Write to output file
 	err = os.WriteFile(cfg.UpgradeInfoBatchFilePath(), batchData, 0o600)
 	if err != nil {

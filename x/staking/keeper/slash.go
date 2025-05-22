@@ -174,20 +174,9 @@ func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, infractionH
 
 	// Deduct from validator's bonded tokens and update the validator.
 	// Burn the slashed tokens from the pool account and decrease the total supply.
-	initialLiquidTokens := validator.TokensFromShares(validator.LiquidShares).TruncateInt()
 	validator, err = k.RemoveValidatorTokens(ctx, validator, tokensToBurn)
 	if err != nil {
 		return math.NewInt(0), err
-	}
-
-	// Proportionally deduct any liquid tokens from the global total
-	updatedLiquidTokens := validator.TokensFromShares(validator.LiquidShares).TruncateInt()
-	slashedLiquidTokens := initialLiquidTokens.Sub(updatedLiquidTokens)
-	if err := k.DecreaseTotalLiquidStakedTokens(sdkCtx, slashedLiquidTokens); err != nil {
-		// This only error's if the total liquid staked tokens underflows
-		// which would indicate there's a corrupted state where the validator has
-		// liquid tokens that are not accounted for in the global total
-		panic(err)
 	}
 
 	switch validator.GetStatus() {
@@ -400,27 +389,6 @@ func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Valida
 		dstValidator, err := k.GetValidator(ctx, valDstAddr)
 		if err != nil {
 			return math.ZeroInt(), err
-		}
-
-		// if the delegator holds a validator bond to destination validator, decrease the destination validator bond shares
-		if delegation.ValidatorBond {
-			if err := k.SafelyDecreaseValidatorBond(ctx, valDstAddr, sharesToUnbond); err != nil {
-				// Log an error instead of panicking to handle operation failures gracefully
-				k.Logger(ctx).Error("failed to decrease validator bond", "error", err)
-			}
-		}
-
-		// if this delegation is from a liquid staking provider (identified if the delegator
-		// is an ICA account), the global and validator liquid totals should be decremented
-		if k.DelegatorIsLiquidStaker(delegatorAddress) {
-			if err := k.DecreaseTotalLiquidStakedTokens(ctx, tokensToBurn); err != nil {
-				// Log an error instead of panicking to handle operation failures gracefully
-				k.Logger(ctx).Error("failed to decrease total liquid staked tokens", "error", err)
-			}
-			if _, err := k.DecreaseValidatorLiquidShares(ctx, valDstAddr, sharesToUnbond); err != nil {
-				// Log an error instead of panicking to handle operation failures gracefully
-				k.Logger(ctx).Error("failed to decrease validator liquid shares", "error", err)
-			}
 		}
 
 		// tokens of a redelegation currently live in the destination validator

@@ -27,6 +27,7 @@ func NewAddUpgradeCmd() *cobra.Command {
 }
 
 // addUpgrade adds upgrade info to manifest
+// TODO batch-upgrade and add-upgrade should write to the same batch file
 func addUpgrade(cfg *cosmovisor.Config, force bool, upgradeHeight int64, upgradeName, executablePath, upgradeInfoPath string) error {
 	logger := cfg.Logger(os.Stdout)
 

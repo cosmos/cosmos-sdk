@@ -25,25 +25,43 @@ import (
 	"cosmossdk.io/x/upgrade/plan"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
+	"cosmossdk.io/tools/cosmovisor/internal/watchers"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 )
 
 type Launcher struct {
 	logger log.Logger
 	cfg    *Config
+	ctx    context.Context
+	cancel context.CancelFunc
 	// nodeUpgradeWatcher watches for data in an upgrade-info.json created by the running node
-	nodeUpgradeWatcher *dataWatcher[upgradetypes.Plan]
+	nodeUpgradeWatcher watchers.Watcher[upgradetypes.Plan]
 	// manualUpgradesWatcher watchers for data in an upgrade-info.json.batch created by the node operator
-	manualUpgradesWatcher *dataWatcher[[]upgradetypes.Plan]
+	manualUpgradesWatcher watchers.Watcher[[]upgradetypes.Plan]
 }
 
 func NewLauncher(logger log.Logger, cfg *Config) (Launcher, error) {
-	fw, err := newUpgradeFileWatcher(cfg)
+	ctx, cancel := context.WithCancel(context.Background())
+
+	dirWatcher, err := watchers.NewFSNotifyWatcher(ctx, cfg.UpgradeInfoDir(), []string{
+		cfg.UpgradeInfoFilePath(),
+		cfg.UpgradeInfoBatchFilePath(),
+	})
 	if err != nil {
-		return Launcher{}, err
+		logger.Warn("failed to intialize fsnotify, it's probably not available on this platform, using polling only", "error", err)
 	}
 
-	return Launcher{logger: logger, cfg: cfg, nodeUpgradeWatcher: fw}, nil
+	nodeUpgradeWatcher := initWatcher[upgradetypes.Plan](ctx, cfg, dirWatcher, cfg.UpgradeInfoFilePath())
+	manualUpgradesWatcher := initWatcher[[]upgradetypes.Plan](ctx, cfg, dirWatcher, cfg.UpgradeInfoBatchFilePath())
+
+	return Launcher{
+		logger:                logger,
+		cfg:                   cfg,
+		ctx:                   ctx,
+		cancel:                cancel,
+		nodeUpgradeWatcher:    nodeUpgradeWatcher,
+		manualUpgradesWatcher: manualUpgradesWatcher,
+	}, nil
 }
 
 // BatchUpgradeWatcher starts a watcher loop that swaps upgrade manifests at the correct
@@ -51,7 +69,7 @@ func NewLauncher(logger log.Logger, cfg *Config) (Launcher, error) {
 // via the websocket API.
 func BatchUpgradeWatcher(ctx context.Context, cfg *Config, logger log.Logger) {
 	// load batch file in memory
-	uInfos, err := readManualUpgrades(cfg)
+	uInfos, err := ReadManualUpgrades(cfg)
 	if err != nil {
 		logger.Warn("failed to load batch upgrade file", "error", err)
 		uInfos = []upgradetypes.Plan{}

@@ -1,16 +1,16 @@
-package cosmovisor
+package watchers
 
 import (
 	"context"
 	"encoding/json"
 )
 
-type dataWatcher[T any] struct {
+type DataWatcher[T any] struct {
 	outChan chan T
 	errChan chan error
 }
 
-func newDataWatcher[T any](ctx context.Context, watcher watcher[[]byte]) *dataWatcher[T] {
+func NewDataWatcher[T any](ctx context.Context, watcher Watcher[[]byte]) *DataWatcher[T] {
 	outChan := make(chan T, 1)
 	errChan := make(chan error, 1)
 	go func() {
@@ -39,17 +39,17 @@ func newDataWatcher[T any](ctx context.Context, watcher watcher[[]byte]) *dataWa
 			}
 		}
 	}()
-	return &dataWatcher[T]{
+	return &DataWatcher[T]{
 		outChan: outChan,
 		errChan: errChan,
 	}
 }
 
-func (d dataWatcher[T]) Updated() <-chan T {
+func (d DataWatcher[T]) Updated() <-chan T {
 	return d.outChan
 
 }
 
-func (d dataWatcher[T]) Errors() <-chan error {
+func (d DataWatcher[T]) Errors() <-chan error {
 	return d.errChan
 }

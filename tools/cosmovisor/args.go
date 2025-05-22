@@ -106,9 +106,14 @@ func (cfg *Config) BaseUpgradeDir() string {
 	return filepath.Join(cfg.Root(), upgradesDir)
 }
 
+// UpgradeInfoDir is the directory where upgrade-info.json is expected to be created by `x/upgrade/keeper`.
+func (cfg *Config) UpgradeInfoDir() string {
+	return filepath.Join(cfg.Home, "data")
+}
+
 // UpgradeInfoFilePath is the expected upgrade-info filename created by `x/upgrade/keeper`.
 func (cfg *Config) UpgradeInfoFilePath() string {
-	return filepath.Join(cfg.Home, "data", upgradetypes.UpgradeInfoFilename)
+	return filepath.Join(cfg.UpgradeInfoDir(), upgradetypes.UpgradeInfoFilename)
 }
 
 // UpgradeInfoBatchFilePath is the same as UpgradeInfoFilePath but with a batch suffix.

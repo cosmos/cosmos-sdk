@@ -1,6 +1,7 @@
 package cosmovisor
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,10 +16,21 @@ import (
 	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/store"
 
-	upgradetypes "cosmossdk.io/x/upgrade/types"
+	"cosmossdk.io/tools/cosmovisor/internal/watchers"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 var errUntestAble = errors.New("untestable")
+
+func initWatcher[T any](ctx context.Context, cfg *Config, dirWatcher *watchers.FSNotifyWatcher, filename string) watchers.Watcher[T] {
+	if dirWatcher != nil {
+		hybridWatcher := watchers.NewHybridWatcher(ctx, dirWatcher, filename, cfg.PollInterval)
+		return watchers.NewDataWatcher[T](ctx, hybridWatcher)
+	} else {
+		pollWatcher := watchers.NewPollWatcher(ctx, filename, cfg.PollInterval)
+		return watchers.NewDataWatcher[T](ctx, pollWatcher)
+	}
+}
 
 type fileWatcher struct {
 	daemonHome string
@@ -86,7 +98,7 @@ func (fw *fileWatcher) IsStop() bool {
 	}
 }
 
-// MonitorUpdate polls the filesystem to check for new upgrade currentInfo.
+// MonitorUpdate pools the filesystem to check for new upgrade currentInfo.
 // currentName is the name of currently running upgrade.  The check is rejected if it finds
 // an upgrade with the same name.
 func (fw *fileWatcher) MonitorUpdate(currentUpgrade upgradetypes.Plan) <-chan struct{} {

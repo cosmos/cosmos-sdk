@@ -112,11 +112,6 @@ func (cfg *Config) UpgradeInfoFilePath() string {
 	return filepath.Join(cfg.Home, "data", upgradetypes.UpgradeInfoFilename)
 }
 
-// UpgradeInfoFilePath is the expected upgrade-info filename created by `x/upgrade/keeper`.
-func (cfg *Config) ManualUpgradesFilePath() string {
-	return filepath.Join(cfg.Home, "data", ManualUpgradesFilename)
-}
-
 // UpgradeInfoBatchFilePath is the same as UpgradeInfoFilePath but with a batch suffix.
 func (cfg *Config) UpgradeInfoBatchFilePath() string {
 	return cfg.UpgradeInfoFilePath() + ".batch"
@@ -580,7 +575,7 @@ func (cfg Config) DetailString() string {
 	var sb strings.Builder
 	sb.WriteString("Configurable Values:\n")
 	for _, kv := range configEntries {
-		fmt.Fprintf(&sb, "  %s: %s\n", kv.name, kv.value)
+		_, _ = fmt.Fprintf(&sb, "  %s: %s\n", kv.name, kv.value)
 	}
 	sb.WriteString("Derived Values:\n")
 	dnl := 0
@@ -591,7 +586,7 @@ func (cfg Config) DetailString() string {
 	}
 	dFmt := fmt.Sprintf("  %%%ds: %%s\n", dnl)
 	for _, kv := range derivedEntries {
-		fmt.Fprintf(&sb, dFmt, kv.name, kv.value)
+		_, _ = fmt.Fprintf(&sb, dFmt, kv.name, kv.value)
 	}
 	return sb.String()
 }
@@ -619,7 +614,9 @@ func (cfg Config) Export() (string, error) {
 	// convert the time value to its format option
 	cfg.TimeFormatLogs = ValueToTimeFormatOption(cfg.TimeFormatLogs)
 
-	defer file.Close()
+	defer func(file *os.File) {
+		_ = file.Close()
+	}(file)
 
 	// write the configuration to the file
 	err = toml.NewEncoder(file).Encode(cfg)

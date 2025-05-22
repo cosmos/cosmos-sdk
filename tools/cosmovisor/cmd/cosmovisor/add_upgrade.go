@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/tools/cosmovisor"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 func NewAddUpgradeCmd() *cobra.Command {
@@ -20,7 +21,7 @@ func NewAddUpgradeCmd() *cobra.Command {
 		RunE:         addUpgradeCmd,
 	}
 
-	addUpgrade.Flags().Bool(cosmovisor.FlagForce, false, "overwrite existing upgrade binary / upgrade-info.json file")
+	addUpgrade.Flags().Bool(cosmovisor.FlagForce, false, "overwrite existing upgrade binary and plan with the same name")
 	addUpgrade.Flags().Int64(cosmovisor.FlagUpgradeHeight, 0, "define a height at which to upgrade the binary automatically (without governance proposal)")
 
 	return addUpgrade
@@ -28,7 +29,7 @@ func NewAddUpgradeCmd() *cobra.Command {
 
 // addUpgrade adds upgrade info to manifest
 // TODO batch-upgrade and add-upgrade should write to the same batch file
-func addUpgrade(cfg *cosmovisor.Config, force bool, upgradeHeight int64, upgradeName, executablePath, upgradeInfoPath string) error {
+func addUpgrade(cfg *cosmovisor.Config, force bool, upgradeHeight int64, upgradeName, executablePath string) error {
 	logger := cfg.Logger(os.Stdout)
 
 	if !cfg.DisableRecase {
@@ -63,7 +64,7 @@ func addUpgrade(cfg *cosmovisor.Config, force bool, upgradeHeight int64, upgrade
 	logger.Info(fmt.Sprintf("Upgrade binary located at %s", cfg.UpgradeBin(upgradeName)))
 
 	if upgradeHeight > 0 {
-		plan := cosmovisor.ManualUpgradePlan{
+		plan := upgradetypes.Plan{
 			Name:   upgradeName,
 			Height: upgradeHeight,
 		}
@@ -114,7 +115,7 @@ func addUpgradeCmd(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to get upgrade-height flag: %w", err)
 	}
 
-	return addUpgrade(cfg, force, upgradeHeight, upgradeName, executablePath, cfg.UpgradeInfoFilePath())
+	return addUpgrade(cfg, force, upgradeHeight, upgradeName, executablePath)
 }
 
 // saveOrAbort saves data to path or aborts if file exists and force is false

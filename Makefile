@@ -2,6 +2,11 @@
 
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
+# TEST_PARALLEL controls how many test functions can run in parallel.
+# Increasing this value can significantly speed up test execution time,
+# especially for IO-bound tests. Default is 8, but can be overridden:
+# make test TEST_PARALLEL=16
+TEST_PARALLEL ?= 8
 
 # Ensure all tags are fetched
 VERSION_RAW := $(shell git fetch --tags --force >/dev/null 2>&1; git describe --tags --always --match "v*")
@@ -242,7 +247,7 @@ ifneq (,$(shell which tparse 2>/dev/null))
 	for module in $(SUB_MODULES); do \
 		cd ${CURRENT_DIR}/$$module; \
 		echo "Running unit tests for $$(grep '^module' go.mod)"; \
-		go test -mod=readonly -json $(ARGS) $(TEST_PACKAGES) ./... | tparse; \
+		go test -mod=readonly -json $(ARGS) -parallel=$(TEST_PARALLEL) $(TEST_PACKAGES) ./... | tparse; \
 		ec=$$?; \
 		if [ "$$ec" -ne '0' ]; then finalec=$$ec; fi; \
 	done; \
@@ -253,7 +258,7 @@ else
 	for module in $(SUB_MODULES); do \
 		cd ${CURRENT_DIR}/$$module; \
 		echo "Running unit tests for $$(grep '^module' go.mod)"; \
-		go test -mod=readonly $(ARGS) $(TEST_PACKAGES) ./... ; \
+		go test -mod=readonly $(ARGS) -parallel=$(TEST_PARALLEL) $(TEST_PACKAGES) ./... ; \
 		ec=$$?; \
 		if [ "$$ec" -ne '0' ]; then finalec=$$ec; fi; \
 	done; \

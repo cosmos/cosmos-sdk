@@ -10,7 +10,6 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -32,7 +31,10 @@ import (
 type Launcher struct {
 	logger log.Logger
 	cfg    *Config
-	fw     *fileWatcher
+	// nodeUpgradeWatcher watches for data in an upgrade-info.json created by the running node
+	nodeUpgradeWatcher *dataWatcher[upgradetypes.Plan]
+	// manualUpgradesWatcher watchers for data in an upgrade-info.json.batch created by the node operator
+	manualUpgradesWatcher *dataWatcher[[]upgradetypes.Plan]
 }
 
 func NewLauncher(logger log.Logger, cfg *Config) (Launcher, error) {
@@ -41,27 +43,7 @@ func NewLauncher(logger log.Logger, cfg *Config) (Launcher, error) {
 		return Launcher{}, err
 	}
 
-	return Launcher{logger: logger, cfg: cfg, fw: fw}, nil
-}
-
-// loadBatchUpgradeFile loads the batch upgrade file into memory, sorted by
-// their upgrade heights
-func loadBatchUpgradeFile(cfg *Config) ([]upgradetypes.Plan, error) {
-	var uInfos []upgradetypes.Plan
-	upgradeInfoFile, err := os.ReadFile(cfg.UpgradeInfoBatchFilePath())
-	if os.IsNotExist(err) {
-		return uInfos, nil
-	} else if err != nil {
-		return nil, fmt.Errorf("error while reading %s: %w", cfg.UpgradeInfoBatchFilePath(), err)
-	}
-
-	if err = json.Unmarshal(upgradeInfoFile, &uInfos); err != nil {
-		return nil, err
-	}
-	sort.Slice(uInfos, func(i, j int) bool {
-		return uInfos[i].Height < uInfos[j].Height
-	})
-	return uInfos, nil
+	return Launcher{logger: logger, cfg: cfg, nodeUpgradeWatcher: fw}, nil
 }
 
 // BatchUpgradeWatcher starts a watcher loop that swaps upgrade manifests at the correct
@@ -69,7 +51,7 @@ func loadBatchUpgradeFile(cfg *Config) ([]upgradetypes.Plan, error) {
 // via the websocket API.
 func BatchUpgradeWatcher(ctx context.Context, cfg *Config, logger log.Logger) {
 	// load batch file in memory
-	uInfos, err := loadBatchUpgradeFile(cfg)
+	uInfos, err := readManualUpgrades(cfg)
 	if err != nil {
 		logger.Warn("failed to load batch upgrade file", "error", err)
 		uInfos = []upgradetypes.Plan{}
@@ -229,7 +211,7 @@ func (l Launcher) Run(args []string, stdin io.Reader, stdout, stderr io.Writer) 
 		return false, err
 	}
 
-	if !IsSkipUpgradeHeight(args, l.fw.currentInfo) {
+	if !IsSkipUpgradeHeight(args, l.nodeUpgradeWatcher.currentInfo) {
 		l.cfg.WaitRestartDelay()
 
 		if err := l.doBackup(); err != nil {
@@ -240,7 +222,7 @@ func (l Launcher) Run(args []string, stdin io.Reader, stdout, stderr io.Writer) 
 			return false, err
 		}
 
-		if err := UpgradeBinary(l.logger, l.cfg, l.fw.currentInfo); err != nil {
+		if err := UpgradeBinary(l.logger, l.cfg, l.nodeUpgradeWatcher.currentInfo); err != nil {
 			return false, err
 		}
 
@@ -280,7 +262,7 @@ func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 	select {
 	// TODO add manual-upgrades watcher
 	// TODO replace with upgrade-info.json watcher
-	case <-l.fw.MonitorUpdate(currentUpgrade):
+	case <-l.nodeUpgradeWatcher.MonitorUpdate(currentUpgrade):
 		// upgrade - kill the process and restart
 		l.logger.Info("daemon shutting down in an attempt to restart")
 
@@ -311,14 +293,14 @@ func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 			_ = cmd.Process.Kill()
 		}
 	case err := <-cmdDone:
-		l.fw.Stop()
+		l.nodeUpgradeWatcher.Stop()
 		// no error -> command exits normally (eg. short command like `gaiad version`)
 		if err == nil {
 			return false, nil
 		}
 		// the app x/upgrade causes a panic and the app can die before the filewatcher finds the
 		// update, so we need to recheck update-info file.
-		if !l.fw.CheckUpdate(currentUpgrade) {
+		if !l.nodeUpgradeWatcher.CheckUpdate(currentUpgrade) {
 			return false, err
 		}
 	}

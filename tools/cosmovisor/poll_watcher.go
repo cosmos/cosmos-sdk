@@ -7,14 +7,14 @@ import (
 	"time"
 )
 
-type PollWatcher struct {
+type pollWatcher struct {
 	outChan chan []byte
 	errChan chan error
 }
 
-var _ Watcher[[]byte] = (*PollWatcher)(nil)
+var _ watcher[[]byte] = (*pollWatcher)(nil)
 
-func NewPollWatcher(ctx context.Context, filename string, pollInterval time.Duration) *PollWatcher {
+func newPollWatcher(ctx context.Context, filename string, pollInterval time.Duration) *pollWatcher {
 	outChan := make(chan []byte, 1)
 	errChan := make(chan error, 1)
 	ticker := time.NewTicker(pollInterval)
@@ -44,16 +44,16 @@ func NewPollWatcher(ctx context.Context, filename string, pollInterval time.Dura
 			}
 		}
 	}()
-	return &PollWatcher{
+	return &pollWatcher{
 		outChan: outChan,
 		errChan: errChan,
 	}
 }
 
-func (w *PollWatcher) Updated() <-chan []byte {
+func (w *pollWatcher) Updated() <-chan []byte {
 	return w.outChan
 }
 
-func (w *PollWatcher) Errors() <-chan error {
+func (w *pollWatcher) Errors() <-chan error {
 	return w.errChan
 }

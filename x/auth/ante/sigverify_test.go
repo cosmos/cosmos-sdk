@@ -453,3 +453,54 @@ func TestIncrementSequenceDecorator(t *testing.T) {
 		})
 	}
 }
+
+// TestSigVerificationAtGenesis tests that transactions with non-zero account numbers
+// can be processed successfully before the first block is created (at block height 0).
+func TestSigVerificationAtGenesis(t *testing.T) {
+	suite := SetupTestSuite(t, true)
+	suite.txBankKeeper.EXPECT().DenomMetadata(gomock.Any(), gomock.Any()).Return(&banktypes.QueryDenomMetadataResponse{}, nil).AnyTimes()
+	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
+
+	// Set block height to 0 to simulate genesis condition
+	suite.ctx = suite.ctx.WithBlockHeight(0)
+
+	// keys and addresses
+	priv1, _, addr1 := testdata.KeyTestPubAddr() // account with account number 0
+	priv2, _, addr2 := testdata.KeyTestPubAddr() // account with non-zero account number
+
+	addrs := []sdk.AccAddress{addr1, addr2}
+	privs := []cryptotypes.PrivKey{priv1, priv2}
+	accNums := []uint64{1000, 1001} // Use unique account numbers
+
+	msgs := make([]sdk.Msg, len(addrs))
+	// set accounts and create msg for each address
+	for i, addr := range addrs {
+		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
+		require.NoError(t, acc.SetAccountNumber(accNums[i]))
+		suite.accountKeeper.SetAccount(suite.ctx, acc)
+		msgs[i] = testdata.NewTestMsg(addr)
+	}
+
+	require.NoError(t, suite.txBuilder.SetMsgs(msgs...))
+	suite.txBuilder.SetFeeAmount(testdata.NewTestFeeAmount())
+	suite.txBuilder.SetGasLimit(testdata.NewTestGasLimit())
+
+	// Create transaction with both accounts
+	accSeqs := []uint64{0, 0}
+	tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
+	require.NoError(t, err)
+
+	// Set up antehandler with SigVerificationDecorator
+	svd := ante.NewSigVerificationDecorator(suite.accountKeeper, suite.clientCtx.TxConfig.SignModeHandler())
+	antehandler := sdk.ChainAnteDecorators(
+		ante.NewSetPubKeyDecorator(suite.accountKeeper),
+		ante.NewValidateSigCountDecorator(suite.accountKeeper),
+		ante.NewSigGasConsumeDecorator(suite.accountKeeper, ante.DefaultSigVerificationGasConsumer),
+		svd,
+	)
+
+	// The transaction should process successfully even though we're at block height 0 (genesis)
+	// with non-zero account numbers
+	_, err = antehandler(suite.ctx, tx, false)
+	require.NoError(t, err, "signature verification should succeed for non-zero account number at genesis")
+}

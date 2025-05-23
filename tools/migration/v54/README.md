@@ -12,11 +12,11 @@ go install github.com/cosmos/cosmos-sdk/tools/migration/v54
 
 Running in current directory:
 ```shell
-v54 .
+migration .
 ```
 
 Running in specified directory
 
 ```shell
-v54 path/to/dir
+migration path/to/dir
 ```

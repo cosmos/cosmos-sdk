@@ -15,7 +15,7 @@ func main() {
 		dir = os.Args[1]
 		log.Debug().Msgf("checking dir %q", dir)
 		if _, err := os.Stat(dir); err != nil {
-			panic(fmt.Sprintf("error with directory %q: %v\n", dir, err))
+			panic(fmt.Sprintf("error with directory: %q: %v\n", dir, err))
 		}
 	}
 

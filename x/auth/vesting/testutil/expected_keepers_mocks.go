@@ -9,61 +9,10 @@ import (
 	reflect "reflect"
 
 	math "cosmossdk.io/math"
-
 	types "github.com/cosmos/cosmos-sdk/types"
-	types0 "github.com/cosmos/cosmos-sdk/x/auth/types"
-	types1 "github.com/cosmos/cosmos-sdk/x/staking/types"
+	types0 "github.com/cosmos/cosmos-sdk/x/staking/types"
 	gomock "github.com/golang/mock/gomock"
 )
-
-// MockAccountKeeper is a mock of AccountKeeper interface.
-type MockAccountKeeper struct {
-	ctrl     *gomock.Controller
-	recorder *MockAccountKeeperMockRecorder
-}
-
-// MockAccountKeeperMockRecorder is the mock recorder for MockAccountKeeper.
-type MockAccountKeeperMockRecorder struct {
-	mock *MockAccountKeeper
-}
-
-// NewMockAccountKeeper creates a new mock instance.
-func NewMockAccountKeeper(ctrl *gomock.Controller) *MockAccountKeeper {
-	mock := &MockAccountKeeper{ctrl: ctrl}
-	mock.recorder = &MockAccountKeeperMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockAccountKeeper) EXPECT() *MockAccountKeeperMockRecorder {
-	return m.recorder
-}
-
-// GetAccount mocks base method.
-func (m *MockAccountKeeper) GetAccount(arg0 types.Context, arg1 types.AccAddress) types0.AccountI {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAccount", arg0, arg1)
-	ret0, _ := ret[0].(types0.AccountI)
-	return ret0
-}
-
-// GetAccount indicates an expected call of GetAccount.
-func (mr *MockAccountKeeperMockRecorder) GetAccount(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccount", reflect.TypeOf((*MockAccountKeeper)(nil).GetAccount), arg0, arg1)
-}
-
-// SetAccount mocks base method.
-func (m *MockAccountKeeper) SetAccount(arg0 types.Context, arg1 types0.AccountI) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetAccount", arg0, arg1)
-}
-
-// SetAccount indicates an expected call of SetAccount.
-func (mr *MockAccountKeeperMockRecorder) SetAccount(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAccount", reflect.TypeOf((*MockAccountKeeper)(nil).SetAccount), arg0, arg1)
-}
 
 // MockBankKeeper is a mock of BankKeeper interface.
 type MockBankKeeper struct {
@@ -103,7 +52,7 @@ func (mr *MockBankKeeperMockRecorder) BlockedAddr(addr interface{}) *gomock.Call
 }
 
 // GetAllBalances mocks base method.
-func (m *MockBankKeeper) GetAllBalances(ctx types.Context, addr types.AccAddress) types.Coins {
+func (m *MockBankKeeper) GetAllBalances(ctx context.Context, addr types.AccAddress) types.Coins {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllBalances", ctx, addr)
 	ret0, _ := ret[0].(types.Coins)
@@ -114,20 +63,6 @@ func (m *MockBankKeeper) GetAllBalances(ctx types.Context, addr types.AccAddress
 func (mr *MockBankKeeperMockRecorder) GetAllBalances(ctx, addr interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllBalances", reflect.TypeOf((*MockBankKeeper)(nil).GetAllBalances), ctx, addr)
-}
-
-// GetBalance mocks base method.
-func (m *MockBankKeeper) GetBalance(ctx types.Context, addr types.AccAddress, denom string) types.Coin {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetBalance", ctx, addr, denom)
-	ret0, _ := ret[0].(types.Coin)
-	return ret0
-}
-
-// GetBalance indicates an expected call of GetBalance.
-func (mr *MockBankKeeperMockRecorder) GetBalance(ctx, addr, denom interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBalance", reflect.TypeOf((*MockBankKeeper)(nil).GetBalance), ctx, addr, denom)
 }
 
 // IsSendEnabledCoins mocks base method.
@@ -164,7 +99,7 @@ func (mr *MockBankKeeperMockRecorder) SendCoins(ctx, fromAddr, toAddr, amt inter
 }
 
 // SpendableCoins mocks base method.
-func (m *MockBankKeeper) SpendableCoins(ctx types.Context, addr types.AccAddress) types.Coins {
+func (m *MockBankKeeper) SpendableCoins(ctx context.Context, addr types.AccAddress) types.Coins {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SpendableCoins", ctx, addr)
 	ret0, _ := ret[0].(types.Coins)
@@ -175,6 +110,55 @@ func (m *MockBankKeeper) SpendableCoins(ctx types.Context, addr types.AccAddress
 func (mr *MockBankKeeperMockRecorder) SpendableCoins(ctx, addr interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SpendableCoins", reflect.TypeOf((*MockBankKeeper)(nil).SpendableCoins), ctx, addr)
+}
+
+// MockAccountKeeper is a mock of AccountKeeper interface.
+type MockAccountKeeper struct {
+	ctrl     *gomock.Controller
+	recorder *MockAccountKeeperMockRecorder
+}
+
+// MockAccountKeeperMockRecorder is the mock recorder for MockAccountKeeper.
+type MockAccountKeeperMockRecorder struct {
+	mock *MockAccountKeeper
+}
+
+// NewMockAccountKeeper creates a new mock instance.
+func NewMockAccountKeeper(ctrl *gomock.Controller) *MockAccountKeeper {
+	mock := &MockAccountKeeper{ctrl: ctrl}
+	mock.recorder = &MockAccountKeeperMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockAccountKeeper) EXPECT() *MockAccountKeeperMockRecorder {
+	return m.recorder
+}
+
+// GetAccount mocks base method.
+func (m *MockAccountKeeper) GetAccount(arg0 context.Context, arg1 types.AccAddress) types.AccountI {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAccount", arg0, arg1)
+	ret0, _ := ret[0].(types.AccountI)
+	return ret0
+}
+
+// GetAccount indicates an expected call of GetAccount.
+func (mr *MockAccountKeeperMockRecorder) GetAccount(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAccount", reflect.TypeOf((*MockAccountKeeper)(nil).GetAccount), arg0, arg1)
+}
+
+// SetAccount mocks base method.
+func (m *MockAccountKeeper) SetAccount(arg0 context.Context, arg1 types.AccountI) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetAccount", arg0, arg1)
+}
+
+// SetAccount indicates an expected call of SetAccount.
+func (mr *MockAccountKeeperMockRecorder) SetAccount(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAccount", reflect.TypeOf((*MockAccountKeeper)(nil).SetAccount), arg0, arg1)
 }
 
 // MockStakingKeeper is a mock of StakingKeeper interface.
@@ -201,11 +185,12 @@ func (m *MockStakingKeeper) EXPECT() *MockStakingKeeperMockRecorder {
 }
 
 // BondDenom mocks base method.
-func (m *MockStakingKeeper) BondDenom(ctx types.Context) string {
+func (m *MockStakingKeeper) BondDenom(ctx context.Context) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "BondDenom", ctx)
 	ret0, _ := ret[0].(string)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // BondDenom indicates an expected call of BondDenom.
@@ -215,11 +200,12 @@ func (mr *MockStakingKeeperMockRecorder) BondDenom(ctx interface{}) *gomock.Call
 }
 
 // GetDelegatorBonded mocks base method.
-func (m *MockStakingKeeper) GetDelegatorBonded(ctx types.Context, delegator types.AccAddress) math.Int {
+func (m *MockStakingKeeper) GetDelegatorBonded(ctx context.Context, delegator types.AccAddress) (math.Int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDelegatorBonded", ctx, delegator)
 	ret0, _ := ret[0].(math.Int)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // GetDelegatorBonded indicates an expected call of GetDelegatorBonded.
@@ -229,11 +215,12 @@ func (mr *MockStakingKeeperMockRecorder) GetDelegatorBonded(ctx, delegator inter
 }
 
 // GetDelegatorDelegations mocks base method.
-func (m *MockStakingKeeper) GetDelegatorDelegations(ctx types.Context, delegator types.AccAddress, maxRetrieve uint16) []types1.Delegation {
+func (m *MockStakingKeeper) GetDelegatorDelegations(ctx context.Context, delegator types.AccAddress, maxRetrieve uint16) ([]types0.Delegation, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDelegatorDelegations", ctx, delegator, maxRetrieve)
-	ret0, _ := ret[0].([]types1.Delegation)
-	return ret0
+	ret0, _ := ret[0].([]types0.Delegation)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // GetDelegatorDelegations indicates an expected call of GetDelegatorDelegations.
@@ -243,11 +230,12 @@ func (mr *MockStakingKeeperMockRecorder) GetDelegatorDelegations(ctx, delegator,
 }
 
 // GetDelegatorUnbonding mocks base method.
-func (m *MockStakingKeeper) GetDelegatorUnbonding(ctx types.Context, delegator types.AccAddress) math.Int {
+func (m *MockStakingKeeper) GetDelegatorUnbonding(ctx context.Context, delegator types.AccAddress) (math.Int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetDelegatorUnbonding", ctx, delegator)
 	ret0, _ := ret[0].(math.Int)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // GetDelegatorUnbonding indicates an expected call of GetDelegatorUnbonding.
@@ -257,11 +245,12 @@ func (mr *MockStakingKeeperMockRecorder) GetDelegatorUnbonding(ctx, delegator in
 }
 
 // GetUnbondingDelegations mocks base method.
-func (m *MockStakingKeeper) GetUnbondingDelegations(ctx types.Context, delegator types.AccAddress, maxRetrieve uint16) []types1.UnbondingDelegation {
+func (m *MockStakingKeeper) GetUnbondingDelegations(ctx context.Context, delegator types.AccAddress, maxRetrieve uint16) ([]types0.UnbondingDelegation, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetUnbondingDelegations", ctx, delegator, maxRetrieve)
-	ret0, _ := ret[0].([]types1.UnbondingDelegation)
-	return ret0
+	ret0, _ := ret[0].([]types0.UnbondingDelegation)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // GetUnbondingDelegations indicates an expected call of GetUnbondingDelegations.
@@ -271,11 +260,11 @@ func (mr *MockStakingKeeperMockRecorder) GetUnbondingDelegations(ctx, delegator,
 }
 
 // GetValidator mocks base method.
-func (m *MockStakingKeeper) GetValidator(ctx types.Context, valAddr types.ValAddress) (types1.Validator, bool) {
+func (m *MockStakingKeeper) GetValidator(ctx context.Context, valAddr types.ValAddress) (types0.Validator, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetValidator", ctx, valAddr)
-	ret0, _ := ret[0].(types1.Validator)
-	ret1, _ := ret[1].(bool)
+	ret0, _ := ret[0].(types0.Validator)
+	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
@@ -286,11 +275,12 @@ func (mr *MockStakingKeeperMockRecorder) GetValidator(ctx, valAddr interface{}) 
 }
 
 // TransferDelegation mocks base method.
-func (m *MockStakingKeeper) TransferDelegation(ctx types.Context, fromAddr, toAddr types.AccAddress, valAddr types.ValAddress, wantShares math.LegacyDec) math.LegacyDec {
+func (m *MockStakingKeeper) TransferDelegation(ctx context.Context, fromAddr, toAddr types.AccAddress, valAddr types.ValAddress, wantShares math.LegacyDec) (math.LegacyDec, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "TransferDelegation", ctx, fromAddr, toAddr, valAddr, wantShares)
 	ret0, _ := ret[0].(math.LegacyDec)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // TransferDelegation indicates an expected call of TransferDelegation.
@@ -300,11 +290,12 @@ func (mr *MockStakingKeeperMockRecorder) TransferDelegation(ctx, fromAddr, toAdd
 }
 
 // TransferUnbonding mocks base method.
-func (m *MockStakingKeeper) TransferUnbonding(ctx types.Context, fromAddr, toAddr types.AccAddress, valAddr types.ValAddress, wantAmt math.Int) math.Int {
+func (m *MockStakingKeeper) TransferUnbonding(ctx context.Context, fromAddr, toAddr types.AccAddress, valAddr types.ValAddress, wantAmt math.Int) (math.Int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "TransferUnbonding", ctx, fromAddr, toAddr, valAddr, wantAmt)
 	ret0, _ := ret[0].(math.Int)
-	return ret0
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // TransferUnbonding indicates an expected call of TransferUnbonding.

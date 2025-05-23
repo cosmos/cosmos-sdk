@@ -39,8 +39,8 @@ type VestingTestSuite struct {
 	ctx           sdk.Context
 	accountKeeper authkeeper.AccountKeeper
 	bankKeeper    *vestingtestutil.MockBankKeeper
-	stakingKeeper *vestingtestutil.MockStakingKeeper
 	msgServer     vestingtypes.MsgServer
+	stakingKeeper *vestingtestutil.MockStakingKeeper
 }
 
 func (s *VestingTestSuite) SetupTest() {
@@ -54,6 +54,7 @@ func (s *VestingTestSuite) SetupTest() {
 
 	ctrl := gomock.NewController(s.T())
 	s.bankKeeper = vestingtestutil.NewMockBankKeeper(ctrl)
+	s.stakingKeeper = vestingtestutil.NewMockStakingKeeper(ctrl)
 	s.accountKeeper = authkeeper.NewAccountKeeper(
 		encCfg.Codec,
 		storeService,
@@ -63,7 +64,6 @@ func (s *VestingTestSuite) SetupTest() {
 		"cosmos",
 		authtypes.NewModuleAddress("gov").String(),
 	)
-	s.stakingKeeper = vestingtestutil.NewMockStakingKeeper(ctrl)
 
 	vestingtypes.RegisterInterfaces(encCfg.InterfaceRegistry)
 	authtypes.RegisterInterfaces(encCfg.InterfaceRegistry)
@@ -180,7 +180,7 @@ func (s *VestingTestSuite) TestCreateVestingAccount() {
 				to3Addr,
 				sdk.Coins{fooCoin},
 				time.Now().Unix(),
-				true,
+				false,
 			),
 			expErr:    false,
 			expErrMsg: "",
@@ -321,6 +321,7 @@ func (s *VestingTestSuite) TestCreatePeriodicVestingAccount() {
 						Amount: sdk.NewCoins(periodCoin),
 					},
 				},
+				true,
 			),
 			expErr:    true,
 			expErrMsg: "invalid 'from' address",
@@ -337,6 +338,7 @@ func (s *VestingTestSuite) TestCreatePeriodicVestingAccount() {
 						Amount: sdk.NewCoins(periodCoin),
 					},
 				},
+				true,
 			),
 			expErr:    true,
 			expErrMsg: "invalid 'to' address",
@@ -353,6 +355,7 @@ func (s *VestingTestSuite) TestCreatePeriodicVestingAccount() {
 						Amount: sdk.NewCoins(periodCoin),
 					},
 				},
+				true,
 			),
 			expErr:    true,
 			expErrMsg: "invalid start time",
@@ -369,6 +372,7 @@ func (s *VestingTestSuite) TestCreatePeriodicVestingAccount() {
 						Amount: sdk.NewCoins(periodCoin),
 					},
 				},
+				true,
 			),
 			expErr:    true,
 			expErrMsg: "invalid period",
@@ -385,6 +389,7 @@ func (s *VestingTestSuite) TestCreatePeriodicVestingAccount() {
 						Amount: sdk.Coins{sdk.Coin{Denom: "stake", Amount: math.NewInt(-1)}},
 					},
 				},
+				true,
 			),
 			expErr:    true,
 			expErrMsg: "-1stake: invalid coins",
@@ -395,6 +400,7 @@ func (s *VestingTestSuite) TestCreatePeriodicVestingAccount() {
 				s.bankKeeper.EXPECT().BlockedAddr(to1Addr).Return(false)
 				toAcc := s.accountKeeper.NewAccountWithAddress(s.ctx, to1Addr)
 				s.accountKeeper.SetAccount(s.ctx, toAcc)
+				s.bankKeeper.EXPECT().IsSendEnabledCoins(gomock.Any(), gomock.Any()).Return(nil)
 			},
 			input: vestingtypes.NewMsgCreatePeriodicVestingAccount(
 				fromAddr,
@@ -406,7 +412,7 @@ func (s *VestingTestSuite) TestCreatePeriodicVestingAccount() {
 						Amount: sdk.NewCoins(periodCoin),
 					},
 				},
-				true,
+				false,
 			),
 			expErr:    true,
 			expErrMsg: "already exists",
@@ -438,9 +444,10 @@ func (s *VestingTestSuite) TestCreatePeriodicVestingAccount() {
 		{
 			name: "create a valid periodic vesting account",
 			preRun: func() {
-				s.bankKeeper.EXPECT().IsSendEnabledCoins(gomock.Any(), periodCoin.Add(fooCoin)).Return(nil)
 				s.bankKeeper.EXPECT().BlockedAddr(to2Addr).Return(false)
 				s.bankKeeper.EXPECT().SendCoins(gomock.Any(), fromAddr, to2Addr, gomock.Any()).Return(nil)
+				s.bankKeeper.EXPECT().IsSendEnabledCoins(gomock.Any(), gomock.Any()).Return(nil)
+
 			},
 			input: vestingtypes.NewMsgCreatePeriodicVestingAccount(
 				fromAddr,

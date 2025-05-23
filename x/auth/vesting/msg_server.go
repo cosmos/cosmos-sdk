@@ -30,36 +30,42 @@ func NewMsgServerImpl(k keeper.AccountKeeper, bk types.BankKeeper, sk types.Stak
 var _ types.MsgServer = msgServer{}
 
 func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCreateVestingAccount) (*types.MsgCreateVestingAccountResponse, error) {
+	from, err := s.AccountKeeper.AddressCodec().StringToBytes(msg.FromAddress)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'from' address: %s", err)
+	}
+
+	to, err := s.AccountKeeper.AddressCodec().StringToBytes(msg.ToAddress)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'to' address: %s", err)
+	}
+
+	if err := validateAmount(msg.Amount); err != nil {
+		return nil, err
+	}
+
+	if msg.EndTime <= 0 {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid end time")
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	ak := s.AccountKeeper
-	bk := s.BankKeeper
-
-	if err := bk.IsSendEnabledCoins(ctx, msg.Amount...); err != nil {
+	if err := s.BankKeeper.IsSendEnabledCoins(ctx, msg.Amount...); err != nil {
 		return nil, err
 	}
 
-	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
-	if err != nil {
-		return nil, err
-	}
-	to, err := sdk.AccAddressFromBech32(msg.ToAddress)
-	if err != nil {
-		return nil, err
-	}
-
-	if bk.BlockedAddr(to) {
+	if s.BankKeeper.BlockedAddr(to) {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
 	}
 
-	if acc := ak.GetAccount(ctx, to); acc != nil {
+	if acc := s.AccountKeeper.GetAccount(ctx, to); acc != nil {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
 	}
 
 	baseAccount := authtypes.NewBaseAccountWithAddress(to)
-	baseAccount = ak.NewAccount(ctx, baseAccount).(*authtypes.BaseAccount)
+	baseAccount = s.AccountKeeper.NewAccount(ctx, baseAccount).(*authtypes.BaseAccount)
 	baseVestingAccount, err := types.NewBaseVestingAccount(baseAccount, msg.Amount.Sort(), msg.EndTime)
 	if err != nil {
-		return nil, err
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
 	var vestingAccount sdk.AccountI
@@ -69,7 +75,7 @@ func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCre
 		vestingAccount = types.NewContinuousVestingAccountRaw(baseVestingAccount, ctx.BlockTime().Unix())
 	}
 
-	ak.SetAccount(ctx, vestingAccount)
+	s.AccountKeeper.SetAccount(ctx, vestingAccount)
 
 	defer func() {
 		telemetry.IncrCounter(1, "new", "account")
@@ -85,7 +91,7 @@ func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCre
 		}
 	}()
 
-	if err = bk.SendCoins(ctx, from, to, msg.Amount); err != nil {
+	if err = s.BankKeeper.SendCoins(ctx, from, to, msg.Amount); err != nil {
 		return nil, err
 	}
 
@@ -93,39 +99,41 @@ func (s msgServer) CreateVestingAccount(goCtx context.Context, msg *types.MsgCre
 }
 
 func (s msgServer) CreatePermanentLockedAccount(goCtx context.Context, msg *types.MsgCreatePermanentLockedAccount) (*types.MsgCreatePermanentLockedAccountResponse, error) {
+	from, err := s.AccountKeeper.AddressCodec().StringToBytes(msg.FromAddress)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'from' address: %s", err)
+	}
+
+	to, err := s.AccountKeeper.AddressCodec().StringToBytes(msg.ToAddress)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'to' address: %s", err)
+	}
+
+	if err := validateAmount(msg.Amount); err != nil {
+		return nil, err
+	}
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	ak := s.AccountKeeper
-	bk := s.BankKeeper
-
-	if err := bk.IsSendEnabledCoins(ctx, msg.Amount...); err != nil {
+	if err := s.BankKeeper.IsSendEnabledCoins(ctx, msg.Amount...); err != nil {
 		return nil, err
 	}
 
-	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
-	if err != nil {
-		return nil, err
-	}
-	to, err := sdk.AccAddressFromBech32(msg.ToAddress)
-	if err != nil {
-		return nil, err
-	}
-
-	if bk.BlockedAddr(to) {
+	if s.BankKeeper.BlockedAddr(to) {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
 	}
 
-	if acc := ak.GetAccount(ctx, to); acc != nil {
+	if acc := s.AccountKeeper.GetAccount(ctx, to); acc != nil {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "account %s already exists", msg.ToAddress)
 	}
 
 	baseAccount := authtypes.NewBaseAccountWithAddress(to)
-	baseAccount = ak.NewAccount(ctx, baseAccount).(*authtypes.BaseAccount)
+	baseAccount = s.AccountKeeper.NewAccount(ctx, baseAccount).(*authtypes.BaseAccount)
 	vestingAccount, err := types.NewPermanentLockedAccount(baseAccount, msg.Amount)
 	if err != nil {
-		return nil, err
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 
-	ak.SetAccount(ctx, vestingAccount)
+	s.AccountKeeper.SetAccount(ctx, vestingAccount)
 
 	defer func() {
 		telemetry.IncrCounter(1, "new", "account")
@@ -141,7 +149,7 @@ func (s msgServer) CreatePermanentLockedAccount(goCtx context.Context, msg *type
 		}
 	}()
 
-	if err = bk.SendCoins(ctx, from, to, msg.Amount); err != nil {
+	if err = s.BankKeeper.SendCoins(ctx, from, to, msg.Amount); err != nil {
 		return nil, err
 	}
 
@@ -149,21 +157,18 @@ func (s msgServer) CreatePermanentLockedAccount(goCtx context.Context, msg *type
 }
 
 // CreateClawbackVestingAccount creates a new ClawbackVestingAccount, or merges a grant into an existing one.
-func (s msgServer) CreateClawbackVestingAccount(goCtx context.Context, msg *types.MsgCreateClawbackVestingAccount) (*types.MsgCreateClawbackVestingAccountResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	ak := s.AccountKeeper
-	bk := s.BankKeeper
-
-	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
-	if err != nil {
-		return nil, err
-	}
-	to, err := sdk.AccAddressFromBech32(msg.ToAddress)
+func (s msgServer) CreateClawbackVestingAccount(ctx context.Context, msg *types.MsgCreateClawbackVestingAccount) (*types.MsgCreateClawbackVestingAccountResponse, error) {
+	from, err := s.AccountKeeper.AddressCodec().StringToBytes(msg.FromAddress)
 	if err != nil {
 		return nil, err
 	}
 
-	if bk.BlockedAddr(to) {
+	to, err := s.AccountKeeper.AddressCodec().StringToBytes(msg.ToAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	if s.BankKeeper.BlockedAddr(to) {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
 	}
 
@@ -200,7 +205,7 @@ func (s msgServer) CreateClawbackVestingAccount(goCtx context.Context, msg *type
 	}
 
 	madeNewAcc := false
-	acc := ak.GetAccount(ctx, to)
+	acc := s.AccountKeeper.GetAccount(ctx, to)
 	var va *types.ClawbackVestingAccount
 
 	if acc != nil {
@@ -214,17 +219,18 @@ func (s msgServer) CreateClawbackVestingAccount(goCtx context.Context, msg *type
 		case msg.Merge && !isClawback:
 			return nil, errorsmod.Wrapf(sdkerrors.ErrNotSupported, "account %s must be a clawback vesting account", msg.ToAddress)
 		}
-		err := va.AddGrant(ctx, msg.FromAddress, s.StakingKeeper, msg.GetStartTime(), msg.GetLockupPeriods(), msg.GetVestingPeriods(), vestingCoins)
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+		err := va.AddGrant(sdkCtx, msg.FromAddress, s.StakingKeeper, msg.GetStartTime(), msg.GetLockupPeriods(), msg.GetVestingPeriods(), vestingCoins)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		baseAccount := ak.NewAccountWithAddress(ctx, to)
+		baseAccount := s.AccountKeeper.NewAccountWithAddress(ctx, to)
 		va = types.NewClawbackVestingAccount(baseAccount.(*authtypes.BaseAccount), from, vestingCoins, msg.StartTime, msg.LockupPeriods, msg.VestingPeriods)
 		madeNewAcc = true
 	}
 
-	ak.SetAccount(ctx, va)
+	s.AccountKeeper.SetAccount(ctx, va)
 
 	if madeNewAcc {
 		defer func() {
@@ -242,7 +248,7 @@ func (s msgServer) CreateClawbackVestingAccount(goCtx context.Context, msg *type
 		}()
 	}
 
-	err = bk.SendCoins(ctx, from, to, vestingCoins)
+	err = s.BankKeeper.SendCoins(ctx, from, to, vestingCoins)
 	if err != nil {
 		return nil, err
 	}
@@ -325,32 +331,44 @@ func (s msgServer) ReturnGrants(goCtx context.Context, msg *types.MsgReturnGrant
 	return &types.MsgReturnGrantsResponse{}, nil
 }
 
-func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *types.MsgCreatePeriodicVestingAccount) (*types.MsgCreatePeriodicVestingAccountResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	ak := s.AccountKeeper
-	bk := s.BankKeeper
-
-	from, err := sdk.AccAddressFromBech32(msg.FromAddress)
+func (s msgServer) CreatePeriodicVestingAccount(ctx context.Context, msg *types.MsgCreatePeriodicVestingAccount) (*types.MsgCreatePeriodicVestingAccountResponse, error) {
+	from, err := s.AccountKeeper.AddressCodec().StringToBytes(msg.FromAddress)
 	if err != nil {
-		return nil, err
-	}
-	to, err := sdk.AccAddressFromBech32(msg.ToAddress)
-	if err != nil {
-		return nil, err
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'from' address: %s", err)
 	}
 
-	if bk.BlockedAddr(to) {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
+	to, err := s.AccountKeeper.AddressCodec().StringToBytes(msg.ToAddress)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid 'to' address: %s", err)
+	}
+
+	if msg.StartTime < 1 {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid start time of %d, length must be greater than 0", msg.StartTime)
 	}
 
 	var totalCoins sdk.Coins
-	for _, period := range msg.VestingPeriods {
+	for i, period := range msg.VestingPeriods {
+		if period.Length < 1 {
+			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid period length of %d in period %d, length must be greater than 0", period.Length, i)
+		}
+
+		if err := validateAmount(period.Amount); err != nil {
+			return nil, err
+		}
+
 		totalCoins = totalCoins.Add(period.Amount...)
 	}
 
+	if s.BankKeeper.BlockedAddr(to) {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
+	}
+
+	if err := s.BankKeeper.IsSendEnabledCoins(ctx, totalCoins...); err != nil {
+		return nil, err
+	}
+
 	madeNewAcc := false
-	acc := ak.GetAccount(ctx, to)
+	acc := s.AccountKeeper.GetAccount(ctx, to)
 
 	if acc != nil {
 		pva, isPeriodic := acc.(*types.PeriodicVestingAccount)
@@ -365,15 +383,15 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 		pva.AddGrant(ctx, s.StakingKeeper, msg.GetStartTime(), msg.GetVestingPeriods(), totalCoins)
 	} else {
 		baseAccount := authtypes.NewBaseAccountWithAddress(to)
-		baseAccount = ak.NewAccount(ctx, baseAccount).(*authtypes.BaseAccount)
+		baseAccount = s.AccountKeeper.NewAccount(ctx, baseAccount).(*authtypes.BaseAccount)
 		acc, err = types.NewPeriodicVestingAccount(baseAccount, totalCoins.Sort(), msg.StartTime, msg.VestingPeriods)
 		if err != nil {
-			return nil, err
+			return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 		}
 		madeNewAcc = true
 	}
 
-	ak.SetAccount(ctx, acc)
+	s.AccountKeeper.SetAccount(ctx, acc)
 
 	if madeNewAcc {
 		defer func() {
@@ -390,9 +408,22 @@ func (s msgServer) CreatePeriodicVestingAccount(goCtx context.Context, msg *type
 			}
 		}()
 	}
-	if err = bk.SendCoins(ctx, from, to, totalCoins); err != nil {
+
+	if err = s.BankKeeper.SendCoins(ctx, from, to, totalCoins); err != nil {
 		return nil, err
 	}
 
 	return &types.MsgCreatePeriodicVestingAccountResponse{}, nil
+}
+
+func validateAmount(amount sdk.Coins) error {
+	if !amount.IsValid() {
+		return sdkerrors.ErrInvalidCoins.Wrap(amount.String())
+	}
+
+	if !amount.IsAllPositive() {
+		return sdkerrors.ErrInvalidCoins.Wrap(amount.String())
+	}
+
+	return nil
 }

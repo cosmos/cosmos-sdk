@@ -4,9 +4,9 @@ PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
 # TEST_PARALLEL controls how many test functions can run in parallel.
 # Increasing this value can significantly speed up test execution time,
-# especially for IO-bound tests. Default is 8, but can be overridden:
+# especially for IO-bound tests. Default is 4, but can be overridden:
 # make test TEST_PARALLEL=16
-TEST_PARALLEL ?= 8
+TEST_PARALLEL ?= 4
 
 # Ensure all tags are fetched
 VERSION_RAW := $(shell git fetch --tags --force >/dev/null 2>&1; git describe --tags --always --match "v*")

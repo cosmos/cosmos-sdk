@@ -171,11 +171,11 @@ Often times the entity owning that address might not be a single individual. For
 To represent weighted vote on chain, we use the following Protobuf message.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1beta1/gov.proto#L34-L47
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/gov/v1beta1/gov.proto#L32-L44
 ```
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1beta1/gov.proto#L181-L201
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/gov/v1beta1/gov.proto#L178-L195
 ```
 
 For a weighted vote to be valid, the `options` field must not contain duplicate vote options, and the sum of weights of all options must be equal to 1.
@@ -185,7 +185,7 @@ For a weighted vote to be valid, the `options` field must not contain duplicate 
 Cosmos SDK v0.53.0 introduced an option for developers to define a custom vote result and voting power calculation function.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/main/x/gov/keeper/tally.go#L15-L24
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/gov/keeper/tally.go#L15-L24
 ```
 
 This gives developers a more expressive way to handle governance on their appchains. 
@@ -324,7 +324,7 @@ unique id and contains a series of timestamps: `submit_time`, `deposit_end_time`
 `voting_start_time`, `voting_end_time` which track the lifecycle of a proposal
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/gov.proto#L51-L99
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/gov/v1/gov.proto#L50-L86
 ```
 
 A proposal will generally require more than just a set of messages to explain its
@@ -372,19 +372,19 @@ parameter set has to be created and the previous one rendered inactive.
 #### DepositParams
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/gov.proto#L152-L162
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/gov/v1/gov.proto#L160-L169
 ```
 
 #### VotingParams
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/gov.proto#L164-L168
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/gov/v1/gov.proto#L172-L176
 ```
 
 #### TallyParams
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/gov.proto#L170-L182
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/gov/v1/gov.proto#L183-L193
 ```
 
 Parameters are stored in a global `GlobalParams` KVStore.
@@ -424,7 +424,7 @@ const (
 ### Deposit
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/gov.proto#L38-L49
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/gov/v1/gov.proto#L38-L47
 ```
 
 ### ValidatorGovInfo
@@ -552,7 +552,7 @@ More information on how to submit proposals in the [client section](#client).
 Proposals can be submitted by any account via a `MsgSubmitProposal` transaction.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/tx.proto#L42-L69
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/gov/v1/tx.proto#L57-L78
 ```
 
 All `sdk.Msgs` passed into the `messages` field of a `MsgSubmitProposal` message
@@ -583,7 +583,7 @@ A deposit is accepted iff:
 * The deposited coins are conform to the accepted denom from the `MinDeposit` param
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/tx.proto#L134-L147
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/gov/v1/tx.proto#L155-L165
 ```
 
 **State modifications:**
@@ -602,7 +602,7 @@ bonded Atom holders are able to send `MsgVote` transactions to cast their
 vote on the proposal.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/tx.proto#L92-L108
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/gov/v1/tx.proto#L111-L123
 ```
 
 **State modifications:**

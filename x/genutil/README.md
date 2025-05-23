@@ -19,17 +19,17 @@ Genutil contains the data structure that defines an application genesis.
 An application genesis consist of a consensus genesis (g.e. CometBFT genesis) and application related genesis data.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-rc.0/x/genutil/types/genesis.go#L24-L34
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/genutil/types/genesis.go#L27-L37
 ```
 
 The application genesis can then be translated to the consensus engine to the right format:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-rc.0/x/genutil/types/genesis.go#L126-L136
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/genutil/types/genesis.go#L148-L158
 ```
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-rc.0/server/start.go#L397-L407
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/server/start.go#L414-L423
 ```
 
 ## Client

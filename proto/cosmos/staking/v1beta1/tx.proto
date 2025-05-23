@@ -82,11 +82,9 @@ message MsgCreateValidator {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  Description     description = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-  CommissionRates commission  = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-  // Deprecated: This field has been deprecated with LSM in favor of the validator bond
-  string min_self_delegation = 3 [
-    deprecated             = true,
+  Description     description         = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  CommissionRates commission          = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  string          min_self_delegation = 3 [
     (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable)   = false,
@@ -121,13 +119,8 @@ message MsgEditValidator {
   // REF: #2373
   string commission_rate = 3
       [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec"];
-  // Deprecated: This field has been deprecated with LSM in favor of the validator bond
-  string min_self_delegation = 4 [
-    deprecated             = true,
-    (cosmos_proto.scalar)  = "cosmos.Int",
-    (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable)   = false
-  ];
+  string min_self_delegation = 4
+      [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "cosmossdk.io/math.Int"];
 }
 
 // MsgEditValidatorResponse defines the Msg/EditValidator response type.

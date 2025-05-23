@@ -58,7 +58,7 @@ func NewValidator(operator string, pubKey cryptotypes.PubKey, description Descri
 		UnbondingHeight:         int64(0),
 		UnbondingTime:           time.Unix(0, 0).UTC(),
 		Commission:              NewCommission(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec()),
-		MinSelfDelegation:       math.ZeroInt(),
+		MinSelfDelegation:       math.OneInt(),
 		UnbondingOnHoldRefCount: 0,
 		ValidatorBondShares:     math.LegacyZeroDec(),
 		LiquidShares:            math.LegacyZeroDec(),
@@ -447,6 +447,7 @@ func (v *Validator) MinEqual(other *Validator) bool {
 		v.Description.Equal(other.Description) &&
 		v.Commission.Equal(other.Commission) &&
 		v.Jailed == other.Jailed &&
+		v.MinSelfDelegation.Equal(other.MinSelfDelegation) &&
 		v.ConsensusPubkey.Equal(other.ConsensusPubkey)
 }
 
@@ -510,7 +511,7 @@ func (v Validator) GetConsensusPower(r math.Int) int64 {
 	return v.ConsensusPower(r)
 }
 func (v Validator) GetCommission() math.LegacyDec      { return v.Commission.Rate }
-func (v Validator) GetMinSelfDelegation() math.Int     { return math.ZeroInt() }
+func (v Validator) GetMinSelfDelegation() math.Int     { return v.MinSelfDelegation }
 func (v Validator) GetDelegatorShares() math.LegacyDec { return v.DelegatorShares }
 func (v Validator) GetLiquidShares() math.LegacyDec    { return v.LiquidShares }
 

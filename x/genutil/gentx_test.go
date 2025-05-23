@@ -1,6 +1,7 @@
 package genutil_test
 
 import (
+	"cosmossdk.io/math"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -62,11 +63,12 @@ func (suite *GenTxTestSuite) SetupTest() {
 
 	var err error
 	amount := sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)
+	one := math.OneInt()
 	suite.msg1, err = stakingtypes.NewMsgCreateValidator(
-		sdk.ValAddress(pk1.Address()).String(), pk1, amount, desc, comm)
+		sdk.ValAddress(pk1.Address()).String(), pk1, amount, desc, comm, one)
 	suite.NoError(err)
 	suite.msg2, err = stakingtypes.NewMsgCreateValidator(
-		sdk.ValAddress(pk2.Address()).String(), pk1, amount, desc, comm)
+		sdk.ValAddress(pk2.Address()).String(), pk1, amount, desc, comm, one)
 	suite.NoError(err)
 }
 

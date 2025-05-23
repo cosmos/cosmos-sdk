@@ -36,6 +36,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## [Unreleased]
+
+### Bug Fixes
+
+* (x/epochs) [#24770](https://github.com/cosmos/cosmos-sdk/pull/24770) Fix register of epoch hooks in `InvokeSetHooks`.
+
 ## [v0.53.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.0) - 2025-04-29
 
 ### Features

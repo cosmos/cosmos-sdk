@@ -47,7 +47,7 @@ on modules, see our [introduction doc](./x/README.md).
 
 ## Tools and Frameworks
 
-The Cosmos ecosystem is vast.
+The Cosmos ecosystem is vast and diverse.
 [Awesome Cosmos](https://github.com/cosmos/awesome-cosmos) is a community-curated list of notable frameworks, modules and tools.
 
 ### Cosmos Hub Mainnet

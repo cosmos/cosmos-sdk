@@ -28,7 +28,7 @@
 
 The Cosmos SDK is a framework for building blockchain applications. [CometBFT (BFT Consensus)](https://github.com/cometbft/cometbft) and the Cosmos SDK are written in the Go programming language. Cosmos SDK is used to build [Gaia](https://github.com/cosmos/gaia), the implementation of the Cosmos Hub.
 
-**WARNING**: The Cosmos SDK has mostly stabilized, but we are still making some breaking changes.
+**WARNING**: The Cosmos SDK has mostly stabilized, but we are still making some breaking changes to it.
 
 **Note**: We advise to always use the latest maintained [Go](https://go.dev/dl) version for building Cosmos SDK applications.
 

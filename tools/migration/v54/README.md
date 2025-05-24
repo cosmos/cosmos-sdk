@@ -4,8 +4,11 @@ This code provides a simple binary to make all necessary changes to a codebase t
 
 # Installation
 
+## Local
+
 ```shell
-go install github.com/cosmos/cosmos-sdk/tools/migration/v54
+cd tools/migration/v54
+go install .
 ```
 
 # Execution

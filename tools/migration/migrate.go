@@ -8,6 +8,7 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -19,7 +20,10 @@ import (
 // GoModUpdate defines a mapping of module path to the version it should be updated to.
 type GoModUpdate map[string]string
 
+type GoModRemoval []string
+
 type MigrateArgs struct {
+	GoModRemoval GoModRemoval
 	// GoModUpdates defines the list of modules to update.
 	GoModUpdates GoModUpdate
 	// ArgUpdates defines the necessary changes where a function has reduced its arguments.
@@ -52,7 +56,7 @@ func Migrate(directory string, args MigrateArgs) error {
 	if err != nil {
 		return err
 	}
-	if err := updateGoModules(goModuleFiles, args.GoModUpdates); err != nil {
+	if err := updateGoModules(goModuleFiles, args.GoModUpdates, args.GoModRemoval); err != nil {
 		return fmt.Errorf("error updating go.mod files: %w", err)
 	}
 	if err := updateFiles(goFiles, args); err != nil {
@@ -61,7 +65,7 @@ func Migrate(directory string, args MigrateArgs) error {
 	return nil
 }
 
-func updateGoModules(goModFiles []string, updates GoModUpdate) error {
+func updateGoModules(goModFiles []string, updates GoModUpdate, removals GoModRemoval) error {
 	eg := errgroup.Group{}
 	for _, filePath := range goModFiles {
 		eg.Go(func() error {
@@ -80,6 +84,12 @@ func updateGoModules(goModFiles []string, updates GoModUpdate) error {
 			for _, module := range modFile.Require {
 				if module.Indirect {
 					continue
+				}
+				if slices.Contains(removals, module.Mod.Path) {
+					if err := modFile.DropRequire(module.Mod.Path); err != nil {
+						return fmt.Errorf("error removing %s: %w", module.Mod.Path, err)
+					}
+					modified = true
 				}
 				// if this module is one we want to update it, we call AddRequire, which updates the version.
 				if newVersion, ok := updates[module.Mod.Path]; ok {

@@ -22,6 +22,7 @@ func main() {
 	log.Debug().Msgf("starting migration in dir %q", dir)
 
 	args := migration.MigrateArgs{
+		GoModRemoval:   removals,
 		GoModUpdates:   moduleUpdates,
 		ArgUpdates:     callUpdates,
 		ComplexUpdates: complexReplacements,

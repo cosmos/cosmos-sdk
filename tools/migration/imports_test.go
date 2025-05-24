@@ -12,6 +12,7 @@ var (
 		{Old: "github.com/cometbft/cometbft/proto/tendermint/types", New: "github.com/cometbft/cometbft/api/cometbft/types/v1"},
 		{Old: "github.com/cometbft/cometbft/proto/tendermint/crypto", New: "github.com/cometbft/cometbft/api/cometbft/crypto/v1"},
 		{Old: "github.com/cometbft/cometbft/proto/tendermint/state", New: "github.com/cometbft/cometbft/api/cometbft/state/v1"},
+		{Old: "cosmossdk.io/x/upgrade", New: "github.com/cosmos/cosmos-sdk/x/upgrade", AllPackages: true},
 	}
 )
 
@@ -50,6 +51,17 @@ func TestUpdateImports(t *testing.T) {
 			doNotWantImport: `"github.com/cometbft/cometbft/proto/tendermint/crypto"`,
 			wantImport:      `"github.com/cometbft/cometbft/api/cometbft/crypto/v1"`,
 			wantAlias:       "crypto",
+			wantMod:         true,
+		},
+		{
+			name: "block import with one replacement",
+			input: `package main
+					import (
+						"fmt"
+						"cosmossdk.io/x/upgrade/types"
+					)`,
+			doNotWantImport: `"cosmossdk.io/x/upgrade/types"`,
+			wantImport:      `"github.com/cosmos/cosmos-sdk/x/upgrade/types"`,
 			wantMod:         true,
 		},
 		{

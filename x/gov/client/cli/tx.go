@@ -240,11 +240,6 @@ $ %s tx gov submit-legacy-proposal --title="Test Proposal" --description="My awe
 				return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 			}
 
-			fmt.Println("error: ", err)
-
-			fmt.Println("Invalid proposal title, please input a valid proposal title.")
-			fmt.Println("args {}", args)
-
 			if len(args) == 0 {
 				return fmt.Errorf("failed to parse proposal: %w", err)
 

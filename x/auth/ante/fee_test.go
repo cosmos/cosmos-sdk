@@ -165,55 +165,6 @@ func TestDeductFees(t *testing.T) {
 	require.Nil(t, err, "Tx errored after account has been set with sufficient funds")
 }
 
-func TestDeductFees_WithName(t *testing.T) {
-	s := SetupTestSuite(t, false)
-	s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
-
-	// keys and addresses
-	priv1, _, addr1 := testdata.KeyTestPubAddr()
-
-	// msg and signatures
-	msg := testdata.NewTestMsg(addr1)
-	feeAmount := testdata.NewTestFeeAmount()
-	gasLimit := testdata.NewTestGasLimit()
-	require.NoError(t, s.txBuilder.SetMsgs(msg))
-	s.txBuilder.SetFeeAmount(feeAmount)
-	s.txBuilder.SetGasLimit(gasLimit)
-
-	privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
-
-	tx, err := s.CreateTestTx(s.ctx, privs, accNums, accSeqs, s.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
-	require.NoError(t, err)
-
-	// Get the signer's address from the transaction
-	signers, err := tx.GetSigners()
-	require.NoError(t, err)
-	signerAddr := sdk.AccAddress(signers[0])
-	fmt.Printf("Signer address: %s\n", signerAddr.String())
-
-	s.accountKeeper.SetAccount(s.ctx, authtypes.NewBaseAccountWithAddress(signerAddr))
-
-	// Set up initial account with coins
-	coins := sdk.NewCoins(sdk.NewCoin("atom", math.NewInt(200)))
-
-	// Using mock bank keeper
-	s.bankKeeper.EXPECT().MintCoins(s.ctx, types.FeeCollectorName, coins).Return(nil)
-	s.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(s.ctx, types.FeeCollectorName, addr1, coins).Return(nil)
-
-	err = s.bankKeeper.MintCoins(s.ctx, types.FeeCollectorName, coins)
-	require.NoError(t, err)
-	err = s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, types.FeeCollectorName, addr1, coins)
-	require.NoError(t, err)
-
-	altCollectorName := distrtypes.ModuleName
-
-	s.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr1, altCollectorName, gomock.Any()).Return(nil)
-	dfd := ante.NewDeductFeeDecoratorWithName(s.accountKeeper, s.bankKeeper, nil, nil, altCollectorName)
-	antehandler := sdk.ChainAnteDecorators(dfd)
-	_, err = antehandler(s.ctx, tx, false)
-	require.NoError(t, err)
-}
-
 func TestDeductFees_WithName_Table(t *testing.T) {
 	testCases := []struct {
 		name             string
@@ -237,18 +188,17 @@ func TestDeductFees_WithName_Table(t *testing.T) {
 			s := SetupTestSuite(t, false)
 			s.txBuilder = s.clientCtx.TxConfig.NewTxBuilder()
 
-			// keys and addresses
-			priv1, _, addr1 := testdata.KeyTestPubAddr()
+			accs := s.CreateTestAccounts(1)
 
 			// msg and signatures
-			msg := testdata.NewTestMsg(addr1)
+			msg := testdata.NewTestMsg(accs[0].acc.GetAddress())
 			feeAmount := testdata.NewTestFeeAmount()
 			gasLimit := testdata.NewTestGasLimit()
 			require.NoError(t, s.txBuilder.SetMsgs(msg))
 			s.txBuilder.SetFeeAmount(feeAmount)
 			s.txBuilder.SetGasLimit(gasLimit)
 
-			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
+			privs, accNums, accSeqs := []cryptotypes.PrivKey{accs[0].priv}, []uint64{0}, []uint64{0}
 			tx, err := s.CreateTestTx(s.ctx, privs, accNums, accSeqs, s.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 			require.NoError(t, err)
 
@@ -258,21 +208,19 @@ func TestDeductFees_WithName_Table(t *testing.T) {
 			signerAddr := sdk.AccAddress(signers[0])
 			fmt.Printf("Signer address: %s\n", signerAddr.String())
 
-			s.accountKeeper.SetAccount(s.ctx, authtypes.NewBaseAccountWithAddress(signerAddr))
-
 			// Set up initial account with coins
 			coins := sdk.NewCoins(sdk.NewCoin("atom", math.NewInt(200)))
 
 			// Using mock bank keeper
 			s.bankKeeper.EXPECT().MintCoins(s.ctx, types.FeeCollectorName, coins).Return(nil)
-			s.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(s.ctx, types.FeeCollectorName, addr1, coins).Return(nil)
+			s.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(s.ctx, types.FeeCollectorName, accs[0].acc.GetAddress(), coins).Return(nil)
 
 			err = s.bankKeeper.MintCoins(s.ctx, types.FeeCollectorName, coins)
 			require.NoError(t, err)
-			err = s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, types.FeeCollectorName, addr1, coins)
+			err = s.bankKeeper.SendCoinsFromModuleToAccount(s.ctx, types.FeeCollectorName, accs[0].acc.GetAddress(), coins)
 			require.NoError(t, err)
 
-			s.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), addr1, tc.altCollectorName, gomock.Any()).Return(nil)
+			s.bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), accs[0].acc.GetAddress(), tc.altCollectorName, gomock.Any()).Return(nil)
 			dfd := ante.NewDeductFeeDecoratorWithName(s.accountKeeper, s.bankKeeper, nil, nil, tc.altCollectorName)
 			antehandler := sdk.ChainAnteDecorators(dfd)
 			_, err = antehandler(s.ctx, tx, false)

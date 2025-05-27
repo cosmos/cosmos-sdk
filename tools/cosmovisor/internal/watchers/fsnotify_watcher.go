@@ -38,7 +38,9 @@ func NewFSNotifyWatcher(ctx context.Context, dir string, filenames []string) (*F
 	go func() {
 		// close the watcher and channels
 		// when the goroutines exits via return's
-		defer watcher.Close()
+		defer func(watcher *fsnotify.Watcher) {
+			_ = watcher.Close()
+		}(watcher)
 		defer close(outChan)
 		defer close(errChan)
 

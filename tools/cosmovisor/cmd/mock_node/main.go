@@ -10,6 +10,8 @@ import (
 )
 
 func main() {
+	// TODO response to GetLatestBlock, status, and write leveldb block number
+
 	cmd := &cobra.Command{
 		Use:   "mock_node",
 		Short: "A mock node for testing cosmovisor.",

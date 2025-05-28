@@ -22,7 +22,7 @@ Each entry must include the Github issue reference in the following format:
 
 ## [Unreleased]
 
-# [v1.0.0](https://github.com/cosmos/cosmos-sdk/releases/tag/api/v1.0.0)
+## [v1.0.0](https://github.com/cosmos/cosmos-sdk/releases/tag/api/v1.0.0)
 
 ### Breaking Changes
 

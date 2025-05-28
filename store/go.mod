@@ -80,3 +80,8 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250422160041-2d3770c4ea7f // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+// replace (
+// 	<temporary replace>
+// )
+replace github.com/cosmos/cosmos-db => github.com/cosmos/cosmos-db v0.0.0-20250505172547-38785e92904d

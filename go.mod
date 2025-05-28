@@ -222,9 +222,11 @@ require (
 // Replace all unreleased direct deps upgraded to comet v1
 replace (
 	cosmossdk.io/api => ./api
+	cosmossdk.io/collections => ./collections
 	cosmossdk.io/core => ./core
 	cosmossdk.io/store => ./store
 	cosmossdk.io/x/tx => ./x/tx
+	github.com/cosmos/cosmos-db => github.com/cosmos/cosmos-db v0.0.0-20250505172547-38785e92904d
 )
 
 // Below are the long-lived replace of the Cosmos SDK

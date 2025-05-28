@@ -116,18 +116,18 @@ func (n *MockNode) Run(ctx context.Context) error {
 
 	n.logger.Info("Starting mock node", "start_height", n.height, "block_time", n.blockTime, "upgrade_plan", n.upgradePlan, "halt_height", upgradeHeight)
 	srv := n.startHTTPServer()
+	ticker := time.NewTicker(n.blockTime)
+	defer ticker.Stop()
 	for n.height < upgradeHeight {
 		n.logger.Info("Processed mock block", "height", n.height)
-		timer := time.NewTimer(n.blockTime)
 		select {
 		case <-ctx.Done():
 			n.logger.Info("Received shutdown signal, stopping node")
-			timer.Stop()
 			if err := srv.Shutdown(ctx); err != nil {
 				n.logger.Error("Error shutting down HTTP server", "err", err)
 			}
 			return nil
-		case <-timer.C:
+		case <-ticker.C:
 			n.height++
 		}
 	}

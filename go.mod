@@ -3,7 +3,7 @@ go 1.23.5
 module github.com/cosmos/cosmos-sdk
 
 require (
-	cosmossdk.io/api v0.9.2
+	cosmossdk.io/api v1.0.0-alpha.0
 	cosmossdk.io/collections v1.2.1
 	cosmossdk.io/core v0.11.3
 	cosmossdk.io/depinject v1.2.0
@@ -221,7 +221,6 @@ require (
 
 // Replace all unreleased direct deps upgraded to comet v1
 replace (
-	cosmossdk.io/api => ./api
 	cosmossdk.io/collections => ./collections
 	cosmossdk.io/core => ./core
 	cosmossdk.io/store => ./store

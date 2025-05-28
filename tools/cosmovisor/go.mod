@@ -27,7 +27,7 @@ require (
 	cloud.google.com/go/iam v1.3.1 // indirect
 	cloud.google.com/go/monitoring v1.22.1 // indirect
 	cloud.google.com/go/storage v1.50.0 // indirect
-	cosmossdk.io/api v0.9.2 // indirect
+	cosmossdk.io/api v1.0.0-alpha.0 // indirect
 	cosmossdk.io/collections v1.2.1 // indirect
 	cosmossdk.io/core v0.11.3 // indirect
 	cosmossdk.io/depinject v1.2.0 // indirect
@@ -211,7 +211,6 @@ replace github.com/cosmos/cosmos-sdk => ../..
 
 // Replace all unreleased indirect deps upgraded to comet v1
 replace (
-	cosmossdk.io/api => ../../api
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/tx => ../../x/tx

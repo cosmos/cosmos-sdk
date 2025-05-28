@@ -3,7 +3,7 @@ module cosmossdk.io/x/tx
 go 1.23.0
 
 require (
-	cosmossdk.io/api v0.9.2
+	cosmossdk.io/api v1.0.0-alpha.0
 	cosmossdk.io/core v0.11.3
 	cosmossdk.io/errors v1.0.2
 	cosmossdk.io/math v1.5.3
@@ -35,10 +35,7 @@ require (
 )
 
 // Replace all unreleased direct deps upgraded to comet v1
-replace (
-	cosmossdk.io/api => ../../api
-	cosmossdk.io/core => ../../core
-)
+replace cosmossdk.io/core => ../../core
 
 // NOTE: we do not want to replace to the development version of cosmossdk.io/api yet
 // Until https://github.com/cosmos/cosmos-sdk/issues/19228 is resolved

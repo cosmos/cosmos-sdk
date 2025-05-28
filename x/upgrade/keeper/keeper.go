@@ -13,9 +13,10 @@ import (
 
 	"github.com/hashicorp/go-metrics"
 
-	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log/v2"
+	"cosmossdk.io/log"
+
+	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 
@@ -33,14 +34,14 @@ import (
 // UpgradeInfoFileName file to store upgrade information
 // use x/upgrade/types.UpgradeInfoFilename instead.
 //
-// Deprecated: will be removed in the future.
+// Deprecated:will be removed in the future.
 const UpgradeInfoFileName string = "upgrade-info.json"
 
 type Keeper struct {
 	homePath           string                          // root directory of app config
 	skipUpgradeHeights map[int64]bool                  // map of heights to skip for an upgrade
 	storeService       corestore.KVStoreService        // key to access x/upgrade store
-	cdc                codec.BinaryCodec               // App-wide binary codec
+	cdc                codec.Codec                     // App-wide binary codec
 	upgradeHandlers    map[string]types.UpgradeHandler // map of plan name to upgrade handler
 	versionSetter      xp.ProtocolVersionSetter        // implements setting the protocol version field on BaseApp
 	downgradeVerified  bool                            // tells if we've already sanity checked that this binary version isn't being used against an old state.
@@ -50,12 +51,11 @@ type Keeper struct {
 
 // NewKeeper constructs an upgrade Keeper which requires the following arguments:
 // skipUpgradeHeights - map of heights to skip an upgrade
-// storeService - a store service with which to access upgrade's store
+// storeKey - a store key with which to access upgrade's store
 // cdc - the app-wide binary codec
 // homePath - root directory of the application's config
 // vs - the interface implemented by baseapp which allows setting baseapp's protocol version field
-// authority - the address capable of executing upgrade proposals
-func NewKeeper(skipUpgradeHeights map[int64]bool, storeService corestore.KVStoreService, cdc codec.BinaryCodec, homePath string, vs xp.ProtocolVersionSetter, authority string) *Keeper {
+func NewKeeper(skipUpgradeHeights map[int64]bool, storeService corestore.KVStoreService, cdc codec.Codec, homePath string, vs xp.ProtocolVersionSetter, authority string) *Keeper {
 	k := &Keeper{
 		homePath:           homePath,
 		skipUpgradeHeights: skipUpgradeHeights,
@@ -274,7 +274,7 @@ func (k Keeper) ScheduleUpgrade(ctx context.Context, plan types.Plan) error {
 		return err
 	}
 
-	telemetry.SetGaugeWithLabels([]string{"server", "info"}, 1, []metrics.Label{telemetry.NewLabel("upgrade_height", strconv.FormatInt(plan.Height, 10))}) //nolint:staticcheck // TODO: switch to OpenTelemetry
+	telemetry.SetGaugeWithLabels([]string{"server", "info"}, 1, []metrics.Label{telemetry.NewLabel("upgrade_height", strconv.FormatInt(plan.Height, 10))})
 
 	return nil
 }
@@ -488,7 +488,7 @@ func (k Keeper) ApplyUpgrade(ctx context.Context, plan types.Plan) error {
 		return err
 	}
 
-	// increment the protocol version and set it in state and baseapp
+	// incremement the protocol version and set it in state and baseapp
 	nextProtocolVersion, err := k.getProtocolVersion(ctx)
 	if err != nil {
 		return err
@@ -524,7 +524,7 @@ func (k Keeper) IsSkipHeight(height int64) bool {
 	return k.skipUpgradeHeights[height]
 }
 
-// DumpUpgradeInfoToDisk writes upgrade information to types.UpgradeInfoFilename.
+// DumpUpgradeInfoToDisk writes upgrade information to UpgradeInfoFileName.
 func (k Keeper) DumpUpgradeInfoToDisk(height int64, p types.Plan) error {
 	upgradeInfoFilePath, err := k.GetUpgradeInfoPath()
 	if err != nil {
@@ -536,7 +536,7 @@ func (k Keeper) DumpUpgradeInfoToDisk(height int64, p types.Plan) error {
 		Height: height,
 		Info:   p.Info,
 	}
-	info, err := json.Marshal(upgradeInfo)
+	info, err := k.cdc.MarshalJSON(&upgradeInfo)
 	if err != nil {
 		return err
 	}
@@ -585,7 +585,7 @@ func (k Keeper) ReadUpgradeInfoFromDisk() (types.Plan, error) {
 	}
 
 	if upgradeInfo.Height > 0 {
-		telemetry.SetGaugeWithLabels([]string{"server", "info"}, 1, []metrics.Label{telemetry.NewLabel("upgrade_height", strconv.FormatInt(upgradeInfo.Height, 10))}) //nolint:staticcheck // TODO: switch to OpenTelemetry
+		telemetry.SetGaugeWithLabels([]string{"server", "info"}, 1, []metrics.Label{telemetry.NewLabel("upgrade_height", strconv.FormatInt(upgradeInfo.Height, 10))})
 	}
 
 	return upgradeInfo, nil

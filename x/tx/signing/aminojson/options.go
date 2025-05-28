@@ -8,7 +8,6 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
-	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/runtime/protoimpl"
 	"google.golang.org/protobuf/types/descriptorpb"
 
@@ -111,10 +110,6 @@ var customTypeExtension = &protoimpl.ExtensionInfo{
 	Name:          gogo.E_Customtype.Name,
 	Tag:           gogo.E_Customtype.Tag,
 	Filename:      gogo.E_Customtype.Filename,
-}
-
-func init() {
-	_ = protoregistry.GlobalTypes.RegisterExtension(customTypeExtension)
 }
 
 func (enc Encoder) getFieldEncoder(field protoreflect.FieldDescriptor) FieldEncoder {

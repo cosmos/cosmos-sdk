@@ -13,6 +13,8 @@ require (
 )
 
 require (
+	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.6-20241120201313-68e42a58b301.1 // indirect
+	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.6-20240130113600-88ef6483f90f.1 // indirect
 	github.com/cometbft/cometbft/api v1.0.0 // indirect
 	github.com/dgraph-io/ristretto/v2 v2.1.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect

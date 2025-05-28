@@ -2,7 +2,6 @@ package watchers
 
 import (
 	"context"
-	"encoding/json"
 )
 
 type DataWatcher[T any] struct {
@@ -10,7 +9,7 @@ type DataWatcher[T any] struct {
 	errChan chan error
 }
 
-func NewDataWatcher[T any](ctx context.Context, watcher Watcher[[]byte]) *DataWatcher[T] {
+func NewDataWatcher[T any](ctx context.Context, watcher Watcher[[]byte], unmarshal func([]byte) (T, error)) *DataWatcher[T] {
 	outChan := make(chan T, 1)
 	errChan := make(chan error, 1)
 	go func() {
@@ -25,7 +24,7 @@ func NewDataWatcher[T any](ctx context.Context, watcher Watcher[[]byte]) *DataWa
 					return
 				}
 				var data T
-				err := json.Unmarshal(contents, &data)
+				data, err := unmarshal(contents)
 				// ignore errors because failing JSON unmarshal probably just means the file is incomplete
 				if err == nil {
 					outChan <- data

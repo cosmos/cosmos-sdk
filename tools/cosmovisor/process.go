@@ -10,23 +10,16 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
-	"strconv"
 	"strings"
-	"sync"
 	"syscall"
 	"time"
 
-	"github.com/fsnotify/fsnotify"
-	"github.com/otiai10/copy"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-
 	"cosmossdk.io/log"
-	"cosmossdk.io/x/upgrade/plan"
-	upgradetypes "cosmossdk.io/x/upgrade/types"
+	"github.com/otiai10/copy"
 
 	"cosmossdk.io/tools/cosmovisor/internal/watchers"
-	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 type Launcher struct {
@@ -38,11 +31,11 @@ type Launcher struct {
 	nodeUpgradeWatcher watchers.Watcher[upgradetypes.Plan]
 	// manualUpgradesWatcher watchers for data in an upgrade-info.json.batch created by the node operator
 	manualUpgradesWatcher watchers.Watcher[[]upgradetypes.Plan]
+	upgradePlan           *upgradetypes.Plan
 }
 
 func NewLauncher(logger log.Logger, cfg *Config) (Launcher, error) {
-	ctx, cancel := context.WithCancel(context.Background())
-
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGQUIT, syscall.SIGTERM)
 	dirWatcher, err := watchers.NewFSNotifyWatcher(ctx, cfg.UpgradeInfoDir(), []string{
 		cfg.UpgradeInfoFilePath(),
 		cfg.UpgradeInfoBatchFilePath(),
@@ -51,6 +44,7 @@ func NewLauncher(logger log.Logger, cfg *Config) (Launcher, error) {
 		logger.Warn("failed to intialize fsnotify, it's probably not available on this platform, using polling only", "error", err)
 	}
 
+	// TODO the watchers should do data validation in additional to json unmarshaling
 	nodeUpgradeWatcher := initWatcher[upgradetypes.Plan](ctx, cfg, dirWatcher, cfg.UpgradeInfoFilePath())
 	manualUpgradesWatcher := initWatcher[[]upgradetypes.Plan](ctx, cfg, dirWatcher, cfg.UpgradeInfoBatchFilePath())
 
@@ -64,126 +58,126 @@ func NewLauncher(logger log.Logger, cfg *Config) (Launcher, error) {
 	}, nil
 }
 
-// BatchUpgradeWatcher starts a watcher loop that swaps upgrade manifests at the correct
-// height, given the batch upgrade file. It watches the current state of the chain
-// via the websocket API.
-func BatchUpgradeWatcher(ctx context.Context, cfg *Config, logger log.Logger) {
-	// load batch file in memory
-	uInfos, err := ReadManualUpgrades(cfg)
-	if err != nil {
-		logger.Warn("failed to load batch upgrade file", "error", err)
-		uInfos = []upgradetypes.Plan{}
-	}
-
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		logger.Warn("failed to init watcher", "error", err)
-		return
-	}
-	defer watcher.Close()
-	err = watcher.Add(filepath.Dir(cfg.UpgradeInfoBatchFilePath()))
-	if err != nil {
-		logger.Warn("watcher failed to add upgrade directory", "error", err)
-		return
-	}
-
-	var conn *grpc.ClientConn
-	var grpcErr error
-
-	defer func() {
-		if conn != nil {
-			if err := conn.Close(); err != nil {
-				logger.Warn("couldn't stop gRPC client", "error", err)
-			}
-		}
-	}()
-
-	// Wait for the chain process to be ready
-pollLoop:
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		default:
-			conn, grpcErr = grpc.NewClient(cfg.GRPCAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
-			if grpcErr == nil {
-				break pollLoop
-			}
-			time.Sleep(time.Second)
-		}
-	}
-
-	client := cmtservice.NewServiceClient(conn)
-
-	var prevUpgradeHeight int64 = -1
-
-	logger.Info("starting the batch watcher loop")
-	for {
-		select {
-		case event := <-watcher.Events:
-			if event.Op&(fsnotify.Write|fsnotify.Create) != 0 {
-				uInfos, err = loadBatchUpgradeFile(cfg)
-				if err != nil {
-					logger.Warn("failed to load batch upgrade file", "error", err)
-					continue
-				}
-			}
-		case <-ctx.Done():
-			return
-		default:
-			if len(uInfos) == 0 {
-				// prevent spending extra CPU cycles
-				time.Sleep(time.Second)
-				continue
-			}
-			resp, err := client.GetLatestBlock(ctx, &cmtservice.GetLatestBlockRequest{})
-			if err != nil {
-				logger.Warn("error getting latest block", "error", err)
-				time.Sleep(time.Second)
-				continue
-			}
-
-			h := resp.SdkBlock.Header.Height
-			upcomingUpgrade := uInfos[0].Height
-			// replace upgrade-info and upgrade-info batch file
-			if h > prevUpgradeHeight && h < upcomingUpgrade {
-				jsonBytes, err := json.Marshal(uInfos[0])
-				if err != nil {
-					logger.Warn("error marshaling JSON for upgrade-info.json", "error", err, "upgrade", uInfos[0])
-					continue
-				}
-				if err := os.WriteFile(cfg.UpgradeInfoFilePath(), jsonBytes, 0o600); err != nil {
-					logger.Warn("error writing upgrade-info.json", "error", err)
-					continue
-				}
-				uInfos = uInfos[1:]
-
-				jsonBytes, err = json.Marshal(uInfos)
-				if err != nil {
-					logger.Warn("error marshaling JSON for upgrade-info.json.batch", "error", err, "upgrades", uInfos)
-					continue
-				}
-				if err := os.WriteFile(cfg.UpgradeInfoBatchFilePath(), jsonBytes, 0o600); err != nil {
-					logger.Warn("error writing upgrade-info.json.batch", "error", err)
-					// remove the upgrade-info.json.batch file to avoid non-deterministic behavior
-					err := os.Remove(cfg.UpgradeInfoBatchFilePath())
-					if err != nil && !os.IsNotExist(err) {
-						logger.Warn("error removing upgrade-info.json.batch", "error", err)
-						return
-					}
-					continue
-				}
-				prevUpgradeHeight = upcomingUpgrade
-			}
-
-			// Add a small delay to avoid hammering the gRPC endpoint
-			time.Sleep(time.Second)
-		}
-	}
-}
+//// BatchUpgradeWatcher starts a watcher loop that swaps upgrade manifests at the correct
+//// height, given the batch upgrade file. It watches the current state of the chain
+//// via the websocket API.
+//func BatchUpgradeWatcher(ctx context.Context, cfg *Config, logger log.Logger) {
+//	// load batch file in memory
+//	uInfos, err := ReadManualUpgrades(cfg)
+//	if err != nil {
+//		logger.Warn("failed to load batch upgrade file", "error", err)
+//		uInfos = []upgradetypes.Plan{}
+//	}
+//
+//	watcher, err := fsnotify.NewWatcher()
+//	if err != nil {
+//		logger.Warn("failed to init watcher", "error", err)
+//		return
+//	}
+//	defer watcher.Close()
+//	err = watcher.Add(filepath.Dir(cfg.UpgradeInfoBatchFilePath()))
+//	if err != nil {
+//		logger.Warn("watcher failed to add upgrade directory", "error", err)
+//		return
+//	}
+//
+//	var conn *grpc.ClientConn
+//	var grpcErr error
+//
+//	defer func() {
+//		if conn != nil {
+//			if err := conn.Close(); err != nil {
+//				logger.Warn("couldn't stop gRPC client", "error", err)
+//			}
+//		}
+//	}()
+//
+//	// Wait for the chain process to be ready
+//pollLoop:
+//	for {
+//		select {
+//		case <-ctx.Done():
+//			return
+//		default:
+//			conn, grpcErr = grpc.NewClient(cfg.GRPCAddress, grpc.WithTransportCredentials(insecure.NewCredentials()))
+//			if grpcErr == nil {
+//				break pollLoop
+//			}
+//			time.Sleep(time.Second)
+//		}
+//	}
+//
+//	client := cmtservice.NewServiceClient(conn)
+//
+//	var prevUpgradeHeight int64 = -1
+//
+//	logger.Info("starting the batch watcher loop")
+//	for {
+//		select {
+//		case event := <-watcher.Events:
+//			if event.Op&(fsnotify.Write|fsnotify.Create) != 0 {
+//				uInfos, err = loadBatchUpgradeFile(cfg)
+//				if err != nil {
+//					logger.Warn("failed to load batch upgrade file", "error", err)
+//					continue
+//				}
+//			}
+//		case <-ctx.Done():
+//			return
+//		default:
+//			if len(uInfos) == 0 {
+//				// prevent spending extra CPU cycles
+//				time.Sleep(time.Second)
+//				continue
+//			}
+//			resp, err := client.GetLatestBlock(ctx, &cmtservice.GetLatestBlockRequest{})
+//			if err != nil {
+//				logger.Warn("error getting latest block", "error", err)
+//				time.Sleep(time.Second)
+//				continue
+//			}
+//
+//			h := resp.SdkBlock.Header.Height
+//			upcomingUpgrade := uInfos[0].Height
+//			// replace upgrade-info and upgrade-info batch file
+//			if h > prevUpgradeHeight && h < upcomingUpgrade {
+//				jsonBytes, err := json.Marshal(uInfos[0])
+//				if err != nil {
+//					logger.Warn("error marshaling JSON for upgrade-info.json", "error", err, "upgrade", uInfos[0])
+//					continue
+//				}
+//				if err := os.WriteFile(cfg.UpgradeInfoFilePath(), jsonBytes, 0o600); err != nil {
+//					logger.Warn("error writing upgrade-info.json", "error", err)
+//					continue
+//				}
+//				uInfos = uInfos[1:]
+//
+//				jsonBytes, err = json.Marshal(uInfos)
+//				if err != nil {
+//					logger.Warn("error marshaling JSON for upgrade-info.json.batch", "error", err, "upgrades", uInfos)
+//					continue
+//				}
+//				if err := os.WriteFile(cfg.UpgradeInfoBatchFilePath(), jsonBytes, 0o600); err != nil {
+//					logger.Warn("error writing upgrade-info.json.batch", "error", err)
+//					// remove the upgrade-info.json.batch file to avoid non-deterministic behavior
+//					err := os.Remove(cfg.UpgradeInfoBatchFilePath())
+//					if err != nil && !os.IsNotExist(err) {
+//						logger.Warn("error removing upgrade-info.json.batch", "error", err)
+//						return
+//					}
+//					continue
+//				}
+//				prevUpgradeHeight = upcomingUpgrade
+//			}
+//
+//			// Add a small delay to avoid hammering the gRPC endpoint
+//			time.Sleep(time.Second)
+//		}
+//	}
+//}
 
 // Run launches the app in a subprocess and returns when the subprocess (app)
-// exits (either when it dies, or *after* a successful upgrade.) and the upgrade is finished.
+// exits (either when it dies, or *after* a successful upgrade.) and upgrade finished.
 // Returns true if the upgrade request was detected and the upgrade process started.
 func (l Launcher) Run(args []string, stdin io.Reader, stdout, stderr io.Writer) (bool, error) {
 	bin, err := l.cfg.CurrentBin()
@@ -204,32 +198,31 @@ func (l Launcher) Run(args []string, stdin io.Reader, stdout, stderr io.Writer) 
 		return false, fmt.Errorf("launching process %s %s failed: %w", bin, strings.Join(args, " "), err)
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	var wg sync.WaitGroup
-	wg.Add(1)
-	// TODO: replace BatchUpgradeWatcher
-	go func() {
-		defer wg.Done()
-		BatchUpgradeWatcher(ctx, l.cfg, l.logger)
-	}()
+	//var wg sync.WaitGroup
+	//wg.Add(1)
+	//// TODO: replace BatchUpgradeWatcher
+	//go func() {
+	//	defer wg.Done()
+	//	BatchUpgradeWatcher(ctx, l.cfg, l.logger)
+	//}()
 
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGQUIT, syscall.SIGTERM)
-	go func() {
-		sig := <-sigs
-		cancel()
-		wg.Wait()
-		if err := cmd.Process.Signal(sig); err != nil {
-			l.logger.Error("terminated", "error", err, "bin", bin)
-			os.Exit(1)
-		}
-	}()
+	//sigs := make(chan os.Signal, 1)
+	//signal.Notify(sigs, syscall.SIGQUIT, syscall.SIGTERM)
+	//go func() {
+	//	sig := <-sigs
+	//	cancel()
+	//	wg.Wait()
+	//	if err := cmd.Process.Signal(sig); err != nil {
+	//		l.logger.Error("terminated", "error", err, "bin", bin)
+	//		os.Exit(1)
+	//	}
+	//}()
 
 	if needsUpdate, err := l.WaitForUpgradeOrExit(cmd); err != nil || !needsUpdate {
 		return false, err
 	}
 
-	if !IsSkipUpgradeHeight(args, l.nodeUpgradeWatcher.currentInfo) {
+	if !IsSkipUpgradeHeight(args, *l.upgradePlan) {
 		l.cfg.WaitRestartDelay()
 
 		if err := l.doBackup(); err != nil {
@@ -240,7 +233,7 @@ func (l Launcher) Run(args []string, stdin io.Reader, stdout, stderr io.Writer) 
 			return false, err
 		}
 
-		if err := UpgradeBinary(l.logger, l.cfg, l.nodeUpgradeWatcher.currentInfo); err != nil {
+		if err := UpgradeBinary(l.logger, l.cfg, *l.upgradePlan); err != nil {
 			return false, err
 		}
 
@@ -251,8 +244,8 @@ func (l Launcher) Run(args []string, stdin io.Reader, stdout, stderr io.Writer) 
 		return true, nil
 	}
 
-	cancel()
-	wg.Wait()
+	//cancel()
+	//wg.Wait()
 
 	return false, nil
 }
@@ -265,13 +258,13 @@ func (l Launcher) Run(args []string, stdin io.Reader, stdout, stderr io.Writer) 
 // It returns (false, nil) if the process exited normally without triggering an upgrade. This is very unlikely
 // to happen with "start" but may happen with short-lived commands like `simd genesis export ...`
 func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
-	// TODO we shouldn't be getting any current upgrade because we're only using upgrade-info.json to receive signals from the node
-	currentUpgrade, err := l.cfg.UpgradeInfo()
-	if err != nil {
-		// upgrade info not found do nothing
-		currentUpgrade = upgradetypes.Plan{}
-	}
-
+	//// TODO we shouldn't be getting any current upgrade because we're only using upgrade-info.json to receive signals from the node
+	//currentUpgrade, err := l.cfg.UpgradeInfo()
+	//if err != nil {
+	//	// upgrade info not found do nothing
+	//	currentUpgrade = upgradetypes.Plan{}
+	//}
+	//
 	cmdDone := make(chan error)
 	go func() {
 		cmdDone <- cmd.Wait()
@@ -280,7 +273,8 @@ func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 	select {
 	// TODO add manual-upgrades watcher
 	// TODO replace with upgrade-info.json watcher
-	case <-l.nodeUpgradeWatcher.MonitorUpdate(currentUpgrade):
+	case upgradePlan := <-l.nodeUpgradeWatcher.Updated():
+		l.upgradePlan = &upgradePlan
 		// upgrade - kill the process and restart
 		l.logger.Info("daemon shutting down in an attempt to restart")
 
@@ -311,15 +305,9 @@ func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 			_ = cmd.Process.Kill()
 		}
 	case err := <-cmdDone:
-		l.nodeUpgradeWatcher.Stop()
 		// no error -> command exits normally (eg. short command like `gaiad version`)
 		if err == nil {
 			return false, nil
-		}
-		// the app x/upgrade causes a panic and the app can die before the filewatcher finds the
-		// update, so we need to recheck update-info file.
-		if !l.nodeUpgradeWatcher.CheckUpdate(currentUpgrade) {
-			return false, err
 		}
 	}
 	return true, nil
@@ -355,157 +343,10 @@ func (l Launcher) doBackup() error {
 			return fmt.Errorf("error while taking data backup: %w", err)
 		}
 
-		// backup is done, lets check endtime to calculate total time taken for the backup process
+		// backup is done, lets check endtime to calculate total time taken for backup process
 		et := time.Now()
 		l.logger.Info("backup completed", "backup saved at", dst, "backup completion time", et, "time taken to complete backup", et.Sub(st))
 	}
 
 	return nil
-}
-
-// doCustomPreUpgrade executes the custom preupgrade script if provided.
-func (l Launcher) doCustomPreUpgrade() error {
-	if l.cfg.CustomPreUpgrade == "" {
-		return nil
-	}
-
-	// check if upgrade-info.json is not empty.
-	var upgradePlan upgradetypes.Plan
-	upgradeInfoFile, err := os.ReadFile(l.cfg.UpgradeInfoFilePath())
-	if err != nil {
-		return fmt.Errorf("error while reading upgrade-info.json: %w", err)
-	}
-
-	if err = json.Unmarshal(upgradeInfoFile, &upgradePlan); err != nil {
-		return err
-	}
-
-	if err = upgradePlan.ValidateBasic(); err != nil {
-		return fmt.Errorf("invalid upgrade plan: %w", err)
-	}
-
-	// check if preupgradeFile is executable file
-	preupgradeFile := filepath.Join(l.cfg.Home, "cosmovisor", l.cfg.CustomPreUpgrade)
-	l.logger.Info("looking for COSMOVISOR_CUSTOM_PREUPGRADE file", "file", preupgradeFile)
-	info, err := os.Stat(preupgradeFile)
-	if err != nil {
-		l.logger.Error("COSMOVISOR_CUSTOM_PREUPGRADE file missing", "file", preupgradeFile)
-		return err
-	}
-	if !info.Mode().IsRegular() {
-		_, f := filepath.Split(preupgradeFile)
-		return fmt.Errorf("COSMOVISOR_CUSTOM_PREUPGRADE: %s is not a regular file", f)
-	}
-
-	// Set the execute bit for only the current user
-	// Given:  Current user - Group - Everyone
-	//       0o     RWX     - RWX   - RWX
-	oldMode := info.Mode().Perm()
-	newMode := oldMode | 0o100
-	if oldMode != newMode {
-		if err := os.Chmod(preupgradeFile, newMode); err != nil {
-			l.logger.Info("COSMOVISOR_CUSTOM_PREUPGRADE could not add execute permission")
-			return errors.New("COSMOVISOR_CUSTOM_PREUPGRADE could not add execute permission")
-		}
-	}
-
-	// Run preupgradeFile
-	cmd := exec.Command(preupgradeFile, upgradePlan.Name, fmt.Sprintf("%d", upgradePlan.Height))
-	cmd.Dir = l.cfg.Home
-	result, err := cmd.Output()
-	if err != nil {
-		return err
-	}
-
-	l.logger.Info("COSMOVISOR_CUSTOM_PREUPGRADE result", "command", preupgradeFile, "argv1", upgradePlan.Name, "argv2", fmt.Sprintf("%d", upgradePlan.Height), "result", result)
-
-	return nil
-}
-
-// doPreUpgrade runs the pre-upgrade command defined by the application and handles respective error codes.
-// cfg contains the cosmovisor config from env var.
-// doPreUpgrade runs the new APP binary in order to process the upgrade (post-upgrade for cosmovisor).
-func (l *Launcher) doPreUpgrade() error {
-	counter := 0
-	for {
-		if counter > l.cfg.PreUpgradeMaxRetries {
-			return fmt.Errorf("pre-upgrade command failed. reached max attempt of retries - %d", l.cfg.PreUpgradeMaxRetries)
-		}
-
-		if err := l.executePreUpgradeCmd(); err != nil {
-			counter++
-
-			var exitErr *exec.ExitError
-			if errors.As(err, &exitErr) {
-				switch exitErr.ExitCode() {
-				case 1:
-					l.logger.Info("pre-upgrade command does not exist. continuing the upgrade.")
-					return nil
-				case 30:
-					return fmt.Errorf("pre-upgrade command failed : %w", err)
-				case 31:
-					l.logger.Error("pre-upgrade command failed. retrying", "error", err, "attempt", counter)
-					continue
-				}
-			}
-		}
-
-		l.logger.Info("pre-upgrade successful. continuing the upgrade.")
-		return nil
-	}
-}
-
-// executePreUpgradeCmd runs the pre-upgrade command defined by the application
-// cfg contains the cosmovisor config from the env vars
-func (l *Launcher) executePreUpgradeCmd() error {
-	bin, err := l.cfg.CurrentBin()
-	if err != nil {
-		return fmt.Errorf("error while getting current binary path: %w", err)
-	}
-
-	result, err := exec.Command(bin, "pre-upgrade").Output()
-	if err != nil {
-		return err
-	}
-
-	l.logger.Info("pre-upgrade result", "result", result)
-	return nil
-}
-
-// IsSkipUpgradeHeight checks if the pre-upgrade script must be run.
-// If the height in the upgrade plan matches any of the heights provided in --unsafe-skip-upgrades, the script is not run.
-func IsSkipUpgradeHeight(args []string, upgradeInfo upgradetypes.Plan) bool {
-	skipUpgradeHeights := UpgradeSkipHeights(args)
-	for _, h := range skipUpgradeHeights {
-		if h == int(upgradeInfo.Height) {
-			return true
-		}
-	}
-	return false
-}
-
-// UpgradeSkipHeights gets all the heights provided when
-// simd start --unsafe-skip-upgrades <height1> <optional_height_2> ... <optional_height_N>
-func UpgradeSkipHeights(args []string) []int {
-	var heights []int
-	for i, arg := range args {
-		if arg == fmt.Sprintf("--%s", FlagSkipUpgradeHeight) {
-			j := i + 1
-
-			for j < len(args) {
-				tArg := args[j]
-				if strings.HasPrefix(tArg, "-") {
-					break
-				}
-				h, err := strconv.Atoi(tArg)
-				if err == nil {
-					heights = append(heights, h)
-				}
-				j++
-			}
-
-			break
-		}
-	}
-	return heights
 }

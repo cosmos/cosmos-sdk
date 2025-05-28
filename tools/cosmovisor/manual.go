@@ -5,12 +5,10 @@ import (
 	"fmt"
 	"os"
 	"sort"
-
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // ReadManualUpgrades reads the manual upgrade data.
-func ReadManualUpgrades(cfg *Config) ([]upgradetypes.Plan, error) {
+func ReadManualUpgrades(cfg *Config) (ManualUpgradeBatch, error) {
 	bz, err := os.ReadFile(cfg.UpgradeInfoBatchFilePath())
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -18,7 +16,7 @@ func ReadManualUpgrades(cfg *Config) ([]upgradetypes.Plan, error) {
 		}
 		return nil, err
 	}
-	var manualUpgrades []upgradetypes.Plan
+	var manualUpgrades ManualUpgradeBatch
 	if err := json.Unmarshal(bz, &manualUpgrades); err != nil {
 		return nil, err
 	}
@@ -30,13 +28,13 @@ func ReadManualUpgrades(cfg *Config) ([]upgradetypes.Plan, error) {
 // AddManualUpgrade adds a manual upgrade plan.
 // If an upgrade with the same name already exists, it will only be overwritten if forceOverwrite is true,
 // otherwise an error will be returned.
-func AddManualUpgrade(cfg *Config, plan upgradetypes.Plan, forceOverwrite bool) error {
+func AddManualUpgrade(cfg *Config, plan ManualUpgradePlan, forceOverwrite bool) error {
 	manualUpgrades, err := ReadManualUpgrades(cfg)
 	if err != nil {
 		return err
 	}
 
-	var newUpgrades []upgradetypes.Plan
+	var newUpgrades ManualUpgradeBatch
 	for _, existing := range manualUpgrades {
 		if existing.Name == plan.Name {
 			if !forceOverwrite {
@@ -58,8 +56,35 @@ func AddManualUpgrade(cfg *Config, plan upgradetypes.Plan, forceOverwrite bool) 
 	return os.WriteFile(cfg.UpgradeInfoBatchFilePath(), manualUpgradesData, 0644)
 }
 
-func sortUpgrades(upgrades []upgradetypes.Plan) {
+func sortUpgrades(upgrades []ManualUpgradePlan) {
 	sort.Slice(upgrades, func(i, j int) bool {
 		return upgrades[i].Height < upgrades[j].Height
 	})
+}
+
+type ManualUpgradeBatch []ManualUpgradePlan
+
+func (m ManualUpgradeBatch) ValidateBasic() error {
+	for _, upgrade := range m {
+		if err := upgrade.ValidateBasic(); err != nil {
+			return fmt.Errorf("invalid upgrade plan %s: %w", upgrade.Name, err)
+		}
+	}
+	return nil
+}
+
+type ManualUpgradePlan struct {
+	Name   string `json:"name"`
+	Height int64  `json:"height"`
+	Info   string `json:"info"`
+}
+
+func (m ManualUpgradePlan) ValidateBasic() error {
+	if m.Name == "" {
+		return fmt.Errorf("name cannot be empty")
+	}
+	if m.Height <= 0 {
+		return fmt.Errorf("height must be greater than 0")
+	}
+	return nil
 }

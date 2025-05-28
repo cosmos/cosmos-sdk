@@ -1,7 +1,7 @@
 package cosmovisor
 
 import (
-	"encoding/json"
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/viper"
 
@@ -70,9 +71,6 @@ type Config struct {
 	TimeFormatLogs           string        `toml:"cosmovisor_timeformat_logs" mapstructure:"cosmovisor_timeformat_logs" default:"kitchen"`
 	CustomPreUpgrade         string        `toml:"cosmovisor_custom_preupgrade" mapstructure:"cosmovisor_custom_preupgrade" default:""`
 	DisableRecase            bool          `toml:"cosmovisor_disable_recase" mapstructure:"cosmovisor_disable_recase" default:"false"`
-
-	// currently running upgrade
-	currentUpgrade upgradetypes.Plan
 }
 
 // Root returns the root directory where all info lives
@@ -412,7 +410,6 @@ func (cfg *Config) SetCurrentUpgrade(u upgradetypes.Plan) (rerr error) {
 		return fmt.Errorf("creating current symlink: %w", err)
 	}
 
-	cfg.currentUpgrade = u
 	f, err := os.Create(filepath.Join(cfg.Root(), upgrade, upgradetypes.UpgradeInfoFilename))
 	if err != nil {
 		return err
@@ -424,39 +421,30 @@ func (cfg *Config) SetCurrentUpgrade(u upgradetypes.Plan) (rerr error) {
 		}
 	}()
 
-	bz, err := json.Marshal(u)
+	out, err := (&jsonpb.Marshaler{}).MarshalToString(&u)
 	if err != nil {
 		return err
 	}
-	_, err = f.Write(bz)
+	_, err = f.Write([]byte(out))
 	return err
 }
 
 // UpgradeInfo returns the current upgrade info
 func (cfg *Config) UpgradeInfo() (upgradetypes.Plan, error) {
-	if cfg.currentUpgrade.Name != "" {
-		return cfg.currentUpgrade, nil
-	}
-
 	filename := filepath.Join(cfg.Root(), currentLink, upgradetypes.UpgradeInfoFilename)
 	_, err := os.Lstat(filename)
 	var u upgradetypes.Plan
 	var bz []byte
 	if err != nil { // no current directory
-		goto returnError
+		return upgradetypes.Plan{}, fmt.Errorf("failed to read %q: %w", filename, err)
 	}
 	if bz, err = os.ReadFile(filename); err != nil {
-		goto returnError
+		return upgradetypes.Plan{}, fmt.Errorf("failed to read %q: %w", filename, err)
 	}
-	if err = json.Unmarshal(bz, &u); err != nil {
-		goto returnError
+	if err = jsonpb.Unmarshal(bytes.NewReader(bz), &u); err != nil {
+		return upgradetypes.Plan{}, fmt.Errorf("error unmarshalling %q: %w", filename, err)
 	}
-	cfg.currentUpgrade = u
-	return cfg.currentUpgrade, nil
-
-returnError:
-	cfg.currentUpgrade.Name = "_"
-	return cfg.currentUpgrade, fmt.Errorf("failed to read %q: %w", filename, err)
+	return u, nil
 }
 
 // BooleanOption checks and validates env option

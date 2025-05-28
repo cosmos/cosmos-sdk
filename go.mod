@@ -5,7 +5,7 @@ module github.com/cosmos/cosmos-sdk
 require (
 	cosmossdk.io/api v1.0.0-alpha.0
 	cosmossdk.io/collections v1.2.1
-	cosmossdk.io/core v0.11.3
+	cosmossdk.io/core v1.1.0-alpha.0
 	cosmossdk.io/depinject v1.2.0
 	cosmossdk.io/errors v1.0.2
 	cosmossdk.io/log v1.6.0
@@ -222,7 +222,6 @@ require (
 // Replace all unreleased direct deps upgraded to comet v1
 replace (
 	cosmossdk.io/collections => ./collections
-	cosmossdk.io/core => ./core
 	cosmossdk.io/store => ./store
 	cosmossdk.io/x/tx => ./x/tx
 	github.com/cosmos/cosmos-db => github.com/cosmos/cosmos-db v0.0.0-20250505172547-38785e92904d

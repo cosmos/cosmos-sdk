@@ -4,7 +4,7 @@ go 1.23.5
 
 require (
 	cosmossdk.io/api v1.0.0-alpha.0
-	cosmossdk.io/core v0.11.3
+	cosmossdk.io/core v1.1.0-alpha.0
 	cosmossdk.io/depinject v1.2.0
 	cosmossdk.io/log v1.6.0
 	github.com/cespare/xxhash/v2 v2.3.0
@@ -158,10 +158,7 @@ require (
 )
 
 // Replace all unreleased direct deps upgraded to comet v1
-replace (
-	cosmossdk.io/core => ../../core
-	github.com/cosmos/cosmos-sdk => ../..
-)
+replace github.com/cosmos/cosmos-sdk => ../..
 
 // Replace all unreleased indirect deps upgraded to comet v1
 replace (

@@ -4,6 +4,8 @@ buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.6-20240130113600-88e
 buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.6-20240130113600-88ef6483f90f.1/go.mod h1:ExRGMEzN3Btj2FXEiyfKHPYflSuer1dKZvz8gD5ZSng=
 cosmossdk.io/api v1.0.0-alpha.0 h1:OrrPzV0nOgu2NuEchoyUDhqvYnpMXoxqDj62q9j8+ao=
 cosmossdk.io/api v1.0.0-alpha.0/go.mod h1:DVYbKgXQUz9CdJssOlwOsn+iwcM6sZWz1kSF6gT1O6A=
+cosmossdk.io/core v1.1.0-alpha.0 h1:RS9qVQ2uXujMV55JF/EGsicAPN1OSjgBPfLOK1xWhk4=
+cosmossdk.io/core v1.1.0-alpha.0/go.mod h1:Shv5PDiNxhD4f6pqDGonkBauoFW0l5v5BLYSkUtaNp8=
 cosmossdk.io/errors v1.0.2 h1:wcYiJz08HThbWxd/L4jObeLaLySopyyuUFB5w4AGpCo=
 cosmossdk.io/errors v1.0.2/go.mod h1:0rjgiHkftRYPj//3DrD6y8hcm40HcPv/dR4R/4efr0k=
 cosmossdk.io/math v1.5.3 h1:WH6tu6Z3AUCeHbeOSHg2mt9rnoiUWVWaQ2t6Gkll96U=

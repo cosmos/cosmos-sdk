@@ -22,6 +22,10 @@ Each entry must include the Github issue reference in the following format:
 
 ## [Unreleased]
 
+## 1.2.1
+
+* Minor dependency bumps
+
 ## 1.2.0 
 
 * SDK v0.53.x support.

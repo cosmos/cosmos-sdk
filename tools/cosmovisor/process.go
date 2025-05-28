@@ -17,6 +17,7 @@ import (
 	"cosmossdk.io/log"
 	"github.com/otiai10/copy"
 
+	"cosmossdk.io/tools/cosmovisor/internal/checkers"
 	"cosmossdk.io/tools/cosmovisor/internal/watchers"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -27,11 +28,15 @@ type Launcher struct {
 	cfg    *Config
 	ctx    context.Context
 	cancel context.CancelFunc
-	// nodeUpgradeWatcher watches for data in an upgrade-info.json created by the running node
-	nodeUpgradeWatcher watchers.Watcher[upgradetypes.Plan]
+	// upgradePlanWatcher watches for data in an upgrade-info.json created by the running node
+	upgradePlanWatcher watchers.Watcher[upgradetypes.Plan]
 	// manualUpgradesWatcher watchers for data in an upgrade-info.json.batch created by the node operator
-	manualUpgradesWatcher watchers.Watcher[[]upgradetypes.Plan]
+	manualUpgradesWatcher watchers.Watcher[ManualUpgradeBatch]
+	haltHeightWatcher     watchers.Watcher[uint64]
+	actualHeightWatcher   watchers.Watcher[uint64]
+	heightChecker         checkers.HeightChecker
 	upgradePlan           *upgradetypes.Plan
+	manualUpgrade         *ManualUpgradePlan
 }
 
 func NewLauncher(logger log.Logger, cfg *Config) (Launcher, error) {
@@ -45,17 +50,61 @@ func NewLauncher(logger log.Logger, cfg *Config) (Launcher, error) {
 	}
 
 	// TODO the watchers should do data validation in additional to json unmarshaling
-	nodeUpgradeWatcher := initWatcher[upgradetypes.Plan](ctx, cfg, dirWatcher, cfg.UpgradeInfoFilePath())
-	manualUpgradesWatcher := initWatcher[[]upgradetypes.Plan](ctx, cfg, dirWatcher, cfg.UpgradeInfoBatchFilePath())
+	nodeUpgradeWatcher := initWatcher[upgradetypes.Plan](ctx, cfg, dirWatcher, cfg.UpgradeInfoFilePath(), cfg.ParseUpgradeInfo)
+	manualUpgradesWatcher := initWatcher[ManualUpgradeBatch](ctx, cfg, dirWatcher, cfg.UpgradeInfoBatchFilePath(), cfg.ParseManualUpgrades)
 
 	return Launcher{
 		logger:                logger,
 		cfg:                   cfg,
 		ctx:                   ctx,
 		cancel:                cancel,
-		nodeUpgradeWatcher:    nodeUpgradeWatcher,
+		upgradePlanWatcher:    nodeUpgradeWatcher,
 		manualUpgradesWatcher: manualUpgradesWatcher,
 	}, nil
+}
+
+func (l *Launcher) Watch() {
+	errChan := joinChannels(l.upgradePlanWatcher.Errors(),
+		l.manualUpgradesWatcher.Errors(),
+		l.haltHeightWatcher.Errors(),
+		l.actualHeightWatcher.Errors())
+	for {
+		select {
+		case <-l.ctx.Done():
+
+			// TODO handle cosmovisor shutdown
+			return
+		case upgradePlan := <-l.upgradePlanWatcher.Updated():
+			l.upgradePlan = &upgradePlan
+			// TODO upgrade plan received, positive signal to perform upgrade, no additional checks needed
+		case <-l.manualUpgradesWatcher.Updated():
+			l.logger.Info("manual upgrades watcher updated")
+			// TODO received new manual upgrades batch:
+			// must establish current node height and select the first manual upgrade after current height, if any
+			// if one is found, node must be restarted with --halt-height
+		case <-l.haltHeightWatcher.Updated():
+			// TODO check against manual upgrade height
+		case <-l.actualHeightWatcher.Updated():
+			// TODO check against manual upgrade height
+		case err := <-errChan:
+			// for now just log errors
+			l.logger.Error("error in upgrade plan watcher", "error", err)
+		}
+	}
+}
+
+// TODO fix this with WaitGroup
+func joinChannels[T any](ch ...<-chan T) <-chan T {
+	out := make(chan T)
+	go func() {
+		defer close(out)
+		for _, c := range ch {
+			for msg := range c {
+				out <- msg
+			}
+		}
+	}()
+	return out
 }
 
 //// BatchUpgradeWatcher starts a watcher loop that swaps upgrade manifests at the correct
@@ -273,7 +322,7 @@ func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 	select {
 	// TODO add manual-upgrades watcher
 	// TODO replace with upgrade-info.json watcher
-	case upgradePlan := <-l.nodeUpgradeWatcher.Updated():
+	case upgradePlan := <-l.upgradePlanWatcher.Updated():
 		l.upgradePlan = &upgradePlan
 		// upgrade - kill the process and restart
 		l.logger.Info("daemon shutting down in an attempt to restart")

@@ -63,7 +63,7 @@ func addUpgrade(cfg *cosmovisor.Config, force bool, upgradeHeight int64, upgrade
 	logger.Info(fmt.Sprintf("Upgrade binary located at %s", cfg.UpgradeBin(upgradeName)))
 
 	if upgradeHeight > 0 {
-		plan := cosmovisor.ManualUpgradePlan{
+		plan := &cosmovisor.ManualUpgradePlan{
 			Name:   upgradeName,
 			Height: upgradeHeight,
 		}

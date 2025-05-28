@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-func NewHTTPRPCBLockChecker(url string) LatestBlockChecker {
+func NewHTTPRPCBLockChecker(url string) HeightChecker {
 	return httpRPCBlockChecker{
 		url: url,
 	}
@@ -33,7 +33,7 @@ func (j httpRPCBlockChecker) GetLatestBlockHeight() (uint64, error) {
 	return getHeightFromRPCBlockResponse(bz)
 }
 
-var _ LatestBlockChecker = httpRPCBlockChecker{}
+var _ HeightChecker = httpRPCBlockChecker{}
 
 type Header struct {
 	Height string `json:"height"`

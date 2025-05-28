@@ -9,7 +9,7 @@ type DataWatcher[T any] struct {
 	errChan chan error
 }
 
-func NewDataWatcher[T any](ctx context.Context, watcher Watcher[[]byte], unmarshal func([]byte) (T, error)) *DataWatcher[T] {
+func NewDataWatcher[T any, I any](ctx context.Context, watcher Watcher[I], unmarshal func(I) (T, error)) *DataWatcher[T] {
 	outChan := make(chan T, 1)
 	errChan := make(chan error, 1)
 	go func() {

@@ -9,7 +9,9 @@ import (
 )
 
 func NewHTTPRPCBLockChecker(url string) LatestBlockChecker {
-	panic("implement me")
+	return httpRPCBlockChecker{
+		url: url,
+	}
 }
 
 type httpRPCBlockChecker struct {
@@ -33,19 +35,20 @@ func (j httpRPCBlockChecker) GetLatestBlockHeight() (uint64, error) {
 
 var _ LatestBlockChecker = httpRPCBlockChecker{}
 
+type Header struct {
+	Height string `json:"height"`
+}
+type Block struct {
+	Header Header `json:"header"`
+}
+type Result struct {
+	Block Block `json:"block"`
+}
+type Response struct {
+	Result Result `json:"result"`
+}
+
 func getHeightFromRPCBlockResponse(bz []byte) (uint64, error) {
-	type Header struct {
-		Height string `json:"height"`
-	}
-	type Block struct {
-		Header Header `json:"header"`
-	}
-	type Result struct {
-		Block Block `json:"block"`
-	}
-	type Response struct {
-		Result Result `json:"result"`
-	}
 
 	var response Response
 	err := json.Unmarshal(bz, &response)

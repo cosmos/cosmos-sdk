@@ -53,7 +53,6 @@ func updateImports(node *ast.File, replacements []ImportReplacement) (bool, erro
 					modified = true
 				}
 			}
-
 		}
 	}
 	return modified, nil

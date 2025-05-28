@@ -12,9 +12,8 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
-	"golang.org/x/sync/errgroup"
-
 	"golang.org/x/mod/modfile"
+	"golang.org/x/sync/errgroup"
 )
 
 // GoModUpdate defines a mapping of module path to the version it should be updated to.

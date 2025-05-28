@@ -2,7 +2,7 @@
 package abci
 
 import (
-	v1 "cosmossdk.io/api/cometbft/abci/v1"
+	v1 "buf.build/gen/go/cometbft/cometbft/protocolbuffers/go/cometbft/abci/v1"
 	v1beta1 "cosmossdk.io/api/cosmos/store/v1beta1"
 	fmt "fmt"
 	runtime "github.com/cosmos/cosmos-proto/runtime"

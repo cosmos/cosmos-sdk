@@ -1,3 +1,7 @@
+buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.6-20241120201313-68e42a58b301.1 h1:tbAL0C7R8geKY3lrQZxV3kbVPm3zL/gIaBKre9W7FSo=
+buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.6-20241120201313-68e42a58b301.1/go.mod h1:vF5TQN2w0Is6cUfYSWGXlwAk8qvVVFuOVHY3mLn86rs=
+buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.6-20240130113600-88ef6483f90f.1 h1:rU7J8a7zrbZ9L0LUP2gWEFJ7+YLsSJ9h9QyyyWZd9ew=
+buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.6-20240130113600-88ef6483f90f.1/go.mod h1:ExRGMEzN3Btj2FXEiyfKHPYflSuer1dKZvz8gD5ZSng=
 cel.dev/expr v0.20.0 h1:OunBvVCfvpWlt4dN7zg3FM6TDkzOePe1+foGJ9AXeeI=
 cel.dev/expr v0.20.0/go.mod h1:MrpN08Q+lEBs+bGYdLxxHkZoUSsCp0nSKTs0nTymJgw=
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=

@@ -518,7 +518,7 @@ func (m *Manager) SnapshotIfApplicable(height int64) {
 		return
 	}
 	// start the routine after need to create a snapshot
-	go m.snapshot(height)
+	go m.Snapshot(height)
 }
 
 // ShouldTakeSnapshot returns true if a snapshot should be taken at height.

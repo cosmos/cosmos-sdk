@@ -8,7 +8,7 @@ import (
 )
 
 // ReadManualUpgrades reads the manual upgrade data.
-func ReadManualUpgrades(cfg *Config) (ManualUpgradeBatch, error) {
+func (cfg *Config) ReadManualUpgrades() (ManualUpgradeBatch, error) {
 	bz, err := os.ReadFile(cfg.UpgradeInfoBatchFilePath())
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -16,20 +16,29 @@ func ReadManualUpgrades(cfg *Config) (ManualUpgradeBatch, error) {
 		}
 		return nil, err
 	}
+	return cfg.ParseManualUpgrades(bz)
+}
+
+func (cfg *Config) ParseManualUpgrades(bz []byte) (ManualUpgradeBatch, error) {
 	var manualUpgrades ManualUpgradeBatch
 	if err := json.Unmarshal(bz, &manualUpgrades); err != nil {
 		return nil, err
 	}
 
 	sortUpgrades(manualUpgrades)
+
+	if err := manualUpgrades.ValidateBasic(); err != nil {
+		return nil, fmt.Errorf("invalid manual upgrade batch: %w", err)
+	}
+
 	return manualUpgrades, nil
 }
 
 // AddManualUpgrade adds a manual upgrade plan.
 // If an upgrade with the same name already exists, it will only be overwritten if forceOverwrite is true,
 // otherwise an error will be returned.
-func AddManualUpgrade(cfg *Config, plan ManualUpgradePlan, forceOverwrite bool) error {
-	manualUpgrades, err := ReadManualUpgrades(cfg)
+func AddManualUpgrade(cfg *Config, plan *ManualUpgradePlan, forceOverwrite bool) error {
+	manualUpgrades, err := cfg.ReadManualUpgrades()
 	if err != nil {
 		return err
 	}
@@ -56,13 +65,13 @@ func AddManualUpgrade(cfg *Config, plan ManualUpgradePlan, forceOverwrite bool) 
 	return os.WriteFile(cfg.UpgradeInfoBatchFilePath(), manualUpgradesData, 0644)
 }
 
-func sortUpgrades(upgrades []ManualUpgradePlan) {
+func sortUpgrades(upgrades ManualUpgradeBatch) {
 	sort.Slice(upgrades, func(i, j int) bool {
 		return upgrades[i].Height < upgrades[j].Height
 	})
 }
 
-type ManualUpgradeBatch []ManualUpgradePlan
+type ManualUpgradeBatch []*ManualUpgradePlan
 
 func (m ManualUpgradeBatch) ValidateBasic() error {
 	for _, upgrade := range m {

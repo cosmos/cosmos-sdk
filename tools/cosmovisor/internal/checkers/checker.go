@@ -1,5 +1,5 @@
 package checkers
 
-type LatestBlockChecker interface {
+type HeightChecker interface {
 	GetLatestBlockHeight() (uint64, error)
 }

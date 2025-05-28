@@ -431,9 +431,8 @@ func (cfg *Config) SetCurrentUpgrade(u upgradetypes.Plan) (rerr error) {
 
 // UpgradeInfo returns the current upgrade info
 func (cfg *Config) UpgradeInfo() (upgradetypes.Plan, error) {
-	filename := filepath.Join(cfg.Root(), currentLink, upgradetypes.UpgradeInfoFilename)
+	filename := cfg.UpgradeInfoFilePath()
 	_, err := os.Lstat(filename)
-	var u upgradetypes.Plan
 	var bz []byte
 	if err != nil { // no current directory
 		return upgradetypes.Plan{}, fmt.Errorf("failed to read %q: %w", filename, err)
@@ -441,10 +440,21 @@ func (cfg *Config) UpgradeInfo() (upgradetypes.Plan, error) {
 	if bz, err = os.ReadFile(filename); err != nil {
 		return upgradetypes.Plan{}, fmt.Errorf("failed to read %q: %w", filename, err)
 	}
-	if err = jsonpb.Unmarshal(bytes.NewReader(bz), &u); err != nil {
-		return upgradetypes.Plan{}, fmt.Errorf("error unmarshalling %q: %w", filename, err)
+	return cfg.ParseUpgradeInfo(bz)
+}
+
+func (cfg *Config) ParseUpgradeInfo(bz []byte) (upgradetypes.Plan, error) {
+	var upgradePlan upgradetypes.Plan
+	if err := jsonpb.Unmarshal(bytes.NewReader(bz), &upgradePlan); err != nil {
+		return upgradetypes.Plan{}, fmt.Errorf("error unmarshalling upgrade info: %w", err)
 	}
-	return u, nil
+	if err := upgradePlan.ValidateBasic(); err != nil {
+		return upgradetypes.Plan{}, fmt.Errorf("upgrade info failed validation upgrade inof: %w", err)
+	}
+	if !cfg.DisableRecase {
+		upgradePlan.Name = strings.ToLower(upgradePlan.Name)
+	}
+	return upgradePlan, nil
 }
 
 // BooleanOption checks and validates env option

@@ -39,7 +39,7 @@ import (
 
 var (
 	flagNodeDirPrefix     = "node-dir-prefix"
-	flagNumValidators     = "v"
+	flagNumValidators     = "validator-count"
 	flagOutputDir         = "output-dir"
 	flagNodeDaemonHome    = "node-daemon-home"
 	flagStartingIPAddress = "starting-ip-address"
@@ -48,6 +48,9 @@ var (
 	flagRPCAddress        = "rpc.address"
 	flagAPIAddress        = "api.address"
 	flagPrintMnemonic     = "print-mnemonic"
+
+	shortFlagNumValidators      = "c"
+	flagDeprecatedNumValidators = "v"
 )
 
 type initArgs struct {
@@ -76,7 +79,9 @@ type startArgs struct {
 }
 
 func addTestnetFlagsToCmd(cmd *cobra.Command) {
-	cmd.Flags().Int(flagNumValidators, 4, "Number of validators to initialize the testnet with")
+	cmd.Flags().IntP(flagNumValidators, shortFlagNumValidators, 4, "Number of validators to initialize the testnet with")
+	cmd.Flags().Int(flagDeprecatedNumValidators, 4, "Number of validators to initialize the testnet with")
+	cmd.Flags().MarkDeprecated(flagDeprecatedNumValidators, fmt.Sprintf("use -%s or --%s", shortFlagNumValidators, flagNumValidators))
 	cmd.Flags().StringP(flagOutputDir, "o", "./.testnets", "Directory to store initialization data for the testnet")
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
 	cmd.Flags().String(server.FlagMinGasPrices, fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom), "Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake)")
@@ -94,7 +99,7 @@ func addTestnetFlagsToCmd(cmd *cobra.Command) {
 
 // NewTestnetCmd creates a root testnet command with subcommands to run an in-process testnet or initialize
 // validator configuration files for running a multi-validator testnet in a separate process
-func NewTestnetCmd(mbm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator) *cobra.Command {
+func NewTestnetCmd(mbm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator, appName string) *cobra.Command {
 	testnetCmd := &cobra.Command{
 		Use:                        "testnet",
 		Short:                      "subcommands for starting or configuring local testnets",
@@ -103,19 +108,19 @@ func NewTestnetCmd(mbm module.BasicManager, genBalIterator banktypes.GenesisBala
 		RunE:                       client.ValidateCmd,
 	}
 
-	testnetCmd.AddCommand(testnetStartCmd())
-	testnetCmd.AddCommand(testnetInitFilesCmd(mbm, genBalIterator))
+	testnetCmd.AddCommand(testnetStartCmd(appName))
+	testnetCmd.AddCommand(testnetInitFilesCmd(mbm, genBalIterator, appName))
 
 	return testnetCmd
 }
 
 // testnetInitFilesCmd returns a cmd to initialize all files for CometBFT testnet and application
-func testnetInitFilesCmd(mbm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator) *cobra.Command {
+func testnetInitFilesCmd(mbm module.BasicManager, genBalIterator banktypes.GenesisBalancesIterator, appName string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "init-files",
 		Short: "Initialize config directories & files for a multi-validator testnet running locally via separate processes (e.g. Docker Compose or similar)",
-		Long: `init-files will setup "v" number of directories and populate each with
-necessary files (private validator, genesis, config, etc.) for running "v" validator nodes.
+		Long: fmt.Sprintf(`init-files will setup a number of directories (specified by "-%[2]s") and populate each with
+necessary files (private validator, genesis, config, etc.) for running validator nodes.
 
 Booting up a network with these validator folders is intended to be used with Docker Compose,
 or a similar setup where each node has a manually configurable IP address.
@@ -123,8 +128,8 @@ or a similar setup where each node has a manually configurable IP address.
 Note, strict routability for addresses is turned off in the config file.
 
 Example:
-	simd testnet init-files --v 4 --output-dir ./.testnets --starting-ip-address 192.168.10.2
-	`,
+	%[1]s testnet init-files -%[2]s 4 --output-dir ./.testnets --starting-ip-address 192.168.10.2
+	`, appName, shortFlagNumValidators),
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
@@ -151,7 +156,7 @@ Example:
 
 	addTestnetFlagsToCmd(cmd)
 	cmd.Flags().String(flagNodeDirPrefix, "node", "Prefix the directory name for each node with (node results in node0, node1, ...)")
-	cmd.Flags().String(flagNodeDaemonHome, "simd", "Home directory of the node's daemon configuration")
+	cmd.Flags().String(flagNodeDaemonHome, appName, "Home directory of the node's daemon configuration")
 	cmd.Flags().String(flagStartingIPAddress, "192.168.0.1", "Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...)")
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
 
@@ -159,17 +164,17 @@ Example:
 }
 
 // testnetStartCmd returns a cmd to start multi validator in-process testnet
-func testnetStartCmd() *cobra.Command {
+func testnetStartCmd(appName string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",
 		Short: "Launch an in-process multi-validator testnet",
-		Long: `testnet will launch an in-process multi-validator testnet,
-and generate "v" directories, populated with necessary validator configuration files
+		Long: fmt.Sprintf(`testnet will launch an in-process multi-validator testnet,
+and generate a number of directories (specified by "-%[2]s"), populated with necessary validator configuration files
 (private validator, genesis, config, etc.).
 
 Example:
-	simd testnet --v 4 --output-dir ./.testnets
-	`,
+	%[1]s testnet start -%[2]s 4 --output-dir ./.testnets
+	`, appName, shortFlagNumValidators),
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			args := startArgs{}
 			args.outputDir, _ = cmd.Flags().GetString(flagOutputDir)

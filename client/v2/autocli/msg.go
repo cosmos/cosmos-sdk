@@ -6,6 +6,7 @@ import (
 
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cobra"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/dynamicpb"
 
@@ -160,7 +161,10 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		// Here we use dynamicpb, to create a proto v1 compatible message.
 		// The SDK codec will handle protov2 -> protov1 (marshal)
 		msg := dynamicpb.NewMessage(input.Descriptor())
-		cloneMessage(msg, input)
+		err = cloneMessage(msg, input)
+		if err != nil {
+			return err
+		}
 
 		return clienttx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 	}
@@ -216,7 +220,10 @@ func (b *Builder) handleGovProposal(
 	// Here we use dynamicpb, to create a proto v1 compatible message.
 	// The SDK codec will handle protov2 -> protov1 (marshal)
 	msg := dynamicpb.NewMessage(input.Descriptor())
-	cloneMessage(msg, input)
+	err = cloneMessage(msg, input)
+	if err != nil {
+		return err
+	}
 
 	if err := proposal.SetMsgs([]gogoproto.Message{msg}); err != nil {
 		return fmt.Errorf("failed to set msg in proposal %w", err)
@@ -227,56 +234,10 @@ func (b *Builder) handleGovProposal(
 
 // cloneMessage safely copies fields from src message to dst message.
 // this avoids the proto.Merge issue with field descriptors from different repositories.
-func cloneMessage(dst, src protoreflect.Message) {
-	// iterate through all populated fields in the source message
-	src.Range(func(fd protoreflect.FieldDescriptor, v protoreflect.Value) bool {
-		// get corresponding field in destination message
-		dstFd := dst.Descriptor().Fields().ByName(fd.Name())
-		if dstFd == nil {
-			panic(fmt.Sprintf("field %s not found in destination message", fd.Name()))
-		}
-
-		if fd.IsList() {
-			// handle repeated fields
-			srcList := v.List()
-			dstList := dst.Mutable(dstFd).List()
-			for i := 0; i < srcList.Len(); i++ {
-				listVal := srcList.Get(i)
-				if fd.Kind() == protoreflect.MessageKind {
-					// recursively clone message values
-					newMsg := dynamicpb.NewMessage(dstFd.Message())
-					cloneMessage(newMsg, listVal.Message())
-					dstList.Append(protoreflect.ValueOfMessage(newMsg))
-				} else {
-					// directly copy primitive values
-					dstList.Append(listVal)
-				}
-			}
-		} else if fd.IsMap() {
-			// handle map fields
-			srcMap := v.Map()
-			dstMap := dst.Mutable(dstFd).Map()
-			srcMap.Range(func(k protoreflect.MapKey, v protoreflect.Value) bool {
-				if fd.MapValue().Kind() == protoreflect.MessageKind {
-					// recursively clone message values
-					newMsg := dynamicpb.NewMessage(dstFd.MapValue().Message())
-					cloneMessage(newMsg, v.Message())
-					dstMap.Set(k, protoreflect.ValueOfMessage(newMsg))
-				} else {
-					// directly copy primitive values
-					dstMap.Set(k, v)
-				}
-				return true
-			})
-		} else if fd.Kind() == protoreflect.MessageKind {
-			// recursively clone nested messages
-			newMsg := dynamicpb.NewMessage(dstFd.Message())
-			cloneMessage(newMsg, v.Message())
-			dst.Set(dstFd, protoreflect.ValueOfMessage(newMsg))
-		} else {
-			// directly copy primitive values
-			dst.Set(dstFd, v)
-		}
-		return true
-	})
+func cloneMessage(dst, src protoreflect.Message) error {
+	bz, err := proto.Marshal(src.Interface())
+	if err != nil {
+		return err
+	}
+	return proto.Unmarshal(bz, dst.Interface())
 }

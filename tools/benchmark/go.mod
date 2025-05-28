@@ -158,10 +158,7 @@ require (
 )
 
 // Replace all unreleased direct deps upgraded to comet v1
-replace (
-	cosmossdk.io/core => ../../core
-	github.com/cosmos/cosmos-sdk => ../..
-)
+replace github.com/cosmos/cosmos-sdk => ../..
 
 // Replace all unreleased indirect deps upgraded to comet v1
 replace (

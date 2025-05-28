@@ -227,7 +227,6 @@ require (
 // Replace all unreleased direct deps upgraded to comet v1
 replace (
 	cosmossdk.io/client/v2 => ../client/v2
-	cosmossdk.io/core => ../core
 	cosmossdk.io/store => ../store
 	cosmossdk.io/tools/confix => ../tools/confix
 	cosmossdk.io/x/tx => ../x/tx

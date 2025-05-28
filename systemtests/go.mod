@@ -170,7 +170,6 @@ replace github.com/cosmos/cosmos-sdk => ../.
 
 // Replace all unreleased indirect deps upgraded to comet v1
 replace (
-	cosmossdk.io/core => ../core
 	cosmossdk.io/store => ../store
 	cosmossdk.io/x/tx => ../x/tx
 )

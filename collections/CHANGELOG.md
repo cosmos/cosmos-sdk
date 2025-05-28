@@ -33,7 +33,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+## [v1.2.2](https://github.com/cosmos/cosmos-sdk/releases/tag/collections%2Fv1.2.1)
+
 * [#24524](https://github.com/cosmos/cosmos-sdk/pull/24524) Make use of exported iterator from dbm.
+* Minor dependency bumps
 
 ## [v1.2.1](https://github.com/cosmos/cosmos-sdk/releases/tag/collections%2Fv1.2.1)
 

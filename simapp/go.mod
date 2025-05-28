@@ -3,7 +3,7 @@ module cosmossdk.io/simapp
 go 1.23.5
 
 require (
-	cosmossdk.io/api v0.9.2
+	cosmossdk.io/api v1.0.0-alpha.0
 	cosmossdk.io/client/v2 v2.0.0-beta.9
 	cosmossdk.io/collections v1.2.1 // indirect
 	cosmossdk.io/core v0.11.3
@@ -226,7 +226,6 @@ require (
 
 // Replace all unreleased direct deps upgraded to comet v1
 replace (
-	cosmossdk.io/api => ../api
 	cosmossdk.io/client/v2 => ../client/v2
 	cosmossdk.io/core => ../core
 	cosmossdk.io/store => ../store

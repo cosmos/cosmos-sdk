@@ -20,7 +20,7 @@ require (
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.6-20241120201313-68e42a58b301.1 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.6-20240130113600-88ef6483f90f.1 // indirect
-	cosmossdk.io/api v0.9.2 // indirect
+	cosmossdk.io/api v1.0.0-alpha.0 // indirect
 	cosmossdk.io/collections v1.2.1 // indirect
 	cosmossdk.io/core v0.11.3 // indirect
 	cosmossdk.io/depinject v1.2.0 // indirect
@@ -174,7 +174,6 @@ require (
 
 // Replace all unreleased indirect deps upgraded to comet v1
 replace (
-	cosmossdk.io/api => ../../api
 	cosmossdk.io/core => ../../core
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/tx => ../../x/tx

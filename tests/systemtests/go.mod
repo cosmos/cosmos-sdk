@@ -28,7 +28,7 @@ require (
 	cosmossdk.io/log v1.6.0 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
 	cosmossdk.io/store v1.1.2 // indirect
-	cosmossdk.io/x/tx v0.14.0 // indirect
+	cosmossdk.io/x/tx v1.2.0-alpha.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
@@ -59,7 +59,7 @@ require (
 	github.com/cosmos/iavl v1.2.6 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.14.0 // indirect
-	github.com/creachadair/tomledit v0.0.27 // indirect
+	github.com/creachadair/tomledit v0.0.28 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.0 // indirect
@@ -173,7 +173,4 @@ require (
 )
 
 // Replace all unreleased indirect deps upgraded to comet v1
-replace (
-	cosmossdk.io/store => ../../store
-	cosmossdk.io/x/tx => ../../x/tx
-)
+replace cosmossdk.io/store => ../../store

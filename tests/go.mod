@@ -11,7 +11,7 @@ require (
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/simapp v0.0.0-20230620040119-e078f1a49e8b
 	cosmossdk.io/store v1.1.2
-	cosmossdk.io/x/tx v0.14.0
+	cosmossdk.io/x/tx v1.2.0-alpha.0
 	github.com/cometbft/cometbft v1.0.1
 	github.com/cometbft/cometbft/api v1.0.0
 	github.com/cosmos/cosmos-db v1.1.1
@@ -220,10 +220,7 @@ require (
 // )
 
 // Replace all unreleased direct deps upgraded to comet v1
-replace (
-	cosmossdk.io/store => ../store
-	cosmossdk.io/x/tx => ../x/tx
-)
+replace cosmossdk.io/store => ../store
 
 // Below are the long-lived replace for tests.
 replace (

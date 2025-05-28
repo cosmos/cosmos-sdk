@@ -1,7 +1,11 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -47,4 +51,16 @@ x/upgrade upgrade-info.json behavior.`,
 	if err := cmd.Execute(); err != nil {
 		panic(err)
 	}
+}
+
+type MockNode struct {
+	height uint64
+}
+
+func (m *MockNode) Run(ctx context.Context) error {
+	ctx, _ = signal.NotifyContext(ctx, os.Interrupt, os.Kill)
+	http.HandleFunc("/block", func(w http.ResponseWriter, r *http.Request) {
+		panic(fmt.Errorf("not implemented"))
+	})
+	return nil
 }

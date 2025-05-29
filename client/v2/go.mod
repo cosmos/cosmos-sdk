@@ -170,5 +170,3 @@ replace github.com/cosmos/cosmos-sdk => ../..
 replace cosmossdk.io/store => ../../store
 
 replace cosmossdk.io/collections => ../../collections
-
-replace cosmossdk.io/core => ../../core

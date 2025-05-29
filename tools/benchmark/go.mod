@@ -156,6 +156,3 @@ require (
 	pgregory.net/rapid v1.2.0 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
-
-// Replace all unreleased direct deps upgraded to comet v1
-replace github.com/cosmos/cosmos-sdk => ../..

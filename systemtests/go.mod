@@ -18,7 +18,7 @@ require (
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.6-20240130113600-88ef6483f90f.1 // indirect
 	cosmossdk.io/api v1.0.0-alpha.0 // indirect
 	cosmossdk.io/collections v1.2.1 // indirect
-	cosmossdk.io/core v1.1.0-alpha.0 // indirect
+	cosmossdk.io/core v1.1.0-alpha.1 // indirect
 	cosmossdk.io/depinject v1.2.1 // indirect
 	cosmossdk.io/errors v1.0.2 // indirect
 	cosmossdk.io/log v1.6.0 // indirect

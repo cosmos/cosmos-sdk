@@ -161,7 +161,9 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		// Here we use dynamicpb, to create a proto v1 compatible message.
 		// The SDK codec will handle protov2 -> protov1 (marshal)
 		msg := dynamicpb.NewMessage(input.Descriptor())
-		cloneMessage(msg, input)
+		if err := cloneMessage(msg, input); err != nil {
+			return fmt.Errorf("failed to clone message: %w", err)
+		}
 
 		return clienttx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 	}
@@ -181,7 +183,7 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 	// set gov proposal flags if command is a gov proposal
 	if options.GovProposal {
 		govcli.AddGovPropFlagsToCmd(cmd)
-		cmd.Flags().Bool(flags.FlagNoProposal, false, "Skip gov proposal and submit a normal transaction")
+		cmd.Flags().Bool(flags.FlagNoProposal, false, "Skip gov proposal and submit a norcloneMessagemal transaction")
 	}
 
 	return cmd, nil
@@ -217,7 +219,9 @@ func (b *Builder) handleGovProposal(
 	// Here we use dynamicpb, to create a proto v1 compatible message.
 	// The SDK codec will handle protov2 -> protov1 (marshal)
 	msg := dynamicpb.NewMessage(input.Descriptor())
-	cloneMessage(msg, input)
+	if err := cloneMessage(msg, input); err != nil {
+		return fmt.Errorf("failed to clone message: %w", err)
+	}
 
 	if err := proposal.SetMsgs([]gogoproto.Message{msg}); err != nil {
 		return fmt.Errorf("failed to set msg in proposal %w", err)

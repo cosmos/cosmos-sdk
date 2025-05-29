@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/signal"
 	"path"
+	"syscall"
 	"time"
 
 	"cosmossdk.io/log"
@@ -39,6 +40,7 @@ x/upgrade upgrade-info.json behavior.`,
 	var homePath string
 	var httpAddr string
 	var blockUrl string
+	var shutdownDelay time.Duration
 	cmd.Flags().Uint64Var(&startHeight, "start-height", 1, "Block height at which to start the mock node.")
 	cmd.Flags().DurationVar(&blockTime, "block-time", 0, "Duration of time between blocks. This is required to simulate a progression of blocks over time.")
 	cmd.Flags().StringVar(&upgradePlan, "upgrade-plan", "", "upgrade-info.json to create after the halt duration is reached. Either this flag or --halt-height must be specified but not both.")
@@ -46,6 +48,7 @@ x/upgrade upgrade-info.json behavior.`,
 	cmd.Flags().StringVar(&homePath, "home", "", "Home directory for the mock node. upgrade-info.json will be written to the data sub-directory of this directory. Defaults to the current directory.")
 	cmd.Flags().StringVar(&httpAddr, "http-addr", ":8080", "HTTP server address to serve block information. Defaults to :8080.")
 	cmd.Flags().StringVar(&blockUrl, "block-url", "/block", "URL at which the latest block information is served. Defaults to /block.")
+	cmd.Flags().DurationVar(&shutdownDelay, "shutdown-delay", 0, "Duration to wait before shutting down the node upon receiving a shutdown signal. Defaults to 0 (no delay).")
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		if upgradePlan != "" && haltHeight > 0 {
 			return fmt.Errorf("cannot specify both --upgrade-plan and --halt-height")
@@ -64,13 +67,14 @@ x/upgrade upgrade-info.json behavior.`,
 			}
 		}
 		node := &MockNode{
-			height:     startHeight,
-			blockTime:  blockTime,
-			haltHeight: haltHeight,
-			homePath:   homePath,
-			httpAddr:   httpAddr,
-			blockUrl:   blockUrl,
-			logger:     log.NewLogger(os.Stdout),
+			height:        startHeight,
+			blockTime:     blockTime,
+			haltHeight:    haltHeight,
+			homePath:      homePath,
+			httpAddr:      httpAddr,
+			blockUrl:      blockUrl,
+			shutdownDelay: shutdownDelay,
+			logger:        log.NewLogger(os.Stdout),
 		}
 		if upgradePlan != "" {
 			node.upgradePlan = &upgradetypes.Plan{}
@@ -97,18 +101,19 @@ x/upgrade upgrade-info.json behavior.`,
 }
 
 type MockNode struct {
-	height      uint64
-	blockTime   time.Duration
-	upgradePlan *upgradetypes.Plan
-	haltHeight  uint64
-	homePath    string
-	httpAddr    string
-	blockUrl    string
-	logger      log.Logger
+	height        uint64
+	blockTime     time.Duration
+	upgradePlan   *upgradetypes.Plan
+	haltHeight    uint64
+	homePath      string
+	httpAddr      string
+	blockUrl      string
+	logger        log.Logger
+	shutdownDelay time.Duration
 }
 
 func (n *MockNode) Run(ctx context.Context) error {
-	ctx, _ = signal.NotifyContext(ctx, os.Interrupt, os.Kill)
+	ctx, _ = signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM)
 	upgradeHeight := n.haltHeight
 	if upgradeHeight == 0 {
 		upgradeHeight = uint64(n.upgradePlan.Height)
@@ -125,6 +130,10 @@ func (n *MockNode) Run(ctx context.Context) error {
 			n.logger.Info("Received shutdown signal, stopping node")
 			if err := srv.Shutdown(ctx); err != nil {
 				n.logger.Error("Error shutting down HTTP server", "err", err)
+			}
+			if n.shutdownDelay > 0 {
+				n.logger.Info("Waiting for shutdown delay", "delay", n.shutdownDelay)
+				time.Sleep(n.shutdownDelay)
 			}
 			return nil
 		case <-ticker.C:

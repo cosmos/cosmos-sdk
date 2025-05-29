@@ -620,8 +620,6 @@ cloud.google.com/go/workflows v1.9.0/go.mod h1:ZGkj1aFIOd9c8Gerkjjq7OW7I5+l6cSvT
 cloud.google.com/go/workflows v1.10.0/go.mod h1:fZ8LmRmZQWacon9UCX1r/g/DfAXx5VcPALq2CxzdePw=
 cosmossdk.io/api v1.0.0-alpha.0 h1:OrrPzV0nOgu2NuEchoyUDhqvYnpMXoxqDj62q9j8+ao=
 cosmossdk.io/api v1.0.0-alpha.0/go.mod h1:DVYbKgXQUz9CdJssOlwOsn+iwcM6sZWz1kSF6gT1O6A=
-cosmossdk.io/core v1.1.0-alpha.0 h1:RS9qVQ2uXujMV55JF/EGsicAPN1OSjgBPfLOK1xWhk4=
-cosmossdk.io/core v1.1.0-alpha.0/go.mod h1:Shv5PDiNxhD4f6pqDGonkBauoFW0l5v5BLYSkUtaNp8=
 cosmossdk.io/depinject v1.2.1 h1:eD6FxkIjlVaNZT+dXTQuwQTKZrFZ4UrfCq1RKgzyhMw=
 cosmossdk.io/depinject v1.2.1/go.mod h1:lqQEycz0H2JXqvOgVwTsjEdMI0plswI7p6KX+MVqFOM=
 cosmossdk.io/errors v1.0.2 h1:wcYiJz08HThbWxd/L4jObeLaLySopyyuUFB5w4AGpCo=
@@ -803,8 +801,8 @@ github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSV
 github.com/coreos/pkg v0.0.0-20160727233714-3ac0863d7acf/go.mod h1:E3G3o1h8I7cfcXa63jLwjI0eiQQMgzzUDFVpN/nH/eA=
 github.com/cosmos/btcutil v1.0.5 h1:t+ZFcX77LpKtDBhjucvnOH8C2l2ioGsBNEQ3jef8xFk=
 github.com/cosmos/btcutil v1.0.5/go.mod h1:IyB7iuqZMJlthe2tkIFL33xPyzbFYP0XVdS8P5lUPis=
-github.com/cosmos/cosmos-db v0.0.0-20250505172547-38785e92904d h1:ZYfTpw8TKV9ml5OLwVVXwqrclzm1jESoI+Sf34WXo0Y=
-github.com/cosmos/cosmos-db v0.0.0-20250505172547-38785e92904d/go.mod h1:AghjcIPqdhSLP/2Z0yha5xPH3nLnskz81pBx3tcVSAw=
+github.com/cosmos/cosmos-db v1.1.2 h1:KZm4xLlPp6rLkyIOmPOhh+XDK9oH1++pNH/csLdX0Dk=
+github.com/cosmos/cosmos-db v1.1.2/go.mod h1:dMg2gav979Ig2N076POEw4CEKbCsieaOfDWSfFZxs8M=
 github.com/cosmos/cosmos-proto v1.0.0-beta.5 h1:eNcayDLpip+zVLRLYafhzLvQlSmyab+RC5W7ZfmxJLA=
 github.com/cosmos/cosmos-proto v1.0.0-beta.5/go.mod h1:hQGLpiIUloJBMdQMMWb/4wRApmI9hjHH05nefC0Ojec=
 github.com/cosmos/go-bip39 v1.0.0 h1:pcomnQdrdH22njcAatO0yWojsUnCO3y2tNoV1cb6hHY=

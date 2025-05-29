@@ -51,7 +51,7 @@ require (
 	github.com/cometbft/cometbft-db v1.0.4 // indirect
 	github.com/cometbft/cometbft/api v1.0.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
-	github.com/cosmos/cosmos-db v1.1.1 // indirect
+	github.com/cosmos/cosmos-db v1.1.2 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/iavl v1.2.6 // indirect
@@ -168,3 +168,7 @@ replace github.com/cosmos/cosmos-sdk => ../..
 
 // Replace all unreleased indirect deps upgraded to comet v1
 replace cosmossdk.io/store => ../../store
+
+replace cosmossdk.io/collections => ../../collections
+
+replace cosmossdk.io/core => ../../core

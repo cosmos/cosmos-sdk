@@ -14,7 +14,8 @@ require (
 	cosmossdk.io/tools/confix v0.1.2
 	cosmossdk.io/x/tx v1.2.0-alpha.0
 	github.com/cometbft/cometbft v1.0.1
-	github.com/cosmos/cosmos-db v1.1.1
+	github.com/cometbft/cometbft/api v1.0.0
+	github.com/cosmos/cosmos-db v1.1.2
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
 	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/cosmos/gogoproto v1.7.0
@@ -26,8 +27,6 @@ require (
 	go.uber.org/mock v0.5.2
 	google.golang.org/protobuf v1.36.6
 )
-
-require github.com/cometbft/cometbft/api v1.0.0
 
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.6-20241120201313-68e42a58b301.1 // indirect
@@ -227,6 +226,8 @@ require (
 // Replace all unreleased direct deps upgraded to comet v1
 replace (
 	cosmossdk.io/client/v2 => ../client/v2
+	cosmossdk.io/collections => ../collections
+	cosmossdk.io/core => ../core
 	cosmossdk.io/store => ../store
 	cosmossdk.io/tools/confix => ../tools/confix
 )

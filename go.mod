@@ -10,7 +10,7 @@ require (
 	cosmossdk.io/errors v1.0.2
 	cosmossdk.io/log v1.6.0
 	cosmossdk.io/math v1.5.3
-	cosmossdk.io/store v1.1.2
+	cosmossdk.io/store v1.2.0-alpha.0
 	cosmossdk.io/x/tx v1.2.0-alpha.0
 	github.com/99designs/keyring v1.2.1
 	github.com/bgentry/speakeasy v0.2.0

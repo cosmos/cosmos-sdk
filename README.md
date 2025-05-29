@@ -16,13 +16,15 @@
   </a>
 </div>
 <div align="center">
-  <a href="https://discord.gg/AzefAFd">
+  <a href="https://discord.com/invite/interchain">
     <img alt="Discord" src="https://img.shields.io/discord/669268347736686612.svg" />
   </a>
   <a href="https://sourcegraph.com/github.com/cosmos/cosmos-sdk?badge">
     <img alt="Imported by" src="https://sourcegraph.com/github.com/cosmos/cosmos-sdk/-/badge.svg" />
   </a>
+  <a href="https://github.com/cosmos/cosmos-sdk/actions/workflows/sims.yml">
     <img alt="Sims" src="https://github.com/cosmos/cosmos-sdk/workflows/Sims/badge.svg" />
+  <a href="https://github.com/cosmos/cosmos-sdk/actions/workflows/lint.yml"> 
     <img alt="Lint Satus" src="https://github.com/cosmos/cosmos-sdk/workflows/Lint/badge.svg" />
 </div>
 

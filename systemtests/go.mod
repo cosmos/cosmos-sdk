@@ -5,7 +5,7 @@ go 1.23.5
 require (
 	cosmossdk.io/math v1.5.3
 	github.com/cometbft/cometbft v1.0.1
-	github.com/cosmos/cosmos-sdk v0.53.0
+	github.com/cosmos/cosmos-sdk v0.54.0-alpha.0
 	github.com/creachadair/tomledit v0.0.28
 	github.com/stretchr/testify v1.10.0
 	github.com/tidwall/gjson v1.18.0
@@ -164,6 +164,3 @@ require (
 	pgregory.net/rapid v1.2.0 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
-
-// Replace all unreleased direct deps upgraded to comet v1
-replace github.com/cosmos/cosmos-sdk => ../.

@@ -3,7 +3,7 @@ module cosmossdk.io/tools/confix
 go 1.23.5
 
 require (
-	github.com/cosmos/cosmos-sdk v0.53.0
+	github.com/cosmos/cosmos-sdk v0.54.0-alpha.0
 	github.com/creachadair/atomicfile v0.3.7
 	github.com/creachadair/tomledit v0.0.27
 	github.com/pelletier/go-toml/v2 v2.2.4
@@ -165,6 +165,3 @@ require (
 	pgregory.net/rapid v1.2.0 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
-
-// Replace all unreleased direct deps upgraded to comet v1
-replace github.com/cosmos/cosmos-sdk => ../..

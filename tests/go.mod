@@ -220,10 +220,7 @@ require (
 // )
 
 // Replace all unreleased direct deps upgraded to comet v1
-replace (
-	cosmossdk.io/collections => ../collections
-	cosmossdk.io/store => ../store
-)
+replace cosmossdk.io/store => ../store
 
 // Below are the long-lived replace for tests.
 replace (

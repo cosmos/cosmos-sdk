@@ -5,7 +5,7 @@ go 1.23.5
 require (
 	cosmossdk.io/api v1.0.0-alpha.0
 	cosmossdk.io/client/v2 v2.0.0-beta.9
-	cosmossdk.io/collections v1.2.1 // indirect
+	cosmossdk.io/collections v1.3.0 // indirect
 	cosmossdk.io/core v1.1.0-alpha.1
 	cosmossdk.io/depinject v1.2.1
 	cosmossdk.io/log v1.6.0
@@ -226,7 +226,6 @@ require (
 // Replace all unreleased direct deps upgraded to comet v1
 replace (
 	cosmossdk.io/client/v2 => ../client/v2
-	cosmossdk.io/collections => ../collections
 	cosmossdk.io/store => ../store
 	cosmossdk.io/tools/confix => ../tools/confix
 )

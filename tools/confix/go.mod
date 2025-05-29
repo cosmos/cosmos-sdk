@@ -23,7 +23,7 @@ require (
 
 require (
 	cosmossdk.io/api v1.0.0-alpha.0 // indirect
-	cosmossdk.io/collections v1.2.1 // indirect
+	cosmossdk.io/collections v1.3.0 // indirect
 	cosmossdk.io/core v1.1.0-alpha.1 // indirect
 	cosmossdk.io/depinject v1.2.1 // indirect
 	cosmossdk.io/errors v1.0.2 // indirect
@@ -171,5 +171,3 @@ replace github.com/cosmos/cosmos-sdk => ../..
 
 // Replace all unreleased indirect deps upgraded to comet v1
 replace cosmossdk.io/store => ../../store
-
-replace cosmossdk.io/collections => ../../collections

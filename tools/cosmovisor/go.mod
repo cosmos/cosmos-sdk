@@ -28,8 +28,8 @@ require (
 	cloud.google.com/go/monitoring v1.22.1 // indirect
 	cloud.google.com/go/storage v1.50.0 // indirect
 	cosmossdk.io/api v1.0.0-alpha.0 // indirect
-	cosmossdk.io/collections v1.2.1 // indirect
-	cosmossdk.io/core v1.1.0-alpha.0 // indirect
+	cosmossdk.io/collections v1.3.0 // indirect
+	cosmossdk.io/core v1.1.0-alpha.1 // indirect
 	cosmossdk.io/depinject v1.2.1 // indirect
 	cosmossdk.io/errors v1.0.2 // indirect
 	cosmossdk.io/math v1.5.3 // indirect
@@ -63,7 +63,7 @@ require (
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
 	github.com/cometbft/cometbft/api v1.0.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
-	github.com/cosmos/cosmos-db v1.1.1 // indirect
+	github.com/cosmos/cosmos-db v1.1.2 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
@@ -79,12 +79,12 @@ require (
 	github.com/dgraph-io/ristretto/v2 v2.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/dvsekhvalnov/jose2go v1.7.0 // indirect
-	github.com/emicklei/dot v1.6.2 // indirect
+	github.com/emicklei/dot v1.8.0 // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.32.4 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.2.1 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
-	github.com/getsentry/sentry-go v0.32.0 // indirect
+	github.com/getsentry/sentry-go v0.33.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.0.5 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect

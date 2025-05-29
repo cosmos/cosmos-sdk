@@ -4,8 +4,8 @@ module github.com/cosmos/cosmos-sdk
 
 require (
 	cosmossdk.io/api v1.0.0-alpha.0
-	cosmossdk.io/collections v1.2.1
-	cosmossdk.io/core v1.1.0-alpha.0
+	cosmossdk.io/collections v1.3.0
+	cosmossdk.io/core v1.1.0-alpha.1
 	cosmossdk.io/depinject v1.2.1
 	cosmossdk.io/errors v1.0.2
 	cosmossdk.io/log v1.6.0
@@ -21,7 +21,7 @@ require (
 	github.com/cometbft/cometbft v1.0.1
 	github.com/cometbft/cometbft/api v1.0.0
 	github.com/cosmos/btcutil v1.0.5
-	github.com/cosmos/cosmos-db v1.1.1
+	github.com/cosmos/cosmos-db v1.1.2
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogogateway v1.2.0
@@ -111,13 +111,13 @@ require (
 	github.com/dgraph-io/ristretto/v2 v2.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/dvsekhvalnov/jose2go v1.6.0 // indirect
-	github.com/emicklei/dot v1.6.2 // indirect
+	github.com/emicklei/dot v1.8.0 // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.32.4 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.2.1 // indirect
-	github.com/fatih/color v1.15.0 // indirect
+	github.com/fatih/color v1.18.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
-	github.com/getsentry/sentry-go v0.32.0 // indirect
+	github.com/getsentry/sentry-go v0.33.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.0.5 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
@@ -220,11 +220,7 @@ require (
 // Replace here are pending PRs, or version to be tagged
 
 // Replace all unreleased direct deps upgraded to comet v1
-replace (
-	cosmossdk.io/collections => ./collections
-	cosmossdk.io/store => ./store
-	github.com/cosmos/cosmos-db => github.com/cosmos/cosmos-db v0.0.0-20250505172547-38785e92904d
-)
+replace cosmossdk.io/store => ./store
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (

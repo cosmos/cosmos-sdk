@@ -5,8 +5,8 @@ go 1.23.5
 require (
 	cosmossdk.io/api v1.0.0-alpha.0
 	cosmossdk.io/client/v2 v2.0.0-beta.9
-	cosmossdk.io/collections v1.2.1 // indirect
-	cosmossdk.io/core v1.1.0-alpha.0
+	cosmossdk.io/collections v1.3.0 // indirect
+	cosmossdk.io/core v1.1.0-alpha.1
 	cosmossdk.io/depinject v1.2.1
 	cosmossdk.io/log v1.6.0
 	cosmossdk.io/math v1.5.3
@@ -14,7 +14,8 @@ require (
 	cosmossdk.io/tools/confix v0.1.2
 	cosmossdk.io/x/tx v1.2.0-alpha.0
 	github.com/cometbft/cometbft v1.0.1
-	github.com/cosmos/cosmos-db v1.1.1
+	github.com/cometbft/cometbft/api v1.0.0
+	github.com/cosmos/cosmos-db v1.1.2
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
 	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/cosmos/gogoproto v1.7.0
@@ -26,8 +27,6 @@ require (
 	go.uber.org/mock v0.5.2
 	google.golang.org/protobuf v1.36.6
 )
-
-require github.com/cometbft/cometbft/api v1.0.0
 
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.6-20241120201313-68e42a58b301.1 // indirect
@@ -87,13 +86,13 @@ require (
 	github.com/dgraph-io/ristretto/v2 v2.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/dvsekhvalnov/jose2go v1.6.0 // indirect
-	github.com/emicklei/dot v1.6.2 // indirect
+	github.com/emicklei/dot v1.8.0 // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.32.4 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.2.1 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
-	github.com/getsentry/sentry-go v0.32.0 // indirect
+	github.com/getsentry/sentry-go v0.33.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.0.5 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect

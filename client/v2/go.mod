@@ -4,7 +4,7 @@ go 1.23.5
 
 require (
 	cosmossdk.io/api v1.0.0-alpha.0
-	cosmossdk.io/core v1.1.0-alpha.0
+	cosmossdk.io/core v1.1.0-alpha.1
 	cosmossdk.io/depinject v1.2.1
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/x/tx v1.2.0-alpha.0
@@ -24,7 +24,7 @@ require (
 require (
 	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.6-20241120201313-68e42a58b301.1 // indirect
 	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.6-20240130113600-88ef6483f90f.1 // indirect
-	cosmossdk.io/collections v1.2.1 // indirect
+	cosmossdk.io/collections v1.3.0 // indirect
 	cosmossdk.io/errors v1.0.2 // indirect
 	cosmossdk.io/log v1.6.0 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
@@ -51,7 +51,7 @@ require (
 	github.com/cometbft/cometbft-db v1.0.4 // indirect
 	github.com/cometbft/cometbft/api v1.0.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
-	github.com/cosmos/cosmos-db v1.1.1 // indirect
+	github.com/cosmos/cosmos-db v1.1.2 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/iavl v1.2.6 // indirect
@@ -65,11 +65,11 @@ require (
 	github.com/dgraph-io/ristretto/v2 v2.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/dvsekhvalnov/jose2go v1.6.0 // indirect
-	github.com/emicklei/dot v1.6.2 // indirect
-	github.com/fatih/color v1.15.0 // indirect
+	github.com/emicklei/dot v1.8.0 // indirect
+	github.com/fatih/color v1.18.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
-	github.com/getsentry/sentry-go v0.32.0 // indirect
+	github.com/getsentry/sentry-go v0.33.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect

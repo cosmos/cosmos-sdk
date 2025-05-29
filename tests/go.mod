@@ -41,7 +41,7 @@ require (
 	cloud.google.com/go/iam v1.2.2 // indirect
 	cloud.google.com/go/monitoring v1.21.2 // indirect
 	cloud.google.com/go/storage v1.49.0 // indirect
-	cosmossdk.io/client/v2 v2.0.0-beta.9 // indirect
+	cosmossdk.io/client/v2 v2.0.0-beta.10 // indirect
 	cosmossdk.io/collections v1.3.0 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect

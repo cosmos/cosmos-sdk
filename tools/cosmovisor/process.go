@@ -23,6 +23,30 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
+/*
+Execution Flow:
+* Cosmovisor started
+* load manual upgrade batches
+* if have manual upgrade:
+	* load last known height
+		if have last known height:
+			* find proper manual upgrade plan
+  			* add --halt-height to the args before running the app
+		else:
+			* find last manual upgrade plan??
+			* start the app --halt-height
+			* check height
+* start the app
+* check height, find proper manual upgrade and restart app with proper --halt-height if needed
+* initialize watchers for
+	* on upgrade-info.json found, stop app, signal upgrade
+	* on upgrade-info.json.batch found, start height checking and restart app with --halt-height if needed
+	* if halt height signal received (by log watching and checking height), stop app, signal upgrade
+	* if past halt height for a manual upgrade, stop app and report error (likely not safe to upgrade)
+    * process exit
+      * if process exits without signaling an upgrade plan, we manually check for upgrade-info.json
+*/
+
 type Launcher struct {
 	logger log.Logger
 	cfg    *Config
@@ -49,18 +73,36 @@ func NewLauncher(logger log.Logger, cfg *Config) (Launcher, error) {
 		logger.Warn("failed to intialize fsnotify, it's probably not available on this platform, using polling only", "error", err)
 	}
 
-	// TODO the watchers should do data validation in additional to json unmarshaling
 	nodeUpgradeWatcher := initWatcher[upgradetypes.Plan](ctx, cfg, dirWatcher, cfg.UpgradeInfoFilePath(), cfg.ParseUpgradeInfo)
 	manualUpgradesWatcher := initWatcher[ManualUpgradeBatch](ctx, cfg, dirWatcher, cfg.UpgradeInfoBatchFilePath(), cfg.ParseManualUpgrades)
 
-	return Launcher{
+	l := Launcher{
 		logger:                logger,
 		cfg:                   cfg,
 		ctx:                   ctx,
 		cancel:                cancel,
 		upgradePlanWatcher:    nodeUpgradeWatcher,
 		manualUpgradesWatcher: manualUpgradesWatcher,
-	}, nil
+	}
+
+	err = l.loadManualUpgrade()
+	if err != nil {
+		return Launcher{}, fmt.Errorf("error loading manual upgrades: %w", err)
+	}
+
+	return l, nil
+}
+
+func (l *Launcher) loadManualUpgrade() error {
+	//manualUpgradeBatch, err := l.cfg.ReadManualUpgrades()
+	//if err != nil {
+	//	return Launcher{}, err
+	//}
+	//if manualUpgradeBatch == nil || len(manualUpgradeBatch) == 0 {
+	//	return nil
+	//}
+	//
+	panic("TODO")
 }
 
 func (l *Launcher) Watch() {
@@ -87,10 +129,15 @@ func (l *Launcher) Watch() {
 		case <-l.actualHeightWatcher.Updated():
 			// TODO check against manual upgrade height
 		case err := <-errChan:
+			// TODO move error handling to a separate goroutine
 			// for now just log errors
 			l.logger.Error("error in upgrade plan watcher", "error", err)
 		}
 	}
+}
+
+func (l *Launcher) watchErrors() {
+
 }
 
 // TODO fix this with WaitGroup

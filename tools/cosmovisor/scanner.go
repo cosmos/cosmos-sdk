@@ -16,7 +16,7 @@ func initWatcher[T any](ctx context.Context, cfg *Config, dirWatcher *watchers.F
 		hybridWatcher := watchers.NewHybridWatcher(ctx, dirWatcher, filename, cfg.PollInterval)
 		return watchers.NewDataWatcher[T](ctx, hybridWatcher, unmarshal)
 	} else {
-		pollWatcher := watchers.NewPollWatcher(ctx, filename, cfg.PollInterval)
+		pollWatcher := watchers.NewFilePollWatcher(ctx, filename, cfg.PollInterval)
 		return watchers.NewDataWatcher[T](ctx, pollWatcher, unmarshal)
 	}
 }

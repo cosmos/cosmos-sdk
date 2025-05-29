@@ -20,7 +20,7 @@ type MemoryStoreServiceI interface {
 // MemoryStoreService represents a unique, non-forgeable handle to a memory-backed
 // KVStore. It should be provided as a module-scoped dependency by the runtime
 // module being used to build the app.
-type MemoryStoreService MemoryStoreServiceI
+type MemoryStoreService = MemoryStoreServiceI
 
 type TransientStoreServiceI interface {
 	// OpenTransientStore retrieves the transient store from the context.

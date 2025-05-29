@@ -27,7 +27,7 @@ require (
 	cosmossdk.io/errors v1.0.2 // indirect
 	cosmossdk.io/log v1.6.0 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
-	cosmossdk.io/store v1.1.2 // indirect
+	cosmossdk.io/store v1.2.0-alpha.0 // indirect
 	cosmossdk.io/x/tx v1.2.0-alpha.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -171,6 +171,3 @@ require (
 	pgregory.net/rapid v1.2.0 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
-
-// Replace all unreleased indirect deps upgraded to comet v1
-replace cosmossdk.io/store => ../../store

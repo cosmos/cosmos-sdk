@@ -183,7 +183,7 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 	// set gov proposal flags if command is a gov proposal
 	if options.GovProposal {
 		govcli.AddGovPropFlagsToCmd(cmd)
-		cmd.Flags().Bool(flags.FlagNoProposal, false, "Skip gov proposal and submit a norcloneMessagemal transaction")
+		cmd.Flags().Bool(flags.FlagNoProposal, false, "Skip gov proposal and submit a normal transaction")
 	}
 
 	return cmd, nil

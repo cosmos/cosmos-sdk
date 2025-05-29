@@ -941,6 +941,22 @@ func (app *BaseApp) checkHalt(height int64, time time.Time) error {
 // against that height and gracefully halt if it matches the latest committed
 // height.
 func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
+	// Upstream cosmos-sdk unconditionally calls SnapshotIfApplicable, like:
+	// app.snapshotManager.SnapshotIfApplicable(header.Height)
+	// We separate that into determination in CommitWithoutSnapshot
+	// and initiation (if applicable) here.
+	res, snapshotHeight, err := app.CommitWithoutSnapshot()
+	if snapshotHeight > 0 {
+		app.SnapshotManager().SnapshotIfApplicable(snapshotHeight)
+	}
+	return res, err
+
+}
+
+// CommitWithoutSnapshot is like Commit but instead of starting the snapshot goroutine
+// it returns a positive height to indicate that a snapshot is warranted.
+// It can be used by apps to synchronously manage snapshot logic, especially initiation.
+func (app *BaseApp) CommitWithoutSnapshot() (*abci.ResponseCommit, int64, error) {
 	header := app.finalizeBlockState.Context().BlockHeader()
 	retainHeight := app.GetBlockRetentionHeight(header.Height)
 
@@ -984,10 +1000,14 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 		app.prepareCheckStater(app.checkState.Context())
 	}
 
-	// The SnapshotIfApplicable method will create the snapshot by starting the goroutine
-	app.snapshotManager.SnapshotIfApplicable(header.Height)
+	var snapshotHeight int64
+	// [AGORIC] In case it should not take snapshot snapshotHeight
+	//will be equal to zero preventing the snapshot from being taken
+	if app.snapshotManager.ShouldTakeSnapshot(header.Height) {
+		snapshotHeight = header.Height
+	}
 
-	return resp, nil
+	return resp, snapshotHeight, nil
 }
 
 // workingHash gets the apphash that will be finalized in commit.

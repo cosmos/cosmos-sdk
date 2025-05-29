@@ -33,6 +33,12 @@ Since v0.13.0, x/tx follows Cosmos SDK semver: https://github.com/cosmos/cosmos-
 
 ## [Unreleased]
 
+## [v1.2.0](https://github.com/cosmos/cosmos-sdk/releases/tag/x/tx/v1.2.0) - 2025-05-28
+
+NOTE: this release retracts `v1.0.0` and `v1.1.0` as those releases are no longer compatible.  
+
+* This release supports CometBFT v1 ahead of Cosmos SDK v0.54
+
 ### Improvements
 
 * [#21850](https://github.com/cosmos/cosmos-sdk/pull/21850) Support bytes field as signer.

@@ -3,8 +3,8 @@ module cosmossdk.io/x/tx
 go 1.23.0
 
 require (
-	cosmossdk.io/api v0.9.2
-	cosmossdk.io/core v0.11.3
+	cosmossdk.io/api v1.0.0-alpha.0
+	cosmossdk.io/core v1.1.0-alpha.0
 	cosmossdk.io/errors v1.0.2
 	cosmossdk.io/math v1.5.3
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
@@ -33,16 +33,6 @@ require (
 	google.golang.org/grpc v1.72.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-// Replace all unreleased direct deps upgraded to comet v1
-replace (
-	cosmossdk.io/api => ../../api
-	cosmossdk.io/core => ../../core
-)
-
-// NOTE: we do not want to replace to the development version of cosmossdk.io/api yet
-// Until https://github.com/cosmos/cosmos-sdk/issues/19228 is resolved
-// We are tagging x/tx v0.14+ from main and v0.13 from release/v0.50.x and must keep using released versions of x/tx dependencies
 
 // retracting released version from unreleased sdk v0.52
 retract [v1.0.0, v1.1.0]

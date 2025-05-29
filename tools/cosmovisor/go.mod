@@ -27,15 +27,15 @@ require (
 	cloud.google.com/go/iam v1.3.1 // indirect
 	cloud.google.com/go/monitoring v1.22.1 // indirect
 	cloud.google.com/go/storage v1.50.0 // indirect
-	cosmossdk.io/api v0.9.2 // indirect
+	cosmossdk.io/api v1.0.0-alpha.0 // indirect
 	cosmossdk.io/collections v1.2.1 // indirect
-	cosmossdk.io/core v0.11.3 // indirect
-	cosmossdk.io/depinject v1.2.0 // indirect
+	cosmossdk.io/core v1.1.0-alpha.0 // indirect
+	cosmossdk.io/depinject v1.2.1 // indirect
 	cosmossdk.io/errors v1.0.2 // indirect
 	cosmossdk.io/math v1.5.3 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
 	cosmossdk.io/store v1.1.2 // indirect
-	cosmossdk.io/x/tx v0.14.0 // indirect
+	cosmossdk.io/x/tx v1.2.0-alpha.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
@@ -197,7 +197,7 @@ require (
 	google.golang.org/api v0.222.0 // indirect
 	google.golang.org/genproto v0.0.0-20250106144421-5f5ef82da422 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250324211829-b45e905df463 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250422160041-2d3770c4ea7f // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250528174236-200df99c418a // indirect
 	google.golang.org/protobuf v1.36.6 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.5.2 // indirect
@@ -210,9 +210,4 @@ require (
 replace github.com/cosmos/cosmos-sdk => ../..
 
 // Replace all unreleased indirect deps upgraded to comet v1
-replace (
-	cosmossdk.io/api => ../../api
-	cosmossdk.io/core => ../../core
-	cosmossdk.io/store => ../../store
-	cosmossdk.io/x/tx => ../../x/tx
-)
+replace cosmossdk.io/store => ../../store

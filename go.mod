@@ -3,15 +3,15 @@ go 1.23.5
 module github.com/cosmos/cosmos-sdk
 
 require (
-	cosmossdk.io/api v0.9.2
+	cosmossdk.io/api v1.0.0-alpha.0
 	cosmossdk.io/collections v1.2.1
-	cosmossdk.io/core v0.11.3
-	cosmossdk.io/depinject v1.2.0
+	cosmossdk.io/core v1.1.0-alpha.0
+	cosmossdk.io/depinject v1.2.1
 	cosmossdk.io/errors v1.0.2
 	cosmossdk.io/log v1.6.0
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/store v1.1.2
-	cosmossdk.io/x/tx v0.14.0
+	cosmossdk.io/x/tx v1.2.0-alpha.0
 	github.com/99designs/keyring v1.2.1
 	github.com/bgentry/speakeasy v0.2.0
 	github.com/bits-and-blooms/bitset v1.22.0
@@ -210,7 +210,7 @@ require (
 	golang.org/x/time v0.8.0 // indirect
 	google.golang.org/api v0.215.0 // indirect
 	google.golang.org/genproto v0.0.0-20241118233622-e639e219e697 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250422160041-2d3770c4ea7f // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250528174236-200df99c418a // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
 	rsc.io/qr v0.2.0 // indirect
@@ -221,11 +221,8 @@ require (
 
 // Replace all unreleased direct deps upgraded to comet v1
 replace (
-	cosmossdk.io/api => ./api
 	cosmossdk.io/collections => ./collections
-	cosmossdk.io/core => ./core
 	cosmossdk.io/store => ./store
-	cosmossdk.io/x/tx => ./x/tx
 	github.com/cosmos/cosmos-db => github.com/cosmos/cosmos-db v0.0.0-20250505172547-38785e92904d
 )
 

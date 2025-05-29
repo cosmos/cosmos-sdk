@@ -3,11 +3,11 @@ module cosmossdk.io/client/v2
 go 1.23.5
 
 require (
-	cosmossdk.io/api v0.9.2
-	cosmossdk.io/core v0.11.3
-	cosmossdk.io/depinject v1.2.0
+	cosmossdk.io/api v1.0.0-alpha.0
+	cosmossdk.io/core v1.1.0-alpha.0
+	cosmossdk.io/depinject v1.2.1
 	cosmossdk.io/math v1.5.3
-	cosmossdk.io/x/tx v0.14.0
+	cosmossdk.io/x/tx v1.2.0-alpha.0
 	github.com/cockroachdb/errors v1.12.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.53.0
@@ -157,19 +157,14 @@ require (
 	golang.org/x/text v0.25.0 // indirect
 	google.golang.org/genproto v0.0.0-20241118233622-e639e219e697 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250324211829-b45e905df463 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250422160041-2d3770c4ea7f // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250528174236-200df99c418a // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
 	pgregory.net/rapid v1.2.0 // indirect
 )
 
 // Replace all unreleased direct deps upgraded to comet v1
-replace (
-	cosmossdk.io/api => ../../api
-	cosmossdk.io/core => ../../core
-	cosmossdk.io/x/tx => ../../x/tx
-	github.com/cosmos/cosmos-sdk => ../..
-)
+replace github.com/cosmos/cosmos-sdk => ../..
 
 // Replace all unreleased indirect deps upgraded to comet v1
 replace cosmossdk.io/store => ../../store

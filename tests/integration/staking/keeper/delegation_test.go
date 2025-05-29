@@ -7,12 +7,15 @@ import (
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/math"
+	"cosmossdk.io/simapp"
 
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/stretchr/testify/require"
 )
 
 func TestUnbondingDelegationsMaxEntries(t *testing.T) {
@@ -136,29 +139,29 @@ func TestTransferDelegation(t *testing.T) {
 	require.Equal(t, math.LegacyZeroDec(), transferred)
 
 	// stake some tokens
-	bond1to1 := types.NewDelegation(addrDels[0], valAddrs[0], sdk.NewDec(99))
+	bond1to1 := types.NewDelegation(addrDels[0], valAddrs[0], math.LegacyNewDec(99))
 	app.StakingKeeper.SetDelegation(ctx, bond1to1)
 	// stake to an unrelated validator so implementation has to skip it
-	bond1to3 := types.NewDelegation(addrDels[0], valAddrs[2], sdk.NewDec(9))
+	bond1to3 := types.NewDelegation(addrDels[0], valAddrs[2], math.LegacyNewDec(9))
 	app.StakingKeeper.SetDelegation(ctx, bond1to3)
 
 	// transfer nothing
-	transferred = app.StakingKeeper.TransferDelegation(ctx, addrDels[0], addrDels[1], valAddrs[0], sdk.ZeroDec())
+	transferred = app.StakingKeeper.TransferDelegation(ctx, addrDels[0], addrDels[1], valAddrs[0], math.LegacyZeroDec())
 	require.Equal(t, math.LegacyZeroDec(), transferred)
 
 	// partial transfer, empty recipient
-	transferred = app.StakingKeeper.TransferDelegation(ctx, addrDels[0], addrDels[1], valAddrs[0], sdk.NewDec(10))
-	require.Equal(t, sdk.NewDec(10), transferred)
+	transferred = app.StakingKeeper.TransferDelegation(ctx, addrDels[0], addrDels[1], valAddrs[0], math.LegacyNewDec(10))
+	require.Equal(t, math.LegacyNewDec(10), transferred)
 	resBond, found := app.StakingKeeper.GetDelegation(ctx, addrDels[0], valAddrs[0])
 	require.True(t, found)
-	require.Equal(t, sdk.NewDec(89), resBond.Shares)
+	require.Equal(t, math.LegacyNewDec(89), resBond.Shares)
 	resBond, found = app.StakingKeeper.GetDelegation(ctx, addrDels[1], valAddrs[0])
 	require.True(t, found)
-	require.Equal(t, sdk.NewDec(10), resBond.Shares)
+	require.Equal(t, math.LegacyNewDec(10), resBond.Shares)
 
 	// partial transfer, existing recipient
-	transferred = app.StakingKeeper.TransferDelegation(ctx, addrDels[0], addrDels[1], valAddrs[0], sdk.NewDec(11))
-	require.Equal(t, transferred, sdk.NewDec(11))
+	transferred = app.StakingKeeper.TransferDelegation(ctx, addrDels[0], addrDels[1], valAddrs[0], math.LegacyNewDec(11))
+	require.Equal(t, transferred, math.LegacyNewDec(11))
 	resBond, found = app.StakingKeeper.GetDelegation(ctx, addrDels[0], valAddrs[0])
 	require.True(t, found)
 	require.Equal(t, math.LegacyNewDec(78), resBond.Shares)
@@ -167,16 +170,16 @@ func TestTransferDelegation(t *testing.T) {
 	require.Equal(t, math.LegacyNewDec(21), resBond.Shares)
 
 	// full transfer
-	transferred = app.StakingKeeper.TransferDelegation(ctx, addrDels[0], addrDels[1], valAddrs[0], sdk.NewDec(9999))
+	transferred = app.StakingKeeper.TransferDelegation(ctx, addrDels[0], addrDels[1], valAddrs[0], math.LegacyNewDec(9999))
 	require.Equal(t, transferred, math.LegacyNewDec(78))
 	resBond, found = app.StakingKeeper.GetDelegation(ctx, addrDels[0], valAddrs[0])
 	require.False(t, found)
 	resBond, found = app.StakingKeeper.GetDelegation(ctx, addrDels[1], valAddrs[0])
 	require.True(t, found)
-	require.Equal(t, sdk.NewDec(99), resBond.Shares)
+	require.Equal(t, math.LegacyNewDec(99), resBond.Shares)
 
 	// simulate redelegate to another validator
-	bond1to2 := types.NewDelegation(addrDels[0], valAddrs[1], sdk.NewDec(20))
+	bond1to2 := types.NewDelegation(addrDels[0], valAddrs[1], math.LegacyNewDec(20))
 	app.StakingKeeper.SetDelegation(ctx, bond1to2)
 	rd := types.NewRedelegation(
 		addrDels[0],
@@ -184,37 +187,37 @@ func TestTransferDelegation(t *testing.T) {
 		valAddrs[1],
 		0,
 		time.Unix(0, 0).UTC(),
-		sdk.NewInt(20),
-		sdk.NewDec(20),
+		math.NewInt(20),
+		math.LegacyNewDec(20),
 		uint64(0),
 	)
 	app.StakingKeeper.SetRedelegation(ctx, rd)
 
 	// partial transfer from redelegation
-	transferred = app.StakingKeeper.TransferDelegation(ctx, addrDels[0], addrDels[1], valAddrs[1], sdk.NewDec(7))
-	require.Equal(t, sdk.NewDec(7), transferred)
+	transferred = app.StakingKeeper.TransferDelegation(ctx, addrDels[0], addrDels[1], valAddrs[1], math.LegacyNewDec(7))
+	require.Equal(t, math.LegacyNewDec(7), transferred)
 	resBond, found = app.StakingKeeper.GetDelegation(ctx, addrDels[0], valAddrs[1])
 	require.True(t, found)
-	require.Equal(t, sdk.NewDec(13), resBond.Shares)
+	require.Equal(t, math.LegacyNewDec(13), resBond.Shares)
 	resBond, found = app.StakingKeeper.GetDelegation(ctx, addrDels[1], valAddrs[1])
 	require.True(t, found)
-	require.Equal(t, sdk.NewDec(7), resBond.Shares)
+	require.Equal(t, math.LegacyNewDec(7), resBond.Shares)
 
 	// stake more alongside redelegation
 	bond1to2, found = app.StakingKeeper.GetDelegation(ctx, addrDels[0], valAddrs[1])
 	require.True(t, found)
-	require.Equal(t, sdk.NewDec(13), bond1to2.Shares)
-	bond1to2.Shares = sdk.NewDec(47) // add 34 shares
+	require.Equal(t, math.LegacyNewDec(13), bond1to2.Shares)
+	bond1to2.Shares = math.LegacyNewDec(47) // add 34 shares
 	app.StakingKeeper.SetDelegation(ctx, bond1to2)
 
 	// full transfer from partial redelegation
-	transferred = app.StakingKeeper.TransferDelegation(ctx, addrDels[0], addrDels[1], valAddrs[1], sdk.NewDec(9999))
-	require.Equal(t, sdk.NewDec(47), transferred)
+	transferred = app.StakingKeeper.TransferDelegation(ctx, addrDels[0], addrDels[1], valAddrs[1], math.LegacyNewDec(9999))
+	require.Equal(t, math.LegacyNewDec(47), transferred)
 	resBond, found = app.StakingKeeper.GetDelegation(ctx, addrDels[0], valAddrs[1])
 	require.False(t, found)
 	resBond, found = app.StakingKeeper.GetDelegation(ctx, addrDels[1], valAddrs[1])
 	require.True(t, found)
-	require.Equal(t, sdk.NewDec(54), resBond.Shares)
+	require.Equal(t, math.LegacyNewDec(54), resBond.Shares)
 }
 
 func TestTransferUnbonding(t *testing.T) {

@@ -1,6 +1,8 @@
 package internal
 
 import (
+	"context"
+
 	"cosmossdk.io/log"
 
 	"cosmossdk.io/tools/cosmovisor"
@@ -58,4 +60,36 @@ func (r *BasicRunner) Run(haltHeight uint64) error {
 			}
 		}
 	}
+}
+
+func Run(ctx context.Context, cfg *cosmovisor.Config, logger log.Logger, haltHeight uint64) error {
+	// TODO start file watchers
+	if haltHeight > 0 {
+		// TODO start height watcher
+	}
+	// TODO start process runner
+	//correctHeightConfirmed := false
+	for {
+		select {
+		//case <-r.upgradePlanWatcher.Updated():
+		//	// TODO shutdown
+		//case <-r.manualUpgradesWatcher.Updated():
+		//	if haltHeight == 0 {
+		//		// TODO shutdown, no halt height set
+		//	} else {
+		//		// TODO check if this would change the halt height
+		//	}
+		//case <-r.runner.Done():
+		//	// TODO handle process exit
+		//case actualHeight := <-r.actualHeightWatcher.Updated():
+		//	if !correctHeightConfirmed {
+		//		// TODO read manual upgrade batch and check if we'd still be at the correct halt height
+		//		correctHeightConfirmed = true
+		//	}
+		//	if actualHeight >= haltHeight {
+		//		// TODO shutdown
+		//	}
+		}
+	}
+	return nil
 }

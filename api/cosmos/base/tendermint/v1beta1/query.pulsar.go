@@ -2,9 +2,9 @@
 package tendermintv1beta1
 
 import (
-	v11 "buf.build/gen/go/cometbft/cometbft/protocolbuffers/go/cometbft/p2p/v1"
-	v1 "buf.build/gen/go/cometbft/cometbft/protocolbuffers/go/cometbft/types/v1"
 	_ "cosmossdk.io/api/amino"
+	v11 "cosmossdk.io/api/cometbft/p2p/v1"
+	v1 "cosmossdk.io/api/cometbft/types/v1"
 	v1beta1 "cosmossdk.io/api/cosmos/base/query/v1beta1"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"

@@ -2,8 +2,8 @@
 package abciv1beta1
 
 import (
-	v1 "buf.build/gen/go/cometbft/cometbft/protocolbuffers/go/cometbft/abci/v1"
-	v11 "buf.build/gen/go/cometbft/cometbft/protocolbuffers/go/cometbft/types/v1"
+	v1 "cosmossdk.io/api/cometbft/abci/v1"
+	v11 "cosmossdk.io/api/cometbft/types/v1"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"

@@ -1,0 +1,43 @@
+digraph {
+	compound=true;
+	node [shape=Mrecord];
+	rankdir="LR";
+
+	ComputeRunPlan [label="ComputeRunPlan"];
+	subgraph cluster_ComputeRunPlan {
+		label="Substates of\nComputeRunPlan";
+		style="dashed";
+		"cluster_ComputeRunPlan-init" [label="", shape=point];
+		ReadUpgradeInfoJson [label="ReadUpgradeInfoJson|activated / ReadUpgradeInfoJsonSync-fm"];
+		ReadManualUpgradeBatch [label="ReadManualUpgradeBatch"];
+		CheckHeight [label="CheckHeight"];
+	}
+	DoUpgrade [label="DoUpgrade"];
+	Run [label="Run|entry / func1\nexit / func2"];
+	RunWithHaltHeight [label="RunWithHaltHeight"];
+	subgraph cluster_RunWithHaltHeight {
+		label="Substates of\nRunWithHaltHeight";
+		style="dashed";
+		"cluster_RunWithHaltHeight-init" [label="", shape=point];
+		ConfirmHaltHeight [label="ConfirmHaltHeight"];
+		WatchForHaltHeight [label="WatchForHaltHeight"];
+	}
+	ShutdownAndRestart [label="ShutdownAndRestart|activated / StopProcess-fm"];
+	"cluster_ComputeRunPlan-init" -> ReadUpgradeInfoJson [label=""];
+	"cluster_RunWithHaltHeight-init" -> ConfirmHaltHeight [label=""];
+	CheckHeight -> RunWithHaltHeight [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">TriggerReadLastKnownHeight [beforeManualUpgradeHeight]</TD></TR></TABLE>>];
+	CheckHeight -> DoUpgrade [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">TriggerReadLastKnownHeight [atManualUpgradeHeight]</TD></TR></TABLE>>];
+	CheckHeight -> FatalError [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">TriggerReadLastKnownHeight [pastManualUpgradeHeight]</TD></TR></TABLE>>];
+	ConfirmHaltHeight -> WatchForHaltHeight [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">TriggerGotActualHeight [haveCorrectHaltHeight]</TD></TR></TABLE>>];
+	ConfirmHaltHeight -> ShutdownAndRestart [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">TriggerGotActualHeight [haveWrongHaltHeight]</TD></TR></TABLE>>];
+	DoUpgrade -> ComputeRunPlan [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">TriggerUpgradeSuccess</TD></TR></TABLE>>];
+	ReadManualUpgradeBatch -> Run [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">TriggerReadManualUpgradeBatch [isNil]</TD></TR></TABLE>>];
+	ReadManualUpgradeBatch -> CheckHeight [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">TriggerReadManualUpgradeBatch [isNotNil]</TD></TR></TABLE>>];
+	ReadUpgradeInfoJson -> ReadManualUpgradeBatch [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">TriggerGotUpgradeInfoJSON [isNil]</TD></TR></TABLE>>];
+	ReadUpgradeInfoJson -> DoUpgrade [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">TriggerGotUpgradeInfoJSON [isNotNil]</TD></TR></TABLE>>];
+	Run -> ShutdownAndRestart [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">TriggerGotNewManualUpgrade</TD></TR><TR><TD ALIGN="LEFT">TriggerGotUpgradeInfoJSON</TD></TR></TABLE>>];
+	ShutdownAndRestart -> ComputeRunPlan [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">TriggerProcessExit</TD></TR></TABLE>>];
+	WatchForHaltHeight -> ShutdownAndRestart [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">TriggerGotNewManualUpgrade</TD></TR><TR><TD ALIGN="LEFT">TriggerGotUpgradeInfoJSON</TD></TR><TR><TD ALIGN="LEFT">TriggerReachedHaltHeight</TD></TR></TABLE>>];
+	init [label="", shape=point];
+	init -> ComputeRunPlan
+}

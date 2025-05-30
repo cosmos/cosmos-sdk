@@ -458,6 +458,10 @@ func (cfg *Config) ParseUpgradeInfo(bz []byte) (upgradetypes.Plan, error) {
 	return upgradePlan, nil
 }
 
+func (cfg Config) ReadLastKnownHeight() uint64 {
+	return 0
+}
+
 // BooleanOption checks and validate env option
 func BooleanOption(name string, defaultVal bool) (bool, error) {
 	p := strings.ToLower(os.Getenv(name))

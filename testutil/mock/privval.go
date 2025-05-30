@@ -36,7 +36,7 @@ func (pv PV) SignVote(chainID string, vote *cmtproto.Vote, signExtension bool) e
 	}
 	vote.Signature = sig
 	if signExtension {
-		extSignBytes := cmttypes.VoteExtensionSignBytes(chainID, vote)
+		extSignBytes, _ := cmttypes.VoteExtensionSignBytes(chainID, vote)
 		extSig, err := pv.PrivKey.Sign(extSignBytes)
 		if err != nil {
 			return err

@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	cmtrpcserver "github.com/cometbft/cometbft/rpc/jsonrpc/server"
+	tmrpcserver "github.com/cometbft/cometbft/rpc/jsonrpc/server"
 	gateway "github.com/cosmos/gogogateway"
 	"github.com/golang/protobuf/proto" //nolint:staticcheck // grpc-gateway uses deprecated golang/protobuf
 	"github.com/gorilla/handlers"
@@ -23,7 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/server/config"
-	cmtlogwrapper "github.com/cosmos/cosmos-sdk/server/log"
+	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 )
@@ -112,13 +112,13 @@ func customGRPCResponseHeaders(ctx context.Context, w http.ResponseWriter, _ pro
 func (s *Server) Start(ctx context.Context, cfg config.Config) error {
 	s.mtx.Lock()
 
-	cmtCfg := cmtrpcserver.DefaultConfig()
+	cmtCfg := tmrpcserver.DefaultConfig()
 	cmtCfg.MaxOpenConnections = int(cfg.API.MaxOpenConnections)
 	cmtCfg.ReadTimeout = time.Duration(cfg.API.RPCReadTimeout) * time.Second
 	cmtCfg.WriteTimeout = time.Duration(cfg.API.RPCWriteTimeout) * time.Second
 	cmtCfg.MaxBodyBytes = int64(cfg.API.RPCMaxBodyBytes)
 
-	listener, err := cmtrpcserver.Listen(cfg.API.Address, cmtCfg.MaxOpenConnections)
+	listener, err := tmrpcserver.Listen(cfg.API.Address, cmtCfg.MaxOpenConnections)
 	if err != nil {
 		s.mtx.Unlock()
 		return err
@@ -145,7 +145,7 @@ func (s *Server) Start(ctx context.Context, cfg config.Config) error {
 				return
 			}
 
-			// Fall back to the grpc gateway server.
+			// Fall back to grpc gateway server.
 			s.GRPCGatewayRouter.ServeHTTP(w, req)
 		}))
 	}
@@ -163,9 +163,9 @@ func (s *Server) Start(ctx context.Context, cfg config.Config) error {
 
 		if enableUnsafeCORS {
 			allowAllCORS := handlers.CORS(handlers.AllowedHeaders([]string{"Content-Type"}))
-			errCh <- cmtrpcserver.Serve(s.listener, allowAllCORS(s.Router), cmtlogwrapper.CometLoggerWrapper{Logger: s.logger}, cmtCfg)
+			errCh <- tmrpcserver.Serve(s.listener, allowAllCORS(s.Router), servercmtlog.CometLoggerWrapper{Logger: s.logger}, cmtCfg)
 		} else {
-			errCh <- cmtrpcserver.Serve(s.listener, s.Router, cmtlogwrapper.CometLoggerWrapper{Logger: s.logger}, cmtCfg)
+			errCh <- tmrpcserver.Serve(s.listener, s.Router, servercmtlog.CometLoggerWrapper{Logger: s.logger}, cmtCfg)
 		}
 	}(cfg.API.EnableUnsafeCORS)
 
@@ -193,13 +193,12 @@ func (s *Server) Close() error {
 
 func (s *Server) SetTelemetry(m *telemetry.Metrics) {
 	s.mtx.Lock()
-	s.registerMetrics(m)
+	s.metrics = m
+	s.registerMetrics()
 	s.mtx.Unlock()
 }
 
-func (s *Server) registerMetrics(m *telemetry.Metrics) {
-	s.metrics = m
-
+func (s *Server) registerMetrics() {
 	metricsHandler := func(w http.ResponseWriter, r *http.Request) {
 		format := strings.TrimSpace(r.FormValue("format"))
 

@@ -38,6 +38,7 @@ func (cfg *Config) ParseManualUpgrades(bz []byte) (ManualUpgradeBatch, error) {
 // If an upgrade with the same name already exists, it will only be overwritten if forceOverwrite is true,
 // otherwise an error will be returned.
 func AddManualUpgrade(cfg *Config, plan *ManualUpgradePlan, forceOverwrite bool) error {
+	// TODO only allow plans that are AFTER the last known height
 	manualUpgrades, err := cfg.ReadManualUpgrades()
 	if err != nil {
 		return err
@@ -57,6 +58,7 @@ func AddManualUpgrade(cfg *Config, plan *ManualUpgradePlan, forceOverwrite bool)
 
 	sortUpgrades(manualUpgrades)
 
+	// TODO we should not write the file every time we add an upgrade, but only once per command otherwise we can trigger spurious
 	manualUpgradesData, err := json.MarshalIndent(manualUpgrades, "", "  ")
 	if err != nil {
 		return err

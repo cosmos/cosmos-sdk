@@ -3,32 +3,26 @@ digraph {
 	node [shape=Mrecord];
 	rankdir="LR";
 
-	ComputeRunPlan [label="ComputeRunPlan"];
-	subgraph cluster_ComputeRunPlan {
-		label="Substates of\nComputeRunPlan";
-		style="dashed";
-		"cluster_ComputeRunPlan-init" [label="", shape=point];
-		ReadUpgradeInfoJson [label="ReadUpgradeInfoJson|entry / CheckForUpgradeInfoJSON-fm"];
-		ReadManualUpgradeBatch [label="ReadManualUpgradeBatch|entry / CheckForManualUpgradeBatch-fm"];
-		CheckHeight [label="CheckHeight|entry / CheckLastKnownHeight-fm"];
-	}
+	CheckForManualUpgradeBatch [label="CheckForManualUpgradeBatch|entry / CheckForManualUpgradeBatch-fm"];
+	CheckForUpgradeInfoJSON [label="CheckForUpgradeInfoJSON|entry / CheckForUpgradeInfoJSON-fm"];
+	CheckLastKnownHeight [label="CheckLastKnownHeight|entry / CheckLastKnownHeight-fm"];
 	DoUpgrade [label="DoUpgrade"];
 	Run [label="Run|entry / Start-fm"];
 	RunWithHaltHeight [label="RunWithHaltHeight|entry / StartWithHaltHeight-fm\nentry / CheckActualHeight-fm"];
 	ShutdownAndRestart [label="ShutdownAndRestart|entry / Stop-fm"];
-	"cluster_ComputeRunPlan-init" -> ReadUpgradeInfoJson [label=""];
-	CheckHeight -> RunWithHaltHeight [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">TriggerReadLastKnownHeight [beforeManualUpgradeHeight]</TD></TR></TABLE>>];
-	CheckHeight -> DoUpgrade [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">TriggerReadLastKnownHeight [atManualUpgradeHeight]</TD></TR></TABLE>>];
-	CheckHeight -> FatalError [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">TriggerReadLastKnownHeight [pastManualUpgradeHeight]</TD></TR></TABLE>>];
-	DoUpgrade -> FatalError [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">TriggerUpgradeError</TD></TR></TABLE>>];
-	DoUpgrade -> ComputeRunPlan [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">TriggerUpgradeSuccess</TD></TR></TABLE>>];
-	ReadManualUpgradeBatch -> Run [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">TriggerReadManualUpgradeBatch [isNil]</TD></TR></TABLE>>];
-	ReadManualUpgradeBatch -> CheckHeight [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">TriggerReadManualUpgradeBatch [isNotNil]</TD></TR></TABLE>>];
-	ReadUpgradeInfoJson -> ReadManualUpgradeBatch [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">TriggerGotUpgradeInfoJSON [isNil]</TD></TR></TABLE>>];
-	ReadUpgradeInfoJson -> DoUpgrade [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">TriggerGotUpgradeInfoJSON [isNotNil]</TD></TR></TABLE>>];
-	Run -> ShutdownAndRestart [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">TriggerGotNewManualUpgrade</TD></TR><TR><TD ALIGN="LEFT">TriggerGotUpgradeInfoJSON</TD></TR></TABLE>>];
-	RunWithHaltHeight -> ShutdownAndRestart [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">TriggerGotActualHeight [haveWrongHaltHeight]</TD></TR><TR><TD ALIGN="LEFT">TriggerGotNewManualUpgrade</TD></TR><TR><TD ALIGN="LEFT">TriggerGotUpgradeInfoJSON</TD></TR><TR><TD ALIGN="LEFT">TriggerReachedHaltHeight</TD></TR></TABLE>>];
-	ShutdownAndRestart -> ComputeRunPlan [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">TriggerProcessExit</TD></TR></TABLE>>];
+	CheckForManualUpgradeBatch -> CheckLastKnownHeight [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">haveManualUpgrades</TD></TR></TABLE>>];
+	CheckForManualUpgradeBatch -> Run [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">noManualUpgrades</TD></TR></TABLE>>];
+	CheckForUpgradeInfoJSON -> CheckForManualUpgradeBatch [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">haveUpgradePlan</TD></TR></TABLE>>];
+	CheckForUpgradeInfoJSON -> DoUpgrade [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">noUpgradePlan</TD></TR></TABLE>>];
+	CheckLastKnownHeight -> RunWithHaltHeight [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">onReadLastKnownHeight [beforeManualUpgradeHeight]</TD></TR></TABLE>>];
+	CheckLastKnownHeight -> DoUpgrade [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">onReadLastKnownHeight [atManualUpgradeHeight]</TD></TR></TABLE>>];
+	CheckLastKnownHeight -> FatalError [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">onReadLastKnownHeight [pastManualUpgradeHeight]</TD></TR></TABLE>>];
+	DoUpgrade -> FatalError [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">onUpgradeError</TD></TR></TABLE>>];
+	DoUpgrade -> CheckForManualUpgradeBatch [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">onUpgradeSuccess [allowDaemonRestart]</TD></TR></TABLE>>];
+	DoUpgrade -> Done [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">onUpgradeSuccess [disableDaemonRestart]</TD></TR></TABLE>>];
+	Run -> ShutdownAndRestart [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">haveUpgradePlan</TD></TR><TR><TD ALIGN="LEFT">onGotNewManualUpgrade</TD></TR></TABLE>>];
+	RunWithHaltHeight -> ShutdownAndRestart [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">haveUpgradePlan</TD></TR><TR><TD ALIGN="LEFT">onGotActualHeight [haveWrongHaltHeight]</TD></TR><TR><TD ALIGN="LEFT">onGotNewManualUpgrade</TD></TR><TR><TD ALIGN="LEFT">onReachedHaltHeight</TD></TR></TABLE>>];
+	ShutdownAndRestart -> CheckForUpgradeInfoJSON [label=<<TABLE BORDER="0"><TR><TD ALIGN="LEFT">onProcessExit</TD></TR></TABLE>>];
 	init [label="", shape=point];
-	init -> ComputeRunPlan
+	init -> CheckForUpgradeInfoJSON
 }

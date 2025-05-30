@@ -40,101 +40,135 @@ func (m *MockRunner) EXPECT() *MockRunnerMockRecorder {
 	return m.recorder
 }
 
-// CheckHeightSync mocks base method.
-func (m *MockRunner) CheckHeightSync(ctx context.Context) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "CheckHeightSync", ctx)
-}
-
-// CheckHeightSync indicates an expected call of CheckHeightSync.
-func (mr *MockRunnerMockRecorder) CheckHeightSync(ctx any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckHeightSync", reflect.TypeOf((*MockRunner)(nil).CheckHeightSync), ctx)
-}
-
-// ReadManualUpgradeBatchSync mocks base method.
-func (m *MockRunner) ReadManualUpgradeBatchSync(ctx context.Context) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "ReadManualUpgradeBatchSync", ctx)
-}
-
-// ReadManualUpgradeBatchSync indicates an expected call of ReadManualUpgradeBatchSync.
-func (mr *MockRunnerMockRecorder) ReadManualUpgradeBatchSync(ctx any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadManualUpgradeBatchSync", reflect.TypeOf((*MockRunner)(nil).ReadManualUpgradeBatchSync), ctx)
-}
-
-// ReadUpgradeInfoJsonSync mocks base method.
-func (m *MockRunner) ReadUpgradeInfoJsonSync(ctx context.Context) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ReadUpgradeInfoJsonSync", ctx)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// ReadUpgradeInfoJsonSync indicates an expected call of ReadUpgradeInfoJsonSync.
-func (mr *MockRunnerMockRecorder) ReadUpgradeInfoJsonSync(ctx any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReadUpgradeInfoJsonSync", reflect.TypeOf((*MockRunner)(nil).ReadUpgradeInfoJsonSync), ctx)
-}
-
-// StartProcess mocks base method.
-func (m *MockRunner) StartProcess(ctx context.Context) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "StartProcess", ctx)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// StartProcess indicates an expected call of StartProcess.
-func (mr *MockRunnerMockRecorder) StartProcess(ctx any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartProcess", reflect.TypeOf((*MockRunner)(nil).StartProcess), ctx)
-}
-
-// StartWatchers mocks base method.
-func (m *MockRunner) StartWatchers(ctx context.Context, watchers ...Watcher) error {
+// CheckActualHeight mocks base method.
+func (m *MockRunner) CheckActualHeight(ctx context.Context, args ...any) error {
 	m.ctrl.T.Helper()
 	varargs := []any{ctx}
-	for _, a := range watchers {
+	for _, a := range args {
 		varargs = append(varargs, a)
 	}
-	ret := m.ctrl.Call(m, "StartWatchers", varargs...)
+	ret := m.ctrl.Call(m, "CheckActualHeight", varargs...)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// StartWatchers indicates an expected call of StartWatchers.
-func (mr *MockRunnerMockRecorder) StartWatchers(ctx any, watchers ...any) *gomock.Call {
+// CheckActualHeight indicates an expected call of CheckActualHeight.
+func (mr *MockRunnerMockRecorder) CheckActualHeight(ctx any, args ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx}, watchers...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartWatchers", reflect.TypeOf((*MockRunner)(nil).StartWatchers), varargs...)
+	varargs := append([]any{ctx}, args...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckActualHeight", reflect.TypeOf((*MockRunner)(nil).CheckActualHeight), varargs...)
 }
 
-// StopProcess mocks base method.
-func (m *MockRunner) StopProcess(ctx context.Context) error {
+// CheckForManualUpgradeBatch mocks base method.
+func (m *MockRunner) CheckForManualUpgradeBatch(ctx context.Context, args ...any) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "StopProcess", ctx)
+	varargs := []any{ctx}
+	for _, a := range args {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "CheckForManualUpgradeBatch", varargs...)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// StopProcess indicates an expected call of StopProcess.
-func (mr *MockRunnerMockRecorder) StopProcess(ctx any) *gomock.Call {
+// CheckForManualUpgradeBatch indicates an expected call of CheckForManualUpgradeBatch.
+func (mr *MockRunnerMockRecorder) CheckForManualUpgradeBatch(ctx any, args ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StopProcess", reflect.TypeOf((*MockRunner)(nil).StopProcess), ctx)
+	varargs := append([]any{ctx}, args...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckForManualUpgradeBatch", reflect.TypeOf((*MockRunner)(nil).CheckForManualUpgradeBatch), varargs...)
 }
 
-// StopWatchers mocks base method.
-func (m *MockRunner) StopWatchers(ctx context.Context) error {
+// CheckForUpgradeInfoJSON mocks base method.
+func (m *MockRunner) CheckForUpgradeInfoJSON(ctx context.Context, args ...any) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "StopWatchers", ctx)
+	varargs := []any{ctx}
+	for _, a := range args {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "CheckForUpgradeInfoJSON", varargs...)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// StopWatchers indicates an expected call of StopWatchers.
-func (mr *MockRunnerMockRecorder) StopWatchers(ctx any) *gomock.Call {
+// CheckForUpgradeInfoJSON indicates an expected call of CheckForUpgradeInfoJSON.
+func (mr *MockRunnerMockRecorder) CheckForUpgradeInfoJSON(ctx any, args ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StopWatchers", reflect.TypeOf((*MockRunner)(nil).StopWatchers), ctx)
+	varargs := append([]any{ctx}, args...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckForUpgradeInfoJSON", reflect.TypeOf((*MockRunner)(nil).CheckForUpgradeInfoJSON), varargs...)
+}
+
+// CheckLastKnownHeight mocks base method.
+func (m *MockRunner) CheckLastKnownHeight(ctx context.Context, args ...any) error {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx}
+	for _, a := range args {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "CheckLastKnownHeight", varargs...)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CheckLastKnownHeight indicates an expected call of CheckLastKnownHeight.
+func (mr *MockRunnerMockRecorder) CheckLastKnownHeight(ctx any, args ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx}, args...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckLastKnownHeight", reflect.TypeOf((*MockRunner)(nil).CheckLastKnownHeight), varargs...)
+}
+
+// Start mocks base method.
+func (m *MockRunner) Start(ctx context.Context, args ...any) error {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx}
+	for _, a := range args {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Start", varargs...)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Start indicates an expected call of Start.
+func (mr *MockRunnerMockRecorder) Start(ctx any, args ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx}, args...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Start", reflect.TypeOf((*MockRunner)(nil).Start), varargs...)
+}
+
+// StartWithHaltHeight mocks base method.
+func (m *MockRunner) StartWithHaltHeight(ctx context.Context, args ...any) error {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx}
+	for _, a := range args {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "StartWithHaltHeight", varargs...)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// StartWithHaltHeight indicates an expected call of StartWithHaltHeight.
+func (mr *MockRunnerMockRecorder) StartWithHaltHeight(ctx any, args ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx}, args...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartWithHaltHeight", reflect.TypeOf((*MockRunner)(nil).StartWithHaltHeight), varargs...)
+}
+
+// Stop mocks base method.
+func (m *MockRunner) Stop(ctx context.Context, args ...any) error {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx}
+	for _, a := range args {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Stop", varargs...)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// Stop indicates an expected call of Stop.
+func (mr *MockRunnerMockRecorder) Stop(ctx any, args ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx}, args...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Stop", reflect.TypeOf((*MockRunner)(nil).Stop), varargs...)
 }

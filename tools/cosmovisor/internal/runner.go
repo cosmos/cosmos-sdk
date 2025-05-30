@@ -21,27 +21,20 @@ type BasicRunner struct {
 	runner                ProcessRunner
 }
 
-func (r *BasicRunner) Run() error {
-	for {
-		select {
-		case <-r.upgradePlanWatcher.Updated():
-			// TODO shutdown
-		case <-r.manualUpgradesWatcher.Updated():
-			// TODO shutdown, if we're past a manual upgrade height then it's an error condition
-		case <-r.runner.Done():
-			// TODO handle process exit
-		}
-	}
+func (r *BasicRunner) ComputePlan() error {
+	// TODO check for upgrade-info.json
+	if _, err := r.cfg.UpgradeInfo(); err == nil {
 
-	// start file watchers
-	// start the daemon
-	// wait for:
-	// - upgrade info JSON -> shutdown
-	// - upgrade info JSON batch -> check current height -> shutdown
-	// before shutdown: check for current height
+	}
+	// TODO check for upgrade-info.json.batch
+	return nil
 }
 
-func (r *BasicRunner) RunWithHaltHeight(haltHeight uint64) error {
+func (r *BasicRunner) DoUpgrade(plan upgradetypes.Plan) error {
+	return nil
+}
+
+func (r *BasicRunner) Run(haltHeight uint64) error {
 	correctHeightConfirmed := false
 	for {
 		select {
@@ -65,5 +58,4 @@ func (r *BasicRunner) RunWithHaltHeight(haltHeight uint64) error {
 			}
 		}
 	}
-
 }

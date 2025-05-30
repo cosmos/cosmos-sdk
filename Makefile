@@ -382,7 +382,7 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
-golangci_version=v2.1.5
+golangci_version=v2.1.6
 
 lint-install:
 	@echo "--> Installing golangci-lint $(golangci_version)"
@@ -392,7 +392,6 @@ lint:
 	@echo "--> Running linter on all files"
 	$(MAKE) lint-install
 	@./scripts/go-lint-all.bash --timeout=15m
-
 
 lint-fix:
 	@echo "--> Running linter"

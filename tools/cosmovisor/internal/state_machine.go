@@ -20,6 +20,7 @@ var (
 	triggerReachedHaltHeight      = "TriggerReachedHaltHeight"
 	triggerProcessExit            = "TriggerProcessExit"
 	triggerUpgradeSuccess         = "TriggerUpgradeSuccess"
+	triggerUpgradeError           = "TriggerUpgradeError"
 )
 
 // states
@@ -31,8 +32,6 @@ var (
 	doUpgrade              = "DoUpgrade"
 	run                    = "Run"
 	runWithHaltHeight      = "RunWithHaltHeight"
-	confirmHaltHeight      = "ConfirmHaltHeight"
-	watchForHaltHeight     = "WatchForHaltHeight"
 	shutdownAndRestart     = "ShutdownAndRestart"
 	fatalError             = "FatalError"
 )
@@ -59,10 +58,6 @@ func pastManualUpgradeHeight(_ context.Context, args ...any) bool {
 	return false
 }
 
-func haveCorrectHaltHeight(_ context.Context, args ...any) bool {
-	return false
-}
-
 func haveWrongHaltHeight(_ context.Context, args ...any) bool {
 	return false
 }
@@ -74,6 +69,7 @@ func StateMachine(runner Runner) *stateless.StateMachine {
 	fsm.SetTriggerParameters(triggerGotUpgradeInfoJSON, reflect.TypeOf(&upgradetypes.Plan{}))
 	fsm.SetTriggerParameters(triggerReadManualUpgradeBatch, reflect.TypeOf(cosmovisor.ManualUpgradeBatch{}))
 	fsm.SetTriggerParameters(triggerReadLastKnownHeight, reflect.TypeOf(uint64(0)))
+	fsm.SetTriggerParameters(triggerGotActualHeight, reflect.TypeOf(uint64(0)))
 	fsm.SetTriggerParameters(triggerProcessExit, reflect.TypeOf(error(nil)))
 
 	// configure ComputeRunPlan state
@@ -82,17 +78,19 @@ func StateMachine(runner Runner) *stateless.StateMachine {
 
 	fsm.Configure(readUpgradeInfoJSON).
 		SubstateOf(computeRunPlan).
+		OnEntry(runner.CheckForUpgradeInfoJSON).
 		Permit(triggerGotUpgradeInfoJSON, readManualUpgradeBatch, isNil).
-		Permit(triggerGotUpgradeInfoJSON, doUpgrade, isNotNil).
-		OnActive(runner.ReadUpgradeInfoJsonSync)
+		Permit(triggerGotUpgradeInfoJSON, doUpgrade, isNotNil)
 
 	fsm.Configure(readManualUpgradeBatch).
 		SubstateOf(computeRunPlan).
+		OnEntry(runner.CheckForManualUpgradeBatch).
 		Permit(triggerReadManualUpgradeBatch, run, isNil).
 		Permit(triggerReadManualUpgradeBatch, checkLastKnownHeight, isNotNil)
 
 	fsm.Configure(checkLastKnownHeight).
 		SubstateOf(computeRunPlan).
+		OnEntry(runner.CheckLastKnownHeight).
 		Permit(triggerReadLastKnownHeight, runWithHaltHeight, beforeManualUpgradeHeight).
 		Permit(triggerReadLastKnownHeight, doUpgrade, atManualUpgradeHeight).
 		Permit(triggerReadLastKnownHeight, fatalError, pastManualUpgradeHeight)
@@ -100,43 +98,29 @@ func StateMachine(runner Runner) *stateless.StateMachine {
 	// configure Run state
 
 	fsm.Configure(run).
-		OnEntry(func(ctx context.Context, args ...any) error {
-			err := runner.StartWatchers(ctx, UpgradeInfoJsonWatcher, ManualUpgradeBatchWatcher)
-			if err != nil {
-				return err
-			}
-			return runner.StartProcess(ctx)
-		}).
-		OnExit(func(ctx context.Context, args ...any) error {
-			return runner.StopWatchers(ctx)
-		}).
+		OnEntry(runner.Start).
 		Permit(triggerGotUpgradeInfoJSON, shutdownAndRestart).
 		Permit(triggerGotNewManualUpgrade, shutdownAndRestart)
 
 	// configure RunWithHaltHeight state
 
 	fsm.Configure(runWithHaltHeight).
-		InitialTransition(confirmHaltHeight)
-
-	fsm.Configure(confirmHaltHeight).
-		SubstateOf(runWithHaltHeight).
-		Permit(triggerGotActualHeight, watchForHaltHeight, haveCorrectHaltHeight).
-		Permit(triggerGotActualHeight, shutdownAndRestart, haveWrongHaltHeight)
-
-	fsm.Configure(watchForHaltHeight).
-		SubstateOf(runWithHaltHeight).
+		Permit(triggerGotActualHeight, shutdownAndRestart, haveWrongHaltHeight).
+		OnEntry(runner.StartWithHaltHeight).
+		OnEntry(runner.CheckActualHeight).
 		Permit(triggerGotUpgradeInfoJSON, shutdownAndRestart).
 		Permit(triggerReachedHaltHeight, shutdownAndRestart).
 		Permit(triggerGotNewManualUpgrade, shutdownAndRestart)
 
 	// configure ShutdownAndRestart state
 	fsm.Configure(shutdownAndRestart).
-		OnActive(runner.StopProcess).
+		OnEntry(runner.Stop).
 		Permit(triggerProcessExit, computeRunPlan)
 
 	// configure DoUpgrade state
 	fsm.Configure(doUpgrade).
-		Permit(triggerUpgradeSuccess, computeRunPlan)
+		Permit(triggerUpgradeSuccess, computeRunPlan).
+		Permit(triggerUpgradeError, fatalError)
 
 	return fsm
 
@@ -149,31 +133,25 @@ func StateMachine(runner Runner) *stateless.StateMachine {
 
 type Watcher int
 
-const (
-	UpgradeInfoJsonWatcher Watcher = iota
-	ManualUpgradeBatchWatcher
-	HeightWatcher
-)
-
 type Runner interface {
-	ReadUpgradeInfoJsonSync(ctx context.Context) error
-	ReadManualUpgradeBatchSync(ctx context.Context)
-	CheckHeightSync(ctx context.Context)
-	StartWatchers(ctx context.Context, watchers ...Watcher) error
-	StopWatchers(ctx context.Context) error
-	StartProcess(ctx context.Context) error
-	StopProcess(ctx context.Context) error
+	CheckForUpgradeInfoJSON(ctx context.Context, args ...any) error
+	CheckForManualUpgradeBatch(ctx context.Context, args ...any) error
+	CheckLastKnownHeight(ctx context.Context, args ...any) error
+	CheckActualHeight(ctx context.Context, args ...any) error
+	Start(ctx context.Context, args ...any) error
+	StartWithHaltHeight(ctx context.Context, args ...any) error
+	Stop(ctx context.Context, args ...any) error
 }
 
 //type MockRunner struct{}
 //
-//func (m MockRunner) ReadUpgradeInfoJsonSync(ctx context.Context) error {
+//func (m MockRunner) CheckForUpgradeInfoJSON(ctx context.Context) error {
 //	return nil
 //}
 //
-////func (m MockRunner) ReadManualUpgradeBatchSync(ctx context.Context) {}
+////func (m MockRunner) CheckForManualUpgradeBatch(ctx context.Context) {}
 ////
-////func (m MockRunner) CheckHeightSync(ctx context.Context) {}
+////func (m MockRunner) CheckLastKnownHeight(ctx context.Context) {}
 ////
 ////func (m MockRunner) WatchUpgradeInfoJson(ctx context.Context) {}
 ////

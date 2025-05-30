@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"os/exec"
+	"reflect"
 	"testing"
 
 	"github.com/qmuntal/stateless"
@@ -14,7 +15,7 @@ import (
 func TestStateMachineGraph(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	mock := NewMockRunner(ctrl)
-	mock.EXPECT().ReadUpgradeInfoJsonSync(gomock.Any()).Return(nil).AnyTimes()
+	mock.EXPECT().CheckForUpgradeInfoJSON(gomock.Any()).Return(nil).AnyTimes()
 	err := os.WriteFile("state_machine.dot", []byte(StateMachine(mock).ToGraph()), 0644)
 	require.NoError(t, err, "Failed to write state machine graph to file")
 	err = exec.Command("dot", "-Tpng", "state_machine.dot", "-o", "state_machine.png").Run()
@@ -35,4 +36,19 @@ func TestStateMachine(t *testing.T) {
 	state, err := fsm.State(context.Background())
 	require.NoError(t, err, "Failed to get initial state")
 	t.Logf("Initial state: %s", state)
+}
+
+func TestFSM2(t *testing.T) {
+	fsm := stateless.NewStateMachine("A")
+	fsm.SetTriggerParameters("go", reflect.TypeOf(""), reflect.TypeOf(""))
+
+	fsm.Configure("A").
+		Permit("go", "B")
+
+	fsm.Configure("B").
+		OnEntry(func(ctx context.Context, args ...any) error {
+			t.Log("Entering state B with args:", args)
+			return nil
+		})
+	require.NoError(t, fsm.Fire("go", "arg1", "arg2"))
 }

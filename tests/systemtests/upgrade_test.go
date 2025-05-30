@@ -40,7 +40,7 @@ func TestChainUpgrade(t *testing.T) {
 	votingPeriod := 5 * time.Second // enough time to vote
 	systest.Sut.ModifyGenesisJSON(t, systest.SetGovVotingPeriod(t, votingPeriod))
 
-	systest.Sut.StartChain(t, fmt.Sprintf("--halt-height=%d", upgradeHeight-1))
+	systest.Sut.StartChain(t, fmt.Sprintf("--halt-height=%d", upgradeHeight+1))
 
 	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 	govAddr := sdk.AccAddress(address.Module("gov")).String()

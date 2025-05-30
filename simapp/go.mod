@@ -3,21 +3,20 @@ module cosmossdk.io/simapp
 go 1.23.5
 
 require (
-	cosmossdk.io/api v1.0.0-alpha.0
-	cosmossdk.io/client/v2 v2.0.0-beta.10
-	cosmossdk.io/collections v1.3.0 // indirect
-	cosmossdk.io/core v1.1.0-alpha.1
-	cosmossdk.io/depinject v1.2.1
+	cosmossdk.io/api v0.9.2
+	cosmossdk.io/client/v2 v2.0.0-beta.9
+	cosmossdk.io/collections v1.2.1 // indirect
+	cosmossdk.io/core v0.11.3
+	cosmossdk.io/depinject v1.2.0
 	cosmossdk.io/log v1.6.0
 	cosmossdk.io/math v1.5.3
-	cosmossdk.io/store v1.2.0-alpha.0
-	cosmossdk.io/tools/confix v0.2.0-rc.3
-	cosmossdk.io/x/tx v1.2.0-alpha.0
+	cosmossdk.io/store v1.1.2
+	cosmossdk.io/tools/confix v0.1.2
+	cosmossdk.io/x/tx v0.14.0
 	github.com/cometbft/cometbft v1.0.1
-	github.com/cometbft/cometbft/api v1.0.0
-	github.com/cosmos/cosmos-db v1.1.2
+	github.com/cosmos/cosmos-db v1.1.1
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
-	github.com/cosmos/cosmos-sdk v0.54.0-alpha.0
+	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/spf13/cast v1.8.0
 	github.com/spf13/cobra v1.9.1
@@ -28,9 +27,9 @@ require (
 	google.golang.org/protobuf v1.36.6
 )
 
+require github.com/cometbft/cometbft/api v1.0.0
+
 require (
-	buf.build/gen/go/cometbft/cometbft/protocolbuffers/go v1.36.6-20241120201313-68e42a58b301.1 // indirect
-	buf.build/gen/go/cosmos/gogo-proto/protocolbuffers/go v1.36.6-20240130113600-88ef6483f90f.1 // indirect
 	cel.dev/expr v0.20.0 // indirect
 	cloud.google.com/go v0.116.0 // indirect
 	cloud.google.com/go/auth v0.14.1 // indirect
@@ -86,13 +85,13 @@ require (
 	github.com/dgraph-io/ristretto/v2 v2.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/dvsekhvalnov/jose2go v1.6.0 // indirect
-	github.com/emicklei/dot v1.8.0 // indirect
+	github.com/emicklei/dot v1.6.2 // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.32.4 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.2.1 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
-	github.com/getsentry/sentry-go v0.33.0 // indirect
+	github.com/getsentry/sentry-go v0.32.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.0.5 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
@@ -207,7 +206,7 @@ require (
 	google.golang.org/api v0.222.0 // indirect
 	google.golang.org/genproto v0.0.0-20241118233622-e639e219e697 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250324211829-b45e905df463 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250528174236-200df99c418a // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250422160041-2d3770c4ea7f // indirect
 	google.golang.org/grpc v1.72.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.5.2 // indirect
@@ -222,6 +221,16 @@ require (
 // replace (
 // 	<temporary replace>
 // )
+
+// Replace all unreleased direct deps upgraded to comet v1
+replace (
+	cosmossdk.io/api => ../api
+	cosmossdk.io/client/v2 => ../client/v2
+	cosmossdk.io/core => ../core
+	cosmossdk.io/store => ../store
+	cosmossdk.io/tools/confix => ../tools/confix
+	cosmossdk.io/x/tx => ../x/tx
+)
 
 // Below are the long-lived replace of the SimApp
 replace (

@@ -13,7 +13,7 @@ type HybridWatcher struct {
 var _ Watcher[[]byte] = &HybridWatcher{}
 
 func NewHybridWatcher(ctx context.Context, dirWatcher *FSNotifyWatcher, filename string, backupPollInterval time.Duration) *HybridWatcher {
-	pollWatcher := NewPollWatcher(ctx, filename, backupPollInterval)
+	pollWatcher := NewFilePollWatcher(ctx, filename, backupPollInterval)
 	outChan := make(chan []byte, 1)
 	errChan := make(chan error, 1)
 

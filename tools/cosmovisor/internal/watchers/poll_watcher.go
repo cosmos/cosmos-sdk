@@ -26,15 +26,16 @@ func NewPollWatcher[T any](ctx context.Context, checker func() (T, error), pollI
 			case <-ctx.Done():
 				return
 			case <-ticker.C:
-				x, err := checker()
+				_, err := checker()
 				if err != nil {
 					if !os.IsNotExist(err) {
 						errChan <- fmt.Errorf("failed to check for updates: %w", err)
 					}
 				} else {
-					if x != nil {
-						outChan <- x
-					}
+					panic("TODO: generically check for empty value")
+					//if x != nil {
+					//	outChan <- x
+					//}
 				}
 			}
 		}

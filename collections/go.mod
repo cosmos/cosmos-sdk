@@ -54,3 +54,7 @@ replace cosmossdk.io/core => ../core
 retract v1.0.0
 
 retract v1.1.0
+
+replace github.com/cometbft/cometbft => github.com/zrbecker/cometbft v0.0.0-20250530022340-7109c1e6ee31
+
+replace github.com/cometbft/cometbft/api => github.com/zrbecker/cometbft/api v0.0.0-20250530022340-7109c1e6ee31

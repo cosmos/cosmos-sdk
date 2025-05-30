@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	cmtabcitypes "github.com/cometbft/cometbft/abci/types"
-	types "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	types "github.com/cometbft/cometbft/api/cometbft/types/v2"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 

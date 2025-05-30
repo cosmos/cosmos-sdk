@@ -15,8 +15,8 @@ import (
 	"time"
 
 	"github.com/cometbft/cometbft/abci/server"
-	cmtstate "github.com/cometbft/cometbft/api/cometbft/state/v1"
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	cmtstate "github.com/cometbft/cometbft/api/cometbft/state/v2"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	cmtjson "github.com/cometbft/cometbft/libs/json"

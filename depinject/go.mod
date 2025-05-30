@@ -30,3 +30,7 @@ require (
 
 // keep grpc 1.67.1 to avoid go minimum version bump (depinject should be compatible with 0.47, 0.50 and 0.53)
 replace google.golang.org/grpc => google.golang.org/grpc v1.67.1
+
+replace github.com/cometbft/cometbft => github.com/zrbecker/cometbft v0.0.0-20250530022340-7109c1e6ee31
+
+replace github.com/cometbft/cometbft/api => github.com/zrbecker/cometbft/api v0.0.0-20250530022340-7109c1e6ee31

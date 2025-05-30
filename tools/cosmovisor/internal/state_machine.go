@@ -12,39 +12,32 @@ import (
 
 // triggers
 var (
-	triggerGotUpgradeInfoJSON     = "TriggerGotUpgradeInfoJSON"
-	triggerReadManualUpgradeBatch = "TriggerReadManualUpgradeBatch"
-	triggerReadLastKnownHeight    = "TriggerReadLastKnownHeight"
-	triggerGotActualHeight        = "TriggerGotActualHeight"
-	triggerGotNewManualUpgrade    = "TriggerGotNewManualUpgrade"
-	triggerReachedHaltHeight      = "TriggerReachedHaltHeight"
-	triggerProcessExit            = "TriggerProcessExit"
-	triggerUpgradeSuccess         = "TriggerUpgradeSuccess"
-	triggerUpgradeError           = "TriggerUpgradeError"
+	triggerGotUpgradeInfoJSON    = "haveUpgradePlan"
+	triggerNoUpgradeInfoJSON     = "noUpgradePlan"
+	triggerGotManualUpgradeBatch = "haveManualUpgrades"
+	triggerNoManualUpgradeBatch  = "noManualUpgrades"
+	triggerReadLastKnownHeight   = "onReadLastKnownHeight"
+	triggerGotActualHeight       = "onGotActualHeight"
+	triggerGotNewManualUpgrade   = "onGotNewManualUpgrade"
+	triggerReachedHaltHeight     = "onReachedHaltHeight"
+	triggerProcessExit           = "onProcessExit"
+	triggerUpgradeSuccess        = "onUpgradeSuccess"
+	triggerUpgradeError          = "onUpgradeError"
 )
 
 // states
 var (
-	computeRunPlan         = "ComputeRunPlan"
-	readUpgradeInfoJSON    = "ReadUpgradeInfoJson"
-	readManualUpgradeBatch = "ReadManualUpgradeBatch"
-	checkLastKnownHeight   = "CheckHeight"
-	doUpgrade              = "DoUpgrade"
-	run                    = "Run"
-	runWithHaltHeight      = "RunWithHaltHeight"
-	shutdownAndRestart     = "ShutdownAndRestart"
-	fatalError             = "FatalError"
+	//computeRunPlan             = "ComputeRunPlan"
+	checkForUpgradeInfoJSON    = "CheckForUpgradeInfoJSON"
+	checkForManualUpgradeBatch = "CheckForManualUpgradeBatch"
+	checkLastKnownHeight       = "CheckLastKnownHeight"
+	doUpgrade                  = "DoUpgrade"
+	run                        = "Run"
+	runWithHaltHeight          = "RunWithHaltHeight"
+	shutdownAndRestart         = "ShutdownAndRestart"
+	fatalError                 = "FatalError"
+	done                       = "Done"
 )
-
-func isNil(_ context.Context, args ...any) bool {
-	// read manual upgrade batch uf upgrade-info.json is nil
-	return args[0] == nil
-}
-
-func isNotNil(_ context.Context, args ...any) bool {
-	// read manual upgrade batch uf upgrade-info.json is nil
-	return args[0] != nil
-}
 
 func beforeManualUpgradeHeight(_ context.Context, args ...any) bool {
 	return false
@@ -62,34 +55,42 @@ func haveWrongHaltHeight(_ context.Context, args ...any) bool {
 	return false
 }
 
+func allowDaemonRestart(_ context.Context, args ...any) bool {
+	return true
+}
+
+func disableDaemonRestart(_ context.Context, args ...any) bool {
+	return false
+}
+
 func StateMachine(runner Runner) *stateless.StateMachine {
-	fsm := stateless.NewStateMachine(computeRunPlan)
+	fsm := stateless.NewStateMachine(checkForUpgradeInfoJSON)
 
 	// configure triggers for the state machine
 	fsm.SetTriggerParameters(triggerGotUpgradeInfoJSON, reflect.TypeOf(&upgradetypes.Plan{}))
-	fsm.SetTriggerParameters(triggerReadManualUpgradeBatch, reflect.TypeOf(cosmovisor.ManualUpgradeBatch{}))
+	fsm.SetTriggerParameters(triggerGotManualUpgradeBatch, reflect.TypeOf(cosmovisor.ManualUpgradeBatch{}))
 	fsm.SetTriggerParameters(triggerReadLastKnownHeight, reflect.TypeOf(uint64(0)))
 	fsm.SetTriggerParameters(triggerGotActualHeight, reflect.TypeOf(uint64(0)))
 	fsm.SetTriggerParameters(triggerProcessExit, reflect.TypeOf(error(nil)))
 
 	// configure ComputeRunPlan state
-	fsm.Configure(computeRunPlan).
-		InitialTransition(readUpgradeInfoJSON)
-
-	fsm.Configure(readUpgradeInfoJSON).
-		SubstateOf(computeRunPlan).
+	//fsm.Configure(computeRunPlan).
+	//	InitialTransition(checkForUpgradeInfoJSON)
+	//
+	fsm.Configure(checkForUpgradeInfoJSON).
+		//SubstateOf(computeRunPlan).
 		OnEntry(runner.CheckForUpgradeInfoJSON).
-		Permit(triggerGotUpgradeInfoJSON, readManualUpgradeBatch, isNil).
-		Permit(triggerGotUpgradeInfoJSON, doUpgrade, isNotNil)
+		Permit(triggerGotUpgradeInfoJSON, checkForManualUpgradeBatch).
+		Permit(triggerNoUpgradeInfoJSON, doUpgrade)
 
-	fsm.Configure(readManualUpgradeBatch).
-		SubstateOf(computeRunPlan).
+	fsm.Configure(checkForManualUpgradeBatch).
+		//SubstateOf(computeRunPlan).
 		OnEntry(runner.CheckForManualUpgradeBatch).
-		Permit(triggerReadManualUpgradeBatch, run, isNil).
-		Permit(triggerReadManualUpgradeBatch, checkLastKnownHeight, isNotNil)
+		Permit(triggerNoManualUpgradeBatch, run).
+		Permit(triggerGotManualUpgradeBatch, checkLastKnownHeight)
 
 	fsm.Configure(checkLastKnownHeight).
-		SubstateOf(computeRunPlan).
+		//SubstateOf(computeRunPlan).
 		OnEntry(runner.CheckLastKnownHeight).
 		Permit(triggerReadLastKnownHeight, runWithHaltHeight, beforeManualUpgradeHeight).
 		Permit(triggerReadLastKnownHeight, doUpgrade, atManualUpgradeHeight).
@@ -115,11 +116,12 @@ func StateMachine(runner Runner) *stateless.StateMachine {
 	// configure ShutdownAndRestart state
 	fsm.Configure(shutdownAndRestart).
 		OnEntry(runner.Stop).
-		Permit(triggerProcessExit, computeRunPlan)
+		Permit(triggerProcessExit, checkForUpgradeInfoJSON)
 
 	// configure DoUpgrade state
 	fsm.Configure(doUpgrade).
-		Permit(triggerUpgradeSuccess, computeRunPlan).
+		Permit(triggerUpgradeSuccess, checkForManualUpgradeBatch, allowDaemonRestart).
+		Permit(triggerUpgradeSuccess, done, disableDaemonRestart).
 		Permit(triggerUpgradeError, fatalError)
 
 	return fsm

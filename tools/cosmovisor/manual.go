@@ -82,15 +82,13 @@ func (m ManualUpgradeBatch) ValidateBasic() error {
 	return nil
 }
 
-func (m ManualUpgradeBatch) FirstUpgradeAfter(height int64) *ManualUpgradePlan {
+func (m ManualUpgradeBatch) FirstUpgrade() *ManualUpgradePlan {
 	// ensure the upgrades are sorted before searching
 	sortUpgrades(m)
-	for _, upgrade := range m {
-		if upgrade.Height > height {
-			return upgrade
-		}
+	if len(m) == 0 {
+		return nil
 	}
-	return nil
+	return m[0]
 }
 
 type ManualUpgradePlan struct {

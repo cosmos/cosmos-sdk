@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             (unknown)
-// source: cometbft/abci/v1/service.proto
+// source: cometbft/abci/v2/service.proto
 
-package abciv1
+package abciv2
 
 import (
 	context "context"
@@ -19,22 +19,22 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	ABCIService_Echo_FullMethodName                = "/cometbft.abci.v1.ABCIService/Echo"
-	ABCIService_Flush_FullMethodName               = "/cometbft.abci.v1.ABCIService/Flush"
-	ABCIService_Info_FullMethodName                = "/cometbft.abci.v1.ABCIService/Info"
-	ABCIService_CheckTx_FullMethodName             = "/cometbft.abci.v1.ABCIService/CheckTx"
-	ABCIService_Query_FullMethodName               = "/cometbft.abci.v1.ABCIService/Query"
-	ABCIService_Commit_FullMethodName              = "/cometbft.abci.v1.ABCIService/Commit"
-	ABCIService_InitChain_FullMethodName           = "/cometbft.abci.v1.ABCIService/InitChain"
-	ABCIService_ListSnapshots_FullMethodName       = "/cometbft.abci.v1.ABCIService/ListSnapshots"
-	ABCIService_OfferSnapshot_FullMethodName       = "/cometbft.abci.v1.ABCIService/OfferSnapshot"
-	ABCIService_LoadSnapshotChunk_FullMethodName   = "/cometbft.abci.v1.ABCIService/LoadSnapshotChunk"
-	ABCIService_ApplySnapshotChunk_FullMethodName  = "/cometbft.abci.v1.ABCIService/ApplySnapshotChunk"
-	ABCIService_PrepareProposal_FullMethodName     = "/cometbft.abci.v1.ABCIService/PrepareProposal"
-	ABCIService_ProcessProposal_FullMethodName     = "/cometbft.abci.v1.ABCIService/ProcessProposal"
-	ABCIService_ExtendVote_FullMethodName          = "/cometbft.abci.v1.ABCIService/ExtendVote"
-	ABCIService_VerifyVoteExtension_FullMethodName = "/cometbft.abci.v1.ABCIService/VerifyVoteExtension"
-	ABCIService_FinalizeBlock_FullMethodName       = "/cometbft.abci.v1.ABCIService/FinalizeBlock"
+	ABCIService_Echo_FullMethodName                = "/cometbft.abci.v2.ABCIService/Echo"
+	ABCIService_Flush_FullMethodName               = "/cometbft.abci.v2.ABCIService/Flush"
+	ABCIService_Info_FullMethodName                = "/cometbft.abci.v2.ABCIService/Info"
+	ABCIService_CheckTx_FullMethodName             = "/cometbft.abci.v2.ABCIService/CheckTx"
+	ABCIService_Query_FullMethodName               = "/cometbft.abci.v2.ABCIService/Query"
+	ABCIService_Commit_FullMethodName              = "/cometbft.abci.v2.ABCIService/Commit"
+	ABCIService_InitChain_FullMethodName           = "/cometbft.abci.v2.ABCIService/InitChain"
+	ABCIService_ListSnapshots_FullMethodName       = "/cometbft.abci.v2.ABCIService/ListSnapshots"
+	ABCIService_OfferSnapshot_FullMethodName       = "/cometbft.abci.v2.ABCIService/OfferSnapshot"
+	ABCIService_LoadSnapshotChunk_FullMethodName   = "/cometbft.abci.v2.ABCIService/LoadSnapshotChunk"
+	ABCIService_ApplySnapshotChunk_FullMethodName  = "/cometbft.abci.v2.ABCIService/ApplySnapshotChunk"
+	ABCIService_PrepareProposal_FullMethodName     = "/cometbft.abci.v2.ABCIService/PrepareProposal"
+	ABCIService_ProcessProposal_FullMethodName     = "/cometbft.abci.v2.ABCIService/ProcessProposal"
+	ABCIService_ExtendVote_FullMethodName          = "/cometbft.abci.v2.ABCIService/ExtendVote"
+	ABCIService_VerifyVoteExtension_FullMethodName = "/cometbft.abci.v2.ABCIService/VerifyVoteExtension"
+	ABCIService_FinalizeBlock_FullMethodName       = "/cometbft.abci.v2.ABCIService/FinalizeBlock"
 )
 
 // ABCIServiceClient is the client API for ABCIService service.
@@ -654,7 +654,7 @@ func _ABCIService_FinalizeBlock_Handler(srv interface{}, ctx context.Context, de
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var ABCIService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "cometbft.abci.v1.ABCIService",
+	ServiceName: "cometbft.abci.v2.ABCIService",
 	HandlerType: (*ABCIServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -723,5 +723,5 @@ var ABCIService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "cometbft/abci/v1/service.proto",
+	Metadata: "cometbft/abci/v2/service.proto",
 }

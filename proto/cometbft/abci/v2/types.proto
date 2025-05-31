@@ -1,13 +1,14 @@
 syntax = "proto3";
-package cometbft.abci.v1;
+package cometbft.abci.v2;
 
 import "cometbft/crypto/v1/proof.proto";
-import "cometbft/types/v1/params.proto";
-import "cometbft/types/v1/validator.proto";
+import "cometbft/types/v2/params.proto";
+import "cometbft/types/v2/validator.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
 
-option go_package = "github.com/cometbft/cometbft/api/cometbft/abci/v1";
+option go_package = "github.com/cometbft/cometbft/api/cometbft/abci/v2";
 
 // ----------------------------------------
 // Request types
@@ -56,7 +57,7 @@ message InfoRequest {
 message InitChainRequest {
   google.protobuf.Timestamp         time             = 1 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
   string                            chain_id         = 2;
-  cometbft.types.v1.ConsensusParams consensus_params = 3;
+  cometbft.types.v2.ConsensusParams consensus_params = 3;
   repeated ValidatorUpdate          validators       = 4 [(gogoproto.nullable) = false];
   bytes                             app_state_bytes  = 5;
   int64                             initial_height   = 6;
@@ -169,13 +170,18 @@ message ExtendVoteRequest {
 
 // VerifyVoteExtensionRequest is a request for the application to verify a vote extension
 // produced by a different validator.
+// The request contains two vote extension fields: one that is replay-protected ('vote_extension')
+// and one that is not ('non_rp_vote_extension').
 message VerifyVoteExtensionRequest {
   // the hash of the block that this received vote corresponds to
   bytes hash = 1;
   // the validator that signed the vote extension
   bytes validator_address = 2;
   int64 height            = 3;
-  bytes vote_extension    = 4;
+  // replay-protected vote extension
+  bytes vote_extension = 4;
+  // non-replay-protected vote extension
+  bytes non_rp_vote_extension = 5;
 }
 
 // FinalizeBlockRequest is a request to finalize the block.
@@ -244,12 +250,15 @@ message InfoResponse {
 
   int64 last_block_height   = 4;
   bytes last_block_app_hash = 5;
+
+  map<string, uint32> lane_priorities = 6;
+  string              default_lane    = 7;
 }
 
 // InitChainResponse contains the ABCI application's hash and updates to the
 // validator set and/or the consensus params, if any.
 message InitChainResponse {
-  cometbft.types.v1.ConsensusParams consensus_params = 1;
+  cometbft.types.v2.ConsensusParams consensus_params = 1;
   repeated ValidatorUpdate          validators       = 2 [(gogoproto.nullable) = false];
   bytes                             app_hash         = 3;
 }
@@ -286,6 +295,8 @@ message CheckTxResponse {
   // removed).
   reserved 9 to 11;
   reserved "sender", "priority", "mempool_error";
+
+  string lane_id = 12;
 }
 
 // CommitResponse indicates how much blocks should CometBFT retain.
@@ -378,8 +389,11 @@ enum ProcessProposalStatus {
 
 // ExtendVoteResponse contains the vote extension that the application would like to
 // attach to its next precommit vote.
+// Information in `vote_extension` will be replay-protected.
+// Information in `non_rp_extension` will not be replay-protected.
 message ExtendVoteResponse {
-  bytes vote_extension = 1;
+  bytes vote_extension   = 1; // this extension's signature is replay-protected
+  bytes non_rp_extension = 2; // this extension's signature is _not_ replay-protected
 }
 
 // VerifyVoteExtensionResponse indicates the ABCI application's decision
@@ -416,11 +430,14 @@ message FinalizeBlockResponse {
   // a list of updates to the validator set. These will reflect the validator set at current height + 2.
   repeated ValidatorUpdate validator_updates = 3 [(gogoproto.nullable) = false];
   // updates to the consensus params, if any.
-  cometbft.types.v1.ConsensusParams consensus_param_updates = 4;
+  cometbft.types.v2.ConsensusParams consensus_param_updates = 4;
   // app_hash is the hash of the applications' state which is used to confirm
   // that execution of the transactions was deterministic.
   // It is up to the application to decide which algorithm to use.
   bytes app_hash = 5;
+  // delay between the time when this block is committed and the next height is started.
+  // previously `timeout_commit` in config.toml
+  google.protobuf.Duration next_block_delay = 6 [(gogoproto.nullable) = false, (gogoproto.stdduration) = true];
 }
 
 // ----------------------------------------
@@ -507,7 +524,7 @@ message ValidatorUpdate {
 // VoteInfo contains the information about the vote.
 message VoteInfo {
   Validator                     validator     = 1 [(gogoproto.nullable) = false];
-  cometbft.types.v1.BlockIDFlag block_id_flag = 3;
+  cometbft.types.v2.BlockIDFlag block_id_flag = 3;
 
   reserved 2; // signed_last_block
 }
@@ -521,7 +538,11 @@ message ExtendedVoteInfo {
   // Vote extension signature created by CometBFT
   bytes extension_signature = 4;
   // block_id_flag indicates whether the validator voted for a block, nil, or did not vote at all
-  cometbft.types.v1.BlockIDFlag block_id_flag = 5;
+  cometbft.types.v2.BlockIDFlag block_id_flag = 5;
+  // Non-deterministic non-replay-protected extension provided by the sending validator's application.
+  bytes non_rp_vote_extension = 6;
+  // Signature on non-replay-protected extension created by CometBFT
+  bytes non_rp_extension_signature = 7;
 
   reserved 2; // signed_last_block
 }

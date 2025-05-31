@@ -31,17 +31,17 @@ message MsgRequest {
   int32                                 i32        = 7;
   int64                                 i64        = 10;
   bool                                  a_bool     = 15;
-  testpbpulsar.Enum                           an_enum    = 16;
-  testpbpulsar.AMessage                       a_message  = 17;
+  testpbpulsar.Enum                     an_enum    = 16;
+  testpbpulsar.AMessage                 a_message  = 17;
   cosmos.base.v1beta1.Coin              a_coin     = 18;
   string                                an_address = 19 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   cosmos.base.query.v1beta1.PageRequest page       = 20;
   repeated bool                         bools      = 21;
   repeated uint32                       uints      = 22;
   repeated string                       strings    = 23;
-  repeated testpbpulsar.Enum enums                       = 24;
+  repeated testpbpulsar.Enum enums                 = 24;
   repeated google.protobuf.Duration durations      = 25;
-  repeated testpbpulsar.AMessage some_messages           = 26;
+  repeated testpbpulsar.AMessage some_messages     = 26;
 
   int32    positional1                                  = 27;
   string   positional2                                  = 28;

@@ -3,8 +3,8 @@ package tendermintv1beta1
 
 import (
 	_ "cosmossdk.io/api/amino"
-	v11 "cosmossdk.io/api/cometbft/p2p/v1"
-	v1 "cosmossdk.io/api/cometbft/types/v1"
+	v1 "cosmossdk.io/api/cometbft/p2p/v1"
+	v2 "cosmossdk.io/api/cometbft/types/v2"
 	v1beta1 "cosmossdk.io/api/cosmos/base/query/v1beta1"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
@@ -3366,9 +3366,9 @@ func (x *fastReflection_GetBlockByHeightResponse) Get(descriptor protoreflect.Fi
 func (x *fastReflection_GetBlockByHeightResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "cosmos.base.tendermint.v1beta1.GetBlockByHeightResponse.block_id":
-		x.BlockId = value.Message().Interface().(*v1.BlockID)
+		x.BlockId = value.Message().Interface().(*v2.BlockID)
 	case "cosmos.base.tendermint.v1beta1.GetBlockByHeightResponse.block":
-		x.Block = value.Message().Interface().(*v1.Block)
+		x.Block = value.Message().Interface().(*v2.Block)
 	case "cosmos.base.tendermint.v1beta1.GetBlockByHeightResponse.sdk_block":
 		x.SdkBlock = value.Message().Interface().(*Block)
 	default:
@@ -3393,12 +3393,12 @@ func (x *fastReflection_GetBlockByHeightResponse) Mutable(fd protoreflect.FieldD
 	switch fd.FullName() {
 	case "cosmos.base.tendermint.v1beta1.GetBlockByHeightResponse.block_id":
 		if x.BlockId == nil {
-			x.BlockId = new(v1.BlockID)
+			x.BlockId = new(v2.BlockID)
 		}
 		return protoreflect.ValueOfMessage(x.BlockId.ProtoReflect())
 	case "cosmos.base.tendermint.v1beta1.GetBlockByHeightResponse.block":
 		if x.Block == nil {
-			x.Block = new(v1.Block)
+			x.Block = new(v2.Block)
 		}
 		return protoreflect.ValueOfMessage(x.Block.ProtoReflect())
 	case "cosmos.base.tendermint.v1beta1.GetBlockByHeightResponse.sdk_block":
@@ -3420,10 +3420,10 @@ func (x *fastReflection_GetBlockByHeightResponse) Mutable(fd protoreflect.FieldD
 func (x *fastReflection_GetBlockByHeightResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "cosmos.base.tendermint.v1beta1.GetBlockByHeightResponse.block_id":
-		m := new(v1.BlockID)
+		m := new(v2.BlockID)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "cosmos.base.tendermint.v1beta1.GetBlockByHeightResponse.block":
-		m := new(v1.Block)
+		m := new(v2.Block)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "cosmos.base.tendermint.v1beta1.GetBlockByHeightResponse.sdk_block":
 		m := new(Block)
@@ -3659,7 +3659,7 @@ func (x *fastReflection_GetBlockByHeightResponse) ProtoMethods() *protoiface.Met
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.BlockId == nil {
-					x.BlockId = &v1.BlockID{}
+					x.BlockId = &v2.BlockID{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.BlockId); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -3695,7 +3695,7 @@ func (x *fastReflection_GetBlockByHeightResponse) ProtoMethods() *protoiface.Met
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.Block == nil {
-					x.Block = &v1.Block{}
+					x.Block = &v2.Block{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Block); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -4315,9 +4315,9 @@ func (x *fastReflection_GetLatestBlockResponse) Get(descriptor protoreflect.Fiel
 func (x *fastReflection_GetLatestBlockResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "cosmos.base.tendermint.v1beta1.GetLatestBlockResponse.block_id":
-		x.BlockId = value.Message().Interface().(*v1.BlockID)
+		x.BlockId = value.Message().Interface().(*v2.BlockID)
 	case "cosmos.base.tendermint.v1beta1.GetLatestBlockResponse.block":
-		x.Block = value.Message().Interface().(*v1.Block)
+		x.Block = value.Message().Interface().(*v2.Block)
 	case "cosmos.base.tendermint.v1beta1.GetLatestBlockResponse.sdk_block":
 		x.SdkBlock = value.Message().Interface().(*Block)
 	default:
@@ -4342,12 +4342,12 @@ func (x *fastReflection_GetLatestBlockResponse) Mutable(fd protoreflect.FieldDes
 	switch fd.FullName() {
 	case "cosmos.base.tendermint.v1beta1.GetLatestBlockResponse.block_id":
 		if x.BlockId == nil {
-			x.BlockId = new(v1.BlockID)
+			x.BlockId = new(v2.BlockID)
 		}
 		return protoreflect.ValueOfMessage(x.BlockId.ProtoReflect())
 	case "cosmos.base.tendermint.v1beta1.GetLatestBlockResponse.block":
 		if x.Block == nil {
-			x.Block = new(v1.Block)
+			x.Block = new(v2.Block)
 		}
 		return protoreflect.ValueOfMessage(x.Block.ProtoReflect())
 	case "cosmos.base.tendermint.v1beta1.GetLatestBlockResponse.sdk_block":
@@ -4369,10 +4369,10 @@ func (x *fastReflection_GetLatestBlockResponse) Mutable(fd protoreflect.FieldDes
 func (x *fastReflection_GetLatestBlockResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "cosmos.base.tendermint.v1beta1.GetLatestBlockResponse.block_id":
-		m := new(v1.BlockID)
+		m := new(v2.BlockID)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "cosmos.base.tendermint.v1beta1.GetLatestBlockResponse.block":
-		m := new(v1.Block)
+		m := new(v2.Block)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "cosmos.base.tendermint.v1beta1.GetLatestBlockResponse.sdk_block":
 		m := new(Block)
@@ -4608,7 +4608,7 @@ func (x *fastReflection_GetLatestBlockResponse) ProtoMethods() *protoiface.Metho
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.BlockId == nil {
-					x.BlockId = &v1.BlockID{}
+					x.BlockId = &v2.BlockID{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.BlockId); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -4644,7 +4644,7 @@ func (x *fastReflection_GetLatestBlockResponse) ProtoMethods() *protoiface.Metho
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.Block == nil {
-					x.Block = &v1.Block{}
+					x.Block = &v2.Block{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Block); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -6015,7 +6015,7 @@ func (x *fastReflection_GetNodeInfoResponse) Get(descriptor protoreflect.FieldDe
 func (x *fastReflection_GetNodeInfoResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "cosmos.base.tendermint.v1beta1.GetNodeInfoResponse.default_node_info":
-		x.DefaultNodeInfo = value.Message().Interface().(*v11.DefaultNodeInfo)
+		x.DefaultNodeInfo = value.Message().Interface().(*v1.DefaultNodeInfo)
 	case "cosmos.base.tendermint.v1beta1.GetNodeInfoResponse.application_version":
 		x.ApplicationVersion = value.Message().Interface().(*VersionInfo)
 	default:
@@ -6040,7 +6040,7 @@ func (x *fastReflection_GetNodeInfoResponse) Mutable(fd protoreflect.FieldDescri
 	switch fd.FullName() {
 	case "cosmos.base.tendermint.v1beta1.GetNodeInfoResponse.default_node_info":
 		if x.DefaultNodeInfo == nil {
-			x.DefaultNodeInfo = new(v11.DefaultNodeInfo)
+			x.DefaultNodeInfo = new(v1.DefaultNodeInfo)
 		}
 		return protoreflect.ValueOfMessage(x.DefaultNodeInfo.ProtoReflect())
 	case "cosmos.base.tendermint.v1beta1.GetNodeInfoResponse.application_version":
@@ -6062,7 +6062,7 @@ func (x *fastReflection_GetNodeInfoResponse) Mutable(fd protoreflect.FieldDescri
 func (x *fastReflection_GetNodeInfoResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "cosmos.base.tendermint.v1beta1.GetNodeInfoResponse.default_node_info":
-		m := new(v11.DefaultNodeInfo)
+		m := new(v1.DefaultNodeInfo)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "cosmos.base.tendermint.v1beta1.GetNodeInfoResponse.application_version":
 		m := new(VersionInfo)
@@ -6280,7 +6280,7 @@ func (x *fastReflection_GetNodeInfoResponse) ProtoMethods() *protoiface.Methods 
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.DefaultNodeInfo == nil {
-					x.DefaultNodeInfo = &v11.DefaultNodeInfo{}
+					x.DefaultNodeInfo = &v1.DefaultNodeInfo{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.DefaultNodeInfo); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -10687,9 +10687,9 @@ type GetBlockByHeightResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	BlockId *v1.BlockID `protobuf:"bytes,1,opt,name=block_id,json=blockId,proto3" json:"block_id,omitempty"`
+	BlockId *v2.BlockID `protobuf:"bytes,1,opt,name=block_id,json=blockId,proto3" json:"block_id,omitempty"`
 	// Deprecated: please use `sdk_block` instead
-	Block    *v1.Block `protobuf:"bytes,2,opt,name=block,proto3" json:"block,omitempty"`
+	Block    *v2.Block `protobuf:"bytes,2,opt,name=block,proto3" json:"block,omitempty"`
 	SdkBlock *Block    `protobuf:"bytes,3,opt,name=sdk_block,json=sdkBlock,proto3" json:"sdk_block,omitempty"`
 }
 
@@ -10713,14 +10713,14 @@ func (*GetBlockByHeightResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_base_tendermint_v1beta1_query_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *GetBlockByHeightResponse) GetBlockId() *v1.BlockID {
+func (x *GetBlockByHeightResponse) GetBlockId() *v2.BlockID {
 	if x != nil {
 		return x.BlockId
 	}
 	return nil
 }
 
-func (x *GetBlockByHeightResponse) GetBlock() *v1.Block {
+func (x *GetBlockByHeightResponse) GetBlock() *v2.Block {
 	if x != nil {
 		return x.Block
 	}
@@ -10767,9 +10767,9 @@ type GetLatestBlockResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	BlockId *v1.BlockID `protobuf:"bytes,1,opt,name=block_id,json=blockId,proto3" json:"block_id,omitempty"`
+	BlockId *v2.BlockID `protobuf:"bytes,1,opt,name=block_id,json=blockId,proto3" json:"block_id,omitempty"`
 	// Deprecated: please use `sdk_block` instead
-	Block    *v1.Block `protobuf:"bytes,2,opt,name=block,proto3" json:"block,omitempty"`
+	Block    *v2.Block `protobuf:"bytes,2,opt,name=block,proto3" json:"block,omitempty"`
 	SdkBlock *Block    `protobuf:"bytes,3,opt,name=sdk_block,json=sdkBlock,proto3" json:"sdk_block,omitempty"`
 }
 
@@ -10793,14 +10793,14 @@ func (*GetLatestBlockResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_base_tendermint_v1beta1_query_proto_rawDescGZIP(), []int{8}
 }
 
-func (x *GetLatestBlockResponse) GetBlockId() *v1.BlockID {
+func (x *GetLatestBlockResponse) GetBlockId() *v2.BlockID {
 	if x != nil {
 		return x.BlockId
 	}
 	return nil
 }
 
-func (x *GetLatestBlockResponse) GetBlock() *v1.Block {
+func (x *GetLatestBlockResponse) GetBlock() *v2.Block {
 	if x != nil {
 		return x.Block
 	}
@@ -10910,8 +10910,8 @@ type GetNodeInfoResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	DefaultNodeInfo    *v11.DefaultNodeInfo `protobuf:"bytes,1,opt,name=default_node_info,json=defaultNodeInfo,proto3" json:"default_node_info,omitempty"`
-	ApplicationVersion *VersionInfo         `protobuf:"bytes,2,opt,name=application_version,json=applicationVersion,proto3" json:"application_version,omitempty"`
+	DefaultNodeInfo    *v1.DefaultNodeInfo `protobuf:"bytes,1,opt,name=default_node_info,json=defaultNodeInfo,proto3" json:"default_node_info,omitempty"`
+	ApplicationVersion *VersionInfo        `protobuf:"bytes,2,opt,name=application_version,json=applicationVersion,proto3" json:"application_version,omitempty"`
 }
 
 func (x *GetNodeInfoResponse) Reset() {
@@ -10934,7 +10934,7 @@ func (*GetNodeInfoResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_base_tendermint_v1beta1_query_proto_rawDescGZIP(), []int{12}
 }
 
-func (x *GetNodeInfoResponse) GetDefaultNodeInfo() *v11.DefaultNodeInfo {
+func (x *GetNodeInfoResponse) GetDefaultNodeInfo() *v1.DefaultNodeInfo {
 	if x != nil {
 		return x.DefaultNodeInfo
 	}
@@ -11367,7 +11367,7 @@ var file_cosmos_base_tendermint_v1beta1_query_proto_rawDesc = []byte{
 	0x74, 0x69, 0x6f, 0x6e, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1b, 0x63, 0x6f, 0x6d,
 	0x65, 0x74, 0x62, 0x66, 0x74, 0x2f, 0x70, 0x32, 0x70, 0x2f, 0x76, 0x31, 0x2f, 0x74, 0x79, 0x70,
 	0x65, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1d, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62,
-	0x66, 0x74, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2f, 0x76, 0x31, 0x2f, 0x74, 0x79, 0x70, 0x65,
+	0x66, 0x74, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2f, 0x76, 0x32, 0x2f, 0x74, 0x79, 0x70, 0x65,
 	0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x2a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f,
 	0x62, 0x61, 0x73, 0x65, 0x2f, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74,
 	0x61, 0x31, 0x2f, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x70, 0x72,
@@ -11376,7 +11376,7 @@ var file_cosmos_base_tendermint_v1beta1_query_proto_rawDesc = []byte{
 	0x74, 0x61, 0x31, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a,
 	0x19, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x63, 0x6f,
 	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1d, 0x63, 0x6f, 0x6d, 0x65,
-	0x74, 0x62, 0x66, 0x74, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2f, 0x76, 0x31, 0x2f, 0x62, 0x6c,
+	0x74, 0x62, 0x66, 0x74, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2f, 0x76, 0x32, 0x2f, 0x62, 0x6c,
 	0x6f, 0x63, 0x6b, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x11, 0x61, 0x6d, 0x69, 0x6e, 0x6f,
 	0x2f, 0x61, 0x6d, 0x69, 0x6e, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x80, 0x01, 0x0a,
 	0x1e, 0x47, 0x65, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74,
@@ -11440,10 +11440,10 @@ var file_cosmos_base_tendermint_v1beta1_query_proto_rawDesc = []byte{
 	0x69, 0x67, 0x68, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x35, 0x0a, 0x08,
 	0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a,
 	0x2e, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2e, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e,
-	0x76, 0x31, 0x2e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x49, 0x44, 0x52, 0x07, 0x62, 0x6c, 0x6f, 0x63,
+	0x76, 0x32, 0x2e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x49, 0x44, 0x52, 0x07, 0x62, 0x6c, 0x6f, 0x63,
 	0x6b, 0x49, 0x64, 0x12, 0x2e, 0x0a, 0x05, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x18, 0x02, 0x20, 0x01,
 	0x28, 0x0b, 0x32, 0x18, 0x2e, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2e, 0x74, 0x79,
-	0x70, 0x65, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x52, 0x05, 0x62, 0x6c,
+	0x70, 0x65, 0x73, 0x2e, 0x76, 0x32, 0x2e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x52, 0x05, 0x62, 0x6c,
 	0x6f, 0x63, 0x6b, 0x12, 0x57, 0x0a, 0x09, 0x73, 0x64, 0x6b, 0x5f, 0x62, 0x6c, 0x6f, 0x63, 0x6b,
 	0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x25, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
 	0x62, 0x61, 0x73, 0x65, 0x2e, 0x74, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x6d, 0x69, 0x6e, 0x74, 0x2e,
@@ -11455,10 +11455,10 @@ var file_cosmos_base_tendermint_v1beta1_query_proto_rawDesc = []byte{
 	0x65, 0x73, 0x74, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
 	0x12, 0x35, 0x0a, 0x08, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01,
 	0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2e, 0x74, 0x79,
-	0x70, 0x65, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x49, 0x44, 0x52, 0x07,
+	0x70, 0x65, 0x73, 0x2e, 0x76, 0x32, 0x2e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x49, 0x44, 0x52, 0x07,
 	0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x49, 0x64, 0x12, 0x2e, 0x0a, 0x05, 0x62, 0x6c, 0x6f, 0x63, 0x6b,
 	0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66,
-	0x74, 0x2e, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x42, 0x6c, 0x6f, 0x63, 0x6b,
+	0x74, 0x2e, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x76, 0x32, 0x2e, 0x42, 0x6c, 0x6f, 0x63, 0x6b,
 	0x52, 0x05, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x12, 0x57, 0x0a, 0x09, 0x73, 0x64, 0x6b, 0x5f, 0x62,
 	0x6c, 0x6f, 0x63, 0x6b, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x25, 0x2e, 0x63, 0x6f, 0x73,
 	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x74, 0x65, 0x6e, 0x64, 0x65, 0x72, 0x6d,
@@ -11681,10 +11681,10 @@ var file_cosmos_base_tendermint_v1beta1_query_proto_goTypes = []interface{}{
 	(*v1beta1.PageRequest)(nil),             // 19: cosmos.base.query.v1beta1.PageRequest
 	(*v1beta1.PageResponse)(nil),            // 20: cosmos.base.query.v1beta1.PageResponse
 	(*anypb.Any)(nil),                       // 21: google.protobuf.Any
-	(*v1.BlockID)(nil),                      // 22: cometbft.types.v1.BlockID
-	(*v1.Block)(nil),                        // 23: cometbft.types.v1.Block
+	(*v2.BlockID)(nil),                      // 22: cometbft.types.v2.BlockID
+	(*v2.Block)(nil),                        // 23: cometbft.types.v2.Block
 	(*Block)(nil),                           // 24: cosmos.base.tendermint.v1beta1.Block
-	(*v11.DefaultNodeInfo)(nil),             // 25: cometbft.p2p.v1.DefaultNodeInfo
+	(*v1.DefaultNodeInfo)(nil),              // 25: cometbft.p2p.v1.DefaultNodeInfo
 }
 var file_cosmos_base_tendermint_v1beta1_query_proto_depIdxs = []int32{
 	19, // 0: cosmos.base.tendermint.v1beta1.GetValidatorSetByHeightRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
@@ -11694,11 +11694,11 @@ var file_cosmos_base_tendermint_v1beta1_query_proto_depIdxs = []int32{
 	4,  // 4: cosmos.base.tendermint.v1beta1.GetLatestValidatorSetResponse.validators:type_name -> cosmos.base.tendermint.v1beta1.Validator
 	20, // 5: cosmos.base.tendermint.v1beta1.GetLatestValidatorSetResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
 	21, // 6: cosmos.base.tendermint.v1beta1.Validator.pub_key:type_name -> google.protobuf.Any
-	22, // 7: cosmos.base.tendermint.v1beta1.GetBlockByHeightResponse.block_id:type_name -> cometbft.types.v1.BlockID
-	23, // 8: cosmos.base.tendermint.v1beta1.GetBlockByHeightResponse.block:type_name -> cometbft.types.v1.Block
+	22, // 7: cosmos.base.tendermint.v1beta1.GetBlockByHeightResponse.block_id:type_name -> cometbft.types.v2.BlockID
+	23, // 8: cosmos.base.tendermint.v1beta1.GetBlockByHeightResponse.block:type_name -> cometbft.types.v2.Block
 	24, // 9: cosmos.base.tendermint.v1beta1.GetBlockByHeightResponse.sdk_block:type_name -> cosmos.base.tendermint.v1beta1.Block
-	22, // 10: cosmos.base.tendermint.v1beta1.GetLatestBlockResponse.block_id:type_name -> cometbft.types.v1.BlockID
-	23, // 11: cosmos.base.tendermint.v1beta1.GetLatestBlockResponse.block:type_name -> cometbft.types.v1.Block
+	22, // 10: cosmos.base.tendermint.v1beta1.GetLatestBlockResponse.block_id:type_name -> cometbft.types.v2.BlockID
+	23, // 11: cosmos.base.tendermint.v1beta1.GetLatestBlockResponse.block:type_name -> cometbft.types.v2.Block
 	24, // 12: cosmos.base.tendermint.v1beta1.GetLatestBlockResponse.sdk_block:type_name -> cosmos.base.tendermint.v1beta1.Block
 	25, // 13: cosmos.base.tendermint.v1beta1.GetNodeInfoResponse.default_node_info:type_name -> cometbft.p2p.v1.DefaultNodeInfo
 	13, // 14: cosmos.base.tendermint.v1beta1.GetNodeInfoResponse.application_version:type_name -> cosmos.base.tendermint.v1beta1.VersionInfo

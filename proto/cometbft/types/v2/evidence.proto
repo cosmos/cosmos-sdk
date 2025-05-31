@@ -1,10 +1,10 @@
 syntax = "proto3";
-package cometbft.types.v1;
+package cometbft.types.v2;
 
-option go_package = "github.com/cometbft/cometbft/api/cometbft/types/v1";
+option go_package = "github.com/cometbft/cometbft/api/cometbft/types/v2";
 
-import "cometbft/types/v1/types.proto";
-import "cometbft/types/v1/validator.proto";
+import "cometbft/types/v2/types.proto";
+import "cometbft/types/v2/validator.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 

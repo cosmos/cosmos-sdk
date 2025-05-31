@@ -293,10 +293,10 @@ github.com/twitchyliquid64/golang-asm v0.15.1 h1:SU5vSMR7hnwNxj24w34ZyCi/FmDZTkS
 github.com/twitchyliquid64/golang-asm v0.15.1/go.mod h1:a1lVb/DtPvCB8fslRZhAngC2+aY1QWCk3Cedj/Gdt08=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
-github.com/zrbecker/cometbft v0.0.0-20250530022340-7109c1e6ee31 h1:OQX3h4k9NBsrlDMEuJLDx2eaxVLrdQwI3vMx+s8GvWM=
-github.com/zrbecker/cometbft v0.0.0-20250530022340-7109c1e6ee31/go.mod h1:9pGlRVmsldV0H0aotznAZywcEWnSW52qIqDoAPu45nY=
-github.com/zrbecker/cometbft/api v0.0.0-20250530022340-7109c1e6ee31 h1:dmrp/B+m1WTnkgaYD+vPjw0DqDoJBJFQhrvDBCOekwQ=
-github.com/zrbecker/cometbft/api v0.0.0-20250530022340-7109c1e6ee31/go.mod h1:Ivh6nSCTJPQOyfQo8dgnyu/T88it092sEqSrZSmTQN8=
+github.com/zrbecker/cometbft v0.0.0-20250531072547-03a237b0b780 h1:ueDqtyq9UP2mKZxBTc4VmYuuMcFwc0VYBPrLjTKywqM=
+github.com/zrbecker/cometbft v0.0.0-20250531072547-03a237b0b780/go.mod h1:W6yhyAFnwnJoYwiFjvYRbIRPidAX1BwsmTE7viSE1a8=
+github.com/zrbecker/cometbft/api v0.0.0-20250531072547-03a237b0b780 h1:OW2u7lE90Mvh/ktaLMwmY603m/lGTearG1uev99SuiY=
+github.com/zrbecker/cometbft/api v0.0.0-20250531072547-03a237b0b780/go.mod h1:Ivh6nSCTJPQOyfQo8dgnyu/T88it092sEqSrZSmTQN8=
 go.opentelemetry.io/auto/sdk v1.1.0 h1:cH53jehLUN6UFLY71z+NDOiNJqDdPRaXzTel0sJySYA=
 go.opentelemetry.io/auto/sdk v1.1.0/go.mod h1:3wSPjt5PWp2RhlCcmmOial7AvC4DQqZb7a7wCow3W8A=
 go.opentelemetry.io/otel v1.34.0 h1:zRLXxLCgL1WyKsPVrgbSdMN4c0FMkDAskSTQP+0hdUY=

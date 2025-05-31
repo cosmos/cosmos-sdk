@@ -18,6 +18,6 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250528174236-200df99c418a // indirect
 )
 
-replace github.com/cometbft/cometbft => github.com/zrbecker/cometbft v0.0.0-20250530022340-7109c1e6ee31
+replace github.com/cometbft/cometbft => github.com/zrbecker/cometbft v0.0.0-20250531072547-03a237b0b780
 
-replace github.com/cometbft/cometbft/api => github.com/zrbecker/cometbft/api v0.0.0-20250530022340-7109c1e6ee31
+replace github.com/cometbft/cometbft/api => github.com/zrbecker/cometbft/api v0.0.0-20250531072547-03a237b0b780

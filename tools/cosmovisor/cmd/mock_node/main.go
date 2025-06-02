@@ -48,6 +48,8 @@ x/upgrade upgrade-info.json behavior.`,
 	cmd.Flags().StringVar(&httpAddr, "http-addr", ":8080", "HTTP server address to serve block information. Defaults to :8080.")
 	cmd.Flags().StringVar(&blockUrl, "block-url", "/block", "URL at which the latest block information is served. Defaults to /block.")
 	cmd.Flags().DurationVar(&shutdownDelay, "shutdown-delay", 0, "Duration to wait before shutting down the node upon receiving a shutdown signal. Defaults to 0 (no delay).")
+	// TODO add flag to use either jsonpb or encoding/json
+	// TODO shutdown at upgrade height
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		if upgradePlan == "" && haltHeight == 0 {
 			return fmt.Errorf("must specify either --upgrade-plan or --halt-height")
@@ -148,7 +150,7 @@ func (n *MockNode) Run(ctx context.Context) error {
 	}
 	if n.haltHeight > 0 {
 		n.logger.Error(fmt.Sprintf("halt per configuration height %d", n.height))
-	} else {
+	} else if n.upgradePlan != nil {
 		n.logger.Info("Mock node reached upgrade height, writing upgrade-info.json", "upgrade_plan", n.upgradePlan)
 		upgradeInfoPath := path.Join(n.homePath, "data", upgradetypes.UpgradeInfoFilename)
 		out, err := (&jsonpb.Marshaler{

@@ -4,6 +4,7 @@ go 1.25.5
 
 require (
 	cosmossdk.io/log v1.6.0
+	github.com/cenkalti/backoff/v5 v5.0.2
 	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/cosmos/gogoproto v1.7.2
 	github.com/fsnotify/fsnotify v1.9.0

@@ -15,9 +15,11 @@ import (
 // We can now make any changes to the underlying directory without interference and leave it
 // in the upgraded state so that the app can restart with the new binary.
 func UpgradeBinary(logger log.Logger, cfg *Config, p upgradetypes.Plan) error {
+	logger.Info("Upgrading binary", "name", p.Name)
 	// simplest case is to switch the link
 	err := plan.EnsureBinary(cfg.UpgradeBin(p.Name))
 	if err == nil {
+		logger.Info("Upgrade binary already present, setting as current", "name", p.Name)
 		// we have the binary - do it
 		return cfg.SetCurrentUpgrade(p)
 	}

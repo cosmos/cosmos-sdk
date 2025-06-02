@@ -102,6 +102,8 @@ func (u *Upgrader) doCustomPreUpgrade() error {
 		return nil
 	}
 
+	u.logger.Info("Running custom pre-upgrade script", "script", u.cfg.CustomPreUpgrade)
+
 	// check if preupgradeFile is executable file
 	preupgradeFile := filepath.Join(u.cfg.Home, "cosmovisor", u.cfg.CustomPreUpgrade)
 	u.logger.Info("looking for COSMOVISOR_CUSTOM_PREUPGRADE file", "file", preupgradeFile)
@@ -201,7 +203,7 @@ func (u *Upgrader) doBackup() error {
 	ymd := fmt.Sprintf("%d-%d-%d", st.Year(), st.Month(), st.Day())
 	dst := filepath.Join(u.cfg.DataBackupPath, fmt.Sprintf("data"+"-backup-%s", ymd))
 
-	u.logger.Info("starting to take backup of data directory", "backup start time", st)
+	u.logger.Info("Taking backup of data directory", "backup_path", dst)
 
 	// copy the $DAEMON_HOME/data to a backup dir
 	if err := copy.Copy(filepath.Join(u.cfg.Home, "data"), dst); err != nil {
@@ -210,7 +212,7 @@ func (u *Upgrader) doBackup() error {
 
 	// backup is done, lets check endtime to calculate total time taken for backup process
 	et := time.Now()
-	u.logger.Info("backup completed", "backup saved at", dst, "backup completion time", et, "time taken to complete backup", et.Sub(st))
+	u.logger.Info("Backup completed", "backup_path", dst, "completion_time", et, "duration", et.Sub(st))
 
 	return nil
 }

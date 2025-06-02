@@ -145,7 +145,9 @@ func (n *MockNode) Run(ctx context.Context) error {
 	} else {
 		n.logger.Info("Mock node reached upgrade height, writing upgrade-info.json", "upgrade_plan", n.upgradePlan)
 		upgradeInfoPath := path.Join(n.homePath, "data", upgradetypes.UpgradeInfoFilename)
-		out, err := (&jsonpb.Marshaler{}).MarshalToString(n.upgradePlan)
+		out, err := (&jsonpb.Marshaler{
+			EmitDefaults: false,
+		}).MarshalToString(n.upgradePlan)
 		if err != nil {
 			return fmt.Errorf("failed to marshal upgrade plan: %w", err)
 		}
@@ -158,6 +160,9 @@ func (n *MockNode) Run(ctx context.Context) error {
 			return fmt.Errorf("failed to write upgrade-info.json: %w", err)
 		}
 	}
+	// Don't exit until we receive a shutdown signal
+	n.logger.Info("Mock node reached upgrade height, waiting for shutdown signal")
+	<-ctx.Done()
 	return nil
 }
 

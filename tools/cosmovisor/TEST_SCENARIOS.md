@@ -1,0 +1,17 @@
+- basic: start node, get upgrade-info.json, upgrade
+- manual upgrade added while running:
+  - start node
+  - get upgrade-info.json.batch
+  - restart with halt height
+  - reach halt height
+  - upgrade
+- manual upgrade added while running but get upgrade-info.json:
+  - start node
+  - get upgrade-info.json.batch
+  - restart with halt height
+  - get upgrade-info.json
+  - upgrade
+  - restart with halt height
+  - reach halt height
+  - upgrade
+- start with halt height

@@ -458,8 +458,26 @@ func (cfg *Config) ParseUpgradeInfo(bz []byte) (upgradetypes.Plan, error) {
 	return upgradePlan, nil
 }
 
+const LastKnownHeightFile = ".last_known_height"
+
 func (cfg Config) ReadLastKnownHeight() uint64 {
-	return 0
+	filename := filepath.Join(cfg.UpgradeInfoDir(), LastKnownHeightFile)
+	bz, err := os.ReadFile(filename)
+	if err != nil {
+		return 0
+	}
+
+	h, err := strconv.ParseUint(string(bz), 10, 64)
+	if err != nil {
+		return 0
+	}
+
+	return h
+}
+
+func (cfg Config) WriteLastKnownHeight(height uint64) error {
+	filename := filepath.Join(cfg.UpgradeInfoDir(), LastKnownHeightFile)
+	return os.WriteFile(filename, []byte(strconv.FormatUint(height, 10)), 0644)
 }
 
 // BooleanOption checks and validate env option

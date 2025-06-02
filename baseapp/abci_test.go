@@ -9,8 +9,11 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"os"
+	"os/signal"
 	"strconv"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 
@@ -1998,22 +2001,50 @@ func TestABCI_HaltChain(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			suite := NewBaseAppSuite(t, baseapp.SetHaltHeight(tc.haltHeight), baseapp.SetHaltTime(tc.haltTime))
-			suite.baseApp.InitChain(&abci.RequestInitChain{
-				ConsensusParams: &cmtproto.ConsensusParams{},
-				InitialHeight:   tc.blockHeight,
-			})
+			// Set up signal handling before the test
+			sigCh := make(chan os.Signal, 1)
+			signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
+			defer signal.Stop(sigCh)
 
-			app := suite.baseApp
-			_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
-				Height: tc.blockHeight,
-				Time:   time.Unix(tc.blockTime, 0),
-			})
+			// Run in a goroutine to handle the signal
+			done := make(chan struct{})
+			var finalizeErr error
+
+			go func() {
+				defer close(done)
+
+				suite := NewBaseAppSuite(t, baseapp.SetHaltHeight(tc.haltHeight), baseapp.SetHaltTime(tc.haltTime))
+				suite.baseApp.InitChain(&abci.RequestInitChain{
+					ConsensusParams: &cmtproto.ConsensusParams{},
+					InitialHeight:   tc.blockHeight,
+				})
+
+				app := suite.baseApp
+				_, finalizeErr = app.FinalizeBlock(&abci.RequestFinalizeBlock{
+					Height: tc.blockHeight,
+					Time:   time.Unix(tc.blockTime, 0),
+				})
+			}()
+
+			if tc.expHalt {
+				// Wait for the signal
+				select {
+				case sig := <-sigCh:
+					t.Logf("Received expected signal: %v", sig)
+				case <-time.After(1 * time.Second):
+					t.Fatal("Expected signal but didn't receive one")
+				}
+			}
+
+			// Wait for goroutine to complete
+			<-done
+
+			// Check the error
 			if !tc.expHalt {
-				require.NoError(t, err)
+				require.NoError(t, finalizeErr)
 			} else {
-				require.Error(t, err)
-				require.True(t, strings.HasPrefix(err.Error(), "halt per configuration"))
+				require.Error(t, finalizeErr)
+				require.True(t, strings.HasPrefix(finalizeErr.Error(), "halt per configuration"))
 			}
 		})
 	}

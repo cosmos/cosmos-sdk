@@ -105,11 +105,14 @@ func RunOnce(ctx context.Context, cfg *cosmovisor.Config, runCfg RunConfig, args
 	defer cancel()
 	upgradePlanWatcher := watchers.InitWatcher[upgradetypes.Plan](ctx, cfg.PollInterval, dirWatcher, cfg.UpgradeInfoFilePath(), cfg.ParseUpgradeInfo)
 	manualUpgradesWatcher := watchers.InitWatcher[cosmovisor.ManualUpgradeBatch](ctx, cfg.PollInterval, dirWatcher, cfg.UpgradeInfoBatchFilePath(), cfg.ParseManualUpgrades)
-	//var actualHeightWatcher watchers.Watcher[uint64]
-	//var heightChecker checkers.HeightWatcher
+	heightChecker := watchers.NewHTTPRPCBLockChecker("http://localhost:8080/block")
+	heightWatcher := watchers.NewHeightWatcher(ctx, heightChecker, cfg.PollInterval, func(height uint64) error {
+		return cfg.WriteLastKnownHeight(height)
+	})
 
 	if haltHeight > 0 {
 		// TODO start height watcher
+		args = append(args, fmt.Sprintf("--halt-height=%d", haltHeight))
 	}
 	//// TODO start process runner
 	cmd, err := createCmd(cfg, runCfg, args, logger)
@@ -123,7 +126,7 @@ func RunOnce(ctx context.Context, cfg *cosmovisor.Config, runCfg RunConfig, args
 		_ = processRunner.Shutdown(cfg.ShutdownGrace)
 	}()
 
-	//correctHeightConfirmed := false
+	correctHeightConfirmed := false
 	for {
 		select {
 		case _, ok := <-upgradePlanWatcher.Updated():
@@ -144,15 +147,15 @@ func RunOnce(ctx context.Context, cfg *cosmovisor.Config, runCfg RunConfig, args
 		case err := <-processRunner.Done():
 			// TODO handle process exit
 			return err
-			// TODO:
-			//case actualHeight := <-actualHeightWatcher.Updated():
-			//	if !correctHeightConfirmed {
-			//		// TODO read manual upgrade batch and check if we'd still be at the correct halt height
-			//		correctHeightConfirmed = true
-			//	}
-			//	if actualHeight >= haltHeight {
-			//		// TODO shutdown
-			//	}
+		// TODO:
+		case actualHeight := <-heightWatcher.Updated():
+			if !correctHeightConfirmed {
+				// TODO read manual upgrade batch and check if we'd still be at the correct halt height
+				correctHeightConfirmed = true
+			}
+			if actualHeight >= haltHeight {
+				return ErrUpgradeNeeded{}
+			}
 			// TODO error channels
 		}
 	}

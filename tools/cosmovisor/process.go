@@ -17,7 +17,6 @@ import (
 	"cosmossdk.io/log"
 	"github.com/otiai10/copy"
 
-	"cosmossdk.io/tools/cosmovisor/internal/checkers"
 	"cosmossdk.io/tools/cosmovisor/internal/watchers"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -58,9 +57,9 @@ type Launcher struct {
 	manualUpgradesWatcher watchers.Watcher[ManualUpgradeBatch]
 	haltHeightWatcher     watchers.Watcher[uint64]
 	actualHeightWatcher   watchers.Watcher[uint64]
-	heightChecker         checkers.HeightChecker
+	heightChecker         watchers.HeightChecker
 	upgradePlan           *upgradetypes.Plan
-	manualUpgrade         *ManualUpgradePlan
+	manualUpgrade         *upgradetypes.Plan
 }
 
 func NewLauncher(logger log.Logger, cfg *Config) (Launcher, error) {

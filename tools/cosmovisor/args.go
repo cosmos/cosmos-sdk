@@ -653,6 +653,11 @@ func (cfg Config) Export() (string, error) {
 	return path, nil
 }
 
+func (cfg *Config) DeleteManualUpgradeAtHeight(height uint64) error {
+	// TODO
+	return nil
+}
+
 func askForConfirmation(str string) bool {
 	var response string
 	fmt.Printf("%s [y/n]: ", str)

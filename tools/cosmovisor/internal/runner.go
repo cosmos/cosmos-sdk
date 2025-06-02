@@ -69,6 +69,7 @@ import (
 func Run(ctx context.Context, cfg *cosmovisor.Config, runCfg RunConfig, args []string, logger log.Logger) error {
 	knownHeight := uint64(0)
 	// TODO handle cases where daemon shuts down without an upgrade, either have a retry count of fail in that case
+	// ideally backoff retry
 	for {
 		upgraded, haltHeight, err := UpgradeIfNeeded(cfg, logger, knownHeight)
 		if upgraded {

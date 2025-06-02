@@ -54,7 +54,7 @@ The Cosmos ecosystem is vast.
 
 ### Cosmos Hub Mainnet
 
-The Cosmos Hub application, `gaia`, has its own [cosmos/gaia repository](https://github.com/cosmos/gaia). Go there to join the Cosmos Hub mainnet and more.
+The Cosmos Hub application, `Gaia`, has its own [cosmos/gaia repository](https://github.com/cosmos/gaia). Go there to join the Cosmos Hub mainnet and more.
 
 ### Inter-Blockchain Communication (IBC)
 

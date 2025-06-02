@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os/exec"
@@ -66,33 +67,30 @@ import (
 //}
 
 func Run(ctx context.Context, cfg *cosmovisor.Config, runCfg RunConfig, args []string, logger log.Logger) error {
-	return RunOnce(ctx, cfg, runCfg, args, logger)
+	knownHeight := uint64(0)
+	// TODO handle cases where daemon shuts down without an upgrade, either have a retry count of fail in that case
+	for {
+		upgraded, haltHeight, err := UpgradeIfNeeded(cfg, logger, knownHeight)
+		if upgraded {
+			logger.Info("Upgrade completed, restarting process")
+			if !cfg.RestartAfterUpgrade {
+				logger.Info("DAEMON_RESTART_AFTER_UPGRADE is disabled, exiting process")
+			}
+		}
+		err = RunOnce(ctx, cfg, runCfg, args, haltHeight, logger)
+		if err != nil {
+			var upgradeNeeded ErrUpgradeNeeded
+			if ok := errors.As(err, &upgradeNeeded); ok {
+				logger.Info("Upgrade needed")
+				knownHeight = upgradeNeeded.KnownHeight
+			} else {
+				return err
+			}
+		}
+	}
 }
 
-func RunOnce(ctx context.Context, cfg *cosmovisor.Config, runCfg RunConfig, args []string, logger log.Logger) error {
-	logger.Info("Checking for upgrade-info.json")
-	if _, err := cfg.UpgradeInfo(); err == nil {
-		return ErrUpgradeNeeded{}
-	}
-	logger.Info("Checking for upgrade-info.json.batch")
-	manualUpgradeBatch, err := cfg.ReadManualUpgrades()
-	if err != nil {
-		return err
-	}
-	logger.Info("Checking last known height")
-	lastKnownHeight := cfg.ReadLastKnownHeight()
-	haltHeight := uint64(0)
-	if manualUpgrade := manualUpgradeBatch.FirstUpgrade(); manualUpgrade != nil {
-		if lastKnownHeight > uint64(manualUpgrade.Height) {
-			return fmt.Errorf("missed manual upgrade %s at height %d, last known height is %d")
-		}
-		haltHeight = uint64(manualUpgrade.Height)
-		logger.Info("Found manual upgrade", "upgrade", manualUpgrade, "halt_height", haltHeight)
-	}
-
-	// TODO initialize watchers and checkers
-
-	// create directory
+func RunOnce(ctx context.Context, cfg *cosmovisor.Config, runCfg RunConfig, args []string, haltHeight uint64, logger log.Logger) error {
 	dirWatcher, err := watchers.NewFSNotifyWatcher(ctx, cfg.UpgradeInfoDir(), []string{
 		cfg.UpgradeInfoFilePath(),
 		cfg.UpgradeInfoBatchFilePath(),
@@ -130,6 +128,7 @@ func RunOnce(ctx context.Context, cfg *cosmovisor.Config, runCfg RunConfig, args
 	for {
 		select {
 		case _, ok := <-upgradePlanWatcher.Updated():
+			// TODO check skip upgrade heights?? (although not sure why we need this as the node should not emit an upgrade plan if skip heights is enabled)
 			if !ok {
 				return nil
 			}

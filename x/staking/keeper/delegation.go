@@ -1487,7 +1487,7 @@ func (k Keeper) TransferDelegation(ctx context.Context, fromAddr, toAddr sdk.Acc
 		return transferred, err
 	}
 
-	toAddrString, err := k.validatorAddressCodec.BytesToString(toAddr)
+	toAddrString, err := k.authKeeper.AddressCodec().BytesToString(toAddr)
 	if err != nil {
 		return transferred, err
 	}
@@ -1523,15 +1523,21 @@ func (k Keeper) TransferDelegation(ctx context.Context, fromAddr, toAddr sdk.Acc
 	// Update or create the delTo object, calling appropriate hooks
 	delTo, err := k.GetDelegation(ctx, toAddr, operatorAddress)
 	if err != nil {
+		// If the receiver has no delegation in the validator we create one
 		delTo = types.NewDelegation(toAddrString, validator.GetOperator(), math.LegacyZeroDec())
 	}
 	if err == nil {
+		// we call this hook before the modification of the delegation
 		k.Hooks().BeforeDelegationSharesModified(ctx, toAddr, operatorAddress)
 	} else {
+		// If the receiver did not have a delegation we call this hook before creation
 		k.Hooks().BeforeDelegationCreated(ctx, toAddr, operatorAddress)
 	}
 	delTo.Shares = delTo.Shares.Add(transferred)
-	k.SetDelegation(ctx, delTo)
+	err = k.SetDelegation(ctx, delTo)
+	if err != nil {
+		return transferred, err
+	}
 	k.Hooks().AfterDelegationModified(ctx, toAddr, valAddr)
 
 	// Update source delegation

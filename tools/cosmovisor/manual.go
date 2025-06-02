@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"sort"
+
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // ReadManualUpgrades reads the manual upgrade data.
@@ -37,7 +39,7 @@ func (cfg *Config) ParseManualUpgrades(bz []byte) (ManualUpgradeBatch, error) {
 // AddManualUpgrade adds a manual upgrade plan.
 // If an upgrade with the same name already exists, it will only be overwritten if forceOverwrite is true,
 // otherwise an error will be returned.
-func AddManualUpgrade(cfg *Config, plan *ManualUpgradePlan, forceOverwrite bool) error {
+func AddManualUpgrade(cfg *Config, plan *upgradetypes.Plan, forceOverwrite bool) error {
 	// TODO only allow plans that are AFTER the last known height
 	manualUpgrades, err := cfg.ReadManualUpgrades()
 	if err != nil {
@@ -73,7 +75,7 @@ func sortUpgrades(upgrades ManualUpgradeBatch) {
 	})
 }
 
-type ManualUpgradeBatch []*ManualUpgradePlan
+type ManualUpgradeBatch []*upgradetypes.Plan
 
 func (m ManualUpgradeBatch) ValidateBasic() error {
 	for _, upgrade := range m {
@@ -84,7 +86,7 @@ func (m ManualUpgradeBatch) ValidateBasic() error {
 	return nil
 }
 
-func (m ManualUpgradeBatch) FirstUpgrade() *ManualUpgradePlan {
+func (m ManualUpgradeBatch) FirstUpgrade() *upgradetypes.Plan {
 	// ensure the upgrades are sorted before searching
 	sortUpgrades(m)
 	if len(m) == 0 {
@@ -93,18 +95,18 @@ func (m ManualUpgradeBatch) FirstUpgrade() *ManualUpgradePlan {
 	return m[0]
 }
 
-type ManualUpgradePlan struct {
-	Name   string `json:"name"`
-	Height int64  `json:"height"`
-	Info   string `json:"info"`
-}
-
-func (m ManualUpgradePlan) ValidateBasic() error {
-	if m.Name == "" {
-		return fmt.Errorf("name cannot be empty")
-	}
-	if m.Height <= 0 {
-		return fmt.Errorf("height must be greater than 0")
-	}
-	return nil
-}
+//type ManualUpgradePlan struct {
+//	Name   string `json:"name"`
+//	Height int64  `json:"height"`
+//	Info   string `json:"info"`
+//}
+//
+//func (m ManualUpgradePlan) ValidateBasic() error {
+//	if m.Name == "" {
+//		return fmt.Errorf("name cannot be empty")
+//	}
+//	if m.Height <= 0 {
+//		return fmt.Errorf("height must be greater than 0")
+//	}
+//	return nil
+//}

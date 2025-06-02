@@ -18,7 +18,7 @@ import (
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/spf13/cobra"
 
-	"cosmossdk.io/tools/cosmovisor/internal/checkers"
+	"cosmossdk.io/tools/cosmovisor/internal/watchers"
 	"github.com/cosmos/cosmos-sdk/server"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
@@ -49,9 +49,6 @@ x/upgrade upgrade-info.json behavior.`,
 	cmd.Flags().StringVar(&blockUrl, "block-url", "/block", "URL at which the latest block information is served. Defaults to /block.")
 	cmd.Flags().DurationVar(&shutdownDelay, "shutdown-delay", 0, "Duration to wait before shutting down the node upon receiving a shutdown signal. Defaults to 0 (no delay).")
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
-		if upgradePlan != "" && haltHeight > 0 {
-			return fmt.Errorf("cannot specify both --upgrade-plan and --halt-height")
-		}
 		if upgradePlan == "" && haltHeight == 0 {
 			return fmt.Errorf("must specify either --upgrade-plan or --halt-height")
 		}
@@ -107,8 +104,11 @@ type MockNode struct {
 func (n *MockNode) Run(ctx context.Context) error {
 	ctx, _ = signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM)
 	upgradeHeight := n.haltHeight
-	if upgradeHeight == 0 {
-		upgradeHeight = uint64(n.upgradePlan.Height)
+	if n.upgradePlan != nil {
+		upgradePlanHeight := uint64(n.upgradePlan.Height)
+		if upgradePlanHeight < upgradeHeight {
+			upgradeHeight = upgradePlanHeight
+		}
 	}
 
 	actualHeightFile := path.Join(n.homePath, "data", "actual-height")
@@ -175,10 +175,10 @@ func (n *MockNode) Run(ctx context.Context) error {
 func (n *MockNode) startHTTPServer() *http.Server {
 	http.HandleFunc(n.blockUrl, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		err := json.NewEncoder(w).Encode(checkers.Response{
-			Result: checkers.Result{
-				Block: checkers.Block{
-					Header: checkers.Header{
+		err := json.NewEncoder(w).Encode(watchers.Response{
+			Result: watchers.Result{
+				Block: watchers.Block{
+					Header: watchers.Header{
 						Height: fmt.Sprintf("%d", n.height),
 					},
 				},

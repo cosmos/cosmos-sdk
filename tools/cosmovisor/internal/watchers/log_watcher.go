@@ -7,11 +7,9 @@ import (
 	"io"
 	"os"
 	"regexp"
-
-	"cosmossdk.io/tools/cosmovisor/internal/checkers"
 )
 
-func NewHaltHeightLogWatcher(ctx context.Context, log io.Reader, checker checkers.HeightChecker) Watcher[uint64] {
+func NewHaltHeightLogWatcher(ctx context.Context, log io.Reader, checker HeightChecker) Watcher[uint64] {
 	check := func(line string) (uint64, error) {
 		height, err := parseHaltHeightLogMessage(line)
 		if err != nil {

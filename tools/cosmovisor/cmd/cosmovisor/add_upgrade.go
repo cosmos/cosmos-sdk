@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/tools/cosmovisor"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 func NewAddUpgradeCmd() *cobra.Command {
@@ -63,7 +64,7 @@ func addUpgrade(cfg *cosmovisor.Config, force bool, upgradeHeight int64, upgrade
 	logger.Info(fmt.Sprintf("Upgrade binary located at %s", cfg.UpgradeBin(upgradeName)))
 
 	if upgradeHeight > 0 {
-		plan := &cosmovisor.ManualUpgradePlan{
+		plan := &upgradetypes.Plan{
 			Name:   upgradeName,
 			Height: upgradeHeight,
 		}

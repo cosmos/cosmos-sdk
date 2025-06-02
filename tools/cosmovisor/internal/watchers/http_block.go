@@ -1,4 +1,4 @@
-package checkers
+package watchers
 
 import (
 	"encoding/json"

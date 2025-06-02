@@ -190,6 +190,9 @@ replace (
 )
 
 retract (
+	// incorrect tag for patch version
+	v0.53.1
+
 	// false start by tagging the wrong branch
 	v0.50.0
 	// revert fix https://github.com/cosmos/cosmos-sdk/pull/16331

@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/signal"
 	"path"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -33,7 +34,6 @@ The --upgrade-plan and --halt-height flags are mutually exclusive. It is an erro
 Based on which flag is specified the node will either exhibit --halt-height before or
 x/upgrade upgrade-info.json behavior.`,
 	}
-	var startHeight uint64
 	var blockTime time.Duration
 	var upgradePlan string
 	var haltHeight uint64
@@ -41,7 +41,6 @@ x/upgrade upgrade-info.json behavior.`,
 	var httpAddr string
 	var blockUrl string
 	var shutdownDelay time.Duration
-	cmd.Flags().Uint64Var(&startHeight, "start-height", 1, "Block height at which to start the mock node.")
 	cmd.Flags().DurationVar(&blockTime, "block-time", 0, "Duration of time between blocks. This is required to simulate a progression of blocks over time.")
 	cmd.Flags().StringVar(&upgradePlan, "upgrade-plan", "", "upgrade-info.json to create after the halt duration is reached. Either this flag or --halt-height must be specified but not both.")
 	cmd.Flags().Uint64Var(&haltHeight, server.FlagHaltHeight, 0, "Block height at which to gracefully halt the chain and shutdown the node. E")
@@ -67,7 +66,7 @@ x/upgrade upgrade-info.json behavior.`,
 			}
 		}
 		node := &MockNode{
-			height:        startHeight,
+			height:        0,
 			blockTime:     blockTime,
 			haltHeight:    haltHeight,
 			homePath:      homePath,
@@ -84,13 +83,6 @@ x/upgrade upgrade-info.json behavior.`,
 			}
 			if err := node.upgradePlan.ValidateBasic(); err != nil {
 				return fmt.Errorf("invalid upgrade plan: %w", err)
-			}
-			if node.upgradePlan.Height < int64(startHeight) {
-				return fmt.Errorf("upgrade plan height %d must be greater than or equal to start height %d", node.upgradePlan.Height, startHeight)
-			}
-		} else {
-			if haltHeight < startHeight {
-				return fmt.Errorf("halt height %d must be greater than or equal to start height %d", haltHeight, startHeight)
 			}
 		}
 		return node.Run(cmd.Context())
@@ -119,6 +111,15 @@ func (n *MockNode) Run(ctx context.Context) error {
 		upgradeHeight = uint64(n.upgradePlan.Height)
 	}
 
+	actualHeightFile := path.Join(n.homePath, "data", "actual-height")
+	// try to read the actual-height file if it exists
+	if bz, err := os.ReadFile(actualHeightFile); err == nil {
+		n.height, err = strconv.ParseUint(string(bz), 10, 64)
+		if err != nil {
+			return fmt.Errorf("failed to parse actual height from file: %w", err)
+		}
+	}
+
 	n.logger.Info("Starting mock node", "start_height", n.height, "block_time", n.blockTime, "upgrade_plan", n.upgradePlan, "halt_height", upgradeHeight)
 	srv := n.startHTTPServer()
 	ticker := time.NewTicker(n.blockTime)
@@ -138,6 +139,11 @@ func (n *MockNode) Run(ctx context.Context) error {
 			return nil
 		case <-ticker.C:
 			n.height++
+			// Write the current height to the actual-height file
+			err := os.WriteFile(actualHeightFile, []byte(fmt.Sprintf("%d", n.height)), 0o644)
+			if err != nil {
+				return fmt.Errorf("failed to write actual height to file: %w", err)
+			}
 		}
 	}
 	if n.haltHeight > 0 {

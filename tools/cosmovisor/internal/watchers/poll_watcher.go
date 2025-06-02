@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"reflect"
 	"time"
 )
 
@@ -26,16 +27,17 @@ func NewPollWatcher[T any](ctx context.Context, checker func() (T, error), pollI
 			case <-ctx.Done():
 				return
 			case <-ticker.C:
-				_, err := checker()
+				x, err := checker()
 				if err != nil {
 					if !os.IsNotExist(err) {
 						errChan <- fmt.Errorf("failed to check for updates: %w", err)
 					}
 				} else {
-					panic("TODO: generically check for empty value")
-					//if x != nil {
-					//	outChan <- x
-					//}
+					// to make PollWatcher generic on any type T (including []byte), we use reflect.DeepEqual and the default zero value of T
+					var zero T
+					if !reflect.DeepEqual(x, zero) {
+						outChan <- x
+					}
 				}
 			}
 		}

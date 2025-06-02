@@ -126,9 +126,15 @@ func RunOnce(ctx context.Context, cfg *cosmovisor.Config, runCfg RunConfig, args
 	//correctHeightConfirmed := false
 	for {
 		select {
-		case <-upgradePlanWatcher.Updated():
+		case _, ok := <-upgradePlanWatcher.Updated():
+			if !ok {
+				return nil
+			}
 			return ErrUpgradeNeeded{}
-		case <-manualUpgradesWatcher.Updated():
+		case _, ok := <-manualUpgradesWatcher.Updated():
+			if !ok {
+				return nil
+			}
 			if haltHeight == 0 {
 				// TODO shutdown, no halt height set
 				return ErrUpgradeNeeded{}
@@ -150,7 +156,6 @@ func RunOnce(ctx context.Context, cfg *cosmovisor.Config, runCfg RunConfig, args
 			// TODO error channels
 		}
 	}
-	return nil
 }
 
 func createCmd(cfg *cosmovisor.Config, runCfg RunConfig, args []string, logger log.Logger) (*exec.Cmd, error) {

@@ -4,9 +4,7 @@ import (
 	"fmt"
 )
 
-type ErrUpgradeNeeded struct {
-	KnownHeight uint64
-}
+type ErrUpgradeNeeded struct{}
 
 func (e ErrUpgradeNeeded) Error() string {
 	return fmt.Sprintf("upgrade needed")

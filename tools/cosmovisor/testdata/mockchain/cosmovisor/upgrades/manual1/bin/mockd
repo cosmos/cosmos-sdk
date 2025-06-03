@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-set -e
-
-exec mock_node "$@" --block-time 1s --upgrade-plan '{"name":"gov1","height":10}'

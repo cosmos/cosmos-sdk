@@ -4,7 +4,7 @@ go 1.23.5
 
 require (
 	cosmossdk.io/api v0.9.2
-	cosmossdk.io/collections v1.2.1 // indirect
+	cosmossdk.io/collections v1.3.0 // indirect
 	cosmossdk.io/core v1.0.0
 	cosmossdk.io/depinject v1.2.0
 	cosmossdk.io/log v1.6.0

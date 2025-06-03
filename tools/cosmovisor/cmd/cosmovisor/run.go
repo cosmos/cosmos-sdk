@@ -49,7 +49,8 @@ func run(ctx context.Context, cfgPath string, args []string, options ...RunOptio
 	}
 
 	logger := cfg.Logger(runCfg.StdOut)
-	return internal.Run(ctx, cfg, runCfg, args, logger)
+	runner := internal.NewRunner(cfg, runCfg, logger)
+	return runner.Start(ctx, args)
 	//launcher, err := cosmovisor.NewLauncher(logger, cfg)
 	//if err != nil {
 	//	return err

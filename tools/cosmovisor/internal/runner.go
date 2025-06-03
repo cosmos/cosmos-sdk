@@ -15,19 +15,36 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-func Run(ctx context.Context, cfg *cosmovisor.Config, runCfg RunConfig, args []string, logger log.Logger) error {
-	knownHeight := uint64(0)
+type TestCallback func()
+
+type Runner struct {
+	runCfg      RunConfig
+	cfg         *cosmovisor.Config
+	logger      log.Logger
+	knownHeight uint64
+}
+
+// NewRunner creates a new Runner instance with the provided configuration and logger.
+func NewRunner(cfg *cosmovisor.Config, runCfg RunConfig, logger log.Logger) Runner {
+	return Runner{
+		runCfg: runCfg,
+		cfg:    cfg,
+		logger: logger,
+	}
+}
+
+func (r Runner) Start(ctx context.Context, args []string) error {
 	// TODO handle cases where daemon shuts down without an upgrade, either have a retry count of fail in that case ideally backoff retry
 	startsWithoutUpgrade := 0
 	for {
-		upgraded, haltHeight, err := UpgradeIfNeeded(cfg, logger, knownHeight)
+		upgraded, haltHeight, err := UpgradeIfNeeded(r.cfg, r.logger, r.knownHeight)
 		if err != nil {
 			return err
 		}
 		if upgraded {
-			logger.Info("Upgrade completed, restarting process")
-			if !cfg.RestartAfterUpgrade {
-				logger.Info("DAEMON_RESTART_AFTER_UPGRADE is disabled, exiting process")
+			r.logger.Info("Upgrade completed, restarting process")
+			if !r.cfg.RestartAfterUpgrade {
+				r.logger.Info("DAEMON_RESTART_AFTER_UPGRADE is disabled, exiting process")
 			}
 			startsWithoutUpgrade = 0
 		} else {
@@ -36,12 +53,11 @@ func Run(ctx context.Context, cfg *cosmovisor.Config, runCfg RunConfig, args []s
 			}
 			startsWithoutUpgrade++
 		}
-		err = RunOnce(ctx, cfg, runCfg, args, haltHeight, logger)
+		err = r.RunOnce(ctx, args, haltHeight)
 		if err != nil {
 			var upgradeNeeded ErrUpgradeNeeded
 			if ok := errors.As(err, &upgradeNeeded); ok {
-				logger.Info("Upgrade needed")
-				knownHeight = upgradeNeeded.KnownHeight
+				r.logger.Info("Upgrade needed")
 			} else {
 				return err
 			}
@@ -49,22 +65,23 @@ func Run(ctx context.Context, cfg *cosmovisor.Config, runCfg RunConfig, args []s
 	}
 }
 
-func RunOnce(ctx context.Context, cfg *cosmovisor.Config, runCfg RunConfig, args []string, haltHeight uint64, logger log.Logger) error {
-	dirWatcher, err := watchers.NewFSNotifyWatcher(ctx, cfg.UpgradeInfoDir(), []string{
-		cfg.UpgradeInfoFilePath(),
-		cfg.UpgradeInfoBatchFilePath(),
+func (r Runner) RunOnce(ctx context.Context, args []string, haltHeight uint64) error {
+	dirWatcher, err := watchers.NewFSNotifyWatcher(ctx, r.cfg.UpgradeInfoDir(), []string{
+		r.cfg.UpgradeInfoFilePath(),
+		r.cfg.UpgradeInfoBatchFilePath(),
 	})
 	if err != nil {
-		logger.Warn("failed to intialize fsnotify, it's probably not available on this platform, using polling only", "error", err)
+		r.logger.Warn("failed to intialize fsnotify, it's probably not available on this platform, using polling only", "error", err)
 	}
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	upgradePlanWatcher := watchers.InitWatcher[upgradetypes.Plan](ctx, cfg.PollInterval, dirWatcher, cfg.UpgradeInfoFilePath(), cfg.ParseUpgradeInfo)
-	manualUpgradesWatcher := watchers.InitWatcher[cosmovisor.ManualUpgradeBatch](ctx, cfg.PollInterval, dirWatcher, cfg.UpgradeInfoBatchFilePath(), cfg.ParseManualUpgrades)
+	upgradePlanWatcher := watchers.InitWatcher[upgradetypes.Plan](ctx, r.cfg.PollInterval, dirWatcher, r.cfg.UpgradeInfoFilePath(), r.cfg.ParseUpgradeInfo)
+	manualUpgradesWatcher := watchers.InitWatcher[cosmovisor.ManualUpgradeBatch](ctx, r.cfg.PollInterval, dirWatcher, r.cfg.UpgradeInfoBatchFilePath(), r.cfg.ParseManualUpgrades)
 	heightChecker := watchers.NewHTTPRPCBLockChecker("http://localhost:8080/block")
-	heightWatcher := watchers.NewHeightWatcher(ctx, heightChecker, cfg.PollInterval, func(height uint64) error {
-		return cfg.WriteLastKnownHeight(height)
+	heightWatcher := watchers.NewHeightWatcher(ctx, heightChecker, r.cfg.PollInterval, func(height uint64) error {
+		r.knownHeight = height
+		return r.cfg.WriteLastKnownHeight(height)
 	})
 
 	if haltHeight > 0 {
@@ -72,7 +89,7 @@ func RunOnce(ctx context.Context, cfg *cosmovisor.Config, runCfg RunConfig, args
 		args = append(args, fmt.Sprintf("--halt-height=%d", haltHeight))
 	}
 	//// TODO start process runner
-	cmd, err := createCmd(cfg, runCfg, args, logger)
+	cmd, err := r.createCmd(args)
 	if err != nil {
 		return err
 	}
@@ -80,7 +97,7 @@ func RunOnce(ctx context.Context, cfg *cosmovisor.Config, runCfg RunConfig, args
 	defer func() {
 		// TODO always check height before shutting down
 		//_, _ = heightChecker.ReadNow()
-		_ = processRunner.Shutdown(cfg.ShutdownGrace)
+		_ = processRunner.Shutdown(r.cfg.ShutdownGrace)
 	}()
 
 	correctHeightConfirmed := false
@@ -119,8 +136,8 @@ func RunOnce(ctx context.Context, cfg *cosmovisor.Config, runCfg RunConfig, args
 	}
 }
 
-func createCmd(cfg *cosmovisor.Config, runCfg RunConfig, args []string, logger log.Logger) (*exec.Cmd, error) {
-	bin, err := cfg.CurrentBin()
+func (r Runner) createCmd(args []string) (*exec.Cmd, error) {
+	bin, err := r.cfg.CurrentBin()
 	if err != nil {
 		return nil, fmt.Errorf("error creating symlink to genesis: %w", err)
 	}
@@ -129,11 +146,11 @@ func createCmd(cfg *cosmovisor.Config, runCfg RunConfig, args []string, logger l
 		return nil, fmt.Errorf("current binary is invalid: %w", err)
 	}
 
-	logger.Info("running app", "path", bin, "args", args)
+	r.logger.Info("running app", "path", bin, "args", args)
 	cmd := exec.Command(bin, args...)
-	cmd.Stdin = runCfg.StdIn
-	cmd.Stdout = runCfg.StdOut
-	cmd.Stderr = runCfg.StdErr
+	cmd.Stdin = r.runCfg.StdIn
+	cmd.Stdout = r.runCfg.StdOut
+	cmd.Stderr = r.runCfg.StdErr
 	return cmd, nil
 }
 

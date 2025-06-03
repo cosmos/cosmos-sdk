@@ -2,7 +2,7 @@
 package txv1beta1
 
 import (
-	v1 "buf.build/gen/go/cometbft/cometbft/protocolbuffers/go/cometbft/types/v1"
+	v1 "cosmossdk.io/api/cometbft/types/v1"
 	v1beta11 "cosmossdk.io/api/cosmos/base/abci/v1beta1"
 	v1beta1 "cosmossdk.io/api/cosmos/base/query/v1beta1"
 	fmt "fmt"

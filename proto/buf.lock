@@ -2,11 +2,6 @@
 version: v1
 deps:
   - remote: buf.build
-    owner: cometbft
-    repository: cometbft
-    commit: 68e42a58b3014033aee53aa3202bf37c
-    digest: shake256:51f2fc29511edaadb51b5935a979d5c8e699deed4fe9509180ad3e5fc46f390200740d0cc4781300e927caf24e0079804218c21e6426b4373adfa10a2f59edae
-  - remote: buf.build
     owner: cosmos
     repository: cosmos-proto
     commit: 04467658e59e44bbb22fe568206e1f70

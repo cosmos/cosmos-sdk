@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -108,6 +109,10 @@ type BaseApp struct {
 	// flag for sealing options and parameters to a BaseApp
 	sealed bool
 
+	// nextBlockDelay is the delay to wait until the next block after ABCI has committed.
+	// This gives the application more time to receive precommits.
+	nextBlockDelay time.Duration
+
 	// block height at which to halt the chain and gracefully shutdown
 	haltHeight uint64
 
@@ -181,6 +186,7 @@ func NewBaseApp(
 		fauxMerkleMode:   false,
 		sigverifyTx:      true,
 		gasConfig:        config.GasConfig{QueryGasLimit: math.MaxUint64},
+		nextBlockDelay:   time.Second,
 	}
 
 	for _, option := range options {

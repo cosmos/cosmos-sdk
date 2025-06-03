@@ -108,7 +108,7 @@ func (n *MockNode) Run(ctx context.Context) error {
 	upgradeHeight := n.haltHeight
 	if n.upgradePlan != nil {
 		upgradePlanHeight := uint64(n.upgradePlan.Height)
-		if upgradePlanHeight < upgradeHeight {
+		if upgradeHeight == 0 || upgradePlanHeight < upgradeHeight {
 			upgradeHeight = upgradePlanHeight
 		}
 	}
@@ -116,13 +116,14 @@ func (n *MockNode) Run(ctx context.Context) error {
 	actualHeightFile := path.Join(n.homePath, "data", "actual-height")
 	// try to read the actual-height file if it exists
 	if bz, err := os.ReadFile(actualHeightFile); err == nil {
+		n.logger.Info("Reading existing height", "height", string(bz))
 		n.height, err = strconv.ParseUint(string(bz), 10, 64)
 		if err != nil {
 			return fmt.Errorf("failed to parse actual height from file: %w", err)
 		}
 	}
 
-	n.logger.Info("Starting mock node", "start_height", n.height, "block_time", n.blockTime, "upgrade_plan", n.upgradePlan, "halt_height", upgradeHeight)
+	n.logger.Info("Starting mock node", "start_height", n.height, "block_time", n.blockTime, "upgrade_plan", n.upgradePlan, "halt_height", n.haltHeight)
 	srv := n.startHTTPServer()
 	ticker := time.NewTicker(n.blockTime)
 	defer ticker.Stop()
@@ -149,6 +150,7 @@ func (n *MockNode) Run(ctx context.Context) error {
 		}
 	}
 	if n.haltHeight > 0 {
+		// this log line matches what BaseApp does when it reaches the halt height
 		n.logger.Error(fmt.Sprintf("halt per configuration height %d", n.height))
 	} else if n.upgradePlan != nil {
 		n.logger.Info("Mock node reached upgrade height, writing upgrade-info.json", "upgrade_plan", n.upgradePlan)

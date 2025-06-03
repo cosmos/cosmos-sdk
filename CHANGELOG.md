@@ -38,7 +38,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-## [v0.53.1](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.1) - 2025-05-30
+## [v0.53.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.2) - 2025-06-02
 
 This patch update also includes minor dependency bumps.
 

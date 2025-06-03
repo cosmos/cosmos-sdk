@@ -19,10 +19,17 @@ import (
 // GoModUpdate defines a mapping of module path to the version it should be updated to.
 type GoModUpdate map[string]string
 
+type GoModReplacement struct {
+	Module      string
+	Replacement string
+	Version     string
+}
+
 type GoModRemoval []string
 
 type MigrateArgs struct {
-	GoModRemoval GoModRemoval
+	GoModRemoval      GoModRemoval
+	GoModReplacements []GoModReplacement
 	// GoModUpdates defines the list of modules to update.
 	GoModUpdates GoModUpdate
 	// ArgUpdates defines the necessary changes where a function has reduced its arguments.
@@ -55,7 +62,7 @@ func Migrate(directory string, args MigrateArgs) error {
 	if err != nil {
 		return err
 	}
-	if err := updateGoModules(goModuleFiles, args.GoModUpdates, args.GoModRemoval); err != nil {
+	if err := updateGoModules(goModuleFiles, args.GoModUpdates, args.GoModRemoval, args.GoModReplacements); err != nil {
 		return fmt.Errorf("error updating go.mod files: %w", err)
 	}
 	if err := updateFiles(goFiles, args); err != nil {
@@ -64,7 +71,7 @@ func Migrate(directory string, args MigrateArgs) error {
 	return nil
 }
 
-func updateGoModules(goModFiles []string, updates GoModUpdate, removals GoModRemoval) error {
+func updateGoModules(goModFiles []string, updates GoModUpdate, removals GoModRemoval, replacements []GoModReplacement) error {
 	eg := errgroup.Group{}
 	for _, filePath := range goModFiles {
 		eg.Go(func() error {
@@ -97,6 +104,12 @@ func updateGoModules(goModFiles []string, updates GoModUpdate, removals GoModRem
 					}
 					modified = true
 				}
+			}
+			for _, replacement := range replacements {
+				if err := modFile.AddReplace(replacement.Module, "", replacement.Replacement, replacement.Version); err != nil {
+					return fmt.Errorf("error adding replace for %s: %w", replacement.Module, err)
+				}
+				modified = true
 			}
 			// if we modified the go mod: format, write, tidy.
 			if modified {

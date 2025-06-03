@@ -1,17 +1,22 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/tools/cosmovisor"
 )
 
 type MockChainSetup struct {
 	Genesis  string
 	Upgrades map[string]string
+	Config   *cosmovisor.Config
 }
 
 func mockNodeWrapper(args string) string {
@@ -23,7 +28,7 @@ exec mock_node %s "$@"
 `, args)
 }
 
-func (m MockChainSetup) Setup(t *testing.T) {
+func (m MockChainSetup) Setup(t *testing.T) (string, string) {
 	dir, err := os.MkdirTemp("", "mockchain")
 	require.NoError(t, err)
 	t.Cleanup(func() {
@@ -48,23 +53,34 @@ func (m MockChainSetup) Setup(t *testing.T) {
 				[]byte(mockNodeWrapper(args)), 0o755),
 		)
 	}
+
+	// update config and save it
+	if m.Config == nil {
+		m.Config = &cosmovisor.Config{}
+	}
+	m.Config.Name = "mockd"
+	m.Config.Home = dir
+	m.Config.DataBackupPath = dir
+	cfgFile, err := m.Config.Export()
+	require.NoError(t, err)
+	t.Logf("Cosmovisor config: %s", cfgFile)
+
+	return dir, cfgFile
 }
 
 func TestMockChain(t *testing.T) {
-	MockChainSetup{
+	mockchainDir, cfgFile := MockChainSetup{
 		Genesis: "--block-time 1s --upgrade-plan '{\"name\":\"gov1\",\"height\":14}'",
 		Upgrades: map[string]string{
 			"gov1":    "--halt-height 20 --block-time 1s --upgrade-plan '{\"name\":\"gov2\",\"height\":30}'",
 			"manual1": "--block-time 1s --upgrade-plan '{\"name\":\"gov1\",\"height\":15}'",
 		},
+		Config: &cosmovisor.Config{
+			PollInterval: time.Second,
+		},
 	}.Setup(t)
-	//dir, err := os.Getwd()
-	//require.NoError(t, err)
-	//if !strings.HasSuffix(dir, "tools/cosmovisor/cmd/cosmovisor") {
-	//	t.Fatalf("expected to be in tools/cosmovisor/cmd/cosmovisor, got %s", dir)
-	//}
-	//// switch to the root of the cosmovisor project
-	//t.Chdir(filepath.Join(dir, "..", ".."))
-	//// clean up previous test runs
-	//require.NoError(t, exec.Command("make", "clean").Run())
+
+	rootCmd := NewRootCmd()
+	rootCmd.SetArgs([]string{"run", "--home", mockchainDir, "--cosmovisor-config", cfgFile})
+	require.NoError(t, rootCmd.ExecuteContext(context.Background()))
 }

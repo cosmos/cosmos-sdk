@@ -1,3 +1,8 @@
+Ideally, scenarios should run in process with args passed manually to cobra so that we can:
+- code coverage
+- use the debugger
+
+## Scenarios
 - basic: start node, get upgrade-info.json, upgrade
 - manual upgrade added while running:
   - start node

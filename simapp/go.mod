@@ -247,6 +247,6 @@ replace (
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
 
-replace github.com/cometbft/cometbft => github.com/zrbecker/cometbft v0.0.0-20250531072547-03a237b0b780
+replace github.com/cometbft/cometbft => ../../cometbft
 
-replace github.com/cometbft/cometbft/api => github.com/zrbecker/cometbft/api v0.0.0-20250531072547-03a237b0b780
+replace github.com/cometbft/cometbft/api => ../../cometbft/api

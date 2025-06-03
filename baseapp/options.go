@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"time"
 
 	dbm "github.com/cosmos/cosmos-db"
 
@@ -331,6 +332,15 @@ func (app *BaseApp) SetMempool(mempool mempool.Mempool) {
 		panic("SetMempool() on sealed BaseApp")
 	}
 	app.mempool = mempool
+}
+
+// SetNextBlockDelay sets the next block delay for the baseapp.
+func (app *BaseApp) SetNextBlockDelay(delay time.Duration) {
+	if app.sealed {
+		panic("SetNextBlockDelay() on sealed BaseApp")
+	}
+
+	app.nextBlockDelay = delay
 }
 
 // SetProcessProposal sets the process proposal function for the BaseApp.

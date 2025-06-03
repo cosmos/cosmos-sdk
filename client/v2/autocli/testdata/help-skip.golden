@@ -1,4 +1,4 @@
-Querying commands for the testpb.Query service
+Querying commands for the testpbpulsar.Query service
 
 Usage:
   test skipecho [flags]

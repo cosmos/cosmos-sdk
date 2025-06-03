@@ -12,7 +12,7 @@ Mention whether you follow Semantic Versioning.
 Usage:
 
 Change log entries are to be added to the Unreleased section from newest to oldest.
-Each entry must include the GitHub issue reference in the following format:
+Each entry must include the Github issue reference in the following format:
 
 * [#<issue-number>] Changelog message.
 
@@ -21,10 +21,6 @@ Each entry must include the GitHub issue reference in the following format:
 # Changelog
 
 ## [Unreleased]
-
-## 1.2.1
-
-* Minor dependency bumps
 
 ## 1.2.0 
 

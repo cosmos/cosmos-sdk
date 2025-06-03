@@ -25,11 +25,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-
-## v1.2.0 (May 29, 2025)
-
-* This version of `store` contains minor dependency bumps and an updated use of `cosmos-db`.
-
 ### Bug Fixes
 
 * [#20425](https://github.com/cosmos/cosmos-sdk/pull/20425) Fix nil pointer panic when querying historical state where a new store does not exist.

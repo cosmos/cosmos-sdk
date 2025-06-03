@@ -727,9 +727,7 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Finaliz
 	}
 
 	if app.cms.TracingEnabled() {
-		app.cms.SetTracingContext(storetypes.TraceContext(
-			map[string]any{"blockHeight": req.Height},
-		))
+		app.cms.SetTracingContext(map[string]any{"blockHeight": req.Height})
 	}
 
 	header := cmtproto.Header{
@@ -868,6 +866,7 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Finaliz
 		TxResults:             txResults,
 		ValidatorUpdates:      endBlock.ValidatorUpdates,
 		ConsensusParamUpdates: &cp,
+		// NextBlockDelay: SOME VALUE
 	}, nil
 }
 

@@ -2,6 +2,7 @@ package network
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -47,6 +48,13 @@ func startInProcess(cfg Config, val *Validator) error {
 	val.app = app
 
 	appGenesisProvider := func() (node.ChecksummedGenesisDoc, error) {
+		// 1. Read the raw bytes of the file:
+		data, err := os.ReadFile(cmtCfg.GenesisFile())
+		if err != nil {
+			return node.ChecksummedGenesisDoc{Sha256Checksum: []byte{}}, err
+		}
+		sum := sha256.Sum256(data)
+
 		appGenesis, err := genutiltypes.AppGenesisFromFile(cmtCfg.GenesisFile())
 		if err != nil {
 			return node.ChecksummedGenesisDoc{
@@ -59,7 +67,7 @@ func startInProcess(cfg Config, val *Validator) error {
 				Sha256Checksum: []byte{},
 			}, err
 		}
-		return node.ChecksummedGenesisDoc{GenesisDoc: gen, Sha256Checksum: make([]byte, 0)}, nil
+		return node.ChecksummedGenesisDoc{GenesisDoc: gen, Sha256Checksum: sum[:]}, nil
 	}
 
 	cmtApp := server.NewCometABCIWrapper(app)

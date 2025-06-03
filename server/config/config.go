@@ -2,8 +2,9 @@ package config
 
 import (
 	"fmt"
-	"github.com/spf13/viper"
 	"math"
+
+	"github.com/spf13/viper"
 
 	pruningtypes "cosmossdk.io/store/pruning/types"
 

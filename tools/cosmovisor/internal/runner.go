@@ -108,11 +108,13 @@ func (r Runner) RunOnce(ctx context.Context, args []string, haltHeight uint64) e
 			if !ok {
 				return nil
 			}
+			r.logger.Info("Received upgrade-info.json")
 			return ErrUpgradeNeeded{}
 		case _, ok := <-manualUpgradesWatcher.Updated():
 			if !ok {
 				return nil
 			}
+			r.logger.Info("Received updates to upgrade-info.json.batch")
 			if haltHeight == 0 {
 				// TODO shutdown, no halt height set
 				return ErrUpgradeNeeded{}
@@ -121,14 +123,17 @@ func (r Runner) RunOnce(ctx context.Context, args []string, haltHeight uint64) e
 			}
 		case err := <-processRunner.Done():
 			// TODO handle process exit
+			r.logger.Warn("Process exited unexpectedly", "error", err)
 			return err
 		// TODO:
 		case actualHeight := <-heightWatcher.Updated():
+			r.logger.Warn("Got height update from watcher", "height", actualHeight)
 			if !correctHeightConfirmed {
 				// TODO read manual upgrade batch and check if we'd still be at the correct halt height
 				correctHeightConfirmed = true
 			}
-			if actualHeight >= haltHeight {
+			// signal an upgrade if we have a halt height and we are at or past it
+			if haltHeight > 0 && actualHeight >= haltHeight {
 				return ErrUpgradeNeeded{}
 			}
 			// TODO error channels

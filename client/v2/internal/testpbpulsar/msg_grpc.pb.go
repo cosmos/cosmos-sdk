@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             (unknown)
-// source: testpb/msg.proto
+// source: testpbpulsar/msg.proto
 
-package testpb
+package testpbpulsar
 
 import (
 	context "context"
@@ -19,8 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Msg_Send_FullMethodName     = "/testpb.Msg/Send"
-	Msg_Clawback_FullMethodName = "/testpb.Msg/Clawback"
+	Msg_Send_FullMethodName     = "/testpbpulsar.Msg/Send"
+	Msg_Clawback_FullMethodName = "/testpbpulsar.Msg/Clawback"
 )
 
 // MsgClient is the client API for Msg service.
@@ -131,7 +131,7 @@ func _Msg_Clawback_Handler(srv interface{}, ctx context.Context, dec func(interf
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Msg_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "testpb.Msg",
+	ServiceName: "testpbpulsar.Msg",
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -144,5 +144,5 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "testpb/msg.proto",
+	Metadata: "testpbpulsar/msg.proto",
 }

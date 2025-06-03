@@ -1,0 +1,53 @@
+# Dependabot configuration for Tajeor Blockchain Explorer
+version: 2
+
+updates:
+  # Node.js dependencies
+  - package-ecosystem: "npm"
+    directory: "/explorer"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Etc/UTC"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "tajeor-dev-team"
+    assignees:
+      - "blockchain-maintainer"
+    commit-message:
+      prefix: "npm"
+      prefix-development: "npm-dev"
+      include: "scope"
+    versioning-strategy: increase
+    rebase-strategy: "auto"
+    
+  # Docker dependencies
+  - package-ecosystem: "docker"
+    directory: "/explorer"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "09:00"
+      timezone: "Etc/UTC"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "tajeor-dev-team"
+    commit-message:
+      prefix: "docker"
+      include: "scope"
+    
+  # GitHub Actions dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "09:00"
+      timezone: "Etc/UTC"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "tajeor-dev-team"
+    commit-message:
+      prefix: "ci"
+      include: "scope" 

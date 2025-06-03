@@ -1,0 +1,207 @@
+name: 🐛 Bug Report
+description: Report a bug in the Tajeor Blockchain Explorer
+title: '[BUG] '
+labels: ['bug', 'triage']
+assignees: ['blockchain-maintainer']
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # 🐛 Bug Report - Tajeor Blockchain Explorer
+        
+        Thank you for reporting a bug! Please provide as much detail as possible to help us resolve the issue.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      description: Please confirm the following before submitting
+      options:
+        - label: I have searched for existing issues
+          required: true
+        - label: I have checked the documentation
+          required: true
+        - label: I am using the latest version
+          required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 🔍 Bug Description
+      description: A clear and concise description of what the bug is
+      placeholder: Describe the bug...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 🔄 Steps to Reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Scroll down to '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: ✅ Expected Behavior
+      description: A clear description of what you expected to happen
+      placeholder: What should happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: ❌ Actual Behavior
+      description: A clear description of what actually happened
+      placeholder: What actually happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: 📸 Screenshots/Logs
+      description: If applicable, add screenshots or error logs
+      placeholder: Paste screenshots or logs here...
+
+  - type: dropdown
+    id: browser
+    attributes:
+      label: 🌐 Browser
+      description: Which browser are you using?
+      options:
+        - Chrome
+        - Firefox
+        - Safari
+        - Edge
+        - Opera
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: browser-version
+    attributes:
+      label: Browser Version
+      placeholder: e.g., Chrome 120.0.0.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: operating-system
+    attributes:
+      label: 💻 Operating System
+      description: Which OS are you using?
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - iOS
+        - Android
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: os-version
+    attributes:
+      label: OS Version
+      placeholder: e.g., Windows 11, macOS 14.0, Ubuntu 22.04
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: 🧩 Component
+      description: Which component is affected?
+      options:
+        - Dashboard
+        - Validators Page
+        - Accounts Page
+        - Blocks Page
+        - Transactions Page
+        - API Endpoints
+        - Search Functionality
+        - Navigation
+        - Performance
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: 🚨 Severity
+      description: How severe is this bug?
+      options:
+        - Low - Minor inconvenience
+        - Medium - Significant impact on functionality
+        - High - Major feature broken
+        - Critical - Application unusable
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: 🌍 Environment Details
+      description: Additional environment information
+      placeholder: |
+        - Node.js version:
+        - Blockchain node version:
+        - Network connection:
+        - Docker version (if applicable):
+        - Any custom configuration:
+
+  - type: textarea
+    id: console-errors
+    attributes:
+      label: 🖥️ Console Errors
+      description: Any errors from browser console or application logs
+      placeholder: Paste console errors here...
+
+  - type: textarea
+    id: network-requests
+    attributes:
+      label: 🌐 Network Requests
+      description: Any failed network requests or API calls
+      placeholder: |
+        - API endpoint:
+        - Response code:
+        - Error message:
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: 📋 Additional Context
+      description: Any other context about the problem
+      placeholder: Add any additional context here...
+
+  - type: checkboxes
+    id: impact
+    attributes:
+      label: 📊 Impact Assessment
+      description: How does this bug affect you?
+      options:
+        - label: Blocks critical functionality
+        - label: Affects user experience
+        - label: Performance degradation
+        - label: Security concern
+        - label: Data accuracy issue
+        - label: UI/UX problem
+
+  - type: textarea
+    id: workaround
+    attributes:
+      label: 🔧 Temporary Workaround
+      description: If you found a temporary workaround, please describe it
+      placeholder: Describe any workaround you found... 

@@ -1,0 +1,112 @@
+# =================================
+# TAJEOR BLOCKCHAIN EXPLORER CONFIG
+# =================================
+
+# Application Settings
+NODE_ENV=production
+PORT=3000
+APP_NAME=Tajeor Blockchain Explorer
+APP_VERSION=1.0.0
+
+# Domain and CORS
+DOMAIN=explorer.tajeor.network
+CORS_ORIGIN=https://explorer.tajeor.network,https://www.tajeor.network
+ALLOWED_HOSTS=explorer.tajeor.network,localhost
+
+# Security Settings
+JWT_SECRET=your_jwt_secret_key_here_make_it_long_and_random
+SESSION_SECRET=your_session_secret_here_also_make_it_random
+API_RATE_LIMIT=100
+API_RATE_WINDOW=15
+BCRYPT_ROUNDS=12
+
+# Database Configuration
+DB_HOST=postgres
+DB_PORT=5432
+DB_NAME=tajeor_explorer
+DB_USER=tajeor
+DB_PASSWORD=your_secure_database_password_here
+DB_SSL=true
+DB_POOL_MIN=2
+DB_POOL_MAX=20
+
+# Redis Configuration
+REDIS_HOST=redis
+REDIS_PORT=6379
+REDIS_PASSWORD=your_secure_redis_password_here
+REDIS_DB=0
+REDIS_TTL=3600
+
+# Blockchain Data Path
+BLOCKCHAIN_DATA_PATH=/d/Private Blockchain/cosmos-sdk/tajeor/.tajeor
+TAJEOR_BINARY_PATH=/d/Private Blockchain/cosmos-sdk/tajeor/build/tajeord.exe
+
+# SSL Configuration
+SSL_CERT_PATH=/etc/nginx/ssl/fullchain.pem
+SSL_KEY_PATH=/etc/nginx/ssl/privkey.pem
+SSL_DHPARAM_PATH=/etc/nginx/ssl/dhparam.pem
+
+# Monitoring & Logging
+LOG_LEVEL=info
+LOG_FORMAT=combined
+LOG_MAX_SIZE=10MB
+LOG_MAX_FILES=5
+ENABLE_METRICS=true
+METRICS_PORT=9464
+
+# Grafana Configuration
+GRAFANA_PASSWORD=your_secure_grafana_password
+GRAFANA_ADMIN_USER=admin
+
+# Elasticsearch Configuration
+ELASTIC_HOST=elasticsearch
+ELASTIC_PORT=9200
+ELASTIC_INDEX=tajeor-logs
+
+# Email Configuration (for alerts)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=alerts@tajeor.network
+SMTP_PASSWORD=your_email_password
+SMTP_FROM=Tajeor Network <alerts@tajeor.network>
+
+# Backup Configuration
+BACKUP_SCHEDULE=0 2 * * *
+BACKUP_RETENTION_DAYS=30
+BACKUP_S3_BUCKET=tajeor-backups
+AWS_ACCESS_KEY_ID=your_aws_access_key
+AWS_SECRET_ACCESS_KEY=your_aws_secret_key
+AWS_REGION=us-east-1
+
+# CDN Configuration
+CDN_URL=https://cdn.tajeor.network
+STATIC_ASSETS_URL=https://static.tajeor.network
+
+# API Documentation
+SWAGGER_ENABLED=true
+SWAGGER_PATH=/api/docs
+API_DOCS_URL=https://docs.tajeor.network
+
+# Performance Settings
+NODE_OPTIONS=--max-old-space-size=512
+UV_THREADPOOL_SIZE=4
+CACHE_TTL=300
+REQUEST_TIMEOUT=30000
+
+# Feature Flags
+ENABLE_REAL_TIME_UPDATES=true
+ENABLE_TRANSACTION_HISTORY=true
+ENABLE_ADVANCED_ANALYTICS=true
+ENABLE_API_AUTHENTICATION=false
+ENABLE_RATE_LIMITING=true
+
+# External Services
+COINGECKO_API_KEY=your_coingecko_api_key
+COINMARKETCAP_API_KEY=your_coinmarketcap_api_key
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+DISCORD_WEBHOOK_URL=your_discord_webhook_url
+
+# Development Settings (only for development)
+DEBUG=false
+ENABLE_CORS=true
+TRUST_PROXY=true 

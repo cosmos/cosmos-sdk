@@ -1,0 +1,229 @@
+name: ✨ Feature Request
+description: Suggest a new feature for the Tajeor Blockchain Explorer
+title: '[FEATURE] '
+labels: ['enhancement', 'feature-request']
+assignees: ['blockchain-maintainer']
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # ✨ Feature Request - Tajeor Blockchain Explorer
+        
+        Thank you for suggesting a new feature! Please provide detailed information to help us understand your request.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      description: Please confirm the following before submitting
+      options:
+        - label: I have searched for existing feature requests
+          required: true
+        - label: I have checked the roadmap/project board
+          required: true
+        - label: This feature aligns with the project goals
+          required: true
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: 🎯 Feature Summary
+      description: A brief summary of the feature you'd like to see
+      placeholder: Summarize the feature in one or two sentences...
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 🔍 Problem Statement
+      description: What problem would this feature solve?
+      placeholder: |
+        Is your feature request related to a problem? Please describe.
+        A clear and concise description of what the problem is.
+        Ex. I'm always frustrated when [...]
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: 💡 Proposed Solution
+      description: Describe the solution you'd like to see
+      placeholder: |
+        A clear and concise description of what you want to happen.
+        Include any specific implementation details if you have them.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 🔄 Alternative Solutions
+      description: Have you considered any alternative solutions?
+      placeholder: |
+        A clear and concise description of any alternative solutions 
+        or features you've considered.
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: 🧩 Component/Area
+      description: Which area of the explorer would this feature affect?
+      options:
+        - Dashboard
+        - Validators Section
+        - Accounts Section
+        - Blocks Section
+        - Transactions Section
+        - Search & Filtering
+        - API Endpoints
+        - Navigation & UI
+        - Performance & Monitoring
+        - Security Features
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: ⭐ Priority Level
+      description: How important is this feature to you?
+      options:
+        - Low - Nice to have
+        - Medium - Would improve workflow
+        - High - Significant value add
+        - Critical - Essential for adoption
+    validations:
+      required: true
+
+  - type: dropdown
+    id: user-type
+    attributes:
+      label: 👤 User Type
+      description: What type of user would benefit from this feature?
+      options:
+        - End Users (General Public)
+        - Developers/Integrators
+        - Validators/Node Operators
+        - Blockchain Analysts
+        - System Administrators
+        - All Users
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-cases
+    attributes:
+      label: 📋 Use Cases
+      description: Describe specific use cases for this feature
+      placeholder: |
+        1. As a [user type], I want [goal] so that [benefit]
+        2. When [scenario], I expect [behavior]
+        3. This feature would help with [specific task]
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: ✅ Acceptance Criteria
+      description: What would make this feature complete?
+      placeholder: |
+        - [ ] Criteria 1
+        - [ ] Criteria 2
+        - [ ] Criteria 3
+
+  - type: textarea
+    id: mockups
+    attributes:
+      label: 🎨 Mockups/Wireframes
+      description: Any visual representations of the feature
+      placeholder: |
+        If you have mockups, wireframes, or examples from other applications,
+        please include them here or provide links.
+
+  - type: checkboxes
+    id: complexity
+    attributes:
+      label: 🔧 Implementation Complexity
+      description: What aspects might be involved? (Check all that apply)
+      options:
+        - label: Frontend/UI changes
+        - label: Backend/API changes
+        - label: Database schema changes
+        - label: Blockchain integration
+        - label: Performance optimization
+        - label: Security considerations
+        - label: Documentation updates
+        - label: Testing requirements
+
+  - type: textarea
+    id: technical-details
+    attributes:
+      label: ⚙️ Technical Details
+      description: Any technical requirements or constraints
+      placeholder: |
+        - API endpoints needed:
+        - Data sources required:
+        - Performance requirements:
+        - Security considerations:
+        - Compatibility requirements:
+
+  - type: dropdown
+    id: effort
+    attributes:
+      label: 📊 Estimated Effort
+      description: How complex do you think this feature is?
+      options:
+        - Small - Few hours of work
+        - Medium - Few days of work
+        - Large - Few weeks of work
+        - Extra Large - Months of work
+        - Unknown
+
+  - type: textarea
+    id: business-value
+    attributes:
+      label: 💼 Business Value
+      description: What value would this feature provide?
+      placeholder: |
+        - Improves user experience by...
+        - Increases adoption by...
+        - Reduces support burden by...
+        - Enables new use cases like...
+
+  - type: textarea
+    id: related-features
+    attributes:
+      label: 🔗 Related Features
+      description: Are there related features or dependencies?
+      placeholder: |
+        - Depends on: #issue_number
+        - Related to: #issue_number
+        - Blocks: #issue_number
+        - Similar to features in: [other applications]
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: 🤝 Contribution
+      description: Would you be interested in contributing?
+      options:
+        - label: I would like to work on this feature
+        - label: I can provide designs/mockups
+        - label: I can help with testing
+        - label: I can help with documentation
+        - label: I can provide feedback during development
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: 📋 Additional Context
+      description: Any other context or information
+      placeholder: |
+        Add any other context, screenshots, links, or examples 
+        that would help explain this feature request. 

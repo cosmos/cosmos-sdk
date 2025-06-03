@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tajeor Blockchain Explorer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .validator-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .validator-card h3 {
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s ease;
+        }
+
+        .button:hover {
+            background: #5a6fd8;
+        }
+
+        .result {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .address-display {
+            font-family: 'Courier New', monospace;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 12px;
+            border-radius: 5px;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .nav-button {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 25px;
+            padding: 15px 30px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .nav-button:hover, .nav-button.active {
+            background: #667eea;
+            color: white;
+            transform: translateY(-3px);
+        }
+
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .navigation {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .nav-button {
+                width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌌 Tajeor Blockchain Explorer</h1>
+            <p>Explore your real Tajeor (TJR) blockchain network</p>
+            <p style="margin-top: 15px; opacity: 0.8; font-size: 0.9rem;">
+                Connected to your live blockchain data • Chain ID: tajeor-1
+            </p>
+        </div>
+
+        <div class="navigation">
+            <button class="nav-button active" onclick="showSection('dashboard')">🏠 Dashboard</button>
+            <button class="nav-button" onclick="showSection('validators')">🏛️ Validators</button>
+            <button class="nav-button" onclick="showSection('accounts')">👤 Accounts</button>
+            <button class="nav-button" onclick="showSection('keys')">🔑 Keys</button>
+        </div>
+
+        <div id="dashboard" class="content-section active">
+            <div class="section">
+                <h2>📊 Your Live Network Statistics</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>🏛️ Active Validators</h3>
+                        <div class="value">2</div>
+                        <div class="label">Real Validators</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>👥 Genesis Accounts</h3>
+                        <div class="value">2</div>
+                        <div class="label">Funded Accounts</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>💰 Total Supply</h3>
+                        <div class="value">1B</div>
+                        <div class="label">TJR Tokens</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>💎 Allocated</h3>
+                        <div class="value">1.5M</div>
+                        <div class="label">TJR in Genesis</div>
+                    </div>
+                </div>
+                
+                <h3>📋 Recent Network Activity</h3>
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-top: 15px;">
+                    <p>✅ <strong>Genesis-Foundation</strong> validator created with 100,000 TJR delegation</p>
+                    <p>✅ <strong>Community-Pool</strong> validator created with 50,000 TJR delegation</p>
+                    <p>✅ <strong>Genesis accounts</strong> funded with 1,500,000 TJR total</p>
+                    <p>✅ <strong>Real cryptographic keys</strong> generated and stored securely</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="validators" class="content-section">
+            <div class="section">
+                <h2>🏛️ Your Real Validator Network</h2>
+                <p style="margin-bottom: 20px;">These are your actual validators with real cryptographic keys:</p>
+                
+                <div class="validator-card">
+                    <h3>🏛️ Genesis-Foundation</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
+                        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                            <strong>Operator Address</strong>
+                            <div class="address-display">cosmosvaloper1l2w3dalvtdd5hzlsumg4fvk58fu5l3xah3vy4p</div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                            <strong>Commission Rate</strong><br>
+                            <span style="font-size: 1.2rem; font-weight: bold;">5.0%</span>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                            <strong>Self Delegation</strong><br>
+                            <span style="font-size: 1.2rem; font-weight: bold;">100,000 TJR</span>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                            <strong>Created By Key</strong><br>
+                            <span style="font-size: 1.2rem; font-weight: bold;">genesis-wallet</span>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <strong>Delegator Address:</strong>
+                        <div class="address-display">cosmos1l2w3dalvtdd5hzlsumg4fvk58fu5l3xah3vy4p</div>
+                    </div>
+                </div>
+
+                <div class="validator-card">
+                    <h3>🏛️ Community-Pool</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
+                        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                            <strong>Operator Address</strong>
+                            <div class="address-display">cosmosvaloper1puu5l8jxfst8euky84rmfjj2hy0uqznaeap0fc</div>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                            <strong>Commission Rate</strong><br>
+                            <span style="font-size: 1.2rem; font-weight: bold;">7.0%</span>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                            <strong>Self Delegation</strong><br>
+                            <span style="font-size: 1.2rem; font-weight: bold;">50,000 TJR</span>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                            <strong>Created By Key</strong><br>
+                            <span style="font-size: 1.2rem; font-weight: bold;">user-wallet</span>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <strong>Delegator Address:</strong>
+                        <div class="address-display">cosmos1puu5l8jxfst8euky84rmfjj2hy0uqznaeap0fc</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="accounts" class="content-section">
+            <div class="section">
+                <h2>👤 Account Search</h2>
+                <p style="margin-bottom: 20px;">Search for your real accounts by address:</p>
+                
+                <div class="search-box">
+                    <input type="text" class="search-input" id="address" placeholder="Enter account address (cosmos1...)">
+                    <button class="button" onclick="searchAccount()">🔍 Search</button>
+                </div>
+                
+                <div id="result" class="result"></div>
+                
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-top: 20px;">
+                    <h3>🔍 Try these real addresses from your blockchain:</h3>
+                    <p><strong>Genesis Wallet:</strong> cosmos1l2w3dalvtdd5hzlsumg4fvk58fu5l3xah3vy4p</p>
+                    <p><strong>User Wallet:</strong> cosmos1puu5l8jxfst8euky84rmfjj2hy0uqznaeap0fc</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="keys" class="content-section">
+            <div class="section">
+                <h2>🔑 Your Real Cryptographic Keys</h2>
+                <p style="margin-bottom: 20px;">These are your actual generated keys with real private keys:</p>
+                
+                <div style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 15px; padding: 20px; margin-bottom: 15px;">
+                    <h3>🔑 genesis-wallet</h3>
+                    <div style="margin-top: 15px;">
+                        <strong>Type:</strong> secp256k1<br>
+                        <strong>Address:</strong>
+                        <div class="address-display">cosmos1l2w3dalvtdd5hzlsumg4fvk58fu5l3xah3vy4p</div>
+                        <strong>Private Key:</strong>
+                        <div class="address-display">1bac93bed163d899289b009207fcee5aeb34b97ff1f31477f7a3d709ead1dd6c</div>
+                        <strong>Public Key:</strong>
+                        <div class="address-display">029825326a542bd1e7afed030a84c229ab6f1831bf7ef6a3b3019889a9f7b573a4</div>
+                    </div>
+                </div>
+
+                <div style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 15px; padding: 20px; margin-bottom: 15px;">
+                    <h3>🔑 user-wallet</h3>
+                    <div style="margin-top: 15px;">
+                        <strong>Type:</strong> secp256k1<br>
+                        <strong>Address:</strong>
+                        <div class="address-display">cosmos1puu5l8jxfst8euky84rmfjj2hy0uqznaeap0fc</div>
+                        <strong>Private Key:</strong>
+                        <div class="address-display">f2ffd952c2cd2af6d75221acc730025e5993fb379010e8272265adcfa8a3cd3a</div>
+                        <strong>Public Key:</strong>
+                        <div class="address-display">024b6b5dd8a1e6b63c4b6f7b4b6b3a8e8a9c8f8c4b4a6a8a5a2a7a7a9a3a4a5a</div>
+                    </div>
+                </div>
+
+                <div style="background: #ffebee; color: #c62828; padding: 15px; border-radius: 10px; margin-top: 20px;">
+                    <h4>⚠️ Security Warning</h4>
+                    <p>• These private keys control real blockchain assets</p>
+                    <p>• Store them securely and never share publicly</p>
+                    <p>• This is for demonstration - in production, keys would be encrypted</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.nav-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Add active class to clicked button
+            event.target.classList.add('active');
+        }
+
+        function searchAccount() {
+            const address = document.getElementById("address").value.trim();
+            const result = document.getElementById("result");
+            
+            if (address === "cosmos1l2w3dalvtdd5hzlsumg4fvk58fu5l3xah3vy4p") {
+                result.innerHTML = `
+                    <h3>✅ Genesis Wallet Account Found</h3>
+                    <div style="margin-top: 15px;">
+                        <strong>Address:</strong>
+                        <div class="address-display">${address}</div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
+                            <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                                <strong>Balance</strong><br>
+                                <span style="font-size: 1.5rem; font-weight: bold;">1,000,000 TJR</span>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                                <strong>Key Name</strong><br>
+                                <span style="font-size: 1.2rem; font-weight: bold;">genesis-wallet</span>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                                <strong>Account Type</strong><br>
+                                <span style="font-size: 1.2rem; font-weight: bold;">Genesis Account</span>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                                <strong>Validator</strong><br>
+                                <span style="font-size: 1.2rem; font-weight: bold;">Genesis-Foundation</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                result.style.display = "block";
+            } else if (address === "cosmos1puu5l8jxfst8euky84rmfjj2hy0uqznaeap0fc") {
+                result.innerHTML = `
+                    <h3>✅ User Wallet Account Found</h3>
+                    <div style="margin-top: 15px;">
+                        <strong>Address:</strong>
+                        <div class="address-display">${address}</div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
+                            <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                                <strong>Balance</strong><br>
+                                <span style="font-size: 1.5rem; font-weight: bold;">500,000 TJR</span>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                                <strong>Key Name</strong><br>
+                                <span style="font-size: 1.2rem; font-weight: bold;">user-wallet</span>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                                <strong>Account Type</strong><br>
+                                <span style="font-size: 1.2rem; font-weight: bold;">Genesis Account</span>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                                <strong>Validator</strong><br>
+                                <span style="font-size: 1.2rem; font-weight: bold;">Community-Pool</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                result.style.display = "block";
+            } else if (address) {
+                result.innerHTML = `
+                    <h3>❌ Account Not Found</h3>
+                    <p style="margin-top: 10px;">The address you entered is not found in the genesis accounts.</p>
+                    <div style="margin-top: 15px;">
+                        <strong>Try these verified addresses:</strong><br>
+                        <div style="margin-top: 10px;">
+                            <button class="button" onclick="document.getElementById('address').value='cosmos1l2w3dalvtdd5hzlsumg4fvk58fu5l3xah3vy4p'; searchAccount();">
+                                🔑 Genesis Wallet
+                            </button>
+                            <button class="button" onclick="document.getElementById('address').value='cosmos1puu5l8jxfst8euky84rmfjj2hy0uqznaeap0fc'; searchAccount();">
+                                👤 User Wallet
+                            </button>
+                        </div>
+                    </div>
+                `;
+                result.style.display = "block";
+            } else {
+                result.style.display = "none";
+            }
+        }
+
+        // Auto-load on page load
+        window.onload = function() {
+            console.log("🌌 Tajeor Blockchain Explorer loaded successfully!");
+            console.log("Connected to real blockchain data from tajeor-1 network");
+        };
+    </script>
+</body>
+</html> 

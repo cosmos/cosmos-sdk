@@ -1,0 +1,71 @@
+name: 🐳 Docker Build Test
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'explorer/**'
+      - '.github/workflows/docker-build.yml'
+
+jobs:
+  docker-test:
+    name: 🧪 Test Docker Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐳 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🔨 Build Docker image (test only)
+        uses: docker/build-push-action@v5
+        with:
+          context: ./explorer
+          platforms: linux/amd64
+          push: false
+          tags: tajeor-explorer:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: 🧪 Test image functionality
+        run: |
+          docker run --name test-container -d \
+            -e NODE_ENV=test \
+            -e PORT=3000 \
+            tajeor-explorer:test
+          
+          # Wait for container to start
+          sleep 10
+          
+          # Test if the application starts
+          docker logs test-container
+          
+          # Clean up
+          docker stop test-container
+          docker rm test-container
+
+  security-scan:
+    name: 🔒 Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐳 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🔨 Build Docker image for scanning
+        uses: docker/build-push-action@v5
+        with:
+          context: ./explorer
+          load: true
+          tags: tajeor-explorer:scan
+
+      - name: 🔍 Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'tajeor-explorer:scan'
+          format: 'table'
+          exit-code: '1'
+          severity: 'CRITICAL,HIGH' 

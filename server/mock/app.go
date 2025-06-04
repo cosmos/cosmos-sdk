@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
 	db "github.com/cosmos/cosmos-db"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"

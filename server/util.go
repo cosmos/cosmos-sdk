@@ -14,8 +14,8 @@ import (
 	"syscall"
 	"time"
 
-	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
-	cmtcfg "github.com/cometbft/cometbft/config"
+	cmtcmd "github.com/cometbft/cometbft/v2/cmd/cometbft/commands"
+	cmtcfg "github.com/cometbft/cometbft/v2/config"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cast"

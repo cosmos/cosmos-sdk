@@ -2,8 +2,8 @@ package mock
 
 import (
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
-	"github.com/cometbft/cometbft/crypto"
-	cmttypes "github.com/cometbft/cometbft/types"
+	"github.com/cometbft/cometbft/v2/crypto"
+	cmttypes "github.com/cometbft/cometbft/v2/types"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"

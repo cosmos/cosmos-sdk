@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
-	cmttime "github.com/cometbft/cometbft/types/time"
+	cmttime "github.com/cometbft/cometbft/v2/types/time"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 

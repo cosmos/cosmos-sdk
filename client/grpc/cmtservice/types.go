@@ -1,7 +1,7 @@
 package cmtservice
 
 import (
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
 )
 
 // ToABCIRequestQuery converts a gRPC ABCIQueryRequest type to an ABCI

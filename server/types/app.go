@@ -5,7 +5,7 @@ import (
 	"io"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
-	cmttypes "github.com/cometbft/cometbft/types"
+	cmttypes "github.com/cometbft/cometbft/v2/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/grpc"
 	"github.com/spf13/cobra"

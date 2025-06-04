@@ -8,8 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
-	cfg "github.com/cometbft/cometbft/config"
-	cmttypes "github.com/cometbft/cometbft/types"
+	cfg "github.com/cometbft/cometbft/v2/config"
+	cmttypes "github.com/cometbft/cometbft/v2/types"
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"
 

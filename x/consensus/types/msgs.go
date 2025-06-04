@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
-	cmttypes "github.com/cometbft/cometbft/types"
+	cmttypes "github.com/cometbft/cometbft/v2/types"
 	"github.com/cosmos/gogoproto/types"
 )
 

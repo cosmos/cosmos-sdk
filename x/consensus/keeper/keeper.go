@@ -4,7 +4,7 @@ import (
 	"context"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
-	cmttypes "github.com/cometbft/cometbft/types"
+	cmttypes "github.com/cometbft/cometbft/v2/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 

@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"time"
 
-	cmtconfig "github.com/cometbft/cometbft/config"
-	cmttime "github.com/cometbft/cometbft/types/time"
+	cmtconfig "github.com/cometbft/cometbft/v2/config"
+	cmttime "github.com/cometbft/cometbft/v2/types/time"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 

@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
+	rpcclientmock "github.com/cometbft/cometbft/v2/rpc/client/mock"
 	"github.com/stretchr/testify/suite"
 
 	sdkmath "cosmossdk.io/math"

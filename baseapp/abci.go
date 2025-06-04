@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/cockroachdb/errors"
-	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
 	"github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
@@ -286,7 +286,7 @@ func (app *BaseApp) OfferSnapshot(req *abci.OfferSnapshotRequest) (*abci.OfferSn
 		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_REJECT}, nil
 
 	default:
-		// CometBFT errors are defined here: https://github.com/cometbft/cometbft/blob/main/statesync/syncer.go
+		// CometBFT errors are defined here: https://github.com/cometbft/cometbft/v2/blob/main/statesync/syncer.go
 		// It may happen that in case of a CometBFT error, such as a timeout (which occurs after two minutes),
 		// the process is aborted. This is done intentionally because deleting the database programmatically
 		// can lead to more complicated situations.
@@ -389,7 +389,7 @@ func (app *BaseApp) CheckTx(req *abci.CheckTxRequest) (*abci.CheckTxResponse, er
 // provided by the client's request.
 //
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
-// Ref: https://github.com/cometbft/cometbft/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
+// Ref: https://github.com/cometbft/cometbft/v2/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) PrepareProposal(req *abci.PrepareProposalRequest) (resp *abci.PrepareProposalResponse, err error) {
 	if app.abciHandlers.PrepareProposalHandler == nil {
 		return nil, errors.New("PrepareProposal handler not set")
@@ -409,7 +409,7 @@ func (app *BaseApp) PrepareProposal(req *abci.PrepareProposalRequest) (resp *abc
 
 	// CometBFT must never call PrepareProposal with a height of 0.
 	//
-	// Ref: https://github.com/cometbft/cometbft/blob/059798a4f5b0c9f52aa8655fa619054a0154088c/spec/core/state.md?plain=1#L37-L38
+	// Ref: https://github.com/cometbft/cometbft/v2/blob/059798a4f5b0c9f52aa8655fa619054a0154088c/spec/core/state.md?plain=1#L37-L38
 	if req.Height < 1 {
 		return nil, errors.New("PrepareProposal called with invalid height")
 	}
@@ -468,14 +468,14 @@ func (app *BaseApp) PrepareProposal(req *abci.PrepareProposalRequest) (resp *abc
 // handler, it will be recovered and we will reject the proposal.
 //
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
-// Ref: https://github.com/cometbft/cometbft/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
+// Ref: https://github.com/cometbft/cometbft/v2/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) ProcessProposal(req *abci.ProcessProposalRequest) (resp *abci.ProcessProposalResponse, err error) {
 	if app.abciHandlers.ProcessProposalHandler == nil {
 		return nil, errors.New("ProcessProposal handler not set")
 	}
 
 	// CometBFT must never call ProcessProposal with a height of 0.
-	// Ref: https://github.com/cometbft/cometbft/blob/059798a4f5b0c9f52aa8655fa619054a0154088c/spec/core/state.md?plain=1#L37-L38
+	// Ref: https://github.com/cometbft/cometbft/v2/blob/059798a4f5b0c9f52aa8655fa619054a0154088c/spec/core/state.md?plain=1#L37-L38
 	if req.Height < 1 {
 		return nil, errors.New("ProcessProposal called with invalid height")
 	}

@@ -12,9 +12,9 @@ import (
 	"time"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
-	cmtjson "github.com/cometbft/cometbft/libs/json"
-	cmttypes "github.com/cometbft/cometbft/types"
-	cmttime "github.com/cometbft/cometbft/types/time"
+	cmtjson "github.com/cometbft/cometbft/v2/libs/json"
+	cmttypes "github.com/cometbft/cometbft/v2/types"
+	cmttime "github.com/cometbft/cometbft/v2/types/time"
 
 	"github.com/cosmos/cosmos-sdk/version"
 )

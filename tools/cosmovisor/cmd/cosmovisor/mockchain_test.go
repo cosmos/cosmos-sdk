@@ -90,7 +90,8 @@ func TestMockChain(t *testing.T) {
 			"manual20": "--block-time 1s --upgrade-plan '{\"name\":\"gov1\",\"height\":30}'",
 		},
 		Config: &cosmovisor.Config{
-			PollInterval: time.Second,
+			PollInterval:        time.Second,
+			RestartAfterUpgrade: true,
 		},
 	}.Setup(t)
 

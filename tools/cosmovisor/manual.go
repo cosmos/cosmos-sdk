@@ -36,11 +36,38 @@ func (cfg *Config) ParseManualUpgrades(bz []byte) (ManualUpgradeBatch, error) {
 	return manualUpgrades, nil
 }
 
-// AddManualUpgrade adds a manual upgrade plan.
+// AddManualUpgrades adds a manual upgrade plan.
 // If an upgrade with the same name already exists, it will only be overwritten if forceOverwrite is true,
 // otherwise an error will be returned.
-func AddManualUpgrade(cfg *Config, plan *upgradetypes.Plan, forceOverwrite bool) error {
+func (cfg *Config) AddManualUpgrades(forceOverwrite bool, plans ...*upgradetypes.Plan) error {
 	// TODO only allow plans that are AFTER the last known height
+	existing, err := cfg.ReadManualUpgrades()
+	if err != nil {
+		return err
+	}
+
+	planMap := map[string]*upgradetypes.Plan{}
+	for _, existingPlan := range existing {
+		planMap[existingPlan.Name] = existingPlan
+	}
+	for _, plan := range plans {
+		if _, ok := planMap[plan.Name]; ok {
+			if !forceOverwrite {
+				return fmt.Errorf("upgrade with name %s already exists", plan.Name)
+			}
+		}
+		planMap[plan.Name] = plan
+	}
+
+	var newUpgrades ManualUpgradeBatch
+	for _, plan := range planMap {
+		newUpgrades = append(newUpgrades, plan)
+	}
+
+	return cfg.saveManualUpgrade(newUpgrades)
+}
+
+func (cfg *Config) RemoveManualUpgrade(height uint64) error {
 	manualUpgrades, err := cfg.ReadManualUpgrades()
 	if err != nil {
 		return err
@@ -48,16 +75,19 @@ func AddManualUpgrade(cfg *Config, plan *upgradetypes.Plan, forceOverwrite bool)
 
 	var newUpgrades ManualUpgradeBatch
 	for _, existing := range manualUpgrades {
-		if existing.Name == plan.Name {
-			if !forceOverwrite {
-				return fmt.Errorf("upgrade with name %s already exists", plan.Name)
-			}
-			newUpgrades = append(newUpgrades, plan)
+		if uint64(existing.Height) == height {
+			continue
 		} else {
 			newUpgrades = append(newUpgrades, existing)
 		}
 	}
+	if len(newUpgrades) == len(manualUpgrades) {
+		return nil
+	}
+	return cfg.saveManualUpgrade(newUpgrades)
+}
 
+func (cfg *Config) saveManualUpgrade(manualUpgrades ManualUpgradeBatch) error {
 	sortUpgrades(manualUpgrades)
 
 	// TODO we should not write the file every time we add an upgrade, but only once per command otherwise we can trigger spurious

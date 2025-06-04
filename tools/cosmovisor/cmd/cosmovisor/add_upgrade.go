@@ -72,7 +72,8 @@ func addUpgrade(cfg *cosmovisor.Config, force bool, upgradeHeight int64, upgrade
 			panic(fmt.Errorf("invalid manual upgrade plan: %w", err))
 		}
 
-		if err := cosmovisor.AddManualUpgrade(cfg, plan, force); err != nil {
+		// TODO only do this once for a whole batch of upgrades
+		if err := cfg.AddManualUpgrades(force, plan); err != nil {
 			panic(fmt.Errorf("failed to add manual upgrade: %w", err))
 		}
 

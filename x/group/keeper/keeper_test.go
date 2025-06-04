@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	cmttime "github.com/cometbft/cometbft/types/time"
+	cmttime "github.com/cometbft/cometbft/v2/types/time"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 

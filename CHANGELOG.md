@@ -38,6 +38,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Breaking Changes
+
+* [#24837](https://github.com/cosmos/cosmos-sdk/pull/24837) Update to using CometBFT v2.
+  * This update changes the import paths from `cometbft/cometbft` to `cometbft/cometbft/v2`.  Users can use the migration tool to automatically update their nodes.
+
 ### Features
 
 * (server) [#24720](https://github.com/cosmos/cosmos-sdk/pull/24720) add `verbose_log_level` flag for configuring the log level when switching to verbose logging mode during sensitive operations (such as chain upgrades).

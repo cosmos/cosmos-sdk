@@ -4,8 +4,8 @@ import (
 	"encoding/binary"
 
 	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
-	"github.com/cometbft/cometbft/crypto/merkle"
-	"github.com/cometbft/cometbft/crypto/tmhash"
+	"github.com/cometbft/cometbft/v2/crypto/merkle"
+	"github.com/cometbft/cometbft/v2/crypto/tmhash"
 
 	"cosmossdk.io/store/internal/kv"
 	"cosmossdk.io/store/internal/tree"

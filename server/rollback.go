@@ -3,7 +3,7 @@ package server
 import (
 	"fmt"
 
-	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
+	cmtcmd "github.com/cometbft/cometbft/v2/cmd/cometbft/commands"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"

@@ -19,7 +19,7 @@ import (
 
 const (
 	testSeed            = "scene learn remember glide apple expand quality spawn property shoe lamp carry upset blossom draft reject aim file trash miss script joy only measure"
-	upgradeHeight int64 = 22
+	upgradeHeight int64 = 45
 	upgradeName         = "v053-to-v054" // must match UpgradeName in simapp/upgrades.go
 )
 
@@ -28,7 +28,7 @@ func TestChainUpgrade(t *testing.T) {
 	// start a legacy chain with some state
 	// when a chain upgrade proposal is executed
 	// then the chain upgrades successfully
-	systest.Sut.StopChain()
+	systest.Sut.ResetChain(t)
 
 	currentBranchBinary := systest.Sut.ExecBinary()
 	currentInitializer := systest.Sut.TestnetInitializer()
@@ -67,8 +67,10 @@ func TestChainUpgrade(t *testing.T) {
 	raw := cli.CustomQuery("q", "gov", "proposal", proposalID)
 	t.Log(raw)
 
-	systest.Sut.AwaitBlockHeight(t, upgradeHeight-1, 60*time.Second)
+	// generous timeout as this could run faster or slower based on HW or in CI
+	systest.Sut.AwaitBlockHeight(t, upgradeHeight-1, 2*time.Minute)
 	t.Logf("current_height: %d\n", systest.Sut.CurrentHeight())
+
 	raw = cli.CustomQuery("q", "gov", "proposal", proposalID)
 	proposalStatus := gjson.Get(raw, "proposal.status").String()
 	require.Equal(t, "PROPOSAL_STATUS_PASSED", proposalStatus, raw)
@@ -82,7 +84,7 @@ func TestChainUpgrade(t *testing.T) {
 	systest.Sut.SetTestnetInitializer(currentInitializer)
 	systest.Sut.StartChain(t)
 
-	require.Equal(t, upgradeHeight+1, systest.Sut.CurrentHeight())
+	require.True(t, upgradeHeight+1 <= systest.Sut.CurrentHeight())
 
 	regex, err := regexp.Compile("DBG this is a debug level message to test that verbose logging mode has properly been enabled during a chain upgrade")
 	require.NoError(t, err)

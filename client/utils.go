@@ -3,7 +3,7 @@ package client
 import (
 	"encoding/base64"
 
-	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
+	rpchttp "github.com/cometbft/cometbft/v2/rpc/client/http"
 	"github.com/spf13/pflag"
 
 	errorsmod "cosmossdk.io/errors"

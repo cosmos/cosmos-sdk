@@ -57,9 +57,11 @@ const (
 	execModeVerifyVoteExtension = sdk.ExecModeVerifyVoteExtension // Verify a vote extension
 	execModeFinalize            = sdk.ExecModeFinalize            // Finalize a block proposal
 
-	// defaultNextBlockDelay is chosen following documentation in CometBFT:
+	// defaultNextBlockDelay is chosen to be the historical default value in Cosmos SDK for TimeoutCommit
+	//
+	// More information on the change from TimeoutCommit to NextBlockDelay can be found here:
 	// https://github.com/cometbft/cometbft/blob/88ef3d267de491db98a654be0af6d791e8724ed0/spec/abci/abci%2B%2B_methods.md?plain=1#L689
-	defaultNextBlockDelay = time.Second
+	defaultNextBlockDelay = 5 * time.Second
 )
 
 var _ servertypes.ABCI = (*BaseApp)(nil)

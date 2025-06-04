@@ -18,7 +18,3 @@ require (
 	golang.org/x/arch v0.17.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
 )
-
-replace github.com/cometbft/cometbft => ../../cometbft
-
-replace github.com/cometbft/cometbft/api => ../../cometbft/api

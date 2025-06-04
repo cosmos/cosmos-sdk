@@ -13,7 +13,7 @@ require (
 )
 
 require (
-	github.com/cometbft/cometbft-db v1.0.2 // indirect
+	github.com/cometbft/cometbft-db v1.0.4 // indirect
 	github.com/dgraph-io/badger/v4 v4.6.0 // indirect
 	github.com/dgraph-io/ristretto/v2 v2.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
@@ -24,7 +24,7 @@ require (
 	github.com/holiman/uint256 v1.3.2 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/lmittmann/tint v1.0.7 // indirect
-	go.etcd.io/bbolt v1.3.11 // indirect
+	go.etcd.io/bbolt v1.4.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/otel v1.34.0 // indirect
 	go.opentelemetry.io/otel/metric v1.34.0 // indirect

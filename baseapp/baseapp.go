@@ -56,6 +56,10 @@ const (
 	execModeVoteExtension       = sdk.ExecModeVoteExtension       // Extend or verify a pre-commit vote
 	execModeVerifyVoteExtension = sdk.ExecModeVerifyVoteExtension // Verify a vote extension
 	execModeFinalize            = sdk.ExecModeFinalize            // Finalize a block proposal
+
+	// defaultNextBlockDelay is chosen following documentation in CometBFT:
+	// https://github.com/cometbft/cometbft/blob/88ef3d267de491db98a654be0af6d791e8724ed0/spec/abci/abci%2B%2B_methods.md?plain=1#L689
+	defaultNextBlockDelay = time.Second
 )
 
 var _ servertypes.ABCI = (*BaseApp)(nil)
@@ -178,7 +182,7 @@ func NewBaseApp(
 		logger:           logger.With(log.ModuleKey, "baseapp"),
 		name:             name,
 		db:               db,
-		cms:              store.NewCommitMultiStore(db, logger, storemetrics.NewNoOpMetrics()), // by default we use a no-op metric gather in store
+		cms:              store.NewCommitMultiStore(db, logger, storemetrics.NewNoOpMetrics()), // by default, we use a no-op metric gather in store
 		storeLoader:      DefaultStoreLoader,
 		grpcQueryRouter:  NewGRPCQueryRouter(),
 		msgServiceRouter: NewMsgServiceRouter(),
@@ -186,7 +190,7 @@ func NewBaseApp(
 		fauxMerkleMode:   false,
 		sigverifyTx:      true,
 		gasConfig:        config.GasConfig{QueryGasLimit: math.MaxUint64},
-		nextBlockDelay:   time.Second,
+		nextBlockDelay:   defaultNextBlockDelay,
 	}
 
 	for _, option := range options {

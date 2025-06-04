@@ -64,10 +64,10 @@ func (cfg *Config) AddManualUpgrades(forceOverwrite bool, plans ...*upgradetypes
 		newUpgrades = append(newUpgrades, plan)
 	}
 
-	return cfg.saveManualUpgrade(newUpgrades)
+	return cfg.saveManualUpgrades(newUpgrades)
 }
 
-func (cfg *Config) RemoveManualUpgrade(height uint64) error {
+func (cfg *Config) RemoveManualUpgrade(height int64) error {
 	manualUpgrades, err := cfg.ReadManualUpgrades()
 	if err != nil {
 		return err
@@ -75,7 +75,7 @@ func (cfg *Config) RemoveManualUpgrade(height uint64) error {
 
 	var newUpgrades ManualUpgradeBatch
 	for _, existing := range manualUpgrades {
-		if uint64(existing.Height) == height {
+		if existing.Height == height {
 			continue
 		} else {
 			newUpgrades = append(newUpgrades, existing)
@@ -84,10 +84,10 @@ func (cfg *Config) RemoveManualUpgrade(height uint64) error {
 	if len(newUpgrades) == len(manualUpgrades) {
 		return nil
 	}
-	return cfg.saveManualUpgrade(newUpgrades)
+	return cfg.saveManualUpgrades(newUpgrades)
 }
 
-func (cfg *Config) saveManualUpgrade(manualUpgrades ManualUpgradeBatch) error {
+func (cfg *Config) saveManualUpgrades(manualUpgrades ManualUpgradeBatch) error {
 	sortUpgrades(manualUpgrades)
 
 	// TODO we should not write the file every time we add an upgrade, but only once per command otherwise we can trigger spurious

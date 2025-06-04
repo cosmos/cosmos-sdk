@@ -83,7 +83,7 @@ func TestMockChain(t *testing.T) {
 	mockchainDir, cfgFile := MockChainSetup{
 		Genesis: "--block-time 1s --upgrade-plan '{\"name\":\"gov1\",\"height\":30}'",
 		GovUpgrades: map[string]string{
-			"gov1": "--halt-height 20 --block-time 1s --upgrade-plan '{\"name\":\"gov2\",\"height\":40}'",
+			"gov1": "--block-time 1s --upgrade-plan '{\"name\":\"gov2\",\"height\":40}'",
 		},
 		ManualUpgrades: map[string]string{
 			"manual10": "--block-time 1s --upgrade-plan '{\"name\":\"gov1\",\"height\":30}'",
@@ -136,10 +136,11 @@ func TestMockChain(t *testing.T) {
 	// TODO:
 	// - [x] add callback on restart for checking state
 	// - [ ] add manual upgrade (manual20) at height 20
-	// - [ ] then add another manual upgrade (manual10) at height 10
+	// - [ ] then add other manual upgrades manual10 at height 10 and manual30 at height 30 as a batch
 	// - [ ] manual20 should get picked up and the process should restart with halt-height 20
 	// - [ ] then manual10 should get picked up and the process should restart with halt-height 10
 	// - [ ] when manual10 gets applied, it should restart with halt-height 20
 	// - [ ] when manual20 gets applied, it should restart with no halt-height
-	// - [ ] and then manual20 should trigger gov2 upgrade at height 30
+	// - [ ] and then manual20 should trigger gov2 upgrade at height 40
+	// - [ ]
 }

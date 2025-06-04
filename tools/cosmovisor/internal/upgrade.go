@@ -23,7 +23,7 @@ type UpgradeCheckResult struct {
 func UpgradeIfNeeded(cfg *cosmovisor.Config, logger log.Logger, knownHeight uint64) (upgraded bool, haltHeight uint64, err error) {
 	logger.Info("Checking for upgrade-info.json")
 	if upgradePlan, err := cfg.UpgradeInfo(); err == nil {
-		upgrader := NewUpgrader(cfg, logger, upgradePlan)
+		upgrader := NewUpgrader(cfg, logger, upgradePlan, false)
 		err := upgrader.DoUpgrade()
 		if err != nil {
 			return false, 0, err
@@ -44,7 +44,7 @@ func UpgradeIfNeeded(cfg *cosmovisor.Config, logger log.Logger, knownHeight uint
 		haltHeight = uint64(manualUpgrade.Height)
 		if lastKnownHeight == haltHeight {
 			logger.Info("At manual upgrade", "upgrade", manualUpgrade, "halt_height", haltHeight)
-			upgrader := NewUpgrader(cfg, logger, *manualUpgrade)
+			upgrader := NewUpgrader(cfg, logger, *manualUpgrade, true)
 			err := upgrader.DoUpgrade()
 			if err != nil {
 				return false, 0, err
@@ -61,22 +61,34 @@ func UpgradeIfNeeded(cfg *cosmovisor.Config, logger log.Logger, knownHeight uint
 }
 
 type Upgrader struct {
-	cfg         *cosmovisor.Config
-	logger      log.Logger
-	upgradePlan upgradetypes.Plan
+	cfg             *cosmovisor.Config
+	logger          log.Logger
+	upgradePlan     upgradetypes.Plan
+	isManualUpgrade bool
 }
 
-func NewUpgrader(cfg *cosmovisor.Config, logger log.Logger, upgradePlan upgradetypes.Plan) *Upgrader {
+func NewUpgrader(cfg *cosmovisor.Config, logger log.Logger, upgradePlan upgradetypes.Plan, isManualUpgrade bool) *Upgrader {
 	return &Upgrader{
-		cfg:         cfg,
-		logger:      logger,
-		upgradePlan: upgradePlan,
+		cfg:             cfg,
+		logger:          logger,
+		upgradePlan:     upgradePlan,
+		isManualUpgrade: isManualUpgrade,
 	}
 }
 
 func (u *Upgrader) DoUpgrade() error {
 	u.logger.Info("Starting upgrade process")
 	u.cfg.WaitRestartDelay()
+
+	currentBin, err := u.cfg.CurrentBin()
+	if err != nil {
+		return err
+	}
+	upgradeBin := u.cfg.UpgradeBin(u.upgradePlan.Name)
+	u.logger.Info("Current binary", "current_bin", currentBin, "upgrade_bin", upgradeBin)
+	if currentBin == upgradeBin {
+		return fmt.Errorf("current binary %s is already the upgrade binary %s, fatal error", currentBin, upgradeBin)
+	}
 
 	if err := u.doBackup(); err != nil {
 		return err
@@ -92,6 +104,14 @@ func (u *Upgrader) DoUpgrade() error {
 
 	if err := u.doPreUpgrade(); err != nil {
 		return err
+	}
+
+	if u.isManualUpgrade {
+		u.logger.Info("Removing completed manual upgrade plan", "height", u.upgradePlan.Height)
+		err := u.cfg.RemoveManualUpgrade(u.upgradePlan.Height)
+		if err != nil {
+			return fmt.Errorf("failed to remove manual upgrade at height %d: %w", u.upgradePlan.Height, err)
+		}
 	}
 
 	return nil

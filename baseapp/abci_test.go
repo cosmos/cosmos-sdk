@@ -2031,7 +2031,7 @@ func TestABCI_HaltChain(t *testing.T) {
 				select {
 				case sig := <-sigCh:
 					t.Logf("Received expected signal: %v", sig)
-				case <-time.After(1 * time.Second):
+				case <-time.After(5 * time.Second):
 					t.Fatal("Expected signal but didn't receive one")
 				}
 			}

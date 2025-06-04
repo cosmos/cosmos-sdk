@@ -75,6 +75,7 @@ func NewUpgrader(cfg *cosmovisor.Config, logger log.Logger, upgradePlan upgradet
 }
 
 func (u *Upgrader) DoUpgrade() error {
+	u.logger.Info("Starting upgrade process")
 	u.cfg.WaitRestartDelay()
 
 	if err := u.doBackup(); err != nil {

@@ -433,7 +433,6 @@ func (cfg *Config) SetCurrentUpgrade(u upgradetypes.Plan) (rerr error) {
 // UpgradeInfo returns the current upgrade info
 func (cfg *Config) UpgradeInfo() (upgradetypes.Plan, error) {
 	filename := cfg.UpgradeInfoFilePath()
-	fmt.Printf("Reading upgrade info from %q\n", filename)
 	_, err := os.Lstat(filename)
 	var bz []byte
 	if err != nil { // no current directory

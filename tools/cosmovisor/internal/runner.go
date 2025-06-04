@@ -44,6 +44,10 @@ func (r Runner) Start(ctx context.Context, args []string) error {
 		}
 		if upgraded {
 			r.logger.Info("Upgrade completed, restarting process")
+			if !r.cfg.RestartAfterUpgrade {
+				r.logger.Info("DAEMON_RESTART_AFTER_UPGRADE is disabled, exiting process")
+				return nil
+			}
 			startsWithoutUpgrade = 0
 		} else {
 			if startsWithoutUpgrade >= 5 {
@@ -51,15 +55,11 @@ func (r Runner) Start(ctx context.Context, args []string) error {
 			}
 			startsWithoutUpgrade++
 		}
-		if !r.cfg.RestartAfterUpgrade {
-			r.logger.Info("DAEMON_RESTART_AFTER_UPGRADE is disabled, exiting process")
-			return nil
-		}
 		err = r.RunOnce(ctx, args, haltHeight)
 		if err != nil {
-			var upgradeNeeded ErrRestartNeeded
-			if ok := errors.As(err, &upgradeNeeded); ok {
-				r.logger.Info("Upgrade needed")
+			var restartNeeded ErrRestartNeeded
+			if ok := errors.As(err, &restartNeeded); ok {
+				r.logger.Info("Restart needed")
 			} else {
 				return err
 			}

@@ -335,6 +335,9 @@ func (app *BaseApp) SetMempool(mempool mempool.Mempool) {
 }
 
 // SetNextBlockDelay sets the next block delay for the baseapp.
+//
+// More information on this value and how it affects CometBFT can be found here:
+// https://github.com/cometbft/cometbft/blob/88ef3d267de491db98a654be0af6d791e8724ed0/spec/abci/abci%2B%2B_methods.md?plain=1#L689
 func (app *BaseApp) SetNextBlockDelay(delay time.Duration) {
 	if app.sealed {
 		panic("SetNextBlockDelay() on sealed BaseApp")

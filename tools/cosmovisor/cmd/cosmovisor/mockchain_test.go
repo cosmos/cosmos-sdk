@@ -130,14 +130,24 @@ func TestMockChain(t *testing.T) {
 		require.NoError(t, rootCmd.Execute())
 	}
 
+	execCtx, cancel := context.WithCancel(context.Background())
+
 	var callbackCount int
 	testCallback := func() {
 		callbackCount++
+		t.Logf("Test callback called for the %dth time", callbackCount)
 		switch callbackCount {
+		// first startup
 		case 1:
+			// add one manual upgrade
 			go addManualUpgrade1()
+		// first restart once we've add the first manual upgrade
 		case 2:
+			// add a second batch of manual upgrades
 			go addManualUpgrade2()
+		case 8:
+			// we've gotten to the test end so gracefully shutdown
+			cancel()
 		}
 	}
 	var wg sync.WaitGroup
@@ -147,13 +157,13 @@ func TestMockChain(t *testing.T) {
 		rootCmd.SetArgs([]string{"run", "--home", mockchainDir, "--cosmovisor-config", cfgFile})
 		rootCmd.SetOut(os.Stdout)
 		rootCmd.SetErr(os.Stderr)
-		ctx := internal.WithTestCallback(context.Background(), testCallback)
-		require.NoError(t, rootCmd.ExecuteContext(ctx))
+		execCtx = internal.WithTestCallback(execCtx, testCallback)
+		require.NoError(t, rootCmd.ExecuteContext(execCtx))
 		wg.Done()
 	}()
 	wg.Wait()
 
-	require.Equal(t, 6, callbackCount)
+	require.Equal(t, 8, callbackCount)
 
 	// TODO:
 	// - [x] add callback on restart for checking state

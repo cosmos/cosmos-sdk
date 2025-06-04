@@ -61,12 +61,17 @@ func (r Runner) Start(ctx context.Context, args []string) error {
 			var restartNeeded ErrRestartNeeded
 			if ok := errors.As(err, &restartNeeded); ok {
 				r.logger.Info("Restart needed")
+			} else if errors.Is(err, errDone) {
+				return nil
 			} else {
 				return err
 			}
+
 		}
 	}
 }
+
+var errDone = errors.New("done")
 
 func (r Runner) RunOnce(ctx context.Context, args []string, haltHeight uint64) error {
 	dirWatcher, err := watchers.NewFSNotifyWatcher(ctx, r.cfg.UpgradeInfoDir(), []string{
@@ -77,8 +82,12 @@ func (r Runner) RunOnce(ctx context.Context, args []string, haltHeight uint64) e
 		r.logger.Warn("failed to intialize fsnotify, it's probably not available on this platform, using polling only", "error", err)
 	}
 
+	// keep the original context for cancellation detection
+	parentCtx := ctx
+	// create child context for controlling watchers
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
+
 	upgradePlanWatcher := watchers.InitWatcher[upgradetypes.Plan](ctx, r.cfg.PollInterval, dirWatcher, r.cfg.UpgradeInfoFilePath(), r.cfg.ParseUpgradeInfo)
 	manualUpgradesWatcher := watchers.InitWatcher[cosmovisor.ManualUpgradeBatch](ctx, r.cfg.PollInterval, dirWatcher, r.cfg.UpgradeInfoBatchFilePath(), r.cfg.ParseManualUpgrades)
 	heightChecker := watchers.NewHTTPRPCBLockChecker("http://localhost:8080/block")
@@ -105,6 +114,10 @@ func (r Runner) RunOnce(ctx context.Context, args []string, haltHeight uint64) e
 	correctHeightConfirmed := false
 	for {
 		select {
+		// listen to the parent context's cancellation
+		case <-parentCtx.Done():
+			r.logger.Info("Parent context cancelled, shutting down")
+			return errDone
 		case _, ok := <-upgradePlanWatcher.Updated():
 			// TODO check skip upgrade heights?? (although not sure why we need this as the node should not emit an upgrade plan if skip heights is enabled)
 			if !ok {

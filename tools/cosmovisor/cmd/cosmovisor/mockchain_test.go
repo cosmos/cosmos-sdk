@@ -80,6 +80,11 @@ func (m MockChainSetup) Setup(t *testing.T) (string, string) {
 }
 
 func TestMockChain(t *testing.T) {
+	pollInterval := time.Millisecond * 500
+	cfg := &cosmovisor.Config{
+		PollInterval:        pollInterval,
+		RestartAfterUpgrade: true,
+	}
 	mockchainDir, cfgFile := MockChainSetup{
 		Genesis: "--block-time 1s --upgrade-plan '{\"name\":\"gov1\",\"height\":30}'",
 		GovUpgrades: map[string]string{
@@ -89,14 +94,11 @@ func TestMockChain(t *testing.T) {
 			"manual10": "--block-time 1s --upgrade-plan '{\"name\":\"gov1\",\"height\":30}'",
 			"manual20": "--block-time 1s --upgrade-plan '{\"name\":\"gov1\",\"height\":30}'",
 		},
-		Config: &cosmovisor.Config{
-			PollInterval:        time.Second,
-			RestartAfterUpgrade: true,
-		},
+		Config: cfg,
 	}.Setup(t)
 
 	addManualUpgrade1 := func() {
-		time.Sleep(2 * time.Second) // wait for startup
+		time.Sleep(pollInterval * 2) // wait for startup
 		rootCmd := NewRootCmd()
 		rootCmd.SetArgs([]string{
 			"add-upgrade",
@@ -131,20 +133,42 @@ func TestMockChain(t *testing.T) {
 	}
 
 	execCtx, cancel := context.WithCancel(context.Background())
+	defer cancel() // always cancel the context to make sure the sub-process shuts down
 
 	var callbackCount int
 	testCallback := func() {
 		callbackCount++
 		t.Logf("Test callback called for the %dth time", callbackCount)
+		currentBin, err := cfg.CurrentBin()
+		require.NoError(t, err)
 		switch callbackCount {
 		// first startup
 		case 1:
+			// we should be starting with the genesis binary
+			require.Contains(t, currentBin, "genesis")
 			// add one manual upgrade
 			go addManualUpgrade1()
 		// first restart once we've add the first manual upgrade
 		case 2:
+			// ensure that the binary is the genesis binary
+			require.Contains(t, currentBin, "genesis")
 			// add a second batch of manual upgrades
 			go addManualUpgrade2()
+		case 3:
+			// ensure that the binary is still the genesis binary, we've just added another upgrade
+			require.Contains(t, currentBin, "genesis")
+		case 4:
+			// we're just doing the upgrade now, so still on genesis
+			require.Contains(t, currentBin, "genesis")
+		case 5:
+			// now we should be on manual10 right before the next upgrade
+			require.Contains(t, currentBin, "manual10")
+		case 6:
+			// now we should be on manual20 right before the next upgrade
+			require.Contains(t, currentBin, "manual20")
+		case 7:
+			// now we should be on gov1 right before the next upgrade
+			require.Contains(t, currentBin, "gov1")
 		case 8:
 			// we've gotten to the test end so gracefully shutdown
 			cancel()

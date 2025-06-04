@@ -232,7 +232,8 @@ func start(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreato
 	}
 	defer appCleanupFn()
 
-	metrics, err := startTelemetry(svrCfg)
+	_, ctx := getCtx(svrCtx, false)
+	metrics, err := startTelemetry(ctx, svrCfg)
 	if err != nil {
 		return fmt.Errorf("failed to start telemetry: %w", err)
 	}
@@ -569,9 +570,9 @@ func startAPIServer(
 	return nil
 }
 
-func startTelemetry(cfg serverconfig.Config) (*telemetry.Metrics, error) {
+func startTelemetry(ctx context.Context, cfg serverconfig.Config) (*telemetry.Metrics, error) {
 	if cfg.Telemetry.OtlpExporterEnabled {
-		telemetry.StartOtlpExporter(cfg.Telemetry)
+		telemetry.StartOtlpExporter(ctx, cfg.Telemetry)
 	}
 	return telemetry.New(cfg.Telemetry)
 }

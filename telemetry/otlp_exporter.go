@@ -21,9 +21,7 @@ import (
 
 const meterName = "cosmos-sdk-otlp-exporter"
 
-func StartOtlpExporter(cfg Config) {
-	ctx := context.Background()
-
+func StartOtlpExporter(ctx context.Context, cfg Config) {
 	exporter, err := otlpmetrichttp.New(ctx,
 		otlpmetrichttp.WithEndpoint(cfg.OtlpCollectorEndpoint),
 		otlpmetrichttp.WithURLPath(cfg.OtlpCollectorMetricsURLPath),
@@ -49,18 +47,27 @@ func StartOtlpExporter(cfg Config) {
 
 	gauges := make(map[string]otmetric.Float64Gauge)
 	histograms := make(map[string]otmetric.Float64Histogram)
+	counters := make(map[string]otmetric.Float64Counter)
 
 	go func() {
+		ticker := time.NewTicker(cfg.OtlpPushInterval)
+		defer ticker.Stop()
 		for {
-			if err := scrapePrometheusMetrics(ctx, meter, gauges, histograms); err != nil {
-				log.Printf("error scraping metrics: %v", err)
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				if err := scrapePrometheusMetrics(ctx, meter, gauges, histograms, counters); err != nil {
+					log.Printf("error scraping metrics: %v", err)
+				}
 			}
-			time.Sleep(cfg.OtlpPushInterval)
 		}
 	}()
 }
 
-func scrapePrometheusMetrics(ctx context.Context, meter otmetric.Meter, gauges map[string]otmetric.Float64Gauge, histograms map[string]otmetric.Float64Histogram) error {
+func scrapePrometheusMetrics(
+	ctx context.Context, meter otmetric.Meter, gauges map[string]otmetric.Float64Gauge,
+	histograms map[string]otmetric.Float64Histogram, counters map[string]otmetric.Float64Counter) error {
 	metricFamilies, err := prometheus.DefaultGatherer.Gather()
 	if err != nil {
 		log.Printf("failed to gather prometheus metrics: %v", err)
@@ -70,12 +77,16 @@ func scrapePrometheusMetrics(ctx context.Context, meter otmetric.Meter, gauges m
 	for _, mf := range metricFamilies {
 		name := mf.GetName()
 		for _, m := range mf.Metric {
+			attrs := make([]attribute.KeyValue, len(m.Label))
+			for i, label := range m.Label {
+				attrs[i] = attribute.String(label.GetName(), label.GetValue())
+			}
 			switch mf.GetType() {
 			case dto.MetricType_GAUGE:
-				recordGauge(ctx, meter, gauges, name, mf.GetHelp(), m.Gauge.GetValue(), nil)
+				recordGauge(ctx, meter, gauges, name, mf.GetHelp(), m.Gauge.GetValue(), attrs)
 
 			case dto.MetricType_COUNTER:
-				recordGauge(ctx, meter, gauges, name, mf.GetHelp(), m.Counter.GetValue(), nil)
+				recordCounter(ctx, meter, counters, name, mf.GetHelp(), m.Counter.GetValue(), attrs)
 
 			case dto.MetricType_HISTOGRAM:
 				recordHistogram(ctx, meter, histograms, name, mf.GetHelp(), m.Histogram)
@@ -90,6 +101,21 @@ func scrapePrometheusMetrics(ctx context.Context, meter otmetric.Meter, gauges m
 	}
 
 	return nil
+}
+
+func recordCounter(ctx context.Context, meter otmetric.Meter, counters map[string]otmetric.Float64Counter, name,
+	help string, val float64, attrs []attribute.KeyValue) {
+	g, ok := counters[name]
+	if !ok {
+		var err error
+		g, err = meter.Float64Counter(name, otmetric.WithDescription(help))
+		if err != nil {
+			log.Printf("failed to create counter %q: %v", name, err)
+			return
+		}
+		counters[name] = g
+	}
+	g.Add(ctx, val, otmetric.WithAttributes(attrs...))
 }
 
 func recordGauge(ctx context.Context, meter otmetric.Meter, gauges map[string]otmetric.Float64Gauge, name, help string, val float64, attrs []attribute.KeyValue) {

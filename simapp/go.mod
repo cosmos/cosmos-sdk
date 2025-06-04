@@ -10,8 +10,8 @@ require (
 	cosmossdk.io/log v1.6.0
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/x/tx v0.14.0
-	github.com/cometbft/cometbft v1.0.1
 	github.com/cometbft/cometbft/api v1.0.0
+	github.com/cometbft/cometbft/v2 v2.0.0-main
 	github.com/cosmos/cosmos-db v1.1.2
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
 	github.com/cosmos/cosmos-sdk v0.53.0
@@ -247,6 +247,6 @@ replace (
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
 
-replace github.com/cometbft/cometbft => ../../cometbft
+replace github.com/cometbft/cometbft/v2 => ../../cometbft
 
 replace github.com/cometbft/cometbft/api => ../../cometbft/api

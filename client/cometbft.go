@@ -3,8 +3,8 @@ package client
 import (
 	"context"
 
-	rpcclient "github.com/cometbft/cometbft/rpc/client"
-	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+	rpcclient "github.com/cometbft/cometbft/v2/rpc/client"
+	coretypes "github.com/cometbft/cometbft/v2/rpc/core/types"
 )
 
 // CometRPC defines the interface of a CometBFT RPC client needed for

@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/cometbft/cometbft/crypto"
-	"github.com/cometbft/cometbft/crypto/tmhash"
+	"github.com/cometbft/cometbft/v2/crypto"
+	"github.com/cometbft/cometbft/v2/crypto/tmhash"
 	"github.com/hdevalence/ed25519consensus"
 
 	errorsmod "cosmossdk.io/errors"

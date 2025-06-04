@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cometbft/cometbft/config"
-	tmed25519 "github.com/cometbft/cometbft/crypto/ed25519"
-	"github.com/cometbft/cometbft/privval"
+	"github.com/cometbft/cometbft/v2/config"
+	tmed25519 "github.com/cometbft/cometbft/v2/crypto/ed25519"
+	"github.com/cometbft/cometbft/v2/privval"
 	"github.com/stretchr/testify/require"
 )
 

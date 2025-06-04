@@ -5,8 +5,8 @@ import (
 	"math"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	cmtjson "github.com/cometbft/cometbft/libs/json"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
+	cmtjson "github.com/cometbft/cometbft/v2/libs/json"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 

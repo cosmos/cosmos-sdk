@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
 
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"

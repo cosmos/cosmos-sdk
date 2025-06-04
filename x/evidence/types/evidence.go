@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cometbft/cometbft/crypto/tmhash"
+	"github.com/cometbft/cometbft/v2/crypto/tmhash"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/comet"

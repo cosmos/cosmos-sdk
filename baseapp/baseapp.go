@@ -8,11 +8,12 @@ import (
 	"slices"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/cockroachdb/errors"
-	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	"github.com/cometbft/cometbft/crypto/tmhash"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
+	"github.com/cometbft/cometbft/v2/crypto/tmhash"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
 	protov2 "google.golang.org/protobuf/proto"
@@ -55,6 +56,10 @@ const (
 	execModeVoteExtension       = sdk.ExecModeVoteExtension       // Extend or verify a pre-commit vote
 	execModeVerifyVoteExtension = sdk.ExecModeVerifyVoteExtension // Verify a vote extension
 	execModeFinalize            = sdk.ExecModeFinalize            // Finalize a block proposal
+
+	// defaultNextBlockDelay is chosen following documentation in CometBFT:
+	// https://github.com/cometbft/cometbft/blob/88ef3d267de491db98a654be0af6d791e8724ed0/spec/abci/abci%2B%2B_methods.md?plain=1#L689
+	defaultNextBlockDelay = time.Second
 )
 
 var _ servertypes.ABCI = (*BaseApp)(nil)
@@ -107,6 +112,10 @@ type BaseApp struct {
 
 	// flag for sealing options and parameters to a BaseApp
 	sealed bool
+
+	// nextBlockDelay is the delay to wait until the next block after ABCI has committed.
+	// This gives the application more time to receive precommits.
+	nextBlockDelay time.Duration
 
 	// block height at which to halt the chain and gracefully shutdown
 	haltHeight uint64
@@ -173,7 +182,7 @@ func NewBaseApp(
 		logger:           logger.With(log.ModuleKey, "baseapp"),
 		name:             name,
 		db:               db,
-		cms:              store.NewCommitMultiStore(db, logger, storemetrics.NewNoOpMetrics()), // by default we use a no-op metric gather in store
+		cms:              store.NewCommitMultiStore(db, logger, storemetrics.NewNoOpMetrics()), // by default, we use a no-op metric gather in store
 		storeLoader:      DefaultStoreLoader,
 		grpcQueryRouter:  NewGRPCQueryRouter(),
 		msgServiceRouter: NewMsgServiceRouter(),
@@ -181,6 +190,7 @@ func NewBaseApp(
 		fauxMerkleMode:   false,
 		sigverifyTx:      true,
 		gasConfig:        config.GasConfig{QueryGasLimit: math.MaxUint64},
+		nextBlockDelay:   defaultNextBlockDelay,
 	}
 
 	for _, option := range options {

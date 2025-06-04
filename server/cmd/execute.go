@@ -3,7 +3,7 @@ package cmd
 import (
 	"context"
 
-	cmtcli "github.com/cometbft/cometbft/libs/cli"
+	cmtcli "github.com/cometbft/cometbft/v2/libs/cli"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 

@@ -3,7 +3,7 @@ package secp256r1
 import (
 	"encoding/base64"
 
-	cmtcrypto "github.com/cometbft/cometbft/crypto"
+	cmtcrypto "github.com/cometbft/cometbft/v2/crypto"
 	"github.com/cosmos/gogoproto/proto"
 
 	ecdsa "github.com/cosmos/cosmos-sdk/crypto/keys/internal/ecdsa"

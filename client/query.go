@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/cockroachdb/errors"
-	abci "github.com/cometbft/cometbft/abci/types"
-	rpcclient "github.com/cometbft/cometbft/rpc/client"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
+	rpcclient "github.com/cometbft/cometbft/v2/rpc/client"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 

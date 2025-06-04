@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
 	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/math"

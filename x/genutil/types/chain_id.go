@@ -7,7 +7,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/cometbft/cometbft/types"
+	"github.com/cometbft/cometbft/v2/types"
 )
 
 const ChainIDFieldName = "chain_id"

@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	abci_server "github.com/cometbft/cometbft/abci/server"
+	abci_server "github.com/cometbft/cometbft/v2/abci/server"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 

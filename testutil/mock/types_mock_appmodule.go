@@ -15,7 +15,7 @@ import (
 	reflect "reflect"
 
 	appmodule "cosmossdk.io/core/appmodule"
-	types "github.com/cometbft/cometbft/abci/types"
+	types "github.com/cometbft/cometbft/v2/abci/types"
 	client "github.com/cosmos/cosmos-sdk/client"
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	types0 "github.com/cosmos/cosmos-sdk/codec/types"

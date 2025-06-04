@@ -63,7 +63,3 @@ replace cosmossdk.io/api => ../api
 retract v0.12.0
 
 retract v1.0.0
-
-replace github.com/cometbft/cometbft => ../../cometbft
-
-replace github.com/cometbft/cometbft/api => ../../cometbft/api

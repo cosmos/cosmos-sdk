@@ -5,8 +5,8 @@ import (
 	"encoding/base64"
 	"testing"
 
-	"github.com/cometbft/cometbft/crypto"
-	tmed25519 "github.com/cometbft/cometbft/crypto/ed25519"
+	"github.com/cometbft/cometbft/v2/crypto"
+	tmed25519 "github.com/cometbft/cometbft/v2/crypto/ed25519"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 

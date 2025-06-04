@@ -4,7 +4,7 @@ import (
 	"errors"
 	"io"
 
-	cmtcfg "github.com/cometbft/cometbft/config"
+	cmtcfg "github.com/cometbft/cometbft/v2/config"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

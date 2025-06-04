@@ -3,8 +3,8 @@ package tendermintv1beta1
 
 import (
 	_ "cosmossdk.io/api/amino"
-	v1 "cosmossdk.io/api/cometbft/types/v1"
-	v11 "cosmossdk.io/api/cometbft/version/v1"
+	v2 "cosmossdk.io/api/cometbft/types/v2"
+	v1 "cosmossdk.io/api/cometbft/version/v1"
 	fmt "fmt"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	_ "github.com/cosmos/gogoproto/gogoproto"
@@ -221,11 +221,11 @@ func (x *fastReflection_Block) Set(fd protoreflect.FieldDescriptor, value protor
 	case "cosmos.base.tendermint.v1beta1.Block.header":
 		x.Header = value.Message().Interface().(*Header)
 	case "cosmos.base.tendermint.v1beta1.Block.data":
-		x.Data = value.Message().Interface().(*v1.Data)
+		x.Data = value.Message().Interface().(*v2.Data)
 	case "cosmos.base.tendermint.v1beta1.Block.evidence":
-		x.Evidence = value.Message().Interface().(*v1.EvidenceList)
+		x.Evidence = value.Message().Interface().(*v2.EvidenceList)
 	case "cosmos.base.tendermint.v1beta1.Block.last_commit":
-		x.LastCommit = value.Message().Interface().(*v1.Commit)
+		x.LastCommit = value.Message().Interface().(*v2.Commit)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.base.tendermint.v1beta1.Block"))
@@ -253,17 +253,17 @@ func (x *fastReflection_Block) Mutable(fd protoreflect.FieldDescriptor) protoref
 		return protoreflect.ValueOfMessage(x.Header.ProtoReflect())
 	case "cosmos.base.tendermint.v1beta1.Block.data":
 		if x.Data == nil {
-			x.Data = new(v1.Data)
+			x.Data = new(v2.Data)
 		}
 		return protoreflect.ValueOfMessage(x.Data.ProtoReflect())
 	case "cosmos.base.tendermint.v1beta1.Block.evidence":
 		if x.Evidence == nil {
-			x.Evidence = new(v1.EvidenceList)
+			x.Evidence = new(v2.EvidenceList)
 		}
 		return protoreflect.ValueOfMessage(x.Evidence.ProtoReflect())
 	case "cosmos.base.tendermint.v1beta1.Block.last_commit":
 		if x.LastCommit == nil {
-			x.LastCommit = new(v1.Commit)
+			x.LastCommit = new(v2.Commit)
 		}
 		return protoreflect.ValueOfMessage(x.LastCommit.ProtoReflect())
 	default:
@@ -283,13 +283,13 @@ func (x *fastReflection_Block) NewField(fd protoreflect.FieldDescriptor) protore
 		m := new(Header)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "cosmos.base.tendermint.v1beta1.Block.data":
-		m := new(v1.Data)
+		m := new(v2.Data)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "cosmos.base.tendermint.v1beta1.Block.evidence":
-		m := new(v1.EvidenceList)
+		m := new(v2.EvidenceList)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "cosmos.base.tendermint.v1beta1.Block.last_commit":
-		m := new(v1.Commit)
+		m := new(v2.Commit)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
@@ -576,7 +576,7 @@ func (x *fastReflection_Block) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.Data == nil {
-					x.Data = &v1.Data{}
+					x.Data = &v2.Data{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Data); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -612,7 +612,7 @@ func (x *fastReflection_Block) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.Evidence == nil {
-					x.Evidence = &v1.EvidenceList{}
+					x.Evidence = &v2.EvidenceList{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Evidence); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -648,7 +648,7 @@ func (x *fastReflection_Block) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.LastCommit == nil {
-					x.LastCommit = &v1.Commit{}
+					x.LastCommit = &v2.Commit{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.LastCommit); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -1041,7 +1041,7 @@ func (x *fastReflection_Header) Get(descriptor protoreflect.FieldDescriptor) pro
 func (x *fastReflection_Header) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "cosmos.base.tendermint.v1beta1.Header.version":
-		x.Version = value.Message().Interface().(*v11.Consensus)
+		x.Version = value.Message().Interface().(*v1.Consensus)
 	case "cosmos.base.tendermint.v1beta1.Header.chain_id":
 		x.ChainId = value.Interface().(string)
 	case "cosmos.base.tendermint.v1beta1.Header.height":
@@ -1049,7 +1049,7 @@ func (x *fastReflection_Header) Set(fd protoreflect.FieldDescriptor, value proto
 	case "cosmos.base.tendermint.v1beta1.Header.time":
 		x.Time = value.Message().Interface().(*timestamppb.Timestamp)
 	case "cosmos.base.tendermint.v1beta1.Header.last_block_id":
-		x.LastBlockId = value.Message().Interface().(*v1.BlockID)
+		x.LastBlockId = value.Message().Interface().(*v2.BlockID)
 	case "cosmos.base.tendermint.v1beta1.Header.last_commit_hash":
 		x.LastCommitHash = value.Bytes()
 	case "cosmos.base.tendermint.v1beta1.Header.data_hash":
@@ -1090,7 +1090,7 @@ func (x *fastReflection_Header) Mutable(fd protoreflect.FieldDescriptor) protore
 	switch fd.FullName() {
 	case "cosmos.base.tendermint.v1beta1.Header.version":
 		if x.Version == nil {
-			x.Version = new(v11.Consensus)
+			x.Version = new(v1.Consensus)
 		}
 		return protoreflect.ValueOfMessage(x.Version.ProtoReflect())
 	case "cosmos.base.tendermint.v1beta1.Header.time":
@@ -1100,7 +1100,7 @@ func (x *fastReflection_Header) Mutable(fd protoreflect.FieldDescriptor) protore
 		return protoreflect.ValueOfMessage(x.Time.ProtoReflect())
 	case "cosmos.base.tendermint.v1beta1.Header.last_block_id":
 		if x.LastBlockId == nil {
-			x.LastBlockId = new(v1.BlockID)
+			x.LastBlockId = new(v2.BlockID)
 		}
 		return protoreflect.ValueOfMessage(x.LastBlockId.ProtoReflect())
 	case "cosmos.base.tendermint.v1beta1.Header.chain_id":
@@ -1139,7 +1139,7 @@ func (x *fastReflection_Header) Mutable(fd protoreflect.FieldDescriptor) protore
 func (x *fastReflection_Header) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "cosmos.base.tendermint.v1beta1.Header.version":
-		m := new(v11.Consensus)
+		m := new(v1.Consensus)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "cosmos.base.tendermint.v1beta1.Header.chain_id":
 		return protoreflect.ValueOfString("")
@@ -1149,7 +1149,7 @@ func (x *fastReflection_Header) NewField(fd protoreflect.FieldDescriptor) protor
 		m := new(timestamppb.Timestamp)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "cosmos.base.tendermint.v1beta1.Header.last_block_id":
-		m := new(v1.BlockID)
+		m := new(v2.BlockID)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "cosmos.base.tendermint.v1beta1.Header.last_commit_hash":
 		return protoreflect.ValueOfBytes(nil)
@@ -1518,7 +1518,7 @@ func (x *fastReflection_Header) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.Version == nil {
-					x.Version = &v11.Consensus{}
+					x.Version = &v1.Consensus{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Version); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -1641,7 +1641,7 @@ func (x *fastReflection_Header) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.LastBlockId == nil {
-					x.LastBlockId = &v1.BlockID{}
+					x.LastBlockId = &v2.BlockID{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.LastBlockId); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -2007,9 +2007,9 @@ type Block struct {
 	unknownFields protoimpl.UnknownFields
 
 	Header     *Header          `protobuf:"bytes,1,opt,name=header,proto3" json:"header,omitempty"`
-	Data       *v1.Data         `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
-	Evidence   *v1.EvidenceList `protobuf:"bytes,3,opt,name=evidence,proto3" json:"evidence,omitempty"`
-	LastCommit *v1.Commit       `protobuf:"bytes,4,opt,name=last_commit,json=lastCommit,proto3" json:"last_commit,omitempty"`
+	Data       *v2.Data         `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
+	Evidence   *v2.EvidenceList `protobuf:"bytes,3,opt,name=evidence,proto3" json:"evidence,omitempty"`
+	LastCommit *v2.Commit       `protobuf:"bytes,4,opt,name=last_commit,json=lastCommit,proto3" json:"last_commit,omitempty"`
 }
 
 func (x *Block) Reset() {
@@ -2039,21 +2039,21 @@ func (x *Block) GetHeader() *Header {
 	return nil
 }
 
-func (x *Block) GetData() *v1.Data {
+func (x *Block) GetData() *v2.Data {
 	if x != nil {
 		return x.Data
 	}
 	return nil
 }
 
-func (x *Block) GetEvidence() *v1.EvidenceList {
+func (x *Block) GetEvidence() *v2.EvidenceList {
 	if x != nil {
 		return x.Evidence
 	}
 	return nil
 }
 
-func (x *Block) GetLastCommit() *v1.Commit {
+func (x *Block) GetLastCommit() *v2.Commit {
 	if x != nil {
 		return x.LastCommit
 	}
@@ -2067,12 +2067,12 @@ type Header struct {
 	unknownFields protoimpl.UnknownFields
 
 	// basic block info
-	Version *v11.Consensus         `protobuf:"bytes,1,opt,name=version,proto3" json:"version,omitempty"`
+	Version *v1.Consensus          `protobuf:"bytes,1,opt,name=version,proto3" json:"version,omitempty"`
 	ChainId string                 `protobuf:"bytes,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
 	Height  int64                  `protobuf:"varint,3,opt,name=height,proto3" json:"height,omitempty"`
 	Time    *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=time,proto3" json:"time,omitempty"`
 	// prev block info
-	LastBlockId *v1.BlockID `protobuf:"bytes,5,opt,name=last_block_id,json=lastBlockId,proto3" json:"last_block_id,omitempty"`
+	LastBlockId *v2.BlockID `protobuf:"bytes,5,opt,name=last_block_id,json=lastBlockId,proto3" json:"last_block_id,omitempty"`
 	// hashes of block data
 	LastCommitHash []byte `protobuf:"bytes,6,opt,name=last_commit_hash,json=lastCommitHash,proto3" json:"last_commit_hash,omitempty"` // commit from validators from the last block
 	DataHash       []byte `protobuf:"bytes,7,opt,name=data_hash,json=dataHash,proto3" json:"data_hash,omitempty"`                     // transactions
@@ -2110,7 +2110,7 @@ func (*Header) Descriptor() ([]byte, []int) {
 	return file_cosmos_base_tendermint_v1beta1_types_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *Header) GetVersion() *v11.Consensus {
+func (x *Header) GetVersion() *v1.Consensus {
 	if x != nil {
 		return x.Version
 	}
@@ -2138,7 +2138,7 @@ func (x *Header) GetTime() *timestamppb.Timestamp {
 	return nil
 }
 
-func (x *Header) GetLastBlockId() *v1.BlockID {
+func (x *Header) GetLastBlockId() *v2.BlockID {
 	if x != nil {
 		return x.LastBlockId
 	}
@@ -2218,9 +2218,9 @@ var file_cosmos_base_tendermint_v1beta1_types_proto_rawDesc = []byte{
 	0x6d, 0x69, 0x6e, 0x74, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x1a, 0x14, 0x67, 0x6f,
 	0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f,
 	0x74, 0x6f, 0x1a, 0x1d, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2f, 0x74, 0x79, 0x70,
-	0x65, 0x73, 0x2f, 0x76, 0x31, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74,
+	0x65, 0x73, 0x2f, 0x76, 0x32, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74,
 	0x6f, 0x1a, 0x20, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2f, 0x74, 0x79, 0x70, 0x65,
-	0x73, 0x2f, 0x76, 0x31, 0x2f, 0x65, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x2e, 0x70, 0x72,
+	0x73, 0x2f, 0x76, 0x32, 0x2f, 0x65, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x2e, 0x70, 0x72,
 	0x6f, 0x74, 0x6f, 0x1a, 0x1f, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2f, 0x76, 0x65,
 	0x72, 0x73, 0x69, 0x6f, 0x6e, 0x2f, 0x76, 0x31, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x70,
 	0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1f, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f,
@@ -2233,16 +2233,16 @@ var file_cosmos_base_tendermint_v1beta1_types_proto_rawDesc = []byte{
 	0x74, 0x61, 0x31, 0x2e, 0x48, 0x65, 0x61, 0x64, 0x65, 0x72, 0x42, 0x09, 0xc8, 0xde, 0x1f, 0x00,
 	0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x06, 0x68, 0x65, 0x61, 0x64, 0x65, 0x72, 0x12, 0x36, 0x0a,
 	0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x17, 0x2e, 0x63, 0x6f,
-	0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2e, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x76, 0x31, 0x2e,
+	0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2e, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x76, 0x32, 0x2e,
 	0x44, 0x61, 0x74, 0x61, 0x42, 0x09, 0xc8, 0xde, 0x1f, 0x00, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52,
 	0x04, 0x64, 0x61, 0x74, 0x61, 0x12, 0x46, 0x0a, 0x08, 0x65, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63,
 	0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1f, 0x2e, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62,
-	0x66, 0x74, 0x2e, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x45, 0x76, 0x69, 0x64,
+	0x66, 0x74, 0x2e, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x76, 0x32, 0x2e, 0x45, 0x76, 0x69, 0x64,
 	0x65, 0x6e, 0x63, 0x65, 0x4c, 0x69, 0x73, 0x74, 0x42, 0x09, 0xc8, 0xde, 0x1f, 0x00, 0xa8, 0xe7,
 	0xb0, 0x2a, 0x01, 0x52, 0x08, 0x65, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x12, 0x3a, 0x0a,
 	0x0b, 0x6c, 0x61, 0x73, 0x74, 0x5f, 0x63, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x18, 0x04, 0x20, 0x01,
 	0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2e, 0x74, 0x79,
-	0x70, 0x65, 0x73, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x52, 0x0a, 0x6c,
+	0x70, 0x65, 0x73, 0x2e, 0x76, 0x32, 0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x52, 0x0a, 0x6c,
 	0x61, 0x73, 0x74, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x22, 0xf7, 0x04, 0x0a, 0x06, 0x48, 0x65,
 	0x61, 0x64, 0x65, 0x72, 0x12, 0x43, 0x0a, 0x07, 0x76, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x18,
 	0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1e, 0x2e, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74,
@@ -2259,7 +2259,7 @@ var file_cosmos_base_tendermint_v1beta1_types_proto_rawDesc = []byte{
 	0x2a, 0x01, 0x52, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x12, 0x49, 0x0a, 0x0d, 0x6c, 0x61, 0x73, 0x74,
 	0x5f, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x5f, 0x69, 0x64, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0b, 0x32,
 	0x1a, 0x2e, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2e, 0x74, 0x79, 0x70, 0x65, 0x73,
-	0x2e, 0x76, 0x31, 0x2e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x49, 0x44, 0x42, 0x09, 0xc8, 0xde, 0x1f,
+	0x2e, 0x76, 0x32, 0x2e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x49, 0x44, 0x42, 0x09, 0xc8, 0xde, 0x1f,
 	0x00, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x0b, 0x6c, 0x61, 0x73, 0x74, 0x42, 0x6c, 0x6f, 0x63,
 	0x6b, 0x49, 0x64, 0x12, 0x28, 0x0a, 0x10, 0x6c, 0x61, 0x73, 0x74, 0x5f, 0x63, 0x6f, 0x6d, 0x6d,
 	0x69, 0x74, 0x5f, 0x68, 0x61, 0x73, 0x68, 0x18, 0x06, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x0e, 0x6c,
@@ -2319,21 +2319,21 @@ var file_cosmos_base_tendermint_v1beta1_types_proto_msgTypes = make([]protoimpl.
 var file_cosmos_base_tendermint_v1beta1_types_proto_goTypes = []interface{}{
 	(*Block)(nil),                 // 0: cosmos.base.tendermint.v1beta1.Block
 	(*Header)(nil),                // 1: cosmos.base.tendermint.v1beta1.Header
-	(*v1.Data)(nil),               // 2: cometbft.types.v1.Data
-	(*v1.EvidenceList)(nil),       // 3: cometbft.types.v1.EvidenceList
-	(*v1.Commit)(nil),             // 4: cometbft.types.v1.Commit
-	(*v11.Consensus)(nil),         // 5: cometbft.version.v1.Consensus
+	(*v2.Data)(nil),               // 2: cometbft.types.v2.Data
+	(*v2.EvidenceList)(nil),       // 3: cometbft.types.v2.EvidenceList
+	(*v2.Commit)(nil),             // 4: cometbft.types.v2.Commit
+	(*v1.Consensus)(nil),          // 5: cometbft.version.v1.Consensus
 	(*timestamppb.Timestamp)(nil), // 6: google.protobuf.Timestamp
-	(*v1.BlockID)(nil),            // 7: cometbft.types.v1.BlockID
+	(*v2.BlockID)(nil),            // 7: cometbft.types.v2.BlockID
 }
 var file_cosmos_base_tendermint_v1beta1_types_proto_depIdxs = []int32{
 	1, // 0: cosmos.base.tendermint.v1beta1.Block.header:type_name -> cosmos.base.tendermint.v1beta1.Header
-	2, // 1: cosmos.base.tendermint.v1beta1.Block.data:type_name -> cometbft.types.v1.Data
-	3, // 2: cosmos.base.tendermint.v1beta1.Block.evidence:type_name -> cometbft.types.v1.EvidenceList
-	4, // 3: cosmos.base.tendermint.v1beta1.Block.last_commit:type_name -> cometbft.types.v1.Commit
+	2, // 1: cosmos.base.tendermint.v1beta1.Block.data:type_name -> cometbft.types.v2.Data
+	3, // 2: cosmos.base.tendermint.v1beta1.Block.evidence:type_name -> cometbft.types.v2.EvidenceList
+	4, // 3: cosmos.base.tendermint.v1beta1.Block.last_commit:type_name -> cometbft.types.v2.Commit
 	5, // 4: cosmos.base.tendermint.v1beta1.Header.version:type_name -> cometbft.version.v1.Consensus
 	6, // 5: cosmos.base.tendermint.v1beta1.Header.time:type_name -> google.protobuf.Timestamp
-	7, // 6: cosmos.base.tendermint.v1beta1.Header.last_block_id:type_name -> cometbft.types.v1.BlockID
+	7, // 6: cosmos.base.tendermint.v1beta1.Header.last_block_id:type_name -> cometbft.types.v2.BlockID
 	7, // [7:7] is the sub-list for method output_type
 	7, // [7:7] is the sub-list for method input_type
 	7, // [7:7] is the sub-list for extension type_name

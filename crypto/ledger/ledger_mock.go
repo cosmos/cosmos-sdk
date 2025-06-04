@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/cometbft/cometbft/crypto"
+	"github.com/cometbft/cometbft/v2/crypto"
 	"github.com/cosmos/go-bip39"
 	secp "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa"

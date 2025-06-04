@@ -3,7 +3,7 @@ package ante_test
 import (
 	"testing"
 
-	cmtcrypto "github.com/cometbft/cometbft/crypto"
+	cmtcrypto "github.com/cometbft/cometbft/v2/crypto"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"

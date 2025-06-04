@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	cmtcfg "github.com/cometbft/cometbft/config"
+	cmtcfg "github.com/cometbft/cometbft/v2/config"
 	db "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

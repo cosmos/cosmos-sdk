@@ -2,8 +2,8 @@ syntax = "proto3";
 package cosmos.base.tendermint.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "cometbft/types/v1/types.proto";
-import "cometbft/types/v1/evidence.proto";
+import "cometbft/types/v2/types.proto";
+import "cometbft/types/v2/evidence.proto";
 import "cometbft/version/v1/types.proto";
 import "google/protobuf/timestamp.proto";
 import "amino/amino.proto";
@@ -14,9 +14,9 @@ option go_package = "github.com/cosmos/cosmos-sdk/client/grpc/cmtservice";
 // field converted to bech32 string.
 message Block {
   Header                         header      = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-  cometbft.types.v1.Data         data        = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-  cometbft.types.v1.EvidenceList evidence    = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-  cometbft.types.v1.Commit       last_commit = 4;
+  cometbft.types.v2.Data         data        = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  cometbft.types.v2.EvidenceList evidence    = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  cometbft.types.v2.Commit       last_commit = 4;
 }
 
 // Header defines the structure of a Tendermint block header.
@@ -29,7 +29,7 @@ message Header {
       [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
 
   // prev block info
-  cometbft.types.v1.BlockID last_block_id = 5 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  cometbft.types.v2.BlockID last_block_id = 5 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 
   // hashes of block data
   bytes last_commit_hash = 6; // commit from validators from the last block

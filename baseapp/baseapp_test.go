@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

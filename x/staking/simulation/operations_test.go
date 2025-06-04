@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	cmttypes "github.com/cometbft/cometbft/types"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
+	cmttypes "github.com/cometbft/cometbft/v2/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"

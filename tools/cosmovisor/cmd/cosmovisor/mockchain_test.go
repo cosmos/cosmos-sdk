@@ -5,18 +5,21 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/tools/cosmovisor"
+	"cosmossdk.io/tools/cosmovisor/internal"
 )
 
 type MockChainSetup struct {
-	Genesis  string
-	Upgrades map[string]string
-	Config   *cosmovisor.Config
+	Genesis        string
+	GovUpgrades    map[string]string
+	ManualUpgrades map[string]string // to be added with the add-upgrade command
+	Config         *cosmovisor.Config
 }
 
 func mockNodeWrapper(args string) string {
@@ -45,14 +48,21 @@ func (m MockChainSetup) Setup(t *testing.T) (string, string) {
 	require.NoError(t,
 		os.WriteFile(mockdPath, []byte(mockNodeWrapper(m.Genesis)), 0o755),
 	)
-	// create upgrade wrappers
-	for name, args := range m.Upgrades {
+	// create gov upgrade wrappers
+	for name, args := range m.GovUpgrades {
 		upgradeDir := filepath.Join(cosmovisorDir, "upgrades", name, "bin")
 		require.NoError(t, os.MkdirAll(upgradeDir, 0o755))
 		require.NoError(t,
 			os.WriteFile(filepath.Join(upgradeDir, "mockd"),
 				[]byte(mockNodeWrapper(args)), 0o755),
 		)
+	}
+	// create manual upgrade wrappers
+	manualUpgradeDir := filepath.Join(dir, "manual-upgrades")
+	require.NoError(t, os.MkdirAll(manualUpgradeDir, 0o755))
+	for name, args := range m.ManualUpgrades {
+		filename := filepath.Join(manualUpgradeDir, name)
+		require.NoError(t, os.WriteFile(filename, []byte(mockNodeWrapper(args)), 0o755))
 	}
 
 	// update config and save it
@@ -71,19 +81,64 @@ func (m MockChainSetup) Setup(t *testing.T) (string, string) {
 
 func TestMockChain(t *testing.T) {
 	mockchainDir, cfgFile := MockChainSetup{
-		Genesis: "--block-time 1s --upgrade-plan '{\"name\":\"gov1\",\"height\":15}'",
-		Upgrades: map[string]string{
-			"gov1":    "--halt-height 20 --block-time 1s --upgrade-plan '{\"name\":\"gov2\",\"height\":30}'",
-			"manual1": "--block-time 1s --upgrade-plan '{\"name\":\"gov1\",\"height\":15}'",
+		Genesis: "--block-time 1s --upgrade-plan '{\"name\":\"gov1\",\"height\":30}'",
+		GovUpgrades: map[string]string{
+			"gov1": "--halt-height 20 --block-time 1s --upgrade-plan '{\"name\":\"gov2\",\"height\":40}'",
+		},
+		ManualUpgrades: map[string]string{
+			"manual10": "--block-time 1s --upgrade-plan '{\"name\":\"gov1\",\"height\":30}'",
+			"manual20": "--block-time 1s --upgrade-plan '{\"name\":\"gov1\",\"height\":30}'",
 		},
 		Config: &cosmovisor.Config{
 			PollInterval: time.Second,
 		},
 	}.Setup(t)
 
-	rootCmd := NewRootCmd()
-	rootCmd.SetArgs([]string{"run", "--home", mockchainDir, "--cosmovisor-config", cfgFile})
-	rootCmd.SetOut(os.Stdout)
-	rootCmd.SetErr(os.Stderr)
-	require.NoError(t, rootCmd.ExecuteContext(context.Background()))
+	var callbackQueue []func()
+	testCallback := func() {
+		for _, cb := range callbackQueue {
+			cb()
+		}
+		callbackQueue = nil // reset for next test
+	}
+	callbackQueue = append(callbackQueue, func() {
+		go func() {
+			time.Sleep(2 * time.Second) // wait for startup
+			rootCmd := NewRootCmd()
+			rootCmd.SetArgs([]string{
+				"add-upgrade",
+				"manual20",
+				filepath.Join(mockchainDir, "manual-upgrades", "manual20"),
+				"--upgrade-height",
+				"20",
+				"--cosmovisor-config",
+				cfgFile,
+			})
+			rootCmd.SetOut(os.Stdout)
+			rootCmd.SetErr(os.Stderr)
+			require.NoError(t, rootCmd.Execute())
+		}()
+	})
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		rootCmd := NewRootCmd()
+		rootCmd.SetArgs([]string{"run", "--home", mockchainDir, "--cosmovisor-config", cfgFile})
+		rootCmd.SetOut(os.Stdout)
+		rootCmd.SetErr(os.Stderr)
+		ctx := internal.WithTestCallback(context.Background(), testCallback)
+		require.NoError(t, rootCmd.ExecuteContext(ctx))
+		wg.Done()
+	}()
+	wg.Wait()
+
+	// TODO:
+	// - [x] add callback on restart for checking state
+	// - [ ] add manual upgrade (manual20) at height 20
+	// - [ ] then add another manual upgrade (manual10) at height 10
+	// - [ ] manual20 should get picked up and the process should restart with halt-height 20
+	// - [ ] then manual10 should get picked up and the process should restart with halt-height 10
+	// - [ ] when manual10 gets applied, it should restart with halt-height 20
+	// - [ ] when manual20 gets applied, it should restart with no halt-height
+	// - [ ] and then manual20 should trigger gov2 upgrade at height 30
 }

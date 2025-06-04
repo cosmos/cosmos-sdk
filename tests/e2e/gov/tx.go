@@ -61,7 +61,7 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
 
 	// create a proposal with a small deposit
-	minimumAcceptedDep := v1.DefaultMinDepositTokens.ToLegacyDec().Mul(v1.DefaultMinDepositRatio).Ceil().TruncateInt()
+	minimumAcceptedDep := math.LegacyNewDecFromInt(v1.DefaultMinDepositTokens).Mul(v1.DefaultMinDepositRatio).Ceil().TruncateInt()
 	out, err = govclitestutil.MsgSubmitLegacyProposal(val.ClientCtx, val.Address.String(),
 		"Text Proposal 2", "Where is the title!?", v1beta1.ProposalTypeText,
 		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, minimumAcceptedDep).String()))

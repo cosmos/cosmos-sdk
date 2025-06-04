@@ -2,6 +2,7 @@ package network
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -59,7 +60,23 @@ func startInProcess(cfg Config, val *Validator) error {
 				Sha256Checksum: []byte{},
 			}, err
 		}
-		return node.ChecksummedGenesisDoc{GenesisDoc: gen, Sha256Checksum: make([]byte, 0)}, nil
+
+		genbz, err := gen.AppState.MarshalJSON()
+		if err != nil {
+			return node.ChecksummedGenesisDoc{
+				Sha256Checksum: []byte{},
+			}, err
+		}
+
+		bz, err := json.Marshal(genbz)
+		if err != nil {
+			return node.ChecksummedGenesisDoc{
+				Sha256Checksum: []byte{},
+			}, err
+		}
+		sum := sha256.Sum256(bz)
+
+		return node.ChecksummedGenesisDoc{GenesisDoc: gen, Sha256Checksum: sum[:]}, nil
 	}
 
 	cmtApp := server.NewCometABCIWrapper(app)

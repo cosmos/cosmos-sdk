@@ -121,7 +121,11 @@ func (r Runner) RunOnce(ctx context.Context, args []string, haltHeight uint64) e
 				// shutdown, no halt height set
 				return ErrRestartNeeded{}
 			} else {
-				// TODO check if this would change the halt height
+				// restart if we need to change the halt height based on the upgrade
+				firstUpgrade := manualUpgrades.FirstUpgrade()
+				if uint64(firstUpgrade.Height) < haltHeight {
+					return ErrRestartNeeded{}
+				}
 			}
 		case err := <-processRunner.Done():
 			// TODO handle process exit

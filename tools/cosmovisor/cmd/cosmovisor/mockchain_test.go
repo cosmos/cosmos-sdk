@@ -95,31 +95,51 @@ func TestMockChain(t *testing.T) {
 		},
 	}.Setup(t)
 
-	var callbackQueue []func()
-	testCallback := func() {
-		for _, cb := range callbackQueue {
-			cb()
-		}
-		callbackQueue = nil // reset for next test
+	addManualUpgrade1 := func() {
+		time.Sleep(2 * time.Second) // wait for startup
+		rootCmd := NewRootCmd()
+		rootCmd.SetArgs([]string{
+			"add-upgrade",
+			"manual20",
+			filepath.Join(mockchainDir, "manual-upgrades", "manual20"),
+			"--upgrade-height",
+			"20",
+			"--cosmovisor-config",
+			cfgFile,
+		})
+		rootCmd.SetOut(os.Stdout)
+		rootCmd.SetErr(os.Stderr)
+		require.NoError(t, rootCmd.Execute())
 	}
-	callbackQueue = append(callbackQueue, func() {
-		go func() {
-			time.Sleep(2 * time.Second) // wait for startup
-			rootCmd := NewRootCmd()
-			rootCmd.SetArgs([]string{
-				"add-upgrade",
-				"manual20",
-				filepath.Join(mockchainDir, "manual-upgrades", "manual20"),
-				"--upgrade-height",
-				"20",
-				"--cosmovisor-config",
-				cfgFile,
-			})
-			rootCmd.SetOut(os.Stdout)
-			rootCmd.SetErr(os.Stderr)
-			require.NoError(t, rootCmd.Execute())
-		}()
-	})
+
+	addManualUpgrade2 := func() {
+		// TODO switch to batch upgrade at 10 and 40
+		time.Sleep(2 * time.Second) // wait for startup
+		rootCmd := NewRootCmd()
+		rootCmd.SetArgs([]string{
+			"add-upgrade",
+			"manual10",
+			filepath.Join(mockchainDir, "manual-upgrades", "manual10"),
+			"--upgrade-height",
+			"10",
+			"--cosmovisor-config",
+			cfgFile,
+		})
+		rootCmd.SetOut(os.Stdout)
+		rootCmd.SetErr(os.Stderr)
+		require.NoError(t, rootCmd.Execute())
+	}
+
+	var callbackCount int
+	testCallback := func() {
+		callbackCount++
+		switch callbackCount {
+		case 1:
+			go addManualUpgrade1()
+		case 2:
+			go addManualUpgrade2()
+		}
+	}
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
@@ -132,6 +152,8 @@ func TestMockChain(t *testing.T) {
 		wg.Done()
 	}()
 	wg.Wait()
+
+	require.Equal(t, 6, callbackCount)
 
 	// TODO:
 	// - [x] add callback on restart for checking state

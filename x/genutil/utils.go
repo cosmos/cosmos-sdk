@@ -60,7 +60,7 @@ func InitializeNodeValidatorFilesFromMnemonic(config *cfg.Config, mnemonic strin
 		return "", nil, err
 	}
 
-	nodeID = string(nodeKey.ID())
+	nodeID = nodeKey.ID()
 
 	pvKeyFile := config.PrivValidatorKeyFile()
 	if err := os.MkdirAll(filepath.Dir(pvKeyFile), 0o777); err != nil {

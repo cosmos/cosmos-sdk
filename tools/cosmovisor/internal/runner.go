@@ -50,6 +50,7 @@ func (r Runner) Start(ctx context.Context, args []string) error {
 			}
 			startsWithoutUpgrade = 0
 		} else {
+			// TODO check that the actual height is meaningfully progressing and we are not stuck in some manual upgrade loop where halt-height keeps getting set at the same height
 			if startsWithoutUpgrade >= 5 {
 				return fmt.Errorf("process restarted %d times without an upgrade, exiting", startsWithoutUpgrade)
 			}
@@ -111,13 +112,13 @@ func (r Runner) RunOnce(ctx context.Context, args []string, haltHeight uint64) e
 			}
 			r.logger.Info("Received upgrade-info.json")
 			return ErrRestartNeeded{}
-		case _, ok := <-manualUpgradesWatcher.Updated():
+		case manualUpgrades, ok := <-manualUpgradesWatcher.Updated():
 			if !ok {
 				return nil
 			}
 			r.logger.Info("Received updates to upgrade-info.json.batch")
-			if haltHeight == 0 {
-				// TODO shutdown, no halt height set
+			if haltHeight == 0 && len(manualUpgrades) > 0 {
+				// shutdown, no halt height set
 				return ErrRestartNeeded{}
 			} else {
 				// TODO check if this would change the halt height

@@ -45,9 +45,9 @@ require (
 	github.com/cockroachdb/pebble v1.1.5 // indirect
 	github.com/cockroachdb/redact v1.1.6 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb // indirect
-	github.com/cometbft/cometbft v1.0.1 // indirect
 	github.com/cometbft/cometbft-db v1.0.4 // indirect
 	github.com/cometbft/cometbft/api v1.0.0 // indirect
+	github.com/cometbft/cometbft/v2 v2.0.0-main // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.1.2 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
@@ -176,6 +176,6 @@ replace (
 	github.com/cosmos/cosmos-sdk => ../..
 )
 
-replace github.com/cometbft/cometbft => ../../../cometbft
+replace github.com/cometbft/cometbft/v2 => ../../../cometbft
 
 replace github.com/cometbft/cometbft/api => ../../../cometbft/api

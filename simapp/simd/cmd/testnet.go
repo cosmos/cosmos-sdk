@@ -51,8 +51,11 @@ var (
 	flagAPIAddress        = "api.address"
 	flagPrintMnemonic     = "print-mnemonic"
 	flagStakingDenom      = "staking-denom"
-	flagCommitTimeout     = "commit-timeout"
-	flagSingleHost        = "single-host"
+	// flagCommitTimeout is a deprecated flag whose value will not be used.
+	//
+	// Deprecated: set NextBlockDelay on the app with baseapp.SetNextBlockDelay()
+	flagCommitTimeout = "commit-timeout"
+	flagSingleHost    = "single-host"
 )
 
 type initArgs struct {
@@ -81,6 +84,7 @@ type startArgs struct {
 	outputDir     string
 	printMnemonic bool
 	rpcAddress    string
+	// Deprecated: use baseapp.SetNextBlockDelay() instead.
 	timeoutCommit time.Duration
 }
 
@@ -156,7 +160,6 @@ Example:
 			args.algo, _ = cmd.Flags().GetString(flags.FlagKeyType)
 			args.bondTokenDenom, _ = cmd.Flags().GetString(flagStakingDenom)
 			args.singleMachine, _ = cmd.Flags().GetBool(flagSingleHost)
-			config.Consensus.TimeoutCommit, err = cmd.Flags().GetDuration(flagCommitTimeout)
 			if err != nil {
 				return err
 			}

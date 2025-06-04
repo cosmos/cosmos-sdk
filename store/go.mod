@@ -86,6 +86,6 @@ require (
 // )
 replace github.com/cosmos/cosmos-db => github.com/cosmos/cosmos-db v0.0.0-20250505172547-38785e92904d
 
-replace github.com/cometbft/cometbft/v2 => ../../cometbft
+replace github.com/cometbft/cometbft/v2 => github.com/cometbft/cometbft/v2 v2.0.0-20250604002332-f4d33abd2469
 
-replace github.com/cometbft/cometbft/api => ../../cometbft/api
+replace github.com/cometbft/cometbft/api => github.com/cometbft/cometbft/api v0.0.0-20250604002332-f4d33abd2469

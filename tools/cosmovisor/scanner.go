@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	dbm "github.com/cometbft/cometbft/v2-db"
+	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/v2/store"
 
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"

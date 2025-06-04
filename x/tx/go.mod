@@ -44,7 +44,3 @@ replace (
 
 // retracting released version from unreleased sdk v0.52
 retract [v1.0.0, v1.1.0]
-
-replace github.com/cometbft/cometbft => ../../../cometbft
-
-replace github.com/cometbft/cometbft/api => ../../../cometbft/api

@@ -19,7 +19,7 @@ import (
 
 const (
 	testSeed            = "scene learn remember glide apple expand quality spawn property shoe lamp carry upset blossom draft reject aim file trash miss script joy only measure"
-	upgradeHeight int64 = 35
+	upgradeHeight int64 = 45
 	upgradeName         = "v053-to-v054" // must match UpgradeName in simapp/upgrades.go
 )
 

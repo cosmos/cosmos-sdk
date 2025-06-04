@@ -22,13 +22,12 @@ func main() {
 	log.Debug().Msgf("starting migration in dir %q", dir)
 
 	args := migration.MigrateArgs{
-		GoModReplacements: replacements,
-		GoModRemoval:      removals,
-		GoModUpdates:      moduleUpdates,
-		ArgUpdates:        callUpdates,
-		ComplexUpdates:    complexReplacements,
-		ImportUpdates:     importReplacements,
-		TypeUpdates:       typeReplacements,
+		GoModRemoval:   removals,
+		GoModUpdates:   moduleUpdates,
+		ArgUpdates:     callUpdates,
+		ComplexUpdates: complexReplacements,
+		ImportUpdates:  importReplacements,
+		TypeUpdates:    typeReplacements,
 	}
 	if err := migration.Migrate(dir, args); err != nil {
 		panic(fmt.Sprintf("error migrating: %v\n", err))

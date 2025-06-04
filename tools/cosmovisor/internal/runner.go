@@ -15,8 +15,6 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-type TestCallback func()
-
 type Runner struct {
 	runCfg      RunConfig
 	cfg         *cosmovisor.Config
@@ -37,15 +35,15 @@ func (r Runner) Start(ctx context.Context, args []string) error {
 	// TODO handle cases where daemon shuts down without an upgrade, either have a retry count of fail in that case ideally backoff retry
 	startsWithoutUpgrade := 0
 	for {
+		if testCallback := GetTestCallback(ctx); testCallback != nil {
+			testCallback()
+		}
 		upgraded, haltHeight, err := UpgradeIfNeeded(r.cfg, r.logger, r.knownHeight)
 		if err != nil {
 			return err
 		}
 		if upgraded {
 			r.logger.Info("Upgrade completed, restarting process")
-			if !r.cfg.RestartAfterUpgrade {
-				r.logger.Info("DAEMON_RESTART_AFTER_UPGRADE is disabled, exiting process")
-			}
 			startsWithoutUpgrade = 0
 		} else {
 			if startsWithoutUpgrade >= 5 {
@@ -53,9 +51,13 @@ func (r Runner) Start(ctx context.Context, args []string) error {
 			}
 			startsWithoutUpgrade++
 		}
+		if !r.cfg.RestartAfterUpgrade {
+			r.logger.Info("DAEMON_RESTART_AFTER_UPGRADE is disabled, exiting process")
+			return nil
+		}
 		err = r.RunOnce(ctx, args, haltHeight)
 		if err != nil {
-			var upgradeNeeded ErrUpgradeNeeded
+			var upgradeNeeded ErrRestartNeeded
 			if ok := errors.As(err, &upgradeNeeded); ok {
 				r.logger.Info("Upgrade needed")
 			} else {
@@ -85,10 +87,9 @@ func (r Runner) RunOnce(ctx context.Context, args []string, haltHeight uint64) e
 	})
 
 	if haltHeight > 0 {
-		// TODO start height watcher
+		r.logger.Info("Setting --halt-height flag for manual upgrade", "halt_height", haltHeight)
 		args = append(args, fmt.Sprintf("--halt-height=%d", haltHeight))
 	}
-	//// TODO start process runner
 	cmd, err := r.createCmd(args)
 	if err != nil {
 		return err
@@ -109,7 +110,7 @@ func (r Runner) RunOnce(ctx context.Context, args []string, haltHeight uint64) e
 				return nil
 			}
 			r.logger.Info("Received upgrade-info.json")
-			return ErrUpgradeNeeded{}
+			return ErrRestartNeeded{}
 		case _, ok := <-manualUpgradesWatcher.Updated():
 			if !ok {
 				return nil
@@ -117,7 +118,7 @@ func (r Runner) RunOnce(ctx context.Context, args []string, haltHeight uint64) e
 			r.logger.Info("Received updates to upgrade-info.json.batch")
 			if haltHeight == 0 {
 				// TODO shutdown, no halt height set
-				return ErrUpgradeNeeded{}
+				return ErrRestartNeeded{}
 			} else {
 				// TODO check if this would change the halt height
 			}
@@ -134,7 +135,7 @@ func (r Runner) RunOnce(ctx context.Context, args []string, haltHeight uint64) e
 			}
 			// signal an upgrade if we have a halt height and we are at or past it
 			if haltHeight > 0 && actualHeight >= haltHeight {
-				return ErrUpgradeNeeded{}
+				return ErrRestartNeeded{}
 			}
 			// TODO error channels
 		}

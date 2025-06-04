@@ -4,10 +4,10 @@ import (
 	"fmt"
 )
 
-type ErrUpgradeNeeded struct{}
+type ErrRestartNeeded struct{}
 
-func (e ErrUpgradeNeeded) Error() string {
+func (e ErrRestartNeeded) Error() string {
 	return fmt.Sprintf("upgrade needed")
 }
 
-var _ error = ErrUpgradeNeeded{}
+var _ error = ErrRestartNeeded{}

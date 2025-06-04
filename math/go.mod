@@ -30,7 +30,3 @@ retract (
 	v1.1.2
 	[v1.0.0, v1.0.1]
 )
-
-replace github.com/cometbft/cometbft => ../../cometbft
-
-replace github.com/cometbft/cometbft/api => ../../cometbft/api

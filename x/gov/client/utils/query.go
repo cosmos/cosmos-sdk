@@ -13,7 +13,7 @@ import (
 
 const (
 	defaultPage  = 1
-	defaultLimit = 30 // should be consistent with https://github.com/cometbft/cometbft/tree/v0.37.x/rpc/core#pagination
+	defaultLimit = 30 // should be consistent with https://github.com/cometbft/cometbft/v2/tree/v0.37.x/rpc/core#pagination
 )
 
 // Proposer contains metadata of a governance proposal used for querying a

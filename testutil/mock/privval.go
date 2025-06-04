@@ -1,9 +1,9 @@
 package mock
 
 import (
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	"github.com/cometbft/cometbft/crypto"
-	cmttypes "github.com/cometbft/cometbft/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
+	"github.com/cometbft/cometbft/v2/crypto"
+	cmttypes "github.com/cometbft/cometbft/v2/types"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
@@ -36,7 +36,7 @@ func (pv PV) SignVote(chainID string, vote *cmtproto.Vote, signExtension bool) e
 	}
 	vote.Signature = sig
 	if signExtension {
-		extSignBytes := cmttypes.VoteExtensionSignBytes(chainID, vote)
+		extSignBytes, _ := cmttypes.VoteExtensionSignBytes(chainID, vote)
 		extSig, err := pv.PrivKey.Sign(extSignBytes)
 		if err != nil {
 			return err

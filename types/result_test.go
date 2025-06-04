@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	cmtt "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-	cmt "github.com/cometbft/cometbft/types"
+	cmtt "github.com/cometbft/cometbft/api/cometbft/types/v2"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
+	coretypes "github.com/cometbft/cometbft/v2/rpc/core/types"
+	cmt "github.com/cometbft/cometbft/v2/types"
 	"github.com/golang/protobuf/proto" //nolint:staticcheck // grpc-gateway uses deprecated golang/protobuf
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"

@@ -2,8 +2,8 @@ syntax = "proto3";
 package cosmos.base.abci.v1beta1;
 
 import "gogoproto/gogo.proto";
-import "cometbft/abci/v1/types.proto";
-import "cometbft/types/v1/block.proto";
+import "cometbft/abci/v2/types.proto";
+import "cometbft/types/v2/block.proto";
 import "google/protobuf/any.proto";
 import "cosmos_proto/cosmos.proto";
 
@@ -45,7 +45,7 @@ message TxResponse {
   // these events include those emitted by processing all the messages and those
   // emitted from the ante. Whereas Logs contains the events, with
   // additional metadata, emitted only by processing the messages.
-  repeated cometbft.abci.v1.Event events = 13
+  repeated cometbft.abci.v2.Event events = 13
       [(gogoproto.nullable) = false, (cosmos_proto.field_added_in) = "cosmos-sdk 0.45"];
 }
 
@@ -101,7 +101,7 @@ message Result {
 
   // Events contains a slice of Event objects that were emitted during message
   // or handler execution.
-  repeated cometbft.abci.v1.Event events = 3 [(gogoproto.nullable) = false];
+  repeated cometbft.abci.v2.Event events = 3 [(gogoproto.nullable) = false];
 
   // msg_responses contains the Msg handler responses type packed in Anys.
   repeated google.protobuf.Any msg_responses = 4 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.46"];
@@ -169,5 +169,5 @@ message SearchBlocksResult {
   // Max count blocks per page
   int64 limit = 5;
   // List of blocks in current page
-  repeated cometbft.types.v1.Block blocks = 6;
+  repeated cometbft.types.v2.Block blocks = 6;
 }

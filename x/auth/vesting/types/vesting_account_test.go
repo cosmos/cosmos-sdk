@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	tmtime "github.com/cometbft/cometbft/types/time"
+	tmtime "github.com/cometbft/cometbft/v2/types/time"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 

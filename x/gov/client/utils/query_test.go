@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/cometbft/cometbft/rpc/client/mock"
-	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-	cmttypes "github.com/cometbft/cometbft/types"
+	"github.com/cometbft/cometbft/v2/rpc/client/mock"
+	coretypes "github.com/cometbft/cometbft/v2/rpc/core/types"
+	cmttypes "github.com/cometbft/cometbft/v2/types"
 	"github.com/stretchr/testify/require"
 
 	sdkmath "cosmossdk.io/math"

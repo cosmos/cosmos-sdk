@@ -5,10 +5,11 @@ import (
 	"sort"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/proto"
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/core/comet"
@@ -35,7 +36,7 @@ func TestValidateVoteExtensions(t *testing.T) {
 
 	// enable vote extensions
 	cp := simtestutil.DefaultConsensusParams
-	cp.Abci = &cmtproto.ABCIParams{VoteExtensionsEnableHeight: 1}
+	cp.Feature = &cmtproto.FeatureParams{VoteExtensionsEnableHeight: &gogotypes.Int64Value{Value: 1}}
 	f.sdkCtx = f.sdkCtx.WithConsensusParams(*cp).WithHeaderInfo(header.Info{Height: 2, ChainID: chainID})
 
 	// setup the validators

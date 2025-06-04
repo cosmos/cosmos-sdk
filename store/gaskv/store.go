@@ -26,12 +26,13 @@ func NewStore(parent types.KVStore, gasMeter types.GasMeter, gasConfig types.Gas
 	return kvs
 }
 
-// Implements Store.
+// GetStoreType implements Store, consuming no gas and returning the underlying
+// store's type.
 func (gs *Store) GetStoreType() types.StoreType {
 	return gs.parent.GetStoreType()
 }
 
-// Implements KVStore.
+// Get implements KVStore, consuming gas based on ReadCostFlat and the read per bytes cost.
 func (gs *Store) Get(key []byte) (value []byte) {
 	gs.gasMeter.ConsumeGas(gs.gasConfig.ReadCostFlat, types.GasReadCostFlatDesc)
 	value = gs.parent.Get(key)
@@ -43,7 +44,7 @@ func (gs *Store) Get(key []byte) (value []byte) {
 	return value
 }
 
-// Implements KVStore.
+// Set implements KVStore, consuming gas based on WriteCostFlat and the write per bytes cost.
 func (gs *Store) Set(key, value []byte) {
 	types.AssertValidKey(key)
 	types.AssertValidValue(value)
@@ -54,13 +55,13 @@ func (gs *Store) Set(key, value []byte) {
 	gs.parent.Set(key, value)
 }
 
-// Implements KVStore.
+// Has implements KVStore, consuming gas based on HasCost.
 func (gs *Store) Has(key []byte) bool {
 	gs.gasMeter.ConsumeGas(gs.gasConfig.HasCost, types.GasHasDesc)
 	return gs.parent.Has(key)
 }
 
-// Implements KVStore.
+// Delete implements KVStore consuming gas based on DeleteCost.
 func (gs *Store) Delete(key []byte) {
 	// charge gas to prevent certain attack vectors even though space is being freed
 	gs.gasMeter.ConsumeGas(gs.gasConfig.DeleteCost, types.GasDeleteDesc)
@@ -82,7 +83,7 @@ func (gs *Store) ReverseIterator(start, end []byte) types.Iterator {
 	return gs.iterator(start, end, false)
 }
 
-// Implements KVStore.
+// CacheWrap implements KVStore - it PANICS as you cannot cache a GasKVStore.
 func (gs *Store) CacheWrap() types.CacheWrap {
 	panic("cannot CacheWrap a GasKVStore")
 }
@@ -120,12 +121,12 @@ func newGasIterator(gasMeter types.GasMeter, gasConfig types.GasConfig, parent t
 	}
 }
 
-// Implements Iterator.
+// Domain implements Iterator, getting the underlying iterator's domain'.
 func (gi *gasIterator) Domain() (start, end []byte) {
 	return gi.parent.Domain()
 }
 
-// Implements Iterator.
+// Valid implements Iterator by checking the underlying iterator.
 func (gi *gasIterator) Valid() bool {
 	return gi.parent.Valid()
 }
@@ -152,7 +153,7 @@ func (gi *gasIterator) Value() (value []byte) {
 	return value
 }
 
-// Implements Iterator.
+// Close implements Iterator by closing the underlying iterator.
 func (gi *gasIterator) Close() error {
 	return gi.parent.Close()
 }

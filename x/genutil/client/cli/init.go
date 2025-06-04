@@ -8,8 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
-	cfg "github.com/cometbft/cometbft/config"
-	cmttypes "github.com/cometbft/cometbft/types"
+	cfg "github.com/cometbft/cometbft/v2/config"
+	cmttypes "github.com/cometbft/cometbft/v2/types"
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"
 
@@ -32,7 +32,7 @@ const (
 	// FlagOverwrite defines a flag to overwrite an existing genesis JSON file.
 	FlagOverwrite = "overwrite"
 
-	// FlagSeed defines a flag to initialize the private validator key from a specific seed.
+	// FlagRecover defines a flag to initialize the private validator key from a specific seed.
 	FlagRecover = "recover"
 
 	// FlagDefaultBondDenom defines the default denom to use in the genesis file.
@@ -118,6 +118,11 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 				initHeight = 1
 			}
 
+			consensusKey, err := cmd.Flags().GetString(FlagConsensusKeyAlgo)
+			if err != nil {
+				return errorsmod.Wrap(err, "Failed to get consensus key algo")
+			}
+
 			nodeID, _, err := genutil.InitializeNodeValidatorFilesFromMnemonic(config, mnemonic)
 			if err != nil {
 				return err
@@ -166,11 +171,6 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			appGenesis.Consensus = &types.ConsensusGenesis{
 				Validators: nil,
 				Params:     cmttypes.DefaultConsensusParams(),
-			}
-
-			consensusKey, err := cmd.Flags().GetString(FlagConsensusKeyAlgo)
-			if err != nil {
-				return errorsmod.Wrap(err, "Failed to get consensus key algo")
 			}
 
 			appGenesis.Consensus.Params.Validator.PubKeyTypes = []string{consensusKey}

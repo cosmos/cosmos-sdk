@@ -3,7 +3,7 @@ package cmd
 import (
 	"context"
 
-	cmtcli "github.com/cometbft/cometbft/libs/cli"
+	cmtcli "github.com/cometbft/cometbft/v2/libs/cli"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
@@ -29,6 +29,7 @@ func Execute(rootCmd *cobra.Command, envPrefix, defaultHome string) error {
 	// NOTE: The default logger is only checking for the "json" value, any other value will default to plain text.
 	rootCmd.PersistentFlags().String(flags.FlagLogFormat, "plain", "The logging format (json|plain)")
 	rootCmd.PersistentFlags().Bool(flags.FlagLogNoColor, false, "Disable colored logs")
+	rootCmd.PersistentFlags().String(flags.FlagVerboseLogLevel, zerolog.DebugLevel.String(), "The logging level (trace|debug|info|warn|error|fatal|panic|disabled|none) to use when performing operations which require extra verbosity (such as upgrades). When enabled, verbose mode disables any custom log filters. Set this to none to make verbose mode equivalent to normal logging.")
 
 	executor := cmtcli.PrepareBaseCmd(rootCmd, envPrefix, defaultHome)
 	return executor.ExecuteContext(ctx)

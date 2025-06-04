@@ -2,16 +2,17 @@ package genutil
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"time"
 
-	cfg "github.com/cometbft/cometbft/config"
-	tmed25519 "github.com/cometbft/cometbft/crypto/ed25519"
-	"github.com/cometbft/cometbft/p2p"
-	"github.com/cometbft/cometbft/privval"
-	cmttypes "github.com/cometbft/cometbft/types"
+	cfg "github.com/cometbft/cometbft/v2/config"
+	tmed25519 "github.com/cometbft/cometbft/v2/crypto/ed25519"
+	"github.com/cometbft/cometbft/v2/p2p"
+	"github.com/cometbft/cometbft/v2/privval"
+	cmttypes "github.com/cometbft/cometbft/v2/types"
 	"github.com/cosmos/go-bip39"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -43,23 +44,23 @@ func ExportGenesisFileWithTime(genFile, chainID string, validators []cmttypes.Ge
 	return appGenesis.SaveAs(genFile)
 }
 
-// InitializeNodeValidatorFiles creates private validator and p2p configuration files.
+// InitializeNodeValidatorFiles creates private validator and p2p configuration files. Key type is ed25519.
 func InitializeNodeValidatorFiles(config *cfg.Config) (nodeID string, valPubKey cryptotypes.PubKey, err error) {
 	return InitializeNodeValidatorFilesFromMnemonic(config, "")
 }
 
 // InitializeNodeValidatorFilesFromMnemonic creates private validator and p2p configuration files using the given mnemonic.
-// If no valid mnemonic is given, a random one will be used instead.
+// If no valid mnemonic is given, a random one will be used instead. Key type is ed25519.
 func InitializeNodeValidatorFilesFromMnemonic(config *cfg.Config, mnemonic string) (nodeID string, valPubKey cryptotypes.PubKey, err error) {
 	if len(mnemonic) > 0 && !bip39.IsMnemonicValid(mnemonic) {
-		return "", nil, fmt.Errorf("invalid mnemonic")
+		return "", nil, errors.New("invalid mnemonic")
 	}
 	nodeKey, err := p2p.LoadOrGenNodeKey(config.NodeKeyFile())
 	if err != nil {
 		return "", nil, err
 	}
 
-	nodeID = string(nodeKey.ID())
+	nodeID = nodeKey.ID()
 
 	pvKeyFile := config.PrivValidatorKeyFile()
 	if err := os.MkdirAll(filepath.Dir(pvKeyFile), 0o777); err != nil {
@@ -72,8 +73,13 @@ func InitializeNodeValidatorFilesFromMnemonic(config *cfg.Config, mnemonic strin
 	}
 
 	var filePV *privval.FilePV
+
 	if len(mnemonic) == 0 {
-		filePV = privval.LoadOrGenFilePV(pvKeyFile, pvStateFile)
+		// CometBFT uses the ed25519 key generator as default if the given generator function is nil.
+		filePV, err = privval.LoadOrGenFilePV(pvKeyFile, pvStateFile, nil)
+		if err != nil {
+			return "", nil, err
+		}
 	} else {
 		privKey := tmed25519.GenPrivKeyFromSecret([]byte(mnemonic))
 		filePV = privval.NewFilePV(privKey, pvKeyFile, pvStateFile)

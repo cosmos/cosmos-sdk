@@ -1,3 +1,4 @@
+// Deprecated: This package is deprecated and will be removed in the next major release. The `x/nft` module will be moved to a separate repo `github.com/cosmos/cosmos-sdk-legacy`.
 package module
 
 import (
@@ -5,9 +6,9 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	nftv1beta1 "cosmossdk.io/api/cosmos/nft/v1beta1"
-	"cosmossdk.io/x/nft"
 
 	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/cosmos/cosmos-sdk/x/nft" //nolint:staticcheck // deprecated and to be removed
 )
 
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.

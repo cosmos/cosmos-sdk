@@ -7,7 +7,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/cometbft/cometbft/crypto"
+	"github.com/cometbft/cometbft/v2/crypto"
 	"github.com/cosmos/go-bip39"
 	secp "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	"github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa"
@@ -29,7 +29,7 @@ func init() {
 	initOptionsDefault()
 }
 
-type LedgerSECP256K1Mock struct{}
+type LedgerSECP256K1Mock struct{} //nolint: revive // we can ignore this, as this type is being used
 
 func (mock LedgerSECP256K1Mock) Close() error {
 	return nil

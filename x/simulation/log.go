@@ -8,13 +8,12 @@ import (
 	"time"
 )
 
-// log writter
 type LogWriter interface {
 	AddEntry(OperationEntry)
 	PrintLogs()
 }
 
-// LogWriter - return a dummy or standard log writer given the testingmode
+// NewLogWriter returns a dummy or standard log writer given the testingmode
 func NewLogWriter(testingmode bool) LogWriter {
 	if !testingmode {
 		return &DummyLogWriter{}
@@ -23,7 +22,7 @@ func NewLogWriter(testingmode bool) LogWriter {
 	return &StandardLogWriter{}
 }
 
-// log writter
+// StandardLogWriter is a standard log writer that writes the logs to a file.
 type StandardLogWriter struct {
 	Seed int64
 
@@ -32,7 +31,7 @@ type StandardLogWriter struct {
 	written   bool
 }
 
-// add an entry to the log writter
+// AddEntry adds an entry to the log writer
 func (lw *StandardLogWriter) AddEntry(opEntry OperationEntry) {
 	lw.OpEntries = append(lw.OpEntries, opEntry)
 }
@@ -81,11 +80,8 @@ func createLogFile(seed int64) *os.File {
 	return f
 }
 
-// dummy log writter
 type DummyLogWriter struct{}
 
-// do nothing
 func (lw *DummyLogWriter) AddEntry(_ OperationEntry) {}
 
-// do nothing
 func (lw *DummyLogWriter) PrintLogs() {}

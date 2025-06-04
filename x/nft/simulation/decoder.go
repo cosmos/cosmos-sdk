@@ -1,15 +1,15 @@
+// Deprecated: This package is deprecated and will be removed in the next major release. The `x/nft` module will be moved to a separate repo `github.com/cosmos/cosmos-sdk-legacy`.
 package simulation
 
 import (
 	"bytes"
 	"fmt"
 
-	"cosmossdk.io/x/nft"
-	"cosmossdk.io/x/nft/keeper"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+	"github.com/cosmos/cosmos-sdk/x/nft"        //nolint:staticcheck // deprecated and to be removed
+	"github.com/cosmos/cosmos-sdk/x/nft/keeper" //nolint:staticcheck // deprecated and to be removed
 )
 
 // NewDecodeStore returns a decoder function closure that unmarshals the KVPair's

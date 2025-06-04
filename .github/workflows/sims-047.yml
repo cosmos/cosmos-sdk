@@ -21,7 +21,7 @@ jobs:
           ref: "release/v0.47.x"
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.23"
+          go-version: "1.24"
           check-latest: true
       - run: make build
 
@@ -33,7 +33,7 @@ jobs:
     steps:
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.23"
+          go-version: "1.24"
           check-latest: true
       - name: Install runsim
         run: go install github.com/cosmos/tools/cmd/runsim@v1.0.0
@@ -52,7 +52,7 @@ jobs:
           ref: "release/v0.47.x"
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.23"
+          go-version: "1.24"
           check-latest: true
       - uses: actions/cache@v4
         with:
@@ -71,7 +71,7 @@ jobs:
           ref: "release/v0.47.x"
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.23"
+          go-version: "1.24"
           check-latest: true
       - uses: actions/cache@v4
         with:
@@ -90,7 +90,7 @@ jobs:
           ref: "release/v0.47.x"
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.23"
+          go-version: "1.24"
           check-latest: true
       - uses: actions/cache@v4
         with:
@@ -99,31 +99,6 @@ jobs:
       - name: test-sim-multi-seed-short
         run: |
           make test-sim-multi-seed-short
-
-  sims-notify-success:
-    needs:
-      [test-sim-multi-seed-short, test-sim-after-import, test-sim-import-export]
-    runs-on: ubuntu-latest
-    if: ${{ success() }}
-    steps:
-      - uses: actions/checkout@v4
-      - name: Get previous workflow status
-        uses: ./.github/actions/last-workflow-status
-        id: last_status
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Notify Slack on success
-        if: ${{ steps.last_status.outputs.last_status == 'failure' }}
-        uses: rtCamp/action-slack-notify@v2.3.3
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_CHANNEL: sdk-sims
-          SLACK_USERNAME: Sim Tests release/0.47.x
-          SLACK_ICON_EMOJI: ":white_check_mark:"
-          SLACK_COLOR: good
-          SLACK_MESSAGE: 0.47.x Sims are passing
-          SLACK_FOOTER: ""
 
   sims-notify-failure:
     permissions:

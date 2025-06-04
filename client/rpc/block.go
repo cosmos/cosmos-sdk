@@ -1,13 +1,12 @@
 package rpc
 
 import (
-	"context"
 	"encoding/hex"
 	"fmt"
 	"time"
 
-	cmt "github.com/cometbft/cometbft/proto/tendermint/types"
-	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+	cmt "github.com/cometbft/cometbft/api/cometbft/types/v2"
+	coretypes "github.com/cometbft/cometbft/v2/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -20,7 +19,7 @@ func GetChainHeight(clientCtx client.Context) (int64, error) {
 		return -1, err
 	}
 
-	status, err := node.Status(context.Background())
+	status, err := node.Status(clientCtx.GetCmdContextWithFallback())
 	if err != nil {
 		return -1, err
 	}
@@ -34,11 +33,12 @@ func GetChainHeight(clientCtx client.Context) (int64, error) {
 //
 // To tell which events you want, you need to provide a query. query is a
 // string, which has a form: "condition AND condition ..." (no OR at the
-// 	moment). condition has a form: "key operation operand". key is a string with
-// 	a restricted set of possible symbols ( \t\n\r\\()"'=>< are not allowed).
-// 	operation can be "=", "<", "<=", ">", ">=", "CONTAINS" AND "EXISTS". operand
-// 	can be a string (escaped with single quotes), number, date or time.
-
+//
+//	moment). condition has a form: "key operation operand". key is a string with
+//	a restricted set of possible symbols ( \t\n\r\\()"'=>< are not allowed).
+//	operation can be "=", "<", "<=", ">", ">=", "CONTAINS" AND "EXISTS". operand
+//	can be a string (escaped with single quotes), number, date or time.
+//
 //	Examples:
 //		  tm.event = 'NewBlock'               # new blocks
 //		  tm.event = 'CompleteProposal'       # node got a complete proposal
@@ -53,7 +53,7 @@ func QueryBlocks(clientCtx client.Context, page, limit int, query, orderBy strin
 		return nil, err
 	}
 
-	resBlocks, err := node.BlockSearch(context.Background(), query, &page, &limit, orderBy)
+	resBlocks, err := node.BlockSearch(clientCtx.GetCmdContextWithFallback(), query, &page, &limit, orderBy)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +68,7 @@ func QueryBlocks(clientCtx client.Context, page, limit int, query, orderBy strin
 	return result, nil
 }
 
-// get block by height
+// GetBlockByHeight gets a block by height
 func GetBlockByHeight(clientCtx client.Context, height *int64) (*cmt.Block, error) {
 	// get the node
 	node, err := clientCtx.GetNode()
@@ -79,7 +79,7 @@ func GetBlockByHeight(clientCtx client.Context, height *int64) (*cmt.Block, erro
 	// header -> BlockchainInfo
 	// header, tx -> Block
 	// results -> BlockResults
-	resBlock, err := node.Block(context.Background(), height)
+	resBlock, err := node.Block(clientCtx.GetCmdContextWithFallback(), height)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +104,7 @@ func GetBlockByHash(clientCtx client.Context, hashHexString string) (*cmt.Block,
 		return nil, err
 	}
 
-	resBlock, err := node.BlockByHash(context.Background(), hash)
+	resBlock, err := node.BlockByHash(clientCtx.GetCmdContextWithFallback(), hash)
 
 	if err != nil {
 		return nil, err

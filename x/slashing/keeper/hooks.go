@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/cometbft/cometbft/crypto"
+	"github.com/cometbft/cometbft/v2/crypto"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -14,12 +14,12 @@ import (
 
 var _ types.StakingHooks = Hooks{}
 
-// Hooks wrapper struct for slashing keeper
+// Hooks is a wrapper struct for slashing keeper
 type Hooks struct {
 	k Keeper
 }
 
-// Return the slashing hooks
+// Hooks returns the slashing hooks
 func (k Keeper) Hooks() Hooks {
 	return Hooks{k}
 }

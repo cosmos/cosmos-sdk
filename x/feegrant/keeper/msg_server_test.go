@@ -5,11 +5,10 @@ import (
 
 	"go.uber.org/mock/gomock"
 
-	"cosmossdk.io/x/feegrant"
-
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
 func (suite *KeeperTestSuite) TestGrantAllowance() {
@@ -227,7 +226,7 @@ func (suite *KeeperTestSuite) TestRevokeAllowance() {
 			},
 			func() {},
 			true,
-			"fee-grant not found",
+			"not found",
 		},
 		{
 			"success: revoke fee allowance",
@@ -269,7 +268,7 @@ func (suite *KeeperTestSuite) TestRevokeAllowance() {
 			},
 			func() {},
 			true,
-			"fee-grant not found",
+			"not found",
 		},
 	}
 

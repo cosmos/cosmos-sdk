@@ -100,6 +100,20 @@ func (mr *MockAccountKeeperMockRecorder) GetParams(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetParams", reflect.TypeOf((*MockAccountKeeper)(nil).GetParams), ctx)
 }
 
+// RemoveExpiredUnorderedNonces mocks base method.
+func (m *MockAccountKeeper) RemoveExpiredUnorderedNonces(ctx types.Context) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemoveExpiredUnorderedNonces", ctx)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemoveExpiredUnorderedNonces indicates an expected call of RemoveExpiredUnorderedNonces.
+func (mr *MockAccountKeeperMockRecorder) RemoveExpiredUnorderedNonces(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveExpiredUnorderedNonces", reflect.TypeOf((*MockAccountKeeper)(nil).RemoveExpiredUnorderedNonces), ctx)
+}
+
 // SetAccount mocks base method.
 func (m *MockAccountKeeper) SetAccount(ctx context.Context, acc types.AccountI) {
 	m.ctrl.T.Helper()
@@ -112,46 +126,8 @@ func (mr *MockAccountKeeperMockRecorder) SetAccount(ctx, acc any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAccount", reflect.TypeOf((*MockAccountKeeper)(nil).SetAccount), ctx, acc)
 }
 
-// MockUnorderedNonceManager is a mock of UnorderedNonceManager interface.
-type MockUnorderedNonceManager struct {
-	ctrl     *gomock.Controller
-	recorder *MockUnorderedNonceManagerMockRecorder
-	isgomock struct{}
-}
-
-// MockUnorderedNonceManagerMockRecorder is the mock recorder for MockUnorderedNonceManager.
-type MockUnorderedNonceManagerMockRecorder struct {
-	mock *MockUnorderedNonceManager
-}
-
-// NewMockUnorderedNonceManager creates a new mock instance.
-func NewMockUnorderedNonceManager(ctrl *gomock.Controller) *MockUnorderedNonceManager {
-	mock := &MockUnorderedNonceManager{ctrl: ctrl}
-	mock.recorder = &MockUnorderedNonceManagerMockRecorder{mock}
-	return mock
-}
-
-// EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockUnorderedNonceManager) EXPECT() *MockUnorderedNonceManagerMockRecorder {
-	return m.recorder
-}
-
-// RemoveExpiredUnorderedNonces mocks base method.
-func (m *MockUnorderedNonceManager) RemoveExpiredUnorderedNonces(ctx types.Context) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemoveExpiredUnorderedNonces", ctx)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// RemoveExpiredUnorderedNonces indicates an expected call of RemoveExpiredUnorderedNonces.
-func (mr *MockUnorderedNonceManagerMockRecorder) RemoveExpiredUnorderedNonces(ctx any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveExpiredUnorderedNonces", reflect.TypeOf((*MockUnorderedNonceManager)(nil).RemoveExpiredUnorderedNonces), ctx)
-}
-
 // TryAddUnorderedNonce mocks base method.
-func (m *MockUnorderedNonceManager) TryAddUnorderedNonce(ctx types.Context, sender []byte, timestamp time.Time) error {
+func (m *MockAccountKeeper) TryAddUnorderedNonce(ctx types.Context, sender []byte, timestamp time.Time) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "TryAddUnorderedNonce", ctx, sender, timestamp)
 	ret0, _ := ret[0].(error)
@@ -159,9 +135,23 @@ func (m *MockUnorderedNonceManager) TryAddUnorderedNonce(ctx types.Context, send
 }
 
 // TryAddUnorderedNonce indicates an expected call of TryAddUnorderedNonce.
-func (mr *MockUnorderedNonceManagerMockRecorder) TryAddUnorderedNonce(ctx, sender, timestamp any) *gomock.Call {
+func (mr *MockAccountKeeperMockRecorder) TryAddUnorderedNonce(ctx, sender, timestamp any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TryAddUnorderedNonce", reflect.TypeOf((*MockUnorderedNonceManager)(nil).TryAddUnorderedNonce), ctx, sender, timestamp)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TryAddUnorderedNonce", reflect.TypeOf((*MockAccountKeeper)(nil).TryAddUnorderedNonce), ctx, sender, timestamp)
+}
+
+// UnorderedTransactionsEnabled mocks base method.
+func (m *MockAccountKeeper) UnorderedTransactionsEnabled() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UnorderedTransactionsEnabled")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// UnorderedTransactionsEnabled indicates an expected call of UnorderedTransactionsEnabled.
+func (mr *MockAccountKeeperMockRecorder) UnorderedTransactionsEnabled() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UnorderedTransactionsEnabled", reflect.TypeOf((*MockAccountKeeper)(nil).UnorderedTransactionsEnabled))
 }
 
 // MockFeegrantKeeper is a mock of FeegrantKeeper interface.

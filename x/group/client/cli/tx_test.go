@@ -7,8 +7,8 @@ import (
 	"io"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
+	rpcclientmock "github.com/cometbft/cometbft/v2/rpc/client/mock"
 	"github.com/stretchr/testify/suite"
 
 	// without this import amino json encoding will fail when resolving any types
@@ -25,9 +25,9 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/group"
-	groupcli "github.com/cosmos/cosmos-sdk/x/group/client/cli"
-	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
+	"github.com/cosmos/cosmos-sdk/x/group"                     //nolint:staticcheck // deprecated and to be removed
+	groupcli "github.com/cosmos/cosmos-sdk/x/group/client/cli" //nolint:staticcheck // deprecated and to be removed
+	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"  //nolint:staticcheck // deprecated and to be removed
 )
 
 var validMetadata = "metadata"
@@ -70,7 +70,7 @@ func (s *CLITestSuite) SetupSuite() {
 
 	ctxGen := func() client.Context {
 		bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-		c := clitestutil.NewMockCometRPC(abci.ResponseQuery{
+		c := clitestutil.NewMockCometRPC(abci.QueryResponse{
 			Value: bz,
 		})
 		return s.baseCtx.WithClient(c)
@@ -273,7 +273,7 @@ func (s *CLITestSuite) TestTxUpdateGroupAdmin() {
 			"correct data",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := clitestutil.NewMockCometRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockCometRPC(abci.QueryResponse{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -293,7 +293,7 @@ func (s *CLITestSuite) TestTxUpdateGroupAdmin() {
 			"with amino-json",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := clitestutil.NewMockCometRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockCometRPC(abci.QueryResponse{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -314,7 +314,7 @@ func (s *CLITestSuite) TestTxUpdateGroupAdmin() {
 			"group id invalid",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := clitestutil.NewMockCometRPC(abci.ResponseQuery{
+				c := clitestutil.NewMockCometRPC(abci.QueryResponse{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)

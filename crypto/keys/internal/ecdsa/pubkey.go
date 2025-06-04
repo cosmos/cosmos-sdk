@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"math/big"
 
-	cmtcrypto "github.com/cometbft/cometbft/crypto"
+	cmtcrypto "github.com/cometbft/cometbft/v2/crypto"
 
 	errorsmod "cosmossdk.io/errors"
 

@@ -206,7 +206,7 @@ func (k Keeper) SlashWithInfractionReason(ctx context.Context, consAddr sdk.Cons
 	return k.Slash(ctx, consAddr, infractionHeight, power, slashFactor)
 }
 
-// jail a validator
+// Jail jails a validator
 func (k Keeper) Jail(ctx context.Context, consAddr sdk.ConsAddress) error {
 	validator := k.mustGetValidatorByConsAddr(ctx, consAddr)
 	if err := k.jailValidator(ctx, validator); err != nil {
@@ -218,7 +218,7 @@ func (k Keeper) Jail(ctx context.Context, consAddr sdk.ConsAddress) error {
 	return nil
 }
 
-// unjail a validator
+// Unjail unjails a validator
 func (k Keeper) Unjail(ctx context.Context, consAddr sdk.ConsAddress) error {
 	validator := k.mustGetValidatorByConsAddr(ctx, consAddr)
 	if err := k.unjailValidator(ctx, validator); err != nil {
@@ -229,7 +229,7 @@ func (k Keeper) Unjail(ctx context.Context, consAddr sdk.ConsAddress) error {
 	return nil
 }
 
-// slash an unbonding delegation and update the pool
+// SlashUnbondingDelegation slashes an unbonding delegation and update the pool
 // return the amount that would have been slashed assuming
 // the unbonding delegation had enough stake to slash
 // (the amount actually slashed may be less if there's
@@ -285,7 +285,7 @@ func (k Keeper) SlashUnbondingDelegation(ctx context.Context, unbondingDelegatio
 	return totalSlashAmount, nil
 }
 
-// slash a redelegation and update the pool
+// SlashRedelegation slashes a redelegation and update the pool
 // return the amount that would have been slashed assuming
 // the unbonding delegation had enough stake to slash
 // (the amount actually slashed may be less if there's

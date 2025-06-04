@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
@@ -971,6 +971,14 @@ func TestNextSenderTx_TxReplacement(t *testing.T) {
 
 	iter := mp.Select(ctx, nil)
 	require.Equal(t, txs[3], iter.Tx())
+}
+
+func TestPriorityNonceMempool_UnorderedTx_FailsForSequence(t *testing.T) {
+	mp := mempool.DefaultPriorityMempool()
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 1)
+	tx := testTx{id: 1, priority: 0, address: accounts[0].Address, nonce: 1, unordered: true}
+	err := mp.Insert(sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger()), tx)
+	require.ErrorContains(t, err, "unordered txs must not have sequence set")
 }
 
 func TestPriorityNonceMempool_UnorderedTx(t *testing.T) {

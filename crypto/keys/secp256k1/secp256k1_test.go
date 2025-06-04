@@ -7,8 +7,8 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/cometbft/cometbft/crypto"
-	tmsecp256k1 "github.com/cometbft/cometbft/crypto/secp256k1"
+	"github.com/cometbft/cometbft/v2/crypto"
+	tmsecp256k1 "github.com/cometbft/cometbft/v2/crypto/secp256k1"
 	"github.com/cosmos/btcutil/base58"
 	secp "github.com/decred/dcrd/dcrec/secp256k1/v4"
 	btcecdsa "github.com/decred/dcrd/dcrec/secp256k1/v4/ecdsa"

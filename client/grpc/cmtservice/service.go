@@ -3,7 +3,7 @@ package cmtservice
 import (
 	"context"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc/codes"
@@ -25,7 +25,7 @@ var (
 )
 
 type (
-	abciQueryFn = func(context.Context, *abci.RequestQuery) (*abci.ResponseQuery, error)
+	abciQueryFn = func(context.Context, *abci.QueryRequest) (*abci.QueryResponse, error)
 
 	queryServer struct {
 		clientCtx         client.Context

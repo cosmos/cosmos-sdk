@@ -147,7 +147,7 @@ priv3, _, addr3 := testdata.KeyTestPubAddr()
 Populating the `TxBuilder` can be done via its methods:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/client/tx_config.go#L39-L57
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/client/tx_config.go#L39-L57
 ```
 
 ```go
@@ -182,6 +182,14 @@ At this point, `TxBuilder`'s underlying transaction is ready to be signed.
 #### Generating an Unordered Transaction
 
 Starting with Cosmos SDK v0.53.0, users may send unordered transactions to chains that have the feature enabled.
+
+:::warning
+
+Unordered transactions MUST leave sequence values unset. When a transaction is both unordered and contains a non-zero sequence value,
+the transaction will be rejected. External services that operate on prior assumptions about transaction sequence values should be updated to handle unordered transactions.
+Services should be aware that when the transaction is unordered, the transaction sequence will always be zero.
+
+:::
 
 Using the example above, we can set the required fields to mark a transaction as unordered. 
 By default, unordered transactions charge an extra 2240 units of gas to offset the additional storage overhead that supports their functionality.

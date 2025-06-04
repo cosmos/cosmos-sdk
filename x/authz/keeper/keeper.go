@@ -3,11 +3,12 @@ package keeper
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"fmt"
 	"strconv"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
 	"github.com/cosmos/gogoproto/proto"
 
 	corestoretypes "cosmossdk.io/core/store"
@@ -47,7 +48,7 @@ func NewKeeper(storeService corestoretypes.KVStoreService, cdc codec.Codec, rout
 	}
 }
 
-// Super ugly hack to not be breaking in v0.50 and v0.47
+// SetBankKeeper is a super ugly hack to not be breaking in v0.50 and v0.47
 // DO NOT USE.
 func (k Keeper) SetBankKeeper(bk authz.BankKeeper) Keeper {
 	k.bankKeeper = bk
@@ -241,7 +242,7 @@ func (k Keeper) DeleteGrant(ctx context.Context, grantee, granter sdk.AccAddress
 	skey := grantStoreKey(grantee, granter, msgType)
 	grant, found := k.getGrant(ctx, skey)
 	if !found {
-		return errorsmod.Wrapf(authz.ErrNoAuthorizationFound, "failed to delete grant with key %s", string(skey))
+		return errorsmod.Wrapf(authz.ErrNoAuthorizationFound, "failed to delete grant with key %s", hex.EncodeToString(skey))
 	}
 
 	if grant.Expiration != nil {

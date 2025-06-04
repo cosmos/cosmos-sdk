@@ -13,9 +13,9 @@ import (
 	"time"
 
 	dbm "github.com/cometbft/cometbft-db"
-	"github.com/cometbft/cometbft/store"
+	"github.com/cometbft/cometbft/v2/store"
 
-	upgradetypes "cosmossdk.io/x/upgrade/types"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 var errUntestAble = errors.New("untestable")

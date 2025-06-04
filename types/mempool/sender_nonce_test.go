@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
@@ -168,6 +168,22 @@ func (s *MempoolTestSuite) TestMaxTx() {
 	ctx = ctx.WithPriority(tx.priority)
 	err = mp.Insert(ctx, tx2)
 	require.Equal(t, mempool.ErrMempoolTxMaxCapacity, err)
+}
+
+func (s *MempoolTestSuite) TestTxRejectedWithUnorderedAndSequence() {
+	t := s.T()
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 1)
+	mp := mempool.NewSenderNonceMempool(mempool.SenderNonceMaxTxOpt(5000))
+
+	txSender := testTx{
+		nonce:     15,
+		address:   accounts[0].Address,
+		priority:  rand.Int63(),
+		unordered: true,
+	}
+	err := mp.Insert(ctx, txSender)
+	require.ErrorContains(t, err, "unordered txs must not have sequence set")
 }
 
 func (s *MempoolTestSuite) TestTxNotFoundOnSender() {

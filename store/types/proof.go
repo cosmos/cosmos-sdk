@@ -3,8 +3,8 @@ package types
 import (
 	"fmt"
 
-	"github.com/cometbft/cometbft/crypto/merkle"
-	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
+	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
+	"github.com/cometbft/cometbft/v2/crypto/merkle"
 	ics23 "github.com/cosmos/ics23/go"
 
 	errorsmod "cosmossdk.io/errors"

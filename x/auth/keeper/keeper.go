@@ -93,6 +93,10 @@ type AccountKeeper struct {
 	permAddrs    map[string]types.PermissionsForAddress
 	bech32Prefix string
 
+	// enableUnorderedTxs enables unordered transaction support.
+	// This boolean helps sigverify ante handlers to determine if they should process unordered transactions.
+	enableUnorderedTxs bool
+
 	// The prototypical AccountI constructor.
 	proto func() sdk.AccountI
 
@@ -108,6 +112,17 @@ type AccountKeeper struct {
 	UnorderedNonces collections.KeySet[collections.Pair[int64, []byte]]
 }
 
+type InitOption func(*AccountKeeper)
+
+// WithUnorderedTransactions enables unordered transaction support.
+// When true, sigverify ante handlers will validate and process unordered transactions.
+// When false, sigverify ante handlers will reject unordered transactions.
+func WithUnorderedTransactions(enable bool) InitOption {
+	return func(ak *AccountKeeper) {
+		ak.enableUnorderedTxs = enable
+	}
+}
+
 var _ AccountKeeperI = &AccountKeeper{}
 
 // NewAccountKeeper returns a new AccountKeeperI that uses go-amino to
@@ -118,7 +133,7 @@ var _ AccountKeeperI = &AccountKeeper{}
 // may use auth.Keeper to access the accounts permissions map.
 func NewAccountKeeper(
 	cdc codec.BinaryCodec, storeService store.KVStoreService, proto func() sdk.AccountI,
-	maccPerms map[string][]string, ac address.Codec, bech32Prefix, authority string,
+	maccPerms map[string][]string, ac address.Codec, bech32Prefix, authority string, opts ...InitOption,
 ) AccountKeeper {
 	permAddrs := make(map[string]types.PermissionsForAddress)
 	for name, perms := range maccPerms {
@@ -145,7 +160,15 @@ func NewAccountKeeper(
 		panic(err)
 	}
 	ak.Schema = schema
+
+	for _, opt := range opts {
+		opt(&ak)
+	}
 	return ak
+}
+
+func (ak AccountKeeper) UnorderedTransactionsEnabled() bool {
+	return ak.enableUnorderedTxs
 }
 
 // GetAuthority returns the x/auth module's authority.

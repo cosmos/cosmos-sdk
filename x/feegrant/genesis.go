@@ -1,6 +1,8 @@
 package feegrant
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/codec/types"
 )
 
@@ -15,7 +17,17 @@ func NewGenesisState(entries []Grant) *GenesisState {
 
 // ValidateGenesis ensures all grants in the genesis state are valid
 func ValidateGenesis(data GenesisState) error {
+	// Check for duplicate grants by (granter, grantee) pair
+	seen := make(map[string]struct{})
+
 	for _, f := range data.Allowances {
+		// Create a unique key for (granter, grantee) pair using a delimiter
+		key := fmt.Sprintf("%s|%s", f.Granter, f.Grantee)
+		if _, exists := seen[key]; exists {
+			return fmt.Errorf("duplicate feegrant found from granter %q to grantee %q", f.Granter, f.Grantee)
+		}
+		seen[key] = struct{}{}
+
 		grant, err := f.GetGrant()
 		if err != nil {
 			return err

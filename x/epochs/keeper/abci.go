@@ -13,25 +13,27 @@ func (k *Keeper) BeginBlocker(ctx sdk.Context) error {
 	start := telemetry.Now()
 	defer telemetry.ModuleMeasureSince(types.ModuleName, start, telemetry.MetricKeyBeginBlocker)
 
-	header := ctx.BlockHeader()
+	blockTime := ctx.BlockTime()
+	blockHeight := ctx.BlockHeight()
+
 	err := k.EpochInfo.Walk(
 		ctx,
 		nil,
 		func(key string, epochInfo types.EpochInfo) (stop bool, err error) {
 			// If blocktime < initial epoch start time, return
-			if header.Time.Before(epochInfo.StartTime) {
+			if blockTime.Before(epochInfo.StartTime) {
 				return false, nil
 			}
 			// if epoch counting hasn't started, signal we need to start.
 			shouldInitialEpochStart := !epochInfo.EpochCountingStarted
 
 			epochEndTime := epochInfo.CurrentEpochStartTime.Add(epochInfo.Duration)
-			shouldEpochStart := (header.Time.After(epochEndTime)) || shouldInitialEpochStart
+			shouldEpochStart := (blockTime.After(epochEndTime)) || shouldInitialEpochStart
 
 			if !shouldEpochStart {
 				return false, nil
 			}
-			epochInfo.CurrentEpochStartHeight = header.Height
+			epochInfo.CurrentEpochStartHeight = blockHeight
 
 			if shouldInitialEpochStart {
 				epochInfo.EpochCountingStarted = true

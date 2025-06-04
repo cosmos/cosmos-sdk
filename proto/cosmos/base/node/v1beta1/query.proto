@@ -40,4 +40,5 @@ message StatusResponse {
   google.protobuf.Timestamp timestamp             = 3 [(gogoproto.stdtime) = true]; // block height timestamp
   bytes                     app_hash              = 4;                              // app hash of the current block
   bytes                     validator_hash        = 5; // validator hash provided by the consensus header
+  string                    chain_id              = 6; // chain identifier
 }

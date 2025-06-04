@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	types "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	types "github.com/cometbft/cometbft/api/cometbft/types/v2"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 

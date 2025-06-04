@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	"github.com/cosmos/gogoproto/proto"
 

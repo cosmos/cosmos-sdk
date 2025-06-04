@@ -15,8 +15,8 @@ import (
 	"time"
 
 	"github.com/cometbft/cometbft/abci/server"
-	cmtstate "github.com/cometbft/cometbft/api/cometbft/state/v1"
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	cmtstate "github.com/cometbft/cometbft/api/cometbft/state/v2"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
@@ -906,7 +906,7 @@ func testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB, tra
 		Signature:        []byte{},
 	}
 
-	// Sign the vote, and copy the proto changes from the act of signing to the vote itself
+	// Sign the vote and copy the proto changes from the act of signing to the vote itself
 	voteProto := vote.ToProto()
 	err = privValidator.SignVote(newChainID, voteProto, false)
 	if err != nil {
@@ -933,7 +933,7 @@ func testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB, tra
 		return nil, err
 	}
 
-	// Create ValidatorSet struct containing just our valdiator.
+	// Create ValidatorSet struct containing just our validator.
 	newVal := &cmttypes.Validator{
 		Address:     validatorAddress,
 		PubKey:      userPubKey,

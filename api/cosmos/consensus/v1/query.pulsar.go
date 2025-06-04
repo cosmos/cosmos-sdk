@@ -2,7 +2,7 @@
 package consensusv1
 
 import (
-	v1 "cosmossdk.io/api/cometbft/types/v1"
+	v2 "cosmossdk.io/api/cometbft/types/v2"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
@@ -528,7 +528,7 @@ func (x *fastReflection_QueryParamsResponse) Get(descriptor protoreflect.FieldDe
 func (x *fastReflection_QueryParamsResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "cosmos.consensus.v1.QueryParamsResponse.params":
-		x.Params = value.Message().Interface().(*v1.ConsensusParams)
+		x.Params = value.Message().Interface().(*v2.ConsensusParams)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.consensus.v1.QueryParamsResponse"))
@@ -551,7 +551,7 @@ func (x *fastReflection_QueryParamsResponse) Mutable(fd protoreflect.FieldDescri
 	switch fd.FullName() {
 	case "cosmos.consensus.v1.QueryParamsResponse.params":
 		if x.Params == nil {
-			x.Params = new(v1.ConsensusParams)
+			x.Params = new(v2.ConsensusParams)
 		}
 		return protoreflect.ValueOfMessage(x.Params.ProtoReflect())
 	default:
@@ -568,7 +568,7 @@ func (x *fastReflection_QueryParamsResponse) Mutable(fd protoreflect.FieldDescri
 func (x *fastReflection_QueryParamsResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "cosmos.consensus.v1.QueryParamsResponse.params":
-		m := new(v1.ConsensusParams)
+		m := new(v2.ConsensusParams)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
@@ -765,7 +765,7 @@ func (x *fastReflection_QueryParamsResponse) ProtoMethods() *protoiface.Methods 
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.Params == nil {
-					x.Params = &v1.ConsensusParams{}
+					x.Params = &v2.ConsensusParams{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Params); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -855,7 +855,7 @@ type QueryParamsResponse struct {
 	// params are the tendermint consensus params stored in the consensus module.
 	// Please note that `params.version` is not populated in this response, it is
 	// tracked separately in the x/upgrade module.
-	Params *v1.ConsensusParams `protobuf:"bytes,1,opt,name=params,proto3" json:"params,omitempty"`
+	Params *v2.ConsensusParams `protobuf:"bytes,1,opt,name=params,proto3" json:"params,omitempty"`
 }
 
 func (x *QueryParamsResponse) Reset() {
@@ -878,7 +878,7 @@ func (*QueryParamsResponse) Descriptor() ([]byte, []int) {
 	return file_cosmos_consensus_v1_query_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *QueryParamsResponse) GetParams() *v1.ConsensusParams {
+func (x *QueryParamsResponse) GetParams() *v2.ConsensusParams {
 	if x != nil {
 		return x.Params
 	}
@@ -894,14 +894,14 @@ var file_cosmos_consensus_v1_query_proto_rawDesc = []byte{
 	0x73, 0x75, 0x73, 0x2e, 0x76, 0x31, 0x1a, 0x1c, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x61,
 	0x70, 0x69, 0x2f, 0x61, 0x6e, 0x6e, 0x6f, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x2e, 0x70,
 	0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1e, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2f, 0x74,
-	0x79, 0x70, 0x65, 0x73, 0x2f, 0x76, 0x31, 0x2f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x2e, 0x70,
+	0x79, 0x70, 0x65, 0x73, 0x2f, 0x76, 0x32, 0x2f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x2e, 0x70,
 	0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x19, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5f, 0x70, 0x72, 0x6f,
 	0x74, 0x6f, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22,
 	0x14, 0x0a, 0x12, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65,
 	0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x51, 0x0a, 0x13, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61,
 	0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3a, 0x0a, 0x06,
 	0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x63,
-	0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2e, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x76, 0x31,
+	0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2e, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x76, 0x32,
 	0x2e, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73,
 	0x52, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x32, 0x9d, 0x01, 0x0a, 0x05, 0x51, 0x75, 0x65,
 	0x72, 0x79, 0x12, 0x93, 0x01, 0x0a, 0x06, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x27, 0x2e,
@@ -945,10 +945,10 @@ var file_cosmos_consensus_v1_query_proto_msgTypes = make([]protoimpl.MessageInfo
 var file_cosmos_consensus_v1_query_proto_goTypes = []interface{}{
 	(*QueryParamsRequest)(nil),  // 0: cosmos.consensus.v1.QueryParamsRequest
 	(*QueryParamsResponse)(nil), // 1: cosmos.consensus.v1.QueryParamsResponse
-	(*v1.ConsensusParams)(nil),  // 2: cometbft.types.v1.ConsensusParams
+	(*v2.ConsensusParams)(nil),  // 2: cometbft.types.v2.ConsensusParams
 }
 var file_cosmos_consensus_v1_query_proto_depIdxs = []int32{
-	2, // 0: cosmos.consensus.v1.QueryParamsResponse.params:type_name -> cometbft.types.v1.ConsensusParams
+	2, // 0: cosmos.consensus.v1.QueryParamsResponse.params:type_name -> cometbft.types.v2.ConsensusParams
 	0, // 1: cosmos.consensus.v1.Query.Params:input_type -> cosmos.consensus.v1.QueryParamsRequest
 	1, // 2: cosmos.consensus.v1.Query.Params:output_type -> cosmos.consensus.v1.QueryParamsResponse
 	2, // [2:3] is the sub-list for method output_type

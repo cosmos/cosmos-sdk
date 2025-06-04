@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	tmproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	tmproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
 	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"

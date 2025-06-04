@@ -5,7 +5,7 @@ import (
 	context "context"
 	"testing"
 
-	cmproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	cmproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/core/address"

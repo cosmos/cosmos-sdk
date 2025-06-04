@@ -2,15 +2,15 @@ syntax = "proto3";
 
 package cosmos.store.streaming.abci;
 
-import "cometbft/abci/v1/types.proto";
+import "cometbft/abci/v2/types.proto";
 import "cosmos/store/v1beta1/listening.proto";
 
 option go_package = "cosmossdk.io/store/streaming/abci";
 
 // ListenEndBlockRequest is the request type for the ListenEndBlock RPC method
 message ListenFinalizeBlockRequest {
-  cometbft.abci.v1.FinalizeBlockRequest  req = 1;
-  cometbft.abci.v1.FinalizeBlockResponse res = 2;
+  cometbft.abci.v2.FinalizeBlockRequest  req = 1;
+  cometbft.abci.v2.FinalizeBlockResponse res = 2;
 }
 
 // ListenEndBlockResponse is the response type for the ListenEndBlock RPC method
@@ -20,7 +20,7 @@ message ListenFinalizeBlockResponse {}
 message ListenCommitRequest {
   // explicitly pass in block height as ResponseCommit does not contain this info
   int64                           block_height         = 1;
-  cometbft.abci.v1.CommitResponse res                  = 2;
+  cometbft.abci.v2.CommitResponse res                  = 2;
   repeated cosmos.store.v1beta1.StoreKVPair change_set = 3;
 }
 

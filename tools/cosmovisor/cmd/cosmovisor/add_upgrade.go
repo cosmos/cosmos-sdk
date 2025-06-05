@@ -29,7 +29,7 @@ func NewAddUpgradeCmd() *cobra.Command {
 
 // addUpgrade adds upgrade info to manifest
 // TODO batch-upgrade and add-upgrade should write to the same batch file
-func addUpgrade(cfg *cosmovisor.Config, force bool, upgradeHeight int64, upgradeName, executablePath string) error {
+func addUpgrade(cfg *cosmovisor.Config, force bool, upgradeHeight int64, upgradeName, executablePath string) (*upgradetypes.Plan, error) {
 	logger := cfg.Logger(os.Stdout)
 
 	if !cfg.DisableRecase {
@@ -38,52 +38,44 @@ func addUpgrade(cfg *cosmovisor.Config, force bool, upgradeHeight int64, upgrade
 
 	if _, err := os.Stat(executablePath); err != nil {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("invalid executable path: %w", err)
+			return nil, fmt.Errorf("invalid executable path: %w", err)
 		}
 
-		return fmt.Errorf("failed to load executable path: %w", err)
+		return nil, fmt.Errorf("failed to load executable path: %w", err)
 	}
 
 	// create upgrade dir
 	upgradeLocation := cfg.UpgradeDir(upgradeName)
 	if err := os.MkdirAll(path.Join(upgradeLocation, "bin"), 0o755); err != nil {
-		return fmt.Errorf("failed to create upgrade directory: %w", err)
+		return nil, fmt.Errorf("failed to create upgrade directory: %w", err)
 	}
 
 	// copy binary to upgrade dir
 	executableData, err := os.ReadFile(executablePath)
 	if err != nil {
-		return fmt.Errorf("failed to read binary: %w", err)
+		return nil, fmt.Errorf("failed to read binary: %w", err)
 	}
 
 	if err := saveOrAbort(cfg.UpgradeBin(upgradeName), executableData, force); err != nil {
-		return err
+		return nil, err
 	}
 
 	logger.Info(fmt.Sprintf("Using %s for %s upgrade", executablePath, upgradeName))
 	logger.Info(fmt.Sprintf("Upgrade binary located at %s", cfg.UpgradeBin(upgradeName)))
 
+	var plan *upgradetypes.Plan
 	if upgradeHeight > 0 {
-		plan := &upgradetypes.Plan{
+		plan = &upgradetypes.Plan{
 			Name:   upgradeName,
 			Height: upgradeHeight,
 		}
-		if err := plan.ValidateBasic(); err != nil {
-			panic(fmt.Errorf("invalid manual upgrade plan: %w", err))
-		}
-
-		// TODO only do this once for a whole batch of upgrades
-		if err := cfg.AddManualUpgrades(force, plan); err != nil {
-			panic(fmt.Errorf("failed to add manual upgrade: %w", err))
-		}
-
-		logger.Info(fmt.Sprintf("added manual upgrade, node will be set to halt at height %d, and binary for upgrade %q will be activated", upgradeHeight, upgradeName))
 	}
 
-	return nil
+	return plan, nil
 }
 
 // GetConfig returns a Config using passed-in flag
+// TODO we should make sure getConfigFromCmd gets used by call commands, it seems like some commands do this differently
 func getConfigFromCmd(cmd *cobra.Command) (*cosmovisor.Config, error) {
 	configPath, err := cmd.Flags().GetString(cosmovisor.FlagCosmovisorConfig)
 	if err != nil {
@@ -116,7 +108,8 @@ func addUpgradeCmd(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to get upgrade-height flag: %w", err)
 	}
 
-	return addUpgrade(cfg, force, upgradeHeight, upgradeName, executablePath)
+	plan, err := addUpgrade(cfg, force, upgradeHeight, upgradeName, executablePath)
+	return cfg.AddManualUpgrades(force, plan)
 }
 
 // saveOrAbort saves data to path or aborts if file exists and force is false

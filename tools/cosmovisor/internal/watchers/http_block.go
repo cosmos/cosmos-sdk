@@ -9,6 +9,7 @@ import (
 )
 
 func NewHTTPRPCBLockChecker(url string) HeightChecker {
+	// TODO we want to include the ability to sniff for /block or /v1/block
 	return httpRPCBlockChecker{
 		url: url,
 	}

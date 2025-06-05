@@ -144,37 +144,41 @@ func TestMockChain(t *testing.T) {
 		currentBin, err := cfg.CurrentBin()
 		require.NoError(t, err)
 		switch callbackCount {
-		// first startup
 		case 1:
+			// first startup
 			// we should be starting with the genesis binary
 			require.Contains(t, currentBin, "genesis")
 			// add one manual upgrade
 			go addManualUpgrade1()
-		// first restart once we've add the first manual upgrade
 		case 2:
-			// ensure that the binary is the genesis binary
+			// first restart once we've add the first manual upgrade
+			// ensure that the binary is still the genesis binary
 			require.Contains(t, currentBin, "genesis")
 			// add a second batch of manual upgrades
 			go addManualUpgrade2()
 		case 3:
-			// ensure that the binary is still the genesis binary, we've just added another upgrade
+			// next restart  after adding more manual upgrades
+			// ensure that the binary is still the genesis binary
 			require.Contains(t, currentBin, "genesis")
 		case 4:
-			// we're just doing the upgrade now, so still on genesis
-			require.Contains(t, currentBin, "genesis")
+			// should have upgraded to manual10
+			require.Contains(t, currentBin, "manual10")
 		case 5:
-			// now we should be on manual10 right before the next upgrade
-			//require.Contains(t, currentBin, "manual10")
+			// should have upgraded to manual20
+			require.Contains(t, currentBin, "manual20")
 		case 6:
-			//require.Contains(t, currentBin, "manual10")
+			// should have upgraded to gov1
+			require.Contains(t, currentBin, "gov1")
 		case 7:
-			//require.Contains(t, currentBin, "manual20")
-		case 8:
-			//require.Contains(t, currentBin, "manual20")
-		case 9:
-			//require.Contains(t, currentBin, "gov1")
+			// should have upgraded to manual40
+			require.Contains(t, currentBin, "manual40")
+			// this is the end of our test so we shutdown here
 			cancel()
 		}
+		//cmd := exec.Command("tree", "-a")
+		//cmd.Dir = mockchainDir
+		//cmd.Stdout = os.Stdout
+		//require.NoError(t, cmd.Run())
 	}
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -189,8 +193,7 @@ func TestMockChain(t *testing.T) {
 	}()
 	wg.Wait()
 
-	// TODO
-	//require.Equal(t, 9, callbackCount)
+	require.Equal(t, 7, callbackCount)
 
 	// TODO:
 	// - [x] add callback on restart for checking state

@@ -40,6 +40,9 @@ func (cfg *Config) ParseManualUpgrades(bz []byte) (ManualUpgradeBatch, error) {
 // If an upgrade with the same name already exists, it will only be overwritten if forceOverwrite is true,
 // otherwise an error will be returned.
 func (cfg *Config) AddManualUpgrades(forceOverwrite bool, plans ...*upgradetypes.Plan) error {
+	if len(plans) == 0 {
+		return nil
+	}
 	// TODO only allow plans that are AFTER the last known height
 	existing, err := cfg.ReadManualUpgrades()
 	if err != nil {
@@ -51,6 +54,9 @@ func (cfg *Config) AddManualUpgrades(forceOverwrite bool, plans ...*upgradetypes
 		planMap[existingPlan.Name] = existingPlan
 	}
 	for _, plan := range plans {
+		if err := plan.ValidateBasic(); err != nil {
+			return fmt.Errorf("invalid upgrade plan %s: %w", plan.Name, err)
+		}
 		if _, ok := planMap[plan.Name]; ok {
 			if !forceOverwrite {
 				return fmt.Errorf("upgrade with name %s already exists", plan.Name)

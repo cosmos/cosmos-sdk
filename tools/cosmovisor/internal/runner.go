@@ -32,8 +32,7 @@ func NewRunner(cfg *cosmovisor.Config, runCfg RunConfig, logger log.Logger) Runn
 }
 
 func (r Runner) Start(ctx context.Context, args []string) error {
-	// TODO handle cases where daemon shuts down without an upgrade, either have a retry count of fail in that case ideally backoff retry
-	startsWithoutUpgrade := 0
+	// TODO handle cases where daemon shuts down without an upgrade or change to halt height, either have a retry count of fail in that case ideally backoff retry
 	for {
 		if testCallback := GetTestCallback(ctx); testCallback != nil {
 			testCallback()
@@ -48,13 +47,6 @@ func (r Runner) Start(ctx context.Context, args []string) error {
 				r.logger.Info("DAEMON_RESTART_AFTER_UPGRADE is disabled, exiting process")
 				return nil
 			}
-			startsWithoutUpgrade = 0
-		} else {
-			// TODO check that the actual height is meaningfully progressing and we are not stuck in some manual upgrade loop where halt-height keeps getting set at the same height
-			if startsWithoutUpgrade >= 5 {
-				return fmt.Errorf("process restarted %d times without an upgrade, exiting", startsWithoutUpgrade)
-			}
-			startsWithoutUpgrade++
 		}
 		err = r.RunOnce(ctx, args, haltHeight)
 		if err != nil {
@@ -132,11 +124,19 @@ func (r Runner) RunOnce(ctx context.Context, args []string, haltHeight uint64) e
 			r.logger.Info("Received updates to upgrade-info.json.batch")
 			if haltHeight == 0 && len(manualUpgrades) > 0 {
 				// shutdown, no halt height set
+				r.logger.Info("No halt height set, but manual upgrades found, restarting process")
 				return ErrRestartNeeded{}
 			} else {
 				// restart if we need to change the halt height based on the upgrade
 				firstUpgrade := manualUpgrades.FirstUpgrade()
+				if firstUpgrade == nil {
+					// if we have no longer have an upgrade then we need to remove halt height
+					r.logger.Info("No upgrade found, removing halt height")
+					return ErrRestartNeeded{}
+				}
 				if uint64(firstUpgrade.Height) < haltHeight {
+					// if we have an earlier halt height then we need to change the halt height
+					r.logger.Info("Earlier manual upgrade found, changing halt height", "current_halt_height", haltHeight, "needed_halt_height", firstUpgrade.Height)
 					return ErrRestartNeeded{}
 				}
 			}
@@ -147,12 +147,34 @@ func (r Runner) RunOnce(ctx context.Context, args []string, haltHeight uint64) e
 		// TODO:
 		case actualHeight := <-heightWatcher.Updated():
 			r.logger.Warn("Got height update from watcher", "height", actualHeight)
-			if !correctHeightConfirmed {
-				// TODO read manual upgrade batch and check if we'd still be at the correct halt height
-				correctHeightConfirmed = true
+			if haltHeight == 0 {
+				// we don't have a halt height, so we don't care to check anything about the actual height
+				continue
 			}
-			// signal an upgrade if we have a halt height and we are at or past it
-			if haltHeight > 0 && actualHeight >= haltHeight {
+			if !correctHeightConfirmed {
+				// read manual upgrade batch and check if we'd still be at the correct halt height
+				manualUpgrades, err := r.cfg.ReadManualUpgrades()
+				if err != nil {
+					r.logger.Warn("Failed to read manual upgrades", "error", err)
+					continue
+				}
+				firstUpgrade := manualUpgrades.FirstUpgrade()
+				if firstUpgrade == nil {
+					// no upgrade found, so we shouldn't have a halt height
+					r.logger.Warn("No upgrade found, but halt height is set, removing halt height. This is unexpected because we didn't receive an update to upgrade-info.json.batch")
+					return ErrRestartNeeded{}
+				}
+				if uint64(firstUpgrade.Height) == haltHeight {
+					correctHeightConfirmed = true
+				} else {
+					// we're at the wrong halt height so we need to restart
+					r.logger.Info("We're at a different height expected, so we need to set a different halt height", "current_halt_height", haltHeight, "needed_halt_height", firstUpgrade.Height)
+					return ErrRestartNeeded{}
+				}
+			}
+			// signal a restart if we're at or past the halt height
+			if actualHeight >= haltHeight {
+				r.logger.Info("Reached halt height, restarting process for upgrade")
 				return ErrRestartNeeded{}
 			}
 			// TODO error channels

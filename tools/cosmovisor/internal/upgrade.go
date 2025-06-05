@@ -50,9 +50,10 @@ func UpgradeIfNeeded(cfg *cosmovisor.Config, logger log.Logger, knownHeight uint
 				return false, 0, err
 			}
 			err = cfg.DeleteManualUpgradeAtHeight(haltHeight)
+			// TODO this is now the wrong halt-height
 			return true, haltHeight, err
 		} else if lastKnownHeight > haltHeight {
-			return false, haltHeight, fmt.Errorf("missed manual upgrade %s at height %d, last known height is %d")
+			return false, haltHeight, fmt.Errorf("missed manual upgrade %s at height %d, last known height is %d", manualUpgrade.Name, manualUpgrade.Height, lastKnownHeight)
 		}
 		logger.Info("Found pending manual upgrade", "upgrade", manualUpgrade, "halt_height", haltHeight)
 		return false, haltHeight, nil

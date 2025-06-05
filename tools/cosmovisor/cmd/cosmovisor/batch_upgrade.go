@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/tools/cosmovisor"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 func NewBatchAddUpgradeCmd() *cobra.Command {
@@ -70,6 +71,7 @@ func addBatchUpgrade(cmd *cobra.Command, _ []string) error {
 
 // processUpgradeList takes in a list of upgrades and creates a batch upgrade file
 func processUpgradeList(cfg *cosmovisor.Config, upgradeList [][]string) error {
+	var upgradePlans []*upgradetypes.Plan
 	for i, upgrade := range upgradeList {
 		if len(upgrade) != 3 {
 			return fmt.Errorf("argument at position %d (%s) is invalid", i, upgrade)
@@ -82,11 +84,16 @@ func processUpgradeList(cfg *cosmovisor.Config, upgradeList [][]string) error {
 		}
 
 		// we use the same logic as the add-upgrade command here, appending to any existing manual upgrade data
-		if err := addUpgrade(cfg, true, upgradeHeight, upgradeName, upgradePath); err != nil {
+		plan, err := addUpgrade(cfg, true, upgradeHeight, upgradeName, upgradePath)
+		if err != nil {
 			return err
 		}
+		if plan != nil {
+			upgradePlans = append(upgradePlans, plan)
+		}
 	}
-	return nil
+
+	return cfg.AddManualUpgrades(true, upgradePlans...)
 }
 
 // processUpgradeFile takes in a CSV batch upgrade file, parses it and calls processUpgradeList

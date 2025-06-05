@@ -133,6 +133,33 @@ statsd-addr = "{{ .Telemetry.StatsdAddr }}"
 datadog-hostname = "{{ .Telemetry.DatadogHostname }}"
 
 ###############################################################################
+###                      OpenTelemetry  Configuration                       ###
+###############################################################################
+
+[telemetry.otlp]
+
+# Whether to enable the OTLP exporter
+exporter-enabled = {{ .Telemetry.OtlpConfig.ExporterEnabled }}
+
+# The endpoint to which metrics/traces should be pushed
+collector-endpoint = "{{ .Telemetry.OtlpConfig.CollectorEndpoint }}"
+
+# The URL path on the collector for metrics (e.g. "/v1/metrics")
+collector-metrics-url-path = "{{ .Telemetry.OtlpConfig.CollectorMetricsURLPath }}"
+
+# Username for authenticating with the OTLP collector (if needed)
+user = "{{ .Telemetry.OtlpConfig.User }}"
+
+# Token or API key for the OTLP collector (if needed)
+token = "{{ .Telemetry.OtlpConfig.Token }}"
+
+# Service name to report to the OTLP collector (overrides the top-level ServiceName if set)
+service-name = "{{ .Telemetry.OtlpConfig.ServiceName }}"
+
+# How often to push (e.g. "10s", "1m")
+push-interval = "{{ .Telemetry.OtlpConfig.PushInterval }}"
+
+###############################################################################
 ###                           API Configuration                             ###
 ###############################################################################
 

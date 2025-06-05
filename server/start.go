@@ -570,13 +570,13 @@ func startAPIServer(
 }
 
 func startTelemetry(svrCtx *Context, cfg serverconfig.Config) (*telemetry.Metrics, error) {
-	if cfg.Telemetry.OtlpExporterEnabled {
-		if err := cfg.Telemetry.Validate(); err != nil {
+	if cfg.Telemetry.OtlpConfig.ExporterEnabled {
+		if err := cfg.Telemetry.OtlpConfig.Validate(); err != nil {
 			return nil, fmt.Errorf("invalid OtlpConfig: %w", err)
 		}
 
 		_, ctx := getCtx(svrCtx, false)
-		err := telemetry.StartOtlpExporter(ctx, svrCtx.Logger, cfg.Telemetry)
+		err := telemetry.StartOtlpExporter(ctx, svrCtx.Logger, cfg.Telemetry.OtlpConfig)
 		if err != nil {
 			return nil, err
 		}

@@ -20,20 +20,20 @@ type UpgradeCheckResult struct {
 	HaltHeight uint64
 }
 
-func UpgradeIfNeeded(cfg *cosmovisor.Config, logger log.Logger, knownHeight uint64) (upgraded bool, haltHeight uint64, err error) {
+func UpgradeIfNeeded(cfg *cosmovisor.Config, logger log.Logger, knownHeight uint64) (upgraded bool, err error) {
 	logger.Info("Checking for upgrade-info.json")
 	if upgradePlan, err := cfg.UpgradeInfo(); err == nil {
 		upgrader := NewUpgrader(cfg, logger, upgradePlan, false)
 		err := upgrader.DoUpgrade()
 		if err != nil {
-			return false, 0, err
+			return false, err
 		}
-		return true, 0, nil
+		return true, nil
 	}
 	logger.Info("Checking for upgrade-info.json.batch")
 	manualUpgradeBatch, err := cfg.ReadManualUpgrades()
 	if err != nil {
-		return false, 0, err
+		return false, err
 	}
 	logger.Info("Checking last known height")
 	lastKnownHeight := knownHeight
@@ -41,24 +41,21 @@ func UpgradeIfNeeded(cfg *cosmovisor.Config, logger log.Logger, knownHeight uint
 		lastKnownHeight = cfg.ReadLastKnownHeight()
 	}
 	if manualUpgrade := manualUpgradeBatch.FirstUpgrade(); manualUpgrade != nil {
-		haltHeight = uint64(manualUpgrade.Height)
+		haltHeight := uint64(manualUpgrade.Height)
 		if lastKnownHeight == haltHeight {
 			logger.Info("At manual upgrade", "upgrade", manualUpgrade, "halt_height", haltHeight)
 			upgrader := NewUpgrader(cfg, logger, *manualUpgrade, true)
 			err := upgrader.DoUpgrade()
 			if err != nil {
-				return false, 0, err
+				return false, err
 			}
 			err = cfg.DeleteManualUpgradeAtHeight(haltHeight)
-			// TODO this is now the wrong halt-height
-			return true, haltHeight, err
+			return true, err
 		} else if lastKnownHeight > haltHeight {
-			return false, haltHeight, fmt.Errorf("missed manual upgrade %s at height %d, last known height is %d", manualUpgrade.Name, manualUpgrade.Height, lastKnownHeight)
+			return false, fmt.Errorf("missed manual upgrade %s at height %d, last known height is %d", manualUpgrade.Name, manualUpgrade.Height, lastKnownHeight)
 		}
-		logger.Info("Found pending manual upgrade", "upgrade", manualUpgrade, "halt_height", haltHeight)
-		return false, haltHeight, nil
 	}
-	return false, 0, nil
+	return false, nil
 }
 
 type Upgrader struct {
@@ -108,10 +105,17 @@ func (u *Upgrader) DoUpgrade() error {
 	}
 
 	if u.isManualUpgrade {
-		u.logger.Info("Removing completed manual upgrade plan", "height", u.upgradePlan.Height)
+		u.logger.Info("Removing completed manual upgrade plan", "height", u.upgradePlan.Height, "name", u.upgradePlan.Name)
 		err := u.cfg.RemoveManualUpgrade(u.upgradePlan.Height)
 		if err != nil {
 			return fmt.Errorf("failed to remove manual upgrade at height %d: %w", u.upgradePlan.Height, err)
+		}
+	} else {
+		u.logger.Info("Removing completed upgrade plan", "height", u.upgradePlan.Height, "name", u.upgradePlan.Name)
+		file := u.cfg.UpgradeInfoFilePath()
+		err := os.Remove(file)
+		if err != nil {
+			return fmt.Errorf("failed to remove upgrade-info.json: %w", err)
 		}
 	}
 

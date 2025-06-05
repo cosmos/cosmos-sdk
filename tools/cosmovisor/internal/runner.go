@@ -34,10 +34,7 @@ func NewRunner(cfg *cosmovisor.Config, runCfg RunConfig, logger log.Logger) Runn
 func (r Runner) Start(ctx context.Context, args []string) error {
 	// TODO handle cases where daemon shuts down without an upgrade or change to halt height, either have a retry count of fail in that case ideally backoff retry
 	for {
-		if testCallback := GetTestCallback(ctx); testCallback != nil {
-			testCallback()
-		}
-		upgraded, haltHeight, err := UpgradeIfNeeded(r.cfg, r.logger, r.knownHeight)
+		upgraded, err := UpgradeIfNeeded(r.cfg, r.logger, r.knownHeight)
 		if err != nil {
 			return err
 		}
@@ -48,6 +45,15 @@ func (r Runner) Start(ctx context.Context, args []string) error {
 				return nil
 			}
 		}
+		args, haltHeight, err := r.ComputeRunArgs(args)
+		if err != nil {
+			return err
+		}
+
+		if testCallback := GetTestCallback(ctx); testCallback != nil {
+			testCallback()
+		}
+
 		err = r.RunOnce(ctx, args, haltHeight)
 		if err != nil {
 			var restartNeeded ErrRestartNeeded
@@ -64,6 +70,22 @@ func (r Runner) Start(ctx context.Context, args []string) error {
 }
 
 var errDone = errors.New("done")
+
+func (r Runner) ComputeRunArgs(args []string) (argsOut []string, haltHeight uint64, err error) {
+	argsOut = args
+	r.logger.Info("Checking for upgrade-info.json.batch")
+	manualUpgradeBatch, err := r.cfg.ReadManualUpgrades()
+	if err != nil {
+		return nil, 0, err
+	}
+	manualUpgrade := manualUpgradeBatch.FirstUpgrade()
+	if manualUpgrade != nil {
+		haltHeight = uint64(manualUpgrade.Height)
+		r.logger.Info("Setting --halt-height flag for manual upgrade", "halt_height", haltHeight)
+		argsOut = append(argsOut, fmt.Sprintf("--halt-height=%d", haltHeight))
+	}
+	return
+}
 
 func (r Runner) RunOnce(ctx context.Context, args []string, haltHeight uint64) error {
 	dirWatcher, err := watchers.NewFSNotifyWatcher(ctx, r.cfg.UpgradeInfoDir(), []string{
@@ -89,8 +111,6 @@ func (r Runner) RunOnce(ctx context.Context, args []string, haltHeight uint64) e
 	})
 
 	if haltHeight > 0 {
-		r.logger.Info("Setting --halt-height flag for manual upgrade", "halt_height", haltHeight)
-		args = append(args, fmt.Sprintf("--halt-height=%d", haltHeight))
 	}
 	cmd, err := r.createCmd(args)
 	if err != nil {

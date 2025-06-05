@@ -149,7 +149,7 @@ func (n *MockNode) Run(ctx context.Context) error {
 			}
 		}
 	}
-	if n.haltHeight > 0 {
+	if n.haltHeight == upgradeHeight { // if we have a halt height and we've reached it - there could be an earlier gov upgrade
 		// this log line matches what BaseApp does when it reaches the halt height
 		n.logger.Error(fmt.Sprintf("halt per configuration height %d", n.height))
 	} else if n.upgradePlan != nil {

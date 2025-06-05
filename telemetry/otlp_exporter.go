@@ -22,6 +22,7 @@ import (
 
 const meterName = "cosmos-sdk-otlp-exporter"
 
+// StartOtlpExporter sets up and runs the OTLP exporter.
 func StartOtlpExporter(ctx context.Context, logger log.Logger, cfg OtlpConfig) error {
 	exporter, err := otlpmetrichttp.New(ctx,
 		otlpmetrichttp.WithEndpoint(cfg.CollectorEndpoint),
@@ -77,6 +78,7 @@ func StartOtlpExporter(ctx context.Context, logger log.Logger, cfg OtlpConfig) e
 	return nil
 }
 
+// scrapePrometheusMetrics gathers and forwards Prometheus metrics to OTLP.
 func scrapePrometheusMetrics(
 	ctx context.Context,
 	meter otmetric.Meter,
@@ -85,32 +87,29 @@ func scrapePrometheusMetrics(
 	histograms map[string]otmetric.Float64Histogram,
 	counters map[string]otmetric.Float64Counter,
 ) error {
-	metricFamilies, err := prometheus.DefaultGatherer.Gather()
+	mfs, err := prometheus.DefaultGatherer.Gather()
 	if err != nil {
 		logger.Debug("failed to gather prometheus metrics: %v", err)
 		return err
 	}
 
-	for _, mf := range metricFamilies {
+	for _, mf := range mfs {
 		name := mf.GetName()
 		for _, m := range mf.Metric {
 			attrs := make([]attribute.KeyValue, len(m.Label))
 			for i, label := range m.Label {
 				attrs[i] = attribute.String(label.GetName(), label.GetValue())
 			}
+
 			switch mf.GetType() {
 			case dto.MetricType_GAUGE:
 				recordGauge(ctx, meter, logger, gauges, name, mf.GetHelp(), m.Gauge.GetValue(), attrs)
-
 			case dto.MetricType_COUNTER:
 				recordCounter(ctx, meter, logger, counters, name, mf.GetHelp(), m.Counter.GetValue(), attrs)
-
 			case dto.MetricType_HISTOGRAM:
 				recordHistogram(ctx, meter, logger, histograms, name, mf.GetHelp(), m.Histogram)
-
 			case dto.MetricType_SUMMARY:
 				recordSummary(ctx, meter, logger, gauges, name, mf.GetHelp(), m.Summary)
-
 			default:
 				continue
 			}
@@ -120,6 +119,7 @@ func scrapePrometheusMetrics(
 	return nil
 }
 
+// recordCounter sends a Prometheus counter as an OTLP counter.
 func recordCounter(
 	ctx context.Context,
 	meter otmetric.Meter,
@@ -129,19 +129,20 @@ func recordCounter(
 	val float64,
 	attrs []attribute.KeyValue,
 ) {
-	g, ok := counters[name]
+	c, ok := counters[name]
 	if !ok {
 		var err error
-		g, err = meter.Float64Counter(name, otmetric.WithDescription(help))
+		c, err = meter.Float64Counter(name, otmetric.WithDescription(help))
 		if err != nil {
 			logger.Debug("failed to create counter %q: %v", name, err)
 			return
 		}
-		counters[name] = g
+		counters[name] = c
 	}
-	g.Add(ctx, val, otmetric.WithAttributes(attrs...))
+	c.Add(ctx, val, otmetric.WithAttributes(attrs...))
 }
 
+// recordGauge sends a Prometheus gauge as an OTLP gauge.
 func recordGauge(
 	ctx context.Context,
 	meter otmetric.Meter,
@@ -164,6 +165,7 @@ func recordGauge(
 	g.Record(ctx, val, otmetric.WithAttributes(attrs...))
 }
 
+// recordHistogram sends a Prometheus histogram as an OTLP histogram.
 func recordHistogram(
 	ctx context.Context,
 	meter otmetric.Meter,
@@ -172,15 +174,15 @@ func recordHistogram(
 	name, help string,
 	h *dto.Histogram,
 ) {
-	boundaries := make([]float64, 0, len(h.Bucket)-1) // excluding +Inf
-	bucketCounts := make([]uint64, 0, len(h.Bucket))
+	bounds := make([]float64, 0, len(h.Bucket)-1)
+	counts := make([]uint64, 0, len(h.Bucket))
 
 	for _, bucket := range h.Bucket {
 		if math.IsInf(bucket.GetUpperBound(), +1) {
-			continue // Skip +Inf bucket boundary explicitly
+			continue
 		}
-		boundaries = append(boundaries, bucket.GetUpperBound())
-		bucketCounts = append(bucketCounts, bucket.GetCumulativeCount())
+		bounds = append(bounds, bucket.GetUpperBound())
+		counts = append(counts, bucket.GetCumulativeCount())
 	}
 
 	hist, ok := histograms[name]
@@ -189,7 +191,7 @@ func recordHistogram(
 		hist, err = meter.Float64Histogram(
 			name,
 			otmetric.WithDescription(help),
-			otmetric.WithExplicitBucketBoundaries(boundaries...),
+			otmetric.WithExplicitBucketBoundaries(bounds...),
 		)
 		if err != nil {
 			logger.Debug("failed to create histogram %s: %v", name, err)
@@ -198,38 +200,45 @@ func recordHistogram(
 		histograms[name] = hist
 	}
 
-	prevCount := uint64(0)
-	for i, count := range bucketCounts {
-		countInBucket := count - prevCount
-		prevCount = count
+	var prev uint64
+	for i, count := range counts {
+		n := count - prev
+		prev = count
 
-		// Explicitly record the mid-point of the bucket as approximation:
 		var value float64
 		if i == 0 {
-			value = boundaries[0] / 2.0
+			value = bounds[0] / 2.0
 		} else {
-			value = (boundaries[i-1] + boundaries[i]) / 2.0
+			value = (bounds[i-1] + bounds[i]) / 2.0
 		}
 
-		// Record `countInBucket` number of observations explicitly (approximation):
-		for j := uint64(0); j < countInBucket; j++ {
+		for j := uint64(0); j < n; j++ {
 			hist.Record(ctx, value)
 		}
 	}
 }
 
-func recordSummary(ctx context.Context, meter otmetric.Meter, logger log.Logger, gauges map[string]otmetric.Float64Gauge, name, help string, s *dto.Summary) {
-	recordGauge(ctx, meter, logger, gauges, name+"_sum", help+" (summary sum)", s.GetSampleSum(), nil)
-	recordGauge(ctx, meter, logger, gauges, name+"_count", help+" (summary count)", float64(s.GetSampleCount()), nil)
+// recordSummary sends a Prometheus summary as OTLP gauges.
+func recordSummary(
+	ctx context.Context,
+	meter otmetric.Meter,
+	logger log.Logger,
+	gauges map[string]otmetric.Float64Gauge,
+	name, help string,
+	s *dto.Summary,
+) {
+	recordGauge(ctx, meter, logger, gauges, name+"_sum", help+" sum", s.GetSampleSum(), nil)
+	recordGauge(ctx, meter, logger, gauges, name+"_count", help+" count", float64(s.GetSampleCount()), nil)
 
 	for _, q := range s.Quantile {
 		attrs := []attribute.KeyValue{
 			attribute.String("quantile", fmt.Sprintf("%v", q.GetQuantile())),
 		}
-		recordGauge(ctx, meter, logger, gauges, name, help+" (summary quantile)", q.GetValue(), attrs)
+		recordGauge(ctx, meter, logger, gauges, name, help+" quantile", q.GetValue(), attrs)
 	}
 }
 
+// formatBasicAuth returns a base64-encoded Basic Auth token.
 func formatBasicAuth(username, token string) string {
 	auth := username + ":" + token
 	return base64.StdEncoding.EncodeToString([]byte(auth))

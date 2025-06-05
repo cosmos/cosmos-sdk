@@ -87,28 +87,28 @@ func scrapePrometheusMetrics(
 	histograms map[string]otmetric.Float64Histogram,
 	counters map[string]otmetric.Float64Counter,
 ) error {
-	mfs, err := prometheus.DefaultGatherer.Gather()
+	metricFamilies, err := prometheus.DefaultGatherer.Gather()
 	if err != nil {
 		return fmt.Errorf("failed to gather prometheus metrics: %w", err)
 	}
 
-	for _, mf := range mfs {
-		name := mf.GetName()
-		for _, m := range mf.Metric {
+	for _, metricFamily := range metricFamilies {
+		name := metricFamily.GetName()
+		for _, m := range metricFamily.Metric {
 			attrs := make([]attribute.KeyValue, len(m.Label))
 			for i, label := range m.Label {
 				attrs[i] = attribute.String(label.GetName(), label.GetValue())
 			}
 
-			switch mf.GetType() {
+			switch metricFamily.GetType() {
 			case dto.MetricType_GAUGE:
-				recordGauge(ctx, meter, logger, gauges, name, mf.GetHelp(), m.Gauge.GetValue(), attrs)
+				recordGauge(ctx, meter, logger, gauges, name, metricFamily.GetHelp(), m.Gauge.GetValue(), attrs)
 			case dto.MetricType_COUNTER:
-				recordCounter(ctx, meter, logger, counters, name, mf.GetHelp(), m.Counter.GetValue(), attrs)
+				recordCounter(ctx, meter, logger, counters, name, metricFamily.GetHelp(), m.Counter.GetValue(), attrs)
 			case dto.MetricType_HISTOGRAM:
-				recordHistogram(ctx, meter, logger, histograms, name, mf.GetHelp(), m.Histogram)
+				recordHistogram(ctx, meter, logger, histograms, name, metricFamily.GetHelp(), m.Histogram)
 			case dto.MetricType_SUMMARY:
-				recordSummary(ctx, meter, logger, gauges, name, mf.GetHelp(), m.Summary)
+				recordSummary(ctx, meter, logger, gauges, name, metricFamily.GetHelp(), m.Summary)
 			default:
 				continue
 			}

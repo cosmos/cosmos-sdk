@@ -67,7 +67,8 @@ func StartOtlpExporter(ctx context.Context, cfg Config) {
 
 func scrapePrometheusMetrics(
 	ctx context.Context, meter otmetric.Meter, gauges map[string]otmetric.Float64Gauge,
-	histograms map[string]otmetric.Float64Histogram, counters map[string]otmetric.Float64Counter) error {
+	histograms map[string]otmetric.Float64Histogram, counters map[string]otmetric.Float64Counter,
+) error {
 	metricFamilies, err := prometheus.DefaultGatherer.Gather()
 	if err != nil {
 		log.Printf("failed to gather prometheus metrics: %v", err)
@@ -104,7 +105,8 @@ func scrapePrometheusMetrics(
 }
 
 func recordCounter(ctx context.Context, meter otmetric.Meter, counters map[string]otmetric.Float64Counter, name,
-	help string, val float64, attrs []attribute.KeyValue) {
+	help string, val float64, attrs []attribute.KeyValue,
+) {
 	g, ok := counters[name]
 	if !ok {
 		var err error

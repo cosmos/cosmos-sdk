@@ -75,3 +75,89 @@ func emitMetrics() {
 		}
 	}
 }
+
+func TestOtlpConfigValidate(t *testing.T) {
+	tests := []struct {
+		name    string
+		cfg     OtlpConfig
+		wantErr bool
+	}{
+		{
+			name: "exporter disabled → no error",
+			cfg: OtlpConfig{
+				OtlpExporterEnabled: false,
+				// other fields may be empty
+			},
+			wantErr: false,
+		},
+		{
+			name: "exporter enabled but missing endpoint → error",
+			cfg: OtlpConfig{
+				OtlpExporterEnabled: true,
+				// OtlpCollectorEndpoint is empty
+				OtlpUser:         "user",
+				OtlpToken:        "token",
+				OtlpPushInterval: 10 * time.Second,
+			},
+			wantErr: true,
+		},
+		{
+			name: "exporter enabled but missing user/token → error",
+			cfg: OtlpConfig{
+				OtlpExporterEnabled:   true,
+				OtlpCollectorEndpoint: "http://example.com:4318",
+				// OtlpUser or OtlpToken is empty
+				OtlpUser:         "",
+				OtlpToken:        "",
+				OtlpPushInterval: 10 * time.Second,
+			},
+			wantErr: true,
+		},
+		{
+			name: "exporter enabled but zero interval → error",
+			cfg: OtlpConfig{
+				OtlpExporterEnabled:   true,
+				OtlpCollectorEndpoint: "http://example.com:4318",
+				OtlpUser:              "user",
+				OtlpToken:             "token",
+				OtlpPushInterval:      0, // invalid
+			},
+			wantErr: true,
+		},
+		{
+			name: "exporter enabled with negative interval → error",
+			cfg: OtlpConfig{
+				OtlpExporterEnabled:   true,
+				OtlpCollectorEndpoint: "http://example.com:4318",
+				OtlpUser:              "user",
+				OtlpToken:             "token",
+				OtlpPushInterval:      -5 * time.Second,
+			},
+			wantErr: true,
+		},
+		{
+			name: "exporter enabled with all fields set correctly → no error",
+			cfg: OtlpConfig{
+				OtlpExporterEnabled:   true,
+				OtlpCollectorEndpoint: "https://collector.example.com:4318",
+				OtlpUser:              "user123",
+				OtlpToken:             "tokenABC",
+				OtlpServiceName:       "my-service",
+				OtlpPushInterval:      15 * time.Second,
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.cfg.Validate()
+			if tc.wantErr {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+		})
+	}
+}

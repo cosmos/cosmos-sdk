@@ -22,12 +22,12 @@ import (
 
 const meterName = "cosmos-sdk-otlp-exporter"
 
-func StartOtlpExporter(ctx context.Context, logger log.Logger, cfg Config) error {
+func StartOtlpExporter(ctx context.Context, logger log.Logger, cfg OtlpConfig) error {
 	exporter, err := otlpmetrichttp.New(ctx,
-		otlpmetrichttp.WithEndpoint(cfg.OtlpCollectorEndpoint),
-		otlpmetrichttp.WithURLPath(cfg.OtlpCollectorMetricsURLPath),
+		otlpmetrichttp.WithEndpoint(cfg.CollectorEndpoint),
+		otlpmetrichttp.WithURLPath(cfg.CollectorMetricsURLPath),
 		otlpmetrichttp.WithHeaders(map[string]string{
-			"Authorization": "Basic " + formatBasicAuth(cfg.OtlpUser, cfg.OtlpToken),
+			"Authorization": "Basic " + formatBasicAuth(cfg.User, cfg.Token),
 		}),
 	)
 	if err != nil {
@@ -35,7 +35,7 @@ func StartOtlpExporter(ctx context.Context, logger log.Logger, cfg Config) error
 	}
 
 	res, err := resource.New(ctx, resource.WithAttributes(
-		semconv.ServiceName(cfg.OtlpServiceName),
+		semconv.ServiceName(cfg.ServiceName),
 	))
 	if err != nil {
 		return fmt.Errorf("OTLP resource creation failed: %w", err)
@@ -43,7 +43,7 @@ func StartOtlpExporter(ctx context.Context, logger log.Logger, cfg Config) error
 
 	meterProvider := metric.NewMeterProvider(
 		metric.WithReader(metric.NewPeriodicReader(exporter,
-			metric.WithInterval(cfg.OtlpPushInterval))),
+			metric.WithInterval(cfg.PushInterval))),
 		metric.WithResource(res),
 	)
 	otel.SetMeterProvider(meterProvider)
@@ -60,7 +60,7 @@ func StartOtlpExporter(ctx context.Context, logger log.Logger, cfg Config) error
 	counters := make(map[string]otmetric.Float64Counter)
 
 	go func() {
-		ticker := time.NewTicker(cfg.OtlpPushInterval)
+		ticker := time.NewTicker(cfg.PushInterval)
 		defer ticker.Stop()
 		for {
 			select {

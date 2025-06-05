@@ -85,7 +85,7 @@ func TestOtlpConfigValidate(t *testing.T) {
 		{
 			name: "exporter disabled → no error",
 			cfg: OtlpConfig{
-				OtlpExporterEnabled: false,
+				ExporterEnabled: false,
 				// other fields may be empty
 			},
 			wantErr: false,
@@ -93,57 +93,57 @@ func TestOtlpConfigValidate(t *testing.T) {
 		{
 			name: "exporter enabled but missing endpoint → error",
 			cfg: OtlpConfig{
-				OtlpExporterEnabled: true,
-				// OtlpCollectorEndpoint is empty
-				OtlpUser:         "user",
-				OtlpToken:        "token",
-				OtlpPushInterval: 10 * time.Second,
+				ExporterEnabled: true,
+				// CollectorEndpoint is empty
+				User:         "user",
+				Token:        "token",
+				PushInterval: 10 * time.Second,
 			},
 			wantErr: true,
 		},
 		{
 			name: "exporter enabled but missing user/token → error",
 			cfg: OtlpConfig{
-				OtlpExporterEnabled:   true,
-				OtlpCollectorEndpoint: "http://example.com:4318",
-				// OtlpUser or OtlpToken is empty
-				OtlpUser:         "",
-				OtlpToken:        "",
-				OtlpPushInterval: 10 * time.Second,
+				ExporterEnabled:   true,
+				CollectorEndpoint: "http://example.com:4318",
+				// User or OtlpToken is empty
+				User:         "",
+				Token:        "",
+				PushInterval: 10 * time.Second,
 			},
 			wantErr: true,
 		},
 		{
 			name: "exporter enabled but zero interval → error",
 			cfg: OtlpConfig{
-				OtlpExporterEnabled:   true,
-				OtlpCollectorEndpoint: "http://example.com:4318",
-				OtlpUser:              "user",
-				OtlpToken:             "token",
-				OtlpPushInterval:      0, // invalid
+				ExporterEnabled:   true,
+				CollectorEndpoint: "http://example.com:4318",
+				User:              "user",
+				Token:             "token",
+				PushInterval:      0, // invalid
 			},
 			wantErr: true,
 		},
 		{
 			name: "exporter enabled with negative interval → error",
 			cfg: OtlpConfig{
-				OtlpExporterEnabled:   true,
-				OtlpCollectorEndpoint: "http://example.com:4318",
-				OtlpUser:              "user",
-				OtlpToken:             "token",
-				OtlpPushInterval:      -5 * time.Second,
+				ExporterEnabled:   true,
+				CollectorEndpoint: "http://example.com:4318",
+				User:              "user",
+				Token:             "token",
+				PushInterval:      -5 * time.Second,
 			},
 			wantErr: true,
 		},
 		{
 			name: "exporter enabled with all fields set correctly → no error",
 			cfg: OtlpConfig{
-				OtlpExporterEnabled:   true,
-				OtlpCollectorEndpoint: "https://collector.example.com:4318",
-				OtlpUser:              "user123",
-				OtlpToken:             "tokenABC",
-				OtlpServiceName:       "my-service",
-				OtlpPushInterval:      15 * time.Second,
+				ExporterEnabled:   true,
+				CollectorEndpoint: "https://collector.example.com:4318",
+				User:              "user123",
+				Token:             "tokenABC",
+				ServiceName:       "my-service",
+				PushInterval:      15 * time.Second,
 			},
 			wantErr: false,
 		},

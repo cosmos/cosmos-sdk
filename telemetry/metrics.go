@@ -91,34 +91,34 @@ type Config struct {
 	// Datadog. Only utilized if MetricsSink is set to "dogstatsd".
 	DatadogHostname string `mapstructure:"datadog-hostname"`
 
-	OtlpConfig `mapstructure:",squash"`
+	// OtlpConfig defines the optional OpenTelemetry exporter.
+	OtlpConfig OtlpConfig `mapstructure:"otlp"`
 }
 
 type OtlpConfig struct {
-	// Otlp Exporter fields
-	OtlpExporterEnabled         bool          `mapstructure:"otlp-exporter-enabled"`
-	OtlpCollectorEndpoint       string        `mapstructure:"otlp-collector-endpoint"`
-	OtlpCollectorMetricsURLPath string        `mapstructure:"otlp-collector-metrics-url-path"`
-	OtlpUser                    string        `mapstructure:"otlp-user"`
-	OtlpToken                   string        `mapstructure:"otlp-token"`
-	OtlpServiceName             string        `mapstructure:"otlp-service-name"`
-	OtlpPushInterval            time.Duration `mapstructure:"otlp-push-interval"`
+	ExporterEnabled         bool          `mapstructure:"exporter-enabled"`
+	CollectorEndpoint       string        `mapstructure:"collector-endpoint"`
+	CollectorMetricsURLPath string        `mapstructure:"collector-metrics-url-path"`
+	User                    string        `mapstructure:"user"`
+	Token                   string        `mapstructure:"token"`
+	ServiceName             string        `mapstructure:"service-name"`
+	PushInterval            time.Duration `mapstructure:"push-interval"`
 }
 
 func (cfg *OtlpConfig) Validate() error {
-	if !cfg.OtlpExporterEnabled {
+	if !cfg.ExporterEnabled {
 		return nil
 	}
 
-	if cfg.OtlpCollectorEndpoint == "" {
-		return fmt.Errorf("OtlpCollectorEndpoint must be set")
+	if cfg.CollectorEndpoint == "" {
+		return fmt.Errorf("CollectorEndpoint must be set")
 	}
-	if cfg.OtlpUser == "" || cfg.OtlpToken == "" {
-		return fmt.Errorf("both OtlpUser and OtlpToken are required for basic auth")
+	if cfg.User == "" || cfg.Token == "" {
+		return fmt.Errorf("both User and Token are required for basic auth")
 	}
-	if cfg.OtlpPushInterval <= 0 {
+	if cfg.PushInterval <= 0 {
 		// assign a sensible default or reject
-		return fmt.Errorf("OtlpPushInterval must be > 0, got %v", cfg.OtlpPushInterval)
+		return fmt.Errorf("PushInterval must be > 0, got %v", cfg.PushInterval)
 	}
 
 	return nil

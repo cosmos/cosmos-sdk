@@ -89,8 +89,7 @@ func scrapePrometheusMetrics(
 ) error {
 	mfs, err := prometheus.DefaultGatherer.Gather()
 	if err != nil {
-		logger.Debug("failed to gather prometheus metrics: %v", err)
-		return err
+		return fmt.Errorf("failed to gather prometheus metrics: %w", err)
 	}
 
 	for _, mf := range mfs {

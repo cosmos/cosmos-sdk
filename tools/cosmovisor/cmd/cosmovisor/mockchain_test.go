@@ -172,13 +172,12 @@ func TestMockChain(t *testing.T) {
 		case 7:
 			// should have upgraded to manual40
 			require.Contains(t, currentBin, "manual40")
-			// this is the end of our test so we shutdown here
-			cancel()
+			// this is the end of our test so we shutdown after a bit here
+			go func() {
+				time.Sleep(pollInterval * 2)
+				cancel()
+			}()
 		}
-		//cmd := exec.Command("tree", "-a")
-		//cmd.Dir = mockchainDir
-		//cmd.Stdout = os.Stdout
-		//require.NoError(t, cmd.Run())
 	}
 	var wg sync.WaitGroup
 	wg.Add(1)

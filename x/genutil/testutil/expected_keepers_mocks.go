@@ -14,7 +14,7 @@ import (
 	json "encoding/json"
 	reflect "reflect"
 
-	types "github.com/cometbft/cometbft/abci/types"
+	types "github.com/cometbft/cometbft/v2/abci/types"
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	types0 "github.com/cosmos/cosmos-sdk/types"
 	exported "github.com/cosmos/cosmos-sdk/x/bank/exported"

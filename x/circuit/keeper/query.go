@@ -34,7 +34,7 @@ func (qs QueryServer) Account(ctx context.Context, req *types.QueryAccountReques
 	return &types.AccountResponse{Permission: &perms}, nil
 }
 
-// Account returns account permissions.
+// Accounts returns account permissions.
 func (qs QueryServer) Accounts(ctx context.Context, req *types.QueryAccountsRequest) (*types.AccountsResponse, error) {
 	results, pageRes, err := query.CollectionPaginate(
 		ctx,

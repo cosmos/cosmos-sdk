@@ -10,7 +10,7 @@ import (
 	"cosmossdk.io/store/types"
 )
 
-// Wrapper type for dbm.Db with implementation of KVStore
+// Store is a wrapper type for dbm.Db with implementation of KVStore
 type Store struct {
 	dbm.DB
 }

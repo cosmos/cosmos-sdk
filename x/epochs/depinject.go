@@ -49,8 +49,8 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	return ModuleOutputs{EpochKeeper: k, Module: m}
 }
 
-func InvokeSetHooks(keeper keeper.Keeper, hooks map[string]types.EpochHooksWrapper) error {
-	if hooks == nil {
+func InvokeSetHooks(keeper *keeper.Keeper, hooks map[string]types.EpochHooksWrapper) error {
+	if keeper == nil || hooks == nil {
 		return nil
 	}
 

@@ -7,7 +7,7 @@ import (
 	"io"
 	"testing"
 
-	cmtcrypto "github.com/cometbft/cometbft/crypto"
+	cmtcrypto "github.com/cometbft/cometbft/v2/crypto"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 

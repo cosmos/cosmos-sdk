@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
 	db "github.com/cosmos/cosmos-db"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
@@ -89,13 +89,11 @@ func KVStoreHandler(storeKey storetypes.StoreKey) bam.MsgServiceHandler {
 	}
 }
 
-// basic KV structure
 type KV struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
 }
 
-// What Genesis JSON is formatted as
 type GenesisJSON struct {
 	Values []KV `json:"values"`
 }
@@ -145,6 +143,7 @@ func AppGenStateEmpty(_ *codec.LegacyAmino, _ genutiltypes.AppGenesis, _ []json.
 }
 
 // Manually write the handlers for this custom message
+
 type MsgServer interface {
 	Test(ctx context.Context, msg *KVStoreTx) (*sdk.Result, error)
 }

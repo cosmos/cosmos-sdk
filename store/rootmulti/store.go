@@ -12,7 +12,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	gogotypes "github.com/cosmos/gogoproto/types"
@@ -83,8 +83,9 @@ type Store struct {
 }
 
 var (
-	_ types.CommitMultiStore = (*Store)(nil)
-	_ types.Queryable        = (*Store)(nil)
+	_ types.CommitMultiStore          = (*Store)(nil)
+	_ types.Queryable                 = (*Store)(nil)
+	_ snapshottypes.SnapshotAnnouncer = (*Store)(nil)
 )
 
 // NewStore returns a reference to a new Store object with the provided DB. The
@@ -335,7 +336,7 @@ func deleteKVStore(kv types.KVStore) error {
 	return nil
 }
 
-// we simulate move by a copy and delete
+// moveKVStoreData implements a move by a copy and delete.
 func moveKVStoreData(oldDB, newDB types.KVStore) error {
 	// we read from one and write to another
 	itr := oldDB.Iterator(nil, nil)
@@ -356,6 +357,10 @@ func moveKVStoreData(oldDB, newDB types.KVStore) error {
 // For other strategies, this height is persisted until the snapshot is operated.
 func (rs *Store) PruneSnapshotHeight(height int64) {
 	rs.pruningManager.HandleSnapshotHeight(height)
+}
+
+func (rs *Store) AnnounceSnapshotHeight(height int64) {
+	rs.pruningManager.AnnounceSnapshotHeight(height)
 }
 
 // SetInterBlockCache sets the Store's internal inter-block (persistent) cache.
@@ -622,6 +627,10 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 				if storeInfos[key.Name()] {
 					return nil, err
 				}
+
+				// If the store donesn't exist at this version, create a dummy one to prevent
+				// nil pointer panic in newer query APIs.
+				cacheStore = dbadapter.Store{DB: dbm.NewMemDB()}
 			}
 
 		default:
@@ -719,7 +728,7 @@ func (rs *Store) PruneStores(pruningHeight int64) (err error) {
 	return nil
 }
 
-// getStoreByName performs a lookup of a StoreKey given a store name typically
+// GetStoreByName performs a lookup of a StoreKey given a store name typically
 // provided in a path. The StoreKey is then used to perform a lookup and return
 // a Store. If the Store is wrapped in an inter-block cache, it will be unwrapped
 // prior to being returned. If the StoreKey does not exist, nil is returned.
@@ -1180,7 +1189,7 @@ func GetLatestVersion(db dbm.DB) int64 {
 	return latestVersion
 }
 
-// Commits each store and returns a new commitInfo.
+// commitStores commits each store and returns a new commitInfo.
 func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore, removalMap map[types.StoreKey]bool) *types.CommitInfo {
 	storeInfos := make([]types.StoreInfo, 0, len(storeMap))
 	storeKeys := keysFromStoreKeyMap(storeMap)

@@ -18,13 +18,13 @@ type Store struct {
 	dbadapter.Store
 }
 
-// Constructs new MemDB adapter
+// NewStore constructs new MemDB adapter
 func NewStore() *Store {
 	return &Store{Store: dbadapter.Store{DB: dbm.NewMemDB()}}
 }
 
-// Implements CommitStore
 // Commit cleans up Store.
+// Implements CommitStore
 func (ts *Store) Commit() (id types.CommitID) {
 	ts.Store = dbadapter.Store{DB: dbm.NewMemDB()}
 	return
@@ -38,7 +38,7 @@ func (ts *Store) GetPruning() pruningtypes.PruningOptions {
 	return pruningtypes.NewPruningOptions(pruningtypes.PruningUndefined)
 }
 
-// Implements CommitStore
+// LastCommitID implements CommitStore, returns empty CommitID.
 func (ts *Store) LastCommitID() types.CommitID {
 	return types.CommitID{}
 }
@@ -47,7 +47,7 @@ func (ts *Store) WorkingHash() []byte {
 	return []byte{}
 }
 
-// Implements Store.
+// GetStoreType implements Store, returns StoreTypeTransient.
 func (ts *Store) GetStoreType() types.StoreType {
 	return types.StoreTypeTransient
 }

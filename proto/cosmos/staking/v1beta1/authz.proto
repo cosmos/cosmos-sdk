@@ -1,7 +1,6 @@
 syntax = "proto3";
 package cosmos.staking.v1beta1;
 
-import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "amino/amino.proto";
@@ -16,7 +15,7 @@ message StakeAuthorization {
 
   // max_tokens specifies the maximum amount of tokens can be delegate to a validator. If it is
   // empty, there is no spend limit and any amount of coins can be delegated.
-  cosmos.base.v1beta1.Coin max_tokens = 1 [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin"];
+  cosmos.base.v1beta1.Coin max_tokens = 1;
   // validators is the oneof that represents either allow_list or deny_list
   oneof validators {
     // allow_list specifies list of validator addresses to whom grantee can delegate tokens on behalf of granter's

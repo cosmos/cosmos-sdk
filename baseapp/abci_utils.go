@@ -7,11 +7,11 @@ import (
 	"slices"
 
 	"github.com/cockroachdb/errors"
-	abci "github.com/cometbft/cometbft/abci/types"
 	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	cryptoenc "github.com/cometbft/cometbft/crypto/encoding"
-	cmttypes "github.com/cometbft/cometbft/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
+	cryptoenc "github.com/cometbft/cometbft/v2/crypto/encoding"
+	cmttypes "github.com/cometbft/cometbft/v2/types"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/proto"
 
@@ -156,7 +156,7 @@ func ValidateVoteExtensions(
 // validateExtendedCommitAgainstLastCommit validates an ExtendedCommitInfo against a LastCommit. Specifically,
 // it checks that the ExtendedCommit + LastCommit (for the same height), are consistent with each other + that
 // they are ordered correctly (by voting power) in accordance with
-// [comet](https://github.com/cometbft/cometbft/blob/4ce0277b35f31985bbf2c25d3806a184a4510010/types/validator_set.go#L784).
+// [comet](https://github.com/cometbft/cometbft/v2/blob/4ce0277b35f31985bbf2c25d3806a184a4510010/types/validator_set.go#L784).
 func validateExtendedCommitAgainstLastCommit(ec abci.ExtendedCommitInfo, lc comet.CommitInfo) error {
 	// check that the rounds are the same
 	if ec.Round != lc.Round() {

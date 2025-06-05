@@ -8,7 +8,7 @@ import (
 
 // defaultConfig has all the options disabled, except Color and TimeFormat
 var defaultConfig = Config{
-	Level:      zerolog.NoLevel,
+	Level:      zerolog.TraceLevel, // this is the default level that zerolog initializes new Logger's with
 	Filter:     nil,
 	OutputJSON: false,
 	Color:      true,
@@ -19,7 +19,16 @@ var defaultConfig = Config{
 
 // Config defines configuration for the logger.
 type Config struct {
-	Level      zerolog.Level
+	// Level is the default logging level.
+	Level zerolog.Level
+	// VerboseLevel is the logging level to use when verbose mode is enabled.
+	// If there is a filter enabled, it will be disabled when verbose mode is enabled
+	// and all log messages will be emitted at the VerboseLevel.
+	// If this is set to NoLevel, then no changes to the logging level or filter will be made
+	// when verbose mode is enabled.
+	VerboseLevel zerolog.Level
+	// Filter is the filter function to use that allows for filtering by key and level.
+	// When verbose mode is enabled, the filter will be disabled unless VerboseLevel is set to NoLevel.
 	Filter     FilterFunc
 	OutputJSON bool
 	Color      bool
@@ -42,6 +51,14 @@ func FilterOption(filter FilterFunc) Option {
 func LevelOption(level zerolog.Level) Option {
 	return func(cfg *Config) {
 		cfg.Level = level
+	}
+}
+
+// VerboseLevelOption sets the verbose level for the Logger.
+// When verbose mode is enabled, the logger will be switched to this level.
+func VerboseLevelOption(level zerolog.Level) Option {
+	return func(cfg *Config) {
+		cfg.VerboseLevel = level
 	}
 }
 

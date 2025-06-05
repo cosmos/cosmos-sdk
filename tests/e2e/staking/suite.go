@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cometbft/cometbft/rpc/client/http"
+	"github.com/cometbft/cometbft/v2/rpc/client/http"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/math"

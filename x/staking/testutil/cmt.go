@@ -1,8 +1,8 @@
 package testutil
 
 import (
-	cmtcrypto "github.com/cometbft/cometbft/crypto"
-	cmttypes "github.com/cometbft/cometbft/types"
+	cmtcrypto "github.com/cometbft/cometbft/v2/crypto"
+	cmttypes "github.com/cometbft/cometbft/v2/types"
 
 	"cosmossdk.io/math"
 

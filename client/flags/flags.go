@@ -18,7 +18,6 @@ const (
 	DefaultGasLimit      = 200000
 	GasFlagAuto          = "auto"
 
-	// DefaultKeyringBackend
 	DefaultKeyringBackend = keyring.BackendOS
 
 	// BroadcastSync defines a tx broadcasting mode where the client waits for
@@ -88,9 +87,10 @@ const (
 	// This differs from FlagOutputDocument that is used to set the output file.
 	FlagOutput = "output"
 	// Logging flags
-	FlagLogLevel   = "log_level"
-	FlagLogFormat  = "log_format"
-	FlagLogNoColor = "log_no_color"
+	FlagLogLevel        = "log_level"
+	FlagVerboseLogLevel = "verbose_log_level"
+	FlagLogFormat       = "log_format"
+	FlagLogNoColor      = "log_no_color"
 )
 
 // List of supported output formats

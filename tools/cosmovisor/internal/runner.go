@@ -78,20 +78,17 @@ func (r Runner) Start(ctx context.Context, args []string) error {
 
 		// Now we actually run the process
 		err = r.RunProcess(ctx, cmd, haltHeight)
-		if err != nil {
-			// There are three types of errors we're checking for here:
-			// 1. ErrRestartNeeded: this is a custom error that is returned whenever the run loop detects that a restart is needed.
-			// 2. errDone: this is a sentinel error that indicates that the cosmovisor process itself should be stopped gracefully.
-			// 3. Any other error: this is an unexpected error that should be logged and returned, causing cosmovisor to exit
-			// TODO is it right for cosmovisor to exit on any other error (basically a non-zero return code)? Maybe we should just log it and continue?
-			var restartNeeded ErrRestartNeeded
-			if ok := errors.As(err, &restartNeeded); ok {
-				r.logger.Info("Restart needed")
-			} else if errors.Is(err, errDone) {
-				return nil
-			} else {
-				return err
-			}
+		// There are three types of cases we're checking for here:
+		// 1. ErrRestartNeeded: this is a custom error that is returned whenever the run loop detects that a restart is needed.
+		// 2. errDone: this is a sentinel error that indicates that the cosmovisor process itself should be stopped gracefully.
+		// 3. Any other error or the : this is an unexpected error that should be logged and returned, causing cosmovisor to exit
+		var restartNeeded ErrRestartNeeded
+		if ok := errors.As(err, &restartNeeded); ok {
+			r.logger.Info("Restart needed")
+		} else if errors.Is(err, errDone) {
+			return nil
+		} else {
+			r.logger.Error("Process exited", "error", err)
 		}
 	}
 }
@@ -195,10 +192,8 @@ func (r Runner) RunProcess(ctx context.Context, cmd *exec.Cmd, haltHeight uint64
 				}
 			}
 		case err := <-processRunner.Done():
-			// TODO handle process exit
-			r.logger.Warn("Process exited unexpectedly", "error", err)
+			// we just return the error or absence of an error here, which will cause the process to restart with a backoff retry algorithm
 			return err
-		// TODO:
 		case actualHeight := <-heightWatcher.Updated():
 			r.logger.Warn("Got height update from watcher", "height", actualHeight)
 			if haltHeight == 0 {

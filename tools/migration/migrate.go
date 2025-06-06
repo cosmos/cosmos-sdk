@@ -25,10 +25,13 @@ type GoModReplacement struct {
 	Version     string
 }
 
+// module -> version
+type GoModAddition map[string]string
 type GoModRemoval []string
 
 type MigrateArgs struct {
 	GoModRemoval      GoModRemoval
+	GoModAddition     GoModAddition
 	GoModReplacements []GoModReplacement
 	// GoModUpdates defines the list of modules to update.
 	GoModUpdates GoModUpdate
@@ -62,16 +65,16 @@ func Migrate(directory string, args MigrateArgs) error {
 	if err != nil {
 		return err
 	}
-	if err := updateGoModules(goModuleFiles, args.GoModUpdates, args.GoModRemoval, args.GoModReplacements); err != nil {
-		return fmt.Errorf("error updating go.mod files: %w", err)
-	}
 	if err := updateFiles(goFiles, args); err != nil {
 		return fmt.Errorf("error updating files: %w", err)
+	}
+	if err := updateGoModules(goModuleFiles, args.GoModUpdates, args.GoModRemoval, args.GoModReplacements, args.GoModAddition); err != nil {
+		return fmt.Errorf("error updating go.mod files: %w", err)
 	}
 	return nil
 }
 
-func updateGoModules(goModFiles []string, updates GoModUpdate, removals GoModRemoval, replacements []GoModReplacement) error {
+func updateGoModules(goModFiles []string, updates GoModUpdate, removals GoModRemoval, replacements []GoModReplacement, additions GoModAddition) error {
 	eg := errgroup.Group{}
 	for _, filePath := range goModFiles {
 		eg.Go(func() error {
@@ -85,6 +88,12 @@ func updateGoModules(goModFiles []string, updates GoModUpdate, removals GoModRem
 				return fmt.Errorf("error parsing %s: %w", filePath, err)
 			}
 			modified := false
+			for mod, ver := range additions {
+				if err := modFile.AddRequire(mod, ver); err != nil {
+					return fmt.Errorf("error adding %s requirement: %w", mod, err)
+				}
+				modified = true
+			}
 			// loop through all the modules in the go.mod file.
 			// we don't care about indirect modules, we only want to update direct dependencies.
 			for _, module := range modFile.Require {
@@ -139,10 +148,6 @@ func updateFiles(goFiles []string, args MigrateArgs) error {
 				return fmt.Errorf("error parsing %s: %w", filePath, err)
 			}
 
-			importsChanged, err := updateImports(node, args.ImportUpdates)
-			if err != nil {
-				return fmt.Errorf("error updating imports in %s: %w", filePath, err)
-			}
 			structsChanged, err := updateStructs(node, args.TypeUpdates)
 			if err != nil {
 				return fmt.Errorf("error updating structs in %s: %w", filePath, err)
@@ -154,6 +159,10 @@ func updateFiles(goFiles []string, args MigrateArgs) error {
 			complexCallsChanged, err := updateComplexFunctions(fset, node, args.ComplexUpdates)
 			if err != nil {
 				return fmt.Errorf("error updating complex function calls in %s: %w", filePath, err)
+			}
+			importsChanged, err := updateImports(node, args.ImportUpdates)
+			if err != nil {
+				return fmt.Errorf("error updating imports in %s: %w", filePath, err)
 			}
 
 			changed := importsChanged || structsChanged || callsChanged || complexCallsChanged

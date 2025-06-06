@@ -13,4 +13,5 @@ var importReplacements = []migration.ImportReplacement{
 	{Old: "cosmossdk.io/x/nft", New: "github.com/cosmos/cosmos-sdk/x/nft", AllPackages: true},
 	{Old: "cosmossdk.io/x/evidence", New: "github.com/cosmos/cosmos-sdk/x/evidence", AllPackages: true},
 	{Old: "cosmossdk.io/x/upgrade", New: "github.com/cosmos/cosmos-sdk/x/upgrade", AllPackages: true},
+	{Old: "github.com/cometbft/cometbft", New: "github.com/cometbft/cometbft/v2", AllPackages: true, Except: []string{"api"}},
 }

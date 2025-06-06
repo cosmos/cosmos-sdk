@@ -1,6 +1,7 @@
 package cosmovisor
 
 import (
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -35,25 +36,25 @@ func TestParseUpgradeInfoFile(t *testing.T) {
 			filename:      "f2-bad-type.json",
 			disableRecase: false,
 			expectUpgrade: upgradetypes.Plan{},
-			expectErr:     "cannot unmarshal number into Go struct",
+			expectErr:     "cannot unmarshal number into Go value",
 		},
 		{
 			filename:      "f2-bad-type-2.json",
 			disableRecase: false,
 			expectUpgrade: upgradetypes.Plan{},
-			expectErr:     "height must be greater than 0: invalid request",
+			expectErr:     `unknown field "heigh"`,
 		},
 		{
 			filename:      "f3-empty.json",
 			disableRecase: false,
 			expectUpgrade: upgradetypes.Plan{},
-			expectErr:     "empty upgrade-info.json in",
+			expectErr:     "EOF",
 		},
 		{
 			filename:      "f4-empty-obj.json",
 			disableRecase: false,
 			expectUpgrade: upgradetypes.Plan{},
-			expectErr:     "invalid upgrade-info.json content: name cannot be empty",
+			expectErr:     "name cannot be empty",
 		},
 		{
 			filename:      "f5-partial-obj-1.json",
@@ -89,4 +90,15 @@ func TestParseUpgradeInfoFile(t *testing.T) {
 			}
 		})
 	}
+}
+
+func parseUpgradeInfoFile(filename string, disableRecase bool) (upgradetypes.Plan, error) {
+	cfg := &Config{
+		DisableRecase: disableRecase,
+	}
+	bz, err := os.ReadFile(filename)
+	if err != nil {
+		return upgradetypes.Plan{}, err
+	}
+	return cfg.ParseUpgradeInfo(bz)
 }

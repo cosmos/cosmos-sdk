@@ -4,6 +4,7 @@ package cosmovisor_test
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io/fs"
 	"os"
@@ -12,11 +13,12 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/log"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/log"
 	"cosmossdk.io/tools/cosmovisor"
-	upgradetypes "cosmossdk.io/x/upgrade/types"
+	"cosmossdk.io/tools/cosmovisor/internal"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 var workDir string
@@ -24,6 +26,8 @@ var workDir string
 func init() {
 	workDir, _ = os.Getwd()
 }
+
+// TODO all these tests share the same setup so we can extract it to a common function
 
 // TestLaunchProcess will try running the script a few times and watch upgrades work properly
 // and args are passed through
@@ -33,9 +37,10 @@ func TestLaunchProcess(t *testing.T) {
 		t,
 		fmt.Sprintf("%s/%s", workDir, "testdata/validate"),
 		cosmovisor.Config{
-			Name:             "dummyd",
-			PollInterval:     15,
-			UnsafeSkipBackup: true,
+			Name:              "dummyd",
+			PollInterval:      15,
+			UnsafeSkipBackup:  true,
+			MaxRestartRetries: 1,
 		},
 	)
 
@@ -52,33 +57,39 @@ func TestLaunchProcess(t *testing.T) {
 
 	require.Equal(t, rPath, currentBin)
 
-	launcher, err := cosmovisor.NewLauncher(logger, cfg)
-	require.NoError(t, err)
+	runCfg := internal.RunConfig{
+		StdIn:  stdin,
+		StdOut: stdout,
+		StdErr: stderr,
+	}
 
+	runner := internal.NewRunner(cfg, runCfg, logger)
 	upgradeFile := cfg.UpgradeInfoFilePath()
 
 	args := []string{"foo", "bar", "1234", upgradeFile}
-	doUpgrade, err := launcher.Run(args, stdin, stdout, stderr)
+	err = runner.Start(context.Background(), args)
 	require.NoError(t, err)
-	require.True(t, doUpgrade)
+	//doUpgrade, err := launcher.Run(args, stdin, stdout, stderr)
+	//require.NoError(t, err)
+	//require.True(t, doUpgrade)
 	require.Empty(t, stderr.String())
 	require.Equal(t, fmt.Sprintf("Genesis foo bar 1234 %s\nUPGRADE \"chain2\" NEEDED at height: 49: {}\n", upgradeFile), stdout.String())
 
 	// ensure this is upgraded now and produces new output
 	currentBin, err = cfg.CurrentBin()
 	require.NoError(t, err)
-
 	rPath, err = filepath.EvalSymlinks(cfg.UpgradeBin("chain2"))
-	require.NoError(t, err)
 
+	require.NoError(t, err)
 	require.Equal(t, rPath, currentBin)
 	args = []string{"second", "run", "--verbose"}
 	stdout.Reset()
 	stderr.Reset()
 
-	doUpgrade, err = launcher.Run(args, stdin, stdout, stderr)
-	require.NoError(t, err)
-	require.False(t, doUpgrade)
+	err = runner.Start(context.Background(), args)
+	require.ErrorContains(t, err, "maximum number of restarts reached")
+	//doUpgrade, err = launcher.Run(args, stdin, stdout, stderr)
+	//require.False(t, doUpgrade)
 	require.Empty(t, stderr.String())
 	require.Equal(t, "Chain 2 is live!\nArgs: second run --verbose\nFinished successfully\n", stdout.String())
 
@@ -96,10 +107,11 @@ func TestPlanDisableRecase(t *testing.T) {
 		t,
 		fmt.Sprintf("%s/%s", workDir, "testdata/norecase"),
 		cosmovisor.Config{
-			Name:             "dummyd",
-			PollInterval:     20,
-			UnsafeSkipBackup: true,
-			DisableRecase:    true,
+			Name:              "dummyd",
+			PollInterval:      20,
+			UnsafeSkipBackup:  true,
+			DisableRecase:     true,
+			MaxRestartRetries: 1,
 		},
 	)
 
@@ -116,15 +128,20 @@ func TestPlanDisableRecase(t *testing.T) {
 
 	require.Equal(t, rPath, currentBin)
 
-	launcher, err := cosmovisor.NewLauncher(logger, cfg)
-	require.NoError(t, err)
+	runCfg := internal.RunConfig{
+		StdIn:  stdin,
+		StdOut: stdout,
+		StdErr: stderr,
+	}
+	runner := internal.NewRunner(cfg, runCfg, logger)
 
 	upgradeFile := cfg.UpgradeInfoFilePath()
 
 	args := []string{"foo", "bar", "1234", upgradeFile}
-	doUpgrade, err := launcher.Run(args, stdin, stdout, stderr)
+	//doUpgrade, err := launcher.Run(args, stdin, stdout, stderr)
+	err = runner.Start(context.Background(), args)
 	require.NoError(t, err)
-	require.True(t, doUpgrade)
+	//require.True(t, doUpgrade)
 	require.Empty(t, stderr.String())
 	require.Equal(t, fmt.Sprintf("Genesis foo bar 1234 %s\nUPGRADE \"Chain2\" NEEDED at height: 49: {}\n", upgradeFile), stdout.String())
 
@@ -139,9 +156,10 @@ func TestPlanDisableRecase(t *testing.T) {
 	stdout.Reset()
 	stderr.Reset()
 
-	doUpgrade, err = launcher.Run(args, stdin, stdout, stderr)
-	require.NoError(t, err)
-	require.False(t, doUpgrade)
+	err = runner.Start(context.Background(), args)
+	//runner.RunProcess(ctx, args)
+	require.ErrorContains(t, err, "maximum number of restarts reached")
+	//require.False(t, doUpgrade)
 	require.Empty(t, stderr.String())
 	require.Equal(t, "Chain 2 is live!\nArgs: second run --verbose\nFinished successfully\n", stdout.String())
 
@@ -176,15 +194,19 @@ func TestLaunchProcessWithRestartDelay(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, rPath, currentBin)
 
-	launcher, err := cosmovisor.NewLauncher(logger, cfg)
+	runner := internal.NewRunner(cfg, internal.RunConfig{
+		StdIn:  stdin,
+		StdOut: stdout,
+		StdErr: stderr,
+	}, logger)
 	require.NoError(t, err)
 
 	upgradeFile := cfg.UpgradeInfoFilePath()
 
 	start := time.Now()
-	doUpgrade, err := launcher.Run([]string{"foo", "bar", "1234", upgradeFile}, stdin, stdout, stderr)
+	err = runner.Start(context.Background(), []string{"foo", "bar", "1234", upgradeFile})
 	require.NoError(t, err)
-	require.True(t, doUpgrade)
+	//require.True(t, doUpgrade)
 
 	// may not be the best way but the fastest way to check we meet the delay
 	// in addition to comparing both the runtime of this test and TestLaunchProcess in addition
@@ -193,17 +215,18 @@ func TestLaunchProcessWithRestartDelay(t *testing.T) {
 	}
 }
 
-// TestPlanShutdownGrace will test the shutdown grace period functionality
+// TestPlanShutdownGrace will test upgrades without lower case plan names
 func TestPlanShutdownGrace(t *testing.T) {
 	// binaries from testdata/validate directory
 	cfg := prepareConfig(
 		t,
 		fmt.Sprintf("%s/%s", workDir, "testdata/dontdie"),
 		cosmovisor.Config{
-			Name:             "dummyd",
-			PollInterval:     15,
-			UnsafeSkipBackup: true,
-			ShutdownGrace:    2 * time.Second,
+			Name:              "dummyd",
+			PollInterval:      15,
+			UnsafeSkipBackup:  true,
+			ShutdownGrace:     2 * time.Second,
+			MaxRestartRetries: 1,
 		},
 	)
 
@@ -218,15 +241,18 @@ func TestPlanShutdownGrace(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, rPath, currentBin)
 
-	launcher, err := cosmovisor.NewLauncher(logger, cfg)
-	require.NoError(t, err)
+	runner := internal.NewRunner(cfg, internal.RunConfig{
+		StdIn:  stdin,
+		StdOut: stdout,
+		StdErr: stderr,
+	}, logger)
 
 	upgradeFile := cfg.UpgradeInfoFilePath()
 
 	args := []string{"foo", "bar", "1234", upgradeFile}
-	doUpgrade, err := launcher.Run(args, stdin, stdout, stderr)
+	err = runner.Start(context.Background(), args)
 	require.NoError(t, err)
-	require.True(t, doUpgrade)
+	//require.True(t, doUpgrade)
 	require.Empty(t, stderr.String())
 	require.Equal(t, fmt.Sprintf("Genesis foo bar 1234 %s\nUPGRADE \"Chain2\" NEEDED at height: 49: {}\nWARN Need Flush\nFlushed\n", upgradeFile), stdout.String())
 
@@ -241,9 +267,9 @@ func TestPlanShutdownGrace(t *testing.T) {
 	stdout.Reset()
 	stderr.Reset()
 
-	doUpgrade, err = launcher.Run(args, stdin, stdout, stderr)
-	require.NoError(t, err)
-	require.False(t, doUpgrade)
+	err = runner.Start(context.Background(), args)
+	require.ErrorContains(t, err, "maximum number of restarts reached")
+	//require.False(t, doUpgrade)
 	require.Empty(t, stderr.String())
 	require.Equal(t, "Chain 2 is live!\nArgs: second run --verbose\nFinished successfully\n", stdout.String())
 
@@ -268,6 +294,7 @@ func TestLaunchProcessWithDownloads(t *testing.T) {
 			AllowDownloadBinaries: true,
 			PollInterval:          100,
 			UnsafeSkipBackup:      true,
+			MaxRestartRetries:     1,
 		},
 	)
 
@@ -281,15 +308,18 @@ func TestLaunchProcessWithDownloads(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, rPath, currentBin)
 
-	launcher, err := cosmovisor.NewLauncher(logger, cfg)
-	require.NoError(t, err)
-
 	stdin, _ := os.Open(os.DevNull)
 	stdout, stderr := newBuffer(), newBuffer()
+	launcher := internal.NewRunner(cfg, internal.RunConfig{
+		StdIn:  stdin,
+		StdOut: stdout,
+		StdErr: stderr,
+	}, logger)
+
 	args := []string{"some", "args", upgradeFilename}
-	doUpgrade, err := launcher.Run(args, stdin, stdout, stderr)
+	err = launcher.Start(context.Background(), args)
 	require.NoError(t, err)
-	require.True(t, doUpgrade)
+	//require.True(t, doUpgrade)
 	require.Empty(t, stderr.String())
 	require.Equal(t, "Genesis autod. Args: some args "+upgradeFilename+"\n"+`ERROR: UPGRADE "chain2" NEEDED at height: 49: zip_binary`+"\n", stdout.String())
 	currentBin, err = cfg.CurrentBin()
@@ -303,13 +333,13 @@ func TestLaunchProcessWithDownloads(t *testing.T) {
 	stdout.Reset()
 	stderr.Reset()
 	args = []string{"run", "--fast", upgradeFilename}
-	doUpgrade, err = launcher.Run(args, stdin, stdout, stderr)
+	err = launcher.Start(context.Background(), args)
 	require.NoError(t, err)
 
 	require.Empty(t, stderr.String())
 	require.Equal(t, "Chain 2 from zipped binary\nArgs: run --fast "+upgradeFilename+"\n"+`ERROR: UPGRADE "chain3" NEEDED at height: 936: ref_to_chain3-zip_dir.json module=main`+"\n", stdout.String())
 	// ended with one more upgrade
-	require.True(t, doUpgrade)
+	//require.True(t, doUpgrade)
 	currentBin, err = cfg.CurrentBin()
 	require.NoError(t, err)
 	rPath, err = filepath.EvalSymlinks(cfg.UpgradeBin("chain3"))
@@ -320,9 +350,9 @@ func TestLaunchProcessWithDownloads(t *testing.T) {
 	args = []string{"end", "--halt", upgradeFilename}
 	stdout.Reset()
 	stderr.Reset()
-	doUpgrade, err = launcher.Run(args, stdin, stdout, stderr)
-	require.NoError(t, err)
-	require.False(t, doUpgrade)
+	err = launcher.Start(context.Background(), args)
+	require.ErrorContains(t, err, "maximum number of restarts reached")
+	//require.False(t, doUpgrade)
 	require.Empty(t, stderr.String())
 	require.Equal(t, "Chain 3 from zipped directory\nArgs: end --halt "+upgradeFilename+"\n", stdout.String())
 
@@ -363,14 +393,18 @@ func TestLaunchProcessWithDownloadsAndMissingPreupgrade(t *testing.T) {
 	rPath, err := filepath.EvalSymlinks(cfg.GenesisBin())
 	require.NoError(t, err)
 	require.Equal(t, rPath, currentBin)
-	launcher, err := cosmovisor.NewLauncher(logger, cfg)
+	stdin, _ := os.Open(os.DevNull)
+	stdout, stderr := newBuffer(), newBuffer()
+	runner := internal.NewRunner(cfg, internal.RunConfig{
+		StdIn:  stdin,
+		StdOut: stdout,
+		StdErr: stderr,
+	}, logger)
 	require.NoError(t, err)
 
 	// Missing Preupgrade Script
-	stdin, _ := os.Open(os.DevNull)
-	stdout, stderr := newBuffer(), newBuffer()
 	args := []string{"some", "args", upgradeFilename}
-	_, err = launcher.Run(args, stdin, stdout, stderr)
+	err = runner.Start(context.Background(), args)
 
 	require.ErrorContains(t, err, "missing.sh")
 	require.ErrorIs(t, err, fs.ErrNotExist)
@@ -405,16 +439,19 @@ func TestLaunchProcessWithDownloadsAndPreupgrade(t *testing.T) {
 	rPath, err := filepath.EvalSymlinks(cfg.GenesisBin())
 	require.NoError(t, err)
 	require.Equal(t, rPath, currentBin)
-	launcher, err := cosmovisor.NewLauncher(logger, cfg)
-	require.NoError(t, err)
-
 	stdin, _ := os.Open(os.DevNull)
 	stdout, stderr := newBuffer(), newBuffer()
+	runner := internal.NewRunner(cfg, internal.RunConfig{
+		StdIn:  stdin,
+		StdOut: stdout,
+		StdErr: stderr,
+	}, logger)
+
 	args := []string{"some", "args", upgradeFilename}
-	doUpgrade, err := launcher.Run(args, stdin, stdout, stderr)
+	err = runner.Start(context.Background(), args)
 
 	require.NoError(t, err)
-	require.True(t, doUpgrade)
+	//require.True(t, doUpgrade)
 	require.Empty(t, stderr.String())
 	require.Equal(t, "Genesis autod. Args: some args "+upgradeFilename+"\n"+`ERROR: UPGRADE "chain2" NEEDED at height: 49: zip_binary`+"\n", stdout.String())
 	currentBin, err = cfg.CurrentBin()
@@ -431,13 +468,14 @@ func TestLaunchProcessWithDownloadsAndPreupgrade(t *testing.T) {
 	stdout.Reset()
 	stderr.Reset()
 	args = []string{"run", "--fast", upgradeFilename}
-	doUpgrade, err = launcher.Run(args, stdin, stdout, stderr)
+	//doUpgrade, err = runner.Run(args, stdin, stdout, stderr)
+	err = runner.Start(context.Background(), args)
 	require.NoError(t, err)
 
 	require.Empty(t, stderr.String())
 	require.Equal(t, "Chain 2 from zipped binary\nArgs: run --fast "+upgradeFilename+"\n"+`ERROR: UPGRADE "chain3" NEEDED at height: 936: ref_to_chain3-zip_dir.json module=main`+"\n", stdout.String())
 	// ended with one more upgrade
-	require.True(t, doUpgrade)
+	//require.True(t, doUpgrade)
 	currentBin, err = cfg.CurrentBin()
 	require.NoError(t, err)
 	rPath, err = filepath.EvalSymlinks(cfg.UpgradeBin("chain3"))
@@ -451,9 +489,9 @@ func TestLaunchProcessWithDownloadsAndPreupgrade(t *testing.T) {
 	args = []string{"end", "--halt", upgradeFilename}
 	stdout.Reset()
 	stderr.Reset()
-	doUpgrade, err = launcher.Run(args, stdin, stdout, stderr)
+	err = runner.Start(context.Background(), args)
 	require.NoError(t, err)
-	require.False(t, doUpgrade)
+	//require.False(t, doUpgrade)
 	require.Empty(t, stderr.String())
 	require.Equal(t, "Chain 3 from zipped directory\nArgs: end --halt "+upgradeFilename+"\n", stdout.String())
 
@@ -465,7 +503,7 @@ func TestLaunchProcessWithDownloadsAndPreupgrade(t *testing.T) {
 	require.Equal(t, rPath, currentBin)
 }
 
-// TestSkipUpgrade tests heights that are identified to be skipped and returns whether the upgrade height matches the skip heights
+// TestSkipUpgrade tests heights that are identified to be skipped and return if upgrade height matches the skip heights
 func TestSkipUpgrade(t *testing.T) {
 	cases := []struct {
 		args        []string

@@ -32,7 +32,7 @@ func NewRunner(cfg *cosmovisor.Config, runCfg RunConfig, logger log.Logger) Runn
 }
 
 func (r Runner) Start(ctx context.Context, args []string) error {
-	retryMgr := NewRetryBackoffManager(r.logger)
+	retryMgr := NewRetryBackoffManager(r.logger, r.cfg.MaxRestartRetries)
 	for {
 		// First we check if we need to upgrade and if we do we perform the upgrade
 		upgraded, err := UpgradeIfNeeded(r.cfg, r.logger, r.knownHeight)
@@ -149,7 +149,7 @@ func (r Runner) RunProcess(ctx context.Context, cmd *exec.Cmd, haltHeight uint64
 		return r.cfg.WriteLastKnownHeight(height)
 	})
 
-	r.logger.Info("Starting process %s with args %v", cmd.Path, cmd.Args)
+	r.logger.Info("Starting process", "path", cmd.Path, "args", cmd.Args)
 	processRunner := RunProcess(cmd)
 	defer func() {
 		// TODO always check for the latest block height before shutting down

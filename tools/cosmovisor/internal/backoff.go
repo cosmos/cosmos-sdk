@@ -3,6 +3,7 @@ package internal
 import (
 	"time"
 
+	"cosmossdk.io/log"
 	"github.com/cenkalti/backoff/v5"
 )
 
@@ -10,13 +11,15 @@ type RetryBackoffManager struct {
 	lastCmd  string
 	lastArgs []string
 	backoff  backoff.BackOff
+	logger   log.Logger
 }
 
 // NewRetryBackoffManager creates a new RetryBackoffManager instance.
-func NewRetryBackoffManager() *RetryBackoffManager {
-	backoff := backoff.NewExponentialBackOff()
+func NewRetryBackoffManager(logger log.Logger) *RetryBackoffManager {
+	backoffAlg := backoff.NewExponentialBackOff()
 	return &RetryBackoffManager{
-		backoff: backoff,
+		backoff: backoffAlg,
+		logger:  logger,
 	}
 }
 
@@ -36,12 +39,17 @@ func (r *RetryBackoffManager) BeforeRun(cmd string, args []string) error {
 	}
 	if reset {
 		// if the command or arguments have changed, we reset the backoff and store the new command and arguments
+		r.logger.Info("Resetting backoff due to command or arguments change")
 		r.backoff.Reset()
 		r.lastCmd = cmd
 		r.lastArgs = args
 	} else {
 		// if the command and arguments are the same, we wait for the next backoff interval
-		time.Sleep(r.backoff.NextBackOff())
+		duration := r.backoff.NextBackOff()
+		r.logger.Info("Applying backoff before restarting command",
+			"backoff", duration)
+		time.Sleep(duration)
+		r.logger.Info("Backoff time elapsed, restarting ")
 	}
 	return nil
 }

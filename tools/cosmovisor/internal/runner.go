@@ -32,7 +32,7 @@ func NewRunner(cfg *cosmovisor.Config, runCfg RunConfig, logger log.Logger) Runn
 }
 
 func (r Runner) Start(ctx context.Context, args []string) error {
-	retryMgr := NewRetryBackoffManager()
+	retryMgr := NewRetryBackoffManager(r.logger)
 	for {
 		// First we check if we need to upgrade and if we do we perform the upgrade
 		upgraded, err := UpgradeIfNeeded(r.cfg, r.logger, r.knownHeight)
@@ -73,6 +73,8 @@ func (r Runner) Start(ctx context.Context, args []string) error {
 		if testCallback := GetTestCallback(ctx); testCallback != nil {
 			testCallback()
 		}
+
+		// TODO should restart delay go here? or should it be handled when upgrading
 
 		// Now we actually run the process
 		err = r.RunProcess(ctx, cmd, haltHeight)

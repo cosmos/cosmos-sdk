@@ -426,6 +426,7 @@ func TestLaunchProcessWithDownloadsAndPreupgrade(t *testing.T) {
 			PollInterval:          100,
 			UnsafeSkipBackup:      true,
 			CustomPreUpgrade:      "preupgrade.sh",
+			MaxRestartRetries:     1,
 		},
 	)
 
@@ -490,7 +491,7 @@ func TestLaunchProcessWithDownloadsAndPreupgrade(t *testing.T) {
 	stdout.Reset()
 	stderr.Reset()
 	err = runner.Start(context.Background(), args)
-	require.NoError(t, err)
+	require.ErrorContains(t, err, "maximum number of restarts reached")
 	//require.False(t, doUpgrade)
 	require.Empty(t, stderr.String())
 	require.Equal(t, "Chain 3 from zipped directory\nArgs: end --halt "+upgradeFilename+"\n", stdout.String())

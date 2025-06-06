@@ -72,6 +72,11 @@ type Config struct {
 	TimeFormatLogs           string        `toml:"cosmovisor_timeformat_logs" mapstructure:"cosmovisor_timeformat_logs" default:"kitchen"`
 	CustomPreUpgrade         string        `toml:"cosmovisor_custom_preupgrade" mapstructure:"cosmovisor_custom_preupgrade" default:""`
 	DisableRecase            bool          `toml:"cosmovisor_disable_recase" mapstructure:"cosmovisor_disable_recase" default:"false"`
+	// MaxRestartRetries is the maximum number of times
+	// to restart the binary after spurious shutdowns,
+	// (those not due to valid upgrades or halt heights changes).
+	// A value of 0 means no limit.
+	MaxRestartRetries int `toml:"max_restart_retries" mapstructure:"max_restart_retries" default:"5"`
 }
 
 // Root returns the root directory where all info lives

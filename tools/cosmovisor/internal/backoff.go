@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"fmt"
 	"time"
 
 	"cosmossdk.io/log"
@@ -8,18 +9,21 @@ import (
 )
 
 type RetryBackoffManager struct {
-	lastCmd  string
-	lastArgs []string
-	backoff  backoff.BackOff
-	logger   log.Logger
+	lastCmd     string
+	lastArgs    []string
+	backoff     backoff.BackOff
+	retryCount  int
+	maxRestarts int
+	logger      log.Logger
 }
 
 // NewRetryBackoffManager creates a new RetryBackoffManager instance.
-func NewRetryBackoffManager(logger log.Logger) *RetryBackoffManager {
+func NewRetryBackoffManager(logger log.Logger, maxRestarts int) *RetryBackoffManager {
 	backoffAlg := backoff.NewExponentialBackOff()
 	return &RetryBackoffManager{
-		backoff: backoffAlg,
-		logger:  logger,
+		backoff:     backoffAlg,
+		maxRestarts: maxRestarts,
+		logger:      logger,
 	}
 }
 
@@ -39,15 +43,19 @@ func (r *RetryBackoffManager) BeforeRun(cmd string, args []string) error {
 	}
 	if reset {
 		// if the command or arguments have changed, we reset the backoff and store the new command and arguments
-		r.logger.Info("Resetting backoff due to command or arguments change")
 		r.backoff.Reset()
+		r.retryCount = 0
 		r.lastCmd = cmd
 		r.lastArgs = args
 	} else {
+		r.retryCount++
+		if r.maxRestarts > 0 && r.retryCount >= r.maxRestarts {
+			return backoff.Permanent(fmt.Errorf("maximum number of restarts reached: %d", r.maxRestarts))
+		}
 		// if the command and arguments are the same, we wait for the next backoff interval
 		duration := r.backoff.NextBackOff()
 		r.logger.Info("Applying backoff before restarting command",
-			"backoff", duration)
+			"backoff_duration", duration.String())
 		time.Sleep(duration)
 		r.logger.Info("Backoff time elapsed, restarting ")
 	}

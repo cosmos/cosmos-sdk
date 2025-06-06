@@ -32,12 +32,14 @@ func NewRunner(cfg *cosmovisor.Config, runCfg RunConfig, logger log.Logger) Runn
 }
 
 func (r Runner) Start(ctx context.Context, args []string) error {
-	// TODO handle cases where daemon shuts down without an upgrade or change to halt height, either have a retry count of fail in that case ideally backoff retry
+	retryMgr := NewRetryBackoffManager()
 	for {
+		// First we check if we need to upgrade and if we do we perform the upgrade
 		upgraded, err := UpgradeIfNeeded(r.cfg, r.logger, r.knownHeight)
 		if err != nil {
 			return err
 		}
+		// If we upgraded, we need to restart the process, but some configurations do not allow automatic restarts
 		if upgraded {
 			r.logger.Info("Upgrade completed, restarting process")
 			if !r.cfg.RestartAfterUpgrade {
@@ -45,17 +47,41 @@ func (r Runner) Start(ctx context.Context, args []string) error {
 				return nil
 			}
 		}
-		args, haltHeight, err := r.ComputeRunArgs(args)
+		// Now we compute the command to run and figure out the halt height if needed
+		cmd, haltHeight, err := r.ComputeRunPlan(args)
 		if err != nil {
 			return err
 		}
 
+		// Usually restarts should be due to either:
+		// 1. an upgrade that requires a restart
+		// 2. a change in the halt height due to a new manual upgrade plan
+		// There are also cases where an app could just shut down due to some error.
+		// If we're in that sort of situation, we want to retry running the command, but
+		// we apply a backoff strategy to avoid hammering the process in case of repeated failures.
+		// We pass the current command and args to the retry manager so it can check whether
+		// the command or its arguments have changed (e.g. if the binary was updated or the halt height changed),
+		// or if we're just in some sort of error restart loop.
+		// TODO add tests for this behavior
+		if err := retryMgr.BeforeRun(cmd.Path, cmd.Args); err != nil {
+			return err
+		}
+
+		// In order to make in process testing feasible, we allow a test callback to be set
+		// and we call it here right before running the process.
+		// Without this it would be much harder to test the cosmovisor runner in a controlled but realistic scenario.
 		if testCallback := GetTestCallback(ctx); testCallback != nil {
 			testCallback()
 		}
 
-		err = r.RunOnce(ctx, args, haltHeight)
+		// Now we actually run the process
+		err = r.RunProcess(ctx, cmd, haltHeight)
 		if err != nil {
+			// There are three types of errors we're checking for here:
+			// 1. ErrRestartNeeded: this is a custom error that is returned whenever the run loop detects that a restart is needed.
+			// 2. errDone: this is a sentinel error that indicates that the cosmovisor process itself should be stopped gracefully.
+			// 3. Any other error: this is an unexpected error that should be logged and returned, causing cosmovisor to exit
+			// TODO is it right for cosmovisor to exit on any other error (basically a non-zero return code)? Maybe we should just log it and continue?
 			var restartNeeded ErrRestartNeeded
 			if ok := errors.As(err, &restartNeeded); ok {
 				r.logger.Info("Restart needed")
@@ -64,15 +90,26 @@ func (r Runner) Start(ctx context.Context, args []string) error {
 			} else {
 				return err
 			}
-
 		}
 	}
 }
 
 var errDone = errors.New("done")
 
-func (r Runner) ComputeRunArgs(args []string) (argsOut []string, haltHeight uint64, err error) {
-	argsOut = args
+func (r Runner) ComputeRunPlan(args []string) (cmd *exec.Cmd, haltHeight uint64, err error) {
+	bin, err := r.cfg.CurrentBin()
+	if err != nil {
+		return nil, 0, fmt.Errorf("error creating symlink to genesis: %w", err)
+	}
+
+	if err := plan.EnsureBinary(bin); err != nil {
+		return nil, 0, fmt.Errorf("current binary is invalid: %w", err)
+	}
+
+	cmd = exec.Command(bin, args...)
+	cmd.Stdin = r.runCfg.StdIn
+	cmd.Stdout = r.runCfg.StdOut
+	cmd.Stderr = r.runCfg.StdErr
 	r.logger.Info("Checking for upgrade-info.json.batch")
 	manualUpgradeBatch, err := r.cfg.ReadManualUpgrades()
 	if err != nil {
@@ -82,12 +119,12 @@ func (r Runner) ComputeRunArgs(args []string) (argsOut []string, haltHeight uint
 	if manualUpgrade != nil {
 		haltHeight = uint64(manualUpgrade.Height)
 		r.logger.Info("Setting --halt-height flag for manual upgrade", "halt_height", haltHeight)
-		argsOut = append(argsOut, fmt.Sprintf("--halt-height=%d", haltHeight))
+		cmd.Args = append(cmd.Args, fmt.Sprintf("--halt-height=%d", haltHeight))
 	}
 	return
 }
 
-func (r Runner) RunOnce(ctx context.Context, args []string, haltHeight uint64) error {
+func (r Runner) RunProcess(ctx context.Context, cmd *exec.Cmd, haltHeight uint64) error {
 	dirWatcher, err := watchers.NewFSNotifyWatcher(ctx, r.cfg.UpgradeInfoDir(), []string{
 		r.cfg.UpgradeInfoFilePath(),
 		r.cfg.UpgradeInfoBatchFilePath(),
@@ -110,16 +147,11 @@ func (r Runner) RunOnce(ctx context.Context, args []string, haltHeight uint64) e
 		return r.cfg.WriteLastKnownHeight(height)
 	})
 
-	if haltHeight > 0 {
-	}
-	cmd, err := r.createCmd(args)
-	if err != nil {
-		return err
-	}
+	r.logger.Info("Starting process %s with args %v", cmd.Path, cmd.Args)
 	processRunner := RunProcess(cmd)
 	defer func() {
-		// TODO always check height before shutting down
-		//_, _ = heightChecker.ReadNow()
+		// TODO always check for the latest block height before shutting down
+		_, _ = heightChecker.GetLatestBlockHeight()
 		_ = processRunner.Shutdown(r.cfg.ShutdownGrace)
 	}()
 
@@ -200,24 +232,6 @@ func (r Runner) RunOnce(ctx context.Context, args []string, haltHeight uint64) e
 			// TODO error channels
 		}
 	}
-}
-
-func (r Runner) createCmd(args []string) (*exec.Cmd, error) {
-	bin, err := r.cfg.CurrentBin()
-	if err != nil {
-		return nil, fmt.Errorf("error creating symlink to genesis: %w", err)
-	}
-
-	if err := plan.EnsureBinary(bin); err != nil {
-		return nil, fmt.Errorf("current binary is invalid: %w", err)
-	}
-
-	r.logger.Info("running app", "path", bin, "args", args)
-	cmd := exec.Command(bin, args...)
-	cmd.Stdin = r.runCfg.StdIn
-	cmd.Stdout = r.runCfg.StdOut
-	cmd.Stderr = r.runCfg.StdErr
-	return cmd, nil
 }
 
 // RunConfig defines the configuration for running a command

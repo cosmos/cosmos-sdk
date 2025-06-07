@@ -67,7 +67,7 @@ func TestMsgSubmitProposal_GetSignBytes(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			msg, err := v1.NewMsgSubmitProposal(tc.proposal, sdk.NewCoins(), sdk.AccAddress{}.String(), "", tc.title, tc.summary, tc.expedited)
+			msg, err := v1.NewMsgSubmitProposal(tc.proposal, sdk.NewCoins(), sdk.AccAddress{}.String(), "", tc.title, tc.summary, tc.expedited, nil)
 			require.NoError(t, err)
 			bz, err := pc.MarshalAminoJSON(msg)
 			require.NoError(t, err)

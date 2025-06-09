@@ -50,6 +50,7 @@ func (r *RetryBackoffManager) BeforeRun(cmd string, args []string) error {
 	} else {
 		r.retryCount++
 		if r.maxRestarts > 0 && r.retryCount >= r.maxRestarts {
+			// TODO we should return the last error that the process returned here
 			return backoff.Permanent(fmt.Errorf("maximum number of restarts reached: %d", r.maxRestarts))
 		}
 		// if the command and arguments are the same, we wait for the next backoff interval

@@ -63,6 +63,7 @@ func (r Runner) Start(ctx context.Context, args []string) error {
 		// the command or its arguments have changed (e.g. if the binary was updated or the halt height changed),
 		// or if we're just in some sort of error restart loop.
 		// TODO add tests for this behavior
+		// TODO should DAEMON_RESTART_AFTER_UPGRADE apply here? it is explicitly about upgrades, but is the user's intention to prevent all restarts?
 		if err := retryMgr.BeforeRun(cmd.Path, cmd.Args); err != nil {
 			return err
 		}
@@ -81,13 +82,14 @@ func (r Runner) Start(ctx context.Context, args []string) error {
 		// There are three types of cases we're checking for here:
 		// 1. ErrRestartNeeded: this is a custom error that is returned whenever the run loop detects that a restart is needed.
 		// 2. errDone: this is a sentinel error that indicates that the cosmovisor process itself should be stopped gracefully.
-		// 3. Any other error or the : this is an unexpected error that should be logged and returned, causing cosmovisor to exit
+		// 3. Any other error or the: this is an unexpected error that should trigger a restart of the process with a backoff strategy.
 		var restartNeeded ErrRestartNeeded
 		if ok := errors.As(err, &restartNeeded); ok {
 			r.logger.Info("Restart needed")
 		} else if errors.Is(err, errDone) {
 			return nil
 		} else {
+			// TODO we should capture this error and it should get returned if retry max restarts is reached
 			r.logger.Error("Process exited", "error", err)
 		}
 	}
@@ -97,6 +99,11 @@ var errDone = errors.New("done")
 
 var ErrUpgradeNoDaemonRestart = errors.New("upgrade completed, but DAEMON_RESTART_AFTER_UPGRADE is disabled")
 
+// ComputeRunPlan computes the command to run based on the current configuration and arguments
+// as well as determining the halt height if a manual upgrade is present.
+// This is called to determine run arguments first and allows us to observe whether
+// run arguments have changed or if the process is in a restart loop because of some error,
+// which is important for the retry backoff manager.
 func (r Runner) ComputeRunPlan(args []string) (cmd *exec.Cmd, haltHeight uint64, err error) {
 	bin, err := r.cfg.CurrentBin()
 	if err != nil {
@@ -125,12 +132,15 @@ func (r Runner) ComputeRunPlan(args []string) (cmd *exec.Cmd, haltHeight uint64,
 	return
 }
 
+// RunProcess runs the given command until either a upgrade is detected or the process exits.
 func (r Runner) RunProcess(ctx context.Context, cmd *exec.Cmd, haltHeight uint64) error {
+	// start the fsnotify watcher to watch for changes in the upgrade info directory
 	dirWatcher, err := watchers.NewFSNotifyWatcher(ctx, r.cfg.UpgradeInfoDir(), []string{
 		r.cfg.UpgradeInfoFilePath(),
 		r.cfg.UpgradeInfoBatchFilePath(),
 	})
 	if err != nil {
+		// if fsnotify is not available, we fall back to polling so we don't return an error here
 		r.logger.Warn("failed to intialize fsnotify, it's probably not available on this platform, using polling only", "error", err)
 	}
 
@@ -140,18 +150,25 @@ func (r Runner) RunProcess(ctx context.Context, cmd *exec.Cmd, haltHeight uint64
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
+	// start watchers for upgrade plans, manual upgrades and height updates
 	upgradePlanWatcher := watchers.InitWatcher[upgradetypes.Plan](ctx, r.cfg.PollInterval, dirWatcher, r.cfg.UpgradeInfoFilePath(), r.cfg.ParseUpgradeInfo)
 	manualUpgradesWatcher := watchers.InitWatcher[cosmovisor.ManualUpgradeBatch](ctx, r.cfg.PollInterval, dirWatcher, r.cfg.UpgradeInfoBatchFilePath(), r.cfg.ParseManualUpgrades)
 	heightChecker := watchers.NewHTTPRPCBLockChecker("http://localhost:8080/block")
+	// TODO should we have a separate poll interval for the height watcher?
 	heightWatcher := watchers.NewHeightWatcher(ctx, heightChecker, r.cfg.PollInterval, func(height uint64) error {
 		r.knownHeight = height
 		return r.cfg.WriteLastKnownHeight(height)
 	})
 
+	if haltHeight > 0 {
+		// TODO start height watcher only if we have a halt height set
+		// currently the height watcher is always checking for the height even when we don't have a halt height set
+	}
+
 	r.logger.Info("Starting process", "path", cmd.Path, "args", cmd.Args)
 	processRunner := RunProcess(cmd)
 	defer func() {
-		// TODO always check for the latest block height before shutting down
+		// TODO always check for the latest block height before shutting down so that we have it in the last known height file
 		_, _ = heightChecker.GetLatestBlockHeight()
 		_ = processRunner.Shutdown(r.cfg.ShutdownGrace)
 	}()
@@ -197,7 +214,7 @@ func (r Runner) RunProcess(ctx context.Context, cmd *exec.Cmd, haltHeight uint64
 			// we just return the error or absence of an error here, which will cause the process to restart with a backoff retry algorithm
 			return err
 		case actualHeight := <-heightWatcher.Updated():
-			r.logger.Warn("Got height update from watcher", "height", actualHeight)
+			r.logger.Debug("Got height update from watcher", "height", actualHeight)
 			if haltHeight == 0 {
 				// we don't have a halt height, so we don't care to check anything about the actual height
 				continue
@@ -228,12 +245,13 @@ func (r Runner) RunProcess(ctx context.Context, cmd *exec.Cmd, haltHeight uint64
 				r.logger.Info("Reached halt height, restarting process for upgrade")
 				return ErrRestartNeeded{}
 			}
-			// TODO error channels
+			// TODO listen to error channels
 		}
 	}
 }
 
-// RunConfig defines the configuration for running a command
+// RunConfig defines the configuration for running a command,
+// essentially mapping its standard input, output, and error streams.
 type RunConfig struct {
 	StdIn  io.Reader
 	StdOut io.Writer

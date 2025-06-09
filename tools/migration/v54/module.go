@@ -19,12 +19,12 @@ var replacements = []migration.GoModReplacement{
 	{
 		Module:      "github.com/cometbft/cometbft/v2",
 		Replacement: "github.com/cometbft/cometbft/v2",
-		Version:     "v2.0.0-20250604002332-f4d33abd2469",
+		Version:     "v2.0.0-alpha.1 ",
 	},
 	{
 		Module:      "github.com/cometbft/cometbft/api",
 		Replacement: "github.com/cometbft/cometbft/api",
-		Version:     "v0.0.0-20250604002332-f4d33abd2469",
+		Version:     "v1.1.0-alpha.1",
 	},
 }
 

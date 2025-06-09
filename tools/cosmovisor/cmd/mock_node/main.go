@@ -41,6 +41,7 @@ x/upgrade upgrade-info.json behavior.`,
 	var httpAddr string
 	var blockUrl string
 	var shutdownDelay time.Duration
+	var shutdownOnUpgrade bool
 	cmd.Flags().DurationVar(&blockTime, "block-time", 0, "Duration of time between blocks. This is required to simulate a progression of blocks over time.")
 	cmd.Flags().StringVar(&upgradePlan, "upgrade-plan", "", "upgrade-info.json to create after the halt duration is reached. Either this flag or --halt-height must be specified but not both.")
 	cmd.Flags().Uint64Var(&haltHeight, server.FlagHaltHeight, 0, "Block height at which to gracefully halt the chain and shutdown the node. E")
@@ -48,6 +49,7 @@ x/upgrade upgrade-info.json behavior.`,
 	cmd.Flags().StringVar(&httpAddr, "http-addr", ":26657", "HTTP server address to serve block information. Defaults to :26657.")
 	cmd.Flags().StringVar(&blockUrl, "block-url", "/block", "URL at which the latest block information is served. Defaults to /block.")
 	cmd.Flags().DurationVar(&shutdownDelay, "shutdown-delay", 0, "Duration to wait before shutting down the node upon receiving a shutdown signal. Defaults to 0 (no delay).")
+	cmd.Flags().BoolVar(&shutdownOnUpgrade, "shutdown-on-upgrade", false, "If true, the node will shutdown immediately after reaching the upgrade height. If false, it will continue running until a shutdown signal is received. Defaults to false.")
 	// TODO add flag to use either jsonpb or encoding/json
 	// TODO shutdown at upgrade height
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
@@ -65,14 +67,15 @@ x/upgrade upgrade-info.json behavior.`,
 			}
 		}
 		node := &MockNode{
-			height:        0,
-			blockTime:     blockTime,
-			haltHeight:    haltHeight,
-			homePath:      homePath,
-			httpAddr:      httpAddr,
-			blockUrl:      blockUrl,
-			shutdownDelay: shutdownDelay,
-			logger:        log.NewLogger(os.Stdout),
+			height:            0,
+			blockTime:         blockTime,
+			haltHeight:        haltHeight,
+			homePath:          homePath,
+			httpAddr:          httpAddr,
+			blockUrl:          blockUrl,
+			shutdownDelay:     shutdownDelay,
+			shutdownOnUpgrade: shutdownOnUpgrade,
+			logger:            log.NewLogger(os.Stdout),
 		}
 		if upgradePlan != "" {
 			node.upgradePlan = &upgradetypes.Plan{}
@@ -92,18 +95,21 @@ x/upgrade upgrade-info.json behavior.`,
 }
 
 type MockNode struct {
-	height        uint64
-	blockTime     time.Duration
-	upgradePlan   *upgradetypes.Plan
-	haltHeight    uint64
-	homePath      string
-	httpAddr      string
-	blockUrl      string
-	logger        log.Logger
-	shutdownDelay time.Duration
+	height            uint64
+	blockTime         time.Duration
+	upgradePlan       *upgradetypes.Plan
+	haltHeight        uint64
+	homePath          string
+	httpAddr          string
+	blockUrl          string
+	logger            log.Logger
+	shutdownDelay     time.Duration
+	shutdownOnUpgrade bool
 }
 
 func (n *MockNode) Run(ctx context.Context) error {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	ctx, _ = signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM)
 	upgradeHeight := n.haltHeight
 	if n.upgradePlan != nil {
@@ -169,6 +175,10 @@ func (n *MockNode) Run(ctx context.Context) error {
 		if err != nil {
 			return fmt.Errorf("failed to write upgrade-info.json: %w", err)
 		}
+	}
+	if n.shutdownOnUpgrade {
+		n.logger.Info("Mock node reached upgrade height, configured to shut down immediately")
+		return nil
 	}
 	// Don't exit until we receive a shutdown signal
 	n.logger.Info("Mock node reached upgrade height, waiting for shutdown signal")

@@ -94,7 +94,7 @@ func TestMockChain(t *testing.T) {
 		},
 		ManualUpgrades: map[string]string{
 			"manual10": "--block-time 1s --upgrade-plan '{\"name\":\"gov1\",\"height\":30}'",
-			"manual20": `--block-time 1s --upgrade-plan '{"name":"gov1","height":30}' --block-url "/v1/block"`,
+			"manual20": `--block-time 1s --upgrade-plan '{"name":"gov1","height":30}' --block-url "/v1/block" --shutdown-on-upgrade`,
 			"manual40": "--block-time 1s --upgrade-plan '{\"name\":\"gov1\",\"height\":50}'",
 		},
 		Config: cfg,

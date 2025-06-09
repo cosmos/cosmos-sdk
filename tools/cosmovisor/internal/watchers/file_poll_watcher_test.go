@@ -17,7 +17,8 @@ func TestPollWatcher(t *testing.T) {
 	filename := filepath.Join(dir, "testfile")
 
 	ctx, cancel := context.WithCancel(context.Background())
-	watcher := NewFilePollWatcher(ctx, log.NewTestLogger(t), filename, time.Millisecond*100)
+	eh := LoggerErrorHandler(log.NewTestLogger(t))
+	watcher := NewFilePollWatcher(ctx, eh, filename, time.Millisecond*100)
 	expectedContent := []byte("test")
 	go func() {
 		// write some dummy data to the file

@@ -5,15 +5,13 @@ import (
 	"os"
 	"reflect"
 	"time"
-
-	"cosmossdk.io/log"
 )
 
 type PollWatcher[T any] struct {
 	outChan chan T
 }
 
-func NewPollWatcher[T any](ctx context.Context, logger log.Logger, checker func() (T, error), pollInterval time.Duration) *PollWatcher[T] {
+func NewPollWatcher[T any](ctx context.Context, errorHandler ErrorHandler, checker func() (T, error), pollInterval time.Duration) *PollWatcher[T] {
 	outChan := make(chan T, 1)
 	ticker := time.NewTicker(pollInterval)
 	go func() {
@@ -28,7 +26,7 @@ func NewPollWatcher[T any](ctx context.Context, logger log.Logger, checker func(
 				x, err := checker()
 				if err != nil {
 					if !os.IsNotExist(err) {
-						logger.Error("failed to check for updates: %w", "error", err)
+						errorHandler.Error("failed to check for updates", err)
 					}
 				} else {
 					// to make PollWatcher generic on any type T (including []byte), we use reflect.DeepEqual and the default zero value of T

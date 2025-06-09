@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"os"
 	"time"
-
-	"cosmossdk.io/log"
 )
 
-func NewFilePollWatcher(ctx context.Context, logger log.Logger, filename string, pollInterval time.Duration) Watcher[[]byte] {
+func NewFilePollWatcher(ctx context.Context, errorHandler ErrorHandler, filename string, pollInterval time.Duration) Watcher[[]byte] {
 	stat, err := os.Stat(filename)
 	var lastModTime time.Time
 	if err == nil {
@@ -35,5 +33,5 @@ func NewFilePollWatcher(ctx context.Context, logger log.Logger, filename string,
 		}
 		return nil, os.ErrNotExist
 	}
-	return NewPollWatcher[[]byte](ctx, logger, check, pollInterval)
+	return NewPollWatcher[[]byte](ctx, errorHandler, check, pollInterval)
 }

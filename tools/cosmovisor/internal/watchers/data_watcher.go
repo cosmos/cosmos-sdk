@@ -2,15 +2,13 @@ package watchers
 
 import (
 	"context"
-
-	"cosmossdk.io/log"
 )
 
 type DataWatcher[T any] struct {
 	outChan chan T
 }
 
-func NewDataWatcher[T any, I any](ctx context.Context, logger log.Logger, watcher Watcher[I], unmarshal func(I) (T, error)) *DataWatcher[T] {
+func NewDataWatcher[T any, I any](ctx context.Context, errorHandler ErrorHandler, watcher Watcher[I], unmarshal func(I) (T, error)) *DataWatcher[T] {
 	outChan := make(chan T, 1)
 	go func() {
 		defer close(outChan)
@@ -27,7 +25,7 @@ func NewDataWatcher[T any, I any](ctx context.Context, logger log.Logger, watche
 				if err == nil {
 					outChan <- data
 				} else {
-					logger.Warn("failed to unmarshal data", "error", err)
+					errorHandler.Warn("failed to unmarshal data", err)
 				}
 			}
 		}

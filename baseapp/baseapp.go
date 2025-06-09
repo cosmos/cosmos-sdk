@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/cockroachdb/errors"
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
@@ -161,6 +162,12 @@ type BaseApp struct {
 	//
 	// SAFETY: it's safe to do if validators validate the total gas wanted in the `ProcessProposal`, which is the case in the default handler.
 	disableBlockGasMeter bool
+
+	// nextBlockDelay is the delay to wait until the next block after ABCI has committed.
+	// This gives the application more time to receive precommits.  This is the same as TimeoutCommit,
+	// but can new be set from the application.  This value defaults to 0, and CometBFT will use the
+	// legacy value set in config.toml if it is 0.
+	nextBlockDelay time.Duration
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -181,6 +188,7 @@ func NewBaseApp(
 		fauxMerkleMode:   false,
 		sigverifyTx:      true,
 		gasConfig:        config.GasConfig{QueryGasLimit: math.MaxUint64},
+		nextBlockDelay:   0, // default to 0 so that the legacy CometBFT config.toml value is used
 	}
 
 	for _, option := range options {

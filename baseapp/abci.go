@@ -868,6 +868,7 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Finaliz
 		TxResults:             txResults,
 		ValidatorUpdates:      endBlock.ValidatorUpdates,
 		ConsensusParamUpdates: &cp,
+		NextBlockDelay:        app.nextBlockDelay,
 	}, nil
 }
 

@@ -10,7 +10,7 @@ require (
 	cosmossdk.io/log v1.6.0
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/x/tx v0.14.0
-	github.com/cometbft/cometbft/api v1.0.0
+	github.com/cometbft/cometbft/api v1.1.0-alpha.1
 	github.com/cometbft/cometbft/v2 v2.0.0-main
 	github.com/cosmos/cosmos-db v1.1.3
 	// this version is not used as it is always replaced by the latest Cosmos SDK version

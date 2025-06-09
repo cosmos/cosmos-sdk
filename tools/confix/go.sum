@@ -1,7 +1,7 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
-cosmossdk.io/depinject v1.2.0 h1:6NW/FSK1IkWTrX7XxUpBmX1QMBozpEI9SsWkKTBc5zw=
-cosmossdk.io/depinject v1.2.0/go.mod h1:pvitjtUxZZZTQESKNS9KhGjWVslJZxtO9VooRJYyPjk=
+cosmossdk.io/depinject v1.2.1 h1:eD6FxkIjlVaNZT+dXTQuwQTKZrFZ4UrfCq1RKgzyhMw=
+cosmossdk.io/depinject v1.2.1/go.mod h1:lqQEycz0H2JXqvOgVwTsjEdMI0plswI7p6KX+MVqFOM=
 cosmossdk.io/errors v1.0.2 h1:wcYiJz08HThbWxd/L4jObeLaLySopyyuUFB5w4AGpCo=
 cosmossdk.io/errors v1.0.2/go.mod h1:0rjgiHkftRYPj//3DrD6y8hcm40HcPv/dR4R/4efr0k=
 cosmossdk.io/log v1.6.0 h1:SJIOmJ059wi1piyRgNRXKXhlDXGqnB5eQwhcZKv2tOk=

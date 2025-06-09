@@ -21,7 +21,7 @@ require (
 	cosmossdk.io/api v0.9.2 // indirect
 	cosmossdk.io/collections v1.2.1 // indirect
 	cosmossdk.io/core v1.0.0 // indirect
-	cosmossdk.io/depinject v1.2.0 // indirect
+	cosmossdk.io/depinject v1.2.1 // indirect
 	cosmossdk.io/errors v1.0.2 // indirect
 	cosmossdk.io/log v1.6.0 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
@@ -46,7 +46,7 @@ require (
 	github.com/cockroachdb/redact v1.1.6 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb // indirect
 	github.com/cometbft/cometbft-db v1.0.4 // indirect
-	github.com/cometbft/cometbft/api v1.0.0 // indirect
+	github.com/cometbft/cometbft/api v1.1.0-alpha.1 // indirect
 	github.com/cometbft/cometbft/v2 v2.0.0-main // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.1.3 // indirect

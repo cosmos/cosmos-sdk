@@ -868,7 +868,6 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Finaliz
 		TxResults:             txResults,
 		ValidatorUpdates:      endBlock.ValidatorUpdates,
 		ConsensusParamUpdates: &cp,
-		NextBlockDelay:        app.nextBlockDelay,
 	}, nil
 }
 
@@ -877,7 +876,7 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Finaliz
 // by the transactions in the proposal, finally followed by the application's
 // EndBlock (if defined).
 //
-// For each raw transaction, i.e., a byte slice, BaseApp will only execute it if
+// For each raw transaction, i.e. a byte slice, BaseApp will only execute it if
 // it adheres to the sdk.Tx interface. Otherwise, the raw transaction will be
 // skipped. This is to support compatibility with proposers injecting vote
 // extensions into the proposal, which should not themselves be executed in cases

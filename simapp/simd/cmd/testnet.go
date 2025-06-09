@@ -71,17 +71,17 @@ type initArgs struct {
 }
 
 type startArgs struct {
-	algo           string
-	apiAddress     string
-	chainID        string
-	enableLogging  bool
-	grpcAddress    string
-	minGasPrices   string
-	numValidators  int
-	outputDir      string
-	printMnemonic  bool
-	rpcAddress     string
-	nextBlockDelay time.Duration
+	algo          string
+	apiAddress    string
+	chainID       string
+	enableLogging bool
+	grpcAddress   string
+	minGasPrices  string
+	numValidators int
+	outputDir     string
+	printMnemonic bool
+	rpcAddress    string
+	timeoutCommit time.Duration
 }
 
 func addTestnetFlagsToCmd(cmd *cobra.Command) {
@@ -156,6 +156,7 @@ Example:
 			args.algo, _ = cmd.Flags().GetString(flags.FlagKeyType)
 			args.bondTokenDenom, _ = cmd.Flags().GetString(flagStakingDenom)
 			args.singleMachine, _ = cmd.Flags().GetBool(flagSingleHost)
+			config.Consensus.TimeoutCommit, err = cmd.Flags().GetDuration(flagCommitTimeout)
 			if err != nil {
 				return err
 			}
@@ -201,7 +202,7 @@ Example:
 			args.apiAddress, _ = cmd.Flags().GetString(flagAPIAddress)
 			args.grpcAddress, _ = cmd.Flags().GetString(flagGRPCAddress)
 			args.printMnemonic, _ = cmd.Flags().GetBool(flagPrintMnemonic)
-			args.nextBlockDelay, _ = cmd.Flags().GetDuration(flagCommitTimeout)
+			args.timeoutCommit, _ = cmd.Flags().GetDuration(flagCommitTimeout)
 
 			return startTestnet(cmd, args)
 		},
@@ -572,7 +573,7 @@ func startTestnet(cmd *cobra.Command, args startArgs) error {
 	networkConfig.APIAddress = args.apiAddress
 	networkConfig.GRPCAddress = args.grpcAddress
 	networkConfig.PrintMnemonic = args.printMnemonic
-	networkConfig.TimeoutCommit = args.nextBlockDelay
+	networkConfig.TimeoutCommit = args.timeoutCommit
 	networkLogger := network.NewCLILogger(cmd)
 
 	baseDir := fmt.Sprintf("%s/%s", args.outputDir, networkConfig.ChainID)

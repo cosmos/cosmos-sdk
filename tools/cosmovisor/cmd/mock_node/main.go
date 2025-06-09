@@ -24,8 +24,6 @@ import (
 )
 
 func main() {
-	// TODO response to GetLatestBlock, status, and write leveldb block number
-
 	cmd := &cobra.Command{
 		Use:   "mock_node",
 		Short: "A mock node for testing cosmovisor.",
@@ -42,6 +40,7 @@ x/upgrade upgrade-info.json behavior.`,
 	var blockUrl string
 	var shutdownDelay time.Duration
 	var shutdownOnUpgrade bool
+	var upgradeInfoEncodingJson bool
 	cmd.Flags().DurationVar(&blockTime, "block-time", 0, "Duration of time between blocks. This is required to simulate a progression of blocks over time.")
 	cmd.Flags().StringVar(&upgradePlan, "upgrade-plan", "", "upgrade-info.json to create after the halt duration is reached. Either this flag or --halt-height must be specified but not both.")
 	cmd.Flags().Uint64Var(&haltHeight, server.FlagHaltHeight, 0, "Block height at which to gracefully halt the chain and shutdown the node. E")
@@ -50,6 +49,7 @@ x/upgrade upgrade-info.json behavior.`,
 	cmd.Flags().StringVar(&blockUrl, "block-url", "/block", "URL at which the latest block information is served. Defaults to /block.")
 	cmd.Flags().DurationVar(&shutdownDelay, "shutdown-delay", 0, "Duration to wait before shutting down the node upon receiving a shutdown signal. Defaults to 0 (no delay).")
 	cmd.Flags().BoolVar(&shutdownOnUpgrade, "shutdown-on-upgrade", false, "If true, the node will shutdown immediately after reaching the upgrade height. If false, it will continue running until a shutdown signal is received. Defaults to false.")
+	cmd.Flags().BoolVar(&upgradeInfoEncodingJson, "upgrade-info-encoding-json", false, "If true, the upgrade-info.json will be encoded using encoding/json instead of jsonpb. This is useful for testing compatibility with different JSON decoders. Defaults to false (uses jsonpb).")
 	// TODO add flag to use either jsonpb or encoding/json
 	// TODO shutdown at upgrade height
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
@@ -67,15 +67,16 @@ x/upgrade upgrade-info.json behavior.`,
 			}
 		}
 		node := &MockNode{
-			height:            0,
-			blockTime:         blockTime,
-			haltHeight:        haltHeight,
-			homePath:          homePath,
-			httpAddr:          httpAddr,
-			blockUrl:          blockUrl,
-			shutdownDelay:     shutdownDelay,
-			shutdownOnUpgrade: shutdownOnUpgrade,
-			logger:            log.NewLogger(os.Stdout),
+			height:                  0,
+			blockTime:               blockTime,
+			haltHeight:              haltHeight,
+			homePath:                homePath,
+			httpAddr:                httpAddr,
+			blockUrl:                blockUrl,
+			shutdownDelay:           shutdownDelay,
+			shutdownOnUpgrade:       shutdownOnUpgrade,
+			upgradeInfoEncodingJson: upgradeInfoEncodingJson,
+			logger:                  log.NewLogger(os.Stdout),
 		}
 		if upgradePlan != "" {
 			node.upgradePlan = &upgradetypes.Plan{}
@@ -95,16 +96,17 @@ x/upgrade upgrade-info.json behavior.`,
 }
 
 type MockNode struct {
-	height            uint64
-	blockTime         time.Duration
-	upgradePlan       *upgradetypes.Plan
-	haltHeight        uint64
-	homePath          string
-	httpAddr          string
-	blockUrl          string
-	logger            log.Logger
-	shutdownDelay     time.Duration
-	shutdownOnUpgrade bool
+	height                  uint64
+	blockTime               time.Duration
+	upgradePlan             *upgradetypes.Plan
+	haltHeight              uint64
+	homePath                string
+	httpAddr                string
+	blockUrl                string
+	logger                  log.Logger
+	shutdownDelay           time.Duration
+	shutdownOnUpgrade       bool
+	upgradeInfoEncodingJson bool
 }
 
 func (n *MockNode) Run(ctx context.Context) error {
@@ -161,9 +163,17 @@ func (n *MockNode) Run(ctx context.Context) error {
 	} else if n.upgradePlan != nil {
 		n.logger.Info("Mock node reached upgrade height, writing upgrade-info.json", "upgrade_plan", n.upgradePlan)
 		upgradeInfoPath := path.Join(n.homePath, "data", upgradetypes.UpgradeInfoFilename)
-		out, err := (&jsonpb.Marshaler{
-			EmitDefaults: false,
-		}).MarshalToString(n.upgradePlan)
+		var out string
+		var err error
+		if n.upgradeInfoEncodingJson {
+			var bz []byte
+			bz, err = json.Marshal(n.upgradePlan)
+			out = string(bz)
+		} else {
+			out, err = (&jsonpb.Marshaler{
+				EmitDefaults: false,
+			}).MarshalToString(n.upgradePlan)
+		}
 		if err != nil {
 			return fmt.Errorf("failed to marshal upgrade plan: %w", err)
 		}

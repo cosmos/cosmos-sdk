@@ -36,6 +36,7 @@ const (
 	EnvInterval                 = "DAEMON_POLL_INTERVAL"
 	EnvPreupgradeMaxRetries     = "DAEMON_PREUPGRADE_MAX_RETRIES"
 	EnvGRPCAddress              = "DAEMON_GRPC_ADDRESS"
+	EnvRPCAddress               = "DAEMON_RPC_ADDRESS"
 	EnvDisableLogs              = "COSMOVISOR_DISABLE_LOGS"
 	EnvColorLogs                = "COSMOVISOR_COLOR_LOGS"
 	EnvTimeFormatLogs           = "COSMOVISOR_TIMEFORMAT_LOGS"
@@ -66,6 +67,7 @@ type Config struct {
 	UnsafeSkipBackup         bool          `toml:"unsafe_skip_backup" mapstructure:"unsafe_skip_backup" default:"false"`
 	DataBackupPath           string        `toml:"daemon_data_backup_dir" mapstructure:"daemon_data_backup_dir"`
 	PreUpgradeMaxRetries     int           `toml:"daemon_preupgrade_max_retries" mapstructure:"daemon_preupgrade_max_retries" default:"0"`
+	RPCAddress               string        `toml:"daemon_rpc_address" mapstructure:"daemon_rpc_address" default:"http://localhost:26657"`
 	GRPCAddress              string        `toml:"daemon_grpc_address" mapstructure:"daemon_grpc_address"`
 	DisableLogs              bool          `toml:"cosmovisor_disable_logs" mapstructure:"cosmovisor_disable_logs" default:"false"`
 	ColorLogs                bool          `toml:"cosmovisor_color_logs" mapstructure:"cosmovisor_color_logs" default:"true"`
@@ -303,6 +305,11 @@ func GetConfigFromEnv(skipValidate bool) (*Config, error) {
 	cfg.GRPCAddress = os.Getenv(EnvGRPCAddress)
 	if cfg.GRPCAddress == "" {
 		cfg.GRPCAddress = "localhost:9090"
+	}
+
+	cfg.RPCAddress = os.Getenv(EnvRPCAddress)
+	if cfg.RPCAddress == "" {
+		cfg.RPCAddress = "http://localhost:26657"
 	}
 
 	if !skipValidate {
@@ -655,11 +662,6 @@ func (cfg Config) Export() (string, error) {
 	}
 
 	return path, nil
-}
-
-func (cfg *Config) DeleteManualUpgradeAtHeight(height uint64) error {
-	// TODO
-	return nil
 }
 
 func askForConfirmation(str string) bool {

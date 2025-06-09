@@ -154,7 +154,7 @@ func (r Runner) RunProcess(ctx context.Context, cmd *exec.Cmd, haltHeight uint64
 	eh := watchers.LoggerErrorHandler(r.logger)
 	upgradePlanWatcher := watchers.InitFileWatcher[upgradetypes.Plan](ctx, eh, r.cfg.PollInterval, dirWatcher, r.cfg.UpgradeInfoFilePath(), r.cfg.ParseUpgradeInfo)
 	manualUpgradesWatcher := watchers.InitFileWatcher[cosmovisor.ManualUpgradeBatch](ctx, eh, r.cfg.PollInterval, dirWatcher, r.cfg.UpgradeInfoBatchFilePath(), r.cfg.ParseManualUpgrades)
-	heightChecker := watchers.NewHTTPRPCBLockChecker("http://localhost:8080/block")
+	heightChecker := watchers.NewHTTPRPCBLockChecker(r.cfg.RPCAddress, r.logger)
 	// TODO should we have a separate poll interval for the height watcher?
 	heightWatcher := watchers.NewHeightWatcher(ctx, eh, heightChecker, r.cfg.PollInterval, func(height uint64) error {
 		r.knownHeight = height

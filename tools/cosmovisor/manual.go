@@ -130,19 +130,3 @@ func (m ManualUpgradeBatch) FirstUpgrade() *upgradetypes.Plan {
 	}
 	return m[0]
 }
-
-//type ManualUpgradePlan struct {
-//	Name   string `json:"name"`
-//	Height int64  `json:"height"`
-//	Info   string `json:"info"`
-//}
-//
-//func (m ManualUpgradePlan) ValidateBasic() error {
-//	if m.Name == "" {
-//		return fmt.Errorf("name cannot be empty")
-//	}
-//	if m.Height <= 0 {
-//		return fmt.Errorf("height must be greater than 0")
-//	}
-//	return nil
-//}

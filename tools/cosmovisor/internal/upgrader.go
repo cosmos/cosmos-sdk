@@ -25,10 +25,16 @@ func UpgradeIfNeeded(cfg *cosmovisor.Config, logger log.Logger, knownHeight uint
 	// TODO should we check the height when we have upgrade-info.json?
 	logger.Info("Checking for upgrade-info.json")
 	if upgradePlan, err := cfg.UpgradeInfo(); err == nil {
-		upgrader := NewUpgrader(cfg, logger, upgradePlan, false)
-		err := upgrader.DoUpgrade()
+		err := DoUpgrade(cfg, logger, upgradePlan)
 		if err != nil {
 			return false, err
+		}
+		// remove the upgrade-info.json file after a successful upgrade, otherwise we will keep trying to upgrade
+		logger.Info("Removing completed upgrade plan", "height", upgradePlan.Height, "name", upgradePlan.Name)
+		file := cfg.UpgradeInfoFilePath()
+		err = os.Remove(file)
+		if err != nil {
+			return true, fmt.Errorf("failed to remove upgrade-info.json: %w", err)
 		}
 		return true, nil
 	}
@@ -46,12 +52,16 @@ func UpgradeIfNeeded(cfg *cosmovisor.Config, logger log.Logger, knownHeight uint
 		haltHeight := uint64(manualUpgrade.Height)
 		if lastKnownHeight == haltHeight {
 			logger.Info("At manual upgrade", "upgrade", manualUpgrade, "halt_height", haltHeight)
-			upgrader := NewUpgrader(cfg, logger, *manualUpgrade, true)
-			err := upgrader.DoUpgrade()
+			err := DoUpgrade(cfg, logger, *manualUpgrade)
 			if err != nil {
 				return false, err
 			}
-			err = cfg.DeleteManualUpgradeAtHeight(haltHeight)
+			// remove the manual upgrade plan after a successful upgrade, otherwise we will keep trying to upgrade
+			logger.Info("Removing completed manual upgrade plan", "height", manualUpgrade.Height, "name", manualUpgrade.Name)
+			err = cfg.RemoveManualUpgrade(manualUpgrade.Height)
+			if err != nil {
+				return true, fmt.Errorf("failed to remove manual upgrade at height %d: %w", manualUpgrade.Height, err)
+			}
 			return true, err
 		} else if lastKnownHeight > haltHeight {
 			// TODO should we just warn here? or actually return an error?
@@ -62,19 +72,18 @@ func UpgradeIfNeeded(cfg *cosmovisor.Config, logger log.Logger, knownHeight uint
 }
 
 type Upgrader struct {
-	cfg             *cosmovisor.Config
-	logger          log.Logger
-	upgradePlan     upgradetypes.Plan
-	isManualUpgrade bool
+	cfg         *cosmovisor.Config
+	logger      log.Logger
+	upgradePlan upgradetypes.Plan
 }
 
-func NewUpgrader(cfg *cosmovisor.Config, logger log.Logger, upgradePlan upgradetypes.Plan, isManualUpgrade bool) *Upgrader {
-	return &Upgrader{
-		cfg:             cfg,
-		logger:          logger,
-		upgradePlan:     upgradePlan,
-		isManualUpgrade: isManualUpgrade,
+func DoUpgrade(cfg *cosmovisor.Config, logger log.Logger, upgradePlan upgradetypes.Plan) error {
+	upgrader := &Upgrader{
+		cfg:         cfg,
+		logger:      logger,
+		upgradePlan: upgradePlan,
 	}
+	return upgrader.DoUpgrade()
 }
 
 func (u *Upgrader) DoUpgrade() error {
@@ -105,21 +114,6 @@ func (u *Upgrader) DoUpgrade() error {
 
 	if err := u.doPreUpgrade(); err != nil {
 		return err
-	}
-
-	if u.isManualUpgrade {
-		u.logger.Info("Removing completed manual upgrade plan", "height", u.upgradePlan.Height, "name", u.upgradePlan.Name)
-		err := u.cfg.RemoveManualUpgrade(u.upgradePlan.Height)
-		if err != nil {
-			return fmt.Errorf("failed to remove manual upgrade at height %d: %w", u.upgradePlan.Height, err)
-		}
-	} else {
-		u.logger.Info("Removing completed upgrade plan", "height", u.upgradePlan.Height, "name", u.upgradePlan.Name)
-		file := u.cfg.UpgradeInfoFilePath()
-		err := os.Remove(file)
-		if err != nil {
-			return fmt.Errorf("failed to remove upgrade-info.json: %w", err)
-		}
 	}
 
 	return nil

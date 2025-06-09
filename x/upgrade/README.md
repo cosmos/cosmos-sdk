@@ -22,9 +22,9 @@ recover from.
 * [State](#state)
 * [Events](#events)
 * [Client](#client)
-  * [CLI](#cli)
-  * [REST](#rest)
-  * [gRPC](#grpc)
+    * [CLI](#cli)
+    * [REST](#rest)
+    * [gRPC](#grpc)
 * [Resources](#resources)
 
 ## Concepts

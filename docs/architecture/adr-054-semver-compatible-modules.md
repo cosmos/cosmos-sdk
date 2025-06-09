@@ -424,6 +424,7 @@ way that requires duplication and differing sets of design principles (protobuf 
 while golang APIs would forbid it).
 
 Other downsides to this approach are:
+
 * no clear roadmap to supporting modules in other languages like Rust
 * doesn't get us any closer to proper object capability security (one of the goals of ADR 033)
 * ADR 033 needs to be done properly anyway for the set of use cases which do need it
@@ -447,6 +448,7 @@ languages, possibly executed within a WASM VM.
 
 To declare minor API revisions of proto files, we propose the following guidelines (which were already documented
 in [cosmos.app.v1alpha module options](../proto/cosmos/app/v1alpha1/module.proto)):
+
 * proto packages which are revised from their initial version (considered revision `0`) should include a `package`
 * comment in some .proto file containing the test `Revision N` at the start of a comment line where `N` is the current
 revision number.
@@ -522,6 +524,7 @@ func ProtoImage(protoImage []byte) Option {}
 ```
 
 This approach allows us to support several ways protobuf files might be generated:
+
 * proto files generated internally to a module (use `ProtoFiles`)
 * the API module approach with pinned file descriptors (use `ProtoImage`)
 * gogo proto (use `GzippedProtoFiles`)

@@ -6,7 +6,7 @@ Note, always read the **App Wiring Changes** section for more information on app
 
 🚨Upgrading to v0.54.x will require a **coordinated** chain upgrade.🚨
 
-### TLDR;
+### TLDR
 
 **The only major feature in Cosmos SDK v0.54.x is the upgrade from CometBFT v0.x.x to CometBFT v2.**
 

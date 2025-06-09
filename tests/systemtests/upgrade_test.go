@@ -19,7 +19,7 @@ import (
 
 const (
 	testSeed            = "scene learn remember glide apple expand quality spawn property shoe lamp carry upset blossom draft reject aim file trash miss script joy only measure"
-	upgradeHeight int64 = 45
+	upgradeHeight int64 = 22
 	upgradeName         = "v053-to-v054" // must match UpgradeName in simapp/upgrades.go
 )
 
@@ -28,7 +28,7 @@ func TestChainUpgrade(t *testing.T) {
 	// start a legacy chain with some state
 	// when a chain upgrade proposal is executed
 	// then the chain upgrades successfully
-	systest.Sut.ResetChain(t)
+	systest.Sut.StopChain()
 
 	currentBranchBinary := systest.Sut.ExecBinary()
 	currentInitializer := systest.Sut.TestnetInitializer()
@@ -67,10 +67,8 @@ func TestChainUpgrade(t *testing.T) {
 	raw := cli.CustomQuery("q", "gov", "proposal", proposalID)
 	t.Log(raw)
 
-	// generous timeout as this could run faster or slower based on HW or in CI
-	systest.Sut.AwaitBlockHeight(t, upgradeHeight-1, 2*time.Minute)
+	systest.Sut.AwaitBlockHeight(t, upgradeHeight-1, 60*time.Second)
 	t.Logf("current_height: %d\n", systest.Sut.CurrentHeight())
-
 	raw = cli.CustomQuery("q", "gov", "proposal", proposalID)
 	proposalStatus := gjson.Get(raw, "proposal.status").String()
 	require.Equal(t, "PROPOSAL_STATUS_PASSED", proposalStatus, raw)

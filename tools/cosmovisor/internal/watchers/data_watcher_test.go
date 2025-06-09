@@ -22,8 +22,12 @@ func TestDataWatcher(t *testing.T) {
 	filename := filepath.Join(dir, "testfile.json")
 
 	ctx, cancel := context.WithCancel(context.Background())
-	pollWatcher := NewPollWatcher(ctx, filename, time.Millisecond*100)
-	dataWatcher := NewDataWatcher[TestData](ctx, pollWatcher)
+	pollWatcher := NewFilePollWatcher(ctx, filename, time.Millisecond*100)
+	dataWatcher := NewDataWatcher[TestData](ctx, pollWatcher, func(contents []byte) (TestData, error) {
+		var data TestData
+		err := json.Unmarshal(contents, &data)
+		return data, err
+	})
 
 	expectedContent := TestData{
 		X: 10,

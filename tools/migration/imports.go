@@ -43,7 +43,8 @@ func updateImports(node *ast.File, replacements []ImportReplacement) (bool, erro
 				}
 				// importPath = github.com/cometbft/cometbft/v2/types/foo
 				// replacement = github.com/cometbft/cometbft/v2
-				if strings.HasPrefix(importPath, replacement.Old) {
+				// second conditional is to prevent appending duplicate v2's to the same import on multiple migraiton runs.
+				if strings.HasPrefix(importPath, replacement.Old) && !strings.HasPrefix(importPath, replacement.New) {
 					subPackage := strings.TrimPrefix(importPath, replacement.Old)
 					imp.Path.Value = fmt.Sprintf(`"%s%s"`, replacement.New, subPackage)
 					modified = true

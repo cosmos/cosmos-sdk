@@ -28,9 +28,10 @@ func TestExceptionReplacement(t *testing.T) {
 						"fmt"
 						"github.com/cometbft/cometbft/db"
 						"github.com/cometbft/cometbft/proto/tendermint/types"
+						"github.com/cometbft/combetft/v2/map"
 					)`,
 			doNotWantImport: `"github.com/cometbft/cometbft/db"`,
-			wantImports:     []string{`"github.com/cometbft/cometbft/v2/db"`, `"github.com/cometbft/cometbft/api/cometbft/types/v2"`},
+			wantImports:     []string{`"github.com/cometbft/cometbft/v2/db"`, `"github.com/cometbft/cometbft/api/cometbft/types/v2"`, `"github.com/cometbft/combetft/v2/map"`},
 			wantMod:         true,
 		},
 	}

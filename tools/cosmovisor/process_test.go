@@ -69,9 +69,6 @@ func TestLaunchProcess(t *testing.T) {
 	args := []string{"foo", "bar", "1234", upgradeFile}
 	err = runner.Start(context.Background(), args)
 	require.NoError(t, err)
-	//doUpgrade, err := launcher.Run(args, stdin, stdout, stderr)
-	//require.NoError(t, err)
-	//require.True(t, doUpgrade)
 	require.Empty(t, stderr.String())
 	require.Equal(t, fmt.Sprintf("Genesis foo bar 1234 %s\nUPGRADE \"chain2\" NEEDED at height: 49: {}\n", upgradeFile), stdout.String())
 
@@ -88,8 +85,6 @@ func TestLaunchProcess(t *testing.T) {
 
 	err = runner.Start(context.Background(), args)
 	require.ErrorContains(t, err, "maximum number of restarts reached")
-	//doUpgrade, err = launcher.Run(args, stdin, stdout, stderr)
-	//require.False(t, doUpgrade)
 	require.Empty(t, stderr.String())
 	require.Equal(t, "Chain 2 is live!\nArgs: second run --verbose\nFinished successfully\n", stdout.String())
 
@@ -138,10 +133,8 @@ func TestPlanDisableRecase(t *testing.T) {
 	upgradeFile := cfg.UpgradeInfoFilePath()
 
 	args := []string{"foo", "bar", "1234", upgradeFile}
-	//doUpgrade, err := launcher.Run(args, stdin, stdout, stderr)
 	err = runner.Start(context.Background(), args)
 	require.NoError(t, err)
-	//require.True(t, doUpgrade)
 	require.Empty(t, stderr.String())
 	require.Equal(t, fmt.Sprintf("Genesis foo bar 1234 %s\nUPGRADE \"Chain2\" NEEDED at height: 49: {}\n", upgradeFile), stdout.String())
 
@@ -157,9 +150,7 @@ func TestPlanDisableRecase(t *testing.T) {
 	stderr.Reset()
 
 	err = runner.Start(context.Background(), args)
-	//runner.RunProcess(ctx, args)
 	require.ErrorContains(t, err, "maximum number of restarts reached")
-	//require.False(t, doUpgrade)
 	require.Empty(t, stderr.String())
 	require.Equal(t, "Chain 2 is live!\nArgs: second run --verbose\nFinished successfully\n", stdout.String())
 
@@ -206,7 +197,6 @@ func TestLaunchProcessWithRestartDelay(t *testing.T) {
 	start := time.Now()
 	err = runner.Start(context.Background(), []string{"foo", "bar", "1234", upgradeFile})
 	require.NoError(t, err)
-	//require.True(t, doUpgrade)
 
 	// may not be the best way but the fastest way to check we meet the delay
 	// in addition to comparing both the runtime of this test and TestLaunchProcess in addition
@@ -252,7 +242,6 @@ func TestPlanShutdownGrace(t *testing.T) {
 	args := []string{"foo", "bar", "1234", upgradeFile}
 	err = runner.Start(context.Background(), args)
 	require.NoError(t, err)
-	//require.True(t, doUpgrade)
 	require.Empty(t, stderr.String())
 	require.Equal(t, fmt.Sprintf("Genesis foo bar 1234 %s\nUPGRADE \"Chain2\" NEEDED at height: 49: {}\nWARN Need Flush\nFlushed\n", upgradeFile), stdout.String())
 
@@ -269,7 +258,6 @@ func TestPlanShutdownGrace(t *testing.T) {
 
 	err = runner.Start(context.Background(), args)
 	require.ErrorContains(t, err, "maximum number of restarts reached")
-	//require.False(t, doUpgrade)
 	require.Empty(t, stderr.String())
 	require.Equal(t, "Chain 2 is live!\nArgs: second run --verbose\nFinished successfully\n", stdout.String())
 
@@ -319,7 +307,6 @@ func TestLaunchProcessWithDownloads(t *testing.T) {
 	args := []string{"some", "args", upgradeFilename}
 	err = launcher.Start(context.Background(), args)
 	require.NoError(t, err)
-	//require.True(t, doUpgrade)
 	require.Empty(t, stderr.String())
 	require.Equal(t, "Genesis autod. Args: some args "+upgradeFilename+"\n"+`ERROR: UPGRADE "chain2" NEEDED at height: 49: zip_binary`+"\n", stdout.String())
 	currentBin, err = cfg.CurrentBin()
@@ -339,7 +326,6 @@ func TestLaunchProcessWithDownloads(t *testing.T) {
 	require.Empty(t, stderr.String())
 	require.Equal(t, "Chain 2 from zipped binary\nArgs: run --fast "+upgradeFilename+"\n"+`ERROR: UPGRADE "chain3" NEEDED at height: 936: ref_to_chain3-zip_dir.json module=main`+"\n", stdout.String())
 	// ended with one more upgrade
-	//require.True(t, doUpgrade)
 	currentBin, err = cfg.CurrentBin()
 	require.NoError(t, err)
 	rPath, err = filepath.EvalSymlinks(cfg.UpgradeBin("chain3"))
@@ -352,7 +338,6 @@ func TestLaunchProcessWithDownloads(t *testing.T) {
 	stderr.Reset()
 	err = launcher.Start(context.Background(), args)
 	require.ErrorContains(t, err, "maximum number of restarts reached")
-	//require.False(t, doUpgrade)
 	require.Empty(t, stderr.String())
 	require.Equal(t, "Chain 3 from zipped directory\nArgs: end --halt "+upgradeFilename+"\n", stdout.String())
 
@@ -452,7 +437,6 @@ func TestLaunchProcessWithDownloadsAndPreupgrade(t *testing.T) {
 	err = runner.Start(context.Background(), args)
 
 	require.NoError(t, err)
-	//require.True(t, doUpgrade)
 	require.Empty(t, stderr.String())
 	require.Equal(t, "Genesis autod. Args: some args "+upgradeFilename+"\n"+`ERROR: UPGRADE "chain2" NEEDED at height: 49: zip_binary`+"\n", stdout.String())
 	currentBin, err = cfg.CurrentBin()
@@ -469,14 +453,12 @@ func TestLaunchProcessWithDownloadsAndPreupgrade(t *testing.T) {
 	stdout.Reset()
 	stderr.Reset()
 	args = []string{"run", "--fast", upgradeFilename}
-	//doUpgrade, err = runner.Run(args, stdin, stdout, stderr)
 	err = runner.Start(context.Background(), args)
 	require.NoError(t, err)
 
 	require.Empty(t, stderr.String())
 	require.Equal(t, "Chain 2 from zipped binary\nArgs: run --fast "+upgradeFilename+"\n"+`ERROR: UPGRADE "chain3" NEEDED at height: 936: ref_to_chain3-zip_dir.json module=main`+"\n", stdout.String())
 	// ended with one more upgrade
-	//require.True(t, doUpgrade)
 	currentBin, err = cfg.CurrentBin()
 	require.NoError(t, err)
 	rPath, err = filepath.EvalSymlinks(cfg.UpgradeBin("chain3"))

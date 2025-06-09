@@ -463,6 +463,7 @@ module manager and follow the Cosmos SDK's existing [0-based versioning](https:/
 versioning as well as runtime modularity, new officially supported runtime modules will be created under the
 `cosmossdk.io/runtime` prefix. For each supported consensus engine a semantically-versioned go module should be created
 with a runtime implementation for that consensus engine. For example:
+
 * `cosmossdk.io/runtime/comet`
 * `cosmossdk.io/runtime/comet/v2`
 * `cosmossdk.io/runtime/rollkit`

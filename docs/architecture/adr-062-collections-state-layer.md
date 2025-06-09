@@ -28,6 +28,7 @@ but are not limited to:
 
 
 This brings in a lot of problems:
+
 * It blocks developers from focusing on the most important part: writing business logic.
 * Key to bytes formats are complex and their definition is error-prone, for example:
     * how do I format time to bytes in such a way that bytes are sorted?
@@ -38,6 +39,7 @@ This brings in a lot of problems:
 
 The current SDK proposed solution to this problem is [ORM](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-055-orm.md).
 Whilst ORM offers a lot of good functionality aimed at solving these specific problems, it has some downsides:
+
 * It requires migrations.
 * It uses the newest protobuf golang API, whilst the SDK still mainly uses gogoproto. 
 * Integrating ORM into a module would require the developer to deal with two different golang frameworks (golang protobuf + gogoproto) representing the same API objects.
@@ -77,6 +79,7 @@ which is relevant for swapping serialisation frameworks and enhancing performanc
 These default implementations also offer safety around proper lexicographic ordering and namespace-collision.
 
 Examples of the collections API can be found here:
+
 * introduction: https://github.com/NibiruChain/collections/tree/main/examples
 * usage in nibiru: [x/oracle](https://github.com/NibiruChain/nibiru/blob/master/x/oracle/keeper/keeper.go#L32), [x/perp](https://github.com/NibiruChain/nibiru/blob/master/x/perp/keeper/keeper.go#L31)
 * cosmos-sdk's x/staking migrated: https://github.com/testinginprod/cosmos-sdk/pull/22

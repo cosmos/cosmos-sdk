@@ -138,6 +138,7 @@ be added to `AminoSignDoc` if possible
 To test that transactions are resistant to malleability,
 we can develop a test suite to run against all sign modes that
 attempts to manipulate transaction bytes in the following ways:
+
 * changing protobuf encoding by
     * reordering fields
     * setting default values
@@ -152,6 +153,7 @@ In the case of Amino JSON, we should also develop tests which ensure that if any
 field not supported by Amino's `AminoSignDoc` is set that signing fails.
 
 In the general case of transaction decoding, we should have unit tests to ensure that
+
 * any `TxRaw` bytes which do not follow ADR 027 canonical encoding cause decoding to fail, and
 * any top-level transaction elements including `TxBody`, `AuthInfo`, public keys, and messages which
 have unknown fields set cause the transaction to be rejected

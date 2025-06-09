@@ -303,11 +303,13 @@ Code generation requires that all providers and invokers and their parameters ar
 
 When we start creating semantically versioned SDK modules that are in standalone go modules, a state machine breaking
 change to a module should be handled as follows:
+
 * the semantic major version should be incremented, and
 * a new semantically versioned module config protobuf type should be created.
 
 For instance, if we have the SDK module for bank in the go module `github.com/cosmos/cosmos-sdk/x/bank` with the module config type
 `cosmos.bank.module.v1.Module`, and we want to make a state machine breaking change to the module, we would:
+
 * create a new go module `github.com/cosmos/cosmos-sdk/x/bank/v2`,
 * with the module config protobuf type `cosmos.bank.module.v2.Module`.
 

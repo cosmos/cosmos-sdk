@@ -34,6 +34,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## UNRELEASED
+
 ### Bug Fixes
 
 * [#24722](https://github.com/cosmos/cosmos-sdk/pull/24722) Fix msg parsing in when no pulsar file is present.

@@ -3,7 +3,7 @@ package main
 import migration "github.com/cosmos/cosmos-sdk/tools/migrate"
 
 var moduleUpdates = migration.GoModUpdate{
-	"github.com/cosmos/cosmos-sdk":     "v0.54.0-alpha.0.0.20250604174653-810d15dd6d16",
+	"github.com/cosmos/cosmos-sdk":     "v0.54.0-alpha.0.0.20250609200650-1521447c77da",
 	"cosmossdk.io/store":               "v1.10.0-rc.1.0.20250604174653-810d15dd6d16",
 	"github.com/cometbft/cometbft/api": "v0.0.0-20250604002332-f4d33abd2469",
 	"google.golang.org/grpc":           "v1.72.1",

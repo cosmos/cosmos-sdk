@@ -91,11 +91,12 @@ func TestMockChain(t *testing.T) {
 		Genesis: "--block-time 1s --upgrade-plan '{\"name\":\"gov1\",\"height\":30}'",
 		GovUpgrades: map[string]string{
 			"gov1": "--block-time 1s --upgrade-plan '{\"name\":\"gov2\",\"height\":50}'",
+			"gov2": "--block-time 1s --upgrade-plan '{\"name\":\"gov3\",\"height\":70}'",
 		},
 		ManualUpgrades: map[string]string{
 			"manual10": "--block-time 1s --upgrade-plan '{\"name\":\"gov1\",\"height\":30}'",
 			"manual20": `--block-time 1s --upgrade-plan '{"name":"gov1","height":30}' --block-url "/v1/block" --shutdown-on-upgrade`,
-			"manual40": "--block-time 1s --upgrade-plan '{\"name\":\"gov1\",\"height\":50}'",
+			"manual40": "--block-time 1s --upgrade-plan '{\"name\":\"gov2\",\"height\":50}'",
 		},
 		Config: cfg,
 	}.Setup(t)
@@ -174,6 +175,9 @@ func TestMockChain(t *testing.T) {
 		case 7:
 			// should have upgraded to manual40
 			require.Contains(t, currentBin, "manual40")
+		case 8:
+			// should have upgraded to manual40
+			require.Contains(t, currentBin, "gov2")
 			// this is the end of our test so we shutdown after a bit here
 			go func() {
 				time.Sleep(pollInterval * 2)
@@ -194,7 +198,7 @@ func TestMockChain(t *testing.T) {
 	}()
 	wg.Wait()
 
-	require.Equal(t, 7, callbackCount)
+	require.Equal(t, 8, callbackCount)
 
 	// TODO:
 	// - [x] add callback on restart for checking state

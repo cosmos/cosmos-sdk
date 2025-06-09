@@ -3,8 +3,6 @@ package watchers
 import (
 	"context"
 	"time"
-
-	"cosmossdk.io/log"
 )
 
 type HeightChecker interface {
@@ -17,12 +15,12 @@ type HeightWatcher struct {
 	onGetHeight func(uint64) error
 }
 
-func NewHeightWatcher(ctx context.Context, logger log.Logger, checker HeightChecker, pollInterval time.Duration, onGetHeight func(uint64) error) *HeightWatcher {
+func NewHeightWatcher(ctx context.Context, errorHandler ErrorHandler, checker HeightChecker, pollInterval time.Duration, onGetHeight func(uint64) error) *HeightWatcher {
 	watcher := &HeightWatcher{
 		checker:     checker,
 		onGetHeight: onGetHeight,
 	}
-	watcher.PollWatcher = NewPollWatcher[uint64](ctx, logger, func() (uint64, error) {
+	watcher.PollWatcher = NewPollWatcher[uint64](ctx, errorHandler, func() (uint64, error) {
 		return watcher.ReadNow()
 
 	}, pollInterval)

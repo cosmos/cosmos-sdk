@@ -20,7 +20,7 @@ the CometBFT repo can be found [here](https://github.com/cometbft/cometbft/blob/
 
 For SDK application developers and node runners, this means that the `timeout_commit` value in the `config.toml` file
 is still used if `NextBlockDelay` is 0 (its default value).  This means that when upgrading to Cosmos SDK v0.54.x, if 
-the existing `timout_commit` values that validators have been using will be maintained and have the same behavior.
+the existing `timeout_commit` values that validators have been using will be maintained and have the same behavior.
 
 For setting the field in your application, there is a new `baseapp` option, `SetNextBlockDelay` which can be passed to your application upon
 initialization in `app.go`.  Setting this value to any non-zero value will override anything that is set in validators' `config.toml`.

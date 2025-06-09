@@ -44,7 +44,7 @@ func (r Runner) Start(ctx context.Context, args []string) error {
 			r.logger.Info("Upgrade completed, restarting process")
 			if !r.cfg.RestartAfterUpgrade {
 				r.logger.Info("DAEMON_RESTART_AFTER_UPGRADE is disabled, exiting process")
-				return nil
+				return ErrUpgradeNoDaemonRestart
 			}
 		}
 		// Now we compute the command to run and figure out the halt height if needed
@@ -94,6 +94,8 @@ func (r Runner) Start(ctx context.Context, args []string) error {
 }
 
 var errDone = errors.New("done")
+
+var ErrUpgradeNoDaemonRestart = errors.New("upgrade completed, but DAEMON_RESTART_AFTER_UPGRADE is disabled")
 
 func (r Runner) ComputeRunPlan(args []string) (cmd *exec.Cmd, haltHeight uint64, err error) {
 	bin, err := r.cfg.CurrentBin()

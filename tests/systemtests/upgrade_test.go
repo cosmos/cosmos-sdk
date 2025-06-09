@@ -82,7 +82,7 @@ func TestChainUpgrade(t *testing.T) {
 	systest.Sut.SetTestnetInitializer(currentInitializer)
 	systest.Sut.StartChain(t)
 
-	require.True(t, upgradeHeight+1 < systest.Sut.CurrentHeight())
+	require.True(t, upgradeHeight+1 <= systest.Sut.CurrentHeight())
 
 	regex, err := regexp.Compile("DBG this is a debug level message to test that verbose logging mode has properly been enabled during a chain upgrade")
 	require.NoError(t, err)

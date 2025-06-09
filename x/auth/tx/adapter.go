@@ -56,8 +56,18 @@ func (w *wrapper) GetSigningTxData() txsigning.TxData {
 
 	txSignerInfos := make([]*txv1beta1.SignerInfo, len(authInfo.SignerInfos))
 	for i, signerInfo := range authInfo.SignerInfos {
+
 		modeInfo := &txv1beta1.ModeInfo{}
 		adaptModeInfo(signerInfo.ModeInfo, modeInfo)
+
+		// Copied from upstream Cosmos SDK to provide the reader with a more
+		// specific error message.
+		//
+		// https://github.com/celestiaorg/celestia-app/issues/4847
+		if signerInfo.PublicKey == nil {
+			panic("signerInfo.PublicKey cannot be nil")
+		}
+
 		txSignerInfo := &txv1beta1.SignerInfo{
 			PublicKey: &anypb.Any{
 				TypeUrl: signerInfo.PublicKey.TypeUrl,

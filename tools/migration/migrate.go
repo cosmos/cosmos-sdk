@@ -25,7 +25,7 @@ type GoModReplacement struct {
 	Version     string
 }
 
-// module -> version
+// GoModAddition is a mapping of module name to version string.
 type GoModAddition map[string]string
 type GoModRemoval []string
 

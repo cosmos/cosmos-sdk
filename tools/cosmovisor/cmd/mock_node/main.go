@@ -45,7 +45,7 @@ x/upgrade upgrade-info.json behavior.`,
 	cmd.Flags().StringVar(&upgradePlan, "upgrade-plan", "", "upgrade-info.json to create after the halt duration is reached. Either this flag or --halt-height must be specified but not both.")
 	cmd.Flags().Uint64Var(&haltHeight, server.FlagHaltHeight, 0, "Block height at which to gracefully halt the chain and shutdown the node. E")
 	cmd.Flags().StringVar(&homePath, "home", "", "Home directory for the mock node. upgrade-info.json will be written to the data sub-directory of this directory. Defaults to the current directory.")
-	cmd.Flags().StringVar(&httpAddr, "http-addr", ":8080", "HTTP server address to serve block information. Defaults to :8080.")
+	cmd.Flags().StringVar(&httpAddr, "http-addr", ":26657", "HTTP server address to serve block information. Defaults to :26657.")
 	cmd.Flags().StringVar(&blockUrl, "block-url", "/block", "URL at which the latest block information is served. Defaults to /block.")
 	cmd.Flags().DurationVar(&shutdownDelay, "shutdown-delay", 0, "Duration to wait before shutting down the node upon receiving a shutdown signal. Defaults to 0 (no delay).")
 	// TODO add flag to use either jsonpb or encoding/json

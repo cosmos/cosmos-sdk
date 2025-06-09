@@ -81,10 +81,11 @@ func (m MockChainSetup) Setup(t *testing.T) (string, string) {
 }
 
 func TestMockChain(t *testing.T) {
-	pollInterval := time.Millisecond * 500
+	pollInterval := time.Second
 	cfg := &cosmovisor.Config{
 		PollInterval:        pollInterval,
 		RestartAfterUpgrade: true,
+		RPCAddress:          "http://localhost:26657", // TODO this should be the default!
 	}
 	mockchainDir, cfgFile := MockChainSetup{
 		Genesis: "--block-time 1s --upgrade-plan '{\"name\":\"gov1\",\"height\":30}'",
@@ -93,7 +94,7 @@ func TestMockChain(t *testing.T) {
 		},
 		ManualUpgrades: map[string]string{
 			"manual10": "--block-time 1s --upgrade-plan '{\"name\":\"gov1\",\"height\":30}'",
-			"manual20": "--block-time 1s --upgrade-plan '{\"name\":\"gov1\",\"height\":30}'",
+			"manual20": `--block-time 1s --upgrade-plan '{"name":"gov1","height":30}' --block-url "/v1/block"`,
 			"manual40": "--block-time 1s --upgrade-plan '{\"name\":\"gov1\",\"height\":50}'",
 		},
 		Config: cfg,

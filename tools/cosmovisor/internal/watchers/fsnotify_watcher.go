@@ -5,18 +5,18 @@ import (
 	"fmt"
 	"os"
 
+	"cosmossdk.io/log"
 	"github.com/fsnotify/fsnotify"
 )
 
 type FSNotifyWatcher struct {
 	watcher *fsnotify.Watcher
 	outChan chan FileUpdate
-	errChan chan error
 }
 
 var _ Watcher[FileUpdate] = (*FSNotifyWatcher)(nil)
 
-func NewFSNotifyWatcher(ctx context.Context, dir string, filenames []string) (*FSNotifyWatcher, error) {
+func NewFSNotifyWatcher(ctx context.Context, logger log.Logger, dir string, filenames []string) (*FSNotifyWatcher, error) {
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		return nil, err
@@ -68,7 +68,7 @@ func NewFSNotifyWatcher(ctx context.Context, dir string, filenames []string) (*F
 				if !ok { // channel closed
 					return
 				}
-				errChan <- fmt.Errorf("fsnotify error: %w", err)
+				logger.Error("fsnotify error", "error", err)
 			}
 		}
 	}()
@@ -76,7 +76,6 @@ func NewFSNotifyWatcher(ctx context.Context, dir string, filenames []string) (*F
 	return &FSNotifyWatcher{
 		watcher: watcher,
 		outChan: outChan,
-		errChan: errChan,
 	}, nil
 }
 
@@ -87,8 +86,4 @@ type FileUpdate struct {
 
 func (w *FSNotifyWatcher) Updated() <-chan FileUpdate {
 	return w.outChan
-}
-
-func (w *FSNotifyWatcher) Errors() <-chan error {
-	return w.errChan
 }

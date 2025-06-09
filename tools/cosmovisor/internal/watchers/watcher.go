@@ -3,19 +3,20 @@ package watchers
 import (
 	"context"
 	"time"
+
+	"cosmossdk.io/log"
 )
 
 type Watcher[T any] interface {
 	Updated() <-chan T
-	Errors() <-chan error
 }
 
-func InitWatcher[T any](ctx context.Context, pollInterval time.Duration, dirWatcher *FSNotifyWatcher, filename string, unmarshal func([]byte) (T, error)) Watcher[T] {
+func InitWatcher[T any](ctx context.Context, logger log.Logger, pollInterval time.Duration, dirWatcher *FSNotifyWatcher, filename string, unmarshal func([]byte) (T, error)) Watcher[T] {
 	if dirWatcher != nil {
-		hybridWatcher := NewHybridWatcher(ctx, dirWatcher, filename, pollInterval)
-		return NewDataWatcher[T](ctx, hybridWatcher, unmarshal)
+		hybridWatcher := NewHybridWatcher(ctx, logger, dirWatcher, filename, pollInterval)
+		return NewDataWatcher[T](ctx, logger, hybridWatcher, unmarshal)
 	} else {
-		pollWatcher := NewFilePollWatcher(ctx, filename, pollInterval)
-		return NewDataWatcher[T](ctx, pollWatcher, unmarshal)
+		pollWatcher := NewFilePollWatcher(ctx, logger, filename, pollInterval)
+		return NewDataWatcher[T](ctx, logger, pollWatcher, unmarshal)
 	}
 }

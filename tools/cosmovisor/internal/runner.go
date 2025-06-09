@@ -135,7 +135,7 @@ func (r Runner) ComputeRunPlan(args []string) (cmd *exec.Cmd, haltHeight uint64,
 // RunProcess runs the given command until either a upgrade is detected or the process exits.
 func (r Runner) RunProcess(ctx context.Context, cmd *exec.Cmd, haltHeight uint64) error {
 	// start the fsnotify watcher to watch for changes in the upgrade info directory
-	dirWatcher, err := watchers.NewFSNotifyWatcher(ctx, r.cfg.UpgradeInfoDir(), []string{
+	dirWatcher, err := watchers.NewFSNotifyWatcher(ctx, r.logger, r.cfg.UpgradeInfoDir(), []string{
 		r.cfg.UpgradeInfoFilePath(),
 		r.cfg.UpgradeInfoBatchFilePath(),
 	})
@@ -151,11 +151,11 @@ func (r Runner) RunProcess(ctx context.Context, cmd *exec.Cmd, haltHeight uint64
 	defer cancel()
 
 	// start watchers for upgrade plans, manual upgrades and height updates
-	upgradePlanWatcher := watchers.InitWatcher[upgradetypes.Plan](ctx, r.cfg.PollInterval, dirWatcher, r.cfg.UpgradeInfoFilePath(), r.cfg.ParseUpgradeInfo)
-	manualUpgradesWatcher := watchers.InitWatcher[cosmovisor.ManualUpgradeBatch](ctx, r.cfg.PollInterval, dirWatcher, r.cfg.UpgradeInfoBatchFilePath(), r.cfg.ParseManualUpgrades)
+	upgradePlanWatcher := watchers.InitWatcher[upgradetypes.Plan](ctx, r.logger, r.cfg.PollInterval, dirWatcher, r.cfg.UpgradeInfoFilePath(), r.cfg.ParseUpgradeInfo)
+	manualUpgradesWatcher := watchers.InitWatcher[cosmovisor.ManualUpgradeBatch](ctx, r.logger, r.cfg.PollInterval, dirWatcher, r.cfg.UpgradeInfoBatchFilePath(), r.cfg.ParseManualUpgrades)
 	heightChecker := watchers.NewHTTPRPCBLockChecker("http://localhost:8080/block")
 	// TODO should we have a separate poll interval for the height watcher?
-	heightWatcher := watchers.NewHeightWatcher(ctx, heightChecker, r.cfg.PollInterval, func(height uint64) error {
+	heightWatcher := watchers.NewHeightWatcher(ctx, r.logger, heightChecker, r.cfg.PollInterval, func(height uint64) error {
 		r.knownHeight = height
 		return r.cfg.WriteLastKnownHeight(height)
 	})
@@ -246,7 +246,6 @@ func (r Runner) RunProcess(ctx context.Context, cmd *exec.Cmd, haltHeight uint64
 				r.logger.Info("Reached halt height, restarting process for upgrade")
 				return ErrRestartNeeded{}
 			}
-			// TODO listen to error channels
 		}
 	}
 }

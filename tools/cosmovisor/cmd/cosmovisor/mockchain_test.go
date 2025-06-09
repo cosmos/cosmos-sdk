@@ -16,7 +16,8 @@ import (
 )
 
 type MockChainSetup struct {
-	Genesis        string
+	Genesis string
+	// TODO test setup should be similar to process_test.go
 	GovUpgrades    map[string]string
 	ManualUpgrades map[string]string // to be added with the add-upgrade command
 	Config         *cosmovisor.Config

@@ -51,11 +51,8 @@ var (
 	flagAPIAddress        = "api.address"
 	flagPrintMnemonic     = "print-mnemonic"
 	flagStakingDenom      = "staking-denom"
-	// flagCommitTimeout is a deprecated flag whose value will not be used.
-	//
-	// Deprecated: set NextBlockDelay on the app with baseapp.SetNextBlockDelay()
-	flagCommitTimeout = "commit-timeout"
-	flagSingleHost    = "single-host"
+	flagCommitTimeout     = "commit-timeout"
+	flagSingleHost        = "single-host"
 )
 
 type initArgs struct {
@@ -74,18 +71,17 @@ type initArgs struct {
 }
 
 type startArgs struct {
-	algo          string
-	apiAddress    string
-	chainID       string
-	enableLogging bool
-	grpcAddress   string
-	minGasPrices  string
-	numValidators int
-	outputDir     string
-	printMnemonic bool
-	rpcAddress    string
-	// Deprecated: use baseapp.SetNextBlockDelay() instead.
-	timeoutCommit time.Duration
+	algo           string
+	apiAddress     string
+	chainID        string
+	enableLogging  bool
+	grpcAddress    string
+	minGasPrices   string
+	numValidators  int
+	outputDir      string
+	printMnemonic  bool
+	rpcAddress     string
+	nextBlockDelay time.Duration
 }
 
 func addTestnetFlagsToCmd(cmd *cobra.Command) {
@@ -174,7 +170,7 @@ Example:
 	cmd.Flags().String(flagStartingIPAddress, "192.168.0.1", "Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...)")
 	cmd.Flags().String(flagListenIPAddress, "0.0.0.0", "TCP or UNIX socket IP address for the RPC server to listen on")
 	cmd.Flags().String(flags.FlagKeyringBackend, flags.DefaultKeyringBackend, "Select keyring's backend (os|file|test)")
-	cmd.Flags().Duration(flagCommitTimeout, 5*time.Second, "Time to wait after a block commit before starting on the new height")
+	cmd.Flags().Duration(flagCommitTimeout, 5*time.Second, "Time to wait after a block commit before starting on the new height - DEPRECATED - use --next")
 	cmd.Flags().Bool(flagSingleHost, false, "Cluster runs on a single host machine with different ports")
 	cmd.Flags().String(flagStakingDenom, sdk.DefaultBondDenom, "Default staking token denominator")
 
@@ -205,6 +201,7 @@ Example:
 			args.apiAddress, _ = cmd.Flags().GetString(flagAPIAddress)
 			args.grpcAddress, _ = cmd.Flags().GetString(flagGRPCAddress)
 			args.printMnemonic, _ = cmd.Flags().GetBool(flagPrintMnemonic)
+			args.nextBlockDelay, _ = cmd.Flags().GetDuration(flagCommitTimeout)
 
 			return startTestnet(cmd, args)
 		},
@@ -454,9 +451,14 @@ func initGenFiles(
 }
 
 func collectGenFiles(
-	clientCtx client.Context, nodeConfig *cmtconfig.Config, chainID string,
-	nodeIDs []string, valPubKeys []cryptotypes.PubKey, numValidators int,
-	outputDir, nodeDirPrefix, nodeDaemonHome string, genBalIterator banktypes.GenesisBalancesIterator,
+	clientCtx client.Context,
+	nodeConfig *cmtconfig.Config,
+	chainID string,
+	nodeIDs []string,
+	valPubKeys []cryptotypes.PubKey,
+	numValidators int,
+	outputDir, nodeDirPrefix, nodeDaemonHome string,
+	genBalIterator banktypes.GenesisBalancesIterator,
 	rpcPortStart, p2pPortStart int,
 	singleMachine bool,
 ) error {
@@ -570,7 +572,7 @@ func startTestnet(cmd *cobra.Command, args startArgs) error {
 	networkConfig.APIAddress = args.apiAddress
 	networkConfig.GRPCAddress = args.grpcAddress
 	networkConfig.PrintMnemonic = args.printMnemonic
-	networkConfig.TimeoutCommit = args.timeoutCommit
+	networkConfig.TimeoutCommit = args.nextBlockDelay
 	networkLogger := network.NewCLILogger(cmd)
 
 	baseDir := fmt.Sprintf("%s/%s", args.outputDir, networkConfig.ChainID)

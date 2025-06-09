@@ -6,8 +6,8 @@ require (
 	cosmossdk.io/errors v1.0.2
 	cosmossdk.io/log v1.6.0
 	cosmossdk.io/math v1.5.3
-	github.com/cometbft/cometbft/api v1.0.0
-	github.com/cometbft/cometbft/v2 v2.0.0-main
+	github.com/cometbft/cometbft/api v1.1.0-alpha.1
+	github.com/cometbft/cometbft/v2 v2.0.0-alpha.1
 	github.com/cosmos/cosmos-db v1.1.3
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/gogoproto v1.7.0
@@ -85,7 +85,3 @@ require (
 // 	<temporary replace>
 // )
 replace github.com/cosmos/cosmos-db => github.com/cosmos/cosmos-db v0.0.0-20250505172547-38785e92904d
-
-replace github.com/cometbft/cometbft/v2 => github.com/cometbft/cometbft/v2 v2.0.0-20250604002332-f4d33abd2469
-
-replace github.com/cometbft/cometbft/api => github.com/cometbft/cometbft/api v0.0.0-20250604002332-f4d33abd2469

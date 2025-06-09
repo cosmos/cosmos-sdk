@@ -5,7 +5,7 @@ go 1.23.5
 require (
 	cosmossdk.io/log v1.6.0
 	github.com/cometbft/cometbft-db v1.0.4
-	github.com/cometbft/cometbft/v2 v2.0.0-main
+	github.com/cometbft/cometbft/v2 v2.0.0-alpha.1
 	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/otiai10/copy v1.14.1
@@ -213,7 +213,3 @@ replace (
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/tx => ../../x/tx
 )
-
-replace github.com/cometbft/cometbft/v2 => github.com/cometbft/cometbft/v2 v2.0.0-20250604002332-f4d33abd2469
-
-replace github.com/cometbft/cometbft/api => github.com/cometbft/cometbft/api v0.0.0-20250604002332-f4d33abd2469

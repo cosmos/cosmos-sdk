@@ -4,7 +4,7 @@ go 1.23.5
 
 require (
 	cosmossdk.io/math v1.5.3
-	github.com/cometbft/cometbft/v2 v2.0.0-main
+	github.com/cometbft/cometbft/v2 v2.0.0-alpha.1
 	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/creachadair/tomledit v0.0.28
 	github.com/stretchr/testify v1.10.0
@@ -178,7 +178,3 @@ replace (
 	cosmossdk.io/store => ../store
 	cosmossdk.io/x/tx => ../x/tx
 )
-
-replace github.com/cometbft/cometbft/v2 => github.com/cometbft/cometbft/v2 v2.0.0-20250604002332-f4d33abd2469
-
-replace github.com/cometbft/cometbft/api => github.com/cometbft/cometbft/api v0.0.0-20250604002332-f4d33abd2469

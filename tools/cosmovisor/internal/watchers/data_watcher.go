@@ -2,19 +2,18 @@ package watchers
 
 import (
 	"context"
+
+	"cosmossdk.io/log"
 )
 
 type DataWatcher[T any] struct {
 	outChan chan T
-	errChan chan error
 }
 
-func NewDataWatcher[T any, I any](ctx context.Context, watcher Watcher[I], unmarshal func(I) (T, error)) *DataWatcher[T] {
+func NewDataWatcher[T any, I any](ctx context.Context, logger log.Logger, watcher Watcher[I], unmarshal func(I) (T, error)) *DataWatcher[T] {
 	outChan := make(chan T, 1)
-	errChan := make(chan error, 1)
 	go func() {
 		defer close(outChan)
-		defer close(errChan)
 		for {
 			select {
 			case <-ctx.Done():
@@ -25,30 +24,20 @@ func NewDataWatcher[T any, I any](ctx context.Context, watcher Watcher[I], unmar
 				}
 				var data T
 				data, err := unmarshal(contents)
-				// ignore errors because failing JSON unmarshal probably just means the file is incomplete
 				if err == nil {
 					outChan <- data
+				} else {
+					logger.Warn("failed to unmarshal data", "error", err)
 				}
-			case err, ok := <-watcher.Errors():
-				if !ok {
-					return
-				}
-				errChan <- err
-
 			}
 		}
 	}()
 	return &DataWatcher[T]{
 		outChan: outChan,
-		errChan: errChan,
 	}
 }
 
 func (d DataWatcher[T]) Updated() <-chan T {
 	return d.outChan
 
-}
-
-func (d DataWatcher[T]) Errors() <-chan error {
-	return d.errChan
 }

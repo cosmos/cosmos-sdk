@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/log"
 	"github.com/stretchr/testify/require"
 )
 
@@ -16,7 +17,7 @@ func TestPollWatcher(t *testing.T) {
 	filename := filepath.Join(dir, "testfile")
 
 	ctx, cancel := context.WithCancel(context.Background())
-	watcher := NewFilePollWatcher(ctx, filename, time.Millisecond*100)
+	watcher := NewFilePollWatcher(ctx, log.NewTestLogger(t), filename, time.Millisecond*100)
 	expectedContent := []byte("test")
 	go func() {
 		// write some dummy data to the file
@@ -46,11 +47,6 @@ func TestPollWatcher(t *testing.T) {
 					return
 				}
 				actualContent = bz
-			case err, ok := <-watcher.Errors():
-				if !ok {
-					return
-				}
-				require.NoError(t, err)
 			case <-ctx.Done():
 				return
 			}
@@ -62,8 +58,6 @@ func TestPollWatcher(t *testing.T) {
 
 	// check that all the channels are closed
 	_, open := <-watcher.Updated()
-	require.False(t, open)
-	_, open = <-watcher.Errors()
 	require.False(t, open)
 
 }

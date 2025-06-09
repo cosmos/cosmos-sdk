@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/log"
 	"github.com/stretchr/testify/require"
 )
 
@@ -22,8 +23,9 @@ func TestDataWatcher(t *testing.T) {
 	filename := filepath.Join(dir, "testfile.json")
 
 	ctx, cancel := context.WithCancel(context.Background())
-	pollWatcher := NewFilePollWatcher(ctx, filename, time.Millisecond*100)
-	dataWatcher := NewDataWatcher[TestData](ctx, pollWatcher, func(contents []byte) (TestData, error) {
+	logger := log.NewTestLogger(t)
+	pollWatcher := NewFilePollWatcher(ctx, logger, filename, time.Millisecond*100)
+	dataWatcher := NewDataWatcher[TestData](ctx, logger, pollWatcher, func(contents []byte) (TestData, error) {
 		var data TestData
 		err := json.Unmarshal(contents, &data)
 		return data, err
@@ -64,11 +66,6 @@ func TestDataWatcher(t *testing.T) {
 					return
 				}
 				actualContext = &content
-			case err, ok := <-dataWatcher.Errors():
-				if !ok {
-					return
-				}
-				require.NoError(t, err)
 			case <-ctx.Done():
 				return
 			}
@@ -81,7 +78,4 @@ func TestDataWatcher(t *testing.T) {
 	// check that all the channels are closed
 	_, open := <-dataWatcher.Updated()
 	require.False(t, open)
-	_, open = <-dataWatcher.Errors()
-	require.False(t, open)
-
 }

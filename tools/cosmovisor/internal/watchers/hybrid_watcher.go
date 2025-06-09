@@ -3,6 +3,8 @@ package watchers
 import (
 	"context"
 	"time"
+
+	"cosmossdk.io/log"
 )
 
 type HybridWatcher struct {
@@ -12,8 +14,8 @@ type HybridWatcher struct {
 
 var _ Watcher[[]byte] = &HybridWatcher{}
 
-func NewHybridWatcher(ctx context.Context, dirWatcher *FSNotifyWatcher, filename string, backupPollInterval time.Duration) *HybridWatcher {
-	pollWatcher := NewFilePollWatcher(ctx, filename, backupPollInterval)
+func NewHybridWatcher(ctx context.Context, logger log.Logger, dirWatcher *FSNotifyWatcher, filename string, backupPollInterval time.Duration) *HybridWatcher {
+	pollWatcher := NewFilePollWatcher(ctx, logger, filename, backupPollInterval)
 	outChan := make(chan []byte, 1)
 	errChan := make(chan error, 1)
 
@@ -36,16 +38,6 @@ func NewHybridWatcher(ctx context.Context, dirWatcher *FSNotifyWatcher, filename
 					return
 				}
 				outChan <- update
-			case err, ok := <-dirWatcher.Errors():
-				if !ok {
-					return
-				}
-				errChan <- err
-			case err, ok := <-pollWatcher.Errors():
-				if !ok {
-					return
-				}
-				errChan <- err
 			}
 		}
 	}()

@@ -21,6 +21,8 @@ type UpgradeCheckResult struct {
 }
 
 func UpgradeIfNeeded(cfg *cosmovisor.Config, logger log.Logger, knownHeight uint64) (upgraded bool, err error) {
+	// if we see upgrade-info.json, assume we are at the right height and upgrade
+	// TODO should we check the height when we have upgrade-info.json?
 	logger.Info("Checking for upgrade-info.json")
 	if upgradePlan, err := cfg.UpgradeInfo(); err == nil {
 		upgrader := NewUpgrader(cfg, logger, upgradePlan, false)
@@ -52,6 +54,7 @@ func UpgradeIfNeeded(cfg *cosmovisor.Config, logger log.Logger, knownHeight uint
 			err = cfg.DeleteManualUpgradeAtHeight(haltHeight)
 			return true, err
 		} else if lastKnownHeight > haltHeight {
+			// TODO should we just warn here? or actually return an error?
 			return false, fmt.Errorf("missed manual upgrade %s at height %d, last known height is %d", manualUpgrade.Name, manualUpgrade.Height, lastKnownHeight)
 		}
 	}

@@ -182,6 +182,7 @@ func (r Runner) RunProcess(ctx context.Context, cmd *exec.Cmd, haltHeight uint64
 			return errDone
 		case _, ok := <-upgradePlanWatcher.Updated():
 			// TODO check skip upgrade heights?? (although not sure why we need this as the node should not emit an upgrade plan if skip heights is enabled)
+			// TODO should we double check we're at the right height in case operators manually create this file?
 			if !ok {
 				return nil
 			}

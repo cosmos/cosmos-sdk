@@ -39,6 +39,7 @@ func (pr *ProcessRunner) Shutdown(shutdownGrace time.Duration) error {
 	if proc == nil {
 		return nil // process already exited
 	}
+	// TODO make sure we don't kill a process that is not running
 	if err := proc.Signal(syscall.SIGTERM); err != nil {
 		return err
 	}

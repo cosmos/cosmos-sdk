@@ -68,26 +68,9 @@ func TestPubKeyFromTypeAndBytes(t *testing.T) {
 		require.Error(t, err)
 	}
 
-	// --- bls12381 (optional) ---
-	if bls12381.Enabled {
-		blsPriv, err := bls12381.GenPrivKey()
-		require.NoError(t, err)
-		blsPub := blsPriv.PubKey()
-
-		pk, err = keys.PubKeyFromTypeAndBytes(blsPub.Type(), blsPub.Bytes())
-		require.NoError(t, err)
-		require.Equal(t, blsPub.Type(), pk.Type())
-		require.Equal(t, blsPub.Bytes(), pk.Bytes())
-		require.Equal(t, blsPub.Address(), pk.Address())
-		require.Equal(t, blsPub.VerifySignature([]byte("msg"), []byte("sig")), pk.VerifySignature([]byte("msg"), []byte("sig")))
-
-		_, err = keys.PubKeyFromTypeAndBytes(blsPub.Type(), blsPub.Bytes()[:5])
-		require.Error(t, err)
-		require.ErrorAs(t, err, &invLen)
-	} else {
-		_, err := keys.PubKeyFromTypeAndBytes(bls12381.KeyType, []byte{})
-		require.Error(t, err)
-	}
+	// --- bls keys are not enabled in comet and should fail ---
+	_, err = bls12381.GenPrivKey()
+	require.Error(t, err)
 
 	// --- unsupported type ---
 	_, err = keys.PubKeyFromTypeAndBytes("not-a-key", []byte{1, 2, 3})

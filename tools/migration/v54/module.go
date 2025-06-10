@@ -5,8 +5,9 @@ import migration "github.com/cosmos/cosmos-sdk/tools/migrate"
 var moduleUpdates = migration.GoModUpdate{
 	"github.com/cosmos/cosmos-sdk":     "v0.54.0-alpha.0.0.20250610194259-ef7b561f7019",
 	"cosmossdk.io/store":               "v1.10.0-rc.1.0.20250604174653-810d15dd6d16",
+	"github.com/cosmos/cosmos-db":      "v1.1.3",
 	"github.com/cometbft/cometbft/api": "v1.1.0-alpha.1",
-	"google.golang.org/grpc":           "v1.72.1",
+	"google.golang.org/grpc":           "v1.73.0",
 	"cosmossdk.io/x/tx":                "v1.2.0-alpha.0.0.20250604161429-8c61b74a1806",
 	"cosmossdk.io/client/v2":           "v2.0.0-beta.10.0.20250604161429-8c61b74a1806",
 	"cosmossdk.io/core":                "v1.1.0-alpha.1.0.20250604161429-8c61b74a1806",
@@ -18,8 +19,7 @@ var moduleUpdates = migration.GoModUpdate{
 var replacements []migration.GoModReplacement
 
 var additions = migration.GoModAddition{
-	"github.com/cometbft/cometbft/v2":  "v2.0.0-alpha.1",
-	"github.com/cometbft/cometbft/api": "v1.1.0-alpha.1",
+	"github.com/cometbft/cometbft/v2": "v2.0.0-alpha.1",
 }
 
 var removals = []string{

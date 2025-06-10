@@ -472,6 +472,7 @@ var newConfig = func(
 		UnsafeSkipBackup:         skipBackup,
 		DataBackupPath:           dataBackupPath,
 		GRPCAddress:              grpcAddress,
+		RPCAddress:               "http://localhost:26657",
 		PreUpgradeMaxRetries:     preupgradeMaxRetries,
 		DisableLogs:              disableLogs,
 		ColorLogs:                colorLogs,

@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/group" //nolint:staticcheck // deprecated and to be removed
+	"github.com/cosmos/cosmos-sdk/x/group" // nolint: staticcheck // to be removed
 	"github.com/cosmos/cosmos-sdk/x/group/errors"
 	"github.com/cosmos/cosmos-sdk/x/group/internal/orm"
 )

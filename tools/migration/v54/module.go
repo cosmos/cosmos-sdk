@@ -15,18 +15,7 @@ var moduleUpdates = migration.GoModUpdate{
 	"github.com/cosmos/ibc-go/v10":     "v10.0.0-beta.0.0.20250604231944-493e1d9fc888",
 }
 
-var replacements = []migration.GoModReplacement{
-	{
-		Module:      "github.com/cometbft/cometbft/v2",
-		Replacement: "github.com/cometbft/cometbft/v2",
-		Version:     "v2.0.0-alpha.1 ",
-	},
-	{
-		Module:      "github.com/cometbft/cometbft/api",
-		Replacement: "github.com/cometbft/cometbft/api",
-		Version:     "v1.1.0-alpha.1",
-	},
-}
+var replacements []migration.GoModReplacement
 
 var additions = migration.GoModAddition{
 	"github.com/cometbft/cometbft/v2":  "v2.0.0-20250604002332-f4d33abd2469",

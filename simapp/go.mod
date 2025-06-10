@@ -3,21 +3,21 @@ module cosmossdk.io/simapp
 go 1.23.5
 
 require (
-	cosmossdk.io/api v0.9.2
-	cosmossdk.io/client/v2 v2.0.0-00010101000000-000000000000
+	cosmossdk.io/api v1.0.0-alpha.0.0.20250604161429-8c61b74a1806
+	cosmossdk.io/client/v2 v2.0.0-beta.10.0.20250604161429-8c61b74a1806
 	cosmossdk.io/collections v1.2.1 // indirect
-	cosmossdk.io/core v1.0.0
+	cosmossdk.io/core v1.1.0-alpha.1.0.20250604161429-8c61b74a1806
 	cosmossdk.io/depinject v1.2.1
 	cosmossdk.io/log v1.6.0
 	cosmossdk.io/math v1.5.3
-	cosmossdk.io/store v1.1.2
+	cosmossdk.io/store v1.10.0-rc.1.0.20250604174653-810d15dd6d16
 	cosmossdk.io/tools/confix v0.0.0-00010101000000-000000000000
-	cosmossdk.io/x/tx v0.14.0
+	cosmossdk.io/x/tx v1.2.0-alpha.0.0.20250604161429-8c61b74a1806
 	github.com/cometbft/cometbft/api v1.1.0-alpha.1
 	github.com/cometbft/cometbft/v2 v2.0.0-alpha.1
 	github.com/cosmos/cosmos-db v1.1.3
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
-	github.com/cosmos/cosmos-sdk v0.53.0
+	github.com/cosmos/cosmos-sdk v0.54.0-alpha.0.0.20250609200650-1521447c77da
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/spf13/cast v1.9.2
 	github.com/spf13/cobra v1.9.1

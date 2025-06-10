@@ -18,8 +18,8 @@ var moduleUpdates = migration.GoModUpdate{
 var replacements []migration.GoModReplacement
 
 var additions = migration.GoModAddition{
-	"github.com/cometbft/cometbft/v2":  "v2.0.0-20250604002332-f4d33abd2469",
-	"github.com/cometbft/cometbft/api": "v0.0.0-20250604002332-f4d33abd2469",
+	"github.com/cometbft/cometbft/v2":  "v2.0.0-alpha.1",
+	"github.com/cometbft/cometbft/api": "v1.1.0-alpha.1",
 }
 
 var removals = []string{

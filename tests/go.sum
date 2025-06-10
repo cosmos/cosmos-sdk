@@ -614,8 +614,8 @@ cloud.google.com/go/workflows v1.7.0/go.mod h1:JhSrZuVZWuiDfKEFxU0/F1PQjmpnpcoIS
 cloud.google.com/go/workflows v1.8.0/go.mod h1:ysGhmEajwZxGn1OhGOGKsTXc5PyxOc0vfKf5Af+to4M=
 cloud.google.com/go/workflows v1.9.0/go.mod h1:ZGkj1aFIOd9c8Gerkjjq7OW7I5+l6cSvT3ujaO/WwSA=
 cloud.google.com/go/workflows v1.10.0/go.mod h1:fZ8LmRmZQWacon9UCX1r/g/DfAXx5VcPALq2CxzdePw=
-cosmossdk.io/client/v2 v2.0.0-beta.9 h1:xc06zg4G858/pK5plhf8RCfo+KR2mdDKJNrEkfrVAqc=
-cosmossdk.io/client/v2 v2.0.0-beta.9/go.mod h1:pHf3CCHX5gmbL9rDCVbXhGI2+/DdAVTEZSLpdd5V9Zs=
+cosmossdk.io/client/v2 v2.0.0-beta.10.0.20250604161429-8c61b74a1806 h1:VPnbJ2f8PAIhlTwShmIvCmS37RZFmBz+YkLzSxIPKBo=
+cosmossdk.io/client/v2 v2.0.0-beta.10.0.20250604161429-8c61b74a1806/go.mod h1:seDsxl1YCDZSWw++0Qpb7mx5eCpnnLwAa0mDeV9VeME=
 cosmossdk.io/depinject v1.2.1 h1:eD6FxkIjlVaNZT+dXTQuwQTKZrFZ4UrfCq1RKgzyhMw=
 cosmossdk.io/depinject v1.2.1/go.mod h1:lqQEycz0H2JXqvOgVwTsjEdMI0plswI7p6KX+MVqFOM=
 cosmossdk.io/errors v1.0.2 h1:wcYiJz08HThbWxd/L4jObeLaLySopyyuUFB5w4AGpCo=

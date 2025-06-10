@@ -26,8 +26,10 @@ type GoModReplacement struct {
 }
 
 // GoModAddition is a mapping of module name to version string.
-type GoModAddition map[string]string
-type GoModRemoval []string
+type (
+	GoModAddition map[string]string
+	GoModRemoval  []string
+)
 
 type MigrateArgs struct {
 	GoModRemoval      GoModRemoval

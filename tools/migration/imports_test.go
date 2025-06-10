@@ -69,7 +69,6 @@ func TestExceptionReplacement(t *testing.T) {
 					t.Errorf("expected import %q to be in the AST", wantImport)
 				}
 			}
-
 		})
 	}
 }

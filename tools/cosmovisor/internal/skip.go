@@ -1,10 +1,11 @@
-package cosmovisor
+package internal
 
 import (
 	"fmt"
 	"strconv"
 	"strings"
 
+	"cosmossdk.io/tools/cosmovisor"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -25,7 +26,7 @@ func IsSkipUpgradeHeight(args []string, upgradeInfo upgradetypes.Plan) bool {
 func UpgradeSkipHeights(args []string) []int {
 	var heights []int
 	for i, arg := range args {
-		if arg == fmt.Sprintf("--%s", FlagSkipUpgradeHeight) {
+		if arg == fmt.Sprintf("--%s", cosmovisor.FlagSkipUpgradeHeight) {
 			j := i + 1
 
 			for j < len(args) {

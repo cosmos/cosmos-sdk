@@ -13,6 +13,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	"cosmossdk.io/tools/cosmovisor"
+	"cosmossdk.io/tools/cosmovisor/internal"
 
 	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -66,7 +67,7 @@ func prepareUpgradeHandler(cmd *cobra.Command, _ []string) error {
 		return fmt.Errorf("failed to parse upgrade info: %w", err)
 	}
 
-	binaryURL, err := cosmovisor.GetBinaryURL(upgradeInfoParsed.Binaries)
+	binaryURL, err := internal.GetBinaryURL(upgradeInfoParsed.Binaries)
 	if err != nil {
 		return fmt.Errorf("binary URL not found in upgrade plan. Cannot prepare for upgrade: %w", err)
 	}

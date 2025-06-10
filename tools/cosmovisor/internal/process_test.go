@@ -1,6 +1,6 @@
 //go:build linux || darwin
 
-package cosmovisor_test
+package internal
 
 import (
 	"bytes"
@@ -17,14 +17,17 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/tools/cosmovisor"
-	"cosmossdk.io/tools/cosmovisor/internal"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 var workDir string
 
 func init() {
-	workDir, _ = os.Getwd()
+	dir, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+	workDir = filepath.Join(dir, "..")
 }
 
 // TODO all these tests share the same setup so we can extract it to a common function
@@ -35,7 +38,7 @@ type launchProcessFixture struct {
 	stdout *buffer
 	stderr *buffer
 	logger log.Logger
-	runner internal.Runner
+	runner Runner
 }
 
 // TestLaunchProcess will try running the script a few times and watch upgrades work properly
@@ -60,7 +63,7 @@ func TestLaunchProcess(t *testing.T) {
 
 	args := []string{"foo", "bar", "1234", upgradeFile}
 	err = f.runner.Start(context.Background(), args)
-	require.ErrorIs(t, err, internal.ErrUpgradeNoDaemonRestart)
+	require.ErrorIs(t, err, ErrUpgradeNoDaemonRestart)
 	require.Empty(t, f.stderr.String())
 	require.Equal(t, fmt.Sprintf("Genesis foo bar 1234 %s\nUPGRADE \"chain2\" NEEDED at height: 49: {}\n", upgradeFile), f.stdout.String())
 
@@ -109,7 +112,7 @@ func TestPlanDisableRecase(t *testing.T) {
 
 	args := []string{"foo", "bar", "1234", upgradeFile}
 	err = f.runner.Start(context.Background(), args)
-	require.ErrorIs(t, err, internal.ErrUpgradeNoDaemonRestart)
+	require.ErrorIs(t, err, ErrUpgradeNoDaemonRestart)
 	require.Empty(t, f.stderr.String())
 	require.Equal(t, fmt.Sprintf("Genesis foo bar 1234 %s\nUPGRADE \"Chain2\" NEEDED at height: 49: {}\n", upgradeFile), f.stdout.String())
 
@@ -155,7 +158,7 @@ func TestLaunchProcessWithRestartDelay(t *testing.T) {
 
 	start := time.Now()
 	err = f.runner.Start(context.Background(), []string{"foo", "bar", "1234", upgradeFile})
-	require.ErrorIs(t, err, internal.ErrUpgradeNoDaemonRestart)
+	require.ErrorIs(t, err, ErrUpgradeNoDaemonRestart)
 
 	// may not be the best way but the fastest way to check we meet the delay
 	// in addition to comparing both the runtime of this test and TestLaunchProcess in addition
@@ -185,7 +188,7 @@ func TestPlanShutdownGrace(t *testing.T) {
 
 	args := []string{"foo", "bar", "1234", upgradeFile}
 	err = f.runner.Start(context.Background(), args)
-	require.ErrorIs(t, err, internal.ErrUpgradeNoDaemonRestart)
+	require.ErrorIs(t, err, ErrUpgradeNoDaemonRestart)
 	require.Empty(t, f.stderr.String())
 	require.Equal(t, fmt.Sprintf("Genesis foo bar 1234 %s\nUPGRADE \"Chain2\" NEEDED at height: 49: {}\nWARN Need Flush\nFlushed\n", upgradeFile), f.stdout.String())
 
@@ -238,7 +241,7 @@ func TestLaunchProcessWithDownloads(t *testing.T) {
 
 	args := []string{"some", "args", upgradeFilename}
 	err = f.runner.Start(context.Background(), args)
-	require.ErrorIs(t, err, internal.ErrUpgradeNoDaemonRestart)
+	require.ErrorIs(t, err, ErrUpgradeNoDaemonRestart)
 	require.Empty(t, f.stderr.String())
 	require.Equal(t, "Genesis autod. Args: some args "+upgradeFilename+"\n"+`ERROR: UPGRADE "chain2" NEEDED at height: 49: zip_binary`+"\n", f.stdout.String())
 	currentBin, err = f.cfg.CurrentBin()
@@ -254,7 +257,7 @@ func TestLaunchProcessWithDownloads(t *testing.T) {
 	args = []string{"run", "--fast", upgradeFilename}
 	err = f.runner.Start(context.Background(), args)
 	// ended with one more upgrade
-	require.ErrorIs(t, err, internal.ErrUpgradeNoDaemonRestart)
+	require.ErrorIs(t, err, ErrUpgradeNoDaemonRestart)
 	require.Empty(t, f.stderr.String())
 	require.Equal(t, "Chain 2 from zipped binary\nArgs: run --fast "+upgradeFilename+"\n"+`ERROR: UPGRADE "chain3" NEEDED at height: 936: ref_to_chain3-zip_dir.json module=main`+"\n", f.stdout.String())
 	currentBin, err = f.cfg.CurrentBin()
@@ -342,7 +345,7 @@ func TestLaunchProcessWithDownloadsAndPreupgrade(t *testing.T) {
 	args := []string{"some", "args", upgradeFilename}
 	err = f.runner.Start(context.Background(), args)
 
-	require.ErrorIs(t, err, internal.ErrUpgradeNoDaemonRestart)
+	require.ErrorIs(t, err, ErrUpgradeNoDaemonRestart)
 	require.Empty(t, f.stderr.String())
 	require.Equal(t, "Genesis autod. Args: some args "+upgradeFilename+"\n"+`ERROR: UPGRADE "chain2" NEEDED at height: 49: zip_binary`+"\n", f.stdout.String())
 	currentBin, err = f.cfg.CurrentBin()
@@ -361,7 +364,7 @@ func TestLaunchProcessWithDownloadsAndPreupgrade(t *testing.T) {
 	args = []string{"run", "--fast", upgradeFilename}
 	err = f.runner.Start(context.Background(), args)
 	// ended with one more upgrade
-	require.ErrorIs(t, err, internal.ErrUpgradeNoDaemonRestart)
+	require.ErrorIs(t, err, ErrUpgradeNoDaemonRestart)
 	require.Empty(t, f.stderr.String())
 	require.Equal(t, "Chain 2 from zipped binary\nArgs: run --fast "+upgradeFilename+"\n"+`ERROR: UPGRADE "chain3" NEEDED at height: 936: ref_to_chain3-zip_dir.json module=main`+"\n", f.stdout.String())
 	currentBin, err = f.cfg.CurrentBin()
@@ -421,7 +424,7 @@ func TestSkipUpgrade(t *testing.T) {
 	for i := range cases {
 		tc := cases[i]
 		require := require.New(t)
-		h := cosmovisor.IsSkipUpgradeHeight(tc.args, tc.upgradeInfo)
+		h := IsSkipUpgradeHeight(tc.args, tc.upgradeInfo)
 		require.Equal(h, tc.expectRes)
 	}
 }
@@ -460,7 +463,7 @@ func TestUpgradeSkipHeights(t *testing.T) {
 	for i := range cases {
 		tc := cases[i]
 		require := require.New(t)
-		h := cosmovisor.UpgradeSkipHeights(tc.args)
+		h := UpgradeSkipHeights(tc.args)
 		require.Equal(h, tc.expectRes)
 	}
 }
@@ -491,7 +494,7 @@ func setupTestLaunchProcessFixture(t *testing.T, testdataDir string, cfg cosmovi
 		stdout: stdout,
 		stderr: stderr,
 		logger: logger,
-		runner: internal.NewRunner(preppedCfg, internal.RunConfig{
+		runner: NewRunner(preppedCfg, RunConfig{
 			StdIn:  stdin,
 			StdOut: stdout,
 			StdErr: stderr,

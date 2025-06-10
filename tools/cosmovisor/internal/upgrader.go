@@ -108,7 +108,7 @@ func (u *Upgrader) DoUpgrade() error {
 		return err
 	}
 
-	if err := cosmovisor.UpgradeBinary(u.logger, u.cfg, u.upgradePlan); err != nil {
+	if err := UpgradeBinary(u.logger, u.cfg, u.upgradePlan); err != nil {
 		return err
 	}
 

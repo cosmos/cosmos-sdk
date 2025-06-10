@@ -1,4 +1,4 @@
-package cosmovisor
+package internal
 
 import (
 	"errors"
@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/log"
 
+	"cosmossdk.io/tools/cosmovisor"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
@@ -15,7 +16,7 @@ import (
 // UpgradeBinary will be called after an upgrade has been confirmed and the process has terminated.
 // We can now make any changes to the underlying directory without interference and leave it
 // in the upgraded state so that the app can restart with the new binary.
-func UpgradeBinary(logger log.Logger, cfg *Config, p upgradetypes.Plan) error {
+func UpgradeBinary(logger log.Logger, cfg *cosmovisor.Config, p upgradetypes.Plan) error {
 	logger.Info("Upgrading binary", "name", p.Name)
 	// simplest case is to switch the link
 	err := plan.EnsureBinary(cfg.UpgradeBin(p.Name))

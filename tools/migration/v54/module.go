@@ -13,6 +13,7 @@ var moduleUpdates = migration.GoModUpdate{
 	"cosmossdk.io/core":                "v1.1.0-alpha.1.0.20250604161429-8c61b74a1806",
 	"cosmossdk.io/simapp":              "v0.0.0-20250602195229-601ab15623c5",
 	"cosmossdk.io/api":                 "v1.0.0-alpha.0.0.20250604161429-8c61b74a1806",
+	"cosmossdk.io/tools/confix":        "v0.2.0-rc.3.0.20250610194259-ef7b561f7019",
 	"github.com/cosmos/ibc-go/v10":     "v10.0.0-beta.0.0.20250604231944-493e1d9fc888",
 }
 

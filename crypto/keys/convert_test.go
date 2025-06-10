@@ -13,13 +13,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys"
 )
 
-func TestPubKeyFromTypeAndBytes(t *testing.T) {
+func TestPubKeyFromCometTypeAndBytes(t *testing.T) {
 	// --- ed25519 ---
 	edPriv := ed25519.GenPrivKey()
 	edPub := edPriv.PubKey()
 
 	// valid
-	pk, err := keys.PubKeyFromTypeAndBytes(edPub.Type(), edPub.Bytes())
+	pk, err := keys.PubKeyFromCometTypeAndBytes(edPub.Type(), edPub.Bytes())
 	require.NoError(t, err)
 	require.Equal(t, edPub.Type(), pk.Type())
 	require.Equal(t, edPub.Bytes(), pk.Bytes())
@@ -27,7 +27,7 @@ func TestPubKeyFromTypeAndBytes(t *testing.T) {
 	require.Equal(t, edPub.VerifySignature([]byte("msg"), []byte("sig")), pk.VerifySignature([]byte("msg"), []byte("sig")))
 
 	// invalid length
-	_, err = keys.PubKeyFromTypeAndBytes(edPub.Type(), edPub.Bytes()[:5])
+	_, err = keys.PubKeyFromCometTypeAndBytes(edPub.Type(), edPub.Bytes()[:5])
 	require.Error(t, err)
 	var invLen encoding.ErrInvalidKeyLen
 	require.ErrorAs(t, err, &invLen)
@@ -36,14 +36,14 @@ func TestPubKeyFromTypeAndBytes(t *testing.T) {
 	secpPriv := secp256k1.GenPrivKey()
 	secpPub := secpPriv.PubKey()
 
-	pk, err = keys.PubKeyFromTypeAndBytes(secpPub.Type(), secpPub.Bytes())
+	pk, err = keys.PubKeyFromCometTypeAndBytes(secpPub.Type(), secpPub.Bytes())
 	require.NoError(t, err)
 	require.Equal(t, secpPub.Type(), pk.Type())
 	require.Equal(t, secpPub.Bytes(), pk.Bytes())
 	require.Equal(t, secpPub.Address(), pk.Address())
 	require.Equal(t, secpPub.VerifySignature([]byte("msg"), []byte("sig")), pk.VerifySignature([]byte("msg"), []byte("sig")))
 
-	_, err = keys.PubKeyFromTypeAndBytes(secpPub.Type(), secpPub.Bytes()[:5])
+	_, err = keys.PubKeyFromCometTypeAndBytes(secpPub.Type(), secpPub.Bytes()[:5])
 	require.Error(t, err)
 	require.ErrorAs(t, err, &invLen)
 
@@ -52,19 +52,19 @@ func TestPubKeyFromTypeAndBytes(t *testing.T) {
 		ethPriv := secp256k1eth.GenPrivKey()
 		ethPub := ethPriv.PubKey()
 
-		pk, err = keys.PubKeyFromTypeAndBytes(ethPub.Type(), ethPub.Bytes())
+		pk, err = keys.PubKeyFromCometTypeAndBytes(ethPub.Type(), ethPub.Bytes())
 		require.NoError(t, err)
 		require.Equal(t, ethPub.Type(), pk.Type())
 		require.Equal(t, ethPub.Bytes(), pk.Bytes())
 		require.Equal(t, ethPub.Address(), pk.Address())
 		require.Equal(t, ethPub.VerifySignature([]byte("msg"), []byte("sig")), pk.VerifySignature([]byte("msg"), []byte("sig")))
 
-		_, err = keys.PubKeyFromTypeAndBytes(ethPub.Type(), ethPub.Bytes()[:5])
+		_, err = keys.PubKeyFromCometTypeAndBytes(ethPub.Type(), ethPub.Bytes()[:5])
 		require.Error(t, err)
 		require.ErrorAs(t, err, &invLen)
 	} else {
 		// should error if type known but not enabled
-		_, err := keys.PubKeyFromTypeAndBytes(secp256k1eth.KeyType, []byte{})
+		_, err := keys.PubKeyFromCometTypeAndBytes(secp256k1eth.KeyType, []byte{})
 		require.Error(t, err)
 	}
 
@@ -73,7 +73,7 @@ func TestPubKeyFromTypeAndBytes(t *testing.T) {
 	require.Error(t, err)
 
 	// --- unsupported type ---
-	_, err = keys.PubKeyFromTypeAndBytes("not-a-key", []byte{1, 2, 3})
+	_, err = keys.PubKeyFromCometTypeAndBytes("not-a-key", []byte{1, 2, 3})
 	require.Error(t, err)
 	var unsup encoding.ErrUnsupportedKey
 	require.ErrorAs(t, err, &unsup)

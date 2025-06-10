@@ -10,10 +10,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
-// PubKeyFromTypeAndBytes builds a crypto.PubKey from the given type and bytes.
+// PubKeyFromCometTypeAndBytes builds a crypto.PubKey from the given comet/v2 type and bytes.
 // It returns ErrUnsupportedKey if the pubkey type is unsupported or
 // ErrInvalidKeyLen if the key length is invalid.
-func PubKeyFromTypeAndBytes(pkType string, bytes []byte) (types.PubKey, error) {
+func PubKeyFromCometTypeAndBytes(pkType string, bytes []byte) (types.PubKey, error) {
 	var pubKey types.PubKey
 	switch pkType {
 	case ed25519.KeyType:

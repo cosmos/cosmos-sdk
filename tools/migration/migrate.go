@@ -16,9 +16,6 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-// GoModUpdate defines a mapping of module path to the version it should be updated to.
-type GoModUpdate map[string]string
-
 type GoModReplacement struct {
 	Module      string
 	Replacement string
@@ -26,6 +23,8 @@ type GoModReplacement struct {
 }
 
 type (
+	// GoModUpdate defines a mapping of module path to the version it should be updated to.
+	GoModUpdate map[string]string
 	// GoModAddition is a mapping of module name to version string.
 	GoModAddition map[string]string
 	GoModRemoval  []string

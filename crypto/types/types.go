@@ -1,7 +1,10 @@
 package types
 
 import (
+	"github.com/cometbft/cometbft/crypto"
 	cmtcrypto "github.com/cometbft/cometbft/v2/crypto"
+	"github.com/cometbft/cometbft/v2/crypto/bls12381"
+	"github.com/cometbft/cometbft/v2/crypto/secp256k1eth"
 	proto "github.com/cosmos/gogoproto/proto"
 )
 

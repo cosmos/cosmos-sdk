@@ -10,7 +10,7 @@ require (
 	cosmossdk.io/log v1.6.0
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/simapp v0.0.0-20230620040119-e078f1a49e8b
-	cosmossdk.io/store v1.10.0-rc.1.0.20250604174653-810d15dd6d16
+	cosmossdk.io/store v1.10.0-rc.1.0.20250610194259-ef7b561f7019
 	cosmossdk.io/x/tx v1.2.0-alpha.0.0.20250604161429-8c61b74a1806
 	github.com/cometbft/cometbft/api v1.1.0-alpha.1
 	github.com/cometbft/cometbft/v2 v2.0.0-alpha.1

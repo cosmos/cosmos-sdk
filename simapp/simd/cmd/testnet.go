@@ -51,11 +51,8 @@ var (
 	flagAPIAddress        = "api.address"
 	flagPrintMnemonic     = "print-mnemonic"
 	flagStakingDenom      = "staking-denom"
-	// flagCommitTimeout is a deprecated flag whose value will not be used.
-	//
-	// Deprecated: set NextBlockDelay on the app with baseapp.SetNextBlockDelay()
-	flagCommitTimeout = "commit-timeout"
-	flagSingleHost    = "single-host"
+	flagCommitTimeout     = "commit-timeout"
+	flagSingleHost        = "single-host"
 )
 
 type initArgs struct {
@@ -84,7 +81,6 @@ type startArgs struct {
 	outputDir     string
 	printMnemonic bool
 	rpcAddress    string
-	// Deprecated: use baseapp.SetNextBlockDelay() instead.
 	timeoutCommit time.Duration
 }
 
@@ -160,6 +156,7 @@ Example:
 			args.algo, _ = cmd.Flags().GetString(flags.FlagKeyType)
 			args.bondTokenDenom, _ = cmd.Flags().GetString(flagStakingDenom)
 			args.singleMachine, _ = cmd.Flags().GetBool(flagSingleHost)
+			config.Consensus.TimeoutCommit, err = cmd.Flags().GetDuration(flagCommitTimeout) // nolint: staticcheck // we are continuing to use this value for backwards compatibility
 			if err != nil {
 				return err
 			}
@@ -205,6 +202,7 @@ Example:
 			args.apiAddress, _ = cmd.Flags().GetString(flagAPIAddress)
 			args.grpcAddress, _ = cmd.Flags().GetString(flagGRPCAddress)
 			args.printMnemonic, _ = cmd.Flags().GetBool(flagPrintMnemonic)
+			args.timeoutCommit, _ = cmd.Flags().GetDuration(flagCommitTimeout)
 
 			return startTestnet(cmd, args)
 		},
@@ -454,9 +452,14 @@ func initGenFiles(
 }
 
 func collectGenFiles(
-	clientCtx client.Context, nodeConfig *cmtconfig.Config, chainID string,
-	nodeIDs []string, valPubKeys []cryptotypes.PubKey, numValidators int,
-	outputDir, nodeDirPrefix, nodeDaemonHome string, genBalIterator banktypes.GenesisBalancesIterator,
+	clientCtx client.Context,
+	nodeConfig *cmtconfig.Config,
+	chainID string,
+	nodeIDs []string,
+	valPubKeys []cryptotypes.PubKey,
+	numValidators int,
+	outputDir, nodeDirPrefix, nodeDaemonHome string,
+	genBalIterator banktypes.GenesisBalancesIterator,
 	rpcPortStart, p2pPortStart int,
 	singleMachine bool,
 ) error {

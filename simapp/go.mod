@@ -4,14 +4,17 @@ go 1.23.5
 
 require (
 	cosmossdk.io/api v0.9.2
+	cosmossdk.io/client/v2 v2.0.0-00010101000000-000000000000
 	cosmossdk.io/collections v1.2.1 // indirect
 	cosmossdk.io/core v1.0.0
 	cosmossdk.io/depinject v1.2.1
 	cosmossdk.io/log v1.6.0
 	cosmossdk.io/math v1.5.3
+	cosmossdk.io/store v1.1.2
+	cosmossdk.io/tools/confix v0.0.0-00010101000000-000000000000
 	cosmossdk.io/x/tx v0.14.0
-	github.com/cometbft/cometbft/api v1.0.0
-	github.com/cometbft/cometbft/v2 v2.0.0-main
+	github.com/cometbft/cometbft/api v1.1.0-alpha.1
+	github.com/cometbft/cometbft/v2 v2.0.0-alpha.1
 	github.com/cosmos/cosmos-db v1.1.3
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
 	github.com/cosmos/cosmos-sdk v0.53.0
@@ -23,12 +26,6 @@ require (
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/mock v0.5.2
 	google.golang.org/protobuf v1.36.6
-)
-
-require (
-	cosmossdk.io/client/v2 v2.0.0-00010101000000-000000000000
-	cosmossdk.io/store v1.1.2
-	cosmossdk.io/tools/confix v0.0.0-00010101000000-000000000000
 )
 
 require (
@@ -246,7 +243,3 @@ replace (
 	// replace broken goleveldb
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
-
-replace github.com/cometbft/cometbft/v2 => github.com/cometbft/cometbft/v2 v2.0.0-20250604002332-f4d33abd2469
-
-replace github.com/cometbft/cometbft/api => github.com/cometbft/cometbft/api v0.0.0-20250604002332-f4d33abd2469

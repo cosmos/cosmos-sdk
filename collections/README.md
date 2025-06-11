@@ -423,7 +423,7 @@ The third type of collection is the `collections.Item`.
 It stores only one single item, it's useful for example for parameters, there's only one instance
 of parameters in state always.
 
-#### implementation curiosity
+### implementation curiosity
 
 A `collections.Item` is just a `collections.Map` with no key but just a value.
 The key is the prefix of the collection!
@@ -683,7 +683,7 @@ func NewKeeper(storeKey *storetypes.KVStoreKey) Keeper {
 }
 ```
 
-#### The Map Key definition
+### The Map Key definition
 
 First of all we can see that in order to define a composite key of two elements we use the `collections.Pair` type:
 

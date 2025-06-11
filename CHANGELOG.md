@@ -41,7 +41,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Breaking Changes
 
 * [#24837](https://github.com/cosmos/cosmos-sdk/pull/24837) Update to using CometBFT v2.
-  * This update changes the import paths from `cometbft/cometbft` to `cometbft/cometbft/v2`.  Users can use the migration tool to automatically update their nodes.
+    * This update changes the import paths from `cometbft/cometbft` to `cometbft/cometbft/v2`.  Users can use the migration tool to automatically update their nodes.
 
 ### Features
 
@@ -81,7 +81,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (crypto/keyring) [#24040](https://github.com/cosmos/cosmos-sdk/pull/24040) Expose the db keyring used in the keystore.
 * (types) [#23919](https://github.com/cosmos/cosmos-sdk/pull/23919) Add MustValAddressFromBech32 function.
 * (all) [#23708](https://github.com/cosmos/cosmos-sdk/pull/23708) Add unordered transaction support.
-  * Adds a `--timeout-timestamp` flag that allows users to specify a block time at which the unordered transactions should expire from the mempool.
+    * Adds a `--timeout-timestamp` flag that allows users to specify a block time at which the unordered transactions should expire from the mempool.
 * (x/epochs) [#23815](https://github.com/cosmos/cosmos-sdk/pull/23815) Upstream `x/epochs` from Osmosis
 * (client) [#23811](https://github.com/cosmos/cosmos-sdk/pull/23811) Add auto cli for node service.
 * (genutil) [#24018](https://github.com/cosmos/cosmos-sdk/pull/24018) Allow manually setting the consensus key type in genesis
@@ -89,11 +89,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/auth) [#24030](https://github.com/cosmos/cosmos-sdk/pull/24030) Allow usage of ed25519 keys for transaction signing.
 * (baseapp) [#24163](https://github.com/cosmos/cosmos-sdk/pull/24163) Add `StreamingManager` to baseapp to extend the abci listeners.
 * (x/protocolpool) [#23933](https://github.com/cosmos/cosmos-sdk/pull/23933) Add x/protocolpool module.
-  * x/distribution can now utilize an externally managed community pool. NOTE: this will make the message handlers for FundCommunityPool and CommunityPoolSpend error, as well as the query handler for CommunityPool.
+    * x/distribution can now utilize an externally managed community pool. NOTE: this will make the message handlers for FundCommunityPool and CommunityPoolSpend error, as well as the query handler for CommunityPool.
 * (client) [#18101](https://github.com/cosmos/cosmos-sdk/pull/18101) Add a `keyring-default-keyname` in `client.toml` for specifying a default key name, and skip the need to use the `--from` flag when signing transactions.
 * (x/gov) [#24355](https://github.com/cosmos/cosmos-sdk/pull/24355) Allow users to set a custom CalculateVoteResultsAndVotingPower function to be used in govkeeper.Tally.
 * (x/mint) [#24436](https://github.com/cosmos/cosmos-sdk/pull/24436) Allow users to set a custom minting function used in the `x/mint` begin blocker.
-  * The `InflationCalculationFn` argument to `mint.NewAppModule()` is now ignored and must be nil.  To set a custom `InflationCalculationFn` on the default minter, use `mintkeeper.WithMintFn(mintkeeper.DefaultMintFn(customInflationFn))`.
+    * The `InflationCalculationFn` argument to `mint.NewAppModule()` is now ignored and must be nil.  To set a custom `InflationCalculationFn` on the default minter, use `mintkeeper.WithMintFn(mintkeeper.DefaultMintFn(customInflationFn))`.
 * (api) [#24428](https://github.com/cosmos/cosmos-sdk/pull/24428) Add block height to response headers
 
 ### Improvements
@@ -103,7 +103,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (telemetry) [#24541](https://github.com/cosmos/cosmos-sdk/pull/24541) Telemetry now includes a pre_blocker metric key. x/upgrade should migrate to this key in v0.54.0.
 * (x/auth) [#24541](https://github.com/cosmos/cosmos-sdk/pull/24541) x/auth's PreBlocker now emits telemetry under the pre_blocker metric key.
 * (x/bank) [#24431](https://github.com/cosmos/cosmos-sdk/pull/24431) Reduce the number of `ValidateDenom` calls in `bank.SendCoins` and `Coin`.
-  * The `AmountOf()` method on`sdk.Coins` no longer will `panic` if given an invalid denom and will instead return a zero value.
+    * The `AmountOf()` method on`sdk.Coins` no longer will `panic` if given an invalid denom and will instead return a zero value.
 * (x/staking) [#24391](https://github.com/cosmos/cosmos-sdk/pull/24391) Replace panics with error results; more verbose error messages
 * (x/staking) [#24354](https://github.com/cosmos/cosmos-sdk/pull/24354) Optimize validator endblock by reducing bech32 conversions, resulting in significant performance improvement
 * (client/keys) [#18950](https://github.com/cosmos/cosmos-sdk/pull/18950) Improve `<appd> keys add`, `<appd> keys import` and `<appd> keys rename` by checking name validation.
@@ -224,11 +224,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#20631](https://github.com/cosmos/cosmos-sdk/pull/20631) Fix json parsing in the wait-tx command.
 * (x/auth) [#20438](https://github.com/cosmos/cosmos-sdk/pull/20438) Add `--skip-signature-verification` flag to multisign command to allow nested multisigs.
 
-## Bug Fixes
-
-* (simulation) [#17911](https://github.com/cosmos/cosmos-sdk/pull/17911) Fix all problems with executing command `make test-sim-custom-genesis-fast` for simulation test.
-* (simulation) [#18196](https://github.com/cosmos/cosmos-sdk/pull/18196) Fix the problem of `validator set is empty after InitGenesis` in simulation test.
-
 ## [v0.50.7](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.7) - 2024-06-04
 
 ### Improvements
@@ -240,6 +235,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Bug Fixes
 
+* (simulation) [#17911](https://github.com/cosmos/cosmos-sdk/pull/17911) Fix all problems with executing command `make test-sim-custom-genesis-fast` for simulation test.
+* (simulation) [#18196](https://github.com/cosmos/cosmos-sdk/pull/18196) Fix the problem of `validator set is empty after InitGenesis` in simulation test.
 * (baseapp) [#20346](https://github.com/cosmos/cosmos-sdk/pull/20346) Correctly assign `execModeSimulate` to context for `simulateTx`.
 * (baseapp) [#20144](https://github.com/cosmos/cosmos-sdk/pull/20144) Remove txs from mempool when AnteHandler fails in recheck.
 * (baseapp) [#20107](https://github.com/cosmos/cosmos-sdk/pull/20107) Avoid header height overwrite block height.

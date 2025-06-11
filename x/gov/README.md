@@ -191,9 +191,9 @@ https://github.com/cosmos/cosmos-sdk/blob/main/x/gov/keeper/tally.go#L15-L24
 This gives developers a more expressive way to handle governance on their appchains. 
 Developers can now build systems with:
 
-- Quadratic Voting
-- Time-weighted Voting
-- Reputation-Based voting
+* Quadratic Voting
+* Time-weighted Voting
+* Reputation-Based voting
 
 ##### Example
 

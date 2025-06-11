@@ -6,16 +6,16 @@ setup in tests.
 
 ## Components
 
-- **CLI**: Command-line interface wrapper for interacting with the chain or keyring
-- **Servers**: Server instances to run the blockchain environment.
-- **Events**: Event listeners
-- **RPC**: Remote Procedure Call setup for communication.
+* **CLI**: Command-line interface wrapper for interacting with the chain or keyring
+* **Servers**: Server instances to run the blockchain environment.
+* **Events**: Event listeners
+* **RPC**: Remote Procedure Call setup for communication.
 
 ## Dependencies
 
-- **testify**: Testing toolkit.
-- **gjson**: JSON parser.
-- **sjson**: JSON modifier.
+* **testify**: Testing toolkit.
+* **gjson**: JSON parser.
+* **sjson**: JSON modifier.
 
 Server and client-side operations are executed on the host machine.
 

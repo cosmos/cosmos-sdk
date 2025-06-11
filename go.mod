@@ -225,7 +225,6 @@ replace (
 	cosmossdk.io/core => ./core
 	cosmossdk.io/store => ./store
 	cosmossdk.io/x/tx => ./x/tx
-	github.com/cosmos/cosmos-db => github.com/cosmos/cosmos-db v0.0.0-20250505172547-38785e92904d
 )
 
 // Below are the long-lived replace of the Cosmos SDK

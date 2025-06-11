@@ -1,0 +1,175 @@
+package migration
+
+import (
+	"go/parser"
+	"go/token"
+	"testing"
+)
+
+func TestExceptionReplacement(t *testing.T) {
+	importReplacements := []ImportReplacement{
+		{Old: "github.com/cometbft/cometbft/proto/tendermint/types", New: "github.com/cometbft/cometbft/api/cometbft/types/v2"},
+		{Old: "github.com/cometbft/cometbft/proto/tendermint/crypto", New: "github.com/cometbft/cometbft/api/cometbft/crypto/v1"},
+		{Old: "github.com/cometbft/cometbft/proto/tendermint/state", New: "github.com/cometbft/cometbft/api/cometbft/state/v2"},
+		{Old: "github.com/cometbft/cometbft", New: "github.com/cometbft/cometbft/v2", AllPackages: true, Except: []string{"api"}},
+	}
+
+	tests := []struct {
+		name            string
+		input           string
+		doNotWantImport string
+		wantImports     []string
+		wantMod         bool
+	}{
+		{
+			name: "block import with one replacement",
+			input: `package main
+					import (
+						"fmt"
+						"github.com/cometbft/cometbft/db"
+						"github.com/cometbft/cometbft/proto/tendermint/types"
+						"github.com/cometbft/combetft/v2/map"
+					)`,
+			doNotWantImport: `"github.com/cometbft/cometbft/db"`,
+			wantImports:     []string{`"github.com/cometbft/cometbft/v2/db"`, `"github.com/cometbft/cometbft/api/cometbft/types/v2"`, `"github.com/cometbft/combetft/v2/map"`},
+			wantMod:         true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fset := token.NewFileSet()
+			node, err := parser.ParseFile(fset, "", tt.input, parser.ImportsOnly)
+			if err != nil {
+				t.Fatalf("failed to parse source: %v", err)
+			}
+
+			modified, err := updateImports(node, importReplacements)
+			if err != nil {
+				t.Fatalf("updateImports returned error: %v", err)
+			}
+			if modified != tt.wantMod {
+				t.Errorf("expected modified=%v, got %v", tt.wantMod, modified)
+			}
+
+			// importsToMaybeAlias is a mapping of imports to an alias if it has one.
+			importsToMaybeAlias := make(map[string]string)
+			for _, imp := range node.Imports {
+				if imp.Name == nil {
+					importsToMaybeAlias[imp.Path.Value] = ""
+				} else {
+					importsToMaybeAlias[imp.Path.Value] = imp.Name.Name
+				}
+			}
+			if _, ok := importsToMaybeAlias[tt.doNotWantImport]; ok {
+				t.Errorf("expected import %q to not be in the AST", tt.input)
+			}
+			for _, wantImport := range tt.wantImports {
+				if _, ok := importsToMaybeAlias[wantImport]; !ok {
+					t.Errorf("expected import %q to be in the AST", wantImport)
+				}
+			}
+		})
+	}
+}
+
+func TestUpdateImports(t *testing.T) {
+	// test data
+	importReplacements := []ImportReplacement{
+		{Old: "github.com/cometbft/cometbft/proto/tendermint/types", New: "github.com/cometbft/cometbft/api/cometbft/types/v1"},
+		{Old: "github.com/cometbft/cometbft/proto/tendermint/crypto", New: "github.com/cometbft/cometbft/api/cometbft/crypto/v1"},
+		{Old: "github.com/cometbft/cometbft/proto/tendermint/state", New: "github.com/cometbft/cometbft/api/cometbft/state/v1"},
+		{Old: "cosmossdk.io/x/upgrade", New: "github.com/cosmos/cosmos-sdk/x/upgrade", AllPackages: true},
+	}
+	tests := []struct {
+		name            string
+		input           string
+		doNotWantImport string
+		wantImport      string
+		wantAlias       string
+		wantMod         bool
+	}{
+		{
+			name:            "import path is updated and alias is added",
+			input:           `package main; import "github.com/cometbft/cometbft/proto/tendermint/types"`,
+			doNotWantImport: `"github.com/cometbft/cometbft/proto/tendermint/types"`,
+			wantImport:      `"github.com/cometbft/cometbft/api/cometbft/types/v1"`,
+			wantAlias:       "types",
+			wantMod:         true,
+		},
+		{
+			name:            "alias stays intact",
+			input:           `package main; import blah "github.com/cometbft/cometbft/proto/tendermint/types"`,
+			doNotWantImport: `"github.com/cometbft/cometbft/proto/tendermint/types"`,
+			wantImport:      `"github.com/cometbft/cometbft/api/cometbft/types/v1"`,
+			wantAlias:       "blah",
+			wantMod:         true,
+		},
+		{
+			name: "block import with one replacement",
+			input: `package main
+					import (
+						"fmt"
+						"github.com/cometbft/cometbft/proto/tendermint/crypto"
+					)`,
+			doNotWantImport: `"github.com/cometbft/cometbft/proto/tendermint/crypto"`,
+			wantImport:      `"github.com/cometbft/cometbft/api/cometbft/crypto/v1"`,
+			wantAlias:       "crypto",
+			wantMod:         true,
+		},
+		{
+			name: "block import with one replacement",
+			input: `package main
+					import (
+						"fmt"
+						"cosmossdk.io/x/upgrade/types"
+					)`,
+			doNotWantImport: `"cosmossdk.io/x/upgrade/types"`,
+			wantImport:      `"github.com/cosmos/cosmos-sdk/x/upgrade/types"`,
+			wantMod:         true,
+		},
+		{
+			name:       "no replacement needed",
+			input:      `package main; import "fmt"`,
+			wantImport: `"fmt"`,
+			wantMod:    false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fset := token.NewFileSet()
+			node, err := parser.ParseFile(fset, "", tt.input, parser.ImportsOnly)
+			if err != nil {
+				t.Fatalf("failed to parse source: %v", err)
+			}
+
+			modified, err := updateImports(node, importReplacements)
+			if err != nil {
+				t.Fatalf("updateImports returned error: %v", err)
+			}
+			if modified != tt.wantMod {
+				t.Errorf("expected modified=%v, got %v", tt.wantMod, modified)
+			}
+
+			// importsToMaybeAlias is a mapping of imports to an alias if it has one.
+			importsToMaybeAlias := make(map[string]string)
+			for _, imp := range node.Imports {
+				if imp.Name == nil {
+					importsToMaybeAlias[imp.Path.Value] = ""
+				} else {
+					importsToMaybeAlias[imp.Path.Value] = imp.Name.Name
+				}
+			}
+			if _, ok := importsToMaybeAlias[tt.doNotWantImport]; ok {
+				t.Errorf("expected import %q to not be in the AST", tt.input)
+			}
+			if _, ok := importsToMaybeAlias[tt.wantImport]; !ok {
+				t.Errorf("expected import %q to be in the AST", tt.wantImport)
+			}
+			if importsToMaybeAlias[tt.wantImport] != tt.wantAlias {
+				t.Errorf("expected alias %q for import %q, got %q", tt.wantAlias, tt.wantImport, importsToMaybeAlias[tt.wantImport])
+			}
+		})
+	}
+}

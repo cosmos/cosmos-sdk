@@ -25,6 +25,7 @@ This document attempts to enumerate the various potential transaction "malleabil
 ### Risks Associated with Malleability
 
 The malleability of transactions poses the following potential risks to end users:
+
 * unsigned data could get added to transactions and be processed by state machines
 * clients often rely on transaction hashes for checking transaction status, but whether or not submitted transaction hashes match processed transaction hashes depends primarily on good network actors rather than fundamental protocol guarantees
 * transactions could potentially get executed more than once (faulty replay protection)
@@ -49,6 +50,7 @@ increasing account sequence number.
 #### Non-deterministic Protobuf Encoding
 
 Cosmos SDK transactions are encoded using protobuf binary encoding when they are submitted to the network. Protobuf binary is not inherently a deterministic encoding meaning that the same logical payload could have several valid bytes representations. In a basic sense, this means that protobuf in general can be decoded and re-encoded to produce a different byte stream (and thus different hash) without changing the logical meaning of the bytes. [ADR 027: Deterministic Protobuf Serialization](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-027-deterministic-protobuf-serialization.md) describes in detail what needs to be done to produce what we consider to be a "canonical", deterministic protobuf serialization. Briefly, the following sources of malleability at the encoding level have been identified and are addressed by this specification:
+
 * fields can be emitted in any order
 * default field values can be included or omitted, and this doesn't change meaning unless `optional` is used
 * `repeated` fields of scalars may use packed or "regular" encoding
@@ -56,6 +58,7 @@ Cosmos SDK transactions are encoded using protobuf binary encoding when they are
 * extra fields may be added and are usually simply ignored by decoders. [ADR 020](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-020-protobuf-transaction-encoding.md#unknown-field-filtering) specifies that in general such extra fields should cause messages and transactions to be rejected)
 
 When using `SIGN_MODE_DIRECT` none of the above malleabilities will be tolerated because:
+
 * signatures of messages and extensions must be done over the raw encoded bytes of those fields
 * the outer tx envelope (`TxRaw`) must follow ADR 027 rules or be rejected
 
@@ -114,6 +117,7 @@ For the known malleability of the `Multisignature` type, we should make sure tha
 were encoded following canonical ADR 027 rules when doing signature verification.
 
 `SIGN_MODE_DIRECT_AUX` provides the same level of safety as `SIGN_MODE_DIRECT` because
+
 * the raw encoded `TxBody` bytes are signed over in `SignDocDirectAux`, and
 * a transaction using `SIGN_MODE_DIRECT_AUX` still requires the primary signer to sign the transaction with `SIGN_MODE_DIRECT`
 
@@ -123,6 +127,7 @@ were encoded following canonical ADR 027 rules when doing signature verification
 Unfortunately, the vast majority of unaddressed malleability risks affect `SIGN_MODE_LEGACY_AMINO_JSON` and this
 sign mode is still commonly used.
 It is recommended that the following improvements be made to Amino JSON signing:
+
 * hashes of `TxBody` and `AuthInfo` should be added to `AminoSignDoc` so that encoding-level malleablity is addressed
 * when constructing `AminoSignDoc`, [protoreflect](https://pkg.go.dev/google.golang.org/protobuf/reflect/protoreflect) API should be used to ensure that there no fields in `TxBody` or `AuthInfo` which do not have a mapping in `AminoSignDoc` have been set
 * fields present in `TxBody` or `AuthInfo` that are not present in `AminoSignDoc` (such as extension options) should
@@ -133,12 +138,13 @@ be added to `AminoSignDoc` if possible
 To test that transactions are resistant to malleability,
 we can develop a test suite to run against all sign modes that
 attempts to manipulate transaction bytes in the following ways:
-- changing protobuf encoding by
-  - reordering fields
-  - setting default values
-  - adding extra bits to varints, or
-  - setting new unknown fields
-- modifying integer and decimal values encoded as strings with leading or trailing zeros
+
+* changing protobuf encoding by
+    * reordering fields
+    * setting default values
+    * adding extra bits to varints, or
+    * setting new unknown fields
+* modifying integer and decimal values encoded as strings with leading or trailing zeros
 
 Whenever any of these manipulations is done, we should observe that the sign doc bytes for the sign mode being
 tested also change, meaning that the corresponding signatures will also have to change.
@@ -147,8 +153,9 @@ In the case of Amino JSON, we should also develop tests which ensure that if any
 field not supported by Amino's `AminoSignDoc` is set that signing fails.
 
 In the general case of transaction decoding, we should have unit tests to ensure that
-- any `TxRaw` bytes which do not follow ADR 027 canonical encoding cause decoding to fail, and
-- any top-level transaction elements including `TxBody`, `AuthInfo`, public keys, and messages which
+
+* any `TxRaw` bytes which do not follow ADR 027 canonical encoding cause decoding to fail, and
+* any top-level transaction elements including `TxBody`, `AuthInfo`, public keys, and messages which
 have unknown fields set cause the transaction to be rejected
 (this ensures that ADR 020 unknown field filtering is properly applied)
 

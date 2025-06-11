@@ -95,6 +95,7 @@ All fields in the `UpgradeInstructions` are optional.
   | `30`             | `pre-upgrade` command was executed but failed. This fails the entire upgrade.                                       |
   | `31`             | `pre-upgrade` command was executed but failed. But the command is retried until exit code `1` or `30` are returned. |
   If defined, then the app supervisors (e.g. Cosmovisor) MUST NOT run `app pre-run`.
+
 * `post_run` is a command to run after the upgraded chain has been started. If defined, this command MUST be only executed at most once by an upgrading node.
   The output and exit code SHOULD be logged but SHOULD NOT affect the running of the upgraded chain.
   The working directory this command runs from MUST be `{DAEMON_HOME}/cosmovisor/{upgrade name}`.

@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/depinject v1.2.1
 	cosmossdk.io/log v1.6.0
 	github.com/cespare/xxhash/v2 v2.3.0
-	github.com/cosmos/cosmos-sdk v0.53.0
+	github.com/cosmos/cosmos-sdk v0.54.0-alpha.0.0.20250611155041-9fa93c9afe32
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/spf13/cobra v1.9.1
@@ -158,17 +158,4 @@ require (
 	nhooyr.io/websocket v1.8.6 // indirect
 	pgregory.net/rapid v1.2.0 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
-)
-
-// Replace all unreleased direct deps upgraded to comet v1
-replace (
-	cosmossdk.io/api => ../../api
-	cosmossdk.io/core => ../../core
-	github.com/cosmos/cosmos-sdk => ../..
-)
-
-// Replace all unreleased indirect deps upgraded to comet v1
-replace (
-	cosmossdk.io/store => ../../store
-	cosmossdk.io/x/tx => ../../x/tx
 )

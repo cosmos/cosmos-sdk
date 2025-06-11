@@ -218,9 +218,6 @@ require (
 // Here are the short-lived replace from the Cosmos SDK
 // Replace here are pending PRs, or version to be tagged
 
-// Replace all unreleased direct deps upgraded to comet v1
-replace cosmossdk.io/collections => ./collections
-
 // Below are the long-lived replace of the Cosmos SDK
 replace (
 	// use cosmos fork of keyring

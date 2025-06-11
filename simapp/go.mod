@@ -4,13 +4,13 @@ go 1.23.5
 
 require (
 	cosmossdk.io/api v1.0.0-alpha.1
-	cosmossdk.io/client/v2 v2.0.0-00010101000000-000000000000
+	cosmossdk.io/client/v2 v2.10.0-beta.4
 	cosmossdk.io/core v1.1.0-alpha.2
 	cosmossdk.io/depinject v1.2.1
 	cosmossdk.io/log v1.6.0
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/store v1.3.0-alpha.1
-	cosmossdk.io/tools/confix v0.0.0-00010101000000-000000000000
+	cosmossdk.io/tools/confix v0.2.0-rc.4
 	cosmossdk.io/x/tx v1.2.0-alpha.1
 	github.com/cometbft/cometbft/api v1.1.0-alpha.1.0.20250611063609-4e308d824f1f
 	github.com/cometbft/cometbft/v2 v2.0.0-alpha.1
@@ -219,12 +219,6 @@ require (
 // replace (
 // 	<temporary replace>
 // )
-
-// Replace all unreleased direct deps upgraded to comet v1
-replace (
-	cosmossdk.io/client/v2 => ../client/v2
-	cosmossdk.io/tools/confix => ../tools/confix
-)
 
 // Below are the long-lived replace of the SimApp
 replace (

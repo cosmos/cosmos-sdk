@@ -124,8 +124,8 @@ github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb/go.mod h1:
 github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd/go.mod h1:sE/e/2PUdi/liOCUjSTXgM1o87ZssimdTWN964YiIeI=
 github.com/cometbft/cometbft-db v1.0.4 h1:cezb8yx/ZWcF124wqUtAFjAuDksS1y1yXedvtprUFxs=
 github.com/cometbft/cometbft-db v1.0.4/go.mod h1:M+BtHAGU2XLrpUxo3Nn1nOCcnVCiLM9yx5OuT0u5SCA=
-github.com/cometbft/cometbft/api v1.1.0-alpha.1 h1:QTHyLVEoFc2kh3uRwHb3HLfGXJ8kxrIaPPGtt7synGY=
-github.com/cometbft/cometbft/api v1.1.0-alpha.1/go.mod h1:Ivh6nSCTJPQOyfQo8dgnyu/T88it092sEqSrZSmTQN8=
+github.com/cometbft/cometbft/api v1.1.0-alpha.1.0.20250611063609-4e308d824f1f h1:xVCNN5smIjz+EoEnBpV1+rlqeHFPoSyonelPevBMGW8=
+github.com/cometbft/cometbft/api v1.1.0-alpha.1.0.20250611063609-4e308d824f1f/go.mod h1:Ivh6nSCTJPQOyfQo8dgnyu/T88it092sEqSrZSmTQN8=
 github.com/cometbft/cometbft/v2 v2.0.0-alpha.1 h1:9dcfa578PqWGoUxFKB/yfZW5ovVcl4nj/wtqf4h1bwo=
 github.com/cometbft/cometbft/v2 v2.0.0-alpha.1/go.mod h1:/ze08eO171CqUqTqAE7FW7ydUJIVkgp6e2svpYvIR3c=
 github.com/containerd/continuity v0.3.0 h1:nisirsYROK15TAMVukJOUyGJjz4BNQJBVsNvAXZJ/eg=

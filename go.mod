@@ -18,8 +18,8 @@ require (
 	github.com/chzyer/readline v1.5.1
 	github.com/cockroachdb/apd/v2 v2.0.2
 	github.com/cockroachdb/errors v1.12.0
-	github.com/cometbft/cometbft/api v1.1.0-alpha.1
-	github.com/cometbft/cometbft/v2 v2.0.0-alpha.1
+	github.com/cometbft/cometbft/api v1.1.0-alpha.1.0.20250611063609-4e308d824f1f
+	github.com/cometbft/cometbft/v2 v2.0.0-20250611063609-4e308d824f1f
 	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/cosmos-db v1.1.3
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5

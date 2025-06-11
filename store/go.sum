@@ -52,8 +52,8 @@ github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb h1:3bCgBvB
 github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb/go.mod h1:7nc4anLGjupUW/PeY5qiNYsdNXj7zopG+eqsS7To5IQ=
 github.com/cometbft/cometbft/api v1.1.0-alpha.1 h1:QTHyLVEoFc2kh3uRwHb3HLfGXJ8kxrIaPPGtt7synGY=
 github.com/cometbft/cometbft/api v1.1.0-alpha.1/go.mod h1:Ivh6nSCTJPQOyfQo8dgnyu/T88it092sEqSrZSmTQN8=
-github.com/cometbft/cometbft/v2 v2.0.0-alpha.1 h1:9dcfa578PqWGoUxFKB/yfZW5ovVcl4nj/wtqf4h1bwo=
-github.com/cometbft/cometbft/v2 v2.0.0-alpha.1/go.mod h1:/ze08eO171CqUqTqAE7FW7ydUJIVkgp6e2svpYvIR3c=
+github.com/cometbft/cometbft/v2 v2.0.0-20250611063609-4e308d824f1f h1:Gy5kTSwgwCMc5S/xjEc75ogN3worBYkTMscpCmVv3uM=
+github.com/cometbft/cometbft/v2 v2.0.0-20250611063609-4e308d824f1f/go.mod h1:/ze08eO171CqUqTqAE7FW7ydUJIVkgp6e2svpYvIR3c=
 github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=
 github.com/cosmos/cosmos-db v1.1.3 h1:7QNT77+vkefostcKkhrzDK9uoIEryzFrU9eoMeaQOPY=
 github.com/cosmos/cosmos-db v1.1.3/go.mod h1:kN+wGsnwUJZYn8Sy5Q2O0vCYA99MJllkKASbs6Unb9U=

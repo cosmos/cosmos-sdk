@@ -74,21 +74,6 @@ func addUpgrade(cfg *cosmovisor.Config, force bool, upgradeHeight int64, upgrade
 	return plan, nil
 }
 
-// GetConfig returns a Config using passed-in flag
-// TODO we should make sure getConfigFromCmd gets used by call commands, it seems like some commands do this differently
-func getConfigFromCmd(cmd *cobra.Command) (*cosmovisor.Config, error) {
-	configPath, err := cmd.Flags().GetString(cosmovisor.FlagCosmovisorConfig)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get config flag: %w", err)
-	}
-
-	cfg, err := cosmovisor.GetConfigFromFile(configPath)
-	if err != nil {
-		return nil, err
-	}
-	return cfg, nil
-}
-
 // addUpgradeCmd parses input flags and adds upgrade info to manifest
 func addUpgradeCmd(cmd *cobra.Command, args []string) error {
 	cfg, err := getConfigFromCmd(cmd)

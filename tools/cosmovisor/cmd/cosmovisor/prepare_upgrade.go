@@ -12,7 +12,6 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"cosmossdk.io/tools/cosmovisor"
 	"cosmossdk.io/tools/cosmovisor/internal"
 
 	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
@@ -35,14 +34,9 @@ gRPC must be enabled on the node for this command to work.`,
 }
 
 func prepareUpgradeHandler(cmd *cobra.Command, _ []string) error {
-	configPath, err := cmd.Flags().GetString(cosmovisor.FlagCosmovisorConfig)
+	cfg, err := getConfigFromCmd(cmd)
 	if err != nil {
-		return fmt.Errorf("failed to get config flag: %w", err)
-	}
-
-	cfg, err := cosmovisor.GetConfigFromFile(configPath)
-	if err != nil {
-		return fmt.Errorf("failed to get config: %w", err)
+		return err
 	}
 
 	logger := cfg.Logger(cmd.OutOrStdout())

@@ -174,11 +174,22 @@ func (s *SystemUnderTest) SetupChain() {
 }
 
 func (s *SystemUnderTest) StartChain(t *testing.T, xargs ...string) {
+	s.doStartChain(t, false, xargs...)
+}
+
+func (s *SystemUnderTest) StartChainWithCosmovisor(t *testing.T, xargs ...string) {
+	s.doStartChain(t, true, xargs...)
+}
+
+func (s *SystemUnderTest) doStartChain(t *testing.T, useCosmovisor bool, xargs ...string) {
 	t.Helper()
+	if useCosmovisor {
+		s.initCosmovisor(t)
+	}
 	s.Log("Start chain\n")
 	s.ChainStarted = true
 	// HACK: force db_backend
-	s.startNodesAsync(t, append([]string{"start", "--log_level=info", "--log_no_color", "--db_backend=goleveldb"}, xargs...)...)
+	s.startNodesAsync(t, useCosmovisor, append([]string{"start", "--log_level=info", "--log_no_color", "--db_backend=goleveldb"}, xargs...)...)
 
 	s.AwaitNodeUp(t, s.rpcAddr)
 
@@ -193,6 +204,32 @@ func (s *SystemUnderTest) StartChain(t *testing.T, xargs ...string) {
 		}),
 	)
 	s.AwaitNextBlock(t, 10e9)
+}
+
+func (s *SystemUnderTest) cosmovisorEnv(t *testing.T, home string) []string {
+	absHome, err := filepath.Abs(home)
+	require.NoError(t, err)
+	return []string{
+		fmt.Sprintf("DAEMON_HOME=%s", absHome),
+		fmt.Sprintf("DAEMON_NAME=%s", s.projectName),
+	}
+}
+
+func (s *SystemUnderTest) initCosmovisor(t *testing.T) {
+	s.withEachNodeHome(func(i int, home string) {
+		env := s.cosmovisorEnv(t, home)
+		binary := locateExecutable(s.execBinary)
+		t.Logf("Initializing Cosmovisor for node %d with binary %s and env %+v", i, binary, env)
+		cmd := exec.Command(
+			"cosmovisor",
+			"init",
+			binary,
+		)
+		cmd.Dir = WorkDir
+		cmd.Env = env
+		s.watchLogs(i, cmd)
+		require.NoError(t, cmd.Run(), "cosmovisor init %d", i)
+	})
 }
 
 // MarkDirty whole chain will be reset when marked dirty
@@ -591,16 +628,30 @@ func RunShellCmd(cmd string, args ...string) (string, error) {
 }
 
 // startNodesAsync runs the given app cli command for all cluster nodes and returns without waiting
-func (s *SystemUnderTest) startNodesAsync(t *testing.T, xargs ...string) {
+func (s *SystemUnderTest) startNodesAsync(t *testing.T, useCosmovisor bool, xargs ...string) {
 	t.Helper()
 	s.withEachNodeHome(func(i int, home string) {
-		args := append(xargs, "--home="+home)
+		absHome, err := filepath.Abs(home)
+		require.NoError(t, err, "failed to get absolute home path")
+		args := append(xargs, "--home="+absHome)
+		var binary string
+		var env []string
+		if useCosmovisor {
+			binary = "cosmovisor"
+			args = append([]string{"run"}, args...) // cosmovisor run <args>
+			cfgPath := filepath.Join(absHome, "cosmovisor", "config.toml")
+			args = append(args, "--cosmovisor-config", cfgPath)
+			env = s.cosmovisorEnv(t, absHome)
+		} else {
+			binary = locateExecutable(s.execBinary)
+		}
 		s.Logf("Execute `%s %s`\n", s.execBinary, strings.Join(args, " "))
 		cmd := exec.Command( //nolint:gosec // used by tests only
-			locateExecutable(s.execBinary),
+			binary,
 			args...,
 		)
 		cmd.Dir = WorkDir
+		cmd.Env = env
 		s.watchLogs(i, cmd)
 		require.NoError(t, cmd.Start(), "node %d", i)
 		s.Logf("Node started: %d\n", cmd.Process.Pid)

@@ -1,41 +1,35 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
-
-	"cosmossdk.io/tools/cosmovisor"
 )
 
-func NewShowUpgradeInfoCmd() *cobra.Command {
+func NewShowManualUpgradesCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:          "show-upgrade-info",
-		Short:        "Display current upgrade-info.json from <app> data directory",
+		Use:          "show-manual-upgrades",
+		Short:        "Display planned manual upgrades",
 		SilenceUsage: false,
 		Args:         cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			configPath, err := cmd.Flags().GetString(cosmovisor.FlagCosmovisorConfig)
-			if err != nil {
-				return fmt.Errorf("failed to get config flag: %w", err)
-			}
-
-			cfg, err := cosmovisor.GetConfigFromFile(configPath)
+			cfg, err := getConfigFromCmd(cmd)
 			if err != nil {
 				return err
 			}
 
-			data, err := os.ReadFile(cfg.UpgradeInfoFilePath())
+			data, err := cfg.ReadManualUpgrades()
 			if err != nil {
-				if os.IsNotExist(err) {
-					cmd.Printf("No upgrade info found at %s\n", cfg.UpgradeInfoFilePath())
-					return nil
-				}
-				return fmt.Errorf("failed to read upgrade-info.json: %w", err)
+				return fmt.Errorf("failed to read upgrade-info.json.batch: %w", err)
 			}
 
-			cmd.Println(string(data))
+			bz, err := json.MarshalIndent(data, "", "  ")
+			if err != nil {
+				return fmt.Errorf("failed to marshal manual upgrade info as json: %w", err)
+			}
+
+			cmd.Println(string(bz))
 			return nil
 		},
 	}

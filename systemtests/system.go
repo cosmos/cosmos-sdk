@@ -215,21 +215,29 @@ func (s *SystemUnderTest) cosmovisorEnv(t *testing.T, home string) []string {
 	}
 }
 
-func (s *SystemUnderTest) initCosmovisor(t *testing.T) {
+func (s *SystemUnderTest) ExecCosmovisor(t *testing.T, async bool, args ...string) {
 	s.withEachNodeHome(func(i int, home string) {
 		env := s.cosmovisorEnv(t, home)
-		binary := locateExecutable(s.execBinary)
-		t.Logf("Initializing Cosmovisor for node %d with binary %s and env %+v", i, binary, env)
+		t.Logf("Calling Cosmovisor with args %+v and env %+v", args, env)
 		cmd := exec.Command(
 			"cosmovisor",
-			"init",
-			binary,
+			args...,
 		)
 		cmd.Dir = WorkDir
 		cmd.Env = env
 		s.watchLogs(i, cmd)
-		require.NoError(t, cmd.Run(), "cosmovisor init %d", i)
+		if async {
+			require.NoError(t, cmd.Start(), "cosmovisor init %d", i)
+			s.awaitProcessCleanup(cmd)
+		} else {
+			require.NoError(t, cmd.Run(), "cosmovisor init %d", i)
+		}
 	})
+}
+
+func (s *SystemUnderTest) initCosmovisor(t *testing.T) {
+	binary := locateExecutable(s.execBinary)
+	s.ExecCosmovisor(t, false, "init", binary)
 }
 
 // MarkDirty whole chain will be reset when marked dirty

@@ -6,7 +6,7 @@ require (
 	cosmossdk.io/log v1.6.0
 	github.com/cometbft/cometbft-db v1.0.4
 	github.com/cometbft/cometbft/v2 v2.0.0-alpha.1
-	github.com/cosmos/cosmos-sdk v0.53.0
+	github.com/cosmos/cosmos-sdk v0.54.0-alpha.0.0.20250611155041-9fa93c9afe32
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/otiai10/copy v1.14.1
 	github.com/pelletier/go-toml/v2 v2.2.4
@@ -25,15 +25,15 @@ require (
 	cloud.google.com/go/iam v1.3.1 // indirect
 	cloud.google.com/go/monitoring v1.22.1 // indirect
 	cloud.google.com/go/storage v1.50.0 // indirect
-	cosmossdk.io/api v0.9.2 // indirect
+	cosmossdk.io/api v1.0.0-alpha.1 // indirect
 	cosmossdk.io/collections v1.2.1 // indirect
-	cosmossdk.io/core v1.0.0 // indirect
+	cosmossdk.io/core v1.1.0-alpha.2 // indirect
 	cosmossdk.io/depinject v1.2.1 // indirect
 	cosmossdk.io/errors v1.0.2 // indirect
 	cosmossdk.io/math v1.5.3 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
-	cosmossdk.io/store v1.1.2 // indirect
-	cosmossdk.io/x/tx v0.14.0 // indirect
+	cosmossdk.io/store v1.3.0-alpha.1 // indirect
+	cosmossdk.io/x/tx v1.2.0-alpha.1 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
@@ -201,15 +201,4 @@ require (
 	nhooyr.io/websocket v1.8.11 // indirect
 	pgregory.net/rapid v1.2.0 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
-)
-
-// Replace all unreleased direct deps upgraded to comet v1
-replace github.com/cosmos/cosmos-sdk => ../..
-
-// Replace all unreleased indirect deps upgraded to comet v1
-replace (
-	cosmossdk.io/api => ../../api
-	cosmossdk.io/core => ../../core
-	cosmossdk.io/store => ../../store
-	cosmossdk.io/x/tx => ../../x/tx
 )

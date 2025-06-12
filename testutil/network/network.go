@@ -20,6 +20,7 @@ import (
 	"github.com/cometbft/cometbft/v2/node"
 	cmtclient "github.com/cometbft/cometbft/v2/rpc/client"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
@@ -478,7 +479,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			mnemonic = cfg.Mnemonics[i]
 		}
 
-		nodeID, pubKey, err := genutil.InitializeNodeValidatorFilesFromMnemonic(cmtCfg, mnemonic)
+		nodeID, pubKey, err := genutil.InitializeNodeValidatorFilesFromMnemonic(cmtCfg, mnemonic, ed25519.PrivKeyName)
 		if err != nil {
 			return nil, err
 		}

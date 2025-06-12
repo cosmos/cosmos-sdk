@@ -47,7 +47,7 @@ var (
 )
 
 type TestnetInitializer interface {
-	Initialize(xargs ...string)
+	Initialize()
 }
 
 // SystemUnderTest blockchain provisioning
@@ -80,7 +80,7 @@ type SystemUnderTest struct {
 	chainID  string
 }
 
-func NewSystemUnderTest(execBinary string, verbose bool, nodesCount int, blockTime time.Duration, chainID string, initer ...TestnetInitializer) *SystemUnderTest {
+func NewSystemUnderTest(execBinary string, verbose bool, nodesCount int, blockTime time.Duration, initer ...TestnetInitializer) *SystemUnderTest {
 	if execBinary == "" {
 		panic("executable binary name must not be empty")
 	}
@@ -90,7 +90,7 @@ func NewSystemUnderTest(execBinary string, verbose bool, nodesCount int, blockTi
 	}
 	execBinary = filepath.Join(WorkDir, "binaries", execBinary)
 	s := &SystemUnderTest{
-		chainID:           chainID,
+		chainID:           "testing",
 		execBinary:        execBinary,
 		outputDir:         "./testnet",
 		blockTime:         blockTime,
@@ -139,12 +139,12 @@ func (s *SystemUnderTest) CommitTimeout() time.Duration {
 	return time.Duration((int64(s.blockTime) * 90) / 100) // leave 10% for all other operations
 }
 
-func (s *SystemUnderTest) SetupChain(initArgs ...string) {
+func (s *SystemUnderTest) SetupChain() {
 	s.Logf("Setup chain: %s\n", s.outputDir)
 	if err := os.RemoveAll(filepath.Join(WorkDir, s.outputDir)); err != nil {
 		panic(err.Error())
 	}
-	s.testnetInitializer.Initialize(initArgs...)
+	s.testnetInitializer.Initialize()
 	s.nodesCount = s.initialNodesCount
 
 	// modify genesis with system test defaults
@@ -174,10 +174,22 @@ func (s *SystemUnderTest) SetupChain(initArgs ...string) {
 }
 
 func (s *SystemUnderTest) StartChain(t *testing.T, xargs ...string) {
+	s.doStartChain(t, false, xargs...)
+}
+
+func (s *SystemUnderTest) StartChainWithCosmovisor(t *testing.T, xargs ...string) {
+	s.doStartChain(t, true, xargs...)
+}
+
+func (s *SystemUnderTest) doStartChain(t *testing.T, useCosmovisor bool, xargs ...string) {
 	t.Helper()
+	if useCosmovisor {
+		s.initCosmovisor(t)
+	}
 	s.Log("Start chain\n")
 	s.ChainStarted = true
-	s.startNodesAsync(t, append([]string{"start", "--log_level=info", "--log_no_color"}, xargs...)...)
+	// HACK: force db_backend
+	s.startNodesAsync(t, useCosmovisor, append([]string{"start", "--log_level=info", "--log_no_color", "--db_backend=goleveldb"}, xargs...)...)
 
 	s.AwaitNodeUp(t, s.rpcAddr)
 
@@ -192,6 +204,32 @@ func (s *SystemUnderTest) StartChain(t *testing.T, xargs ...string) {
 		}),
 	)
 	s.AwaitNextBlock(t, 10e9)
+}
+
+func (s *SystemUnderTest) cosmovisorEnv(t *testing.T, home string) []string {
+	absHome, err := filepath.Abs(home)
+	require.NoError(t, err)
+	return []string{
+		fmt.Sprintf("DAEMON_HOME=%s", absHome),
+		fmt.Sprintf("DAEMON_NAME=%s", s.projectName),
+	}
+}
+
+func (s *SystemUnderTest) initCosmovisor(t *testing.T) {
+	s.withEachNodeHome(func(i int, home string) {
+		env := s.cosmovisorEnv(t, home)
+		binary := locateExecutable(s.execBinary)
+		t.Logf("Initializing Cosmovisor for node %d with binary %s and env %+v", i, binary, env)
+		cmd := exec.Command(
+			"cosmovisor",
+			"init",
+			binary,
+		)
+		cmd.Dir = WorkDir
+		cmd.Env = env
+		s.watchLogs(i, cmd)
+		require.NoError(t, cmd.Run(), "cosmovisor init %d", i)
+	})
 }
 
 // MarkDirty whole chain will be reset when marked dirty
@@ -298,7 +336,7 @@ func (s *SystemUnderTest) AwaitNodeUp(t *testing.T, rpcAddr string) {
 	go func() { // query for a non empty block on status page
 		t.Logf("Checking node status: %s\n", rpcAddr)
 		for {
-			con, err := client.New(rpcAddr, "/websocket")
+			con, err := client.New(rpcAddr)
 			if err != nil || con.Start() != nil {
 				time.Sleep(time.Second)
 				continue
@@ -313,13 +351,11 @@ func (s *SystemUnderTest) AwaitNodeUp(t *testing.T, rpcAddr string) {
 			started <- struct{}{}
 		}
 	}()
-	timer := time.NewTimer(timeout)
-	defer timer.Stop()
 	select {
 	case <-started:
 	case <-ctx.Done():
 		require.NoError(t, ctx.Err())
-	case <-timer.C:
+	case <-time.NewTimer(timeout).C:
 		t.Fatalf("timeout waiting for node start: %s", timeout)
 	}
 }
@@ -404,9 +440,7 @@ func (s *SystemUnderTest) AwaitBlockHeight(t *testing.T, targetHeight int64, tim
 	} else {
 		maxWaitTime = time.Duration(targetHeight-s.currentHeight.Load()+4) * s.blockTime
 	}
-	timer := time.NewTimer(maxWaitTime)
-	defer timer.Stop()
-	abort := timer.C
+	abort := time.NewTimer(maxWaitTime).C
 	for {
 		select {
 		case <-abort:
@@ -436,12 +470,10 @@ func (s *SystemUnderTest) AwaitNextBlock(t *testing.T, timeout ...time.Duration)
 		done <- s.currentHeight.Load()
 		close(done)
 	}()
-	timer := time.NewTimer(maxWaitTime)
-	defer timer.Stop()
 	select {
 	case v := <-done:
 		return v
-	case <-timer.C:
+	case <-time.NewTimer(maxWaitTime).C:
 		t.Fatalf("Timeout - no block within %s", maxWaitTime)
 		return -1
 	}
@@ -596,16 +628,30 @@ func RunShellCmd(cmd string, args ...string) (string, error) {
 }
 
 // startNodesAsync runs the given app cli command for all cluster nodes and returns without waiting
-func (s *SystemUnderTest) startNodesAsync(t *testing.T, xargs ...string) {
+func (s *SystemUnderTest) startNodesAsync(t *testing.T, useCosmovisor bool, xargs ...string) {
 	t.Helper()
 	s.withEachNodeHome(func(i int, home string) {
-		args := append(xargs, "--home="+home)
+		absHome, err := filepath.Abs(home)
+		require.NoError(t, err, "failed to get absolute home path")
+		args := append(xargs, "--home="+absHome)
+		var binary string
+		var env []string
+		if useCosmovisor {
+			binary = "cosmovisor"
+			args = append([]string{"run"}, args...) // cosmovisor run <args>
+			cfgPath := filepath.Join(absHome, "cosmovisor", "config.toml")
+			args = append(args, "--cosmovisor-config", cfgPath)
+			env = s.cosmovisorEnv(t, absHome)
+		} else {
+			binary = locateExecutable(s.execBinary)
+		}
 		s.Logf("Execute `%s %s`\n", s.execBinary, strings.Join(args, " "))
 		cmd := exec.Command( //nolint:gosec // used by tests only
-			locateExecutable(s.execBinary),
+			binary,
 			args...,
 		)
 		cmd.Dir = WorkDir
+		cmd.Env = env
 		s.watchLogs(i, cmd)
 		require.NoError(t, cmd.Start(), "node %d", i)
 		s.Logf("Node started: %d\n", cmd.Process.Pid)
@@ -760,6 +806,7 @@ func (s *SystemUnderTest) AddFullnode(t *testing.T, beforeStart ...func(nodeNumb
 		"--log_level=info",
 		"--log_no_color",
 		"--home", nodePath,
+		"--db_backend", "goleveldb", // HACK: force db_backend
 	}
 	s.Logf("Execute `%s %s`\n", s.execBinary, strings.Join(args, " "))
 	cmd = exec.Command( //nolint:gosec // used by tests only
@@ -856,7 +903,7 @@ type EventListener struct {
 // NewEventListener event listener
 func NewEventListener(t *testing.T, rpcAddr string) *EventListener {
 	t.Helper()
-	httpClient, err := client.New(rpcAddr, "/websocket")
+	httpClient, err := client.New(rpcAddr)
 	require.NoError(t, err)
 	require.NoError(t, httpClient.Start())
 	return &EventListener{client: httpClient, t: t}
@@ -870,7 +917,7 @@ type (
 )
 
 // Subscribe to receive events for a topic. Does not block.
-// For query syntax See https://docs.cosmos.network/v0.46/core/events.html#subscribing-to-events
+// For query syntax See https://docs.cosmos.network/master/core/events.html#subscribing-to-events
 func (l *EventListener) Subscribe(query string, cb EventConsumer) func() {
 	ctx, done := context.WithCancel(context.Background())
 	l.t.Cleanup(done)
@@ -892,7 +939,7 @@ func (l *EventListener) Subscribe(query string, cb EventConsumer) func() {
 }
 
 // AwaitQuery blocks and waits for a single result or timeout. This can be used with `broadcast-mode=async`.
-// For query syntax See https://docs.cosmos.network/v0.46/core/events.html#subscribing-to-events
+// For query syntax See https://docs.cosmos.network/master/core/events.html#subscribing-to-events
 func (l *EventListener) AwaitQuery(query string, optMaxWaitTime ...time.Duration) *ctypes.ResultEvent {
 	c, result := CaptureSingleEventConsumer()
 	maxWaitTime := DefaultWaitTime
@@ -911,7 +958,6 @@ func TimeoutConsumer(t *testing.T, maxWaitTime time.Duration, next EventConsumer
 	ctx, done := context.WithCancel(context.Background())
 	t.Cleanup(done)
 	timeout := time.NewTimer(maxWaitTime)
-	t.Cleanup(func() { timeout.Stop() })
 	timedOut := make(chan struct{}, 1)
 	go func() {
 		select {
@@ -927,13 +973,6 @@ func TimeoutConsumer(t *testing.T, maxWaitTime time.Duration, next EventConsumer
 			t.Fatalf("Timeout waiting for new events %s", maxWaitTime)
 			return false
 		default:
-			if !timeout.Stop() {
-				// Drain the channel if the timer already fired
-				select {
-				case <-timeout.C:
-				default:
-				}
-			}
 			timeout.Reset(maxWaitTime)
 			result := next(e)
 			if !result {

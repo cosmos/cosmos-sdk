@@ -85,12 +85,14 @@ func (r Runner) Start(ctx context.Context, args []string) error {
 		// 3. Any other error or the: this is an unexpected error that should trigger a restart of the process with a backoff strategy.
 		var restartNeeded ErrRestartNeeded
 		if ok := errors.As(err, &restartNeeded); ok {
-			r.logger.Info("Restart needed")
+			r.logger.Info("Process shutdown complete, restart needed")
 		} else if errors.Is(err, errDone) {
+			r.logger.Info("Shutting down Cosmovisor process gracefully")
 			return nil
+		} else if err != nil {
+			r.logger.Error("Process exited with error, attempting to restart", "error", err)
 		} else {
-			// TODO we should capture this error and it should get returned if retry max restarts is reached
-			r.logger.Error("Process exited", "error", err)
+			r.logger.Info("Process exited without error, restarting")
 		}
 	}
 }

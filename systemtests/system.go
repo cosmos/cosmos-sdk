@@ -224,8 +224,8 @@ func (s *SystemUnderTest) ExecCosmovisor(t *testing.T, async bool, args ...strin
 			args...,
 		)
 		cmd.Dir = WorkDir
+		env = append(env, "COSMOVISOR_COLOR_LOGS=false")
 		cmd.Env = env
-		s.watchLogs(i, cmd)
 		if async {
 			require.NoError(t, cmd.Start(), "cosmovisor init %d", i)
 			s.awaitProcessCleanup(cmd)

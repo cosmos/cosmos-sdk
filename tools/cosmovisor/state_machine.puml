@@ -1,0 +1,67 @@
+@startuml
+
+[*] -> ComputeRunPlan
+
+
+state UpgradeIfNeeded {
+    state ReadUpgradeInfo {
+    }
+    state ReadManualUpgradeBatch {
+    }
+    ReadUpgradeInfo --> ReadManualUpgradeBatch
+    ReadManualUpgradeBatch --> ReadLatestHeight
+}
+
+UpgradeIfNeeded --> ComputeRunPlan
+
+state ComputeRunPlan {
+    state ReadManualUpgradeBatch {
+    }
+    ReadManualUpgradeBatch --> ReadLatestHeight
+}
+
+ComputeRunPlan --> RunProcess
+
+state RunProcess {
+}
+
+'ReadUpgradeInfo --> DoUpgrade: have upgrade-info.json
+'ReadLatestHeight --> RunWithHaltHeight: have manual-upgrade-batch.json
+'ReadLatestHeight --> Error: have unapplied upgrades before current height?
+'ReadManualUpgradeBatch --> Run: no manual-upgrade-batch.json
+'
+''ReadUpgradeInfo --> DoUpgrade: have upgrade-info.json
+''ComputeRunPlan --> Run
+''ComputeRunPlan --> RunWithHaltHeight
+''
+'state DoUpgrade {
+'    DoBackup --> CustomPreUpgrade
+'    CustomPreUpgrade --> SwitchToNewBinary
+'    SwitchToNewBinary --> RunPreUpgrade
+'    RunPreUpgrade --> ComputeRunPlan
+'}
+''
+'state Run {
+'    state ConfirmDesiredHaltHeight {
+'    }
+'    ConfirmDesiredHaltHeight --> WatchForSignals: true
+'    state WatchForSignals {
+'    }
+'}
+'
+'WatchForSignals --> CheckHaveUpgrade: got upgrade-info.json
+'
+'state CheckHaveUpgrade {
+'    CheckSkipUpgradeHeight --> Run
+'}
+'
+'CheckSkipUpgradeHeight --> ShutdownNode
+'ConfirmDesiredHaltHeight --> ShutdownNode: false
+'
+'state ShutdownNode {
+'    SendShutdownSignal --> WaitForShutdown
+'}
+'
+'WaitForShutdown --> ComputeRunPlan
+'
+@enduml

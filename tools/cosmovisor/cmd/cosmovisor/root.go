@@ -19,7 +19,7 @@ func NewRootCmd() *cobra.Command {
 		configCmd,
 		NewVersionCmd(),
 		NewAddUpgradeCmd(),
-		NewShowUpgradeInfoCmd(),
+		NewShowManualUpgradesCmd(),
 		NewBatchAddUpgradeCmd(),
 		NewPrepareUpgradeCmd(),
 	)

@@ -21,6 +21,7 @@ import (
 	cmtclient "github.com/cometbft/cometbft/v2/rpc/client"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
+
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 

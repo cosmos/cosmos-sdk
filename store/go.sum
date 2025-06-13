@@ -50,10 +50,10 @@ github.com/cockroachdb/redact v1.1.6 h1:zXJBwDZ84xJNlHl1rMyCojqyIxv+7YUpQiJLQ7n4
 github.com/cockroachdb/redact v1.1.6/go.mod h1:BVNblN9mBWFyMyqK1k3AAiSxhvhfK2oOZZ2lK+dpvRg=
 github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb h1:3bCgBvB8PbJVMX1ouCcSIxvsqKPYM7gs72o0zC76n9g=
 github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb/go.mod h1:7nc4anLGjupUW/PeY5qiNYsdNXj7zopG+eqsS7To5IQ=
-github.com/cometbft/cometbft/api v1.1.0-alpha.1 h1:QTHyLVEoFc2kh3uRwHb3HLfGXJ8kxrIaPPGtt7synGY=
-github.com/cometbft/cometbft/api v1.1.0-alpha.1/go.mod h1:Ivh6nSCTJPQOyfQo8dgnyu/T88it092sEqSrZSmTQN8=
-github.com/cometbft/cometbft/v2 v2.0.0-20250611063609-4e308d824f1f h1:Gy5kTSwgwCMc5S/xjEc75ogN3worBYkTMscpCmVv3uM=
-github.com/cometbft/cometbft/v2 v2.0.0-20250611063609-4e308d824f1f/go.mod h1:/ze08eO171CqUqTqAE7FW7ydUJIVkgp6e2svpYvIR3c=
+github.com/cometbft/cometbft/api v1.1.0-rc1 h1:NdlXfp4wialMwJ+1ds1DBtfysdxErUxg8/AaqgT0ifQ=
+github.com/cometbft/cometbft/api v1.1.0-rc1/go.mod h1:Ivh6nSCTJPQOyfQo8dgnyu/T88it092sEqSrZSmTQN8=
+github.com/cometbft/cometbft/v2 v2.0.0-rc1 h1:3QyDHTFzH3a1N6c2jt03kFDCxM/hgUvhzDYBVnPVXY8=
+github.com/cometbft/cometbft/v2 v2.0.0-rc1/go.mod h1:/ze08eO171CqUqTqAE7FW7ydUJIVkgp6e2svpYvIR3c=
 github.com/coreos/go-systemd/v22 v22.5.0/go.mod h1:Y58oyj3AT4RCenI/lSvhwexgC+NSVTIJ3seZv2GcEnc=
 github.com/cosmos/cosmos-db v1.1.3 h1:7QNT77+vkefostcKkhrzDK9uoIEryzFrU9eoMeaQOPY=
 github.com/cosmos/cosmos-db v1.1.3/go.mod h1:kN+wGsnwUJZYn8Sy5Q2O0vCYA99MJllkKASbs6Unb9U=

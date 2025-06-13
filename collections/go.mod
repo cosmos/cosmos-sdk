@@ -52,3 +52,6 @@ require (
 retract v1.0.0
 
 retract v1.1.0
+
+// early tag for v0.54.0
+retract v1.3.0

@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/go-bip39"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
@@ -48,7 +49,7 @@ func ExportGenesisFileWithTime(genFile, chainID string, validators []cmttypes.Ge
 
 // InitializeNodeValidatorFiles creates private validator and p2p configuration files. Key type is ed25519.
 func InitializeNodeValidatorFiles(config *cfg.Config) (nodeID string, valPubKey cryptotypes.PubKey, err error) {
-	return InitializeNodeValidatorFilesFromMnemonic(config, "")
+	return InitializeNodeValidatorFilesWithKeyType(config, ed25519.KeyType)
 }
 
 // InitializeNodeValidatorFilesFromMnemonic creates private validator and p2p configuration files using the given mnemonic.

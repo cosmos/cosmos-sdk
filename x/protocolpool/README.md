@@ -18,12 +18,12 @@ The following `x/distribution` handlers will now return an error when the `proto
 
 **QueryService**
 
-- `CommunityPool`
+* `CommunityPool`
 
 **MsgService**
 
-- `CommunityPoolSpend`
-- `FundCommunityPool`
+* `CommunityPoolSpend`
+* `FundCommunityPool`
 
 If you have services that rely on this functionality from `x/distribution`, please update them to use the `x/protocolpool` equivalents.
 
@@ -124,9 +124,9 @@ https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/proto/cosmos/protocolp
 
 The message will fail under the following conditions:
 
-- The recipient address is empty or restricted.
-- The percentage is zero/negative/greater than one.
-- The Expiry time is less than the current block time.
+* The recipient address is empty or restricted.
+* The percentage is zero/negative/greater than one.
+* The Expiry time is less than the current block time.
 
 :::warning
 If two continuous fund proposals to the same address are created, the previous ContinuousFund will be updated with the new ContinuousFund.
@@ -146,8 +146,8 @@ https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/x/protocolpool/proto/c
 
 The message will fail under the following conditions:
 
-- The recipient address is empty or restricted.
-- The ContinuousFund for the recipient does not exist.
+* The recipient address is empty or restricted.
+* The ContinuousFund for the recipient does not exist.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/x/protocolpool/keeper/msg_server.go#L188-L226

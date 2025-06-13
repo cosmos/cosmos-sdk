@@ -81,7 +81,7 @@ func (s Store) Delete(key []byte) {
 }
 
 // Iterator implements KVStore
-// Check https://github.com/cometbft/cometbft/blob/master/libs/db/prefix_db.go#L106
+// Check https://github.com/cometbft/cometbft/v2/blob/master/libs/db/prefix_db.go#L106
 func (s Store) Iterator(start, end []byte) types.Iterator {
 	newStart := cloneAppend(s.prefix, start)
 
@@ -98,7 +98,7 @@ func (s Store) Iterator(start, end []byte) types.Iterator {
 }
 
 // ReverseIterator implements KVStore
-// Check https://github.com/cometbft/cometbft/blob/master/libs/db/prefix_db.go#L129
+// Check https://github.com/cometbft/cometbft/v2/blob/master/libs/db/prefix_db.go#L129
 func (s Store) ReverseIterator(start, end []byte) types.Iterator {
 	newstart := cloneAppend(s.prefix, start)
 
@@ -192,7 +192,7 @@ func (pi *prefixIterator) Error() error {
 	return nil
 }
 
-// stripPrefix is copied from github.com/cometbft/cometbft/libs/db/prefix_db.go
+// stripPrefix is copied from github.com/cometbft/cometbft/v2/libs/db/prefix_db.go
 func stripPrefix(key, prefix []byte) []byte {
 	if len(key) < len(prefix) || !bytes.Equal(key[:len(prefix)], prefix) {
 		panic("should not happen")

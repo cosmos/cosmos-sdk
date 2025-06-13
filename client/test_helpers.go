@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cometbft/cometbft/libs/bytes"
-	rpcclient "github.com/cometbft/cometbft/rpc/client"
-	"github.com/cometbft/cometbft/rpc/client/mock"
-	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-	cmttypes "github.com/cometbft/cometbft/types"
+	"github.com/cometbft/cometbft/v2/libs/bytes"
+	rpcclient "github.com/cometbft/cometbft/v2/rpc/client"
+	"github.com/cometbft/cometbft/v2/rpc/client/mock"
+	coretypes "github.com/cometbft/cometbft/v2/rpc/core/types"
+	cmttypes "github.com/cometbft/cometbft/v2/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"

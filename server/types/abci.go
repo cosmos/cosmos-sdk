@@ -3,7 +3,7 @@ package types
 import (
 	"context"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
 )
 
 // ABCI is an interface that enables any finite, deterministic state machine

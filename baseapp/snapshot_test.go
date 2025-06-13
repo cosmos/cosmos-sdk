@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
 	"github.com/stretchr/testify/require"
 
 	pruningtypes "cosmossdk.io/store/pruning/types"

@@ -195,6 +195,7 @@ Messages that have a custom encoding, including `google.protobuf.Timestamp`, `go
 #### Examples
 
 Message header screen is stripped, one-level of indentation removed:
+
 ```
 /cosmos.gov.v1.Vote
 > Proposal id: 4
@@ -210,6 +211,7 @@ Message header screen is stripped, one-level of indentation removed:
 ```
 
 Message with custom encoding:
+
 ```
 /cosmos.base.v1beta1.Coin
 > 10uatom
@@ -271,8 +273,9 @@ Examples:
 * The hexadecimal string is finally separated into groups of 4 digits, with a space `' '` as separator. If the bytes length is odd, the 2 remaining hexadecimal characters are at the end.
 
 The number 35 was chosen because it is the longest length where the hashed-and-prefixed representation is longer than the original data directly formatted, using the 3 rules above. More specifically:
-- a 35-byte array will have 70 hex characters, plus 17 space characters, resulting in 87 characters.
-- byte arrays starting from length 36 will be be hashed to 32 bytes, which is 64 hex characters plus 15 spaces, and with the `SHA-256=` prefix, it takes 87 characters.
+
+* a 35-byte array will have 70 hex characters, plus 17 space characters, resulting in 87 characters.
+* byte arrays starting from length 36 will be be hashed to 32 bytes, which is 64 hex characters plus 15 spaces, and with the `SHA-256=` prefix, it takes 87 characters.
 Also, secp256k1 public keys have length 33, so their Textual representation is not their hashed value, which we would like to avoid.
 
 Note: Data longer than 35 bytes are not rendered in a way that can be inverted. See ADR-050's [section about invertability](./adr-050-sign-mode-textual.md#invertible-rendering) for a discussion.

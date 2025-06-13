@@ -7,8 +7,8 @@ import (
 	"io"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
+	rpcclientmock "github.com/cometbft/cometbft/v2/rpc/client/mock"
 	"github.com/stretchr/testify/suite"
 
 	// without this import amino json encoding will fail when resolving any types

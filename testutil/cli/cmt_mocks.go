@@ -3,12 +3,12 @@ package cli
 import (
 	"context"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	cmtbytes "github.com/cometbft/cometbft/libs/bytes"
-	rpcclient "github.com/cometbft/cometbft/rpc/client"
-	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
-	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-	cmttypes "github.com/cometbft/cometbft/types"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
+	cmtbytes "github.com/cometbft/cometbft/v2/libs/bytes"
+	rpcclient "github.com/cometbft/cometbft/v2/rpc/client"
+	rpcclientmock "github.com/cometbft/cometbft/v2/rpc/client/mock"
+	coretypes "github.com/cometbft/cometbft/v2/rpc/core/types"
+	cmttypes "github.com/cometbft/cometbft/v2/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 )

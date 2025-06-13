@@ -12,7 +12,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	gogotypes "github.com/cosmos/gogoproto/types"
@@ -627,6 +627,10 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 				if storeInfos[key.Name()] {
 					return nil, err
 				}
+
+				// If the store donesn't exist at this version, create a dummy one to prevent
+				// nil pointer panic in newer query APIs.
+				cacheStore = dbadapter.Store{DB: dbm.NewMemDB()}
 			}
 
 		default:

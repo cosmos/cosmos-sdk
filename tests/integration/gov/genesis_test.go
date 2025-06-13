@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"gotest.tools/v3/assert"
 

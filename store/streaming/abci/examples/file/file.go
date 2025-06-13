@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
 	"github.com/hashicorp/go-plugin"
 
 	streamingabci "cosmossdk.io/store/streaming/abci"

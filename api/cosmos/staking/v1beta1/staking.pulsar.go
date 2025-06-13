@@ -3,8 +3,8 @@ package stakingv1beta1
 
 import (
 	_ "cosmossdk.io/api/amino"
-	v11 "cosmossdk.io/api/cometbft/abci/v1"
-	v1 "cosmossdk.io/api/cometbft/types/v1"
+	v21 "cosmossdk.io/api/cometbft/abci/v2"
+	v2 "cosmossdk.io/api/cometbft/types/v2"
 	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
@@ -247,7 +247,7 @@ func (x *fastReflection_HistoricalInfo) Get(descriptor protoreflect.FieldDescrip
 func (x *fastReflection_HistoricalInfo) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "cosmos.staking.v1beta1.HistoricalInfo.header":
-		x.Header = value.Message().Interface().(*v1.Header)
+		x.Header = value.Message().Interface().(*v2.Header)
 	case "cosmos.staking.v1beta1.HistoricalInfo.valset":
 		lv := value.List()
 		clv := lv.(*_HistoricalInfo_2_list)
@@ -274,7 +274,7 @@ func (x *fastReflection_HistoricalInfo) Mutable(fd protoreflect.FieldDescriptor)
 	switch fd.FullName() {
 	case "cosmos.staking.v1beta1.HistoricalInfo.header":
 		if x.Header == nil {
-			x.Header = new(v1.Header)
+			x.Header = new(v2.Header)
 		}
 		return protoreflect.ValueOfMessage(x.Header.ProtoReflect())
 	case "cosmos.staking.v1beta1.HistoricalInfo.valset":
@@ -297,7 +297,7 @@ func (x *fastReflection_HistoricalInfo) Mutable(fd protoreflect.FieldDescriptor)
 func (x *fastReflection_HistoricalInfo) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "cosmos.staking.v1beta1.HistoricalInfo.header":
-		m := new(v1.Header)
+		m := new(v2.Header)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "cosmos.staking.v1beta1.HistoricalInfo.valset":
 		list := []*Validator{}
@@ -519,7 +519,7 @@ func (x *fastReflection_HistoricalInfo) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.Header == nil {
-					x.Header = &v1.Header{}
+					x.Header = &v2.Header{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Header); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -12188,7 +12188,7 @@ func (x *fastReflection_Pool) ProtoMethods() *protoiface.Methods {
 var _ protoreflect.List = (*_ValidatorUpdates_1_list)(nil)
 
 type _ValidatorUpdates_1_list struct {
-	list *[]*v11.ValidatorUpdate
+	list *[]*v21.ValidatorUpdate
 }
 
 func (x *_ValidatorUpdates_1_list) Len() int {
@@ -12204,18 +12204,18 @@ func (x *_ValidatorUpdates_1_list) Get(i int) protoreflect.Value {
 
 func (x *_ValidatorUpdates_1_list) Set(i int, value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*v11.ValidatorUpdate)
+	concreteValue := valueUnwrapped.Interface().(*v21.ValidatorUpdate)
 	(*x.list)[i] = concreteValue
 }
 
 func (x *_ValidatorUpdates_1_list) Append(value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*v11.ValidatorUpdate)
+	concreteValue := valueUnwrapped.Interface().(*v21.ValidatorUpdate)
 	*x.list = append(*x.list, concreteValue)
 }
 
 func (x *_ValidatorUpdates_1_list) AppendMutable() protoreflect.Value {
-	v := new(v11.ValidatorUpdate)
+	v := new(v21.ValidatorUpdate)
 	*x.list = append(*x.list, v)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
@@ -12228,7 +12228,7 @@ func (x *_ValidatorUpdates_1_list) Truncate(n int) {
 }
 
 func (x *_ValidatorUpdates_1_list) NewElement() protoreflect.Value {
-	v := new(v11.ValidatorUpdate)
+	v := new(v21.ValidatorUpdate)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
@@ -12421,7 +12421,7 @@ func (x *fastReflection_ValidatorUpdates) Mutable(fd protoreflect.FieldDescripto
 	switch fd.FullName() {
 	case "cosmos.staking.v1beta1.ValidatorUpdates.updates":
 		if x.Updates == nil {
-			x.Updates = []*v11.ValidatorUpdate{}
+			x.Updates = []*v21.ValidatorUpdate{}
 		}
 		value := &_ValidatorUpdates_1_list{list: &x.Updates}
 		return protoreflect.ValueOfList(value)
@@ -12439,7 +12439,7 @@ func (x *fastReflection_ValidatorUpdates) Mutable(fd protoreflect.FieldDescripto
 func (x *fastReflection_ValidatorUpdates) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "cosmos.staking.v1beta1.ValidatorUpdates.updates":
-		list := []*v11.ValidatorUpdate{}
+		list := []*v21.ValidatorUpdate{}
 		return protoreflect.ValueOfList(&_ValidatorUpdates_1_list{list: &list})
 	default:
 		if fd.IsExtension() {
@@ -12639,7 +12639,7 @@ func (x *fastReflection_ValidatorUpdates) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Updates = append(x.Updates, &v11.ValidatorUpdate{})
+				x.Updates = append(x.Updates, &v21.ValidatorUpdate{})
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Updates[len(x.Updates)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
@@ -12811,7 +12811,7 @@ type HistoricalInfo struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Header *v1.Header   `protobuf:"bytes,1,opt,name=header,proto3" json:"header,omitempty"`
+	Header *v2.Header   `protobuf:"bytes,1,opt,name=header,proto3" json:"header,omitempty"`
 	Valset []*Validator `protobuf:"bytes,2,rep,name=valset,proto3" json:"valset,omitempty"`
 }
 
@@ -12835,7 +12835,7 @@ func (*HistoricalInfo) Descriptor() ([]byte, []int) {
 	return file_cosmos_staking_v1beta1_staking_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *HistoricalInfo) GetHeader() *v1.Header {
+func (x *HistoricalInfo) GetHeader() *v2.Header {
 	if x != nil {
 		return x.Header
 	}
@@ -13998,7 +13998,7 @@ type ValidatorUpdates struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Updates []*v11.ValidatorUpdate `protobuf:"bytes,1,rep,name=updates,proto3" json:"updates,omitempty"`
+	Updates []*v21.ValidatorUpdate `protobuf:"bytes,1,rep,name=updates,proto3" json:"updates,omitempty"`
 }
 
 func (x *ValidatorUpdates) Reset() {
@@ -14021,7 +14021,7 @@ func (*ValidatorUpdates) Descriptor() ([]byte, []int) {
 	return file_cosmos_staking_v1beta1_staking_proto_rawDescGZIP(), []int{20}
 }
 
-func (x *ValidatorUpdates) GetUpdates() []*v11.ValidatorUpdate {
+func (x *ValidatorUpdates) GetUpdates() []*v21.ValidatorUpdate {
 	if x != nil {
 		return x.Updates
 	}
@@ -14048,13 +14048,13 @@ var file_cosmos_staking_v1beta1_staking_proto_rawDesc = []byte{
 	0x2f, 0x63, 0x6f, 0x69, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x11, 0x61, 0x6d, 0x69,
 	0x6e, 0x6f, 0x2f, 0x61, 0x6d, 0x69, 0x6e, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1d,
 	0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2f, 0x76,
-	0x31, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1c, 0x63,
-	0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2f, 0x61, 0x62, 0x63, 0x69, 0x2f, 0x76, 0x31, 0x2f,
+	0x32, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1c, 0x63,
+	0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2f, 0x61, 0x62, 0x63, 0x69, 0x2f, 0x76, 0x32, 0x2f,
 	0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x94, 0x01, 0x0a, 0x0e,
 	0x48, 0x69, 0x73, 0x74, 0x6f, 0x72, 0x69, 0x63, 0x61, 0x6c, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x3c,
 	0x0a, 0x06, 0x68, 0x65, 0x61, 0x64, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19,
 	0x2e, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2e, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e,
-	0x76, 0x31, 0x2e, 0x48, 0x65, 0x61, 0x64, 0x65, 0x72, 0x42, 0x09, 0xc8, 0xde, 0x1f, 0x00, 0xa8,
+	0x76, 0x32, 0x2e, 0x48, 0x65, 0x61, 0x64, 0x65, 0x72, 0x42, 0x09, 0xc8, 0xde, 0x1f, 0x00, 0xa8,
 	0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x06, 0x68, 0x65, 0x61, 0x64, 0x65, 0x72, 0x12, 0x44, 0x0a, 0x06,
 	0x76, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x63,
 	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x61, 0x6b, 0x69, 0x6e, 0x67, 0x2e, 0x76, 0x31,
@@ -14388,7 +14388,7 @@ var file_cosmos_staking_v1beta1_staking_proto_rawDesc = []byte{
 	0x1f, 0x01, 0x22, 0x5a, 0x0a, 0x10, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x55,
 	0x70, 0x64, 0x61, 0x74, 0x65, 0x73, 0x12, 0x46, 0x0a, 0x07, 0x75, 0x70, 0x64, 0x61, 0x74, 0x65,
 	0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62,
-	0x66, 0x74, 0x2e, 0x61, 0x62, 0x63, 0x69, 0x2e, 0x76, 0x31, 0x2e, 0x56, 0x61, 0x6c, 0x69, 0x64,
+	0x66, 0x74, 0x2e, 0x61, 0x62, 0x63, 0x69, 0x2e, 0x76, 0x32, 0x2e, 0x56, 0x61, 0x6c, 0x69, 0x64,
 	0x61, 0x74, 0x6f, 0x72, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x42, 0x09, 0xc8, 0xde, 0x1f, 0x00,
 	0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x07, 0x75, 0x70, 0x64, 0x61, 0x74, 0x65, 0x73, 0x2a, 0xb6,
 	0x01, 0x0a, 0x0a, 0x42, 0x6f, 0x6e, 0x64, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x2c, 0x0a,
@@ -14463,15 +14463,15 @@ var file_cosmos_staking_v1beta1_staking_proto_goTypes = []interface{}{
 	(*RedelegationResponse)(nil),      // 20: cosmos.staking.v1beta1.RedelegationResponse
 	(*Pool)(nil),                      // 21: cosmos.staking.v1beta1.Pool
 	(*ValidatorUpdates)(nil),          // 22: cosmos.staking.v1beta1.ValidatorUpdates
-	(*v1.Header)(nil),                 // 23: cometbft.types.v1.Header
+	(*v2.Header)(nil),                 // 23: cometbft.types.v2.Header
 	(*timestamppb.Timestamp)(nil),     // 24: google.protobuf.Timestamp
 	(*anypb.Any)(nil),                 // 25: google.protobuf.Any
 	(*durationpb.Duration)(nil),       // 26: google.protobuf.Duration
 	(*v1beta1.Coin)(nil),              // 27: cosmos.base.v1beta1.Coin
-	(*v11.ValidatorUpdate)(nil),       // 28: cometbft.abci.v1.ValidatorUpdate
+	(*v21.ValidatorUpdate)(nil),       // 28: cometbft.abci.v2.ValidatorUpdate
 }
 var file_cosmos_staking_v1beta1_staking_proto_depIdxs = []int32{
-	23, // 0: cosmos.staking.v1beta1.HistoricalInfo.header:type_name -> cometbft.types.v1.Header
+	23, // 0: cosmos.staking.v1beta1.HistoricalInfo.header:type_name -> cometbft.types.v2.Header
 	6,  // 1: cosmos.staking.v1beta1.HistoricalInfo.valset:type_name -> cosmos.staking.v1beta1.Validator
 	3,  // 2: cosmos.staking.v1beta1.Commission.commission_rates:type_name -> cosmos.staking.v1beta1.CommissionRates
 	24, // 3: cosmos.staking.v1beta1.Commission.update_time:type_name -> google.protobuf.Timestamp
@@ -14492,7 +14492,7 @@ var file_cosmos_staking_v1beta1_staking_proto_depIdxs = []int32{
 	15, // 18: cosmos.staking.v1beta1.RedelegationEntryResponse.redelegation_entry:type_name -> cosmos.staking.v1beta1.RedelegationEntry
 	16, // 19: cosmos.staking.v1beta1.RedelegationResponse.redelegation:type_name -> cosmos.staking.v1beta1.Redelegation
 	19, // 20: cosmos.staking.v1beta1.RedelegationResponse.entries:type_name -> cosmos.staking.v1beta1.RedelegationEntryResponse
-	28, // 21: cosmos.staking.v1beta1.ValidatorUpdates.updates:type_name -> cometbft.abci.v1.ValidatorUpdate
+	28, // 21: cosmos.staking.v1beta1.ValidatorUpdates.updates:type_name -> cometbft.abci.v2.ValidatorUpdate
 	22, // [22:22] is the sub-list for method output_type
 	22, // [22:22] is the sub-list for method input_type
 	22, // [22:22] is the sub-list for extension type_name

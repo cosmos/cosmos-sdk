@@ -161,7 +161,9 @@ func (b *Builder) BuildMsgMethodCommand(descriptor protoreflect.MethodDescriptor
 		// Here we use dynamicpb, to create a proto v1 compatible message.
 		// The SDK codec will handle protov2 -> protov1 (marshal)
 		msg := dynamicpb.NewMessage(input.Descriptor())
-		proto.Merge(msg, input.Interface())
+		if err := cloneMessage(msg, input); err != nil {
+			return fmt.Errorf("failed to clone message: %w", err)
+		}
 
 		return clienttx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 	}
@@ -217,11 +219,23 @@ func (b *Builder) handleGovProposal(
 	// Here we use dynamicpb, to create a proto v1 compatible message.
 	// The SDK codec will handle protov2 -> protov1 (marshal)
 	msg := dynamicpb.NewMessage(input.Descriptor())
-	proto.Merge(msg, input.Interface())
+	if err := cloneMessage(msg, input); err != nil {
+		return fmt.Errorf("failed to clone message: %w", err)
+	}
 
 	if err := proposal.SetMsgs([]gogoproto.Message{msg}); err != nil {
 		return fmt.Errorf("failed to set msg in proposal %w", err)
 	}
 
 	return clienttx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), proposal)
+}
+
+// cloneMessage safely copies fields from src message to dst message.
+// this avoids the proto.Merge issue with field descriptors from different repositories.
+func cloneMessage(dst, src protoreflect.Message) error {
+	bz, err := proto.Marshal(src.Interface())
+	if err != nil {
+		return err
+	}
+	return proto.Unmarshal(bz, dst.Interface())
 }

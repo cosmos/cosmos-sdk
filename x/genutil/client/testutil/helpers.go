@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	cmtcfg "github.com/cometbft/cometbft/config"
+	cmtcfg "github.com/cometbft/cometbft/v2/config"
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/log"

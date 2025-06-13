@@ -153,7 +153,7 @@ func (r Runner) RunProcess(ctx context.Context, cmd *exec.Cmd, haltHeight uint64
 	defer cancel()
 
 	// start watchers for upgrade plans, manual upgrades and height updates
-	eh := watchers.LoggerErrorHandler(r.logger)
+	eh := watchers.DebugLoggerErrorHandler(r.logger)
 	upgradePlanWatcher := watchers.InitFileWatcher[upgradetypes.Plan](ctx, eh, r.cfg.PollInterval, dirWatcher, r.cfg.UpgradeInfoFilePath(), r.cfg.ParseUpgradeInfo)
 	manualUpgradesWatcher := watchers.InitFileWatcher[cosmovisor.ManualUpgradeBatch](ctx, eh, r.cfg.PollInterval, dirWatcher, r.cfg.UpgradeInfoBatchFilePath(), r.cfg.ParseManualUpgrades)
 	heightChecker := watchers.NewHTTPRPCBLockChecker(r.cfg.RPCAddress, r.logger)

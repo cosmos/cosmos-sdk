@@ -23,7 +23,7 @@ func TestDataWatcher(t *testing.T) {
 	filename := filepath.Join(dir, "testfile.json")
 
 	ctx, cancel := context.WithCancel(context.Background())
-	eh := LoggerErrorHandler(log.NewTestLogger(t))
+	eh := DebugLoggerErrorHandler(log.NewTestLogger(t))
 	pollWatcher := NewFilePollWatcher(ctx, eh, filename, time.Millisecond*100)
 	dataWatcher := NewDataWatcher[TestData](ctx, eh, pollWatcher, func(contents []byte) (TestData, error) {
 		var data TestData

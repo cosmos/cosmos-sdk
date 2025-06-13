@@ -21,21 +21,22 @@ type ErrorHandler interface {
 	Warn(msg string, err error)
 }
 
-type loggerErrorHandler struct {
+type debugLoggerErrorHandler struct {
 	logger log.Logger
 }
 
-func (h *loggerErrorHandler) Error(msg string, err error) {
-	h.logger.Error(msg, "error", err)
-}
-
-func (h *loggerErrorHandler) Warn(msg string, err error) {
+func (h *debugLoggerErrorHandler) Error(msg string, err error) {
 	h.logger.Warn(msg, "error", err)
 }
 
-// LoggerErrorHandler returns an ErrorHandler that logs errors and warnings using the provided logger.
-func LoggerErrorHandler(logger log.Logger) ErrorHandler {
-	return &loggerErrorHandler{logger: logger}
+func (h *debugLoggerErrorHandler) Warn(msg string, err error) {
+	h.logger.Debug(msg, "error", err)
+}
+
+// DebugLoggerErrorHandler returns an ErrorHandler that logs errors and warnings using the provided logger,
+// but downgrades errors to warnings and warnings to debug logs.
+func DebugLoggerErrorHandler(logger log.Logger) ErrorHandler {
+	return &debugLoggerErrorHandler{logger: logger}
 }
 
 // InitFileWatcher initializes a file watcher which uses either both fsnotify and polling (hybrid watcher) or just polling,

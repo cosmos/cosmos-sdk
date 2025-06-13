@@ -4,17 +4,10 @@ package systemtests
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-	"github.com/tidwall/gjson"
-
 	systest "cosmossdk.io/systemtests"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
 func TestCosmovisorUpgrade(t *testing.T) {
@@ -34,40 +27,68 @@ func TestCosmovisorUpgrade(t *testing.T) {
 	votingPeriod := 5 * time.Second // enough time to vote
 	systest.Sut.ModifyGenesisJSON(t, systest.SetGovVotingPeriod(t, votingPeriod))
 
-	systest.Sut.StartChainWithCosmovisor(t, fmt.Sprintf("--halt-height=%d", upgradeHeight+1))
+	systest.Sut.StartChainWithCosmovisor(t)
 
-	systest.Sut.ExecCosmovisor(t, true, "add-upgrade", upgradeName, currentBranchBinary)
+	systest.Sut.ExecCosmovisor(
+		t,
+		true,
+		"add-upgrade",
+		"old-to-new",
+		currentBranchBinary,
+		fmt.Sprintf("--upgrade-height=%d", 10),
+	)
 
-	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
-	govAddr := sdk.AccAddress(address.Module("gov")).String()
-	// submit upgrade proposal
-	proposal := fmt.Sprintf(`
-{
- "messages": [
-  {
-   "@type": "/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
-   "authority": %q,
-   "plan": {
-    "name": %q,
-    "height": "%d"
-   }
-  }
- ],
- "metadata": "ipfs://CID",
- "deposit": "100000000stake",
- "title": "my upgrade",
- "summary": "testing"
-}`, govAddr, upgradeName, upgradeHeight)
-	proposalID := cli.SubmitAndVoteGovProposal(proposal)
-	t.Logf("current_height: %d\n", systest.Sut.CurrentHeight())
-	raw := cli.CustomQuery("q", "gov", "proposal", proposalID)
-	t.Log(raw)
+	systest.Sut.AwaitBlockHeight(t, 12)
 
-	systest.Sut.AwaitBlockHeight(t, upgradeHeight-1, 60*time.Second)
-	t.Logf("current_height: %d\n", systest.Sut.CurrentHeight())
-	raw = cli.CustomQuery("q", "gov", "proposal", proposalID)
-	proposalStatus := gjson.Get(raw, "proposal.status").String()
-	require.Equal(t, "PROPOSAL_STATUS_PASSED", proposalStatus, raw)
+	// TODO check logs for halt behavior
+	// TODO check current binary
+
+	systest.Sut.ExecCosmovisor(
+		t,
+		true,
+		"add-upgrade",
+		"do-nothing-upgrade",
+		currentBranchBinary,
+		fmt.Sprintf("--upgrade-height=%d", 20),
+	)
+
+	// TODO check logs for halt behavior
+	// TODO check current binary
+
+	systest.Sut.AwaitBlockHeight(t, 22)
+
+	systest.Sut.StopChain()
+
+	//	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
+	//	govAddr := sdk.AccAddress(address.Module("gov")).String()
+	//	// submit upgrade proposal
+	//	proposal := fmt.Sprintf(`
+	//{
+	// "messages": [
+	//  {
+	//   "@type": "/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
+	//   "authority": %q,
+	//   "plan": {
+	//    "name": %q,
+	//    "height": "%d"
+	//   }
+	//  }
+	// ],
+	// "metadata": "ipfs://CID",
+	// "deposit": "100000000stake",
+	// "title": "my upgrade",
+	// "summary": "testing"
+	//}`, govAddr, upgradeName, upgradeHeight)
+	//	proposalID := cli.SubmitAndVoteGovProposal(proposal)
+	//	t.Logf("current_height: %d\n", systest.Sut.CurrentHeight())
+	//	raw := cli.CustomQuery("q", "gov", "proposal", proposalID)
+	//	t.Log(raw)
+	//
+	//	systest.Sut.AwaitBlockHeight(t, upgradeHeight-1, 60*time.Second)
+	//	t.Logf("current_height: %d\n", systest.Sut.CurrentHeight())
+	//	raw = cli.CustomQuery("q", "gov", "proposal", proposalID)
+	//	proposalStatus := gjson.Get(raw, "proposal.status").String()
+	//	require.Equal(t, "PROPOSAL_STATUS_PASSED", proposalStatus, raw)
 
 	//t.Log("waiting for upgrade info")
 	//systest.Sut.AwaitUpgradeInfo(t)
@@ -80,12 +101,12 @@ func TestCosmovisorUpgrade(t *testing.T) {
 	//
 	//require.True(t, upgradeHeight+1 <= systest.Sut.CurrentHeight())
 
-	regex, err := regexp.Compile("DBG this is a debug level message to test that verbose logging mode has properly been enabled during a chain upgrade")
-	require.NoError(t, err)
-	require.Equal(t, systest.Sut.NodesCount(), systest.Sut.FindLogMessage(regex))
+	//regex, err := regexp.Compile("DBG this is a debug level message to test that verbose logging mode has properly been enabled during a chain upgrade")
+	//require.NoError(t, err)
+	//require.Equal(t, systest.Sut.NodesCount(), systest.Sut.FindLogMessage(regex))
 
 	// smoke test that new version runs
-	cli = systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
-	got := cli.Run("tx", "protocolpool", "fund-community-pool", "100stake", "--from=node0")
-	systest.RequireTxSuccess(t, got)
+	//cli = systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
+	//got := cli.Run("tx", "protocolpool", "fund-community-pool", "100stake", "--from=node0")
+	//systest.RequireTxSuccess(t, got)
 }

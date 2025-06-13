@@ -37,7 +37,7 @@ func CollectGenTxsCmd(genBalIterator types.GenesisBalancesIterator, defaultNodeH
 
 			config.SetRoot(clientCtx.HomeDir)
 
-			nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(config, consensusKey)
+			nodeID, valPubKey, err := genutil.InitializeNodeValidatorFilesWithKeyType(config, consensusKey)
 			if err != nil {
 				return errors.Wrap(err, "failed to initialize node validator files")
 			}

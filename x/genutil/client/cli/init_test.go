@@ -237,7 +237,7 @@ func TestInitNodeValidatorFiles(t *testing.T) {
 	cfg, err := genutiltest.CreateDefaultCometConfig(home)
 	require.NoError(t, err)
 
-	nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(cfg, "ed25519")
+	nodeID, valPubKey, err := genutil.InitializeNodeValidatorFilesWithKeyType(cfg, "ed25519")
 	require.NoError(t, err)
 
 	require.NotEqual(t, "", nodeID)

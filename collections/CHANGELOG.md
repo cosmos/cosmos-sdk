@@ -31,11 +31,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-### Improvements
+## [v1.3.1](https://github.com/cosmos/cosmos-sdk/releases/tag/collections%2Fv1.3.1)
 
-* [#24524](https://github.com/cosmos/cosmos-sdk/pull/24524) Make use of exported iterator from dbm.
-
-## [v1.2.1](https://github.com/cosmos/cosmos-sdk/releases/tag/collections%2Fv1.2.1)
+* Prep for Cosmos SDK v0.54.0
 
 ## Bug Fixes
 

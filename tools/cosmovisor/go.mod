@@ -5,7 +5,7 @@ go 1.23.5
 require (
 	cosmossdk.io/log v1.6.0
 	github.com/cometbft/cometbft-db v1.0.4
-	github.com/cometbft/cometbft/v2 v2.0.0-alpha.1
+	github.com/cometbft/cometbft/v2 v2.0.0-rc1
 	github.com/cosmos/cosmos-sdk v0.54.0-alpha.0.0.20250611155041-9fa93c9afe32
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/otiai10/copy v1.14.1
@@ -59,7 +59,7 @@ require (
 	github.com/cockroachdb/pebble v1.1.5 // indirect
 	github.com/cockroachdb/redact v1.1.6 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb // indirect
-	github.com/cometbft/cometbft/api v1.1.0-alpha.1.0.20250611063609-4e308d824f1f // indirect
+	github.com/cometbft/cometbft/api v1.1.0-rc1 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.1.3 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect

@@ -20,7 +20,7 @@ require (
 require (
 	cosmossdk.io/api v1.0.0-rc.1 // indirect
 	cosmossdk.io/collections v1.3.1 // indirect
-	cosmossdk.io/core v1.1.0-alpha.2 // indirect
+	cosmossdk.io/core v1.1.0-rc.1 // indirect
 	cosmossdk.io/depinject v1.2.1 // indirect
 	cosmossdk.io/errors v1.0.2 // indirect
 	cosmossdk.io/log v1.6.0 // indirect

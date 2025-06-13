@@ -12,7 +12,7 @@ import (
 )
 
 func NewHTTPRPCBLockChecker(baseUrl string, logger log.Logger) HeightChecker {
-	return httpRPCBlockChecker{
+	return &httpRPCBlockChecker{
 		baseUrl: baseUrl,
 		logger:  logger,
 	}
@@ -24,7 +24,7 @@ type httpRPCBlockChecker struct {
 	logger  log.Logger
 }
 
-func (j httpRPCBlockChecker) GetLatestBlockHeight() (uint64, error) {
+func (j *httpRPCBlockChecker) GetLatestBlockHeight() (uint64, error) {
 	if j.subUrl != "" {
 		return j.getLatestBlockHeight(j.subUrl)
 	}
@@ -48,7 +48,7 @@ func (j httpRPCBlockChecker) GetLatestBlockHeight() (uint64, error) {
 	return 0, fmt.Errorf("failed to get latest block height from both /block and /v1/block RPC endpoints: %w", errors.Join(err1, err2))
 }
 
-func (j httpRPCBlockChecker) getLatestBlockHeight(subUrl string) (uint64, error) {
+func (j *httpRPCBlockChecker) getLatestBlockHeight(subUrl string) (uint64, error) {
 	url := j.baseUrl + subUrl
 	res, err := http.Get(url)
 	if err != nil {
@@ -64,7 +64,7 @@ func (j httpRPCBlockChecker) getLatestBlockHeight(subUrl string) (uint64, error)
 	return getHeightFromRPCBlockResponse(bz)
 }
 
-var _ HeightChecker = httpRPCBlockChecker{}
+var _ HeightChecker = &httpRPCBlockChecker{}
 
 type Header struct {
 	Height string `json:"height"`

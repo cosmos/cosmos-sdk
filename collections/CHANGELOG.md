@@ -35,6 +35,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * Prep for Cosmos SDK v0.54.0
 
+## [v1.2.1](https://github.com/cosmos/cosmos-sdk/releases/tag/collections%2Fv1.2.1)
+
 ## Bug Fixes
 
 * [#24737](https://github.com/cosmos/cosmos-sdk/pull/24737) Ensure that map memory will never be reused unintentionally.

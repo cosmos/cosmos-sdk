@@ -94,6 +94,12 @@ func addUpgradeCmd(cmd *cobra.Command, args []string) error {
 	}
 
 	plan, err := addUpgrade(cfg, force, upgradeHeight, upgradeName, executablePath)
+	if err != nil {
+		return err
+	}
+	if plan == nil {
+		return nil // No plan to add
+	}
 	return cfg.AddManualUpgrades(force, plan)
 }
 

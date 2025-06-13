@@ -7,7 +7,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+	"github.com/tidwall/gjson"
+
 	systest "cosmossdk.io/systemtests"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
 func TestCosmovisorUpgrade(t *testing.T) {
@@ -29,35 +34,67 @@ func TestCosmovisorUpgrade(t *testing.T) {
 
 	systest.Sut.StartChainWithCosmovisor(t)
 
+	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
+	govAddr := sdk.AccAddress(address.Module("gov")).String()
+	// submit upgrade proposal
+	proposal := fmt.Sprintf(`
+	{
+	"messages": [
+	 {
+	  "@type": "/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
+	  "authority": %q,
+	  "plan": {
+	   "name": %q,
+	   "height": "%d"
+	  }
+	 }
+	],
+	"metadata": "ipfs://CID",
+	"deposit": "100000000stake",
+	"title": "my upgrade",
+	"summary": "testing"
+	}`, govAddr, upgradeName, upgradeHeight)
+	proposalID := cli.SubmitAndVoteGovProposal(proposal)
+
+	// add manual upgrade
 	systest.Sut.ExecCosmovisor(
 		t,
 		true,
 		"add-upgrade",
-		"old-to-new",
+		"manual1",
 		currentBranchBinary,
 		fmt.Sprintf("--upgrade-height=%d", 10),
 	)
 
-	systest.Sut.AwaitBlockHeight(t, 12)
-
-	// TODO check logs for halt behavior
-	// TODO check current binary
-
+	// add binary for gov upgrade
 	systest.Sut.ExecCosmovisor(
 		t,
 		true,
 		"add-upgrade",
-		"do-nothing-upgrade",
+		upgradeName,
 		currentBranchBinary,
-		fmt.Sprintf("--upgrade-height=%d", 20),
 	)
+
+	systest.Sut.AwaitBlockHeight(t, upgradeHeight-1, 60*time.Second)
+
+	t.Logf("current_height: %d\n", systest.Sut.CurrentHeight())
+	raw := cli.CustomQuery("q", "gov", "proposal", proposalID)
+	proposalStatus := gjson.Get(raw, "proposal.status").String()
+	require.Equal(t, "PROPOSAL_STATUS_PASSED", proposalStatus, raw)
 
 	// TODO check logs for halt behavior
 	// TODO check current binary
 
-	systest.Sut.AwaitBlockHeight(t, 22)
+	systest.Sut.AwaitBlockHeight(t, upgradeHeight+1)
+	// TODO check logs for halt behavior
+	// TODO check current binary
 
-	systest.Sut.StopChain()
+	// smoke test that new version runs
+	cli = systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
+	got := cli.Run("tx", "protocolpool", "fund-community-pool", "100stake", "--from=node0")
+	systest.RequireTxSuccess(t, got)
+
+	//systest.Sut.StopChain()
 
 	//	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 	//	govAddr := sdk.AccAddress(address.Module("gov")).String()

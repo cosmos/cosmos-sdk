@@ -47,7 +47,8 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
-			Service: feegrantv1beta1.Msg_ServiceDesc.ServiceName,
+			Service:              feegrantv1beta1.Msg_ServiceDesc.ServiceName,
+			EnhanceCustomCommand: true,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "RevokeAllowance",
@@ -68,7 +69,6 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Example:   fmt.Sprintf(`$ %s tx feegrant prune --from [mykey]`, version.AppName),
 				},
 			},
-			EnhanceCustomCommand: true,
 		},
 	}
 }

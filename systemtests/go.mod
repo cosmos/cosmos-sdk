@@ -5,7 +5,7 @@ go 1.23.5
 require (
 	cosmossdk.io/math v1.5.3
 	github.com/cometbft/cometbft/v2 v2.0.0-rc1
-	github.com/cosmos/cosmos-sdk v0.54.0-alpha.0.0.20250611155041-9fa93c9afe32
+	github.com/cosmos/cosmos-sdk v0.54.0-rc.1
 	github.com/creachadair/tomledit v0.0.28
 	github.com/stretchr/testify v1.10.0
 	github.com/tidwall/gjson v1.18.0

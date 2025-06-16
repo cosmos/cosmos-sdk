@@ -1,7 +1,7 @@
-cosmossdk.io/api v1.0.0-alpha.1 h1:PvH11RPE2m65jnq4vdZfVZ/PSyX8P3VDvrHdW4Y31as=
-cosmossdk.io/api v1.0.0-alpha.1/go.mod h1:8YOT+XjVFb9eZJk62YqjFILOm8MlLhbnkC9/jxIYri8=
-cosmossdk.io/depinject v1.2.0 h1:6NW/FSK1IkWTrX7XxUpBmX1QMBozpEI9SsWkKTBc5zw=
-cosmossdk.io/depinject v1.2.0/go.mod h1:pvitjtUxZZZTQESKNS9KhGjWVslJZxtO9VooRJYyPjk=
+cosmossdk.io/api v1.0.0-rc.1 h1:KwZHIMveoeg6YVwvKZxJLp7be5uk6qmnqNAar2tPxVU=
+cosmossdk.io/api v1.0.0-rc.1/go.mod h1:8YOT+XjVFb9eZJk62YqjFILOm8MlLhbnkC9/jxIYri8=
+cosmossdk.io/depinject v1.2.1 h1:eD6FxkIjlVaNZT+dXTQuwQTKZrFZ4UrfCq1RKgzyhMw=
+cosmossdk.io/depinject v1.2.1/go.mod h1:lqQEycz0H2JXqvOgVwTsjEdMI0plswI7p6KX+MVqFOM=
 cosmossdk.io/math v1.5.3 h1:WH6tu6Z3AUCeHbeOSHg2mt9rnoiUWVWaQ2t6Gkll96U=
 cosmossdk.io/math v1.5.3/go.mod h1:uqcZv7vexnhMFJF+6zh9EWdm/+Ylyln34IvPnBauPCQ=
 github.com/DataDog/zstd v1.5.7 h1:ybO8RBeh29qrxIhCA9E8gKY6xfONU9T6G6aP9DTKfLE=

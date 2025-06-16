@@ -3,13 +3,13 @@ module cosmossdk.io/simapp
 go 1.23.5
 
 require (
-	cosmossdk.io/api v1.0.0-alpha.1
+	cosmossdk.io/api v1.0.0-rc.1
 	cosmossdk.io/client/v2 v2.10.0-beta.4
-	cosmossdk.io/core v1.1.0-alpha.2
+	cosmossdk.io/core v1.1.0-rc.1
 	cosmossdk.io/depinject v1.2.1
 	cosmossdk.io/log v1.6.0
 	cosmossdk.io/math v1.5.3
-	cosmossdk.io/store v1.3.0-alpha.1
+	cosmossdk.io/store v1.10.0-rc.2
 	cosmossdk.io/tools/confix v0.2.0-rc.4
 	cosmossdk.io/x/tx v1.2.0-alpha.1
 	github.com/cometbft/cometbft/api v1.1.0-rc1

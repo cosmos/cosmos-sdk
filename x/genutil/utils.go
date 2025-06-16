@@ -106,7 +106,7 @@ func InitializeNodeValidatorFilesWithKeyType(config *cfg.Config, keyType string)
 	return InitializeNodeValidatorFilesFromMnemonicWithKeyType(config, "", keyType)
 }
 
-func InitializeNodeValidatorFilesFromMnemonicWithKeyType(config *cfg.Config, mnemonic string, keyType string) (nodeID string, valPubKey cryptotypes.PubKey, err error) {
+func InitializeNodeValidatorFilesFromMnemonicWithKeyType(config *cfg.Config, mnemonic, keyType string) (nodeID string, valPubKey cryptotypes.PubKey, err error) {
 	if len(mnemonic) > 0 && !bip39.IsMnemonicValid(mnemonic) {
 		return "", nil, errors.New("invalid mnemonic")
 	}

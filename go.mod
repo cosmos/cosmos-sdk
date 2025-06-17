@@ -3,23 +3,23 @@ go 1.23.5
 module github.com/cosmos/cosmos-sdk
 
 require (
-	cosmossdk.io/api v0.9.2
-	cosmossdk.io/collections v1.2.1
-	cosmossdk.io/core v1.0.0
+	cosmossdk.io/api v1.0.0-rc.1
+	cosmossdk.io/collections v1.3.1
+	cosmossdk.io/core v1.1.0-rc.1
 	cosmossdk.io/depinject v1.2.1
 	cosmossdk.io/errors v1.0.2
 	cosmossdk.io/log v1.6.0
 	cosmossdk.io/math v1.5.3
-	cosmossdk.io/store v1.1.2
-	cosmossdk.io/x/tx v0.14.0
+	cosmossdk.io/store v1.10.0-rc.2
+	cosmossdk.io/x/tx v1.2.0-rc.1
 	github.com/99designs/keyring v1.2.1
 	github.com/bgentry/speakeasy v0.2.0
 	github.com/bits-and-blooms/bitset v1.22.0
 	github.com/chzyer/readline v1.5.1
 	github.com/cockroachdb/apd/v2 v2.0.2
 	github.com/cockroachdb/errors v1.12.0
-	github.com/cometbft/cometbft/api v1.1.0-alpha.1
-	github.com/cometbft/cometbft/v2 v2.0.0-alpha.1
+	github.com/cometbft/cometbft/api v1.1.0-rc1
+	github.com/cometbft/cometbft/v2 v2.0.0-rc1
 	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/cosmos-db v1.1.3
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
@@ -221,15 +221,6 @@ require (
 
 // Here are the short-lived replace from the Cosmos SDK
 // Replace here are pending PRs, or version to be tagged
-
-// Replace all unreleased direct deps upgraded to comet v1
-replace (
-	cosmossdk.io/api => ./api
-	cosmossdk.io/collections => ./collections
-	cosmossdk.io/core => ./core
-	cosmossdk.io/store => ./store
-	cosmossdk.io/x/tx => ./x/tx
-)
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (

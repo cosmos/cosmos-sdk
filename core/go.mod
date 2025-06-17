@@ -3,12 +3,12 @@ module cosmossdk.io/core
 go 1.23.0
 
 require (
-	cosmossdk.io/api v0.9.2
-	cosmossdk.io/depinject v1.2.0
+	cosmossdk.io/api v1.0.0-rc.1
+	cosmossdk.io/depinject v1.2.1
 	cosmossdk.io/math v1.5.3
 	github.com/cosmos/cosmos-db v1.1.3
 	github.com/stretchr/testify v1.10.0
-	google.golang.org/grpc v1.72.2
+	google.golang.org/grpc v1.73.0
 	google.golang.org/protobuf v1.36.6
 )
 
@@ -55,9 +55,6 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
-
-// Replace all unreleased direct deps upgraded to comet v1
-replace cosmossdk.io/api => ../api
 
 // Version tagged too early and incompatible with v0.50 (latest at the time of tagging)
 retract v0.12.0

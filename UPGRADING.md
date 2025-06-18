@@ -10,7 +10,7 @@ Note, always read the **App Wiring Changes** section for more information on app
 
 **The only major feature in Cosmos SDK v0.54.x is the upgrade from CometBFT v0.x.x to CometBFT v2.**
 
-For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos-sdk/blob/release/v0.54.x/CHANGELOG.md).
+For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos-sdk/blob/main/CHANGELOG.md).
 
 #### Deprecation of `TimeoutCommit`
 

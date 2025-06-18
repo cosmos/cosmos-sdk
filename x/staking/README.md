@@ -464,7 +464,7 @@ When a Validator is slashed, the following occurs:
 
 * The total `slashAmount` is calculated as the `slashFactor` (a chain parameter) \* `TokensFromConsensusPower`,
   the total number of tokens bonded to the validator at the time of the infraction.
-* Every unbonding delegation and pseudo-unbonding redelegation such that the infraction occured before the unbonding or
+* Every unbonding delegation and pseudo-unbonding redelegation such that the infraction occurred before the unbonding or
   redelegation began from the validator are slashed by the `slashFactor` percentage of the initialBalance.
 * Each amount slashed from redelegations and unbonding delegations is subtracted from the
   total slash amount.
@@ -472,7 +472,7 @@ When a Validator is slashed, the following occurs:
   `NonBondedPool` depending on the validator's status. This reduces the total supply of tokens.
 
 In the case of a slash due to any infraction that requires evidence to submitted (for example double-sign), the slash
-occurs at the block where the evidence is included, not at the block where the infraction occured.
+occurs at the block where the evidence is included, not at the block where the infraction occurred.
 Put otherwise, validators are not slashed retroactively, only when they are caught.
 
 #### Slash Unbonding Delegation

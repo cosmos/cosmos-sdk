@@ -1631,7 +1631,7 @@ simd tx staking edit-validator [flags]
 Example:
 
 ```bash
-simd tx staking edit-validator --moniker "new_moniker_name" --website "new_webiste_url" --from mykey
+simd tx staking edit-validator --moniker "new_moniker_name" --website "new_website_url" --from mykey
 ```
 
 ##### redelegate

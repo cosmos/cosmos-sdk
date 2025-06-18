@@ -203,6 +203,53 @@ func (store *Store) Copy() types.CacheKVStore {
 	return newStore
 }
 
+// Clone creates a copy-on-write snapshot of the Store.
+func (store *Store) Clone() types.BranchStore {
+	store.mtx.Lock()
+	defer store.mtx.Unlock()
+
+	cacheCopy := make(map[string]*cValue, len(store.cache))
+	for k, v := range store.cache {
+		cv := *v
+		cacheCopy[k] = &cv
+	}
+
+	unsortedCopy := make(map[string]struct{}, len(store.unsortedCache))
+	for k := range store.unsortedCache {
+		unsortedCopy[k] = struct{}{}
+	}
+
+	clone := &Store{
+		cache:         cacheCopy,
+		unsortedCache: unsortedCopy,
+		sortedCache:   store.sortedCache.Copy(),
+		parent:        store.parent,
+	}
+	return clone
+}
+
+// Restore replaces the Store's cache with that of the provided snapshot.
+func (store *Store) Restore(s types.BranchStore) {
+	other := s.(*Store)
+	store.mtx.Lock()
+	defer store.mtx.Unlock()
+
+	store.cache = other.cache
+	store.unsortedCache = other.unsortedCache
+	store.sortedCache = other.sortedCache
+
+	other.cache = make(map[string]*cValue)
+	other.unsortedCache = make(map[string]struct{})
+	other.sortedCache = internal.NewBTree()
+}
+
+// Discard clears all pending writes.
+func (store *Store) Discard() {
+	store.mtx.Lock()
+	defer store.mtx.Unlock()
+	store.resetCaches()
+}
+
 //----------------------------------------
 // Iteration
 

@@ -193,3 +193,56 @@ func (cms Store) Copy() types.CacheMultiStore {
 
 	return newStore
 }
+
+// Clone creates a copy-on-write snapshot of the multistore.
+func (cms Store) Clone() Store {
+	newDB := cms.db.(types.BranchStore).Clone().(types.CacheKVStore)
+	stores := make(map[types.StoreKey]types.CacheWrap, len(cms.stores))
+	for k, v := range cms.stores {
+		stores[k] = v.(types.BranchStore).Clone().(types.CacheWrap)
+	}
+	return Store{
+		db:           newDB,
+		stores:       stores,
+		keys:         cms.keys,
+		traceWriter:  cms.traceWriter,
+		traceContext: cms.traceContext,
+	}
+}
+
+// Restore restores the multistore from the given snapshot.
+func (cms Store) Restore(other Store) {
+	cms.db.(types.BranchStore).Restore(other.db.(types.BranchStore))
+
+	for k, v := range cms.stores {
+		if o, ok := other.stores[k]; ok {
+			v.(types.BranchStore).Restore(o.(types.BranchStore))
+		} else {
+			v.Discard()
+		}
+	}
+
+	for k, v := range other.stores {
+		if _, ok := cms.stores[k]; !ok {
+			cms.stores[k] = v
+		}
+	}
+}
+
+// Discard clears all pending writes of substores.
+func (cms Store) Discard() {
+	cms.db.Discard()
+	for _, store := range cms.stores {
+		store.Discard()
+	}
+}
+
+// RunAtomic executes the callback on a cloned multistore and restores the state if it succeeds.
+func (cms Store) RunAtomic(cb func(types.CacheMultiStore) error) error {
+	branch := cms.Clone()
+	if err := cb(branch); err != nil {
+		return err
+	}
+	cms.Restore(branch)
+	return nil
+}

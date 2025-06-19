@@ -150,6 +150,9 @@ type MultiStore interface {
 type CacheMultiStore interface {
 	MultiStore
 	Write() // Writes operations to underlying KVStore
+
+	// Clone returns a sibling store of CacheMultiStore
+	Clone() CacheMultiStore
 }
 
 // CommitMultiStore is an interface for a MultiStore without cache capabilities.
@@ -274,7 +277,8 @@ type CacheKVStore interface {
 
 	// Writes operations to underlying KVStore
 	Write()
-	Discard()
+	// Clone creates a new Store object with same parent
+	Clone() CacheKVStore
 }
 
 // CommitKVStore is an interface for MultiStore.
@@ -294,9 +298,6 @@ type CacheWrap interface {
 	// Write syncs with the underlying store.
 	Write()
 
-	// Discard clears the pending write set without applying it to the parent store.
-	Discard()
-
 	// CacheWrap recursively wraps again.
 	CacheWrap() CacheWrap
 
@@ -310,15 +311,6 @@ type CacheWrapper interface {
 
 	// CacheWrapWithTrace branches a store with tracing enabled.
 	CacheWrapWithTrace(w io.Writer, tc TraceContext) CacheWrap
-}
-
-// BranchStore represents a cache store that can be cloned and restored.
-type BranchStore interface {
-	// Clone returns a copy-on-write snapshot of the store.
-	Clone() BranchStore
-
-	// Restore replaces the store's contents with that of the given snapshot.
-	Restore(BranchStore)
 }
 
 func (cid CommitID) IsZero() bool {

@@ -93,3 +93,11 @@ func TestConfigCmdEnvFlag(t *testing.T) {
 		})
 	}
 }
+
+func TestDefaultConfig(t *testing.T) {
+	got := config.DefaultConfig()
+
+	t.Run("KeyringBackend should be test", func(t *testing.T) {
+		require.Equal(t, "test", got.KeyringBackend)
+	})
+}

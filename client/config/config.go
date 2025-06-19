@@ -11,7 +11,7 @@ import (
 func DefaultConfig() *ClientConfig {
 	return &ClientConfig{
 		ChainID:        "",
-		KeyringBackend: "os",
+		KeyringBackend: "test",
 		Output:         "text",
 		Node:           "tcp://localhost:26657",
 		BroadcastMode:  "sync",

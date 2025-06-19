@@ -36,3 +36,9 @@ func TestParseGasSetting(t *testing.T) {
 		})
 	}
 }
+
+func TestDefaults(t *testing.T) {
+	t.Run("DefaultKeyringBackend should be test", func(t *testing.T) {
+		require.Equal(t, "test", flags.DefaultKeyringBackend)
+	})
+}

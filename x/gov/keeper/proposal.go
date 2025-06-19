@@ -16,7 +16,7 @@ import (
 )
 
 // SubmitProposal creates a new proposal given an array of messages
-func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata, title, summary string, proposer sdk.AccAddress, expedited bool) (v1.Proposal, error) {
+func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata, title, summary string, proposer sdk.AccAddress, expedited bool, duration *time.Duration) (v1.Proposal, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	err := k.assertMetadataLength(metadata)
 	if err != nil {
@@ -99,7 +99,7 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 	submitTime := sdkCtx.BlockHeader().Time
 	depositPeriod := params.MaxDepositPeriod
 
-	proposal, err := v1.NewProposal(messages, proposalID, submitTime, submitTime.Add(*depositPeriod), metadata, title, summary, proposer, expedited)
+	proposal, err := v1.NewProposal(messages, proposalID, submitTime, submitTime.Add(*depositPeriod), metadata, title, summary, proposer, expedited, duration)
 	if err != nil {
 		return v1.Proposal{}, err
 	}
@@ -250,7 +250,12 @@ func (k Keeper) ActivateVotingPeriod(ctx context.Context, proposal v1.Proposal) 
 	}
 
 	if proposal.Expedited {
-		votingPeriod = params.ExpeditedVotingPeriod
+		if proposal.Duration != nil {
+			votingPeriod = proposal.Duration
+		} else {
+			votingPeriod = params.ExpeditedVotingPeriod
+
+		}
 	} else {
 		votingPeriod = params.VotingPeriod
 	}

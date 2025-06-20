@@ -237,6 +237,9 @@ func DefaultConfig() *Config {
 		Telemetry: telemetry.Config{
 			Enabled:      false,
 			GlobalLabels: [][]string{},
+			OtlpConfig: telemetry.OtlpConfig{
+				ExporterEnabled: false,
+			},
 		},
 		API: APIConfig{
 			Enable:             false,
@@ -290,6 +293,12 @@ func (c Config) ValidateBasic() error {
 		return sdkerrors.ErrAppConfig.Wrapf(
 			"cannot enable state sync snapshots with '%s' pruning setting", pruningtypes.PruningOptionEverything,
 		)
+	}
+
+	if c.Telemetry.Enabled && c.Telemetry.OtlpConfig.ExporterEnabled {
+		if err := c.Telemetry.OtlpConfig.Validate(); err != nil {
+			return sdkerrors.ErrAppConfig.Wrapf("invalid telemetry config: %v", err)
+		}
 	}
 
 	return nil

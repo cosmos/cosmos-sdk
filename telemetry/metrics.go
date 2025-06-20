@@ -90,6 +90,38 @@ type Config struct {
 	// DatadogHostname defines the hostname to use when emitting metrics to
 	// Datadog. Only utilized if MetricsSink is set to "dogstatsd".
 	DatadogHostname string `mapstructure:"datadog-hostname"`
+
+	// OtlpConfig defines the optional OpenTelemetry exporter.
+	OtlpConfig OtlpConfig `mapstructure:"otlp"`
+}
+
+type OtlpConfig struct {
+	ExporterEnabled         bool          `mapstructure:"exporter-enabled"`
+	CollectorEndpoint       string        `mapstructure:"collector-endpoint"`
+	CollectorMetricsURLPath string        `mapstructure:"collector-metrics-url-path"`
+	User                    string        `mapstructure:"user"`
+	Token                   string        `mapstructure:"token"`
+	ServiceName             string        `mapstructure:"service-name"`
+	PushInterval            time.Duration `mapstructure:"push-interval"`
+}
+
+func (cfg *OtlpConfig) Validate() error {
+	if !cfg.ExporterEnabled {
+		return nil
+	}
+
+	if cfg.CollectorEndpoint == "" {
+		return fmt.Errorf("CollectorEndpoint must be set")
+	}
+	if cfg.User == "" || cfg.Token == "" {
+		return fmt.Errorf("both User and Token are required for basic auth")
+	}
+	if cfg.PushInterval <= 0 {
+		// assign a sensible default or reject
+		return fmt.Errorf("PushInterval must be > 0, got %v", cfg.PushInterval)
+	}
+
+	return nil
 }
 
 // Metrics defines a wrapper around application telemetry functionality. It allows

@@ -51,7 +51,7 @@ the members already in a specialization group to internally elect new members,
 or maybe the community may assign a permission to a particular specialization
 group to appoint members to other 3rd party groups. The sky is really the limit
 as to how membership admittance can be structured. We attempt to capture
-some of these possiblities in a common interface dubbed the `Electionator`. For
+some of these possibilities in a common interface dubbed the `Electionator`. For
 its initial implementation as a part of this ADR we recommend that the general
 election abstraction (`Electionator`) is provided as well as a basic
 implementation of that abstraction which allows for a continuous election of

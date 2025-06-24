@@ -96,7 +96,6 @@ func (cfg *Config) RemoveManualUpgrade(height int64) error {
 func (cfg *Config) saveManualUpgrades(manualUpgrades ManualUpgradeBatch) error {
 	sortUpgrades(manualUpgrades)
 
-	// TODO we should not write the file every time we add an upgrade, but only once per command otherwise we can trigger spurious
 	manualUpgradesData, err := json.MarshalIndent(manualUpgrades, "", "  ")
 	if err != nil {
 		return err

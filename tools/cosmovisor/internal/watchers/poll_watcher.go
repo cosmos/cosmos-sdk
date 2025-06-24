@@ -8,39 +8,48 @@ import (
 )
 
 type PollWatcher[T any] struct {
-	outChan chan T
+	outChan      chan T
+	errorHandler ErrorHandler
+	checker      func() (T, error)
+	pollInterval time.Duration
 }
 
-func NewPollWatcher[T any](ctx context.Context, errorHandler ErrorHandler, checker func() (T, error), pollInterval time.Duration) *PollWatcher[T] {
+func NewPollWatcher[T any](errorHandler ErrorHandler, checker func() (T, error), pollInterval time.Duration) *PollWatcher[T] {
 	outChan := make(chan T, 1)
-	ticker := time.NewTicker(pollInterval)
+	return &PollWatcher[T]{
+		errorHandler: errorHandler,
+		checker:      checker,
+		pollInterval: pollInterval,
+		outChan:      outChan,
+	}
+}
+
+func (w *PollWatcher[T]) Start(ctx context.Context) {
+	ticker := time.NewTicker(w.pollInterval)
 	go func() {
 		defer ticker.Stop()
-		defer close(outChan)
+		defer close(w.outChan)
 
 		for {
 			select {
 			case <-ctx.Done():
 				return
 			case <-ticker.C:
-				x, err := checker()
+				x, err := w.checker()
 				if err != nil {
 					if !os.IsNotExist(err) {
-						errorHandler.Error("failed to check for updates", err)
+						w.errorHandler.Error("failed to check for updates", err)
 					}
 				} else {
 					// to make PollWatcher generic on any type T (including []byte), we use reflect.DeepEqual and the default zero value of T
 					var zero T
 					if !reflect.DeepEqual(x, zero) {
-						outChan <- x
+						w.outChan <- x
 					}
 				}
 			}
 		}
 	}()
-	return &PollWatcher[T]{
-		outChan: outChan,
-	}
 }
 
 func (w *PollWatcher[T]) Updated() <-chan T {

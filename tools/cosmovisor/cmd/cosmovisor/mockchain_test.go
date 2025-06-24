@@ -102,7 +102,7 @@ func TestMockChain(t *testing.T) {
 	}.Setup(t)
 
 	addManualUpgrade1 := func() {
-		time.Sleep(pollInterval * 2) // wait for startup
+		time.Sleep(pollInterval * 3) // wait a bit
 		rootCmd := NewRootCmd()
 		rootCmd.SetArgs([]string{
 			"add-upgrade",

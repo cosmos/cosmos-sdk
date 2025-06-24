@@ -888,8 +888,7 @@ func (app *BaseApp) runTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx) (gInfo s
 	case execModeFinalize:
 		err = app.mempool.Remove(tx)
 		if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
-			return gInfo, nil, anteEvents,
-				fmt.Errorf("failed to remove tx from mempool: %w", err)
+			app.logger.Error("failed to remove tx from mempool", "err", err)
 		}
 	}
 

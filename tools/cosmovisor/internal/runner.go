@@ -171,7 +171,7 @@ func (r *Runner) RunProcess(ctx context.Context, cmd *exec.Cmd, haltHeight uint6
 	r.logger.Info("Starting process", "path", cmd.Path, "args", cmd.Args)
 	processRunner := RunProcess(cmd)
 	defer func() {
-		// TODO always check for the latest block height before shutting down so that we have it in the last known height file
+		// always check for the latest block height before shutting down so that we have it in the last known height file
 		_, _ = heightChecker.GetLatestBlockHeight()
 		_ = processRunner.Shutdown(r.cfg.ShutdownGrace)
 	}()
@@ -185,7 +185,6 @@ func (r *Runner) RunProcess(ctx context.Context, cmd *exec.Cmd, haltHeight uint6
 			return errDone
 		case _, ok := <-upgradePlanWatcher.Updated():
 			// TODO check skip upgrade heights?? (although not sure why we need this as the node should not emit an upgrade plan if skip heights is enabled)
-			// TODO should we double check we're at the right height in case operators manually create this file?
 			if !ok {
 				return nil
 			}

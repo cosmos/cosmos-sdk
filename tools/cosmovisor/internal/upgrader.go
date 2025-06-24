@@ -22,7 +22,6 @@ type UpgradeCheckResult struct {
 
 func UpgradeIfNeeded(cfg *cosmovisor.Config, logger log.Logger, knownHeight uint64) (upgraded bool, err error) {
 	// if we see upgrade-info.json, assume we are at the right height and upgrade
-	// TODO should we check the height when we have upgrade-info.json?
 	logger.Info("Checking for upgrade-info.json")
 	if upgradePlan, err := cfg.UpgradeInfo(); err == nil {
 		err := DoUpgrade(cfg, logger, upgradePlan)

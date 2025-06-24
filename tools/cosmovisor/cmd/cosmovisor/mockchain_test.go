@@ -16,8 +16,7 @@ import (
 )
 
 type MockChainSetup struct {
-	Genesis string
-	// TODO test setup should be similar to process_test.go
+	Genesis        string
 	GovUpgrades    map[string]string
 	ManualUpgrades map[string]string // to be added with the add-upgrade command
 	Config         *cosmovisor.Config
@@ -199,15 +198,4 @@ func TestMockChain(t *testing.T) {
 	wg.Wait()
 
 	require.Equal(t, 8, callbackCount)
-
-	// TODO:
-	// - [x] add callback on restart for checking state
-	// - [ ] add manual upgrade (manual20) at height 20
-	// - [ ] then add other manual upgrades manual10 at height 10 and manual30 at height 30 as a batch
-	// - [ ] manual20 should get picked up and the process should restart with halt-height 20
-	// - [ ] then manual10 should get picked up and the process should restart with halt-height 10
-	// - [ ] when manual10 gets applied, it should restart with halt-height 20
-	// - [ ] when manual20 gets applied, it should restart with no halt-height
-	// - [ ] and then manual20 should trigger gov2 upgrade at height 40
-	// - [ ]
 }

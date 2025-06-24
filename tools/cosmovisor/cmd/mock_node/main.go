@@ -50,8 +50,6 @@ x/upgrade upgrade-info.json behavior.`,
 	cmd.Flags().DurationVar(&shutdownDelay, "shutdown-delay", 0, "Duration to wait before shutting down the node upon receiving a shutdown signal. Defaults to 0 (no delay).")
 	cmd.Flags().BoolVar(&shutdownOnUpgrade, "shutdown-on-upgrade", false, "If true, the node will shutdown immediately after reaching the upgrade height. If false, it will continue running until a shutdown signal is received. Defaults to false.")
 	cmd.Flags().BoolVar(&upgradeInfoEncodingJson, "upgrade-info-encoding-json", false, "If true, the upgrade-info.json will be encoded using encoding/json instead of jsonpb. This is useful for testing compatibility with different JSON decoders. Defaults to false (uses jsonpb).")
-	// TODO add flag to use either jsonpb or encoding/json
-	// TODO shutdown at upgrade height
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
 		if upgradePlan == "" && haltHeight == 0 {
 			return fmt.Errorf("must specify either --upgrade-plan or --halt-height")

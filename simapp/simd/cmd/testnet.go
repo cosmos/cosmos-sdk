@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 	"time"
 
-	cmtconfig "github.com/cometbft/cometbft/config"
-	cmttime "github.com/cometbft/cometbft/types/time"
+	cmtconfig "github.com/cometbft/cometbft/v2/config"
+	cmttime "github.com/cometbft/cometbft/v2/types/time"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
@@ -156,7 +156,7 @@ Example:
 			args.algo, _ = cmd.Flags().GetString(flags.FlagKeyType)
 			args.bondTokenDenom, _ = cmd.Flags().GetString(flagStakingDenom)
 			args.singleMachine, _ = cmd.Flags().GetBool(flagSingleHost)
-			config.Consensus.TimeoutCommit, err = cmd.Flags().GetDuration(flagCommitTimeout)
+			config.Consensus.TimeoutCommit, err = cmd.Flags().GetDuration(flagCommitTimeout) // nolint: staticcheck // we are continuing to use this value for backwards compatibility
 			if err != nil {
 				return err
 			}
@@ -202,6 +202,7 @@ Example:
 			args.apiAddress, _ = cmd.Flags().GetString(flagAPIAddress)
 			args.grpcAddress, _ = cmd.Flags().GetString(flagGRPCAddress)
 			args.printMnemonic, _ = cmd.Flags().GetBool(flagPrintMnemonic)
+			args.timeoutCommit, _ = cmd.Flags().GetDuration(flagCommitTimeout)
 
 			return startTestnet(cmd, args)
 		},
@@ -451,9 +452,14 @@ func initGenFiles(
 }
 
 func collectGenFiles(
-	clientCtx client.Context, nodeConfig *cmtconfig.Config, chainID string,
-	nodeIDs []string, valPubKeys []cryptotypes.PubKey, numValidators int,
-	outputDir, nodeDirPrefix, nodeDaemonHome string, genBalIterator banktypes.GenesisBalancesIterator,
+	clientCtx client.Context,
+	nodeConfig *cmtconfig.Config,
+	chainID string,
+	nodeIDs []string,
+	valPubKeys []cryptotypes.PubKey,
+	numValidators int,
+	outputDir, nodeDirPrefix, nodeDaemonHome string,
+	genBalIterator banktypes.GenesisBalancesIterator,
 	rpcPortStart, p2pPortStart int,
 	singleMachine bool,
 ) error {

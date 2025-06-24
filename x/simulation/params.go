@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"math/rand"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	"github.com/cometbft/cometbft/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
+	"github.com/cometbft/cometbft/v2/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/simulation"

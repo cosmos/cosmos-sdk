@@ -3,8 +3,8 @@ package keeper_test
 import (
 	"testing"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	cmttime "github.com/cometbft/cometbft/types/time"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
+	cmttime "github.com/cometbft/cometbft/v2/types/time"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"

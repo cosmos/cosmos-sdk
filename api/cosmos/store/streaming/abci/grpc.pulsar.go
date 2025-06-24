@@ -2,7 +2,7 @@
 package abci
 
 import (
-	v1 "cosmossdk.io/api/cometbft/abci/v1"
+	v2 "cosmossdk.io/api/cometbft/abci/v2"
 	v1beta1 "cosmossdk.io/api/cosmos/store/v1beta1"
 	fmt "fmt"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
@@ -186,9 +186,9 @@ func (x *fastReflection_ListenFinalizeBlockRequest) Get(descriptor protoreflect.
 func (x *fastReflection_ListenFinalizeBlockRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "cosmos.store.streaming.abci.ListenFinalizeBlockRequest.req":
-		x.Req = value.Message().Interface().(*v1.FinalizeBlockRequest)
+		x.Req = value.Message().Interface().(*v2.FinalizeBlockRequest)
 	case "cosmos.store.streaming.abci.ListenFinalizeBlockRequest.res":
-		x.Res = value.Message().Interface().(*v1.FinalizeBlockResponse)
+		x.Res = value.Message().Interface().(*v2.FinalizeBlockResponse)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.store.streaming.abci.ListenFinalizeBlockRequest"))
@@ -211,12 +211,12 @@ func (x *fastReflection_ListenFinalizeBlockRequest) Mutable(fd protoreflect.Fiel
 	switch fd.FullName() {
 	case "cosmos.store.streaming.abci.ListenFinalizeBlockRequest.req":
 		if x.Req == nil {
-			x.Req = new(v1.FinalizeBlockRequest)
+			x.Req = new(v2.FinalizeBlockRequest)
 		}
 		return protoreflect.ValueOfMessage(x.Req.ProtoReflect())
 	case "cosmos.store.streaming.abci.ListenFinalizeBlockRequest.res":
 		if x.Res == nil {
-			x.Res = new(v1.FinalizeBlockResponse)
+			x.Res = new(v2.FinalizeBlockResponse)
 		}
 		return protoreflect.ValueOfMessage(x.Res.ProtoReflect())
 	default:
@@ -233,10 +233,10 @@ func (x *fastReflection_ListenFinalizeBlockRequest) Mutable(fd protoreflect.Fiel
 func (x *fastReflection_ListenFinalizeBlockRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "cosmos.store.streaming.abci.ListenFinalizeBlockRequest.req":
-		m := new(v1.FinalizeBlockRequest)
+		m := new(v2.FinalizeBlockRequest)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "cosmos.store.streaming.abci.ListenFinalizeBlockRequest.res":
-		m := new(v1.FinalizeBlockResponse)
+		m := new(v2.FinalizeBlockResponse)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
@@ -451,7 +451,7 @@ func (x *fastReflection_ListenFinalizeBlockRequest) ProtoMethods() *protoiface.M
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.Req == nil {
-					x.Req = &v1.FinalizeBlockRequest{}
+					x.Req = &v2.FinalizeBlockRequest{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Req); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -487,7 +487,7 @@ func (x *fastReflection_ListenFinalizeBlockRequest) ProtoMethods() *protoiface.M
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.Res == nil {
-					x.Res = &v1.FinalizeBlockResponse{}
+					x.Res = &v2.FinalizeBlockResponse{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Res); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -1127,7 +1127,7 @@ func (x *fastReflection_ListenCommitRequest) Set(fd protoreflect.FieldDescriptor
 	case "cosmos.store.streaming.abci.ListenCommitRequest.block_height":
 		x.BlockHeight = value.Int()
 	case "cosmos.store.streaming.abci.ListenCommitRequest.res":
-		x.Res = value.Message().Interface().(*v1.CommitResponse)
+		x.Res = value.Message().Interface().(*v2.CommitResponse)
 	case "cosmos.store.streaming.abci.ListenCommitRequest.change_set":
 		lv := value.List()
 		clv := lv.(*_ListenCommitRequest_3_list)
@@ -1154,7 +1154,7 @@ func (x *fastReflection_ListenCommitRequest) Mutable(fd protoreflect.FieldDescri
 	switch fd.FullName() {
 	case "cosmos.store.streaming.abci.ListenCommitRequest.res":
 		if x.Res == nil {
-			x.Res = new(v1.CommitResponse)
+			x.Res = new(v2.CommitResponse)
 		}
 		return protoreflect.ValueOfMessage(x.Res.ProtoReflect())
 	case "cosmos.store.streaming.abci.ListenCommitRequest.change_set":
@@ -1181,7 +1181,7 @@ func (x *fastReflection_ListenCommitRequest) NewField(fd protoreflect.FieldDescr
 	case "cosmos.store.streaming.abci.ListenCommitRequest.block_height":
 		return protoreflect.ValueOfInt64(int64(0))
 	case "cosmos.store.streaming.abci.ListenCommitRequest.res":
-		m := new(v1.CommitResponse)
+		m := new(v2.CommitResponse)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "cosmos.store.streaming.abci.ListenCommitRequest.change_set":
 		list := []*v1beta1.StoreKVPair{}
@@ -1430,7 +1430,7 @@ func (x *fastReflection_ListenCommitRequest) ProtoMethods() *protoiface.Methods 
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.Res == nil {
-					x.Res = &v1.CommitResponse{}
+					x.Res = &v2.CommitResponse{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Res); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -1880,8 +1880,8 @@ type ListenFinalizeBlockRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Req *v1.FinalizeBlockRequest  `protobuf:"bytes,1,opt,name=req,proto3" json:"req,omitempty"`
-	Res *v1.FinalizeBlockResponse `protobuf:"bytes,2,opt,name=res,proto3" json:"res,omitempty"`
+	Req *v2.FinalizeBlockRequest  `protobuf:"bytes,1,opt,name=req,proto3" json:"req,omitempty"`
+	Res *v2.FinalizeBlockResponse `protobuf:"bytes,2,opt,name=res,proto3" json:"res,omitempty"`
 }
 
 func (x *ListenFinalizeBlockRequest) Reset() {
@@ -1904,14 +1904,14 @@ func (*ListenFinalizeBlockRequest) Descriptor() ([]byte, []int) {
 	return file_cosmos_store_streaming_abci_grpc_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *ListenFinalizeBlockRequest) GetReq() *v1.FinalizeBlockRequest {
+func (x *ListenFinalizeBlockRequest) GetReq() *v2.FinalizeBlockRequest {
 	if x != nil {
 		return x.Req
 	}
 	return nil
 }
 
-func (x *ListenFinalizeBlockRequest) GetRes() *v1.FinalizeBlockResponse {
+func (x *ListenFinalizeBlockRequest) GetRes() *v2.FinalizeBlockResponse {
 	if x != nil {
 		return x.Res
 	}
@@ -1953,7 +1953,7 @@ type ListenCommitRequest struct {
 
 	// explicitly pass in block height as ResponseCommit does not contain this info
 	BlockHeight int64                  `protobuf:"varint,1,opt,name=block_height,json=blockHeight,proto3" json:"block_height,omitempty"`
-	Res         *v1.CommitResponse     `protobuf:"bytes,2,opt,name=res,proto3" json:"res,omitempty"`
+	Res         *v2.CommitResponse     `protobuf:"bytes,2,opt,name=res,proto3" json:"res,omitempty"`
 	ChangeSet   []*v1beta1.StoreKVPair `protobuf:"bytes,3,rep,name=change_set,json=changeSet,proto3" json:"change_set,omitempty"`
 }
 
@@ -1984,7 +1984,7 @@ func (x *ListenCommitRequest) GetBlockHeight() int64 {
 	return 0
 }
 
-func (x *ListenCommitRequest) GetRes() *v1.CommitResponse {
+func (x *ListenCommitRequest) GetRes() *v2.CommitResponse {
 	if x != nil {
 		return x.Res
 	}
@@ -2033,18 +2033,18 @@ var file_cosmos_store_streaming_abci_grpc_proto_rawDesc = []byte{
 	0x70, 0x63, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x1b, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
 	0x2e, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x73, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x69, 0x6e, 0x67,
 	0x2e, 0x61, 0x62, 0x63, 0x69, 0x1a, 0x1c, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2f,
-	0x61, 0x62, 0x63, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x70, 0x72,
+	0x61, 0x62, 0x63, 0x69, 0x2f, 0x76, 0x32, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x70, 0x72,
 	0x6f, 0x74, 0x6f, 0x1a, 0x24, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x73, 0x74, 0x6f, 0x72,
 	0x65, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x6c, 0x69, 0x73, 0x74, 0x65, 0x6e,
 	0x69, 0x6e, 0x67, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x91, 0x01, 0x0a, 0x1a, 0x4c, 0x69,
 	0x73, 0x74, 0x65, 0x6e, 0x46, 0x69, 0x6e, 0x61, 0x6c, 0x69, 0x7a, 0x65, 0x42, 0x6c, 0x6f, 0x63,
 	0x6b, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x38, 0x0a, 0x03, 0x72, 0x65, 0x71, 0x18,
 	0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74,
-	0x2e, 0x61, 0x62, 0x63, 0x69, 0x2e, 0x76, 0x31, 0x2e, 0x46, 0x69, 0x6e, 0x61, 0x6c, 0x69, 0x7a,
+	0x2e, 0x61, 0x62, 0x63, 0x69, 0x2e, 0x76, 0x32, 0x2e, 0x46, 0x69, 0x6e, 0x61, 0x6c, 0x69, 0x7a,
 	0x65, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x52, 0x03, 0x72,
 	0x65, 0x71, 0x12, 0x39, 0x0a, 0x03, 0x72, 0x65, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32,
 	0x27, 0x2e, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2e, 0x61, 0x62, 0x63, 0x69, 0x2e,
-	0x76, 0x31, 0x2e, 0x46, 0x69, 0x6e, 0x61, 0x6c, 0x69, 0x7a, 0x65, 0x42, 0x6c, 0x6f, 0x63, 0x6b,
+	0x76, 0x32, 0x2e, 0x46, 0x69, 0x6e, 0x61, 0x6c, 0x69, 0x7a, 0x65, 0x42, 0x6c, 0x6f, 0x63, 0x6b,
 	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x03, 0x72, 0x65, 0x73, 0x22, 0x1d, 0x0a,
 	0x1b, 0x4c, 0x69, 0x73, 0x74, 0x65, 0x6e, 0x46, 0x69, 0x6e, 0x61, 0x6c, 0x69, 0x7a, 0x65, 0x42,
 	0x6c, 0x6f, 0x63, 0x6b, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xae, 0x01, 0x0a,
@@ -2053,7 +2053,7 @@ var file_cosmos_store_streaming_abci_grpc_proto_rawDesc = []byte{
 	0x69, 0x67, 0x68, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0b, 0x62, 0x6c, 0x6f, 0x63,
 	0x6b, 0x48, 0x65, 0x69, 0x67, 0x68, 0x74, 0x12, 0x32, 0x0a, 0x03, 0x72, 0x65, 0x73, 0x18, 0x02,
 	0x20, 0x01, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2e,
-	0x61, 0x62, 0x63, 0x69, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x52, 0x65,
+	0x61, 0x62, 0x63, 0x69, 0x2e, 0x76, 0x32, 0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x52, 0x65,
 	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x03, 0x72, 0x65, 0x73, 0x12, 0x40, 0x0a, 0x0a, 0x63,
 	0x68, 0x61, 0x6e, 0x67, 0x65, 0x5f, 0x73, 0x65, 0x74, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32,
 	0x21, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x73, 0x74, 0x6f, 0x72, 0x65, 0x2e, 0x76,
@@ -2114,15 +2114,15 @@ var file_cosmos_store_streaming_abci_grpc_proto_goTypes = []interface{}{
 	(*ListenFinalizeBlockResponse)(nil), // 1: cosmos.store.streaming.abci.ListenFinalizeBlockResponse
 	(*ListenCommitRequest)(nil),         // 2: cosmos.store.streaming.abci.ListenCommitRequest
 	(*ListenCommitResponse)(nil),        // 3: cosmos.store.streaming.abci.ListenCommitResponse
-	(*v1.FinalizeBlockRequest)(nil),     // 4: cometbft.abci.v1.FinalizeBlockRequest
-	(*v1.FinalizeBlockResponse)(nil),    // 5: cometbft.abci.v1.FinalizeBlockResponse
-	(*v1.CommitResponse)(nil),           // 6: cometbft.abci.v1.CommitResponse
+	(*v2.FinalizeBlockRequest)(nil),     // 4: cometbft.abci.v2.FinalizeBlockRequest
+	(*v2.FinalizeBlockResponse)(nil),    // 5: cometbft.abci.v2.FinalizeBlockResponse
+	(*v2.CommitResponse)(nil),           // 6: cometbft.abci.v2.CommitResponse
 	(*v1beta1.StoreKVPair)(nil),         // 7: cosmos.store.v1beta1.StoreKVPair
 }
 var file_cosmos_store_streaming_abci_grpc_proto_depIdxs = []int32{
-	4, // 0: cosmos.store.streaming.abci.ListenFinalizeBlockRequest.req:type_name -> cometbft.abci.v1.FinalizeBlockRequest
-	5, // 1: cosmos.store.streaming.abci.ListenFinalizeBlockRequest.res:type_name -> cometbft.abci.v1.FinalizeBlockResponse
-	6, // 2: cosmos.store.streaming.abci.ListenCommitRequest.res:type_name -> cometbft.abci.v1.CommitResponse
+	4, // 0: cosmos.store.streaming.abci.ListenFinalizeBlockRequest.req:type_name -> cometbft.abci.v2.FinalizeBlockRequest
+	5, // 1: cosmos.store.streaming.abci.ListenFinalizeBlockRequest.res:type_name -> cometbft.abci.v2.FinalizeBlockResponse
+	6, // 2: cosmos.store.streaming.abci.ListenCommitRequest.res:type_name -> cometbft.abci.v2.CommitResponse
 	7, // 3: cosmos.store.streaming.abci.ListenCommitRequest.change_set:type_name -> cosmos.store.v1beta1.StoreKVPair
 	0, // 4: cosmos.store.streaming.abci.ABCIListenerService.ListenFinalizeBlock:input_type -> cosmos.store.streaming.abci.ListenFinalizeBlockRequest
 	2, // 5: cosmos.store.streaming.abci.ABCIListenerService.ListenCommit:input_type -> cosmos.store.streaming.abci.ListenCommitRequest

@@ -13,7 +13,7 @@ import (
 	"path"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 	"gotest.tools/v3/assert"

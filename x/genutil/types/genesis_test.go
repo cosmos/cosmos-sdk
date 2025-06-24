@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	cmttypes "github.com/cometbft/cometbft/types"
+	cmttypes "github.com/cometbft/cometbft/v2/types"
 	"gotest.tools/v3/assert"
 	"gotest.tools/v3/golden"
 

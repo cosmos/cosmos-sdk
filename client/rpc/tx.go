@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
-	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-	tmtypes "github.com/cometbft/cometbft/types"
+	rpchttp "github.com/cometbft/cometbft/v2/rpc/client/http"
+	coretypes "github.com/cometbft/cometbft/v2/rpc/core/types"
+	tmtypes "github.com/cometbft/cometbft/v2/types"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"

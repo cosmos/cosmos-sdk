@@ -7,12 +7,12 @@ import (
 	"strconv"
 	"strings"
 
-	cmtcfg "github.com/cometbft/cometbft/config"
-	cmtjson "github.com/cometbft/cometbft/libs/json"
-	"github.com/cometbft/cometbft/node"
-	"github.com/cometbft/cometbft/p2p"
-	pvm "github.com/cometbft/cometbft/privval"
-	cmtversion "github.com/cometbft/cometbft/version"
+	cmtcfg "github.com/cometbft/cometbft/v2/config"
+	cmtjson "github.com/cometbft/cometbft/v2/libs/json"
+	"github.com/cometbft/cometbft/v2/node"
+	"github.com/cometbft/cometbft/v2/p2p"
+	pvm "github.com/cometbft/cometbft/v2/privval"
+	cmtversion "github.com/cometbft/cometbft/v2/version"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
 

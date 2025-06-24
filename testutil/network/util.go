@@ -2,19 +2,20 @@ package network
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"net"
 	"os"
 	"path/filepath"
 
-	cmtcfg "github.com/cometbft/cometbft/config"
-	"github.com/cometbft/cometbft/node"
-	"github.com/cometbft/cometbft/p2p"
-	pvm "github.com/cometbft/cometbft/privval"
-	"github.com/cometbft/cometbft/proxy"
-	"github.com/cometbft/cometbft/rpc/client/local"
-	cmttime "github.com/cometbft/cometbft/types/time"
+	cmtcfg "github.com/cometbft/cometbft/v2/config"
+	"github.com/cometbft/cometbft/v2/node"
+	"github.com/cometbft/cometbft/v2/p2p"
+	pvm "github.com/cometbft/cometbft/v2/privval"
+	"github.com/cometbft/cometbft/v2/proxy"
+	"github.com/cometbft/cometbft/v2/rpc/client/local"
+	cmttime "github.com/cometbft/cometbft/v2/types/time"
 	"golang.org/x/sync/errgroup"
 
 	"cosmossdk.io/log"
@@ -59,7 +60,23 @@ func startInProcess(cfg Config, val *Validator) error {
 				Sha256Checksum: []byte{},
 			}, err
 		}
-		return node.ChecksummedGenesisDoc{GenesisDoc: gen, Sha256Checksum: make([]byte, 0)}, nil
+
+		genbz, err := gen.AppState.MarshalJSON()
+		if err != nil {
+			return node.ChecksummedGenesisDoc{
+				Sha256Checksum: []byte{},
+			}, err
+		}
+
+		bz, err := json.Marshal(genbz)
+		if err != nil {
+			return node.ChecksummedGenesisDoc{
+				Sha256Checksum: []byte{},
+			}, err
+		}
+		sum := sha256.Sum256(bz)
+
+		return node.ChecksummedGenesisDoc{GenesisDoc: gen, Sha256Checksum: sum[:]}, nil
 	}
 
 	cmtApp := server.NewCometABCIWrapper(app)

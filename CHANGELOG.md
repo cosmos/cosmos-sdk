@@ -61,7 +61,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/authz) [#24638](https://github.com/cosmos/cosmos-sdk/pull/24638) Fixed a minor bug where the grant key was cast as a string and dumped directly into the error message leading to an error string possibly containing invalid UTF-8.
 * (client, client/rpc, x/auth/tx) [#24551](https://github.com/cosmos/cosmos-sdk/pull/24551) Handle cancellation properly when supplying context to client methods.
 * (x/epochs) [#24770](https://github.com/cosmos/cosmos-sdk/pull/24770) Fix register of epoch hooks in `InvokeSetHooks`.
-* (baseapp) [#]() Don't take mempool error as state machine execution failure.
+* (baseapp) [#24898](https://github.com/cosmos/cosmos-sdk/pull/24898) Don't take mempool error as state machine execution failure.
 
 ### Deprecated
 

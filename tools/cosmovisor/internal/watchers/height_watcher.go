@@ -15,16 +15,20 @@ type HeightWatcher struct {
 	onGetHeight func(uint64) error
 }
 
-func NewHeightWatcher(ctx context.Context, errorHandler ErrorHandler, checker HeightChecker, pollInterval time.Duration, onGetHeight func(uint64) error) *HeightWatcher {
+func NewHeightWatcher(errorHandler ErrorHandler, checker HeightChecker, pollInterval time.Duration, onGetHeight func(uint64) error) *HeightWatcher {
 	watcher := &HeightWatcher{
 		checker:     checker,
 		onGetHeight: onGetHeight,
 	}
-	watcher.PollWatcher = NewPollWatcher[uint64](ctx, errorHandler, func() (uint64, error) {
+	watcher.PollWatcher = NewPollWatcher[uint64](errorHandler, func() (uint64, error) {
 		return watcher.ReadNow()
 
 	}, pollInterval)
 	return watcher
+}
+
+func (h HeightWatcher) Start(ctx context.Context) {
+	h.PollWatcher.Start(ctx)
 }
 
 func (h HeightWatcher) ReadNow() (uint64, error) {

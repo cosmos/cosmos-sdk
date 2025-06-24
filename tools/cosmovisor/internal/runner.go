@@ -23,15 +23,15 @@ type Runner struct {
 }
 
 // NewRunner creates a new Runner instance with the provided configuration and logger.
-func NewRunner(cfg *cosmovisor.Config, runCfg RunConfig, logger log.Logger) Runner {
-	return Runner{
+func NewRunner(cfg *cosmovisor.Config, runCfg RunConfig, logger log.Logger) *Runner {
+	return &Runner{
 		runCfg: runCfg,
 		cfg:    cfg,
 		logger: logger,
 	}
 }
 
-func (r Runner) Start(ctx context.Context, args []string) error {
+func (r *Runner) Start(ctx context.Context, args []string) error {
 	retryMgr := NewRetryBackoffManager(r.logger, r.cfg.MaxRestartRetries)
 	for {
 		// First we check if we need to upgrade and if we do we perform the upgrade
@@ -106,7 +106,7 @@ var ErrUpgradeNoDaemonRestart = errors.New("upgrade completed, but DAEMON_RESTAR
 // This is called to determine run arguments first and allows us to observe whether
 // run arguments have changed or if the process is in a restart loop because of some error,
 // which is important for the retry backoff manager.
-func (r Runner) ComputeRunPlan(args []string) (cmd *exec.Cmd, haltHeight uint64, err error) {
+func (r *Runner) ComputeRunPlan(args []string) (cmd *exec.Cmd, haltHeight uint64, err error) {
 	bin, err := r.cfg.CurrentBin()
 	if err != nil {
 		return nil, 0, fmt.Errorf("error creating symlink to genesis: %w", err)
@@ -135,7 +135,7 @@ func (r Runner) ComputeRunPlan(args []string) (cmd *exec.Cmd, haltHeight uint64,
 }
 
 // RunProcess runs the given command until either a upgrade is detected or the process exits.
-func (r Runner) RunProcess(ctx context.Context, cmd *exec.Cmd, haltHeight uint64) error {
+func (r *Runner) RunProcess(ctx context.Context, cmd *exec.Cmd, haltHeight uint64) error {
 	// start the fsnotify watcher to watch for changes in the upgrade info directory
 	dirWatcher, err := watchers.NewFSNotifyWatcher(ctx, r.logger, r.cfg.UpgradeInfoDir(), []string{
 		r.cfg.UpgradeInfoFilePath(),
@@ -157,15 +157,15 @@ func (r Runner) RunProcess(ctx context.Context, cmd *exec.Cmd, haltHeight uint64
 	upgradePlanWatcher := watchers.InitFileWatcher[upgradetypes.Plan](ctx, eh, r.cfg.PollInterval, dirWatcher, r.cfg.UpgradeInfoFilePath(), r.cfg.ParseUpgradeInfo)
 	manualUpgradesWatcher := watchers.InitFileWatcher[cosmovisor.ManualUpgradeBatch](ctx, eh, r.cfg.PollInterval, dirWatcher, r.cfg.UpgradeInfoBatchFilePath(), r.cfg.ParseManualUpgrades)
 	heightChecker := watchers.NewHTTPRPCBLockChecker(r.cfg.RPCAddress, r.logger)
-	// TODO should we have a separate poll interval for the height watcher?
-	heightWatcher := watchers.NewHeightWatcher(ctx, eh, heightChecker, r.cfg.PollInterval, func(height uint64) error {
+	heightWatcher := watchers.NewHeightWatcher(eh, heightChecker, r.cfg.PollInterval, func(height uint64) error {
 		r.knownHeight = height
 		return r.cfg.WriteLastKnownHeight(height)
 	})
 
 	if haltHeight > 0 {
-		// TODO start height watcher only if we have a halt height set
-		// currently the height watcher is always checking for the height even when we don't have a halt height set
+		// only watch for height updates if we have a halt height set
+		r.logger.Info("Starting height watcher", "halt_height", haltHeight)
+		heightWatcher.Start(ctx)
 	}
 
 	r.logger.Info("Starting process", "path", cmd.Path, "args", cmd.Args)

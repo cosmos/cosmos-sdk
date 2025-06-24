@@ -33,5 +33,7 @@ func NewFilePollWatcher(ctx context.Context, errorHandler ErrorHandler, filename
 		}
 		return nil, os.ErrNotExist
 	}
-	return NewPollWatcher[[]byte](ctx, errorHandler, check, pollInterval)
+	watcher := NewPollWatcher[[]byte](errorHandler, check, pollInterval)
+	watcher.Start(ctx)
+	return watcher
 }

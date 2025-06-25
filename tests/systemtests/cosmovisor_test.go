@@ -4,6 +4,8 @@ package systemtests
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"regexp"
 	"testing"
 	"time"
@@ -30,7 +32,6 @@ func TestCosmovisorUpgrade(t *testing.T) {
 	systest.Sut.StopChain()
 
 	currentBranchBinary := systest.Sut.ExecBinary()
-	//currentInitializer := systest.Sut.TestnetInitializer()
 
 	legacyBinary := systest.WorkDir + "/binaries/v0.53/simd"
 	systest.Sut.SetExecBinary(legacyBinary)
@@ -79,13 +80,22 @@ func TestCosmovisorUpgrade(t *testing.T) {
 	proposalStatus := gjson.Get(raw, "proposal.status").String()
 	require.Equal(t, "PROPOSAL_STATUS_PASSED", proposalStatus, raw)
 
+	wrapperTxt := fmt.Sprintf(`#!/usr/bin/env bash
+set -e
+TEST_MANUAL_UPGRADE_HEIGHT="%d" exec %s "$@"`, upgrade2Height, currentBranchBinary)
+	wrapperPath := filepath.Join(systest.WorkDir, "testnet", fmt.Sprintf("%s.sh", upgrade2Name))
+	wrapperPath, err := filepath.Abs(wrapperPath)
+	require.NoError(t, err, "failed to get absolute path for manual upgrade script")
+	err = os.WriteFile(wrapperPath, []byte(wrapperTxt), 0o755)
+	require.NoError(t, err, "failed to write manual upgrade script")
+
 	// add manual upgrade
 	systest.Sut.ExecCosmovisor(
 		t,
 		true,
 		"add-upgrade",
 		upgrade2Name,
-		currentBranchBinary,
+		wrapperPath,
 		fmt.Sprintf("--upgrade-height=%d", upgrade2Height),
 	)
 

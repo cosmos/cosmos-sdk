@@ -215,12 +215,15 @@ func (s *SystemUnderTest) cosmovisorEnv(t *testing.T, home string) []string {
 	}
 }
 
+func (s *SystemUnderTest) cosmovisorPath() string {
+	return filepath.Join(WorkDir, "binaries", "cosmovisor")
+}
 func (s *SystemUnderTest) ExecCosmovisor(t *testing.T, async bool, args ...string) {
 	s.withEachNodeHome(func(i int, home string) {
 		env := s.cosmovisorEnv(t, home)
 		t.Logf("Calling Cosmovisor with args %+v and env %+v", args, env)
 		cmd := exec.Command(
-			"../../tools/cosmovisor/cosmovisor",
+			s.cosmovisorPath(),
 			args...,
 		)
 		cmd.Dir = WorkDir
@@ -645,7 +648,7 @@ func (s *SystemUnderTest) startNodesAsync(t *testing.T, useCosmovisor bool, xarg
 		var binary string
 		var env []string
 		if useCosmovisor {
-			binary = "cosmovisor"
+			binary = s.cosmovisorPath()
 			args = append([]string{"run"}, args...) // cosmovisor run <args>
 			cfgPath := filepath.Join(absHome, "cosmovisor", "config.toml")
 			args = append(args, "--cosmovisor-config", cfgPath)

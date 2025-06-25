@@ -492,7 +492,7 @@ localnet-debug: localnet-stop localnet-build-dlv localnet-build-nodes
 
 .PHONY: localnet-start localnet-stop localnet-debug localnet-build-env localnet-build-dlv localnet-build-nodes
 
-test-system: build-v53 build
+test-system: build-v53 build cosmovisor
 	mkdir -p ./tests/systemtests/binaries/
 	cp $(BUILDDIR)/simd ./tests/systemtests/binaries/
 	mkdir -p ./tests/systemtests/binaries/v0.53

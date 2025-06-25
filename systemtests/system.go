@@ -220,7 +220,7 @@ func (s *SystemUnderTest) ExecCosmovisor(t *testing.T, async bool, args ...strin
 		env := s.cosmovisorEnv(t, home)
 		t.Logf("Calling Cosmovisor with args %+v and env %+v", args, env)
 		cmd := exec.Command(
-			"cosmovisor",
+			"../../tools/cosmovisor/cosmovisor",
 			args...,
 		)
 		cmd.Dir = WorkDir

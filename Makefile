@@ -492,13 +492,21 @@ localnet-debug: localnet-stop localnet-build-dlv localnet-build-nodes
 
 .PHONY: localnet-start localnet-stop localnet-debug localnet-build-env localnet-build-dlv localnet-build-nodes
 
-test-system: build-v53 build cosmovisor
+# build-system-test-current builds the binaries necessary for running system tests, but only those on the current branch
+# this is useful if you are iterating on tests which rely on changes to the current branch only (which is most common in development)
+build-system-test-current: build cosmovisor
 	mkdir -p ./tests/systemtests/binaries/
 	cp $(BUILDDIR)/simd ./tests/systemtests/binaries/
+	cp tools/cosmovisor/cosmovisor ./tests/systemtests/binaries/
+
+# build-system-test builds the binaries necessary for runnings system tests and places them in the correct locations
+build-system-test: build-v53
 	mkdir -p ./tests/systemtests/binaries/v0.53
 	mv $(BUILDDIR)/simdv53 ./tests/systemtests/binaries/v0.53/simd
+
+test-system: build-system-test
 	$(MAKE) -C tests/systemtests test
-.PHONY: test-system
+.PHONY: build-system-test-current build-system-test test-system
 
 # build-v53 checks out the v0.53.x branch, builds the binary, and renames it to simdv53.
 build-v53:

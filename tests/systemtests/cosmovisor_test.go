@@ -19,33 +19,35 @@ import (
 )
 
 func TestCosmovisorUpgrade(t *testing.T) {
-	const (
-		upgrade1Height       = 25
-		upgrade1Name         = "v053-to-v054" // must match UpgradeName in simapp/upgrades.go
-		upgrade2Height int64 = 30
-		upgrade2Name         = "manual1"
-	)
-	// Scenario:
-	// start a legacy chain with some state
-	// when a chain upgrade proposal is executed
-	// then the chain upgrades successfully
-	systest.Sut.StopChain()
+	t.Run("gov upgrade, then manual upgrade", func(t *testing.T) {
+		const (
+			upgrade1Height       = 25
+			upgrade1Name         = "v053-to-v054" // must match UpgradeName in simapp/upgrades.go
+			upgrade2Height int64 = 30
+			upgrade2Name         = "manual1"
+		)
 
-	currentBranchBinary := systest.Sut.ExecBinary()
+		// Scenario:
+		// start a legacy chain with some state
+		// when a chain upgrade proposal is executed
+		// then the chain upgrades successfully
+		systest.Sut.StopChain()
 
-	legacyBinary := systest.WorkDir + "/binaries/v0.53/simd"
-	systest.Sut.SetExecBinary(legacyBinary)
-	systest.Sut.SetupChain()
+		currentBranchBinary := systest.Sut.ExecBinary()
 
-	votingPeriod := 5 * time.Second // enough time to vote
-	systest.Sut.ModifyGenesisJSON(t, systest.SetGovVotingPeriod(t, votingPeriod))
+		legacyBinary := systest.WorkDir + "/binaries/v0.53/simd"
+		systest.Sut.SetExecBinary(legacyBinary)
+		systest.Sut.SetupChain()
 
-	systest.Sut.StartChainWithCosmovisor(t)
+		votingPeriod := 5 * time.Second // enough time to vote
+		systest.Sut.ModifyGenesisJSON(t, systest.SetGovVotingPeriod(t, votingPeriod))
 
-	cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
-	govAddr := sdk.AccAddress(address.Module("gov")).String()
-	// submit upgrade proposal
-	proposal := fmt.Sprintf(`
+		systest.Sut.StartChainWithCosmovisor(t)
+
+		cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
+		govAddr := sdk.AccAddress(address.Module("gov")).String()
+		// submit upgrade proposal
+		proposal := fmt.Sprintf(`
 	{
 	"messages": [
 	 {
@@ -62,60 +64,100 @@ func TestCosmovisorUpgrade(t *testing.T) {
 	"title": "my upgrade",
 	"summary": "testing"
 	}`, govAddr, upgrade1Name, upgrade1Height)
-	proposalID := cli.SubmitAndVoteGovProposal(proposal)
+		proposalID := cli.SubmitAndVoteGovProposal(proposal)
 
-	// add binary for gov upgrade
-	systest.Sut.ExecCosmovisor(
-		t,
-		true,
-		"add-upgrade",
-		upgrade1Name,
-		currentBranchBinary,
-	)
+		// add binary for gov upgrade
+		systest.Sut.ExecCosmovisor(
+			t,
+			true,
+			"add-upgrade",
+			upgrade1Name,
+			currentBranchBinary,
+		)
 
-	systest.Sut.AwaitBlockHeight(t, 21, 60*time.Second)
+		systest.Sut.AwaitBlockHeight(t, 21, 60*time.Second)
 
-	t.Logf("current_height: %d\n", systest.Sut.CurrentHeight())
-	raw := cli.CustomQuery("q", "gov", "proposal", proposalID)
-	proposalStatus := gjson.Get(raw, "proposal.status").String()
-	require.Equal(t, "PROPOSAL_STATUS_PASSED", proposalStatus, raw)
+		t.Logf("current_height: %d\n", systest.Sut.CurrentHeight())
+		raw := cli.CustomQuery("q", "gov", "proposal", proposalID)
+		proposalStatus := gjson.Get(raw, "proposal.status").String()
+		require.Equal(t, "PROPOSAL_STATUS_PASSED", proposalStatus, raw)
 
-	wrapperTxt := fmt.Sprintf(`#!/usr/bin/env bash
+		// add manual upgrade
+		systest.Sut.ExecCosmovisor(
+			t,
+			true,
+			"add-upgrade",
+			upgrade2Name,
+			currentBranchBinary,
+			fmt.Sprintf("--upgrade-height=%d", upgrade2Height),
+		)
+
+		systest.Sut.AwaitBlockHeight(t, upgrade1Height+1)
+
+		regex, err := regexp.Compile(fmt.Sprintf(`UPGRADE %q NEEDED at height: %d:  module=x/upgrade`,
+			upgrade1Name, upgrade1Height))
+		require.NoError(t, err)
+		require.Equal(t, systest.Sut.NodesCount(), systest.Sut.FindLogMessage(regex))
+		// TODO check current binary
+
+		systest.Sut.AwaitBlockHeight(t, upgrade2Height+1)
+		regex, err = regexp.Compile(fmt.Sprintf(`halt per configuration height %d`,
+			upgrade2Height))
+		require.NoError(t, err)
+		require.Equal(t, systest.Sut.NodesCount(), systest.Sut.FindLogMessage(regex))
+		// TODO check current binary
+
+		// smoke test that new version runs
+		cli = systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
+		got := cli.Run("tx", "protocolpool", "fund-community-pool", "100stake", "--from=node0")
+		systest.RequireTxSuccess(t, got)
+	})
+
+	t.Run("manual upgrade", func(t *testing.T) {
+		const (
+			upgradeHeight = 10
+			upgradeName   = "v053-to-v054" // must match UpgradeName in simapp/upgrades.go
+		)
+		// Scenario:
+		// start a legacy chain with some state
+		// when a chain upgrade proposal is executed
+		// then the chain upgrades successfully
+		systest.Sut.StopChain()
+
+		currentBranchBinary := systest.Sut.ExecBinary()
+
+		legacyBinary := systest.WorkDir + "/binaries/v0.53/simd"
+		systest.Sut.SetExecBinary(legacyBinary)
+		systest.Sut.SetupChain()
+
+		systest.Sut.StartChainWithCosmovisor(t)
+
+		// we create a wrapper for the current branch binary which sets the
+		// SIMAPP_MANUAL_UPGRADE_HEIGHT which will cause the upgrade to be applied manually
+		wrapperTxt := fmt.Sprintf(`#!/usr/bin/env bash
 set -e
-TEST_MANUAL_UPGRADE_HEIGHT="%d" exec %s "$@"`, upgrade2Height, currentBranchBinary)
-	wrapperPath := filepath.Join(systest.WorkDir, "testnet", fmt.Sprintf("%s.sh", upgrade2Name))
-	wrapperPath, err := filepath.Abs(wrapperPath)
-	require.NoError(t, err, "failed to get absolute path for manual upgrade script")
-	err = os.WriteFile(wrapperPath, []byte(wrapperTxt), 0o755)
-	require.NoError(t, err, "failed to write manual upgrade script")
+SIMAPP_MANUAL_UPGRADE_HEIGHT="%d" exec %s "$@"`, upgradeHeight, currentBranchBinary)
+		wrapperPath := filepath.Join(systest.WorkDir, "testnet", fmt.Sprintf("%s.sh", upgradeName))
+		wrapperPath, err := filepath.Abs(wrapperPath)
+		require.NoError(t, err, "failed to get absolute path for manual upgrade script")
+		err = os.WriteFile(wrapperPath, []byte(wrapperTxt), 0o755)
+		require.NoError(t, err, "failed to write manual upgrade script")
 
-	// add manual upgrade
-	systest.Sut.ExecCosmovisor(
-		t,
-		true,
-		"add-upgrade",
-		upgrade2Name,
-		wrapperPath,
-		fmt.Sprintf("--upgrade-height=%d", upgrade2Height),
-	)
+		// schedule manual upgrade to latest version
+		systest.Sut.ExecCosmovisor(
+			t,
+			true,
+			"add-upgrade",
+			upgradeName,
+			wrapperPath,
+			fmt.Sprintf("--upgrade-height=%d", upgradeHeight),
+		)
 
-	systest.Sut.AwaitBlockHeight(t, upgrade1Height+1)
+		systest.Sut.AwaitBlockHeight(t, upgradeHeight+1, 60*time.Second)
 
-	regex, err := regexp.Compile(fmt.Sprintf(`UPGRADE %q NEEDED at height: %d:  module=x/upgrade`,
-		upgrade1Name, upgrade1Height))
-	require.NoError(t, err)
-	require.Equal(t, systest.Sut.NodesCount(), systest.Sut.FindLogMessage(regex))
-	// TODO check current binary
-
-	systest.Sut.AwaitBlockHeight(t, upgrade2Height+1)
-	regex, err = regexp.Compile(fmt.Sprintf(`halt per configuration height %d`,
-		upgrade2Height))
-	require.NoError(t, err)
-	require.Equal(t, systest.Sut.NodesCount(), systest.Sut.FindLogMessage(regex))
-	// TODO check current binary
-
-	// smoke test that new version runs
-	cli = systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
-	got := cli.Run("tx", "protocolpool", "fund-community-pool", "100stake", "--from=node0")
-	systest.RequireTxSuccess(t, got)
+		// smoke test that new version runs
+		cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
+		got := cli.Run("tx", "protocolpool", "fund-community-pool", "100stake", "--from=node0")
+		systest.RequireTxSuccess(t, got)
+	})
 }

@@ -2,6 +2,8 @@ package simapp
 
 import (
 	"context"
+	"os"
+	"strconv"
 
 	storetypes "cosmossdk.io/store/types"
 
@@ -30,6 +32,22 @@ func (app SimApp) RegisterUpgradeHandlers() {
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if err != nil {
 		panic(err)
+	}
+
+	// this allows us to check migration to v0.54.x in the system tests via a manual (non-governance upgrade)
+	if manualUpgrade, ok := os.LookupEnv("SIMAPP_MANUAL_UPGRADE_HEIGHT"); ok {
+		height, err := strconv.ParseUint(manualUpgrade, 10, 64)
+		if err != nil {
+			panic("invalid SIMAPP_MANUAL_UPGRADE_HEIGHT height: " + err.Error())
+		}
+		upgradeInfo = upgradetypes.Plan{
+			Name:   UpgradeName,
+			Height: int64(height),
+		}
+		err = app.UpgradeKeeper.SetManualUpgrade(&upgradeInfo)
+		if err != nil {
+			panic("failed to set manual upgrade: " + err.Error())
+		}
 	}
 
 	if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {

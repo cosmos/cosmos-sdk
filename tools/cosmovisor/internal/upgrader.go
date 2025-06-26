@@ -29,6 +29,7 @@ func UpgradeIfNeeded(cfg *cosmovisor.Config, logger log.Logger, knownHeight uint
 			return false, err
 		}
 		// remove the upgrade-info.json file after a successful upgrade, otherwise we will keep trying to upgrade
+		// TODO is this actually safe to do, it seems like some logic in simapp actually depends on the file being present, so maybe x/upgrade should clear it??
 		logger.Info("Removing completed upgrade plan", "height", upgradePlan.Height, "name", upgradePlan.Name)
 		file := cfg.UpgradeInfoFilePath()
 		err = os.Remove(file)

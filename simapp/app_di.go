@@ -3,12 +3,8 @@
 package simapp
 
 import (
-	"fmt"
 	"io"
-	"os"
-	"strconv"
 
-	abci "github.com/cometbft/cometbft/v2/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
 
 	clienthelpers "cosmossdk.io/client/v2/helpers"
@@ -26,7 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	testdata_pulsar "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -262,25 +257,6 @@ func NewSimApp(
 	}
 
 	return app
-}
-
-// PreBlocker application updates every pre block
-func (app *SimApp) PreBlocker(ctx sdk.Context, req *abci.FinalizeBlockRequest) (*sdk.ResponsePreBlock, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	curHeight := sdkCtx.BlockHeight()
-	testManualUpgradeHeight, haveManualUpgrade := os.LookupEnv("TEST_MANUAL_UPGRADE_HEIGHT")
-
-	if haveManualUpgrade {
-		upgradeHeight, err := strconv.ParseInt(testManualUpgradeHeight, 10, 64)
-		if err != nil {
-			return nil, fmt.Errorf("invalid TEST_MANUAL_UPGRADE_HEIGHT: %w", err)
-		}
-		app.Logger().Info("TEST_MANUAL_UPGRADE_HEIGHT is set", "upgrade_height", upgradeHeight, "current_height", curHeight)
-		if curHeight == upgradeHeight {
-			app.Logger().Info("TEST_MANUAL_UPGRADE_HEIGHT is set, running manual upgrade logic", "height", upgradeHeight)
-		}
-	}
-	return app.App.PreBlocker(ctx, req)
 }
 
 // setAnteHandler sets custom ante handlers.

@@ -47,6 +47,7 @@ type Keeper struct {
 	downgradeVerified  bool                            // tells if we've already sanity checked that this binary version isn't being used against an old state.
 	authority          string                          // the address capable of executing and canceling an upgrade. Usually the gov module account
 	initVersionMap     module.VersionMap               // the module version map at init genesis
+	manualUpgradeInfo  *types.Plan
 }
 
 // NewKeeper constructs an upgrade Keeper which requires the following arguments:
@@ -599,4 +600,25 @@ func (k *Keeper) SetDowngradeVerified(v bool) {
 // DowngradeVerified returns downgradeVerified.
 func (k Keeper) DowngradeVerified() bool {
 	return k.downgradeVerified
+}
+
+// SetManualUpgrade sets the manual upgrade plan.
+// Currently, this e
+// If the plan is nil, it clears the existing manual upgrade info.
+func (k Keeper) SetManualUpgrade(plan *types.Plan) error {
+	if plan == nil {
+		k.manualUpgradeInfo = nil
+		return nil
+	}
+
+	if err := plan.ValidateBasic(); err != nil {
+		return err
+	}
+
+	k.manualUpgradeInfo = plan
+	return nil
+}
+
+func (k Keeper) GetManualUpgrade() *types.Plan {
+	return k.manualUpgradeInfo
 }

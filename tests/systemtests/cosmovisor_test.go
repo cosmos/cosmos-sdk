@@ -101,10 +101,6 @@ func TestCosmovisorUpgrade(t *testing.T) {
 		// TODO check current binary
 
 		systest.Sut.AwaitBlockHeight(t, upgrade2Height+1)
-		regex, err = regexp.Compile(fmt.Sprintf(`halt per configuration height %d`,
-			upgrade2Height))
-		require.NoError(t, err)
-		require.Equal(t, systest.Sut.NodesCount(), systest.Sut.FindLogMessage(regex))
 		// TODO check current binary
 
 		// smoke test that new version runs

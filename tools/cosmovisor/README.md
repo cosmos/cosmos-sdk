@@ -243,8 +243,7 @@ The following heuristic is applied to detect the upgrade:
 * If `cosmovisor/current/upgrade-info.json` doesn't exist but `data/upgrade-info.json` exists, then `cosmovisor` assumes
   that whatever is in `data/upgrade-info.json` is a valid upgrade request. In this case `cosmovisor` tries immediately
   to make an upgrade according to the `name` attribute in `data/upgrade-info.json`.
-* Otherwise, `cosmovisor` waits for changes in `upgrade-info.json`. As soon as a new upgrade name is recorded in the
-  file, `cosmovisor` will trigger an upgrade mechanism.
+* If `cosmovisor/current/upgrade-info.json` exists, `cosmovisor` waits for changes in `upgrade-info.json`. As soon as a new upgrade name different from the current one is recorded in the file, `cosmovisor` will trigger an upgrade mechanism.
 
 When the upgrade mechanism is triggered, `cosmovisor` will:
 
@@ -252,7 +251,6 @@ When the upgrade mechanism is triggered, `cosmovisor` will:
    where `<name>` is the `upgrade-info.json:name` attribute);
 2. update the `current` symbolic link to point to the new directory and save `data/upgrade-info.json` to
    `cosmovisor/current/upgrade-info.json`.
-3. deleted `data/upgrade-info.json` to avoid further triggering of the upgrade mechanism.
 
 ### Scheduling Manual Upgrades
 

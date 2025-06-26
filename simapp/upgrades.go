@@ -33,6 +33,7 @@ func (app SimApp) RegisterUpgradeHandlers() {
 	if err != nil {
 		panic(err)
 	}
+	app.Logger().Debug("read upgrade info from disk", "upgrade_info", upgradeInfo)
 
 	// this allows us to check migration to v0.54.x in the system tests via a manual (non-governance upgrade)
 	if manualUpgrade, ok := os.LookupEnv("SIMAPP_MANUAL_UPGRADE_HEIGHT"); ok {

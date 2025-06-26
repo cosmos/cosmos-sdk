@@ -136,6 +136,7 @@ func (r *Runner) ComputeRunPlan(args []string) (cmd *exec.Cmd, haltHeight uint64
 
 // RunProcess runs the given command until either a upgrade is detected or the process exits.
 func (r *Runner) RunProcess(ctx context.Context, cmd *exec.Cmd, haltHeight uint64) error {
+	currentBinaryUpgradeName := r.cfg.CurrentBinaryUpgradeName()
 	// start the fsnotify watcher to watch for changes in the upgrade info directory
 	dirWatcher, err := watchers.NewFSNotifyWatcher(ctx, r.logger, r.cfg.UpgradeInfoDir(), []string{
 		r.cfg.UpgradeInfoFilePath(),
@@ -154,7 +155,7 @@ func (r *Runner) RunProcess(ctx context.Context, cmd *exec.Cmd, haltHeight uint6
 
 	// start watchers for upgrade plans, manual upgrades and height updates
 	eh := watchers.DebugLoggerErrorHandler(r.logger)
-	upgradePlanWatcher := watchers.InitFileWatcher[upgradetypes.Plan](ctx, eh, r.cfg.PollInterval, dirWatcher, r.cfg.UpgradeInfoFilePath(), r.cfg.ParseUpgradeInfo)
+	upgradePlanWatcher := watchers.InitFileWatcher[*upgradetypes.Plan](ctx, eh, r.cfg.PollInterval, dirWatcher, r.cfg.UpgradeInfoFilePath(), r.cfg.ParseUpgradeInfo)
 	manualUpgradesWatcher := watchers.InitFileWatcher[cosmovisor.ManualUpgradeBatch](ctx, eh, r.cfg.PollInterval, dirWatcher, r.cfg.UpgradeInfoBatchFilePath(), r.cfg.ParseManualUpgrades)
 	heightChecker := watchers.NewHTTPRPCBLockChecker(r.cfg.RPCAddress, r.logger)
 	heightWatcher := watchers.NewHeightWatcher(eh, heightChecker, r.cfg.PollInterval, func(height uint64) error {
@@ -183,13 +184,16 @@ func (r *Runner) RunProcess(ctx context.Context, cmd *exec.Cmd, haltHeight uint6
 		case <-parentCtx.Done():
 			r.logger.Info("Parent context cancelled, shutting down")
 			return errDone
-		case _, ok := <-upgradePlanWatcher.Updated():
+		case upgradePlan, ok := <-upgradePlanWatcher.Updated():
 			// TODO check skip upgrade heights?? (although not sure why we need this as the node should not emit an upgrade plan if skip heights is enabled)
 			if !ok {
 				return nil
 			}
 			r.logger.Info("Received upgrade-info.json")
-			return ErrRestartNeeded{}
+			if upgradePlan.Name != currentBinaryUpgradeName {
+				// only restart if we have a different upgrade name than the current binary's upgrade name
+				return ErrRestartNeeded{}
+			}
 		case manualUpgrades, ok := <-manualUpgradesWatcher.Updated():
 			if !ok {
 				return nil

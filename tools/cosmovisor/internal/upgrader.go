@@ -23,18 +23,15 @@ type UpgradeCheckResult struct {
 func UpgradeIfNeeded(cfg *cosmovisor.Config, logger log.Logger, knownHeight uint64) (upgraded bool, err error) {
 	// if we see upgrade-info.json, assume we are at the right height and upgrade
 	logger.Info("Checking for upgrade-info.json")
-	if upgradePlan, err := cfg.UpgradeInfo(); err == nil {
+	currentBinaryUpgradeName := cfg.CurrentBinaryUpgradeName()
+	logger.Debug("read current binary's upgrade info", "name", currentBinaryUpgradeName)
+	// only upgrade if we have a pending upgrade plan with a different name from the current binary's upgrade plan
+	if upgradePlan, err := cfg.PendingUpgradeInfo(); err == nil &&
+		upgradePlan != nil &&
+		upgradePlan.Name != currentBinaryUpgradeName {
 		err := DoUpgrade(cfg, logger, upgradePlan)
 		if err != nil {
 			return false, err
-		}
-		// remove the upgrade-info.json file after a successful upgrade, otherwise we will keep trying to upgrade
-		// TODO is this actually safe to do, it seems like some logic in simapp actually depends on the file being present, so maybe x/upgrade should clear it??
-		logger.Info("Removing completed upgrade plan", "height", upgradePlan.Height, "name", upgradePlan.Name)
-		file := cfg.UpgradeInfoFilePath()
-		err = os.Remove(file)
-		if err != nil {
-			return true, fmt.Errorf("failed to remove upgrade-info.json: %w", err)
 		}
 		return true, nil
 	}
@@ -52,7 +49,7 @@ func UpgradeIfNeeded(cfg *cosmovisor.Config, logger log.Logger, knownHeight uint
 		haltHeight := uint64(manualUpgrade.Height)
 		if lastKnownHeight == haltHeight {
 			logger.Info("At manual upgrade", "upgrade", manualUpgrade, "halt_height", haltHeight)
-			err := DoUpgrade(cfg, logger, *manualUpgrade)
+			err := DoUpgrade(cfg, logger, manualUpgrade)
 			if err != nil {
 				return false, err
 			}
@@ -74,10 +71,10 @@ func UpgradeIfNeeded(cfg *cosmovisor.Config, logger log.Logger, knownHeight uint
 type Upgrader struct {
 	cfg         *cosmovisor.Config
 	logger      log.Logger
-	upgradePlan upgradetypes.Plan
+	upgradePlan *upgradetypes.Plan
 }
 
-func DoUpgrade(cfg *cosmovisor.Config, logger log.Logger, upgradePlan upgradetypes.Plan) error {
+func DoUpgrade(cfg *cosmovisor.Config, logger log.Logger, upgradePlan *upgradetypes.Plan) error {
 	upgrader := &Upgrader{
 		cfg:         cfg,
 		logger:      logger,
@@ -108,7 +105,7 @@ func (u *Upgrader) DoUpgrade() error {
 		return err
 	}
 
-	if err := UpgradeBinary(u.logger, u.cfg, u.upgradePlan); err != nil {
+	if err := UpgradeBinary(u.logger, u.cfg, *u.upgradePlan); err != nil {
 		return err
 	}
 

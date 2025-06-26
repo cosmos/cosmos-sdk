@@ -442,32 +442,58 @@ func (cfg *Config) SetCurrentUpgrade(u upgradetypes.Plan) (rerr error) {
 	return err
 }
 
-// UpgradeInfo returns the current upgrade info
-func (cfg *Config) UpgradeInfo() (upgradetypes.Plan, error) {
+// PendingUpgradeInfo returns pending upgrade info written by x/upgrade.
+func (cfg *Config) PendingUpgradeInfo() (*upgradetypes.Plan, error) {
 	filename := cfg.UpgradeInfoFilePath()
 	_, err := os.Lstat(filename)
 	var bz []byte
 	if err != nil { // no current directory
-		return upgradetypes.Plan{}, fmt.Errorf("failed to read %q: %w", filename, err)
+		return nil, fmt.Errorf("failed to read %q: %w", filename, err)
 	}
 	if bz, err = os.ReadFile(filename); err != nil {
-		return upgradetypes.Plan{}, fmt.Errorf("failed to read %q: %w", filename, err)
+		return nil, fmt.Errorf("failed to read %q: %w", filename, err)
 	}
 	return cfg.ParseUpgradeInfo(bz)
 }
 
-func (cfg *Config) ParseUpgradeInfo(bz []byte) (upgradetypes.Plan, error) {
+// CurrentBinaryUpgradeInfo returns the upgrade info for the current active binary, if any.
+func (cfg *Config) CurrentBinaryUpgradeInfo() (*upgradetypes.Plan, error) {
+	filename := filepath.Join(cfg.Root(), currentLink, upgradetypes.UpgradeInfoFilename)
+	bz, err := os.ReadFile(filename)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to read %q: %w", filename, err)
+	}
+	return cfg.ParseUpgradeInfo(bz)
+}
+
+// CurrentBinaryUpgradeName returns the upgrade info for the current active binary, if any.
+func (cfg *Config) CurrentBinaryUpgradeName() string {
+	upgradeInfo, err := cfg.CurrentBinaryUpgradeInfo()
+	if err != nil {
+		return ""
+	}
+	if upgradeInfo == nil {
+		return ""
+	}
+	return upgradeInfo.Name
+}
+
+// ParseUpgradeInfo parses the upgrade info from the given byte slice.
+func (cfg *Config) ParseUpgradeInfo(bz []byte) (*upgradetypes.Plan, error) {
 	var upgradePlan upgradetypes.Plan
 	if err := jsonpb.Unmarshal(bytes.NewReader(bz), &upgradePlan); err != nil {
-		return upgradetypes.Plan{}, fmt.Errorf("error unmarshalling upgrade info: %w", err)
+		return nil, fmt.Errorf("error unmarshalling upgrade info: %w", err)
 	}
 	if err := upgradePlan.ValidateBasic(); err != nil {
-		return upgradetypes.Plan{}, fmt.Errorf("upgrade info failed validation upgrade inof: %w", err)
+		return nil, fmt.Errorf("upgrade info failed validation upgrade inof: %w", err)
 	}
 	if !cfg.DisableRecase {
 		upgradePlan.Name = strings.ToLower(upgradePlan.Name)
 	}
-	return upgradePlan, nil
+	return &upgradePlan, nil
 }
 
 const LastKnownHeightFile = ".last_known_height"

@@ -62,6 +62,28 @@ func PreBlocker(ctx context.Context, k *keeper.Keeper) (appmodule.ResponsePreBlo
 	}
 
 	if !found {
+		// check for manual upgrade
+		manualPlan := k.GetManualUpgrade()
+		if manualPlan != nil && manualPlan.Height == blockHeight {
+			// if we have a manual upgrade, we execute it
+			logger := k.Logger(ctx)
+			logger.Info(fmt.Sprintf("applying manual upgrade \"%s\" at %d", manualPlan.Name, blockHeight))
+			sdkCtx = sdkCtx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
+			if err := k.ApplyUpgrade(sdkCtx, *manualPlan); err != nil {
+				return nil, err
+			}
+
+			// clear the manual upgrade plan
+			err = k.SetManualUpgrade(nil)
+			if err != nil {
+				return nil, fmt.Errorf("failed to clear manual upgrade plan: %w", err)
+			}
+
+			return &sdk.ResponsePreBlock{
+				ConsensusParamsChanged: true,
+			}, nil
+		}
+
 		return &sdk.ResponsePreBlock{
 			ConsensusParamsChanged: false,
 		}, nil

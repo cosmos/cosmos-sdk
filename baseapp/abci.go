@@ -1281,11 +1281,11 @@ func (app *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, check
 	// branch the commit multi-store for safety
 	ctx := sdk.NewContext(cacheMS, *header, true, app.logger).
 		WithMinGasPrices(app.minGasPrices).
-		WithGasMeter(storetypes.NewGasMeter(app.queryGasLimit)).
 		WithBlockHeader(*header).
 		WithBlockHeight(height)
 
 	ctx = ctx.WithBlockGasMeter(app.getBlockGasMeter(ctx))
+	ctx = ctx.WithGasMeter(storetypes.NewGasMeter(app.queryGasLimit))
 
 	if !isLatest {
 		rms, ok := app.cms.(*rootmulti.Store)

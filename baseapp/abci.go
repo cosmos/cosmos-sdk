@@ -1,6 +1,7 @@
 package baseapp
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"sort"
@@ -489,6 +490,7 @@ func (app *BaseApp) ProcessProposal(req *abci.ProcessProposalRequest) (resp *abc
 		ProposerAddress:    req.ProposerAddress,
 		NextValidatorsHash: req.NextValidatorsHash,
 		AppHash:            app.LastCommitID().Hash,
+		ConsensusHash:      req.Hash,
 	}
 	app.stateManager.SetState(execModeProcessProposal, app.cms, header, app.logger, app.streamingManager)
 
@@ -744,7 +746,28 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Finaliz
 	// finalizeBlockState should be set on InitChain or ProcessProposal. If it is
 	// nil, it means we are replaying this block and we need to set the state here
 	// given that during block replay ProcessProposal is not executed by CometBFT.
-	finalizeState := app.stateManager.GetState(execModeFinalize)
+	var finalizeState *state.State
+	for {
+		firstState := app.stateManager.GetState(execModeFinalize)
+		if firstState == nil {
+			break
+		}
+
+		// only match state up to the requested height
+		if req.Height < firstState.Context().BlockHeight() {
+			break
+		}
+
+		// matche state by it's height and hash
+		// special case for initialHeight
+		if (req.Height == app.initialHeight && firstState.Context().HeaderInfo().Height == app.initialHeight) || (req.Height == firstState.Context().HeaderInfo().Height && bytes.Equal(req.Hash, firstState.Context().HeaderInfo().Hash)) {
+			finalizeState = firstState
+			break
+		} else {
+			// throw away the oldest unmatched state
+			app.stateManager.ClearState(execModeFinalize)
+		}
+	}
 	if finalizeState == nil {
 		app.stateManager.SetState(execModeFinalize, app.cms, header, app.logger, app.streamingManager)
 		finalizeState = app.stateManager.GetState(execModeFinalize)

@@ -1285,6 +1285,8 @@ func (app *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, check
 		WithBlockHeader(*header).
 		WithBlockHeight(height)
 
+	ctx = ctx.WithBlockGasMeter(app.getBlockGasMeter(ctx))
+
 	if !isLatest {
 		rms, ok := app.cms.(*rootmulti.Store)
 		if ok {

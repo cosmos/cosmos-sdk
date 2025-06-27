@@ -1284,7 +1284,7 @@ func (app *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, check
 		WithBlockHeader(*header).
 		WithBlockHeight(height)
 
-	ctx = ctx.WithBlockGasMeter(app.getBlockGasMeter(ctx))
+	ctx = ctx.WithConsensusParams(app.GetConsensusParams(ctx))
 	ctx = ctx.WithGasMeter(storetypes.NewGasMeter(app.queryGasLimit))
 
 	if !isLatest {

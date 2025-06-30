@@ -115,8 +115,12 @@ func TestCosmovisorUpgrade(t *testing.T) {
 		regex, err = regexp.Compile("read upgrade info from disk")
 		require.NoError(t, err)
 		require.Equal(t, systest.Sut.NodesCount(), systest.Sut.FindLogMessage(regex))
+		// make sure we ran the upgrade handler
 
 		systest.Sut.AwaitBlockHeight(t, upgrade2Height+1)
+		require.Equal(t, systest.Sut.NodesCount(), systest.Sut.FindLogMessage(
+			regexp.MustCompile(fmt.Sprintf(`applying upgrade %q`, upgrade1Name))),
+		)
 
 		requireCurrentPointsTo(t, fmt.Sprintf("upgrades/%s", upgrade2Name))
 
@@ -166,6 +170,11 @@ func TestCosmovisorUpgrade(t *testing.T) {
 		systest.Sut.AwaitBlockHeight(t, upgradeHeight+1, 60*time.Second)
 
 		requireCurrentPointsTo(t, fmt.Sprintf("upgrades/%s", upgradeName))
+
+		// make sure the upgrade handler was called
+		require.Equal(t, systest.Sut.NodesCount(), systest.Sut.FindLogMessage(
+			regexp.MustCompile(fmt.Sprintf(`applying upgrade %s`, upgradeName))),
+		)
 
 		// smoke test that new version runs
 		cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)

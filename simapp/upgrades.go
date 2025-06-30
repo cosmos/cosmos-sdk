@@ -30,7 +30,9 @@ func (app SimApp) RegisterUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
 		UpgradeName,
 		func(ctx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-			sdk.UnwrapSDKContext(ctx).Logger().Debug("this is a debug level message to test that verbose logging mode has properly been enabled during a chain upgrade")
+			logger := sdk.UnwrapSDKContext(ctx).Logger()
+			logger.Debug("this is a debug level message to test that verbose logging mode has properly been enabled during a chain upgrade")
+			logger.Debug(fmt.Sprintf("applying upgrade %s", UpgradeName))
 			return app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
 		},
 	)
@@ -38,6 +40,8 @@ func (app SimApp) RegisterUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
 		ManualUpgradeName,
 		func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+			logger := sdk.UnwrapSDKContext(ctx).Logger()
+			logger.Debug(fmt.Sprintf("applying upgrade %s", ManualUpgradeName))
 			// do some minimal state breaking update
 			err := app.GovKeeper.Constitution.Set(ctx,
 				fmt.Sprintf("we have expected upgrade %q and that's now our constitution", plan.Name))

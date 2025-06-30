@@ -61,8 +61,9 @@ func UpgradeIfNeeded(cfg *cosmovisor.Config, logger log.Logger, knownHeight uint
 			}
 			return true, err
 		} else if lastKnownHeight > haltHeight {
-			// TODO should we just warn here? or actually return an error?
-			return false, fmt.Errorf("missed manual upgrade %s at height %d, last known height is %d", manualUpgrade.Name, manualUpgrade.Height, lastKnownHeight)
+			// if the last known height is past the halt height, we assume that we are in an error condition and have missed the halt height!
+			return false, fmt.Errorf("last known height is %d, but we have manual upgrade %s scheduled for height %d which is before the current height! For safety, Cosmovisor assumes that this is an error condition that requires operator intervention. If the manual upgrade was scheduled by error, please remove it from upgrade-info.json.batch and restart Cosmovisor",
+				lastKnownHeight, manualUpgrade.Name, manualUpgrade.Height)
 		}
 	}
 	return false, nil

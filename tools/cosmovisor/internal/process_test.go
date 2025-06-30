@@ -30,15 +30,13 @@ func init() {
 	workDir = filepath.Join(dir, "..")
 }
 
-// TODO all these tests share the same setup so we can extract it to a common function
-
 type launchProcessFixture struct {
 	cfg    *cosmovisor.Config
 	stdin  *os.File
 	stdout *buffer
 	stderr *buffer
 	logger log.Logger
-	runner Runner
+	runner *Runner
 }
 
 // TestLaunchProcess will try running the script a few times and watch upgrades work properly

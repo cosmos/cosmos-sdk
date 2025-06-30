@@ -43,7 +43,6 @@ func (cfg *Config) AddManualUpgrades(forceOverwrite bool, plans ...*upgradetypes
 	if len(plans) == 0 {
 		return nil
 	}
-	// TODO only allow plans that are AFTER the last known height
 	existing, err := cfg.ReadManualUpgrades()
 	if err != nil {
 		return err

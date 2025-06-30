@@ -62,8 +62,6 @@ func (r *Runner) Start(ctx context.Context, args []string) error {
 		// We pass the current command and args to the retry manager so it can check whether
 		// the command or its arguments have changed (e.g. if the binary was updated or the halt height changed),
 		// or if we're just in some sort of error restart loop.
-		// TODO add tests for this behavior
-		// TODO should DAEMON_RESTART_AFTER_UPGRADE apply here? it is explicitly about upgrades, but is the user's intention to prevent all restarts?
 		if err := retryMgr.BeforeRun(cmd.Path, cmd.Args); err != nil {
 			return err
 		}
@@ -74,8 +72,6 @@ func (r *Runner) Start(ctx context.Context, args []string) error {
 		if testCallback := GetTestCallback(ctx); testCallback != nil {
 			testCallback()
 		}
-
-		// TODO should restart delay go here? or should it be handled when upgrading
 
 		// Now we actually run the process
 		err = r.RunProcess(ctx, cmd, haltHeight)

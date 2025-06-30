@@ -1,11 +1,13 @@
 package simapp
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"os"
-	"strconv"
 
 	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/gogoproto/jsonpb"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -19,6 +21,7 @@ import (
 // could look like when an application is migrating from Cosmos SDK version
 // v0.53.x to v0.54.x.
 const UpgradeName = "v053-to-v054"
+const ManualUpgradeName = "manual1"
 
 func (app SimApp) RegisterUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
@@ -26,6 +29,16 @@ func (app SimApp) RegisterUpgradeHandlers() {
 		func(ctx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 			sdk.UnwrapSDKContext(ctx).Logger().Debug("this is a debug level message to test that verbose logging mode has properly been enabled during a chain upgrade")
 			return app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
+		},
+	)
+	// we add another upgrade, to be performed manually which does some small state breakage
+	app.UpgradeKeeper.SetUpgradeHandler(
+		ManualUpgradeName,
+		func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+			// do some minimal state breaking update
+			err := app.GovKeeper.Constitution.Set(ctx,
+				fmt.Sprintf("we have expected upgrade %q and that's now our constitution", plan.Name))
+			return fromVM, err
 		},
 	)
 
@@ -38,17 +51,14 @@ func (app SimApp) RegisterUpgradeHandlers() {
 		app.Logger().Info("read upgrade info from disk", "upgrade_info", upgradeInfo)
 	}
 
-	// this allows us to check migration to v0.54.x in the system tests via a manual (non-governance upgrade)
-	if manualUpgrade, ok := os.LookupEnv("SIMAPP_MANUAL_UPGRADE_HEIGHT"); ok {
-		height, err := strconv.ParseUint(manualUpgrade, 10, 64)
+	// this allows to test stateful manual upgrades with Cosmovisor
+	if manualUpgradeVar, ok := os.LookupEnv("SIMAPP_MANUAL_UPGRADE"); ok {
+		var manualUpgrade upgradetypes.Plan
+		err := (&jsonpb.Unmarshaler{}).Unmarshal(bytes.NewBufferString(manualUpgradeVar), &manualUpgrade)
 		if err != nil {
-			panic("invalid SIMAPP_MANUAL_UPGRADE_HEIGHT height: " + err.Error())
+			panic("invalid SIMAPP_MANUAL_UPGRADE: " + err.Error())
 		}
-		upgradeInfo = upgradetypes.Plan{
-			Name:   UpgradeName,
-			Height: int64(height),
-		}
-		err = app.UpgradeKeeper.SetManualUpgrade(&upgradeInfo)
+		err = app.UpgradeKeeper.SetManualUpgrade(&manualUpgrade)
 		if err != nil {
 			panic("failed to set manual upgrade: " + err.Error())
 		}

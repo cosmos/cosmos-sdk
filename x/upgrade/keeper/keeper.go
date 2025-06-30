@@ -607,7 +607,7 @@ func (k Keeper) DowngradeVerified() bool {
 // This allows manual upgrades to be executed using handlers registered with SetUpgradeHandler.
 // Currently, only when manual upgrade can be set.
 // It will be applied and cleared when the specified upgrade height has been reached.
-func (k Keeper) SetManualUpgrade(plan *types.Plan) error {
+func (k *Keeper) SetManualUpgrade(plan *types.Plan) error {
 	if plan == nil {
 		k.manualUpgradeInfo = nil
 		return nil
@@ -621,6 +621,6 @@ func (k Keeper) SetManualUpgrade(plan *types.Plan) error {
 	return nil
 }
 
-func (k Keeper) GetManualUpgrade() *types.Plan {
+func (k *Keeper) GetManualUpgrade() *types.Plan {
 	return k.manualUpgradeInfo
 }

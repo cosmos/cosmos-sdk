@@ -10,12 +10,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
 	systest "cosmossdk.io/systemtests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 func TestCosmovisorUpgrade(t *testing.T) {
@@ -25,8 +27,7 @@ func TestCosmovisorUpgrade(t *testing.T) {
 		// 2. submits a gov upgrade proposal to switch to v0.54
 		// 3. adds a binary for the gov upgrade
 		// 4. waits for the upgrade to be applied and checks the symlink
-		// 5. adds a manual upgrade which doesn't really do anything,
-		//	  but we check that the cosmovisor symlink has been updated
+		// 5. adds a manual upgrade which simapp has configured to make a small state breaking update
 		// 6. waits for the manual upgrade to be applied and checks the symlink
 		const (
 			upgrade1Height       = 25
@@ -88,13 +89,16 @@ func TestCosmovisorUpgrade(t *testing.T) {
 		proposalStatus := gjson.Get(raw, "proposal.status").String()
 		require.Equal(t, "PROPOSAL_STATUS_PASSED", proposalStatus, raw)
 
+		// we create a wrapper for the current branch binary which sets up the manual upgrade
+		wrapperPath := createWrapper(t, upgrade2Name, upgrade2Height, currentBranchBinary)
+
 		// add manual upgrade
 		systest.Sut.ExecCosmovisor(
 			t,
 			true,
 			"add-upgrade",
 			upgrade2Name,
-			currentBranchBinary,
+			wrapperPath,
 			fmt.Sprintf("--upgrade-height=%d", upgrade2Height),
 		)
 
@@ -145,16 +149,8 @@ func TestCosmovisorUpgrade(t *testing.T) {
 		systest.Sut.StartChainWithCosmovisor(t)
 		requireCurrentPointsTo(t, "genesis")
 
-		// we create a wrapper for the current branch binary which sets the
-		// SIMAPP_MANUAL_UPGRADE_HEIGHT which will cause the upgrade to be applied manually
-		wrapperTxt := fmt.Sprintf(`#!/usr/bin/env bash
-set -e
-SIMAPP_MANUAL_UPGRADE_HEIGHT="%d" exec %s "$@"`, upgradeHeight, currentBranchBinary)
-		wrapperPath := filepath.Join(systest.WorkDir, "testnet", fmt.Sprintf("%s.sh", upgradeName))
-		wrapperPath, err := filepath.Abs(wrapperPath)
-		require.NoError(t, err, "failed to get absolute path for manual upgrade script")
-		err = os.WriteFile(wrapperPath, []byte(wrapperTxt), 0o755)
-		require.NoError(t, err, "failed to write manual upgrade script")
+		// we create a wrapper for the current branch binary which sets up the manual upgrade
+		wrapperPath := createWrapper(t, upgradeName, upgradeHeight, currentBranchBinary)
 
 		// schedule manual upgrade to latest version
 		systest.Sut.ExecCosmovisor(
@@ -185,4 +181,24 @@ func requireCurrentPointsTo(t *testing.T, expected string) {
 		require.NoError(t, err, "failed to read current symlink for node %d", i)
 		require.Equal(t, expected, resolved, "current symlink for node %d does not point to expected directory", i)
 	}
+}
+
+func createWrapper(t *testing.T, upgradeName string, upgradeHeight int64, binary string) string {
+	t.Helper()
+	plan := upgradetypes.Plan{
+		Name:   upgradeName,
+		Height: upgradeHeight,
+	}
+	str, err := (&jsonpb.Marshaler{}).MarshalToString(&plan)
+	require.NoError(t, err, "failed to marshal upgrade plan to JSON")
+
+	wrapperTxt := fmt.Sprintf(`#!/usr/bin/env bash
+set -e
+SIMAPP_MANUAL_UPGRADE='%s' exec %s "$@"`, str, binary)
+	wrapperPath := filepath.Join(systest.WorkDir, "testnet", fmt.Sprintf("%s.sh", upgradeName))
+	wrapperPath, err = filepath.Abs(wrapperPath)
+	require.NoError(t, err, "failed to get absolute path for manual upgrade script")
+	err = os.WriteFile(wrapperPath, []byte(wrapperTxt), 0o755)
+	require.NoError(t, err, "failed to write manual upgrade script")
+	return wrapperPath
 }

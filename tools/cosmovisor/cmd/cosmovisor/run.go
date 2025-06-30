@@ -4,7 +4,10 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -36,6 +39,18 @@ func run(ctx context.Context, cfgPath string, args []string, options ...RunOptio
 	if err != nil {
 		return err
 	}
+
+	ctx, _ = signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	shutdownChan := make(chan os.Signal, 1)
+	signal.Notify(shutdownChan, syscall.SIGINT, syscall.SIGTERM)
+	// ensure we shutdown if the process is killed and context cancellation doesn't cause an exit on its own
+	go func() {
+		<-shutdownChan
+		fmt.Println("Received shutdown signal, exiting gracefully...")
+		time.Sleep(cfg.ShutdownGrace)
+		fmt.Println("Forcing process shutdown")
+		os.Exit(0)
+	}()
 
 	runCfg := DefaultRunConfig
 	for _, opt := range options {

@@ -75,6 +75,8 @@ func TestCosmovisorUpgrade(t *testing.T) {
 			currentBranchBinary,
 		)
 
+		requireCurrentPointsTo(t, "genesis")
+
 		systest.Sut.AwaitBlockHeight(t, 21, 60*time.Second)
 
 		t.Logf("current_height: %d\n", systest.Sut.CurrentHeight())
@@ -94,15 +96,20 @@ func TestCosmovisorUpgrade(t *testing.T) {
 
 		systest.Sut.AwaitBlockHeight(t, upgrade1Height+1)
 
+		requireCurrentPointsTo(t, fmt.Sprintf("upgrades/%s", upgrade1Name))
+		// make sure a gov upgrade was triggered
 		regex, err := regexp.Compile(fmt.Sprintf(`UPGRADE %q NEEDED at height: %d:  module=x/upgrade`,
 			upgrade1Name, upgrade1Height))
 		require.NoError(t, err)
 		require.Equal(t, systest.Sut.NodesCount(), systest.Sut.FindLogMessage(regex))
-		// TODO check current binary
-		// TODO check logs to make sure upgrade-info.json was readable by the node for store upgrades
+		// make sure the upgrade-info.json was readable by nodes when they restarted
+		regex, err = regexp.Compile("read upgrade info from disk")
+		require.NoError(t, err)
+		require.Equal(t, systest.Sut.NodesCount(), systest.Sut.FindLogMessage(regex))
 
 		systest.Sut.AwaitBlockHeight(t, upgrade2Height+1)
-		// TODO check current binary
+
+		requireCurrentPointsTo(t, fmt.Sprintf("upgrades/%s", upgrade2Name))
 
 		// smoke test that new version runs
 		cli = systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
@@ -128,6 +135,7 @@ func TestCosmovisorUpgrade(t *testing.T) {
 		systest.Sut.SetupChain()
 
 		systest.Sut.StartChainWithCosmovisor(t)
+		requireCurrentPointsTo(t, "genesis")
 
 		// we create a wrapper for the current branch binary which sets the
 		// SIMAPP_MANUAL_UPGRADE_HEIGHT which will cause the upgrade to be applied manually
@@ -152,9 +160,21 @@ SIMAPP_MANUAL_UPGRADE_HEIGHT="%d" exec %s "$@"`, upgradeHeight, currentBranchBin
 
 		systest.Sut.AwaitBlockHeight(t, upgradeHeight+1, 60*time.Second)
 
+		requireCurrentPointsTo(t, fmt.Sprintf("upgrades/%s", upgradeName))
+
 		// smoke test that new version runs
 		cli := systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
 		got := cli.Run("tx", "protocolpool", "fund-community-pool", "100stake", "--from=node0")
 		systest.RequireTxSuccess(t, got)
 	})
+}
+
+func requireCurrentPointsTo(t *testing.T, expected string) {
+	t.Helper()
+	for i := 0; i < systest.Sut.NodesCount(); i++ {
+		curSymLink := filepath.Join(systest.Sut.NodeDir(i), "cosmovisor", "current")
+		resolved, err := os.Readlink(curSymLink)
+		require.NoError(t, err, "failed to read current symlink for node %d", i)
+		require.Equal(t, expected, resolved, "current symlink for node %d does not point to expected directory", i)
+	}
 }

@@ -11,7 +11,7 @@ import (
 
 	"cosmossdk.io/log"
 
-	"cosmossdk.io/tools/cosmovisor"
+	"cosmossdk.io/tools/cosmovisor/v2"
 
 	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
 )

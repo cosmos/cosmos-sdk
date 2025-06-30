@@ -11,8 +11,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"cosmossdk.io/tools/cosmovisor"
-	"cosmossdk.io/tools/cosmovisor/internal"
+	"cosmossdk.io/tools/cosmovisor/v2"
+	"cosmossdk.io/tools/cosmovisor/v2/internal"
 )
 
 var runCmd = &cobra.Command{

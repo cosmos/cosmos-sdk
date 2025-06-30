@@ -18,7 +18,7 @@ import (
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/spf13/cobra"
 
-	"cosmossdk.io/tools/cosmovisor/internal/watchers"
+	"cosmossdk.io/tools/cosmovisor/v2/internal/watchers"
 	"github.com/cosmos/cosmos-sdk/server"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )

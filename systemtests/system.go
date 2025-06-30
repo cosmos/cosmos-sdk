@@ -670,7 +670,9 @@ func (s *SystemUnderTest) startNodesAsync(t *testing.T, useCosmovisor bool, xarg
 			args...,
 		)
 		cmd.Dir = WorkDir
-		cmd.Env = env
+		if useCosmovisor {
+			cmd.Env = env
+		}
 		s.watchLogs(i, cmd)
 		require.NoError(t, cmd.Start(), "node %d", i)
 		s.Logf("Node started: %d\n", cmd.Process.Pid)

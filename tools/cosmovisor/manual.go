@@ -100,7 +100,7 @@ func (cfg *Config) saveManualUpgrades(manualUpgrades ManualUpgradeBatch) error {
 		return err
 	}
 
-	return os.WriteFile(cfg.UpgradeInfoBatchFilePath(), manualUpgradesData, 0644)
+	return os.WriteFile(cfg.UpgradeInfoBatchFilePath(), manualUpgradesData, 0o644)
 }
 
 func sortUpgrades(upgrades ManualUpgradeBatch) {

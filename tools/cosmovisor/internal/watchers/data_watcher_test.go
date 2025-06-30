@@ -8,8 +8,9 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/log"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/log"
 )
 
 type TestData struct {
@@ -38,14 +39,14 @@ func TestDataWatcher(t *testing.T) {
 	go func() {
 		// write some dummy data to the file
 		time.Sleep(time.Second)
-		err = os.WriteFile(filename, []byte("unexpected content - should be ignored"), 0644)
+		err = os.WriteFile(filename, []byte("unexpected content - should be ignored"), 0o644)
 		require.NoError(t, err)
 
 		// write the expected content to the file
 		time.Sleep(time.Second)
 		bz, err := json.Marshal(expectedContent)
 		require.NoError(t, err)
-		err = os.WriteFile(filename, bz, 0644)
+		err = os.WriteFile(filename, bz, 0o644)
 		require.NoError(t, err)
 
 		// wait a bit to ensure the watcher has time to pick up the change

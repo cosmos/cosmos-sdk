@@ -488,7 +488,7 @@ func (cfg *Config) ParseUpgradeInfo(bz []byte) (*upgradetypes.Plan, error) {
 		return nil, fmt.Errorf("error unmarshalling upgrade info: %w", err)
 	}
 	if err := upgradePlan.ValidateBasic(); err != nil {
-		return nil, fmt.Errorf("upgrade info failed validation upgrade inof: %w", err)
+		return nil, fmt.Errorf("upgrade info failed validation upgrade info: %w", err)
 	}
 	if !cfg.DisableRecase {
 		upgradePlan.Name = strings.ToLower(upgradePlan.Name)
@@ -515,7 +515,7 @@ func (cfg Config) ReadLastKnownHeight() uint64 {
 
 func (cfg Config) WriteLastKnownHeight(height uint64) error {
 	filename := filepath.Join(cfg.UpgradeInfoDir(), LastKnownHeightFile)
-	return os.WriteFile(filename, []byte(strconv.FormatUint(height, 10)), 0644)
+	return os.WriteFile(filename, []byte(strconv.FormatUint(height, 10)), 0o644)
 }
 
 // BooleanOption checks and validate env option

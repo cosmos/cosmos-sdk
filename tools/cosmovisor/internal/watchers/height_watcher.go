@@ -22,7 +22,6 @@ func NewHeightWatcher(errorHandler ErrorHandler, checker HeightChecker, pollInte
 	}
 	watcher.PollWatcher = NewPollWatcher[uint64](errorHandler, func() (uint64, error) {
 		return watcher.ReadNow()
-
 	}, pollInterval)
 	return watcher
 }

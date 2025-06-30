@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"cosmossdk.io/log"
 	"github.com/cenkalti/backoff/v5"
+
+	"cosmossdk.io/log"
 )
 
 type RetryBackoffManager struct {

@@ -13,10 +13,12 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/log"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/log"
+
 	"cosmossdk.io/tools/cosmovisor/v2"
+
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -473,6 +475,7 @@ type buffer struct {
 }
 
 func setupTestLaunchProcessFixture(t *testing.T, testdataDir string, cfg cosmovisor.Config) *launchProcessFixture {
+	t.Helper()
 	// binaries from testdata/validate directory
 	preppedCfg := prepareConfig(
 		t,

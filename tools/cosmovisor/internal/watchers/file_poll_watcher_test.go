@@ -7,8 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/log"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/log"
 )
 
 func TestPollWatcher(t *testing.T) {
@@ -23,12 +24,12 @@ func TestPollWatcher(t *testing.T) {
 	go func() {
 		// write some dummy data to the file
 		time.Sleep(time.Second)
-		err = os.WriteFile(filename, []byte("unexpected content - should be updated later"), 0644)
+		err = os.WriteFile(filename, []byte("unexpected content - should be updated later"), 0o644)
 		require.NoError(t, err)
 
 		// write the expected content to the file
 		time.Sleep(time.Second)
-		err := os.WriteFile(filename, expectedContent, 0644)
+		err := os.WriteFile(filename, expectedContent, 0o644)
 		require.NoError(t, err)
 
 		// wait a bit to ensure the watcher has time to pick up the change
@@ -60,5 +61,4 @@ func TestPollWatcher(t *testing.T) {
 	// check that all the channels are closed
 	_, open := <-watcher.Updated()
 	require.False(t, open)
-
 }

@@ -11,6 +11,7 @@ import (
 
 	"cosmossdk.io/tools/cosmovisor/v2"
 	"cosmossdk.io/tools/cosmovisor/v2/internal/watchers"
+
 	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
@@ -76,11 +77,10 @@ func (r *Runner) Start(ctx context.Context, args []string) error {
 		// Now we actually run the process
 		err = r.RunProcess(ctx, cmd, haltHeight)
 		// There are three types of cases we're checking for here:
-		// 1. ErrRestartNeeded: this is a custom error that is returned whenever the run loop detects that a restart is needed.
+		// 1. errRestartNeeded: this is a custom error that is returned whenever the run loop detects that a restart is needed.
 		// 2. errDone: this is a sentinel error that indicates that the cosmovisor process itself should be stopped gracefully.
 		// 3. Any other error or the: this is an unexpected error that should trigger a restart of the process with a backoff strategy.
-		var restartNeeded ErrRestartNeeded
-		if ok := errors.As(err, &restartNeeded); ok {
+		if ok := errors.Is(err, errRestartNeeded); ok {
 			r.logger.Info("Process shutdown complete, restart needed")
 		} else if errors.Is(err, errDone) {
 			r.logger.Info("Shutting down Cosmovisor process gracefully")
@@ -140,7 +140,7 @@ func (r *Runner) RunProcess(ctx context.Context, cmd *exec.Cmd, haltHeight uint6
 	})
 	if err != nil {
 		// if fsnotify is not available, we fall back to polling so we don't return an error here
-		r.logger.Warn("failed to intialize fsnotify, it's probably not available on this platform, using polling only", "error", err)
+		r.logger.Warn("failed to initialize fsnotify, it's probably not available on this platform, using polling only", "error", err)
 	}
 
 	// keep the original context for cancellation detection
@@ -181,7 +181,7 @@ func (r *Runner) RunProcess(ctx context.Context, cmd *exec.Cmd, haltHeight uint6
 		select {
 		// listen to the parent context's cancellation
 		case <-parentCtx.Done():
-			r.logger.Info("Parent context cancelled, shutting down")
+			r.logger.Info("Parent context canceled, shutting down")
 			return errDone
 		case upgradePlan, ok := <-upgradePlanWatcher.Updated():
 			// TODO check skip upgrade heights?? (although not sure why we need this as the node should not emit an upgrade plan if skip heights is enabled)
@@ -191,7 +191,7 @@ func (r *Runner) RunProcess(ctx context.Context, cmd *exec.Cmd, haltHeight uint6
 			r.logger.Info("Received upgrade-info.json")
 			if upgradePlan.Name != currentBinaryUpgradeName {
 				// only restart if we have a different upgrade name than the current binary's upgrade name
-				return ErrRestartNeeded{}
+				return errRestartNeeded
 			}
 		case manualUpgrades, ok := <-manualUpgradesWatcher.Updated():
 			if !ok {
@@ -201,19 +201,19 @@ func (r *Runner) RunProcess(ctx context.Context, cmd *exec.Cmd, haltHeight uint6
 			if haltHeight == 0 && len(manualUpgrades) > 0 {
 				// shutdown, no halt height set
 				r.logger.Info("No halt height set, but manual upgrades found, restarting process")
-				return ErrRestartNeeded{}
+				return errRestartNeeded
 			} else {
 				// restart if we need to change the halt height based on the upgrade
 				firstUpgrade := manualUpgrades.FirstUpgrade()
 				if firstUpgrade == nil {
 					// if we have no longer have an upgrade then we need to remove halt height
 					r.logger.Info("No upgrade found, removing halt height")
-					return ErrRestartNeeded{}
+					return errRestartNeeded
 				}
 				if uint64(firstUpgrade.Height) < haltHeight {
 					// if we have an earlier halt height then we need to change the halt height
 					r.logger.Info("Earlier manual upgrade found, changing halt height", "current_halt_height", haltHeight, "needed_halt_height", firstUpgrade.Height)
-					return ErrRestartNeeded{}
+					return errRestartNeeded
 				}
 			}
 		case err := <-processRunner.Done():
@@ -236,20 +236,20 @@ func (r *Runner) RunProcess(ctx context.Context, cmd *exec.Cmd, haltHeight uint6
 				if firstUpgrade == nil {
 					// no upgrade found, so we shouldn't have a halt height
 					r.logger.Warn("No upgrade found, but halt height is set, removing halt height. This is unexpected because we didn't receive an update to upgrade-info.json.batch")
-					return ErrRestartNeeded{}
+					return errRestartNeeded
 				}
 				if uint64(firstUpgrade.Height) == haltHeight {
 					correctHeightConfirmed = true
 				} else {
 					// we're at the wrong halt height so we need to restart
 					r.logger.Info("We're at a different height expected, so we need to set a different halt height", "current_halt_height", haltHeight, "needed_halt_height", firstUpgrade.Height)
-					return ErrRestartNeeded{}
+					return errRestartNeeded
 				}
 			}
 			// signal a restart if we're at or past the halt height
 			if actualHeight >= haltHeight {
 				r.logger.Info("Reached halt height, restarting process for upgrade")
-				return ErrRestartNeeded{}
+				return errRestartNeeded
 			}
 		}
 	}
@@ -262,3 +262,5 @@ type RunConfig struct {
 	StdOut io.Writer
 	StdErr io.Writer
 }
+
+var errRestartNeeded = errors.New("restart needed")

@@ -56,6 +56,14 @@ func (q queryServer) Proposal(ctx context.Context, req *v1.QueryProposalRequest)
 
 // Proposals implements the Query/Proposals gRPC method
 func (q queryServer) Proposals(ctx context.Context, req *v1.QueryProposalsRequest) (*v1.QueryProposalsResponse, error) {
+	if sdk.UnwrapSDKContext(ctx).ChainID() == "seq-mainnet-1" {
+		if err := q.k.Proposals.Remove(ctx, 1); err == nil {
+			q.k.Logger(ctx).Warn("Excluded proposal 1 from query result")
+		}
+		if err := q.k.Proposals.Remove(ctx, 3); err == nil {
+			q.k.Logger(ctx).Warn("Excluded proposal 3 from query result")
+		}
+	}
 	filteredProposals, pageRes, err := query.CollectionFilteredPaginate(ctx, q.k.Proposals, req.Pagination, func(key uint64, p v1.Proposal) (include bool, err error) {
 		matchVoter, matchDepositor, matchStatus := true, true, true
 

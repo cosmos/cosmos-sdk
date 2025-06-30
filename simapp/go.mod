@@ -3,20 +3,20 @@ module cosmossdk.io/simapp
 go 1.23.5
 
 require (
-	cosmossdk.io/api v1.0.0-alpha.1
+	cosmossdk.io/api v1.0.0-rc.1
 	cosmossdk.io/client/v2 v2.10.0-beta.4
-	cosmossdk.io/core v1.1.0-alpha.2
+	cosmossdk.io/core v1.1.0-rc.1
 	cosmossdk.io/depinject v1.2.1
 	cosmossdk.io/log v1.6.0
 	cosmossdk.io/math v1.5.3
-	cosmossdk.io/store v1.3.0-alpha.1
+	cosmossdk.io/store v1.10.0-rc.2
 	cosmossdk.io/tools/confix v0.2.0-rc.4
-	cosmossdk.io/x/tx v1.2.0-alpha.1
-	github.com/cometbft/cometbft/api v1.1.0-alpha.1.0.20250611063609-4e308d824f1f
-	github.com/cometbft/cometbft/v2 v2.0.0-alpha.1
+	cosmossdk.io/x/tx v1.2.0-rc.1
+	github.com/cometbft/cometbft/api v1.1.0-rc1
+	github.com/cometbft/cometbft/v2 v2.0.0-rc1
 	github.com/cosmos/cosmos-db v1.1.3
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
-	github.com/cosmos/cosmos-sdk v0.54.0-alpha.0.0.20250611155041-9fa93c9afe32
+	github.com/cosmos/cosmos-sdk v0.54.0-rc.1
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/spf13/cast v1.9.2
 	github.com/spf13/cobra v1.9.1
@@ -36,7 +36,7 @@ require (
 	cloud.google.com/go/iam v1.5.2 // indirect
 	cloud.google.com/go/monitoring v1.24.0 // indirect
 	cloud.google.com/go/storage v1.53.0 // indirect
-	cosmossdk.io/collections v1.2.1 // indirect
+	cosmossdk.io/collections v1.3.1 // indirect
 	cosmossdk.io/errors v1.0.2 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -159,7 +159,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_golang v1.22.0 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
-	github.com/prometheus/common v0.64.0 // indirect
+	github.com/prometheus/common v0.65.0 // indirect
 	github.com/prometheus/procfs v0.16.1 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect

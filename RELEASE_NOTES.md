@@ -8,7 +8,7 @@ Announcing Cosmos SDK v0.53
 
 We are pleased to announce the release of Cosmos SDK v0.53! We’re excited to be delivering a new version of the Cosmos SDK that provides key features and updates while minimizing breaking changes so you can focus on what matters most: building.
 
-Upgrading to this verison of the Cosmos SDK from any `v0.50.x` release will **require a coordinated chain upgrade**.
+Upgrading to this version of the Cosmos SDK from any `v0.50.x` release will **require a coordinated chain upgrade**.
 
 For more upgrade information, check out our [upgrading guide](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/UPGRADING.md)
 

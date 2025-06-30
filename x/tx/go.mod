@@ -3,8 +3,8 @@ module cosmossdk.io/x/tx
 go 1.23.0
 
 require (
-	cosmossdk.io/api v1.0.0-alpha.1
-	cosmossdk.io/core v1.1.0-alpha.2
+	cosmossdk.io/api v1.0.0-rc.1
+	cosmossdk.io/core v1.1.0-rc.1
 	cosmossdk.io/errors v1.0.2
 	cosmossdk.io/math v1.5.3
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5

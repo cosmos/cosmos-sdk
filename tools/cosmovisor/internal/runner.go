@@ -16,10 +16,10 @@ import (
 )
 
 type Runner struct {
-	runCfg      RunConfig
-	cfg         *cosmovisor.Config
-	logger      log.Logger
-	knownHeight uint64
+	runCfg         RunConfig
+	cfg            *cosmovisor.Config
+	logger         log.Logger
+	lastSeenHeight uint64
 }
 
 // NewRunner creates a new Runner instance with the provided configuration and logger.
@@ -35,7 +35,7 @@ func (r *Runner) Start(ctx context.Context, args []string) error {
 	retryMgr := NewRetryBackoffManager(r.logger, r.cfg.MaxRestartRetries)
 	for {
 		// First we check if we need to upgrade and if we do we perform the upgrade
-		upgraded, err := UpgradeIfNeeded(r.cfg, r.logger, r.knownHeight)
+		upgraded, err := UpgradeIfNeeded(r.cfg, r.logger, r.lastSeenHeight)
 		if err != nil {
 			return err
 		}
@@ -159,7 +159,7 @@ func (r *Runner) RunProcess(ctx context.Context, cmd *exec.Cmd, haltHeight uint6
 	manualUpgradesWatcher := watchers.InitFileWatcher[cosmovisor.ManualUpgradeBatch](ctx, eh, r.cfg.PollInterval, dirWatcher, r.cfg.UpgradeInfoBatchFilePath(), r.cfg.ParseManualUpgrades)
 	heightChecker := watchers.NewHTTPRPCBLockChecker(r.cfg.RPCAddress, r.logger)
 	heightWatcher := watchers.NewHeightWatcher(eh, heightChecker, r.cfg.PollInterval, func(height uint64) error {
-		r.knownHeight = height
+		r.lastSeenHeight = height
 		return r.cfg.WriteLastKnownHeight(height)
 	})
 

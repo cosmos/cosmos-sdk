@@ -99,6 +99,7 @@ func TestCosmovisorUpgrade(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, systest.Sut.NodesCount(), systest.Sut.FindLogMessage(regex))
 		// TODO check current binary
+		// TODO check logs to make sure upgrade-info.json was readable by the node for store upgrades
 
 		systest.Sut.AwaitBlockHeight(t, upgrade2Height+1)
 		// TODO check current binary

@@ -29,6 +29,7 @@ func (app SimApp) RegisterUpgradeHandlers() {
 		},
 	)
 
+	// we check that we can read the upgrade info from disk, which is necessary for setting store key upgrades
 	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
 	if err != nil {
 		panic(err)

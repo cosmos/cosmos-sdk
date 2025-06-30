@@ -20,6 +20,14 @@ import (
 
 func TestCosmovisorUpgrade(t *testing.T) {
 	t.Run("gov upgrade, then manual upgrade", func(t *testing.T) {
+		// this test
+		// 1. starts a legacy v0.53 chain with Cosmovisor
+		// 2. submits a gov upgrade proposal to switch to v0.54
+		// 3. adds a binary for the gov upgrade
+		// 4. waits for the upgrade to be applied and checks the symlink
+		// 5. adds a manual upgrade which doesn't really do anything,
+		//	  but we check that the cosmovisor symlink has been updated
+		// 6. waits for the manual upgrade to be applied and checks the symlink
 		const (
 			upgrade1Height       = 25
 			upgrade1Name         = "v053-to-v054" // must match UpgradeName in simapp/upgrades.go
@@ -27,10 +35,6 @@ func TestCosmovisorUpgrade(t *testing.T) {
 			upgrade2Name         = "manual1"
 		)
 
-		// Scenario:
-		// start a legacy chain with some state
-		// when a chain upgrade proposal is executed
-		// then the chain upgrades successfully
 		systest.Sut.StopChain()
 
 		currentBranchBinary := systest.Sut.ExecBinary()
@@ -118,6 +122,10 @@ func TestCosmovisorUpgrade(t *testing.T) {
 	})
 
 	t.Run("manual upgrade", func(t *testing.T) {
+		// this test:
+		// 1. starts a legacy v0.53 chain with Cosmovisor
+		// 2. adds a manual upgrade to v0.54 which has an environment variable set to manually perform the migration
+		// 3. waits for the manual upgrade to be applied and checks the symlink
 		const (
 			upgradeHeight = 10
 			upgradeName   = "v053-to-v054" // must match UpgradeName in simapp/upgrades.go

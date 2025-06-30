@@ -177,6 +177,7 @@ func (s *SystemUnderTest) StartChain(t *testing.T, xargs ...string) {
 	s.doStartChain(t, false, xargs...)
 }
 
+// StartChainWithCosmovisor starts the chain wrapping its execution with Cosmovisor.
 func (s *SystemUnderTest) StartChainWithCosmovisor(t *testing.T, xargs ...string) {
 	s.doStartChain(t, true, xargs...)
 }
@@ -218,6 +219,9 @@ func (s *SystemUnderTest) cosmovisorEnv(t *testing.T, home string) []string {
 func (s *SystemUnderTest) cosmovisorPath() string {
 	return filepath.Join(WorkDir, "binaries", "cosmovisor")
 }
+
+// ExecCosmovisor executes the Cosmovisor binary with the given arguments
+// for each node in the network with the home directory set properly for each node.
 func (s *SystemUnderTest) ExecCosmovisor(t *testing.T, async bool, args ...string) {
 	s.withEachNodeHome(func(i int, home string) {
 		env := s.cosmovisorEnv(t, home)

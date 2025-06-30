@@ -40,7 +40,7 @@ func run(ctx context.Context, cfgPath string, args []string, options ...RunOptio
 		return err
 	}
 
-	ctx, _ = signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	ctx, _ = signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM)
 	shutdownChan := make(chan os.Signal, 1)
 	signal.Notify(shutdownChan, syscall.SIGINT, syscall.SIGTERM)
 	// ensure we shutdown if the process is killed and context cancellation doesn't cause an exit on its own

@@ -500,7 +500,7 @@ build-system-test-current: build cosmovisor
 	cp tools/cosmovisor/cosmovisor ./tests/systemtests/binaries/
 
 # build-system-test builds the binaries necessary for runnings system tests and places them in the correct locations
-build-system-test: build-v53
+build-system-test: build-system-test-current build-v53
 	mkdir -p ./tests/systemtests/binaries/v0.53
 	mv $(BUILDDIR)/simdv53 ./tests/systemtests/binaries/v0.53/simd
 

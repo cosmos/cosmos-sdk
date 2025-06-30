@@ -166,7 +166,10 @@ func (r *Runner) RunProcess(ctx context.Context, cmd *exec.Cmd, haltHeight uint6
 	}
 
 	r.logger.Info("Starting process", "path", cmd.Path, "args", cmd.Args)
-	processRunner := RunProcess(cmd)
+	processRunner, err := RunProcess(cmd)
+	if err != nil {
+		return fmt.Errorf("failed to start process: %w", err)
+	}
 	defer func() {
 		// always check for the latest block height before shutting down so that we have it in the last known height file
 		_, _ = heightChecker.GetLatestBlockHeight()

@@ -614,8 +614,8 @@ cloud.google.com/go/workflows v1.7.0/go.mod h1:JhSrZuVZWuiDfKEFxU0/F1PQjmpnpcoIS
 cloud.google.com/go/workflows v1.8.0/go.mod h1:ysGhmEajwZxGn1OhGOGKsTXc5PyxOc0vfKf5Af+to4M=
 cloud.google.com/go/workflows v1.9.0/go.mod h1:ZGkj1aFIOd9c8Gerkjjq7OW7I5+l6cSvT3ujaO/WwSA=
 cloud.google.com/go/workflows v1.10.0/go.mod h1:fZ8LmRmZQWacon9UCX1r/g/DfAXx5VcPALq2CxzdePw=
-cosmossdk.io/collections v1.2.1 h1:mAlNMs5vJwkda4TA+k5q/43p24RVAQ/qyDrjANu3BXE=
-cosmossdk.io/collections v1.2.1/go.mod h1:PSsEJ/fqny0VPsHLFT6gXDj/2C1tBOTS9eByK0+PBFU=
+cosmossdk.io/collections v1.3.1 h1:09e+DUId2brWsNOQ4nrk+bprVmMUaDH9xvtZkeqIjVw=
+cosmossdk.io/collections v1.3.1/go.mod h1:ynvkP0r5ruAjbmedE+vQ07MT6OtJ0ZIDKrtJHK7Q/4c=
 cosmossdk.io/depinject v1.2.1 h1:eD6FxkIjlVaNZT+dXTQuwQTKZrFZ4UrfCq1RKgzyhMw=
 cosmossdk.io/depinject v1.2.1/go.mod h1:lqQEycz0H2JXqvOgVwTsjEdMI0plswI7p6KX+MVqFOM=
 cosmossdk.io/errors v1.0.2 h1:wcYiJz08HThbWxd/L4jObeLaLySopyyuUFB5w4AGpCo=
@@ -781,10 +781,10 @@ github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb/go.mod h1:
 github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd/go.mod h1:sE/e/2PUdi/liOCUjSTXgM1o87ZssimdTWN964YiIeI=
 github.com/cometbft/cometbft-db v1.0.4 h1:cezb8yx/ZWcF124wqUtAFjAuDksS1y1yXedvtprUFxs=
 github.com/cometbft/cometbft-db v1.0.4/go.mod h1:M+BtHAGU2XLrpUxo3Nn1nOCcnVCiLM9yx5OuT0u5SCA=
-github.com/cometbft/cometbft/api v1.1.0-alpha.1.0.20250611063609-4e308d824f1f h1:xVCNN5smIjz+EoEnBpV1+rlqeHFPoSyonelPevBMGW8=
-github.com/cometbft/cometbft/api v1.1.0-alpha.1.0.20250611063609-4e308d824f1f/go.mod h1:Ivh6nSCTJPQOyfQo8dgnyu/T88it092sEqSrZSmTQN8=
-github.com/cometbft/cometbft/v2 v2.0.0-20250611063609-4e308d824f1f h1:Gy5kTSwgwCMc5S/xjEc75ogN3worBYkTMscpCmVv3uM=
-github.com/cometbft/cometbft/v2 v2.0.0-20250611063609-4e308d824f1f/go.mod h1:/ze08eO171CqUqTqAE7FW7ydUJIVkgp6e2svpYvIR3c=
+github.com/cometbft/cometbft/api v1.1.0-rc1 h1:NdlXfp4wialMwJ+1ds1DBtfysdxErUxg8/AaqgT0ifQ=
+github.com/cometbft/cometbft/api v1.1.0-rc1/go.mod h1:Ivh6nSCTJPQOyfQo8dgnyu/T88it092sEqSrZSmTQN8=
+github.com/cometbft/cometbft/v2 v2.0.0-rc1 h1:3QyDHTFzH3a1N6c2jt03kFDCxM/hgUvhzDYBVnPVXY8=
+github.com/cometbft/cometbft/v2 v2.0.0-rc1/go.mod h1:/ze08eO171CqUqTqAE7FW7ydUJIVkgp6e2svpYvIR3c=
 github.com/containerd/continuity v0.3.0 h1:nisirsYROK15TAMVukJOUyGJjz4BNQJBVsNvAXZJ/eg=
 github.com/containerd/continuity v0.3.0/go.mod h1:wJEAIwKOm/pBZuBd0JmeTvnLquTB1Ag8espWhkykbPM=
 github.com/coreos/go-semver v0.2.0/go.mod h1:nnelYz7RCh+5ahJtPPxZlU+153eP4D4r3EedlOD2RNk=
@@ -1407,8 +1407,8 @@ github.com/prometheus/common v0.9.1/go.mod h1:yhUN8i9wzaXS3w1O07YhxHEBxD+W35wd8b
 github.com/prometheus/common v0.10.0/go.mod h1:Tlit/dnDKsSWFlCLTWaA1cyBgKHSMdTB80sz/V91rCo=
 github.com/prometheus/common v0.15.0/go.mod h1:U+gB1OBLb1lF3O42bTCL+FK18tX9Oar16Clt/msog/s=
 github.com/prometheus/common v0.26.0/go.mod h1:M7rCNAaPfAosfx8veZJCuw84e35h3Cfd9VFqTh1DIvc=
-github.com/prometheus/common v0.64.0 h1:pdZeA+g617P7oGv1CzdTzyeShxAGrTBsolKNOLQPGO4=
-github.com/prometheus/common v0.64.0/go.mod h1:0gZns+BLRQ3V6NdaerOhMbwwRbNh9hkGINtQAsP5GS8=
+github.com/prometheus/common v0.65.0 h1:QDwzd+G1twt//Kwj/Ww6E9FQq1iVMmODnILtW1t2VzE=
+github.com/prometheus/common v0.65.0/go.mod h1:0gZns+BLRQ3V6NdaerOhMbwwRbNh9hkGINtQAsP5GS8=
 github.com/prometheus/procfs v0.0.0-20181005140218-185b4288413d/go.mod h1:c3At6R/oaqEKCNdg8wHV1ftS6bRYblBhIjjI8uT2IGk=
 github.com/prometheus/procfs v0.0.0-20190117184657-bf6a532e95b1/go.mod h1:c3At6R/oaqEKCNdg8wHV1ftS6bRYblBhIjjI8uT2IGk=
 github.com/prometheus/procfs v0.0.2/go.mod h1:TjEm7ze935MbeOT/UhFTIMYKhuLP4wbCsTZCD3I8kEA=

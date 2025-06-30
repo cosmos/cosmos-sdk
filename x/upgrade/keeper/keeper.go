@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"encoding/binary"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -577,7 +576,7 @@ func (k Keeper) ReadUpgradeInfoFromDisk() (types.Plan, error) {
 		return upgradeInfo, err
 	}
 
-	if err := json.Unmarshal(data, &upgradeInfo); err != nil {
+	if err := k.cdc.UnmarshalJSON(data, &upgradeInfo); err != nil {
 		return upgradeInfo, err
 	}
 

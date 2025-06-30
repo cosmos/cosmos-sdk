@@ -33,6 +33,7 @@ exec mock_node %s "$@"
 }
 
 func (m MockChainSetup) Setup(t *testing.T) (string, string) {
+	t.Helper()
 	dir, err := os.MkdirTemp("", "mockchain")
 	require.NoError(t, err)
 	t.Cleanup(func() {

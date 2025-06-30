@@ -17,10 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
-const (
-	testSeed = "scene learn remember glide apple expand quality spawn property shoe lamp carry upset blossom draft reject aim file trash miss script joy only measure"
-)
-
 func TestChainUpgrade(t *testing.T) {
 	const (
 		upgradeHeight int64 = 22

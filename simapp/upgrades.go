@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"os"
 
-	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/gogoproto/jsonpb"
+
+	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -20,8 +21,10 @@ import (
 // NOTE: This upgrade defines a reference implementation of what an upgrade
 // could look like when an application is migrating from Cosmos SDK version
 // v0.53.x to v0.54.x.
-const UpgradeName = "v053-to-v054"
-const ManualUpgradeName = "manual1"
+const (
+	UpgradeName       = "v053-to-v054"
+	ManualUpgradeName = "manual1"
+)
 
 func (app SimApp) RegisterUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(

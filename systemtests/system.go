@@ -174,11 +174,13 @@ func (s *SystemUnderTest) SetupChain() {
 }
 
 func (s *SystemUnderTest) StartChain(t *testing.T, xargs ...string) {
+	t.Helper()
 	s.doStartChain(t, false, xargs...)
 }
 
 // StartChainWithCosmovisor starts the chain wrapping its execution with Cosmovisor.
 func (s *SystemUnderTest) StartChainWithCosmovisor(t *testing.T, xargs ...string) {
+	t.Helper()
 	s.doStartChain(t, true, xargs...)
 }
 
@@ -208,6 +210,7 @@ func (s *SystemUnderTest) doStartChain(t *testing.T, useCosmovisor bool, xargs .
 }
 
 func (s *SystemUnderTest) cosmovisorEnv(t *testing.T, home string) []string {
+	t.Helper()
 	absHome, err := filepath.Abs(home)
 	require.NoError(t, err)
 	return []string{
@@ -243,6 +246,7 @@ func (s *SystemUnderTest) ExecCosmovisor(t *testing.T, async bool, args ...strin
 }
 
 func (s *SystemUnderTest) initCosmovisor(t *testing.T) {
+	t.Helper()
 	binary := locateExecutable(s.execBinary)
 	s.ExecCosmovisor(t, false, "init", binary)
 }
@@ -661,7 +665,7 @@ func (s *SystemUnderTest) startNodesAsync(t *testing.T, useCosmovisor bool, xarg
 			binary = locateExecutable(s.execBinary)
 		}
 		s.Logf("Execute `%s %s`\n", s.execBinary, strings.Join(args, " "))
-		cmd := exec.Command( //nolint:gosec // used by tests only
+		cmd := exec.Command(
 			binary,
 			args...,
 		)

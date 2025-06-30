@@ -14,11 +14,12 @@ import (
 	"syscall"
 	"time"
 
-	"cosmossdk.io/log"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/spf13/cobra"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/tools/cosmovisor/v2/internal/watchers"
+
 	"github.com/cosmos/cosmos-sdk/server"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )

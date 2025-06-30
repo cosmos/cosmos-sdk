@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"os"
 
-	"cosmossdk.io/log"
 	"github.com/fsnotify/fsnotify"
+
+	"cosmossdk.io/log"
 )
 
 type FSNotifyWatcher struct {

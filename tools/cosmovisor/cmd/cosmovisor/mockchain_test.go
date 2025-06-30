@@ -84,7 +84,7 @@ func TestMockChain(t *testing.T) {
 	cfg := &cosmovisor.Config{
 		PollInterval:        pollInterval,
 		RestartAfterUpgrade: true,
-		RPCAddress:          "http://localhost:26657", // TODO this should be the default!
+		RPCAddress:          "http://localhost:26657",
 	}
 	mockchainDir, cfgFile := MockChainSetup{
 		Genesis: "--block-time 1s --upgrade-plan '{\"name\":\"gov1\",\"height\":30}'",

@@ -38,8 +38,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Breaking Changes
 
-* [#24821](https://github.com/cosmos/cosmos-sdk/pull/24821) Reimplement core Cosmovisor logic for managing and observing
-  governance and manual upgrades.
+* [#24821](https://github.com/cosmos/cosmos-sdk/pull/24821) Reimplement core Cosmovisor logic for managing and observing governance and manual upgrades.
 
 ## v1.7.1 - 2025-01-12
 

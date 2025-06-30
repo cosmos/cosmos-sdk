@@ -603,8 +603,10 @@ func (k Keeper) DowngradeVerified() bool {
 }
 
 // SetManualUpgrade sets the manual upgrade plan.
-// Currently, this e
 // If the plan is nil, it clears the existing manual upgrade info.
+// This allows manual upgrades to be executed using handlers registered with SetUpgradeHandler.
+// Currently, only when manual upgrade can be set.
+// It will be applied and cleared when the specified upgrade height has been reached.
 func (k Keeper) SetManualUpgrade(plan *types.Plan) error {
 	if plan == nil {
 		k.manualUpgradeInfo = nil

@@ -9,8 +9,8 @@ import (
 
 	"cosmossdk.io/log"
 
-	"cosmossdk.io/tools/cosmovisor"
-	"cosmossdk.io/tools/cosmovisor/internal/watchers"
+	"cosmossdk.io/tools/cosmovisor/v2"
+	"cosmossdk.io/tools/cosmovisor/v2/internal/watchers"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )

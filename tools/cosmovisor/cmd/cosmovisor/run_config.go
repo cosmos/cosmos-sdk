@@ -4,7 +4,7 @@ import (
 	"io"
 	"os"
 
-	"cosmossdk.io/tools/cosmovisor/internal"
+	"cosmossdk.io/tools/cosmovisor/v2/internal"
 )
 
 // DefaultRunConfig defines a default RunConfig that writes to os.Stdout and os.Stderr

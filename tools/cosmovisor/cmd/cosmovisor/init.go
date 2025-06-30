@@ -11,8 +11,9 @@ import (
 
 	"cosmossdk.io/log"
 
-	"cosmossdk.io/tools/cosmovisor"
-	"cosmossdk.io/x/upgrade/plan"
+	"cosmossdk.io/tools/cosmovisor/v2"
+
+	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
 )
 
 func NewInitCmd() *cobra.Command {
@@ -54,7 +55,7 @@ func InitializeCosmovisor(logger log.Logger, args []string) error {
 		return err
 	}
 
-	// proceed to minimal validation
+	// process to minimal validation
 	if err := minConfigValidate(cfg); err != nil {
 		return err
 	}

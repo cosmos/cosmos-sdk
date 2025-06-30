@@ -11,8 +11,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/tools/cosmovisor"
-	"cosmossdk.io/tools/cosmovisor/internal"
+	"cosmossdk.io/tools/cosmovisor/v2"
+	"cosmossdk.io/tools/cosmovisor/v2/internal"
 )
 
 type MockChainSetup struct {

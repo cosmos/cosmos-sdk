@@ -5,9 +5,11 @@ import (
 	"strconv"
 	"strings"
 
-	"cosmossdk.io/tools/cosmovisor"
+	"cosmossdk.io/tools/cosmovisor/v2"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
+
+// TODO do we need this functionality or should it be deleted?
 
 // IsSkipUpgradeHeight checks if pre-upgrade script must be run.
 // If the height in the upgrade plan matches any of the heights provided in --unsafe-skip-upgrades, the script is not run.

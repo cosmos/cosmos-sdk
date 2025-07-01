@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"encoding/binary"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -40,12 +39,13 @@ type Keeper struct {
 	homePath           string                          // root directory of app config
 	skipUpgradeHeights map[int64]bool                  // map of heights to skip for an upgrade
 	storeService       corestore.KVStoreService        // key to access x/upgrade store
-	cdc                codec.BinaryCodec               // App-wide binary codec
+	cdc                codec.Codec                     // App-wide binary codec
 	upgradeHandlers    map[string]types.UpgradeHandler // map of plan name to upgrade handler
 	versionSetter      xp.ProtocolVersionSetter        // implements setting the protocol version field on BaseApp
 	downgradeVerified  bool                            // tells if we've already sanity checked that this binary version isn't being used against an old state.
 	authority          string                          // the address capable of executing and canceling an upgrade. Usually the gov module account
 	initVersionMap     module.VersionMap               // the module version map at init genesis
+	manualUpgradeInfo  *types.Plan
 }
 
 // NewKeeper constructs an upgrade Keeper which requires the following arguments:
@@ -54,7 +54,7 @@ type Keeper struct {
 // cdc - the app-wide binary codec
 // homePath - root directory of the application's config
 // vs - the interface implemented by baseapp which allows setting baseapp's protocol version field
-func NewKeeper(skipUpgradeHeights map[int64]bool, storeService corestore.KVStoreService, cdc codec.BinaryCodec, homePath string, vs xp.ProtocolVersionSetter, authority string) *Keeper {
+func NewKeeper(skipUpgradeHeights map[int64]bool, storeService corestore.KVStoreService, cdc codec.Codec, homePath string, vs xp.ProtocolVersionSetter, authority string) *Keeper {
 	k := &Keeper{
 		homePath:           homePath,
 		skipUpgradeHeights: skipUpgradeHeights,
@@ -535,7 +535,7 @@ func (k Keeper) DumpUpgradeInfoToDisk(height int64, p types.Plan) error {
 		Height: height,
 		Info:   p.Info,
 	}
-	info, err := json.Marshal(upgradeInfo)
+	info, err := k.cdc.MarshalJSON(&upgradeInfo)
 	if err != nil {
 		return err
 	}
@@ -575,7 +575,7 @@ func (k Keeper) ReadUpgradeInfoFromDisk() (types.Plan, error) {
 		return upgradeInfo, err
 	}
 
-	if err := json.Unmarshal(data, &upgradeInfo); err != nil {
+	if err := k.cdc.UnmarshalJSON(data, &upgradeInfo); err != nil {
 		return upgradeInfo, err
 	}
 
@@ -598,4 +598,27 @@ func (k *Keeper) SetDowngradeVerified(v bool) {
 // DowngradeVerified returns downgradeVerified.
 func (k Keeper) DowngradeVerified() bool {
 	return k.downgradeVerified
+}
+
+// SetManualUpgrade sets the manual upgrade plan.
+// If the plan is nil, it clears the existing manual upgrade info.
+// This allows manual upgrades to be executed using handlers registered with SetUpgradeHandler.
+// Currently, only when manual upgrade can be set.
+// It will be applied and cleared when the specified upgrade height has been reached.
+func (k *Keeper) SetManualUpgrade(plan *types.Plan) error {
+	if plan == nil {
+		k.manualUpgradeInfo = nil
+		return nil
+	}
+
+	if err := plan.ValidateBasic(); err != nil {
+		return err
+	}
+
+	k.manualUpgradeInfo = plan
+	return nil
+}
+
+func (k *Keeper) GetManualUpgrade() *types.Plan {
+	return k.manualUpgradeInfo
 }

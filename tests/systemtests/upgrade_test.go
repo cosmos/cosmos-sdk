@@ -17,13 +17,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
-const (
-	testSeed            = "scene learn remember glide apple expand quality spawn property shoe lamp carry upset blossom draft reject aim file trash miss script joy only measure"
-	upgradeHeight int64 = 22
-	upgradeName         = "v053-to-v054" // must match UpgradeName in simapp/upgrades.go
-)
-
 func TestChainUpgrade(t *testing.T) {
+	const (
+		upgradeHeight int64 = 22
+		upgradeName         = "v053-to-v054" // must match UpgradeName in simapp/upgrades.go
+	)
+
 	// Scenario:
 	// start a legacy chain with some state
 	// when a chain upgrade proposal is executed

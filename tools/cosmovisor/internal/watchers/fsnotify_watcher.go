@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/fsnotify/fsnotify"
 
@@ -28,20 +30,15 @@ func NewFSNotifyWatcher(ctx context.Context, logger log.Logger, dir string, file
 		return nil, fmt.Errorf("failed to watch directory %s: %w", dir, err)
 	}
 
-    // TODO check that filenames are in dir & fully qualified
-    // Validate filenames are absolute paths within the watched directory
-    filenameSet := make(map[string]struct{})
-    for _, filename := range filenames {
-        if !filepath.IsAbs(filename) {
-            return nil, fmt.Errorf("filename must be absolute path: %s", filename)
-        }
-        if !strings.HasPrefix(filename, dir) {
-            return nil, fmt.Errorf("filename must be within watched directory: %s", filename)
-        }
-        filenameSet[filename] = struct{}{}
-    }
+	// validate filenames are absolute paths within the watched directory
 	filenameSet := make(map[string]struct{})
 	for _, filename := range filenames {
+		if !filepath.IsAbs(filename) {
+			return nil, fmt.Errorf("filename must be absolute path: %s", filename)
+		}
+		if !strings.HasPrefix(filename, dir) {
+			return nil, fmt.Errorf("filename must be within watched directory: %s", filename)
+		}
 		filenameSet[filename] = struct{}{}
 	}
 

@@ -3,12 +3,14 @@ package secp256r1
 import (
 	"encoding/base64"
 
-	errorsmod "cosmossdk.io/errors"
 	cmtcrypto "github.com/cometbft/cometbft/v2/crypto"
+	"github.com/cosmos/gogoproto/proto"
+
+	errorsmod "cosmossdk.io/errors"
+
 	ecdsa "github.com/cosmos/cosmos-sdk/crypto/keys/internal/ecdsa"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/gogoproto/proto"
 )
 
 // customProtobufType is here to make sure that ecdsaPK and ecdsaSK implement the

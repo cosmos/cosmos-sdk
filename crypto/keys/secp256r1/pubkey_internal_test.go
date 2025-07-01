@@ -13,9 +13,7 @@ import (
 var _ cryptotypes.PubKey = (*PubKey)(nil)
 
 func TestPKSuite(t *testing.T) {
-
 	suite.Run(t, new(PKSuite))
-
 }
 
 type CommonSuite struct {
@@ -27,7 +25,6 @@ type CommonSuite struct {
 }
 
 func (suite *CommonSuite) SetupSuite() {
-
 	sk, err := GenPrivKey()
 
 	suite.Require().NoError(err)
@@ -35,13 +32,11 @@ func (suite *CommonSuite) SetupSuite() {
 	suite.sk = sk
 
 	suite.pk = sk.PubKey().(*PubKey)
-
 }
 
 type PKSuite struct{ CommonSuite }
 
 func (suite *PKSuite) TestString() {
-
 	require := suite.Require()
 
 	pkStr := suite.pk.String()
@@ -49,17 +44,13 @@ func (suite *PKSuite) TestString() {
 	prefix := "secp256r1{"
 
 	require.Equal(prefix, pkStr[:len(prefix)])
-
 }
 
 func (suite *PKSuite) TestType() {
-
 	suite.Require().Equal(name, suite.pk.Type())
-
 }
 
 func (suite *PKSuite) TestBytes() {
-
 	bz := suite.pk.Bytes()
 
 	suite.Len(bz, fieldSize+1)
@@ -67,11 +58,9 @@ func (suite *PKSuite) TestBytes() {
 	var pk *PubKey
 
 	suite.Nil(pk.Bytes())
-
 }
 
 func (suite *PKSuite) TestEquals() {
-
 	require := suite.Require()
 
 	skOther, err := GenPrivKey()
@@ -89,11 +78,9 @@ func (suite *PKSuite) TestEquals() {
 	require.True(pkOther2.Equals(pkOther))
 
 	require.True(pkOther.Equals(pkOther), "Equals must be reflexive") //nolint:gocritic // false positive
-
 }
 
 func (suite *PKSuite) TestMarshalProto() {
-
 	require := suite.Require()
 
 	/**** test structure marshaling ****/
@@ -173,11 +160,9 @@ func (suite *PKSuite) TestMarshalProto() {
 	require.True(pkI.Equals(suite.pk))
 
 	require.Error(emptyCodec.UnmarshalInterface(bz, nil), "nil should fail")
-
 }
 
 func (suite *PKSuite) TestSize() {
-
 	require := suite.Require()
 
 	var pk ecdsaPK
@@ -187,11 +172,9 @@ func (suite *PKSuite) TestSize() {
 	var nilPk *ecdsaPK
 
 	require.Equal(0, nilPk.Size(), "nil value must have zero size")
-
 }
 
 func (suite *PKSuite) TestJson() {
-
 	require := suite.Require()
 
 	bz, err := suite.pk.Key.MarshalJSON()
@@ -203,11 +186,9 @@ func (suite *PKSuite) TestJson() {
 	require.NoError(pk.UnmarshalJSON(bz))
 
 	require.Equal(suite.pk.Key, pk)
-
 }
 
 func (suite *PKSuite) TestNewPubKeyFromBytes() {
-
 	require := suite.Require()
 
 	originalBytes := suite.pk.Bytes()
@@ -237,5 +218,4 @@ func (suite *PKSuite) TestNewPubKeyFromBytes() {
 	_, err = NewPubKeyFromBytes(invalidBytes)
 
 	require.Error(err)
-
 }

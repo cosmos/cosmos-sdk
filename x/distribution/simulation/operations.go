@@ -99,6 +99,11 @@ func SimulateMsgSetWithdrawAddress(txConfig client.TxConfig, ak types.AccountKee
 		simToAccount, _ := simtypes.RandomAcc(r, accs)
 
 		account := ak.GetAccount(ctx, simAccount.Address)
+		_, ok := account.(types.VestingAccount)
+		if ok {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSetWithdrawAddress{}), "vesting account can't have withdraw addresses since CIP-31"), nil, nil
+		}
+
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
 		msg := types.NewMsgSetWithdrawAddress(simAccount.Address, simToAccount.Address)

@@ -164,7 +164,7 @@ func TestMockChain(t *testing.T) {
 			// add a second batch of manual upgrades
 			go addManualUpgrade2()
 		case 3:
-			// next restart  after adding more manual upgrades
+			// next restart after adding more manual upgrades
 			// ensure that the binary is still the genesis binary
 			require.Contains(t, currentBin, "genesis")
 		case 4:
@@ -180,7 +180,7 @@ func TestMockChain(t *testing.T) {
 			// should have upgraded to manual40
 			require.Contains(t, currentBin, "manual40")
 		case 8:
-			// should have upgraded to manual40
+			// should have upgraded to gov2
 			require.Contains(t, currentBin, "gov2")
 			// this is the end of our test so we shutdown after a bit here
 			go func() {

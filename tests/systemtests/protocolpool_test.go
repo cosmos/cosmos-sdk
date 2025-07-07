@@ -145,8 +145,8 @@ func TestQueryProtocolPool(t *testing.T) {
 	// delegate tokens to validator
 	// check distribution
 
+	systemtests.ResetSut(t)
 	sut := systemtests.Sut
-	sut.ResetChain(t)
 
 	// set up gov params so we can pass props quickly
 	modifyGovParams(t)
@@ -263,7 +263,7 @@ func TestQueryProtocolPool(t *testing.T) {
 // - submit prop and vote until passed
 // Check that funds are distributed and continuous fund is cleaned up once expired
 func TestContinuousFunds(t *testing.T) {
-	systemtests.Sut.ResetChain(t)
+	systemtests.ResetSut(t)
 	cli := systemtests.NewCLIWrapper(t, systemtests.Sut, systemtests.Verbose)
 
 	// set up gov params so we can pass props quickly
@@ -366,7 +366,7 @@ func TestContinuousFunds(t *testing.T) {
 //
 // Check that some funds have been distributed and that the fund is canceled.
 func TestCancelContinuousFunds(t *testing.T) {
-	systemtests.Sut.ResetChain(t)
+	systemtests.ResetSut(t)
 	cli := systemtests.NewCLIWrapper(t, systemtests.Sut, systemtests.Verbose)
 
 	// set up gov params so we can pass props quickly

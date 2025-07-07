@@ -41,10 +41,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * (baseapp) [#1](https://github.com/atomone-hub/cosmos-sdk/pull/1) `SetProtocolVersion` has been renamed to `SetAppVersion`. It now updates the consensus params in baseapp's `ParamStore`.
-* (baseapp) [#1](https://github.com/01builders/cosmos-sdk/pull/1) Re-add query router for custom abci queries.
-* (testing) [#1](https://github.com/01builders/cosmos-sdk/pull/1) Add `MakeTestEncodingConfigWithOpts` to pass `testutil.CodecOptions` when creating `TestEncodingConfig`.
-* (x/auth) [#7](https://github.com/01builders/cosmos-sdk/pull/7) Support legacy global AccountNumber.
-* (crypto/keyring) [#8](https://github.com/01builders/cosmos-sdk/pull/8) Fix error wrapping in pkg crypto/keyring. Removed `cockroachdb/errors` in favour of `errorsmod.Wrap`.
+* (baseapp) [#1](https://github.com/atomone-hub/cosmos-sdk/pull/1) Re-add query router for custom abci queries.
+* (testing) [#1](https://github.com/atomone-hub/cosmos-sdk/pull/1) Add `MakeTestEncodingConfigWithOpts` to pass `testutil.CodecOptions` when creating `TestEncodingConfig`.
+* (x/auth) [#1](https://github.com/atomone-hub/cosmos-sdk/pull/1) Support legacy global AccountNumber.
+* (crypto/keyring) [#1](https://github.com/atomone-hub/cosmos-sdk/pull/1) Fix error wrapping in pkg crypto/keyring. Removed `cockroachdb/errors` in favour of `errorsmod.Wrap`.
 
 ### Improvements
 

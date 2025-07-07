@@ -23,13 +23,17 @@ type MockChainSetup struct {
 }
 
 func mockNodeWrapper(args string) string {
+	// Get the current working directory to find the mock_node source
+	wd, _ := os.Getwd()
+	mockNodeDir := filepath.Join(wd, "..", "mock_node")
 	return fmt.Sprintf(
 		`#!/usr/bin/env bash
 set -e
 
 echo "$@"
-exec mock_node %s "$@" 
-`, args)
+cd %s
+exec go run . %s "$@" 
+`, mockNodeDir, args)
 }
 
 func (m MockChainSetup) Setup(t *testing.T) (string, string) {

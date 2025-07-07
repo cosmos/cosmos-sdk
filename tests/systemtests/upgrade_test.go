@@ -27,7 +27,7 @@ func TestChainUpgrade(t *testing.T) {
 	// start a legacy chain with some state
 	// when a chain upgrade proposal is executed
 	// then the chain upgrades successfully
-	systest.Sut.StopChain()
+	systest.ResetSut(t)
 
 	currentBranchBinary := systest.Sut.ExecBinary()
 	currentInitializer := systest.Sut.TestnetInitializer()

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
@@ -17,10 +18,12 @@ var (
 	Sut            *SystemUnderTest
 	Verbose        bool
 	execBinaryName string
+	// Store original configuration for ResetSut
+	originalNodesCount int
+	originalBlockTime  time.Duration
 )
 
 func RunTests(m *testing.M) {
-	chainID := flag.String("chain-id", "testing", "chainID")
 	waitTime := flag.Duration("wait-time", DefaultWaitTime, "time to wait for chain events")
 	nodesCount := flag.Int("nodes-count", 4, "number of nodes in the cluster")
 	blockTime := flag.Duration("block-time", 3000*time.Millisecond, "block creation time")
@@ -48,7 +51,12 @@ func RunTests(m *testing.M) {
 	}
 	execBinaryName = *execBinary
 
-	Sut = NewSystemUnderTest(*execBinary, Verbose, *nodesCount, *blockTime, *chainID)
+	// store original configuration for ResetSut, we do this with global variables for now since Sut is global
+	// and we want the same initial configuration when we do a complete reset
+	originalNodesCount = *nodesCount
+	originalBlockTime = *blockTime
+
+	Sut = NewSystemUnderTest(*execBinary, Verbose, *nodesCount, *blockTime)
 	Sut.SetupChain() // setup chain and keyring
 
 	// run tests
@@ -120,6 +128,25 @@ const (
 | || (_| | | |  __/ (_| |
 |_| \__,_|_|_|\___|\__,_|`
 )
+
+// ResetSut completely resets Sut by deleting all state and creating a fresh instance of Sut.
+func ResetSut(t *testing.T) {
+	t.Helper()
+	// stop current instance if it exists
+	if Sut != nil {
+		Sut.StopChain()
+	}
+
+	// delete entire testnet directory to remove all state
+	err := os.RemoveAll(filepath.Join(WorkDir, "testnet"))
+	if err != nil {
+		t.Fatalf("failed to remove testnet directory: %v", err)
+	}
+
+	// create fresh Sut instance with original configuration
+	Sut = NewSystemUnderTest(execBinaryName, Verbose, originalNodesCount, originalBlockTime)
+	Sut.SetupChain()
+}
 
 func printResultFlag(ok bool) {
 	if ok {

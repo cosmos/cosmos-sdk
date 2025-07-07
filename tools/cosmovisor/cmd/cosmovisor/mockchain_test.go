@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sync"
 	"testing"
@@ -15,6 +16,45 @@ import (
 	"cosmossdk.io/tools/cosmovisor/v2/internal"
 )
 
+var mockNodeBinPath string
+
+func TestMain(m *testing.M) {
+	// build mock_node binary for tests
+	if err := buildMockNode(); err != nil {
+		fmt.Printf("Failed to build mock_node: %v\n", err)
+		os.Exit(1)
+	}
+
+	// run tests
+	os.Exit(m.Run())
+}
+
+func buildMockNode() error {
+	wd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
+	// create build directory if it doesn't exist
+	buildDir := filepath.Join(wd, "build")
+	if err := os.MkdirAll(buildDir, 0o755); err != nil {
+		return err
+	}
+
+	mockNodeDir := filepath.Join(wd, "..", "mock_node")
+	binPath := filepath.Join(buildDir, "mock_node")
+
+	// store the absolute path for use in mockNodeWrapper
+	mockNodeBinPath, err = filepath.Abs(mockNodeDir)
+	if err != nil {
+		return err
+	}
+
+	cmd := exec.Command("go", "build", "-o", binPath, ".")
+	cmd.Dir = mockNodeDir
+	return cmd.Run()
+}
+
 type MockChainSetup struct {
 	Genesis        string
 	GovUpgrades    map[string]string
@@ -23,17 +63,13 @@ type MockChainSetup struct {
 }
 
 func mockNodeWrapper(args string) string {
-	// Get the current working directory to find the mock_node source
-	wd, _ := os.Getwd()
-	mockNodeDir := filepath.Join(wd, "..", "mock_node")
 	return fmt.Sprintf(
 		`#!/usr/bin/env bash
 set -e
 
 echo "$@"
-cd %s
-exec go run . %s "$@" 
-`, mockNodeDir, args)
+exec %s %s "$@" 
+`, mockNodeBinPath, args)
 }
 
 func (m MockChainSetup) Setup(t *testing.T) (string, string) {

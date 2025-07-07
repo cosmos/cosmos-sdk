@@ -187,6 +187,8 @@ func TestMockChain(t *testing.T) {
 				time.Sleep(pollInterval * 2)
 				cancel()
 			}()
+		default:
+			t.Errorf("Unexpected callback count: %d", callbackCount)
 		}
 	}
 	var wg sync.WaitGroup

@@ -45,7 +45,7 @@ func buildMockNode() error {
 	binPath := filepath.Join(buildDir, "mock_node")
 
 	// store the absolute path for use in mockNodeWrapper
-	mockNodeBinPath, err = filepath.Abs(mockNodeDir)
+	mockNodeBinPath, err = filepath.Abs(binPath)
 	if err != nil {
 		return err
 	}

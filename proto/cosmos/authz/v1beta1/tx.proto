@@ -33,7 +33,7 @@ service Msg {
 
   // PruneExpiredGrants prunes the expired grants. Currently up to 75 at a time.
   //
-  // Since cosmos-sdk 0.50.x-celestia
+  // Since cosmos-sdk 0.50.x-atomone
   rpc PruneExpiredGrants(MsgPruneExpiredGrants) returns (MsgPruneExpiredGrantsResponse);
 }
 
@@ -87,7 +87,7 @@ message MsgRevokeResponse {}
 
 // MsgPruneExpiredGrants prunes the expired grants.
 //
-// Since cosmos-sdk 0.50.x-celestia
+// Since cosmos-sdk 0.50.x-atomone
 message MsgPruneExpiredGrants {
   option (cosmos.msg.v1.signer) = "pruner";
 
@@ -96,5 +96,5 @@ message MsgPruneExpiredGrants {
 
 // MsgPruneExpiredGrantsResponse defines the Msg/MsgPruneExpiredGrantsResponse response type.
 //
-// Since cosmos-sdk 0.50.x-celestia
+// Since cosmos-sdk 0.50.x-atomone
 message MsgPruneExpiredGrantsResponse {}

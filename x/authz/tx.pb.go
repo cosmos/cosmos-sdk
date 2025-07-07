@@ -6,6 +6,10 @@ package authz
 import (
 	context "context"
 	fmt "fmt"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+
 	_ "github.com/cosmos/cosmos-proto"
 	types "github.com/cosmos/cosmos-sdk/codec/types"
 	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
@@ -16,15 +20,14 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	io "io"
-	math "math"
-	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
-var _ = proto.Marshal
-var _ = fmt.Errorf
-var _ = math.Inf
+var (
+	_ = proto.Marshal
+	_ = fmt.Errorf
+	_ = math.Inf
+)
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -46,9 +49,11 @@ func (*MsgGrant) ProtoMessage()    {}
 func (*MsgGrant) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3ceddab7d8589ad1, []int{0}
 }
+
 func (m *MsgGrant) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *MsgGrant) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_MsgGrant.Marshal(b, m, deterministic)
@@ -61,12 +66,15 @@ func (m *MsgGrant) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
+
 func (m *MsgGrant) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_MsgGrant.Merge(m, src)
 }
+
 func (m *MsgGrant) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *MsgGrant) XXX_DiscardUnknown() {
 	xxx_messageInfo_MsgGrant.DiscardUnknown(m)
 }
@@ -74,8 +82,7 @@ func (m *MsgGrant) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgGrant proto.InternalMessageInfo
 
 // MsgGrantResponse defines the Msg/MsgGrant response type.
-type MsgGrantResponse struct {
-}
+type MsgGrantResponse struct{}
 
 func (m *MsgGrantResponse) Reset()         { *m = MsgGrantResponse{} }
 func (m *MsgGrantResponse) String() string { return proto.CompactTextString(m) }
@@ -83,9 +90,11 @@ func (*MsgGrantResponse) ProtoMessage()    {}
 func (*MsgGrantResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3ceddab7d8589ad1, []int{1}
 }
+
 func (m *MsgGrantResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *MsgGrantResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_MsgGrantResponse.Marshal(b, m, deterministic)
@@ -98,12 +107,15 @@ func (m *MsgGrantResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, er
 		return b[:n], nil
 	}
 }
+
 func (m *MsgGrantResponse) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_MsgGrantResponse.Merge(m, src)
 }
+
 func (m *MsgGrantResponse) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *MsgGrantResponse) XXX_DiscardUnknown() {
 	xxx_messageInfo_MsgGrantResponse.DiscardUnknown(m)
 }
@@ -127,9 +139,11 @@ func (*MsgExec) ProtoMessage()    {}
 func (*MsgExec) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3ceddab7d8589ad1, []int{2}
 }
+
 func (m *MsgExec) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *MsgExec) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_MsgExec.Marshal(b, m, deterministic)
@@ -142,12 +156,15 @@ func (m *MsgExec) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
+
 func (m *MsgExec) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_MsgExec.Merge(m, src)
 }
+
 func (m *MsgExec) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *MsgExec) XXX_DiscardUnknown() {
 	xxx_messageInfo_MsgExec.DiscardUnknown(m)
 }
@@ -165,9 +182,11 @@ func (*MsgExecResponse) ProtoMessage()    {}
 func (*MsgExecResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3ceddab7d8589ad1, []int{3}
 }
+
 func (m *MsgExecResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *MsgExecResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_MsgExecResponse.Marshal(b, m, deterministic)
@@ -180,12 +199,15 @@ func (m *MsgExecResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, err
 		return b[:n], nil
 	}
 }
+
 func (m *MsgExecResponse) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_MsgExecResponse.Merge(m, src)
 }
+
 func (m *MsgExecResponse) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *MsgExecResponse) XXX_DiscardUnknown() {
 	xxx_messageInfo_MsgExecResponse.DiscardUnknown(m)
 }
@@ -206,9 +228,11 @@ func (*MsgRevoke) ProtoMessage()    {}
 func (*MsgRevoke) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3ceddab7d8589ad1, []int{4}
 }
+
 func (m *MsgRevoke) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *MsgRevoke) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_MsgRevoke.Marshal(b, m, deterministic)
@@ -221,12 +245,15 @@ func (m *MsgRevoke) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
+
 func (m *MsgRevoke) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_MsgRevoke.Merge(m, src)
 }
+
 func (m *MsgRevoke) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *MsgRevoke) XXX_DiscardUnknown() {
 	xxx_messageInfo_MsgRevoke.DiscardUnknown(m)
 }
@@ -234,8 +261,7 @@ func (m *MsgRevoke) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgRevoke proto.InternalMessageInfo
 
 // MsgRevokeResponse defines the Msg/MsgRevokeResponse response type.
-type MsgRevokeResponse struct {
-}
+type MsgRevokeResponse struct{}
 
 func (m *MsgRevokeResponse) Reset()         { *m = MsgRevokeResponse{} }
 func (m *MsgRevokeResponse) String() string { return proto.CompactTextString(m) }
@@ -243,9 +269,11 @@ func (*MsgRevokeResponse) ProtoMessage()    {}
 func (*MsgRevokeResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3ceddab7d8589ad1, []int{5}
 }
+
 func (m *MsgRevokeResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *MsgRevokeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_MsgRevokeResponse.Marshal(b, m, deterministic)
@@ -258,12 +286,15 @@ func (m *MsgRevokeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, e
 		return b[:n], nil
 	}
 }
+
 func (m *MsgRevokeResponse) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_MsgRevokeResponse.Merge(m, src)
 }
+
 func (m *MsgRevokeResponse) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *MsgRevokeResponse) XXX_DiscardUnknown() {
 	xxx_messageInfo_MsgRevokeResponse.DiscardUnknown(m)
 }
@@ -272,7 +303,7 @@ var xxx_messageInfo_MsgRevokeResponse proto.InternalMessageInfo
 
 // MsgPruneExpiredGrants prunes the expired grants.
 //
-// Since cosmos-sdk 0.50.x-celestia
+// Since cosmos-sdk 0.50.x-atomone
 type MsgPruneExpiredGrants struct {
 	Pruner string `protobuf:"bytes,1,opt,name=pruner,proto3" json:"pruner,omitempty"`
 }
@@ -283,9 +314,11 @@ func (*MsgPruneExpiredGrants) ProtoMessage()    {}
 func (*MsgPruneExpiredGrants) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3ceddab7d8589ad1, []int{6}
 }
+
 func (m *MsgPruneExpiredGrants) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *MsgPruneExpiredGrants) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_MsgPruneExpiredGrants.Marshal(b, m, deterministic)
@@ -298,12 +331,15 @@ func (m *MsgPruneExpiredGrants) XXX_Marshal(b []byte, deterministic bool) ([]byt
 		return b[:n], nil
 	}
 }
+
 func (m *MsgPruneExpiredGrants) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_MsgPruneExpiredGrants.Merge(m, src)
 }
+
 func (m *MsgPruneExpiredGrants) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *MsgPruneExpiredGrants) XXX_DiscardUnknown() {
 	xxx_messageInfo_MsgPruneExpiredGrants.DiscardUnknown(m)
 }
@@ -312,9 +348,8 @@ var xxx_messageInfo_MsgPruneExpiredGrants proto.InternalMessageInfo
 
 // MsgPruneExpiredGrantsResponse defines the Msg/MsgPruneExpiredGrantsResponse response type.
 //
-// Since cosmos-sdk 0.50.x-celestia
-type MsgPruneExpiredGrantsResponse struct {
-}
+// Since cosmos-sdk 0.50.x-atomone
+type MsgPruneExpiredGrantsResponse struct{}
 
 func (m *MsgPruneExpiredGrantsResponse) Reset()         { *m = MsgPruneExpiredGrantsResponse{} }
 func (m *MsgPruneExpiredGrantsResponse) String() string { return proto.CompactTextString(m) }
@@ -322,9 +357,11 @@ func (*MsgPruneExpiredGrantsResponse) ProtoMessage()    {}
 func (*MsgPruneExpiredGrantsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_3ceddab7d8589ad1, []int{7}
 }
+
 func (m *MsgPruneExpiredGrantsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
+
 func (m *MsgPruneExpiredGrantsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
 		return xxx_messageInfo_MsgPruneExpiredGrantsResponse.Marshal(b, m, deterministic)
@@ -337,12 +374,15 @@ func (m *MsgPruneExpiredGrantsResponse) XXX_Marshal(b []byte, deterministic bool
 		return b[:n], nil
 	}
 }
+
 func (m *MsgPruneExpiredGrantsResponse) XXX_Merge(src proto.Message) {
 	xxx_messageInfo_MsgPruneExpiredGrantsResponse.Merge(m, src)
 }
+
 func (m *MsgPruneExpiredGrantsResponse) XXX_Size() int {
 	return m.Size()
 }
+
 func (m *MsgPruneExpiredGrantsResponse) XXX_DiscardUnknown() {
 	xxx_messageInfo_MsgPruneExpiredGrantsResponse.DiscardUnknown(m)
 }
@@ -406,8 +446,10 @@ var fileDescriptor_3ceddab7d8589ad1 = []byte{
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
-var _ context.Context
-var _ grpc.ClientConn
+var (
+	_ context.Context
+	_ grpc.ClientConn
+)
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
@@ -431,7 +473,7 @@ type MsgClient interface {
 	Revoke(ctx context.Context, in *MsgRevoke, opts ...grpc.CallOption) (*MsgRevokeResponse, error)
 	// PruneExpiredGrants prunes the expired grants. Currently up to 75 at a time.
 	//
-	// Since cosmos-sdk 0.50.x-celestia
+	// Since cosmos-sdk 0.50.x-atomone
 	PruneExpiredGrants(ctx context.Context, in *MsgPruneExpiredGrants, opts ...grpc.CallOption) (*MsgPruneExpiredGrantsResponse, error)
 }
 
@@ -495,23 +537,25 @@ type MsgServer interface {
 	Revoke(context.Context, *MsgRevoke) (*MsgRevokeResponse, error)
 	// PruneExpiredGrants prunes the expired grants. Currently up to 75 at a time.
 	//
-	// Since cosmos-sdk 0.50.x-celestia
+	// Since cosmos-sdk 0.50.x-atomone
 	PruneExpiredGrants(context.Context, *MsgPruneExpiredGrants) (*MsgPruneExpiredGrantsResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
-type UnimplementedMsgServer struct {
-}
+type UnimplementedMsgServer struct{}
 
 func (*UnimplementedMsgServer) Grant(ctx context.Context, req *MsgGrant) (*MsgGrantResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Grant not implemented")
 }
+
 func (*UnimplementedMsgServer) Exec(ctx context.Context, req *MsgExec) (*MsgExecResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Exec not implemented")
 }
+
 func (*UnimplementedMsgServer) Revoke(ctx context.Context, req *MsgRevoke) (*MsgRevokeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Revoke not implemented")
 }
+
 func (*UnimplementedMsgServer) PruneExpiredGrants(ctx context.Context, req *MsgPruneExpiredGrants) (*MsgPruneExpiredGrantsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PruneExpiredGrants not implemented")
 }
@@ -592,31 +636,33 @@ func _Msg_PruneExpiredGrants_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
-var Msg_serviceDesc = _Msg_serviceDesc
-var _Msg_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "cosmos.authz.v1beta1.Msg",
-	HandlerType: (*MsgServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "Grant",
-			Handler:    _Msg_Grant_Handler,
+var (
+	Msg_serviceDesc  = _Msg_serviceDesc
+	_Msg_serviceDesc = grpc.ServiceDesc{
+		ServiceName: "cosmos.authz.v1beta1.Msg",
+		HandlerType: (*MsgServer)(nil),
+		Methods: []grpc.MethodDesc{
+			{
+				MethodName: "Grant",
+				Handler:    _Msg_Grant_Handler,
+			},
+			{
+				MethodName: "Exec",
+				Handler:    _Msg_Exec_Handler,
+			},
+			{
+				MethodName: "Revoke",
+				Handler:    _Msg_Revoke_Handler,
+			},
+			{
+				MethodName: "PruneExpiredGrants",
+				Handler:    _Msg_PruneExpiredGrants_Handler,
+			},
 		},
-		{
-			MethodName: "Exec",
-			Handler:    _Msg_Exec_Handler,
-		},
-		{
-			MethodName: "Revoke",
-			Handler:    _Msg_Revoke_Handler,
-		},
-		{
-			MethodName: "PruneExpiredGrants",
-			Handler:    _Msg_PruneExpiredGrants_Handler,
-		},
-	},
-	Streams:  []grpc.StreamDesc{},
-	Metadata: "cosmos/authz/v1beta1/tx.proto",
-}
+		Streams:  []grpc.StreamDesc{},
+		Metadata: "cosmos/authz/v1beta1/tx.proto",
+	}
+)
 
 func (m *MsgGrant) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
@@ -895,6 +941,7 @@ func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
+
 func (m *MsgGrant) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1012,9 +1059,11 @@ func (m *MsgPruneExpiredGrantsResponse) Size() (n int) {
 func sovTx(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
+
 func sozTx(x uint64) (n int) {
 	return sovTx(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
+
 func (m *MsgGrant) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1162,6 +1211,7 @@ func (m *MsgGrant) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func (m *MsgGrantResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1212,6 +1262,7 @@ func (m *MsgGrantResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func (m *MsgExec) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1328,6 +1379,7 @@ func (m *MsgExec) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func (m *MsgExecResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1410,6 +1462,7 @@ func (m *MsgExecResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func (m *MsgRevoke) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1556,6 +1609,7 @@ func (m *MsgRevoke) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func (m *MsgRevokeResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1606,6 +1660,7 @@ func (m *MsgRevokeResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func (m *MsgPruneExpiredGrants) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1688,6 +1743,7 @@ func (m *MsgPruneExpiredGrants) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func (m *MsgPruneExpiredGrantsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1738,6 +1794,7 @@ func (m *MsgPruneExpiredGrantsResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
 func skipTx(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0

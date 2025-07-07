@@ -143,7 +143,8 @@ func (ctx Context) BroadcastTxCommit(txBytes []byte) (*sdk.TxResponse, error) {
 			return syncRes, fmt.Errorf("tx hash did not match: got %s, expected %s", evtHash, txHash)
 		}
 
-		parsedLogs, parseErr := sdk.ParseABCILogs(evt.Result.Log)
+		parsedLogs, _ := sdk.ParseABCILogs(evt.Result.Log)
+
 		commitRes := &sdk.TxResponse{
 			TxHash:    evtHash,
 			Height:    evt.Height,
@@ -160,7 +161,7 @@ func (ctx Context) BroadcastTxCommit(txBytes []byte) (*sdk.TxResponse, error) {
 		if !evt.Result.IsOK() {
 			return commitRes, fmt.Errorf("unexpected result code %d", evt.Result.Code)
 		}
-		return commitRes, parseErr
+		return commitRes, nil
 	}
 
 	if waitTx.Err != nil {

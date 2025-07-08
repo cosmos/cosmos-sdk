@@ -76,6 +76,11 @@ func TestGRPCValidatorOutstandingRewards(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
+	// Set up fee pool.
+	assert.NilError(t, f.distrKeeper.FeePool.Set(f.sdkCtx, types.FeePool{
+		CommunityPool: sdk.NewDecCoins(sdk.DecCoin{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(0)}),
+	}))
+
 	// set module account coins
 	initTokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(1000))
 	assert.NilError(t, f.bankKeeper.MintCoins(f.sdkCtx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initTokens))))
@@ -152,6 +157,11 @@ func TestGRPCValidatorOutstandingRewards(t *testing.T) {
 func TestGRPCValidatorCommission(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
+
+	// Set up fee pool.
+	assert.NilError(t, f.distrKeeper.FeePool.Set(f.sdkCtx, types.FeePool{
+		CommunityPool: sdk.NewDecCoins(sdk.DecCoin{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(0)}),
+	}))
 
 	// set module account coins
 	initTokens := f.stakingKeeper.TokensFromConsensusPower(f.sdkCtx, int64(1000))

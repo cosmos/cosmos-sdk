@@ -441,6 +441,10 @@ func (app *BaseApp) Init() error {
 	return app.cms.GetPruning().Validate()
 }
 
+func (app *BaseApp) GetMinGasPrices() sdk.DecCoins {
+	return app.minGasPrices
+}
+
 func (app *BaseApp) setMinGasPrices(gasPrices sdk.DecCoins) {
 	app.minGasPrices = gasPrices
 }

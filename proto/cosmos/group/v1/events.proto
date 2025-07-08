@@ -92,3 +92,13 @@ message EventProposalPruned {
   // tally_result is the proposal tally result (when applicable).
   TallyResult tally_result = 3;
 }
+
+// EventTallyError is an event emitted when a proposal tally failed with an error.
+message EventTallyError {
+
+  // proposal_id is the unique ID of the proposal.
+  uint64 proposal_id = 1;
+
+  // error_message is the raw error output
+  string error_message = 2;
+}

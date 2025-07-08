@@ -48,13 +48,13 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/consensus) [#9](https://github.com/01builders/cosmos-sdk/pull/9) Address bug where sending `MsgUpdateParams` to `x/consensus` would overwrite `AppVersion` with zero value. Always use existing `AppVersion` param.
 * (client) [#435](https://github.com/celestiaorg/cosmos-sdk/pull/435) Extend the `CometRPC` interface with cometbft `rpcclient.MempoolClient`.
 * (baseapp) [#432](https://github.com/celestiaorg/cosmos-sdk/pull/432) Extend the `sdk.EndBlock` type with `TimeoutInfo` to be propagated to `ResponseFinalizeBlock`.
-* (auth/tx) [#432](https://github.com/celestiaorg/cosmos-sdk/pull/432) Set the `prove` flag to `false` for tx queries. 
+* (auth/tx) [#432](https://github.com/celestiaorg/cosmos-sdk/pull/432) Set the `prove` flag to `false` for tx queries.
 * (x/authz) [#442](https://github.com/celestiaorg/cosmos-sdk/pull/442) Added a limit of 200 grants pruned per `BeginBlock` and the `PruneExpiredGrants` message that prunes 75 expired grants on every run.
-* (x/staking) [#443](https://github.com/celestiaorg/cosmos-sdk/pull/443) Added a limit of 1000 to delegation keys migration. A further 10000 keys are migrated per `BeginBlock`, tracked by `NextMigrateDelegationsByValidatorIndexKey`. 
+* (x/staking) [#443](https://github.com/celestiaorg/cosmos-sdk/pull/443) Added a limit of 1000 to delegation keys migration. A further 10000 keys are migrated per `BeginBlock`, tracked by `NextMigrateDelegationsByValidatorIndexKey`.
 * (x/distribution) [#437](https://github.com/celestiaorg/cosmos-sdk/pull/437) Implement [CIP-30](https://github.com/celestiaorg/CIPs/blob/main/cips/cip-030.md).
-* (x/staking) [#444](https://github.com/celestiaorg/cosmos-sdk/pull/443) Added a limit of 1000 to historical info key migration. A further 1000 keys are migrated per `BeginBlock`, tracked by `NextMigrateHistoricalInfoKey`. 
+* (x/staking) [#444](https://github.com/celestiaorg/cosmos-sdk/pull/443) Added a limit of 1000 to historical info key migration. A further 1000 keys are migrated per `BeginBlock`, tracked by `NextMigrateHistoricalInfoKey`.
 * (x/slashing) [#447](https://github.com/celestiaorg/cosmos-sdk/pull/447) Updates the x/slashing key prefix for validator missed block bitarray from `0x02` to `0x12` and modifies the x/slashing v4 migration handler to be deletion of old keys, only. The migration is now done lazily via `BeginBlocker`.
-* (server) [#455](https://github.com/celestiaorg/cosmos-sdk/pull/455) Added celestia-core `BlockAPI` to app grpc server. When running in standalone mode the app uses a `BlockAPI` proxy service to maintain support through same the app grpc port. 
+* (server) [#455](https://github.com/celestiaorg/cosmos-sdk/pull/455) Added celestia-core `BlockAPI` to app grpc server. When running in standalone mode the app uses a `BlockAPI` proxy service to maintain support through same the app grpc port.
 * (server) [#576](https://github.com/celestiaorg/cosmos-sdk/pull/576) Updated the default listen address for remote ABCI connections over grpc from `tcp://127.0.0.1:26658` to `tcp://127.0.0.1:36658`.
 
 ## [Unreleased-Cosmos-SDK]
@@ -63,6 +63,19 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (baseapp) [#23879](https://github.com/cosmos/cosmos-sdk/pull/23879) Ensure finalize block response is not empty in the defer check of FinalizeBlock to avoid panic by nil pointer.
 * (query) [#23884](https://github.com/cosmos/cosmos-sdk/pull/23884) Fix NPE in query pagination.
+
+## [v0.50.14](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.14) - 2025-07-08
+
+### Bug Fixes
+
+* [GHSA-p22h-3m2v-cmgh](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-p22h-3m2v-cmgh) Fix x/distribution can halt when historical rewards overflow.
+
+
+## [v0.50.13](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.13) - 2025-03-12
+
+### Bug Fixes
+
+* [GHSA-47ww-ff84-4jrg](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-47ww-ff84-4jrg) Fix x/group can halt when erroring in EndBlocker
 
 ## [v0.50.12](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.12) - 2025-02-20
 

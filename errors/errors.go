@@ -81,6 +81,27 @@ func ABCIError(codespace string, code uint32, log string) error {
 	return Wrap(&Error{codespace: codespace, code: code, desc: "unknown"}, log)
 }
 
+// AllRegisteredErrors returns a deep copy of all registered errors.
+// The returned map contains error IDs as keys (formatted as "codespace:code")
+// and their corresponding Error instances as values.
+//
+// This function returns a deep copy to prevent external modification of the
+// original error registry, ensuring the integrity of registered errors.
+func AllRegisteredErrors() map[string]*Error {
+	// Create a deep copy to prevent external modification of registered errors
+	copy := make(map[string]*Error, len(usedCodes))
+	for key, err := range usedCodes {
+		// Create a new Error instance with the same values
+		copy[key] = &Error{
+			codespace: err.codespace,
+			code:      err.code,
+			desc:      err.desc,
+			grpcCode:  err.grpcCode,
+		}
+	}
+	return copy
+}
+
 // Error represents a root error.
 //
 // Weave framework is using root error to categorize issues. Each instance

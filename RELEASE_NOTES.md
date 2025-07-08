@@ -1,17 +1,15 @@
-# Cosmos SDK v0.53.2 Release Notes
-
-💬 [**Release Discussion**](https://github.com/orgs/cosmos/discussions/58)
+# Cosmos SDK v0.53.3 Release Notes
 
 ## 🚀 Highlights
 
-Announcing Cosmos SDK v0.53.2
+This patch release fixes [GHSA-p22h-3m2v-cmgh](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-p22h-3m2v-cmgh).
+It resolves a `x/distribution` module issue that can halt chains when the historical rewards pool overflows.
+Chains using the `x/distribution` module are affected by this issue.
 
-This release is a patch update that includes feedback from early users of Cosmos SDK v0.53.0.
+We recommended upgrading to this patch release as soon as possible.
 
-Upgrading to this version of the Cosmos SDK from any `v0.53.x` is trivial and does not require a chain upgrade.
-
-NOTE: `v0.53.1` has been retracted.
+This patch is state-breaking; chains must perform a coordinated upgrade. This patch cannot be applied in a rolling upgrade.
 
 ## 📝 Changelog
 
-Check out the [changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.53.2/CHANGELOG.md) for an exhaustive list of changes, or [compare changes](https://github.com/cosmos/cosmos-sdk/compare/v0.53.0...v0.53.1) from the last release.
+Check out the [changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.53.3/CHANGELOG.md) for an exhaustive list of changes or [compare changes](https://github.com/cosmos/cosmos-sdk/compare/v0.53.2...v0.53.3) from the last release.

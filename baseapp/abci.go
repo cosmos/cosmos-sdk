@@ -161,7 +161,7 @@ func (app *BaseApp) Query(_ context.Context, req *abci.RequestQuery) (resp *abci
 	}()
 
 	// when a client did not provide a query height, manually inject the latest
-	//[AGORIC] sanity check required for parallel Query https://github.com/agoric-labs/cosmos-sdk/pull/111
+	// [AGORIC] sanity check required for parallel Query https://github.com/agoric-labs/cosmos-sdk/pull/111
 	lastHeight := app.LastBlockHeight()
 	if req.Height == 0 {
 		req.Height = lastHeight
@@ -950,7 +950,6 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 		app.SnapshotManager().SnapshotIfApplicable(snapshotHeight)
 	}
 	return res, err
-
 }
 
 // CommitWithoutSnapshot is like Commit but instead of starting the snapshot goroutine
@@ -1002,7 +1001,7 @@ func (app *BaseApp) CommitWithoutSnapshot() (*abci.ResponseCommit, int64, error)
 
 	var snapshotHeight int64
 	// [AGORIC] In case it should not take snapshot snapshotHeight
-	//will be equal to zero preventing the snapshot from being taken
+	// will be equal to zero preventing the snapshot from being taken
 	if app.snapshotManager.ShouldTakeSnapshot(header.Height) {
 		snapshotHeight = header.Height
 	}

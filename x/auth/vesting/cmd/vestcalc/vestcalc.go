@@ -10,6 +10,7 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/client/cli"
 )
@@ -370,7 +371,7 @@ func (id *isoDate) String() string {
 }
 
 // isoDateFlag makes a new isoDate flag, accessed as a time.Time.
-func isoDateFlag(name string, usage string) *time.Time {
+func isoDateFlag(name, usage string) *time.Time {
 	id := isoDate{time.Time{}}
 	flag.CommandLine.Var(&id, name, usage)
 	return &id.Time
@@ -407,7 +408,7 @@ func (dates *isoDateList) String() string {
 }
 
 // isoDateListFlag makes a new isoDateList flag.
-func isoDateListFlag(name string, usage string) *isoDateList {
+func isoDateListFlag(name, usage string) *isoDateList {
 	dates := isoDateList([]time.Time{})
 	flag.Var(&dates, name, usage)
 	return &dates
@@ -434,7 +435,7 @@ func (it *isoTime) String() string {
 }
 
 // isoTimeFlag makes a new isoTime flag, accessed as a time.Time.
-func isoTimeFlag(name string, value string, usage string) *time.Time {
+func isoTimeFlag(name, value, usage string) *time.Time {
 	t, err := time.Parse(hhmmFmt, value)
 	if err != nil {
 		t = time.Time{}

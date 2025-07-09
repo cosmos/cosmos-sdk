@@ -242,7 +242,6 @@ $ %s tx gov submit-legacy-proposal --title="Test Proposal" --description="My awe
 
 			if len(args) == 0 {
 				return fmt.Errorf("failed to parse proposal: %w", err)
-
 			}
 
 			// otherwise try to interpret as a new post (0.46) submit-proposal

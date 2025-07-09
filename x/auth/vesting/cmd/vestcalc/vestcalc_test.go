@@ -40,7 +40,7 @@ func coins(s string) sdk.Coins {
 	return c
 }
 
-func evt(ts string, cs string) event {
+func evt(ts, cs string) event {
 	tm := iso(ts)
 	c := coins(cs)
 	return event{Time: tm, Coins: c}
@@ -282,7 +282,7 @@ func TestApplyCliff(t *testing.T) {
 }
 
 func TestWrite(t *testing.T) {
-	// Use an explicit timezone for consistant intervals between timestamps.
+	// Use an explicit timezone for consistent intervals between timestamps.
 	oldLoc := time.Local
 	loc, err := time.LoadLocation("America/Los_Angeles")
 	if err != nil {

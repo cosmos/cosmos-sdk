@@ -325,7 +325,6 @@ func TestManager_CannotRestoreTooLargeItem(t *testing.T) {
 	// Feeding the chunks fails
 	for _, chunk := range chunks {
 		_, err = manager.RestoreChunk(chunk)
-
 		if err != nil {
 			break
 		}

@@ -357,23 +357,16 @@ Currently only supported for ClawbackVestingAccount.`,
 // Returrns start time, periods, and error.
 
 func readScheduleFile(path string) (int64, []types.Period, error) {
-
 	contents, err := os.ReadFile(path)
-
 	if err != nil {
-
 		return 0, nil, err
-
 	}
 
 	var data VestingData
 
 	err = json.Unmarshal(contents, &data)
-
 	if err != nil {
-
 		return 0, nil, err
-
 	}
 
 	startTime := data.StartTime
@@ -383,17 +376,12 @@ func readScheduleFile(path string) (int64, []types.Period, error) {
 	for i, p := range data.Periods {
 
 		amount, err := sdk.ParseCoinsNormalized(p.Coins)
-
 		if err != nil {
-
 			return 0, nil, err
-
 		}
 
 		if p.Length < 1 {
-
 			return 0, nil, fmt.Errorf("invalid period length of %d in period %d, length must be greater than 0", p.Length, i)
-
 		}
 
 		period := types.Period{Length: p.Length, Amount: amount}
@@ -403,5 +391,4 @@ func readScheduleFile(path string) (int64, []types.Period, error) {
 	}
 
 	return startTime, periods, nil
-
 }

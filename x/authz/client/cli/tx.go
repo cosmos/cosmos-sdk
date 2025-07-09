@@ -47,7 +47,6 @@ func GetTxCmd(ac address.Codec) *cobra.Command {
 
 	AuthorizationTxCmd.AddCommand(
 		NewCmdGrantAuthorization(ac),
-		NewCmdRevokeAuthorization(ac),
 		NewCmdExecAuthorization(),
 	)
 
@@ -229,6 +228,8 @@ func getExpireTime(cmd *cobra.Command) (*time.Time, error) {
 }
 
 // NewCmdRevokeAuthorization returns a CLI command handler for creating a MsgRevoke transaction.
+// Deprecated: This command is deprecated and will be removed in a future release.
+// The module is using its AutoCLI command instead.
 func NewCmdRevokeAuthorization(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "revoke [grantee] [msg-type-url] --from=[granter]",

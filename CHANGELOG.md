@@ -38,6 +38,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Features
+
+* [#24872](https://github.com/cosmos/cosmos-sdk/pull/24872) Support BLS 12-381 for cli `init`, `gentx`, `collect-gentx`
+
 ### Breaking Changes
 
 * [#24837](https://github.com/cosmos/cosmos-sdk/pull/24837) Update to using CometBFT v2.

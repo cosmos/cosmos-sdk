@@ -64,3 +64,27 @@ func TestBroadcastCancellation(t *testing.T) {
 		require.ErrorIs(t, err, context.Canceled)
 	}
 }
+
+func BenchmarkCheckCometErrorCompare(b *testing.B) {
+	txBytes := []byte{0xA, 0xB}
+
+	errs := []error{
+		mempool.ErrTxInCache,
+		mempool.ErrTxTooLarge{},
+		mempool.ErrMempoolIsFull{},
+	}
+
+	for _, err := range errs {
+		errName := fmt.Sprintf("%T", err)
+
+		b.Run(errName, func(b *testing.B) {
+			b.ReportAllocs()
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				if CheckCometError(err, txBytes) == nil {
+					b.FailNow()
+				}
+			}
+		})
+	}
+}

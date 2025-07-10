@@ -2,8 +2,8 @@ package client
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/cometbft/cometbft/v2/mempool"
 	cmttypes "github.com/cometbft/cometbft/v2/types"
@@ -14,6 +14,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
+)
+
+var (
+	errTxTooLarge    mempool.ErrTxTooLarge
+	errMempoolIsFull mempool.ErrMempoolIsFull
 )
 
 // BroadcastTx broadcasts a transactions either synchronously or asynchronously
@@ -44,34 +49,29 @@ func CheckTendermintError(err error, tx cmttypes.Tx) *sdk.TxResponse {
 // CometBFT error that is returned before the tx is submitted due to
 // precondition checks that failed. If an CometBFT error is detected, this
 // function returns the correct code back in TxResponse.
-//
-// TODO: Avoid brittle string matching in favor of error matching. This requires
-// a change to CometBFT's RPCError type to allow retrieval or matching against
-// a concrete error type.
 func CheckCometError(err error, tx cmttypes.Tx) *sdk.TxResponse {
 	if err == nil {
 		return nil
 	}
 
-	errStr := strings.ToLower(err.Error())
 	txHash := fmt.Sprintf("%X", tx.Hash())
 
 	switch {
-	case strings.Contains(errStr, strings.ToLower(mempool.ErrTxInCache.Error())):
+	case errors.Is(err, mempool.ErrTxInCache):
 		return &sdk.TxResponse{
 			Code:      sdkerrors.ErrTxInMempoolCache.ABCICode(),
 			Codespace: sdkerrors.ErrTxInMempoolCache.Codespace(),
 			TxHash:    txHash,
 		}
 
-	case strings.Contains(errStr, "mempool is full"):
+	case errors.As(err, &errMempoolIsFull):
 		return &sdk.TxResponse{
 			Code:      sdkerrors.ErrMempoolIsFull.ABCICode(),
 			Codespace: sdkerrors.ErrMempoolIsFull.Codespace(),
 			TxHash:    txHash,
 		}
 
-	case strings.Contains(errStr, "tx too large"):
+	case errors.As(err, &errTxTooLarge):
 		return &sdk.TxResponse{
 			Code:      sdkerrors.ErrTxTooLarge.ABCICode(),
 			Codespace: sdkerrors.ErrTxTooLarge.Codespace(),

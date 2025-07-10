@@ -5,12 +5,16 @@ import (
 	"testing"
 	stdtime "time"
 
+	cmtprototypes "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/cometbft/cometbft/types/time"
+	"github.com/stretchr/testify/require"
+	"gotest.tools/v3/assert"
+
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	cmtprototypes "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/cometbft/cometbft/types/time"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -33,8 +37,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/stretchr/testify/require"
-	"gotest.tools/v3/assert"
 )
 
 var (
@@ -121,13 +123,13 @@ func initFixtures(t *testing.T) *fixture {
 	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts, nil)
 	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper, nil)
 	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper, nil)
-	//mintModule := mint.NewAppModule(cdc, mintKeeper, accountKeeper, nil, nil)
+	// mintModule := mint.NewAppModule(cdc, mintKeeper, accountKeeper, nil, nil)
 
 	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, map[string]appmodule.AppModule{
 		authtypes.ModuleName:    authModule,
 		banktypes.ModuleName:    bankModule,
 		stakingtypes.ModuleName: stakingModule,
-		//minttypes.ModuleName:    mintModule,
+		// minttypes.ModuleName:    mintModule,
 	})
 
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
@@ -166,7 +168,6 @@ func TestCreatePeriodicVestingAccBricked(t *testing.T) {
 	bacc, origCoins := initBaseAccount()
 	_, err := vestingtypes.NewPeriodicVestingAccount(bacc, origCoins, now.Unix(), badPeriods)
 	assert.Error(t, err, "period #1 has invalid coins: -9000fee")
-
 }
 
 func TestAddGrantPeroidicVestingAcc(t *testing.T) {
@@ -225,7 +226,7 @@ func TestAddGrantPeroidicVestingAcc(t *testing.T) {
 	require.Equal(t, int64(0), pva.DelegatedVesting.AmountOf(stakeDenom).Int64())
 	require.Equal(t, int64(0), pva.DelegatedFree.AmountOf(stakeDenom).Int64())
 
-	//f.accountKeeper.SetAccount(ctx, pva)
+	// f.accountKeeper.SetAccount(ctx, pva)
 	// fund the vesting account with new grant (old has vested and transferred out)
 	err = banktestutil.FundAccount(ctx, f.bankKeeper, pva.GetAddress(), origCoins)
 	require.NoError(t, err)
@@ -236,9 +237,9 @@ func TestAddGrantPeroidicVestingAcc(t *testing.T) {
 	tadr := pva.GetAddress()
 	co := c(stake(1))
 	err = f.bankKeeper.SendCoins(ctx, tadr, dest, co)
-	//require.Error(t, err)
+	// require.Error(t, err)
 	ctx = ctx.WithBlockTime(now.Add(1500 * stdtime.Second))
-	//err = f.bankKeeper.SendCoins(ctx, pva.GetAddress(), dest, origCoins)
+	// err = f.bankKeeper.SendCoins(ctx, pva.GetAddress(), dest, origCoins)
 	require.NoError(t, err)
 }
 
@@ -303,7 +304,7 @@ func TestAddGrantPeriodicVestingAcc_negAmount(t *testing.T) {
 
 	addr := pva.GetAddress()
 
-	// At now+150 add a new grant wich attempts to prematurly vest the grant
+	// At now+150 add a new grant which attempts to prematurely vest the grant
 	bogusPeriods := vestingtypes.Periods{
 		{Length: 1, Amount: c(fee(750))},
 		{Length: 1000, Amount: []sdk.Coin{{Denom: feeDenom, Amount: math.NewInt(-749)}}},
@@ -316,7 +317,7 @@ func TestAddGrantPeriodicVestingAcc_negAmount(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Equal(t, int64(100), f.bankKeeper.GetBalance(ctx, addr, stakeDenom).Amount.Int64())
 
-	// try to transfer the orginal grant before its time
+	// try to transfer the original grant before its time
 	ctx = ctx.WithBlockTime(now.Add(160 * stdtime.Second))
 	_, _, dest := testdata.KeyTestPubAddr()
 	err = f.bankKeeper.SendCoins(ctx, addr, dest, c(fee(750)))

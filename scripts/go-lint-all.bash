@@ -8,9 +8,9 @@ export REPO_ROOT
 lint_module() {
   local root="$1"
   shift
-  cd "$(dirname "$root")" &&
+  (cd "$(dirname "$root")" &&
     echo "linting $(grep "^module" go.mod) [$(date -Iseconds -u)]" &&
-    golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@"
+    golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@")
 }
 export -f lint_module
 
@@ -28,10 +28,16 @@ else
     exit 0
   fi
 
+  status=0
   for f in $(dirname $(echo "$GIT_DIFF" | tr -d "'") | uniq); do
     echo "linting $f [$(date -Iseconds -u)]" &&
-    cd $f &&
-    golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@" &&
-    cd $REPO_ROOT
+    (cd "$f" &&
+    golangci-lint run ./... -c "${REPO_ROOT}/.golangci.yml" "$@") || status=$?
   done
+  if [[ $status -eq 0 ]]; then
+    echo "linting succeeded"
+  else
+    echo "linting failed"
+  fi
+  exit $status
 fi

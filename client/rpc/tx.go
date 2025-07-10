@@ -9,8 +9,6 @@ import (
 	"strings"
 	"time"
 
-	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -21,78 +19,12 @@ import (
 
 const TimeoutFlag = "timeout"
 
-func newTxResponseCheckTx(res *coretypes.ResultBroadcastTxCommit) *sdk.TxResponse {
-	if res == nil {
-		return nil
-	}
-
-	var txHash string
-	if res.Hash != nil {
-		txHash = res.Hash.String()
-	}
-
-	parsedLogs, _ := sdk.ParseABCILogs(res.CheckTx.Log)
-
-	return &sdk.TxResponse{
-		Height:    res.Height,
-		TxHash:    txHash,
-		Codespace: res.CheckTx.Codespace,
-		Code:      res.CheckTx.Code,
-		Data:      strings.ToUpper(hex.EncodeToString(res.CheckTx.Data)),
-		RawLog:    res.CheckTx.Log,
-		Logs:      parsedLogs,
-		Info:      res.CheckTx.Info,
-		GasWanted: res.CheckTx.GasWanted,
-		GasUsed:   res.CheckTx.GasUsed,
-		Events:    res.CheckTx.Events,
-	}
-}
-
-func newTxResponseDeliverTx(res *coretypes.ResultBroadcastTxCommit) *sdk.TxResponse {
-	if res == nil {
-		return nil
-	}
-
-	var txHash string
-	if res.Hash != nil {
-		txHash = res.Hash.String()
-	}
-
-	parsedLogs, _ := sdk.ParseABCILogs(res.TxResult.Log)
-
-	return &sdk.TxResponse{
-		Height:    res.Height,
-		TxHash:    txHash,
-		Codespace: res.TxResult.Codespace,
-		Code:      res.TxResult.Code,
-		Data:      strings.ToUpper(hex.EncodeToString(res.TxResult.Data)),
-		RawLog:    res.TxResult.Log,
-		Logs:      parsedLogs,
-		Info:      res.TxResult.Info,
-		GasWanted: res.TxResult.GasWanted,
-		GasUsed:   res.TxResult.GasUsed,
-		Events:    res.TxResult.Events,
-	}
-}
-
-func newResponseFormatBroadcastTxCommit(res *coretypes.ResultBroadcastTxCommit) *sdk.TxResponse {
-	if res == nil {
-		return nil
-	}
-
-	if !res.CheckTx.IsOK() {
-		return newTxResponseCheckTx(res)
-	}
-
-	return newTxResponseDeliverTx(res)
-}
-
 // QueryEventForTxCmd is an alias for WaitTxCmd, kept for backwards compatibility.
 func QueryEventForTxCmd() *cobra.Command {
 	return WaitTxCmd()
 }
 
-// WaitTx returns a CLI command that waits for a transaction with the given hash to be included in a block.
+// WaitTxCmd returns a CLI command that waits for a transaction with the given hash to be included in a block.
 func WaitTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "wait-tx [hash]",
@@ -120,58 +52,38 @@ $ %[1]s tx [flags] | %[1]s q wait-tx
 			ctx, cancel := context.WithTimeout(context.Background(), timeout)
 			defer cancel()
 
-			var hash []byte
-			if len(args) == 0 {
+			txSubmitted := func() (*sdk.TxResponse, []byte, error) {
+				if len(args) > 0 {
+					// read hash from args
+					hashByt, err := hex.DecodeString(args[0])
+					if err != nil {
+						return nil, nil, err
+					}
+
+					return nil, hashByt, nil
+				}
+
 				// read hash from stdin
 				in, err := io.ReadAll(cmd.InOrStdin())
 				if err != nil {
-					return err
+					return nil, nil, err
 				}
 				hashByt, err := parseHashFromInput(in)
 				if err != nil {
-					return err
+					return nil, nil, err
 				}
 
-				hash = hashByt
-			} else {
-				// read hash from args
-				hashByt, err := hex.DecodeString(args[0])
-				if err != nil {
-					return err
-				}
-
-				hash = hashByt
+				return nil, hashByt, nil
 			}
 
-			res, err := clientCtx.Client.Tx(ctx, hash, false)
-			if err == nil {
-				// tx already included in a block
-				res := &coretypes.ResultBroadcastTxCommit{
-					TxResult: res.TxResult,
-					Hash:     res.Hash,
-					Height:   res.Height,
-				}
-				return clientCtx.PrintProto(newResponseFormatBroadcastTxCommit(res))
+			res, err := clientCtx.WaitTx(ctx, txSubmitted)
+			if err != nil {
+				return err
 			}
-
-			waitTxCh := client.WaitTx(ctx, clientCtx.NodeURI, string(hash))
-			waitTxResult := <-waitTxCh
-			if waitTxResult.Err != nil {
-				return waitTxResult.Err
-			}
-
-			txe := waitTxResult.BlockInclusion
-
-			broadcastRes := &coretypes.ResultBroadcastTxCommit{
-				TxResult: txe.Result,
-				Hash:     tmtypes.Tx(txe.Tx).Hash(),
-				Height:   txe.Height,
-			}
-
-			// Propagate the printing error, if any.
-			return clientCtx.PrintProto(newResponseFormatBroadcastTxCommit(broadcastRes))
+			return clientCtx.PrintProto(res)
 		},
 	}
+
 	cmd.Flags().Duration(TimeoutFlag, 15*time.Second, "The maximum time to wait for the transaction to be included in a block")
 	flags.AddQueryFlagsToCmd(cmd)
 

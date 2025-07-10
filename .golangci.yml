@@ -4,20 +4,13 @@ run:
   sort-results: true
   allow-parallel-runners: true
   exclude-dir: testutil/testdata
-  skip-files:
-    - server/grpc/gogoreflection/fix_registration.go
-    - "fix_registration.go"
-    - "x/bank/migrations/v4/gen_state_test.go"
-    - ".*\\.pb\\.go$"
-    - ".*\\.pb\\.gw\\.go$"
-    - ".*\\.pulsar\\.go$"
 
 linters:
   disable-all: true
   enable:
     # - depguard
     - dogsled
-    - exportloopref
+    # - exportloopref
     - goconst
     - gocritic
     - gci
@@ -38,6 +31,13 @@ linters:
     - unused
 
 issues:
+  exclude-files:
+    - server/grpc/gogoreflection/fix_registration.go
+    - "fix_registration.go"
+    - "x/bank/migrations/v4/gen_state_test.go"
+    - ".*\\.pb\\.go$"
+    - ".*\\.pb\\.gw\\.go$"
+    - ".*\\.pulsar\\.go$"
   exclude-rules:
     - text: "Use of weak random number generator"
       linters:

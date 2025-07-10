@@ -35,9 +35,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog (Agoric fork)
 
-## Unreleased
+## `v0.50.14-alpha.agoric.1` - 2025-07-09
 
-Upgrade to v0.50.13 of the Cosmos SDK, with Agoric changes preserved.
+Upgrade to v0.50.14 of the Cosmos SDK, with Agoric changes preserved.
 
 ### Bug Fixes
 

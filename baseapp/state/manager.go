@@ -1,6 +1,7 @@
 package state
 
 import (
+	"container/heap"
 	"fmt"
 	"sync"
 
@@ -37,15 +38,44 @@ type Manager struct {
 	checkState           *State
 	prepareProposalState *State
 	processProposalState *State
-	finalizeBlockState   *State
+	finalizeBlockState   *MinHeap
 	stateMut             sync.RWMutex
 
 	gasConfig config.GasConfig
 }
 
+type MinHeap []*State
+
+func (h MinHeap) Len() int      { return len(h) }
+func (h MinHeap) Swap(i, j int) { h[i], h[j] = h[j], h[i] }
+func (h MinHeap) Less(i, j int) bool {
+	if h[i].ctx.BlockHeight() < h[j].ctx.BlockHeight() {
+		return true
+	} else if h[i].ctx.BlockHeight() == h[j].ctx.BlockHeight() && h[i].ctx.BlockTime().Before(h[j].ctx.BlockTime()) {
+		return true
+	} else {
+		return false
+	}
+}
+
+func (h *MinHeap) Push(x any) {
+	*h = append(*h, x.(*State))
+}
+
+func (h *MinHeap) Pop() any {
+	old := *h
+	n := len(old)
+	x := old[n-1]
+	*h = old[:n-1]
+	return x
+}
+
 func NewManager(gasConfig config.GasConfig) *Manager {
+	finalizeBlockState := &MinHeap{}
+	heap.Init(finalizeBlockState)
 	return &Manager{
-		gasConfig: gasConfig,
+		gasConfig:          gasConfig,
+		finalizeBlockState: finalizeBlockState,
 	}
 }
 
@@ -55,8 +85,10 @@ func (mgr *Manager) GetState(mode sdk.ExecMode) *State {
 
 	switch mode {
 	case sdk.ExecModeFinalize:
-		return mgr.finalizeBlockState
-
+		if mgr.finalizeBlockState.Len() > 0 {
+			return (*mgr.finalizeBlockState)[0]
+		}
+		return nil
 	case sdk.ExecModePrepareProposal:
 		return mgr.prepareProposalState
 
@@ -84,6 +116,7 @@ func (mgr *Manager) SetState(
 		Time:    h.Time,
 		ChainID: h.ChainID,
 		AppHash: h.AppHash,
+		Hash:    h.ConsensusHash,
 	}
 	baseState := NewState(
 		sdk.NewContext(ms, h, false, logger).
@@ -107,8 +140,7 @@ func (mgr *Manager) SetState(
 		mgr.processProposalState = baseState
 
 	case sdk.ExecModeFinalize:
-		mgr.finalizeBlockState = baseState
-
+		heap.Push(mgr.finalizeBlockState, baseState)
 	default:
 		panic(fmt.Sprintf("invalid runTxMode for setState: %d", mode))
 	}
@@ -129,8 +161,9 @@ func (mgr *Manager) ClearState(mode sdk.ExecMode) {
 		mgr.processProposalState = nil
 
 	case sdk.ExecModeFinalize:
-		mgr.finalizeBlockState = nil
-
+		if mgr.finalizeBlockState.Len() > 0 {
+			heap.Pop(mgr.finalizeBlockState)
+		}
 	default:
 		panic(fmt.Sprintf("invalid runTxMode for clearState: %d", mode))
 	}

@@ -6,7 +6,7 @@ CMDS='git go gofmt goimports misspell'
 STAGED_GO_FILES=$(git diff --cached --name-only -- '*.go')
 
 f_echo_stderr() {
-  echo $@ >&2
+  echo "$@" >&2
 }
 
 f_exit_success() {

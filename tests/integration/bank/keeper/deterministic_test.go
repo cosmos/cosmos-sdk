@@ -1,7 +1,4 @@
 package keeper_test
-t.Parallel()
-f := initDeterministicFixture(t)
-
 
 import (
 	"testing"
@@ -64,10 +61,6 @@ type deterministicFixture struct {
 	bankKeeper  keeper.BaseKeeper
 	queryClient banktypes.QueryClient
 }
-
-t.Parallel()
-f := initDeterministicFixture(t)
-
 
 func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey, banktypes.StoreKey)

@@ -246,6 +246,7 @@ func simulateMsgSubmitProposal(
 			simtypes.RandStringOfLength(r, 100),
 			simtypes.RandStringOfLength(r, 100),
 			expedited,
+			nil,
 		)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate a submit proposal msg"), nil, err

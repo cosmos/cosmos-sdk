@@ -3,10 +3,11 @@ package types
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
 )
 
 func TestVestingAccountMsg(t *testing.T) {
@@ -17,6 +18,7 @@ func TestVestingAccountMsg(t *testing.T) {
 	msg := NewMsgCreateVestingAccount(fromAddr, toAddr, amount, endTime, false)
 	require.NotNil(t, msg)
 }
+
 func TestClawbackVestingAccountMsg(t *testing.T) {
 	_, _, fromAddr := KeyTestPubAddr()
 	_, _, toAddr := KeyTestPubAddr()

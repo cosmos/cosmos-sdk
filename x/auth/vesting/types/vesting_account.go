@@ -7,14 +7,14 @@ import (
 	stdmath "math"
 	"time"
 
-	sdkerrors "cosmossdk.io/errors"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	errors2 "github.com/cosmos/cosmos-sdk/types/errors"
 	"sigs.k8s.io/yaml"
 
+	sdkerrors "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	errors2 "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 )
@@ -970,7 +970,6 @@ func (va *ClawbackVestingAccount) Clawback(ctx sdk.Context, requestor, dest sdk.
 				panic(err) // shouldn't happen
 			}
 			validator, err := sk.GetValidator(ctx, validatorAddr)
-
 			if err != nil {
 				// validator has been removed
 				continue

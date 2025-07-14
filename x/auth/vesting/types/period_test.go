@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func mkper(length int64, amount int64) Period {
+func mkper(length, amount int64) Period {
 	return Period{
 		Length: length,
 		Amount: sdk.NewCoins(sdk.NewInt64Coin("test", amount)),

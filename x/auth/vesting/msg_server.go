@@ -287,12 +287,10 @@ func (s msgServer) Clawback(goCtx context.Context, msg *types.MsgClawback) (*typ
 	acc := ak.GetAccount(ctx, addr)
 	if acc == nil {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrNotFound, "account %s does not exist", msg.Address)
-
 	}
 	va, ok := acc.(*types.ClawbackVestingAccount)
 	if !ok {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "account not subject to clawback: %s", msg.Address)
-
 	}
 
 	err = va.Clawback(ctx, funder, dest, ak, bk, s.StakingKeeper)
@@ -318,12 +316,10 @@ func (s msgServer) ReturnGrants(goCtx context.Context, msg *types.MsgReturnGrant
 	acc := ak.GetAccount(ctx, addr)
 	if acc == nil {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrNotFound, "account %s does not exist", msg.Address)
-
 	}
 	va, ok := acc.(*types.ClawbackVestingAccount)
 	if !ok {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "account does not support return-grants: %s", msg.Address)
-
 	}
 
 	va.ReturnGrants(ctx, ak, s.BankKeeper, s.StakingKeeper)

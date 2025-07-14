@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/math"
@@ -13,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/stretchr/testify/require"
 )
 
 func TestUnbondingDelegationsMaxEntries(t *testing.T) {
@@ -232,8 +232,8 @@ func TestTransferUnbonding(t *testing.T) {
 
 	addrDels, valAddrs := generateAddresses(f, 100)
 
-	//addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, math.NewInt(10000))
-	//valAddrs := simtestutil.ConvertAddrsToValAddrs(addrDels)
+	// addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, math.NewInt(10000))
+	// valAddrs := simtestutil.ConvertAddrsToValAddrs(addrDels)
 
 	// try to transfer when there's nothing
 	transferred, err := f.stakingKeeper.TransferUnbonding(f.sdkCtx, addrDels[0], addrDels[1], valAddrs[0], math.NewInt(30))

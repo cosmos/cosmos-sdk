@@ -447,7 +447,6 @@ func (s *VestingTestSuite) TestCreatePeriodicVestingAccount() {
 				s.bankKeeper.EXPECT().BlockedAddr(to2Addr).Return(false)
 				s.bankKeeper.EXPECT().SendCoins(gomock.Any(), fromAddr, to2Addr, gomock.Any()).Return(nil)
 				s.bankKeeper.EXPECT().IsSendEnabledCoins(gomock.Any(), gomock.Any()).Return(nil)
-
 			},
 			input: vestingtypes.NewMsgCreatePeriodicVestingAccount(
 				fromAddr,

@@ -268,7 +268,7 @@ func findEndIndex(strL []string, endQ string) int {
 		}
 		if midStr < endQ {
 			left = mid + 1
-		} else { // midStrL > startQ
+		} else { // midStr > endQ
 			right = mid - 1
 		}
 	}

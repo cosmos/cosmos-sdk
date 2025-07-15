@@ -2,7 +2,6 @@ package codec_test
 
 import (
 	"bytes"
-	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -110,5 +109,5 @@ func TestAminoCodecUnpackAnyFails(t *testing.T) {
 	cdc := codec.NewAminoCodec(createTestCodec())
 	err := cdc.UnpackAny(new(types.Any), &testdata.Cat{})
 	require.Error(t, err)
-	require.Equal(t, err, errors.New("AminoCodec can't handle unpack protobuf Any's"))
+	require.EqualError(t, err, "AminoCodec can't handle unpack protobuf Any's")
 }

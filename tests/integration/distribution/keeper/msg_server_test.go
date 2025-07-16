@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"encoding/hex"
 	"fmt"
 	"testing"
 
@@ -16,6 +17,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/integration"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,6 +33,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
@@ -72,6 +76,7 @@ func initFixture(t testing.TB) *fixture {
 
 	maccPerms := map[string][]string{
 		distrtypes.ModuleName:          {authtypes.Minter},
+		minttypes.ModuleName:           {authtypes.Minter},
 		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 	}
@@ -132,10 +137,18 @@ func initFixture(t testing.TB) *fixture {
 	})
 
 	sdkCtx := sdk.UnwrapSDKContext(integrationApp.Context())
+	require.NoError(t, stakingKeeper.SetParams(sdkCtx, stakingtypes.DefaultParams()))
+
+	stakingKeeper.SetHooks(
+		stakingtypes.NewMultiStakingHooks(
+			distrKeeper.Hooks(), // Needed for reward distribution on staking events
+		),
+	)
 
 	// Register MsgServer and QueryServer
 	distrtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), distrkeeper.NewMsgServerImpl(distrKeeper))
 	distrtypes.RegisterQueryServer(integrationApp.QueryHelper(), distrkeeper.NewQuerier(distrKeeper))
+	stakingtypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), stakingkeeper.NewMsgServerImpl(stakingKeeper))
 
 	return &fixture{
 		app:           integrationApp,
@@ -981,4 +994,109 @@ func TestMsgDepositValidatorRewardsPool(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCannotDepositIfRewardPoolFull(t *testing.T) {
+	f := initFixture(t)
+	err := f.distrKeeper.FeePool.Set(f.sdkCtx, distrtypes.FeePool{
+		CommunityPool: sdk.NewDecCoins(sdk.DecCoin{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(10000)}),
+	})
+	assert.NilError(t, err)
+	assert.NilError(t, f.distrKeeper.Params.Set(f.sdkCtx, distrtypes.DefaultParams()))
+	_, err = f.distrKeeper.FeePool.Get(f.sdkCtx)
+	assert.NilError(t, err)
+
+	ctx := f.sdkCtx.WithIsCheckTx(false).WithBlockHeight(1)
+	populateValidators(t, f)
+
+	valPubKey := newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB53")
+	operatorAddr := sdk.ValAddress(valPubKey.Address())
+
+	tstaking := stakingtestutil.NewHelper(t, ctx, f.stakingKeeper)
+
+	assert.NilError(t, f.bankKeeper.MintCoins(f.sdkCtx, minttypes.ModuleName, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))))
+	assert.NilError(t, f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, minttypes.ModuleName, sdk.AccAddress(operatorAddr), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))))
+
+	tstaking.Commission = stakingtypes.NewCommissionRates(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec())
+	selfDelegation := math.OneInt()
+	tstaking.CreateValidator(operatorAddr, valPubKey, selfDelegation, true)
+
+	_, err = f.stakingKeeper.EndBlocker(f.sdkCtx)
+	assert.NilError(t, err)
+
+	testDenom := "utesttest"
+	maxSupply, ok := math.NewIntFromString("115792089237316195423570985008687907853269984665640564039457584007913129639934")
+	assert.Assert(t, ok)
+	maxCoins := sdk.NewCoins(sdk.NewCoin(testDenom, maxSupply))
+	assert.NilError(t, f.bankKeeper.MintCoins(f.sdkCtx, minttypes.ModuleName, maxCoins))
+	assert.NilError(t, f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, minttypes.ModuleName, sdk.AccAddress(operatorAddr), maxCoins))
+
+	fundValMsg := &distrtypes.MsgDepositValidatorRewardsPool{
+		Depositor:        sdk.AccAddress(operatorAddr).String(),
+		ValidatorAddress: operatorAddr.String(),
+		Amount:           maxCoins,
+	}
+
+	// fund the rewards pool. this will set the current rewards.
+	_, err = f.app.RunMsg(
+		fundValMsg,
+		integration.WithAutomaticFinalizeBlock(),
+		integration.WithAutomaticCommit(),
+	)
+	assert.NilError(t, err)
+
+	// now we delegate to increment the validator period, setting the current rewards to the previous.
+	power := int64(1)
+	delegationAmount := sdk.TokensFromConsensusPower(power, sdk.DefaultPowerReduction)
+	delMsg := stakingtypes.NewMsgDelegate(sdk.AccAddress(operatorAddr).String(), operatorAddr.String(), sdk.NewCoin(sdk.DefaultBondDenom, delegationAmount))
+	_, err = f.app.RunMsg(
+		delMsg,
+		integration.WithAutomaticFinalizeBlock(),
+		integration.WithAutomaticCommit(),
+	)
+	assert.NilError(t, err)
+
+	// this should fail since this amount cannot be added to the previous amount without overflowing.
+	_, err = f.app.RunMsg(
+		fundValMsg,
+		integration.WithAutomaticFinalizeBlock(),
+		integration.WithAutomaticCommit(),
+	)
+	assert.ErrorContains(t, err, "unable to deposit coins")
+}
+
+var (
+	pubkeys = []cryptotypes.PubKey{
+		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB50"),
+		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB51"),
+		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB52"),
+	}
+
+	valAddresses = []sdk.ValAddress{
+		sdk.ValAddress(pubkeys[0].Address()),
+		sdk.ValAddress(pubkeys[1].Address()),
+		sdk.ValAddress(pubkeys[2].Address()),
+	}
+
+	initAmt   = sdk.TokensFromConsensusPower(1000000, sdk.DefaultPowerReduction)
+	initCoins = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
+)
+
+func populateValidators(t assert.TestingT, f *fixture) {
+	totalSupplyAmt := initAmt.MulRaw(int64(len(valAddresses)))
+	totalSupply := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, totalSupplyAmt))
+	assert.NilError(t, f.bankKeeper.MintCoins(f.sdkCtx, distrtypes.ModuleName, totalSupply))
+
+	for _, addr := range valAddresses {
+		assert.NilError(t, f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, distrtypes.ModuleName, (sdk.AccAddress)(addr), initCoins))
+	}
+}
+
+func newPubKey(pk string) (res cryptotypes.PubKey) {
+	pkBytes, err := hex.DecodeString(pk)
+	if err != nil {
+		panic(err)
+	}
+	pubkey := &ed25519.PubKey{Key: pkBytes}
+	return pubkey
 }

@@ -85,11 +85,9 @@ message Proposal {
 
   // title is the title of the proposal
   string title = 11 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.47"];
-  ;
 
   // summary is a short summary of the proposal
   string summary = 12 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.47"];
-  ;
 
   // proposer is the address of the proposal sumbitter
   string proposer = 13

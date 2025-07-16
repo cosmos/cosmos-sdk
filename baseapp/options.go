@@ -24,6 +24,20 @@ import (
 // File for storing in-package BaseApp optional functions,
 // for options that need access to non-exported fields of the BaseApp
 
+// SetNextBlockDelay sets the next block delay for the baseapp.
+//
+// The application is initialized with a default value of 0.
+//
+// More information on this value and how it affects CometBFT can be found here:
+// https://github.com/cometbft/cometbft/blob/88ef3d267de491db98a654be0af6d791e8724ed0/spec/abci/abci%2B%2B_methods.md?plain=1#L689
+func (app *BaseApp) SetNextBlockDelay(delay time.Duration) {
+	if app.sealed {
+		panic("SetNextBlockDelay() on sealed BaseApp")
+	}
+
+	app.nextBlockDelay = delay
+}
+
 // SetPruning sets a pruning option on the multistore associated with the app
 func SetPruning(opts pruningtypes.PruningOptions) func(*BaseApp) {
 	return func(bapp *BaseApp) { bapp.cms.SetPruning(opts) }
@@ -332,20 +346,6 @@ func (app *BaseApp) SetMempool(mempool mempool.Mempool) {
 		panic("SetMempool() on sealed BaseApp")
 	}
 	app.mempool = mempool
-}
-
-// SetNextBlockDelay sets the next block delay for the baseapp.
-//
-// The application is initialized with a default value of 1s.
-//
-// More information on this value and how it affects CometBFT can be found here:
-// https://github.com/cometbft/cometbft/blob/88ef3d267de491db98a654be0af6d791e8724ed0/spec/abci/abci%2B%2B_methods.md?plain=1#L689
-func (app *BaseApp) SetNextBlockDelay(delay time.Duration) {
-	if app.sealed {
-		panic("SetNextBlockDelay() on sealed BaseApp")
-	}
-
-	app.nextBlockDelay = delay
 }
 
 // SetProcessProposal sets the process proposal function for the BaseApp.

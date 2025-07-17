@@ -87,7 +87,7 @@ A decision policy is the mechanism by which members of a group can vote on
 proposals, as well as the rules that dictate whether a proposal should pass
 or not based on its tally outcome.
 
-All decision policies generally would have a mininum execution period and a
+All decision policies generally would have a minimum execution period and a
 maximum voting window. The minimum execution period is the minimum amount of time
 that must pass after submission in order for a proposal to potentially be executed, and it may
 be set to 0. The maximum voting window is the maximum time after submission that a proposal may
@@ -212,7 +212,7 @@ Proposals and votes are automatically pruned to avoid state bloat.
 Votes are pruned:
 
 * either after a successful tally, i.e. a tally whose result passes the decision
-  policy's rules, which can be trigged by a `Msg/Exec` or a
+  policy's rules, which can be triggered by a `Msg/Exec` or a
   `Msg/{SubmitProposal,Vote}` with the `Exec` field set,
 * or on `EndBlock` right after the proposal's voting period end. This applies to proposals with status `aborted` or `withdrawn` too.
 
@@ -1163,7 +1163,7 @@ simd tx group withdraw-proposal 1 cosmos1..
 The `vote` command allows users to vote on a proposal.
 
 ```bash
-simd tx group vote proposal-id] [voter] [choice] [metadata] [flags]
+simd tx group vote [proposal-id] [voter] [choice] [metadata] [flags]
 ```
 
 Example:

@@ -386,7 +386,6 @@ func TestDumpUpgradeInfoToFile(t *testing.T) {
 	require.Nil(t, err)
 }
 
-// TODO: add testcase to for `no upgrade handler is present for last applied upgrade`.
 func TestBinaryVersion(t *testing.T) {
 	var skipHeight int64 = 15
 	s := setupTest(t, 10, map[int64]bool{skipHeight: true})
@@ -422,6 +421,21 @@ func TestBinaryVersion(t *testing.T) {
 				return newCtx
 			},
 			false,
+		},
+		{
+			"test panic: no upgrade handler is present for last applied upgrade",
+			func() sdk.Context {
+				// Apply an upgrade without setting a handler
+				newCtx := s.ctx.WithHeaderInfo(header.Info{Height: 12})
+				require.NoError(t, s.keeper.ApplyUpgrade(newCtx, types.Plan{
+					Name:   "test1",
+					Height: 12,
+				}))
+
+				// Move to next height where the missing handler should be detected
+				return newCtx.WithHeaderInfo(header.Info{Height: 13})
+			},
+			true,
 		},
 		{
 			"test panic: upgrade needed",

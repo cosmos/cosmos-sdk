@@ -423,21 +423,6 @@ func TestBinaryVersion(t *testing.T) {
 			false,
 		},
 		{
-			"test panic: no upgrade handler is present for last applied upgrade",
-			func() sdk.Context {
-				// Apply an upgrade without setting a handler
-				newCtx := s.ctx.WithHeaderInfo(header.Info{Height: 12})
-				require.NoError(t, s.keeper.ApplyUpgrade(newCtx, types.Plan{
-					Name:   "test1",
-					Height: 12,
-				}))
-
-				// Move to next height where the missing handler should be detected
-				return newCtx.WithHeaderInfo(header.Info{Height: 13})
-			},
-			true,
-		},
-		{
 			"test panic: upgrade needed",
 			func() sdk.Context {
 				err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test2", Height: 13})
@@ -459,6 +444,51 @@ func TestBinaryVersion(t *testing.T) {
 			require.NoError(t, err)
 		}
 	}
+}
+
+// TestMissingUpgradeHandler tests the scenario when no upgrade handler is present for last applied upgrade
+func TestMissingUpgradeHandler(t *testing.T) {
+	// Setup test environment similar to TestDowngradeVerification
+	encCfg := moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now(), Height: 10})
+
+	skip := map[int64]bool{}
+	k := keeper.NewKeeper(skip, storeService, encCfg.Codec, t.TempDir(), nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	m := upgrade.NewAppModule(k, addresscodec.NewBech32Codec("cosmos"))
+
+	// Submit and execute an upgrade plan with handler
+	planName := "test_upgrade"
+	err := k.ScheduleUpgrade(ctx, types.Plan{Name: planName, Height: ctx.HeaderInfo().Height + 1})
+	require.NoError(t, err)
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 1})
+
+	// Set the handler and execute upgrade
+	k.SetUpgradeHandler(planName, func(_ context.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		return vm, nil
+	})
+
+	// Successful upgrade
+	_, err = m.PreBlock(ctx)
+	require.NoError(t, err)
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 1})
+
+	// Now simulate a restart without the upgrade handler (missing handler scenario)
+	newKeeper := keeper.NewKeeper(skip, storeService, encCfg.Codec, t.TempDir(), nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	newModule := upgrade.NewAppModule(newKeeper, addresscodec.NewBech32Codec("cosmos"))
+
+	// Verify that the last applied upgrade exists but no handler is present
+	lastAppliedPlan, _, err := newKeeper.GetLastCompletedUpgrade(ctx)
+	require.NoError(t, err)
+	require.Equal(t, planName, lastAppliedPlan)
+	require.False(t, newKeeper.HasHandler(planName))
+
+	// This should trigger an error because no handler exists for the last applied upgrade
+	_, err = newModule.PreBlock(ctx)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "upgrade handler is missing for test_upgrade upgrade plan")
 }
 
 func TestDowngradeVerification(t *testing.T) {

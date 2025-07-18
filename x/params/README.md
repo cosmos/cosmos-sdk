@@ -76,4 +76,4 @@ Modules often define parameters as a proto message. The generated struct can imp
 * `KeyTable.RegisterParamSet()`: registers all parameters in the struct
 * `Subspace.{Get, Set}ParamSet()`: Get to & Set from the struct
 
-The implementor should be a pointer in order to use `GetParamSet()`.
+The implementer should be a pointer in order to use `GetParamSet()`.

@@ -15,8 +15,8 @@ func TestStakeUnstake(t *testing.T) {
 	// Scenario:
 	// delegate tokens to validator
 	// undelegate some tokens
+	systemtests.ResetSut(t)
 	sut := systemtests.Sut
-	sut.ResetChain(t)
 
 	cli := systemtests.NewCLIWrapper(t, sut, systemtests.Verbose)
 

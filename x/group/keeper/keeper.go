@@ -378,7 +378,6 @@ func (k Keeper) PruneProposals(ctx sdk.Context) error {
 			return err
 		}
 		// Emit event for proposal finalized with its result
-		proposal := proposal
 		if err := ctx.EventManager().EmitTypedEvent(
 			&group.EventProposalPruned{
 				ProposalId:  proposal.Id,

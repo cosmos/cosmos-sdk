@@ -1,4 +1,5 @@
 name: Lint
+
 on:
   push:
     branches:

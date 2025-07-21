@@ -103,7 +103,8 @@ require (
 	github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb // indirect
 	github.com/cometbft/cometbft-db v1.0.4 // indirect
 	github.com/cosmos/iavl v1.2.6 // indirect
-	github.com/cosmos/iavl/v2 v2.0.0-alpha.5 // indirect
+	github.com/cosmos/iavl-bench/bench v0.0.4 // indirect
+	github.com/cosmos/iavl/v2 v2.0.0-alpha.5.0.20250528143651-0e4c40f1f5ef // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
@@ -152,7 +153,7 @@ require (
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.10 // indirect
-	github.com/kocubinski/costor-api v1.1.1 // indirect
+	github.com/kocubinski/costor-api v1.1.2 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lib/pq v1.10.9 // indirect

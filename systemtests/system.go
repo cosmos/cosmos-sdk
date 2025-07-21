@@ -80,7 +80,7 @@ type SystemUnderTest struct {
 	chainID  string
 }
 
-func NewSystemUnderTest(execBinary string, verbose bool, nodesCount int, blockTime time.Duration, initer ...TestnetInitializer) *SystemUnderTest {
+func NewSystemUnderTest(execBinary string, verbose bool, nodesCount int, blockTime time.Duration, chainID string, initer ...TestnetInitializer) *SystemUnderTest {
 	if execBinary == "" {
 		panic("executable binary name must not be empty")
 	}
@@ -90,7 +90,7 @@ func NewSystemUnderTest(execBinary string, verbose bool, nodesCount int, blockTi
 	}
 	execBinary = filepath.Join(WorkDir, "binaries", execBinary)
 	s := &SystemUnderTest{
-		chainID:           "testing",
+		chainID:           chainID,
 		execBinary:        execBinary,
 		outputDir:         "./testnet",
 		blockTime:         blockTime,

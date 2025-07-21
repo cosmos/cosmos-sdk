@@ -12,6 +12,7 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/cosmos/iavl v1.2.6
+	github.com/cosmos/iavl/v2 v2.0.0-alpha.5
 	github.com/cosmos/ics23/go v0.11.0
 	github.com/hashicorp/go-hclog v1.6.3
 	github.com/hashicorp/go-metrics v0.5.4
@@ -23,6 +24,13 @@ require (
 	google.golang.org/grpc v1.73.0
 	google.golang.org/protobuf v1.36.6
 	gotest.tools/v3 v3.5.2
+)
+
+require (
+	github.com/aybabtme/uniplot v0.0.0-20151203143629-039c559e5e7e // indirect
+	github.com/bvinc/go-sqlite-lite v0.6.1 // indirect
+	github.com/dustin/go-humanize v1.0.1 // indirect
+	github.com/kocubinski/costor-api v1.1.1 // indirect
 )
 
 require (

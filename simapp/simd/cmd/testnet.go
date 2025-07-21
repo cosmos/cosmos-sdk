@@ -285,7 +285,7 @@ func initTestnetFiles(
 			ip  string
 		)
 		if args.singleMachine {
-			ip = "0.0.0.0"
+			ip = "127.0.0.1"
 		} else {
 			ip, err = getIP(i, args.startingIPAddress)
 			if err != nil {

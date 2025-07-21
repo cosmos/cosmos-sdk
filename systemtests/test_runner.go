@@ -20,7 +20,7 @@ var (
 )
 
 func RunTests(m *testing.M) {
-	chainID := flag.String("chainID", "testing", "chainID")
+	chainID := flag.String("chain-id", "testing", "chainID")
 	waitTime := flag.Duration("wait-time", DefaultWaitTime, "time to wait for chain events")
 	nodesCount := flag.Int("nodes-count", 4, "number of nodes in the cluster")
 	blockTime := flag.Duration("block-time", 3000*time.Millisecond, "block creation time")

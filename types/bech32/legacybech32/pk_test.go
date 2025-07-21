@@ -1,6 +1,10 @@
+//go:build ledger
+// +build ledger
+
 package legacybech32
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -15,7 +19,12 @@ func TestBeach32ifPbKey(t *testing.T) {
 	require := require.New(t)
 	path := *hd.NewFundraiserParams(0, sdk.CoinType, 0)
 	priv, err := ledger.NewPrivKeySecp256k1Unsafe(path)
-	require.Nil(err, "%s", err)
+	if err != nil {
+		if strings.Contains(err.Error(), "support for ledger devices is not available") {
+			t.Skip("ledger support not available in this build")
+		}
+		require.NoError(err)
+	}
 	require.NotNil(priv)
 
 	pubKeyAddr, err := MarshalPubKey(AccPK, priv.PubKey())

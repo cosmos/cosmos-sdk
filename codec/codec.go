@@ -10,7 +10,7 @@ import (
 
 type (
 	// Codec defines a functionality for serializing other objects.
-	// Users can defin a custom Protobuf-based serialization.
+	// Users can define a custom Protobuf-based serialization.
 	// Note, Amino can still be used without any dependency on Protobuf.
 	// SDK provides to Codec implementations:
 	//

@@ -22,7 +22,7 @@ func createTestCodec() *codec.LegacyAmino {
 	return cdc
 }
 
-func TestAminoMarsharlInterface(t *testing.T) {
+func TestAminoMarshalInterface(t *testing.T) {
 	cdc := codec.NewAminoCodec(createTestCodec())
 	m := interfaceMarshaler{cdc.MarshalInterface, cdc.UnmarshalInterface}
 	testInterfaceMarshaling(require.New(t), m, true)

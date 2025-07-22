@@ -248,9 +248,11 @@ func initTestnetFiles(
 		genFiles    []string
 	)
 	const (
-		rpcPort  = 26657
-		apiPort  = 1317
-		grpcPort = 9090
+		rpcPort          = 26657
+		apiPort          = 1317
+		grpcPort         = 9090
+		pprofListen      = 6060
+		prometheusListen = 27780
 	)
 	p2pPortStart := 26656
 
@@ -264,6 +266,8 @@ func initTestnetFiles(
 			nodeConfig.P2P.AddrBookStrict = false
 			nodeConfig.P2P.PexReactor = false
 			nodeConfig.P2P.AllowDuplicateIP = true
+			nodeConfig.Instrumentation.PrometheusListenAddr = fmt.Sprintf(":%d", prometheusListen+portOffset)
+			nodeConfig.RPC.PprofListenAddress = fmt.Sprintf("localhost:%d", pprofListen+portOffset)
 			appConfig.API.Address = fmt.Sprintf("tcp://0.0.0.0:%d", apiPort+portOffset)
 			appConfig.GRPC.Address = fmt.Sprintf("0.0.0.0:%d", grpcPort+portOffset)
 		}

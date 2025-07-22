@@ -252,7 +252,6 @@ $ %s query block --%s=%s <hash>
 				}
 
 				if heightStr == "" {
-					cmd.Println("Falling back to latest block height:")
 					height, err = rpc.GetChainHeight(clientCtx)
 					if err != nil {
 						return fmt.Errorf("failed to get chain height: %w", err)

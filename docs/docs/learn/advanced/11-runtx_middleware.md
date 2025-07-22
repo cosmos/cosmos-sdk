@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # RunTx recovery middleware
 
-`BaseApp.runTx()` function handles Go panics that might occur during transactions execution, for example, keeper has faced an invalid state and paniced.
+`BaseApp.runTx()` function handles Go panics that might occur during transactions execution, for example, keeper has faced an invalid state and panicked.
 Depending on the panic type different handler is used, for instance the default one prints an error log message.
 Recovery middleware is used to add custom panic recovery for Cosmos SDK application developers.
 
@@ -16,7 +16,7 @@ More context can found in the corresponding [ADR-022](../../build/architecture/a
 https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/baseapp/recovery.go#L14-L17
 ```
 
-`recoveryObj` is a return value for `recover()` function from the `buildin` Go package.
+`recoveryObj` is a return value for `recover()` function from the `building` Go package.
 
 **Contract:**
 

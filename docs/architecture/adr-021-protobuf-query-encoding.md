@@ -176,7 +176,7 @@ service Query {
 }
 ```
 
-grpc-gateway will work direcly against the GRPC proxy described above which will
+grpc-gateway will work directly against the GRPC proxy described above which will
 translate requests to ABCI queries under the hood. grpc-gateway can also
 generate Swagger definitions automatically.
 

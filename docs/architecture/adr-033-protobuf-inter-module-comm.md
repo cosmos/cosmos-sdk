@@ -378,7 +378,7 @@ replacing `Keeper` interfaces altogether.
 
 * an alternative to keepers which can more easily lead to stable inter-module interfaces
 * proper inter-module OCAPs
-* improved module developer DevX, as commented on by several particpants on
+* improved module developer DevX, as commented on by several participants on
     [Architecture Review Call, Dec 3](https://hackmd.io/E0wxxOvRQ5qVmTf6N_k84Q)
 * lays the groundwork for what can be a greatly simplified `app.go`
 * router can be setup to enforce atomic transactions for module-to-module calls

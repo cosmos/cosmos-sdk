@@ -49,7 +49,7 @@ The SDK requires the Protobuf comment of the new addition to contain one line wi
 // Since: cosmos-sdk <version>{, <version>...}
 ```
 
-Where each `version` denotes a minor ("0.45") or patch ("0.44.5") version from which the field is available. This will greatly help client libraries, who can optionally use reflection or custom code generation to show/hide these fields depending on the targetted node version.
+Where each `version` denotes a minor ("0.45") or patch ("0.44.5") version from which the field is available. This will greatly help client libraries, who can optionally use reflection or custom code generation to show/hide these fields depending on the targeted node version.
 
 As examples, the following comments are valid:
 

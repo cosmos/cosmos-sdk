@@ -657,7 +657,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSe
 			expectedTxs: []int{9},
 		},
 		"no txs added": {
-			// Becasuse the first tx was deemed valid but too big, the next expected valid sequence is tx[0].seq (3), so
+			// Because the first tx was deemed valid but too big, the next expected valid sequence is tx[0].seq (3), so
 			// the rest of the txs fail because they have a seq of 4.
 			ctx:      s.ctx,
 			txInputs: []testTx{testTxs[12], testTxs[13], testTxs[14]},

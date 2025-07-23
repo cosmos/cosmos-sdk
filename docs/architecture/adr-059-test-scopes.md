@@ -242,7 +242,7 @@ demonstrated in [PR#12706](https://github.com/cosmos/cosmos-sdk/pull/12706).
 
 It may be useful if test suites could be run in integration mode (with mocked tendermint) or
 with e2e fixtures (with real tendermint and many nodes). Integration fixtures could be used
-for quicker runs, e2e fixures could be used for more battle hardening.
+for quicker runs, e2e fixtures could be used for more battle hardening.
 
 A PoC `x/gov` was completed in PR [#12847](https://github.com/cosmos/cosmos-sdk/pull/12847)
 is in progress for unit tests demonstrating BDD [Rejected].

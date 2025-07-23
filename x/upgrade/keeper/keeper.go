@@ -487,7 +487,7 @@ func (k Keeper) ApplyUpgrade(ctx context.Context, plan types.Plan) error {
 		return err
 	}
 
-	// incremement the protocol version and set it in state and baseapp
+	// increment the protocol version and set it in state and baseapp
 	nextProtocolVersion, err := k.getProtocolVersion(ctx)
 	if err != nil {
 		return err

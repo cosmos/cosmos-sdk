@@ -15,7 +15,7 @@ This ADR is a continuation of the motivation, design, and context established in
 [ADR 020](./adr-020-protobuf-transaction-encoding.md), namely, we aim to design the
 Protocol Buffer migration path for the client-side of the Cosmos SDK.
 
-This ADR continues from [ADD 020](./adr-020-protobuf-transaction-encoding.md)
+This ADR continues from [ADR 020](./adr-020-protobuf-transaction-encoding.md)
 to specify the encoding of queries.
 
 ## Decision
@@ -176,7 +176,7 @@ service Query {
 }
 ```
 
-grpc-gateway will work direcly against the GRPC proxy described above which will
+grpc-gateway will work directly against the GRPC proxy described above which will
 translate requests to ABCI queries under the hood. grpc-gateway can also
 generate Swagger definitions automatically.
 

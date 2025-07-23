@@ -179,7 +179,7 @@ We must be able to cryptographically derive one address from another one. The de
 
 ```go
 func Derive(address, derivationKey []byte) []byte {
-	return Hash(addres, derivationKey)
+	return Hash(address, derivationKey)
 }
 ```
 
@@ -319,7 +319,7 @@ Algorithm for complex / composed keys:
 
 Module addresses: Should module addresses have different size to differentiate it?
 
-* we will need to set a pre-image prefix for module addresse to keept them in 32-byte space: `hash(hash('module') + module_key)`
+* we will need to set a pre-image prefix for module addresse to kept them in 32-byte space: `hash(hash('module') + module_key)`
 * Aaron observation: we already need to deal with variable length (to not break secp256k1 keys).
 
 Discussion about arithmetic hash function for ZKP
@@ -331,7 +331,7 @@ Post quantum signature size
 
 * Alan suggestion: Falcon: speed / size ratio - very good.
 * Aaron - should we think about it?
-  Alan: based on early extrapolation this thing will get able to break EC cryptography in 2050 . But that’s a lot of uncertainty. But there is magic happening with recurions / linking / simulation and that can speedup the progress.
+  Alan: based on early extrapolation this thing will get able to break EC cryptography in 2050 . But that’s a lot of uncertainty. But there is magic happening with recursions / linking / simulation and that can speedup the progress.
 
 Other ideas
 

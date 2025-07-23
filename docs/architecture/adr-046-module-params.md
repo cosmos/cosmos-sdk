@@ -143,7 +143,7 @@ are read on a consistent basis.
 
 However, this methodology will require developers to implement more types and
 Msg service metohds which can become burdensome if many parameters exist. In addition,
-developers are required to implement persistance logics of module parameters.
+developers are required to implement persistence logics of module parameters.
 However, this should be trivial.
 
 ### Backwards Compatibility

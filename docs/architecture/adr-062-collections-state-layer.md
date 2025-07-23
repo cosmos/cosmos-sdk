@@ -74,7 +74,7 @@ Collections types, in fact, delegate the duty of serialisation of keys and value
 which is relevant for swapping serialisation frameworks and enhancing performance.
 `Collections` already comes in with default `ValueEncoders`, specifically for: protobuf objects, special SDK types (sdk.Int, sdk.Dec).
 
-`KeyEncoders` take care of converting keys to bytes, `collections` already comes in with some default `KeyEncoders` for some privimite golang types
+`KeyEncoders` take care of converting keys to bytes, `collections` already comes in with some default `KeyEncoders` for some primitive golang types
 (uint64, string, time.Time, ...) and some widely used sdk types (sdk.Acc/Val/ConsAddress, sdk.Int/Dec, ...).
 These default implementations also offer safety around proper lexicographic ordering and namespace-collision.
 

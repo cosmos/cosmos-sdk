@@ -67,7 +67,7 @@ func (Value) Set(ctx Context, o interface{}) {}
 // Check if a raw value exists
 func (Value) Exists(ctx Context) bool {}
 
-// Delete a raw value value
+// Delete a raw value 
 func (Value) Delete(ctx Context) {}
 ```
 

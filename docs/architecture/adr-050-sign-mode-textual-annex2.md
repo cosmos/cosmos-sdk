@@ -25,7 +25,7 @@ Unicode text within the transaction.
 
 `SIGN_MODE_TEXTUAL` renders to an abstract representation, leaving it
 up to device-specific software how to present this representation given the
-capabilities, limitations, and conventions of the deivce.
+capabilities, limitations, and conventions of the device.
 
 We offer the following normative guidance:
 

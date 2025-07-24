@@ -33,5 +33,5 @@ type ABCI interface {
 	ListSnapshots(*abci.ListSnapshotsRequest) (*abci.ListSnapshotsResponse, error)                // List available snapshots
 	OfferSnapshot(*abci.OfferSnapshotRequest) (*abci.OfferSnapshotResponse, error)                // Offer a snapshot to the application
 	LoadSnapshotChunk(*abci.LoadSnapshotChunkRequest) (*abci.LoadSnapshotChunkResponse, error)    // Load a snapshot chunk
-	ApplySnapshotChunk(*abci.ApplySnapshotChunkRequest) (*abci.ApplySnapshotChunkResponse, error) // Apply a shapshot chunk
+	ApplySnapshotChunk(*abci.ApplySnapshotChunkRequest) (*abci.ApplySnapshotChunkResponse, error) // Apply a snapshot chunk
 }

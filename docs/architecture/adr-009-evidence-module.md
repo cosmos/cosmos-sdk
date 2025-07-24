@@ -17,7 +17,7 @@ evidence can be submitted, evaluated and verified resulting in some agreed upon
 penalty for any misbehavior committed by a validator, such as equivocation (double-voting),
 signing when unbonded, signing an incorrect state transition (in the future), etc.
 Furthermore, such a mechanism is paramount for any
-[IBC](https://github.com/cosmos/ics/blob/master/ibc/2_IBC_ARCHITECTURE.md) or
+[IBC](https://github.com/tw-bc-group/ics/blob/master/ibc/2_IBC_ARCHITECTURE.md) or
 cross-chain validation protocol implementation in order to support the ability
 for any misbehavior to be relayed back from a collateralized chain to a primary
 chain so that the equivocating validator(s) can be slashed.

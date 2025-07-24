@@ -11,8 +11,7 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/bank/types";
 
 // Params defines the parameters for the bank module.
 message Params {
-  option (amino.name)                 = "cosmos-sdk/x/bank/Params";
-  option (gogoproto.goproto_stringer) = false;
+  option (amino.name) = "cosmos-sdk/x/bank/Params";
   // Deprecated: Use of SendEnabled in params is deprecated.
   // For genesis, use the newly added send_enabled field in the genesis object.
   // Storage, lookup, and manipulation of this information is now in the keeper.
@@ -25,10 +24,9 @@ message Params {
 // SendEnabled maps coin denom to a send_enabled status (whether a denom is
 // sendable).
 message SendEnabled {
-  option (gogoproto.equal)            = true;
-  option (gogoproto.goproto_stringer) = false;
-  string denom                        = 1;
-  bool   enabled                      = 2;
+  option (gogoproto.equal) = true;
+  string denom             = 1;
+  bool   enabled           = 2;
 }
 
 // Input models transaction input.
@@ -42,6 +40,7 @@ message Input {
   repeated cosmos.base.v1beta1.Coin coins = 2 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }
@@ -55,6 +54,7 @@ message Output {
   repeated cosmos.base.v1beta1.Coin coins = 2 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }
@@ -73,6 +73,7 @@ message Supply {
   repeated cosmos.base.v1beta1.Coin total = 1 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }

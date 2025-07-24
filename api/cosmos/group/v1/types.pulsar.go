@@ -7832,6 +7832,7 @@ type GroupInfo struct {
 	// admin is the account address of the group's admin.
 	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
 	// metadata is any arbitrary metadata to attached to the group.
+	// the recommended format of the metadata is to be found here: https://docs.cosmos.network/v0.47/modules/group#group-1
 	Metadata string `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// version is used to track changes to a group's membership structure that
 	// would break existing proposals. Whenever any members weight is changed,
@@ -8284,7 +8285,7 @@ func (x *TallyResult) GetNoWithVetoCount() string {
 	return ""
 }
 
-// Vote represents a vote for a proposal.
+// Vote represents a vote for a proposal.string metadata
 type Vote struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -8297,6 +8298,7 @@ type Vote struct {
 	// option is the voter's choice on the proposal.
 	Option VoteOption `protobuf:"varint,3,opt,name=option,proto3,enum=cosmos.group.v1.VoteOption" json:"option,omitempty"`
 	// metadata is any arbitrary metadata attached to the vote.
+	// the recommended format of the metadata is to be found here: https://docs.cosmos.network/v0.47/modules/group#vote-2
 	Metadata string `protobuf:"bytes,4,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// submit_time is the timestamp when the vote was submitted.
 	SubmitTime *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=submit_time,json=submitTime,proto3" json:"submit_time,omitempty"`

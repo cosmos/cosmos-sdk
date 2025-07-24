@@ -11,41 +11,36 @@ import (
 	tmed25519 "github.com/cometbft/cometbft/crypto/ed25519"
 	"github.com/cometbft/cometbft/p2p"
 	"github.com/cometbft/cometbft/privval"
-	tmtypes "github.com/cometbft/cometbft/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/go-bip39"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
 // ExportGenesisFile creates and writes the genesis configuration to disk. An
 // error is returned if building or writing the configuration to file fails.
-func ExportGenesisFile(genDoc *tmtypes.GenesisDoc, genFile string) error {
-	if err := genDoc.ValidateAndComplete(); err != nil {
+func ExportGenesisFile(genesis *types.AppGenesis, genFile string) error {
+	if err := genesis.ValidateAndComplete(); err != nil {
 		return err
 	}
 
-	return genDoc.SaveAs(genFile)
+	return genesis.SaveAs(genFile)
 }
 
 // ExportGenesisFileWithTime creates and writes the genesis configuration to disk.
 // An error is returned if building or writing the configuration to file fails.
-func ExportGenesisFileWithTime(
-	genFile, chainID string, validators []tmtypes.GenesisValidator,
-	appState json.RawMessage, genTime time.Time,
-) error {
-	genDoc := tmtypes.GenesisDoc{
-		GenesisTime: genTime,
-		ChainID:     chainID,
-		Validators:  validators,
-		AppState:    appState,
-	}
+func ExportGenesisFileWithTime(genFile, chainID string, validators []cmttypes.GenesisValidator, appState json.RawMessage, genTime time.Time) error {
+	appGenesis := types.NewAppGenesisWithVersion(chainID, appState)
+	appGenesis.GenesisTime = genTime
+	appGenesis.Consensus.Validators = validators
 
-	if err := genDoc.ValidateAndComplete(); err != nil {
+	if err := appGenesis.ValidateAndComplete(); err != nil {
 		return err
 	}
 
-	return genDoc.SaveAs(genFile)
+	return appGenesis.SaveAs(genFile)
 }
 
 // InitializeNodeValidatorFiles creates private validator and p2p configuration files.
@@ -90,7 +85,7 @@ func InitializeNodeValidatorFilesFromMnemonic(config *cfg.Config, mnemonic strin
 		return "", nil, err
 	}
 
-	valPubKey, err = cryptocodec.FromTmPubKeyInterface(tmValPubKey)
+	valPubKey, err = cryptocodec.FromCmtPubKeyInterface(tmValPubKey)
 	if err != nil {
 		return "", nil, err
 	}

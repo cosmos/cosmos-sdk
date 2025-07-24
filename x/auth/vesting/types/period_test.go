@@ -6,7 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func mkper(length int64, amount int64) Period {
+func mkper(length, amount int64) Period {
 	return Period{
 		Length: length,
 		Amount: sdk.NewCoins(sdk.NewInt64Coin("test", amount)),
@@ -136,7 +136,7 @@ func TestDisjunctPeriods(t *testing.T) {
 					if gotPeriod.Length != wantPeriod.Length {
 						t.Errorf("period %d length: got %d, want %d", i, gotPeriod.Length, wantPeriod.Length)
 					}
-					if !gotPeriod.Amount.IsEqual(wantPeriod.Amount) {
+					if !gotPeriod.Amount.Equal(wantPeriod.Amount) {
 						t.Errorf("period %d amount: got %v, want %v", i, gotPeriod.Amount, wantPeriod.Amount)
 					}
 				}
@@ -252,7 +252,7 @@ func TestConjunctPeriods(t *testing.T) {
 					if gotPeriod.Length != wantPeriod.Length {
 						t.Errorf("period %d length: got %d, want %d", i, gotPeriod.Length, wantPeriod.Length)
 					}
-					if !gotPeriod.Amount.IsEqual(wantPeriod.Amount) {
+					if !gotPeriod.Amount.Equal(wantPeriod.Amount) {
 						t.Errorf("period %d amount: got %v, want %v", i, gotPeriod.Amount, wantPeriod.Amount)
 					}
 				}

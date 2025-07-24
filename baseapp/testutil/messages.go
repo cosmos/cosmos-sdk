@@ -1,6 +1,8 @@
 package testutil
 
 import (
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,7 +31,7 @@ func (msg *MsgCounter) ValidateBasic() error {
 	if msg.Counter >= 0 {
 		return nil
 	}
-	return sdkerrors.Wrap(sdkerrors.ErrInvalidSequence, "counter should be a non-negative integer")
+	return errorsmod.Wrap(sdkerrors.ErrInvalidSequence, "counter should be a non-negative integer")
 }
 
 var _ sdk.Msg = &MsgCounter2{}
@@ -39,7 +41,7 @@ func (msg *MsgCounter2) ValidateBasic() error {
 	if msg.Counter >= 0 {
 		return nil
 	}
-	return sdkerrors.Wrap(sdkerrors.ErrInvalidSequence, "counter should be a non-negative integer")
+	return errorsmod.Wrap(sdkerrors.ErrInvalidSequence, "counter should be a non-negative integer")
 }
 
 var _ sdk.Msg = &MsgKeyValue{}
@@ -54,10 +56,10 @@ func (msg *MsgKeyValue) GetSigners() []sdk.AccAddress {
 
 func (msg *MsgKeyValue) ValidateBasic() error {
 	if msg.Key == nil {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "key cannot be nil")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "key cannot be nil")
 	}
 	if msg.Value == nil {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "value cannot be nil")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "value cannot be nil")
 	}
 	return nil
 }

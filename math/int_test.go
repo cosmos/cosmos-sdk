@@ -432,7 +432,7 @@ func TestRoundTripMarshalToInt(t *testing.T) {
 func TestFormatInt(t *testing.T) {
 	type integerTest []string
 	var testcases []integerTest
-	raw, err := os.ReadFile("../tx/textual/internal/testdata/integers.json")
+	raw, err := os.ReadFile("testdata/integers.json")
 	require.NoError(t, err)
 	err = json.Unmarshal(raw, &testcases)
 	require.NoError(t, err)
@@ -468,6 +468,47 @@ func TestFormatIntNonDigits(t *testing.T) {
 			}
 			if s != "" {
 				t.Fatalf("Got a non-empty string: %q", s)
+			}
+		})
+	}
+}
+
+func TestFormatIntEmptyString(t *testing.T) {
+	_, err := math.FormatInt("")
+	require.ErrorContains(t, err, "cannot format empty string")
+}
+
+func TestFormatIntCorrectness(t *testing.T) {
+	tests := []struct {
+		in   string
+		want string
+	}{
+		{"0", "0"},
+		{"-2", "-2"},
+		{"10", "10"},
+		{"123", "123"},
+		{"1234", "1'234"},
+		{"12345", "12'345"},
+		{"123456", "123'456"},
+		{"-123456", "-123'456"},
+		{"1234567", "1'234'567"},
+		{"12345678", "12'345'678"},
+		{"123456789", "123'456'789"},
+		{"12345678910", "12'345'678'910"},
+		{"9999999999999999", "9'999'999'999'999'999"},
+		{"-9999999999999999", "-9'999'999'999'999'999"},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.in, func(t *testing.T) {
+			got, err := math.FormatInt(tt.in)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			if got != tt.want {
+				t.Fatalf("Mismatch:\n\tGot:  %q\n\tWant: %q", got, tt.want)
 			}
 		})
 	}

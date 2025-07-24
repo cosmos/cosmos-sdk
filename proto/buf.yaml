@@ -8,6 +8,14 @@ deps:
 breaking:
   use:
     - FILE
+  ignore:
+    # Major version upgrade allows breaking changes
+    - FIELD_NO_DELETE
+    - FILE_NO_DELETE
+    - PACKAGE_NO_DELETE
+    - FIELD_SAME_TYPE
+    - FIELD_SAME_NAME
+    - PACKAGE_SAME_GO_PACKAGE
 lint:
   use:
     - DEFAULT

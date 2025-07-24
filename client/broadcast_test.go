@@ -9,7 +9,7 @@ import (
 	"github.com/cometbft/cometbft/mempool"
 	"github.com/cometbft/cometbft/rpc/client/mock"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-	tmtypes "github.com/cometbft/cometbft/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -21,15 +21,11 @@ type MockClient struct {
 	err error
 }
 
-func (c MockClient) BroadcastTxCommit(ctx context.Context, tx tmtypes.Tx) (*coretypes.ResultBroadcastTxCommit, error) {
+func (c MockClient) BroadcastTxAsync(_ context.Context, _ cmttypes.Tx) (*coretypes.ResultBroadcastTx, error) {
 	return nil, c.err
 }
 
-func (c MockClient) BroadcastTxAsync(ctx context.Context, tx tmtypes.Tx) (*coretypes.ResultBroadcastTx, error) {
-	return nil, c.err
-}
-
-func (c MockClient) BroadcastTxSync(ctx context.Context, tx tmtypes.Tx) (*coretypes.ResultBroadcastTx, error) {
+func (c MockClient) BroadcastTxSync(_ context.Context, _ cmttypes.Tx) (*coretypes.ResultBroadcastTx, error) {
 	return nil, c.err
 }
 
@@ -51,7 +47,6 @@ func TestBroadcastError(t *testing.T) {
 	modes := []string{
 		flags.BroadcastAsync,
 		flags.BroadcastSync,
-		flags.BroadcastBlock,
 	}
 
 	txBytes := []byte{0xA, 0xB}

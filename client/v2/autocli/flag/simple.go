@@ -7,9 +7,6 @@ import (
 
 func bindSimpleFlag(flagSet *pflag.FlagSet, kind protoreflect.Kind, name, shorthand, usage string) HasValue {
 	switch kind {
-	case protoreflect.BytesKind:
-		val := flagSet.BytesBase64P(name, shorthand, nil, usage)
-		return newSimpleValue(val, protoreflect.ValueOfBytes)
 	case protoreflect.StringKind:
 		val := flagSet.StringP(name, shorthand, "", usage)
 		return newSimpleValue(val, protoreflect.ValueOfString)

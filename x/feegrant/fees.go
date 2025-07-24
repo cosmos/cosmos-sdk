@@ -1,13 +1,14 @@
 package feegrant
 
 import (
+	"context"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // FeeAllowance implementations are tied to a given fee delegator and delegatee,
-// and are used to enforce fee grant limits.
+// and are used to enforce feegrant limits.
 type FeeAllowanceI interface {
 	// Accept can use fee payment requested as well as timestamp of the current block
 	// to determine whether or not to process this. This is checked in
@@ -19,7 +20,7 @@ type FeeAllowanceI interface {
 	//
 	// If remove is true (regardless of the error), the FeeAllowance will be deleted from storage
 	// (eg. when it is used up). (See call to RevokeAllowance in Keeper.UseGrantedFees)
-	Accept(ctx sdk.Context, fee sdk.Coins, msgs []sdk.Msg) (remove bool, err error)
+	Accept(ctx context.Context, fee sdk.Coins, msgs []sdk.Msg) (remove bool, err error)
 
 	// ValidateBasic should evaluate this FeeAllowance for internal consistency.
 	// Don't allow negative amounts, or negative periods for example.

@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/tools/cosmovisor"
 )
 
@@ -227,12 +228,12 @@ func (p *BufferedPipe) panicIfStarted(msg string) {
 }
 
 // NewCapturingLogger creates a buffered stdout pipe, and a logger that uses it.
-func (s *InitTestSuite) NewCapturingLogger() (*BufferedPipe, *zerolog.Logger) {
+func (s *InitTestSuite) NewCapturingLogger() (*BufferedPipe, log.Logger) {
 	bufferedStdOut, err := StartNewBufferedPipe("stdout", os.Stdout)
 	s.Require().NoError(err, "creating stdout buffered pipe")
 	output := zerolog.ConsoleWriter{Out: bufferedStdOut, TimeFormat: time.RFC3339Nano}
-	logger := zerolog.New(output).With().Str("module", "cosmovisor").Timestamp().Logger()
-	return &bufferedStdOut, &logger
+	logger := log.NewCustomLogger(zerolog.New(output).With().Str("module", "cosmovisor").Timestamp().Logger())
+	return &bufferedStdOut, logger
 }
 
 // CreateHelloWorld creates a shell script that outputs HELLO WORLD.
@@ -348,9 +349,9 @@ func (s *InitTestSuite) TestInitializeCosmovisorInvalidExisting() {
 		require.NoError(t, copyFile(hwExe, genBin), "copying exe to genesis/bin")
 
 		s.setEnv(t, env)
-		logger := zerolog.Nop()
+		logger := log.NewNopLogger()
 		expErr := fmt.Sprintf("the path %q already exists but is not a directory", genBin)
-		err := InitializeCosmovisor(&logger, []string{hwExe})
+		err := InitializeCosmovisor(logger, []string{hwExe})
 		require.EqualError(t, err, expErr, "invalid path to executable: must not be a directory", "calling InitializeCosmovisor")
 	})
 
@@ -379,7 +380,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorInvalidExisting() {
 
 		s.setEnv(t, env)
 		buffer, logger := s.NewCapturingLogger()
-		logger.Info().Msgf("Calling InitializeCosmovisor: %s", t.Name())
+		logger.Info(fmt.Sprintf("Calling InitializeCosmovisor: %s", t.Name()))
 		err := InitializeCosmovisor(logger, []string{hwExe})
 		require.EqualError(t, err, expErr, "calling InitializeCosmovisor")
 		bufferBz := buffer.Collect()
@@ -407,7 +408,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorInvalidExisting() {
 
 		s.setEnv(t, env)
 		buffer, logger := s.NewCapturingLogger()
-		logger.Info().Msgf("Calling InitializeCosmovisor: %s", t.Name())
+		logger.Info(fmt.Sprintf("Calling InitializeCosmovisor: %s", t.Name()))
 		err := InitializeCosmovisor(logger, []string{hwExe})
 		require.EqualError(t, err, expErr, "calling InitializeCosmovisor")
 		bufferBz := buffer.Collect()
@@ -462,7 +463,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 
 		s.setEnv(s.T(), env)
 		buffer, logger := s.NewCapturingLogger()
-		logger.Info().Msgf("Calling InitializeCosmovisor: %s", t.Name())
+		logger.Info(fmt.Sprintf("Calling InitializeCosmovisor: %s", t.Name()))
 		err := InitializeCosmovisor(logger, []string{hwNonExe})
 		require.NoError(t, err, "calling InitializeCosmovisor")
 
@@ -514,7 +515,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 
 		s.setEnv(t, env)
 		buffer, logger := s.NewCapturingLogger()
-		logger.Info().Msgf("Calling InitializeCosmovisor: %s", t.Name())
+		logger.Info(fmt.Sprintf("Calling InitializeCosmovisor: %s", t.Name()))
 		err := InitializeCosmovisor(logger, []string{hwExe})
 		require.NoError(t, err, "calling InitializeCosmovisor")
 		bufferBz := buffer.Collect()
@@ -546,7 +547,7 @@ func (s *InitTestSuite) TestInitializeCosmovisorValid() {
 
 		s.setEnv(t, env)
 		buffer, logger := s.NewCapturingLogger()
-		logger.Info().Msgf("Calling InitializeCosmovisor: %s", t.Name())
+		logger.Info(fmt.Sprintf("Calling InitializeCosmovisor: %s", t.Name()))
 		err := InitializeCosmovisor(logger, []string{hwExe})
 		require.NoError(t, err, "calling InitializeCosmovisor")
 		bufferBz := buffer.Collect()

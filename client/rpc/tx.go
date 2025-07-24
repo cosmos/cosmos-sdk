@@ -3,134 +3,115 @@ package rpc
 import (
 	"context"
 	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"io"
 	"strings"
 	"time"
 
-	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
-func newTxResponseCheckTx(res *coretypes.ResultBroadcastTxCommit) *sdk.TxResponse {
-	if res == nil {
-		return nil
-	}
+const TimeoutFlag = "timeout"
 
-	var txHash string
-	if res.Hash != nil {
-		txHash = res.Hash.String()
-	}
-
-	parsedLogs, _ := sdk.ParseABCILogs(res.CheckTx.Log)
-
-	return &sdk.TxResponse{
-		Height:    res.Height,
-		TxHash:    txHash,
-		Codespace: res.CheckTx.Codespace,
-		Code:      res.CheckTx.Code,
-		Data:      strings.ToUpper(hex.EncodeToString(res.CheckTx.Data)),
-		RawLog:    res.CheckTx.Log,
-		Logs:      parsedLogs,
-		Info:      res.CheckTx.Info,
-		GasWanted: res.CheckTx.GasWanted,
-		GasUsed:   res.CheckTx.GasUsed,
-		Events:    res.CheckTx.Events,
-	}
-}
-
-func newTxResponseDeliverTx(res *coretypes.ResultBroadcastTxCommit) *sdk.TxResponse {
-	if res == nil {
-		return nil
-	}
-
-	var txHash string
-	if res.Hash != nil {
-		txHash = res.Hash.String()
-	}
-
-	parsedLogs, _ := sdk.ParseABCILogs(res.DeliverTx.Log)
-
-	return &sdk.TxResponse{
-		Height:    res.Height,
-		TxHash:    txHash,
-		Codespace: res.DeliverTx.Codespace,
-		Code:      res.DeliverTx.Code,
-		Data:      strings.ToUpper(hex.EncodeToString(res.DeliverTx.Data)),
-		RawLog:    res.DeliverTx.Log,
-		Logs:      parsedLogs,
-		Info:      res.DeliverTx.Info,
-		GasWanted: res.DeliverTx.GasWanted,
-		GasUsed:   res.DeliverTx.GasUsed,
-		Events:    res.DeliverTx.Events,
-	}
-}
-
-func newResponseFormatBroadcastTxCommit(res *coretypes.ResultBroadcastTxCommit) *sdk.TxResponse {
-	if res == nil {
-		return nil
-	}
-
-	if !res.CheckTx.IsOK() {
-		return newTxResponseCheckTx(res)
-	}
-
-	return newTxResponseDeliverTx(res)
-}
-
-// QueryEventForTxCmd returns a CLI command that subscribes to a WebSocket connection and waits for a transaction event with the given hash.
+// QueryEventForTxCmd is an alias for WaitTxCmd, kept for backwards compatibility.
 func QueryEventForTxCmd() *cobra.Command {
+	return WaitTxCmd()
+}
+
+// WaitTxCmd returns a CLI command that waits for a transaction with the given hash to be included in a block.
+func WaitTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "event-query-tx-for [hash]",
-		Short: "Query for a transaction by hash",
-		Long:  `Subscribes to a CometBFT WebSocket connection and waits for a transaction event with the given hash.`,
-		Args:  cobra.ExactArgs(1),
+		Use:     "wait-tx [hash]",
+		Aliases: []string{"event-query-tx-for"},
+		Short:   "Wait for a transaction to be included in a block",
+		Long:    `Subscribes to a CometBFT WebSocket connection and waits for a transaction event with the given hash.`,
+		Example: fmt.Sprintf(`By providing the transaction hash:
+$ %[1]s q wait-tx [hash]
+
+Or, by piping a "tx" command:
+$ %[1]s tx [flags] | %[1]s q wait-tx
+`, version.AppName),
+		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
 			}
 
-			hash := args[0]
+			timeout, err := cmd.Flags().GetDuration(TimeoutFlag)
+			if err != nil {
+				return err
+			}
 
-			// XXX: We use a hardcoded 15 second timeout for compatibility with v0.47,
-			// but this will be configurable sometime in v0.50.
-			// You can use Agoric's -bblock if you don't want any timeout.
-			ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
+			ctx, cancel := context.WithTimeout(context.Background(), timeout)
 			defer cancel()
 
-			// We block here until the event is received, but only if the above
-			// context timeout doesn't happen first.
-			waitTx := <-client.WaitTx(ctx, clientCtx.NodeURI, hash)
-			if evt := waitTx.BlockInclusion; evt != nil {
-				// There was block inclusion, so print the event.
-				res := &coretypes.ResultBroadcastTxCommit{
-					DeliverTx: evt.Result,
-					Hash:      tmtypes.Tx(evt.Tx).Hash(),
-					Height:    evt.Height,
+			txSubmitted := func() (*sdk.TxResponse, []byte, error) {
+				if len(args) > 0 {
+					// read hash from args
+					hashByt, err := hex.DecodeString(args[0])
+					if err != nil {
+						return nil, nil, err
+					}
+
+					return nil, hashByt, nil
 				}
 
-				err = clientCtx.PrintProto(newResponseFormatBroadcastTxCommit(res))
-			}
-
-			// Check for waiting errors, if any.
-			if waitTx.Err != nil {
-				if ctx.Err() == context.DeadlineExceeded {
-					return errors.ErrLogic.Wrapf("timed out waiting for event, the transaction could have already been included or wasn't yet included")
+				// read hash from stdin
+				in, err := io.ReadAll(cmd.InOrStdin())
+				if err != nil {
+					return nil, nil, err
 				}
-				return waitTx.Err
+				hashByt, err := parseHashFromInput(in)
+				if err != nil {
+					return nil, nil, err
+				}
+
+				return nil, hashByt, nil
 			}
 
-			// Propagate the printing error, if any.
-			return err
+			res, err := clientCtx.WaitTx(ctx, txSubmitted)
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
 		},
 	}
 
-	flags.AddTxFlagsToCmd(cmd)
+	cmd.Flags().Duration(TimeoutFlag, 15*time.Second, "The maximum time to wait for the transaction to be included in a block")
+	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
+}
+
+func parseHashFromInput(in []byte) ([]byte, error) {
+	// The content of in is expected to be the result of a tx command which should be using GenerateOrBroadcastTxCLI.
+	// That outputs a sdk.TxResponse as either the json or yaml. As json, we can't unmarshal it back into that struct,
+	// though, because the height field ends up quoted which confuses json.Unmarshal (because it's for an int64 field).
+
+	// Try to find the txhash from json ouptut.
+	resultTx := make(map[string]json.RawMessage)
+	if err := json.Unmarshal(in, &resultTx); err == nil && len(resultTx["txhash"]) > 0 {
+		// input was JSON, return the hash
+		hash := strings.Trim(strings.TrimSpace(string(resultTx["txhash"])), `"`)
+		if len(hash) > 0 {
+			return hex.DecodeString(hash)
+		}
+	}
+
+	// Try to find the txhash from yaml output.
+	lines := strings.Split(string(in), "\n")
+	for _, line := range lines {
+		if strings.HasPrefix(line, "txhash:") {
+			hash := strings.TrimSpace(line[len("txhash:"):])
+			return hex.DecodeString(hash)
+		}
+	}
+	return nil, fmt.Errorf("txhash not found")
 }

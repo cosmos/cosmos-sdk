@@ -1,42 +1,47 @@
 package types
 
 import (
+	context "context"
+
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
-
-// AccountKeeper defines the expected interface contract the vesting module
-// requires for storing accounts.
-type AccountKeeper interface {
-	GetAccount(sdk.Context, sdk.AccAddress) authtypes.AccountI
-	SetAccount(sdk.Context, authtypes.AccountI)
-}
 
 // BankKeeper defines the expected interface contract the vesting module requires
 // for creating vesting accounts with funds.
 type BankKeeper interface {
-	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
-	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
-	IsSendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error
-	SendCoins(ctx sdk.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
-	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	IsSendEnabledCoins(ctx context.Context, coins ...sdk.Coin) error
+	SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error
 	BlockedAddr(addr sdk.AccAddress) bool
+	GetAllBalances(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+}
+
+// AccountKeeper defines the expected interface contract the vesting module
+// requires for storing accounts.
+type AccountKeeper interface {
+	// Retrieve an account from the store.
+	GetAccount(context.Context, sdk.AccAddress) sdk.AccountI
+
+	// Set an account in the store.
+	SetAccount(context.Context, sdk.AccountI)
 }
 
 // StakingKeeper defines the expected interface contract the vesting module
 // requires for finding and changing the delegated tokens, used in clawback.
 type StakingKeeper interface {
-	BondDenom(ctx sdk.Context) string
-	GetDelegatorBonded(ctx sdk.Context, delegator sdk.AccAddress) sdk.Int
-	GetDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress,
-		maxRetrieve uint16) []stakingtypes.Delegation
-	GetDelegatorUnbonding(ctx sdk.Context, delegator sdk.AccAddress) sdk.Int
-	GetUnbondingDelegations(ctx sdk.Context, delegator sdk.AccAddress,
-		maxRetrieve uint16) []stakingtypes.UnbondingDelegation
-	GetValidator(ctx sdk.Context, valAddr sdk.ValAddress) (stakingtypes.Validator, bool)
-	TransferUnbonding(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, valAddr sdk.ValAddress, wantAmt sdk.Int) sdk.Int
-	TransferDelegation(ctx sdk.Context, fromAddr, toAddr sdk.AccAddress, valAddr sdk.ValAddress, wantShares sdk.Dec) sdk.Dec
+	BondDenom(ctx context.Context) (string, error)
+	GetDelegatorBonded(ctx context.Context, delegator sdk.AccAddress) (math.Int, error)
+	GetDelegatorDelegations(ctx context.Context, delegator sdk.AccAddress,
+		maxRetrieve uint16) ([]stakingtypes.Delegation, error)
+	GetDelegatorUnbonding(ctx context.Context, delegator sdk.AccAddress) (math.Int, error)
+	GetUnbondingDelegations(ctx context.Context, delegator sdk.AccAddress,
+		maxRetrieve uint16) ([]stakingtypes.UnbondingDelegation, error)
+	GetValidator(ctx context.Context, valAddr sdk.ValAddress) (stakingtypes.Validator, error)
+	TransferUnbonding(ctx context.Context, fromAddr, toAddr sdk.AccAddress, valAddr sdk.ValAddress, wantAmt math.Int) (math.Int, error)
+	TransferDelegation(ctx context.Context, fromAddr, toAddr sdk.AccAddress, valAddr sdk.ValAddress, wantShares math.LegacyDec) (math.LegacyDec, error)
 }
 
 // DistributionHooks is the expected interface for distribution module hooks.

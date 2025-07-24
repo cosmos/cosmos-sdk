@@ -265,7 +265,7 @@ func (m *QueryGranterGrantsResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// QueryGranteeGrantsRequest is the request type for the Query/IssuedGrants RPC method.
+// QueryGranteeGrantsRequest is the request type for the Query/GranteeGrants RPC method.
 type QueryGranteeGrantsRequest struct {
 	Grantee string `protobuf:"bytes,1,opt,name=grantee,proto3" json:"grantee,omitempty"`
 	// pagination defines an pagination for the request.
@@ -568,7 +568,6 @@ func _Query_GranteeGrants_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-var Query_serviceDesc = _Query_serviceDesc
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.authz.v1beta1.Query",
 	HandlerType: (*QueryServer)(nil),

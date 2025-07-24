@@ -8,38 +8,35 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	"os"
 	"reflect"
 	"strconv"
 	"testing"
 	"unsafe"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/stretchr/testify/require"
+
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
-	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
-	bankmodulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
-	consensusmodulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
-	mintmodulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
-	paramsmodulev1 "cosmossdk.io/api/cosmos/params/module/v1"
-	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
-	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
-	dbm "github.com/cometbft/cometbft-db"
-	"github.com/cometbft/cometbft/libs/log"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	tmtypes "github.com/cometbft/cometbft/types"
-	"github.com/stretchr/testify/require"
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
@@ -52,23 +49,11 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 	_ "github.com/cosmos/cosmos-sdk/x/mint"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-var (
-	ParamStoreKey = []byte("paramstore")
-)
-
-func defaultLogger() log.Logger {
-	if testing.Verbose() {
-		return log.NewTMLogger(log.NewSyncWriter(os.Stdout)).With("module", "baseapp/test")
-	}
-
-	return log.NewNopLogger()
-}
+var ParamStoreKey = []byte("paramstore")
 
 // GenesisStateWithSingleValidator initializes GenesisState with a single validator and genesis accounts
 // that also act as delegators.
@@ -80,8 +65,8 @@ func GenesisStateWithSingleValidator(t *testing.T, codec codec.Codec, builder *r
 	require.NoError(t, err)
 
 	// create validator set with single validator
-	validator := tmtypes.NewValidator(pubKey, 1)
-	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
+	validator := cmttypes.NewValidator(pubKey, 1)
+	valSet := cmttypes.NewValidatorSet([]*cmttypes.Validator{validator})
 
 	// generate genesis account
 	senderPrivKey := secp256k1.GenPrivKey()
@@ -89,7 +74,7 @@ func GenesisStateWithSingleValidator(t *testing.T, codec codec.Codec, builder *r
 	balances := []banktypes.Balance{
 		{
 			Address: acc.GetAddress().String(),
-			Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
+			Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000000000000))),
 		},
 	}
 
@@ -101,89 +86,16 @@ func GenesisStateWithSingleValidator(t *testing.T, codec codec.Codec, builder *r
 	return genesisState
 }
 
-func makeTestConfig() depinject.Config {
-	return appconfig.Compose(&appv1alpha1.Config{
-		Modules: []*appv1alpha1.ModuleConfig{
-			{
-				Name: "runtime",
-				Config: appconfig.WrapAny(&runtimev1alpha1.Module{
-					AppName: "BaseAppApp",
-					BeginBlockers: []string{
-						"mint",
-						"staking",
-						"auth",
-						"bank",
-						"params",
-						"consensus",
-					},
-					EndBlockers: []string{
-						"staking",
-						"auth",
-						"bank",
-						"mint",
-						"params",
-						"consensus",
-					},
-					OverrideStoreKeys: []*runtimev1alpha1.StoreKeyConfig{
-						{
-							ModuleName: "auth",
-							KvStoreKey: "acc",
-						},
-					},
-					InitGenesis: []string{
-						"auth",
-						"bank",
-						"staking",
-						"mint",
-						"params",
-						"consensus",
-					},
-				}),
-			},
-			{
-				Name: "auth",
-				Config: appconfig.WrapAny(&authmodulev1.Module{
-					Bech32Prefix: "cosmos",
-					ModuleAccountPermissions: []*authmodulev1.ModuleAccountPermission{
-						{Account: authtypes.FeeCollectorName},
-						{Account: minttypes.ModuleName, Permissions: []string{authtypes.Minter}},
-						{Account: stakingtypes.BondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
-						{Account: stakingtypes.NotBondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
-					},
-				}),
-			},
-			{
-				Name:   "bank",
-				Config: appconfig.WrapAny(&bankmodulev1.Module{}),
-			},
-			{
-				Name:   "params",
-				Config: appconfig.WrapAny(&paramsmodulev1.Module{}),
-			},
-			{
-				Name:   "staking",
-				Config: appconfig.WrapAny(&stakingmodulev1.Module{}),
-			},
-			{
-				Name:   "mint",
-				Config: appconfig.WrapAny(&mintmodulev1.Module{}),
-			},
-			{
-				Name:   "consensus",
-				Config: appconfig.WrapAny(&consensusmodulev1.Module{}),
-			},
-			{
-				Name:   "tx",
-				Config: appconfig.WrapAny(&txconfigv1.Config{}),
-			},
-		},
-	})
-}
-
 func makeMinimalConfig() depinject.Config {
-	var mempoolOpt runtime.BaseAppOption = baseapp.SetMempool(mempool.NewSenderNonceMempool())
+	var (
+		mempoolOpt            = baseapp.SetMempool(mempool.NewSenderNonceMempool())
+		addressCodec          = func() address.Codec { return addresscodec.NewBech32Codec("cosmos") }
+		validatorAddressCodec = func() runtime.ValidatorAddressCodec { return addresscodec.NewBech32Codec("cosmosvaloper") }
+		consensusAddressCodec = func() runtime.ConsensusAddressCodec { return addresscodec.NewBech32Codec("cosmosvalcons") }
+	)
+
 	return depinject.Configs(
-		depinject.Supply(mempoolOpt),
+		depinject.Supply(mempoolOpt, addressCodec, validatorAddressCodec, consensusAddressCodec),
 		appconfig.Compose(&appv1alpha1.Config{
 			Modules: []*appv1alpha1.ModuleConfig{
 				{
@@ -266,12 +178,12 @@ func incrementCounter(ctx context.Context,
 	switch m := msg.(type) {
 	case *baseapptestutil.MsgCounter:
 		if m.FailOnHandler {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "message handler failure")
+			return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "message handler failure")
 		}
 		msgCount = m.Counter
 	case *baseapptestutil.MsgCounter2:
 		if m.FailOnHandler {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "message handler failure")
+			return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "message handler failure")
 		}
 		msgCount = m.Counter
 	}
@@ -303,7 +215,7 @@ func anteHandlerTxTest(t *testing.T, capKey storetypes.StoreKey, storeKey []byte
 		counter, failOnAnte := parseTxMemo(t, tx)
 
 		if failOnAnte {
-			return ctx, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
+			return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
 		}
 
 		_, err := incrementingCounter(t, store, storeKey, counter)
@@ -320,14 +232,14 @@ func anteHandlerTxTest(t *testing.T, capKey storetypes.StoreKey, storeKey []byte
 	}
 }
 
-func incrementingCounter(t *testing.T, store sdk.KVStore, counterKey []byte, counter int64) (*sdk.Result, error) {
+func incrementingCounter(t *testing.T, store storetypes.KVStore, counterKey []byte, counter int64) (*sdk.Result, error) {
 	storedCounter := getIntFromStore(t, store, counterKey)
 	require.Equal(t, storedCounter, counter)
 	setIntOnStore(store, counterKey, counter+1)
 	return &sdk.Result{}, nil
 }
 
-func setIntOnStore(store sdk.KVStore, key []byte, i int64) {
+func setIntOnStore(store storetypes.KVStore, key []byte, i int64) {
 	bz := make([]byte, 8)
 	n := binary.PutVarint(bz, i)
 	store.Set(key, bz[:n])
@@ -337,40 +249,37 @@ type paramStore struct {
 	db *dbm.MemDB
 }
 
-func (ps *paramStore) Set(_ sdk.Context, value *tmproto.ConsensusParams) {
+var _ baseapp.ParamStore = (*paramStore)(nil)
+
+func (ps paramStore) Set(_ context.Context, value cmtproto.ConsensusParams) error {
 	bz, err := json.Marshal(value)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
-	ps.db.Set(ParamStoreKey, bz)
+	return ps.db.Set(ParamStoreKey, bz)
 }
 
-func (ps *paramStore) Has(_ sdk.Context) bool {
-	ok, err := ps.db.Has(ParamStoreKey)
-	if err != nil {
-		panic(err)
-	}
-
-	return ok
+func (ps paramStore) Has(_ context.Context) (bool, error) {
+	return ps.db.Has(ParamStoreKey)
 }
 
-func (ps paramStore) Get(ctx sdk.Context) (*tmproto.ConsensusParams, error) {
+func (ps paramStore) Get(_ context.Context) (cmtproto.ConsensusParams, error) {
 	bz, err := ps.db.Get(ParamStoreKey)
 	if err != nil {
-		panic(err)
+		return cmtproto.ConsensusParams{}, err
 	}
 
 	if len(bz) == 0 {
-		return nil, errors.New("params not found")
+		return cmtproto.ConsensusParams{}, errors.New("params not found")
 	}
 
-	var params tmproto.ConsensusParams
+	var params cmtproto.ConsensusParams
 	if err := json.Unmarshal(bz, &params); err != nil {
-		panic(err)
+		return cmtproto.ConsensusParams{}, err
 	}
 
-	return &params, nil
+	return params, nil
 }
 
 func setTxSignature(t *testing.T, builder client.TxBuilder, nonce uint64) {
@@ -400,9 +309,9 @@ func getCheckStateCtx(app *baseapp.BaseApp) sdk.Context {
 	return rf.MethodByName("Context").Call(nil)[0].Interface().(sdk.Context)
 }
 
-func getDeliverStateCtx(app *baseapp.BaseApp) sdk.Context {
+func getFinalizeBlockStateCtx(app *baseapp.BaseApp) sdk.Context {
 	v := reflect.ValueOf(app).Elem()
-	f := v.FieldByName("deliverState")
+	f := v.FieldByName("finalizeBlockState")
 	rf := reflect.NewAt(f.Type(), unsafe.Pointer(f.UnsafeAddr())).Elem()
 	return rf.MethodByName("Context").Call(nil)[0].Interface().(sdk.Context)
 }
@@ -423,9 +332,10 @@ func parseTxMemo(t *testing.T, tx sdk.Tx) (counter int64, failOnAnte bool) {
 }
 
 func newTxCounter(t *testing.T, cfg client.TxConfig, counter int64, msgCounters ...int64) signing.Tx {
+	_, _, addr := testdata.KeyTestPubAddr()
 	msgs := make([]sdk.Msg, 0, len(msgCounters))
 	for _, c := range msgCounters {
-		msg := &baseapptestutil.MsgCounter{Counter: c, FailOnHandler: false}
+		msg := &baseapptestutil.MsgCounter{Counter: c, FailOnHandler: false, Signer: addr.String()}
 		msgs = append(msgs, msg)
 	}
 
@@ -437,7 +347,7 @@ func newTxCounter(t *testing.T, cfg client.TxConfig, counter int64, msgCounters 
 	return builder.GetTx()
 }
 
-func getIntFromStore(t *testing.T, store sdk.KVStore, key []byte) int64 {
+func getIntFromStore(t *testing.T, store storetypes.KVStore, key []byte) int64 {
 	bz := store.Get(key)
 	if len(bz) == 0 {
 		return 0
@@ -478,5 +388,19 @@ func setFailOnHandler(cfg client.TxConfig, tx signing.Tx, fail bool) signing.Tx 
 	}
 
 	builder.SetMsgs(msgs...)
+	return builder.GetTx()
+}
+
+// wonkyMsg is to be used to run a MsgCounter2 message when the MsgCounter2 handler is not registered.
+func wonkyMsg(t *testing.T, cfg client.TxConfig, tx signing.Tx) signing.Tx {
+	t.Helper()
+	builder := cfg.NewTxBuilder()
+	builder.SetMemo(tx.GetMemo())
+
+	msgs := tx.GetMsgs()
+	msgs = append(msgs, &baseapptestutil.MsgCounter2{})
+
+	err := builder.SetMsgs(msgs...)
+	require.NoError(t, err)
 	return builder.GetTx()
 }

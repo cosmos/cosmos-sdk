@@ -35,7 +35,19 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog (Agoric fork)
 
-## Unreleased
+## `v0.50.14-alpha.agoric.1` - 2025-07-09
+
+Upgrade to v0.50.14 of the Cosmos SDK, with Agoric changes preserved.
+
+### Bug Fixes
+
+* (client) [#441](https://github.com/agoric-labs/cosmos-sdk/pull/441)  Make `appd query wait-tx` robust by retrying if the tx hash could not be queried, but the Tx event has already passed.
+
+### `v0.47.17-alpha.agoric.1` - 2025-03-25
+
+Upgrade to v0.47.17 of the Cosmos SDK, with Agoric changes preserved.
+
+## `v0.46.16-alpha.agoric.2.5` - 2024-12-16
 
 ### API Breaking
 

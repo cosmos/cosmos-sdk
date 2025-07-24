@@ -34,7 +34,7 @@ func generateSequentialKeys(startKey []byte, numKeys int) [][]byte {
 }
 
 // Generate many random, unsorted keys
-func generateRandomKeys(keySize int, numKeys int) [][]byte {
+func generateRandomKeys(keySize, numKeys int) [][]byte {
 	toReturn := make([][]byte, 0, numKeys)
 	for i := 0; i < numKeys; i++ {
 		newKey := randSlice(keySize)

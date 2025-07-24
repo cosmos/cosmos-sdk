@@ -6,8 +6,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -19,29 +21,30 @@ import (
 
 func TestMigrateStore(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig()
-	bankKey := sdk.NewKVStoreKey("bank")
-	ctx := testutil.DefaultContext(bankKey, sdk.NewTransientStoreKey("transient_test"))
-	store := ctx.KVStore(bankKey)
+	bankKey := storetypes.NewKVStoreKey("bank")
+	storeService := runtime.NewKVStoreService(bankKey)
+	ctx := testutil.DefaultContext(bankKey, storetypes.NewTransientStoreKey("transient_test"))
+	store := runtime.KVStoreAdapter(storeService.OpenKVStore(ctx))
 
 	addr := sdk.AccAddress([]byte("addr________________"))
 	prefixAccStore := prefix.NewStore(store, v2.CreateAccountBalancesPrefix(addr))
 
 	balances := sdk.NewCoins(
-		sdk.NewCoin("foo", sdk.NewInt(10000)),
-		sdk.NewCoin("bar", sdk.NewInt(20000)),
+		sdk.NewCoin("foo", math.NewInt(10000)),
+		sdk.NewCoin("bar", math.NewInt(20000)),
 	)
 
 	for _, b := range balances {
-		bz, err := encCfg.Codec.Marshal(&b)
+		bz, err := encCfg.Codec.Marshal(&b) //nolint:gosec // G601: Implicit memory aliasing in for loop.
 		require.NoError(t, err)
 
 		prefixAccStore.Set([]byte(b.Denom), bz)
 	}
 
-	require.NoError(t, v3.MigrateStore(ctx, bankKey, encCfg.Codec))
+	require.NoError(t, v3.MigrateStore(ctx, storeService, encCfg.Codec))
 
 	for _, b := range balances {
-		addrPrefixStore := prefix.NewStore(store, types.CreateAccountBalancesPrefix(addr))
+		addrPrefixStore := prefix.NewStore(store, v3.CreateAccountBalancesPrefix(addr))
 		bz := addrPrefixStore.Get([]byte(b.Denom))
 		var expected math.Int
 		require.NoError(t, expected.Unmarshal(bz))
@@ -57,9 +60,10 @@ func TestMigrateStore(t *testing.T) {
 
 func TestMigrateDenomMetaData(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig()
-	bankKey := sdk.NewKVStoreKey("bank")
-	ctx := testutil.DefaultContext(bankKey, sdk.NewTransientStoreKey("transient_test"))
-	store := ctx.KVStore(bankKey)
+	bankKey := storetypes.NewKVStoreKey("bank")
+	storeService := runtime.NewKVStoreService(bankKey)
+	ctx := testutil.DefaultContext(bankKey, storetypes.NewTransientStoreKey("transient_test"))
+	store := runtime.KVStoreAdapter(storeService.OpenKVStore(ctx))
 	metaData := []types.Metadata{
 		{
 			Name:        "Cosmos Hub Atom",
@@ -97,7 +101,7 @@ func TestMigrateDenomMetaData(t *testing.T) {
 		denomMetadataStore.Set(key, bz)
 	}
 
-	require.NoError(t, v3.MigrateStore(ctx, bankKey, encCfg.Codec))
+	require.NoError(t, v3.MigrateStore(ctx, storeService, encCfg.Codec))
 
 	denomMetadataStore = prefix.NewStore(store, v2.DenomMetadataPrefix)
 	denomMetadataIter := denomMetadataStore.Iterator(nil, nil)

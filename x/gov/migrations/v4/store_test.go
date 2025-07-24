@@ -6,6 +6,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
+
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,7 +23,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	"github.com/cosmos/cosmos-sdk/x/upgrade"
 )
 
 var (
@@ -63,9 +66,9 @@ func (ms mockSubspace) Get(ctx sdk.Context, key []byte, ptr interface{}) {
 }
 
 func TestMigrateStore(t *testing.T) {
-	cdc := moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{}, gov.AppModuleBasic{}, bank.AppModuleBasic{}).Codec
-	govKey := sdk.NewKVStoreKey("gov")
-	ctx := testutil.DefaultContext(govKey, sdk.NewTransientStoreKey("transient_test"))
+	cdc := moduletestutil.MakeTestEncodingConfig(gov.AppModuleBasic{}, bank.AppModuleBasic{}).Codec
+	govKey := storetypes.NewKVStoreKey("gov")
+	ctx := testutil.DefaultContext(govKey, storetypes.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(govKey)
 
 	legacySubspace := newMockSubspace(v1.DefaultParams())
@@ -75,13 +78,13 @@ func TestMigrateStore(t *testing.T) {
 	// Create 2 proposals
 	prop1Content, err := v1.NewLegacyContent(v1beta1.NewTextProposal("Test", "description"), authtypes.NewModuleAddress("gov").String())
 	require.NoError(t, err)
-	proposal1, err := v1.NewProposal([]sdk.Msg{prop1Content}, 1, propTime, propTime, "some metadata for the legacy content", "Test", "description", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))
+	proposal1, err := v1.NewProposal([]sdk.Msg{prop1Content}, 1, propTime, propTime, "some metadata for the legacy content", "Test", "description", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), false)
 	require.NoError(t, err)
 	prop1Bz, err := cdc.Marshal(&proposal1)
 	require.NoError(t, err)
 	store.Set(v1gov.ProposalKey(proposal1.Id), prop1Bz)
 
-	proposal2, err := v1.NewProposal(getTestProposal(), 2, propTime, propTime, "some metadata for the legacy content", "Test", "description", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))
+	proposal2, err := v1.NewProposal(getTestProposal(), 2, propTime, propTime, "some metadata for the legacy content", "Test", "description", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), false)
 	proposal2.Status = v1.StatusVotingPeriod
 	require.NoError(t, err)
 	prop2Bz, err := cdc.Marshal(&proposal2)
@@ -89,7 +92,8 @@ func TestMigrateStore(t *testing.T) {
 	store.Set(v1gov.ProposalKey(proposal2.Id), prop2Bz)
 
 	// Run migrations.
-	err = v4.MigrateStore(ctx, govKey, legacySubspace, cdc)
+	storeService := runtime.NewKVStoreService(govKey)
+	err = v4.MigrateStore(ctx, storeService, legacySubspace, cdc)
 	require.NoError(t, err)
 
 	// Check params
@@ -103,7 +107,7 @@ func TestMigrateStore(t *testing.T) {
 	require.Equal(t, legacySubspace.tp.Quorum, params.Quorum)
 	require.Equal(t, legacySubspace.tp.Threshold, params.Threshold)
 	require.Equal(t, legacySubspace.tp.VetoThreshold, params.VetoThreshold)
-	require.Equal(t, sdk.ZeroDec().String(), params.MinInitialDepositRatio)
+	require.Equal(t, math.LegacyZeroDec().String(), params.MinInitialDepositRatio)
 
 	// Check proposals' status
 	var migratedProp1 v1.Proposal
@@ -128,7 +132,7 @@ func getTestProposal() []sdk.Msg {
 	}
 
 	return []sdk.Msg{
-		banktypes.NewMsgSend(govAcct, addr, sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000)))),
+		banktypes.NewMsgSend(govAcct, addr, sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(1000)))),
 		legacyProposalMsg,
 	}
 }

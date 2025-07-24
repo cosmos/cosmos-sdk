@@ -5,10 +5,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/regen-network/gocuke"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/depinject"
 )
@@ -131,11 +130,11 @@ func fullTypeName(typeName string) string {
 	return fmt.Sprintf("cosmossdk.io/depinject_test/depinject_test.%s", typeName)
 }
 
-func (s *bindingSuite) ThereIsAGlobalBindingForA(preferredType string, interfaceType string) {
+func (s *bindingSuite) ThereIsAGlobalBindingForA(preferredType, interfaceType string) {
 	s.addConfig(depinject.BindInterface(fullTypeName(interfaceType), fullTypeName(preferredType)))
 }
 
-func (s *bindingSuite) ThereIsABindingForAInModule(preferredType string, interfaceType string, moduleName string) {
+func (s *bindingSuite) ThereIsABindingForAInModule(preferredType, interfaceType, moduleName string) {
 	s.addConfig(depinject.BindInterfaceInModule(moduleName, fullTypeName(interfaceType), fullTypeName(preferredType)))
 }
 
@@ -147,7 +146,7 @@ func (s *bindingSuite) ModuleWantsADuck(module string) {
 	s.addConfig(depinject.ProvideInModule(module, ProvideModuleDuck))
 }
 
-func (s *bindingSuite) ModuleResolvesA(module string, duckType string) {
+func (s *bindingSuite) ModuleResolvesA(module, duckType string) {
 	pond := s.resolvePond()
 	moduleFound := false
 	for _, dw := range pond.Ducks {

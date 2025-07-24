@@ -7,7 +7,7 @@ import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 import "amino/amino.proto";
 
-option go_package = "github.com/cosmos/cosmos-sdk/x/feegrant";
+option go_package = "cosmossdk.io/x/feegrant";
 
 // Msg defines the feegrant msg service.
 service Msg {
@@ -20,6 +20,11 @@ service Msg {
   // RevokeAllowance revokes any fee allowance of granter's account that
   // has been granted to the grantee.
   rpc RevokeAllowance(MsgRevokeAllowance) returns (MsgRevokeAllowanceResponse);
+
+  // PruneAllowances prunes expired fee allowances, currently up to 75 at a time.
+  //
+  // Since cosmos-sdk 0.50
+  rpc PruneAllowances(MsgPruneAllowances) returns (MsgPruneAllowancesResponse);
 }
 
 // MsgGrantAllowance adds permission for Grantee to spend up to Allowance
@@ -55,3 +60,18 @@ message MsgRevokeAllowance {
 
 // MsgRevokeAllowanceResponse defines the Msg/RevokeAllowanceResponse response type.
 message MsgRevokeAllowanceResponse {}
+
+// MsgPruneAllowances prunes expired fee allowances.
+//
+// Since cosmos-sdk 0.50
+message MsgPruneAllowances {
+  option (cosmos.msg.v1.signer) = "pruner";
+
+  // pruner is the address of the user pruning expired allowances.
+  string pruner = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgPruneAllowancesResponse defines the Msg/PruneAllowancesResponse response type.
+//
+// Since cosmos-sdk 0.50
+message MsgPruneAllowancesResponse {}

@@ -1,10 +1,11 @@
 package cli
 
 import (
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/x/evidence/types"
-
 	"github.com/spf13/cobra"
+
+	"cosmossdk.io/x/evidence/types"
+
+	"github.com/cosmos/cosmos-sdk/client"
 )
 
 // GetTxCmd returns a CLI command that has all the native evidence module tx

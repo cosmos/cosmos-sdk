@@ -911,7 +911,7 @@ func (x *PubKey) GetKey() []byte {
 	return nil
 }
 
-// Deprecated: PrivKey defines a ed25519 private key.
+// PrivKey defines a ed25519 private key.
 // NOTE: ed25519 keys must not be used in SDK apps except in a tendermint validator context.
 type PrivKey struct {
 	state         protoimpl.MessageState

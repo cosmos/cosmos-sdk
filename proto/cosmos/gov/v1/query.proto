@@ -1,4 +1,3 @@
-
 // Since: cosmos-sdk 0.46
 syntax = "proto3";
 package cosmos.gov.v1;
@@ -12,6 +11,11 @@ option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types/v1";
 
 // Query defines the gRPC querier service for gov module
 service Query {
+  // Constitution queries the chain's constitution.
+  rpc Constitution(QueryConstitutionRequest) returns (QueryConstitutionResponse) {
+    option (google.api.http).get = "/cosmos/gov/v1/constitution";
+  }
+
   // Proposal queries proposal details based on ProposalID.
   rpc Proposal(QueryProposalRequest) returns (QueryProposalResponse) {
     option (google.api.http).get = "/cosmos/gov/v1/proposals/{proposal_id}";
@@ -37,7 +41,7 @@ service Query {
     option (google.api.http).get = "/cosmos/gov/v1/params/{params_type}";
   }
 
-  // Deposit queries single deposit information based proposalID, depositAddr.
+  // Deposit queries single deposit information based on proposalID, depositAddr.
   rpc Deposit(QueryDepositRequest) returns (QueryDepositResponse) {
     option (google.api.http).get = "/cosmos/gov/v1/proposals/{proposal_id}/deposits/{depositor}";
   }
@@ -51,6 +55,14 @@ service Query {
   rpc TallyResult(QueryTallyResultRequest) returns (QueryTallyResultResponse) {
     option (google.api.http).get = "/cosmos/gov/v1/proposals/{proposal_id}/tally";
   }
+}
+
+// QueryConstitutionRequest is the request type for the Query/Constitution RPC method
+message QueryConstitutionRequest {}
+
+// QueryConstitutionResponse is the response type for the Query/Constitution RPC method
+message QueryConstitutionResponse {
+  string constitution = 1;
 }
 
 // QueryProposalRequest is the request type for the Query/Proposal RPC method.

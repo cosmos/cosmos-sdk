@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/testutil"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,7 +19,7 @@ import (
 func TestDirectAuxHandler(t *testing.T) {
 	privKey, pubkey, addr := testdata.KeyTestPubAddr()
 	_, feePayerPubKey, feePayerAddr := testdata.KeyTestPubAddr()
-	interfaceRegistry := codectypes.NewInterfaceRegistry()
+	interfaceRegistry := testutil.CodecOptions{}.NewInterfaceRegistry()
 	interfaceRegistry.RegisterImplementations((*sdk.Msg)(nil), &testdata.TestMsg{})
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
 
@@ -49,7 +50,6 @@ func TestDirectAuxHandler(t *testing.T) {
 	}
 
 	fee := txtypes.Fee{Amount: sdk.NewCoins(sdk.NewInt64Coin("atom", 150)), GasLimit: 20000}
-	tip := &txtypes.Tip{Amount: sdk.NewCoins(sdk.NewInt64Coin("tip-token", 10))}
 
 	err = txBuilder.SetMsgs(msgs...)
 	require.NoError(t, err)
@@ -57,7 +57,6 @@ func TestDirectAuxHandler(t *testing.T) {
 	txBuilder.SetFeeAmount(fee.Amount)
 	txBuilder.SetFeePayer(feePayerAddr)
 	txBuilder.SetGasLimit(fee.GasLimit)
-	txBuilder.SetTip(tip)
 
 	err = txBuilder.SetSignatures(sig, feePayerSig)
 	require.NoError(t, err)
@@ -109,7 +108,6 @@ func TestDirectAuxHandler(t *testing.T) {
 		ChainId:       "test-chain",
 		PublicKey:     any,
 		Sequence:      accSeq,
-		Tip:           tip,
 	}
 
 	expectedSignBytes, err := signDocDirectAux.Marshal()

@@ -5,12 +5,16 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
+
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v1"
 	v2 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v2"
@@ -20,8 +24,8 @@ import (
 
 func TestMigrateStore(t *testing.T) {
 	cdc := moduletestutil.MakeTestEncodingConfig().Codec
-	govKey := sdk.NewKVStoreKey("gov")
-	ctx := testutil.DefaultContext(govKey, sdk.NewTransientStoreKey("transient_test"))
+	govKey := storetypes.NewKVStoreKey("gov")
+	ctx := testutil.DefaultContext(govKey, storetypes.NewTransientStoreKey("transient_test"))
 	store := ctx.KVStore(govKey)
 
 	_, _, addr1 := testdata.KeyTestPubAddr()
@@ -42,17 +46,17 @@ func TestMigrateStore(t *testing.T) {
 		{
 			"ProposalKey",
 			v1.ProposalKey(proposalID), dummyValue,
-			types.ProposalKey(proposalID), dummyValue,
+			append(types.ProposalsKeyPrefix, sdk.Uint64ToBigEndian(proposalID)...), dummyValue,
 		},
 		{
 			"ActiveProposalQueue",
 			v1.ActiveProposalQueueKey(proposalID, now), dummyValue,
-			types.ActiveProposalQueueKey(proposalID, now), dummyValue,
+			activeProposalQueueKey(proposalID, now), dummyValue,
 		},
 		{
 			"InactiveProposalQueue",
 			v1.InactiveProposalQueueKey(proposalID, now), dummyValue,
-			types.InactiveProposalQueueKey(proposalID, now), dummyValue,
+			inactiveProposalQueueKey(proposalID, now), dummyValue,
 		},
 		{
 			"ProposalIDKey",
@@ -62,12 +66,12 @@ func TestMigrateStore(t *testing.T) {
 		{
 			"DepositKey",
 			v1.DepositKey(proposalID, addr1), dummyValue,
-			types.DepositKey(proposalID, addr1), dummyValue,
+			depositKey(proposalID, addr1), dummyValue,
 		},
 		{
 			"VotesKeyPrefix",
 			v1.VoteKey(proposalID, addr1), oldVoteValue,
-			types.VoteKey(proposalID, addr1), newVoteValue,
+			voteKey(proposalID, addr1), newVoteValue,
 		},
 	}
 
@@ -77,7 +81,8 @@ func TestMigrateStore(t *testing.T) {
 	}
 
 	// Run migratio
-	err := v2.MigrateStore(ctx, govKey, cdc)
+	storeService := runtime.NewKVStoreService(govKey)
+	err := v2.MigrateStore(ctx, storeService, cdc)
 	require.NoError(t, err)
 
 	// Make sure the new keys are set and old keys are deleted.
@@ -90,4 +95,23 @@ func TestMigrateStore(t *testing.T) {
 			require.Equal(t, tc.newValue, store.Get(tc.newKey))
 		})
 	}
+}
+
+// TODO(tip): remove all the functions below once we delete the migrations
+
+func depositKey(proposalID uint64, depositorAddr sdk.AccAddress) []byte {
+	return append(append(types.DepositsKeyPrefix, sdk.Uint64ToBigEndian(proposalID)...), address.MustLengthPrefix(depositorAddr.Bytes())...)
+}
+
+func voteKey(proposalID uint64, addr sdk.AccAddress) []byte {
+	return append(append(types.VotesKeyPrefix, sdk.Uint64ToBigEndian(proposalID)...), address.MustLengthPrefix(addr.Bytes())...)
+}
+
+func activeProposalQueueKey(proposalID uint64, endTime time.Time) []byte {
+	return append(append(types.ActiveProposalQueuePrefix, sdk.FormatTimeBytes(endTime)...), sdk.Uint64ToBigEndian(proposalID)...)
+}
+
+// InactiveProposalQueueKey returns the key for a proposalID in the inactiveProposalQueue
+func inactiveProposalQueueKey(proposalID uint64, endTime time.Time) []byte {
+	return append(append(types.InactiveProposalQueuePrefix, sdk.FormatTimeBytes(endTime)...), sdk.Uint64ToBigEndian(proposalID)...)
 }

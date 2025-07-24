@@ -122,7 +122,7 @@ func (s *MultiErrorTestSuite) TestGetErrors() {
 		s.T().Run(tc.name, func(t *testing.T) {
 			// Make sure it's getting what's expected.
 			actual1 := tc.multi.GetErrors()
-			require.NotSame(t, &tc.expected, &actual1)
+			require.NotSame(t, tc.expected, actual1)
 			require.Equal(t, tc.expected, actual1)
 			// Make sure that changing what was given back doesn't alter the original.
 			actual1[0] = errors.New("unexpected error")

@@ -1,7 +1,7 @@
 syntax = "proto3";
 package cosmos.evidence.v1beta1;
 
-option go_package            = "github.com/cosmos/cosmos-sdk/x/evidence/types";
+option go_package            = "cosmossdk.io/x/evidence/types";
 option (gogoproto.equal_all) = true;
 
 import "amino/amino.proto";
@@ -12,10 +12,9 @@ import "cosmos_proto/cosmos.proto";
 // Equivocation implements the Evidence interface and defines evidence of double
 // signing misbehavior.
 message Equivocation {
-  option (amino.name)                 = "cosmos-sdk/Equivocation";
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.goproto_getters)  = false;
-  option (gogoproto.equal)            = false;
+  option (amino.name)                = "cosmos-sdk/Equivocation";
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.equal)           = false;
 
   // height is the equivocation height.
   int64 height = 1;

@@ -3,11 +3,10 @@ package common
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
-
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 )
 
 func TestQueryDelegationRewardsAddrValidation(t *testing.T) {

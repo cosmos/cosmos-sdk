@@ -3,8 +3,9 @@ package client_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/stretchr/testify/require"
+
+	"github.com/cosmos/cosmos-sdk/client"
 )
 
 func TestValidatePromptNotEmpty(t *testing.T) {

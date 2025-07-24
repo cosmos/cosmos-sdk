@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
+
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
@@ -12,7 +13,7 @@ import (
 
 func CreateValidator(pk cryptotypes.PubKey, stake math.Int) (stakingtypes.Validator, error) {
 	valConsAddr := sdk.GetConsAddress(pk)
-	val, err := stakingtypes.NewValidator(sdk.ValAddress(valConsAddr), pk, stakingtypes.Description{})
+	val, err := stakingtypes.NewValidator(sdk.ValAddress(valConsAddr).String(), pk, stakingtypes.Description{Moniker: "TestValidator"})
 	val.Tokens = stake
 	val.DelegatorShares = math.LegacyNewDecFromInt(val.Tokens)
 	return val, err
@@ -45,16 +46,22 @@ func SlashValidator(
 	consAddr sdk.ConsAddress,
 	infractionHeight int64,
 	power int64,
-	slashFactor sdk.Dec,
+	slashFactor math.LegacyDec,
 	validator *stakingtypes.Validator,
 	distrKeeper *keeper.Keeper,
+	sk *MockStakingKeeper,
 ) math.Int {
 	if slashFactor.IsNegative() {
 		panic(fmt.Errorf("attempted to slash with a negative slash factor: %v", slashFactor))
 	}
 
+	valBz, err := sk.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+	if err != nil {
+		panic(err)
+	}
+
 	// call the before-modification hook
-	err := distrKeeper.Hooks().BeforeValidatorModified(ctx, validator.GetOperator())
+	err = distrKeeper.Hooks().BeforeValidatorModified(ctx, valBz)
 	if err != nil {
 		panic(err)
 	}
@@ -67,22 +74,25 @@ func SlashValidator(
 		panic("we can't test any other case here")
 	}
 
-	slashAmountDec := sdk.NewDecFromInt(validator.Tokens).Mul(sdk.NewDecWithPrec(5, 1))
+	slashAmountDec := math.LegacyNewDecFromInt(validator.Tokens).Mul(math.LegacyNewDecWithPrec(5, 1))
 	slashAmount := slashAmountDec.TruncateInt()
 
 	// cannot decrease balance below zero
-	tokensToBurn := sdk.MinInt(slashAmount, validator.Tokens)
-	tokensToBurn = sdk.MaxInt(tokensToBurn, math.ZeroInt()) // defensive.
+	tokensToBurn := math.MinInt(slashAmount, validator.Tokens)
+	tokensToBurn = math.MaxInt(tokensToBurn, math.ZeroInt()) // defensive.
 
 	// we need to calculate the *effective* slash fraction for distribution
 	if validator.Tokens.IsPositive() {
-		effectiveFraction := sdk.NewDecFromInt(tokensToBurn).QuoRoundUp(sdk.NewDecFromInt(validator.Tokens))
+		effectiveFraction := math.LegacyNewDecFromInt(tokensToBurn).QuoRoundUp(math.LegacyNewDecFromInt(validator.Tokens))
 		// possible if power has changed
 		if effectiveFraction.GT(math.LegacyOneDec()) {
 			effectiveFraction = math.LegacyOneDec()
 		}
 		// call the before-slashed hook
-		distrKeeper.Hooks().BeforeValidatorSlashed(ctx, validator.GetOperator(), effectiveFraction)
+		err := distrKeeper.Hooks().BeforeValidatorSlashed(ctx, valBz, effectiveFraction)
+		if err != nil {
+			panic(err)
+		}
 	}
 	// Deduct from validator's bonded tokens and update the validator.
 	// Burn the slashed tokens from the pool account and decrease the total supply.
@@ -101,16 +111,21 @@ func Delegate(
 	validator *stakingtypes.Validator,
 	amount math.Int,
 	delegation *stakingtypes.Delegation,
+	sk *MockStakingKeeper,
 ) (
-	newShares sdk.Dec,
+	newShares math.LegacyDec,
 	updatedDel stakingtypes.Delegation,
 	err error,
 ) {
+	valBz, err := sk.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+	if err != nil {
+		return math.LegacyZeroDec(), stakingtypes.Delegation{}, err
+	}
 	if delegation != nil {
-		err = distrKeeper.Hooks().BeforeDelegationSharesModified(ctx, delegator, validator.GetOperator())
+		err = distrKeeper.Hooks().BeforeDelegationSharesModified(ctx, delegator, valBz)
 	} else {
-		err = distrKeeper.Hooks().BeforeDelegationCreated(ctx, delegator, validator.GetOperator())
-		del := stakingtypes.NewDelegation(delegator, validator.GetOperator(), math.LegacyZeroDec())
+		err = distrKeeper.Hooks().BeforeDelegationCreated(ctx, delegator, valBz)
+		del := stakingtypes.NewDelegation(delegator.String(), validator.GetOperator(), math.LegacyZeroDec())
 		delegation = &del
 	}
 

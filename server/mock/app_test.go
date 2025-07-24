@@ -1,33 +1,51 @@
 package mock
 
 import (
+	"context"
 	"math/rand"
 	"testing"
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/log"
+
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
-func TestInitApp(t *testing.T) {
-	app, closer, err := SetupApp()
-	// closer may need to be run, even when error in later stage
-	if closer != nil {
-		defer closer()
-	}
+// SetupApp initializes a new application,
+// failing t if initialization fails.
+func SetupApp(t *testing.T) servertypes.ABCI {
+	t.Helper()
+
+	logger := log.NewTestLogger(t)
+
+	rootDir := t.TempDir()
+
+	app, err := NewApp(rootDir, logger)
 	require.NoError(t, err)
 
-	appState, err := AppGenState(nil, types.GenesisDoc{}, nil)
+	return app
+}
+
+func TestInitApp(t *testing.T) {
+	app := SetupApp(t)
+
+	appState, err := AppGenState(nil, genutiltypes.AppGenesis{}, nil)
 	require.NoError(t, err)
 
 	req := abci.RequestInitChain{
 		AppStateBytes: appState,
 	}
-	app.InitChain(req)
+	res, err := app.InitChain(&req)
+	require.NoError(t, err)
+	app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Hash:   res.AppHash,
+		Height: 1,
+	})
 	app.Commit()
 
 	// make sure we can query these values
@@ -36,18 +54,14 @@ func TestInitApp(t *testing.T) {
 		Data: []byte("foo"),
 	}
 
-	qres := app.Query(query)
+	qres, err := app.Query(context.Background(), &query)
+	require.NoError(t, err)
 	require.Equal(t, uint32(0), qres.Code, qres.Log)
 	require.Equal(t, []byte("bar"), qres.Value)
 }
 
 func TestDeliverTx(t *testing.T) {
-	app, closer, err := SetupApp()
-	// closer may need to be run, even when error in later stage
-	if closer != nil {
-		defer closer()
-	}
-	require.NoError(t, err)
+	app := SetupApp(t)
 
 	key := "my-special-key"
 	value := "top-secret-data!!"
@@ -58,18 +72,16 @@ func TestDeliverTx(t *testing.T) {
 	tx := NewTx(key, value, randomAccounts[0].Address)
 	txBytes := tx.GetSignBytes()
 
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{
-		AppHash: []byte("apphash"),
-		Height:  1,
-	}})
+	res, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Hash:   []byte("apphash"),
+		Height: 1,
+		Txs:    [][]byte{txBytes},
+	})
+	require.NoError(t, err)
+	require.NotEmpty(t, res.AppHash)
 
-	dres := app.DeliverTx(abci.RequestDeliverTx{Tx: txBytes})
-	require.Equal(t, uint32(0), dres.Code, dres.Log)
-
-	app.EndBlock(abci.RequestEndBlock{})
-
-	cres := app.Commit()
-	require.NotEmpty(t, cres.Data)
+	_, err = app.Commit()
+	require.NoError(t, err)
 
 	// make sure we can query these values
 	query := abci.RequestQuery{
@@ -77,7 +89,8 @@ func TestDeliverTx(t *testing.T) {
 		Data: []byte(key),
 	}
 
-	qres := app.Query(query)
+	qres, err := app.Query(context.Background(), &query)
+	require.NoError(t, err)
 	require.Equal(t, uint32(0), qres.Code, qres.Log)
 	require.Equal(t, []byte(value), qres.Value)
 }

@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/bytes"
+	cmtt "github.com/cometbft/cometbft/proto/tendermint/types"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-	"github.com/golang/protobuf/proto"
+	cmt "github.com/cometbft/cometbft/types"
+	"github.com/golang/protobuf/proto" //nolint:staticcheck // grpc-gateway uses deprecated golang/protobuf
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -68,7 +70,7 @@ func (s *resultTestSuite) TestNewSearchTxsResult() {
 }
 
 func (s *resultTestSuite) TestResponseResultTx() {
-	deliverTxResult := abci.ResponseDeliverTx{
+	deliverTxResult := abci.ExecTxResult{
 		Codespace: "codespace",
 		Code:      1,
 		Data:      []byte("data"),
@@ -78,7 +80,7 @@ func (s *resultTestSuite) TestResponseResultTx() {
 		GasUsed:   90,
 	}
 	resultTx := &coretypes.ResultTx{
-		Hash:     bytes.HexBytes([]byte("test")),
+		Hash:     []byte("test"),
 		Height:   10,
 		TxResult: deliverTxResult,
 	}
@@ -125,7 +127,7 @@ txhash: "74657374"
 		Codespace: "codespace",
 		Data:      []byte("data"),
 		Log:       `[]`,
-		Hash:      bytes.HexBytes([]byte("test")),
+		Hash:      []byte("test"),
 	}
 
 	s.Require().Equal(&sdk.TxResponse{
@@ -137,6 +139,44 @@ txhash: "74657374"
 		TxHash:    "74657374",
 	}, sdk.NewResponseFormatBroadcastTx(resultBroadcastTx))
 	s.Require().Equal((*sdk.TxResponse)(nil), sdk.NewResponseFormatBroadcastTx(nil))
+}
+
+func (s *resultTestSuite) TestNewSearchBlocksResult() {
+	got := sdk.NewSearchBlocksResult(150, 20, 2, 20, []*cmtt.Block{})
+	s.Require().Equal(&sdk.SearchBlocksResult{
+		TotalCount: 150,
+		Count:      20,
+		PageNumber: 2,
+		PageTotal:  8,
+		Limit:      20,
+		Blocks:     []*cmtt.Block{},
+	}, got)
+}
+
+func (s *resultTestSuite) TestResponseResultBlock() {
+	timestamp := time.Now()
+	timestampStr := timestamp.UTC().Format(time.RFC3339)
+
+	//  create a block
+	resultBlock := &coretypes.ResultBlock{Block: &cmt.Block{
+		Header: cmt.Header{
+			Height: 10,
+			Time:   timestamp,
+		},
+		Evidence: cmt.EvidenceData{
+			Evidence: make(cmt.EvidenceList, 0),
+		},
+	}}
+
+	blk, err := resultBlock.Block.ToProto()
+	s.Require().NoError(err)
+
+	want := &cmtt.Block{
+		Header:   blk.Header,
+		Evidence: blk.Evidence,
+	}
+
+	s.Require().Equal(want, sdk.NewResponseResultBlock(resultBlock, timestampStr))
 }
 
 func TestWrapServiceResult(t *testing.T) {

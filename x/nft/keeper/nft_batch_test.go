@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/nft"
+	"cosmossdk.io/x/nft"
 )
 
 func (s *TestSuite) TestBatchMint() {
@@ -348,13 +347,6 @@ func (s *TestSuite) saveClass(tokens []nft.NFT) {
 	classMap := groupByClassID(tokens)
 	for classID := range classMap {
 		err := s.nftKeeper.SaveClass(s.ctx, nft.Class{Id: classID})
-		s.Require().NoError(err)
-	}
-}
-
-func (s *TestSuite) mintNFT(tokens []nft.NFT, receiver sdk.AccAddress) {
-	for _, token := range tokens {
-		err := s.nftKeeper.Mint(s.ctx, token, receiver)
 		s.Require().NoError(err)
 	}
 }

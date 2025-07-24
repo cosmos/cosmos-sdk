@@ -19,6 +19,7 @@ message SendAuthorization {
   repeated cosmos.base.v1beta1.Coin spend_limit = 1 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 

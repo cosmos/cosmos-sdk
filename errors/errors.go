@@ -16,6 +16,9 @@ var (
 	// errInternal should never be exposed, but we reserve this code for non-specified errors
 	errInternal = Register(UndefinedCodespace, 1, "internal")
 
+	// ErrStopIterating is used to break out of an iteration
+	ErrStopIterating = Register(UndefinedCodespace, 2, "stop iterating")
+
 	// ErrPanic should only be set when we recovering from a panic
 	ErrPanic = Register(UndefinedCodespace, 111222, "panic")
 )

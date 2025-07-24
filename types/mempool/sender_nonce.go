@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math/rand" // #nosec // math/rand is used for random selection and seeded from crypto/rand
+	"sync"
 
 	"github.com/huandu/skiplist"
 
@@ -14,11 +15,11 @@ import (
 )
 
 var (
-	_ Mempool  = (*SenderNonceMempool)(nil)
-	_ Iterator = (*senderNonceMempoolIterator)(nil)
+	_ ExtMempool = (*SenderNonceMempool)(nil)
+	_ Iterator   = (*senderNonceMempoolIterator)(nil)
 )
 
-var DefaultMaxTx = 0
+var DefaultMaxTx = -1
 
 // SenderNonceMempool is a mempool that prioritizes transactions within a sender
 // by nonce, the lowest first, but selects a random sender on each iteration.
@@ -31,13 +32,14 @@ var DefaultMaxTx = 0
 // Note that PrepareProposal could choose to stop iteration before reaching the
 // end if maxBytes is reached.
 type SenderNonceMempool struct {
+	mtx        sync.Mutex
 	senders    map[string]*skiplist.SkipList
 	rnd        *rand.Rand
 	maxTx      int
 	existingTx map[txKey]bool
 }
 
-type SenderNonceOptions func(mp *SenderNonceMempool)
+type SenderNonceOptions func(*SenderNonceMempool)
 
 type txKey struct {
 	address string
@@ -103,8 +105,8 @@ func (snm *SenderNonceMempool) setSeed(seed int64) {
 // NextSenderTx returns the next transaction for a given sender by nonce order,
 // i.e. the next valid transaction for the sender. If no such transaction exists,
 // nil will be returned.
-func (mp *SenderNonceMempool) NextSenderTx(sender string) sdk.Tx {
-	senderIndex, ok := mp.senders[sender]
+func (snm *SenderNonceMempool) NextSenderTx(sender string) sdk.Tx {
+	senderIndex, ok := snm.senders[sender]
 	if !ok {
 		return nil
 	}
@@ -116,7 +118,9 @@ func (mp *SenderNonceMempool) NextSenderTx(sender string) sdk.Tx {
 // Insert adds a tx to the mempool. It returns an error if the tx does not have
 // at least one signer. Note, priority is ignored.
 func (snm *SenderNonceMempool) Insert(_ context.Context, tx sdk.Tx) error {
-	if snm.maxTx > 0 && snm.CountTx() >= snm.maxTx {
+	snm.mtx.Lock()
+	defer snm.mtx.Unlock()
+	if snm.maxTx > 0 && len(snm.existingTx) >= snm.maxTx {
 		return ErrMempoolTxMaxCapacity
 	}
 	if snm.maxTx < 0 {
@@ -154,7 +158,13 @@ func (snm *SenderNonceMempool) Insert(_ context.Context, tx sdk.Tx) error {
 //
 // NOTE: It is not safe to use this iterator while removing transactions from
 // the underlying mempool.
-func (snm *SenderNonceMempool) Select(_ context.Context, _ [][]byte) Iterator {
+func (snm *SenderNonceMempool) Select(ctx context.Context, txs [][]byte) Iterator {
+	snm.mtx.Lock()
+	defer snm.mtx.Unlock()
+	return snm.doSelect(ctx, txs)
+}
+
+func (snm *SenderNonceMempool) doSelect(_ context.Context, _ [][]byte) Iterator {
 	var senders []string
 
 	senderCursors := make(map[string]*skiplist.Element)
@@ -182,14 +192,29 @@ func (snm *SenderNonceMempool) Select(_ context.Context, _ [][]byte) Iterator {
 	return iter.Next()
 }
 
+// SelectBy will hold the mutex during the iteration, callback returns if continue.
+func (snm *SenderNonceMempool) SelectBy(ctx context.Context, txs [][]byte, callback func(sdk.Tx) bool) {
+	snm.mtx.Lock()
+	defer snm.mtx.Unlock()
+
+	iter := snm.doSelect(ctx, txs)
+	for iter != nil && callback(iter.Tx()) {
+		iter = iter.Next()
+	}
+}
+
 // CountTx returns the total count of txs in the mempool.
 func (snm *SenderNonceMempool) CountTx() int {
+	snm.mtx.Lock()
+	defer snm.mtx.Unlock()
 	return len(snm.existingTx)
 }
 
 // Remove removes a tx from the mempool. It returns an error if the tx does not
 // have at least one signer or the tx was not found in the pool.
 func (snm *SenderNonceMempool) Remove(tx sdk.Tx) error {
+	snm.mtx.Lock()
+	defer snm.mtx.Unlock()
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {
 		return err

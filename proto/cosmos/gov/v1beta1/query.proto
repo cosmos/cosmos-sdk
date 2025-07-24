@@ -37,7 +37,7 @@ service Query {
     option (google.api.http).get = "/cosmos/gov/v1beta1/params/{params_type}";
   }
 
-  // Deposit queries single deposit information based proposalID, depositAddr.
+  // Deposit queries single deposit information based on proposalID, depositor address.
   rpc Deposit(QueryDepositRequest) returns (QueryDepositResponse) {
     option (google.api.http).get = "/cosmos/gov/v1beta1/proposals/{proposal_id}/deposits/{depositor}";
   }

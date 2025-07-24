@@ -11,7 +11,7 @@ import "amino/amino.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1";
 
-// Msg defines the bank Msg service.
+// Msg defines the gov Msg service.
 service Msg {
   option (cosmos.msg.v1.service) = true;
 
@@ -36,17 +36,17 @@ message MsgSubmitProposal {
   option (cosmos.msg.v1.signer) = "proposer";
   option (amino.name)           = "cosmos-sdk/MsgSubmitProposal";
 
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
-  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
 
   // content is the proposal's content.
   google.protobuf.Any content = 1 [(cosmos_proto.accepts_interface) = "cosmos.gov.v1beta1.Content"];
+
   // initial_deposit is the deposit value that must be paid at proposal submission.
   repeated cosmos.base.v1beta1.Coin initial_deposit = 2 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 
@@ -65,10 +65,8 @@ message MsgVote {
   option (cosmos.msg.v1.signer) = "voter";
   option (amino.name)           = "cosmos-sdk/MsgVote";
 
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
-  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
 
   // proposal_id defines the unique id of the proposal.
   uint64 proposal_id = 1;
@@ -90,10 +88,8 @@ message MsgVoteWeighted {
   option (cosmos.msg.v1.signer) = "voter";
   option (amino.name)           = "cosmos-sdk/MsgVoteWeighted";
 
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
-  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
 
   // proposal_id defines the unique id of the proposal.
   uint64 proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (amino.dont_omitempty) = true];
@@ -115,10 +111,9 @@ message MsgDeposit {
   option (cosmos.msg.v1.signer) = "depositor";
   option (amino.name)           = "cosmos-sdk/MsgDeposit";
 
-  option (gogoproto.equal)            = false;
-  option (gogoproto.goproto_stringer) = false;
-  option (gogoproto.stringer)         = false;
-  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.equal)           = false;
+  option (gogoproto.stringer)        = false;
+  option (gogoproto.goproto_getters) = false;
 
   // proposal_id defines the unique id of the proposal.
   uint64 proposal_id = 1 [(gogoproto.jsontag) = "proposal_id", (amino.dont_omitempty) = true];
@@ -130,6 +125,7 @@ message MsgDeposit {
   repeated cosmos.base.v1beta1.Coin amount = 3 [
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true,
+    (amino.encoding)         = "legacy_coins",
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
   ];
 }

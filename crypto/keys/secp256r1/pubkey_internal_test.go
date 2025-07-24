@@ -62,13 +62,13 @@ func (suite *PKSuite) TestEquals() {
 	require.False(suite.pk.Equals(pkOther))
 	require.True(pkOther.Equals(pkOther2))
 	require.True(pkOther2.Equals(pkOther))
-	require.True(pkOther.Equals(pkOther), "Equals must be reflexive")
+	require.True(pkOther.Equals(pkOther), "Equals must be reflexive") //nolint:gocritic // false positive
 }
 
 func (suite *PKSuite) TestMarshalProto() {
 	require := suite.Require()
 
-	/**** test structure marshalling ****/
+	/**** test structure marshaling ****/
 
 	var pk PubKey
 	bz, err := proto.Marshal(suite.pk)
@@ -76,7 +76,7 @@ func (suite *PKSuite) TestMarshalProto() {
 	require.NoError(proto.Unmarshal(bz, &pk))
 	require.True(pk.Equals(suite.pk))
 
-	/**** test structure marshalling with codec ****/
+	/**** test structure marshaling with codec ****/
 
 	pk = PubKey{}
 	emptyRegistry := types.NewInterfaceRegistry()
@@ -104,7 +104,7 @@ func (suite *PKSuite) TestMarshalProto() {
 	require.Len(bz2, bufSize)
 	require.Equal(bz, bz2[(bufSize-pk.Size()):])
 
-	/**** test interface marshalling ****/
+	/**** test interface marshaling ****/
 	bz, err = pubkeyCodec.MarshalInterface(suite.pk)
 	require.NoError(err)
 	var pkI cryptotypes.PubKey

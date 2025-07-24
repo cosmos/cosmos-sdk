@@ -16,7 +16,7 @@ in this testnet.
     `simd` binary inside a new `build` directory. The following instructions are run from inside
     the `build` directory.
 2. If you've run `simd` before, you may need to reset your database before starting a new
-    testnet. You can reset your database with the following command: `$ ./simd tendermint unsafe-reset-all`.
+    testnet. You can reset your database with the following command: `$ ./simd comet unsafe-reset-all`.
 3. `$ ./simd init [moniker] --chain-id [chain-id]`. This will initialize a new working directory
     at the default location `~/.simapp`. You need to provide a "moniker" and a "chain id". These
     two names can be anything, but you will need to use the same "chain id" in the following steps.
@@ -42,11 +42,11 @@ in this testnet.
     persistent_peers = "[validator_address]@[ip_address]:[port],[validator_address]@[ip_address]:[port]"
     ```
 
-    You can find `validator_address` by running `$ ./simd tendermint show-node-id`. The output will
+    You can find `validator_address` by running `$ ./simd comet show-node-id`. The output will
     be the hex-encoded `validator_address`. The default `port` is 26656.
 10. Now you can start your nodes: `$ ./simd start`.
 
-Now you have a small testnet that you can use to try out changes to the Cosmos SDK or Tendermint!
+Now you have a small testnet that you can use to try out changes to the Cosmos SDK or CometBFT!
 
 NOTE: Sometimes creating the network through the `collect-gentxs` will fail, and validators will start
 in a funny state (and then panic). If this happens, you can try to create and start the network first

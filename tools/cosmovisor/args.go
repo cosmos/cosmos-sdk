@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
+	"cosmossdk.io/log"
 	cverrors "cosmossdk.io/tools/cosmovisor/errors"
-	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	"github.com/rs/zerolog"
+	"cosmossdk.io/x/upgrade/plan"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
 // environment variable names
@@ -27,6 +27,7 @@ const (
 	EnvDataBackupPath       = "DAEMON_DATA_BACKUP_DIR"
 	EnvInterval             = "DAEMON_POLL_INTERVAL"
 	EnvPreupgradeMaxRetries = "DAEMON_PREUPGRADE_MAX_RETRIES"
+	EnvDisableLogs          = "COSMOVISOR_DISABLE_LOGS"
 )
 
 const (
@@ -50,6 +51,7 @@ type Config struct {
 	UnsafeSkipBackup      bool
 	DataBackupPath        string
 	PreupgradeMaxRetries  int
+	DisableLogs           bool
 
 	// currently running upgrade
 	currentUpgrade upgradetypes.Plan
@@ -157,6 +159,9 @@ func GetConfigFromEnv() (*Config, error) {
 	if cfg.UnsafeSkipBackup, err = booleanOption(EnvSkipBackup, false); err != nil {
 		errs = append(errs, err)
 	}
+	if cfg.DisableLogs, err = booleanOption(EnvDisableLogs, false); err != nil {
+		errs = append(errs, err)
+	}
 
 	interval := os.Getenv(EnvInterval)
 	if interval != "" {
@@ -208,16 +213,16 @@ func parseEnvDuration(input string) (time.Duration, error) {
 }
 
 // LogConfigOrError logs either the config details or the error.
-func LogConfigOrError(logger *zerolog.Logger, cfg *Config, err error) {
+func LogConfigOrError(logger log.Logger, cfg *Config, err error) {
 	if cfg == nil && err == nil {
 		return
 	}
-	logger.Info().Msg("configuration:")
+	logger.Info("configuration:")
 	switch {
 	case err != nil:
 		cverrors.LogErrors(logger, "configuration errors found", err)
 	case cfg != nil:
-		logger.Info().Msg(cfg.DetailString())
+		logger.Info(cfg.DetailString())
 	}
 }
 
@@ -248,7 +253,7 @@ func (cfg *Config) validate() []error {
 	}
 
 	// check the DataBackupPath
-	if cfg.UnsafeSkipBackup == true {
+	if cfg.UnsafeSkipBackup {
 		return errs
 	}
 
@@ -275,7 +280,7 @@ func (cfg *Config) SetCurrentUpgrade(u upgradetypes.Plan) (rerr error) {
 	// ensure named upgrade exists
 	bin := cfg.UpgradeBin(u.Name)
 
-	if err := EnsureBinary(bin); err != nil {
+	if err := plan.EnsureBinary(bin); err != nil {
 		return err
 	}
 
@@ -286,7 +291,9 @@ func (cfg *Config) SetCurrentUpgrade(u upgradetypes.Plan) (rerr error) {
 
 	// remove link if it exists
 	if _, err := os.Stat(link); err == nil {
-		os.Remove(link)
+		if err := os.Remove(link); err != nil {
+			return fmt.Errorf("failed to remove existing link: %w", err)
+		}
 	}
 
 	// point to the new directory
@@ -295,7 +302,7 @@ func (cfg *Config) SetCurrentUpgrade(u upgradetypes.Plan) (rerr error) {
 	}
 
 	cfg.currentUpgrade = u
-	f, err := os.Create(filepath.Join(upgrade, upgradekeeper.UpgradeInfoFileName))
+	f, err := os.Create(filepath.Join(upgrade, upgradetypes.UpgradeInfoFilename))
 	if err != nil {
 		return err
 	}
@@ -319,7 +326,7 @@ func (cfg *Config) UpgradeInfo() (upgradetypes.Plan, error) {
 		return cfg.currentUpgrade, nil
 	}
 
-	filename := filepath.Join(cfg.Root(), currentLink, upgradekeeper.UpgradeInfoFileName)
+	filename := filepath.Join(cfg.Root(), currentLink, upgradetypes.UpgradeInfoFilename)
 	_, err := os.Lstat(filename)
 	var u upgradetypes.Plan
 	var bz []byte
@@ -361,11 +368,12 @@ func (cfg Config) DetailString() string {
 		{EnvName, cfg.Name},
 		{EnvDownloadBin, fmt.Sprintf("%t", cfg.AllowDownloadBinaries)},
 		{EnvRestartUpgrade, fmt.Sprintf("%t", cfg.RestartAfterUpgrade)},
-		{EnvRestartDelay, fmt.Sprintf("%s", cfg.RestartDelay)},
-		{EnvInterval, fmt.Sprintf("%s", cfg.PollInterval)},
+		{EnvRestartDelay, cfg.RestartDelay.String()},
+		{EnvInterval, cfg.PollInterval.String()},
 		{EnvSkipBackup, fmt.Sprintf("%t", cfg.UnsafeSkipBackup)},
 		{EnvDataBackupPath, cfg.DataBackupPath},
 		{EnvPreupgradeMaxRetries, fmt.Sprintf("%d", cfg.PreupgradeMaxRetries)},
+		{EnvDisableLogs, fmt.Sprintf("%t", cfg.DisableLogs)},
 	}
 
 	derivedEntries := []struct{ name, value string }{

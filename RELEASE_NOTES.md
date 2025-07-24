@@ -1,16 +1,15 @@
-# Cosmos SDK v0.47.16 Release Notes
-
-💬 [**Release Discussion**](https://github.com/orgs/cosmos/discussions/6)
+# Cosmos SDK v0.50.14 Release Notes
 
 ## 🚀 Highlights
 
-This patch release fixes [GHSA-x5vx-95h7-rv4p](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-x5vx-95h7-rv4p).
-It resolves a `x/group` module issue that can halt chain when handling a malicious proposal.
-Only users of the `x/group` module are affected by this issue.
+This patch release fixes [GHSA-p22h-3m2v-cmgh](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-p22h-3m2v-cmgh).
+It resolves a `x/distribution` module issue that can halt chains when the historical rewards pool overflows.
+Chains using the `x/distribution` module are affected by this issue.
 
-We recommended to upgrade to this patch release as soon as possible.
-When upgrading from <= v0.47.15, please use a chain upgrade to ensure that 2/3 of the validator power upgrade to v0.47.16.
+We recommended upgrading to this patch release as soon as possible.
+
+This patch is state-breaking; chains must perform a coordinated upgrade. This patch cannot be applied in a rolling upgrade.
 
 ## 📝 Changelog
 
-Check out the [changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.47.16/CHANGELOG.md) for an exhaustive list of changes or [compare changes](https://github.com/cosmos/cosmos-sdk/compare/v0.47.15...v0.47.16) from last release.
+Check out the [changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.50.14/CHANGELOG.md) for an exhaustive list of changes or [compare changes](https://github.com/cosmos/cosmos-sdk/compare/v0.50.13...v0.50.14) from the last release.

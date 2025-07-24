@@ -1,25 +1,31 @@
 package keeper_test
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
 	"time"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/collections"
+	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/evidence"
+	"cosmossdk.io/x/evidence/exported"
+	"cosmossdk.io/x/evidence/keeper"
+	evidencetestutil "cosmossdk.io/x/evidence/testutil"
+	"cosmossdk.io/x/evidence/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
-	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
-	evidencetestutil "github.com/cosmos/cosmos-sdk/x/evidence/testutil"
-	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 var (
@@ -29,15 +35,7 @@ var (
 		newPubKey("0B485CFC0EECC619440448436F8FC9DF40566F2369E72400281454CB552AFB52"),
 	}
 
-	valAddresses = []sdk.ValAddress{
-		sdk.ValAddress(pubkeys[0].Address()),
-		sdk.ValAddress(pubkeys[1].Address()),
-		sdk.ValAddress(pubkeys[2].Address()),
-	}
-
-	// The default power validators are initialized to have within tests
-	initAmt   = sdk.TokensFromConsensusPower(200, sdk.DefaultPowerReduction)
-	initCoins = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
+	valAddress = sdk.ValAddress(pubkeys[0].Address())
 )
 
 func newPubKey(pk string) (res cryptotypes.PubKey) {
@@ -52,7 +50,7 @@ func newPubKey(pk string) (res cryptotypes.PubKey) {
 }
 
 func testEquivocationHandler(_ interface{}) types.Handler {
-	return func(ctx sdk.Context, e exported.Evidence) error {
+	return func(ctx context.Context, e exported.Evidence) error {
 		if err := e.ValidateBasic(); err != nil {
 			return err
 		}
@@ -79,6 +77,7 @@ type KeeperTestSuite struct {
 	accountKeeper  *evidencetestutil.MockAccountKeeper
 	slashingKeeper *evidencetestutil.MockSlashingKeeper
 	stakingKeeper  *evidencetestutil.MockStakingKeeper
+	blockInfo      *evidencetestutil.MockCometinfo
 	queryClient    types.QueryClient
 	encCfg         moduletestutil.TestEncodingConfig
 	msgServer      types.MsgServer
@@ -86,8 +85,9 @@ type KeeperTestSuite struct {
 
 func (suite *KeeperTestSuite) SetupTest() {
 	encCfg := moduletestutil.MakeTestEncodingConfig(evidence.AppModuleBasic{})
-	key := sdk.NewKVStoreKey(types.StoreKey)
-	tkey := sdk.NewTransientStoreKey("evidence_transient_store")
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
+	tkey := storetypes.NewTransientStoreKey("evidence_transient_store")
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, tkey)
 	suite.ctx = testCtx.Ctx
 
@@ -97,12 +97,15 @@ func (suite *KeeperTestSuite) SetupTest() {
 	slashingKeeper := evidencetestutil.NewMockSlashingKeeper(ctrl)
 	accountKeeper := evidencetestutil.NewMockAccountKeeper(ctrl)
 	bankKeeper := evidencetestutil.NewMockBankKeeper(ctrl)
+	suite.blockInfo = &evidencetestutil.MockCometinfo{}
 
 	evidenceKeeper := keeper.NewKeeper(
 		encCfg.Codec,
-		key,
+		storeService,
 		stakingKeeper,
 		slashingKeeper,
+		address.NewBech32Codec("cosmos"),
+		&evidencetestutil.MockCometinfo{},
 	)
 
 	suite.stakingKeeper = stakingKeeper
@@ -113,13 +116,13 @@ func (suite *KeeperTestSuite) SetupTest() {
 	router = router.AddRoute(types.RouteEquivocation, testEquivocationHandler(evidenceKeeper))
 	evidenceKeeper.SetRouter(router)
 
-	suite.ctx = testCtx.Ctx.WithBlockHeader(tmproto.Header{Height: 1})
+	suite.ctx = testCtx.Ctx.WithBlockHeader(cmtproto.Header{Height: 1})
 	suite.encCfg = moduletestutil.MakeTestEncodingConfig(evidence.AppModuleBasic{})
 
 	suite.accountKeeper = accountKeeper
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)
-	types.RegisterQueryServer(queryHelper, evidenceKeeper)
+	types.RegisterQueryServer(queryHelper, keeper.NewQuerier(evidenceKeeper))
 	suite.queryClient = types.NewQueryClient(queryHelper)
 	suite.evidenceKeeper = *evidenceKeeper
 
@@ -161,8 +164,8 @@ func (suite *KeeperTestSuite) TestSubmitValidEvidence() {
 
 	suite.Nil(suite.evidenceKeeper.SubmitEvidence(ctx, e))
 
-	res, ok := suite.evidenceKeeper.GetEvidence(ctx, e.Hash())
-	suite.True(ok)
+	res, err := suite.evidenceKeeper.Evidences.Get(ctx, e.Hash())
+	suite.NoError(err)
 	suite.Equal(e, res)
 }
 
@@ -180,8 +183,8 @@ func (suite *KeeperTestSuite) TestSubmitValidEvidence_Duplicate() {
 	suite.Nil(suite.evidenceKeeper.SubmitEvidence(ctx, e))
 	suite.Error(suite.evidenceKeeper.SubmitEvidence(ctx, e))
 
-	res, ok := suite.evidenceKeeper.GetEvidence(ctx, e.Hash())
-	suite.True(ok)
+	res, err := suite.evidenceKeeper.Evidences.Get(ctx, e.Hash())
+	suite.NoError(err)
 	suite.Equal(e, res)
 }
 
@@ -195,10 +198,11 @@ func (suite *KeeperTestSuite) TestSubmitInvalidEvidence() {
 		ConsensusAddress: sdk.ConsAddress(pk.PubKey().Address().Bytes()).String(),
 	}
 
-	suite.Error(suite.evidenceKeeper.SubmitEvidence(ctx, e))
+	err := suite.evidenceKeeper.SubmitEvidence(ctx, e)
+	suite.ErrorIs(err, types.ErrInvalidEvidence)
 
-	res, ok := suite.evidenceKeeper.GetEvidence(ctx, e.Hash())
-	suite.False(ok)
+	res, err := suite.evidenceKeeper.Evidences.Get(ctx, e.Hash())
+	suite.ErrorIs(err, collections.ErrNotFound)
 	suite.Nil(res)
 }
 
@@ -207,8 +211,12 @@ func (suite *KeeperTestSuite) TestIterateEvidence() {
 	numEvidence := 100
 	suite.populateEvidence(ctx, numEvidence)
 
-	evidence := suite.evidenceKeeper.GetAllEvidence(ctx)
-	suite.Len(evidence, numEvidence)
+	var evidences []exported.Evidence
+	suite.Require().NoError(suite.evidenceKeeper.Evidences.Walk(ctx, nil, func(key []byte, value exported.Evidence) (stop bool, err error) {
+		evidences = append(evidences, value)
+		return false, nil
+	}))
+	suite.Len(evidences, numEvidence)
 }
 
 func (suite *KeeperTestSuite) TestGetEvidenceHandler() {

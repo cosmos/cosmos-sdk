@@ -9,19 +9,19 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	clienttestutil "github.com/cosmos/cosmos-sdk/client/testutil"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
 func Test_runDeleteCmd(t *testing.T) {
 	// Now add a temporary keybase
 	kbHome := t.TempDir()
 	cmd := DeleteKeyCommand()
-	cmd.Flags().AddFlagSet(Commands(kbHome).PersistentFlags())
+	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
 	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
 
 	yesF, _ := cmd.Flags().GetBool(flagYes)
@@ -34,9 +34,9 @@ func Test_runDeleteCmd(t *testing.T) {
 	fakeKeyName2 := "runDeleteCmd_Key2"
 
 	path := sdk.GetConfig().GetFullBIP44Path()
-	cdc := clienttestutil.MakeTestCodec(t)
+	cdc := moduletestutil.MakeTestEncodingConfig().Codec
 
-	cmd.SetArgs([]string{"blah", fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome)})
+	cmd.SetArgs([]string{"blah", fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome)})
 	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)
 	require.NoError(t, err)
 
@@ -59,7 +59,7 @@ func Test_runDeleteCmd(t *testing.T) {
 	// User confirmation missing
 	cmd.SetArgs([]string{
 		fakeKeyName1,
-		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
 	err = cmd.Execute()
@@ -72,7 +72,7 @@ func Test_runDeleteCmd(t *testing.T) {
 	// Now there is a confirmation
 	cmd.SetArgs([]string{
 		fakeKeyName1,
-		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
 		fmt.Sprintf("--%s=true", flagYes),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})
@@ -86,7 +86,7 @@ func Test_runDeleteCmd(t *testing.T) {
 
 	cmd.SetArgs([]string{
 		fakeKeyName2,
-		fmt.Sprintf("--%s=%s", flags.FlagHome, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
 		fmt.Sprintf("--%s=true", flagYes),
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
 	})

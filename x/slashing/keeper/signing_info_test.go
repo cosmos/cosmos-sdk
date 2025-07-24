@@ -4,7 +4,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/cosmos/cosmos-sdk/x/slashing/testutil"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
@@ -26,8 +25,8 @@ func (s *KeeperTestSuite) TestValidatorSigningInfo() {
 	keeper.SetValidatorSigningInfo(ctx, consAddr, signingInfo)
 
 	require.True(keeper.HasValidatorSigningInfo(ctx, consAddr))
-	info, found := keeper.GetValidatorSigningInfo(ctx, consAddr)
-	require.True(found)
+	info, err := keeper.GetValidatorSigningInfo(ctx, consAddr)
+	require.NoError(err)
 	require.Equal(info.StartHeight, ctx.BlockHeight())
 	require.Equal(info.IndexOffset, int64(3))
 	require.Equal(info.JailedUntil, time.Unix(2, 0).UTC())
@@ -43,7 +42,8 @@ func (s *KeeperTestSuite) TestValidatorSigningInfo() {
 	require.Equal(signingInfos[0].Address, signingInfo.Address)
 
 	// test Tombstone
-	keeper.Tombstone(ctx, consAddr)
+	err = keeper.Tombstone(ctx, consAddr)
+	require.NoError(err)
 	require.True(keeper.IsTombstoned(ctx, consAddr))
 
 	// test JailUntil
@@ -53,41 +53,46 @@ func (s *KeeperTestSuite) TestValidatorSigningInfo() {
 	require.Equal(sInfo.JailedUntil, jailTime)
 }
 
-func (s *KeeperTestSuite) TestValidatorMissedBlockBitArray() {
+func (s *KeeperTestSuite) TestValidatorMissedBlockBitmap_SmallWindow() {
 	ctx, keeper := s.ctx, s.slashingKeeper
 	require := s.Require()
 
-	params := testutil.TestParams()
-	params.SignedBlocksWindow = 100
-	require.NoError(keeper.SetParams(ctx, params))
+	for _, window := range []int64{100, 32_000} {
+		params := testutil.TestParams()
+		params.SignedBlocksWindow = window
+		require.NoError(keeper.SetParams(ctx, params))
 
-	testCases := []struct {
-		name   string
-		index  int64
-		missed bool
-	}{
-		{
-			name:   "missed block with false",
-			index:  50,
-			missed: false,
-		},
-		{
-			name:   "missed block with true",
-			index:  51,
-			missed: true,
-		},
-	}
-	for ind, tc := range testCases {
-		tc := tc
-		s.Run(tc.name, func() {
-			keeper.SetValidatorMissedBlockBitArray(ctx, consAddr, tc.index, tc.missed)
-			missed := keeper.GetValidatorMissedBlockBitArray(ctx, consAddr, tc.index)
+		// validator misses all blocks in the window
+		var valIdxOffset int64
+		for valIdxOffset < params.SignedBlocksWindow {
+			idx := valIdxOffset % params.SignedBlocksWindow
+			err := keeper.SetMissedBlockBitmapValue(ctx, consAddr, idx, true)
+			require.NoError(err)
 
-			require.Equal(missed, tc.missed)
-			missedBlocks := keeper.GetValidatorMissedBlocks(ctx, consAddr)
-			require.Equal(len(missedBlocks), ind+1)
-			require.Equal(missedBlocks[ind].Index, tc.index)
-			require.Equal(missedBlocks[ind].Missed, tc.missed)
-		})
+			missed, err := keeper.GetMissedBlockBitmapValue(ctx, consAddr, idx)
+			require.NoError(err)
+			require.True(missed)
+
+			valIdxOffset++
+		}
+
+		// validator should have missed all blocks
+		missedBlocks, err := keeper.GetValidatorMissedBlocks(ctx, consAddr)
+		require.NoError(err)
+		require.Len(missedBlocks, int(params.SignedBlocksWindow))
+
+		// sign next block, which rolls the missed block bitmap
+		idx := valIdxOffset % params.SignedBlocksWindow
+		err = keeper.SetMissedBlockBitmapValue(ctx, consAddr, idx, false)
+		require.NoError(err)
+
+		missed, err := keeper.GetMissedBlockBitmapValue(ctx, consAddr, idx)
+		require.NoError(err)
+		require.False(missed)
+
+		// validator should have missed all blocks except the last one
+		missedBlocks, err = keeper.GetValidatorMissedBlocks(ctx, consAddr)
+		require.NoError(err)
+		require.Len(missedBlocks, int(params.SignedBlocksWindow)-1)
 	}
 }

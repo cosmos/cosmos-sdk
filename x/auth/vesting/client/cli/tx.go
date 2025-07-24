@@ -2,11 +2,14 @@ package cli
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
 
 	"github.com/spf13/cobra"
+
+	"cosmossdk.io/core/address"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -25,7 +28,7 @@ const (
 )
 
 // GetTxCmd returns vesting module's transaction commands.
-func GetTxCmd() *cobra.Command {
+func GetTxCmd(ac address.Codec) *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Vesting transaction subcommands",
@@ -35,12 +38,9 @@ func GetTxCmd() *cobra.Command {
 	}
 
 	txCmd.AddCommand(
-		NewMsgCreateVestingAccountCmd(),
-		NewMsgCreatePermanentLockedAccountCmd(),
-		NewMsgCreatePeriodicVestingAccountCmd(),
-		NewMsgCreateClawbackVestingAccountCmd(),
-		NewMsgClawbackCmd(),
-		NewMsgReturnGrantsCmd(),
+		NewMsgCreateVestingAccountCmd(ac),
+		NewMsgCreatePermanentLockedAccountCmd(ac),
+		NewMsgCreatePeriodicVestingAccountCmd(ac),
 	)
 
 	return txCmd
@@ -48,7 +48,7 @@ func GetTxCmd() *cobra.Command {
 
 // NewMsgCreateVestingAccountCmd returns a CLI command handler for creating a
 // MsgCreateVestingAccount transaction.
-func NewMsgCreateVestingAccountCmd() *cobra.Command {
+func NewMsgCreateVestingAccountCmd(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-vesting-account [to_address] [amount] [end_time]",
 		Short: "Create a new vesting account funded with an allocation of tokens.",
@@ -63,9 +63,13 @@ timestamp.`,
 			if err != nil {
 				return err
 			}
-			toAddr, err := sdk.AccAddressFromBech32(args[0])
+			toAddr, err := ac.StringToBytes(args[0])
 			if err != nil {
 				return err
+			}
+
+			if args[1] == "" {
+				return errors.New("amount is empty")
 			}
 
 			amount, err := sdk.ParseCoinsNormalized(args[1])
@@ -81,7 +85,6 @@ timestamp.`,
 			delayed, _ := cmd.Flags().GetBool(FlagDelayed)
 
 			msg := types.NewMsgCreateVestingAccount(clientCtx.GetFromAddress(), toAddr, amount, endTime, delayed)
-
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -94,7 +97,7 @@ timestamp.`,
 
 // NewMsgCreatePermanentLockedAccountCmd returns a CLI command handler for creating a
 // MsgCreatePermanentLockedAccount transaction.
-func NewMsgCreatePermanentLockedAccountCmd() *cobra.Command {
+func NewMsgCreatePermanentLockedAccountCmd(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-permanent-locked-account [to_address] [amount]",
 		Short: "Create a new permanently locked account funded with an allocation of tokens.",
@@ -107,9 +110,13 @@ tokens.`,
 			if err != nil {
 				return err
 			}
-			toAddr, err := sdk.AccAddressFromBech32(args[0])
+			toAddr, err := ac.StringToBytes(args[0])
 			if err != nil {
 				return err
+			}
+
+			if args[1] == "" {
+				return errors.New("amount is empty")
 			}
 
 			amount, err := sdk.ParseCoinsNormalized(args[1])
@@ -118,7 +125,6 @@ tokens.`,
 			}
 
 			msg := types.NewMsgCreatePermanentLockedAccount(clientCtx.GetFromAddress(), toAddr, amount)
-
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -140,17 +146,16 @@ type InputPeriod struct {
 
 // NewMsgCreatePeriodicVestingAccountCmd returns a CLI command handler for creating a
 // MsgCreatePeriodicVestingAccountCmd transaction.
-func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
+func NewMsgCreatePeriodicVestingAccountCmd(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-periodic-vesting-account [to_address] [periods_json_file]",
 		Short: "Create a new vesting account funded with an allocation of tokens.",
-		Long:  `A sequence of coins and period length in seconds. Periods are sequential, in that the duration of a period only starts at the end of the previous period. The duration of the first period starts upon account creation.`,
-		Example: `The following periods.json file shows 20 "test" coins vesting 30 days apart from each other.
+		Long: `A sequence of coins and period length in seconds. Periods are sequential, in that the duration of of a period only starts at the end of the previous period. The duration of the first period starts upon account creation. For instance, the following periods.json file shows 20 "test" coins vesting 30 days apart from each other.
 		Where periods.json contains:
 
-		An array of coin strings and durations for coins to vest
+		An array of coin strings and unix epoch times for coins to vest
 { "start_time": 1625204910,
-"period":[
+"periods":[
  {
   "coins": "10test",
   "length_seconds":2592000 //30 days
@@ -169,7 +174,7 @@ func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
 				return err
 			}
 
-			toAddr, err := sdk.AccAddressFromBech32(args[0])
+			toAddr, err := ac.StringToBytes(args[0])
 			if err != nil {
 				return err
 			}
@@ -182,51 +187,18 @@ func NewMsgCreatePeriodicVestingAccountCmd() *cobra.Command {
 			merge, _ := cmd.Flags().GetBool(FlagMerge)
 
 			msg := types.NewMsgCreatePeriodicVestingAccount(clientCtx.GetFromAddress(), toAddr, startTime, periods, merge)
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
-
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
-	cmd.Flags().Bool(FlagMerge, false, "Merge new amount and schedule with existing periodic vesting account, if any")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
 
-// readScheduleFile reads the file at path and unmarshals it to get the schedule.
-// Returns start time, periods, and error.
-func readScheduleFile(path string) (int64, []types.Period, error) {
-	contents, err := os.ReadFile(path)
-	if err != nil {
-		return 0, nil, err
-	}
-	var data VestingData
-	err = json.Unmarshal(contents, &data)
-	if err != nil {
-		return 0, nil, err
-	}
-	startTime := data.StartTime
-	var periods []types.Period
-	for i, p := range data.Periods {
-		amount, err := sdk.ParseCoinsNormalized(p.Coins)
-		if err != nil {
-			return 0, nil, err
-		}
-		if p.Length < 1 {
-			return 0, nil, fmt.Errorf("invalid period length of %d in period %d, length must be greater than 0", p.Length, i)
-		}
-		period := types.Period{Length: p.Length, Amount: amount}
-		periods = append(periods, period)
-	}
-	return startTime, periods, nil
-}
-
 // NewMsgCreateClawbackVestingAccountCmd returns a CLI command handler for creating a
 // MsgCreateClawbackVestingAccount transaction.
-func NewMsgCreateClawbackVestingAccountCmd() *cobra.Command {
+func NewMsgCreateClawbackVestingAccountCmd(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-clawback-vesting-account [to_address]",
 		Short: "Create a new vesting account funded with an allocation of tokens, subject to clawback.",
@@ -260,7 +232,7 @@ with a start time and an array of coins strings and durations relative to the st
 				return err
 			}
 
-			toAddr, err := sdk.AccAddressFromBech32(args[0])
+			toAddr, err := ac.StringToBytes(args[0])
 			if err != nil {
 				return err
 			}
@@ -307,7 +279,7 @@ with a start time and an array of coins strings and durations relative to the st
 
 // NewMsgClawbackCmd returns a CLI command handler for creating a
 // MsgClawback transaction.
-func NewMsgClawbackCmd() *cobra.Command {
+func NewMsgClawbackCmd(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "clawback [address]",
 		Short: "Transfer unvested amount out of a ClawbackVestingAccount.",
@@ -322,7 +294,7 @@ The recipient is vulnerable to slashing, and must act to unbond the tokens if de
 				return err
 			}
 
-			addr, err := sdk.AccAddressFromBech32(args[0])
+			addr, err := ac.StringToBytes(args[0])
 			if err != nil {
 				return err
 			}
@@ -330,7 +302,7 @@ The recipient is vulnerable to slashing, and must act to unbond the tokens if de
 			var dest sdk.AccAddress
 			destString, _ := cmd.Flags().GetString(FlagDest)
 			if destString != "" {
-				dest, err = sdk.AccAddressFromBech32(destString)
+				dest, err = ac.StringToBytes(destString)
 				if err != nil {
 					return fmt.Errorf("bad dest address: %w", err)
 				}
@@ -378,4 +350,45 @@ Currently only supported for ClawbackVestingAccount.`,
 	}
 	flags.AddTxFlagsToCmd(cmd)
 	return cmd
+}
+
+// readScheduleFile reads the file at path and unmarshals it to get the schedule.
+
+// Returrns start time, periods, and error.
+
+func readScheduleFile(path string) (int64, []types.Period, error) {
+	contents, err := os.ReadFile(path)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	var data VestingData
+
+	err = json.Unmarshal(contents, &data)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	startTime := data.StartTime
+
+	var periods []types.Period
+
+	for i, p := range data.Periods {
+
+		amount, err := sdk.ParseCoinsNormalized(p.Coins)
+		if err != nil {
+			return 0, nil, err
+		}
+
+		if p.Length < 1 {
+			return 0, nil, fmt.Errorf("invalid period length of %d in period %d, length must be greater than 0", p.Length, i)
+		}
+
+		period := types.Period{Length: p.Length, Amount: amount}
+
+		periods = append(periods, period)
+
+	}
+
+	return startTime, periods, nil
 }

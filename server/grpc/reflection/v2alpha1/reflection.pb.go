@@ -1677,7 +1677,6 @@ func _ReflectionService_GetTxDescriptor_Handler(srv interface{}, ctx context.Con
 	return interceptor(ctx, in, info, handler)
 }
 
-var ReflectionService_serviceDesc = _ReflectionService_serviceDesc
 var _ReflectionService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.base.reflection.v2alpha1.ReflectionService",
 	HandlerType: (*ReflectionServiceServer)(nil),

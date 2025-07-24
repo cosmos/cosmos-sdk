@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"time"
 
-	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
-	tmjson "github.com/cometbft/cometbft/libs/json"
-	"github.com/cometbft/cometbft/libs/log"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	tmtypes "github.com/cometbft/cometbft/types"
+	cmtjson "github.com/cometbft/cometbft/libs/json"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
+	dbm "github.com/cosmos/cosmos-db"
 
+	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -31,27 +31,27 @@ import (
 
 const DefaultGenTxGas = 10000000
 
-// DefaultConsensusParams defines the default Tendermint consensus params used in
+// DefaultConsensusParams defines the default CometBFT consensus params used in
 // SimApp testing.
-var DefaultConsensusParams = &tmproto.ConsensusParams{
-	Block: &tmproto.BlockParams{
+var DefaultConsensusParams = &cmtproto.ConsensusParams{
+	Block: &cmtproto.BlockParams{
 		MaxBytes: 200000,
 		MaxGas:   100_000_000,
 	},
-	Evidence: &tmproto.EvidenceParams{
+	Evidence: &cmtproto.EvidenceParams{
 		MaxAgeNumBlocks: 302400,
 		MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
 		MaxBytes:        10000,
 	},
-	Validator: &tmproto.ValidatorParams{
+	Validator: &cmtproto.ValidatorParams{
 		PubKeyTypes: []string{
-			tmtypes.ABCIPubKeyTypeEd25519,
+			cmttypes.ABCIPubKeyTypeEd25519,
 		},
 	},
 }
 
 // CreateRandomValidatorSet creates a validator set with one random validator
-func CreateRandomValidatorSet() (*tmtypes.ValidatorSet, error) {
+func CreateRandomValidatorSet() (*cmttypes.ValidatorSet, error) {
 	privVal := mock.NewPV()
 	pubKey, err := privVal.GetPubKey()
 	if err != nil {
@@ -59,9 +59,9 @@ func CreateRandomValidatorSet() (*tmtypes.ValidatorSet, error) {
 	}
 
 	// create validator set with single validator
-	validator := tmtypes.NewValidator(pubKey, 1)
+	validator := cmttypes.NewValidator(pubKey, 1)
 
-	return tmtypes.NewValidatorSet([]*tmtypes.Validator{validator}), nil
+	return cmttypes.NewValidatorSet([]*cmttypes.Validator{validator}), nil
 }
 
 type GenesisAccount struct {
@@ -75,20 +75,22 @@ type GenesisAccount struct {
 // BaseAppOption defines the additional operations that must be run on baseapp before app start.
 // AtGenesis defines if the app started should already have produced block or not.
 type StartupConfig struct {
-	ValidatorSet    func() (*tmtypes.ValidatorSet, error)
+	ValidatorSet    func() (*cmttypes.ValidatorSet, error)
 	BaseAppOption   runtime.BaseAppOption
 	AtGenesis       bool
 	GenesisAccounts []GenesisAccount
+	DB              dbm.DB
 }
 
 func DefaultStartUpConfig() StartupConfig {
 	priv := secp256k1.GenPrivKey()
 	ba := authtypes.NewBaseAccount(priv.PubKey().Address().Bytes(), priv.PubKey(), 0, 0)
-	ga := GenesisAccount{ba, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000)))}
+	ga := GenesisAccount{ba, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100000000000000)))}
 	return StartupConfig{
 		ValidatorSet:    CreateRandomValidatorSet,
 		AtGenesis:       false,
 		GenesisAccounts: []GenesisAccount{ga},
+		DB:              dbm.NewMemDB(),
 	}
 }
 
@@ -107,18 +109,32 @@ func SetupAtGenesis(appConfig depinject.Config, extraOutputs ...interface{}) (*r
 }
 
 // NextBlock starts a new block.
-func NextBlock(app *runtime.App, ctx sdk.Context, jumpTime time.Duration) sdk.Context {
-	app.EndBlock(abci.RequestEndBlock{Height: ctx.BlockHeight()})
-
-	app.Commit()
+func NextBlock(app *runtime.App, ctx sdk.Context, jumpTime time.Duration) (sdk.Context, error) {
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: ctx.BlockHeight(), Time: ctx.BlockTime()})
+	if err != nil {
+		return sdk.Context{}, err
+	}
+	_, err = app.Commit()
+	if err != nil {
+		return sdk.Context{}, err
+	}
 
 	newBlockTime := ctx.BlockTime().Add(jumpTime)
-	nextHeight := ctx.BlockHeight() + 1
-	newHeader := tmproto.Header{Height: nextHeight, Time: newBlockTime}
 
-	app.BeginBlock(abci.RequestBeginBlock{Header: newHeader})
+	header := ctx.BlockHeader()
+	header.Time = newBlockTime
+	header.Height++
 
-	return app.NewUncachedContext(false, newHeader)
+	newCtx := app.BaseApp.NewUncachedContext(false, header).WithHeaderInfo(coreheader.Info{
+		Height: header.Height,
+		Time:   header.Time,
+	})
+
+	if err != nil {
+		return sdk.Context{}, err
+	}
+
+	return newCtx, err
 }
 
 // SetupWithConfiguration initializes a new runtime.App. A Nop logger is set in runtime.App.
@@ -132,17 +148,14 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 		codec      codec.Codec
 	)
 
-	if err := depinject.Inject(
-		appConfig,
-		append(extraOutputs, &appBuilder, &codec)...,
-	); err != nil {
+	if err := depinject.Inject(appConfig, append(extraOutputs, &appBuilder, &codec)...); err != nil {
 		return nil, fmt.Errorf("failed to inject dependencies: %w", err)
 	}
 
 	if startupConfig.BaseAppOption != nil {
-		app = appBuilder.Build(log.NewNopLogger(), dbm.NewMemDB(), nil, startupConfig.BaseAppOption)
+		app = appBuilder.Build(startupConfig.DB, nil, startupConfig.BaseAppOption)
 	} else {
-		app = appBuilder.Build(log.NewNopLogger(), dbm.NewMemDB(), nil)
+		app = appBuilder.Build(startupConfig.DB, nil)
 	}
 	if err := app.Load(true); err != nil {
 		return nil, fmt.Errorf("failed to load app: %w", err)
@@ -169,29 +182,30 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 	}
 
 	// init chain must be called to stop deliverState from being nil
-	stateBytes, err := tmjson.MarshalIndent(genesisState, "", " ")
+	stateBytes, err := cmtjson.MarshalIndent(genesisState, "", " ")
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal default genesis state: %w", err)
 	}
 
 	// init chain will set the validator set and initialize the genesis accounts
-	app.InitChain(
-		abci.RequestInitChain{
-			Validators:      []abci.ValidatorUpdate{},
-			ConsensusParams: DefaultConsensusParams,
-			AppStateBytes:   stateBytes,
-		},
-	)
+	_, err = app.InitChain(&abci.RequestInitChain{
+		Validators:      []abci.ValidatorUpdate{},
+		ConsensusParams: DefaultConsensusParams,
+		AppStateBytes:   stateBytes,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to init chain: %w", err)
+	}
 
 	// commit genesis changes
 	if !startupConfig.AtGenesis {
-		app.Commit()
-		app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{
+		_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
 			Height:             app.LastBlockHeight() + 1,
-			AppHash:            app.LastCommitID().Hash,
-			ValidatorsHash:     valSet.Hash(),
 			NextValidatorsHash: valSet.Hash(),
-		}})
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to finalize block: %w", err)
+		}
 	}
 
 	return app, nil
@@ -201,7 +215,7 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 func GenesisStateWithValSet(
 	codec codec.Codec,
 	genesisState map[string]json.RawMessage,
-	valSet *tmtypes.ValidatorSet,
+	valSet *cmttypes.ValidatorSet,
 	genAccs []authtypes.GenesisAccount,
 	balances ...banktypes.Balance,
 ) (map[string]json.RawMessage, error) {
@@ -215,7 +229,7 @@ func GenesisStateWithValSet(
 	bondAmt := sdk.DefaultPowerReduction
 
 	for _, val := range valSet.Validators {
-		pk, err := cryptocodec.FromTmPubKeyInterface(val.PubKey)
+		pk, err := cryptocodec.FromCmtPubKeyInterface(val.PubKey)
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert pubkey: %w", err)
 		}
@@ -231,15 +245,15 @@ func GenesisStateWithValSet(
 			Jailed:            false,
 			Status:            stakingtypes.Bonded,
 			Tokens:            bondAmt,
-			DelegatorShares:   math.LegacyOneDec(),
+			DelegatorShares:   sdkmath.LegacyOneDec(),
 			Description:       stakingtypes.Description{},
 			UnbondingHeight:   int64(0),
 			UnbondingTime:     time.Unix(0, 0).UTC(),
-			Commission:        stakingtypes.NewCommission(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec()),
-			MinSelfDelegation: math.ZeroInt(),
+			Commission:        stakingtypes.NewCommission(sdkmath.LegacyZeroDec(), sdkmath.LegacyZeroDec(), sdkmath.LegacyZeroDec()),
+			MinSelfDelegation: sdkmath.ZeroInt(),
 		}
 		validators = append(validators, validator)
-		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress(), val.Address.Bytes(), math.LegacyOneDec()))
+		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress().String(), sdk.ValAddress(val.Address).String(), sdkmath.LegacyOneDec()))
 
 	}
 

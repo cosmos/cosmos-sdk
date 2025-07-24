@@ -2,6 +2,7 @@ package coins
 
 import (
 	"fmt"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -9,6 +10,13 @@ import (
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	"cosmossdk.io/math"
 )
+
+const emptyCoins = "zero"
+
+// Amount can be a whole number or a decimal number. Denominations can be 3 ~ 128
+// characters long and support letters, followed by either a letter, a number or
+// a separator ('/', ':', '.', '_' or '-').
+var coinRegex = regexp.MustCompile(`^(\d+(\.\d+)?)([a-zA-Z][a-zA-Z0-9\/\:\._\-]{2,127})$`)
 
 // formatCoin formats a sdk.Coin into a value-rendered string, using the
 // given metadata about the denom. It returns the formatted coin string, the
@@ -59,7 +67,7 @@ func formatCoin(coin *basev1beta1.Coin, metadata *bankv1beta1.Metadata) (string,
 	return vr + " " + dispDenom, err
 }
 
-// formatCoins formats Coins into a value-rendered string, which uses
+// FormatCoins formats Coins into a value-rendered string, which uses
 // `formatCoin` separated by ", " (a comma and a space), and sorted
 // alphabetically by value-rendered denoms. It expects an array of metadata
 // (optionally nil), where each metadata at index `i` MUST match the coin denom
@@ -76,6 +84,16 @@ func FormatCoins(coins []*basev1beta1.Coin, metadata []*bankv1beta1.Metadata) (s
 		if err != nil {
 			return "", err
 		}
+
+		// If a coin contains a comma, return an error given that the output
+		// could be misinterpreted by the user as 2 different coins.
+		if strings.Contains(formatted[i], ",") {
+			return "", fmt.Errorf("coin %s contains a comma", formatted[i])
+		}
+	}
+
+	if len(coins) == 0 {
+		return emptyCoins, nil
 	}
 
 	// Sort the formatted coins by display denom.
@@ -87,4 +105,25 @@ func FormatCoins(coins []*basev1beta1.Coin, metadata []*bankv1beta1.Metadata) (s
 	})
 
 	return strings.Join(formatted, ", "), nil
+}
+
+// ParseCoin parses a coin from a string. The string must be in the format
+// <amount><denom>, where <amount> is a number and <denom> is a valid denom.
+func ParseCoin(input string) (*basev1beta1.Coin, error) {
+	input = strings.TrimSpace(input)
+
+	if input == "" {
+		return nil, fmt.Errorf("empty input when parsing coin")
+	}
+
+	matches := coinRegex.FindStringSubmatch(input)
+
+	if len(matches) == 0 {
+		return nil, fmt.Errorf("invalid input format")
+	}
+
+	return &basev1beta1.Coin{
+		Amount: matches[1],
+		Denom:  matches[3],
+	}, nil
 }

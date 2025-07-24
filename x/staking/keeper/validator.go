@@ -529,7 +529,7 @@ func (k Keeper) DeleteValidatorQueue(ctx context.Context, val types.Validator) e
 	return k.SetUnbondingValidatorsQueue(ctx, val.UnbondingTime, val.UnbondingHeight, newAddrs)
 }
 
-// ValidatorQueueIterator returns an interator ranging over validators that are
+// ValidatorQueueIterator returns an iterator ranging over validators that are
 // unbonding whose unbonding completion occurs at the given height and time.
 func (k Keeper) ValidatorQueueIterator(ctx context.Context, endTime time.Time, endHeight int64) (corestore.Iterator, error) {
 	store := k.storeService.OpenKVStore(ctx)

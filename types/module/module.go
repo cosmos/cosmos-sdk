@@ -643,7 +643,7 @@ type MigrationHandler func(sdk.Context) error
 type VersionMap map[string]uint64
 
 // RunMigrations performs in-place store migrations for all modules. This
-// function MUST be called insde an x/upgrade UpgradeHandler.
+// function MUST be called inside an x/upgrade UpgradeHandler.
 //
 // Recall that in an upgrade handler, the `fromVM` VersionMap is retrieved from
 // x/upgrade's store, and the function needs to return the target VersionMap

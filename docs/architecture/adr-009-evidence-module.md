@@ -178,5 +178,5 @@ type GenesisState struct {
 ## References
 
 * [ICS](https://github.com/cosmos/ics)
-* [IBC Architecture](https://github.com/cosmos/ics/blob/master/ibc/1_IBC_ARCHITECTURE.md)
+* [IBC Architecture](https://github.com/tw-bc-group/ics/blob/master/ibc/2_IBC_ARCHITECTURE.md)
 * [Tendermint Fork Accountability](https://github.com/tendermint/spec/blob/7b3138e69490f410768d9b1ffc7a17abc23ea397/spec/consensus/fork-accountability.md)

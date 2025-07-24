@@ -27,7 +27,7 @@ func NewMintingRestrictionTestHelper() *MintingRestrictionTestHelper {
 	return &MintingRestrictionTestHelper{Calls: make([]*MintingRestrictionArgs, 0, 2)}
 }
 
-// RecordCall makes note that the provided args were used as a funcion call.
+// RecordCall makes note that the provided args were used as a function call.
 func (s *MintingRestrictionTestHelper) RecordCall(name string, coins sdk.Coins) {
 	s.Calls = append(s.Calls, s.NewArgs(name, coins))
 }
@@ -411,7 +411,7 @@ func NewSendRestrictionTestHelper() *SendRestrictionTestHelper {
 	return &SendRestrictionTestHelper{Calls: make([]*SendRestrictionArgs, 0, 2)}
 }
 
-// RecordCall makes note that the provided args were used as a funcion call.
+// RecordCall makes note that the provided args were used as a function call.
 func (s *SendRestrictionTestHelper) RecordCall(name string, fromAddr, toAddr sdk.AccAddress, coins sdk.Coins) {
 	s.Calls = append(s.Calls, s.NewArgs(name, fromAddr, toAddr, coins))
 }

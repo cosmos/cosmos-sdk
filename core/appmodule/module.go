@@ -64,7 +64,7 @@ type ResponsePreBlock interface {
 // custom logic before BeginBlock.
 type HasPreBlocker interface {
 	AppModule
-	// PreBlock is method that will be run before BeginBlock.
+	// PreBlock is a method that will be run before BeginBlock.
 	PreBlock(context.Context) (ResponsePreBlock, error)
 }
 

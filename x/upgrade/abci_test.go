@@ -455,8 +455,10 @@ func TestMissingUpgradeHandler(t *testing.T) {
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now(), Height: 10})
 
+	// Use the same temp directory for both keepers to share storage
+	tempDir := t.TempDir()
 	skip := map[int64]bool{}
-	k := keeper.NewKeeper(skip, storeService, encCfg.Codec, t.TempDir(), nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	k := keeper.NewKeeper(skip, storeService, encCfg.Codec, tempDir, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	m := upgrade.NewAppModule(k, addresscodec.NewBech32Codec("cosmos"))
 
 	// Submit and execute an upgrade plan with handler
@@ -476,7 +478,8 @@ func TestMissingUpgradeHandler(t *testing.T) {
 	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 1})
 
 	// Now simulate a restart without the upgrade handler (missing handler scenario)
-	newKeeper := keeper.NewKeeper(skip, storeService, encCfg.Codec, t.TempDir(), nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	// Use the same temp directory and store service to maintain state
+	newKeeper := keeper.NewKeeper(skip, storeService, encCfg.Codec, tempDir, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 	newModule := upgrade.NewAppModule(newKeeper, addresscodec.NewBech32Codec("cosmos"))
 
 	// Verify that the last applied upgrade exists but no handler is present

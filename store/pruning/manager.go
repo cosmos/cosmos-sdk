@@ -46,7 +46,7 @@ func (e *NegativeHeightsError) Error() string {
 var pruneSnapshotHeightsKey = []byte("s/prunesnapshotheights")
 
 // NewManager returns a new Manager with the given db and logger.
-// The retuned manager uses a pruning strategy of "nothing" which
+// The returned manager uses a pruning strategy of "nothing" which
 // keeps all heights. Users of the Manager may change the strategy
 // by calling SetOptions.
 func NewManager(db dbm.DB, logger log.Logger) *Manager {

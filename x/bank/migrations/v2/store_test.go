@@ -92,7 +92,7 @@ func TestBalanceKeysMigration(t *testing.T) {
 	fooBarBz, err := encCfg.Codec.Marshal(&fooBarCoin)
 	require.NoError(t, err)
 	store.Set(oldKeyFooBar, fooBarBz)
-	require.NotNil(t, store.Get(oldKeyFooBar)) // before store migation zero values can also exist in store.
+	require.NotNil(t, store.Get(oldKeyFooBar)) // before store migration zero values can also exist in store.
 
 	err = v2bank.MigrateStore(ctx, storeService, encCfg.Codec)
 	require.NoError(t, err)

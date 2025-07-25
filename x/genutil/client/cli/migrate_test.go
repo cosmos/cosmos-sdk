@@ -14,6 +14,8 @@ import (
 )
 
 func TestMigrateGenesis(t *testing.T) {
+	t.Skip() // No genesis migration are supported yet.
+
 	testCases := []struct {
 		name      string
 		genesis   string

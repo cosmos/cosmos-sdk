@@ -7,6 +7,7 @@ import (
 
 	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/core/store"
+
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 

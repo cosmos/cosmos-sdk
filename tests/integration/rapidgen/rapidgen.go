@@ -43,7 +43,6 @@ import (
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	gov_v1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	gov_v1beta1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	grouptypes "github.com/cosmos/cosmos-sdk/x/group"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -176,29 +175,6 @@ var (
 				WithDisallowNil().
 				WithInterfaceHint("cosmos.gov.v1beta1.Content", &gov_v1beta1_api.TextProposal{})),
 		GenType(&gov_v1_types.MsgUpdateParams{}, &gov_v1_api.MsgUpdateParams{}, GenOpts.WithDisallowNil()),
-
-		// group
-		GenType(&grouptypes.MsgCreateGroup{}, &groupapi.MsgCreateGroup{}, GenOpts),
-		GenType(&grouptypes.MsgUpdateGroupMembers{}, &groupapi.MsgUpdateGroupMembers{}, GenOpts),
-		GenType(&grouptypes.MsgUpdateGroupAdmin{}, &groupapi.MsgUpdateGroupAdmin{}, GenOpts),
-		GenType(&grouptypes.MsgUpdateGroupMetadata{}, &groupapi.MsgUpdateGroupMetadata{}, GenOpts),
-		GenType(&grouptypes.MsgCreateGroupWithPolicy{}, &groupapi.MsgCreateGroupWithPolicy{},
-			WithDecisionPolicy(GenOpts)),
-		GenType(&grouptypes.MsgCreateGroupPolicy{}, &groupapi.MsgCreateGroupPolicy{},
-			WithDecisionPolicy(GenOpts)),
-		GenType(&grouptypes.MsgUpdateGroupPolicyAdmin{}, &groupapi.MsgUpdateGroupPolicyAdmin{}, GenOpts),
-		GenType(&grouptypes.MsgUpdateGroupPolicyDecisionPolicy{}, &groupapi.MsgUpdateGroupPolicyDecisionPolicy{},
-			WithDecisionPolicy(GenOpts)),
-		GenType(&grouptypes.MsgUpdateGroupPolicyMetadata{}, &groupapi.MsgUpdateGroupPolicyMetadata{}, GenOpts),
-		GenType(&grouptypes.MsgSubmitProposal{}, &groupapi.MsgSubmitProposal{},
-			GenOpts.WithDisallowNil().
-				WithAnyTypes(&groupapi.MsgCreateGroup{}, &groupapi.MsgUpdateGroupMembers{}).
-				WithInterfaceHint("cosmos.base.v1beta1.Msg", &groupapi.MsgCreateGroup{}).
-				WithInterfaceHint("cosmos.base.v1beta1.Msg", &groupapi.MsgUpdateGroupMembers{}),
-		),
-		GenType(&grouptypes.MsgVote{}, &groupapi.MsgVote{}, GenOpts),
-		GenType(&grouptypes.MsgExec{}, &groupapi.MsgExec{}, GenOpts),
-		GenType(&grouptypes.MsgLeaveGroup{}, &groupapi.MsgLeaveGroup{}, GenOpts),
 
 		// mint
 		GenType(&minttypes.MsgUpdateParams{}, &mintapi.MsgUpdateParams{}, GenOpts.WithDisallowNil()),

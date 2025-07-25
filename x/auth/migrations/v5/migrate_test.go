@@ -8,6 +8,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/colltest"
+
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 

@@ -123,16 +123,10 @@ $(BUILD_TARGETS): go.sum $(BUILDDIR)/
 $(BUILDDIR)/:
 	mkdir -p $(BUILDDIR)/
 
-cosmovisor:
-	$(MAKE) -C tools/cosmovisor cosmovisor
-
 confix:
 	$(MAKE) -C tools/confix confix
 
-hubl:
-	$(MAKE) -C tools/hubl hubl
-
-.PHONY: build build-linux-amd64 build-linux-arm64 cosmovisor confix
+.PHONY: build build-linux-amd64 build-linux-arm64 confix
 
 
 mocks: $(MOCKS_DIR)

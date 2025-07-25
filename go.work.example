@@ -14,9 +14,7 @@ use (
 	./simapp
 	./tests
 	./store
-	./tools/cosmovisor
 	./tools/confix
-	./tools/hubl
 	./x/tx
 	./x/nft
 	./x/circuit

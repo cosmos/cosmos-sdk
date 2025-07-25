@@ -115,29 +115,11 @@ updates:
       - "A:automerge"
       - dependencies
   - package-ecosystem: gomod
-    directory: "/tools/cosmovisor"
-    schedule:
-      interval: weekly
-      day: friday
-      time: "02:00"
-    labels:
-      - "A:automerge"
-      - dependencies
-  - package-ecosystem: gomod
     directory: "/tools/confix"
     schedule:
       interval: weekly
       day: tuesday
       time: "02:10"
-    labels:
-      - "A:automerge"
-      - dependencies
-  - package-ecosystem: gomod
-    directory: "/tools/hubl"
-    schedule:
-      interval: weekly
-      day: thursday
-      time: "02:15"
     labels:
       - "A:automerge"
       - dependencies

@@ -29,7 +29,6 @@ func NewTxCmd(ac address.Codec) *cobra.Command {
 	}
 
 	txCmd.AddCommand(
-		NewSendTxCmd(ac),
 		NewMultiSendTxCmd(ac),
 	)
 
@@ -37,6 +36,9 @@ func NewTxCmd(ac address.Codec) *cobra.Command {
 }
 
 // NewSendTxCmd returns a CLI command handler for creating a MsgSend transaction.
+// Deprecated: The module uses the AutoCLI generated command with a better UX.
+// This command should be removed in the future, but this requires reworking the
+// bank send helper: the solution is here: https://github.com/cosmos/cosmos-sdk/pull/17868.
 func NewSendTxCmd(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "send [from_key_or_address] [to_address] [amount]",

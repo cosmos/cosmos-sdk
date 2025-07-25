@@ -117,7 +117,7 @@ func ExportCmd(appExporter types.AppExporter, defaultNodeHome string) *cobra.Com
 
 	cmd.Flags().String(flags.FlagHome, defaultNodeHome, "The application home directory")
 	cmd.Flags().Int64(FlagHeight, -1, "Export state from a particular height (-1 means latest height)")
-	cmd.Flags().Bool(FlagForZeroHeight, false, "Export state to start at height zero (perform preproccessing)")
+	cmd.Flags().Bool(FlagForZeroHeight, false, "Export state to start at height zero (perform preprocessing)")
 	cmd.Flags().StringSlice(FlagJailAllowedAddrs, []string{}, "Comma-separated list of operator addresses of jailed validators to unjail")
 	cmd.Flags().StringSlice(FlagModulesToExport, []string{}, "Comma-separated list of modules to export. If empty, will export all modules")
 	cmd.Flags().String(flags.FlagOutputDocument, "", "Exported state is written to the given file instead of STDOUT")

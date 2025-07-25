@@ -1092,7 +1092,7 @@ where `proposal.json` contains:
   "messages": [
     {
       "@type": "/cosmos.bank.v1beta1.MsgSend",
-      "from_address": "cosmos1...", // The gov module module address
+      "from_address": "cosmos1...", // The gov module address
       "to_address": "cosmos1...",
       "amount":[{"denom": "stake","amount": "10"}]
     }

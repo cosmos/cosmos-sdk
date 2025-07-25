@@ -420,7 +420,7 @@ func (v Validator) RemoveTokens(tokens math.Int) Validator {
 }
 
 // RemoveDelShares removes delegator shares from a validator.
-// NOTE: because token fractions are left in the valiadator,
+// NOTE: because token fractions are left in the validator,
 //
 //	the exchange rate of future shares of this validator can increase.
 func (v Validator) RemoveDelShares(delShares math.LegacyDec) (Validator, math.Int) {

@@ -376,7 +376,7 @@ message Pool {
   ];
 }
 
-// Infraction indicates the infraction a validator commited.
+// Infraction indicates the infraction a validator committed.
 enum Infraction {
   // UNSPECIFIED defines an empty infraction.
   INFRACTION_UNSPECIFIED = 0;

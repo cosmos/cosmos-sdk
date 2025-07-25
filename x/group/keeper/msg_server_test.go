@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
 	"go.uber.org/mock/gomock"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -17,7 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/group"
+	"github.com/cosmos/cosmos-sdk/x/group" //nolint:staticcheck // deprecated and to be removed
 	"github.com/cosmos/cosmos-sdk/x/group/internal/math"
 	"github.com/cosmos/cosmos-sdk/x/group/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"

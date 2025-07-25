@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
 
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
@@ -40,7 +40,7 @@ func initChain(
 	}
 	appState, accounts, chainID, genesisTimestamp := appStateFn(r, accounts, config)
 	consensusParams := randomConsensusParams(r, appState, cdc, blockMaxGas)
-	req := abci.RequestInitChain{
+	req := abci.InitChainRequest{
 		AppStateBytes:   appState,
 		ChainId:         chainID,
 		ConsensusParams: consensusParams,

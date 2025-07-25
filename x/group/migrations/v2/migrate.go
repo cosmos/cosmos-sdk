@@ -1,3 +1,4 @@
+// Deprecated: This package is deprecated and will be removed in the next major release. The `x/group` module will be moved to a separate repo `github.com/cosmos/cosmos-sdk-legacy`.
 package v2
 
 import (
@@ -16,7 +17,6 @@ import (
 const (
 	ModuleName = "group"
 
-	// Group Policy Table
 	GroupPolicyTablePrefix    byte = 0x20
 	GroupPolicyTableSeqPrefix byte = 0x21
 )

@@ -12,7 +12,7 @@ type QuerySubspaceParams struct {
 	Key      string
 }
 
-// SubspaceParamsResponse defines the response for quering parameters by subspace.
+// SubspaceParamsResponse defines the response for querying parameters by subspace.
 type SubspaceParamsResponse struct {
 	Subspace string
 	Key      string

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cometbft/cometbft/p2p"
+	"github.com/cometbft/cometbft/v2/p2p"
 	"github.com/creachadair/tomledit"
 	"github.com/creachadair/tomledit/parser"
 )
@@ -178,7 +178,7 @@ func (s ModifyConfigYamlInitializer) Initialize() {
 	nodeAddresses := make([]string, s.initialNodesCount)
 	for i := 0; i < s.initialNodesCount; i++ {
 		nodeDir := filepath.Join(WorkDir, NodePath(i, s.outputDir, s.projectName), "config")
-		id := string(mustV(p2p.LoadNodeKey(filepath.Join(nodeDir, "node_key.json"))).ID())
+		id := mustV(p2p.LoadNodeKey(filepath.Join(nodeDir, "node_key.json"))).ID()
 		nodeAddresses[i] = fmt.Sprintf("%s@127.0.0.1:%d", id, DefaultP2PPort+i)
 	}
 

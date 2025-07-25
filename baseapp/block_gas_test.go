@@ -5,8 +5,8 @@ import (
 	"math"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	cmtjson "github.com/cometbft/cometbft/libs/json"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
+	cmtjson "github.com/cometbft/cometbft/v2/libs/json"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
@@ -114,7 +114,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			genState := GenesisStateWithSingleValidator(t, cdc, appBuilder)
 			stateBytes, err := cmtjson.MarshalIndent(genState, "", " ")
 			require.NoError(t, err)
-			_, err = bapp.InitChain(&abci.RequestInitChain{
+			_, err = bapp.InitChain(&abci.InitChainRequest{
 				Validators:      []abci.ValidatorUpdate{},
 				ConsensusParams: simtestutil.DefaultConsensusParams,
 				AppStateBytes:   stateBytes,
@@ -155,7 +155,7 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			_, txBytes, err := createTestTx(txConfig, txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 			require.NoError(t, err)
 
-			rsp, err := bapp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+			rsp, err := bapp.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 1, Txs: [][]byte{txBytes}})
 			require.NoError(t, err)
 
 			// check result

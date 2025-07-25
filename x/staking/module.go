@@ -8,7 +8,7 @@ import (
 	"slices"
 	"sort"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
@@ -206,7 +206,7 @@ type ModuleInputs struct {
 	LegacySubspace exported.Subspace `optional:"true"`
 }
 
-// Dependency Injection Outputs
+// ModuleOutputs contains Dependency Injection Outputs
 type ModuleOutputs struct {
 	depinject.Out
 

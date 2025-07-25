@@ -5,12 +5,13 @@ package simapp
 import (
 	"encoding/json"
 	"fmt"
-	abci "github.com/cometbft/cometbft/abci/types"
+	"io"
+	"maps"
+
+	abci "github.com/cometbft/cometbft/v2/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cast"
-	"io"
-	"maps"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
@@ -19,22 +20,7 @@ import (
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/circuit"
-	circuitkeeper "cosmossdk.io/x/circuit/keeper"
-	circuittypes "cosmossdk.io/x/circuit/types"
-	"cosmossdk.io/x/evidence"
-	evidencekeeper "cosmossdk.io/x/evidence/keeper"
-	evidencetypes "cosmossdk.io/x/evidence/types"
-	"cosmossdk.io/x/feegrant"
-	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
-	feegrantmodule "cosmossdk.io/x/feegrant/module"
-	"cosmossdk.io/x/nft"
-	nftkeeper "cosmossdk.io/x/nft/keeper"
-	nftmodule "cosmossdk.io/x/nft/module"
 	"cosmossdk.io/x/tx/signing"
-	"cosmossdk.io/x/upgrade"
-	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
-	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -74,6 +60,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/cosmos-sdk/x/circuit"
+	circuitkeeper "github.com/cosmos/cosmos-sdk/x/circuit/keeper"
+	circuittypes "github.com/cosmos/cosmos-sdk/x/circuit/types"
 	consensus "github.com/cosmos/cosmos-sdk/x/consensus"
 	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
@@ -83,6 +72,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/epochs"
 	epochskeeper "github.com/cosmos/cosmos-sdk/x/epochs/keeper"
 	epochstypes "github.com/cosmos/cosmos-sdk/x/epochs/types"
+	"github.com/cosmos/cosmos-sdk/x/evidence"
+	evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
+	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
+	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
+	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
@@ -90,12 +85,15 @@ import (
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	"github.com/cosmos/cosmos-sdk/x/group"
-	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
-	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
+	"github.com/cosmos/cosmos-sdk/x/group"                    //nolint:staticcheck // deprecated and to be removed
+	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper" //nolint:staticcheck // deprecated and to be removed
+	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module" //nolint:staticcheck // deprecated and to be removed
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	"github.com/cosmos/cosmos-sdk/x/nft"
+	nftkeeper "github.com/cosmos/cosmos-sdk/x/nft/keeper"
+	nftmodule "github.com/cosmos/cosmos-sdk/x/nft/module"
 	"github.com/cosmos/cosmos-sdk/x/protocolpool"
 	protocolpoolkeeper "github.com/cosmos/cosmos-sdk/x/protocolpool/keeper"
 	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
@@ -105,6 +103,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/x/upgrade"
+	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 const appName = "SimApp"
@@ -306,6 +307,7 @@ func NewSimApp(
 		authcodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		authkeeper.WithUnorderedTransactions(true),
 	)
 
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
@@ -467,7 +469,7 @@ func NewSimApp(
 
 	app.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-			// register the governance hooks
+		// register the governance hooks
 		),
 	)
 
@@ -497,7 +499,7 @@ func NewSimApp(
 
 	app.EpochsKeeper.SetHooks(
 		epochstypes.NewMultiEpochHooks(
-			// insert epoch hooks receivers here
+		// insert epoch hooks receivers here
 		),
 	)
 
@@ -526,8 +528,8 @@ func NewSimApp(
 		nftmodule.NewAppModule(appCodec, app.NFTKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
 		circuit.NewAppModule(appCodec, app.CircuitKeeper),
-		epochs.NewAppModule(appCodec, app.EpochsKeeper),
-		protocolpool.NewAppModule(appCodec, app.ProtocolPoolKeeper, app.AccountKeeper, app.BankKeeper),
+		epochs.NewAppModule(app.EpochsKeeper),
+		protocolpool.NewAppModule(app.ProtocolPoolKeeper, app.AccountKeeper, app.BankKeeper),
 	)
 
 	// BasicModuleManager defines the module BasicManager is in charge of setting up basic,
@@ -697,12 +699,16 @@ func (app *SimApp) setAnteHandler(txConfig client.TxConfig) {
 	anteHandler, err := NewAnteHandler(
 		HandlerOptions{
 			ante.HandlerOptions{
-				UnorderedNonceManager: app.AccountKeeper,
-				AccountKeeper:         app.AccountKeeper,
-				BankKeeper:            app.BankKeeper,
-				SignModeHandler:       txConfig.SignModeHandler(),
-				FeegrantKeeper:        app.FeeGrantKeeper,
-				SigGasConsumer:        ante.DefaultSigVerificationGasConsumer,
+				AccountKeeper:   app.AccountKeeper,
+				BankKeeper:      app.BankKeeper,
+				SignModeHandler: txConfig.SignModeHandler(),
+				FeegrantKeeper:  app.FeeGrantKeeper,
+				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+				SigVerifyOptions: []ante.SigVerificationDecoratorOption{
+					// change below as needed.
+					ante.WithUnorderedTxGasCost(ante.DefaultUnorderedTxGasCost),
+					ante.WithMaxUnorderedTxTimeoutDuration(ante.DefaultMaxTimeoutDuration),
+				},
 			},
 			&app.CircuitKeeper,
 		},
@@ -730,7 +736,7 @@ func (app *SimApp) setPostHandler() {
 func (app *SimApp) Name() string { return app.BaseApp.Name() }
 
 // PreBlocker application updates every pre block
-func (app *SimApp) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+func (app *SimApp) PreBlocker(ctx sdk.Context, _ *abci.FinalizeBlockRequest) (*sdk.ResponsePreBlock, error) {
 	return app.ModuleManager.PreBlock(ctx)
 }
 
@@ -749,7 +755,7 @@ func (a *SimApp) Configurator() module.Configurator {
 }
 
 // InitChainer application update at chain initialization
-func (app *SimApp) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
+func (app *SimApp) InitChainer(ctx sdk.Context, req *abci.InitChainRequest) (*abci.InitChainResponse, error) {
 	var genesisState GenesisState
 	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)

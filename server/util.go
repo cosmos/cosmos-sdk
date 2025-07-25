@@ -14,8 +14,8 @@ import (
 	"syscall"
 	"time"
 
-	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
-	cmtcfg "github.com/cometbft/cometbft/config"
+	cmtcmd "github.com/cometbft/cometbft/v2/cmd/cometbft/commands"
+	cmtcfg "github.com/cometbft/cometbft/v2/config"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cast"
@@ -44,7 +44,6 @@ import (
 // a command's Context.
 const ServerContextKey = sdk.ContextKey("server.context")
 
-// server context
 type Context struct {
 	Viper  *viper.Viper
 	Config *cmtcfg.Config
@@ -178,6 +177,15 @@ func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 		// We use CometBFT flag (cmtcli.TraceFlag) for trace logging.
 		log.TraceOption(ctx.Viper.GetBool(FlagTrace)))
 
+	verboseLogLevelStr := ctx.Viper.GetString(flags.FlagVerboseLogLevel)
+	if verboseLogLevelStr != "" {
+		verboseLogLvl, err := parseVerboseLogLevel(verboseLogLevelStr)
+		if err != nil {
+			return nil, fmt.Errorf("invalid verbose log level: %s: %w", verboseLogLevelStr, err)
+		}
+		opts = append(opts, log.VerboseLevelOption(verboseLogLvl))
+	}
+
 	// check and set filter level or keys for the logger if any
 	logLvlStr := ctx.Viper.GetString(flags.FlagLogLevel)
 	if logLvlStr == "" {
@@ -199,6 +207,14 @@ func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 	}
 
 	return log.NewLogger(out, opts...), nil
+}
+
+// parseVerboseLogLevel parses the string "none" as zerolog.NoLevel and all other level strings using zerolog.ParseLevel.
+func parseVerboseLogLevel(verboseLogLevelStr string) (zerolog.Level, error) {
+	if verboseLogLevelStr == "none" {
+		return zerolog.NoLevel, nil
+	}
+	return zerolog.ParseLevel(verboseLogLevelStr)
 }
 
 // GetServerContextFromCmd returns a Context from a command or an empty Context
@@ -249,8 +265,8 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 		defaultCometCfg := cmtcfg.DefaultConfig()
 		// The SDK is opinionated about those comet values, so we set them here.
 		// We verify first that the user has not changed them for not overriding them.
-		if conf.Consensus.TimeoutCommit == defaultCometCfg.Consensus.TimeoutCommit {
-			conf.Consensus.TimeoutCommit = 5 * time.Second
+		if conf.Consensus.TimeoutCommit == defaultCometCfg.Consensus.TimeoutCommit { // nolint: staticcheck // we are continuing to use this value for backwards compatibility
+			conf.Consensus.TimeoutCommit = 5 * time.Second // nolint: staticcheck // we are continuing to use this value for backwards compatibility
 		}
 		if conf.RPC.PprofListenAddress == defaultCometCfg.RPC.PprofListenAddress {
 			conf.RPC.PprofListenAddress = "localhost:6060"
@@ -311,7 +327,6 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 	return conf, nil
 }
 
-// add server commands
 func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator types.AppCreator, appExport types.AppExporter, addStartFlags types.ModuleInitFlags) {
 	cometCmd := &cobra.Command{
 		Use:     "comet",
@@ -378,6 +393,8 @@ func AddTestnetCreatorCommand(rootCmd *cobra.Command, appCreator types.AppCreato
 	rootCmd.AddCommand(testnetCreateCmd)
 }
 
+// ExternalIP gets the external IP address of the machine.
+//
 // https://stackoverflow.com/questions/23558425/how-do-i-get-the-local-ip-address-in-go
 // TODO there must be a better way to get external IP
 func ExternalIP() (string, error) {

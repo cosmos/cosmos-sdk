@@ -622,7 +622,7 @@ func SimulateMsgBeginRedelegate(
 		}
 
 		if hasRecRedel {
-			return simtypes.NoOpMsg(types.ModuleName, msgType, "receveing redelegation is not allowed"), nil, nil // skip
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "receiving redelegation is not allowed"), nil, nil // skip
 		}
 
 		// get random destination validator

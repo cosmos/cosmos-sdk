@@ -87,13 +87,13 @@ to determine which heights are to be pruned (959 - 50 - 10 = 899-909 = 959 - 50)
 ## Configuration
 
 * `state-sync.snapshot-interval`
-  * the interval at which to take snapshots.
-  * the value of 0 disables snapshots.
-  * if pruning is enabled, it is done after a snapshot is complete for the heights that are multiples of this interval.
+    * the interval at which to take snapshots.
+    * the value of 0 disables snapshots.
+    * if pruning is enabled, it is done after a snapshot is complete for the heights that are multiples of this interval.
 
 * `state-sync.snapshot-keep-recent`:
-  * the number of recent snapshots to keep.
-  * 0 means keep all.
+    * the number of recent snapshots to keep.
+    * 0 means keep all.
 
 ## Snapshot Metadata
 

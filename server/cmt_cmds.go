@@ -7,12 +7,12 @@ import (
 	"strconv"
 	"strings"
 
-	cmtcfg "github.com/cometbft/cometbft/config"
-	cmtjson "github.com/cometbft/cometbft/libs/json"
-	"github.com/cometbft/cometbft/node"
-	"github.com/cometbft/cometbft/p2p"
-	pvm "github.com/cometbft/cometbft/privval"
-	cmtversion "github.com/cometbft/cometbft/version"
+	cmtcfg "github.com/cometbft/cometbft/v2/config"
+	cmtjson "github.com/cometbft/cometbft/v2/libs/json"
+	"github.com/cometbft/cometbft/v2/node"
+	"github.com/cometbft/cometbft/v2/p2p"
+	pvm "github.com/cometbft/cometbft/v2/privval"
+	cmtversion "github.com/cometbft/cometbft/v2/version"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
 
@@ -155,7 +155,7 @@ func VersionCmd() *cobra.Command {
 				BlockProtocol uint64
 				P2PProtocol   uint64
 			}{
-				CometBFT:      cmtversion.TMCoreSemVer,
+				CometBFT:      cmtversion.CMTSemVer,
 				ABCI:          cmtversion.ABCIVersion,
 				BlockProtocol: cmtversion.BlockProtocol,
 				P2PProtocol:   cmtversion.P2PProtocol,
@@ -384,8 +384,10 @@ func BootstrapStateCmd(appCreator types.AppCreator) *cobra.Command {
 				app := appCreator(logger, db, nil, serverCtx.Viper)
 				height = app.CommitMultiStore().LastCommitID().Version
 			}
-
-			return node.BootstrapStateWithGenProvider(cmd.Context(), cfg, cmtcfg.DefaultDBProvider, getGenDocProvider(cfg), uint64(height), nil)
+			if height < 0 {
+				return fmt.Errorf("height must be non-negative, got %d", height)
+			}
+			return node.BootstrapState(cmd.Context(), cfg, cmtcfg.DefaultDBProvider, getGenDocProvider(cfg), uint64(height), nil)
 		},
 	}
 

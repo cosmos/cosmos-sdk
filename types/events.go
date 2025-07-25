@@ -8,7 +8,7 @@ import (
 	"slices"
 	"strings"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
 	"github.com/cosmos/gogoproto/jsonpb"
 	proto "github.com/cosmos/gogoproto/proto"
 
@@ -268,7 +268,7 @@ const (
 )
 
 type (
-	// StringAttributes defines a slice of StringEvents objects.
+	// StringEvents defines a slice of StringEvents objects.
 	StringEvents []StringEvent
 )
 

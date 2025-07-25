@@ -5,7 +5,6 @@ import (
 )
 
 const (
-	// module name
 	ModuleName = "auth"
 
 	// StoreKey is string representation of the store key for auth
@@ -31,4 +30,7 @@ var (
 
 	// UnorderedNoncesKey prefix for the unordered sequence storage.
 	UnorderedNoncesKey = collections.NewPrefix(90)
+
+	// LegacyGlobalAccountNumberKey is the legacy param key for global account number
+	LegacyGlobalAccountNumberKey = []byte("globalAccountNumber")
 )

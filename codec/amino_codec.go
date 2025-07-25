@@ -4,9 +4,10 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 )
 
-// Deprecated: AminoCodec defines a codec that utilizes Codec for both binary and JSON
+// AminoCodec defines a codec that utilizes Codec for both binary and JSON
 // encoding. Any usage of amino should be done using the LegacyAmino type directly.
-// Usage of amino with the Codec type is not well-supported and may be removed in the future.
+//
+// Deprecated: Usage of amino with the Codec type is not well-supported and may be removed in the future.
 type AminoCodec struct {
 	*LegacyAmino
 }

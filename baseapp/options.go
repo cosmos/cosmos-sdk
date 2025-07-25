@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"time"
 
 	dbm "github.com/cosmos/cosmos-db"
 
@@ -22,6 +23,20 @@ import (
 
 // File for storing in-package BaseApp optional functions,
 // for options that need access to non-exported fields of the BaseApp
+
+// SetNextBlockDelay sets the next block delay for the baseapp.
+//
+// The application is initialized with a default value of 0.
+//
+// More information on this value and how it affects CometBFT can be found here:
+// https://github.com/cometbft/cometbft/blob/88ef3d267de491db98a654be0af6d791e8724ed0/spec/abci/abci%2B%2B_methods.md?plain=1#L689
+func (app *BaseApp) SetNextBlockDelay(delay time.Duration) {
+	if app.sealed {
+		panic("SetNextBlockDelay() on sealed BaseApp")
+	}
+
+	app.nextBlockDelay = delay
+}
 
 // SetPruning sets a pruning option on the multistore associated with the app
 func SetPruning(opts pruningtypes.PruningOptions) func(*BaseApp) {
@@ -44,7 +59,7 @@ func SetQueryGasLimit(queryGasLimit uint64) func(*BaseApp) {
 		queryGasLimit = math.MaxUint64
 	}
 
-	return func(bapp *BaseApp) { bapp.queryGasLimit = queryGasLimit }
+	return func(bapp *BaseApp) { bapp.gasConfig.QueryGasLimit = queryGasLimit }
 }
 
 // SetHaltHeight returns a BaseApp option function that sets the halt block height.
@@ -180,11 +195,11 @@ func (app *BaseApp) SetInitChainer(initChainer sdk.InitChainer) {
 		panic("SetInitChainer() on sealed BaseApp")
 	}
 
-	app.initChainer = initChainer
+	app.abciHandlers.InitChainer = initChainer
 }
 
 func (app *BaseApp) PreBlocker() sdk.PreBlocker {
-	return app.preBlocker
+	return app.abciHandlers.PreBlocker
 }
 
 func (app *BaseApp) SetPreBlocker(preBlocker sdk.PreBlocker) {
@@ -192,7 +207,7 @@ func (app *BaseApp) SetPreBlocker(preBlocker sdk.PreBlocker) {
 		panic("SetPreBlocker() on sealed BaseApp")
 	}
 
-	app.preBlocker = preBlocker
+	app.abciHandlers.PreBlocker = preBlocker
 }
 
 func (app *BaseApp) SetBeginBlocker(beginBlocker sdk.BeginBlocker) {
@@ -200,7 +215,7 @@ func (app *BaseApp) SetBeginBlocker(beginBlocker sdk.BeginBlocker) {
 		panic("SetBeginBlocker() on sealed BaseApp")
 	}
 
-	app.beginBlocker = beginBlocker
+	app.abciHandlers.BeginBlocker = beginBlocker
 }
 
 func (app *BaseApp) SetEndBlocker(endBlocker sdk.EndBlocker) {
@@ -208,7 +223,7 @@ func (app *BaseApp) SetEndBlocker(endBlocker sdk.EndBlocker) {
 		panic("SetEndBlocker() on sealed BaseApp")
 	}
 
-	app.endBlocker = endBlocker
+	app.abciHandlers.EndBlocker = endBlocker
 }
 
 func (app *BaseApp) SetPrepareCheckStater(prepareCheckStater sdk.PrepareCheckStater) {
@@ -216,7 +231,7 @@ func (app *BaseApp) SetPrepareCheckStater(prepareCheckStater sdk.PrepareCheckSta
 		panic("SetPrepareCheckStater() on sealed BaseApp")
 	}
 
-	app.prepareCheckStater = prepareCheckStater
+	app.abciHandlers.PrepareCheckStater = prepareCheckStater
 }
 
 func (app *BaseApp) SetPrecommiter(precommiter sdk.Precommiter) {
@@ -224,7 +239,7 @@ func (app *BaseApp) SetPrecommiter(precommiter sdk.Precommiter) {
 		panic("SetPrecommiter() on sealed BaseApp")
 	}
 
-	app.precommiter = precommiter
+	app.abciHandlers.Precommiter = precommiter
 }
 
 func (app *BaseApp) SetAnteHandler(ah sdk.AnteHandler) {
@@ -267,7 +282,7 @@ func (app *BaseApp) SetFauxMerkleMode() {
 	app.fauxMerkleMode = true
 }
 
-// SetNotSigverify during simulation testing, transaction signature verification needs to be ignored.
+// SetNotSigverifyTx during simulation testing, transaction signature verification needs to be ignored.
 func (app *BaseApp) SetNotSigverifyTx() {
 	app.sigverifyTx = false
 }
@@ -338,7 +353,7 @@ func (app *BaseApp) SetProcessProposal(handler sdk.ProcessProposalHandler) {
 	if app.sealed {
 		panic("SetProcessProposal() on sealed BaseApp")
 	}
-	app.processProposal = handler
+	app.abciHandlers.ProcessProposalHandler = handler
 }
 
 // SetPrepareProposal sets the prepare proposal function for the BaseApp.
@@ -347,16 +362,16 @@ func (app *BaseApp) SetPrepareProposal(handler sdk.PrepareProposalHandler) {
 		panic("SetPrepareProposal() on sealed BaseApp")
 	}
 
-	app.prepareProposal = handler
+	app.abciHandlers.PrepareProposalHandler = handler
 }
 
-// SetCheckTx sets the checkTx function for the BaseApp.
+// SetCheckTxHandler sets the checkTx function for the BaseApp.
 func (app *BaseApp) SetCheckTxHandler(handler sdk.CheckTxHandler) {
 	if app.sealed {
 		panic("SetCheckTxHandler() on sealed BaseApp")
 	}
 
-	app.checkTxHandler = handler
+	app.abciHandlers.CheckTxHandler = handler
 }
 
 func (app *BaseApp) SetExtendVoteHandler(handler sdk.ExtendVoteHandler) {
@@ -364,7 +379,7 @@ func (app *BaseApp) SetExtendVoteHandler(handler sdk.ExtendVoteHandler) {
 		panic("SetExtendVoteHandler() on sealed BaseApp")
 	}
 
-	app.extendVote = handler
+	app.abciHandlers.ExtendVoteHandler = handler
 }
 
 func (app *BaseApp) SetVerifyVoteExtensionHandler(handler sdk.VerifyVoteExtensionHandler) {
@@ -372,7 +387,7 @@ func (app *BaseApp) SetVerifyVoteExtensionHandler(handler sdk.VerifyVoteExtensio
 		panic("SetVerifyVoteExtensionHandler() on sealed BaseApp")
 	}
 
-	app.verifyVoteExt = handler
+	app.abciHandlers.VerifyVoteExtensionHandler = handler
 }
 
 // SetStoreMetrics sets the prepare proposal function for the BaseApp.

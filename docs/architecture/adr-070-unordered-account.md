@@ -2,9 +2,10 @@
 
 ## Changelog
 
-- Dec 4, 2023: Initial Draft (@yihuang, @tac0turtle, @alexanderbez)
-- Jan 30, 2024: Include section on deterministic transaction encoding
-- Mar 18, 2025: Revise implementation to use Cosmos SDK KV Store and require unique timeouts per-address (@technicallyty)
+* Dec 4, 2023: Initial Draft (@yihuang, @tac0turtle, @alexanderbez)
+* Jan 30, 2024: Include section on deterministic transaction encoding
+* Mar 18, 2025: Revise implementation to use Cosmos SDK KV Store and require unique timeouts per-address (@technicallyty)
+* Apr 25, 2025: Add note about rejecting unordered txs with sequence values.
 
 ## Status
 
@@ -38,8 +39,8 @@ will be recorded to state.
 
 New transactions will be checked against the state to prevent duplicate submissions. To prevent the state from growing indefinitely, we propose the following:
 
-- Define an upper bound for the value of `timeout_timestamp` (i.e. 10 minutes).
-- Add PreBlocker method x/auth that removes state entries with a `timeout_timestamp` earlier than the current block time.
+* Define an upper bound for the value of `timeout_timestamp` (i.e. 10 minutes).
+* Add PreBlocker method x/auth that removes state entries with a `timeout_timestamp` earlier than the current block time.
 
 ### Transaction Format
 
@@ -288,6 +289,8 @@ for _, tx := range txs {
 	tx.SetTimeoutTimestamp(time.Now() + 1 * time.Nanosecond)
 }
 ```
+
+We will reject transactions that have both sequence and unordered timeouts set. We do this to avoid assuming the intent of the user.
 
 ### State Management
 

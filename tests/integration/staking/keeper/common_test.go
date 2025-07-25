@@ -4,7 +4,7 @@ import (
 	"math/big"
 	"testing"
 
-	cmtprototypes "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtprototypes "github.com/cometbft/cometbft/api/cometbft/types/v2"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/core/appmodule"

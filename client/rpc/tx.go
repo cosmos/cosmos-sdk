@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
-	coretypes "github.com/cometbft/cometbft/rpc/core/types"
-	tmtypes "github.com/cometbft/cometbft/types"
+	rpchttp "github.com/cometbft/cometbft/v2/rpc/client/http"
+	coretypes "github.com/cometbft/cometbft/v2/rpc/core/types"
+	tmtypes "github.com/cometbft/cometbft/v2/types"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -94,7 +94,7 @@ func QueryEventForTxCmd() *cobra.Command {
 	return WaitTxCmd()
 }
 
-// WaitTx returns a CLI command that waits for a transaction with the given hash to be included in a block.
+// WaitTxCmd returns a CLI command that waits for a transaction with the given hash to be included in a block.
 func WaitTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "wait-tx [hash]",
@@ -119,7 +119,7 @@ $ %[1]s tx [flags] | %[1]s q wait-tx
 				return err
 			}
 
-			c, err := rpchttp.New(clientCtx.NodeURI, "/websocket")
+			c, err := rpchttp.New(clientCtx.NodeURI)
 			if err != nil {
 				return err
 			}
@@ -204,7 +204,7 @@ func parseHashFromInput(in []byte) ([]byte, error) {
 	// That outputs a sdk.TxResponse as either the json or yaml. As json, we can't unmarshal it back into that struct,
 	// though, because the height field ends up quoted which confuses json.Unmarshal (because it's for an int64 field).
 
-	// Try to find the txhash from json ouptut.
+	// Try to find the txhash from json output.
 	resultTx := make(map[string]json.RawMessage)
 	if err := json.Unmarshal(in, &resultTx); err == nil && len(resultTx["txhash"]) > 0 {
 		// input was JSON, return the hash

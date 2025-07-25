@@ -28,7 +28,6 @@ message GenesisState {
   TallyParams tally_params = 7 [deprecated = true];
   // params defines all the paramaters of x/gov module.
   Params params = 8 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.47"];
-  ;
   // The constitution allows builders to lay a foundation and define purpose.
   // This is an immutable string set in genesis.
   // There are no amendments, to go outside of scope, just fork.

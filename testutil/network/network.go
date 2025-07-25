@@ -17,8 +17,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cometbft/cometbft/node"
-	cmtclient "github.com/cometbft/cometbft/rpc/client"
+	"github.com/cometbft/cometbft/v2/node"
+	cmtclient "github.com/cometbft/cometbft/v2/rpc/client"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
@@ -88,9 +88,9 @@ func init() {
 	}
 }
 
-// AppConstructor defines a function which accepts a network configuration and
-// creates an ABCI Application to provide to CometBFT.
 type (
+	// AppConstructor defines a function which accepts a network configuration and
+	// creates an ABCI Application to provide to CometBFT.
 	AppConstructor     = func(val ValidatorI) servertypes.Application
 	TestFixtureFactory = func() TestFixture
 )
@@ -381,7 +381,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 
 		ctx := server.NewDefaultContext()
 		cmtCfg := ctx.Config
-		cmtCfg.Consensus.TimeoutCommit = cfg.TimeoutCommit
+		cmtCfg.Consensus.TimeoutCommit = cfg.TimeoutCommit // nolint: staticcheck // we are continuing to use this value for backwards compatibility
 
 		// Only allow the first validator to expose an RPC, API and gRPC
 		// server/client due to CometBFT in-process constraints.
@@ -473,7 +473,12 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		cmtCfg.P2P.AddrBookStrict = false
 		cmtCfg.P2P.AllowDuplicateIP = true
 
-		nodeID, pubKey, err := genutil.InitializeNodeValidatorFiles(cmtCfg)
+		var mnemonic string
+		if i < len(cfg.Mnemonics) {
+			mnemonic = cfg.Mnemonics[i]
+		}
+
+		nodeID, pubKey, err := genutil.InitializeNodeValidatorFilesFromMnemonic(cmtCfg, mnemonic)
 		if err != nil {
 			return nil, err
 		}
@@ -490,11 +495,6 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		algo, err := keyring.NewSigningAlgoFromString(cfg.SigningAlgo, keyringAlgos)
 		if err != nil {
 			return nil, err
-		}
-
-		var mnemonic string
-		if i < len(cfg.Mnemonics) {
-			mnemonic = cfg.Mnemonics[i]
 		}
 
 		addr, secret, err := testutil.GenerateSaveCoinKey(kb, nodeDirName, mnemonic, true, algo)

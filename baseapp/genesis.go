@@ -3,7 +3,7 @@ package baseapp
 import (
 	"errors"
 
-	"github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/v2/abci/types"
 
 	"cosmossdk.io/core/genesis"
 )

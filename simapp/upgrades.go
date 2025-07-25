@@ -4,25 +4,25 @@ import (
 	"context"
 
 	storetypes "cosmossdk.io/store/types"
-	upgradetypes "cosmossdk.io/x/upgrade/types"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	epochstypes "github.com/cosmos/cosmos-sdk/x/epochs/types"
-	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // UpgradeName defines the on-chain upgrade name for the sample SimApp upgrade
-// from v050 to v053.
+// from v053 to v054.
 //
 // NOTE: This upgrade defines a reference implementation of what an upgrade
 // could look like when an application is migrating from Cosmos SDK version
-// v0.50.x to v0.53.x.
-const UpgradeName = "v050-to-v053"
+// v0.53.x to v0.54.x.
+const UpgradeName = "v053-to-v054"
 
 func (app SimApp) RegisterUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
 		UpgradeName,
 		func(ctx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+			sdk.UnwrapSDKContext(ctx).Logger().Debug("this is a debug level message to test that verbose logging mode has properly been enabled during a chain upgrade")
 			return app.ModuleManager.RunMigrations(ctx, app.Configurator(), fromVM)
 		},
 	)
@@ -34,10 +34,7 @@ func (app SimApp) RegisterUpgradeHandlers() {
 
 	if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := storetypes.StoreUpgrades{
-			Added: []string{
-				epochstypes.ModuleName,
-				protocolpooltypes.ModuleName,
-			},
+			Added: []string{},
 		}
 
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades

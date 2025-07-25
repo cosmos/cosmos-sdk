@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cometbft/cometbft/mempool"
-	cmttypes "github.com/cometbft/cometbft/types"
+	"github.com/cometbft/cometbft/v2/mempool"
+	cmttypes "github.com/cometbft/cometbft/v2/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -91,7 +91,7 @@ func (ctx Context) BroadcastTxSync(txBytes []byte) (*sdk.TxResponse, error) {
 		return nil, err
 	}
 
-	res, err := node.BroadcastTxSync(context.Background(), txBytes)
+	res, err := node.BroadcastTxSync(ctx.GetCmdContextWithFallback(), txBytes)
 	if errRes := CheckCometError(err, txBytes); errRes != nil {
 		return errRes, nil
 	}
@@ -107,7 +107,7 @@ func (ctx Context) BroadcastTxAsync(txBytes []byte) (*sdk.TxResponse, error) {
 		return nil, err
 	}
 
-	res, err := node.BroadcastTxAsync(context.Background(), txBytes)
+	res, err := node.BroadcastTxAsync(ctx.GetCmdContextWithFallback(), txBytes)
 	if errRes := CheckCometError(err, txBytes); errRes != nil {
 		return errRes, nil
 	}

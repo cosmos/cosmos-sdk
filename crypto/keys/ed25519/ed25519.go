@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/cometbft/cometbft/crypto"
-	"github.com/cometbft/cometbft/crypto/tmhash"
+	"github.com/cometbft/cometbft/v2/crypto"
+	"github.com/cometbft/cometbft/v2/crypto/tmhash"
 	"github.com/hdevalence/ed25519consensus"
 
 	errorsmod "cosmossdk.io/errors"
@@ -26,7 +26,7 @@ const (
 	PubKeySize = 32
 	// PrivKeySize is the size, in bytes, of private keys as used in this package.
 	PrivKeySize = 64
-	// Size of an Edwards25519 signature. Namely the size of a compressed
+	// SignatureSize is the size of an Edwards25519 signature. Namely the size of a compressed
 	// Edwards25519 point, and a field element. Both of which are 32 bytes.
 	SignatureSize = 64
 	// SeedSize is the size, in bytes, of private key seeds. These are the

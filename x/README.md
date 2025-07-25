@@ -34,8 +34,6 @@ capabilities of your blockchain or further specialize it.
 * [Authz](./authz/README.md) - Authorization for accounts to perform actions on behalf of other accounts.
 * [Epochs](./epochs/README.md) - Registration so SDK modules can have logic to be executed at the timed tickers.
 * [Feegrant](./feegrant/README.md) - Grant fee allowances for executing transactions.
-* [Group](./group/README.md) - Allows for the creation and management of on-chain multisig accounts.
-* [NFT](./nft/README.md) - NFT module implemented based on [ADR43](https://docs.cosmos.network/main/architecture/adr-043-nft-module.html).
 * [ProtocolPool](./protocolpool/README.md) - Extended management of community pool functionality.
 
 ## Deprecated Modules
@@ -43,8 +41,10 @@ capabilities of your blockchain or further specialize it.
 The following modules are deprecated.  They will no longer be maintained and eventually will be removed
 in an upcoming release of the Cosmos SDK per our [release process](https://github.com/cosmos/cosmos-sdk/blob/main/RELEASE_PROCESS.md).
 
-* [Crisis](./crisis/README.md) - *Deprecated* halting the blockchain under certain circumstances (e.g. if an invariant is broken).
-* [Params](./params/README.md) - *Deprecated* Globally available parameter store.
+* [Crisis](./crisis/README.md) - _Deprecated_ halting the blockchain under certain circumstances (e.g. if an invariant is broken).
+* [Params](./params/README.md) - _Deprecated_ Globally available parameter store.
+* [NFT](./nft/README.md) - _Deprecated_ NFT module implemented based on [ADR43](https://docs.cosmos.network/main/architecture/adr-043-nft-module.html).  This module will be moved to the `cosmos-sdk-legacy` repo for use.
+* [Group](./group/README.md) - _Deprecated_ Allows for the creation and management of on-chain multisig accounts.  This module will be moved to the `cosmos-sdk-legacy` repo for legacy use.
 
 To learn more about the process of building modules, visit the [building modules reference documentation](https://docs.cosmos.network/main/building-modules/intro).
 

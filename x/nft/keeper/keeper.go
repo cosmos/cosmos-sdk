@@ -1,11 +1,12 @@
+// Deprecated: This package is deprecated and will be removed in the next major release. The `x/nft` module will be moved to a separate repo `github.com/cosmos/cosmos-sdk-legacy`.
 package keeper
 
 import (
 	"cosmossdk.io/core/address"
 	store "cosmossdk.io/core/store"
-	"cosmossdk.io/x/nft"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/x/nft" //nolint:staticcheck // deprecated and to be removed
 )
 
 // Keeper of the nft store

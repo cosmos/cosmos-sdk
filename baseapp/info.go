@@ -3,7 +3,7 @@ package baseapp
 import (
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
 
 	"cosmossdk.io/core/comet"
 )
@@ -145,7 +145,7 @@ func (m misbehaviorWrapper) TotalVotingPower() int64 {
 }
 
 type prepareProposalInfo struct {
-	*abci.RequestPrepareProposal
+	*abci.PrepareProposalRequest
 }
 
 var _ comet.BlockInfo = (*prepareProposalInfo)(nil)

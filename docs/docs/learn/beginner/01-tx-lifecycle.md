@@ -39,7 +39,23 @@ Additionally, there are several [flags](../advanced/07-cli.md) users can use to 
 
 The ultimate value of the fees paid is equal to the gas multiplied by the gas prices. In other words, `fees = ceil(gas * gasPrices)`. Thus, since fees can be calculated using gas prices and vice versa, the users specify only one of the two.
 
-Later, validators decide whether or not to include the transaction in their block by comparing the given or calculated `gas-prices` to their local `min-gas-prices`. `Tx` is rejected if its `gas-prices` is not high enough, so users are incentivized to pay more.
+Later, validators decide whether to include the transaction in their block by comparing the given or calculated `gas-prices` to their local `min-gas-prices`. `Tx` is rejected if its `gas-prices` is not high enough, so users are incentivized to pay more.
+
+#### Unordered Transactions
+
+With Cosmos SDK v0.53.0, users may send unordered transactions to chains that have this feature enabled.
+The following flags allow a user to build an unordered transaction from the CLI.
+
+* `--unordered` specifies that this transaction should be unordered. (transaction sequence must be unset)
+* `--timeout-duration` specifies the amount of time the unordered transaction should be valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + timeout duration.
+
+:::warning
+
+Unordered transactions MUST leave sequence values unset. When a transaction is both unordered and contains a non-zero sequence value,
+the transaction will be rejected. External services that operate on prior assumptions about transaction sequence values should be updated to handle unordered transactions.
+Services should be aware that when the transaction is unordered, the transaction sequence will always be zero.
+
+:::
 
 #### CLI Example
 
@@ -56,7 +72,7 @@ The command-line is an easy way to interact with an application, but `Tx` can al
 ## Addition to Mempool
 
 Each full-node (running CometBFT) that receives a `Tx` sends an [ABCI message](https://docs.cometbft.com/v0.37/spec/p2p/messages/),
-`CheckTx`, to the application layer to check for validity, and receives an `abci.ResponseCheckTx`. If the `Tx` passes the checks, it is held in the node's
+`CheckTx`, to the application layer to check for validity, and receives an `abci.CheckTxResponse`. If the `Tx` passes the checks, it is held in the node's
 [**Mempool**](https://docs.cometbft.com/v0.37/spec/p2p/messages/mempool/), an in-memory pool of transactions unique to each node, pending inclusion in a block - honest nodes discard a `Tx` if it is found to be invalid. Prior to consensus, nodes continuously check incoming transactions and gossip them to their peers.
 
 ### Types of Checks

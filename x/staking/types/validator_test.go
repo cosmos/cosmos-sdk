@@ -5,7 +5,7 @@ import (
 	"sort"
 	"testing"
 
-	cmttypes "github.com/cometbft/cometbft/types"
+	cmttypes "github.com/cometbft/cometbft/v2/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -57,24 +57,6 @@ func TestUpdateDescription(t *testing.T) {
 	d, err = d1.UpdateDescription(d3)
 	require.Nil(t, err)
 	require.Equal(t, d, d3)
-}
-
-func TestABCIValidatorUpdate(t *testing.T) {
-	validator := newValidator(t, valAddr1, pk1)
-	abciVal := validator.ABCIValidatorUpdate(sdk.DefaultPowerReduction)
-	pk, err := validator.TmConsPublicKey()
-	require.NoError(t, err)
-	require.Equal(t, pk, abciVal.PubKey)
-	require.Equal(t, validator.BondedTokens().Int64(), abciVal.Power)
-}
-
-func TestABCIValidatorUpdateZero(t *testing.T) {
-	validator := newValidator(t, valAddr1, pk1)
-	abciVal := validator.ABCIValidatorUpdateZero()
-	pk, err := validator.TmConsPublicKey()
-	require.NoError(t, err)
-	require.Equal(t, pk, abciVal.PubKey)
-	require.Equal(t, int64(0), abciVal.Power)
 }
 
 func TestShareTokens(t *testing.T) {

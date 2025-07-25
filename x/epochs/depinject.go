@@ -45,12 +45,12 @@ type ModuleOutputs struct {
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
 	k := keeper.NewKeeper(in.StoreService, in.Cdc)
-	m := NewAppModule(in.Cdc, k)
+	m := NewAppModule(k)
 	return ModuleOutputs{EpochKeeper: k, Module: m}
 }
 
-func InvokeSetHooks(keeper keeper.Keeper, hooks map[string]types.EpochHooksWrapper) error {
-	if hooks == nil {
+func InvokeSetHooks(keeper *keeper.Keeper, hooks map[string]types.EpochHooksWrapper) error {
+	if keeper == nil || hooks == nil {
 		return nil
 	}
 

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding"
@@ -50,7 +50,7 @@ func NewGRPCQueryRouter() *GRPCQueryRouter {
 
 // GRPCQueryHandler defines a function type which handles ABCI Query requests
 // using gRPC
-type GRPCQueryHandler = func(ctx sdk.Context, req *abci.RequestQuery) (*abci.ResponseQuery, error)
+type GRPCQueryHandler = func(ctx sdk.Context, req *abci.QueryRequest) (*abci.QueryResponse, error)
 
 // Route returns the GRPCQueryHandler for a given query route path or nil
 // if not found
@@ -103,7 +103,7 @@ func (qrt *GRPCQueryRouter) registerABCIQueryHandler(sd *grpc.ServiceDesc, metho
 		)
 	}
 
-	qrt.routes[fqName] = func(ctx sdk.Context, req *abci.RequestQuery) (*abci.ResponseQuery, error) {
+	qrt.routes[fqName] = func(ctx sdk.Context, req *abci.QueryRequest) (*abci.QueryResponse, error) {
 		// call the method handler from the service description with the handler object,
 		// a wrapped sdk.Context with proto-unmarshaled data from the ABCI request data
 		res, err := methodHandler(handler, ctx, func(i any) error {
@@ -121,7 +121,7 @@ func (qrt *GRPCQueryRouter) registerABCIQueryHandler(sd *grpc.ServiceDesc, metho
 		}
 
 		// return the result bytes as the response value
-		return &abci.ResponseQuery{
+		return &abci.QueryResponse{
 			Height: req.Height,
 			Value:  resBytes,
 		}, nil

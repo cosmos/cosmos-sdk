@@ -15,7 +15,7 @@ The global configuration instance exposed by the `viper` package is not
 used by Cosmos SDK in this function. A new instance of `viper.Viper` is created
 and the following is performed. The environmental variable prefix is set
 to the current program name. Environmental variables consider the underscore
-to be equivalent to the `.` or `-` character. This means that an configuration
+to be equivalent to the `.` or `-` character. This means that a configuration
 value called `rpc.laddr` would be read from an environmental variable called
 `MYTOOL_RPC_LADDR` if the current program name is `mytool`.
 

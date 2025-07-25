@@ -75,7 +75,7 @@ Each entry must include the Github issue reference in the following format:
 
 ## [v0.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v0.1.0) - 2023-03-13
 
-* Introducing a standalone SDK logger package (`comossdk.io/log`).
+* Introducing a standalone SDK logger package (`cosmossdk.io/log`).
   It replaces CometBFT logger and provides a common interface for all SDK components.
   The default logger (`NewLogger`) is using [zerolog](https://github.com/rs/zerolog),
   but it can be easily replaced with any implementation that implements the `log.Logger` interface.

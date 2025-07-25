@@ -22,7 +22,7 @@ func GenCommunityTax(r *rand.Rand) math.LegacyDec {
 
 // GenWithdrawEnabled returns a randomized WithdrawEnabled parameter.
 func GenWithdrawEnabled(r *rand.Rand) bool {
-	return r.Int63n(101) <= 95 // 95% chance of withdraws being enabled
+	return r.Int63n(101) <= 95 // 95% chance of withdrawals being enabled
 }
 
 // RandomizedGenState generates a random GenesisState for distribution

@@ -12,6 +12,8 @@ require (
 	gotest.tools/v3 v3.5.2
 )
 
+require go.yaml.in/yaml/v2 v2.4.2 // indirect
+
 require (
 	cosmossdk.io/api v0.9.2 // indirect
 	cosmossdk.io/collections v1.2.1 // indirect
@@ -157,5 +159,5 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect
 	pgregory.net/rapid v1.2.0 // indirect
-	sigs.k8s.io/yaml v1.4.0 // indirect
+	sigs.k8s.io/yaml v1.6.0 // indirect
 )

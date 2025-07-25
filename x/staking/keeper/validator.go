@@ -78,7 +78,7 @@ func (k Keeper) SetValidator(ctx context.Context, validator types.Validator) err
 	return store.Set(types.GetValidatorKey(str), bz)
 }
 
-// SetValidatorByConsAddr sets a validator by conesensus address
+// SetValidatorByConsAddr sets a validator by consensus address
 func (k Keeper) SetValidatorByConsAddr(ctx context.Context, validator types.Validator) error {
 	consPk, err := validator.GetConsAddr()
 	if err != nil {
@@ -543,7 +543,7 @@ func (k Keeper) UnbondAllMatureValidators(ctx context.Context) error {
 	blockTime := sdkCtx.BlockTime()
 	blockHeight := sdkCtx.BlockHeight()
 
-	// unbondingValIterator will contains all validator addresses indexed under
+	// unbondingValIterator will contain all validator addresses indexed under
 	// the ValidatorQueueKey prefix. Note, the entire index key is composed as
 	// ValidatorQueueKey | timeBzLen (8-byte big endian) | timeBz | heightBz (8-byte big endian),
 	// so it may be possible that certain validator addresses that are iterated

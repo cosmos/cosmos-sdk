@@ -90,7 +90,7 @@ type Proposals []Proposal
 
 var _ codectypes.UnpackInterfacesMessage = Proposals{}
 
-// Equal returns true if two slices (order-dependant) of proposals are equal.
+// Equal returns true if two slices (order-dependent) of proposals are equal.
 func (p Proposals) Equal(other Proposals) bool {
 	if len(p) != len(other) {
 		return false

@@ -60,7 +60,7 @@ func (k Keeper) AddPubkey(ctx context.Context, pubkey cryptotypes.PubKey) error 
 	return store.Set(key, bz)
 }
 
-// GetPubkey returns the pubkey from the adddress-pubkey relation
+// GetPubkey returns the pubkey from the address-pubkey relation
 func (k Keeper) GetPubkey(ctx context.Context, a cryptotypes.Address) (cryptotypes.PubKey, error) {
 	store := k.storeService.OpenKVStore(ctx)
 	bz, err := store.Get(types.AddrPubkeyRelationKey(a))
@@ -75,13 +75,13 @@ func (k Keeper) GetPubkey(ctx context.Context, a cryptotypes.Address) (cryptotyp
 }
 
 // Slash attempts to slash a validator. The slash is delegated to the staking
-// module to make the necessary validator changes. It specifies no intraction reason.
+// module to make the necessary validator changes. It specifies no infraction reason.
 func (k Keeper) Slash(ctx context.Context, consAddr sdk.ConsAddress, fraction sdkmath.LegacyDec, power, distributionHeight int64) error {
 	return k.SlashWithInfractionReason(ctx, consAddr, fraction, power, distributionHeight, stakingtypes.Infraction_INFRACTION_UNSPECIFIED)
 }
 
 // SlashWithInfractionReason attempts to slash a validator. The slash is delegated to the staking
-// module to make the necessary validator changes. It specifies an intraction reason.
+// module to make the necessary validator changes. It specifies an infraction reason.
 func (k Keeper) SlashWithInfractionReason(ctx context.Context, consAddr sdk.ConsAddress, fraction sdkmath.LegacyDec, power, distributionHeight int64, infraction stakingtypes.Infraction) error {
 	coinsBurned, err := k.sk.SlashWithInfractionReason(ctx, consAddr, distributionHeight, power, fraction, infraction)
 	if err != nil {

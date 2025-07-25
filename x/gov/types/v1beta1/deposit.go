@@ -19,7 +19,7 @@ func (d Deposit) Empty() bool {
 // Deposits is a collection of Deposit objects
 type Deposits []Deposit
 
-// Equal returns true if two slices (order-dependant) of deposits are equal.
+// Equal returns true if two slices (order-dependent) of deposits are equal.
 func (d Deposits) Equal(other Deposits) bool {
 	if len(d) != len(other) {
 		return false

@@ -91,7 +91,7 @@ func TestInterceptConfigsPreRunHandlerCreatesConfigFilesWhenMissing(t *testing.T
 	}
 
 	if !s.Mode().IsRegular() {
-		t.Fatal("appp.toml not created as regular file")
+		t.Fatal("app.toml not created as regular file")
 	}
 
 	if s.Size() == 0 {

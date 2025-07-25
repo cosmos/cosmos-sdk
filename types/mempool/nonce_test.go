@@ -41,6 +41,12 @@ func TestChooseNonce(t *testing.T) {
 			seq:       15,
 			expErr:    "unordered txs must not have sequence set",
 		},
+		{
+			name:      "timeout with zero unix but positive nano",
+			unordered: true,
+			timeout:   time.Unix(0, 1),
+			expErr:    "invalid timestamp value",
+		},
 	}
 
 	for _, tc := range testCases {

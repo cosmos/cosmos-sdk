@@ -15,8 +15,9 @@ func ChooseNonce(seq uint64, tx sdk.Tx) (uint64, error) {
 		if seq > 0 {
 			return 0, errors.New("unordered txs must not have sequence set")
 		}
-		timestamp := unordered.GetTimeoutTimeStamp().UnixNano()
-		if timestamp < 0 {
+		timeoutTimestamp := unordered.GetTimeoutTimeStamp()
+		timestamp := timeoutTimestamp.Unix()
+		if timeoutTimestamp.IsZero() || timestamp == 0 {
 			return 0, errors.New("invalid timestamp value")
 		}
 		return uint64(timestamp), nil

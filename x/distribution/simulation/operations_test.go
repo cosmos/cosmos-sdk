@@ -67,7 +67,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 }
 
 // TestSimulateMsgSetWithdrawAddress tests the normal scenario of a valid message of type TypeMsgSetWithdrawAddress.
-// Abonormal scenarios, where the message is created by an errors, are not tested here.
+// Abnormal scenarios, where the message is created by an errors, are not tested here.
 func (suite *SimTestSuite) TestSimulateMsgSetWithdrawAddress() {
 	// setup 3 accounts
 	s := rand.NewSource(1)
@@ -97,7 +97,7 @@ func (suite *SimTestSuite) TestSimulateMsgSetWithdrawAddress() {
 
 // TestSimulateMsgWithdrawDelegatorReward tests the normal scenario of a valid message
 // of type TypeMsgWithdrawDelegatorReward.
-// Abonormal scenarios, where the message is created by an errors, are not tested here.
+// Abnormal scenarios, where the message is created by an errors, are not tested here.
 func (suite *SimTestSuite) TestSimulateMsgWithdrawDelegatorReward() {
 	// setup 3 accounts
 	s := rand.NewSource(4)
@@ -143,7 +143,7 @@ func (suite *SimTestSuite) TestSimulateMsgWithdrawDelegatorReward() {
 
 // TestSimulateMsgWithdrawValidatorCommission tests the normal scenario of a valid message
 // of type TypeMsgWithdrawValidatorCommission.
-// Abonormal scenarios, where the message is created by an errors, are not tested here.
+// Abnormal scenarios, where the message is created by an errors, are not tested here.
 func (suite *SimTestSuite) TestSimulateMsgWithdrawValidatorCommission() {
 	suite.testSimulateMsgWithdrawValidatorCommission("atoken")
 	suite.testSimulateMsgWithdrawValidatorCommission("tokenxxx")
@@ -212,7 +212,7 @@ func (suite *SimTestSuite) testSimulateMsgWithdrawValidatorCommission(tokenName 
 }
 
 // TestSimulateMsgFundCommunityPool tests the normal scenario of a valid message of type TypeMsgFundCommunityPool.
-// Abonormal scenarios, where the message is created by an errors, are not tested here.
+// Abnormal scenarios, where the message is created by an errors, are not tested here.
 func (suite *SimTestSuite) TestSimulateMsgFundCommunityPool() {
 	// setup 3 accounts
 	s := rand.NewSource(1)

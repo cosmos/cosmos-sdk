@@ -25,7 +25,7 @@ type BankKeeper interface {
 	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 }
 
-// ParamSubspace defines the expected Subspace interfacace
+// ParamSubspace defines the expected Subspace interface
 type ParamSubspace interface {
 	HasKeyTable() bool
 	WithKeyTable(table paramtypes.KeyTable) paramtypes.Subspace

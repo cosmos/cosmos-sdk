@@ -64,7 +64,7 @@ require (
 	google.golang.org/protobuf v1.36.6
 	gotest.tools/v3 v3.5.2
 	pgregory.net/rapid v1.2.0
-	sigs.k8s.io/yaml v1.5.0
+	sigs.k8s.io/yaml v1.6.0
 )
 
 require (

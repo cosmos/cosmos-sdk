@@ -401,7 +401,7 @@ func (s *SimTestSuite) setupValidatorRewards(ctx sdk.Context, valAddress sdk.Val
 	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyOneDec())}
 	historicalRewards := distrtypes.NewValidatorHistoricalRewards(decCoins, 2)
 	s.Require().NoError(s.distrKeeper.SetValidatorHistoricalRewards(ctx, valAddress, 2, historicalRewards))
-	// setup current revards
+	// setup current rewards
 	currentRewards := distrtypes.NewValidatorCurrentRewards(decCoins, 3)
 	s.Require().NoError(s.distrKeeper.SetValidatorCurrentRewards(ctx, valAddress, currentRewards))
 }

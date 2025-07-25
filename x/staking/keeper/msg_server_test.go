@@ -342,7 +342,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 			expErrMsg: "validator does not exist",
 		},
 		{
-			name: "change commmission rate in <24hrs",
+			name: "change commission rate in <24hrs",
 			ctx:  ctx,
 			input: &stakingtypes.MsgEditValidator{
 				Description: stakingtypes.Description{

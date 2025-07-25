@@ -53,7 +53,7 @@ func (s *MigrationTestSuite) TestMigrateLegacyLocalKey() {
 	item := keyring.Item{
 		Key:         n1,
 		Data:        serializedLegacyLocalInfo,
-		Description: "SDK kerying version",
+		Description: "SDK keyring version",
 	}
 
 	s.Require().NoError(s.ks.SetItem(item))
@@ -71,7 +71,7 @@ func (s *MigrationTestSuite) TestMigrateLegacyLedgerKey() {
 	item := keyring.Item{
 		Key:         n1,
 		Data:        serializedLegacyLedgerInfo,
-		Description: "SDK kerying version",
+		Description: "SDK keyring version",
 	}
 
 	s.Require().NoError(s.ks.SetItem(item))

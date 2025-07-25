@@ -319,7 +319,7 @@ Algorithm for complex / composed keys:
 
 Module addresses: Should module addresses have different size to differentiate it?
 
-* we will need to set a pre-image prefix for module addresse to kept them in 32-byte space: `hash(hash('module') + module_key)`
+* we will need to set a pre-image prefix for module addresses to kept them in 32-byte space: `hash(hash('module') + module_key)`
 * Aaron observation: we already need to deal with variable length (to not break secp256k1 keys).
 
 Discussion about arithmetic hash function for ZKP

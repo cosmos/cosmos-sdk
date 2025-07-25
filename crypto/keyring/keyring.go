@@ -189,7 +189,7 @@ func newKeyringGeneric(
 	case BackendPass:
 		db, err = keyring.Open(newPassBackendKeyringConfig(appName, rootDir, userInput))
 	default:
-		return nil, errorsmod.Wrap(ErrUnknownBacked, backend)
+		return nil, errorsmod.Wrap(ErrUnknownBackend, backend)
 	}
 
 	if err != nil {

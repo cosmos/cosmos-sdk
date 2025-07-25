@@ -79,12 +79,12 @@ func NewParamsFromPath(path string) (*BIP44Params, error) {
 
 	if !isHardened(spl[1]) || !isHardened(spl[2]) {
 		return nil,
-			fmt.Errorf("second and third field in path must be hardened (ie. contain the suffix ', got %s and %s", spl[1], spl[2])
+			fmt.Errorf("second and third field in path must be hardened (ie. contain the suffix '  ', got %s and %s", spl[1], spl[2])
 	}
 
 	if isHardened(spl[3]) || isHardened(spl[4]) {
 		return nil,
-			fmt.Errorf("fourth and fifth field in path must not be hardened (ie. not contain the suffix ', got %s and %s", spl[3], spl[4])
+			fmt.Errorf("fourth and fifth field in path must not be hardened (ie. not contain the suffix '  '), got %s and %s", spl[3], spl[4])
 	}
 
 	if change != 0 && change != 1 {

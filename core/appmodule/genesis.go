@@ -36,7 +36,7 @@ type GenesisSource = func(field string) (io.ReadCloser, error)
 // abstract over a single JSON object or JSON in separate files that can be
 // streamed over. Modules should open a separate io.WriteCloser for each field
 // and should prefer writing fields as arrays when possible to support efficient
-// iteration. It is important the caller closers the writer AND checks the error
+// iteration. It is important the caller closes the writer AND checks the error
 // when done with it. It is expected that a stream of JSON data is written
 // to the writer.
 type GenesisTarget = func(field string) (io.WriteCloser, error)

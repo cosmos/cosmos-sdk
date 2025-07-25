@@ -315,7 +315,7 @@ func TestSign(t *testing.T) {
 		/**** test double sign Direct mode
 		  signing transaction with 2 or more DIRECT signers should fail in DIRECT mode ****/
 		{
-			"direct: should  append a DIRECT signature with existing AMINO",
+			"direct: should append a DIRECT signature with existing AMINO",
 			// txb already has 1 AMINO signature
 			txfDirect, txb, from1, false,
 			[]cryptotypes.PubKey{pubKey2, pubKey1},

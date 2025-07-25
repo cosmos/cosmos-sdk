@@ -36,7 +36,7 @@ func getIndex(pk types.PubKey, keys []types.PubKey) int {
 }
 
 // AddSignature adds a signature to the multisig, at the corresponding index. The index must
-// represent the pubkey index in the LegacyAmingPubKey structure, which verifies this signature.
+// represent the pubkey index in the LegacyAminoPubKey structure, which verifies this signature.
 // If the signature already exists, replace it.
 func AddSignature(mSig *signing.MultiSignatureData, sig signing.SignatureData, index int) {
 	newSigIndex := mSig.BitArray.NumTrueBitsBefore(index)

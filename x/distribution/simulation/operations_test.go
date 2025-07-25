@@ -327,7 +327,7 @@ func (suite *SimTestSuite) setupValidatorRewards(valAddress sdk.ValAddress) {
 	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyOneDec())}
 	historicalRewards := types.NewValidatorHistoricalRewards(decCoins, 2)
 	suite.Require().NoError(suite.distrKeeper.SetValidatorHistoricalRewards(suite.ctx, valAddress, 2, historicalRewards))
-	// setup current revards
+	// setup current rewards
 	currentRewards := types.NewValidatorCurrentRewards(decCoins, 3)
 	suite.Require().NoError(suite.distrKeeper.SetValidatorCurrentRewards(suite.ctx, valAddress, currentRewards))
 }

@@ -433,3 +433,27 @@ func (ps paramStore) Has(_ context.Context) (bool, error) {
 func (ps paramStore) Get(_ context.Context) (cmtproto.ConsensusParams, error) {
 	return ps.params, nil
 }
+
+// TestApplyUpgrade verifies that the app version is not incremented when an
+// upgrade is applied.
+func (s *KeeperTestSuite) TestApplyUpgrade() {
+	s.SetupTest()
+
+	wantAppVersion := uint64(0)
+	appVersion, err := s.upgradeKeeper.GetVersionModifier().AppVersion(context.Background())
+	s.Require().NoError(err)
+	s.Require().Equal(wantAppVersion, appVersion)
+
+	s.upgradeKeeper.SetUpgradeHandler("test-upgrade", func(_ context.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		return vm, nil
+	})
+
+	s.upgradeKeeper.ApplyUpgrade(s.ctx, types.Plan{
+		Name:   "test-upgrade",
+		Height: 1,
+	})
+
+	appVersion, err = s.upgradeKeeper.GetVersionModifier().AppVersion(context.Background())
+	s.Require().NoError(err)
+	s.Require().Equal(wantAppVersion, appVersion)
+}

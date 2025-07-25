@@ -411,7 +411,7 @@ func (k Keeper) HasHandler(name string) bool {
 }
 
 // ApplyUpgrade will execute the handler associated with the Plan and mark the plan as done.
-// If successful, it will increment the app version and clear the IBC state
+// If successful, it will clear the IBC state.
 func (k Keeper) ApplyUpgrade(ctx context.Context, plan types.Plan) error {
 	handler := k.upgradeHandlers[plan.Name]
 	if handler == nil {
@@ -431,18 +431,6 @@ func (k Keeper) ApplyUpgrade(ctx context.Context, plan types.Plan) error {
 	err = k.SetModuleVersionMap(ctx, updatedVM)
 	if err != nil {
 		return err
-	}
-
-	// incremement the app version and set it in state and baseapp
-	if k.versionModifier != nil {
-		currentAppVersion, err := k.versionModifier.AppVersion(ctx)
-		if err != nil {
-			return err
-		}
-
-		if err := k.versionModifier.SetAppVersion(ctx, currentAppVersion+1); err != nil {
-			return err
-		}
 	}
 
 	// Must clear IBC state after upgrade is applied as it is stored separately from the upgrade plan.
@@ -540,4 +528,8 @@ func (k *Keeper) SetDowngradeVerified(v bool) {
 // DowngradeVerified returns downgradeVerified.
 func (k Keeper) DowngradeVerified() bool {
 	return k.downgradeVerified
+}
+
+func (k Keeper) GetVersionModifier() xp.AppVersionModifier {
+	return k.versionModifier
 }

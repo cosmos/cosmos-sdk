@@ -231,7 +231,7 @@ func TestSubspace(t *testing.T) {
 		require.Equal(t, kv.param, indirect(kv.ptr), "stored param not equal, tc #%d", i)
 
 		require.Panics(t, func() { space.Get(ctx, []byte("invalid"), kv.ptr) }, "invalid space.Get not panics when no value exists, tc #%d", i)
-		require.Equal(t, kv.param, indirect(kv.ptr), "invalid space.Get unmarshalls when no value existt, tc #%d", i)
+		require.Equal(t, kv.param, indirect(kv.ptr), "invalid space.Get unmarshalls when no value exist, tc #%d", i)
 
 		require.Panics(t, func() { space.Get(ctx, []byte(kv.key), nil) }, "invalid space.Get not panics when the pointer is nil, tc #%d", i)
 		require.Panics(t, func() { space.Get(ctx, []byte(kv.key), new(invalid)) }, "invalid space.Get not panics when the pointer is different type, tc #%d", i)

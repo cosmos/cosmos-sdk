@@ -1406,7 +1406,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgDeposit() {
 			expErr:    true,
 			expErrMsg: "not found",
 		},
-		"empty depositer": {
+		"empty depositor": {
 			preRun: func() uint64 {
 				return pID
 			},

@@ -46,7 +46,7 @@ var (
 const (
 	OpMsgCreateGroup                     = "op_weight_msg_create_group"
 	OpMsgUpdateGroupAdmin                = "op_weight_msg_update_group_admin"
-	OpMsgUpdateGroupMetadata             = "op_wieght_msg_update_group_metadata"
+	OpMsgUpdateGroupMetadata             = "op_weight_msg_update_group_metadata"
 	OpMsgUpdateGroupMembers              = "op_weight_msg_update_group_members"
 	OpMsgCreateGroupPolicy               = "op_weight_msg_create_group_account"
 	OpMsgCreateGroupWithPolicy           = "op_weight_msg_create_group_with_policy"
@@ -694,9 +694,9 @@ func simulateMsgUpdateGroupMembers(
 		}
 
 		// set existing random group member weight to zero to remove from the group
-		existigMembers := res.Members
-		if len(existigMembers) > 1 {
-			memberToRemove := existigMembers[r.Intn(len(existigMembers))]
+		existingMembers := res.Members
+		if len(existingMembers) > 1 {
+			memberToRemove := existingMembers[r.Intn(len(existingMembers))]
 			var isDuplicateMember bool
 			for idx, m := range members {
 				if m.Address == memberToRemove.Member.Address {

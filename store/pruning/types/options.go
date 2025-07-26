@@ -40,7 +40,7 @@ const (
 	// pruned at every 10th height.
 	PruningEverything
 	// PruningNothing defines a pruning strategy where all heights are kept on disk.
-	// This is the only stretegy where KeepEvery=1 is allowed with state-sync snapshots disabled.
+	// This is the only strategy where KeepEvery=1 is allowed with state-sync snapshots disabled.
 	PruningNothing
 	// PruningCustom defines a pruning strategy where the user specifies the pruning.
 	PruningCustom

@@ -121,7 +121,7 @@ func newGasIterator(gasMeter types.GasMeter, gasConfig types.GasConfig, parent t
 	}
 }
 
-// Domain implements Iterator, getting the underlying iterator's domain'.
+// Domain implements Iterator, getting the underlying iterator's domain.
 func (gi *gasIterator) Domain() (start, end []byte) {
 	return gi.parent.Domain()
 }

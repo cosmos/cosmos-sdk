@@ -46,7 +46,7 @@ func TestCommit(t *testing.T) {
 	require.Equal(t, value, db.Get(key))
 }
 
-func TestStorePrunningOptions(t *testing.T) {
+func TestStorePruningOptions(t *testing.T) {
 	// this is a no-op
 	db := mem.NewStore()
 	require.Equal(t, pruningtypes.NewPruningOptions(pruningtypes.PruningUndefined), db.GetPruning())

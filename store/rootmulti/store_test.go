@@ -1102,7 +1102,7 @@ func TestCommitStores(t *testing.T) {
 	testCases := []struct {
 		name          string
 		committed     int
-		exptectCommit int
+		expectCommit int
 	}{
 		{
 			"when upgrade not get interrupted",
@@ -1136,7 +1136,7 @@ func TestCommitStores(t *testing.T) {
 				require.Equal(t, version, s.CommitId.Version)
 			}
 			require.Equal(t, version, res.Version)
-			require.Equal(t, tc.exptectCommit, store.Committed)
+			require.Equal(t, tc.expectCommit, store.Committed)
 		})
 	}
 }

@@ -11,7 +11,7 @@ import (
 	grpcstatus "google.golang.org/grpc/status"
 )
 
-const testCodespace = "testtesttest"
+const testCodespace = "testspace"
 
 var (
 	ErrTxDecode                = Register(testCodespace, 2, "tx parse error")
@@ -245,7 +245,7 @@ func (s *errorsTestSuite) TestGRPCStatus() {
 
 	status, ok := grpcstatus.FromError(ErrNotFound)
 	s.Require().True(ok)
-	s.Require().Equal("codespace testtesttest code 38: not found", status.Message())
+	s.Require().Equal("codespace testspace code 38: not found", status.Message())
 
 	// test wrapping
 	s.Require().Equal(codes.Unimplemented, grpcstatus.Code(ErrNotSupported.Wrap("test")))
@@ -253,7 +253,7 @@ func (s *errorsTestSuite) TestGRPCStatus() {
 
 	status, ok = grpcstatus.FromError(ErrNotFound.Wrap("test"))
 	s.Require().True(ok)
-	s.Require().Equal("codespace testtesttest code 38: not found: test", status.Message())
+	s.Require().Equal("codespace testspace code 38: not found: test", status.Message())
 }
 
 func (s *errorsTestSuite) TestDoubleRegister() {

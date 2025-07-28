@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	_ "cosmossdk.io/api/cosmos/crypto/ed25519" // register to that it shows up in protoregistry.GlobalTypes
+	_ "cosmossdk.io/api/cosmos/crypto/ed25519" // register so that it shows up in protoregistry.GlobalTypes
 	stakingv1beta "cosmossdk.io/api/cosmos/staking/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/version"
@@ -153,7 +153,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod:      "BeginRedelegate",
 					Use:            "redelegate [src-validator-addr] [dst-validator-addr] [amount] --from [delegator]",
-					Short:          "Generate multisig signatures for transactions generated offline",
+					Short:          "Redelegate illiquid tokens from one validator to another",
 					Long:           "Redelegate an amount of illiquid staking tokens from one validator to another.",
 					Example:        fmt.Sprintf(`%s tx staking redelegate cosmosvaloper... cosmosvaloper... 100stake --from mykey`, version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "validator_src_address"}, {ProtoField: "validator_dst_address"}, {ProtoField: "amount"}},

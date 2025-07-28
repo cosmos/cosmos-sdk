@@ -1432,7 +1432,7 @@ func (s *E2ETestSuite) TestAuxSigner() {
 			true,
 		},
 		{
-			"no error with SIGN_MDOE_DIRECT_AUX mode and generate-only set (ignores generate-only)",
+			"no error with SIGN_MODE_DIRECT_AUX mode and generate-only set (ignores generate-only)",
 			[]string{
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
 				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
@@ -1440,7 +1440,7 @@ func (s *E2ETestSuite) TestAuxSigner() {
 			false,
 		},
 		{
-			"no error with SIGN_MDOE_DIRECT_AUX mode and generate-only, tip flag set",
+			"no error with SIGN_MODE_DIRECT_AUX mode and generate-only, tip flag set",
 			[]string{
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
 				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),

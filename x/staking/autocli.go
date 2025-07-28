@@ -43,7 +43,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod: "ValidatorUnbondingDelegations",
 					Use:       "unbonding-delegations-from [validator-addr]",
-					Short:     "Query all unbonding delegatations from a validator",
+					Short:     "Query all unbonding delegations from a validator",
 					Long:      "Query delegations that are unbonding _from_ a validator.",
 					Example:   fmt.Sprintf("$ %s query staking unbonding-delegations-from [val-addr]", version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{

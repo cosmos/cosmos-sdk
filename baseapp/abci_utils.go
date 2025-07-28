@@ -233,6 +233,11 @@ func (h *DefaultProposalHandler) SetTxSelector(ts TxSelector) {
 	h.txSelector = ts
 }
 
+// SetSignerExtractionAdapter sets the SetSignerExtractionAdapter on the DefaultProposalHandler.
+func (h *DefaultProposalHandler) SetSignerExtractionAdapter(signerExtAdapter mempool.SignerExtractionAdapter) {
+	h.signerExtAdapter = signerExtAdapter
+}
+
 // PrepareProposalHandler returns the default implementation for processing an
 // ABCI proposal. The application's mempool is enumerated and all valid
 // transactions are added to the proposal. Transactions are valid if they:

@@ -427,7 +427,13 @@ func (k Keeper) GetLastValidators(ctx context.Context) (validators []types.Valid
 
 	i := 0
 	for ; iterator.Valid(); iterator.Next() {
-		k.Logger(ctx).Info("iterating validator power keys", "key", iterator, "value", iterator.Value())
+		k.Logger(ctx).Info(
+			"iterating validator power keys",
+			"key",
+			fmt.Sprintf("%x", iterator.Key()),
+			"value",
+			fmt.Sprintf("%x", iterator.Value()),
+		)
 
 		// sanity check
 		if i >= int(maxValidators) {

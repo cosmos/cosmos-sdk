@@ -631,11 +631,11 @@ This message is expected to fail if:
 When this message is processed the following actions occur:
 
 * validator's `DelegatorShares` and the delegation's `Shares` are both reduced by the message `SharesAmount`
-* calculate the token worth of the shares remove that amount tokens held within the validator
+* calculate the token worth of the shares and remove that amount of tokens held within the validator
 * with those removed tokens, if the validator is:
     * `Bonded` - add them to an entry in `UnbondingDelegation` (create `UnbondingDelegation` if it doesn't exist) with a completion time a full unbonding period from the current time. Update pool shares to reduce BondedTokens and increase NotBondedTokens by token worth of the shares.
     * `Unbonding` - add them to an entry in `UnbondingDelegation` (create `UnbondingDelegation` if it doesn't exist) with the same completion time as the validator (`UnbondingMinTime`).
-    * `Unbonded` - then send the coins the message `DelegatorAddr`
+    * `Unbonded` - then send the coins to the message `DelegatorAddr`
 * if there are no more `Shares` in the delegation, then the delegation object is removed from the store
     * under this situation if the delegation is the validator's self-delegation then also jail the validator.
 
@@ -698,7 +698,7 @@ This message is expected to fail if:
 When this message is processed the following actions occur:
 
 * the source validator's `DelegatorShares` and the delegations `Shares` are both reduced by the message `SharesAmount`
-* calculate the token worth of the shares remove that amount tokens held within the source validator.
+* calculate the token worth of the shares and remove that amount of tokens held within the source validator.
 * if the source validator is:
     * `Bonded` - add an entry to the `Redelegation` (create `Redelegation` if it doesn't exist) with a completion time a full unbonding period from the current time. Update pool shares to reduce BondedTokens and increase NotBondedTokens by token worth of the shares (this may be effectively reversed in the next step however).
     * `Unbonding` - add an entry to the `Redelegation` (create `Redelegation` if it doesn't exist) with the same completion time as the validator (`UnbondingMinTime`).
@@ -1668,7 +1668,7 @@ simd tx staking unbond cosmosvaloper1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100s
 
 ##### cancel unbond
 
-The command `cancel-unbond` allow users to cancel the unbonding delegation entry and delegate back to the original validator.
+The command `cancel-unbond` allows users to cancel the unbonding delegation entry and delegate back to the original validator.
 
 Usage:
 

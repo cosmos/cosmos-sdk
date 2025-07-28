@@ -31,7 +31,7 @@ func (v Vote) Empty() bool {
 // Votes is a collection of Vote objects
 type Votes []*Vote
 
-// Equal returns true if two slices (order-dependant) of votes are equal.
+// Equal returns true if two slices (order-dependent) of votes are equal.
 func (v Votes) Equal(other Votes) bool {
 	if len(v) != len(other) {
 		return false

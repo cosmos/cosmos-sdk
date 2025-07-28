@@ -134,7 +134,7 @@ func (m *Manager) SetSnapshotInterval(snapshotInterval uint64) {
 	m.snapshotInterval = snapshotInterval
 }
 
-// GetPruningHeight returns the height which can prune upto if it is able to prune at the given height.
+// GetPruningHeight returns the height which can prune up to if it is able to prune at the given height.
 func (m *Manager) GetPruningHeight(height int64) int64 {
 	if m.opts.GetPruningStrategy() == types.PruningNothing ||
 		m.opts.Interval <= 0 ||

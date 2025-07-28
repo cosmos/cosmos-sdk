@@ -1,7 +1,7 @@
 package ed25519
 
 /*
-This package contains a wrapper around crypto/ed22519 to make it comply with the crypto interfaces.
+This package contains a wrapper around crypto/ed25519 to make it comply with the crypto interfaces.
 
 This package employs zip215 rules. We use https://github.com/hdevalence/ed25519consensus verification function. This is done in order to keep compatibility with Tendermints ed25519 implementation.
 	- https://github.com/cometbft/cometbft/v2/blob/master/crypto/ed25519/ed25519.go#L155

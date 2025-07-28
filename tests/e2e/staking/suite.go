@@ -91,7 +91,6 @@ func (s *E2ETestSuite) SetupSuite() {
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 	)
 	s.Require().NoError(err)
-	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
 	s.Require().Equal(uint32(0), txRes.Code)
 	s.Require().NoError(s.network.WaitForNextBlock())

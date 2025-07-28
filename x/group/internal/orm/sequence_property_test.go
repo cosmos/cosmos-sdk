@@ -15,7 +15,7 @@ func TestSequence(t *testing.T) {
 
 func testSequenceMachine(t *rapid.T) {
 	// Init sets up the real Sequence, including choosing a random initial value,
-	// and initialises the model state
+	// and intialises the model state
 	ctx := NewMockContext()
 	store := ctx.KVStore(storetypes.NewKVStoreKey("test"))
 

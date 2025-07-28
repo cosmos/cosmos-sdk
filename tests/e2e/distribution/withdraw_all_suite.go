@@ -53,7 +53,7 @@ func (s *WithdrawAllTestSuite) TearDownSuite() {
 }
 
 // TestNewWithdrawAllRewardsGenerateOnly requires multiple validators, if I add this test to `E2ETestSuite` by increasing
-// `NumValidators` the existing tests are leading to non-determnism so created new suite for this test.
+// `NumValidators` the existing tests are leading to non-determinism so created new suite for this test.
 func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 	require := s.Require()
 	val := s.network.Validators[0]

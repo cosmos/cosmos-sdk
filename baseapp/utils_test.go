@@ -13,8 +13,8 @@ import (
 	"testing"
 	"unsafe"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	cmttypes "github.com/cometbft/cometbft/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
+	cmttypes "github.com/cometbft/cometbft/v2/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
@@ -432,7 +432,6 @@ func setFailOnHandler(cfg client.TxConfig, tx signing.Tx, fail bool) signing.Tx 
 func wonkyMsg(t *testing.T, cfg client.TxConfig, tx signing.Tx) signing.Tx {
 	t.Helper()
 
-	t.Helper()
 	builder := cfg.NewTxBuilder()
 	builder.SetMemo(tx.GetMemo())
 

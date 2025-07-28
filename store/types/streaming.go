@@ -3,7 +3,7 @@ package types
 import (
 	"context"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
 )
 
 // ABCIListener is the interface that we're exposing as a streaming service.
@@ -13,7 +13,7 @@ import (
 type ABCIListener interface {
 	// ListenFinalizeBlock updates the streaming service with the latest FinalizeBlock messages
 	ListenFinalizeBlock(ctx context.Context, req abci.FinalizeBlockRequest, res abci.FinalizeBlockResponse) error
-	// ListenCommit updates the steaming service with the latest Commit messages and state changes
+	// ListenCommit updates the streaming service with the latest Commit messages and state changes
 	ListenCommit(ctx context.Context, res abci.CommitResponse, changeSet []*StoreKVPair) error
 }
 

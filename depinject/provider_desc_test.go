@@ -45,7 +45,7 @@ func StructInAndOut(_ float32, _ StructIn, _ byte) (int16, StructOut, int32, err
 	return int16(0), StructOut{}, int32(0), nil
 }
 
-func BadErrorPosition() (error, int) { return nil, 0 } //nolint:stylecheck,staticcheck // Deliberately has error as first of multiple arguments.
+func BadErrorPosition() (error, int) { return nil, 0 } //nolint:staticcheck // Deliberately has error as first of multiple arguments.
 
 func BadOptionalFn(_ BadOptional) int { return 0 }
 

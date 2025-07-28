@@ -8,11 +8,12 @@ import (
 	"slices"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/cockroachdb/errors"
-	abci "github.com/cometbft/cometbft/abci/types"
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	"github.com/cometbft/cometbft/crypto/tmhash"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
+	"github.com/cometbft/cometbft/v2/crypto/tmhash"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
 	protov2 "google.golang.org/protobuf/proto"
@@ -120,7 +121,7 @@ type BaseApp struct {
 	// ResponseCommit.RetainHeight value during ABCI Commit. A value of 0 indicates
 	// that no blocks should be pruned.
 	//
-	// Note: CometBFT block pruning is dependant on this parameter in conjunction
+	// Note: CometBFT block pruning is dependent on this parameter in conjunction
 	// with the unbonding (safety threshold) period, state pruning and state sync
 	// snapshot parameters to determine the correct minimum value of
 	// ResponseCommit.RetainHeight.
@@ -161,6 +162,12 @@ type BaseApp struct {
 	//
 	// SAFETY: it's safe to do if validators validate the total gas wanted in the `ProcessProposal`, which is the case in the default handler.
 	disableBlockGasMeter bool
+
+	// nextBlockDelay is the delay to wait until the next block after ABCI has committed.
+	// This gives the application more time to receive precommits.  This is the same as TimeoutCommit,
+	// but can new be set from the application.  This value defaults to 0, and CometBFT will use the
+	// legacy value set in config.toml if it is 0.
+	nextBlockDelay time.Duration
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -173,7 +180,7 @@ func NewBaseApp(
 		logger:           logger.With(log.ModuleKey, "baseapp"),
 		name:             name,
 		db:               db,
-		cms:              store.NewCommitMultiStore(db, logger, storemetrics.NewNoOpMetrics()), // by default we use a no-op metric gather in store
+		cms:              store.NewCommitMultiStore(db, logger, storemetrics.NewNoOpMetrics()), // by default, we use a no-op metric gather in store
 		storeLoader:      DefaultStoreLoader,
 		grpcQueryRouter:  NewGRPCQueryRouter(),
 		msgServiceRouter: NewMsgServiceRouter(),
@@ -181,6 +188,7 @@ func NewBaseApp(
 		fauxMerkleMode:   false,
 		sigverifyTx:      true,
 		gasConfig:        config.GasConfig{QueryGasLimit: math.MaxUint64},
+		nextBlockDelay:   0, // default to 0 so that the legacy CometBFT config.toml value is used
 	}
 
 	for _, option := range options {

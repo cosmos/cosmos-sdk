@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cometbft/cometbft/rpc/client/http"
+	"github.com/cometbft/cometbft/v2/rpc/client/http"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/math"
@@ -90,7 +90,6 @@ func (s *E2ETestSuite) SetupSuite() {
 		unbondingAmount,
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 	)
-	s.Require().NoError(err)
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
 	s.Require().Equal(uint32(0), txRes.Code)

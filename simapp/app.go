@@ -8,7 +8,7 @@ import (
 	"io"
 	"maps"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cast"
@@ -533,7 +533,7 @@ func NewSimApp(
 	)
 
 	// BasicModuleManager defines the module BasicManager is in charge of setting up basic,
-	// non-dependant module elements, such as codec registration and genesis verification.
+	// non-dependent module elements, such as codec registration and genesis verification.
 	// By default it is composed of all the module from the module manager.
 	// Additionally, app module basics can be overwritten by passing them as argument.
 	app.BasicModuleManager = module.NewBasicManagerFromManager(

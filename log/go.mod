@@ -3,7 +3,7 @@ module cosmossdk.io/log
 go 1.23.0
 
 require (
-	github.com/bytedance/sonic v1.13.2
+	github.com/bytedance/sonic v1.13.3
 	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.34.0
 )

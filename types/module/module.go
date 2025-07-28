@@ -36,7 +36,7 @@ import (
 	"slices"
 	"sort"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
@@ -52,7 +52,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// AppModuleBasic is the standard form for basic non-dependant elements of an application module.
+// AppModuleBasic is the standard form for basic non-dependent elements of an application module.
 type AppModuleBasic interface {
 	HasName
 	RegisterLegacyAminoCodec(*codec.LegacyAmino)
@@ -643,7 +643,7 @@ type MigrationHandler func(sdk.Context) error
 type VersionMap map[string]uint64
 
 // RunMigrations performs in-place store migrations for all modules. This
-// function MUST be called insde an x/upgrade UpgradeHandler.
+// function MUST be called inside an x/upgrade UpgradeHandler.
 //
 // Recall that in an upgrade handler, the `fromVM` VersionMap is retrieved from
 // x/upgrade's store, and the function needs to return the target VersionMap

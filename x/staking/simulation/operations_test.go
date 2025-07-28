@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	cmttypes "github.com/cometbft/cometbft/types"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
+	cmttypes "github.com/cometbft/cometbft/v2/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -160,7 +160,7 @@ func (s *SimTestSuite) TestWeightedOperations() {
 }
 
 // TestSimulateMsgCreateValidator tests the normal scenario of a valid message of type TypeMsgCreateValidator.
-// Abonormal scenarios, where the message are created by an errors are not tested here.
+// Abnormal scenarios, where the message are created by an errors are not tested here.
 func (s *SimTestSuite) TestSimulateMsgCreateValidator() {
 	require := s.Require()
 	_, err := s.app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: s.app.LastBlockHeight() + 1, Hash: s.app.LastCommitID().Hash})
@@ -184,7 +184,7 @@ func (s *SimTestSuite) TestSimulateMsgCreateValidator() {
 }
 
 // TestSimulateMsgCancelUnbondingDelegation tests the normal scenario of a valid message of type TypeMsgCancelUnbondingDelegation.
-// Abonormal scenarios, where the message is
+// Abnormal scenarios, where the message is
 func (s *SimTestSuite) TestSimulateMsgCancelUnbondingDelegation() {
 	require := s.Require()
 	blockTime := time.Now().UTC()
@@ -230,7 +230,7 @@ func (s *SimTestSuite) TestSimulateMsgCancelUnbondingDelegation() {
 }
 
 // TestSimulateMsgEditValidator tests the normal scenario of a valid message of type TypeMsgEditValidator.
-// Abonormal scenarios, where the message is created by an errors are not tested here.
+// Abnormal scenarios, where the message is created by an errors are not tested here.
 func (s *SimTestSuite) TestSimulateMsgEditValidator() {
 	require := s.Require()
 	blockTime := time.Now().UTC()
@@ -257,7 +257,7 @@ func (s *SimTestSuite) TestSimulateMsgEditValidator() {
 }
 
 // TestSimulateMsgDelegate tests the normal scenario of a valid message of type TypeMsgDelegate.
-// Abonormal scenarios, where the message is created by an errors are not tested here.
+// Abnormal scenarios, where the message is created by an errors are not tested here.
 func (s *SimTestSuite) TestSimulateMsgDelegate() {
 	require := s.Require()
 	blockTime := time.Now().UTC()
@@ -280,7 +280,7 @@ func (s *SimTestSuite) TestSimulateMsgDelegate() {
 }
 
 // TestSimulateMsgUndelegate tests the normal scenario of a valid message of type TypeMsgUndelegate.
-// Abonormal scenarios, where the message is created by an errors are not tested here.
+// Abnormal scenarios, where the message is created by an errors are not tested here.
 func (s *SimTestSuite) TestSimulateMsgUndelegate() {
 	require := s.Require()
 	blockTime := time.Now().UTC()
@@ -322,7 +322,7 @@ func (s *SimTestSuite) TestSimulateMsgUndelegate() {
 }
 
 // TestSimulateMsgBeginRedelegate tests the normal scenario of a valid message of type TypeMsgBeginRedelegate.
-// Abonormal scenarios, where the message is created by an errors, are not tested here.
+// Abnormal scenarios, where the message is created by an errors, are not tested here.
 func (s *SimTestSuite) TestSimulateMsgBeginRedelegate() {
 	require := s.Require()
 	blockTime := time.Now().UTC()
@@ -401,7 +401,7 @@ func (s *SimTestSuite) setupValidatorRewards(ctx sdk.Context, valAddress sdk.Val
 	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyOneDec())}
 	historicalRewards := distrtypes.NewValidatorHistoricalRewards(decCoins, 2)
 	s.Require().NoError(s.distrKeeper.SetValidatorHistoricalRewards(ctx, valAddress, 2, historicalRewards))
-	// setup current revards
+	// setup current rewards
 	currentRewards := distrtypes.NewValidatorCurrentRewards(decCoins, 3)
 	s.Require().NoError(s.distrKeeper.SetValidatorCurrentRewards(ctx, valAddress, currentRewards))
 }

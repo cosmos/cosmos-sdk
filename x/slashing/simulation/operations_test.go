@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	cmttypes "github.com/cometbft/cometbft/types"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
+	cmttypes "github.com/cometbft/cometbft/v2/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
@@ -150,7 +150,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 }
 
 // TestSimulateMsgUnjail tests the normal scenario of a valid message of type types.MsgUnjail.
-// Abonormal scenarios, where the message is created by an errors, are not tested here.
+// Abnormal scenarios, where the message is created by an errors, are not tested here.
 func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 	blockTime := time.Now().UTC()
 	ctx := suite.ctx.WithBlockTime(blockTime)

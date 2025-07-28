@@ -69,7 +69,7 @@ message Tx {
     repeated bytes signatures = 3;
 }
 
-// A variant of Tx that pins the signer's exact binary represenation of body and
+// A variant of Tx that pins the signer's exact binary representation of body and
 // auth_info. This is used for signing, broadcasting and verification. The binary
 // `serialize(tx: TxRaw)` is stored in Tendermint and the hash `sha256(serialize(tx: TxRaw))`
 // becomes the "txhash", commonly used as the transaction ID.

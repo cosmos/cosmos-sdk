@@ -12,7 +12,7 @@ import (
 	"testing"
 
 	"github.com/99designs/keyring"
-	cmtcrypto "github.com/cometbft/cometbft/crypto"
+	cmtcrypto "github.com/cometbft/cometbft/v2/crypto"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/bcrypt"
 
@@ -2013,7 +2013,7 @@ func TestRenameKey(t *testing.T) {
 
 // TestChangeBcrypt tests the compatibility from upstream Bcrypt and our own
 func TestChangeBcrypt(t *testing.T) {
-	pw := []byte("somepasswword!")
+	pw := []byte("somepassword!")
 
 	saltBytes := cmtcrypto.CRandBytes(16)
 	cosmosHash, err := cosmosbcrypt.GenerateFromPassword(saltBytes, pw, 2)

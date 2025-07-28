@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
-	"github.com/cometbft/cometbft/crypto/encoding"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
+	"github.com/cometbft/cometbft/v2/crypto/encoding"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/errors"
@@ -420,7 +420,7 @@ func (v Validator) RemoveTokens(tokens math.Int) Validator {
 }
 
 // RemoveDelShares removes delegator shares from a validator.
-// NOTE: because token fractions are left in the valiadator,
+// NOTE: because token fractions are left in the validator,
 //
 //	the exchange rate of future shares of this validator can increase.
 func (v Validator) RemoveDelShares(delShares math.LegacyDec) (Validator, math.Int) {

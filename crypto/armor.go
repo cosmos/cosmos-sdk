@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/cometbft/cometbft/crypto"
+	"github.com/cometbft/cometbft/v2/crypto"
 	"golang.org/x/crypto/argon2"
 	"golang.org/x/crypto/chacha20poly1305"
 	"golang.org/x/crypto/openpgp/armor" //nolint:staticcheck //TODO: remove this dependency
@@ -170,7 +170,7 @@ func encryptPrivKey(privKey cryptotypes.PrivKey, passphrase string) (saltBytes, 
 		panic(errorsmod.Wrap(err, "error generating cypher from key"))
 	}
 
-	nonce := make([]byte, aead.NonceSize(), aead.NonceSize()+len(privKeyBytes)+aead.Overhead()) // Nonce is fixed to maintain consistency, each key is generated  at every encryption using a random salt.
+	nonce := make([]byte, aead.NonceSize(), aead.NonceSize()+len(privKeyBytes)+aead.Overhead()) // Nonce is fixed to maintain consistency, each key is generated at every encryption using a random salt.
 
 	encBytes = aead.Seal(nil, nonce, privKeyBytes, nil)
 

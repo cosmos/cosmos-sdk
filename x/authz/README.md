@@ -122,7 +122,7 @@ In `EndBlock` (which runs for every block) we continuously check and prune the e
 https://github.com/cosmos/cosmos-sdk/blob/5f4ddc6f80f9707320eec42182184207fff3833a/x/authz/keeper/keeper.go#L378-L403
 ```
 
-* GrantQueue: `0x02 | expiration_bytes | granter_address_len (1 byte) | granter_address_bytes | grantee_address_len (1 byte) | grantee_address_bytes -> ProtocalBuffer(GrantQueueItem)`
+* GrantQueue: `0x02 | expiration_bytes | granter_address_len (1 byte) | granter_address_bytes | grantee_address_len (1 byte) | grantee_address_bytes -> ProtocolBuffer(GrantQueueItem)`
 
 The `expiration_bytes` are the expiration date in UTC with the format `"2006-01-02T15:04:05.000000000"`.
 
@@ -255,22 +255,27 @@ The `grant` command allows a granter to grant an authorization to a grantee.
 ```bash
 simd tx authz grant <grantee> <authorization_type="send"|"generic"|"delegate"|"unbond"|"redelegate"> --from <granter> [flags]
 ```
--  The `send` authorization_type refers to the built-in `SendAuthorization` type. The custom flags available are `spend-limit` (required) and `allow-list` (optional) , documented [here](#SendAuthorization)
+
+*  The `send` authorization_type refers to the built-in `SendAuthorization` type. The custom flags available are `spend-limit` (required) and `allow-list` (optional) , documented [here](#sendauthorization)
 
 Example:
 
 ```bash
     simd tx authz grant cosmos1.. send --spend-limit=100stake --allow-list=cosmos1...,cosmos2... --from=cosmos1..
 ```
-- The `generic` authorization_type refers to the built-in `GenericAuthorization` type. The custom flag available is `msg-type` ( required) documented [here](#GenericAuthorization).
+
+* The `generic` authorization_type refers to the built-in `GenericAuthorization` type. The custom flag available is `msg-type` ( required) documented [here](#genericauthorization).
 
 > Note: `msg-type` is any valid Cosmos SDK `Msg` type url.
 
 Example:
+
 ```bash
     simd tx authz grant cosmos1.. generic --msg-type=/cosmos.bank.v1beta1.MsgSend --from=cosmos1..
 ```
-- The `delegate`,`unbond`,`redelegate` authorization_types refer to the built-in `StakeAuthorization` type. The custom flags available are `spend-limit` (optional), `allowed-validators` (optional) and `deny-validators` (optional) documented  [here](#StakeAuthorization).
+
+* The `delegate`,`unbond`,`redelegate` authorization_types refer to the built-in `StakeAuthorization` type. The custom flags available are `spend-limit` (optional), `allowed-validators` (optional) and `deny-validators` (optional) documented  [here](#stakeauthorization).
+
 > Note: `allowed-validators` and `deny-validators` cannot both be empty. `spend-limit` represents the `MaxTokens`
 
 Example:

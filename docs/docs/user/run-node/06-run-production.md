@@ -196,7 +196,7 @@ tmkms softsign import $HOME/tmkms/config/secrets/priv_validator_key.json $HOME/t
 
 At this point, it is necessary to delete the `priv_validator_key.json` from the validator node and the tmkms node. Since the key has been imported into tmkms (above) it is no longer necessary on the nodes. The key can be safely stored offline. 
 
-4. Modifiy the `tmkms.toml`. 
+4. Modify the `tmkms.toml`. 
 
 ```bash
 vim $HOME/tmkms/config/tmkms.toml

@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"io"
 
-	cmttypes "github.com/cometbft/cometbft/types"
+	cmttypes "github.com/cometbft/cometbft/v2/types"
 	amino "github.com/tendermint/go-amino"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"

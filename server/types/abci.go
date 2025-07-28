@@ -3,7 +3,7 @@ package types
 import (
 	"context"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	abci "github.com/cometbft/cometbft/v2/abci/types"
 )
 
 // ABCI is an interface that enables any finite, deterministic state machine
@@ -33,5 +33,5 @@ type ABCI interface {
 	ListSnapshots(*abci.ListSnapshotsRequest) (*abci.ListSnapshotsResponse, error)                // List available snapshots
 	OfferSnapshot(*abci.OfferSnapshotRequest) (*abci.OfferSnapshotResponse, error)                // Offer a snapshot to the application
 	LoadSnapshotChunk(*abci.LoadSnapshotChunkRequest) (*abci.LoadSnapshotChunkResponse, error)    // Load a snapshot chunk
-	ApplySnapshotChunk(*abci.ApplySnapshotChunkRequest) (*abci.ApplySnapshotChunkResponse, error) // Apply a shapshot chunk
+	ApplySnapshotChunk(*abci.ApplySnapshotChunkRequest) (*abci.ApplySnapshotChunkResponse, error) // Apply a snapshot chunk
 }

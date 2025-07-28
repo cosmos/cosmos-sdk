@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	cmtcfg "github.com/cometbft/cometbft/config"
+	cmtcfg "github.com/cometbft/cometbft/v2/config"
 	db "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -91,7 +91,7 @@ func TestInterceptConfigsPreRunHandlerCreatesConfigFilesWhenMissing(t *testing.T
 	}
 
 	if !s.Mode().IsRegular() {
-		t.Fatal("appp.toml not created as regular file")
+		t.Fatal("app.toml not created as regular file")
 	}
 
 	if s.Size() == 0 {

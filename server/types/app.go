@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"io"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
-	cmttypes "github.com/cometbft/cometbft/types"
+	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
+	cmttypes "github.com/cometbft/cometbft/v2/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/grpc"
 	"github.com/spf13/cobra"
@@ -25,7 +25,7 @@ type (
 	// via config file or through CLI arguments/flags. The underlying implementation
 	// is defined by the server package and is typically implemented via a Viper
 	// literal defined on the server Context. Note, casting Get calls may not yield
-	// the expected types and could result in type assertion errors. It is recommend
+	// the expected types and could result in type assertion errors. It is recommended
 	// to either use the cast package or perform manual conversion for safety.
 	AppOptions interface {
 		Get(string) any

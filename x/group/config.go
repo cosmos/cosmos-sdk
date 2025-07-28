@@ -2,7 +2,7 @@ package group
 
 import "time"
 
-// Config is a config struct used for intialising the group module to avoid using globals.
+// Config is a config struct used for initializing the group module to avoid using globals.
 type Config struct {
 	// MaxExecutionPeriod defines the max duration after a proposal's voting
 	// period ends that members can send a MsgExec to execute the proposal.

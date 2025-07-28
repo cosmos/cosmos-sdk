@@ -49,7 +49,7 @@ func randSig() []byte {
 }
 
 // tests for malleability
-// highest bit of signature ECDSA s value must be 0, in the 33th byte
+// highest bit of signature ECDSA s value must be 0, in the 33rd byte
 func compactSigCheck(t *testing.T, sig []byte) {
 	b := int(sig[32])
 	if b < 0 {

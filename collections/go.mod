@@ -4,11 +4,11 @@ go 1.23.2
 
 require (
 	cosmossdk.io/schema v1.1.0
-	github.com/cosmos/cosmos-db v1.1.2
+	github.com/cosmos/cosmos-db v1.1.3
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/google/go-cmp v0.7.0
 	github.com/stretchr/testify v1.10.0
-	github.com/tidwall/btree v1.7.0
+	github.com/tidwall/btree v1.8.0
 	google.golang.org/protobuf v1.36.6
 	pgregory.net/rapid v1.2.0
 )
@@ -49,8 +49,9 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace cosmossdk.io/core => ../core
-
 retract v1.0.0
 
 retract v1.1.0
+
+// early tag for v0.54.0
+retract v1.3.0

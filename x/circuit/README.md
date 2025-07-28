@@ -91,7 +91,7 @@ Reset is called by an authorized account to enable execution for a specific msgU
 
 ```protobuf
   // ResetCircuitBreaker resumes processing of Msg's in the state machine that
-  // have been been paused using TripCircuitBreaker.
+  // have been paused using TripCircuitBreaker.
   rpc ResetCircuitBreaker(MsgResetCircuitBreaker) returns (MsgResetCircuitBreakerResponse);
 ```
 
@@ -245,11 +245,13 @@ Re-enable previously disabled message types (requires authorization):
 In case of a critical vulnerability in a specific message type:
 
 1. Quickly disable the vulnerable message type:
+
    ```bash
    <appd> tx circuit trip --type-urls="/cosmos.vulnerable.v1beta1.MsgVulnerable" --from=<authorized_key> --gas=auto --gas-adjustment=1.5
    ```
 
 2. After a fix is deployed, re-enable the message type:
+
    ```bash
    <appd> tx circuit reset --type-urls="/cosmos.vulnerable.v1beta1.MsgVulnerable" --from=<authorized_key> --gas=auto --gas-adjustment=1.5
    ```

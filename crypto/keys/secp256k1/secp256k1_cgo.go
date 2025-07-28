@@ -4,7 +4,7 @@
 package secp256k1
 
 import (
-	"github.com/cometbft/cometbft/crypto"
+	"github.com/cometbft/cometbft/v2/crypto"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1/internal/secp256k1"
 )
@@ -15,7 +15,7 @@ func (privKey *PrivKey) Sign(msg []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	// we do not need v  in r||s||v:
+	// we do not need v in r||s||v:
 	rs := rsv[:len(rsv)-1]
 	return rs, nil
 }

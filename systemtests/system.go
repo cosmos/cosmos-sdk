@@ -18,10 +18,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cometbft/cometbft/libs/sync"
-	client "github.com/cometbft/cometbft/rpc/client/http"
-	ctypes "github.com/cometbft/cometbft/rpc/core/types"
-	tmtypes "github.com/cometbft/cometbft/types"
+	"github.com/cometbft/cometbft/v2/libs/sync"
+	client "github.com/cometbft/cometbft/v2/rpc/client/http"
+	ctypes "github.com/cometbft/cometbft/v2/rpc/core/types"
+	tmtypes "github.com/cometbft/cometbft/v2/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/sjson"
 
@@ -80,7 +80,7 @@ type SystemUnderTest struct {
 	chainID  string
 }
 
-func NewSystemUnderTest(execBinary string, verbose bool, nodesCount int, blockTime time.Duration, initer ...TestnetInitializer) *SystemUnderTest {
+func NewSystemUnderTest(execBinary string, verbose bool, nodesCount int, blockTime time.Duration, chainID string, initer ...TestnetInitializer) *SystemUnderTest {
 	if execBinary == "" {
 		panic("executable binary name must not be empty")
 	}
@@ -90,7 +90,7 @@ func NewSystemUnderTest(execBinary string, verbose bool, nodesCount int, blockTi
 	}
 	execBinary = filepath.Join(WorkDir, "binaries", execBinary)
 	s := &SystemUnderTest{
-		chainID:           "testing",
+		chainID:           chainID,
 		execBinary:        execBinary,
 		outputDir:         "./testnet",
 		blockTime:         blockTime,

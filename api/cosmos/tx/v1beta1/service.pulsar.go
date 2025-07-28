@@ -2,7 +2,7 @@
 package txv1beta1
 
 import (
-	v1 "cosmossdk.io/api/cometbft/types/v1"
+	v2 "cosmossdk.io/api/cometbft/types/v2"
 	v1beta11 "cosmossdk.io/api/cosmos/base/abci/v1beta1"
 	v1beta1 "cosmossdk.io/api/cosmos/base/query/v1beta1"
 	fmt "fmt"
@@ -5140,9 +5140,9 @@ func (x *fastReflection_GetBlockWithTxsResponse) Set(fd protoreflect.FieldDescri
 		clv := lv.(*_GetBlockWithTxsResponse_1_list)
 		x.Txs = *clv.list
 	case "cosmos.tx.v1beta1.GetBlockWithTxsResponse.block_id":
-		x.BlockId = value.Message().Interface().(*v1.BlockID)
+		x.BlockId = value.Message().Interface().(*v2.BlockID)
 	case "cosmos.tx.v1beta1.GetBlockWithTxsResponse.block":
-		x.Block = value.Message().Interface().(*v1.Block)
+		x.Block = value.Message().Interface().(*v2.Block)
 	case "cosmos.tx.v1beta1.GetBlockWithTxsResponse.pagination":
 		x.Pagination = value.Message().Interface().(*v1beta1.PageResponse)
 	default:
@@ -5173,12 +5173,12 @@ func (x *fastReflection_GetBlockWithTxsResponse) Mutable(fd protoreflect.FieldDe
 		return protoreflect.ValueOfList(value)
 	case "cosmos.tx.v1beta1.GetBlockWithTxsResponse.block_id":
 		if x.BlockId == nil {
-			x.BlockId = new(v1.BlockID)
+			x.BlockId = new(v2.BlockID)
 		}
 		return protoreflect.ValueOfMessage(x.BlockId.ProtoReflect())
 	case "cosmos.tx.v1beta1.GetBlockWithTxsResponse.block":
 		if x.Block == nil {
-			x.Block = new(v1.Block)
+			x.Block = new(v2.Block)
 		}
 		return protoreflect.ValueOfMessage(x.Block.ProtoReflect())
 	case "cosmos.tx.v1beta1.GetBlockWithTxsResponse.pagination":
@@ -5203,10 +5203,10 @@ func (x *fastReflection_GetBlockWithTxsResponse) NewField(fd protoreflect.FieldD
 		list := []*Tx{}
 		return protoreflect.ValueOfList(&_GetBlockWithTxsResponse_1_list{list: &list})
 	case "cosmos.tx.v1beta1.GetBlockWithTxsResponse.block_id":
-		m := new(v1.BlockID)
+		m := new(v2.BlockID)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "cosmos.tx.v1beta1.GetBlockWithTxsResponse.block":
-		m := new(v1.Block)
+		m := new(v2.Block)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "cosmos.tx.v1beta1.GetBlockWithTxsResponse.pagination":
 		m := new(v1beta1.PageResponse)
@@ -5498,7 +5498,7 @@ func (x *fastReflection_GetBlockWithTxsResponse) ProtoMethods() *protoiface.Meth
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.BlockId == nil {
-					x.BlockId = &v1.BlockID{}
+					x.BlockId = &v2.BlockID{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.BlockId); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -5534,7 +5534,7 @@ func (x *fastReflection_GetBlockWithTxsResponse) ProtoMethods() *protoiface.Meth
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.Block == nil {
-					x.Block = &v1.Block{}
+					x.Block = &v2.Block{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Block); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -9624,8 +9624,8 @@ type GetBlockWithTxsResponse struct {
 
 	// txs are the transactions in the block.
 	Txs     []*Tx       `protobuf:"bytes,1,rep,name=txs,proto3" json:"txs,omitempty"`
-	BlockId *v1.BlockID `protobuf:"bytes,2,opt,name=block_id,json=blockId,proto3" json:"block_id,omitempty"`
-	Block   *v1.Block   `protobuf:"bytes,3,opt,name=block,proto3" json:"block,omitempty"`
+	BlockId *v2.BlockID `protobuf:"bytes,2,opt,name=block_id,json=blockId,proto3" json:"block_id,omitempty"`
+	Block   *v2.Block   `protobuf:"bytes,3,opt,name=block,proto3" json:"block,omitempty"`
 	// pagination defines a pagination for the response.
 	Pagination *v1beta1.PageResponse `protobuf:"bytes,4,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
@@ -9657,14 +9657,14 @@ func (x *GetBlockWithTxsResponse) GetTxs() []*Tx {
 	return nil
 }
 
-func (x *GetBlockWithTxsResponse) GetBlockId() *v1.BlockID {
+func (x *GetBlockWithTxsResponse) GetBlockId() *v2.BlockID {
 	if x != nil {
 		return x.BlockId
 	}
 	return nil
 }
 
-func (x *GetBlockWithTxsResponse) GetBlock() *v1.Block {
+func (x *GetBlockWithTxsResponse) GetBlock() *v2.Block {
 	if x != nil {
 		return x.Block
 	}
@@ -9994,9 +9994,9 @@ var file_cosmos_tx_v1beta1_service_proto_rawDesc = []byte{
 	0x2f, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x70,
 	0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a,
 	0x1d, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2f,
-	0x76, 0x31, 0x2f, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1d,
+	0x76, 0x32, 0x2f, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1d,
 	0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2f, 0x76,
-	0x31, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x19, 0x63,
+	0x32, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x19, 0x63,
 	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x63, 0x6f, 0x73, 0x6d,
 	0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x88, 0x02, 0x0a, 0x12, 0x47, 0x65, 0x74,
 	0x54, 0x78, 0x73, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12,
@@ -10083,11 +10083,11 @@ var file_cosmos_tx_v1beta1_service_proto_rawDesc = []byte{
 	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x74, 0x78, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
 	0x61, 0x31, 0x2e, 0x54, 0x78, 0x52, 0x03, 0x74, 0x78, 0x73, 0x12, 0x35, 0x0a, 0x08, 0x62, 0x6c,
 	0x6f, 0x63, 0x6b, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x63,
-	0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2e, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x76, 0x31,
+	0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2e, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x76, 0x32,
 	0x2e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x49, 0x44, 0x52, 0x07, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x49,
 	0x64, 0x12, 0x2e, 0x0a, 0x05, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b,
 	0x32, 0x18, 0x2e, 0x63, 0x6f, 0x6d, 0x65, 0x74, 0x62, 0x66, 0x74, 0x2e, 0x74, 0x79, 0x70, 0x65,
-	0x73, 0x2e, 0x76, 0x31, 0x2e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x52, 0x05, 0x62, 0x6c, 0x6f, 0x63,
+	0x73, 0x2e, 0x76, 0x32, 0x2e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x52, 0x05, 0x62, 0x6c, 0x6f, 0x63,
 	0x6b, 0x12, 0x47, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18,
 	0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62,
 	0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
@@ -10282,8 +10282,8 @@ var file_cosmos_tx_v1beta1_service_proto_goTypes = []interface{}{
 	(*v1beta1.PageResponse)(nil),    // 23: cosmos.base.query.v1beta1.PageResponse
 	(*v1beta11.GasInfo)(nil),        // 24: cosmos.base.abci.v1beta1.GasInfo
 	(*v1beta11.Result)(nil),         // 25: cosmos.base.abci.v1beta1.Result
-	(*v1.BlockID)(nil),              // 26: cometbft.types.v1.BlockID
-	(*v1.Block)(nil),                // 27: cometbft.types.v1.Block
+	(*v2.BlockID)(nil),              // 26: cometbft.types.v2.BlockID
+	(*v2.Block)(nil),                // 27: cometbft.types.v2.Block
 }
 var file_cosmos_tx_v1beta1_service_proto_depIdxs = []int32{
 	20, // 0: cosmos.tx.v1beta1.GetTxsEventRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
@@ -10300,8 +10300,8 @@ var file_cosmos_tx_v1beta1_service_proto_depIdxs = []int32{
 	22, // 11: cosmos.tx.v1beta1.GetTxResponse.tx_response:type_name -> cosmos.base.abci.v1beta1.TxResponse
 	20, // 12: cosmos.tx.v1beta1.GetBlockWithTxsRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
 	21, // 13: cosmos.tx.v1beta1.GetBlockWithTxsResponse.txs:type_name -> cosmos.tx.v1beta1.Tx
-	26, // 14: cosmos.tx.v1beta1.GetBlockWithTxsResponse.block_id:type_name -> cometbft.types.v1.BlockID
-	27, // 15: cosmos.tx.v1beta1.GetBlockWithTxsResponse.block:type_name -> cometbft.types.v1.Block
+	26, // 14: cosmos.tx.v1beta1.GetBlockWithTxsResponse.block_id:type_name -> cometbft.types.v2.BlockID
+	27, // 15: cosmos.tx.v1beta1.GetBlockWithTxsResponse.block:type_name -> cometbft.types.v2.Block
 	23, // 16: cosmos.tx.v1beta1.GetBlockWithTxsResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
 	21, // 17: cosmos.tx.v1beta1.TxDecodeResponse.tx:type_name -> cosmos.tx.v1beta1.Tx
 	21, // 18: cosmos.tx.v1beta1.TxEncodeRequest.tx:type_name -> cosmos.tx.v1beta1.Tx

@@ -70,7 +70,7 @@ Further guidelines to be described below.
 Names should be descriptive enough to convey their meaning and distinguish
 them from other names.
 
-Given that we are using fully-qualifed names within
+Given that we are using fully-qualified names within
 `google.protobuf.Any` as well as within gRPC query routes, we should aim to
 keep names concise, without going overboard. The general rule of thumb should
 be if a shorter name would convey more or else the same thing, pick the shorter

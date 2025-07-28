@@ -1,4 +1,4 @@
-# ADR 062: Collections, a simplified storage layer for cosmos-sdk modules.
+# ADR 062: Collections, a simplified storage layer for cosmos-sdk modules
 
 ## Changelog
 
@@ -18,30 +18,32 @@ storage in a simple and straightforward manner, whilst offering safety, extensib
 Module developers are forced into manually implementing storage functionalities in their modules, those functionalities include
 but are not limited to:
 
-- Defining key to bytes formats.
-- Defining value to bytes formats.
-- Defining secondary indexes.
-- Defining query methods to expose outside to deal with storage.
-- Defining local methods to deal with storage writing.
-- Dealing with genesis imports and exports.
-- Writing tests for all the above.
+* Defining key to bytes formats.
+* Defining value to bytes formats.
+* Defining secondary indexes.
+* Defining query methods to expose outside to deal with storage.
+* Defining local methods to deal with storage writing.
+* Dealing with genesis imports and exports.
+* Writing tests for all the above.
 
 
 This brings in a lot of problems:
-- It blocks developers from focusing on the most important part: writing business logic.
-- Key to bytes formats are complex and their definition is error-prone, for example:
-  - how do I format time to bytes in such a way that bytes are sorted?
-  - how do I ensure when I don't have namespace collisions when dealing with secondary indexes?
-- The lack of standardisation makes life hard for clients, and the problem is exacerbated when it comes to providing proofs for objects present in state. Clients are forced to maintain a list of object paths to gather proofs.
+
+* It blocks developers from focusing on the most important part: writing business logic.
+* Key to bytes formats are complex and their definition is error-prone, for example:
+    * how do I format time to bytes in such a way that bytes are sorted?
+    * how do I ensure when I don't have namespace collisions when dealing with secondary indexes?
+* The lack of standardisation makes life hard for clients, and the problem is exacerbated when it comes to providing proofs for objects present in state. Clients are forced to maintain a list of object paths to gather proofs.
 
 ### Current Solution: ORM
 
 The current SDK proposed solution to this problem is [ORM](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-055-orm.md).
 Whilst ORM offers a lot of good functionality aimed at solving these specific problems, it has some downsides:
-- It requires migrations.
-- It uses the newest protobuf golang API, whilst the SDK still mainly uses gogoproto. 
-- Integrating ORM into a module would require the developer to deal with two different golang frameworks (golang protobuf + gogoproto) representing the same API objects.
-- It has a high learning curve, even for simple storage layers as it requires developers to have knowledge around protobuf options, custom cosmos-sdk storage extensions, and tooling download. Then after this they still need to learn the code-generated API.
+
+* It requires migrations.
+* It uses the newest protobuf golang API, whilst the SDK still mainly uses gogoproto. 
+* Integrating ORM into a module would require the developer to deal with two different golang frameworks (golang protobuf + gogoproto) representing the same API objects.
+* It has a high learning curve, even for simple storage layers as it requires developers to have knowledge around protobuf options, custom cosmos-sdk storage extensions, and tooling download. Then after this they still need to learn the code-generated API.
 
 ### CosmWasm Solution: cw-storage-plus
 
@@ -56,11 +58,11 @@ We propose to port the `collections` API, whose implementation lives in [NibiruC
 
 Collections implements four different storage handlers types:
 
-- `Map`: which deals with simple `key=>object` mappings.
-- `KeySet`: which acts as a `Set` and only retains keys and no object (usecase: allow-lists).
-- `Item`: which always contains only one object (usecase: Params)
-- `Sequence`: which implements a simple always increasing number (usecase: Nonces)
-- `IndexedMap`: builds on top of `Map` and `KeySet` and allows to create relationships with `Objects` and `Objects` secondary keys.
+* `Map`: which deals with simple `key=>object` mappings.
+* `KeySet`: which acts as a `Set` and only retains keys and no object (usecase: allow-lists).
+* `Item`: which always contains only one object (usecase: Params)
+* `Sequence`: which implements a simple always increasing number (usecase: Nonces)
+* `IndexedMap`: builds on top of `Map` and `KeySet` and allows to create relationships with `Objects` and `Objects` secondary keys.
 
 All the collection APIs build on top of the simple `Map` type.
 
@@ -77,9 +79,10 @@ which is relevant for swapping serialisation frameworks and enhancing performanc
 These default implementations also offer safety around proper lexicographic ordering and namespace-collision.
 
 Examples of the collections API can be found here:
-- introduction: https://github.com/NibiruChain/collections/tree/main/examples
-- usage in nibiru: [x/oracle](https://github.com/NibiruChain/nibiru/blob/master/x/oracle/keeper/keeper.go#L32), [x/perp](https://github.com/NibiruChain/nibiru/blob/master/x/perp/keeper/keeper.go#L31)
-- cosmos-sdk's x/staking migrated: https://github.com/testinginprod/cosmos-sdk/pull/22
+
+* introduction: https://github.com/NibiruChain/collections/tree/main/examples
+* usage in nibiru: [x/oracle](https://github.com/NibiruChain/nibiru/blob/master/x/oracle/keeper/keeper.go#L32), [x/perp](https://github.com/NibiruChain/nibiru/blob/master/x/perp/keeper/keeper.go#L31)
+* cosmos-sdk's x/staking migrated: https://github.com/testinginprod/cosmos-sdk/pull/22
 
 
 ## Consequences
@@ -92,17 +95,17 @@ the upgrade to the new storage layer non-state breaking.
 
 ### Positive
 
-- ADR aimed at removing code from the SDK rather than adding it. Migrating just `x/staking` to collections would yield to a net decrease in LOC (even considering the addition of collections itself).
-- Simplifies and standardises storage layers across modules in the SDK.
-- Does not require to have to deal with protobuf.
-- It's pure golang code.
-- Generalisation over `KeyEncoders` and `ValueEncoders` allows us to not tie ourself to the data serialisation framework.
-- `KeyEncoders` and `ValueEncoders` can be extended to provide schema reflection.
+* ADR aimed at removing code from the SDK rather than adding it. Migrating just `x/staking` to collections would yield to a net decrease in LOC (even considering the addition of collections itself).
+* Simplifies and standardises storage layers across modules in the SDK.
+* Does not require to have to deal with protobuf.
+* It's pure golang code.
+* Generalisation over `KeyEncoders` and `ValueEncoders` allows us to not tie ourself to the data serialisation framework.
+* `KeyEncoders` and `ValueEncoders` can be extended to provide schema reflection.
 
 ### Negative
 
-- Golang generics are not as battle-tested as other Golang features, despite being used in production right now.
-- Collection types instantiation needs to be improved.
+* Golang generics are not as battle-tested as other Golang features, despite being used in production right now.
+* Collection types instantiation needs to be improved.
 
 ### Neutral
 
@@ -110,8 +113,8 @@ the upgrade to the new storage layer non-state breaking.
 
 ## Further Discussions
 
-- Automatic genesis import/export (not implemented because of API breakage)
-- Schema reflection
+* Automatic genesis import/export (not implemented because of API breakage)
+* Schema reflection
 
 
 ## References

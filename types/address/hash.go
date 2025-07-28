@@ -48,7 +48,7 @@ func Compose(typ string, subAddresses []Addressable) ([]byte, error) {
 		a := subAddresses[i].Address()
 		as[i], err = LengthPrefix(a)
 		if err != nil {
-			return nil, fmt.Errorf("not compatible sub-adddress=%v at index=%d [%w]", a, i, err)
+			return nil, fmt.Errorf("not compatible sub-address=%v at index=%d [%w]", a, i, err)
 		}
 		totalLen += len(as[i])
 	}

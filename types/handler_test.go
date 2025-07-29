@@ -35,7 +35,7 @@ func TestChainAnteDecorators(t *testing.T) {
 }
 
 func TestChainPostDecorators(t *testing.T) {
-	// test panic when passing an empty sclice of PostDecorators
+	// test panic when passing an empty slice of PostDecorators
 	require.Nil(t, sdk.ChainPostDecorators([]sdk.PostDecorator{}...))
 
 	// Create empty context as well as transaction

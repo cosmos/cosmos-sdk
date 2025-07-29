@@ -91,7 +91,7 @@ If there's a planned upgrade and the upgrade height is reached, the old binary w
 
 This information is critical to ensure the `StoreUpgrades` happens smoothly at correct height and
 expected upgrade. It eliminates the chances for the new binary to execute `StoreUpgrades` multiple
-times everytime on restart. Also if there are multiple upgrades planned on same height, the `Name`
+times every time on restart. Also if there are multiple upgrades planned on the same height, the `Name`
 will ensure these `StoreUpgrades` takes place only in planned upgrade handler.
 
 ### Proposal
@@ -106,7 +106,7 @@ upgrade can be delayed or hastened by updating the `Plan.Height` in a new propos
 https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/upgrade/v1beta1/tx.proto#L29-L41
 ```
 
-#### Cancelling Upgrade Proposals
+#### Canceling Upgrade Proposals
 
 Upgrade proposals can be cancelled. There exists a gov-enabled `MsgCancelUpgrade`
 message type, which can be embedded in a proposal, voted on and, if passed, will

@@ -645,7 +645,7 @@ func ParseDecCoin(coinStr string) (coin DecCoin, err error) {
 	return NewDecCoinFromDec(denomStr, amount), nil
 }
 
-// ParseDecCoins will parse out a list of decimal coins separated by commas. If the parsing is successuful,
+// ParseDecCoins will parse out a list of decimal coins separated by commas. If the parsing is successful,
 // the provided coins will be sanitized by removing zero coins and sorting the coin set. Lastly
 // a validation of the coin set is executed. If the check passes, ParseDecCoins will return the sanitized coins.
 // Otherwise it will return an error.

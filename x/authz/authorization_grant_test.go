@@ -8,7 +8,7 @@ import (
 )
 
 // TODO: remove and use: robert/expect-error
-func expecError(r *require.Assertions, expected string, received error) {
+func expectError(r *require.Assertions, expected string, received error) {
 	if expected == "" {
 		r.NoError(received)
 	} else {
@@ -36,7 +36,7 @@ func TestNewGrant(t *testing.T) {
 	for _, tc := range tcs {
 		t.Run(tc.title, func(t *testing.T) {
 			_, err := NewGrant(tc.blockTime, tc.a, tc.expire)
-			expecError(require.New(t), tc.err, err)
+			expectError(require.New(t), tc.err, err)
 		})
 	}
 }

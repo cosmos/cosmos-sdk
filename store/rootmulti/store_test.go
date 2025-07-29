@@ -1102,7 +1102,7 @@ func TestCommitStores(t *testing.T) {
 	testCases := []struct {
 		name          string
 		committed     int
-		expectCommit int
+		expectCommit  int
 	}{
 		{
 			"when upgrade not get interrupted",

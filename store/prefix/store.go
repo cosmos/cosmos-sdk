@@ -42,7 +42,7 @@ func (s Store) key(key []byte) (res []byte) {
 	return
 }
 
-// GetStoreType implements Store, returning the parent store's type'
+// GetStoreType implements Store, returning the parent store's type
 func (s Store) GetStoreType() types.StoreType {
 	return s.parent.GetStoreType()
 }

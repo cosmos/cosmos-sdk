@@ -330,7 +330,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 				},
 			},
 			expErr:    true,
-			expErrMsg: "xtensions cannot be updated to a past or current height",
+			expErrMsg: "extensions cannot be updated to a past or current height",
 		},
 		{
 			name: "invalid pbts update - current height",
@@ -358,7 +358,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 				},
 			},
 			expErr:    true,
-			expErrMsg: "xtensions cannot be updated to a past or current height",
+			expErrMsg: "extensions cannot be updated to a past or current height",
 		},
 		{
 			name: "invalid pbts update - past height",
@@ -415,7 +415,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 				},
 			},
 			expErr:    true,
-			expErrMsg: "xtensions cannot be modified once enabledenabled",
+			expErrMsg: "xtensions cannot be modified once enabled",
 		},
 		{
 			name:            "invalid pbts update - enabled feature",

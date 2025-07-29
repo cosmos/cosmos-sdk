@@ -98,7 +98,7 @@ func NewMsgCreatePermanentLockedAccountCmd(ac address.Codec) *cobra.Command {
 		Use:   "create-permanent-locked-account [to_address] [amount]",
 		Short: "Create a new permanently locked account funded with an allocation of tokens.",
 		Long: `Create a new account funded with an allocation of permanently locked tokens. These
-tokens may be used for staking but are non-transferable. Staking rewards will acrue as liquid and transferable
+tokens may be used for staking but are non-transferable. Staking rewards will accrue as liquid and transferable
 tokens.`,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {

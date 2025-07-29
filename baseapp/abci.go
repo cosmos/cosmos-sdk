@@ -286,7 +286,7 @@ func (app *BaseApp) OfferSnapshot(req *abci.OfferSnapshotRequest) (*abci.OfferSn
 		return &abci.OfferSnapshotResponse{Result: abci.OFFER_SNAPSHOT_RESULT_REJECT}, nil
 
 	default:
-		// CometBFT errors are defined here: https://github.com/cometbft/cometbft/v2/blob/main/statesync/syncer.go
+		// CometBFT errors are defined here: https://github.com/cometbft/cometbft/blob/main/statesync/syncer.go
 		// It may happen that in case of a CometBFT error, such as a timeout (which occurs after two minutes),
 		// the process is aborted. This is done intentionally because deleting the database programmatically
 		// can lead to more complicated situations.
@@ -409,7 +409,7 @@ func (app *BaseApp) PrepareProposal(req *abci.PrepareProposalRequest) (resp *abc
 
 	// CometBFT must never call PrepareProposal with a height of 0.
 	//
-	// Ref: https://github.com/cometbft/cometbft/v2/blob/059798a4f5b0c9f52aa8655fa619054a0154088c/spec/core/state.md?plain=1#L37-L38
+	// Ref: https://github.com/cometbft/cometbft/blob/059798a4f5b0c9f52aa8655fa619054a0154088c/spec/core/state.md?plain=1#L37-L38
 	if req.Height < 1 {
 		return nil, errors.New("PrepareProposal called with invalid height")
 	}
@@ -475,7 +475,7 @@ func (app *BaseApp) ProcessProposal(req *abci.ProcessProposalRequest) (resp *abc
 	}
 
 	// CometBFT must never call ProcessProposal with a height of 0.
-	// Ref: https://github.com/cometbft/cometbft/v2/blob/059798a4f5b0c9f52aa8655fa619054a0154088c/spec/core/state.md?plain=1#L37-L38
+	// Ref: https://github.com/cometbft/cometbft/blob/059798a4f5b0c9f52aa8655fa619054a0154088c/spec/core/state.md?plain=1#L37-L38
 	if req.Height < 1 {
 		return nil, errors.New("ProcessProposal called with invalid height")
 	}

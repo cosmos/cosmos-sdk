@@ -21,7 +21,7 @@ func (s *coinTestSuite) TestMapCoinsAdd() {
 		{"empty list + set", s.emptyCoins, cA0M1, sdk.Coins{s.cm1}, "zero coins should be removed"},
 		{"empty list + set", s.emptyCoins, cA1M1, cA1M1, "zero + a_non_zero = a_non_zero"},
 		{"set + empty list", cA0M1, s.emptyCoins, sdk.Coins{s.cm1}, "zero coins should be removed"},
-		{"set + empty list", cA1M1, s.emptyCoins, cA1M1, "a_non_zero + zero  = a_non_zero"},
+		{"set + empty list", cA1M1, s.emptyCoins, cA1M1, "a_non_zero + zero = a_non_zero"},
 		{
 			"{1atom,1muon}+{1atom,1muon}", cA1M1, cA1M1,
 			sdk.Coins{s.ca2, s.cm2},

@@ -100,7 +100,7 @@ To look up all denoms, do not provide any arguments.`,
 					Long: `Send funds from one account to another.
 Note, the '--from' flag is ignored as it is implied from [from_key_or_address].
 When using '--dry-run' a key name cannot be used, only a bech32 address.
-Note: multiple coins can be send by space separated.`,
+Note: multiple coins can be sent by space separated.`,
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "from_address"}, {ProtoField: "to_address"}, {ProtoField: "amount", Varargs: true}},
 				},
 				{

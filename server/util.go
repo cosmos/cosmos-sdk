@@ -27,7 +27,6 @@ import (
 	"cosmossdk.io/log"
 
 	"cosmossdk.io/store"
-	"cosmossdk.io/store/iavl2"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
@@ -584,10 +583,16 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		defaultMempool,
 		baseapp.SetChainID(chainID),
 		baseapp.SetQueryGasLimit(cast.ToUint64(appOpts.Get(FlagQueryGasLimit))),
-		// TODO for now we just enable iavl v2 always for testing, later it needs to be configurable
-		baseapp.EnableIAVLV2(&iavl2.Config{
-			Path: filepath.Join(homeDir, "data", "v2"),
-		}),
+		baseapp.SetupMemIAVL(
+			homeDir,
+			appOpts,
+			false,
+			false,
+			50000,
+		),
+		//baseapp.EnableIAVLV2(&iavl2.Config{
+		//	Path: filepath.Join(homeDir, "data", "v2"),
+		//}),
 	}
 }
 

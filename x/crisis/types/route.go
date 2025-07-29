@@ -20,7 +20,7 @@ func NewInvarRoute(moduleName, route string, invar sdk.Invariant) InvarRoute {
 	}
 }
 
-// get the full invariance route
+// get the full invariant route
 func (i InvarRoute) FullRoute() string {
 	return i.ModuleName + "/" + i.Route
 }

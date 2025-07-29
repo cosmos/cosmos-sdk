@@ -14,7 +14,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod: "VerifyInvariant",
 					Use:       "invariant-broken [module-name] [invariant-route] --from mykey",
-					Short:     "Submit proof that an invariant broken",
+					Short:     "Submit proof that an invariant is broken",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "invariant_module_name"},
 						{ProtoField: "invariant_route"},

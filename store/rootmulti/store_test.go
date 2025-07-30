@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	dbm "github.com/cosmos/cosmos-db"
 
 	"cosmossdk.io/errors"
 	"cosmossdk.io/log"

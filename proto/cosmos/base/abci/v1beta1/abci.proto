@@ -61,7 +61,7 @@ message ABCIMessageLog {
   repeated StringEvent events = 3 [(gogoproto.castrepeated) = "StringEvents", (gogoproto.nullable) = false];
 }
 
-// StringEvent defines en Event object wrapper where all the attributes
+// StringEvent defines an Event object wrapper where all the attributes
 // contain key/value pairs that are strings instead of raw bytes.
 message StringEvent {
   option (gogoproto.stringer) = true;

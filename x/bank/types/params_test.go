@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func Test_sendParamEqual(t *testing.T) {
+func TestSendParamEqual(t *testing.T) {
 	paramsA := NewSendEnabled(sdk.DefaultBondDenom, true)
 	paramsB := NewSendEnabled(sdk.DefaultBondDenom, true)
 	paramsC := NewSendEnabled("foodenom", false)
@@ -21,7 +21,7 @@ func Test_sendParamEqual(t *testing.T) {
 	require.False(t, ok)
 }
 
-func Test_SendEnabledString(t *testing.T) {
+func TestSendEnabledString(t *testing.T) {
 	paramStringTrue := "denom:\"foo\" enabled:true "
 	paramTrue := NewSendEnabled("foo", true)
 	assert.Equal(t, paramStringTrue, paramTrue.String(), "true")
@@ -30,7 +30,7 @@ func Test_SendEnabledString(t *testing.T) {
 	assert.Equal(t, paramStringFalse, paramFalse.String(), "false")
 }
 
-func Test_ParamsString(t *testing.T) {
+func TestParamsString(t *testing.T) {
 	tests := []struct {
 		name     string
 		params   Params
@@ -65,7 +65,7 @@ func Test_ParamsString(t *testing.T) {
 	}
 }
 
-func Test_validateParams(t *testing.T) {
+func TestValidateParams(t *testing.T) {
 	assert.NoError(t, DefaultParams().Validate(), "default")
 	assert.NoError(t, NewParams(true).Validate(), "true")
 	assert.NoError(t, NewParams(false).Validate(), "false")

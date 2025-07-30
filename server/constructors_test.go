@@ -8,13 +8,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_openDB(t *testing.T) {
+func TestOpenDB(t *testing.T) {
 	t.Parallel()
 	_, err := openDB(t.TempDir(), dbm.GoLevelDBBackend)
 	require.NoError(t, err)
 }
 
-func Test_openTraceWriter(t *testing.T) {
+func TestOpenTraceWriter(t *testing.T) {
 	t.Parallel()
 
 	fname := filepath.Join(t.TempDir(), "logfile")

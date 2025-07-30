@@ -139,7 +139,7 @@ func setVersionPackageVars(t *testing.T) {
 	version.BuildTags = testBuildTags
 }
 
-func Test_runVersionCmd(t *testing.T) {
+func TestRunVersionCmd(t *testing.T) {
 	cmd := version.NewVersionCommand()
 	_, mockOut := testutil.ApplyMockIO(cmd)
 

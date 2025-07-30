@@ -145,7 +145,7 @@ func (i MultiKeyIndex) PrefixScan(store types.KVStore, startI, endI any) (Iterat
 }
 
 // ReversePrefixScan returns an Iterator over a domain of keys in descending order. End is exclusive.
-// Start is an MultiKeyIndex key or prefix. It must be less than end, or the Iterator is invalid  and error is returned.
+// Start is an MultiKeyIndex key or prefix. It must be less than end, or the Iterator is invalid and error is returned.
 // Iterator must be closed by caller.
 // To iterate over entire domain, use PrefixScan(nil, nil)
 //

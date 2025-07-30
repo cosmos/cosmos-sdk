@@ -45,7 +45,7 @@ func (k FooKeeper) Do(obj interface{}) {
 }
 ```
 
-By default that panic would be recovered and an error message will be printed to log. To override that behaviour we should register a custom RecoveryHandler:
+By default that panic would be recovered and an error message will be printed to log. To override that behavior we should register a custom RecoveryHandler:
 
 ```go
 // Cosmos SDK application constructor

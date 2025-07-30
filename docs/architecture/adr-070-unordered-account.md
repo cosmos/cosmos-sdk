@@ -319,7 +319,7 @@ single-use unordered nonces, instead of deriving nonces from bytes in the transa
 
 * Requires additional storage overhead.
 * Requirement of unique timestamps per transaction causes a small amount of additional overhead for clients. Clients must ensure each transaction's timeout timestamp is different. However, nanosecond differentials suffice.
-* Usage of Cosmos SDK KV store is slower in comparison to using a non-merklized store or ad-hoc methods, and block times may slow down as a result.
+* Usage of Cosmos SDK KV store is slower in comparison to using a non-merkleized store or ad-hoc methods, and block times may slow down as a result.
 
 ## References
 

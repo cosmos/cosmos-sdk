@@ -61,7 +61,7 @@ func (a AutoUInt64Table) Update(store storetypes.KVStore, rowID uint64, newValue
 // and fails with a `ErrNotFound` otherwise. Any caller must therefore make sure that this contract
 // is fulfilled.
 //
-// Delete iterates though the registered callbacks and removes secondary index keys by them.
+// Delete iterates through the registered callbacks and removes secondary index keys by them.
 func (a AutoUInt64Table) Delete(store storetypes.KVStore, rowID uint64) error {
 	return a.table.Delete(store, EncodeSequence(rowID))
 }

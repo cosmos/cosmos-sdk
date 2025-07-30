@@ -20,7 +20,7 @@ func MigrateJSON(oldState *v1beta1.GenesisState) (*v1.GenesisState, error) {
 		return nil, err
 	}
 
-	depParams, votingParms, tallyParams := convertToNewDepParams(oldState.DepositParams), convertToNewVotingParams(oldState.VotingParams), convertToNewTallyParams(oldState.TallyParams)
+	depParams, votingParams, tallyParams := convertToNewDepParams(oldState.DepositParams), convertToNewVotingParams(oldState.VotingParams), convertToNewTallyParams(oldState.TallyParams)
 
 	return &v1.GenesisState{
 		StartingProposalId: oldState.StartingProposalId,
@@ -28,7 +28,7 @@ func MigrateJSON(oldState *v1beta1.GenesisState) (*v1.GenesisState, error) {
 		Votes:              newVotes,
 		Proposals:          newProps,
 		DepositParams:      &depParams,
-		VotingParams:       &votingParms,
+		VotingParams:       &votingParams,
 		TallyParams:        &tallyParams,
 	}, nil
 }

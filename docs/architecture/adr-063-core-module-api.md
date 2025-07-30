@@ -388,7 +388,7 @@ Additional `AppModule` extension interfaces either inside or outside of core wil
 these concerns.
 
 In the case of gogo proto and amino interfaces, the registration of these generally should happen as early
-as possible during initialization and in [ADR 057: App Wiring](./adr-057-app-wiring-1.md), protobuf type registration  
+as possible during initialization and in [ADR 057: App Wiring](./adr-057-app-wiring.md), protobuf type registration  
 happens before dependency injection (although this could alternatively be done dedicated DI providers).
 
 gRPC gateway registration should probably be handled by the runtime module, but the core API shouldn't depend on gRPC

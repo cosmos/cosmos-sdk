@@ -1100,9 +1100,9 @@ func prepareStoreMap() (map[types.StoreKey]types.CommitKVStore, error) {
 
 func TestCommitStores(t *testing.T) {
 	testCases := []struct {
-		name          string
-		committed     int
-		expectCommit  int
+		name		string
+		committed	int
+		expectCommit	int
 	}{
 		{
 			"when upgrade not get interrupted",

@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_genPrivKey(t *testing.T) {
+func TestGenPrivKey(t *testing.T) {
 	empty := make([]byte, 32)
 	oneB := big.NewInt(1).Bytes()
 	onePadded := make([]byte, 32)

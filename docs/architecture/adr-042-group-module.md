@@ -28,7 +28,7 @@ The proof of concept of the group module can be found in https://github.com/cosm
 
 ## Decision
 
-We propose merging the `x/group` module with its supporting [ORM/Table Store package](https://github.com/regen-network/regen-ledger/tree/master/orm) ([#7098](https://github.com/cosmos/cosmos-sdk/issues/7098)) into the Cosmos SDK and continuing development here. There will be a dedicated ADR for the ORM package.
+We propose merging the `x/group` module with its supporting [ORM/Table Store package](https://github.com/cosmos/cosmos-sdk/tree/main/x/group/internal/orm) ([#7098](https://github.com/cosmos/cosmos-sdk/issues/7098)) into the Cosmos SDK and continuing development here. There will be a dedicated ADR for the ORM package.
 
 ### Group
 

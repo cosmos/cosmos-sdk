@@ -14,7 +14,7 @@ The main difference the Cosmos SDK is defining as a differentiation between RFC 
 
 ## RFC life cycle
 
-RFC creation is an **iterative** process. An RFC is meant as a distributed colloboration session, it may have many comments and is usually the bi-product of no working group or synchornous communication 
+RFC creation is an **iterative** process. An RFC is meant as a distributed collaboration session, it may have many comments and is usually the bi-product of no working group or synchronous communication 
 
 1. Proposals could start with a new GitHub Issue,  be a result of existing Issues or a discussion.
 
@@ -28,7 +28,7 @@ RFC creation is an **iterative** process. An RFC is meant as a distributed collo
 
 6. If there is consensus and enough feedback then the RFC can be accepted. 
 
-> Note: An RFC is written when there is no working group or team session on the problem. RFC's are meant as a distributed white boarding session. If there is a working group on the proposal there is no need to have an RFC as there is synchornous whiteboarding going on. 
+> Note: An RFC is written when there is no working group or team session on the problem. RFC's are meant as a distributed white boarding session. If there is a working group on the proposal there is no need to have an RFC as there is synchronous whiteboarding going on. 
 
 ### RFC status
 

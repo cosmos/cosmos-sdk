@@ -20,7 +20,7 @@ This ADR defines a set of changes to enable listening to state changes of indivi
 
 ## Context
 
-Currently, KVStore data can be remotely accessed through [Queries](https://github.com/cosmos/cosmos-sdk/blob/master/docs/building-modules/messages-and-queries.md#queries)
+Currently, KVStore data can be remotely accessed through [Queries](https://docs.cosmos.network/main/build/building-modules/messages-and-queries#queries)
 which proceed either through Tendermint and the ABCI, or through the gRPC server.
 In addition to these request/response queries, it would be beneficial to have a means of listening to state changes as they occur in real time.
 

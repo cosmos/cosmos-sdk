@@ -52,7 +52,7 @@ func TestKeySet(t *testing.T) {
 	require.False(t, iter.Valid())
 }
 
-func Test_noValue(t *testing.T) {
+func TestNoValue(t *testing.T) {
 	require.Equal(t, noValueValueType, noValueCodec.ValueType())
 	require.Equal(t, noValueValueType, noValueCodec.Stringify(NoValue{}))
 

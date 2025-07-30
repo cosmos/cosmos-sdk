@@ -17,7 +17,7 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
-func Test_runRenameCmd(t *testing.T) {
+func TestRunRenameCmd(t *testing.T) {
 	// temp keybase
 	kbHome := t.TempDir()
 	cmd := RenameKeyCommand()

@@ -226,7 +226,7 @@ type HasServices interface {
 
 ```
 
-Because of the `cosmos.msg.v1.service` protobuf option, required for `Msg` services, the same `ServiceRegitrar` can be
+Because of the `cosmos.msg.v1.service` protobuf option, required for `Msg` services, the same `ServiceRegistrar` can be
 used to register both `Msg` and query services.
 
 #### Genesis

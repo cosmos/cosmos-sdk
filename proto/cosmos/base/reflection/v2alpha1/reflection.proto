@@ -61,7 +61,7 @@ message ChainDescriptor {
 
 // CodecDescriptor describes the registered interfaces and provides metadata information on the types
 message CodecDescriptor {
-  // interfaces is a list of the registeed interfaces descriptors
+  // interfaces is a list of the registered interfaces descriptors
   repeated InterfaceDescriptor interfaces = 1;
 }
 

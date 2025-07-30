@@ -22,7 +22,7 @@ It is built using the following stack:
 
 ## Docs Build Workflow
 
-The docs are built and deployed automatically on GitHub Pages by a [GitHub Action workflow](.github/workflows/deploy-docs.yml).
+The docs are built and deployed automatically on GitHub Pages by a [GitHub Action workflow](../.github/workflows/build-docs.yml).
 The workflow is triggered on every push to the `main` and `release/v**` branches, every time documentations or specs are modified.
 
 ### How It Works
@@ -60,7 +60,7 @@ make build-docs
 
 When a new major version of the SDK is released, the following steps should be taken:
 
-* On the `release/vX.Y.Z` branch, remove the deploy action (`.github/workflows/deploy-docs.yml`), for avoiding deploying the docs from the release branches.
+* On the `release/vX.Y.Z` branch, remove the deploy action (`.github/workflows/build-docs.yml`), for avoiding deploying the docs from the release branches.
 * On the `release/vX.Y.Z` branch, update `docusaurus.config.js` and set the `lastVersion` to `current`, remove all other versions from the config.
 * Each time a new version is released (on docusaurus), drop support from the oldest versions.
     * If the old version is still running vuepress (v0.45, v0.46), remove its line from `vuepress_versions`

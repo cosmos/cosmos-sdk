@@ -8,7 +8,7 @@ import (
 	"cosmossdk.io/math"
 )
 
-func Test_validateAuxFuncs(t *testing.T) {
+func TestValidateAuxFuncs(t *testing.T) {
 	type args struct {
 		i any
 	}

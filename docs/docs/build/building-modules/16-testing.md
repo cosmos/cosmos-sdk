@@ -116,9 +116,9 @@ Here are some examples:
 * Osmosis E2E tests: <https://github.com/osmosis-labs/osmosis/tree/main/tests/e2e>.
 
 :::note warning
-The SDK is in the process of creating its E2E tests, as defined in [ADR-59](https://docs.cosmos.network/main/architecture/adr-059-test-scopes.html). This page will eventually be updated with better examples.
+The SDK is in the process of creating its E2E tests, as defined in [ADR-59](https://docs.cosmos.network/main/build/architecture/adr-059-test-scopes). This page will eventually be updated with better examples.
 :::
 
 ## Learn More
 
-Learn more about testing scope in [ADR-59](https://docs.cosmos.network/main/architecture/adr-059-test-scopes.html).
+Learn more about testing scope in [ADR-59](https://docs.cosmos.network/main/build/architecture/adr-059-test-scopes).

@@ -10,7 +10,7 @@ PROPOSED
 
 ## Abstract
 
-Account rekeying is a process hat allows an account to replace its authentication pubkey with a new one.
+Account rekeying is a process that allows an account to replace its authentication pubkey with a new one.
 
 ## Context
 

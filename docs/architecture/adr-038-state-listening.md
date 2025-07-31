@@ -529,7 +529,7 @@ func NewStreamingPlugin(name string, logLevel string) (interface{}, error) {
 
 We propose a `RegisterStreamingPlugin` function for the App to register `NewStreamingPlugin`s with the App's BaseApp.
 Streaming plugins can be of `Any` type; therefore, the function takes in an interface vs a concrete type.
-For example, we could have plugins of `ABCIListener`, `WasmListener` or `IBCListener`. Note that `RegisterStreamingPluing` function
+For example, we could have plugins of `ABCIListener`, `WasmListener` or `IBCListener`. Note that `RegisterStreamingPlugin` function
 is helper function and not a requirement. Plugin registration can easily be moved from the App to the BaseApp directly.
 
 ```go

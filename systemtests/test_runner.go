@@ -20,6 +20,7 @@ var (
 )
 
 func RunTests(m *testing.M) {
+	chainID := flag.String("chain-id", "testing", "chainID")
 	waitTime := flag.Duration("wait-time", DefaultWaitTime, "time to wait for chain events")
 	nodesCount := flag.Int("nodes-count", 4, "number of nodes in the cluster")
 	blockTime := flag.Duration("block-time", 3000*time.Millisecond, "block creation time")
@@ -47,7 +48,7 @@ func RunTests(m *testing.M) {
 	}
 	execBinaryName = *execBinary
 
-	Sut = NewSystemUnderTest(*execBinary, Verbose, *nodesCount, *blockTime)
+	Sut = NewSystemUnderTest(*execBinary, Verbose, *nodesCount, *blockTime, *chainID)
 	Sut.SetupChain() // setup chain and keyring
 
 	// run tests

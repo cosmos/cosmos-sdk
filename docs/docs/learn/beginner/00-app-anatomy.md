@@ -50,7 +50,7 @@ In general, the core of the state-machine is defined in a file called `app.go`. 
 
 The first thing defined in `app.go` is the `type` of the application. It is generally comprised of the following parts:
 
-* **Embeding [runtime.App](../../build/building-apps/00-runtime.md)** The runtime package manages the application's core components and modules through dependency injection. It provides declarative configuration for module management, state storage, and ABCI handling.
+* **Embedding [runtime.App](../../build/building-apps/00-runtime.md)** The runtime package manages the application's core components and modules through dependency injection. It provides declarative configuration for module management, state storage, and ABCI handling.
     * `Runtime` wraps `BaseApp`, meaning when a transaction is relayed by CometBFT to the application, `app` uses `runtime`'s methods to route them to the appropriate module. `BaseApp` implements all the [ABCI methods](https://docs.cometbft.com/v0.38/spec/abci/) and the [routing logic](../advanced/00-baseapp.md#service-routers).
     * It automatically configures the **[module manager](../../build/building-modules/01-module-manager.md#manager)** based on the app wiring configuration. The module manager facilitates operations related to these modules, like registering their [`Msg` service](../../build/building-modules/03-msg-services.md) and [gRPC `Query` service](#grpc-query-services), or setting the order of execution between modules for various functions like [`InitChainer`](#initchainer), [`PreBlocker`](#preblocker) and [`BeginBlocker` and `EndBlocker`](#beginblocker-and-endblocker).
 * [**An App Wiring configuration file**](../../build/building-apps/00-runtime.md) The app wiring configuration file contains the list of application's modules that `runtime` must instantiate. The instantiation of the modules are done using `depinject`. It also contains the order in which all module's `InitGenesis` and `Pre/Begin/EndBlocker` methods should be executed.
@@ -179,7 +179,7 @@ Note that `sdk.Msg`s are bundled in [transactions](../advanced/01-transactions.m
 
 When a valid block of transactions is received by the full-node, CometBFT relays each one to the application via [`DeliverTx`](https://docs.cometbft.com/v0.37/spec/abci/abci++_app_requirements#specifics-of-responsedelivertx). Then, the application handles the transaction:
 
-1. Upon receiving the transaction, the application first unmarshalls it from `[]byte`.
+1. Upon receiving the transaction, the application first unmarshals it from `[]byte`.
 2. Then, it verifies a few things about the transaction like [fee payment and signatures](./04-gas-fees.md#antehandler) before extracting the `Msg`(s) contained in the transaction.
 3. `sdk.Msg`s are encoded using Protobuf [`Any`s](#register-codec). By analyzing each `Any`'s `type_url`, baseapp's `msgServiceRouter` routes the `sdk.Msg` to the corresponding module's `Msg` service.
 4. If the message is successfully processed, the state is updated.

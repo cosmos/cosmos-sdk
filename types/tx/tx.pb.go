@@ -266,7 +266,7 @@ type SignDocDirectAux struct {
 	AccountNumber uint64 `protobuf:"varint,4,opt,name=account_number,json=accountNumber,proto3" json:"account_number,omitempty"`
 	// sequence is the sequence number of the signing account.
 	Sequence uint64 `protobuf:"varint,5,opt,name=sequence,proto3" json:"sequence,omitempty"`
-	// tips have been depreacted and should not be used
+	// tips have been deprecated and should not be used
 	Tip *Tip `protobuf:"bytes,6,opt,name=tip,proto3" json:"tip,omitempty"` // Deprecated: Do not use.
 }
 
@@ -818,7 +818,7 @@ func (m *ModeInfo_Multi) GetModeInfos() []*ModeInfo {
 
 // Fee includes the amount of coins paid in fees and the maximum
 // gas to be used by the transaction. The ratio yields an effective "gasprice",
-// which must be above some miminum to be accepted into the mempool.
+// which must be above some minimum to be accepted into the mempool.
 type Fee struct {
 	// amount is the amount of coins to be paid as a fee
 	Amount github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,1,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`

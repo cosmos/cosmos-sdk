@@ -73,7 +73,7 @@ When a new major version of the SDK is released, the following steps should be t
         },
       ```
 
-* Add the new version sidebar to the list of versionned sidebar and add the version to `versions.json`.
+* Add the new version sidebar to the list of versioned sidebar and add the version to `versions.json`.
 * Update the latest version (`presets[1].docs.lastVersion`) in `docusaurus.config.js`.
 * Add the new version with in `presets[1].docs.versions` in `docusaurus.config.js`.
 

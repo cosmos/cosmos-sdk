@@ -80,7 +80,7 @@ type SystemUnderTest struct {
 	chainID  string
 }
 
-func NewSystemUnderTest(execBinary string, verbose bool, nodesCount int, blockTime time.Duration, initer ...TestnetInitializer) *SystemUnderTest {
+func NewSystemUnderTest(execBinary string, verbose bool, nodesCount int, blockTime time.Duration, chainID string, initer ...TestnetInitializer) *SystemUnderTest {
 	if execBinary == "" {
 		panic("executable binary name must not be empty")
 	}
@@ -90,7 +90,7 @@ func NewSystemUnderTest(execBinary string, verbose bool, nodesCount int, blockTi
 	}
 	execBinary = filepath.Join(WorkDir, "binaries", execBinary)
 	s := &SystemUnderTest{
-		chainID:           "testing",
+		chainID:           chainID,
 		execBinary:        execBinary,
 		outputDir:         "./testnet",
 		blockTime:         blockTime,
@@ -866,7 +866,7 @@ type (
 )
 
 // Subscribe to receive events for a topic. Does not block.
-// For query syntax See https://docs.cosmos.network/master/core/events.html#subscribing-to-events
+// For query syntax See https://docs.cosmos.network/v0.46/core/events.html#subscribing-to-events
 func (l *EventListener) Subscribe(query string, cb EventConsumer) func() {
 	ctx, done := context.WithCancel(context.Background())
 	l.t.Cleanup(done)
@@ -888,7 +888,7 @@ func (l *EventListener) Subscribe(query string, cb EventConsumer) func() {
 }
 
 // AwaitQuery blocks and waits for a single result or timeout. This can be used with `broadcast-mode=async`.
-// For query syntax See https://docs.cosmos.network/master/core/events.html#subscribing-to-events
+// For query syntax See https://docs.cosmos.network/v0.46/core/events.html#subscribing-to-events
 func (l *EventListener) AwaitQuery(query string, optMaxWaitTime ...time.Duration) *ctypes.ResultEvent {
 	c, result := CaptureSingleEventConsumer()
 	maxWaitTime := DefaultWaitTime

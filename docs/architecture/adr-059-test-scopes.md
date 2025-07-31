@@ -56,7 +56,7 @@ Tests which exercise a whole module's function with dependencies mocked, are *jo
 These are almost like integration tests in that they exercise many things together but still
 use mocks.
 
-Example 1 journey vs illustrative tests - [depinject's BDD style tests](https://github.com/cosmos/cosmos-sdk/blob/main/depinject/features/bindings.feature), show how we can
+Example 1 journey vs illustrative tests - [depinject's BDD style tests](https://github.com/cosmos/cosmos-sdk/blob/main/depinject/binding_test.go), show how we can
 rapidly build up many illustrative cases demonstrating behavioral rules without [very much code](https://github.com/cosmos/cosmos-sdk/blob/main/depinject/binding_test.go) while maintaining high level readability.
 
 Example 2 [depinject table driven tests](https://github.com/cosmos/cosmos-sdk/blob/main/depinject/provider_desc_test.go)
@@ -148,7 +148,7 @@ to a production environment as is practical. Presently these tests are located a
 [tests/e2e](https://github.com/cosmos/cosmos-sdk/tree/main/tests/e2e) and rely on [testutil/network](https://github.com/cosmos/cosmos-sdk/tree/main/testutil/network) to start up an in-process Tendermint node.
 
 An application should be built as minimally as possible to exercise the desired functionality.
-The SDK uses an application will only the required modules for the tests. The application developer is adviced to use its own application for e2e tests.
+The SDK uses an application will only the required modules for the tests. The application developer is advised to use its own application for e2e tests.
 
 #### Limitations
 

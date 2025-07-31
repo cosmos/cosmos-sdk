@@ -58,7 +58,7 @@ halt-time = {{ .BaseConfig.HaltTime }}
 # It has no bearing on application state pruning which is determined by the
 # "pruning-*" configurations.
 #
-# Note: CometBFT block pruning is dependant on this parameter in conjunction
+# Note: CometBFT block pruning is dependent on this parameter in conjunction
 # with the unbonding (safety threshold) period, state pruning and state sync
 # snapshot parameters to determine the correct minimum value of
 # ResponseCommit.RetainHeight.

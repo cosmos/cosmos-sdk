@@ -5,7 +5,7 @@ sidebar_position: 1
 # Module Manager
 
 :::note Synopsis
-Cosmos SDK modules need to implement the [`AppModule` interfaces](#application-module-interfaces), in order to be managed by the application's [module manager](#module-manager). The module manager plays an important role in [`message` and `query` routing](../../learn/advanced/00-baseapp.md#routing), and allows application developers to set the order of execution of a variety of functions like [`PreBlocker`](../../learn/beginner/00-app-anatomy#preblocker) and [`BeginBlocker` and `EndBlocker`](../../learn/beginner/00-app-anatomy.md#begingblocker-and-endblocker).
+Cosmos SDK modules need to implement the [`AppModule` interfaces](#application-module-interfaces), in order to be managed by the application's [module manager](#module-manager). The module manager plays an important role in [`message` and `query` routing](../../learn/advanced/00-baseapp.md#routing), and allows application developers to set the order of execution of a variety of functions like [`PreBlocker`](../../learn/beginner/00-app-anatomy.md#preblocker) and [`BeginBlocker` and `EndBlocker`](../../learn/beginner/00-app-anatomy.md#begingblocker-and-endblocker).
 :::
 
 :::note Pre-requisite Readings
@@ -271,7 +271,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/types/module/module.go#L77
 It implements the following methods:
 
 * `NewBasicManager(modules ...AppModuleBasic)`: Constructor function. It takes a list of the application's `AppModuleBasic` and builds a new `BasicManager`. This function is generally called in the `init()` function of [`app.go`](../../learn/beginner/00-app-anatomy.md#core-application-file) to quickly initialize the independent elements of the application's modules (click [here](https://github.com/cosmos/gaia/blob/main/app/app.go#L59-L74) to see an example).
-* `NewBasicManagerFromManager(manager *Manager, customModuleBasics map[string]AppModuleBasic)`: Contructor function. It creates a new `BasicManager` from a `Manager`. The `BasicManager` will contain all `AppModuleBasic` from the `AppModule` manager using `CoreAppModuleBasicAdaptor` whenever possible. Module's `AppModuleBasic` can be overridden by passing a custom AppModuleBasic map
+* `NewBasicManagerFromManager(manager *Manager, customModuleBasics map[string]AppModuleBasic)`: Constructor function. It creates a new `BasicManager` from a `Manager`. The `BasicManager` will contain all `AppModuleBasic` from the `AppModule` manager using `CoreAppModuleBasicAdaptor` whenever possible. Module's `AppModuleBasic` can be overridden by passing a custom AppModuleBasic map
 * `RegisterLegacyAminoCodec(cdc *codec.LegacyAmino)`: Registers the [`codec.LegacyAmino`s](../../learn/advanced/05-encoding.md#amino) of each of the application's `AppModuleBasic`. This function is usually called early on in the [application's construction](../../learn/beginner/00-app-anatomy.md#constructor).
 * `RegisterInterfaces(registry codectypes.InterfaceRegistry)`: Registers interface types and implementations of each of the application's `AppModuleBasic`.
 * `DefaultGenesis(cdc codec.JSONCodec)`: Provides default genesis information for modules in the application by calling the [`DefaultGenesis(cdc codec.JSONCodec)`](./08-genesis.md#defaultgenesis) function of each module. It only calls the modules that implements the `HasGenesisBasics` interfaces.

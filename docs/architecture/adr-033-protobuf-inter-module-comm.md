@@ -94,7 +94,7 @@ evolution.
 the two which checks if one module is authorized to send the specified `Msg` to the other module providing a proper
 object capability system (see below).
 3. The router for inter-module communication gives us a convenient place to handle rollback of transactions,
-enabling atomicy of operations ([currently a problem](https://github.com/cosmos/cosmos-sdk/issues/8030)). Any failure within a module-to-module call would result in a failure of the entire
+enabling atomicity of operations ([currently a problem](https://github.com/cosmos/cosmos-sdk/issues/8030)). Any failure within a module-to-module call would result in a failure of the entire
 transaction
 
 This mechanism has the added benefits of:

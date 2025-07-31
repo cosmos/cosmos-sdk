@@ -72,7 +72,7 @@ In addition to being aware of the general non-determinism of protobuf binary, de
 
 In addition to the non-determinism present in protobuf binary itself, some protobuf field data is encoded using a micro-format which itself may not be deterministic. Consider for instance integer or decimal encoding. Some decoders may allow for the presence of leading or trailing zeros without changing the logical meaning, ex. `00100` vs `100` or `100.00` vs `100`. So if a sign mode encodes numbers deterministically, but decoders accept multiple representations,
 a user may sign over the value `100` while `0100` gets encoded. This would be possible with Amino JSON to the extent that the integer decoder accepts leading zeros. I believe the current `Int` implementation will reject this, however, it is
-probably possible to encode a octal or hexadecimal representation in the transaction whereas the user signs over a decimal integer.
+probably possible to encode an octal or hexadecimal representation in the transaction whereas the user signs over a decimal integer.
 
 #### Signature Encoding
 

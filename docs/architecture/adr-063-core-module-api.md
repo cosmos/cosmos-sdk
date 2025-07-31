@@ -558,7 +558,7 @@ as by providing service implementations by wrapping `sdk.Context`.
 ## References
 
 * [ADR 033: Protobuf-based Inter-Module Communication](./adr-033-protobuf-inter-module-comm.md)
-* [ADR 057: App Wiring](./adr-057-app-wiring-1.md)
+* [ADR 057: App Wiring](./adr-057-app-wiring.md)
 * [ADR 055: ORM](./adr-055-orm.md)
 * [ADR 028: Public Key Addresses](./adr-028-public-key-addresses.md)
 * [Keeping Your Modules Compatible](https://go.dev/blog/module-compatibility)

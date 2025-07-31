@@ -40,7 +40,7 @@ var (
 func getSDKVersion() string {
 	deps, ok := debug.ReadBuildInfo()
 	if !ok {
-		return "unable to read deps"
+		return "build info not available (not built with go modules)"
 	}
 	var sdkVersion string
 	for _, dep := range deps.Deps {

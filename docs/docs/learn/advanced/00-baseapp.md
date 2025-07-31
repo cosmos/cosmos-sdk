@@ -166,7 +166,7 @@ which encodes and validates each transaction and from there the `AnteHandler` is
 If successful, valid transactions are returned inclusive of the events, tags, and data generated 
 during the execution of the proposal. 
 The described behavior is that of the default handler, applications have the flexibility to define their own 
-[custom mempool handlers](https://docs.cosmos.network/main/building-apps/app-mempool#custom-mempool-handlers).
+[custom mempool handlers](https://docs.cosmos.network/main/build/building-apps/app-mempool).
 
 ![ProcessProposal](./baseapp_state-prepareproposal.png)
 
@@ -177,7 +177,7 @@ from the root store and is used to process a signed proposal received from a val
 In this state, `runTx` is called and the `AnteHandler` is executed and the context used in this state is built with information 
 from the header and the main state, including the minimum gas prices, which are also set. 
 Again we want to highlight that the described behavior is that of the default handler and applications have the flexibility to define their own
-[custom mempool handlers](https://docs.cosmos.network/main/building-apps/app-mempool#custom-mempool-handlers).
+[custom mempool handlers](https://docs.cosmos.network/main/build/building-apps/app-mempool).
 
 ![ProcessProposal](./baseapp_state-processproposal.png)
 

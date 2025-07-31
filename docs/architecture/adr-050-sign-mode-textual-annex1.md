@@ -51,7 +51,7 @@ Value Renderers describe how values of different Protobuf types should be encode
 
 ### `coins`
 
-* an array of `coin` is display as the concatenation of each `coin` encoded as the specification above, the joined together with the delimiter `", "` (a comma and a space, no quotes around).
+* an array of `coin` is display as the concatenation of each `coin` encoded as the specification above, then joined together with the delimiter `", "` (a comma and a space, no quotes around).
 * the list of coins is ordered by unicode code point of the display denom: `A-Z` < `a-z`. For example, the string `aAbBcC` would be sorted `ABCabc`.
     * if the coins list had 0 items in it then it'll be rendered as `zero`
 

@@ -126,7 +126,7 @@ message Artifact {
   It is not required, but is recommended.
   If provided, it MUST be a hex encoded checksum string.
   Tools utilizing these `UpgradeInstructions` MUST fail if a `checksum` is provided but is different from the checksum of the result returned by the `url`.
-* `checksum_algo` is a string identify the algorithm used to generate the `checksum`.
+* `checksum_algo` is a string identifying the algorithm used to generate the `checksum`.
   Recommended algorithms: `sha256`, `sha512`.
   Algorithms also supported (but not recommended): `sha1`, `md5`.
   If a `checksum` is provided, a `checksum_algo` MUST also be provided.

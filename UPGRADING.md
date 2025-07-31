@@ -429,7 +429,25 @@ For ante handler construction via `ante.NewAnteHandler`, the field `ante.Handler
 
 #### `x/capability`
 
-Capability has been moved to [IBC Go](https://github.com/cosmos/ibc-go). IBC v8 will contain the necessary changes to incorporate the new module location.
+The capability module has been moved to [cosmos/ibc-go](https://github.com/cosmos/ibc-go). IBC v8 will contain the necessary changes to incorporate the new module location. In your `app.go`, you must import the capability module from the new location:
+
+```diff
++	"github.com/cosmos/ibc-go/modules/capability"
++	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
++	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
+-	"github.com/cosmos/cosmos-sdk/x/capability/types"
+-	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
+-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+```
+
+Similar to previous versions, your module manager must include the capability module.
+
+```go
+app.ModuleManager = module.NewManager(
+	capability.NewAppModule(encodingConfig.Codec, *app.CapabilityKeeper, true),
+	// remaining modules
+)
+```
 
 #### `x/genutil`
 

@@ -56,7 +56,7 @@ ValidateMsgA(msg MsgA, now Time, gm GasMeter) error {
 		return sdkerrrors.ErrInvalidRequest.Wrap("msg expired")
 	}
 	gm.ConsumeGas(1000, "signature verification")
-	return signatureVerificaton(msg.Prover, msg.Data)
+	return signatureVerification(msg.Prover, msg.Data)
 }
 ```
 

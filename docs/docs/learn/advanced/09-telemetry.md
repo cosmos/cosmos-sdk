@@ -91,7 +91,7 @@ The following examples expose too much cardinality and may not even prove to be 
 | `tx_msg_withdraw_commission`    | The total amount of tokens withdrawn in a `MsgWithdrawValidatorCommission` (per denom)    | token           | gauge   |
 | `tx_msg_delegate`               | The total amount of tokens delegated in a `MsgDelegate`                                   | token           | gauge   |
 | `tx_msg_begin_unbonding`        | The total amount of tokens undelegated in a `MsgUndelegate`                               | token           | gauge   |
-| `tx_msg_begin_begin_redelegate` | The total amount of tokens redelegated in a `MsgBeginRedelegate`                          | token           | gauge   |
+| `tx_msg_begin_redelegate`       | The total amount of tokens redelegated in a `MsgBeginRedelegate`                          | token           | gauge   |
 | `tx_msg_ibc_transfer`           | The total amount of tokens transferred via IBC in a `MsgTransfer` (source or sink chain)  | token           | gauge   |
 | `ibc_transfer_packet_receive`   | The total amount of tokens received in a `FungibleTokenPacketData` (source or sink chain) | token           | gauge   |
 | `new_account`                   | Total number of new accounts created                                                      | account         | counter |

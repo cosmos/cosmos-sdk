@@ -33,7 +33,7 @@ import (
 // UpgradeInfoFileName file to store upgrade information
 // use x/upgrade/types.UpgradeInfoFilename instead.
 //
-// Deprecated:will be removed in the future.
+// Deprecated: will be removed in the future.
 const UpgradeInfoFileName string = "upgrade-info.json"
 
 type Keeper struct {

@@ -25,7 +25,7 @@ How would this look in practice? First, we want to finalize the v0.40.0 release 
 and then install a specially named upgrade handler (eg. "testnet-v2" or even "v0.40.0"). An upgrade
 handler should be defined in a new version of the software to define what migrations
 to run to migrate from the older version of the software. Naturally, this is app-specific rather
-than module specific, and  must be defined in `app.go`, even if it imports logic from various
+than module specific, and must be defined in `app.go`, even if it imports logic from various
 modules to perform the actions. You can register them with `upgradeKeeper.SetUpgradeHandler`
 during the app initialization (before starting the abci server), and they serve not only to
 perform a migration, but also to identify if this is the old or new version (eg. presence of

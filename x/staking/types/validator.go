@@ -360,7 +360,7 @@ func (v Validator) BondedTokens() math.Int {
 	return math.ZeroInt()
 }
 
-// ConsensusPower gets the consensus-engine power. Aa reduction of 10^6 from
+// ConsensusPower gets the consensus-engine power. A reduction of 10^6 from
 // validator tokens is applied
 func (v Validator) ConsensusPower(r math.Int) int64 {
 	if v.IsBonded() {

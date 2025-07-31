@@ -304,7 +304,7 @@ func SimulateMsgDelegate(
 		}
 
 		if val.InvalidExRate() {
-			return simtypes.NoOpMsg(types.ModuleName, msgType, "validator's invalid echange rate"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "validator's invalid exchange rate"), nil, nil
 		}
 
 		amount := bk.GetBalance(ctx, simAccount.Address, denom).Amount

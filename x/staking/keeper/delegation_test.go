@@ -41,7 +41,7 @@ func (s *KeeperTestSuite) TestDelegation() {
 		validators[i] = stakingkeeper.TestingUpdateValidator(keeper, ctx, validators[i], true)
 	}
 
-	// first add a validators[0] to delegate too
+	// first add a validators[0] to delegate to
 	bond1to1 := stakingtypes.NewDelegation(addrDels[0].String(), valAddrs[0].String(), math.LegacyNewDec(9))
 
 	// check the empty keeper first

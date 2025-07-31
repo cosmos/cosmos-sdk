@@ -124,7 +124,7 @@ func TestStakingMsgs(t *testing.T) {
 	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, app.BaseApp, header, []sdk.Msg{beginUnbondingMsg}, "", []uint64{1}, []uint64{1}, true, true, priv2)
 	require.NoError(t, err)
 
-	// delegation should exist anymore
+	// delegation should not exist anymore
 	ctxCheck = app.NewContext(true)
 	_, err = stakingKeeper.GetDelegation(ctxCheck, addr2, sdk.ValAddress(addr1))
 	require.ErrorIs(t, err, types.ErrNoDelegation)

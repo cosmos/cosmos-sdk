@@ -23,7 +23,7 @@ increase which technically creates a new go module
 (with a v2, v3, etc. suffix).
 
 [Keeping modules API compatible](https://go.dev/blog/module-compatibility) in
-this way requires a fair amount of fair thought and discipline.
+this way requires a fair amount of thought and discipline.
 
 The Cosmos SDK is a fairly large project which originated before go modules
 came into existence and has always been under a v0.x release even though

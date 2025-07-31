@@ -24,16 +24,16 @@ In the current Cosmos SDK documentation on the [Object-Capability Model](../docs
 
 > We assume that a thriving ecosystem of Cosmos SDK modules that are easy to compose into a blockchain application will contain faulty or malicious modules.
 
-There is currently not a thriving ecosystem of Cosmos SDK modules. We hypothesize that this is in part due to:
+There is currently no thriving ecosystem of Cosmos SDK modules. We hypothesize that this is in part due to:
 
 1. lack of a stable v1.0 Cosmos SDK to build modules off of. Module interfaces are changing, sometimes dramatically, from
 point release to point release, often for good reasons, but this does not create a stable foundation to build on.
-2. lack of a properly implemented object capability or even object-oriented encapsulation system which makes refactors
-of module keeper interfaces inevitable because the current interfaces are poorly constrained.
+2. lack of a properly implemented object capability or even an object-oriented encapsulation system which makes refactors
+of module keeper interfaces is inevitable because the current interfaces are poorly constrained.
 
 ### `x/bank` Case Study
 
-Currently the `x/bank` keeper gives pretty much unrestricted access to any module which references it. For instance, the
+Currently the `x/bank` keeper gives pretty much-unrestricted access to any module that references it. For instance, the
 `SetBalance` method allows the caller to set the balance of any account to anything, bypassing even proper tracking of supply.
 
 There appears to have been some later attempts to implement some semblance of OCAPs using module-level minting, staking
@@ -44,14 +44,14 @@ However, these permissions don’t really do much. They control what modules can
 `BurnCoins` and `DelegateCoins***` methods, but for one there is no unique object capability token that controls access —
 just a simple string. So the `x/upgrade` module could mint tokens for the `x/staking` module simple by calling
 `MintCoins(“staking”)`. Furthermore, all modules which have access to these keeper methods, also have access to
-`SetBalance` negating any other attempt at OCAPs and breaking even basic object-oriented encapsulation.
+`SetBalance` negates any other attempt at OCAPs and breaks even basic object-oriented encapsulation.
 
 ## Decision
 
 Based on [ADR-021](./adr-021-protobuf-query-encoding.md) and [ADR-031](./adr-031-msg-service.md), we introduce the
 Inter-Module Communication framework for secure module authorization and OCAPs.
 When implemented, this could also serve as an alternative to the existing paradigm of passing keepers between
-modules. The approach outlined here-in is intended to form the basis of a Cosmos SDK v1.0 that provides the necessary
+modules. The approach outlined herein is intended to form the basis of a Cosmos SDK v1.0 that provides the necessary
 stability and encapsulation guarantees that allow a thriving module ecosystem to emerge.
 
 Of particular note — the decision is to _enable_ this functionality for modules to adopt at their own discretion.
@@ -137,7 +137,7 @@ func NewFooMsgServer(moduleKey RootModuleKey, ...) FooMsgServer {
 
   return FooMsgServer {
     // ...
-    modouleKey: moduleKey,
+    moduleKey: moduleKey,
     bankQuery: bank.NewQueryClient(moduleKey),
     bankMsg: bank.NewMsgClient(moduleKey),
   }
@@ -154,7 +154,7 @@ func (foo *FooMsgServer) Bar(ctx context.Context, req *MsgBarRequest) (*MsgBarRe
 }
 ```
 
-This design is also intended to be extensible to cover use cases of more fine grained permissioning like minting by
+This design is also intended to be extensible to cover use cases of more fine-grained permissioning like minting by
 denom prefix being restricted to certain modules (as discussed in
 [#7459](https://github.com/cosmos/cosmos-sdk/pull/7459#discussion_r529545528)).
 

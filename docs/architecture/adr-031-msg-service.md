@@ -97,7 +97,7 @@ On the client side, developers could take advantage of this by creating RPC impl
 logic. Protobuf libraries that use asynchronous callbacks, like [protobuf.js](https://github.com/protobufjs/protobuf.js#using-services)
 could use this to register callbacks for specific messages even for transactions that include multiple `Msg`s.
 
-Each `Msg` service method should have exactly one request parameter: its corresponding `Msg` type. For example, the `Msg` service method `/cosmos.gov.v1beta1.Msg/SubmitProposal` above has exactly one request parameter, namely the `Msg` type `/cosmos.gov.v1beta1.MsgSubmitProposal`. It is important the reader understands clearly the nomenclature difference between a `Msg` service (a Protobuf service) and a `Msg` type (a Protobuf message), and the differences in their fully-qualified name.
+Each `Msg` service method should have exactly one request parameter: its corresponding `Msg` type. For example, the `Msg` service method `/cosmos.gov.v1beta1.Msg/SubmitProposal` above has exactly one request parameter, namely the `Msg` type `/cosmos.gov.v1beta1.MsgSubmitProposal`. It is important that the reader understands clearly the nomenclature difference between a `Msg` service (a Protobuf service) and a `Msg` type (a Protobuf message), and the differences in their fully-qualified name.
 
 This convention has been decided over the more canonical `Msg...Request` names mainly for backwards compatibility, but also for better readability in `TxBody.messages` (see [Encoding section](#encoding) below): transactions containing `/cosmos.gov.MsgSubmitProposal` read better than those containing `/cosmos.gov.v1beta1.MsgSubmitProposalRequest`.
 
@@ -105,16 +105,16 @@ One consequence of this convention is that each `Msg` type can be the request pa
 
 ### Encoding
 
-Encoding of transactions generated with `Msg` services do not differ from current Protobuf transaction encoding as defined in [ADR-020](./adr-020-protobuf-transaction-encoding.md). We are encoding `Msg` types (which are exactly `Msg` service methods' request parameters) as `Any` in `Tx`s which involves packing the
+Encoding of transactions generated with `Msg` services does not differ from the current Protobuf transaction encoding as defined in [ADR-020](./adr-020-protobuf-transaction-encoding.md). We are encoding `Msg` types (which are exactly `Msg` service methods' request parameters) as `Any` in `Tx`s, which involves packing the
 binary-encoded `Msg` with its type URL.
 
 ### Decoding
 
-Since `Msg` types are packed into `Any`, decoding transactions messages are done by unpacking `Any`s into `Msg` types. For more information, please refer to [ADR-020](./adr-020-protobuf-transaction-encoding.md#transactions).
+Since `Msg` types are packed into `Any`, decoding transaction messages is done by unpacking `Any`s into `Msg` types. For more information, please refer to [ADR-020](./adr-020-protobuf-transaction-encoding.md#transactions).
 
 ### Routing
 
-We propose to add a `msg_service_router` in BaseApp. This router is a key/value map which maps `Msg` types' `type_url`s to their corresponding `Msg` service method handler. Since there is a 1-to-1 mapping between `Msg` types and `Msg` service method, the `msg_service_router` has exactly one entry per `Msg` service method.
+We propose to add a `msg_service_router` in BaseApp. This router is a key/value map which maps `Msg` types' `type_url`s to their corresponding `Msg` service method handler. Since there is a 1-to-1 mapping between `Msg` types and `Msg` service methods, the `msg_service_router` has exactly one entry per `Msg` service method.
 
 When a transaction is processed by BaseApp (in CheckTx or in DeliverTx), its `TxBody.messages` are decoded as `Msg`s. Each `Msg`'s `type_url` is matched against an entry in the `msg_service_router`, and the respective `Msg` service method handler is called.
 
@@ -179,12 +179,12 @@ This design changes how a module functionality is exposed and accessed. It depre
 
 This also allows us to change how we perform functional tests. Instead of mocking AppModules and Router, we will mock a client (server will stay hidden). More specifically: we will never mock `moduleA.MsgServer` in `moduleB`, but rather `moduleA.MsgClient`. One can think about it as working with external services (eg DBs, or online servers...). We assume that the transmission between clients and servers is correctly handled by generated Protocol Buffers.
 
-Finally, closing a module to client API opens desirable OCAP patterns discussed in ADR-033. Since server implementation and interface is hidden, nobody can hold "keepers"/servers and will be forced to relay on the client interface, which will drive developers for correct encapsulation and software engineering patterns.
+Finally, closing a module to the client API opens desirable OCAP patterns discussed in ADR-033. Since server implementation and interface is hidden, nobody can hold "keepers"/servers and will be forced to relay on the client interface, which will drive developers for correct encapsulation and software engineering patterns.
 
 ### Pros
 
 * communicates return type clearly
-* manual handler registration and return type marshaling is no longer needed, just implement the interface and register it
+* manual handler registration and return type marshaling are no longer needed, just implement the interface and register it
 * communication interface is automatically generated, the developer can now focus only on the state transition methods - this would improve the UX of [\#7093](https://github.com/cosmos/cosmos-sdk/issues/7093) approach (1) if we chose to adopt that
 * generated client code could be useful for clients and tests
 * dramatically reduces and simplifies the code

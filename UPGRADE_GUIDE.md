@@ -449,7 +449,7 @@ options := ante.HandlerOptions{
     SigVerifyOptions: []ante.SigVerificationDecoratorOption{
         // change below as needed.
         ante.WithUnorderedTxGasCost(ante.DefaultUnorderedTxGasCost),
-        ante.WithMaxUnorderedTxTimeoutDuration(ante.DefaultMaxTimoutDuration),
+        ante.WithMaxUnorderedTxTimeoutDuration(ante.DefaultMaxTimeoutDuration),
     },
 }
 ```

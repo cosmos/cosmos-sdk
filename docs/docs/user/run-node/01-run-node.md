@@ -50,7 +50,7 @@ The `~/.simapp` folder has the following structure:
 
 ## Updating Some Default Settings
 
-If you want to change any field values in configuration files (for ex: genesis.json) you can use `jq` ([installation](https://stedolan.github.io/jq/download/) & [docs](https://stedolan.github.io/jq/manual/#Assignment)) & `sed` commands to do that. Few examples are listed here.
+If you want to change any field values in configuration files (for ex: genesis.json) you can use `jq` ([installation](https://stedolan.github.io/jq/download/) & [docs](https://stedolan.github.io/jq/manual/#Assignment)) & `sed` commands to do that. A few examples are listed here.
 
 ```bash
 # to change the chain-id

@@ -20,7 +20,7 @@ service definitions defined in [ADR 021](./adr-021-protobuf-query-encoding.md) a
 
 ## Context
 
-In the current Cosmos SDK documentation on the [Object-Capability Model](../../learn/advanced/10-ocap.md), it is stated that:
+In the current Cosmos SDK documentation on the [Object-Capability Model](../docs/learn/advanced/10-ocap.md), it is stated that:
 
 > We assume that a thriving ecosystem of Cosmos SDK modules that are easy to compose into a blockchain application will contain faulty or malicious modules.
 
@@ -94,7 +94,7 @@ evolution.
 the two which checks if one module is authorized to send the specified `Msg` to the other module providing a proper
 object capability system (see below).
 3. The router for inter-module communication gives us a convenient place to handle rollback of transactions,
-enabling atomicy of operations ([currently a problem](https://github.com/cosmos/cosmos-sdk/issues/8030)). Any failure within a module-to-module call would result in a failure of the entire
+enabling atomicity of operations ([currently a problem](https://github.com/cosmos/cosmos-sdk/issues/8030)). Any failure within a module-to-module call would result in a failure of the entire
 transaction
 
 This mechanism has the added benefits of:

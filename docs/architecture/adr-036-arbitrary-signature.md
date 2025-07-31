@@ -17,7 +17,7 @@ Draft
 
 ## Abstract
 
-Currently, in the Cosmos SDK, there is no convention to sign arbitrary message like on Ethereum. We propose with this specification, for Cosmos SDK ecosystem, a way to sign and validate off-chain arbitrary messages.
+Currently, in the Cosmos SDK, there is no convention to sign arbitrary message like in Ethereum. We propose with this specification, for Cosmos SDK ecosystem, a way to sign and validate off-chain arbitrary messages.
 
 This specification serves the purpose of covering every use case, this means that cosmos-sdk applications developers decide how to serialize and represent `Data` to users.
 
@@ -51,7 +51,7 @@ Verification of an offchain transaction follows the same rules as an onchain one
 
 The first message added to the `offchain` package is `MsgSignData`.
 
-`MsgSignData` allows developers to sign arbitrary bytes valid offchain only. Where `Signer` is the account address of the signer. `Data` is arbitrary bytes which can represent `text`, `files`, `object`s. It's applications developers decision how `Data` should be deserialized, serialized and the object it can represent in their context.
+`MsgSignData` allows developers to sign arbitrary bytes validatable offchain only. Where `Signer` is the account address of the signer. `Data` is arbitrary bytes which can represent `text`, `files`, `object`s. It's applications developers decision how `Data` should be deserialized, serialized and the object it can represent in their context.
 
 It's applications developers decision how `Data` should be treated, by treated we mean the serialization and deserialization process and the Object `Data` should represent.
 

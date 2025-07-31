@@ -1074,7 +1074,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 			expErrMsg: "max validators must be positive",
 		},
 		{
-			name: "max entries most be positive",
+			name: "max entries must be positive",
 			input: &stakingtypes.MsgUpdateParams{
 				Authority: keeper.GetAuthority(),
 				Params: stakingtypes.Params{

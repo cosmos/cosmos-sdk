@@ -64,7 +64,7 @@ type ResponseCheckTx struct {
 }
 ```
 
-Please note that because CheckTx handles separate logic related to mempool priotization, its signature is different than DeliverTx and SimulateTx.
+Please note that because CheckTx handles separate logic related to mempool prioritization, its signature is different than DeliverTx and SimulateTx.
 
 BaseApp holds a reference to a `tx.Handler`:
 

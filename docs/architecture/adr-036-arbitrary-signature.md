@@ -17,15 +17,15 @@ Draft
 
 ## Abstract
 
-Currently, in the Cosmos SDK, there is no convention to sign arbitrary message like on Ethereum. We propose with this specification, for Cosmos SDK ecosystem, a way to sign and validate off-chain arbitrary messages.
+Currently, in the Cosmos SDK, there is no convention to sign an arbitrary message like on Ethereum. We propose with this specification, for the Cosmos SDK ecosystem, a way to sign and validate off-chain arbitrary messages.
 
-This specification serves the purpose of covering every use case, this means that cosmos-sdk applications developers decide how to serialize and represent `Data` to users.
+This specification serves the purpose of covering every use case, this means that cosmos-sdk application developers decide how to serialize and represent `Data` to users.
 
 ## Context
 
-Having the ability to sign messages off-chain has proven to be a fundamental aspect of nearly any blockchain. The notion of signing messages off-chain has many added benefits such as saving on computational costs and reducing transaction throughput and overhead. Within the context of the Cosmos, some of the major applications of signing such data includes, but is not limited to, providing a cryptographic secure and verifiable means of proving validator identity and possibly associating it with some other framework or organization. In addition, having the ability to sign Cosmos messages with a Ledger or similar HSM device.
+Having the ability to sign messages off-chain has proven to be a fundamental aspect of nearly any blockchain. The notion of signing messages off-chain has many added benefits such as saving on computational costs and reducing transaction throughput and overhead. Within the context of the Cosmos, some of the major applications of signing such data include, but is not limited to, providing a cryptographically secure and verifiable means of proving validator identity and possibly associating it with some other framework or organization. In addition, having the ability to sign Cosmos messages with a Ledger or similar HSM device.
 
-Further context and use cases can be found in the references links.
+Further context and use cases can be found in the reference links.
 
 ## Decision
 

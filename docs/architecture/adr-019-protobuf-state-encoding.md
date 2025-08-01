@@ -136,7 +136,7 @@ to be reimplemented for each chain
 The main counter-argument to using `Any` centers around its additional space
 and possibly performance overhead. The space overhead could be dealt with using
 compression at the persistence layer in the future and the performance impact
-is likely to be small. Thus, not using `Any` is seem as a pre-mature optimization,
+is likely to be small. Thus, not using `Any` is seen as a pre-mature optimization,
 with user experience as the higher order concern.
 
 Note, that given the Cosmos SDK's decision to adopt the `Codec` interfaces described

@@ -165,7 +165,7 @@ message MsgExecResponse {
 message MsgExec {
   string   grantee                  = 1;
   // Authorization Msg requests to execute. Each msg must implement Authorization interface
-  repeated google.protobuf.Any msgs = 2 [(cosmos_proto.accepts_interface) = "cosmos.base.v1beta1.Msg"];;
+  repeated google.protobuf.Any msgs = 2 [(cosmos_proto.accepts_interface) = "cosmos.base.v1beta1.Msg"];
 }
 ```
 

@@ -11,7 +11,7 @@
 * Nov 23, 2022: Specify CBOR encoding.
 * Dec 01, 2022: Link to examples in separate JSON file.
 * Dec 06, 2022: Re-ordering of envelope screens.
-* Dec 14, 2022: Mention exceptions for invertability.
+* Dec 14, 2022: Mention exceptions for invertibility.
 * Jan 23, 2023: Switch Screen.Text to Title+Content.
 * Mar 07, 2023: Change SignDoc from array to struct containing array.
 * Mar 20, 2023: Introduce a spec version initialized to 0.
@@ -205,7 +205,7 @@ Memo: <string>                                              // Skipped if no mem
 Fee: <coins>                                                // See value renderers for coins rendering.
 *Fee payer: <string>                                        // Skipped if no fee_payer set.
 *Fee granter: <string>                                      // Skipped if no fee_granter set.
-Tip: <coins>                                                // Skippted if no tip.
+Tip: <coins>                                                // Skipped if no tip.
 Tipper: <string>
 *Gas Limit: <uint64>
 *Timeout Height: <uint64>                                   // Skipped if no timeout_height set.
@@ -285,7 +285,7 @@ Moreover, the renderer must provide 2 functions: one for formatting from Protobu
 
 ### Require signing over the `TxBody` and `AuthInfo` raw bytes
 
-Recall that the transaction bytes merklelized on chain are the Protobuf binary serialization of [TxRaw](https://buf.build/cosmos/cosmos-sdk/docs/main:cosmos.tx.v1beta1#cosmos.tx.v1beta1.TxRaw), which contains the `body_bytes` and `auth_info_bytes`. Moreover, the transaction hash is defined as the SHA256 hash of the `TxRaw` bytes. We require that the user signs over these bytes in SIGN_MODE_TEXTUAL, more specifically over the following string:
+Recall that the transaction bytes merkleized on chain are the Protobuf binary serialization of [TxRaw](https://buf.build/cosmos/cosmos-sdk/docs/main:cosmos.tx.v1beta1#cosmos.tx.v1beta1.TxRaw), which contains the `body_bytes` and `auth_info_bytes`. Moreover, the transaction hash is defined as the SHA256 hash of the `TxRaw` bytes. We require that the user signs over these bytes in SIGN_MODE_TEXTUAL, more specifically over the following string:
 
 ```
 *Hash of raw bytes: <HEX(sha256(len(body_bytes) ++ body_bytes ++ len(auth_info_bytes) ++ auth_info_bytes))>
@@ -297,7 +297,7 @@ where:
 * `HEX` is the hexadecimal representation of the bytes, all in capital letters, no `0x` prefix,
 * and `len()` is encoded as a Big-Endian uint64.
 
-This is to prevent transaction hash malleability. The point #1 about invertiblity assures that transaction `body` and `auth_info` values are not malleable, but the transaction hash still might be malleable with point #1 only, because the SIGN_MODE_TEXTUAL strings don't follow the byte ordering defined in `body_bytes` and `auth_info_bytes`. Without this hash, a malicious validator or exchange could intercept a transaction, modify its transaction hash _after_ the user signed it using SIGN_MODE_TEXTUAL (by tweaking the byte ordering inside `body_bytes` or `auth_info_bytes`), and then submit it to Tendermint.
+This is to prevent transaction hash malleability. The point #1 about invertibility assures that transaction `body` and `auth_info` values are not malleable, but the transaction hash still might be malleable with point #1 only, because the SIGN_MODE_TEXTUAL strings don't follow the byte ordering defined in `body_bytes` and `auth_info_bytes`. Without this hash, a malicious validator or exchange could intercept a transaction, modify its transaction hash _after_ the user signed it using SIGN_MODE_TEXTUAL (by tweaking the byte ordering inside `body_bytes` or `auth_info_bytes`), and then submit it to Tendermint.
 
 By including this hash in the SIGN_MODE_TEXTUAL signing payload, we keep the same level of guarantees as [SIGN_MODE_DIRECT](./adr-020-protobuf-transaction-encoding.md).
 

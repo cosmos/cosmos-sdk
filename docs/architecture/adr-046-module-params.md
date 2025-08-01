@@ -142,7 +142,7 @@ and writing parameters from and to state, especially if a specific set of parame
 are read on a consistent basis.
 
 However, this methodology will require developers to implement more types and
-Msg service metohds which can become burdensome if many parameters exist. In addition,
+Msg service methods which can become burdensome if many parameters exist. In addition,
 developers are required to implement persistence logics of module parameters.
 However, this should be trivial.
 

@@ -12,7 +12,7 @@ type (
 	// Codec defines a functionality for serializing other objects.
 	// Users can define a custom Protobuf-based serialization.
 	// Note, Amino can still be used without any dependency on Protobuf.
-	// SDK provides to Codec implementations:
+	// SDK provides two Codec implementations:
 	//
 	// 1. AminoCodec: Provides full Amino serialization compatibility.
 	// 2. ProtoCodec: Provides full Protobuf serialization compatibility.

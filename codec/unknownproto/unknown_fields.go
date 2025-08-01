@@ -333,7 +333,7 @@ type errUnknownField struct {
 
 // String implements fmt.Stringer.
 func (twt *errUnknownField) String() string {
-	return fmt.Sprintf("errUnknownField %q: {TagNum: %d, WireType:%q}",
+	return fmt.Sprintf("errUnknownField %q: {TagNum: %d, WireType: %q}",
 		twt.Type, twt.TagNum, wireTypeToString(twt.WireType))
 }
 

@@ -192,13 +192,13 @@ func (p Params) ValidateBasic() error {
 
 	minInitialDepositRatio, err := sdkmath.LegacyNewDecFromStr(p.MinInitialDepositRatio)
 	if err != nil {
-		return fmt.Errorf("invalid mininum initial deposit ratio of proposal: %w", err)
+		return fmt.Errorf("invalid minimum initial deposit ratio of proposal: %w", err)
 	}
 	if minInitialDepositRatio.IsNegative() {
-		return fmt.Errorf("mininum initial deposit ratio of proposal must be positive: %s", minInitialDepositRatio)
+		return fmt.Errorf("minimum initial deposit ratio of proposal must be positive: %s", minInitialDepositRatio)
 	}
 	if minInitialDepositRatio.GT(sdkmath.LegacyOneDec()) {
-		return fmt.Errorf("mininum initial deposit ratio of proposal is too large: %s", minInitialDepositRatio)
+		return fmt.Errorf("minimum initial deposit ratio of proposal is too large: %s", minInitialDepositRatio)
 	}
 
 	proposalCancelRate, err := sdkmath.LegacyNewDecFromStr(p.ProposalCancelRatio)

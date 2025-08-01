@@ -35,7 +35,7 @@ type LedgerPrivKey interface {
 // and will be deprecated/removed once LEGACY_AMINO_JSON is removed.
 type LedgerPrivKeyAminoJSON interface {
 	LedgerPrivKey
-	// SignLedgerAminoJSON signs a messages on the Ledger device using
+	// SignLedgerAminoJSON signs a message on the Ledger device using
 	// SIGN_MODE_LEGACY_AMINO_JSON.
 	SignLedgerAminoJSON(msg []byte) ([]byte, error)
 }

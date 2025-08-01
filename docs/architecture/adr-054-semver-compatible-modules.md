@@ -644,7 +644,7 @@ type IntegrationTestConfig struct {
 }
 
 // Run runs the test function for all combinations of dependency modules.
-func (cfg IntegationTestConfig) Run(t *testing.T, f func (t *testing.T, f IntegrationTestFixture)) {
+func (cfg IntegrationTestConfig) Run(t *testing.T, f func (t *testing.T, f IntegrationTestFixture)) {
     // ...
 }
 ```

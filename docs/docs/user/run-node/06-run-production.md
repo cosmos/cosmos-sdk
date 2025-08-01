@@ -202,7 +202,7 @@ At this point, it is necessary to delete the `priv_validator_key.json` from the 
 vim $HOME/tmkms/config/tmkms.toml
 ```
 
-This example shows a configuration that could be used for soft signing. The example has an IP of `123.456.12.345` with a port of `26659` a chain_id of `test-chain-waSDSe`. These are items that most be modified for the usecase of tmkms and the network. 
+This example shows a configuration that could be used for soft signing. The example has an IP of `123.456.12.345` with a port of `26659` a chain_id of `test-chain-waSDSe`. These are items that must be modified for the usecase of tmkms and the network. 
 
 ```toml
 # CometBFT KMS configuration file

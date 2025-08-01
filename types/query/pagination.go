@@ -55,6 +55,7 @@ func Paginate(
 	onResult func(key, value []byte) error,
 ) (*PageResponse, error) {
 	pageRequest = initPageRequestDefaults(pageRequest)
+	pageRequest = ClampPageRequestLimit(pageRequest)
 
 	if pageRequest.Offset > 0 && pageRequest.Key != nil {
 		return nil, fmt.Errorf("invalid request, either offset or key is expected, got both")
@@ -156,5 +157,18 @@ func initPageRequestDefaults(pageRequest *PageRequest) *PageRequest {
 		pageRequestCopy.CountTotal = true
 	}
 
+	return &pageRequestCopy
+}
+
+// ClampPageRequestLimit returns a safe Limit such that Offset+Limit never overflows uint64.
+func ClampPageRequestLimit(pageRequest *PageRequest) *PageRequest {
+	if pageRequest == nil {
+		return &PageRequest{}
+	}
+
+	pageRequestCopy := *pageRequest
+	if pageRequestCopy.Limit > PaginationMaxLimit-pageRequestCopy.Offset {
+		pageRequestCopy.Limit = PaginationMaxLimit - pageRequestCopy.Offset
+	}
 	return &pageRequestCopy
 }

@@ -72,7 +72,7 @@ static int secp256k1_scalar_is_zero(const secp256k1_scalar *a);
 /** Check whether a scalar equals one. */
 static int secp256k1_scalar_is_one(const secp256k1_scalar *a);
 
-/** Check whether a scalar, considered as an nonnegative integer, is even. */
+/** Check whether a scalar, considered as a nonnegative integer, is even. */
 static int secp256k1_scalar_is_even(const secp256k1_scalar *a);
 
 /** Check whether a scalar is higher than the group order divided by 2. */

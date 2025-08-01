@@ -534,7 +534,7 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_tweak_mul(
  *          uniformly random 32-byte arrays, or equal to zero. 1 otherwise.
  * Args:    ctx:    pointer to a context object initialized for validation
  *                 (cannot be NULL).
- * In/Out:  pubkey: pointer to a public key obkect.
+ * In/Out:  pubkey: pointer to a public key object.
  * In:      tweak:  pointer to a 32-byte tweak.
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_tweak_mul(

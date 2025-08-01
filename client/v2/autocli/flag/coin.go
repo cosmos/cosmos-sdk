@@ -42,7 +42,7 @@ func (c *coinValue) String() string {
 
 func (c *coinValue) Set(stringValue string) error {
 	if strings.Contains(stringValue, ",") {
-		return errors.New("coin flag must be a single coin, specific multiple coins with multiple flags or spaces")
+		return errors.New("coin flag must be a single coin, specify multiple coins with multiple flags or spaces")
 	}
 
 	coin, err := coins.ParseCoin(stringValue)

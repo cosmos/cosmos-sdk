@@ -146,7 +146,6 @@ type SimApp struct {
 	// keys to access the substores
 	keys  map[string]*storetypes.KVStoreKey
 	tkeys map[string]*storetypes.TransientStoreKey
-	okeys map[string]*storetypes.ObjectStoreKey
 
 	// keepers
 	AccountKeeper         authkeeper.AccountKeeper
@@ -270,7 +269,7 @@ func NewSimApp(
 	}
 
 	tkeys := storetypes.NewTransientStoreKeys(paramstypes.TStoreKey, banktypes.TStoreKey)
-	okeys := storetypes.NewObjectStoreKeys(banktypes.ObjectStoreKey)
+
 	app := &SimApp{
 		BaseApp:           bApp,
 		legacyAmino:       legacyAmino,
@@ -279,7 +278,6 @@ func NewSimApp(
 		interfaceRegistry: interfaceRegistry,
 		keys:              keys,
 		tkeys:             tkeys,
-		okeys:             okeys,
 	}
 
 	app.ParamsKeeper = initParamsKeeper(appCodec, legacyAmino, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
@@ -525,7 +523,6 @@ func NewSimApp(
 	// initialize stores
 	app.MountKVStores(keys)
 	app.MountTransientStores(tkeys)
-	app.MountObjectStores(okeys)
 
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)

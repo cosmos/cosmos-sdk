@@ -9,7 +9,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -60,7 +59,6 @@ type BaseSendKeeper struct {
 	cdc          codec.BinaryCodec
 	ak           types.AccountKeeper
 	storeService store.KVStoreService
-	objStoreKey  storetypes.StoreKey
 	logger       log.Logger
 
 	// list of addresses that are restricted from receiving transactions
@@ -77,7 +75,6 @@ func NewBaseSendKeeper(
 	cdc codec.BinaryCodec,
 	storeService store.KVStoreService,
 	tStoreService store.TransientStoreService,
-	objStoreKey storetypes.StoreKey,
 	ak types.AccountKeeper,
 	blockedAddrs map[string]bool,
 	authority string,
@@ -92,7 +89,6 @@ func NewBaseSendKeeper(
 		cdc:             cdc,
 		ak:              ak,
 		storeService:    storeService,
-		objStoreKey:     objStoreKey,
 		blockedAddrs:    blockedAddrs,
 		authority:       authority,
 		logger:          logger,
@@ -173,7 +169,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 				return err
 			}
 
-			err = k.sendCoins(ctx, inAddress, newOutAddress, sdk.NewCoins(coin))
+			err = k.sendCoin(ctx, inAddress, newOutAddress, coin)
 			if err != nil {
 				return err
 			}
@@ -204,7 +200,7 @@ func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccA
 			return err
 		}
 
-		err = k.sendCoins(ctx, fromAddr, newToAddr, sdk.NewCoins(coin))
+		err = k.sendCoin(ctx, fromAddr, newToAddr, coin)
 		if err != nil {
 			return err
 		}
@@ -221,23 +217,17 @@ func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccA
 	return nil
 }
 
-func (k BaseSendKeeper) sendCoins(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
-	err := k.subUnlockedCoins(ctx, fromAddr, amt, true) // only sub this coin
+func (k BaseSendKeeper) sendCoin(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coin) error {
+	err := k.subUnlockedCoins(ctx, fromAddr, sdk.NewCoins(amt), true) // only sub this coin
 	if err != nil {
 		return err
 	}
 
-	err = k.addCoins(ctx, toAddr, amt)
+	err = k.addCoins(ctx, toAddr, sdk.NewCoins(amt))
 	if err != nil {
 		return err
 	}
 
-	k.ensureAccountCreated(ctx, toAddr)
-	k.emitSendCoinsEvents(ctx, fromAddr, toAddr, amt)
-	return nil
-}
-
-func (k BaseSendKeeper) ensureAccountCreated(ctx context.Context, toAddr sdk.AccAddress) {
 	// Create account if recipient does not exist.
 	//
 	// NOTE: This should ultimately be removed in favor a more flexible approach
@@ -247,9 +237,7 @@ func (k BaseSendKeeper) ensureAccountCreated(ctx context.Context, toAddr sdk.Acc
 		defer telemetry.IncrCounter(1, "new", "account")
 		k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, toAddr))
 	}
-}
 
-func (k BaseSendKeeper) emitSendCoinsEvents(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	sdkCtx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -259,6 +247,7 @@ func (k BaseSendKeeper) emitSendCoinsEvents(ctx context.Context, fromAddr, toAdd
 			sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
 		),
 	)
+	return nil
 }
 
 // validateCoinsBeforeSend is checks extracted from subUnlockedCoins to be run before sendRestrictionFn inside SendCoins

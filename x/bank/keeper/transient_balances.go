@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"context"
-
 	"cosmossdk.io/store/prefix"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -13,31 +11,30 @@ import (
 )
 
 // getTransientAccountStore gets the transient account store of the given address.
-func (k BaseViewKeeper) getTransientAccountStore(ctx context.Context, addr sdk.AccAddress) prefix.Store {
+func (k BaseViewKeeper) getTransientAccountStore(ctx sdk.Context, addr sdk.AccAddress) prefix.Store {
 	store := k.tStoreService.OpenTransientStore(ctx)
 	return prefix.NewStore(runtime.KVStoreAdapter(store), createAccountBalancesPrefix(addr))
 }
 
 // setTransientBalance sets the transient coin balance for an account by address.
-func (k BaseSendKeeper) setTransientBalance(ctx context.Context, addr sdk.AccAddress, balance sdk.Coin) {
+func (k BaseSendKeeper) setTransientBalance(ctx sdk.Context, addr sdk.AccAddress, balance sdk.Coin) {
 	accountStore := k.getTransientAccountStore(ctx, addr)
 
 	bz := k.cdc.MustMarshal(&balance)
 	accountStore.Set([]byte(balance.Denom), bz)
 }
 
-func (k BaseKeeper) EmitAllTransientBalances(ctx context.Context) {
+func (k BaseKeeper) EmitAllTransientBalances(ctx sdk.Context) {
 	balanceUpdates := k.GetAllTransientAccountBalanceUpdates(ctx)
 	if len(balanceUpdates) > 0 {
-		sdkCtx := sdk.UnwrapSDKContext(ctx)
-		sdkCtx.EventManager().EmitTypedEvent(&types.EventSetBalances{
+		ctx.EventManager().EmitTypedEvent(&types.EventSetBalances{
 			BalanceUpdates: balanceUpdates,
 		})
 	}
 }
 
 // GetAllTransientAccountBalanceUpdates returns all the transient accounts balances from the transient store.
-func (k BaseViewKeeper) GetAllTransientAccountBalanceUpdates(ctx context.Context) []*types.BalanceUpdate {
+func (k BaseViewKeeper) GetAllTransientAccountBalanceUpdates(ctx sdk.Context) []*types.BalanceUpdate {
 	balanceUpdates := make([]*types.BalanceUpdate, 0)
 
 	k.IterateAllTransientBalances(ctx, func(addr sdk.AccAddress, balance sdk.Coin) bool {
@@ -56,7 +53,7 @@ func (k BaseViewKeeper) GetAllTransientAccountBalanceUpdates(ctx context.Context
 // IterateAllTransientBalances iterates over all transient balances of all accounts and
 // denominations that are provided to a callback. If true is returned from the
 // callback, iteration is halted.
-func (k BaseViewKeeper) IterateAllTransientBalances(ctx context.Context, cb func(sdk.AccAddress, sdk.Coin) bool) {
+func (k BaseViewKeeper) IterateAllTransientBalances(ctx sdk.Context, cb func(sdk.AccAddress, sdk.Coin) bool) {
 	store := k.tStoreService.OpenTransientStore(ctx)
 	balancesStore := prefix.NewStore(runtime.KVStoreAdapter(store), types.BalancesPrefix)
 

@@ -16,7 +16,6 @@ import (
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -44,8 +43,7 @@ var (
 	_ module.HasServices         = AppModule{}
 	_ module.HasInvariants       = AppModule{}
 
-	_ appmodule.AppModule     = AppModule{}
-	_ appmodule.HasEndBlocker = AppModule{}
+	_ appmodule.AppModule = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the bank module.
@@ -178,8 +176,8 @@ func (am AppModule) BeginBlock(ctx sdk.Context) {
 // EndBlock returns the end blocker for the bank module. It returns no validator
 // updates.
 func (am AppModule) EndBlock(ctx context.Context) error {
-	am.keeper.EmitAllTransientBalances(ctx)
-	return am.keeper.CreditVirtualAccounts(ctx)
+	EndBlocker(sdk.UnwrapSDKContext(ctx), am.keeper)
+	return nil
 }
 
 // AppModuleSimulation functions
@@ -223,7 +221,6 @@ type ModuleInputs struct {
 	Cdc           codec.Codec
 	StoreService  corestore.KVStoreService
 	TStoreService corestore.TransientStoreService
-	ObjStoreKey   *storetypes.ObjectStoreKey
 	Logger        log.Logger
 
 	AccountKeeper types.AccountKeeper
@@ -265,7 +262,6 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.Cdc,
 		in.StoreService,
 		in.TStoreService,
-		in.ObjStoreKey,
 		in.AccountKeeper,
 		blockedAddresses,
 		authority.String(),

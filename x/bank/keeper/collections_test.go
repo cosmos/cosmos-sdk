@@ -26,8 +26,7 @@ import (
 
 func TestBankStateCompatibility(t *testing.T) {
 	key := storetypes.NewKVStoreKey(banktypes.StoreKey)
-	okey := storetypes.NewObjectStoreKey(banktypes.ObjectStoreKey)
-	testCtx := testutil.DefaultContextWithObjectStore(t, key, storetypes.NewTransientStoreKey("transient_test"), okey)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 	storeService := runtime.NewKVStoreService(key)
@@ -43,7 +42,6 @@ func TestBankStateCompatibility(t *testing.T) {
 		encCfg.Codec,
 		storeService,
 		tStoreService,
-		okey,
 		authKeeper,
 		map[string]bool{accAddrs[4].String(): true},
 		authtypes.NewModuleAddress("gov").String(),

@@ -68,16 +68,12 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
 	)
-	tkeys := storetypes.NewTransientStoreKeys(
-		banktypes.TStoreKey,
-	)
-	okeys := storetypes.NewObjectStoreKeys(
-		banktypes.ObjectStoreKey,
-	)
+	tkey := storetypes.NewTransientStoreKey(banktypes.TStoreKey)
 	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, distribution.AppModuleBasic{}).Codec
 
 	logger := log.NewTestLogger(t)
-	cms := integration.CreateMultiStore(keys, tkeys, okeys, logger)
+	cms := integration.CreateMultiStore(keys, logger)
+	cms.MountStoreWithDB(tkey, storetypes.StoreTypeTransient, nil)
 	if err := cms.LoadLatestVersion(); err != nil {
 		t.Fatalf("failed to load latest version: %v", err)
 	}
@@ -109,8 +105,7 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 	bankKeeper := bankkeeper.NewBaseKeeper(
 		cdc,
 		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
-		runtime.NewTransientKVStoreService(tkeys[banktypes.TStoreKey]),
-		okeys[banktypes.ObjectStoreKey],
+		runtime.NewTransientKVStoreService(tkey),
 		accountKeeper,
 		blockedAddresses,
 		authority.String(),

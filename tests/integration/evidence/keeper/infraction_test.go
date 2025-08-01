@@ -83,16 +83,12 @@ func initFixture(t testing.TB) *fixture {
 	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, paramtypes.StoreKey, consensusparamtypes.StoreKey, evidencetypes.StoreKey, stakingtypes.StoreKey, slashingtypes.StoreKey,
 	)
-	tkeys := storetypes.NewTransientStoreKeys(
-		banktypes.TStoreKey,
-	)
-	okeys := storetypes.NewObjectStoreKeys(
-		banktypes.ObjectStoreKey,
-	)
+	tkey := storetypes.NewTransientStoreKey(banktypes.TStoreKey)
 	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, evidence.AppModuleBasic{}).Codec
 
 	logger := log.NewTestLogger(t)
-	cms := integration.CreateMultiStore(keys, tkeys, okeys, logger)
+	cms := integration.CreateMultiStore(keys, logger)
+	cms.MountStoreWithDB(tkey, storetypes.StoreTypeTransient, nil)
 	if err := cms.LoadLatestVersion(); err != nil {
 		t.Fatalf("failed to load latest version: %v", err)
 	}
@@ -124,8 +120,7 @@ func initFixture(t testing.TB) *fixture {
 	bankKeeper := bankkeeper.NewBaseKeeper(
 		cdc,
 		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
-		runtime.NewTransientKVStoreService(tkeys[banktypes.TStoreKey]),
-		okeys[banktypes.ObjectStoreKey],
+		runtime.NewTransientKVStoreService(tkey),
 		accountKeeper,
 		blockedAddresses,
 		authority.String(),

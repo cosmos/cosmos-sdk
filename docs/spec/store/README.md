@@ -218,7 +218,6 @@ func NewApp(...) Application {
 	// initialize stores
 	app.MountKVStores(keys)
 	app.MountTransientStores(transientKeys)
-	app.MountObjectStores(okeys)
 	app.MountMemoryStores(memKeys)
 
 	// ...

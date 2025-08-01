@@ -72,7 +72,7 @@ func ValidateGenesisCmd(mbm module.BasicManager) *cobra.Command {
 func enrichUnmarshalError(err error) error {
 	var syntaxErr *json.SyntaxError
 	if errors.As(err, &syntaxErr) {
-		return fmt.Errorf("error at offset %d: %s", syntaxErr.Offset, syntaxErr.Error())
+		return fmt.Errorf("at offset %d: %s", syntaxErr.Offset, syntaxErr.Error())
 	}
 	return err
 }

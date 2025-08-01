@@ -10,7 +10,7 @@ import (
 type PubKey interface {
 	types.PubKey
 
-	// VerifyMultisignature verifies the provide multi-signature represented by MultiSignatureData
+	// VerifyMultisignature verifies the provided multi-signature represented by MultiSignatureData
 	// using getSignBytes to retrieve the sign bytes to verify against for the provided mode.
 	VerifyMultisignature(getSignBytes GetSignBytesFunc, sig *signing.MultiSignatureData) error
 

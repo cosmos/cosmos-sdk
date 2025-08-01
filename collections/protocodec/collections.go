@@ -14,7 +14,7 @@ import (
 )
 
 // BoolValue implements a ValueCodec that saves the bool value
-// as if it was a prototypes.BoolValue. Required for backwards
+// as if it was a gogotypes.BoolValue. Required for backwards
 // compatibility of state.
 var BoolValue collcodec.ValueCodec[bool] = boolValue{}
 

@@ -54,7 +54,7 @@ const (
 // to the keys command in future startups / or the attacker must get access
 // to the filesystem. However, with a similar threat model (changing
 // variables in runtime), one can cause the user to sign a different tx
-// than what they see, which is a significantly cheaper attack then breaking
+// than what they see, which is a significantly cheaper attack than breaking
 // a bcrypt hash. (Recall that the nonce still exists to break rainbow tables)
 // For further notes on security parameter choice, see README.md
 var BcryptSecurityParameter uint32 = 12

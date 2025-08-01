@@ -68,7 +68,7 @@ func TestArmorUnarmorPrivKey(t *testing.T) {
 	headerWrongKdf := map[string]string{
 		"kdf":  "wrong",
 		"salt": fmt.Sprintf("%X", saltBytes),
-		"type": "secp256k",
+		"type": "secp256k1",
 	}
 	armored = crypto.EncodeArmor("TENDERMINT PRIVATE KEY", headerWrongKdf, encBytes)
 	_, _, err = crypto.UnarmorDecryptPrivKey(armored, "passphrase")

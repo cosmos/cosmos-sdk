@@ -23,21 +23,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## [Unreleased-Upstream]
-
-### Improvements
-
-* [#207](https://github.com/crypto-org-chain/cosmos-sdk/pull/207) Remove api CacheWrapWithTrace.
-* [#205](https://github.com/crypto-org-chain/cosmos-sdk/pull/205) Support object store.
-* [#240](https://github.com/crypto-org-chain/cosmos-sdk/pull/240) Split methods from `MultiStore` into specialized `RootMultiStore`, keep `MultiStore` generic.
-* [#241](https://github.com/crypto-org-chain/cosmos-sdk/pull/241) Refactor the cache store to be btree backed, prepare to support copy-on-write atomic branching.
-* [#242](https://github.com/crypto-org-chain/cosmos-sdk/pull/242) Init cache on cache lazily, save memory allocations.
-* [#243](https://github.com/crypto-org-chain/cosmos-sdk/pull/243) Support `RunAtomic` API to use new CoW cache store.
-* [#244](https://github.com/crypto-org-chain/cosmos-sdk/pull/244) Add `Discard` method to CacheWrap to discard the write buffer.
-* [#258](https://github.com/crypto-org-chain/cosmos-sdk/pull/258) Add `NewFromParent` API to cachemulti store to create a new store from block-stm multiversion data structure.
-* [#1043](https://github.com/crypto-org-chain/cosmos-sdk/pull/1043) Add back CacheWrapWithTrace api.
-
-## [Unreleased]
+> **Disclaimer**: Numbers from v1.0.x to v1.9.x are reserved for the v0.50 line.
+> cosmossdk.io/store compatible with the v0.50 line is tagged from release/v0.50.x
+> Numbers from v1.10.x onwards are reserved for the 0.52+ line.
+> With Cosmos SDK v2 (with store/v2), CometBFT has been pushed to the boundaries, so issues like this
+> are not expected to happen again.
 
 ## v1.1.1 (September 06, 2024)
 

@@ -70,7 +70,7 @@ type BaseApp struct {
 	name              string                      // application name from abci.BlockInfo
 	db                dbm.DB                      // common DB backend
 	cms               storetypes.CommitMultiStore // Main (uncached) state
-	qms               storetypes.RootMultiStore   // Optional alternative multistore for querying only.
+	qms               storetypes.MultiStore       // Optional alternative multistore for querying only.
 	storeLoader       StoreLoader                 // function to handle store loading, may be overridden with SetStoreLoader()
 	grpcQueryRouter   *GRPCQueryRouter            // router for redirecting gRPC query calls
 	msgServiceRouter  *MsgServiceRouter           // router for redirecting Msg service messages
@@ -315,9 +315,6 @@ func (app *BaseApp) MountStores(keys ...storetypes.StoreKey) {
 		case *storetypes.MemoryStoreKey:
 			app.MountStore(key, storetypes.StoreTypeMemory)
 
-		case *storetypes.ObjectStoreKey:
-			app.MountStore(key, storetypes.StoreTypeObject)
-
 		default:
 			panic(fmt.Sprintf("Unrecognized store key type :%T", key))
 		}
@@ -354,17 +351,6 @@ func (app *BaseApp) MountMemoryStores(keys map[string]*storetypes.MemoryStoreKey
 	for _, key := range skeys {
 		memKey := keys[key]
 		app.MountStore(memKey, storetypes.StoreTypeMemory)
-	}
-}
-
-// MountObjectStores mounts all transient object stores with the BaseApp's internal
-// commit multi-store.
-func (app *BaseApp) MountObjectStores(keys map[string]*storetypes.ObjectStoreKey) {
-	skeys := maps.Keys(keys)
-	sort.Strings(skeys)
-	for _, key := range skeys {
-		memKey := keys[key]
-		app.MountStore(memKey, storetypes.StoreTypeObject)
 	}
 }
 

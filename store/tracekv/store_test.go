@@ -283,7 +283,7 @@ func TestTraceKVStoreGetStoreType(t *testing.T) {
 
 func TestTraceKVStoreCacheWrap(t *testing.T) {
 	store := newEmptyTraceKVStore(nil)
-	store.CacheWrap()
+	require.Panics(t, func() { store.CacheWrap() })
 }
 
 func TestTraceKVStoreCacheWrapWithTrace(t *testing.T) {

@@ -9,7 +9,7 @@ const RootCodespace = "sdk"
 
 var (
 	// ErrTxDecode is returned if we cannot parse a transaction
-	ErrTxDecode = errorsmod.Register(RootCodespace, 2, "tx parse error")
+	ErrTxDecode = errorsmod.Register(RootCodespace, 2, "transaction decoding failed")
 
 	// ErrInvalidSequence is returned when the sequence number (nonce) is incorrect for the signature.
 	ErrInvalidSequence = errorsmod.Register(RootCodespace, 3, "invalid sequence")
@@ -28,7 +28,7 @@ var (
 	ErrInvalidAddress = errorsmod.Register(RootCodespace, 7, "invalid address")
 
 	// ErrInvalidPubKey is returned when a public key is invalid.
-	ErrInvalidPubKey = errorsmod.Register(RootCodespace, 8, "invalid pubkey")
+	ErrInvalidPubKey = errorsmod.Register(RootCodespace, 8, "invalid public key")
 
 	// ErrUnknownAddress is returned when an address is not found.
 	ErrUnknownAddress = errorsmod.Register(RootCodespace, 9, "unknown address")
@@ -133,7 +133,7 @@ var (
 
 	// ErrAppConfig defines an error occurred if application configuration is
 	// misconfigured.
-	ErrAppConfig = errorsmod.Register(RootCodespace, 40, "error in app.toml")
+	ErrAppConfig = errorsmod.Register(RootCodespace, 40, "invalid configuration in app.toml")
 
 	// ErrInvalidGasLimit defines an error when an invalid GasWanted value is
 	// supplied.

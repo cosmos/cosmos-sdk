@@ -98,7 +98,7 @@ func LoadArchiveCmd() *cobra.Command {
 
 			savedSnapshot := <-quitChan
 			if savedSnapshot == nil {
-				return fmt.Errorf("failed to save snapshot")
+				return fmt.Errorf("failed to save snapshot chunks to node")
 			}
 
 			if !reflect.DeepEqual(&snapshot, savedSnapshot) {

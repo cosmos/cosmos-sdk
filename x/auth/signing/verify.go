@@ -78,7 +78,7 @@ func VerifySignature(
 			return err
 		}
 		if !pubKey.VerifySignature(signBytes, data.Signature) {
-			return fmt.Errorf("unable to verify single signer signature")
+			return fmt.Errorf("signature verification failed: invalid signature for public key")
 		}
 		return nil
 

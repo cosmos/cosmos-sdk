@@ -160,7 +160,7 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig StartupCon
 	// create validator set
 	valSet, err := startupConfig.ValidatorSet()
 	if err != nil {
-		return nil, fmt.Errorf("failed to create validator set")
+		return nil, fmt.Errorf("failed to create validator set from genesis validators")
 	}
 
 	var (

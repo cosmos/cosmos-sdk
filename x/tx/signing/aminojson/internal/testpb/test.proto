@@ -50,7 +50,7 @@ message ABitOfEverything {
   // gogoproto.  They are tested fully in /tests/integration/aminojson/aminojson_test.go
 
   // Any types are not tested here because they are treated fundamentally differently in gogoproto.
-  // In the go-admin/gogoproto paradigm a custom SDK type is used to wrap the Any type, which has no
+  // In the go-amino/gogoproto paradigm a custom SDK type is used to wrap the Any type, which has no
   // equivalent in code in pulsar generated types.
   //
   // google.protobuf.Any any = 22

@@ -199,7 +199,7 @@ func (st *Store) Set(key, value []byte) {
 	types.AssertValidValue(value)
 	_, err := st.tree.Set(key, value)
 	if err != nil && st.logger != nil {
-		st.logger.Error("iavl set error", "error", err.Error())
+		st.logger.Error("iavl set", "error", err.Error())
 	}
 }
 

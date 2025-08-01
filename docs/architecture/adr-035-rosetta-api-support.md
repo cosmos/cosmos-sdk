@@ -14,7 +14,7 @@
 ## Context
 
 [Rosetta API](https://www.rosetta-api.org/) is an open-source specification and set of tools developed by Coinbase to
-standardise blockchain interactions.
+standardize blockchain interactions.
 
 Through the use of a standard API for integrating blockchain applications it will
 
@@ -26,13 +26,13 @@ Through the use of a standard API for integrating blockchain applications it wil
 ## Decision
 
 It is clear that adding Rosetta API support to the Cosmos SDK will bring value to all the developers and
-Cosmos SDK based chains in the ecosystem. How it is implemented is key.
+Cosmos SDK-based chains in the ecosystem. How it is implemented is key.
 
 The driving principles of the proposed design are:
 
-1. **Extensibility:** it must be as riskless and painless as possible for application developers to set-up network
+1. **Extensibility:** it must be as riskless and painless as possible for application developers to set up network
    configurations to expose Rosetta API-compliant services.
-2. **Long term support:** This proposal aims to provide support for all the supported Cosmos SDK release series.
+2. **Long-term support:** This proposal aims to provide support for all the supported Cosmos SDK release series.
 3. **Cost-efficiency:** Backporting changes to Rosetta API specifications from `master` to the various stable
    branches of Cosmos SDK is a cost that needs to be reduced.
 
@@ -204,7 +204,7 @@ Proposed
 ### Positive
 
 * Out-of-the-box Rosetta API support within Cosmos SDK.
-* Blockchain interface standardisation
+* Blockchain interface standardization
 
 ## References
 

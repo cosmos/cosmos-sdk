@@ -142,7 +142,7 @@ func TestKeyring_SaveOfflineKey_ErrorCases(t *testing.T) {
 			},
 			uid:         "duplicate_name",
 			pubKey:      ed25519.GenPrivKey().PubKey(), // Different pubkey
-			expectedErr: false, // Actually allowed due to keyring's recovery logic
+			expectedErr: false,                         // Actually allowed due to keyring's recovery logic
 			description: "Duplicate key name with different pubkey is allowed due to recovery logic",
 		},
 		{
@@ -184,7 +184,7 @@ func TestKeyring_SaveOfflineKey_ErrorCases(t *testing.T) {
 			} else {
 				require.NoError(t, err, "Unexpected error occurred for test: %s", tt.description)
 				require.NotNil(t, k, "Key record should not be nil on success")
-				
+
 				// Verify key properties for successful cases
 				require.Equal(t, tt.uid, k.Name, "Key name mismatch")
 				require.Equal(t, TypeOffline, k.GetType(), "Key type should be offline")

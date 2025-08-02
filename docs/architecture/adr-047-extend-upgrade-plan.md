@@ -59,7 +59,7 @@ The current upgrade process has this timeline:
 We will update the `x/upgrade.Plan` message for providing upgrade instructions.
 The upgrade instructions will contain a list of artifacts available for each platform.
 It allows for the definition of a pre-run and post-run commands.
-These commands are not consensus guaranteed; they will be executed by Cosmosvisor (or other) during its upgrade handling.
+These commands are not consensus guaranteed; they will be executed by Cosmovisor (or other) during its upgrade handling.
 
 ```protobuf
 message Plan {
@@ -88,7 +88,7 @@ All fields in the `UpgradeInstructions` are optional.
   This command MUST behave the same as the current [pre-upgrade](https://github.com/cosmos/cosmos-sdk/blob/v0.44.5/docs/migrations/pre-upgrade.md) command.
   It does not take in any command-line arguments and is expected to terminate with the following exit codes:
 
-  | Exit status code | How it is handled in Cosmosvisor                                                                                    |
+  | Exit status code | How it is handled in Cosmovisor                                                                                    |
   |------------------|---------------------------------------------------------------------------------------------------------------------|
   | `0`              | Assumes `pre-upgrade` command executed successfully and continues the upgrade.                                      |
   | `1`              | Default exit code when `pre-upgrade` command has not been implemented.                                              |

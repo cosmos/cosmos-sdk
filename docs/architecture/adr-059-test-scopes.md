@@ -153,7 +153,7 @@ The SDK uses an application will only the required modules for the tests. The ap
 #### Limitations
 
 In general the limitations of end to end tests are orchestration and compute cost.
-Scaffolding is required to start up and run a prod-like environment and the this
+Scaffolding is required to start up and run a prod-like environment and this
 process takes much longer to start and run than unit or integration tests.
 
 Global locks present in Tendermint code cause stateful starting/stopping to sometimes hang

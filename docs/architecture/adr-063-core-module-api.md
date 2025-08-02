@@ -282,7 +282,7 @@ type HasGenesis interface {
 
 #### Pre Blockers
 
-Modules that have functionality that runs before BeginBlock and should implement the has `HasPreBlocker` interfaces:
+Modules that have functionality that runs before BeginBlock and should implement the `HasPreBlocker` interfaces:
 
 ```go
 type HasPreBlocker interface {

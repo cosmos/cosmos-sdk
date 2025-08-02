@@ -35,7 +35,7 @@ application state. This data structure is the base layer `KVStore`.
 In addition, the SDK provides abstractions on top of this Merkle data structure.
 Namely, a root multi-store (RMS) is a collection of each module's `KVStore`.
 Through the RMS, the application can serve queries and provide proofs to clients
-in addition to provide a module access to its own unique `KVStore` though the use
+in addition to provide a module access to its own unique `KVStore` through the use
 of `StoreKey`, which is an OCAP primitive.
 
 There are further layers of abstraction that sit between the RMS and the underlying
@@ -65,7 +65,7 @@ See the [Storage Discussion](https://github.com/cosmos/cosmos-sdk/discussions/13
 ## Alternatives
 
 There was a previous attempt to refactor the storage layer described in [ADR-040](./adr-040-storage-and-smt-state-commitments.md).
-However, this approach mainly stems on the short comings of IAVL and various performance
+However, this approach mainly stems on the shortcomings of IAVL and various performance
 issues around it. While there was a (partial) implementation of [ADR-040](./adr-040-storage-and-smt-state-commitments.md),
 it was never adopted for a variety of reasons, such as the reliance on using an
 SMT, which was more in a research phase, and some design choices that couldn't

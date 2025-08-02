@@ -128,7 +128,7 @@ Unfortunately, the vast majority of unaddressed malleability risks affect `SIGN_
 sign mode is still commonly used.
 It is recommended that the following improvements be made to Amino JSON signing:
 
-* hashes of `TxBody` and `AuthInfo` should be added to `AminoSignDoc` so that encoding-level malleablity is addressed
+* hashes of `TxBody` and `AuthInfo` should be added to `AminoSignDoc` so that encoding-level malleability is addressed
 * when constructing `AminoSignDoc`, [protoreflect](https://pkg.go.dev/google.golang.org/protobuf/reflect/protoreflect) API should be used to ensure that there no fields in `TxBody` or `AuthInfo` which do not have a mapping in `AminoSignDoc` have been set
 * fields present in `TxBody` or `AuthInfo` that are not present in `AminoSignDoc` (such as extension options) should
 be added to `AminoSignDoc` if possible

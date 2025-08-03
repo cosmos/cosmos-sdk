@@ -344,9 +344,9 @@ func (c CLIWrapper) AddKey(name string) string {
 }
 
 // AddKeyFromSeed recovers the key from given seed and add it to default keyring. Returns address
-func (c CLIWrapper) AddKeyFromSeed(name, mnemoic string) string {
+func (c CLIWrapper) AddKeyFromSeed(name, mnemonic string) string {
 	cmd := c.WithKeyringFlags("keys", "add", name, "--recover")
-	out, _ := c.runWithInput(cmd, strings.NewReader(mnemoic))
+	out, _ := c.runWithInput(cmd, strings.NewReader(mnemonic))
 	addr := gjson.Get(out, "address").String()
 	require.NotEmpty(c.t, addr, "got %q", out)
 	return addr
@@ -361,7 +361,7 @@ func (c CLIWrapper) GetKeyAddr(name string) string {
 	return addr
 }
 
-// GetKeyAddrPrefix returns key address with Beach32 prefix encoding for a key (acc|val|cons)
+// GetKeyAddrPrefix returns key address with Bech32 prefix encoding for a key (acc|val|cons)
 func (c CLIWrapper) GetKeyAddrPrefix(name, prefix string) string {
 	cmd := c.WithKeyringFlags("keys", "show", name, "-a", "--bech="+prefix)
 	out, _ := c.run(cmd)

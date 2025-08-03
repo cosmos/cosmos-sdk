@@ -32,13 +32,13 @@ func LoadValidatorPubKey(t *testing.T, keyFile string) cryptotypes.PubKey {
 // QueryCometValidatorPowerForNode returns the validator's power from tendermint RPC endpoint. 0 when not found
 func QueryCometValidatorPowerForNode(t *testing.T, sut *SystemUnderTest, nodeNumber int) int64 {
 	t.Helper()
-	pubKebBz := LoadValidatorPubKeyForNode(t, sut, nodeNumber).Bytes()
-	return QueryCometValidatorPower(sut.RPCClient(t), pubKebBz)
+	pubKeyBz := LoadValidatorPubKeyForNode(t, sut, nodeNumber).Bytes()
+	return QueryCometValidatorPower(sut.RPCClient(t), pubKeyBz)
 }
 
-func QueryCometValidatorPower(c RPCClient, pubKebBz []byte) int64 {
+func QueryCometValidatorPower(c RPCClient, pubKeyBz []byte) int64 {
 	for _, v := range c.Validators() {
-		if bytes.Equal(v.PubKey.Bytes(), pubKebBz) {
+		if bytes.Equal(v.PubKey.Bytes(), pubKeyBz) {
 			return v.VotingPower
 		}
 	}

@@ -446,7 +446,7 @@ func (m *Manager) RestoreChunk(chunk []byte) (bool, error) {
 		m.chRestore = nil
 
 		// the chunks are all written into files, we can save the snapshot to the db,
-		// even if the restoration may not completed yet.
+		// even if the restoration may not be completed yet.
 		if err := m.store.saveSnapshot(m.restoreSnapshot); err != nil {
 			return false, errorsmod.Wrap(err, "save restoring snapshot")
 		}

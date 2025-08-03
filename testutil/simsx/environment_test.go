@@ -57,10 +57,10 @@ func TestChainDataSourceGetHasAccount(t *testing.T) {
 	accs := simtypes.RandomAccounts(r, 3)
 	reporter := NewBasicSimulationReporter()
 	c := NewChainDataSource(sdk.Context{}, r, nil, nil, codec, accs...)
-	exisingAddr := accs[0].AddressBech32
-	assert.Equal(t, exisingAddr, c.GetAccount(reporter, exisingAddr).AddressBech32)
+	existingAddr := accs[0].AddressBech32
+	assert.Equal(t, existingAddr, c.GetAccount(reporter, existingAddr).AddressBech32)
 	assert.False(t, reporter.IsSkipped())
-	assert.True(t, c.HasAccount(exisingAddr))
+	assert.True(t, c.HasAccount(existingAddr))
 	// and non-existing account
 	reporter = NewBasicSimulationReporter()
 	assert.Empty(t, c.GetAccount(reporter, "non-existing").AddressBech32)

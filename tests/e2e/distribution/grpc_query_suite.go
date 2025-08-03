@@ -98,7 +98,7 @@ func (s *GRPCQueryTestSuite) TestQueryValidatorDistributionInfoGRPC() {
 			&types.QueryValidatorDistributionInfoResponse{},
 		},
 		{
-			"gRPC request with valid validator address ",
+			"gRPC request with valid validator address",
 			fmt.Sprintf("%s/cosmos/distribution/v1beta1/validators/%s", baseURL, val.ValAddress.String()),
 			false,
 			&types.QueryValidatorDistributionInfoResponse{},

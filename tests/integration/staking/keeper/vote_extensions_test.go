@@ -100,7 +100,7 @@ func TestValidateVoteExtensions(t *testing.T) {
 	assert.NilError(t, err)
 }
 
-func masrhalVoteExt(msg proto.Message) ([]byte, error) {
+func marshalVoteExt(msg proto.Message) ([]byte, error) {
 	var buf bytes.Buffer
 	if err := protoio.NewDelimitedWriter(&buf).WriteMsg(msg); err != nil {
 		return nil, err

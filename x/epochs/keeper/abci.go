@@ -47,9 +47,6 @@ func (k *Keeper) BeginBlocker(ctx sdk.Context) error {
 				if err != nil {
 					return false, err
 				}
-				if err != nil {
-					return false, nil
-				}
 
 				cacheCtx, writeFn := ctx.CacheContext()
 				if err := k.AfterEpochEnd(cacheCtx, epochInfo.Identifier, epochInfo.CurrentEpoch); err != nil {

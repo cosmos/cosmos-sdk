@@ -121,7 +121,7 @@ Backwards compatibility is maintained as this is a new message spec definition.
 
 ## Further discussion
 
-* Regarding security in `MsgSignData`, the developer using `MsgSignData` is in charge of making the content laying in `Data` non-replayable when, and if, needed.
+* Regarding security in `MsgSignData`, the developer using `MsgSignData` is in charge of making the content lying in `Data` non-replayable when, and if, needed.
 * the offchain package will be further extended with extra messages that target specific use cases such as, but not limited to, authentication in applications, payment channels, L2 solutions in general.
 
 ## References

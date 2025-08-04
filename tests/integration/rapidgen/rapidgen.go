@@ -31,6 +31,7 @@ import (
 	upgradeapi "cosmossdk.io/api/cosmos/upgrade/v1beta1"
 	vestingapi "cosmossdk.io/api/cosmos/vesting/v1beta1"
 
+	grouptypes "github.com/cosmos/cosmos-sdk/contrib/x/group"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -42,7 +43,6 @@ import (
 	feegranttypes "github.com/cosmos/cosmos-sdk/x/feegrant"
 	gov_v1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	gov_v1beta1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	grouptypes "github.com/cosmos/cosmos-sdk/x/group" //nolint:staticcheck // deprecated and to be removed
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"

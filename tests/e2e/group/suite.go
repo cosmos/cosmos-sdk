@@ -13,6 +13,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/contrib/x/group"
+	client "github.com/cosmos/cosmos-sdk/contrib/x/group/client/cli"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -20,8 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/group"                   //nolint:staticcheck // deprecated and to be removed
-	client "github.com/cosmos/cosmos-sdk/x/group/client/cli" //nolint:staticcheck // deprecated and to be removed
 )
 
 type E2ETestSuite struct {

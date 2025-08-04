@@ -30,6 +30,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/contrib/x/circuit"
+	circuitkeeper "github.com/cosmos/cosmos-sdk/contrib/x/circuit/keeper"
+	circuittypes "github.com/cosmos/cosmos-sdk/contrib/x/circuit/types"
+	"github.com/cosmos/cosmos-sdk/contrib/x/group"                    //nolint:staticcheck // deprecated and to be removed
+	groupkeeper "github.com/cosmos/cosmos-sdk/contrib/x/group/keeper" //nolint:staticcheck // deprecated and to be removed
+	groupmodule "github.com/cosmos/cosmos-sdk/contrib/x/group/module" //nolint:staticcheck // deprecated and to be removed
+	"github.com/cosmos/cosmos-sdk/contrib/x/nft"
+	nftkeeper "github.com/cosmos/cosmos-sdk/contrib/x/nft/keeper"
+	nftmodule "github.com/cosmos/cosmos-sdk/contrib/x/nft/module"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -60,9 +69,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/circuit"
-	circuitkeeper "github.com/cosmos/cosmos-sdk/x/circuit/keeper"
-	circuittypes "github.com/cosmos/cosmos-sdk/x/circuit/types"
 	consensus "github.com/cosmos/cosmos-sdk/x/consensus"
 	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
@@ -85,15 +91,9 @@ import (
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	"github.com/cosmos/cosmos-sdk/x/group"                    //nolint:staticcheck // deprecated and to be removed
-	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper" //nolint:staticcheck // deprecated and to be removed
-	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module" //nolint:staticcheck // deprecated and to be removed
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/cosmos/cosmos-sdk/x/nft"
-	nftkeeper "github.com/cosmos/cosmos-sdk/x/nft/keeper"
-	nftmodule "github.com/cosmos/cosmos-sdk/x/nft/module"
 	"github.com/cosmos/cosmos-sdk/x/protocolpool"
 	protocolpoolkeeper "github.com/cosmos/cosmos-sdk/x/protocolpool/keeper"
 	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"

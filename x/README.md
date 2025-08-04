@@ -14,7 +14,7 @@ proof-of-stake capabilities and governance.
 
 * [Auth](./auth/README.md) - Authentication of accounts and transactions for Cosmos SDK applications.
 * [Bank](./bank/README.md) - Token transfer functionalities.
-* [Circuit](./circuit/README.md) - Circuit breaker module for pausing messages.
+* [Circuit](../contrib/x/circuit/README.md) - Circuit breaker module for pausing messages.
 * [Consensus](./consensus/README.md) - Consensus module for modifying CometBFT's ABCI consensus params.
 * [Distribution](./distribution/README.md) - Fee distribution, and staking token provision distribution.
 * [Evidence](./evidence/README.md) - Evidence handling for double signing, misbehaviour, etc.
@@ -43,8 +43,8 @@ in an upcoming release of the Cosmos SDK per our [release process](https://githu
 
 * [Crisis](./crisis/README.md) - _Deprecated_ halting the blockchain under certain circumstances (e.g. if an invariant is broken).
 * [Params](./params/README.md) - _Deprecated_ Globally available parameter store.
-* [NFT](./nft/README.md) - _Deprecated_ NFT module implemented based on [ADR43](https://docs.cosmos.network/main/build/architecture/adr-043-nft-module).  This module will be moved to the `cosmos-sdk-legacy` repo for use.
-* [Group](./group/README.md) - _Deprecated_ Allows for the creation and management of on-chain multisig accounts.  This module will be moved to the `cosmos-sdk-legacy` repo for legacy use.
+* [NFT](../contrib/x/nft/README.md) - _Deprecated_ NFT module implemented based on [ADR43](https://docs.cosmos.network/main/build/architecture/adr-043-nft-module).  This module will be moved to the `cosmos-sdk-legacy` repo for use.
+* [Group](../contrib/x/group/README.md) - _Deprecated_ Allows for the creation and management of on-chain multisig accounts.  This module will be moved to the `cosmos-sdk-legacy` repo for legacy use.
 
 To learn more about the process of building modules, visit the [building modules reference documentation](https://docs.cosmos.network/main/building-modules/intro).
 

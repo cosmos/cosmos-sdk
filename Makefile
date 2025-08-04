@@ -14,6 +14,9 @@ HTTPS_GIT := https://github.com/cosmos/cosmos-sdk.git
 DOCKER := $(shell which docker)
 PROJECT_NAME = $(shell git remote get-url origin | xargs basename -s .git)
 
+# Subdirectories for tagging
+SUBDIR_PREFIXES := api core errors store x/circuit x/evidence x/feegrant x/nft x/tx x/upgrade
+
 # process build tags
 build_tags = netgo
 ifeq ($(LEDGER_ENABLED),true)
@@ -481,3 +484,44 @@ localnet-start: localnet-stop localnet-build-env localnet-build-nodes
 localnet-debug: localnet-stop localnet-build-dlv localnet-build-nodes
 
 .PHONY: localnet-start localnet-stop localnet-debug localnet-build-env localnet-build-dlv localnet-build-nodes
+
+###############################################################################
+###                                Tagging                                  ###
+###############################################################################
+
+# tag-client creates and pushes the special client tag with v2.0.0- prefix
+# Usage: make tag-client TAG=v1.2.3 (creates client/v2.0.0-v1.2.3)
+tag-client:
+ifndef TAG
+	$(error TAG is required. Usage: make tag-client TAG=v1.2.3)
+endif
+	@echo "Fetching latest tags from origin..."
+	@git fetch origin --tags
+	@echo "Creating client tag for $(TAG)..."
+	@client_tag="client/v2.0.0-$(TAG)"; \
+	echo "Creating tag: $$client_tag"; \
+	git tag "$$client_tag" $(TAG); \
+	echo "Pushing tag: $$client_tag"; \
+	git push origin "$$client_tag"
+	@echo "Successfully created and pushed client tag for $(TAG)"
+
+# tag-subdirs creates and pushes tags with subdir prefixes for a given tag
+# Usage: make tag-subdirs TAG=v1.2.3
+# NOTE: This also automatically creates the special client tag
+tag-subdirs: tag-client
+ifndef TAG
+	$(error TAG is required. Usage: make tag-subdirs TAG=v1.2.3)
+endif
+	@echo "Fetching latest tags from origin..."
+	@git fetch origin --tags
+	@echo "Creating and pushing subdir tags for $(TAG)..."
+	@for prefix in $(SUBDIR_PREFIXES); do \
+		new_tag="$$prefix/$(TAG)"; \
+		echo "Creating tag: $$new_tag"; \
+		git tag "$$new_tag" $(TAG); \
+		echo "Pushing tag: $$new_tag"; \
+		git push origin "$$new_tag"; \
+	done
+	@echo "Successfully created and pushed all subdir tags for $(TAG)"
+
+.PHONY: tag-subdirs tag-client

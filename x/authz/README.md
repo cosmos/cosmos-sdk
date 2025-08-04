@@ -264,7 +264,7 @@ Example:
     simd tx authz grant cosmos1.. send --spend-limit=100stake --allow-list=cosmos1...,cosmos2... --from=cosmos1..
 ```
 
-* The `generic` authorization_type refers to the built-in `GenericAuthorization` type. The custom flag available is `msg-type` ( required) documented [here](#genericauthorization).
+* The `generic` authorization_type refers to the built-in `GenericAuthorization` type. The custom flag available is `msg-type` (required) documented [here](#genericauthorization).
 
 > Note: `msg-type` is any valid Cosmos SDK `Msg` type url.
 
@@ -274,7 +274,7 @@ Example:
     simd tx authz grant cosmos1.. generic --msg-type=/cosmos.bank.v1beta1.MsgSend --from=cosmos1..
 ```
 
-* The `delegate`,`unbond`,`redelegate` authorization_types refer to the built-in `StakeAuthorization` type. The custom flags available are `spend-limit` (optional), `allowed-validators` (optional) and `deny-validators` (optional) documented  [here](#stakeauthorization).
+* The `delegate`,`unbond`,`redelegate` authorization_types refer to the built-in `StakeAuthorization` type. The custom flags available are `spend-limit` (optional), `allowed-validators` (optional) and `deny-validators` (optional) documented [here](#stakeauthorization).
 
 > Note: `allowed-validators` and `deny-validators` cannot both be empty. `spend-limit` represents the `MaxTokens`
 

@@ -75,7 +75,7 @@ func TestNewKeyring(t *testing.T) {
 			dir:         t.TempDir(),
 			userInput:   strings.NewReader(""),
 			cdc:         cdc,
-			expectedErr: ErrUnknownBacked,
+			expectedErr: ErrUnknownBackend,
 		},
 	}
 	for _, tt := range tests {

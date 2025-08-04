@@ -144,6 +144,11 @@ func DisableBlockGasMeter() func(*BaseApp) {
 	return func(app *BaseApp) { app.SetDisableBlockGasMeter(true) }
 }
 
+// SkipEndBlocker skips EndBlocker processing for non-blocking query mode.
+func SkipEndBlocker() func(*BaseApp) {
+	return func(app *BaseApp) { app.SetSkipEndBlocker(true) }
+}
+
 func (app *BaseApp) SetName(name string) {
 	if app.sealed {
 		panic("SetName() on sealed BaseApp")
@@ -407,6 +412,11 @@ func (app *BaseApp) SetStreamingManager(manager storetypes.StreamingManager) {
 // SetDisableBlockGasMeter sets the disableBlockGasMeter flag for the BaseApp.
 func (app *BaseApp) SetDisableBlockGasMeter(disableBlockGasMeter bool) {
 	app.disableBlockGasMeter = disableBlockGasMeter
+}
+
+// SetSkipEndBlocker sets the skipEndBlocker flag for the BaseApp.
+func (app *BaseApp) SetSkipEndBlocker(skipEndBlocker bool) {
+	app.skipEndBlocker = skipEndBlocker
 }
 
 // SetMsgServiceRouter sets the MsgServiceRouter of a BaseApp.

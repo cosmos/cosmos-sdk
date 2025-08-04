@@ -163,6 +163,10 @@ type BaseApp struct {
 	// SAFETY: it's safe to do if validators validate the total gas wanted in the `ProcessProposal`, which is the case in the default handler.
 	disableBlockGasMeter bool
 
+	// skipEndBlocker will skip EndBlocker processing when true, useful for query-only modes
+	// where EndBlocker operations might block or are unnecessary.
+	skipEndBlocker bool
+
 	// nextBlockDelay is the delay to wait until the next block after ABCI has committed.
 	// This gives the application more time to receive precommits.  This is the same as TimeoutCommit,
 	// but can now be set from the application.  This value defaults to 0, and CometBFT will use the
@@ -734,6 +738,11 @@ func (app *BaseApp) deliverTx(tx []byte) *abci.ExecTxResult {
 // have been processed in FinalizeBlock.
 func (app *BaseApp) endBlock(_ context.Context) (sdk.EndBlock, error) {
 	var endblock sdk.EndBlock
+
+	if app.skipEndBlocker {
+		// Skip EndBlocker processing when flag is set
+		return endblock, nil
+	}
 
 	if app.abciHandlers.EndBlocker != nil {
 		eb, err := app.abciHandlers.EndBlocker(app.stateManager.GetState(execModeFinalize).Context())

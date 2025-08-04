@@ -10,6 +10,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"reflect"
 	"runtime/pprof"
 	"strings"
 	"time"
@@ -39,6 +40,7 @@ import (
 
 	pruningtypes "cosmossdk.io/store/pruning/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -79,6 +81,7 @@ const (
 	FlagDisableIAVLFastNode = "iavl-disable-fastnode"
 	FlagIAVLSyncPruning     = "iavl-sync-pruning"
 	FlagShutdownGrace       = "shutdown-grace"
+	FlagSkipEndBlocker      = "skip-endblocker"
 
 	// state sync-related flags
 
@@ -631,6 +634,42 @@ func getCtx(svrCtx *Context, block bool) (*errgroup.Group, context.Context) {
 	return g, ctx
 }
 
+// getBaseAppFromApp attempts to extract a BaseApp pointer from various app types
+func getBaseAppFromApp(app types.Application) *baseapp.BaseApp {
+	// Direct cast won't work since Application is an interface that BaseApp doesn't fully implement
+	// BaseApp doesn't implement RegisterAPIRoutes and other methods required by Application interface
+
+	// Try interface method
+	if appWithBaseApp, ok := app.(interface{ GetBaseApp() *baseapp.BaseApp }); ok {
+		return appWithBaseApp.GetBaseApp()
+	}
+
+	// Use reflection to find embedded BaseApp
+	appValue := reflect.ValueOf(app)
+	if appValue.Kind() == reflect.Ptr {
+		appValue = appValue.Elem()
+	}
+
+	if appValue.Kind() == reflect.Struct {
+		// Look for embedded BaseApp field
+		for i := 0; i < appValue.NumField(); i++ {
+			field := appValue.Field(i)
+			fieldType := appValue.Type().Field(i)
+
+			// Check if it's an embedded BaseApp
+			if fieldType.Type == reflect.TypeOf((*baseapp.BaseApp)(nil)) && fieldType.Anonymous {
+				if field.CanInterface() {
+					if baseApp, ok := field.Interface().(*baseapp.BaseApp); ok {
+						return baseApp
+					}
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
 func startApp(svrCtx *Context, appCreator types.AppCreator, opts StartCmdOptions) (app types.Application, cleanupFn func(), err error) {
 	traceWriter, traceCleanupFn, err := setupTraceWriter(svrCtx)
 	if err != nil {
@@ -650,6 +689,17 @@ func startApp(svrCtx *Context, appCreator types.AppCreator, opts StartCmdOptions
 		}
 	} else {
 		app = appCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)
+	}
+
+	// Check if skip-endblocker flag is set and configure the app accordingly
+	if skipEndBlocker := svrCtx.Viper.GetBool(FlagSkipEndBlocker); skipEndBlocker {
+		baseAppPtr := getBaseAppFromApp(app)
+		if baseAppPtr != nil {
+			baseAppPtr.SetSkipEndBlocker(true)
+			svrCtx.Logger.Info("EndBlocker processing disabled via flag")
+		} else {
+			svrCtx.Logger.Warn("Skip EndBlocker flag set but unable to access BaseApp")
+		}
 	}
 
 	cleanupFn = func() {
@@ -1035,6 +1085,7 @@ func addStartNodeFlags(cmd *cobra.Command, opts StartCmdOptions) {
 	cmd.Flags().Bool(FlagDisableIAVLFastNode, false, "Disable fast node for IAVL tree")
 	cmd.Flags().Int(FlagMempoolMaxTxs, mempool.DefaultMaxTx, "Sets MaxTx value for the app-side mempool")
 	cmd.Flags().Duration(FlagShutdownGrace, 0*time.Second, "On Shutdown, duration to wait for resource clean up")
+	cmd.Flags().Bool(FlagSkipEndBlocker, false, "Skip EndBlocker processing for non-blocking query mode")
 
 	// support old flags name for backwards compatibility
 	cmd.Flags().SetNormalizeFunc(func(f *pflag.FlagSet, name string) pflag.NormalizedName {

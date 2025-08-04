@@ -3,18 +3,18 @@ package keeper
 import (
 	"context"
 	"fmt"
+	types2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 
 	"cosmossdk.io/core/comet"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 // BeginBlocker iterates through and handles any newly discovered evidence of
 // misbehavior submitted by CometBFT. Currently, only equivocation is handled.
 func (k Keeper) BeginBlocker(ctx context.Context) error {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyBeginBlocker)
+	defer telemetry.ModuleMeasureSince(types2.ModuleName, telemetry.Now(), telemetry.MetricKeyBeginBlocker)
 
 	bi := k.cometInfo.GetCometBlockInfo(ctx)
 	if bi == nil {
@@ -30,7 +30,7 @@ func (k Keeper) BeginBlocker(ctx context.Context) error {
 		// It's still ongoing discussion how should we treat and slash attacks with
 		// premeditation. So for now we agree to treat them in the same way.
 		case comet.LightClientAttack, comet.DuplicateVote:
-			evidence := types.FromABCIEvidence(evidences.Get(i), k.stakingKeeper.ConsensusAddressCodec())
+			evidence := types2.FromABCIEvidence(evidences.Get(i), k.stakingKeeper.ConsensusAddressCodec())
 			err := k.handleEquivocationEvidence(ctx, evidence)
 			if err != nil {
 				return err

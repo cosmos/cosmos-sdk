@@ -2,19 +2,19 @@ package evidence
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/contrib/x/evidence/exported"
+	"github.com/cosmos/cosmos-sdk/contrib/x/evidence/keeper"
+	types2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
-	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 // InitGenesis initializes the evidence module's state from a provided genesis
 // state.
-func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs *types.GenesisState) {
+func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs *types2.GenesisState) {
 	if err := gs.Validate(); err != nil {
-		panic(fmt.Sprintf("failed to validate %s genesis state: %s", types.ModuleName, err))
+		panic(fmt.Sprintf("failed to validate %s genesis state: %s", types2.ModuleName, err))
 	}
 
 	for _, e := range gs.Evidence {
@@ -33,8 +33,8 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, gs *types.GenesisState) {
 }
 
 // ExportGenesis returns the evidence module's exported genesis.
-func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
-	gs := new(types.GenesisState)
+func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types2.GenesisState {
+	gs := new(types2.GenesisState)
 	err := k.Evidences.Walk(ctx, nil, func(_ []byte, value exported.Evidence) (stop bool, err error) {
 		anyEvi, err := codectypes.NewAnyWithValue(value)
 		if err != nil {

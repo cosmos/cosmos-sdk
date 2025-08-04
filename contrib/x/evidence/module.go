@@ -4,6 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	eviclient "github.com/cosmos/cosmos-sdk/contrib/x/evidence/client"
+	"github.com/cosmos/cosmos-sdk/contrib/x/evidence/client/cli"
+	keeper2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/keeper"
+	"github.com/cosmos/cosmos-sdk/contrib/x/evidence/simulation"
+	types2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -22,11 +27,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	eviclient "github.com/cosmos/cosmos-sdk/x/evidence/client"
-	"github.com/cosmos/cosmos-sdk/x/evidence/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
-	"github.com/cosmos/cosmos-sdk/x/evidence/simulation"
-	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 var (
@@ -57,24 +57,24 @@ func NewAppModuleBasic(evidenceHandlers ...eviclient.EvidenceHandler) AppModuleB
 
 // Name returns the evidence module's name.
 func (AppModuleBasic) Name() string {
-	return types.ModuleName
+	return types2.ModuleName
 }
 
 // RegisterLegacyAminoCodec registers the evidence module's types to the LegacyAmino codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	types.RegisterLegacyAminoCodec(cdc)
+	types2.RegisterLegacyAminoCodec(cdc)
 }
 
 // DefaultGenesis returns the evidence module's default genesis state.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(types.DefaultGenesisState())
+	return cdc.MustMarshalJSON(types2.DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the evidence module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
-	var gs types.GenesisState
+	var gs types2.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &gs); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types2.ModuleName, err)
 	}
 
 	return gs.Validate()
@@ -82,7 +82,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the evidence module.
 func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwruntime.ServeMux) {
-	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
+	if err := types2.RegisterQueryHandlerClient(context.Background(), mux, types2.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
 }
@@ -100,7 +100,7 @@ func (a AppModuleBasic) GetTxCmd() *cobra.Command {
 
 // RegisterInterfaces registers the evidence module's interface types
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
-	types.RegisterInterfaces(registry)
+	types2.RegisterInterfaces(registry)
 }
 
 // ----------------------------------------------------------------------------
@@ -111,11 +111,11 @@ func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) 
 type AppModule struct {
 	AppModuleBasic
 
-	keeper keeper.Keeper
+	keeper keeper2.Keeper
 }
 
 // NewAppModule creates a new AppModule object.
-func NewAppModule(keeper keeper.Keeper) AppModule {
+func NewAppModule(keeper keeper2.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
@@ -130,18 +130,18 @@ func (am AppModule) IsAppModule() {}
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
-	types.RegisterMsgServer(registrar, keeper.NewMsgServerImpl(am.keeper))
-	types.RegisterQueryServer(registrar, keeper.NewQuerier(&am.keeper))
+	types2.RegisterMsgServer(registrar, keeper2.NewMsgServerImpl(am.keeper))
+	types2.RegisterQueryServer(registrar, keeper2.NewQuerier(&am.keeper))
 	return nil
 }
 
 // InitGenesis performs the evidence module's genesis initialization It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) {
-	var gs types.GenesisState
+	var gs types2.GenesisState
 	err := cdc.UnmarshalJSON(bz, &gs)
 	if err != nil {
-		panic(fmt.Sprintf("failed to unmarshal %s genesis state: %s", types.ModuleName, err))
+		panic(fmt.Sprintf("failed to unmarshal %s genesis state: %s", types2.ModuleName, err))
 	}
 
 	InitGenesis(ctx, am.keeper, &gs)
@@ -169,7 +169,7 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 
 // RegisterStoreDecoder registers a decoder for evidence module's types
 func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
-	sdr[types.StoreKey] = simtypes.NewStoreDecoderFuncFromCollectionsSchema(am.keeper.Schema)
+	sdr[types2.StoreKey] = simtypes.NewStoreDecoderFuncFromCollectionsSchema(am.keeper.Schema)
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
@@ -193,8 +193,8 @@ type ModuleInputs struct {
 	StoreService store.KVStoreService
 	Cdc          codec.Codec
 
-	StakingKeeper  types.StakingKeeper
-	SlashingKeeper types.SlashingKeeper
+	StakingKeeper  types2.StakingKeeper
+	SlashingKeeper types2.SlashingKeeper
 	AddressCodec   address.Codec
 
 	BlockInfoService comet.BlockInfoService
@@ -203,12 +203,12 @@ type ModuleInputs struct {
 type ModuleOutputs struct {
 	depinject.Out
 
-	EvidenceKeeper keeper.Keeper
+	EvidenceKeeper keeper2.Keeper
 	Module         appmodule.AppModule
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
-	k := keeper.NewKeeper(in.Cdc, in.StoreService, in.StakingKeeper, in.SlashingKeeper, in.AddressCodec, in.BlockInfoService)
+	k := keeper2.NewKeeper(in.Cdc, in.StoreService, in.StakingKeeper, in.SlashingKeeper, in.AddressCodec, in.BlockInfoService)
 	m := NewAppModule(*k)
 
 	return ModuleOutputs{EvidenceKeeper: *k, Module: m}

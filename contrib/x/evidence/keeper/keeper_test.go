@@ -4,6 +4,11 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/contrib/x/evidence"
+	"github.com/cosmos/cosmos-sdk/contrib/x/evidence/exported"
+	keeper2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/keeper"
+	evidencetestutil "github.com/cosmos/cosmos-sdk/contrib/x/evidence/testutil"
+	types2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 	"time"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
@@ -21,11 +26,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
-	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
-	evidencetestutil "github.com/cosmos/cosmos-sdk/x/evidence/testutil"
-	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 var (
@@ -49,13 +49,13 @@ func newPubKey(pk string) (res cryptotypes.PubKey) {
 	return pubkey
 }
 
-func testEquivocationHandler(_ interface{}) types.Handler {
+func testEquivocationHandler(_ interface{}) types2.Handler {
 	return func(ctx context.Context, e exported.Evidence) error {
 		if err := e.ValidateBasic(); err != nil {
 			return err
 		}
 
-		ee, ok := e.(*types.Equivocation)
+		ee, ok := e.(*types2.Equivocation)
 		if !ok {
 			return fmt.Errorf("unexpected evidence type: %T", e)
 		}
@@ -72,20 +72,20 @@ type KeeperTestSuite struct {
 
 	ctx sdk.Context
 
-	evidenceKeeper keeper.Keeper
+	evidenceKeeper keeper2.Keeper
 	bankKeeper     *evidencetestutil.MockBankKeeper
 	accountKeeper  *evidencetestutil.MockAccountKeeper
 	slashingKeeper *evidencetestutil.MockSlashingKeeper
 	stakingKeeper  *evidencetestutil.MockStakingKeeper
 	blockInfo      *evidencetestutil.MockCometinfo
-	queryClient    types.QueryClient
+	queryClient    types2.QueryClient
 	encCfg         moduletestutil.TestEncodingConfig
-	msgServer      types.MsgServer
+	msgServer      types2.MsgServer
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
 	encCfg := moduletestutil.MakeTestEncodingConfig(evidence.AppModuleBasic{})
-	key := storetypes.NewKVStoreKey(types.StoreKey)
+	key := storetypes.NewKVStoreKey(types2.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	tkey := storetypes.NewTransientStoreKey("evidence_transient_store")
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, tkey)
@@ -99,7 +99,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	bankKeeper := evidencetestutil.NewMockBankKeeper(ctrl)
 	suite.blockInfo = &evidencetestutil.MockCometinfo{}
 
-	evidenceKeeper := keeper.NewKeeper(
+	evidenceKeeper := keeper2.NewKeeper(
 		encCfg.Codec,
 		storeService,
 		stakingKeeper,
@@ -112,8 +112,8 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.slashingKeeper = slashingKeeper
 	suite.bankKeeper = bankKeeper
 
-	router := types.NewRouter()
-	router = router.AddRoute(types.RouteEquivocation, testEquivocationHandler(evidenceKeeper))
+	router := types2.NewRouter()
+	router = router.AddRoute(types2.RouteEquivocation, testEquivocationHandler(evidenceKeeper))
 	evidenceKeeper.SetRouter(router)
 
 	suite.ctx = testCtx.Ctx.WithBlockHeader(cmtproto.Header{Height: 1})
@@ -122,14 +122,14 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.accountKeeper = accountKeeper
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)
-	types.RegisterQueryServer(queryHelper, keeper.NewQuerier(evidenceKeeper))
-	suite.queryClient = types.NewQueryClient(queryHelper)
+	types2.RegisterQueryServer(queryHelper, keeper2.NewQuerier(evidenceKeeper))
+	suite.queryClient = types2.NewQueryClient(queryHelper)
 	suite.evidenceKeeper = *evidenceKeeper
 
-	suite.Require().Equal(testCtx.Ctx.Logger().With("module", "x/"+types.ModuleName),
+	suite.Require().Equal(testCtx.Ctx.Logger().With("module", "x/"+types2.ModuleName),
 		suite.evidenceKeeper.Logger(testCtx.Ctx))
 
-	suite.msgServer = keeper.NewMsgServerImpl(suite.evidenceKeeper)
+	suite.msgServer = keeper2.NewMsgServerImpl(suite.evidenceKeeper)
 }
 
 func (suite *KeeperTestSuite) populateEvidence(ctx sdk.Context, numEvidence int) []exported.Evidence {
@@ -138,7 +138,7 @@ func (suite *KeeperTestSuite) populateEvidence(ctx sdk.Context, numEvidence int)
 	for i := 0; i < numEvidence; i++ {
 		pk := ed25519.GenPrivKey()
 
-		evidence[i] = &types.Equivocation{
+		evidence[i] = &types2.Equivocation{
 			Height:           11,
 			Power:            100,
 			Time:             time.Now().UTC(),
@@ -155,7 +155,7 @@ func (suite *KeeperTestSuite) TestSubmitValidEvidence() {
 	ctx := suite.ctx.WithIsCheckTx(false)
 	pk := ed25519.GenPrivKey()
 
-	e := &types.Equivocation{
+	e := &types2.Equivocation{
 		Height:           1,
 		Power:            100,
 		Time:             time.Now().UTC(),
@@ -173,7 +173,7 @@ func (suite *KeeperTestSuite) TestSubmitValidEvidence_Duplicate() {
 	ctx := suite.ctx.WithIsCheckTx(false)
 	pk := ed25519.GenPrivKey()
 
-	e := &types.Equivocation{
+	e := &types2.Equivocation{
 		Height:           1,
 		Power:            100,
 		Time:             time.Now().UTC(),
@@ -191,7 +191,7 @@ func (suite *KeeperTestSuite) TestSubmitValidEvidence_Duplicate() {
 func (suite *KeeperTestSuite) TestSubmitInvalidEvidence() {
 	ctx := suite.ctx.WithIsCheckTx(false)
 	pk := ed25519.GenPrivKey()
-	e := &types.Equivocation{
+	e := &types2.Equivocation{
 		Height:           0,
 		Power:            100,
 		Time:             time.Now().UTC(),
@@ -199,7 +199,7 @@ func (suite *KeeperTestSuite) TestSubmitInvalidEvidence() {
 	}
 
 	err := suite.evidenceKeeper.SubmitEvidence(ctx, e)
-	suite.ErrorIs(err, types.ErrInvalidEvidence)
+	suite.ErrorIs(err, types2.ErrInvalidEvidence)
 
 	res, err := suite.evidenceKeeper.Evidences.Get(ctx, e.Hash())
 	suite.ErrorIs(err, collections.ErrNotFound)
@@ -220,7 +220,7 @@ func (suite *KeeperTestSuite) TestIterateEvidence() {
 }
 
 func (suite *KeeperTestSuite) TestGetEvidenceHandler() {
-	handler, err := suite.evidenceKeeper.GetEvidenceHandler((&types.Equivocation{}).Route())
+	handler, err := suite.evidenceKeeper.GetEvidenceHandler((&types2.Equivocation{}).Route())
 	suite.NoError(err)
 	suite.NotNil(handler)
 

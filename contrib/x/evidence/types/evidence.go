@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/contrib/x/evidence/exported"
 	"time"
 
 	"github.com/cometbft/cometbft/v2/crypto/tmhash"
@@ -10,7 +11,6 @@ import (
 	"cosmossdk.io/core/comet"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 )
 
 // Evidence type constants

@@ -3,9 +3,9 @@ package keeper
 import (
 	"context"
 	"fmt"
+	types2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -23,7 +23,7 @@ import (
 //
 // TODO: Some of the invalid constraints listed above may need to be reconsidered
 // in the case of a lunatic attack.
-func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.Equivocation) error {
+func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types2.Equivocation) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	logger := k.Logger(ctx)
 	consAddr := evidence.GetConsensusAddress(k.stakingKeeper.ConsensusAddressCodec())
@@ -137,7 +137,7 @@ func (k Keeper) handleEquivocationEvidence(ctx context.Context, evidence *types.
 		}
 	}
 
-	err = k.slashingKeeper.JailUntil(ctx, consAddr, types.DoubleSignJailEndTime)
+	err = k.slashingKeeper.JailUntil(ctx, consAddr, types2.DoubleSignJailEndTime)
 	if err != nil {
 		return err
 	}

@@ -2,6 +2,11 @@ package evidence_test
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/contrib/x/evidence"
+	"github.com/cosmos/cosmos-sdk/contrib/x/evidence/exported"
+	"github.com/cosmos/cosmos-sdk/contrib/x/evidence/keeper"
+	"github.com/cosmos/cosmos-sdk/contrib/x/evidence/testutil"
+	types2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 	"testing"
 	"time"
 
@@ -15,11 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
-	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
-	"github.com/cosmos/cosmos-sdk/x/evidence/testutil"
-	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 type GenesisTestSuite struct {
@@ -46,7 +46,7 @@ func (suite *GenesisTestSuite) SetupTest() {
 
 func (suite *GenesisTestSuite) TestInitGenesis() {
 	var (
-		genesisState *types.GenesisState
+		genesisState *types2.GenesisState
 		testEvidence []exported.Evidence
 		pk           = ed25519.GenPrivKey()
 	)
@@ -62,14 +62,14 @@ func (suite *GenesisTestSuite) TestInitGenesis() {
 			func() {
 				testEvidence = make([]exported.Evidence, 100)
 				for i := 0; i < 100; i++ {
-					testEvidence[i] = &types.Equivocation{
+					testEvidence[i] = &types2.Equivocation{
 						Height:           int64(i + 1),
 						Power:            100,
 						Time:             time.Now().UTC(),
 						ConsensusAddress: pk.PubKey().Address().String(),
 					}
 				}
-				genesisState = types.NewGenesisState(testEvidence)
+				genesisState = types2.NewGenesisState(testEvidence)
 			},
 			true,
 			func() {
@@ -84,13 +84,13 @@ func (suite *GenesisTestSuite) TestInitGenesis() {
 			func() {
 				testEvidence = make([]exported.Evidence, 100)
 				for i := 0; i < 100; i++ {
-					testEvidence[i] = &types.Equivocation{
+					testEvidence[i] = &types2.Equivocation{
 						Power:            100,
 						Time:             time.Now().UTC(),
 						ConsensusAddress: pk.PubKey().Address().String(),
 					}
 				}
-				genesisState = types.NewGenesisState(testEvidence)
+				genesisState = types2.NewGenesisState(testEvidence)
 			},
 			false,
 			func() {
@@ -133,7 +133,7 @@ func (suite *GenesisTestSuite) TestExportGenesis() {
 		{
 			"success",
 			func() {
-				ev := &types.Equivocation{
+				ev := &types2.Equivocation{
 					Height:           1,
 					Power:            100,
 					Time:             time.Now().UTC(),

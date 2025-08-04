@@ -30,15 +30,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/contrib/x/circuit"
-	circuitkeeper "github.com/cosmos/cosmos-sdk/contrib/x/circuit/keeper"
-	circuittypes "github.com/cosmos/cosmos-sdk/contrib/x/circuit/types"
-	"github.com/cosmos/cosmos-sdk/contrib/x/group"                    //nolint:staticcheck // deprecated and to be removed
-	groupkeeper "github.com/cosmos/cosmos-sdk/contrib/x/group/keeper" //nolint:staticcheck // deprecated and to be removed
-	groupmodule "github.com/cosmos/cosmos-sdk/contrib/x/group/module" //nolint:staticcheck // deprecated and to be removed
-	"github.com/cosmos/cosmos-sdk/contrib/x/nft"
-	nftkeeper "github.com/cosmos/cosmos-sdk/contrib/x/nft/keeper"
-	nftmodule "github.com/cosmos/cosmos-sdk/contrib/x/nft/module"
+	"github.com/cosmos/cosmos-sdk/contrib/x/evidence"
+	evidencekeeper "github.com/cosmos/cosmos-sdk/contrib/x/evidence/keeper"
+	evidencetypes "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -78,9 +72,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/epochs"
 	epochskeeper "github.com/cosmos/cosmos-sdk/x/epochs/keeper"
 	epochstypes "github.com/cosmos/cosmos-sdk/x/epochs/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
-	evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
-	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
@@ -122,7 +113,6 @@ var (
 		stakingtypes.BondedPoolName:                 {authtypes.Burner, authtypes.Staking},
 		stakingtypes.NotBondedPoolName:              {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:                         {authtypes.Burner},
-		nft.ModuleName:                              nil,
 		protocolpooltypes.ModuleName:                nil,
 		protocolpooltypes.ProtocolPoolEscrowAccount: nil}
 )
@@ -156,13 +146,10 @@ type SimApp struct {
 	UpgradeKeeper         *upgradekeeper.Keeper
 	EvidenceKeeper        evidencekeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
-	CircuitKeeper         circuitkeeper.Keeper
 
 	// supplementary keepers
-	FeeGrantKeeper     feegrantkeeper.Keeper
-	GroupKeeper        groupkeeper.Keeper
+	FeeGrantKeeper     feegrantkeeper.KeeperAuthzKeeper
 	AuthzKeeper        authzkeeper.Keeper
-	NFTKeeper          nftkeeper.Keeper
 	EpochsKeeper       epochskeeper.Keeper
 	ProtocolPoolKeeper protocolpoolkeeper.Keeper
 
@@ -267,10 +254,7 @@ func NewSimApp(
 		upgradetypes.StoreKey,
 		feegrant.StoreKey,
 		evidencetypes.StoreKey,
-		circuittypes.StoreKey,
 		authzkeeper.StoreKey,
-		nftkeeper.StoreKey,
-		group.StoreKey,
 		epochstypes.StoreKey,
 		protocolpooltypes.StoreKey,
 	)
@@ -396,32 +380,11 @@ func NewSimApp(
 		),
 	)
 
-	app.CircuitKeeper = circuitkeeper.NewKeeper(
-		appCodec,
-		runtime.NewKVStoreService(keys[circuittypes.StoreKey]),
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		app.AccountKeeper.AddressCodec(),
-	)
-	app.BaseApp.SetCircuitBreaker(&app.CircuitKeeper)
-
 	app.AuthzKeeper = authzkeeper.NewKeeper(
 		runtime.NewKVStoreService(keys[authzkeeper.StoreKey]),
 		appCodec,
 		app.MsgServiceRouter(),
 		app.AccountKeeper,
-	)
-
-	groupConfig := group.DefaultConfig()
-	/*
-		Example of setting group params:
-		groupConfig.MaxMetadataLen = 1000
-	*/
-	app.GroupKeeper = groupkeeper.NewKeeper(
-		keys[group.StoreKey],
-		appCodec,
-		app.MsgServiceRouter(),
-		app.AccountKeeper,
-		groupConfig,
 	)
 
 	// get skipUpgradeHeights from the app options
@@ -473,13 +436,6 @@ func NewSimApp(
 		),
 	)
 
-	app.NFTKeeper = nftkeeper.NewKeeper(
-		runtime.NewKVStoreService(keys[nftkeeper.StoreKey]),
-		appCodec,
-		app.AccountKeeper,
-		app.BankKeeper,
-	)
-
 	// create evidence keeper with router
 	evidenceKeeper := evidencekeeper.NewKeeper(
 		appCodec,
@@ -524,10 +480,7 @@ func NewSimApp(
 		upgrade.NewAppModule(app.UpgradeKeeper, app.AccountKeeper.AddressCodec()),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-		groupmodule.NewAppModule(appCodec, app.GroupKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-		nftmodule.NewAppModule(appCodec, app.NFTKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
-		circuit.NewAppModule(appCodec, app.CircuitKeeper),
 		epochs.NewAppModule(app.EpochsKeeper),
 		protocolpool.NewAppModule(app.ProtocolPoolKeeper, app.AccountKeeper, app.BankKeeper),
 	)
@@ -572,7 +525,6 @@ func NewSimApp(
 		stakingtypes.ModuleName,
 		genutiltypes.ModuleName,
 		feegrant.ModuleName,
-		group.ModuleName,
 		protocolpooltypes.ModuleName,
 	)
 
@@ -591,12 +543,9 @@ func NewSimApp(
 		evidencetypes.ModuleName,
 		authz.ModuleName,
 		feegrant.ModuleName,
-		nft.ModuleName,
-		group.ModuleName,
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
 		consensusparamtypes.ModuleName,
-		circuittypes.ModuleName,
 		epochstypes.ModuleName,
 		protocolpooltypes.ModuleName,
 	}
@@ -615,11 +564,8 @@ func NewSimApp(
 		evidencetypes.ModuleName,
 		authz.ModuleName,
 		feegrant.ModuleName,
-		nft.ModuleName,
-		group.ModuleName,
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
-		circuittypes.ModuleName,
 		epochstypes.ModuleName,
 	}
 
@@ -696,21 +642,18 @@ func NewSimApp(
 }
 
 func (app *SimApp) setAnteHandler(txConfig client.TxConfig) {
-	anteHandler, err := NewAnteHandler(
-		HandlerOptions{
-			ante.HandlerOptions{
-				AccountKeeper:   app.AccountKeeper,
-				BankKeeper:      app.BankKeeper,
-				SignModeHandler: txConfig.SignModeHandler(),
-				FeegrantKeeper:  app.FeeGrantKeeper,
-				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-				SigVerifyOptions: []ante.SigVerificationDecoratorOption{
-					// change below as needed.
-					ante.WithUnorderedTxGasCost(ante.DefaultUnorderedTxGasCost),
-					ante.WithMaxUnorderedTxTimeoutDuration(ante.DefaultMaxTimeoutDuration),
-				},
+	anteHandler, err := ante.NewAnteHandler(
+		ante.HandlerOptions{
+			AccountKeeper:   app.AccountKeeper,
+			BankKeeper:      app.BankKeeper,
+			SignModeHandler: txConfig.SignModeHandler(),
+			FeegrantKeeper:  app.FeeGrantKeeper,
+			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+			SigVerifyOptions: []ante.SigVerificationDecoratorOption{
+				// change below as needed.
+				ante.WithUnorderedTxGasCost(ante.DefaultUnorderedTxGasCost),
+				ante.WithMaxUnorderedTxTimeoutDuration(ante.DefaultMaxTimeoutDuration),
 			},
-			&app.CircuitKeeper,
 		},
 	)
 	if err != nil {

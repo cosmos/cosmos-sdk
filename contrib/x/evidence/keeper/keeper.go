@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/contrib/x/evidence/exported"
+	types2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 	"strings"
 
 	"cosmossdk.io/collections"
@@ -15,8 +17,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 // Keeper defines the evidence module's keeper. The keeper is responsible for
@@ -25,9 +25,9 @@ import (
 type Keeper struct {
 	cdc            codec.BinaryCodec
 	storeService   store.KVStoreService
-	router         types.Router
-	stakingKeeper  types.StakingKeeper
-	slashingKeeper types.SlashingKeeper
+	router         types2.Router
+	stakingKeeper  types2.StakingKeeper
+	slashingKeeper types2.SlashingKeeper
 	addressCodec   address.Codec
 
 	cometInfo comet.BlockInfoService
@@ -38,8 +38,8 @@ type Keeper struct {
 
 // NewKeeper creates a new Keeper object.
 func NewKeeper(
-	cdc codec.BinaryCodec, storeService store.KVStoreService, stakingKeeper types.StakingKeeper,
-	slashingKeeper types.SlashingKeeper, ac address.Codec, ci comet.BlockInfoService,
+	cdc codec.BinaryCodec, storeService store.KVStoreService, stakingKeeper types2.StakingKeeper,
+	slashingKeeper types2.SlashingKeeper, ac address.Codec, ci comet.BlockInfoService,
 ) *Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
 	k := &Keeper{
@@ -49,7 +49,7 @@ func NewKeeper(
 		slashingKeeper: slashingKeeper,
 		addressCodec:   ac,
 		cometInfo:      ci,
-		Evidences:      collections.NewMap(sb, types.KeyPrefixEvidence, "evidences", collections.BytesKey, codec.CollInterfaceValue[exported.Evidence](cdc)),
+		Evidences:      collections.NewMap(sb, types2.KeyPrefixEvidence, "evidences", collections.BytesKey, codec.CollInterfaceValue[exported.Evidence](cdc)),
 	}
 	schema, err := sb.Build()
 	if err != nil {
@@ -62,14 +62,14 @@ func NewKeeper(
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx context.Context) log.Logger {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	return sdkCtx.Logger().With("module", "x/"+types.ModuleName)
+	return sdkCtx.Logger().With("module", "x/"+types2.ModuleName)
 }
 
 // SetRouter sets the Evidence Handler router for the x/evidence module. Note,
 // we allow the ability to set the router after the Keeper is constructed as a
 // given Handler may need access the Keeper before being constructed. The router
 // may only be set once and will be sealed if it's not already sealed.
-func (k *Keeper) SetRouter(rtr types.Router) {
+func (k *Keeper) SetRouter(rtr types2.Router) {
 	// It is vital to seal the Evidence Handler router as to not allow further
 	// handlers to be registered after the keeper is created since this
 	// could create invalid or non-deterministic behavior.
@@ -77,7 +77,7 @@ func (k *Keeper) SetRouter(rtr types.Router) {
 		rtr.Seal()
 	}
 	if k.router != nil {
-		panic(fmt.Sprintf("attempting to reset router on x/%s", types.ModuleName))
+		panic(fmt.Sprintf("attempting to reset router on x/%s", types2.ModuleName))
 	}
 
 	k.router = rtr
@@ -85,9 +85,9 @@ func (k *Keeper) SetRouter(rtr types.Router) {
 
 // GetEvidenceHandler returns a registered Handler for a given Evidence type. If
 // no handler exists, an error is returned.
-func (k Keeper) GetEvidenceHandler(evidenceRoute string) (types.Handler, error) {
+func (k Keeper) GetEvidenceHandler(evidenceRoute string) (types2.Handler, error) {
 	if !k.router.HasRoute(evidenceRoute) {
-		return nil, errors.Wrap(types.ErrNoEvidenceHandlerExists, evidenceRoute)
+		return nil, errors.Wrap(types2.ErrNoEvidenceHandlerExists, evidenceRoute)
 	}
 
 	return k.router.GetRoute(evidenceRoute), nil
@@ -99,22 +99,22 @@ func (k Keeper) GetEvidenceHandler(evidenceRoute string) (types.Handler, error) 
 // persisted.
 func (k Keeper) SubmitEvidence(ctx context.Context, evidence exported.Evidence) error {
 	if _, err := k.Evidences.Get(ctx, evidence.Hash()); err == nil {
-		return errors.Wrap(types.ErrEvidenceExists, strings.ToUpper(hex.EncodeToString(evidence.Hash())))
+		return errors.Wrap(types2.ErrEvidenceExists, strings.ToUpper(hex.EncodeToString(evidence.Hash())))
 	}
 	if !k.router.HasRoute(evidence.Route()) {
-		return errors.Wrap(types.ErrNoEvidenceHandlerExists, evidence.Route())
+		return errors.Wrap(types2.ErrNoEvidenceHandlerExists, evidence.Route())
 	}
 
 	handler := k.router.GetRoute(evidence.Route())
 	if err := handler(ctx, evidence); err != nil {
-		return errors.Wrap(types.ErrInvalidEvidence, err.Error())
+		return errors.Wrap(types2.ErrInvalidEvidence, err.Error())
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	sdkCtx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			types.EventTypeSubmitEvidence,
-			sdk.NewAttribute(types.AttributeKeyEvidenceHash, strings.ToUpper(hex.EncodeToString(evidence.Hash()))),
+			types2.EventTypeSubmitEvidence,
+			sdk.NewAttribute(types2.AttributeKeyEvidenceHash, strings.ToUpper(hex.EncodeToString(evidence.Hash()))),
 		),
 	)
 

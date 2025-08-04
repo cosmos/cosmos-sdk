@@ -17,7 +17,7 @@ proof-of-stake capabilities and governance.
 * [Circuit](../contrib/x/circuit/README.md) - Circuit breaker module for pausing messages.
 * [Consensus](./consensus/README.md) - Consensus module for modifying CometBFT's ABCI consensus params.
 * [Distribution](./distribution/README.md) - Fee distribution, and staking token provision distribution.
-* [Evidence](./evidence/README.md) - Evidence handling for double signing, misbehaviour, etc.
+* [Evidence](../contrib/x/evidence/README.md) - Evidence handling for double signing, misbehaviour, etc.
 * [Governance](./gov/README.md) - On-chain proposals and voting.
 * [Genutil](./genutil/README.md) - Genesis utilities for the Cosmos SDK.
 * [Mint](./mint/README.md) - Creation of new units of staking token.

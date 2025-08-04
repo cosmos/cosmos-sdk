@@ -91,3 +91,13 @@ timestamp.`,
 
 	return cmd
 }
+
+type VestingData struct {
+	StartTime int64         `json:"start_time"`
+	Periods   []InputPeriod `json:"periods"`
+}
+
+type InputPeriod struct {
+	Coins  string `json:"coins"`
+	Length int64  `json:"length_seconds"`
+}

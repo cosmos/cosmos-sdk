@@ -6,21 +6,21 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	nft2 "github.com/cosmos/cosmos-sdk/contrib/x/nft"
+	nft "github.com/cosmos/cosmos-sdk/contrib/x/nft"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-var _ nft2.MsgServer = Keeper{}
+var _ nft.MsgServer = Keeper{}
 
 // Send implements Send method of the types.MsgServer.
-func (k Keeper) Send(goCtx context.Context, msg *nft2.MsgSend) (*nft2.MsgSendResponse, error) {
+func (k Keeper) Send(goCtx context.Context, msg *nft.MsgSend) (*nft.MsgSendResponse, error) {
 	if len(msg.ClassId) == 0 {
-		return nil, nft2.ErrEmptyClassID
+		return nil, nft.ErrEmptyClassID
 	}
 
 	if len(msg.Id) == 0 {
-		return nil, nft2.ErrEmptyNFTID
+		return nil, nft.ErrEmptyNFTID
 	}
 
 	sender, err := k.ac.StringToBytes(msg.Sender)
@@ -43,11 +43,11 @@ func (k Keeper) Send(goCtx context.Context, msg *nft2.MsgSend) (*nft2.MsgSendRes
 		return nil, err
 	}
 
-	err = ctx.EventManager().EmitTypedEvent(&nft2.EventSend{
+	err = ctx.EventManager().EmitTypedEvent(&nft.EventSend{
 		ClassId:  msg.ClassId,
 		Id:       msg.Id,
 		Sender:   msg.Sender,
 		Receiver: msg.Receiver,
 	})
-	return &nft2.MsgSendResponse{}, err
+	return &nft.MsgSendResponse{}, err
 }

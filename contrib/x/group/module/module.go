@@ -18,7 +18,7 @@ import (
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	group2 "github.com/cosmos/cosmos-sdk/contrib/x/group"
+	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
 	"github.com/cosmos/cosmos-sdk/contrib/x/group/client/cli"
 	keeper2 "github.com/cosmos/cosmos-sdk/contrib/x/group/keeper"
 	simulation2 "github.com/cosmos/cosmos-sdk/contrib/x/group/simulation"
@@ -44,13 +44,13 @@ var (
 type AppModule struct {
 	AppModuleBasic
 	keeper     keeper2.Keeper
-	bankKeeper group2.BankKeeper
-	accKeeper  group2.AccountKeeper
+	bankKeeper group.BankKeeper
+	accKeeper  group.AccountKeeper
 	registry   cdctypes.InterfaceRegistry
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper2.Keeper, ak group2.AccountKeeper, bk group2.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper2.Keeper, ak group.AccountKeeper, bk group.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak.AddressCodec()},
 		keeper:         keeper,
@@ -73,20 +73,20 @@ type AppModuleBasic struct {
 
 // Name returns the group module's name.
 func (AppModuleBasic) Name() string {
-	return group2.ModuleName
+	return group.ModuleName
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the group
 // module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(group2.NewGenesisState())
+	return cdc.MustMarshalJSON(group.NewGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the group module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
-	var data group2.GenesisState
+	var data group.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", group2.ModuleName, err)
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", group.ModuleName, err)
 	}
 	return data.Validate()
 }
@@ -98,19 +98,19 @@ func (a AppModuleBasic) GetTxCmd() *cobra.Command {
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the group module.
 func (a AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *gwruntime.ServeMux) {
-	if err := group2.RegisterQueryHandlerClient(context.Background(), mux, group2.NewQueryClient(clientCtx)); err != nil {
+	if err := group.RegisterQueryHandlerClient(context.Background(), mux, group.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
 }
 
 // RegisterInterfaces registers the group module's interface types
 func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
-	group2.RegisterInterfaces(registry)
+	group.RegisterInterfaces(registry)
 }
 
 // RegisterLegacyAminoCodec registers the group module's types for the given codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	group2.RegisterLegacyAminoCodec(cdc)
+	group.RegisterLegacyAminoCodec(cdc)
 }
 
 // InitGenesis performs genesis initialization for the group module. It returns
@@ -129,12 +129,12 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 // RegisterServices registers a gRPC query service to respond to the
 // module-specific gRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	group2.RegisterMsgServer(cfg.MsgServer(), am.keeper)
-	group2.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	group.RegisterMsgServer(cfg.MsgServer(), am.keeper)
+	group.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 
 	m := keeper2.NewMigrator(am.keeper)
-	if err := cfg.RegisterMigration(group2.ModuleName, 1, m.Migrate1to2); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", group2.ModuleName, err))
+	if err := cfg.RegisterMigration(group.ModuleName, 1, m.Migrate1to2); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", group.ModuleName, err))
 	}
 }
 
@@ -158,7 +158,7 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 
 // RegisterStoreDecoder registers a decoder for group module's types
 func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
-	sdr[group2.StoreKey] = simulation2.NewDecodeStore(am.cdc)
+	sdr[group.StoreKey] = simulation2.NewDecodeStore(am.cdc)
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
@@ -208,8 +208,8 @@ type GroupInputs struct {
 	Config           *modulev1.Module
 	Key              *store.KVStoreKey
 	Cdc              codec.Codec
-	AccountKeeper    group2.AccountKeeper
-	BankKeeper       group2.BankKeeper
+	AccountKeeper    group.AccountKeeper
+	BankKeeper       group.BankKeeper
 	Registry         cdctypes.InterfaceRegistry
 	MsgServiceRouter baseapp.MessageRouter
 }
@@ -228,7 +228,7 @@ func ProvideModule(in GroupInputs) GroupOutputs {
 		in.Config.MaxExecutionPeriod = "1209600s"
 	*/
 
-	k := keeper2.NewKeeper(in.Key, in.Cdc, in.MsgServiceRouter, in.AccountKeeper, group2.Config{MaxExecutionPeriod: in.Config.MaxExecutionPeriod.AsDuration(), MaxMetadataLen: in.Config.MaxMetadataLen})
+	k := keeper2.NewKeeper(in.Key, in.Cdc, in.MsgServiceRouter, in.AccountKeeper, group.Config{MaxExecutionPeriod: in.Config.MaxExecutionPeriod.AsDuration(), MaxMetadataLen: in.Config.MaxMetadataLen})
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
 	return GroupOutputs{GroupKeeper: k, Module: m}
 }

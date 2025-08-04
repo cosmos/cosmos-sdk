@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	group2 "github.com/cosmos/cosmos-sdk/contrib/x/group"
+	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
@@ -24,7 +24,7 @@ func (s *TestSuite) TestTally() {
 		srcBlockTime   time.Time
 		setupProposal  func(ctx context.Context) uint64
 		expErr         bool
-		expTallyResult group2.TallyResult
+		expTallyResult group.TallyResult
 	}{
 		"invalid proposal id": {
 			setupProposal: func(ctx context.Context) uint64 {
@@ -37,13 +37,13 @@ func (s *TestSuite) TestTally() {
 				msgs := []sdk.Msg{msgSend1}
 				return submitProposal(ctx, s, msgs, proposers)
 			},
-			expTallyResult: group2.DefaultTallyResult(),
+			expTallyResult: group.DefaultTallyResult(),
 		},
 		"withdrawn proposal": {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1}
 				proposalID := submitProposal(ctx, s, msgs, proposers)
-				_, err := s.groupKeeper.WithdrawProposal(ctx, &group2.MsgWithdrawProposal{
+				_, err := s.groupKeeper.WithdrawProposal(ctx, &group.MsgWithdrawProposal{
 					ProposalId: proposalID,
 					Address:    proposers[0],
 				})
@@ -56,9 +56,9 @@ func (s *TestSuite) TestTally() {
 		"proposal with some votes": {
 			setupProposal: func(ctx context.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1}
-				return submitProposalAndVote(ctx, s, msgs, proposers, group2.VOTE_OPTION_YES)
+				return submitProposalAndVote(ctx, s, msgs, proposers, group.VOTE_OPTION_YES)
 			},
-			expTallyResult: group2.TallyResult{
+			expTallyResult: group.TallyResult{
 				YesCount:        "2",
 				NoCount:         "0",
 				NoWithVetoCount: "0",
@@ -71,7 +71,7 @@ func (s *TestSuite) TestTally() {
 		s.Run(msg, func() {
 			sdkCtx, _ := s.sdkCtx.CacheContext()
 			pID := spec.setupProposal(sdkCtx)
-			req := &group2.QueryTallyResultRequest{
+			req := &group.QueryTallyResultRequest{
 				ProposalId: pID,
 			}
 

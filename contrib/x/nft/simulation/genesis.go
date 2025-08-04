@@ -5,16 +5,16 @@ import (
 
 	"cosmossdk.io/core/address"
 
-	nft2 "github.com/cosmos/cosmos-sdk/contrib/x/nft"
+	nft "github.com/cosmos/cosmos-sdk/contrib/x/nft"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 // genClasses returns a slice of nft class.
-func genClasses(r *rand.Rand, accounts []simtypes.Account) []*nft2.Class {
-	classes := make([]*nft2.Class, len(accounts)-1)
+func genClasses(r *rand.Rand, accounts []simtypes.Account) []*nft.Class {
+	classes := make([]*nft.Class, len(accounts)-1)
 	for i := 0; i < len(accounts)-1; i++ {
-		classes[i] = &nft2.Class{
+		classes[i] = &nft.Class{
 			Id:          simtypes.RandStringOfLength(r, 10),
 			Name:        simtypes.RandStringOfLength(r, 10),
 			Symbol:      simtypes.RandStringOfLength(r, 10),
@@ -26,17 +26,17 @@ func genClasses(r *rand.Rand, accounts []simtypes.Account) []*nft2.Class {
 }
 
 // genNFT returns a slice of nft.
-func genNFT(r *rand.Rand, classID string, accounts []simtypes.Account, ac address.Codec) []*nft2.Entry {
-	entries := make([]*nft2.Entry, len(accounts)-1)
+func genNFT(r *rand.Rand, classID string, accounts []simtypes.Account, ac address.Codec) []*nft.Entry {
+	entries := make([]*nft.Entry, len(accounts)-1)
 	for i := 0; i < len(accounts)-1; i++ {
 		owner := accounts[i]
 		oast, err := ac.BytesToString(owner.Address.Bytes())
 		if err != nil {
 			panic(err)
 		}
-		entries[i] = &nft2.Entry{
+		entries[i] = &nft.Entry{
 			Owner: oast,
-			Nfts: []*nft2.NFT{
+			Nfts: []*nft.NFT{
 				{
 					ClassId: classID,
 					Id:      simtypes.RandStringOfLength(r, 10),
@@ -50,13 +50,13 @@ func genNFT(r *rand.Rand, classID string, accounts []simtypes.Account, ac addres
 
 // RandomizedGenState generates a random GenesisState for nft.
 func RandomizedGenState(simState *module.SimulationState, ac address.Codec) {
-	var classes []*nft2.Class
+	var classes []*nft.Class
 	simState.AppParams.GetOrGenerate(
 		"nft", &classes, simState.Rand,
 		func(r *rand.Rand) { classes = genClasses(r, simState.Accounts) },
 	)
 
-	var entries []*nft2.Entry
+	var entries []*nft.Entry
 	simState.AppParams.GetOrGenerate(
 		"nft", &entries, simState.Rand,
 		func(r *rand.Rand) {
@@ -65,9 +65,9 @@ func RandomizedGenState(simState *module.SimulationState, ac address.Codec) {
 		},
 	)
 
-	nftGenesis := &nft2.GenesisState{
+	nftGenesis := &nft.GenesisState{
 		Classes: classes,
 		Entries: entries,
 	}
-	simState.GenState[nft2.ModuleName] = simState.Cdc.MustMarshalJSON(nftGenesis)
+	simState.GenState[nft.ModuleName] = simState.Cdc.MustMarshalJSON(nftGenesis)
 }

@@ -6,12 +6,12 @@ import (
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	group2 "github.com/cosmos/cosmos-sdk/contrib/x/group"
+	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // parseDecisionPolicy reads and parses the decision policy.
-func parseDecisionPolicy(cdc codec.Codec, decisionPolicyFile string) (group2.DecisionPolicy, error) {
+func parseDecisionPolicy(cdc codec.Codec, decisionPolicyFile string) (group.DecisionPolicy, error) {
 	if decisionPolicyFile == "" {
 		return nil, fmt.Errorf("decision policy is required")
 	}
@@ -21,7 +21,7 @@ func parseDecisionPolicy(cdc codec.Codec, decisionPolicyFile string) (group2.Dec
 		return nil, err
 	}
 
-	var policy group2.DecisionPolicy
+	var policy group.DecisionPolicy
 	if err := cdc.UnmarshalInterfaceJSON(contents, &policy); err != nil {
 		return nil, fmt.Errorf("failed to parse decision policy: %w", err)
 	}
@@ -30,9 +30,9 @@ func parseDecisionPolicy(cdc codec.Codec, decisionPolicyFile string) (group2.Dec
 }
 
 // parseMembers reads and parses the members.
-func parseMembers(membersFile string) ([]group2.MemberRequest, error) {
+func parseMembers(membersFile string) ([]group.MemberRequest, error) {
 	members := struct {
-		Members []group2.MemberRequest `json:"members"`
+		Members []group.MemberRequest `json:"members"`
 	}{}
 
 	if membersFile == "" {
@@ -51,10 +51,10 @@ func parseMembers(membersFile string) ([]group2.MemberRequest, error) {
 	return members.Members, nil
 }
 
-func execFromString(execStr string) group2.Exec {
-	exec := group2.Exec_EXEC_UNSPECIFIED
+func execFromString(execStr string) group.Exec {
+	exec := group.Exec_EXEC_UNSPECIFIED
 	if execStr == ExecTry || execStr == "1" {
-		exec = group2.Exec_EXEC_TRY
+		exec = group.Exec_EXEC_TRY
 	}
 
 	return exec

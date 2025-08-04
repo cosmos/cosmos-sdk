@@ -16,7 +16,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
-	group2 "github.com/cosmos/cosmos-sdk/contrib/x/group"
+	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
 	"github.com/cosmos/cosmos-sdk/contrib/x/group/internal/math"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,82 +29,82 @@ func TestDoTallyAndUpdate(t *testing.T) {
 		myOtherAddr = sdk.AccAddress(bytes.Repeat([]byte{0x02}, 20))
 	)
 	encCfg := moduletestutil.MakeTestEncodingConfig()
-	group2.RegisterInterfaces(encCfg.InterfaceRegistry)
+	group.RegisterInterfaces(encCfg.InterfaceRegistry)
 
-	storeKey := storetypes.NewKVStoreKey(group2.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(group.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, storeKey, storetypes.NewTransientStoreKey("transient_test"))
 	myAccountKeeper := &mockAccountKeeper{
 		AddressCodecFn: func() coreaddress.Codec {
 			return address.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix())
 		},
 	}
-	groupKeeper := NewKeeper(storeKey, encCfg.Codec, nil, myAccountKeeper, group2.DefaultConfig())
+	groupKeeper := NewKeeper(storeKey, encCfg.Codec, nil, myAccountKeeper, group.DefaultConfig())
 	noEventsFn := func(proposalID uint64) sdk.Events { return sdk.Events{} }
 	type memberVote struct {
 		address string
 		weight  string
-		option  group2.VoteOption
+		option  group.VoteOption
 	}
 	specs := map[string]struct {
 		votes           []memberVote
-		policy          group2.DecisionPolicy
-		expStatus       group2.ProposalStatus
+		policy          group.DecisionPolicy
+		expStatus       group.ProposalStatus
 		expVotesCleared bool
 		expEvents       func(proposalID uint64) sdk.Events
 	}{
 		"proposal accepted": {
 			votes: []memberVote{
-				{address: myAddr.String(), option: group2.VOTE_OPTION_YES, weight: "2"},
-				{address: myOtherAddr.String(), option: group2.VOTE_OPTION_NO, weight: "1"},
+				{address: myAddr.String(), option: group.VOTE_OPTION_YES, weight: "2"},
+				{address: myOtherAddr.String(), option: group.VOTE_OPTION_NO, weight: "1"},
 			},
 			policy: mockDecisionPolicy{
-				AllowFn: func(tallyResult group2.TallyResult, totalPower string) (group2.DecisionPolicyResult, error) {
-					return group2.DecisionPolicyResult{Allow: true, Final: true}, nil
+				AllowFn: func(tallyResult group.TallyResult, totalPower string) (group.DecisionPolicyResult, error) {
+					return group.DecisionPolicyResult{Allow: true, Final: true}, nil
 				},
 			},
-			expStatus:       group2.PROPOSAL_STATUS_ACCEPTED,
+			expStatus:       group.PROPOSAL_STATUS_ACCEPTED,
 			expVotesCleared: true,
 			expEvents:       noEventsFn,
 		},
 		"proposal rejected": {
 			votes: []memberVote{
-				{address: myAddr.String(), option: group2.VOTE_OPTION_YES, weight: "1"},
-				{address: myOtherAddr.String(), option: group2.VOTE_OPTION_NO, weight: "2"},
+				{address: myAddr.String(), option: group.VOTE_OPTION_YES, weight: "1"},
+				{address: myOtherAddr.String(), option: group.VOTE_OPTION_NO, weight: "2"},
 			},
 			policy: mockDecisionPolicy{
-				AllowFn: func(tallyResult group2.TallyResult, totalPower string) (group2.DecisionPolicyResult, error) {
-					return group2.DecisionPolicyResult{Allow: false, Final: true}, nil
+				AllowFn: func(tallyResult group.TallyResult, totalPower string) (group.DecisionPolicyResult, error) {
+					return group.DecisionPolicyResult{Allow: false, Final: true}, nil
 				},
 			},
-			expStatus:       group2.PROPOSAL_STATUS_REJECTED,
+			expStatus:       group.PROPOSAL_STATUS_REJECTED,
 			expVotesCleared: true,
 			expEvents:       noEventsFn,
 		},
 		"proposal in flight": {
 			votes: []memberVote{
-				{address: myAddr.String(), option: group2.VOTE_OPTION_YES, weight: "1"},
-				{address: myOtherAddr.String(), option: group2.VOTE_OPTION_NO, weight: "1"},
+				{address: myAddr.String(), option: group.VOTE_OPTION_YES, weight: "1"},
+				{address: myOtherAddr.String(), option: group.VOTE_OPTION_NO, weight: "1"},
 			},
 			policy: mockDecisionPolicy{
-				AllowFn: func(tallyResult group2.TallyResult, totalPower string) (group2.DecisionPolicyResult, error) {
-					return group2.DecisionPolicyResult{Allow: false, Final: false}, nil
+				AllowFn: func(tallyResult group.TallyResult, totalPower string) (group.DecisionPolicyResult, error) {
+					return group.DecisionPolicyResult{Allow: false, Final: false}, nil
 				},
 			},
-			expStatus:       group2.PROPOSAL_STATUS_SUBMITTED,
+			expStatus:       group.PROPOSAL_STATUS_SUBMITTED,
 			expVotesCleared: false,
 			expEvents:       noEventsFn,
 		},
 		"policy errors": {
 			votes: []memberVote{
-				{address: myAddr.String(), option: group2.VOTE_OPTION_YES, weight: "1"},
-				{address: myOtherAddr.String(), option: group2.VOTE_OPTION_NO, weight: "2"},
+				{address: myAddr.String(), option: group.VOTE_OPTION_YES, weight: "1"},
+				{address: myOtherAddr.String(), option: group.VOTE_OPTION_NO, weight: "2"},
 			},
 			policy: mockDecisionPolicy{
-				AllowFn: func(tallyResult group2.TallyResult, totalPower string) (group2.DecisionPolicyResult, error) {
-					return group2.DecisionPolicyResult{}, errors.New("my test error")
+				AllowFn: func(tallyResult group.TallyResult, totalPower string) (group.DecisionPolicyResult, error) {
+					return group.DecisionPolicyResult{}, errors.New("my test error")
 				},
 			},
-			expStatus:       group2.PROPOSAL_STATUS_REJECTED,
+			expStatus:       group.PROPOSAL_STATUS_REJECTED,
 			expVotesCleared: true,
 			expEvents: func(proposalID uint64) sdk.Events {
 				return sdk.Events{
@@ -130,28 +130,28 @@ func TestDoTallyAndUpdate(t *testing.T) {
 			require.NoError(t, err)
 			// given a group, policy and persisted votes
 			for _, v := range spec.votes {
-				err := groupKeeper.groupMemberTable.Create(ctx.KVStore(storeKey), &group2.GroupMember{
+				err := groupKeeper.groupMemberTable.Create(ctx.KVStore(storeKey), &group.GroupMember{
 					GroupId: groupID,
-					Member:  &group2.Member{Address: v.address, Weight: v.weight},
+					Member:  &group.Member{Address: v.address, Weight: v.weight},
 				})
 				require.NoError(t, err)
-				err = groupKeeper.voteTable.Create(ctx.KVStore(storeKey), &group2.Vote{
+				err = groupKeeper.voteTable.Create(ctx.KVStore(storeKey), &group.Vote{
 					ProposalId: proposalId,
 					Voter:      v.address,
 					Option:     v.option,
 				})
 				require.NoError(t, err)
 			}
-			myGroupInfo := group2.GroupInfo{
+			myGroupInfo := group.GroupInfo{
 				TotalWeight: totalWeight.String(),
 			}
-			myPolicy := group2.GroupPolicyInfo{GroupId: groupID}
+			myPolicy := group.GroupPolicyInfo{GroupId: groupID}
 			err = myPolicy.SetDecisionPolicy(spec.policy)
 			require.NoError(t, err)
 
-			myProposal := &group2.Proposal{
+			myProposal := &group.Proposal{
 				Id:              proposalId,
-				Status:          group2.PROPOSAL_STATUS_SUBMITTED,
+				Status:          group.PROPOSAL_STATUS_SUBMITTED,
 				VotingPeriodEnd: ctx.BlockTime().Add(time.Hour),
 			}
 
@@ -173,7 +173,7 @@ func TestDoTallyAndUpdate(t *testing.T) {
 	}
 }
 
-var _ group2.AccountKeeper = &mockAccountKeeper{}
+var _ group.AccountKeeper = &mockAccountKeeper{}
 
 // mockAccountKeeper is a mock implementation of the AccountKeeper interface for testing purposes.
 type mockAccountKeeper struct {
@@ -206,10 +206,10 @@ func (m mockAccountKeeper) RemoveAccount(ctx context.Context, acc sdk.AccountI) 
 // mockDecisionPolicy is a mock implementation of a decision policy for testing purposes.
 type mockDecisionPolicy struct {
 	fakeProtoType
-	AllowFn func(tallyResult group2.TallyResult, totalPower string) (group2.DecisionPolicyResult, error)
+	AllowFn func(tallyResult group.TallyResult, totalPower string) (group.DecisionPolicyResult, error)
 }
 
-func (m mockDecisionPolicy) Allow(tallyResult group2.TallyResult, totalPower string) (group2.DecisionPolicyResult, error) {
+func (m mockDecisionPolicy) Allow(tallyResult group.TallyResult, totalPower string) (group.DecisionPolicyResult, error) {
 	if m.AllowFn == nil {
 		panic("not expected to be called")
 	}
@@ -228,7 +228,7 @@ func (m mockDecisionPolicy) ValidateBasic() error {
 	panic("not expected to be called")
 }
 
-func (m mockDecisionPolicy) Validate(g group2.GroupInfo, config group2.Config) error {
+func (m mockDecisionPolicy) Validate(g group.GroupInfo, config group.Config) error {
 	panic("not expected to be called")
 }
 

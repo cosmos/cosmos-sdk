@@ -3,13 +3,13 @@ package keeper
 import (
 	"sort"
 
-	nft2 "github.com/cosmos/cosmos-sdk/contrib/x/nft"
+	nft "github.com/cosmos/cosmos-sdk/contrib/x/nft"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // InitGenesis initializes the nft module's genesis state from a given
 // genesis state.
-func (k Keeper) InitGenesis(ctx sdk.Context, data *nft2.GenesisState) {
+func (k Keeper) InitGenesis(ctx sdk.Context, data *nft.GenesisState) {
 	for _, class := range data.Classes {
 		if err := k.SaveClass(ctx, *class); err != nil {
 			panic(err)
@@ -30,9 +30,9 @@ func (k Keeper) InitGenesis(ctx sdk.Context, data *nft2.GenesisState) {
 }
 
 // ExportGenesis returns a GenesisState for a given context.
-func (k Keeper) ExportGenesis(ctx sdk.Context) *nft2.GenesisState {
+func (k Keeper) ExportGenesis(ctx sdk.Context) *nft.GenesisState {
 	classes := k.GetClasses(ctx)
-	nftMap := make(map[string][]*nft2.NFT)
+	nftMap := make(map[string][]*nft.NFT)
 	for _, class := range classes {
 		nfts := k.GetNFTsOfClass(ctx, class.Id)
 		for i, n := range nfts {
@@ -43,7 +43,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *nft2.GenesisState {
 			}
 			nftArr, ok := nftMap[ownerStr]
 			if !ok {
-				nftArr = make([]*nft2.NFT, 0)
+				nftArr = make([]*nft.NFT, 0)
 			}
 			nftMap[ownerStr] = append(nftArr, &nfts[i])
 		}
@@ -55,14 +55,14 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *nft2.GenesisState {
 	}
 	sort.Strings(owners)
 
-	entries := make([]*nft2.Entry, 0, len(nftMap))
+	entries := make([]*nft.Entry, 0, len(nftMap))
 	for _, owner := range owners {
-		entries = append(entries, &nft2.Entry{
+		entries = append(entries, &nft.Entry{
 			Owner: owner,
 			Nfts:  nftMap[owner],
 		})
 	}
-	return &nft2.GenesisState{
+	return &nft.GenesisState{
 		Classes: classes,
 		Entries: entries,
 	}

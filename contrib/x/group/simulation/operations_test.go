@@ -15,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	group2 "github.com/cosmos/cosmos-sdk/contrib/x/group"
+	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
 	groupkeeper "github.com/cosmos/cosmos-sdk/contrib/x/group/keeper"
 	"github.com/cosmos/cosmos-sdk/contrib/x/group/simulation"
 	grouptestutil "github.com/cosmos/cosmos-sdk/contrib/x/group/testutil"
@@ -78,21 +78,21 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		opMsgRoute string
 		opMsgName  string
 	}{
-		{simulation.WeightMsgCreateGroup, group2.ModuleName, simulation.TypeMsgCreateGroup},
-		{simulation.WeightMsgCreateGroupPolicy, group2.ModuleName, simulation.TypeMsgCreateGroupPolicy},
-		{simulation.WeightMsgCreateGroupWithPolicy, group2.ModuleName, simulation.TypeMsgCreateGroupWithPolicy},
-		{simulation.WeightMsgSubmitProposal, group2.ModuleName, simulation.TypeMsgSubmitProposal},
-		{simulation.WeightMsgSubmitProposal, group2.ModuleName, simulation.TypeMsgSubmitProposal},
-		{simulation.WeightMsgWithdrawProposal, group2.ModuleName, simulation.TypeMsgWithdrawProposal},
-		{simulation.WeightMsgVote, group2.ModuleName, simulation.TypeMsgVote},
-		{simulation.WeightMsgExec, group2.ModuleName, simulation.TypeMsgExec},
-		{simulation.WeightMsgUpdateGroupMetadata, group2.ModuleName, simulation.TypeMsgUpdateGroupMetadata},
-		{simulation.WeightMsgUpdateGroupAdmin, group2.ModuleName, simulation.TypeMsgUpdateGroupAdmin},
-		{simulation.WeightMsgUpdateGroupMembers, group2.ModuleName, simulation.TypeMsgUpdateGroupMembers},
-		{simulation.WeightMsgUpdateGroupPolicyAdmin, group2.ModuleName, simulation.TypeMsgUpdateGroupPolicyAdmin},
-		{simulation.WeightMsgUpdateGroupPolicyDecisionPolicy, group2.ModuleName, simulation.TypeMsgUpdateGroupPolicyDecisionPolicy},
-		{simulation.WeightMsgUpdateGroupPolicyMetadata, group2.ModuleName, simulation.TypeMsgUpdateGroupPolicyMetadata},
-		{simulation.WeightMsgLeaveGroup, group2.ModuleName, simulation.TypeMsgLeaveGroup},
+		{simulation.WeightMsgCreateGroup, group.ModuleName, simulation.TypeMsgCreateGroup},
+		{simulation.WeightMsgCreateGroupPolicy, group.ModuleName, simulation.TypeMsgCreateGroupPolicy},
+		{simulation.WeightMsgCreateGroupWithPolicy, group.ModuleName, simulation.TypeMsgCreateGroupWithPolicy},
+		{simulation.WeightMsgSubmitProposal, group.ModuleName, simulation.TypeMsgSubmitProposal},
+		{simulation.WeightMsgSubmitProposal, group.ModuleName, simulation.TypeMsgSubmitProposal},
+		{simulation.WeightMsgWithdrawProposal, group.ModuleName, simulation.TypeMsgWithdrawProposal},
+		{simulation.WeightMsgVote, group.ModuleName, simulation.TypeMsgVote},
+		{simulation.WeightMsgExec, group.ModuleName, simulation.TypeMsgExec},
+		{simulation.WeightMsgUpdateGroupMetadata, group.ModuleName, simulation.TypeMsgUpdateGroupMetadata},
+		{simulation.WeightMsgUpdateGroupAdmin, group.ModuleName, simulation.TypeMsgUpdateGroupAdmin},
+		{simulation.WeightMsgUpdateGroupMembers, group.ModuleName, simulation.TypeMsgUpdateGroupMembers},
+		{simulation.WeightMsgUpdateGroupPolicyAdmin, group.ModuleName, simulation.TypeMsgUpdateGroupPolicyAdmin},
+		{simulation.WeightMsgUpdateGroupPolicyDecisionPolicy, group.ModuleName, simulation.TypeMsgUpdateGroupPolicyDecisionPolicy},
+		{simulation.WeightMsgUpdateGroupPolicyMetadata, group.ModuleName, simulation.TypeMsgUpdateGroupPolicyMetadata},
+		{simulation.WeightMsgLeaveGroup, group.ModuleName, simulation.TypeMsgLeaveGroup},
 	}
 
 	for i, w := range weightedOps {
@@ -143,7 +143,7 @@ func (suite *SimTestSuite) TestSimulateCreateGroup() {
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg group2.MsgCreateGroup
+	var msg group.MsgCreateGroup
 	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
@@ -170,7 +170,7 @@ func (suite *SimTestSuite) TestSimulateCreateGroupWithPolicy() {
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg group2.MsgCreateGroupWithPolicy
+	var msg group.MsgCreateGroupWithPolicy
 	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
@@ -187,9 +187,9 @@ func (suite *SimTestSuite) TestSimulateCreateGroupPolicy() {
 
 	// setup a group
 	_, err := suite.groupKeeper.CreateGroup(suite.ctx,
-		&group2.MsgCreateGroup{
+		&group.MsgCreateGroup{
 			Admin: acc.Address.String(),
-			Members: []group2.MemberRequest{
+			Members: []group.MemberRequest{
 				{
 					Address: acc.Address.String(),
 					Weight:  "1",
@@ -210,7 +210,7 @@ func (suite *SimTestSuite) TestSimulateCreateGroupPolicy() {
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg group2.MsgCreateGroupPolicy
+	var msg group.MsgCreateGroupPolicy
 	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
@@ -228,9 +228,9 @@ func (suite *SimTestSuite) TestSimulateSubmitProposal() {
 	// setup a group
 	ctx := suite.ctx
 	groupRes, err := suite.groupKeeper.CreateGroup(ctx,
-		&group2.MsgCreateGroup{
+		&group.MsgCreateGroup{
 			Admin: acc.Address.String(),
-			Members: []group2.MemberRequest{
+			Members: []group.MemberRequest{
 				{
 					Address: acc.Address.String(),
 					Weight:  "1",
@@ -241,11 +241,11 @@ func (suite *SimTestSuite) TestSimulateSubmitProposal() {
 	suite.Require().NoError(err)
 
 	// setup a group account
-	accountReq := &group2.MsgCreateGroupPolicy{
+	accountReq := &group.MsgCreateGroupPolicy{
 		Admin:   acc.Address.String(),
 		GroupId: groupRes.GroupId,
 	}
-	err = accountReq.SetDecisionPolicy(group2.NewThresholdDecisionPolicy("1", time.Hour, 0))
+	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour, 0))
 	suite.Require().NoError(err)
 	groupPolicyRes, err := suite.groupKeeper.CreateGroupPolicy(ctx, accountReq)
 	suite.Require().NoError(err)
@@ -261,7 +261,7 @@ func (suite *SimTestSuite) TestSimulateSubmitProposal() {
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg group2.MsgSubmitProposal
+	var msg group.MsgSubmitProposal
 	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
@@ -280,9 +280,9 @@ func (suite *SimTestSuite) TestWithdrawProposal() {
 	ctx := suite.ctx
 	addr := acc.Address.String()
 	groupRes, err := suite.groupKeeper.CreateGroup(ctx,
-		&group2.MsgCreateGroup{
+		&group.MsgCreateGroup{
 			Admin: addr,
-			Members: []group2.MemberRequest{
+			Members: []group.MemberRequest{
 				{
 					Address: addr,
 					Weight:  "1",
@@ -293,17 +293,17 @@ func (suite *SimTestSuite) TestWithdrawProposal() {
 	suite.Require().NoError(err)
 
 	// setup a group account
-	accountReq := &group2.MsgCreateGroupPolicy{
+	accountReq := &group.MsgCreateGroupPolicy{
 		Admin:   addr,
 		GroupId: groupRes.GroupId,
 	}
-	err = accountReq.SetDecisionPolicy(group2.NewThresholdDecisionPolicy("1", time.Hour, 0))
+	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour, 0))
 	suite.Require().NoError(err)
 	groupPolicyRes, err := suite.groupKeeper.CreateGroupPolicy(ctx, accountReq)
 	suite.Require().NoError(err)
 
 	// setup a proposal
-	proposalReq, err := group2.NewMsgSubmitProposal(groupPolicyRes.Address, []string{addr}, []sdk.Msg{
+	proposalReq, err := group.NewMsgSubmitProposal(groupPolicyRes.Address, []string{addr}, []sdk.Msg{
 		&banktypes.MsgSend{
 			FromAddress: groupPolicyRes.Address,
 			ToAddress:   addr,
@@ -325,7 +325,7 @@ func (suite *SimTestSuite) TestWithdrawProposal() {
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg group2.MsgWithdrawProposal
+	var msg group.MsgWithdrawProposal
 	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
@@ -344,9 +344,9 @@ func (suite *SimTestSuite) TestSimulateVote() {
 	ctx := suite.ctx
 	addr := acc.Address.String()
 	groupRes, err := suite.groupKeeper.CreateGroup(ctx,
-		&group2.MsgCreateGroup{
+		&group.MsgCreateGroup{
 			Admin: addr,
-			Members: []group2.MemberRequest{
+			Members: []group.MemberRequest{
 				{
 					Address: addr,
 					Weight:  "1",
@@ -357,18 +357,18 @@ func (suite *SimTestSuite) TestSimulateVote() {
 	suite.Require().NoError(err)
 
 	// setup a group account
-	accountReq := &group2.MsgCreateGroupPolicy{
+	accountReq := &group.MsgCreateGroupPolicy{
 		Admin:    addr,
 		GroupId:  groupRes.GroupId,
 		Metadata: "",
 	}
-	err = accountReq.SetDecisionPolicy(group2.NewThresholdDecisionPolicy("1", time.Hour, 0))
+	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour, 0))
 	suite.Require().NoError(err)
 	groupPolicyRes, err := suite.groupKeeper.CreateGroupPolicy(ctx, accountReq)
 	suite.Require().NoError(err)
 
 	// setup a proposal
-	proposalReq, err := group2.NewMsgSubmitProposal(groupPolicyRes.Address, []string{addr}, []sdk.Msg{
+	proposalReq, err := group.NewMsgSubmitProposal(groupPolicyRes.Address, []string{addr}, []sdk.Msg{
 		&banktypes.MsgSend{
 			FromAddress: groupPolicyRes.Address,
 			ToAddress:   addr,
@@ -390,7 +390,7 @@ func (suite *SimTestSuite) TestSimulateVote() {
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg group2.MsgVote
+	var msg group.MsgVote
 	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
@@ -409,9 +409,9 @@ func (suite *SimTestSuite) TestSimulateExec() {
 	ctx := suite.ctx
 	addr := acc.Address.String()
 	groupRes, err := suite.groupKeeper.CreateGroup(ctx,
-		&group2.MsgCreateGroup{
+		&group.MsgCreateGroup{
 			Admin: addr,
-			Members: []group2.MemberRequest{
+			Members: []group.MemberRequest{
 				{
 					Address: addr,
 					Weight:  "1",
@@ -422,17 +422,17 @@ func (suite *SimTestSuite) TestSimulateExec() {
 	suite.Require().NoError(err)
 
 	// setup a group account
-	accountReq := &group2.MsgCreateGroupPolicy{
+	accountReq := &group.MsgCreateGroupPolicy{
 		Admin:   addr,
 		GroupId: groupRes.GroupId,
 	}
-	err = accountReq.SetDecisionPolicy(group2.NewThresholdDecisionPolicy("1", time.Hour, 0))
+	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour, 0))
 	suite.Require().NoError(err)
 	groupPolicyRes, err := suite.groupKeeper.CreateGroupPolicy(ctx, accountReq)
 	suite.Require().NoError(err)
 
 	// setup a proposal
-	proposalReq, err := group2.NewMsgSubmitProposal(groupPolicyRes.Address, []string{addr}, []sdk.Msg{
+	proposalReq, err := group.NewMsgSubmitProposal(groupPolicyRes.Address, []string{addr}, []sdk.Msg{
 		&banktypes.MsgSend{
 			FromAddress: groupPolicyRes.Address,
 			ToAddress:   addr,
@@ -444,10 +444,10 @@ func (suite *SimTestSuite) TestSimulateExec() {
 	suite.Require().NoError(err)
 
 	// vote
-	_, err = suite.groupKeeper.Vote(ctx, &group2.MsgVote{
+	_, err = suite.groupKeeper.Vote(ctx, &group.MsgVote{
 		ProposalId: proposalRes.ProposalId,
 		Voter:      addr,
-		Option:     group2.VOTE_OPTION_YES,
+		Option:     group.VOTE_OPTION_YES,
 		Exec:       1,
 	})
 	suite.Require().NoError(err)
@@ -463,7 +463,7 @@ func (suite *SimTestSuite) TestSimulateExec() {
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg group2.MsgExec
+	var msg group.MsgExec
 	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
@@ -480,9 +480,9 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupAdmin() {
 
 	// setup a group
 	_, err := suite.groupKeeper.CreateGroup(suite.ctx,
-		&group2.MsgCreateGroup{
+		&group.MsgCreateGroup{
 			Admin: acc.Address.String(),
-			Members: []group2.MemberRequest{
+			Members: []group.MemberRequest{
 				{
 					Address: acc.Address.String(),
 					Weight:  "1",
@@ -503,7 +503,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupAdmin() {
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg group2.MsgUpdateGroupAdmin
+	var msg group.MsgUpdateGroupAdmin
 	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
@@ -520,9 +520,9 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupMetadata() {
 
 	// setup a group
 	_, err := suite.groupKeeper.CreateGroup(suite.ctx,
-		&group2.MsgCreateGroup{
+		&group.MsgCreateGroup{
 			Admin: acc.Address.String(),
-			Members: []group2.MemberRequest{
+			Members: []group.MemberRequest{
 				{
 					Address: acc.Address.String(),
 					Weight:  "1",
@@ -543,7 +543,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupMetadata() {
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg group2.MsgUpdateGroupMetadata
+	var msg group.MsgUpdateGroupMetadata
 	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
@@ -560,9 +560,9 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupMembers() {
 
 	// setup a group
 	_, err := suite.groupKeeper.CreateGroup(suite.ctx,
-		&group2.MsgCreateGroup{
+		&group.MsgCreateGroup{
 			Admin: acc.Address.String(),
-			Members: []group2.MemberRequest{
+			Members: []group.MemberRequest{
 				{
 					Address: acc.Address.String(),
 					Weight:  "1",
@@ -583,7 +583,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupMembers() {
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg group2.MsgUpdateGroupMembers
+	var msg group.MsgUpdateGroupMembers
 	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
@@ -601,9 +601,9 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyAdmin() {
 	// setup a group
 	ctx := suite.ctx
 	groupRes, err := suite.groupKeeper.CreateGroup(ctx,
-		&group2.MsgCreateGroup{
+		&group.MsgCreateGroup{
 			Admin: acc.Address.String(),
-			Members: []group2.MemberRequest{
+			Members: []group.MemberRequest{
 				{
 					Address: acc.Address.String(),
 					Weight:  "1",
@@ -614,11 +614,11 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyAdmin() {
 	suite.Require().NoError(err)
 
 	// setup a group account
-	accountReq := &group2.MsgCreateGroupPolicy{
+	accountReq := &group.MsgCreateGroupPolicy{
 		Admin:   acc.Address.String(),
 		GroupId: groupRes.GroupId,
 	}
-	err = accountReq.SetDecisionPolicy(group2.NewThresholdDecisionPolicy("1", time.Hour, 0))
+	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour, 0))
 	suite.Require().NoError(err)
 	groupPolicyRes, err := suite.groupKeeper.CreateGroupPolicy(ctx, accountReq)
 	suite.Require().NoError(err)
@@ -634,7 +634,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyAdmin() {
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg group2.MsgUpdateGroupPolicyAdmin
+	var msg group.MsgUpdateGroupPolicyAdmin
 	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
@@ -652,9 +652,9 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyDecisionPolicy() {
 	// setup a group
 	ctx := suite.ctx
 	groupRes, err := suite.groupKeeper.CreateGroup(ctx,
-		&group2.MsgCreateGroup{
+		&group.MsgCreateGroup{
 			Admin: acc.Address.String(),
-			Members: []group2.MemberRequest{
+			Members: []group.MemberRequest{
 				{
 					Address: acc.Address.String(),
 					Weight:  "1",
@@ -665,11 +665,11 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyDecisionPolicy() {
 	suite.Require().NoError(err)
 
 	// setup a group account
-	accountReq := &group2.MsgCreateGroupPolicy{
+	accountReq := &group.MsgCreateGroupPolicy{
 		Admin:   acc.Address.String(),
 		GroupId: groupRes.GroupId,
 	}
-	err = accountReq.SetDecisionPolicy(group2.NewThresholdDecisionPolicy("1", time.Hour, 0))
+	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour, 0))
 	suite.Require().NoError(err)
 	groupPolicyRes, err := suite.groupKeeper.CreateGroupPolicy(ctx, accountReq)
 	suite.Require().NoError(err)
@@ -685,7 +685,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyDecisionPolicy() {
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg group2.MsgUpdateGroupPolicyDecisionPolicy
+	var msg group.MsgUpdateGroupPolicyDecisionPolicy
 	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
@@ -703,9 +703,9 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyMetadata() {
 	// setup a group
 	ctx := suite.ctx
 	groupRes, err := suite.groupKeeper.CreateGroup(ctx,
-		&group2.MsgCreateGroup{
+		&group.MsgCreateGroup{
 			Admin: acc.Address.String(),
-			Members: []group2.MemberRequest{
+			Members: []group.MemberRequest{
 				{
 					Address: acc.Address.String(),
 					Weight:  "1",
@@ -716,11 +716,11 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyMetadata() {
 	suite.Require().NoError(err)
 
 	// setup a group account
-	accountReq := &group2.MsgCreateGroupPolicy{
+	accountReq := &group.MsgCreateGroupPolicy{
 		Admin:   acc.Address.String(),
 		GroupId: groupRes.GroupId,
 	}
-	err = accountReq.SetDecisionPolicy(group2.NewThresholdDecisionPolicy("1", time.Hour, 0))
+	err = accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("1", time.Hour, 0))
 	suite.Require().NoError(err)
 	groupPolicyRes, err := suite.groupKeeper.CreateGroupPolicy(ctx, accountReq)
 	suite.Require().NoError(err)
@@ -736,7 +736,7 @@ func (suite *SimTestSuite) TestSimulateUpdateGroupPolicyMetadata() {
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg group2.MsgUpdateGroupPolicyMetadata
+	var msg group.MsgUpdateGroupPolicyMetadata
 	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)
@@ -759,9 +759,9 @@ func (suite *SimTestSuite) TestSimulateLeaveGroup() {
 	// setup a group
 	ctx := suite.ctx
 	groupRes, err := suite.groupKeeper.CreateGroup(ctx,
-		&group2.MsgCreateGroup{
+		&group.MsgCreateGroup{
 			Admin: admin.Address.String(),
-			Members: []group2.MemberRequest{
+			Members: []group.MemberRequest{
 				{
 					Address: member1.Address.String(),
 					Weight:  "1",
@@ -780,12 +780,12 @@ func (suite *SimTestSuite) TestSimulateLeaveGroup() {
 	require.NoError(err)
 
 	// setup a group account
-	accountReq := &group2.MsgCreateGroupPolicy{
+	accountReq := &group.MsgCreateGroupPolicy{
 		Admin:    admin.Address.String(),
 		GroupId:  groupRes.GroupId,
 		Metadata: "",
 	}
-	require.NoError(accountReq.SetDecisionPolicy(group2.NewThresholdDecisionPolicy("3", time.Hour, time.Hour)))
+	require.NoError(accountReq.SetDecisionPolicy(group.NewThresholdDecisionPolicy("3", time.Hour, time.Hour)))
 	_, err = suite.groupKeeper.CreateGroupPolicy(ctx, accountReq)
 	require.NoError(err)
 
@@ -800,7 +800,7 @@ func (suite *SimTestSuite) TestSimulateLeaveGroup() {
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg group2.MsgLeaveGroup
+	var msg group.MsgLeaveGroup
 	err = proto.Unmarshal(operationMsg.Msg, &msg)
 	suite.Require().NoError(err)
 	suite.Require().True(operationMsg.OK)

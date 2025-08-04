@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	group2 "github.com/cosmos/cosmos-sdk/contrib/x/group"
+	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
 	"github.com/cosmos/cosmos-sdk/contrib/x/group/internal/math"
 	"github.com/cosmos/cosmos-sdk/version"
 )
@@ -106,7 +106,7 @@ Where members.json contains:
 				}
 			}
 
-			msg := &group2.MsgCreateGroup{
+			msg := &group.MsgCreateGroup{
 				Admin:    clientCtx.GetFromAddress().String(),
 				Members:  members,
 				Metadata: args[1],
@@ -180,7 +180,7 @@ Set a member's weight to "0" to delete it.
 				return errZeroGroupID
 			}
 
-			msg := &group2.MsgUpdateGroupMembers{
+			msg := &group.MsgUpdateGroupMembers{
 				Admin:         clientCtx.GetFromAddress().String(),
 				MemberUpdates: members,
 				GroupId:       groupID,
@@ -224,7 +224,7 @@ func MsgUpdateGroupAdminCmd() *cobra.Command {
 				return errors.New("new admin cannot be the same as the current admin")
 			}
 
-			msg := &group2.MsgUpdateGroupAdmin{
+			msg := &group.MsgUpdateGroupAdmin{
 				Admin:    clientCtx.GetFromAddress().String(),
 				NewAdmin: args[2],
 				GroupId:  groupID,
@@ -265,7 +265,7 @@ func MsgUpdateGroupMetadataCmd() *cobra.Command {
 				return errZeroGroupID
 			}
 
-			msg := &group2.MsgUpdateGroupMetadata{
+			msg := &group.MsgUpdateGroupMetadata{
 				Admin:    clientCtx.GetFromAddress().String(),
 				Metadata: args[2],
 				GroupId:  groupID,
@@ -357,7 +357,7 @@ and policy.json contains:
 				return err
 			}
 
-			msg, err := group2.NewMsgCreateGroupWithPolicy(
+			msg, err := group.NewMsgCreateGroupWithPolicy(
 				clientCtx.GetFromAddress().String(),
 				members,
 				args[1],
@@ -437,7 +437,7 @@ Here, we can use percentage decision policy when needed, where 0 < percentage <=
 				return err
 			}
 
-			msg, err := group2.NewMsgCreateGroupPolicy(
+			msg, err := group.NewMsgCreateGroupPolicy(
 				clientCtx.GetFromAddress(),
 				groupID,
 				args[2],
@@ -476,7 +476,7 @@ func MsgUpdateGroupPolicyAdminCmd() *cobra.Command {
 				return err
 			}
 
-			msg := &group2.MsgUpdateGroupPolicyAdmin{
+			msg := &group.MsgUpdateGroupPolicyAdmin{
 				Admin:              clientCtx.GetFromAddress().String(),
 				GroupPolicyAddress: args[1],
 				NewAdmin:           args[2],
@@ -518,7 +518,7 @@ func MsgUpdateGroupPolicyDecisionPolicyCmd(ac address.Codec) *cobra.Command {
 				return err
 			}
 
-			msg, err := group2.NewMsgUpdateGroupPolicyDecisionPolicy(
+			msg, err := group.NewMsgUpdateGroupPolicyDecisionPolicy(
 				clientCtx.GetFromAddress(),
 				accountAddress,
 				policy,
@@ -552,7 +552,7 @@ func MsgUpdateGroupPolicyMetadataCmd() *cobra.Command {
 				return err
 			}
 
-			msg := &group2.MsgUpdateGroupPolicyMetadata{
+			msg := &group.MsgUpdateGroupPolicyMetadata{
 				Admin:              clientCtx.GetFromAddress().String(),
 				GroupPolicyAddress: args[1],
 				Metadata:           args[2],
@@ -636,7 +636,7 @@ metadata example:
 			}
 
 			execStr, _ := cmd.Flags().GetString(FlagExec)
-			msg, err := group2.NewMsgSubmitProposal(
+			msg, err := group.NewMsgSubmitProposal(
 				prop.GroupPolicyAddress,
 				prop.Proposers,
 				msgs,
@@ -691,7 +691,7 @@ Parameters:
 				return fmt.Errorf("invalid proposal id: %d", proposalID)
 			}
 
-			msg := &group2.MsgWithdrawProposal{
+			msg := &group.MsgWithdrawProposal{
 				ProposalId: proposalID,
 				Address:    clientCtx.GetFromAddress().String(),
 			}
@@ -740,14 +740,14 @@ Parameters:
 				return err
 			}
 
-			voteOption, err := group2.VoteOptionFromString(args[2])
+			voteOption, err := group.VoteOptionFromString(args[2])
 			if err != nil {
 				return err
 			}
 
 			execStr, _ := cmd.Flags().GetString(FlagExec)
 
-			msg := &group2.MsgVote{
+			msg := &group.MsgVote{
 				ProposalId: proposalID,
 				Voter:      args[1],
 				Option:     voteOption,
@@ -782,7 +782,7 @@ func MsgExecCmd() *cobra.Command {
 				return err
 			}
 
-			msg := &group2.MsgExec{
+			msg := &group.MsgExec{
 				ProposalId: proposalID,
 				Executor:   clientCtx.GetFromAddress().String(),
 			}
@@ -828,7 +828,7 @@ Parameters:
 				return errZeroGroupID
 			}
 
-			msg := &group2.MsgLeaveGroup{
+			msg := &group.MsgLeaveGroup{
 				Address: clientCtx.GetFromAddress().String(),
 				GroupId: groupID,
 			}

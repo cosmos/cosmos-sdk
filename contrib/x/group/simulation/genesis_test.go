@@ -9,7 +9,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
-	group2 "github.com/cosmos/cosmos-sdk/contrib/x/group"
+	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
 	groupmodule "github.com/cosmos/cosmos-sdk/contrib/x/group/module"
 	"github.com/cosmos/cosmos-sdk/contrib/x/group/simulation"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -36,8 +36,8 @@ func TestRandomizedGenState(t *testing.T) {
 	}
 
 	simulation.RandomizedGenState(&simState)
-	var groupGenesis group2.GenesisState
-	simState.Cdc.MustUnmarshalJSON(simState.GenState[group2.ModuleName], &groupGenesis)
+	var groupGenesis group.GenesisState
+	simState.Cdc.MustUnmarshalJSON(simState.GenState[group.ModuleName], &groupGenesis)
 
 	require.Equal(t, int(groupGenesis.GroupSeq), len(simState.Accounts))
 	require.Len(t, groupGenesis.Groups, len(simState.Accounts))

@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
-	nft2 "github.com/cosmos/cosmos-sdk/contrib/x/nft"
+	nft "github.com/cosmos/cosmos-sdk/contrib/x/nft"
 )
 
 func TestGRPCQuery(t *testing.T) {
@@ -18,47 +18,47 @@ func TestGRPCQuery(t *testing.T) {
 
 func (s *TestSuite) TestBalance() {
 	s.accountKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
-	var req *nft2.QueryBalanceRequest
+	var req *nft.QueryBalanceRequest
 	testCases := []struct {
 		msg      string
 		malleate func(index int, require *require.Assertions)
 		expError string
 		balance  uint64
-		postTest func(index int, require *require.Assertions, res *nft2.QueryBalanceResponse, expBalance uint64)
+		postTest func(index int, require *require.Assertions, res *nft.QueryBalanceResponse, expBalance uint64)
 	}{
 		{
 			"fail empty ClassId",
 			func(index int, require *require.Assertions) {
-				req = &nft2.QueryBalanceRequest{}
+				req = &nft.QueryBalanceRequest{}
 			},
-			nft2.ErrEmptyClassID.Error(),
+			nft.ErrEmptyClassID.Error(),
 			0,
-			func(index int, require *require.Assertions, res *nft2.QueryBalanceResponse, expBalance uint64) {},
+			func(index int, require *require.Assertions, res *nft.QueryBalanceResponse, expBalance uint64) {},
 		},
 		{
 			"fail invalid Owner addr",
 			func(index int, require *require.Assertions) {
-				req = &nft2.QueryBalanceRequest{
+				req = &nft.QueryBalanceRequest{
 					ClassId: testClassID,
 					Owner:   "owner",
 				}
 			},
 			"decoding bech32 failed",
 			0,
-			func(index int, require *require.Assertions, res *nft2.QueryBalanceResponse, expBalance uint64) {},
+			func(index int, require *require.Assertions, res *nft.QueryBalanceResponse, expBalance uint64) {},
 		},
 		{
 			"Success",
 			func(index int, require *require.Assertions) {
 				s.TestMint()
-				req = &nft2.QueryBalanceRequest{
+				req = &nft.QueryBalanceRequest{
 					ClassId: testClassID,
 					Owner:   s.encodedAddrs[0],
 				}
 			},
 			"",
 			2,
-			func(index int, require *require.Assertions, res *nft2.QueryBalanceResponse, expBalance uint64) {
+			func(index int, require *require.Assertions, res *nft.QueryBalanceResponse, expBalance uint64) {
 				require.Equal(res.Amount, expBalance, "the error occurred on:%d", index)
 			},
 		},
@@ -81,58 +81,58 @@ func (s *TestSuite) TestBalance() {
 
 func (s *TestSuite) TestOwner() {
 	var (
-		req   *nft2.QueryOwnerRequest
+		req   *nft.QueryOwnerRequest
 		owner string
 	)
 	testCases := []struct {
 		msg      string
 		malleate func(index int, require *require.Assertions)
 		expError string
-		postTest func(index int, require *require.Assertions, res *nft2.QueryOwnerResponse)
+		postTest func(index int, require *require.Assertions, res *nft.QueryOwnerResponse)
 	}{
 		{
 			"fail empty ClassId",
 			func(index int, require *require.Assertions) {
-				req = &nft2.QueryOwnerRequest{
+				req = &nft.QueryOwnerRequest{
 					Id: testID,
 				}
 			},
-			nft2.ErrEmptyClassID.Error(),
-			func(index int, require *require.Assertions, res *nft2.QueryOwnerResponse) {},
+			nft.ErrEmptyClassID.Error(),
+			func(index int, require *require.Assertions, res *nft.QueryOwnerResponse) {},
 		},
 		{
 			"fail empty nft id",
 			func(index int, require *require.Assertions) {
-				req = &nft2.QueryOwnerRequest{
+				req = &nft.QueryOwnerRequest{
 					ClassId: testClassID,
 				}
 			},
-			nft2.ErrEmptyNFTID.Error(),
-			func(index int, require *require.Assertions, res *nft2.QueryOwnerResponse) {},
+			nft.ErrEmptyNFTID.Error(),
+			func(index int, require *require.Assertions, res *nft.QueryOwnerResponse) {},
 		},
 		{
 			"success but nft id not exist",
 			func(index int, require *require.Assertions) {
-				req = &nft2.QueryOwnerRequest{
+				req = &nft.QueryOwnerRequest{
 					ClassId: testClassID,
 					Id:      "kitty2",
 				}
 			},
 			"",
-			func(index int, require *require.Assertions, res *nft2.QueryOwnerResponse) {
+			func(index int, require *require.Assertions, res *nft.QueryOwnerResponse) {
 				require.Equal(res.Owner, owner, "the error occurred on:%d", index)
 			},
 		},
 		{
 			"success but class id not exist",
 			func(index int, require *require.Assertions) {
-				req = &nft2.QueryOwnerRequest{
+				req = &nft.QueryOwnerRequest{
 					ClassId: "kitty1",
 					Id:      testID,
 				}
 			},
 			"",
-			func(index int, require *require.Assertions, res *nft2.QueryOwnerResponse) {
+			func(index int, require *require.Assertions, res *nft.QueryOwnerResponse) {
 				require.Equal(res.Owner, owner, "the error occurred on:%d", index)
 			},
 		},
@@ -140,14 +140,14 @@ func (s *TestSuite) TestOwner() {
 			"Success",
 			func(index int, require *require.Assertions) {
 				s.TestMint()
-				req = &nft2.QueryOwnerRequest{
+				req = &nft.QueryOwnerRequest{
 					ClassId: testClassID,
 					Id:      testID,
 				}
 				owner = s.encodedAddrs[0]
 			},
 			"",
-			func(index int, require *require.Assertions, res *nft2.QueryOwnerResponse) {
+			func(index int, require *require.Assertions, res *nft.QueryOwnerResponse) {
 				require.Equal(res.Owner, owner, "the error occurred on:%d", index)
 			},
 		},
@@ -169,54 +169,54 @@ func (s *TestSuite) TestOwner() {
 }
 
 func (s *TestSuite) TestSupply() {
-	var req *nft2.QuerySupplyRequest
+	var req *nft.QuerySupplyRequest
 	testCases := []struct {
 		msg      string
 		malleate func(index int, require *require.Assertions)
 		expError string
 		supply   uint64
-		postTest func(index int, require *require.Assertions, res *nft2.QuerySupplyResponse, supply uint64)
+		postTest func(index int, require *require.Assertions, res *nft.QuerySupplyResponse, supply uint64)
 	}{
 		{
 			"fail empty ClassId",
 			func(index int, require *require.Assertions) {
-				req = &nft2.QuerySupplyRequest{}
+				req = &nft.QuerySupplyRequest{}
 			},
-			nft2.ErrEmptyClassID.Error(),
+			nft.ErrEmptyClassID.Error(),
 			0,
-			func(index int, require *require.Assertions, res *nft2.QuerySupplyResponse, supply uint64) {},
+			func(index int, require *require.Assertions, res *nft.QuerySupplyResponse, supply uint64) {},
 		},
 		{
 			"success but class id not exist",
 			func(index int, require *require.Assertions) {
-				req = &nft2.QuerySupplyRequest{
+				req = &nft.QuerySupplyRequest{
 					ClassId: "kitty1",
 				}
 			},
 			"",
 			0,
-			func(index int, require *require.Assertions, res *nft2.QuerySupplyResponse, supply uint64) {
+			func(index int, require *require.Assertions, res *nft.QuerySupplyResponse, supply uint64) {
 				require.Equal(res.Amount, supply, "the error occurred on:%d", index)
 			},
 		},
 		{
 			"success but supply equal zero",
 			func(index int, require *require.Assertions) {
-				req = &nft2.QuerySupplyRequest{
+				req = &nft.QuerySupplyRequest{
 					ClassId: testClassID,
 				}
 				s.TestSaveClass()
 			},
 			"",
 			0,
-			func(index int, require *require.Assertions, res *nft2.QuerySupplyResponse, supply uint64) {
+			func(index int, require *require.Assertions, res *nft.QuerySupplyResponse, supply uint64) {
 				require.Equal(res.Amount, supply, "the error occurred on:%d", index)
 			},
 		},
 		{
 			"Success",
 			func(index int, require *require.Assertions) {
-				n := nft2.NFT{
+				n := nft.NFT{
 					ClassId: testClassID,
 					Id:      testID,
 					Uri:     testURI,
@@ -224,13 +224,13 @@ func (s *TestSuite) TestSupply() {
 				err := s.nftKeeper.Mint(s.ctx, n, s.addrs[0])
 				require.NoError(err, "the error occurred on:%d", index)
 
-				req = &nft2.QuerySupplyRequest{
+				req = &nft.QuerySupplyRequest{
 					ClassId: testClassID,
 				}
 			},
 			"",
 			1,
-			func(index int, require *require.Assertions, res *nft2.QuerySupplyResponse, supply uint64) {
+			func(index int, require *require.Assertions, res *nft.QuerySupplyResponse, supply uint64) {
 				require.Equal(res.Amount, supply, "the error occurred on:%d", index)
 			},
 		},
@@ -253,43 +253,43 @@ func (s *TestSuite) TestSupply() {
 
 func (s *TestSuite) TestNFTs() {
 	var (
-		req  *nft2.QueryNFTsRequest
-		nfts []*nft2.NFT
+		req  *nft.QueryNFTsRequest
+		nfts []*nft.NFT
 	)
 	testCases := []struct {
 		msg      string
 		malleate func(index int, require *require.Assertions)
 		expError string
-		postTest func(index int, require *require.Assertions, res *nft2.QueryNFTsResponse)
+		postTest func(index int, require *require.Assertions, res *nft.QueryNFTsResponse)
 	}{
 		{
 			"fail empty Owner and ClassId",
 			func(index int, require *require.Assertions) {
-				req = &nft2.QueryNFTsRequest{}
+				req = &nft.QueryNFTsRequest{}
 			},
 			"must provide at least one of classID or owner",
-			func(index int, require *require.Assertions, res *nft2.QueryNFTsResponse) {},
+			func(index int, require *require.Assertions, res *nft.QueryNFTsResponse) {},
 		},
 		{
 			"success,empty ClassId and no nft",
 			func(index int, require *require.Assertions) {
-				req = &nft2.QueryNFTsRequest{
+				req = &nft.QueryNFTsRequest{
 					Owner: s.encodedAddrs[1],
 				}
 				s.TestSaveClass()
 			},
 			"",
-			func(index int, require *require.Assertions, res *nft2.QueryNFTsResponse) {
+			func(index int, require *require.Assertions, res *nft.QueryNFTsResponse) {
 				require.Len(res.Nfts, 0, "the error occurred on:%d", index)
 			},
 		},
 		{
 			"success, empty Owner and class id not exist",
 			func(index int, require *require.Assertions) {
-				req = &nft2.QueryNFTsRequest{
+				req = &nft.QueryNFTsRequest{
 					ClassId: "kitty1",
 				}
-				n := nft2.NFT{
+				n := nft.NFT{
 					ClassId: testClassID,
 					Id:      testID,
 					Uri:     testURI,
@@ -298,21 +298,21 @@ func (s *TestSuite) TestNFTs() {
 				require.NoError(err, "the error occurred on:%d", index)
 			},
 			"",
-			func(index int, require *require.Assertions, res *nft2.QueryNFTsResponse) {
+			func(index int, require *require.Assertions, res *nft.QueryNFTsResponse) {
 				require.Len(res.Nfts, 0, "the error occurred on:%d", index)
 			},
 		},
 		{
 			"Success,query by owner",
 			func(index int, require *require.Assertions) {
-				err := s.nftKeeper.SaveClass(s.ctx, nft2.Class{
+				err := s.nftKeeper.SaveClass(s.ctx, nft.Class{
 					Id: "MyKitty",
 				})
 				require.NoError(err)
 
-				nfts = []*nft2.NFT{}
+				nfts = []*nft.NFT{}
 				for i := 0; i < 5; i++ {
-					n := nft2.NFT{
+					n := nft.NFT{
 						ClassId: "MyKitty",
 						Id:      fmt.Sprintf("MyCat%d", i),
 					}
@@ -321,35 +321,35 @@ func (s *TestSuite) TestNFTs() {
 					nfts = append(nfts, &n)
 				}
 
-				req = &nft2.QueryNFTsRequest{
+				req = &nft.QueryNFTsRequest{
 					Owner: s.encodedAddrs[2],
 				}
 			},
 			"",
-			func(index int, require *require.Assertions, res *nft2.QueryNFTsResponse) {
+			func(index int, require *require.Assertions, res *nft.QueryNFTsResponse) {
 				require.EqualValues(res.Nfts, nfts, "the error occurred on:%d", index)
 			},
 		},
 		{
 			"Success,query by classID",
 			func(index int, require *require.Assertions) {
-				req = &nft2.QueryNFTsRequest{
+				req = &nft.QueryNFTsRequest{
 					ClassId: "MyKitty",
 				}
 			},
 			"",
-			func(index int, require *require.Assertions, res *nft2.QueryNFTsResponse) {
+			func(index int, require *require.Assertions, res *nft.QueryNFTsResponse) {
 				require.EqualValues(res.Nfts, nfts, "the error occurred on:%d", index)
 			},
 		},
 		{
 			"Success,query by classId and owner",
 			func(index int, require *require.Assertions) {
-				req = &nft2.QueryNFTsRequest{
+				req = &nft.QueryNFTsRequest{
 					ClassId: testClassID,
 					Owner:   s.encodedAddrs[0],
 				}
-				nfts = []*nft2.NFT{
+				nfts = []*nft.NFT{
 					{
 						ClassId: testClassID,
 						Id:      testID,
@@ -358,7 +358,7 @@ func (s *TestSuite) TestNFTs() {
 				}
 			},
 			"",
-			func(index int, require *require.Assertions, res *nft2.QueryNFTsResponse) {
+			func(index int, require *require.Assertions, res *nft.QueryNFTsResponse) {
 				require.Equal(res.Nfts, nfts, "the error occurred on:%d", index)
 			},
 		},
@@ -381,71 +381,71 @@ func (s *TestSuite) TestNFTs() {
 
 func (s *TestSuite) TestNFT() {
 	var (
-		req    *nft2.QueryNFTRequest
-		expNFT nft2.NFT
+		req    *nft.QueryNFTRequest
+		expNFT nft.NFT
 	)
 	testCases := []struct {
 		msg      string
 		malleate func(index int, require *require.Assertions)
 		expError string
-		postTest func(index int, require *require.Assertions, res *nft2.QueryNFTResponse)
+		postTest func(index int, require *require.Assertions, res *nft.QueryNFTResponse)
 	}{
 		{
 			"fail empty ClassId",
 			func(index int, require *require.Assertions) {
-				req = &nft2.QueryNFTRequest{}
+				req = &nft.QueryNFTRequest{}
 			},
-			nft2.ErrEmptyClassID.Error(),
-			func(index int, require *require.Assertions, res *nft2.QueryNFTResponse) {},
+			nft.ErrEmptyClassID.Error(),
+			func(index int, require *require.Assertions, res *nft.QueryNFTResponse) {},
 		},
 		{
 			"fail empty nft id",
 			func(index int, require *require.Assertions) {
-				req = &nft2.QueryNFTRequest{
+				req = &nft.QueryNFTRequest{
 					ClassId: testClassID,
 				}
 			},
-			nft2.ErrEmptyNFTID.Error(),
-			func(index int, require *require.Assertions, res *nft2.QueryNFTResponse) {},
+			nft.ErrEmptyNFTID.Error(),
+			func(index int, require *require.Assertions, res *nft.QueryNFTResponse) {},
 		},
 		{
 			"fail ClassId not exist",
 			func(index int, require *require.Assertions) {
-				req = &nft2.QueryNFTRequest{
+				req = &nft.QueryNFTRequest{
 					ClassId: "kitty1",
 					Id:      testID,
 				}
 				s.TestMint()
 			},
 			"not found nft",
-			func(index int, require *require.Assertions, res *nft2.QueryNFTResponse) {},
+			func(index int, require *require.Assertions, res *nft.QueryNFTResponse) {},
 		},
 		{
 			"fail nft id not exist",
 			func(index int, require *require.Assertions) {
-				req = &nft2.QueryNFTRequest{
+				req = &nft.QueryNFTRequest{
 					ClassId: testClassID,
 					Id:      "kitty2",
 				}
 			},
 			"not found nft",
-			func(index int, require *require.Assertions, res *nft2.QueryNFTResponse) {},
+			func(index int, require *require.Assertions, res *nft.QueryNFTResponse) {},
 		},
 		{
 			"success",
 			func(index int, require *require.Assertions) {
-				req = &nft2.QueryNFTRequest{
+				req = &nft.QueryNFTRequest{
 					ClassId: testClassID,
 					Id:      testID,
 				}
-				expNFT = nft2.NFT{
+				expNFT = nft.NFT{
 					ClassId: testClassID,
 					Id:      testID,
 					Uri:     testURI,
 				}
 			},
 			"",
-			func(index int, require *require.Assertions, res *nft2.QueryNFTResponse) {
+			func(index int, require *require.Assertions, res *nft.QueryNFTResponse) {
 				require.Equal(*res.Nft, expNFT, "the error occurred on:%d", index)
 			},
 		},
@@ -468,38 +468,38 @@ func (s *TestSuite) TestNFT() {
 
 func (s *TestSuite) TestClass() {
 	var (
-		req   *nft2.QueryClassRequest
-		class nft2.Class
+		req   *nft.QueryClassRequest
+		class nft.Class
 	)
 	testCases := []struct {
 		msg      string
 		malleate func(index int, require *require.Assertions)
 		expError string
-		postTest func(index int, require *require.Assertions, res *nft2.QueryClassResponse)
+		postTest func(index int, require *require.Assertions, res *nft.QueryClassResponse)
 	}{
 		{
 			"fail empty ClassId",
 			func(index int, require *require.Assertions) {
-				req = &nft2.QueryClassRequest{}
+				req = &nft.QueryClassRequest{}
 			},
-			nft2.ErrEmptyClassID.Error(),
-			func(index int, require *require.Assertions, res *nft2.QueryClassResponse) {},
+			nft.ErrEmptyClassID.Error(),
+			func(index int, require *require.Assertions, res *nft.QueryClassResponse) {},
 		},
 		{
 			"fail ClassId not exist",
 			func(index int, require *require.Assertions) {
-				req = &nft2.QueryClassRequest{
+				req = &nft.QueryClassRequest{
 					ClassId: "kitty1",
 				}
 				s.TestSaveClass()
 			},
 			"not found class",
-			func(index int, require *require.Assertions, res *nft2.QueryClassResponse) {},
+			func(index int, require *require.Assertions, res *nft.QueryClassResponse) {},
 		},
 		{
 			"success",
 			func(index int, require *require.Assertions) {
-				class = nft2.Class{
+				class = nft.Class{
 					Id:          testClassID,
 					Name:        testClassName,
 					Symbol:      testClassSymbol,
@@ -507,12 +507,12 @@ func (s *TestSuite) TestClass() {
 					Uri:         testClassURI,
 					UriHash:     testClassURIHash,
 				}
-				req = &nft2.QueryClassRequest{
+				req = &nft.QueryClassRequest{
 					ClassId: testClassID,
 				}
 			},
 			"",
-			func(index int, require *require.Assertions, res *nft2.QueryClassResponse) {
+			func(index int, require *require.Assertions, res *nft.QueryClassResponse) {
 				require.Equal(*res.Class, class, "the error occurred on:%d", index)
 			},
 		},
@@ -535,30 +535,30 @@ func (s *TestSuite) TestClass() {
 
 func (s *TestSuite) TestClasses() {
 	var (
-		req     *nft2.QueryClassesRequest
-		classes []nft2.Class
+		req     *nft.QueryClassesRequest
+		classes []nft.Class
 	)
 	testCases := []struct {
 		msg      string
 		malleate func(index int, require *require.Assertions)
 		expError string
-		postTest func(index int, require *require.Assertions, res *nft2.QueryClassesResponse)
+		postTest func(index int, require *require.Assertions, res *nft.QueryClassesResponse)
 	}{
 		{
 			"success Class not exist",
 			func(index int, require *require.Assertions) {
-				req = &nft2.QueryClassesRequest{}
+				req = &nft.QueryClassesRequest{}
 			},
 			"",
-			func(index int, require *require.Assertions, res *nft2.QueryClassesResponse) {
+			func(index int, require *require.Assertions, res *nft.QueryClassesResponse) {
 				require.Len(res.Classes, 0)
 			},
 		},
 		{
 			"success",
 			func(index int, require *require.Assertions) {
-				req = &nft2.QueryClassesRequest{}
-				classes = []nft2.Class{
+				req = &nft.QueryClassesRequest{}
+				classes = []nft.Class{
 					{
 						Id:          testClassID,
 						Name:        testClassName,
@@ -571,7 +571,7 @@ func (s *TestSuite) TestClasses() {
 				s.TestSaveClass()
 			},
 			"",
-			func(index int, require *require.Assertions, res *nft2.QueryClassesResponse) {
+			func(index int, require *require.Assertions, res *nft.QueryClassesResponse) {
 				require.Len(res.Classes, 1, "the error occurred on:%d", index)
 				require.Equal(*res.Classes[0], classes[0], "the error occurred on:%d", index)
 			},

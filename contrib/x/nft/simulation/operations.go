@@ -7,7 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	nft2 "github.com/cosmos/cosmos-sdk/contrib/x/nft"
+	nft "github.com/cosmos/cosmos-sdk/contrib/x/nft"
 	"github.com/cosmos/cosmos-sdk/contrib/x/nft/keeper"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,7 +25,7 @@ const (
 )
 
 // TypeMsgSend will be removed in the future
-var TypeMsgSend = sdk.MsgTypeURL(&nft2.MsgSend{})
+var TypeMsgSend = sdk.MsgTypeURL(&nft.MsgSend{})
 
 // WeightedOperations returns all the operations from the module with their respective weights
 // migrate to the msg factories instead, this method will be removed in the future
@@ -34,8 +34,8 @@ func WeightedOperations(
 	appParams simtypes.AppParams,
 	_ codec.JSONCodec,
 	txCfg client.TxConfig,
-	ak nft2.AccountKeeper,
-	bk nft2.BankKeeper,
+	ak nft.AccountKeeper,
+	bk nft.BankKeeper,
 	k keeper.Keeper,
 ) simulation.WeightedOperations {
 	var weightMsgSend int
@@ -59,8 +59,8 @@ func WeightedOperations(
 func SimulateMsgSend(
 	_ *codec.ProtoCodec,
 	txCfg client.TxConfig,
-	ak nft2.AccountKeeper,
-	bk nft2.BankKeeper,
+	ak nft.AccountKeeper,
+	bk nft.BankKeeper,
 	k keeper.Keeper,
 ) simtypes.Operation {
 	return func(
@@ -70,37 +70,37 @@ func SimulateMsgSend(
 		receiver, _ := simtypes.RandomAcc(r, accs)
 
 		if sender.Address.Equals(receiver.Address) {
-			return simtypes.NoOpMsg(nft2.ModuleName, TypeMsgSend, "sender and receiver are same"), nil, nil
+			return simtypes.NoOpMsg(nft.ModuleName, TypeMsgSend, "sender and receiver are same"), nil, nil
 		}
 
 		senderAcc := ak.GetAccount(ctx, sender.Address)
 		spendableCoins := bk.SpendableCoins(ctx, sender.Address)
 		fees, err := simtypes.RandomFees(r, ctx, spendableCoins)
 		if err != nil {
-			return simtypes.NoOpMsg(nft2.ModuleName, TypeMsgSend, err.Error()), nil, err
+			return simtypes.NoOpMsg(nft.ModuleName, TypeMsgSend, err.Error()), nil, err
 		}
 
 		spendLimit := spendableCoins.Sub(fees...)
 		if spendLimit == nil {
-			return simtypes.NoOpMsg(nft2.ModuleName, TypeMsgSend, "spend limit is nil"), nil, nil
+			return simtypes.NoOpMsg(nft.ModuleName, TypeMsgSend, "spend limit is nil"), nil, nil
 		}
 
 		n, err := randNFT(ctx, r, k, senderAcc.GetAddress())
 		if err != nil {
-			return simtypes.NoOpMsg(nft2.ModuleName, TypeMsgSend, err.Error()), nil, err
+			return simtypes.NoOpMsg(nft.ModuleName, TypeMsgSend, err.Error()), nil, err
 		}
 
 		senderStr, err := ak.AddressCodec().BytesToString(senderAcc.GetAddress().Bytes())
 		if err != nil {
-			return simtypes.NoOpMsg(nft2.ModuleName, TypeMsgSend, err.Error()), nil, err
+			return simtypes.NoOpMsg(nft.ModuleName, TypeMsgSend, err.Error()), nil, err
 		}
 
 		receiverStr, err := ak.AddressCodec().BytesToString(receiver.Address.Bytes())
 		if err != nil {
-			return simtypes.NoOpMsg(nft2.ModuleName, TypeMsgSend, err.Error()), nil, err
+			return simtypes.NoOpMsg(nft.ModuleName, TypeMsgSend, err.Error()), nil, err
 		}
 
-		msg := &nft2.MsgSend{
+		msg := &nft.MsgSend{
 			ClassId:  n.ClassId,
 			Id:       n.Id,
 			Sender:   senderStr,
@@ -119,11 +119,11 @@ func SimulateMsgSend(
 			sender.PrivKey,
 		)
 		if err != nil {
-			return simtypes.NoOpMsg(nft2.ModuleName, TypeMsgSend, "unable to generate mock tx"), nil, err
+			return simtypes.NoOpMsg(nft.ModuleName, TypeMsgSend, "unable to generate mock tx"), nil, err
 		}
 
 		if _, _, err = app.SimDeliver(txCfg.TxEncoder(), tx); err != nil {
-			return simtypes.NoOpMsg(nft2.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
+			return simtypes.NoOpMsg(nft.ModuleName, sdk.MsgTypeURL(msg), "unable to deliver tx"), nil, err
 		}
 
 		return simtypes.NewOperationMsg(msg, true, ""), nil, nil
@@ -131,33 +131,33 @@ func SimulateMsgSend(
 }
 
 // randNFT picks a random NFT from a class belonging to the specified owner(minter).
-func randNFT(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, minter sdk.AccAddress) (nft2.NFT, error) {
+func randNFT(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, minter sdk.AccAddress) (nft.NFT, error) {
 	c, err := randClass(ctx, r, k)
 	if err != nil {
-		return nft2.NFT{}, err
+		return nft.NFT{}, err
 	}
 	ns := k.GetNFTsOfClassByOwner(ctx, c.Id, minter)
 	if len(ns) > 0 {
 		return ns[r.Intn(len(ns))], nil
 	}
 
-	n := nft2.NFT{
+	n := nft.NFT{
 		ClassId: c.Id,
 		Id:      simtypes.RandStringOfLength(r, 10),
 		Uri:     simtypes.RandStringOfLength(r, 10),
 	}
 	err = k.Mint(ctx, n, minter)
 	if err != nil {
-		return nft2.NFT{}, err
+		return nft.NFT{}, err
 	}
 	return n, nil
 }
 
 // randClass picks a random Class.
-func randClass(ctx sdk.Context, r *rand.Rand, k keeper.Keeper) (nft2.Class, error) {
+func randClass(ctx sdk.Context, r *rand.Rand, k keeper.Keeper) (nft.Class, error) {
 	classes := k.GetClasses(ctx)
 	if len(classes) == 0 {
-		c := nft2.Class{
+		c := nft.Class{
 			Id:          simtypes.RandStringOfLength(r, 10),
 			Name:        simtypes.RandStringOfLength(r, 10),
 			Symbol:      simtypes.RandStringOfLength(r, 10),
@@ -166,7 +166,7 @@ func randClass(ctx sdk.Context, r *rand.Rand, k keeper.Keeper) (nft2.Class, erro
 		}
 		err := k.SaveClass(ctx, c)
 		if err != nil {
-			return nft2.Class{}, err
+			return nft.Class{}, err
 		}
 		return c, nil
 	}

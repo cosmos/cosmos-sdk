@@ -6,7 +6,7 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
-	group2 "github.com/cosmos/cosmos-sdk/contrib/x/group"
+	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
 	orm2 "github.com/cosmos/cosmos-sdk/contrib/x/group/internal/orm"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
@@ -25,7 +25,7 @@ const (
 func Migrate(
 	ctx sdk.Context,
 	storeKey storetypes.StoreKey,
-	accountKeeper group2.AccountKeeper,
+	accountKeeper group.AccountKeeper,
 	groupPolicySeq orm2.Sequence,
 	groupPolicyTable orm2.PrimaryKeyTable,
 ) error {
@@ -36,12 +36,12 @@ func Migrate(
 	for i := uint64(0); i <= curAccVal; i++ {
 		derivationKey := make([]byte, 8)
 		binary.BigEndian.PutUint64(derivationKey, i)
-		groupPolicyAcc := sdk.AccAddress(address.Module(group2.ModuleName, policyKey, derivationKey))
+		groupPolicyAcc := sdk.AccAddress(address.Module(group.ModuleName, policyKey, derivationKey))
 		groupPolicyAccountDerivationKey[groupPolicyAcc.String()] = derivationKey
 	}
 
 	// get all group policies
-	var groupPolicies []*group2.GroupPolicyInfo
+	var groupPolicies []*group.GroupPolicyInfo
 	if _, err := groupPolicyTable.Export(store, &groupPolicies); err != nil {
 		return fmt.Errorf("failed to get group policies: %w", err)
 	}
@@ -64,7 +64,7 @@ func Migrate(
 			panic(fmt.Errorf("group policy account %s derivation key not found", policy.Address))
 		}
 
-		ac, err := authtypes.NewModuleCredential(group2.ModuleName, []byte{GroupPolicyTablePrefix}, derivationKey)
+		ac, err := authtypes.NewModuleCredential(group.ModuleName, []byte{GroupPolicyTablePrefix}, derivationKey)
 		if err != nil {
 			return err
 		}

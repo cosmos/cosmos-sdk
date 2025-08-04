@@ -10,7 +10,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
-	nft2 "github.com/cosmos/cosmos-sdk/contrib/x/nft"
+	nft "github.com/cosmos/cosmos-sdk/contrib/x/nft"
 	nftmodule "github.com/cosmos/cosmos-sdk/contrib/x/nft/module"
 	"github.com/cosmos/cosmos-sdk/contrib/x/nft/simulation"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -35,8 +35,8 @@ func TestRandomizedGenState(t *testing.T) {
 	}
 
 	simulation.RandomizedGenState(&simState, addresscodec.NewBech32Codec("cosmos"))
-	var nftGenesis nft2.GenesisState
-	simState.Cdc.MustUnmarshalJSON(simState.GenState[nft2.ModuleName], &nftGenesis)
+	var nftGenesis nft.GenesisState
+	simState.Cdc.MustUnmarshalJSON(simState.GenState[nft.ModuleName], &nftGenesis)
 
 	require.Len(t, nftGenesis.Classes, len(simState.Accounts)-1)
 	require.Len(t, nftGenesis.Entries, len(simState.Accounts)-1)

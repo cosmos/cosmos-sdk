@@ -8,13 +8,13 @@ import (
 	"cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	group2 "github.com/cosmos/cosmos-sdk/contrib/x/group"
+	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
 	"github.com/cosmos/cosmos-sdk/types"
 )
 
 // InitGenesis initializes the group module's genesis state.
 func (k Keeper) InitGenesis(ctx types.Context, cdc codec.JSONCodec, data json.RawMessage) []abci.ValidatorUpdate {
-	var genesisState group2.GenesisState
+	var genesisState group.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
 
 	if err := k.groupTable.Import(ctx.KVStore(k.key), genesisState.Groups, genesisState.GroupSeq); err != nil {
@@ -45,10 +45,10 @@ func (k Keeper) InitGenesis(ctx types.Context, cdc codec.JSONCodec, data json.Ra
 }
 
 // ExportGenesis returns the group module's exported genesis.
-func (k Keeper) ExportGenesis(ctx types.Context, _ codec.JSONCodec) *group2.GenesisState {
-	genesisState := group2.NewGenesisState()
+func (k Keeper) ExportGenesis(ctx types.Context, _ codec.JSONCodec) *group.GenesisState {
+	genesisState := group.NewGenesisState()
 
-	var groups []*group2.GroupInfo
+	var groups []*group.GroupInfo
 
 	groupSeq, err := k.groupTable.Export(ctx.KVStore(k.key), &groups)
 	if err != nil {
@@ -57,14 +57,14 @@ func (k Keeper) ExportGenesis(ctx types.Context, _ codec.JSONCodec) *group2.Gene
 	genesisState.Groups = groups
 	genesisState.GroupSeq = groupSeq
 
-	var groupMembers []*group2.GroupMember
+	var groupMembers []*group.GroupMember
 	_, err = k.groupMemberTable.Export(ctx.KVStore(k.key), &groupMembers)
 	if err != nil {
 		panic(errors.Wrap(err, "group members"))
 	}
 	genesisState.GroupMembers = groupMembers
 
-	var groupPolicies []*group2.GroupPolicyInfo
+	var groupPolicies []*group.GroupPolicyInfo
 	_, err = k.groupPolicyTable.Export(ctx.KVStore(k.key), &groupPolicies)
 	if err != nil {
 		panic(errors.Wrap(err, "group policies"))
@@ -72,7 +72,7 @@ func (k Keeper) ExportGenesis(ctx types.Context, _ codec.JSONCodec) *group2.Gene
 	genesisState.GroupPolicies = groupPolicies
 	genesisState.GroupPolicySeq = k.groupPolicySeq.CurVal(ctx.KVStore(k.key))
 
-	var proposals []*group2.Proposal
+	var proposals []*group.Proposal
 	proposalSeq, err := k.proposalTable.Export(ctx.KVStore(k.key), &proposals)
 	if err != nil {
 		panic(errors.Wrap(err, "proposals"))
@@ -80,7 +80,7 @@ func (k Keeper) ExportGenesis(ctx types.Context, _ codec.JSONCodec) *group2.Gene
 	genesisState.Proposals = proposals
 	genesisState.ProposalSeq = proposalSeq
 
-	var votes []*group2.Vote
+	var votes []*group.Vote
 	_, err = k.voteTable.Export(ctx.KVStore(k.key), &votes)
 	if err != nil {
 		panic(errors.Wrap(err, "votes"))

@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	nft2 "github.com/cosmos/cosmos-sdk/contrib/x/nft"
+	nft "github.com/cosmos/cosmos-sdk/contrib/x/nft"
 	nftkeeper "github.com/cosmos/cosmos-sdk/contrib/x/nft/keeper"
 	"github.com/cosmos/cosmos-sdk/contrib/x/nft/simulation"
 	"github.com/cosmos/cosmos-sdk/contrib/x/nft/testutil"
@@ -84,7 +84,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		opMsgRoute string
 		opMsgName  string
 	}{
-		{simulation.WeightSend, nft2.ModuleName, simulation.TypeMsgSend},
+		{simulation.WeightSend, nft.ModuleName, simulation.TypeMsgSend},
 	}
 
 	for i, w := range weightedOps {
@@ -136,7 +136,7 @@ func (suite *SimTestSuite) TestSimulateMsgSend() {
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg nft2.MsgSend
+	var msg nft.MsgSend
 	_ = suite.codec.UnmarshalJSON(operationMsg.Msg, &msg)
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Len(futureOperations, 0)

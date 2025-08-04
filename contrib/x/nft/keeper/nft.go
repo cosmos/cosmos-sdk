@@ -6,19 +6,19 @@ import (
 	"cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 
-	nft2 "github.com/cosmos/cosmos-sdk/contrib/x/nft"
+	nft "github.com/cosmos/cosmos-sdk/contrib/x/nft"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Mint defines a method for minting a new nft
-func (k Keeper) Mint(ctx context.Context, token nft2.NFT, receiver sdk.AccAddress) error {
+func (k Keeper) Mint(ctx context.Context, token nft.NFT, receiver sdk.AccAddress) error {
 	if !k.HasClass(ctx, token.ClassId) {
-		return errors.Wrap(nft2.ErrClassNotExists, token.ClassId)
+		return errors.Wrap(nft.ErrClassNotExists, token.ClassId)
 	}
 
 	if k.HasNFT(ctx, token.ClassId, token.Id) {
-		return errors.Wrap(nft2.ErrNFTExists, token.Id)
+		return errors.Wrap(nft.ErrNFTExists, token.Id)
 	}
 
 	return k.mintWithNoCheck(ctx, token, receiver)
@@ -27,7 +27,7 @@ func (k Keeper) Mint(ctx context.Context, token nft2.NFT, receiver sdk.AccAddres
 // mintWithNoCheck defines a method for minting a new nft
 // Note: this method does not check whether the class already exists in nft.
 // The upper-layer application needs to check it when it needs to use it.
-func (k Keeper) mintWithNoCheck(ctx context.Context, token nft2.NFT, receiver sdk.AccAddress) error {
+func (k Keeper) mintWithNoCheck(ctx context.Context, token nft.NFT, receiver sdk.AccAddress) error {
 	k.setNFT(ctx, token)
 	k.setOwner(ctx, token.ClassId, token.Id, receiver)
 	k.incrTotalSupply(ctx, token.ClassId)
@@ -36,7 +36,7 @@ func (k Keeper) mintWithNoCheck(ctx context.Context, token nft2.NFT, receiver sd
 	if err != nil {
 		return err
 	}
-	return sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(&nft2.EventMint{
+	return sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(&nft.EventMint{
 		ClassId: token.ClassId,
 		Id:      token.Id,
 		Owner:   recStr,
@@ -47,11 +47,11 @@ func (k Keeper) mintWithNoCheck(ctx context.Context, token nft2.NFT, receiver sd
 // Note: When the upper module uses this method, it needs to authenticate nft
 func (k Keeper) Burn(ctx context.Context, classID, nftID string) error {
 	if !k.HasClass(ctx, classID) {
-		return errors.Wrap(nft2.ErrClassNotExists, classID)
+		return errors.Wrap(nft.ErrClassNotExists, classID)
 	}
 
 	if !k.HasNFT(ctx, classID, nftID) {
-		return errors.Wrap(nft2.ErrNFTNotExists, nftID)
+		return errors.Wrap(nft.ErrNFTNotExists, nftID)
 	}
 
 	return k.burnWithNoCheck(ctx, classID, nftID)
@@ -72,7 +72,7 @@ func (k Keeper) burnWithNoCheck(ctx context.Context, classID, nftID string) erro
 		return err
 	}
 
-	return sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(&nft2.EventBurn{
+	return sdk.UnwrapSDKContext(ctx).EventManager().EmitTypedEvent(&nft.EventBurn{
 		ClassId: classID,
 		Id:      nftID,
 		Owner:   ownerStr,
@@ -81,13 +81,13 @@ func (k Keeper) burnWithNoCheck(ctx context.Context, classID, nftID string) erro
 
 // Update defines a method for updating an exist nft
 // Note: When the upper module uses this method, it needs to authenticate nft
-func (k Keeper) Update(ctx context.Context, token nft2.NFT) error {
+func (k Keeper) Update(ctx context.Context, token nft.NFT) error {
 	if !k.HasClass(ctx, token.ClassId) {
-		return errors.Wrap(nft2.ErrClassNotExists, token.ClassId)
+		return errors.Wrap(nft.ErrClassNotExists, token.ClassId)
 	}
 
 	if !k.HasNFT(ctx, token.ClassId, token.Id) {
-		return errors.Wrap(nft2.ErrNFTNotExists, token.Id)
+		return errors.Wrap(nft.ErrNFTNotExists, token.Id)
 	}
 	k.updateWithNoCheck(ctx, token)
 	return nil
@@ -96,7 +96,7 @@ func (k Keeper) Update(ctx context.Context, token nft2.NFT) error {
 // Update defines a method for updating an exist nft
 // Note: this method does not check whether the class already exists in nft.
 // The upper-layer application needs to check it when it needs to use it
-func (k Keeper) updateWithNoCheck(ctx context.Context, token nft2.NFT) {
+func (k Keeper) updateWithNoCheck(ctx context.Context, token nft.NFT) {
 	k.setNFT(ctx, token)
 }
 
@@ -108,11 +108,11 @@ func (k Keeper) Transfer(ctx context.Context,
 	receiver sdk.AccAddress,
 ) error {
 	if !k.HasClass(ctx, classID) {
-		return errors.Wrap(nft2.ErrClassNotExists, classID)
+		return errors.Wrap(nft.ErrClassNotExists, classID)
 	}
 
 	if !k.HasNFT(ctx, classID, nftID) {
-		return errors.Wrap(nft2.ErrNFTNotExists, nftID)
+		return errors.Wrap(nft.ErrNFTNotExists, nftID)
 	}
 
 	return k.transferWithNoCheck(ctx, classID, nftID, receiver)
@@ -133,19 +133,19 @@ func (k Keeper) transferWithNoCheck(ctx context.Context,
 }
 
 // GetNFT returns the nft information of the specified classID and nftID
-func (k Keeper) GetNFT(ctx context.Context, classID, nftID string) (nft2.NFT, bool) {
+func (k Keeper) GetNFT(ctx context.Context, classID, nftID string) (nft.NFT, bool) {
 	store := k.getNFTStore(ctx, classID)
 	bz := store.Get([]byte(nftID))
 	if len(bz) == 0 {
-		return nft2.NFT{}, false
+		return nft.NFT{}, false
 	}
-	var nft nft2.NFT
+	var nft nft.NFT
 	k.cdc.MustUnmarshal(bz, &nft)
 	return nft, true
 }
 
 // GetNFTsOfClassByOwner returns all nft information of the specified classID under the specified owner
-func (k Keeper) GetNFTsOfClassByOwner(ctx context.Context, classID string, owner sdk.AccAddress) (nfts []nft2.NFT) {
+func (k Keeper) GetNFTsOfClassByOwner(ctx context.Context, classID string, owner sdk.AccAddress) (nfts []nft.NFT) {
 	ownerStore := k.getClassStoreByOwner(ctx, owner, classID)
 	iterator := ownerStore.Iterator(nil, nil)
 	defer iterator.Close()
@@ -159,12 +159,12 @@ func (k Keeper) GetNFTsOfClassByOwner(ctx context.Context, classID string, owner
 }
 
 // GetNFTsOfClass returns all nft information under the specified classID
-func (k Keeper) GetNFTsOfClass(ctx context.Context, classID string) (nfts []nft2.NFT) {
+func (k Keeper) GetNFTsOfClass(ctx context.Context, classID string) (nfts []nft.NFT) {
 	nftStore := k.getNFTStore(ctx, classID)
 	iterator := nftStore.Iterator(nil, nil)
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		var nft nft2.NFT
+		var nft nft.NFT
 		k.cdc.MustUnmarshal(iterator.Value(), &nft)
 		nfts = append(nfts, nft)
 	}
@@ -203,7 +203,7 @@ func (k Keeper) HasNFT(ctx context.Context, classID, id string) bool {
 	return store.Has([]byte(id))
 }
 
-func (k Keeper) setNFT(ctx context.Context, token nft2.NFT) {
+func (k Keeper) setNFT(ctx context.Context, token nft.NFT) {
 	nftStore := k.getNFTStore(ctx, token.ClassId)
 	bz := k.cdc.MustMarshal(&token)
 	nftStore.Set([]byte(token.Id), bz)

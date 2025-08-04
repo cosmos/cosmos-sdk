@@ -3,11 +3,11 @@ package keeper_test
 import (
 	"fmt"
 
-	nft2 "github.com/cosmos/cosmos-sdk/contrib/x/nft"
+	nft "github.com/cosmos/cosmos-sdk/contrib/x/nft"
 )
 
 var (
-	ExpClass = nft2.Class{
+	ExpClass = nft.Class{
 		Id:          testClassID,
 		Name:        testClassName,
 		Symbol:      testClassSymbol,
@@ -16,7 +16,7 @@ var (
 		UriHash:     testClassURIHash,
 	}
 
-	ExpNFT = nft2.NFT{
+	ExpNFT = nft.NFT{
 		ClassId: testClassID,
 		Id:      testID,
 		Uri:     testURI,
@@ -34,11 +34,11 @@ func (s *TestSuite) TestSend() {
 	err = s.nftKeeper.Mint(s.ctx, ExpNFT, s.addrs[0])
 	s.Require().NoError(err)
 
-	expGenesis := &nft2.GenesisState{
-		Classes: []*nft2.Class{&ExpClass},
-		Entries: []*nft2.Entry{{
+	expGenesis := &nft.GenesisState{
+		Classes: []*nft.Class{&ExpClass},
+		Entries: []*nft.Entry{{
 			Owner: s.encodedAddrs[0],
-			Nfts:  []*nft2.NFT{&ExpNFT},
+			Nfts:  []*nft.NFT{&ExpNFT},
 		}},
 	}
 	genesis := s.nftKeeper.ExportGenesis(s.ctx)
@@ -46,13 +46,13 @@ func (s *TestSuite) TestSend() {
 
 	testCases := []struct {
 		name   string
-		req    *nft2.MsgSend
+		req    *nft.MsgSend
 		expErr bool
 		errMsg string
 	}{
 		{
 			name: "empty nft id",
-			req: &nft2.MsgSend{
+			req: &nft.MsgSend{
 				ClassId:  testClassID,
 				Id:       "",
 				Sender:   s.encodedAddrs[0],
@@ -63,7 +63,7 @@ func (s *TestSuite) TestSend() {
 		},
 		{
 			name: "empty class id",
-			req: &nft2.MsgSend{
+			req: &nft.MsgSend{
 				ClassId:  "",
 				Id:       testID,
 				Sender:   s.encodedAddrs[0],
@@ -74,7 +74,7 @@ func (s *TestSuite) TestSend() {
 		},
 		{
 			name: "invalid class id",
-			req: &nft2.MsgSend{
+			req: &nft.MsgSend{
 				ClassId:  "invalid ClassId",
 				Id:       testID,
 				Sender:   s.encodedAddrs[0],
@@ -85,7 +85,7 @@ func (s *TestSuite) TestSend() {
 		},
 		{
 			name: "invalid nft id",
-			req: &nft2.MsgSend{
+			req: &nft.MsgSend{
 				ClassId:  testClassID,
 				Id:       "invalid Id",
 				Sender:   s.encodedAddrs[0],
@@ -96,7 +96,7 @@ func (s *TestSuite) TestSend() {
 		},
 		{
 			name: "unauthorized sender",
-			req: &nft2.MsgSend{
+			req: &nft.MsgSend{
 				ClassId:  testClassID,
 				Id:       testID,
 				Sender:   s.encodedAddrs[1],
@@ -107,7 +107,7 @@ func (s *TestSuite) TestSend() {
 		},
 		{
 			name: "valid transaction",
-			req: &nft2.MsgSend{
+			req: &nft.MsgSend{
 				ClassId:  testClassID,
 				Id:       testID,
 				Sender:   s.encodedAddrs[0],

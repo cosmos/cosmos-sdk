@@ -17,7 +17,7 @@ import (
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	nft2 "github.com/cosmos/cosmos-sdk/contrib/x/nft"
+	nft "github.com/cosmos/cosmos-sdk/contrib/x/nft"
 	keeper2 "github.com/cosmos/cosmos-sdk/contrib/x/nft/keeper"
 	simulation2 "github.com/cosmos/cosmos-sdk/contrib/x/nft/simulation"
 	"github.com/cosmos/cosmos-sdk/testutil/simsx"
@@ -43,14 +43,14 @@ type AppModuleBasic struct {
 
 // Name returns the nft module's name.
 func (AppModuleBasic) Name() string {
-	return nft2.ModuleName
+	return nft.ModuleName
 }
 
 // RegisterServices registers a gRPC query service to respond to the
 // module-specific gRPC queries.
 func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
-	nft2.RegisterMsgServer(registrar, am.keeper)
-	nft2.RegisterQueryServer(registrar, am.keeper)
+	nft.RegisterMsgServer(registrar, am.keeper)
+	nft.RegisterQueryServer(registrar, am.keeper)
 	return nil
 }
 
@@ -59,28 +59,28 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
 
 // RegisterInterfaces registers the nft module's interface types
 func (AppModuleBasic) RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
-	nft2.RegisterInterfaces(registry)
+	nft.RegisterInterfaces(registry)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the nft
 // module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(nft2.DefaultGenesisState())
+	return cdc.MustMarshalJSON(nft.DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the nft module.
 func (ab AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config sdkclient.TxEncodingConfig, bz json.RawMessage) error {
-	var data nft2.GenesisState
+	var data nft.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		return errors.Wrapf(err, "failed to unmarshal %s genesis state", nft2.ModuleName)
+		return errors.Wrapf(err, "failed to unmarshal %s genesis state", nft.ModuleName)
 	}
 
-	return nft2.ValidateGenesis(data, ab.ac)
+	return nft.ValidateGenesis(data, ab.ac)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the nft module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux *gwruntime.ServeMux) {
-	if err := nft2.RegisterQueryHandlerClient(context.Background(), mux, nft2.NewQueryClient(clientCtx)); err != nil {
+	if err := nft.RegisterQueryHandlerClient(context.Background(), mux, nft.NewQueryClient(clientCtx)); err != nil {
 		panic(err)
 	}
 }
@@ -90,13 +90,13 @@ type AppModule struct {
 	AppModuleBasic
 	keeper keeper2.Keeper
 	// TODO accountKeeper,bankKeeper will be replaced by query service
-	accountKeeper nft2.AccountKeeper
-	bankKeeper    nft2.BankKeeper
+	accountKeeper nft.AccountKeeper
+	bankKeeper    nft.BankKeeper
 	registry      cdctypes.InterfaceRegistry
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper2.Keeper, ak nft2.AccountKeeper, bk nft2.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper2.Keeper, ak nft.AccountKeeper, bk nft.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak.AddressCodec()},
 		keeper:         keeper,
@@ -115,7 +115,7 @@ func (am AppModule) IsAppModule() {}
 // InitGenesis performs genesis initialization for the nft module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) {
-	var genesisState nft2.GenesisState
+	var genesisState nft.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
 	am.keeper.InitGenesis(ctx, &genesisState)
 }
@@ -176,8 +176,8 @@ type NftInputs struct {
 	Cdc          codec.Codec
 	Registry     cdctypes.InterfaceRegistry
 
-	AccountKeeper nft2.AccountKeeper
-	BankKeeper    nft2.BankKeeper
+	AccountKeeper nft.AccountKeeper
+	BankKeeper    nft.BankKeeper
 }
 
 type NftOutputs struct {

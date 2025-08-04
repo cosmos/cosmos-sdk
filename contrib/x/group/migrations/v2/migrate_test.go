@@ -9,7 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
-	group2 "github.com/cosmos/cosmos-sdk/contrib/x/group"
+	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
 	orm2 "github.com/cosmos/cosmos-sdk/contrib/x/group/internal/orm"
 	groupkeeper "github.com/cosmos/cosmos-sdk/contrib/x/group/keeper"
 	"github.com/cosmos/cosmos-sdk/contrib/x/group/migrations/v2"
@@ -54,7 +54,7 @@ func TestMigrate(t *testing.T) {
 }
 
 func createGroupPolicies(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Codec, policies []sdk.AccAddress) (orm2.PrimaryKeyTable, orm2.Sequence, error) {
-	groupPolicyTable, err := orm2.NewPrimaryKeyTable([2]byte{groupkeeper.GroupPolicyTablePrefix}, &group2.GroupPolicyInfo{}, cdc)
+	groupPolicyTable, err := orm2.NewPrimaryKeyTable([2]byte{groupkeeper.GroupPolicyTablePrefix}, &group.GroupPolicyInfo{}, cdc)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -62,7 +62,7 @@ func createGroupPolicies(ctx sdk.Context, storeKey storetypes.StoreKey, cdc code
 	groupPolicySeq := orm2.NewSequence(v2.GroupPolicyTableSeqPrefix)
 
 	for _, policyAddr := range policies {
-		groupPolicyInfo, err := group2.NewGroupPolicyInfo(policyAddr, 1, authorityAddr, "", 1, group2.NewPercentageDecisionPolicy("1", 1, 1), ctx.BlockTime())
+		groupPolicyInfo, err := group.NewGroupPolicyInfo(policyAddr, 1, authorityAddr, "", 1, group.NewPercentageDecisionPolicy("1", 1, 1), ctx.BlockTime())
 		if err != nil {
 			return orm2.PrimaryKeyTable{}, orm2.Sequence{}, err
 		}
@@ -78,7 +78,7 @@ func createGroupPolicies(ctx sdk.Context, storeKey storetypes.StoreKey, cdc code
 }
 
 // createOldPolicyAccount re-creates the group policy account using a module account
-func createOldPolicyAccount(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Codec, policies []sdk.AccAddress) ([]*authtypes.ModuleAccount, group2.AccountKeeper) {
+func createOldPolicyAccount(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Codec, policies []sdk.AccAddress) ([]*authtypes.ModuleAccount, group.AccountKeeper) {
 	accountKeeper := authkeeper.NewAccountKeeper(cdc, runtime.NewKVStoreService(storeKey.(*storetypes.KVStoreKey)), authtypes.ProtoBaseAccount, nil, addresscodec.NewBech32Codec(sdk.Bech32MainPrefix), sdk.Bech32MainPrefix, authorityAddr.String())
 
 	oldPolicyAccounts := make([]*authtypes.ModuleAccount, len(policies))

@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	group2 "github.com/cosmos/cosmos-sdk/contrib/x/group"
+	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
 	groupkeeper "github.com/cosmos/cosmos-sdk/contrib/x/group/keeper"
 	"github.com/cosmos/cosmos-sdk/contrib/x/group/module"
 	grouptestutil "github.com/cosmos/cosmos-sdk/contrib/x/group/testutil"
@@ -29,9 +29,9 @@ import (
 type fixture struct {
 	ctx          types.Context
 	keeper       groupkeeper.Keeper
-	queryClient  group2.QueryClient
+	queryClient  group.QueryClient
 	addrs        []types.AccAddress
-	defaultGroup *group2.MsgCreateGroupWithPolicyResponse
+	defaultGroup *group.MsgCreateGroupWithPolicyResponse
 }
 
 func initKeeper(t *testing.T) *fixture {
@@ -41,7 +41,7 @@ func initKeeper(t *testing.T) *fixture {
 		interfaceRegistry codectypes.InterfaceRegistry
 	)
 
-	key := storetypes.NewKVStoreKey(group2.StoreKey)
+	key := storetypes.NewKVStoreKey(group.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
 
@@ -67,19 +67,19 @@ func initKeeper(t *testing.T) *fixture {
 	accountKeeper.EXPECT().NewAccount(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	accountKeeper.EXPECT().SetAccount(gomock.Any(), gomock.Any()).AnyTimes()
 
-	groupKeeper = groupkeeper.NewKeeper(key, encCfg.Codec, bApp.MsgServiceRouter(), accountKeeper, group2.DefaultConfig())
+	groupKeeper = groupkeeper.NewKeeper(key, encCfg.Codec, bApp.MsgServiceRouter(), accountKeeper, group.DefaultConfig())
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, interfaceRegistry)
-	group2.RegisterQueryServer(queryHelper, groupKeeper)
-	queryClient := group2.NewQueryClient(queryHelper)
+	group.RegisterQueryServer(queryHelper, groupKeeper)
+	queryClient := group.NewQueryClient(queryHelper)
 
-	msgGroupAndPolicy := &group2.MsgCreateGroupWithPolicy{
+	msgGroupAndPolicy := &group.MsgCreateGroupWithPolicy{
 		Admin: addrs[0].String(),
-		Members: []group2.MemberRequest{
+		Members: []group.MemberRequest{
 			{Address: addrs[1].String(), Weight: "1"},
 			{Address: addrs[3].String(), Weight: "2"},
 		},
 	}
-	err := msgGroupAndPolicy.SetDecisionPolicy(group2.NewThresholdDecisionPolicy("2", time.Second, 20))
+	err := msgGroupAndPolicy.SetDecisionPolicy(group.NewThresholdDecisionPolicy("2", time.Second, 20))
 	require.NoError(t, err)
 
 	resp, err := groupKeeper.CreateGroupWithPolicy(ctx, msgGroupAndPolicy)
@@ -99,7 +99,7 @@ func TestQueryGroupInfo(t *testing.T) {
 
 	testCases := []struct {
 		name      string
-		req       group2.QueryGroupInfoRequest
+		req       group.QueryGroupInfoRequest
 		expErrMsg string
 	}{
 		{
@@ -108,12 +108,12 @@ func TestQueryGroupInfo(t *testing.T) {
 		},
 		{
 			name:      "unknown id",
-			req:       group2.QueryGroupInfoRequest{GroupId: 20},
+			req:       group.QueryGroupInfoRequest{GroupId: 20},
 			expErrMsg: "group: not found",
 		},
 		{
 			name:      "valid id",
-			req:       group2.QueryGroupInfoRequest{GroupId: 1},
+			req:       group.QueryGroupInfoRequest{GroupId: 1},
 			expErrMsg: "",
 		},
 	}
@@ -136,22 +136,22 @@ func TestQueryGroupPolicyInfo(t *testing.T) {
 
 	testCases := []struct {
 		name      string
-		req       group2.QueryGroupPolicyInfoRequest
+		req       group.QueryGroupPolicyInfoRequest
 		expErrMsg string
 	}{
 		{
 			name:      "valid address",
-			req:       group2.QueryGroupPolicyInfoRequest{Address: fixture.defaultGroup.GroupPolicyAddress},
+			req:       group.QueryGroupPolicyInfoRequest{Address: fixture.defaultGroup.GroupPolicyAddress},
 			expErrMsg: "",
 		},
 		{
 			name:      "unexisting address",
-			req:       group2.QueryGroupPolicyInfoRequest{Address: fixture.addrs[5].String()},
+			req:       group.QueryGroupPolicyInfoRequest{Address: fixture.addrs[5].String()},
 			expErrMsg: "group policy: not found",
 		},
 		{
 			name:      "invalid address",
-			req:       group2.QueryGroupPolicyInfoRequest{Address: "invalid address"},
+			req:       group.QueryGroupPolicyInfoRequest{Address: "invalid address"},
 			expErrMsg: "decoding bech32 failed",
 		},
 	}
@@ -174,22 +174,22 @@ func TestQueryGroupMembers(t *testing.T) {
 
 	testCases := []struct {
 		name      string
-		req       group2.QueryGroupMembersRequest
-		postRun   func(resp *group2.QueryGroupMembersResponse)
+		req       group.QueryGroupMembersRequest
+		postRun   func(resp *group.QueryGroupMembersResponse)
 		expErrMsg string
 	}{
 		{
 			name: "valid group",
-			req:  group2.QueryGroupMembersRequest{GroupId: 1},
-			postRun: func(resp *group2.QueryGroupMembersResponse) {
+			req:  group.QueryGroupMembersRequest{GroupId: 1},
+			postRun: func(resp *group.QueryGroupMembersResponse) {
 				require.Len(t, resp.Members, 2)
 			},
 			expErrMsg: "",
 		},
 		{
 			name: "unexisting group",
-			req:  group2.QueryGroupMembersRequest{GroupId: 20},
-			postRun: func(resp *group2.QueryGroupMembersResponse) {
+			req:  group.QueryGroupMembersRequest{GroupId: 20},
+			postRun: func(resp *group.QueryGroupMembersResponse) {
 				require.Len(t, resp.Members, 0)
 			},
 			expErrMsg: "",
@@ -218,25 +218,25 @@ func TestQueryGroupsByAdmin(t *testing.T) {
 
 	testCases := []struct {
 		name      string
-		req       group2.QueryGroupsByAdminRequest
-		postRun   func(resp *group2.QueryGroupsByAdminResponse)
+		req       group.QueryGroupsByAdminRequest
+		postRun   func(resp *group.QueryGroupsByAdminResponse)
 		expErrMsg string
 	}{
 		{
 			name:      "valid admin",
-			req:       group2.QueryGroupsByAdminRequest{Admin: fixture.addrs[0].String()},
-			postRun:   func(resp *group2.QueryGroupsByAdminResponse) { require.Len(t, resp.Groups, 1) },
+			req:       group.QueryGroupsByAdminRequest{Admin: fixture.addrs[0].String()},
+			postRun:   func(resp *group.QueryGroupsByAdminResponse) { require.Len(t, resp.Groups, 1) },
 			expErrMsg: "",
 		},
 		{
 			name:      "unexisting address",
-			req:       group2.QueryGroupsByAdminRequest{Admin: fixture.addrs[5].String()},
-			postRun:   func(resp *group2.QueryGroupsByAdminResponse) { require.Len(t, resp.Groups, 0) },
+			req:       group.QueryGroupsByAdminRequest{Admin: fixture.addrs[5].String()},
+			postRun:   func(resp *group.QueryGroupsByAdminResponse) { require.Len(t, resp.Groups, 0) },
 			expErrMsg: "",
 		},
 		{
 			name:      "invalid address",
-			req:       group2.QueryGroupsByAdminRequest{Admin: "invalid address"},
+			req:       group.QueryGroupsByAdminRequest{Admin: "invalid address"},
 			expErrMsg: "decoding bech32 failed",
 		},
 	}
@@ -263,20 +263,20 @@ func TestQueryGroupPoliciesByGroup(t *testing.T) {
 
 	testCases := []struct {
 		name      string
-		req       group2.QueryGroupPoliciesByGroupRequest
-		postRun   func(resp *group2.QueryGroupPoliciesByGroupResponse)
+		req       group.QueryGroupPoliciesByGroupRequest
+		postRun   func(resp *group.QueryGroupPoliciesByGroupResponse)
 		expErrMsg string
 	}{
 		{
 			name:      "valid group",
-			req:       group2.QueryGroupPoliciesByGroupRequest{GroupId: 1},
-			postRun:   func(resp *group2.QueryGroupPoliciesByGroupResponse) { require.Len(t, resp.GroupPolicies, 1) },
+			req:       group.QueryGroupPoliciesByGroupRequest{GroupId: 1},
+			postRun:   func(resp *group.QueryGroupPoliciesByGroupResponse) { require.Len(t, resp.GroupPolicies, 1) },
 			expErrMsg: "",
 		},
 		{
 			name:      "unexisting group",
-			req:       group2.QueryGroupPoliciesByGroupRequest{GroupId: 20},
-			postRun:   func(resp *group2.QueryGroupPoliciesByGroupResponse) { require.Len(t, resp.GroupPolicies, 0) },
+			req:       group.QueryGroupPoliciesByGroupRequest{GroupId: 20},
+			postRun:   func(resp *group.QueryGroupPoliciesByGroupResponse) { require.Len(t, resp.GroupPolicies, 0) },
 			expErrMsg: "",
 		},
 	}
@@ -303,25 +303,25 @@ func TestQueryGroupPoliciesByAdmin(t *testing.T) {
 
 	testCases := []struct {
 		name      string
-		req       group2.QueryGroupPoliciesByAdminRequest
-		postRun   func(resp *group2.QueryGroupPoliciesByAdminResponse)
+		req       group.QueryGroupPoliciesByAdminRequest
+		postRun   func(resp *group.QueryGroupPoliciesByAdminResponse)
 		expErrMsg string
 	}{
 		{
 			name:      "valid admin",
-			req:       group2.QueryGroupPoliciesByAdminRequest{Admin: fixture.addrs[0].String()},
-			postRun:   func(resp *group2.QueryGroupPoliciesByAdminResponse) { require.Len(t, resp.GroupPolicies, 1) },
+			req:       group.QueryGroupPoliciesByAdminRequest{Admin: fixture.addrs[0].String()},
+			postRun:   func(resp *group.QueryGroupPoliciesByAdminResponse) { require.Len(t, resp.GroupPolicies, 1) },
 			expErrMsg: "",
 		},
 		{
 			name:      "unexisting address",
-			req:       group2.QueryGroupPoliciesByAdminRequest{Admin: fixture.addrs[5].String()},
-			postRun:   func(resp *group2.QueryGroupPoliciesByAdminResponse) { require.Len(t, resp.GroupPolicies, 0) },
+			req:       group.QueryGroupPoliciesByAdminRequest{Admin: fixture.addrs[5].String()},
+			postRun:   func(resp *group.QueryGroupPoliciesByAdminResponse) { require.Len(t, resp.GroupPolicies, 0) },
 			expErrMsg: "",
 		},
 		{
 			name:      "invalid address",
-			req:       group2.QueryGroupPoliciesByAdminRequest{Admin: "invalid address"},
+			req:       group.QueryGroupPoliciesByAdminRequest{Admin: "invalid address"},
 			expErrMsg: "decoding bech32 failed",
 		},
 	}
@@ -346,31 +346,31 @@ func TestQueryGroupPoliciesByAdmin(t *testing.T) {
 func TestQueryGroupsByMember(t *testing.T) {
 	fixture := initKeeper(t)
 
-	members := []group2.MemberRequest{
+	members := []group.MemberRequest{
 		{Address: fixture.addrs[3].String(), Weight: "1"}, {Address: fixture.addrs[4].String(), Weight: "2"},
 	}
-	_, err := fixture.keeper.CreateGroup(fixture.ctx, &group2.MsgCreateGroup{
+	_, err := fixture.keeper.CreateGroup(fixture.ctx, &group.MsgCreateGroup{
 		Admin:   fixture.addrs[1].String(),
 		Members: members,
 	})
 	require.NoError(t, err)
 
 	// not part of any group
-	resp, err := fixture.queryClient.GroupsByMember(context.Background(), &group2.QueryGroupsByMemberRequest{
+	resp, err := fixture.queryClient.GroupsByMember(context.Background(), &group.QueryGroupsByMemberRequest{
 		Address: fixture.addrs[5].String(),
 	})
 	require.NoError(t, err)
 	require.Len(t, resp.Groups, 0)
 
 	// expect one group
-	resp, err = fixture.queryClient.GroupsByMember(context.Background(), &group2.QueryGroupsByMemberRequest{
+	resp, err = fixture.queryClient.GroupsByMember(context.Background(), &group.QueryGroupsByMemberRequest{
 		Address: fixture.addrs[4].String(),
 	})
 	require.NoError(t, err)
 	require.Len(t, resp.Groups, 1)
 
 	// expect two groups
-	resp, err = fixture.queryClient.GroupsByMember(context.Background(), &group2.QueryGroupsByMemberRequest{
+	resp, err = fixture.queryClient.GroupsByMember(context.Background(), &group.QueryGroupsByMemberRequest{
 		Address: fixture.addrs[3].String(),
 	})
 	require.NoError(t, err)
@@ -380,10 +380,10 @@ func TestQueryGroupsByMember(t *testing.T) {
 func TestQueryGroups(t *testing.T) {
 	fixture := initKeeper(t)
 
-	members := []group2.MemberRequest{
+	members := []group.MemberRequest{
 		{Address: fixture.addrs[3].String(), Weight: "1"},
 	}
-	_, err := fixture.keeper.CreateGroup(fixture.ctx, &group2.MsgCreateGroup{
+	_, err := fixture.keeper.CreateGroup(fixture.ctx, &group.MsgCreateGroup{
 		Admin:   fixture.addrs[2].String(),
 		Members: members,
 	})
@@ -416,7 +416,7 @@ func TestQueryGroups(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			resp, err := fixture.queryClient.Groups(context.Background(), &group2.QueryGroupsRequest{
+			resp, err := fixture.queryClient.Groups(context.Background(), &group.QueryGroupsRequest{
 				Pagination: &query.PageRequest{
 					Limit: tc.itemsPerPage,
 				},

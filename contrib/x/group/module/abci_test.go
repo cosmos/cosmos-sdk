@@ -16,7 +16,7 @@ import (
 
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	group2 "github.com/cosmos/cosmos-sdk/contrib/x/group"
+	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
 	"github.com/cosmos/cosmos-sdk/contrib/x/group/keeper"
 	"github.com/cosmos/cosmos-sdk/contrib/x/group/module"
 	grouptestutil "github.com/cosmos/cosmos-sdk/contrib/x/group/testutil"
@@ -79,17 +79,17 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 	s.Require().NoError(err)
 
 	// Initial group, group policy and balance setup
-	members := []group2.MemberRequest{
+	members := []group.MemberRequest{
 		{Address: addr1st, Weight: "1"}, {Address: addr2.String(), Weight: "2"},
 	}
 
-	groupRes, err := s.groupKeeper.CreateGroup(ctx, &group2.MsgCreateGroup{
+	groupRes, err := s.groupKeeper.CreateGroup(ctx, &group.MsgCreateGroup{
 		Admin:   addr1st,
 		Members: members,
 	})
 	s.Require().NoError(err)
 
-	groupRes2, err := s.groupKeeper.CreateGroup(ctx, &group2.MsgCreateGroup{
+	groupRes2, err := s.groupKeeper.CreateGroup(ctx, &group.MsgCreateGroup{
 		Admin:   addr2.String(),
 		Members: members,
 	})
@@ -98,13 +98,13 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 	groupID := groupRes.GroupId
 	groupID2 := groupRes2.GroupId
 
-	policy := group2.NewThresholdDecisionPolicy(
+	policy := group.NewThresholdDecisionPolicy(
 		"2",
 		time.Second,
 		0,
 	)
 
-	policyReq := &group2.MsgCreateGroupPolicy{
+	policyReq := &group.MsgCreateGroupPolicy{
 		Admin:   addr1.String(),
 		GroupId: groupID,
 	}
@@ -114,13 +114,13 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 	policyRes, err := s.groupKeeper.CreateGroupPolicy(ctx, policyReq)
 	s.Require().NoError(err)
 
-	policy2 := group2.NewThresholdDecisionPolicy(
+	policy2 := group.NewThresholdDecisionPolicy(
 		"1",
 		time.Second,
 		0,
 	)
 
-	policyReq2 := &group2.MsgCreateGroupPolicy{
+	policyReq2 := &group.MsgCreateGroupPolicy{
 		Admin:   addr2.String(),
 		GroupId: groupID2,
 	}
@@ -157,15 +157,15 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 		expErr            bool
 		expErrMsg         string
 		newCtx            sdk.Context
-		expExecutorResult group2.ProposalExecutorResult
-		expStatus         group2.ProposalStatus
+		expExecutorResult group.ProposalExecutorResult
+		expStatus         group.ProposalStatus
 	}{
 		"proposal pruned after executor result success": {
 			setupProposal: func(ctx sdk.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1}
-				pID, err := submitProposalAndVote(s, ctx, msgs, proposers, groupPolicyAddr, group2.VOTE_OPTION_YES)
+				pID, err := submitProposalAndVote(s, ctx, msgs, proposers, groupPolicyAddr, group.VOTE_OPTION_YES)
 				s.Require().NoError(err)
-				_, err = s.groupKeeper.Exec(ctx, &group2.MsgExec{Executor: addr3.String(), ProposalId: pID})
+				_, err = s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr3.String(), ProposalId: pID})
 				s.Require().NoError(err)
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
 				s.Require().NoError(testutil.FundAccount(sdkCtx, s.bankKeeper, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
@@ -174,14 +174,14 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 			},
 			expErrMsg:         "load proposal: not found",
 			newCtx:            ctx,
-			expExecutorResult: group2.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 		},
 		"proposal with multiple messages pruned when executed with result success": {
 			setupProposal: func(ctx sdk.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1, msgSend1}
-				pID, err := submitProposalAndVote(s, ctx, msgs, proposers, groupPolicyAddr, group2.VOTE_OPTION_YES)
+				pID, err := submitProposalAndVote(s, ctx, msgs, proposers, groupPolicyAddr, group.VOTE_OPTION_YES)
 				s.Require().NoError(err)
-				_, err = s.groupKeeper.Exec(ctx, &group2.MsgExec{Executor: addr3.String(), ProposalId: pID})
+				_, err = s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr3.String(), ProposalId: pID})
 				s.Require().NoError(err)
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
 				s.Require().NoError(testutil.FundAccount(sdkCtx, s.bankKeeper, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
@@ -190,14 +190,14 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 			},
 			expErrMsg:         "load proposal: not found",
 			newCtx:            ctx,
-			expExecutorResult: group2.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 		},
 		"proposal not pruned when not executed and rejected": {
 			setupProposal: func(ctx sdk.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1}
-				pID, err := submitProposalAndVote(s, ctx, msgs, proposers, groupPolicyAddr, group2.VOTE_OPTION_NO)
+				pID, err := submitProposalAndVote(s, ctx, msgs, proposers, groupPolicyAddr, group.VOTE_OPTION_NO)
 				s.Require().NoError(err)
-				_, err = s.groupKeeper.Exec(ctx, &group2.MsgExec{Executor: addr3.String(), ProposalId: pID})
+				_, err = s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr3.String(), ProposalId: pID})
 				s.Require().NoError(err)
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
 				s.Require().NoError(testutil.FundAccount(sdkCtx, s.bankKeeper, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
@@ -205,14 +205,14 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 				return pID
 			},
 			newCtx:            ctx,
-			expExecutorResult: group2.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
-			expStatus:         group2.PROPOSAL_STATUS_REJECTED,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+			expStatus:         group.PROPOSAL_STATUS_REJECTED,
 		},
 		"open proposal is not pruned which must not fail ": {
 			setupProposal: func(ctx sdk.Context) uint64 {
 				pID, err := submitProposal(s, ctx, []sdk.Msg{msgSend1}, proposers, groupPolicyAddr)
 				s.Require().NoError(err)
-				_, err = s.groupKeeper.Exec(ctx, &group2.MsgExec{Executor: addr3.String(), ProposalId: pID})
+				_, err = s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr3.String(), ProposalId: pID})
 				s.Require().NoError(err)
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
 				s.Require().NoError(testutil.FundAccount(sdkCtx, s.bankKeeper, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
@@ -220,19 +220,19 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 				return pID
 			},
 			newCtx:            ctx,
-			expExecutorResult: group2.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
-			expStatus:         group2.PROPOSAL_STATUS_SUBMITTED,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+			expStatus:         group.PROPOSAL_STATUS_SUBMITTED,
 		},
 		"proposal not pruned with group policy modified before tally": {
 			setupProposal: func(ctx sdk.Context) uint64 {
 				pID, err := submitProposal(s, ctx, []sdk.Msg{msgSend1}, proposers, groupPolicyAddr)
 				s.Require().NoError(err)
-				_, err = s.groupKeeper.UpdateGroupPolicyMetadata(ctx, &group2.MsgUpdateGroupPolicyMetadata{
+				_, err = s.groupKeeper.UpdateGroupPolicyMetadata(ctx, &group.MsgUpdateGroupPolicyMetadata{
 					Admin:              addr1.String(),
 					GroupPolicyAddress: policyRes.Address,
 				})
 				s.Require().NoError(err)
-				_, err = s.groupKeeper.Exec(ctx, &group2.MsgExec{Executor: addr3.String(), ProposalId: pID})
+				_, err = s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: addr3.String(), ProposalId: pID})
 				s.Require().Error(err) // since proposal with status Aborted cannot be executed
 				sdkCtx := sdk.UnwrapSDKContext(ctx)
 				s.Require().NoError(testutil.FundAccount(sdkCtx, s.bankKeeper, groupPolicyAddr, sdk.Coins{sdk.NewInt64Coin("test", 10002)}))
@@ -240,27 +240,27 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 				return pID
 			},
 			newCtx:            ctx,
-			expExecutorResult: group2.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
-			expStatus:         group2.PROPOSAL_STATUS_ABORTED,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+			expStatus:         group.PROPOSAL_STATUS_ABORTED,
 		},
 		"pruned when proposal is executable when failed before": {
 			setupProposal: func(ctx sdk.Context) uint64 {
 				msgs := []sdk.Msg{msgSend1}
-				pID, err := submitProposalAndVote(s, ctx, msgs, proposers, groupPolicyAddr, group2.VOTE_OPTION_YES)
+				pID, err := submitProposalAndVote(s, ctx, msgs, proposers, groupPolicyAddr, group.VOTE_OPTION_YES)
 				s.Require().NoError(err)
-				_, err = s.groupKeeper.Exec(ctx, &group2.MsgExec{Executor: s.addrs[2].String(), ProposalId: pID})
+				_, err = s.groupKeeper.Exec(ctx, &group.MsgExec{Executor: s.addrs[2].String(), ProposalId: pID})
 				s.Require().NoError(err)
 				return pID
 			},
 			newCtx:            ctx,
 			expErrMsg:         "load proposal: not found",
-			expExecutorResult: group2.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_SUCCESS,
 		},
 		"proposal with status withdrawn is pruned after voting period end": {
 			setupProposal: func(sdkCtx sdk.Context) uint64 {
 				pID, err := submitProposal(s, sdkCtx, []sdk.Msg{msgSend1}, proposers, groupPolicyAddr)
 				s.Require().NoError(err)
-				_, err = s.groupKeeper.WithdrawProposal(ctx, &group2.MsgWithdrawProposal{
+				_, err = s.groupKeeper.WithdrawProposal(ctx, &group.MsgWithdrawProposal{
 					ProposalId: pID,
 					Address:    proposers[0],
 				})
@@ -269,13 +269,13 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 			},
 			newCtx:    ctx.WithBlockTime(ctx.BlockTime().Add(votingPeriod).Add(time.Hour)),
 			expErrMsg: "load proposal: not found",
-			expStatus: group2.PROPOSAL_STATUS_WITHDRAWN,
+			expStatus: group.PROPOSAL_STATUS_WITHDRAWN,
 		},
 		"proposal with status withdrawn is not pruned (before voting period)": {
 			setupProposal: func(sdkCtx sdk.Context) uint64 {
 				pID, err := submitProposal(s, sdkCtx, []sdk.Msg{msgSend1}, proposers, groupPolicyAddr)
 				s.Require().NoError(err)
-				_, err = s.groupKeeper.WithdrawProposal(ctx, &group2.MsgWithdrawProposal{
+				_, err = s.groupKeeper.WithdrawProposal(ctx, &group.MsgWithdrawProposal{
 					ProposalId: pID,
 					Address:    proposers[0],
 				})
@@ -284,16 +284,16 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 			},
 			newCtx:            ctx,
 			expErrMsg:         "",
-			expExecutorResult: group2.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
-			expStatus:         group2.PROPOSAL_STATUS_WITHDRAWN,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+			expStatus:         group.PROPOSAL_STATUS_WITHDRAWN,
 		},
 		"proposal with status aborted is pruned after voting period end (due to updated group policy decision policy)": {
 			setupProposal: func(sdkCtx sdk.Context) uint64 {
 				pID, err := submitProposal(s, sdkCtx, []sdk.Msg{msgSend2}, proposers, groupPolicyAddr2)
 				s.Require().NoError(err)
 
-				policy := group2.NewThresholdDecisionPolicy("3", time.Second, 0)
-				msg := &group2.MsgUpdateGroupPolicyDecisionPolicy{
+				policy := group.NewThresholdDecisionPolicy("3", time.Second, 0)
+				msg := &group.MsgUpdateGroupPolicyDecisionPolicy{
 					Admin:              s.addrs[1].String(),
 					GroupPolicyAddress: policyRes2.Address,
 				}
@@ -306,16 +306,16 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 			},
 			newCtx:            ctx.WithBlockTime(ctx.BlockTime().Add(votingPeriod).Add(time.Hour)),
 			expErrMsg:         "load proposal: not found",
-			expStatus:         group2.PROPOSAL_STATUS_ABORTED,
-			expExecutorResult: group2.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+			expStatus:         group.PROPOSAL_STATUS_ABORTED,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		},
 		"proposal with status aborted is not pruned before voting period end (due to updated group policy)": {
 			setupProposal: func(sdkCtx sdk.Context) uint64 {
 				pID, err := submitProposal(s, sdkCtx, []sdk.Msg{msgSend2}, proposers, groupPolicyAddr2)
 				s.Require().NoError(err)
 
-				policy := group2.NewThresholdDecisionPolicy("3", time.Second, 0)
-				msg := &group2.MsgUpdateGroupPolicyDecisionPolicy{
+				policy := group.NewThresholdDecisionPolicy("3", time.Second, 0)
+				msg := &group.MsgUpdateGroupPolicyDecisionPolicy{
 					Admin:              s.addrs[1].String(),
 					GroupPolicyAddress: policyRes2.Address,
 				}
@@ -328,8 +328,8 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 			},
 			newCtx:            ctx,
 			expErrMsg:         "",
-			expStatus:         group2.PROPOSAL_STATUS_ABORTED,
-			expExecutorResult: group2.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
+			expStatus:         group.PROPOSAL_STATUS_ABORTED,
+			expExecutorResult: group.PROPOSAL_EXECUTOR_RESULT_NOT_RUN,
 		},
 	}
 	for msg, spec := range specs {
@@ -338,29 +338,29 @@ func (s *IntegrationTestSuite) TestEndBlockerPruning() {
 
 			s.Require().NoError(module.EndBlocker(spec.newCtx, s.groupKeeper))
 
-			if spec.expErrMsg != "" && spec.expExecutorResult != group2.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
-				_, err = s.groupKeeper.Proposal(spec.newCtx, &group2.QueryProposalRequest{ProposalId: proposalID})
+			if spec.expErrMsg != "" && spec.expExecutorResult != group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
+				_, err = s.groupKeeper.Proposal(spec.newCtx, &group.QueryProposalRequest{ProposalId: proposalID})
 				s.Require().Error(err)
 				s.Require().Contains(err.Error(), spec.expErrMsg)
 				return
 			}
-			if spec.expExecutorResult == group2.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
+			if spec.expExecutorResult == group.PROPOSAL_EXECUTOR_RESULT_SUCCESS {
 				// Make sure proposal is deleted from state
-				_, err = s.groupKeeper.Proposal(spec.newCtx, &group2.QueryProposalRequest{ProposalId: proposalID})
+				_, err = s.groupKeeper.Proposal(spec.newCtx, &group.QueryProposalRequest{ProposalId: proposalID})
 				s.Require().Contains(err.Error(), spec.expErrMsg)
-				res, err := s.groupKeeper.VotesByProposal(ctx, &group2.QueryVotesByProposalRequest{ProposalId: proposalID})
+				res, err := s.groupKeeper.VotesByProposal(ctx, &group.QueryVotesByProposalRequest{ProposalId: proposalID})
 				s.Require().NoError(err)
 				s.Require().Empty(res.GetVotes())
 			} else {
 				// Check that proposal and votes exists
-				res, err := s.groupKeeper.Proposal(spec.newCtx, &group2.QueryProposalRequest{ProposalId: proposalID})
+				res, err := s.groupKeeper.Proposal(spec.newCtx, &group.QueryProposalRequest{ProposalId: proposalID})
 				s.Require().NoError(err)
-				_, err = s.groupKeeper.VotesByProposal(ctx, &group2.QueryVotesByProposalRequest{ProposalId: res.Proposal.Id})
+				_, err = s.groupKeeper.VotesByProposal(ctx, &group.QueryVotesByProposalRequest{ProposalId: res.Proposal.Id})
 				s.Require().NoError(err)
 				s.Require().Equal("", spec.expErrMsg)
 
-				exp := group2.ProposalExecutorResult_name[int32(spec.expExecutorResult)]
-				got := group2.ProposalExecutorResult_name[int32(res.Proposal.ExecutorResult)]
+				exp := group.ProposalExecutorResult_name[int32(spec.expExecutorResult)]
+				got := group.ProposalExecutorResult_name[int32(res.Proposal.ExecutorResult)]
 				s.Assert().Equal(exp, got)
 
 				s.Require().Equal(res.GetProposal().Status, spec.expStatus)
@@ -375,11 +375,11 @@ func (s *IntegrationTestSuite) TestEndBlockerTallying() {
 	addrs := s.addrs
 
 	// Initial group, group policy and balance setup
-	members := []group2.MemberRequest{
+	members := []group.MemberRequest{
 		{Address: addrs[1].String(), Weight: "1"}, {Address: addrs[2].String(), Weight: "2"},
 	}
 
-	groupRes, err := s.groupKeeper.CreateGroup(ctx, &group2.MsgCreateGroup{
+	groupRes, err := s.groupKeeper.CreateGroup(ctx, &group.MsgCreateGroup{
 		Admin:   addrs[0].String(),
 		Members: members,
 	})
@@ -387,13 +387,13 @@ func (s *IntegrationTestSuite) TestEndBlockerTallying() {
 
 	groupID := groupRes.GroupId
 
-	policy := group2.NewThresholdDecisionPolicy(
+	policy := group.NewThresholdDecisionPolicy(
 		"2",
 		time.Second,
 		0,
 	)
 
-	policyReq := &group2.MsgCreateGroupPolicy{
+	policyReq := &group.MsgCreateGroupPolicy{
 		Admin:   addrs[0].String(),
 		GroupId: groupID,
 	}
@@ -421,8 +421,8 @@ func (s *IntegrationTestSuite) TestEndBlockerTallying() {
 		admin     string
 		expErrMsg string
 		newCtx    sdk.Context
-		tallyRes  group2.TallyResult
-		expStatus group2.ProposalStatus
+		tallyRes  group.TallyResult
+		expStatus group.ProposalStatus
 	}{
 		"tally updated after voting period end": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
@@ -432,8 +432,8 @@ func (s *IntegrationTestSuite) TestEndBlockerTallying() {
 			},
 			admin:     proposers[0],
 			newCtx:    ctx.WithBlockTime(ctx.BlockTime().Add(votingPeriod).Add(time.Hour)),
-			tallyRes:  group2.DefaultTallyResult(),
-			expStatus: group2.PROPOSAL_STATUS_REJECTED,
+			tallyRes:  group.DefaultTallyResult(),
+			expStatus: group.PROPOSAL_STATUS_REJECTED,
 		},
 		"tally within voting period": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
@@ -444,62 +444,62 @@ func (s *IntegrationTestSuite) TestEndBlockerTallying() {
 			},
 			admin:     proposers[0],
 			newCtx:    ctx,
-			tallyRes:  group2.DefaultTallyResult(),
-			expStatus: group2.PROPOSAL_STATUS_SUBMITTED,
+			tallyRes:  group.DefaultTallyResult(),
+			expStatus: group.PROPOSAL_STATUS_SUBMITTED,
 		},
 		"tally within voting period(with votes)": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
-				pID, err := submitProposalAndVote(s, ctx, []sdk.Msg{msgSend}, proposers, groupPolicyAddr, group2.VOTE_OPTION_YES)
+				pID, err := submitProposalAndVote(s, ctx, []sdk.Msg{msgSend}, proposers, groupPolicyAddr, group.VOTE_OPTION_YES)
 				s.Require().NoError(err)
 
 				return pID
 			},
 			admin:     proposers[0],
 			newCtx:    ctx,
-			tallyRes:  group2.DefaultTallyResult(),
-			expStatus: group2.PROPOSAL_STATUS_SUBMITTED,
+			tallyRes:  group.DefaultTallyResult(),
+			expStatus: group.PROPOSAL_STATUS_SUBMITTED,
 		},
 		"tally after voting period (not passing)": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				// `addrs[1]` has weight 1
-				pID, err := submitProposalAndVote(s, ctx, []sdk.Msg{msgSend}, []string{addrs[1].String()}, groupPolicyAddr, group2.VOTE_OPTION_YES)
+				pID, err := submitProposalAndVote(s, ctx, []sdk.Msg{msgSend}, []string{addrs[1].String()}, groupPolicyAddr, group.VOTE_OPTION_YES)
 				s.Require().NoError(err)
 
 				return pID
 			},
 			admin:  proposers[0],
 			newCtx: ctx.WithBlockTime(ctx.BlockTime().Add(votingPeriod).Add(time.Hour)),
-			tallyRes: group2.TallyResult{
+			tallyRes: group.TallyResult{
 				YesCount:        "1",
 				NoCount:         "0",
 				NoWithVetoCount: "0",
 				AbstainCount:    "0",
 			},
-			expStatus: group2.PROPOSAL_STATUS_REJECTED,
+			expStatus: group.PROPOSAL_STATUS_REJECTED,
 		},
 		"tally after voting period(with votes)": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
-				pID, err := submitProposalAndVote(s, ctx, []sdk.Msg{msgSend}, proposers, groupPolicyAddr, group2.VOTE_OPTION_YES)
+				pID, err := submitProposalAndVote(s, ctx, []sdk.Msg{msgSend}, proposers, groupPolicyAddr, group.VOTE_OPTION_YES)
 				s.Require().NoError(err)
 
 				return pID
 			},
 			admin:  proposers[0],
 			newCtx: ctx.WithBlockTime(ctx.BlockTime().Add(votingPeriod).Add(time.Hour)),
-			tallyRes: group2.TallyResult{
+			tallyRes: group.TallyResult{
 				YesCount:        "2",
 				NoCount:         "0",
 				NoWithVetoCount: "0",
 				AbstainCount:    "0",
 			},
-			expStatus: group2.PROPOSAL_STATUS_ACCEPTED,
+			expStatus: group.PROPOSAL_STATUS_ACCEPTED,
 		},
 		"tally of withdrawn proposal": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
 				pID, err := submitProposal(s, sdkCtx, []sdk.Msg{msgSend}, proposers, groupPolicyAddr)
 				s.Require().NoError(err)
 
-				_, err = s.groupKeeper.WithdrawProposal(ctx, &group2.MsgWithdrawProposal{
+				_, err = s.groupKeeper.WithdrawProposal(ctx, &group.MsgWithdrawProposal{
 					ProposalId: pID,
 					Address:    proposers[0],
 				})
@@ -509,15 +509,15 @@ func (s *IntegrationTestSuite) TestEndBlockerTallying() {
 			},
 			admin:     proposers[0],
 			newCtx:    ctx,
-			tallyRes:  group2.DefaultTallyResult(),
-			expStatus: group2.PROPOSAL_STATUS_WITHDRAWN,
+			tallyRes:  group.DefaultTallyResult(),
+			expStatus: group.PROPOSAL_STATUS_WITHDRAWN,
 		},
 		"tally of withdrawn proposal (with votes)": {
 			preRun: func(sdkCtx sdk.Context) uint64 {
-				pID, err := submitProposalAndVote(s, ctx, []sdk.Msg{msgSend}, proposers, groupPolicyAddr, group2.VOTE_OPTION_YES)
+				pID, err := submitProposalAndVote(s, ctx, []sdk.Msg{msgSend}, proposers, groupPolicyAddr, group.VOTE_OPTION_YES)
 				s.Require().NoError(err)
 
-				_, err = s.groupKeeper.WithdrawProposal(ctx, &group2.MsgWithdrawProposal{
+				_, err = s.groupKeeper.WithdrawProposal(ctx, &group.MsgWithdrawProposal{
 					ProposalId: pID,
 					Address:    proposers[0],
 				})
@@ -527,8 +527,8 @@ func (s *IntegrationTestSuite) TestEndBlockerTallying() {
 			},
 			admin:     proposers[0],
 			newCtx:    ctx,
-			tallyRes:  group2.DefaultTallyResult(),
-			expStatus: group2.PROPOSAL_STATUS_WITHDRAWN,
+			tallyRes:  group.DefaultTallyResult(),
+			expStatus: group.PROPOSAL_STATUS_WITHDRAWN,
 		},
 	}
 
@@ -537,7 +537,7 @@ func (s *IntegrationTestSuite) TestEndBlockerTallying() {
 			pID := spec.preRun(ctx)
 
 			s.Require().NoError(module.EndBlocker(spec.newCtx, s.groupKeeper))
-			resp, err := s.groupKeeper.Proposal(spec.newCtx, &group2.QueryProposalRequest{
+			resp, err := s.groupKeeper.Proposal(spec.newCtx, &group.QueryProposalRequest{
 				ProposalId: pID,
 			})
 
@@ -555,7 +555,7 @@ func (s *IntegrationTestSuite) TestEndBlockerTallying() {
 }
 
 func submitProposal(s *IntegrationTestSuite, ctx context.Context, msgs []sdk.Msg, proposers []string, groupPolicyAddr sdk.AccAddress) (uint64, error) {
-	proposalReq := &group2.MsgSubmitProposal{
+	proposalReq := &group.MsgSubmitProposal{
 		GroupPolicyAddress: groupPolicyAddr.String(),
 		Proposers:          proposers,
 	}
@@ -578,13 +578,13 @@ func submitProposalAndVote(
 	msgs []sdk.Msg,
 	proposers []string,
 	groupPolicyAddr sdk.AccAddress,
-	voteOption group2.VoteOption,
+	voteOption group.VoteOption,
 ) (uint64, error) {
 	myProposalID, err := submitProposal(s, ctx, msgs, proposers, groupPolicyAddr)
 	if err != nil {
 		return 0, err
 	}
-	_, err = s.groupKeeper.Vote(ctx, &group2.MsgVote{
+	_, err = s.groupKeeper.Vote(ctx, &group.MsgVote{
 		ProposalId: myProposalID,
 		Voter:      proposers[0],
 		Option:     voteOption,

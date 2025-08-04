@@ -29,7 +29,7 @@ jobs:
       - name: Setup Node.js 🔧
         uses: actions/setup-node@v4
         with:
-          node-version: "16.x"
+          node-version: "24.x"
 
       # npm install npm should be removed when https://github.com/npm/cli/issues/4942 is fixed
       - name: Build docs 🔧

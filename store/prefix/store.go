@@ -42,7 +42,7 @@ func (s Store) key(key []byte) (res []byte) {
 	return
 }
 
-// GetStoreType implements Store, returning the parent store's type'
+// GetStoreType implements Store, returning the parent store's type
 func (s Store) GetStoreType() types.StoreType {
 	return s.parent.GetStoreType()
 }
@@ -81,7 +81,7 @@ func (s Store) Delete(key []byte) {
 }
 
 // Iterator implements KVStore
-// Check https://github.com/cometbft/cometbft/v2/blob/master/libs/db/prefix_db.go#L106
+// Check https://github.com/cometbft/cometbft-db/blob/main/prefixdb_iterator.go#L106
 func (s Store) Iterator(start, end []byte) types.Iterator {
 	newStart := cloneAppend(s.prefix, start)
 
@@ -98,7 +98,7 @@ func (s Store) Iterator(start, end []byte) types.Iterator {
 }
 
 // ReverseIterator implements KVStore
-// Check https://github.com/cometbft/cometbft/v2/blob/master/libs/db/prefix_db.go#L129
+// Check https://github.com/cometbft/cometbft-db/blob/main/prefixdb_iterator.go#L129
 func (s Store) ReverseIterator(start, end []byte) types.Iterator {
 	newstart := cloneAppend(s.prefix, start)
 

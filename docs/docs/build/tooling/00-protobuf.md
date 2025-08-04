@@ -61,7 +61,7 @@ https://github.com/cosmos/cosmos-sdk/blob/main/proto/buf.gen.gogo.yaml#L1-L9
 ```
 
 :::tip
-Example of how to define `gen` files can be found [here](https://docs.buf.build/tour/generate-go-code)
+Example of how to define `gen` files can be found [here](https://docs.buf.build/generate/overview)
 :::
 
 #### `buf.gen.pulsar.yaml`
@@ -73,7 +73,7 @@ https://github.com/cosmos/cosmos-sdk/blob/main/proto/buf.gen.pulsar.yaml#L1-L18
 ```
 
 :::tip
-Example of how to define `gen` files can be found [here](https://docs.buf.build/tour/generate-go-code)
+Example of how to define `gen` files can be found [here](https://docs.buf.build/generate/overview)
 :::
 
 #### `buf.gen.swagger.yaml`
@@ -85,7 +85,7 @@ https://github.com/cosmos/cosmos-sdk/blob/main/proto/buf.gen.swagger.yaml#L1-L6
 ```
 
 :::tip
-Example of how to define `gen` files can be found [here](https://docs.buf.build/tour/generate-go-code)
+Example of how to define `gen` files can be found [here](https://docs.buf.build/generate/overview)
 :::
 
 #### `buf.lock`
@@ -98,7 +98,7 @@ https://github.com/cosmos/cosmos-sdk/blob/main/proto/buf.lock#L1-L16
 
 #### `buf.yaml`
 
-`buf.yaml` defines the [name of your package](https://github.com/cosmos/cosmos-sdk/blob/main/proto/buf.yaml#L3), which [breakage checker](https://docs.buf.build/tour/detect-breaking-changes) to use and how to [lint your protobuf files](https://buf.build/docs/tutorials/getting-started-with-buf-cli#lint-your-api). 
+`buf.yaml` defines the [name of your package](https://github.com/cosmos/cosmos-sdk/blob/main/proto/buf.yaml#L3), which [breakage checker](https://docs.buf.build/breaking/overview) to use and how to [lint your protobuf files](https://buf.build/docs/tutorials/getting-started-with-buf-cli#lint-your-api). 
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/main/proto/buf.yaml#L1-L24

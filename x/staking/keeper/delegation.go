@@ -303,7 +303,7 @@ func (k Keeper) IterateDelegatorUnbondingDelegations(ctx context.Context, delega
 	return nil
 }
 
-// GetDelegatorBonded returs the total amount a delegator has bonded.
+// GetDelegatorBonded returns the total amount a delegator has bonded.
 func (k Keeper) GetDelegatorBonded(ctx context.Context, delegator sdk.AccAddress) (math.Int, error) {
 	bonded := math.LegacyZeroDec()
 

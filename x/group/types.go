@@ -56,7 +56,7 @@ func NewThresholdDecisionPolicy(threshold string, votingPeriod, minExecutionPeri
 	return &ThresholdDecisionPolicy{threshold, &DecisionPolicyWindows{votingPeriod, minExecutionPeriod}}
 }
 
-// GetVotingPeriod returns the voitng period of ThresholdDecisionPolicy
+// GetVotingPeriod returns the voting period of ThresholdDecisionPolicy
 func (p ThresholdDecisionPolicy) GetVotingPeriod() time.Duration {
 	return p.Windows.VotingPeriod
 }
@@ -161,7 +161,7 @@ func NewPercentageDecisionPolicy(percentage string, votingPeriod, executionPerio
 	return &PercentageDecisionPolicy{percentage, &DecisionPolicyWindows{votingPeriod, executionPeriod}}
 }
 
-// GetVotingPeriod returns the voitng period of PercentageDecisionPolicy
+// GetVotingPeriod returns the voting period of PercentageDecisionPolicy
 func (p PercentageDecisionPolicy) GetVotingPeriod() time.Duration {
 	return p.Windows.VotingPeriod
 }

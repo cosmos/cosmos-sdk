@@ -172,7 +172,7 @@ func (suite *KeeperTestSuite) TestGetAllContinuousFunds() {
 
 func (suite *KeeperTestSuite) TestDistributeFunds() {
 	initialBalance := sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(1000))
-	initalBalanceCoins := sdk.NewCoins(initialBalance)
+	initialBalanceCoins := sdk.NewCoins(initialBalance)
 
 	tests := []struct {
 		name               string
@@ -216,11 +216,11 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 				err := suite.poolKeeper.ContinuousFunds.Set(suite.ctx, recipientAddr, fund)
 				suite.Require().NoError(err)
 
-				amountToStream := poolkeeper.PercentageCoinMul(math.LegacyMustNewDecFromStr("0.3"), initalBalanceCoins)
+				amountToStream := poolkeeper.PercentageCoinMul(math.LegacyMustNewDecFromStr("0.3"), initialBalanceCoins)
 				suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ProtocolPoolEscrowAccount, recipientAddr, amountToStream).
 					Return(nil).Times(1)
 
-				remainingCoins := initalBalanceCoins.Sub(amountToStream...)
+				remainingCoins := initialBalanceCoins.Sub(amountToStream...)
 				suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ProtocolPoolEscrowAccount, types.ModuleName, remainingCoins).
 					Return(nil).Times(1)
 			},
@@ -242,11 +242,11 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 				err := suite.poolKeeper.ContinuousFunds.Set(suite.ctx, recipientAddr, fund)
 				suite.Require().NoError(err)
 
-				amountToStream := poolkeeper.PercentageCoinMul(math.LegacyMustNewDecFromStr("0.3"), initalBalanceCoins)
+				amountToStream := poolkeeper.PercentageCoinMul(math.LegacyMustNewDecFromStr("0.3"), initialBalanceCoins)
 				suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ProtocolPoolEscrowAccount, recipientAddr, amountToStream).
 					Return(sdkerrors.ErrUnauthorized).Times(1)
 
-				suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ProtocolPoolEscrowAccount, types.ModuleName, initalBalanceCoins).
+				suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ProtocolPoolEscrowAccount, types.ModuleName, initialBalanceCoins).
 					Return(nil).Times(1)
 			},
 			expectedErr: "",
@@ -274,7 +274,7 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 				suite.Require().NoError(err)
 
 				// And full amount to be sent to the community pool.
-				suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ProtocolPoolEscrowAccount, types.ModuleName, initalBalanceCoins).
+				suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ProtocolPoolEscrowAccount, types.ModuleName, initialBalanceCoins).
 					Return(nil).Times(1)
 			},
 			expectedErr: "",
@@ -312,14 +312,14 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 				err = suite.poolKeeper.ContinuousFunds.Set(suite.ctx, accAddr, fund2)
 				suite.Require().NoError(err)
 
-				amountToStream1 := poolkeeper.PercentageCoinMul(math.LegacyMustNewDecFromStr("0.3"), initalBalanceCoins)
-				amountToStream2 := poolkeeper.PercentageCoinMul(math.LegacyMustNewDecFromStr("0.2"), initalBalanceCoins)
+				amountToStream1 := poolkeeper.PercentageCoinMul(math.LegacyMustNewDecFromStr("0.3"), initialBalanceCoins)
+				amountToStream2 := poolkeeper.PercentageCoinMul(math.LegacyMustNewDecFromStr("0.2"), initialBalanceCoins)
 				suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ProtocolPoolEscrowAccount, recipientAddr, amountToStream1).
 					Return(sdkerrors.ErrUnauthorized).Times(1)
 				suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ProtocolPoolEscrowAccount, recipientAddr2, amountToStream2).
 					Return(nil).Times(1)
 
-				remainingCoins := initalBalanceCoins.Sub(amountToStream2...)
+				remainingCoins := initialBalanceCoins.Sub(amountToStream2...)
 				suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ProtocolPoolEscrowAccount, types.ModuleName, remainingCoins).
 					Return(nil).Times(1)
 			},
@@ -358,7 +358,7 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 				err = suite.poolKeeper.ContinuousFunds.Set(suite.ctx, recipientAddr2, fund2)
 				suite.Require().NoError(err)
 
-				amountToStream1 := poolkeeper.PercentageCoinMul(math.LegacyMustNewDecFromStr("0.8"), initalBalanceCoins) // 800 stake
+				amountToStream1 := poolkeeper.PercentageCoinMul(math.LegacyMustNewDecFromStr("0.8"), initialBalanceCoins) // 800 stake
 				suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ProtocolPoolEscrowAccount, recipientAddr, amountToStream1).
 					Return(nil).Times(1)
 			},
@@ -406,11 +406,11 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 				err := suite.poolKeeper.ContinuousFunds.Set(suite.ctx, recipientAddr, fund)
 				suite.Require().NoError(err)
 
-				amountToStream := poolkeeper.PercentageCoinMul(math.LegacyMustNewDecFromStr("0.3"), initalBalanceCoins)
+				amountToStream := poolkeeper.PercentageCoinMul(math.LegacyMustNewDecFromStr("0.3"), initialBalanceCoins)
 				suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ProtocolPoolEscrowAccount, recipientAddr, amountToStream).
 					Return(nil).Times(1)
 
-				remainingCoins := initalBalanceCoins.Sub(amountToStream...)
+				remainingCoins := initialBalanceCoins.Sub(amountToStream...)
 				suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ProtocolPoolEscrowAccount, types.ModuleName, remainingCoins).
 					Return(fmt.Errorf("send module error")).Times(1)
 			},
@@ -433,11 +433,11 @@ func (suite *KeeperTestSuite) TestDistributeFunds() {
 				err := suite.poolKeeper.ContinuousFunds.Set(suite.ctx, recipientAddr, fund)
 				suite.Require().NoError(err)
 
-				amountToStream := poolkeeper.PercentageCoinMul(math.LegacyMustNewDecFromStr("0.3"), initalBalanceCoins)
+				amountToStream := poolkeeper.PercentageCoinMul(math.LegacyMustNewDecFromStr("0.3"), initialBalanceCoins)
 				suite.bankKeeper.EXPECT().SendCoinsFromModuleToAccount(suite.ctx, types.ProtocolPoolEscrowAccount, recipientAddr, amountToStream).
 					Return(nil).Times(1)
 
-				remainingCoins := initalBalanceCoins.Sub(amountToStream...)
+				remainingCoins := initialBalanceCoins.Sub(amountToStream...)
 				suite.bankKeeper.EXPECT().SendCoinsFromModuleToModule(suite.ctx, types.ProtocolPoolEscrowAccount, types.ModuleName, remainingCoins).
 					Return(nil).Times(1)
 			},

@@ -72,7 +72,7 @@ In addition to being aware of the general non-determinism of protobuf binary, de
 
 In addition to the non-determinism present in protobuf binary itself, some protobuf field data is encoded using a micro-format which itself may not be deterministic. Consider for instance integer or decimal encoding. Some decoders may allow for the presence of leading or trailing zeros without changing the logical meaning, ex. `00100` vs `100` or `100.00` vs `100`. So if a sign mode encodes numbers deterministically, but decoders accept multiple representations,
 a user may sign over the value `100` while `0100` gets encoded. This would be possible with Amino JSON to the extent that the integer decoder accepts leading zeros. I believe the current `Int` implementation will reject this, however, it is
-probably possible to encode a octal or hexadecimal representation in the transaction whereas the user signs over a decimal integer.
+probably possible to encode an octal or hexadecimal representation in the transaction whereas the user signs over a decimal integer.
 
 #### Signature Encoding
 
@@ -128,7 +128,7 @@ Unfortunately, the vast majority of unaddressed malleability risks affect `SIGN_
 sign mode is still commonly used.
 It is recommended that the following improvements be made to Amino JSON signing:
 
-* hashes of `TxBody` and `AuthInfo` should be added to `AminoSignDoc` so that encoding-level malleablity is addressed
+* hashes of `TxBody` and `AuthInfo` should be added to `AminoSignDoc` so that encoding-level malleability is addressed
 * when constructing `AminoSignDoc`, [protoreflect](https://pkg.go.dev/google.golang.org/protobuf/reflect/protoreflect) API should be used to ensure that there no fields in `TxBody` or `AuthInfo` which do not have a mapping in `AminoSignDoc` have been set
 * fields present in `TxBody` or `AuthInfo` that are not present in `AminoSignDoc` (such as extension options) should
 be added to `AminoSignDoc` if possible

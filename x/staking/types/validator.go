@@ -360,7 +360,7 @@ func (v Validator) BondedTokens() math.Int {
 	return math.ZeroInt()
 }
 
-// ConsensusPower gets the consensus-engine power. Aa reduction of 10^6 from
+// ConsensusPower gets the consensus-engine power. A reduction of 10^6 from
 // validator tokens is applied
 func (v Validator) ConsensusPower(r math.Int) int64 {
 	if v.IsBonded() {
@@ -420,7 +420,7 @@ func (v Validator) RemoveTokens(tokens math.Int) Validator {
 }
 
 // RemoveDelShares removes delegator shares from a validator.
-// NOTE: because token fractions are left in the valiadator,
+// NOTE: because token fractions are left in the validator,
 //
 //	the exchange rate of future shares of this validator can increase.
 func (v Validator) RemoveDelShares(delShares math.LegacyDec) (Validator, math.Int) {

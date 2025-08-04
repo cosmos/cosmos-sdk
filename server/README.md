@@ -85,6 +85,6 @@ func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts serverty
 ```
 
 Note, some of the options provided are exposed via CLI flags in the start command
-and some are also allowed to be set in the application's `app.toml`. It is recommend
+and some are also allowed to be set in the application's `app.toml`. It is recommended
 to use the `cast` package for type safety guarantees and due to the limitations of
 CLI flag types.

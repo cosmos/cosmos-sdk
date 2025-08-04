@@ -313,7 +313,7 @@ As a chain developer, you decide that you'd like to provide clarity to your key 
 * token holders
 * developers (yourself)
 
-You use the constitution to immutably store some Markdown in genesis, so that when difficult questions come up, the constutituon can provide guidance to the community.
+You use the constitution to immutably store some Markdown in genesis, so that when difficult questions come up, the constitution can provide guidance to the community.
 
 ### Proposals
 
@@ -719,7 +719,7 @@ simd query gov --help
 The `deposit` command allows users to query a deposit for a given proposal from a given depositor.
 
 ```bash
-simd query gov deposit [proposal-id] [depositer-addr] [flags]
+simd query gov deposit [proposal-id] [depositor-addr] [flags]
 ```
 
 Example:
@@ -1092,7 +1092,7 @@ where `proposal.json` contains:
   "messages": [
     {
       "@type": "/cosmos.bank.v1beta1.MsgSend",
-      "from_address": "cosmos1...", // The gov module module address
+      "from_address": "cosmos1...", // The gov module address
       "to_address": "cosmos1...",
       "amount":[{"denom": "stake","amount": "10"}]
     }
@@ -1149,7 +1149,7 @@ simd tx gov submit-legacy-proposal param-change proposal.json --from cosmos1..
 
 #### cancel-proposal
 
-Once proposal is canceled, from the deposits of proposal `deposits * proposal_cancel_ratio` will be burned or sent to `ProposalCancelDest` address , if `ProposalCancelDest` is empty then deposits will be burned. The `remaining deposits` will be sent to depositers.
+Once proposal is canceled, from the deposits of proposal `deposits * proposal_cancel_ratio` will be burned or sent to `ProposalCancelDest` address , if `ProposalCancelDest` is empty then deposits will be burned. The `remaining deposits` will be sent to depositors.
 
 ```bash
 simd tx gov cancel-proposal [proposal-id] [flags]

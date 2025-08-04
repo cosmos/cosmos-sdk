@@ -39,6 +39,7 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	_ "github.com/cosmos/cosmos-sdk/x/epochs" // import for side-effects
 	epochstypes "github.com/cosmos/cosmos-sdk/x/epochs/types"
+	_ "github.com/cosmos/cosmos-sdk/x/evidence" // import for side-effects
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	_ "github.com/cosmos/cosmos-sdk/x/feegrant/module" // import for side-effects

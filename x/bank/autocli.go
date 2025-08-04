@@ -46,12 +46,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "total-supply",
 					Alias:     []string{"total"},
 					Short:     "Query the total supply of coins of the chain",
-					Long:      "Query total supply of coins that are held by accounts in the chain. To query for the total supply of a specific coin denomination use --denom flag.",
+					Long:      "Query the total supply of coins that are held by accounts in the chain.",
 				},
 				{
 					RpcMethod:      "SupplyOf",
 					Use:            "total-supply-of [denom]",
-					Short:          "Query the supply of a single coin denom",
+					Short:          "Query the total supply of a specific coin denomination.",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "denom"}},
 				},
 				{

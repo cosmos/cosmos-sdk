@@ -162,7 +162,7 @@ module may be removed entirely in a future release.
 
 ### Negative
 
-* Module parameters becomes slightly more burdensome for module developers:
+* Module parameters become slightly more burdensome for module developers:
     * Modules are now responsible for persisting and retrieving parameter state
     * Modules are now required to have unique message handlers to handle parameter
       changes per unique parameter data structure.

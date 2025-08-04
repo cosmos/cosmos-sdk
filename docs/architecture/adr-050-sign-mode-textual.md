@@ -226,7 +226,7 @@ Tipper: <string>
 Transaction Body is the `Tx.TxBody.Messages` field, which is an array of `Any`s, where each `Any` packs a `sdk.Msg`. Since `sdk.Msg`s are widely used, they have a slightly different encoding than usual array of `Any`s (Protobuf: `repeated google.protobuf.Any`) described in Annex 1.
 
 ```
-This transaction has <int> message:   // Optional 's' for "message" if there's is >1 sdk.Msgs.
+This transaction has <int> message:   // Optional 's' for "message" if there's  >1 sdk.Msgs.
 // For each Msg, print the following 2 lines:
 Msg (<int>/<int>): <string>           // E.g. Msg (1/2): bank v1beta1 send coins
 <value rendering of Msg struct>

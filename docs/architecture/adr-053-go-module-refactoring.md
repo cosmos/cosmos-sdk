@@ -96,7 +96,7 @@ per-project, although most of these will hopefully be indirect
 
 ## Further Discussions
 
-Further discussions are occurring in primarily in
+Further discussions are occurring primarily in
 https://github.com/cosmos/cosmos-sdk/discussions/10582 and within
 the Cosmos SDK Framework Working Group.
 

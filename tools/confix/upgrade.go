@@ -17,7 +17,7 @@ import (
 )
 
 // Upgrade reads the configuration file at configPath and applies any
-// transformations necessary to Upgrade it to the current version. If this
+// transformations necessary to upgrade it to the current version. If this
 // succeeds, the transformed output is written to outputPath. As a special
 // case, if outputPath == "" the output is written to stdout.
 //

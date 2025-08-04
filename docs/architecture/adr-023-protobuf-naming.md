@@ -117,7 +117,7 @@ Instead of breaking things, we should make every effort to evolve schemas rather
 to prevent such breakage.
 
 With that in mind, different stable versions (i.e. `v1` or `v2`) of a package should more or less be considered
-different packages and this should be last resort approach for upgrading protobuf schemas. Scenarios where creating
+different packages and this should be a last resort approach for upgrading protobuf schemas. Scenarios where creating
 a `v2` may make sense are:
 
 * we want to create a new module with similar functionality to an existing module and adding `v2` is the most natural
@@ -200,7 +200,7 @@ go package names, i.e. the `cosmos.bank` protobuf package will still live in
 
 ### Message Naming
 
-Message type names should be as concise possible without losing clarity. `sdk.Msg`
+Message type names should be as as concise possible without losing clarity. `sdk.Msg`
 types which are used in transactions will retain the `Msg` prefix as that provides
 helpful context.
 

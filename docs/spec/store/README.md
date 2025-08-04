@@ -103,7 +103,7 @@ responsibility of the caller to ensure that concurrent access to the store is
 not performed. 
 
 The main issue with concurrent use is when data is written at the same time as
-it's being iterated over. Doing so will cause a irrecoverable fatal error because
+it's being iterated over. Doing so will cause an irrecoverable fatal error because
 of concurrent reads and writes to an internal map.
 
 Although it's not recommended, you can iterate through values while writing to

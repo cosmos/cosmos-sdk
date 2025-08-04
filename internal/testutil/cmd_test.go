@@ -86,7 +86,7 @@ func TestSetArgsWithWrappedMethod(t *testing.T) {
 		f := cmd.Flags()
 		f.BoolP("a", "a", false, "check built-in pflag.Value")
 		f.IntSlice("b", []int{1, 2}, "check built-in pflag.SliceValue with default value")
-		f.IntSliceP("c", "c", nil, "check built pflag.SliceValue with nil default value")
+		f.IntSliceP("c", "c", nil, "check built-in pflag.SliceValue with nil default value")
 		f.Var(&mockFlagWithCommaD, "d", "check custom implementation of pflag.SliceValue with splitting by comma and default value")
 		f.VarP(&mockFlagWithCommaE, "e", "e", "check custom implementation of pflag.SliceValue with splitting by comma and nil default value")
 		f.Var(&mockFlagWithSemicolonF, "f", "check custom implementation of pflag.SliceValue with splitting by semicolon and default value")

@@ -18,9 +18,9 @@ import (
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
+	"github.com/cosmos/cosmos-sdk/contrib/x/group"
 	"github.com/cosmos/cosmos-sdk/contrib/x/group/client/cli"
-	keeper2 "github.com/cosmos/cosmos-sdk/contrib/x/group/keeper"
+	"github.com/cosmos/cosmos-sdk/contrib/x/group/keeper"
 	simulation2 "github.com/cosmos/cosmos-sdk/contrib/x/group/simulation"
 	"github.com/cosmos/cosmos-sdk/testutil/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -43,14 +43,14 @@ var (
 
 type AppModule struct {
 	AppModuleBasic
-	keeper     keeper2.Keeper
+	keeper     keeper.Keeper
 	bankKeeper group.BankKeeper
 	accKeeper  group.AccountKeeper
 	registry   cdctypes.InterfaceRegistry
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper2.Keeper, ak group.AccountKeeper, bk group.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak group.AccountKeeper, bk group.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak.AddressCodec()},
 		keeper:         keeper,
@@ -132,7 +132,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	group.RegisterMsgServer(cfg.MsgServer(), am.keeper)
 	group.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 
-	m := keeper2.NewMigrator(am.keeper)
+	m := keeper.NewMigrator(am.keeper)
 	if err := cfg.RegisterMigration(group.ModuleName, 1, m.Migrate1to2); err != nil {
 		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", group.ModuleName, err))
 	}
@@ -217,7 +217,7 @@ type GroupInputs struct {
 type GroupOutputs struct {
 	depinject.Out
 
-	GroupKeeper keeper2.Keeper
+	GroupKeeper keeper.Keeper
 	Module      appmodule.AppModule
 }
 
@@ -228,7 +228,7 @@ func ProvideModule(in GroupInputs) GroupOutputs {
 		in.Config.MaxExecutionPeriod = "1209600s"
 	*/
 
-	k := keeper2.NewKeeper(in.Key, in.Cdc, in.MsgServiceRouter, in.AccountKeeper, group.Config{MaxExecutionPeriod: in.Config.MaxExecutionPeriod.AsDuration(), MaxMetadataLen: in.Config.MaxMetadataLen})
+	k := keeper.NewKeeper(in.Key, in.Cdc, in.MsgServiceRouter, in.AccountKeeper, group.Config{MaxExecutionPeriod: in.Config.MaxExecutionPeriod.AsDuration(), MaxMetadataLen: in.Config.MaxMetadataLen})
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
 	return GroupOutputs{GroupKeeper: k, Module: m}
 }

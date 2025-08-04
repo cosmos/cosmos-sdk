@@ -12,7 +12,7 @@ import (
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/contrib/x/circuit"
 	"github.com/cosmos/cosmos-sdk/contrib/x/circuit/keeper"
-	types2 "github.com/cosmos/cosmos-sdk/contrib/x/circuit/types"
+	"github.com/cosmos/cosmos-sdk/contrib/x/circuit/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -34,7 +34,7 @@ func TestGenesisTestSuite(t *testing.T) {
 }
 
 func (s *GenesisTestSuite) SetupTest() {
-	key := storetypes.NewKVStoreKey(types2.StoreKey)
+	key := storetypes.NewKVStoreKey(types.StoreKey)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(circuit.AppModuleBasic{})
 
@@ -52,15 +52,15 @@ func (s *GenesisTestSuite) SetupTest() {
 }
 
 func (s *GenesisTestSuite) TestInitExportGenesis() {
-	perms := types2.Permissions{
+	perms := types.Permissions{
 		Level:         3,
 		LimitTypeUrls: []string{"test"},
 	}
 	err := s.keeper.Permissions.Set(s.ctx, s.addrBytes, perms)
 	s.Require().NoError(err)
 
-	var accounts []*types2.GenesisAccountPermissions
-	genAccsPerms := types2.GenesisAccountPermissions{
+	var accounts []*types.GenesisAccountPermissions
+	genAccsPerms := types.GenesisAccountPermissions{
 		Address:     sdk.AccAddress(s.addrBytes).String(),
 		Permissions: &perms,
 	}
@@ -68,7 +68,7 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 
 	url := "test_url"
 
-	genesisState := &types2.GenesisState{
+	genesisState := &types.GenesisState{
 		AccountPermissions: accounts,
 		DisabledTypeUrls:   []string{url},
 	}
@@ -79,7 +79,7 @@ func (s *GenesisTestSuite) TestInitExportGenesis() {
 	bz, err := s.cdc.MarshalJSON(exported)
 	s.Require().NoError(err)
 
-	var exportedGenesisState types2.GenesisState
+	var exportedGenesisState types.GenesisState
 	err = s.cdc.UnmarshalJSON(bz, &exportedGenesisState)
 	s.Require().NoError(err)
 

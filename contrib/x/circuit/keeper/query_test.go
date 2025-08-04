@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/contrib/x/circuit/keeper"
-	types2 "github.com/cosmos/cosmos-sdk/contrib/x/circuit/types"
+	"github.com/cosmos/cosmos-sdk/contrib/x/circuit/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
@@ -24,21 +24,21 @@ func TestQueryAccount(t *testing.T) {
 	qs := keeper.NewQueryServer(f.keeper)
 
 	// test the Account method
-	res, err := qs.Account(f.ctx, &types2.QueryAccountRequest{Address: addresses[0]})
+	res, err := qs.Account(f.ctx, &types.QueryAccountRequest{Address: addresses[0]})
 	require.NoError(t, err)
-	require.Equal(t, res.Permission.Level, types2.Permissions_Level(3))
+	require.Equal(t, res.Permission.Level, types.Permissions_Level(3))
 	require.Equal(t, res.Permission.LimitTypeUrls, []string{
 		"test",
 	})
 
 	// test invalid address
-	res, err = qs.Account(f.ctx, &types2.QueryAccountRequest{Address: "invalid"})
+	res, err = qs.Account(f.ctx, &types.QueryAccountRequest{Address: "invalid"})
 	require.Error(t, err)
 	require.ErrorContains(t, err, "invalid bech32 string")
 	require.Nil(t, res)
 
 	// test account not found
-	res, err = qs.Account(f.ctx, &types2.QueryAccountRequest{Address: addresses[1]})
+	res, err = qs.Account(f.ctx, &types.QueryAccountRequest{Address: addresses[1]})
 	require.Error(t, err)
 	require.ErrorContains(t, err, "not found")
 	require.Nil(t, res)
@@ -55,7 +55,7 @@ func TestQueryAccounts(t *testing.T) {
 	qs := keeper.NewQueryServer(f.keeper)
 
 	// test the Accounts method with no accounts
-	res1, err := qs.Accounts(f.ctx, &types2.QueryAccountsRequest{
+	res1, err := qs.Accounts(f.ctx, &types.QueryAccountsRequest{
 		Pagination: &query.PageRequest{Limit: 10},
 	})
 	require.NoError(t, err)
@@ -65,7 +65,7 @@ func TestQueryAccounts(t *testing.T) {
 	require.NoError(t, err)
 
 	// test the Accounts method
-	res2, err := qs.Accounts(f.ctx, &types2.QueryAccountsRequest{
+	res2, err := qs.Accounts(f.ctx, &types.QueryAccountsRequest{
 		Pagination: &query.PageRequest{Limit: 10},
 	})
 	require.NoError(t, err)
@@ -86,14 +86,14 @@ func TestQueryDisabledList(t *testing.T) {
 	qs := keeper.NewQueryServer(f.keeper)
 
 	// test the DisabledList method
-	disabledList, err := qs.DisabledList(f.ctx, &types2.QueryDisabledListRequest{})
+	disabledList, err := qs.DisabledList(f.ctx, &types.QueryDisabledListRequest{})
 	require.NoError(t, err)
 	require.Len(t, disabledList.DisabledList, 0)
 
 	require.NoError(t, f.keeper.DisableList.Set(f.ctx, f.mockMsgURL))
 
 	// test the DisabledList method
-	disabledList, err = qs.DisabledList(f.ctx, &types2.QueryDisabledListRequest{})
+	disabledList, err = qs.DisabledList(f.ctx, &types.QueryDisabledListRequest{})
 	require.NoError(t, err)
 	require.Equal(t, []string{f.mockMsgURL}, disabledList.DisabledList)
 }

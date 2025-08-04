@@ -3,11 +3,11 @@ package keeper
 import (
 	"context"
 
-	types2 "github.com/cosmos/cosmos-sdk/contrib/x/circuit/types"
+	"github.com/cosmos/cosmos-sdk/contrib/x/circuit/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
-var _ types2.QueryServer = QueryServer{}
+var _ types.QueryServer = QueryServer{}
 
 type QueryServer struct {
 	keeper Keeper
@@ -15,12 +15,12 @@ type QueryServer struct {
 
 // NewQueryServer returns an implementation of the circuit QueryServer interface
 // for the provided Keeper.
-func NewQueryServer(keeper Keeper) types2.QueryServer {
+func NewQueryServer(keeper Keeper) types.QueryServer {
 	return &QueryServer{keeper: keeper}
 }
 
 // Account returns account permissions.
-func (qs QueryServer) Account(ctx context.Context, req *types2.QueryAccountRequest) (*types2.AccountResponse, error) {
+func (qs QueryServer) Account(ctx context.Context, req *types.QueryAccountRequest) (*types.AccountResponse, error) {
 	add, err := qs.keeper.addressCodec.StringToBytes(req.Address)
 	if err != nil {
 		return nil, err
@@ -31,21 +31,21 @@ func (qs QueryServer) Account(ctx context.Context, req *types2.QueryAccountReque
 		return nil, err
 	}
 
-	return &types2.AccountResponse{Permission: &perms}, nil
+	return &types.AccountResponse{Permission: &perms}, nil
 }
 
 // Accounts returns account permissions.
-func (qs QueryServer) Accounts(ctx context.Context, req *types2.QueryAccountsRequest) (*types2.AccountsResponse, error) {
+func (qs QueryServer) Accounts(ctx context.Context, req *types.QueryAccountsRequest) (*types.AccountsResponse, error) {
 	results, pageRes, err := query.CollectionPaginate(
 		ctx,
 		qs.keeper.Permissions,
 		req.Pagination,
-		func(key []byte, value types2.Permissions) (*types2.GenesisAccountPermissions, error) {
+		func(key []byte, value types.Permissions) (*types.GenesisAccountPermissions, error) {
 			addrStr, err := qs.keeper.addressCodec.BytesToString(key)
 			if err != nil {
 				return nil, err
 			}
-			return &types2.GenesisAccountPermissions{
+			return &types.GenesisAccountPermissions{
 				Address:     addrStr,
 				Permissions: &value,
 			}, nil
@@ -55,11 +55,11 @@ func (qs QueryServer) Accounts(ctx context.Context, req *types2.QueryAccountsReq
 		return nil, err
 	}
 
-	return &types2.AccountsResponse{Accounts: results, Pagination: pageRes}, nil
+	return &types.AccountsResponse{Accounts: results, Pagination: pageRes}, nil
 }
 
 // DisabledList returns a list of disabled message urls
-func (qs QueryServer) DisabledList(ctx context.Context, req *types2.QueryDisabledListRequest) (*types2.DisabledListResponse, error) {
+func (qs QueryServer) DisabledList(ctx context.Context, req *types.QueryDisabledListRequest) (*types.DisabledListResponse, error) {
 	// Iterate over disabled list and perform the callback
 	var msgs []string
 	err := qs.keeper.DisableList.Walk(ctx, nil, func(msgUrl string) (bool, error) {
@@ -70,5 +70,5 @@ func (qs QueryServer) DisabledList(ctx context.Context, req *types2.QueryDisable
 		return nil, err
 	}
 
-	return &types2.DisabledListResponse{DisabledList: msgs}, nil
+	return &types.DisabledListResponse{DisabledList: msgs}, nil
 }

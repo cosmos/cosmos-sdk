@@ -17,8 +17,8 @@ import (
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	nft "github.com/cosmos/cosmos-sdk/contrib/x/nft"
-	keeper2 "github.com/cosmos/cosmos-sdk/contrib/x/nft/keeper"
+	"github.com/cosmos/cosmos-sdk/contrib/x/nft"
+	"github.com/cosmos/cosmos-sdk/contrib/x/nft/keeper"
 	simulation2 "github.com/cosmos/cosmos-sdk/contrib/x/nft/simulation"
 	"github.com/cosmos/cosmos-sdk/testutil/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -88,7 +88,7 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx sdkclient.Context, mux
 // AppModule implements the sdk.AppModule interface
 type AppModule struct {
 	AppModuleBasic
-	keeper keeper2.Keeper
+	keeper keeper.Keeper
 	// TODO accountKeeper,bankKeeper will be replaced by query service
 	accountKeeper nft.AccountKeeper
 	bankKeeper    nft.BankKeeper
@@ -96,7 +96,7 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule object
-func NewAppModule(cdc codec.Codec, keeper keeper2.Keeper, ak nft.AccountKeeper, bk nft.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
+func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak nft.AccountKeeper, bk nft.BankKeeper, registry cdctypes.InterfaceRegistry) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc, ac: ak.AddressCodec()},
 		keeper:         keeper,
@@ -141,7 +141,7 @@ func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
 
 // RegisterStoreDecoder registers a decoder for nft module's types
 func (am AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {
-	sdr[keeper2.StoreKey] = simulation2.NewDecodeStore(am.cdc)
+	sdr[keeper.StoreKey] = simulation2.NewDecodeStore(am.cdc)
 }
 
 // WeightedOperations returns the all the nft module operations with their respective weights.
@@ -183,12 +183,12 @@ type NftInputs struct {
 type NftOutputs struct {
 	depinject.Out
 
-	NFTKeeper keeper2.Keeper
+	NFTKeeper keeper.Keeper
 	Module    appmodule.AppModule
 }
 
 func ProvideModule(in NftInputs) NftOutputs {
-	k := keeper2.NewKeeper(in.StoreService, in.Cdc, in.AccountKeeper, in.BankKeeper)
+	k := keeper.NewKeeper(in.StoreService, in.Cdc, in.AccountKeeper, in.BankKeeper)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.Registry)
 
 	return NftOutputs{NFTKeeper: k, Module: m}

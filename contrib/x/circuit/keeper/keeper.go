@@ -8,7 +8,7 @@ import (
 	"cosmossdk.io/core/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	types2 "github.com/cosmos/cosmos-sdk/contrib/x/circuit/types"
+	"github.com/cosmos/cosmos-sdk/contrib/x/circuit/types"
 )
 
 // Keeper defines the circuit module's keeper.
@@ -22,7 +22,7 @@ type Keeper struct {
 
 	Schema collections.Schema
 	// Permissions contains the permissions for each account
-	Permissions collections.Map[[]byte, types2.Permissions]
+	Permissions collections.Map[[]byte, types.Permissions]
 	// DisableList contains the message URLs that are disabled
 	DisableList collections.KeySet[string]
 }
@@ -43,14 +43,14 @@ func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, authori
 		addressCodec: addressCodec,
 		Permissions: collections.NewMap(
 			sb,
-			types2.AccountPermissionPrefix,
+			types.AccountPermissionPrefix,
 			"permissions",
 			collections.BytesKey,
-			codec.CollValue[types2.Permissions](cdc),
+			codec.CollValue[types.Permissions](cdc),
 		),
 		DisableList: collections.NewKeySet(
 			sb,
-			types2.DisableListPrefix,
+			types.DisableListPrefix,
 			"disable_list",
 			collections.StringKey,
 		),

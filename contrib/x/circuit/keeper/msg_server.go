@@ -2,14 +2,14 @@ package keeper
 
 import (
 	"bytes"
-	context "context"
-	fmt "fmt"
+	"context"
+	"fmt"
 	"strings"
 
 	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
 
-	types2 "github.com/cosmos/cosmos-sdk/contrib/x/circuit/types"
+	"github.com/cosmos/cosmos-sdk/contrib/x/circuit/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -18,15 +18,15 @@ type msgServer struct {
 	Keeper
 }
 
-var _ types2.MsgServer = msgServer{}
+var _ types.MsgServer = msgServer{}
 
 // NewMsgServerImpl returns an implementation of the circuit MsgServer interface
 // for the provided Keeper.
-func NewMsgServerImpl(keeper Keeper) types2.MsgServer {
+func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
 
-func (srv msgServer) AuthorizeCircuitBreaker(ctx context.Context, msg *types2.MsgAuthorizeCircuitBreaker) (*types2.MsgAuthorizeCircuitBreakerResponse, error) {
+func (srv msgServer) AuthorizeCircuitBreaker(ctx context.Context, msg *types.MsgAuthorizeCircuitBreaker) (*types.MsgAuthorizeCircuitBreakerResponse, error) {
 	address, err := srv.addressCodec.StringToBytes(msg.Granter)
 	if err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func (srv msgServer) AuthorizeCircuitBreaker(ctx context.Context, msg *types2.Ms
 			return nil, err
 		}
 
-		if perms.Level != types2.Permissions_LEVEL_SUPER_ADMIN {
+		if perms.Level != types.Permissions_LEVEL_SUPER_ADMIN {
 			return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "only super admins can authorize users")
 		}
 	}
@@ -73,12 +73,12 @@ func (srv msgServer) AuthorizeCircuitBreaker(ctx context.Context, msg *types2.Ms
 		),
 	})
 
-	return &types2.MsgAuthorizeCircuitBreakerResponse{
+	return &types.MsgAuthorizeCircuitBreakerResponse{
 		Success: true,
 	}, nil
 }
 
-func (srv msgServer) TripCircuitBreaker(ctx context.Context, msg *types2.MsgTripCircuitBreaker) (*types2.MsgTripCircuitBreakerResponse, error) {
+func (srv msgServer) TripCircuitBreaker(ctx context.Context, msg *types.MsgTripCircuitBreaker) (*types.MsgTripCircuitBreakerResponse, error) {
 	address, err := srv.addressCodec.StringToBytes(msg.Authority)
 	if err != nil {
 		return nil, err
@@ -102,9 +102,9 @@ func (srv msgServer) TripCircuitBreaker(ctx context.Context, msg *types2.MsgTrip
 		}
 
 		switch {
-		case perms.Level == types2.Permissions_LEVEL_SUPER_ADMIN || perms.Level == types2.Permissions_LEVEL_ALL_MSGS || bytes.Equal(address, srv.GetAuthority()):
+		case perms.Level == types.Permissions_LEVEL_SUPER_ADMIN || perms.Level == types.Permissions_LEVEL_ALL_MSGS || bytes.Equal(address, srv.GetAuthority()):
 			// if the sender is a super admin or the module authority, no need to check perms
-		case perms.Level == types2.Permissions_LEVEL_SOME_MSGS:
+		case perms.Level == types.Permissions_LEVEL_SOME_MSGS:
 			// if the sender has permission for some messages, check if the sender has permission for this specific message
 			if !hasPermissionForMsg(perms, msgTypeURL) {
 				return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "account does not have permission to trip circuit breaker for message %s", msgTypeURL)
@@ -130,14 +130,14 @@ func (srv msgServer) TripCircuitBreaker(ctx context.Context, msg *types2.MsgTrip
 		),
 	})
 
-	return &types2.MsgTripCircuitBreakerResponse{
+	return &types.MsgTripCircuitBreakerResponse{
 		Success: true,
 	}, nil
 }
 
 // ResetCircuitBreaker resumes processing of Msg's in the state machine that
 // have been paused using TripCircuitBreaker.
-func (srv msgServer) ResetCircuitBreaker(ctx context.Context, msg *types2.MsgResetCircuitBreaker) (*types2.MsgResetCircuitBreakerResponse, error) {
+func (srv msgServer) ResetCircuitBreaker(ctx context.Context, msg *types.MsgResetCircuitBreaker) (*types.MsgResetCircuitBreakerResponse, error) {
 	keeper := srv.Keeper
 	address, err := srv.addressCodec.StringToBytes(msg.Authority)
 	if err != nil {
@@ -162,9 +162,9 @@ func (srv msgServer) ResetCircuitBreaker(ctx context.Context, msg *types2.MsgRes
 		}
 
 		switch {
-		case perms.Level == types2.Permissions_LEVEL_SUPER_ADMIN || perms.Level == types2.Permissions_LEVEL_ALL_MSGS || bytes.Equal(address, srv.GetAuthority()):
+		case perms.Level == types.Permissions_LEVEL_SUPER_ADMIN || perms.Level == types.Permissions_LEVEL_ALL_MSGS || bytes.Equal(address, srv.GetAuthority()):
 			// if the sender is a super admin or the module authority, no need to check perms
-		case perms.Level == types2.Permissions_LEVEL_SOME_MSGS:
+		case perms.Level == types.Permissions_LEVEL_SOME_MSGS:
 			// if the sender has permission for some messages, check if the sender has permission for this specific message
 			if !hasPermissionForMsg(perms, msgTypeURL) {
 				return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "account does not have permission to reset circuit breaker for message %s", msgTypeURL)
@@ -189,11 +189,11 @@ func (srv msgServer) ResetCircuitBreaker(ctx context.Context, msg *types2.MsgRes
 		),
 	})
 
-	return &types2.MsgResetCircuitBreakerResponse{Success: true}, nil
+	return &types.MsgResetCircuitBreakerResponse{Success: true}, nil
 }
 
 // hasPermissionForMsg returns true if the account can trip or reset the message.
-func hasPermissionForMsg(perms types2.Permissions, msg string) bool {
+func hasPermissionForMsg(perms types.Permissions, msg string) bool {
 	for _, msgurl := range perms.LimitTypeUrls {
 		if msg == msgurl {
 			return true

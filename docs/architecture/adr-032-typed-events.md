@@ -294,7 +294,7 @@ func PublishChainTxEvents(ctx context.Context, client cmtclient.EventsClient, bu
                     for _, abciEv := range events {
                         typedEvent, err := sdk.ParseTypedEvent(abciEv)
                         if err != nil {
-                            return er
+                            return err
                         }
                         if err := bus.Publish(typedEvent); err != nil {
                             bus.Close()

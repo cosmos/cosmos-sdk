@@ -98,7 +98,7 @@ func (suite *KeeperTestSuite) TestTotalSupply() {
 		{
 			"calculation NOT matching genesis Supply field",
 			types.NewGenesisState(defaultGenesis.Params, balances, sdk.NewCoins(sdk.NewCoin("wrongcoin", sdkmath.NewInt(1))), defaultGenesis.DenomMetadata, defaultGenesis.SendEnabled),
-			nil, true, "genesis supply is incorrect, expected 1wrongcoin, got 21barcoin, 11foocoin",
+			nil, true, "genesis supply is incorrect, expected 1wrongcoin, got 21barcoin,11foocoin",
 		},
 		{
 			"calculation matches genesis Supply field",

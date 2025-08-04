@@ -4,11 +4,6 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/contrib/x/evidence"
-	"github.com/cosmos/cosmos-sdk/contrib/x/evidence/exported"
-	keeper2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/keeper"
-	evidencetestutil "github.com/cosmos/cosmos-sdk/contrib/x/evidence/testutil"
-	types2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 	"time"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
@@ -20,6 +15,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/contrib/x/evidence"
+	"github.com/cosmos/cosmos-sdk/contrib/x/evidence/exported"
+	keeper2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/keeper"
+	evidencetestutil "github.com/cosmos/cosmos-sdk/contrib/x/evidence/testutil"
+	types2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/runtime"

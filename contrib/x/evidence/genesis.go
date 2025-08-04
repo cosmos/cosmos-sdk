@@ -2,11 +2,11 @@ package evidence
 
 import (
 	"fmt"
+
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/contrib/x/evidence/exported"
 	"github.com/cosmos/cosmos-sdk/contrib/x/evidence/keeper"
 	types2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
-
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

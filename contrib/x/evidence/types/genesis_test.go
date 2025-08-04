@@ -2,8 +2,6 @@ package types_test
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/contrib/x/evidence/exported"
-	types2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 	"testing"
 	"time"
 
@@ -11,6 +9,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/contrib/x/evidence/exported"
+	types2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 )
 

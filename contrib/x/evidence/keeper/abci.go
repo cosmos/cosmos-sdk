@@ -3,10 +3,10 @@ package keeper
 import (
 	"context"
 	"fmt"
-	types2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 
 	"cosmossdk.io/core/comet"
 
+	types2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

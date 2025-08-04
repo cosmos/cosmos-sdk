@@ -1,10 +1,10 @@
 package simulation
 
 import (
-	"github.com/cosmos/cosmos-sdk/contrib/x/evidence/exported"
-	types2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 	"math/rand"
 
+	"github.com/cosmos/cosmos-sdk/contrib/x/evidence/exported"
+	types2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )

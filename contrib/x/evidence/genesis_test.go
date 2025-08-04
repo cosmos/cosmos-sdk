@@ -2,11 +2,6 @@ package evidence_test
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/contrib/x/evidence"
-	"github.com/cosmos/cosmos-sdk/contrib/x/evidence/exported"
-	"github.com/cosmos/cosmos-sdk/contrib/x/evidence/keeper"
-	"github.com/cosmos/cosmos-sdk/contrib/x/evidence/testutil"
-	types2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 	"testing"
 	"time"
 
@@ -17,6 +12,11 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 
+	"github.com/cosmos/cosmos-sdk/contrib/x/evidence"
+	"github.com/cosmos/cosmos-sdk/contrib/x/evidence/exported"
+	"github.com/cosmos/cosmos-sdk/contrib/x/evidence/keeper"
+	"github.com/cosmos/cosmos-sdk/contrib/x/evidence/testutil"
+	types2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"

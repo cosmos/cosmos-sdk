@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/contrib/x/evidence/exported"
-	types2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 	"strings"
 
 	"cosmossdk.io/collections"
@@ -16,6 +14,8 @@ import (
 	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/contrib/x/evidence/exported"
+	types2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

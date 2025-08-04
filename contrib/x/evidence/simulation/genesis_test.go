@@ -2,8 +2,6 @@ package simulation_test
 
 import (
 	"encoding/json"
-	"github.com/cosmos/cosmos-sdk/contrib/x/evidence/simulation"
-	types2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 	"math/rand"
 	"testing"
 
@@ -13,6 +11,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/contrib/x/evidence/simulation"
+	types2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )

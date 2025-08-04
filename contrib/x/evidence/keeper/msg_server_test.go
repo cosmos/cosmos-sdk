@@ -1,9 +1,9 @@
 package keeper_test
 
 import (
-	types2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 	"time"
 
+	types2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

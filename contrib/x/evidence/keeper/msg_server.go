@@ -2,10 +2,10 @@ package keeper
 
 import (
 	"context"
-	types2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 
 	"cosmossdk.io/errors"
 
+	types2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )

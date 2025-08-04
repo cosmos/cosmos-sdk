@@ -2,7 +2,6 @@ package types_test
 
 import (
 	"encoding/hex"
-	types2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 	"strings"
 	"testing"
 	"time"
@@ -12,6 +11,7 @@ import (
 	"cosmossdk.io/core/comet"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	types2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

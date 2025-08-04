@@ -3,8 +3,8 @@ package keeper
 import (
 	"context"
 	"fmt"
-	types2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 
+	types2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )

@@ -160,7 +160,7 @@ type BufferedPipe struct {
 
 	// buffer is the channel used to communicate buffer contents.
 	buffer chan []byte
-	// stated is true if this BufferedPipe has been started.
+	// started is true if this BufferedPipe has been started.
 	started bool
 }
 

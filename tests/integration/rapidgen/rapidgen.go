@@ -19,7 +19,6 @@ import (
 	multisigapi "cosmossdk.io/api/cosmos/crypto/multisig"
 	"cosmossdk.io/api/cosmos/crypto/secp256k1"
 	distapi "cosmossdk.io/api/cosmos/distribution/v1beta1"
-	evidenceapi "cosmossdk.io/api/cosmos/evidence/v1beta1"
 	feegrantapi "cosmossdk.io/api/cosmos/feegrant/v1beta1"
 	gov_v1_api "cosmossdk.io/api/cosmos/gov/v1"
 	gov_v1beta1_api "cosmossdk.io/api/cosmos/gov/v1beta1"
@@ -30,9 +29,7 @@ import (
 	stakingapi "cosmossdk.io/api/cosmos/staking/v1beta1"
 	upgradeapi "cosmossdk.io/api/cosmos/upgrade/v1beta1"
 	vestingapi "cosmossdk.io/api/cosmos/vesting/v1beta1"
-
-	evidencetypes "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
-	grouptypes "github.com/cosmos/cosmos-sdk/contrib/x/group"
+	
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -134,12 +131,6 @@ var (
 		GenType(&disttypes.MsgCommunityPoolSpend{}, &distapi.MsgCommunityPoolSpend{}, GenOpts),
 		GenType(&disttypes.MsgDepositValidatorRewardsPool{}, &distapi.MsgDepositValidatorRewardsPool{}, GenOpts),
 
-		// evidence
-		GenType(&evidencetypes.MsgSubmitEvidence{}, &evidenceapi.MsgSubmitEvidence{},
-			GenOpts.WithAnyTypes(&evidenceapi.Equivocation{}).
-				WithDisallowNil().
-				WithInterfaceHint("cosmos.evidence.v1beta1.Evidence", &evidenceapi.Equivocation{})),
-
 		// feegrant
 		GenType(&feegranttypes.MsgGrantAllowance{}, &feegrantapi.MsgGrantAllowance{},
 			GenOpts.WithDisallowNil().
@@ -176,29 +167,6 @@ var (
 				WithDisallowNil().
 				WithInterfaceHint("cosmos.gov.v1beta1.Content", &gov_v1beta1_api.TextProposal{})),
 		GenType(&gov_v1_types.MsgUpdateParams{}, &gov_v1_api.MsgUpdateParams{}, GenOpts.WithDisallowNil()),
-
-		// group
-		GenType(&grouptypes.MsgCreateGroup{}, &groupapi.MsgCreateGroup{}, GenOpts),
-		GenType(&grouptypes.MsgUpdateGroupMembers{}, &groupapi.MsgUpdateGroupMembers{}, GenOpts),
-		GenType(&grouptypes.MsgUpdateGroupAdmin{}, &groupapi.MsgUpdateGroupAdmin{}, GenOpts),
-		GenType(&grouptypes.MsgUpdateGroupMetadata{}, &groupapi.MsgUpdateGroupMetadata{}, GenOpts),
-		GenType(&grouptypes.MsgCreateGroupWithPolicy{}, &groupapi.MsgCreateGroupWithPolicy{},
-			WithDecisionPolicy(GenOpts)),
-		GenType(&grouptypes.MsgCreateGroupPolicy{}, &groupapi.MsgCreateGroupPolicy{},
-			WithDecisionPolicy(GenOpts)),
-		GenType(&grouptypes.MsgUpdateGroupPolicyAdmin{}, &groupapi.MsgUpdateGroupPolicyAdmin{}, GenOpts),
-		GenType(&grouptypes.MsgUpdateGroupPolicyDecisionPolicy{}, &groupapi.MsgUpdateGroupPolicyDecisionPolicy{},
-			WithDecisionPolicy(GenOpts)),
-		GenType(&grouptypes.MsgUpdateGroupPolicyMetadata{}, &groupapi.MsgUpdateGroupPolicyMetadata{}, GenOpts),
-		GenType(&grouptypes.MsgSubmitProposal{}, &groupapi.MsgSubmitProposal{},
-			GenOpts.WithDisallowNil().
-				WithAnyTypes(&groupapi.MsgCreateGroup{}, &groupapi.MsgUpdateGroupMembers{}).
-				WithInterfaceHint("cosmos.base.v1beta1.Msg", &groupapi.MsgCreateGroup{}).
-				WithInterfaceHint("cosmos.base.v1beta1.Msg", &groupapi.MsgUpdateGroupMembers{}),
-		),
-		GenType(&grouptypes.MsgVote{}, &groupapi.MsgVote{}, GenOpts),
-		GenType(&grouptypes.MsgExec{}, &groupapi.MsgExec{}, GenOpts),
-		GenType(&grouptypes.MsgLeaveGroup{}, &groupapi.MsgLeaveGroup{}, GenOpts),
 
 		// mint
 		GenType(&minttypes.MsgUpdateParams{}, &mintapi.MsgUpdateParams{}, GenOpts.WithDisallowNil()),
@@ -248,8 +216,6 @@ var (
 			GenOpts.WithAnyTypes(&ed25519.PubKey{}, &secp256k1.PubKey{})),
 
 		GenType(&disttypes.Params{}, &distapi.Params{}, GenOpts),
-
-		GenType(&evidencetypes.Equivocation{}, &evidenceapi.Equivocation{}, GenOpts.WithDisallowNil()),
 
 		GenType(&feegranttypes.BasicAllowance{}, &feegrantapi.BasicAllowance{}, GenOpts.WithDisallowNil()),
 		GenType(&feegranttypes.PeriodicAllowance{}, &feegrantapi.PeriodicAllowance{}, GenOpts.WithDisallowNil()),

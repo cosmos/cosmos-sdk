@@ -68,7 +68,7 @@ SECP256K1_WARN_UNUSED_RESULT int ec_privkey_export_der(
  * Out:  seckey:     pointer to a 32-byte array for storing the private key.
  *                   (cannot be NULL).
  * In:   privkey:    pointer to a private key in DER format (cannot be NULL).
- *       privkeylen: length of the DER private key pointed to be privkey.
+ *       privkeylen: length of the DER private key pointed to by privkey.
  *
  * This function will accept more than just strict DER, and even allow some BER
  * violations. The public key stored inside the DER-encoded private key is not

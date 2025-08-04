@@ -28,7 +28,7 @@ func NewSigningAlgoFromString(str string, algoList SigningAlgoList) (SignatureAl
 // SigningAlgoList is a slice of signature algorithms
 type SigningAlgoList []SignatureAlgo
 
-// Contains returns true if the SigningAlgoList the given SignatureAlgo.
+// Contains returns true if the SigningAlgoList contains the given SignatureAlgo.
 func (sal SigningAlgoList) Contains(algo SignatureAlgo) bool {
 	for _, cAlgo := range sal {
 		if cAlgo.Name() == algo.Name() {

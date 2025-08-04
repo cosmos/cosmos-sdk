@@ -2,7 +2,6 @@ package types_test
 
 import (
 	"encoding/hex"
-	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 	"strings"
 	"testing"
 	"time"
@@ -13,6 +12,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 func TestEquivocation_Valid(t *testing.T) {

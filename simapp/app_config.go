@@ -22,7 +22,6 @@ import (
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
-	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -40,6 +39,7 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	_ "github.com/cosmos/cosmos-sdk/x/epochs" // import for side-effects
 	epochstypes "github.com/cosmos/cosmos-sdk/x/epochs/types"
+	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	_ "github.com/cosmos/cosmos-sdk/x/feegrant/module" // import for side-effects
 	"github.com/cosmos/cosmos-sdk/x/genutil"

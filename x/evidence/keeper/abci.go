@@ -3,12 +3,12 @@ package keeper
 import (
 	"context"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 
 	"cosmossdk.io/core/comet"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 // BeginBlocker iterates through and handles any newly discovered evidence of

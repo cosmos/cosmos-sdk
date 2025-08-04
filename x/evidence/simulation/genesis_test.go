@@ -2,8 +2,6 @@ package simulation_test
 
 import (
 	"encoding/json"
-	"github.com/cosmos/cosmos-sdk/x/evidence/simulation"
-	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 	"math/rand"
 	"testing"
 
@@ -15,6 +13,8 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/evidence/simulation"
+	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 // TestRandomizedGenState tests the normal scenario of applying RandomizedGenState.

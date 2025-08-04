@@ -22,6 +22,7 @@ proof-of-stake capabilities and governance.
 * [Slashing](./slashing/README.md) - Validator punishment mechanisms.
 * [Staking](./staking/README.md) - Proof-of-Stake layer for public blockchains.
 * [Upgrade](./upgrade/README.md) - Software upgrades handling and coordination.
+* [Evidence](./evidence/README.md) - Evidence handling for double signing, misbehaviour, etc.
 
 ## Supplementary Modules
 
@@ -43,7 +44,6 @@ The following modules are deprecated.  They will no longer be maintained activel
 * [NFT](../contrib/x/nft/README.md) - _Deprecated_ NFT module implemented based on [ADR43](https://docs.cosmos.network/main/build/architecture/adr-043-nft-module).
 * [Group](../contrib/x/group/README.md) - _Deprecated_ Allows for the creation and management of on-chain multisig accounts.  
 * [Circuit](../contrib/x/circuit/README.md) _Deprecated_ - Circuit breaker module for pausing messages.
-* [Evidence](evidence/README.md) - Evidence handling for double signing, misbehaviour, etc.
 
 To learn more about the process of building modules, visit the [building modules reference documentation](https://docs.cosmos.network/main/building-modules/intro).
 

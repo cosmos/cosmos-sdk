@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
-	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 
 	proto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/grpc/codes"
@@ -14,6 +12,8 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
+	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 var _ types.QueryServer = Querier{}

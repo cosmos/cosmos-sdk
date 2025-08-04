@@ -3,7 +3,6 @@
 package simapp
 
 import (
-	evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
 	"io"
 
 	dbm "github.com/cosmos/cosmos-db"
@@ -34,6 +33,7 @@ import (
 	consensuskeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	epochskeeper "github.com/cosmos/cosmos-sdk/x/epochs/keeper"
+	evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
 	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"

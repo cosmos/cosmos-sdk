@@ -1,10 +1,10 @@
 package simulation
 
 import (
+	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
+	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 	"math/rand"
 
-	"github.com/cosmos/cosmos-sdk/contrib/x/evidence/exported"
-	types2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
@@ -23,6 +23,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	simState.AppParams.GetOrGenerate(evidence, &ev, simState.Rand, func(r *rand.Rand) { ev = GenEvidences(r, simState.Accounts) })
 
-	evidenceGenesis := types2.NewGenesisState(ev)
-	simState.GenState[types2.ModuleName] = simState.Cdc.MustMarshalJSON(evidenceGenesis)
+	evidenceGenesis := types.NewGenesisState(ev)
+	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(evidenceGenesis)
 }

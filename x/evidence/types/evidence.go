@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 	"time"
 
 	"github.com/cometbft/cometbft/v2/crypto/tmhash"
@@ -9,7 +10,6 @@ import (
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/comet"
 
-	"github.com/cosmos/cosmos-sdk/contrib/x/evidence/exported"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

@@ -2,6 +2,8 @@ package simulation_test
 
 import (
 	"encoding/json"
+	"github.com/cosmos/cosmos-sdk/x/evidence/simulation"
+	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 	"math/rand"
 	"testing"
 
@@ -11,8 +13,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/contrib/x/evidence/simulation"
-	types2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
@@ -38,8 +38,8 @@ func TestRandomizedGenState(t *testing.T) {
 
 	simulation.RandomizedGenState(&simState)
 
-	var evidenceGenesis types2.GenesisState
-	simState.Cdc.MustUnmarshalJSON(simState.GenState[types2.ModuleName], &evidenceGenesis)
+	var evidenceGenesis types.GenesisState
+	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &evidenceGenesis)
 
 	require.Len(t, evidenceGenesis.Evidence, 0)
 }

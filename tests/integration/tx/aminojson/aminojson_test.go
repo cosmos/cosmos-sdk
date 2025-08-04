@@ -37,7 +37,6 @@ import (
 	signing_testutil "cosmossdk.io/x/tx/signing/testutil"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/contrib/x/evidence"
 	groupmodule "github.com/cosmos/cosmos-sdk/contrib/x/group/module"
 	ed25519types "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
@@ -64,6 +63,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/consensus"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/cosmos/cosmos-sdk/x/evidence"
 	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	gov_v1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1"

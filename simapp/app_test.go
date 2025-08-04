@@ -18,8 +18,6 @@ import (
 	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/contrib/x/evidence"
-	evidencetypes "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 	grouptypes "github.com/cosmos/cosmos-sdk/contrib/x/group"
 	group "github.com/cosmos/cosmos-sdk/contrib/x/group/module"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -41,6 +39,8 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/epochs"
 	epochstypes "github.com/cosmos/cosmos-sdk/x/epochs/types"
+	"github.com/cosmos/cosmos-sdk/x/evidence"
+	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"

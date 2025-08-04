@@ -3,8 +3,8 @@ package types
 import (
 	"context"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 
-	"github.com/cosmos/cosmos-sdk/contrib/x/evidence/exported"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

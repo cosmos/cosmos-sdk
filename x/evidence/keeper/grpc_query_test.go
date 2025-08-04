@@ -3,16 +3,16 @@ package keeper_test
 import (
 	"encoding/hex"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
+	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/contrib/x/evidence/exported"
-	types2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 func (suite *KeeperTestSuite) TestQueryEvidence() {
 	var (
-		req      *types2.QueryEvidenceRequest
+		req      *types.QueryEvidenceRequest
 		evidence []exported.Evidence
 	)
 
@@ -21,16 +21,16 @@ func (suite *KeeperTestSuite) TestQueryEvidence() {
 		malleate  func()
 		expPass   bool
 		expErrMsg string
-		posttests func(res *types2.QueryEvidenceResponse)
+		posttests func(res *types.QueryEvidenceResponse)
 	}{
 		{
 			"invalid request with empty evidence hash",
 			func() {
-				req = &types2.QueryEvidenceRequest{Hash: ""}
+				req = &types.QueryEvidenceRequest{Hash: ""}
 			},
 			false,
 			"invalid request; hash is empty",
-			func(res *types2.QueryEvidenceResponse) {},
+			func(res *types.QueryEvidenceResponse) {},
 		},
 		{
 			"evidence not found",
@@ -39,22 +39,22 @@ func (suite *KeeperTestSuite) TestQueryEvidence() {
 				evidence = suite.populateEvidence(suite.ctx, numEvidence)
 				evidenceHash := strings.ToUpper(hex.EncodeToString(evidence[0].Hash()))
 				reqHash := strings.Repeat("a", len(evidenceHash))
-				req = types2.NewQueryEvidenceRequest(reqHash)
+				req = types.NewQueryEvidenceRequest(reqHash)
 			},
 			false,
 			"not found",
-			func(res *types2.QueryEvidenceResponse) {
+			func(res *types.QueryEvidenceResponse) {
 			},
 		},
 		{
 			"non-existent evidence",
 			func() {
 				reqHash := "DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660"
-				req = types2.NewQueryEvidenceRequest(reqHash)
+				req = types.NewQueryEvidenceRequest(reqHash)
 			},
 			false,
 			"evidence DF0C23E8634E480F84B9D5674A7CDC9816466DEC28A3358F73260F68D28D7660 not found",
-			func(res *types2.QueryEvidenceResponse) {
+			func(res *types.QueryEvidenceResponse) {
 			},
 		},
 		{
@@ -62,11 +62,11 @@ func (suite *KeeperTestSuite) TestQueryEvidence() {
 			func() {
 				numEvidence := 100
 				evidence = suite.populateEvidence(suite.ctx, numEvidence)
-				req = types2.NewQueryEvidenceRequest(strings.ToUpper(hex.EncodeToString(evidence[0].Hash())))
+				req = types.NewQueryEvidenceRequest(strings.ToUpper(hex.EncodeToString(evidence[0].Hash())))
 			},
 			true,
 			"",
-			func(res *types2.QueryEvidenceResponse) {
+			func(res *types.QueryEvidenceResponse) {
 				var evi exported.Evidence
 				err := suite.encCfg.InterfaceRegistry.UnpackAny(res.Evidence, &evi)
 				suite.Require().NoError(err)
@@ -98,21 +98,21 @@ func (suite *KeeperTestSuite) TestQueryEvidence() {
 }
 
 func (suite *KeeperTestSuite) TestQueryAllEvidence() {
-	var req *types2.QueryAllEvidenceRequest
+	var req *types.QueryAllEvidenceRequest
 
 	testCases := []struct {
 		msg       string
 		malleate  func()
 		expPass   bool
-		posttests func(res *types2.QueryAllEvidenceResponse)
+		posttests func(res *types.QueryAllEvidenceResponse)
 	}{
 		{
 			"success without evidence",
 			func() {
-				req = &types2.QueryAllEvidenceRequest{}
+				req = &types.QueryAllEvidenceRequest{}
 			},
 			true,
-			func(res *types2.QueryAllEvidenceResponse) {
+			func(res *types.QueryAllEvidenceResponse) {
 				suite.Require().Empty(res.Evidence)
 			},
 		},
@@ -126,10 +126,10 @@ func (suite *KeeperTestSuite) TestQueryAllEvidence() {
 					Limit:      50,
 					CountTotal: false,
 				}
-				req = types2.NewQueryAllEvidenceRequest(pageReq)
+				req = types.NewQueryAllEvidenceRequest(pageReq)
 			},
 			true,
-			func(res *types2.QueryAllEvidenceResponse) {
+			func(res *types.QueryAllEvidenceResponse) {
 				suite.Equal(len(res.Evidence), 50)
 				suite.NotNil(res.Pagination.NextKey)
 			},

@@ -248,7 +248,7 @@ https://github.com/cosmos/cosmos-sdk/tree/release/v0.50.x/x/evidence/keeper/infr
 
 **Note:** The slashing, jailing, and tombstoning calls are delegated through the `x/slashing` module
 that emits informative events and finally delegates calls to the `x/staking` module. See documentation
-on slashing and jailing in [State Transitions](../../../x/staking/README.md#state-transitions).
+on slashing and jailing in [State Transitions](../staking/README.md#state-transitions).
 
 ## Client
 

@@ -9,6 +9,7 @@ import (
 	consensusmodulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
 	distrmodulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
 	epochsmodulev1 "cosmossdk.io/api/cosmos/epochs/module/v1"
+	evidencemodulev1 "cosmossdk.io/api/cosmos/evidence/module/v1"
 	feegrantmodulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
 	genutilmodulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
 	govmodulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
@@ -21,6 +22,7 @@ import (
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
+	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -100,6 +102,7 @@ var (
 					distrtypes.ModuleName,
 					protocolpooltypes.ModuleName,
 					slashingtypes.ModuleName,
+					evidencetypes.ModuleName,
 					stakingtypes.ModuleName,
 					authz.ModuleName,
 					epochstypes.ModuleName,
@@ -131,6 +134,7 @@ var (
 					govtypes.ModuleName,
 					minttypes.ModuleName,
 					genutiltypes.ModuleName,
+					evidencetypes.ModuleName,
 					authz.ModuleName,
 					feegrant.ModuleName,
 					upgradetypes.ModuleName,
@@ -151,6 +155,7 @@ var (
 					govtypes.ModuleName,
 					minttypes.ModuleName,
 					genutiltypes.ModuleName,
+					evidencetypes.ModuleName,
 					authz.ModuleName,
 					feegrant.ModuleName,
 					upgradetypes.ModuleName,
@@ -224,6 +229,10 @@ var (
 		{
 			Name:   govtypes.ModuleName,
 			Config: appconfig.WrapAny(&govmodulev1.Module{}),
+		},
+		{
+			Name:   evidencetypes.ModuleName,
+			Config: appconfig.WrapAny(&evidencemodulev1.Module{}),
 		},
 		{
 			Name:   feegrant.ModuleName,

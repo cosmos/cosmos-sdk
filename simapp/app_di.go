@@ -3,6 +3,7 @@
 package simapp
 
 import (
+	evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
 	"io"
 
 	dbm "github.com/cosmos/cosmos-db"
@@ -69,6 +70,7 @@ type SimApp struct {
 	DistrKeeper           distrkeeper.Keeper
 	GovKeeper             *govkeeper.Keeper
 	UpgradeKeeper         *upgradekeeper.Keeper
+	EvidenceKeeper        evidencekeeper.Keeper
 	ConsensusParamsKeeper consensuskeeper.Keeper
 
 	// supplementary keepers
@@ -169,6 +171,7 @@ func NewSimApp(
 		&app.UpgradeKeeper,
 		&app.AuthzKeeper,
 		&app.FeeGrantKeeper,
+		&app.EvidenceKeeper,
 		&app.ConsensusParamsKeeper,
 		&app.EpochsKeeper,
 		&app.ProtocolPoolKeeper,

@@ -2,6 +2,8 @@ package types_test
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
+	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 	"testing"
 	"time"
 
@@ -9,13 +11,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/contrib/x/evidence/exported"
-	types2 "github.com/cosmos/cosmos-sdk/contrib/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 )
 
 func TestDefaultGenesisState(t *testing.T) {
-	gs := types2.DefaultGenesisState()
+	gs := types.DefaultGenesisState()
 	require.NotNil(t, gs.Evidence)
 	require.Len(t, gs.Evidence, 0)
 }
@@ -43,11 +43,11 @@ func TestNewGenesisState(t *testing.T) {
 
 			if tc.expPass {
 				require.NotPanics(t, func() {
-					types2.NewGenesisState(evidence)
+					types.NewGenesisState(evidence)
 				})
 			} else {
 				require.Panics(t, func() {
-					types2.NewGenesisState(evidence)
+					types.NewGenesisState(evidence)
 				})
 			}
 		})
@@ -56,7 +56,7 @@ func TestNewGenesisState(t *testing.T) {
 
 func TestGenesisStateValidate(t *testing.T) {
 	var (
-		genesisState *types2.GenesisState
+		genesisState *types.GenesisState
 		testEvidence []exported.Evidence
 		pk           = ed25519.GenPrivKey()
 	)
@@ -71,14 +71,14 @@ func TestGenesisStateValidate(t *testing.T) {
 			func() {
 				testEvidence = make([]exported.Evidence, 100)
 				for i := 0; i < 100; i++ {
-					testEvidence[i] = &types2.Equivocation{
+					testEvidence[i] = &types.Equivocation{
 						Height:           int64(i + 1),
 						Power:            100,
 						Time:             time.Now().UTC(),
 						ConsensusAddress: pk.PubKey().Address().String(),
 					}
 				}
-				genesisState = types2.NewGenesisState(testEvidence)
+				genesisState = types.NewGenesisState(testEvidence)
 			},
 			true,
 		},
@@ -87,21 +87,21 @@ func TestGenesisStateValidate(t *testing.T) {
 			func() {
 				testEvidence = make([]exported.Evidence, 100)
 				for i := 0; i < 100; i++ {
-					testEvidence[i] = &types2.Equivocation{
+					testEvidence[i] = &types.Equivocation{
 						Height:           int64(i),
 						Power:            100,
 						Time:             time.Now().UTC(),
 						ConsensusAddress: pk.PubKey().Address().String(),
 					}
 				}
-				genesisState = types2.NewGenesisState(testEvidence)
+				genesisState = types.NewGenesisState(testEvidence)
 			},
 			false,
 		},
 		{
 			"expected evidence",
 			func() {
-				genesisState = &types2.GenesisState{
+				genesisState = &types.GenesisState{
 					Evidence: []*codectypes.Any{{}},
 				}
 			},
@@ -123,7 +123,7 @@ func TestGenesisStateValidate(t *testing.T) {
 }
 
 func TestUnpackInterfaces(t *testing.T) {
-	gs := types2.GenesisState{
+	gs := types.GenesisState{
 		Evidence: []*codectypes.Any{{}},
 	}
 

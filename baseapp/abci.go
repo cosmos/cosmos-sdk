@@ -818,11 +818,7 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Finaliz
 		var response *abci.ExecTxResult
 
 		if _, err := app.txDecoder(rawTx); err == nil {
-			if app.queryOnlyMode {
-				response = app.deliverTxQueryOnly(rawTx)
-			} else {
-				response = app.deliverTx(rawTx)
-			}
+			response = app.deliverTx(rawTx)
 		} else {
 			// In the case where a transaction included in a block proposal is malformed,
 			// we still want to return a default response to comet. This is because comet

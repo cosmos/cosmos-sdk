@@ -154,6 +154,11 @@ func SetQueryOnlyMode() func(*BaseApp) {
 	return func(app *BaseApp) { app.SetQueryOnlyMode(true) }
 }
 
+// SetBypassTxProcessing enables bypassing transaction processing while maintaining decoding and validation.
+func SetBypassTxProcessing() func(*BaseApp) {
+	return func(app *BaseApp) { app.SetBypassTxProcessing(true) }
+}
+
 func (app *BaseApp) SetName(name string) {
 	if app.sealed {
 		panic("SetName() on sealed BaseApp")
@@ -434,6 +439,14 @@ func (app *BaseApp) SetQueryOnlyMode(queryOnlyMode bool) {
 		// Query-only mode implies skipping EndBlocker as well
 		app.skipEndBlocker = true
 	}
+}
+
+// SetBypassTxProcessing sets the bypassTxProcessing flag for the BaseApp.
+func (app *BaseApp) SetBypassTxProcessing(bypassTxProcessing bool) {
+	if app.sealed {
+		panic("SetBypassTxProcessing() on sealed BaseApp")
+	}
+	app.bypassTxProcessing = bypassTxProcessing
 }
 
 // SetMsgServiceRouter sets the MsgServiceRouter of a BaseApp.

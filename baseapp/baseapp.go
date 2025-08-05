@@ -172,6 +172,10 @@ type BaseApp struct {
 	// This enables fast query-only nodes that stay synchronized without executing business logic.
 	queryOnlyMode bool
 
+	// bypassTxProcessing will skip transaction processing (ante handler, message execution)
+	// but still maintain transaction decoding and basic validation for state consistency.
+	bypassTxProcessing bool
+
 	// nextBlockDelay is the delay to wait until the next block after ABCI has committed.
 	// This gives the application more time to receive precommits.  This is the same as TimeoutCommit,
 	// but can now be set from the application.  This value defaults to 0, and CometBFT will use the
@@ -734,6 +738,7 @@ func (app *BaseApp) deliverTx(tx []byte) *abci.ExecTxResult {
 		telemetry.SetGauge(float32(gInfo.GasWanted), "tx", "gas", "wanted")
 	}()
 
+
 	gInfo, result, anteEvents, err := app.runTx(execModeFinalize, tx, nil)
 	if err != nil {
 		resultStr = "failed"
@@ -758,31 +763,6 @@ func (app *BaseApp) deliverTx(tx []byte) *abci.ExecTxResult {
 	return resp
 }
 
-// deliverTxQueryOnly processes a transaction in query-only mode by only updating
-// raw state without executing application logic
-func (app *BaseApp) deliverTxQueryOnly(tx []byte) *abci.ExecTxResult {
-	// In query-only mode, we still need to decode transactions to maintain
-	// state consistency, but we skip the actual execution
-	if _, err := app.txDecoder(tx); err != nil {
-		// Return error response for malformed transactions
-		return sdkerrors.ResponseExecTxResultWithEvents(
-			sdkerrors.ErrTxDecode, 0, 0, nil, false,
-		)
-	}
-
-	// For query-only mode, return success without executing
-	// This maintains state consistency without application processing
-	return &abci.ExecTxResult{
-		Code:      0,
-		Data:      nil,
-		Log:       "query-only mode: transaction skipped",
-		Info:      "",
-		GasWanted: 0,
-		GasUsed:   0,
-		Events:    nil,
-		Codespace: "",
-	}
-}
 
 // endBlock is an application-defined function that is called after transactions
 // have been processed in FinalizeBlock.
@@ -957,12 +937,21 @@ func (app *BaseApp) runTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx) (gInfo s
 	// is a branch of a branch.
 	runMsgCtx, msCache := app.cacheTxContext(ctx, txBytes)
 
-	// Attempt to execute all messages and only update state if all messages pass
-	// and we're in DeliverTx. Note, runMsgs will never return a reference to a
-	// Result if any single message fails or does not have a registered Handler.
-	msgsV2, err := tx.GetMsgsV2()
-	if err == nil {
-		result, err = app.runMsgs(runMsgCtx, msgs, msgsV2, mode)
+	// Handle bypass transaction processing mode - skip message execution but maintain state
+	if app.bypassTxProcessing {
+		// Return success without executing messages but maintain gas info
+		result = &sdk.Result{
+			Log: "bypass mode: message execution skipped",
+		}
+		err = nil
+	} else {
+		// Attempt to execute all messages and only update state if all messages pass
+		// and we're in DeliverTx. Note, runMsgs will never return a reference to a
+		// Result if any single message fails or does not have a registered Handler.
+		msgsV2, err := tx.GetMsgsV2()
+		if err == nil {
+			result, err = app.runMsgs(runMsgCtx, msgs, msgsV2, mode)
+		}
 	}
 
 	// Run optional postHandlers (should run regardless of the execution result).

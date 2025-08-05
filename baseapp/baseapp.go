@@ -937,21 +937,12 @@ func (app *BaseApp) runTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx) (gInfo s
 	// is a branch of a branch.
 	runMsgCtx, msCache := app.cacheTxContext(ctx, txBytes)
 
-	// Handle bypass transaction processing mode - skip message execution but maintain state
-	if app.bypassTxProcessing {
-		// Return success without executing messages but maintain gas info
-		result = &sdk.Result{
-			Log: "bypass mode: message execution skipped",
-		}
-		err = nil
-	} else {
-		// Attempt to execute all messages and only update state if all messages pass
-		// and we're in DeliverTx. Note, runMsgs will never return a reference to a
-		// Result if any single message fails or does not have a registered Handler.
-		msgsV2, err := tx.GetMsgsV2()
-		if err == nil {
-			result, err = app.runMsgs(runMsgCtx, msgs, msgsV2, mode)
-		}
+	// Attempt to execute all messages and only update state if all messages pass
+	// and we're in DeliverTx. Note, runMsgs will never return a reference to a
+	// Result if any single message fails or does not have a registered Handler.
+	msgsV2, err := tx.GetMsgsV2()
+	if err == nil {
+		result, err = app.runMsgs(runMsgCtx, msgs, msgsV2, mode)
 	}
 
 	// Run optional postHandlers (should run regardless of the execution result).
@@ -1017,10 +1008,22 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 			return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "no message handler found for %T", msg)
 		}
 
-		// ADR 031 request type routing
-		msgResult, err := handler(ctx, msg)
-		if err != nil {
-			return nil, errorsmod.Wrapf(err, "failed to execute message; message index: %d", i)
+		var msgResult *sdk.Result
+		var err error
+
+		// Handle bypass transaction processing mode - skip message execution
+		if app.bypassTxProcessing {
+			// Create a minimal successful result without executing the handler
+			msgResult = &sdk.Result{
+				Log: "bypass mode: message handler skipped",
+			}
+			err = nil
+		} else {
+			// ADR 031 request type routing
+			msgResult, err = handler(ctx, msg)
+			if err != nil {
+				return nil, errorsmod.Wrapf(err, "failed to execute message; message index: %d", i)
+			}
 		}
 
 		// create message events

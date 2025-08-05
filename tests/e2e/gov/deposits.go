@@ -127,13 +127,13 @@ func (s *DepositTestSuite) TestQueryProposalAfterVotingPeriod() {
 	s.Require().Len(deposits.Deposits, 0)
 }
 
-func (s *DepositTestSuite) queryDeposits(val *network.Validator, proposalID string, exceptErr bool, message string) *v1.QueryDepositsResponse {
+func (s *DepositTestSuite) queryDeposits(val *network.Validator, proposalID string, expectErr bool, message string) *v1.QueryDepositsResponse {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/deposits", val.APIAddress, proposalID))
 	s.Require().NoError(err)
 
-	if exceptErr {
+	if expectErr {
 		s.Require().Contains(string(resp), message)
 		return nil
 	}
@@ -145,13 +145,13 @@ func (s *DepositTestSuite) queryDeposits(val *network.Validator, proposalID stri
 	return &depositsRes
 }
 
-func (s *DepositTestSuite) queryDeposit(val *network.Validator, proposalID string, exceptErr bool, message string) *v1.QueryDepositResponse {
+func (s *DepositTestSuite) queryDeposit(val *network.Validator, proposalID string, expectErr bool, message string) *v1.QueryDepositResponse {
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	resp, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/deposits/%s", val.APIAddress, proposalID, val.Address.String()))
 	s.Require().NoError(err)
 
-	if exceptErr {
+	if expectErr {
 		s.Require().Contains(string(resp), message)
 		return nil
 	}

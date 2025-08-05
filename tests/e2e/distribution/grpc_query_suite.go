@@ -563,6 +563,5 @@ func doRequest(url string, headers map[string]string) ([]byte, http.Header, erro
 	if err = res.Body.Close(); err != nil {
 		return nil, nil, err
 	}
-	fmt.Printf("headers: %v\n", res.Header)
 	return body, res.Header, nil
 }

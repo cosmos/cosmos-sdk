@@ -531,7 +531,7 @@ func (s *E2ETestSuite) TestNewExecGrantAuthorized() {
 			"",
 		},
 		{
-			"error over grantee doesn't exist on chain",
+			"error due to insufficient funds for grantee",
 			[]string{
 				execMsg.Name(),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee1.String()),
@@ -541,7 +541,7 @@ func (s *E2ETestSuite) TestNewExecGrantAuthorized() {
 			},
 			0,
 			true,
-			"insufficient funds", // earlier the error was account not found here.
+			"insufficient funds",
 		},
 		{
 			"error over spent",

@@ -149,6 +149,11 @@ func SkipEndBlocker() func(*BaseApp) {
 	return func(app *BaseApp) { app.SetSkipEndBlocker(true) }
 }
 
+// SetQueryOnlyMode enables comprehensive query-only mode for fast query nodes.
+func SetQueryOnlyMode() func(*BaseApp) {
+	return func(app *BaseApp) { app.SetQueryOnlyMode(true) }
+}
+
 func (app *BaseApp) SetName(name string) {
 	if app.sealed {
 		panic("SetName() on sealed BaseApp")
@@ -417,6 +422,18 @@ func (app *BaseApp) SetDisableBlockGasMeter(disableBlockGasMeter bool) {
 // SetSkipEndBlocker sets the skipEndBlocker flag for the BaseApp.
 func (app *BaseApp) SetSkipEndBlocker(skipEndBlocker bool) {
 	app.skipEndBlocker = skipEndBlocker
+}
+
+// SetQueryOnlyMode sets the queryOnlyMode flag for the BaseApp.
+func (app *BaseApp) SetQueryOnlyMode(queryOnlyMode bool) {
+	if app.sealed {
+		panic("SetQueryOnlyMode() on sealed BaseApp")
+	}
+	app.queryOnlyMode = queryOnlyMode
+	if queryOnlyMode {
+		// Query-only mode implies skipping EndBlocker as well
+		app.skipEndBlocker = true
+	}
 }
 
 // SetMsgServiceRouter sets the MsgServiceRouter of a BaseApp.

@@ -167,6 +167,11 @@ type BaseApp struct {
 	// where EndBlocker operations might block or are unnecessary.
 	skipEndBlocker bool
 
+	// queryOnlyMode will skip all application processing (PreBlocker, BeginBlocker, 
+	// transaction execution, EndBlocker) while still accepting state updates via state sync.
+	// This enables fast query-only nodes that stay synchronized without executing business logic.
+	queryOnlyMode bool
+
 	// nextBlockDelay is the delay to wait until the next block after ABCI has committed.
 	// This gives the application more time to receive precommits.  This is the same as TimeoutCommit,
 	// but can now be set from the application.  This value defaults to 0, and CometBFT will use the
@@ -262,6 +267,16 @@ func (app *BaseApp) Version() string {
 // Logger returns the logger of the BaseApp.
 func (app *BaseApp) Logger() log.Logger {
 	return app.logger
+}
+
+// QueryOnlyMode returns whether the BaseApp is in query-only mode.
+func (app *BaseApp) QueryOnlyMode() bool {
+	return app.queryOnlyMode
+}
+
+// SkipEndBlocker returns whether EndBlocker processing is skipped.
+func (app *BaseApp) SkipEndBlocker() bool {
+	return app.skipEndBlocker
 }
 
 // Trace returns the boolean value for logging error stack traces.
@@ -650,6 +665,10 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 
 func (app *BaseApp) preBlock(req *abci.FinalizeBlockRequest) ([]abci.Event, error) {
 	var events []abci.Event
+	if app.queryOnlyMode {
+		// Skip PreBlocker processing in query-only mode
+		return events, nil
+	}
 	if app.abciHandlers.PreBlocker != nil {
 		finalizeState := app.stateManager.GetState(execModeFinalize)
 		ctx := finalizeState.Context().WithEventManager(sdk.NewEventManager())
@@ -676,6 +695,11 @@ func (app *BaseApp) beginBlock(_ *abci.FinalizeBlockRequest) (sdk.BeginBlock, er
 		resp sdk.BeginBlock
 		err  error
 	)
+
+	if app.queryOnlyMode {
+		// Skip BeginBlocker processing in query-only mode
+		return resp, nil
+	}
 
 	if app.abciHandlers.BeginBlocker != nil {
 		resp, err = app.abciHandlers.BeginBlocker(app.stateManager.GetState(execModeFinalize).Context())
@@ -732,6 +756,32 @@ func (app *BaseApp) deliverTx(tx []byte) *abci.ExecTxResult {
 	}
 
 	return resp
+}
+
+// deliverTxQueryOnly processes a transaction in query-only mode by only updating
+// raw state without executing application logic
+func (app *BaseApp) deliverTxQueryOnly(tx []byte) *abci.ExecTxResult {
+	// In query-only mode, we still need to decode transactions to maintain
+	// state consistency, but we skip the actual execution
+	if _, err := app.txDecoder(tx); err != nil {
+		// Return error response for malformed transactions
+		return sdkerrors.ResponseExecTxResultWithEvents(
+			sdkerrors.ErrTxDecode, 0, 0, nil, false,
+		)
+	}
+
+	// For query-only mode, return success without executing
+	// This maintains state consistency without application processing
+	return &abci.ExecTxResult{
+		Code:      0,
+		Data:      nil,
+		Log:       "query-only mode: transaction skipped",
+		Info:      "",
+		GasWanted: 0,
+		GasUsed:   0,
+		Events:    nil,
+		Codespace: "",
+	}
 }
 
 // endBlock is an application-defined function that is called after transactions

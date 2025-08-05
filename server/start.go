@@ -81,7 +81,7 @@ const (
 	FlagDisableIAVLFastNode = "iavl-disable-fastnode"
 	FlagIAVLSyncPruning     = "iavl-sync-pruning"
 	FlagShutdownGrace       = "shutdown-grace"
-	FlagSkipEndBlocker      = "skip-endblocker"
+	FlagQueryOnlyMode       = "query-only-mode"
 
 	// state sync-related flags
 
@@ -691,14 +691,14 @@ func startApp(svrCtx *Context, appCreator types.AppCreator, opts StartCmdOptions
 		app = appCreator(svrCtx.Logger, db, traceWriter, svrCtx.Viper)
 	}
 
-	// Check if skip-endblocker flag is set and configure the app accordingly
-	if skipEndBlocker := svrCtx.Viper.GetBool(FlagSkipEndBlocker); skipEndBlocker {
+	// Check if query-only mode flag is set and configure the app accordingly
+	if queryOnlyMode := svrCtx.Viper.GetBool(FlagQueryOnlyMode); queryOnlyMode {
 		baseAppPtr := getBaseAppFromApp(app)
 		if baseAppPtr != nil {
-			baseAppPtr.SetSkipEndBlocker(true)
-			svrCtx.Logger.Info("EndBlocker processing disabled via flag")
+			baseAppPtr.SetQueryOnlyMode(true)
+			svrCtx.Logger.Info("Query-only mode enabled")
 		} else {
-			svrCtx.Logger.Warn("Skip EndBlocker flag set but unable to access BaseApp")
+			svrCtx.Logger.Warn("Query-only mode flag set but unable to access BaseApp")
 		}
 	}
 
@@ -1085,7 +1085,7 @@ func addStartNodeFlags(cmd *cobra.Command, opts StartCmdOptions) {
 	cmd.Flags().Bool(FlagDisableIAVLFastNode, false, "Disable fast node for IAVL tree")
 	cmd.Flags().Int(FlagMempoolMaxTxs, mempool.DefaultMaxTx, "Sets MaxTx value for the app-side mempool")
 	cmd.Flags().Duration(FlagShutdownGrace, 0*time.Second, "On Shutdown, duration to wait for resource clean up")
-	cmd.Flags().Bool(FlagSkipEndBlocker, false, "Skip EndBlocker processing for non-blocking query mode")
+	cmd.Flags().Bool(FlagQueryOnlyMode, false, "Run in query-only mode: accept state via sync but skip application processing")
 
 	// support old flags name for backwards compatibility
 	cmd.Flags().SetNormalizeFunc(func(f *pflag.FlagSet, name string) pflag.NormalizedName {

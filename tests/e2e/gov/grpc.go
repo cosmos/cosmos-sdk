@@ -99,7 +99,7 @@ func (s *E2ETestSuite) TestGetProposalsGRPC() {
 			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &proposals)
 
 			if tc.expErr {
-				s.Require().Empty(proposals.Proposals)
+				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
 				s.Require().Len(proposals.Proposals, tc.wantNumProposals)

@@ -890,7 +890,7 @@ func (ks keystore) writeOfflineKey(name string, pk types.PubKey) (*Record, error
 	return k, ks.writeRecord(k)
 }
 
-// writeMultisigKey investigate where thisf function is called maybe remove it
+// writeMultisigKey investigate where this function is called maybe remove it
 func (ks keystore) writeMultisigKey(name string, pk types.PubKey) (*Record, error) {
 	k, err := NewMultiRecord(name, pk)
 	if err != nil {

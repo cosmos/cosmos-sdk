@@ -16,7 +16,7 @@ The `genutil` package contains a variety of genesis utility functionalities for 
 ## Genesis
 
 Genutil contains the data structure that defines an application genesis.
-An application genesis consist of a consensus genesis (g.e. CometBFT genesis) and application related genesis data.
+An application genesis consists of a consensus genesis (g.e. CometBFT genesis) and application related genesis data.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-rc.0/x/genutil/types/genesis.go#L24-L34

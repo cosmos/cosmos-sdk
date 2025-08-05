@@ -221,7 +221,7 @@ func (s *E2ETestSuite) TestNewCmdSubmitLegacyProposal() {
 		{
 			"invalid proposal",
 			[]string{
-				fmt.Sprintf("--%s='Where is the title!?'", cli.FlagDescription),        //nolint:staticcheck // keep deprecated flag for test
+				fmt.Sprintf("--%s=%s", cli.FlagDescription, "Where is the title!?"),        //nolint:staticcheck // keep deprecated flag for test
 				fmt.Sprintf("--%s=%s", cli.FlagProposalType, v1beta1.ProposalTypeText), //nolint:staticcheck // keep deprecated flag for test
 				fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10000)).String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
@@ -245,8 +245,8 @@ func (s *E2ETestSuite) TestNewCmdSubmitLegacyProposal() {
 		{
 			"valid transaction",
 			[]string{
-				fmt.Sprintf("--%s='Text Proposal'", cli.FlagTitle),
-				fmt.Sprintf("--%s='Where is the title!?'", cli.FlagDescription),        //nolint:staticcheck // keep deprecated flag for test
+				fmt.Sprintf("--%s=%s", cli.FlagTitle, "Text Proposal"),
+				fmt.Sprintf("--%s=%s", cli.FlagDescription, "Where is the title!?"),        //nolint:staticcheck // keep deprecated flag for test
 				fmt.Sprintf("--%s=%s", cli.FlagProposalType, v1beta1.ProposalTypeText), //nolint:staticcheck // keep deprecated flag for test
 				fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, math.NewInt(100000)).String()),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),

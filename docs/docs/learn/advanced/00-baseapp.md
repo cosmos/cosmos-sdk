@@ -469,7 +469,7 @@ When the underlying consensus engine receives a block proposal, each transaction
 Before the first transaction of a given block is processed, a [volatile state](#state-updates) called `finalizeBlockState` is initialized during FinalizeBlock. This state is updated each time a transaction is processed via `FinalizeBlock`, and committed to the [main state](#main-state) when the block is [committed](#commit), after what it is set to `nil`.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/baseapp/baseapp.go#LL772-L807
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/baseapp/baseapp.go#L772-L807
 ```
 
 Transaction execution within `FinalizeBlock` performs the **exact same steps as `CheckTx`**, with a little caveat at step 3 and the addition of a fifth step:

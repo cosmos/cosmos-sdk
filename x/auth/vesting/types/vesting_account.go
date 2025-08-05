@@ -233,7 +233,7 @@ func (cva ContinuousVestingAccount) LockedCoins(blockTime time.Time) sdk.Coins {
 }
 
 // TrackDelegation tracks a desired delegation amount by setting the appropriate
-// values for the amount of delegated vesting, delegated free, and reducing the
+// values for the amount of delegated vesting, delegated vesting, and reducing the
 // overall amount of base coins.
 func (cva *ContinuousVestingAccount) TrackDelegation(blockTime time.Time, balance, amount sdk.Coins) {
 	cva.BaseVestingAccount.TrackDelegation(balance, cva.GetVestingCoins(blockTime), amount)

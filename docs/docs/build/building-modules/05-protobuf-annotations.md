@@ -64,7 +64,7 @@ option (cosmos_proto.implements_interface) = "cosmos.auth.v1beta1.AccountI";
 
 ## Method,Field,Message Added In
 
-`method_added_in`, `field_added_in` and `message_added_in` are annotations to denotate to clients that a field has been supported in a later version. This is useful when new methods or fields are added in later versions and that the client needs to be aware of what it can call.
+`method_added_in`, `field_added_in` and `message_added_in` are annotations to denote to clients that a field has been supported in a later version. This is useful when new methods or fields are added in later versions and that the client needs to be aware of what it can call.
 
 The annotation should be worded as follow:
 

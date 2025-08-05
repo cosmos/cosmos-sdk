@@ -59,7 +59,7 @@ func TestPromptIntegerOverflow(t *testing.T) {
 }
 
 func TestPromptParseInteger(t *testing.T) {
-	// Intentionally sending a value out of the range of
+	// Intentionally sending a value out of the range of int.
 	values := []struct {
 		in   string
 		want int

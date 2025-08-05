@@ -698,7 +698,7 @@ func (s *E2ETestSuite) TestCLISendGenerateSignAndBroadcast() {
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
-	// Ensure destiny account state
+	// Ensure destination account state
 	err = s.network.RetryForBlocks(func() error {
 		resp, err = testutil.GetRequest(fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s", val1.APIAddress, addr))
 		s.Require().NoError(err)

@@ -58,7 +58,7 @@ service Service {
 // GetValidatorSetByHeightRequest is the request type for the Query/GetValidatorSetByHeight RPC method.
 message GetValidatorSetByHeightRequest {
   int64 height = 1;
-  // pagination defines an pagination for the request.
+  // pagination defines a pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
@@ -66,13 +66,13 @@ message GetValidatorSetByHeightRequest {
 message GetValidatorSetByHeightResponse {
   int64              block_height = 1;
   repeated Validator validators   = 2;
-  // pagination defines an pagination for the response.
+  // pagination defines a pagination for the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 3;
 }
 
 // GetLatestValidatorSetRequest is the request type for the Query/GetValidatorSetByHeight RPC method.
 message GetLatestValidatorSetRequest {
-  // pagination defines an pagination for the request.
+  // pagination defines a pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
@@ -80,7 +80,7 @@ message GetLatestValidatorSetRequest {
 message GetLatestValidatorSetResponse {
   int64              block_height = 1;
   repeated Validator validators   = 2;
-  // pagination defines an pagination for the response.
+  // pagination defines a pagination for the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 3;
 }
 

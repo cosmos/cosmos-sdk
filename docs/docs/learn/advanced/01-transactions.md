@@ -99,7 +99,7 @@ If you wish to learn more, please refer to [ADR-050](../../build/architecture/ad
 
 #### Custom Sign modes
 
-There is the opportunity to add your own custom sign mode to the Cosmos-SDK.  While we can not accept the implementation of the sign mode to the repository, we can accept a pull request to add the custom signmode to the SignMode enum located [here](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/tx/signing/v1beta1/signing.proto#L17)
+There is an opportunity to add your own custom sign mode to the Cosmos-SDK.  While we can not accept the implementation of the sign mode to the repository, we can accept a pull request to add the custom signmode to the SignMode enum located [here](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/tx/signing/v1beta1/signing.proto#L17)
 
 ## Transaction Process
 

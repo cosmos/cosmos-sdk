@@ -29,7 +29,7 @@ message MsgUpdateParams {
 
   // params defines the x/consensus parameters to update.
   // VersionsParams is not included in this Msg because it is tracked
-  // separarately in x/upgrade.
+  // separately in x/upgrade.
   //
   // NOTE: All parameters must be supplied.
   cometbft.types.v2.BlockParams     block     = 2;

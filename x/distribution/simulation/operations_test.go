@@ -67,7 +67,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 }
 
 // TestSimulateMsgSetWithdrawAddress tests the normal scenario of a valid message of type TypeMsgSetWithdrawAddress.
-// Abnormal scenarios, where the message is created by an errors, are not tested here.
+// Abnormal scenarios, where the message is created by an error, are not tested here.
 func (suite *SimTestSuite) TestSimulateMsgSetWithdrawAddress() {
 	// setup 3 accounts
 	s := rand.NewSource(1)

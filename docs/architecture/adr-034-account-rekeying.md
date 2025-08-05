@@ -10,7 +10,7 @@ PROPOSED
 
 ## Abstract
 
-Account rekeying is a process hat allows an account to replace its authentication pubkey with a new one.
+Account rekeying is a process that allows an account to replace its authentication pubkey with a new one.
 
 ## Context
 
@@ -68,7 +68,7 @@ Breaks the current assumed relationship between address and pubkeys as H(pubkey)
 
 ### Neutral
 
-* While the purpose of this is intended to allow the owner of an account to update to a new pubkey they own, this could technically also be used to transfer ownership of an account to a new owner.  For example, this could be use used to sell a staked position without unbonding or an account that has vesting tokens.  However, the friction of this is very high as this would essentially have to be done as a very specific OTC trade. Furthermore, additional constraints could be added to prevent accounts with Vesting tokens to use this feature.
+* While the purpose of this is intended to allow the owner of an account to update to a new pubkey they own, this could technically also be used to transfer ownership of an account to a new owner.  For example, this could be used to sell a staked position without unbonding or an account that has vesting tokens.  However, the friction of this is very high as this would essentially have to be done as a very specific OTC trade. Furthermore, additional constraints could be added to prevent accounts with Vesting tokens to use this feature.
 * Will require that PubKeys for an account are included in the genesis exports.
 
 ## References

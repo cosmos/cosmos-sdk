@@ -92,7 +92,7 @@ func (s *InitTestSuite) clearEnv() *cosmovisorInitEnv {
 // setEnv sets environment variables to the values provided.
 // If t is not nil, and there's a problem, the test will fail immediately.
 // If t is nil, problems will just be logged using s.T().
-func (s *InitTestSuite) setEnv(t *testing.T, env *cosmovisorInitEnv) { //nolint:thelper // false psotive
+func (s *InitTestSuite) setEnv(t *testing.T, env *cosmovisorInitEnv) { //nolint:thelper // false positive
 	if t == nil {
 		s.T().Logf("Restoring environment variables.")
 	}
@@ -160,7 +160,7 @@ type BufferedPipe struct {
 
 	// buffer is the channel used to communicate buffer contents.
 	buffer chan []byte
-	// stated is true if this BufferedPipe has been started.
+	// started is true if this BufferedPipe has been started.
 	started bool
 }
 

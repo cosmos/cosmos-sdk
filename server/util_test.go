@@ -401,7 +401,7 @@ func TestInterceptConfigsPreRunHandlerPrecedenceConfigDefault(t *testing.T) {
 	}
 }
 
-// Ensure that if interceptConfigs encounters any error other than non-existen errors
+// Ensure that if interceptConfigs encounters any error other than non-existent errors
 // that we correctly return the offending error, for example a permission error.
 // See https://github.com/cosmos/cosmos-sdk/issues/7578
 func TestInterceptConfigsWithBadPermissions(t *testing.T) {

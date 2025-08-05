@@ -77,7 +77,7 @@ in many languages:
 * All other ASCII control characters, plus non-ASCII Unicode code points,
 are shown as either:
 
-    * `\u` followed by 4 uppercase hex chacters for code points
+    * `\u` followed by 4 uppercase hex characters for code points
     in the basic multilingual plane (BMP).
 
     * `\U` followed by 8 uppercase hex characters for other code points.

@@ -39,7 +39,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/bank/v1be
 
 ### `sdk.Msg` Interface
 
-`sdk.Msg` is a alias of `proto.Message`. 
+`sdk.Msg` is an alias of `proto.Message`. 
 
 To attach a `ValidateBasic()` method to a message then you must add methods to the type adhering to the `HasValidateBasic`.
 

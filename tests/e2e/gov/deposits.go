@@ -30,7 +30,7 @@ func NewDepositTestSuite(cfg network.Config) *DepositTestSuite {
 }
 
 func (s *DepositTestSuite) SetupSuite() {
-	s.T().Log("setting up test suite")
+	s.T().Log("setting up e2e test suite")
 
 	var err error
 	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)

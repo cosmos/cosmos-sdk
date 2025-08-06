@@ -34,7 +34,7 @@ rootCmd.AddCommand(
 )
 ```
 
-The `ConfigCommand` function builds the `config` root command and is defined in the `confixCmd` package (`cosmossdk.io/tools/confix/cmd`).
+The `ConfixCommand` function builds the `config` root command and is defined in the `confixCmd` package (`cosmossdk.io/tools/confix/cmd`).
 An implementation example can be found in `simapp`.
 
 The command will be available as `simd config`.

@@ -35,7 +35,6 @@ func TestMigrateStore(t *testing.T) {
 	require.NoError(t, err)
 	prop2, err := v1beta1.NewProposal(v1beta1.NewTextProposal("my title 2", "my desc 2"), 2, propTime, propTime)
 	require.NoError(t, err)
-	require.NoError(t, err)
 	prop2Bz, err := cdc.Marshal(&prop2)
 	require.NoError(t, err)
 

@@ -161,7 +161,7 @@ func (suite *KeeperTestSuite) TestFeeAllowances() {
 				suite.Require().Equal(len(resp.Allowances), 3)
 				for i, addr := range suite.addrs[1:4] {
 					resp.Allowances[i].Granter = suite.addrs[0].String()
-					resp.Allowances[i].Granter = addr.String()
+					resp.Allowances[i].Grantee = suite.addrs[0].String()
 				}
 			},
 		},

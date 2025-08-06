@@ -98,7 +98,7 @@ through several steps, beginning with decoding `Tx`.
 
 ### Decoding
 
-When `Tx` is received by the application from the underlying consensus engine (e.g. CometBFT ), it is still in its [encoded](../advanced/05-encoding.md) `[]byte` form and needs to be unmarshaled in order to be processed. Then, the [`runTx`](../advanced/00-baseapp.md#runtx-antehandler-runmsgs-posthandler) function is called to run in `runTxModeCheck` mode, meaning the function runs all checks but exits before executing messages and writing state changes.
+When `Tx` is received by the application from the underlying consensus engine (e.g. CometBFT), it is still in its [encoded](../advanced/05-encoding.md) `[]byte` form and needs to be unmarshaled in order to be processed. Then, the [`runTx`](../advanced/00-baseapp.md#runtx-antehandler-runmsgs-posthandler) function is called to run in `runTxModeCheck` mode, meaning the function runs all checks but exits before executing messages and writing state changes.
 
 ### ValidateBasic (deprecated)
 
@@ -230,7 +230,7 @@ to during consensus. Under the hood, transaction execution is almost identical t
 Instead of using their `checkState`, full-nodes use `finalizeblock`:
 
 * **Decoding:** Since `FinalizeBlock` is an ABCI call, `Tx` is received in the encoded `[]byte` form.
-  Nodes first unmarshal the transaction, using the [`TxConfig`](./app-anatomy#register-codec) defined in the app, then call `runTx` in `execModeFinalize`, which is very similar to `CheckTx` but also executes and writes state changes.
+  Nodes first unmarshal the transaction, using the [`TxConfig`](./00-app-anatomy.md#register-codec) defined in the app, then call `runTx` in `execModeFinalize`, which is very similar to `CheckTx` but also executes and writes state changes.
 
 * **Checks and `AnteHandler`:** Full-nodes call `validateBasicMsgs` and `AnteHandler` again. This second check
   happens because they may not have seen the same transactions during the addition to Mempool stage 

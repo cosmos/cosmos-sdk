@@ -62,7 +62,7 @@ func (ak AccountKeeper) SetAccount(ctx context.Context, acc sdk.AccountI) {
 	}
 }
 
-// RemoveAccount removes an account for the account mapper store.
+// RemoveAccount removes an account from the account mapper store.
 // NOTE: this will cause supply invariant violation if called
 func (ak AccountKeeper) RemoveAccount(ctx context.Context, acc sdk.AccountI) {
 	err := ak.Accounts.Remove(ctx, acc.GetAddress())

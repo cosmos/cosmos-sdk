@@ -71,7 +71,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/simd/cmd/root_v2.go#L47
 
 :::tip
 Use the `EnhanceRootCommand()` from the AutoCLI options to automatically add auto-generated commands from the modules to the root command.
-Additionnally it adds all manually defined modules commands (`tx` and `query`) as well.
+Additionally it adds all manually defined modules commands (`tx` and `query`) as well.
 Read more about [AutoCLI](https://docs.cosmos.network/main/core/autocli) in its dedicated section.
 :::
 
@@ -153,7 +153,7 @@ Flags are added to commands directly (generally in the [module's CLI file](../..
 
 ## Environment variables
 
-Each flag is bound to its respective named environment variable. Then name of the environment variable consist of two parts - capital case `basename` followed by flag name of the flag. `-` must be substituted with `_`. For example flag `--node` for application with basename `GAIA` is bound to `GAIA_NODE`. It allows reducing the amount of flags typed for routine operations. For example instead of:
+Each flag is bound to its respective named environment variable. The name of the environment variable consist of two parts - capital case `basename` followed by flag name of the flag. `-` must be substituted with `_`. For example flag `--node` for application with basename `GAIA` is bound to `GAIA_NODE`. It allows reducing the amount of flags typed for routine operations. For example instead of:
 
 ```shell
 gaia --home=./ --node=<node address> --chain-id="testchain-1" --keyring-backend=test tx ... --from=<key name>

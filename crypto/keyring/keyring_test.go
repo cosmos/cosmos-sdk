@@ -75,7 +75,7 @@ func TestNewKeyring(t *testing.T) {
 			dir:         t.TempDir(),
 			userInput:   strings.NewReader(""),
 			cdc:         cdc,
-			expectedErr: ErrUnknownBacked,
+			expectedErr: ErrUnknownBackend,
 		},
 	}
 	for _, tt := range tests {
@@ -2013,7 +2013,7 @@ func TestRenameKey(t *testing.T) {
 
 // TestChangeBcrypt tests the compatibility from upstream Bcrypt and our own
 func TestChangeBcrypt(t *testing.T) {
-	pw := []byte("somepasswword!")
+	pw := []byte("somepassword!")
 
 	saltBytes := cmtcrypto.CRandBytes(16)
 	cosmosHash, err := cosmosbcrypt.GenerateFromPassword(saltBytes, pw, 2)

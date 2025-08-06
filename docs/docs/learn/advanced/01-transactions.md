@@ -76,7 +76,7 @@ The Cosmos SDK also provides a couple of other sign modes for particular use cas
 
 #### `SIGN_MODE_DIRECT_AUX`
 
-`SIGN_MODE_DIRECT_AUX` is a sign mode released in the Cosmos SDK v0.46 which targets transactions with multiple signers. Whereas `SIGN_MODE_DIRECT` expects each signer to sign over both `TxBody` and `AuthInfo` (which includes all other signers' signer infos, i.e. their account sequence, public key and mode info), `SIGN_MODE_DIRECT_AUX` allows N-1 signers to only sign over `TxBody` and _their own_ signer info. Morever, each auxiliary signer (i.e. a signer using `SIGN_MODE_DIRECT_AUX`) doesn't
+`SIGN_MODE_DIRECT_AUX` is a sign mode released in the Cosmos SDK v0.46 which targets transactions with multiple signers. Whereas `SIGN_MODE_DIRECT` expects each signer to sign over both `TxBody` and `AuthInfo` (which includes all other signers' signer infos, i.e. their account sequence, public key and mode info), `SIGN_MODE_DIRECT_AUX` allows N-1 signers to only sign over `TxBody` and _their own_ signer info. Moreover, each auxiliary signer (i.e. a signer using `SIGN_MODE_DIRECT_AUX`) doesn't
 need to sign over the fees:
 
 ```protobuf reference
@@ -99,7 +99,7 @@ If you wish to learn more, please refer to [ADR-050](../../build/architecture/ad
 
 #### Custom Sign modes
 
-There is the opportunity to add your own custom sign mode to the Cosmos-SDK.  While we can not accept the implementation of the sign mode to the repository, we can accept a pull request to add the custom signmode to the SignMode enum located [here](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/tx/signing/v1beta1/signing.proto#L17)
+There is an opportunity to add your own custom sign mode to the Cosmos-SDK.  While we can not accept the implementation of the sign mode to the repository, we can accept a pull request to add the custom signmode to the SignMode enum located [here](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/tx/signing/v1beta1/signing.proto#L17)
 
 ## Transaction Process
 

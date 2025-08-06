@@ -52,7 +52,6 @@ var (
 // AppModuleBasic defines the basic application module used by the staking module.
 type AppModuleBasic struct {
 	cdc codec.Codec
-	ak  types.AccountKeeper
 }
 
 // Name returns the staking module's name.
@@ -119,7 +118,7 @@ func NewAppModule(
 	ls exported.Subspace,
 ) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{cdc: cdc, ak: ak},
+		AppModuleBasic: AppModuleBasic{cdc: cdc},
 		keeper:         keeper,
 		accountKeeper:  ak,
 		bankKeeper:     bk,

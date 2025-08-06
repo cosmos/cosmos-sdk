@@ -342,7 +342,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 			expErrMsg: "validator does not exist",
 		},
 		{
-			name: "change commmission rate in <24hrs",
+			name: "change commission rate in <24hrs",
 			ctx:  ctx,
 			input: &stakingtypes.MsgEditValidator{
 				Description: stakingtypes.Description{
@@ -1074,7 +1074,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 			expErrMsg: "max validators must be positive",
 		},
 		{
-			name: "max entries most be positive",
+			name: "max entries must be positive",
 			input: &stakingtypes.MsgUpdateParams{
 				Authority: keeper.GetAuthority(),
 				Params: stakingtypes.Params{

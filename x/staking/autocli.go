@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	_ "cosmossdk.io/api/cosmos/crypto/ed25519" // register to that it shows up in protoregistry.GlobalTypes
+	_ "cosmossdk.io/api/cosmos/crypto/ed25519" // register so that it shows up in protoregistry.GlobalTypes
 	stakingv1beta "cosmossdk.io/api/cosmos/staking/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/version"
@@ -43,7 +43,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod: "ValidatorUnbondingDelegations",
 					Use:       "unbonding-delegations-from [validator-addr]",
-					Short:     "Query all unbonding delegatations from a validator",
+					Short:     "Query all unbonding delegations from a validator",
 					Long:      "Query delegations that are unbonding _from_ a validator.",
 					Example:   fmt.Sprintf("$ %s query staking unbonding-delegations-from [val-addr]", version.AppName),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{

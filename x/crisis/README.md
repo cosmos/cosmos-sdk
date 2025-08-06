@@ -66,7 +66,7 @@ The crisis module emits the following events:
 
 ### Handlers
 
-#### MsgVerifyInvariance
+#### MsgVerifyInvariant
 
 | Type      | Attribute Key | Attribute Value  |
 |-----------|---------------|------------------|

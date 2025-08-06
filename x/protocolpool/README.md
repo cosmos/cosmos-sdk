@@ -54,7 +54,7 @@ CommunityPoolSpend can be called by the module authority (default governance mod
 ### CreateContinuousFund
 
 CreateContinuousFund is a message used to initiate a continuous fund for a specific recipient. The proposed percentage of funds will be distributed only on withdraw request for the recipient. The fund distribution continues until expiry time is reached or continuous fund request is canceled.
-NOTE:  This feature is designed to work with the SDK's default bond denom. 
+NOTE: This feature is designed to work with the SDK's default bond denom. 
 
 ```protobuf
   // CreateContinuousFund defines a method to distribute a percentage of funds to an address continuously.

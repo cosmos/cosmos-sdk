@@ -94,9 +94,6 @@ func NewTxBenchmarkSuite(tb testing.TB) *TxBenchmarkSuite {
 	assert.NilError(tb, err)
 	s.txHeight = resp.Height
 
-	assert.NilError(tb, err)
-	s.txHeight = resp.Height
-
 	return s
 }
 

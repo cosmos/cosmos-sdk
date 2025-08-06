@@ -16,7 +16,7 @@ import (
 //
 // Using apd.Decimal directly can be unsafe because apd operations mutate the underlying Decimal,
 // but when copying the big.Int structure can be shared between Decimal instances causing corruption.
-// This was originally discovered in regen0-network/mainnet#15.
+// This was originally discovered in regen-network/mainnet#15.
 type Dec struct {
 	dec apd.Decimal
 }

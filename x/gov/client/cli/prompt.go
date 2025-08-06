@@ -65,7 +65,7 @@ func Prompt[T any](data T, namePrefix string) (T, error) {
 	}
 
 	for i := range v.NumField() {
-		// if the field is a struct skip or not slice of string or int then skip
+		// if the field is a struct skip or not a slice of string or int then skip
 		switch v.Field(i).Kind() {
 		case reflect.Struct:
 			// TODO(@julienrbrt) in the future we can add a recursive call to Prompt

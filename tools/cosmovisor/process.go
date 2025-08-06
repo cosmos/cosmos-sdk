@@ -312,7 +312,7 @@ func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 		if err == nil {
 			return false, nil
 		}
-		// the app x/upgrade causes a panic and the app can die before the filwatcher finds the
+		// the app x/upgrade causes a panic and the app can die before the filewatcher finds the
 		// update, so we need to recheck update-info file.
 		if !l.fw.CheckUpdate(currentUpgrade) {
 			return false, err

@@ -142,7 +142,7 @@ func NewSimApp(
 				//
 				// STAKING
 				//
-				// For provinding a different validator and consensus address codec, add it below.
+				// For providing a different validator and consensus address codec, add it below.
 				// By default the staking module uses the bech32 prefix provided in the auth config,
 				// and appends "valoper" and "valcons" for validator and consensus addresses respectively.
 				// When providing a custom address codec in auth, custom address codecs must be provided here as well.

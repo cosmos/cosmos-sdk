@@ -37,7 +37,7 @@ type MsgUpdateParams struct {
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// params defines the x/consensus parameters to update.
 	// VersionsParams is not included in this Msg because it is tracked
-	// separarately in x/upgrade.
+	// separately in x/upgrade.
 	//
 	// NOTE: All parameters must be supplied.
 	Block     *v2.BlockParams     `protobuf:"bytes,2,opt,name=block,proto3" json:"block,omitempty"`

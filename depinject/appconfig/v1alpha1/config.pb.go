@@ -97,7 +97,7 @@ type ModuleConfig struct {
 	// cosmos.bank.module.v2.Module, the app-specific name "bank" stays the same
 	// and the framework knows that the v2 module should receive all the same state
 	// that the v1 module had. Note: modules should provide info on which versions
-	// they can migrate from in the ModuleDescriptor.can_migration_from field.
+	// they can migrate from in the ModuleDescriptor.can_migrate_from field.
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	// config is the config object for the module. Module config messages should
 	// define a ModuleDescriptor using the cosmos.app.v1alpha1.is_module extension.

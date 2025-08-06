@@ -2532,7 +2532,7 @@ The gov module has two locations for metadata where users can provide further co
 
 ### Proposal
 
-Location: off-chain as json object stored on IPFS (mirrors [group proposal](../group/README.md#metadata))
+Location: off-chain as json object stored on IPFS (mirrors [group proposal](../../contrib/x/group/README.md#metadata))
 
 ```json
 {
@@ -2552,7 +2552,7 @@ In v0.46, the `authors` field is a comma-separated string. Frontends are encoura
 
 ### Vote
 
-Location: on-chain as json within 255 character limit (mirrors [group vote](../group/README.md#metadata))
+Location: on-chain as json within 255 character limit (mirrors [group vote](../../contrib/x/group/README.md#metadata))
 
 ```json
 {

@@ -10404,7 +10404,7 @@ type GetValidatorSetByHeightRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	Height int64 `protobuf:"varint,1,opt,name=height,proto3" json:"height,omitempty"`
-	// pagination defines an pagination for the request.
+	// pagination defines a pagination for the request.
 	Pagination *v1beta1.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -10450,7 +10450,7 @@ type GetValidatorSetByHeightResponse struct {
 
 	BlockHeight int64        `protobuf:"varint,1,opt,name=block_height,json=blockHeight,proto3" json:"block_height,omitempty"`
 	Validators  []*Validator `protobuf:"bytes,2,rep,name=validators,proto3" json:"validators,omitempty"`
-	// pagination defines an pagination for the response.
+	// pagination defines a pagination for the response.
 	Pagination *v1beta1.PageResponse `protobuf:"bytes,3,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -10501,7 +10501,7 @@ type GetLatestValidatorSetRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// pagination defines an pagination for the request.
+	// pagination defines a pagination for the request.
 	Pagination *v1beta1.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -10540,7 +10540,7 @@ type GetLatestValidatorSetResponse struct {
 
 	BlockHeight int64        `protobuf:"varint,1,opt,name=block_height,json=blockHeight,proto3" json:"block_height,omitempty"`
 	Validators  []*Validator `protobuf:"bytes,2,rep,name=validators,proto3" json:"validators,omitempty"`
-	// pagination defines an pagination for the response.
+	// pagination defines a pagination for the response.
 	Pagination *v1beta1.PageResponse `protobuf:"bytes,3,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 

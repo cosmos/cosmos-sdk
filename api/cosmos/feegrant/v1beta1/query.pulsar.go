@@ -3143,7 +3143,7 @@ type QueryAllowanceResponse struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// allowance is a allowance granted for grantee by granter.
+	// allowance is an allowance granted for grantee by granter.
 	Allowance *Grant `protobuf:"bytes,1,opt,name=allowance,proto3" json:"allowance,omitempty"`
 }
 
@@ -3181,7 +3181,7 @@ type QueryAllowancesRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	Grantee string `protobuf:"bytes,1,opt,name=grantee,proto3" json:"grantee,omitempty"`
-	// pagination defines an pagination for the request.
+	// pagination defines a pagination for the request.
 	Pagination *v1beta1.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -3227,7 +3227,7 @@ type QueryAllowancesResponse struct {
 
 	// allowances are allowance's granted for grantee by granter.
 	Allowances []*Grant `protobuf:"bytes,1,rep,name=allowances,proto3" json:"allowances,omitempty"`
-	// pagination defines an pagination for the response.
+	// pagination defines a pagination for the response.
 	Pagination *v1beta1.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -3272,7 +3272,7 @@ type QueryAllowancesByGranterRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	Granter string `protobuf:"bytes,1,opt,name=granter,proto3" json:"granter,omitempty"`
-	// pagination defines an pagination for the request.
+	// pagination defines a pagination for the request.
 	Pagination *v1beta1.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -3318,7 +3318,7 @@ type QueryAllowancesByGranterResponse struct {
 
 	// allowances that have been issued by the granter.
 	Allowances []*Grant `protobuf:"bytes,1,rep,name=allowances,proto3" json:"allowances,omitempty"`
-	// pagination defines an pagination for the response.
+	// pagination defines a pagination for the response.
 	Pagination *v1beta1.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 

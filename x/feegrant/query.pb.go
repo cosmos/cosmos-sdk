@@ -87,7 +87,7 @@ func (m *QueryAllowanceRequest) GetGrantee() string {
 
 // QueryAllowanceResponse is the response type for the Query/Allowance RPC method.
 type QueryAllowanceResponse struct {
-	// allowance is a allowance granted for grantee by granter.
+	// allowance is an allowance granted for grantee by granter.
 	Allowance *Grant `protobuf:"bytes,1,opt,name=allowance,proto3" json:"allowance,omitempty"`
 }
 
@@ -134,7 +134,7 @@ func (m *QueryAllowanceResponse) GetAllowance() *Grant {
 // QueryAllowancesRequest is the request type for the Query/Allowances RPC method.
 type QueryAllowancesRequest struct {
 	Grantee string `protobuf:"bytes,1,opt,name=grantee,proto3" json:"grantee,omitempty"`
-	// pagination defines an pagination for the request.
+	// pagination defines a pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -189,7 +189,7 @@ func (m *QueryAllowancesRequest) GetPagination() *query.PageRequest {
 type QueryAllowancesResponse struct {
 	// allowances are allowance's granted for grantee by granter.
 	Allowances []*Grant `protobuf:"bytes,1,rep,name=allowances,proto3" json:"allowances,omitempty"`
-	// pagination defines an pagination for the response.
+	// pagination defines a pagination for the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -243,7 +243,7 @@ func (m *QueryAllowancesResponse) GetPagination() *query.PageResponse {
 // QueryAllowancesByGranterRequest is the request type for the Query/AllowancesByGranter RPC method.
 type QueryAllowancesByGranterRequest struct {
 	Granter string `protobuf:"bytes,1,opt,name=granter,proto3" json:"granter,omitempty"`
-	// pagination defines an pagination for the request.
+	// pagination defines a pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -298,7 +298,7 @@ func (m *QueryAllowancesByGranterRequest) GetPagination() *query.PageRequest {
 type QueryAllowancesByGranterResponse struct {
 	// allowances that have been issued by the granter.
 	Allowances []*Grant `protobuf:"bytes,1,rep,name=allowances,proto3" json:"allowances,omitempty"`
-	// pagination defines an pagination for the response.
+	// pagination defines a pagination for the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
@@ -413,7 +413,7 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// Allowance returns granted allwance to the grantee by the granter.
+	// Allowance returns granted allowance to the grantee by the granter.
 	Allowance(ctx context.Context, in *QueryAllowanceRequest, opts ...grpc.CallOption) (*QueryAllowanceResponse, error)
 	// Allowances returns all the grants for the given grantee address.
 	Allowances(ctx context.Context, in *QueryAllowancesRequest, opts ...grpc.CallOption) (*QueryAllowancesResponse, error)
@@ -458,7 +458,7 @@ func (c *queryClient) AllowancesByGranter(ctx context.Context, in *QueryAllowanc
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// Allowance returns granted allwance to the grantee by the granter.
+	// Allowance returns granted allowance to the grantee by the granter.
 	Allowance(context.Context, *QueryAllowanceRequest) (*QueryAllowanceResponse, error)
 	// Allowances returns all the grants for the given grantee address.
 	Allowances(context.Context, *QueryAllowancesRequest) (*QueryAllowancesResponse, error)

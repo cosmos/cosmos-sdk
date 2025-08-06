@@ -12749,7 +12749,7 @@ func (BondStatus) EnumDescriptor() ([]byte, []int) {
 	return file_cosmos_staking_v1beta1_staking_proto_rawDescGZIP(), []int{0}
 }
 
-// Infraction indicates the infraction a validator commited.
+// Infraction indicates the infraction a validator committed.
 type Infraction int32
 
 const (
@@ -13061,7 +13061,7 @@ type Validator struct {
 	MinSelfDelegation string `protobuf:"bytes,11,opt,name=min_self_delegation,json=minSelfDelegation,proto3" json:"min_self_delegation,omitempty"`
 	// strictly positive if this validator's unbonding has been stopped by external modules
 	UnbondingOnHoldRefCount int64 `protobuf:"varint,12,opt,name=unbonding_on_hold_ref_count,json=unbondingOnHoldRefCount,proto3" json:"unbonding_on_hold_ref_count,omitempty"`
-	// list of unbonding ids, each uniquely identifing an unbonding of this validator
+	// list of unbonding ids, each uniquely identifying an unbonding of this validator
 	UnbondingIds []uint64 `protobuf:"varint,13,rep,packed,name=unbonding_ids,json=unbondingIds,proto3" json:"unbonding_ids,omitempty"`
 }
 

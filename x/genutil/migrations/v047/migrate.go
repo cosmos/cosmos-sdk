@@ -2,6 +2,7 @@ package v047
 
 import (
 	"github.com/cosmos/cosmos-sdk/client"
+	groupv2 "github.com/cosmos/cosmos-sdk/contrib/x/group/migrations/v2"
 	v1auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v1"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankv4 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v4"
@@ -12,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 	v4gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v4"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	groupv2 "github.com/cosmos/cosmos-sdk/x/group/migrations/v2"
 )
 
 // Migrate migrates exported state from v0.46 to a v0.47 genesis state.

@@ -23,7 +23,6 @@ var intValues = []protoreflect.Value{
 	protoreflect.ValueOfString("100000000000000000000000000000000000000000000000000000000"),
 	protoreflect.ValueOfString("77777777777777777777777777777777700"),
 	protoreflect.ValueOfString("-77777777777777777777777777777777700"),
-	protoreflect.ValueOfString("77777777777777777777777777777777700"),
 }
 
 func BenchmarkIntValueRendererFormat(b *testing.B) {

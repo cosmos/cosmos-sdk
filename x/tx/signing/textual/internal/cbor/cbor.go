@@ -1,5 +1,5 @@
 // Package cbor implements just enough of the CBOR (Concise Binary Object
-// Representation, RFC 8948) to deterministically encode simple data. It does
+// Representation, RFC 8949) to deterministically encode simple data. It does
 // not include decoding as it is not needed for the purpose of this package.
 package cbor
 

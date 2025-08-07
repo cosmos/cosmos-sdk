@@ -10,7 +10,7 @@ import (
 type boolValueRenderer struct{}
 
 // NewBoolValueRenderer returns a ValueRenderer for protocol buffer bool values.
-// It renders the boolean as YES or NO.
+// It renders the boolean as True or False.
 func NewBoolValueRenderer() ValueRenderer {
 	return boolValueRenderer{}
 }

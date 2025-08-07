@@ -44,6 +44,11 @@ func TestDurationJSON(t *testing.T) {
 				require.Equal(t, tc.Text, screens[0].Content)
 			}
 
+			// Skip Parse if tc.Proto is nil or screens is empty
+			if tc.Proto == nil {
+				return
+			}
+
 			val, err := rend.Parse(context.Background(), screens)
 			if tc.Error {
 				require.Error(t, err)

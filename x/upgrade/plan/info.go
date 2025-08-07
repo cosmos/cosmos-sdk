@@ -41,7 +41,7 @@ func ParseOptionEnforceChecksum(enforce bool) ParseOption {
 }
 
 // ParseInfo parses an info string into a map of os/arch strings to URL string.
-// If the infoStr is a url, an GET request will be made to it, and its response will be parsed instead.
+// If the infoStr is a url, a GET request will be made to it, and its response will be parsed instead.
 func ParseInfo(infoStr string, opts ...ParseOption) (*Info, error) {
 	parseConfig := &ParseConfig{}
 	for _, opt := range opts {

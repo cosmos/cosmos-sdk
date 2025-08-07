@@ -299,7 +299,9 @@ func (s *KeeperTestSuite) TestIncrementProtocolVersion() {
 	upgradedProtocolVersion, err := s.baseApp.AppVersion(s.ctx)
 	s.Require().NoError(err)
 
-	s.Require().Equal(oldProtocolVersion+1, upgradedProtocolVersion)
+	// NOTE: celestia-app has modified the upgrade keeper to not increment the version. That is 
+	// handled elsewhere
+	s.Require().Equal(oldProtocolVersion, upgradedProtocolVersion)
 }
 
 // Tests that the underlying state of x/upgrade is set correctly after

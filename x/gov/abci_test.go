@@ -619,8 +619,8 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			require.NotEqual(t, initialModuleAccCoins, intermediateModuleAccCoins)
 
 			// Submit proposal deposit + 1 extra top up deposit
-			expectedIntermediateMofuleAccCoings := initialModuleAccCoins.Add(proposalCoins...).Add(proposalCoins...)
-			require.Equal(t, expectedIntermediateMofuleAccCoings, intermediateModuleAccCoins)
+			expectedIntermediateModuleAccCoins := initialModuleAccCoins.Add(proposalCoins...).Add(proposalCoins...)
+			require.Equal(t, expectedIntermediateModuleAccCoins, intermediateModuleAccCoins)
 
 			// block header time at the voting period
 			newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod)

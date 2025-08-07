@@ -23,7 +23,7 @@ import (
 //	If the archive does not contain either /bin/{daemonName} or /{daemonName}, an error is returned.
 //
 // If dstRoot already exists, some or all of its contents might be updated.
-// NOTE: This functions does not check the provided url for validity.
+// NOTE: This function does not check the provided url for validity.
 func DownloadUpgrade(dstRoot, url, daemonName string) error {
 	target := filepath.Join(dstRoot, "bin", daemonName)
 

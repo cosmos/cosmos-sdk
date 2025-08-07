@@ -4,7 +4,7 @@ import (
 	"cosmossdk.io/errors"
 )
 
-// x/authz module sentinel errors
+// x/upgrade module sentinel errors
 var (
 	// ErrNoModuleVersionFound error if there is no version found in the module-version map
 	ErrNoModuleVersionFound = errors.Register(ModuleName, 2, "module version not found")

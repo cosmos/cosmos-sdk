@@ -6,7 +6,7 @@ sidebar_position: 1
 
 The Cosmos SDK contains different types of [tests](https://martinfowler.com/articles/practical-test-pyramid.html).
 These tests have different goals and are used at different stages of the development cycle.
-We advice, as a general rule, to use tests at all stages of the development cycle.
+We advise, as a general rule, to use tests at all stages of the development cycle.
 It is advised, as a chain developer, to test your application and modules in a similar way than the SDK.
 
 The rationale behind testing can be found in [ADR-59](https://docs.cosmos.network/main/build/architecture/adr-059-test-scopes).

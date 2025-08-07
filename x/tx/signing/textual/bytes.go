@@ -56,7 +56,7 @@ func (vr bytesValueRenderer) Parse(_ context.Context, screens []Screen) (protore
 		return protoreflect.ValueOfBytes([]byte{}), nil
 	}
 
-	// Remove all spaces between every 4th char, then we can decode hex.
+	// Remove all spaces from the string before hex decoding
 	data, err := hex.DecodeString(strings.ReplaceAll(formatted, " ", ""))
 	if err != nil {
 		return nilValue, err
@@ -65,7 +65,7 @@ func (vr bytesValueRenderer) Parse(_ context.Context, screens []Screen) (protore
 	return protoreflect.ValueOfBytes(data), nil
 }
 
-// toHex converts bytes to hex, and inserts a space every 4th character.
+// toHex converts bytes to hex, and inserts a space after every 4th character.
 func toHex(bz []byte) string {
 	text := strings.ToUpper(hex.EncodeToString(bz))
 

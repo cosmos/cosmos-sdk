@@ -82,7 +82,7 @@ func (a AutoUInt64Table) GetOne(store storetypes.KVStore, rowID uint64, dest pro
 }
 
 // PrefixScan returns an Iterator over a domain of keys in ascending order. End is exclusive.
-// Start is an MultiKeyIndex key or prefix. It must be less than end, or the Iterator is invalid and error is returned.
+// Start is a MultiKeyIndex key or prefix. It must be less than end, or the Iterator is invalid and error is returned.
 // Iterator must be closed by caller.
 // To iterate over entire domain, use PrefixScan(1, math.MaxUint64)
 //
@@ -103,7 +103,7 @@ func (a AutoUInt64Table) PrefixScan(store storetypes.KVStore, start, end uint64)
 }
 
 // ReversePrefixScan returns an Iterator over a domain of keys in descending order. End is exclusive.
-// Start is an MultiKeyIndex key or prefix. It must be less than end, or the Iterator is invalid  and error is returned.
+// Start is a MultiKeyIndex key or prefix. It must be less than end, or the Iterator is invalid  and error is returned.
 // Iterator must be closed by caller.
 // To iterate over entire domain, use PrefixScan(1, math.MaxUint64)
 //

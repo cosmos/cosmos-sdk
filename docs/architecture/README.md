@@ -30,7 +30,7 @@ it stands today.
 
 If recorded decisions turned out to be lacking, convene a discussion, record the new decisions here, and then modify the code to match.
 
-## Creating new ADR
+## Creating a new ADR
 
 Read about the [PROCESS](./PROCESS.md).
 

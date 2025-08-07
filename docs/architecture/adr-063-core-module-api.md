@@ -282,7 +282,7 @@ type HasGenesis interface {
 
 #### Pre Blockers
 
-Modules that have functionality that runs before BeginBlock and should implement the has `HasPreBlocker` interfaces:
+Modules that have functionality that runs before BeginBlock and should implement the `HasPreBlocker` interfaces:
 
 ```go
 type HasPreBlocker interface {
@@ -408,7 +408,7 @@ which modules can return in a provider:
 
 ```go
 func ProvideGrpcGateway() GrpcGatewayInfo {
-    return GrpcGatewayinfo {
+    return GrpcGatewayInfo {
         Handlers: []Handler {types.RegisterQueryHandlerClient}
     }
 }
@@ -496,7 +496,7 @@ a dependency on `github.com/cosmos/cosmos-sdk` would no longer be required.
 In short, modules would depend primarily on `cosmossdk.io/core`, and each `cosmossdk.io/runtime/{consensus-engine}`
 would implement the `cosmossdk.io/core` functionality for that consensus engine.
 
-On additional piece that would need to be resolved as part of this architecture is how runtimes relate to the server.
+One additional piece that would need to be resolved as part of this architecture is how runtimes relate to the server.
 Likely it would make sense to modularize the current server architecture so that it can be used with any runtime even
 if that is based on a consensus engine besides Comet. This means that eventually the Comet runtime would need to
 encapsulate the logic for starting Comet and the ABCI app.

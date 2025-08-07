@@ -57,7 +57,7 @@ func (i *Unique[ReferenceKey, PrimaryKey, Value]) Reference(ctx context.Context,
 		return err
 	}
 	if has {
-		return fmt.Errorf("%w: index uniqueness constrain violation: %s", collections.ErrConflict, i.refKeys.KeyCodec().Stringify(refKey))
+		return fmt.Errorf("%w: index uniqueness constraint violation: %s", collections.ErrConflict, i.refKeys.KeyCodec().Stringify(refKey))
 	}
 	return i.refKeys.Set(ctx, refKey, pk)
 }

@@ -314,11 +314,13 @@ func (s *SystemUnderTest) AwaitNodeUp(t *testing.T, rpcAddr string) {
 			started <- struct{}{}
 		}
 	}()
+	timer := time.NewTimer(timeout)
+	defer timer.Stop()
 	select {
 	case <-started:
 	case <-ctx.Done():
 		require.NoError(t, ctx.Err())
-	case <-time.NewTimer(timeout).C:
+	case <-timer.C:
 		t.Fatalf("timeout waiting for node start: %s", timeout)
 	}
 }
@@ -403,7 +405,9 @@ func (s *SystemUnderTest) AwaitBlockHeight(t *testing.T, targetHeight int64, tim
 	} else {
 		maxWaitTime = time.Duration(targetHeight-s.currentHeight.Load()+4) * s.blockTime
 	}
-	abort := time.NewTimer(maxWaitTime).C
+	timer := time.NewTimer(maxWaitTime)
+	defer timer.Stop()
+	abort := timer.C
 	for {
 		select {
 		case <-abort:
@@ -433,10 +437,12 @@ func (s *SystemUnderTest) AwaitNextBlock(t *testing.T, timeout ...time.Duration)
 		done <- s.currentHeight.Load()
 		close(done)
 	}()
+	timer := time.NewTimer(maxWaitTime)
+	defer timer.Stop()
 	select {
 	case v := <-done:
 		return v
-	case <-time.NewTimer(maxWaitTime).C:
+	case <-timer.C:
 		t.Fatalf("Timeout - no block within %s", maxWaitTime)
 		return -1
 	}
@@ -907,6 +913,7 @@ func TimeoutConsumer(t *testing.T, maxWaitTime time.Duration, next EventConsumer
 	ctx, done := context.WithCancel(context.Background())
 	t.Cleanup(done)
 	timeout := time.NewTimer(maxWaitTime)
+	t.Cleanup(func() { timeout.Stop() })
 	timedOut := make(chan struct{}, 1)
 	go func() {
 		select {
@@ -922,6 +929,13 @@ func TimeoutConsumer(t *testing.T, maxWaitTime time.Duration, next EventConsumer
 			t.Fatalf("Timeout waiting for new events %s", maxWaitTime)
 			return false
 		default:
+			if !timeout.Stop() {
+				// Drain the channel if the timer already fired
+				select {
+				case <-timeout.C:
+				default:
+				}
+			}
 			timeout.Reset(maxWaitTime)
 			result := next(e)
 			if !result {

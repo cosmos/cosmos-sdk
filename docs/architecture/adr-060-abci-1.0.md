@@ -84,7 +84,7 @@ type Mempool interface {
 
 	// Select returns an Iterator over the app-side mempool. If txs are specified,
 	// then they shall be incorporated into the Iterator. The Iterator must
-	// closed by the caller.
+	// be closed by the caller.
 	Select(sdk.Context, [][]byte) Iterator
 
 	// CountTx returns the number of transactions currently in the mempool.

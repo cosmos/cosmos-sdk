@@ -116,7 +116,7 @@ func TestCoinJSONTestcases(t *testing.T) {
 	}
 }
 
-// coinJsonTest is the type of test cases in the testdata file.
+// coinJSONTest is the type of test cases in the testdata file.
 // If the test case has a Proto, try to Format() it. If Error is set, expect
 // an error, otherwise match Text, then Parse() the text and expect it to
 // match (via proto.Equals()) the original Proto. If the test case has no

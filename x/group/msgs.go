@@ -14,7 +14,6 @@ var (
 	_ sdk.Msg = &MsgUpdateGroupAdmin{}
 	_ sdk.Msg = &MsgUpdateGroupMetadata{}
 	_ sdk.Msg = &MsgUpdateGroupMembers{}
-	_ sdk.Msg = &MsgUpdateGroupMembers{}
 	_ sdk.Msg = &MsgCreateGroupWithPolicy{}
 	_ sdk.Msg = &MsgCreateGroupPolicy{}
 	_ sdk.Msg = &MsgUpdateGroupPolicyAdmin{}

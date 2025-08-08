@@ -25,4 +25,6 @@ var (
 	// ErrInvalidRequest defines an ABCI typed error where the request contains
 	// invalid data.
 	ErrInvalidRequest = errors.Register(StoreCodespace, 7, "invalid request")
+
+	ErrInvalidHeight = errors.New(StoreCodespace, 8, "invalid height")
 )

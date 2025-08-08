@@ -25,6 +25,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"cosmossdk.io/log"
+
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
@@ -582,6 +583,14 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		defaultMempool,
 		baseapp.SetChainID(chainID),
 		baseapp.SetQueryGasLimit(cast.ToUint64(appOpts.Get(FlagQueryGasLimit))),
+		// TODO for testing purposes we always enable memiavl, but we need this to be a config param in the future
+		baseapp.SetupMemIAVL(
+			homeDir,
+			appOpts,
+			false,
+			false,
+			50000,
+		),
 	}
 }
 

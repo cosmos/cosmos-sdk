@@ -13,7 +13,6 @@ import (
 	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
-
 	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -427,14 +426,6 @@ func (k Keeper) GetLastValidators(ctx context.Context) (validators []types.Valid
 
 	i := 0
 	for ; iterator.Valid(); iterator.Next() {
-		k.Logger(ctx).Info(
-			"iterating validator power keys",
-			"key",
-			fmt.Sprintf("%x", iterator.Key()),
-			"value",
-			fmt.Sprintf("%x", iterator.Value()),
-		)
-
 		// sanity check
 		if i >= int(maxValidators) {
 			panic("more validators than maxValidators found")

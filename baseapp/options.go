@@ -8,10 +8,8 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 
-	"cosmossdk.io/store/iavl2"
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
-	"cosmossdk.io/store/rootmulti"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
@@ -419,19 +417,4 @@ func (app *BaseApp) SetMsgServiceRouter(msgServiceRouter *MsgServiceRouter) {
 // SetGRPCQueryRouter sets the GRPCQueryRouter of the BaseApp.
 func (app *BaseApp) SetGRPCQueryRouter(grpcQueryRouter *GRPCQueryRouter) {
 	app.grpcQueryRouter = grpcQueryRouter
-}
-
-func EnableIAVLV2(iavl2Config *iavl2.Config) func(*BaseApp) {
-	return func(app *BaseApp) {
-		if app.sealed {
-			panic("EnableIAVLV2() on sealed BaseApp")
-		}
-
-		cms, ok := app.cms.(rootmulti.EnableIAVLV2Store)
-		if !ok {
-			panic("EnableIAVLV2() called on a CommitMultiStore that does not support IAVLv2")
-		}
-
-		cms.EnableIAVLV2(iavl2Config)
-	}
 }

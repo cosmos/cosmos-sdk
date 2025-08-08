@@ -20,11 +20,9 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
-
 	"cosmossdk.io/store/cachemulti"
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/iavl"
-	"cosmossdk.io/store/iavl2"
 	"cosmossdk.io/store/listenkv"
 	"cosmossdk.io/store/mem"
 	"cosmossdk.io/store/metrics"
@@ -82,7 +80,6 @@ type Store struct {
 	listeners         map[types.StoreKey]*types.MemoryListener
 	metrics           metrics.StoreMetrics
 	commitHeader      cmtproto.Header
-	iavl2Config       *iavl2.Config
 }
 
 var (
@@ -144,15 +141,6 @@ func (rs *Store) SetIAVLDisableFastNode(disableFastNode bool) {
 
 func (rs *Store) SetIAVLSyncPruning(syncPruning bool) {
 	rs.iavlSyncPruning = syncPruning
-}
-
-type EnableIAVLV2Store interface {
-	EnableIAVLV2(config *iavl2.Config)
-}
-
-// EnableIAVLV2 enables iavl v2 with the specified configuration.
-func (rs *Store) EnableIAVLV2(config *iavl2.Config) {
-	rs.iavl2Config = config
 }
 
 // GetStoreType implements Store.
@@ -1042,24 +1030,7 @@ func (rs *Store) loadCommitStoreFromParams(key types.StoreKey, id types.CommitID
 		panic("recursive MultiStores not yet supported")
 
 	case types.StoreTypeIAVL:
-		var store types.CommitKVStore
-		var err error
-
-		// check if we should use IAVL v2
-		if rs.iavl2Config != nil {
-			opts := iavl2.Options{
-				Logger:         rs.logger,
-				Metrics:        rs.metrics,
-				Key:            key,
-				CommitID:       id,
-				InitialVersion: params.initialVersion,
-			}
-			store, err = iavl2.LoadStore(*rs.iavl2Config, opts)
-		} else {
-			// Use v1 (current implementation)
-			store, err = iavl.LoadStoreWithOpts(db, rs.logger, key, id, params.initialVersion, rs.iavlCacheSize, rs.iavlDisableFastNode, rs.metrics, iavltree.AsyncPruningOption(!rs.iavlSyncPruning))
-		}
-
+		store, err := iavl.LoadStoreWithOpts(db, rs.logger, key, id, params.initialVersion, rs.iavlCacheSize, rs.iavlDisableFastNode, rs.metrics, iavltree.AsyncPruningOption(!rs.iavlSyncPruning))
 		if err != nil {
 			return nil, err
 		}

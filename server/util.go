@@ -583,6 +583,7 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		defaultMempool,
 		baseapp.SetChainID(chainID),
 		baseapp.SetQueryGasLimit(cast.ToUint64(appOpts.Get(FlagQueryGasLimit))),
+		// TODO for testing purposes we always enable memiavl, but we need this to be a config param in the future
 		baseapp.SetupMemIAVL(
 			homeDir,
 			appOpts,
@@ -590,9 +591,6 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 			false,
 			50000,
 		),
-		//baseapp.EnableIAVLV2(&iavl2.Config{
-		//	Path: filepath.Join(homeDir, "data", "v2"),
-		//}),
 	}
 }
 

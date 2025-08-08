@@ -12,7 +12,7 @@ import (
 //
 // This value is constant as this should not change without a hard fork.
 // For CometBFT this should be set to 1 block, for more details see:
-// https://github.com/cometbft/cometbft/v2/blob/main/spec/abci/abci%2B%2B_basic_concepts.md#consensusblock-execution-methods
+// https://docs.cometbft.com/v0.38/spec/abci/abci++_basic_concepts#consensusblock-execution-methods
 const ValidatorUpdateDelay int64 = 1
 
 var (

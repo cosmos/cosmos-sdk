@@ -90,17 +90,17 @@ func TestIncrementProposalNumber(t *testing.T) {
 	require.NoError(t, err)
 
 	tp := TestProposal
-	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, false)
+	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, false, nil)
 	require.NoError(t, err)
-	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, false)
+	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, false, nil)
 	require.NoError(t, err)
-	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, true)
+	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, true, nil)
 	require.NoError(t, err)
-	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, true)
+	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, true, nil)
 	require.NoError(t, err)
-	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, false)
+	_, err = govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, false, nil)
 	require.NoError(t, err)
-	proposal6, err := govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, false)
+	proposal6, err := govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, false, nil)
 	require.NoError(t, err)
 
 	require.Equal(t, uint64(6), proposal6.Id)
@@ -116,7 +116,7 @@ func TestProposalQueues(t *testing.T) {
 
 	// create test proposals
 	tp := TestProposal
-	proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, false)
+	proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrBz, false, nil)
 	require.NoError(t, err)
 
 	has, err := govKeeper.InactiveProposalsQueue.Has(ctx, collections.Join(*proposal.DepositEndTime, proposal.Id))

@@ -8,7 +8,7 @@ require (
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/google/go-cmp v0.7.0
 	github.com/stretchr/testify v1.10.0
-	github.com/tidwall/btree v1.8.0
+	github.com/tidwall/btree v1.8.1
 	google.golang.org/protobuf v1.36.6
 	pgregory.net/rapid v1.2.0
 )

@@ -483,7 +483,7 @@ func extractSignersBytes(tx sdk.Tx) ([][]byte, error) {
 // BaseApp.Commit() will set the check state based on the latest header.
 //
 // NOTE: Since CheckTx and DeliverTx state are managed separately, subsequent and
-// sequential txs orginating from the same account cannot be handled correctly in
+// sequential txs originating from the same account cannot be handled correctly in
 // a reliable way unless sequence numbers are managed and tracked manually by a
 // client. It is recommended to instead use multiple messages in a tx.
 type IncrementSequenceDecorator struct {

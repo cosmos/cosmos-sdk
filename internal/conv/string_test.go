@@ -25,7 +25,9 @@ func (s *StringSuite) TestUnsafeStrToBytes() {
 	for range 5 {
 		b := unsafeConvertStr()
 		runtime.GC()
-		<-time.NewTimer(2 * time.Millisecond).C
+		timer := time.NewTimer(2 * time.Millisecond)
+		<-timer.C
+		timer.Stop()
 		b2 := append(b, 'd')
 		s.Equal("abc", string(b))
 		s.Equal("abcd", string(b2))
@@ -42,7 +44,9 @@ func (s *StringSuite) TestUnsafeBytesToStr() {
 	for range 5 {
 		str := unsafeConvertBytes()
 		runtime.GC()
-		<-time.NewTimer(2 * time.Millisecond).C
+		timer := time.NewTimer(2 * time.Millisecond)
+		<-timer.C
+		timer.Stop()
 		s.Equal("abc", str)
 	}
 }

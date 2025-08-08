@@ -31,7 +31,7 @@ func newTestTxConfig() (client.TxConfig, codec.Codec) {
 	return authtx.NewTxConfig(codec.NewProtoCodec(encodingConfig.InterfaceRegistry), authtx.DefaultSignModes), encodingConfig.Codec
 }
 
-// mockContext is a mock client.Context to return abitrary simulation response, used to
+// mockContext is a mock client.Context to return arbitrary simulation response, used to
 // unit test CalculateGas.
 type mockContext struct {
 	gasUsed uint64
@@ -315,7 +315,7 @@ func TestSign(t *testing.T) {
 		/**** test double sign Direct mode
 		  signing transaction with 2 or more DIRECT signers should fail in DIRECT mode ****/
 		{
-			"direct: should  append a DIRECT signature with existing AMINO",
+			"direct: should append a DIRECT signature with existing AMINO",
 			// txb already has 1 AMINO signature
 			txfDirect, txb, from1, false,
 			[]cryptotypes.PubKey{pubKey2, pubKey1},

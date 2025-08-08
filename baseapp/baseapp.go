@@ -121,7 +121,7 @@ type BaseApp struct {
 	// ResponseCommit.RetainHeight value during ABCI Commit. A value of 0 indicates
 	// that no blocks should be pruned.
 	//
-	// Note: CometBFT block pruning is dependant on this parameter in conjunction
+	// Note: CometBFT block pruning is dependent on this parameter in conjunction
 	// with the unbonding (safety threshold) period, state pruning and state sync
 	// snapshot parameters to determine the correct minimum value of
 	// ResponseCommit.RetainHeight.
@@ -165,7 +165,7 @@ type BaseApp struct {
 
 	// nextBlockDelay is the delay to wait until the next block after ABCI has committed.
 	// This gives the application more time to receive precommits.  This is the same as TimeoutCommit,
-	// but can new be set from the application.  This value defaults to 0, and CometBFT will use the
+	// but can now be set from the application.  This value defaults to 0, and CometBFT will use the
 	// legacy value set in config.toml if it is 0.
 	nextBlockDelay time.Duration
 }

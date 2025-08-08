@@ -21,7 +21,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.1/baseapp/msg_service_router.go#
 ``` 
 
 :::note
-The `CircuitBreakerDecorator` works for most use cases, but [does not check the inner messages of a transaction](https://docs.cosmos.network/main/learn/beginner/tx-lifecycle#antehandler). This some transactions (such as `x/authz` transactions or some `x/gov` transactions) may pass the ante handler. **This does not affect the circuit breaker** as the message router check will still fail the transaction.
+The `CircuitBreakerDecorator` works for most use cases, but [does not check the inner messages of a transaction](https://docs.cosmos.network/main/learn/beginner/tx-lifecycle#antehandler). This means some transactions (such as `x/authz` transactions or some `x/gov` transactions) may pass the ante handler. **This does not affect the circuit breaker** as the message router check will still fail the transaction.
 This tradeoff is to avoid introducing more dependencies in the `x/circuit` module. Chains can re-define the `CircuitBreakerDecorator` to check for inner messages if they wish to do so.
 :::
 
@@ -91,7 +91,7 @@ Reset is called by an authorized account to enable execution for a specific msgU
 
 ```protobuf
   // ResetCircuitBreaker resumes processing of Msg's in the state machine that
-  // have been been paused using TripCircuitBreaker.
+  // have been paused using TripCircuitBreaker.
   rpc ResetCircuitBreaker(MsgResetCircuitBreaker) returns (MsgResetCircuitBreakerResponse);
 ```
 

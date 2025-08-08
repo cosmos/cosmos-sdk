@@ -166,7 +166,7 @@ which encodes and validates each transaction and from there the `AnteHandler` is
 If successful, valid transactions are returned inclusive of the events, tags, and data generated 
 during the execution of the proposal. 
 The described behavior is that of the default handler, applications have the flexibility to define their own 
-[custom mempool handlers](https://docs.cosmos.network/main/building-apps/app-mempool#custom-mempool-handlers).
+[custom mempool handlers](https://docs.cosmos.network/main/build/building-apps/app-mempool).
 
 ![ProcessProposal](./baseapp_state-prepareproposal.png)
 
@@ -177,7 +177,7 @@ from the root store and is used to process a signed proposal received from a val
 In this state, `runTx` is called and the `AnteHandler` is executed and the context used in this state is built with information 
 from the header and the main state, including the minimum gas prices, which are also set. 
 Again we want to highlight that the described behavior is that of the default handler and applications have the flexibility to define their own
-[custom mempool handlers](https://docs.cosmos.network/main/building-apps/app-mempool#custom-mempool-handlers).
+[custom mempool handlers](https://docs.cosmos.network/main/build/building-apps/app-mempool).
 
 ![ProcessProposal](./baseapp_state-processproposal.png)
 
@@ -396,7 +396,7 @@ The `AnteHandler` is theoretically optional, but still a very important componen
 
 * Be a primary line of defense against spam and second line of defense (the first one being the mempool) against transaction replay with fees deduction and [`sequence`](./01-transactions.md#transaction-generation) checking.
 * Perform preliminary _stateful_ validity checks like ensuring signatures are valid or that the sender has enough funds to pay for fees.
-* Play a role in the incentivisation of stakeholders via the collection of transaction fees.
+* Play a role in the incentivization of stakeholders via the collection of transaction fees.
 
 `BaseApp` holds an `anteHandler` as parameter that is initialized in the [application's constructor](../beginner/00-app-anatomy.md#application-constructor). The most widely used `anteHandler` is the [`auth` module](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/auth/ante/ante.go).
 
@@ -469,12 +469,12 @@ When the underlying consensus engine receives a block proposal, each transaction
 Before the first transaction of a given block is processed, a [volatile state](#state-updates) called `finalizeBlockState` is initialized during FinalizeBlock. This state is updated each time a transaction is processed via `FinalizeBlock`, and committed to the [main state](#main-state) when the block is [committed](#commit), after what it is set to `nil`.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/baseapp/baseapp.go#LL772-L807
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/baseapp/baseapp.go#L772-L807
 ```
 
 Transaction execution within `FinalizeBlock` performs the **exact same steps as `CheckTx`**, with a little caveat at step 3 and the addition of a fifth step:
 
-1. The `AnteHandler` does **not** check that the transaction's `gas-prices` is sufficient. That is because the `min-gas-prices` value `gas-prices` is checked against is local to the node, and therefore what is enough for one full-node might not be for another. This means that the proposer can potentially include transactions for free, although they are not incentivised to do so, as they earn a bonus on the total fee of the block they propose.
+1. The `AnteHandler` does **not** check that the transaction's `gas-prices` is sufficient. That is because the `min-gas-prices` value `gas-prices` is checked against is local to the node, and therefore what is enough for one full-node might not be for another. This means that the proposer can potentially include transactions for free, although they are not incentivized to do so, as they earn a bonus on the total fee of the block they propose.
 2. For each `sdk.Msg` in the transaction, route to the appropriate module's Protobuf [`Msg` service](../../build/building-modules/03-msg-services.md). Additional _stateful_ checks are performed, and the branched multistore held in `finalizeBlockState`'s `context` is updated by the module's `keeper`. If the `Msg` service returns successfully, the branched multistore held in `context` is written to `finalizeBlockState` `CacheMultiStore`.
 
 During the additional fifth step outlined in (2), each read/write to the store increases the value of `GasConsumed`. You can find the default cost of each operation:

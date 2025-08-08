@@ -24,7 +24,7 @@ const (
 // Keys for distribution store
 // Items are stored with the following key: values
 //
-// - 0x00<proposalID_Bytes>: FeePol
+// - 0x00<proposalID_Bytes>: FeePool
 //
 // - 0x01: sdk.ConsAddress
 //

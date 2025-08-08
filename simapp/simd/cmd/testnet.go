@@ -248,9 +248,11 @@ func initTestnetFiles(
 		genFiles    []string
 	)
 	const (
-		rpcPort  = 26657
-		apiPort  = 1317
-		grpcPort = 9090
+		rpcPort          = 26657
+		apiPort          = 1317
+		grpcPort         = 9090
+		pprofListen      = 6060
+		prometheusListen = 27780
 	)
 	p2pPortStart := 26656
 
@@ -264,6 +266,8 @@ func initTestnetFiles(
 			nodeConfig.P2P.AddrBookStrict = false
 			nodeConfig.P2P.PexReactor = false
 			nodeConfig.P2P.AllowDuplicateIP = true
+			nodeConfig.Instrumentation.PrometheusListenAddr = fmt.Sprintf(":%d", prometheusListen+portOffset)
+			nodeConfig.RPC.PprofListenAddress = fmt.Sprintf("localhost:%d", pprofListen+portOffset)
 			appConfig.API.Address = fmt.Sprintf("tcp://0.0.0.0:%d", apiPort+portOffset)
 			appConfig.GRPC.Address = fmt.Sprintf("0.0.0.0:%d", grpcPort+portOffset)
 		}
@@ -285,7 +289,7 @@ func initTestnetFiles(
 			ip  string
 		)
 		if args.singleMachine {
-			ip = "0.0.0.0"
+			ip = "127.0.0.1"
 		} else {
 			ip, err = getIP(i, args.startingIPAddress)
 			if err != nil {
@@ -579,7 +583,7 @@ func startTestnet(cmd *cobra.Command, args startArgs) error {
 	baseDir := fmt.Sprintf("%s/%s", args.outputDir, networkConfig.ChainID)
 	if _, err := os.Stat(baseDir); !os.IsNotExist(err) {
 		return fmt.Errorf(
-			"testnests directory already exists for chain-id '%s': %s, please remove or select a new --chain-id",
+			"testnets directory already exists for chain-id '%s': %s, please remove or select a new --chain-id",
 			networkConfig.ChainID, baseDir)
 	}
 

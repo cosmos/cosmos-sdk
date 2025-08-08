@@ -53,7 +53,7 @@ func (s *MigrationTestSuite) TestMigrateLegacyLocalKey() {
 	item := keyring.Item{
 		Key:         n1,
 		Data:        serializedLegacyLocalInfo,
-		Description: "SDK kerying version",
+		Description: "SDK keyring version",
 	}
 
 	s.Require().NoError(s.ks.SetItem(item))
@@ -71,7 +71,7 @@ func (s *MigrationTestSuite) TestMigrateLegacyLedgerKey() {
 	item := keyring.Item{
 		Key:         n1,
 		Data:        serializedLegacyLedgerInfo,
-		Description: "SDK kerying version",
+		Description: "SDK keyring version",
 	}
 
 	s.Require().NoError(s.ks.SetItem(item))
@@ -87,7 +87,7 @@ func (s *MigrationTestSuite) TestMigrateLegacyOfflineKey() {
 	item := keyring.Item{
 		Key:         n1,
 		Data:        serializedLegacyOfflineInfo,
-		Description: "SDK kerying version",
+		Description: "SDK keyring version",
 	}
 
 	s.Require().NoError(s.ks.SetItem(item))
@@ -110,7 +110,7 @@ func (s *MigrationTestSuite) TestMigrateLegacyMultiKey() {
 	item := keyring.Item{
 		Key:         n1,
 		Data:        serializedLegacyMultiInfo,
-		Description: "SDK kerying version",
+		Description: "SDK keyring version",
 	}
 
 	s.Require().NoError(s.ks.SetItem(item))
@@ -129,7 +129,7 @@ func (s *MigrationTestSuite) TestMigrateLocalRecord() {
 	item := keyring.Item{
 		Key:         n1,
 		Data:        serializedRecord,
-		Description: "SDK kerying version",
+		Description: "SDK keyring version",
 	}
 
 	s.Require().NoError(s.ks.SetItem(item))
@@ -154,7 +154,7 @@ func (s *MigrationTestSuite) TestMigrateOneRandomItemError() {
 	errItem := keyring.Item{
 		Key:         n1,
 		Data:        randomBytes,
-		Description: "SDK kerying version",
+		Description: "SDK keyring version",
 	}
 
 	s.Require().NoError(s.ks.SetItem(errItem))
@@ -177,7 +177,7 @@ func (s *MigrationTestSuite) TestMigrateAllLegacyMultiOffline() {
 	item := keyring.Item{
 		Key:         n1,
 		Data:        serializedLegacyMultiInfo,
-		Description: "SDK kerying version",
+		Description: "SDK keyring version",
 	}
 
 	s.Require().NoError(s.ks.SetItem(item))
@@ -188,7 +188,7 @@ func (s *MigrationTestSuite) TestMigrateAllLegacyMultiOffline() {
 	item = keyring.Item{
 		Key:         n1,
 		Data:        serializedLegacyOfflineInfo,
-		Description: "SDK kerying version",
+		Description: "SDK keyring version",
 	}
 
 	s.Require().NoError(s.ks.SetItem(item))
@@ -209,7 +209,7 @@ func (s *MigrationTestSuite) TestMigrateErrUnknownItemKey() {
 	item := keyring.Item{
 		Key:         n1,
 		Data:        serializedLegacyOfflineInfo,
-		Description: "SDK kerying version",
+		Description: "SDK keyring version",
 	}
 
 	s.Require().NoError(s.ks.SetItem(item))
@@ -223,7 +223,7 @@ func (s *MigrationTestSuite) TestMigrateErrEmptyItemData() {
 	item := keyring.Item{
 		Key:         n1,
 		Data:        []byte{},
-		Description: "SDK kerying version",
+		Description: "SDK keyring version",
 	}
 
 	s.Require().NoError(s.ks.SetItem(item))

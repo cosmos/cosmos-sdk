@@ -57,7 +57,7 @@ Modules are encouraged to utilize Protobuf encoding for their respective types. 
 
 In addition to [following official Protocol Buffer guidelines](https://developers.google.com/protocol-buffers/docs/proto3#simple), we recommend using these annotations in .proto files when dealing with interfaces:
 
-* use `cosmos_proto.accepts_interface` to annote `Any` fields that accept interfaces
+* use `cosmos_proto.accepts_interface` to annotate `Any` fields that accept interfaces
     * pass the same fully qualified name as `protoName` to `InterfaceRegistry.RegisterInterface`
     * example: `(cosmos_proto.accepts_interface) = "cosmos.gov.v1beta1.Content"` (and not just `Content`)
 * annotate interface implementations with `cosmos_proto.implements_interface`
@@ -268,7 +268,7 @@ message MsgSubmitEvidence {
 }
 ```
 
-The Cosmos SDK `codec.Codec` interface provides support methods `MarshalInterface` and `UnmarshalInterface` to easy encoding of state to `Any`.
+The Cosmos SDK `codec.Codec` interface provides support methods `MarshalInterface` and `UnmarshalInterface` for easy encoding of state to `Any`.
 
 Module should register interfaces using `InterfaceRegistry` which provides a mechanism for registering interfaces: `RegisterInterface(protoName string, iface interface{}, impls ...proto.Message)` and implementations: `RegisterImplementations(iface interface{}, impls ...proto.Message)` that can be safely unpacked from Any, similarly to type registration with Amino:
 

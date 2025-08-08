@@ -70,7 +70,7 @@ Further guidelines to be described below.
 Names should be descriptive enough to convey their meaning and distinguish
 them from other names.
 
-Given that we are using fully-qualifed names within
+Given that we are using fully-qualified names within
 `google.protobuf.Any` as well as within gRPC query routes, we should aim to
 keep names concise, without going overboard. The general rule of thumb should
 be if a shorter name would convey more or else the same thing, pick the shorter
@@ -117,7 +117,7 @@ Instead of breaking things, we should make every effort to evolve schemas rather
 to prevent such breakage.
 
 With that in mind, different stable versions (i.e. `v1` or `v2`) of a package should more or less be considered
-different packages and this should be last resort approach for upgrading protobuf schemas. Scenarios where creating
+different packages and this should be a last resort approach for upgrading protobuf schemas. Scenarios where creating
 a `v2` may make sense are:
 
 * we want to create a new module with similar functionality to an existing module and adding `v2` is the most natural
@@ -200,7 +200,7 @@ go package names, i.e. the `cosmos.bank` protobuf package will still live in
 
 ### Message Naming
 
-Message type names should be as concise possible without losing clarity. `sdk.Msg`
+Message type names should be as as concise possible without losing clarity. `sdk.Msg`
 types which are used in transactions will retain the `Msg` prefix as that provides
 helpful context.
 

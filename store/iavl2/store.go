@@ -233,7 +233,7 @@ func (st *Store) DeleteVersionsTo(version int64) error {
 
 // Iterator implements types.KVStore, returns an iterator from the underlying IAVL tree.
 func (st *Store) Iterator(start, end []byte) types.Iterator {
-	iterator, err := st.tree.Iterator(start, end, true)
+	iterator, err := st.tree.Iterator(start, end, false)
 	if err != nil {
 		panic(err)
 	}
@@ -242,7 +242,7 @@ func (st *Store) Iterator(start, end []byte) types.Iterator {
 
 // ReverseIterator implements types.KVStore, returns a reverse iterator from the underlying IAVL tree.
 func (st *Store) ReverseIterator(start, end []byte) types.Iterator {
-	iterator, err := st.tree.Iterator(start, end, false)
+	iterator, err := st.tree.ReverseIterator(start, end)
 	if err != nil {
 		panic(err)
 	}

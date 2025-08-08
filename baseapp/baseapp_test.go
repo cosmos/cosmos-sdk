@@ -1044,3 +1044,24 @@ func TestLoadVersionPruning(t *testing.T) {
 	require.Nil(t, err)
 	testLoadVersionHelper(t, app, int64(7), lastCommitID)
 }
+
+func TestQueryOnlyMode(t *testing.T) {
+	pruningOpt := baseapp.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningDefault))
+	db := dbm.NewMemDB()
+	name := t.Name()
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil, pruningOpt)
+
+	// Test that query-only mode is initially disabled
+	require.False(t, app.QueryOnlyMode())
+
+	// Enable query-only mode
+	app.SetQueryOnlyMode(true)
+	require.True(t, app.QueryOnlyMode())
+
+	// Verify that setting query-only mode also enables skip EndBlocker
+	require.True(t, app.SkipEndBlocker())
+
+	// Test that we can disable query-only mode
+	app.SetQueryOnlyMode(false)
+	require.False(t, app.QueryOnlyMode())
+}

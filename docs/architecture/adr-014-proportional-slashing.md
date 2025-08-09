@@ -8,13 +8,13 @@
 
 ## Context
 
-In Proof of Stake-based chains, centralization of consensus power amongst a small set of validators can cause harm to the network due to increased risk of censorship, liveness failure, fork attacks, etc.  However, while this centralization causes a negative externality to the network, it is not directly felt by the delegators contributing towards delegating towards already large validators.  We would like a way to pass on the negative externality cost of centralization onto those large validators and their delegators.
+In Proof-of-Stake-based chains, centralization of consensus power among a small set of validators can cause harm to the network due to an increased risk of censorship, liveness failure, and fork attacks, etc.  However, while this centralization causes a negative externality to the network, it is not directly felt by the delegators who contribute to delegating to already large validators.  We would like a way to pass on the negative externality cost of centralization onto those large validators and their delegators.
 
 ## Decision
 
 ### Design
 
-To solve this problem, we will implement a procedure called Proportional Slashing.  The desire is that the larger a validator is, the more they should be slashed.  The first naive attempt is to make a validator's slash percent proportional to their share of consensus voting power.
+To solve this problem, we will implement a procedure called Proportional Slashing.  The desire is that the larger a validator is, the more it should be slashed.  The first naive attempt is to make a validator's slash percent proportional to their share of consensus voting power.
 
 ```text
 slash_amount = k * power // power is the faulting validator's voting power and k is some on-chain constant
@@ -28,7 +28,7 @@ slash_amount = k * (power_1 + power_2 + ... + power_n) // where power_i is the v
 
 Now, if someone splits a validator of 10% into two validators of 5% each which both fault, then they both fault in the same time frame, they both will get slashed at the sum 10% amount.
 
-However in practice, we likely don't want a linear relation between amount of stake at fault, and the percentage of stake to slash. In particular, solely 5% of stake double signing effectively did nothing to majorly threaten security, whereas 30% of stake being at fault clearly merits a large slashing factor, due to being very close to the point at which Tendermint security is threatened. A linear relation would require a factor of 6 gap between these two, whereas the difference in risk posed to the network is much larger. We propose using S-curves (formally [logistic functions](https://en.wikipedia.org/wiki/Logistic_function) to solve this). S-Curves capture the desired criterion quite well. They allow the slashing factor to be minimal for small values, and then grow very rapidly near some threshold point where the risk posed becomes notable.
+However in practice, we likely don't want a linear relation between the amount of stake at fault, and the percentage of stake to slash. In particular, solely 5% of stake double signing effectively did nothing to majorly threaten security, whereas 30% of stake being at fault clearly merits a large slashing factor, due to being very close to the point at which Tendermint security is threatened. A linear relation would require a factor of 6 gap between these two, whereas the difference in risk posed to the network is much larger. We propose using S-curves (formally [logistic functions](https://en.wikipedia.org/wiki/Logistic_function) to solve this). S-Curves capture the desired criterion quite well. They allow the slashing factor to be minimal for small values, and then grow very rapidly near some threshold point where the risk posed becomes notable.
 
 #### Parameterization
 
@@ -82,4 +82,4 @@ Proposed
 
 ### Negative
 
-* More computationally expensive than current implementation.  Will require more data about "recent slashing events" to be stored on chain.
+* More computationally expensive than the current implementation.  Will require more data about "recent slashing events" to be stored on chain.

@@ -345,32 +345,32 @@ func (mr *MockBankKeeperMockRecorder) SendCoinsFromModuleToAccount(ctx, senderMo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SendCoinsFromModuleToAccount", reflect.TypeOf((*MockBankKeeper)(nil).SendCoinsFromModuleToAccount), ctx, senderModule, recipientAddr, amt)
 }
 
-// MockCometinfo is a mock of Cometinfo interface.
-type MockCometinfo struct {
+// MockCometInfo is a mock of CometInfo interface.
+type MockCometInfo struct {
 	ctrl     *gomock.Controller
-	recorder *MockCometinfoMockRecorder
+	recorder *MockCometInfoMockRecorder
 	isgomock struct{}
 }
 
-// MockCometinfoMockRecorder is the mock recorder for MockCometinfo.
-type MockCometinfoMockRecorder struct {
-	mock *MockCometinfo
+// MockCometInfoMockRecorder is the mock recorder for MockCometInfo.
+type MockCometInfoMockRecorder struct {
+	mock *MockCometInfo
 }
 
-// NewMockCometinfo creates a new mock instance.
-func NewMockCometinfo(ctrl *gomock.Controller) *MockCometinfo {
-	mock := &MockCometinfo{ctrl: ctrl}
-	mock.recorder = &MockCometinfoMockRecorder{mock}
+// NewMockCometInfo creates a new mock instance.
+func NewMockCometInfo(ctrl *gomock.Controller) *MockCometInfo {
+	mock := &MockCometInfo{ctrl: ctrl}
+	mock.recorder = &MockCometInfoMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use.
-func (m *MockCometinfo) EXPECT() *MockCometinfoMockRecorder {
+func (m *MockCometInfo) EXPECT() *MockCometInfoMockRecorder {
 	return m.recorder
 }
 
 // GetCometBlockInfo mocks base method.
-func (m *MockCometinfo) GetCometBlockInfo(arg0 context.Context) comet.BlockInfo {
+func (m *MockCometInfo) GetCometBlockInfo(arg0 context.Context) comet.BlockInfo {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetCometBlockInfo", arg0)
 	ret0, _ := ret[0].(comet.BlockInfo)
@@ -378,7 +378,7 @@ func (m *MockCometinfo) GetCometBlockInfo(arg0 context.Context) comet.BlockInfo 
 }
 
 // GetCometBlockInfo indicates an expected call of GetCometBlockInfo.
-func (mr *MockCometinfoMockRecorder) GetCometBlockInfo(arg0 any) *gomock.Call {
+func (mr *MockCometInfoMockRecorder) GetCometBlockInfo(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCometBlockInfo", reflect.TypeOf((*MockCometinfo)(nil).GetCometBlockInfo), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCometBlockInfo", reflect.TypeOf((*MockCometInfo)(nil).GetCometBlockInfo), arg0)
 }

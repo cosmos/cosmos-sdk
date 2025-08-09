@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"cosmossdk.io/collections"
+	collcodec "cosmossdk.io/collections/codec"
 	corestoretypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 
@@ -33,7 +34,8 @@ type Keeper struct {
 	storeService corestoretypes.KVStoreService
 
 	// The codec for binary encoding/decoding.
-	cdc codec.Codec
+	cdc       codec.Codec
+	legacyCdc codec.Codec
 
 	// Legacy Proposal router
 	legacyRouter v1beta1.Router
@@ -75,9 +77,32 @@ func WithCustomCalculateVoteResultsAndVotingPowerFn(calculateVoteResultsAndVotin
 	}
 }
 
+func WithLegacyCodec(legacyCdc codec.Codec) InitOption {
+	return func(k *Keeper) {
+		if legacyCdc == nil {
+			panic("legacyCdc cannot be nil")
+		}
+
+		k.legacyCdc = legacyCdc
+	}
+}
+
 // GetAuthority returns the x/gov module's authority.
 func (k Keeper) GetAuthority() string {
 	return k.authority
+}
+
+type CustomValueCodec struct {
+	collcodec.ValueCodec[v1.Proposal]
+	k *Keeper
+}
+
+func (c *CustomValueCodec) Decode(b []byte) (v1.Proposal, error) {
+	p, err := c.ValueCodec.Decode(b)
+	if err != nil && c.k.legacyCdc != nil {
+		err = c.k.legacyCdc.Unmarshal(b, &p)
+	}
+	return p, err
 }
 
 // NewKeeper returns a governance keeper. It handles:
@@ -123,11 +148,14 @@ func NewKeeper(
 		Deposits:                             collections.NewMap(sb, types.DepositsKeyPrefix, "deposits", collections.PairKeyCodec(collections.Uint64Key, sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), codec.CollValue[v1.Deposit](cdc)), // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 		Votes:                                collections.NewMap(sb, types.VotesKeyPrefix, "votes", collections.PairKeyCodec(collections.Uint64Key, sdk.LengthPrefixedAddressKey(sdk.AccAddressKey)), codec.CollValue[v1.Vote](cdc)),          // nolint: staticcheck // sdk.LengthPrefixedAddressKey is needed to retain state compatibility
 		ProposalID:                           collections.NewSequence(sb, types.ProposalIDKey, "proposal_id"),
-		Proposals:                            collections.NewMap(sb, types.ProposalsKeyPrefix, "proposals", collections.Uint64Key, codec.CollValue[v1.Proposal](cdc)),
 		ActiveProposalsQueue:                 collections.NewMap(sb, types.ActiveProposalQueuePrefix, "active_proposals_queue", collections.PairKeyCodec(sdk.TimeKey, collections.Uint64Key), collections.Uint64Value),     // sdk.TimeKey is needed to retain state compatibility
 		InactiveProposalsQueue:               collections.NewMap(sb, types.InactiveProposalQueuePrefix, "inactive_proposals_queue", collections.PairKeyCodec(sdk.TimeKey, collections.Uint64Key), collections.Uint64Value), // sdk.TimeKey is needed to retain state compatibility
 		VotingPeriodProposals:                collections.NewMap(sb, types.VotingPeriodProposalKeyPrefix, "voting_period_proposals", collections.Uint64Key, collections.BytesValue),
 	}
+	k.Proposals = collections.NewMap(sb, types.ProposalsKeyPrefix, "proposals", collections.Uint64Key, &CustomValueCodec{
+		ValueCodec: codec.CollValue[v1.Proposal](cdc),
+		k:          k,
+	})
 
 	for _, opt := range initOptions {
 		opt(k)

@@ -13,7 +13,7 @@ SUPERSEDED by ADR-045
 
 The current AnteHandler design allows users to either use the default AnteHandler provided in `x/auth` or to build their own AnteHandler from scratch. Ideally AnteHandler functionality is split into multiple, modular functions that can be chained together along with custom ante-functions so that users do not have to rewrite common antehandler logic when they want to implement custom behavior.
 
-For example, let's say a user wants to implement some custom signature verification logic. In the current codebase, the user would have to write their own Antehandler from scratch largely reimplementing much of the same code and then set their own custom, monolithic antehandler in the baseapp. Instead, we would like to allow users to specify custom behavior when necessary and combine them with default ante-handler functionality in a way that is as modular and flexible as possible.
+For example, let's say a user wants to implement some custom signature verification logic. In the current codebase, the user would have to write their own Antehandler from scratch largely reimplementing much of the same code and then set their own custom, monolithic antehandler in the baseapp. Instead, we would like to allow users to specify custom behavior when necessary and combine it with default ante-handler functionality in a way that is as modular and flexible as possible.
 
 ## Proposals
 
@@ -157,7 +157,7 @@ app.SetAnteHandler(mm.GetAnteHandler())
 
 #### Custom Workflow
 
-This is an example workflow for a user that wants to implement custom antehandler logic. In this example, the user wants to implement custom signature verification and change the order of antehandler so that validate memo runs before signature verification.
+This is an example workflow for a user who wants to implement custom antehandler logic. In this example, the user wants to implement custom signature verification and change the order of antehandler so that validate memo runs before signature verification.
 
 ##### User Code
 
@@ -177,7 +177,7 @@ moduleManager.SetAnteHandlerOrder([]AnteHandler(ValidateMemo, CustomSigVerify, D
 Pros:
 
 1. Allows for ante functionality to be as modular as possible.
-2. For users that do not need custom ante-functionality, there is little difference between how antehandlers work and how BeginBlock and EndBlock work in ModuleManager.
+2. For users who do not need custom ante-functionality, there is little difference between how antehandlers work and how BeginBlock and EndBlock work in ModuleManager.
 3. Still easy to understand
 
 Cons:
@@ -186,13 +186,13 @@ Cons:
 
 ### Simple Decorators
 
-This approach takes inspiration from Weave's decorator design while trying to minimize the number of breaking changes to the Cosmos SDK and maximizing simplicity. Like Weave decorators, this approach allows one `AnteDecorator` to wrap the next AnteHandler to do pre- and post-processing on the result. This is useful since decorators can do defer/cleanups after an AnteHandler returns as well as perform some setup beforehand. Unlike Weave decorators, these `AnteDecorator` functions can only wrap over the AnteHandler rather than the entire handler execution path. This is deliberate as we want decorators from different modules to perform authentication/validation on a `tx`. However, we do not want decorators being capable of wrapping and modifying the results of a `MsgHandler`.
+This approach takes inspiration from Weave's decorator design while trying to minimize the number of breaking changes to the Cosmos SDK and maximize simplicity. Like Weave decorators, this approach allows one `AnteDecorator` to wrap the next AnteHandler to do pre- and post-processing on the result. This is useful since decorators can do defer/cleanups after an AnteHandler returns as well as perform some setup beforehand. Unlike Weave decorators, these `AnteDecorator` functions can only wrap over the AnteHandler rather than the entire handler execution path. This is deliberate as we want decorators from different modules to perform authentication/validation on a `tx`. However, we do not want decorators to be capable of wrapping and modifying the results of a `MsgHandler`.
 
-In addition, this approach will not break any core Cosmos SDK API's. Since we preserve the notion of an AnteHandler and still set a single AnteHandler in baseapp, the decorator is simply an additional approach available for users that desire more customization. The API of modules (namely `x/auth`) may break with this approach, but the core API remains untouched.
+In addition, this approach will not break any core Cosmos SDK API's. Since we preserve the notion of an AnteHandler and still set a single AnteHandler in baseapp, the decorator is simply an additional approach available for users who desire more customization. The API of modules (namely `x/auth`) may break with this approach, but the core API remains untouched.
 
 Allow Decorator interface that can be chained together to create a Cosmos SDK AnteHandler.
 
-This allows users to choose between implementing an AnteHandler by themselves and setting it in the baseapp, or use the decorator pattern to chain their custom decorators with the Cosmos SDK provided decorators in the order they wish.
+This allows users to choose between implementing an AnteHandler by themselves and setting it in the baseapp, or using the decorator pattern to chain their custom decorators with the Cosmos SDK provided decorators in the order they wish.
 
 ```go
 // An AnteDecorator wraps an AnteHandler, and can do pre- and post-processing on the next AnteHandler

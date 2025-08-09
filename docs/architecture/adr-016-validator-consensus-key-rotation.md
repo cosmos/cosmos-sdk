@@ -7,7 +7,7 @@
 
 ## Context
 
-Validator consensus key rotation feature has been discussed and requested for a long time, for the sake of safer validator key management policy (e.g. https://github.com/tendermint/tendermint/issues/1136). So, we suggest one of the simplest form of validator consensus key rotation implementation mostly onto Cosmos SDK.
+Validator consensus key rotation feature has been discussed and requested for a long time, for the sake of safer validator key management policy (e.g. https://github.com/tendermint/tendermint/issues/1136). So, we suggest one of the simplest forms of validator consensus key rotation implementation mostly onto Cosmos SDK.
 
 We don't need to make any update on consensus logic in Tendermint because Tendermint does not have any mapping information of consensus key and validator operator key, meaning that from Tendermint's point of view, a consensus key rotation of a validator is simply a replacement of a consensus key to another.
 
@@ -40,13 +40,13 @@ Also, it should be noted that this ADR includes only the simplest form of consen
     * a validator should pay `KeyRotationFee` to rotate the consensus key which is calculated as below
     * `KeyRotationFee` = (max(`VotingPowerPercentage` *100, 1)* `InitialKeyRotationFee`) * 2^(number of rotations in `ConsPubKeyRotationHistory` in recent unbonding period)
 * evidence module
-    * evidence module can search corresponding consensus key for any height from slashing keeper so that it can decide which consensus key is supposed to be used for the given height.
+    * evidence module can search corresponding consensus key for any height from the slashing keeper so that it can decide which consensus key is supposed to be used for the given height.
 * abci.ValidatorUpdate
-    * tendermint already has ability to change a consensus key by ABCI communication(`ValidatorUpdate`).
+    * tendermint already has the ability to change a consensus key by ABCI communication(`ValidatorUpdate`).
     * validator consensus key update can be done via creating new + delete old by change the power to zero.
     * therefore, we expect we do not even need to change Tendermint codebase at all to implement this feature.
 * new genesis parameters in `staking` module
-    * `MaxConsPubKeyRotations` : maximum number of rotation can be executed by a validator in recent unbonding period. default value 10 is suggested(11th key rotation will be rejected)
+    * `MaxConsPubKeyRotations` : maximum number of rotations can be executed by a validator in recent unbonding period. default value 10 is suggested(11th key rotation will be rejected)
     * `InitialKeyRotationFee` : the initial key rotation fee when no key rotation has happened in recent unbonding period. default value 1atom is suggested(1atom fee for the first key rotation in recent unbonding period)
 
 ### Workflow

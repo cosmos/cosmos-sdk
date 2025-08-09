@@ -130,7 +130,7 @@ func GetValidatorCurrentRewardsAddress(key []byte) (valAddr sdk.ValAddress) {
 // GetValidatorAccumulatedCommissionAddress creates the address from a validator's accumulated commission key.
 func GetValidatorAccumulatedCommissionAddress(key []byte) (valAddr sdk.ValAddress) {
 	// key is in the format:
-	// 0x07<valAddrLen (1 Byte)><valAddr_Bytes>: ValidatorCurrentRewards
+	// 0x07<valAddrLen (1 Byte)><valAddr_Bytes>: ValidatorAccumulatedCommission
 
 	// Remove prefix and address length.
 	kv.AssertKeyAtLeastLength(key, 3)

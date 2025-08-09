@@ -125,7 +125,7 @@ func ValidateGenesis(data GenesisState) error {
         }
         addrMap[addrStr] = true
 
-        // check account specific validation
+        // check account-specific validation
         if err := acc.Validate(); err != nil {
             return fmt.Errorf("invalid account found in genesis state; address: %s, error: %s", addrStr, err.Error())
         }

@@ -11,9 +11,9 @@ Accepted
 
 ## Context
 
-In order to support building highly secure, robust and interoperable blockchain
+In order to support building a highly secure, robust and interoperable blockchain
 applications, it is vital for the Cosmos SDK to expose a mechanism in which arbitrary
-evidence can be submitted, evaluated and verified resulting in some agreed upon
+evidence can be submitted, evaluated and verified resulting in some agreed-upon
 penalty for any misbehavior committed by a validator, such as equivocation (double-voting),
 signing when unbonded, signing an incorrect state transition (in the future), etc.
 Furthermore, such a mechanism is paramount for any
@@ -31,7 +31,7 @@ functionality:
   custom evidence messages, message handlers, and methods to slash and penalize
   accordingly for misbehavior.
 * Support the ability to route evidence messages to handlers in any module to
-  determine the validity of submitted misbehavior.
+  determine the validity of the submitted misbehavior.
 * Support the ability, through governance, to modify slashing penalties of any
   evidence type.
 * Querier implementation to support querying params, evidence types, params, and
@@ -49,7 +49,7 @@ an infraction time. We want the `Evidence` type to remain as flexible as possibl
 When submitting evidence to the `x/evidence` module, the concrete type must provide
 the validator's consensus address, which should be known by the `x/slashing`
 module (assuming the infraction is valid), the height at which the infraction
-occurred and the validator's power at same height in which the infraction occurred.
+occurred and the validator's power was at the same height as the infraction occurred.
 
 ```go
 type Evidence interface {
@@ -161,7 +161,7 @@ type GenesisState struct {
 ### Positive
 
 * Allows the state machine to process misbehavior submitted on-chain and penalize
-  validators based on agreed upon slashing parameters.
+  validators based on agreed-upon slashing parameters.
 * Allows evidence types to be defined and handled by any module. This further allows
   slashing and jailing to be defined by more complex mechanisms.
 * Does not solely rely on Tendermint to submit evidence.

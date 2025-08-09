@@ -19,8 +19,8 @@ state is defined as a `StoreKey`, which gives full access on the entire Merkle t
 send the access right to a specific key-value pair (or a set of key-value pairs) to another module safely.
 
 Finally, because the getter/setter functions are defined as methods of a module's `Keeper`, the reviewers
-have to consider the whole Merkle tree space when they reviewing a function accessing any part of the state.
-There is no static way to know which part of the state that the function is accessing (and which is not).
+have to consider the whole Merkle tree space when they review a function accessing any part of the state.
+There is no static way to know which part of the state the function is accessing (and which is not).
 
 ## Decision
 
@@ -125,8 +125,8 @@ Where the `key` argument in core method is typed.
 
 Some of the properties of the accessor types are:
 
-* State access happens only when a function which takes a `Context` as an argument is invoked
-* Accessor type structs give rights to access the state only that the struct is referring, no other
+* State access happens only when a function that takes a `Context` as an argument is invoked
+* Accessor type structs give rights to access only the state that the struct is referring to, no other
 * Marshalling/Unmarshalling happens implicitly within the core methods
 
 ## Status

@@ -20,7 +20,7 @@ import (
 //
 //	(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int"
 //
-// In pulsar message they represented as strings, which is the only format this encoder supports.
+// In pulsar message they are represented as strings, which is the only format this encoder supports.
 func cosmosIntEncoder(_ *Encoder, v protoreflect.Value, w io.Writer) error {
 	switch val := v.Interface().(type) {
 	case string:

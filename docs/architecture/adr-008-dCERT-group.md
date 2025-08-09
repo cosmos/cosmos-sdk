@@ -68,9 +68,9 @@ following specifications:
    send a transaction accepting their admission at which point the validity of
    their admission is to be confirmed.
     * A sequence number is assigned when a member is added to dCERT group.
-     If a member leaves the dCERT group and then enters back, a new sequence number
+     If a member leaves the dCERT group and then re-enters, a new sequence number
      is assigned.  
-* Addresses which control the greatest amount of preferred-representation are
+* Addresses that control the greatest amount of preferred-representation are
    eligible to join the dCERT group (up the _maximum number of dCERT members_).
    If the dCERT group is already full and new member is admitted, the existing
    dCERT member with the lowest amount of votes is kicked from the dCERT group.
@@ -93,7 +93,7 @@ following specifications:
 
 All members of the dCERT group must stake tokens _specifically_ to maintain
 eligibility as a dCERT member. These tokens can be staked directly by the vying
-dCERT member or out of the good will of a 3rd party (who shall gain no on-chain
+dCERT member or out of the goodwill of a 3rd party (who shall gain no on-chain
 benefits for doing so). This staking mechanism should use the existing global
 unbonding time of tokens staked for network validator security. A dCERT member
 can _only be_ a member if it has the required tokens staked under this
@@ -101,7 +101,7 @@ mechanism. If those tokens are unbonded then the dCERT member must be
 automatically kicked from the group.  
 
 Slashing of a particular dCERT member due to soft-contract breach should be
-performed by governance on a per member basis based on the magnitude of the
+performed by governance on a per-member basis based on the magnitude of the
 breach.  The process flow is anticipated to be that a dCERT member is suspended
 by the dCERT group prior to being slashed by governance.  
 
@@ -109,11 +109,11 @@ Membership suspension by the dCERT group takes place through a voting procedure
 by the dCERT group members. After this suspension has taken place, a governance
 proposal to slash the dCERT member must be submitted, if the proposal is not
 approved by the time the rescinding member has completed unbonding their
-tokens, then the tokens are no longer staked and unable to be slashed.
+tokens, then the tokens are no longer staked and are unable to be slashed.
 
 Additionally in the case of an emergency situation of a colluding and malicious
 dCERT group, the community needs the capability to disband the entire dCERT
-group and likely fully slash them. This could be achieved though a special new
+group and likely fully slash them. This could be achieved through a special new
 proposal type (implemented as a general governance proposal) which would halt
 the functionality of the dCERT group until the proposal was concluded. This
 special proposal type would likely need to also have a fairly large wager which
@@ -144,7 +144,7 @@ required.
 
 Note also, that if there was a problem with governance voting (for instance a
 capability to vote many times) then governance would be broken and should be
-halted with this mechanism, it would be then up to the validator set to
+halted with this mechanism, it would then be up to the validator set to
 coordinate and hard-fork upgrade to a patched version of the software where
 governance is re-enabled (and fixed). If the dCERT group abuses this privilege
 they should all be severely slashed.
@@ -157,8 +157,8 @@ Proposed
 
 ### Positive
 
-* Potential to reduces the number of parties to coordinate with during an emergency
-* Reduction in possibility of disclosing sensitive information to malicious parties
+* Potential to reduce the number of parties to coordinate with during an emergency
+* Reduction in the possibility of disclosing sensitive information to malicious parties
 
 ### Negative
 

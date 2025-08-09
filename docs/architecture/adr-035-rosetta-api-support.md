@@ -9,7 +9,7 @@
 
 ## Changelog
 
-* 2021-05-12: the external library  [cosmos-rosetta-gateway](https://github.com/tendermint/cosmos-rosetta-gateway) has been moved within the Cosmos SDK.
+* 2021-05-12: the external library [cosmos-rosetta-gateway](https://github.com/tendermint/cosmos-rosetta-gateway) has been moved within the Cosmos SDK.
 
 ## Context
 
@@ -32,11 +32,11 @@ The driving principles of the proposed design are:
 
 1. **Extensibility:** it must be as riskless and painless as possible for application developers to set-up network
    configurations to expose Rosetta API-compliant services.
-2. **Long term support:** This proposal aims to provide support for all the supported Cosmos SDK release series.
+2. **Long term support:** This proposal aims to provide support for all the Cosmos SDK release series.
 3. **Cost-efficiency:** Backporting changes to Rosetta API specifications from `master` to the various stable
    branches of Cosmos SDK is a cost that needs to be reduced.
 
-We will achieve these delivering on these principles by the following:
+We will achieve these by delivering on these principles by the following:
 
 1. There will be a package `rosetta/lib`
    for the implementation of the core Rosetta API features, particularly:
@@ -53,7 +53,7 @@ We will achieve these delivering on these principles by the following:
 
 ### The External Repo
 
-As section will describe the proposed external library, including the service implementation, plus the defined types and interfaces.
+This section will describe the proposed external library, including the service implementation, plus the defined types and interfaces.
 
 #### Server
 
@@ -120,8 +120,8 @@ type Client interface {
 	// BlockTransactionsByHash gets the block, parent block and transactions
 	// given the block hash.
 	BlockTransactionsByHash(ctx context.Context, hash string) (BlockTransactionsResponse, error)
-	// BlockTransactionsByHash gets the block, parent block and transactions
-	// given the block hash.
+	// BlockTransactionsByHeight gets the block, parent block and transactions
+	// given the block height.
 	BlockTransactionsByHeight(ctx context.Context, height *int64) (BlockTransactionsResponse, error)
 	// GetTx gets a transaction given its hash
 	GetTx(ctx context.Context, hash string) (*types.Transaction, error)
@@ -189,7 +189,7 @@ As stated at the start, application developers will have two methods for invocat
 
 #### Shared Process (Only Stargate)
 
-Rosetta API service could run within the same execution process as the application. This would be enabled via app.toml settings, and if gRPC is not enabled the rosetta instance would be spinned in offline mode (tx building capabilities only).
+Rosetta API service could run within the same execution process as the application. This would be enabled via app.toml settings, and if gRPC is not enabled the rosetta instance would be spun in offline mode (tx building capabilities only).
 
 #### Separate API service
 

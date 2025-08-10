@@ -153,6 +153,23 @@ func TestGetGovGovernanceAndModuleAccountAddress(t *testing.T) {
 	require.Equal(t, mAddr, govKeeper.ModuleAccountAddress())
 }
 
+type dummyCodec struct{ codec.Codec }
+
+func TestWithLegacyCodec(t *testing.T) {
+	k := &keeper.Keeper{}
+
+	// Should set legacyCdc field
+	legacy := &dummyCodec{}
+	opt := keeper.WithLegacyCodec(legacy)
+	opt(k)
+	require.Equal(t, legacy, k.LegacyCodec())
+
+	// Should panic if nil is passed
+	require.PanicsWithValue(t, "legacyCdc cannot be nil", func() {
+		keeper.WithLegacyCodec(nil)(k)
+	})
+}
+
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }

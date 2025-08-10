@@ -251,3 +251,8 @@ func (k Keeper) assertSummaryLength(summary string) error {
 	}
 	return nil
 }
+
+// LegacyCodec returns the legacy codec (for testing).
+func (k Keeper) LegacyCodec() codec.Codec {
+	return k.legacyCdc
+}

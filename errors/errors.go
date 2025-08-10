@@ -192,7 +192,7 @@ func Wrap(err error, description string) error {
 		return nil
 	}
 
-	// If this error does not carry the stacktrace information yet, attach
+	// If this error does not carry the stack trace information yet, attach
 	// one. This should be done only once per error at the lowest frame
 	// possible (most inner wrap).
 	if stackTrace(err) == nil {

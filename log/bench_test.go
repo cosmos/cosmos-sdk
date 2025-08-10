@@ -34,7 +34,7 @@ func BenchmarkLoggers(b *testing.B) {
 			keyVals: []any{"foo", 1},
 		},
 		{
-			// Small numbers may be optimized, so check if an unusual/larger number performs different.
+			// Small numbers may be optimized, so check if an unusual/larger number performs differently.
 			name:    "single largeish int",
 			keyVals: []any{"foo", 123456789},
 		},
@@ -80,7 +80,7 @@ func BenchmarkLoggers(b *testing.B) {
 
 	// The real logger exposed by this package,
 	// writing to an io.Discard writer,
-	// so that real write time is negligible.
+	// so that the real write time is negligible.
 	b.Run("zerolog", func(b *testing.B) {
 		for _, bc := range benchCases {
 			b.Run(bc.name, func(b *testing.B) {

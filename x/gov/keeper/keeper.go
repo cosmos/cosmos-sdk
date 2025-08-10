@@ -77,6 +77,7 @@ func WithCustomCalculateVoteResultsAndVotingPowerFn(calculateVoteResultsAndVotin
 	}
 }
 
+// WithLegacyCodec returns an InitOption that sets the legacy codec for the Keeper.
 func WithLegacyCodec(legacyCdc codec.Codec) InitOption {
 	return func(k *Keeper) {
 		if legacyCdc == nil {
@@ -92,11 +93,19 @@ func (k Keeper) GetAuthority() string {
 	return k.authority
 }
 
+// CustomValueCodec is a wrapper around a ValueCodec for v1.Proposal that allows
+// decoding using both the primary codec and legacy codec.
+// When decoding, it first attempts to use the primary ValueCodec. If decoding fails
+// and a legacy codec is set on the keeper, it attempts to unmarshal using the legacy codec instead.
+// This is useful for handling proposals that may have been encoded with an older codec version.
 type CustomValueCodec struct {
 	collcodec.ValueCodec[v1.Proposal]
 	k *Keeper
 }
 
+// Decode attempts to decode the provided bytes into a v1.Proposal using the primary ValueCodec.
+// If decoding fails and a legacy codec is set on the keeper, it attempts to unmarshal using the legacy codec instead.
+// Returns the decoded v1.Proposal and any error encountered.
 func (c *CustomValueCodec) Decode(b []byte) (v1.Proposal, error) {
 	p, err := c.ValueCodec.Decode(b)
 	if err != nil && c.k.legacyCdc != nil {

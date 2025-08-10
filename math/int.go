@@ -102,7 +102,7 @@ func (i Int) BigInt() *big.Int {
 	return new(big.Int).Set(i.i)
 }
 
-// BigIntMut converts Int to big.Int, mutative the input
+// BigIntMut converts Int to big.Int, mutates the input
 func (i Int) BigIntMut() *big.Int {
 	if i.IsNil() {
 		return nil
@@ -323,7 +323,7 @@ func (i Int) SafeSub(i2 Int) (res Int, err error) {
 	return res, nil
 }
 
-// Mul multiples two Ints
+// Mul multiplies two Ints
 func (i Int) Mul(i2 Int) (res Int) {
 	// Check overflow
 	x, err := i.SafeMul(i2)
@@ -338,7 +338,7 @@ func (i Int) MulRaw(i2 int64) Int {
 	return i.Mul(NewInt(i2))
 }
 
-// SafeMul multiples Int from another and returns an error if overflow
+// SafeMul multiplies Int from another and returns an error if overflow
 func (i Int) SafeMul(i2 Int) (res Int, err error) {
 	res = Int{mul(i.i, i2.i)}
 	// Check overflow

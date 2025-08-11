@@ -307,7 +307,7 @@ Hashing algorithm
 Algorithm:
 
 * Alan recommends to hash the prefix: `address(pub_key) = hash(hash(key_type) + pub_key)[:32]`, main benefits:
-    * we are free to user arbitrary long prefix names
+    * we are free to use arbitrary long prefix names
     * we still don’t risk collisions
     * switch tables
 * discussion about penalization -> about adding prefix post hash

@@ -50,7 +50,7 @@ API and supports:
 
 Almost all the information needed to decode state directly is specified in .proto files. Each table definition specifies
 an ID which is unique per .proto file and each index within a table is unique within that table. Clients then only need
-to know the name of a module and the prefix ORM data for a specific .proto file within that module in order to decode
+to know the name of a module and the ORM data prefix for a specific .proto file within that module in order to decode
 state data directly. This additional information will be exposed directly through app configs which will be explained
 in a future ADR related to app wiring.
 
@@ -60,7 +60,7 @@ be stored in the key value store as `Key: '0', Value: {"b":1}` (with more effici
 Also, the generated code from https://github.com/cosmos/cosmos-proto does optimizations around the
 `google.golang.org/protobuf/reflect/protoreflect` API to improve performance.
 
-A code generator is included with the ORM which creates type safe wrappers around the ORM's dynamic `Table`
+A code generator is included with the ORM which creates type-safe wrappers around the ORM's dynamic `Table`
 implementation and is the recommended way for modules to use the ORM.
 
 The ORM tests provide a simplified bank module demonstration which illustrates:
@@ -106,7 +106,7 @@ Further discussions will happen within the Cosmos SDK Framework Working Group. C
 
 ## References
 
-* https://github.com/iov-one/weave/tree/master/orm).
+* https://github.com/iov-one/weave/tree/master/orm
 * https://github.com/regen-network/regen-ledger/tree/157181f955823149e1825263a317ad8e16096da4/orm
 * https://github.com/cosmos/cosmos-sdk/tree/35d3312c3be306591fcba39892223f1244c8d108/x/group/internal/orm
 * https://github.com/cosmos/cosmos-sdk/discussions/9156

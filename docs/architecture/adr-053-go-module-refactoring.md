@@ -67,7 +67,7 @@ before `v1.0.0` is tagged and should make use of `internal` packages to limit
 the exposed API surface
 * the new go module's API may deviate from the existing code where there are
 clear improvements to be made or to remove legacy dependencies (for instance on
-amino or gogo proto), as long the old package attempts
+amino or gogo proto), as long as the old package attempts
 to avoid API breakage with aliases and wrappers
 * care should be taken when simply trying to turn an existing package into a
 new go module: https://github.com/golang/go/wiki/Modules#is-it-possible-to-add-a-module-to-a-multi-module-repository.
@@ -79,13 +79,13 @@ if necessary), rather than trying to make an old package a new module.
 ### Backwards Compatibility
 
 If the above guidelines are followed to use aliases or wrapper types pointing
-in existing APIs that point back to the new go modules, there should be no or
+to existing APIs that point back to the new go modules, there should be no or
 very limited breaking changes to existing APIs.
 
 ### Positive
 
 * standalone pieces of software will reach `v1.0.0` sooner
-* new features to specific functionality will be released sooner 
+* new features for specific functionality will be released sooner 
 
 ### Negative
 

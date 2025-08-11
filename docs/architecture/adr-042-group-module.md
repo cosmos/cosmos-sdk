@@ -49,7 +49,7 @@ message GroupInfo {
     // admin is the account address of the group's admin.
     string admin = 2;
 
-    // metadata is any arbitrary metadata to attached to the group.
+    // metadata is any arbitrary metadata attached to the group.
     bytes metadata = 3;
 
     // version is used to track changes to a group's membership structure that

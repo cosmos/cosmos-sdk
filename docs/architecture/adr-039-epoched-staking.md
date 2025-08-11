@@ -23,7 +23,7 @@ The current proof of stake module takes the design decision to apply staking wei
 
 An alternative design choice is to allow buffering staking updates (delegations, unbonds, validators joining) for a number of blocks. This epoched proof of stake consensus provides the guarantee that the consensus weights for validators will not change mid-epoch, except in the event of a slash condition.
 
-Additionally, the UX hurdle may not be as significant as was previously thought. This is because it is possible to provide users immediate acknowledgement that their bond was recorded and will be executed.
+Additionally, the UX hurdle may not be as significant as was previously thought. This is because it is possible to provide users with immediate acknowledgement that their bond was recorded and will be executed.
 
 Furthermore, it has become clearer over time that immediate execution of staking events comes with limitations, such as:
 

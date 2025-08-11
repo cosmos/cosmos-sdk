@@ -18,7 +18,7 @@
 
 ## Status
 
-Accepted. Implementation started. Small value renderers details still need to be polished.
+Accepted. Implementation started. Small value renderer details still need to be polished.
 
 Spec version: 0.
 
@@ -30,7 +30,7 @@ This ADR specifies SIGN_MODE_TEXTUAL, a new string-based sign mode that is targe
 
 Protobuf-based SIGN_MODE_DIRECT was introduced in [ADR-020](./adr-020-protobuf-transaction-encoding.md) and is intended to replace SIGN_MODE_LEGACY_AMINO_JSON in most situations, such as mobile wallets and CLI keyrings. However, the [Ledger](https://www.ledger.com/) hardware wallet is still using SIGN_MODE_LEGACY_AMINO_JSON for displaying the sign bytes to the user. Hardware wallets cannot transition to SIGN_MODE_DIRECT as:
 
-* SIGN_MODE_DIRECT is binary-based and thus not suitable for display to end-users. Technically, hardware wallets could simply display the sign bytes to the user. But this would be considered as blind signing, and is a security concern.
+* SIGN_MODE_DIRECT is binary-based and thus not suitable for display to end-users. Technically, hardware wallets could simply display the sign bytes to the user. But this would be considered blind signing, and is a security concern.
 * hardware cannot decode the protobuf sign bytes due to memory constraints, as the Protobuf definitions would need to be embedded on the hardware device.
 
 In an effort to remove Amino from the SDK, a new sign mode needs to be created for hardware devices. [Initial discussions](https://github.com/cosmos/cosmos-sdk/issues/6513) propose a text-based sign mode, which this ADR formally specifies.
@@ -106,7 +106,7 @@ will be rejected.
 
 For security, transaction signatures should have three properties:
 
-1. Given the transaction, signatures, and chain state, it must be possible to validate that the signatures matches the transaction,
+1. Given the transaction, signatures, and chain state, it must be possible to validate that the signatures match the transaction,
 to verify that the signers must have known their respective secret keys.
 
 2. It must be computationally infeasible to find a substantially different transaction for which the given signatures are valid, given the same chain state.
@@ -180,7 +180,7 @@ indent_key = 3
 expert_key = 4
 ```
 
-Defining the sign_doc as directly an array of screens has also been considered. However, given the possibility of future iterations of this specification, using a single-keyed struct has been chosen over the former proposal, as structs allow for easier backwards-compatibility.
+Defining the sign_doc directly as an array of screens has also been considered. However, given the possibility of future iterations of this specification, using a single-keyed struct has been chosen over the former proposal, as structs allow for easier backwards-compatibility.
 
 ## Details
 
@@ -190,7 +190,7 @@ and expert screens are marked with a leading `*`.
 
 ### Encoding of the Transaction Envelope
 
-We define "transaction envelope" as all data in a transaction that is not in the `TxBody.Messages` field. Transaction envelope includes fee, signer infos and memo, but don't include `Msg`s. `//` denotes comments and are not shown on the Ledger device.
+We define "transaction envelope" as all data in a transaction that is not in the `TxBody.Messages` field. Transaction envelope includes fee, signer infos and memo, but doesn't include `Msg`s. `//` denotes comments and are not shown on the Ledger device.
 
 ```
 Chain ID: <string>
@@ -346,8 +346,8 @@ SIGN_MODE_TEXTUAL is purely additive, and doesn't break any backwards compatibil
 
 ### Negative
 
-* Some fields are still encoded in non-human-readable ways, such as public keys in hexadecimal.
-* New ledger app needs to be released, still unclear
+* Some fields are still encoded in non-human-readable ways, such as public keys encoded in hexadecimal.
+* New ledger app needs to be released, but the timeline is still unclear
 
 ### Neutral
 

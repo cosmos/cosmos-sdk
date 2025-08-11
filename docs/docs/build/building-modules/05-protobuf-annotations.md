@@ -56,7 +56,7 @@ There are a few options for what can be provided as a scalar: `cosmos.AddressStr
 
 ## Implements_Interface
 
-The implement interface is used to provide information to client tooling like [telescope](https://github.com/cosmology-tech/telescope) on how to encode and decode protobuf messages. 
+`Implements_Interface` is used to provide information to client tooling like [telescope](https://github.com/cosmology-tech/telescope) on how to encode and decode protobuf messages. 
 
 ```proto
 option (cosmos_proto.implements_interface) = "cosmos.auth.v1beta1.AccountI";

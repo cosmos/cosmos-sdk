@@ -243,7 +243,7 @@ The middleware-based design builds upon the existing antehandlers design describ
 * The Antehandlers are run before `Msg` execution, whereas middlewares can run before and after.
 * The middleware approach uses separate methods for `{Check,Deliver,Simulate}Tx`, whereas the antehandlers pass a `simulate bool` flag and uses the `sdkCtx.Is{Check,Recheck}Tx()` flags to determine in which transaction mode we are.
 * The middleware design lets each middleware hold a reference to the next middleware, whereas the antehandlers pass a `next` argument in the `AnteHandle` method.
-* The middleware design use Go's standard `context.Context`, whereas the antehandlers use `sdk.Context`.
+* The middleware design uses Go's standard `context.Context`, whereas the antehandlers use `sdk.Context`.
 
 ## Consequences
 

@@ -25,7 +25,7 @@ movement to splitting SDK modules into [standalone go modules](https://github.co
 Both of these will ideally allow the ecosystem to move faster because we won't
 be waiting for all dependencies to update synchronously. For instance, we could
 have 3 versions of the core SDK compatible with the latest 2 releases of
-CosmWasm as well as 4 different versions of staking . This sort of setup would
+CosmWasm as well as 4 different versions of staking. This sort of setup would
 allow early adopters to aggressively integrate new versions, while allowing
 more conservative users to be selective about which versions they're ready for.
 
@@ -169,7 +169,7 @@ Imagine that we solve the first two problems but now have a scenario where
 `bar/v2` wants the option to use `MsgDoSomething.condition` which only `foo/v2`
 supports. If `bar/v2` works with `foo` `v1` and sets `condition` to some non-nil
 value, then `foo` will silently ignore this field resulting in a silent logic
-possibly dangerous logic error. If `bar/v2` were able to check whether `foo` was
+a possibly dangerous logic error. If `bar/v2` were able to check whether `foo` was
 on `v1` or `v2` and dynamically, it could choose to only use `condition` when
 `foo/v2` is available. Even if `bar/v2` were able to perform this check, however,
 how do we know that it is always performing the check properly. Without
@@ -535,7 +535,7 @@ One risk of ADR 033 is that dependencies are called at runtime which are not pre
 Also we want modules to have a way to define a minimum dependency API revision that they require. Therefore, all
 modules should declare their set of dependencies upfront. These dependencies could be defined when a module is
 instantiated, but ideally we know what the dependencies are before instantiation and can statically look at an app
-config and determine whether the set of modules. For example, if `bar` requires `foo` revision `>= 1`, then we
+config and determine whether the set of modules is compatible. For example, if `bar` requires `foo` revision `>= 1`, then we
 should be able to know this when creating an app config with two versions of `bar` and `foo`.
 
 We propose defining these dependencies in the proto options of the module config object itself.

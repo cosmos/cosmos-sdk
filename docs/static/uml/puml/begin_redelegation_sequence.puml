@@ -5,7 +5,7 @@ title: Redelegation
 
 msgServer -> keeper : BeginRedelegation(delAddr, valSrcAddr, valDstAddr, sharesAmount)
 participant  "keeper (staking)" as keeper
-keeper -> keeper : get number of sharew
+keeper -> keeper : get number of shares
 note left: If the delegator has more shares than the total shares in the validator\n(due to rounding errors), then just withdraw the max number of shares.
 keeper -> keeper : check the redelegation uses correct denom
 

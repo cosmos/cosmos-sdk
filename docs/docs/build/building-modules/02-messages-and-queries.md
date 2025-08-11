@@ -47,7 +47,7 @@ To attach a `ValidateBasic()` method to a message then you must add methods to t
 https://github.com/cosmos/cosmos-sdk/blob/9c1e8b247cd47b5d3decda6e86fbc3bc996ee5d7/types/tx_msg.go#L84-L88
 ```
 
-In 0.50+ signers from the `GetSigners()` call is automated via a protobuf annotation. 
+In 0.50+ signers from the `GetSigners()` call are automated via a protobuf annotation. 
 
 Read more about the signer field [here](./05-protobuf-annotations.md).
 
@@ -128,7 +128,7 @@ The `path` for each `query` must be defined by the module developer in the modul
 
 ### Store Queries
 
-Store queries query directly for store keys. They use `clientCtx.QueryABCI(req abci.QueryRequest)` to return the full `abci.QueryResponse` with inclusion Merkle proofs.
+Store queries access store keys directly. They use `clientCtx.QueryABCI(req abci.QueryRequest)` to return the full `abci.QueryResponse` with inclusion Merkle proofs.
 
 See following examples:
 

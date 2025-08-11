@@ -84,7 +84,7 @@ account balances.
 
 External APIs will need to scan all balances under an account to retain backwards-compatibility. It
 is advised that these APIs use `GetBalance` and `SetBalance` instead of `GetAllBalances` when
-possible as to not load the entire account balance.
+possible as not to load the entire account balance.
 
 ### Supply module
 

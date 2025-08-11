@@ -179,7 +179,7 @@ This design changes how a module functionality is exposed and accessed. It depre
 
 This also allows us to change how we perform functional tests. Instead of mocking AppModules and Router, we will mock a client (server will stay hidden). More specifically: we will never mock `moduleA.MsgServer` in `moduleB`, but rather `moduleA.MsgClient`. One can think about it as working with external services (eg DBs, or online servers...). We assume that the transmission between clients and servers is correctly handled by generated Protocol Buffers.
 
-Finally, closing a module to client API opens desirable OCAP patterns discussed in ADR-033. Since server implementation and interface is hidden, nobody can hold "keepers"/servers and will be forced to relay on the client interface, which will drive developers for correct encapsulation and software engineering patterns.
+Finally, closing a module to client API opens desirable OCAP patterns discussed in ADR-033. Since server implementation and interface is hidden, nobody can hold "keepers"/servers and will be forced to rely on the client interface, which will drive developers for correct encapsulation and software engineering patterns.
 
 ### Pros
 

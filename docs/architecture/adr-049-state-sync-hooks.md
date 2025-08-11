@@ -109,14 +109,14 @@ On top of the existing `Snapshotter` interface for the `multistore`, we add `Ext
 
 ```go
 // ExtensionPayloadReader read extension payloads,
-// it returns io.EOF when reached either end of stream or the extension boundaries.
+// it returns io.EOF when it reaches either end of stream or the extension boundaries.
 type ExtensionPayloadReader = func() ([]byte, error)
 
 // ExtensionPayloadWriter is a helper to write extension payloads to underlying stream.
 type ExtensionPayloadWriter = func([]byte) error
 
 // ExtensionSnapshotter is an extension Snapshotter that is appended to the snapshot stream.
-// ExtensionSnapshotter has an unique name and manages it's own internal formats.
+// ExtensionSnapshotter has a unique name and manages it's own internal formats.
 type ExtensionSnapshotter interface {
 	// SnapshotName returns the name of snapshotter, it should be unique in the manager.
 	SnapshotName() string
@@ -131,7 +131,7 @@ type ExtensionSnapshotter interface {
 	SnapshotExtension(height uint64, payloadWriter ExtensionPayloadWriter) error
 
 	// RestoreExtension restores an extension state snapshot,
-	// the payload reader returns `io.EOF` when reached the extension boundaries.
+	// the payload reader returns `io.EOF` when it reaches the extension boundaries.
 	RestoreExtension(height uint64, format uint32, payloadReader ExtensionPayloadReader) error
 
 }
@@ -144,7 +144,7 @@ As a result of this implementation, we are able to create snapshots of binary ch
 
 ### Backwards Compatibility
 
-This ADR introduces new proto message types, adds an `extensions` field in snapshot `Manager`, and add new `ExtensionSnapshotter` interface, so this is not backwards compatible if we have extensions.
+This ADR introduces new proto message types, adds an `extensions` field in snapshot `Manager`, and adds a new `ExtensionSnapshotter` interface, so this is not backwards compatible if we have extensions.
 
 But for applications that do not have the state data outside of the IAVL tree for any module, the snapshot stream is backwards-compatible.
 

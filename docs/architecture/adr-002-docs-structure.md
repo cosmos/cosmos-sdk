@@ -2,7 +2,7 @@
 
 ## Context
 
-There is a need for a scalable structure of the Cosmos SDK documentation. Current documentation includes a lot of non-related Cosmos SDK material, is difficult to maintain and hard to follow as a user.
+There is a need for a scalable structure of the Cosmos SDK documentation. Current documentation includes a lot of non-related Cosmos SDK material, which is difficult to maintain and hard to follow as a user.
 
 Ideally, we would have:
 

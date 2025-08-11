@@ -78,7 +78,7 @@ We can then have a way to chain these micro-functions so that they run one after
 
 Users can order the AnteHandlers easily by simply using the ModuleManager. The ModuleManager will take in a list of AnteHandlers and return a single AnteHandler that runs each AnteHandler in the order of the list provided. If the user is comfortable with the default ordering of each module, this is as simple as providing a list with each module's antehandler (exactly the same as BeginBlocker and EndBlocker).
 
-If however, users wish to change the order or add, modify, or delete ante micro-functions in anyway; they can always define their own ante micro-functions and add them explicitly to the list that gets passed into module manager.
+If however, users wish to change the order or add, modify, or delete ante micro-functions in any way; they can always define their own ante micro-functions and add them explicitly to the list that gets passed into module manager.
 
 #### Default Workflow
 

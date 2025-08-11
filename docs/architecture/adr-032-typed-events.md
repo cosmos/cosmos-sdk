@@ -107,7 +107,7 @@ func ParseTypedEvent(event abci.Event) (proto.Message, error) {
 }
 ```
 
-Here, the `EmitTypedEvent` is a method on `EventManager` which takes typed event as input and apply json serialization on it. Then it maps the JSON key/value pairs to `event.Attributes` and emits it in form of `sdk.Event`. `Event.Type` will be the type URL of the proto message.
+Here, the `EmitTypedEvent` is a method on `EventManager` which takes typed event as input and applies json serialization on it. Then it maps the JSON key/value pairs to `event.Attributes` and emits it in form of `sdk.Event`. `Event.Type` will be the type URL of the proto message.
 
 When we subscribe to emitted events on the CometBFT websocket, they are emitted in the form of an `abci.Event`. `ParseTypedEvent` parses the event back to it's original proto message.
 

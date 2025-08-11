@@ -7,7 +7,7 @@
 * 10/14/2022:
     * Add `ListenCommit`, flatten the state writes in a block to a single batch.
     * Remove listeners from cache stores, should only listen to `rootmulti.Store`.
-    * Remove `HaltAppOnDeliveryError()`, the errors are propagated by default, the implementations should return nil if don't want to propagate errors.
+    * Remove `HaltAppOnDeliveryError()`, the errors are propagated by default, the implementations should return nil if they don't want to propagate errors.
 * 26/05/2023: Update with ABCI 2.0
 
 ## Status
@@ -40,7 +40,7 @@ type MemoryListener struct {
 	stateCache []StoreKVPair
 }
 
-// NewMemoryListener creates a listener that accumulate the state writes in memory.
+// NewMemoryListener creates a listener that accumulates the state writes in memory.
 func NewMemoryListener() *MemoryListener {
 	return &MemoryListener{}
 }
@@ -114,7 +114,7 @@ func (s *Store) Delete(key []byte) {
 
 ### MultiStore interface updates
 
-We will update the `CommitMultiStore` interface to allow us to wrap a `Memorylistener` to a specific `KVStore`.
+We will update the `CommitMultiStore` interface to allow us to wrap a `MemoryListener` to a specific `KVStore`.
 Note that the `MemoryListener` will be attached internally by the concrete `rootmulti` implementation.
 
 ```go
@@ -225,7 +225,7 @@ so that the service can group the state changes with the ABCI requests.
 type ABCIListener interface {
 	// ListenFinalizeBlock updates the streaming service with the latest FinalizeBlock messages
 	ListenFinalizeBlock(ctx context.Context, req abci.FinalizeBlockRequest, res abci.FinalizeBlockResponse) error
-	// ListenCommit updates the steaming service with the latest Commit messages and state changes
+	// ListenCommit updates the streaming service with the latest Commit messages and state changes
 	ListenCommit(ctx context.Context, res abci.CommitResponse, changeSet []*StoreKVPair) error
 }
 ```
@@ -720,5 +720,5 @@ These changes will provide a means of subscribing to KVStore state changes in re
 
 ### Neutral
 
-* Introduces additional- but optional- complexity to configuring and running a cosmos application
+* Introduces additional—but optional—complexity to configuring and running a cosmos application
 * If an application developer opts to use these features to expose data, they need to be aware of the ramifications/risks of that data exposure as it pertains to the specifics of their application

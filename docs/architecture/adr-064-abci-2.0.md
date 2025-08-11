@@ -25,7 +25,7 @@ includes `ExtendVote`, `VerifyVoteExtension` and `FinalizeBlock`.
 ABCI 2.0 continues the promised updates from ABCI++, specifically three additional
 ABCI methods that the application can implement in order to gain further control,
 insight and customization of the consensus process, unlocking many novel use-cases
-that previously not possible. We describe these three new methods below:
+that were previously not possible. We describe these three new methods below:
 
 ### `ExtendVote`
 
@@ -396,7 +396,7 @@ and rely on existing events, especially since applications will still define
 In order to facilitate existing event functionality, we propose that all `BeginBlock`
 and `EndBlock` events have a dedicated `EventAttribute` with `key=block` and
 `value=begin_block|end_block`. The `EventAttribute` will be appended to each event
-in both `BeginBlock` and `EndBlock` events`. 
+in both `BeginBlock` and `EndBlock` events. 
 
 
 ### Upgrading

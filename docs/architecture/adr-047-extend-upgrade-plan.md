@@ -201,8 +201,8 @@ The new upgrade timeline is very similar to the current one. Changes are in bold
 
 ### Backwards Compatibility
 
-Since the only change to existing definitions is the addition of the `instructions` field to the `Plan` message, and that field is optional, there are no backwards incompatibilities with respects to the proto messages.
-Additionally, current behavior will be maintained when no `UpgradeInstructions` are provided, so there are no backwards incompatibilities with respects to either the upgrade module or Cosmovisor.
+Since the only change to existing definitions is the addition of the `instructions` field to the `Plan` message, and that field is optional, there are no backwards incompatibilities with respect to the proto messages.
+Additionally, current behavior will be maintained when no `UpgradeInstructions` are provided, so there are no backwards incompatibilities with respect to either the upgrade module or Cosmovisor.
 
 ### Forwards Compatibility
 

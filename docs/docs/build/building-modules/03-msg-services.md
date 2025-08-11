@@ -33,7 +33,7 @@ When possible, the existing module's [`Keeper`](./06-keeper.md) should implement
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/bank/keeper/msg_server.go#L17-L19
 ```
 
-`msgServer` methods can retrieve the `sdk.Context` from the `context.Context` parameter using the `sdk.UnwrapSDKContext`:
+`msgServer` methods can retrieve the `sdk.Context` from the `context.Context` parameter using the `sdk.UnwrapSDKContext` method:
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/bank/keeper/msg_server.go#L56

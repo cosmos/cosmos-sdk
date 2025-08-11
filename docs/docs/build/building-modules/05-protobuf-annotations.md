@@ -56,7 +56,7 @@ There are a few options for what can be provided as a scalar: `cosmos.AddressStr
 
 ## Implements_Interface
 
-Implement interface is used to provide information to client tooling like [telescope](https://github.com/cosmology-tech/telescope) on how to encode and decode protobuf messages. 
+`Implements_Interface` is used to provide information to client tooling like [telescope](https://github.com/cosmology-tech/telescope) on how to encode and decode protobuf messages. 
 
 ```proto
 option (cosmos_proto.implements_interface) = "cosmos.auth.v1beta1.AccountI";
@@ -66,7 +66,7 @@ option (cosmos_proto.implements_interface) = "cosmos.auth.v1beta1.AccountI";
 
 `method_added_in`, `field_added_in` and `message_added_in` are annotations to denote to clients that a field has been supported in a later version. This is useful when new methods or fields are added in later versions and that the client needs to be aware of what it can call.
 
-The annotation should be worded as follow:
+The annotation should be worded as follows:
 
 ```proto
 option (cosmos_proto.method_added_in) = "cosmos-sdk v0.50.1";
@@ -76,17 +76,15 @@ option (cosmos_proto.method_added_in) = "simapp v24.0.0";
 
 ## Amino
 
-The amino codec was removed in `v0.50+`, this means there is not a need register `legacyAminoCodec`. To replace the amino codec, Amino protobuf annotations are used to provide information to the amino codec on how to encode and decode protobuf messages. 
+The amino codec was removed in `v0.50+`, this means there is no need to register `legacyAminoCodec`. To replace the amino codec, Amino protobuf annotations are used to provide information to the amino codec on how to encode and decode protobuf messages. 
 
-:::note
-Amino annotations are only used for backwards compatibility with amino. New modules are not required use amino annotations.
-:::
+Amino annotations are only used for backwards compatibility with amino. New modules are not required to use amino annotations.
 
 The below annotations are used to provide information to the amino codec on how to encode and decode protobuf messages in a backwards compatible manner. 
 
 ### Name
 
-Name specifies the amino name that would show up for the user in order for them see which message they are signing.
+Name specifies the amino name that would show up for the user in order for them to see which message they are signing.
 
 ```proto
 option (amino.name) = "cosmos-sdk/BaseAccount";
@@ -98,7 +96,7 @@ https://github.com/cosmos/cosmos-sdk/blob/e8f28bf5db18b8d6b7e0d94b542ce4cf48fed9
 
 ### Field_Name
 
-Field name specifies the amino name that would show up for the user in order for them see which field they are signing.
+Field name specifies the amino name that would show up for the user in order for them to see which field they are signing.
 
 ```proto
 uint64 height = 1 [(amino.field_name) = "public_key"];

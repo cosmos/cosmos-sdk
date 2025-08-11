@@ -14,7 +14,7 @@ This ADR describes a flexible mechanism to maintain a consensus level gas prices
 
 ## Context
 
-Currently, each validator configures it's own `minimal-gas-prices` in `app.yaml`. But setting a proper minimal gas price is critical to protect network from dos attack, and it's hard for all the validators to pick a sensible value, so we propose to maintain a gas price in consensus level.
+Currently, each validator configures its own `minimal-gas-prices` in `app.yaml`. But setting a proper minimal gas price is critical to protect network from dos attack, and it's hard for all the validators to pick a sensible value, so we propose to maintain a gas price in consensus level.
 
 Since tendermint 0.34.20 has supported mempool prioritization, we can take advantage of that to implement more sophisticated gas fee system.
 
@@ -70,7 +70,7 @@ Within the same tier, follow the default Tendermint order (currently FIFO). Be a
 This mechanism can be easily composed with prioritization mechanisms:
 
 * we can add extra tiers out of a user control:
-    * Example 1: user can set tier 0, 10 or 20, but the protocol will create tiers 0, 1, 2 ... 29. For example IBC transactions will go to tier `user_tier + 5`: if user selected tier 1, then the transaction will go to tier 15.
+    * Example 1: user can set tier 0, 10 or 20, but the protocol will create tiers 0, 1, 2 ... 29. For example IBC transactions will go to tier `user_tier + 5`: if user selects tier 1, then the transaction will go to tier 15.
     * Example 2: we can reserve tier 4, 5, ... only for special transaction types. For example, tier 5 is reserved for evidence tx. So if submits a bank.Send transaction and set tier 5, it will be delegated to tier 3 (the max tier level available for any transaction). 
     * Example 3: we can enforce that all transactions of a specific type will go to specific tier. For example, tier 100 will be reserved for evidence transactions and all evidence transactions will always go to that tier.
 

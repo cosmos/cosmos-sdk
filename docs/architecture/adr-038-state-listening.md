@@ -16,7 +16,7 @@ Proposed
 
 ## Abstract
 
-This ADR defines a set of changes to enable listening to state changes of individual KVStores and exposing these data to consumers.
+This ADR defines a set of changes to enable listening to state changes of individual KVStores and exposing this data to consumers.
 
 ## Context
 

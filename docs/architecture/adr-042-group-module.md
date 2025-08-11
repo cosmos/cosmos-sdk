@@ -260,7 +260,7 @@ Inter-module communication introduced by [ADR-033](adr-033-protobuf-inter-module
 
 ### Neutral
 
-* It uses ADR 033 so it will need to be implemented within the Cosmos SDK, but this doesn't imply necessarily any large refactoring of existing Cosmos SDK modules.
+* It uses ADR 033 so it will need to be implemented within the Cosmos SDK, but this doesn't necessarily imply any large refactoring of existing Cosmos SDK modules.
 * The current implementation of the group module uses the ORM package.
 
 ## Further Discussions

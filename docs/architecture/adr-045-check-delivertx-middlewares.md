@@ -282,7 +282,7 @@ This ADR does not introduce any state-machine-, client- or CLI-breaking changes.
 
 ### Positive
 
-* Allow custom logic to be run before an after `Msg` execution. This enables the [tips](https://github.com/cosmos/cosmos-sdk/issues/9406) and [gas refund](https://github.com/cosmos/cosmos-sdk/issues/2150) uses cases, and possibly other ones.
+* Allow custom logic to be run before and after `Msg` execution. This enables the [tips](https://github.com/cosmos/cosmos-sdk/issues/9406) and [gas refund](https://github.com/cosmos/cosmos-sdk/issues/2150) uses cases, and possibly other ones.
 * Make BaseApp more lightweight, and defer complex logic to small modular components.
 * Separate paths for `{Check,Deliver,Simulate}Tx` with different returns types. This allows for improved readability (replace `if sdkCtx.IsRecheckTx() && !simulate {...}` with separate methods) and more flexibility (e.g. returning a `priority` in `ResponseCheckTx`).
 

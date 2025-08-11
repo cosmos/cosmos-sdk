@@ -91,7 +91,7 @@ func TestCacheKVStoreNested(t *testing.T) {
 	require.Equal(t, valFmt(1), st.Get(keyFmt(1)))
 	require.Equal(t, valFmt(3), st2.Get(keyFmt(1)))
 
-	// st2 writes to its parent, st. doesnt effect mem
+	// st2 writes to its parent, st. doesn't effect mem
 	st2.Write()
 	require.Equal(t, []byte(nil), mem.Get(keyFmt(1)))
 	require.Equal(t, valFmt(3), st.Get(keyFmt(1)))

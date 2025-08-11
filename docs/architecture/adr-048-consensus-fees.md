@@ -76,7 +76,7 @@ This mechanism can be easily composed with prioritization mechanisms:
 
 ### `min-gas-prices`
 
-Deprecate the current per-validator `min-gas-prices` configuration, since it would confusing for it to work together with the consensus gas price.
+Deprecate the current per-validator `min-gas-prices` configuration, since it would be confusing for it to work together with the consensus gas price.
 
 ### Adjust For Block Load
 
@@ -126,7 +126,7 @@ class TierParams:
   priority: int           # priority in tendermint mempool
   initial_gas_price: Coin
   parent_gas_target: int
-  change_speed: Decimal   # 0 means don't adjust for block load.
+  change_speed: Decimal   # 0 means doesn't adjust for block load.
 
 class Params:
     'protocol parameters'
@@ -173,9 +173,9 @@ def end_block():
 
 ### Dos attack protection
 
-To fully saturate the blocks and prevent other transactions from executing, attacker need to use transactions of highest tier, the cost would be significantly higher than the default tier.
+To fully saturate the blocks and prevent other transactions from executing, an attacker needs to use transactions of highest tier, the cost would be significantly higher than the default tier.
 
-If attacker spam with lower tier transactions, user can mitigate by sending higher tier transactions.
+If an attacker spams with lower tier transactions, users can mitigate by sending higher tier transactions.
 
 ## Consequences
 
@@ -189,7 +189,7 @@ If attacker spam with lower tier transactions, user can mitigate by sending high
 
 * The default tier keeps the same predictable gas price experience for client.
 * The higher tier's gas price can adapt to block load.
-* No priority conflict with custom priority based on transaction types, since this proposal only occupy three priority levels.
+* No priority conflict with custom priority based on transaction types, since this proposal only occupies three priority levels.
 * Possibility to compose different priority rules with tiers
 
 ### Negative

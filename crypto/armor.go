@@ -1,260 +1,289 @@
-package crypto_test
+package crypto
 
 import (
 	"bytes"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
-	"testing"
 
-	cmtcrypto "github.com/cometbft/cometbft/v2/crypto"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"github.com/cometbft/cometbft/v2/crypto"
+	"golang.org/x/crypto/argon2"
+	"golang.org/x/crypto/chacha20poly1305"
+	"golang.org/x/crypto/openpgp/armor" //nolint:staticcheck //TODO: remove this dependency
 
-	"cosmossdk.io/core/address"
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
+	errorsmod "cosmossdk.io/errors"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
-	"github.com/cosmos/cosmos-sdk/crypto"
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/bcrypt"
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/crypto/xsalsa20symmetric"
-	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil/configurator"
-	"github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-func TestArmorUnarmorPrivKey(t *testing.T) {
-	priv := secp256k1.GenPrivKey()
-	armored := crypto.EncryptArmorPrivKey(priv, "passphrase", "")
-	_, _, err := crypto.UnarmorDecryptPrivKey(armored, "wrongpassphrase")
-	require.Error(t, err)
-	decrypted, algo, err := crypto.UnarmorDecryptPrivKey(armored, "passphrase")
-	require.NoError(t, err)
-	require.Equal(t, string(hd.Secp256k1Type), algo)
-	require.True(t, priv.Equals(decrypted))
+const (
+	blockTypePrivKey = "TENDERMINT PRIVATE KEY"
+	blockTypeKeyInfo = "TENDERMINT KEY INFO"
+	blockTypePubKey  = "TENDERMINT PUBLIC KEY"
 
-	// empty string
-	decrypted, algo, err = crypto.UnarmorDecryptPrivKey("", "passphrase")
-	require.Error(t, err)
-	require.True(t, errors.Is(err, io.EOF))
-	require.Nil(t, decrypted)
-	require.Empty(t, algo)
+	defaultAlgo = "secp256k1"
 
-	// wrong key type
-	armored = crypto.ArmorPubKeyBytes(priv.PubKey().Bytes(), "")
-	_, _, err = crypto.UnarmorDecryptPrivKey(armored, "passphrase")
-	require.Error(t, err)
-	require.Contains(t, err.Error(), "unrecognized armor type")
+	headerVersion = "version"
+	headerType    = "type"
+)
 
-	// armor key manually
-	encryptPrivKeyFn := func(privKey cryptotypes.PrivKey, passphrase string) (saltBytes, encBytes []byte) {
-		saltBytes = cmtcrypto.CRandBytes(16)
-		key, err := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), crypto.BcryptSecurityParameter)
-		require.NoError(t, err)
-		key = cmtcrypto.Sha256(key) // get 32 bytes
-		privKeyBytes := legacy.Cdc.Amino.MustMarshalBinaryBare(privKey)
-		return saltBytes, xsalsa20symmetric.EncryptSymmetric(privKeyBytes, key)
-	}
-	saltBytes, encBytes := encryptPrivKeyFn(priv, "passphrase")
+var (
+	kdfHeader = "kdf"
+	kdfBcrypt = "bcrypt"
+	kdfArgon2 = "argon2"
+)
 
-	// wrong kdf header
-	headerWrongKdf := map[string]string{
-		"kdf":  "wrong",
-		"salt": fmt.Sprintf("%X", saltBytes),
-		"type": "secp256k",
-	}
-	armored = crypto.EncodeArmor("TENDERMINT PRIVATE KEY", headerWrongKdf, encBytes)
-	_, _, err = crypto.UnarmorDecryptPrivKey(armored, "passphrase")
-	require.Error(t, err)
-	require.Equal(t, "unrecognized KDF type: wrong", err.Error())
-}
+const (
+	argon2Time    = 1
+	argon2Memory  = 64 * 1024
+	argon2Threads = 4
+)
 
-func TestArmorUnarmorPubKey(t *testing.T) {
-	// Select the encryption and storage for your cryptostore
-	var cdc codec.Codec
+// BcryptSecurityParameter is security parameter var, and it can be changed within the lcd test.
+// Making the bcrypt security parameter a var shouldn't be a security issue:
+// One can't verify an invalid key by maliciously changing the bcrypt
+// parameter during a runtime vulnerability. The main security
+// threat this then exposes would be something that changes this during
+// runtime before the user creates their key. This vulnerability must
+// succeed to update this to that same value before every subsequent call
+// to the keys command in future startups / or the attacker must get access
+// to the filesystem. However, with a similar threat model (changing
+// variables in runtime), one can cause the user to sign a different tx
+// than what they see, which is a significantly cheaper attack than breaking
+// a bcrypt hash. (Recall that the nonce still exists to break rainbow tables)
+// For further notes on security parameter choice, see README.md
+var BcryptSecurityParameter uint32 = 12
 
-	err := depinject.Inject(depinject.Configs(
-		configurator.NewAppConfig(),
-		depinject.Supply(log.NewNopLogger(),
-			func() address.Codec { return addresscodec.NewBech32Codec("cosmos") },
-			func() runtime.ValidatorAddressCodec { return addresscodec.NewBech32Codec("cosmosvaloper") },
-			func() runtime.ConsensusAddressCodec { return addresscodec.NewBech32Codec("cosmosvalcons") },
-		),
-	), &cdc)
-	require.NoError(t, err)
+//-----------------------------------------------------------------
+// add armor
 
-	cstore := keyring.NewInMemory(cdc)
-
-	// Add keys and see they return in alphabetical order
-	k, _, err := cstore.NewMnemonic("Bob", keyring.English, types.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
-	require.NoError(t, err)
-	key, err := k.GetPubKey()
-	require.NoError(t, err)
-	armored := crypto.ArmorPubKeyBytes(legacy.Cdc.Amino.MustMarshalBinaryBare(key), "")
-	pubBytes, algo, err := crypto.UnarmorPubKeyBytes(armored)
-	require.NoError(t, err)
-	pub, err := legacy.PubKeyFromBytes(pubBytes)
-	require.NoError(t, err)
-	require.Equal(t, string(hd.Secp256k1Type), algo)
-	require.True(t, pub.Equals(key))
-
-	armored = crypto.ArmorPubKeyBytes(legacy.Cdc.Amino.MustMarshalBinaryBare(key), "unknown")
-	pubBytes, algo, err = crypto.UnarmorPubKeyBytes(armored)
-	require.NoError(t, err)
-	pub, err = legacy.PubKeyFromBytes(pubBytes)
-	require.NoError(t, err)
-	require.Equal(t, "unknown", algo)
-	require.True(t, pub.Equals(key))
-
-	armored, err = cstore.ExportPrivKeyArmor("Bob", "passphrase")
-	require.NoError(t, err)
-	_, _, err = crypto.UnarmorPubKeyBytes(armored)
-	require.Error(t, err)
-	require.Equal(t, `couldn't unarmor bytes: unrecognized armor type "TENDERMINT PRIVATE KEY", expected: "TENDERMINT PUBLIC KEY"`, err.Error())
-
-	// armor pubkey manually
+// ArmorInfoBytes returns the info from info bytes.
+func ArmorInfoBytes(bz []byte) string {
 	header := map[string]string{
-		"version": "0.0.0",
-		"type":    "unknown",
+		headerType:    "Info",
+		headerVersion: "0.0.0",
 	}
-	armored = crypto.EncodeArmor("TENDERMINT PUBLIC KEY", header, pubBytes)
-	_, algo, err = crypto.UnarmorPubKeyBytes(armored)
-	require.NoError(t, err)
-	// return secp256k1 if version is 0.0.0
-	require.Equal(t, "secp256k1", algo)
 
-	// missing version header
-	header = map[string]string{
-		"type": "unknown",
-	}
-	armored = crypto.EncodeArmor("TENDERMINT PUBLIC KEY", header, pubBytes)
-	bz, algo, err := crypto.UnarmorPubKeyBytes(armored)
-	require.Nil(t, bz)
-	require.Empty(t, algo)
-	require.Error(t, err)
-	require.Equal(t, "header's version field is empty", err.Error())
-
-	// unknown version header
-	header = map[string]string{
-		"type":    "unknown",
-		"version": "unknown",
-	}
-	armored = crypto.EncodeArmor("TENDERMINT PUBLIC KEY", header, pubBytes)
-	bz, algo, err = crypto.UnarmorPubKeyBytes(armored)
-	require.Nil(t, bz)
-	require.Empty(t, algo)
-	require.Error(t, err)
-	require.Equal(t, "unrecognized version: unknown", err.Error())
+	return EncodeArmor(blockTypeKeyInfo, header, bz)
 }
 
-func TestArmorInfoBytes(t *testing.T) {
-	bs := []byte("test")
-	armoredString := crypto.ArmorInfoBytes(bs)
-	unarmoredBytes, err := crypto.UnarmorInfoBytes(armoredString)
-	require.NoError(t, err)
-	require.True(t, bytes.Equal(bs, unarmoredBytes))
-}
-
-func TestUnarmorInfoBytesErrors(t *testing.T) {
-	unarmoredBytes, err := crypto.UnarmorInfoBytes("")
-	require.Error(t, err)
-	require.True(t, errors.Is(err, io.EOF))
-	require.Nil(t, unarmoredBytes)
-
+// ArmorPubKeyBytes return the pubkey from info bytes.
+func ArmorPubKeyBytes(bz []byte, algo string) string {
 	header := map[string]string{
-		"type":    "Info",
-		"version": "0.0.1",
+		headerVersion: "0.0.1",
 	}
-	unarmoredBytes, err = crypto.UnarmorInfoBytes(crypto.EncodeArmor(
-		"TENDERMINT KEY INFO", header, []byte("plain-text")))
-	require.Error(t, err)
-	require.Equal(t, "unrecognized version: 0.0.1", err.Error())
-	require.Nil(t, unarmoredBytes)
+	if algo != "" {
+		header[headerType] = algo
+	}
+
+	return EncodeArmor(blockTypePubKey, header, bz)
 }
 
-func BenchmarkBcryptGenerateFromPassword(b *testing.B) {
-	passphrase := []byte("passphrase")
-	for securityParam := uint32(9); securityParam < 16; securityParam++ {
-		param := securityParam
-		b.Run(fmt.Sprintf("benchmark-security-param-%d", param), func(b *testing.B) {
-			b.ReportAllocs()
-			saltBytes := cmtcrypto.CRandBytes(16)
-			b.ResetTimer()
-			for i := 0; i < b.N; i++ {
-				_, err := bcrypt.GenerateFromPassword(saltBytes, passphrase, param)
-				require.Nil(b, err)
-			}
-		})
+//-----------------------------------------------------------------
+// remove armor
+
+// UnarmorInfoBytes returns the info bytes from an armored string.
+func UnarmorInfoBytes(armorStr string) ([]byte, error) {
+	bz, header, err := unarmorBytes(armorStr, blockTypeKeyInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	if header[headerVersion] != "0.0.0" {
+		return nil, fmt.Errorf("unrecognized version: %v", header[headerVersion])
+	}
+
+	return bz, nil
+}
+
+// UnarmorPubKeyBytes returns the pubkey byte slice, a string of the algo type, and an error
+func UnarmorPubKeyBytes(armorStr string) (bz []byte, algo string, err error) {
+	bz, header, err := unarmorBytes(armorStr, blockTypePubKey)
+	if err != nil {
+		return nil, "", fmt.Errorf("couldn't unarmor bytes: %w", err)
+	}
+
+	switch header[headerVersion] {
+	case "0.0.0":
+		return bz, defaultAlgo, err
+	case "0.0.1":
+		if header[headerType] == "" {
+			header[headerType] = defaultAlgo
+		}
+
+		return bz, header[headerType], err
+	case "":
+		return nil, "", fmt.Errorf("header's version field is empty")
+	default:
+		err = fmt.Errorf("unrecognized version: %v", header[headerVersion])
+		return nil, "", err
 	}
 }
 
-func TestArmor(t *testing.T) {
-	blockType := "MINT TEST"
-	data := []byte("somedata")
-	armorStr := crypto.EncodeArmor(blockType, nil, data)
+func unarmorBytes(armorStr, blockType string) (bz []byte, header map[string]string, err error) {
+	bType, header, bz, err := DecodeArmor(armorStr)
+	if err != nil {
+		return
+	}
 
-	// Decode armorStr and test for equivalence.
-	blockType2, _, data2, err := crypto.DecodeArmor(armorStr)
-	require.Nil(t, err, "%+v", err)
-	assert.Equal(t, blockType, blockType2)
-	assert.Equal(t, data, data2)
+	if bType != blockType {
+		err = fmt.Errorf("unrecognized armor type %q, expected: %q", bType, blockType)
+		return
+	}
+
+	return
 }
 
-func TestBcryptLegacyEncryption(t *testing.T) {
-	privKey := secp256k1.GenPrivKey()
-	saltBytes := cmtcrypto.CRandBytes(16)
-	passphrase := "passphrase"
+//-----------------------------------------------------------------
+// encrypt/decrypt with armor
+
+// EncryptArmorPrivKey encrypts and armors the private key.
+func EncryptArmorPrivKey(privKey cryptotypes.PrivKey, passphrase, algo string) string {
+	saltBytes, encBytes := encryptPrivKey(privKey, passphrase)
+	header := map[string]string{
+		kdfHeader: kdfArgon2,
+		"salt":    fmt.Sprintf("%X", saltBytes),
+	}
+
+	if algo != "" {
+		header[headerType] = algo
+	}
+
+	armorStr := EncodeArmor(blockTypePrivKey, header, encBytes)
+
+	return armorStr
+}
+
+func encryptPrivKey(privKey cryptotypes.PrivKey, passphrase string) (saltBytes, encBytes []byte) {
+	saltBytes = crypto.CRandBytes(16)
+
+	key := argon2.IDKey([]byte(passphrase), saltBytes, argon2Time, argon2Memory, argon2Threads, chacha20poly1305.KeySize)
 	privKeyBytes := legacy.Cdc.MustMarshal(privKey)
 
-	// Bcrypt + Aead
-	headerBcrypt := map[string]string{
-		"kdf":  "bcrypt",
-		"salt": fmt.Sprintf("%X", saltBytes),
-	}
-	keyBcrypt, _ := bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), 12) // Legacy key generation
-	keyBcrypt = cmtcrypto.Sha256(keyBcrypt)
-
-	// bcrypt + xsalsa20symmetric
-	encBytesBcryptXsalsa20symmetric := xsalsa20symmetric.EncryptSymmetric(privKeyBytes, keyBcrypt)
-
-	type testCase struct {
-		description string
-		armor       string
+	aead, err := chacha20poly1305.New(key)
+	if err != nil {
+		panic(errorsmod.Wrap(err, "error generating cipher from key"))
 	}
 
-	for _, scenario := range []testCase{
-		{
-			description: "Argon2 + Aead",
-			armor:       crypto.EncryptArmorPrivKey(privKey, "passphrase", ""),
-		},
-		{
-			description: "Bcrypt + xsalsa20symmetric",
-			armor:       crypto.EncodeArmor("TENDERMINT PRIVATE KEY", headerBcrypt, encBytesBcryptXsalsa20symmetric),
-		},
-	} {
-		t.Run(scenario.description, func(t *testing.T) {
-			_, _, err := crypto.UnarmorDecryptPrivKey(scenario.armor, "wrongpassphrase")
-			require.Error(t, err)
-			decryptedPrivKey, _, err := crypto.UnarmorDecryptPrivKey(scenario.armor, "passphrase")
-			require.NoError(t, err)
-			require.True(t, privKey.Equals(decryptedPrivKey))
-		})
+	nonce := make([]byte, aead.NonceSize(), aead.NonceSize()+len(privKeyBytes)+aead.Overhead()) // Nonce is fixed to maintain consistency, each key is generated at every encryption using a random salt.
+
+	encBytes = aead.Seal(nil, nonce, privKeyBytes, nil)
+
+	return saltBytes, encBytes
+}
+
+// UnarmorDecryptPrivKey returns the privkey byte slice, a string of the algo type, and an error
+func UnarmorDecryptPrivKey(armorStr, passphrase string) (privKey cryptotypes.PrivKey, algo string, err error) {
+	blockType, header, encBytes, err := DecodeArmor(armorStr)
+	if err != nil {
+		return privKey, "", err
 	}
 
-	// Test wrong kdf header
-	headerWithoutKdf := map[string]string{
-		"kdf":  "wrongKdf",
-		"salt": fmt.Sprintf("%X", saltBytes),
+	if blockType != blockTypePrivKey {
+		return privKey, "", fmt.Errorf("unrecognized armor type: %v", blockType)
 	}
 
-	_, _, err := crypto.UnarmorDecryptPrivKey(crypto.EncodeArmor("TENDERMINT PRIVATE KEY", headerWithoutKdf, encBytesBcryptXsalsa20symmetric), "passphrase")
-	require.Error(t, err)
-	require.Equal(t, "unrecognized KDF type: wrongKdf", err.Error())
+	if header[kdfHeader] != kdfBcrypt && header[kdfHeader] != kdfArgon2 {
+		return privKey, "", fmt.Errorf("unrecognized KDF type: %v", header[kdfHeader])
+	}
+
+	if header["salt"] == "" {
+		return privKey, "", fmt.Errorf("missing salt bytes")
+	}
+
+	saltBytes, err := hex.DecodeString(header["salt"])
+	if err != nil {
+		return privKey, "", fmt.Errorf("error decoding salt: %v", err.Error())
+	}
+
+	privKey, err = decryptPrivKey(saltBytes, encBytes, passphrase, header[kdfHeader])
+
+	if header[headerType] == "" {
+		header[headerType] = defaultAlgo
+	}
+
+	return privKey, header[headerType], err
+}
+
+func decryptPrivKey(saltBytes, encBytes []byte, passphrase, kdf string) (privKey cryptotypes.PrivKey, err error) {
+	// Key derivation
+	var (
+		key          []byte
+		privKeyBytes []byte
+	)
+
+	// Since the argon2 key derivation and chacha encryption was implemented together, it is not possible to have mixed kdf and encryption algorithms
+	switch kdf {
+	case kdfArgon2:
+		key = argon2.IDKey([]byte(passphrase), saltBytes, argon2Time, argon2Memory, argon2Threads, chacha20poly1305.KeySize)
+
+		aead, err := chacha20poly1305.New(key)
+		if err != nil {
+			return privKey, errorsmod.Wrap(err, "Error generating aead cipher for key.")
+		} else if len(encBytes) < aead.NonceSize() {
+			return privKey, errorsmod.Wrap(nil, "Encrypted bytes length is smaller than aead nonce size.")
+		}
+		nonce := make([]byte, aead.NonceSize(), aead.NonceSize()+len(privKeyBytes)+aead.Overhead())
+		privKeyBytes, err = aead.Open(nil, nonce, encBytes, nil) // Decrypt the message and check it wasn't tampered with.
+		if err != nil {
+			return privKey, sdkerrors.ErrWrongPassword
+		}
+	case kdfBcrypt:
+		key, err = bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
+		if err != nil {
+			return privKey, errorsmod.Wrap(err, "Error generating bcrypt cipher for key.")
+		}
+		key = crypto.Sha256(key) // Get 32 bytes
+		privKeyBytes, err = xsalsa20symmetric.DecryptSymmetric(encBytes, key)
+
+		if errors.Is(err, xsalsa20symmetric.ErrCiphertextDecrypt) {
+			return privKey, sdkerrors.ErrWrongPassword
+		}
+	default:
+		return privKey, errorsmod.Wrap(nil, fmt.Sprintf("Unrecognized key derivation function (kdf) header: %s.", kdf))
+	}
+
+	if err != nil {
+		return privKey, err
+	}
+
+	return legacy.PrivKeyFromBytes(privKeyBytes)
+}
+
+//-----------------------------------------------------------------
+// encode/decode with armor
+
+func EncodeArmor(blockType string, headers map[string]string, data []byte) string {
+	buf := new(bytes.Buffer)
+	w, err := armor.Encode(buf, blockType, headers)
+	if err != nil {
+		panic(fmt.Errorf("could not encode ascii armor: %w", err))
+	}
+	_, err = w.Write(data)
+	if err != nil {
+		panic(fmt.Errorf("could not encode ascii armor: %w", err))
+	}
+	err = w.Close()
+	if err != nil {
+		panic(fmt.Errorf("could not encode ascii armor: %w", err))
+	}
+	return buf.String()
+}
+
+func DecodeArmor(armorStr string) (blockType string, headers map[string]string, data []byte, err error) {
+	buf := bytes.NewBufferString(armorStr)
+	block, err := armor.Decode(buf)
+	if err != nil {
+		return "", nil, nil, err
+	}
+	data, err = io.ReadAll(block.Body)
+	if err != nil {
+		return "", nil, nil, err
+	}
+	return block.Type, block.Header, data, nil
 }

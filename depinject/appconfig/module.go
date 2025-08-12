@@ -17,7 +17,7 @@ var Register = RegisterModule
 // will be injected into the container and can be requested by a provider
 // function. All module initialization should be handled by the provided options.
 //
-// Config is a protobuf message type. It should define the cosmos.app.v1alpha.module
+// Config is a protobuf message type. It should define the cosmos.app.v1alpha1.module
 // option and must explicitly specify go_package to make debugging easier for users.
 //
 // If you want to customize an existing module, you need to overwrite by calling

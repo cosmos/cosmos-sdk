@@ -72,7 +72,7 @@ func ArmorInfoBytes(bz []byte) string {
 	return EncodeArmor(blockTypeKeyInfo, header, bz)
 }
 
-// ArmorPubKeyBytes return the pubkey from info bytes.
+// ArmorPubKeyBytes returns the pubkey from info bytes.
 func ArmorPubKeyBytes(bz []byte, algo string) string {
 	header := map[string]string{
 		headerVersion: "0.0.1",
@@ -101,7 +101,7 @@ func UnarmorInfoBytes(armorStr string) ([]byte, error) {
 	return bz, nil
 }
 
-// UnarmorPubKeyBytes returns the pubkey byte slice, a string of the algo type, and an error
+// UnarmorPubKeyBytes returns the pubkey byte slice, the string of the algo type, and an error
 func UnarmorPubKeyBytes(armorStr string) (bz []byte, algo string, err error) {
 	bz, header, err := unarmorBytes(armorStr, blockTypePubKey)
 	if err != nil {

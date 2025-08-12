@@ -20,7 +20,7 @@ func unsafeConvertStr() []byte {
 }
 
 func (s *StringSuite) TestUnsafeStrToBytes() {
-	// we convert in other function to trigger GC. We want to check that
+	// we convert in another function to trigger GC. We want to check that
 	// the underlying array in []bytes is accessible after GC will finish swapping.
 	for range 5 {
 		b := unsafeConvertStr()
@@ -39,7 +39,7 @@ func unsafeConvertBytes() string {
 }
 
 func (s *StringSuite) TestUnsafeBytesToStr() {
-	// we convert in other function to trigger GC. We want to check that
+	// we convert in another function to trigger GC. We want to check that
 	// the underlying array in []bytes is accessible after GC will finish swapping.
 	for range 5 {
 		str := unsafeConvertBytes()

@@ -88,7 +88,7 @@ message SignDocDirectAux {
   // sequence is the sequence number of the signing account.
   uint64 sequence = 5;
 
-  // tips have been depreacted and should not be used
+  // tips have been deprecated and should not be used
   Tip tip = 6 [deprecated = true];
 }
 
@@ -220,7 +220,7 @@ message ModeInfo {
 
 // Fee includes the amount of coins paid in fees and the maximum
 // gas to be used by the transaction. The ratio yields an effective "gasprice",
-// which must be above some miminum to be accepted into the mempool.
+// which must be above some minimum to be accepted into the mempool.
 message Fee {
   // amount is the amount of coins to be paid as a fee
   repeated cosmos.base.v1beta1.Coin amount = 1 [

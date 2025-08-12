@@ -375,7 +375,7 @@ func TestDumpUpgradeInfoToFile(t *testing.T) {
 	upgradeInfo, err := s.keeper.ReadUpgradeInfoFromDisk()
 	require.NoError(t, err)
 
-	t.Log("Verify upgrade height from file matches ")
+	t.Log("Verify upgrade height from file matches")
 	require.Equal(t, upgradeInfo.Height, planHeight)
 	require.Equal(t, upgradeInfo.Name, plan.Name)
 

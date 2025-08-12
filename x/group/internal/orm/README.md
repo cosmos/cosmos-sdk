@@ -35,7 +35,7 @@ The `table` struct does not:
 
 The `table` struct is private, so that we only have custom tables built on top of it, that do satisfy these requirements.
 
-`table` provides methods for exporting (using a [`PrefixScan` `Iterator`](03_iterator_pagination.md#iterator)) and importing genesis data. For the import to be successful, objects have to be aware of their primary key by implementing the [`PrimaryKeyed`](#primarykeyed) interface.
+`table` provides methods for exporting (using a [`PrefixScan` `Iterator`](#iterator)) and importing genesis data. For the import to be successful, objects have to be aware of their primary key by implementing the [`PrimaryKeyed`](#primarykeyed) interface.
 
 ### AutoUInt64Table
 
@@ -72,7 +72,7 @@ Key parts, except the last part, follow these rules:
 
 ## Secondary Index
 
-Secondary indexes can be used on `Indexable` [tables](01_table.md). Indeed, those tables implement the `Indexable` interface that provides a set of functions that can be called by indexes to register and interact with the tables, like callback functions that are called on entries creation, update or deletion to create, update or remove corresponding entries in the table secondary indexes.
+Secondary indexes can be used on `Indexable` [tables](#table). Indeed, those tables implement the `Indexable` interface that provides a set of functions that can be called by indexes to register and interact with the tables, like callback functions that are called on entries creation, update or deletion to create, update or remove corresponding entries in the table secondary indexes.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/tree/release/v0.50.x/x/group/internal/orm/types.go#L88-L93
@@ -96,7 +96,7 @@ https://github.com/cosmos/cosmos-sdk/tree/release/v0.50.x/x/group/internal/orm/i
 https://github.com/cosmos/cosmos-sdk/tree/release/v0.50.x/x/group/internal/orm/indexer.go#L15-L19
 ```
 
-The currently used implementation of an `indexer`, `Indexer`, relies on an `IndexerFunc` that should be provided when instantiating the index. Based on the source object, this function returns one or multiple index keys as `[]interface{}`. Such secondary index keys should be bytes, string or `uint64` in order to be handled properly by the [key codec](01_table.md#key-codec) which defines specific encoding for those types.
+The currently used implementation of an `indexer`, `Indexer`, relies on an `IndexerFunc` that should be provided when instantiating the index. Based on the source object, this function returns one or multiple index keys as `[]interface{}`. Such secondary index keys should be bytes, string or `uint64` in order to be handled properly by the [key codec](#key-codec) which defines specific encoding for those types.
 In the index prefix store, the keys are built based on the source object's `RowID` and its secondary index key(s) using the key codec and the values are set as empty bytes.
 
 ### UniqueIndex
@@ -105,7 +105,7 @@ As opposed to `MultiKeyIndex`, `UniqueIndex` is an index where duplicate keys ar
 
 ## Iterator and Pagination
 
-Both [tables](01_table.md) and [secondary indexes](02_secondary_index.md) support iterating over a domain of keys, through `PrefixScan` or `ReversePrefixScan`, as well pagination.
+Both [tables](#table) and [secondary indexes](#secondary-index) support iterating over a domain of keys, through `PrefixScan` or `ReversePrefixScan`, as well pagination.
 
 ### Iterator
 

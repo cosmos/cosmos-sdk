@@ -638,7 +638,7 @@ func GetSignerAcc(ctx sdk.Context, ak AccountKeeper, addr sdk.AccAddress) (sdk.A
 }
 
 // CountSubKeys counts the total number of keys for a multi-sig public key.
-// A non-multisig, i.e. a regular signature, it naturally a count of 1. If it is a multisig,
+// A non-multisig, i.e. a regular signature, it naturally has a count of 1. If it is a multisig,
 // then it recursively calls it on its pubkeys.
 func CountSubKeys(pub cryptotypes.PubKey) int {
 	if pub == nil {

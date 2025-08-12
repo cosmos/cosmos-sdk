@@ -39,15 +39,15 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/bank/v1be
 
 ### `sdk.Msg` Interface
 
-`sdk.Msg` is a alias of `proto.Message`. 
+`sdk.Msg` is an alias of `proto.Message`. 
 
-To attach a `ValidateBasic()` method to a message then you must add methods to the type adhereing to the `HasValidateBasic`.
+To attach a `ValidateBasic()` method to a message then you must add methods to the type adhering to the `HasValidateBasic`.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/9c1e8b247cd47b5d3decda6e86fbc3bc996ee5d7/types/tx_msg.go#L84-L88
 ```
 
-In 0.50+ signers from the `GetSigners()` call is automated via a protobuf annotation. 
+In 0.50+ signers from the `GetSigners()` call are automated via a protobuf annotation. 
 
 Read more about the signer field [here](./05-protobuf-annotations.md).
 
@@ -120,7 +120,7 @@ where:
 * `queryType` is used by the module's [`querier`](./04-query-services.md#legacy-queriers) to map the `query` to the appropriate `querier function` within the module.
 * `args` are the actual arguments needed to process the `query`. They are filled out by the end-user. Note that for bigger queries, you might prefer passing arguments in the `Data` field of the request `req` instead of the `path`.
 
-The `path` for each `query` must be defined by the module developer in the module's [command-line interface file](./09-module-interfaces.md#query-commands).Overall, there are 3 mains components module developers need to implement in order to make the subset of the state defined by their module queryable:
+The `path` for each `query` must be defined by the module developer in the module's [command-line interface file](./09-module-interfaces.md#query-commands). Overall, there are 3 mains components module developers need to implement in order to make the subset of the state defined by their module queryable:
 
 * A [`querier`](./04-query-services.md#legacy-queriers), to process the `query` once it has been [routed to the module](../../learn/advanced/00-baseapp.md#query-routing).
 * [Query commands](./09-module-interfaces.md#query-commands) in the module's CLI file, where the `path` for each `query` is specified.
@@ -128,7 +128,7 @@ The `path` for each `query` must be defined by the module developer in the modul
 
 ### Store Queries
 
-Store queries query directly for store keys. They use `clientCtx.QueryABCI(req abci.QueryRequest)` to return the full `abci.QueryResponse` with inclusion Merkle proofs.
+Store queries access store keys directly. They use `clientCtx.QueryABCI(req abci.QueryRequest)` to return the full `abci.QueryResponse` with inclusion Merkle proofs.
 
 See following examples:
 

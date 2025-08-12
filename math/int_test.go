@@ -195,9 +195,9 @@ func (s *intTestSuite) TestIntPanic() {
 	s.Require().NotPanics(func() { math.Int{}.BigInt() })
 }
 
-// Tests below uses randomness
+// Tests below use randomness
 // Since we are using *big.Int as underlying value
-// and (U/)Int is immutable value(see TestImmutability(U/)Int)
+// and (U/)Int is an immutable value(see TestImmutability(U/)Int)
 // it is safe to use randomness in the tests
 func (s *intTestSuite) TestIdentInt() {
 	for d := 0; d < 1000; d++ {

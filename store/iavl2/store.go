@@ -17,11 +17,12 @@ import (
 )
 
 var (
-	_ types.KVStore                 = (*Store)(nil)
-	_ types.CommitStore             = (*Store)(nil)
-	_ types.CommitKVStore           = (*Store)(nil)
-	_ types.Queryable               = (*Store)(nil)
-	_ types.StoreWithInitialVersion = (*Store)(nil)
+	_ types.KVStore                    = (*Store)(nil)
+	_ types.CommitStore                = (*Store)(nil)
+	_ types.CommitKVStore              = (*Store)(nil)
+	_ types.CommitKVStoreWithImmutable = (*Store)(nil)
+	_ types.Queryable                  = (*Store)(nil)
+	_ types.StoreWithInitialVersion    = (*Store)(nil)
 )
 
 // Store Implements types.KVStore and CommitKVStore.
@@ -95,27 +96,75 @@ func LoadStore(config Config, opts Options) (types.CommitKVStore, error) {
 //		metrics: metrics.NewNoOpMetrics(),
 //	}
 //}
-//
-//// GetImmutable returns a reference to a new store backed by an immutable IAVL
-//// tree at a specific version (height) without any pruning options. This should
-//// be used for querying and iteration only. If the version does not exist or has
-//// been pruned, an empty immutable IAVL tree will be used.
-//// Any mutable operations executed will result in a panic.
-//func (st *Store) GetImmutable(version int64) (*Store, error) {
-//	if !st.VersionExists(version) {
-//		return nil, errors.New("version mismatch on immutable IAVL tree; version does not exist. Version has either been pruned, or is for a future block height")
-//	}
-//
-//	iTree, err := st.tree.GetImmutable(version)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return &Store{
-//		tree:    &immutableTree{iTree},
-//		metrics: st.metrics,
-//	}, nil
-//}
+
+// GetImmutable returns a reference to a new store backed by an immutable IAVL
+// tree at a specific version (height) without any pruning options. This should
+// be used for querying and iteration only. If the version does not exist or has
+// been pruned, an empty immutable IAVL tree will be used.
+// Any mutable operations executed will result in a panic.
+func (st *Store) GetImmutable(version int64) (types.KVStore, error) {
+	// TODO this is a brutal hack around the fact that iavl v2 does not support anything like this yet. MUST BE FIXED BEFORE RELEASE!
+	tree := iavlv2.NewTree(st.sqliteDb, st.nodePool, iavlv2.DefaultTreeOptions())
+	err := st.tree.LoadVersion(version)
+	if err != nil {
+		return nil, err
+	}
+	return immutableTreeWrapper{tree}, nil
+}
+
+type immutableTreeWrapper struct {
+	tree *iavlv2.Tree
+}
+
+func (st immutableTreeWrapper) GetStoreType() types.StoreType { return types.StoreTypeIAVL }
+
+func (st immutableTreeWrapper) CacheWrap() types.CacheWrap { return cachekv.NewStore(st) }
+
+func (st immutableTreeWrapper) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
+	return cachekv.NewStore(tracekv.NewStore(st, w, tc))
+}
+
+func (st immutableTreeWrapper) Get(key []byte) []byte {
+	value, err := st.tree.Get(key)
+	if err != nil {
+		panic(err)
+	}
+	return value
+}
+
+func (st immutableTreeWrapper) Has(key []byte) bool {
+	has, err := st.tree.Has(key)
+	if err != nil {
+		panic(err)
+	}
+	return has
+}
+
+func (st immutableTreeWrapper) Set(key, value []byte) {
+	panic("tree is immutable, cannot set!")
+}
+
+func (st immutableTreeWrapper) Delete(key []byte) {
+	panic("tree is immutable, cannot delete!")
+}
+
+func (st immutableTreeWrapper) Iterator(start, end []byte) types.Iterator {
+	iterator, err := st.tree.Iterator(start, end, false)
+	if err != nil {
+		panic(err)
+	}
+	return iterator
+}
+
+func (st immutableTreeWrapper) ReverseIterator(start, end []byte) types.Iterator {
+	iterator, err := st.tree.ReverseIterator(start, end)
+	if err != nil {
+		panic(err)
+	}
+	return iterator
+}
+
+var _ types.KVStore = immutableTreeWrapper{}
 
 // Commit commits the current store state and returns a CommitID with the new
 // version and hash.

@@ -12,6 +12,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
+
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/internal/kv"
 	"cosmossdk.io/store/metrics"
@@ -26,11 +27,12 @@ const (
 )
 
 var (
-	_ types.KVStore                 = (*Store)(nil)
-	_ types.CommitStore             = (*Store)(nil)
-	_ types.CommitKVStore           = (*Store)(nil)
-	_ types.Queryable               = (*Store)(nil)
-	_ types.StoreWithInitialVersion = (*Store)(nil)
+	_ types.KVStore                    = (*Store)(nil)
+	_ types.CommitStore                = (*Store)(nil)
+	_ types.CommitKVStore              = (*Store)(nil)
+	_ types.CommitKVStoreWithImmutable = (*Store)(nil)
+	_ types.Queryable                  = (*Store)(nil)
+	_ types.StoreWithInitialVersion    = (*Store)(nil)
 )
 
 // Store Implements types.KVStore and CommitKVStore.
@@ -111,7 +113,7 @@ func UnsafeNewStore(tree *iavl.MutableTree) *Store {
 // be used for querying and iteration only. If the version does not exist or has
 // been pruned, an empty immutable IAVL tree will be used.
 // Any mutable operations executed will result in a panic.
-func (st *Store) GetImmutable(version int64) (*Store, error) {
+func (st *Store) GetImmutable(version int64) (types.KVStore, error) {
 	if !st.VersionExists(version) {
 		return nil, errors.New("version mismatch on immutable IAVL tree; version does not exist. Version has either been pruned, or is for a future block height")
 	}
@@ -275,7 +277,7 @@ func (st *Store) Export(version int64) (*iavl.Exporter, error) {
 	if err != nil {
 		return nil, errorsmod.Wrapf(err, "iavl export failed for version %v", version)
 	}
-	tree, ok := istore.tree.(*immutableTree)
+	tree, ok := istore.(*Store).tree.(*immutableTree)
 	if !ok || tree == nil {
 		return nil, fmt.Errorf("iavl export failed: unable to fetch tree for version %v", version)
 	}

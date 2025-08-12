@@ -616,7 +616,7 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 			// Attempt to lazy-load an already saved IAVL store version. If the
 			// version does not exist or is pruned, an error should be returned.
 			var err error
-			cacheStore, err = store.(*iavl.Store).GetImmutable(version)
+			cacheStore, err = store.(types.CommitKVStoreWithImmutable).GetImmutable(version)
 			// if we got error from loading a module store
 			// we fetch commit info of this version
 			// we use commit info to check if the store existed at this version or not
@@ -726,6 +726,7 @@ func (rs *Store) PruneStores(pruningHeight int64) (err error) {
 
 		store = rs.GetCommitKVStore(key)
 
+		// TODO support *iavl2.Store
 		err := store.(*iavl.Store).DeleteVersionsTo(pruningHeight)
 		if err == nil {
 			continue
@@ -857,6 +858,7 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	}
 
 	// Collect stores to snapshot (only IAVL stores are supported)
+	// TODO support *iavl2.Store
 	type namedStore struct {
 		*iavl.Store
 		name string
@@ -970,6 +972,7 @@ loop:
 				}
 				importer.Close()
 			}
+			// TODO support *iavl2.Store
 			store, ok := rs.GetStoreByName(item.Store.Name).(*iavl.Store)
 			if !ok || store == nil {
 				return snapshottypes.SnapshotItem{}, errorsmod.Wrapf(types.ErrLogic, "cannot import into non-IAVL store %q", item.Store.Name)
@@ -1126,6 +1129,7 @@ func (rs *Store) RollbackToVersion(target int64) error {
 			// If the store is wrapped with an inter-block cache, we must first unwrap
 			// it to get the underlying IAVL store.
 			store = rs.GetCommitKVStore(key)
+			// TODO support *iavl2.Store
 			err := store.(*iavl.Store).LoadVersionForOverwriting(target)
 			if err != nil {
 				return err

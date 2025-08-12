@@ -282,6 +282,11 @@ type CommitKVStore interface {
 	KVStore
 }
 
+type CommitKVStoreWithImmutable interface {
+	CommitKVStore
+	GetImmutable(version int64) (KVStore, error)
+}
+
 //----------------------------------------
 // CacheWrap
 

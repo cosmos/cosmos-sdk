@@ -198,11 +198,12 @@ Examples:
 				return err
 			}
 
-			msg, err := authz.NewMsgGrant(clientCtx.GetFromAddress(), grantee, authorization, expire)
+			msgGrant, err := authz.NewMsgGrant(clientCtx.GetFromAddress(), grantee, authorization, expire)
 			if err != nil {
 				return err
 			}
 
+			var msg sdk.Msg = msgGrant
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
@@ -253,9 +254,10 @@ Example:
 
 			granter := clientCtx.GetFromAddress()
 			msgAuthorized := args[1]
-			msg := authz.NewMsgRevoke(granter, grantee, msgAuthorized)
+			msgVal := authz.NewMsgRevoke(granter, grantee, msgAuthorized)
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+			var msg sdk.Msg = &msgVal
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 	flags.AddTxFlagsToCmd(cmd)
@@ -290,9 +292,10 @@ Example:
 			if err != nil {
 				return err
 			}
-			msg := authz.NewMsgExec(grantee, theTx.GetMsgs())
+			execVal := authz.NewMsgExec(grantee, theTx.GetMsgs())
 
-			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+			var msg sdk.Msg = &execVal
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 

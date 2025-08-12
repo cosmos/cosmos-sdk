@@ -9,7 +9,7 @@ import (
 
 // captureStdout captures stdout produced during fn execution and returns it as string.
 func captureStdout(t *testing.T, fn func()) string {
-	// t.Helper() // Keep code simple and compatible across Go versions in this repo
+	t.Helper()
 	old := os.Stdout
 	r, w, err := os.Pipe()
 	if err != nil {
@@ -64,4 +64,4 @@ func TestRawBytes_NegativeIsError(t *testing.T) {
 	if err := cmd.RunE(cmd, []string{"[-1]"}); err == nil {
 		t.Fatalf("expected error for negative input, got nil")
 	}
-} 
+}

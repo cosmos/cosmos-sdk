@@ -292,7 +292,7 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 		var (
 			resError        error
 			selectedTxsNums int
-			invalidTxs      []sdk.Tx // invalid txs to be removed out of the loop to avoid dead lock
+			invalidTxs      []sdk.Tx // invalid txs to be removed out of the loop to avoid deadlock
 		)
 		mempool.SelectBy(ctx, h.mempool, req.Txs, func(memTx sdk.Tx) bool {
 			unorderedTx, ok := memTx.(sdk.TxWithUnordered)

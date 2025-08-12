@@ -12,7 +12,7 @@ import (
 	"testing"
 )
 
-// MaxBitLen defines the maximum bit length supported bit Int and Uint types.
+// MaxBitLen defines the maximum bit length supported by Int and Uint types.
 const MaxBitLen = 256
 
 // maxWordLen defines the maximum word length supported by Int and Uint types.
@@ -102,7 +102,7 @@ func (i Int) BigInt() *big.Int {
 	return new(big.Int).Set(i.i)
 }
 
-// BigIntMut converts Int to big.Int, mutative the input
+// BigIntMut converts Int to big.Int, mutating the input
 func (i Int) BigIntMut() *big.Int {
 	if i.IsNil() {
 		return nil
@@ -144,7 +144,7 @@ func NewIntFromBigInt(i *big.Int) Int {
 
 // NewIntFromBigIntMut constructs Int from big.Int. If the provided big.Int is nil,
 // it returns an empty instance. This function panics if the bit length is > 256.
-// Note, this function mutate the argument.
+// Note, this function mutates the argument.
 func NewIntFromBigIntMut(i *big.Int) Int {
 	if i == nil {
 		return Int{}

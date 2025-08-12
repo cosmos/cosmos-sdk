@@ -9,9 +9,9 @@ import (
 	"errors"
 )
 
-// If ledger support (build tag) has been enabled, which implies a CGO dependency,
-// set the discoverLedger function which is responsible for loading the Ledger
-// device at runtime or returning an error.
+// If ledger support (build tag) has been disabled, which means no CGO dependency,
+// set the discoverLedger function to return an error indicating that ledger
+// device support is not available in this executable.
 func init() {
 	options.discoverLedger = func() (SECP256K1, error) {
 		return nil, errors.New("support for ledger devices is not available in this executable")

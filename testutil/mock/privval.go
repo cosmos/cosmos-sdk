@@ -48,3 +48,15 @@ func (pv PV) SignProposal(chainID string, proposal *cmtproto.Proposal) error {
 	proposal.Signature = sig
 	return nil
 }
+
+func (pv PV) SignRawBytes(chainID, uniqueID string, rawBytes []byte) ([]byte, error) {
+	signBytes, err := cmttypes.RawBytesMessageSignBytes(chainID, uniqueID, rawBytes)
+	if err != nil {
+		return nil, err
+	}
+	sig, err := pv.PrivKey.Sign(signBytes)
+	if err != nil {
+		return nil, err
+	}
+	return sig, nil
+}

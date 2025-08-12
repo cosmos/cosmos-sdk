@@ -82,7 +82,7 @@ type BaseConfig struct {
 	// which informs CometBFT what to index. If empty, all events will be indexed.
 	IndexEvents []string `mapstructure:"index-events"`
 
-	// IavlCacheSize set the size of the iavl tree cache.
+	// IAVLCacheSize set the size of the iavl tree cache.
 	IAVLCacheSize uint64 `mapstructure:"iavl-cache-size"`
 
 	// IAVLDisableFastNode enables or disables the fast sync node.

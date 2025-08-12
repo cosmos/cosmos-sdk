@@ -129,11 +129,9 @@ func (k Keeper) WithdrawDelegationRewards(ctx context.Context, delAddr sdk.AccAd
 	}
 
 	del, err := k.stakingKeeper.Delegation(ctx, delAddr, valAddr)
-	if err != nil {
-		return nil, err
-	}
-
-	if del == nil { // flow where the user doesn't have a delegation anymore to the validator
+	// If there's an error getting the delegation (either key not found or ErrNoDelegation),
+	// we should still check for outstanding rewards
+	if err != nil || del == nil {
 		key := collections.Join(delAddr, valAddr)
 		outstandingRewards, err := k.UserOutstandingRewards.Get(ctx, key)
 		if errors.Is(err, collections.ErrNotFound) {

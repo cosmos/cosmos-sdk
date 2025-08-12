@@ -19,6 +19,7 @@ The fork include the following changes compared to upstream:
 * The celestia-core celestia-core `BlockAPI` is exposed through the app grpc server. When running in standalone mode the app uses a proxy service to maintain support through same the app grpc port.
 * The default listen address for remote ABCI connections over grpc has been updated from `tcp://127.0.0.1:26658` to `tcp://127.0.0.1:36658`.
 * The default keyring backend has been changed from `os` to `test`.
+* Rewards from the x/distribution module are not auto-claimed. Instead, they can be claimed at arbitrary points in time.
 
 Read the [CHANGELOG.md](CHANGELOG.md) for more details.
 

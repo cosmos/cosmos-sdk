@@ -488,7 +488,6 @@ func TestGRPCDelegationRewards(t *testing.T) {
 	assert.NilError(t, f.stakingKeeper.SetParams(f.sdkCtx, stakingtypes.DefaultParams()))
 
 	// staking msg server is already registered in initFixture
-
 	qr := f.app.QueryHelper()
 	queryClient := types.NewQueryClient(qr)
 

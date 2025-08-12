@@ -8,6 +8,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
@@ -21,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtestutil "github.com/cosmos/cosmos-sdk/x/distribution/testutil"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestSetWithdrawAddr(t *testing.T) {
@@ -208,4 +210,114 @@ func TestFundCommunityPool(t *testing.T) {
 	feePool, err := distrKeeper.FeePool.Get(ctx)
 	require.NoError(t, err)
 	require.Equal(t, initPool.CommunityPool.Add(sdk.NewDecCoinsFromCoins(amount...)...), feePool.CommunityPool)
+}
+
+func TestWithdrawDelegationRewards_NoDelegation(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: time.Now()})
+	addrs := simtestutil.CreateIncrementalAccounts(2)
+
+	delegatorAddr := addrs[0]
+	valAddr := sdk.ValAddress(addrs[1])
+
+	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
+	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
+	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+
+	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
+
+	distrKeeper := keeper.NewKeeper(
+		encCfg.Codec,
+		storeService,
+		accountKeeper,
+		bankKeeper,
+		stakingKeeper,
+		"fee_collector",
+		authtypes.NewModuleAddress("gov").String(),
+	)
+
+	// Create validator
+	val, err := distrtestutil.CreateValidator(valConsPk0, math.NewInt(100))
+	require.NoError(t, err)
+
+	// Mock validator exists
+	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val, nil)
+
+	// Mock delegation returns error (no delegation exists)
+	stakingKeeper.EXPECT().Delegation(gomock.Any(), delegatorAddr, valAddr).Return(nil, stakingtypes.ErrNoDelegation)
+
+	// Try to withdraw delegation rewards when no delegation exists and no outstanding rewards
+	rewards, err := distrKeeper.WithdrawDelegationRewards(ctx, delegatorAddr, valAddr)
+
+	// Should return an error since there's no delegation and no outstanding rewards
+	require.Error(t, err)
+	require.ErrorIs(t, err, types.ErrEmptyDelegationDistInfo)
+	require.Nil(t, rewards)
+}
+
+func TestWithdrawDelegationRewards_NoDelegationWithOutstandingRewards(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	encCfg := moduletestutil.MakeTestEncodingConfig(distribution.AppModuleBasic{})
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: time.Now()})
+	addrs := simtestutil.CreateIncrementalAccounts(2)
+
+	delegatorAddr := addrs[0]
+	valAddr := sdk.ValAddress(addrs[1])
+
+	bankKeeper := distrtestutil.NewMockBankKeeper(ctrl)
+	stakingKeeper := distrtestutil.NewMockStakingKeeper(ctrl)
+	accountKeeper := distrtestutil.NewMockAccountKeeper(ctrl)
+
+	accountKeeper.EXPECT().GetModuleAddress("distribution").Return(distrAcc.GetAddress())
+
+	distrKeeper := keeper.NewKeeper(
+		encCfg.Codec,
+		storeService,
+		accountKeeper,
+		bankKeeper,
+		stakingKeeper,
+		"fee_collector",
+		authtypes.NewModuleAddress("gov").String(),
+	)
+
+	// Create validator
+	val, err := distrtestutil.CreateValidator(valConsPk0, math.NewInt(100))
+	require.NoError(t, err)
+
+	// Set up outstanding rewards
+	outstandingRewards := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100)))
+	err = distrKeeper.UserOutstandingRewards.Set(ctx, collections.Join(delegatorAddr, valAddr), types.UserOutstandingRewards{
+		Rewards: outstandingRewards,
+	})
+	require.NoError(t, err)
+
+	// Mock validator exists
+	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val, nil)
+
+	// Mock delegation returns error (no delegation exists)
+	stakingKeeper.EXPECT().Delegation(gomock.Any(), delegatorAddr, valAddr).Return(nil, stakingtypes.ErrNoDelegation)
+
+	// Mock GetAccount returns nil (not a vesting account)
+	accountKeeper.EXPECT().GetAccount(gomock.Any(), delegatorAddr).Return(nil)
+
+	// Expect bank keeper to send the outstanding rewards
+	bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), types.ModuleName, delegatorAddr, outstandingRewards).Return(nil)
+
+	// Try to withdraw delegation rewards when no delegation exists but there are outstanding rewards
+	rewards, err := distrKeeper.WithdrawDelegationRewards(ctx, delegatorAddr, valAddr)
+
+	// Should succeed and return the outstanding rewards
+	require.NoError(t, err)
+	require.Equal(t, outstandingRewards, rewards)
+
+	// Verify outstanding rewards were removed
+	_, err = distrKeeper.UserOutstandingRewards.Get(ctx, collections.Join(delegatorAddr, valAddr))
+	require.ErrorIs(t, err, collections.ErrNotFound)
 }

@@ -268,7 +268,7 @@ func TestMsgWithdrawDelegatorReward(t *testing.T) {
 				ValidatorAddress: f.valAddr.String(),
 			},
 			expErr:    true,
-			expErrMsg: "no delegation for (address, validator) tuple",
+			expErrMsg: "no delegation distribution info",
 		},
 		{
 			name: "validator with no delegations",
@@ -1056,6 +1056,9 @@ func TestCannotDepositIfRewardPoolFull(t *testing.T) {
 		integration.WithAutomaticCommit(),
 	)
 	assert.NilError(t, err)
+
+	// transfer tokens from distribution module back to the account for the second deposit
+	assert.NilError(t, f.bankKeeper.SendCoinsFromModuleToAccount(f.sdkCtx, distrtypes.ModuleName, sdk.AccAddress(operatorAddr), maxCoins))
 
 	// this should fail since this amount cannot be added to the previous amount without overflowing.
 	_, err = f.app.RunMsg(

@@ -6,7 +6,7 @@ import (
 )
 
 // MarshalYAML marshals toPrint using JSONCodec to leverage specialized MarshalJSON methods
-// (usually related to serialize data with protobuf or amino depending on a configuration).
+// (usually related to serializing data with protobuf or amino depending on a configuration).
 // This involves additional roundtrip through JSON.
 func MarshalYAML(cdc JSONCodec, toPrint proto.Message) ([]byte, error) {
 	// We are OK with the performance hit of the additional JSON roundtrip. MarshalYAML is not

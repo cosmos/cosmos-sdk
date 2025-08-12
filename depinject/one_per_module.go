@@ -11,7 +11,7 @@ import (
 // can have up to one value per module. All of the values for a one-per-module type T
 // and their respective modules, can be retrieved by declaring an input parameter map[string]T.
 type OnePerModuleType interface {
-	// IsOnePerModuleType is a marker function just indicates that this is a one-per-module type.
+	// IsOnePerModuleType is a marker function that just indicates that this is a one-per-module type.
 	IsOnePerModuleType()
 }
 

@@ -183,7 +183,7 @@ between modules.
 
 One of the key tactics for resolving circular dependencies is to use different providers and/or invokers to allow a
 circular dependency between components. For example, say the slashing keeper depends on the keeper module but the
-staking keeper also depends on the staking module indirectly (in the form of "staking hooks"). The slashing module
+staking keeper also depends on the slashing module indirectly (in the form of "staking hooks"). The slashing module
 can declare a dependency directly on the staking keeper (using an interface to avoid actually importing the staking
 keeper package). It can also provide an instance of the slashing keeper wrapped as staking hooks in a `OnePerModuleType`
 we'll call `StakingHooksWrapper`. Now, if the staking module directly depended on the staking hooks wrappers

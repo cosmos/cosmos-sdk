@@ -321,14 +321,7 @@ func (g *Generator) Close() error {
 
 func encodeUint64(x uint64) []byte {
 	var b [8]byte
-	b[0] = byte(x)
-	b[1] = byte(x >> 8)
-	b[2] = byte(x >> 16)
-	b[3] = byte(x >> 24)
-	b[4] = byte(x >> 32)
-	b[5] = byte(x >> 40)
-	b[6] = byte(x >> 48)
-	b[7] = byte(x >> 56)
+	binary.LittleEndian.PutUint64(b[:], x)
 	return b[:]
 }
 

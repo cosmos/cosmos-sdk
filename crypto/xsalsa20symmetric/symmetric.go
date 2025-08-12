@@ -8,7 +8,7 @@ import (
 	"golang.org/x/crypto/nacl/secretbox"
 )
 
-// TODO, make this into a struct that implements crypto.Symmetric.
+// TODO: make this into a struct that implements crypto.Symmetric.
 
 const (
 	nonceLen  = 24
@@ -18,7 +18,6 @@ const (
 var ErrCiphertextDecrypt = errors.New("ciphertext decryption failed")
 
 // EncryptSymmetric encrypts the given plaintext with the given secret. The
-//
 // secret must be 32 bytes long. Use something like Sha256(Bcrypt(passphrase))
 // The ciphertext is (secretbox.Overhead + 24) bytes longer than the plaintext.
 func EncryptSymmetric(plaintext, secret []byte) (ciphertext []byte) {
@@ -37,7 +36,6 @@ func EncryptSymmetric(plaintext, secret []byte) (ciphertext []byte) {
 }
 
 // DecryptSymmetric decrypts the given ciphertext with the given secret. The
-//
 // secret must be 32 bytes long. Use something like Sha256(Bcrypt(passphrase))
 // The ciphertext is (secretbox.Overhead + 24) bytes longer than the plaintext.
 func DecryptSymmetric(ciphertext, secret []byte) (plaintext []byte, err error) {

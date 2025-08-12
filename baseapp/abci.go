@@ -3,6 +3,7 @@ package baseapp
 import (
 	"context"
 	"fmt"
+	"io"
 	"sort"
 	"strings"
 	"time"
@@ -16,6 +17,7 @@ import (
 
 	coreheader "cosmossdk.io/core/header"
 	errorsmod "cosmossdk.io/errors"
+
 	"cosmossdk.io/store/rootmulti"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
@@ -1287,6 +1289,12 @@ func (bapp *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, chec
 	}
 
 	cacheMS, err := qms.CacheMultiStoreWithVersion(height)
+	defer func() {
+		closer, ok := cacheMS.(io.Closer)
+		if ok {
+			closer.Close()
+		}
+	}()
 	if err != nil {
 		return sdk.Context{},
 			errorsmod.Wrapf(

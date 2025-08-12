@@ -56,6 +56,8 @@ func LoadStore(config Config, opts Options) (types.CommitKVStore, error) {
 	}
 
 	treeOpts := iavlv2.DefaultTreeOptions()
+	// TODO figure out what the right default checkpoint interval should be, it's set to 1 for historical queries
+	treeOpts.CheckpointInterval = 1
 
 	tree := iavlv2.NewTree(sqliteDb, nodePool, treeOpts)
 
@@ -104,67 +106,36 @@ func LoadStore(config Config, opts Options) (types.CommitKVStore, error) {
 // Any mutable operations executed will result in a panic.
 func (st *Store) GetImmutable(version int64) (types.KVStore, error) {
 	// TODO this is a brutal hack around the fact that iavl v2 does not support anything like this yet. MUST BE FIXED BEFORE RELEASE!
-	tree := iavlv2.NewTree(st.sqliteDb, st.nodePool, iavlv2.DefaultTreeOptions())
+	latestVersion := st.tree.Version()
 	err := st.tree.LoadVersion(version)
 	if err != nil {
 		return nil, err
 	}
-	return immutableTreeWrapper{tree}, nil
+	return &immutableTreeWrapper{
+		Store:         st,
+		latestVersion: latestVersion,
+	}, nil
 }
 
 type immutableTreeWrapper struct {
-	tree *iavlv2.Tree
+	*Store
+	latestVersion int64
 }
 
-func (st immutableTreeWrapper) GetStoreType() types.StoreType { return types.StoreTypeIAVL }
-
-func (st immutableTreeWrapper) CacheWrap() types.CacheWrap { return cachekv.NewStore(st) }
-
-func (st immutableTreeWrapper) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
-	return cachekv.NewStore(tracekv.NewStore(st, w, tc))
-}
-
-func (st immutableTreeWrapper) Get(key []byte) []byte {
-	value, err := st.tree.Get(key)
-	if err != nil {
-		panic(err)
-	}
-	return value
-}
-
-func (st immutableTreeWrapper) Has(key []byte) bool {
-	has, err := st.tree.Has(key)
-	if err != nil {
-		panic(err)
-	}
-	return has
-}
-
-func (st immutableTreeWrapper) Set(key, value []byte) {
+func (st *immutableTreeWrapper) Set(key, value []byte) {
 	panic("tree is immutable, cannot set!")
 }
 
-func (st immutableTreeWrapper) Delete(key []byte) {
+func (st *immutableTreeWrapper) Delete(key []byte) {
 	panic("tree is immutable, cannot delete!")
 }
 
-func (st immutableTreeWrapper) Iterator(start, end []byte) types.Iterator {
-	iterator, err := st.tree.Iterator(start, end, false)
-	if err != nil {
-		panic(err)
-	}
-	return iterator
+func (st *immutableTreeWrapper) Close() error {
+	return st.Store.tree.LoadVersion(st.latestVersion)
 }
 
-func (st immutableTreeWrapper) ReverseIterator(start, end []byte) types.Iterator {
-	iterator, err := st.tree.ReverseIterator(start, end)
-	if err != nil {
-		panic(err)
-	}
-	return iterator
-}
-
-var _ types.KVStore = immutableTreeWrapper{}
+var _ types.KVStore = &immutableTreeWrapper{}
+var _ io.Closer = &immutableTreeWrapper{}
 
 // Commit commits the current store state and returns a CommitID with the new
 // version and hash.

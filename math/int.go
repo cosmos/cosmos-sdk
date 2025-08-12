@@ -12,7 +12,7 @@ import (
 	"testing"
 )
 
-// MaxBitLen defines the maximum bit length supported bit Int and Uint types.
+// MaxBitLen defines the maximum bit length supported by Int and Uint types.
 const MaxBitLen = 256
 
 // maxWordLen defines the maximum word length supported by Int and Uint types.
@@ -102,7 +102,7 @@ func (i Int) BigInt() *big.Int {
 	return new(big.Int).Set(i.i)
 }
 
-// BigIntMut converts Int to big.Int, mutative the input
+// BigIntMut converts Int to big.Int, mutating the input
 func (i Int) BigIntMut() *big.Int {
 	if i.IsNil() {
 		return nil
@@ -144,7 +144,7 @@ func NewIntFromBigInt(i *big.Int) Int {
 
 // NewIntFromBigIntMut constructs Int from big.Int. If the provided big.Int is nil,
 // it returns an empty instance. This function panics if the bit length is > 256.
-// Note, this function mutate the argument.
+// Note, this function mutates the argument.
 func NewIntFromBigIntMut(i *big.Int) Int {
 	if i == nil {
 		return Int{}
@@ -323,7 +323,7 @@ func (i Int) SafeSub(i2 Int) (res Int, err error) {
 	return res, nil
 }
 
-// Mul multiples two Ints
+// Mul multiplies two Ints
 func (i Int) Mul(i2 Int) (res Int) {
 	// Check overflow
 	x, err := i.SafeMul(i2)
@@ -338,7 +338,7 @@ func (i Int) MulRaw(i2 int64) Int {
 	return i.Mul(NewInt(i2))
 }
 
-// SafeMul multiples Int from another and returns an error if overflow
+// SafeMul multiplies Int from another and returns an error if overflow
 func (i Int) SafeMul(i2 Int) (res Int, err error) {
 	res = Int{mul(i.i, i2.i)}
 	// Check overflow
@@ -404,7 +404,7 @@ func (i Int) Abs() Int {
 	return Int{abs(i.i)}
 }
 
-// MinInt return the minimum of the ints
+// MinInt returns the minimum of the ints
 func MinInt(i1, i2 Int) Int {
 	return Int{min(i1.BigInt(), i2.BigInt())}
 }

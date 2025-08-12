@@ -68,7 +68,7 @@ func TestValueCodec[T any](t *testing.T, encoder codec.ValueCodec[T], value T) {
 
 // MockValueCodec returns a mock of collections.ValueCodec for type T, it
 // can be used for collections Values testing. It also supports interfaces.
-// For the interfaces cases, in order for an interface to be decoded it must
+// For the interface cases, in order for an interface to be decoded it must
 // have been encoded first. Not concurrency safe.
 // EG:
 // Let's say the value is interface Animal

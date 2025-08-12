@@ -83,7 +83,7 @@ func (bA *CompactBitArray) SetIndex(i int, v bool) bool {
 }
 
 // NumTrueBitsBefore returns the number of bits set to true before the
-// given index. e.g. if bA = _XX__XX, NumOfTrueBitsBefore(4) = 2, since
+// given index. e.g. if bA = _XX__XX, NumTrueBitsBefore(4) = 2, since
 // there are two bits set to true before index 4.
 func (bA *CompactBitArray) NumTrueBitsBefore(index int) int {
 	onesCount := 0
@@ -176,7 +176,7 @@ func (bA *CompactBitArray) StringIndented(indent string) string {
 }
 
 // MarshalJSON implements json.Marshaler interface by marshaling bit array
-// using a custom format: a string of '-' or 'x' where 'x' denotes the 1 bit.
+// using a custom format: a string of '_' or 'x' where 'x' denotes the 1 bit.
 func (bA *CompactBitArray) MarshalJSON() ([]byte, error) {
 	if bA == nil {
 		return []byte("null"), nil

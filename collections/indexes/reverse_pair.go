@@ -48,7 +48,10 @@ func NewReversePair[Value, K1, K2 any](
 	pairCodec codec.KeyCodec[collections.Pair[K1, K2]],
 	options ...func(*reversePairOptions),
 ) *ReversePair[K1, K2, Value] {
-	pkc := pairCodec.(pairKeyCodec[K1, K2])
+	pkc, ok := pairCodec.(pairKeyCodec[K1, K2])
+	if !ok {
+		panic("NewReversePair requires a collections.PairKeyCodec to be able to access the sub-codecs of the pair")
+	}
 	o := new(reversePairOptions)
 	for _, option := range options {
 		option(o)

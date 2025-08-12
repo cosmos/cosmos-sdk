@@ -172,6 +172,8 @@ func (c collInterfaceValue[T]) Stringify(value T) string {
 }
 
 func (c collInterfaceValue[T]) ValueType() string {
-	var t T
-	return fmt.Sprintf("%T", t)
+	// We use reflection to get the type name of the interface.
+	// Using `var t T; fmt.Sprintf("%T", t)` would return "<nil>".
+	var p *T
+	return reflect.TypeOf(p).Elem().String()
 }

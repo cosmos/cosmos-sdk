@@ -157,7 +157,12 @@ func (m mockValueCodec[T]) getTypeName(value T) string {
 		return m.valueType
 	}
 	typ := reflect.TypeOf(value)
+	// If the type is a pointer, we get the type it points to.
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
+	}
 	name := fmt.Sprintf("%s.%s", typ.PkgPath(), typ.Name())
+	// Store the base type (not pointer) so that `reflect.New` in Decode works correctly.
 	m.seenTypes[name] = typ
 	return name
 }

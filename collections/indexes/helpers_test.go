@@ -69,7 +69,7 @@ func TestHelpers(t *testing.T) {
 	err = ScanValues(ctx, indexedMap, iter, func(v Amount) bool {
 		require.Equal(t, Amount(200), v)
 		numCalled++
-		require.Equal(t, numCalled, 1)
+		require.Equal(t, 1, numCalled)
 		return true // says to stop
 	})
 	require.NoError(t, err)
@@ -82,7 +82,7 @@ func TestHelpers(t *testing.T) {
 		require.Equal(t, Amount(200), kv.Value)
 		require.Equal(t, collections.Join("address1", "osmo"), kv.Key)
 		numCalled++
-		require.Equal(t, numCalled, 1)
+		require.Equal(t, 1, numCalled)
 		return true // says to stop
 	})
 	require.NoError(t, err)

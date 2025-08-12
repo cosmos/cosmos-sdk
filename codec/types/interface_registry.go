@@ -100,12 +100,12 @@ type UnpackInterfacesMessage interface {
 	//		// where X is an Any field on MyStruct
 	//		err := unpacker.UnpackAny(s.X, &x)
 	//		if err != nil {
-	//			return nil
+	//			return err
 	//		}
 	//		// where Y is a field on MyStruct that implements UnpackInterfacesMessage itself
 	//		err = s.Y.UnpackInterfaces(unpacker)
 	//		if err != nil {
-	//			return nil
+	//			return err
 	//		}
 	//		return nil
 	//	 }

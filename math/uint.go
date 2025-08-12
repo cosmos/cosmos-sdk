@@ -21,7 +21,7 @@ func (u Uint) BigInt() *big.Int {
 	return new(big.Int).Set(u.i)
 }
 
-// BigIntMut converts Uint to big.Int, mutative the input
+// BigIntMut converts Uint to big.Int, mutating the input
 func (u Uint) BigIntMut() *big.Int {
 	if u.IsNil() {
 		return nil

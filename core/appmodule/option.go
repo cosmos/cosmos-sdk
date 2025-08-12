@@ -7,7 +7,7 @@ import (
 // Option is a functional option for implementing modules.
 type Option = depinjectappconfig.Option
 
-// Provide registers providers with the dependency injection system that will be
+// Provide register providers with the dependency injection system that will be
 // run within the module scope. See cosmossdk.io/depinject for
 // documentation on the dependency injection system.
 var Provide = depinjectappconfig.Provide

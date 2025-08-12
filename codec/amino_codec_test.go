@@ -14,7 +14,7 @@ import (
 func createTestCodec() *codec.LegacyAmino {
 	cdc := codec.NewLegacyAmino()
 	cdc.RegisterInterface((*testdata.Animal)(nil), nil)
-	// NOTE: since we unmarshal interface using pointers, we need to register a pointer
+	// NOTE: since we unmarshal interfaces using pointers, we need to register a pointer
 	// types here.
 	cdc.RegisterConcrete(&testdata.Dog{}, "testdata/Dog", nil)
 	cdc.RegisterConcrete(&testdata.Cat{}, "testdata/Cat", nil)
@@ -100,7 +100,7 @@ func TestAminoCodecPrintTypes(t *testing.T) {
 	wantHeader := "| Type | Name | Prefix | Length | Notes |"
 	require.Equal(t, lines[0], []byte(wantHeader))
 
-	// Expecting the types to be listed in the order that they were registered.
+	// Expecting the types to be listed in the order in which they were registered.
 	require.True(t, bytes.HasPrefix(lines[2], []byte("| Dog | testdata/Dog |")))
 	require.True(t, bytes.HasPrefix(lines[3], []byte("| Cat | testdata/Cat |")))
 }

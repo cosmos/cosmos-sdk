@@ -23,10 +23,13 @@ var (
 	_ types.CommitKVStoreWithImmutable = (*Store)(nil)
 	_ types.Queryable                  = (*Store)(nil)
 	_ types.StoreWithInitialVersion    = (*Store)(nil)
+	_ io.Closer                        = (*Store)(nil)
 )
 
 // Store Implements types.KVStore and CommitKVStore.
 type Store struct {
+	path     string
+	storeKey types.StoreKey
 	tree     *iavlv2.Tree
 	sqliteDb *iavlv2.SqliteDb
 	nodePool *iavlv2.NodePool
@@ -78,6 +81,8 @@ func LoadStore(config Config, opts Options) (types.CommitKVStore, error) {
 	}
 
 	return &Store{
+		path:     path,
+		storeKey: opts.Key,
 		tree:     tree,
 		sqliteDb: sqliteDb,
 		nodePool: nodePool,
@@ -105,21 +110,27 @@ func LoadStore(config Config, opts Options) (types.CommitKVStore, error) {
 // been pruned, an empty immutable IAVL tree will be used.
 // Any mutable operations executed will result in a panic.
 func (st *Store) GetImmutable(version int64) (types.KVStore, error) {
-	// TODO this is a brutal hack around the fact that iavl v2 does not support anything like this yet. MUST BE FIXED BEFORE RELEASE!
-	latestVersion := st.tree.Version()
-	err := st.tree.LoadVersion(version)
+	// TODO this is a hack around the fact that iavl v2 does not support anything like this explicitly yet
+	st2, err := LoadStore(Config{Path: st.path}, Options{
+		Logger:  st.logger,
+		Metrics: st.metrics,
+		Key:     st.storeKey,
+		CommitID: types.CommitID{
+			Version: version,
+		},
+		InitialVersion: 0,
+	})
 	if err != nil {
 		return nil, err
 	}
+
 	return &immutableTreeWrapper{
-		Store:         st,
-		latestVersion: latestVersion,
+		Store: st2.(*Store),
 	}, nil
 }
 
 type immutableTreeWrapper struct {
 	*Store
-	latestVersion int64
 }
 
 func (st *immutableTreeWrapper) Set(key, value []byte) {
@@ -131,7 +142,7 @@ func (st *immutableTreeWrapper) Delete(key []byte) {
 }
 
 func (st *immutableTreeWrapper) Close() error {
-	return st.Store.tree.LoadVersion(st.latestVersion)
+	return st.Store.Close()
 }
 
 var _ types.KVStore = &immutableTreeWrapper{}
@@ -143,6 +154,11 @@ func (st *Store) Commit() types.CommitID {
 	defer st.metrics.MeasureSince("store", "iavl", "commit")
 
 	hash, version, err := st.tree.SaveVersion()
+	if err != nil {
+		panic(err)
+	}
+
+	err = st.tree.WriteLatestLeaves()
 	if err != nil {
 		panic(err)
 	}
@@ -434,3 +450,8 @@ func (st *Store) Query(req *types.RequestQuery) (res *types.ResponseQuery, err e
 //	op := types.NewIavlCommitmentOp(key, commitmentProof)
 //	return &cmtprotocrypto.ProofOps{Ops: []cmtprotocrypto.ProofOp{op.ProofOp()}}
 //}
+
+// TODO we should make sure that layers above this proper call close
+func (st *Store) Close() error {
+	return st.tree.Close()
+}

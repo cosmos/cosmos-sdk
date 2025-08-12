@@ -198,7 +198,7 @@ func (s *ABCIUtilsTestSuite) TestValidateVoteExtensionsSingleVoteAbsent() {
 				ExtensionSignature: extSig0,
 				BlockIdFlag:        cmtproto.BlockIDFlagCommit,
 			},
-			// validator of power <1/3 is missing, so commit-info shld still be valid
+			// validator of power <1/3 is missing, so commit-info should still be valid
 			{
 				Validator:   s.vals[1].toValidator(333),
 				BlockIdFlag: cmtproto.BlockIDFlagAbsent,

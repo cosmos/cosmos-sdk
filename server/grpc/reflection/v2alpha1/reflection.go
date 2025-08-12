@@ -75,7 +75,7 @@ func newReflectionServiceServer(grpcSrv *grpc.Server, conf Config) (reflectionSe
 	// set deliver descriptor
 	txDescriptor, err := newTxDescriptor(conf.InterfaceRegistry)
 	if err != nil {
-		return reflectionServiceServer{}, fmt.Errorf("unable to create deliver descriptor: %w", err)
+		return reflectionServiceServer{}, fmt.Errorf("unable to create transaction descriptor: %w", err)
 	}
 	authnDescriptor := newAuthnDescriptor(conf.SigningModes)
 	desc := &AppDescriptor{

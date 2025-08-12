@@ -64,9 +64,9 @@ explicitly pass a context `ctx` as the first argument of a process.
 
 The `Context` contains a `MultiStore`, which allows for branching and caching functionality using `CacheMultiStore`
 (queries in `CacheMultiStore` are cached to avoid future round trips).
-Each `KVStore` is branched in a safe and isolated ephemeral storage. Processes are free to write changes to
+Each `KVStore` is branched into safe and isolated ephemeral storage. Processes are free to write changes to
 the `CacheMultiStore`. If a state-transition sequence is performed without issue, the store branch can
-be committed to the underlying store at the end of the sequence or disregard them if something
+be committed to the underlying store at the end of the sequence or discard them if something
 goes wrong. The pattern of usage for a Context is as follows:
 
 1. A process receives a Context `ctx` from its parent process, which provides information needed to

@@ -23,7 +23,7 @@ It is built using the following stack:
 ## Docs Build Workflow
 
 The docs are built and deployed automatically on GitHub Pages by a [GitHub Action workflow](../.github/workflows/build-docs.yml).
-The workflow is triggered on every push to the `main` and `release/v**` branches, every time documentations or specs are modified.
+The workflow is triggered on every push to the `main` and `release/v**` branches, every time documentation or specs are modified.
 
 ### How It Works
 
@@ -47,8 +47,8 @@ npm start
 It runs `pre.sh` scripts to get all the docs that are not already in the `docs/docs` folder.
 It also runs `post.sh` scripts to clean up the docs and remove unnecessary files when quitting.
 
-Note, the command above only build the docs for the current versions.
-With the drawback that none of the redirections works. So, you'll need to go to /main to see the docs.
+Note, the command above only builds the docs for the current versions.
+With the drawback that none of the redirections work. So, you'll need to go to /main to see the docs.
 
 To build all the docs (including versioned documentation), run:
 
@@ -56,7 +56,7 @@ To build all the docs (including versioned documentation), run:
 make build-docs
 ```
 
-## What to for new major SDK versions
+## What to do for new major SDK versions
 
 When a new major version of the SDK is released, the following steps should be taken:
 
@@ -75,6 +75,6 @@ When a new major version of the SDK is released, the following steps should be t
 
 * Add the new version sidebar to the list of versioned sidebar and add the version to `versions.json`.
 * Update the latest version (`presets[1].docs.lastVersion`) in `docusaurus.config.js`.
-* Add the new version with in `presets[1].docs.versions` in `docusaurus.config.js`.
+* Add the new version in `presets[1].docs.versions` in `docusaurus.config.js`.
 
 Learn more about [versioning](https://docusaurus.io/docs/versioning) in Docusaurus.

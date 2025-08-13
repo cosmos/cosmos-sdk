@@ -116,7 +116,7 @@ The `x/auth/tx` module provides a convenient CLI command for decoding and encodi
 #### `encode`
 
 The `encode` command encodes a transaction created with the `--generate-only` flag or signed with the sign command.
-The transaction is serialized it to Protobuf and returned as base64.
+The transaction is serialized to Protobuf and returned as base64.
 
 ```bash
 $ simd tx encode tx.json
@@ -128,7 +128,7 @@ More information about the `encode` command can be found running `simd tx encode
 
 #### `decode`
 
-The `decode` commands decodes a transaction encoded with the `encode` command.
+The `decode` command decodes a transaction encoded with the `encode` command.
 
 
 ```bash

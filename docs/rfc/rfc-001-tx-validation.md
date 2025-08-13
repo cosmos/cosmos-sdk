@@ -22,4 +22,4 @@ We can and will still support the `ValidateBasic` function for users and provide
 
 ### Consequences
 
-The consequence of updating the transaction flow is that transaction that may have failed before with the `ValidateBasic` flow will now be included in a block and the fees charged. 
+The consequence of updating the transaction flow is that transactions that may have failed before with the `ValidateBasic` flow will now be included in a block and the fees charged. 

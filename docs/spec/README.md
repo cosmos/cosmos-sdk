@@ -15,7 +15,7 @@ block.
 * [Store](./store) - The core Merkle store that holds the state.
 * [Bech32](./addresses/bech32.md) - Address format for Cosmos SDK applications.
 
-## Modules specifications
+## Module specifications
 
 Go to the [module directory](https://docs.cosmos.network/main/modules)
 

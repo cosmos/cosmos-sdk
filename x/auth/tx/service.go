@@ -21,7 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
-// baseAppSimulateFn is the signature of the Baseapp#Simulate function.
+// baseAppSimulateFn is the signature of the BaseApp#Simulate function.
 type baseAppSimulateFn func(txBytes []byte) (sdk.GasInfo, *sdk.Result, error)
 
 // txServer is the server for the protobuf Tx service.

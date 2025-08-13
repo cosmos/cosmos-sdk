@@ -11,7 +11,7 @@ This section describes how to securely run a node in a public setting and/or on 
 When operating a node, full node or validator, in production it is important to set your server up securely. 
 
 :::note
-There are many different ways to secure a server and your node, the described steps here is one way. To see another way of setting up a server see the [run in production tutorial](https://tutorials.cosmos.network/hands-on-exercise/4-run-in-prod).
+There are many different ways to secure a server and your node, the described steps here are one way. To see another way of setting up a server see the [run in production tutorial](https://tutorials.cosmos.network/hands-on-exercise/4-run-in-prod).
 :::
 
 :::note
@@ -61,7 +61,7 @@ sudo ufw default deny incoming
 sudo ufw default allow outgoing
 ```
 
-2. Lets make sure that port 22 (ssh) stays open. 
+2. Let's make sure that port 22 (ssh) stays open. 
 
 ```bash
 sudo ufw allow ssh

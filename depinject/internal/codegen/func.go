@@ -20,7 +20,7 @@ func newFuncGen(fileGen *FileGen, f *ast.FuncDecl) *FuncGen {
 		}
 	}
 
-	// reserve result
+	// reserve results
 	for _, field := range f.Type.Results.List {
 		for _, name := range field.Names {
 			g.idents[name.Name] = true

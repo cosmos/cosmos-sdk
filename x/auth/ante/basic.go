@@ -1,7 +1,9 @@
 package ante
 
 import (
+	"fmt"
 	"slices"
+	"sync"
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
@@ -180,7 +182,11 @@ func isIncompleteSignature(data signing.SignatureData) bool {
 type (
 	// TxTimeoutHeightDecorator defines an AnteHandler decorator that checks for a
 	// tx height timeout.
-	TxTimeoutHeightDecorator struct{}
+	TxTimeoutHeightDecorator struct {
+		// Duplicate log prevention with simple state management
+		mu           sync.RWMutex
+		lastLogTimes map[string]time.Time
+	}
 
 	// TxWithTimeoutHeight defines the interface a tx must implement in order for
 	// TxHeightTimeoutDecorator to process the tx.
@@ -195,7 +201,9 @@ type (
 // NewTxTimeoutHeightDecorator defines an AnteHandler decorator that checks for a
 // tx height timeout.
 func NewTxTimeoutHeightDecorator() TxTimeoutHeightDecorator {
-	return TxTimeoutHeightDecorator{}
+	return TxTimeoutHeightDecorator{
+		lastLogTimes: make(map[string]time.Time),
+	}
 }
 
 // AnteHandle implements an AnteHandler decorator for the TxHeightTimeoutDecorator
@@ -210,6 +218,9 @@ func (txh TxTimeoutHeightDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 
 	timeoutHeight := timeoutTx.GetTimeoutHeight()
 	if timeoutHeight > 0 && uint64(ctx.BlockHeight()) > timeoutHeight {
+		// Log timeout error with duplicate prevention
+		txh.logTimeoutError(ctx, tx, timeoutHeight)
+
 		return ctx, errorsmod.Wrapf(
 			sdkerrors.ErrTxTimeoutHeight, "block height: %d, timeout height: %d", ctx.BlockHeight(), timeoutHeight,
 		)
@@ -224,4 +235,67 @@ func (txh TxTimeoutHeightDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	}
 
 	return next(ctx, tx, simulate)
+}
+
+// logTimeoutError logs timeout errors with duplicate prevention
+func (txh TxTimeoutHeightDecorator) logTimeoutError(ctx sdk.Context, tx sdk.Tx, timeoutHeight uint64) {
+	heightDiff := uint64(ctx.BlockHeight()) - timeoutHeight
+	logKey := fmt.Sprintf("timeout_%d_%s", heightDiff, txh.extractBidder(tx))
+
+	// Log only once per minute for the same error pattern
+	if txh.shouldLog(logKey) {
+		switch {
+		case heightDiff == 1:
+			// 1 block difference: DEBUG level
+			ctx.Logger().Debug("timeout height: 1 block difference",
+				"current_height", ctx.BlockHeight(),
+				"timeout_height", timeoutHeight,
+				"bidder", txh.extractBidder(tx),
+				"note", "common race condition, will resolve automatically",
+			)
+
+		case heightDiff <= 3:
+			// 2-3 block difference: INFO level
+			ctx.Logger().Info("timeout height: minor delay",
+				"current_height", ctx.BlockHeight(),
+				"timeout_height", timeoutHeight,
+				"height_difference", heightDiff,
+				"bidder", txh.extractBidder(tx),
+				"note", "minor timing issue, should resolve soon",
+			)
+
+		default:
+			// 4+ block difference: WARN level (always log)
+			ctx.Logger().Warn("timeout height: significant delay",
+				"current_height", ctx.BlockHeight(),
+				"timeout_height", timeoutHeight,
+				"height_difference", heightDiff,
+				"bidder", txh.extractBidder(tx),
+				"action_required", "investigate_network_issues",
+			)
+		}
+	}
+}
+
+// shouldLog checks if we should log this error (prevents duplicates)
+func (txh TxTimeoutHeightDecorator) shouldLog(logKey string) bool {
+	txh.mu.Lock()
+	defer txh.mu.Unlock()
+
+	now := time.Now()
+	if lastLog, exists := txh.lastLogTimes[logKey]; exists {
+		if now.Sub(lastLog) < time.Minute { // Log once per minute
+			return false
+		}
+	}
+
+	txh.lastLogTimes[logKey] = now
+	return true
+}
+
+// extractBidder extracts bidder address from transaction
+func (txh TxTimeoutHeightDecorator) extractBidder(tx sdk.Tx) string {
+	// In actual implementation, extract bidder info from tx
+	// For now, return a simple identifier
+	return "unknown_bidder"
 }

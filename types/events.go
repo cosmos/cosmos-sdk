@@ -59,7 +59,7 @@ func (em EventManager) ABCIEvents() []abci.Event {
 	return em.events.ToABCIEvents()
 }
 
-// EmitTypedEvent takes typed event and emits converting it into Event
+// EmitTypedEvent takes a typed event and emits it by converting it into an Event
 func (em *EventManager) EmitTypedEvent(tev proto.Message) error {
 	event, err := TypedEventToEvent(tev)
 	if err != nil {
@@ -70,7 +70,7 @@ func (em *EventManager) EmitTypedEvent(tev proto.Message) error {
 	return nil
 }
 
-// EmitTypedEvents takes series of typed events and emit
+// EmitTypedEvents takes a series of typed events and emits them
 func (em *EventManager) EmitTypedEvents(tevs ...proto.Message) error {
 	events := make(Events, len(tevs))
 	for i, tev := range tevs {
@@ -85,7 +85,7 @@ func (em *EventManager) EmitTypedEvents(tevs ...proto.Message) error {
 	return nil
 }
 
-// TypedEventToEvent takes typed event and converts to Event object
+// TypedEventToEvent takes a typed event and converts it to an Event object
 func TypedEventToEvent(tev proto.Message) (Event, error) {
 	evtType := proto.MessageName(tev)
 	evtJSON, err := codec.ProtoMarshalJSON(tev, nil)
@@ -221,7 +221,7 @@ func (e Events) AppendEvent(event Event) Events {
 	return append(e, event)
 }
 
-// AppendEvents adds a slice of Event objects to an exist slice of Event objects.
+// AppendEvents adds a slice of Event objects to an existing slice of Event objects.
 func (e Events) AppendEvents(events Events) Events {
 	return append(e, events...)
 }
@@ -313,7 +313,7 @@ func StringifyEvents(events []abci.Event) StringEvents {
 }
 
 // MarkEventsToIndex returns the set of ABCI events, where each event's attribute
-// has it's index value marked based on the provided set of events to index.
+// has its index value marked based on the provided set of events to index.
 func MarkEventsToIndex(events []abci.Event, indexSet map[string]struct{}) []abci.Event {
 	indexAll := len(indexSet) == 0
 	updatedEvents := make([]abci.Event, len(events))

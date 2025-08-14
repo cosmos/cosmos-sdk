@@ -4,7 +4,7 @@ package types
 // If newCtx.IsZero(), ctx is used instead.
 type AnteHandler func(ctx Context, tx Tx, simulate bool) (newCtx Context, err error)
 
-// PostHandler like AnteHandler but it executes after RunMsgs. Runs on success
+// PostHandler is like AnteHandler but it executes after RunMsgs. Runs on success
 // or failure and enables use cases like gas refunding.
 type PostHandler func(ctx Context, tx Tx, simulate, success bool) (newCtx Context, err error)
 
@@ -19,9 +19,9 @@ type PostDecorator interface {
 }
 
 // ChainAnteDecorators chains AnteDecorators together with each AnteDecorator
-// wrapping over the decorators further along chain and returns a single AnteHandler.
+// wrapping over the decorators further along the chain and returns a single AnteHandler.
 //
-// NOTE: The first element is outermost decorator, while the last element is innermost
+// NOTE: The first element is the outermost decorator, while the last element is the innermost
 // decorator. Decorator ordering is critical since some decorators will expect
 // certain checks and updates to be performed (e.g. the Context) before the decorator
 // is run. These expectations should be documented clearly in a CONTRACT docline
@@ -31,7 +31,7 @@ type PostDecorator interface {
 // MUST set GasMeter with the FIRST AnteDecorator. Failing to do so will cause
 // transactions to be processed with an infinite gasmeter and open a DOS attack vector.
 // Use `ante.SetUpContextDecorator` or a custom Decorator with similar functionality.
-// Returns nil when no AnteDecorator are supplied.
+// Returns nil when no AnteDecorators are supplied.
 func ChainAnteDecorators(chain ...AnteDecorator) AnteHandler {
 	if len(chain) == 0 {
 		return nil
@@ -53,9 +53,9 @@ func ChainAnteDecorators(chain ...AnteDecorator) AnteHandler {
 }
 
 // ChainPostDecorators chains PostDecorators together with each PostDecorator
-// wrapping over the decorators further along chain and returns a single PostHandler.
+// wrapping over the decorators further along the chain and returns a single PostHandler.
 //
-// NOTE: The first element is outermost decorator, while the last element is innermost
+// NOTE: The first element is the outermost decorator, while the last element is the innermost
 // decorator. Decorator ordering is critical since some decorators will expect
 // certain checks and updates to be performed (e.g. the Context) before the decorator
 // is run. These expectations should be documented clearly in a CONTRACT docline

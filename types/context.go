@@ -30,7 +30,7 @@ const (
 )
 
 /*
-Context is an immutable object contains all information needed to
+Context is an immutable object that contains all information needed to
 process a request.
 
 It contains a context.Context object inside if you want to use that,
@@ -53,7 +53,7 @@ type Context struct {
 	blockGasMeter        storetypes.GasMeter
 	checkTx              bool
 	recheckTx            bool // if recheckTx == true, then checkTx must also be true
-	sigverifyTx          bool // when run simulation, because the private key corresponding to the account in the genesis.json randomly generated, we must skip the sigverify.
+	sigverifyTx          bool // when running simulation, because the private key corresponding to the account in the genesis.json is randomly generated, we must skip the sigverify.
 	execMode             ExecMode
 	minGasPrice          DecCoins
 	consParams           cmtproto.ConsensusParams
@@ -312,7 +312,7 @@ func (c Context) WithCometInfo(cometInfo comet.BlockInfo) Context {
 
 // WithHeaderInfo returns a Context with an updated header info
 func (c Context) WithHeaderInfo(headerInfo header.Info) Context {
-	// Settime to UTC
+	// Set time to UTC
 	headerInfo.Time = headerInfo.Time.UTC()
 	c.headerInfo = headerInfo
 	return c

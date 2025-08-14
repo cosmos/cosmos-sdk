@@ -52,7 +52,7 @@ func TestChainPostDecorators(t *testing.T) {
 	_, err := sdk.ChainPostDecorators(mockPostDecorator1)(ctx, tx, true, true)
 	require.NoError(t, err)
 
-	// Tests chaining multiple post decorators
+	// Test chaining multiple post decorators
 	mockPostDecorator1.EXPECT().PostHandle(gomock.Eq(ctx), gomock.Eq(tx), true, gomock.Eq(true), gomock.Any()).Times(1)
 	mockPostDecorator2.EXPECT().PostHandle(gomock.Eq(ctx), gomock.Eq(tx), true, gomock.Eq(true), gomock.Any()).Times(1)
 	// NOTE: we can't check that mockAnteDecorator2 is passed as the last argument because

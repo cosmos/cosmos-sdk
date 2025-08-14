@@ -48,7 +48,7 @@ type Server struct {
 // CustomGRPCHeaderMatcher for mapping request headers to
 // GRPC metadata.
 // HTTP headers that start with 'Grpc-Metadata-' are automatically mapped to
-// gRPC metadata after removing prefix 'Grpc-Metadata-'. We can use this
+// gRPC metadata after removing the prefix 'Grpc-Metadata-'. We can use this
 // CustomGRPCHeaderMatcher if headers don't start with `Grpc-Metadata-`
 func CustomGRPCHeaderMatcher(key string) (string, bool) {
 	switch strings.ToLower(key) {
@@ -227,7 +227,7 @@ func newErrorResponse(code int, err string) errorResponse {
 	return errorResponse{Code: code, Error: err}
 }
 
-// writeErrorResponse prepares and writes a HTTP error
+// writeErrorResponse prepares and writes an HTTP error
 // given a status code and an error message.
 func writeErrorResponse(w http.ResponseWriter, status int, err string) {
 	w.Header().Set("Content-Type", "application/json")

@@ -159,9 +159,9 @@ func (s *errorsTestSuite) TestIsOf() {
 
 	require.True(IsOf(errW, ErrLogic))
 	require.True(IsOf(errW, err, ErrLogic))
-	require.True(IsOf(errW, nil, errW), "error should much itself")
+	require.True(IsOf(errW, nil, errW), "error should match itself")
 	err2 := errors.New("other error")
-	require.True(IsOf(err2, nil, err2), "error should much itself")
+	require.True(IsOf(err2, nil, err2), "error should match itself")
 }
 
 type customError struct{}

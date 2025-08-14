@@ -24,12 +24,12 @@ var (
 	DefaultPowerReduction = sdkmath.NewIntFromUint64(1000000)
 )
 
-// TokensToConsensusPower - convert input tokens to potential consensus-engine power
+// TokensToConsensusPower - converts input tokens to potential consensus-engine power
 func TokensToConsensusPower(tokens, powerReduction sdkmath.Int) int64 {
 	return (tokens.Quo(powerReduction)).Int64()
 }
 
-// TokensFromConsensusPower - convert input power to tokens
+// TokensFromConsensusPower - converts input power to tokens
 func TokensFromConsensusPower(power int64, powerReduction sdkmath.Int) sdkmath.Int {
 	return sdkmath.NewInt(power).Mul(powerReduction)
 }

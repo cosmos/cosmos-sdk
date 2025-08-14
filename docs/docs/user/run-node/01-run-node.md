@@ -68,7 +68,7 @@ jq '.app_state.mint.minter.inflation = "0.300000000000000000"' genesis.json > te
 
 ### Client Interaction
 
-When instantiating a node, GRPC and REST are defaulted to localhost to avoid unknown exposure of your node to the public. It is recommended to not expose these endpoints without a proxy that can handle load balancing or authentication is set up between your node and the public. 
+When instantiating a node, GRPC and REST are defaulted to localhost to avoid unknown exposure of your node to the public. It is recommended not to expose these endpoints without a proxy that can handle load balancing or authentication set up between your node and the public. 
 
 :::tip
 A commonly used tool for this is [nginx](https://nginx.org).

@@ -22,7 +22,7 @@ Having the ability to sign messages off-chain has proven to be a fundamental asp
 of nearly any blockchain. The notion of signing messages off-chain has many
 added benefits such as saving on computational costs and reducing transaction
 throughput and overhead. Within the context of the Cosmos, some of the major
-applications of signing such data includes, but is not limited to, providing a
+applications of signing such data include, but is not limited to, providing a
 cryptographic secure and verifiable means of proving validator identity and
 possibly associating it with some other framework or organization. In addition,
 having the ability to sign Cosmos messages with a Ledger or similar HSM device.
@@ -152,7 +152,7 @@ more complex structures, apart from just string messages, and still be able to
 know exactly what they are signing (opposed to signing a bunch of arbitrary bytes).
 
 Thus, in the future, the Cosmos signing message specification will be expected
-to expand upon it's canonical JSON structure to include such functionality.
+to expand upon its canonical JSON structure to include such functionality.
 
 ## API
 

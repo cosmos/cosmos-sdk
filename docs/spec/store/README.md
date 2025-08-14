@@ -29,9 +29,9 @@ with, which also provides the basis of most state storage and commitment operati
 is the `KVStore`. The `KVStore` interface provides basic CRUD abilities and
 prefix-based iteration, including reverse iteration.
 
-Typically, each module has it's own dedicated `KVStore` instance, which it can
+Typically, each module has its own dedicated `KVStore` instance, which it can
 get access to via the `sdk.Context` and the use of a pointer-based named key --
-`KVStoreKey`. The `KVStoreKey` provides pseudo-OCAP. How a exactly a `KVStoreKey`
+`KVStoreKey`. The `KVStoreKey` provides pseudo-OCAP. How exactly a `KVStoreKey`
 maps to a `KVStore` will be illustrated below through the `CommitMultiStore`.
 
 Note, a `KVStore` cannot directly commit state. Instead, a `KVStore` can be wrapped
@@ -115,7 +115,7 @@ to `true` in the config TOML file.
 ### `cachekv.Store`
 
 The `cachekv.Store` store wraps an underlying `KVStore`, typically a `iavl.Store`
-and contains an in-memory cache for storing pending writes to underlying `KVStore`.
+and contains an in-memory cache for storing pending writes to the underlying `KVStore`.
 `Set` and `Delete` calls are executed on the in-memory cache, whereas `Has` calls
 are proxied to the underlying `KVStore`. 
 
@@ -194,7 +194,7 @@ a `BaseApp` instance which internally has a reference to a `CommitMultiStore`
 that is implemented by a `rootmulti.Store`. The application then registers one or
 more `KVStoreKey` that pertain to a unique module and thus a `KVStore`. Through
 the use of an `sdk.Context` and a `KVStoreKey`, each module can get direct access
-to it's respective `KVStore` instance.
+to its respective `KVStore` instance.
 
 Example:
 

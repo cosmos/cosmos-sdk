@@ -28,7 +28,7 @@ The inter-block cache is an in-memory cache storing (in-most-cases) immutable st
 
 ### Motivation
 
-The goal of the inter-block cache is to allow SDK modules to have fast access to data that it is typically queried during the execution of every block. This is data that do not change often, e.g. module parameters. The inter-block cache wraps each `CommitKVStore` of a multi store such as `rootmulti` with a fixed size, write-through cache. Caches are not cleared after a block is committed, as opposed to other caching layers such as `cachekv`.
+The goal of the inter-block cache is to allow SDK modules to have fast access to data that is typically queried during the execution of every block. This is data that does not change often, e.g. module parameters. The inter-block cache wraps each `CommitKVStore` of a multi store such as `rootmulti` with a fixed size, write-through cache. Caches are not cleared after a block is committed, as opposed to other caching layers such as `cachekv`.
 
 ### Definitions
 
@@ -47,7 +47,7 @@ This specification assumes that there exists a cache implementation accessible t
 The inter-block cache requires that the cache implementation to provide methods to create a cache, add a key/value pair, remove a key/value pair and retrieve the value associated to a key. In this specification, we assume that a `Cache` feature offers this functionality through the following methods:
 
 * `NewCache(size int)` creates a new cache with `size` capacity and returns it.
-* `Get(key string)` attempts to retrieve a key/value pair from `Cache.` It returns `(value []byte, success bool)`. If `Cache` contains the key, it `value` contains the associated value and `success=true`. Otherwise, `success=false` and `value` should be ignored.
+* `Get(key string)` attempts to retrieve a key/value pair from `Cache.` It returns `(value []byte, success bool)`. If `Cache` contains the key, then `value` contains the associated value and `success=true`. Otherwise, `success=false` and `value` should be ignored.
 * `Add(key string, value []byte)` inserts a key/value pair into the `Cache`.
 * `Remove(key string)` removes the key/value pair identified by `key` from `Cache`.
 
@@ -83,7 +83,7 @@ Iteration over each wrapped store is supported via the embedded `CommitKVStore` 
 
 ### General design
 
-The inter-block cache feature is composed by two components: `CommitKVCacheManager` and `CommitKVCache`.
+The inter-block cache feature is composed of two components: `CommitKVCacheManager` and `CommitKVCache`.
 
 `CommitKVCacheManager` implements the cache manager. It maintains a mapping from a store key to a `KVStore`.
 
@@ -128,7 +128,7 @@ func NewCommitKVStoreCacheManager(size uint) CommitKVStoreCacheManager {
 | ------------- | ---------|------- |
 | manager  | `CommitKVStoreCacheManager` | The cache manager |
 | storeKey  | string | The store key of the store being retrieved |
-| store  | `CommitKVStore` | The store that it is cached in case the manager does not have any in its map of caches |
+| store  | `CommitKVStore` | The store that is cached in case the manager does not have any in its map of caches |
 
 ```go
 func GetStoreCache(

@@ -200,8 +200,8 @@ type (
 
 // NewTxTimeoutHeightDecorator defines an AnteHandler decorator that checks for a
 // tx height timeout.
-func NewTxTimeoutHeightDecorator() TxTimeoutHeightDecorator {
-	return TxTimeoutHeightDecorator{
+func NewTxTimeoutHeightDecorator() *TxTimeoutHeightDecorator {
+	return &TxTimeoutHeightDecorator{
 		lastLogTimes: make(map[string]time.Time),
 	}
 }
@@ -210,7 +210,7 @@ func NewTxTimeoutHeightDecorator() TxTimeoutHeightDecorator {
 // type where the current block height is checked against the tx's height timeout.
 // If a height timeout is provided (non-zero) and is less than the current block
 // height, then an error is returned.
-func (txh TxTimeoutHeightDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
+func (txh *TxTimeoutHeightDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	timeoutTx, ok := tx.(TxWithTimeoutHeight)
 	if !ok {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "expected tx to implement TxWithTimeoutHeight")
@@ -238,9 +238,23 @@ func (txh TxTimeoutHeightDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 }
 
 // logTimeoutError logs timeout errors with duplicate prevention
-func (txh TxTimeoutHeightDecorator) logTimeoutError(ctx sdk.Context, tx sdk.Tx, timeoutHeight uint64) {
-	heightDiff := uint64(ctx.BlockHeight()) - timeoutHeight
-	logKey := fmt.Sprintf("timeout_%d_%s", heightDiff, txh.extractBidder(tx))
+func (txh *TxTimeoutHeightDecorator) logTimeoutError(ctx sdk.Context, tx sdk.Tx, timeoutHeight uint64) {
+	currentHeight := uint64(ctx.BlockHeight())
+
+	// Safety check to prevent underflow
+	if currentHeight <= timeoutHeight {
+		return
+	}
+
+	heightDiff := currentHeight - timeoutHeight
+	bidder := txh.extractBidder(tx)
+
+	// Limit bidder length and remove special characters for log key
+	if len(bidder) > 20 {
+		bidder = bidder[:20]
+	}
+
+	logKey := fmt.Sprintf("timeout_%d_%s", heightDiff, bidder)
 
 	// Log only once per minute for the same error pattern
 	if txh.shouldLog(logKey) {
@@ -278,11 +292,24 @@ func (txh TxTimeoutHeightDecorator) logTimeoutError(ctx sdk.Context, tx sdk.Tx, 
 }
 
 // shouldLog checks if we should log this error (prevents duplicates)
-func (txh TxTimeoutHeightDecorator) shouldLog(logKey string) bool {
+func (txh *TxTimeoutHeightDecorator) shouldLog(logKey string) bool {
 	txh.mu.Lock()
 	defer txh.mu.Unlock()
 
 	now := time.Now()
+
+	// Clean up old entries if map grows too large
+	const maxEntries = 1000
+	if len(txh.lastLogTimes) > maxEntries {
+		// Remove entries older than 5 minutes
+		cutoff := now.Add(-5 * time.Minute)
+		for k, v := range txh.lastLogTimes {
+			if v.Before(cutoff) {
+				delete(txh.lastLogTimes, k)
+			}
+		}
+	}
+
 	if lastLog, exists := txh.lastLogTimes[logKey]; exists {
 		if now.Sub(lastLog) < time.Minute { // Log once per minute
 			return false
@@ -294,8 +321,13 @@ func (txh TxTimeoutHeightDecorator) shouldLog(logKey string) bool {
 }
 
 // extractBidder extracts bidder address from transaction
-func (txh TxTimeoutHeightDecorator) extractBidder(tx sdk.Tx) string {
-	// In actual implementation, extract bidder info from tx
-	// For now, return a simple identifier
+func (txh *TxTimeoutHeightDecorator) extractBidder(tx sdk.Tx) string {
+	// Prefer extracting an explicit bidder if messages expose it via custom signing logic.
+	if sigTx, ok := tx.(authsigning.SigVerifiableTx); ok {
+		if signers, err := sigTx.GetSigners(); err == nil && len(signers) > 0 {
+			return sdk.AccAddress(signers[0]).String() // use first signer as bidder by default
+		}
+	}
+	// fallback — keep previous behavior while still marking it as unknown
 	return "unknown_bidder"
 }

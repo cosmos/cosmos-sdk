@@ -31,7 +31,7 @@ func SortJSON(toSortJSON []byte) ([]byte, error) {
 	return js, nil
 }
 
-// MustSortJSON is like SortJSON but panic if an error occurs, e.g., if
+// MustSortJSON is like SortJSON but panics if an error occurs, e.g., if
 // the passed JSON isn't valid.
 //
 // Deprecated: SortJSON was used for GetSignbytes, this is now automatic with amino signing
@@ -50,7 +50,7 @@ func Uint64ToBigEndian(i uint64) []byte {
 	return b
 }
 
-// BigEndianToUint64 returns an uint64 from big endian encoded bytes. If encoding
+// BigEndianToUint64 returns a uint64 from big endian encoded bytes. If encoding
 // is empty, zero is returned.
 func BigEndianToUint64(bz []byte) uint64 {
 	if len(bz) == 0 {

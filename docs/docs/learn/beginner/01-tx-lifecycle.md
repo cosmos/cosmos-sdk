@@ -113,7 +113,7 @@ Read [RFC 001](https://docs.cosmos.network/main/rfc/rfc-001-tx-validation) for m
 :::
 
 :::note
-`BaseApp` still calls `ValidateBasic` on messages that implements that method for backwards compatibility.
+`BaseApp` still calls `ValidateBasic` on messages that implement that method for backwards compatibility.
 :::
 
 #### Guideline
@@ -129,7 +129,7 @@ A copy of the cached context is provided to the `AnteHandler`, which performs li
 For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/blob/main/x/auth/README.md) module `AnteHandler` checks and increments sequence numbers, checks signatures and account numbers, and deducts fees from the first signer of the transaction - all state changes are made using the `checkState`.
 
 :::warning
-Ante handlers only run on a transaction. If a transaction embed multiple messages (like some x/authz, x/gov transactions for instance), the ante handlers only have awareness of the outer message. Inner messages are mostly directly routed to the [message router](https://docs.cosmos.network/main/learn/advanced/baseapp#msg-service-router) and will skip the chain of ante handlers. Keep that in mind when designing your own ante handler.
+Ante handlers only run on a transaction. If a transaction embeds multiple messages (like some x/authz, x/gov transactions for instance), the ante handlers only have awareness of the outer message. Inner messages are mostly directly routed to the [message router](https://docs.cosmos.network/main/learn/advanced/baseapp#msg-service-router) and will skip the chain of ante handlers. Keep that in mind when designing your own ante handler.
 :::
 
 ### Gas

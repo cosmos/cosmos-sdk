@@ -15,10 +15,10 @@ import (
 )
 
 type (
-	// Msg defines the interface a transaction message needed to fulfill.
+	// Msg defines the interface a transaction message needs to fulfill.
 	Msg = proto.Message
 
-	// LegacyMsg defines the interface a transaction message needed to fulfill up through
+	// LegacyMsg defines the interface a transaction message needs to fulfill up through
 	// v0.47.
 	LegacyMsg interface {
 		Msg
@@ -45,7 +45,7 @@ type (
 
 	// HasMsgs defines an interface a transaction must fulfill.
 	HasMsgs interface {
-		// GetMsgs gets the all the transaction's messages.
+		// GetMsgs gets all the transaction's messages.
 		GetMsgs() []Msg
 	}
 
@@ -53,7 +53,7 @@ type (
 	Tx interface {
 		HasMsgs
 
-		// GetMsgsV2 gets the transaction's messages as google.golang.org/protobuf/proto.Message's.
+		// GetMsgsV2 gets the transaction's messages as google.golang.org/protobuf/proto.Messages.
 		GetMsgsV2() ([]protov2.Message, error)
 	}
 
@@ -136,7 +136,7 @@ func GetMsgFromTypeURL(cdc codec.Codec, input string) (Msg, error) {
 	return msg, nil
 }
 
-// GetModuleNameFromTypeURL assumes that module name is the second element of the msg type URL
+// GetModuleNameFromTypeURL assumes that the module name is the second element of the msg type URL
 // e.g. "cosmos.bank.v1beta1.MsgSend" => "bank"
 // It returns an empty string if the input is not a valid type URL
 func GetModuleNameFromTypeURL(input string) string {

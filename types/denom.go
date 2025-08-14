@@ -10,7 +10,7 @@ import (
 // multipliers (e.g. 1atom = 10^-6uatom).
 var denomUnits = map[string]math.LegacyDec{}
 
-// baseDenom is the denom of smallest unit registered
+// baseDenom is the denom of the smallest unit registered
 var baseDenom string
 
 // RegisterDenom registers a denomination with a corresponding unit. If the
@@ -47,8 +47,8 @@ func GetDenomUnit(denom string) (math.LegacyDec, bool) {
 	return unit, true
 }
 
-// SetBaseDenom allow overwriting the base denom
-// if the denom has registered before, otherwise return error
+// SetBaseDenom allows overwriting the base denom
+// if the denom has been registered before, otherwise return error
 func SetBaseDenom(denom string) error {
 	_, ok := denomUnits[denom]
 	if !ok {
@@ -58,7 +58,7 @@ func SetBaseDenom(denom string) error {
 	return nil
 }
 
-// GetBaseDenom returns the denom of smallest unit registered
+// GetBaseDenom returns the denom of the smallest unit registered
 func GetBaseDenom() (string, error) {
 	if baseDenom == "" {
 		return "", fmt.Errorf("no denom is registered")
@@ -116,7 +116,7 @@ func ConvertDecCoin(coin DecCoin, denom string) (DecCoin, error) {
 	return NewDecCoinFromDec(denom, coin.Amount.Mul(srcUnit).Quo(dstUnit)), nil
 }
 
-// NormalizeCoin try to convert a coin to the smallest unit registered,
+// NormalizeCoin tries to convert a coin to the smallest unit registered,
 // returns original one if failed.
 func NormalizeCoin(coin Coin) Coin {
 	base, err := GetBaseDenom()
@@ -130,7 +130,7 @@ func NormalizeCoin(coin Coin) Coin {
 	return newCoin
 }
 
-// NormalizeDecCoin try to convert a decimal coin to the smallest unit registered,
+// NormalizeDecCoin tries to convert a decimal coin to the smallest unit registered,
 // returns original one if failed.
 func NormalizeDecCoin(coin DecCoin) DecCoin {
 	base, err := GetBaseDenom()
@@ -144,7 +144,7 @@ func NormalizeDecCoin(coin DecCoin) DecCoin {
 	return newCoin
 }
 
-// NormalizeCoins normalize and truncate a list of decimal coins
+// NormalizeCoins normalizes and truncates a list of decimal coins
 func NormalizeCoins(coins []DecCoin) Coins {
 	if coins == nil {
 		return nil

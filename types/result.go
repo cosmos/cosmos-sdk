@@ -167,7 +167,7 @@ var _, _ codectypes.UnpackInterfacesMessage = SearchTxsResult{}, TxResponse{}
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 //
 // types.UnpackInterfaces needs to be called for each nested Tx because
-// there are generally interfaces to unpack in Tx's
+// there are generally interfaces to unpack in Txs
 func (s SearchTxsResult) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	for _, tx := range s.Txs {
 		err := codectypes.UnpackInterfaces(tx, unpacker)

@@ -36,7 +36,7 @@ func TestPrefix(t *testing.T) {
 		bytes := []byte("prefix")
 		prefix := NewPrefix(bytes)
 		require.Equal(t, bytes, prefix.Bytes())
-		// assert if modification happen they do not propagate to prefix
+		// assert if modification happens they do not propagate to prefix
 		bytes[0] = 0x0
 		require.Equal(t, []byte("prefix"), prefix.Bytes())
 	})

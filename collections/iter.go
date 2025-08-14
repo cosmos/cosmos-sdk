@@ -42,7 +42,7 @@ type RangeKey[K any] struct {
 // identifies the next key after the provided key K.
 // Example: given a string key "ABCD" the next key is bytes("ABCD\0")
 // It's useful when defining inclusivity or exclusivity of a key
-// in store iteration. Specifically: to make an Iterator start exclude key K
+// in store iteration. Specifically: to make an Iterator start excluding key K
 // I would return a RangeKeyNext(key) in the Ranger start.
 func RangeKeyNext[K any](key K) *RangeKey[K] {
 	return &RangeKey[K]{key: key, kind: rangeKeyNext}

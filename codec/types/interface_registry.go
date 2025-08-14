@@ -63,7 +63,7 @@ type InterfaceRegistry interface {
 	//  registry.RegisterImplementations((*sdk.Msg)(nil), &MsgSend{}, &MsgMultiSend{})
 	RegisterImplementations(iface any, impls ...proto.Message)
 
-	// ListAllInterfaces list the type URLs of all registered interfaces.
+	// ListAllInterfaces lists the type URLs of all registered interfaces.
 	ListAllInterfaces() []string
 
 	// ListImplementations lists the valid type URLs for the given interface name that can be used
@@ -76,7 +76,7 @@ type InterfaceRegistry interface {
 	protodesc.Resolver
 
 	// RangeFiles iterates over all registered files and calls f on each one. This
-	// implements the part of protoregistry.Files that is needed for reflecting over
+	// implements the part of protoregistry.Files that are needed for reflecting over
 	// the entire FileDescriptorSet.
 	RangeFiles(f func(protoreflect.FileDescriptor) bool)
 
@@ -240,7 +240,7 @@ func (registry *interfaceRegistry) registerImpl(iface any, typeURL string, impl 
 	if found && foundImplType != implType {
 		panic(
 			fmt.Errorf(
-				"concrete type %s has already been registered under typeURL %s, cannot register %s under same typeURL. "+
+				"concrete type %s has already been registered under typeURL %s, cannot register %s under the same typeURL. "+
 					"This usually means that there are conflicting modules registering different concrete types "+
 					"for a same interface implementation",
 				foundImplType,

@@ -28,7 +28,7 @@ var (
 	_ codec.AminoMarshaler = &PrivKey{}
 )
 
-// NewPrivateKeyFromBytes build a new key from the given bytes.
+// NewPrivateKeyFromBytes builds a new key from the given bytes.
 func NewPrivateKeyFromBytes(bz []byte) (PrivKey, error) {
 	secretKey, err := bls12381.NewPrivateKeyFromBytes(bz)
 	if err != nil {
@@ -163,7 +163,7 @@ func (pubKey PubKey) Equals(other cryptotypes.PubKey) bool {
 	return pubKey.Type() == other.Type() && bytes.Equal(pubKey.Bytes(), other.Bytes())
 }
 
-// String returns Hex representation of a pubkey with it's type
+// String returns Hex representation of a pubkey with its type
 func (pubKey PubKey) String() string {
 	return fmt.Sprintf("PubKeyBLS12_381{%X}", pubKey.Key)
 }

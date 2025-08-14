@@ -775,7 +775,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 			}
 
 			if pass != reEnteredPass {
-				fmt.Fprintln(os.Stderr, "passphrase do not match")
+				fmt.Fprintln(os.Stderr, "passphrase does not match")
 				continue
 			}
 

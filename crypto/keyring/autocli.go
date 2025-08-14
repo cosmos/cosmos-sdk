@@ -23,7 +23,7 @@ type autoCLIKeyring interface {
 	Sign(name string, msg []byte, signMode signingv1beta1.SignMode) ([]byte, error)
 }
 
-// NewAutoCLIKeyring wraps the SDK keyring and make it compatible with the AutoCLI keyring interfaces.
+// NewAutoCLIKeyring wraps the SDK keyring and makes it compatible with the AutoCLI keyring interfaces.
 func NewAutoCLIKeyring(kr Keyring) (autoCLIKeyring, error) {
 	return &autoCLIKeyringAdapter{kr}, nil
 }

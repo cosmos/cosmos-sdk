@@ -238,7 +238,7 @@ func (coins Coins) String() string {
 	return out.String()
 }
 
-// Validate checks that the Coins are sorted, have positive amount, with a valid and unique
+// Validate checks that the Coins are sorted, have positive amounts, with a valid and unique
 // denomination (i.e no duplicates). Otherwise, it returns an error.
 func (coins Coins) Validate() error {
 	switch len(coins) {
@@ -293,7 +293,7 @@ func (coins Coins) isSorted() bool {
 	return true
 }
 
-// IsValid calls Validate and returns true when the Coins are sorted, have positive amount, with a
+// IsValid calls Validate and returns true when the Coins are sorted, have positive amounts, with a
 // valid and unique denomination (i.e no duplicates).
 func (coins Coins) IsValid() bool {
 	return coins.Validate() == nil
@@ -471,7 +471,7 @@ func (coins Coins) SafeQuoInt(x math.Int) (Coins, bool) {
 
 // Max takes two valid Coins inputs and returns a valid Coins result
 // where for every denom D, AmountOf(D) of the result is the maximum
-// of AmountOf(D) of the inputs.  Note that the result might be not
+// of AmountOf(D) of the inputs.  Note that the result might not
 // be equal to either input. For any valid Coins a, b, and c, the
 // following are always true:
 //
@@ -517,7 +517,7 @@ func (coins Coins) Max(coinsB Coins) Coins {
 
 // Min takes two valid Coins inputs and returns a valid Coins result
 // where for every denom D, AmountOf(D) of the result is the minimum
-// of AmountOf(D) of the inputs.  Note that the result might be not
+// of AmountOf(D) of the inputs.  Note that the result might not
 // be equal to either input. For any valid Coins a, b, and c, the
 // following are always true:
 //
@@ -602,7 +602,7 @@ func (coins Coins) IsAllGTE(coinsB Coins) bool {
 	return true
 }
 
-// IsAllLT returns True iff for every denom in coins, the denom is present at
+// IsAllLT returns true iff for every denom in coins, the denom is present at
 // a smaller amount in coinsB.
 func (coins Coins) IsAllLT(coinsB Coins) bool {
 	return coinsB.IsAllGT(coins)
@@ -879,7 +879,7 @@ func ValidateDenom(denom string) error {
 	return nil
 }
 
-// ParseCoinNormalized parses and normalize a cli input for one coin type, returning errors if invalid or on an empty string
+// ParseCoinNormalized parses and normalizes a cli input for one coin type, returning errors if invalid or on an empty string
 // as well.
 // Expected format: "{amount}{denomination}"
 func ParseCoinNormalized(coinStr string) (coin Coin, err error) {
@@ -898,7 +898,7 @@ func ParseCoinNormalized(coinStr string) (coin Coin, err error) {
 // sanitized coins.
 // Otherwise, it will return an error.
 // If an empty string is provided to ParseCoinsNormalized, it returns nil Coins.
-// ParseCoinsNormalized supports decimal coins as inputs, and truncate them to int after converted to the smallest unit.
+// ParseCoinsNormalized supports decimal coins as inputs, and truncates them to int after converted to the smallest unit.
 // Expected format: "{amount0}{denomination},...,{amountN}{denominationN}"
 func ParseCoinsNormalized(coinStr string) (Coins, error) {
 	coins, err := ParseDecCoins(coinStr)

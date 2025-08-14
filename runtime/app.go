@@ -92,8 +92,8 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 
 // RegisterStores registers the provided store keys.
 // This method should only be used for registering extra stores
-// which is necessary for modules that not registered using the app config.
-// To be used in combination of RegisterModules.
+// which is necessary for modules that are not registered using the app config.
+// To be used in combination with RegisterModules.
 func (a *App) RegisterStores(keys ...storetypes.StoreKey) error {
 	a.storeKeys = append(a.storeKeys, keys...)
 	a.MountStores(keys...)
@@ -243,7 +243,7 @@ func (a *App) DefaultGenesis() map[string]json.RawMessage {
 	return a.basicManager.DefaultGenesis(a.cdc)
 }
 
-// GetStoreKeys returns all the stored store keys.
+// GetStoreKeys returns all the store keys.
 func (a *App) GetStoreKeys() []storetypes.StoreKey {
 	return a.storeKeys
 }

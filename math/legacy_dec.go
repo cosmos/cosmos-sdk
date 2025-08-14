@@ -185,7 +185,7 @@ func LegacyNewDecFromStr(str string) (LegacyDec, error) {
 		return LegacyDec{}, fmt.Errorf("value '%s' exceeds max precision by %d decimal places: max precision %d", str, LegacyPrecision-lenDecs, LegacyPrecision)
 	}
 
-	// add some extra zero's to correct to the Precision factor
+	// add some extra zeros to correct for the Precision factor
 	zerosToAdd := LegacyPrecision - lenDecs
 	zeros := strings.Repeat("0", zerosToAdd)
 	combinedStr += zeros
@@ -447,7 +447,7 @@ func (d LegacyDec) QuoInt64Mut(i int64) LegacyDec {
 // using Newton's method (where n is positive). The algorithm starts with some guess and
 // computes the sequence of improved guesses until an answer converges to an
 // approximate answer.  It returns `|d|.ApproxRoot() * -1` if input is negative.
-// A maximum number of 100 iterations is used a backup boundary condition for
+// A maximum number of 100 iterations is used as a backup boundary condition for
 // cases where the answer never converges enough to satisfy the main condition.
 func (d LegacyDec) ApproxRoot(root uint64) (guess LegacyDec, err error) {
 	defer func() {
@@ -526,7 +526,7 @@ func (d LegacyDec) PowerMut(power uint64) LegacyDec {
 }
 
 // ApproxSqrt is a wrapper around ApproxRoot for the common special case
-// of finding the square root of a number. It returns -(sqrt(abs(d)) if input is negative.
+// of finding the square root of a number. It returns -(sqrt(abs(d))) if input is negative.
 func (d LegacyDec) ApproxSqrt() (LegacyDec, error) {
 	return d.ApproxRoot(2)
 }

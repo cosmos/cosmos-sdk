@@ -21,10 +21,10 @@ type AppI interface {
 	// NOTE: This should NOT be sealed before being returned.
 	LegacyAmino() *codec.LegacyAmino
 
-	// BeginBlocker is logic run every begin block.
+	// BeginBlocker is the logic run at every begin block.
 	BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error)
 
-	// EndBlocker is logic run every end block.
+	// EndBlocker is the logic run at every end block.
 	EndBlocker(ctx sdk.Context) (sdk.EndBlock, error)
 
 	// InitChainer is the application update at chain (i.e app) initialization.

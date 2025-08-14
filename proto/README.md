@@ -1,7 +1,7 @@
 # Maintaining Cosmos SDK Proto Files
 
 All of the Cosmos SDK proto files are defined here. This folder should
-be synced regularly with buf.build/cosmos/cosmos-sdk regularly by
+be synced regularly with buf.build/cosmos/cosmos-sdk by
 a maintainer by running `buf push` in this folder.
 
 User facing documentation should not be placed here but instead goes in

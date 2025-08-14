@@ -21,7 +21,7 @@ func (u Uint) BigInt() *big.Int {
 	return new(big.Int).Set(u.i)
 }
 
-// BigIntMut converts Uint to big.Int, mutative the input
+// BigIntMut converts Uint to big.Int, mutating the input
 func (u Uint) BigIntMut() *big.Int {
 	if u.IsNil() {
 		return nil
@@ -78,7 +78,7 @@ func (u Uint) Uint64() uint64 {
 	return u.i.Uint64()
 }
 
-// IsZero returns 1 if the uint equals to 0.
+// IsZero returns 1 if the uint equals 0.
 func (u Uint) IsZero() bool { return u.Equal(ZeroUint()) }
 
 // Equal compares two Uints

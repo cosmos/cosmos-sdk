@@ -74,7 +74,7 @@ inter-block-cache = {{ .BaseConfig.InterBlockCache }}
 # ["message.sender", "message.recipient"]
 index-events = [{{ range .BaseConfig.IndexEvents }}{{ printf "%q, " . }}{{end}}]
 
-# IavlCacheSize set the size of the iavl tree cache (in number of nodes).
+# IavlCacheSize sets the size of the iavl tree cache (in number of nodes).
 iavl-cache-size = {{ .BaseConfig.IAVLCacheSize }}
 
 # IAVLDisableFastNode enables or disables the fast node feature of IAVL. 
@@ -96,7 +96,7 @@ app-db-backend = "{{ .BaseConfig.AppDBBackend }}"
 service-name = "{{ .Telemetry.ServiceName }}"
 
 # Enabled enables the application telemetry functionality. When enabled,
-# an in-memory sink is also enabled by default. Operators may also enabled
+# an in-memory sink is also enabled by default. Operators may also enable
 # other sinks such as Prometheus.
 enabled = {{ .Telemetry.Enabled }}
 
@@ -239,7 +239,7 @@ stop-node-on-err = {{ .Streaming.ABCI.StopNodeOnErr }}
 ###############################################################################
 
 [mempool]
-# Setting max-txs to 0 will allow for a unbounded amount of transactions in the mempool.
+# Setting max-txs to 0 will allow for an unbounded amount of transactions in the mempool.
 # Setting max_txs to negative 1 (-1) will disable transactions from being inserted into the mempool (no-op mempool).
 # Setting max_txs to a positive number (> 0) will limit the number of transactions in the mempool, by the specified amount.
 #

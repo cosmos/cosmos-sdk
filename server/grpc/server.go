@@ -81,7 +81,7 @@ func StartGRPCServer(ctx context.Context, logger log.Logger, cfg config.GRPCConf
 
 	errCh := make(chan error)
 
-	// Start the gRPC in an external goroutine as Serve is blocking and will return
+	// Start the gRPC server in an external goroutine as Serve is blocking and will return
 	// an error upon failure, which we'll send on the error channel that will be
 	// consumed by the for block below.
 	go func() {

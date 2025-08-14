@@ -18,7 +18,7 @@ jobs:
   split-test-files:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
           go-version: "1.24"
@@ -52,7 +52,7 @@ jobs:
       matrix:
         part: ["00", "01", "02", "03"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
           go-version: "1.24"
@@ -86,7 +86,7 @@ jobs:
   test-integration:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
           go-version: "1.24"
@@ -117,7 +117,7 @@ jobs:
   test-e2e:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
           go-version: "1.24"
@@ -149,7 +149,7 @@ jobs:
     runs-on: depot-ubuntu-22.04-4
     needs: [tests, test-integration, test-e2e]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: technote-space/get-diff-action@v6.1.2
         id: git_diff
         with:
@@ -188,7 +188,7 @@ jobs:
   test-sim-nondeterminism:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
           go-version: "1.24"
@@ -221,7 +221,7 @@ jobs:
   test-clientv2:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
           go-version: "1.24"
@@ -244,7 +244,7 @@ jobs:
   test-core:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
           go-version: "1.24"
@@ -267,7 +267,7 @@ jobs:
   test-depinject:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
@@ -290,7 +290,7 @@ jobs:
   test-errors:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
@@ -313,7 +313,7 @@ jobs:
   test-math:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
@@ -336,7 +336,7 @@ jobs:
   test-schema:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
           go-version: "1.12"
@@ -358,7 +358,7 @@ jobs:
   test-collections:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
           go-version: "1.24"
@@ -381,7 +381,7 @@ jobs:
   test-cosmovisor:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
           go-version: "1.24"
@@ -404,7 +404,7 @@ jobs:
   test-confix:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
           go-version: "1.24"
@@ -427,7 +427,7 @@ jobs:
   test-store:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
           go-version: "1.24"
@@ -451,7 +451,7 @@ jobs:
   test-log:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
           go-version: "1.24"
@@ -481,7 +481,7 @@ jobs:
   test-x-tx:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
           go-version: "1.24"
@@ -504,7 +504,7 @@ jobs:
   test-tools-benchmark:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
           go-version: "1.23.2"

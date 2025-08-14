@@ -48,7 +48,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
 			Service:              authzv1beta1.Msg_ServiceDesc.ServiceName,
-			EnhanceCustomCommand: false, // use custom commands only until v0.51
+			EnhanceCustomCommand: true,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "Exec",

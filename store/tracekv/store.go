@@ -91,7 +91,7 @@ func (tkv *Store) ReverseIterator(start, end []byte) types.Iterator {
 }
 
 // iterator facilitates iteration over a KVStore. It delegates the necessary
-// calls to it's parent KVStore.
+// calls to its parent KVStore.
 func (tkv *Store) iterator(start, end []byte, ascending bool) types.Iterator {
 	var parent types.Iterator
 

@@ -9,7 +9,7 @@ Gather relevant insights about your application and modules with custom metrics 
 :::
 
 The Cosmos SDK enables operators and developers to gain insight into the performance and behavior of
-their application through the use of the `telemetry` package. To enable telemetrics, set `telemetry.enabled = true` in the app.toml config file.
+their application through the use of the `telemetry` package. To enable telemetry, set `telemetry.enabled = true` in the app.toml config file.
 
 The Cosmos SDK currently supports enabling in-memory and prometheus as telemetry sinks. In-memory sink is always attached (when the telemetry is enabled) with 10 second interval and 1 minute retention. This means that metrics will be aggregated over 10 seconds, and metrics will be kept alive for 1 minute.
 

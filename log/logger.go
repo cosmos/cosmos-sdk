@@ -202,7 +202,7 @@ func (l zeroLogWrapper) WithContext(keyVals ...interface{}) any {
 }
 
 // Impl returns the underlying zerolog logger.
-// It can be used to used zerolog structured API directly instead of the wrapper.
+// It can be used to use zerolog structured API directly instead of the wrapper.
 func (l zeroLogWrapper) Impl() interface{} {
 	return l.Logger
 }

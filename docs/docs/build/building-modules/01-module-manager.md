@@ -5,7 +5,7 @@ sidebar_position: 1
 # Module Manager
 
 :::note Synopsis
-Cosmos SDK modules need to implement the [`AppModule` interfaces](#application-module-interfaces), in order to be managed by the application's [module manager](#module-manager). The module manager plays an important role in [`message` and `query` routing](../../learn/advanced/00-baseapp.md#routing), and allows application developers to set the order of execution of a variety of functions like [`PreBlocker`](../../learn/beginner/00-app-anatomy.md#preblocker) and [`BeginBlocker` and `EndBlocker`](../../learn/beginner/00-app-anatomy.md#begingblocker-and-endblocker).
+Cosmos SDK modules need to implement the [`AppModule` interfaces](#application-module-interfaces), in order to be managed by the application's [module manager](#module-manager). The module manager plays an important role in [`message` and `query` routing](../../learn/advanced/00-baseapp.md#routing), and allows application developers to set the order of execution of a variety of functions like [`PreBlocker`](../../learn/beginner/00-app-anatomy.md#preblocker) and [`BeginBlocker` and `EndBlocker`](../../learn/beginner/00-app-anatomy.md#beginblocker-and-endblocker).
 :::
 
 :::note Pre-requisite Readings
@@ -29,7 +29,7 @@ There are 2 main application module interfaces:
 * [`appmodule.AppModule` / `module.AppModule`](#appmodule) for inter-dependent module functionalities (except genesis-related functionalities).
 * (legacy) [`module.AppModuleBasic`](#appmodulebasic) for independent module functionalities. New modules can use `module.CoreAppModuleBasicAdaptor` instead.
 
-The above interfaces are mostly embedding smaller interfaces (extension interfaces), that defines specific functionalities:
+The above interfaces are mostly embedding smaller interfaces (extension interfaces), that define specific functionalities:
 
 * (legacy) `module.HasName`: Allows the module to provide its own name for legacy purposes.
 * (legacy) [`module.HasGenesisBasics`](#modulehasgenesisbasics): The legacy interface for stateless genesis methods.
@@ -144,7 +144,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/types/module/module.go#L199-L2
 
 ### `HasInvariants`
 
-This interface defines one method. It allows to checks if a module can register invariants.
+This interface defines one method. It allows checking if a module can register invariants.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/types/module/module.go#L211-L214
@@ -154,7 +154,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/types/module/module.go#L211-L2
 
 ### `HasServices`
 
-This interface defines one method. It allows to checks if a module can register invariants.
+This interface defines one method. It allows checking if a module can register services.
 
 #### `appmodule.HasService`
 
@@ -196,7 +196,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/core/appmodule/module.go#L73-L
 
 ### `HasEndBlocker`
 
-The `HasEndBlocker` is an extension interface from `appmodule.AppModule`. All modules that have an `EndBlock` method implement this interface. If a module need to return validator set updates (staking), they can use `HasABCIEndBlock`
+The `HasEndBlocker` is an extension interface from `appmodule.AppModule`. All modules that have an `EndBlock` method implement this interface. If a module needs to return validator set updates (staking), they can use `HasABCIEndBlock`
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/core/appmodule/module.go#L83-L89

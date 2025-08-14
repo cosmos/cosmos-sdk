@@ -401,7 +401,7 @@ const (
     VoteAbstain     = 0x4
 )
 
-type ProposalType  string
+type ProposalType string
 
 const (
     ProposalTypePlainText       = "Text"

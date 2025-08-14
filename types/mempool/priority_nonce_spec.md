@@ -116,7 +116,7 @@ because of the transactions following them, tx(priority=99) must be selected bef
 | B      | 1     | 20       |
 | B      | 3     | 4        |
 | C      | 0     | 2        |
-| C      | 3     | 7        |
+| C      | 3     | 90        |
 
 ```mermaid
 graph TD

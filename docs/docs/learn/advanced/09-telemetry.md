@@ -13,7 +13,7 @@ their application through the use of the `telemetry` package. To enable telemetr
 
 The Cosmos SDK currently supports enabling in-memory and prometheus as telemetry sinks. In-memory sink is always attached (when the telemetry is enabled) with 10 second interval and 1 minute retention. This means that metrics will be aggregated over 10 seconds, and metrics will be kept alive for 1 minute.
 
-To query active metrics (see retention note above) you have to enable API server (`api.enabled = true` in the app.toml). Single API endpoint is exposed: `http://localhost:1317/metrics?format={text|prometheus}`, the default being `text`.
+To query active metrics (see retention note above) you have to enable API server (`api.enabled = true` in the app.toml). A single API endpoint is exposed: `http://localhost:1317/metrics?format={text|prometheus}`, the default being `text`.
 
 ## Emitting metrics
 

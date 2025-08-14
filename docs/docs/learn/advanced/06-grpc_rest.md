@@ -69,7 +69,7 @@ If, for various reasons, you cannot use gRPC (for example, you are building a we
 https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/proto/cosmos/bank/v1beta1/query.proto#L23-L30
 ```
 
-For application developers, gRPC-gateway REST routes needs to be wired up to the REST server, this is done by calling the `RegisterGRPCGatewayRoutes` function on the ModuleManager.
+For application developers, gRPC-gateway REST routes need to be wired up to the REST server, this is done by calling the `RegisterGRPCGatewayRoutes` function on the ModuleManager.
 
 ### Swagger
 

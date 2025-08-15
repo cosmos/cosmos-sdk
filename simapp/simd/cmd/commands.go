@@ -91,7 +91,7 @@ func initAppConfig() (string, interface{}) {
 	// And we set the default config to the custom app template.
 	customAppTemplate := serverconfig.DefaultConfigTemplate + `
 [custom]
-# That field will be parsed by server.InterceptConfigsPreRunHandler and held by viper.
+# This field will be parsed by server.InterceptConfigsPreRunHandler and held by viper.
 # Do not forget to add quotes around the value if it is a string.
 custom-field = "{{ .Custom.CustomField }}"`
 

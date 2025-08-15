@@ -1,6 +1,6 @@
 /*
 NOTE: Usage of x/params to manage parameters is deprecated in favor of x/gov
-controlled execution of MsgUpdateParams messages. These types remains solely
+controlled execution of MsgUpdateParams messages. These types remain solely
 for migration purposes and will be removed in a future release.
 */
 package types

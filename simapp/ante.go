@@ -30,6 +30,11 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		return nil, errors.New("sign mode handler is required for ante builder")
 	}
 
+	// Inserted: ensure CircuitKeeper is provided to avoid a panic at runtime.
+	if options.CircuitKeeper == nil {
+		return nil, errors.New("circuit keeper is required for ante builder")
+	}
+
 	anteDecorators := []sdk.AnteDecorator{
 		ante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
 		circuitante.NewCircuitBreakerDecorator(options.CircuitKeeper),

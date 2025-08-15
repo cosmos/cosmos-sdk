@@ -153,8 +153,8 @@ func (s *Server) Start(ctx context.Context, cfg config.Config) error {
 	// register grpc-gateway routes (after grpc-web server as the first match is used)
 	s.Router.PathPrefix("/").Handler(s.GRPCGatewayRouter)
 
-	errCh := make(chan error)
-
+	errCh := make(chan error, 1)
+	
 	// Start the API in an external goroutine as Serve is blocking and will return
 	// an error upon failure, which we'll send on the error channel that will be
 	// consumed by the for block below.

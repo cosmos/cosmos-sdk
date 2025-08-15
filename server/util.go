@@ -63,11 +63,15 @@ func NewContext(v *viper.Viper, config *cmtcfg.Config, logger log.Logger) *Conte
 }
 
 func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = fmt.Errorf("bindFlags failed: %v", r)
-		}
-	}()
+    defer func() {
+        if r := recover(); r != nil {
+            if e, ok := r.(error); ok {
+                err = fmt.Errorf("bindFlags failed: %w", e)
+            } else {
+                err = fmt.Errorf("bindFlags failed: %v", r)
+            }
+        }
+    }(
 
 	cmd.Flags().VisitAll(func(f *pflag.Flag) {
 		// Environment variables can't have dashes in them, so bind them to their equivalent

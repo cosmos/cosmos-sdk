@@ -71,7 +71,7 @@ func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) 
                 err = fmt.Errorf("bindFlags failed: %v", r)
             }
         }
-    }(
+    }()
 
 	cmd.Flags().VisitAll(func(f *pflag.Flag) {
 		// Environment variables can't have dashes in them, so bind them to their equivalent

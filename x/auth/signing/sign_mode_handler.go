@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
-// SignModeHandler defines a interface to be implemented by types which will handle
+// SignModeHandler defines an interface to be implemented by types which will handle
 // SignMode's by generating sign bytes from a Tx and SignerData
 type SignModeHandler interface {
 	// DefaultMode is the default mode that is to be used with this handler if no

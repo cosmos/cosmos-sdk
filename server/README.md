@@ -1,7 +1,7 @@
 # Server
 
 The `server` package is responsible for providing the mechanisms necessary to
-start an ABCI CometBFT application and provides the CLI framework (based on [cobra](https://github.com/spf13/cobra))
+start an ABCI CometBFT application and provide the CLI framework (based on [cobra](https://github.com/spf13/cobra))
 necessary to fully bootstrap an application. The package exposes two core functions: `StartCmd`
 and `ExportCmd` which creates commands to start the application and export state respectively.
 
@@ -10,12 +10,12 @@ and `ExportCmd` which creates commands to start the application and export state
 The root command of an application typically is constructed with:
 
 * command to start an application binary
-* three meta commands: `query`, `tx`, and a few auxiliary commands such as `genesis`.
+* three meta commands: `query`, `tx`, and a few auxiliary commands such as `genesis`
 utilities.
 
 It is vital that the root command of an application uses `PersistentPreRun()` cobra command
 property for executing the command, so all child commands have access to the server and client contexts.
-These contexts are set as their default values initially and maybe modified,
+These contexts are set as their default values initially and may be modified,
 scoped to the command, in their respective `PersistentPreRun()` functions. Note that
 the `client.Context` is typically pre-populated with "default" values that may be
 useful for all commands to inherit and override if necessary.
@@ -68,7 +68,7 @@ former creates a CometBFT service and the latter creates a CometBFT Node.
 
 Under the hood, `StartCmd` will call `GetServerContextFromCmd`, which provides
 the command access to a `server.Context`. This context provides access to the
-viper literal, the CometBFT config and logger. This allows flags to be bound
+viper literal, the CometBFT config and logger. This allows flags to be bound to
 the viper literal and passed to the application construction.
 
 Example:

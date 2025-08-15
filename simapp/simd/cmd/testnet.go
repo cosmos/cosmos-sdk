@@ -178,7 +178,7 @@ Example:
 	return cmd
 }
 
-// testnetStartCmd returns a cmd to start multi validator in-process testnet
+// testnetStartCmd returns a cmd to start a multi-validator in-process testnet
 func testnetStartCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",

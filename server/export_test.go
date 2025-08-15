@@ -86,12 +86,12 @@ func NewExportSystem(t *testing.T, exporter types.AppExporter) *ExportSystem {
 	}
 }
 
-// Run wraps (*cmdtest.System).RunC, providing e's context.
+// Run wraps (*cmdtest.System).RunC, providing s's context.
 func (s *ExportSystem) Run(args ...string) cmdtest.RunResult {
 	return s.sys.RunC(s.Ctx, args...)
 }
 
-// MustRun wraps (*cmdtest.System).MustRunC, providing e's context.
+// MustRun wraps (*cmdtest.System).MustRunC, providing s's context.
 func (s *ExportSystem) MustRun(t *testing.T, args ...string) cmdtest.RunResult {
 	t.Helper()
 

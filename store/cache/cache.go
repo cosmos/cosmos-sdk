@@ -79,7 +79,7 @@ func (cmgr *CommitKVStoreCacheManager) Unwrap(key types.StoreKey) types.CommitKV
 	return nil
 }
 
-// Reset resets in the internal caches.
+// Reset resets the internal caches.
 func (cmgr *CommitKVStoreCacheManager) Reset() {
 	// Clear the map.
 	// Please note that we are purposefully using the map clearing idiom.

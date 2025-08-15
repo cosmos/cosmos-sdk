@@ -143,7 +143,7 @@ func (iter *cacheMergeIterator) Close() error {
 	return err1
 }
 
-// Error returns an error if the cacheMergeIterator is invalid defined by the
+// Error returns an error if the cacheMergeIterator is invalid as defined by the
 // Valid method.
 func (iter *cacheMergeIterator) Error() error {
 	if !iter.Valid() {

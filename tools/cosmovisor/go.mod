@@ -3,7 +3,7 @@ module cosmossdk.io/tools/cosmovisor
 go 1.23.5
 
 require (
-	cosmossdk.io/log v1.6.0
+	cosmossdk.io/log v1.6.1
 	github.com/cometbft/cometbft-db v1.0.4
 	github.com/cometbft/cometbft/v2 v2.0.0-rc1
 	github.com/cosmos/cosmos-sdk v0.54.0-rc.1

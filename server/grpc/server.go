@@ -79,7 +79,7 @@ func StartGRPCServer(ctx context.Context, logger log.Logger, cfg config.GRPCConf
 		return fmt.Errorf("failed to listen on address %s: %w", cfg.Address, err)
 	}
 
-	errCh := make(chan error)
+	errCh := make(chan error, 1)
 
 	// Start the gRPC server in an external goroutine as Serve is blocking and will return
 	// an error upon failure, which we'll send on the error channel that will be

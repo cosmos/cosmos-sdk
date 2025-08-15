@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/client/v2 v2.10.0-beta.4
 	cosmossdk.io/core v1.1.0-rc.1
 	cosmossdk.io/depinject v1.2.1
-	cosmossdk.io/log v1.6.0
+	cosmossdk.io/log v1.6.1
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/store v1.10.0-rc.2
 	cosmossdk.io/tools/confix v0.2.0-rc.4

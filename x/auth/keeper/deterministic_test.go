@@ -88,7 +88,7 @@ func (suite *DeterministicTestSuite) SetupTest() {
 	suite.accountNumberLanes = 1
 }
 
-// createAndSetAccount creates a random account and sets to the keeper store.
+// createAndSetAccount creates a random account and sets them to the keeper store.
 func (suite *DeterministicTestSuite) createAndSetAccounts(t *rapid.T, count int) []sdk.AccountI {
 	accs := make([]sdk.AccountI, 0, count)
 

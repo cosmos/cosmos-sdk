@@ -13,7 +13,7 @@ import (
 func TestNewModuleCredentials(t *testing.T) {
 	// wrong derivation keys
 	_, err := authtypes.NewModuleCredential("group", []byte{})
-	require.Error(t, err, "derivation keys must be non empty")
+	require.Error(t, err, "derivation keys must be non-empty")
 	_, err = authtypes.NewModuleCredential("group", [][]byte{{0x0, 0x30}, {}}...)
 	require.Error(t, err)
 

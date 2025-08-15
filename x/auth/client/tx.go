@@ -105,7 +105,7 @@ func ReadTxFromFile(ctx client.Context, filename string) (tx sdk.Tx, err error) 
 	return ctx.TxConfig.TxJSONDecoder()(bytes)
 }
 
-// ReadTxsFromInput reads multiples txs from the given filename(s). Can pass "-" to read from stdin.
+// ReadTxsFromInput reads multiple txs from the given filename(s). Can pass "-" to read from stdin.
 // Unlike ReadTxFromFile, this function does not decode the txs.
 func ReadTxsFromInput(txCfg client.TxConfig, filenames ...string) (scanner *BatchScanner, err error) {
 	if len(filenames) == 0 {

@@ -91,7 +91,7 @@ func SanitizeGenesisAccounts(genAccs GenesisAccounts) GenesisAccounts {
 		}
 	}
 
-	// dupAccNums a sorted list of the account numbers with duplicates.
+	// dupAccNums is a sorted list of the account numbers with duplicates.
 	var dupAccNums []uint64
 	for num := range dupAccNum {
 		dupAccNums = append(dupAccNums, num)

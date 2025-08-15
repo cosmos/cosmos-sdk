@@ -50,7 +50,9 @@ func (b balanceByAddress) Swap(i, j int) {
 	b.balances[i], b.balances[j] = b.balances[j], b.balances[i]
 }
 
-// SanitizeGenesisBalances sorts addresses and coin sets.
+// SanitizeGenesisBalances sorts balances by account address.
+// It does not reorder the coins within each balance; it assumes coin sets
+// are already valid and normalized elsewhere.
 func SanitizeGenesisBalances(balances []Balance) []Balance {
 	// Given that this function sorts balances, using the standard library's
 	// Quicksort based algorithms, we have algorithmic complexities of:

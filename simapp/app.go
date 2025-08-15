@@ -532,7 +532,7 @@ func NewSimApp(
 		protocolpool.NewAppModule(app.ProtocolPoolKeeper, app.AccountKeeper, app.BankKeeper),
 	)
 
-	// BasicModuleManager defines the module BasicManager is in charge of setting up basic,
+	// BasicModuleManager defines the module BasicManager that is in charge of setting up basic,
 	// non-dependent module elements, such as codec registration and genesis verification.
 	// By default it is composed of all the module from the module manager.
 	// Additionally, app module basics can be overwritten by passing them as argument.
@@ -652,7 +652,7 @@ func NewSimApp(
 
 	// create the simulation manager and define the order of the modules for deterministic simulations
 	//
-	// NOTE: this is not required apps that don't use the simulator for fuzz testing
+	// NOTE: this is not required for apps that don't use the simulator for fuzz testing
 	// transactions
 	overrideModules := map[string]module.AppModuleSimulation{
 		authtypes.ModuleName: auth.NewAppModule(app.appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts, nil),

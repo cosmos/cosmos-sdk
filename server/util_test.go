@@ -95,7 +95,7 @@ func TestInterceptConfigsPreRunHandlerCreatesConfigFilesWhenMissing(t *testing.T
 	}
 
 	if s.Size() == 0 {
-		t.Fatal("config.toml created as empty file")
+		t.Fatal("app.toml created as empty file")
 	}
 
 	// Test that the config for use in server/start.go is created

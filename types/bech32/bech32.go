@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/btcutil/bech32"
 )
 
-// ConvertAndEncode converts from a base256 encoded byte string to base32 encoded byte string and then to bech32.
+// ConvertAndEncode converts from a base256 encoded byte string to a base32 encoded byte string and then to bech32.
 func ConvertAndEncode(hrp string, data []byte) (string, error) {
 	converted, err := bech32.ConvertBits(data, 8, 5, true)
 	if err != nil {

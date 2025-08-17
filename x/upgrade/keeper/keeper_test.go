@@ -138,7 +138,7 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 			expPass: false,
 		},
 		{
-			name: "unsuccessful height schedule: due date in past",
+			name: "unsuccessful height schedule: due date in the past",
 			plan: types.Plan{
 				Name:   "all-good",
 				Info:   "some text here",

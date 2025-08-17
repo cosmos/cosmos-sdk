@@ -12,11 +12,13 @@ import (
 	isatty "github.com/mattn/go-isatty"
 )
 
-// MinPassLength is the minimum acceptable password length
+// MinPassLength is the minimum acceptable password length for security requirements
 const MinPassLength = 8
 
-// GetPassword will prompt for a password one-time (to sign a tx)
-// It enforces the password length
+// GetPassword prompts for a password with appropriate input method based on terminal type.
+// For interactive terminals, uses speakeasy to hide input and provide secure prompting.
+// For non-interactive input (pipes/files), reads from the provided buffer.
+// Enforces minimum password length and returns the password or an error.
 func GetPassword(prompt string, buf *bufio.Reader) (pass string, err error) {
 	if inputIsTty() {
 		pass, err = speakeasy.FAsk(os.Stderr, prompt)
@@ -37,9 +39,10 @@ func GetPassword(prompt string, buf *bufio.Reader) (pass string, err error) {
 	return pass, nil
 }
 
-// GetConfirmation will request user give the confirmation from stdin.
-// "y", "Y", "yes", "YES", and "Yes" all count as confirmations.
-// If the input is not recognized, it returns false and a nil error.
+// GetConfirmation prompts for user confirmation with flexible input parsing.
+// Accepts "y", "Y", "yes", "YES", and "Yes" as positive confirmations.
+// Any other input (including empty) is treated as negative confirmation.
+// Returns true for positive confirmation, false otherwise, with nil error.
 func GetConfirmation(prompt string, r *bufio.Reader, w io.Writer) (bool, error) {
 	if inputIsTty() {
 		_, _ = fmt.Fprintf(w, "%s [y/N]: ", prompt)
@@ -63,7 +66,10 @@ func GetConfirmation(prompt string, r *bufio.Reader, w io.Writer) (bool, error) 
 	return false, nil
 }
 
-// GetString simply returns the trimmed string output of a given reader.
+// GetString prompts for and reads a string input, trimming whitespace.
+// For interactive terminals, displays the prompt on stderr.
+// For non-interactive input, reads silently from the provided buffer.
+// Returns the trimmed string or an error if reading fails.
 func GetString(prompt string, buf *bufio.Reader) (string, error) {
 	if inputIsTty() && prompt != "" {
 		fmt.Fprintf(os.Stderr, "> %s\n", prompt)
@@ -77,16 +83,18 @@ func GetString(prompt string, buf *bufio.Reader) (string, error) {
 	return strings.TrimSpace(out), nil
 }
 
-// inputIsTty returns true iff we have an interactive prompt,
-// where we can disable echo and request to repeat the password.
-// If false, we can optimize for piped input from another command
+// inputIsTty determines if stdin is connected to an interactive terminal.
+// Returns true for interactive prompts where we can control input behavior
+// (e.g., hide password input, request confirmation). Returns false for
+// piped input from other commands where we optimize for non-interactive use.
 func inputIsTty() bool {
 	return isatty.IsTerminal(os.Stdin.Fd()) || isatty.IsCygwinTerminal(os.Stdin.Fd())
 }
 
-// readLineFromBuf reads one line from reader.
-// Subsequent calls reuse the same buffer, so we don't lose
-// any input when reading a password twice (to verify)
+// readLineFromBuf reads one line from the provided buffer reader.
+// Handles EOF gracefully by returning partial input if available.
+// Subsequent calls reuse the same buffer, preserving input across
+// multiple reads (useful for password verification scenarios).
 func readLineFromBuf(buf *bufio.Reader) (string, error) {
 	pass, err := buf.ReadString('\n')
 

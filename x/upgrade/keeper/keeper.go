@@ -50,7 +50,7 @@ type Keeper struct {
 
 // NewKeeper constructs an upgrade Keeper which requires the following arguments:
 // skipUpgradeHeights - map of heights to skip an upgrade
-// storeKey - a store key with which to access upgrade's store
+// storeKey - a store key with which to access the upgrade's store
 // cdc - the app-wide binary codec
 // homePath - root directory of the application's config
 // vs - the interface implemented by baseapp which allows setting baseapp's protocol version field
@@ -131,7 +131,7 @@ func (k Keeper) SetModuleVersionMap(ctx context.Context, vm module.VersionMap) e
 	if len(vm) > 0 {
 		store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 		versionStore := prefix.NewStore(store, []byte{types.VersionMapByte})
-		// Even though the underlying store (cachekv) store is sorted, we still
+		// Even though the underlying store (cachekv) is sorted, we still
 		// prefer a deterministic iteration order of the map, to avoid undesired
 		// surprises if we ever change stores.
 		sortedModNames := make([]string, 0, len(vm))
@@ -231,7 +231,7 @@ func (k Keeper) ScheduleUpgrade(ctx context.Context, plan types.Plan) error {
 		return err
 	}
 
-	// NOTE: allow for the possibility of chains to schedule upgrades in begin block of the same block
+	// NOTE: allow for the possibility of chains to schedule upgrades in the beginning block of the same block
 	// as a strategy for emergency hard fork recoveries
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	if plan.Height < sdkCtx.HeaderInfo().Height {
@@ -249,7 +249,7 @@ func (k Keeper) ScheduleUpgrade(ctx context.Context, plan types.Plan) error {
 
 	store := k.storeService.OpenKVStore(ctx)
 
-	// clear any old IBC state stored by previous plan
+	// clear any old IBC state stored by the previous plan
 	oldPlan, err := k.GetUpgradePlan(ctx)
 	// if there's an error but it's not ErrNoUpgradePlanFound, return error
 	if err != nil && !errors.Is(err, types.ErrNoUpgradePlanFound) {
@@ -392,7 +392,7 @@ func (k Keeper) ClearIBCState(ctx context.Context, lastHeight int64) error {
 
 // ClearUpgradePlan clears any schedule upgrade and associated IBC states.
 func (k Keeper) ClearUpgradePlan(ctx context.Context) error {
-	// clear IBC states every time upgrade plan is removed
+	// clear IBC states every time the upgrade plan is removed
 	oldPlan, err := k.GetUpgradePlan(ctx)
 	if err != nil {
 		// if there's no upgrade plan, return nil to match previous behavior

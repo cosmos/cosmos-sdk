@@ -17,7 +17,7 @@ const (
 	// PlanByte specifies the Byte under which a pending upgrade plan is stored in the store
 	PlanByte = 0x0
 
-	// DoneByte is a prefix to look up completed upgrade plan by name
+	// DoneByte is a prefix to look up the completed upgrade plan by name
 	DoneByte = 0x1
 
 	// VersionMapByte is a prefix to look up module names (key) and versions (value)
@@ -26,13 +26,13 @@ const (
 	// ProtocolVersionByte is a prefix to look up Protocol Version
 	ProtocolVersionByte = 0x3
 
-	// KeyUpgradedIBCState is the key under which upgraded ibc state is stored in the upgrade store
+	// KeyUpgradedIBCState is the key under which the upgraded IBC state is stored in the upgrade store
 	KeyUpgradedIBCState = "upgradedIBCState"
 
-	// KeyUpgradedClient is the sub-key under which upgraded client state will be stored
+	// KeyUpgradedClient is the sub-key under which the upgraded client state will be stored
 	KeyUpgradedClient = "upgradedClient"
 
-	// KeyUpgradedConsState is the sub-key under which upgraded consensus state will be stored
+	// KeyUpgradedConsState is the sub-key under which the upgraded consensus state will be stored
 	KeyUpgradedConsState = "upgradedConsState"
 )
 

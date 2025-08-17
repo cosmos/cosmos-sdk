@@ -908,7 +908,11 @@ func (app *BaseApp) runTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx) (gInfo s
 
 	// Run optional postHandlers (should run regardless of the execution result).
 	//
-	// Note: If the postHandler fails, we also revert the runMsgs state.
+	// PostHandler execution follows specific error handling rules:
+	// - If postHandler fails and main execution succeeded, return only postHandler error
+	// - If postHandler fails and main execution failed, wrap postHandler error with main error
+	// - This preserves original error codes for better user experience while ensuring
+	//   postHandler errors are not lost when main execution succeeds.
 	if app.postHandler != nil {
 		// The runMsgCtx context currently contains events emitted by the ante handler.
 		// We clear this to correctly order events without duplicates.

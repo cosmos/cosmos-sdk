@@ -63,7 +63,7 @@ func (k Keeper) ModuleVersions(c context.Context, req *types.QueryModuleVersions
 	if len(req.ModuleName) > 0 {
 		version, err := k.getModuleVersion(ctx, req.ModuleName)
 		if err != nil {
-			// module requested, but not found or error happened
+			// module requested, but not found or an error occurred
 			return nil, errorsmod.Wrapf(err, "x/upgrade: QueryModuleVersions module %s not found", req.ModuleName)
 		}
 

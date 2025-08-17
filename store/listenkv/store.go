@@ -52,19 +52,19 @@ func (s *Store) Has(key []byte) bool {
 }
 
 // Iterator implements the KVStore interface. It delegates the Iterator call
-// the to the parent KVStore.
+// to the parent KVStore.
 func (s *Store) Iterator(start, end []byte) types.Iterator {
 	return s.iterator(start, end, true)
 }
 
 // ReverseIterator implements the KVStore interface. It delegates the
-// ReverseIterator call the to the parent KVStore.
+// ReverseIterator call to the parent KVStore.
 func (s *Store) ReverseIterator(start, end []byte) types.Iterator {
 	return s.iterator(start, end, false)
 }
 
 // iterator facilitates iteration over a KVStore. It delegates the necessary
-// calls to it's parent KVStore.
+// calls to its parent KVStore.
 func (s *Store) iterator(start, end []byte, ascending bool) types.Iterator {
 	var parent types.Iterator
 

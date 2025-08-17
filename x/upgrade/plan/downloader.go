@@ -23,13 +23,13 @@ import (
 //	If the archive does not contain either /bin/{daemonName} or /{daemonName}, an error is returned.
 //
 // If dstRoot already exists, some or all of its contents might be updated.
-// NOTE: This functions does not check the provided url for validity.
+// NOTE: This function does not check the provided url for validity.
 func DownloadUpgrade(dstRoot, url, daemonName string) error {
 	target := filepath.Join(dstRoot, "bin", daemonName)
 
 	// First try to download it as a single file. If there's no error, it's okay and we're done.
 	if err := getFile(url, target); err != nil {
-		// If it was a checksum error, no need to try as directory.
+		// If it was a checksum error, no need to try as a directory.
 		var checksumError *getter.ChecksumError
 		if errors.As(err, &checksumError) {
 			return err

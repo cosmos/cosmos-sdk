@@ -41,7 +41,7 @@ func PreBlocker(ctx context.Context, k *keeper.Keeper) (appmodule.ResponsePreBlo
 		// It'll panic in these cases if there is no upgrade handler registered for the last applied upgrade.
 		// 1. If there is no scheduled upgrade.
 		// 2. If the plan is not ready.
-		// 3. If the plan is ready and skip upgrade height is set for current height.
+		// 3. If the plan is ready and the skip upgrade height is set for the current height.
 		if !found || !plan.ShouldExecute(blockHeight) || (plan.ShouldExecute(blockHeight) && k.IsSkipHeight(blockHeight)) {
 			lastAppliedPlan, _, err := k.GetLastCompletedUpgrade(ctx)
 			if err != nil {
@@ -69,14 +69,14 @@ func PreBlocker(ctx context.Context, k *keeper.Keeper) (appmodule.ResponsePreBlo
 
 	logger := k.Logger(ctx)
 
-	// To make sure clear upgrade is executed at the same block
+	// To make sure a clear upgrade is executed at the same block
 	if plan.ShouldExecute(blockHeight) {
-		// If skip upgrade has been set for current height, we clear the upgrade plan
+		// If skip upgrade has been set for the current height, we clear the upgrade plan
 		if k.IsSkipHeight(blockHeight) {
 			skipUpgradeMsg := fmt.Sprintf("UPGRADE \"%s\" SKIPPED at %d: %s", plan.Name, plan.Height, plan.Info)
 			logger.Info(skipUpgradeMsg)
 
-			// Clear the upgrade plan at current height
+			// Clear the upgrade plan at the current height
 			if err := k.ClearUpgradePlan(ctx); err != nil {
 				return nil, err
 			}

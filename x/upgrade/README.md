@@ -36,7 +36,7 @@ to occur. A `Plan` can be scheduled at a specific block height.
 A `Plan` is created once a (frozen) release candidate along with an appropriate upgrade
 `Handler` (see below) is agreed upon, where the `Name` of a `Plan` corresponds to a
 specific `Handler`. Typically, a `Plan` is created through a governance proposal
-process, where if voted upon and passed, will be scheduled. The `Info` of a `Plan`
+process, where if voted upon and passed, it will be scheduled. The `Info` of a `Plan`
 may contain various metadata about the upgrade, typically application specific
 upgrade info to be included on-chain such as a git commit that validators could
 automatically upgrade to.
@@ -60,7 +60,7 @@ be seamless. This tool is [Cosmovisor](https://github.com/cosmos/cosmos-sdk/tree
 The `x/upgrade` module facilitates upgrading from major version X to major version Y. To
 accomplish this, node operators must first upgrade their current binary to a new
 binary that has a corresponding `Handler` for the new version Y. It is assumed that
-this version has fully been tested and approved by the community at large. This
+this version has been fully tested and approved by the community at large. This
 `Handler` defines what state migrations need to occur before the new binary Y
 can successfully run the chain. Naturally, this `Handler` is application specific
 and not defined on a per-module basis. Registering a `Handler` is done via
@@ -71,7 +71,7 @@ type UpgradeHandler func(Context, Plan, VersionMap) (VersionMap, error)
 ```
 
 During each `EndBlock` execution, the `x/upgrade` module checks if there exists a
-`Plan` that should execute (is scheduled at that height). If so, the corresponding
+`Plan` that should be executed (is scheduled at that height). If so, the corresponding
 `Handler` is executed. If the `Plan` is expected to execute but no `Handler` is registered
 or if the binary was upgraded too early, the node will gracefully panic and exit.
 
@@ -92,7 +92,7 @@ If there's a planned upgrade and the upgrade height is reached, the old binary w
 This information is critical to ensure the `StoreUpgrades` happens smoothly at correct height and
 expected upgrade. It eliminates the chances for the new binary to execute `StoreUpgrades` multiple
 times every time on restart. Also if there are multiple upgrades planned on same height, the `Name`
-will ensure these `StoreUpgrades` takes place only in planned upgrade handler.
+will ensure these `StoreUpgrades` take place only in pthe lanned upgrade handler.
 
 ### Proposal
 
@@ -121,7 +121,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/upgrade/v1bet
 If such a possibility is desired, the upgrade height is to be
 `2 * (VotingPeriod + DepositPeriod) + (SafetyDelta)` from the beginning of the
 upgrade proposal. The `SafetyDelta` is the time available from the success of an
-upgrade proposal and the realization it was a bad idea (due to external social consensus).
+upgrade proposal and the realization that it was a bad idea (due to external social consensus).
 
 A `MsgCancelUpgrade` proposal can also be made while the original
 `MsgSoftwareUpgrade` proposal is still being voted upon, as long as the `VotingPeriod`
@@ -133,7 +133,7 @@ The internal state of the `x/upgrade` module is relatively minimal and simple. T
 state contains the currently active upgrade `Plan` (if one exists) by key
 `0x0` and if a `Plan` is marked as "done" by key `0x1`. The state
 contains the consensus versions of all app modules in the application. The versions
-are stored as big endian `uint64`, and can be accessed with prefix `0x2` appended
+are stored as big endian `uint64`, and can be accessed with a prefix `0x2` appended
 by the corresponding module name of type `string`. The state maintains a
 `Protocol Version` which can be accessed by key `0x3`.
 
@@ -146,7 +146,7 @@ The `x/upgrade` module contains no genesis state.
 
 ## Events
 
-The `x/upgrade` does not emit any events by itself. Any and all proposal related
+The `x/upgrade` does not emit any events by itself. Any and all proposal-related
 events are emitted through the `x/gov` module.
 
 ## Client
@@ -172,7 +172,7 @@ simd query upgrade applied [upgrade-name] [flags]
 ```
 
 If upgrade-name was previously executed on the chain, this returns the header for the block at which it was applied.
-This helps a client determine which binary was valid over a given range of blocks, as well as more context to understand past migrations.
+This helps a client determine which binary was valid over a given range of blocks, as well as provides more context to understand past migrations.
 
 Example:
 

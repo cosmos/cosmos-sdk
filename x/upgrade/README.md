@@ -92,7 +92,7 @@ If there's a planned upgrade and the upgrade height is reached, the old binary w
 This information is critical to ensure the `StoreUpgrades` happens smoothly at correct height and
 expected upgrade. It eliminates the chances for the new binary to execute `StoreUpgrades` multiple
 times every time on restart. Also if there are multiple upgrades planned on same height, the `Name`
-will ensure these `StoreUpgrades` take place only in pthe lanned upgrade handler.
+will ensure these `StoreUpgrades` take place only in the planned upgrade handler.
 
 ### Proposal
 

@@ -403,7 +403,7 @@ func TestBinaryVersion(t *testing.T) {
 			false,
 		},
 		{
-			"test not panic: upgrade handler is present for last applied upgrade",
+			"test not panic: upgrade handler is present for the last applied upgrade",
 			func() sdk.Context {
 				s.keeper.SetUpgradeHandler("test0", func(_ context.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 					return vm, nil

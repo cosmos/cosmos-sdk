@@ -128,7 +128,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, _ json.RawMe
 	// set version map automatically if available
 	if versionMap := am.keeper.GetInitVersionMap(); versionMap != nil {
 		// chains can still use a custom init chainer for setting the version map
-		// this means that we need to combine the manually wired modules version map with app wiring enabled modules version map
+		// this means that we need to combine the manually wired modules version map with the app wiring enabled modules version map
 		moduleVM, err := am.keeper.GetModuleVersionMap(ctx)
 		if err != nil {
 			panic(err)

@@ -42,16 +42,18 @@ func (gs *Store) Get(key []byte) (value []byte) {
 	if gasCost, err := SafeMul(gs.gasConfig.ReadCostPerByte, len(key)); err == nil {
 		gs.gasMeter.ConsumeGas(gasCost, types.GasReadPerByteDesc)
 	} else {
-		// If overflow occurs, consume maximum gas as a safety measure
-		gs.gasMeter.ConsumeGas(types.Gas(^uint64(0)), types.GasReadPerByteDesc)
+		// If overflow occurs, trigger out-of-gas panic deterministically
+		remaining := gs.gasMeter.Limit() - gs.gasMeter.GasConsumed()
+		gs.gasMeter.ConsumeGas(remaining+1, types.GasReadPerByteDesc)
 	}
 
 	// Safe gas calculation for value length
 	if gasCost, err := SafeMul(gs.gasConfig.ReadCostPerByte, len(value)); err == nil {
 		gs.gasMeter.ConsumeGas(gasCost, types.GasReadPerByteDesc)
 	} else {
-		// If overflow occurs, consume maximum gas as a safety measure
-		gs.gasMeter.ConsumeGas(types.Gas(^uint64(0)), types.GasReadPerByteDesc)
+		// If overflow occurs, trigger out-of-gas panic deterministically
+		remaining := gs.gasMeter.Limit() - gs.gasMeter.GasConsumed()
+		gs.gasMeter.ConsumeGas(remaining+1, types.GasReadPerByteDesc)
 	}
 
 	return value
@@ -67,16 +69,18 @@ func (gs *Store) Set(key, value []byte) {
 	if gasCost, err := SafeMul(gs.gasConfig.WriteCostPerByte, len(key)); err == nil {
 		gs.gasMeter.ConsumeGas(gasCost, types.GasWritePerByteDesc)
 	} else {
-		// If overflow occurs, consume maximum gas as a safety measure
-		gs.gasMeter.ConsumeGas(types.Gas(^uint64(0)), types.GasWritePerByteDesc)
+		// If overflow occurs, trigger out-of-gas panic deterministically
+		remaining := gs.gasMeter.Limit() - gs.gasMeter.GasConsumed()
+		gs.gasMeter.ConsumeGas(remaining+1, types.GasWritePerByteDesc)
 	}
 
 	// Safe gas calculation for value length
 	if gasCost, err := SafeMul(gs.gasConfig.WriteCostPerByte, len(value)); err == nil {
 		gs.gasMeter.ConsumeGas(gasCost, types.GasWritePerByteDesc)
 	} else {
-		// If overflow occurs, consume maximum gas as a safety measure
-		gs.gasMeter.ConsumeGas(types.Gas(^uint64(0)), types.GasWritePerByteDesc)
+		// If overflow occurs, trigger out-of-gas panic deterministically
+		remaining := gs.gasMeter.Limit() - gs.gasMeter.GasConsumed()
+		gs.gasMeter.ConsumeGas(remaining+1, types.GasWritePerByteDesc)
 	}
 
 	gs.parent.Set(key, value)
@@ -201,16 +205,18 @@ func (gi *gasIterator) consumeSeekGas() {
 		if gasCost, err := SafeMul(gi.gasConfig.ReadCostPerByte, len(key)); err == nil {
 			gi.gasMeter.ConsumeGas(gasCost, types.GasValuePerByteDesc)
 		} else {
-			// If overflow occurs, consume maximum gas as a safety measure
-			gi.gasMeter.ConsumeGas(types.Gas(^uint64(0)), types.GasValuePerByteDesc)
+			// If overflow occurs, trigger out-of-gas panic deterministically
+			remaining := gi.gasMeter.Limit() - gi.gasMeter.GasConsumed()
+			gi.gasMeter.ConsumeGas(remaining+1, types.GasValuePerByteDesc)
 		}
 
 		// Safe gas calculation for value length
 		if gasCost, err := SafeMul(gi.gasConfig.ReadCostPerByte, len(value)); err == nil {
 			gi.gasMeter.ConsumeGas(gasCost, types.GasValuePerByteDesc)
 		} else {
-			// If overflow occurs, consume maximum gas as a safety measure
-			gi.gasMeter.ConsumeGas(types.Gas(^uint64(0)), types.GasValuePerByteDesc)
+			// If overflow occurs, trigger out-of-gas panic deterministically
+			remaining := gi.gasMeter.Limit() - gi.gasMeter.GasConsumed()
+			gi.gasMeter.ConsumeGas(remaining+1, types.GasValuePerByteDesc)
 		}
 	}
 	gi.gasMeter.ConsumeGas(gi.gasConfig.IterNextCostFlat, types.GasIterNextCostFlatDesc)

@@ -79,8 +79,12 @@ func TestSafeMul(t *testing.T) {
 		require.Contains(t, err.Error(), "gas calculation overflow")
 		require.Equal(t, types.Gas(0), result)
 
-		// Test overflow: very large length
-		result, err = gaskv.SafeMul(1000, int(maxUint64/1000+1))
+		// Test overflow: choose length that is safely representable as int on 32/64-bit,
+		// and a cost that guarantees overflow when multiplied by length.
+		// length = 1<<30 is safe for 32-bit; cost = floor(MaxUint64/length) + 1 ensures overflow.
+		length := 1 << 30
+		overflowCost := types.Gas((^uint64(0))/uint64(length)) + 1
+		result, err = gaskv.SafeMul(overflowCost, length)
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "gas calculation overflow")
 		require.Equal(t, types.Gas(0), result)

@@ -1,6 +1,7 @@
 package gaskv
 
 import (
+	"fmt"
 	"io"
 
 	"cosmossdk.io/store/types"
@@ -37,9 +38,21 @@ func (gs *Store) Get(key []byte) (value []byte) {
 	gs.gasMeter.ConsumeGas(gs.gasConfig.ReadCostFlat, types.GasReadCostFlatDesc)
 	value = gs.parent.Get(key)
 
-	// TODO overflow-safe math?
-	gs.gasMeter.ConsumeGas(gs.gasConfig.ReadCostPerByte*types.Gas(len(key)), types.GasReadPerByteDesc)
-	gs.gasMeter.ConsumeGas(gs.gasConfig.ReadCostPerByte*types.Gas(len(value)), types.GasReadPerByteDesc)
+	// Safe gas calculation for key length
+	if gasCost, err := SafeMul(gs.gasConfig.ReadCostPerByte, len(key)); err == nil {
+		gs.gasMeter.ConsumeGas(gasCost, types.GasReadPerByteDesc)
+	} else {
+		// If overflow occurs, consume maximum gas as a safety measure
+		gs.gasMeter.ConsumeGas(types.Gas(^uint64(0)), types.GasReadPerByteDesc)
+	}
+
+	// Safe gas calculation for value length
+	if gasCost, err := SafeMul(gs.gasConfig.ReadCostPerByte, len(value)); err == nil {
+		gs.gasMeter.ConsumeGas(gasCost, types.GasReadPerByteDesc)
+	} else {
+		// If overflow occurs, consume maximum gas as a safety measure
+		gs.gasMeter.ConsumeGas(types.Gas(^uint64(0)), types.GasReadPerByteDesc)
+	}
 
 	return value
 }
@@ -49,9 +62,23 @@ func (gs *Store) Set(key, value []byte) {
 	types.AssertValidKey(key)
 	types.AssertValidValue(value)
 	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostFlat, types.GasWriteCostFlatDesc)
-	// TODO overflow-safe math?
-	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostPerByte*types.Gas(len(key)), types.GasWritePerByteDesc)
-	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostPerByte*types.Gas(len(value)), types.GasWritePerByteDesc)
+
+	// Safe gas calculation for key length
+	if gasCost, err := SafeMul(gs.gasConfig.WriteCostPerByte, len(key)); err == nil {
+		gs.gasMeter.ConsumeGas(gasCost, types.GasWritePerByteDesc)
+	} else {
+		// If overflow occurs, consume maximum gas as a safety measure
+		gs.gasMeter.ConsumeGas(types.Gas(^uint64(0)), types.GasWritePerByteDesc)
+	}
+
+	// Safe gas calculation for value length
+	if gasCost, err := SafeMul(gs.gasConfig.WriteCostPerByte, len(value)); err == nil {
+		gs.gasMeter.ConsumeGas(gasCost, types.GasWritePerByteDesc)
+	} else {
+		// If overflow occurs, consume maximum gas as a safety measure
+		gs.gasMeter.ConsumeGas(types.Gas(^uint64(0)), types.GasWritePerByteDesc)
+	}
+
 	gs.parent.Set(key, value)
 }
 
@@ -170,8 +197,38 @@ func (gi *gasIterator) consumeSeekGas() {
 		key := gi.Key()
 		value := gi.Value()
 
-		gi.gasMeter.ConsumeGas(gi.gasConfig.ReadCostPerByte*types.Gas(len(key)), types.GasValuePerByteDesc)
-		gi.gasMeter.ConsumeGas(gi.gasConfig.ReadCostPerByte*types.Gas(len(value)), types.GasValuePerByteDesc)
+		// Safe gas calculation for key length
+		if gasCost, err := SafeMul(gi.gasConfig.ReadCostPerByte, len(key)); err == nil {
+			gi.gasMeter.ConsumeGas(gasCost, types.GasValuePerByteDesc)
+		} else {
+			// If overflow occurs, consume maximum gas as a safety measure
+			gi.gasMeter.ConsumeGas(types.Gas(^uint64(0)), types.GasValuePerByteDesc)
+		}
+
+		// Safe gas calculation for value length
+		if gasCost, err := SafeMul(gi.gasConfig.ReadCostPerByte, len(value)); err == nil {
+			gi.gasMeter.ConsumeGas(gasCost, types.GasValuePerByteDesc)
+		} else {
+			// If overflow occurs, consume maximum gas as a safety measure
+			gi.gasMeter.ConsumeGas(types.Gas(^uint64(0)), types.GasValuePerByteDesc)
+		}
 	}
 	gi.gasMeter.ConsumeGas(gi.gasConfig.IterNextCostFlat, types.GasIterNextCostFlatDesc)
+}
+
+// SafeMul performs safe multiplication of gas cost and length to prevent overflow
+func SafeMul(cost types.Gas, length int) (types.Gas, error) {
+	if length < 0 {
+		return 0, fmt.Errorf("negative length: %d", length)
+	}
+	if cost == 0 {
+		return 0, nil
+	}
+
+	// Check for overflow: if cost * uint64(length) would overflow uint64
+	if uint64(length) > 0 && cost > types.Gas(^uint64(0))/types.Gas(length) {
+		return 0, fmt.Errorf("gas calculation overflow: cost=%d, length=%d", cost, length)
+	}
+
+	return cost * types.Gas(length), nil
 }

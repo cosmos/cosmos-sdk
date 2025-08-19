@@ -91,7 +91,7 @@ func TestCacheKVStoreNested(t *testing.T) {
 	require.Equal(t, valFmt(1), st.Get(keyFmt(1)))
 	require.Equal(t, valFmt(3), st2.Get(keyFmt(1)))
 
-	// st2 writes to its parent, st. doesnt effect mem
+	// st2 writes to its parent, st. doesn't effect mem
 	st2.Write()
 	require.Equal(t, []byte(nil), mem.Get(keyFmt(1)))
 	require.Equal(t, valFmt(3), st.Get(keyFmt(1)))
@@ -238,13 +238,13 @@ func TestCacheKVMergeIteratorBasics(t *testing.T) {
 	st.Write()
 	assertIterateDomain(t, st, 0)
 
-	// add two keys and assert theyre there
+	// add two keys and assert they're there
 	k1, v1 := keyFmt(1), valFmt(1)
 	st.Set(k, v)
 	st.Set(k1, v1)
 	assertIterateDomain(t, st, 2)
 
-	// write it and assert theyre there
+	// write it and assert they're there
 	st.Write()
 	assertIterateDomain(t, st, 2)
 

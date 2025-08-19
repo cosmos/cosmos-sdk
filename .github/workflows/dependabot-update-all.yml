@@ -26,7 +26,7 @@ jobs:
           token: "${{ steps.app-token.outputs.token }}"
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.24"
+          go-version: "1.25"
           check-latest: true
       - name: Extract updated dependency
         id: deps

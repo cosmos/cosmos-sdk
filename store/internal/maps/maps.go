@@ -156,7 +156,7 @@ func (kv KVPair) Bytes() []byte {
 	// * 8 bytes to Uvarint encode the length of the value
 	// So preallocate for the worst case, which will in total
 	// be a maximum of 14 bytes wasted, if len(key)=1, len(value)=1,
-	// but that's going to rare.
+	// but that's going to be rare.
 	buf := make([]byte, 8+len(kv.Key)+8+len(kv.Value))
 
 	// Encode the key, prefixed with its length.

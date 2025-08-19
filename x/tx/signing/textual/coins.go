@@ -41,7 +41,7 @@ func (vr coinsValueRenderer) Format(ctx context.Context, v protoreflect.Value) (
 	coin := &basev1beta1.Coin{}
 	err := coerceToMessage(v.Interface().(protoreflect.Message).Interface(), coin)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get full keys: %w", err)
 	}
 
 	metadata, err := vr.coinMetadataQuerier(ctx, coin.Denom)
@@ -51,7 +51,7 @@ func (vr coinsValueRenderer) Format(ctx context.Context, v protoreflect.Value) (
 
 	formatted, err := FormatCoins([]*basev1beta1.Coin{coin}, []*bankv1beta1.Metadata{metadata})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get full keys: %w", err)
 	}
 
 	return []Screen{{Content: formatted}}, nil

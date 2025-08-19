@@ -3,6 +3,7 @@ package indexes
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/codec"
@@ -151,7 +152,7 @@ func (i MultiIterator[ReferenceKey, PrimaryKey]) PrimaryKey() (PrimaryKey, error
 func (i MultiIterator[ReferenceKey, PrimaryKey]) PrimaryKeys() ([]PrimaryKey, error) {
 	fullKeys, err := i.FullKeys()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get full keys: %w", err)
 	}
 	pks := make([]PrimaryKey, len(fullKeys))
 	for i, fullKey := range fullKeys {

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -28,7 +29,7 @@ func NewQueryServer(k *Keeper) v1.QueryServer {
 func (q queryServer) Constitution(ctx context.Context, _ *v1.QueryConstitutionRequest) (*v1.QueryConstitutionResponse, error) {
 	constitution, err := q.k.Constitution.Get(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get full keys: %w", err)
 	}
 	return &v1.QueryConstitutionResponse{Constitution: constitution}, nil
 }

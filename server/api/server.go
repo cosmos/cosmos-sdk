@@ -11,7 +11,7 @@ import (
 
 	cmtrpcserver "github.com/cometbft/cometbft/v2/rpc/jsonrpc/server"
 	gateway "github.com/cosmos/gogogateway"
-	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/proto" //nolint:staticcheck // keeping deprecated import
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"

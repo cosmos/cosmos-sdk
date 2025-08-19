@@ -16,7 +16,7 @@ jobs:
       contents: write # for goreleaser/goreleaser-action to create a GitHub release
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install Go
         uses: actions/setup-go@v5
         with:

@@ -17,7 +17,7 @@ type ABCI interface {
 	CheckTx(*abci.CheckTxRequest) (*abci.CheckTxResponse, error) // Validate a tx for the mempool
 
 	// Consensus Connection
-	InitChain(*abci.InitChainRequest) (*abci.InitChainResponse, error) // Initialize blockchain w validators/other info from CometBFT
+	InitChain(*abci.InitChainRequest) (*abci.InitChainResponse, error) // Initialize blockchain with validators/other info from CometBFT
 	PrepareProposal(*abci.PrepareProposalRequest) (*abci.PrepareProposalResponse, error)
 	ProcessProposal(*abci.ProcessProposalRequest) (*abci.ProcessProposalResponse, error)
 	// Deliver the decided block with its txs to the Application

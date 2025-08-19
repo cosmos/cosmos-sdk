@@ -34,7 +34,7 @@ func BenchmarkLoggers(b *testing.B) {
 			keyVals: []any{"foo", 1},
 		},
 		{
-			// Small numbers may be optimized, so check if an unusual/larger number performs different.
+			// Small numbers may be optimized, so check if an unusual/larger number performs differently.
 			name:    "single largeish int",
 			keyVals: []any{"foo", 123456789},
 		},
@@ -94,7 +94,7 @@ func BenchmarkLoggers(b *testing.B) {
 		}
 	})
 
-	// The nop logger we use expose in the public API,
+	// The nop logger we expose in the public API,
 	// also useful as a reference for how expensive zerolog is.
 	b.Run("specialized nop logger", func(b *testing.B) {
 		for _, bc := range nopCases {

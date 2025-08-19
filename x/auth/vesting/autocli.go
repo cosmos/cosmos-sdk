@@ -9,7 +9,8 @@ import (
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 	return &autocliv1.ModuleOptions{
 		Tx: &autocliv1.ServiceCommandDescriptor{
-			Service: vestingv1beta1.Msg_ServiceDesc.ServiceName,
+			Service:              vestingv1beta1.Msg_ServiceDesc.ServiceName,
+			EnhanceCustomCommand: true,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "CreateVestingAccount",
@@ -41,7 +42,6 @@ These tokens may be used for staking but are non-transferable. Staking rewards w
 					},
 				},
 			},
-			EnhanceCustomCommand: false, // use custom commands only until v0.51
 		},
 	}
 }

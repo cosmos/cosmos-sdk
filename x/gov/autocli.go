@@ -94,7 +94,8 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			EnhanceCustomCommand: true, // We still have manual commands in gov that we want to keep
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
-			Service: govv1.Msg_ServiceDesc.ServiceName,
+			EnhanceCustomCommand: true,
+			Service:              govv1.Msg_ServiceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "Deposit",
@@ -140,7 +141,6 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					GovProposal:    true,
 				},
 			},
-			EnhanceCustomCommand: false, // use custom commands only until v0.51
 		},
 	}
 }

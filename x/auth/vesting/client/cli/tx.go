@@ -34,8 +34,6 @@ func GetTxCmd(ac address.Codec) *cobra.Command {
 	}
 
 	txCmd.AddCommand(
-		NewMsgCreateVestingAccountCmd(ac),
-		NewMsgCreatePermanentLockedAccountCmd(ac),
 		NewMsgCreatePeriodicVestingAccountCmd(ac),
 	)
 
@@ -44,6 +42,8 @@ func GetTxCmd(ac address.Codec) *cobra.Command {
 
 // NewMsgCreateVestingAccountCmd returns a CLI command handler for creating a
 // MsgCreateVestingAccount transaction.
+// Deprecated: This command is deprecated and will be removed in a future release.
+// The module is using its AutoCLI command instead.
 func NewMsgCreateVestingAccountCmd(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-vesting-account [to_address] [amount] [end_time]",
@@ -91,8 +91,9 @@ timestamp.`,
 	return cmd
 }
 
-// NewMsgCreatePermanentLockedAccountCmd returns a CLI command handler for creating a
-// MsgCreatePermanentLockedAccount transaction.
+// NewMsgCreatePermanentLockedAccountCmd returns a CLI command handler for creating a MsgCreatePermanentLockedAccount transaction.
+// Deprecated: This command is deprecated and will be removed in a future release.
+// The module is using its AutoCLI command instead.
 func NewMsgCreatePermanentLockedAccountCmd(ac address.Codec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-permanent-locked-account [to_address] [amount]",

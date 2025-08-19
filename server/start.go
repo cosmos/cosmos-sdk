@@ -366,7 +366,6 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 	return g.Wait()
 }
 
-// TODO: Move nodeKey into being created within the function.
 func startCmtNode(
 	ctx context.Context,
 	cfg *cmtcfg.Config,

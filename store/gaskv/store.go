@@ -232,7 +232,7 @@ func SafeMul(cost types.Gas, length int) (types.Gas, error) {
 	}
 
 	// Check for overflow: if cost * uint64(length) would overflow uint64
-	if uint64(length) > 0 && cost > types.Gas(^uint64(0))/types.Gas(length) {
+	if uint64(length) > 0 && cost > ^types.Gas(0)/types.Gas(length) {
 		return 0, fmt.Errorf("gas calculation overflow: cost=%d, length=%d", cost, length)
 	}
 

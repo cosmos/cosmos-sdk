@@ -50,7 +50,7 @@ func TestSafeMul(t *testing.T) {
 	// Test edge cases
 	t.Run("edge cases", func(t *testing.T) {
 		// Test maximum uint64 values that don't overflow
-		maxUint64 := types.Gas(^uint64(0))
+		maxUint64 := ^types.Gas(0)
 		result, err := gaskv.SafeMul(maxUint64, 1)
 		require.NoError(t, err)
 		require.Equal(t, maxUint64, result)
@@ -65,7 +65,7 @@ func TestSafeMul(t *testing.T) {
 
 	// Test overflow cases
 	t.Run("overflow cases", func(t *testing.T) {
-		maxUint64 := types.Gas(^uint64(0))
+		maxUint64 := ^types.Gas(0)
 
 		// Test overflow: maxUint64 * 2 should overflow
 		result, err := gaskv.SafeMul(maxUint64, 2)
@@ -83,7 +83,7 @@ func TestSafeMul(t *testing.T) {
 		// and a cost that guarantees overflow when multiplied by length.
 		// length = 1<<30 is safe for 32-bit; cost = floor(MaxUint64/length) + 1 ensures overflow.
 		length := 1 << 30
-		overflowCost := types.Gas((^uint64(0))/uint64(length)) + 1
+		overflowCost := (^types.Gas(0))/types.Gas(length) + 1
 		result, err = gaskv.SafeMul(overflowCost, length)
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "gas calculation overflow")
@@ -105,7 +105,7 @@ func TestSafeMul(t *testing.T) {
 
 	// Test boundary cases
 	t.Run("boundary cases", func(t *testing.T) {
-		maxUint64 := types.Gas(^uint64(0))
+		maxUint64 := ^types.Gas(0)
 
 		// Test exactly at the boundary (should not overflow)
 		// Find a value that when multiplied by 2 equals maxUint64
@@ -160,7 +160,7 @@ func TestSafeMulIntegration(t *testing.T) {
 	// Verify gas was consumed (should be a large amount but not overflow)
 	gasConsumed := meter.GasConsumed()
 	require.Greater(t, gasConsumed, types.Gas(0))
-	require.Less(t, gasConsumed, types.Gas(^uint64(0))) // Should not be max uint64
+	require.Less(t, gasConsumed, ^types.Gas(0)) // Should not be max uint64
 }
 
 func TestGasKVStoreBasic(t *testing.T) {

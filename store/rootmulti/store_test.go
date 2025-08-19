@@ -436,7 +436,7 @@ func TestMultiStoreRestart(t *testing.T) {
 	reloadedCid := multi.LastCommitID()
 	require.Equal(t, int64(4), reloadedCid.Version, "Reloaded CID is not the same as last flushed CID")
 
-	// Check that store1 and store2 retained date from 3rd commit
+	// Check that store1 and store2 retained data from 3rd commit
 	store1 = multi.GetStoreByName("store1").(types.KVStore)
 	val := store1.Get([]byte(k))
 	require.Equal(t, []byte(fmt.Sprintf("%s:%d", v, 3)), val, "Reloaded value not the same as last flushed value")

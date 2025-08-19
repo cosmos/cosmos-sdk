@@ -6,7 +6,7 @@ require (
 	cosmossdk.io/api v1.0.0-rc.1
 	cosmossdk.io/core v1.1.0-rc.1
 	cosmossdk.io/depinject v1.2.1
-	cosmossdk.io/log v1.6.0
+	cosmossdk.io/log v1.6.1
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/cosmos/cosmos-sdk v0.54.0-rc.1
 	github.com/cosmos/gogoproto v1.7.0

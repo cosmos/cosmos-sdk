@@ -75,7 +75,7 @@ graph LR
 
 Mempool order: [6, 5, 8, 3, 5, 9]
 
-Although tx(priority=9) has the highest global priority it is selected last.  This is due tx(priority=3) 
+Although tx(priority=9) has the highest global priority it is selected last.  This is due to tx(priority=3) 
 gating 9's selection by rule 1.
 
 ### Case 3 - Priority ties

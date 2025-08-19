@@ -69,7 +69,7 @@ func NewApp(rootDir string, logger log.Logger) (servertypes.ABCI, error) {
 }
 
 // KVStoreHandler is a simple handler that takes KVStoreTx and writes
-// them to the db.
+// it to the db.
 func KVStoreHandler(storeKey storetypes.StoreKey) bam.MsgServiceHandler {
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		dTx, ok := msg.(*KVStoreTx)

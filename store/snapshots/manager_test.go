@@ -170,7 +170,7 @@ func TestManager_Restore(t *testing.T) {
 	err = manager.Restore(types.Snapshot{Height: 3, Format: types.CurrentFormat, Hash: []byte{1, 2, 3}})
 	require.Error(t, err)
 
-	// Restore errors on chunk and chunkhashes mismatch
+	// Restore errors on chunk and chunk hashes mismatch
 	err = manager.Restore(types.Snapshot{
 		Height:   3,
 		Format:   types.CurrentFormat,

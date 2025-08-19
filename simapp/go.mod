@@ -24,7 +24,7 @@ require (
 	github.com/spf13/viper v1.20.1
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/mock v0.6.0
-	google.golang.org/protobuf v1.36.7
+	google.golang.org/protobuf v1.36.7 // indirect
 )
 
 require (

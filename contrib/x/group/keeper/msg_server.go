@@ -12,7 +12,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
-	errors2 "github.com/cosmos/cosmos-sdk/contrib/x/group/errors"
+	errors "github.com/cosmos/cosmos-sdk/contrib/x/group/errors"
 	"github.com/cosmos/cosmos-sdk/contrib/x/group/internal/math"
 	"github.com/cosmos/cosmos-sdk/contrib/x/group/internal/orm"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -101,11 +101,11 @@ func (k Keeper) CreateGroup(goCtx context.Context, msg *group.MsgCreateGroup) (*
 
 func (k Keeper) UpdateGroupMembers(goCtx context.Context, msg *group.MsgUpdateGroupMembers) (*group.MsgUpdateGroupMembersResponse, error) {
 	if msg.GroupId == 0 {
-		return nil, errorsmod.Wrap(errors2.ErrEmpty, "group id")
+		return nil, errorsmod.Wrap(errors.ErrEmpty, "group id")
 	}
 
 	if len(msg.MemberUpdates) == 0 {
-		return nil, errorsmod.Wrap(errors2.ErrEmpty, "member updates")
+		return nil, errorsmod.Wrap(errors.ErrEmpty, "member updates")
 	}
 
 	if err := k.validateMembers(msg.MemberUpdates); err != nil {
@@ -203,7 +203,7 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, msg *group.MsgUpdateGr
 		}
 		// ensure that group has one or more members
 		if totalWeight.IsZero() {
-			return errorsmod.Wrap(errors2.ErrInvalid, "group must not be empty")
+			return errorsmod.Wrap(errors.ErrInvalid, "group must not be empty")
 		}
 		// Update group in the groupTable.
 		g.TotalWeight = totalWeight.String()
@@ -225,11 +225,11 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, msg *group.MsgUpdateGr
 
 func (k Keeper) UpdateGroupAdmin(goCtx context.Context, msg *group.MsgUpdateGroupAdmin) (*group.MsgUpdateGroupAdminResponse, error) {
 	if msg.GroupId == 0 {
-		return nil, errorsmod.Wrap(errors2.ErrEmpty, "group id")
+		return nil, errorsmod.Wrap(errors.ErrEmpty, "group id")
 	}
 
 	if strings.EqualFold(msg.Admin, msg.NewAdmin) {
-		return nil, errorsmod.Wrap(errors2.ErrInvalid, "new and old admin are the same")
+		return nil, errorsmod.Wrap(errors.ErrInvalid, "new and old admin are the same")
 	}
 
 	if _, err := k.accKeeper.AddressCodec().StringToBytes(msg.Admin); err != nil {
@@ -257,7 +257,7 @@ func (k Keeper) UpdateGroupAdmin(goCtx context.Context, msg *group.MsgUpdateGrou
 
 func (k Keeper) UpdateGroupMetadata(goCtx context.Context, msg *group.MsgUpdateGroupMetadata) (*group.MsgUpdateGroupMetadataResponse, error) {
 	if msg.GroupId == 0 {
-		return nil, errorsmod.Wrap(errors2.ErrEmpty, "group id")
+		return nil, errorsmod.Wrap(errors.ErrEmpty, "group id")
 	}
 
 	if err := k.assertMetadataLength(msg.Metadata, "group metadata"); err != nil {
@@ -332,7 +332,7 @@ func (k Keeper) CreateGroupWithPolicy(ctx context.Context, msg *group.MsgCreateG
 
 func (k Keeper) CreateGroupPolicy(goCtx context.Context, msg *group.MsgCreateGroupPolicy) (*group.MsgCreateGroupPolicyResponse, error) {
 	if msg.GroupId == 0 {
-		return nil, errorsmod.Wrap(errors2.ErrEmpty, "group id")
+		return nil, errorsmod.Wrap(errors.ErrEmpty, "group id")
 	}
 
 	if err := k.assertMetadataLength(msg.GetMetadata(), "group policy metadata"); err != nil {
@@ -431,7 +431,7 @@ func (k Keeper) CreateGroupPolicy(goCtx context.Context, msg *group.MsgCreateGro
 
 func (k Keeper) UpdateGroupPolicyAdmin(goCtx context.Context, msg *group.MsgUpdateGroupPolicyAdmin) (*group.MsgUpdateGroupPolicyAdminResponse, error) {
 	if strings.EqualFold(msg.Admin, msg.NewAdmin) {
-		return nil, errorsmod.Wrap(errors2.ErrInvalid, "new and old admin are same")
+		return nil, errorsmod.Wrap(errors.ErrInvalid, "new and old admin are same")
 	}
 
 	if _, err := k.accKeeper.AddressCodec().StringToBytes(msg.NewAdmin); err != nil {
@@ -514,7 +514,7 @@ func (k Keeper) UpdateGroupPolicyMetadata(goCtx context.Context, msg *group.MsgU
 
 func (k Keeper) SubmitProposal(goCtx context.Context, msg *group.MsgSubmitProposal) (*group.MsgSubmitProposalResponse, error) {
 	if len(msg.Proposers) == 0 {
-		return nil, errorsmod.Wrap(errors2.ErrEmpty, "proposers")
+		return nil, errorsmod.Wrap(errors.ErrEmpty, "proposers")
 	}
 
 	if err := k.validateProposers(msg.Proposers); err != nil {
@@ -578,7 +578,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, msg *group.MsgSubmitPropos
 	// Only members of the group can submit a new proposal.
 	for _, proposer := range msg.Proposers {
 		if !k.groupMemberTable.Has(ctx.KVStore(k.key), orm.PrimaryKey(&group.GroupMember{GroupId: groupInfo.Id, Member: &group.Member{Address: proposer}})) {
-			return nil, errorsmod.Wrapf(errors2.ErrUnauthorized, "not in group: %s", proposer)
+			return nil, errorsmod.Wrapf(errors.ErrUnauthorized, "not in group: %s", proposer)
 		}
 	}
 
@@ -658,7 +658,7 @@ func (k Keeper) SubmitProposal(goCtx context.Context, msg *group.MsgSubmitPropos
 
 func (k Keeper) WithdrawProposal(goCtx context.Context, msg *group.MsgWithdrawProposal) (*group.MsgWithdrawProposalResponse, error) {
 	if msg.ProposalId == 0 {
-		return nil, errorsmod.Wrap(errors2.ErrEmpty, "proposal id")
+		return nil, errorsmod.Wrap(errors.ErrEmpty, "proposal id")
 	}
 
 	if _, err := k.accKeeper.AddressCodec().StringToBytes(msg.Address); err != nil {
@@ -673,7 +673,7 @@ func (k Keeper) WithdrawProposal(goCtx context.Context, msg *group.MsgWithdrawPr
 
 	// Ensure the proposal can be withdrawn.
 	if proposal.Status != group.PROPOSAL_STATUS_SUBMITTED {
-		return nil, errorsmod.Wrapf(errors2.ErrInvalid, "cannot withdraw a proposal with the status of %s", proposal.Status.String())
+		return nil, errorsmod.Wrapf(errors.ErrInvalid, "cannot withdraw a proposal with the status of %s", proposal.Status.String())
 	}
 
 	var policyInfo group.GroupPolicyInfo
@@ -683,7 +683,7 @@ func (k Keeper) WithdrawProposal(goCtx context.Context, msg *group.MsgWithdrawPr
 
 	// check address is the group policy admin he is in proposers list..
 	if msg.Address != policyInfo.Admin && !isProposer(proposal, msg.Address) {
-		return nil, errorsmod.Wrapf(errors2.ErrUnauthorized, "given address is neither group policy admin nor in proposers: %s", msg.Address)
+		return nil, errorsmod.Wrapf(errors.ErrUnauthorized, "given address is neither group policy admin nor in proposers: %s", msg.Address)
 	}
 
 	proposal.Status = group.PROPOSAL_STATUS_WITHDRAWN
@@ -700,16 +700,16 @@ func (k Keeper) WithdrawProposal(goCtx context.Context, msg *group.MsgWithdrawPr
 
 func (k Keeper) Vote(goCtx context.Context, msg *group.MsgVote) (*group.MsgVoteResponse, error) {
 	if msg.ProposalId == 0 {
-		return nil, errorsmod.Wrap(errors2.ErrEmpty, "proposal id")
+		return nil, errorsmod.Wrap(errors.ErrEmpty, "proposal id")
 	}
 
 	// verify vote options
 	if msg.Option == group.VOTE_OPTION_UNSPECIFIED {
-		return nil, errorsmod.Wrap(errors2.ErrEmpty, "vote option")
+		return nil, errorsmod.Wrap(errors.ErrEmpty, "vote option")
 	}
 
 	if _, ok := group.VoteOption_name[int32(msg.Option)]; !ok {
-		return nil, errorsmod.Wrap(errors2.ErrInvalid, "vote option")
+		return nil, errorsmod.Wrap(errors.ErrInvalid, "vote option")
 	}
 
 	if err := k.assertMetadataLength(msg.Metadata, "metadata"); err != nil {
@@ -728,11 +728,11 @@ func (k Keeper) Vote(goCtx context.Context, msg *group.MsgVote) (*group.MsgVoteR
 
 	// Ensure that we can still accept votes for this proposal.
 	if proposal.Status != group.PROPOSAL_STATUS_SUBMITTED {
-		return nil, errorsmod.Wrap(errors2.ErrInvalid, "proposal not open for voting")
+		return nil, errorsmod.Wrap(errors.ErrInvalid, "proposal not open for voting")
 	}
 
 	if ctx.BlockTime().After(proposal.VotingPeriodEnd) {
-		return nil, errorsmod.Wrap(errors2.ErrExpired, "voting period has ended already")
+		return nil, errorsmod.Wrap(errors.ErrExpired, "voting period has ended already")
 	}
 
 	policyInfo, err := k.getGroupPolicyInfo(ctx, proposal.GroupPolicyAddress)
@@ -826,7 +826,7 @@ func (k Keeper) doTallyAndUpdate(ctx sdk.Context, proposal *group.Proposal, grou
 // Exec executes the messages from a proposal.
 func (k Keeper) Exec(goCtx context.Context, msg *group.MsgExec) (*group.MsgExecResponse, error) {
 	if msg.ProposalId == 0 {
-		return nil, errorsmod.Wrap(errors2.ErrEmpty, "proposal id")
+		return nil, errorsmod.Wrap(errors.ErrEmpty, "proposal id")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -836,7 +836,7 @@ func (k Keeper) Exec(goCtx context.Context, msg *group.MsgExec) (*group.MsgExecR
 	}
 
 	if proposal.Status != group.PROPOSAL_STATUS_SUBMITTED && proposal.Status != group.PROPOSAL_STATUS_ACCEPTED {
-		return nil, errorsmod.Wrapf(errors2.ErrInvalid, "not possible to exec with proposal status %s", proposal.Status.String())
+		return nil, errorsmod.Wrapf(errors.ErrInvalid, "not possible to exec with proposal status %s", proposal.Status.String())
 	}
 
 	policyInfo, err := k.getGroupPolicyInfo(ctx, proposal.GroupPolicyAddress)
@@ -924,7 +924,7 @@ func (k Keeper) Exec(goCtx context.Context, msg *group.MsgExec) (*group.MsgExecR
 // LeaveGroup implements the MsgServer/LeaveGroup method.
 func (k Keeper) LeaveGroup(goCtx context.Context, msg *group.MsgLeaveGroup) (*group.MsgLeaveGroupResponse, error) {
 	if msg.GroupId == 0 {
-		return nil, errorsmod.Wrap(errors2.ErrEmpty, "group-id")
+		return nil, errorsmod.Wrap(errors.ErrEmpty, "group-id")
 	}
 
 	_, err := k.accKeeper.AddressCodec().StringToBytes(msg.Address)
@@ -1073,7 +1073,7 @@ func (k Keeper) doUpdateGroup(ctx sdk.Context, groupID uint64, reqGroupAdmin str
 // is greater than a pre-defined maxMetadataLen.
 func (k Keeper) assertMetadataLength(metadata, description string) error {
 	if metadata != "" && uint64(len(metadata)) > k.config.MaxMetadataLen {
-		return errorsmod.Wrapf(errors2.ErrMaxLimit, description)
+		return errorsmod.Wrapf(errors.ErrMaxLimit, "%s", description)
 	}
 	return nil
 }
@@ -1082,7 +1082,7 @@ func (k Keeper) assertMetadataLength(metadata, description string) error {
 // is greater than a pre-defined 40*MaxMetadataLen.
 func (k Keeper) assertSummaryLength(summary string) error {
 	if summary != "" && uint64(len(summary)) > 40*k.config.MaxMetadataLen {
-		return errorsmod.Wrapf(errors2.ErrMaxLimit, "proposal summary is too long")
+		return errorsmod.Wrapf(errors.ErrMaxLimit, "proposal summary is too long")
 	}
 	return nil
 }
@@ -1099,7 +1099,7 @@ func (k Keeper) validateDecisionPolicies(ctx sdk.Context, g group.GroupInfo) err
 	for {
 		var groupPolicy group.GroupPolicyInfo
 		_, err = it.LoadNext(&groupPolicy)
-		if errors2.ErrORMIteratorDone.Is(err) {
+		if errors.ErrORMIteratorDone.Is(err) {
 			break
 		}
 		if err != nil {
@@ -1121,7 +1121,7 @@ func (k Keeper) validateProposers(proposers []string) error {
 	index := make(map[string]struct{}, len(proposers))
 	for _, proposer := range proposers {
 		if _, exists := index[proposer]; exists {
-			return errorsmod.Wrapf(errors2.ErrDuplicate, "address: %s", proposer)
+			return errorsmod.Wrapf(errors.ErrDuplicate, "address: %s", proposer)
 		}
 
 		_, err := k.accKeeper.AddressCodec().StringToBytes(proposer)
@@ -1146,7 +1146,7 @@ func (k Keeper) validateMembers(members []group.MemberRequest) error {
 	index := make(map[string]struct{}, len(members))
 	for _, member := range members {
 		if _, exists := index[member.Address]; exists {
-			return errorsmod.Wrapf(errors2.ErrDuplicate, "address: %s", member.Address)
+			return errorsmod.Wrapf(errors.ErrDuplicate, "address: %s", member.Address)
 		}
 
 		_, err := k.accKeeper.AddressCodec().StringToBytes(member.Address)

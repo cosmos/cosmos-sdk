@@ -211,10 +211,10 @@ func TestLegacyGRPCQueryTally(t *testing.T) {
 
 				expRes = &v1beta1.QueryTallyResultResponse{
 					Tally: v1beta1.TallyResult{
-						Yes:        math.LegacyNewInt(3 * 5 * 1000000),
-						No:         math.LegacyNewInt(0),
-						Abstain:    math.LegacyNewInt(0),
-						NoWithVeto: math.LegacyNewInt(0),
+						Yes:        math.NewInt(3 * 5 * 1000000),
+						No:         math.NewInt(0),
+						Abstain:    math.NewInt(0),
+						NoWithVeto: math.NewInt(0),
 					},
 				}
 			},

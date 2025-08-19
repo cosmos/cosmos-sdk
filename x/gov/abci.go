@@ -21,7 +21,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyEndBlocker)
 
 	logger := ctx.Logger().With("module", "x/"+types.ModuleName)
-	// delete dead proposals from store and returns theirs deposits.
+	// delete dead proposals from store and returns their deposits.
 	// A proposal is dead when it's inactive and didn't get enough deposit on time to get into voting phase.
 	rng := collections.NewPrefixUntilPairRange[time.Time, uint64](ctx.BlockTime())
 	iter, err := keeper.InactiveProposalsQueue.Iterate(ctx, rng)

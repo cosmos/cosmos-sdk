@@ -3,6 +3,9 @@ package v2_test
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/contrib/x/crisis"
+	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/migrations/v2"
+	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/types"
 	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"
@@ -11,9 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/crisis"
-	v2 "github.com/cosmos/cosmos-sdk/x/crisis/migrations/v2"
-	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 )
 
 type mockSubspace struct {

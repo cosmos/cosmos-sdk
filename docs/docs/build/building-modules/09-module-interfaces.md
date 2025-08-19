@@ -132,7 +132,8 @@ Since `AddTxFlagsToCmd(cmd *cobra.Command)` includes all of the basic flags requ
 Similarly, there is a `AddQueryFlagsToCmd(cmd *cobra.Command)` to add common flags to a module query command.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/client/flags/flags.go#L95-L106```
+https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/client/flags/flags.go#L95-L106
+```
 -->
 
 ## gRPC

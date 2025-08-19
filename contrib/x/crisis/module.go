@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/exported"
+	keeper2 "github.com/cosmos/cosmos-sdk/contrib/x/crisis/keeper"
+	types2 "github.com/cosmos/cosmos-sdk/contrib/x/crisis/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
@@ -23,9 +26,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/crisis/exported"
-	"github.com/cosmos/cosmos-sdk/x/crisis/keeper"
-	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -53,28 +53,28 @@ type AppModuleBasic struct{}
 
 // Name returns the crisis module's name.
 func (AppModuleBasic) Name() string {
-	return types.ModuleName
+	return types2.ModuleName
 }
 
 // RegisterLegacyAminoCodec registers the crisis module's types on the given LegacyAmino codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	types.RegisterLegacyAminoCodec(cdc)
+	types2.RegisterLegacyAminoCodec(cdc)
 }
 
 // DefaultGenesis returns default genesis state as raw bytes for the crisis
 // module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(types.DefaultGenesisState())
+	return cdc.MustMarshalJSON(types2.DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the crisis module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
-	var data types.GenesisState
+	var data types2.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types2.ModuleName, err)
 	}
 
-	return types.ValidateGenesis(&data)
+	return types2.ValidateGenesis(&data)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the crisis module.
@@ -83,7 +83,7 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(_ client.Context, _ *gwruntime.S
 // RegisterInterfaces registers interfaces and implementations of the crisis
 // module.
 func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) {
-	types.RegisterInterfaces(registry)
+	types2.RegisterInterfaces(registry)
 }
 
 // AppModule implements an application module for the crisis module.
@@ -95,7 +95,7 @@ type AppModule struct {
 	// NOTE: We store a reference to the keeper here so that after a module
 	// manager is created, the invariants can be properly registered and
 	// executed.
-	keeper *keeper.Keeper
+	keeper *keeper2.Keeper
 
 	// legacySubspace is used solely for migration of x/params managed parameters
 	legacySubspace exported.Subspace
@@ -109,7 +109,7 @@ type AppModule struct {
 // modified genesis file.
 //
 // Deprecated: the crisis module is deprecated and will be removed in the next Cosmos SDK major release.
-func NewAppModule(keeper *keeper.Keeper, skipGenesisInvariants bool, ss exported.Subspace) AppModule {
+func NewAppModule(keeper *keeper2.Keeper, skipGenesisInvariants bool, ss exported.Subspace) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{},
 		keeper:         keeper,
@@ -134,18 +134,18 @@ func AddModuleInitFlags(startCmd *cobra.Command) {
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
-	types.RegisterMsgServer(cfg.MsgServer(), am.keeper)
+	types2.RegisterMsgServer(cfg.MsgServer(), am.keeper)
 
-	m := keeper.NewMigrator(am.keeper, am.legacySubspace)
-	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err))
+	m := keeper2.NewMigrator(am.keeper, am.legacySubspace)
+	if err := cfg.RegisterMigration(types2.ModuleName, 1, m.Migrate1to2); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", types2.ModuleName, err))
 	}
 }
 
 // InitGenesis performs genesis initialization for the crisis module. It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.RawMessage) {
-	var genesisState types.GenesisState
+	var genesisState types2.GenesisState
 	cdc.MustUnmarshalJSON(data, &genesisState)
 
 	am.keeper.InitGenesis(ctx, &genesisState)
@@ -188,7 +188,7 @@ type ModuleInputs struct {
 	Cdc          codec.Codec
 	AppOpts      servertypes.AppOptions `optional:"true"`
 
-	BankKeeper   types.SupplyKeeper
+	BankKeeper   types2.SupplyKeeper
 	AddressCodec address.Codec
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
@@ -199,7 +199,7 @@ type ModuleOutputs struct {
 	depinject.Out
 
 	Module       appmodule.AppModule
-	CrisisKeeper *keeper.Keeper
+	CrisisKeeper *keeper2.Keeper
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
@@ -219,7 +219,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
-	k := keeper.NewKeeper(
+	k := keeper2.NewKeeper(
 		in.Cdc,
 		in.StoreService,
 		invalidCheckPeriod,

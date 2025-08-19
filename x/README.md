@@ -39,7 +39,7 @@ capabilities of your blockchain or further specialize it.
 
 The following modules are deprecated.  They will no longer be maintained actively.
 
-* [Crisis](./crisis/README.md) - _Deprecated_ halting the blockchain under certain circumstances (e.g. if an invariant is broken).
+* [Crisis](../contrib/x/crisis/README.md) - _Deprecated_ halting the blockchain under certain circumstances (e.g. if an invariant is broken).
 * [Params](./params/README.md) - _Deprecated_ Globally available parameter store.
 * [NFT](../contrib/x/nft/README.md) - _Deprecated_ NFT module implemented based on [ADR43](https://docs.cosmos.network/main/build/architecture/adr-043-nft-module).
 * [Group](../contrib/x/group/README.md) - _Deprecated_ Allows for the creation and management of on-chain multisig accounts.  

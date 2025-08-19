@@ -6,8 +6,8 @@ sidebar_position: 1
 
 The Cosmos SDK contains different types of [tests](https://martinfowler.com/articles/practical-test-pyramid.html).
 These tests have different goals and are used at different stages of the development cycle.
-We advice, as a general rule, to use tests at all stages of the development cycle.
-It is advised, as a chain developer, to test your application and modules in a similar way than the SDK.
+We advise, as a general rule, to use tests at all stages of the development cycle.
+It is advised, as a chain developer, to test your application and modules in a similar way to the SDK.
 
 The rationale behind testing can be found in [ADR-59](https://docs.cosmos.network/main/build/architecture/adr-059-test-scopes).
 
@@ -46,7 +46,7 @@ This allows us to test the `x/gov` module without having to import other modules
 https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/gov/keeper/keeper_test.go#L3-L42
 ```
 
-We can test then create unit tests using the newly created `Keeper` instance.
+We can then create unit tests using the newly created `Keeper` instance.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/gov/keeper/keeper_test.go#L83-L107

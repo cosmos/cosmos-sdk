@@ -72,7 +72,7 @@ In the node, all data is stored using Protocol Buffers serialization.
 The Cosmos SDK supports the following digital key schemes for creating digital signatures:
 
 * `secp256k1`, as implemented in the [Cosmos SDK's `crypto/keys/secp256k1` package](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/crypto/keys/secp256k1/secp256k1.go).
-* `secp256r1`, as implemented in the [Cosmos SDK's `crypto/keys/secp256r1` package](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/crypto/keys/secp256r1/pubkey.go),
+* `secp256r1`, as implemented in the [Cosmos SDK's `crypto/keys/secp256r1` package](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/crypto/keys/secp256r1/pubkey.go).
 * `tm-ed25519`, as implemented in the [Cosmos SDK `crypto/keys/ed25519` package](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/crypto/keys/ed25519/ed25519.go). This scheme is supported only for the consensus validation.
 
 |              | Address length in bytes | Public key length in bytes | Used for transaction authentication | Used for consensus (cometbft) |
@@ -173,7 +173,7 @@ To create a new key type for using in keyring, `keyring.SignatureAlgo` interface
 https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/crypto/keyring/signing_algorithms.go#L11-L16
 ```
 
-The interface consists in three methods where `Name()` returns the name of the algorithm as a `hd.PubKeyType` and `Derive()` and `Generate()` must return the following functions respectively:
+The interface consists of three methods where `Name()` returns the name of the algorithm as a `hd.PubKeyType` and `Derive()` and `Generate()` must return the following functions respectively:
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/crypto/hd/algo.go#L28-L31

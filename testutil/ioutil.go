@@ -73,7 +73,7 @@ func TempFile(tb testing.TB) *os.File {
 	return fp
 }
 
-// GetTempDir returns a writable temporary director for the test to use.
+// GetTempDir returns a writable temporary directory for the test to use.
 func GetTempDir(tb testing.TB) string {
 	tb.Helper()
 	// os.MkDir() is used instead of testing.T.TempDir()

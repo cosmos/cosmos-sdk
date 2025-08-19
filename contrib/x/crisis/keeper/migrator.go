@@ -1,9 +1,9 @@
 package keeper
 
 import (
+	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/exported"
+	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/migrations/v2"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/crisis/exported"
-	v2 "github.com/cosmos/cosmos-sdk/x/crisis/migrations/v2"
 )
 
 // Migrator is a struct for handling in-place state migrations.

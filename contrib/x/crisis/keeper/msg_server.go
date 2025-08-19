@@ -4,18 +4,18 @@ import (
 	"context"
 
 	"cosmossdk.io/errors"
+	types2 "github.com/cosmos/cosmos-sdk/contrib/x/crisis/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-var _ types.MsgServer = &Keeper{}
+var _ types2.MsgServer = &Keeper{}
 
 // VerifyInvariant implements MsgServer.VerifyInvariant method.
 // It defines a method to verify a particular invariant.
-func (k *Keeper) VerifyInvariant(goCtx context.Context, msg *types.MsgVerifyInvariant) (*types.MsgVerifyInvariantResponse, error) {
+func (k *Keeper) VerifyInvariant(goCtx context.Context, msg *types2.MsgVerifyInvariant) (*types2.MsgVerifyInvariantResponse, error) {
 	if msg.Sender == "" {
 		return nil, sdkerrors.ErrInvalidAddress.Wrap("empty address string is not allowed")
 	}
@@ -53,7 +53,7 @@ func (k *Keeper) VerifyInvariant(goCtx context.Context, msg *types.MsgVerifyInva
 	}
 
 	if !found {
-		return nil, types.ErrUnknownInvariant
+		return nil, types2.ErrUnknownInvariant
 	}
 
 	if stop {
@@ -66,17 +66,17 @@ func (k *Keeper) VerifyInvariant(goCtx context.Context, msg *types.MsgVerifyInva
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			types.EventTypeInvariant,
-			sdk.NewAttribute(types.AttributeKeyRoute, msg.InvariantRoute),
+			types2.EventTypeInvariant,
+			sdk.NewAttribute(types2.AttributeKeyRoute, msg.InvariantRoute),
 		),
 	})
 
-	return &types.MsgVerifyInvariantResponse{}, nil
+	return &types2.MsgVerifyInvariantResponse{}, nil
 }
 
 // UpdateParams implements MsgServer.UpdateParams method.
 // It defines a method to update the x/crisis module parameters.
-func (k *Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+func (k *Keeper) UpdateParams(ctx context.Context, msg *types2.MsgUpdateParams) (*types2.MsgUpdateParamsResponse, error) {
 	if k.authority != msg.Authority {
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)
 	}
@@ -93,5 +93,5 @@ func (k *Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (
 		return nil, err
 	}
 
-	return &types.MsgUpdateParamsResponse{}, nil
+	return &types2.MsgUpdateParamsResponse{}, nil
 }

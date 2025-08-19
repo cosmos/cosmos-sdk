@@ -9,17 +9,17 @@ import (
 	"cosmossdk.io/core/address"
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
+	types2 "github.com/cosmos/cosmos-sdk/contrib/x/crisis/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 )
 
 // Keeper - crisis keeper
 //
 // Deprecated: the crisis keeper is deprecated and will be removed in the next Cosmos SDK major release.
 type Keeper struct {
-	routes         []types.InvarRoute
+	routes         []types2.InvarRoute
 	invCheckPeriod uint
 	storeService   storetypes.KVStoreService
 	cdc            codec.BinaryCodec
@@ -28,7 +28,7 @@ type Keeper struct {
 	// should be the x/gov module account.
 	authority string
 
-	supplyKeeper types.SupplyKeeper
+	supplyKeeper types2.SupplyKeeper
 
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 
@@ -43,20 +43,20 @@ type Keeper struct {
 // Deprecated: the crisis keeper is deprecated and will be removed in the next Cosmos SDK major release.
 func NewKeeper(
 	cdc codec.BinaryCodec, storeService storetypes.KVStoreService, invCheckPeriod uint,
-	supplyKeeper types.SupplyKeeper, feeCollectorName, authority string, ac address.Codec,
+	supplyKeeper types2.SupplyKeeper, feeCollectorName, authority string, ac address.Codec,
 ) *Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
 	k := &Keeper{
 		storeService:     storeService,
 		cdc:              cdc,
-		routes:           make([]types.InvarRoute, 0),
+		routes:           make([]types2.InvarRoute, 0),
 		invCheckPeriod:   invCheckPeriod,
 		supplyKeeper:     supplyKeeper,
 		feeCollectorName: feeCollectorName,
 		authority:        authority,
 		addressCodec:     ac,
 
-		ConstantFee: collections.NewItem(sb, types.ConstantFeeKey, "constant_fee", codec.CollValue[sdk.Coin](cdc)),
+		ConstantFee: collections.NewItem(sb, types2.ConstantFeeKey, "constant_fee", codec.CollValue[sdk.Coin](cdc)),
 	}
 	schema, err := sb.Build()
 	if err != nil {
@@ -74,17 +74,17 @@ func (k *Keeper) GetAuthority() string {
 // Logger returns a module-specific logger.
 func (k *Keeper) Logger(ctx context.Context) log.Logger {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	return sdkCtx.Logger().With("module", "x/"+types.ModuleName)
+	return sdkCtx.Logger().With("module", "x/"+types2.ModuleName)
 }
 
 // RegisterRoute register the routes for each of the invariants
 func (k *Keeper) RegisterRoute(moduleName, route string, invar sdk.Invariant) {
-	invarRoute := types.NewInvarRoute(moduleName, route, invar)
+	invarRoute := types2.NewInvarRoute(moduleName, route, invar)
 	k.routes = append(k.routes, invarRoute)
 }
 
 // Routes - return the keeper's invariant routes
-func (k *Keeper) Routes() []types.InvarRoute {
+func (k *Keeper) Routes() []types2.InvarRoute {
 	return k.routes
 }
 

@@ -114,7 +114,7 @@ func TestFilteredFeeValidAllow(t *testing.T) {
 			blockTime: now,
 			accept:    false,
 		},
-		"with out spend limit": {
+		"without spend limit": {
 			allowance: &feegrant.BasicAllowance{
 				Expiration: &oneHour,
 			},

@@ -19,7 +19,7 @@ The 5 methods introduced in ABCI 2.0 are:
 
 Based on validator voting power, CometBFT chooses a block proposer and calls `PrepareProposal` on the block proposer's application (Cosmos SDK). The selected block proposer is responsible for collecting outstanding transactions from the mempool, adhering to the application's specifications. The application can enforce custom transaction ordering and incorporate additional transactions, potentially generated from vote extensions in the previous block.
 
-To perform this manipulation on the application side, a custom handler must be implemented. By default, the Cosmos SDK provides `PrepareProposalHandler`, used in conjunction with an application specific mempool. A custom handler can be written by application developer, if a noop handler provided, all transactions are considered valid.
+To perform this manipulation on the application side, a custom handler must be implemented. By default, the Cosmos SDK provides `PrepareProposalHandler`, used in conjunction with an application specific mempool. A custom handler can be written by an application developer, if a noop handler is provided, all transactions are considered valid.
 
 Please note that vote extensions will only be available on the following height in which vote extensions are enabled. More information about vote extensions can be found [here](https://docs.cosmos.network/main/build/abci/vote-extensions).
 
@@ -39,7 +39,7 @@ These methods allow applications to extend the voting process by requiring valid
 
 If vote extensions are enabled, `ExtendVote` will be called on every validator and each one will return its vote extension which is in practice a bunch of bytes. As mentioned above this data (vote extension) can only be retrieved in the next block height during `PrepareProposal`. Additionally, this data can be arbitrary, but in the provided tutorials, it serves as an oracle or proof of transactions in the mempool. Essentially, vote extensions are processed and injected as transactions. Examples of use-cases for vote extensions include prices for a price oracle or encryption shares for an encrypted transaction mempool. `ExtendVote` CAN be non-deterministic.
 
-`VerifyVoteExtensions` is performed on every validator multiple times in order to verify other validators' vote extensions. This check is submitted to validate the integrity and validity of the vote extensions preventing malicious or invalid vote extensions.
+`VerifyVoteExtensions` is performed on every validator multiple times in order to verify other validators' vote extensions. This check is performed to validate the integrity and validity of the vote extensions preventing malicious or invalid vote extensions.
 
 Additionally, applications must keep the vote extension data concise as it can degrade the performance of their chain, see testing results [here](https://docs.cometbft.com/v0.38/qa/cometbft-qa-38#vote-extensions-testbed).
 

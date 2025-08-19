@@ -18,7 +18,7 @@ jobs:
   test-sim-multi-seed-long:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
           go-version: "1.24"
@@ -33,7 +33,7 @@ jobs:
     runs-on: depot-ubuntu-22.04-4
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
           go-version: "1.24"

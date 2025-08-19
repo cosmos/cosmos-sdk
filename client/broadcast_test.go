@@ -20,7 +20,7 @@ func CreateContextWithErrorAndMode(err error, mode string) Context {
 	}
 }
 
-// Test the correct code is returned when
+// Test the correct code is returned when broadcasting transactions with specific mempool errors
 func TestBroadcastError(t *testing.T) {
 	errors := map[error]uint32{
 		mempool.ErrTxInCache:       sdkerrors.ErrTxInMempoolCache.ABCICode(),

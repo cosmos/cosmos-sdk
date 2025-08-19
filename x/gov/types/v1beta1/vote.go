@@ -54,7 +54,7 @@ func NewNonSplitVoteOption(option VoteOption) WeightedVoteOptions {
 	return WeightedVoteOptions{{option, sdkmath.LegacyNewDec(1)}}
 }
 
-// WeightedVoteOptions describes array of WeightedVoteOptions
+// WeightedVoteOptions describes an array of WeightedVoteOptions
 type WeightedVoteOptions []WeightedVoteOption
 
 func (v WeightedVoteOptions) String() (out string) {

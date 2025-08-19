@@ -3,6 +3,10 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/contrib/x/crisis"
+	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/keeper"
+	crisistestutil "github.com/cosmos/cosmos-sdk/contrib/x/crisis/testutil"
+	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/types"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
@@ -13,10 +17,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/crisis"
-	"github.com/cosmos/cosmos-sdk/x/crisis/keeper"
-	crisistestutil "github.com/cosmos/cosmos-sdk/x/crisis/testutil"
-	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 )
 
 func TestLogger(t *testing.T) {

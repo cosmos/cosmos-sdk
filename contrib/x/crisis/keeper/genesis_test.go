@@ -3,6 +3,10 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/contrib/x/crisis"
+	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/keeper"
+	crisistestutil "github.com/cosmos/cosmos-sdk/contrib/x/crisis/testutil"
+	types2 "github.com/cosmos/cosmos-sdk/contrib/x/crisis/types"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
@@ -15,10 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/crisis"
-	"github.com/cosmos/cosmos-sdk/x/crisis/keeper"
-	crisistestutil "github.com/cosmos/cosmos-sdk/x/crisis/testutil"
-	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 )
 
 type GenesisTestSuite struct {
@@ -34,7 +34,7 @@ func TestGenesisTestSuite(t *testing.T) {
 }
 
 func (s *GenesisTestSuite) SetupTest() {
-	key := storetypes.NewKVStoreKey(types.StoreKey)
+	key := storetypes.NewKVStoreKey(types2.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{})
@@ -67,7 +67,7 @@ func (s *GenesisTestSuite) TestImportExportGenesis() {
 }
 
 func (s *GenesisTestSuite) TestInitGenesis() {
-	genesisState := types.DefaultGenesisState()
+	genesisState := types2.DefaultGenesisState()
 	genesisState.ConstantFee = sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(1000))
 	s.keeper.InitGenesis(s.sdkCtx, genesisState)
 

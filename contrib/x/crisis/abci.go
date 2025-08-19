@@ -3,10 +3,10 @@ package crisis
 import (
 	"context"
 
+	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/keeper"
+	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/crisis/keeper"
-	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 )
 
 // EndBlocker checks all registered invariants

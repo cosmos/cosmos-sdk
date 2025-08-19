@@ -47,7 +47,7 @@ One such tool is [grpcurl](https://github.com/fullstorydev/grpcurl), and a gRPC 
 
 ```bash
 grpcurl \
-    -plaintext                                           # We want results in plain test
+    -plaintext                                           # We want results in plain text
     -import-path ./proto \                               # Import these .proto files
     -proto ./proto/cosmos/staking/v1beta1/query.proto \  # Look into this .proto file for the Query protobuf service
     -d '{"address":"$MY_DELEGATOR"}' \                   # Query arguments
@@ -134,7 +134,7 @@ Once a result is received from the querier, `baseapp` begins the process of retu
 
 ## Response
 
-Since `Query()` is an ABCI function, `baseapp` returns the response as an [`abci.QueryResponse`](https://docs.cometbft.com/main/spec/abci/abci++_methods#query) type. The `client.Context` `Query()` routine receives the response and.
+Since `Query()` is an ABCI function, `baseapp` returns the response as an [`abci.QueryResponse`](https://docs.cometbft.com/main/spec/abci/abci++_methods#query) type. The `client.Context` `Query()` routine receives the response and processes it.
 
 ### CLI Response
 

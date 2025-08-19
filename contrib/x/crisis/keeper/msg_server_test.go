@@ -3,6 +3,10 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/contrib/x/crisis"
+	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/keeper"
+	crisistestutil "github.com/cosmos/cosmos-sdk/contrib/x/crisis/testutil"
+	types2 "github.com/cosmos/cosmos-sdk/contrib/x/crisis/types"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
@@ -15,10 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/x/crisis"
-	"github.com/cosmos/cosmos-sdk/x/crisis/keeper"
-	crisistestutil "github.com/cosmos/cosmos-sdk/x/crisis/testutil"
-	"github.com/cosmos/cosmos-sdk/x/crisis/types"
 )
 
 type KeeperTestSuite struct {
@@ -34,7 +34,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	ctrl := gomock.NewController(s.T())
 	supplyKeeper := crisistestutil.NewMockSupplyKeeper(ctrl)
 
-	key := storetypes.NewKVStoreKey(types.StoreKey)
+	key := storetypes.NewKVStoreKey(types2.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{})
@@ -62,13 +62,13 @@ func (s *KeeperTestSuite) TestMsgVerifyInvariant() {
 
 	testCases := []struct {
 		name      string
-		input     *types.MsgVerifyInvariant
+		input     *types2.MsgVerifyInvariant
 		expErr    bool
 		expErrMsg string
 	}{
 		{
 			name: "empty sender not allowed",
-			input: &types.MsgVerifyInvariant{
+			input: &types2.MsgVerifyInvariant{
 				Sender:              "",
 				InvariantModuleName: "bank",
 				InvariantRoute:      "total-supply",
@@ -78,7 +78,7 @@ func (s *KeeperTestSuite) TestMsgVerifyInvariant() {
 		},
 		{
 			name: "invalid sender address",
-			input: &types.MsgVerifyInvariant{
+			input: &types2.MsgVerifyInvariant{
 				Sender:              "invalid address",
 				InvariantModuleName: "bank",
 				InvariantRoute:      "total-supply",
@@ -88,7 +88,7 @@ func (s *KeeperTestSuite) TestMsgVerifyInvariant() {
 		},
 		{
 			name: "unregistered invariant route",
-			input: &types.MsgVerifyInvariant{
+			input: &types2.MsgVerifyInvariant{
 				Sender:              sender.Address.String(),
 				InvariantModuleName: "module",
 				InvariantRoute:      "invalidroute",
@@ -98,7 +98,7 @@ func (s *KeeperTestSuite) TestMsgVerifyInvariant() {
 		},
 		{
 			name: "valid invariant",
-			input: &types.MsgVerifyInvariant{
+			input: &types2.MsgVerifyInvariant{
 				Sender:              sender.Address.String(),
 				InvariantModuleName: "bank",
 				InvariantRoute:      "total-supply",
@@ -126,13 +126,13 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 
 	testCases := []struct {
 		name      string
-		input     *types.MsgUpdateParams
+		input     *types2.MsgUpdateParams
 		expErr    bool
 		expErrMsg string
 	}{
 		{
 			name: "invalid authority",
-			input: &types.MsgUpdateParams{
+			input: &types2.MsgUpdateParams{
 				Authority:   "invalid",
 				ConstantFee: constantFee,
 			},
@@ -141,7 +141,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 		},
 		{
 			name: "invalid constant fee",
-			input: &types.MsgUpdateParams{
+			input: &types2.MsgUpdateParams{
 				Authority:   s.keeper.GetAuthority(),
 				ConstantFee: sdk.Coin{},
 			},
@@ -149,7 +149,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 		},
 		{
 			name: "negative constant fee",
-			input: &types.MsgUpdateParams{
+			input: &types2.MsgUpdateParams{
 				Authority:   s.keeper.GetAuthority(),
 				ConstantFee: sdk.Coin{Denom: sdk.DefaultBondDenom, Amount: sdkmath.NewInt(-1000)},
 			},
@@ -157,7 +157,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 		},
 		{
 			name: "all good",
-			input: &types.MsgUpdateParams{
+			input: &types2.MsgUpdateParams{
 				Authority:   s.keeper.GetAuthority(),
 				ConstantFee: constantFee,
 			},

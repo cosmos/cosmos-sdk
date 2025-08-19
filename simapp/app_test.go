@@ -18,8 +18,6 @@ import (
 	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	grouptypes "github.com/cosmos/cosmos-sdk/contrib/x/group"
-	group "github.com/cosmos/cosmos-sdk/contrib/x/group/module"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -220,7 +218,6 @@ func TestRunMigrations(t *testing.T) {
 					distrtypes.ModuleName:        distribution.AppModule{}.ConsensusVersion(),
 					slashingtypes.ModuleName:     slashing.AppModule{}.ConsensusVersion(),
 					govtypes.ModuleName:          gov.AppModule{}.ConsensusVersion(),
-					grouptypes.ModuleName:        group.AppModule{}.ConsensusVersion(),
 					upgradetypes.ModuleName:      upgrade.AppModule{}.ConsensusVersion(),
 					vestingtypes.ModuleName:      vesting.AppModule{}.ConsensusVersion(),
 					feegrant.ModuleName:          feegrantmodule.AppModule{}.ConsensusVersion(),

@@ -13,8 +13,10 @@ Unless otherwise noted, every step must be done by everyone who wants to partici
 in this testnet.
 
 1. From the root directory of the Cosmos SDK repository, run `$ make build`. This will build the
-    `simd` binary inside a new `build` directory. The following instructions are run from inside
-    the `build` directory.
+    `simd` binary at `build/simd`.
+    
+    **Note**: The following instructions use `./build/simd` from the root directory,
+    or `./simd` if you cd into the build directory first.
 2. If you've run `simd` before, you may need to reset your database before starting a new
     testnet. You can reset your database with the following command: `$ ./simd comet unsafe-reset-all`.
 3. `$ ./simd init [moniker] --chain-id [chain-id]`. This will initialize a new working directory

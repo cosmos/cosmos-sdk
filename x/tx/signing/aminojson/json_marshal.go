@@ -82,7 +82,7 @@ func NewEncoder(options EncoderOptions) Encoder {
 			"threshold_string": thresholdStringEncoder,
 		},
 		aminoFieldEncoders: map[string]FieldEncoder{
-			"legacy_coins": nullSliceAsEmptyEncoder,
+			"legacy_coins": NullSliceAsEmptyEncoder,
 			"inline_json":  cosmosInlineJSON,
 		},
 		protoTypeEncoders: map[string]MessageEncoder{

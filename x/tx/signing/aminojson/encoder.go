@@ -72,9 +72,10 @@ func cosmosDecEncoder(_ *Encoder, v protoreflect.Value, w io.Writer) error {
 	}
 }
 
-// nullSliceAsEmptyEncoder replicates the behavior at:
+// NullSliceAsEmptyEncoder replicates the behavior at:
 // https://github.com/cosmos/cosmos-sdk/blob/be9bd7a8c1b41b115d58f4e76ee358e18a52c0af/types/coin.go#L199-L205
-func nullSliceAsEmptyEncoder(enc *Encoder, v protoreflect.Value, w io.Writer) error {
+// Agoric: Make Public so we can use it under proper name on agoric-sdk
+func NullSliceAsEmptyEncoder(enc *Encoder, v protoreflect.Value, w io.Writer) error {
 	switch list := v.Interface().(type) {
 	case protoreflect.List:
 		if list.Len() == 0 {

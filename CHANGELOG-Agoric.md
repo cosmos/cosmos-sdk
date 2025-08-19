@@ -35,6 +35,9 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog (Agoric fork)
 
+
+* (aminojson): [#443](https://github.com/agoric-labs/cosmos-sdk/pull/443) Changed nullSliceAsEmptyEncoder to be Public.
+
 ## `v0.50.14-alpha.agoric.1` - 2025-07-09
 
 Upgrade to v0.50.14 of the Cosmos SDK, with Agoric changes preserved.

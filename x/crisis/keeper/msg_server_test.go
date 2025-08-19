@@ -53,8 +53,6 @@ func (s *KeeperTestSuite) TestMsgVerifyInvariant() {
 
 	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{})
 	kr := keyring.NewInMemory(encCfg.Codec)
-	testutil.CreateKeyringAccounts(s.T(), kr, 1)
-
 	sender := testutil.CreateKeyringAccounts(s.T(), kr, 1)[0]
 
 	s.supplyKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(2)

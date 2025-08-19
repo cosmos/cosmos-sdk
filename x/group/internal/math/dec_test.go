@@ -116,11 +116,11 @@ var genFloatAndDec *rapid.Generator[floatAndDec] = rapid.Custom(func(t *rapid.T)
 
 // Property: n == NewDecFromInt64(n).Int64()
 func testDecInt64(t *rapid.T) {
-	nIn := rapid.Int64().Draw(t, "n")
-	nOut, err := NewDecFromInt64(nIn).Int64()
+	inputInt := rapid.Int64().Draw(t, "n")
+	outputInt, err := NewDecFromInt64(inputInt).Int64()
 
 	require.NoError(t, err)
-	require.Equal(t, nIn, nOut)
+	require.Equal(t, inputInt, outputInt)
 }
 
 // Property: 0 + a == a

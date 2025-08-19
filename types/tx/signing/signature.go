@@ -40,17 +40,17 @@ func SignatureDataToProto(data SignatureData) *SignatureDescriptor_Data {
 			},
 		}
 	case *MultiSignatureData:
-		descDatas := make([]*SignatureDescriptor_Data, len(data.Signatures))
+		descriptorDataList := make([]*SignatureDescriptor_Data, len(data.Signatures))
 
 		for j, d := range data.Signatures {
-			descDatas[j] = SignatureDataToProto(d)
+			descriptorDataList[j] = SignatureDataToProto(d)
 		}
 
 		return &SignatureDescriptor_Data{
 			Sum: &SignatureDescriptor_Data_Multi_{
 				Multi: &SignatureDescriptor_Data_Multi{
 					Bitarray:   data.BitArray,
-					Signatures: descDatas,
+					Signatures: descriptorDataList,
 				},
 			},
 		}
@@ -71,15 +71,15 @@ func SignatureDataFromProto(descData *SignatureDescriptor_Data) SignatureData {
 		}
 	case *SignatureDescriptor_Data_Multi_:
 		multi := descData.Multi
-		datas := make([]SignatureData, len(multi.Signatures))
+		signatureDataList := make([]SignatureData, len(multi.Signatures))
 
 		for j, d := range multi.Signatures {
-			datas[j] = SignatureDataFromProto(d)
+			signatureDataList[j] = SignatureDataFromProto(d)
 		}
 
 		return &MultiSignatureData{
 			BitArray:   multi.Bitarray,
-			Signatures: datas,
+			Signatures: signatureDataList,
 		}
 	default:
 		panic(fmt.Errorf("unexpected case %+v", descData))

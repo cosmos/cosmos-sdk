@@ -96,16 +96,16 @@ func CollectTxs(cdc codec.JSONCodec, txJSONDecoder sdk.TxDecoder, moniker, genTx
 	// addresses and IPs (and port) validator server info
 	var addressesIPs []string
 
-	for _, fo := range fos {
-		if fo.IsDir() {
+	for _, fileEntry := range fos {
+		if fileEntry.IsDir() {
 			continue
 		}
-		if !strings.HasSuffix(fo.Name(), ".json") {
+		if !strings.HasSuffix(fileEntry.Name(), ".json") {
 			continue
 		}
 
 		// get the genTx
-		jsonRawTx, err := os.ReadFile(filepath.Join(genTxsDir, fo.Name()))
+		jsonRawTx, err := os.ReadFile(filepath.Join(genTxsDir, fileEntry.Name()))
 		if err != nil {
 			return appGenTxs, persistentPeers, err
 		}

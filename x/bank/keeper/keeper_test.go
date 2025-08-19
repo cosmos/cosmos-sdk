@@ -2497,7 +2497,7 @@ func (suite *KeeperTestSuite) TestGetAllBalances() {
 		sdk.NewInt64Coin("ten", 40000000), sdk.NewInt64Coin("eleven", 4545), sdk.NewInt64Coin("twelve", 41212),
 		sdk.NewInt64Coin("thirteen", 41333), sdk.NewInt64Coin("fourteen", 401414), sdk.NewInt64Coin("fifteen", 47),
 		sdk.NewInt64Coin("sixteen", 400016), sdk.NewInt64Coin("seventeen", 404), sdk.NewInt64Coin("eighteen", 4454),
-		sdk.NewInt64Coin("ninteen", 41298), sdk.NewInt64Coin("twenty", 456789),
+		sdk.NewInt64Coin("nineteen", 41298), sdk.NewInt64Coin("twenty", 456789),
 	)
 
 	bals := []struct {
@@ -2592,11 +2592,11 @@ func (suite *KeeperTestSuite) TestGetAccountsBalances() {
 		sdk.NewInt64Coin("ten", 40000000), sdk.NewInt64Coin("eleven", 4545), sdk.NewInt64Coin("twelve", 41212),
 		sdk.NewInt64Coin("thirteen", 41333), sdk.NewInt64Coin("fourteen", 401414), sdk.NewInt64Coin("fifteen", 47),
 		sdk.NewInt64Coin("sixteen", 400016), sdk.NewInt64Coin("seventeen", 404), sdk.NewInt64Coin("eighteen", 4454),
-		sdk.NewInt64Coin("ninteen", 41298), sdk.NewInt64Coin("twenty", 456789),
+		sdk.NewInt64Coin("nineteen", 41298), sdk.NewInt64Coin("twenty", 456789),
 	)
 	balC := sdk.NewCoins(sdk.NewInt64Coin("one", 222), sdk.NewInt64Coin("two", 234))
 	balD := sdk.Coins(nil)
-	balE := sdk.NewCoins(sdk.NewInt64Coin("banana", 99), sdk.NewInt64Coin("six", 789))
+	balanceE := sdk.NewCoins(sdk.NewInt64Coin("banana", 99), sdk.NewInt64Coin("six", 789))
 	balF := sdk.NewCoins(
 		sdk.NewInt64Coin("one", 37), sdk.NewInt64Coin("two", 3), sdk.NewInt64Coin("three", 399),
 		sdk.NewInt64Coin("four", 3456), sdk.NewInt64Coin("five", 321),
@@ -2613,7 +2613,7 @@ func (suite *KeeperTestSuite) TestGetAccountsBalances() {
 		{Addr: addrB, Coins: balB},
 		{Addr: addrC, Coins: balC},
 		{Addr: addrD, Coins: balD},
-		{Addr: addrE, Coins: balE},
+		{Addr: addrE, Coins: balanceE},
 		{Addr: addrF, Coins: balF},
 		{Addr: addrG, Coins: balG},
 	}

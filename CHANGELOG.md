@@ -41,10 +41,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Breaking Changes
 
-* [#25090](https://github.com/cosmos/cosmos-sdk/pull/25090) Moved deprecated modules to `./contrib`.  These modules are still available but will not longer be actively maintained or supported in the Cosmos SDK Bug Bounty program.
+* [#25090](https://github.com/cosmos/cosmos-sdk/pull/25090) Moved deprecated modules to `./contrib`.  These modules are still available but will no longer be actively maintained or supported in the Cosmos SDK Bug Bounty program.
   * `x/group`
   * `x/nft`
   * `x/circuit`
+  * `x/crisis`
 * [#24837](https://github.com/cosmos/cosmos-sdk/pull/24837) Update to using CometBFT v2.
     * This update changes the import paths from `cometbft/cometbft` to `cometbft/cometbft/v2`.  Users can use the [migration tool](./tools/migration/TODO) to automatically update their nodes.
 

@@ -174,7 +174,7 @@ func (p Params) ValidateBasic() error {
 	}
 
 	if p.VotingPeriod == nil {
-		return fmt.Errorf("voting period must not be nil: %d", p.VotingPeriod)
+		return fmt.Errorf("voting period must not be nil: %v", p.VotingPeriod)
 	}
 	if p.VotingPeriod.Seconds() <= 0 {
 		return fmt.Errorf("voting period must be positive: %s", p.VotingPeriod)

@@ -72,6 +72,20 @@ func cosmosDecEncoder(_ *Encoder, v protoreflect.Value, w io.Writer) error {
 	}
 }
 
+// cosmosAddressBytesEncoder encodes `bytes` fields that represent addresses in bech32 format.
+func cosmosAddressBytesEncoder(enc *Encoder, v protoreflect.Value, w io.Writer) error {
+	if enc.addressCodec == nil {
+		return fmt.Errorf("address codec not set in encoder so we can't render address bytes as bech32 strings")
+	}
+
+	addrStr, err := enc.addressCodec.BytesToString(v.Bytes())
+	if err != nil {
+		return fmt.Errorf("failed to convert bytes to address string: %w", err)
+	}
+
+	return jsonMarshal(w, addrStr)
+}
+
 // nullSliceAsEmptyEncoder replicates the behavior at:
 // https://github.com/cosmos/cosmos-sdk/blob/be9bd7a8c1b41b115d58f4e76ee358e18a52c0af/types/coin.go#L199-L205
 func nullSliceAsEmptyEncoder(enc *Encoder, v protoreflect.Value, w io.Writer) error {

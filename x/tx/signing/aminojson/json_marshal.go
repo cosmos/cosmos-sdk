@@ -7,6 +7,7 @@ import (
 	"io"
 	"sort"
 
+	"cosmossdk.io/core/address"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/proto"
@@ -44,6 +45,8 @@ type EncoderOptions struct {
 	TypeResolver signing.TypeResolver
 	// FileResolver is used to resolve protobuf file descriptors TypeURL when TypeResolver fails.
 	FileResolver signing.ProtoFileResolver
+	// AddressCodec is used to render address bytes as JSON strings.
+	AddressCodec address.Codec
 }
 
 // Encoder is a JSON encoder that uses the Amino JSON encoding rules for protobuf messages.
@@ -60,6 +63,7 @@ type Encoder struct {
 	enumsAsString             bool
 	aminoNameAsTypeURL        bool
 	marshalMappings           bool
+	addressCodec              address.Codec
 }
 
 // NewEncoder returns a new Encoder capable of serializing protobuf messages to JSON using the Amino JSON encoding
@@ -73,8 +77,9 @@ func NewEncoder(options EncoderOptions) Encoder {
 	}
 	enc := Encoder{
 		cosmosProtoScalarEncoders: map[string]FieldEncoder{
-			cosmosDecType: cosmosDecEncoder,
-			"cosmos.Int":  cosmosIntEncoder,
+			cosmosDecType:         cosmosDecEncoder,
+			"cosmos.Int":          cosmosIntEncoder,
+			"cosmos.AddressBytes": cosmosAddressBytesEncoder,
 		},
 		aminoMessageEncoders: map[string]MessageEncoder{
 			"key_field":        keyFieldEncoder,
@@ -97,6 +102,7 @@ func NewEncoder(options EncoderOptions) Encoder {
 		enumsAsString:      options.EnumAsString,
 		aminoNameAsTypeURL: options.AminoNameAsTypeURL,
 		marshalMappings:    options.MarshalMappings,
+		addressCodec:       options.AddressCodec,
 	}
 	return enc
 }

@@ -30,16 +30,13 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	circuitkeeper "github.com/cosmos/cosmos-sdk/x/circuit/keeper"
 	consensuskeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	epochskeeper "github.com/cosmos/cosmos-sdk/x/epochs/keeper"
 	evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
 	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
-	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper" //nolint:staticcheck // deprecated and to be removed
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
-	nftkeeper "github.com/cosmos/cosmos-sdk/x/nft/keeper" //nolint:staticcheck // deprecated and to be removed
 	protocolpoolkeeper "github.com/cosmos/cosmos-sdk/x/protocolpool/keeper"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
@@ -75,13 +72,10 @@ type SimApp struct {
 	UpgradeKeeper         *upgradekeeper.Keeper
 	EvidenceKeeper        evidencekeeper.Keeper
 	ConsensusParamsKeeper consensuskeeper.Keeper
-	CircuitKeeper         circuitkeeper.Keeper
 
 	// supplementary keepers
 	FeeGrantKeeper     feegrantkeeper.Keeper
-	GroupKeeper        groupkeeper.Keeper
 	AuthzKeeper        authzkeeper.Keeper
-	NFTKeeper          nftkeeper.Keeper
 	EpochsKeeper       epochskeeper.Keeper
 	ProtocolPoolKeeper protocolpoolkeeper.Keeper
 
@@ -176,12 +170,9 @@ func NewSimApp(
 		&app.GovKeeper,
 		&app.UpgradeKeeper,
 		&app.AuthzKeeper,
-		&app.EvidenceKeeper,
 		&app.FeeGrantKeeper,
-		&app.GroupKeeper,
-		&app.NFTKeeper,
+		&app.EvidenceKeeper,
 		&app.ConsensusParamsKeeper,
-		&app.CircuitKeeper,
 		&app.EpochsKeeper,
 		&app.ProtocolPoolKeeper,
 	); err != nil {
@@ -271,16 +262,13 @@ func NewSimApp(
 // setAnteHandler sets custom ante handlers.
 // "x/auth/tx" pre-defined ante handler have been disabled in app_config.
 func (app *SimApp) setAnteHandler(txConfig client.TxConfig) {
-	anteHandler, err := NewAnteHandler(
-		HandlerOptions{
-			ante.HandlerOptions{
-				AccountKeeper:   app.AccountKeeper,
-				BankKeeper:      app.BankKeeper,
-				SignModeHandler: txConfig.SignModeHandler(),
-				FeegrantKeeper:  app.FeeGrantKeeper,
-				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
-			},
-			&app.CircuitKeeper,
+	anteHandler, err := ante.NewAnteHandler(
+		ante.HandlerOptions{
+			AccountKeeper:   app.AccountKeeper,
+			BankKeeper:      app.BankKeeper,
+			SignModeHandler: txConfig.SignModeHandler(),
+			FeegrantKeeper:  app.FeeGrantKeeper,
+			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		},
 	)
 	if err != nil {

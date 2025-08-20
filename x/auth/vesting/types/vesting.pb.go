@@ -114,7 +114,7 @@ func (m *ContinuousVestingAccount) XXX_DiscardUnknown() {
 var xxx_messageInfo_ContinuousVestingAccount proto.InternalMessageInfo
 
 // DelayedVestingAccount implements the VestingAccount interface. It vests all
-// coins after a specific time, but non prior. In other words, it keeps them
+// coins after a specific time, but not prior. In other words, it keeps them
 // locked until a specified time.
 type DelayedVestingAccount struct {
 	*BaseVestingAccount `protobuf:"bytes,1,opt,name=base_vesting_account,json=baseVestingAccount,proto3,embedded=base_vesting_account" json:"base_vesting_account,omitempty"`

@@ -160,7 +160,7 @@ func (m *ABCIMessageLog) GetEvents() StringEvents {
 	return nil
 }
 
-// StringEvent defines en Event object wrapper where all the attributes
+// StringEvent defines an Event object wrapper where all the attributes
 // contain key/value pairs that are strings instead of raw bytes.
 type StringEvent struct {
 	Type       string      `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`

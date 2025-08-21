@@ -111,3 +111,25 @@ A reference to the github actions can be found [here](https://github.com/cosmos/
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/main/.github/workflows/proto.yml#L1-L32
 ```
+
+### Troubleshooting: proto generation (buf/protoc)
+
+- **`protoc: command not found` or plugin not found**  
+  Prefer the Docker-based flow described on this page to avoid local toolchain drift:  
+  ```sh
+  make proto-image && make proto-gen
+  ```
+  This pins compatible `protoc` and plugins. If you do use a local toolchain, ensure your `$PATH` includes `$(go env GOPATH)/bin`.
+
+- **Buf import errors (e.g., `google/api/annotations.proto` not found)**  
+  Verify that your project contains the required `buf.yaml` and `buf.gen*.yaml` files and that `deps` are present and correct.  
+  In mono-repos, make sure any `third_party/proto` (or equivalent) directories are included and that `buf` configs point to them.
+
+- **Shell/CI differences**  
+  Some environments handle shell options differently (e.g., `set -o pipefail`). Running the generation via the documented Docker image avoids these discrepancies.
+
+- **Version pinning**  
+  Pin the proto-builder image to the recommended tag (e.g., `ghcr.io/cosmos/proto-builder:<version>`) to prevent plugin/version mismatches. When in doubt, rebuild the image and regenerate:
+  ```sh
+  make clean proto-image proto-gen
+  ```

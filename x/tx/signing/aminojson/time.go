@@ -57,11 +57,13 @@ func marshalDuration(_ *Encoder, message protoreflect.Message, writer io.Writer)
 		return errors.New("expected seconds field")
 	}
 
-	// todo
-	// check signs are consistent
 	seconds := message.Get(secondsField).Int()
+	// ensure seconds fits in time.Duration when converted to nanoseconds
 	if seconds > MaxDurationSeconds {
 		return fmt.Errorf("%d seconds would overflow an int64 when represented as nanoseconds", seconds)
+	}
+	if seconds < -MaxDurationSeconds {
+		return fmt.Errorf("%d seconds would underflow an int64 when represented as nanoseconds", seconds)
 	}
 
 	nanosField := fields.ByName(nanosName)
@@ -70,6 +72,15 @@ func marshalDuration(_ *Encoder, message protoreflect.Message, writer io.Writer)
 	}
 
 	nanos := message.Get(nanosField).Int()
+	// validate nanos range according to protobuf Duration constraints
+	if nanos <= -1e9 || nanos >= 1e9 {
+		return fmt.Errorf("nanos must be in range [-999999999, 999999999], got %d", nanos)
+	}
+	// seconds and nanos must have consistent signs
+	if (seconds > 0 && nanos < 0) || (seconds < 0 && nanos > 0) {
+		return fmt.Errorf("seconds and nanos must have the same sign")
+	}
+
 	totalNanos := nanos + (seconds * 1e9)
 	_, err := fmt.Fprintf(writer, `"%d"`, totalNanos)
 	return err

@@ -22,7 +22,7 @@ func init() {
 			Fee:   99,
 			Nested: &testdata.Nested3B{
 				Id:   3,
-				Name: "3A this one that one there those oens",
+				Name: "3A this one that one there those ones",
 				Age:  4588,
 				B4: []*testdata.Nested4B{
 					{

@@ -297,7 +297,7 @@ func (c *container) addNode(provider *providerDescriptor, key *moduleKey) (inter
 	}
 
 	if hasOwnModuleKeyParam {
-		return nil, fmt.Errorf("%T and %T must not be declared as dependencies on the same provided",
+		return nil, fmt.Errorf("%T and %T must not be declared as dependencies on the same provider",
 			ModuleKey{}, OwnModuleKey{})
 	}
 

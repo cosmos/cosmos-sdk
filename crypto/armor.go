@@ -54,7 +54,7 @@ const (
 // to the keys command in future startups / or the attacker must get access
 // to the filesystem. However, with a similar threat model (changing
 // variables in runtime), one can cause the user to sign a different tx
-// than what they see, which is a significantly cheaper attack then breaking
+// than what they see, which is a significantly cheaper attack than breaking
 // a bcrypt hash. (Recall that the nonce still exists to break rainbow tables)
 // For further notes on security parameter choice, see README.md
 var BcryptSecurityParameter uint32 = 12
@@ -167,7 +167,7 @@ func encryptPrivKey(privKey cryptotypes.PrivKey, passphrase string) (saltBytes, 
 
 	aead, err := chacha20poly1305.New(key)
 	if err != nil {
-		panic(errorsmod.Wrap(err, "error generating cypher from key"))
+		panic(errorsmod.Wrap(err, "error generating cipher from key"))
 	}
 
 	nonce := make([]byte, aead.NonceSize(), aead.NonceSize()+len(privKeyBytes)+aead.Overhead()) // Nonce is fixed to maintain consistency, each key is generated at every encryption using a random salt.
@@ -224,7 +224,7 @@ func decryptPrivKey(saltBytes, encBytes []byte, passphrase, kdf string) (privKey
 
 		aead, err := chacha20poly1305.New(key)
 		if err != nil {
-			return privKey, errorsmod.Wrap(err, "Error generating aead cypher for key.")
+			return privKey, errorsmod.Wrap(err, "Error generating aead cipher for key.")
 		} else if len(encBytes) < aead.NonceSize() {
 			return privKey, errorsmod.Wrap(nil, "Encrypted bytes length is smaller than aead nonce size.")
 		}
@@ -236,7 +236,7 @@ func decryptPrivKey(saltBytes, encBytes []byte, passphrase, kdf string) (privKey
 	case kdfBcrypt:
 		key, err = bcrypt.GenerateFromPassword(saltBytes, []byte(passphrase), BcryptSecurityParameter)
 		if err != nil {
-			return privKey, errorsmod.Wrap(err, "Error generating bcrypt cypher for key.")
+			return privKey, errorsmod.Wrap(err, "Error generating bcrypt cipher for key.")
 		}
 		key = crypto.Sha256(key) // Get 32 bytes
 		privKeyBytes, err = xsalsa20symmetric.DecryptSymmetric(encBytes, key)

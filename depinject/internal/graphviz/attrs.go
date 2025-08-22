@@ -47,7 +47,7 @@ func (a *Attributes) SetFontSize(size string) { a.SetAttr("fontsize", size) }
 // SetStyle sets the style attribute.
 func (a *Attributes) SetStyle(style string) { a.SetAttr("style", style) }
 
-// String returns the attributes graphviz string in the format [name = "value", ...].
+// String returns the attributes graphviz string in the format [name="value", ...].
 func (a *Attributes) String() string {
 	if len(a.attrs) == 0 {
 		return ""

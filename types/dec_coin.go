@@ -157,7 +157,7 @@ func (coin DecCoin) IsValid() bool {
 // DecCoins defines a slice of coins with decimal values
 type DecCoins []DecCoin
 
-// NewDecCoins constructs a new coin set with with decimal values
+// NewDecCoins constructs a new coin set with decimal values
 // from DecCoins. The provided coins will be sanitized by removing
 // zero coins and sorting the coin set. A panic will occur if the coin set is not valid.
 func NewDecCoins(decCoins ...DecCoin) DecCoins {
@@ -509,7 +509,7 @@ func (coins DecCoins) IsZero() bool {
 	return true
 }
 
-// Validate checks that the DecCoins are sorted, have positive amount, with a valid and unique
+// Validate checks that the DecCoins are sorted, have positive amounts, with a valid and unique
 // denomination (i.e no duplicates). Otherwise, it returns an error.
 func (coins DecCoins) Validate() error {
 	switch len(coins) {
@@ -557,7 +557,7 @@ func (coins DecCoins) Validate() error {
 	}
 }
 
-// IsValid calls Validate and returns true when the DecCoins are sorted, have positive amount, with a
+// IsValid calls Validate and returns true when the DecCoins are sorted, have positive amounts, with a
 // valid and unique denomination (i.e no duplicates).
 func (coins DecCoins) IsValid() bool {
 	return coins.Validate() == nil

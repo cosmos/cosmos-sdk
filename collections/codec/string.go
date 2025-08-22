@@ -38,6 +38,11 @@ func (stringKey[T]) Size(key T) int {
 }
 
 func (stringKey[T]) EncodeNonTerminal(buffer []byte, key T) (int, error) {
+	// Check if buffer has sufficient length for key + delimiter
+	if len(buffer) < len(key)+1 {
+		return 0, fmt.Errorf("%w: buffer too small for non-terminal string encoding, need %d bytes, got %d", ErrEncoding, len(key)+1, len(buffer))
+	}
+
 	for i := range key {
 		c := key[i]
 		if c == StringDelimiter {
@@ -45,6 +50,9 @@ func (stringKey[T]) EncodeNonTerminal(buffer []byte, key T) (int, error) {
 		}
 		buffer[i] = c
 	}
+
+	// Add the delimiter at the end
+	buffer[len(key)] = StringDelimiter
 
 	return len(key) + 1, nil
 }

@@ -165,7 +165,7 @@ func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplat
 	return serverCtx, nil
 }
 
-// CreateSDKLogger creates a the default SDK logger.
+// CreateSDKLogger creates the default SDK logger.
 // It reads the log level and format from the server context.
 func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 	var opts []log.Option

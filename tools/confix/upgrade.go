@@ -44,7 +44,7 @@ func Upgrade(ctx context.Context, plan transform.Plan, doc *tomledit.Document, c
 
 	// allow to skip validation
 	if !skipValidate {
-		// verify that file is valid after applying fixes
+		// verify that the file is valid after applying fixes
 		if err := CheckValid(configPath, buf.Bytes()); err != nil {
 			return fmt.Errorf("updated config is invalid: %w", err)
 		}

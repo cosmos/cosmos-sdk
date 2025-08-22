@@ -214,7 +214,7 @@ func FuzzMessageValueRendererParse(f *testing.F) {
 	})
 }
 
-// Copied from types/coin.go but pasted in here so as to avoid any imports
+// Copied from types/coin.go but pasted in here to avoid any imports
 // of that package as has been mandated by team decisions.
 var (
 	reCoinDenom  = regexp.MustCompile(`[a-zA-Z][a-zA-Z0-9/:._-]{2,127}`)

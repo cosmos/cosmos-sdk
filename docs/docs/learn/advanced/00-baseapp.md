@@ -437,7 +437,7 @@ Finally, the `InitChain(req abci.InitChainRequest)` method of `BaseApp` calls th
 
 ### FinalizeBlock
 
-The [`FinalizeBlock` ABCI message](https://github.com/cometbft/cometbft/blob/v0.38.x/spec/abci/abci++_basic_concepts.md#method-overview) is sent from the underlying CometBFT engine when a block proposal created by the correct proposer is received. The previous `BeginBlock, DeliverTx and Endblock` calls are private methods on the BaseApp struct.
+The [`FinalizeBlock` ABCI message](https://github.com/cometbft/cometbft/blob/v0.38.x/spec/abci/abci++_basic_concepts.md#method-overview) is sent from the underlying CometBFT engine when a block proposal created by the correct proposer is received. The previous `BeginBlock, DeliverTx and Endblock` calls are private methods on the BaseApp struct. In ABCI++, `FinalizeBlock` also returns the `app_hash` in its response, which represents the application state after processing all transactions in the block.
 
 
 ```go reference 
@@ -504,13 +504,15 @@ EndBlock is run after transaction execution completes. It allows developers to h
 https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/baseapp/baseapp.go#L811-L833
 ```
 
+At the end of `FinalizeBlock`, the application returns a `ResponseFinalizeBlock` that includes the `app_hash` - the hash of the application state after all transactions in the block have been processed. This `app_hash` is computed from the `finalizeBlockState` and represents the state that will be committed when the block is finalized. The `app_hash` is made available earlier in the consensus process compared to the previous ABCI version, where it was only returned in `ResponseCommit`.
+
 ### Commit
 
 The [`Commit` ABCI message](https://github.com/cometbft/cometbft/blob/v0.37.x/spec/abci/abci++_basic_concepts.md#method-overview) is sent from the underlying CometBFT engine after the full-node has received _precommits_ from 2/3+ of validators (weighted by voting power). On the `BaseApp` end, the `Commit(res abci.CommitResponse)` function is implemented to commit all the valid state transitions that occurred during `FinalizeBlock` and to reset state for the next block.
 
 To commit state-transitions, the `Commit` function calls the `Write()` function on `finalizeBlockState.ms`, where `finalizeBlockState.ms` is a branched multistore of the main store `app.cms`. Then, the `Commit` function sets `checkState` to the latest header (obtained from `finalizeBlockState.ctx.BlockHeader`) and `finalizeBlockState` to `nil`.
 
-Finally, `Commit` returns the hash of the commitment of `app.cms` back to the underlying consensus engine. This hash is used as a reference in the header of the next block.
+Finally, the `app_hash` that was returned in `ResponseFinalizeBlock` is now used as a reference in the header of the next block, as it represents the committed state after all transactions in the current block have been processed.
 
 ### Info
 

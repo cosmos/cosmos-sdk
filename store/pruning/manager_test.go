@@ -153,12 +153,12 @@ func TestPruningHeight_Inputs(t *testing.T) {
 			0,
 			types.PruningEverything,
 		},
-		"currentHeight is  zero - prune everything - invalid currentHeight": {
+		"currentHeight is zero - prune everything - invalid currentHeight": {
 			0,
 			0,
 			types.PruningEverything,
 		},
-		"currentHeight is positive but within keep recent- prune everything - not kept": {
+		"currentHeight is positive but within keep recent - prune everything - not kept": {
 			keepRecent,
 			0,
 			types.PruningEverything,

@@ -18,10 +18,10 @@ jobs:
   split-test-files:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.24"
+          go-version: "1.25"
           check-latest: true
       - name: Create a file with all core Cosmos SDK pkgs
         run: go list ./... > pkgs.txt
@@ -52,10 +52,10 @@ jobs:
       matrix:
         part: ["00", "01", "02", "03"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.24"
+          go-version: "1.25"
           check-latest: true
           cache: true
           cache-dependency-path: go.sum
@@ -86,10 +86,10 @@ jobs:
   test-integration:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.24"
+          go-version: "1.25"
           check-latest: true
           cache: true
           cache-dependency-path: go.sum
@@ -117,10 +117,10 @@ jobs:
   test-e2e:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.24"
+          go-version: "1.25"
           check-latest: true
           cache: true
           cache-dependency-path: go.sum
@@ -149,7 +149,7 @@ jobs:
     runs-on: depot-ubuntu-22.04-4
     needs: [tests, test-integration, test-e2e]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: technote-space/get-diff-action@v6.1.2
         id: git_diff
         with:
@@ -188,10 +188,10 @@ jobs:
   test-sim-nondeterminism:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.24"
+          go-version: "1.25"
           check-latest: true
           cache: true
           cache-dependency-path: go.sum
@@ -221,10 +221,10 @@ jobs:
   test-clientv2:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.24"
+          go-version: "1.25"
           check-latest: true
           cache: true
           cache-dependency-path: client/v2/go.sum
@@ -244,10 +244,10 @@ jobs:
   test-core:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.24"
+          go-version: "1.25"
           check-latest: true
           cache: true
           cache-dependency-path: core/go.sum
@@ -267,7 +267,7 @@ jobs:
   test-depinject:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
@@ -290,7 +290,7 @@ jobs:
   test-errors:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
@@ -313,7 +313,7 @@ jobs:
   test-math:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
           go-version: "1.22"
@@ -336,7 +336,7 @@ jobs:
   test-schema:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
           go-version: "1.12"
@@ -358,10 +358,10 @@ jobs:
   test-collections:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.24"
+          go-version: "1.25"
           check-latest: true
           cache: true
           cache-dependency-path: collections/go.sum
@@ -381,10 +381,10 @@ jobs:
   test-cosmovisor:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.24"
+          go-version: "1.25"
           check-latest: true
           cache: true
           cache-dependency-path: tools/cosmovisor/go.sum
@@ -404,10 +404,10 @@ jobs:
   test-confix:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.24"
+          go-version: "1.25"
           check-latest: true
           cache: true
           cache-dependency-path: tools/confix/go.sum
@@ -427,10 +427,10 @@ jobs:
   test-store:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.24"
+          go-version: "1.25"
           check-latest: true
           cache: true
           cache-dependency-path: store/go.sum
@@ -451,10 +451,10 @@ jobs:
   test-log:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.24"
+          go-version: "1.25"
           check-latest: true
           cache: true
           cache-dependency-path: log/go.sum
@@ -481,10 +481,10 @@ jobs:
   test-x-tx:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.24"
+          go-version: "1.25"
           check-latest: true
           cache: true
           cache-dependency-path: x/tx/go.sum
@@ -504,10 +504,10 @@ jobs:
   test-tools-benchmark:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.23.2"
+          go-version: "1.25"
           check-latest: true
           cache: true
           cache-dependency-path: tools/benchmark/go.sum

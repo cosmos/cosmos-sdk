@@ -37,6 +37,7 @@ import (
 	signing_testutil "cosmossdk.io/x/tx/signing/testutil"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	groupmodule "github.com/cosmos/cosmos-sdk/contrib/x/group/module"
 	ed25519types "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	secp256k1types "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -67,7 +68,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	gov_v1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	gov_v1beta1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module" //nolint:staticcheck // deprecated and to be removed
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/slashing"

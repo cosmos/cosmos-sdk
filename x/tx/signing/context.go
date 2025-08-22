@@ -35,7 +35,7 @@ type Context struct {
 	maxRecursionDepth     int
 }
 
-// Options are options for creating Context which will be used for signing operations.
+// Options are parameters for creating a Context, which will be used for signing operations.
 type Options struct {
 	// FileResolver is the protobuf file resolver to use for resolving message descriptors.
 	// If it is nil, the global protobuf registry will be used.

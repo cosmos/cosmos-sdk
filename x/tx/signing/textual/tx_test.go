@@ -25,7 +25,7 @@ import (
 	"cosmossdk.io/x/tx/signing/textual/internal/textualpb"
 )
 
-// txJSONTestTx represents the type that in the JSON test
+// txJSONTestTx represents the type that is in the JSON test
 // cases `proto` field. The inner contents are protojson
 // encoded, so we represent them as []byte here, and decode
 // them inside the test.

@@ -144,6 +144,21 @@ func DisableBlockGasMeter() func(*BaseApp) {
 	return func(app *BaseApp) { app.SetDisableBlockGasMeter(true) }
 }
 
+// SkipEndBlocker skips EndBlocker processing for non-blocking query mode.
+func SkipEndBlocker() func(*BaseApp) {
+	return func(app *BaseApp) { app.SetSkipEndBlocker(true) }
+}
+
+// SetQueryOnlyMode enables comprehensive query-only mode for fast query nodes.
+func SetQueryOnlyMode() func(*BaseApp) {
+	return func(app *BaseApp) { app.SetQueryOnlyMode(true) }
+}
+
+// SetBypassTxProcessing enables bypassing transaction processing while maintaining decoding and validation.
+func SetBypassTxProcessing() func(*BaseApp) {
+	return func(app *BaseApp) { app.SetBypassTxProcessing(true) }
+}
+
 func (app *BaseApp) SetName(name string) {
 	if app.sealed {
 		panic("SetName() on sealed BaseApp")
@@ -407,6 +422,31 @@ func (app *BaseApp) SetStreamingManager(manager storetypes.StreamingManager) {
 // SetDisableBlockGasMeter sets the disableBlockGasMeter flag for the BaseApp.
 func (app *BaseApp) SetDisableBlockGasMeter(disableBlockGasMeter bool) {
 	app.disableBlockGasMeter = disableBlockGasMeter
+}
+
+// SetSkipEndBlocker sets the skipEndBlocker flag for the BaseApp.
+func (app *BaseApp) SetSkipEndBlocker(skipEndBlocker bool) {
+	app.skipEndBlocker = skipEndBlocker
+}
+
+// SetQueryOnlyMode sets the queryOnlyMode flag for the BaseApp.
+func (app *BaseApp) SetQueryOnlyMode(queryOnlyMode bool) {
+	if app.sealed {
+		panic("SetQueryOnlyMode() on sealed BaseApp")
+	}
+	app.queryOnlyMode = queryOnlyMode
+	if queryOnlyMode {
+		// Query-only mode implies skipping EndBlocker as well
+		app.skipEndBlocker = true
+	}
+}
+
+// SetBypassTxProcessing sets the bypassTxProcessing flag for the BaseApp.
+func (app *BaseApp) SetBypassTxProcessing(bypassTxProcessing bool) {
+	if app.sealed {
+		panic("SetBypassTxProcessing() on sealed BaseApp")
+	}
+	app.bypassTxProcessing = bypassTxProcessing
 }
 
 // SetMsgServiceRouter sets the MsgServiceRouter of a BaseApp.

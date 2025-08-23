@@ -311,11 +311,11 @@ func RawBytesCmd() *cobra.Command {
 
 			byteArray := []byte{}
 			for _, s := range spl {
-				b, err := strconv.ParseInt(s, 10, 8)
+				u, err := strconv.ParseUint(s, 10, 8)
 				if err != nil {
 					return err
 				}
-				byteArray = append(byteArray, byte(b))
+				byteArray = append(byteArray, byte(u))
 			}
 			fmt.Printf("%X\n", byteArray)
 			return nil

@@ -192,8 +192,6 @@ func NewKeeper(logger log.Logger) Keeper {
 }
 ```
 
-```
-
 ### Core `AppModule` extension interfaces
 
 

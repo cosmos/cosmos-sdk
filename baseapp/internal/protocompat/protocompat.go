@@ -17,8 +17,8 @@ import (
 )
 
 var (
-	gogoType           = reflect.TypeOf((*gogoproto.Message)(nil)).Elem()
-	protov2Type        = reflect.TypeOf((*proto2.Message)(nil)).Elem()
+	gogoType           = reflect.TypeFor[proto.Message]()
+	protov2Type        = reflect.TypeFor[proto.Message]()
 	protov2MarshalOpts = proto2.MarshalOptions{Deterministic: true}
 )
 

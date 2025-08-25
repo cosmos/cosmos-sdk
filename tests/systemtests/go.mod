@@ -3,10 +3,6 @@ module cosmossdk.io/tests/systemtests
 go 1.23.5
 
 // temporary replace
-replace github.com/cosmos/iavl => github.com/cosmos/iavl v1.2.6
-
-replace github.com/cosmos/iavl/v2 => ../../../dev/iavl/v2
-
 replace cosmossdk.io/store => ../../store
 
 replace (

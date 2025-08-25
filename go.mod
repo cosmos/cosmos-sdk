@@ -102,7 +102,7 @@ require (
 	github.com/cockroachdb/redact v1.1.6 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb // indirect
 	github.com/cometbft/cometbft-db v1.0.4 // indirect
-	github.com/cosmos/iavl v1.3.5 // indirect
+	github.com/cosmos/iavl v1.2.6 // indirect
 	github.com/cosmos/iavl-bench/bench v0.0.4 // indirect
 	github.com/cosmos/iavl/v2 v2.0.0-alpha.5.0.20250528143651-0e4c40f1f5ef // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
@@ -224,10 +224,6 @@ require (
 // Here are the short-lived replace from the Cosmos SDK
 // Replace here are pending PRs, or version to be tagged
 replace cosmossdk.io/store => ./store
-
-replace github.com/cosmos/iavl => github.com/cosmos/iavl v1.2.6
-
-replace github.com/cosmos/iavl/v2 => ../dev/iavl/v2
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (

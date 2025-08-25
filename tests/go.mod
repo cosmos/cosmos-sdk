@@ -216,13 +216,9 @@ require (
 	sigs.k8s.io/yaml v1.5.0 // indirect
 )
 
-replace github.com/cosmos/iavl => github.com/cosmos/iavl v1.2.6
-
 // Here are the short-lived replace from the SimApp
 // Replace here are pending PRs, or version to be tagged
 replace cosmossdk.io/store => ../store
-
-replace github.com/cosmos/iavl/v2 => ../../dev/iavl/v2
 
 // Below are the long-lived replace for tests.
 replace (

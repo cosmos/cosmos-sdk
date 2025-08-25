@@ -5,55 +5,84 @@ import (
 	"reflect"
 	"testing"
 
-	"gotest.tools/v3/assert"
-
 	"cosmossdk.io/depinject/internal/graphviz"
+	"gotest.tools/v3/assert"
 )
 
-func TestCheckIsExportedType(t *testing.T) {
-	expectValidType(t, false)
-	expectValidType(t, uint(0))
-	expectValidType(t, uint8(0))
-	expectValidType(t, uint16(0))
-	expectValidType(t, uint32(0))
-	expectValidType(t, uint64(0))
-	expectValidType(t, int(0))
-	expectValidType(t, int8(0))
-	expectValidType(t, int16(0))
-	expectValidType(t, int32(0))
-	expectValidType(t, int64(0))
-	expectValidType(t, float32(0))
-	expectValidType(t, float64(0))
-	expectValidType(t, complex64(0))
-	expectValidType(t, complex128(0))
-	expectValidType(t, os.FileMode(0))
-	expectValidType(t, [1]int{0})
-	expectValidType(t, []int{})
-	expectValidType(t, "")
-	expectValidType(t, make(chan int))
-	expectValidType(t, make(<-chan int))
-	expectValidType(t, make(chan<- int))
-	expectValidType(t, func(int, string) (bool, error) { return false, nil })
-	expectValidType(t, func(int, ...string) (bool, error) { return false, nil })
-	expectValidType(t, In{})
-	expectValidType(t, map[string]In{})
-	expectValidType(t, &In{})
-	expectValidType(t, uintptr(0))
-	expectValidType(t, (*Location)(nil))
-
-	expectInvalidType(t, container{}, "must be exported")
-	expectInvalidType(t, &container{}, "must be exported")
-	expectInvalidType(t, graphviz.Attributes{}, "internal")
-	expectInvalidType(t, map[string]graphviz.Attributes{}, "internal")
-	expectInvalidType(t, []graphviz.Attributes{}, "internal")
+type testCase struct {
+	name        string
+	value       interface{}
+	expectError string // "" means valid
 }
 
-func expectValidType(t *testing.T, v interface{}) {
-	t.Helper()
-	assert.NilError(t, isExportedType(reflect.TypeOf(v)))
+func genTestCase() []testCase {
+	return []testCase{
+		// valid types
+		{"Bool", false, ""},
+		{"Uint", uint(0), ""},
+		{"Uint8", uint8(0), ""},
+		{"Uint16", uint16(0), ""},
+		{"Uint32", uint32(0), ""},
+		{"Uint64", uint64(0), ""},
+		{"Int", int(0), ""},
+		{"Int8", int8(0), ""},
+		{"Int16", int16(0), ""},
+		{"Int32", int32(0), ""},
+		{"Int64", int64(0), ""},
+		{"Float32", float32(0), ""},
+		{"Float64", float64(0), ""},
+		{"Complex64", complex64(0), ""},
+		{"Complex128", complex128(0), ""},
+		{"String", "", ""},
+		{"OSFileMode", os.FileMode(0), ""},
+		{"ArrayOfInt", [1]int{0}, ""},
+		{"SliceOfInt", []int{}, ""},
+		{"ChanOfInt", make(chan int), ""},
+		{"RecvOnlyChan", make(<-chan int), ""},
+		{"SendOnlyChan", make(chan<- int), ""},
+		{"FunctionBasic", func(int, string) (bool, error) { return false, nil }, ""},
+		{"FunctionVariadic", func(int, ...string) (bool, error) { return false, nil }, ""},
+		{"ExportedStruct", In{}, ""},
+		{"MapStringToExported", map[string]In{}, ""},
+		{"PointerToExported", &In{}, ""},
+		{"Uintptr", uintptr(0), ""},
+		{"NilLocationPointer", (*Location)(nil), ""},
+
+		// invalid types
+		{"UnexportedStruct", container{}, "must be exported"},
+		{"PointerToUnexportedStruct", &container{}, "must be exported"},
+		{"InternalTypeGraphviz", graphviz.Attributes{}, "internal"},
+		{"MapWithInternalType", map[string]graphviz.Attributes{}, "internal"},
+		{"SliceWithInternalType", []graphviz.Attributes{}, "internal"},
+	}
 }
 
-func expectInvalidType(t *testing.T, v interface{}, errContains string) {
-	t.Helper()
-	assert.ErrorContains(t, isExportedType(reflect.TypeOf(v)), errContains)
+func TestIsExportedType(t *testing.T) {
+	cases := genTestCase()
+
+	for _, tc := range cases {
+		rv := reflect.TypeOf(tc.value)
+		t.Run(tc.name, func(t *testing.T) {
+			if err := isExportedType(rv); err != nil {
+				assert.ErrorContains(t, err, tc.expectError)
+			} else {
+				if tc.expectError != "" {
+					t.FailNow()
+				}
+			}
+		})
+	}
+}
+
+func BenchmarkIsExportedType(b *testing.B) {
+	cases := genTestCase()
+	for _, v := range cases {
+		rv := reflect.TypeOf(v.value)
+		b.Run(v.name, func(b *testing.B) {
+			b.ReportAllocs()
+			for i := 0; i < b.N; i++ {
+				_ = isExportedType(rv)
+			}
+		})
+	}
 }

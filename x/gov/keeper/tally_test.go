@@ -22,7 +22,7 @@ func TestVoteRemovalAfterTally(t *testing.T) {
 
 	// Create a test proposal
 	tp := TestProposal
-	proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrs[0], false)
+	proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "test", "summary", addrs[0], false, nil)
 	require.NoError(t, err)
 	proposalID := proposal.Id
 
@@ -66,11 +66,11 @@ func TestMultipleProposalsVoteRemoval(t *testing.T) {
 	addrs := simtestutil.AddTestAddrsIncremental(bankKeeper, stakingKeeper, ctx, 2, math.NewInt(30000000))
 
 	tp := TestProposal
-	proposal1, err := govKeeper.SubmitProposal(ctx, tp, "", "test1", "summary", addrs[0], false)
+	proposal1, err := govKeeper.SubmitProposal(ctx, tp, "", "test1", "summary", addrs[0], false, nil)
 	require.NoError(t, err)
 	proposal1ID := proposal1.Id
 
-	proposal2, err := govKeeper.SubmitProposal(ctx, tp, "", "test2", "summary", addrs[0], false)
+	proposal2, err := govKeeper.SubmitProposal(ctx, tp, "", "test2", "summary", addrs[0], false, nil)
 	require.NoError(t, err)
 	proposal2ID := proposal2.Id
 

@@ -104,7 +104,7 @@ func TestSlashingMsgs(t *testing.T) {
 	unjailMsg := &types.MsgUnjail{ValidatorAddr: sdk.ValAddress(addr1).String()}
 
 	ctxCheck = app.NewContext(true)
-	_, err = slashingKeeper.GetValidatorSigningInfo(ctxCheck, sdk.ConsAddress(valAddr))
+	_, err = slashingKeeper.GetValidatorSigningInfo(ctxCheck, sdk.ConsAddress(valKey.PubKey().Address()))
 	require.NoError(t, err)
 
 	// unjail should fail with unknown validator

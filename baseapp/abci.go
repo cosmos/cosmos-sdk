@@ -1288,7 +1288,13 @@ func (bapp *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, chec
 		height = lastBlockHeight
 	}
 
-	cacheMS, err := qms.CacheMultiStoreWithVersion(height)
+	var cacheMS storetypes.CacheMultiStore
+	var err error
+	if isLatest {
+		cacheMS = qms.CacheMultiStore()
+	} else {
+		cacheMS, err = qms.CacheMultiStoreWithVersion(height)
+	}
 	defer func() {
 		closer, ok := cacheMS.(io.Closer)
 		if ok {

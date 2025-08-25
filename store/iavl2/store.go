@@ -46,8 +46,9 @@ func LoadStore(config Config, opts Options) (types.CommitKVStore, error) {
 	path := filepath.Join(config.Path, opts.Key.Name())
 
 	sqliteOpts := iavlv2.SqliteDbOptions{
-		Path:   path,
-		Logger: logger,
+		Path:       path,
+		Logger:     logger,
+		ShardTrees: true,
 	}
 
 	// create node pool for memory management
@@ -61,6 +62,7 @@ func LoadStore(config Config, opts Options) (types.CommitKVStore, error) {
 	treeOpts := iavlv2.DefaultTreeOptions()
 	// TODO figure out what the right default checkpoint interval should be, it's set to 1 for historical queries
 	treeOpts.CheckpointInterval = 1
+	treeOpts.EvictionDepth = 127
 
 	tree := iavlv2.NewTree(sqliteDb, nodePool, treeOpts)
 

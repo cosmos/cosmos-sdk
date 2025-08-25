@@ -21,7 +21,7 @@ require (
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/spf13/cobra v1.9.1
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.0
 	github.com/tendermint/go-amino v0.16.0
 	go.uber.org/mock v0.6.0
 	google.golang.org/grpc v1.75.0

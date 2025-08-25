@@ -83,7 +83,7 @@ func (mock LedgerSECP256K1Mock) GetAddressPubKeySECP256K1(derivationPath []uint3
 	// Generate the bech32 addr using existing cmtcrypto/etc.
 	pub := &csecp256k1.PubKey{Key: compressedPublicKey}
 	addr := sdk.AccAddress(pub.Address()).String()
-	return pk, addr, err
+	return compressedPublicKey, addr, err
 }
 
 func (mock LedgerSECP256K1Mock) SignSECP256K1(derivationPath []uint32, message []byte, p2 byte) ([]byte, error) {

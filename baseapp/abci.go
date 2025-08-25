@@ -3,7 +3,6 @@ package baseapp
 import (
 	"context"
 	"fmt"
-	"io"
 	"sort"
 	"strings"
 	"time"
@@ -1288,19 +1287,7 @@ func (bapp *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, chec
 		height = lastBlockHeight
 	}
 
-	var cacheMS storetypes.CacheMultiStore
-	var err error
-	if isLatest {
-		cacheMS = qms.CacheMultiStore()
-	} else {
-		cacheMS, err = qms.CacheMultiStoreWithVersion(height)
-	}
-	defer func() {
-		closer, ok := cacheMS.(io.Closer)
-		if ok {
-			closer.Close()
-		}
-	}()
+	cacheMS, err := qms.CacheMultiStoreWithVersion(height)
 	if err != nil {
 		return sdk.Context{},
 			errorsmod.Wrapf(

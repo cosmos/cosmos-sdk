@@ -46,8 +46,8 @@ func LoadStore(config Config, opts Options) (types.CommitKVStore, error) {
 	path := filepath.Join(config.Path, opts.Key.Name())
 
 	sqliteOpts := iavlv2.SqliteDbOptions{
-		Path:       path,
-		Logger:     logger,
+		Path: path,
+		//Logger:     logger,
 		ShardTrees: true,
 	}
 
@@ -112,27 +112,61 @@ func LoadStore(config Config, opts Options) (types.CommitKVStore, error) {
 // been pruned, an empty immutable IAVL tree will be used.
 // Any mutable operations executed will result in a panic.
 func (st *Store) GetImmutable(version int64) (types.KVStore, error) {
-	// TODO this is a hack around the fact that iavl v2 does not support anything like this explicitly yet
-	st2, err := LoadStore(Config{Path: st.path}, Options{
-		Logger:  st.logger,
-		Metrics: st.metrics,
-		Key:     st.storeKey,
-		CommitID: types.CommitID{
-			Version: version,
-		},
-		InitialVersion: 0,
-	})
-	if err != nil {
-		return nil, err
+	treeVersion := st.tree.Version()
+	switch treeVersion {
+	case version:
+	case version + 1:
+	default:
+		return nil, fmt.Errorf("unsupported query version %d, only current (%d) and previous (%d) versions are supported", version, treeVersion, treeVersion-1)
 	}
-
 	return &immutableTreeWrapper{
-		Store: st2.(*Store),
+		version: version,
+		store:   st,
 	}, nil
 }
 
 type immutableTreeWrapper struct {
-	*Store
+	version int64
+	store   *Store
+}
+
+func (st *immutableTreeWrapper) GetStoreType() types.StoreType { return types.StoreTypeIAVL }
+
+func (st *immutableTreeWrapper) CacheWrap() types.CacheWrap { return cachekv.NewStore(st) }
+
+func (st *immutableTreeWrapper) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
+	return cachekv.NewStore(tracekv.NewStore(st, w, tc))
+}
+
+func (st *immutableTreeWrapper) Get(key []byte) []byte {
+	ok, value, err := st.store.tree.GetRecent(st.version, key)
+	if !ok {
+		panic(fmt.Sprintf("version %d does not exist in IAVL tree", st.version))
+	}
+	if err != nil {
+		panic(err)
+	}
+	return value
+}
+
+func (st *immutableTreeWrapper) Has(key []byte) bool {
+	return len(st.Get(key)) > 0
+}
+
+func (st *immutableTreeWrapper) Iterator(start, end []byte) types.Iterator {
+	ok, it := st.store.tree.IterateRecent(st.version, start, end, true)
+	if !ok {
+		panic(fmt.Sprintf("version %d does not exist in IAVL tree", st.version))
+	}
+	return it
+}
+
+func (st *immutableTreeWrapper) ReverseIterator(start, end []byte) types.Iterator {
+	ok, it := st.store.tree.IterateRecent(st.version, start, end, false)
+	if !ok {
+		panic(fmt.Sprintf("version %d does not exist in IAVL tree", st.version))
+	}
+	return it
 }
 
 func (st *immutableTreeWrapper) Set(key, value []byte) {
@@ -143,12 +177,7 @@ func (st *immutableTreeWrapper) Delete(key []byte) {
 	panic("tree is immutable, cannot delete!")
 }
 
-func (st *immutableTreeWrapper) Close() error {
-	return st.Store.Close()
-}
-
 var _ types.KVStore = &immutableTreeWrapper{}
-var _ io.Closer = &immutableTreeWrapper{}
 
 // Commit commits the current store state and returns a CommitID with the new
 // version and hash.
@@ -156,11 +185,6 @@ func (st *Store) Commit() types.CommitID {
 	defer st.metrics.MeasureSince("store", "iavl", "commit")
 
 	hash, version, err := st.tree.SaveVersion()
-	if err != nil {
-		panic(err)
-	}
-
-	err = st.tree.WriteLatestLeaves()
 	if err != nil {
 		panic(err)
 	}

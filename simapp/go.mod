@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/client/v2 v2.10.0-beta.4
 	cosmossdk.io/core v1.1.0-rc.1
 	cosmossdk.io/depinject v1.2.1
-	cosmossdk.io/log v1.6.0
+	cosmossdk.io/log v1.6.1
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/store v1.10.0-rc.2
 	cosmossdk.io/tools/confix v0.2.0-rc.4
@@ -54,8 +54,8 @@ require (
 	github.com/bgentry/speakeasy v0.2.0 // indirect
 	github.com/bits-and-blooms/bitset v1.22.0 // indirect
 	github.com/bvinc/go-sqlite-lite v0.6.1 // indirect
-	github.com/bytedance/sonic v1.13.2 // indirect
-	github.com/bytedance/sonic/loader v0.2.4 // indirect
+	github.com/bytedance/sonic v1.14.0 // indirect
+	github.com/bytedance/sonic/loader v0.3.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/chzyer/readline v1.5.1 // indirect
@@ -73,7 +73,7 @@ require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
-	github.com/cosmos/iavl v1.2.6 // indirect
+	github.com/cosmos/iavl v1.3.5 // indirect
 	github.com/cosmos/iavl-bench/bench v0.0.4 // indirect
 	github.com/cosmos/iavl/v2 v2.0.0-alpha.5.0.20250528143651-0e4c40f1f5ef // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
@@ -224,6 +224,10 @@ require (
 // Replace here are pending PRs, or version to be tagged
 //<temporary replace>
 replace cosmossdk.io/store => ../store
+
+replace github.com/cosmos/iavl => github.com/cosmos/iavl v1.2.6
+
+replace github.com/cosmos/iavl/v2 => ../../dev/iavl/v2
 
 // Below are the long-lived replace of the SimApp
 replace (

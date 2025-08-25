@@ -3,6 +3,10 @@ module cosmossdk.io/tests/systemtests
 go 1.23.5
 
 // temporary replace
+replace github.com/cosmos/iavl => github.com/cosmos/iavl v1.2.6
+
+replace github.com/cosmos/iavl/v2 => ../../../dev/iavl/v2
+
 replace cosmossdk.io/store => ../../store
 
 replace (
@@ -26,7 +30,7 @@ require (
 	cosmossdk.io/core v1.1.0-rc.1 // indirect
 	cosmossdk.io/depinject v1.2.1 // indirect
 	cosmossdk.io/errors v1.0.2 // indirect
-	cosmossdk.io/log v1.6.0 // indirect
+	cosmossdk.io/log v1.6.1 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
 	cosmossdk.io/store v1.10.0-rc.2 // indirect
 	cosmossdk.io/x/tx v1.2.0-rc.1 // indirect
@@ -39,8 +43,8 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/speakeasy v0.2.0 // indirect
 	github.com/bvinc/go-sqlite-lite v0.6.1 // indirect
-	github.com/bytedance/sonic v1.13.2 // indirect
-	github.com/bytedance/sonic/loader v0.2.4 // indirect
+	github.com/bytedance/sonic v1.14.0 // indirect
+	github.com/bytedance/sonic/loader v0.3.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.5 // indirect
@@ -59,7 +63,7 @@ require (
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/gogoproto v1.7.0 // indirect
-	github.com/cosmos/iavl v1.2.6 // indirect
+	github.com/cosmos/iavl v1.3.5 // indirect
 	github.com/cosmos/iavl-bench/bench v0.0.4 // indirect
 	github.com/cosmos/iavl/v2 v2.0.0-alpha.5.0.20250528143651-0e4c40f1f5ef // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect

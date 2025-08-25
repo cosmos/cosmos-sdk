@@ -1,11 +1,16 @@
 package depinject
 
 import (
-	"fmt"
+	"errors"
 	"reflect"
-	"slices"
 	"strings"
 	"unicode"
+	"unicode/utf8"
+)
+
+var (
+	errTypeMustBeExported  = errors.New("type must be exported")
+	errTypeFromInternalPkg = errors.New("type must not come from an internal package")
 )
 
 // isExportedType checks if the type is exported and not in an internal
@@ -19,13 +24,14 @@ func isExportedType(typ reflect.Type) error {
 	name := typ.Name()
 	pkgPath := typ.PkgPath()
 	if name != "" && pkgPath != "" {
-		if unicode.IsLower([]rune(name)[0]) {
-			return fmt.Errorf("type must be exported: %s", typ)
+		if r, _ := utf8.DecodeRuneInString(name); unicode.IsLower(r) {
+			return errTypeMustBeExported
 		}
 
-		pkgParts := strings.Split(pkgPath, "/")
-		if slices.Contains(pkgParts, "internal") {
-			return fmt.Errorf("type must not come from an internal package: %s", typ)
+		if strings.Contains(pkgPath, "/internal/") ||
+			strings.HasSuffix(pkgPath, "/internal") ||
+			strings.HasPrefix(pkgPath, "internal/") {
+			return errTypeFromInternalPkg
 		}
 
 		return nil
@@ -36,27 +42,21 @@ func isExportedType(typ reflect.Type) error {
 		return isExportedType(typ.Elem())
 
 	case reflect.Func:
-		numIn := typ.NumIn()
-		for i := 0; i < numIn; i++ {
-			err := isExportedType(typ.In(i))
-			if err != nil {
+		for i := 0; i < typ.NumIn(); i++ {
+			if err := isExportedType(typ.In(i)); err != nil {
 				return err
 			}
 		}
 
-		numOut := typ.NumOut()
-		for i := 0; i < numOut; i++ {
-			err := isExportedType(typ.Out(i))
-			if err != nil {
+		for i := 0; i < typ.NumOut(); i++ {
+			if err := isExportedType(typ.Out(i)); err != nil {
 				return err
 			}
 		}
 
 		return nil
-
 	case reflect.Map:
-		err := isExportedType(typ.Key())
-		if err != nil {
+		if err := isExportedType(typ.Key()); err != nil {
 			return err
 		}
 		return isExportedType(typ.Elem())

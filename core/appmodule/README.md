@@ -5,7 +5,7 @@ requiring the app developer to understand the details of inter-module dependenci
 
 ## 1. Create a module config protobuf message
 
-The first step in creating a module that works with `appconfig`, is to create a protobuf message for the module configuration. The best practices for defining the module configuration message are:
+The first step in creating a module that works with `appconfig` is to create a protobuf message for the module configuration. The best practices for defining the module configuration message are:
 
 * Use a dedicated protobuf package for the module configuration message  instead of placing it in the API protobuf package. For example, the module configuration for bank would go in `cosmos.bank.module.v1` instead of just `cosmos.bank.v1`. This decouples the state machine version from the API version.
 * The module configuration message is usually called simply `Module`, ex. `cosmos.bank.module.v1.Module`.
@@ -52,7 +52,7 @@ func init() {
 A `depinject` "provider" is a function which takes dependencies from other modules as inputs and returns outputs for
 other modules to use as dependencies. A `depinject` "invoker" is function which takes optional dependencies as inputs,
 returns no outputs, and is run at the end of initializing the dependency graph. Providers are much more common than
-invokers and should be the preferred method of wiring up modules when possible. Providers and invokers can be registered
+invokers, and should be the preferred method of wiring up modules when possible. Providers and invokers can be registered
 for modules by using `appmodule.Provide` and `appmodule.Invoke` to create options which get passed
 to `appmodule.Register` in the module `init` function, ex:
 
@@ -94,7 +94,7 @@ can use `golang_bindings` options in their app config in order to resolve the co
 #### Structs with embedded `depinject.In` and `depinject.Out`
 
 Structs that have `depinject.In` or `depinject.Out` as an embedded field are treated specially by `depinject`, where
-all of these structs fields are treated as input or output parameters, respectively. These structs allow custom options
+all of these structs' fields are treated as input or output parameters, respectively. These structs allow custom options
 to be defined using struct field tags. Currently, the only supported custom option is `optional:"true"` which marks
 a field as optional.
 

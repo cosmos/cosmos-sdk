@@ -24,7 +24,7 @@ A table can be built given a `codec.ProtoMarshaler` model type, a prefix to acce
 https://github.com/cosmos/cosmos-sdk/tree/release/v0.50.x/x/group/internal/orm/table.go#L30-L36
 ```
 
-In the prefix store, entities should be stored by an unique identifier called `RowID` which can be based either on an `uint64` auto-increment counter, string or dynamic size bytes.
+In the prefix store, entities should be stored by a unique identifier called `RowID` which can be based either on an `uint64` auto-increment counter, string or dynamic size bytes.
 Regular CRUD operations can be performed on a table, these methods take a `sdk.KVStore` as parameter to get the table prefix store.
 
 The `table` struct does not:
@@ -49,7 +49,7 @@ It's based on the `Sequence` struct which is a persistent unique key generator b
 
 ### PrimaryKeyTable
 
-`PrimaryKeyTable` provides simpler object style orm methods where are persisted and loaded with a reference to their unique primary key.
+`PrimaryKeyTable` provides simpler object-style ORM methods where objects are persisted and loaded with a reference to their unique primary key.
 
 #### PrimaryKeyed
 
@@ -109,7 +109,7 @@ Both [tables](#table) and [secondary indexes](#secondary-index) support iteratin
 
 ### Iterator
 
-An `Iterator` allows iteration through a sequence of key value pairs.
+An `Iterator` allows iteration through a sequence of key-value pairs.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/tree/release/v0.50.x/x/group/internal/orm/types.go#L77-L85

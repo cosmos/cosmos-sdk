@@ -9,7 +9,7 @@ NOTE: `x/crisis` is deprecated as of Cosmos SDK v0.53 and will be removed in the
 ## Overview
 
 The crisis module halts the blockchain under the circumstance that a blockchain
-invariant is broken. Invariants can be registered with the application during the
+invariant is broken. Invariants can be registered during the
 application initialization process.
 
 ## Contents
@@ -56,7 +56,7 @@ This message is expected to fail if:
 
 This message checks the invariant provided, and if the invariant is broken it
 panics, halting the blockchain. If the invariant is broken, the constant fee is
-never deducted as the transaction is never committed to a block (equivalent to
+never deducted, as the transaction is never committed to a block (equivalent to
 being refunded). However, if the invariant is not broken, the constant fee will
 not be refunded.
 

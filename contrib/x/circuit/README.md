@@ -4,9 +4,9 @@
 
 ## Concepts
 
-Circuit Breaker is a module that is meant to avoid a chain needing to halt/shut down in the presence of a vulnerability, instead the module will allow specific messages or all messages to be disabled. When operating a chain, if it is app specific then a halt of the chain is less detrimental, but if there are applications built on top of the chain then halting is expensive due to the disturbance to applications. 
+Circuit Breaker is a module that is meant to avoid a chain needing to halt/shut down in the presence of a vulnerability. Instead, the module will allow specific messages or all messages to be disabled. When operating a chain, if it is app-specific then a halt of the chain is less detrimental, but if there are applications built on top of the chain then halting is expensive due to the disturbance to applications. 
 
-Circuit Breaker works with the idea that an address or set of addresses have the right to block messages from being executed and/or included in the mempool. Any address with a permission is able to reset the circuit breaker for the message. 
+Circuit Breaker works with the idea that an address or set of addresses have the right to block messages from being executed and/or included in the mempool. Any address with permission is able to reset the circuit breaker for the message. 
 
 The transactions are checked and can be rejected at two points:
 
@@ -70,7 +70,7 @@ List of type urls that are disabled.
 
 ### Authorize 
 
-Authorize, is called by the module authority (default governance module account) or any account with `LEVEL_SUPER_ADMIN` to give permission to disable/enable messages to another account. There are three levels of permissions that can be granted. `LEVEL_SOME_MSGS` limits the number of messages that can be disabled. `LEVEL_ALL_MSGS` permits all messages to be disabled. `LEVEL_SUPER_ADMIN` allows an account to take all circuit breaker actions including authorizing and deauthorizing other accounts.
+Authorize is called by the module authority (default governance module account) or any account with `LEVEL_SUPER_ADMIN` to give permission to disable/enable messages to another account. There are three levels of permissions that can be granted. `LEVEL_SOME_MSGS` limits the number of messages that can be disabled. `LEVEL_ALL_MSGS` permits all messages to be disabled. `LEVEL_SUPER_ADMIN` allows an account to take all circuit breaker actions including authorizing and deauthorizing other accounts.
 
 ```protobuf
   // AuthorizeCircuitBreaker allows a super-admin to grant (or revoke) another
@@ -154,7 +154,7 @@ The circuit module emits the following events:
 | message  | module        | circuit            |
 | message  | action        | trip_circuit_breaker |
 
-#### ResetCircuitBreaker
+#### MsgResetCircuitBreaker
 
 | Type     | Attribute Key | Attribute Value    |
 |----------|---------------|--------------------|

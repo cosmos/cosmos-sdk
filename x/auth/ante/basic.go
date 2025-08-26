@@ -198,6 +198,15 @@ func NewTxTimeoutHeightDecorator() TxTimeoutHeightDecorator {
 	return TxTimeoutHeightDecorator{}
 }
 
+// GetRecommendedTimeoutHeight returns the recommended timeout height for a transaction.
+// It adds a buffer to the current block height to ensure the transaction has time to be processed.
+func GetRecommendedTimeoutHeight(currentHeight uint64, buffer uint64) uint64 {
+	if buffer == 0 {
+		buffer = 1 // Default buffer of 1 block
+	}
+	return currentHeight + buffer
+}
+
 // AnteHandle implements an AnteHandler decorator for the TxHeightTimeoutDecorator
 // type where the current block height is checked against the tx's height timeout.
 // If a height timeout is provided (non-zero) and is less than the current block
@@ -209,10 +218,27 @@ func (txh TxTimeoutHeightDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	}
 
 	timeoutHeight := timeoutTx.GetTimeoutHeight()
-	if timeoutHeight > 0 && uint64(ctx.BlockHeight()) > timeoutHeight {
-		return ctx, errorsmod.Wrapf(
-			sdkerrors.ErrTxTimeoutHeight, "block height: %d, timeout height: %d", ctx.BlockHeight(), timeoutHeight,
-		)
+	currentHeight := uint64(ctx.BlockHeight())
+
+	if timeoutHeight > 0 {
+		// Check if timeout height is set to current block height (which is invalid)
+		if timeoutHeight == currentHeight {
+			nextBlockHeight := currentHeight + 1
+			return ctx, errorsmod.Wrapf(
+				sdkerrors.ErrTxTimeoutHeight,
+				"you must set the timeout height to be the next block height got %d, expected %d",
+				timeoutHeight, nextBlockHeight,
+			)
+		}
+
+		// Check if timeout height has already passed
+		if currentHeight > timeoutHeight {
+			return ctx, errorsmod.Wrapf(
+				sdkerrors.ErrTxTimeoutHeight,
+				"transaction timeout height %d has already passed; current block height is %d",
+				timeoutHeight, currentHeight,
+			)
+		}
 	}
 
 	timeoutTimestamp := timeoutTx.GetTimeoutTimeStamp()

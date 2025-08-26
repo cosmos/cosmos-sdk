@@ -204,7 +204,7 @@ func TestTxTimeoutHeightDecorator(t *testing.T) {
 	}{
 		{"default value", 0, 10, time.Time{}, time.Time{}, nil},
 		{"no timeout (greater height)", 15, 10, time.Time{}, time.Time{}, nil},
-		{"no timeout (same height)", 10, 10, time.Time{}, time.Time{}, nil},
+		{"no timeout (same height)", 10, 10, time.Time{}, time.Time{}, sdkerrors.ErrTxTimeoutHeight}, // Updated: same height is now invalid
 		{"timeout (smaller height)", 9, 10, time.Time{}, time.Time{}, sdkerrors.ErrTxTimeoutHeight},
 		{"no timeout (timeout after timestamp)", 0, 20, currentTime.Add(time.Minute), currentTime, nil},
 		{"no timeout (current time)", 0, 20, currentTime, currentTime, nil},
@@ -232,6 +232,27 @@ func TestTxTimeoutHeightDecorator(t *testing.T) {
 			ctx := suite.ctx.WithBlockHeight(tc.height).WithBlockTime(tc.timestamp)
 			_, err = antehandler(ctx, tx, true)
 			require.ErrorIs(t, err, tc.expectedErr)
+		})
+	}
+}
+
+func TestGetRecommendedTimeoutHeight(t *testing.T) {
+	testCases := []struct {
+		name           string
+		currentHeight  uint64
+		buffer         uint64
+		expectedHeight uint64
+	}{
+		{"default buffer", 100, 0, 101},
+		{"custom buffer", 100, 5, 105},
+		{"zero height", 0, 1, 1},
+		{"large height", 1000000, 10, 1000010},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := ante.GetRecommendedTimeoutHeight(tc.currentHeight, tc.buffer)
+			require.Equal(t, tc.expectedHeight, result)
 		})
 	}
 }

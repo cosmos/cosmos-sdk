@@ -13,6 +13,7 @@ import (
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	anypb "google.golang.org/protobuf/types/known/anypb"
+	durationpb "google.golang.org/protobuf/types/known/durationpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	reflect "reflect"
@@ -130,6 +131,7 @@ var (
 	fd_MsgSubmitProposal_title           protoreflect.FieldDescriptor
 	fd_MsgSubmitProposal_summary         protoreflect.FieldDescriptor
 	fd_MsgSubmitProposal_expedited       protoreflect.FieldDescriptor
+	fd_MsgSubmitProposal_duration        protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -142,6 +144,7 @@ func init() {
 	fd_MsgSubmitProposal_title = md_MsgSubmitProposal.Fields().ByName("title")
 	fd_MsgSubmitProposal_summary = md_MsgSubmitProposal.Fields().ByName("summary")
 	fd_MsgSubmitProposal_expedited = md_MsgSubmitProposal.Fields().ByName("expedited")
+	fd_MsgSubmitProposal_duration = md_MsgSubmitProposal.Fields().ByName("duration")
 }
 
 var _ protoreflect.Message = (*fastReflection_MsgSubmitProposal)(nil)
@@ -251,6 +254,12 @@ func (x *fastReflection_MsgSubmitProposal) Range(f func(protoreflect.FieldDescri
 			return
 		}
 	}
+	if x.Duration != nil {
+		value := protoreflect.ValueOfMessage(x.Duration.ProtoReflect())
+		if !f(fd_MsgSubmitProposal_duration, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -280,6 +289,8 @@ func (x *fastReflection_MsgSubmitProposal) Has(fd protoreflect.FieldDescriptor) 
 		return x.Summary != ""
 	case "cosmos.gov.v1.MsgSubmitProposal.expedited":
 		return x.Expedited != false
+	case "cosmos.gov.v1.MsgSubmitProposal.duration":
+		return x.Duration != nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.gov.v1.MsgSubmitProposal"))
@@ -310,6 +321,8 @@ func (x *fastReflection_MsgSubmitProposal) Clear(fd protoreflect.FieldDescriptor
 		x.Summary = ""
 	case "cosmos.gov.v1.MsgSubmitProposal.expedited":
 		x.Expedited = false
+	case "cosmos.gov.v1.MsgSubmitProposal.duration":
+		x.Duration = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.gov.v1.MsgSubmitProposal"))
@@ -353,6 +366,9 @@ func (x *fastReflection_MsgSubmitProposal) Get(descriptor protoreflect.FieldDesc
 	case "cosmos.gov.v1.MsgSubmitProposal.expedited":
 		value := x.Expedited
 		return protoreflect.ValueOfBool(value)
+	case "cosmos.gov.v1.MsgSubmitProposal.duration":
+		value := x.Duration
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.gov.v1.MsgSubmitProposal"))
@@ -391,6 +407,8 @@ func (x *fastReflection_MsgSubmitProposal) Set(fd protoreflect.FieldDescriptor, 
 		x.Summary = value.Interface().(string)
 	case "cosmos.gov.v1.MsgSubmitProposal.expedited":
 		x.Expedited = value.Bool()
+	case "cosmos.gov.v1.MsgSubmitProposal.duration":
+		x.Duration = value.Message().Interface().(*durationpb.Duration)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.gov.v1.MsgSubmitProposal"))
@@ -423,6 +441,11 @@ func (x *fastReflection_MsgSubmitProposal) Mutable(fd protoreflect.FieldDescript
 		}
 		value := &_MsgSubmitProposal_2_list{list: &x.InitialDeposit}
 		return protoreflect.ValueOfList(value)
+	case "cosmos.gov.v1.MsgSubmitProposal.duration":
+		if x.Duration == nil {
+			x.Duration = new(durationpb.Duration)
+		}
+		return protoreflect.ValueOfMessage(x.Duration.ProtoReflect())
 	case "cosmos.gov.v1.MsgSubmitProposal.proposer":
 		panic(fmt.Errorf("field proposer of message cosmos.gov.v1.MsgSubmitProposal is not mutable"))
 	case "cosmos.gov.v1.MsgSubmitProposal.metadata":
@@ -462,6 +485,9 @@ func (x *fastReflection_MsgSubmitProposal) NewField(fd protoreflect.FieldDescrip
 		return protoreflect.ValueOfString("")
 	case "cosmos.gov.v1.MsgSubmitProposal.expedited":
 		return protoreflect.ValueOfBool(false)
+	case "cosmos.gov.v1.MsgSubmitProposal.duration":
+		m := new(durationpb.Duration)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.gov.v1.MsgSubmitProposal"))
@@ -562,6 +588,10 @@ func (x *fastReflection_MsgSubmitProposal) ProtoMethods() *protoiface.Methods {
 		if x.Expedited {
 			n += 2
 		}
+		if x.Duration != nil {
+			l = options.Size(x.Duration)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -590,6 +620,20 @@ func (x *fastReflection_MsgSubmitProposal) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Duration != nil {
+			encoded, err := options.Marshal(x.Duration)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x42
 		}
 		if x.Expedited {
 			i--
@@ -926,6 +970,42 @@ func (x *fastReflection_MsgSubmitProposal) ProtoMethods() *protoiface.Methods {
 					}
 				}
 				x.Expedited = bool(v != 0)
+			case 8:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Duration", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Duration == nil {
+					x.Duration = &durationpb.Duration{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Duration); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -7032,6 +7112,9 @@ type MsgSubmitProposal struct {
 	Summary string `protobuf:"bytes,6,opt,name=summary,proto3" json:"summary,omitempty"`
 	// expedited defines if the proposal is expedited or not
 	Expedited bool `protobuf:"varint,7,opt,name=expedited,proto3" json:"expedited,omitempty"`
+	// this field that can be used to set a desired proposal duration which
+	// will be used to generate the required quorum for passing
+	Duration *durationpb.Duration `protobuf:"bytes,8,opt,name=duration,proto3" json:"duration,omitempty"`
 }
 
 func (x *MsgSubmitProposal) Reset() {
@@ -7101,6 +7184,13 @@ func (x *MsgSubmitProposal) GetExpedited() bool {
 		return x.Expedited
 	}
 	return false
+}
+
+func (x *MsgSubmitProposal) GetDuration() *durationpb.Duration {
+	if x != nil {
+		return x.Duration
+	}
+	return nil
 }
 
 // MsgSubmitProposalResponse defines the Msg/SubmitProposal response type.
@@ -7674,7 +7764,9 @@ var file_cosmos_gov_v1_tx_proto_rawDesc = []byte{
 	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x11, 0x61, 0x6d, 0x69, 0x6e, 0x6f, 0x2f, 0x61, 0x6d, 0x69,
 	0x6e, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1f, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65,
 	0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74,
-	0x61, 0x6d, 0x70, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xe4, 0x03, 0x0a, 0x11, 0x4d, 0x73,
+	0x61, 0x6d, 0x70, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1e, 0x67, 0x6f, 0x6f, 0x67, 0x6c,
+	0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x64, 0x75, 0x72, 0x61, 0x74,
+	0x69, 0x6f, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xb4, 0x04, 0x0a, 0x11, 0x4d, 0x73,
 	0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c, 0x12,
 	0x30, 0x0a, 0x08, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28,
 	0x0b, 0x32, 0x14, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
@@ -7701,7 +7793,12 @@ var file_cosmos_gov_v1_tx_proto_rawDesc = []byte{
 	0x37, 0x52, 0x07, 0x73, 0x75, 0x6d, 0x6d, 0x61, 0x72, 0x79, 0x12, 0x31, 0x0a, 0x09, 0x65, 0x78,
 	0x70, 0x65, 0x64, 0x69, 0x74, 0x65, 0x64, 0x18, 0x07, 0x20, 0x01, 0x28, 0x08, 0x42, 0x13, 0xda,
 	0xb4, 0x2d, 0x0f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x20, 0x30, 0x2e,
-	0x35, 0x30, 0x52, 0x09, 0x65, 0x78, 0x70, 0x65, 0x64, 0x69, 0x74, 0x65, 0x64, 0x3a, 0x31, 0x82,
+	0x35, 0x30, 0x52, 0x09, 0x65, 0x78, 0x70, 0x65, 0x64, 0x69, 0x74, 0x65, 0x64, 0x12, 0x4e, 0x0a,
+	0x08, 0x64, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x08, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x19, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75,
+	0x66, 0x2e, 0x44, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x42, 0x17, 0x98, 0xdf, 0x1f, 0x01,
+	0xda, 0xb4, 0x2d, 0x0f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x20, 0x30,
+	0x2e, 0x35, 0x34, 0x52, 0x08, 0x64, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x3a, 0x31, 0x82,
 	0xe7, 0xb0, 0x2a, 0x08, 0x70, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x65, 0x72, 0x8a, 0xe7, 0xb0, 0x2a,
 	0x1f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x76, 0x31, 0x2f, 0x4d,
 	0x73, 0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x50, 0x72, 0x6f, 0x70, 0x6f, 0x73, 0x61, 0x6c,
@@ -7902,39 +7999,41 @@ var file_cosmos_gov_v1_tx_proto_goTypes = []interface{}{
 	(*MsgCancelProposalResponse)(nil),    // 13: cosmos.gov.v1.MsgCancelProposalResponse
 	(*anypb.Any)(nil),                    // 14: google.protobuf.Any
 	(*v1beta1.Coin)(nil),                 // 15: cosmos.base.v1beta1.Coin
-	(VoteOption)(0),                      // 16: cosmos.gov.v1.VoteOption
-	(*WeightedVoteOption)(nil),           // 17: cosmos.gov.v1.WeightedVoteOption
-	(*Params)(nil),                       // 18: cosmos.gov.v1.Params
-	(*timestamppb.Timestamp)(nil),        // 19: google.protobuf.Timestamp
+	(*durationpb.Duration)(nil),          // 16: google.protobuf.Duration
+	(VoteOption)(0),                      // 17: cosmos.gov.v1.VoteOption
+	(*WeightedVoteOption)(nil),           // 18: cosmos.gov.v1.WeightedVoteOption
+	(*Params)(nil),                       // 19: cosmos.gov.v1.Params
+	(*timestamppb.Timestamp)(nil),        // 20: google.protobuf.Timestamp
 }
 var file_cosmos_gov_v1_tx_proto_depIdxs = []int32{
 	14, // 0: cosmos.gov.v1.MsgSubmitProposal.messages:type_name -> google.protobuf.Any
 	15, // 1: cosmos.gov.v1.MsgSubmitProposal.initial_deposit:type_name -> cosmos.base.v1beta1.Coin
-	14, // 2: cosmos.gov.v1.MsgExecLegacyContent.content:type_name -> google.protobuf.Any
-	16, // 3: cosmos.gov.v1.MsgVote.option:type_name -> cosmos.gov.v1.VoteOption
-	17, // 4: cosmos.gov.v1.MsgVoteWeighted.options:type_name -> cosmos.gov.v1.WeightedVoteOption
-	15, // 5: cosmos.gov.v1.MsgDeposit.amount:type_name -> cosmos.base.v1beta1.Coin
-	18, // 6: cosmos.gov.v1.MsgUpdateParams.params:type_name -> cosmos.gov.v1.Params
-	19, // 7: cosmos.gov.v1.MsgCancelProposalResponse.canceled_time:type_name -> google.protobuf.Timestamp
-	0,  // 8: cosmos.gov.v1.Msg.SubmitProposal:input_type -> cosmos.gov.v1.MsgSubmitProposal
-	2,  // 9: cosmos.gov.v1.Msg.ExecLegacyContent:input_type -> cosmos.gov.v1.MsgExecLegacyContent
-	4,  // 10: cosmos.gov.v1.Msg.Vote:input_type -> cosmos.gov.v1.MsgVote
-	6,  // 11: cosmos.gov.v1.Msg.VoteWeighted:input_type -> cosmos.gov.v1.MsgVoteWeighted
-	8,  // 12: cosmos.gov.v1.Msg.Deposit:input_type -> cosmos.gov.v1.MsgDeposit
-	10, // 13: cosmos.gov.v1.Msg.UpdateParams:input_type -> cosmos.gov.v1.MsgUpdateParams
-	12, // 14: cosmos.gov.v1.Msg.CancelProposal:input_type -> cosmos.gov.v1.MsgCancelProposal
-	1,  // 15: cosmos.gov.v1.Msg.SubmitProposal:output_type -> cosmos.gov.v1.MsgSubmitProposalResponse
-	3,  // 16: cosmos.gov.v1.Msg.ExecLegacyContent:output_type -> cosmos.gov.v1.MsgExecLegacyContentResponse
-	5,  // 17: cosmos.gov.v1.Msg.Vote:output_type -> cosmos.gov.v1.MsgVoteResponse
-	7,  // 18: cosmos.gov.v1.Msg.VoteWeighted:output_type -> cosmos.gov.v1.MsgVoteWeightedResponse
-	9,  // 19: cosmos.gov.v1.Msg.Deposit:output_type -> cosmos.gov.v1.MsgDepositResponse
-	11, // 20: cosmos.gov.v1.Msg.UpdateParams:output_type -> cosmos.gov.v1.MsgUpdateParamsResponse
-	13, // 21: cosmos.gov.v1.Msg.CancelProposal:output_type -> cosmos.gov.v1.MsgCancelProposalResponse
-	15, // [15:22] is the sub-list for method output_type
-	8,  // [8:15] is the sub-list for method input_type
-	8,  // [8:8] is the sub-list for extension type_name
-	8,  // [8:8] is the sub-list for extension extendee
-	0,  // [0:8] is the sub-list for field type_name
+	16, // 2: cosmos.gov.v1.MsgSubmitProposal.duration:type_name -> google.protobuf.Duration
+	14, // 3: cosmos.gov.v1.MsgExecLegacyContent.content:type_name -> google.protobuf.Any
+	17, // 4: cosmos.gov.v1.MsgVote.option:type_name -> cosmos.gov.v1.VoteOption
+	18, // 5: cosmos.gov.v1.MsgVoteWeighted.options:type_name -> cosmos.gov.v1.WeightedVoteOption
+	15, // 6: cosmos.gov.v1.MsgDeposit.amount:type_name -> cosmos.base.v1beta1.Coin
+	19, // 7: cosmos.gov.v1.MsgUpdateParams.params:type_name -> cosmos.gov.v1.Params
+	20, // 8: cosmos.gov.v1.MsgCancelProposalResponse.canceled_time:type_name -> google.protobuf.Timestamp
+	0,  // 9: cosmos.gov.v1.Msg.SubmitProposal:input_type -> cosmos.gov.v1.MsgSubmitProposal
+	2,  // 10: cosmos.gov.v1.Msg.ExecLegacyContent:input_type -> cosmos.gov.v1.MsgExecLegacyContent
+	4,  // 11: cosmos.gov.v1.Msg.Vote:input_type -> cosmos.gov.v1.MsgVote
+	6,  // 12: cosmos.gov.v1.Msg.VoteWeighted:input_type -> cosmos.gov.v1.MsgVoteWeighted
+	8,  // 13: cosmos.gov.v1.Msg.Deposit:input_type -> cosmos.gov.v1.MsgDeposit
+	10, // 14: cosmos.gov.v1.Msg.UpdateParams:input_type -> cosmos.gov.v1.MsgUpdateParams
+	12, // 15: cosmos.gov.v1.Msg.CancelProposal:input_type -> cosmos.gov.v1.MsgCancelProposal
+	1,  // 16: cosmos.gov.v1.Msg.SubmitProposal:output_type -> cosmos.gov.v1.MsgSubmitProposalResponse
+	3,  // 17: cosmos.gov.v1.Msg.ExecLegacyContent:output_type -> cosmos.gov.v1.MsgExecLegacyContentResponse
+	5,  // 18: cosmos.gov.v1.Msg.Vote:output_type -> cosmos.gov.v1.MsgVoteResponse
+	7,  // 19: cosmos.gov.v1.Msg.VoteWeighted:output_type -> cosmos.gov.v1.MsgVoteWeightedResponse
+	9,  // 20: cosmos.gov.v1.Msg.Deposit:output_type -> cosmos.gov.v1.MsgDepositResponse
+	11, // 21: cosmos.gov.v1.Msg.UpdateParams:output_type -> cosmos.gov.v1.MsgUpdateParamsResponse
+	13, // 22: cosmos.gov.v1.Msg.CancelProposal:output_type -> cosmos.gov.v1.MsgCancelProposalResponse
+	16, // [16:23] is the sub-list for method output_type
+	9,  // [9:16] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_gov_v1_tx_proto_init() }

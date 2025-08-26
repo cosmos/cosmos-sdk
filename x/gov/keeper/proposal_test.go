@@ -29,7 +29,7 @@ func (suite *KeeperTestSuite) TestGetSetProposal() {
 
 	for _, tc := range testCases {
 		tp := TestProposal
-		proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", suite.addrs[0], tc.expedited)
+		proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", suite.addrs[0], tc.expedited, nil)
 		suite.Require().NoError(err)
 		proposalID := proposal.Id
 		suite.Require().NoError(suite.govKeeper.SetProposal(suite.ctx, proposal))
@@ -56,7 +56,7 @@ func (suite *KeeperTestSuite) TestDeleteProposal() {
 		suite.Require().ErrorIs(suite.govKeeper.DeleteProposal(suite.ctx, 10), collections.ErrNotFound)
 
 		tp := TestProposal
-		proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", suite.addrs[0], tc.expedited)
+		proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", suite.addrs[0], tc.expedited, nil)
 		suite.Require().NoError(err)
 		proposalID := proposal.Id
 		suite.Require().NoError(suite.govKeeper.SetProposal(suite.ctx, proposal))
@@ -77,7 +77,7 @@ func (suite *KeeperTestSuite) TestActivateVotingPeriod() {
 
 	for _, tc := range testCases {
 		tp := TestProposal
-		proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", suite.addrs[0], tc.expedited)
+		proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", suite.addrs[0], tc.expedited, nil)
 		suite.Require().NoError(err)
 
 		suite.Require().Nil(proposal.VotingStartTime)
@@ -107,7 +107,7 @@ func (suite *KeeperTestSuite) TestDeleteProposalInVotingPeriod() {
 	for _, tc := range testCases {
 		suite.reset()
 		tp := TestProposal
-		proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", suite.addrs[0], tc.expedited)
+		proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", suite.addrs[0], tc.expedited, nil)
 		suite.Require().NoError(err)
 		suite.Require().Nil(proposal.VotingStartTime)
 
@@ -168,7 +168,7 @@ func (suite *KeeperTestSuite) TestSubmitProposal() {
 	for i, tc := range testCases {
 		prop, err := v1.NewLegacyContent(tc.content, tc.authority)
 		suite.Require().NoError(err)
-		_, err = suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, tc.metadata, "title", "", suite.addrs[0], tc.expedited)
+		_, err = suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, tc.metadata, "title", "", suite.addrs[0], tc.expedited, nil)
 		suite.Require().True(errors.Is(tc.expectedErr, err), "tc #%d; got: %v, expected: %v", i, err, tc.expectedErr)
 	}
 }
@@ -178,16 +178,16 @@ func (suite *KeeperTestSuite) TestCancelProposal() {
 	tp := v1beta1.TextProposal{Title: "title", Description: "description"}
 	prop, err := v1.NewLegacyContent(&tp, govAcct)
 	suite.Require().NoError(err)
-	proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, "", "title", "summary", suite.addrs[0], false)
+	proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, "", "title", "summary", suite.addrs[0], false, nil)
 	suite.Require().NoError(err)
 	proposalID := proposal.Id
 
-	proposal2, err := suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, "", "title", "summary", suite.addrs[1], true)
+	proposal2, err := suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, "", "title", "summary", suite.addrs[1], true, nil)
 	suite.Require().NoError(err)
 	proposal2ID := proposal2.Id
 
 	// proposal3 is only used to check the votes for proposals which doesn't go through `CancelProposal` are still present in state
-	proposal3, err := suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, "", "title", "summary", suite.addrs[2], false)
+	proposal3, err := suite.govKeeper.SubmitProposal(suite.ctx, []sdk.Msg{prop}, "", "title", "summary", suite.addrs[2], false, nil)
 	suite.Require().NoError(err)
 	proposal3ID := proposal3.Id
 

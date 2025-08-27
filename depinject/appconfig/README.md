@@ -7,7 +7,7 @@ requiring the app developer to understand the details of inter-module dependenci
 
 The first step in creating a module that works with `appconfig`, is to create a protobuf message for the module configuration. The best practices for defining the module configuration message are:
 
-* Use a dedicated protobuf package for the module configuration message  instead of placing it in the API protobuf package. For example, the module configuration for bank would go in `cosmos.bank.module.v1` instead of just `cosmos.bank.v1`. This decouples the state machine version from the API version.
+* Use a dedicated protobuf package for the module configuration message instead of placing it in the API protobuf package. For example, the module configuration for bank would go in `cosmos.bank.module.v1` instead of just `cosmos.bank.v1`. This decouples the state machine version from the API version.
 * The module configuration message is usually called simply `Module`, ex. `cosmos.bank.module.v1.Module`.
 * Create a new protobuf package and configuration message for each state machine breaking version of the module, ex. `cosmos.bank.module.v2.Module`, etc.
 
@@ -167,7 +167,7 @@ provider, usually because of a circular dependency, and which may be optional.
 
 * make dependencies `optional` whenever possible!
 * interface types should be used whenever possible to avoid tight couplings between two modules.
-* `OnePerModuleType`s should be used when there is something occurs at most once per module and the module name is a
+* `OnePerModuleType`s should be used when something occurs at most once per module and the module name is a
 convenient way for providing a deterministic order.
 * `ManyPerContainerType`s should be used only when there is an obvious way to create an ordering from the types or
 when ordering *really* doesn't matter (which is rare).
@@ -189,7 +189,7 @@ keeper package). It can also provide an instance of the slashing keeper wrapped 
 we'll call `StakingHooksWrapper`. Now, if the staking module directly depended on the staking hooks wrappers
 (`map[string]StakingHooksWrapper`) we would have a circular dependency graph and `depinject` would fail. To fix this,
 the staking module can define an invoker which depends on `map[string]StakingHooksWrapper` and the staking keeper
-(which was provided by the staking module already in a separate provided). In this way `depinject` will be able to
+(which was provided by the staking module already in a separate provider). In this way `depinject` will be able to
 satisfy this dependency graph which allows staking and slashing to depend on each other in this order:
 
 * provide staking keeper -> slashing keeper

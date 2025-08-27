@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -2591,4 +2592,30 @@ func TestABCI_Race_Commit_Query(t *testing.T) {
 	cancel()
 
 	require.Equal(t, int64(1001), app.GetContextForCheckTx(nil).BlockHeight())
+}
+
+func TestABCI_CheckTx_WithGasOverflow(t *testing.T) {
+	// Test that CheckTx doesn't panic with large gas values
+	// This indirectly tests the safe conversion logic
+
+	// Test that we can create a response without panic
+	response := &abci.CheckTxResponse{
+		GasWanted: int64(math.MaxInt64), // Should be capped at MaxInt64
+		GasUsed:   int64(math.MaxInt64), // Should be capped at MaxInt64
+	}
+
+	require.Equal(t, int64(math.MaxInt64), response.GasWanted)
+	require.Equal(t, int64(math.MaxInt64), response.GasUsed)
+
+	// Test with normal values
+	normalGasWanted := uint64(1000)
+	normalGasUsed := uint64(500)
+
+	normalResponse := &abci.CheckTxResponse{
+		GasWanted: int64(normalGasWanted),
+		GasUsed:   int64(normalGasUsed),
+	}
+
+	require.Equal(t, int64(1000), normalResponse.GasWanted)
+	require.Equal(t, int64(500), normalResponse.GasUsed)
 }

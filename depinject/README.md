@@ -168,7 +168,7 @@ depinject.Inject(
  &pond)
 ```
 
-Now `depinject` has enough information to provide `Mallard` as an input to `APond`.
+Now `depinject` has enough information to provide `Mallard` as an input to `Pond`.
 
 ### Full example in real app
 
@@ -196,7 +196,7 @@ were left unused.
 Here is an example Graphviz rendering of a dependency graph build which failed:
 ![Graphviz Error Example](https://raw.githubusercontent.com/cosmos/cosmos-sdk/ff39d243d421442b400befcd959ec3ccd2525154/depinject/testdata/example_error.svg)
 
-Graphviz DOT files can be converted into SVG's for viewing in a web browser using the `dot` command-line tool, ex:
+Graphviz DOT files can be converted into SVGs for viewing in a web browser using the `dot` command-line tool, ex:
 
 ```txt
 dot -Tsvg debug_container.dot > debug_container.svg

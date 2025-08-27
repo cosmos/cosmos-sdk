@@ -236,6 +236,50 @@ func TestTxTimeoutHeightDecorator(t *testing.T) {
 	}
 }
 
+func TestTxTimeoutHeightDecorator_ErrorMessages(t *testing.T) {
+	suite := SetupTestSuite(t, true)
+	antehandler := sdk.ChainAnteDecorators(ante.NewTxTimeoutHeightDecorator())
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
+	msg := testdata.NewTestMsg(addr1)
+	feeAmount := testdata.NewTestFeeAmount()
+	gasLimit := testdata.NewTestGasLimit()
+
+	// Build a base tx
+	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
+	require.NoError(t, suite.txBuilder.SetMsgs(msg))
+	suite.txBuilder.SetFeeAmount(feeAmount)
+	suite.txBuilder.SetGasLimit(gasLimit)
+
+	// Case 1: same height -> require "strictly greater/next block" guidance
+	{
+		suite.txBuilder.SetTimeoutHeight(10)
+		suite.txBuilder.SetTimeoutTimestamp(time.Time{})
+		privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
+		tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
+		require.NoError(t, err)
+
+		ctx := suite.ctx.WithBlockHeight(10)
+		_, err = antehandler(ctx, tx, true)
+		require.ErrorIs(t, err, sdkerrors.ErrTxTimeoutHeight)
+		require.ErrorContains(t, err, "strictly greater than the current block height")
+	}
+
+	// Case 2: past height -> require hint to try >= next block
+	{
+		suite.txBuilder.SetTimeoutHeight(9)
+		suite.txBuilder.SetTimeoutTimestamp(time.Time{})
+		privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
+		tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
+		require.NoError(t, err)
+
+		ctx := suite.ctx.WithBlockHeight(10)
+		_, err = antehandler(ctx, tx, true)
+		require.ErrorIs(t, err, sdkerrors.ErrTxTimeoutHeight)
+		require.ErrorContains(t, err, "has already passed")
+		require.ErrorContains(t, err, "try >=")
+	}
+}
+
 func TestGetRecommendedTimeoutHeight(t *testing.T) {
 	testCases := []struct {
 		name           string
@@ -255,4 +299,12 @@ func TestGetRecommendedTimeoutHeight(t *testing.T) {
 			require.Equal(t, tc.expectedHeight, result)
 		})
 	}
+
+	// Test overflow boundary case
+	t.Run("overflow boundary", func(t *testing.T) {
+		maxHeight := ^uint64(0) - 5
+		result := ante.GetRecommendedTimeoutHeight(maxHeight, 10)
+		// Should saturate to max uint64 when overflow occurs
+		require.Equal(t, ^uint64(0), result)
+	})
 }

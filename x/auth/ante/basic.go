@@ -246,7 +246,7 @@ func (txh TxTimeoutHeightDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 // GetRecommendedTimeoutHeight returns the recommended timeout height for a transaction.
 // It adds a buffer to the current block height to ensure the transaction has time to be processed.
 // When buffer=0, it defaults to 1 block (next block).
-func GetRecommendedTimeoutHeight(currentHeight uint64, buffer uint64) uint64 {
+func GetRecommendedTimeoutHeight(currentHeight, buffer uint64) uint64 {
 	if buffer == 0 {
 		buffer = 1 // Default buffer of 1 block
 	}

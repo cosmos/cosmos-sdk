@@ -65,3 +65,6 @@ The IBC module for the Cosmos SDK has its own [cosmos/ibc-go repository](https:/
 ## Disambiguation
 
 This Cosmos SDK project is not related to the [React-Cosmos](https://github.com/react-cosmos/react-cosmos) project (yet). Many thanks to Evan Coury and Ovidiu (@skidding) for this Github organization name. As per our agreement, this disambiguation notice will stay here.
+
+## Documentation
+- Developer docs: https://docs.cosmos.network/

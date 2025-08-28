@@ -2,6 +2,7 @@
 
 package bls12_381
 
+/*
 import (
 	"bytes"
 	"errors"
@@ -133,3 +134,5 @@ func (pubKey PubKey) Equals(other cryptotypes.PubKey) bool {
 func (pubKey PubKey) String() string {
 	return fmt.Sprintf("PubKeyBLS12_381{%X}", pubKey.Key)
 }
+
+*/

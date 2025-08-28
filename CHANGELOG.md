@@ -46,8 +46,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * `x/nft`
   * `x/circuit`
   * `x/crisis`
-* [#24837](https://github.com/cosmos/cosmos-sdk/pull/24837) Update to using CometBFT v2.
-    * This update changes the import paths from `cometbft/cometbft` to `cometbft/cometbft/v2`.  Users can use the [migration tool](./tools/migration/TODO) to automatically update their nodes.
+* (crypto) [#24414](https://github.com/cosmos/cosmos-sdk/pull/24414) Remove sr25519 support, since it was removed in CometBFT v1.x (see: CometBFT [#3646](https://github.com/cometbft/cometbft/pull/3646)).
 
 ### Features
 

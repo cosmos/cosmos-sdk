@@ -31,9 +31,9 @@ func (s *Suite) SetupTest() {
 	s.spot = &testdata.Dog{Size_: "small", Name: "Spot"}
 	s.a = TypeWithInterface{Animal: s.spot}
 
-	any, err := types.NewAnyWithValue(s.spot)
+	v, err := types.NewAnyWithValue(s.spot)
 	s.Require().NoError(err)
-	s.b = testdata.HasAnimal{Animal: any}
+	s.b = testdata.HasAnimal{Animal: v}
 }
 
 func (s *Suite) TestAminoBinary() {
@@ -89,12 +89,12 @@ func (s *Suite) TestNested() {
 	s.cdc.RegisterConcrete(&testdata.HasHasAnimal{}, "testdata/HasHasAnimal", nil)
 	s.cdc.RegisterConcrete(&testdata.HasHasHasAnimal{}, "testdata/HasHasHasAnimal", nil)
 
-	any, err := types.NewAnyWithValue(&s.b)
+	v, err := types.NewAnyWithValue(&s.b)
 	s.Require().NoError(err)
-	hha := testdata.HasHasAnimal{HasAnimal: any}
-	any2, err := types.NewAnyWithValue(&hha)
+	hha := testdata.HasHasAnimal{HasAnimal: v}
+	v2, err := types.NewAnyWithValue(&hha)
 	s.Require().NoError(err)
-	hhha := testdata.HasHasHasAnimal{HasHasAnimal: any2}
+	hhha := testdata.HasHasHasAnimal{HasHasAnimal: v2}
 
 	// marshal
 	err = types.UnpackInterfaces(hhha, types.AminoPacker{Cdc: s.cdc})

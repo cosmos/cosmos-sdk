@@ -78,7 +78,7 @@ func (am AppModule) IsOnePerModuleType() {}
 func (am AppModule) IsAppModule() {}
 
 // GenerateGenesisState performs a no-op.
-func (AppModule) GenerateGenesisState(simState *module.SimulationState) {}
+func (AppModule) GenerateGenesisState(*module.SimulationState) {}
 
 // RegisterServices registers a gRPC query service to respond to the
 // module-specific gRPC queries.
@@ -87,7 +87,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 }
 
 // RegisterStoreDecoder doesn't register any type.
-func (AppModule) RegisterStoreDecoder(sdr simtypes.StoreDecoderRegistry) {}
+func (AppModule) RegisterStoreDecoder(simtypes.StoreDecoderRegistry) {}
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {

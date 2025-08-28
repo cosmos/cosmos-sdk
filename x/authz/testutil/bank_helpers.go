@@ -8,18 +8,18 @@ import (
 
 var _ bank.MsgServer = MockBankKeeper{}
 
-func (k MockBankKeeper) Send(goCtx context.Context, msg *bank.MsgSend) (*bank.MsgSendResponse, error) {
+func (k MockBankKeeper) Send(context.Context, *bank.MsgSend) (*bank.MsgSendResponse, error) {
 	return nil, nil
 }
 
-func (k MockBankKeeper) MultiSend(goCtx context.Context, msg *bank.MsgMultiSend) (*bank.MsgMultiSendResponse, error) {
+func (k MockBankKeeper) MultiSend(context.Context, *bank.MsgMultiSend) (*bank.MsgMultiSendResponse, error) {
 	return nil, nil
 }
 
-func (k MockBankKeeper) UpdateParams(goCtx context.Context, req *bank.MsgUpdateParams) (*bank.MsgUpdateParamsResponse, error) {
+func (k MockBankKeeper) UpdateParams(context.Context, *bank.MsgUpdateParams) (*bank.MsgUpdateParamsResponse, error) {
 	return nil, nil
 }
 
-func (k MockBankKeeper) SetSendEnabled(goCtx context.Context, req *bank.MsgSetSendEnabled) (*bank.MsgSetSendEnabledResponse, error) {
+func (k MockBankKeeper) SetSendEnabled(context.Context, *bank.MsgSetSendEnabled) (*bank.MsgSetSendEnabledResponse, error) {
 	return nil, nil
 }

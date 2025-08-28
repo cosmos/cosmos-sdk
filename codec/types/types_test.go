@@ -19,10 +19,10 @@ func TestAnyPackUnpack(t *testing.T) {
 	var animal testdata.Animal
 
 	// with cache
-	any, err := types.NewAnyWithValue(spot)
+	v, err := types.NewAnyWithValue(spot)
 	require.NoError(t, err)
-	require.Equal(t, spot, any.GetCachedValue())
-	err = registry.UnpackAny(any, &animal)
+	require.Equal(t, spot, v.GetCachedValue())
+	err = registry.UnpackAny(v, &animal)
 	require.NoError(t, err)
 	require.Equal(t, spot, animal)
 }
@@ -44,7 +44,7 @@ var (
 func (dog FakeDog) Reset()                  {}
 func (dog FakeDog) String() string          { return "fakedog" }
 func (dog FakeDog) ProtoMessage()           {}
-func (dog FakeDog) XXX_MessageName() string { return proto.MessageName(&testdata.Dog{}) } //nolint:revive // XXX_ prefix is intentional
+func (dog FakeDog) XXX_MessageName() string { return proto.MessageName(&testdata.Dog{}) }
 func (dog FakeDog) Greet() string           { return "fakedog" }
 
 func TestRegister(t *testing.T) {
@@ -92,11 +92,11 @@ func TestUnpackInterfaces(t *testing.T) {
 	registry := testdata.NewTestInterfaceRegistry()
 
 	spot := &testdata.Dog{Name: "Spot"}
-	any, err := types.NewAnyWithValue(spot)
+	v, err := types.NewAnyWithValue(spot)
 	require.NoError(t, err)
 
 	hasAny := testdata.HasAnimal{
-		Animal: any,
+		Animal: v,
 		X:      1,
 	}
 	bz, err := hasAny.Marshal()
@@ -116,18 +116,18 @@ func TestNested(t *testing.T) {
 	registry := testdata.NewTestInterfaceRegistry()
 
 	spot := &testdata.Dog{Name: "Spot"}
-	any, err := types.NewAnyWithValue(spot)
+	v, err := types.NewAnyWithValue(spot)
 	require.NoError(t, err)
 
-	ha := &testdata.HasAnimal{Animal: any}
-	any2, err := types.NewAnyWithValue(ha)
+	ha := &testdata.HasAnimal{Animal: v}
+	v2, err := types.NewAnyWithValue(ha)
 	require.NoError(t, err)
 
-	hha := &testdata.HasHasAnimal{HasAnimal: any2}
-	any3, err := types.NewAnyWithValue(hha)
+	hha := &testdata.HasHasAnimal{HasAnimal: v2}
+	v3, err := types.NewAnyWithValue(hha)
 	require.NoError(t, err)
 
-	hhha := testdata.HasHasHasAnimal{HasHasAnimal: any3}
+	hhha := testdata.HasHasHasAnimal{HasHasAnimal: v3}
 
 	// marshal
 	bz, err := hhha.Marshal()
@@ -145,11 +145,11 @@ func TestNested(t *testing.T) {
 
 func TestAny_ProtoJSON(t *testing.T) {
 	spot := &testdata.Dog{Name: "Spot"}
-	any, err := types.NewAnyWithValue(spot)
+	v, err := types.NewAnyWithValue(spot)
 	require.NoError(t, err)
 
 	jm := &jsonpb.Marshaler{}
-	json, err := jm.MarshalToString(any)
+	json, err := jm.MarshalToString(v)
 	require.NoError(t, err)
 	require.Equal(t, "{\"@type\":\"/testpb.Dog\",\"name\":\"Spot\"}", json)
 
@@ -164,7 +164,7 @@ func TestAny_ProtoJSON(t *testing.T) {
 	require.Equal(t, spot, animal)
 
 	ha := &testdata.HasAnimal{
-		Animal: any,
+		Animal: v,
 	}
 	err = ha.UnpackInterfaces(types.ProtoJSONPacker{JSONPBMarshaler: jm})
 	require.NoError(t, err)

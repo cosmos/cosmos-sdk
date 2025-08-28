@@ -138,8 +138,8 @@ func mkTxResult(txConfig client.TxConfig, resTx *coretypes.ResultTx, resBlock *c
 	if !ok {
 		return nil, fmt.Errorf("expecting a type implementing intoAny, got: %T", txb)
 	}
-	any := p.AsAny()
-	return sdk.NewResponseResultTx(resTx, any, resBlock.Block.Time.Format(time.RFC3339)), nil
+	v := p.AsAny()
+	return sdk.NewResponseResultTx(resTx, v, resBlock.Block.Time.Format(time.RFC3339)), nil
 }
 
 // Deprecated: this interface is used only internally for scenario we are

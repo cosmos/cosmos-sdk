@@ -18,14 +18,14 @@ func (k NoKeyring) List() ([]string, error) {
 	return nil, errNoKeyring
 }
 
-func (k NoKeyring) LookupAddressByKeyName(name string) ([]byte, error) {
+func (k NoKeyring) LookupAddressByKeyName(string) ([]byte, error) {
 	return nil, errNoKeyring
 }
 
-func (k NoKeyring) GetPubKey(name string) (cryptotypes.PubKey, error) {
+func (k NoKeyring) GetPubKey(string) (cryptotypes.PubKey, error) {
 	return nil, errNoKeyring
 }
 
-func (k NoKeyring) Sign(name string, msg []byte, signMode signingv1beta1.SignMode) ([]byte, error) {
+func (k NoKeyring) Sign(string, []byte, signingv1beta1.SignMode) ([]byte, error) {
 	return nil, errNoKeyring
 }

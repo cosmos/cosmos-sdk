@@ -898,7 +898,6 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 
 			return nil
 		}()
-
 		if err != nil {
 			return err
 		}
@@ -910,7 +909,7 @@ func (rs *Store) Snapshot(height uint64, protoWriter protoio.Writer) error {
 // Restore implements snapshottypes.Snapshotter.
 // returns next snapshot item and error.
 func (rs *Store) Restore(
-	height uint64, format uint32, protoReader protoio.Reader,
+	height uint64, _ uint32, protoReader protoio.Reader,
 ) (snapshottypes.SnapshotItem, error) {
 	// Import nodes into stores. The first item is expected to be a SnapshotItem containing
 	// a SnapshotStoreItem, telling us which store to import into. The following items will contain

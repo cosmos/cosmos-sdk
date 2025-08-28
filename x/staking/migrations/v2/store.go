@@ -60,7 +60,7 @@ func migrateValidatorsByPowerIndexKey(store storetypes.KVStore) {
 // migration includes:
 //
 // - Setting the Power Reduction param in the paramstore
-func MigrateStore(ctx sdk.Context, store storetypes.KVStore) error {
+func MigrateStore(_ sdk.Context, store storetypes.KVStore) error {
 	v2distribution.MigratePrefixAddress(store, v1.LastValidatorPowerKey)
 	v2distribution.MigratePrefixAddress(store, v1.ValidatorsKey)
 	v2distribution.MigratePrefixAddress(store, v1.ValidatorsByConsAddrKey)

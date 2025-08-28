@@ -227,7 +227,7 @@ func (pc *ProtoCodec) MarshalInterface(i gogoproto.Message) ([]byte, error) {
 	if err := assertNotNil(i); err != nil {
 		return nil, err
 	}
-	any, err := types.NewAnyWithValue(i)
+	v, err := types.NewAnyWithValue(i)
 	if err != nil {
 		return nil, err
 	}
@@ -236,7 +236,7 @@ func (pc *ProtoCodec) MarshalInterface(i gogoproto.Message) ([]byte, error) {
 		return nil, err
 	}
 
-	return pc.Marshal(any)
+	return pc.Marshal(v)
 }
 
 // UnmarshalInterface is a convenience function for proto unmarshaling interfaces. It
@@ -249,24 +249,24 @@ func (pc *ProtoCodec) MarshalInterface(i gogoproto.Message) ([]byte, error) {
 //	var x MyInterface
 //	err := cdc.UnmarshalInterface(bz, &x)
 func (pc *ProtoCodec) UnmarshalInterface(bz []byte, ptr interface{}) error {
-	any := &types.Any{}
-	err := pc.Unmarshal(bz, any)
+	v := &types.Any{}
+	err := pc.Unmarshal(bz, v)
 	if err != nil {
 		return err
 	}
 
-	return pc.UnpackAny(any, ptr)
+	return pc.UnpackAny(v, ptr)
 }
 
 // MarshalInterfaceJSON is a convenience function for proto marshaling interfaces. It
 // packs the provided value in an Any and then marshals it to bytes.
 // NOTE: to marshal a concrete type, you should use MarshalJSON instead
 func (pc *ProtoCodec) MarshalInterfaceJSON(x gogoproto.Message) ([]byte, error) {
-	any, err := types.NewAnyWithValue(x)
+	v, err := types.NewAnyWithValue(x)
 	if err != nil {
 		return nil, err
 	}
-	return pc.MarshalJSON(any)
+	return pc.MarshalJSON(v)
 }
 
 // UnmarshalInterfaceJSON is a convenience function for proto unmarshaling interfaces.
@@ -279,19 +279,19 @@ func (pc *ProtoCodec) MarshalInterfaceJSON(x gogoproto.Message) ([]byte, error) 
 //	var x MyInterface  // must implement proto.Message
 //	err := cdc.UnmarshalInterfaceJSON(&x, bz)
 func (pc *ProtoCodec) UnmarshalInterfaceJSON(bz []byte, iface interface{}) error {
-	any := &types.Any{}
-	err := pc.UnmarshalJSON(bz, any)
+	v := &types.Any{}
+	err := pc.UnmarshalJSON(bz, v)
 	if err != nil {
 		return err
 	}
-	return pc.UnpackAny(any, iface)
+	return pc.UnpackAny(v, iface)
 }
 
 // UnpackAny implements AnyUnpacker.UnpackAny method,
 // it unpacks the value in any to the interface pointer passed in as
 // iface.
-func (pc *ProtoCodec) UnpackAny(any *types.Any, iface interface{}) error {
-	return pc.interfaceRegistry.UnpackAny(any, iface)
+func (pc *ProtoCodec) UnpackAny(v *types.Any, iface interface{}) error {
+	return pc.interfaceRegistry.UnpackAny(v, iface)
 }
 
 // InterfaceRegistry returns InterfaceRegistry
@@ -321,11 +321,11 @@ func (pc *ProtoCodec) GetMsgV1Signers(msg gogoproto.Message) ([][]byte, proto.Me
 		signers, err := pc.interfaceRegistry.SigningContext().GetSigners(msgV2)
 		return signers, msgV2, err
 	}
-	a, err := types.NewAnyWithValue(msg)
+	v, err := types.NewAnyWithValue(msg)
 	if err != nil {
 		return nil, nil, err
 	}
-	return pc.GetMsgAnySigners(a)
+	return pc.GetMsgAnySigners(v)
 }
 
 // GRPCCodec returns the gRPC Codec for this specific ProtoCodec

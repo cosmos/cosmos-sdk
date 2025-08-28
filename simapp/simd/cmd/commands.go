@@ -116,7 +116,7 @@ func initRootCmd(
 	)
 
 	server.AddCommandsWithStartCmdOptions(rootCmd, simapp.DefaultNodeHome, newApp, appExport, server.StartCmdOptions{
-		AddFlags: func(startCmd *cobra.Command) {},
+		AddFlags: func(*cobra.Command) {},
 	})
 
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands

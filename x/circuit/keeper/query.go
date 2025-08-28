@@ -60,7 +60,7 @@ func (qs QueryServer) Accounts(ctx context.Context, req *types.QueryAccountsRequ
 }
 
 // DisabledList returns a list of disabled message urls
-func (qs QueryServer) DisabledList(ctx context.Context, req *types.QueryDisabledListRequest) (*types.DisabledListResponse, error) {
+func (qs QueryServer) DisabledList(ctx context.Context, _ *types.QueryDisabledListRequest) (*types.DisabledListResponse, error) {
 	// Iterate over disabled list and perform the callback
 	var msgs []string
 	err := qs.keeper.DisableList.Walk(ctx, nil, func(msgUrl string) (bool, error) {

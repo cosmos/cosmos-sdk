@@ -21,7 +21,7 @@ func ModuleAccountInvariant(keeper *Keeper, bk types.BankKeeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		var expectedDeposits sdk.Coins
 
-		err := keeper.Deposits.Walk(ctx, nil, func(key collections.Pair[uint64, sdk.AccAddress], value v1.Deposit) (stop bool, err error) {
+		err := keeper.Deposits.Walk(ctx, nil, func(_ collections.Pair[uint64, sdk.AccAddress], value v1.Deposit) (stop bool, err error) {
 			expectedDeposits = expectedDeposits.Add(value.Amount...)
 			return false, nil
 		})

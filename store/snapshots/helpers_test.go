@@ -113,7 +113,7 @@ type mockSnapshotter struct {
 }
 
 func (m *mockSnapshotter) Restore(
-	height uint64, format uint32, protoReader protoio.Reader,
+	_ uint64, format uint32, protoReader protoio.Reader,
 ) (snapshottypes.SnapshotItem, error) {
 	if format == 0 {
 		return snapshottypes.SnapshotItem{}, snapshottypes.ErrUnknownFormat
@@ -175,13 +175,11 @@ type mockErrorSnapshotter struct{}
 
 var _ snapshottypes.Snapshotter = (*mockErrorSnapshotter)(nil)
 
-func (m *mockErrorSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) error {
+func (m *mockErrorSnapshotter) Snapshot(uint64, protoio.Writer) error {
 	return errors.New("mock snapshot error")
 }
 
-func (m *mockErrorSnapshotter) Restore(
-	height uint64, format uint32, protoReader protoio.Reader,
-) (snapshottypes.SnapshotItem, error) {
+func (m *mockErrorSnapshotter) Restore(uint64, uint32, protoio.Reader) (snapshottypes.SnapshotItem, error) {
 	return snapshottypes.SnapshotItem{}, errors.New("mock restore error")
 }
 
@@ -193,7 +191,7 @@ func (m *mockErrorSnapshotter) SupportedFormats() []uint32 {
 	return []uint32{snapshottypes.CurrentFormat}
 }
 
-func (m *mockErrorSnapshotter) PruneSnapshotHeight(height int64) {
+func (m *mockErrorSnapshotter) PruneSnapshotHeight(int64) {
 }
 
 func (m *mockErrorSnapshotter) GetSnapshotInterval() uint64 {

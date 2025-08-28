@@ -41,7 +41,7 @@ func (k Querier) Validators(ctx context.Context, req *types.QueryValidatorsReque
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	valStore := prefix.NewStore(store, types.ValidatorsKey)
 
-	validators, pageRes, err := query.GenericFilteredPaginate(k.cdc, valStore, req.Pagination, func(key []byte, val *types.Validator) (*types.Validator, error) {
+	validators, pageRes, err := query.GenericFilteredPaginate(k.cdc, valStore, req.Pagination, func(_ []byte, val *types.Validator) (*types.Validator, error) {
 		if req.Status != "" && !strings.EqualFold(val.GetStatus().String(), req.Status) {
 			return nil, nil
 		}
@@ -107,7 +107,7 @@ func (k Querier) ValidatorDelegations(ctx context.Context, req *types.QueryValid
 		dels    types.Delegations
 		pageRes *query.PageResponse
 	)
-	pageRes, err = query.Paginate(delStore, req.Pagination, func(delAddr, value []byte) error {
+	pageRes, err = query.Paginate(delStore, req.Pagination, func(delAddr, _ []byte) error {
 		bz := store.Get(types.GetDelegationKey(delAddr, valAddr))
 
 		var delegation types.Delegation
@@ -147,7 +147,7 @@ func (k Querier) getValidatorDelegationsLegacy(ctx context.Context, req *types.Q
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 
 	valStore := prefix.NewStore(store, types.DelegationKey)
-	return query.GenericFilteredPaginate(k.cdc, valStore, req.Pagination, func(key []byte, delegation *types.Delegation) (*types.Delegation, error) {
+	return query.GenericFilteredPaginate(k.cdc, valStore, req.Pagination, func(_ []byte, delegation *types.Delegation) (*types.Delegation, error) {
 		_, err := k.validatorAddressCodec.StringToBytes(req.ValidatorAddr)
 		if err != nil {
 			return nil, err
@@ -182,7 +182,7 @@ func (k Querier) ValidatorUnbondingDelegations(ctx context.Context, req *types.Q
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	srcValPrefix := types.GetUBDsByValIndexKey(valAddr)
 	ubdStore := prefix.NewStore(store, srcValPrefix)
-	pageRes, err := query.Paginate(ubdStore, req.Pagination, func(key, value []byte) error {
+	pageRes, err := query.Paginate(ubdStore, req.Pagination, func(key, _ []byte) error {
 		storeKey := types.GetUBDKeyFromValIndexKey(append(srcValPrefix, key...))
 		storeValue := store.Get(storeKey)
 
@@ -294,7 +294,7 @@ func (k Querier) DelegatorDelegations(ctx context.Context, req *types.QueryDeleg
 
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	delStore := prefix.NewStore(store, types.GetDelegationsKey(delAddr))
-	pageRes, err := query.Paginate(delStore, req.Pagination, func(key, value []byte) error {
+	pageRes, err := query.Paginate(delStore, req.Pagination, func(_, value []byte) error {
 		delegation, err := types.UnmarshalDelegation(k.cdc, value)
 		if err != nil {
 			return err
@@ -363,7 +363,7 @@ func (k Querier) DelegatorUnbondingDelegations(ctx context.Context, req *types.Q
 
 	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
 	unbStore := prefix.NewStore(store, types.GetUBDsKey(delAddr))
-	pageRes, err := query.Paginate(unbStore, req.Pagination, func(key, value []byte) error {
+	pageRes, err := query.Paginate(unbStore, req.Pagination, func(_, value []byte) error {
 		unbond, err := types.UnmarshalUBD(k.cdc, value)
 		if err != nil {
 			return err
@@ -446,7 +446,7 @@ func (k Querier) DelegatorValidators(ctx context.Context, req *types.QueryDelega
 	}
 
 	delStore := prefix.NewStore(store, types.GetDelegationsKey(delAddr))
-	pageRes, err := query.Paginate(delStore, req.Pagination, func(key, value []byte) error {
+	pageRes, err := query.Paginate(delStore, req.Pagination, func(_, value []byte) error {
 		delegation, err := types.UnmarshalDelegation(k.cdc, value)
 		if err != nil {
 			return err
@@ -534,7 +534,7 @@ func queryRedelegationsFromSrcValidator(store storetypes.KVStore, k Querier, req
 
 	srcValPrefix := types.GetREDsFromValSrcIndexKey(valAddr)
 	redStore := prefix.NewStore(store, srcValPrefix)
-	res, err = query.Paginate(redStore, req.Pagination, func(key, value []byte) error {
+	res, err = query.Paginate(redStore, req.Pagination, func(key, _ []byte) error {
 		storeKey := types.GetREDKeyFromValSrcIndexKey(append(srcValPrefix, key...))
 		storeValue := store.Get(storeKey)
 		red, err := types.UnmarshalRED(k.cdc, storeValue)
@@ -555,7 +555,7 @@ func queryAllRedelegations(store storetypes.KVStore, k Querier, req *types.Query
 	}
 
 	redStore := prefix.NewStore(store, types.GetREDsKey(delAddr))
-	res, err = query.Paginate(redStore, req.Pagination, func(key, value []byte) error {
+	res, err = query.Paginate(redStore, req.Pagination, func(_, value []byte) error {
 		redelegation, err := types.UnmarshalRED(k.cdc, value)
 		if err != nil {
 			return err

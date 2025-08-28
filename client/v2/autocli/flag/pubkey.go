@@ -45,12 +45,12 @@ func (a *pubkeyValue) Set(s string) error {
 		return fmt.Errorf("input isn't a pubkey: %w", err)
 	}
 
-	any, err := types.NewAnyWithValue(pk)
+	v, err := types.NewAnyWithValue(pk)
 	if err != nil {
 		return fmt.Errorf("error converting to any type")
 	}
 
-	a.value = any
+	a.value = v
 
 	return nil
 }

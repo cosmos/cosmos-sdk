@@ -44,11 +44,11 @@ func (msg *MsgGrant) SetAuthorization(a Authorization) error {
 	if !ok {
 		return sdkerrors.ErrPackAny.Wrapf("can't proto marshal %T", m)
 	}
-	any, err := cdctypes.NewAnyWithValue(m)
+	v, err := cdctypes.NewAnyWithValue(m)
 	if err != nil {
 		return err
 	}
-	msg.Grant.Authorization = any
+	msg.Grant.Authorization = v
 	return nil
 }
 
@@ -83,12 +83,12 @@ func NewMsgRevoke(granter, grantee sdk.AccAddress, msgTypeURL string) MsgRevoke 
 func NewMsgExec(grantee sdk.AccAddress, msgs []sdk.Msg) MsgExec {
 	msgsAny := make([]*cdctypes.Any, len(msgs))
 	for i, msg := range msgs {
-		any, err := cdctypes.NewAnyWithValue(msg)
+		v, err := cdctypes.NewAnyWithValue(msg)
 		if err != nil {
 			panic(err)
 		}
 
-		msgsAny[i] = any
+		msgsAny[i] = v
 	}
 
 	return MsgExec{

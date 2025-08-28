@@ -19,7 +19,7 @@ func Migrate(ctx sdk.Context, cdc codec.BinaryCodec, store storetypes.KVStore, p
 	// Get all the missed blocks for each validator, based on the existing signing
 	// info.
 	var missedBlocks []types.ValidatorMissedBlocks
-	iterateValidatorSigningInfos(ctx, cdc, store, func(addr sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool) {
+	iterateValidatorSigningInfos(ctx, cdc, store, func(addr sdk.ConsAddress, _ types.ValidatorSigningInfo) (stop bool) {
 		bechAddr := addr.String()
 		localMissedBlocks := GetValidatorMissedBlocks(ctx, cdc, store, addr, params)
 
@@ -57,7 +57,7 @@ func Migrate(ctx sdk.Context, cdc codec.BinaryCodec, store storetypes.KVStore, p
 }
 
 func iterateValidatorSigningInfos(
-	ctx sdk.Context,
+	_ sdk.Context,
 	cdc codec.BinaryCodec,
 	store storetypes.KVStore,
 	cb func(address sdk.ConsAddress, info types.ValidatorSigningInfo) (stop bool),
@@ -77,7 +77,7 @@ func iterateValidatorSigningInfos(
 }
 
 func iterateValidatorMissedBlockBitArray(
-	ctx sdk.Context,
+	_ sdk.Context,
 	cdc codec.BinaryCodec,
 	store storetypes.KVStore,
 	addr sdk.ConsAddress,
@@ -114,7 +114,7 @@ func GetValidatorMissedBlocks(
 	return missedBlocks
 }
 
-func deleteValidatorMissedBlockBitArray(ctx sdk.Context, store storetypes.KVStore, addr sdk.ConsAddress) {
+func deleteValidatorMissedBlockBitArray(_ sdk.Context, store storetypes.KVStore, addr sdk.ConsAddress) {
 	iter := storetypes.KVStorePrefixIterator(store, validatorMissedBlockBitArrayPrefixKey(addr))
 	defer iter.Close()
 
@@ -123,7 +123,7 @@ func deleteValidatorMissedBlockBitArray(ctx sdk.Context, store storetypes.KVStor
 	}
 }
 
-func setMissedBlockBitmapValue(ctx sdk.Context, store storetypes.KVStore, addr sdk.ConsAddress, index int64, missed bool) error {
+func setMissedBlockBitmapValue(_ sdk.Context, store storetypes.KVStore, addr sdk.ConsAddress, index int64, missed bool) error {
 	// get the chunk or "word" in the logical bitmap
 	chunkIndex := index / MissedBlockBitmapChunkSize
 	key := ValidatorMissedBlockBitmapKey(addr, chunkIndex)

@@ -89,7 +89,7 @@ func (it *immutableTree) AvailableVersions() []int {
 	return []int{}
 }
 
-func (it *immutableTree) LoadVersionForOverwriting(targetVersion int64) error {
+func (it *immutableTree) LoadVersionForOverwriting(int64) error {
 	panic("cannot call 'LoadVersionForOverwriting' on an immutable IAVL tree")
 }
 

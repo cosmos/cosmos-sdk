@@ -15,7 +15,7 @@ func ExportSnapshotCmd(appCreator servertypes.AppCreator) *cobra.Command {
 		Use:   "export",
 		Short: "Export app state to snapshot store",
 		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			ctx := server.GetServerContextFromCmd(cmd)
 
 			height, err := cmd.Flags().GetInt64("height")

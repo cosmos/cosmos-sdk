@@ -62,7 +62,7 @@ func TestConfigCmdEnvFlag(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			testCmd := &cobra.Command{
 				Use: "test",
-				RunE: func(cmd *cobra.Command, args []string) error {
+				RunE: func(cmd *cobra.Command, _ []string) error {
 					clientCtx, err := client.GetClientQueryContext(cmd)
 					if err != nil {
 						return err

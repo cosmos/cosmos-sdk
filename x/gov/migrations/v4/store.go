@@ -55,7 +55,7 @@ func migrateParams(ctx sdk.Context, store storetypes.KVStore, legacySubspace exp
 	return nil
 }
 
-func migrateProposalVotingPeriod(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCodec) error {
+func migrateProposalVotingPeriod(_ sdk.Context, store storetypes.KVStore, cdc codec.BinaryCodec) error {
 	propStore := prefix.NewStore(store, v1.ProposalsKeyPrefix)
 
 	iter := propStore.Iterator(nil, nil)

@@ -94,7 +94,7 @@ Example:
 	f.String(flagMnemonicSrc, "", "Import mnemonic from a file (only usable when recover or interactive is passed)")
 
 	// support old flags name for backwards compatibility
-	f.SetNormalizeFunc(func(f *pflag.FlagSet, name string) pflag.NormalizedName {
+	f.SetNormalizeFunc(func(_ *pflag.FlagSet, name string) pflag.NormalizedName {
 		if name == flags.FlagKeyAlgorithm {
 			name = flags.FlagKeyType
 		}

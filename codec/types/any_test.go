@@ -19,7 +19,7 @@ var _ proto.Message = (*errOnMarshal)(nil)
 
 var errAlways = fmt.Errorf("always erroring")
 
-func (eom *errOnMarshal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) { //nolint:revive // XXX_ prefix is intentional
+func (eom *errOnMarshal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return nil, errAlways
 }
 
@@ -39,7 +39,7 @@ func TestNewAnyWithCustomTypeURLWithErrorNoAllocation(t *testing.T) {
 
 	var ms1, ms2 runtime.MemStats
 	runtime.ReadMemStats(&ms1)
-	any, err := types.NewAnyWithValue(eom)
+	v, err := types.NewAnyWithValue(eom)
 	runtime.ReadMemStats(&ms2)
 	// Ensure that no fresh allocation was made.
 	if diff := ms2.HeapAlloc - ms1.HeapAlloc; diff > 0 {
@@ -48,8 +48,8 @@ func TestNewAnyWithCustomTypeURLWithErrorNoAllocation(t *testing.T) {
 	if err == nil {
 		t.Fatal("err wasn't returned")
 	}
-	if any != nil {
-		t.Fatalf("Unexpectedly got a non-nil Any value: %v", any)
+	if v != nil {
+		t.Fatalf("Unexpectedly got a non-nil Any value: %v", v)
 	}
 }
 
@@ -59,14 +59,14 @@ func BenchmarkNewAnyWithCustomTypeURLWithErrorReturned(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		any, err := types.NewAnyWithValue(eom)
+		v, err := types.NewAnyWithValue(eom)
 		if err == nil {
 			b.Fatal("err wasn't returned")
 		}
-		if any != nil {
-			b.Fatalf("Unexpectedly got a non-nil Any value: %v", any)
+		if v != nil {
+			b.Fatalf("Unexpectedly got a non-nil Any value: %v", v)
 		}
-		sink = any
+		sink = v
 	}
 	if sink == nil {
 		b.Fatal("benchmark didn't run")

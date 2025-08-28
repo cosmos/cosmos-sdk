@@ -127,7 +127,7 @@ func CanWithdrawInvariant(k Keeper) sdk.Invariant {
 func ReferenceCountInvariant(k Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		valCount := uint64(0)
-		err := k.stakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
+		err := k.stakingKeeper.IterateValidators(ctx, func(int64, stakingtypes.ValidatorI) (stop bool) {
 			valCount++
 			return false
 		})

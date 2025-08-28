@@ -47,9 +47,8 @@ func TestingUpdateValidator(keeper *Keeper, ctx sdk.Context, validator types.Val
 		if bytes.Equal(valAddr, bz) {
 			if deleted {
 				panic("found duplicate power index key")
-			} else {
-				deleted = true
 			}
+			deleted = true
 
 			if err = store.Delete(iterator.Key()); err != nil {
 				panic(err)

@@ -23,11 +23,11 @@ func NewMsgSubmitEvidence(s sdk.AccAddress, evi exported.Evidence) (*MsgSubmitEv
 	if !ok {
 		return nil, fmt.Errorf("cannot proto marshal %T", evi)
 	}
-	any, err := types.NewAnyWithValue(msg)
+	v, err := types.NewAnyWithValue(msg)
 	if err != nil {
 		return nil, err
 	}
-	return &MsgSubmitEvidence{Submitter: s.String(), Evidence: any}, nil
+	return &MsgSubmitEvidence{Submitter: s.String(), Evidence: v}, nil
 }
 
 func (m MsgSubmitEvidence) GetEvidence() exported.Evidence {

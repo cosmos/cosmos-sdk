@@ -679,7 +679,7 @@ func (k Keeper) SetRedelegationEntry(ctx context.Context,
 	delegatorAddr sdk.AccAddress, validatorSrcAddr,
 	validatorDstAddr sdk.ValAddress, creationHeight int64,
 	minTime time.Time, balance math.Int,
-	sharesSrc, sharesDst math.LegacyDec,
+	_, sharesDst math.LegacyDec,
 ) (types.Redelegation, error) {
 	id, err := k.IncrementUnbondingID(ctx)
 	if err != nil {
@@ -830,7 +830,7 @@ func (k Keeper) RedelegationQueueIterator(ctx context.Context, endTime time.Time
 // DequeueAllMatureRedelegationQueue returns a concatenated list of all the
 // timeslices inclusively previous to currTime, and deletes the timeslices from
 // the queue.
-func (k Keeper) DequeueAllMatureRedelegationQueue(ctx context.Context, currTime time.Time) (matureRedelegations []types.DVVTriplet, err error) {
+func (k Keeper) DequeueAllMatureRedelegationQueue(ctx context.Context, _ time.Time) (matureRedelegations []types.DVVTriplet, err error) {
 	store := k.storeService.OpenKVStore(ctx)
 
 	// gets an iterator for all timeslices from time 0 until the current Blockheader time
@@ -1068,12 +1068,12 @@ func (k Keeper) getBeginInfo(
 ) (completionTime time.Time, height int64, completeNow bool, err error) {
 	validator, err := k.GetValidator(ctx, valSrcAddr)
 	if err != nil && errors.Is(err, types.ErrNoValidatorFound) {
-		return
+		return completionTime, height, completeNow, err
 	}
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	unbondingTime, err := k.UnbondingTime(ctx)
 	if err != nil {
-		return
+		return completionTime, height, completeNow, err
 	}
 
 	// TODO: When would the validator not be found?

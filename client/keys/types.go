@@ -42,8 +42,8 @@ type UpdateKeyReq struct {
 }
 
 // NewUpdateKeyReq constructs a new UpdateKeyReq structure.
-func NewUpdateKeyReq(old, new string) UpdateKeyReq {
-	return UpdateKeyReq{OldPassword: old, NewPassword: new}
+func NewUpdateKeyReq(oldKey, newKey string) UpdateKeyReq {
+	return UpdateKeyReq{OldPassword: oldKey, NewPassword: newKey}
 }
 
 // DeleteKeyReq requests deleting a key

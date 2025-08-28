@@ -15,10 +15,10 @@ func TestMarshalYAML(t *testing.T) {
 		Size_: "small",
 		Name:  "Spot",
 	}
-	any, err := types.NewAnyWithValue(dog)
+	v, err := types.NewAnyWithValue(dog)
 	require.NoError(t, err)
 	hasAnimal := &testdata.HasAnimal{
-		Animal: any,
+		Animal: v,
 		X:      0,
 	}
 

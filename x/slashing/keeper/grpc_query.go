@@ -67,7 +67,7 @@ func (k Keeper) SigningInfos(ctx context.Context, req *types.QuerySigningInfosRe
 	var signInfos []types.ValidatorSigningInfo
 
 	sigInfoStore := prefix.NewStore(runtime.KVStoreAdapter(store), types.ValidatorSigningInfoKeyPrefix)
-	pageRes, err := query.Paginate(sigInfoStore, req.Pagination, func(key, value []byte) error {
+	pageRes, err := query.Paginate(sigInfoStore, req.Pagination, func(_, value []byte) error {
 		var info types.ValidatorSigningInfo
 		err := k.cdc.Unmarshal(value, &info)
 		if err != nil {

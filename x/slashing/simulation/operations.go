@@ -28,7 +28,7 @@ const (
 func WeightedOperations(
 	registry codectypes.InterfaceRegistry,
 	appParams simtypes.AppParams,
-	cdc codec.JSONCodec,
+	_ codec.JSONCodec,
 	txGen client.TxConfig,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
@@ -50,7 +50,7 @@ func WeightedOperations(
 
 // SimulateMsgUnjail generates a MsgUnjail with random values
 func SimulateMsgUnjail(
-	cdc *codec.ProtoCodec,
+	_ *codec.ProtoCodec,
 	txGen client.TxConfig,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,

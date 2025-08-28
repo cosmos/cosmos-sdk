@@ -81,12 +81,12 @@ func (AppModuleBasic) RegisterInterfaces(registry codectypes.InterfaceRegistry) 
 }
 
 // DefaultGenesis is an empty object
-func (AppModuleBasic) DefaultGenesis(_ codec.JSONCodec) json.RawMessage {
+func (AppModuleBasic) DefaultGenesis(codec.JSONCodec) json.RawMessage {
 	return []byte("{}")
 }
 
 // ValidateGenesis is always successful, as we ignore the value
-func (AppModuleBasic) ValidateGenesis(_ codec.JSONCodec, config client.TxEncodingConfig, _ json.RawMessage) error {
+func (AppModuleBasic) ValidateGenesis(codec.JSONCodec, client.TxEncodingConfig, json.RawMessage) error {
 	return nil
 }
 

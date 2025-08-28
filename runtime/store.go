@@ -112,7 +112,7 @@ func (kvStoreAdapter) CacheWrap() storetypes.CacheWrap {
 	panic("unimplemented")
 }
 
-func (kvStoreAdapter) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) storetypes.CacheWrap {
+func (kvStoreAdapter) CacheWrapWithTrace(io.Writer, storetypes.TraceContext) storetypes.CacheWrap {
 	panic("unimplemented")
 }
 

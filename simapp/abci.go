@@ -61,7 +61,7 @@ func (h *VoteExtensionHandler) ExtendVote() sdk.ExtendVoteHandler {
 }
 
 func (h *VoteExtensionHandler) VerifyVoteExtension() sdk.VerifyVoteExtensionHandler {
-	return func(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+	return func(_ sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
 		var ve VoteExtension
 
 		if err := json.Unmarshal(req.VoteExtension, &ve); err != nil {

@@ -32,7 +32,7 @@ type GenesisAccountsIterator interface {
 	)
 }
 
-// GenesisAccountsIterator defines the expected iterating genesis accounts object (noalias)
+// GenesisBalancesIterator defines the expected iterating genesis accounts object (noalias)
 type GenesisBalancesIterator interface {
 	IterateGenesisBalances(
 		cdc codec.JSONCodec,

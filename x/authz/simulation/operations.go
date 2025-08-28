@@ -43,7 +43,7 @@ const (
 func WeightedOperations(
 	registry cdctypes.InterfaceRegistry,
 	appParams simtypes.AppParams,
-	cdc codec.JSONCodec,
+	_ codec.JSONCodec,
 	txGen client.TxConfig,
 	ak authz.AccountKeeper,
 	bk authz.BankKeeper,
@@ -87,7 +87,7 @@ func WeightedOperations(
 
 // SimulateMsgGrant generates a MsgGrant with random values.
 func SimulateMsgGrant(
-	cdc *codec.ProtoCodec,
+	_ *codec.ProtoCodec,
 	txCfg client.TxConfig,
 	ak authz.AccountKeeper,
 	bk authz.BankKeeper,
@@ -160,7 +160,7 @@ func generateRandomAuthorization(r *rand.Rand, spendLimit sdk.Coins) authz.Autho
 
 // SimulateMsgRevoke generates a MsgRevoke with random values.
 func SimulateMsgRevoke(
-	cdc *codec.ProtoCodec,
+	_ *codec.ProtoCodec,
 	txCfg client.TxConfig,
 	ak authz.AccountKeeper,
 	bk authz.BankKeeper,
@@ -229,7 +229,7 @@ func SimulateMsgRevoke(
 
 // SimulateMsgExec generates a MsgExec with random values.
 func SimulateMsgExec(
-	cdc *codec.ProtoCodec,
+	_ *codec.ProtoCodec,
 	txCfg client.TxConfig,
 	ak authz.AccountKeeper,
 	bk authz.BankKeeper,

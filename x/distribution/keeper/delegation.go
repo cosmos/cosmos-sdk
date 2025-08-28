@@ -99,13 +99,13 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, val stakingtypes
 	// fetch starting info for delegation
 	startingInfo, err := k.GetDelegatorStartingInfo(ctx, sdk.ValAddress(valAddr), sdk.AccAddress(delAddr))
 	if err != nil {
-		return
+		return rewards, err
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	if startingInfo.Height == uint64(sdkCtx.BlockHeight()) {
 		// started this height, no rewards yet
-		return
+		return rewards, err
 	}
 
 	startingPeriod := startingInfo.PreviousPeriod
@@ -124,7 +124,7 @@ func (k Keeper) CalculateDelegationRewards(ctx context.Context, val stakingtypes
 	endingHeight := uint64(sdkCtx.BlockHeight())
 	if endingHeight > startingHeight {
 		k.IterateValidatorSlashEventsBetween(ctx, valAddr, startingHeight, endingHeight,
-			func(height uint64, event types.ValidatorSlashEvent) (stop bool) {
+			func(_ uint64, event types.ValidatorSlashEvent) (stop bool) {
 				endingPeriod := event.ValidatorPeriod
 				if endingPeriod > startingPeriod {
 					delRewards, err := k.calculateDelegationRewardsBetween(ctx, val, startingPeriod, endingPeriod, stake)

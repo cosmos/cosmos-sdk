@@ -126,7 +126,7 @@ $ %[1]s tx [flags] | %[1]s q wait-tx
 			if err := c.Start(); err != nil {
 				return err
 			}
-			defer c.Stop() //nolint:errcheck // ignore stop error
+			defer c.Stop()
 
 			ctx, cancel := context.WithTimeout(context.Background(), timeout)
 			defer cancel()

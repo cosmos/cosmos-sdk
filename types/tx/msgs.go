@@ -18,15 +18,15 @@ type MsgResponse interface{}
 
 // SetMsgs takes a slice of sdk.Msg's and turn them into Any's.
 func SetMsgs(msgs []sdk.Msg) ([]*types.Any, error) {
-	anys := make([]*types.Any, len(msgs))
+	values := make([]*types.Any, len(msgs))
 	for i, msg := range msgs {
 		var err error
-		anys[i], err = types.NewAnyWithValue(msg)
+		values[i], err = types.NewAnyWithValue(msg)
 		if err != nil {
 			return nil, err
 		}
 	}
-	return anys, nil
+	return values, nil
 }
 
 // GetMsgs takes a slice of Any's and turn them into sdk.Msg's.

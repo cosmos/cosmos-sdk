@@ -495,7 +495,7 @@ func (plva PermanentLockedAccount) LockedCoins(_ time.Time) sdk.Coins {
 // TrackDelegation tracks a desired delegation amount by setting the appropriate
 // values for the amount of delegated vesting, delegated free, and reducing the
 // overall amount of base coins.
-func (plva *PermanentLockedAccount) TrackDelegation(blockTime time.Time, balance, amount sdk.Coins) {
+func (plva *PermanentLockedAccount) TrackDelegation(_ time.Time, balance, amount sdk.Coins) {
 	plva.BaseVestingAccount.TrackDelegation(balance, plva.OriginalVesting, amount)
 }
 

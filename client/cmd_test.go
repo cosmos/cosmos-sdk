@@ -60,7 +60,7 @@ func TestSetCmdClientContextHandler(t *testing.T) {
 
 	newCmd := func() *cobra.Command {
 		c := &cobra.Command{
-			PreRunE: func(cmd *cobra.Command, args []string) error {
+			PreRunE: func(cmd *cobra.Command, _ []string) error {
 				return client.SetCmdClientContextHandler(initClientCtx, cmd)
 			},
 			RunE: func(cmd *cobra.Command, _ []string) error {

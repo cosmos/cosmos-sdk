@@ -136,11 +136,11 @@ func grpcServerEncode(c encoding.Codec, msg interface{}) ([]byte, error) {
 }
 
 func mustAny(msg proto.Message) *types.Any {
-	any, err := types.NewAnyWithValue(msg)
+	v, err := types.NewAnyWithValue(msg)
 	if err != nil {
 		panic(err)
 	}
-	return any
+	return v
 }
 
 func BenchmarkProtoCodecMarshalLengthPrefixed(b *testing.B) {

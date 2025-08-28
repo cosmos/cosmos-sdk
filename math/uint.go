@@ -125,16 +125,16 @@ func (u Uint) Decr() Uint {
 	return u.Sub(OneUint())
 }
 
-// Quo divides Uint with uint64
+// QuoUint64 divides Uint with uint64
 func (u Uint) QuoUint64(u2 uint64) Uint { return u.Quo(NewUint(u2)) }
 
-// Return the minimum of the Uints
+// MinUint return the minimum of the Uints
 func MinUint(u1, u2 Uint) Uint { return NewUintFromBigInt(min(u1.i, u2.i)) }
 
-// Return the maximum of the Uints
+// MaxUint return the maximum of the Uints
 func MaxUint(u1, u2 Uint) Uint { return NewUintFromBigInt(max(u1.i, u2.i)) }
 
-// Human readable string
+// String returns human readable string
 func (u Uint) String() string { return u.i.String() }
 
 // MarshalJSON defines custom encoding scheme
@@ -247,7 +247,7 @@ func RelativePow(x, n, b Uint) (z Uint) {
 			return z
 		}
 		z = ZeroUint() // otherwise 0^a = 0
-		return
+		return z
 	}
 
 	z = x

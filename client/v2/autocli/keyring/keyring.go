@@ -20,7 +20,8 @@ type KeyringImpl struct { //nolint:revive // stuttering is fine
 
 // NewKeyringInContext returns a new context with the keyring set.
 func NewKeyringInContext(ctx context.Context, k Keyring) context.Context {
-	return context.WithValue(ctx, KeyringContextKey, NewKeyringImpl(k))
+	// TODO: should this be fixed?
+	return context.WithValue(ctx, KeyringContextKey, NewKeyringImpl(k)) //nolint:staticcheck // SA1029: should not use empty anonymous struct as key for value; define your own type to avoid collisions (we can ignore this safely until we make a fix for this)
 }
 
 func NewKeyringImpl(k Keyring) *KeyringImpl {

@@ -36,13 +36,13 @@ func NewAllowedMsgAllowance(allowance FeeAllowanceI, allowedMsgs []string) (*All
 	if !ok {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", msg)
 	}
-	any, err := types.NewAnyWithValue(msg)
+	v, err := types.NewAnyWithValue(msg)
 	if err != nil {
 		return nil, err
 	}
 
 	return &AllowedMsgAllowance{
-		Allowance:       any,
+		Allowance:       v,
 		AllowedMessages: allowedMsgs,
 	}, nil
 }

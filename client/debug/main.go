@@ -64,7 +64,7 @@ func getCodecInterfaces() *cobra.Command {
 		Use:   "list-interfaces",
 		Short: "List all registered interface type URLs",
 		Long:  "List all registered interface type URLs using the application codec",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			iFaces := clientCtx.Codec.InterfaceRegistry().ListAllInterfaces()
 			for _, iFace := range iFaces {
@@ -329,7 +329,7 @@ func PrefixesCmd() *cobra.Command {
 		Short:   "List prefixes used for Human-Readable Part (HRP) in Bech32",
 		Long:    "List prefixes used in Bech32 addresses.",
 		Example: fmt.Sprintf("$ %s debug prefixes", version.AppName),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			cmd.Printf("Bech32 Acc: %s\n", sdk.GetConfig().GetBech32AccountAddrPrefix())
 			cmd.Printf("Bech32 Val: %s\n", sdk.GetConfig().GetBech32ValidatorAddrPrefix())
 			cmd.Printf("Bech32 Con: %s\n", sdk.GetConfig().GetBech32ConsensusAddrPrefix())

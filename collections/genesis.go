@@ -20,7 +20,7 @@ type jsonMapEntry struct {
 }
 
 func (m Map[K, V]) validateGenesis(reader io.Reader) error {
-	return m.doDecodeJSON(reader, func(key K, value V) error {
+	return m.doDecodeJSON(reader, func(_ K, _ V) error {
 		return nil
 	})
 }

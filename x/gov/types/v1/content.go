@@ -18,12 +18,12 @@ func NewLegacyContent(content v1beta1.Content, authority string) (*MsgExecLegacy
 		return nil, fmt.Errorf("%T does not implement proto.Message", content)
 	}
 
-	any, err := codectypes.NewAnyWithValue(msg)
+	v, err := codectypes.NewAnyWithValue(msg)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewMsgExecLegacyContent(any, authority), nil
+	return NewMsgExecLegacyContent(v, authority), nil
 }
 
 // LegacyContentFromMessage extracts the legacy Content interface from a

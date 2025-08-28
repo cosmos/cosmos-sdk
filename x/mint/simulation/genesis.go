@@ -31,17 +31,17 @@ func GenInflationRateChange(r *rand.Rand) math.LegacyDec {
 }
 
 // GenInflationMax randomized InflationMax
-func GenInflationMax(r *rand.Rand) math.LegacyDec {
+func GenInflationMax(*rand.Rand) math.LegacyDec {
 	return math.LegacyNewDecWithPrec(20, 2)
 }
 
 // GenInflationMin randomized InflationMin
-func GenInflationMin(r *rand.Rand) math.LegacyDec {
+func GenInflationMin(*rand.Rand) math.LegacyDec {
 	return math.LegacyNewDecWithPrec(7, 2)
 }
 
 // GenGoalBonded randomized GoalBonded
-func GenGoalBonded(r *rand.Rand) math.LegacyDec {
+func GenGoalBonded(*rand.Rand) math.LegacyDec {
 	return math.LegacyNewDecWithPrec(67, 2)
 }
 

@@ -228,7 +228,7 @@ func (timeKeyCodec) Decode(buffer []byte) (int, time.Time, error) {
 	return timeSize, t, nil
 }
 
-func (timeKeyCodec) Size(key time.Time) int { return timeSize }
+func (timeKeyCodec) Size(time.Time) int { return timeSize }
 
 func (timeKeyCodec) EncodeJSON(value time.Time) ([]byte, error) { return value.MarshalJSON() }
 

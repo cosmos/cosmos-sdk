@@ -289,7 +289,7 @@ func GenesisStateWithValSet(
 type EmptyAppOptions struct{}
 
 // Get implements AppOptions
-func (ao EmptyAppOptions) Get(o string) interface{} {
+func (ao EmptyAppOptions) Get(string) interface{} {
 	return nil
 }
 

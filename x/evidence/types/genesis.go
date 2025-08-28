@@ -20,11 +20,11 @@ func NewGenesisState(e []exported.Evidence) *GenesisState {
 		if !ok {
 			panic(fmt.Errorf("cannot proto marshal %T", evi))
 		}
-		any, err := types.NewAnyWithValue(msg)
+		v, err := types.NewAnyWithValue(msg)
 		if err != nil {
 			panic(err)
 		}
-		evidence[i] = any
+		evidence[i] = v
 	}
 	return &GenesisState{
 		Evidence: evidence,

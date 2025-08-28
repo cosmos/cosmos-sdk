@@ -314,7 +314,7 @@ func SimulateMsgDeposit(
 ) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
+		accs []simtypes.Account, _ string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
 		proposalID, ok := randomProposalID(r, k, ctx, v1.StatusDepositPeriod)
@@ -384,8 +384,7 @@ func operationSimulateMsgVote(
 	proposalIDInt int64,
 ) simtypes.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, _ string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		if simAccount.Equals(simtypes.Account{}) {
 			simAccount, _ = simtypes.RandomAcc(r, accs)
@@ -447,8 +446,7 @@ func operationSimulateMsgVoteWeighted(
 	proposalIDInt int64,
 ) simtypes.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, _ string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		if simAccount.Equals(simtypes.Account{}) {
 			simAccount, _ = simtypes.RandomAcc(r, accs)
@@ -499,8 +497,7 @@ func SimulateMsgCancelProposal(
 	k *keeper.Keeper,
 ) simtypes.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, _ string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount := accs[0]
 		proposal := randomProposal(r, k, ctx)
@@ -608,7 +605,7 @@ func randomDeposit(
 // randomProposal returns a random proposal stored in state
 func randomProposal(r *rand.Rand, k *keeper.Keeper, ctx sdk.Context) *v1.Proposal {
 	var proposals []*v1.Proposal
-	err := k.Proposals.Walk(ctx, nil, func(key uint64, value v1.Proposal) (stop bool, err error) {
+	err := k.Proposals.Walk(ctx, nil, func(_ uint64, value v1.Proposal) (stop bool, err error) {
 		proposals = append(proposals, &value)
 		return false, nil
 	})

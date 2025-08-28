@@ -252,7 +252,7 @@ func ProvideCometInfoService() comet.BlockInfoService {
 	return cometInfoService{}
 }
 
-func ProvideHeaderInfoService(app *AppBuilder) header.Service {
+func ProvideHeaderInfoService(_ *AppBuilder) header.Service {
 	return headerInfoService{}
 }
 

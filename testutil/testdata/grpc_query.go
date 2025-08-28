@@ -27,13 +27,13 @@ func (e QueryImpl) TestAny(_ context.Context, request *TestAnyRequest) (*TestAny
 		return nil, fmt.Errorf("expected Animal")
 	}
 
-	any, err := types.NewAnyWithValue(animal.(proto.Message))
+	v, err := types.NewAnyWithValue(animal.(proto.Message))
 	if err != nil {
 		return nil, err
 	}
 
 	return &TestAnyResponse{HasAnimal: &HasAnimal{
-		Animal: any,
+		Animal: v,
 		X:      10,
 	}}, nil
 }

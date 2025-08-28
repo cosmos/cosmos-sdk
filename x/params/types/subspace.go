@@ -86,7 +86,7 @@ func (s Subspace) transientStore(ctx sdk.Context) storetypes.KVStore {
 
 // Validate attempts to validate a parameter value by its key. If the key is not
 // registered or if the validation of the value fails, an error is returned.
-func (s Subspace) Validate(ctx sdk.Context, key []byte, value interface{}) error {
+func (s Subspace) Validate(_ sdk.Context, key []byte, value interface{}) error {
 	attr, ok := s.table.m[string(key)]
 	if !ok {
 		return fmt.Errorf("parameter %s not registered", key)

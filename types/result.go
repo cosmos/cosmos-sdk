@@ -83,7 +83,7 @@ func NewResponseResultTx(res *coretypes.ResultTx, anyTx *codectypes.Any, timesta
 }
 
 // NewResponseResultBlock returns a BlockResponse given a ResultBlock from CometBFT
-func NewResponseResultBlock(res *coretypes.ResultBlock, timestamp string) *cmtproto.Block {
+func NewResponseResultBlock(res *coretypes.ResultBlock, _ string) *cmtproto.Block {
 	if res == nil {
 		return nil
 	}
@@ -203,7 +203,7 @@ func WrapServiceResult(ctx Context, res proto.Message, err error) (*Result, erro
 		return nil, err
 	}
 
-	any, err := codectypes.NewAnyWithValue(res)
+	v, err := codectypes.NewAnyWithValue(res)
 	if err != nil {
 		return nil, err
 	}
@@ -224,7 +224,7 @@ func WrapServiceResult(ctx Context, res proto.Message, err error) (*Result, erro
 	return &Result{
 		Data:         data,
 		Events:       events,
-		MsgResponses: []*codectypes.Any{any},
+		MsgResponses: []*codectypes.Any{v},
 	}, nil
 }
 

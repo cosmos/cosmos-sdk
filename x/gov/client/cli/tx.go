@@ -213,7 +213,7 @@ $ %s tx gov submit-legacy-proposal --title="Test Proposal" --description="My awe
 				version.AppName, version.AppName,
 			),
 		),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err

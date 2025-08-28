@@ -899,10 +899,10 @@ func (s *coinTestSuite) TestMinMax() {
 	}
 
 	for _, tc := range cases {
-		min := tc.input1.Min(tc.input2)
-		max := tc.input1.Max(tc.input2)
-		s.Require().True(min.Equal(tc.min), tc.name)
-		s.Require().True(max.Equal(tc.max), tc.name)
+		minimum := tc.input1.Min(tc.input2)
+		maximum := tc.input1.Max(tc.input2)
+		s.Require().True(minimum.Equal(tc.min), tc.name)
+		s.Require().True(maximum.Equal(tc.max), tc.name)
 	}
 }
 

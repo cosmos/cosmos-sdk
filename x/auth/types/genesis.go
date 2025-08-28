@@ -170,11 +170,11 @@ func PackAccounts(accounts GenesisAccounts) ([]*types.Any, error) {
 		if !ok {
 			return nil, fmt.Errorf("cannot proto marshal %T", acc)
 		}
-		any, err := types.NewAnyWithValue(msg)
+		v, err := types.NewAnyWithValue(msg)
 		if err != nil {
 			return nil, err
 		}
-		accountsAny[i] = any
+		accountsAny[i] = v
 	}
 
 	return accountsAny, nil

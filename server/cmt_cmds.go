@@ -72,7 +72,7 @@ func ShowNodeIDCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "show-node-id",
 		Short: "Show this node's ID",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			serverCtx := GetServerContextFromCmd(cmd)
 			cfg := serverCtx.Config
 
@@ -92,7 +92,7 @@ func ShowValidatorCmd() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "show-validator",
 		Short: "Show this node's CometBFT validator info",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			serverCtx := GetServerContextFromCmd(cmd)
 			cfg := serverCtx.Config
 
@@ -126,7 +126,7 @@ func ShowAddressCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "show-address",
 		Short: "Shows this node's CometBFT validator consensus address",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			serverCtx := GetServerContextFromCmd(cmd)
 			cfg := serverCtx.Config
 
@@ -148,7 +148,7 @@ func VersionCmd() *cobra.Command {
 		Use:   "version",
 		Short: "Print CometBFT libraries' version",
 		Long:  "Print protocols' and libraries' version numbers against which this app has been compiled.",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			bs, err := yaml.Marshal(&struct {
 				CometBFT      string
 				ABCI          string
@@ -185,7 +185,7 @@ for. Each module documents its respective events under 'xx_events.md'.
 			"$ %s query blocks --query \"message.sender='cosmos1...' AND block.height > 7\" --page 1 --limit 30 --order_by asc",
 			version.AppName,
 		),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err
@@ -365,7 +365,7 @@ func BootstrapStateCmd(appCreator types.AppCreator) *cobra.Command {
 		Use:   "bootstrap-state",
 		Short: "Bootstrap CometBFT state at an arbitrary block height using a light client",
 		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			serverCtx := GetServerContextFromCmd(cmd)
 			logger := log.NewLogger(cmd.OutOrStdout())
 			cfg := serverCtx.Config

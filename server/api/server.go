@@ -119,7 +119,7 @@ func (s *Server) Start(ctx context.Context, cfg config.Config) error {
 		var options []grpcweb.Option
 		if cfg.API.EnableUnsafeCORS {
 			options = append(options,
-				grpcweb.WithOriginFunc(func(origin string) bool {
+				grpcweb.WithOriginFunc(func(string) bool {
 					return true
 				}),
 			)

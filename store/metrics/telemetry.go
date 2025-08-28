@@ -53,4 +53,4 @@ func NewNoOpMetrics() NoOpMetrics {
 }
 
 // MeasureSince is a no-op implementation of the StoreMetrics interface to avoid time.Now() calls
-func (m NoOpMetrics) MeasureSince(keys ...string) {}
+func (m NoOpMetrics) MeasureSince(...string) {}

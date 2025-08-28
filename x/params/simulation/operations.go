@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
 
-func min(a, b int) int {
+func minimum(a, b int) int {
 	if a <= b {
 		return a
 	}
@@ -22,7 +22,7 @@ func min(a, b int) int {
 func SimulateParamChangeProposalContent(paramChangePool []simulation.LegacyParamChange) simulation.ContentSimulatorFn { //nolint:staticcheck // used for legacy testing
 	numProposals := 0
 	// Bound the maximum number of simultaneous parameter changes
-	maxSimultaneousParamChanges := min(len(paramChangePool), 1000)
+	maxSimultaneousParamChanges := minimum(len(paramChangePool), 1000)
 	if maxSimultaneousParamChanges == 0 {
 		panic("param changes array is empty")
 	}

@@ -615,7 +615,7 @@ func SignWithLedger(k *Record, msg []byte, signMode signing.SignMode) (sig []byt
 
 	priv, err := ledger.NewPrivKeySecp256k1Unsafe(*path)
 	if err != nil {
-		return
+		return sig, pub, err
 	}
 	ledgerPubKey := priv.PubKey()
 	pubKey, err := k.GetPubKey()
@@ -699,7 +699,7 @@ func newFileBackendKeyringConfig(name, dir string, buf io.Reader) keyring.Config
 }
 
 func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
-	return func(prompt string) (string, error) {
+	return func(string) (string, error) {
 		keyhashStored := false
 		keyhashFilePath := filepath.Join(dir, "keyhash")
 

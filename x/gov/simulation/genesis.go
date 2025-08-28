@@ -96,7 +96,7 @@ func GenVeto(r *rand.Rand) sdkmath.LegacyDec {
 }
 
 // GenMinDepositRatio returns randomized DepositMinRatio
-func GenMinDepositRatio(r *rand.Rand) sdkmath.LegacyDec {
+func GenMinDepositRatio(*rand.Rand) sdkmath.LegacyDec {
 	return sdkmath.LegacyMustNewDecFromStr("0.01")
 }
 

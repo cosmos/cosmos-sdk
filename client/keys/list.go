@@ -56,7 +56,7 @@ func ListKeyTypesCmd() *cobra.Command {
 		Use:   "list-key-types",
 		Short: "List all key types",
 		Long:  `Return a list of all supported key types (also known as algos)`,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
 				return err

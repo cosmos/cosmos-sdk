@@ -39,7 +39,7 @@ func ChainAnteDecorators(chain ...AnteDecorator) AnteHandler {
 
 	handlerChain := make([]AnteHandler, len(chain)+1)
 	// set the terminal AnteHandler decorator
-	handlerChain[len(chain)] = func(ctx Context, tx Tx, simulate bool) (Context, error) {
+	handlerChain[len(chain)] = func(ctx Context, _ Tx, _ bool) (Context, error) {
 		return ctx, nil
 	}
 	for i := 0; i < len(chain); i++ {
@@ -67,7 +67,7 @@ func ChainPostDecorators(chain ...PostDecorator) PostHandler {
 
 	handlerChain := make([]PostHandler, len(chain)+1)
 	// set the terminal PostHandler decorator
-	handlerChain[len(chain)] = func(ctx Context, tx Tx, simulate, success bool) (Context, error) {
+	handlerChain[len(chain)] = func(ctx Context, _ Tx, _, _ bool) (Context, error) {
 		return ctx, nil
 	}
 	for i := 0; i < len(chain); i++ {

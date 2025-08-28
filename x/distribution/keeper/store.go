@@ -30,7 +30,7 @@ func (k Keeper) SetDelegatorWithdrawAddr(ctx context.Context, delAddr, withdrawA
 }
 
 // delete a delegator withdraw addr
-func (k Keeper) DeleteDelegatorWithdrawAddr(ctx context.Context, delAddr, withdrawAddr sdk.AccAddress) error {
+func (k Keeper) DeleteDelegatorWithdrawAddr(ctx context.Context, delAddr, _ sdk.AccAddress) error {
 	store := k.storeService.OpenKVStore(ctx)
 	return store.Delete(types.GetDelegatorWithdrawAddrKey(delAddr))
 }

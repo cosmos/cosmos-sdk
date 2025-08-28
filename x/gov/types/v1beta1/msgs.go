@@ -64,11 +64,11 @@ func (m *MsgSubmitProposal) SetContent(content Content) error {
 	if !ok {
 		return fmt.Errorf("can't proto marshal %T", msg)
 	}
-	any, err := codectypes.NewAnyWithValue(msg)
+	v, err := codectypes.NewAnyWithValue(msg)
 	if err != nil {
 		return err
 	}
-	m.Content = any
+	m.Content = v
 	return nil
 }
 

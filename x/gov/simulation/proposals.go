@@ -25,7 +25,7 @@ func ProposalMsgs() []simtypes.WeightedProposalMsg {
 
 // SimulateTextProposal returns a random text proposal content.
 // A text proposal is a proposal that contains no msgs.
-func SimulateTextProposal(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) sdk.Msg {
+func SimulateTextProposal(*rand.Rand, sdk.Context, []simtypes.Account) sdk.Msg {
 	return nil
 }
 

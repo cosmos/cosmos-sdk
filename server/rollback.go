@@ -25,7 +25,7 @@ The application also rolls back to height n - 1. No blocks are removed, so upon
 restarting CometBFT the transactions in block n will be re-executed against the
 application.
 `,
-		RunE: func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
 			ctx := GetServerContextFromCmd(cmd)
 			cfg := ctx.Config
 			home := cfg.RootDir

@@ -77,7 +77,7 @@ func (keeper Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, met
 		if msg, ok := msg.(*v1.MsgExecLegacyContent); ok {
 			cacheCtx, _ := sdkCtx.CacheContext()
 			if _, err := handler(cacheCtx, msg); err != nil {
-				if errors.Is(types.ErrNoProposalHandlerExists, err) {
+				if errors.Is(err, types.ErrNoProposalHandlerExists) {
 					return v1.Proposal{}, err
 				}
 				return v1.Proposal{}, errorsmod.Wrap(types.ErrInvalidProposalContent, err.Error())

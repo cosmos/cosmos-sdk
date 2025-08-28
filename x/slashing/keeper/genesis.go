@@ -8,43 +8,46 @@ import (
 
 // InitGenesis initializes default parameters and the keeper's address to
 // pubkey map.
-func (keeper Keeper) InitGenesis(ctx sdk.Context, stakingKeeper types.StakingKeeper, data *types.GenesisState) {
-	stakingKeeper.IterateValidators(ctx,
-		func(index int64, validator stakingtypes.ValidatorI) bool {
-			consPk, err := validator.ConsPubKey()
-			if err != nil {
-				panic(err)
-			}
+func (keeper Keeper) InitGenesis(ctx sdk.Context, stakingKeeper types.StakingKeeper, data *types.GenesisState) error {
+	err := stakingKeeper.IterateValidators(ctx, func(_ int64, validator stakingtypes.ValidatorI) bool {
+		consPk, err := validator.ConsPubKey()
+		if err != nil {
+			panic(err)
+		}
 
-			keeper.AddPubkey(ctx, consPk)
-			return false
-		},
-	)
+		if err := keeper.AddPubkey(ctx, consPk); err != nil {
+			panic(err)
+		}
+		return false
+	})
+	if err != nil {
+		return err
+	}
 
 	for _, info := range data.SigningInfos {
 		address, err := keeper.sk.ConsensusAddressCodec().StringToBytes(info.Address)
 		if err != nil {
-			panic(err)
+			return err
 		}
-		keeper.SetValidatorSigningInfo(ctx, address, info.ValidatorSigningInfo)
+		if err := keeper.SetValidatorSigningInfo(ctx, address, info.ValidatorSigningInfo); err != nil {
+			return err
+		}
 	}
 
 	for _, array := range data.MissedBlocks {
 		address, err := keeper.sk.ConsensusAddressCodec().StringToBytes(array.Address)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		for _, missed := range array.MissedBlocks {
 			if err := keeper.SetMissedBlockBitmapValue(ctx, address, missed.Index, missed.Missed); err != nil {
-				panic(err)
+				return err
 			}
 		}
 	}
 
-	if err := keeper.SetParams(ctx, data.Params); err != nil {
-		panic(err)
-	}
+	return keeper.SetParams(ctx, data.Params)
 }
 
 // ExportGenesis writes the current store values

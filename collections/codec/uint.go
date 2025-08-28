@@ -111,7 +111,7 @@ func (uint16Key[T]) Decode(buffer []byte) (int, T, error) {
 	return 2, (T)(binary.BigEndian.Uint16(buffer)), nil
 }
 
-func (uint16Key[T]) Size(key T) int { return 2 }
+func (uint16Key[T]) Size(T) int { return 2 }
 
 func (uint16Key[T]) EncodeJSON(value T) ([]byte, error) { return uintEncodeJSON((uint64)(value)) }
 

@@ -12,7 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func migrateDelegationsByValidatorIndex(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCodec) error {
+func migrateDelegationsByValidatorIndex(_ sdk.Context, store storetypes.KVStore, _ codec.BinaryCodec) error {
 	iterator := storetypes.KVStorePrefixIterator(store, DelegationKey)
 
 	for ; iterator.Valid(); iterator.Next() {

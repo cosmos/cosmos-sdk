@@ -3,16 +3,16 @@ package math
 import "golang.org/x/exp/constraints"
 
 func Max[T constraints.Ordered](a, b T, rest ...T) T {
-	max := a
+	maximum := a
 	if b > a {
-		max = b
+		maximum = b
 	}
 	for _, val := range rest {
-		if val > max {
-			max = val
+		if val > maximum {
+			maximum = val
 		}
 	}
-	return max
+	return maximum
 }
 
 func Min[T constraints.Ordered](a, b T, rest ...T) T {

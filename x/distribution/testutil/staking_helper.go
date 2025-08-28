@@ -43,9 +43,9 @@ func CallCreateValidatorHooks(ctx sdk.Context, k keeper.Keeper, addr sdk.AccAddr
 // The passed validator will get its tokens updated.
 func SlashValidator(
 	ctx sdk.Context,
-	consAddr sdk.ConsAddress,
+	_ sdk.ConsAddress,
 	infractionHeight int64,
-	power int64,
+	_ int64,
 	slashFactor math.LegacyDec,
 	validator *stakingtypes.Validator,
 	distrKeeper *keeper.Keeper,

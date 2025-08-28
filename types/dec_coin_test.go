@@ -1039,7 +1039,7 @@ func (s *decCoinTestSuite) TestDecCoin_IsEqual() {
 
 	for i, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
-			res := tc.coin.IsEqual(tc.otherCoin)
+			res := tc.coin.Equal(tc.otherCoin)
 			if tc.expectedResult {
 				s.Require().True(res, "Test case #%d: %s", i, tc.name)
 			} else {

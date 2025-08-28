@@ -42,28 +42,28 @@ func RandStringOfLength(r *rand.Rand, n int) string {
 }
 
 // RandPositiveInt get a rand positive math.Int
-func RandPositiveInt(r *rand.Rand, max math.Int) (math.Int, error) {
-	if !max.GTE(math.OneInt()) {
+func RandPositiveInt(r *rand.Rand, maximum math.Int) (math.Int, error) {
+	if !maximum.GTE(math.OneInt()) {
 		return math.Int{}, errors.New("max too small")
 	}
 
-	max = max.Sub(math.OneInt())
+	maximum = maximum.Sub(math.OneInt())
 
-	return math.NewIntFromBigInt(new(big.Int).Rand(r, max.BigInt())).Add(math.OneInt()), nil
+	return math.NewIntFromBigInt(new(big.Int).Rand(r, maximum.BigInt())).Add(math.OneInt()), nil
 }
 
 // RandomAmount generates a random amount
 // Note: The range of RandomAmount includes max, and is, in fact, biased to return max as well as 0.
-func RandomAmount(r *rand.Rand, max math.Int) math.Int {
+func RandomAmount(r *rand.Rand, maximum math.Int) math.Int {
 	randInt := big.NewInt(0)
 
 	switch r.Intn(10) {
 	case 0:
 		// randInt = big.NewInt(0)
 	case 1:
-		randInt = max.BigInt()
+		randInt = maximum.BigInt()
 	default: // NOTE: there are 10 total cases.
-		randInt = big.NewInt(0).Rand(r, max.BigInt()) // up to max - 1
+		randInt = big.NewInt(0).Rand(r, maximum.BigInt()) // up to max - 1
 	}
 
 	return math.NewIntFromBigInt(randInt)
@@ -71,16 +71,16 @@ func RandomAmount(r *rand.Rand, max math.Int) math.Int {
 
 // RandomDecAmount generates a random decimal amount
 // Note: The range of RandomDecAmount includes max, and is, in fact, biased to return max as well as 0.
-func RandomDecAmount(r *rand.Rand, max math.LegacyDec) math.LegacyDec {
+func RandomDecAmount(r *rand.Rand, maximum math.LegacyDec) math.LegacyDec {
 	randInt := big.NewInt(0)
 
 	switch r.Intn(10) {
 	case 0:
 		// randInt = big.NewInt(0)
 	case 1:
-		randInt = max.BigInt() // the underlying big int with all precision bits.
+		randInt = maximum.BigInt() // the underlying big int with all precision bits.
 	default: // NOTE: there are 10 total cases.
-		randInt = big.NewInt(0).Rand(r, max.BigInt())
+		randInt = big.NewInt(0).Rand(r, maximum.BigInt())
 	}
 
 	return math.LegacyNewDecFromBigIntWithPrec(randInt, math.LegacyPrecision)
@@ -101,8 +101,8 @@ func RandTimestamp(r *rand.Rand) time.Time {
 }
 
 // RandIntBetween returns a random int in the range [min, max) using a given source of randomness.
-func RandIntBetween(r *rand.Rand, min, max int) int {
-	return r.Intn(max-min) + min
+func RandIntBetween(r *rand.Rand, minimum, maximum int) int {
+	return r.Intn(maximum-minimum) + minimum
 }
 
 // RandSubsetCoins returns random subset of the provided coins

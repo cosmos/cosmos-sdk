@@ -255,7 +255,7 @@ func (k BaseKeeper) DenomOwners(
 		ctx,
 		k.Balances.Indexes.Denom,
 		req.Pagination,
-		func(key collections.Pair[string, sdk.AccAddress], value collections.NoValue) (*types.DenomOwner, error) {
+		func(key collections.Pair[string, sdk.AccAddress], _ collections.NoValue) (*types.DenomOwner, error) {
 			amt, err := k.Balances.Get(ctx, collections.Join(key.K2(), req.Denom))
 			if err != nil {
 				return nil, err

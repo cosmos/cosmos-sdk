@@ -13,7 +13,7 @@ import (
 var _ types.QueryServer = Keeper{}
 
 // CurrentPlan implements the Query/CurrentPlan gRPC method
-func (k Keeper) CurrentPlan(c context.Context, req *types.QueryCurrentPlanRequest) (*types.QueryCurrentPlanResponse, error) {
+func (k Keeper) CurrentPlan(c context.Context, _ *types.QueryCurrentPlanRequest) (*types.QueryCurrentPlanResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
 	plan, err := k.GetUpgradePlan(ctx)
@@ -84,6 +84,6 @@ func (k Keeper) ModuleVersions(c context.Context, req *types.QueryModuleVersions
 }
 
 // Authority implements the Query/Authority gRPC method, returning the account capable of performing upgrades
-func (k Keeper) Authority(c context.Context, req *types.QueryAuthorityRequest) (*types.QueryAuthorityResponse, error) {
+func (k Keeper) Authority(context.Context, *types.QueryAuthorityRequest) (*types.QueryAuthorityResponse, error) {
 	return &types.QueryAuthorityResponse{Address: k.authority}, nil
 }

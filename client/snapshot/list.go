@@ -12,7 +12,7 @@ import (
 var ListSnapshotsCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List local snapshots",
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		ctx := server.GetServerContextFromCmd(cmd)
 		snapshotStore, err := server.GetSnapshotStore(ctx.Viper)
 		if err != nil {

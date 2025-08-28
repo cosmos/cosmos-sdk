@@ -285,13 +285,13 @@ func (k Keeper) SlashUnbondingDelegation(ctx context.Context, unbondingDelegatio
 	return totalSlashAmount, nil
 }
 
-// slash a redelegation and update the pool
+// SlashRedelegation slashs a redelegation and update the pool
 // return the amount that would have been slashed assuming
 // the unbonding delegation had enough stake to slash
 // (the amount actually slashed may be less if there's
 // insufficient stake remaining)
 // NOTE this is only slashing for prior infractions from the source validator
-func (k Keeper) SlashRedelegation(ctx context.Context, srcValidator types.Validator, redelegation types.Redelegation,
+func (k Keeper) SlashRedelegation(ctx context.Context, _ types.Validator, redelegation types.Redelegation,
 	infractionHeight int64, slashFactor math.LegacyDec,
 ) (totalSlashAmount math.Int, err error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)

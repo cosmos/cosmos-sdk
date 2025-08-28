@@ -21,7 +21,7 @@ func NewMsgGrantAllowance(feeAllowance FeeAllowanceI, granter, grantee sdk.AccAd
 	if !ok {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrPackAny, "cannot proto marshal %T", msg)
 	}
-	any, err := types.NewAnyWithValue(msg)
+	v, err := types.NewAnyWithValue(msg)
 	if err != nil {
 		return nil, err
 	}
@@ -29,7 +29,7 @@ func NewMsgGrantAllowance(feeAllowance FeeAllowanceI, granter, grantee sdk.AccAd
 	return &MsgGrantAllowance{
 		Granter:   granter.String(),
 		Grantee:   grantee.String(),
-		Allowance: any,
+		Allowance: v,
 	}, nil
 }
 

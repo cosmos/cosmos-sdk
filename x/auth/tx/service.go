@@ -43,7 +43,7 @@ func NewTxServer(clientCtx client.Context, simulate baseAppSimulateFn, interface
 var _ txtypes.ServiceServer = txServer{}
 
 // GetTxsEvent implements the ServiceServer.TxsByEvents RPC method.
-func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventRequest) (*txtypes.GetTxsEventResponse, error) {
+func (s txServer) GetTxsEvent(_ context.Context, req *txtypes.GetTxsEventRequest) (*txtypes.GetTxsEventResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "request cannot be nil")
 	}
@@ -73,7 +73,7 @@ func (s txServer) GetTxsEvent(ctx context.Context, req *txtypes.GetTxsEventReque
 }
 
 // Simulate implements the ServiceServer.Simulate RPC method.
-func (s txServer) Simulate(ctx context.Context, req *txtypes.SimulateRequest) (*txtypes.SimulateResponse, error) {
+func (s txServer) Simulate(_ context.Context, req *txtypes.SimulateRequest) (*txtypes.SimulateResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid empty tx")
 	}
@@ -107,7 +107,7 @@ func (s txServer) Simulate(ctx context.Context, req *txtypes.SimulateRequest) (*
 }
 
 // GetTx implements the ServiceServer.GetTx RPC method.
-func (s txServer) GetTx(ctx context.Context, req *txtypes.GetTxRequest) (*txtypes.GetTxResponse, error) {
+func (s txServer) GetTx(_ context.Context, req *txtypes.GetTxRequest) (*txtypes.GetTxResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "request cannot be nil")
 	}
@@ -222,7 +222,7 @@ func (s txServer) BroadcastTx(ctx context.Context, req *txtypes.BroadcastTxReque
 }
 
 // TxEncode implements the ServiceServer.TxEncode RPC method.
-func (s txServer) TxEncode(ctx context.Context, req *txtypes.TxEncodeRequest) (*txtypes.TxEncodeResponse, error) {
+func (s txServer) TxEncode(_ context.Context, req *txtypes.TxEncodeRequest) (*txtypes.TxEncodeResponse, error) {
 	if req.Tx == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid empty tx")
 	}
@@ -240,7 +240,7 @@ func (s txServer) TxEncode(ctx context.Context, req *txtypes.TxEncodeRequest) (*
 }
 
 // TxEncodeAmino implements the ServiceServer.TxEncodeAmino RPC method.
-func (s txServer) TxEncodeAmino(ctx context.Context, req *txtypes.TxEncodeAminoRequest) (*txtypes.TxEncodeAminoResponse, error) {
+func (s txServer) TxEncodeAmino(_ context.Context, req *txtypes.TxEncodeAminoRequest) (*txtypes.TxEncodeAminoResponse, error) {
 	if req.AminoJson == "" {
 		return nil, status.Error(codes.InvalidArgument, "invalid empty tx json")
 	}
@@ -262,7 +262,7 @@ func (s txServer) TxEncodeAmino(ctx context.Context, req *txtypes.TxEncodeAminoR
 }
 
 // TxDecode implements the ServiceServer.TxDecode RPC method.
-func (s txServer) TxDecode(ctx context.Context, req *txtypes.TxDecodeRequest) (*txtypes.TxDecodeResponse, error) {
+func (s txServer) TxDecode(_ context.Context, req *txtypes.TxDecodeRequest) (*txtypes.TxDecodeResponse, error) {
 	if req.TxBytes == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid empty tx bytes")
 	}
@@ -283,7 +283,7 @@ func (s txServer) TxDecode(ctx context.Context, req *txtypes.TxDecodeRequest) (*
 }
 
 // TxDecodeAmino implements the ServiceServer.TxDecodeAmino RPC method.
-func (s txServer) TxDecodeAmino(ctx context.Context, req *txtypes.TxDecodeAminoRequest) (*txtypes.TxDecodeAminoResponse, error) {
+func (s txServer) TxDecodeAmino(_ context.Context, req *txtypes.TxDecodeAminoRequest) (*txtypes.TxDecodeAminoResponse, error) {
 	if req.AminoBinary == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid empty tx bytes")
 	}

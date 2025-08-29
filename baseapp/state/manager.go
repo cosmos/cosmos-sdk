@@ -29,7 +29,7 @@ type Manager struct {
 	// consensus rounds, the state is always reset to the previous block's state.
 	//
 	// - processProposalState: Used for ProcessProposal, which is set based on the
-	// the previous block's state. This state is never committed. In case of
+	// previous block's state. This state is never committed. In case of
 	// multiple rounds, the state is always reset to the previous block's state.
 	//
 	// - finalizeBlockState: Used for FinalizeBlock, which is set based on the
@@ -43,12 +43,15 @@ type Manager struct {
 	gasConfig config.GasConfig
 }
 
+// NewManager creates a new state manager with the provided gas configuration.
 func NewManager(gasConfig config.GasConfig) *Manager {
 	return &Manager{
 		gasConfig: gasConfig,
 	}
 }
 
+// GetState returns the BaseApp's state for the corresponding execution mode.
+// Returns nil if no state has been set for the given mode.
 func (mgr *Manager) GetState(mode sdk.ExecMode) *State {
 	mgr.stateMut.RLock()
 	defer mgr.stateMut.RUnlock()
@@ -68,9 +71,9 @@ func (mgr *Manager) GetState(mode sdk.ExecMode) *State {
 	}
 }
 
-// SetState sets the BaseApp's state for the corresponding mode with a branched
+// SetState sets the BaseApp's state for the corresponding execution mode with a branched
 // multi-store (i.e. a CacheMultiStore) and a new Context with the same
-// multi-store branch, and provided header.
+// multi-store branch and provided header.
 func (mgr *Manager) SetState(
 	mode sdk.ExecMode,
 	unbranchedStore storetypes.CommitMultiStore,
@@ -110,10 +113,12 @@ func (mgr *Manager) SetState(
 		mgr.finalizeBlockState = baseState
 
 	default:
-		panic(fmt.Sprintf("invalid runTxMode for setState: %d", mode))
+		panic(fmt.Sprintf("invalid exec mode for setState: %d", mode))
 	}
 }
 
+// ClearState clears the BaseApp's state for the corresponding execution mode.
+// This is typically called during cleanup operations.
 func (mgr *Manager) ClearState(mode sdk.ExecMode) {
 	mgr.stateMut.Lock()
 	defer mgr.stateMut.Unlock()
@@ -132,6 +137,6 @@ func (mgr *Manager) ClearState(mode sdk.ExecMode) {
 		mgr.finalizeBlockState = nil
 
 	default:
-		panic(fmt.Sprintf("invalid runTxMode for clearState: %d", mode))
+		panic(fmt.Sprintf("invalid exec mode for clearState: %d", mode))
 	}
 }

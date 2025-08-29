@@ -46,4 +46,4 @@ jobs:
           make lint
         env:
           GIT_DIFF: ${{ env.GIT_DIFF }}
-          LINT_DIFF: 1
+          LINT_DIFF: 0

@@ -20,7 +20,20 @@ const (
 	maxTimePerBlock int64 = 10000
 )
 
-// TODO: explain transitional matrix usage
+// The transition matrices below control stochastic behavior in the simulation:
+//
+//   - defaultLivenessTransitionMatrix: models validator liveness across three
+//     states (online, spotty, offline). Each column represents the current state,
+//     each row represents the next state; entries are integer weights used for
+//     weighted random selection. Higher weights mean higher probability.
+//
+//   - defaultBlockSizeTransitionMatrix: models block size regimes across three
+//     states (large range, medium range, zero). Similar column-as-current,
+//     row-as-next convention applies.
+//
+// These matrices are fed into CreateTransitionMatrix, which precomputes column
+// totals for efficient sampling. During simulation, NextState(r, i) is called
+// with a deterministic RNG r and current state i to obtain the next state.
 var (
 	// Currently there are 3 different liveness types,
 	// fully online, spotty connection, offline.

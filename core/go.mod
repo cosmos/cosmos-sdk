@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/depinject v1.2.1
 	cosmossdk.io/math v1.5.3
 	github.com/cosmos/cosmos-db v1.1.3
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 	google.golang.org/grpc v1.75.0
 	google.golang.org/protobuf v1.36.7
 )

@@ -15,6 +15,7 @@ type State struct {
 	ctx sdk.Context
 }
 
+// NewState creates a new State instance with the provided context and multi-store.
 func NewState(ctx sdk.Context, ms storetypes.CacheMultiStore) *State {
 	return &State{
 		MultiStore: ms,
@@ -22,7 +23,7 @@ func NewState(ctx sdk.Context, ms storetypes.CacheMultiStore) *State {
 	}
 }
 
-// CacheMultiStore calls and returns a CacheMultiStore on the state's underlying
+// CacheMultiStore creates and returns a new CacheMultiStore from the state's underlying
 // CacheMultiStore.
 func (st *State) CacheMultiStore() storetypes.CacheMultiStore {
 	return st.MultiStore.CacheMultiStore()

@@ -72,7 +72,7 @@ func (a SendAuthorization) ValidateBasic() error {
 		return sdkerrors.ErrInvalidCoins.Wrapf("spend limit must be positive")
 	}
 
-	found := make(map[string]bool, 0)
+	found := make(map[string]bool)
 	for i := range a.AllowList {
 		if found[a.AllowList[i]] {
 			return ErrDuplicateEntry

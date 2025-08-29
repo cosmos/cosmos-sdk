@@ -88,7 +88,7 @@ func (i LimitedIterator) Close() error {
 }
 
 // First loads the first element into the given destination type and closes the iterator.
-// When the iterator is closed or has no elements the according error is passed as return value.
+// When the iterator is closed or has no elements the corresponding error is passed as return value.
 func First(it Iterator, dest proto.Message) (RowID, error) {
 	if it == nil {
 		return nil, errorsmod.Wrap(errors.ErrORMInvalidArgument, "iterator must not be nil")
@@ -103,7 +103,7 @@ func First(it Iterator, dest proto.Message) (RowID, error) {
 
 // Paginate does pagination with a given Iterator based on the provided
 // PageRequest and unmarshals the results into the dest interface that must be
-// an non-nil pointer to a slice.
+// a non-nil pointer to a slice.
 //
 // If pageRequest is nil, then we will use these default values:
 //   - Offset: 0
@@ -111,7 +111,7 @@ func First(it Iterator, dest proto.Message) (RowID, error) {
 //   - Limit: 100
 //   - CountTotal: true
 //
-// If pageRequest.Key was provided, it got used beforehand to instantiate the Iterator,
+// If pageRequest.Key was provided, it was used beforehand to instantiate the Iterator,
 // using for instance UInt64Index.GetPaginated method. Only one of pageRequest.Offset or
 // pageRequest.Key should be set. Using pageRequest.Key is more efficient for querying
 // the next page.

@@ -32,10 +32,10 @@ type OptimisticExecution struct {
 	initialized bool   // A boolean value indicating whether the struct has been initialized
 
 	// debugging/testing options
-	abortRate int // number from 0 to 100 that determines the percentage of OE that should be aborted
+	abortRate int // number from 0 to 100 that determines the percentage of OE executions that should be aborted
 }
 
-// NewOptimisticExecution initializes the Optimistic Execution context but does not start it.
+// NewOptimisticExecution creates a new Optimistic Execution context but does not start execution.
 func NewOptimisticExecution(logger log.Logger, fn FinalizeBlockFunc, opts ...func(*OptimisticExecution)) *OptimisticExecution {
 	logger = logger.With(log.ModuleKey, "oe")
 	oe := &OptimisticExecution{logger: logger, finalizeBlockFunc: fn}
@@ -46,7 +46,7 @@ func NewOptimisticExecution(logger log.Logger, fn FinalizeBlockFunc, opts ...fun
 }
 
 // WithAbortRate sets the abort rate for the OE. The abort rate is a number from
-// 0 to 100 that determines the percentage of OE that should be aborted.
+// 0 to 100 that determines the percentage of OE executions that should be aborted.
 // This is for testing purposes only and must not be used in production.
 func WithAbortRate(rate int) func(*OptimisticExecution) {
 	return func(oe *OptimisticExecution) {
@@ -55,7 +55,7 @@ func WithAbortRate(rate int) func(*OptimisticExecution) {
 }
 
 // Reset resets the OE context. Must be called whenever we want to invalidate
-// the current OE.
+// the current optimistic execution.
 func (oe *OptimisticExecution) Reset() {
 	oe.mtx.Lock()
 	defer oe.mtx.Unlock()
@@ -70,7 +70,7 @@ func (oe *OptimisticExecution) Enabled() bool {
 }
 
 // Initialized returns true if the OE was initialized, meaning that it contains
-// a request and it was run or it is running.
+// a request and execution was started or is currently running.
 func (oe *OptimisticExecution) Initialized() bool {
 	if oe == nil {
 		return false
@@ -81,7 +81,7 @@ func (oe *OptimisticExecution) Initialized() bool {
 	return oe.initialized
 }
 
-// Execute initializes the OE and starts it in a goroutine.
+// Execute initializes the OE and starts execution in a goroutine.
 func (oe *OptimisticExecution) Execute(req *abci.ProcessProposalRequest) {
 	oe.mtx.Lock()
 	defer oe.mtx.Unlock()
@@ -134,7 +134,7 @@ func (oe *OptimisticExecution) AbortIfNeeded(reqHash []byte) bool {
 		return true
 	} else if oe.abortRate > 0 && rand.Intn(100) < oe.abortRate {
 		// this is for test purposes only, we can emulate a certain percentage of
-		// OE needed to be aborted.
+		// OE executions that need to be aborted.
 		oe.cancelFunc()
 		oe.logger.Error("OE aborted due to test abort rate")
 		return true

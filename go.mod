@@ -104,9 +104,8 @@ require (
 	github.com/cockroachdb/redact v1.1.6 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb // indirect
 	github.com/cometbft/cometbft-db v1.0.4 // indirect
-	github.com/cosmos/iavl v1.2.6 // indirect
-	github.com/cosmos/iavl-bench/bench v0.0.4 // indirect
-	github.com/cosmos/iavl/v2 v2.0.0-alpha.5.0.20250214231356-8e6443f30c41 // indirect
+	github.com/cosmos/iavl v1.3.5 // indirect
+	github.com/cosmos/iavl/v2 v2.0.0-alpha.5.0.20250829183505-8e11ef38d394 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
@@ -231,6 +230,7 @@ replace cosmossdk.io/store => ./store
 replace (
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
+	github.com/cosmos/iavl v1.3.5 => github.com/cosmos/iavl v1.2.6
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
 	// TODO: remove it: https://github.com/cosmos/cosmos-sdk/issues/13134
 	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt/v4 v4.4.2

@@ -61,9 +61,8 @@ require (
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/gogoproto v1.7.0 // indirect
-	github.com/cosmos/iavl v1.2.6 // indirect
-	github.com/cosmos/iavl-bench/bench v0.0.4 // indirect
-	github.com/cosmos/iavl/v2 v2.0.0-alpha.5.0.20250214231356-8e6443f30c41 // indirect
+	github.com/cosmos/iavl v1.3.5 // indirect
+	github.com/cosmos/iavl/v2 v2.0.0-alpha.5.0.20250829183505-8e11ef38d394 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.14.0 // indirect
 	github.com/creachadair/tomledit v0.0.28 // indirect
@@ -185,3 +184,5 @@ require (
 	pgregory.net/rapid v1.2.0 // indirect
 	sigs.k8s.io/yaml v1.5.0 // indirect
 )
+
+replace github.com/cosmos/iavl v1.3.5 => github.com/cosmos/iavl v1.2.6

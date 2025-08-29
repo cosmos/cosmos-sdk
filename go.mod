@@ -1,4 +1,4 @@
-go 1.23.2
+go 1.25.0
 
 module github.com/cosmos/cosmos-sdk
 
@@ -22,6 +22,7 @@ require (
 	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/cosmos-db v1.1.1
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
+	github.com/cosmos/cosmos-sdk/blockstm v0.0.0-00010101000000-000000000000
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogogateway v1.2.0
 	github.com/cosmos/gogoproto v1.7.0
@@ -85,7 +86,6 @@ require (
 	github.com/cometbft/cometbft-db v0.14.1 // indirect
 	github.com/cosmos/iavl v1.2.2 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
-	github.com/crypto-org-chain/go-block-stm v0.0.0-20241213061541-7afe924fb4a6 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
@@ -173,9 +173,7 @@ require (
 
 // Here are the short-lived replace from the Cosmos SDK
 // Replace here are pending PRs, or version to be tagged
-// replace (
-// 	<temporary replace>
-// )
+replace github.com/cosmos/cosmos-sdk/blockstm => ./blockstm
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (

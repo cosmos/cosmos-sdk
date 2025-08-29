@@ -8,8 +8,6 @@ import (
 
 	"github.com/cometbft/cometbft/v2/crypto"
 
-	"cosmossdk.io/errors"
-
 	"github.com/cosmos/cosmos-sdk/internal/conv"
 )
 
@@ -28,14 +26,23 @@ func Hash(typ string, key []byte) []byte {
 	hasher := sha256.New()
 	_, err := hasher.Write(conv.UnsafeStrToBytes(typ))
 	// the error is always nil, it's here only to satisfy the io.Writer interface
-	errors.AssertNil(err)
+	if err != nil {
+		// This should never happen with sha256.New(), but handle it gracefully
+		panic(fmt.Sprintf("failed to write type to hasher: %v", err))
+	}
 	th := hasher.Sum(nil)
 
 	hasher.Reset()
 	_, err = hasher.Write(th)
-	errors.AssertNil(err)
+	if err != nil {
+		// This should never happen with sha256.New(), but handle it gracefully
+		panic(fmt.Sprintf("failed to write hash to hasher: %v", err))
+	}
 	_, err = hasher.Write(key)
-	errors.AssertNil(err)
+	if err != nil {
+		// This should never happen with sha256.New(), but handle it gracefully
+		panic(fmt.Sprintf("failed to write key to hasher: %v", err))
+	}
 	return hasher.Sum(nil)
 }
 

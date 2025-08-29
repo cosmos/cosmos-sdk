@@ -16,7 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
-// BroadcastTx broadcasts a transactions either synchronously or asynchronously
+// BroadcastTx broadcasts a transaction either synchronously or asynchronously
 // based on the context parameters. The result of the broadcast is parsed into
 // an intermediate structure which is logged if the context has a logger
 // defined.

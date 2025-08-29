@@ -166,7 +166,7 @@ which encodes and validates each transaction and from there the `AnteHandler` is
 If successful, valid transactions are returned inclusive of the events, tags, and data generated 
 during the execution of the proposal. 
 The described behavior is that of the default handler, applications have the flexibility to define their own 
-[custom mempool handlers](https://docs.cosmos.network/main/building-apps/app-mempool#custom-mempool-handlers).
+[custom mempool handlers](https://docs.cosmos.network/main/build/building-apps/app-mempool).
 
 ![ProcessProposal](./baseapp_state-prepareproposal.png)
 
@@ -177,7 +177,7 @@ from the root store and is used to process a signed proposal received from a val
 In this state, `runTx` is called and the `AnteHandler` is executed and the context used in this state is built with information 
 from the header and the main state, including the minimum gas prices, which are also set. 
 Again we want to highlight that the described behavior is that of the default handler and applications have the flexibility to define their own
-[custom mempool handlers](https://docs.cosmos.network/main/building-apps/app-mempool#custom-mempool-handlers).
+[custom mempool handlers](https://docs.cosmos.network/main/build/building-apps/app-mempool).
 
 ![ProcessProposal](./baseapp_state-processproposal.png)
 
@@ -257,7 +257,7 @@ Here is how the `PrepareProposal` function can be implemented:
 
 1.  Extract the `sdk.Msg`s from the transaction.
 2.  Perform _stateful_ checks by calling `Validate()` on each of the `sdk.Msg`'s. This is done after _stateless_ checks as _stateful_ checks are more computationally expensive. If `Validate()` fails, `PrepareProposal` returns before running further checks, which saves resources.
-3.  Perform any additional checks that are specific to the application, such as checking account balances, or ensuring that certain conditions are met before a transaction is proposed.hey are processed by the consensus engine, if necessary.
+3.  Perform any additional checks that are specific to the application, such as checking account balances, or ensuring that certain conditions are met before a transaction is proposed. They are processed by the consensus engine, if necessary.
 4.  Return the updated transactions to be processed by the consensus engine
 
 Note that, unlike `CheckTx()`, `PrepareProposal` process `sdk.Msg`s, so it can directly update the state. However, unlike `FinalizeBlock()`, it does not commit the state updates. It's important to exercise caution when using `PrepareProposal` as incorrect coding could affect the overall liveness of the network.
@@ -307,7 +307,7 @@ transaction is received by a full-node. The role of `CheckTx` is to guard the fu
 Unconfirmed transactions are relayed to peers only if they pass `CheckTx`.
 
 `CheckTx()` can perform both _stateful_ and _stateless_ checks, but developers should strive to
-make the checks **lightweight** because gas fees are not charged for the resources (CPU, data load...) used during the `CheckTx`. 
+make the checks **lightweight** because gas fees are not charged for the resources (CPU, data load...) used during `CheckTx`. 
 
 In the Cosmos SDK, after [decoding transactions](./05-encoding.md), `CheckTx()` is implemented
 to do the following checks:
@@ -368,11 +368,11 @@ This allows certain checks like signature verification can be skipped during `Ch
 
 ### RunTx
 
-`RunTx` is called from `CheckTx`/`Finalizeblock` to handle the transaction, with `execModeCheck` or `execModeFinalize` as parameter to differentiate between the two modes of execution. Note that when `RunTx` receives a transaction, it has already been decoded.
+`RunTx` is called from `CheckTx`/`FinalizeBlock` to handle the transaction, with `execModeCheck` or `execModeFinalize` as parameter to differentiate between the two modes of execution. Note that when `RunTx` receives a transaction, it has already been decoded.
 
 The first thing `RunTx` does upon being called is to retrieve the `context`'s `CacheMultiStore` by calling the `getContextForTx()` function with the appropriate mode (either `runTxModeCheck` or `execModeFinalize`). This `CacheMultiStore` is a branch of the main store, with cache functionality (for query requests), instantiated during `FinalizeBlock` for transaction execution and during the `Commit` of the previous block for `CheckTx`. After that, two `defer func()` are called for [`gas`](../beginner/04-gas-fees.md) management. They are executed when `runTx` returns and make sure `gas` is actually consumed, and will throw errors, if any.
 
-After that, `RunTx()` calls `ValidateBasic()`, when available and for backward compatibility, on each `sdk.Msg`in the `Tx`, which runs preliminary _stateless_ validity checks. If any `sdk.Msg` fails to pass `ValidateBasic()`, `RunTx()` returns with an error.
+After that, `RunTx()` calls `ValidateBasic()`, when available and for backward compatibility, on each `sdk.Msg` in the `Tx`, which runs preliminary _stateless_ validity checks. If any `sdk.Msg` fails to pass `ValidateBasic()`, `RunTx()` returns with an error.
 
 Then, the [`anteHandler`](#antehandler) of the application is run (if it exists). In preparation of this step, both the `checkState`/`finalizeBlockState`'s `context` and `context`'s `CacheMultiStore` are branched using the `cacheTxContext()` function.
 
@@ -396,7 +396,7 @@ The `AnteHandler` is theoretically optional, but still a very important componen
 
 * Be a primary line of defense against spam and second line of defense (the first one being the mempool) against transaction replay with fees deduction and [`sequence`](./01-transactions.md#transaction-generation) checking.
 * Perform preliminary _stateful_ validity checks like ensuring signatures are valid or that the sender has enough funds to pay for fees.
-* Play a role in the incentivisation of stakeholders via the collection of transaction fees.
+* Play a role in the incentivization of stakeholders via the collection of transaction fees.
 
 `BaseApp` holds an `anteHandler` as parameter that is initialized in the [application's constructor](../beginner/00-app-anatomy.md#application-constructor). The most widely used `anteHandler` is the [`auth` module](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/auth/ante/ante.go).
 
@@ -404,7 +404,7 @@ Click [here](../beginner/04-gas-fees.md#antehandler) for more on the `anteHandle
 
 ### RunMsgs
 
-`RunMsgs` is called from `RunTx` with `runTxModeCheck` as parameter to check the existence of a route for each message the transaction, and with `execModeFinalize` to actually process the `sdk.Msg`s.
+`RunMsgs` is called from `RunTx` with `runTxModeCheck` as parameter to check the existence of a route for each message in the transaction, and with `execModeFinalize` to actually process the `sdk.Msg`s.
 
 First, it retrieves the `sdk.Msg`'s fully-qualified type name, by checking the `type_url` of the Protobuf `Any` representing the `sdk.Msg`. Then, using the application's [`msgServiceRouter`](#msg-service-router), it checks for the existence of `Msg` service method related to that `type_url`. At this point, if `mode == runTxModeCheck`, `RunMsgs` returns. Otherwise, if `mode == execModeFinalize`, the [`Msg` service](../../build/building-modules/03-msg-services.md) RPC is executed, before `RunMsgs` returns.
 
@@ -437,7 +437,7 @@ Finally, the `InitChain(req abci.InitChainRequest)` method of `BaseApp` calls th
 
 ### FinalizeBlock
 
-The [`FinalizeBlock` ABCI message](https://github.com/cometbft/cometbft/blob/v0.38.x/spec/abci/abci++_basic_concepts.md#method-overview) is sent from the underlying CometBFT engine when a block proposal created by the correct proposer is received. The previous `BeginBlock, DeliverTx and Endblock` calls are private methods on the BaseApp struct.
+The [`FinalizeBlock` ABCI message](https://github.com/cometbft/cometbft/blob/v0.38.x/spec/abci/abci++_basic_concepts.md#method-overview) is sent from the underlying CometBFT engine when a block proposal created by the correct proposer is received. The previous `BeginBlock, DeliverTx and Endblock` calls are private methods on the BaseApp struct. In ABCI++, `FinalizeBlock` also returns the `app_hash` in its response, which represents the application state after processing all transactions in the block.
 
 
 ```go reference 
@@ -469,12 +469,12 @@ When the underlying consensus engine receives a block proposal, each transaction
 Before the first transaction of a given block is processed, a [volatile state](#state-updates) called `finalizeBlockState` is initialized during FinalizeBlock. This state is updated each time a transaction is processed via `FinalizeBlock`, and committed to the [main state](#main-state) when the block is [committed](#commit), after what it is set to `nil`.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/baseapp/baseapp.go#LL772-L807
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/baseapp/baseapp.go#L772-L807
 ```
 
 Transaction execution within `FinalizeBlock` performs the **exact same steps as `CheckTx`**, with a little caveat at step 3 and the addition of a fifth step:
 
-1. The `AnteHandler` does **not** check that the transaction's `gas-prices` is sufficient. That is because the `min-gas-prices` value `gas-prices` is checked against is local to the node, and therefore what is enough for one full-node might not be for another. This means that the proposer can potentially include transactions for free, although they are not incentivised to do so, as they earn a bonus on the total fee of the block they propose.
+1. The `AnteHandler` does **not** check that the transaction's `gas-prices` is sufficient. That is because the `min-gas-prices` value `gas-prices` is checked against is local to the node, and therefore what is enough for one full-node might not be for another. This means that the proposer can potentially include transactions for free, although they are not incentivized to do so, as they earn a bonus on the total fee of the block they propose.
 2. For each `sdk.Msg` in the transaction, route to the appropriate module's Protobuf [`Msg` service](../../build/building-modules/03-msg-services.md). Additional _stateful_ checks are performed, and the branched multistore held in `finalizeBlockState`'s `context` is updated by the module's `keeper`. If the `Msg` service returns successfully, the branched multistore held in `context` is written to `finalizeBlockState` `CacheMultiStore`.
 
 During the additional fifth step outlined in (2), each read/write to the store increases the value of `GasConsumed`. You can find the default cost of each operation:
@@ -504,13 +504,15 @@ EndBlock is run after transaction execution completes. It allows developers to h
 https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/baseapp/baseapp.go#L811-L833
 ```
 
+At the end of `FinalizeBlock`, the application returns a `ResponseFinalizeBlock` that includes the `app_hash` - the hash of the application state after all transactions in the block have been processed. This `app_hash` is computed from the `finalizeBlockState` and represents the state that will be committed when the block is finalized. The `app_hash` is made available earlier in the consensus process compared to the previous ABCI version, where it was only returned in `ResponseCommit`.
+
 ### Commit
 
 The [`Commit` ABCI message](https://github.com/cometbft/cometbft/blob/v0.37.x/spec/abci/abci++_basic_concepts.md#method-overview) is sent from the underlying CometBFT engine after the full-node has received _precommits_ from 2/3+ of validators (weighted by voting power). On the `BaseApp` end, the `Commit(res abci.CommitResponse)` function is implemented to commit all the valid state transitions that occurred during `FinalizeBlock` and to reset state for the next block.
 
 To commit state-transitions, the `Commit` function calls the `Write()` function on `finalizeBlockState.ms`, where `finalizeBlockState.ms` is a branched multistore of the main store `app.cms`. Then, the `Commit` function sets `checkState` to the latest header (obtained from `finalizeBlockState.ctx.BlockHeader`) and `finalizeBlockState` to `nil`.
 
-Finally, `Commit` returns the hash of the commitment of `app.cms` back to the underlying consensus engine. This hash is used as a reference in the header of the next block.
+Finally, the `app_hash` that was returned in `ResponseFinalizeBlock` is now used as a reference in the header of the next block, as it represents the committed state after all transactions in the current block have been processed.
 
 ### Info
 

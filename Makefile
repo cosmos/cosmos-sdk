@@ -142,7 +142,7 @@ hubl:
 
 #? mocks: Generate mock file
 mocks: $(MOCKS_DIR)
-	@go install go.uber.org/mock/mockgen@v0.5.0
+	@go install go.uber.org/mock/mockgen@v0.6.0
 	sh ./scripts/mockgen.sh
 .PHONY: mocks
 
@@ -383,7 +383,7 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
-golangci_version=v2.1.6
+golangci_version=v2.3.1
 
 lint-install:
 	@echo "--> Installing golangci-lint $(golangci_version)"
@@ -391,13 +391,13 @@ lint-install:
 
 lint:
 	@echo "--> Running linter on all files"
-	$(MAKE) lint-install
+	@$(MAKE) lint-install
 	@./scripts/go-lint-all.bash --timeout=15m
 
 
 lint-fix:
 	@echo "--> Running linter"
-	$(MAKE) lint-install
+	@$(MAKE) lint-install
 	@./scripts/go-lint-all.bash --fix
 
 .PHONY: lint lint-fix

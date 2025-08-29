@@ -6,8 +6,8 @@ sidebar_position: 1
 
 :::note Synopsis
 
-The Cosmos SDK allows much easier wiring of an `app.go` thanks to [runtime](./00-runtime.md) and app wiring.
-Learn more about the rationale of App Wiring in [ADR-057](../architecture/adr-057-app-wiring.md).
+The Cosmos SDK makes wiring of an `app.go` much easier thanks to [runtime](./00-runtime.md) and app wiring.
+Learn more about the rationale of App Wiring in [ADR-057](../../../architecture/adr-057-app-wiring.md).
 
 :::
 
@@ -16,7 +16,7 @@ Learn more about the rationale of App Wiring in [ADR-057](../architecture/adr-05
 * [What is `runtime`?](./00-runtime.md)
 * [Depinject documentation](../packages/01-depinject.md)
 * [Modules depinject-ready](../building-modules/15-depinject.md)
-* [ADR 057: App Wiring](../architecture/adr-057-app-wiring.md)
+* [ADR 057: App Wiring](../../../architecture/adr-057-app-wiring.md)
 
 :::
 
@@ -40,7 +40,7 @@ The `app_config.go` file is the single place to configure all modules parameters
 
 2. Configure the `runtime` module:
 
-    In this configuration, the order at which the modules are defined in PreBlockers, BeginBlocks, and EndBlockers is important.
+    In this configuration, the order in which the modules are defined in PreBlockers, BeginBlocks, and EndBlockers is important.
     They are named in the order they should be executed by the module manager.
 
     ```go reference
@@ -67,7 +67,7 @@ See the complete `app_config.go` file for `SimApp` [here](https://github.com/cos
 
 :::tip
 The example above shows how to create an `AppConfig` using Go. However, it is also possible to create an `AppConfig` using YAML, or JSON.  
-The configuration can then be embed with `go:embed` and read with [`appconfig.LoadYAML`](https://pkg.go.dev/cosmossdk.io/core/appconfig#LoadYAML), or [`appconfig.LoadJSON`](https://pkg.go.dev/cosmossdk.io/core/appconfig#LoadJSON), in `app_di.go`.
+The configuration can then be embedded with `go:embed` and read with [`appconfig.LoadYAML`](https://pkg.go.dev/cosmossdk.io/core/appconfig#LoadYAML), or [`appconfig.LoadJSON`](https://pkg.go.dev/cosmossdk.io/core/appconfig#LoadJSON), in `app_di.go`.
 
 ```go
 //go:embed app_config.yaml

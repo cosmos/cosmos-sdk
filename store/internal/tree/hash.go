@@ -11,7 +11,7 @@ var (
 	innerPrefix = []byte{1}
 )
 
-// HashFromByteSlices computes a Merkle tree where the leaves are the byte slice,
+// HashFromByteSlices computes a Merkle tree where the leaves are the byte slices,
 // in the provided order. It follows RFC-6962.
 func HashFromByteSlices(items [][]byte) []byte {
 	return hashFromByteSlices(sha256.New(), items)

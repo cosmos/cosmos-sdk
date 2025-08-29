@@ -10,7 +10,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 )
 
-// RegisterInterfaces registers the sdk.Tx interface.
+// RegisterInterfaces registers the crypto key interfaces.
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	var pk *cryptotypes.PubKey
 	registry.RegisterInterface("cosmos.crypto.PubKey", pk)

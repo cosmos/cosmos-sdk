@@ -354,7 +354,7 @@ func moveKVStoreData(oldDB, newDB types.KVStore) error {
 
 // PruneSnapshotHeight prunes the given height according to the prune strategy.
 // If the strategy is PruneNothing, this is a no-op.
-// For other strategies, this height is persisted until the snapshot is operated.
+// For other strategies, this height is persisted until the snapshot is completed.
 func (rs *Store) PruneSnapshotHeight(height int64) {
 	rs.pruningManager.HandleSnapshotHeight(height)
 }
@@ -628,7 +628,7 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 					return nil, err
 				}
 
-				// If the store donesn't exist at this version, create a dummy one to prevent
+				// If the store doesn't exist at this version, create a dummy one to prevent
 				// nil pointer panic in newer query APIs.
 				cacheStore = dbadapter.Store{DB: dbm.NewMemDB()}
 			}
@@ -694,7 +694,7 @@ func (rs *Store) handlePruning(version int64) error {
 	return rs.PruneStores(pruneHeight)
 }
 
-// PruneStores prunes all history upto the specific height of the multi store.
+// PruneStores prunes all history up to the specific height of the multi store.
 func (rs *Store) PruneStores(pruningHeight int64) (err error) {
 	if pruningHeight <= 0 {
 		rs.logger.Debug("pruning skipped, height is less than or equal to 0")

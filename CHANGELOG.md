@@ -38,21 +38,24 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
-### Features
-
-* [#24872](https://github.com/cosmos/cosmos-sdk/pull/24872) Support BLS 12-381 for cli `init`, `gentx`, `collect-gentx`
 
 ### Breaking Changes
 
+* [#25090](https://github.com/cosmos/cosmos-sdk/pull/25090) Moved deprecated modules to `./contrib`.  These modules are still available but will no longer be actively maintained or supported in the Cosmos SDK Bug Bounty program.
+  * `x/group`
+  * `x/nft`
+  * `x/circuit`
+  * `x/crisis`
 * [#24837](https://github.com/cosmos/cosmos-sdk/pull/24837) Update to using CometBFT v2.
-    * This update changes the import paths from `cometbft/cometbft` to `cometbft/cometbft/v2`.  Users can use the migration tool to automatically update their nodes.
+    * This update changes the import paths from `cometbft/cometbft` to `cometbft/cometbft/v2`.  Users can use the [migration tool](./tools/migration/TODO) to automatically update their nodes.
 
 ### Features
 
+* [#24872](https://github.com/cosmos/cosmos-sdk/pull/24872) Support BLS 12-381 for cli `init`, `gentx`, `collect-gentx`
 * (crypto) [#24919](https://github.com/cosmos/cosmos-sdk/pull/24919) add `NewPubKeyFromBytes` function to the `secp256r1` package to create `PubKey` from bytes
 * (server) [#24720](https://github.com/cosmos/cosmos-sdk/pull/24720) add `verbose_log_level` flag for configuring the log level when switching to verbose logging mode during sensitive operations (such as chain upgrades).
 * (crypto) [#24861](https://github.com/cosmos/cosmos-sdk/pull/24861) add `PubKeyFromCometTypeAndBytes` helper function to convert from `comet/v2` PubKeys to the `cryptotypes.Pubkey` interface.
-* (abci_utils) [#25008](https://github.com/cosmos/cosmos-sdk/pull/24861) add the ability to assign a custom signer extraction adapter in `DefaultProposalHandler`.
+* (abci_utils) [#25008](https://github.com/cosmos/cosmos-sdk/pull/25008) add the ability to assign a custom signer extraction adapter in `DefaultProposalHandler`.
 
 ### Improvements
 
@@ -68,6 +71,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (client, client/rpc, x/auth/tx) [#24551](https://github.com/cosmos/cosmos-sdk/pull/24551) Handle cancellation properly when supplying context to client methods.
 * (x/epochs) [#24770](https://github.com/cosmos/cosmos-sdk/pull/24770) Fix register of epoch hooks in `InvokeSetHooks`.
 * (baseapp) [#24898](https://github.com/cosmos/cosmos-sdk/pull/24898) Don't take mempool error as state machine execution failure.
+* (x/epochs) [#25087](https://github.com/cosmos/cosmos-sdk/pull/25087) Remove redundant error check in BeginBlocker.
 * [GHSA-p22h-3m2v-cmgh](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-p22h-3m2v-cmgh) Fix x/distribution can halt when historical rewards overflow.
 
 ### Deprecated

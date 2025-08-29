@@ -291,7 +291,7 @@ func (st *Store) Import(version int64) (*iavl.Importer, error) {
 	return tree.Import(version)
 }
 
-// Handle gatest the latest height, if height is 0
+// Handle gets the latest height, if height is 0
 func getHeight(tree Tree, req *types.RequestQuery) int64 {
 	height := req.Height
 	if height == 0 {

@@ -152,7 +152,7 @@ type BaseApp struct {
 	cdc codec.Codec
 
 	// optimisticExec contains the context required for Optimistic Execution,
-	// including the goroutine handling.This is experimental and must be enabled
+	// including the goroutine handling. This is experimental and must be enabled
 	// by developers.
 	optimisticExec *oe.OptimisticExecution
 
@@ -628,7 +628,7 @@ func (app *BaseApp) getContextForTx(mode sdk.ExecMode, txBytes []byte) sdk.Conte
 	return ctx
 }
 
-// cacheTxContext returns a new context based off of the provided context with
+// cacheTxContext returns a new context based on the provided context with
 // a branched multi-store.
 func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context, storetypes.CacheMultiStore) {
 	ms := ctx.MultiStore()
@@ -893,7 +893,7 @@ func (app *BaseApp) runTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx) (gInfo s
 		}
 	}
 
-	// Create a new Context based off of the existing Context with a MultiStore branch
+	// Create a new Context based on the existing Context with a MultiStore branch
 	// in case message processing fails. At this point, the MultiStore
 	// is a branch of a branch.
 	runMsgCtx, msCache := app.cacheTxContext(ctx, txBytes)

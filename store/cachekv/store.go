@@ -306,7 +306,7 @@ func (store *Store) dirtyItems(start, end []byte) {
 	// what's in the subset we are concerned about.
 	// If you are interleaving iterator calls with writes, this can easily become an
 	// O(N^2) overhead.
-	// Even without that, too many range checks eventually becomes more expensive
+	// Even without that, too many range checks eventually become more expensive
 	// than just not having the cache.
 	if n < minSortSize {
 		for key := range store.unsortedCache {

@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
-	cmttime "github.com/cometbft/cometbft/v2/types/time"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/address"

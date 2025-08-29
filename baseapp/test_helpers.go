@@ -9,9 +9,9 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// SimCheck defines a CheckTx helper function that used in tests and simulations.
+// SimCheck defines a CheckTx helper function that is used in tests and simulations.
 func (app *BaseApp) SimCheck(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
-	// runTx expects tx bytes as argument, so we encode the tx argument into
+	// runTx expects tx bytes as an argument, so we encode the tx argument into
 	// bytes. Note that runTx will actually decode those bytes again. But since
 	// this helper is only used in tests/simulation, it's fine.
 	bz, err := txEncoder(tx)
@@ -67,7 +67,7 @@ func (app *BaseApp) NewContextLegacy(isCheckTx bool, header cmtproto.Header) sdk
 	return sdk.NewContext(app.stateManager.GetState(execModeFinalize).MultiStore, header, false, app.logger)
 }
 
-// NewContext returns a new sdk.Context with a empty header
+// NewContext returns a new sdk.Context with an empty header
 func (app *BaseApp) NewContext(isCheckTx bool) sdk.Context {
 	return app.NewContextLegacy(isCheckTx, cmtproto.Header{})
 }

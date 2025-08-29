@@ -7,7 +7,7 @@ require (
 	github.com/cometbft/cometbft/v2 v2.0.0-rc1
 	github.com/cosmos/cosmos-sdk v0.54.0-rc.1
 	github.com/creachadair/tomledit v0.0.28
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 	github.com/tidwall/gjson v1.18.0
 	github.com/tidwall/sjson v1.2.5
 	google.golang.org/grpc v1.75.0

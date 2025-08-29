@@ -479,7 +479,7 @@ func extractSignersBytes(tx sdk.Tx) ([][]byte, error) {
 
 // IncrementSequenceDecorator handles incrementing sequences of all signers.
 // Use the IncrementSequenceDecorator decorator to prevent replay attacks. Note,
-// there is need to execute IncrementSequenceDecorator on RecheckTx since
+// there is a need to execute IncrementSequenceDecorator on RecheckTx since
 // BaseApp.Commit() will set the check state based on the latest header.
 //
 // NOTE: Since CheckTx and DeliverTx state are managed separately, subsequent and

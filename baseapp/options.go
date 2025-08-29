@@ -333,7 +333,7 @@ func (app *BaseApp) SetTxEncoder(txEncoder sdk.TxEncoder) {
 	app.txEncoder = txEncoder
 }
 
-// SetQueryMultiStore set a alternative MultiStore implementation to support grpc query service.
+// SetQueryMultiStore sets an alternative MultiStore implementation to support grpc query service.
 //
 // Ref: https://github.com/cosmos/cosmos-sdk/issues/13317
 func (app *BaseApp) SetQueryMultiStore(ms storetypes.MultiStore) {

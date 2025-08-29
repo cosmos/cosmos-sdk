@@ -47,7 +47,7 @@ func MakeHybridHandler(cdc codec.BinaryCodec, sd *grpc.ServiceDesc, method grpc.
 
 // makeProtoV2HybridHandler returns a handler that can handle both gogo and protov2 messages.
 func makeProtoV2HybridHandler(prefMethod protoreflect.MethodDescriptor, cdc codec.BinaryCodec, method grpc.MethodDesc, handler any) (Handler, error) {
-	// it's a protov2 handler, if a gogo counterparty is not found we cannot handle gogo messages.
+	// it's a protov2 handler, if a gogo counterpart is not found we cannot handle gogo messages.
 	gogoExists := gogoproto.MessageType(string(prefMethod.Output().FullName())) != nil
 	if !gogoExists {
 		return func(ctx context.Context, inReq, outResp protoiface.MessageV1) error {
@@ -112,7 +112,7 @@ func makeProtoV2HybridHandler(prefMethod protoreflect.MethodDescriptor, cdc code
 }
 
 func makeGogoHybridHandler(prefMethod protoreflect.MethodDescriptor, cdc codec.BinaryCodec, method grpc.MethodDesc, handler any) (Handler, error) {
-	// it's a gogo handler, we check if the existing protov2 counterparty exists.
+	// it's a gogo handler, we check if the existing protov2 counterpart exists.
 	_, err := protoregistry.GlobalTypes.FindMessageByName(prefMethod.Output().FullName())
 	if err != nil {
 		// this can only be a gogo message.
@@ -138,7 +138,7 @@ func makeGogoHybridHandler(prefMethod protoreflect.MethodDescriptor, cdc codec.B
 			return nil
 		}, nil
 	}
-	// this is a gogo handler, and we have a protov2 counterparty.
+	// this is a gogo handler, and we have a protov2 counterpart.
 	return func(ctx context.Context, inReq, outResp protoiface.MessageV1) error {
 		switch m := inReq.(type) {
 		case proto2.Message:

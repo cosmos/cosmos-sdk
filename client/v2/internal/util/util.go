@@ -34,14 +34,14 @@ func ResolveMessageType(resolver protoregistry.MessageTypeResolver, descriptor p
 }
 
 // IsSupportedVersion is used to determine in which version of a module / sdk a rpc was introduced.
-// It returns false if the rpc has comment for an higher version than the current one.
+// It returns false if the rpc has comment for a higher version than the current one.
 // It returns true if the method descriptor contains no annotation.
 func IsSupportedVersion(methodDesc protoreflect.MethodDescriptor) bool {
 	return isSupportedVersion(methodDesc, buildInfo)
 }
 
 // isSupportedVersion is used to determine in which version of a module / sdk a rpc was introduced.
-// It returns false if the rpc has comment for an higher version than the current one.
+// It returns false if the rpc has comment for a higher version than the current one.
 // It returns true if the method descriptor contains no annotation.
 // It takes a buildInfo as argument to be able to test it.
 func isSupportedVersion(methodDesc protoreflect.MethodDescriptor, buildInfo *debug.BuildInfo) bool {

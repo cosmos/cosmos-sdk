@@ -32,7 +32,7 @@ func (s *KeeperTestSuite) TestExportAndInitGenesis() {
 	require.Len(genesisState.SigningInfos, 2)
 	require.Equal(genesisState.SigningInfos[0].ValidatorSigningInfo, info1)
 
-	// Tombstone validators after genesis shouldn't effect genesis state
+	// Tombstone validators after genesis shouldn't affect genesis state
 	err := keeper.Tombstone(ctx, consAddr1)
 	require.NoError(err)
 	err = keeper.Tombstone(ctx, consAddr2)

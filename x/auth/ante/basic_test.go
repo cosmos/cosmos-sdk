@@ -204,7 +204,7 @@ func TestTxTimeoutHeightDecorator(t *testing.T) {
 	}{
 		{"default value", 0, 10, time.Time{}, time.Time{}, nil},
 		{"no timeout (greater height)", 15, 10, time.Time{}, time.Time{}, nil},
-		{"no timeout (same height)", 10, 10, time.Time{}, time.Time{}, nil},
+		{"no timeout (same height)", 10, 10, time.Time{}, time.Time{}, sdkerrors.ErrTxTimeoutHeight}, // Updated: same height is now invalid
 		{"timeout (smaller height)", 9, 10, time.Time{}, time.Time{}, sdkerrors.ErrTxTimeoutHeight},
 		{"no timeout (timeout after timestamp)", 0, 20, currentTime.Add(time.Minute), currentTime, nil},
 		{"no timeout (current time)", 0, 20, currentTime, currentTime, nil},
@@ -234,4 +234,77 @@ func TestTxTimeoutHeightDecorator(t *testing.T) {
 			require.ErrorIs(t, err, tc.expectedErr)
 		})
 	}
+}
+
+func TestTxTimeoutHeightDecorator_ErrorMessages(t *testing.T) {
+	suite := SetupTestSuite(t, true)
+	antehandler := sdk.ChainAnteDecorators(ante.NewTxTimeoutHeightDecorator())
+	priv1, _, addr1 := testdata.KeyTestPubAddr()
+	msg := testdata.NewTestMsg(addr1)
+	feeAmount := testdata.NewTestFeeAmount()
+	gasLimit := testdata.NewTestGasLimit()
+
+	// Build a base tx
+	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
+	require.NoError(t, suite.txBuilder.SetMsgs(msg))
+	suite.txBuilder.SetFeeAmount(feeAmount)
+	suite.txBuilder.SetGasLimit(gasLimit)
+
+	// Case 1: same height -> require "strictly greater/next block" guidance
+	{
+		suite.txBuilder.SetTimeoutHeight(10)
+		suite.txBuilder.SetTimeoutTimestamp(time.Time{})
+		privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
+		tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
+		require.NoError(t, err)
+
+		ctx := suite.ctx.WithBlockHeight(10)
+		_, err = antehandler(ctx, tx, true)
+		require.ErrorIs(t, err, sdkerrors.ErrTxTimeoutHeight)
+		require.ErrorContains(t, err, "strictly greater than the current block height")
+	}
+
+	// Case 2: past height -> require hint to try >= next block
+	{
+		suite.txBuilder.SetTimeoutHeight(9)
+		suite.txBuilder.SetTimeoutTimestamp(time.Time{})
+		privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
+		tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
+		require.NoError(t, err)
+
+		ctx := suite.ctx.WithBlockHeight(10)
+		_, err = antehandler(ctx, tx, true)
+		require.ErrorIs(t, err, sdkerrors.ErrTxTimeoutHeight)
+		require.ErrorContains(t, err, "has already passed")
+		require.ErrorContains(t, err, "try >=")
+	}
+}
+
+func TestGetRecommendedTimeoutHeight(t *testing.T) {
+	testCases := []struct {
+		name           string
+		currentHeight  uint64
+		buffer         uint64
+		expectedHeight uint64
+	}{
+		{"default buffer", 100, 0, 101},
+		{"custom buffer", 100, 5, 105},
+		{"zero height", 0, 1, 1},
+		{"large height", 1000000, 10, 1000010},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := ante.GetRecommendedTimeoutHeight(tc.currentHeight, tc.buffer)
+			require.Equal(t, tc.expectedHeight, result)
+		})
+	}
+
+	// Test overflow boundary case
+	t.Run("overflow boundary", func(t *testing.T) {
+		maxHeight := ^uint64(0) - 5
+		result := ante.GetRecommendedTimeoutHeight(maxHeight, 10)
+		// Should saturate to max uint64 when overflow occurs
+		require.Equal(t, ^uint64(0), result)
+	})
 }

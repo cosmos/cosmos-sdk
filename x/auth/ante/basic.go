@@ -198,7 +198,7 @@ func NewTxTimeoutHeightDecorator() TxTimeoutHeightDecorator {
 	return TxTimeoutHeightDecorator{}
 }
 
-// AnteHandle implements an AnteHandler decorator for the TxHeightTimeoutDecorator
+// AnteHandle implements an AnteHandler decorator for the TxTimeoutHeightDecorator
 // type where the current block height is checked against the tx's height timeout.
 // If a height timeout is provided (non-zero) and is less than the current block
 // height, then an error is returned.
@@ -209,10 +209,27 @@ func (txh TxTimeoutHeightDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	}
 
 	timeoutHeight := timeoutTx.GetTimeoutHeight()
-	if timeoutHeight > 0 && uint64(ctx.BlockHeight()) > timeoutHeight {
-		return ctx, errorsmod.Wrapf(
-			sdkerrors.ErrTxTimeoutHeight, "block height: %d, timeout height: %d", ctx.BlockHeight(), timeoutHeight,
-		)
+	currentHeight := uint64(ctx.BlockHeight())
+
+	if timeoutHeight > 0 {
+		// Check if timeout height is set to current block height (which is invalid)
+		if timeoutHeight == currentHeight {
+			nextBlockHeight := GetRecommendedTimeoutHeight(currentHeight, 1)
+			return ctx, errorsmod.Wrapf(
+				sdkerrors.ErrTxTimeoutHeight,
+				"timeout height must be strictly greater than the current block height: got %d, expected at least %d",
+				timeoutHeight, nextBlockHeight,
+			)
+		}
+
+		// Check if timeout height has already passed
+		if currentHeight > timeoutHeight {
+			return ctx, errorsmod.Wrapf(
+				sdkerrors.ErrTxTimeoutHeight,
+				"transaction timeout height %d has already passed; current block height is %d (try >= %d)",
+				timeoutHeight, currentHeight, GetRecommendedTimeoutHeight(currentHeight, 1),
+			)
+		}
 	}
 
 	timeoutTimestamp := timeoutTx.GetTimeoutTimeStamp()
@@ -224,4 +241,19 @@ func (txh TxTimeoutHeightDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	}
 
 	return next(ctx, tx, simulate)
+}
+
+// GetRecommendedTimeoutHeight returns the recommended timeout height for a transaction.
+// It adds a buffer to the current block height to ensure the transaction has time to be processed.
+// When buffer=0, it defaults to 1 block (next block).
+func GetRecommendedTimeoutHeight(currentHeight, buffer uint64) uint64 {
+	if buffer == 0 {
+		buffer = 1 // Default buffer of 1 block
+	}
+	// Saturating add to guard against uint64 overflow (extremely unlikely in practice).
+	sum := currentHeight + buffer
+	if sum < currentHeight { // overflow detected
+		return ^uint64(0)
+	}
+	return sum
 }

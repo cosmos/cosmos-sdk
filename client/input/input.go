@@ -37,7 +37,7 @@ func GetPassword(prompt string, buf *bufio.Reader) (pass string, err error) {
 	return pass, nil
 }
 
-// GetConfirmation will request user give the confirmation from stdin.
+// GetConfirmation will request user to give the confirmation from stdin.
 // "y", "Y", "yes", "YES", and "Yes" all count as confirmations.
 // If the input is not recognized, it returns false and a nil error.
 func GetConfirmation(prompt string, r *bufio.Reader, w io.Writer) (bool, error) {
@@ -77,7 +77,7 @@ func GetString(prompt string, buf *bufio.Reader) (string, error) {
 	return strings.TrimSpace(out), nil
 }
 
-// inputIsTty returns true iff we have an interactive prompt,
+// inputIsTty returns true if we have an interactive prompt,
 // where we can disable echo and request to repeat the password.
 // If false, we can optimize for piped input from another command
 func inputIsTty() bool {

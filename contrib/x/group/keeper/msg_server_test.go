@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	abci "github.com/cometbft/cometbft/v2/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"go.uber.org/mock/gomock"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"

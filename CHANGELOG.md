@@ -46,8 +46,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
   * `x/nft`
   * `x/circuit`
   * `x/crisis`
-* [#24837](https://github.com/cosmos/cosmos-sdk/pull/24837) Update to using CometBFT v2.
-    * This update changes the import paths from `cometbft/cometbft` to `cometbft/cometbft/v2`.  Users can use the [migration tool](./tools/migration/TODO) to automatically update their nodes.
+* (crypto) [#24414](https://github.com/cosmos/cosmos-sdk/pull/24414) Remove sr25519 support, since it was removed in CometBFT v1.x (see: CometBFT [#3646](https://github.com/cometbft/cometbft/pull/3646)).
 
 ### Features
 
@@ -127,10 +126,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (server) [#24072](https://github.com/cosmos/cosmos-sdk/pull/24072) Return BlockHeader by shallow copy in server Context.
 * (x/bank) [#24053](https://github.com/cosmos/cosmos-sdk/pull/24053) Resolve a foot-gun by swapping send restrictions check in `InputOutputCoins` before coin deduction.
 * (codec/types) [#24336](https://github.com/cosmos/cosmos-sdk/pull/24336) Most types definitions were moved to `github.com/cosmos/gogoproto/types/any` with aliases to these left in `codec/types` so that there should be no breakage to existing code. This allows protobuf generated code to optionally reference the SDK's custom `Any` type without a direct dependency on the SDK. This can be done by changing the `protoc` `M` parameter for `any.proto` to `Mgoogle/protobuf/any.proto=github.com/cosmos/gogoproto/types/any`.
-
-### API Breaking Changes
-
-* (crypto) [#24414](https://github.com/cosmos/cosmos-sdk/pull/24414) Remove sr25519 support, since it was removed in CometBFT v1.x (see: CometBFT [#3646](https://github.com/cometbft/cometbft/pull/3646)).
 
 ### Bug Fixes
 

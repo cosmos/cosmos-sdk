@@ -160,3 +160,8 @@ require (
 	nhooyr.io/websocket v1.8.6 // indirect
 	pgregory.net/rapid v1.2.0 // indirect
 )
+
+// replace (
+// 	<temporary replace>
+// )
+replace cosmossdk.io/store => ../../store

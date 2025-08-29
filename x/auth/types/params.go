@@ -80,7 +80,7 @@ func validateSigVerifyCostSecp256k1(i any) error {
 	}
 
 	if v == 0 {
-		return fmt.Errorf("invalid SECK256k1 signature verification cost: %d", v)
+		return fmt.Errorf("invalid SECP256k1 signature verification cost: %d", v)
 	}
 
 	return nil

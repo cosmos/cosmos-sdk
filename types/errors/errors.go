@@ -131,7 +131,7 @@ var (
 	// non-DB domain errors).
 	ErrIO = errorsmod.Register(RootCodespace, 39, "internal IO error")
 
-	// ErrAppConfig defines an error occurred if application configuration is
+	// ErrAppConfig defines an error that occurs if application configuration is
 	// misconfigured.
 	ErrAppConfig = errorsmod.Register(RootCodespace, 40, "error in app.toml")
 

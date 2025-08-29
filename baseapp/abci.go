@@ -20,6 +20,7 @@ import (
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/blockstm"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -834,7 +835,7 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 
 func (app *BaseApp) executeTxsWithExecutor(ctx context.Context, txs [][]byte) ([]*abci.ExecTxResult, error) {
 	if app.executor == nil {
-		app.executor = DefaultExecutor{
+		app.executor = blockstm.DefaultExecutor{
 			ctx:       ctx,
 			txDecoder: app.txDecoder,
 			deliverTx: func(txs []byte) *abci.ExecTxResult { return app.deliverTx(txs, nil, nil) },

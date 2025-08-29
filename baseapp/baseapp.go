@@ -26,6 +26,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/oe"
+	"github.com/cosmos/cosmos-sdk/blockstm"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -200,7 +201,7 @@ type BaseApp struct {
 	disableBlockGasMeter bool
 
 	// Optional alternative tx executor, used for block-stm parallel transaction execution. If nil, default executor is used.
-	executor Executor
+	executor blockstm.Executor
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a

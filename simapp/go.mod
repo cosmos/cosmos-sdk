@@ -5,7 +5,7 @@ go 1.25.0
 require (
 	cosmossdk.io/api v0.9.2
 	cosmossdk.io/client/v2 v2.0.0-beta.11
-	cosmossdk.io/collections v1.2.1 // indirect
+	cosmossdk.io/collections v1.3.1 // indirect
 	cosmossdk.io/core v0.11.3
 	cosmossdk.io/depinject v1.2.1
 	cosmossdk.io/log v1.6.0
@@ -19,7 +19,7 @@ require (
 	cosmossdk.io/x/tx v0.14.0
 	cosmossdk.io/x/upgrade v0.2.0
 	github.com/cometbft/cometbft v0.38.17
-	github.com/cosmos/cosmos-db v1.1.1
+	github.com/cosmos/cosmos-db v1.1.3
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
 	github.com/cosmos/cosmos-sdk v0.53.0
 	github.com/cosmos/gogoproto v1.7.0
@@ -73,6 +73,7 @@ require (
 	github.com/cometbft/cometbft-db v0.14.1 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
+	github.com/cosmos/cosmos-sdk/blockstm v0.0.0-00010101000000-000000000000 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/iavl v1.2.2 // indirect
@@ -94,7 +95,7 @@ require (
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
-	github.com/getsentry/sentry-go v0.32.0 // indirect
+	github.com/getsentry/sentry-go v0.33.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.0.5 // indirect
 	github.com/go-kit/kit v0.13.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
@@ -231,6 +232,7 @@ replace (
 	cosmossdk.io/client/v2 => ../client/v2
 	cosmossdk.io/store => ../store
 	cosmossdk.io/x/circuit => ../x/circuit
+	github.com/cosmos/cosmos-sdk/blockstm => ../blockstm/
 )
 
 // Below are the long-lived replace of the SimApp

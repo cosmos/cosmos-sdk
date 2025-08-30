@@ -37,6 +37,10 @@ const (
 	QueryPathBroadcastTx = "/cosmos.tx.v1beta1.Service/BroadcastTx"
 )
 
+type TxRunner interface {
+	Run(txs [][]byte) ([]*abci.ExecTxResult, error)
+}
+
 func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
 	if req.ChainId != app.chainID {
 		return nil, fmt.Errorf("invalid chain-id on InitChain; expected: %s, got: %s", app.chainID, req.ChainId)
@@ -834,15 +838,15 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 }
 
 func (app *BaseApp) executeTxsWithExecutor(ctx context.Context, txs [][]byte) ([]*abci.ExecTxResult, error) {
-	if app.executor == nil {
-		app.executor = blockstm.DefaultExecutor{
-			ctx:       ctx,
-			txDecoder: app.txDecoder,
-			deliverTx: func(txs []byte) *abci.ExecTxResult { return app.deliverTx(txs, nil, nil) },
-		}
+	if app.txRunner == nil {
+		app.txRunner = blockstm.NewDefaultRunner(
+			ctx,
+			app.txDecoder,
+			func(txs []byte) *abci.ExecTxResult { return app.deliverTx(txs, nil, nil) },
+		)
 	}
 
-	return app.executor.run(txs)
+	return app.txRunner.Run(txs)
 }
 
 // FinalizeBlock will execute the block proposal provided by RequestFinalizeBlock.

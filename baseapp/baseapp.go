@@ -26,7 +26,6 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/oe"
-	"github.com/cosmos/cosmos-sdk/blockstm"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -200,8 +199,8 @@ type BaseApp struct {
 	// SAFETY: it's safe to do if validators validate the total gas wanted in the `ProcessProposal`, which is the case in the default handler.
 	disableBlockGasMeter bool
 
-	// Optional alternative tx executor, used for block-stm parallel transaction execution. If nil, default executor is used.
-	executor blockstm.Executor
+	// Optional alternative tx runner, used for block-stm parallel transaction execution. If nil, default txRunner is used.
+	txRunner TxRunner
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a

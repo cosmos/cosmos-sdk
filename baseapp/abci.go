@@ -3,6 +3,7 @@ package baseapp
 import (
 	"context"
 	"fmt"
+	"math"
 	"sort"
 	"strings"
 	"time"
@@ -19,8 +20,6 @@ import (
 	"cosmossdk.io/store/rootmulti"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
-
-	"math"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/state"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -371,7 +370,7 @@ func (app *BaseApp) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, er
 			return sdkerrors.ResponseCheckTxWithEvents(err, gasInfo.GasWanted, gasInfo.GasUsed, anteEvents, app.trace), nil
 		}
 
-		return &abci.CheckTxResponse{
+		return &abci.ResponseCheckTx{
 			GasWanted: safeInt64FromUint64(gasInfo.GasWanted),
 			GasUsed:   safeInt64FromUint64(gasInfo.GasUsed),
 			Log:       result.Log,

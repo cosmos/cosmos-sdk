@@ -142,34 +142,37 @@ func TestTrackDelegationContVestingAcc(t *testing.T) {
 	// require the ability to delegate all vesting coins
 	cva, err := types.NewContinuousVestingAccount(bacc, origCoins, now.Unix(), endTime.Unix())
 	require.NoError(t, err)
-	cva.TrackDelegation(now, origCoins, origCoins)
+	err = cva.TrackDelegation(now, origCoins, origCoins)
+	require.NoError(t, err)
 	require.Equal(t, origCoins, cva.DelegatedVesting)
 	require.Nil(t, cva.DelegatedFree)
 
 	// require the ability to delegate all vested coins
 	cva, err = types.NewContinuousVestingAccount(bacc, origCoins, now.Unix(), endTime.Unix())
 	require.NoError(t, err)
-	cva.TrackDelegation(endTime, origCoins, origCoins)
+	err = cva.TrackDelegation(endTime, origCoins, origCoins)
+	require.NoError(t, err)
 	require.Nil(t, cva.DelegatedVesting)
 	require.Equal(t, origCoins, cva.DelegatedFree)
 
 	// require the ability to delegate all vesting coins (50%) and all vested coins (50%)
 	cva, err = types.NewContinuousVestingAccount(bacc, origCoins, now.Unix(), endTime.Unix())
 	require.NoError(t, err)
-	cva.TrackDelegation(now.Add(12*time.Hour), origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+	err = cva.TrackDelegation(now.Add(12*time.Hour), origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+	require.NoError(t, err)
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)}, cva.DelegatedVesting)
 	require.Nil(t, cva.DelegatedFree)
 
-	cva.TrackDelegation(now.Add(12*time.Hour), origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+	err = cva.TrackDelegation(now.Add(12*time.Hour), origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+	require.NoError(t, err)
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)}, cva.DelegatedVesting)
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)}, cva.DelegatedFree)
 
 	// require no modifications when delegation amount is zero or not enough funds
 	cva, err = types.NewContinuousVestingAccount(bacc, origCoins, now.Unix(), endTime.Unix())
 	require.NoError(t, err)
-	require.Panics(t, func() {
-		cva.TrackDelegation(endTime, origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 1000000)})
-	})
+	err = cva.TrackDelegation(endTime, origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 1000000)})
+	require.Error(t, err)
 	require.Nil(t, cva.DelegatedVesting)
 	require.Nil(t, cva.DelegatedFree)
 }
@@ -183,41 +186,48 @@ func TestTrackUndelegationContVestingAcc(t *testing.T) {
 	// require the ability to undelegate all vesting coins
 	cva, err := types.NewContinuousVestingAccount(bacc, origCoins, now.Unix(), endTime.Unix())
 	require.NoError(t, err)
-	cva.TrackDelegation(now, origCoins, origCoins)
-	cva.TrackUndelegation(origCoins)
+	err = cva.TrackDelegation(now, origCoins, origCoins)
+	require.NoError(t, err)
+	err = cva.TrackUndelegation(origCoins)
+	require.NoError(t, err)
 	require.Nil(t, cva.DelegatedFree)
 	require.Equal(t, emptyCoins, cva.DelegatedVesting)
 
 	// require the ability to undelegate all vested coins
 	cva, err = types.NewContinuousVestingAccount(bacc, origCoins, now.Unix(), endTime.Unix())
 	require.NoError(t, err)
-	cva.TrackDelegation(endTime, origCoins, origCoins)
-	cva.TrackUndelegation(origCoins)
+	err = cva.TrackDelegation(endTime, origCoins, origCoins)
+	require.NoError(t, err)
+	err = cva.TrackUndelegation(origCoins)
+	require.NoError(t, err)
 	require.Equal(t, emptyCoins, cva.DelegatedFree)
 	require.Nil(t, cva.DelegatedVesting)
 
 	// require no modifications when the undelegation amount is zero
 	cva, err = types.NewContinuousVestingAccount(bacc, origCoins, now.Unix(), endTime.Unix())
 	require.NoError(t, err)
-	require.Panics(t, func() {
-		cva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(stakeDenom, 0)})
-	})
+	err = cva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(stakeDenom, 0)})
+	require.Error(t, err)
 	require.Nil(t, cva.DelegatedFree)
 	require.Nil(t, cva.DelegatedVesting)
 
 	// vest 50% and delegate to two validators
 	cva, err = types.NewContinuousVestingAccount(bacc, origCoins, now.Unix(), endTime.Unix())
 	require.NoError(t, err)
-	cva.TrackDelegation(now.Add(12*time.Hour), origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
-	cva.TrackDelegation(now.Add(12*time.Hour), origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+	err = cva.TrackDelegation(now.Add(12*time.Hour), origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+	require.NoError(t, err)
+	err = cva.TrackDelegation(now.Add(12*time.Hour), origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+	require.NoError(t, err)
 
 	// undelegate from one validator that got slashed 50%
-	cva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(stakeDenom, 25)})
+	err = cva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(stakeDenom, 25)})
+	require.NoError(t, err)
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 25)}, cva.DelegatedFree)
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)}, cva.DelegatedVesting)
 
 	// undelegate from the other validator that did not get slashed
-	cva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+	err = cva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+	require.NoError(t, err)
 	require.Equal(t, emptyCoins, cva.DelegatedFree)
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 25)}, cva.DelegatedVesting)
 }
@@ -302,7 +312,8 @@ func TestTrackDelegationDelVestingAcc(t *testing.T) {
 	// require the ability to delegate all vested coins
 	dva, err = types.NewDelayedVestingAccount(bacc, origCoins, endTime.Unix())
 	require.NoError(t, err)
-	dva.TrackDelegation(endTime, origCoins, origCoins)
+	err = dva.TrackDelegation(endTime, origCoins, origCoins)
+	require.NoError(t, err)
 	require.Nil(t, dva.DelegatedVesting)
 	require.Equal(t, origCoins, dva.DelegatedFree)
 
@@ -310,16 +321,16 @@ func TestTrackDelegationDelVestingAcc(t *testing.T) {
 	// schedule
 	dva, err = types.NewDelayedVestingAccount(bacc, origCoins, endTime.Unix())
 	require.NoError(t, err)
-	dva.TrackDelegation(now.Add(12*time.Hour), origCoins, origCoins)
+	err = dva.TrackDelegation(now.Add(12*time.Hour), origCoins, origCoins)
+	require.NoError(t, err)
 	require.Equal(t, origCoins, dva.DelegatedVesting)
 	require.Nil(t, dva.DelegatedFree)
 
 	// require no modifications when delegation amount is zero or not enough funds
 	dva, err = types.NewDelayedVestingAccount(bacc, origCoins, endTime.Unix())
 	require.NoError(t, err)
-	require.Panics(t, func() {
-		dva.TrackDelegation(endTime, origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 1000000)})
-	})
+	err = dva.TrackDelegation(endTime, origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 1000000)})
+	require.Error(t, err)
 	require.Nil(t, dva.DelegatedVesting)
 	require.Nil(t, dva.DelegatedFree)
 }
@@ -333,42 +344,49 @@ func TestTrackUndelegationDelVestingAcc(t *testing.T) {
 	// require the ability to undelegate all vesting coins
 	dva, err := types.NewDelayedVestingAccount(bacc, origCoins, endTime.Unix())
 	require.NoError(t, err)
-	dva.TrackDelegation(now, origCoins, origCoins)
-	dva.TrackUndelegation(origCoins)
+	err = dva.TrackDelegation(now, origCoins, origCoins)
+	require.NoError(t, err)
+	err = dva.TrackUndelegation(origCoins)
+	require.NoError(t, err)
 	require.Nil(t, dva.DelegatedFree)
 	require.Equal(t, emptyCoins, dva.DelegatedVesting)
 
 	// require the ability to undelegate all vested coins
 	dva, err = types.NewDelayedVestingAccount(bacc, origCoins, endTime.Unix())
 	require.NoError(t, err)
-	dva.TrackDelegation(endTime, origCoins, origCoins)
-	dva.TrackUndelegation(origCoins)
+	err = dva.TrackDelegation(endTime, origCoins, origCoins)
+	require.NoError(t, err)
+	err = dva.TrackUndelegation(origCoins)
+	require.NoError(t, err)
 	require.Equal(t, emptyCoins, dva.DelegatedFree)
 	require.Nil(t, dva.DelegatedVesting)
 
 	// require no modifications when the undelegation amount is zero
 	dva, err = types.NewDelayedVestingAccount(bacc, origCoins, endTime.Unix())
 	require.NoError(t, err)
-	require.Panics(t, func() {
-		dva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(stakeDenom, 0)})
-	})
+	err = dva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(stakeDenom, 0)})
+	require.Error(t, err)
 	require.Nil(t, dva.DelegatedFree)
 	require.Nil(t, dva.DelegatedVesting)
 
 	// vest 50% and delegate to two validators
 	dva, err = types.NewDelayedVestingAccount(bacc, origCoins, endTime.Unix())
 	require.NoError(t, err)
-	dva.TrackDelegation(now.Add(12*time.Hour), origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
-	dva.TrackDelegation(now.Add(12*time.Hour), origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+	err = dva.TrackDelegation(now.Add(12*time.Hour), origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+	require.NoError(t, err)
+	err = dva.TrackDelegation(now.Add(12*time.Hour), origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+	require.NoError(t, err)
 
 	// undelegate from one validator that got slashed 50%
-	dva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(stakeDenom, 25)})
+	err = dva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(stakeDenom, 25)})
+	require.NoError(t, err)
 
 	require.Nil(t, dva.DelegatedFree)
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 75)}, dva.DelegatedVesting)
 
 	// undelegate from the other validator that did not get slashed
-	dva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+	err = dva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+	require.NoError(t, err)
 	require.Nil(t, dva.DelegatedFree)
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 25)}, dva.DelegatedVesting)
 }
@@ -563,7 +581,8 @@ func TestTrackDelegationPeriodicVestingAcc(t *testing.T) {
 	// delegate half of vesting coins
 	pva, err = types.NewPeriodicVestingAccount(bacc, origCoins, now.Unix(), periods)
 	require.NoError(t, err)
-	pva.TrackDelegation(now, origCoins, periods[0].Amount)
+	err = pva.TrackDelegation(now, origCoins, periods[0].Amount)
+	require.NoError(t, err)
 	// require that all delegated coins are delegated vesting
 	require.Equal(t, pva.DelegatedVesting, periods[0].Amount)
 	require.Nil(t, pva.DelegatedFree)
@@ -571,7 +590,8 @@ func TestTrackDelegationPeriodicVestingAcc(t *testing.T) {
 	// delegate 75% of coins, split between vested and vesting
 	pva, err = types.NewPeriodicVestingAccount(bacc, origCoins, now.Unix(), periods)
 	require.NoError(t, err)
-	pva.TrackDelegation(now.Add(12*time.Hour), origCoins, periods[0].Amount.Add(periods[1].Amount...))
+	err = pva.TrackDelegation(now.Add(12*time.Hour), origCoins, periods[0].Amount.Add(periods[1].Amount...))
+	require.NoError(t, err)
 	// require that the maximum possible amount of vesting coins are chosen for delegation.
 	require.Equal(t, pva.DelegatedFree, periods[1].Amount)
 	require.Equal(t, pva.DelegatedVesting, periods[0].Amount)
@@ -579,20 +599,21 @@ func TestTrackDelegationPeriodicVestingAcc(t *testing.T) {
 	// require the ability to delegate all vesting coins (50%) and all vested coins (50%)
 	pva, err = types.NewPeriodicVestingAccount(bacc, origCoins, now.Unix(), periods)
 	require.NoError(t, err)
-	pva.TrackDelegation(now.Add(12*time.Hour), origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+	err = pva.TrackDelegation(now.Add(12*time.Hour), origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+	require.NoError(t, err)
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)}, pva.DelegatedVesting)
 	require.Nil(t, pva.DelegatedFree)
 
-	pva.TrackDelegation(now.Add(12*time.Hour), origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+	err = pva.TrackDelegation(now.Add(12*time.Hour), origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+	require.NoError(t, err)
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)}, pva.DelegatedVesting)
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)}, pva.DelegatedFree)
 
 	// require no modifications when delegation amount is zero or not enough funds
 	pva, err = types.NewPeriodicVestingAccount(bacc, origCoins, now.Unix(), periods)
 	require.NoError(t, err)
-	require.Panics(t, func() {
-		pva.TrackDelegation(endTime, origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 1000000)})
-	})
+	err = pva.TrackDelegation(endTime, origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 1000000)})
+	require.Error(t, err)
 	require.Nil(t, pva.DelegatedVesting)
 	require.Nil(t, pva.DelegatedFree)
 }
@@ -611,49 +632,58 @@ func TestTrackUndelegationPeriodicVestingAcc(t *testing.T) {
 	// require the ability to undelegate all vesting coins at the beginning of vesting
 	pva, err := types.NewPeriodicVestingAccount(bacc, origCoins, now.Unix(), periods)
 	require.NoError(t, err)
-	pva.TrackDelegation(now, origCoins, origCoins)
-	pva.TrackUndelegation(origCoins)
+	err = pva.TrackDelegation(now, origCoins, origCoins)
+	require.NoError(t, err)
+	err = pva.TrackUndelegation(origCoins)
+	require.NoError(t, err)
 	require.Nil(t, pva.DelegatedFree)
 	require.Equal(t, emptyCoins, pva.DelegatedVesting)
 
 	// require the ability to undelegate all vested coins at the end of vesting
 	pva, err = types.NewPeriodicVestingAccount(bacc, origCoins, now.Unix(), periods)
 	require.NoError(t, err)
-	pva.TrackDelegation(endTime, origCoins, origCoins)
-	pva.TrackUndelegation(origCoins)
+	err = pva.TrackDelegation(endTime, origCoins, origCoins)
+	require.NoError(t, err)
+	err = pva.TrackUndelegation(origCoins)
+	require.NoError(t, err)
 	require.Equal(t, emptyCoins, pva.DelegatedFree)
 	require.Nil(t, pva.DelegatedVesting)
 
 	// require the ability to undelegate half of coins
 	pva, err = types.NewPeriodicVestingAccount(bacc, origCoins, now.Unix(), periods)
 	require.NoError(t, err)
-	pva.TrackDelegation(endTime, origCoins, periods[0].Amount)
-	pva.TrackUndelegation(periods[0].Amount)
+	err = pva.TrackDelegation(endTime, origCoins, periods[0].Amount)
+	require.NoError(t, err)
+	err = pva.TrackUndelegation(periods[0].Amount)
+	require.NoError(t, err)
 	require.Equal(t, emptyCoins, pva.DelegatedFree)
 	require.Nil(t, pva.DelegatedVesting)
 
 	// require no modifications when the undelegation amount is zero
 	pva, err = types.NewPeriodicVestingAccount(bacc, origCoins, now.Unix(), periods)
 	require.NoError(t, err)
-	require.Panics(t, func() {
-		pva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(stakeDenom, 0)})
-	})
+	err = pva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(stakeDenom, 0)})
+	require.Error(t, err)
 	require.Nil(t, pva.DelegatedFree)
 	require.Nil(t, pva.DelegatedVesting)
 
 	// vest 50% and delegate to two validators
 	pva, err = types.NewPeriodicVestingAccount(bacc, origCoins, now.Unix(), periods)
 	require.NoError(t, err)
-	pva.TrackDelegation(now.Add(12*time.Hour), origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
-	pva.TrackDelegation(now.Add(12*time.Hour), origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+	err = pva.TrackDelegation(now.Add(12*time.Hour), origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+	require.NoError(t, err)
+	err = pva.TrackDelegation(now.Add(12*time.Hour), origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+	require.NoError(t, err)
 
 	// undelegate from one validator that got slashed 50%
-	pva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(stakeDenom, 25)})
+	err = pva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(stakeDenom, 25)})
+	require.NoError(t, err)
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 25)}, pva.DelegatedFree)
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)}, pva.DelegatedVesting)
 
 	// undelegate from the other validator that did not get slashed
-	pva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+	err = pva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+	require.NoError(t, err)
 	require.Equal(t, emptyCoins, pva.DelegatedFree)
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 25)}, pva.DelegatedVesting)
 }
@@ -712,7 +742,8 @@ func TestSpendableCoinsPermLockedVestingAcc(t *testing.T) {
 	// delegate some locked coins
 	// require that locked is reduced
 	delegatedAmount := sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 50))
-	plva.TrackDelegation(now.Add(12*time.Hour), origCoins, delegatedAmount)
+	err = plva.TrackDelegation(now.Add(12*time.Hour), origCoins, delegatedAmount)
+	require.NoError(t, err)
 	lockedCoins = plva.LockedCoins(now.Add(12 * time.Hour))
 	require.True(t, lockedCoins.Equal(origCoins.Sub(delegatedAmount...)))
 }
@@ -726,23 +757,24 @@ func TestTrackDelegationPermLockedVestingAcc(t *testing.T) {
 	// require the ability to delegate all vesting coins
 	plva, err := types.NewPermanentLockedAccount(bacc, origCoins)
 	require.NoError(t, err)
-	plva.TrackDelegation(now, origCoins, origCoins)
+	err = plva.TrackDelegation(now, origCoins, origCoins)
+	require.NoError(t, err)
 	require.Equal(t, origCoins, plva.DelegatedVesting)
 	require.Nil(t, plva.DelegatedFree)
 
 	// require the ability to delegate all vested coins at endTime
 	plva, err = types.NewPermanentLockedAccount(bacc, origCoins)
 	require.NoError(t, err)
-	plva.TrackDelegation(endTime, origCoins, origCoins)
+	err = plva.TrackDelegation(endTime, origCoins, origCoins)
+	require.NoError(t, err)
 	require.Equal(t, origCoins, plva.DelegatedVesting)
 	require.Nil(t, plva.DelegatedFree)
 
 	// require no modifications when delegation amount is zero or not enough funds
 	plva, err = types.NewPermanentLockedAccount(bacc, origCoins)
 	require.NoError(t, err)
-	require.Panics(t, func() {
-		plva.TrackDelegation(endTime, origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 1000000)})
-	})
+	err = plva.TrackDelegation(endTime, origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 1000000)})
+	require.Error(t, err)
 	require.Nil(t, plva.DelegatedVesting)
 	require.Nil(t, plva.DelegatedFree)
 }
@@ -756,42 +788,49 @@ func TestTrackUndelegationPermLockedVestingAcc(t *testing.T) {
 	// require the ability to undelegate all vesting coins
 	plva, err := types.NewPermanentLockedAccount(bacc, origCoins)
 	require.NoError(t, err)
-	plva.TrackDelegation(now, origCoins, origCoins)
-	plva.TrackUndelegation(origCoins)
+	err = plva.TrackDelegation(now, origCoins, origCoins)
+	require.NoError(t, err)
+	err = plva.TrackUndelegation(origCoins)
+	require.NoError(t, err)
 	require.Nil(t, plva.DelegatedFree)
 	require.Equal(t, emptyCoins, plva.DelegatedVesting)
 
 	// require the ability to undelegate all vesting coins at endTime
 	plva, err = types.NewPermanentLockedAccount(bacc, origCoins)
 	require.NoError(t, err)
-	plva.TrackDelegation(endTime, origCoins, origCoins)
-	plva.TrackUndelegation(origCoins)
+	err = plva.TrackDelegation(endTime, origCoins, origCoins)
+	require.NoError(t, err)
+	err = plva.TrackUndelegation(origCoins)
+	require.NoError(t, err)
 	require.Nil(t, plva.DelegatedFree)
 	require.Equal(t, emptyCoins, plva.DelegatedVesting)
 
 	// require no modifications when the undelegation amount is zero
 	plva, err = types.NewPermanentLockedAccount(bacc, origCoins)
 	require.NoError(t, err)
-	require.Panics(t, func() {
-		plva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(stakeDenom, 0)})
-	})
+	err = plva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(stakeDenom, 0)})
+	require.Error(t, err)
 	require.Nil(t, plva.DelegatedFree)
 	require.Nil(t, plva.DelegatedVesting)
 
 	// delegate to two validators
 	plva, err = types.NewPermanentLockedAccount(bacc, origCoins)
 	require.NoError(t, err)
-	plva.TrackDelegation(now, origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
-	plva.TrackDelegation(now, origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+	err = plva.TrackDelegation(now, origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+	require.NoError(t, err)
+	err = plva.TrackDelegation(now, origCoins, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+	require.NoError(t, err)
 
 	// undelegate from one validator that got slashed 50%
-	plva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(stakeDenom, 25)})
+	err = plva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(stakeDenom, 25)})
+	require.NoError(t, err)
 
 	require.Nil(t, plva.DelegatedFree)
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 75)}, plva.DelegatedVesting)
 
 	// undelegate from the other validator that did not get slashed
-	plva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+	err = plva.TrackUndelegation(sdk.Coins{sdk.NewInt64Coin(stakeDenom, 50)})
+	require.NoError(t, err)
 	require.Nil(t, plva.DelegatedFree)
 	require.Equal(t, sdk.Coins{sdk.NewInt64Coin(stakeDenom, 25)}, plva.DelegatedVesting)
 }

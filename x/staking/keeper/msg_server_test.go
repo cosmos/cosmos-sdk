@@ -695,7 +695,7 @@ func (s *KeeperTestSuite) TestMsgBeginRedelegate() {
 				require.NoError(err)
 				events := ctx.EventManager().Events()
 				delegator, found := events.GetAttributes("delegator")
-				s.Require().Equal(delegator, tc.input.DelegatorAddress)
+				s.Require().Equal(delegator[0].Value, tc.input.DelegatorAddress)
 				s.Require().Equal(true, found)
 			}
 		})

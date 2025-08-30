@@ -712,8 +712,8 @@ func (app *BaseApp) deliverTx(tx []byte) *abci.ExecTxResult {
 	}
 
 	resp = &abci.ExecTxResult{
-		GasWanted: int64(gInfo.GasWanted),
-		GasUsed:   int64(gInfo.GasUsed),
+		GasWanted: safeInt64FromUint64(gInfo.GasWanted),
+		GasUsed:   safeInt64FromUint64(gInfo.GasUsed),
 		Log:       result.Log,
 		Data:      result.Data,
 		Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),

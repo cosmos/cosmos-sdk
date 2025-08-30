@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	abci_server "github.com/cometbft/cometbft/v2/abci/server"
+	abci_server "github.com/cometbft/cometbft/abci/server"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
@@ -237,7 +237,7 @@ func TestInitNodeValidatorFiles(t *testing.T) {
 	cfg, err := genutiltest.CreateDefaultCometConfig(home)
 	require.NoError(t, err)
 
-	nodeID, valPubKey, err := genutil.InitializeNodeValidatorFilesWithKeyType(cfg, "ed25519")
+	nodeID, valPubKey, err := genutil.InitializeNodeValidatorFiles(cfg)
 	require.NoError(t, err)
 
 	require.NotEqual(t, "", nodeID)

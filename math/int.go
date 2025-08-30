@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"math/big"
 	"math/bits"
 	"strings"
@@ -83,6 +84,15 @@ func unmarshalText(i *big.Int, text string) error {
 	}
 
 	return nil
+}
+
+// SafeInt64FromUint64 converts uint64 to int64 with overflow checking.
+// If the value is too large to fit in int64, it returns math.MaxInt64.
+func SafeInt64FromUint64(val uint64) int64 {
+	if val > math.MaxInt64 {
+		return math.MaxInt64
+	}
+	return int64(val)
 }
 
 var _ customProtobufType = (*Int)(nil)

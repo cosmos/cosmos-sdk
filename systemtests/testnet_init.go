@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cometbft/cometbft/v2/p2p"
+	"github.com/cometbft/cometbft/p2p"
 	"github.com/creachadair/tomledit"
 	"github.com/creachadair/tomledit/parser"
 )

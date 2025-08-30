@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	rpchttp "github.com/cometbft/cometbft/v2/rpc/client/http"
-	coretypes "github.com/cometbft/cometbft/v2/rpc/core/types"
-	tmtypes "github.com/cometbft/cometbft/v2/types"
+	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -119,7 +119,7 @@ $ %[1]s tx [flags] | %[1]s q wait-tx
 				return err
 			}
 
-			c, err := rpchttp.New(clientCtx.NodeURI)
+			c, err := rpchttp.New(clientCtx.NodeURI, "/websocket")
 			if err != nil {
 				return err
 			}

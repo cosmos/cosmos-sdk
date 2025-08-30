@@ -19,9 +19,9 @@ func safeInt64FromUint64(val uint64) int64 {
 
 // ResponseCheckTxWithEvents returns an ABCI ResponseCheckTx object with fields filled in
 // from the given error, gas values and events.
-func ResponseCheckTxWithEvents(err error, gw, gu uint64, events []abci.Event, debug bool) *abci.CheckTxResponse {
+func ResponseCheckTxWithEvents(err error, gw, gu uint64, events []abci.Event, debug bool) *abci.ResponseCheckTx {
 	space, code, log := errorsmod.ABCIInfo(err, debug)
-	return &abci.CheckTxResponse{
+	return &abci.ResponseCheckTx{
 		Codespace: space,
 		Code:      code,
 		Log:       log,
@@ -47,9 +47,9 @@ func ResponseExecTxResultWithEvents(err error, gw, gu uint64, events []abci.Even
 
 // QueryResult returns a ResponseQuery from an error. It will try to parse ABCI
 // info from the error.
-func QueryResult(err error, debug bool) *abci.QueryResponse {
+func QueryResult(err error, debug bool) *abci.ResponseQuery {
 	space, code, log := errorsmod.ABCIInfo(err, debug)
-	return &abci.QueryResponse{
+	return &abci.ResponseQuery{
 		Codespace: space,
 		Code:      code,
 		Log:       log,

@@ -2591,7 +2591,7 @@ func TestABCI_CheckTx_WithGasOverflow(t *testing.T) {
 	// This indirectly tests the safe conversion logic
 
 	// Test that we can create a response without panic
-	response := &abci.CheckTxResponse{
+	response := &abci.ResponseCheckTx{
 		GasWanted: int64(math.MaxInt64), // Should be capped at MaxInt64
 		GasUsed:   int64(math.MaxInt64), // Should be capped at MaxInt64
 	}
@@ -2603,7 +2603,7 @@ func TestABCI_CheckTx_WithGasOverflow(t *testing.T) {
 	normalGasWanted := uint64(1000)
 	normalGasUsed := uint64(500)
 
-	normalResponse := &abci.CheckTxResponse{
+	normalResponse := &abci.ResponseCheckTx{
 		GasWanted: int64(normalGasWanted),
 		GasUsed:   int64(normalGasUsed),
 	}

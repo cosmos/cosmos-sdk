@@ -7,7 +7,7 @@
 * 10/14/2022:
     * Add `ListenCommit`, flatten the state writes in a block to a single batch.
     * Remove listeners from cache stores, should only listen to `rootmulti.Store`.
-    * Remove `HaltAppOnDeliveryError()`, the errors are propagated by default, the implementations should return nil if they don't want to propagate errors.
+    * Remove `HaltAppOnDeliveryError()`, the errors are propagated by default, the implementations should return nil if don't want to propogate errors.
 * 26/05/2023: Update with ABCI 2.0
 
 ## Status
@@ -20,7 +20,7 @@ This ADR defines a set of changes to enable listening to state changes of indivi
 
 ## Context
 
-Currently, KVStore data can be remotely accessed through [Queries](https://docs.cosmos.network/main/build/building-modules/messages-and-queries#queries)
+Currently, KVStore data can be remotely accessed through [Queries](https://github.com/cosmos/cosmos-sdk/blob/master/docs/building-modules/messages-and-queries.md#queries)
 which proceed either through Tendermint and the ABCI, or through the gRPC server.
 In addition to these request/response queries, it would be beneficial to have a means of listening to state changes as they occur in real time.
 
@@ -40,7 +40,7 @@ type MemoryListener struct {
 	stateCache []StoreKVPair
 }
 
-// NewMemoryListener creates a listener that accumulates the state writes in memory.
+// NewMemoryListener creates a listener that accumulate the state writes in memory.
 func NewMemoryListener() *MemoryListener {
 	return &MemoryListener{}
 }
@@ -114,7 +114,7 @@ func (s *Store) Delete(key []byte) {
 
 ### MultiStore interface updates
 
-We will update the `CommitMultiStore` interface to allow us to wrap a `MemoryListener` to a specific `KVStore`.
+We will update the `CommitMultiStore` interface to allow us to wrap a `Memorylistener` to a specific `KVStore`.
 Note that the `MemoryListener` will be attached internally by the concrete `rootmulti` implementation.
 
 ```go
@@ -224,9 +224,9 @@ so that the service can group the state changes with the ABCI requests.
 // ABCIListener is the interface that we're exposing as a streaming service.
 type ABCIListener interface {
 	// ListenFinalizeBlock updates the streaming service with the latest FinalizeBlock messages
-	ListenFinalizeBlock(ctx context.Context, req abci.FinalizeBlockRequest, res abci.FinalizeBlockResponse) error
-	// ListenCommit updates the streaming service with the latest Commit messages and state changes
-	ListenCommit(ctx context.Context, res abci.CommitResponse, changeSet []*StoreKVPair) error
+	ListenFinalizeBlock(ctx context.Context, req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) error
+	// ListenCommit updates the steaming service with the latest Commit messages and state changes
+	ListenCommit(ctx context.Context, res abci.ResponseCommit, changeSet []*StoreKVPair) error
 }
 ```
 
@@ -267,16 +267,16 @@ We will modify the `FinalizeBlock` and `Commit` methods to pass ABCI requests an
 to any streaming service hooks registered with the `BaseApp`.
 
 ```go
-func (app *BaseApp) FinalizeBlock(req abci.FinalizeBlockRequest) abci.FinalizeBlockResponse {
+func (app *BaseApp) FinalizeBlock(req abci.RequestFinalizeBlock) abci.ResponseFinalizeBlock {
 
-    var abciRes abci.FinalizeBlockResponse
+    var abciRes abci.ResponseFinalizeBlock
     defer func() {
         // call the streaming service hook with the FinalizeBlock messages
         for _, abciListener := range app.abciListeners {
             ctx := app.finalizeState.ctx
             blockHeight := ctx.BlockHeight()
             if app.abciListenersAsync {
-                go func(req abci.FinalizeBlockRequest, res abci.FinalizeBlockResponse) {
+                go func(req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) {
                     if err := app.abciListener.FinalizeBlock(blockHeight, req, res); err != nil {
                         app.logger.Error("FinalizeBlock listening hook failed", "height", blockHeight, "err", err)
                     }
@@ -299,11 +299,11 @@ func (app *BaseApp) FinalizeBlock(req abci.FinalizeBlockRequest) abci.FinalizeBl
 ```
 
 ```go
-func (app *BaseApp) Commit() abci.CommitResponse {
+func (app *BaseApp) Commit() abci.ResponseCommit {
 
     ...
 
-    res := abci.CommitResponse{
+    res := abci.ResponseCommit{
         Data:         commitID.Hash,
         RetainHeight: retainHeight,
     }
@@ -314,7 +314,7 @@ func (app *BaseApp) Commit() abci.CommitResponse {
         blockHeight := ctx.BlockHeight()
         changeSet := app.cms.PopStateCache()
         if app.abciListenersAsync {
-            go func(res abci.CommitResponse, changeSet []store.StoreKVPair) {
+            go func(res abci.ResponseCommit, changeSet []store.StoreKVPair) {
                 if err := app.abciListener.ListenCommit(ctx, res, changeSet); err != nil {
                     app.logger.Error("ListenCommit listening hook failed", "height", blockHeight, "err", err)
                 }
@@ -354,7 +354,7 @@ var Handshake = plugin.HandshakeConfig{
     MagicCookieValue: "ef78114d-7bdf-411c-868f-347c99a78345",
 }
 
-// ListenerPlugin is the base struct for all kinds of go-plugin implementations
+// ListenerPlugin is the base struc for all kinds of go-plugin implementations
 // It will be included in interfaces of different Plugins
 type ABCIListenerPlugin struct {
     // GRPCPlugin must still implement the Plugin interface
@@ -433,13 +433,13 @@ type GRPCClient struct {
     client ABCIListenerServiceClient
 }
 
-func (m *GRPCClient) ListenFinalizeBlock(goCtx context.Context, req abci.FinalizeBlockRequest, res abci.FinalizeBlockResponse) error {
+func (m *GRPCClient) ListenFinalizeBlock(goCtx context.Context, req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) error {
     ctx := sdk.UnwrapSDKContext(goCtx)
     _, err := m.client.ListenDeliverTx(ctx, &ListenDeliverTxRequest{BlockHeight: ctx.BlockHeight(), Req: req, Res: res})
     return err
 }
 
-func (m *GRPCClient) ListenCommit(goCtx context.Context, res abci.CommitResponse, changeSet []store.StoreKVPair) error {
+func (m *GRPCClient) ListenCommit(goCtx context.Context, res abci.ResponseCommit, changeSet []store.StoreKVPair) error {
     ctx := sdk.UnwrapSDKContext(goCtx)
     _, err := m.client.ListenCommit(ctx, &ListenCommitRequest{BlockHeight: ctx.BlockHeight(), Res: res, ChangeSet: changeSet})
     return err
@@ -471,11 +471,11 @@ And the pre-compiled Go plugin `Impl`(*this is only used for plugins that are wr
 // ABCIListener is the implementation of the baseapp.ABCIListener interface
 type ABCIListener struct{}
 
-func (m *ABCIListenerPlugin) ListenFinalizeBlock(ctx context.Context, req abci.FinalizeBlockRequest, res abci.FinalizeBlockResponse) error {
+func (m *ABCIListenerPlugin) ListenFinalizeBlock(ctx context.Context, req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) error {
     // send data to external system
 }
 
-func (m *ABCIListenerPlugin) ListenCommit(ctx context.Context, res abci.CommitResponse, changeSet []store.StoreKVPair) error {
+func (m *ABCIListenerPlugin) ListenCommit(ctx context.Context, res abci.ResponseCommit, changeSet []store.StoreKVPair) error {
     // send data to external system
 }
 
@@ -529,7 +529,7 @@ func NewStreamingPlugin(name string, logLevel string) (interface{}, error) {
 
 We propose a `RegisterStreamingPlugin` function for the App to register `NewStreamingPlugin`s with the App's BaseApp.
 Streaming plugins can be of `Any` type; therefore, the function takes in an interface vs a concrete type.
-For example, we could have plugins of `ABCIListener`, `WasmListener` or `IBCListener`. Note that `RegisterStreamingPlugin` function
+For example, we could have plugins of `ABCIListener`, `WasmListener` or `IBCListener`. Note that `RegisterStreamingPluing` function
 is helper function and not a requirement. Plugin registration can easily be moved from the App to the BaseApp directly.
 
 ```go
@@ -720,5 +720,5 @@ These changes will provide a means of subscribing to KVStore state changes in re
 
 ### Neutral
 
-* Introduces additional—but optional—complexity to configuring and running a cosmos application
+* Introduces additional- but optional- complexity to configuring and running a cosmos application
 * If an application developer opts to use these features to expose data, they need to be aware of the ramifications/risks of that data exposure as it pertains to the specifics of their application

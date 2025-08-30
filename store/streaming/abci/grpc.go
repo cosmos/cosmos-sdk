@@ -4,7 +4,7 @@ import (
 	"context"
 	"os"
 
-	abci "github.com/cometbft/cometbft/v2/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/hashicorp/go-plugin"
 
 	storetypes "cosmossdk.io/store/types"
@@ -22,7 +22,7 @@ type GRPCClient struct {
 // It panics if a types.Context was not properly attached.
 // When the node is configured to stop on listening errors,
 // it will terminate immediately and exit with a non-zero code.
-func (m *GRPCClient) ListenFinalizeBlock(goCtx context.Context, req abci.FinalizeBlockRequest, res abci.FinalizeBlockResponse) error {
+func (m *GRPCClient) ListenFinalizeBlock(goCtx context.Context, req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) error {
 	ctx := goCtx.(storetypes.Context)
 	sm := ctx.StreamingManager()
 	request := &ListenFinalizeBlockRequest{Req: &req, Res: &res}
@@ -39,7 +39,7 @@ func (m *GRPCClient) ListenFinalizeBlock(goCtx context.Context, req abci.Finaliz
 // It panics if a types.Context was not properly attached.
 // When the node is configured to stop on listening errors,
 // it will terminate immediately and exit with a non-zero code.
-func (m *GRPCClient) ListenCommit(goCtx context.Context, res abci.CommitResponse, changeSet []*storetypes.StoreKVPair) error {
+func (m *GRPCClient) ListenCommit(goCtx context.Context, res abci.ResponseCommit, changeSet []*storetypes.StoreKVPair) error {
 	ctx := goCtx.(storetypes.Context)
 	sm := ctx.StreamingManager()
 	request := &ListenCommitRequest{BlockHeight: ctx.BlockHeight(), Res: &res, ChangeSet: changeSet}

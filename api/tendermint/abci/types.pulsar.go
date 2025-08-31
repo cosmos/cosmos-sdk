@@ -33273,7 +33273,7 @@ type ResponseFinalizeBlock struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// set of block events emmitted as part of executing the block
+	// set of block events emitted as part of executing the block
 	Events []*Event `protobuf:"bytes,1,rep,name=events,proto3" json:"events,omitempty"`
 	// the result of executing each transaction including the events
 	// the particular transction emitted. This should match the order

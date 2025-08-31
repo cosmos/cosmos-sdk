@@ -354,7 +354,7 @@ var Handshake = plugin.HandshakeConfig{
     MagicCookieValue: "ef78114d-7bdf-411c-868f-347c99a78345",
 }
 
-// ListenerPlugin is the base struc for all kinds of go-plugin implementations
+// ListenerPlugin is the base struct for all kinds of go-plugin implementations
 // It will be included in interfaces of different Plugins
 type ABCIListenerPlugin struct {
     // GRPCPlugin must still implement the Plugin interface

@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
-	abci "github.com/cometbft/cometbft/v2/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 

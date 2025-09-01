@@ -7,8 +7,8 @@ import (
 	"io"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/v2/abci/types"
-	rpcclientmock "github.com/cometbft/cometbft/v2/rpc/client/mock"
+	abci "github.com/cometbft/cometbft/abci/types"
+	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 	"github.com/stretchr/testify/suite"
 
 	// without this import amino json encoding will fail when resolving any types
@@ -70,7 +70,7 @@ func (s *CLITestSuite) SetupSuite() {
 
 	ctxGen := func() client.Context {
 		bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-		c := clitestutil.NewMockCometRPC(abci.QueryResponse{
+		c := clitestutil.NewMockCometRPC(abci.ResponseQuery{
 			Value: bz,
 		})
 		return s.baseCtx.WithClient(c)
@@ -273,7 +273,7 @@ func (s *CLITestSuite) TestTxUpdateGroupAdmin() {
 			"correct data",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := clitestutil.NewMockCometRPC(abci.QueryResponse{
+				c := clitestutil.NewMockCometRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -293,7 +293,7 @@ func (s *CLITestSuite) TestTxUpdateGroupAdmin() {
 			"with amino-json",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := clitestutil.NewMockCometRPC(abci.QueryResponse{
+				c := clitestutil.NewMockCometRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)
@@ -314,7 +314,7 @@ func (s *CLITestSuite) TestTxUpdateGroupAdmin() {
 			"group id invalid",
 			func() client.Context {
 				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-				c := clitestutil.NewMockCometRPC(abci.QueryResponse{
+				c := clitestutil.NewMockCometRPC(abci.ResponseQuery{
 					Value: bz,
 				})
 				return s.baseCtx.WithClient(c)

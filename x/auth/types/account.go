@@ -8,7 +8,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/cometbft/cometbft/v2/crypto"
+	"github.com/cometbft/cometbft/crypto"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"

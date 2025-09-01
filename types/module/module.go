@@ -36,7 +36,7 @@ import (
 	"slices"
 	"sort"
 
-	abci "github.com/cometbft/cometbft/v2/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
@@ -479,7 +479,7 @@ func (m *Manager) RegisterServices(cfg Configurator) error {
 // InitGenesis performs init genesis functionality for modules. Exactly one
 // module must return a non-empty validator set update to correctly initialize
 // the chain.
-func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData map[string]json.RawMessage) (*abci.InitChainResponse, error) {
+func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData map[string]json.RawMessage) (*abci.ResponseInitChain, error) {
 	var validatorUpdates []abci.ValidatorUpdate
 	ctx.Logger().Info("initializing blockchain state from genesis.json")
 	for _, moduleName := range m.OrderInitGenesis {
@@ -494,12 +494,12 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 			// core API genesis
 			source, err := genesis.SourceFromRawJSON(genesisData[moduleName])
 			if err != nil {
-				return &abci.InitChainResponse{}, err
+				return &abci.ResponseInitChain{}, err
 			}
 
 			err = module.InitGenesis(ctx, source)
 			if err != nil {
-				return &abci.InitChainResponse{}, err
+				return &abci.ResponseInitChain{}, err
 			}
 		} else if module, ok := mod.(HasGenesis); ok {
 			ctx.Logger().Debug("running initialization for module", "module", moduleName)
@@ -512,7 +512,7 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 			// only one module will update the validator set
 			if len(moduleValUpdates) > 0 {
 				if len(validatorUpdates) > 0 {
-					return &abci.InitChainResponse{}, errors.New("validator InitGenesis updates already set by a previous module")
+					return &abci.ResponseInitChain{}, errors.New("validator InitGenesis updates already set by a previous module")
 				}
 				validatorUpdates = moduleValUpdates
 			}
@@ -521,10 +521,10 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 
 	// a chain must initialize with a non-empty validator set
 	if len(validatorUpdates) == 0 {
-		return &abci.InitChainResponse{}, fmt.Errorf("validator set is empty after InitGenesis, please ensure at least one validator is initialized with a delegation greater than or equal to the DefaultPowerReduction (%d)", sdk.DefaultPowerReduction)
+		return &abci.ResponseInitChain{}, fmt.Errorf("validator set is empty after InitGenesis, please ensure at least one validator is initialized with a delegation greater than or equal to the DefaultPowerReduction (%d)", sdk.DefaultPowerReduction)
 	}
 
-	return &abci.InitChainResponse{
+	return &abci.ResponseInitChain{
 		Validators: validatorUpdates,
 	}, nil
 }
@@ -813,7 +813,7 @@ func (m *Manager) EndBlock(ctx sdk.Context) (sdk.EndBlock, error) {
 				}
 
 				for _, updates := range moduleValUpdates {
-					validatorUpdates = append(validatorUpdates, abci.ValidatorUpdate{PubKeyBytes: updates.PubKeyBytes, PubKeyType: updates.PubKeyType, Power: updates.Power})
+					validatorUpdates = append(validatorUpdates, abci.ValidatorUpdate{PubKey: updates.PubKey, Power: updates.Power})
 				}
 			}
 		} else {

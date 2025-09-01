@@ -3,19 +3,19 @@ module cosmossdk.io/simapp
 go 1.24
 
 require (
-	cosmossdk.io/api v0.9.2
-	cosmossdk.io/client/v2 v2.0.0-beta.9
-	cosmossdk.io/core v0.11.3
+	cosmossdk.io/api v1.0.0-alpha.1
+	cosmossdk.io/client/v2 v2.10.0-beta.4
+	cosmossdk.io/core v1.1.0-alpha.2
 	cosmossdk.io/depinject v1.2.1
 	cosmossdk.io/log v1.6.1
 	cosmossdk.io/math v1.5.3
-	cosmossdk.io/store v1.1.2
+	cosmossdk.io/store v1.3.0-alpha.1
 	cosmossdk.io/tools/confix v0.1.2
-	cosmossdk.io/x/tx v0.14.0
+	cosmossdk.io/x/tx v1.2.0-alpha.1
 	github.com/cometbft/cometbft v0.38.18
 	github.com/cosmos/cosmos-db v1.1.3
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
-	github.com/cosmos/cosmos-sdk v0.53.4
+	github.com/cosmos/cosmos-sdk v0.54.0-alpha.0.0.20250611155041-9fa93c9afe32
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/spf13/cast v1.9.2
 	github.com/spf13/cobra v1.10.1
@@ -65,7 +65,9 @@ require (
 	github.com/cockroachdb/pebble v1.1.5 // indirect
 	github.com/cockroachdb/redact v1.1.6 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb // indirect
-	github.com/cometbft/cometbft-db v0.14.1 // indirect
+	github.com/cometbft/cometbft-db v1.0.4 // indirect
+	github.com/cometbft/cometbft/api v1.1.0-alpha.1.0.20250611063609-4e308d824f1f // indirect
+	github.com/cometbft/cometbft/v2 v2.0.0-alpha.1 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect

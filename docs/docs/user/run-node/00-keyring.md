@@ -25,7 +25,7 @@ private keys storage, and user sessions according to the user's password policie
 is a list of the most popular operating systems and their respective password managers:
 
 * macOS: [Keychain](https://support.apple.com/en-gb/guide/keychain-access/welcome/mac)
-* Windows: [Credentials Management API](https://docs.microsoft.com/en-us/windows/win32/secauthn/credentials-management)
+* Windows: [Credentials Management API](https://learn.microsoft.com/en-us/windows/win32/secauthn/credentials-management)
 * GNU/Linux:
     * [libsecret](https://gitlab.gnome.org/GNOME/libsecret)
     * [kwallet](https://api.kde.org/frameworks/kwallet/html/index.html)

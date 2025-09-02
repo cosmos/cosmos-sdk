@@ -123,7 +123,7 @@ func NewSimApp(
 				//
 				// authtypes.RandomGenesisAccountsFn(simulation.RandomGenesisAccounts),
 				//
-				// For providing a custom a base account type add it below.
+				// For providing a custom base account type add it below.
 				// By default the auth module uses authtypes.ProtoBaseAccount().
 				//
 				// func() sdk.AccountI { return authtypes.ProtoBaseAccount() },

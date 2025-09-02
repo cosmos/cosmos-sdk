@@ -426,4 +426,4 @@ curl -X POST \
 
 ## Using CosmJS (JavaScript & TypeScript)
 
-CosmJS aims to build client libraries in JavaScript that can be embedded in web applications. Please see [https://cosmos.github.io/cosmjs](https://cosmos.github.io/cosmjs) for more information. As of January 2021, CosmJS documentation is still a work in progress.
+CosmJS aims to build client libraries in JavaScript that can be embedded in web applications. Please see [https://github.com/cosmos/cosmjs](https://github.com/cosmos/cosmjs) for more information. As of January 2021, CosmJS documentation is still a work in progress.

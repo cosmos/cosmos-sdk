@@ -16,8 +16,7 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/tools/cosmovisor"
-
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
 type upgradeTestSuite struct {

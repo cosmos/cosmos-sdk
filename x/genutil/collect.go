@@ -10,7 +10,7 @@ import (
 	"sort"
 	"strings"
 
-	cfg "github.com/cometbft/cometbft/v2/config"
+	cfg "github.com/cometbft/cometbft/config"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

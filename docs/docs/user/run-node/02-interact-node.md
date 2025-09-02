@@ -244,7 +244,7 @@ func main() {
 
 ### CosmJS
 
-CosmJS documentation can be found at [https://cosmos.github.io/cosmjs](https://cosmos.github.io/cosmjs). As of January 2021, CosmJS documentation is still a work in progress.
+CosmJS documentation can be found at [https://github.com/cosmos/cosmjs](https://github.com/cosmos/cosmjs). As of January 2021, CosmJS documentation is still a work in progress.
 
 ## Using the REST Endpoints
 
@@ -286,4 +286,4 @@ Assuming the state at that block has not yet been pruned by the node, this query
 
 ### Cross-Origin Resource Sharing (CORS)
 
-[CORS policies](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) are not enabled by default to help with security. If you would like to use the rest-server in a public environment we recommend you provide a reverse proxy, this can be done with [nginx](https://www.nginx.com/). For testing and development purposes there is an `enabled-unsafe-cors` field inside [`app.toml`](../../user/run-node/01-run-node.md#configuring-the-node-using-apptoml-and-configtoml).
+[CORS policies](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS) are not enabled by default to help with security. If you would like to use the rest-server in a public environment we recommend you provide a reverse proxy, this can be done with [nginx](https://nginx.org/). For testing and development purposes there is an `enabled-unsafe-cors` field inside [`app.toml`](../../user/run-node/01-run-node.md#configuring-the-node-using-apptoml-and-configtoml).

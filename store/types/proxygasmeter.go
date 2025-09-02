@@ -52,7 +52,7 @@ func (pgm ProxyGasMeter) IsOutOfGas() bool {
 }
 
 func (pgm ProxyGasMeter) ConsumeGas(amount Gas, descriptor string) {
-	consumed, overflow := addUint64Overflow(pgm.GasMeter.GasConsumed(), amount)
+	consumed, overflow := addUint64Overflow(pgm.GasConsumed(), amount)
 	if overflow {
 		panic(ErrorGasOverflow{Descriptor: descriptor})
 	}

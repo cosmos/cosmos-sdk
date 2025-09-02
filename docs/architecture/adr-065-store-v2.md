@@ -21,7 +21,7 @@ shortcomings and flaws have been exposed in the state and storage primitives of
 the Cosmos SDK.
 
 In order to keep up with the evolving demands and needs of both clients and developers,
-a major overhaul to these primitives are necessary.
+a major overhaul to these primitives is necessary.
 
 ## Context
 
@@ -35,7 +35,7 @@ application state. This data structure is the base layer `KVStore`.
 In addition, the SDK provides abstractions on top of this Merkle data structure.
 Namely, a root multi-store (RMS) is a collection of each module's `KVStore`.
 Through the RMS, the application can serve queries and provide proofs to clients
-in addition to provide a module access to its own unique `KVStore` though the use
+in addition to providing a module access to its own unique `KVStore` through the use
 of `StoreKey`, which is an OCAP primitive.
 
 There are further layers of abstraction that sit between the RMS and the underlying
@@ -65,11 +65,11 @@ See the [Storage Discussion](https://github.com/cosmos/cosmos-sdk/discussions/13
 ## Alternatives
 
 There was a previous attempt to refactor the storage layer described in [ADR-040](./adr-040-storage-and-smt-state-commitments.md).
-However, this approach mainly stems on the short comings of IAVL and various performance
+However, this approach mainly stems from the shortcomings of IAVL and various performance
 issues around it. While there was a (partial) implementation of [ADR-040](./adr-040-storage-and-smt-state-commitments.md),
 it was never adopted for a variety of reasons, such as the reliance on using an
 SMT, which was more in a research phase, and some design choices that couldn't
-be fully agreed upon, such as the snap-shotting mechanism that would result in
+be fully agreed upon, such as the snapshotting mechanism that would result in
 massive state bloat.
 
 ## Decision
@@ -192,7 +192,7 @@ Since the SS layer is naturally a storage layer only, without any commitments
 to (key, value) pairs, it cannot provide Merkle proofs to clients during queries.
 
 Since the pruning strategy against the SC layer is configured by the operator,
-we can therefore have the RMS route the query SC layer if the version exists and
+we can therefore have the RMS route the query to the SC layer if the version exists and
 `prove: true`. Otherwise, the query will fall back to the SS layer without a proof.
 
 We could explore the idea of using state snapshots to rebuild an in-memory IAVL

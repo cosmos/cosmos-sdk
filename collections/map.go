@@ -223,6 +223,14 @@ func deleteDomain(s store.KVStore, start, end []byte) error {
 	return nil
 }
 
+// concatNew concatenates two byte slices, prefix and suffix, into a new byte slice and returns the result.
+func concatNew(prefix, suffix []byte) []byte {
+	b := make([]byte, len(prefix)+len(suffix))
+	copy(b, prefix)
+	copy(b[len(prefix):], suffix)
+	return b
+}
+
 // IterateRaw iterates over the collection. The iteration range is untyped, it uses raw
 // bytes. The resulting Iterator is typed.
 // A nil start iterates from the first key contained in the collection.
@@ -230,12 +238,12 @@ func deleteDomain(s store.KVStore, start, end []byte) error {
 // A nil start and a nil end iterates over every key contained in the collection.
 // TODO(tip): simplify after https://github.com/cosmos/cosmos-sdk/pull/14310 is merged
 func (m Map[K, V]) IterateRaw(ctx context.Context, start, end []byte, order Order) (Iterator[K, V], error) {
-	prefixedStart := append(m.prefix, start...)
+	prefixedStart := concatNew(m.prefix, start)
 	var prefixedEnd []byte
 	if end == nil {
 		prefixedEnd = nextBytesPrefixKey(m.prefix)
 	} else {
-		prefixedEnd = append(m.prefix, end...)
+		prefixedEnd = concatNew(m.prefix, end)
 	}
 
 	if bytes.Compare(prefixedStart, prefixedEnd) == 1 {

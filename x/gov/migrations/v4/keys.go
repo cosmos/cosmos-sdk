@@ -11,7 +11,7 @@ var (
 	// ParamsKey is the key of x/gov params
 	ParamsKey = []byte{0x30}
 
-	// - 0x04<proposalID_Bytes>: ProposalContents
+	// VotingPeriodProposalKeyPrefix - 0x04<proposalID_Bytes>: ProposalContents
 	VotingPeriodProposalKeyPrefix = []byte{0x04}
 )
 

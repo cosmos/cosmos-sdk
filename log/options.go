@@ -8,7 +8,7 @@ import (
 
 // defaultConfig has all the options disabled, except Color and TimeFormat
 var defaultConfig = Config{
-	Level:      zerolog.NoLevel,
+	Level:      zerolog.TraceLevel, // this is the default level that zerolog initializes new Logger's with
 	Filter:     nil,
 	OutputJSON: false,
 	Color:      true,
@@ -19,7 +19,16 @@ var defaultConfig = Config{
 
 // Config defines configuration for the logger.
 type Config struct {
-	Level      zerolog.Level
+	// Level is the default logging level.
+	Level zerolog.Level
+	// VerboseLevel is the logging level to use when verbose mode is enabled.
+	// If there is a filter enabled, it will be disabled when verbose mode is enabled
+	// and all log messages will be emitted at the VerboseLevel.
+	// If this is set to NoLevel, then no changes to the logging level or filter will be made
+	// when verbose mode is enabled.
+	VerboseLevel zerolog.Level
+	// Filter is the filter function to use that allows for filtering by key and level.
+	// When verbose mode is enabled, the filter will be disabled unless VerboseLevel is set to NoLevel.
 	Filter     FilterFunc
 	OutputJSON bool
 	Color      bool
@@ -45,6 +54,14 @@ func LevelOption(level zerolog.Level) Option {
 	}
 }
 
+// VerboseLevelOption sets the verbose level for the Logger.
+// When verbose mode is enabled, the logger will be switched to this level.
+func VerboseLevelOption(level zerolog.Level) Option {
+	return func(cfg *Config) {
+		cfg.VerboseLevel = level
+	}
+}
+
 // OutputJSONOption sets the output of the logger to JSON.
 // By default, the logger outputs to a human-readable format.
 func OutputJSONOption() Option {
@@ -53,7 +70,7 @@ func OutputJSONOption() Option {
 	}
 }
 
-// ColorOption add option to enable/disable coloring
+// ColorOption adds an option to enable/disable coloring
 // of the logs when console writer is in use
 func ColorOption(val bool) Option {
 	return func(cfg *Config) {
@@ -62,8 +79,8 @@ func ColorOption(val bool) Option {
 }
 
 // TimeFormatOption configures timestamp format of the logger
-// timestamps disabled if empty.
-// it is responsibility of the caller to provider correct values
+// Timestamps are disabled if empty.
+// It is the responsibility of the caller to provide correct values
 // Supported formats:
 //   - time.Layout
 //   - time.ANSIC
@@ -83,14 +100,14 @@ func TimeFormatOption(format string) Option {
 	}
 }
 
-// TraceOption add option to enable/disable print of stacktrace on error log
+// TraceOption adds an option to enable/disable print of stacktrace on error log
 func TraceOption(val bool) Option {
 	return func(cfg *Config) {
 		cfg.StackTrace = val
 	}
 }
 
-// HooksOption append hooks to the Logger hooks
+// HooksOption appends hooks to the Logger hooks
 func HooksOption(hooks ...zerolog.Hook) Option {
 	return func(cfg *Config) {
 		cfg.Hooks = append(cfg.Hooks, hooks...)

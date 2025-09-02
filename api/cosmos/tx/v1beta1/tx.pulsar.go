@@ -8461,7 +8461,7 @@ type SignDocDirectAux struct {
 	AccountNumber uint64 `protobuf:"varint,4,opt,name=account_number,json=accountNumber,proto3" json:"account_number,omitempty"`
 	// sequence is the sequence number of the signing account.
 	Sequence uint64 `protobuf:"varint,5,opt,name=sequence,proto3" json:"sequence,omitempty"`
-	// tips have been depreacted and should not be used
+	// tips have been deprecated and should not be used
 	//
 	// Deprecated: Do not use.
 	Tip *Tip `protobuf:"bytes,6,opt,name=tip,proto3" json:"tip,omitempty"`
@@ -8561,6 +8561,10 @@ type TxBody struct {
 	// Note, when set to true, the existing 'timeout_timestamp' value must
 	// be set and will be used to correspond to a timestamp in which the transaction is deemed
 	// valid.
+	//
+	// When true, the sequence value MUST be 0, and any transaction with unordered=true and a non-zero sequence value will
+	// be rejected.
+	// External services that make assumptions about sequence values may need to be updated because of this.
 	Unordered bool `protobuf:"varint,4,opt,name=unordered,proto3" json:"unordered,omitempty"`
 	// timeout_timestamp is the block time after which this transaction will not
 	// be processed by the chain.
@@ -8854,7 +8858,7 @@ func (*ModeInfo_Multi_) isModeInfo_Sum() {}
 
 // Fee includes the amount of coins paid in fees and the maximum
 // gas to be used by the transaction. The ratio yields an effective "gasprice",
-// which must be above some miminum to be accepted into the mempool.
+// which must be above some minimum to be accepted into the mempool.
 type Fee struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

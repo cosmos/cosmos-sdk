@@ -38,7 +38,7 @@ In order to improve the current situation, a new "app wiring" paradigm has been 
 involves:
 
 * declaration configuration of the modules in an app which can be serialized to JSON or YAML
-* a dependency-injection (DI) framework for instantiating apps from the that configuration
+* a dependency-injection (DI) framework for instantiating apps from the configuration
 
 ### Dependency Injection
 
@@ -250,8 +250,6 @@ defined here are described in [ADR 063: Core Module API](./adr-063-core-module-a
 
 ### Registration of Inter-Module Hooks
 
-### Registration of Inter-Module Hooks
-
 Some modules define a hooks interface (ex. `StakingHooks`) which allows one module to call back into another module
 when certain events happen.
 
@@ -303,16 +301,18 @@ Code generation requires that all providers and invokers and their parameters ar
 
 When we start creating semantically versioned SDK modules that are in standalone go modules, a state machine breaking
 change to a module should be handled as follows:
-- the semantic major version should be incremented, and
-- a new semantically versioned module config protobuf type should be created.
 
-For instance, if we have the SDK module for bank in the go module `cosmossdk.io/x/bank` with the module config type
+* the semantic major version should be incremented, and
+* a new semantically versioned module config protobuf type should be created.
+
+For instance, if we have the SDK module for bank in the go module `github.com/cosmos/cosmos-sdk/x/bank` with the module config type
 `cosmos.bank.module.v1.Module`, and we want to make a state machine breaking change to the module, we would:
-- create a new go module `cosmossdk.io/x/bank/v2`,
-- with the module config protobuf type `cosmos.bank.module.v2.Module`.
 
-This _does not_ mean that we need to increment the protobuf API version for bank. Both modules can support
-`cosmos.bank.v1`, but `cosmossdk.io/x/bank/v2` will be a separate go module with a separate module config type.
+* create a new go module `github.com/cosmos/cosmos-sdk/x/bank/v2`,
+* with the module config protobuf type `cosmos.bank.module.v2.Module`.
+
+This *does not* mean that we need to increment the protobuf API version for bank. Both modules can support
+`cosmos.bank.v1`, but `github.com/cosmos/cosmos-sdk/x/bank/v2` will be a separate go module with a separate module config type.
 
 This practice will eventually allow us to use appconfig to load new versions of a module via a configuration change.
 
@@ -320,7 +320,7 @@ Effectively, there should be a 1:1 correspondence between a semantically version
 versioned module config protobuf type, and major versioning bumps should occur whenever state machine breaking changes
 are made to a module.
 
-NOTE: SDK modules that are standalone go modules _should not_ adopt semantic versioning until the concerns described in
+NOTE: SDK modules that are standalone go modules *should not* adopt semantic versioning until the concerns described in
 [ADR 054: Module Semantic Versioning](./adr-054-semver-compatible-modules.md) are
 addressed. The short-term solution for this issue was left somewhat unresolved. However, the easiest tactic is
 likely to use a standalone API go module and follow the guidelines described in this comment: https://github.com/cosmos/cosmos-sdk/pull/11802#issuecomment-1406815181. For the time-being, it is recommended that

@@ -128,7 +128,7 @@ func (cms Store) Write() {
 	}
 }
 
-// Implements CacheWrapper.
+// CacheWrap implements CacheWrapper, returns the cache multi-store as a CacheWrap.
 func (cms Store) CacheWrap() types.CacheWrap {
 	return cms.CacheMultiStore().(types.CacheWrap)
 }
@@ -138,7 +138,8 @@ func (cms Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.Cac
 	return cms.CacheWrap()
 }
 
-// Implements MultiStore.
+// CacheMultiStore implements MultiStore, returns a new CacheMultiStore from the
+// underlying CacheMultiStore.
 func (cms Store) CacheMultiStore() types.CacheMultiStore {
 	return newCacheMultiStoreFromCMS(cms)
 }

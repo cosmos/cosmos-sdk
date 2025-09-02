@@ -53,14 +53,14 @@ func run(cfgPath string, args []string, options ...RunOption) error {
 	}
 
 	doUpgrade, err := launcher.Run(args, runCfg.StdIn, runCfg.StdOut, runCfg.StdErr)
-	// if RestartAfterUpgrade, we launch after a successful upgrade (given that condition launcher.Run returns nil)
+	// if RestartAfterUpgrade is enabled, we launch after a successful upgrade (given that the launcher.Run returns nil)
 	for cfg.RestartAfterUpgrade && err == nil && doUpgrade {
 		logger.Info("upgrade detected, relaunching", "app", cfg.Name)
 		doUpgrade, err = launcher.Run(args, runCfg.StdIn, runCfg.StdOut, runCfg.StdErr)
 	}
 
 	if doUpgrade && err == nil {
-		logger.Info("upgrade detected, DAEMON_RESTART_AFTER_UPGRADE is off. Verify new upgrade and start cosmovisor again.")
+		logger.Info("upgrade detected, DAEMON_RESTART_AFTER_UPGRADE is off. Please verify the new upgrade and start cosmovisor again.")
 	}
 
 	return err

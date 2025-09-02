@@ -29,14 +29,14 @@ type (
 		GetSigners() []AccAddress
 	}
 
-	// Fee defines an interface for an application application-defined concrete
+	// Fee defines an interface for an application-defined concrete
 	// transaction type to be able to set and return the transaction fee.
 	Fee interface {
 		GetGas() uint64
 		GetAmount() Coins
 	}
 
-	// Signature defines an interface for an application application-defined
+	// Signature defines an interface for an application-defined
 	// concrete transaction type to be able to set and return transaction signatures.
 	Signature interface {
 		GetPubKey() cryptotypes.PubKey
@@ -77,6 +77,8 @@ type (
 	TxWithTimeoutTimeStamp interface {
 		Tx
 
+		// GetTimeoutTimeStamp gets the timeout timestamp for the tx.
+		// IMPORTANT: when the uint value is needed here, you MUST use UnixNano.
 		GetTimeoutTimeStamp() time.Time
 	}
 

@@ -156,7 +156,7 @@ message MsgSend {
   string class_id = 1;
   string id       = 2;
   string sender   = 3;
-  string reveiver = 4;
+  string receiver = 4;
 }
 message MsgSendResponse {}
 ```
@@ -253,7 +253,7 @@ message QuerySupplyResponse {
   uint64 amount = 1;
 }
 
-// QueryNFTstRequest is the request type for the Query/NFTs RPC method
+// QueryNFTsRequest is the request type for the Query/NFTs RPC method
 message QueryNFTsRequest {
   string                                class_id   = 1;
   string                                owner      = 2;
@@ -315,7 +315,7 @@ No backward incompatibilities.
 
 ### Forward Compatibility
 
-This specification conforms to the ERC-721 smart contract specification for NFT identifiers. Note that ERC-721 defines uniqueness based on (contract address, uint256 tokenId), and we conform to this implicitly because a single module is currently aimed to track NFT identifiers. Note: use of the (mutable) data field to determine uniqueness is not safe.s
+This specification conforms to the ERC-721 smart contract specification for NFT identifiers. Note that ERC-721 defines uniqueness based on (contract address, uint256 tokenId), and we conform to this implicitly because a single module is currently aimed to track NFT identifiers. Note: use of the (mutable) data field to determine uniqueness is not safe.
 
 ### Positive
 

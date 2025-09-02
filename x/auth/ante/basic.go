@@ -192,7 +192,7 @@ type (
 	}
 )
 
-// TxTimeoutHeightDecorator defines an AnteHandler decorator that checks for a
+// NewTxTimeoutHeightDecorator defines an AnteHandler decorator that checks for a
 // tx height timeout.
 func NewTxTimeoutHeightDecorator() TxTimeoutHeightDecorator {
 	return TxTimeoutHeightDecorator{}

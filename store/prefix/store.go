@@ -36,9 +36,9 @@ func NewObjStore(parent types.ObjKVStore, prefix []byte) ObjStore {
 	)
 }
 
-// GStore is similar with cometbft/cometbft/libs/db/prefix_db
-// both gives access only to the limited subset of the store
-// for convinience or safety
+// GStore is similar to cometbft/cometbft/libs/db/prefix_db
+// both give access only to the limited subset of the store
+// for convenience or safety
 type GStore[V any] struct {
 	parent types.GKVStore[V]
 	prefix []byte
@@ -75,12 +75,12 @@ func (s GStore[V]) key(key []byte) (res []byte) {
 	return
 }
 
-// Implements Store
+// GetStoreType implements Store, returning the parent store's type
 func (s GStore[V]) GetStoreType() types.StoreType {
 	return s.parent.GetStoreType()
 }
 
-// Implements CacheWrap
+// CacheWrap implements CacheWrap, returning a new CacheWrap with the parent store as the underlying store
 func (s GStore[V]) CacheWrap() types.CacheWrap {
 	return cachekv.NewGStore(s, s.isZero, s.valueLen)
 }
@@ -93,48 +93,48 @@ func (s GStore[V]) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.
 	return s.CacheWrap()
 }
 
-// Implements KVStore
+// Get implements KVStore, calls Get on the parent store with the key prefixed with the prefix
 func (s GStore[V]) Get(key []byte) V {
 	res := s.parent.Get(s.key(key))
 	return res
 }
 
-// Implements KVStore
+// Has implements KVStore, calls Has on the parent store with the key prefixed with the prefix
 func (s GStore[V]) Has(key []byte) bool {
 	return s.parent.Has(s.key(key))
 }
 
-// Implements KVStore
+// Set implements KVStore, calls Set on the parent store with the key prefixed with the prefix
 func (s GStore[V]) Set(key []byte, value V) {
 	types.AssertValidKey(key)
 	types.AssertValidValueGeneric(value, s.isZero, s.valueLen)
 	s.parent.Set(s.key(key), value)
 }
 
-// Implements KVStore
+// Delete implements KVStore, calls Delete on the parent store with the key prefixed with the prefix
 func (s GStore[V]) Delete(key []byte) {
 	s.parent.Delete(s.key(key))
 }
 
-// Implements KVStore
-// Check https://github.com/cometbft/cometbft/blob/master/libs/db/prefix_db.go#L106
+// Iterator implements KVStore
+// Check https://github.com/cometbft/cometbft-db/blob/main/prefixdb_iterator.go#L106
 func (s GStore[V]) Iterator(start, end []byte) types.GIterator[V] {
-	newstart := cloneAppend(s.prefix, start)
+	newStart := cloneAppend(s.prefix, start)
 
-	var newend []byte
+	var newEnd []byte
 	if end == nil {
-		newend = cpIncr(s.prefix)
+		newEnd = cpIncr(s.prefix)
 	} else {
-		newend = cloneAppend(s.prefix, end)
+		newEnd = cloneAppend(s.prefix, end)
 	}
 
-	iter := s.parent.Iterator(newstart, newend)
+	iter := s.parent.Iterator(newStart, newEnd)
 
 	return newPrefixIterator(s.prefix, start, end, iter)
 }
 
 // ReverseIterator implements KVStore
-// Check https://github.com/cometbft/cometbft/blob/master/libs/db/prefix_db.go#L129
+// Check https://github.com/cometbft/cometbft-db/blob/main/prefixdb_iterator.go#L129
 func (s GStore[V]) ReverseIterator(start, end []byte) types.GIterator[V] {
 	newstart := cloneAppend(s.prefix, start)
 
@@ -170,17 +170,17 @@ func newPrefixIterator[V any](prefix, start, end []byte, parent types.GIterator[
 	}
 }
 
-// Implements Iterator
+// Domain implements Iterator, returning the start and end keys of the prefixIterator.
 func (pi *prefixIterator[V]) Domain() ([]byte, []byte) {
 	return pi.start, pi.end
 }
 
-// Implements Iterator
+// Valid implements Iterator, checking if the prefixIterator is valid and if the underlying iterator is valid.
 func (pi *prefixIterator[V]) Valid() bool {
 	return pi.valid && pi.iter.Valid()
 }
 
-// Implements Iterator
+// Next implements Iterator, moving the underlying iterator to the next key/value pair that starts with the prefix.
 func (pi *prefixIterator[V]) Next() {
 	if !pi.valid {
 		panic("prefixIterator invalid, cannot call Next()")
@@ -192,7 +192,7 @@ func (pi *prefixIterator[V]) Next() {
 	}
 }
 
-// Implements Iterator
+// Key implements Iterator, returning the stripped prefix key
 func (pi *prefixIterator[V]) Key() (key []byte) {
 	if !pi.valid {
 		panic("prefixIterator invalid, cannot call Key()")
@@ -213,7 +213,7 @@ func (pi *prefixIterator[V]) Value() V {
 	return pi.iter.Value()
 }
 
-// Implements Iterator
+// Close implements Iterator, closing the underlying iterator.
 func (pi *prefixIterator[V]) Close() error {
 	return pi.iter.Close()
 }
@@ -228,7 +228,7 @@ func (pi *prefixIterator[V]) Error() error {
 	return nil
 }
 
-// copied from github.com/cometbft/cometbft/libs/db/prefix_db.go
+// stripPrefix is copied from github.com/cometbft/cometbft/libs/db/prefix_db.go
 func stripPrefix(key, prefix []byte) []byte {
 	if len(key) < len(prefix) || !bytes.Equal(key[:len(prefix)], prefix) {
 		panic("should not happen")
@@ -237,7 +237,7 @@ func stripPrefix(key, prefix []byte) []byte {
 	return key[len(prefix):]
 }
 
-// wrapping types.PrefixEndBytes
+// cpIncr wraps the bytes in types.PrefixEndBytes
 func cpIncr(bz []byte) []byte {
 	return types.PrefixEndBytes(bz)
 }

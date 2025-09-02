@@ -192,7 +192,7 @@ func (s *argsTestSuite) TestConfigPaths() {
 }
 
 // Test validate
-// add more test in test validate
+// add more tests to test validate
 func (s *argsTestSuite) TestValidate() {
 	relPath := filepath.Join("testdata", "validate")
 	absPath, err := filepath.Abs(relPath)

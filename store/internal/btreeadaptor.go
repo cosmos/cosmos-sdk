@@ -22,7 +22,7 @@ func NewBTreeStore[V any](btree btree.BTree[V], isZero func(V) bool, valueLen fu
 	return &BTreeStore[V]{btree, isZero, valueLen}
 }
 
-// Hash Implements GKVStore.
+// Has Implements GKVStore.
 func (ts *BTreeStore[V]) Has(key []byte) bool {
 	return !ts.isZero(ts.Get(key))
 }

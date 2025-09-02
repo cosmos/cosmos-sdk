@@ -7,14 +7,14 @@ default implementation of `PrepareProposal` runs basic validity checks on each
 transaction.
 
 Note, `ProcessProposal` MUST be deterministic. Non-deterministic behaviors will cause apphash mismatches.
-This means if `ProcessProposal` panics or fails and we reject, all honest validator
+This means that if `ProcessProposal` panics or fails and we reject, all honest validator
 processes should reject (i.e., prevote nil). If so, CometBFT will start a new round with a new block proposal and the same cycle will happen with `PrepareProposal`
 and `ProcessProposal` for the new proposal.
 
 Here is the implementation of the default implementation:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/baseapp/abci_utils.go#L219-L226
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/baseapp/abci_utils.go#L219-L226
 ```
 
 Like `PrepareProposal`, this implementation is the default and can be modified by

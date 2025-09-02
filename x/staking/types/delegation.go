@@ -41,7 +41,7 @@ func MustUnmarshalDelegation(cdc codec.BinaryCodec, value []byte) Delegation {
 	return delegation
 }
 
-// return the delegation
+// UnmarshalDelegation unmarshals the delegation.
 func UnmarshalDelegation(cdc codec.BinaryCodec, value []byte) (delegation Delegation, err error) {
 	err = cdc.Unmarshal(value, &delegation)
 	return delegation, err
@@ -88,12 +88,12 @@ func (e UnbondingDelegationEntry) OnHold() bool {
 	return e.UnbondingOnHoldRefCount > 0
 }
 
-// return the unbonding delegation entry
+// MustMarshalUBDE marshals the unbonding delegation entry. Panics if fails.
 func MustMarshalUBDE(cdc codec.BinaryCodec, ubd UnbondingDelegationEntry) []byte {
 	return cdc.MustMarshal(&ubd)
 }
 
-// unmarshal a unbonding delegation entry from a store value
+// MustUnmarshalUBDE unmarshals a unbonding delegation entry from a store value. Panics if fails.
 func MustUnmarshalUBDE(cdc codec.BinaryCodec, value []byte) UnbondingDelegationEntry {
 	ubd, err := UnmarshalUBDE(cdc, value)
 	if err != nil {
@@ -103,7 +103,7 @@ func MustUnmarshalUBDE(cdc codec.BinaryCodec, value []byte) UnbondingDelegationE
 	return ubd
 }
 
-// unmarshal a unbonding delegation entry from a store value
+// UnmarshalUBDE unmarshals a unbonding delegation entry from a store value
 func UnmarshalUBDE(cdc codec.BinaryCodec, value []byte) (ubd UnbondingDelegationEntry, err error) {
 	err = cdc.Unmarshal(value, &ubd)
 	return ubd, err
@@ -163,12 +163,12 @@ func (ubd *UnbondingDelegation) RemoveEntry(i int64) {
 	ubd.Entries = slices.Delete(ubd.Entries, int(i), int(i+1))
 }
 
-// return the unbonding delegation
+// MustMarshalUBD marshals the unbonding delegation. Panics if fails.
 func MustMarshalUBD(cdc codec.BinaryCodec, ubd UnbondingDelegation) []byte {
 	return cdc.MustMarshal(&ubd)
 }
 
-// unmarshal a unbonding delegation from a store value
+// MustUnmarshalUBD unmarshals a unbonding delegation from a store value. Panics if fails.
 func MustUnmarshalUBD(cdc codec.BinaryCodec, value []byte) UnbondingDelegation {
 	ubd, err := UnmarshalUBD(cdc, value)
 	if err != nil {
@@ -178,7 +178,7 @@ func MustUnmarshalUBD(cdc codec.BinaryCodec, value []byte) UnbondingDelegation {
 	return ubd
 }
 
-// unmarshal a unbonding delegation from a store value
+// UnmarshalUBD unmarshals a unbonding delegation from a store value.
 func UnmarshalUBD(cdc codec.BinaryCodec, value []byte) (ubd UnbondingDelegation, err error) {
 	err = cdc.Unmarshal(value, &ubd)
 	return ubd, err

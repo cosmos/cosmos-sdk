@@ -15,7 +15,7 @@ var (
 	_ types.ObjKVStore = (*ObjStore)(nil)
 )
 
-// Store is a wrapper for a MemDB with Commiter implementation
+// GStore is a wrapper for a MemDB with Committer implementation
 type GStore[V any] struct {
 	internal.BTreeStore[V]
 }
@@ -57,8 +57,8 @@ func (*ObjStore) GetStoreType() types.StoreType {
 	return types.StoreTypeObject
 }
 
-// Implements CommitStore
 // Commit cleans up Store.
+// Implements CommitStore
 func (ts *GStore[V]) Commit() (id types.CommitID) {
 	ts.Clear()
 	return
@@ -72,7 +72,7 @@ func (ts *GStore[V]) GetPruning() pruningtypes.PruningOptions {
 	return pruningtypes.NewPruningOptions(pruningtypes.PruningUndefined)
 }
 
-// Implements CommitStore
+// LastCommitID implements CommitStore, returns empty CommitID.
 func (ts *GStore[V]) LastCommitID() types.CommitID {
 	return types.CommitID{}
 }

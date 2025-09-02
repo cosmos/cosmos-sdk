@@ -56,7 +56,7 @@ type GStore[V any] struct {
 	valueLen func(V) int
 }
 
-// NewStore creates a new Store object
+// NewGStore creates a new Store object
 func NewGStore[V any](parent types.GKVStore[V], isZero func(V) bool, valueLen func(V) int) *GStore[V] {
 	return &GStore[V]{
 		cache:         make(map[string]*cValue[V]),
@@ -139,7 +139,7 @@ func (store *GStore[V]) resetCaches() {
 	store.sortedCache = btree.NewBTree[V]()
 }
 
-// Implements Cachetypes.KVStore.
+// Write implements Cachetypes.KVStore.
 func (store *GStore[V]) Write() {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
@@ -319,7 +319,7 @@ const (
 
 const minSortSize = 1024
 
-// Constructs a slice of dirty items, to use w/ memIterator.
+// dirtyItems constructs a slice of dirty items, to use w/ memIterator.
 func (store *GStore[V]) dirtyItems(start, end []byte) {
 	startStr, endStr := conv.UnsafeBytesToStr(start), conv.UnsafeBytesToStr(end)
 	if end != nil && startStr > endStr {
@@ -330,7 +330,7 @@ func (store *GStore[V]) dirtyItems(start, end []byte) {
 	n := len(store.unsortedCache)
 	unsorted := make([]*kvPair[V], 0)
 	// If the unsortedCache is too big, its costs too much to determine
-	// whats in the subset we are concerned about.
+	// what's in the subset we are concerned about.
 	// If you are interleaving iterator calls with writes, this can easily become an
 	// O(N^2) overhead.
 	// Even without that, too many range checks eventually becomes more expensive
@@ -421,7 +421,7 @@ func (store *GStore[V]) clearUnsortedCacheSubset(unsorted []*kvPair[V], sortStat
 //----------------------------------------
 // etc
 
-// Only entrypoint to mutate store.cache.
+// setCacheValue is the only entrypoint to mutate store.cache.
 // A `nil` value means a deletion.
 func (store *GStore[V]) setCacheValue(key []byte, value V, dirty bool) {
 	keyStr := conv.UnsafeBytesToStr(key)

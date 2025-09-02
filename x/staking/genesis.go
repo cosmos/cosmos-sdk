@@ -42,7 +42,7 @@ func WriteValidators(ctx sdk.Context, keeper *keeper.Keeper) (vals []cmttypes.Ge
 }
 
 // ValidateGenesis validates the provided staking genesis state to ensure the
-// expected invariants holds. (i.e. params in correct bounds, no duplicate validators)
+// expected invariants hold. (i.e. params in correct bounds, no duplicate validators)
 func ValidateGenesis(data *types.GenesisState) error {
 	if err := validateGenesisStateValidators(data.Validators); err != nil {
 		return err

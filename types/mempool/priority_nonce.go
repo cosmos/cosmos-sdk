@@ -2,7 +2,6 @@ package mempool
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"math"
 	"sync"
@@ -27,8 +26,8 @@ type (
 		// OnRead is a callback to be called when a tx is read from the mempool.
 		OnRead func(tx sdk.Tx)
 
-		// TxReplacement is a callback to be called when duplicated transaction nonce
-		// detected during mempool insert. An application can define a transaction
+		// TxReplacement is a callback to be called when a duplicated transaction nonce
+		// is detected during mempool insert. An application can define a transaction
 		// replacement rule based on tx priority or certain transaction fields.
 		TxReplacement func(op, np C, oTx, nTx sdk.Tx) bool
 
@@ -41,7 +40,7 @@ type (
 		// - if MaxTx < 0, `Insert` is a no-op.
 		MaxTx int
 
-		// SignerExtractor is an implementation which retrieves signer data from a sdk.Tx
+		// SignerExtractor is an implementation which retrieves signer data from an sdk.Tx
 		SignerExtractor SignerExtractionAdapter
 	}
 
@@ -222,15 +221,9 @@ func (mp *PriorityNonceMempool[C]) Insert(ctx context.Context, tx sdk.Tx) error 
 	sig := sigs[0]
 	sender := sig.Signer.String()
 	priority := mp.cfg.TxPriority.GetTxPriority(ctx, tx)
-	nonce := sig.Sequence
-
-	// if it's an unordered tx, we use the timeout timestamp instead of the nonce
-	if unordered, ok := tx.(sdk.TxWithUnordered); ok && unordered.GetUnordered() {
-		timestamp := unordered.GetTimeoutTimeStamp().Unix()
-		if timestamp < 0 {
-			return errors.New("invalid timestamp value")
-		}
-		nonce = uint64(timestamp)
+	nonce, err := ChooseNonce(sig.Sequence, tx)
+	if err != nil {
+		return err
 	}
 
 	key := txMeta[C]{nonce: nonce, priority: priority, sender: sender}
@@ -353,7 +346,7 @@ func (i *PriorityNonceIterator[C]) Tx() sdk.Tx {
 }
 
 // Select returns a set of transactions from the mempool, ordered by priority
-// and sender-nonce in O(n) time. The passed in list of transactions are ignored.
+// and sender-nonce in O(n) time. The passed in list of transactions is ignored.
 // This is a readonly operation, the mempool is not modified.
 //
 // The maxBytes parameter defines the maximum number of bytes of transactions to
@@ -467,15 +460,9 @@ func (mp *PriorityNonceMempool[C]) Remove(tx sdk.Tx) error {
 
 	sig := sigs[0]
 	sender := sig.Signer.String()
-	nonce := sig.Sequence
-
-	// if it's an unordered tx, we use the timeout timestamp instead of the nonce
-	if unordered, ok := tx.(sdk.TxWithUnordered); ok && unordered.GetUnordered() {
-		timestamp := unordered.GetTimeoutTimeStamp().Unix()
-		if timestamp < 0 {
-			return errors.New("invalid timestamp value")
-		}
-		nonce = uint64(timestamp)
+	nonce, err := ChooseNonce(sig.Sequence, tx)
+	if err != nil {
+		return err
 	}
 
 	scoreKey := txMeta[C]{nonce: nonce, sender: sender}

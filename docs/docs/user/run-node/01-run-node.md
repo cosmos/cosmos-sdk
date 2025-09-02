@@ -50,7 +50,7 @@ The `~/.simapp` folder has the following structure:
 
 ## Updating Some Default Settings
 
-If you want to change any field values in configuration files (for ex: genesis.json) you can use `jq` ([installation](https://stedolan.github.io/jq/download/) & [docs](https://stedolan.github.io/jq/manual/#Assignment)) & `sed` commands to do that. Few examples are listed here.
+If you want to change any field values in configuration files (for ex: genesis.json) you can use `jq` ([installation](https://stedolan.github.io/jq/download/) & [docs](https://stedolan.github.io/jq/manual/#Assignment)) & `sed` commands to do that. A few examples are listed here.
 
 ```bash
 # to change the chain-id
@@ -68,7 +68,7 @@ jq '.app_state.mint.minter.inflation = "0.300000000000000000"' genesis.json > te
 
 ### Client Interaction
 
-When instantiating a node, GRPC and REST are defaulted to localhost to avoid unknown exposure of your node to the public. It is recommended to not expose these endpoints without a proxy that can handle load balancing or authentication is set up between your node and the public. 
+When instantiating a node, GRPC and REST are defaulted to localhost to avoid unknown exposure of your node to the public. It is recommended not to expose these endpoints without a proxy that can handle load balancing or authentication set up between your node and the public. 
 
 :::tip
 A commonly used tool for this is [nginx](https://nginx.org).
@@ -155,7 +155,7 @@ You should see blocks come in.
 
 The previous command allows you to run a single node. This is enough for the next section on interacting with this node, but you may wish to run multiple nodes at the same time, and see how consensus happens between them.
 
-The naive way would be to run the same commands again in separate terminal windows. This is possible, however, in the Cosmos SDK, we leverage the power of [Docker Compose](https://docs.docker.com/compose/) to run a localnet. If you need inspiration on how to set up your own localnet with Docker Compose, you can have a look at the Cosmos SDK's [`docker-compose.yml`](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/docker-compose.yml).
+The naive way would be to run the same commands again in separate terminal windows. This is possible, however, in the Cosmos SDK, we leverage the power of [Docker Compose](https://docs.docker.com/compose/) to run a localnet. If you need inspiration on how to set up your own localnet with Docker Compose, you can have a look at the Cosmos SDK's [`docker-compose.yml`](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/docker-compose.yml).
 
 ### Standalone App/CometBFT
 

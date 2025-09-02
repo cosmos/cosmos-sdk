@@ -11,7 +11,7 @@ var (
 	innerPrefix = []byte{1}
 )
 
-// HashFromByteSlices computes a Merkle tree where the leaves are the byte slice,
+// HashFromByteSlices computes a Merkle tree where the leaves are the byte slices,
 // in the provided order. It follows RFC-6962.
 func HashFromByteSlices(items [][]byte) []byte {
 	return hashFromByteSlices(sha256.New(), items)
@@ -31,7 +31,7 @@ func hashFromByteSlices(sha hash.Hash, items [][]byte) []byte {
 	}
 }
 
-// returns tmhash(0x00 || leaf)
+// leafHashOpt returns tmhash(0x00 || leaf)
 func leafHashOpt(s hash.Hash, leaf []byte) []byte {
 	s.Reset()
 	s.Write(leafPrefix)
@@ -47,7 +47,7 @@ func innerHashOpt(s hash.Hash, left, right []byte) []byte {
 	return s.Sum(nil)
 }
 
-// returns tmhash(<empty>)
+// emptyHash returns tmhash(<empty>)
 func emptyHash() []byte {
 	h := sha256.Sum256([]byte{})
 	return h[:]

@@ -69,7 +69,7 @@ type BaseConfig struct {
 	// It has no bearing on application state pruning which is determined by the
 	// "pruning-*" configurations.
 	//
-	// Note: CometBFT block pruning is dependant on this parameter in conjunction
+	// Note: CometBFT block pruning is dependent on this parameter in conjunction
 	// with the unbonding (safety threshold) period, state pruning and state sync
 	// snapshot parameters to determine the correct minimum value of
 	// ResponseCommit.RetainHeight.
@@ -82,7 +82,7 @@ type BaseConfig struct {
 	// which informs CometBFT what to index. If empty, all events will be indexed.
 	IndexEvents []string `mapstructure:"index-events"`
 
-	// IavlCacheSize set the size of the iavl tree cache.
+	// IavlCacheSize sets the size of the iavl tree cache.
 	IAVLCacheSize uint64 `mapstructure:"iavl-cache-size"`
 
 	// IAVLDisableFastNode enables or disables the fast sync node.
@@ -140,7 +140,7 @@ type GRPCConfig struct {
 	// The default value is math.MaxInt32.
 	MaxSendMsgSize int `mapstructure:"max-send-msg-size"`
 
-	// SkipCheckHeader defines if the gRPC server should bypass check header.
+	// SkipCheckHeader defines if the gRPC server should bypass header checking.
 	SkipCheckHeader bool `mapstructure:"skip-check-header"`
 }
 
@@ -161,7 +161,7 @@ type StateSyncConfig struct {
 	SnapshotKeepRecent uint32 `mapstructure:"snapshot-keep-recent"`
 }
 
-// MempoolConfig defines the configurations for the SDK built-in app-side mempool
+// MempoolConfig defines the configuration for the SDK built-in app-side mempool
 // implementations.
 type MempoolConfig struct {
 	// MaxTxs defines the behavior of the mempool. A negative value indicates

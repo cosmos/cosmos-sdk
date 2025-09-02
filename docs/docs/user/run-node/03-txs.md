@@ -147,7 +147,7 @@ priv3, _, addr3 := testdata.KeyTestPubAddr()
 Populating the `TxBuilder` can be done via its methods:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/client/tx_config.go#L39-L57
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/client/tx_config.go#L39-L57
 ```
 
 ```go
@@ -161,7 +161,7 @@ func sendTx() error {
     // Define two x/bank MsgSend messages:
     // - from addr1 to addr3,
     // - from addr2 to addr3.
-    // This means that the transactions needs two signers: addr1 and addr2.
+    // This means that the transaction needs two signers: addr1 and addr2.
     msg1 := banktypes.NewMsgSend(addr1, addr3, types.NewCoins(types.NewInt64Coin("atom", 12)))
     msg2 := banktypes.NewMsgSend(addr2, addr3, types.NewCoins(types.NewInt64Coin("atom", 34)))
 
@@ -182,6 +182,14 @@ At this point, `TxBuilder`'s underlying transaction is ready to be signed.
 #### Generating an Unordered Transaction
 
 Starting with Cosmos SDK v0.53.0, users may send unordered transactions to chains that have the feature enabled.
+
+:::warning
+
+Unordered transactions MUST leave sequence values unset. When a transaction is both unordered and contains a non-zero sequence value,
+the transaction will be rejected. External services that operate on prior assumptions about transaction sequence values should be updated to handle unordered transactions.
+Services should be aware that when the transaction is unordered, the transaction sequence will always be zero.
+
+:::
 
 Using the example above, we can set the required fields to mark a transaction as unordered. 
 By default, unordered transactions charge an extra 2240 units of gas to offset the additional storage overhead that supports their functionality.
@@ -412,10 +420,10 @@ Broadcasting a transaction using the REST endpoint (served by `gRPC-gateway`) ca
 ```bash
 curl -X POST \
     -H "Content-Type: application/json" \
-    -d'{"tx_bytes":"{{txBytes}}","mode":"BROADCAST_MODE_SYNC"}' \
+    -d' {"tx_bytes":"{{txBytes}}","mode":"BROADCAST_MODE_SYNC"}' \
     localhost:1317/cosmos/tx/v1beta1/txs
 ```
 
 ## Using CosmJS (JavaScript & TypeScript)
 
-CosmJS aims to build client libraries in JavaScript that can be embedded in web applications. Please see [https://cosmos.github.io/cosmjs](https://cosmos.github.io/cosmjs) for more information. As of January 2021, CosmJS documentation is still work in progress.
+CosmJS aims to build client libraries in JavaScript that can be embedded in web applications. Please see [https://cosmos.github.io/cosmjs](https://cosmos.github.io/cosmjs) for more information. As of January 2021, CosmJS documentation is still a work in progress.

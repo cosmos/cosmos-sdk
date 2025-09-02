@@ -9,13 +9,13 @@ var (
 	// ErrUnsupportedLanguage is raised when the caller tries to use a
 	// different language than english for creating a mnemonic sentence.
 	ErrUnsupportedLanguage = errors.New("unsupported language: only english is supported")
-	// ErrUnknownBacked is raised when the keyring backend is unknown
-	ErrUnknownBacked = errors.New("unknown keyring backend")
+	// ErrUnknownBackend is raised when the keyring backend is unknown
+	ErrUnknownBackend = errors.New("unknown keyring backend")
 	// ErrOverwriteKey is raised when a key cannot be overwritten
 	ErrOverwriteKey = errors.New("cannot overwrite key")
 	// ErrKeyAlreadyExists is raised when creating a key that already exists
 	ErrKeyAlreadyExists = errors.Newf("key already exists")
-	// ErrInvalidSignMode is raised when trying to sign with an invaled method
+	// ErrInvalidSignMode is raised when trying to sign with an invalid method
 	ErrInvalidSignMode = errors.New("invalid sign mode, expected LEGACY_AMINO_JSON or TEXTUAL")
 	// ErrMaxPassPhraseAttempts is raised when the maxPassphraseEntryAttempts is reached
 	ErrMaxPassPhraseAttempts = errors.New("too many failed passphrase attempts")

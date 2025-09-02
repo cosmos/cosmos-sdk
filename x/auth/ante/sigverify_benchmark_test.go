@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256r1"
 )
 
-// This benchmark is used to asses the ante.Secp256k1ToR1GasFactor value
+// This benchmark is used to assess the ante.Secp256k1ToR1GasFactor value
 func BenchmarkSig(b *testing.B) {
 	require := require.New(b)
 	msg := cmtcrypto.CRandBytes(1000)

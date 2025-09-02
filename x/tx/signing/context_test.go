@@ -199,6 +199,27 @@ func TestGetSigners(t *testing.T) {
 			},
 			want: [][]byte{[]byte("foo")},
 		},
+		{
+			name: "validator signers",
+			msg: &testpb.ValidatorSigners{
+				Signers: []string{"val" + hex.EncodeToString([]byte("foo"))},
+			},
+			want: [][]byte{[]byte("foo")},
+		},
+		{
+			name: "validator bytes signer",
+			msg: &testpb.ValidatorByteSigner{
+				Signer: []byte("foo"),
+			},
+			want: [][]byte{[]byte("foo")},
+		},
+		{
+			name: "validator bytes signers",
+			msg: &testpb.ValidatorByteSigners{
+				Signers: [][]byte{[]byte("foo")},
+			},
+			want: [][]byte{[]byte("foo")},
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -267,7 +288,7 @@ func TestDefineCustomGetSigners(t *testing.T) {
 	})
 	context, err = NewContext(options)
 	require.NoError(t, err)
-	require.ErrorContains(t, context.Validate(), "a custom signer function as been defined for message SimpleSigner")
+	require.ErrorContains(t, context.Validate(), "a custom signer function has been defined for message SimpleSigner")
 }
 
 type dummyAddressCodec struct{}

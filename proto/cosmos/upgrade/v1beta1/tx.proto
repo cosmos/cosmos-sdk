@@ -7,7 +7,7 @@ import "cosmos/upgrade/v1beta1/upgrade.proto";
 import "cosmos/msg/v1/msg.proto";
 import "amino/amino.proto";
 
-option go_package = "cosmossdk.io/x/upgrade/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/upgrade/types";
 
 // Msg defines the upgrade Msg service.
 service Msg {

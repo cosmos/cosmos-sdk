@@ -594,7 +594,7 @@ func delegationToDelegationResponse(ctx context.Context, k *Keeper, del types.De
 		del.DelegatorAddress,
 		del.GetValidatorAddr(),
 		del.Shares,
-		sdk.NewCoin(bondDenom, val.TokensFromShares(del.Shares).TruncateInt()),
+		sdk.NewCoin(bondDenom, val.TokensFromSharesRoundUp(del.Shares).TruncateInt()),
 	), nil
 }
 

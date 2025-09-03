@@ -31,7 +31,6 @@ var (
 	addr1 = sdk.AccAddress(priv1.PubKey().Address())
 
 	valKey  = ed25519.GenPrivKey()
-	valAddr = sdk.AccAddress(valKey.PubKey().Address())
 )
 
 func TestSlashingMsgs(t *testing.T) {

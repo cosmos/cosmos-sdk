@@ -12,7 +12,7 @@ import (
 	"testing"
 
 	"github.com/99designs/keyring"
-	cmtcrypto "github.com/cometbft/cometbft/v2/crypto"
+	cmtcrypto "github.com/cometbft/cometbft/crypto"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/bcrypt"
 

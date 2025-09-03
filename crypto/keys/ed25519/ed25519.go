@@ -186,7 +186,7 @@ func (pubKey *PubKey) VerifySignature(msg, sig []byte) bool {
 	return ed25519consensus.Verify(pubKey.Key, msg, sig)
 }
 
-// String returns Hex representation of a pubkey with it's type
+// String returns Hex representation of a pubkey with its type
 func (pubKey *PubKey) String() string {
 	return fmt.Sprintf("PubKeyEd25519{%X}", pubKey.Key)
 }

@@ -6,7 +6,8 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// defaultConfig has all the options disabled, except Color and TimeFormat
+// defaultConfig provides a base configuration with maximum verbosity (TraceLevel)
+// and minimal formatting options enabled (Color and TimeFormat)
 var defaultConfig = Config{
 	Level:      zerolog.TraceLevel, // this is the default level that zerolog initializes new Logger's with
 	Filter:     nil,

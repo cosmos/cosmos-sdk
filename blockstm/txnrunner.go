@@ -12,29 +12,37 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-func NewDefaultRunner(ctx context.Context, txDecoder sdk.TxDecoder, deliverTx func([]byte) *abci.ExecTxResult) *DefaultRunner {
+type (
+	DeliverTxFunc func(tx []byte, ms storetypes.MultiStore, incarnationCache map[string]any) *abci.ExecTxResult
+	TxRunner      interface {
+		Run(context.Context, storetypes.MultiStore, [][]byte, DeliverTxFunc) ([]*abci.ExecTxResult, error)
+	}
+)
+
+var (
+	_ TxRunner = DefaultRunner{}
+	_ TxRunner = STMRunner{}
+)
+
+func NewDefaultRunner(txDecoder sdk.TxDecoder) *DefaultRunner {
 	return &DefaultRunner{
-		ctx:       ctx,
 		txDecoder: txDecoder,
-		deliverTx: deliverTx,
 	}
 }
 
 // DefaultRunner default executor without parallelism
 type DefaultRunner struct {
-	ctx       context.Context
 	txDecoder sdk.TxDecoder
-	deliverTx func(tx []byte) *abci.ExecTxResult
 }
 
-func (d DefaultRunner) Run(txs [][]byte) ([]*abci.ExecTxResult, error) {
+func (d DefaultRunner) Run(ctx context.Context, _ storetypes.MultiStore, txs [][]byte, deliverTx DeliverTxFunc) ([]*abci.ExecTxResult, error) {
 	// Fallback to the default execution logic
 	txResults := make([]*abci.ExecTxResult, 0, len(txs))
 	for _, rawTx := range txs {
 		var response *abci.ExecTxResult
 
 		if _, err := d.txDecoder(rawTx); err == nil {
-			response = d.deliverTx(rawTx)
+			response = deliverTx(rawTx, nil, nil)
 		} else {
 			// In the case where a transaction included in a block proposal is malformed,
 			// we still want to return a default response to comet. This is because comet
@@ -50,8 +58,8 @@ func (d DefaultRunner) Run(txs [][]byte) ([]*abci.ExecTxResult, error) {
 
 		// check after every tx if we should abort
 		select {
-		case <-d.ctx.Done():
-			return nil, d.ctx.Err()
+		case <-ctx.Done():
+			return nil, ctx.Err()
 		default:
 			// continue
 		}
@@ -61,19 +69,30 @@ func (d DefaultRunner) Run(txs [][]byte) ([]*abci.ExecTxResult, error) {
 	return txResults, nil
 }
 
+func NewSTMRunner(
+	txDecoder sdk.TxDecoder,
+	stores []storetypes.StoreKey,
+	workers int, estimate bool, coinDenom string,
+) *STMRunner {
+	return &STMRunner{
+		txDecoder: txDecoder,
+		stores:    stores,
+		workers:   workers,
+		estimate:  estimate,
+		coinDenom: coinDenom,
+	}
+}
+
 // STMRunner simple implementation of block-stm
 type STMRunner struct {
-	ctx       context.Context
 	txDecoder sdk.TxDecoder
 	stores    []storetypes.StoreKey
-	ms        MultiStore
 	workers   int
 	estimate  bool
 	coinDenom string
-	deliverTx func(int, sdk.Tx, MultiStore, map[string]any) *abci.ExecTxResult
 }
 
-func (e STMRunner) Run(txs [][]byte) ([]*abci.ExecTxResult, error) {
+func (e STMRunner) Run(ctx context.Context, ms storetypes.MultiStore, txs [][]byte, deliverTx DeliverTxFunc) ([]*abci.ExecTxResult, error) {
 	var authStore, bankStore int
 	index := make(map[storetypes.StoreKey]int, len(e.stores))
 	for i, k := range e.stores {
@@ -99,7 +118,7 @@ func (e STMRunner) Run(txs [][]byte) ([]*abci.ExecTxResult, error) {
 
 	var (
 		estimates []MultiLocations
-		memTxs    []sdk.Tx
+		memTxs    [][]byte
 	)
 
 	if e.estimate {
@@ -107,10 +126,10 @@ func (e STMRunner) Run(txs [][]byte) ([]*abci.ExecTxResult, error) {
 	}
 
 	if err := ExecuteBlockWithEstimates(
-		e.ctx,
+		ctx,
 		blockSize,
 		index,
-		e.ms,
+		stmMultiStoreWrapper{ms},
 		e.workers,
 		estimates,
 		func(txn TxnIndex, ms MultiStore) {
@@ -123,11 +142,11 @@ func (e STMRunner) Run(txs [][]byte) ([]*abci.ExecTxResult, error) {
 				cache = *v
 			}
 
-			var memTx sdk.Tx
+			var memTx []byte
 			if memTxs != nil {
 				memTx = memTxs[txn]
 			}
-			results[txn] = e.deliverTx(int(txn), memTx, ms, cache)
+			results[txn] = deliverTx(memTx, msWrapper{ms}, cache)
 
 			if v != nil {
 				incarnationCache[txn].Store(v)
@@ -142,8 +161,8 @@ func (e STMRunner) Run(txs [][]byte) ([]*abci.ExecTxResult, error) {
 
 // preEstimates returns a static estimation of the written keys for each transaction.
 // NOTE: make sure it sync with the latest sdk logic when sdk upgrade.
-func preEstimates(txs [][]byte, workers, authStore, bankStore int, coinDenom string, txDecoder sdk.TxDecoder) ([]sdk.Tx, []MultiLocations) {
-	memTxs := make([]sdk.Tx, len(txs))
+func preEstimates(txs [][]byte, workers, authStore, bankStore int, coinDenom string, txDecoder sdk.TxDecoder) ([][]byte, []MultiLocations) {
+	memTxs := make([][]byte, len(txs))
 	estimates := make([]MultiLocations, len(txs))
 
 	job := func(start, end int) {
@@ -153,7 +172,7 @@ func preEstimates(txs [][]byte, workers, authStore, bankStore int, coinDenom str
 			if err != nil {
 				continue
 			}
-			memTxs[i] = tx
+			memTxs[i] = rawTx
 
 			feeTx, ok := tx.(sdk.FeeTx)
 			if !ok {

@@ -14,6 +14,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/oe"
+	"github.com/cosmos/cosmos-sdk/blockstm"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -124,9 +125,9 @@ func SetOptimisticExecution(opts ...func(*oe.OptimisticExecution)) func(*BaseApp
 	}
 }
 
-// SetTxRunner sets a custom tx executor for the BaseApp (e.g for parallel execution).
-func SetTxRunner(txRunner TxRunner) func(*BaseApp) {
-	return func(app *BaseApp) { app.txRunner = txRunner }
+// SetTxRunner sets the block stm tx runner for the BaseApp for parallel execution.
+func (app *BaseApp) SetBlockSTMTxRunner(txRunner blockstm.TxRunner) {
+	app.txRunner = txRunner
 }
 
 // DisableBlockGasMeter disables the block gas meter.
@@ -407,9 +408,4 @@ func (app *BaseApp) SetMsgServiceRouter(msgServiceRouter *MsgServiceRouter) {
 // SetGRPCQueryRouter sets the GRPCQueryRouter of the BaseApp.
 func (app *BaseApp) SetGRPCQueryRouter(grpcQueryRouter *GRPCQueryRouter) {
 	app.grpcQueryRouter = grpcQueryRouter
-}
-
-// SetTxRunner sets a custom tx runner for the BaseApp (e.g for parallel execution).
-func (app *BaseApp) SetExecutor(txRunner TxRunner) {
-	app.txRunner = txRunner
 }

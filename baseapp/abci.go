@@ -37,10 +37,6 @@ const (
 	QueryPathBroadcastTx = "/cosmos.tx.v1beta1.Service/BroadcastTx"
 )
 
-type TxRunner interface {
-	Run(txs [][]byte) ([]*abci.ExecTxResult, error)
-}
-
 func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
 	if req.ChainId != app.chainID {
 		return nil, fmt.Errorf("invalid chain-id on InitChain; expected: %s, got: %s", app.chainID, req.ChainId)
@@ -803,7 +799,7 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 	//
 	// NOTE: Not all raw transactions may adhere to the sdk.Tx interface, e.g.
 	// vote extensions, so skip those.
-	txResults, err := app.executeTxsWithExecutor(ctx, req.Txs)
+	txResults, err := app.executeTxsWithExecutor(ctx, app.finalizeBlockState.ms, req.Txs)
 	if err != nil {
 		// usually due to canceled
 		return nil, err
@@ -837,16 +833,14 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 	}, nil
 }
 
-func (app *BaseApp) executeTxsWithExecutor(ctx context.Context, txs [][]byte) ([]*abci.ExecTxResult, error) {
+func (app *BaseApp) executeTxsWithExecutor(ctx context.Context, ms storetypes.MultiStore, txs [][]byte) ([]*abci.ExecTxResult, error) {
 	if app.txRunner == nil {
 		app.txRunner = blockstm.NewDefaultRunner(
-			ctx,
 			app.txDecoder,
-			func(txs []byte) *abci.ExecTxResult { return app.deliverTx(txs, nil, nil) },
 		)
 	}
 
-	return app.txRunner.Run(txs)
+	return app.txRunner.Run(ctx, ms, txs, app.deliverTx)
 }
 
 // FinalizeBlock will execute the block proposal provided by RequestFinalizeBlock.

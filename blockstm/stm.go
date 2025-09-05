@@ -14,7 +14,7 @@ func ExecuteBlock(
 	ctx context.Context,
 	blockSize int,
 	stores map[storetypes.StoreKey]int,
-	storage MultiStore,
+	storage storetypes.MultiStore,
 	executors int,
 	txExecutor TxExecutor,
 ) error {
@@ -28,7 +28,7 @@ func ExecuteBlockWithEstimates(
 	ctx context.Context,
 	blockSize int,
 	stores map[storetypes.StoreKey]int,
-	storage MultiStore,
+	storage storetypes.MultiStore,
 	executors int,
 	estimates []MultiLocations, // txn -> multi-locations
 	txExecutor TxExecutor,

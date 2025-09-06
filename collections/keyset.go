@@ -137,7 +137,7 @@ func (NoValue) Encode(_ NoValue) ([]byte, error) {
 }
 
 func (NoValue) Decode(b []byte) (NoValue, error) {
-	if !bytes.Equal(b, []byte{}) {
+	if len(b) != 0 {
 		return NoValue{}, fmt.Errorf("%w: invalid value, wanted an empty non-nil byte slice, got: %x", ErrEncoding, b)
 	}
 	return NoValue{}, nil

@@ -16,8 +16,9 @@ var _ ExtMempool = (*NoOpMempool)(nil)
 // is FIFO-ordered by default.
 type NoOpMempool struct{}
 
-func (NoOpMempool) Insert(context.Context, sdk.Tx) error                  { return nil }
-func (NoOpMempool) Select(context.Context, [][]byte) Iterator             { return nil }
-func (NoOpMempool) SelectBy(context.Context, [][]byte, func(sdk.Tx) bool) {}
-func (NoOpMempool) CountTx() int                                          { return 0 }
-func (NoOpMempool) Remove(sdk.Tx) error                                   { return nil }
+func (NoOpMempool) Insert(context.Context, sdk.Tx) error                      { return nil }
+func (NoOpMempool) InsertWithGasWanted(context.Context, sdk.Tx, uint64) error { return nil }
+func (NoOpMempool) Select(context.Context, [][]byte) Iterator                 { return nil }
+func (NoOpMempool) SelectBy(context.Context, [][]byte, func(Tx) bool)         {}
+func (NoOpMempool) CountTx() int                                              { return 0 }
+func (NoOpMempool) Remove(sdk.Tx) error                                       { return nil }

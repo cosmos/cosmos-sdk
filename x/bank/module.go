@@ -17,6 +17,7 @@ import (
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -44,7 +45,8 @@ var (
 	_ module.HasGenesis          = AppModule{}
 	_ module.HasServices         = AppModule{}
 
-	_ appmodule.AppModule = AppModule{}
+	_ appmodule.HasEndBlocker = AppModule{}
+	_ appmodule.AppModule     = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the bank module.
@@ -215,12 +217,12 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	Config       *modulev1.Module
-	Cdc          codec.Codec
-	StoreService corestore.KVStoreService
-	Logger       log.Logger
-
+	Config        *modulev1.Module
+	Cdc           codec.Codec
+	StoreService  corestore.KVStoreService
+	Logger        log.Logger
 	AccountKeeper types.AccountKeeper
+	ObjStoreKey   *storetypes.ObjectStoreKey
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace `optional:"true"`
@@ -257,6 +259,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 
 	bankKeeper := keeper.NewBaseKeeper(
 		in.Cdc,
+		in.ObjStoreKey,
 		in.StoreService,
 		in.AccountKeeper,
 		blockedAddresses,
@@ -302,4 +305,8 @@ func InvokeSetSendRestrictions(
 	}
 
 	return nil
+}
+
+func (am AppModule) EndBlock(ctx context.Context) error {
+	return am.keeper.CreditVirtualAccounts(ctx)
 }

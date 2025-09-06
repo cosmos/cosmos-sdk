@@ -258,6 +258,7 @@ func NewSimApp(
 		epochstypes.StoreKey,
 		protocolpooltypes.StoreKey,
 	)
+	okeys := storetypes.NewObjectStoreKeys(banktypes.ObjectStoreKey)
 
 	// register streaming services
 	if err := bApp.RegisterStreamingServices(appOpts, keys); err != nil {
@@ -296,6 +297,7 @@ func NewSimApp(
 
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec,
+		okeys[banktypes.ObjectStoreKey],
 		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
 		app.AccountKeeper,
 		BlockedAddresses(),
@@ -521,6 +523,7 @@ func NewSimApp(
 		epochstypes.ModuleName,
 	)
 	app.ModuleManager.SetOrderEndBlockers(
+		banktypes.ModuleName,
 		govtypes.ModuleName,
 		stakingtypes.ModuleName,
 		genutiltypes.ModuleName,
@@ -609,6 +612,7 @@ func NewSimApp(
 
 	// initialize stores
 	app.MountKVStores(keys)
+	app.MountObjectStores(okeys)
 
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)

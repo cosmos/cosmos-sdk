@@ -129,6 +129,11 @@ func DisableBlockGasMeter() func(*BaseApp) {
 	return func(app *BaseApp) { app.SetDisableBlockGasMeter(true) }
 }
 
+// SetTxExecutor sets a custom tx executor for the BaseApp, usually for parallel execution.
+func SetTxExecutor(executor TxExecutor) func(*BaseApp) {
+	return func(app *BaseApp) { app.txExecutor = executor }
+}
+
 func (app *BaseApp) SetName(name string) {
 	if app.sealed {
 		panic("SetName() on sealed BaseApp")
@@ -321,7 +326,7 @@ func (app *BaseApp) SetTxEncoder(txEncoder sdk.TxEncoder) {
 // SetQueryMultiStore set a alternative MultiStore implementation to support grpc query service.
 //
 // Ref: https://github.com/cosmos/cosmos-sdk/issues/13317
-func (app *BaseApp) SetQueryMultiStore(ms storetypes.MultiStore) {
+func (app *BaseApp) SetQueryMultiStore(ms storetypes.RootMultiStore) {
 	app.qms = ms
 }
 
@@ -402,4 +407,9 @@ func (app *BaseApp) SetMsgServiceRouter(msgServiceRouter *MsgServiceRouter) {
 // SetGRPCQueryRouter sets the GRPCQueryRouter of the BaseApp.
 func (app *BaseApp) SetGRPCQueryRouter(grpcQueryRouter *GRPCQueryRouter) {
 	app.grpcQueryRouter = grpcQueryRouter
+}
+
+// SetTxExecutor sets a custom tx executor for the BaseApp, usually for parallel execution.
+func (app *BaseApp) SetTxExecutor(executor TxExecutor) {
+	app.txExecutor = executor
 }

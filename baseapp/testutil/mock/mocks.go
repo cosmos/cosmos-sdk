@@ -135,12 +135,13 @@ func (mr *MockProposalTxVerifierMockRecorder) PrepareProposalVerifyTx(tx any) *g
 }
 
 // ProcessProposalVerifyTx mocks base method.
-func (m *MockProposalTxVerifier) ProcessProposalVerifyTx(txBz []byte) (types.Tx, error) {
+func (m *MockProposalTxVerifier) ProcessProposalVerifyTx(txBz []byte) (types.Tx,uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ProcessProposalVerifyTx", txBz)
 	ret0, _ := ret[0].(types.Tx)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret1, _ := ret[1].(uint64)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
 }
 
 // ProcessProposalVerifyTx indicates an expected call of ProcessProposalVerifyTx.
@@ -216,17 +217,17 @@ func (mr *MockTxSelectorMockRecorder) Clear() *gomock.Call {
 }
 
 // SelectTxForProposal mocks base method.
-func (m *MockTxSelector) SelectTxForProposal(ctx context.Context, maxTxBytes, maxBlockGas uint64, memTx types.Tx, txBz []byte) bool {
+func (m *MockTxSelector) SelectTxForProposal(ctx context.Context, maxTxBytes, maxBlockGas uint64, memTx types.Tx, txBz []byte, gasWanted uint64) bool {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SelectTxForProposal", ctx, maxTxBytes, maxBlockGas, memTx, txBz)
+	ret := m.ctrl.Call(m, "SelectTxForProposal", ctx, maxTxBytes, maxBlockGas, memTx, txBz, gasWanted)
 	ret0, _ := ret[0].(bool)
 	return ret0
 }
 
 // SelectTxForProposal indicates an expected call of SelectTxForProposal.
-func (mr *MockTxSelectorMockRecorder) SelectTxForProposal(ctx, maxTxBytes, maxBlockGas, memTx, txBz any) *gomock.Call {
+func (mr *MockTxSelectorMockRecorder) SelectTxForProposal(ctx, maxTxBytes, maxBlockGas, memTx, txBz, gasWanted any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SelectTxForProposal", reflect.TypeOf((*MockTxSelector)(nil).SelectTxForProposal), ctx, maxTxBytes, maxBlockGas, memTx, txBz)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SelectTxForProposal", reflect.TypeOf((*MockTxSelector)(nil).SelectTxForProposal), ctx, maxTxBytes, maxBlockGas, memTx, txBz, gasWanted)
 }
 
 // SelectedTxs mocks base method.

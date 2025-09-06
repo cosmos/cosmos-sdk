@@ -1,6 +1,7 @@
 package gaskv
 
 import (
+	"errors"
 	"io"
 
 	"cosmossdk.io/store/types"
@@ -131,6 +132,16 @@ func (gs *GStore[V]) iterator(start, end []byte, ascending bool) types.GIterator
 	} else {
 		parent = gs.parent.ReverseIterator(start, end)
 	}
+
+	// release parent open iterator if we panic during consumeSeekGas() and re-panic
+	defer func() {
+		if r := recover(); r != nil {
+			if err := parent.Close(); err != nil {
+				r = errors.Join(r.(error), err)
+			}
+			panic(r)
+		}
+	}()
 
 	gi := newGasIterator(gs.gasMeter, gs.gasConfig, parent, gs.valueLen)
 	gi.consumeSeekGas()

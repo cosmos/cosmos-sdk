@@ -375,3 +375,17 @@ func (s *paginationTestSuite) TestPaginate() {
 	// Output:
 	// balances:<denom:"foo0denom" amount:"100" > pagination:<next_key:"foo1denom" total:2 >
 }
+
+func (s *paginationTestSuite) TestClampOverflow() {
+	s.T().Log("verify that Limit is clamped when Offset+Limit would overflow")
+
+	pageReq := &query.PageRequest{
+		Offset: uint64(5),
+		Limit:  ^uint64(0),
+	}
+
+	clamped := query.ClampPageRequestLimit(pageReq)
+
+	want := query.PaginationMaxLimit - clamped.Offset
+	s.Require().Equal(want, clamped.Limit)
+}

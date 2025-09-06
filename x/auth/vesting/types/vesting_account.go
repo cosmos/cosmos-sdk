@@ -6,8 +6,10 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestexported "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 )
@@ -56,16 +58,18 @@ func (bva BaseVestingAccount) LockedCoinsFromVesting(vestingCoins sdk.Coins) sdk
 //
 // CONTRACT: The account's coins, delegation coins, vesting coins, and delegated
 // vesting coins must be sorted.
-func (bva *BaseVestingAccount) TrackDelegation(balance, vestingCoins, amount sdk.Coins) {
+func (bva *BaseVestingAccount) TrackDelegation(balance, vestingCoins, amount sdk.Coins) error {
 	for _, coin := range amount {
 		baseAmt := balance.AmountOf(coin.Denom)
 		vestingAmt := vestingCoins.AmountOf(coin.Denom)
 		delVestingAmt := bva.DelegatedVesting.AmountOf(coin.Denom)
 
-		// Panic if the delegation amount is zero or if the base coins does not
-		// exceed the desired delegation amount.
-		if coin.Amount.IsZero() || baseAmt.LT(coin.Amount) {
-			panic("delegation attempt with zero coins or insufficient funds")
+		// Return error if the delegation amount is non-positive or if the base balance is insufficient.
+		if coin.Amount.IsZero() {
+			return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, "delegation amount must be > 0")
+		}
+		if baseAmt.LT(coin.Amount) {
+			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, "balance %s, requested %s", baseAmt, coin.Amount)
 		}
 
 		// compute x and y per the specification, where:
@@ -84,6 +88,7 @@ func (bva *BaseVestingAccount) TrackDelegation(balance, vestingCoins, amount sdk
 			bva.DelegatedFree = bva.DelegatedFree.Add(yCoin)
 		}
 	}
+	return nil
 }
 
 // TrackUndelegation tracks an undelegation amount by setting the necessary
@@ -96,11 +101,11 @@ func (bva *BaseVestingAccount) TrackDelegation(balance, vestingCoins, amount sdk
 // the undelegated tokens are non-integral.
 //
 // CONTRACT: The account's coins and undelegation coins must be sorted.
-func (bva *BaseVestingAccount) TrackUndelegation(amount sdk.Coins) {
+func (bva *BaseVestingAccount) TrackUndelegation(amount sdk.Coins) error {
 	for _, coin := range amount {
-		// panic if the undelegation amount is zero
+		// Return error if the undelegation amount is zero
 		if coin.Amount.IsZero() {
-			panic("undelegation attempt with zero coins")
+			return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, "undelegation amount must be > 0")
 		}
 		delegatedFree := bva.DelegatedFree.AmountOf(coin.Denom)
 		delegatedVesting := bva.DelegatedVesting.AmountOf(coin.Denom)
@@ -121,6 +126,7 @@ func (bva *BaseVestingAccount) TrackUndelegation(amount sdk.Coins) {
 			bva.DelegatedVesting = bva.DelegatedVesting.Sub(yCoin)
 		}
 	}
+	return nil
 }
 
 // GetOriginalVesting returns a vesting account's original vesting amount
@@ -235,8 +241,8 @@ func (cva ContinuousVestingAccount) LockedCoins(blockTime time.Time) sdk.Coins {
 // TrackDelegation tracks a desired delegation amount by setting the appropriate
 // values for the amount of delegated vesting, delegated free, and reducing the
 // overall amount of base coins.
-func (cva *ContinuousVestingAccount) TrackDelegation(blockTime time.Time, balance, amount sdk.Coins) {
-	cva.BaseVestingAccount.TrackDelegation(balance, cva.GetVestingCoins(blockTime), amount)
+func (cva *ContinuousVestingAccount) TrackDelegation(blockTime time.Time, balance, amount sdk.Coins) error {
+	return cva.BaseVestingAccount.TrackDelegation(balance, cva.GetVestingCoins(blockTime), amount)
 }
 
 // GetStartTime returns the time when vesting starts for a continuous vesting
@@ -340,8 +346,8 @@ func (pva PeriodicVestingAccount) LockedCoins(blockTime time.Time) sdk.Coins {
 // TrackDelegation tracks a desired delegation amount by setting the appropriate
 // values for the amount of delegated vesting, delegated free, and reducing the
 // overall amount of base coins.
-func (pva *PeriodicVestingAccount) TrackDelegation(blockTime time.Time, balance, amount sdk.Coins) {
-	pva.BaseVestingAccount.TrackDelegation(balance, pva.GetVestingCoins(blockTime), amount)
+func (pva *PeriodicVestingAccount) TrackDelegation(blockTime time.Time, balance, amount sdk.Coins) error {
+	return pva.BaseVestingAccount.TrackDelegation(balance, pva.GetVestingCoins(blockTime), amount)
 }
 
 // GetStartTime returns the time when vesting starts for a periodic vesting
@@ -439,8 +445,8 @@ func (dva DelayedVestingAccount) LockedCoins(blockTime time.Time) sdk.Coins {
 // TrackDelegation tracks a desired delegation amount by setting the appropriate
 // values for the amount of delegated vesting, delegated free, and reducing the
 // overall amount of base coins.
-func (dva *DelayedVestingAccount) TrackDelegation(blockTime time.Time, balance, amount sdk.Coins) {
-	dva.BaseVestingAccount.TrackDelegation(balance, dva.GetVestingCoins(blockTime), amount)
+func (dva *DelayedVestingAccount) TrackDelegation(blockTime time.Time, balance, amount sdk.Coins) error {
+	return dva.BaseVestingAccount.TrackDelegation(balance, dva.GetVestingCoins(blockTime), amount)
 }
 
 // GetStartTime returns zero since a delayed vesting account has no start time.
@@ -495,8 +501,8 @@ func (plva PermanentLockedAccount) LockedCoins(_ time.Time) sdk.Coins {
 // TrackDelegation tracks a desired delegation amount by setting the appropriate
 // values for the amount of delegated vesting, delegated free, and reducing the
 // overall amount of base coins.
-func (plva *PermanentLockedAccount) TrackDelegation(blockTime time.Time, balance, amount sdk.Coins) {
-	plva.BaseVestingAccount.TrackDelegation(balance, plva.OriginalVesting, amount)
+func (plva *PermanentLockedAccount) TrackDelegation(blockTime time.Time, balance, amount sdk.Coins) error {
+	return plva.BaseVestingAccount.TrackDelegation(balance, plva.OriginalVesting, amount)
 }
 
 // GetStartTime returns zero since a permanent locked vesting account has no start time.

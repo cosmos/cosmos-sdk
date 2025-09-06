@@ -92,7 +92,7 @@ func TestProtoCodecMarshal(t *testing.T) {
 	)
 
 	// sanity check
-	require.True(t, reflect.TypeOf(cat).Implements(reflect.TypeOf((*testdata.Animal)(nil)).Elem()))
+	require.True(t, reflect.TypeOf(cat).Implements(reflect.TypeFor[testdata.Animal]()))
 
 	bz, err := cdc.MarshalInterface(cat)
 	require.NoError(t, err)

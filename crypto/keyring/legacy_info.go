@@ -52,32 +52,32 @@ func (i legacyLocalInfo) GetType() KeyType {
 	return TypeLocal
 }
 
-// GetType implements Info interface
+// GetName implements Info interface
 func (i legacyLocalInfo) GetName() string {
 	return i.Name
 }
 
-// GetType implements Info interface
+// GetPubKey implements Info interface
 func (i legacyLocalInfo) GetPubKey() cryptotypes.PubKey {
 	return i.PubKey
 }
 
-// GetType implements Info interface
+// GetAddress implements Info interface
 func (i legacyLocalInfo) GetAddress() sdk.AccAddress {
 	return i.PubKey.Address().Bytes()
 }
 
-// GetPrivKeyArmor
+// GetPrivKeyArmor returns the armored private key
 func (i legacyLocalInfo) GetPrivKeyArmor() string {
 	return i.PrivKeyArmor
 }
 
-// GetType implements Info interface
+// GetAlgo implements Info interface
 func (i legacyLocalInfo) GetAlgo() hd.PubKeyType {
 	return i.Algo
 }
 
-// GetType implements Info interface
+// GetPath implements Info interface
 func (i legacyLocalInfo) GetPath() (*hd.BIP44Params, error) {
 	return nil, fmt.Errorf("BIP44 Paths are not available for this type")
 }
@@ -111,7 +111,7 @@ func (i legacyLedgerInfo) GetAddress() sdk.AccAddress {
 	return i.PubKey.Address().Bytes()
 }
 
-// GetPath implements Info interface
+// GetAlgo implements Info interface
 func (i legacyLedgerInfo) GetAlgo() hd.PubKeyType {
 	return i.Algo
 }

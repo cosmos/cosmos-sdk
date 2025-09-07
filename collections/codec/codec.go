@@ -22,7 +22,7 @@ type KeyCodec[T any] interface {
 	// the key T. Returns the number of bytes read, the type T
 	// or an error in case of decoding failure.
 	Decode(buffer []byte) (int, T, error)
-	// Size returns the buffer size need to encode key T in binary format.
+	// Size returns the buffer size needed to encode key T in binary format.
 	// The returned value must match what is computed by Encode for all
 	// encodings except the ones involving varints. Varints are expected
 	// to return the maximum varint bytes buffer length, at the risk of

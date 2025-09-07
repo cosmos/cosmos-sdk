@@ -16,8 +16,8 @@ type BlockInfo interface {
 	// ValidatorsHash returns the hash of the validators
 	// For Comet, it is the hash of the next validator set
 	GetValidatorsHash() []byte
-	GetProposerAddress() []byte // ProposerAddress returns the address of the block proposer
-	GetLastCommit() CommitInfo  // DecidedLastCommit returns the last commit info
+	GetProposerAddress() []byte // GetProposerAddress returns the address of the block proposer
+	GetLastCommit() CommitInfo  // GetLastCommit returns the last commit info
 }
 
 // MisbehaviorType is the type of misbehavior for a validator

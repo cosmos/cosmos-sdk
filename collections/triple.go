@@ -324,7 +324,7 @@ func (t tripleKeyCodec[K1, K2, K3]) SchemaCodec() (codec.SchemaCodec[Triple[K1, 
 	}, nil
 }
 
-// NewPrefixUntilTripleRange defines a collection query which ranges until the provided Pair prefix.
+// NewPrefixUntilTripleRange defines a collection query which ranges until the provided Triple prefix.
 // Unstable: this API might change in the future.
 func NewPrefixUntilTripleRange[K1, K2, K3 any](k1 K1) Ranger[Triple[K1, K2, K3]] {
 	key := TriplePrefix[K1, K2, K3](k1)
@@ -353,7 +353,7 @@ func NewSuperPrefixedTripleRange[K1, K2, K3 any](k1 K1, k2 K2) Ranger[Triple[K1,
 	}
 }
 
-// NewPrefixUntilTripleRangeReversed defines a collection query which ranges until the provided Pair prefix
+// NewPrefixUntilTripleRangeReversed defines a collection query which ranges until the provided Triple prefix
 // in reverse order.
 // Unstable: this API might change in the future.
 func NewPrefixUntilTripleRangeReversed[K1, K2, K3 any](k1 K1) Ranger[Triple[K1, K2, K3]] {

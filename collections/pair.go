@@ -103,7 +103,7 @@ func (p pairKeyCodec[K1, K2]) Decode(buffer []byte) (int, Pair[K1, K2], error) {
 		return 0, Pair[K1, K2]{}, err
 	}
 	readTotal += read
-	read, key2, err := p.keyCodec2.Decode(buffer[read:])
+	read, key2, err := p.keyCodec2.Decode(buffer[readTotal:])
 	if err != nil {
 		return 0, Pair[K1, K2]{}, err
 	}
@@ -175,7 +175,7 @@ func (p pairKeyCodec[K1, K2]) DecodeNonTerminal(buffer []byte) (int, Pair[K1, K2
 		return 0, Pair[K1, K2]{}, err
 	}
 	readTotal += read
-	read, key2, err := p.keyCodec2.DecodeNonTerminal(buffer[read:])
+	read, key2, err := p.keyCodec2.DecodeNonTerminal(buffer[readTotal:])
 	if err != nil {
 		return 0, Pair[K1, K2]{}, err
 	}
@@ -371,7 +371,7 @@ func (p *PairRange[K1, K2]) Descending() *PairRange[K1, K2] {
 
 func (p *PairRange[K1, K2]) RangeValues() (start, end *RangeKey[Pair[K1, K2]], order Order, err error) {
 	if p.err != nil {
-		return nil, nil, 0, err
+		return nil, nil, 0, p.err
 	}
 	return p.start, p.end, p.order, nil
 }

@@ -108,9 +108,8 @@ const (
 	debugContainerLog = "debug_container.log"
 )
 
-// Debug is a default debug option which sends log output to stderr, dumps
-// the container in the graphviz DOT and SVG formats to debug_container.dot
-// and debug_container.svg respectively.
+// Debug is a default debug option which writes logs to debug_container.log and
+// dumps the container in the Graphviz DOT format to debug_container.dot.
 func Debug() DebugOption {
 	return DebugOptions(
 		FileLogger(debugContainerLog),
@@ -159,8 +158,8 @@ func DebugCleanup(cleanup func()) DebugOption {
 }
 
 // AutoDebug does the same thing as Debug when there is an error and deletes
-// the debug_container.dot if it exists when there is no error. This is the
-// default debug mode of Run.
+// debug_container.dot and debug_container.log if they exist when there is no
+// error. This is the default debug mode of Run.
 func AutoDebug() DebugOption {
 	return DebugOptions(
 		OnError(Debug()),

@@ -18,7 +18,7 @@ const emptyCoins = "zero"
 // a separator ('/', ':', '.', '_' or '-').
 var coinRegex = regexp.MustCompile(`^(\d+(\.\d+)?)([a-zA-Z][a-zA-Z0-9\/\:\._\-]{2,127})$`)
 
-// formatCoin formats a sdk.Coin into a value-rendered string, using the
+// formatCoin formats a basev1beta1.Coin into a value-rendered string, using the
 // given metadata about the denom. It returns the formatted coin string, the
 // display denom, and an optional error.
 func formatCoin(coin *basev1beta1.Coin, metadata *bankv1beta1.Metadata) (string, error) {

@@ -35,7 +35,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/hashicorp/go-cleanhttp v0.5.2
-	github.com/hashicorp/go-getter v1.7.9
+	github.com/hashicorp/go-getter v1.7.10
 	github.com/hashicorp/go-metrics v0.5.4
 	github.com/hashicorp/golang-lru v1.0.2
 	github.com/hdevalence/ed25519consensus v0.2.0
@@ -83,7 +83,24 @@ require (
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.29.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.50.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.50.0 // indirect
-	github.com/aws/aws-sdk-go v1.55.8 // indirect
+	github.com/aws/aws-sdk-go-v2 v1.36.3 // indirect
+	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.10 // indirect
+	github.com/aws/aws-sdk-go-v2/config v1.29.15 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.68 // indirect
+	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.30 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.34 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.34 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.3 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.34 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.12.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.7.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.15 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.18.15 // indirect
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.80.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.25.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.30.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sts v1.33.20 // indirect
+	github.com/aws/smithy-go v1.22.3 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/bufbuild/protocompile v0.14.1 // indirect
@@ -136,6 +153,7 @@ require (
 	github.com/googleapis/gax-go/v2 v2.15.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/gsterjov/go-libsecret v0.0.0-20161001094733-a6f4afe4910c // indirect
+	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.65 // indirect
 	github.com/hashicorp/go-hclog v1.6.3 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/go-plugin v1.7.0 // indirect
@@ -145,7 +163,6 @@ require (
 	github.com/hashicorp/yamux v0.1.2 // indirect
 	github.com/iancoleman/strcase v0.3.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.10 // indirect

@@ -1,4 +1,4 @@
-go 1.24
+go 1.24.0
 
 module github.com/cosmos/cosmos-sdk
 
@@ -57,7 +57,7 @@ require (
 	github.com/tendermint/go-amino v0.16.0
 	go.uber.org/mock v0.6.0
 	golang.org/x/crypto v0.41.0
-	golang.org/x/sync v0.16.0
+	golang.org/x/sync v0.17.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20250707201910-8d1bb00bc6a7
 	google.golang.org/grpc v1.75.0
 	google.golang.org/protobuf v1.36.8

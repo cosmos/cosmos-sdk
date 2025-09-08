@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/suite"
 

@@ -12,7 +12,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	gogotypes "github.com/cosmos/gogoproto/types"

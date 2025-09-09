@@ -13,7 +13,7 @@ import (
 )
 
 type (
-	DeliverTxFunc func(tx []byte, ms storetypes.MultiStore, incarnationCache map[string]any) *abci.ExecTxResult
+	DeliverTxFunc func(tx []byte, ms storetypes.MultiStore, txIndex int, incarnationCache map[string]any) *abci.ExecTxResult
 	TxRunner      interface {
 		Run(context.Context, storetypes.MultiStore, [][]byte, DeliverTxFunc) ([]*abci.ExecTxResult, error)
 	}
@@ -38,11 +38,11 @@ type DefaultRunner struct {
 func (d DefaultRunner) Run(ctx context.Context, _ storetypes.MultiStore, txs [][]byte, deliverTx DeliverTxFunc) ([]*abci.ExecTxResult, error) {
 	// Fallback to the default execution logic
 	txResults := make([]*abci.ExecTxResult, 0, len(txs))
-	for _, rawTx := range txs {
+	for i, rawTx := range txs {
 		var response *abci.ExecTxResult
 
 		if _, err := d.txDecoder(rawTx); err == nil {
-			response = deliverTx(rawTx, nil, nil)
+			response = deliverTx(rawTx, nil, i, nil)
 		} else {
 			// In the case where a transaction included in a block proposal is malformed,
 			// we still want to return a default response to comet. This is because comet
@@ -146,7 +146,7 @@ func (e STMRunner) Run(ctx context.Context, ms storetypes.MultiStore, txs [][]by
 			if memTxs != nil {
 				memTx = memTxs[txn]
 			}
-			results[txn] = deliverTx(memTx, msWrapper{ms}, cache)
+			results[txn] = deliverTx(memTx, msWrapper{ms}, int(txn), cache)
 
 			if v != nil {
 				incarnationCache[txn].Store(v)

@@ -353,7 +353,7 @@ func (app *BaseApp) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, er
 	}
 
 	if app.checkTxHandler == nil {
-		gInfo, result, anteEvents, err := app.RunTx(mode, req.Tx, nil, nil, nil)
+		gInfo, result, anteEvents, err := app.RunTx(mode, req.Tx, nil, -1, nil, nil)
 		if err != nil {
 			return sdkerrors.ResponseCheckTxWithEvents(err, gInfo.GasWanted, gInfo.GasUsed, anteEvents, app.trace), nil
 		}
@@ -369,7 +369,7 @@ func (app *BaseApp) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, er
 
 	// Create wrapper to avoid users overriding the execution mode
 	runTx := func(txBytes []byte, tx sdk.Tx) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) {
-		return app.RunTx(mode, txBytes, tx, nil, nil)
+		return app.RunTx(mode, txBytes, tx, -1, nil, nil)
 	}
 
 	return app.checkTxHandler(runTx, req)
@@ -800,7 +800,10 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 
 	// Reset the gas meter so that the AnteHandlers aren't required to
 	gasMeter = app.getBlockGasMeter(app.finalizeBlockState.Context())
-	app.finalizeBlockState.SetContext(app.finalizeBlockState.Context().WithBlockGasMeter(gasMeter))
+	app.finalizeBlockState.SetContext(
+		app.finalizeBlockState.Context().
+			WithBlockGasMeter(gasMeter).
+			WithTxCount(len(req.Txs)))
 
 	// Iterate over all raw transactions in the proposal and attempt to execute
 	// them, gathering the execution results.

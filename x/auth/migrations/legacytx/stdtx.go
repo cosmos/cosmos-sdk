@@ -20,7 +20,7 @@ var (
 
 // StdFee includes the amount of coins paid in fees and the maximum
 // gas to be used by the transaction. The ratio yields an effective "gasprice",
-// which must be above some miminum to be accepted into the mempool.
+// which must be above some minimum to be accepted into the mempool.
 // [Deprecated]
 type StdFee struct {
 	Amount  sdk.Coins `json:"amount" yaml:"amount"`
@@ -146,7 +146,7 @@ func (tx StdTx) GetSignaturesV2() ([]signing.SignatureV2, error) {
 	return res, nil
 }
 
-// GetPubkeys returns the pubkeys of signers if the pubkey is included in the signature
+// GetPubKeys returns the pubkeys of signers if the pubkey is included in the signature
 // If pubkey is not included in the signature, then nil is in the slice instead
 func (tx StdTx) GetPubKeys() ([]cryptotypes.PubKey, error) {
 	pks := make([]cryptotypes.PubKey, len(tx.Signatures))

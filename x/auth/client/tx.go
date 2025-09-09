@@ -53,7 +53,7 @@ func SignTx(txFactory tx.Factory, clientCtx client.Context, name string, txBuild
 		return err
 	}
 	if !isTxSigner(addr, signers) {
-		return fmt.Errorf("%s: %s", errors.ErrorInvalidSigner, name)
+		return fmt.Errorf("%w: %s", errors.ErrorInvalidSigner, name)
 	}
 	if !offline {
 		txFactory, err = populateAccountFromState(txFactory, clientCtx, addr)
@@ -88,7 +88,7 @@ func SignTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, add
 	return tx.Sign(clientCtx.CmdContext, txFactory, name, txBuilder, overwrite)
 }
 
-// Read and decode a StdTx from the given filename. Can pass "-" to read from stdin.
+// ReadTxFromFile reads and decodes a StdTx from the given filename. Can pass "-" to read from stdin.
 func ReadTxFromFile(ctx client.Context, filename string) (tx sdk.Tx, err error) {
 	var bytes []byte
 

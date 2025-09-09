@@ -11,9 +11,11 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
+var LegacyGlobalAccountNumberKey = authtypes.LegacyGlobalAccountNumberKey
+
 func Migrate(ctx context.Context, storeService storetypes.KVStoreService, sequence collections.Sequence) error {
 	store := storeService.OpenKVStore(ctx)
-	b, err := store.Get(authtypes.LegacyGlobalAccountNumberKey)
+	b, err := store.Get(LegacyGlobalAccountNumberKey)
 	if err != nil {
 		return err
 	}
@@ -37,7 +39,7 @@ func Migrate(ctx context.Context, storeService storetypes.KVStoreService, sequen
 	}
 
 	// remove the value from the old prefix.
-	err = store.Delete(authtypes.LegacyGlobalAccountNumberKey)
+	err = store.Delete(LegacyGlobalAccountNumberKey)
 	if err != nil {
 		return err
 	}

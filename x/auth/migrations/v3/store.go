@@ -22,7 +22,7 @@ func mapAccountAddressToAccountID(ctx sdk.Context, storeService corestore.KVStor
 		if err := cdc.UnmarshalInterface(iterator.Value(), &acc); err != nil {
 			return err
 		}
-		store.Set(accountNumberStoreKey(acc.GetAccountNumber()), acc.GetAddress().Bytes())
+		_ = store.Set(accountNumberStoreKey(acc.GetAccountNumber()), acc.GetAddress().Bytes())
 	}
 
 	return nil

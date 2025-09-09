@@ -92,7 +92,7 @@ type StdSignature struct {
 	Signature          []byte                          `json:"signature" yaml:"signature"`
 }
 
-// Deprecated
+// Deprecated: NewStdSignature is a legacy function
 func NewStdSignature(pk cryptotypes.PubKey, sig []byte) StdSignature {
 	return StdSignature{PubKey: pk, Signature: sig}
 }

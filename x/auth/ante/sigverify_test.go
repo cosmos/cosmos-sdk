@@ -229,7 +229,7 @@ func TestSigVerification(t *testing.T) {
 						},
 						Sequence: tc.accSeqs[0],
 					}
-					suite.txBuilder.SetSignatures(txSigs...)
+					require.NoError(t, suite.txBuilder.SetSignatures(txSigs...))
 					tx = suite.txBuilder.GetTx()
 				}
 
@@ -268,6 +268,8 @@ func TestSigIntegration(t *testing.T) {
 }
 
 func runSigDecorators(t *testing.T, params types.Params, _ bool, privs ...cryptotypes.PrivKey) (storetypes.Gas, error) {
+	t.Helper()
+
 	suite := SetupTestSuite(t, true)
 	suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 

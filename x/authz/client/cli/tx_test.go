@@ -174,7 +174,6 @@ func (s *CLITestSuite) createAccount(uid string) sdk.AccAddress {
 func (s *CLITestSuite) msgSendExec(grantee sdk.AccAddress) {
 	val := testutil.CreateKeyringAccounts(s.T(), s.kr, 1)
 	// Send some funds to the new account.
-	s.ac.StringToBytes("cosmos16zex22087zs656t0vedytv5wqhm6axxd5679ry")
 	out, err := clitestutil.MsgSendExec(
 		s.clientCtx,
 		val[0].Address,
@@ -592,7 +591,6 @@ func (s *CLITestSuite) TestCmdRevokeAuthorizations() {
 		},
 	}
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdRevokeAuthorization(addresscodec.NewBech32Codec("cosmos"))
 
@@ -727,7 +725,6 @@ func (s *CLITestSuite) TestNewExecGenericAuthorized() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdExecAuthorization()
 
@@ -812,7 +809,6 @@ func (s *CLITestSuite) TestNewExecGrantAuthorized() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := cli.NewCmdExecAuthorization()
 			clientCtx := s.clientCtx

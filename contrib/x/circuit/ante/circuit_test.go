@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	cmproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
-	abci "github.com/cometbft/cometbft/v2/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"
@@ -45,7 +45,7 @@ func initFixture(t *testing.T) *fixture {
 	encCfg := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{})
 	mockclientCtx := client.Context{}.
 		WithTxConfig(encCfg.TxConfig).
-		WithClient(clitestutil.NewMockCometRPC(abci.QueryResponse{}))
+		WithClient(clitestutil.NewMockCometRPC(abci.ResponseQuery{}))
 
 	return &fixture{
 		ctx:           testutil.DefaultContextWithDB(t, mockStoreKey, storetypes.NewTransientStoreKey("transient_test")).Ctx.WithBlockHeader(cmproto.Header{}),

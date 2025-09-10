@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/cometbft/cometbft/v2/crypto"
+	"github.com/cometbft/cometbft/crypto"
 
 	"cosmossdk.io/errors"
 

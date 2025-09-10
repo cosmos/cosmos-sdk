@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/v2/abci/types"
-	cmtjson "github.com/cometbft/cometbft/v2/libs/json"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtjson "github.com/cometbft/cometbft/libs/json"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
@@ -83,14 +83,14 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.NoError(err)
 
 	// init chain will set the validator set and initialize the genesis accounts
-	_, err = app.InitChain(&abci.InitChainRequest{
+	_, err = app.InitChain(&abci.RequestInitChain{
 		Validators:      []abci.ValidatorUpdate{},
 		ConsensusParams: sims.DefaultConsensusParams,
 		AppStateBytes:   stateBytes,
 	})
 	s.NoError(err)
 
-	_, err = app.FinalizeBlock(&abci.FinalizeBlockRequest{
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height:             app.LastBlockHeight() + 1,
 		Hash:               app.LastCommitID().Hash,
 		NextValidatorsHash: valSet.Hash(),

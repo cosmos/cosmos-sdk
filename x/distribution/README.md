@@ -291,12 +291,12 @@ When using an external community pool with `x/distribution`, the following handl
 
 **QueryService**
 
-- `CommunityPool`
+* `CommunityPool`
 
 **MsgService**
 
-- `CommunityPoolSpend`
-- `FundCommunityPool`
+* `CommunityPoolSpend`
+* `FundCommunityPool`
 
 If you have services that rely on this functionality from `x/distribution`, please update them to use the `x/protocolpool` equivalents.
 

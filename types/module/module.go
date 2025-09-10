@@ -52,7 +52,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// AppModuleBasic is the standard form for basic non-dependant elements of an application module.
+// AppModuleBasic is the standard form for basic non-dependent elements of an application module.
 type AppModuleBasic interface {
 	HasName
 	RegisterLegacyAminoCodec(*codec.LegacyAmino)
@@ -198,7 +198,7 @@ type HasABCIGenesis interface {
 
 // AppModule is the form for an application module. Most of
 // its functionality has been moved to extension interfaces.
-// Deprecated: use appmodule.AppModule with a combination of extension interfaes interfaces instead.
+// Deprecated: use appmodule.AppModule with a combination of extension interfaces instead.
 type AppModule interface {
 	appmodule.AppModule
 
@@ -267,7 +267,7 @@ func (GenesisOnlyAppModule) IsOnePerModuleType() {}
 // IsAppModule implements the appmodule.AppModule interface.
 func (GenesisOnlyAppModule) IsAppModule() {}
 
-// RegisterInvariants is a placeholder function register no invariants
+// RegisterInvariants is a placeholder function that registers no invariants
 //
 // Deprecated: this function will be removed when x/crisis and invariants are removed from the cosmos SDK.
 func (GenesisOnlyAppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
@@ -539,7 +539,7 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, 
 	if len(modulesToExport) == 0 {
 		modulesToExport = m.OrderExportGenesis
 	}
-	// verify modules exists in app, so that we don't panic in the middle of an export
+	// verify modules exist in app, so that we don't panic in the middle of an export
 	if err := m.checkModulesExists(modulesToExport); err != nil {
 		return nil, err
 	}
@@ -643,7 +643,7 @@ type MigrationHandler func(sdk.Context) error
 type VersionMap map[string]uint64
 
 // RunMigrations performs in-place store migrations for all modules. This
-// function MUST be called insde an x/upgrade UpgradeHandler.
+// function MUST be called inside an x/upgrade UpgradeHandler.
 //
 // Recall that in an upgrade handler, the `fromVM` VersionMap is retrieved from
 // x/upgrade's store, and the function needs to return the target VersionMap
@@ -658,8 +658,8 @@ type VersionMap map[string]uint64
 //	})
 //
 // Internally, RunMigrations will perform the following steps:
-// - create an `updatedVM` VersionMap of module with their latest ConsensusVersion
-// - make a diff of `fromVM` and `udpatedVM`, and for each module:
+// - create an `updatedVM` VersionMap of modules with their latest ConsensusVersion
+// - make a diff of `fromVM` and `updatedVM`, and for each module:
 //   - if the module's `fromVM` version is less than its `updatedVM` version,
 //     then run in-place store migrations for that module between those versions.
 //   - if the module does not exist in the `fromVM` (which means that it's a new module,
@@ -674,7 +674,7 @@ type VersionMap map[string]uint64
 // As an app developer, if you wish to skip running InitGenesis for your new
 // module "foo", you need to manually pass a `fromVM` argument to this function
 // foo's module version set to its latest ConsensusVersion. That way, the diff
-// between the function's `fromVM` and `udpatedVM` will be empty, hence not
+// between the function's `fromVM` and `updatedVM` will be empty, hence not
 // running anything for foo.
 //
 // Example:
@@ -722,6 +722,7 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM Ver
 		// 2. An existing chain is upgrading from version < 0.43 to v0.43+ for the first time.
 		// In this case, all modules have yet to be added to x/upgrade's VersionMap store.
 		if exists {
+			sdkCtx.Logger().Info(fmt.Sprintf("running migrations for module: %s", moduleName))
 			err := c.runModuleMigrations(sdkCtx, moduleName, fromVersion, toVersion)
 			if err != nil {
 				return nil, err

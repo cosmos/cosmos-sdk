@@ -18,11 +18,11 @@ Simulations are useful for testing edge cases in module implementations.
 * [Simulation Package](#simulation-package)
 * [Simulation App Module](#simulation-app-module)
 * [SimsX](#simsx)
-  * [Example Implementations](#example-implementations)
+    * [Example Implementations](#example-implementations)
 * [Store decoders](#store-decoders)
 * [Randomized genesis](#randomized-genesis)
 * [Random weighted operations](#random-weighted-operations)
-  * [Using Simsx](#using-simsx)
+    * [Using Simsx](#using-simsx)
 * [App Simulator manager](#app-simulator-manager)
 * [Running Simulations](#running-simulations)
 
@@ -47,6 +47,7 @@ See an example implementation of these methods from `x/distribution` [here](http
 Cosmos SDK v0.53.0 introduced a new package, `simsx`, providing improved DevX for writing simulation code.
 
 It exposes the following extension interfaces that modules may implement to integrate with the new `simsx` runner.
+
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/main/testutil/simsx/runner.go#L223-L234
 ```
@@ -62,15 +63,15 @@ If the module does **not** have message handlers or governance proposal handlers
 
 ### Example Implementations
 
-- `HasWeightedOperationsXWithProposals`: [x/gov](https://github.com/cosmos/cosmos-sdk/blob/main/x/gov/module.go#L242-L261)
-- `HasWeightedOperationsX`: [x/bank](https://github.com/cosmos/cosmos-sdk/blob/main/x/bank/module.go#L199-L203)
-- `HasProposalMsgsX`: [x/bank](https://github.com/cosmos/cosmos-sdk/blob/main/x/bank/module.go#L194-L197)
+* `HasWeightedOperationsXWithProposals`: [x/gov](https://github.com/cosmos/cosmos-sdk/blob/main/x/gov/module.go#L242-L261)
+* `HasWeightedOperationsX`: [x/bank](https://github.com/cosmos/cosmos-sdk/blob/main/x/bank/module.go#L199-L203)
+* `HasProposalMsgsX`: [x/bank](https://github.com/cosmos/cosmos-sdk/blob/main/x/bank/module.go#L194-L197)
 
 ## Store decoders
 
 Registering the store decoders is required for the `AppImportExport` simulation. This allows
 for the key-value pairs from the stores to be decoded to their corresponding types.
-In particular, it matches the key to a concrete type and then unmarshalls the value from the `KVPair` to the type provided.
+In particular, it matches the key to a concrete type and then unmarshals the value from the `KVPair` to the type provided.
 
 Modules using [collections](https://github.com/cosmos/cosmos-sdk/blob/main/collections/README.md) can use the `NewStoreDecoderFuncFromCollectionsSchema` function that builds the decoder for you:
 

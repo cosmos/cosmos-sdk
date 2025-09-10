@@ -6048,7 +6048,7 @@ type A struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// Fields that are parseable by SIGN_MODE_TEXTUAL.
+	// Fields that are parsable by SIGN_MODE_TEXTUAL.
 	UINT32    uint32                 `protobuf:"varint,1,opt,name=UINT32,proto3" json:"UINT32,omitempty"`
 	UINT64    uint64                 `protobuf:"varint,2,opt,name=UINT64,proto3" json:"UINT64,omitempty"`
 	INT32     int32                  `protobuf:"varint,3,opt,name=INT32,proto3" json:"INT32,omitempty"`

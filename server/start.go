@@ -51,8 +51,9 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
+// CometBFT full-node start flags
+
 const (
-	// CometBFT full-node start flags
 	flagWithComet          = "with-comet"
 	flagAddress            = "address"
 	flagTransport          = "transport"
@@ -78,10 +79,12 @@ const (
 	FlagShutdownGrace       = "shutdown-grace"
 
 	// state sync-related flags
+
 	FlagStateSyncSnapshotInterval   = "state-sync.snapshot-interval"
 	FlagStateSyncSnapshotKeepRecent = "state-sync.snapshot-keep-recent"
 
 	// api-related flags
+
 	FlagAPIEnable             = "api.enable"
 	FlagAPISwagger            = "api.swagger"
 	FlagAPIAddress            = "api.address"
@@ -92,6 +95,7 @@ const (
 	FlagAPIEnableUnsafeCORS   = "api.enabled-unsafe-cors"
 
 	// gRPC-related flags
+
 	flagGRPCOnly            = "grpc-only"
 	flagGRPCEnable          = "grpc.enable"
 	flagGRPCAddress         = "grpc.address"
@@ -99,9 +103,11 @@ const (
 	flagGRPCSkipCheckHeader = "grpc.skip-check-header"
 
 	// mempool flags
+
 	FlagMempoolMaxTxs = "mempool.max-txs"
 
 	// testnet keys
+
 	KeyIsTestnet             = "is-testnet"
 	KeyNewChainID            = "new-chain-ID"
 	KeyNewOpAddr             = "new-operator-addr"
@@ -122,7 +128,7 @@ type StartCmdOptions struct {
 	PostSetupStandalone func(svrCtx *Context, clientCtx client.Context, ctx context.Context, g *errgroup.Group) error
 	// AddFlags add custom flags to start cmd
 	AddFlags func(cmd *cobra.Command)
-	// StartCommandHanlder can be used to customize the start command handler
+	// StartCommandHandler can be used to customize the start command handler
 	StartCommandHandler func(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreator, inProcessConsensus bool, opts StartCmdOptions) error
 }
 
@@ -178,12 +184,12 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 
 			_, err := GetPruningOptionsFromFlags(serverCtx.Viper)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get pruning options: %w", err)
 			}
 
 			clientCtx, err := client.GetClientQueryContext(cmd)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to get client context: %w", err)
 			}
 
 			withCMT, _ := cmd.Flags().GetBool(flagWithComet)
@@ -215,18 +221,18 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 func start(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreator, withCmt bool, opts StartCmdOptions) error {
 	svrCfg, err := getAndValidateConfig(svrCtx)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get and validate config: %w", err)
 	}
 
 	app, appCleanupFn, err := startApp(svrCtx, appCreator, opts)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to start app: %w", err)
 	}
 	defer appCleanupFn()
 
 	metrics, err := startTelemetry(svrCfg)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to start telemetry: %w", err)
 	}
 
 	emitServerInfoMetrics()
@@ -339,12 +345,12 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 
 	grpcSrv, clientCtx, err := startGrpcServer(ctx, g, svrCfg.GRPC, clientCtx, svrCtx, app)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to start grpc server: %w", err)
 	}
 
 	err = startAPIServer(ctx, g, svrCfg, clientCtx, svrCtx, app, cmtCfg.RootDir, grpcSrv, metrics)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to start api server: %w", err)
 	}
 
 	if opts.PostSetup != nil {
@@ -642,7 +648,7 @@ func InPlaceTestnetCreator(testnetAppCreator types.AppCreator) *cobra.Command {
 		Short: "Create and start a testnet from current local state",
 		Long: `Create and start a testnet from current local state.
 After utilizing this command the network will start. If the network is stopped,
-the normal "start" command should be used. Re-using this command on state that
+the normal "start" command should be used. Reusing this command on state that
 has already been modified by this command could result in unexpected behavior.
 
 Additionally, the first block may take up to one minute to be committed, depending
@@ -864,7 +870,7 @@ func testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB, tra
 		Signature:        []byte{},
 	}
 
-	// Sign the vote, and copy the proto changes from the act of signing to the vote itself
+	// Sign the vote and copy the proto changes from the act of signing to the vote itself
 	voteProto := vote.ToProto()
 	err = privValidator.SignVote(newChainID, voteProto)
 	if err != nil {
@@ -891,7 +897,7 @@ func testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB, tra
 		return nil, err
 	}
 
-	// Create ValidatorSet struct containing just our valdiator.
+	// Create ValidatorSet struct containing just our validator.
 	newVal := &cmttypes.Validator{
 		Address:     validatorAddress,
 		PubKey:      userPubKey,
@@ -927,7 +933,7 @@ func testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB, tra
 		return nil, err
 	}
 
-	// Modfiy Validators stateDB entry.
+	// Modify Validators stateDB entry.
 	err = stateDB.Set(fmt.Appendf(nil, "validatorsKey:%v", blockStore.Height()), buf)
 	if err != nil {
 		return nil, err

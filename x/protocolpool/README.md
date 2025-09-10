@@ -10,7 +10,7 @@ sidebar_position: 1
 
 This module is `supplemental`; it is not required to run a Cosmos SDK chain. `x/protocolpool` enhances the community pool functionality provided by `x/distribution` and enables custom modules to further extend the community pool.
 
-Note: _as long as an external commmunity pool keeper (here, `x/protocolpool`) is wired in DI configs, `x/distribution` will automatically use it for its external pool._
+Note: _as long as an external community pool keeper (here, `x/protocolpool`) is wired in DI configs, `x/distribution` will automatically use it for its external pool._
 
 ## Usage Limitations
 
@@ -18,12 +18,12 @@ The following `x/distribution` handlers will now return an error when the `proto
 
 **QueryService**
 
-- `CommunityPool`
+* `CommunityPool`
 
 **MsgService**
 
-- `CommunityPoolSpend`
-- `FundCommunityPool`
+* `CommunityPoolSpend`
+* `FundCommunityPool`
 
 If you have services that rely on this functionality from `x/distribution`, please update them to use the `x/protocolpool` equivalents.
 
@@ -54,7 +54,7 @@ CommunityPoolSpend can be called by the module authority (default governance mod
 ### CreateContinuousFund
 
 CreateContinuousFund is a message used to initiate a continuous fund for a specific recipient. The proposed percentage of funds will be distributed only on withdraw request for the recipient. The fund distribution continues until expiry time is reached or continuous fund request is canceled.
-NOTE:  This feature is designed to work with the SDK's default bond denom. 
+NOTE:  This feature is designed to work with the SDK's default bond denom.
 
 ```protobuf
   // CreateContinuousFund defines a method to distribute a percentage of funds to an address continuously.
@@ -91,7 +91,7 @@ https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/proto/cosmos/protocolp
 
 ```go
 func (k Keeper) FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error {
-	return k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, amount)
+ return k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, amount)
 }
 ```
 
@@ -110,7 +110,7 @@ The message will fail under the following conditions:
 
 ```go
 func (k Keeper) DistributeFromCommunityPool(ctx context.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error {
-	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiveAddr, amount)
+ return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiveAddr, amount)
 }
 ```
 
@@ -124,9 +124,9 @@ https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/proto/cosmos/protocolp
 
 The message will fail under the following conditions:
 
-- The recipient address is empty or restricted.
-- The percentage is zero/negative/greater than one.
-- The Expiry time is less than the current block time.
+* The recipient address is empty or restricted.
+* The percentage is zero/negative/greater than one.
+* The Expiry time is less than the current block time.
 
 :::warning
 If two continuous fund proposals to the same address are created, the previous ContinuousFund will be updated with the new ContinuousFund.
@@ -138,7 +138,7 @@ https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/x/protocolpool/keeper/
 
 ### MsgCancelContinuousFund
 
-This message is used to cancel an existing continuous fund proposal for a specific recipient. Once canceled, the continuous fund will no longer distribute funds at each begin block, and the state object will be removed. 
+This message is used to cancel an existing continuous fund proposal for a specific recipient. Once canceled, the continuous fund will no longer distribute funds at each begin block, and the state object will be removed.
 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/x/protocolpool/proto/cosmos/protocolpool/v1/tx.proto#L136-L161
@@ -146,8 +146,8 @@ https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/x/protocolpool/proto/c
 
 The message will fail under the following conditions:
 
-- The recipient address is empty or restricted.
-- The ContinuousFund for the recipient does not exist.
+* The recipient address is empty or restricted.
+* The ContinuousFund for the recipient does not exist.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/x/protocolpool/keeper/msg_server.go#L188-L226

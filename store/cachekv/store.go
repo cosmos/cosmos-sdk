@@ -330,7 +330,7 @@ func (store *GStore[V]) dirtyItems(start, end []byte) {
 	n := len(store.unsortedCache)
 	unsorted := make([]*kvPair[V], 0)
 	// If the unsortedCache is too big, its costs too much to determine
-	// whats in the subset we are concerned about.
+	// what's in the subset we are concerned about.
 	// If you are interleaving iterator calls with writes, this can easily become an
 	// O(N^2) overhead.
 	// Even without that, too many range checks eventually becomes more expensive
@@ -421,7 +421,7 @@ func (store *GStore[V]) clearUnsortedCacheSubset(unsorted []*kvPair[V], sortStat
 //----------------------------------------
 // etc
 
-// Only entrypoint to mutate store.cache.
+// setCacheValue is the only entrypoint to mutate store.cache.
 // A `nil` value means a deletion.
 func (store *GStore[V]) setCacheValue(key []byte, value V, dirty bool) {
 	keyStr := conv.UnsafeBytesToStr(key)

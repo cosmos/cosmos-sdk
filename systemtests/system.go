@@ -80,7 +80,7 @@ type SystemUnderTest struct {
 	chainID  string
 }
 
-func NewSystemUnderTest(execBinary string, verbose bool, nodesCount int, blockTime time.Duration, initer ...TestnetInitializer) *SystemUnderTest {
+func NewSystemUnderTest(execBinary string, verbose bool, nodesCount int, blockTime time.Duration, chainID string, initer ...TestnetInitializer) *SystemUnderTest {
 	if execBinary == "" {
 		panic("executable binary name must not be empty")
 	}
@@ -90,7 +90,7 @@ func NewSystemUnderTest(execBinary string, verbose bool, nodesCount int, blockTi
 	}
 	execBinary = filepath.Join(WorkDir, "binaries", execBinary)
 	s := &SystemUnderTest{
-		chainID:           "testing",
+		chainID:           chainID,
 		execBinary:        execBinary,
 		outputDir:         "./testnet",
 		blockTime:         blockTime,
@@ -206,7 +206,7 @@ func (s *SystemUnderTest) IsDirty() bool {
 
 // watchLogs stores stdout/stderr in a file and in a ring buffer to output the last n lines on test error
 func (s *SystemUnderTest) watchLogs(node int, cmd *exec.Cmd) {
-	logfile, err := os.Create(filepath.Join(WorkDir, s.outputDir, fmt.Sprintf("node%d.out", node)))
+	logfile, err := os.Create(s.logfileName(node))
 	if err != nil {
 		panic(fmt.Sprintf("open logfile error %#+v", err))
 	}
@@ -227,6 +227,10 @@ func (s *SystemUnderTest) watchLogs(node int, cmd *exec.Cmd) {
 		close(stopRingBuffer)
 		_ = logfile.Close()
 	})
+}
+
+func (s *SystemUnderTest) logfileName(node int) string {
+	return filepath.Join(WorkDir, s.outputDir, fmt.Sprintf("node%d.out", node))
 }
 
 func appendToBuf(r io.Reader, b *ring.Ring, stop <-chan struct{}) {
@@ -309,11 +313,13 @@ func (s *SystemUnderTest) AwaitNodeUp(t *testing.T, rpcAddr string) {
 			started <- struct{}{}
 		}
 	}()
+	timer := time.NewTimer(timeout)
+	defer timer.Stop()
 	select {
 	case <-started:
 	case <-ctx.Done():
 		require.NoError(t, ctx.Err())
-	case <-time.NewTimer(timeout).C:
+	case <-timer.C:
 		t.Fatalf("timeout waiting for node start: %s", timeout)
 	}
 }
@@ -398,7 +404,9 @@ func (s *SystemUnderTest) AwaitBlockHeight(t *testing.T, targetHeight int64, tim
 	} else {
 		maxWaitTime = time.Duration(targetHeight-s.currentHeight.Load()+4) * s.blockTime
 	}
-	abort := time.NewTimer(maxWaitTime).C
+	timer := time.NewTimer(maxWaitTime)
+	defer timer.Stop()
+	abort := timer.C
 	for {
 		select {
 		case <-abort:
@@ -428,10 +436,12 @@ func (s *SystemUnderTest) AwaitNextBlock(t *testing.T, timeout ...time.Duration)
 		done <- s.currentHeight.Load()
 		close(done)
 	}()
+	timer := time.NewTimer(maxWaitTime)
+	defer timer.Stop()
 	select {
 	case v := <-done:
 		return v
-	case <-time.NewTimer(maxWaitTime).C:
+	case <-timer.C:
 		t.Fatalf("Timeout - no block within %s", maxWaitTime)
 		return -1
 	}
@@ -789,6 +799,24 @@ func (s *SystemUnderTest) BlockTime() time.Duration {
 	return s.blockTime
 }
 
+// FindLogMessage searches the logs of each node and returns a count of the number of
+// nodes that had a match for the provided regular expression.
+func (s *SystemUnderTest) FindLogMessage(regex *regexp.Regexp) int {
+	found := 0
+	for i := 0; i < s.nodesCount; i++ {
+		logfile := s.logfileName(i)
+		content, err := os.ReadFile(logfile)
+		if err != nil {
+			continue // skip if file cannot be read
+		}
+		if regex.Match(content) {
+			found++
+		}
+
+	}
+	return found
+}
+
 type Node struct {
 	ID      string
 	IP      string
@@ -842,7 +870,7 @@ type (
 )
 
 // Subscribe to receive events for a topic. Does not block.
-// For query syntax See https://docs.cosmos.network/master/core/events.html#subscribing-to-events
+// For query syntax See https://docs.cosmos.network/v0.46/core/events.html#subscribing-to-events
 func (l *EventListener) Subscribe(query string, cb EventConsumer) func() {
 	ctx, done := context.WithCancel(context.Background())
 	l.t.Cleanup(done)
@@ -864,7 +892,7 @@ func (l *EventListener) Subscribe(query string, cb EventConsumer) func() {
 }
 
 // AwaitQuery blocks and waits for a single result or timeout. This can be used with `broadcast-mode=async`.
-// For query syntax See https://docs.cosmos.network/master/core/events.html#subscribing-to-events
+// For query syntax See https://docs.cosmos.network/v0.46/core/events.html#subscribing-to-events
 func (l *EventListener) AwaitQuery(query string, optMaxWaitTime ...time.Duration) *ctypes.ResultEvent {
 	c, result := CaptureSingleEventConsumer()
 	maxWaitTime := DefaultWaitTime
@@ -883,6 +911,7 @@ func TimeoutConsumer(t *testing.T, maxWaitTime time.Duration, next EventConsumer
 	ctx, done := context.WithCancel(context.Background())
 	t.Cleanup(done)
 	timeout := time.NewTimer(maxWaitTime)
+	t.Cleanup(func() { timeout.Stop() })
 	timedOut := make(chan struct{}, 1)
 	go func() {
 		select {
@@ -898,6 +927,13 @@ func TimeoutConsumer(t *testing.T, maxWaitTime time.Duration, next EventConsumer
 			t.Fatalf("Timeout waiting for new events %s", maxWaitTime)
 			return false
 		default:
+			if !timeout.Stop() {
+				// Drain the channel if the timer already fired
+				select {
+				case <-timeout.C:
+				default:
+				}
+			}
 			timeout.Reset(maxWaitTime)
 			result := next(e)
 			if !result {

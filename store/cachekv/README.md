@@ -7,8 +7,8 @@ The core goals the CacheKVStore seeks to solve are:
 * Buffer all writes to the parent store, so they can be dropped if they need to be reverted
 * Allow iteration over contiguous spans of keys
 * Act as a cache, improving access time for reads that have already been done (by replacing tree access with hashtable access, avoiding disk I/O)
-  * Note: We actually fail to achieve this for iteration right now
-  * Note: Need to consider this getting too large and dropping some cached reads
+    * Note: We actually fail to achieve this for iteration right now
+    * Note: Need to consider this getting too large and dropping some cached reads
 * Make subsequent reads account for prior buffered writes
 * Write all buffered changes to the parent store
 

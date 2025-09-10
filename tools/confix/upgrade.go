@@ -17,7 +17,7 @@ import (
 )
 
 // Upgrade reads the configuration file at configPath and applies any
-// transformations necessary to Upgrade it to the current version. If this
+// transformations necessary to upgrade it to the current version. If this
 // succeeds, the transformed output is written to outputPath. As a special
 // case, if outputPath == "" the output is written to stdout.
 //
@@ -44,7 +44,7 @@ func Upgrade(ctx context.Context, plan transform.Plan, doc *tomledit.Document, c
 
 	// allow to skip validation
 	if !skipValidate {
-		// verify that file is valid after applying fixes
+		// verify that the file is valid after applying fixes
 		if err := CheckValid(configPath, buf.Bytes()); err != nil {
 			return fmt.Errorf("updated config is invalid: %w", err)
 		}

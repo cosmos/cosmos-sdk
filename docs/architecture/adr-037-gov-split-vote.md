@@ -2,7 +2,7 @@
 
 ## Changelog
 
-* 2020/10/28: Intial draft
+* 2020/10/28: Initial draft
 
 ## Status
 
@@ -14,9 +14,9 @@ This ADR defines a modification to the governance module that would allow a stak
 
 ## Context
 
-Currently, an address can cast a vote with only one options (Yes/No/Abstain/NoWithVeto) and use their full voting power behind that choice.
+Currently, an address can cast a vote with only one option (Yes/No/Abstain/NoWithVeto) and use their full voting power behind that choice.
 
-However, often times the entity owning that address might not be a single individual.  For example, a company might have different stakeholders who want to vote differently, and so it makes sense to allow them to split their voting power.  Another example use case is exchanges.  Many centralized exchanges often stake a portion of their users' tokens in their custody.  Currently, it is not possible for them to do "passthrough voting" and giving their users voting rights over their tokens.  However, with this system, exchanges can poll their users for voting preferences, and then vote on-chain proportionally to the results of the poll.
+However, oftentimes the entity owning that address might not be a single individual.  For example, a company might have different stakeholders who want to vote differently, and so it makes sense to allow them to split their voting power.  Another example use case is exchanges.  Many centralized exchanges often stake a portion of their users' tokens in their custody.  Currently, it is not possible for them to do "passthrough voting" and giving their users voting rights over their tokens.  However, with this system, exchanges can poll their users for voting preferences, and then vote on-chain proportionally to the results of the poll.
 
 ## Decision
 
@@ -53,7 +53,7 @@ type MsgVoteWeighted struct {
 
 The `ValidateBasic` of a `MsgVoteWeighted` struct would require that
 
-1. The sum of all the Rates is equal to 1.0
+1. The sum of all the rates is equal to 1.0
 2. No Option is repeated
 
 The governance tally function will iterate over all the options in a vote and add to the tally the result of the voter's voting power * the rate for that option.

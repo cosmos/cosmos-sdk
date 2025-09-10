@@ -1,9 +1,8 @@
 package keeper_test
 
 import (
-	"cosmossdk.io/x/feegrant"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
 const (
@@ -145,6 +144,25 @@ func (suite *KeeperTestSuite) TestFeeAllowances() {
 				suite.Require().Equal(len(resp.Allowances), 1)
 				suite.Require().Equal(resp.Allowances[0].Granter, suite.addrs[0].String())
 				suite.Require().Equal(resp.Allowances[0].Grantee, suite.addrs[1].String())
+			},
+		},
+		{
+			"valid query: expect multi grant",
+			&feegrant.QueryAllowancesRequest{
+				Grantee: suite.addrs[0].String(),
+			},
+			false,
+			func() {
+				suite.grantFeeAllowance(suite.addrs[1], suite.addrs[0])
+				suite.grantFeeAllowance(suite.addrs[2], suite.addrs[0])
+				suite.grantFeeAllowance(suite.addrs[3], suite.addrs[0])
+			},
+			func(resp *feegrant.QueryAllowancesResponse) {
+				suite.Require().Equal(len(resp.Allowances), 3)
+				for i, addr := range suite.addrs[1:4] {
+					resp.Allowances[i].Granter = suite.addrs[0].String()
+					resp.Allowances[i].Granter = addr.String()
+				}
 			},
 		},
 	}

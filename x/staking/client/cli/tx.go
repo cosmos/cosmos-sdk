@@ -416,7 +416,7 @@ func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 	return txf, msg, nil
 }
 
-// Return the flagset, particular flags, and a description of defaults
+// CreateValidatorMsgFlagSet returns the FlagSet, particular flags, and a description of defaults
 // this is anticipated to be used with the gen-tx
 func CreateValidatorMsgFlagSet(ipDefault string) (fs *flag.FlagSet, defaultsDesc string) {
 	fsCreateValidator := flag.NewFlagSet("", flag.ContinueOnError)
@@ -569,8 +569,8 @@ func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, c
 
 // BuildCreateValidatorMsg makes a new MsgCreateValidator.
 func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorConfig, txBldr tx.Factory, generateOnly bool, valCodec address.Codec) (tx.Factory, sdk.Msg, error) {
-	amounstStr := config.Amount
-	amount, err := sdk.ParseCoinNormalized(amounstStr)
+	amountStr := config.Amount
+	amount, err := sdk.ParseCoinNormalized(amountStr)
 	if err != nil {
 		return txBldr, nil, err
 	}

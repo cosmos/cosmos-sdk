@@ -57,7 +57,6 @@ func (*ObjStore) GetStoreType() types.StoreType {
 	return types.StoreTypeObject
 }
 
-// Implements CommitStore
 // Commit cleans up Store.
 func (ts *GStore[V]) Commit() (id types.CommitID) {
 	ts.Clear()

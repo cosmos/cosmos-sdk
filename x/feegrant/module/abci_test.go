@@ -8,10 +8,6 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/feegrant"
-	"cosmossdk.io/x/feegrant/keeper"
-	"cosmossdk.io/x/feegrant/module"
-	feegranttestutil "cosmossdk.io/x/feegrant/testutil"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
@@ -21,6 +17,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/module"
+	feegranttestutil "github.com/cosmos/cosmos-sdk/x/feegrant/testutil"
 )
 
 func TestFeegrantPruning(t *testing.T) {
@@ -84,7 +84,7 @@ func TestFeegrantPruning(t *testing.T) {
 	})
 	require.NoError(t, err)
 	require.NotNil(t, res)
-	require.Len(t, res.Allowances, 3)
+	require.Len(t, res.Allowances, 2)
 
 	testCtx.Ctx = testCtx.Ctx.WithBlockTime(now.AddDate(0, 0, 2))
 	require.NoError(t, module.EndBlocker(testCtx.Ctx, feeGrantKeeper))

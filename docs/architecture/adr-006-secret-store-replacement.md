@@ -21,7 +21,7 @@ We are seeking solution that provides a common abstraction layer to the many dif
 
 We recommend replacing the current Keybase backend based on LevelDB with [Keyring](https://github.com/99designs/keyring) by 99 designs. This application is designed to provide a common abstraction and uniform interface between many secret stores and is used by AWS Vault application by 99-designs application.
 
-This appears to fulfill the requirement of protecting both key material and metadata from rouge software on a user’s machine.
+This appears to fulfill the requirement of protecting both key material and metadata from rogue software on a user’s machine.
 
 ## Status
 

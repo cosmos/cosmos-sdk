@@ -121,14 +121,14 @@ func (s GStore[V]) Delete(key []byte) {
 func (s GStore[V]) Iterator(start, end []byte) types.GIterator[V] {
 	newstart := cloneAppend(s.prefix, start)
 
-	var newend []byte
+	var newEnd []byte
 	if end == nil {
-		newend = cpIncr(s.prefix)
+		newEnd = cpIncr(s.prefix)
 	} else {
-		newend = cloneAppend(s.prefix, end)
+		newEnd = cloneAppend(s.prefix, end)
 	}
 
-	iter := s.parent.Iterator(newstart, newend)
+	iter := s.parent.Iterator(newStart, newEnd)
 
 	return newPrefixIterator(s.prefix, start, end, iter)
 }
@@ -228,7 +228,7 @@ func (pi *prefixIterator[V]) Error() error {
 	return nil
 }
 
-// copied from github.com/cometbft/cometbft/libs/db/prefix_db.go
+// stripPrefix is copied from github.com/cometbft/cometbft/libs/db/prefix_db.go
 func stripPrefix(key, prefix []byte) []byte {
 	if len(key) < len(prefix) || !bytes.Equal(key[:len(prefix)], prefix) {
 		panic("should not happen")
@@ -237,7 +237,7 @@ func stripPrefix(key, prefix []byte) []byte {
 	return key[len(prefix):]
 }
 
-// wrapping types.PrefixEndBytes
+// cpIncr wraps the bytes in types.PrefixEndBytes
 func cpIncr(bz []byte) []byte {
 	return types.PrefixEndBytes(bz)
 }

@@ -51,7 +51,7 @@ func InitializeCosmovisor(logger log.Logger, args []string) error {
 		return err
 	}
 
-	// process to minimal validation
+	// proceed to minimal validation
 	if err := minConfigValidate(cfg); err != nil {
 		return err
 	}

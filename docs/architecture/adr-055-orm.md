@@ -64,6 +64,7 @@ A code generator is included with the ORM which creates type safe wrappers aroun
 implementation and is the recommended way for modules to use the ORM.
 
 The ORM tests provide a simplified bank module demonstration which illustrates:
+
 * [ORM proto options](https://github.com/cosmos/cosmos-sdk/blob/0d846ae2f0424b2eb640f6679a703b52d407813d/orm/internal/testpb/bank.proto)
 * [Generated Code](https://github.com/cosmos/cosmos-sdk/blob/0d846ae2f0424b2eb640f6679a703b52d407813d/orm/internal/testpb/bank.cosmos_orm.go)
 * [Example Usage in a Module Keeper](https://github.com/cosmos/cosmos-sdk/blob/0d846ae2f0424b2eb640f6679a703b52d407813d/orm/model/ormdb/module_test.go)

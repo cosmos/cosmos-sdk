@@ -11,7 +11,7 @@ option go_package = "cosmossdk.io/x/tx/internal/testpb";
 
 // A is used for testing value renderers.
 message A {
-  // Fields that are parseable by SIGN_MODE_TEXTUAL.
+  // Fields that are parsable by SIGN_MODE_TEXTUAL.
   uint32                   UINT32             = 1;
   uint64                   UINT64             = 2;
   int32                    INT32              = 3;

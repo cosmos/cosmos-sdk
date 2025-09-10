@@ -55,7 +55,7 @@ func CalcRoot(data map[string][]byte) []byte {
 	return root
 }
 
-// GetKey this returns a key, on Left/Right/Middle
+// GetKey returns a key, on Left/Right/Middle
 func GetKey(allkeys []string, loc Where) string {
 	if loc == Left {
 		return allkeys[0]

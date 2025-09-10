@@ -88,9 +88,9 @@ func init() {
 	}
 }
 
-// AppConstructor defines a function which accepts a network configuration and
-// creates an ABCI Application to provide to CometBFT.
 type (
+	// AppConstructor defines a function which accepts a network configuration and
+	// creates an ABCI Application to provide to CometBFT.
 	AppConstructor     = func(val ValidatorI) servertypes.Application
 	TestFixtureFactory = func() TestFixture
 )
@@ -639,7 +639,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 
 	l.Log("started test network at height:", height)
 
-	// Ensure we cleanup incase any test was abruptly halted (e.g. SIGINT) as any
+	// Ensure we cleanup in case any test was abruptly halted (e.g. SIGINT) as any
 	// defer in a test would not be called.
 	trapSignal(network.Cleanup)
 

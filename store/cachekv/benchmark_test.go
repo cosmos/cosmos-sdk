@@ -68,11 +68,11 @@ func BenchmarkDeepCacheStack13(b *testing.B) {
 type CacheStack struct {
 	initialStore types.CacheKVStore
 	// Context of the initial state before transaction execution.
-	// It's the context used by `StateDB.CommitedState`.
+	// It's the context used by `StateDB.CommittedState`.
 	cacheStores []types.CacheKVStore
 }
 
-// CurrentContext returns the top context of cached stack,
+// CurrentStore returns the top context of cached stack,
 // if the stack is empty, returns the initial context.
 func (cs *CacheStack) CurrentStore() types.CacheKVStore {
 	l := len(cs.cacheStores)

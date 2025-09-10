@@ -241,3 +241,52 @@ func (s *contextTestSuite) TestUnwrapSDKContext() {
 	sdkCtx2 = types.UnwrapSDKContext(ctx)
 	s.Require().Equal(sdkCtx, sdkCtx2)
 }
+
+func (s *contextTestSuite) TestProxyGasMeter() {
+	ctx := types.NewContext(nil, cmtproto.Header{}, false, nil).WithGasMeter(storetypes.NewGasMeter(20))
+	s.Require().EqualValues(20, ctx.GasMeter().Limit())
+
+	ctx.GasMeter().ConsumeGas(5, "test")
+	s.Require().EqualValues(5, ctx.GasMeter().GasConsumed())
+	s.Require().EqualValues(15, ctx.GasMeter().GasRemaining())
+
+	{
+		ctx := ctx.WithGasLimit(10)
+		s.Require().EqualValues(10, ctx.GasMeter().Limit())
+
+		ctx.GasMeter().ConsumeGas(5, "test")
+		s.Require().EqualValues(5, ctx.GasMeter().GasConsumed())
+
+		s.Require().Panics(func() {
+			ctx.GasMeter().ConsumeGas(6, "test")
+		})
+		s.Require().EqualValues(11, ctx.GasMeter().GasConsumed())
+	}
+
+	s.Require().EqualValues(10, ctx.GasMeter().GasConsumed())
+	s.Require().EqualValues(10, ctx.GasMeter().GasRemaining())
+
+	{
+		ctx := ctx.WithGasLimit(5)
+		s.Require().EqualValues(5, ctx.GasMeter().Limit())
+
+		s.Require().Panics(func() {
+			ctx.GasMeter().ConsumeGas(6, "test")
+		})
+		s.Require().EqualValues(6, ctx.GasMeter().GasConsumed())
+	}
+
+	s.Require().EqualValues(10, ctx.GasMeter().GasConsumed())
+	s.Require().EqualValues(10, ctx.GasMeter().GasRemaining())
+
+	{
+		ctx := ctx.WithGasLimit(15)
+		s.Require().EqualValues(10, ctx.GasMeter().Limit())
+
+		ctx.GasMeter().ConsumeGas(10, "test")
+		s.Require().EqualValues(10, ctx.GasMeter().GasConsumed())
+	}
+
+	s.Require().EqualValues(20, ctx.GasMeter().GasConsumed())
+	s.Require().EqualValues(0, ctx.GasMeter().GasRemaining())
+}

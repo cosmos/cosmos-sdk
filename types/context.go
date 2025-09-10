@@ -224,12 +224,13 @@ func (c Context) WithGasMeter(meter storetypes.GasMeter) Context {
 	return c
 }
 
-// WithGasRemaining returns a Context with a lower remaining gas,
-// it's used to execute sub-calls with a lower gas limit.
-// the gas consumption is still tracked by the parent gas meter in realtime,
-// there's no risk of losing gas accounting.
-func (c Context) WithGasRemaining(remaining storetypes.Gas) Context {
-	return c.WithGasMeter(storetypes.NewProxyGasMeter(c.GasMeter(), remaining))
+// WithGasLimit replaces the GasMeter with a ProxyGasMeter whose gas limit is set to the minimal of the
+// given limit and the remaining gas in the current GasMeter.
+//
+// ProxyGasMeter will delegate the gas consumption to the parent gas meter in realtime, so there's no need to write
+// back the gas consumed to the parent gas meter when the sub-GasMeter is done.
+func (c Context) WithGasLimit(limit storetypes.Gas) Context {
+	return c.WithGasMeter(storetypes.NewProxyGasMeter(c.GasMeter(), limit))
 }
 
 // WithBlockGasMeter returns a Context with an updated block GasMeter

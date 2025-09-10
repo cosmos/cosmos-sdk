@@ -1,69 +1,49 @@
 package types
 
 import (
-	fmt "fmt"
+	"fmt"
 )
 
 var _ GasMeter = &ProxyGasMeter{}
 
-// ProxyGasMeter wraps another GasMeter, but enforces a lower gas limit.
-// Gas consumption is delegated to the wrapped GasMeter, so it won't risk losing gas accounting compared to standalone
-// gas meter.
+// ProxyGasMeter is like a basicGasMeter, but delegates the gas changes (refund and consume) to the parent GasMeter in
+// realtime, so it won't risk losing gas accounting in face of error return or panics.
 type ProxyGasMeter struct {
 	GasMeter
 
-	limit Gas
+	parent GasMeter
 }
 
-// NewProxyGasMeter returns a new GasMeter which wraps the provided gas meter.
-// The remaining is the maximum gas that can be consumed on top of current consumed
-// gas of the wrapped gas meter.
+// NewProxyGasMeter returns a new ProxyGasMeter which is like a basic gas meter with minimum of new limit and remaining gas
+// of the parent gas meter, it also delegate the gas consumption to parent gas meter in real time, so it won't risk
+// losing gas accounting in face of panics or other unexpected errors.
 //
-// If the new remaining is greater than or equal to the existing remaining gas, no wrapping is needed
-// and the original gas meter is returned.
-func NewProxyGasMeter(gasMeter GasMeter, remaining Gas) GasMeter {
-	if remaining >= gasMeter.GasRemaining() {
-		return gasMeter
-	}
-
+// If limit is greater than or equal to the remaining gas, no wrapping is needed and the original gas meter is returned.
+func NewProxyGasMeter(gasMeter GasMeter, limit Gas) GasMeter {
+	limit = min(limit, gasMeter.GasRemaining())
 	return &ProxyGasMeter{
-		GasMeter: gasMeter,
-		limit:    remaining + gasMeter.GasConsumed(),
+		GasMeter: NewGasMeter(limit),
+		parent:   gasMeter,
 	}
 }
 
-func (pgm ProxyGasMeter) GasRemaining() Gas {
-	if pgm.IsPastLimit() {
-		return 0
-	}
-	return pgm.limit - pgm.GasConsumed()
+// RefundGas will also refund gas to parent gas meter.
+func (pgm ProxyGasMeter) RefundGas(amount Gas, descriptor string) {
+	pgm.GasMeter.RefundGas(amount, descriptor)
+	pgm.parent.RefundGas(amount, descriptor)
 }
 
-func (pgm ProxyGasMeter) Limit() Gas {
-	return pgm.limit
-}
-
-func (pgm ProxyGasMeter) IsPastLimit() bool {
-	return pgm.GasConsumed() > pgm.limit
-}
-
-func (pgm ProxyGasMeter) IsOutOfGas() bool {
-	return pgm.GasConsumed() >= pgm.limit
-}
-
+// ConsumeGas will also consume gas from parent gas meter.
+//
+// it consume sub-gasmeter first, which means if sub-gasmeter runs out of gas,
+// the gas is not charged in parent gas meter, the assumption for business logic
+// is the gas is always charged before the work is done, so when out-of-gas panic happens,
+// the actual work is not done yet, so we don't need to consume the gas in parent gas meter.
 func (pgm ProxyGasMeter) ConsumeGas(amount Gas, descriptor string) {
-	consumed, overflow := addUint64Overflow(pgm.GasConsumed(), amount)
-	if overflow {
-		panic(ErrorGasOverflow{Descriptor: descriptor})
-	}
-
-	if consumed > pgm.limit {
-		panic(ErrorOutOfGas{Descriptor: descriptor})
-	}
-
 	pgm.GasMeter.ConsumeGas(amount, descriptor)
+	pgm.parent.ConsumeGas(amount, descriptor)
 }
 
 func (pgm ProxyGasMeter) String() string {
-	return fmt.Sprintf("ProxyGasMeter{consumed: %d, limit: %d}", pgm.GasConsumed(), pgm.limit)
+	return fmt.Sprintf("ProxyGasMeter{consumed: %d, limit: %d}", pgm.GasConsumed(), pgm.Limit())
 }

@@ -92,7 +92,7 @@ func (s txServer) Simulate(_ context.Context, req *txtypes.SimulateRequest) (*tx
 	}
 
 	if txBytes == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty txBytes is not allowed")
+		return nil, status.Error(codes.InvalidArgument, "empty txBytes is not allowed")
 	}
 
 	gasInfo, result, err := s.simulate(txBytes)

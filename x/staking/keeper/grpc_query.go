@@ -245,14 +245,14 @@ func (k Querier) Delegation(ctx context.Context, req *types.QueryDelegationReque
 // UnbondingDelegation queries unbonding info for given validator delegator pair
 func (k Querier) UnbondingDelegation(ctx context.Context, req *types.QueryUnbondingDelegationRequest) (*types.QueryUnbondingDelegationResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	if req.DelegatorAddr == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "delegator address cannot be empty")
+		return nil, status.Error(codes.InvalidArgument, "delegator address cannot be empty")
 	}
 	if req.ValidatorAddr == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "validator address cannot be empty")
+		return nil, status.Error(codes.InvalidArgument, "validator address cannot be empty")
 	}
 
 	delAddr, err := k.authKeeper.AddressCodec().StringToBytes(req.DelegatorAddr)
@@ -279,7 +279,7 @@ func (k Querier) UnbondingDelegation(ctx context.Context, req *types.QueryUnbond
 // DelegatorDelegations queries all delegations of a given delegator address
 func (k Querier) DelegatorDelegations(ctx context.Context, req *types.QueryDelegatorDelegationsRequest) (*types.QueryDelegatorDelegationsResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	if req.DelegatorAddr == "" {

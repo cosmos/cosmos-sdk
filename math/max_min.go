@@ -2,7 +2,7 @@ package math
 
 import "golang.org/x/exp/constraints"
 
-func Max[T constraints.Ordered](a, b T, rest ...T) T {
+func Maximum[T constraints.Ordered](a, b T, rest ...T) T {
 	maximum := a
 	if b > a {
 		maximum = b
@@ -15,15 +15,15 @@ func Max[T constraints.Ordered](a, b T, rest ...T) T {
 	return maximum
 }
 
-func Min[T constraints.Ordered](a, b T, rest ...T) T {
-	min := a
+func Minimum[T constraints.Ordered](a, b T, rest ...T) T {
+	minimum := a
 	if b < a {
-		min = b
+		minimum = b
 	}
 	for _, val := range rest {
-		if val < min {
-			min = val
+		if val < minimum {
+			minimum = val
 		}
 	}
-	return min
+	return minimum
 }

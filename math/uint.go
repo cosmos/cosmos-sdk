@@ -129,10 +129,10 @@ func (u Uint) Decr() Uint {
 func (u Uint) QuoUint64(u2 uint64) Uint { return u.Quo(NewUint(u2)) }
 
 // MinUint return the minimum of the Uints
-func MinUint(u1, u2 Uint) Uint { return NewUintFromBigInt(min(u1.i, u2.i)) }
+func MinUint(u1, u2 Uint) Uint { return NewUintFromBigInt(minimum(u1.i, u2.i)) }
 
 // MaxUint return the maximum of the Uints
-func MaxUint(u1, u2 Uint) Uint { return NewUintFromBigInt(max(u1.i, u2.i)) }
+func MaxUint(u1, u2 Uint) Uint { return NewUintFromBigInt(maximum(u1.i, u2.i)) }
 
 // String returns human readable string
 func (u Uint) String() string { return u.i.String() }

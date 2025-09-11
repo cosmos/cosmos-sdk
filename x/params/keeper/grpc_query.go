@@ -17,11 +17,11 @@ var _ proposal.QueryServer = Keeper{}
 // Params returns subspace params
 func (k Keeper) Params(c context.Context, req *proposal.QueryParamsRequest) (*proposal.QueryParamsResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	if req.Subspace == "" || req.Key == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid request")
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
 	ss, ok := k.GetSubspace(req.Subspace)
@@ -43,7 +43,7 @@ func (k Keeper) Subspaces(
 	req *proposal.QuerySubspacesRequest,
 ) (*proposal.QuerySubspacesResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	spaces := k.GetSubspaces()

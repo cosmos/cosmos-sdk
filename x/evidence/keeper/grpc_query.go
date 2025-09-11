@@ -30,11 +30,11 @@ func NewQuerier(keeper *Keeper) Querier {
 // Evidence implements the Query/Evidence gRPC method
 func (k Querier) Evidence(c context.Context, req *types.QueryEvidenceRequest) (*types.QueryEvidenceResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	if req.Hash == "" {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid request; hash is empty")
+		return nil, status.Error(codes.InvalidArgument, "invalid request; hash is empty")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
@@ -56,7 +56,7 @@ func (k Querier) Evidence(c context.Context, req *types.QueryEvidenceRequest) (*
 
 	evidenceAny, err := codectypes.NewAnyWithValue(msg)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &types.QueryEvidenceResponse{Evidence: evidenceAny}, nil
@@ -65,7 +65,7 @@ func (k Querier) Evidence(c context.Context, req *types.QueryEvidenceRequest) (*
 // AllEvidence implements the Query/AllEvidence gRPC method
 func (k Querier) AllEvidence(ctx context.Context, req *types.QueryAllEvidenceRequest) (*types.QueryAllEvidenceResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	evidences, pageRes, err := query.CollectionPaginate(ctx, k.k.Evidences, req.Pagination, func(_ []byte, value exported.Evidence) (*codectypes.Any, error) {

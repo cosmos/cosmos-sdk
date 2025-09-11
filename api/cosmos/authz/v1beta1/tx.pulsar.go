@@ -2,13 +2,9 @@
 package authzv1beta1
 
 import (
-	fmt "fmt"
-	io "io"
-	reflect "reflect"
-	sync "sync"
-
 	_ "cosmossdk.io/api/amino"
 	_ "cosmossdk.io/api/cosmos/msg/v1"
+	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	_ "github.com/cosmos/gogoproto/gogoproto"
@@ -16,6 +12,9 @@ import (
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	anypb "google.golang.org/protobuf/types/known/anypb"
+	io "io"
+	reflect "reflect"
+	sync "sync"
 )
 
 var (
@@ -53,21 +52,17 @@ func (x *MsgGrant) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var (
-	_fastReflection_MsgGrant_messageType fastReflection_MsgGrant_messageType
-	_                                    protoreflect.MessageType = fastReflection_MsgGrant_messageType{}
-)
+var _fastReflection_MsgGrant_messageType fastReflection_MsgGrant_messageType
+var _ protoreflect.MessageType = fastReflection_MsgGrant_messageType{}
 
 type fastReflection_MsgGrant_messageType struct{}
 
 func (x fastReflection_MsgGrant_messageType) Zero() protoreflect.Message {
 	return (*fastReflection_MsgGrant)(nil)
 }
-
 func (x fastReflection_MsgGrant_messageType) New() protoreflect.Message {
 	return new(fastReflection_MsgGrant)
 }
-
 func (x fastReflection_MsgGrant_messageType) Descriptor() protoreflect.MessageDescriptor {
 	return md_MsgGrant
 }
@@ -585,7 +580,9 @@ func (x *fastReflection_MsgGrant) ProtoMethods() *protoiface.Methods {
 	}
 }
 
-var md_MsgGrantResponse protoreflect.MessageDescriptor
+var (
+	md_MsgGrantResponse protoreflect.MessageDescriptor
+)
 
 func init() {
 	file_cosmos_authz_v1beta1_tx_proto_init()
@@ -612,21 +609,17 @@ func (x *MsgGrantResponse) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var (
-	_fastReflection_MsgGrantResponse_messageType fastReflection_MsgGrantResponse_messageType
-	_                                            protoreflect.MessageType = fastReflection_MsgGrantResponse_messageType{}
-)
+var _fastReflection_MsgGrantResponse_messageType fastReflection_MsgGrantResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgGrantResponse_messageType{}
 
 type fastReflection_MsgGrantResponse_messageType struct{}
 
 func (x fastReflection_MsgGrantResponse_messageType) Zero() protoreflect.Message {
 	return (*fastReflection_MsgGrantResponse)(nil)
 }
-
 func (x fastReflection_MsgGrantResponse_messageType) New() protoreflect.Message {
 	return new(fastReflection_MsgGrantResponse)
 }
-
 func (x fastReflection_MsgGrantResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
 	return md_MsgGrantResponse
 }
@@ -1027,21 +1020,17 @@ func (x *MsgExec) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var (
-	_fastReflection_MsgExec_messageType fastReflection_MsgExec_messageType
-	_                                   protoreflect.MessageType = fastReflection_MsgExec_messageType{}
-)
+var _fastReflection_MsgExec_messageType fastReflection_MsgExec_messageType
+var _ protoreflect.MessageType = fastReflection_MsgExec_messageType{}
 
 type fastReflection_MsgExec_messageType struct{}
 
 func (x fastReflection_MsgExec_messageType) Zero() protoreflect.Message {
 	return (*fastReflection_MsgExec)(nil)
 }
-
 func (x fastReflection_MsgExec_messageType) New() protoreflect.Message {
 	return new(fastReflection_MsgExec)
 }
-
 func (x fastReflection_MsgExec_messageType) Descriptor() protoreflect.MessageDescriptor {
 	return md_MsgExec
 }
@@ -1582,21 +1571,17 @@ func (x *MsgExecResponse) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var (
-	_fastReflection_MsgExecResponse_messageType fastReflection_MsgExecResponse_messageType
-	_                                           protoreflect.MessageType = fastReflection_MsgExecResponse_messageType{}
-)
+var _fastReflection_MsgExecResponse_messageType fastReflection_MsgExecResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgExecResponse_messageType{}
 
 type fastReflection_MsgExecResponse_messageType struct{}
 
 func (x fastReflection_MsgExecResponse_messageType) Zero() protoreflect.Message {
 	return (*fastReflection_MsgExecResponse)(nil)
 }
-
 func (x fastReflection_MsgExecResponse_messageType) New() protoreflect.Message {
 	return new(fastReflection_MsgExecResponse)
 }
-
 func (x fastReflection_MsgExecResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
 	return md_MsgExecResponse
 }
@@ -2024,21 +2009,17 @@ func (x *MsgRevoke) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var (
-	_fastReflection_MsgRevoke_messageType fastReflection_MsgRevoke_messageType
-	_                                     protoreflect.MessageType = fastReflection_MsgRevoke_messageType{}
-)
+var _fastReflection_MsgRevoke_messageType fastReflection_MsgRevoke_messageType
+var _ protoreflect.MessageType = fastReflection_MsgRevoke_messageType{}
 
 type fastReflection_MsgRevoke_messageType struct{}
 
 func (x fastReflection_MsgRevoke_messageType) Zero() protoreflect.Message {
 	return (*fastReflection_MsgRevoke)(nil)
 }
-
 func (x fastReflection_MsgRevoke_messageType) New() protoreflect.Message {
 	return new(fastReflection_MsgRevoke)
 }
-
 func (x fastReflection_MsgRevoke_messageType) Descriptor() protoreflect.MessageDescriptor {
 	return md_MsgRevoke
 }
@@ -2541,7 +2522,9 @@ func (x *fastReflection_MsgRevoke) ProtoMethods() *protoiface.Methods {
 	}
 }
 
-var md_MsgRevokeResponse protoreflect.MessageDescriptor
+var (
+	md_MsgRevokeResponse protoreflect.MessageDescriptor
+)
 
 func init() {
 	file_cosmos_authz_v1beta1_tx_proto_init()
@@ -2568,21 +2551,17 @@ func (x *MsgRevokeResponse) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var (
-	_fastReflection_MsgRevokeResponse_messageType fastReflection_MsgRevokeResponse_messageType
-	_                                             protoreflect.MessageType = fastReflection_MsgRevokeResponse_messageType{}
-)
+var _fastReflection_MsgRevokeResponse_messageType fastReflection_MsgRevokeResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgRevokeResponse_messageType{}
 
 type fastReflection_MsgRevokeResponse_messageType struct{}
 
 func (x fastReflection_MsgRevokeResponse_messageType) Zero() protoreflect.Message {
 	return (*fastReflection_MsgRevokeResponse)(nil)
 }
-
 func (x fastReflection_MsgRevokeResponse_messageType) New() protoreflect.Message {
 	return new(fastReflection_MsgRevokeResponse)
 }
-
 func (x fastReflection_MsgRevokeResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
 	return md_MsgRevokeResponse
 }
@@ -2930,21 +2909,17 @@ func (x *MsgPruneExpiredGrants) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var (
-	_fastReflection_MsgPruneExpiredGrants_messageType fastReflection_MsgPruneExpiredGrants_messageType
-	_                                                 protoreflect.MessageType = fastReflection_MsgPruneExpiredGrants_messageType{}
-)
+var _fastReflection_MsgPruneExpiredGrants_messageType fastReflection_MsgPruneExpiredGrants_messageType
+var _ protoreflect.MessageType = fastReflection_MsgPruneExpiredGrants_messageType{}
 
 type fastReflection_MsgPruneExpiredGrants_messageType struct{}
 
 func (x fastReflection_MsgPruneExpiredGrants_messageType) Zero() protoreflect.Message {
 	return (*fastReflection_MsgPruneExpiredGrants)(nil)
 }
-
 func (x fastReflection_MsgPruneExpiredGrants_messageType) New() protoreflect.Message {
 	return new(fastReflection_MsgPruneExpiredGrants)
 }
-
 func (x fastReflection_MsgPruneExpiredGrants_messageType) Descriptor() protoreflect.MessageDescriptor {
 	return md_MsgPruneExpiredGrants
 }
@@ -3323,7 +3298,9 @@ func (x *fastReflection_MsgPruneExpiredGrants) ProtoMethods() *protoiface.Method
 	}
 }
 
-var md_MsgPruneExpiredGrantsResponse protoreflect.MessageDescriptor
+var (
+	md_MsgPruneExpiredGrantsResponse protoreflect.MessageDescriptor
+)
 
 func init() {
 	file_cosmos_authz_v1beta1_tx_proto_init()
@@ -3350,21 +3327,17 @@ func (x *MsgPruneExpiredGrantsResponse) slowProtoReflect() protoreflect.Message 
 	return mi.MessageOf(x)
 }
 
-var (
-	_fastReflection_MsgPruneExpiredGrantsResponse_messageType fastReflection_MsgPruneExpiredGrantsResponse_messageType
-	_                                                         protoreflect.MessageType = fastReflection_MsgPruneExpiredGrantsResponse_messageType{}
-)
+var _fastReflection_MsgPruneExpiredGrantsResponse_messageType fastReflection_MsgPruneExpiredGrantsResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgPruneExpiredGrantsResponse_messageType{}
 
 type fastReflection_MsgPruneExpiredGrantsResponse_messageType struct{}
 
 func (x fastReflection_MsgPruneExpiredGrantsResponse_messageType) Zero() protoreflect.Message {
 	return (*fastReflection_MsgPruneExpiredGrantsResponse)(nil)
 }
-
 func (x fastReflection_MsgPruneExpiredGrantsResponse_messageType) New() protoreflect.Message {
 	return new(fastReflection_MsgPruneExpiredGrantsResponse)
 }
-
 func (x fastReflection_MsgPruneExpiredGrantsResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
 	return md_MsgPruneExpiredGrantsResponse
 }
@@ -4125,21 +4098,19 @@ func file_cosmos_authz_v1beta1_tx_proto_rawDescGZIP() []byte {
 	return file_cosmos_authz_v1beta1_tx_proto_rawDescData
 }
 
-var (
-	file_cosmos_authz_v1beta1_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
-	file_cosmos_authz_v1beta1_tx_proto_goTypes  = []interface{}{
-		(*MsgGrant)(nil),                      // 0: cosmos.authz.v1beta1.MsgGrant
-		(*MsgGrantResponse)(nil),              // 1: cosmos.authz.v1beta1.MsgGrantResponse
-		(*MsgExec)(nil),                       // 2: cosmos.authz.v1beta1.MsgExec
-		(*MsgExecResponse)(nil),               // 3: cosmos.authz.v1beta1.MsgExecResponse
-		(*MsgRevoke)(nil),                     // 4: cosmos.authz.v1beta1.MsgRevoke
-		(*MsgRevokeResponse)(nil),             // 5: cosmos.authz.v1beta1.MsgRevokeResponse
-		(*MsgPruneExpiredGrants)(nil),         // 6: cosmos.authz.v1beta1.MsgPruneExpiredGrants
-		(*MsgPruneExpiredGrantsResponse)(nil), // 7: cosmos.authz.v1beta1.MsgPruneExpiredGrantsResponse
-		(*Grant)(nil),                         // 8: cosmos.authz.v1beta1.Grant
-		(*anypb.Any)(nil),                     // 9: google.protobuf.Any
-	}
-)
+var file_cosmos_authz_v1beta1_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_cosmos_authz_v1beta1_tx_proto_goTypes = []interface{}{
+	(*MsgGrant)(nil),                      // 0: cosmos.authz.v1beta1.MsgGrant
+	(*MsgGrantResponse)(nil),              // 1: cosmos.authz.v1beta1.MsgGrantResponse
+	(*MsgExec)(nil),                       // 2: cosmos.authz.v1beta1.MsgExec
+	(*MsgExecResponse)(nil),               // 3: cosmos.authz.v1beta1.MsgExecResponse
+	(*MsgRevoke)(nil),                     // 4: cosmos.authz.v1beta1.MsgRevoke
+	(*MsgRevokeResponse)(nil),             // 5: cosmos.authz.v1beta1.MsgRevokeResponse
+	(*MsgPruneExpiredGrants)(nil),         // 6: cosmos.authz.v1beta1.MsgPruneExpiredGrants
+	(*MsgPruneExpiredGrantsResponse)(nil), // 7: cosmos.authz.v1beta1.MsgPruneExpiredGrantsResponse
+	(*Grant)(nil),                         // 8: cosmos.authz.v1beta1.Grant
+	(*anypb.Any)(nil),                     // 9: google.protobuf.Any
+}
 var file_cosmos_authz_v1beta1_tx_proto_depIdxs = []int32{
 	8, // 0: cosmos.authz.v1beta1.MsgGrant.grant:type_name -> cosmos.authz.v1beta1.Grant
 	9, // 1: cosmos.authz.v1beta1.MsgExec.msgs:type_name -> google.protobuf.Any

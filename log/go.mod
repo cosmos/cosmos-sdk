@@ -1,6 +1,6 @@
 module cosmossdk.io/log
 
-go 1.20
+go 1.24.4
 
 require (
 	github.com/rs/zerolog v1.29.1

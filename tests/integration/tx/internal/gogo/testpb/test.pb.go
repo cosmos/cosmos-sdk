@@ -406,6 +406,7 @@ func _IntegrationTxTestMsg_TestFields_Handler(srv interface{}, ctx context.Conte
 	return interceptor(ctx, in, info, handler)
 }
 
+var IntegrationTxTestMsg_serviceDesc = _IntegrationTxTestMsg_serviceDesc
 var _IntegrationTxTestMsg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "testpb.IntegrationTxTestMsg",
 	HandlerType: (*IntegrationTxTestMsgServer)(nil),

@@ -1,6 +1,6 @@
 module cosmossdk.io/math
 
-go 1.20
+go 1.24.4
 
 require (
 	github.com/stretchr/testify v1.8.4

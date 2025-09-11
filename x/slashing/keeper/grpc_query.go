@@ -26,7 +26,7 @@ func NewQuerier(keeper Keeper) Querier {
 // Params returns parameters of x/slashing module
 func (k Keeper) Params(ctx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	params, err := k.GetParams(ctx)
@@ -37,7 +37,7 @@ func (k Keeper) Params(ctx context.Context, req *types.QueryParamsRequest) (*typ
 // SigningInfo returns signing-info of a specific validator.
 func (k Keeper) SigningInfo(ctx context.Context, req *types.QuerySigningInfoRequest) (*types.QuerySigningInfoResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	if req.ConsAddress == "" {
@@ -60,7 +60,7 @@ func (k Keeper) SigningInfo(ctx context.Context, req *types.QuerySigningInfoRequ
 // SigningInfos returns signing-infos of all validators.
 func (k Keeper) SigningInfos(ctx context.Context, req *types.QuerySigningInfosRequest) (*types.QuerySigningInfosResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	store := k.storeService.OpenKVStore(ctx)

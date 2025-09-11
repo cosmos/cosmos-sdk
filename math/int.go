@@ -41,7 +41,7 @@ func neg(i *big.Int) *big.Int { return new(big.Int).Neg(i) }
 
 func abs(i *big.Int) *big.Int { return new(big.Int).Abs(i) }
 
-func min(i, i2 *big.Int) *big.Int {
+func minimum(i, i2 *big.Int) *big.Int {
 	if i.Cmp(i2) == 1 {
 		return new(big.Int).Set(i2)
 	}
@@ -49,7 +49,7 @@ func min(i, i2 *big.Int) *big.Int {
 	return new(big.Int).Set(i)
 }
 
-func max(i, i2 *big.Int) *big.Int {
+func maximum(i, i2 *big.Int) *big.Int {
 	if i.Cmp(i2) == -1 {
 		return new(big.Int).Set(i2)
 	}
@@ -313,14 +313,14 @@ func (i Int) Abs() Int {
 	return Int{abs(i.i)}
 }
 
-// return the minimum of the ints
+// MinInt return the minimum of the ints
 func MinInt(i1, i2 Int) Int {
-	return Int{min(i1.BigInt(), i2.BigInt())}
+	return Int{minimum(i1.BigInt(), i2.BigInt())}
 }
 
 // MaxInt returns the maximum between two integers.
 func MaxInt(i, i2 Int) Int {
-	return Int{max(i.BigInt(), i2.BigInt())}
+	return Int{maximum(i.BigInt(), i2.BigInt())}
 }
 
 // Human readable string

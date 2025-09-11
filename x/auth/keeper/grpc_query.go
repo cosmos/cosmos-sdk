@@ -25,7 +25,7 @@ type queryServer struct{ k AccountKeeper }
 
 func (s queryServer) AccountAddressByID(ctx context.Context, req *types.QueryAccountAddressByIDRequest) (*types.QueryAccountAddressByIDResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	if req.Id != 0 { // ignoring `0` case since it is default value.
@@ -62,7 +62,7 @@ func (s queryServer) Accounts(ctx context.Context, req *types.QueryAccountsReque
 // Account returns account details based on address
 func (s queryServer) Account(ctx context.Context, req *types.QueryAccountRequest) (*types.QueryAccountResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	if req.Address == "" {
@@ -80,7 +80,7 @@ func (s queryServer) Account(ctx context.Context, req *types.QueryAccountRequest
 
 	v, err := codectypes.NewAnyWithValue(account)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, status.Errorf(codes.Internal, "%s", err.Error())
 	}
 
 	return &types.QueryAccountResponse{Account: v}, nil
@@ -121,7 +121,7 @@ func (s queryServer) ModuleAccounts(c context.Context, req *types.QueryModuleAcc
 		}
 		v, err := codectypes.NewAnyWithValue(account)
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, err.Error())
+			return nil, status.Errorf(codes.Internal, "%s", err.Error())
 		}
 		modAccounts = append(modAccounts, v)
 	}
@@ -132,7 +132,7 @@ func (s queryServer) ModuleAccounts(c context.Context, req *types.QueryModuleAcc
 // ModuleAccountByName returns module account by module name
 func (s queryServer) ModuleAccountByName(c context.Context, req *types.QueryModuleAccountByNameRequest) (*types.QueryModuleAccountByNameResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	if len(req.Name) == 0 {
@@ -148,7 +148,7 @@ func (s queryServer) ModuleAccountByName(c context.Context, req *types.QueryModu
 	}
 	v, err := codectypes.NewAnyWithValue(account)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, status.Errorf(codes.Internal, "%s", err.Error())
 	}
 
 	return &types.QueryModuleAccountByNameResponse{Account: v}, nil
@@ -209,7 +209,7 @@ func (s queryServer) AddressStringToBytes(_ context.Context, req *types.AddressS
 // AccountInfo implements the AccountInfo query.
 func (s queryServer) AccountInfo(ctx context.Context, req *types.QueryAccountInfoRequest) (*types.QueryAccountInfoResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	if req.Address == "" {
@@ -232,7 +232,7 @@ func (s queryServer) AccountInfo(ctx context.Context, req *types.QueryAccountInf
 	if pubKey != nil {
 		pkAny, err = codectypes.NewAnyWithValue(account.GetPubKey())
 		if err != nil {
-			return nil, status.Errorf(codes.Internal, err.Error())
+			return nil, status.Errorf(codes.Internal, "%s", err.Error())
 		}
 	}
 

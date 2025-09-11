@@ -166,7 +166,7 @@ func (k BaseKeeper) SupplyOf(c context.Context, req *types.QuerySupplyOfRequest)
 // Params implements the gRPC service handler for querying x/bank parameters.
 func (k BaseKeeper) Params(ctx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -178,7 +178,7 @@ func (k BaseKeeper) Params(ctx context.Context, req *types.QueryParamsRequest) (
 // DenomsMetadata implements Query/DenomsMetadata gRPC method.
 func (k BaseKeeper) DenomsMetadata(c context.Context, req *types.QueryDenomsMetadataRequest) (*types.QueryDenomsMetadataResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	kvStore := runtime.KVStoreAdapter(k.storeService.OpenKVStore(c))
 	store := prefix.NewStore(kvStore, types.DenomMetadataPrefix)
@@ -204,7 +204,7 @@ func (k BaseKeeper) DenomsMetadata(c context.Context, req *types.QueryDenomsMeta
 // DenomMetadata implements Query/DenomMetadata gRPC method.
 func (k BaseKeeper) DenomMetadata(c context.Context, req *types.QueryDenomMetadataRequest) (*types.QueryDenomMetadataResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	if err := sdk.ValidateDenom(req.Denom); err != nil {
@@ -226,7 +226,7 @@ func (k BaseKeeper) DenomMetadata(c context.Context, req *types.QueryDenomMetada
 // DenomMetadataByQueryString is identical to DenomMetadata query, but receives request via query string.
 func (k BaseKeeper) DenomMetadataByQueryString(c context.Context, req *types.QueryDenomMetadataByQueryStringRequest) (*types.QueryDenomMetadataByQueryStringResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	res, err := k.DenomMetadata(c, &types.QueryDenomMetadataRequest{
@@ -244,7 +244,7 @@ func (k BaseKeeper) DenomOwners(
 	req *types.QueryDenomOwnersRequest,
 ) (*types.QueryDenomOwnersResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	if err := sdk.ValidateDenom(req.Denom); err != nil {
@@ -273,7 +273,7 @@ func (k BaseKeeper) DenomOwners(
 
 func (k BaseKeeper) SendEnabled(goCtx context.Context, req *types.QuerySendEnabledRequest) (*types.QuerySendEnabledResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	resp := &types.QuerySendEnabledResponse{}
@@ -304,7 +304,7 @@ func (k BaseKeeper) SendEnabled(goCtx context.Context, req *types.QuerySendEnabl
 // DenomOwnersByQuery is identical to DenomOwner query, but receives denom values via query string.
 func (k BaseKeeper) DenomOwnersByQuery(ctx context.Context, req *types.QueryDenomOwnersByQueryRequest) (*types.QueryDenomOwnersByQueryResponse, error) {
 	if req == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "empty request")
+		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 	resp, err := k.DenomOwners(ctx, &types.QueryDenomOwnersRequest{
 		Denom:      req.Denom,

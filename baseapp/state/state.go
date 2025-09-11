@@ -22,7 +22,7 @@ func NewState(ctx sdk.Context, ms storetypes.CacheMultiStore) *State {
 	}
 }
 
-// CacheMultiStore calls and returns a CacheMultiStore on the state's underling
+// CacheMultiStore calls and returns a CacheMultiStore on the state's underlying
 // CacheMultiStore.
 func (st *State) CacheMultiStore() storetypes.CacheMultiStore {
 	return st.MultiStore.CacheMultiStore()

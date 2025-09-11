@@ -19,7 +19,7 @@ A Protobuf `Msg` service processes [messages](./02-messages-and-queries.md#messa
 
 Each module should define a Protobuf `Msg` service, which will be responsible for processing requests (implementing `sdk.Msg`) and returning responses.
 
-As further described in [ADR 031](../architecture/adr-031-msg-service.md), this approach has the advantage of clearly specifying return types and generating server and client code.
+As further described in [ADR 031](../../../architecture/adr-031-msg-service.md), this approach has the advantage of clearly specifying return types and generating server and client code.
 
 Protobuf generates a `MsgServer` interface based on a definition of `Msg` service. It is the role of the module developer to implement this interface, by implementing the state transition logic that should happen upon receival of each `sdk.Msg`. As an example, here is the generated `MsgServer` interface for `x/bank`, which exposes two `sdk.Msg`s:
 
@@ -33,7 +33,7 @@ When possible, the existing module's [`Keeper`](./06-keeper.md) should implement
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/bank/keeper/msg_server.go#L17-L19
 ```
 
-`msgServer` methods can retrieve the `context.Context` from the `context.Context` parameter method using the `sdk.UnwrapSDKContext`:
+`msgServer` methods can retrieve the `sdk.Context` from the `context.Context` parameter using the `sdk.UnwrapSDKContext` method:
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/bank/keeper/msg_server.go#L56
@@ -53,10 +53,10 @@ It is recommended to implement all validation checks in a separate function that
 ```go
 ValidateMsgA(msg MsgA, now Time, gm GasMeter) error {
 	if now.Before(msg.Expire) {
-		return sdkerrrors.ErrInvalidRequest.Wrap("msg expired")
+		return sdkerrors.ErrInvalidRequest.Wrap("msg expired")
 	}
 	gm.ConsumeGas(1000, "signature verification")
-	return signatureVerificaton(msg.Prover, msg.Data)
+	return signatureVerification(msg.Prover, msg.Data)
 }
 ```
 
@@ -75,7 +75,7 @@ Before returning, `msgServer` methods generally emit one or more [events](../../
 
 ```go
 ctx.EventManager().EmitTypedEvent(
-	&group.EventABC{Key1: Value1,  Key2, Value2})
+	&group.EventABC{Key1: Value1, Key2: Value2})
 ```
 
 or the older `EmitEvent` function: 

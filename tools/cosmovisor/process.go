@@ -23,10 +23,10 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	"cosmossdk.io/log"
+	"cosmossdk.io/x/upgrade/plan"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 type Launcher struct {
@@ -183,7 +183,7 @@ pollLoop:
 }
 
 // Run launches the app in a subprocess and returns when the subprocess (app)
-// exits (either when it dies, or *after* a successful upgrade.) and upgrade finished.
+// exits (either when it dies, or *after* a successful upgrade.) and the upgrade is finished.
 // Returns true if the upgrade request was detected and the upgrade process started.
 func (l Launcher) Run(args []string, stdin io.Reader, stdout, stderr io.Writer) (bool, error) {
 	bin, err := l.cfg.CurrentBin()
@@ -312,7 +312,7 @@ func (l Launcher) WaitForUpgradeOrExit(cmd *exec.Cmd) (bool, error) {
 		if err == nil {
 			return false, nil
 		}
-		// the app x/upgrade causes a panic and the app can die before the filwatcher finds the
+		// the app x/upgrade causes a panic and the app can die before the filewatcher finds the
 		// update, so we need to recheck update-info file.
 		if !l.fw.CheckUpdate(currentUpgrade) {
 			return false, err
@@ -351,7 +351,7 @@ func (l Launcher) doBackup() error {
 			return fmt.Errorf("error while taking data backup: %w", err)
 		}
 
-		// backup is done, lets check endtime to calculate total time taken for backup process
+		// backup is done, lets check endtime to calculate total time taken for the backup process
 		et := time.Now()
 		l.logger.Info("backup completed", "backup saved at", dst, "backup completion time", et, "time taken to complete backup", et.Sub(st))
 	}
@@ -468,7 +468,7 @@ func (l *Launcher) executePreUpgradeCmd() error {
 	return nil
 }
 
-// IsSkipUpgradeHeight checks if pre-upgrade script must be run.
+// IsSkipUpgradeHeight checks if the pre-upgrade script must be run.
 // If the height in the upgrade plan matches any of the heights provided in --unsafe-skip-upgrades, the script is not run.
 func IsSkipUpgradeHeight(args []string, upgradeInfo upgradetypes.Plan) bool {
 	skipUpgradeHeights := UpgradeSkipHeights(args)

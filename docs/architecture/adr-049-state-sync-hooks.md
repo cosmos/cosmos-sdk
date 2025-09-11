@@ -139,14 +139,14 @@ type ExtensionSnapshotter interface {
 
 ## Consequences
 
-As a result of this implementation, we are able to create snapshots of binary chunk stream for the state that we maintain outside of the IAVL Tree, CosmWasm blobs for example. And new clients are able to fetch sanpshots of state for all modules that have implemented the corresponding interface from peer nodes. 
+As a result of this implementation, we are able to create snapshots of binary chunk stream for the state that we maintain outside of the IAVL Tree, CosmWasm blobs for example. And new clients are able to fetch snapshots of state for all modules that have implemented the corresponding interface from peer nodes. 
 
 
 ### Backwards Compatibility
 
-This ADR introduces new proto message types, add an `extensions` field in snapshot `Manager`, and add new `ExtensionSnapshotter` interface, so this is not backwards compatible if we have extensions.
+This ADR introduces new proto message types, adds an `extensions` field in snapshot `Manager`, and add new `ExtensionSnapshotter` interface, so this is not backwards compatible if we have extensions.
 
-But for applications that does not have the state data outside of the IAVL tree for any module, the snapshot stream is backwards-compatible.
+But for applications that do not have the state data outside of the IAVL tree for any module, the snapshot stream is backwards-compatible.
 
 ### Positive
 

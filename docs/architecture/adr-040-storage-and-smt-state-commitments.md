@@ -17,7 +17,7 @@ Sparse Merkle Tree ([SMT](https://osf.io/8mcnh/)) is a version of a Merkle Tree 
 Currently, Cosmos SDK uses IAVL for both state [commitments](https://cryptography.fandom.com/wiki/Commitment_scheme) and data storage.
 
 IAVL has effectively become an orphaned project within the Cosmos ecosystem and it's proven to be an inefficient state commitment data structure.
-In the current design, IAVL is used for both data storage and as a Merkle Tree for state commitments. IAVL is meant to be a standalone Merkelized key/value database, however it's using a KV DB engine to store all tree nodes. So, each node is stored in a separate record in the KV DB. This causes many inefficiencies and problems:
+In the current design, IAVL is used for both data storage and as a Merkle Tree for state commitments. IAVL is meant to be a standalone Merkleized key/value database, however it's using a KV DB engine to store all tree nodes. So, each node is stored in a separate record in the KV DB. This causes many inefficiencies and problems:
 
 * Each object query requires a tree traversal from the root. Subsequent queries for the same object are cached on the Cosmos SDK level.
 * Each edge traversal requires a DB query.
@@ -30,7 +30,7 @@ Moreover, the IAVL project lacks support and a maintainer and we already see bet
 
 ## Decision
 
-We propose to separate the concerns of state commitment (**SC**), needed for consensus, and state storage (**SS**), needed for state machine. Finally we replace IAVL with [Celestia's SMT](https://github.com/lazyledger/smt). Celestia SMT is based on Diem (called jellyfish) design [*] - it uses a compute-optimised SMT by replacing subtrees with only default values with a single node (same approach is used by Ethereum2) and implements compact proofs.
+We propose to separate the concerns of state commitment (**SC**), needed for consensus, and state storage (**SS**), needed for state machine. Finally we replace IAVL with [Celestia's SMT](https://github.com/lazyledger/smt). Celestia SMT is based on Diem (called jellyfish) design [*] - it uses a compute-optimized SMT by replacing subtrees with only default values with a single node (same approach is used by Ethereum2) and implements compact proofs.
 
 The storage model presented here doesn't deal with data structure nor serialization. It's a Key-Value database, where both key and value are binaries. The storage user is responsible for data serialization.
 
@@ -92,7 +92,7 @@ A new database snapshot will be created in every `EndBlocker` and identified by 
 NOTE: `Commit` must be called exactly once per block. Otherwise we risk going out of sync for the version number and block height.
 NOTE: For the Cosmos SDK storage, we may consider splitting that interface into `Committer` and `PruningCommitter` - only the multiroot should implement `PruningCommitter` (cache and prefix store don't need pruning).
 
-Number of historical versions for `abci.QueryRequest` and state sync snapshots is part of a node configuration, not a chain configuration (configuration implied by the blockchain consensus). A configuration should allow to specify number of past blocks and number of past blocks modulo some number (eg: 100 past blocks and one snapshot every 100 blocks for past 2000 blocks). Archival nodes can keep all past versions.
+Number of historical versions for `abci.RequestQuery` and state sync snapshots is part of a node configuration, not a chain configuration (configuration implied by the blockchain consensus). A configuration should allow to specify number of past blocks and number of past blocks modulo some number (eg: 100 past blocks and one snapshot every 100 blocks for past 2000 blocks). Archival nodes can keep all past versions.
 
 Pruning old snapshots is effectively done by a database. Whenever we update a record in `SC`, SMT won't update nodes - instead it creates new nodes on the update path, without removing the old one. Since we are snapshotting each block, we need to change that mechanism to immediately remove orphaned nodes from the database. This is a safe operation - snapshots will keep track of the records and make it available when accessing past versions.
 
@@ -100,8 +100,8 @@ To manage the active snapshots we will either use a DB _max number of snapshots_
 
 #### Accessing old state versions
 
-One of the functional requirements is to access old state. This is done through `abci.QueryRequest` structure.  The version is specified by a block height (so we query for an object by a key `K` at block height `H`). The number of old versions supported for `abci.QueryRequest` is configurable. Accessing an old state is done by using available snapshots.
-`abci.QueryRequest` doesn't need old state of `SC` unless the `prove=true` parameter is set. The SMT merkle proof must be included in the `abci.QueryResponse` only if both `SC` and `SS` have a snapshot for requested version.
+One of the functional requirements is to access old state. This is done through `abci.RequestQuery` structure.  The version is specified by a block height (so we query for an object by a key `K` at block height `H`). The number of old versions supported for `abci.RequestQuery` is configurable. Accessing an old state is done by using available snapshots.
+`abci.RequestQuery` doesn't need old state of `SC` unless the `prove=true` parameter is set. The SMT merkle proof must be included in the `abci.ResponseQuery` only if both `SC` and `SS` have a snapshot for requested version.
 
 Moreover, Cosmos SDK could provide a way to directly access a historical state. However, a state machine shouldn't do that - since the number of snapshots is configurable, it would lead to nondeterministic execution.
 
@@ -285,5 +285,5 @@ We were discussing use case where modules can use a support database, which is n
 * Facebook Diem (Libra) SMT [design](https://developers.diem.com/papers/jellyfish-merkle-tree/2021-01-14.pdf)
 * [Trillian Revocation Transparency](https://github.com/google/trillian/blob/master/docs/papers/RevocationTransparency.pdf), [Trillian Verifiable Data Structures](https://github.com/google/trillian/blob/master/docs/papers/VerifiableDataStructures.pdf).
 * Design and implementation [discussion](https://github.com/cosmos/cosmos-sdk/discussions/8297).
-* [How to Upgrade IBC Chains and their Clients](https://github.com/cosmos/ibc-go/blob/main/docs/ibc/upgrades/quick-guide.md)
+* [How to Upgrade IBC Chains and their Clients](https://ibc.cosmos.network/main/ibc/upgrades/quick-guide/)
 * [ADR-40 Effect on IBC](https://github.com/cosmos/ibc-go/discussions/256)

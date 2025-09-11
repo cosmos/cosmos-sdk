@@ -290,7 +290,7 @@ func fileDescWithDependencies(fd *dpb.FileDescriptorProto, sentFileDescriptors m
 	return r, nil
 }
 
-// fileDescEncodingByFilename finds the file descriptor for given filename,
+// fileDescEncodingByFilename finds the file descriptor for the given filename,
 // finds all of its previously unsent transitive dependencies, does marshaling
 // on them, and returns the marshaled result.
 func (s *serverReflectionServer) fileDescEncodingByFilename(name string, sentFileDescriptors map[string]bool) ([][]byte, error) {
@@ -305,7 +305,7 @@ func (s *serverReflectionServer) fileDescEncodingByFilename(name string, sentFil
 	return fileDescWithDependencies(fd, sentFileDescriptors)
 }
 
-// parseMetadata finds the file descriptor bytes specified meta.
+// parseMetadata finds the file descriptor bytes specified by meta.
 // For SupportPackageIsVersion4, m is the name of the proto file, we
 // call proto.FileDescriptor to get the byte slice.
 // For SupportPackageIsVersion3, m is a byte slice itself.
@@ -349,7 +349,7 @@ func (s *serverReflectionServer) fileDescEncodingContainingSymbol(name string, s
 }
 
 // fileDescEncodingContainingExtension finds the file descriptor containing
-// given extension, finds all of its previously unsent transitive dependencies,
+// the given extension, finds all of its previously unsent transitive dependencies,
 // does marshaling on them, and returns the marshaled result.
 func (s *serverReflectionServer) fileDescEncodingContainingExtension(typeName string, extNum int32, sentFileDescriptors map[string]bool) ([][]byte, error) {
 	st, err := typeForName(typeName)

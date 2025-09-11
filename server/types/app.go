@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"io"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
-	cmttypes "github.com/cometbft/cometbft/v2/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/grpc"
 	"github.com/spf13/cobra"
@@ -40,7 +40,7 @@ type (
 		RegisterAPIRoutes(*api.Server, config.APIConfig)
 
 		// RegisterGRPCServerWithSkipCheckHeader registers gRPC services directly with the gRPC
-		// server and bypass check header flag.
+		// server and bypasses check header flag.
 		RegisterGRPCServerWithSkipCheckHeader(grpc.Server, bool)
 
 		// RegisterTxService registers the gRPC Query service for tx (such as tx
@@ -53,10 +53,10 @@ type (
 		// RegisterNodeService registers the node gRPC Query service.
 		RegisterNodeService(client.Context, config.Config)
 
-		// CommitMultiStore return the multistore instance
+		// CommitMultiStore returns the multistore instance
 		CommitMultiStore() storetypes.CommitMultiStore
 
-		// Return the snapshot manager
+		// SnapshotManager returns the snapshot manager
 		SnapshotManager() *snapshots.Manager
 
 		// Close is called in start cmd to gracefully cleanup resources.

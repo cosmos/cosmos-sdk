@@ -4,8 +4,8 @@ import (
 	"math/rand"
 	"testing"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
-	cmttime "github.com/cometbft/cometbft/v2/types/time"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
@@ -27,8 +27,8 @@ import (
 )
 
 func BenchmarkApplyAndReturnValidatorSetUpdates(b *testing.B) {
-	// goal of this benchmark to measure the performance changes in ApplyAndReturnValidatorSetUpdates
-	// for dropping the bench32 conversion and different index types.
+	// goal of this benchmark is to measure the performance changes in ApplyAndReturnValidatorSetUpdates
+	// for dropping the bech32 conversion and different index types.
 	// therefore the validator power, max or state is not modified to focus on comparing the valset
 	// for an update only.
 	const validatorCount = 150

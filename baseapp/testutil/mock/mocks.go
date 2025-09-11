@@ -135,7 +135,7 @@ func (mr *MockProposalTxVerifierMockRecorder) PrepareProposalVerifyTx(tx any) *g
 }
 
 // ProcessProposalVerifyTx mocks base method.
-func (m *MockProposalTxVerifier) ProcessProposalVerifyTx(txBz []byte) (types.Tx,uint64, error) {
+func (m *MockProposalTxVerifier) ProcessProposalVerifyTx(txBz []byte) (types.Tx, uint64, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ProcessProposalVerifyTx", txBz)
 	ret0, _ := ret[0].(types.Tx)

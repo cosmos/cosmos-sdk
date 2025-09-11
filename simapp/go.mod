@@ -239,10 +239,9 @@ require (
 // 	<temporary replace>
 // )
 
+// cosmossdk.io/store => ../store
 replace (
-	cosmossdk.io/client/v2 => ../client/v2
 	cosmossdk.io/store => ../store
-	cosmossdk.io/x/circuit => ../x/circuit
 	github.com/cosmos/cosmos-sdk/blockstm => ../blockstm/
 )
 

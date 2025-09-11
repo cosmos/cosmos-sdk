@@ -2,14 +2,15 @@
 
 package bls12_381
 
+/*
 import (
 	"bytes"
 	"errors"
 	"fmt"
 
-	"github.com/cometbft/cometbft/v2/crypto"
+	"github.com/cometbft/cometbft/crypto"
+	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/cometbft/cometbft/v2/crypto/bls12381"
-	"github.com/cometbft/cometbft/v2/crypto/tmhash"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -167,3 +168,5 @@ func (pubKey PubKey) Equals(other cryptotypes.PubKey) bool {
 func (pubKey PubKey) String() string {
 	return fmt.Sprintf("PubKeyBLS12_381{%X}", pubKey.Key)
 }
+
+*/

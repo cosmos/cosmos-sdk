@@ -1,4 +1,4 @@
-go 1.24.0
+go 1.25.0
 
 module github.com/cosmos/cosmos-sdk
 
@@ -22,6 +22,7 @@ require (
 	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/cosmos-db v1.1.3
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
+	github.com/cosmos/cosmos-sdk/blockstm v0.0.0-00010101000000-000000000000
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogogateway v1.2.0
 	github.com/cosmos/gogoproto v1.7.0
@@ -175,7 +176,6 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
-	github.com/nxadm/tail v1.4.11 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20230904125328-1f23a7beb09a // indirect
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc5 // indirect
@@ -235,6 +235,10 @@ require (
 
 // Here are the short-lived replace from the Cosmos SDK
 // Replace here are pending PRs, or version to be tagged
+replace (
+	cosmossdk.io/store => ./store
+	github.com/cosmos/cosmos-sdk/blockstm => ./blockstm
+)
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (
@@ -250,9 +254,10 @@ replace (
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
 
-replace cosmossdk.io/store => ./store
-
 retract (
+	// incorrect tag for patch version
+	v0.53.1
+
 	// false start by tagging the wrong branch
 	v0.50.0
 	// revert fix https://github.com/cosmos/cosmos-sdk/pull/16331

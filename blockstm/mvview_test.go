@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	storetypes "cosmossdk.io/store/types"
 	"github.com/test-go/testify/require"
+
+	storetypes "cosmossdk.io/store/types"
 )
 
 func TestMVMemoryViewDelete(t *testing.T) {

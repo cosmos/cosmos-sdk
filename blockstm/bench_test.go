@@ -5,8 +5,9 @@ import (
 	"strconv"
 	"testing"
 
-	storetypes "cosmossdk.io/store/types"
 	"github.com/test-go/testify/require"
+
+	storetypes "cosmossdk.io/store/types"
 )
 
 func BenchmarkBlockSTM(b *testing.B) {

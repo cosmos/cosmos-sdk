@@ -3,8 +3,9 @@ package blockstm
 import (
 	"testing"
 
-	storetypes "cosmossdk.io/store/types"
 	"github.com/test-go/testify/require"
+
+	storetypes "cosmossdk.io/store/types"
 )
 
 func TestMVMemoryRecord(t *testing.T) {

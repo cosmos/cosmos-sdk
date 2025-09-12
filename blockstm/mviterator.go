@@ -1,8 +1,9 @@
 package blockstm
 
 import (
-	storetypes "cosmossdk.io/store/types"
 	"github.com/tidwall/btree"
+
+	storetypes "cosmossdk.io/store/types"
 )
 
 // MVIterator is an iterator for a multi-versioned store.
@@ -114,7 +115,7 @@ func (it *MVIterator[V]) resolveValueInner(tree *BTree[secondaryDataItem[V]]) (*
 				it.waitFn(v.Index)
 				continue
 			}
-			// in validation mode, it should fail validation immediatelly
+			// in validation mode, it should fail validation immediately
 			return nil, false
 		}
 

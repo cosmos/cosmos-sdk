@@ -31,6 +31,7 @@ func NewExecutor(
 	}
 }
 
+// Run executes all tasks until completion
 // Invariant `num_active_tasks`:
 //   - `NextTask` increases it if returns a valid task.
 //   - `TryExecute` and `NeedsReexecution` don't change it if it returns a new valid task to run,

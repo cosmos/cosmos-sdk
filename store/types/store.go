@@ -475,7 +475,7 @@ type ObjectStoreKey struct {
 	name string
 }
 
-// Constructs new ObjectStoreKey
+// NewObjectStoreKey constructs new ObjectStoreKey
 // Must return a pointer according to the ocap principle
 func NewObjectStoreKey(name string) *ObjectStoreKey {
 	return &ObjectStoreKey{
@@ -483,12 +483,12 @@ func NewObjectStoreKey(name string) *ObjectStoreKey {
 	}
 }
 
-// Implements StoreKey
+// Name returns the key's name field
 func (key *ObjectStoreKey) Name() string {
 	return key.name
 }
 
-// Implements StoreKey
+// String returns a human readable key, name string
 func (key *ObjectStoreKey) String() string {
 	return fmt.Sprintf("ObjectStoreKey{%p, %s}", key, key.name)
 }

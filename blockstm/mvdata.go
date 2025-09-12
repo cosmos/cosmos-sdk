@@ -7,8 +7,7 @@ import (
 )
 
 const (
-	// Since we do copy-on-write a lot, smaller degree means smaller allocations
-	OuterBTreeDegree = 4
+	OuterBTreeDegree = 4 // Since we do copy-on-write a lot, smaller degree means smaller allocations
 	InnerBTreeDegree = 4
 )
 

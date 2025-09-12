@@ -26,8 +26,6 @@ type Store struct {
 	traceWriter  io.Writer
 	traceContext types.TraceContext
 	parentStore  func(types.StoreKey) types.CacheWrapper
-
-	branched bool
 }
 
 var _ types.CacheMultiStore = Store{}

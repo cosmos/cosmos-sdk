@@ -8,15 +8,16 @@ import (
 	"math/rand"
 	"testing"
 
-	storetypes "cosmossdk.io/store/types"
 	"github.com/test-go/testify/require"
+
+	storetypes "cosmossdk.io/store/types"
 )
 
 func accountName(i int64) string {
 	return fmt.Sprintf("account%05d", i)
 }
 
-func testBlock(size int, accounts int) *MockBlock {
+func testBlock(size, accounts int) *MockBlock {
 	txs := make([]Tx, size)
 	g := rand.New(rand.NewSource(0))
 	for i := 0; i < size; i++ {
@@ -27,7 +28,7 @@ func testBlock(size int, accounts int) *MockBlock {
 	return NewMockBlock(txs)
 }
 
-func iterateBlock(size int, accounts int) *MockBlock {
+func iterateBlock(size, accounts int) *MockBlock {
 	txs := make([]Tx, size)
 	g := rand.New(rand.NewSource(0))
 	for i := 0; i < size; i++ {

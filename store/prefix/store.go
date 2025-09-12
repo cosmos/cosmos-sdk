@@ -75,12 +75,12 @@ func (s GStore[V]) key(key []byte) (res []byte) {
 	return
 }
 
-// Implements Store
+// GetStoreType implements the Store interface
 func (s GStore[V]) GetStoreType() types.StoreType {
 	return s.parent.GetStoreType()
 }
 
-// Implements CacheWrap
+// CacheWrap implements the CacheWrap interface
 func (s GStore[V]) CacheWrap() types.CacheWrap {
 	return cachekv.NewGStore(s, s.isZero, s.valueLen)
 }
@@ -93,30 +93,30 @@ func (s GStore[V]) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.
 	return s.CacheWrap()
 }
 
-// Implements KVStore
+// Get implements the KVStore interface.
 func (s GStore[V]) Get(key []byte) V {
 	res := s.parent.Get(s.key(key))
 	return res
 }
 
-// Implements KVStore
+// Has implements the KVStore interface.
 func (s GStore[V]) Has(key []byte) bool {
 	return s.parent.Has(s.key(key))
 }
 
-// Implements KVStore
+// Set implements the KVStore interface.
 func (s GStore[V]) Set(key []byte, value V) {
 	types.AssertValidKey(key)
 	types.AssertValidValueGeneric(value, s.isZero, s.valueLen)
 	s.parent.Set(s.key(key), value)
 }
 
-// Implements KVStore
+// Delete implements the KVStore interface.
 func (s GStore[V]) Delete(key []byte) {
 	s.parent.Delete(s.key(key))
 }
 
-// Implements KVStore
+// Iterator implements the KVStore interface.
 // Check https://github.com/cometbft/cometbft/blob/master/libs/db/prefix_db.go#L106
 func (s GStore[V]) Iterator(start, end []byte) types.GIterator[V] {
 	newstart := cloneAppend(s.prefix, start)

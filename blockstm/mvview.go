@@ -15,7 +15,7 @@ var (
 	_ MVView                = (*GMVMemoryView[any])(nil)
 )
 
-// GMVMemoryView[V] wraps `MVMemory` for execution of a single transaction.
+// GMVMemoryView wraps `MVMemory` for execution of a single transaction.
 type GMVMemoryView[V any] struct {
 	storage   storetypes.GKVStore[V]
 	mvData    *GMVData[V]

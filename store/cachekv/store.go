@@ -56,7 +56,7 @@ type GStore[V any] struct {
 	valueLen func(V) int
 }
 
-// NewStore creates a new Store object
+// NewGStore creates a new Store object
 func NewGStore[V any](parent types.GKVStore[V], isZero func(V) bool, valueLen func(V) int) *GStore[V] {
 	return &GStore[V]{
 		cache:         make(map[string]*cValue[V]),
@@ -139,7 +139,7 @@ func (store *GStore[V]) resetCaches() {
 	store.sortedCache = btree.NewBTree[V]()
 }
 
-// Implements Cachetypes.KVStore.
+// Write implements Cachetypes.KVStore.
 func (store *GStore[V]) Write() {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()

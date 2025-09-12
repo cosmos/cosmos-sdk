@@ -32,26 +32,26 @@ func TestMVData(t *testing.T) {
 	// read closest version
 	value, version, estimate := data.Read([]byte("a"), 4)
 	require.False(t, estimate)
-	require.Equal(t, []byte([]byte("3")), value)
+	require.Equal(t, []byte("3"), value)
 	require.Equal(t, TxnVersion{Index: 3, Incarnation: 1}, version)
 
 	// read closest version
 	value, version, estimate = data.Read([]byte("a"), 3)
 	require.False(t, estimate)
-	require.Equal(t, []byte([]byte("2")), value)
+	require.Equal(t, []byte("2"), value)
 	require.Equal(t, TxnVersion{Index: 2, Incarnation: 1}, version)
 
 	// read closest version
 	value, version, estimate = data.Read([]byte("b"), 3)
 	require.False(t, estimate)
-	require.Equal(t, []byte([]byte("2")), value)
+	require.Equal(t, []byte("2"), value)
 	require.Equal(t, TxnVersion{Index: 2, Incarnation: 1}, version)
 
 	// new incarnation overrides old
 	data.Write([]byte("a"), []byte("3-2"), TxnVersion{Index: 3, Incarnation: 2})
 	value, version, estimate = data.Read([]byte("a"), 4)
 	require.False(t, estimate)
-	require.Equal(t, []byte([]byte("3-2")), value)
+	require.Equal(t, []byte("3-2"), value)
 	require.Equal(t, TxnVersion{Index: 3, Incarnation: 2}, version)
 
 	// read estimate
@@ -64,7 +64,7 @@ func TestMVData(t *testing.T) {
 	data.Delete([]byte("a"), 3)
 	value, version, estimate = data.Read([]byte("a"), 4)
 	require.False(t, estimate)
-	require.Equal(t, []byte([]byte("2")), value)
+	require.Equal(t, []byte("2"), value)
 	require.Equal(t, TxnVersion{Index: 2, Incarnation: 1}, version)
 
 	data.Delete([]byte("b"), 2)

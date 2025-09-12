@@ -1,14 +1,14 @@
 package blockstm
 
 import (
+	cryptorand "crypto/rand"
 	"encoding/binary"
 	"fmt"
 	"strings"
 
-	cryptorand "crypto/rand"
+	"github.com/cometbft/cometbft/crypto/secp256k1"
 
 	storetypes "cosmossdk.io/store/types"
-	"github.com/cometbft/cometbft/crypto/secp256k1"
 )
 
 var (

@@ -58,12 +58,12 @@ func NewGStore[V any](
 	return kvs
 }
 
-// Implements Store.
+// GetStoreType calls GetStoreType on the wrapped store.
 func (gs *GStore[V]) GetStoreType() types.StoreType {
 	return gs.parent.GetStoreType()
 }
 
-// Implements KVStore.
+// Get retrieves a key from the wrapped store.
 func (gs *GStore[V]) Get(key []byte) (value V) {
 	gs.gasMeter.ConsumeGas(gs.gasConfig.ReadCostFlat, types.GasReadCostFlatDesc)
 	value = gs.parent.Get(key)
@@ -75,7 +75,7 @@ func (gs *GStore[V]) Get(key []byte) (value V) {
 	return value
 }
 
-// Implements KVStore.
+// Set stores a value in the wrapped store.
 func (gs *GStore[V]) Set(key []byte, value V) {
 	types.AssertValidKey(key)
 	types.AssertValidValueGeneric(value, gs.isZero, gs.valueLen)
@@ -86,13 +86,13 @@ func (gs *GStore[V]) Set(key []byte, value V) {
 	gs.parent.Set(key, value)
 }
 
-// Implements KVStore.
+// Has checks if the wrapped store contains the key.
 func (gs *GStore[V]) Has(key []byte) bool {
 	gs.gasMeter.ConsumeGas(gs.gasConfig.HasCost, types.GasHasDesc)
 	return gs.parent.Has(key)
 }
 
-// Implements KVStore.
+// Delete removes a key from the wrapped store.
 func (gs *GStore[V]) Delete(key []byte) {
 	// charge gas to prevent certain attack vectors even though space is being freed
 	gs.gasMeter.ConsumeGas(gs.gasConfig.DeleteCost, types.GasDeleteDesc)

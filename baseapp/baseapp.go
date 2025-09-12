@@ -920,7 +920,7 @@ func (app *BaseApp) getContextForTx(mode sdk.ExecMode, txBytes []byte, txIndex i
 
 	if mode == execModeSimulate {
 		ctx, _ = ctx.CacheContext()
-		ctx = ctx.WithExecMode(sdk.ExecMode(execModeSimulate))
+		ctx = ctx.WithExecMode(execModeSimulate)
 	}
 
 	return ctx

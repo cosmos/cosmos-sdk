@@ -146,7 +146,7 @@ func (s *Scheduler) NextTask() (TxnVersion, TaskKind) {
 	}
 }
 
-func (s *Scheduler) WaitForDependency(txn TxnIndex, blocking_txn TxnIndex) *Condvar {
+func (s *Scheduler) WaitForDependency(txn, blocking_txn TxnIndex) *Condvar {
 	cond := NewCondvar()
 	entry := &s.txn_dependency[blocking_txn]
 	entry.Lock()
@@ -171,6 +171,7 @@ func (s *Scheduler) ResumeDependencies(txns []TxnIndex) {
 	}
 }
 
+// FinishExecution marks an execution task as complete.
 // Invariant `num_active_tasks`: decreased if an invalid task is returned.
 func (s *Scheduler) FinishExecution(version TxnVersion, wroteNewPath bool) (TxnVersion, TaskKind) {
 	s.txn_status[version.Index].SetExecuted()
@@ -193,6 +194,7 @@ func (s *Scheduler) TryValidationAbort(version TxnVersion) bool {
 	return s.txn_status[version.Index].TryValidationAbort(version.Incarnation)
 }
 
+// FinishValidation marks a validation task as complete.
 // Invariant `num_active_tasks`: decreased if an invalid task is returned.
 func (s *Scheduler) FinishValidation(txn TxnIndex, aborted bool) (TxnVersion, TaskKind) {
 	if aborted {

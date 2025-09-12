@@ -7,8 +7,7 @@ import (
 )
 
 type (
-	// keys are sorted
-	Locations      []Key
+	Locations      []Key // keys are sorted
 	MultiLocations map[int]Locations
 )
 

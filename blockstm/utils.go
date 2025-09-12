@@ -42,6 +42,7 @@ func FetchIncr(a *atomic.Uint64) uint64 {
 	return a.Add(1) - 1
 }
 
+// DiffOrderedList compares two ordered lists
 // callback arguments: (value, is_new)
 func DiffOrderedList(old, new []Key, callback func(Key, bool) bool) {
 	i, j := 0, 0

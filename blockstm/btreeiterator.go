@@ -62,7 +62,7 @@ func NewBTreeIteratorG[T KeyItem](
 	return mi
 }
 
-func (mi *BTreeIteratorG[T]) Domain() (start []byte, end []byte) {
+func (mi *BTreeIteratorG[T]) Domain() (start, end []byte) {
 	return mi.start, mi.end
 }
 

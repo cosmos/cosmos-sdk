@@ -57,7 +57,7 @@ func ExecuteBlockWithEstimates(
 
 	if !scheduler.Done() {
 		if ctx.Err() != nil {
-			// cancelled
+			// canceled
 			return ctx.Err()
 		}
 

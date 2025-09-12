@@ -125,7 +125,7 @@ func SetOptimisticExecution(opts ...func(*oe.OptimisticExecution)) func(*BaseApp
 	}
 }
 
-// SetTxRunner sets the block stm tx runner for the BaseApp for parallel execution.
+// SetBlockSTMTxRunner sets the block stm tx runner for the BaseApp for parallel execution.
 func (app *BaseApp) SetBlockSTMTxRunner(txRunner blockstm.TxRunner) {
 	app.txRunner = txRunner
 }

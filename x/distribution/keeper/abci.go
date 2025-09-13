@@ -14,7 +14,6 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) error {
 
 	// determine the total power signing the block
 	var previousTotalPower int64
-	// determine the total power signing the block
 	for _, voteInfo := range ctx.VoteInfos() {
 		previousTotalPower += voteInfo.Validator.Power
 	}

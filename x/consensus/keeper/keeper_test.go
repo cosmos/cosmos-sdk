@@ -165,7 +165,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 			expErrMsg: "",
 		},
 		{
-			name: "invalid  params",
+			name: "invalid params",
 			input: &types.MsgUpdateParams{
 				Authority: s.consensusParamsKeeper.GetAuthority(),
 				Block:     &cmtproto.BlockParams{MaxGas: -10, MaxBytes: -10},

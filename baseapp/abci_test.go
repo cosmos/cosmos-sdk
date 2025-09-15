@@ -22,11 +22,14 @@ import (
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/cosmos/gogoproto/proto"
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
+	"cosmossdk.io/store/memstore"
+	"cosmossdk.io/store/prefix"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
@@ -213,6 +216,238 @@ func TestABCI_FinalizeBlock_WithInitialHeight(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, int64(3), app.LastBlockHeight())
+}
+
+func TestABCI_MemStoreCacheContextLifecycle(t *testing.T) {
+	name := t.Name()
+	db := dbm.NewMemDB()
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
+
+	_, err := app.InitChain(
+		&abci.InitChainRequest{
+			InitialHeight: 3,
+		},
+	)
+	require.NoError(t, err)
+
+	blockPrefix := []byte{0x01}
+	app.SetEndBlocker(func(ctx sdk.Context) (sdk.EndBlock, error) {
+		prefixedStore := ctx.MemStore(blockPrefix)
+		typedStore := memstore.NewTypedMemStore[*cmtproto.Block](prefixedStore)
+
+		typedStore.Set([]byte("block-1"), &cmtproto.Block{
+			Header: cmtproto.Header{Height: 1},
+		})
+
+		// drop cacheCtx case
+		cacheCtx, _ := ctx.CacheContext()
+		{
+			// Separate prefix and typed functionality
+			prefixedStore := cacheCtx.MemStore(blockPrefix)
+			typedStore := memstore.NewTypedMemStore[*cmtproto.Block](prefixedStore)
+
+			typedStore.Set([]byte("block-2"), &cmtproto.Block{
+				Header: cmtproto.Header{Height: 2},
+			})
+
+			block2 := typedStore.Get([]byte("block-2"))
+			require.Equal(t, block2.Header.Height, int64(2))
+		}
+
+		cacheCtx2, writeCache2 := ctx.CacheContext()
+		{
+			// Separate prefix and typed functionality
+			prefixedStore := cacheCtx2.MemStore(blockPrefix)
+			typedStore := memstore.NewTypedMemStore[*cmtproto.Block](prefixedStore)
+
+			typedStore.Set([]byte("block-3"), &cmtproto.Block{
+				Header: cmtproto.Header{Height: 3},
+			})
+
+			block3 := typedStore.Get([]byte("block-3"))
+			require.Equal(t, block3.Header.Height, int64(3))
+		}
+		writeCache2()
+
+		block1 := typedStore.Get([]byte("block-1")) // from ctx
+		require.Equal(t, block1.Header.Height, int64(1))
+		block2 := typedStore.Get([]byte("block-2")) // from cacheCtx
+		require.Nil(t, block2)
+		block3 := typedStore.Get([]byte("block-3"))
+		require.Equal(t, block3.Header.Height, int64(3))
+
+		return sdk.EndBlock{}, nil
+	})
+
+	_, err = app.FinalizeBlock(&abci.FinalizeBlockRequest{Height: 3})
+	require.NoError(t, err)
+
+	cms := app.CommitMultiStore()
+	memStore := cms.GetMemStore()
+	// Separate prefix and typed functionality
+	prefixedStore := prefix.NewMemStore(memStore, blockPrefix)
+	typedStore := memstore.NewTypedMemStore[*cmtproto.Block](prefixedStore)
+
+	val := typedStore.Get([]byte("block-1"))
+	require.Nil(t, val)
+
+	_, err = app.Commit()
+	require.NoError(t, err)
+	require.Equal(t, int64(3), app.LastBlockHeight())
+
+	// re-initialize after commit
+	memStore = cms.GetMemStore()
+	// Separate prefix and typed functionality
+	prefixedStore = prefix.NewMemStore(memStore, blockPrefix)
+	typedStore = memstore.NewTypedMemStore[*cmtproto.Block](prefixedStore)
+
+	val = typedStore.Get([]byte("block-1"))
+	require.NotNil(t, val)
+	require.Equal(t, val.Header.Height, int64(1))
+
+	val = typedStore.Get([]byte("block-2"))
+	require.Nil(t, val)
+
+	val = typedStore.Get([]byte("block-3"))
+	require.NotNil(t, val)
+	require.Equal(t, val.Header.Height, int64(3))
+}
+
+func TestABCI_MemStoreWarmpup(t *testing.T) {
+	name := t.Name()
+	db := dbm.NewMemDB()
+
+	blockPrefix := []byte{0x01}
+	warmupFunction := func(
+		ctx sdk.Context,
+	) {
+		// Separate prefix and typed functionality
+		prefixedStore := ctx.MemStore(blockPrefix)
+		typedStore := memstore.NewTypedMemStore[*cmtproto.Block](prefixedStore)
+
+		val, err := db.Get([]byte("s/latest"))
+		if err != nil || val == nil {
+			return
+		}
+
+		var lastHeight int64
+		require.NoError(t, gogotypes.StdInt64Unmarshal(&lastHeight, val))
+
+		for i := int64(1); i <= lastHeight; i++ {
+			block := &cmtproto.Block{
+				Header: cmtproto.Header{Height: i},
+			}
+			typedStore.Set([]byte(fmt.Sprintf("block-%d", i)), block)
+		}
+	}
+
+	newApp := func(db dbm.DB) *baseapp.BaseApp {
+		app := baseapp.NewBaseApp(
+			name,
+			log.NewTestLogger(t),
+			db,
+			nil,
+		)
+
+		app.SetEndBlocker(func(ctx sdk.Context) (sdk.EndBlock, error) {
+			// Separate prefix and typed functionality
+			prefixedStore := ctx.MemStore(blockPrefix)
+			typedStore := memstore.NewTypedMemStore[*cmtproto.Block](prefixedStore)
+
+			header := ctx.BlockHeader()
+			typedStore.Set(
+				[]byte(
+					fmt.Sprintf("block-%d", header.Height),
+				),
+				&cmtproto.Block{
+					Header: cmtproto.Header{
+						Height: header.Height,
+					},
+				},
+			)
+			return sdk.EndBlock{}, nil
+		})
+
+		require.NoError(t, app.LoadLatestVersion())
+
+		memStoreManager := memstore.NewMemStoreManager()
+		cms := app.CommitMultiStore()
+		cms.SetMemStoreManager(memStoreManager)
+
+		cacheMulti := cms.CacheMultiStore()
+
+		ctx := sdk.NewContext(
+			cacheMulti,
+			cmtproto.Header{
+				ChainID: app.ChainID(),
+				Height:  app.LastBlockHeight(),
+			},
+			false,
+			log.NewNopLogger(),
+		)
+
+		warmupFunction(ctx)
+		cacheMulti.Write()
+		memStoreManager.Commit(app.LastBlockHeight())
+
+		return app
+	}
+
+	nextBlock := func(app *baseapp.BaseApp) {
+		_, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{
+			Height: app.LastBlockHeight() + 1,
+		})
+		require.NoError(t, err)
+
+		_, err = app.Commit()
+		require.NoError(t, err)
+	}
+
+	app := newApp(db)
+	_, err := app.InitChain(&abci.InitChainRequest{
+		InitialHeight: 1,
+	})
+	require.NoError(t, err)
+
+	for range 10 {
+		nextBlock(app)
+	}
+
+	memStoreSnapshot := []struct {
+		key   []byte
+		value *cmtproto.Block
+	}{}
+	{
+		cms := app.CommitMultiStore()
+		ekv := cms.GetMemStore()
+		prefixedStore := prefix.NewMemStore(ekv, blockPrefix)
+		typedEkv := memstore.NewTypedMemStore[*cmtproto.Block](prefixedStore)
+		iter := typedEkv.Iterator(nil, nil)
+		for ; iter.Valid(); iter.Next() {
+			memStoreSnapshot = append(memStoreSnapshot, struct {
+				key   []byte
+				value *cmtproto.Block
+			}{
+				key:   iter.Key(),
+				value: iter.Value(),
+			})
+		}
+		iter.Close()
+	}
+	require.NoError(t, app.Close())
+
+	app2 := newApp(db)
+	{ // check memStore snapshot
+		cms := app2.CommitMultiStore()
+		ekv := cms.GetMemStore()
+		prefixedStore := prefix.NewMemStore(ekv, blockPrefix)
+		typedEkv := memstore.NewTypedMemStore[*cmtproto.Block](prefixedStore)
+		for _, kv := range memStoreSnapshot {
+			val := typedEkv.Get(kv.key)
+			require.Equal(t, kv.value, val)
+		}
+	}
+	require.NoError(t, app2.Close())
 }
 
 func TestABCI_FinalizeBlock_WithBeginAndEndBlocker(t *testing.T) {

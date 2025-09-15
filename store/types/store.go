@@ -140,6 +140,7 @@ type MultiStore interface {
 	// If the store does not exist, panics.
 	GetStore(StoreKey) Store
 	GetKVStore(StoreKey) KVStore
+	GetMemStore() MemStore
 	GetObjKVStore(StoreKey) ObjKVStore
 
 	// TracingEnabled returns if tracing is enabled for the MultiStore.
@@ -224,6 +225,10 @@ type CommitMultiStore interface {
 
 	// SetIAVLDisableFastNode enables/disables fastnode feature on iavl.
 	SetIAVLDisableFastNode(disable bool)
+
+	SetMemStoreManager(memStore MemStoreManager)
+
+	SetSnapshotPoolLimit(limit int64)
 
 	// SetIAVLSyncPruning set sync/async pruning on iavl.
 	SetIAVLSyncPruning(sync bool)

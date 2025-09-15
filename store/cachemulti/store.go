@@ -26,6 +26,7 @@ type Store struct {
 	traceWriter  io.Writer
 	traceContext types.TraceContext
 	parentStore  func(types.StoreKey) types.CacheWrapper
+	memStore     types.MemStore
 
 	branched bool
 }
@@ -38,11 +39,13 @@ var _ types.CacheMultiStore = Store{}
 func NewFromKVStore(
 	stores map[types.StoreKey]types.CacheWrapper,
 	traceWriter io.Writer, traceContext types.TraceContext,
+	memStore types.MemStore,
 ) Store {
 	cms := Store{
 		stores:       make(map[types.StoreKey]types.CacheWrap, len(stores)),
 		traceWriter:  traceWriter,
 		traceContext: traceContext,
+		memStore:     memStore,
 	}
 
 	for key, store := range stores {
@@ -56,9 +59,9 @@ func NewFromKVStore(
 // CacheWrapper objects. Each CacheWrapper store is a branched store.
 func NewStore(
 	_ dbm.DB, stores map[types.StoreKey]types.CacheWrapper, _ map[string]types.StoreKey,
-	traceWriter io.Writer, traceContext types.TraceContext,
+	traceWriter io.Writer, traceContext types.TraceContext, memStore types.MemStore,
 ) Store {
-	return NewFromKVStore(stores, traceWriter, traceContext)
+	return NewFromKVStore(stores, traceWriter, traceContext, memStore)
 }
 
 // NewFromParent constructs a cache multistore with a parent store lazily,
@@ -66,11 +69,13 @@ func NewStore(
 func NewFromParent(
 	parentStore func(types.StoreKey) types.CacheWrapper,
 	traceWriter io.Writer, traceContext types.TraceContext,
+	memStore types.MemStore,
 ) Store {
 	return Store{
 		stores:       make(map[types.StoreKey]types.CacheWrap),
 		traceWriter:  traceWriter,
 		traceContext: traceContext,
+		memStore:     memStore,
 		parentStore:  parentStore,
 	}
 }
@@ -132,6 +137,8 @@ func (cms Store) Write() {
 	for _, store := range cms.stores {
 		store.Write()
 	}
+
+	cms.memStore.Commit()
 }
 
 func (cms Store) Discard() {
@@ -152,7 +159,7 @@ func (cms Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.Cac
 
 // Implements MultiStore.
 func (cms Store) CacheMultiStore() types.CacheMultiStore {
-	return NewFromParent(cms.getCacheWrapper, cms.traceWriter, cms.traceContext)
+	return NewFromParent(cms.getCacheWrapper, cms.traceWriter, cms.traceContext, cms.memStore)
 }
 
 func (cms Store) getCacheWrapper(key types.StoreKey) types.CacheWrapper {
@@ -241,4 +248,8 @@ func (cms Store) RunAtomic(cb func(types.CacheMultiStore) error) error {
 
 	cms.Restore(branch)
 	return nil
+}
+
+func (cms Store) GetMemStore() types.MemStore {
+	return cms.memStore
 }

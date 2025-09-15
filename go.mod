@@ -203,7 +203,7 @@ replace cosmossdk.io/api => ./api
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (
-	cosmossdk.io/store => ./store
+	cosmossdk.io/store => ./store // TODO this was commented out originally, why ?
 	cosmossdk.io/x/evidence => ./x/evidence
 	cosmossdk.io/x/feegrant => ./x/feegrant
 	cosmossdk.io/x/tx => ./x/tx
@@ -224,6 +224,8 @@ replace (
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
 	// replace broken goleveldb
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
+
+	github.com/tidwall/btree => github.com/InjectiveLabs/btree v0.0.0-20250402045845-4690b506608a
 )
 
 retract (

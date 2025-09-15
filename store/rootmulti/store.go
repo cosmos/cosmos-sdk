@@ -23,6 +23,7 @@ import (
 	"cosmossdk.io/store/iavl"
 	"cosmossdk.io/store/listenkv"
 	"cosmossdk.io/store/mem"
+	"cosmossdk.io/store/memstore"
 	"cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/pruning"
 	pruningtypes "cosmossdk.io/store/pruning/types"
@@ -76,6 +77,8 @@ type Store struct {
 	listeners         map[types.StoreKey]*types.MemoryListener
 	metrics           metrics.StoreMetrics
 	commitHeader      cmtproto.Header
+
+	memStoreManager types.MemStoreManager
 }
 
 var (
@@ -100,6 +103,7 @@ func NewStore(db dbm.DB, logger log.Logger, metricGatherer metrics.StoreMetrics)
 		removalMap:          make(map[types.StoreKey]bool),
 		pruningManager:      pruning.NewManager(db, logger),
 		metrics:             metricGatherer,
+		memStoreManager:     memstore.NewMemStoreManager(),
 	}
 }
 
@@ -136,6 +140,14 @@ func (rs *Store) SetIAVLDisableFastNode(disableFastNode bool) {
 
 func (rs *Store) SetIAVLSyncPruning(syncPruning bool) {
 	rs.iavlSyncPruning = syncPruning
+}
+
+func (rs *Store) SetMemStoreManager(memStoreManager types.MemStoreManager) {
+	rs.memStoreManager = memStoreManager
+}
+
+func (rs *Store) SetSnapshotPoolLimit(limit int64) {
+	rs.memStoreManager.SetSnapshotPoolLimit(limit)
 }
 
 // GetStoreType implements Store.
@@ -517,6 +529,11 @@ func (rs *Store) Commit() types.CommitID {
 	rs.lastCommitInfo.Timestamp = rs.commitHeader.Time
 	defer rs.flushMetadata(rs.db, version, rs.lastCommitInfo)
 
+	defer func() {
+		height := rs.lastCommitInfo.Version
+		rs.memStoreManager.Commit(height)
+	}()
+
 	// remove remnants of removed stores
 	for sk := range rs.removalMap {
 		if _, ok := rs.stores[sk]; ok {
@@ -598,7 +615,12 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 		}
 		stores[k] = store
 	}
-	return cachemulti.NewFromKVStore(stores, rs.traceWriter, rs.getTracingContext())
+	return cachemulti.NewFromKVStore(
+		stores,
+		rs.traceWriter,
+		rs.getTracingContext(),
+		rs.memStoreManager.Branch(),
+	)
 }
 
 // CacheMultiStoreWithVersion is analogous to CacheMultiStore except that it
@@ -664,7 +686,20 @@ func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStor
 		cachedStores[key] = cacheStore
 	}
 
-	return cachemulti.NewFromKVStore(cachedStores, rs.traceWriter, rs.getTracingContext()), nil
+	memStoreSnapshot, exists := rs.memStoreManager.GetSnapshotBranch(version)
+
+	if !exists {
+		memStoreSnapshot = memstore.NewUnusableMemstore(version)
+	}
+
+	return cachemulti.NewStore(
+		rs.db,
+		cachedStores,
+		rs.keysByName,
+		rs.traceWriter,
+		rs.getTracingContext(),
+		memStoreSnapshot,
+	), nil
 }
 
 // GetStore returns a mounted Store for a given StoreKey. If the StoreKey does
@@ -720,6 +755,10 @@ func (rs *Store) GetObjKVStore(key types.StoreKey) types.ObjKVStore {
 	}
 
 	return store
+}
+
+func (rs *Store) GetMemStore() types.MemStore {
+	return rs.memStoreManager.Branch()
 }
 
 func (rs *Store) handlePruning(version int64) error {

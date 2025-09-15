@@ -235,6 +235,11 @@ type HasABCIEndBlock interface {
 	EndBlock(context.Context) ([]abci.ValidatorUpdate, error)
 }
 
+// HasWarmupMemStore is the interface for modules that need to warm up the mem store.
+type HasWarmupMemStore interface {
+	WarmupMemStore(sdk.Context)
+}
+
 var (
 	_ appmodule.AppModule = (*GenesisOnlyAppModule)(nil)
 	_ AppModuleBasic      = (*GenesisOnlyAppModule)(nil)
@@ -871,6 +876,16 @@ func (m *Manager) GetVersionMap() VersionMap {
 // ModuleNames returns list of all module names, without any particular order.
 func (m *Manager) ModuleNames() []string {
 	return maps.Keys(m.Modules)
+}
+
+// WarmupMemStore calls WarmupMemStore for all modules that implement HasWarmupMemStore
+func (m *Manager) WarmupMemStore(ctx sdk.Context) {
+	for _, module := range m.Modules {
+		warmupModule, ok := module.(HasWarmupMemStore)
+		if ok {
+			warmupModule.WarmupMemStore(ctx)
+		}
+	}
 }
 
 // DefaultMigrationsOrder returns a default migrations order: ascending alphabetical by module name,

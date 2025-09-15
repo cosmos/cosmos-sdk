@@ -19,8 +19,10 @@ func (b bytesKey[T]) Encode(buffer []byte, key T) (int, error) {
 }
 
 func (bytesKey[T]) Decode(buffer []byte) (int, T, error) {
-	// todo: should we copy it? collections will just discard the buffer, so from coll POV is not needed.
-	return len(buffer), buffer, nil
+	// Copy to avoid returning a slice aliasing the provided buffer which may be reused by callers (e.g. iterators).
+	out := make([]byte, len(buffer))
+	copy(out, buffer)
+	return len(buffer), out, nil
 }
 
 func (bytesKey[T]) Size(key T) int {
@@ -71,7 +73,10 @@ func (bytesKey[T]) DecodeNonTerminal(buffer []byte) (int, T, error) {
 			ErrEncoding, keyLength, len(buffer[1:]),
 		)
 	}
-	return 1 + keyLength, buffer[1 : keyLength+1], nil
+	// Copy the sub-slice to avoid aliasing the caller-provided buffer which may be reused.
+	out := make([]byte, keyLength)
+	copy(out, buffer[1:1+keyLength])
+	return 1 + keyLength, out, nil
 }
 
 func (bytesKey[T]) SizeNonTerminal(key T) int {

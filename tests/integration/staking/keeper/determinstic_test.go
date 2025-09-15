@@ -248,10 +248,12 @@ func setValidator(t *testing.T, f *deterministicFixture, validator stakingtypes.
 	assert.NilError(t, f.stakingKeeper.Hooks().AfterValidatorCreated(f.ctx, valbz))
 
 	delegatorAddress := sdk.AccAddress(valbz)
-	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, validator.BondedTokens()))
+	// Use validator.Tokens instead of validator.BondedTokens() to avoid zero amount issue
+	// when validator is not in Bonded status
+	coins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, validator.Tokens))
 	assert.NilError(t, banktestutil.FundAccount(f.ctx, f.bankKeeper, delegatorAddress, coins))
 
-	_, err = f.stakingKeeper.Delegate(f.ctx, delegatorAddress, validator.BondedTokens(), stakingtypes.Unbonded, validator, true)
+	_, err = f.stakingKeeper.Delegate(f.ctx, delegatorAddress, validator.Tokens, stakingtypes.Unbonded, validator, true)
 	assert.NilError(t, err)
 }
 

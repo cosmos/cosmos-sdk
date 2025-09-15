@@ -197,6 +197,6 @@ replace (
 
 replace (
 	// Use CometBFT v1.0.1 with Mempool lanes and DOG
-	github.com/cometbft/cometbft => github.com/InjectiveLabs/cometbft v1.0.1-inj.2
+	github.com/cometbft/cometbft => github.com/InjectiveLabs/cometbft v1.0.1-inj.3
 	github.com/cometbft/cometbft/api => github.com/InjectiveLabs/cometbft/api v1.0.0-inj.2
 )

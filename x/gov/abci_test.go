@@ -31,7 +31,7 @@ func TestUnregisteredProposal_InactiveProposalFails(t *testing.T) {
 	startTime, endTime := time.Now().Add(-4*time.Hour), ctx.BlockHeader().Time
 	proposal, err := v1.NewProposal([]sdk.Msg{
 		&v1.Proposal{}, // invalid proposal message
-	}, 1, startTime, startTime, "", "Unsupported proposal", "Unsupported proposal", addrs[0], false)
+	}, 1, startTime, startTime, "", "Unsupported proposal", "Unsupported proposal", addrs[0], false, nil)
 	require.NoError(t, err)
 
 	err = suite.GovKeeper.SetProposal(ctx, proposal)
@@ -59,7 +59,7 @@ func TestUnregisteredProposal_ActiveProposalFails(t *testing.T) {
 	startTime, endTime := time.Now().Add(-4*time.Hour), ctx.BlockHeader().Time
 	proposal, err := v1.NewProposal([]sdk.Msg{
 		&v1.Proposal{}, // invalid proposal message
-	}, 1, startTime, startTime, "", "Unsupported proposal", "Unsupported proposal", addrs[0], false)
+	}, 1, startTime, startTime, "", "Unsupported proposal", "Unsupported proposal", addrs[0], false, nil)
 	require.NoError(t, err)
 	proposal.Status = v1.StatusVotingPeriod
 	proposal.VotingEndTime = &endTime
@@ -105,6 +105,7 @@ func TestTickExpiredDepositPeriod(t *testing.T) {
 		"Proposal",
 		"description of proposal",
 		false,
+		nil,
 	)
 	require.NoError(t, err)
 
@@ -157,6 +158,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 		"Proposal",
 		"description of proposal",
 		false,
+		nil,
 	)
 	require.NoError(t, err)
 
@@ -180,6 +182,7 @@ func TestTickMultipleExpiredDepositPeriod(t *testing.T) {
 		"Proposal",
 		"description of proposal",
 		false,
+		nil,
 	)
 	require.NoError(t, err)
 
@@ -227,6 +230,7 @@ func TestTickPassedDepositPeriod(t *testing.T) {
 		"Proposal",
 		"description of proposal",
 		false,
+		nil,
 	)
 	require.NoError(t, err)
 
@@ -289,7 +293,7 @@ func TestTickPassedVotingPeriod(t *testing.T) {
 			checkActiveProposalsQueue(t, ctx, suite.GovKeeper)
 
 			proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, suite.StakingKeeper.TokensFromConsensusPower(ctx, 5*depositMultiplier))}
-			newProposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{mkTestLegacyContent(t)}, proposalCoins, addrs[0].String(), "", "Proposal", "description of proposal", tc.expedited)
+			newProposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{mkTestLegacyContent(t)}, proposalCoins, addrs[0].String(), "", "Proposal", "description of proposal", tc.expedited, nil)
 			require.NoError(t, err)
 
 			res, err := govMsgSvr.SubmitProposal(ctx, newProposalMsg)
@@ -389,7 +393,7 @@ func TestProposalPassedEndblocker(t *testing.T) {
 			require.NotNil(t, macc)
 			initialModuleAccCoins := suite.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
 
-			proposal, err := suite.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", "title", "summary", proposer, tc.expedited)
+			proposal, err := suite.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", "title", "summary", proposer, tc.expedited, nil)
 			require.NoError(t, err)
 
 			proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, suite.StakingKeeper.TokensFromConsensusPower(ctx, 10*depositMultiplier))}
@@ -447,7 +451,7 @@ func TestEndBlockerProposalHandlerFailed(t *testing.T) {
 	require.NoError(t, err)
 
 	msg := banktypes.NewMsgSend(authtypes.NewModuleAddress(types.ModuleName), addrs[0], sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(100000))))
-	proposal, err := suite.GovKeeper.SubmitProposal(ctx, []sdk.Msg{msg}, "", "title", "summary", proposer, false)
+	proposal, err := suite.GovKeeper.SubmitProposal(ctx, []sdk.Msg{msg}, "", "title", "summary", proposer, false, nil)
 	require.NoError(t, err)
 
 	proposalCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, suite.StakingKeeper.TokensFromConsensusPower(ctx, 10)))
@@ -544,7 +548,7 @@ func TestExpeditedProposal_PassAndConversionToRegular(t *testing.T) {
 			depositorInitialBalance := suite.BankKeeper.GetAllBalances(ctx, addrs[1])
 
 			proposalCoins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, suite.StakingKeeper.TokensFromConsensusPower(ctx, 5*depositMultiplier))}
-			newProposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{}, proposalCoins, proposer.String(), "metadata", "title", "summary", true)
+			newProposalMsg, err := v1.NewMsgSubmitProposal([]sdk.Msg{}, proposalCoins, proposer.String(), "metadata", "title", "summary", true, nil)
 			require.NoError(t, err)
 
 			res, err := govMsgSvr.SubmitProposal(ctx, newProposalMsg)

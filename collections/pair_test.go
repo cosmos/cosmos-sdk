@@ -67,3 +67,34 @@ func TestPairRange(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, []Pair[string, uint64]{Join("A", uint64(2)), Join("A", uint64(1))}, keys)
 }
+
+func TestPairDecodeConsumesAllBytes(t *testing.T) {
+    // Prepare a buffer with a non-terminal first key and a terminal second key.
+    // This ensures decoding must advance by the cumulative readTotal before decoding K2.
+    pc := PairKeyCodec(StringKey, Uint64Key)
+
+    // Encode using the codec to avoid manual mistakes
+    buf := make([]byte, pc.Size(Join("A", uint64(1))))
+    n, err := pc.Encode(buf, Join("A", uint64(1)))
+    require.NoError(t, err)
+    require.Equal(t, len(buf), n)
+
+    // Iterator.Key enforces full consumption; use the decode directly as well
+    read, key, err := pc.Decode(buf)
+    require.NoError(t, err)
+    require.Equal(t, len(buf), read)
+    require.Equal(t, Join("A", uint64(1)), key)
+}
+
+func TestPairRange_ErrorPropagation(t *testing.T) {
+    // Demonstrate that a stored error on PairRange is propagated by RangeValues
+    rng := &PairRange[string, uint64]{}
+    sentinel := fmt.Errorf("sentinel range error")
+    rng.err = sentinel
+
+    start, end, order, err := rng.RangeValues()
+    require.Nil(t, start)
+    require.Nil(t, end)
+    require.Equal(t, Order(0), order)
+    require.Equal(t, sentinel, err)
+}

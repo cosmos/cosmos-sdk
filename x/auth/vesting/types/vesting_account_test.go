@@ -291,7 +291,8 @@ func TestSpendableCoinsDelVestingAcc(t *testing.T) {
 	// delegate some locked coins
 	// require that locked is reduced
 	delegatedAmount := sdk.NewCoins(sdk.NewInt64Coin(stakeDenom, 50))
-	dva.TrackDelegation(now.Add(12*time.Hour), origCoins, delegatedAmount)
+	err = dva.TrackDelegation(now.Add(12*time.Hour), origCoins, delegatedAmount)
+	require.NoError(t, err)
 	lockedCoins = dva.LockedCoins(now.Add(12 * time.Hour))
 	require.True(t, lockedCoins.Equal(origCoins.Sub(delegatedAmount...)))
 }
@@ -305,7 +306,8 @@ func TestTrackDelegationDelVestingAcc(t *testing.T) {
 	// require the ability to delegate all vesting coins
 	dva, err := types.NewDelayedVestingAccount(bacc, origCoins, endTime.Unix())
 	require.NoError(t, err)
-	dva.TrackDelegation(now, origCoins, origCoins)
+	err = dva.TrackDelegation(now, origCoins, origCoins)
+	require.NoError(t, err)
 	require.Equal(t, origCoins, dva.DelegatedVesting)
 	require.Nil(t, dva.DelegatedFree)
 
@@ -567,14 +569,16 @@ func TestTrackDelegationPeriodicVestingAcc(t *testing.T) {
 	// require the ability to delegate all vesting coins
 	pva, err := types.NewPeriodicVestingAccount(bacc, origCoins, now.Unix(), periods)
 	require.NoError(t, err)
-	pva.TrackDelegation(now, origCoins, origCoins)
+	err = pva.TrackDelegation(now, origCoins, origCoins)
+	require.NoError(t, err)
 	require.Equal(t, origCoins, pva.DelegatedVesting)
 	require.Nil(t, pva.DelegatedFree)
 
 	// require the ability to delegate all vested coins
 	pva, err = types.NewPeriodicVestingAccount(bacc, origCoins, now.Unix(), periods)
 	require.NoError(t, err)
-	pva.TrackDelegation(endTime, origCoins, origCoins)
+	err = pva.TrackDelegation(endTime, origCoins, origCoins)
+	require.NoError(t, err)
 	require.Nil(t, pva.DelegatedVesting)
 	require.Equal(t, origCoins, pva.DelegatedFree)
 

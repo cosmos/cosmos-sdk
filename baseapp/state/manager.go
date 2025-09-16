@@ -14,6 +14,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// Manager manages the different execution states of the BaseApp.
+// It maintains separate states for different ABCI execution modes and provides
+// thread-safe access to these states.
 type Manager struct {
 	// volatile states:
 	//
@@ -29,26 +32,29 @@ type Manager struct {
 	// consensus rounds, the state is always reset to the previous block's state.
 	//
 	// - processProposalState: Used for ProcessProposal, which is set based on the
-	// the previous block's state. This state is never committed. In case of
+	// previous block's state. This state is never committed. In case of
 	// multiple rounds, the state is always reset to the previous block's state.
 	//
 	// - finalizeBlockState: Used for FinalizeBlock, which is set based on the
 	// previous block's state. This state is committed.
-	checkState           *State
-	prepareProposalState *State
-	processProposalState *State
-	finalizeBlockState   *State
-	stateMut             sync.RWMutex
+	checkState           *State       // State for CheckTx execution
+	prepareProposalState *State       // State for PrepareProposal execution
+	processProposalState *State       // State for ProcessProposal execution
+	finalizeBlockState   *State       // State for FinalizeBlock execution
+	stateMut             sync.RWMutex // Protects concurrent access to states
 
-	gasConfig config.GasConfig
+	gasConfig config.GasConfig // Gas configuration for transaction execution
 }
 
+// NewManager creates a new state manager with the given gas configuration.
 func NewManager(gasConfig config.GasConfig) *Manager {
 	return &Manager{
 		gasConfig: gasConfig,
 	}
 }
 
+// GetState returns the state for the specified execution mode.
+// Returns nil if no state has been set for the given mode.
 func (mgr *Manager) GetState(mode sdk.ExecMode) *State {
 	mgr.stateMut.RLock()
 	defer mgr.stateMut.RUnlock()
@@ -68,9 +74,9 @@ func (mgr *Manager) GetState(mode sdk.ExecMode) *State {
 	}
 }
 
-// SetState sets the BaseApp's state for the corresponding mode with a branched
-// multi-store (i.e. a CacheMultiStore) and a new Context with the same
-// multi-store branch, and provided header.
+// SetState initializes the BaseApp's state for the specified execution mode.
+// It creates a branched multi-store (CacheMultiStore) and a new Context with
+// the provided header information. The state is configured based on the execution mode.
 func (mgr *Manager) SetState(
 	mode sdk.ExecMode,
 	unbranchedStore storetypes.CommitMultiStore,
@@ -78,13 +84,16 @@ func (mgr *Manager) SetState(
 	logger log.Logger,
 	streamingManager storetypes.StreamingManager,
 ) {
+	// Create a cached multi-store for the state
 	ms := unbranchedStore.CacheMultiStore()
+	// Extract header information for the context
 	headerInfo := header.Info{
 		Height:  h.Height,
 		Time:    h.Time,
 		ChainID: h.ChainID,
 		AppHash: h.AppHash,
 	}
+	// Create a new state with the branched store and context
 	baseState := NewState(
 		sdk.NewContext(ms, h, false, logger).
 			WithStreamingManager(streamingManager).
@@ -95,8 +104,10 @@ func (mgr *Manager) SetState(
 	mgr.stateMut.Lock()
 	defer mgr.stateMut.Unlock()
 
+	// Configure and assign the state based on execution mode
 	switch mode {
 	case sdk.ExecModeCheck:
+		// CheckTx mode requires special gas price configuration
 		baseState.SetContext(baseState.Context().WithIsCheckTx(true).WithMinGasPrices(mgr.gasConfig.MinGasPrices))
 		mgr.checkState = baseState
 
@@ -114,6 +125,8 @@ func (mgr *Manager) SetState(
 	}
 }
 
+// ClearState removes the state for the specified execution mode.
+// This is typically called when resetting or cleaning up states.
 func (mgr *Manager) ClearState(mode sdk.ExecMode) {
 	mgr.stateMut.Lock()
 	defer mgr.stateMut.Unlock()

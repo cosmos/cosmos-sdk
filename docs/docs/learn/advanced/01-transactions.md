@@ -226,5 +226,4 @@ Senders must use a unique timestamp for each distinct transaction. The differenc
 
 These unique timestamps serve as a one-shot nonce, and their lifespan in state is short-lived.
 Upon transaction inclusion, an entry consisting of timeout timestamp and account address will be recorded to state. 
-
 Once the block time passes the timeout timestamp value, the entry will be removed. This ensures that unordered nonces do not indefinitely fill up the chain's storage.

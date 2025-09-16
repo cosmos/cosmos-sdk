@@ -18,7 +18,8 @@ import (
 	gomock "go.uber.org/mock/gomock"
 )
 
-// MockValidatorStore is a mock of ValidatorStore interface.
+// MockValidatorStore is a mock implementation of the ValidatorStore interface
+// for testing purposes. It provides controlled behavior for validator-related operations.
 type MockValidatorStore struct {
 	ctrl     *gomock.Controller
 	recorder *MockValidatorStoreMockRecorder
@@ -26,23 +27,27 @@ type MockValidatorStore struct {
 }
 
 // MockValidatorStoreMockRecorder is the mock recorder for MockValidatorStore.
+// It records method calls and allows setting expectations for the mock behavior.
 type MockValidatorStoreMockRecorder struct {
 	mock *MockValidatorStore
 }
 
-// NewMockValidatorStore creates a new mock instance.
+// NewMockValidatorStore creates a new mock instance of ValidatorStore
+// with the provided gomock controller.
 func NewMockValidatorStore(ctrl *gomock.Controller) *MockValidatorStore {
 	mock := &MockValidatorStore{ctrl: ctrl}
 	mock.recorder = &MockValidatorStoreMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use.
+// EXPECT returns a mock recorder that allows setting expectations
+// for method calls on the MockValidatorStore.
 func (m *MockValidatorStore) EXPECT() *MockValidatorStoreMockRecorder {
 	return m.recorder
 }
 
-// GetPubKeyByConsAddr mocks base method.
+// GetPubKeyByConsAddr mocks the base method to retrieve a validator's
+// public key by their consensus address.
 func (m *MockValidatorStore) GetPubKeyByConsAddr(arg0 context.Context, arg1 types.ConsAddress) (crypto.PublicKey, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPubKeyByConsAddr", arg0, arg1)
@@ -51,13 +56,15 @@ func (m *MockValidatorStore) GetPubKeyByConsAddr(arg0 context.Context, arg1 type
 	return ret0, ret1
 }
 
-// GetPubKeyByConsAddr indicates an expected call of GetPubKeyByConsAddr.
+// GetPubKeyByConsAddr indicates an expected call of GetPubKeyByConsAddr
+// and allows setting up the mock behavior for this method.
 func (mr *MockValidatorStoreMockRecorder) GetPubKeyByConsAddr(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPubKeyByConsAddr", reflect.TypeOf((*MockValidatorStore)(nil).GetPubKeyByConsAddr), arg0, arg1)
 }
 
-// MockGasTx is a mock of GasTx interface.
+// MockGasTx is a mock implementation of the GasTx interface
+// for testing gas-related transaction operations.
 type MockGasTx struct {
 	ctrl     *gomock.Controller
 	recorder *MockGasTxMockRecorder
@@ -65,23 +72,27 @@ type MockGasTx struct {
 }
 
 // MockGasTxMockRecorder is the mock recorder for MockGasTx.
+// It records method calls and allows setting expectations for the mock behavior.
 type MockGasTxMockRecorder struct {
 	mock *MockGasTx
 }
 
-// NewMockGasTx creates a new mock instance.
+// NewMockGasTx creates a new mock instance of GasTx
+// with the provided gomock controller.
 func NewMockGasTx(ctrl *gomock.Controller) *MockGasTx {
 	mock := &MockGasTx{ctrl: ctrl}
 	mock.recorder = &MockGasTxMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use.
+// EXPECT returns a mock recorder that allows setting expectations
+// for method calls on the MockGasTx.
 func (m *MockGasTx) EXPECT() *MockGasTxMockRecorder {
 	return m.recorder
 }
 
-// GetGas mocks base method.
+// GetGas mocks the base method to retrieve the gas limit
+// for a transaction.
 func (m *MockGasTx) GetGas() uint64 {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetGas")
@@ -89,13 +100,15 @@ func (m *MockGasTx) GetGas() uint64 {
 	return ret0
 }
 
-// GetGas indicates an expected call of GetGas.
+// GetGas indicates an expected call of GetGas
+// and allows setting up the mock behavior for this method.
 func (mr *MockGasTxMockRecorder) GetGas() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGas", reflect.TypeOf((*MockGasTx)(nil).GetGas))
 }
 
-// MockProposalTxVerifier is a mock of ProposalTxVerifier interface.
+// MockProposalTxVerifier is a mock implementation of the ProposalTxVerifier interface
+// for testing proposal-related transaction verification operations.
 type MockProposalTxVerifier struct {
 	ctrl     *gomock.Controller
 	recorder *MockProposalTxVerifierMockRecorder
@@ -103,23 +116,27 @@ type MockProposalTxVerifier struct {
 }
 
 // MockProposalTxVerifierMockRecorder is the mock recorder for MockProposalTxVerifier.
+// It records method calls and allows setting expectations for the mock behavior.
 type MockProposalTxVerifierMockRecorder struct {
 	mock *MockProposalTxVerifier
 }
 
-// NewMockProposalTxVerifier creates a new mock instance.
+// NewMockProposalTxVerifier creates a new mock instance of ProposalTxVerifier
+// with the provided gomock controller.
 func NewMockProposalTxVerifier(ctrl *gomock.Controller) *MockProposalTxVerifier {
 	mock := &MockProposalTxVerifier{ctrl: ctrl}
 	mock.recorder = &MockProposalTxVerifierMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use.
+// EXPECT returns a mock recorder that allows setting expectations
+// for method calls on the MockProposalTxVerifier.
 func (m *MockProposalTxVerifier) EXPECT() *MockProposalTxVerifierMockRecorder {
 	return m.recorder
 }
 
-// PrepareProposalVerifyTx mocks base method.
+// PrepareProposalVerifyTx mocks the base method to verify a transaction
+// during the prepare proposal phase.
 func (m *MockProposalTxVerifier) PrepareProposalVerifyTx(tx types.Tx) ([]byte, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PrepareProposalVerifyTx", tx)
@@ -128,13 +145,15 @@ func (m *MockProposalTxVerifier) PrepareProposalVerifyTx(tx types.Tx) ([]byte, e
 	return ret0, ret1
 }
 
-// PrepareProposalVerifyTx indicates an expected call of PrepareProposalVerifyTx.
+// PrepareProposalVerifyTx indicates an expected call of PrepareProposalVerifyTx
+// and allows setting up the mock behavior for this method.
 func (mr *MockProposalTxVerifierMockRecorder) PrepareProposalVerifyTx(tx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PrepareProposalVerifyTx", reflect.TypeOf((*MockProposalTxVerifier)(nil).PrepareProposalVerifyTx), tx)
 }
 
-// ProcessProposalVerifyTx mocks base method.
+// ProcessProposalVerifyTx mocks the base method to verify a transaction
+// during the process proposal phase.
 func (m *MockProposalTxVerifier) ProcessProposalVerifyTx(txBz []byte) (types.Tx, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ProcessProposalVerifyTx", txBz)
@@ -143,13 +162,15 @@ func (m *MockProposalTxVerifier) ProcessProposalVerifyTx(txBz []byte) (types.Tx,
 	return ret0, ret1
 }
 
-// ProcessProposalVerifyTx indicates an expected call of ProcessProposalVerifyTx.
+// ProcessProposalVerifyTx indicates an expected call of ProcessProposalVerifyTx
+// and allows setting up the mock behavior for this method.
 func (mr *MockProposalTxVerifierMockRecorder) ProcessProposalVerifyTx(txBz any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProcessProposalVerifyTx", reflect.TypeOf((*MockProposalTxVerifier)(nil).ProcessProposalVerifyTx), txBz)
 }
 
-// TxDecode mocks base method.
+// TxDecode mocks the base method to decode transaction bytes
+// into a transaction object.
 func (m *MockProposalTxVerifier) TxDecode(txBz []byte) (types.Tx, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "TxDecode", txBz)
@@ -158,13 +179,15 @@ func (m *MockProposalTxVerifier) TxDecode(txBz []byte) (types.Tx, error) {
 	return ret0, ret1
 }
 
-// TxDecode indicates an expected call of TxDecode.
+// TxDecode indicates an expected call of TxDecode
+// and allows setting up the mock behavior for this method.
 func (mr *MockProposalTxVerifierMockRecorder) TxDecode(txBz any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TxDecode", reflect.TypeOf((*MockProposalTxVerifier)(nil).TxDecode), txBz)
 }
 
-// TxEncode mocks base method.
+// TxEncode mocks the base method to encode a transaction object
+// into transaction bytes.
 func (m *MockProposalTxVerifier) TxEncode(tx types.Tx) ([]byte, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "TxEncode", tx)
@@ -173,13 +196,15 @@ func (m *MockProposalTxVerifier) TxEncode(tx types.Tx) ([]byte, error) {
 	return ret0, ret1
 }
 
-// TxEncode indicates an expected call of TxEncode.
+// TxEncode indicates an expected call of TxEncode
+// and allows setting up the mock behavior for this method.
 func (mr *MockProposalTxVerifierMockRecorder) TxEncode(tx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TxEncode", reflect.TypeOf((*MockProposalTxVerifier)(nil).TxEncode), tx)
 }
 
-// MockTxSelector is a mock of TxSelector interface.
+// MockTxSelector is a mock implementation of the TxSelector interface
+// for testing transaction selection operations.
 type MockTxSelector struct {
 	ctrl     *gomock.Controller
 	recorder *MockTxSelectorMockRecorder
@@ -187,35 +212,41 @@ type MockTxSelector struct {
 }
 
 // MockTxSelectorMockRecorder is the mock recorder for MockTxSelector.
+// It records method calls and allows setting expectations for the mock behavior.
 type MockTxSelectorMockRecorder struct {
 	mock *MockTxSelector
 }
 
-// NewMockTxSelector creates a new mock instance.
+// NewMockTxSelector creates a new mock instance of TxSelector
+// with the provided gomock controller.
 func NewMockTxSelector(ctrl *gomock.Controller) *MockTxSelector {
 	mock := &MockTxSelector{ctrl: ctrl}
 	mock.recorder = &MockTxSelectorMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use.
+// EXPECT returns a mock recorder that allows setting expectations
+// for method calls on the MockTxSelector.
 func (m *MockTxSelector) EXPECT() *MockTxSelectorMockRecorder {
 	return m.recorder
 }
 
-// Clear mocks base method.
+// Clear mocks the base method to clear the selected transactions
+// from the selector.
 func (m *MockTxSelector) Clear() {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "Clear")
 }
 
-// Clear indicates an expected call of Clear.
+// Clear indicates an expected call of Clear
+// and allows setting up the mock behavior for this method.
 func (mr *MockTxSelectorMockRecorder) Clear() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Clear", reflect.TypeOf((*MockTxSelector)(nil).Clear))
 }
 
-// SelectTxForProposal mocks base method.
+// SelectTxForProposal mocks the base method to select a transaction
+// for inclusion in a block proposal.
 func (m *MockTxSelector) SelectTxForProposal(ctx context.Context, maxTxBytes, maxBlockGas uint64, memTx types.Tx, txBz []byte) bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SelectTxForProposal", ctx, maxTxBytes, maxBlockGas, memTx, txBz)
@@ -223,13 +254,15 @@ func (m *MockTxSelector) SelectTxForProposal(ctx context.Context, maxTxBytes, ma
 	return ret0
 }
 
-// SelectTxForProposal indicates an expected call of SelectTxForProposal.
+// SelectTxForProposal indicates an expected call of SelectTxForProposal
+// and allows setting up the mock behavior for this method.
 func (mr *MockTxSelectorMockRecorder) SelectTxForProposal(ctx, maxTxBytes, maxBlockGas, memTx, txBz any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SelectTxForProposal", reflect.TypeOf((*MockTxSelector)(nil).SelectTxForProposal), ctx, maxTxBytes, maxBlockGas, memTx, txBz)
 }
 
-// SelectedTxs mocks base method.
+// SelectedTxs mocks the base method to retrieve all selected transactions
+// for the current proposal.
 func (m *MockTxSelector) SelectedTxs(ctx context.Context) [][]byte {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SelectedTxs", ctx)
@@ -237,7 +270,8 @@ func (m *MockTxSelector) SelectedTxs(ctx context.Context) [][]byte {
 	return ret0
 }
 
-// SelectedTxs indicates an expected call of SelectedTxs.
+// SelectedTxs indicates an expected call of SelectedTxs
+// and allows setting up the mock behavior for this method.
 func (mr *MockTxSelectorMockRecorder) SelectedTxs(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SelectedTxs", reflect.TypeOf((*MockTxSelector)(nil).SelectedTxs), ctx)

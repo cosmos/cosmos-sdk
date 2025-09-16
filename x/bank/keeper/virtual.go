@@ -91,7 +91,7 @@ func (k BaseSendKeeper) addVirtualCoins(ctx context.Context, addr sdk.AccAddress
 	// bytes containing account address followed by the txn index
 	key := make([]byte, len(addr)+8)
 	copy(key, addr)
-	binary.BigEndian.PutUint64(key[len(addr):], uint64(sdkCtx.TxIndex()))
+	binary.BigEndian.PutUint64(key[len(addr):], uint64(sdkCtx.TxIndex())) // nolint:gosec // index conversion safe
 
 	var coins sdk.Coins
 	value := store.Get(key)
@@ -108,7 +108,7 @@ func (k BaseSendKeeper) subVirtualCoins(ctx context.Context, addr sdk.AccAddress
 
 	key := make([]byte, len(addr)+8)
 	copy(key, addr)
-	binary.BigEndian.PutUint64(key[len(addr):], uint64(sdkCtx.TxIndex()))
+	binary.BigEndian.PutUint64(key[len(addr):], uint64(sdkCtx.TxIndex())) // nolint:gosec // index conversion safe
 
 	value := store.Get(key)
 	if value == nil {

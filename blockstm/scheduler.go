@@ -66,14 +66,14 @@ func (s *Scheduler) Done() bool {
 }
 
 func (s *Scheduler) DecreaseValidationIdx(target TxnIndex) {
-	StoreMin(&s.validation_idx, uint64(target))
+	StoreMin(&s.validation_idx, uint64(target)) //nolint:gosec // index conversion safe
 	s.decrease_cnt.Add(1)
 }
 
 func (s *Scheduler) CheckDone() {
 	observed_cnt := s.decrease_cnt.Load()
-	if s.execution_idx.Load() >= uint64(s.block_size) &&
-		s.validation_idx.Load() >= uint64(s.block_size) &&
+	if s.execution_idx.Load() >= uint64(s.block_size) && //nolint:gosec // block size conversion safe
+		s.validation_idx.Load() >= uint64(s.block_size) && //nolint:gosec // block size conversion safe
 		s.num_active_tasks.Load() == 0 {
 		if observed_cnt == s.decrease_cnt.Load() {
 			s.done_marker.Store(true)
@@ -102,7 +102,7 @@ func (s *Scheduler) TryIncarnate(idx TxnIndex) TxnVersion {
 //
 // Invariant `num_active_tasks`: increased if a valid task is returned.
 func (s *Scheduler) NextVersionToExecute() TxnVersion {
-	if s.execution_idx.Load() >= uint64(s.block_size) {
+	if s.execution_idx.Load() >= uint64(s.block_size) { //nolint:gosec // block size conversion safe
 		s.CheckDone()
 		return InvalidTxnVersion
 	}
@@ -116,15 +116,15 @@ func (s *Scheduler) NextVersionToExecute() TxnVersion {
 //
 // Invariant `num_active_tasks`: increased if a valid task is returned.
 func (s *Scheduler) NextVersionToValidate() TxnVersion {
-	if s.validation_idx.Load() >= uint64(s.block_size) {
+	if s.validation_idx.Load() >= uint64(s.block_size) { //nolint:gosec // block size conversion safe
 		s.CheckDone()
 		return InvalidTxnVersion
 	}
 	IncrAtomic(&s.num_active_tasks)
 	idx_to_validate := FetchIncr(&s.validation_idx)
-	if idx_to_validate < uint64(s.block_size) {
+	if idx_to_validate < uint64(s.block_size) { //nolint:gosec // block size conversion safe
 		if ok, incarnation := s.txn_status[idx_to_validate].IsExecuted(); ok {
-			return TxnVersion{TxnIndex(idx_to_validate), incarnation}
+			return TxnVersion{TxnIndex(idx_to_validate), incarnation} //nolint:gosec // index conversion safe
 		}
 	}
 
@@ -178,7 +178,8 @@ func (s *Scheduler) FinishExecution(version TxnVersion, wroteNewPath bool) (TxnV
 
 	deps := s.txn_dependency[version.Index].Swap(nil)
 	s.ResumeDependencies(deps)
-	if s.validation_idx.Load() > uint64(version.Index) { // otherwise index already small enough
+	// otherwise index already small enough
+	if s.validation_idx.Load() > uint64(version.Index) { //nolint:gosec // index conversion safe
 		if !wroteNewPath {
 			// schedule validation for current tx only, don't decrease num_active_tasks
 			return version, TaskKindValidation
@@ -200,7 +201,7 @@ func (s *Scheduler) FinishValidation(txn TxnIndex, aborted bool) (TxnVersion, Ta
 	if aborted {
 		s.txn_status[txn].SetReadyStatus()
 		s.DecreaseValidationIdx(txn + 1)
-		if s.execution_idx.Load() > uint64(txn) {
+		if s.execution_idx.Load() > uint64(txn) { //nolint:gosec // index conversion safe
 			return s.TryIncarnate(txn), TaskKindExecution
 		}
 	}

@@ -159,7 +159,11 @@ func (cms Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.Cac
 
 // Implements MultiStore.
 func (cms Store) CacheMultiStore() types.CacheMultiStore {
-	return NewFromParent(cms.getCacheWrapper, cms.traceWriter, cms.traceContext, cms.memStore)
+	// Important: create an isolated MemStore branch for nested cache contexts.
+	// Reusing the same memStore instance causes writes in a dropped CacheContext
+	// to leak into the parent context. Branching ensures writes are only
+	// propagated when Write() is called on the child cache store.
+	return NewFromParent(cms.getCacheWrapper, cms.traceWriter, cms.traceContext, cms.memStore.Branch())
 }
 
 func (cms Store) getCacheWrapper(key types.StoreKey) types.CacheWrapper {

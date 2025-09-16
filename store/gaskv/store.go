@@ -70,7 +70,7 @@ func (gs *GStore[V]) Get(key []byte) (value V) {
 
 	// TODO overflow-safe math?
 	gs.gasMeter.ConsumeGas(gs.gasConfig.ReadCostPerByte*types.Gas(len(key)), types.GasReadPerByteDesc)
-	gs.gasMeter.ConsumeGas(gs.gasConfig.ReadCostPerByte*types.Gas(gs.valueLen(value)), types.GasReadPerByteDesc) //nolint:gosec // fix this with the above as well
+	gs.gasMeter.ConsumeGas(gs.gasConfig.ReadCostPerByte*types.Gas(gs.valueLen(value)), types.GasReadPerByteDesc)
 
 	return value
 }
@@ -82,7 +82,7 @@ func (gs *GStore[V]) Set(key []byte, value V) {
 	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostFlat, types.GasWriteCostFlatDesc)
 	// TODO overflow-safe math?
 	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostPerByte*types.Gas(len(key)), types.GasWritePerByteDesc)
-	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostPerByte*types.Gas(gs.valueLen(value)), types.GasWritePerByteDesc) //nolint:gosec // fix this with the above as well
+	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostPerByte*types.Gas(gs.valueLen(value)), types.GasWritePerByteDesc)
 	gs.parent.Set(key, value)
 }
 
@@ -203,7 +203,7 @@ func (gi *gasIterator[V]) consumeSeekGas() {
 		value := gi.Value()
 
 		gi.gasMeter.ConsumeGas(gi.gasConfig.ReadCostPerByte*types.Gas(len(key)), types.GasValuePerByteDesc)
-		gi.gasMeter.ConsumeGas(gi.gasConfig.ReadCostPerByte*types.Gas(gi.valueLen(value)), types.GasValuePerByteDesc) //nolint:gosec // fix this with the above as well
+		gi.gasMeter.ConsumeGas(gi.gasConfig.ReadCostPerByte*types.Gas(gi.valueLen(value)), types.GasValuePerByteDesc)
 	}
 	gi.gasMeter.ConsumeGas(gi.gasConfig.IterNextCostFlat, types.GasIterNextCostFlatDesc)
 }

@@ -13,29 +13,31 @@ import (
 	"cosmossdk.io/log"
 )
 
-// FinalizeBlockFunc is the function that is called by the OE to finalize the
-// block. It is the same as the one in the ABCI app.
+// FinalizeBlockFunc is the function that is called by the Optimistic Execution (OE)
+// to finalize the block. It has the same signature as the ABCI FinalizeBlock method.
 type FinalizeBlockFunc func(context.Context, *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error)
 
-// OptimisticExecution is a struct that contains the OE context. It is used to
-// run the FinalizeBlock function in a goroutine, and to abort it if needed.
+// OptimisticExecution manages the optimistic execution of block finalization.
+// It runs the FinalizeBlock function in a goroutine and provides mechanisms
+// to abort the execution if the block proposal changes.
 type OptimisticExecution struct {
-	finalizeBlockFunc FinalizeBlockFunc // ABCI FinalizeBlock function with a context
-	logger            log.Logger
+	finalizeBlockFunc FinalizeBlockFunc // ABCI FinalizeBlock function to execute
+	logger            log.Logger        // Logger for debugging and monitoring
 
-	mtx         sync.Mutex
-	stopCh      chan struct{}
-	request     *abci.RequestFinalizeBlock
-	response    *abci.ResponseFinalizeBlock
-	err         error
-	cancelFunc  func() // cancel function for the context
-	initialized bool   // A boolean value indicating whether the struct has been initialized
+	mtx         sync.Mutex                  // Protects concurrent access to OE state
+	stopCh      chan struct{}               // Channel to signal when OE execution completes
+	request     *abci.RequestFinalizeBlock  // The block finalization request being processed
+	response    *abci.ResponseFinalizeBlock // The result of block finalization
+	err         error                       // Any error that occurred during execution
+	cancelFunc  func()                      // Function to cancel the execution context
+	initialized bool                        // Whether the OE has been initialized with a request
 
 	// debugging/testing options
-	abortRate int // number from 0 to 100 that determines the percentage of OE that should be aborted
+	abortRate int // Percentage (0-100) of OE executions to randomly abort for testing
 }
 
-// NewOptimisticExecution initializes the Optimistic Execution context but does not start it.
+// NewOptimisticExecution creates a new OptimisticExecution instance.
+// The execution is not started until Execute() is called.
 func NewOptimisticExecution(logger log.Logger, fn FinalizeBlockFunc, opts ...func(*OptimisticExecution)) *OptimisticExecution {
 	logger = logger.With(log.ModuleKey, "oe")
 	oe := &OptimisticExecution{logger: logger, finalizeBlockFunc: fn}
@@ -45,17 +47,17 @@ func NewOptimisticExecution(logger log.Logger, fn FinalizeBlockFunc, opts ...fun
 	return oe
 }
 
-// WithAbortRate sets the abort rate for the OE. The abort rate is a number from
-// 0 to 100 that determines the percentage of OE that should be aborted.
-// This is for testing purposes only and must not be used in production.
+// WithAbortRate sets the abort rate for testing purposes.
+// The rate is a percentage (0-100) that determines how often OE should be randomly aborted.
+// This option is for testing only and must not be used in production.
 func WithAbortRate(rate int) func(*OptimisticExecution) {
 	return func(oe *OptimisticExecution) {
 		oe.abortRate = rate
 	}
 }
 
-// Reset resets the OE context. Must be called whenever we want to invalidate
-// the current OE.
+// Reset clears the OE state and invalidates the current execution.
+// Must be called before starting a new optimistic execution.
 func (oe *OptimisticExecution) Reset() {
 	oe.mtx.Lock()
 	defer oe.mtx.Unlock()
@@ -65,12 +67,13 @@ func (oe *OptimisticExecution) Reset() {
 	oe.initialized = false
 }
 
+// Enabled returns true if OptimisticExecution is available (not nil).
 func (oe *OptimisticExecution) Enabled() bool {
 	return oe != nil
 }
 
-// Initialized returns true if the OE was initialized, meaning that it contains
-// a request and it was run or it is running.
+// Initialized returns true if the OE has been initialized with a request
+// and is either running or has completed execution.
 func (oe *OptimisticExecution) Initialized() bool {
 	if oe == nil {
 		return false
@@ -81,7 +84,8 @@ func (oe *OptimisticExecution) Initialized() bool {
 	return oe.initialized
 }
 
-// Execute initializes the OE and starts it in a goroutine.
+// Execute initializes the OE with the given proposal and starts block finalization
+// in a separate goroutine. The execution can be aborted if the proposal changes.
 func (oe *OptimisticExecution) Execute(req *abci.RequestProcessProposal) {
 	oe.mtx.Lock()
 	defer oe.mtx.Unlock()
@@ -105,12 +109,14 @@ func (oe *OptimisticExecution) Execute(req *abci.RequestProcessProposal) {
 
 	go func() {
 		start := time.Now()
+		// Execute the block finalization function
 		resp, err := oe.finalizeBlockFunc(ctx, oe.request)
 
 		oe.mtx.Lock()
 
 		executionTime := time.Since(start)
 		oe.logger.Debug("OE finished", "duration", executionTime.String(), "height", oe.request.Height, "hash", hex.EncodeToString(oe.request.Hash))
+		// Store the result and signal completion
 		oe.response, oe.err = resp, err
 
 		close(oe.stopCh)
@@ -118,8 +124,8 @@ func (oe *OptimisticExecution) Execute(req *abci.RequestProcessProposal) {
 	}()
 }
 
-// AbortIfNeeded aborts the OE if the request hash is not the same as the one in
-// the running OE. Returns true if the OE was aborted.
+// AbortIfNeeded checks if the OE should be aborted based on hash mismatch or test settings.
+// Returns true if the OE was aborted, false otherwise.
 func (oe *OptimisticExecution) AbortIfNeeded(reqHash []byte) bool {
 	if oe == nil {
 		return false
@@ -129,12 +135,12 @@ func (oe *OptimisticExecution) AbortIfNeeded(reqHash []byte) bool {
 	defer oe.mtx.Unlock()
 
 	if !bytes.Equal(oe.request.Hash, reqHash) {
+		// Block proposal changed, abort the current execution
 		oe.logger.Error("OE aborted due to hash mismatch", "oe_hash", hex.EncodeToString(oe.request.Hash), "req_hash", hex.EncodeToString(reqHash), "oe_height", oe.request.Height, "req_height", oe.request.Height)
 		oe.cancelFunc()
 		return true
 	} else if oe.abortRate > 0 && rand.Intn(100) < oe.abortRate {
-		// this is for test purposes only, we can emulate a certain percentage of
-		// OE needed to be aborted.
+		// Random abort for testing purposes to simulate execution failures
 		oe.cancelFunc()
 		oe.logger.Error("OE aborted due to test abort rate")
 		return true
@@ -143,7 +149,7 @@ func (oe *OptimisticExecution) AbortIfNeeded(reqHash []byte) bool {
 	return false
 }
 
-// Abort aborts the OE unconditionally and waits for it to finish.
+// Abort immediately cancels the OE execution and waits for the goroutine to finish.
 func (oe *OptimisticExecution) Abort() {
 	if oe == nil || oe.cancelFunc == nil {
 		return
@@ -153,7 +159,8 @@ func (oe *OptimisticExecution) Abort() {
 	<-oe.stopCh
 }
 
-// WaitResult waits for the OE to finish and returns the result.
+// WaitResult blocks until the OE execution completes and returns the finalization
+// result and any error that occurred during execution.
 func (oe *OptimisticExecution) WaitResult() (*abci.ResponseFinalizeBlock, error) {
 	<-oe.stopCh
 	return oe.response, oe.err

@@ -10,7 +10,7 @@ immediate decision is required.
 
 The purpose of an RFC is to serve as a historical record of a high-level
 discussion that might otherwise only be recorded in an ad-hoc way (for example,
-via gists or Google docs) that are difficult to discover for someone after the
+via gists or Google Docs) that are difficult to discover for someone after the
 fact. An RFC _may_ give rise to more specific architectural _decisions_ for
 the Cosmos SDK, but those decisions must be recorded separately in
 [Architecture Decision Records (ADR)](../architecture).

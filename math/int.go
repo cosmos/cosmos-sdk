@@ -144,7 +144,7 @@ func NewIntFromBigInt(i *big.Int) Int {
 
 // NewIntFromBigIntMut constructs Int from big.Int. If the provided big.Int is nil,
 // it returns an empty instance. This function panics if the bit length is > 256.
-// Note, this function mutate the argument.
+// Note, this function mutates the argument.
 func NewIntFromBigIntMut(i *big.Int) Int {
 	if i == nil {
 		return Int{}

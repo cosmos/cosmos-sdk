@@ -21,7 +21,7 @@ var (
 )
 
 // table is the high level object to storage mapper functionality. Persistent
-// entities are stored by an unique identifier called `RowID`. The table struct
+// entities are stored by a unique identifier called `RowID`. The table struct
 // does not:
 // - enforce uniqueness of the `RowID`
 // - enforce prefix uniqueness of keys, i.e. not allowing one key to be a prefix

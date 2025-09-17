@@ -527,7 +527,7 @@ func (coins Coins) Max(coinsB Coins) Coins {
 //	a.Add(b...).Equal(a.Min(b).Add(a.Max(b)...))
 //
 // E.g.
-// {1A, 3B, 2C}.Min({4A, 2B, 2C} == {1A, 2B, 2C})
+// {1A, 3B, 2C}.Min({4A, 2B, 2C}) == {1A, 2B, 2C}
 // {2A, 3B}.Min({1B, 4C}) == {1B}
 // {1A, 2B}.Min({3C}) == empty
 //

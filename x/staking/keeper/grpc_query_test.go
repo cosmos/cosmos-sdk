@@ -81,7 +81,9 @@ func (s *KeeperTestSuite) TestGRPCQueryDelegation() {
 
 		delegator := sdk.AccAddress(PKs[1].Address().Bytes())
 		amount, ok := math.NewIntFromString(delegationAmount)
+		require.True(ok)
 		shares, err := validator.SharesFromTokens(amount)
+		require.NoError(err)
 		err = keeper.SetDelegation(ctx, types.NewDelegation(delegator.String(), validator.GetOperator(), shares))
 		require.NoError(err)
 

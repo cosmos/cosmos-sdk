@@ -12,8 +12,8 @@ import (
 
 var _ types.KVStore = Store{}
 
-// Store is similar with cometbft/cometbft/libs/db/prefix_db
-// both gives access only to the limited subset of the store
+// Store is similar to cometbft/cometbft/libs/db/prefix_db
+// both give access only to the limited subset of the store
 // for convenience or safety
 type Store struct {
 	parent types.KVStore
@@ -75,7 +75,7 @@ func (s Store) Set(key, value []byte) {
 	s.parent.Set(s.key(key), value)
 }
 
-// Delete implements KVStore, calls delete on the parent store with the key prefixed with the prefix
+// Delete implements KVStore, calls Delete on the parent store with the key prefixed with the prefix
 func (s Store) Delete(key []byte) {
 	s.parent.Delete(s.key(key))
 }
@@ -192,7 +192,7 @@ func (pi *prefixIterator) Error() error {
 	return nil
 }
 
-// stripPrefix is copied from github.com/cometbft/cometbft/v2/libs/db/prefix_db.go
+// stripPrefix is copied from github.com/cometbft/cometbft/libs/db/prefix_db.go
 func stripPrefix(key, prefix []byte) []byte {
 	if len(key) < len(prefix) || !bytes.Equal(key[:len(prefix)], prefix) {
 		panic("should not happen")

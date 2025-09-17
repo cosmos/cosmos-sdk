@@ -10,11 +10,11 @@
 
 An RFC is a sort of async whiteboarding session. It is meant to replace the need for a distributed team to come together to make a decision. Currently, the Cosmos SDK team and contributors are distributed around the world. The team conducts working groups to have a synchronous discussion and an RFC can be used to capture the discussion for a wider audience to better understand the changes that are coming to the software. 
 
-The main difference the Cosmos SDK is defining as a differentiation between RFC and ADRs is that one is to come to consensus and circulate information about a potential change or feature. An ADR is used if there is already consensus on a feature or change and there is not a need to articulate the change coming to the software. An ADR will articulate the changes and have a lower amount of communication .   
+The main difference the Cosmos SDK is defining as a differentiation between RFC and ADRs is that one is to come to consensus and circulate information about a potential change or feature. An ADR is used if there is already consensus on a feature or change and there is not a need to articulate the change coming to the software. An ADR will articulate the changes and have a lower amount of communication.   
 
 ## RFC life cycle
 
-RFC creation is an **iterative** process. An RFC is meant as a distributed collaboration session, it may have many comments and is usually the bi-product of no working group or synchronous communication 
+RFC creation is an **iterative** process. An RFC is meant as a distributed collaboration session, it may have many comments and is usually the by-product of no working group or synchronous communication 
 
 1. Proposals could start with a new GitHub Issue,  be a result of existing Issues or a discussion.
 

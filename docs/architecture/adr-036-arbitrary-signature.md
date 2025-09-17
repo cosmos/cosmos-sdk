@@ -17,27 +17,27 @@ Draft
 
 ## Abstract
 
-Currently, in the Cosmos SDK, there is no convention to sign arbitrary message like on Ethereum. We propose with this specification, for Cosmos SDK ecosystem, a way to sign and validate off-chain arbitrary messages.
+Currently, in the Cosmos SDK, there is no convention to sign arbitrary messages like in Ethereum. We propose with this specification, for Cosmos SDK ecosystem, a way to sign and validate off-chain arbitrary messages.
 
-This specification serves the purpose of covering every use case, this means that cosmos-sdk applications developers decide how to serialize and represent `Data` to users.
+This specification serves the purpose of covering every use case; this means that Cosmos SDK application developers decide how to serialize and represent `Data` to users.
 
 ## Context
 
-Having the ability to sign messages off-chain has proven to be a fundamental aspect of nearly any blockchain. The notion of signing messages off-chain has many added benefits such as saving on computational costs and reducing transaction throughput and overhead. Within the context of the Cosmos, some of the major applications of signing such data includes, but is not limited to, providing a cryptographic secure and verifiable means of proving validator identity and possibly associating it with some other framework or organization. In addition, having the ability to sign Cosmos messages with a Ledger or similar HSM device.
+Having the ability to sign messages off-chain has proven to be a fundamental aspect of nearly any blockchain. The notion of signing messages off-chain has many added benefits such as saving on computational costs and reducing transaction throughput and overhead. Within the context of the Cosmos, some of the major applications of signing such data include, but is not limited to, providing a cryptographic secure and verifiable means of proving validator identity and possibly associating it with some other framework or organization. In addition, having the ability to sign Cosmos messages with a Ledger or similar HSM device.
 
-Further context and use cases can be found in the references links.
+Further context and use cases can be found in the reference links.
 
 ## Decision
 
 The aim is being able to sign arbitrary messages, even using Ledger or similar HSM devices.
 
-As a result signed messages should look roughly like Cosmos SDK messages but **must not** be a valid on-chain transaction. `chain-id`, `account_number` and `sequence` can all be assigned invalid values.
+As a result, signed messages should look roughly like Cosmos SDK messages but **must not** be a valid on-chain transaction. `chain-id`, `account_number` and `sequence` can all be assigned invalid values.
 
 Cosmos SDK 0.40 also introduces a concept of “auth_info” this can specify SIGN_MODES.
 
 A spec should include an `auth_info` that supports SIGN_MODE_DIRECT and SIGN_MODE_LEGACY_AMINO.
 
-Create the `offchain` proto definitions, we extend the auth module with `offchain` package to offer functionalities to verify and sign offline messages.
+To create the `offchain` proto definitions, we extend the auth module with `offchain` package to offer functionalities to verify and sign offline messages.
 
 An offchain transaction follows these rules:
 
@@ -51,7 +51,7 @@ Verification of an offchain transaction follows the same rules as an onchain one
 
 The first message added to the `offchain` package is `MsgSignData`.
 
-`MsgSignData` allows developers to sign arbitrary bytes valid offchain only. Where `Signer` is the account address of the signer. `Data` is arbitrary bytes which can represent `text`, `files`, `object`s. It's applications developers decision how `Data` should be deserialized, serialized and the object it can represent in their context.
+`MsgSignData` allows developers to sign arbitrary bytes validatable offchain only. `Signer` is the account address of the signer. `Data` is arbitrary bytes which can represent `text`, `files`, `object`s. It's applications developers decision how `Data` should be deserialized, serialized and the object it can represent in their context.
 
 It's applications developers decision how `Data` should be treated, by treated we mean the serialization and deserialization process and the Object `Data` should represent.
 
@@ -116,13 +116,13 @@ Backwards compatibility is maintained as this is a new message spec definition.
 
 ### Negative
 
-* Current proposal requires a fixed relationship between an account address and a public key.
+* The current proposal requires a fixed relationship between an account address and a public key.
 * Doesn't work with multisig accounts.
 
 ## Further discussion
 
-* Regarding security in `MsgSignData`, the developer using `MsgSignData` is in charge of making the content laying in `Data` non-replayable when, and if, needed.
-* the offchain package will be further extended with extra messages that target specific use cases such as, but not limited to, authentication in applications, payment channels, L2 solutions in general.
+* Regarding security in `MsgSignData`, the developer using `MsgSignData` is in charge of making the content contained in `Data` non-replayable when, and if, needed.
+* The offchain package will be further extended with extra messages that target specific use cases such as, but not limited to, authentication in applications, payment channels, L2 solutions in general.
 
 ## References
 

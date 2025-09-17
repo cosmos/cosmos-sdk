@@ -11,12 +11,12 @@ Accepted
 
 ## Abstract
 
-We want to leverage protobuf `service` definitions for defining `Msg`s which will give us significant developer UX
+We want to leverage protobuf `service` definitions for defining `Msg`s, which will give us significant developer UX
 improvements in terms of the code that is generated and the fact that return types will now be well defined.
 
 ## Context
 
-Currently `Msg` handlers in the Cosmos SDK do have return values that are placed in the `data` field of the response.
+Currently `Msg` handlers in the Cosmos SDK have return values that are placed in the `data` field of the response.
 These return values, however, are not specified anywhere except in the golang handler code.
 
 In early conversations [it was proposed](https://docs.google.com/document/d/1eEgYgvgZqLE45vETjhwIw4VOqK-5hwQtZtjVbiXnIGc/edit)
@@ -105,12 +105,12 @@ One consequence of this convention is that each `Msg` type can be the request pa
 
 ### Encoding
 
-Encoding of transactions generated with `Msg` services do not differ from current Protobuf transaction encoding as defined in [ADR-020](./adr-020-protobuf-transaction-encoding.md). We are encoding `Msg` types (which are exactly `Msg` service methods' request parameters) as `Any` in `Tx`s which involves packing the
+Encoding of transactions generated with `Msg` services does not differ from current Protobuf transaction encoding as defined in [ADR-020](./adr-020-protobuf-transaction-encoding.md). We are encoding `Msg` types (which are exactly `Msg` service methods' request parameters) as `Any` in `Tx`s which involves packing the
 binary-encoded `Msg` with its type URL.
 
 ### Decoding
 
-Since `Msg` types are packed into `Any`, decoding transactions messages are done by unpacking `Any`s into `Msg` types. For more information, please refer to [ADR-020](./adr-020-protobuf-transaction-encoding.md#transactions).
+Since `Msg` types are packed into `Any`, decoding transaction messages is done by unpacking `Any`s into `Msg` types. For more information, please refer to [ADR-020](./adr-020-protobuf-transaction-encoding.md#transactions).
 
 ### Routing
 
@@ -157,7 +157,7 @@ than later when transactions are processed.
 ### `Msg` Service Implementation
 
 Just like query services, `Msg` service methods can retrieve the `sdk.Context`
-from the `context.Context` parameter method using the `sdk.UnwrapSDKContext`
+from the `context.Context` parameter using the `sdk.UnwrapSDKContext`
 method:
 
 ```go

@@ -3,13 +3,13 @@ module cosmossdk.io/core
 go 1.23.0
 
 require (
-	cosmossdk.io/api v1.0.0-rc.1
+	cosmossdk.io/api v0.9.2
 	cosmossdk.io/depinject v1.2.1
 	cosmossdk.io/math v1.5.3
 	github.com/cosmos/cosmos-db v1.1.3
-	github.com/stretchr/testify v1.10.0
-	google.golang.org/grpc v1.74.2
-	google.golang.org/protobuf v1.36.6
+	github.com/stretchr/testify v1.11.1
+	google.golang.org/grpc v1.75.1
+	google.golang.org/protobuf v1.36.9
 )
 
 require (
@@ -50,8 +50,8 @@ require (
 	golang.org/x/net v0.42.0 // indirect
 	golang.org/x/sys v0.34.0 // indirect
 	golang.org/x/text v0.27.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20250528174236-200df99c418a // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250528174236-200df99c418a // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20250707201910-8d1bb00bc6a7 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250707201910-8d1bb00bc6a7 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )

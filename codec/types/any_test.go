@@ -28,7 +28,7 @@ var eom = &errOnMarshal{}
 // Ensure that returning an error doesn't suddenly allocate and waste bytes.
 // See https://github.com/cosmos/cosmos-sdk/issues/8537
 func TestNewAnyWithCustomTypeURLWithErrorNoAllocation(t *testing.T) {
-	// This tests continues to fail inconsistently.
+	// This test continues to fail inconsistently.
 	//
 	// Example: https://github.com/cosmos/cosmos-sdk/pull/9246/checks?check_run_id=2643313958#step:6:118
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/9010

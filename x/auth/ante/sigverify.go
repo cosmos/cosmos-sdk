@@ -35,7 +35,7 @@ var (
 )
 
 func init() {
-	// This decodes a valid hex string into a sepc256k1Pubkey for use in transaction simulation
+	// This decodes a valid hex string into a secp256k1Pubkey for use in transaction simulation
 	bz, _ := hex.DecodeString("035AD6810A47F073553FF30D2FCC7E0D3B1C0B74B61A1AAA2582344037151E143A")
 	copy(key, bz)
 	simSecp256k1Pubkey.Key = key
@@ -100,7 +100,7 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		if err != nil {
 			return ctx, err
 		}
-		// account already has pubkey set,no need to reset
+		// account already has pubkey set, no need to reset
 		if acc.GetPubKey() != nil {
 			continue
 		}
@@ -638,7 +638,7 @@ func GetSignerAcc(ctx sdk.Context, ak AccountKeeper, addr sdk.AccAddress) (sdk.A
 }
 
 // CountSubKeys counts the total number of keys for a multi-sig public key.
-// A non-multisig, i.e. a regular signature, it naturally a count of 1. If it is a multisig,
+// A non-multisig, i.e. a regular signature, it naturally has a count of 1. If it is a multisig,
 // then it recursively calls it on its pubkeys.
 func CountSubKeys(pub cryptotypes.PubKey) int {
 	if pub == nil {

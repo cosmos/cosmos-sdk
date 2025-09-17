@@ -36,7 +36,7 @@ import (
 	"slices"
 	"sort"
 
-	abci "github.com/cometbft/cometbft/v2/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
@@ -198,7 +198,7 @@ type HasABCIGenesis interface {
 
 // AppModule is the form for an application module. Most of
 // its functionality has been moved to extension interfaces.
-// Deprecated: use appmodule.AppModule with a combination of extension interfaces interfaces instead.
+// Deprecated: use appmodule.AppModule with a combination of extension interfaces instead.
 type AppModule interface {
 	appmodule.AppModule
 
@@ -267,7 +267,7 @@ func (GenesisOnlyAppModule) IsOnePerModuleType() {}
 // IsAppModule implements the appmodule.AppModule interface.
 func (GenesisOnlyAppModule) IsAppModule() {}
 
-// RegisterInvariants is a placeholder function register no invariants
+// RegisterInvariants is a placeholder function that registers no invariants
 //
 // Deprecated: this function will be removed when x/crisis and invariants are removed from the cosmos SDK.
 func (GenesisOnlyAppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
@@ -479,7 +479,7 @@ func (m *Manager) RegisterServices(cfg Configurator) error {
 // InitGenesis performs init genesis functionality for modules. Exactly one
 // module must return a non-empty validator set update to correctly initialize
 // the chain.
-func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData map[string]json.RawMessage) (*abci.InitChainResponse, error) {
+func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData map[string]json.RawMessage) (*abci.ResponseInitChain, error) {
 	var validatorUpdates []abci.ValidatorUpdate
 	ctx.Logger().Info("initializing blockchain state from genesis.json")
 	for _, moduleName := range m.OrderInitGenesis {
@@ -494,12 +494,12 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 			// core API genesis
 			source, err := genesis.SourceFromRawJSON(genesisData[moduleName])
 			if err != nil {
-				return &abci.InitChainResponse{}, err
+				return &abci.ResponseInitChain{}, err
 			}
 
 			err = module.InitGenesis(ctx, source)
 			if err != nil {
-				return &abci.InitChainResponse{}, err
+				return &abci.ResponseInitChain{}, err
 			}
 		} else if module, ok := mod.(HasGenesis); ok {
 			ctx.Logger().Debug("running initialization for module", "module", moduleName)
@@ -512,7 +512,7 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 			// only one module will update the validator set
 			if len(moduleValUpdates) > 0 {
 				if len(validatorUpdates) > 0 {
-					return &abci.InitChainResponse{}, errors.New("validator InitGenesis updates already set by a previous module")
+					return &abci.ResponseInitChain{}, errors.New("validator InitGenesis updates already set by a previous module")
 				}
 				validatorUpdates = moduleValUpdates
 			}
@@ -521,10 +521,10 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 
 	// a chain must initialize with a non-empty validator set
 	if len(validatorUpdates) == 0 {
-		return &abci.InitChainResponse{}, fmt.Errorf("validator set is empty after InitGenesis, please ensure at least one validator is initialized with a delegation greater than or equal to the DefaultPowerReduction (%d)", sdk.DefaultPowerReduction)
+		return &abci.ResponseInitChain{}, fmt.Errorf("validator set is empty after InitGenesis, please ensure at least one validator is initialized with a delegation greater than or equal to the DefaultPowerReduction (%d)", sdk.DefaultPowerReduction)
 	}
 
-	return &abci.InitChainResponse{
+	return &abci.ResponseInitChain{
 		Validators: validatorUpdates,
 	}, nil
 }
@@ -539,7 +539,7 @@ func (m *Manager) ExportGenesisForModules(ctx sdk.Context, cdc codec.JSONCodec, 
 	if len(modulesToExport) == 0 {
 		modulesToExport = m.OrderExportGenesis
 	}
-	// verify modules exists in app, so that we don't panic in the middle of an export
+	// verify modules exist in app, so that we don't panic in the middle of an export
 	if err := m.checkModulesExists(modulesToExport); err != nil {
 		return nil, err
 	}
@@ -658,8 +658,8 @@ type VersionMap map[string]uint64
 //	})
 //
 // Internally, RunMigrations will perform the following steps:
-// - create an `updatedVM` VersionMap of module with their latest ConsensusVersion
-// - make a diff of `fromVM` and `udpatedVM`, and for each module:
+// - create an `updatedVM` VersionMap of modules with their latest ConsensusVersion
+// - make a diff of `fromVM` and `updatedVM`, and for each module:
 //   - if the module's `fromVM` version is less than its `updatedVM` version,
 //     then run in-place store migrations for that module between those versions.
 //   - if the module does not exist in the `fromVM` (which means that it's a new module,
@@ -674,7 +674,7 @@ type VersionMap map[string]uint64
 // As an app developer, if you wish to skip running InitGenesis for your new
 // module "foo", you need to manually pass a `fromVM` argument to this function
 // foo's module version set to its latest ConsensusVersion. That way, the diff
-// between the function's `fromVM` and `udpatedVM` will be empty, hence not
+// between the function's `fromVM` and `updatedVM` will be empty, hence not
 // running anything for foo.
 //
 // Example:
@@ -813,7 +813,7 @@ func (m *Manager) EndBlock(ctx sdk.Context) (sdk.EndBlock, error) {
 				}
 
 				for _, updates := range moduleValUpdates {
-					validatorUpdates = append(validatorUpdates, abci.ValidatorUpdate{PubKeyBytes: updates.PubKeyBytes, PubKeyType: updates.PubKeyType, Power: updates.Power})
+					validatorUpdates = append(validatorUpdates, abci.ValidatorUpdate{PubKey: updates.PubKey, Power: updates.Power})
 				}
 			}
 		} else {

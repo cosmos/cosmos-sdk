@@ -72,7 +72,7 @@ The command-line is an easy way to interact with an application, but `Tx` can al
 ## Addition to Mempool
 
 Each full-node (running CometBFT) that receives a `Tx` sends an [ABCI message](https://docs.cometbft.com/v0.37/spec/p2p/messages/),
-`CheckTx`, to the application layer to check for validity, and receives an `abci.CheckTxResponse`. If the `Tx` passes the checks, it is held in the node's
+`CheckTx`, to the application layer to check for validity, and receives an `abci.ResponseCheckTx`. If the `Tx` passes the checks, it is held in the node's
 [**Mempool**](https://docs.cometbft.com/v0.37/spec/p2p/messages/mempool/), an in-memory pool of transactions unique to each node, pending inclusion in a block - honest nodes discard a `Tx` if it is found to be invalid. Prior to consensus, nodes continuously check incoming transactions and gossip them to their peers.
 
 ### Types of Checks
@@ -230,7 +230,7 @@ to during consensus. Under the hood, transaction execution is almost identical t
 Instead of using their `checkState`, full-nodes use `finalizeblock`:
 
 * **Decoding:** Since `FinalizeBlock` is an ABCI call, `Tx` is received in the encoded `[]byte` form.
-  Nodes first unmarshal the transaction, using the [`TxConfig`](./00-app-anatomy.md#register-codec) defined in the app, then call `runTx` in `execModeFinalize`, which is very similar to `CheckTx` but also executes and writes state changes.
+  Nodes first unmarshal the transaction, using the [`TxConfig`](./app-anatomy#register-codec) defined in the app, then call `runTx` in `execModeFinalize`, which is very similar to `CheckTx` but also executes and writes state changes.
 
 * **Checks and `AnteHandler`:** Full-nodes call `validateBasicMsgs` and `AnteHandler` again. This second check
   happens because they may not have seen the same transactions during the addition to Mempool stage 

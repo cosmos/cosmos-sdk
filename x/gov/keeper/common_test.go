@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
-	cmttime "github.com/cometbft/cometbft/v2/types/time"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
@@ -110,7 +110,7 @@ func setupGovKeeper(t *testing.T) (
 	err = govKeeper.Constitution.Set(ctx, "constitution")
 	require.NoError(t, err)
 
-	// Register all handlers for the MegServiceRouter.
+	// Register all handlers for the MsgServiceRouter.
 	msr.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 	v1.RegisterMsgServer(msr, keeper.NewMsgServerImpl(govKeeper))
 	banktypes.RegisterMsgServer(msr, nil) // Nil is fine here as long as we never execute the proposal's Msgs.

@@ -391,7 +391,7 @@ func TestNoOpMintingRestrictionFn(t *testing.T) {
 		err = types.NoOpMintingRestrictionFn(sdk.Context{}, sdk.Coins{})
 	}
 	require.NotPanics(t, testFunc, "NoOpMintingRestrictionFn")
-	assert.NoError(t, err, "NoOpSendRestrictionFn error")
+	assert.NoError(t, err, "NoOpMintingRestrictionFn error")
 }
 
 // SendRestrictionArgs are the args provided to a SendRestrictionFn function.

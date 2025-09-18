@@ -63,6 +63,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (baseapp) [#24655](https://github.com/cosmos/cosmos-sdk/pull/24655) Add mutex locks for `state` and make `lastCommitInfo` atomic to prevent race conditions between `Commit` and `CreateQueryContext`.
 * (proto) [#24161](https://github.com/cosmos/cosmos-sdk/pull/24161) Remove unnecessary annotations from `x/staking` authz proto.
 * (x/bank) [#24660](https://github.com/cosmos/cosmos-sdk/pull/24660) Improve performance of the `GetAllBalances` and `GetAccountsBalances` keeper methods.
+* (x/feegrant) [#24957](https://github.com/cosmos/cosmos-sdk/pull/24957) make `revokeAllowance` function public so keepers can call it directly instead of via the message server.
 
 ### Bug Fixes
 

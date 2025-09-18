@@ -12,7 +12,7 @@ require (
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/systemtests v1.2.1
 	github.com/cosmos/cosmos-sdk v0.53.0
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 	github.com/tidwall/gjson v1.18.0
 	github.com/tidwall/sjson v1.2.5
 )
@@ -132,7 +132,7 @@ require (
 	github.com/sasha-s/go-deadlock v0.3.5 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.14.0 // indirect
-	github.com/spf13/cast v1.9.2 // indirect
+	github.com/spf13/cast v1.10.0 // indirect
 	github.com/spf13/cobra v1.9.1 // indirect
 	github.com/spf13/pflag v1.0.7 // indirect
 	github.com/spf13/viper v1.20.1 // indirect

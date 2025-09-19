@@ -68,6 +68,7 @@ func init() {
 			ProvideKVStoreKey,
 			ProvideTransientStoreKey,
 			ProvideMemoryStoreKey,
+			ProvideObjectStoreKey,
 			ProvideGenesisTxHandler,
 			ProvideKVStoreService,
 			ProvideMemoryStoreService,
@@ -234,6 +235,12 @@ func ProvideMemoryStoreKey(config *runtimev1alpha1.Module, key depinject.ModuleK
 	}
 
 	storeKey := storetypes.NewMemoryStoreKey(fmt.Sprintf("memory:%s", key.Name()))
+	registerStoreKey(app, storeKey)
+	return storeKey
+}
+
+func ProvideObjectStoreKey(key depinject.ModuleKey, app *AppBuilder) *storetypes.ObjectStoreKey {
+	storeKey := storetypes.NewObjectStoreKey(fmt.Sprintf("object:%s", key.Name()))
 	registerStoreKey(app, storeKey)
 	return storeKey
 }

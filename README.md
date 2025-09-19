@@ -2,7 +2,7 @@
   <h1> Cosmos SDK </h1>
 </div>
 
-![banner](docs/static/img/banner.jpg)
+![banner](docs/static/img/banner.svg)
 
 <div align="center">
   <a href="https://github.com/cosmos/cosmos-sdk/blob/main/LICENSE">

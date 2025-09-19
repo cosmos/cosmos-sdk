@@ -6,6 +6,12 @@ import (
 	storetypes "cosmossdk.io/store/types"
 )
 
+const (
+	TelemetrySubsystem = "blockstm"
+	KeyExecutedTxs     = "executed_txs"
+	KeyValidatedTxs    = "validated_txs"
+)
+
 type (
 	TxnIndex    int
 	Incarnation uint

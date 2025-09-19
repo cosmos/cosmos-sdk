@@ -59,6 +59,12 @@ The Cosmos SDK was first released in 2019, and the first blockchain to use the S
 
 The Cosmos Hub still receives the most up-to-date Cosmos SDK versions. The Cosmos Hub application, `gaia`, has its own [cosmos/gaia repository](https://github.com/cosmos/gaia). 
 
+## Developer Community and Support
+
+The issue list of this repo is exclusively for bug reports and feature requests. We have active, helpful communities on Discord, Telegram, and Slack.
+
+**| Need Help? | Support & Community: [Discord](https://discord.com/invite/interchain) - [Telegram](https://t.me/CosmosOG) - [Talk to an Expert](https://cosmos.network/interest-form) - [Join the #Cosmos-tech Slack Channel](https://forms.gle/A8jawLgB8zuL1FN36) |**
+
 ## Documentation and Resources
 **View the Cosmos SDK documentation: https://docs.cosmos.network/**
 

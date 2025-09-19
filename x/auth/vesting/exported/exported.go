@@ -22,11 +22,13 @@ type VestingAccount interface {
 	// delegating from a vesting account. It accepts the current block time, the
 	// delegation amount and balance of all coins whose denomination exists in
 	// the account's original vesting balance.
-	TrackDelegation(blockTime time.Time, balance, amount sdk.Coins)
+	// Returns an error if the delegation is invalid (e.g., non-positive amount or insufficient funds).
+	TrackDelegation(blockTime time.Time, balance, amount sdk.Coins) error
 
 	// TrackUndelegation performs internal vesting accounting necessary when a
 	// vesting account performs an undelegation.
-	TrackUndelegation(amount sdk.Coins)
+	// Returns an error if the undelegation is invalid (e.g., non-positive amount).
+	TrackUndelegation(amount sdk.Coins) error
 
 	GetVestedCoins(blockTime time.Time) sdk.Coins
 	GetVestingCoins(blockTime time.Time) sdk.Coins

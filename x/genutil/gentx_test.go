@@ -35,7 +35,6 @@ var (
 	addr1 = sdk.AccAddress(pk1.Address())
 	addr2 = sdk.AccAddress(pk2.Address())
 	desc  = stakingtypes.NewDescription("testname", "", "", "", "")
-	comm  = stakingtypes.CommissionRates{}
 )
 
 // GenTxTestSuite is a test suite to be used with gentx tests.
@@ -65,10 +64,10 @@ func (suite *GenTxTestSuite) SetupTest() {
 	amount := sdk.NewInt64Coin(sdk.DefaultBondDenom, 50)
 	one := math.OneInt()
 	suite.msg1, err = stakingtypes.NewMsgCreateValidator(
-		sdk.ValAddress(pk1.Address()).String(), pk1, amount, desc, comm, one)
+		sdk.ValAddress(pk1.Address()).String(), pk1, amount, desc, one)
 	suite.NoError(err)
 	suite.msg2, err = stakingtypes.NewMsgCreateValidator(
-		sdk.ValAddress(pk2.Address()).String(), pk1, amount, desc, comm, one)
+		sdk.ValAddress(pk2.Address()).String(), pk1, amount, desc, one)
 	suite.NoError(err)
 }
 

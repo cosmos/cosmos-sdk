@@ -26,7 +26,7 @@ var (
 // Delegator address and validator address are the same.
 func NewMsgCreateValidator(
 	valAddr string, pubKey cryptotypes.PubKey,
-	selfDelegation sdk.Coin, description Description, commission CommissionRates, minSelfDelegation math.Int,
+	selfDelegation sdk.Coin, description Description, minSelfDelegation math.Int,
 ) (*MsgCreateValidator, error) {
 	var pkAny *codectypes.Any
 	if pubKey != nil {
@@ -40,7 +40,6 @@ func NewMsgCreateValidator(
 		ValidatorAddress:  valAddr,
 		Pubkey:            pkAny,
 		Value:             selfDelegation,
-		Commission:        commission,
 		MinSelfDelegation: minSelfDelegation,
 	}, nil
 }
@@ -65,14 +64,6 @@ func (msg MsgCreateValidator) Validate(ac address.Codec) error {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
 	}
 
-	if msg.Commission == (CommissionRates{}) {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty commission")
-	}
-
-	if err := msg.Commission.Validate(); err != nil {
-		return err
-	}
-
 	if !msg.MinSelfDelegation.IsPositive() {
 		return errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
@@ -94,10 +85,9 @@ func (msg MsgCreateValidator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) 
 }
 
 // NewMsgEditValidator creates a new MsgEditValidator instance
-func NewMsgEditValidator(valAddr string, description Description, newRate *math.LegacyDec, newMinSelfDelegation *math.Int) *MsgEditValidator {
+func NewMsgEditValidator(valAddr string, description Description, newMinSelfDelegation *math.Int) *MsgEditValidator {
 	return &MsgEditValidator{
 		Description:       description,
-		CommissionRate:    newRate,
 		ValidatorAddress:  valAddr,
 		MinSelfDelegation: newMinSelfDelegation,
 	}

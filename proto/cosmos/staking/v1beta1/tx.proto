@@ -55,9 +55,9 @@ message MsgCreateValidator {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  Description     description         = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-  CommissionRates commission          = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-  string          min_self_delegation = 3 [
+  Description description = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  reserved 2;
+  string min_self_delegation = 3 [
     (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable)   = false,
@@ -86,12 +86,8 @@ message MsgEditValidator {
   Description description       = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
   string      validator_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
 
-  // We pass a reference to the new commission rate and min self delegation as
-  // it's not mandatory to update. If not updated, the deserialized rate will be
-  // zero with no way to distinguish if an update was intended.
-  // REF: #2373
-  string commission_rate = 3
-      [(cosmos_proto.scalar) = "cosmos.Dec", (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec"];
+  reserved 3; // commission_rate
+
   string min_self_delegation = 4
       [(cosmos_proto.scalar) = "cosmos.Int", (gogoproto.customtype) = "cosmossdk.io/math.Int"];
 }

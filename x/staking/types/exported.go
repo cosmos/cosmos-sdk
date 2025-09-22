@@ -30,7 +30,6 @@ type ValidatorI interface {
 	GetTokens() math.Int                                            // validation tokens
 	GetBondedTokens() math.Int                                      // validator bonded tokens
 	GetConsensusPower(math.Int) int64                               // validation power in CometBFT
-	GetCommission() math.LegacyDec                                  // validator commission rate
 	GetMinSelfDelegation() math.Int                                 // validator minimum self delegation
 	GetDelegatorShares() math.LegacyDec                             // total outstanding delegator shares
 	TokensFromShares(math.LegacyDec) math.LegacyDec                 // token worth of provided delegator shares

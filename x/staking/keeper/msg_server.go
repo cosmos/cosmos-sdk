@@ -10,8 +10,6 @@ import (
 	"google.golang.org/grpc/status"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/math"
-
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -41,15 +39,6 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 
 	if err := msg.Validate(k.validatorAddressCodec); err != nil {
 		return nil, err
-	}
-
-	minCommRate, err := k.MinCommissionRate(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	if msg.Commission.Rate.LT(minCommRate) {
-		return nil, errorsmod.Wrapf(types.ErrCommissionLTMinRate, "cannot set validator commission to less than minimum rate of %s", minCommRate)
 	}
 
 	// check to see if the pubkey or sender has been registered before
@@ -101,16 +90,6 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 	}
 
 	validator, err := types.NewValidator(msg.ValidatorAddress, pk, msg.Description)
-	if err != nil {
-		return nil, err
-	}
-
-	commission := types.NewCommissionWithTime(
-		msg.Commission.Rate, msg.Commission.MaxRate,
-		msg.Commission.MaxChangeRate, sdkCtx.BlockHeader().Time,
-	)
-
-	validator, err = validator.SetInitialCommission(commission)
 	if err != nil {
 		return nil, err
 	}
@@ -174,21 +153,6 @@ func (k msgServer) EditValidator(ctx context.Context, msg *types.MsgEditValidato
 		)
 	}
 
-	if msg.CommissionRate != nil {
-		if msg.CommissionRate.GT(math.LegacyOneDec()) || msg.CommissionRate.IsNegative() {
-			return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "commission rate must be between 0 and 1 (inclusive)")
-		}
-
-		minCommissionRate, err := k.MinCommissionRate(ctx)
-		if err != nil {
-			return nil, errorsmod.Wrap(sdkerrors.ErrLogic, err.Error())
-		}
-
-		if msg.CommissionRate.LT(minCommissionRate) {
-			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "commission rate cannot be less than the min commission rate %s", minCommissionRate.String())
-		}
-	}
-
 	// validator must already be registered
 	validator, err := k.GetValidator(ctx, valAddr)
 	if err != nil {
@@ -202,20 +166,6 @@ func (k msgServer) EditValidator(ctx context.Context, msg *types.MsgEditValidato
 	}
 
 	validator.Description = description
-
-	if msg.CommissionRate != nil {
-		commission, err := k.UpdateValidatorCommission(ctx, validator, *msg.CommissionRate)
-		if err != nil {
-			return nil, err
-		}
-
-		// call the before-modification hook since we're about to update the commission
-		if err := k.Hooks().BeforeValidatorModified(ctx, valAddr); err != nil {
-			return nil, err
-		}
-
-		validator.Commission = commission
-	}
 
 	if msg.MinSelfDelegation != nil {
 		if !msg.MinSelfDelegation.GT(validator.MinSelfDelegation) {
@@ -238,7 +188,6 @@ func (k msgServer) EditValidator(ctx context.Context, msg *types.MsgEditValidato
 	sdkCtx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeEditValidator,
-			sdk.NewAttribute(types.AttributeKeyCommissionRate, validator.Commission.String()),
 			sdk.NewAttribute(types.AttributeKeyMinSelfDelegation, validator.MinSelfDelegation.String()),
 		),
 	})

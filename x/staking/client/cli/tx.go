@@ -136,18 +136,6 @@ func NewEditValidatorCmd(ac address.Codec) *cobra.Command {
 			details, _ := cmd.Flags().GetString(FlagDetails)
 			description := types.NewDescription(moniker, identity, website, security, details)
 
-			var newRate *math.LegacyDec
-
-			commissionRate, _ := cmd.Flags().GetString(FlagCommissionRate)
-			if commissionRate != "" {
-				rate, err := math.LegacyNewDecFromStr(commissionRate)
-				if err != nil {
-					return fmt.Errorf("invalid new commission rate: %v", err)
-				}
-
-				newRate = &rate
-			}
-
 			var newMinSelfDelegation *math.Int
 
 			minSelfDelegationString, _ := cmd.Flags().GetString(FlagMinSelfDelegation)
@@ -165,7 +153,7 @@ func NewEditValidatorCmd(ac address.Codec) *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgEditValidator(valAddr, description, newRate, newMinSelfDelegation)
+			msg := types.NewMsgEditValidator(valAddr, description, newMinSelfDelegation)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -395,7 +383,7 @@ func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 		return txf, nil, err
 	}
 	msg, err := types.NewMsgCreateValidator(
-		valStr, val.PubKey, val.Amount, description, val.CommissionRates, val.MinSelfDelegation,
+		valStr, val.PubKey, val.Amount, description, val.MinSelfDelegation,
 	)
 	if err != nil {
 		return txf, nil, err
@@ -586,15 +574,6 @@ func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorC
 		config.Details,
 	)
 
-	// get the initial validator commission parameters
-	rateStr := config.CommissionRate
-	maxRateStr := config.CommissionMaxRate
-	maxChangeRateStr := config.CommissionMaxChangeRate
-	commissionRates, err := buildCommissionRates(rateStr, maxRateStr, maxChangeRateStr)
-	if err != nil {
-		return txBldr, nil, err
-	}
-
 	// get the initial validator min self delegation
 	msbStr := config.MinSelfDelegation
 	minSelfDelegation, ok := math.NewIntFromString(msbStr)
@@ -613,7 +592,6 @@ func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorC
 		config.PubKey,
 		amount,
 		description,
-		commissionRates,
 		minSelfDelegation,
 	)
 	if err != nil {

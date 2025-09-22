@@ -23,46 +23,6 @@ message HistoricalInfo {
   repeated Validator      valset = 2 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
-// CommissionRates defines the initial commission rates to be used for creating
-// a validator.
-message CommissionRates {
-  option (gogoproto.equal) = true;
-
-  // rate is the commission rate charged to delegators, as a fraction.
-  string rate = 1 [
-    (cosmos_proto.scalar)  = "cosmos.Dec",
-    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
-    (gogoproto.nullable)   = false,
-    (amino.dont_omitempty) = true
-  ];
-  // max_rate defines the maximum commission rate which validator can ever charge, as a fraction.
-  string max_rate = 2 [
-    (cosmos_proto.scalar)  = "cosmos.Dec",
-    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
-    (gogoproto.nullable)   = false,
-    (amino.dont_omitempty) = true
-  ];
-  // max_change_rate defines the maximum daily increase of the validator commission, as a fraction.
-  string max_change_rate = 3 [
-    (cosmos_proto.scalar)  = "cosmos.Dec",
-    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
-    (gogoproto.nullable)   = false,
-    (amino.dont_omitempty) = true
-  ];
-}
-
-// Commission defines commission parameters for a given validator.
-message Commission {
-  option (gogoproto.equal) = true;
-
-  // commission_rates defines the initial commission rates to be used for creating a validator.
-  CommissionRates commission_rates = 1
-      [(gogoproto.embed) = true, (gogoproto.nullable) = false, (amino.dont_omitempty) = true];
-  // update_time is the last time the commission rate was changed.
-  google.protobuf.Timestamp update_time = 2
-      [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
-}
-
 // Description defines a validator description.
 message Description {
   option (gogoproto.equal) = true;
@@ -118,8 +78,7 @@ message Validator {
   // unbonding_time defines, if unbonding, the min time for the validator to complete unbonding.
   google.protobuf.Timestamp unbonding_time = 9
       [(gogoproto.nullable) = false, (amino.dont_omitempty) = true, (gogoproto.stdtime) = true];
-  // commission defines the commission parameters.
-  Commission commission = 10 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+  reserved 10; // commission defines the commission parameters.
   // min_self_delegation is the validator's self declared minimum self delegation.
   //
   // Since: cosmos-sdk 0.46
@@ -312,9 +271,19 @@ message Params {
   uint32 historical_entries = 4;
   // bond_denom defines the bondable coin denomination.
   string bond_denom = 5;
-  // min_commission_rate is the chain-wide minimum commission rate that a validator can charge their delegators
+
+  // min_commission_rate represents the minimum commission rate that a validator can charge their delegators
   string min_commission_rate = 6 [
     (gogoproto.moretags)   = "yaml:\"min_commission_rate\"",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true,
+    (cosmos_proto.scalar)  = "cosmos.Dec"
+  ];
+
+  // max_commission_rate represents the maximum commission rate that a validator can charge their delegators
+  string max_commission_rate = 7 [
+    (gogoproto.moretags)   = "yaml:\"max_commission_rate\"",
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false,
     (amino.dont_omitempty) = true,

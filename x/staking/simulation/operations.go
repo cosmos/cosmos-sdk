@@ -164,14 +164,7 @@ func SimulateMsgCreateValidator(
 			simtypes.RandStringOfLength(r, 10),
 		)
 
-		maxCommission := math.LegacyNewDecWithPrec(int64(simtypes.RandIntBetween(r, 0, 100)), 2)
-		commission := types.NewCommissionRates(
-			simtypes.RandomDecAmount(r, maxCommission),
-			maxCommission,
-			simtypes.RandomDecAmount(r, maxCommission),
-		)
-
-		msg, err := types.NewMsgCreateValidator(address.String(), simAccount.ConsKey.PubKey(), selfDelegation, description, commission, math.OneInt())
+		msg, err := types.NewMsgCreateValidator(address.String(), simAccount.ConsKey.PubKey(), selfDelegation, description, math.OneInt())
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to create CreateValidator message"), nil, err
 		}
@@ -219,13 +212,6 @@ func SimulateMsgEditValidator(
 		}
 
 		address := val.GetOperator()
-		newCommissionRate := simtypes.RandomDecAmount(r, val.Commission.MaxRate)
-
-		if err := val.Commission.ValidateNewRate(newCommissionRate, ctx.BlockHeader().Time); err != nil {
-			// skip as the commission is invalid
-			return simtypes.NoOpMsg(types.ModuleName, msgType, "invalid commission rate"), nil, nil
-		}
-
 		bz, err := k.ValidatorAddressCodec().StringToBytes(val.GetOperator())
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "error getting validator address bytes"), nil, err
@@ -247,7 +233,7 @@ func SimulateMsgEditValidator(
 			simtypes.RandStringOfLength(r, 10),
 		)
 
-		msg := types.NewMsgEditValidator(address, description, &newCommissionRate, nil)
+		msg := types.NewMsgEditValidator(address, description, nil)
 
 		txCtx := simulation.OperationInput{
 			R:               r,

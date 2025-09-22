@@ -2,7 +2,6 @@ package cli
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 
@@ -13,7 +12,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // validator struct to define the fields of the validator
@@ -25,7 +23,6 @@ type validator struct {
 	Website           string
 	Security          string
 	Details           string
-	CommissionRates   types.CommissionRates
 	MinSelfDelegation math.Int
 }
 
@@ -75,11 +72,6 @@ func parseAndValidateValidatorJSON(cdc codec.Codec, path string) (validator, err
 		return validator{}, fmt.Errorf("must specify the moniker name")
 	}
 
-	commissionRates, err := buildCommissionRates(v.CommissionRate, v.CommissionMaxRate, v.CommissionMaxChange)
-	if err != nil {
-		return validator{}, err
-	}
-
 	if v.MinSelfDelegation == "" {
 		return validator{}, fmt.Errorf("must specify minimum self delegation")
 	}
@@ -96,32 +88,6 @@ func parseAndValidateValidatorJSON(cdc codec.Codec, path string) (validator, err
 		Website:           v.Website,
 		Security:          v.Security,
 		Details:           v.Details,
-		CommissionRates:   commissionRates,
 		MinSelfDelegation: minSelfDelegation,
 	}, nil
-}
-
-func buildCommissionRates(rateStr, maxRateStr, maxChangeRateStr string) (commission types.CommissionRates, err error) {
-	if rateStr == "" || maxRateStr == "" || maxChangeRateStr == "" {
-		return commission, errors.New("must specify all validator commission parameters")
-	}
-
-	rate, err := math.LegacyNewDecFromStr(rateStr)
-	if err != nil {
-		return commission, err
-	}
-
-	maxRate, err := math.LegacyNewDecFromStr(maxRateStr)
-	if err != nil {
-		return commission, err
-	}
-
-	maxChangeRate, err := math.LegacyNewDecFromStr(maxChangeRateStr)
-	if err != nil {
-		return commission, err
-	}
-
-	commission = types.NewCommissionRates(rate, maxRate, maxChangeRate)
-
-	return commission, nil
 }

@@ -57,7 +57,6 @@ func NewValidator(operator string, pubKey cryptotypes.PubKey, description Descri
 		Description:             description,
 		UnbondingHeight:         int64(0),
 		UnbondingTime:           time.Unix(0, 0).UTC(),
-		Commission:              NewCommission(math.LegacyZeroDec(), math.LegacyZeroDec(), math.LegacyZeroDec()),
 		MinSelfDelegation:       math.OneInt(),
 		UnbondingOnHoldRefCount: 0,
 	}, nil
@@ -284,18 +283,6 @@ func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
 	}
 }
 
-// SetInitialCommission attempts to set a validator's initial commission. An
-// error is returned if the commission is invalid.
-func (v Validator) SetInitialCommission(commission Commission) (Validator, error) {
-	if err := commission.Validate(); err != nil {
-		return v, err
-	}
-
-	v.Commission = commission
-
-	return v, nil
-}
-
 // In some situations, the exchange rate becomes invalid, e.g. if
 // Validator loses all tokens due to slashing. In this case,
 // make all future delegations invalid.
@@ -443,7 +430,6 @@ func (v *Validator) MinEqual(other *Validator) bool {
 		v.Tokens.Equal(other.Tokens) &&
 		v.DelegatorShares.Equal(other.DelegatorShares) &&
 		v.Description.Equal(other.Description) &&
-		v.Commission.Equal(other.Commission) &&
 		v.Jailed == other.Jailed &&
 		v.MinSelfDelegation.Equal(other.MinSelfDelegation) &&
 		v.ConsensusPubkey.Equal(other.ConsensusPubkey)
@@ -508,7 +494,6 @@ func (v Validator) GetBondedTokens() math.Int { return v.BondedTokens() }
 func (v Validator) GetConsensusPower(r math.Int) int64 {
 	return v.ConsensusPower(r)
 }
-func (v Validator) GetCommission() math.LegacyDec      { return v.Commission.Rate }
 func (v Validator) GetMinSelfDelegation() math.Int     { return v.MinSelfDelegation }
 func (v Validator) GetDelegatorShares() math.LegacyDec { return v.DelegatorShares }
 

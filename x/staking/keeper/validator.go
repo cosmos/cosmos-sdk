@@ -182,34 +182,6 @@ func (k Keeper) RemoveValidatorTokens(ctx context.Context,
 	return validator, nil
 }
 
-// UpdateValidatorCommission attempts to update a validator's commission rate.
-// An error is returned if the new commission rate is invalid.
-func (k Keeper) UpdateValidatorCommission(ctx context.Context,
-	validator types.Validator, newRate math.LegacyDec,
-) (types.Commission, error) {
-	commission := validator.Commission
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	blockTime := sdkCtx.BlockHeader().Time
-
-	if err := commission.ValidateNewRate(newRate, blockTime); err != nil {
-		return commission, err
-	}
-
-	minCommissionRate, err := k.MinCommissionRate(ctx)
-	if err != nil {
-		return commission, err
-	}
-
-	if newRate.LT(minCommissionRate) {
-		return commission, fmt.Errorf("cannot set validator commission to less than minimum rate of %s", minCommissionRate)
-	}
-
-	commission.Rate = newRate
-	commission.UpdateTime = blockTime
-
-	return commission, nil
-}
-
 // RemoveValidator removes the validator record and associated indexes
 // except for the bonded validator index which is only handled in ApplyAndReturnTendermintUpdates
 func (k Keeper) RemoveValidator(ctx context.Context, address sdk.ValAddress) error {

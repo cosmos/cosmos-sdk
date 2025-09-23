@@ -31,7 +31,6 @@ var (
 	addr1 = sdk.AccAddress(priv1.PubKey().Address())
 
 	valKey  = ed25519.GenPrivKey()
-	valAddr = sdk.AccAddress(valKey.PubKey().Address())
 )
 
 func TestSlashingMsgs(t *testing.T) {
@@ -104,7 +103,7 @@ func TestSlashingMsgs(t *testing.T) {
 	unjailMsg := &types.MsgUnjail{ValidatorAddr: sdk.ValAddress(addr1).String()}
 
 	ctxCheck = app.NewContext(true)
-	_, err = slashingKeeper.GetValidatorSigningInfo(ctxCheck, sdk.ConsAddress(valAddr))
+	_, err = slashingKeeper.GetValidatorSigningInfo(ctxCheck, sdk.ConsAddress(valKey.PubKey().Address()))
 	require.NoError(t, err)
 
 	// unjail should fail with unknown validator

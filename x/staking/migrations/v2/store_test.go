@@ -10,7 +10,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
-	sdktestuil "github.com/cosmos/cosmos-sdk/testutil"
+	sdktestutil "github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v1"
@@ -22,7 +22,7 @@ import (
 func TestStoreMigration(t *testing.T) {
 	stakingKey := storetypes.NewKVStoreKey("staking")
 	tStakingKey := storetypes.NewTransientStoreKey("transient_test")
-	ctx := sdktestuil.DefaultContext(stakingKey, tStakingKey)
+	ctx := sdktestutil.DefaultContext(stakingKey, tStakingKey)
 	store := ctx.KVStore(stakingKey)
 
 	_, pk1, addr1 := testdata.KeyTestPubAddr()
@@ -130,7 +130,6 @@ func TestStoreMigration(t *testing.T) {
 
 	// Make sure the new keys are set and old keys are deleted.
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			if !bytes.Equal(tc.oldKey, tc.newKey) {
 				require.Nil(t, store.Get(tc.oldKey))

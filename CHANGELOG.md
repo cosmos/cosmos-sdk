@@ -57,6 +57,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * (x/gov) [#24386](https://github.com/cosmos/cosmos-sdk/pull/24386) Improve helpers to easily create governance proposals from CLI.
+* (x/staking) [#12](https://github.com/atomone-hub/cosmos-sdk/pull/12) Fix some typos and improve the code readability.
 
 ### Bug Fixes
 

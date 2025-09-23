@@ -28,7 +28,7 @@ func NewHistoricalInfo(header cmtproto.Header, valSet Validators, powerReduction
 	}
 }
 
-// MustUnmarshalHistoricalInfo wll unmarshal historical info and panic on error
+// MustUnmarshalHistoricalInfo will unmarshal historical info and panic on error
 func MustUnmarshalHistoricalInfo(cdc codec.BinaryCodec, value []byte) HistoricalInfo {
 	hi, err := UnmarshalHistoricalInfo(cdc, value)
 	if err != nil {

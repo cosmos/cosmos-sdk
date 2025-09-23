@@ -299,7 +299,7 @@ func SimulateMsgDelegate(
 		}
 
 		if val.InvalidExRate() {
-			return simtypes.NoOpMsg(types.ModuleName, msgType, "validator's invalid echange rate"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "validator's invalid exchange rate"), nil, nil
 		}
 
 		amount := bk.GetBalance(ctx, simAccount.Address, denom).Amount
@@ -614,7 +614,7 @@ func SimulateMsgBeginRedelegate(
 		}
 
 		if hasRecRedel {
-			return simtypes.NoOpMsg(types.ModuleName, msgType, "receveing redelegation is not allowed"), nil, nil // skip
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "receiving redelegation is not allowed"), nil, nil // skip
 		}
 
 		// get random destination validator
@@ -648,6 +648,9 @@ func SimulateMsgBeginRedelegate(
 
 		if redAmt.IsZero() {
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "amount is zero"), nil, nil
+		}
+		if totalBond.Sub(redAmt).IsZero() {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "can not redelegate all"), nil, nil
 		}
 
 		// check if the shares truncate to zero

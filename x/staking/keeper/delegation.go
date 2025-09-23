@@ -273,7 +273,11 @@ func (k Keeper) GetDelegatorUnbonding(ctx context.Context, delegator sdk.AccAddr
 		}
 		return false
 	})
-	return unbonding, err
+	if err != nil {
+		return unbonding, err
+	}
+
+	return unbonding, nil
 }
 
 // IterateDelegatorUnbondingDelegations iterates through a delegator's unbonding delegations.
@@ -299,7 +303,7 @@ func (k Keeper) IterateDelegatorUnbondingDelegations(ctx context.Context, delega
 	return nil
 }
 
-// GetDelegatorBonded returs the total amount a delegator has bonded.
+// GetDelegatorBonded returns the total amount a delegator has bonded.
 func (k Keeper) GetDelegatorBonded(ctx context.Context, delegator sdk.AccAddress) (math.Int, error) {
 	bonded := math.LegacyZeroDec()
 
@@ -630,7 +634,7 @@ func (k Keeper) HasReceivingRedelegation(ctx context.Context, delAddr sdk.AccAdd
 func (k Keeper) HasMaxRedelegationEntries(ctx context.Context, delegatorAddr sdk.AccAddress, validatorSrcAddr, validatorDstAddr sdk.ValAddress) (bool, error) {
 	red, err := k.GetRedelegation(ctx, delegatorAddr, validatorSrcAddr, validatorDstAddr)
 	if err != nil {
-		if err == types.ErrNoRedelegation {
+		if errors.Is(err, types.ErrNoRedelegation) {
 			return false, nil
 		}
 

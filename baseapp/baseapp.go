@@ -1067,7 +1067,7 @@ func (app *BaseApp) PrepareProposalVerifyTx(tx sdk.Tx) ([]byte, error) {
 // ProcessProposal state internally will be discarded. <nil, err> will be
 // returned if the transaction cannot be decoded. <Tx, nil> will be returned if
 // the transaction is valid, otherwise <Tx, err> will be returned.
-func (app *BaseApp) ProcessProposalVerifyTx(txBz []byte) (sdk.Tx, uint64, error) {
+func (app *BaseApp) ProcessProposalVerifyTx(txBz []byte) (msg sdk.Tx, gasWanted uint64, err error) {
 	tx, err := app.txDecoder(txBz)
 	if err != nil {
 		return nil, 0, err

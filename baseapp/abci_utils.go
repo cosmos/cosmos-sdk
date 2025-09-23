@@ -201,7 +201,7 @@ type (
 	// to verify a transaction.
 	ProposalTxVerifier interface {
 		PrepareProposalVerifyTx(tx sdk.Tx) ([]byte, error)
-		ProcessProposalVerifyTx(txBz []byte) (sdk.Tx, uint64, error)
+		ProcessProposalVerifyTx(txBz []byte) (msg sdk.Tx, gasWanted uint64, err error)
 		TxDecode(txBz []byte) (sdk.Tx, error)
 		TxEncode(tx sdk.Tx) ([]byte, error)
 	}

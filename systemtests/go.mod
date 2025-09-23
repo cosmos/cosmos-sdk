@@ -6,7 +6,7 @@ require (
 	cosmossdk.io/math v1.5.3
 	github.com/cometbft/cometbft v0.38.18
 	github.com/cosmos/cosmos-sdk v0.53.4
-	github.com/creachadair/tomledit v0.0.28
+	github.com/creachadair/tomledit v0.0.29
 	github.com/stretchr/testify v1.11.1
 	github.com/tidwall/gjson v1.18.0
 	github.com/tidwall/sjson v1.2.5

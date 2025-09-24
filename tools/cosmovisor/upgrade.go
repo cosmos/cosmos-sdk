@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"runtime"
 
 	"cosmossdk.io/log"
@@ -52,10 +54,22 @@ func UpgradeBinary(logger log.Logger, cfg *Config, p upgradetypes.Plan) error {
 	// NEW: Download PreUpgradeScript if required
 	if upgradeInfo.PreUpgradeScript != "" {
 		logger.Info("preUpgradeURL script found, downloading & saving to current upgrade folder")
-		if err := plan.DownloadPreUpgradeScript(cfg.Root(), upgradeInfo.PreUpgradeScript); err != nil {
+		if err := plan.DownloadPreUpgradeScript(cfg.UpgradeDir(p.Name), upgradeInfo.PreUpgradeScript); err != nil {
 			return fmt.Errorf("cannot download preUpgradeScript. %w", err)
 		}
 		logger.Info("downloading preUpgradeScript complete")
+
+		// Run preupgradeFile
+		preupgradeFile := filepath.Join(cfg.UpgradeDir(p.Name), cfg.CustomPreUpgrade)
+
+		cmd := exec.Command(preupgradeFile, p.Name, fmt.Sprintf("%d", p.Height))
+		cmd.Dir = cfg.Home
+		result, err := cmd.Output()
+		if err != nil {
+			return err
+		}
+
+		logger.Info("Verified pre-upgrade script result", "command", preupgradeFile, "argv1", p.Name, "argv2", fmt.Sprintf("%d", p.Height), "result", result)
 	}
 
 	// If not there, then we try to download it... maybe

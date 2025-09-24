@@ -192,7 +192,7 @@ func (pi *prefixIterator) Error() error {
 	return nil
 }
 
-// stripPrefix is copied from github.com/cometbft/cometbft/v2/libs/db/prefix_db.go
+// stripPrefix is copied from github.com/cometbft/cometbft/libs/db/prefix_db.go
 func stripPrefix(key, prefix []byte) []byte {
 	if len(key) < len(prefix) || !bytes.Equal(key[:len(prefix)], prefix) {
 		panic("should not happen")

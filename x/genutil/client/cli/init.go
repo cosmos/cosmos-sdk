@@ -8,8 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
-	cfg "github.com/cometbft/cometbft/v2/config"
-	cmttypes "github.com/cometbft/cometbft/v2/types"
+	cfg "github.com/cometbft/cometbft/config"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"
 
@@ -118,12 +118,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 				initHeight = 1
 			}
 
-			consensusKey, err := cmd.Flags().GetString(FlagConsensusKeyAlgo)
-			if err != nil {
-				return errorsmod.Wrap(err, "Failed to get consensus key algo")
-			}
-
-			nodeID, _, err := genutil.InitializeNodeValidatorFilesFromMnemonicWithKeyType(config, mnemonic, consensusKey)
+			nodeID, _, err := genutil.InitializeNodeValidatorFilesFromMnemonic(config, mnemonic)
 			if err != nil {
 				return err
 			}
@@ -171,6 +166,11 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			appGenesis.Consensus = &types.ConsensusGenesis{
 				Validators: nil,
 				Params:     cmttypes.DefaultConsensusParams(),
+			}
+
+			consensusKey, err := cmd.Flags().GetString(FlagConsensusKeyAlgo)
+			if err != nil {
+				return errorsmod.Wrap(err, "Failed to get consensus key algo")
 			}
 
 			appGenesis.Consensus.Params.Validator.PubKeyTypes = []string{consensusKey}

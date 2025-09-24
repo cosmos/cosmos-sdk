@@ -873,7 +873,7 @@ func (app *BaseApp) runTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx) (gInfo s
 
 	switch mode {
 	case execModeCheck:
-		err = app.mempool.InsertWithGasWanted(ctx, tx, gasWanted)
+		err = app.mempool.InsertWithOption(ctx, tx, mempool.InsertOption{GasWanted: gasWanted})
 		if err != nil {
 			return gInfo, nil, anteEvents, err
 		}

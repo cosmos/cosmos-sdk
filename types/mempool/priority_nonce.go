@@ -192,7 +192,7 @@ func (mp *PriorityNonceMempool[C]) NextSenderTx(sender string) sdk.Tx {
 	return cursor.Value.(Tx).Tx
 }
 
-// InsertWithGasWanted attempts to insert a Tx into the app-side mempool in O(log n) time,
+// InsertWithOption attempts to insert a Tx into the app-side mempool in O(log n) time,
 // returning an error if unsuccessful. Sender and nonce are derived from the
 // transaction's first signature.
 //
@@ -201,7 +201,7 @@ func (mp *PriorityNonceMempool[C]) NextSenderTx(sender string) sdk.Tx {
 //
 // Inserting a duplicate tx with a different priority overwrites the existing tx,
 // changing the total order of the mempool.
-func (mp *PriorityNonceMempool[C]) InsertWithGasWanted(ctx context.Context, tx sdk.Tx, gasWanted uint64) error {
+func (mp *PriorityNonceMempool[C]) InsertWithOption(ctx context.Context, tx sdk.Tx, option InsertOption) error {
 	mp.mtx.Lock()
 	defer mp.mtx.Unlock()
 	if mp.cfg.MaxTx > 0 && mp.priorityIndex.Len() >= mp.cfg.MaxTx {
@@ -209,8 +209,7 @@ func (mp *PriorityNonceMempool[C]) InsertWithGasWanted(ctx context.Context, tx s
 	} else if mp.cfg.MaxTx < 0 {
 		return nil
 	}
-
-	memTx := NewMempoolTx(tx, gasWanted)
+	memTx := NewMempoolTx(tx, option.GasWanted)
 
 	sigs, err := mp.cfg.SignerExtractor.GetSigners(tx)
 	if err != nil {
@@ -286,7 +285,7 @@ func (mp *PriorityNonceMempool[C]) Insert(ctx context.Context, tx sdk.Tx) error 
 		gasLimit = gasTx.GetGas()
 	}
 
-	return mp.InsertWithGasWanted(ctx, tx, gasLimit)
+	return mp.InsertWithOption(ctx, tx, InsertOption{GasWanted: gasLimit})
 }
 
 func (i *PriorityNonceIterator[C]) iteratePriority() Iterator {

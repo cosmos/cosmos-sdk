@@ -116,9 +116,9 @@ func (snm *SenderNonceMempool) NextSenderTx(sender string) sdk.Tx {
 	return cursor.Value.(Tx).Tx
 }
 
-// InsertWithGasWanted adds a tx to the mempool. It returns an error if the tx does not have
+// InsertWithOption adds a tx to the mempool. It returns an error if the tx does not have
 // at least one signer. Note, priority is ignored.
-func (snm *SenderNonceMempool) InsertWithGasWanted(_ context.Context, tx sdk.Tx, gasLimit uint64) error {
+func (snm *SenderNonceMempool) InsertWithOption(_ context.Context, tx sdk.Tx, option InsertOption) error {
 	snm.mtx.Lock()
 	defer snm.mtx.Unlock()
 	if snm.maxTx > 0 && len(snm.existingTx) >= snm.maxTx {
@@ -128,7 +128,7 @@ func (snm *SenderNonceMempool) InsertWithGasWanted(_ context.Context, tx sdk.Tx,
 		return nil
 	}
 
-	memTx := NewMempoolTx(tx, gasLimit)
+	memTx := NewMempoolTx(tx, option.GasWanted)
 
 	sigs, err := tx.(signing.SigVerifiableTx).GetSignaturesV2()
 	if err != nil {
@@ -165,7 +165,7 @@ func (snm *SenderNonceMempool) Insert(ctx context.Context, tx sdk.Tx) error {
 		gasLimit = gasTx.GetGas()
 	}
 
-	return snm.InsertWithGasWanted(ctx, tx, gasLimit)
+	return snm.InsertWithOption(ctx, tx, InsertOption{GasWanted: gasLimit})
 }
 
 // Select returns an iterator ordering transactions in the mempool with the lowest

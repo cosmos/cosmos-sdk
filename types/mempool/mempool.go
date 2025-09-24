@@ -23,13 +23,17 @@ type GasTx interface {
 	GetGas() uint64
 }
 
+type InsertOption struct {
+	GasWanted uint64
+}
+
 type Mempool interface {
 	// Insert attempts to insert a Tx into the app-side mempool returning
 	// an error upon failure.
 	Insert(context.Context, sdk.Tx) error
 
-	// Insert with a custom gas wanted value
-	InsertWithGasWanted(context.Context, sdk.Tx, uint64) error
+	// InsertWithOption with a custom option, e.g. gas wanted.
+	InsertWithOption(context.Context, sdk.Tx, InsertOption) error
 
 	// Select returns an Iterator over the app-side mempool. If txs are specified,
 	// then they shall be incorporated into the Iterator. The Iterator is not thread-safe to use.

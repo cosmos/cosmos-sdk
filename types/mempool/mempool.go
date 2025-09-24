@@ -19,10 +19,6 @@ func NewMempoolTx(tx sdk.Tx, gasWanted uint64) Tx {
 	}
 }
 
-type GasTx interface {
-	GetGas() uint64
-}
-
 type InsertOption struct {
 	GasWanted uint64
 }

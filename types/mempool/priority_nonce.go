@@ -281,7 +281,7 @@ func (mp *PriorityNonceMempool[C]) InsertWithOption(ctx context.Context, tx sdk.
 
 func (mp *PriorityNonceMempool[C]) Insert(ctx context.Context, tx sdk.Tx) error {
 	var gasLimit uint64
-	if gasTx, ok := tx.(GasTx); ok {
+	if gasTx, ok := tx.(sdk.GasTx); ok {
 		gasLimit = gasTx.GetGas()
 	}
 

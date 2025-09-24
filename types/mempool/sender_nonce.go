@@ -161,7 +161,7 @@ func (snm *SenderNonceMempool) InsertWithOption(_ context.Context, tx sdk.Tx, op
 
 func (snm *SenderNonceMempool) Insert(ctx context.Context, tx sdk.Tx) error {
 	var gasLimit uint64
-	if gasTx, ok := tx.(GasTx); ok {
+	if gasTx, ok := tx.(sdk.GasTx); ok {
 		gasLimit = gasTx.GetGas()
 	}
 

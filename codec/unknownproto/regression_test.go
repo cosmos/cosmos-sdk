@@ -18,8 +18,8 @@ func TestBadBytesPassedIntoDecoder(t *testing.T) {
 	decoder := cfg.TxConfig.TxDecoder()
 	tx, err := decoder(data)
 
-	// TODO: When issue https://github.com/cosmos/cosmos-sdk/issues/7846
-	// is addressed, we'll remove this .Contains check.
+	// Error handling for protowire parsing has been improved (issue #7846),
+	// but this test still validates proper error detection for malformed protobuf data.
 	require.Contains(t, err.Error(), io.ErrUnexpectedEOF.Error())
 	require.Nil(t, tx)
 }

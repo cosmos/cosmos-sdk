@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"cosmossdk.io/x/upgrade/plan"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
 )
 
 type argsTestSuite struct {

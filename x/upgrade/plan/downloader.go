@@ -43,6 +43,25 @@ func DownloadUpgrade(dstRoot, url, daemonName string) error {
 	return EnsureBinary(target)
 }
 
+func DownloadPreUpgradeScript(dstRoot, url string) error {
+	target := filepath.Join(dstRoot, "preupgrade.sh")
+
+	// First try to download it as a single file. If there's no error, it's okay and we're done.
+	if err := getFile(url, target); err != nil {
+		// If it was a checksum error, no need to try as directory.
+		var checksumError *getter.ChecksumError
+		if errors.As(err, &checksumError) {
+			return err
+		}
+		// // File download didn't work, try it as an archive.
+		// if err = downloadUpgradeAsArchive(dstRoot, url, daemonName); err != nil {
+		// 	// Out of options, send back the error.
+		// 	return err
+		// }
+	}
+	return EnsurePreUpgrade(target)
+}
+
 // downloadUpgradeAsArchive tries to download the given url as an archive.
 // The archive is unpacked and saved in dstDir.
 // If the archive contains /{daemonName} and not /bin/{daemonName}, then /{daemonName} will be moved to /bin/{daemonName}.
@@ -80,6 +99,29 @@ func downloadUpgradeAsArchive(dstDir, url, daemonName string) error {
 //   - The path exists, but is one of: Dir, Symlink, NamedPipe, Socket, Device, CharDevice, or Irregular.
 //   - The file exists, is not executable by all three of User, Group, and Other, and cannot be made executable.
 func EnsureBinary(path string) error {
+	info, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
+	if !info.Mode().IsRegular() {
+		_, f := filepath.Split(path)
+		return fmt.Errorf("%s is not a regular file", f)
+	}
+	// Make sure all executable bits are set.
+	oldMode := info.Mode().Perm()
+	newMode := oldMode | 0o111 // Set the three execute bits to on (a+x).
+	if oldMode != newMode {
+		return os.Chmod(path, newMode)
+	}
+	return nil
+}
+
+// EnsurePreUpgrade checks that the given file exists as a regular file and is executable.
+// An error is returned if:
+//   - The file does not exist.
+//   - The path exists, but is one of: Dir, Symlink, NamedPipe, Socket, Device, CharDevice, or Irregular.
+//   - The file exists, is not executable by all three of User, Group, and Other, and cannot be made executable.
+func EnsurePreUpgrade(path string) error {
 	info, err := os.Stat(path)
 	if err != nil {
 		return err

@@ -7,8 +7,8 @@ import (
 	"runtime"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/x/upgrade/plan"
-	upgradetypes "cosmossdk.io/x/upgrade/types"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // UpgradeBinary will be called after the log message has been parsed and the process has terminated.
@@ -47,6 +47,15 @@ func UpgradeBinary(logger log.Logger, cfg *Config, p upgradetypes.Plan) error {
 	url, err := GetBinaryURL(upgradeInfo.Binaries)
 	if err != nil {
 		return err
+	}
+
+	// NEW: Download PreUpgradeScript if required
+	if upgradeInfo.PreUpgradeScript != "" {
+		logger.Info("preUpgradeURL script found, downloading & saving to current upgrade folder")
+		if err := plan.DownloadPreUpgradeScript(cfg.Root(), upgradeInfo.PreUpgradeScript); err != nil {
+			return fmt.Errorf("cannot download preUpgradeScript. %w", err)
+		}
+		logger.Info("downloading preUpgradeScript complete")
 	}
 
 	// If not there, then we try to download it... maybe

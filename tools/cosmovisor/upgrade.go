@@ -60,7 +60,29 @@ func UpgradeBinary(logger log.Logger, cfg *Config, p upgradetypes.Plan) error {
 		logger.Info("downloading preUpgradeScript complete")
 
 		// Run preupgradeFile
-		preupgradeFile := filepath.Join(cfg.UpgradeDir(p.Name), cfg.CustomPreUpgrade)
+		preupgradeFile := filepath.Join(cfg.UpgradeDir(p.Name), "preupgrade.sh")
+
+		info, err := os.Stat(preupgradeFile)
+		if err != nil {
+			logger.Error("planned preupgrade file missing", "file", preupgradeFile)
+			return err
+		}
+		if !info.Mode().IsRegular() {
+			_, f := filepath.Split(preupgradeFile)
+			return fmt.Errorf("planned preupgrade file: %s is not a regular file", f)
+		}
+
+		// Set the execute bit for only the current user
+		// Given:  Current user - Group - Everyone
+		//       0o     RWX     - RWX   - RWX
+		oldMode := info.Mode().Perm()
+		newMode := oldMode | 0o100
+		if oldMode != newMode {
+			if err := os.Chmod(preupgradeFile, newMode); err != nil {
+				logger.Info("planned preupgrade file: could not add execute permission")
+				return errors.New("planned preupgrade file: could not add execute permission")
+			}
+		}
 
 		cmd := exec.Command(preupgradeFile, p.Name, fmt.Sprintf("%d", p.Height))
 		cmd.Dir = cfg.Home

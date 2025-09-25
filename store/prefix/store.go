@@ -163,7 +163,10 @@ func (pi *prefixIterator) Key() (key []byte) {
 	}
 
 	key = pi.iter.Key()
-	key = stripPrefix(key, pi.prefix)
+	key, ok := bytes.CutPrefix(key, pi.prefix)
+	if !ok {
+		panic("should not happen")
+	}
 
 	return
 }
@@ -190,15 +193,6 @@ func (pi *prefixIterator) Error() error {
 	}
 
 	return nil
-}
-
-// stripPrefix is copied from github.com/cometbft/cometbft/libs/db/prefix_db.go
-func stripPrefix(key, prefix []byte) []byte {
-	if len(key) < len(prefix) || !bytes.Equal(key[:len(prefix)], prefix) {
-		panic("should not happen")
-	}
-
-	return key[len(prefix):]
 }
 
 // cpIncr wraps the bytes in types.PrefixEndBytes

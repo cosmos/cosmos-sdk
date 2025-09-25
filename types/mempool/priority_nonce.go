@@ -189,10 +189,10 @@ func (mp *PriorityNonceMempool[C]) NextSenderTx(sender string) sdk.Tx {
 	}
 
 	cursor := senderIndex.Front()
-	return cursor.Value.(sdk.Tx)
+	return cursor.Value.(Tx).Tx
 }
 
-// Insert attempts to insert a Tx into the app-side mempool in O(log n) time,
+// InsertWithOption attempts to insert a Tx into the app-side mempool in O(log n) time,
 // returning an error if unsuccessful. Sender and nonce are derived from the
 // transaction's first signature.
 //
@@ -201,7 +201,7 @@ func (mp *PriorityNonceMempool[C]) NextSenderTx(sender string) sdk.Tx {
 //
 // Inserting a duplicate tx with a different priority overwrites the existing tx,
 // changing the total order of the mempool.
-func (mp *PriorityNonceMempool[C]) Insert(ctx context.Context, tx sdk.Tx) error {
+func (mp *PriorityNonceMempool[C]) InsertWithOption(ctx context.Context, tx sdk.Tx, option InsertOption) error {
 	mp.mtx.Lock()
 	defer mp.mtx.Unlock()
 	if mp.cfg.MaxTx > 0 && mp.priorityIndex.Len() >= mp.cfg.MaxTx {
@@ -209,6 +209,7 @@ func (mp *PriorityNonceMempool[C]) Insert(ctx context.Context, tx sdk.Tx) error 
 	} else if mp.cfg.MaxTx < 0 {
 		return nil
 	}
+	memTx := NewMempoolTx(tx, option.GasWanted)
 
 	sigs, err := mp.cfg.SignerExtractor.GetSigners(tx)
 	if err != nil {
@@ -247,12 +248,12 @@ func (mp *PriorityNonceMempool[C]) Insert(ctx context.Context, tx sdk.Tx) error 
 	// changes.
 	sk := txMeta[C]{nonce: nonce, sender: sender}
 	if oldScore, txExists := mp.scores[sk]; txExists {
-		if mp.cfg.TxReplacement != nil && !mp.cfg.TxReplacement(oldScore.priority, priority, senderIndex.Get(key).Value.(sdk.Tx), tx) {
+		if mp.cfg.TxReplacement != nil && !mp.cfg.TxReplacement(oldScore.priority, priority, senderIndex.Get(key).Value.(Tx).Tx, tx) {
 			return fmt.Errorf(
 				"tx doesn't fit the replacement rule, oldPriority: %v, newPriority: %v, oldTx: %v, newTx: %v",
 				oldScore.priority,
 				priority,
-				senderIndex.Get(key).Value.(sdk.Tx),
+				senderIndex.Get(key).Value.(Tx).Tx,
 				tx,
 			)
 		}
@@ -270,12 +271,21 @@ func (mp *PriorityNonceMempool[C]) Insert(ctx context.Context, tx sdk.Tx) error 
 
 	// Since senderIndex is scored by nonce, a changed priority will overwrite the
 	// existing key.
-	key.senderElement = senderIndex.Set(key, tx)
+	key.senderElement = senderIndex.Set(key, memTx)
 
 	mp.scores[sk] = txMeta[C]{priority: priority}
 	mp.priorityIndex.Set(key, tx)
 
 	return nil
+}
+
+func (mp *PriorityNonceMempool[C]) Insert(ctx context.Context, tx sdk.Tx) error {
+	var gasLimit uint64
+	if gasTx, ok := tx.(sdk.GasTx); ok {
+		gasLimit = gasTx.GetGas()
+	}
+
+	return mp.InsertWithOption(ctx, tx, InsertOption{GasWanted: gasLimit})
 }
 
 func (i *PriorityNonceIterator[C]) iteratePriority() Iterator {
@@ -341,8 +351,8 @@ func (i *PriorityNonceIterator[C]) Next() Iterator {
 	return i
 }
 
-func (i *PriorityNonceIterator[C]) Tx() sdk.Tx {
-	return i.senderCursors[i.sender].Value.(sdk.Tx)
+func (i *PriorityNonceIterator[C]) Tx() Tx {
+	return i.senderCursors[i.sender].Value.(Tx)
 }
 
 // Select returns a set of transactions from the mempool, ordered by priority
@@ -376,7 +386,7 @@ func (mp *PriorityNonceMempool[C]) doSelect(_ context.Context, _ [][]byte) Itera
 }
 
 // SelectBy will hold the mutex during the iteration, callback returns if continue.
-func (mp *PriorityNonceMempool[C]) SelectBy(ctx context.Context, txs [][]byte, callback func(sdk.Tx) bool) {
+func (mp *PriorityNonceMempool[C]) SelectBy(ctx context.Context, txs [][]byte, callback func(Tx) bool) {
 	mp.mtx.Lock()
 	defer mp.mtx.Unlock()
 

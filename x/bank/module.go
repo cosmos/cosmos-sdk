@@ -44,7 +44,8 @@ var (
 	_ module.HasGenesis          = AppModule{}
 	_ module.HasServices         = AppModule{}
 
-	_ appmodule.AppModule = AppModule{}
+	_ appmodule.AppModule     = AppModule{}
+	_ appmodule.HasEndBlocker = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the bank module.
@@ -200,6 +201,10 @@ func (AppModule) ProposalMsgsX(weights simsx.WeightSource, reg simsx.Registry) {
 func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Registry) {
 	reg.Add(weights.Get("msg_send", 100), simulation.MsgSendFactory())
 	reg.Add(weights.Get("msg_multisend", 10), simulation.MsgMultiSendFactory())
+}
+
+func (am AppModule) EndBlock(ctx context.Context) error {
+	return am.keeper.CreditVirtualAccounts(ctx)
 }
 
 // App Wiring Setup

@@ -2,6 +2,8 @@ module github.com/cosmos/cosmos-sdk/blockstm
 
 go 1.25.0
 
+replace github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-20250924232609-2c6195d95951
+
 require (
 	cosmossdk.io/collections v1.3.1
 	cosmossdk.io/store v1.1.2

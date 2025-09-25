@@ -5,7 +5,7 @@ go 1.24.0
 require (
 	github.com/cosmos/cosmos-sdk v0.53.4
 	github.com/creachadair/atomicfile v0.3.8
-	github.com/creachadair/tomledit v0.0.28
+	github.com/creachadair/tomledit v0.0.29
 	github.com/pelletier/go-toml/v2 v2.2.4
 	github.com/spf13/cobra v1.10.1
 	github.com/spf13/viper v1.21.0
@@ -59,7 +59,7 @@ require (
 	github.com/cosmos/iavl v1.2.6 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.16.0 // indirect
-	github.com/danieljoos/wincred v1.1.2 // indirect
+	github.com/danieljoos/wincred v1.2.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.0 // indirect
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect

@@ -165,10 +165,9 @@ func BenchmarkProtoCodecMarshalLengthPrefixed(b *testing.B) {
 		}),
 	}
 
-	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		blob, err := pCdc.MarshalLengthPrefixed(msg)
 		if err != nil {
 			b.Fatal(err)

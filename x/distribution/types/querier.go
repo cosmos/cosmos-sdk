@@ -76,7 +76,7 @@ type QueryDelegatorParams struct {
 	DelegatorAddress sdk.AccAddress `json:"delegator_address" yaml:"delegator_address"`
 }
 
-// NewQueryDelegatorParams creates a new instance of QueryDelegationRewardsParams
+// NewQueryDelegatorParams creates a new instance of QueryDelegatorParams
 func NewQueryDelegatorParams(delegatorAddr sdk.AccAddress) QueryDelegatorParams {
 	return QueryDelegatorParams{
 		DelegatorAddress: delegatorAddr,

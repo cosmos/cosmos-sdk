@@ -419,11 +419,11 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 	// rewards for del0 should be 3/4 initial
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial * 3 / 4)}}, rewards)
 
-	// calculate delegation rewards for del2
+	// calculate delegation rewards for del1
 	rewards, err = distrKeeper.CalculateDelegationRewards(ctx, val, del1, endingPeriod)
 	require.NoError(t, err)
 
-	// rewards for del2 should be 1/4 initial
+	// rewards for del1 should be 1/4 initial
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(initial * 1 / 4)}}, rewards)
 
 	// commission should be equal to initial (50% twice)

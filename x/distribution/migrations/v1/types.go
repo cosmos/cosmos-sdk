@@ -39,7 +39,7 @@ const (
 //
 // - 0x06<valAddr_Bytes>: ValidatorCurrentRewards
 //
-// - 0x07<valAddr_Bytes>: ValidatorCurrentRewards
+// - 0x07<valAddr_Bytes>: ValidatorAccumulatedCommission
 //
 // - 0x08<valAddr_Bytes><height>: ValidatorSlashEvent
 var (
@@ -90,7 +90,7 @@ func GetValidatorHistoricalRewardsAddressPeriod(key []byte) (valAddr sdk.ValAddr
 	kv.AssertKeyLength(addr, v1auth.AddrLen)
 	valAddr = addr
 	b := key[1+v1auth.AddrLen:]
-	kv.AssertKeyLength(addr, 8)
+	kv.AssertKeyLength(b, 8)
 	period = binary.LittleEndian.Uint64(b)
 	return
 }

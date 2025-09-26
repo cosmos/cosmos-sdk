@@ -16,7 +16,7 @@ func (k *Keeper) InitGenesis(ctx sdk.Context, genState types.GenesisState) error
 	return nil
 }
 
-// ExportGenesis returns the capability module's exported genesis.
+// ExportGenesis returns the epochs module's exported genesis.
 func (k *Keeper) ExportGenesis(ctx sdk.Context) (*types.GenesisState, error) {
 	genesis := types.DefaultGenesis()
 	epochs, err := k.AllEpochInfos(ctx)

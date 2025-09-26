@@ -27,7 +27,7 @@ func RandomizedEpochs(r *rand.Rand) []types.EpochInfo {
 	return epochs
 }
 
-// RandomizedGenState generates a random GenesisState for distribution
+// RandomizedGenState generates a random GenesisState for epochs
 func RandomizedGenState(simState *module.SimulationState) {
 	epochs := RandomizedEpochs(simState.Rand)
 	epochsGenesis := types.GenesisState{

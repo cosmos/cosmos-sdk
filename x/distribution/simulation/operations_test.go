@@ -212,7 +212,7 @@ func (suite *SimTestSuite) testSimulateMsgWithdrawValidatorCommission(tokenName 
 }
 
 // TestSimulateMsgFundCommunityPool tests the normal scenario of a valid message of type TypeMsgFundCommunityPool.
-// Abnormal scenarios, where the message is created by an errors, are not tested here.
+// Abnormal scenarios, where the message is created by an error, are not tested here.
 func (suite *SimTestSuite) TestSimulateMsgFundCommunityPool() {
 	// setup 3 accounts
 	s := rand.NewSource(1)

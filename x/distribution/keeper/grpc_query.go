@@ -202,7 +202,7 @@ func (k Querier) ValidatorSlashes(ctx context.Context, req *types.QueryValidator
 	return &types.QueryValidatorSlashesResponse{Slashes: slashes, Pagination: pageRes}, nil
 }
 
-// DelegationRewards the total rewards accrued by a delegation
+// DelegationRewards queries the total rewards accrued by a delegation
 func (k Querier) DelegationRewards(ctx context.Context, req *types.QueryDelegationRewardsRequest) (*types.QueryDelegationRewardsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -256,7 +256,7 @@ func (k Querier) DelegationRewards(ctx context.Context, req *types.QueryDelegati
 	return &types.QueryDelegationRewardsResponse{Rewards: rewards}, nil
 }
 
-// DelegationTotalRewards the total rewards accrued by each validator
+// DelegationTotalRewards queries the total rewards accrued by each validator
 func (k Querier) DelegationTotalRewards(ctx context.Context, req *types.QueryDelegationTotalRewardsRequest) (*types.QueryDelegationTotalRewardsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")

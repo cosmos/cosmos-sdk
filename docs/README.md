@@ -47,7 +47,7 @@ npm start
 It runs `pre.sh` scripts to get all the docs that are not already in the `docs/docs` folder.
 It also runs `post.sh` scripts to clean up the docs and remove unnecessary files when quitting.
 
-Note, the command above only build the docs for the current versions.
+Note, the command above only builds the docs for the current versions.
 With the drawback that none of the redirections works. So, you'll need to go to /main to see the docs.
 
 To build all the docs (including versioned documentation), run:
@@ -56,13 +56,13 @@ To build all the docs (including versioned documentation), run:
 make build-docs
 ```
 
-## What to for new major SDK versions
+## What to do for new major SDK versions
 
 When a new major version of the SDK is released, the following steps should be taken:
 
 * On the `release/vX.Y.Z` branch, remove the deploy action (`.github/workflows/build-docs.yml`), for avoiding deploying the docs from the release branches.
 * On the `release/vX.Y.Z` branch, update `docusaurus.config.js` and set the `lastVersion` to `current`, remove all other versions from the config.
-* Each time a new version is released (on docusaurus), drop support from the oldest versions.
+* Each time a new version is released (on docusaurus), drop support for the oldest versions.
     * If the old version is still running vuepress (v0.45, v0.46), remove its line from `vuepress_versions`
     * If any, remove the outdated redirections from `docusaurus.config.js` and add the base version redirection (`/vX.XX`) to `/main`.
 
@@ -75,6 +75,6 @@ When a new major version of the SDK is released, the following steps should be t
 
 * Add the new version sidebar to the list of versioned sidebar and add the version to `versions.json`.
 * Update the latest version (`presets[1].docs.lastVersion`) in `docusaurus.config.js`.
-* Add the new version with in `presets[1].docs.versions` in `docusaurus.config.js`.
+* Add the new version within in `presets[1].docs.versions` in `docusaurus.config.js`.
 
 Learn more about [versioning](https://docusaurus.io/docs/versioning) in Docusaurus.

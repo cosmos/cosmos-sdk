@@ -3633,7 +3633,7 @@ type EvidenceParams struct {
 	//
 	// It should correspond with an app's "unbonding period" or other similar
 	// mechanism for handling [Nothing-At-Stake
-	// attacks](https://github.com/ethereum/wiki/wiki/Proof-of-Stake-FAQ#what-is-the-nothing-at-stake-problem-and-how-can-it-be-fixed).
+	// attacks](https://ethereum.org/developers/docs/consensus-mechanisms/pos/faqs/#what-is-proof-of-stake).
 	MaxAgeDuration *durationpb.Duration `protobuf:"bytes,2,opt,name=max_age_duration,json=maxAgeDuration,proto3" json:"max_age_duration,omitempty"`
 	// This sets the maximum size of total evidence in bytes that can be committed in a single block.
 	// and should fall comfortably under the max block bytes.

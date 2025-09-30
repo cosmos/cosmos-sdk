@@ -83,7 +83,7 @@ func TestAppImportExport(t *testing.T) {
 		var genesisState GenesisState
 		require.NoError(tb, json.Unmarshal(exported.AppState, &genesisState))
 		ctxB := newApp.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()})
-		_, err = newApp.ModuleManager.InitGenesis(ctxB, newApp.appCodec, genesisState)
+		_, err = newApp.ModuleManager.InitGenesis(ctxB, newApp.AppCodec(), genesisState)
 		if IsEmptyValidatorSetErr(err) {
 			tb.Skip("Skipping simulation as all validators have been unbonded")
 			return

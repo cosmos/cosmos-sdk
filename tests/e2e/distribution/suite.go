@@ -15,7 +15,6 @@ import (
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/math"
-	"cosmossdk.io/simapp"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -62,7 +61,7 @@ func removeModuleConfig(moduleConfig []*appv1alpha1.ModuleConfig, target string)
 func initNetworkConfig(t *testing.T, externalPoolEnabled bool) network.Config {
 	t.Helper()
 
-	moduleConfig := simapp.ModuleConfig
+	moduleConfig := ModuleConfig
 
 	// overwrite the module config so that protocolpool is removed "disabling" it
 	if !externalPoolEnabled {

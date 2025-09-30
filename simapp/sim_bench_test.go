@@ -55,7 +55,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		app.BaseApp,
 		simtestutil.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
 		simtypes.RandomAccounts,
-		simtestutil.BuildSimulationOperations(app, app.AppCodec(), config, app.txConfig),
+		simtestutil.BuildSimulationOperations(app, app.AppCodec(), config, app.TxConfig()),
 		BlockedAddresses(),
 		config,
 		app.AppCodec(),

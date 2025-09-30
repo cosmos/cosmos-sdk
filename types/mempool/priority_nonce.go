@@ -6,6 +6,7 @@ import (
 	"math"
 	"sync"
 
+	"github.com/cosmos/cosmos-sdk/types/mempool/internal"
 	"github.com/huandu/skiplist"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -221,7 +222,7 @@ func (mp *PriorityNonceMempool[C]) Insert(ctx context.Context, tx sdk.Tx) error 
 	sig := sigs[0]
 	sender := sig.Signer.String()
 	priority := mp.cfg.TxPriority.GetTxPriority(ctx, tx)
-	nonce, err := ChooseNonce(sig.Sequence, tx)
+	nonce, err := internal.ChooseNonce(sig.Sequence, tx)
 	if err != nil {
 		return err
 	}
@@ -460,7 +461,7 @@ func (mp *PriorityNonceMempool[C]) Remove(tx sdk.Tx) error {
 
 	sig := sigs[0]
 	sender := sig.Signer.String()
-	nonce, err := ChooseNonce(sig.Sequence, tx)
+	nonce, err := internal.ChooseNonce(sig.Sequence, tx)
 	if err != nil {
 		return err
 	}

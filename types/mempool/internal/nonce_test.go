@@ -1,12 +1,11 @@
-package mempool_test
+package internal_test
 
 import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/cosmos/cosmos-sdk/types/mempool"
+	"github.com/stretchr/testify/require"
 )
 
 func TestChooseNonce(t *testing.T) {
@@ -45,8 +44,8 @@ func TestChooseNonce(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			tx := testTx{unordered: tc.unordered, nonce: tc.seq, timeout: &tc.timeout}
-			nonce, err := mempool.ChooseNonce(tc.seq, tx)
+			tx := mempool.testTx{unordered: tc.unordered, nonce: tc.seq, timeout: &tc.timeout}
+			nonce, err := ChooseNonce(tc.seq, tx)
 			if tc.expErr != "" {
 				require.ErrorContains(t, err, tc.expErr)
 			} else {

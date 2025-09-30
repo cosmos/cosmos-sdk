@@ -9,6 +9,7 @@ import (
 	"slices"
 	"sync"
 
+	"github.com/cosmos/cosmos-sdk/types/mempool/internal"
 	"github.com/huandu/skiplist"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -138,7 +139,7 @@ func (snm *SenderNonceMempool) Insert(_ context.Context, tx sdk.Tx) error {
 
 	sig := sigs[0]
 	sender := sdk.AccAddress(sig.PubKey.Address()).String()
-	nonce, err := ChooseNonce(sig.Sequence, tx)
+	nonce, err := internal.ChooseNonce(sig.Sequence, tx)
 	if err != nil {
 		return err
 	}
@@ -229,7 +230,7 @@ func (snm *SenderNonceMempool) Remove(tx sdk.Tx) error {
 
 	sig := sigs[0]
 	sender := sdk.AccAddress(sig.PubKey.Address()).String()
-	nonce, err := ChooseNonce(sig.Sequence, tx)
+	nonce, err := internal.ChooseNonce(sig.Sequence, tx)
 	if err != nil {
 		return err
 	}

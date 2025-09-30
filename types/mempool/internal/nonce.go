@@ -1,4 +1,4 @@
-package mempool
+package internal
 
 import (
 	"errors"

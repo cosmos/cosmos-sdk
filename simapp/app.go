@@ -1,5 +1,3 @@
-//go:build app_v1
-
 package simapp
 
 import (
@@ -127,10 +125,7 @@ var (
 // capabilities aren't needed for testing.
 type SimApp struct {
 	*baseapp.BaseApp
-	legacyAmino       *codec.LegacyAmino
-	appCodec          codec.Codec
-	txConfig          client.TxConfig
-	interfaceRegistry types.InterfaceRegistry
+	encodingConfig EncodingConfig
 
 	// keys to access the substores
 	keys map[string]*storetypes.KVStoreKey
@@ -172,16 +167,15 @@ func init() {
 	}
 }
 
-// NewSimApp returns a reference to an initialized SimApp.
-func NewSimApp(
-	logger log.Logger,
-	db dbm.DB,
-	traceStore io.Writer,
-	loadLatest bool,
-	appOpts servertypes.AppOptions,
-	baseAppOptions ...func(*baseapp.BaseApp),
-) *SimApp {
-	interfaceRegistry, _ := types.NewInterfaceRegistryWithOptions(types.InterfaceRegistryOptions{
+type EncodingConfig struct {
+	InterfaceRegistry types.InterfaceRegistry
+	Codec             *codec.ProtoCodec
+	LegacyAmino       *codec.LegacyAmino
+	TxConfig          client.TxConfig
+}
+
+func NewEncodingConfigFromOptions(types.InterfaceRegistryOptions) EncodingConfig {
+	interfaceRegistry, err := types.NewInterfaceRegistryWithOptions(types.InterfaceRegistryOptions{
 		ProtoFiles: proto.HybridResolver,
 		SigningOptions: signing.Options{
 			AddressCodec: address.Bech32Codec{
@@ -192,6 +186,10 @@ func NewSimApp(
 			},
 		},
 	})
+	if err != nil {
+		panic(err)
+	}
+
 	appCodec := codec.NewProtoCodec(interfaceRegistry)
 	legacyAmino := codec.NewLegacyAmino()
 	txConfig := tx.NewTxConfig(appCodec, tx.DefaultSignModes)
@@ -202,6 +200,35 @@ func NewSimApp(
 
 	std.RegisterLegacyAminoCodec(legacyAmino)
 	std.RegisterInterfaces(interfaceRegistry)
+
+	return EncodingConfig{
+		InterfaceRegistry: interfaceRegistry,
+		Codec:             appCodec,
+		LegacyAmino:       legacyAmino,
+		TxConfig:          txConfig,
+	}
+}
+
+// NewSimApp returns a reference to an initialized SimApp.
+func NewSimApp(
+	logger log.Logger,
+	db dbm.DB,
+	traceStore io.Writer,
+	loadLatest bool,
+	appOpts servertypes.AppOptions,
+	baseAppOptions ...func(*baseapp.BaseApp),
+) *SimApp {
+	encodingConfig := NewEncodingConfigFromOptions(types.InterfaceRegistryOptions{
+		ProtoFiles: proto.HybridResolver,
+		SigningOptions: signing.Options{
+			AddressCodec: address.Bech32Codec{
+				Bech32Prefix: sdk.GetConfig().GetBech32AccountAddrPrefix(),
+			},
+			ValidatorAddressCodec: address.Bech32Codec{
+				Bech32Prefix: sdk.GetConfig().GetBech32ValidatorAddrPrefix(),
+			},
+		},
+	})
 
 	// Below we could construct and set an application specific mempool and
 	// ABCI 1.0 PrepareProposal and ProcessProposal handlers. These defaults are
@@ -236,11 +263,11 @@ func NewSimApp(
 	}
 	baseAppOptions = append(baseAppOptions, voteExtOp, baseapp.SetOptimisticExecution())
 
-	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
+	bApp := baseapp.NewBaseApp(appName, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
-	bApp.SetInterfaceRegistry(interfaceRegistry)
-	bApp.SetTxEncoder(txConfig.TxEncoder())
+	bApp.SetInterfaceRegistry(encodingConfig.InterfaceRegistry)
+	bApp.SetTxEncoder(encodingConfig.TxConfig.TxEncoder())
 
 	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey,
@@ -265,17 +292,14 @@ func NewSimApp(
 	}
 
 	app := &SimApp{
-		BaseApp:           bApp,
-		legacyAmino:       legacyAmino,
-		appCodec:          appCodec,
-		txConfig:          txConfig,
-		interfaceRegistry: interfaceRegistry,
-		keys:              keys,
+		BaseApp:        bApp,
+		encodingConfig: encodingConfig,
+		keys:           keys,
 	}
 
 	// set the BaseApp's parameter store
 	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
-		appCodec,
+		encodingConfig.Codec,
 		runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]),
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		runtime.EventService{},
@@ -284,7 +308,7 @@ func NewSimApp(
 
 	// add keepers
 	app.AccountKeeper = authkeeper.NewAccountKeeper(
-		appCodec,
+		encodingConfig.Codec,
 		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
 		maccPerms,
@@ -295,7 +319,7 @@ func NewSimApp(
 	)
 
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
-		appCodec,
+		encodingConfig.Codec,
 		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
 		app.AccountKeeper,
 		BlockedAddresses(),
@@ -303,6 +327,7 @@ func NewSimApp(
 		logger,
 	)
 
+	// TODO probably just eliminate this and remove textual signing
 	// optional: enable sign mode textual by overwriting the default tx config (after setting the bank keeper)
 	enabledSignModes := append(tx.DefaultSignModes, sigtypes.SignMode_SIGN_MODE_TEXTUAL)
 	txConfigOpts := tx.ConfigOptions{
@@ -310,16 +335,16 @@ func NewSimApp(
 		TextualCoinMetadataQueryFn: txmodule.NewBankKeeperCoinMetadataQueryFn(app.BankKeeper),
 	}
 	txConfig, err := tx.NewTxConfigWithOptions(
-		appCodec,
+		encodingConfig.Codec,
 		txConfigOpts,
 	)
 	if err != nil {
 		panic(err)
 	}
-	app.txConfig = txConfig
+	app.encodingConfig.TxConfig = txConfig
 
 	app.StakingKeeper = stakingkeeper.NewKeeper(
-		appCodec,
+		encodingConfig.Codec,
 		runtime.NewKVStoreService(keys[stakingtypes.StoreKey]),
 		app.AccountKeeper,
 		app.BankKeeper,
@@ -328,7 +353,7 @@ func NewSimApp(
 		authcodec.NewBech32Codec(sdk.Bech32PrefixConsAddr),
 	)
 	app.MintKeeper = mintkeeper.NewKeeper(
-		appCodec,
+		encodingConfig.Codec,
 		runtime.NewKVStoreService(keys[minttypes.StoreKey]),
 		app.StakingKeeper,
 		app.AccountKeeper,
@@ -339,7 +364,7 @@ func NewSimApp(
 	)
 
 	app.ProtocolPoolKeeper = protocolpoolkeeper.NewKeeper(
-		appCodec,
+		encodingConfig.Codec,
 		runtime.NewKVStoreService(keys[protocolpooltypes.StoreKey]),
 		app.AccountKeeper,
 		app.BankKeeper,
@@ -347,7 +372,7 @@ func NewSimApp(
 	)
 
 	app.DistrKeeper = distrkeeper.NewKeeper(
-		appCodec,
+		encodingConfig.Codec,
 		runtime.NewKVStoreService(keys[distrtypes.StoreKey]),
 		app.AccountKeeper,
 		app.BankKeeper,
@@ -358,15 +383,15 @@ func NewSimApp(
 	)
 
 	app.SlashingKeeper = slashingkeeper.NewKeeper(
-		appCodec,
-		legacyAmino,
+		encodingConfig.Codec,
+		encodingConfig.LegacyAmino,
 		runtime.NewKVStoreService(keys[slashingtypes.StoreKey]),
 		app.StakingKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	app.FeeGrantKeeper = feegrantkeeper.NewKeeper(
-		appCodec,
+		encodingConfig.Codec,
 		runtime.NewKVStoreService(keys[feegrant.StoreKey]),
 		app.AccountKeeper,
 	)
@@ -382,7 +407,7 @@ func NewSimApp(
 
 	app.AuthzKeeper = authzkeeper.NewKeeper(
 		runtime.NewKVStoreService(keys[authzkeeper.StoreKey]),
-		appCodec,
+		encodingConfig.Codec,
 		app.MsgServiceRouter(),
 		app.AccountKeeper,
 	)
@@ -397,7 +422,7 @@ func NewSimApp(
 	app.UpgradeKeeper = upgradekeeper.NewKeeper(
 		skipUpgradeHeights,
 		runtime.NewKVStoreService(keys[upgradetypes.StoreKey]),
-		appCodec,
+		encodingConfig.Codec,
 		homePath,
 		app.BaseApp,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
@@ -415,7 +440,7 @@ func NewSimApp(
 		govConfig.MaxMetadataLen = 10000
 	*/
 	govKeeper := govkeeper.NewKeeper(
-		appCodec,
+		encodingConfig.Codec,
 		runtime.NewKVStoreService(keys[govtypes.StoreKey]),
 		app.AccountKeeper,
 		app.BankKeeper,
@@ -438,7 +463,7 @@ func NewSimApp(
 
 	// create evidence keeper with router
 	evidenceKeeper := evidencekeeper.NewKeeper(
-		appCodec,
+		encodingConfig.Codec,
 		runtime.NewKVStoreService(keys[evidencetypes.StoreKey]),
 		app.StakingKeeper,
 		app.SlashingKeeper,
@@ -450,7 +475,7 @@ func NewSimApp(
 
 	app.EpochsKeeper = epochskeeper.NewKeeper(
 		runtime.NewKVStoreService(keys[epochstypes.StoreKey]),
-		appCodec,
+		encodingConfig.Codec,
 	)
 
 	app.EpochsKeeper.SetHooks(
@@ -468,19 +493,19 @@ func NewSimApp(
 			app.AccountKeeper, app.StakingKeeper, app,
 			txConfig,
 		),
-		auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts, nil),
+		auth.NewAppModule(encodingConfig.Codec, app.AccountKeeper, authsims.RandomGenesisAccounts, nil),
 		vesting.NewAppModule(app.AccountKeeper, app.BankKeeper),
-		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, nil),
-		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
-		gov.NewAppModule(appCodec, &app.GovKeeper, app.AccountKeeper, app.BankKeeper, nil),
-		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper, nil, nil),
-		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, nil, app.interfaceRegistry),
-		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, nil),
-		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, nil),
+		bank.NewAppModule(encodingConfig.Codec, app.BankKeeper, app.AccountKeeper, nil),
+		feegrantmodule.NewAppModule(encodingConfig.Codec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.encodingConfig.InterfaceRegistry),
+		gov.NewAppModule(encodingConfig.Codec, &app.GovKeeper, app.AccountKeeper, app.BankKeeper, nil),
+		mint.NewAppModule(encodingConfig.Codec, app.MintKeeper, app.AccountKeeper, nil, nil),
+		slashing.NewAppModule(encodingConfig.Codec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, nil, app.encodingConfig.InterfaceRegistry),
+		distr.NewAppModule(encodingConfig.Codec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, nil),
+		staking.NewAppModule(encodingConfig.Codec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, nil),
 		upgrade.NewAppModule(app.UpgradeKeeper, app.AccountKeeper.AddressCodec()),
 		evidence.NewAppModule(app.EvidenceKeeper),
-		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
+		authzmodule.NewAppModule(encodingConfig.Codec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.encodingConfig.InterfaceRegistry),
+		consensus.NewAppModule(encodingConfig.Codec, app.ConsensusParamsKeeper),
 		epochs.NewAppModule(app.EpochsKeeper),
 		protocolpool.NewAppModule(app.ProtocolPoolKeeper, app.AccountKeeper, app.BankKeeper),
 	)
@@ -497,8 +522,8 @@ func NewSimApp(
 				[]govclient.ProposalHandler{},
 			),
 		})
-	app.BasicModuleManager.RegisterLegacyAminoCodec(legacyAmino)
-	app.BasicModuleManager.RegisterInterfaces(interfaceRegistry)
+	app.BasicModuleManager.RegisterLegacyAminoCodec(app.encodingConfig.LegacyAmino)
+	app.BasicModuleManager.RegisterInterfaces(app.encodingConfig.InterfaceRegistry)
 
 	// NOTE: upgrade module is required to be prioritized
 	app.ModuleManager.SetOrderPreBlockers(
@@ -575,7 +600,7 @@ func NewSimApp(
 	// Uncomment if you want to set a custom migration order here.
 	// app.ModuleManager.SetOrderMigrations(custom order)
 
-	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
+	app.configurator = module.NewConfigurator(app.encodingConfig.Codec, app.MsgServiceRouter(), app.GRPCQueryRouter())
 	err = app.ModuleManager.RegisterServices(app.configurator)
 	if err != nil {
 		panic(err)
@@ -601,7 +626,7 @@ func NewSimApp(
 	// NOTE: this is not required apps that don't use the simulator for fuzz testing
 	// transactions
 	overrideModules := map[string]module.AppModuleSimulation{
-		authtypes.ModuleName: auth.NewAppModule(app.appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts, nil),
+		authtypes.ModuleName: auth.NewAppModule(app.encodingConfig.Codec, app.AccountKeeper, authsims.RandomGenesisAccounts, nil),
 	}
 	app.sm = module.NewSimulationManagerFromAppModules(app.ModuleManager.Modules, overrideModules)
 
@@ -704,7 +729,7 @@ func (app *SimApp) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*ab
 		panic(err)
 	}
 	app.UpgradeKeeper.SetModuleVersionMap(ctx, app.ModuleManager.GetVersionMap())
-	return app.ModuleManager.InitGenesis(ctx, app.appCodec, genesisState)
+	return app.ModuleManager.InitGenesis(ctx, app.encodingConfig.Codec, genesisState)
 }
 
 // LoadHeight loads a particular height
@@ -717,7 +742,7 @@ func (app *SimApp) LoadHeight(height int64) error {
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
 func (app *SimApp) LegacyAmino() *codec.LegacyAmino {
-	return app.legacyAmino
+	return app.encodingConfig.LegacyAmino
 }
 
 // AppCodec returns SimApp's app codec.
@@ -725,17 +750,17 @@ func (app *SimApp) LegacyAmino() *codec.LegacyAmino {
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
 func (app *SimApp) AppCodec() codec.Codec {
-	return app.appCodec
+	return app.encodingConfig.Codec
 }
 
 // InterfaceRegistry returns SimApp's InterfaceRegistry
 func (app *SimApp) InterfaceRegistry() types.InterfaceRegistry {
-	return app.interfaceRegistry
+	return app.encodingConfig.InterfaceRegistry
 }
 
 // TxConfig returns SimApp's TxConfig
 func (app *SimApp) TxConfig() client.TxConfig {
-	return app.txConfig
+	return app.encodingConfig.TxConfig
 }
 
 // AutoCliOpts returns the autocli options for the app.
@@ -761,7 +786,7 @@ func (app *SimApp) AutoCliOpts() autocli.AppOptions {
 
 // DefaultGenesis returns a default genesis from the registered AppModuleBasic's.
 func (a *SimApp) DefaultGenesis() map[string]json.RawMessage {
-	return a.BasicModuleManager.DefaultGenesis(a.appCodec)
+	return a.BasicModuleManager.DefaultGenesis(a.encodingConfig.Codec)
 }
 
 // GetKey returns the KVStoreKey for the provided store key.
@@ -810,7 +835,7 @@ func (app *SimApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APICon
 
 // RegisterTxService implements the Application.RegisterTxService method.
 func (app *SimApp) RegisterTxService(clientCtx client.Context) {
-	authtx.RegisterTxService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.BaseApp.Simulate, app.interfaceRegistry)
+	authtx.RegisterTxService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.BaseApp.Simulate, app.encodingConfig.InterfaceRegistry)
 }
 
 // RegisterTendermintService implements the Application.RegisterTendermintService method.
@@ -819,7 +844,7 @@ func (app *SimApp) RegisterTendermintService(clientCtx client.Context) {
 	cmtservice.RegisterTendermintService(
 		clientCtx,
 		app.BaseApp.GRPCQueryRouter(),
-		app.interfaceRegistry,
+		app.encodingConfig.InterfaceRegistry,
 		cmtApp.Query,
 	)
 }

@@ -527,7 +527,7 @@ func NewSDKApp(
 		sdkApp.EncodingConfig.Codec,
 		runtime.NewKVStoreService(sdkApp.StoreKeys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
-		defaultMaccPerms,
+		sdkApp.moduleAccountPerms,
 		authcodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
@@ -538,7 +538,7 @@ func NewSDKApp(
 		sdkApp.EncodingConfig.Codec,
 		runtime.NewKVStoreService(sdkApp.StoreKeys[banktypes.StoreKey]),
 		sdkApp.AccountKeeper,
-		BlockedAddresses(),
+		sdkApp.BlockedAddresses(),
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		logger,
 	)
@@ -692,7 +692,7 @@ func NewSDKApp(
 
 	sdkApp.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-		// register the governance hooks
+			// register the governance hooks
 		),
 	)
 
@@ -715,7 +715,7 @@ func NewSDKApp(
 
 		sdkApp.EpochsKeeper.SetHooks(
 			epochstypes.NewMultiEpochHooks(
-			// insert epoch hooks receivers here
+				// insert epoch hooks receivers here
 			),
 		)
 		optionalModules = append(optionalModules, epochs.NewAppModule(*sdkApp.EpochsKeeper))
@@ -742,6 +742,10 @@ func NewSDKApp(
 	sdkApp.optionalModules = optionalModules
 
 	return sdkApp
+}
+
+func (app *SDKApp) initKeepers() {
+
 }
 
 func (app *SDKApp) LoadModules() error {
@@ -1001,4 +1005,17 @@ func (app *SDKApp) setPostHandler() {
 	}
 
 	app.SetPostHandler(postHandler)
+}
+
+// BlockedAddresses returns all the app's blocked account addresses.
+func (app *SDKApp) BlockedAddresses() map[string]bool {
+	modAccAddrs := make(map[string]bool)
+	for acc := range app.moduleAccountPerms {
+		modAccAddrs[authtypes.NewModuleAddress(acc).String()] = true
+	}
+
+	// allow the following addresses to receive funds
+	delete(modAccAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+
+	return modAccAddrs
 }

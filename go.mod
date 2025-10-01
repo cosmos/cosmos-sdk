@@ -10,6 +10,7 @@ require (
 	cosmossdk.io/errors v1.0.2
 	cosmossdk.io/log v1.6.1
 	cosmossdk.io/math v1.5.3
+	cosmossdk.io/store v1.1.2
 	cosmossdk.io/x/tx v0.14.0
 	github.com/99designs/keyring v1.2.1
 	github.com/bgentry/speakeasy v0.2.0
@@ -17,10 +18,11 @@ require (
 	github.com/chzyer/readline v1.5.1
 	github.com/cockroachdb/apd/v2 v2.0.2
 	github.com/cockroachdb/errors v1.12.0
-	github.com/cometbft/cometbft v0.0.0-20251001111754-952a670d0776
+	github.com/cometbft/cometbft v0.38.18
 	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/cosmos-db v1.1.3
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
+	github.com/cosmos/cosmos-sdk/blockstm v0.0.0-00010101000000-000000000000
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogogateway v1.2.0
 	github.com/cosmos/gogoproto v1.7.0
@@ -236,6 +238,7 @@ require (
 // Replace here are pending PRs, or version to be tagged
 replace (
 	cosmossdk.io/store => ./store
+	github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20251001111754-952a670d0776
 	github.com/cosmos/cosmos-sdk/blockstm => ./blockstm
 )
 
@@ -251,6 +254,7 @@ replace (
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
 	// replace broken goleveldb
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
+	github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-20250924232609-2c6195d95951
 )
 
 retract (

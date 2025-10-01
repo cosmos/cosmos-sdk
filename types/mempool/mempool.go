@@ -34,6 +34,17 @@ type ExtMempool interface {
 	SelectBy(context.Context, [][]byte, func(sdk.Tx) bool)
 }
 
+// AsyncInsertMempool is an extension of Mempool that supports asynchronous insertion.
+// Mempools implementing this interface can perform insertions in the background
+// and return immediately, improving performance for CometBFT's mempool operations.
+type AsyncInsertMempool interface {
+	Mempool
+
+	// InsertAsync attempts to insert a Tx into the app-side mempool asynchronously,
+	// returning immediately without waiting for the insertion to complete.
+	InsertAsync(context.Context, sdk.Tx) error
+}
+
 // Iterator defines an app-side mempool iterator interface that is as minimal as
 // possible. The order of iteration is determined by the app-side mempool
 // implementation.

@@ -28,6 +28,10 @@ func (w cometABCIWrapper) CheckTx(_ context.Context, req *abci.RequestCheckTx) (
 	return w.app.CheckTx(req)
 }
 
+func (w cometABCIWrapper) InsertMempool(_ context.Context, req *abci.RequestInsertMempool) (*abci.ResponseInsertMempool, error) {
+	return w.app.InsertMempool(req)
+}
+
 func (w cometABCIWrapper) InitChain(_ context.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
 	return w.app.InitChain(req)
 }

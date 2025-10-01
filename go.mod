@@ -238,7 +238,7 @@ require (
 // Replace here are pending PRs, or version to be tagged
 replace (
 	cosmossdk.io/store => ./store
-	github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20251001111754-952a670d0776
+	github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.0.0-20251001191257-c0aba3017384
 	github.com/cosmos/cosmos-sdk/blockstm => ./blockstm
 )
 

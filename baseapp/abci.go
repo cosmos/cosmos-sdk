@@ -26,6 +26,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 )
 
 // Supported ABCI Query prefixes and paths
@@ -376,6 +377,52 @@ func (app *BaseApp) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, er
 	}
 
 	return app.abciHandlers.CheckTxHandler(runTx, req)
+}
+
+// InsertMempool implements the InsertMempool ABCI method and returns a
+// ResponseInsertMempool object to the client. It decodes the transaction and
+// inserts it into the application mempool if available. If the mempool supports
+// async insertion, it will use that to return immediately.
+func (app *BaseApp) InsertMempool(req *abci.RequestInsertMempool) (*abci.ResponseInsertMempool, error) {
+	// If no mempool is configured, return success
+	if app.mempool == nil {
+		return &abci.ResponseInsertMempool{Code: abci.CodeTypeOK}, nil
+	}
+
+	// Decode transaction
+	tx, err := app.txDecoder(req.Tx)
+	if err != nil {
+		return &abci.ResponseInsertMempool{
+			Code: sdkerrors.ErrTxDecode.ABCICode(),
+			Log:  err.Error(),
+		}, nil
+	}
+
+	// Get check state context
+	checkState := app.stateManager.GetState(execModeCheck)
+	ctx := checkState.Context()
+
+	// Check if mempool supports async insertion
+	if asyncMempool, ok := app.mempool.(mempool.AsyncInsertMempool); ok {
+		// Use async insertion for immediate return
+		if err := asyncMempool.InsertAsync(ctx, tx); err != nil {
+			return &abci.ResponseInsertMempool{
+				Code: sdkerrors.ErrMempoolIsFull.ABCICode(),
+				Log:  err.Error(),
+			}, nil
+		}
+		return &abci.ResponseInsertMempool{Code: abci.CodeTypeOK}, nil
+	}
+
+	// Fall back to synchronous insertion
+	if err := app.mempool.Insert(ctx, tx); err != nil {
+		return &abci.ResponseInsertMempool{
+			Code: sdkerrors.ErrMempoolIsFull.ABCICode(),
+			Log:  err.Error(),
+		}, nil
+	}
+
+	return &abci.ResponseInsertMempool{Code: abci.CodeTypeOK}, nil
 }
 
 // PrepareProposal implements the PrepareProposal ABCI method and returns a

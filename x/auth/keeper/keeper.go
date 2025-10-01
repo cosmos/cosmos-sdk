@@ -125,6 +125,15 @@ func WithUnorderedTransactions(enable bool) InitOption {
 
 var _ AccountKeeperI = &AccountKeeper{}
 
+func (ak *AccountKeeper) SetAccountPermissions(maccPerms map[string][]string) {
+	permAddrs := make(map[string]types.PermissionsForAddress)
+	for name, perms := range maccPerms {
+		permAddrs[name] = types.NewPermissionsForAddress(name, perms)
+	}
+
+	ak.permAddrs = permAddrs
+}
+
 // NewAccountKeeper returns a new AccountKeeperI that uses go-amino to
 // (binary) encode and decode concrete sdk.Accounts.
 // `maccPerms` is a map that takes accounts' addresses as keys, and their respective permissions as values. This map is used to construct
@@ -135,11 +144,6 @@ func NewAccountKeeper(
 	cdc codec.BinaryCodec, storeService store.KVStoreService, proto func() sdk.AccountI,
 	maccPerms map[string][]string, ac address.Codec, bech32Prefix, authority string, opts ...InitOption,
 ) AccountKeeper {
-	permAddrs := make(map[string]types.PermissionsForAddress)
-	for name, perms := range maccPerms {
-		permAddrs[name] = types.NewPermissionsForAddress(name, perms)
-	}
-
 	sb := collections.NewSchemaBuilder(storeService)
 
 	ak := AccountKeeper{
@@ -148,7 +152,6 @@ func NewAccountKeeper(
 		storeService:    storeService,
 		proto:           proto,
 		cdc:             cdc,
-		permAddrs:       permAddrs,
 		authority:       authority,
 		Params:          collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 		AccountNumber:   collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
@@ -160,6 +163,8 @@ func NewAccountKeeper(
 		panic(err)
 	}
 	ak.Schema = schema
+
+	ak.SetAccountPermissions(maccPerms)
 
 	for _, opt := range opts {
 		opt(&ak)

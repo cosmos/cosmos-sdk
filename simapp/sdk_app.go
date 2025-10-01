@@ -5,6 +5,7 @@ import (
 	"io"
 	"maps"
 	"slices"
+	"sync"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -152,6 +153,8 @@ type SDKAppConfig struct {
 	WithEpochs       bool
 	WithFeeGrant     bool
 	WithMint         bool
+	// TODO gov optional?
+	// TODO any other optional modules?
 
 	WithUnorderedTx bool
 
@@ -316,6 +319,8 @@ func DefaultSDKAppConfig(
 }
 
 type SDKApp struct {
+	loaded sync.Once
+
 	cfg SDKAppConfig
 
 	*baseapp.BaseApp
@@ -744,11 +749,20 @@ func NewSDKApp(
 	return sdkApp
 }
 
-func (app *SDKApp) initKeepers() {
-
+func (app *SDKApp) AddModule(module module.AppModule) {
 }
 
-func (app *SDKApp) LoadModules() error {
+func (app *SDKApp) LoadModules() {
+	app.loaded.Do(app.loadModules)
+}
+
+func (app *SDKApp) loadModules() {
+	// TODO: set macc perms updated
+	app.AccountKeeper.SetAccountPermissions(app.moduleAccountPerms)
+
+	// TODO: set blocked addresses updated
+	app.BankKeeper.SetBlockedAddresses(app.BlockedAddresses())
+
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
 	app.ModuleManager = module.NewManager(
@@ -779,7 +793,7 @@ func (app *SDKApp) LoadModules() error {
 	app.configurator = module.NewConfigurator(app.EncodingConfig.Codec, app.MsgServiceRouter(), app.GRPCQueryRouter())
 	err := app.ModuleManager.RegisterServices(app.configurator)
 	if err != nil {
-		return err
+		panic(err)
 	}
 
 	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.ModuleManager.Modules))
@@ -816,8 +830,6 @@ func (app *SDKApp) LoadModules() error {
 
 	// initialize stores
 	app.MountKVStores(app.StoreKeys)
-
-	return nil
 }
 
 // Name returns the name of the App

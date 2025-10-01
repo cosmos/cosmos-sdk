@@ -58,7 +58,7 @@ func setupStateFactory(app *SimApp) sims.SimStateFactory {
 	return sims.SimStateFactory{
 		Codec:         app.AppCodec(),
 		AppStateFn:    simtestutil.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
-		BlockedAddr:   BlockedAddresses(),
+		BlockedAddr:   app.BlockedAddresses(),
 		AccountSource: app.AccountKeeper,
 		BalanceSource: app.BankKeeper,
 	}

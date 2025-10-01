@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"io"
 
+	dbm "github.com/cosmos/cosmos-db"
+
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/log"
-	dbm "github.com/cosmos/cosmos-db"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -57,16 +58,13 @@ func NewSimApp(
 	}
 
 	// set up keeper ...
-	// app.AddModule( // new module )
+	// app.AddModule()
 	// add keeper
 	// add module to module manager
 	// update keys
 	//
 
-	err := app.LoadModules()
-	if err != nil {
-		panic(err)
-	}
+	app.LoadModules()
 
 	// RegisterUpgradeHandlers is used for registering any on-chain upgrades.
 	app.RegisterUpgradeHandlers()

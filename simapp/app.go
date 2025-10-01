@@ -1,53 +1,31 @@
 package simapp
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"maps"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cast"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
-	"cosmossdk.io/client/v2/autocli"
 	clienthelpers "cosmossdk.io/client/v2/helpers"
-	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
-	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/address"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/server/api"
-	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/std"
 	testdata_pulsar "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	sigtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
-	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -55,10 +33,8 @@ import (
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/consensus"
-	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
@@ -80,7 +56,6 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/mint"
-	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/protocolpool"
 	protocolpoolkeeper "github.com/cosmos/cosmos-sdk/x/protocolpool/keeper"
@@ -89,7 +64,6 @@ import (
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
@@ -104,12 +78,6 @@ var (
 
 	// module account permissions
 	maccPerms = map[string][]string{
-		authtypes.FeeCollectorName:                  nil,
-		distrtypes.ModuleName:                       nil,
-		minttypes.ModuleName:                        {authtypes.Minter},
-		stakingtypes.BondedPoolName:                 {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName:              {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:                         {authtypes.Burner},
 		protocolpooltypes.ModuleName:                nil,
 		protocolpooltypes.ProtocolPoolEscrowAccount: nil,
 	}
@@ -119,36 +87,6 @@ var (
 	_ runtime.AppI            = (*SimApp)(nil)
 	_ servertypes.Application = (*SimApp)(nil)
 )
-
-type SDKApp struct {
-	*baseapp.BaseApp
-	encodingConfig EncodingConfig
-
-	// keys to access the substores
-	keys map[string]*storetypes.KVStoreKey
-
-	// the module manager
-	ModuleManager      *module.Manager
-	BasicModuleManager module.BasicManager
-
-	// simulation manager
-	sm *module.SimulationManager
-
-	// module configurator
-	configurator module.Configurator
-
-	// essential keepers
-	AccountKeeper         authkeeper.AccountKeeper
-	BankKeeper            bankkeeper.BaseKeeper
-	StakingKeeper         *stakingkeeper.Keeper
-	SlashingKeeper        slashingkeeper.Keeper
-	MintKeeper            mintkeeper.Keeper
-	DistrKeeper           distrkeeper.Keeper
-	GovKeeper             govkeeper.Keeper
-	UpgradeKeeper         *upgradekeeper.Keeper
-	EvidenceKeeper        evidencekeeper.Keeper
-	ConsensusParamsKeeper consensusparamkeeper.Keeper
-}
 
 // SimApp extends an ABCI application, but with most of its parameters exported.
 // They are exported for convenience in creating helper functions, as object
@@ -171,38 +109,6 @@ func init() {
 	}
 }
 
-type EncodingConfig struct {
-	InterfaceRegistry types.InterfaceRegistry
-	Codec             *codec.ProtoCodec
-	LegacyAmino       *codec.LegacyAmino
-	TxConfig          client.TxConfig
-}
-
-func NewEncodingConfigFromOptions(opts types.InterfaceRegistryOptions) EncodingConfig {
-	interfaceRegistry, err := types.NewInterfaceRegistryWithOptions(opts)
-	if err != nil {
-		panic(err)
-	}
-
-	appCodec := codec.NewProtoCodec(interfaceRegistry)
-	legacyAmino := codec.NewLegacyAmino()
-	txConfig := authtx.NewTxConfig(appCodec, authtx.DefaultSignModes)
-
-	if err := interfaceRegistry.SigningContext().Validate(); err != nil {
-		panic(err)
-	}
-
-	std.RegisterLegacyAminoCodec(legacyAmino)
-	std.RegisterInterfaces(interfaceRegistry)
-
-	return EncodingConfig{
-		InterfaceRegistry: interfaceRegistry,
-		Codec:             appCodec,
-		LegacyAmino:       legacyAmino,
-		TxConfig:          txConfig,
-	}
-}
-
 // NewSimApp returns a reference to an initialized SimApp.
 func NewSimApp(
 	logger log.Logger,
@@ -212,139 +118,24 @@ func NewSimApp(
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *SimApp {
-	encodingConfig := NewEncodingConfigFromOptions(types.InterfaceRegistryOptions{
-		ProtoFiles: proto.HybridResolver,
-		SigningOptions: signing.Options{
-			AddressCodec: address.Bech32Codec{
-				Bech32Prefix: sdk.GetConfig().GetBech32AccountAddrPrefix(),
-			},
-			ValidatorAddressCodec: address.Bech32Codec{
-				Bech32Prefix: sdk.GetConfig().GetBech32ValidatorAddrPrefix(),
-			},
-		},
-	})
-
-	voteExtOp := func(bApp *baseapp.BaseApp) {
-		voteExtHandler := NewVoteExtensionHandler()
-		voteExtHandler.SetHandlers(bApp)
-	}
-	baseAppOptions = append(baseAppOptions, voteExtOp, baseapp.SetOptimisticExecution())
-
-	bApp := baseapp.NewBaseApp(appName, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
-	bApp.SetCommitMultiStoreTracer(traceStore)
-	bApp.SetVersion(version.Version)
-	bApp.SetInterfaceRegistry(encodingConfig.InterfaceRegistry)
-	bApp.SetTxEncoder(encodingConfig.TxConfig.TxEncoder())
-
-	keys := storetypes.NewKVStoreKeys(
-		authtypes.StoreKey,
-		banktypes.StoreKey,
-		stakingtypes.StoreKey,
-		minttypes.StoreKey,
-		distrtypes.StoreKey,
-		slashingtypes.StoreKey,
-		govtypes.StoreKey,
-		consensusparamtypes.StoreKey,
-		upgradetypes.StoreKey,
-		feegrant.StoreKey,
-		evidencetypes.StoreKey,
-		authzkeeper.StoreKey,
-		epochstypes.StoreKey,
-		protocolpooltypes.StoreKey,
-	)
-
-	// register streaming services
-	if err := bApp.RegisterStreamingServices(appOpts, keys); err != nil {
-		panic(err)
-	}
-
-	sdkApp := &SDKApp{
-		BaseApp:        bApp,
-		encodingConfig: encodingConfig,
-		keys:           keys,
-	}
+	sdkApp := NewSDKApp(logger, db, traceStore, appOpts, baseAppOptions...)
+	maps.Copy(maccPerms, defaultMaccPerms)
 
 	app := &SimApp{
 		SDKApp: sdkApp,
 	}
 
-	// set the BaseApp's parameter store
-	sdkApp.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
-		encodingConfig.Codec,
-		runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]),
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		runtime.EventService{},
-	)
-	bApp.SetParamStore(sdkApp.ConsensusParamsKeeper.ParamsStore)
-
-	// add keepers
-	sdkApp.AccountKeeper = authkeeper.NewAccountKeeper(
-		encodingConfig.Codec,
-		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
-		authtypes.ProtoBaseAccount,
-		maccPerms,
-		authcodec.NewBech32Codec(sdk.Bech32MainPrefix),
-		sdk.Bech32MainPrefix,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		authkeeper.WithUnorderedTransactions(true),
-	)
-
-	sdkApp.BankKeeper = bankkeeper.NewBaseKeeper(
-		encodingConfig.Codec,
-		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
-		sdkApp.AccountKeeper,
-		BlockedAddresses(),
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		logger,
-	)
-
-	// TODO probably just eliminate this and remove textual signing
-	// optional: enable sign mode textual by overwriting the default tx config (after setting the bank keeper)
-	enabledSignModes := append(authtx.DefaultSignModes, sigtypes.SignMode_SIGN_MODE_TEXTUAL)
-	txConfigOpts := authtx.ConfigOptions{
-		EnabledSignModes:           enabledSignModes,
-		TextualCoinMetadataQueryFn: txmodule.NewBankKeeperCoinMetadataQueryFn(sdkApp.BankKeeper),
-	}
-	txConfig, err := authtx.NewTxConfigWithOptions(
-		encodingConfig.Codec,
-		txConfigOpts,
-	)
-	if err != nil {
-		panic(err)
-	}
-	sdkApp.encodingConfig.TxConfig = txConfig
-
-	sdkApp.StakingKeeper = stakingkeeper.NewKeeper(
-		encodingConfig.Codec,
-		runtime.NewKVStoreService(keys[stakingtypes.StoreKey]),
-		sdkApp.AccountKeeper,
-		sdkApp.BankKeeper,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		authcodec.NewBech32Codec(sdk.Bech32PrefixValAddr),
-		authcodec.NewBech32Codec(sdk.Bech32PrefixConsAddr),
-	)
-	sdkApp.MintKeeper = mintkeeper.NewKeeper(
-		encodingConfig.Codec,
-		runtime.NewKVStoreService(keys[minttypes.StoreKey]),
-		sdkApp.StakingKeeper,
-		sdkApp.AccountKeeper,
-		sdkApp.BankKeeper,
-		authtypes.FeeCollectorName,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		// mintkeeper.WithMintFn(mintkeeper.DefaultMintFn(minttypes.DefaultInflationCalculationFn)), custom mintFn can be added here
-	)
-
 	app.ProtocolPoolKeeper = protocolpoolkeeper.NewKeeper(
-		encodingConfig.Codec,
-		runtime.NewKVStoreService(keys[protocolpooltypes.StoreKey]),
+		sdkApp.EncodingConfig.Codec,
+		runtime.NewKVStoreService(sdkApp.Keys[protocolpooltypes.StoreKey]),
 		app.AccountKeeper,
 		app.BankKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	sdkApp.DistrKeeper = distrkeeper.NewKeeper(
-		encodingConfig.Codec,
-		runtime.NewKVStoreService(keys[distrtypes.StoreKey]),
+		sdkApp.EncodingConfig.Codec,
+		runtime.NewKVStoreService(sdkApp.Keys[distrtypes.StoreKey]),
 		sdkApp.AccountKeeper,
 		sdkApp.BankKeeper,
 		sdkApp.StakingKeeper,
@@ -354,16 +145,16 @@ func NewSimApp(
 	)
 
 	sdkApp.SlashingKeeper = slashingkeeper.NewKeeper(
-		encodingConfig.Codec,
-		encodingConfig.LegacyAmino,
-		runtime.NewKVStoreService(keys[slashingtypes.StoreKey]),
+		sdkApp.EncodingConfig.Codec,
+		sdkApp.EncodingConfig.LegacyAmino,
+		runtime.NewKVStoreService(sdkApp.Keys[slashingtypes.StoreKey]),
 		sdkApp.StakingKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	app.FeeGrantKeeper = feegrantkeeper.NewKeeper(
-		encodingConfig.Codec,
-		runtime.NewKVStoreService(keys[feegrant.StoreKey]),
+		sdkApp.EncodingConfig.Codec,
+		runtime.NewKVStoreService(sdkApp.Keys[feegrant.StoreKey]),
 		sdkApp.AccountKeeper,
 	)
 
@@ -377,8 +168,8 @@ func NewSimApp(
 	)
 
 	app.AuthzKeeper = authzkeeper.NewKeeper(
-		runtime.NewKVStoreService(keys[authzkeeper.StoreKey]),
-		encodingConfig.Codec,
+		runtime.NewKVStoreService(sdkApp.Keys[authzkeeper.StoreKey]),
+		sdkApp.EncodingConfig.Codec,
 		sdkApp.MsgServiceRouter(),
 		sdkApp.AccountKeeper,
 	)
@@ -392,8 +183,8 @@ func NewSimApp(
 	// set the governance module account as the authority for conducting upgrades
 	sdkApp.UpgradeKeeper = upgradekeeper.NewKeeper(
 		skipUpgradeHeights,
-		runtime.NewKVStoreService(keys[upgradetypes.StoreKey]),
-		encodingConfig.Codec,
+		runtime.NewKVStoreService(sdkApp.Keys[upgradetypes.StoreKey]),
+		sdkApp.EncodingConfig.Codec,
 		homePath,
 		sdkApp.BaseApp,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
@@ -411,8 +202,8 @@ func NewSimApp(
 		govConfig.MaxMetadataLen = 10000
 	*/
 	govKeeper := govkeeper.NewKeeper(
-		encodingConfig.Codec,
-		runtime.NewKVStoreService(keys[govtypes.StoreKey]),
+		sdkApp.EncodingConfig.Codec,
+		runtime.NewKVStoreService(sdkApp.Keys[govtypes.StoreKey]),
 		sdkApp.AccountKeeper,
 		sdkApp.BankKeeper,
 		sdkApp.StakingKeeper,
@@ -428,14 +219,14 @@ func NewSimApp(
 
 	sdkApp.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-			// register the governance hooks
+		// register the governance hooks
 		),
 	)
 
 	// create evidence keeper with router
 	evidenceKeeper := evidencekeeper.NewKeeper(
-		encodingConfig.Codec,
-		runtime.NewKVStoreService(keys[evidencetypes.StoreKey]),
+		sdkApp.EncodingConfig.Codec,
+		runtime.NewKVStoreService(sdkApp.Keys[evidencetypes.StoreKey]),
 		sdkApp.StakingKeeper,
 		sdkApp.SlashingKeeper,
 		sdkApp.AccountKeeper.AddressCodec(),
@@ -445,13 +236,13 @@ func NewSimApp(
 	sdkApp.EvidenceKeeper = *evidenceKeeper
 
 	app.EpochsKeeper = epochskeeper.NewKeeper(
-		runtime.NewKVStoreService(keys[epochstypes.StoreKey]),
-		encodingConfig.Codec,
+		runtime.NewKVStoreService(sdkApp.Keys[epochstypes.StoreKey]),
+		sdkApp.EncodingConfig.Codec,
 	)
 
 	app.EpochsKeeper.SetHooks(
 		epochstypes.NewMultiEpochHooks(
-			// insert epoch hooks receivers here
+		// insert epoch hooks receivers here
 		),
 	)
 
@@ -462,28 +253,28 @@ func NewSimApp(
 	sdkApp.ModuleManager = module.NewManager(
 		genutil.NewAppModule(
 			sdkApp.AccountKeeper, sdkApp.StakingKeeper, sdkApp,
-			txConfig,
+			sdkApp.TxConfig(),
 		),
-		auth.NewAppModule(encodingConfig.Codec, sdkApp.AccountKeeper, authsims.RandomGenesisAccounts, nil),
+		auth.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.AccountKeeper, authsims.RandomGenesisAccounts, nil),
 		vesting.NewAppModule(sdkApp.AccountKeeper, sdkApp.BankKeeper),
-		bank.NewAppModule(encodingConfig.Codec, sdkApp.BankKeeper, sdkApp.AccountKeeper, nil),
-		feegrantmodule.NewAppModule(encodingConfig.Codec, sdkApp.AccountKeeper, sdkApp.BankKeeper, app.FeeGrantKeeper, sdkApp.encodingConfig.InterfaceRegistry),
-		gov.NewAppModule(encodingConfig.Codec, &sdkApp.GovKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, nil),
-		mint.NewAppModule(encodingConfig.Codec, sdkApp.MintKeeper, sdkApp.AccountKeeper, nil, nil),
-		slashing.NewAppModule(encodingConfig.Codec, sdkApp.SlashingKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, sdkApp.StakingKeeper, nil, app.encodingConfig.InterfaceRegistry),
-		distr.NewAppModule(encodingConfig.Codec, sdkApp.DistrKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, sdkApp.StakingKeeper, nil),
-		staking.NewAppModule(encodingConfig.Codec, sdkApp.StakingKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, nil),
+		bank.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.BankKeeper, sdkApp.AccountKeeper, nil),
+		feegrantmodule.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.AccountKeeper, sdkApp.BankKeeper, app.FeeGrantKeeper, sdkApp.EncodingConfig.InterfaceRegistry),
+		gov.NewAppModule(sdkApp.EncodingConfig.Codec, &sdkApp.GovKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, nil),
+		mint.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.MintKeeper, sdkApp.AccountKeeper, nil, nil),
+		slashing.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.SlashingKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, sdkApp.StakingKeeper, nil, app.EncodingConfig.InterfaceRegistry),
+		distr.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.DistrKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, sdkApp.StakingKeeper, nil),
+		staking.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.StakingKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, nil),
 		upgrade.NewAppModule(sdkApp.UpgradeKeeper, sdkApp.AccountKeeper.AddressCodec()),
 		evidence.NewAppModule(sdkApp.EvidenceKeeper),
-		authzmodule.NewAppModule(encodingConfig.Codec, app.AuthzKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, sdkApp.encodingConfig.InterfaceRegistry),
-		consensus.NewAppModule(encodingConfig.Codec, sdkApp.ConsensusParamsKeeper),
+		authzmodule.NewAppModule(sdkApp.EncodingConfig.Codec, app.AuthzKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, sdkApp.EncodingConfig.InterfaceRegistry),
+		consensus.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.ConsensusParamsKeeper),
 		epochs.NewAppModule(app.EpochsKeeper),
 		protocolpool.NewAppModule(app.ProtocolPoolKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper),
 	)
 
 	// BasicModuleManager defines the module BasicManager is in charge of setting up basic,
 	// non-dependent module elements, such as codec registration and genesis verification.
-	// By default it is composed of all the module from the module manager.
+	// By default, it is composed of all the module from the module manager.
 	// Additionally, app module basics can be overwritten by passing them as argument.
 	sdkApp.BasicModuleManager = module.NewBasicManagerFromManager(
 		sdkApp.ModuleManager,
@@ -493,8 +284,8 @@ func NewSimApp(
 				[]govclient.ProposalHandler{},
 			),
 		})
-	sdkApp.BasicModuleManager.RegisterLegacyAminoCodec(sdkApp.encodingConfig.LegacyAmino)
-	sdkApp.BasicModuleManager.RegisterInterfaces(sdkApp.encodingConfig.InterfaceRegistry)
+	sdkApp.BasicModuleManager.RegisterLegacyAminoCodec(sdkApp.EncodingConfig.LegacyAmino)
+	sdkApp.BasicModuleManager.RegisterInterfaces(sdkApp.EncodingConfig.InterfaceRegistry)
 
 	// NOTE: upgrade module is required to be prioritized
 	sdkApp.ModuleManager.SetOrderPreBlockers(
@@ -571,14 +362,14 @@ func NewSimApp(
 	// Uncomment if you want to set a custom migration order here.
 	// app.ModuleManager.SetOrderMigrations(custom order)
 
-	sdkApp.configurator = module.NewConfigurator(sdkApp.encodingConfig.Codec, sdkApp.MsgServiceRouter(), sdkApp.GRPCQueryRouter())
-	err = sdkApp.ModuleManager.RegisterServices(sdkApp.configurator)
+	sdkApp.configurator = module.NewConfigurator(sdkApp.EncodingConfig.Codec, sdkApp.MsgServiceRouter(), sdkApp.GRPCQueryRouter())
+	err := sdkApp.ModuleManager.RegisterServices(sdkApp.configurator)
 	if err != nil {
 		panic(err)
 	}
 
 	// RegisterUpgradeHandlers is used for registering any on-chain upgrades.
-	// Make sure it's called after `app.ModuleManager` and `app.configurator` are set.
+	// Make sure it's called after `app.ModuleManager` and `app.Configurator` are set.
 	app.RegisterUpgradeHandlers()
 
 	autocliv1.RegisterQueryServer(sdkApp.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(sdkApp.ModuleManager.Modules))
@@ -597,21 +388,21 @@ func NewSimApp(
 	// NOTE: this is not required apps that don't use the simulator for fuzz testing
 	// transactions
 	overrideModules := map[string]module.AppModuleSimulation{
-		authtypes.ModuleName: auth.NewAppModule(sdkApp.encodingConfig.Codec, sdkApp.AccountKeeper, authsims.RandomGenesisAccounts, nil),
+		authtypes.ModuleName: auth.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.AccountKeeper, authsims.RandomGenesisAccounts, nil),
 	}
-	sdkApp.sm = module.NewSimulationManagerFromAppModules(sdkApp.ModuleManager.Modules, overrideModules)
+	sdkApp.simulationManager = module.NewSimulationManagerFromAppModules(sdkApp.ModuleManager.Modules, overrideModules)
 
-	sdkApp.sm.RegisterStoreDecoders()
+	sdkApp.simulationManager.RegisterStoreDecoders()
 
 	// initialize stores
-	sdkApp.MountKVStores(keys)
+	sdkApp.MountKVStores(sdkApp.Keys)
 
 	// initialize BaseApp
 	sdkApp.SetInitChainer(app.InitChainer)
 	sdkApp.SetPreBlocker(app.PreBlocker)
 	sdkApp.SetBeginBlocker(app.BeginBlocker)
 	sdkApp.SetEndBlocker(app.EndBlocker)
-	app.setAnteHandler(txConfig)
+	app.setAnteHandler(sdkApp.TxConfig())
 
 	// In v0.46, the SDK introduces _postHandlers_. PostHandlers are like
 	// antehandlers, but are run _after_ the `runMsgs` execution. They are also
@@ -669,159 +460,6 @@ func (app *SimApp) setPostHandler() {
 	}
 
 	app.SetPostHandler(postHandler)
-}
-
-// Name returns the name of the App
-func (app *SimApp) Name() string { return app.BaseApp.Name() }
-
-// PreBlocker application updates every pre block
-func (app *SimApp) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
-	return app.ModuleManager.PreBlock(ctx)
-}
-
-// BeginBlocker application updates every begin block
-func (app *SimApp) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
-	return app.ModuleManager.BeginBlock(ctx)
-}
-
-// EndBlocker application updates every end block
-func (app *SimApp) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
-	return app.ModuleManager.EndBlock(ctx)
-}
-
-func (app *SimApp) Configurator() module.Configurator {
-	return app.configurator
-}
-
-// InitChainer application update at chain initialization
-func (app *SimApp) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
-	var genesisState GenesisState
-	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
-		panic(err)
-	}
-	_ = app.UpgradeKeeper.SetModuleVersionMap(ctx, app.ModuleManager.GetVersionMap())
-	return app.ModuleManager.InitGenesis(ctx, app.encodingConfig.Codec, genesisState)
-}
-
-// LoadHeight loads a particular height
-func (app *SimApp) LoadHeight(height int64) error {
-	return app.LoadVersion(height)
-}
-
-// LegacyAmino returns SimApp's amino codec.
-//
-// NOTE: This is solely to be used for testing purposes as it may be desirable
-// for modules to register their own custom testing types.
-func (app *SimApp) LegacyAmino() *codec.LegacyAmino {
-	return app.encodingConfig.LegacyAmino
-}
-
-// AppCodec returns SimApp's app codec.
-//
-// NOTE: This is solely to be used for testing purposes as it may be desirable
-// for modules to register their own custom testing types.
-func (app *SimApp) AppCodec() codec.Codec {
-	return app.encodingConfig.Codec
-}
-
-// InterfaceRegistry returns SimApp's InterfaceRegistry
-func (app *SimApp) InterfaceRegistry() types.InterfaceRegistry {
-	return app.encodingConfig.InterfaceRegistry
-}
-
-// TxConfig returns SimApp's TxConfig
-func (app *SimApp) TxConfig() client.TxConfig {
-	return app.encodingConfig.TxConfig
-}
-
-// AutoCliOpts returns the autocli options for the app.
-func (app *SimApp) AutoCliOpts() autocli.AppOptions {
-	modules := make(map[string]appmodule.AppModule, 0)
-	for _, m := range app.ModuleManager.Modules {
-		if moduleWithName, ok := m.(module.HasName); ok {
-			moduleName := moduleWithName.Name()
-			if appModule, ok := moduleWithName.(appmodule.AppModule); ok {
-				modules[moduleName] = appModule
-			}
-		}
-	}
-
-	return autocli.AppOptions{
-		Modules:               modules,
-		ModuleOptions:         runtimeservices.ExtractAutoCLIOptions(app.ModuleManager.Modules),
-		AddressCodec:          authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
-		ValidatorAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
-		ConsensusAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
-	}
-}
-
-// DefaultGenesis returns a default genesis from the registered AppModuleBasic's.
-func (app *SimApp) DefaultGenesis() map[string]json.RawMessage {
-	return app.BasicModuleManager.DefaultGenesis(app.encodingConfig.Codec)
-}
-
-// GetKey returns the KVStoreKey for the provided store key.
-//
-// NOTE: This is solely to be used for testing purposes.
-func (app *SimApp) GetKey(storeKey string) *storetypes.KVStoreKey {
-	return app.keys[storeKey]
-}
-
-// GetStoreKeys returns all the stored store keys.
-func (app *SimApp) GetStoreKeys() []storetypes.StoreKey {
-	keys := make([]storetypes.StoreKey, 0, len(app.keys))
-	for _, key := range app.keys {
-		keys = append(keys, key)
-	}
-
-	return keys
-}
-
-// SimulationManager implements the SimulationApp interface
-func (app *SimApp) SimulationManager() *module.SimulationManager {
-	return app.sm
-}
-
-// RegisterAPIRoutes registers all application module routes with the provided
-// API server.
-func (app *SimApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
-	clientCtx := apiSvr.ClientCtx
-	// Register new tx routes from grpc-gateway.
-	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
-
-	// Register new CometBFT queries routes from grpc-gateway.
-	cmtservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
-
-	// Register node gRPC service for grpc-gateway.
-	nodeservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
-
-	// Register grpc-gateway routes for all modules.
-	app.BasicModuleManager.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
-
-	// register swagger API from root so that other applications can override easily
-	if err := server.RegisterSwaggerAPI(apiSvr.ClientCtx, apiSvr.Router, apiConfig.Swagger); err != nil {
-		panic(err)
-	}
-}
-
-// RegisterTxService implements the Application.RegisterTxService method.
-func (app *SimApp) RegisterTxService(clientCtx client.Context) {
-	authtx.RegisterTxService(app.GRPCQueryRouter(), clientCtx, app.Simulate, app.encodingConfig.InterfaceRegistry)
-}
-
-// RegisterTendermintService implements the Application.RegisterTendermintService method.
-func (app *SimApp) RegisterTendermintService(clientCtx client.Context) {
-	cmtApp := server.NewCometABCIWrapper(app)
-	cmtservice.RegisterTendermintService(
-		clientCtx,
-		app.GRPCQueryRouter(),
-		app.encodingConfig.InterfaceRegistry,
-		cmtApp.Query,
-	)
-}
-
-func (app *SimApp) RegisterNodeService(clientCtx client.Context, cfg config.Config) {
-	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter(), cfg)
 }
 
 // GetMaccPerms returns a copy of the module account permissions

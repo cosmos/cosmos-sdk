@@ -177,7 +177,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	interBlockCachingAppFactory := func(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) *SimApp {
 		if FlagEnableStreamingValue {
 			m := map[string]any{
-				"streaming.abci.keys":             []string{"*"},
+				"streaming.abci.Keys":             []string{"*"},
 				"streaming.abci.plugin":           "abci_v1",
 				"streaming.abci.stop-node-on-err": true,
 			}

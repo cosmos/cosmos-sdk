@@ -102,7 +102,7 @@ func TestRunMigrations(t *testing.T) {
 	logger := log.NewTestLogger(t)
 	app := NewSimApp(logger.With("instance", "simapp"), db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
 
-	// Create a new baseapp and configurator for the purpose of this test.
+	// Create a new baseapp and Configurator for the purpose of this test.
 	bApp := baseapp.NewBaseApp(app.Name(), logger.With("instance", "baseapp"), db, app.TxConfig().TxDecoder())
 	bApp.SetCommitMultiStoreTracer(nil)
 	bApp.SetInterfaceRegistry(app.InterfaceRegistry())

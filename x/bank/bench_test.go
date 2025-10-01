@@ -92,7 +92,7 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 
 	// Run this with a profiler, so its easy to distinguish what time comes from
 	// Committing, and what time comes from Check/Deliver Tx.
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _, err := baseApp.SimCheck(txEncoder, txs[i])
 		if err != nil {
 			panic(fmt.Errorf("failed to simulate tx: %w", err))
@@ -150,7 +150,7 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 
 	// Run this with a profiler, so its easy to distinguish what time comes from
 	// Committing, and what time comes from Check/Deliver Tx.
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _, err := baseApp.SimCheck(txEncoder, txs[i])
 		if err != nil {
 			panic(fmt.Errorf("failed to simulate tx: %w", err))

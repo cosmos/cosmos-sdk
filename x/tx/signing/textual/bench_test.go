@@ -32,7 +32,7 @@ func BenchmarkIntValueRendererFormat(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for _, value := range intValues {
 			if _, err := ivr.Format(ctx, value); err != nil {
 				b.Fatal(err)
@@ -59,7 +59,7 @@ func BenchmarkDecimalValueRendererFormat(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for _, value := range decimalValues {
 			if _, err := dvr.Format(ctx, value); err != nil {
 				b.Fatal(err)
@@ -86,7 +86,7 @@ func BenchmarkBytesValueRendererFormat(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for _, value := range byteValues {
 			if _, err := bvr.Format(ctx, value); err != nil {
 				b.Fatal(err)
@@ -131,7 +131,7 @@ func BenchmarkMessageValueRenderer_parseRepeated(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for _, rs := range rsL {
 			sink, _ = rs.rend.Parse(ctx, rs.screens)
 		}

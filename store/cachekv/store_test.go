@@ -674,7 +674,7 @@ func BenchmarkCacheKVStoreGetNoKeyFound(b *testing.B) {
 	st := newCacheKVStore()
 	b.ResetTimer()
 	// assumes b.N < 2**24
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		st.Get([]byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)})
 	}
 }
@@ -682,13 +682,13 @@ func BenchmarkCacheKVStoreGetNoKeyFound(b *testing.B) {
 func BenchmarkCacheKVStoreGetKeyFound(b *testing.B) {
 	b.ReportAllocs()
 	st := newCacheKVStore()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		arr := []byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)}
 		st.Set(arr, arr)
 	}
 	b.ResetTimer()
 	// assumes b.N < 2**24
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		st.Get([]byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)})
 	}
 }

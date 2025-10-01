@@ -29,7 +29,7 @@ func BenchmarkAccountMapperGetAccountFound(b *testing.B) {
 	ctx := app.NewContext(false)
 
 	// assumes b.N < 2**24
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		arr := []byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)}
 		addr := sdk.AccAddress(arr)
 		acc := accountKeeper.NewAccountWithAddress(ctx, addr)
@@ -37,7 +37,7 @@ func BenchmarkAccountMapperGetAccountFound(b *testing.B) {
 	}
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		arr := []byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)}
 		accountKeeper.GetAccount(ctx, sdk.AccAddress(arr))
 	}
@@ -58,7 +58,7 @@ func BenchmarkAccountMapperSetAccount(b *testing.B) {
 	b.ResetTimer()
 
 	// assumes b.N < 2**24
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		arr := []byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)}
 		addr := sdk.AccAddress(arr)
 		acc := accountKeeper.NewAccountWithAddress(ctx, addr)

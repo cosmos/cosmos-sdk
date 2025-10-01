@@ -14,7 +14,7 @@ func BenchmarkContext_KVStore(b *testing.B) {
 	ctx := testutil.DefaultContext(key, types.NewTransientStoreKey("transient_"+b.Name()))
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_ = ctx.KVStore(key)
 	}
 }
@@ -25,7 +25,7 @@ func BenchmarkContext_TransientStore(b *testing.B) {
 	ctx := testutil.DefaultContext(key, types.NewTransientStoreKey("transient_"+b.Name()))
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_ = ctx.TransientStore(key)
 	}
 }
@@ -36,7 +36,7 @@ func BenchmarkContext_CacheContext(b *testing.B) {
 	ctx := testutil.DefaultContext(key, types.NewTransientStoreKey("transient_"+b.Name()))
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _ = ctx.CacheContext()
 	}
 }

@@ -21,7 +21,7 @@ func BenchmarkAccAddressString(b *testing.B) {
 	}
 	a2 := pk.Address()
 	var str, str2 string
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		str = a.String()
 		str2 = a2.String()
 	}
@@ -37,7 +37,7 @@ func BenchmarkMarshalPubKey(b *testing.B) {
 
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		b.StopTimer()
 		rng.Read(pk.Key)
 		b.StartTimer()
@@ -55,7 +55,7 @@ func BenchmarkGetPubKeyFromBech32(b *testing.B) {
 
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		b.StopTimer()
 		rng.Read(pk.Key)
 

@@ -258,14 +258,14 @@ var (
 
 func DefaultSDKAppConfig(
 	name string,
-	appOpts servertypes.AppOptions,
-	baseAppOptions ...func(*baseapp.BaseApp),
+	opts servertypes.AppOptions,
 ) SDKAppConfig {
+
 	return SDKAppConfig{
 		AppName: name,
 
-		AppOpts:          appOpts,
-		BaseAppOptions:   baseAppOptions,
+		AppOpts:          opts,
+		BaseAppOptions:   server.DefaultBaseappOptions(opts),
 		WithProtocolPool: true,
 		WithAuthz:        true,
 		WithEpochs:       true,
@@ -273,7 +273,7 @@ func DefaultSDKAppConfig(
 		WithMint:         true,
 
 		WithStreamingServices: false,
-		WithUnorderedTx:       false,
+		WithUnorderedTx:       true,
 
 		OrderPreBlockers:   defaultOrderPreBlockers,
 		OrderBeginBlockers: defaultOrderBeginBlockers,
@@ -566,7 +566,7 @@ func NewSDKApp(
 
 	sdkApp.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-		// register the governance hooks
+			// register the governance hooks
 		),
 	)
 
@@ -588,7 +588,7 @@ func NewSDKApp(
 
 	sdkApp.EpochsKeeper.SetHooks(
 		epochstypes.NewMultiEpochHooks(
-		// insert epoch hooks receivers here
+			// insert epoch hooks receivers here
 		),
 	)
 

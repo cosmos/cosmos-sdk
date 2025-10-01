@@ -193,11 +193,12 @@ func newApp(
 	traceStore io.Writer,
 	appOpts servertypes.AppOptions,
 ) servertypes.Application {
-	baseappOptions := server.DefaultBaseappOptions(appOpts)
 	return simapp.NewSimApp(
-		logger, db, traceStore, true,
+		logger,
+		db,
+		traceStore,
+		true,
 		appOpts,
-		baseappOptions...,
 	)
 }
 

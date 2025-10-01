@@ -3,7 +3,6 @@ package simapp
 import (
 	"fmt"
 	"io"
-	"maps"
 
 	dbm "github.com/cosmos/cosmos-db"
 
@@ -15,21 +14,12 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
 const appName = "SimApp"
 
-var (
-	// DefaultNodeHome default home directories for the application daemon
-	DefaultNodeHome string
-
-	// module account permissions
-	maccPerms = map[string][]string{
-		protocolpooltypes.ModuleName:                nil,
-		protocolpooltypes.ProtocolPoolEscrowAccount: nil,
-	}
-)
+// DefaultNodeHome default home directories for the application daemon
+var DefaultNodeHome string
 
 var (
 	_ runtime.AppI            = (*SimApp)(nil)
@@ -60,9 +50,8 @@ func NewSimApp(
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *SimApp {
-	maps.Copy(maccPerms, defaultMaccPerms)
-
 	sdkAppConfig := DefaultSDKAppConfig(appName, appOpts, baseAppOptions...)
+	sdkAppConfig.WithEpochs = true
 
 	sdkApp := NewSDKApp(logger, db, traceStore, sdkAppConfig)
 
@@ -70,8 +59,17 @@ func NewSimApp(
 		SDKApp: sdkApp,
 	}
 
-	// Uncomment if you want to set a custom migration order here.
-	// app.ModuleManager.SetOrderMigrations(custom order)
+	// set up keeper ...
+	// app.AddModule( // new module )
+	// add keeper
+	// add module to module manager
+	// update keys
+	//
+
+	err := app.LoadModules()
+	if err != nil {
+		panic(err)
+	}
 
 	// RegisterUpgradeHandlers is used for registering any on-chain upgrades.
 	app.RegisterUpgradeHandlers()
@@ -89,7 +87,7 @@ func NewSimApp(
 //
 // NOTE: This is solely to be used for testing purposes.
 func GetMaccPerms() map[string][]string {
-	return maps.Clone(maccPerms)
+	return nil // TODO fix
 }
 
 // BlockedAddresses returns all the app's blocked account addresses.

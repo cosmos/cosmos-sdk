@@ -3,6 +3,8 @@ package simapp
 import (
 	"encoding/json"
 	"io"
+	"maps"
+	"slices"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -95,12 +97,14 @@ import (
 )
 
 var defaultMaccPerms = map[string][]string{
-	authtypes.FeeCollectorName:     nil,
-	distrtypes.ModuleName:          nil,
-	minttypes.ModuleName:           {authtypes.Minter},
-	stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
-	stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
-	govtypes.ModuleName:            {authtypes.Burner},
+	authtypes.FeeCollectorName:                  nil,
+	distrtypes.ModuleName:                       nil,
+	minttypes.ModuleName:                        {authtypes.Minter},
+	stakingtypes.BondedPoolName:                 {authtypes.Burner, authtypes.Staking},
+	stakingtypes.NotBondedPoolName:              {authtypes.Burner, authtypes.Staking},
+	govtypes.ModuleName:                         {authtypes.Burner},
+	protocolpooltypes.ModuleName:                nil,
+	protocolpooltypes.ProtocolPoolEscrowAccount: nil,
 }
 
 type EncodingConfig struct {
@@ -149,8 +153,7 @@ type SDKAppConfig struct {
 	WithFeeGrant     bool
 	WithMint         bool
 
-	WithStreamingServices bool
-	WithUnorderedTx       bool
+	WithUnorderedTx bool
 
 	Keys               []string
 	OrderPreBlockers   []string
@@ -158,6 +161,8 @@ type SDKAppConfig struct {
 	OrderEndBlockers   []string
 	OrderInitGenesis   []string
 	OrderExportGenesis []string
+
+	ModuleAccountPerms map[string][]string
 
 	Mempool mempool.Mempool
 
@@ -291,8 +296,9 @@ func DefaultSDKAppConfig(
 		WithFeeGrant:     true,
 		WithMint:         true,
 
-		WithStreamingServices: false,
-		WithUnorderedTx:       true,
+		WithUnorderedTx: true,
+
+		ModuleAccountPerms: defaultMaccPerms,
 
 		OrderPreBlockers:   defaultOrderPreBlockers,
 		OrderBeginBlockers: defaultOrderBeginBlockers,
@@ -315,8 +321,8 @@ type SDKApp struct {
 	*baseapp.BaseApp
 	EncodingConfig EncodingConfig
 
-	// Keys to access the substores
-	Keys map[string]*storetypes.KVStoreKey
+	// StoreKeys to access the substores
+	StoreKeys map[string]*storetypes.KVStoreKey
 
 	// the module manager
 	ModuleManager      *module.Manager
@@ -345,6 +351,17 @@ type SDKApp struct {
 	AuthzKeeper        *authzkeeper.Keeper
 	EpochsKeeper       *epochskeeper.Keeper
 	ProtocolPoolKeeper *protocolpoolkeeper.Keeper
+
+	moduleAccountPerms map[string][]string
+	keys               []string
+	orderPreBlockers   []string
+	orderBeginBlockers []string
+	orderEndBlockers   []string
+	orderInitGenesis   []string
+	orderExportGenesis []string
+
+	requiredModules []module.AppModule
+	optionalModules []module.AppModule
 }
 
 func initBaseApp(
@@ -383,37 +400,123 @@ func initBaseApp(
 	return bApp
 }
 
+func processOptionalModules(appConfig SDKAppConfig) {
+	checkForModuleInclusion := func(moduleName string) func(string) bool {
+		return func(s string) bool {
+			return moduleName == s
+		}
+	}
+
+	deleteModuleFromOrdering := func(moduleName string) {
+		defaultOrderPreBlockers = slices.DeleteFunc(defaultOrderPreBlockers, checkForModuleInclusion(moduleName))
+		defaultOrderBeginBlockers = slices.DeleteFunc(defaultOrderBeginBlockers, checkForModuleInclusion(moduleName))
+		defaultOrderEndBlockers = slices.DeleteFunc(defaultOrderEndBlockers, checkForModuleInclusion(moduleName))
+		defaultOrderInitGenesis = slices.DeleteFunc(defaultOrderInitGenesis, checkForModuleInclusion(moduleName))
+		defaultOrderExportGenesis = slices.DeleteFunc(defaultOrderExportGenesis, checkForModuleInclusion(moduleName))
+	}
+
+	if !appConfig.WithProtocolPool {
+		// remove from macc permissions
+		maps.DeleteFunc(appConfig.ModuleAccountPerms, func(s string, _ []string) bool {
+			switch s {
+			case protocolpooltypes.ModuleName:
+				return true
+			case protocolpooltypes.ProtocolPoolEscrowAccount:
+				return true
+			default:
+				return false
+			}
+		})
+
+		deleteModuleFromOrdering(protocolpooltypes.ModuleName)
+	}
+
+	if !appConfig.WithAuthz {
+		maps.DeleteFunc(appConfig.ModuleAccountPerms, func(s string, _ []string) bool {
+			switch s {
+			case authz.ModuleName:
+				return true
+			default:
+				return false
+			}
+		})
+
+		deleteModuleFromOrdering(authz.ModuleName)
+	}
+
+	if !appConfig.WithFeeGrant {
+		maps.DeleteFunc(appConfig.ModuleAccountPerms, func(s string, _ []string) bool {
+			switch s {
+			case feegrant.ModuleName:
+				return true
+			default:
+				return false
+			}
+		})
+
+		deleteModuleFromOrdering(feegrant.ModuleName)
+	}
+
+	if !appConfig.WithMint {
+		maps.DeleteFunc(appConfig.ModuleAccountPerms, func(s string, _ []string) bool {
+			switch s {
+			case minttypes.ModuleName:
+				return true
+			default:
+				return false
+			}
+		})
+	}
+
+	if !appConfig.WithEpochs {
+		maps.DeleteFunc(appConfig.ModuleAccountPerms, func(s string, _ []string) bool {
+			switch s {
+			case epochstypes.ModuleName:
+				return true
+			default:
+				return false
+			}
+		})
+
+		deleteModuleFromOrdering(epochstypes.ModuleName)
+	}
+}
+
 func NewSDKApp(
 	logger log.Logger,
 	db dbm.DB,
 	traceStore io.Writer,
 	appConfig SDKAppConfig,
 ) *SDKApp {
+	processOptionalModules(appConfig)
+
 	encodingConfig := NewEncodingConfigFromOptions(appConfig.InterfaceRegistryOptions)
 	bApp := initBaseApp(logger, db, traceStore, encodingConfig, appConfig)
 
-	keys := storetypes.NewKVStoreKeys(
+	storeKeys := storetypes.NewKVStoreKeys(
 		defaultKeys...,
 	)
 
-	// register streaming services
-	if appConfig.WithStreamingServices {
-		if err := bApp.RegisterStreamingServices(appConfig.AppOpts, keys); err != nil {
-			panic(err)
-		}
+	sdkApp := &SDKApp{
+		cfg:                appConfig,
+		BaseApp:            bApp,
+		EncodingConfig:     encodingConfig,
+		StoreKeys:          storeKeys,
+		keys:               appConfig.Keys,
+		orderPreBlockers:   appConfig.OrderPreBlockers,
+		orderBeginBlockers: appConfig.OrderBeginBlockers,
+		orderEndBlockers:   appConfig.OrderEndBlockers,
+		orderInitGenesis:   appConfig.OrderInitGenesis,
+		orderExportGenesis: appConfig.OrderExportGenesis,
+		moduleAccountPerms: appConfig.ModuleAccountPerms,
 	}
 
-	sdkApp := &SDKApp{
-		cfg:            appConfig,
-		BaseApp:        bApp,
-		EncodingConfig: encodingConfig,
-		Keys:           keys,
-	}
+	var optionalModules []module.AppModule
 
 	// set the BaseApp's parameter store
 	sdkApp.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
 		sdkApp.EncodingConfig.Codec,
-		runtime.NewKVStoreService(sdkApp.Keys[consensusparamtypes.StoreKey]),
+		runtime.NewKVStoreService(sdkApp.StoreKeys[consensusparamtypes.StoreKey]),
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		runtime.EventService{},
 	)
@@ -422,9 +525,9 @@ func NewSDKApp(
 	// add keepers
 	sdkApp.AccountKeeper = authkeeper.NewAccountKeeper(
 		sdkApp.EncodingConfig.Codec,
-		runtime.NewKVStoreService(sdkApp.Keys[authtypes.StoreKey]),
+		runtime.NewKVStoreService(sdkApp.StoreKeys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
-		maccPerms,
+		defaultMaccPerms,
 		authcodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
@@ -433,7 +536,7 @@ func NewSDKApp(
 
 	sdkApp.BankKeeper = bankkeeper.NewBaseKeeper(
 		sdkApp.EncodingConfig.Codec,
-		runtime.NewKVStoreService(sdkApp.Keys[banktypes.StoreKey]),
+		runtime.NewKVStoreService(sdkApp.StoreKeys[banktypes.StoreKey]),
 		sdkApp.AccountKeeper,
 		BlockedAddresses(),
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
@@ -458,59 +561,71 @@ func NewSDKApp(
 
 	sdkApp.StakingKeeper = stakingkeeper.NewKeeper(
 		sdkApp.EncodingConfig.Codec,
-		runtime.NewKVStoreService(sdkApp.Keys[stakingtypes.StoreKey]),
+		runtime.NewKVStoreService(sdkApp.StoreKeys[stakingtypes.StoreKey]),
 		sdkApp.AccountKeeper,
 		sdkApp.BankKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		authcodec.NewBech32Codec(sdk.Bech32PrefixValAddr),
 		authcodec.NewBech32Codec(sdk.Bech32PrefixConsAddr),
 	)
-	mintKeeper := mintkeeper.NewKeeper(
-		sdkApp.EncodingConfig.Codec,
-		runtime.NewKVStoreService(sdkApp.Keys[minttypes.StoreKey]),
-		sdkApp.StakingKeeper,
-		sdkApp.AccountKeeper,
-		sdkApp.BankKeeper,
-		authtypes.FeeCollectorName,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		// mintkeeper.WithMintFn(mintkeeper.DefaultMintFn(minttypes.DefaultInflationCalculationFn)), custom mintFn can be added here
-	)
-	sdkApp.MintKeeper = &mintKeeper
 
-	protocolPoolKeeper := protocolpoolkeeper.NewKeeper(
-		sdkApp.EncodingConfig.Codec,
-		runtime.NewKVStoreService(sdkApp.Keys[protocolpooltypes.StoreKey]),
-		sdkApp.AccountKeeper,
-		sdkApp.BankKeeper,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-	)
-	sdkApp.ProtocolPoolKeeper = &protocolPoolKeeper
+	if appConfig.WithMint {
+		mintKeeper := mintkeeper.NewKeeper(
+			sdkApp.EncodingConfig.Codec,
+			runtime.NewKVStoreService(sdkApp.StoreKeys[minttypes.StoreKey]),
+			sdkApp.StakingKeeper,
+			sdkApp.AccountKeeper,
+			sdkApp.BankKeeper,
+			authtypes.FeeCollectorName,
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			// mintkeeper.WithMintFn(mintkeeper.DefaultMintFn(minttypes.DefaultInflationCalculationFn)), custom mintFn can be added here
+		)
+		sdkApp.MintKeeper = &mintKeeper
+		optionalModules = append(optionalModules, mint.NewAppModule(sdkApp.EncodingConfig.Codec, *sdkApp.MintKeeper, sdkApp.AccountKeeper, nil, nil))
+	}
+
+	var distrOpts []distrkeeper.InitOption
+	if appConfig.WithProtocolPool {
+		protocolPoolKeeper := protocolpoolkeeper.NewKeeper(
+			sdkApp.EncodingConfig.Codec,
+			runtime.NewKVStoreService(sdkApp.StoreKeys[protocolpooltypes.StoreKey]),
+			sdkApp.AccountKeeper,
+			sdkApp.BankKeeper,
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		)
+		sdkApp.ProtocolPoolKeeper = &protocolPoolKeeper
+		distrOpts = append(distrOpts, distrkeeper.WithExternalCommunityPool(sdkApp.ProtocolPoolKeeper))
+		optionalModules = append(optionalModules, protocolpool.NewAppModule(*sdkApp.ProtocolPoolKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper))
+	}
 
 	sdkApp.DistrKeeper = distrkeeper.NewKeeper(
 		sdkApp.EncodingConfig.Codec,
-		runtime.NewKVStoreService(sdkApp.Keys[distrtypes.StoreKey]),
+		runtime.NewKVStoreService(sdkApp.StoreKeys[distrtypes.StoreKey]),
 		sdkApp.AccountKeeper,
 		sdkApp.BankKeeper,
 		sdkApp.StakingKeeper,
 		authtypes.FeeCollectorName,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		distrkeeper.WithExternalCommunityPool(sdkApp.ProtocolPoolKeeper),
+		distrOpts...,
 	)
 
 	sdkApp.SlashingKeeper = slashingkeeper.NewKeeper(
 		sdkApp.EncodingConfig.Codec,
 		sdkApp.EncodingConfig.LegacyAmino,
-		runtime.NewKVStoreService(sdkApp.Keys[slashingtypes.StoreKey]),
+		runtime.NewKVStoreService(sdkApp.StoreKeys[slashingtypes.StoreKey]),
 		sdkApp.StakingKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
-	feeGrantKeeper := feegrantkeeper.NewKeeper(
-		sdkApp.EncodingConfig.Codec,
-		runtime.NewKVStoreService(sdkApp.Keys[feegrant.StoreKey]),
-		sdkApp.AccountKeeper,
-	)
-	sdkApp.FeeGrantKeeper = &feeGrantKeeper
+	if appConfig.WithFeeGrant {
+		feeGrantKeeper := feegrantkeeper.NewKeeper(
+			sdkApp.EncodingConfig.Codec,
+			runtime.NewKVStoreService(sdkApp.StoreKeys[feegrant.StoreKey]),
+			sdkApp.AccountKeeper,
+		)
+		sdkApp.FeeGrantKeeper = &feeGrantKeeper
+		optionalModules = append(optionalModules, feegrantmodule.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.AccountKeeper, sdkApp.BankKeeper, *sdkApp.FeeGrantKeeper, sdkApp.EncodingConfig.InterfaceRegistry))
+	}
 
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
@@ -521,13 +636,16 @@ func NewSDKApp(
 		),
 	)
 
-	authzKeeper := authzkeeper.NewKeeper(
-		runtime.NewKVStoreService(sdkApp.Keys[authzkeeper.StoreKey]),
-		sdkApp.EncodingConfig.Codec,
-		sdkApp.MsgServiceRouter(),
-		sdkApp.AccountKeeper,
-	)
-	sdkApp.AuthzKeeper = &authzKeeper
+	if appConfig.WithAuthz {
+		authzKeeper := authzkeeper.NewKeeper(
+			runtime.NewKVStoreService(sdkApp.StoreKeys[authzkeeper.StoreKey]),
+			sdkApp.EncodingConfig.Codec,
+			sdkApp.MsgServiceRouter(),
+			sdkApp.AccountKeeper,
+		)
+		sdkApp.AuthzKeeper = &authzKeeper
+		optionalModules = append(optionalModules, authzmodule.NewAppModule(sdkApp.EncodingConfig.Codec, *sdkApp.AuthzKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, sdkApp.EncodingConfig.InterfaceRegistry))
+	}
 
 	// get skipUpgradeHeights from the app options
 	skipUpgradeHeights := map[int64]bool{}
@@ -538,7 +656,7 @@ func NewSDKApp(
 	// set the governance module account as the authority for conducting upgrades
 	sdkApp.UpgradeKeeper = upgradekeeper.NewKeeper(
 		skipUpgradeHeights,
-		runtime.NewKVStoreService(sdkApp.Keys[upgradetypes.StoreKey]),
+		runtime.NewKVStoreService(sdkApp.StoreKeys[upgradetypes.StoreKey]),
 		sdkApp.EncodingConfig.Codec,
 		homePath,
 		sdkApp.BaseApp,
@@ -558,7 +676,7 @@ func NewSDKApp(
 	*/
 	govKeeper := govkeeper.NewKeeper(
 		sdkApp.EncodingConfig.Codec,
-		runtime.NewKVStoreService(sdkApp.Keys[govtypes.StoreKey]),
+		runtime.NewKVStoreService(sdkApp.StoreKeys[govtypes.StoreKey]),
 		sdkApp.AccountKeeper,
 		sdkApp.BankKeeper,
 		sdkApp.StakingKeeper,
@@ -581,28 +699,29 @@ func NewSDKApp(
 	// create evidence keeper with router
 	sdkApp.EvidenceKeeper = evidencekeeper.NewKeeper(
 		sdkApp.EncodingConfig.Codec,
-		runtime.NewKVStoreService(sdkApp.Keys[evidencetypes.StoreKey]),
+		runtime.NewKVStoreService(sdkApp.StoreKeys[evidencetypes.StoreKey]),
 		sdkApp.StakingKeeper,
 		sdkApp.SlashingKeeper,
 		sdkApp.AccountKeeper.AddressCodec(),
 		runtime.ProvideCometInfoService(),
 	)
 
-	epochsKeeper := epochskeeper.NewKeeper(
-		runtime.NewKVStoreService(sdkApp.Keys[epochstypes.StoreKey]),
-		sdkApp.EncodingConfig.Codec,
-	)
-	sdkApp.EpochsKeeper = &epochsKeeper
+	if appConfig.WithEpochs {
+		epochsKeeper := epochskeeper.NewKeeper(
+			runtime.NewKVStoreService(sdkApp.StoreKeys[epochstypes.StoreKey]),
+			sdkApp.EncodingConfig.Codec,
+		)
+		sdkApp.EpochsKeeper = &epochsKeeper
 
-	sdkApp.EpochsKeeper.SetHooks(
-		epochstypes.NewMultiEpochHooks(
-		// insert epoch hooks receivers here
-		),
-	)
+		sdkApp.EpochsKeeper.SetHooks(
+			epochstypes.NewMultiEpochHooks(
+			// insert epoch hooks receivers here
+			),
+		)
+		optionalModules = append(optionalModules, epochs.NewAppModule(*sdkApp.EpochsKeeper))
+	}
 
-	// NOTE: Any module instantiated in the module manager that is later modified
-	// must be passed by reference here.
-	sdkApp.ModuleManager = module.NewManager(
+	requiredModules := []module.AppModule{
 		genutil.NewAppModule(
 			sdkApp.AccountKeeper, sdkApp.StakingKeeper, sdkApp,
 			sdkApp.TxConfig(),
@@ -610,83 +729,91 @@ func NewSDKApp(
 		auth.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.AccountKeeper, authsims.RandomGenesisAccounts, nil),
 		vesting.NewAppModule(sdkApp.AccountKeeper, sdkApp.BankKeeper),
 		bank.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.BankKeeper, sdkApp.AccountKeeper, nil),
-		feegrantmodule.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.AccountKeeper, sdkApp.BankKeeper, *sdkApp.FeeGrantKeeper, sdkApp.EncodingConfig.InterfaceRegistry),
 		gov.NewAppModule(sdkApp.EncodingConfig.Codec, &sdkApp.GovKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, nil),
-		mint.NewAppModule(sdkApp.EncodingConfig.Codec, *sdkApp.MintKeeper, sdkApp.AccountKeeper, nil, nil),
 		slashing.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.SlashingKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, sdkApp.StakingKeeper, nil, sdkApp.EncodingConfig.InterfaceRegistry),
 		distr.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.DistrKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, sdkApp.StakingKeeper, nil),
 		staking.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.StakingKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, nil),
 		upgrade.NewAppModule(sdkApp.UpgradeKeeper, sdkApp.AccountKeeper.AddressCodec()),
 		evidence.NewAppModule(*sdkApp.EvidenceKeeper),
-		authzmodule.NewAppModule(sdkApp.EncodingConfig.Codec, *sdkApp.AuthzKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, sdkApp.EncodingConfig.InterfaceRegistry),
 		consensus.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.ConsensusParamsKeeper),
-		epochs.NewAppModule(*sdkApp.EpochsKeeper),
-		protocolpool.NewAppModule(*sdkApp.ProtocolPoolKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper),
+	}
+
+	sdkApp.requiredModules = requiredModules
+	sdkApp.optionalModules = optionalModules
+
+	return sdkApp
+}
+
+func (app *SDKApp) LoadModules() error {
+	// NOTE: Any module instantiated in the module manager that is later modified
+	// must be passed by reference here.
+	app.ModuleManager = module.NewManager(
+		append(app.requiredModules, app.optionalModules...)...,
 	)
 
 	// BasicModuleManager defines the module BasicManager is in charge of setting up basic,
 	// non-dependent module elements, such as codec registration and genesis verification.
 	// By default, it is composed of all the module from the module manager.
 	// Additionally, app module basics can be overwritten by passing them as argument.
-	sdkApp.BasicModuleManager = module.NewBasicManagerFromManager(
-		sdkApp.ModuleManager,
+	app.BasicModuleManager = module.NewBasicManagerFromManager(
+		app.ModuleManager,
 		map[string]module.AppModuleBasic{
 			genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
 			govtypes.ModuleName: gov.NewAppModuleBasic(
 				[]govclient.ProposalHandler{},
 			),
 		})
-	sdkApp.BasicModuleManager.RegisterLegacyAminoCodec(sdkApp.EncodingConfig.LegacyAmino)
-	sdkApp.BasicModuleManager.RegisterInterfaces(sdkApp.EncodingConfig.InterfaceRegistry)
+	app.BasicModuleManager.RegisterLegacyAminoCodec(app.EncodingConfig.LegacyAmino)
+	app.BasicModuleManager.RegisterInterfaces(app.EncodingConfig.InterfaceRegistry)
 
-	sdkApp.ModuleManager.SetOrderPreBlockers(appConfig.OrderPreBlockers...)
-	sdkApp.ModuleManager.SetOrderBeginBlockers(appConfig.OrderBeginBlockers...)
-	sdkApp.ModuleManager.SetOrderEndBlockers(appConfig.OrderEndBlockers...)
-	sdkApp.ModuleManager.SetOrderInitGenesis(appConfig.OrderInitGenesis...)
-	sdkApp.ModuleManager.SetOrderExportGenesis(appConfig.OrderExportGenesis...)
+	app.ModuleManager.SetOrderPreBlockers(app.orderPreBlockers...)
+	app.ModuleManager.SetOrderBeginBlockers(app.orderBeginBlockers...)
+	app.ModuleManager.SetOrderEndBlockers(app.orderEndBlockers...)
+	app.ModuleManager.SetOrderInitGenesis(app.orderInitGenesis...)
+	app.ModuleManager.SetOrderExportGenesis(app.orderExportGenesis...)
 
-	sdkApp.configurator = module.NewConfigurator(sdkApp.EncodingConfig.Codec, sdkApp.MsgServiceRouter(), sdkApp.GRPCQueryRouter())
-	err = sdkApp.ModuleManager.RegisterServices(sdkApp.configurator)
+	app.configurator = module.NewConfigurator(app.EncodingConfig.Codec, app.MsgServiceRouter(), app.GRPCQueryRouter())
+	err := app.ModuleManager.RegisterServices(app.configurator)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
-	autocliv1.RegisterQueryServer(sdkApp.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(sdkApp.ModuleManager.Modules))
+	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.ModuleManager.Modules))
 
 	reflectionSvc, err := runtimeservices.NewReflectionService()
 	if err != nil {
 		panic(err)
 	}
-	reflectionv1.RegisterReflectionServiceServer(sdkApp.GRPCQueryRouter(), reflectionSvc)
+	reflectionv1.RegisterReflectionServiceServer(app.GRPCQueryRouter(), reflectionSvc)
 
 	// add test gRPC service for testing gRPC queries in isolation
-	testdata_pulsar.RegisterQueryServer(sdkApp.GRPCQueryRouter(), testdata_pulsar.QueryImpl{})
+	testdata_pulsar.RegisterQueryServer(app.GRPCQueryRouter(), testdata_pulsar.QueryImpl{})
 
 	// create the simulation manager and define the order of the modules for deterministic simulations
 	//
 	// NOTE: this is not required apps that don't use the simulator for fuzz testing
 	// transactions
 	overrideModules := map[string]module.AppModuleSimulation{
-		authtypes.ModuleName: auth.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.AccountKeeper, authsims.RandomGenesisAccounts, nil),
+		authtypes.ModuleName: auth.NewAppModule(app.EncodingConfig.Codec, app.AccountKeeper, authsims.RandomGenesisAccounts, nil),
 	}
-	sdkApp.simulationManager = module.NewSimulationManagerFromAppModules(sdkApp.ModuleManager.Modules, overrideModules)
+	app.simulationManager = module.NewSimulationManagerFromAppModules(app.ModuleManager.Modules, overrideModules)
 
-	sdkApp.simulationManager.RegisterStoreDecoders()
-
-	// initialize stores
-	sdkApp.MountKVStores(sdkApp.Keys)
+	app.simulationManager.RegisterStoreDecoders()
 
 	// initialize BaseApp
-	sdkApp.SetInitChainer(sdkApp.InitChainer)
-	sdkApp.SetPreBlocker(sdkApp.PreBlocker)
-	sdkApp.SetBeginBlocker(sdkApp.BeginBlocker)
-	sdkApp.SetEndBlocker(sdkApp.EndBlocker)
+	app.SetInitChainer(app.InitChainer)
+	app.SetPreBlocker(app.PreBlocker)
+	app.SetBeginBlocker(app.BeginBlocker)
+	app.SetEndBlocker(app.EndBlocker)
 
 	// default pre and post handlers
-	sdkApp.setAnteHandler(sdkApp.TxConfig())
-	sdkApp.setPostHandler()
+	app.setAnteHandler(app.TxConfig())
+	app.setPostHandler()
 
-	return sdkApp
+	// initialize stores
+	app.MountKVStores(app.StoreKeys)
+
+	return nil
 }
 
 // Name returns the name of the App
@@ -782,13 +909,13 @@ func (app *SDKApp) DefaultGenesis() map[string]json.RawMessage {
 //
 // NOTE: This is solely to be used for testing purposes.
 func (app *SDKApp) GetKey(storeKey string) *storetypes.KVStoreKey {
-	return app.Keys[storeKey]
+	return app.StoreKeys[storeKey]
 }
 
 // GetStoreKeys returns all the stored store Keys.
 func (app *SDKApp) GetStoreKeys() []storetypes.StoreKey {
-	keys := make([]storetypes.StoreKey, 0, len(app.Keys))
-	for _, key := range app.Keys {
+	keys := make([]storetypes.StoreKey, 0, len(app.StoreKeys))
+	for _, key := range app.StoreKeys {
 		keys = append(keys, key)
 	}
 

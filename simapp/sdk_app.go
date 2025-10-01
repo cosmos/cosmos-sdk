@@ -259,13 +259,16 @@ var (
 func DefaultSDKAppConfig(
 	name string,
 	opts servertypes.AppOptions,
+	baseAppOptions ...func(*baseapp.BaseApp),
 ) SDKAppConfig {
+	defaultOptions := server.DefaultBaseappOptions(opts)
+	baseAppOptions = append(defaultOptions, baseAppOptions...)
 
 	return SDKAppConfig{
 		AppName: name,
 
 		AppOpts:          opts,
-		BaseAppOptions:   server.DefaultBaseappOptions(opts),
+		BaseAppOptions:   baseAppOptions,
 		WithProtocolPool: true,
 		WithAuthz:        true,
 		WithEpochs:       true,
@@ -566,7 +569,7 @@ func NewSDKApp(
 
 	sdkApp.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-			// register the governance hooks
+		// register the governance hooks
 		),
 	)
 
@@ -588,7 +591,7 @@ func NewSDKApp(
 
 	sdkApp.EpochsKeeper.SetHooks(
 		epochstypes.NewMultiEpochHooks(
-			// insert epoch hooks receivers here
+		// insert epoch hooks receivers here
 		),
 	)
 

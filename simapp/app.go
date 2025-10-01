@@ -10,6 +10,7 @@ import (
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/log"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -57,10 +58,11 @@ func NewSimApp(
 	traceStore io.Writer,
 	loadLatest bool,
 	appOpts servertypes.AppOptions,
+	baseAppOptions ...func(*baseapp.BaseApp),
 ) *SimApp {
 	maps.Copy(maccPerms, defaultMaccPerms)
 
-	sdkAppConfig := DefaultSDKAppConfig(appName, appOpts)
+	sdkAppConfig := DefaultSDKAppConfig(appName, appOpts, baseAppOptions...)
 
 	sdkApp := NewSDKApp(logger, db, traceStore, sdkAppConfig)
 

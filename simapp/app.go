@@ -118,8 +118,9 @@ func NewSimApp(
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *SimApp {
-	sdkApp := NewSDKApp(logger, db, traceStore, appOpts, baseAppOptions...)
 	maps.Copy(maccPerms, defaultMaccPerms)
+
+	sdkApp := NewSDKApp(logger, db, traceStore, appOpts, baseAppOptions...)
 
 	app := &SimApp{
 		SDKApp: sdkApp,

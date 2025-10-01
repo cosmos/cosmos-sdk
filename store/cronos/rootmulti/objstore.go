@@ -1,6 +1,3 @@
-//go:build objstore
-// +build objstore
-
 package rootmulti
 
 import (

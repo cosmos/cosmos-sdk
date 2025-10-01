@@ -254,6 +254,8 @@ replace (
 	github.com/cosmos/cosmos-sdk/blockstm => ../blockstm/
 )
 
+replace github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-20250924232609-2c6195d95951
+
 // Below are the long-lived replace of the SimApp
 replace (
 	// use cosmos fork of keyring

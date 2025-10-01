@@ -588,7 +588,7 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 			appOpts,
 			false,
 			false,
-			50000,
+			0, // no cache cause were gonna use blockSTM in conjunction here
 		),
 	}
 }

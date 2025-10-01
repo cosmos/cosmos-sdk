@@ -14,6 +14,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/oe"
+	"github.com/cosmos/cosmos-sdk/blockstm"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -122,6 +123,11 @@ func SetOptimisticExecution(opts ...func(*oe.OptimisticExecution)) func(*BaseApp
 	return func(app *BaseApp) {
 		app.optimisticExec = oe.NewOptimisticExecution(app.logger, app.internalFinalizeBlock, opts...)
 	}
+}
+
+// SetBlockSTMTxRunner sets the block stm tx runner for the BaseApp for parallel execution.
+func (app *BaseApp) SetBlockSTMTxRunner(txRunner blockstm.TxRunner) {
+	app.txRunner = txRunner
 }
 
 // DisableBlockGasMeter disables the block gas meter.

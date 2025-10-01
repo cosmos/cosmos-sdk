@@ -24,37 +24,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
-	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	"github.com/cosmos/cosmos-sdk/x/authz"
-	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/consensus"
-	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
-	distr "github.com/cosmos/cosmos-sdk/x/distribution"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/epochs"
-	epochstypes "github.com/cosmos/cosmos-sdk/x/epochs/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
-	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
-	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	"github.com/cosmos/cosmos-sdk/x/gov"
-	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/mint"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/cosmos/cosmos-sdk/x/protocolpool"
 	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
-	"github.com/cosmos/cosmos-sdk/x/slashing"
-	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/cosmos/cosmos-sdk/x/upgrade"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 const appName = "SimApp"
@@ -120,117 +91,6 @@ func NewSimApp(
 	}
 
 	/****  Module Options ****/
-
-	// NOTE: Any module instantiated in the module manager that is later modified
-	// must be passed by reference here.
-	sdkApp.ModuleManager = module.NewManager(
-		genutil.NewAppModule(
-			sdkApp.AccountKeeper, sdkApp.StakingKeeper, sdkApp,
-			sdkApp.TxConfig(),
-		),
-		auth.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.AccountKeeper, authsims.RandomGenesisAccounts, nil),
-		vesting.NewAppModule(sdkApp.AccountKeeper, sdkApp.BankKeeper),
-		bank.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.BankKeeper, sdkApp.AccountKeeper, nil),
-		feegrantmodule.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.AccountKeeper, sdkApp.BankKeeper, *sdkApp.FeeGrantKeeper, sdkApp.EncodingConfig.InterfaceRegistry),
-		gov.NewAppModule(sdkApp.EncodingConfig.Codec, &sdkApp.GovKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, nil),
-		mint.NewAppModule(sdkApp.EncodingConfig.Codec, *sdkApp.MintKeeper, sdkApp.AccountKeeper, nil, nil),
-		slashing.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.SlashingKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, sdkApp.StakingKeeper, nil, sdkApp.EncodingConfig.InterfaceRegistry),
-		distr.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.DistrKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, sdkApp.StakingKeeper, nil),
-		staking.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.StakingKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, nil),
-		upgrade.NewAppModule(sdkApp.UpgradeKeeper, sdkApp.AccountKeeper.AddressCodec()),
-		evidence.NewAppModule(*sdkApp.EvidenceKeeper),
-		authzmodule.NewAppModule(sdkApp.EncodingConfig.Codec, *sdkApp.AuthzKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, sdkApp.EncodingConfig.InterfaceRegistry),
-		consensus.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.ConsensusParamsKeeper),
-		epochs.NewAppModule(*sdkApp.EpochsKeeper),
-		protocolpool.NewAppModule(*sdkApp.ProtocolPoolKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper),
-	)
-
-	// BasicModuleManager defines the module BasicManager is in charge of setting up basic,
-	// non-dependent module elements, such as codec registration and genesis verification.
-	// By default, it is composed of all the module from the module manager.
-	// Additionally, app module basics can be overwritten by passing them as argument.
-	sdkApp.BasicModuleManager = module.NewBasicManagerFromManager(
-		sdkApp.ModuleManager,
-		map[string]module.AppModuleBasic{
-			genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
-			govtypes.ModuleName: gov.NewAppModuleBasic(
-				[]govclient.ProposalHandler{},
-			),
-		})
-	sdkApp.BasicModuleManager.RegisterLegacyAminoCodec(sdkApp.EncodingConfig.LegacyAmino)
-	sdkApp.BasicModuleManager.RegisterInterfaces(sdkApp.EncodingConfig.InterfaceRegistry)
-
-	// NOTE: upgrade module is required to be prioritized
-	sdkApp.ModuleManager.SetOrderPreBlockers(
-		upgradetypes.ModuleName,
-		authtypes.ModuleName,
-	)
-	// During begin block slashing happens after distr.BeginBlocker so that
-	// there is nothing left over in the validator fee pool, so as to keep the
-	// CanWithdrawInvariant invariant.
-	// NOTE: staking module is required if HistoricalEntries param > 0
-	sdkApp.ModuleManager.SetOrderBeginBlockers(
-		minttypes.ModuleName,
-		distrtypes.ModuleName,
-		protocolpooltypes.ModuleName,
-		slashingtypes.ModuleName,
-		evidencetypes.ModuleName,
-		stakingtypes.ModuleName,
-		genutiltypes.ModuleName,
-		authz.ModuleName,
-		epochstypes.ModuleName,
-	)
-	sdkApp.ModuleManager.SetOrderEndBlockers(
-		govtypes.ModuleName,
-		stakingtypes.ModuleName,
-		genutiltypes.ModuleName,
-		feegrant.ModuleName,
-		protocolpooltypes.ModuleName,
-	)
-
-	// NOTE: The genutils module must occur after staking so that pools are
-	// properly initialized with tokens from genesis accounts.
-	// NOTE: The genutils module must also occur after auth so that it can access the params from auth.
-	genesisModuleOrder := []string{
-		authtypes.ModuleName,
-		banktypes.ModuleName,
-		distrtypes.ModuleName,
-		stakingtypes.ModuleName,
-		slashingtypes.ModuleName,
-		govtypes.ModuleName,
-		minttypes.ModuleName,
-		genutiltypes.ModuleName,
-		evidencetypes.ModuleName,
-		authz.ModuleName,
-		feegrant.ModuleName,
-		upgradetypes.ModuleName,
-		vestingtypes.ModuleName,
-		consensusparamtypes.ModuleName,
-		epochstypes.ModuleName,
-		protocolpooltypes.ModuleName,
-	}
-
-	exportModuleOrder := []string{
-		consensusparamtypes.ModuleName,
-		authtypes.ModuleName,
-		protocolpooltypes.ModuleName, // Must be exported before bank
-		banktypes.ModuleName,
-		distrtypes.ModuleName,
-		stakingtypes.ModuleName,
-		slashingtypes.ModuleName,
-		govtypes.ModuleName,
-		minttypes.ModuleName,
-		genutiltypes.ModuleName,
-		evidencetypes.ModuleName,
-		authz.ModuleName,
-		feegrant.ModuleName,
-		upgradetypes.ModuleName,
-		vestingtypes.ModuleName,
-		epochstypes.ModuleName,
-	}
-
-	sdkApp.ModuleManager.SetOrderInitGenesis(genesisModuleOrder...)
-	sdkApp.ModuleManager.SetOrderExportGenesis(exportModuleOrder...)
 
 	// Uncomment if you want to set a custom migration order here.
 	// app.ModuleManager.SetOrderMigrations(custom order)

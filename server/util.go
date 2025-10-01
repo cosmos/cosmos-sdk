@@ -486,17 +486,6 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 			panic(fmt.Errorf("failed to parse chain-id from genesis file: %w", err))
 		}
 	}
-
-	snapshotStore, err := GetSnapshotStore(appOpts)
-	if err != nil {
-		panic(err)
-	}
-
-	snapshotOptions := snapshottypes.NewSnapshotOptions(
-		cast.ToUint64(appOpts.Get(FlagStateSyncSnapshotInterval)),
-		cast.ToUint32(appOpts.Get(FlagStateSyncSnapshotKeepRecent)),
-	)
-
 	defaultMempool := baseapp.SetMempool(mempool.NoOpMempool{})
 	if maxTxs := cast.ToInt(appOpts.Get(FlagMempoolMaxTxs)); maxTxs >= 0 {
 		defaultMempool = baseapp.SetMempool(
@@ -506,7 +495,7 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		)
 	}
 
-	return []func(*baseapp.BaseApp){
+	opts := []func(*baseapp.BaseApp){
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(FlagMinGasPrices))),
 		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(FlagHaltHeight))),
@@ -515,7 +504,6 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		baseapp.SetInterBlockCache(cache),
 		baseapp.SetTrace(cast.ToBool(appOpts.Get(FlagTrace))),
 		baseapp.SetIndexEvents(cast.ToStringSlice(appOpts.Get(FlagIndexEvents))),
-		baseapp.SetSnapshot(snapshotStore, snapshotOptions),
 		baseapp.SetIAVLCacheSize(cast.ToInt(appOpts.Get(FlagIAVLCacheSize))),
 		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(FlagDisableIAVLFastNode))),
 		baseapp.SetIAVLSyncPruning(cast.ToBool(appOpts.Get(FlagIAVLSyncPruning))),
@@ -523,6 +511,22 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		baseapp.SetChainID(chainID),
 		baseapp.SetQueryGasLimit(cast.ToUint64(appOpts.Get(FlagQueryGasLimit))),
 	}
+
+	if snapshotInterval := cast.ToUint64(appOpts.Get(FlagStateSyncSnapshotInterval)); snapshotInterval > 0 {
+		snapshotStore, err := GetSnapshotStore(appOpts)
+		if err != nil {
+			panic(err)
+		}
+
+		snapshotOptions := snapshottypes.NewSnapshotOptions(
+			cast.ToUint64(snapshotInterval),
+			cast.ToUint32(appOpts.Get(FlagStateSyncSnapshotKeepRecent)),
+		)
+
+		opts = append(opts, baseapp.SetSnapshot(snapshotStore, snapshotOptions))
+	}
+
+	return opts
 }
 
 func GetSnapshotStore(appOpts types.AppOptions) (*snapshots.Store, error) {
@@ -532,13 +536,14 @@ func GetSnapshotStore(appOpts types.AppOptions) (*snapshots.Store, error) {
 		return nil, fmt.Errorf("failed to create snapshots directory: %w", err)
 	}
 
-	snapshotDB, err := dbm.NewDB("metadata", GetAppDBBackend(appOpts), snapshotDir)
+	dbBackend := GetAppDBBackend(appOpts)
+	snapshotDB, err := dbm.NewDB("metadata", dbBackend, snapshotDir)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create snapshots for %s database: %w", dbBackend, err)
 	}
 	snapshotStore, err := snapshots.NewStore(snapshotDB, snapshotDir)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create snapshots store: %w", err)
 	}
 
 	return snapshotStore, nil

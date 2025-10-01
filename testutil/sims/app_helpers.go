@@ -14,6 +14,7 @@ import (
 	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/depinject"
 	sdkmath "cosmossdk.io/math"
+	pruningtypes "cosmossdk.io/store/pruning/types"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -21,6 +22,7 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,7 +31,10 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-const DefaultGenTxGas = 10000000
+const (
+	DefaultGenTxGas = 10000000
+	TestChainID     = "test-1"
+)
 
 // DefaultConsensusParams defines the default CometBFT consensus params used in
 // SimApp testing.
@@ -303,6 +308,8 @@ func (m AppOptionsMap) Get(key string) any {
 
 func NewAppOptionsWithFlagHome(homePath string) servertypes.AppOptions {
 	return AppOptionsMap{
-		flags.FlagHome: homePath,
+		flags.FlagHome:     homePath,
+		server.FlagPruning: pruningtypes.PruningOptionDefault,
+		flags.FlagChainID:  TestChainID,
 	}
 }

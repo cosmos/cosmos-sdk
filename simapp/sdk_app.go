@@ -141,6 +141,8 @@ type SDKAppConfig struct {
 	AppOpts        servertypes.AppOptions
 	BaseAppOptions []func(*baseapp.BaseApp)
 
+	InterfaceRegistryOptions types.InterfaceRegistryOptions
+
 	WithProtocolPool bool
 	WithAuthz        bool
 	WithEpochs       bool
@@ -254,6 +256,18 @@ var (
 		vestingtypes.ModuleName,
 		epochstypes.ModuleName,
 	}
+
+	defaultInterfaceRegistryOptions = types.InterfaceRegistryOptions{
+		ProtoFiles: proto.HybridResolver,
+		SigningOptions: signing.Options{
+			AddressCodec: address.Bech32Codec{
+				Bech32Prefix: sdk.GetConfig().GetBech32AccountAddrPrefix(),
+			},
+			ValidatorAddressCodec: address.Bech32Codec{
+				Bech32Prefix: sdk.GetConfig().GetBech32ValidatorAddrPrefix(),
+			},
+		},
+	}
 )
 
 func DefaultSDKAppConfig(
@@ -266,6 +280,8 @@ func DefaultSDKAppConfig(
 
 	return SDKAppConfig{
 		AppName: name,
+
+		InterfaceRegistryOptions: defaultInterfaceRegistryOptions,
 
 		AppOpts:          opts,
 		BaseAppOptions:   baseAppOptions,
@@ -373,18 +389,7 @@ func NewSDKApp(
 	traceStore io.Writer,
 	appConfig SDKAppConfig,
 ) *SDKApp {
-	encodingConfig := NewEncodingConfigFromOptions(types.InterfaceRegistryOptions{
-		ProtoFiles: proto.HybridResolver,
-		SigningOptions: signing.Options{
-			AddressCodec: address.Bech32Codec{
-				Bech32Prefix: sdk.GetConfig().GetBech32AccountAddrPrefix(),
-			},
-			ValidatorAddressCodec: address.Bech32Codec{
-				Bech32Prefix: sdk.GetConfig().GetBech32ValidatorAddrPrefix(),
-			},
-		},
-	})
-
+	encodingConfig := NewEncodingConfigFromOptions(appConfig.InterfaceRegistryOptions)
 	bApp := initBaseApp(logger, db, traceStore, encodingConfig, appConfig)
 
 	keys := storetypes.NewKVStoreKeys(

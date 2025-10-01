@@ -79,10 +79,7 @@ func NewSimApp(
 
 	baseAppOptions = append(baseAppOptions, voteExtOp, baseapp.SetOptimisticExecution())
 
-	sdkAppConfig := SDKAppConfig{
-		AppOpts:        appOpts,
-		BaseAppOptions: baseAppOptions,
-	}
+	sdkAppConfig := DefaultSDKAppConfig(appOpts, baseAppOptions...)
 
 	sdkApp := NewSDKApp(logger, db, traceStore, sdkAppConfig)
 

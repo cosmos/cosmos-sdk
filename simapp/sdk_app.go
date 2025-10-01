@@ -251,6 +251,8 @@ func DefaultSDKAppConfig(
 		OrderPreBlockers:   defaultOrderPreBlockers,
 		OrderBeginBlockers: defaultOrderBeginBlockers,
 		OrderEndBlockers:   defaultOrderEndBlockers,
+		OrderInitGenesis:   defaultOrderInitGenesis,
+		OrderExportGenesis: defaultOrderExportGenesis,
 	}
 }
 
@@ -496,7 +498,7 @@ func NewSDKApp(
 
 	sdkApp.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-		// register the governance hooks
+			// register the governance hooks
 		),
 	)
 
@@ -518,7 +520,7 @@ func NewSDKApp(
 
 	sdkApp.EpochsKeeper.SetHooks(
 		epochstypes.NewMultiEpochHooks(
-		// insert epoch hooks receivers here
+			// insert epoch hooks receivers here
 		),
 	)
 
@@ -561,11 +563,11 @@ func NewSDKApp(
 	sdkApp.BasicModuleManager.RegisterLegacyAminoCodec(sdkApp.EncodingConfig.LegacyAmino)
 	sdkApp.BasicModuleManager.RegisterInterfaces(sdkApp.EncodingConfig.InterfaceRegistry)
 
-	sdkApp.ModuleManager.SetOrderPreBlockers(defaultOrderPreBlockers...)
-	sdkApp.ModuleManager.SetOrderBeginBlockers(defaultOrderBeginBlockers...)
-	sdkApp.ModuleManager.SetOrderEndBlockers(defaultOrderEndBlockers...)
-	sdkApp.ModuleManager.SetOrderInitGenesis(defaultOrderInitGenesis...)
-	sdkApp.ModuleManager.SetOrderExportGenesis(defaultOrderExportGenesis...)
+	sdkApp.ModuleManager.SetOrderPreBlockers(appConfig.OrderBeginBlockers...)
+	sdkApp.ModuleManager.SetOrderBeginBlockers(appConfig.OrderBeginBlockers...)
+	sdkApp.ModuleManager.SetOrderEndBlockers(appConfig.OrderEndBlockers...)
+	sdkApp.ModuleManager.SetOrderInitGenesis(appConfig.OrderInitGenesis...)
+	sdkApp.ModuleManager.SetOrderExportGenesis(appConfig.OrderExportGenesis...)
 
 	return sdkApp
 }

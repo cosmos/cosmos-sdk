@@ -631,7 +631,7 @@ func NewSDKApp(
 	sdkApp.BasicModuleManager.RegisterLegacyAminoCodec(sdkApp.EncodingConfig.LegacyAmino)
 	sdkApp.BasicModuleManager.RegisterInterfaces(sdkApp.EncodingConfig.InterfaceRegistry)
 
-	sdkApp.ModuleManager.SetOrderPreBlockers(appConfig.OrderBeginBlockers...)
+	sdkApp.ModuleManager.SetOrderPreBlockers(appConfig.OrderPreBlockers...)
 	sdkApp.ModuleManager.SetOrderBeginBlockers(appConfig.OrderBeginBlockers...)
 	sdkApp.ModuleManager.SetOrderEndBlockers(appConfig.OrderEndBlockers...)
 	sdkApp.ModuleManager.SetOrderInitGenesis(appConfig.OrderInitGenesis...)

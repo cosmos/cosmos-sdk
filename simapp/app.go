@@ -120,15 +120,22 @@ var (
 	_ servertypes.Application = (*SimApp)(nil)
 )
 
-// SimApp extends an ABCI application, but with most of its parameters exported.
-// They are exported for convenience in creating helper functions, as object
-// capabilities aren't needed for testing.
-type SimApp struct {
+type SDKApp struct {
 	*baseapp.BaseApp
 	encodingConfig EncodingConfig
 
 	// keys to access the substores
 	keys map[string]*storetypes.KVStoreKey
+
+	// the module manager
+	ModuleManager      *module.Manager
+	BasicModuleManager module.BasicManager
+
+	// simulation manager
+	sm *module.SimulationManager
+
+	// module configurator
+	configurator module.Configurator
 
 	// essential keepers
 	AccountKeeper         authkeeper.AccountKeeper
@@ -141,22 +148,19 @@ type SimApp struct {
 	UpgradeKeeper         *upgradekeeper.Keeper
 	EvidenceKeeper        evidencekeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
+}
+
+// SimApp extends an ABCI application, but with most of its parameters exported.
+// They are exported for convenience in creating helper functions, as object
+// capabilities aren't needed for testing.
+type SimApp struct {
+	*SDKApp
 
 	// supplementary keepers
 	FeeGrantKeeper     feegrantkeeper.Keeper
 	AuthzKeeper        authzkeeper.Keeper
 	EpochsKeeper       epochskeeper.Keeper
 	ProtocolPoolKeeper protocolpoolkeeper.Keeper
-
-	// the module manager
-	ModuleManager      *module.Manager
-	BasicModuleManager module.BasicManager
-
-	// simulation manager
-	sm *module.SimulationManager
-
-	// module configurator
-	configurator module.Configurator
 }
 
 func init() {
@@ -174,18 +178,8 @@ type EncodingConfig struct {
 	TxConfig          client.TxConfig
 }
 
-func NewEncodingConfigFromOptions(types.InterfaceRegistryOptions) EncodingConfig {
-	interfaceRegistry, err := types.NewInterfaceRegistryWithOptions(types.InterfaceRegistryOptions{
-		ProtoFiles: proto.HybridResolver,
-		SigningOptions: signing.Options{
-			AddressCodec: address.Bech32Codec{
-				Bech32Prefix: sdk.GetConfig().GetBech32AccountAddrPrefix(),
-			},
-			ValidatorAddressCodec: address.Bech32Codec{
-				Bech32Prefix: sdk.GetConfig().GetBech32ValidatorAddrPrefix(),
-			},
-		},
-	})
+func NewEncodingConfigFromOptions(opts types.InterfaceRegistryOptions) EncodingConfig {
+	interfaceRegistry, err := types.NewInterfaceRegistryWithOptions(opts)
 	if err != nil {
 		panic(err)
 	}
@@ -230,33 +224,6 @@ func NewSimApp(
 		},
 	})
 
-	// Below we could construct and set an application specific mempool and
-	// ABCI 1.0 PrepareProposal and ProcessProposal handlers. These defaults are
-	// already set in the SDK's BaseApp, this shows an example of how to override
-	// them.
-	//
-	// Example:
-	//
-	// bApp := baseapp.NewBaseApp(...)
-	// nonceMempool := mempool.NewSenderNonceMempool()
-	// abciPropHandler := NewDefaultProposalHandler(nonceMempool, bApp)
-	//
-	// bApp.SetMempool(nonceMempool)
-	// bApp.SetPrepareProposal(abciPropHandler.PrepareProposalHandler())
-	// bApp.SetProcessProposal(abciPropHandler.ProcessProposalHandler())
-	//
-	// Alternatively, you can construct BaseApp options, append those to
-	// baseAppOptions and pass them to NewBaseApp.
-	//
-	// Example:
-	//
-	// prepareOpt = func(app *baseapp.BaseApp) {
-	// 	abciPropHandler := baseapp.NewDefaultProposalHandler(nonceMempool, app)
-	// 	app.SetPrepareProposal(abciPropHandler.PrepareProposalHandler())
-	// }
-	// baseAppOptions = append(baseAppOptions, prepareOpt)
-
-	// create and set dummy vote extension handler
 	voteExtOp := func(bApp *baseapp.BaseApp) {
 		voteExtHandler := NewVoteExtensionHandler()
 		voteExtHandler.SetHandlers(bApp)
@@ -291,23 +258,27 @@ func NewSimApp(
 		panic(err)
 	}
 
-	app := &SimApp{
+	sdkApp := &SDKApp{
 		BaseApp:        bApp,
 		encodingConfig: encodingConfig,
 		keys:           keys,
 	}
 
+	app := &SimApp{
+		SDKApp: sdkApp,
+	}
+
 	// set the BaseApp's parameter store
-	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
+	sdkApp.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
 		encodingConfig.Codec,
 		runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]),
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		runtime.EventService{},
 	)
-	bApp.SetParamStore(app.ConsensusParamsKeeper.ParamsStore)
+	bApp.SetParamStore(sdkApp.ConsensusParamsKeeper.ParamsStore)
 
 	// add keepers
-	app.AccountKeeper = authkeeper.NewAccountKeeper(
+	sdkApp.AccountKeeper = authkeeper.NewAccountKeeper(
 		encodingConfig.Codec,
 		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
 		authtypes.ProtoBaseAccount,
@@ -318,10 +289,10 @@ func NewSimApp(
 		authkeeper.WithUnorderedTransactions(true),
 	)
 
-	app.BankKeeper = bankkeeper.NewBaseKeeper(
+	sdkApp.BankKeeper = bankkeeper.NewBaseKeeper(
 		encodingConfig.Codec,
 		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
-		app.AccountKeeper,
+		sdkApp.AccountKeeper,
 		BlockedAddresses(),
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		logger,
@@ -332,7 +303,7 @@ func NewSimApp(
 	enabledSignModes := append(authtx.DefaultSignModes, sigtypes.SignMode_SIGN_MODE_TEXTUAL)
 	txConfigOpts := authtx.ConfigOptions{
 		EnabledSignModes:           enabledSignModes,
-		TextualCoinMetadataQueryFn: txmodule.NewBankKeeperCoinMetadataQueryFn(app.BankKeeper),
+		TextualCoinMetadataQueryFn: txmodule.NewBankKeeperCoinMetadataQueryFn(sdkApp.BankKeeper),
 	}
 	txConfig, err := authtx.NewTxConfigWithOptions(
 		encodingConfig.Codec,
@@ -341,23 +312,23 @@ func NewSimApp(
 	if err != nil {
 		panic(err)
 	}
-	app.encodingConfig.TxConfig = txConfig
+	sdkApp.encodingConfig.TxConfig = txConfig
 
-	app.StakingKeeper = stakingkeeper.NewKeeper(
+	sdkApp.StakingKeeper = stakingkeeper.NewKeeper(
 		encodingConfig.Codec,
 		runtime.NewKVStoreService(keys[stakingtypes.StoreKey]),
-		app.AccountKeeper,
-		app.BankKeeper,
+		sdkApp.AccountKeeper,
+		sdkApp.BankKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		authcodec.NewBech32Codec(sdk.Bech32PrefixValAddr),
 		authcodec.NewBech32Codec(sdk.Bech32PrefixConsAddr),
 	)
-	app.MintKeeper = mintkeeper.NewKeeper(
+	sdkApp.MintKeeper = mintkeeper.NewKeeper(
 		encodingConfig.Codec,
 		runtime.NewKVStoreService(keys[minttypes.StoreKey]),
-		app.StakingKeeper,
-		app.AccountKeeper,
-		app.BankKeeper,
+		sdkApp.StakingKeeper,
+		sdkApp.AccountKeeper,
+		sdkApp.BankKeeper,
 		authtypes.FeeCollectorName,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		// mintkeeper.WithMintFn(mintkeeper.DefaultMintFn(minttypes.DefaultInflationCalculationFn)), custom mintFn can be added here
@@ -371,45 +342,45 @@ func NewSimApp(
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
-	app.DistrKeeper = distrkeeper.NewKeeper(
+	sdkApp.DistrKeeper = distrkeeper.NewKeeper(
 		encodingConfig.Codec,
 		runtime.NewKVStoreService(keys[distrtypes.StoreKey]),
-		app.AccountKeeper,
-		app.BankKeeper,
-		app.StakingKeeper,
+		sdkApp.AccountKeeper,
+		sdkApp.BankKeeper,
+		sdkApp.StakingKeeper,
 		authtypes.FeeCollectorName,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		distrkeeper.WithExternalCommunityPool(app.ProtocolPoolKeeper),
 	)
 
-	app.SlashingKeeper = slashingkeeper.NewKeeper(
+	sdkApp.SlashingKeeper = slashingkeeper.NewKeeper(
 		encodingConfig.Codec,
 		encodingConfig.LegacyAmino,
 		runtime.NewKVStoreService(keys[slashingtypes.StoreKey]),
-		app.StakingKeeper,
+		sdkApp.StakingKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	app.FeeGrantKeeper = feegrantkeeper.NewKeeper(
 		encodingConfig.Codec,
 		runtime.NewKVStoreService(keys[feegrant.StoreKey]),
-		app.AccountKeeper,
+		sdkApp.AccountKeeper,
 	)
 
 	// register the staking hooks
 	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
-	app.StakingKeeper.SetHooks(
+	sdkApp.StakingKeeper.SetHooks(
 		stakingtypes.NewMultiStakingHooks(
-			app.DistrKeeper.Hooks(),
-			app.SlashingKeeper.Hooks(),
+			sdkApp.DistrKeeper.Hooks(),
+			sdkApp.SlashingKeeper.Hooks(),
 		),
 	)
 
 	app.AuthzKeeper = authzkeeper.NewKeeper(
 		runtime.NewKVStoreService(keys[authzkeeper.StoreKey]),
 		encodingConfig.Codec,
-		app.MsgServiceRouter(),
-		app.AccountKeeper,
+		sdkApp.MsgServiceRouter(),
+		sdkApp.AccountKeeper,
 	)
 
 	// get skipUpgradeHeights from the app options
@@ -419,12 +390,12 @@ func NewSimApp(
 	}
 	homePath := cast.ToString(appOpts.Get(flags.FlagHome))
 	// set the governance module account as the authority for conducting upgrades
-	app.UpgradeKeeper = upgradekeeper.NewKeeper(
+	sdkApp.UpgradeKeeper = upgradekeeper.NewKeeper(
 		skipUpgradeHeights,
 		runtime.NewKVStoreService(keys[upgradetypes.StoreKey]),
 		encodingConfig.Codec,
 		homePath,
-		app.BaseApp,
+		sdkApp.BaseApp,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
@@ -442,11 +413,11 @@ func NewSimApp(
 	govKeeper := govkeeper.NewKeeper(
 		encodingConfig.Codec,
 		runtime.NewKVStoreService(keys[govtypes.StoreKey]),
-		app.AccountKeeper,
-		app.BankKeeper,
-		app.StakingKeeper,
-		app.DistrKeeper,
-		app.MsgServiceRouter(),
+		sdkApp.AccountKeeper,
+		sdkApp.BankKeeper,
+		sdkApp.StakingKeeper,
+		sdkApp.DistrKeeper,
+		sdkApp.MsgServiceRouter(),
 		govConfig,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		// govkeeper.WithCustomCalculateVoteResultsAndVotingPowerFn(...), // Add if you want to use a custom vote calculation function.
@@ -455,7 +426,7 @@ func NewSimApp(
 	// Set legacy router for backwards compatibility with gov v1beta1
 	govKeeper.SetLegacyRouter(govRouter)
 
-	app.GovKeeper = *govKeeper.SetHooks(
+	sdkApp.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
 		// register the governance hooks
 		),
@@ -465,13 +436,13 @@ func NewSimApp(
 	evidenceKeeper := evidencekeeper.NewKeeper(
 		encodingConfig.Codec,
 		runtime.NewKVStoreService(keys[evidencetypes.StoreKey]),
-		app.StakingKeeper,
-		app.SlashingKeeper,
-		app.AccountKeeper.AddressCodec(),
+		sdkApp.StakingKeeper,
+		sdkApp.SlashingKeeper,
+		sdkApp.AccountKeeper.AddressCodec(),
 		runtime.ProvideCometInfoService(),
 	)
 	// If evidence needs to be handled for the app, set routes in router here and seal
-	app.EvidenceKeeper = *evidenceKeeper
+	sdkApp.EvidenceKeeper = *evidenceKeeper
 
 	app.EpochsKeeper = epochskeeper.NewKeeper(
 		runtime.NewKVStoreService(keys[epochstypes.StoreKey]),
@@ -488,45 +459,45 @@ func NewSimApp(
 
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
-	app.ModuleManager = module.NewManager(
+	sdkApp.ModuleManager = module.NewManager(
 		genutil.NewAppModule(
-			app.AccountKeeper, app.StakingKeeper, app,
+			sdkApp.AccountKeeper, sdkApp.StakingKeeper, sdkApp,
 			txConfig,
 		),
-		auth.NewAppModule(encodingConfig.Codec, app.AccountKeeper, authsims.RandomGenesisAccounts, nil),
-		vesting.NewAppModule(app.AccountKeeper, app.BankKeeper),
-		bank.NewAppModule(encodingConfig.Codec, app.BankKeeper, app.AccountKeeper, nil),
-		feegrantmodule.NewAppModule(encodingConfig.Codec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.encodingConfig.InterfaceRegistry),
-		gov.NewAppModule(encodingConfig.Codec, &app.GovKeeper, app.AccountKeeper, app.BankKeeper, nil),
-		mint.NewAppModule(encodingConfig.Codec, app.MintKeeper, app.AccountKeeper, nil, nil),
-		slashing.NewAppModule(encodingConfig.Codec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, nil, app.encodingConfig.InterfaceRegistry),
-		distr.NewAppModule(encodingConfig.Codec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, nil),
-		staking.NewAppModule(encodingConfig.Codec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, nil),
-		upgrade.NewAppModule(app.UpgradeKeeper, app.AccountKeeper.AddressCodec()),
-		evidence.NewAppModule(app.EvidenceKeeper),
-		authzmodule.NewAppModule(encodingConfig.Codec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.encodingConfig.InterfaceRegistry),
-		consensus.NewAppModule(encodingConfig.Codec, app.ConsensusParamsKeeper),
+		auth.NewAppModule(encodingConfig.Codec, sdkApp.AccountKeeper, authsims.RandomGenesisAccounts, nil),
+		vesting.NewAppModule(sdkApp.AccountKeeper, sdkApp.BankKeeper),
+		bank.NewAppModule(encodingConfig.Codec, sdkApp.BankKeeper, sdkApp.AccountKeeper, nil),
+		feegrantmodule.NewAppModule(encodingConfig.Codec, sdkApp.AccountKeeper, sdkApp.BankKeeper, app.FeeGrantKeeper, sdkApp.encodingConfig.InterfaceRegistry),
+		gov.NewAppModule(encodingConfig.Codec, &sdkApp.GovKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, nil),
+		mint.NewAppModule(encodingConfig.Codec, sdkApp.MintKeeper, sdkApp.AccountKeeper, nil, nil),
+		slashing.NewAppModule(encodingConfig.Codec, sdkApp.SlashingKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, sdkApp.StakingKeeper, nil, app.encodingConfig.InterfaceRegistry),
+		distr.NewAppModule(encodingConfig.Codec, sdkApp.DistrKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, sdkApp.StakingKeeper, nil),
+		staking.NewAppModule(encodingConfig.Codec, sdkApp.StakingKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, nil),
+		upgrade.NewAppModule(sdkApp.UpgradeKeeper, sdkApp.AccountKeeper.AddressCodec()),
+		evidence.NewAppModule(sdkApp.EvidenceKeeper),
+		authzmodule.NewAppModule(encodingConfig.Codec, app.AuthzKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, sdkApp.encodingConfig.InterfaceRegistry),
+		consensus.NewAppModule(encodingConfig.Codec, sdkApp.ConsensusParamsKeeper),
 		epochs.NewAppModule(app.EpochsKeeper),
-		protocolpool.NewAppModule(app.ProtocolPoolKeeper, app.AccountKeeper, app.BankKeeper),
+		protocolpool.NewAppModule(app.ProtocolPoolKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper),
 	)
 
 	// BasicModuleManager defines the module BasicManager is in charge of setting up basic,
 	// non-dependent module elements, such as codec registration and genesis verification.
 	// By default it is composed of all the module from the module manager.
 	// Additionally, app module basics can be overwritten by passing them as argument.
-	app.BasicModuleManager = module.NewBasicManagerFromManager(
-		app.ModuleManager,
+	sdkApp.BasicModuleManager = module.NewBasicManagerFromManager(
+		sdkApp.ModuleManager,
 		map[string]module.AppModuleBasic{
 			genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
 			govtypes.ModuleName: gov.NewAppModuleBasic(
 				[]govclient.ProposalHandler{},
 			),
 		})
-	app.BasicModuleManager.RegisterLegacyAminoCodec(app.encodingConfig.LegacyAmino)
-	app.BasicModuleManager.RegisterInterfaces(app.encodingConfig.InterfaceRegistry)
+	sdkApp.BasicModuleManager.RegisterLegacyAminoCodec(sdkApp.encodingConfig.LegacyAmino)
+	sdkApp.BasicModuleManager.RegisterInterfaces(sdkApp.encodingConfig.InterfaceRegistry)
 
 	// NOTE: upgrade module is required to be prioritized
-	app.ModuleManager.SetOrderPreBlockers(
+	sdkApp.ModuleManager.SetOrderPreBlockers(
 		upgradetypes.ModuleName,
 		authtypes.ModuleName,
 	)
@@ -534,7 +505,7 @@ func NewSimApp(
 	// there is nothing left over in the validator fee pool, so as to keep the
 	// CanWithdrawInvariant invariant.
 	// NOTE: staking module is required if HistoricalEntries param > 0
-	app.ModuleManager.SetOrderBeginBlockers(
+	sdkApp.ModuleManager.SetOrderBeginBlockers(
 		minttypes.ModuleName,
 		distrtypes.ModuleName,
 		protocolpooltypes.ModuleName,
@@ -545,7 +516,7 @@ func NewSimApp(
 		authz.ModuleName,
 		epochstypes.ModuleName,
 	)
-	app.ModuleManager.SetOrderEndBlockers(
+	sdkApp.ModuleManager.SetOrderEndBlockers(
 		govtypes.ModuleName,
 		stakingtypes.ModuleName,
 		genutiltypes.ModuleName,
@@ -594,14 +565,14 @@ func NewSimApp(
 		epochstypes.ModuleName,
 	}
 
-	app.ModuleManager.SetOrderInitGenesis(genesisModuleOrder...)
-	app.ModuleManager.SetOrderExportGenesis(exportModuleOrder...)
+	sdkApp.ModuleManager.SetOrderInitGenesis(genesisModuleOrder...)
+	sdkApp.ModuleManager.SetOrderExportGenesis(exportModuleOrder...)
 
 	// Uncomment if you want to set a custom migration order here.
 	// app.ModuleManager.SetOrderMigrations(custom order)
 
-	app.configurator = module.NewConfigurator(app.encodingConfig.Codec, app.MsgServiceRouter(), app.GRPCQueryRouter())
-	err = app.ModuleManager.RegisterServices(app.configurator)
+	sdkApp.configurator = module.NewConfigurator(sdkApp.encodingConfig.Codec, sdkApp.MsgServiceRouter(), sdkApp.GRPCQueryRouter())
+	err = sdkApp.ModuleManager.RegisterServices(sdkApp.configurator)
 	if err != nil {
 		panic(err)
 	}
@@ -610,36 +581,36 @@ func NewSimApp(
 	// Make sure it's called after `app.ModuleManager` and `app.configurator` are set.
 	app.RegisterUpgradeHandlers()
 
-	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.ModuleManager.Modules))
+	autocliv1.RegisterQueryServer(sdkApp.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(sdkApp.ModuleManager.Modules))
 
 	reflectionSvc, err := runtimeservices.NewReflectionService()
 	if err != nil {
 		panic(err)
 	}
-	reflectionv1.RegisterReflectionServiceServer(app.GRPCQueryRouter(), reflectionSvc)
+	reflectionv1.RegisterReflectionServiceServer(sdkApp.GRPCQueryRouter(), reflectionSvc)
 
 	// add test gRPC service for testing gRPC queries in isolation
-	testdata_pulsar.RegisterQueryServer(app.GRPCQueryRouter(), testdata_pulsar.QueryImpl{})
+	testdata_pulsar.RegisterQueryServer(sdkApp.GRPCQueryRouter(), testdata_pulsar.QueryImpl{})
 
 	// create the simulation manager and define the order of the modules for deterministic simulations
 	//
 	// NOTE: this is not required apps that don't use the simulator for fuzz testing
 	// transactions
 	overrideModules := map[string]module.AppModuleSimulation{
-		authtypes.ModuleName: auth.NewAppModule(app.encodingConfig.Codec, app.AccountKeeper, authsims.RandomGenesisAccounts, nil),
+		authtypes.ModuleName: auth.NewAppModule(sdkApp.encodingConfig.Codec, sdkApp.AccountKeeper, authsims.RandomGenesisAccounts, nil),
 	}
-	app.sm = module.NewSimulationManagerFromAppModules(app.ModuleManager.Modules, overrideModules)
+	sdkApp.sm = module.NewSimulationManagerFromAppModules(sdkApp.ModuleManager.Modules, overrideModules)
 
-	app.sm.RegisterStoreDecoders()
+	sdkApp.sm.RegisterStoreDecoders()
 
 	// initialize stores
-	app.MountKVStores(keys)
+	sdkApp.MountKVStores(keys)
 
 	// initialize BaseApp
-	app.SetInitChainer(app.InitChainer)
-	app.SetPreBlocker(app.PreBlocker)
-	app.SetBeginBlocker(app.BeginBlocker)
-	app.SetEndBlocker(app.EndBlocker)
+	sdkApp.SetInitChainer(app.InitChainer)
+	sdkApp.SetPreBlocker(app.PreBlocker)
+	sdkApp.SetBeginBlocker(app.BeginBlocker)
+	sdkApp.SetEndBlocker(app.EndBlocker)
 	app.setAnteHandler(txConfig)
 
 	// In v0.46, the SDK introduces _postHandlers_. PostHandlers are like
@@ -658,7 +629,7 @@ func NewSimApp(
 	app.setPostHandler()
 
 	if loadLatest {
-		if err := app.LoadLatestVersion(); err != nil {
+		if err := sdkApp.LoadLatestVersion(); err != nil {
 			panic(fmt.Errorf("error loading last version: %w", err))
 		}
 	}

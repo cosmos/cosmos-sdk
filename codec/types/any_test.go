@@ -58,7 +58,7 @@ var sink any
 func BenchmarkNewAnyWithCustomTypeURLWithErrorReturned(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		any, err := types.NewAnyWithValue(eom)
 		if err == nil {
 			b.Fatal("err wasn't returned")

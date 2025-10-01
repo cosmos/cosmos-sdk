@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 
 	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
 	dbm "github.com/cosmos/cosmos-db"
@@ -79,6 +80,9 @@ type Store struct {
 	commitHeader      cmtproto.Header
 
 	memStoreManager types.MemStoreManager
+	// memStore holds the pre-isolated memstore instance created during setState.
+	// It uses atomic.Pointer for thread-safe access without requiring explicit locking.
+	memStore atomic.Pointer[types.MemStore]
 }
 
 var (
@@ -91,7 +95,11 @@ var (
 // a store is created, KVStores must be mounted and finally LoadLatestVersion or
 // LoadVersion must be called.
 func NewStore(db dbm.DB, logger log.Logger, metricGatherer metrics.StoreMetrics) *Store {
-	return &Store{
+	manager := memstore.NewMemStoreManager()
+	// Pre-create an isolated memstore instance that will be used by all CacheMultiStore instances
+	isolatedMemStore := manager.Branch()
+
+	rs := &Store{
 		db:                  db,
 		logger:              logger,
 		iavlCacheSize:       iavl.DefaultIAVLCacheSize,
@@ -103,8 +111,12 @@ func NewStore(db dbm.DB, logger log.Logger, metricGatherer metrics.StoreMetrics)
 		removalMap:          make(map[types.StoreKey]bool),
 		pruningManager:      pruning.NewManager(db, logger),
 		metrics:             metricGatherer,
-		memStoreManager:     memstore.NewMemStoreManager(),
+		memStoreManager:     manager,
 	}
+	// Store the pre-isolated memstore
+	rs.memStore.Store(&isolatedMemStore)
+
+	return rs
 }
 
 // GetPruning fetches the pruning strategy from the root store.
@@ -532,6 +544,9 @@ func (rs *Store) Commit() types.CommitID {
 	defer func() {
 		height := rs.lastCommitInfo.Version
 		rs.memStoreManager.Commit(height)
+		// Create a new isolated memstore for the next block and replace the current one
+		newIsolatedMemStore := rs.memStoreManager.Branch()
+		rs.memStore.Store(&newIsolatedMemStore)
 	}()
 
 	// remove remnants of removed stores
@@ -615,11 +630,18 @@ func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 		}
 		stores[k] = store
 	}
+
+	// Use the pre-isolated memstore instance created during NewStore or after Commit
+	memStorePtr := rs.memStore.Load()
+	if memStorePtr == nil {
+		panic("memStore pointer is nil - this should never happen")
+	}
+
 	return cachemulti.NewFromKVStore(
 		stores,
 		rs.traceWriter,
 		rs.getTracingContext(),
-		rs.memStoreManager.Branch(),
+		(*memStorePtr).Branch(),
 	)
 }
 
@@ -758,7 +780,13 @@ func (rs *Store) GetObjKVStore(key types.StoreKey) types.ObjKVStore {
 }
 
 func (rs *Store) GetMemStore() types.MemStore {
-	return rs.memStoreManager.Branch()
+	// Return the pre-isolated memstore instance
+	// This pointer is always expected to be non-nil after initialization
+	memStorePtr := rs.memStore.Load()
+	if memStorePtr == nil {
+		panic("memStore pointer is nil - this should never happen after initialization")
+	}
+	return *memStorePtr
 }
 
 func (rs *Store) handlePruning(version int64) error {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
+	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 	ics23 "github.com/cosmos/ics23/go"
 	"github.com/crypto-org-chain/cronos/memiavl"
 
@@ -186,7 +186,7 @@ func (st *Store) WorkingHash() []byte {
 // Takes a MutableTree, a key, and a flag for creating existence or absence proof and returns the
 // appropriate merkle.Proof. Since this must be called after querying for the value, this function should never error
 // Thus, it will panic on error rather than returning it
-func getProofFromTree(tree *memiavl.Tree, key []byte, exists bool) *cmtprotocrypto.ProofOps {
+func getProofFromTree(tree *memiavl.Tree, key []byte, exists bool) *crypto.ProofOps {
 	var (
 		commitmentProof *ics23.CommitmentProof
 		err             error
@@ -209,5 +209,5 @@ func getProofFromTree(tree *memiavl.Tree, key []byte, exists bool) *cmtprotocryp
 	}
 
 	op := types.NewIavlCommitmentOp(key, commitmentProof)
-	return &cmtprotocrypto.ProofOps{Ops: []cmtprotocrypto.ProofOp{op.ProofOp()}}
+	return &crypto.ProofOps{Ops: []crypto.ProofOp{op.ProofOp()}}
 }

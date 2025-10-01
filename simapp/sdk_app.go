@@ -695,11 +695,11 @@ func NewSDKApp(
 	// Set legacy router for backwards compatibility with gov v1beta1
 	govKeeper.SetLegacyRouter(govRouter)
 
-	sdkApp.GovKeeper = *govKeeper.SetHooks(
-		govtypes.NewMultiGovHooks(
-			// register the governance hooks
-		),
-	)
+	sdkApp.GovKeeper = *govKeeper.SetHooks(govtypes.NewMultiGovHooks())
+	//	govtypes.NewMultiGovHooks(
+	//		// register the governance hooks
+	//	),
+	//)
 
 	// create evidence keeper with router
 	sdkApp.EvidenceKeeper = evidencekeeper.NewKeeper(
@@ -720,7 +720,7 @@ func NewSDKApp(
 
 		sdkApp.EpochsKeeper.SetHooks(
 			epochstypes.NewMultiEpochHooks(
-				// insert epoch hooks receivers here
+			// insert epoch hooks receivers here
 			),
 		)
 		optionalModules = append(optionalModules, epochs.NewAppModule(*sdkApp.EpochsKeeper))

@@ -6,7 +6,6 @@ import (
 	"maps"
 
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/spf13/cast"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
@@ -15,10 +14,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
-	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	testdata_pulsar "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -30,43 +27,33 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/consensus"
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
-	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/epochs"
-	epochskeeper "github.com/cosmos/cosmos-sdk/x/epochs/keeper"
 	epochstypes "github.com/cosmos/cosmos-sdk/x/epochs/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
-	evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
-	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
-	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/protocolpool"
-	protocolpoolkeeper "github.com/cosmos/cosmos-sdk/x/protocolpool/keeper"
 	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
-	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
-	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
@@ -93,12 +80,6 @@ var (
 // capabilities aren't needed for testing.
 type SimApp struct {
 	*SDKApp
-
-	// supplementary keepers
-	FeeGrantKeeper     feegrantkeeper.Keeper
-	AuthzKeeper        authzkeeper.Keeper
-	EpochsKeeper       epochskeeper.Keeper
-	ProtocolPoolKeeper protocolpoolkeeper.Keeper
 }
 
 func init() {
@@ -120,132 +101,23 @@ func NewSimApp(
 ) *SimApp {
 	maps.Copy(maccPerms, defaultMaccPerms)
 
-	sdkApp := NewSDKApp(logger, db, traceStore, appOpts, baseAppOptions...)
+	voteExtOp := func(bApp *baseapp.BaseApp) {
+		voteExtHandler := NewVoteExtensionHandler()
+		voteExtHandler.SetHandlers(bApp)
+	}
+
+	baseAppOptions = append(baseAppOptions, voteExtOp, baseapp.SetOptimisticExecution())
+
+	sdkAppConfig := SDKAppConfig{
+		AppOpts:        appOpts,
+		BaseAppOptions: baseAppOptions,
+	}
+
+	sdkApp := NewSDKApp(logger, db, traceStore, sdkAppConfig)
 
 	app := &SimApp{
 		SDKApp: sdkApp,
 	}
-
-	app.ProtocolPoolKeeper = protocolpoolkeeper.NewKeeper(
-		sdkApp.EncodingConfig.Codec,
-		runtime.NewKVStoreService(sdkApp.Keys[protocolpooltypes.StoreKey]),
-		app.AccountKeeper,
-		app.BankKeeper,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-	)
-
-	sdkApp.DistrKeeper = distrkeeper.NewKeeper(
-		sdkApp.EncodingConfig.Codec,
-		runtime.NewKVStoreService(sdkApp.Keys[distrtypes.StoreKey]),
-		sdkApp.AccountKeeper,
-		sdkApp.BankKeeper,
-		sdkApp.StakingKeeper,
-		authtypes.FeeCollectorName,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		distrkeeper.WithExternalCommunityPool(app.ProtocolPoolKeeper),
-	)
-
-	sdkApp.SlashingKeeper = slashingkeeper.NewKeeper(
-		sdkApp.EncodingConfig.Codec,
-		sdkApp.EncodingConfig.LegacyAmino,
-		runtime.NewKVStoreService(sdkApp.Keys[slashingtypes.StoreKey]),
-		sdkApp.StakingKeeper,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-	)
-
-	app.FeeGrantKeeper = feegrantkeeper.NewKeeper(
-		sdkApp.EncodingConfig.Codec,
-		runtime.NewKVStoreService(sdkApp.Keys[feegrant.StoreKey]),
-		sdkApp.AccountKeeper,
-	)
-
-	// register the staking hooks
-	// NOTE: stakingKeeper above is passed by reference, so that it will contain these hooks
-	sdkApp.StakingKeeper.SetHooks(
-		stakingtypes.NewMultiStakingHooks(
-			sdkApp.DistrKeeper.Hooks(),
-			sdkApp.SlashingKeeper.Hooks(),
-		),
-	)
-
-	app.AuthzKeeper = authzkeeper.NewKeeper(
-		runtime.NewKVStoreService(sdkApp.Keys[authzkeeper.StoreKey]),
-		sdkApp.EncodingConfig.Codec,
-		sdkApp.MsgServiceRouter(),
-		sdkApp.AccountKeeper,
-	)
-
-	// get skipUpgradeHeights from the app options
-	skipUpgradeHeights := map[int64]bool{}
-	for _, h := range cast.ToIntSlice(appOpts.Get(server.FlagUnsafeSkipUpgrades)) {
-		skipUpgradeHeights[int64(h)] = true
-	}
-	homePath := cast.ToString(appOpts.Get(flags.FlagHome))
-	// set the governance module account as the authority for conducting upgrades
-	sdkApp.UpgradeKeeper = upgradekeeper.NewKeeper(
-		skipUpgradeHeights,
-		runtime.NewKVStoreService(sdkApp.Keys[upgradetypes.StoreKey]),
-		sdkApp.EncodingConfig.Codec,
-		homePath,
-		sdkApp.BaseApp,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-	)
-
-	// Register the proposal types
-	// Deprecated: Avoid adding new handlers, instead use the new proposal flow
-	// by granting the governance module the right to execute the message.
-	// See: https://docs.cosmos.network/main/modules/gov#proposal-messages
-	govRouter := govv1beta1.NewRouter()
-	govRouter.AddRoute(govtypes.RouterKey, govv1beta1.ProposalHandler)
-	govConfig := govtypes.DefaultConfig()
-	/*
-		Example of setting gov params:
-		govConfig.MaxMetadataLen = 10000
-	*/
-	govKeeper := govkeeper.NewKeeper(
-		sdkApp.EncodingConfig.Codec,
-		runtime.NewKVStoreService(sdkApp.Keys[govtypes.StoreKey]),
-		sdkApp.AccountKeeper,
-		sdkApp.BankKeeper,
-		sdkApp.StakingKeeper,
-		sdkApp.DistrKeeper,
-		sdkApp.MsgServiceRouter(),
-		govConfig,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		// govkeeper.WithCustomCalculateVoteResultsAndVotingPowerFn(...), // Add if you want to use a custom vote calculation function.
-	)
-
-	// Set legacy router for backwards compatibility with gov v1beta1
-	govKeeper.SetLegacyRouter(govRouter)
-
-	sdkApp.GovKeeper = *govKeeper.SetHooks(
-		govtypes.NewMultiGovHooks(
-		// register the governance hooks
-		),
-	)
-
-	// create evidence keeper with router
-	evidenceKeeper := evidencekeeper.NewKeeper(
-		sdkApp.EncodingConfig.Codec,
-		runtime.NewKVStoreService(sdkApp.Keys[evidencetypes.StoreKey]),
-		sdkApp.StakingKeeper,
-		sdkApp.SlashingKeeper,
-		sdkApp.AccountKeeper.AddressCodec(),
-		runtime.ProvideCometInfoService(),
-	)
-	// If evidence needs to be handled for the app, set routes in router here and seal
-	sdkApp.EvidenceKeeper = *evidenceKeeper
-
-	app.EpochsKeeper = epochskeeper.NewKeeper(
-		runtime.NewKVStoreService(sdkApp.Keys[epochstypes.StoreKey]),
-		sdkApp.EncodingConfig.Codec,
-	)
-
-	app.EpochsKeeper.SetHooks(
-		epochstypes.NewMultiEpochHooks(
-		// insert epoch hooks receivers here
-		),
-	)
 
 	/****  Module Options ****/
 
@@ -259,18 +131,18 @@ func NewSimApp(
 		auth.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.AccountKeeper, authsims.RandomGenesisAccounts, nil),
 		vesting.NewAppModule(sdkApp.AccountKeeper, sdkApp.BankKeeper),
 		bank.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.BankKeeper, sdkApp.AccountKeeper, nil),
-		feegrantmodule.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.AccountKeeper, sdkApp.BankKeeper, app.FeeGrantKeeper, sdkApp.EncodingConfig.InterfaceRegistry),
+		feegrantmodule.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.AccountKeeper, sdkApp.BankKeeper, *sdkApp.FeeGrantKeeper, sdkApp.EncodingConfig.InterfaceRegistry),
 		gov.NewAppModule(sdkApp.EncodingConfig.Codec, &sdkApp.GovKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, nil),
-		mint.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.MintKeeper, sdkApp.AccountKeeper, nil, nil),
-		slashing.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.SlashingKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, sdkApp.StakingKeeper, nil, app.EncodingConfig.InterfaceRegistry),
+		mint.NewAppModule(sdkApp.EncodingConfig.Codec, *sdkApp.MintKeeper, sdkApp.AccountKeeper, nil, nil),
+		slashing.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.SlashingKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, sdkApp.StakingKeeper, nil, sdkApp.EncodingConfig.InterfaceRegistry),
 		distr.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.DistrKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, sdkApp.StakingKeeper, nil),
 		staking.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.StakingKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, nil),
 		upgrade.NewAppModule(sdkApp.UpgradeKeeper, sdkApp.AccountKeeper.AddressCodec()),
-		evidence.NewAppModule(sdkApp.EvidenceKeeper),
-		authzmodule.NewAppModule(sdkApp.EncodingConfig.Codec, app.AuthzKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, sdkApp.EncodingConfig.InterfaceRegistry),
+		evidence.NewAppModule(*sdkApp.EvidenceKeeper),
+		authzmodule.NewAppModule(sdkApp.EncodingConfig.Codec, *sdkApp.AuthzKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, sdkApp.EncodingConfig.InterfaceRegistry),
 		consensus.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.ConsensusParamsKeeper),
-		epochs.NewAppModule(app.EpochsKeeper),
-		protocolpool.NewAppModule(app.ProtocolPoolKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper),
+		epochs.NewAppModule(*sdkApp.EpochsKeeper),
+		protocolpool.NewAppModule(*sdkApp.ProtocolPoolKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper),
 	)
 
 	// BasicModuleManager defines the module BasicManager is in charge of setting up basic,
@@ -399,10 +271,10 @@ func NewSimApp(
 	sdkApp.MountKVStores(sdkApp.Keys)
 
 	// initialize BaseApp
-	sdkApp.SetInitChainer(app.InitChainer)
-	sdkApp.SetPreBlocker(app.PreBlocker)
-	sdkApp.SetBeginBlocker(app.BeginBlocker)
-	sdkApp.SetEndBlocker(app.EndBlocker)
+	sdkApp.SetInitChainer(sdkApp.InitChainer)
+	sdkApp.SetPreBlocker(sdkApp.PreBlocker)
+	sdkApp.SetBeginBlocker(sdkApp.BeginBlocker)
+	sdkApp.SetEndBlocker(sdkApp.EndBlocker)
 	app.setAnteHandler(sdkApp.TxConfig())
 
 	// In v0.46, the SDK introduces _postHandlers_. PostHandlers are like

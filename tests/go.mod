@@ -12,7 +12,7 @@ require (
 	cosmossdk.io/simapp v0.0.0-20230620040119-e078f1a49e8b
 	cosmossdk.io/store v1.1.2
 	cosmossdk.io/x/tx v0.14.0
-	github.com/cometbft/cometbft v0.38.19-0.20251001222208-9697086f3007
+	github.com/cometbft/cometbft v0.38.19-0.20251001230332-8293b1d20465
 	github.com/cosmos/cosmos-db v1.1.3
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	// this version is not used as it is always replaced by the latest Cosmos SDK version

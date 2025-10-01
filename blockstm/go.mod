@@ -7,7 +7,7 @@ replace github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-2025092423260
 require (
 	cosmossdk.io/collections v1.3.1
 	cosmossdk.io/store v1.1.2
-	github.com/cometbft/cometbft v0.38.19-0.20251001222208-9697086f3007
+	github.com/cometbft/cometbft v0.38.19-0.20251001230332-8293b1d20465
 	github.com/cosmos/cosmos-sdk v0.0.0-00010101000000-000000000000
 	github.com/test-go/testify v1.1.4
 	github.com/tidwall/btree v1.8.1

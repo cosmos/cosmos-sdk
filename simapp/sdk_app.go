@@ -9,6 +9,8 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cast"
 
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
@@ -30,13 +32,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/std"
+	testdata_pulsar "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	sigtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
@@ -130,19 +136,33 @@ func NewEncodingConfigFromOptions(opts types.InterfaceRegistryOptions) EncodingC
 }
 
 type SDKAppConfig struct {
-	AppOpts            servertypes.AppOptions
-	BaseAppOptions     []func(*baseapp.BaseApp)
-	WithProtocolPool   bool
-	WithAuthz          bool
-	WithEpochs         bool
-	WithFeeGrant       bool
-	WithMint           bool
+	AppName string
+
+	AppOpts        servertypes.AppOptions
+	BaseAppOptions []func(*baseapp.BaseApp)
+
+	WithProtocolPool bool
+	WithAuthz        bool
+	WithEpochs       bool
+	WithFeeGrant     bool
+	WithMint         bool
+
+	WithStreamingServices bool
+	WithUnorderedTx       bool
+
 	Keys               []string
 	OrderPreBlockers   []string
 	OrderBeginBlockers []string
 	OrderEndBlockers   []string
 	OrderInitGenesis   []string
 	OrderExportGenesis []string
+
+	Mempool mempool.Mempool
+
+	VerifyVoteExtensionHandler sdk.VerifyVoteExtensionHandler
+	PrepareProposalHandler     sdk.PrepareProposalHandler
+	ProcessProposalHandler     sdk.ProcessProposalHandler
+	ExtendVoteHandler          sdk.ExtendVoteHandler
 }
 
 var (
@@ -237,22 +257,36 @@ var (
 )
 
 func DefaultSDKAppConfig(
+	name string,
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) SDKAppConfig {
 	return SDKAppConfig{
-		AppOpts:            appOpts,
-		BaseAppOptions:     baseAppOptions,
-		WithProtocolPool:   true,
-		WithAuthz:          true,
-		WithEpochs:         true,
-		WithFeeGrant:       true,
-		WithMint:           true,
+		AppName: name,
+
+		AppOpts:          appOpts,
+		BaseAppOptions:   baseAppOptions,
+		WithProtocolPool: true,
+		WithAuthz:        true,
+		WithEpochs:       true,
+		WithFeeGrant:     true,
+		WithMint:         true,
+
+		WithStreamingServices: false,
+		WithUnorderedTx:       false,
+
 		OrderPreBlockers:   defaultOrderPreBlockers,
 		OrderBeginBlockers: defaultOrderBeginBlockers,
 		OrderEndBlockers:   defaultOrderEndBlockers,
 		OrderInitGenesis:   defaultOrderInitGenesis,
 		OrderExportGenesis: defaultOrderExportGenesis,
+
+		Mempool:                    mempool.NoOpMempool{},
+		VerifyVoteExtensionHandler: baseapp.NoOpVerifyVoteExtensionHandler(),
+		ExtendVoteHandler:          baseapp.NoOpExtendVote(),
+		// leave these as nil for construction later in baseapp by default
+		PrepareProposalHandler: nil,
+		ProcessProposalHandler: nil,
 	}
 }
 
@@ -294,6 +328,42 @@ type SDKApp struct {
 	ProtocolPoolKeeper *protocolpoolkeeper.Keeper
 }
 
+func initBaseApp(
+	logger log.Logger,
+	db dbm.DB,
+	traceStore io.Writer,
+	encodingConfig EncodingConfig,
+	appConfig SDKAppConfig,
+) *baseapp.BaseApp {
+	baseAppOptions := []func(*baseapp.BaseApp){
+		func(app *baseapp.BaseApp) {
+			app.SetMempool(appConfig.Mempool)
+		},
+		func(app *baseapp.BaseApp) {
+			app.SetVerifyVoteExtensionHandler(appConfig.VerifyVoteExtensionHandler)
+		},
+		func(app *baseapp.BaseApp) {
+			app.SetExtendVoteHandler(appConfig.ExtendVoteHandler)
+		},
+		func(app *baseapp.BaseApp) {
+			app.SetPrepareProposal(appConfig.PrepareProposalHandler)
+		},
+		func(app *baseapp.BaseApp) {
+			app.SetProcessProposal(appConfig.ProcessProposalHandler)
+		},
+	}
+
+	baseAppOptions = append(baseAppOptions, appConfig.BaseAppOptions...)
+
+	bApp := baseapp.NewBaseApp(appName, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
+	bApp.SetCommitMultiStoreTracer(traceStore)
+	bApp.SetVersion(version.Version)
+	bApp.SetInterfaceRegistry(encodingConfig.InterfaceRegistry)
+	bApp.SetTxEncoder(encodingConfig.TxConfig.TxEncoder())
+
+	return bApp
+}
+
 func NewSDKApp(
 	logger log.Logger,
 	db dbm.DB,
@@ -312,19 +382,17 @@ func NewSDKApp(
 		},
 	})
 
-	bApp := baseapp.NewBaseApp(appName, logger, db, encodingConfig.TxConfig.TxDecoder(), appConfig.BaseAppOptions...)
-	bApp.SetCommitMultiStoreTracer(traceStore)
-	bApp.SetVersion(version.Version)
-	bApp.SetInterfaceRegistry(encodingConfig.InterfaceRegistry)
-	bApp.SetTxEncoder(encodingConfig.TxConfig.TxEncoder())
+	bApp := initBaseApp(logger, db, traceStore, encodingConfig, appConfig)
 
 	keys := storetypes.NewKVStoreKeys(
 		defaultKeys...,
 	)
 
 	// register streaming services
-	if err := bApp.RegisterStreamingServices(appConfig.AppOpts, keys); err != nil {
-		panic(err)
+	if appConfig.WithStreamingServices {
+		if err := bApp.RegisterStreamingServices(appConfig.AppOpts, keys); err != nil {
+			panic(err)
+		}
 	}
 
 	sdkApp := &SDKApp{
@@ -352,7 +420,7 @@ func NewSDKApp(
 		authcodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		authkeeper.WithUnorderedTransactions(true),
+		authkeeper.WithUnorderedTransactions(appConfig.WithUnorderedTx),
 	)
 
 	sdkApp.BankKeeper = bankkeeper.NewBaseKeeper(
@@ -498,7 +566,7 @@ func NewSDKApp(
 
 	sdkApp.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-			// register the governance hooks
+		// register the governance hooks
 		),
 	)
 
@@ -520,7 +588,7 @@ func NewSDKApp(
 
 	sdkApp.EpochsKeeper.SetHooks(
 		epochstypes.NewMultiEpochHooks(
-			// insert epoch hooks receivers here
+		// insert epoch hooks receivers here
 		),
 	)
 
@@ -568,6 +636,47 @@ func NewSDKApp(
 	sdkApp.ModuleManager.SetOrderEndBlockers(appConfig.OrderEndBlockers...)
 	sdkApp.ModuleManager.SetOrderInitGenesis(appConfig.OrderInitGenesis...)
 	sdkApp.ModuleManager.SetOrderExportGenesis(appConfig.OrderExportGenesis...)
+
+	sdkApp.configurator = module.NewConfigurator(sdkApp.EncodingConfig.Codec, sdkApp.MsgServiceRouter(), sdkApp.GRPCQueryRouter())
+	err = sdkApp.ModuleManager.RegisterServices(sdkApp.configurator)
+	if err != nil {
+		panic(err)
+	}
+
+	autocliv1.RegisterQueryServer(sdkApp.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(sdkApp.ModuleManager.Modules))
+
+	reflectionSvc, err := runtimeservices.NewReflectionService()
+	if err != nil {
+		panic(err)
+	}
+	reflectionv1.RegisterReflectionServiceServer(sdkApp.GRPCQueryRouter(), reflectionSvc)
+
+	// add test gRPC service for testing gRPC queries in isolation
+	testdata_pulsar.RegisterQueryServer(sdkApp.GRPCQueryRouter(), testdata_pulsar.QueryImpl{})
+
+	// create the simulation manager and define the order of the modules for deterministic simulations
+	//
+	// NOTE: this is not required apps that don't use the simulator for fuzz testing
+	// transactions
+	overrideModules := map[string]module.AppModuleSimulation{
+		authtypes.ModuleName: auth.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.AccountKeeper, authsims.RandomGenesisAccounts, nil),
+	}
+	sdkApp.simulationManager = module.NewSimulationManagerFromAppModules(sdkApp.ModuleManager.Modules, overrideModules)
+
+	sdkApp.simulationManager.RegisterStoreDecoders()
+
+	// initialize stores
+	sdkApp.MountKVStores(sdkApp.Keys)
+
+	// initialize BaseApp
+	sdkApp.SetInitChainer(sdkApp.InitChainer)
+	sdkApp.SetPreBlocker(sdkApp.PreBlocker)
+	sdkApp.SetBeginBlocker(sdkApp.BeginBlocker)
+	sdkApp.SetEndBlocker(sdkApp.EndBlocker)
+
+	// default pre and post handlers
+	sdkApp.setAnteHandler(sdkApp.TxConfig())
+	sdkApp.setPostHandler()
 
 	return sdkApp
 }
@@ -723,4 +832,38 @@ func (app *SDKApp) RegisterTendermintService(clientCtx client.Context) {
 
 func (app *SDKApp) RegisterNodeService(clientCtx client.Context, cfg config.Config) {
 	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter(), cfg)
+}
+
+func (app *SDKApp) setAnteHandler(txConfig client.TxConfig) {
+	anteHandler, err := ante.NewAnteHandler(
+		ante.HandlerOptions{
+			AccountKeeper:   app.AccountKeeper,
+			BankKeeper:      app.BankKeeper,
+			SignModeHandler: txConfig.SignModeHandler(),
+			FeegrantKeeper:  app.FeeGrantKeeper,
+			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+			SigVerifyOptions: []ante.SigVerificationDecoratorOption{
+				// change below as needed.
+				ante.WithUnorderedTxGasCost(ante.DefaultUnorderedTxGasCost),
+				ante.WithMaxUnorderedTxTimeoutDuration(ante.DefaultMaxTimeoutDuration),
+			},
+		},
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	// Set the AnteHandler for the app
+	app.SetAnteHandler(anteHandler)
+}
+
+func (app *SDKApp) setPostHandler() {
+	postHandler, err := posthandler.NewPostHandler(
+		posthandler.HandlerOptions{},
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	app.SetPostHandler(postHandler)
 }

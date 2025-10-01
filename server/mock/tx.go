@@ -71,7 +71,7 @@ func (msg *KVStoreTx) Equals(key cryptotypes.PubKey) bool {
 }
 
 func (msg *KVStoreTx) Reset()         {}
-func (msg *KVStoreTx) String() string { return "TODO" }
+func (msg *KVStoreTx) String() string { return fmt.Sprintf("KVStoreTx{key:%q value:%q address:%s}", msg.key, msg.value, msg.address.String()) }
 func (msg *KVStoreTx) ProtoMessage()  {}
 
 var (

@@ -28,6 +28,8 @@ func (ctx Context) BroadcastTx(txBytes []byte) (res *sdk.TxResponse, err error) 
 	case flags.BroadcastAsync:
 		res, err = ctx.BroadcastTxAsync(txBytes)
 
+	case flags.BroadcastModeUnchecked:
+		res, err = ctx.BroadcastTxUnchecked(txBytes)
 	default:
 		return nil, fmt.Errorf("unsupported return type %s; supported types: sync, async", ctx.BroadcastMode)
 	}
@@ -108,6 +110,21 @@ func (ctx Context) BroadcastTxAsync(txBytes []byte) (*sdk.TxResponse, error) {
 	}
 
 	res, err := node.BroadcastTxAsync(ctx.GetCmdContextWithFallback(), txBytes)
+	if errRes := CheckCometError(err, txBytes); errRes != nil {
+		return errRes, nil
+	}
+
+	return sdk.NewResponseFormatBroadcastTx(res), err
+}
+
+// BroadcastTxUnchecked broadcasts transaction bytes to a CometBFT node without calling CheckTx
+func (ctx Context) BroadcastTxUnchecked(txBytes []byte) (*sdk.TxResponse, error) {
+	node, err := ctx.GetNode()
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := node.BroadcastTxUnchecked(ctx.GetCmdContextWithFallback(), txBytes)
 	if errRes := CheckCometError(err, txBytes); errRes != nil {
 		return errRes, nil
 	}

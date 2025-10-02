@@ -56,8 +56,6 @@ func newBech32Output(config *sdk.Config, bs []byte) bech32Output {
 	return out
 }
 
-//
-
 // ParseKeyStringCommand parses an address from hex to bech32 and vice versa.
 func ParseKeyStringCommand() *cobra.Command {
 	cmd := &cobra.Command{

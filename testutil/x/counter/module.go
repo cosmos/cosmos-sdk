@@ -1,6 +1,9 @@
 package counter
 
 import (
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
@@ -15,6 +18,12 @@ var _ appmodule.AppModule = AppModule{}
 // AppModule implements an application module
 type AppModule struct {
 	keeper *keeper.Keeper
+}
+
+func (am AppModule) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {
+}
+
+func (am AppModule) RegisterGRPCGatewayRoutes(_ client.Context, _ *runtime.ServeMux) {
 }
 
 // IsAppModule implements the appmodule.AppModule interface.

@@ -68,8 +68,22 @@ func NewSimApp(
 	// update keys
 	//
 
-	counterKeeper := counterkeeper.NewKeeper(runtime.NewKVStoreService(storetypes.NewKVStoreKey(countertypes.ModuleName)))
-	_ = counter.NewAppModule(counterKeeper)
+	key := storetypes.NewKVStoreKey(countertypes.ModuleName)
+	counterKeeper := counterkeeper.NewKeeper(runtime.NewKVStoreService(key))
+	counterModule := counter.NewAppModule(counterKeeper)
+	wrappedModule := AppModule{
+		AppModule: counterModule,
+		storeKeys: map[string]*storetypes.KVStoreKey{
+			countertypes.ModuleName: key,
+		},
+		name:      countertypes.ModuleName,
+		maccPerms: nil,
+	}
+
+	err := app.AddModule(wrappedModule)
+	if err != nil {
+		panic(err)
+	}
 
 	app.LoadModules()
 

@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"io"
 
-	storetypes "cosmossdk.io/store/types"
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/cosmos/cosmos-sdk/testutil/x/counter"
 
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/testutil/x/counter"
 	counterkeeper "github.com/cosmos/cosmos-sdk/testutil/x/counter/keeper"
 	countertypes "github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
 )

@@ -359,7 +359,6 @@ type SDKApp struct {
 	ProtocolPoolKeeper *protocolpoolkeeper.Keeper
 
 	moduleAccountPerms map[string][]string
-	keys               []string
 	orderPreBlockers   []string
 	orderBeginBlockers []string
 	orderEndBlockers   []string
@@ -508,7 +507,6 @@ func NewSDKApp(
 		BaseApp:            bApp,
 		EncodingConfig:     encodingConfig,
 		StoreKeys:          storeKeys,
-		keys:               appConfig.Keys,
 		orderPreBlockers:   appConfig.OrderPreBlockers,
 		orderBeginBlockers: appConfig.OrderBeginBlockers,
 		orderEndBlockers:   appConfig.OrderEndBlockers,
@@ -721,7 +719,7 @@ func NewSDKApp(
 
 		sdkApp.EpochsKeeper.SetHooks(
 			epochstypes.NewMultiEpochHooks(
-				// insert epoch hooks receivers here
+			// insert epoch hooks receivers here
 			),
 		)
 		optionalModules = append(optionalModules, epochs.NewAppModule(*sdkApp.EpochsKeeper))
@@ -753,8 +751,8 @@ func NewSDKApp(
 
 type AppModule struct {
 	module.AppModule
+	storeKeys map[string]*storetypes.KVStoreKey
 	name      string
-	storeKey  string
 	maccPerms map[string][]string
 }
 
@@ -768,13 +766,13 @@ func (app *SDKApp) AddModule(module AppModule) error {
 		app.moduleAccountPerms[moduleAcc] = perms
 	}
 
-	// add to the key list
-	app.keys = append(app.keys, module.storeKey)
-
 	// add to store key list
-	app.StoreKeys = storetypes.NewKVStoreKeys(
-		app.keys...,
-	)
+	for name, storeKey := range module.storeKeys {
+		if _, found := app.StoreKeys[name]; found {
+			return fmt.Errorf("module store key %s already exists in app: %v", module.name, app.StoreKeys)
+		}
+		app.StoreKeys[name] = storeKey
+	}
 
 	// append actual module
 	app.optionalModules = append(app.optionalModules, module)

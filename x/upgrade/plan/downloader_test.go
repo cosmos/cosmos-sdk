@@ -3,12 +3,14 @@ package plan
 import (
 	"archive/zip"
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/hashicorp/go-getter"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -207,6 +209,125 @@ func (s *DownloaderTestSuite) TestDownloadUpgrade() {
 		err := DownloadUpgrade(dstRoot, url, "not-expected")
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "result does not contain a bin/not-expected or not-expected file")
+	})
+}
+
+func (s *DownloaderTestSuite) TestDownloadPreUpgradeScript() {
+	preUpgradeScript := NewTestFile("preupgrade.sh", "#!/usr/bin/env bash\necho 'pre-upgrade running'\n")
+	invalidChecksumScript := NewTestFile("preupgrade-bad.sh", "#!/usr/bin/env bash\necho 'bad checksum'\n")
+
+	scriptPath := s.saveSrcTestFile(preUpgradeScript)
+	badScriptPath := s.saveSrcTestFile(invalidChecksumScript)
+
+	getDstDir := func(testName string) string {
+		_, tName := filepath.Split(testName)
+		return s.Home + "/dst/" + tName
+	}
+
+	s.T().Run("url does not exist", func(t *testing.T) {
+		dstRoot := getDstDir(t.Name())
+		url := "file:///not/a/real/path/preupgrade.sh?checksum=sha256:2c22e34510bd1d4ad2343cdc54f7165bccf30caef73f39af7dd1db2795a3da48"
+		err := DownloadPreUpgradeScript(dstRoot, url)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "no such file or directory")
+	})
+
+	s.T().Run("url has incorrect checksum", func(t *testing.T) {
+		dstRoot := getDstDir(t.Name())
+		badChecksum := "2c22e34510bd1d4ad2343cdc54f7165bccf30caef73f39af7dd1db2795a3da48"
+		url := "file://" + badScriptPath + "?checksum=sha256:" + badChecksum
+		err := DownloadPreUpgradeScript(dstRoot, url)
+		require.Error(t, err)
+		var checksumError *getter.ChecksumError
+		assert.True(t, errors.As(err, &checksumError))
+	})
+
+	s.T().Run("url returns single valid script file", func(t *testing.T) {
+		dstRoot := getDstDir(t.Name())
+		url := makeFileURL(t, scriptPath)
+		err := DownloadPreUpgradeScript(dstRoot, url)
+		require.NoError(t, err)
+
+		target := filepath.Join(dstRoot, "preupgrade.sh")
+		requireFileExistsAndIsExecutable(t, target)
+		requireFileEquals(t, target, preUpgradeScript)
+	})
+
+	s.T().Run("script is downloaded and made executable via EnsurePreUpgrade", func(t *testing.T) {
+		dstRoot := getDstDir(t.Name())
+		// Create destination root
+		require.NoError(t, os.MkdirAll(dstRoot, 0755))
+
+		// Manually write script (simulate partial download)
+		target := filepath.Join(dstRoot, "preupgrade.sh")
+		err := os.WriteFile(target, []byte(preUpgradeScript.Contents), 0644) // not executable yet
+		require.NoError(t, err)
+
+		// Now call EnsurePreUpgrade (which is tested via DownloadPreUpgradeScript flow)
+		err = EnsurePreUpgrade(target)
+		require.NoError(t, err)
+
+		// Check it's now executable
+		info, err := os.Stat(target)
+		require.NoError(t, err)
+		assert.Equal(t, os.FileMode(0755), info.Mode().Perm())
+	})
+
+}
+
+func (s *DownloaderTestSuite) TestEnsurePreUpgrade() {
+	// Setup test files
+	nonExeScript := s.saveSrcTestFile(NewTestFile("preupgrade.sh", "#!/bin/bash\necho 'pre-upgrade'\n"))
+	s.Require().NoError(os.Chmod(nonExeScript, 0o644), "failed to make non-executable")
+
+	exeScript := s.saveSrcTestFile(NewTestFile("preupgrade.sh", "#!/bin/bash\necho 'already exec'\n"))
+	s.Require().NoError(os.Chmod(exeScript, 0o755), "failed to make executable")
+
+	dirPath := filepath.Join(s.Home, "test-dir")
+	s.Require().NoError(os.MkdirAll(dirPath, 0o755), "failed to create test dir")
+
+	symlinkPath := filepath.Join(s.Home, "preupgrade-link.sh")
+	s.Require().NoError(os.Symlink("non-existent", symlinkPath), "failed to create symlink")
+
+	// Run subtests
+	s.T().Run("file does not exist", func(t *testing.T) {
+		missing := filepath.Join(s.Home, "preupgrade.sh")
+		err := EnsurePreUpgrade(missing)
+		require.Error(t, err)
+		assert.True(t, os.IsNotExist(err), "expected 'file does not exist' error")
+	})
+
+	s.T().Run("path is a directory", func(t *testing.T) {
+		err := EnsurePreUpgrade(dirPath)
+		require.Error(t, err)
+		assert.EqualError(t, err, "test-dir is not a regular file")
+	})
+
+	s.T().Run("file exists but not executable, becomes executable", func(t *testing.T) {
+		err := EnsurePreUpgrade(nonExeScript)
+		require.NoError(t, err)
+
+		requireFileExistsAndIsExecutable(t, nonExeScript)
+		info, err := os.Stat(nonExeScript)
+		require.NoError(t, err)
+		mode := info.Mode().Perm()
+		assert.True(t, (mode&0o111) == 0o111, "expected all execute bits to be set")
+	})
+
+	s.T().Run("file is already executable, no change", func(t *testing.T) {
+		infoBefore, err := os.Stat(exeScript)
+		require.NoError(t, err)
+		modeBefore := infoBefore.Mode().Perm()
+
+		err = EnsurePreUpgrade(exeScript)
+		require.NoError(t, err)
+
+		infoAfter, err := os.Stat(exeScript)
+		require.NoError(t, err)
+		modeAfter := infoAfter.Mode().Perm()
+
+		assert.Equal(t, modeBefore, modeAfter, "mode should not change if already executable")
+		requireFileExistsAndIsExecutable(t, exeScript)
 	})
 }
 

@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	"github.com/hashicorp/go-metrics"
 )
 
 type TaskKind int
@@ -211,12 +212,12 @@ func (s *Scheduler) FinishValidation(txn TxnIndex, aborted bool) (TxnVersion, Ta
 		telemetry.IncrCounterWithLabels(
 			[]string{TelemetrySubsystem, KeyTxReExecutions},
 			1,
-			[]telemetry.Label{telemetry.NewLabel("tx_index", strconv.Itoa(int(txn)))},
+			[]metrics.Label{telemetry.NewLabel("tx_index", strconv.Itoa(int(txn)))},
 		)
 		telemetry.SetGaugeWithLabels(
 			[]string{TelemetrySubsystem, KeyTxReExecutions, "count"},
 			float32(reExecCount),
-			[]telemetry.Label{telemetry.NewLabel("tx_index", strconv.Itoa(int(txn)))},
+			[]metrics.Label{telemetry.NewLabel("tx_index", strconv.Itoa(int(txn)))},
 		)
 
 		s.txn_status[txn].SetReadyStatus()

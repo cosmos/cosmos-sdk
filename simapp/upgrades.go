@@ -4,6 +4,7 @@ import (
 	"context"
 
 	storetypes "cosmossdk.io/store/types"
+	countertypes "github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -34,7 +35,9 @@ func (app *SimApp) RegisterUpgradeHandlers() {
 
 	if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
 		storeUpgrades := storetypes.StoreUpgrades{
-			Added: []string{},
+			Added: []string{
+				countertypes.ModuleName,
+			},
 		}
 
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades

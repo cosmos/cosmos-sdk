@@ -16,8 +16,9 @@ import (
 // Info is the special structure that the Plan.Info string can be (as json).
 type Info struct {
 	parseConfig ParseConfig `json:"-"`
-
-	Binaries BinaryDownloadURLMap `json:"binaries"`
+	// URL to sh script to run prior to upgrade
+	PreUpgradeScript string               `json:"pre_upgrade_script"`
+	Binaries         BinaryDownloadURLMap `json:"binaries"`
 }
 
 // BinaryDownloadURLMap is a map of os/architecture strings to a URL where the binary can be downloaded.

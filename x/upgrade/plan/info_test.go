@@ -33,18 +33,44 @@ func (s *InfoTestSuite) saveTestFile(f *TestFile) string {
 }
 
 func (s *InfoTestSuite) TestParseInfo() {
+	// Base JSON without preupgrade script
 	goodJSON := `{"binaries":{"os1/arch1":"url1","os2/arch2":"url2"}}`
-	binariesWrongJSON := `{"binaries":["foo","bar"]}`
-	binariesWrongValueJSON := `{"binaries":{"os1/arch1":1,"os2/arch2":2}}`
+	// JSON with preupgrade script
+	goodJSONWithScript := `{"binaries":{"os1/arch1":"url1","os2/arch2":"url2"},"pre_upgrade_script":"file://some-script.sh"}`
+	// JSON with non-string preupgrade (invalid)
+	preupgradeNotStringJSON := `{"binaries":{},"pre_upgrade_script":123}`
+	// JSON with null preupgrade
+	preupgradeIsNullJSON := `{"binaries":{},"pre_upgrade_script":null}`
+
+	// Save files
 	goodJSONPath := s.saveTestFile(NewTestFile("good.json", goodJSON))
-	binariesWrongJSONPath := s.saveTestFile(NewTestFile("binaries-wrong.json", binariesWrongJSON))
-	binariesWrongValueJSONPath := s.saveTestFile(NewTestFile("binaries-wrong-value.json", binariesWrongValueJSON))
+	goodJSONWithScriptPath := s.saveTestFile(NewTestFile("with-script.json", goodJSONWithScript))
+	preupgradeNotStringJSONPath := s.saveTestFile(NewTestFile("preupgrade-not-string.json", preupgradeNotStringJSON))
+	preupgradeIsNullJSONPath := s.saveTestFile(NewTestFile("preupgrade-is-null.json", preupgradeIsNullJSON))
+
+	// Define expected outputs accurately
+	minimalJsonInfo := &Info{
+		Binaries: BinaryDownloadURLMap{},
+	}
 	goodJSONAsInfo := &Info{
 		Binaries: BinaryDownloadURLMap{
 			"os1/arch1": "url1",
 			"os2/arch2": "url2",
 		},
 	}
+	goodJSONWithScriptAsInfo := &Info{
+		Binaries: BinaryDownloadURLMap{
+			"os1/arch1": "url1",
+			"os2/arch2": "url2",
+		},
+		PreUpgradeScript: "file://some-script.sh",
+	}
+
+	binariesWrongJSON := `{"binaries":["foo","bar"]}`
+	binariesWrongValueJSON := `{"binaries":{"os1/arch1":1,"os2/arch2":2}}`
+	binariesWrongJSONPath := s.saveTestFile(NewTestFile("binaries-wrong.json", binariesWrongJSON))
+	binariesWrongValueJSONPath := s.saveTestFile(NewTestFile("binaries-wrong-value.json", binariesWrongValueJSON))
+
 	makeInfoStrFuncString := func(val string) func(t *testing.T) string {
 		return func(t *testing.T) string {
 			t.Helper()
@@ -71,6 +97,24 @@ func (s *InfoTestSuite) TestParseInfo() {
 			expectedInError: nil,
 		},
 		{
+			name:            "json good with preupgrade script",
+			infoStrMaker:    makeInfoStrFuncString(goodJSONWithScript),
+			expectedInfo:    goodJSONWithScriptAsInfo,
+			expectedInError: nil,
+		},
+		{
+			name:            "json preupgrade is not string",
+			infoStrMaker:    makeInfoStrFuncString(preupgradeNotStringJSON),
+			expectedInfo:    nil,
+			expectedInError: []string{"could not parse plan info", "cannot unmarshal number into Go struct field Info.pre_upgrade_script of type string"},
+		},
+		{
+			name:            "json preupgrade is null",
+			infoStrMaker:    makeInfoStrFuncString(preupgradeIsNullJSON),
+			expectedInfo:    minimalJsonInfo,
+			expectedInError: nil,
+		},
+		{
 			name:            "blank string",
 			infoStrMaker:    makeInfoStrFuncString("   "),
 			expectedInfo:    nil,
@@ -79,7 +123,7 @@ func (s *InfoTestSuite) TestParseInfo() {
 		{
 			name:            "empty JSON",
 			infoStrMaker:    makeInfoStrFuncString("{}"),
-			expectedInfo:    &Info{},
+			expectedInfo:    &Info{}, // Binaries: {}, PreUpgradeScript: ""
 			expectedInError: nil,
 		},
 		{
@@ -104,6 +148,24 @@ func (s *InfoTestSuite) TestParseInfo() {
 			name:            "url good",
 			infoStrMaker:    makeInfoStrFuncURL(goodJSONPath),
 			expectedInfo:    goodJSONAsInfo,
+			expectedInError: nil,
+		},
+		{
+			name:            "url good with preupgrade script",
+			infoStrMaker:    makeInfoStrFuncURL(goodJSONWithScriptPath),
+			expectedInfo:    goodJSONWithScriptAsInfo,
+			expectedInError: nil,
+		},
+		{
+			name:            "url preupgrade is not string",
+			infoStrMaker:    makeInfoStrFuncURL(preupgradeNotStringJSONPath),
+			expectedInfo:    nil,
+			expectedInError: []string{"could not parse plan info", "cannot unmarshal number into Go struct field Info.pre_upgrade_script of type string"},
+		},
+		{
+			name:            "url preupgrade is null",
+			infoStrMaker:    makeInfoStrFuncURL(preupgradeIsNullJSONPath),
+			expectedInfo:    minimalJsonInfo,
 			expectedInError: nil,
 		},
 		{

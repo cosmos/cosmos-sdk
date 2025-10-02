@@ -7,9 +7,10 @@ import (
 )
 
 const (
-	TelemetrySubsystem = "blockstm"
-	KeyExecutedTxs     = "executed_txs"
-	KeyValidatedTxs    = "validated_txs"
+	TelemetrySubsystem   = "blockstm"
+	KeyExecutedTxs       = "executed_txs"
+	KeyValidatedTxs      = "validated_txs"
+	KeyTxReExecutions    = "tx_re_executions"
 )
 
 type (

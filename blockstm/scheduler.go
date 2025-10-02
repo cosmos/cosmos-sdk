@@ -3,8 +3,11 @@ package blockstm
 import (
 	"fmt"
 	"runtime"
+	"strconv"
 	"sync"
 	"sync/atomic"
+
+	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
 type TaskKind int
@@ -51,13 +54,16 @@ type Scheduler struct {
 	// metrics
 	executedTxns  atomic.Int64
 	validatedTxns atomic.Int64
+	// Per-transaction re-execution counts
+	txnReExecutions []atomic.Uint64
 }
 
 func NewScheduler(block_size int) *Scheduler {
 	return &Scheduler{
-		block_size:     block_size,
-		txn_dependency: make([]TxDependency, block_size),
-		txn_status:     make([]StatusEntry, block_size),
+		block_size:      block_size,
+		txn_dependency:  make([]TxDependency, block_size),
+		txn_status:      make([]StatusEntry, block_size),
+		txnReExecutions: make([]atomic.Uint64, block_size),
 	}
 }
 
@@ -198,6 +204,21 @@ func (s *Scheduler) TryValidationAbort(version TxnVersion) bool {
 // Invariant `num_active_tasks`: decreased if an invalid task is returned.
 func (s *Scheduler) FinishValidation(txn TxnIndex, aborted bool) (TxnVersion, TaskKind) {
 	if aborted {
+		// Increment re-execution counter for this transaction
+		reExecCount := s.txnReExecutions[txn].Add(1)
+
+		// Emit telemetry for this re-execution
+		telemetry.IncrCounterWithLabels(
+			[]string{TelemetrySubsystem, KeyTxReExecutions},
+			1,
+			[]telemetry.Label{telemetry.NewLabel("tx_index", strconv.Itoa(int(txn)))},
+		)
+		telemetry.SetGaugeWithLabels(
+			[]string{TelemetrySubsystem, KeyTxReExecutions, "count"},
+			float32(reExecCount),
+			[]telemetry.Label{telemetry.NewLabel("tx_index", strconv.Itoa(int(txn)))},
+		)
+
 		s.txn_status[txn].SetReadyStatus()
 		s.DecreaseValidationIdx(txn + 1)
 		if s.execution_idx.Load() > uint64(txn) {
@@ -212,4 +233,12 @@ func (s *Scheduler) FinishValidation(txn TxnIndex, aborted bool) (TxnVersion, Ta
 func (s *Scheduler) Stats() string {
 	return fmt.Sprintf("executed: %d, validated: %d",
 		s.executedTxns.Load(), s.validatedTxns.Load())
+}
+
+// GetTxnReExecutionCount returns the number of times a transaction has been re-executed
+func (s *Scheduler) GetTxnReExecutionCount(txn TxnIndex) uint64 {
+	if int(txn) >= len(s.txnReExecutions) {
+		return 0
+	}
+	return s.txnReExecutions[txn].Load()
 }

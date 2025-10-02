@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"io"
 
+	storetypes "cosmossdk.io/store/types"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-sdk/testutil/x/counter"
 
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/log"
@@ -12,6 +14,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	counterkeeper "github.com/cosmos/cosmos-sdk/testutil/x/counter/keeper"
+	countertypes "github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
 )
 
 const appName = "SimApp"
@@ -63,6 +67,9 @@ func NewSimApp(
 	// add module to module manager
 	// update keys
 	//
+
+	counterKeeper := counterkeeper.NewKeeper(runtime.NewKVStoreService(storetypes.NewKVStoreKey(countertypes.ModuleName)))
+	_ = counter.NewAppModule(counterKeeper)
 
 	app.LoadModules()
 

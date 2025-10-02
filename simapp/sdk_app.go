@@ -2,6 +2,7 @@ package simapp
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"maps"
 	"slices"
@@ -720,7 +721,7 @@ func NewSDKApp(
 
 		sdkApp.EpochsKeeper.SetHooks(
 			epochstypes.NewMultiEpochHooks(
-			// insert epoch hooks receivers here
+				// insert epoch hooks receivers here
 			),
 		)
 		optionalModules = append(optionalModules, epochs.NewAppModule(*sdkApp.EpochsKeeper))
@@ -734,6 +735,7 @@ func NewSDKApp(
 		auth.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.AccountKeeper, authsims.RandomGenesisAccounts, nil),
 		vesting.NewAppModule(sdkApp.AccountKeeper, sdkApp.BankKeeper),
 		bank.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.BankKeeper, sdkApp.AccountKeeper, nil),
+		// todo optional???
 		gov.NewAppModule(sdkApp.EncodingConfig.Codec, &sdkApp.GovKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, nil),
 		slashing.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.SlashingKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, sdkApp.StakingKeeper, nil, sdkApp.EncodingConfig.InterfaceRegistry),
 		distr.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.DistrKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, sdkApp.StakingKeeper, nil),
@@ -749,7 +751,42 @@ func NewSDKApp(
 	return sdkApp
 }
 
-func (app *SDKApp) AddModule(module module.AppModule) {
+type AppModule struct {
+	module.AppModule
+	name      string
+	storeKey  string
+	maccPerms map[string][]string
+}
+
+func (app *SDKApp) AddModule(module AppModule) error {
+	// update maccPerms
+	for moduleAcc, perms := range module.maccPerms {
+		if _, found := app.moduleAccountPerms[moduleAcc]; found {
+			return fmt.Errorf("module account %s already exists in app: %v", moduleAcc, app.moduleAccountPerms)
+		}
+
+		app.moduleAccountPerms[moduleAcc] = perms
+	}
+
+	// add to the key list
+	app.keys = append(app.keys, module.storeKey)
+
+	// add to store key list
+	app.StoreKeys = storetypes.NewKVStoreKeys(
+		app.keys...,
+	)
+
+	// append actual module
+	app.optionalModules = append(app.optionalModules, module)
+
+	// append to order of genesis etc
+	app.orderPreBlockers = append(app.orderPreBlockers, module.name)
+	app.orderBeginBlockers = append(app.orderBeginBlockers, module.name)
+	app.orderEndBlockers = append(app.orderEndBlockers, module.name)
+	app.orderInitGenesis = append(app.orderInitGenesis, module.name)
+	app.orderExportGenesis = append(app.orderExportGenesis, module.name)
+
+	return nil
 }
 
 func (app *SDKApp) LoadModules() {

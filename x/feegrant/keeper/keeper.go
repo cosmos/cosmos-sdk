@@ -155,8 +155,8 @@ func (k Keeper) UpdateAllowance(ctx context.Context, granter, grantee sdk.AccAdd
 	return nil
 }
 
-// revokeAllowance removes an existing grant
-func (k Keeper) revokeAllowance(ctx context.Context, granter, grantee sdk.AccAddress) error {
+// RevokeAllowance removes an existing grant
+func (k Keeper) RevokeAllowance(ctx context.Context, granter, grantee sdk.AccAddress) error {
 	grant, err := k.GetAllowance(ctx, granter, grantee)
 	if err != nil {
 		return err
@@ -239,8 +239,8 @@ func (k Keeper) UseGrantedFees(ctx context.Context, granter, grantee sdk.AccAddr
 	remove, err := grant.Accept(ctx, fee, msgs)
 
 	if remove {
-		// Ignoring the `revokeFeeAllowance` error, because the user has enough grants to perform this transaction.
-		_ = k.revokeAllowance(ctx, granter, grantee)
+		// Ignoring the `RevokeAllowance` error, because the user has enough grants to perform this transaction.
+		_ = k.RevokeAllowance(ctx, granter, grantee)
 		if err != nil {
 			return err
 		}

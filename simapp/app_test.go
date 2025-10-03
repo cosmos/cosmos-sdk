@@ -67,7 +67,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	})
 
 	// BlockedAddresses returns a map of addresses in app v1 and a map of modules name in app di.
-	for acc := range BlockedAddresses() {
+	for acc := range app.BlockedAddresses() {
 		var addr sdk.AccAddress
 		if modAddr, err := sdk.AccAddressFromBech32(acc); err == nil {
 			addr = modAddr
@@ -102,12 +102,12 @@ func TestRunMigrations(t *testing.T) {
 	logger := log.NewTestLogger(t)
 	app := NewSimApp(logger.With("instance", "simapp"), db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
 
-	// Create a new baseapp and configurator for the purpose of this test.
+	// Create a new baseapp and Configurator for the purpose of this test.
 	bApp := baseapp.NewBaseApp(app.Name(), logger.With("instance", "baseapp"), db, app.TxConfig().TxDecoder())
 	bApp.SetCommitMultiStoreTracer(nil)
 	bApp.SetInterfaceRegistry(app.InterfaceRegistry())
 	app.BaseApp = bApp
-	configurator := module.NewConfigurator(app.appCodec, bApp.MsgServiceRouter(), app.GRPCQueryRouter())
+	configurator := module.NewConfigurator(app.AppCodec(), bApp.MsgServiceRouter(), app.GRPCQueryRouter())
 
 	// We register all modules on the Configurator, except x/bank. x/bank will
 	// serve as the test subject on which we run the migration tests.
@@ -249,8 +249,8 @@ func TestInitGenesisOnMigration(t *testing.T) {
 	t.Cleanup(mockCtrl.Finish)
 	mockModule := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
 	mockDefaultGenesis := json.RawMessage(`{"key": "value"}`)
-	mockModule.EXPECT().DefaultGenesis(gomock.Eq(app.appCodec)).Times(1).Return(mockDefaultGenesis)
-	mockModule.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(app.appCodec), gomock.Eq(mockDefaultGenesis)).Times(1)
+	mockModule.EXPECT().DefaultGenesis(gomock.Eq(app.AppCodec())).Times(1).Return(mockDefaultGenesis)
+	mockModule.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(app.AppCodec()), gomock.Eq(mockDefaultGenesis)).Times(1)
 	mockModule.EXPECT().ConsensusVersion().Times(1).Return(uint64(0))
 
 	app.ModuleManager.Modules["mock"] = mockModule

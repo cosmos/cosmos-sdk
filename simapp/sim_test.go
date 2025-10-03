@@ -58,7 +58,7 @@ func setupStateFactory(app *SimApp) sims.SimStateFactory {
 	return sims.SimStateFactory{
 		Codec:         app.AppCodec(),
 		AppStateFn:    simtestutil.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
-		BlockedAddr:   BlockedAddresses(),
+		BlockedAddr:   app.BlockedAddresses(),
 		AccountSource: app.AccountKeeper,
 		BalanceSource: app.BankKeeper,
 	}
@@ -83,7 +83,7 @@ func TestAppImportExport(t *testing.T) {
 		var genesisState GenesisState
 		require.NoError(tb, json.Unmarshal(exported.AppState, &genesisState))
 		ctxB := newApp.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()})
-		_, err = newApp.ModuleManager.InitGenesis(ctxB, newApp.appCodec, genesisState)
+		_, err = newApp.ModuleManager.InitGenesis(ctxB, newApp.AppCodec(), genesisState)
 		if IsEmptyValidatorSetErr(err) {
 			tb.Skip("Skipping simulation as all validators have been unbonded")
 			return
@@ -177,7 +177,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	interBlockCachingAppFactory := func(logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp)) *SimApp {
 		if FlagEnableStreamingValue {
 			m := map[string]any{
-				"streaming.abci.keys":             []string{"*"},
+				"streaming.abci.Keys":             []string{"*"},
 				"streaming.abci.plugin":           "abci_v1",
 				"streaming.abci.stop-node-on-err": true,
 			}

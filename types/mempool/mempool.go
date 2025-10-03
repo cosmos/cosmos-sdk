@@ -7,6 +7,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+var (
+	ErrTxNotFound           = errors.New("tx not found in mempool")
+	ErrMempoolTxMaxCapacity = errors.New("pool reached max tx capacity")
+)
+
 type Mempool interface {
 	// Insert attempts to insert a Tx into the app-side mempool returning
 	// an error upon failure.
@@ -45,11 +50,6 @@ type Iterator interface {
 	// Tx returns the transaction at the current position of the iterator.
 	Tx() sdk.Tx
 }
-
-var (
-	ErrTxNotFound           = errors.New("tx not found in mempool")
-	ErrMempoolTxMaxCapacity = errors.New("pool reached max tx capacity")
-)
 
 // SelectBy is compatible with old interface to avoid breaking api.
 // In v0.52+, this function is removed and SelectBy is merged into Mempool interface.

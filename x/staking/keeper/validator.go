@@ -211,7 +211,7 @@ func (k Keeper) UpdateValidatorCommission(ctx context.Context,
 }
 
 // RemoveValidator removes the validator record and associated indexes
-// except for the bonded validator index which is only handled in ApplyAndReturnTendermintUpdates
+// except for the bonded validator index which is only handled in ApplyAndReturnValidatorSetUpdates
 func (k Keeper) RemoveValidator(ctx context.Context, address sdk.ValAddress) error {
 	// first retrieve the old validator record
 	validator, err := k.GetValidator(ctx, address)

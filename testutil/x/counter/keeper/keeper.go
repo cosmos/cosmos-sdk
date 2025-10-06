@@ -5,14 +5,14 @@ import (
 	"errors"
 	"fmt"
 
-	storetypes "cosmossdk.io/store/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
+	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -29,6 +29,7 @@ type Keeper struct {
 func NewKeeper2() *Keeper {
 	key := storetypes.NewKVStoreKey(types.ModuleName)
 	k := NewKeeper(runtime.NewKVStoreService(key))
+	k.key = key
 
 	return k
 }

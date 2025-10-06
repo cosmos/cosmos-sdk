@@ -754,7 +754,7 @@ func NewSDKApp(
 
 func (app *SDKApp) AddModule(module Module) error {
 	// update MaccPerms
-	for moduleAcc, perms := range module.MaccPerms {
+	for moduleAcc, perms := range module.MaccPerms() {
 		if _, found := app.moduleAccountPerms[moduleAcc]; found {
 			return fmt.Errorf("module account %s already exists in app: %v", moduleAcc, app.moduleAccountPerms)
 		}
@@ -763,22 +763,22 @@ func (app *SDKApp) AddModule(module Module) error {
 	}
 
 	// add to store key list
-	for name, storeKey := range module.StoreKeys {
+	for name, storeKey := range module.StoreKeys() {
 		if _, found := app.StoreKeys[name]; found {
-			return fmt.Errorf("module store key %s already exists in app: %v", module.Name, app.StoreKeys)
+			return fmt.Errorf("module store key %s already exists in app: %v", module.Name(), app.StoreKeys)
 		}
 		app.StoreKeys[name] = storeKey
 	}
 
 	// append actual module
-	app.optionalModules = append(app.optionalModules, module.AppModule)
+	app.optionalModules = append(app.optionalModules, module)
 
 	// append to order of genesis etc
-	app.orderPreBlockers = append(app.orderPreBlockers, module.Name)
-	app.orderBeginBlockers = append(app.orderBeginBlockers, module.Name)
-	app.orderEndBlockers = append(app.orderEndBlockers, module.Name)
-	app.orderInitGenesis = append(app.orderInitGenesis, module.Name)
-	app.orderExportGenesis = append(app.orderExportGenesis, module.Name)
+	app.orderPreBlockers = append(app.orderPreBlockers, module.Name())
+	app.orderBeginBlockers = append(app.orderBeginBlockers, module.Name())
+	app.orderEndBlockers = append(app.orderEndBlockers, module.Name())
+	app.orderInitGenesis = append(app.orderInitGenesis, module.Name())
+	app.orderExportGenesis = append(app.orderExportGenesis, module.Name())
 
 	return nil
 }

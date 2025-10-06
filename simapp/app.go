@@ -8,15 +8,12 @@ import (
 
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/log"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/app"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/x/counter"
-	counterkeeper "github.com/cosmos/cosmos-sdk/testutil/x/counter/keeper"
-	countertypes "github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
 )
 
 const appName = "SimApp"
@@ -62,19 +59,7 @@ func NewSimApp(
 		SDKApp: sdkApp,
 	}
 
-	key := storetypes.NewKVStoreKey(countertypes.ModuleName)
-	counterKeeper := counterkeeper.NewKeeper(runtime.NewKVStoreService(key))
-	counterModule := counter.NewAppModule(counterKeeper)
-	wrappedModule := app.Module{
-		AppModule: counterModule,
-		StoreKeys: map[string]*storetypes.KVStoreKey{
-			countertypes.ModuleName: key,
-		},
-		Name:      countertypes.ModuleName,
-		MaccPerms: nil,
-	}
-
-	err := simApp.AddModule(wrappedModule)
+	err := simApp.AddModule(counter.NewAppModule2())
 	if err != nil {
 		panic(err)
 	}

@@ -1,11 +1,11 @@
 package counter
 
 import (
-	storetypes "cosmossdk.io/store/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/app"
 	"github.com/cosmos/cosmos-sdk/client"

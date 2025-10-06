@@ -67,7 +67,7 @@ func NewSimApp(
 	simApp.LoadModules()
 
 	// RegisterUpgradeHandlers is used for registering any on-chain upgrades.
-	simApp.RegisterUpgradeHandlers()
+	simApp.RegisterUpgradeHandlers(MyUpgrade)
 
 	if loadLatest {
 		if err := simApp.LoadLatestVersion(); err != nil {

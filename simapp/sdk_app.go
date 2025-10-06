@@ -722,7 +722,7 @@ func NewSDKApp(
 
 		sdkApp.EpochsKeeper.SetHooks(
 			epochstypes.NewMultiEpochHooks(
-				// insert epoch hooks receivers here
+			// insert epoch hooks receivers here
 			),
 		)
 		optionalModules = append(optionalModules, epochs.NewAppModule(*sdkApp.EpochsKeeper))

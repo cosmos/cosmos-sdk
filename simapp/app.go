@@ -30,6 +30,8 @@ var (
 // capabilities aren't needed for testing.
 type SimApp struct {
 	*app.SDKApp
+
+	// TODO add other structures or configurations if you want
 }
 
 func init() {

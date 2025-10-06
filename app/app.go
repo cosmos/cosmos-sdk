@@ -1,4 +1,4 @@
-package simapp
+package app
 
 import (
 	"encoding/json"
@@ -399,7 +399,7 @@ func initBaseApp(
 
 	baseAppOptions = append(baseAppOptions, appConfig.BaseAppOptions...)
 
-	bApp := baseapp.NewBaseApp(appName, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
+	bApp := baseapp.NewBaseApp(appConfig.AppName, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(encodingConfig.InterfaceRegistry)
@@ -752,16 +752,16 @@ func NewSDKApp(
 	return sdkApp
 }
 
-type AppModule struct {
+type Module struct {
 	module.AppModule
-	storeKeys map[string]*storetypes.KVStoreKey
-	name      string
-	maccPerms map[string][]string
+	StoreKeys map[string]*storetypes.KVStoreKey
+	Name      string
+	MaccPerms map[string][]string
 }
 
-func (app *SDKApp) AddModule(module AppModule) error {
-	// update maccPerms
-	for moduleAcc, perms := range module.maccPerms {
+func (app *SDKApp) AddModule(module Module) error {
+	// update MaccPerms
+	for moduleAcc, perms := range module.MaccPerms {
 		if _, found := app.moduleAccountPerms[moduleAcc]; found {
 			return fmt.Errorf("module account %s already exists in app: %v", moduleAcc, app.moduleAccountPerms)
 		}
@@ -770,22 +770,22 @@ func (app *SDKApp) AddModule(module AppModule) error {
 	}
 
 	// add to store key list
-	for name, storeKey := range module.storeKeys {
+	for name, storeKey := range module.StoreKeys {
 		if _, found := app.StoreKeys[name]; found {
-			return fmt.Errorf("module store key %s already exists in app: %v", module.name, app.StoreKeys)
+			return fmt.Errorf("module store key %s already exists in app: %v", module.Name, app.StoreKeys)
 		}
 		app.StoreKeys[name] = storeKey
 	}
 
 	// append actual module
-	app.optionalModules = append(app.optionalModules, module)
+	app.optionalModules = append(app.optionalModules, module.AppModule)
 
 	// append to order of genesis etc
-	app.orderPreBlockers = append(app.orderPreBlockers, module.name)
-	app.orderBeginBlockers = append(app.orderBeginBlockers, module.name)
-	app.orderEndBlockers = append(app.orderEndBlockers, module.name)
-	app.orderInitGenesis = append(app.orderInitGenesis, module.name)
-	app.orderExportGenesis = append(app.orderExportGenesis, module.name)
+	app.orderPreBlockers = append(app.orderPreBlockers, module.Name)
+	app.orderBeginBlockers = append(app.orderBeginBlockers, module.Name)
+	app.orderEndBlockers = append(app.orderEndBlockers, module.Name)
+	app.orderInitGenesis = append(app.orderInitGenesis, module.Name)
+	app.orderExportGenesis = append(app.orderExportGenesis, module.Name)
 
 	return nil
 }
@@ -870,7 +870,7 @@ func (app *SDKApp) loadModules() {
 	app.MountKVStores(app.StoreKeys)
 }
 
-// Name returns the name of the App
+// Name returns the Name of the App
 func (app *SDKApp) Name() string { return app.BaseApp.Name() }
 
 // PreBlocker application updates every pre block
@@ -894,7 +894,7 @@ func (app *SDKApp) Configurator() module.Configurator {
 
 // InitChainer application update at chain initialization
 func (app *SDKApp) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
-	var genesisState GenesisState
+	var genesisState sdk.GenesisState
 	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
 	}
@@ -931,27 +931,6 @@ func (app *SDKApp) InterfaceRegistry() types.InterfaceRegistry {
 // TxConfig returns SimApp's TxConfig
 func (app *SDKApp) TxConfig() client.TxConfig {
 	return app.EncodingConfig.TxConfig
-}
-
-// AutoCliOpts returns the autocli options for the app.
-func (app *SDKApp) AutoCliOpts() autocli.AppOptions {
-	modules := make(map[string]appmodule.AppModule, 0)
-	for _, m := range app.ModuleManager.Modules {
-		if moduleWithName, ok := m.(module.HasName); ok {
-			moduleName := moduleWithName.Name()
-			if appModule, ok := moduleWithName.(appmodule.AppModule); ok {
-				modules[moduleName] = appModule
-			}
-		}
-	}
-
-	return autocli.AppOptions{
-		Modules:               modules,
-		ModuleOptions:         runtimeservices.ExtractAutoCLIOptions(app.ModuleManager.Modules),
-		AddressCodec:          authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
-		ValidatorAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
-		ConsensusAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
-	}
 }
 
 // DefaultGenesis returns a default genesis from the registered AppModuleBasic's.
@@ -1068,4 +1047,25 @@ func (app *SDKApp) BlockedAddresses() map[string]bool {
 	delete(modAccAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
 	return modAccAddrs
+}
+
+// AutoCliOpts returns the autocli options for the app.
+func (app *SDKApp) AutoCliOpts() autocli.AppOptions {
+	modules := make(map[string]appmodule.AppModule, 0)
+	for _, m := range app.ModuleManager.Modules {
+		if moduleWithName, ok := m.(module.HasName); ok {
+			moduleName := moduleWithName.Name()
+			if appModule, ok := moduleWithName.(appmodule.AppModule); ok {
+				modules[moduleName] = appModule
+			}
+		}
+	}
+
+	return autocli.AppOptions{
+		Modules:               modules,
+		ModuleOptions:         runtimeservices.ExtractAutoCLIOptions(app.ModuleManager.Modules),
+		AddressCodec:          authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
+		ValidatorAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
+		ConsensusAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
+	}
 }

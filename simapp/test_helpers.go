@@ -37,7 +37,7 @@ type SetupOptions struct {
 	AppOpts servertypes.AppOptions
 }
 
-func setup(withGenesis bool) (*SimApp, GenesisState) {
+func setup(withGenesis bool) (*SimApp, sdk.GenesisState) {
 	db := dbm.NewMemDB()
 
 	appOptions := make(simtestutil.AppOptionsMap, 0)
@@ -47,7 +47,7 @@ func setup(withGenesis bool) (*SimApp, GenesisState) {
 	if withGenesis {
 		return app, app.DefaultGenesis()
 	}
-	return app, GenesisState{}
+	return app, sdk.GenesisState{}
 }
 
 // NewSimappWithCustomOptions initializes a new SimApp with custom options.
@@ -153,7 +153,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *cmttypes.ValidatorSet, genAccs
 
 // GenesisStateWithSingleValidator initializes GenesisState with a single validator and genesis accounts
 // that also act as delegators.
-func GenesisStateWithSingleValidator(t *testing.T, app *SimApp) GenesisState {
+func GenesisStateWithSingleValidator(t *testing.T, app *SimApp) sdk.GenesisState {
 	t.Helper()
 
 	privVal := mock.NewPV()

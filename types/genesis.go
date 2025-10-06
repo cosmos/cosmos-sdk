@@ -1,8 +1,6 @@
-package simapp
+package types
 
-import (
-	"encoding/json"
-)
+import "encoding/json"
 
 // GenesisState of the blockchain is represented here as a map of raw json
 // messages key'd by a identifier string.

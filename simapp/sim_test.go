@@ -80,7 +80,7 @@ func TestAppImportExport(t *testing.T) {
 		tb.Log("importing genesis...\n")
 		newTestInstance := sims.NewSimulationAppInstance(tb, ti.Cfg, NewSimApp)
 		newApp := newTestInstance.App
-		var genesisState GenesisState
+		var genesisState sdk.GenesisState
 		require.NoError(tb, json.Unmarshal(exported.AppState, &genesisState))
 		ctxB := newApp.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()})
 		_, err = newApp.ModuleManager.InitGenesis(ctxB, newApp.AppCodec(), genesisState)

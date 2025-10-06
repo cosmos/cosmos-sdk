@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/app"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -32,7 +33,7 @@ var (
 // They are exported for convenience in creating helper functions, as object
 // capabilities aren't needed for testing.
 type SimApp struct {
-	*SDKApp
+	*app.SDKApp
 }
 
 func init() {
@@ -52,12 +53,12 @@ func NewSimApp(
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *SimApp {
-	sdkAppConfig := DefaultSDKAppConfig(appName, appOpts, baseAppOptions...)
+	sdkAppConfig := app.DefaultSDKAppConfig(appName, appOpts, baseAppOptions...)
 	sdkAppConfig.WithEpochs = true
 
-	sdkApp := NewSDKApp(logger, db, traceStore, sdkAppConfig)
+	sdkApp := app.NewSDKApp(logger, db, traceStore, sdkAppConfig)
 
-	app := &SimApp{
+	simApp := &SimApp{
 		SDKApp: sdkApp,
 	}
 
@@ -71,30 +72,30 @@ func NewSimApp(
 	key := storetypes.NewKVStoreKey(countertypes.ModuleName)
 	counterKeeper := counterkeeper.NewKeeper(runtime.NewKVStoreService(key))
 	counterModule := counter.NewAppModule(counterKeeper)
-	wrappedModule := AppModule{
+	wrappedModule := app.Module{
 		AppModule: counterModule,
-		storeKeys: map[string]*storetypes.KVStoreKey{
+		StoreKeys: map[string]*storetypes.KVStoreKey{
 			countertypes.ModuleName: key,
 		},
-		name:      countertypes.ModuleName,
-		maccPerms: nil,
+		Name:      countertypes.ModuleName,
+		MaccPerms: nil,
 	}
 
-	err := app.AddModule(wrappedModule)
+	err := simApp.AddModule(wrappedModule)
 	if err != nil {
 		panic(err)
 	}
 
-	app.LoadModules()
+	simApp.LoadModules()
 
 	// RegisterUpgradeHandlers is used for registering any on-chain upgrades.
-	app.RegisterUpgradeHandlers()
+	simApp.RegisterUpgradeHandlers()
 
 	if loadLatest {
-		if err := app.LoadLatestVersion(); err != nil {
+		if err := simApp.LoadLatestVersion(); err != nil {
 			panic(fmt.Errorf("error loading last version: %w", err))
 		}
 	}
 
-	return app
+	return simApp
 }

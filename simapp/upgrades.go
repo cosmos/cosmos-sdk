@@ -25,6 +25,7 @@ var MyUpgrade = app.Upgrade[*SimApp]{
 		},
 	},
 	UpgradeCallBack: func(ctx sdk.Context, plan upgradetypes.Plan, app *SimApp) error {
+		ctx.Logger().Debug("this is a debug level message to test that verbose logging mode has properly been enabled during a chain upgrade")
 		return nil
 	},
 }

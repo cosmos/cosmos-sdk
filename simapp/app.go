@@ -6,7 +6,6 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 
-	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/app"
@@ -35,7 +34,7 @@ type SimApp struct {
 
 func init() {
 	var err error
-	DefaultNodeHome, err = clienthelpers.GetNodeHomeDirectory(".simapp")
+	DefaultNodeHome, err = app.GetNodeHomeDirectory(".simapp")
 	if err != nil {
 		panic(err)
 	}

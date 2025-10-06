@@ -79,7 +79,8 @@ func TestLoadStore(t *testing.T) {
 	cIDHp := types.CommitID{Version: verHp, Hash: hash}
 	require.Nil(t, err)
 
-	// TODO: Prune this height
+	// Prune up to and including Hp (this will prune both H and Hp)
+	require.NoError(t, store.DeleteVersionsTo(verHp))
 
 	// Create current height Hc
 	updated, err = tree.Set([]byte("hello"), []byte("ciao"))
@@ -89,30 +90,26 @@ func TestLoadStore(t *testing.T) {
 	cIDHc := types.CommitID{Version: verHc, Hash: hash}
 	require.Nil(t, err)
 
-	// Querying an existing store at some previous non-pruned height H
-	hStore, err := store.GetImmutable(verH)
-	require.NoError(t, err)
-	require.Equal(t, string(hStore.Get([]byte("hello"))), "hallo")
+	// Querying an existing store at some previous pruned height H
+	_, err = store.GetImmutable(verH)
+	require.Error(t, err)
 
 	// Querying an existing store at some previous pruned height Hp
-	hpStore, err := store.GetImmutable(verHp)
-	require.NoError(t, err)
-	require.Equal(t, string(hpStore.Get([]byte("hello"))), "hola")
+	_, err = store.GetImmutable(verHp)
+	require.Error(t, err)
 
 	// Querying an existing store at current height Hc
 	hcStore, err := store.GetImmutable(verHc)
 	require.NoError(t, err)
 	require.Equal(t, string(hcStore.Get([]byte("hello"))), "ciao")
 
-	// Querying a new store at some previous non-pruned height H
-	newHStore, err := LoadStore(db, log.NewNopLogger(), types.NewKVStoreKey("test"), cIDH, DefaultIAVLCacheSize, false, metrics.NewNoOpMetrics())
-	require.NoError(t, err)
-	require.Equal(t, string(newHStore.Get([]byte("hello"))), "hallo")
+	// Querying a new store at some previous pruned height H
+	_, err = LoadStore(db, log.NewNopLogger(), types.NewKVStoreKey("test"), cIDH, DefaultIAVLCacheSize, false, metrics.NewNoOpMetrics())
+	require.Error(t, err)
 
 	// Querying a new store at some previous pruned height Hp
-	newHpStore, err := LoadStore(db, log.NewNopLogger(), types.NewKVStoreKey("test"), cIDHp, DefaultIAVLCacheSize, false, metrics.NewNoOpMetrics())
-	require.NoError(t, err)
-	require.Equal(t, string(newHpStore.Get([]byte("hello"))), "hola")
+	_, err = LoadStore(db, log.NewNopLogger(), types.NewKVStoreKey("test"), cIDHp, DefaultIAVLCacheSize, false, metrics.NewNoOpMetrics())
+	require.Error(t, err)
 
 	// Querying a new store at current height H
 	newHcStore, err := LoadStore(db, log.NewNopLogger(), types.NewKVStoreKey("test"), cIDHc, DefaultIAVLCacheSize, false, metrics.NewNoOpMetrics())

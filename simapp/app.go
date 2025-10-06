@@ -52,6 +52,8 @@ func NewSimApp(
 ) *SimApp {
 	sdkAppConfig := app.DefaultSDKAppConfig(appName, appOpts, baseAppOptions...)
 	sdkAppConfig.WithEpochs = true
+	sdkAppConfig.ExtendVoteHandler = NewVoteExtensionHandler().ExtendVote()
+	sdkAppConfig.VerifyVoteExtensionHandler = NewVoteExtensionHandler().VerifyVoteExtension()
 
 	sdkApp := app.NewSDKApp(logger, db, traceStore, sdkAppConfig)
 
@@ -67,7 +69,7 @@ func NewSimApp(
 	simApp.LoadModules()
 
 	// RegisterUpgradeHandlers is used for registering any on-chain upgrades.
-	simApp.RegisterUpgradeHandlers(MyUpgrade)
+	app.RegisterUpgradeHandlers(simApp, MyUpgrade)
 
 	if loadLatest {
 		if err := simApp.LoadLatestVersion(); err != nil {

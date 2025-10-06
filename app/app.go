@@ -35,10 +35,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/std"
 	testdata_pulsar "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	sigtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -98,85 +96,31 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-var defaultMaccPerms = map[string][]string{
-	authtypes.FeeCollectorName:                  nil,
-	distrtypes.ModuleName:                       nil,
-	minttypes.ModuleName:                        {authtypes.Minter},
-	stakingtypes.BondedPoolName:                 {authtypes.Burner, authtypes.Staking},
-	stakingtypes.NotBondedPoolName:              {authtypes.Burner, authtypes.Staking},
-	govtypes.ModuleName:                         {authtypes.Burner},
-	protocolpooltypes.ModuleName:                nil,
-	protocolpooltypes.ProtocolPoolEscrowAccount: nil,
+type AppI interface { //nolint:revive // keeping this name for clarity
+	servertypes.Application
+
+	ModuleManager() *module.Manager
+	UpgradeKeeper() *upgradekeeper.Keeper
+	Configurator() module.Configurator
+	SetStoreLoader(loader baseapp.StoreLoader)
 }
 
-type EncodingConfig struct {
-	InterfaceRegistry types.InterfaceRegistry
-	Codec             *codec.ProtoCodec
-	LegacyAmino       *codec.LegacyAmino
-	TxConfig          client.TxConfig
-}
+var _ AppI = &SDKApp{}
 
-func NewEncodingConfigFromOptions(opts types.InterfaceRegistryOptions) EncodingConfig {
-	interfaceRegistry, err := types.NewInterfaceRegistryWithOptions(opts)
-	if err != nil {
-		panic(err)
-	}
-
-	appCodec := codec.NewProtoCodec(interfaceRegistry)
-	legacyAmino := codec.NewLegacyAmino()
-	txConfig := authtx.NewTxConfig(appCodec, authtx.DefaultSignModes)
-
-	if err := interfaceRegistry.SigningContext().Validate(); err != nil {
-		panic(err)
-	}
-
-	std.RegisterLegacyAminoCodec(legacyAmino)
-	std.RegisterInterfaces(interfaceRegistry)
-
-	return EncodingConfig{
-		InterfaceRegistry: interfaceRegistry,
-		Codec:             appCodec,
-		LegacyAmino:       legacyAmino,
-		TxConfig:          txConfig,
-	}
-}
-
-type SDKAppConfig struct {
-	AppName string
-
-	AppOpts        servertypes.AppOptions
-	BaseAppOptions []func(*baseapp.BaseApp)
-
-	InterfaceRegistryOptions types.InterfaceRegistryOptions
-
-	WithProtocolPool bool
-	WithAuthz        bool
-	WithEpochs       bool
-	WithFeeGrant     bool
-	WithMint         bool
-	// TODO gov optional?
-	// TODO any other optional modules?
-
-	WithUnorderedTx bool
-
-	Keys               []string
-	OrderPreBlockers   []string
-	OrderBeginBlockers []string
-	OrderEndBlockers   []string
-	OrderInitGenesis   []string
-	OrderExportGenesis []string
-
-	ModuleAccountPerms map[string][]string
-
-	Mempool mempool.Mempool
-
-	VerifyVoteExtensionHandler sdk.VerifyVoteExtensionHandler
-	PrepareProposalHandler     sdk.PrepareProposalHandler
-	ProcessProposalHandler     sdk.ProcessProposalHandler
-	ExtendVoteHandler          sdk.ExtendVoteHandler
-}
+// _ runtime.AppI            = &SDKApp{}
 
 var (
+	defaultMaccPerms = map[string][]string{
+		authtypes.FeeCollectorName:                  nil,
+		distrtypes.ModuleName:                       nil,
+		minttypes.ModuleName:                        {authtypes.Minter},
+		stakingtypes.BondedPoolName:                 {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName:              {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:                         {authtypes.Burner},
+		protocolpooltypes.ModuleName:                nil,
+		protocolpooltypes.ProtocolPoolEscrowAccount: nil,
+	}
+
 	defaultKeys = []string{
 		authtypes.StoreKey,
 		banktypes.StoreKey,
@@ -279,49 +223,6 @@ var (
 	}
 )
 
-func DefaultSDKAppConfig(
-	name string,
-	opts servertypes.AppOptions,
-	baseAppOptions ...func(*baseapp.BaseApp),
-) SDKAppConfig {
-	defaultOptions := server.DefaultBaseappOptions(opts)
-
-	// TODO - populate if nil to fix any issues
-
-	baseAppOptions = append(defaultOptions, baseAppOptions...)
-
-	return SDKAppConfig{
-		AppName: name,
-
-		InterfaceRegistryOptions: defaultInterfaceRegistryOptions,
-
-		AppOpts:          opts,
-		BaseAppOptions:   baseAppOptions,
-		WithProtocolPool: true,
-		WithAuthz:        true,
-		WithEpochs:       true,
-		WithFeeGrant:     true,
-		WithMint:         true,
-
-		WithUnorderedTx: true,
-
-		ModuleAccountPerms: defaultMaccPerms,
-
-		OrderPreBlockers:   defaultOrderPreBlockers,
-		OrderBeginBlockers: defaultOrderBeginBlockers,
-		OrderEndBlockers:   defaultOrderEndBlockers,
-		OrderInitGenesis:   defaultOrderInitGenesis,
-		OrderExportGenesis: defaultOrderExportGenesis,
-
-		Mempool:                    mempool.NoOpMempool{},
-		VerifyVoteExtensionHandler: baseapp.NoOpVerifyVoteExtensionHandler(),
-		ExtendVoteHandler:          baseapp.NoOpExtendVote(),
-		// leave these as nil for construction later in baseapp by default
-		PrepareProposalHandler: nil,
-		ProcessProposalHandler: nil,
-	}
-}
-
 type SDKApp struct {
 	loaded sync.Once
 
@@ -334,7 +235,7 @@ type SDKApp struct {
 	StoreKeys map[string]*storetypes.KVStoreKey
 
 	// the module manager
-	ModuleManager      *module.Manager
+	moduleManager      *module.Manager
 	BasicModuleManager module.BasicManager
 
 	// simulation manager
@@ -350,7 +251,7 @@ type SDKApp struct {
 	SlashingKeeper        slashingkeeper.Keeper
 	DistrKeeper           distrkeeper.Keeper
 	GovKeeper             govkeeper.Keeper
-	UpgradeKeeper         *upgradekeeper.Keeper
+	upgradeKeeper         *upgradekeeper.Keeper
 	EvidenceKeeper        *evidencekeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
 
@@ -661,7 +562,7 @@ func NewSDKApp(
 	}
 	homePath := cast.ToString(appConfig.AppOpts.Get(flags.FlagHome))
 	// set the governance module account as the authority for conducting upgrades
-	sdkApp.UpgradeKeeper = upgradekeeper.NewKeeper(
+	sdkApp.upgradeKeeper = upgradekeeper.NewKeeper(
 		skipUpgradeHeights,
 		runtime.NewKVStoreService(sdkApp.StoreKeys[upgradetypes.StoreKey]),
 		sdkApp.EncodingConfig.Codec,
@@ -741,7 +642,7 @@ func NewSDKApp(
 		slashing.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.SlashingKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, sdkApp.StakingKeeper, nil, sdkApp.EncodingConfig.InterfaceRegistry),
 		distr.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.DistrKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, sdkApp.StakingKeeper, nil),
 		staking.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.StakingKeeper, sdkApp.AccountKeeper, sdkApp.BankKeeper, nil),
-		upgrade.NewAppModule(sdkApp.UpgradeKeeper, sdkApp.AccountKeeper.AddressCodec()),
+		upgrade.NewAppModule(sdkApp.upgradeKeeper, sdkApp.AccountKeeper.AddressCodec()),
 		evidence.NewAppModule(*sdkApp.EvidenceKeeper),
 		consensus.NewAppModule(sdkApp.EncodingConfig.Codec, sdkApp.ConsensusParamsKeeper),
 	}
@@ -796,7 +697,7 @@ func (app *SDKApp) loadModules() {
 
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
-	app.ModuleManager = module.NewManager(
+	app.moduleManager = module.NewManager(
 		append(app.requiredModules, app.optionalModules...)...,
 	)
 
@@ -805,7 +706,7 @@ func (app *SDKApp) loadModules() {
 	// By default, it is composed of all the module from the module manager.
 	// Additionally, app module basics can be overwritten by passing them as argument.
 	app.BasicModuleManager = module.NewBasicManagerFromManager(
-		app.ModuleManager,
+		app.moduleManager,
 		map[string]module.AppModuleBasic{
 			genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
 			govtypes.ModuleName: gov.NewAppModuleBasic(
@@ -815,19 +716,19 @@ func (app *SDKApp) loadModules() {
 	app.BasicModuleManager.RegisterLegacyAminoCodec(app.EncodingConfig.LegacyAmino)
 	app.BasicModuleManager.RegisterInterfaces(app.EncodingConfig.InterfaceRegistry)
 
-	app.ModuleManager.SetOrderPreBlockers(app.orderPreBlockers...)
-	app.ModuleManager.SetOrderBeginBlockers(app.orderBeginBlockers...)
-	app.ModuleManager.SetOrderEndBlockers(app.orderEndBlockers...)
-	app.ModuleManager.SetOrderInitGenesis(app.orderInitGenesis...)
-	app.ModuleManager.SetOrderExportGenesis(app.orderExportGenesis...)
+	app.moduleManager.SetOrderPreBlockers(app.orderPreBlockers...)
+	app.moduleManager.SetOrderBeginBlockers(app.orderBeginBlockers...)
+	app.moduleManager.SetOrderEndBlockers(app.orderEndBlockers...)
+	app.moduleManager.SetOrderInitGenesis(app.orderInitGenesis...)
+	app.moduleManager.SetOrderExportGenesis(app.orderExportGenesis...)
 
 	app.configurator = module.NewConfigurator(app.EncodingConfig.Codec, app.MsgServiceRouter(), app.GRPCQueryRouter())
-	err := app.ModuleManager.RegisterServices(app.configurator)
+	err := app.moduleManager.RegisterServices(app.configurator)
 	if err != nil {
 		panic(err)
 	}
 
-	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.ModuleManager.Modules))
+	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.moduleManager.Modules))
 
 	reflectionSvc, err := runtimeservices.NewReflectionService()
 	if err != nil {
@@ -845,7 +746,7 @@ func (app *SDKApp) loadModules() {
 	overrideModules := map[string]module.AppModuleSimulation{
 		authtypes.ModuleName: auth.NewAppModule(app.EncodingConfig.Codec, app.AccountKeeper, authsims.RandomGenesisAccounts, nil),
 	}
-	app.simulationManager = module.NewSimulationManagerFromAppModules(app.ModuleManager.Modules, overrideModules)
+	app.simulationManager = module.NewSimulationManagerFromAppModules(app.moduleManager.Modules, overrideModules)
 
 	app.simulationManager.RegisterStoreDecoders()
 
@@ -868,17 +769,17 @@ func (app *SDKApp) Name() string { return app.BaseApp.Name() }
 
 // PreBlocker application updates every pre block
 func (app *SDKApp) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
-	return app.ModuleManager.PreBlock(ctx)
+	return app.moduleManager.PreBlock(ctx)
 }
 
 // BeginBlocker application updates every begin block
 func (app *SDKApp) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
-	return app.ModuleManager.BeginBlock(ctx)
+	return app.moduleManager.BeginBlock(ctx)
 }
 
 // EndBlocker application updates every end block
 func (app *SDKApp) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
-	return app.ModuleManager.EndBlock(ctx)
+	return app.moduleManager.EndBlock(ctx)
 }
 
 func (app *SDKApp) Configurator() module.Configurator {
@@ -891,8 +792,8 @@ func (app *SDKApp) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*ab
 	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
 	}
-	_ = app.UpgradeKeeper.SetModuleVersionMap(ctx, app.ModuleManager.GetVersionMap())
-	return app.ModuleManager.InitGenesis(ctx, app.EncodingConfig.Codec, genesisState)
+	_ = app.upgradeKeeper.SetModuleVersionMap(ctx, app.moduleManager.GetVersionMap())
+	return app.moduleManager.InitGenesis(ctx, app.EncodingConfig.Codec, genesisState)
 }
 
 // LoadHeight loads a particular height
@@ -1045,7 +946,7 @@ func (app *SDKApp) BlockedAddresses() map[string]bool {
 // AutoCliOpts returns the autocli options for the app.
 func (app *SDKApp) AutoCliOpts() autocli.AppOptions {
 	modules := make(map[string]appmodule.AppModule, 0)
-	for _, m := range app.ModuleManager.Modules {
+	for _, m := range app.moduleManager.Modules {
 		if moduleWithName, ok := m.(module.HasName); ok {
 			moduleName := moduleWithName.Name()
 			if appModule, ok := moduleWithName.(appmodule.AppModule); ok {
@@ -1056,9 +957,17 @@ func (app *SDKApp) AutoCliOpts() autocli.AppOptions {
 
 	return autocli.AppOptions{
 		Modules:               modules,
-		ModuleOptions:         runtimeservices.ExtractAutoCLIOptions(app.ModuleManager.Modules),
+		ModuleOptions:         runtimeservices.ExtractAutoCLIOptions(app.moduleManager.Modules),
 		AddressCodec:          authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
 		ValidatorAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
 		ConsensusAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
 	}
+}
+
+func (app *SDKApp) ModuleManager() *module.Manager {
+	return app.moduleManager
+}
+
+func (app *SDKApp) UpgradeKeeper() *upgradekeeper.Keeper {
+	return app.upgradeKeeper
 }

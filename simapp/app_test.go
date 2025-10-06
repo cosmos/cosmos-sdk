@@ -114,7 +114,7 @@ func TestRunMigrations(t *testing.T) {
 	//
 	// The loop below is the same as calling `RegisterServices` on
 	// ModuleManager, except that we skip x/bank.
-	for name, mod := range app.ModuleManager.Modules {
+	for name, mod := range app.ModuleManager().Modules {
 		if name == banktypes.ModuleName {
 			continue
 		}
@@ -207,7 +207,7 @@ func TestRunMigrations(t *testing.T) {
 			// Run migrations only for bank. That's why we put the initial
 			// version for bank as 1, and for all other modules, we put as
 			// their latest ConsensusVersion.
-			_, err = app.ModuleManager.RunMigrations(
+			_, err = app.ModuleManager().RunMigrations(
 				app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()}), configurator,
 				module.VersionMap{
 					banktypes.ModuleName:         1,
@@ -253,11 +253,11 @@ func TestInitGenesisOnMigration(t *testing.T) {
 	mockModule.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(app.AppCodec()), gomock.Eq(mockDefaultGenesis)).Times(1)
 	mockModule.EXPECT().ConsensusVersion().Times(1).Return(uint64(0))
 
-	app.ModuleManager.Modules["mock"] = mockModule
+	app.ModuleManager().Modules["mock"] = mockModule
 
 	// Run migrations only for "mock" module. We exclude it from
 	// the VersionMap to simulate upgrading with a new module.
-	_, err := app.ModuleManager.RunMigrations(ctx, app.Configurator(),
+	_, err := app.ModuleManager().RunMigrations(ctx, app.Configurator(),
 		module.VersionMap{
 			"bank":         bank.AppModule{}.ConsensusVersion(),
 			"auth":         auth.AppModule{}.ConsensusVersion(),
@@ -287,15 +287,15 @@ func TestUpgradeStateOnGenesis(t *testing.T) {
 
 	// make sure the upgrade keeper has version map in state
 	ctx := app.NewContext(false)
-	vm, err := app.UpgradeKeeper.GetModuleVersionMap(ctx)
+	vm, err := app.UpgradeKeeper().GetModuleVersionMap(ctx)
 	require.NoError(t, err)
-	for v, i := range app.ModuleManager.Modules {
+	for v, i := range app.ModuleManager().Modules {
 		if i, ok := i.(module.HasConsensusVersion); ok {
 			require.Equal(t, vm[v], i.ConsensusVersion())
 		}
 	}
 
-	require.NotNil(t, app.UpgradeKeeper.GetVersionSetter())
+	require.NotNil(t, app.UpgradeKeeper().GetVersionSetter())
 }
 
 // TestMergedRegistry tests that fetching the gogo/protov2 merged registry

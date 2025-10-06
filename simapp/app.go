@@ -60,7 +60,7 @@ func NewSimApp(
 		SDKApp: sdkApp,
 	}
 
-	err := simApp.AddModule(counter.NewAppModule2())
+	err := simApp.AddModules(counter.NewAppModule2())
 	if err != nil {
 		panic(err)
 	}

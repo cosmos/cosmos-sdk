@@ -623,7 +623,7 @@ func NewSDKApp(
 
 		sdkApp.EpochsKeeper.SetHooks(
 			epochstypes.NewMultiEpochHooks(
-			// insert epoch hooks receivers here
+				// insert epoch hooks receivers here
 			),
 		)
 		optionalModules = append(optionalModules, epochs.NewAppModule(*sdkApp.EpochsKeeper))
@@ -653,7 +653,18 @@ func NewSDKApp(
 	return sdkApp
 }
 
-func (app *SDKApp) AddModule(module Module) error {
+func (app *SDKApp) AddModules(modules ...Module) error {
+	for _, module := range modules {
+		err := app.addModule(module)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (app *SDKApp) addModule(module Module) error {
 	// update MaccPerms
 	for moduleAcc, perms := range module.MaccPerms() {
 		if _, found := app.moduleAccountPerms[moduleAcc]; found {

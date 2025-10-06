@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -16,11 +18,25 @@ import (
 )
 
 type Keeper struct {
+	key          *storetypes.KVStoreKey
 	storeService store.KVStoreService
 
 	CountStore collections.Item[int64]
 
 	hooks types.CounterHooks
+}
+
+func NewKeeper2() *Keeper {
+	key := storetypes.NewKVStoreKey(types.ModuleName)
+	k := NewKeeper(runtime.NewKVStoreService(key))
+
+	return k
+}
+
+func (k *Keeper) StoreKeys() map[string]*storetypes.KVStoreKey {
+	return map[string]*storetypes.KVStoreKey{
+		types.StoreKey: k.key,
+	}
 }
 
 func NewKeeper(storeService store.KVStoreService) *Keeper {
@@ -33,10 +49,10 @@ func NewKeeper(storeService store.KVStoreService) *Keeper {
 
 // Querier
 
-var _ types.QueryServer = Keeper{}
+var _ types.QueryServer = &Keeper{}
 
 // GetCount queries the x/counter count
-func (k Keeper) GetCount(ctx context.Context, _ *types.QueryGetCountRequest) (*types.QueryGetCountResponse, error) {
+func (k *Keeper) GetCount(ctx context.Context, _ *types.QueryGetCountRequest) (*types.QueryGetCountResponse, error) {
 	count, err := k.CountStore.Get(ctx)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
@@ -51,9 +67,9 @@ func (k Keeper) GetCount(ctx context.Context, _ *types.QueryGetCountRequest) (*t
 
 // MsgServer
 
-var _ types.MsgServer = Keeper{}
+var _ types.MsgServer = &Keeper{}
 
-func (k Keeper) IncreaseCount(ctx context.Context, msg *types.MsgIncreaseCounter) (*types.MsgIncreaseCountResponse, error) {
+func (k *Keeper) IncreaseCount(ctx context.Context, msg *types.MsgIncreaseCounter) (*types.MsgIncreaseCountResponse, error) {
 	var num int64
 	num, err := k.CountStore.Get(ctx)
 	if err != nil {

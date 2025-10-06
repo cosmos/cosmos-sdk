@@ -752,13 +752,6 @@ func NewSDKApp(
 	return sdkApp
 }
 
-type Module struct {
-	module.AppModule
-	StoreKeys map[string]*storetypes.KVStoreKey
-	Name      string
-	MaccPerms map[string][]string
-}
-
 func (app *SDKApp) AddModule(module Module) error {
 	// update MaccPerms
 	for moduleAcc, perms := range module.MaccPerms {

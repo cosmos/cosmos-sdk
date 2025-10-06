@@ -62,13 +62,6 @@ func NewSimApp(
 		SDKApp: sdkApp,
 	}
 
-	// set up keeper ...
-	// app.AddModule()
-	// add keeper
-	// add module to module manager
-	// update keys
-	//
-
 	key := storetypes.NewKVStoreKey(countertypes.ModuleName)
 	counterKeeper := counterkeeper.NewKeeper(runtime.NewKVStoreService(key))
 	counterModule := counter.NewAppModule(counterKeeper)

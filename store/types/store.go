@@ -372,6 +372,8 @@ type StoreKey interface {
 // generation in the IBC protocol as defined in https://github.com/cosmos/ibc/tree/master/spec/core/ics-005-port-allocation#data-structures
 type CapabilityKey StoreKey
 
+var _ StoreKey = &KVStoreKey{}
+
 // KVStoreKey is used for accessing substores.
 // Only the pointer value should ever be used - it functions as a capabilities key.
 type KVStoreKey struct {

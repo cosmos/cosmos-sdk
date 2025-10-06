@@ -269,10 +269,6 @@ $ %s query block --%s=%s <hash>
 					return err
 				}
 
-				if output.Header.Height == 0 {
-					return fmt.Errorf("no block found with height %s", args[0])
-				}
-
 				return clientCtx.PrintProto(output)
 
 			case auth.TypeHash:
@@ -285,10 +281,6 @@ $ %s query block --%s=%s <hash>
 				output, err := rpc.GetBlockByHash(clientCtx, args[0])
 				if err != nil {
 					return err
-				}
-
-				if output.Header.AppHash == nil {
-					return fmt.Errorf("no block found with hash %s", args[0])
 				}
 
 				return clientCtx.PrintProto(output)

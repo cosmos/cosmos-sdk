@@ -10,18 +10,18 @@ import (
 	"strings"
 	"testing"
 
-	pruningtypes "cosmossdk.io/store/pruning/types"
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
+	pruningtypes "cosmossdk.io/store/pruning/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -75,13 +75,13 @@ type SimulationApp interface {
 func Run[T SimulationApp](
 	t *testing.T,
 	appFactory func(
-	logger log.Logger,
-	db dbm.DB,
-	traceStore io.Writer,
-	loadLatest bool,
-	appOpts servertypes.AppOptions,
-	baseAppOptions ...func(*baseapp.BaseApp),
-) T,
+		logger log.Logger,
+		db dbm.DB,
+		traceStore io.Writer,
+		loadLatest bool,
+		appOpts servertypes.AppOptions,
+		baseAppOptions ...func(*baseapp.BaseApp),
+	) T,
 	setupStateFactory func(app T) SimStateFactory,
 	postRunActions ...func(t testing.TB, app TestInstance[T], accs []simtypes.Account),
 ) {
@@ -101,13 +101,13 @@ func Run[T SimulationApp](
 func RunWithSeeds[T SimulationApp](
 	t *testing.T,
 	appFactory func(
-	logger log.Logger,
-	db dbm.DB,
-	traceStore io.Writer,
-	loadLatest bool,
-	appOpts servertypes.AppOptions,
-	baseAppOptions ...func(*baseapp.BaseApp),
-) T,
+		logger log.Logger,
+		db dbm.DB,
+		traceStore io.Writer,
+		loadLatest bool,
+		appOpts servertypes.AppOptions,
+		baseAppOptions ...func(*baseapp.BaseApp),
+	) T,
 	setupStateFactory func(app T) SimStateFactory,
 	seeds []int64,
 	fuzzSeed []byte,
@@ -121,13 +121,13 @@ func RunWithSeeds[T SimulationApp](
 func RunWithSeedsAndRandAcc[T SimulationApp](
 	t *testing.T,
 	appFactory func(
-	logger log.Logger,
-	db dbm.DB,
-	traceStore io.Writer,
-	loadLatest bool,
-	appOpts servertypes.AppOptions,
-	baseAppOptions ...func(*baseapp.BaseApp),
-) T,
+		logger log.Logger,
+		db dbm.DB,
+		traceStore io.Writer,
+		loadLatest bool,
+		appOpts servertypes.AppOptions,
+		baseAppOptions ...func(*baseapp.BaseApp),
+	) T,
 	setupStateFactory func(app T) SimStateFactory,
 	seeds []int64,
 	fuzzSeed []byte,

@@ -22,8 +22,8 @@ const appName = "SimApp"
 var DefaultNodeHome string
 
 var (
-	_ runtime.AppI            = (*SimApp)(nil)
-	_ servertypes.Application = (*SimApp)(nil)
+	_ runtime.AppI = (*SimApp)(nil)
+	_ app.AppI     = (*SimApp)(nil)
 )
 
 // SimApp extends an ABCI application, but with most of its parameters exported.

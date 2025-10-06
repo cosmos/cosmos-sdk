@@ -10,7 +10,9 @@ import (
 	"strings"
 	"testing"
 
+	pruningtypes "cosmossdk.io/store/pruning/types"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
@@ -73,13 +75,13 @@ type SimulationApp interface {
 func Run[T SimulationApp](
 	t *testing.T,
 	appFactory func(
-		logger log.Logger,
-		db dbm.DB,
-		traceStore io.Writer,
-		loadLatest bool,
-		appOpts servertypes.AppOptions,
-		baseAppOptions ...func(*baseapp.BaseApp),
-	) T,
+	logger log.Logger,
+	db dbm.DB,
+	traceStore io.Writer,
+	loadLatest bool,
+	appOpts servertypes.AppOptions,
+	baseAppOptions ...func(*baseapp.BaseApp),
+) T,
 	setupStateFactory func(app T) SimStateFactory,
 	postRunActions ...func(t testing.TB, app TestInstance[T], accs []simtypes.Account),
 ) {
@@ -99,13 +101,13 @@ func Run[T SimulationApp](
 func RunWithSeeds[T SimulationApp](
 	t *testing.T,
 	appFactory func(
-		logger log.Logger,
-		db dbm.DB,
-		traceStore io.Writer,
-		loadLatest bool,
-		appOpts servertypes.AppOptions,
-		baseAppOptions ...func(*baseapp.BaseApp),
-	) T,
+	logger log.Logger,
+	db dbm.DB,
+	traceStore io.Writer,
+	loadLatest bool,
+	appOpts servertypes.AppOptions,
+	baseAppOptions ...func(*baseapp.BaseApp),
+) T,
 	setupStateFactory func(app T) SimStateFactory,
 	seeds []int64,
 	fuzzSeed []byte,
@@ -119,13 +121,13 @@ func RunWithSeeds[T SimulationApp](
 func RunWithSeedsAndRandAcc[T SimulationApp](
 	t *testing.T,
 	appFactory func(
-		logger log.Logger,
-		db dbm.DB,
-		traceStore io.Writer,
-		loadLatest bool,
-		appOpts servertypes.AppOptions,
-		baseAppOptions ...func(*baseapp.BaseApp),
-	) T,
+	logger log.Logger,
+	db dbm.DB,
+	traceStore io.Writer,
+	loadLatest bool,
+	appOpts servertypes.AppOptions,
+	baseAppOptions ...func(*baseapp.BaseApp),
+) T,
 	setupStateFactory func(app T) SimStateFactory,
 	seeds []int64,
 	fuzzSeed []byte,
@@ -376,6 +378,8 @@ func NewSimulationAppInstance[T SimulationApp](
 	})
 	appOptions := make(simtestutil.AppOptionsMap)
 	appOptions[flags.FlagHome] = workDir
+	appOptions[server.FlagPruning] = pruningtypes.PruningOptionNothing
+	appOptions[flags.FlagChainID] = tCfg.ChainID
 	opts := []func(*baseapp.BaseApp){baseapp.SetChainID(tCfg.ChainID)}
 	if tCfg.FauxMerkle {
 		opts = append(opts, FauxMerkleModeOpt)

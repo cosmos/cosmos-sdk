@@ -509,9 +509,7 @@ func BenchmarkInt64SliceToBytes(b *testing.B) {
 		data[i] = int64(i)
 	}
 
-	b.ResetTimer()
-
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_ = int64SliceToBytes(data...)
 	}
 }

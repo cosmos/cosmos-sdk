@@ -15,9 +15,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/x/counter/types"
 )
 
-var _ appmodule.AppModule = AppModule{}
-
-var _ app.Module = AppModule{}
+var (
+	_ appmodule.AppModule = AppModule{}
+	_ app.Module          = AppModule{}
+)
 
 // AppModule implements an application module
 type AppModule struct {

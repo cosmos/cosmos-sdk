@@ -10,7 +10,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/app"
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/x/counter"
 )
@@ -20,10 +19,7 @@ const appName = "SimApp"
 // DefaultNodeHome default home directories for the application daemon
 var DefaultNodeHome string
 
-var (
-	_ runtime.AppI = (*SimApp)(nil)
-	_ app.AppI     = (*SimApp)(nil)
-)
+var _ app.AppI = (*SimApp)(nil)
 
 // SimApp extends an ABCI application, but with most of its parameters exported.
 // They are exported for convenience in creating helper functions, as object

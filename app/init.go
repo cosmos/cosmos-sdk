@@ -103,7 +103,7 @@ func (app *SDKApp) initConsensusModule(cfg SDKAppConfig) {
 
 	// set the BaseApp's parameter store
 	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
-		app.EncodingConfig.Codec,
+		app.encodingConfig.Codec,
 		runtime.NewKVStoreService(app.mustGetStoreKey(consensusparamtypes.StoreKey)),
 		cfg.ModuleAuthority,
 		runtime.EventService{},
@@ -111,7 +111,7 @@ func (app *SDKApp) initConsensusModule(cfg SDKAppConfig) {
 	app.SetParamStore(app.ConsensusParamsKeeper.ParamsStore)
 
 	module := consensus.NewAppModule(
-		app.EncodingConfig.Codec,
+		app.encodingConfig.Codec,
 		app.ConsensusParamsKeeper,
 	)
 	app.requiredModules = append(app.requiredModules, module)
@@ -124,7 +124,7 @@ func (app *SDKApp) initAccountModule(cfg SDKAppConfig) {
 	app.Logger().Info("initializing account keeper")
 
 	app.AccountKeeper = authkeeper.NewAccountKeeper(
-		app.EncodingConfig.Codec,
+		app.encodingConfig.Codec,
 		runtime.NewKVStoreService(app.mustGetStoreKey(authtypes.StoreKey)),
 		authtypes.ProtoBaseAccount,
 		app.moduleAccountPerms,
@@ -135,7 +135,7 @@ func (app *SDKApp) initAccountModule(cfg SDKAppConfig) {
 	)
 
 	module := auth.NewAppModule(
-		app.EncodingConfig.Codec,
+		app.encodingConfig.Codec,
 		app.AccountKeeper,
 		authsims.RandomGenesisAccounts,
 		nil,
@@ -151,7 +151,7 @@ func (app *SDKApp) initBankModule(cfg SDKAppConfig) {
 	app.Logger().Info("initializing bank keeper")
 
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
-		app.EncodingConfig.Codec,
+		app.encodingConfig.Codec,
 		runtime.NewKVStoreService(app.mustGetStoreKey(banktypes.StoreKey)),
 		app.AccountKeeper,
 		app.BlockedAddresses(),
@@ -160,7 +160,7 @@ func (app *SDKApp) initBankModule(cfg SDKAppConfig) {
 	)
 
 	module := bank.NewAppModule(
-		app.EncodingConfig.Codec,
+		app.encodingConfig.Codec,
 		app.BankKeeper,
 		app.AccountKeeper,
 		nil,
@@ -177,7 +177,7 @@ func (app *SDKApp) initStakingModule(cfg SDKAppConfig) {
 	app.Logger().Info("initializing staking keeper")
 
 	app.StakingKeeper = stakingkeeper.NewKeeper(
-		app.EncodingConfig.Codec,
+		app.encodingConfig.Codec,
 		runtime.NewKVStoreService(app.mustGetStoreKey(stakingtypes.StoreKey)),
 		app.AccountKeeper,
 		app.BankKeeper,
@@ -187,7 +187,7 @@ func (app *SDKApp) initStakingModule(cfg SDKAppConfig) {
 	)
 
 	module := staking.NewAppModule(
-		app.EncodingConfig.Codec,
+		app.encodingConfig.Codec,
 		app.StakingKeeper,
 		app.AccountKeeper,
 		app.BankKeeper,
@@ -208,7 +208,7 @@ func (app *SDKApp) initMintModule(cfg SDKAppConfig) {
 
 		// TODO pipe in mintfn etc
 		mintKeeper := mintkeeper.NewKeeper(
-			app.EncodingConfig.Codec,
+			app.encodingConfig.Codec,
 			runtime.NewKVStoreService(app.mustGetStoreKey(minttypes.StoreKey)),
 			app.StakingKeeper,
 			app.AccountKeeper,
@@ -218,7 +218,13 @@ func (app *SDKApp) initMintModule(cfg SDKAppConfig) {
 			// mintkeeper.WithMintFn(mintkeeper.DefaultMintFn(minttypes.DefaultInflationCalculationFn)), custom mintFn can be added here
 		)
 		app.MintKeeper = &mintKeeper
-		app.optionalModules = append(app.optionalModules, mint.NewAppModule(app.EncodingConfig.Codec, *app.MintKeeper, app.AccountKeeper, nil, nil))
+		app.optionalModules = append(app.optionalModules, mint.NewAppModule(
+			app.encodingConfig.Codec,
+			*app.MintKeeper,
+			app.AccountKeeper,
+			nil,
+			nil,
+		))
 	}
 }
 
@@ -233,7 +239,7 @@ func (app *SDKApp) initDistrModules(cfg SDKAppConfig) {
 		app.Logger().Info("initializing protocol pool keeper")
 
 		protocolPoolKeeper := protocolpoolkeeper.NewKeeper(
-			app.EncodingConfig.Codec,
+			app.encodingConfig.Codec,
 			runtime.NewKVStoreService(app.mustGetStoreKey(protocolpooltypes.StoreKey)),
 			app.AccountKeeper,
 			app.BankKeeper,
@@ -252,7 +258,7 @@ func (app *SDKApp) initDistrModules(cfg SDKAppConfig) {
 
 	// TODO optional?
 	app.DistrKeeper = distrkeeper.NewKeeper(
-		app.EncodingConfig.Codec,
+		app.encodingConfig.Codec,
 		runtime.NewKVStoreService(app.mustGetStoreKey(distrtypes.StoreKey)),
 		app.AccountKeeper,
 		app.BankKeeper,
@@ -263,7 +269,7 @@ func (app *SDKApp) initDistrModules(cfg SDKAppConfig) {
 	)
 
 	module := distr.NewAppModule(
-		app.EncodingConfig.Codec,
+		app.encodingConfig.Codec,
 		app.DistrKeeper,
 		app.AccountKeeper,
 		app.BankKeeper,
@@ -281,21 +287,21 @@ func (app *SDKApp) initSlashingModule(cfg SDKAppConfig) {
 	app.Logger().Info("initializing slashing keeper")
 
 	app.SlashingKeeper = slashingkeeper.NewKeeper(
-		app.EncodingConfig.Codec,
-		app.EncodingConfig.LegacyAmino,
+		app.encodingConfig.Codec,
+		app.encodingConfig.LegacyAmino,
 		runtime.NewKVStoreService(app.mustGetStoreKey(slashingtypes.StoreKey)),
 		app.StakingKeeper,
 		cfg.ModuleAuthority,
 	)
 
 	module := slashing.NewAppModule(
-		app.EncodingConfig.Codec,
+		app.encodingConfig.Codec,
 		app.SlashingKeeper,
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.StakingKeeper,
 		nil,
-		app.EncodingConfig.InterfaceRegistry,
+		app.encodingConfig.InterfaceRegistry,
 	)
 
 	app.requiredModules = append(app.requiredModules, module)
@@ -310,12 +316,18 @@ func (app *SDKApp) initFeeGrantModule(cfg SDKAppConfig) {
 		app.Logger().Info("initializing fee grant keeper")
 
 		feeGrantKeeper := feegrantkeeper.NewKeeper(
-			app.EncodingConfig.Codec,
+			app.encodingConfig.Codec,
 			runtime.NewKVStoreService(app.mustGetStoreKey(feegrant.StoreKey)),
 			app.AccountKeeper,
 		)
 		app.FeeGrantKeeper = &feeGrantKeeper
-		app.optionalModules = append(app.optionalModules, feegrantmodule.NewAppModule(app.EncodingConfig.Codec, app.AccountKeeper, app.BankKeeper, *app.FeeGrantKeeper, app.EncodingConfig.InterfaceRegistry))
+		app.optionalModules = append(app.optionalModules, feegrantmodule.NewAppModule(
+			app.encodingConfig.Codec,
+			app.AccountKeeper,
+			app.BankKeeper,
+			*app.FeeGrantKeeper,
+			app.encodingConfig.InterfaceRegistry,
+		))
 	}
 }
 
@@ -339,12 +351,18 @@ func (app *SDKApp) initAuthzModule(cfg SDKAppConfig) {
 
 		authzKeeper := authzkeeper.NewKeeper(
 			runtime.NewKVStoreService(app.mustGetStoreKey(authzkeeper.StoreKey)),
-			app.EncodingConfig.Codec,
+			app.encodingConfig.Codec,
 			app.MsgServiceRouter(),
 			app.AccountKeeper,
 		)
 		app.AuthzKeeper = &authzKeeper
-		app.optionalModules = append(app.optionalModules, authzmodule.NewAppModule(app.EncodingConfig.Codec, *app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.EncodingConfig.InterfaceRegistry))
+		app.optionalModules = append(app.optionalModules, authzmodule.NewAppModule(
+			app.encodingConfig.Codec,
+			*app.AuthzKeeper,
+			app.AccountKeeper,
+			app.BankKeeper,
+			app.encodingConfig.InterfaceRegistry,
+		))
 	}
 }
 
@@ -364,7 +382,7 @@ func (app *SDKApp) initUpgradeModule(cfg SDKAppConfig) {
 	app.upgradeKeeper = upgradekeeper.NewKeeper(
 		skipUpgradeHeights,
 		runtime.NewKVStoreService(app.mustGetStoreKey(upgradetypes.StoreKey)),
-		app.EncodingConfig.Codec,
+		app.encodingConfig.Codec,
 		homePath,
 		app.BaseApp,
 		cfg.ModuleAuthority,
@@ -401,7 +419,7 @@ func (app *SDKApp) initGovModule(cfg SDKAppConfig) {
 		govConfig.MaxMetadataLen = 10000
 	*/
 	govKeeper := govkeeper.NewKeeper(
-		app.EncodingConfig.Codec,
+		app.encodingConfig.Codec,
 		runtime.NewKVStoreService(app.mustGetStoreKey(govtypes.StoreKey)),
 		app.AccountKeeper,
 		app.BankKeeper,
@@ -419,7 +437,7 @@ func (app *SDKApp) initGovModule(cfg SDKAppConfig) {
 	app.GovKeeper = *govKeeper.SetHooks(govtypes.NewMultiGovHooks())
 
 	module := gov.NewAppModule(
-		app.EncodingConfig.Codec,
+		app.encodingConfig.Codec,
 		&app.GovKeeper,
 		app.AccountKeeper,
 		app.BankKeeper,
@@ -439,7 +457,7 @@ func (app *SDKApp) initEvidenceModule(cfg SDKAppConfig) {
 
 	// create evidence keeper with router
 	app.EvidenceKeeper = evidencekeeper.NewKeeper(
-		app.EncodingConfig.Codec,
+		app.encodingConfig.Codec,
 		runtime.NewKVStoreService(app.mustGetStoreKey(evidencetypes.StoreKey)),
 		app.StakingKeeper,
 		app.SlashingKeeper,
@@ -458,7 +476,7 @@ func (app *SDKApp) initEpochsModule(cfg SDKAppConfig) {
 
 		epochsKeeper := epochskeeper.NewKeeper(
 			runtime.NewKVStoreService(app.mustGetStoreKey(epochstypes.StoreKey)),
-			app.EncodingConfig.Codec,
+			app.encodingConfig.Codec,
 		)
 		app.EpochsKeeper = &epochsKeeper
 

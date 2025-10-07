@@ -9,14 +9,12 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
 
+	"github.com/cosmos/cosmos-sdk/app"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/auth/tx"
-	authtxconfig "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -26,11 +24,16 @@ func NewRootCmd() *cobra.Command {
 	// we "pre"-instantiate the application for getting the injected/configured encoding configuration
 	tempApp := simapp.NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(simapp.DefaultNodeHome))
 
+	// TODO: can we pass a generic constructor in here?
+	return RootCmdFactory(tempApp)
+}
+
+func RootCmdFactory(app app.AppI) *cobra.Command {
 	initClientCtx := client.Context{}.
-		WithCodec(tempApp.EncodingConfig.Codec).
-		WithInterfaceRegistry(tempApp.EncodingConfig.InterfaceRegistry).
-		WithTxConfig(tempApp.EncodingConfig.TxConfig).
-		WithLegacyAmino(tempApp.EncodingConfig.LegacyAmino).
+		WithCodec(app.EncodingConfig().Codec).
+		WithInterfaceRegistry(app.EncodingConfig().InterfaceRegistry).
+		WithTxConfig(app.EncodingConfig().TxConfig).
+		WithLegacyAmino(app.EncodingConfig().LegacyAmino).
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
 		WithHomeDir(simapp.DefaultNodeHome).
@@ -56,26 +59,6 @@ func NewRootCmd() *cobra.Command {
 				return err
 			}
 
-			// This needs to go after ReadFromClientConfig, as that function
-			// sets the RPC client needed for SIGN_MODE_TEXTUAL. This sign mode
-			// is only available if the client is online.
-			if !initClientCtx.Offline {
-				enabledSignModes := append(tx.DefaultSignModes, signing.SignMode_SIGN_MODE_TEXTUAL)
-				txConfigOpts := tx.ConfigOptions{
-					EnabledSignModes:           enabledSignModes,
-					TextualCoinMetadataQueryFn: authtxconfig.NewGRPCCoinMetadataQueryFn(initClientCtx),
-				}
-				txConfig, err := tx.NewTxConfigWithOptions(
-					initClientCtx.Codec,
-					txConfigOpts,
-				)
-				if err != nil {
-					return err
-				}
-
-				initClientCtx = initClientCtx.WithTxConfig(txConfig)
-			}
-
 			if err := client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
 				return err
 			}
@@ -87,11 +70,16 @@ func NewRootCmd() *cobra.Command {
 		},
 	}
 
-	initRootCmd(rootCmd, tempApp.EncodingConfig.TxConfig, tempApp.BasicModuleManager)
+	initRootCmd(rootCmd, app.EncodingConfig().TxConfig, app.BasicModuleManager())
+	EnhanceRootCmd(rootCmd, initClientCtx, app)
 
+	return rootCmd
+}
+
+func EnhanceRootCmd(rootCmd *cobra.Command, clientCtx client.Context, app app.AppI) *cobra.Command {
 	// add keyring to autocli opts
-	autoCliOpts := tempApp.AutoCliOpts()
-	autoCliOpts.ClientCtx = initClientCtx
+	autoCliOpts := app.AutoCliOpts()
+	autoCliOpts.ClientCtx = clientCtx
 
 	nodeCmds := nodeservice.NewNodeCommands()
 	autoCliOpts.ModuleOptions[nodeCmds.Name()] = nodeCmds.AutoCLIOptions()

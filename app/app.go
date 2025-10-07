@@ -62,12 +62,16 @@ type AppI interface { //nolint:revive // keeping this name for clarity
 	servertypes.Application
 
 	ModuleManager() *module.Manager
+	BasicModuleManager() module.BasicManager
 	UpgradeKeeper() *upgradekeeper.Keeper
 	Configurator() module.Configurator
 	SetStoreLoader(loader baseapp.StoreLoader)
 
 	ExportAppStateAndValidators(forZeroHeight bool, jailAllowedAddrs, modulesToExport []string) (servertypes.ExportedApp, error)
 	SimulationManager() *module.SimulationManager
+	EncodingConfig() EncodingConfig
+
+	AutoCliOpts() autocli.AppOptions
 }
 
 var (
@@ -81,14 +85,14 @@ type SDKApp struct {
 	cfg SDKAppConfig
 
 	*baseapp.BaseApp
-	EncodingConfig EncodingConfig
+	encodingConfig EncodingConfig
 
 	// storeKeys to access the substores
 	storeKeys map[string]*storetypes.KVStoreKey
 
 	// the module manager
 	moduleManager      *module.Manager
-	BasicModuleManager module.BasicManager
+	basicModuleManager module.BasicManager
 
 	// simulation manager
 	simulationManager *module.SimulationManager
@@ -192,7 +196,7 @@ func NewSDKApp(
 	sdkApp := &SDKApp{
 		cfg:                appConfig,
 		BaseApp:            bApp,
-		EncodingConfig:     encodingConfig,
+		encodingConfig:     encodingConfig,
 		storeKeys:          storeKeys,
 		orderPreBlockers:   appConfig.OrderPreBlockers,
 		orderBeginBlockers: appConfig.OrderBeginBlockers,
@@ -288,7 +292,7 @@ func (app *SDKApp) loadModules() {
 	// non-dependent module elements, such as codec registration and genesis verification.
 	// By default, it is composed of all the module from the module manager.
 	// Additionally, app module basics can be overwritten by passing them as argument.
-	app.BasicModuleManager = module.NewBasicManagerFromManager(
+	app.basicModuleManager = module.NewBasicManagerFromManager(
 		app.moduleManager,
 		map[string]module.AppModuleBasic{
 			genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
@@ -296,8 +300,8 @@ func (app *SDKApp) loadModules() {
 				[]govclient.ProposalHandler{},
 			),
 		})
-	app.BasicModuleManager.RegisterLegacyAminoCodec(app.EncodingConfig.LegacyAmino)
-	app.BasicModuleManager.RegisterInterfaces(app.EncodingConfig.InterfaceRegistry)
+	app.basicModuleManager.RegisterLegacyAminoCodec(app.encodingConfig.LegacyAmino)
+	app.basicModuleManager.RegisterInterfaces(app.encodingConfig.InterfaceRegistry)
 
 	app.moduleManager.SetOrderPreBlockers(app.orderPreBlockers...)
 	app.moduleManager.SetOrderBeginBlockers(app.orderBeginBlockers...)
@@ -305,7 +309,7 @@ func (app *SDKApp) loadModules() {
 	app.moduleManager.SetOrderInitGenesis(app.orderInitGenesis...)
 	app.moduleManager.SetOrderExportGenesis(app.orderExportGenesis...)
 
-	app.configurator = module.NewConfigurator(app.EncodingConfig.Codec, app.MsgServiceRouter(), app.GRPCQueryRouter())
+	app.configurator = module.NewConfigurator(app.encodingConfig.Codec, app.MsgServiceRouter(), app.GRPCQueryRouter())
 	err := app.moduleManager.RegisterServices(app.configurator)
 	if err != nil {
 		panic(err)
@@ -318,7 +322,7 @@ func (app *SDKApp) loadModules() {
 	// NOTE: this is not required apps that don't use the simulator for fuzz testing
 	// transactions
 	overrideModules := map[string]module.AppModuleSimulation{
-		authtypes.ModuleName: auth.NewAppModule(app.EncodingConfig.Codec, app.AccountKeeper, authsims.RandomGenesisAccounts, nil),
+		authtypes.ModuleName: auth.NewAppModule(app.encodingConfig.Codec, app.AccountKeeper, authsims.RandomGenesisAccounts, nil),
 	}
 	app.simulationManager = module.NewSimulationManagerFromAppModules(app.moduleManager.Modules, overrideModules)
 
@@ -367,7 +371,7 @@ func (app *SDKApp) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*ab
 		panic(err)
 	}
 	_ = app.upgradeKeeper.SetModuleVersionMap(ctx, app.moduleManager.GetVersionMap())
-	return app.moduleManager.InitGenesis(ctx, app.EncodingConfig.Codec, genesisState)
+	return app.moduleManager.InitGenesis(ctx, app.encodingConfig.Codec, genesisState)
 }
 
 // LoadHeight loads a particular height
@@ -380,7 +384,7 @@ func (app *SDKApp) LoadHeight(height int64) error {
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
 func (app *SDKApp) LegacyAmino() *codec.LegacyAmino {
-	return app.EncodingConfig.LegacyAmino
+	return app.encodingConfig.LegacyAmino
 }
 
 // AppCodec returns SimApp's app codec.
@@ -388,29 +392,29 @@ func (app *SDKApp) LegacyAmino() *codec.LegacyAmino {
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
 func (app *SDKApp) AppCodec() *codec.ProtoCodec {
-	return app.EncodingConfig.Codec
+	return app.encodingConfig.Codec
 }
 
 // InterfaceRegistry returns SimApp's InterfaceRegistry
 func (app *SDKApp) InterfaceRegistry() types.InterfaceRegistry {
-	return app.EncodingConfig.InterfaceRegistry
+	return app.encodingConfig.InterfaceRegistry
 }
 
 // TxConfig returns SimApp's TxConfig
 func (app *SDKApp) TxConfig() client.TxConfig {
-	return app.EncodingConfig.TxConfig
+	return app.encodingConfig.TxConfig
 }
 
 // DefaultGenesis returns a default genesis from the registered AppModuleBasic's.
 func (app *SDKApp) DefaultGenesis() map[string]json.RawMessage {
-	return app.BasicModuleManager.DefaultGenesis(app.EncodingConfig.Codec)
+	return app.BasicModuleManager().DefaultGenesis(app.encodingConfig.Codec)
 }
 
 // GetKey returns the KVStoreKey for the provided store key.
 //
 // NOTE: This is solely to be used for testing purposes.
 func (app *SDKApp) GetKey(storeKey string) *storetypes.KVStoreKey {
-	return app.storeKeys[storeKey]
+	return app.mustGetStoreKey(storeKey)
 }
 
 // GetStoreKeys returns all the stored store Keys.
@@ -442,7 +446,7 @@ func (app *SDKApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APICon
 	nodeservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// Register grpc-gateway routes for all modules.
-	app.BasicModuleManager.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+	app.basicModuleManager.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// register swagger API from root so that other applications can override easily
 	if err := server.RegisterSwaggerAPI(apiSvr.ClientCtx, apiSvr.Router, apiConfig.Swagger); err != nil {
@@ -452,7 +456,7 @@ func (app *SDKApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APICon
 
 // RegisterTxService implements the Application.RegisterTxService method.
 func (app *SDKApp) RegisterTxService(clientCtx client.Context) {
-	authtx.RegisterTxService(app.GRPCQueryRouter(), clientCtx, app.Simulate, app.EncodingConfig.InterfaceRegistry)
+	authtx.RegisterTxService(app.GRPCQueryRouter(), clientCtx, app.Simulate, app.encodingConfig.InterfaceRegistry)
 }
 
 // RegisterTendermintService implements the Application.RegisterTendermintService method.
@@ -461,7 +465,7 @@ func (app *SDKApp) RegisterTendermintService(clientCtx client.Context) {
 	cmtservice.RegisterTendermintService(
 		clientCtx,
 		app.GRPCQueryRouter(),
-		app.EncodingConfig.InterfaceRegistry,
+		app.encodingConfig.InterfaceRegistry,
 		cmtApp.Query,
 	)
 }
@@ -519,9 +523,9 @@ func (app *SDKApp) BlockedAddresses() map[string]bool {
 
 // AutoCliOpts returns the autocli options for the app.
 func (app *SDKApp) AutoCliOpts() autocli.AppOptions {
-	modules := make(map[string]appmodule.AppModule, 0)
+	modules := make(map[string]appmodule.AppModule)
 	for _, m := range app.moduleManager.Modules {
-		if moduleWithName, ok := m.(module.HasName); ok {
+		if moduleWithName, ok := m.(NameProvider); ok {
 			moduleName := moduleWithName.Name()
 			if appModule, ok := moduleWithName.(appmodule.AppModule); ok {
 				modules[moduleName] = appModule
@@ -530,7 +534,8 @@ func (app *SDKApp) AutoCliOpts() autocli.AppOptions {
 	}
 
 	return autocli.AppOptions{
-		Modules:               modules,
+		Modules: modules,
+		// TODO options?????
 		ModuleOptions:         runtimeservices.ExtractAutoCLIOptions(app.moduleManager.Modules),
 		AddressCodec:          authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
 		ValidatorAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
@@ -542,6 +547,14 @@ func (app *SDKApp) ModuleManager() *module.Manager {
 	return app.moduleManager
 }
 
+func (app *SDKApp) BasicModuleManager() module.BasicManager {
+	return app.basicModuleManager
+}
+
 func (app *SDKApp) UpgradeKeeper() *upgradekeeper.Keeper {
 	return app.upgradeKeeper
+}
+
+func (app *SDKApp) EncodingConfig() EncodingConfig {
+	return app.encodingConfig
 }

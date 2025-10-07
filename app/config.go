@@ -1,6 +1,9 @@
 package app
 
 import (
+	"maps"
+	"slices"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -11,6 +14,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
+	"github.com/cosmos/cosmos-sdk/x/authz"
+	epochstypes "github.com/cosmos/cosmos-sdk/x/epochs/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
 type EncodingConfig struct {
@@ -80,6 +88,8 @@ type SDKAppConfig struct {
 	ExtendVoteHandler          sdk.ExtendVoteHandler
 
 	Upgrades []Upgrade[AppI]
+
+	ModuleAuthority string
 }
 
 func DefaultSDKAppConfig(
@@ -124,5 +134,90 @@ func DefaultSDKAppConfig(
 		ProcessProposalHandler: nil,
 
 		Upgrades: nil,
+
+		ModuleAuthority: defaultModuleAuthority,
+	}
+}
+
+// TODO test thoroughly
+func (appConfig *SDKAppConfig) processOptionalModules() {
+	checkForModuleInclusion := func(moduleName string) func(string) bool {
+		return func(s string) bool {
+			return moduleName == s
+		}
+	}
+
+	deleteModuleFromOrdering := func(moduleName string) {
+		defaultOrderPreBlockers = slices.DeleteFunc(defaultOrderPreBlockers, checkForModuleInclusion(moduleName))
+		defaultOrderBeginBlockers = slices.DeleteFunc(defaultOrderBeginBlockers, checkForModuleInclusion(moduleName))
+		defaultOrderEndBlockers = slices.DeleteFunc(defaultOrderEndBlockers, checkForModuleInclusion(moduleName))
+		defaultOrderInitGenesis = slices.DeleteFunc(defaultOrderInitGenesis, checkForModuleInclusion(moduleName))
+		defaultOrderExportGenesis = slices.DeleteFunc(defaultOrderExportGenesis, checkForModuleInclusion(moduleName))
+	}
+
+	if !appConfig.WithProtocolPool {
+		// remove from macc permissions
+		maps.DeleteFunc(appConfig.ModuleAccountPerms, func(s string, _ []string) bool {
+			switch s {
+			case protocolpooltypes.ModuleName:
+				return true
+			case protocolpooltypes.ProtocolPoolEscrowAccount:
+				return true
+			default:
+				return false
+			}
+		})
+
+		deleteModuleFromOrdering(protocolpooltypes.ModuleName)
+	}
+
+	if !appConfig.WithAuthz {
+		maps.DeleteFunc(appConfig.ModuleAccountPerms, func(s string, _ []string) bool {
+			switch s {
+			case authz.ModuleName:
+				return true
+			default:
+				return false
+			}
+		})
+
+		deleteModuleFromOrdering(authz.ModuleName)
+	}
+
+	if !appConfig.WithFeeGrant {
+		maps.DeleteFunc(appConfig.ModuleAccountPerms, func(s string, _ []string) bool {
+			switch s {
+			case feegrant.ModuleName:
+				return true
+			default:
+				return false
+			}
+		})
+
+		deleteModuleFromOrdering(feegrant.ModuleName)
+	}
+
+	if !appConfig.WithMint {
+		maps.DeleteFunc(appConfig.ModuleAccountPerms, func(s string, _ []string) bool {
+			switch s {
+			case minttypes.ModuleName:
+				return true
+			default:
+				return false
+			}
+		})
+	}
+
+	if !appConfig.WithEpochs {
+		maps.DeleteFunc(appConfig.ModuleAccountPerms, func(s string, _ []string) bool {
+			switch s {
+			case epochstypes.ModuleName:
+				return true
+			default:
+				return false
+			}
+		})
+
+		deleteModuleFromOrdering(epochstypes.ModuleName)
 	}
 }

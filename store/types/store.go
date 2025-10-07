@@ -189,7 +189,7 @@ type CommitMultiStore interface {
 	LoadVersion(ver int64) error
 
 	// Set an inter-block (persistent) cache that maintains a mapping from
-	// StoreKeys to CommitKVStores.
+	// storeKeys to CommitKVStores.
 	SetInterBlockCache(MultiStorePersistentCache)
 
 	// SetInitialVersion sets the initial version of the IAVL tree. It is used when
@@ -480,7 +480,7 @@ func (tc TraceContext) Merge(newTc TraceContext) TraceContext {
 }
 
 // MultiStorePersistentCache defines an interface which provides inter-block
-// (persistent) caching capabilities for multiple CommitKVStores based on StoreKeys.
+// (persistent) caching capabilities for multiple CommitKVStores based on storeKeys.
 type MultiStorePersistentCache interface {
 	// Wrap and return the provided CommitKVStore with an inter-block (persistent)
 	// cache.

@@ -100,6 +100,16 @@ func (k *Keeper) SetHooks(sh types.StakingHooks) {
 	k.hooks = sh
 }
 
+// AddHooks is an API for extending the hooks for the staking module.
+func (k *Keeper) AddHooks(sh types.StakingHooks) {
+	existingHooks := k.Hooks()
+	hooks := types.MultiStakingHooks{
+		existingHooks, sh,
+	}
+
+	k.hooks = hooks
+}
+
 // GetLastTotalPower loads the last total validator power.
 func (k Keeper) GetLastTotalPower(ctx context.Context) (math.Int, error) {
 	store := k.storeService.OpenKVStore(ctx)

@@ -184,7 +184,7 @@ func (rs *Store) GetCommitKVStore(key types.StoreKey) types.CommitKVStore {
 	return rs.stores[key]
 }
 
-// StoreKeysByName returns mapping storeNames -> StoreKeys
+// StoreKeysByName returns mapping storeNames -> storeKeys
 func (rs *Store) StoreKeysByName() map[string]types.StoreKey {
 	return rs.keysByName
 }

@@ -10,9 +10,13 @@ type Module interface {
 	module.AppModule
 
 	// additional providers //  TODO optional?
-	StoreKeysProvider
+	Keeper
 	NameProvider
 	MaccPermsProvider
+}
+
+type Keeper interface {
+	StoreKeysProvider
 }
 
 type StoreKeysProvider interface {

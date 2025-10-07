@@ -134,27 +134,37 @@ func TestAddTokensValidatorUnbonded(t *testing.T) {
 	assert.True(math.LegacyDecEq(t, math.LegacyNewDec(10), validator.DelegatorShares))
 }
 
-// TODO refactor to make simpler like the AddToken tests above
 func TestRemoveDelShares(t *testing.T) {
-	valA := types.Validator{
-		OperatorAddress: valAddr1.String(),
-		ConsensusPubkey: pk1Any,
-		Status:          types.Bonded,
-		Tokens:          math.NewInt(100),
-		DelegatorShares: math.LegacyNewDec(100),
-	}
+	t.Run("partial removal", func(t *testing.T) {
+		val := types.Validator{
+			OperatorAddress: valAddr1.String(),
+			ConsensusPubkey: pk1Any,
+			Status:          types.Bonded,
+			Tokens:          math.NewInt(100),
+			DelegatorShares: math.LegacyNewDec(100),
+		}
 
-	// Remove delegator shares
-	valB, coinsB := valA.RemoveDelShares(math.LegacyNewDec(10))
-	require.Equal(t, int64(10), coinsB.Int64())
-	require.Equal(t, int64(90), valB.DelegatorShares.RoundInt64())
-	require.Equal(t, int64(90), valB.BondedTokens().Int64())
+		updated, issued := val.RemoveDelShares(math.LegacyNewDec(10))
+		require.Equal(t, int64(10), issued.Int64())
+		require.Equal(t, int64(90), updated.DelegatorShares.RoundInt64())
+		require.Equal(t, int64(90), updated.BondedTokens().Int64())
+	})
 
-	// specific case from random tests
-	validator := mkValidator(5102, math.LegacyNewDec(115))
-	_, tokens := validator.RemoveDelShares(math.LegacyNewDec(29))
+	t.Run("remove all shares", func(t *testing.T) {
+		val := mkValidator(100, math.LegacyNewDec(100))
+		updated, issued := val.RemoveDelShares(math.LegacyNewDec(100))
 
-	require.True(math.IntEq(t, math.NewInt(1286), tokens))
+		require.True(t, math.IntEq(t, math.NewInt(100), issued))
+		require.True(t, updated.Tokens.IsZero())
+		require.True(t, updated.DelegatorShares.IsZero())
+	})
+
+	t.Run("regression_5102_115_remove_29", func(t *testing.T) {
+		validator := mkValidator(5102, math.LegacyNewDec(115))
+		_, tokens := validator.RemoveDelShares(math.LegacyNewDec(29))
+
+		require.True(t, math.IntEq(t, math.NewInt(1286), tokens))
+	})
 }
 
 func TestAddTokensFromDel(t *testing.T) {

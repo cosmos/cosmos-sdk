@@ -11,13 +11,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sigtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
-	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
@@ -62,32 +59,13 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-// CONTRACT: bankkeeper must be configured
-func (app *SDKApp) setupOptionalTextualMode() {
-	// TODO probably just eliminate this and remove textual signing
-	// optional: enable sign mode textual by overwriting the default tx config (after setting the bank keeper)
-	enabledSignModes := append(authtx.DefaultSignModes, sigtypes.SignMode_SIGN_MODE_TEXTUAL)
-	txConfigOpts := authtx.ConfigOptions{
-		EnabledSignModes:           enabledSignModes,
-		TextualCoinMetadataQueryFn: txmodule.NewBankKeeperCoinMetadataQueryFn(app.BankKeeper),
-	}
-	txConfig, err := authtx.NewTxConfigWithOptions(
-		app.EncodingConfig.Codec,
-		txConfigOpts,
-	)
-	if err != nil {
-		panic(err)
-	}
-	app.EncodingConfig.TxConfig = txConfig
-}
-
-func (app *SDKApp) mustGetStoreKey(storeKey string) *storetypes.KVStoreKey {
-	key, found := app.storeKeys[storeKey]
+func (app *SDKApp) mustGetStoreKey(keyName string) *storetypes.KVStoreKey {
+	storeKey, found := app.storeKeys[keyName]
 	if !found {
-		panic(fmt.Sprintf("store key %s not found, make sure it is initialized in your application", storeKey))
+		panic(fmt.Sprintf("store key %s not found, make sure it is initialized in your application", keyName))
 	}
 
-	return key
+	return storeKey
 }
 
 // CONTRACT:

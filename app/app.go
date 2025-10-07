@@ -211,8 +211,8 @@ func NewSDKApp(
 }
 
 func (app *SDKApp) AddModules(modules ...Module) error {
-	for _, module := range modules {
-		err := app.addModule(module)
+	for _, mod := range modules {
+		err := app.addModule(mod)
 		if err != nil {
 			return err
 		}
@@ -221,9 +221,9 @@ func (app *SDKApp) AddModules(modules ...Module) error {
 	return nil
 }
 
-func (app *SDKApp) addModule(module Module) error {
+func (app *SDKApp) addModule(mod Module) error {
 	// update MaccPerms
-	for moduleAcc, perms := range module.MaccPerms() {
+	for moduleAcc, perms := range mod.MaccPerms() {
 		if _, found := app.moduleAccountPerms[moduleAcc]; found {
 			return fmt.Errorf("module account %s already exists in app: %v", moduleAcc, app.moduleAccountPerms)
 		}
@@ -232,22 +232,22 @@ func (app *SDKApp) addModule(module Module) error {
 	}
 
 	// add to store key list
-	for name, storeKey := range module.StoreKeys() {
+	for name, storeKey := range mod.StoreKeys() {
 		if _, found := app.storeKeys[name]; found {
-			return fmt.Errorf("module store key %s already exists in app: %v", module.Name(), app.storeKeys)
+			return fmt.Errorf("module store key %s already exists in app: %v", mod.Name(), app.storeKeys)
 		}
 		app.storeKeys[name] = storeKey
 	}
 
 	// append actual module to the custom module list
-	app.customModules = append(app.customModules, module)
+	app.customModules = append(app.customModules, mod)
 
 	// append to order of genesis etc
-	app.orderPreBlockers = append(app.orderPreBlockers, module.Name())
-	app.orderBeginBlockers = append(app.orderBeginBlockers, module.Name())
-	app.orderEndBlockers = append(app.orderEndBlockers, module.Name())
-	app.orderInitGenesis = append(app.orderInitGenesis, module.Name())
-	app.orderExportGenesis = append(app.orderExportGenesis, module.Name())
+	app.orderPreBlockers = append(app.orderPreBlockers, mod.Name())
+	app.orderBeginBlockers = append(app.orderBeginBlockers, mod.Name())
+	app.orderEndBlockers = append(app.orderEndBlockers, mod.Name())
+	app.orderInitGenesis = append(app.orderInitGenesis, mod.Name())
+	app.orderExportGenesis = append(app.orderExportGenesis, mod.Name())
 
 	return nil
 }

@@ -1,8 +1,6 @@
 package group
 
 import (
-	"github.com/cosmos/gogoproto/proto"
-
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -102,11 +100,7 @@ func NewMsgUpdateGroupPolicyDecisionPolicy(admin, address sdk.AccAddress, decisi
 
 // SetDecisionPolicy sets the decision policy for MsgUpdateGroupPolicyDecisionPolicy.
 func (m *MsgUpdateGroupPolicyDecisionPolicy) SetDecisionPolicy(decisionPolicy DecisionPolicy) error {
-	msg, ok := decisionPolicy.(proto.Message)
-	if !ok {
-		return sdkerrors.ErrInvalidType.Wrapf("can't proto marshal %T", msg)
-	}
-	any, err := types.NewAnyWithValue(msg)
+	any, err := types.NewAnyWithValue(decisionPolicy)
 	if err != nil {
 		return err
 	}

@@ -28,7 +28,7 @@ func BenchmarkSig(b *testing.B) {
 
 	b.Run("secp256k1", func(b *testing.B) {
 		b.ReportAllocs()
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			ok := pkK.VerifySignature(msg, sigK)
 			require.True(ok)
 		}
@@ -36,7 +36,7 @@ func BenchmarkSig(b *testing.B) {
 
 	b.Run("secp256r1", func(b *testing.B) {
 		b.ReportAllocs()
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			ok := pkR.VerifySignature(msg, sigR)
 			require.True(ok)
 		}

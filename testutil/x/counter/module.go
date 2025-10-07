@@ -25,8 +25,8 @@ type AppModule struct {
 	keeper *keeper.Keeper
 }
 
-func NewAppModule2() AppModule {
-	k := keeper.NewKeeper2()
+func NewExtendedAppModule() AppModule {
+	k := keeper.NewExtendedKeeper()
 	return NewAppModule(k)
 }
 
@@ -34,7 +34,7 @@ func (am AppModule) StoreKeys() map[string]*storetypes.KVStoreKey {
 	return am.keeper.StoreKeys()
 }
 
-func (am AppModule) MaccPerms() map[string][]string {
+func (am AppModule) ModuleAccountPermissions() map[string][]string {
 	return nil
 }
 

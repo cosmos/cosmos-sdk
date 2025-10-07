@@ -1,6 +1,3 @@
-//go:build e2e
-// +build e2e
-
 package server_test
 
 import (
@@ -163,16 +160,16 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 	assert.NilError(t, err)
 
 	db := dbm.NewMemDB()
-	app := simapp.NewSimApp(logger, db, nil, true, simtestutil.NewAppOptionsWithFlagHome(tempDir))
+	simApp := simapp.NewSimApp(logger, db, nil, true, simtestutil.NewAppOptionsWithFlagHome(tempDir))
 
-	genesisState := simapp.GenesisStateWithSingleValidator(t, app)
+	genesisState := simapp.GenesisStateWithSingleValidator(t, simApp)
 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
 	assert.NilError(t, err)
 
 	serverCtx := server.NewDefaultContext()
 	serverCtx.Config.RootDir = tempDir
 
-	clientCtx := client.Context{}.WithCodec(app.AppCodec())
+	clientCtx := client.Context{}.WithCodec(simApp.AppCodec())
 	appGenesis := genutiltypes.AppGenesis{
 		ChainID:  "theChainId",
 		AppState: stateBytes,
@@ -185,19 +182,19 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 	err = genutil.ExportGenesisFile(&appGenesis, serverCtx.Config.GenesisFile())
 	assert.NilError(t, err)
 
-	_, err = app.InitChain(&abci.RequestInitChain{
+	_, err = simApp.InitChain(&abci.RequestInitChain{
 		Validators:      []abci.ValidatorUpdate{},
 		ConsensusParams: simtestutil.DefaultConsensusParams,
 		AppStateBytes:   appGenesis.AppState,
 	})
 	assert.NilError(t, err)
 
-	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err = simApp.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: 1,
 	})
 	assert.NilError(t, err)
 
-	_, err = app.Commit()
+	_, err = simApp.Commit()
 	assert.NilError(t, err)
 
 	cmd := server.ExportCmd(
@@ -219,7 +216,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
-	return app, ctx, appGenesis, cmd
+	return simApp, ctx, appGenesis, cmd
 }
 
 func createConfigFolder(dir string) error {

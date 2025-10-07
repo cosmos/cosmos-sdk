@@ -21,6 +21,7 @@ import (
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
@@ -64,11 +65,15 @@ type AppI interface { //nolint:revive // keeping this name for clarity
 	UpgradeKeeper() *upgradekeeper.Keeper
 	Configurator() module.Configurator
 	SetStoreLoader(loader baseapp.StoreLoader)
+
+	ExportAppStateAndValidators(forZeroHeight bool, jailAllowedAddrs, modulesToExport []string) (servertypes.ExportedApp, error)
+	SimulationManager() *module.SimulationManager
 }
 
-var _ AppI = &SDKApp{}
-
-// _ runtime.AppI            = &SDKApp{}
+var (
+	_ AppI         = &SDKApp{}
+	_ runtime.AppI = &SDKApp{}
+)
 
 type SDKApp struct {
 	loaded sync.Once
@@ -116,9 +121,21 @@ type SDKApp struct {
 	orderInitGenesis   []string
 	orderExportGenesis []string
 
+	moduleLoader
+}
+
+type moduleLoader struct {
 	requiredModules []module.AppModule
 	optionalModules []module.AppModule
 	customModules   []module.AppModule
+}
+
+func newModuleLoader() moduleLoader {
+	return moduleLoader{
+		requiredModules: make([]module.AppModule, 0),
+		optionalModules: make([]module.AppModule, 0),
+		customModules:   make([]module.AppModule, 0),
+	}
 }
 
 func initBaseApp(
@@ -183,9 +200,7 @@ func NewSDKApp(
 		orderInitGenesis:   appConfig.OrderInitGenesis,
 		orderExportGenesis: appConfig.OrderExportGenesis,
 		moduleAccountPerms: appConfig.ModuleAccountPerms,
-		optionalModules:    make([]module.AppModule, 0),
-		requiredModules:    make([]module.AppModule, 0),
-		customModules:      make([]module.AppModule, 0),
+		moduleLoader:       newModuleLoader(),
 	}
 
 	// add keepers
@@ -223,7 +238,7 @@ func (app *SDKApp) AddModules(modules ...Module) error {
 
 func (app *SDKApp) addModule(mod Module) error {
 	// update MaccPerms
-	for moduleAcc, perms := range mod.MaccPerms() {
+	for moduleAcc, perms := range mod.ModuleAccountPermissions() {
 		if _, found := app.moduleAccountPerms[moduleAcc]; found {
 			return fmt.Errorf("module account %s already exists in app: %v", moduleAcc, app.moduleAccountPerms)
 		}
@@ -372,7 +387,7 @@ func (app *SDKApp) LegacyAmino() *codec.LegacyAmino {
 //
 // NOTE: This is solely to be used for testing purposes as it may be desirable
 // for modules to register their own custom testing types.
-func (app *SDKApp) AppCodec() codec.Codec {
+func (app *SDKApp) AppCodec() *codec.ProtoCodec {
 	return app.EncodingConfig.Codec
 }
 

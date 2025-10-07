@@ -16,6 +16,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 
+	"github.com/cosmos/cosmos-sdk/app"
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -24,7 +25,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -223,7 +223,7 @@ func NewTestNetworkFixture() network.TestFixture {
 	}
 	defer os.RemoveAll(dir)
 
-	app := NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(dir))
+	simApp := NewSimApp(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(dir))
 
 	appCtr := func(val network.ValidatorI) servertypes.Application {
 		return NewSimApp(
@@ -237,12 +237,12 @@ func NewTestNetworkFixture() network.TestFixture {
 
 	return network.TestFixture{
 		AppConstructor: appCtr,
-		GenesisState:   app.DefaultGenesis(),
-		EncodingConfig: testutil.TestEncodingConfig{
-			InterfaceRegistry: app.InterfaceRegistry(),
-			Codec:             app.AppCodec(),
-			TxConfig:          app.TxConfig(),
-			Amino:             app.LegacyAmino(),
+		GenesisState:   simApp.DefaultGenesis(),
+		EncodingConfig: app.EncodingConfig{
+			InterfaceRegistry: simApp.InterfaceRegistry(),
+			Codec:             simApp.AppCodec(),
+			TxConfig:          simApp.TxConfig(),
+			LegacyAmino:       simApp.LegacyAmino(),
 		},
 	}
 }

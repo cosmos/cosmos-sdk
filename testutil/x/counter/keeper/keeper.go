@@ -29,7 +29,7 @@ type Keeper struct {
 	hooks types.CounterHooks
 }
 
-func NewKeeper2() *Keeper {
+func NewExtendedKeeper() *Keeper {
 	key := storetypes.NewKVStoreKey(types.ModuleName)
 	k := NewKeeper(runtime.NewKVStoreService(key))
 	k.key = key

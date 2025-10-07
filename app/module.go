@@ -12,7 +12,7 @@ type Module interface {
 	// additional providers //  TODO optional?
 	Keeper
 	NameProvider
-	MaccPermsProvider
+	ModuleAccountPermissionsProvider
 }
 
 type Keeper interface {
@@ -27,6 +27,6 @@ type NameProvider interface {
 	Name() string
 }
 
-type MaccPermsProvider interface {
-	MaccPerms() map[string][]string
+type ModuleAccountPermissionsProvider interface {
+	ModuleAccountPermissions() map[string][]string
 }

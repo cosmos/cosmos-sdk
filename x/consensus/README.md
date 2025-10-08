@@ -45,8 +45,8 @@ To update consensus parameters, submit a governance proposal with `MsgUpdatePara
 ```go
 import (
     "time"
-    govtypes "cosmossdk.io/x/gov/types"
-    authtypes "cosmossdk.io/x/auth/types"
+    govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+    authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 msg := &types.MsgUpdateParams{

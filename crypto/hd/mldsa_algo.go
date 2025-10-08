@@ -1,7 +1,7 @@
 package hd
 
 import (
-	"fmt"
+	"crypto/sha256"
 
 	"github.com/cloudflare/circl/sign/mldsa/mldsa44"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/mldsa"
@@ -10,13 +10,15 @@ import (
 )
 
 const (
-	MLDSAType = PubKeyType("mldsa44")
+	MLDSA44Type = PubKeyType("mldsa44")
 )
 
 type mldsaAlgo struct{}
 
+var Mldsa44 = mldsaAlgo{}
+
 func (s mldsaAlgo) Name() PubKeyType {
-	return MLDSAType
+	return MLDSA44Type
 }
 
 // Derive derives and returns the mldsa44 private key for the given seed and HD path.
@@ -26,8 +28,9 @@ func (s mldsaAlgo) Derive() DeriveFn {
 		if err != nil {
 			return nil, err
 		}
+		shaSeed := sha256.Sum256(seed)
 		scheme := mldsa44.Scheme()
-		_, privateKey := scheme.DeriveKey(seed)
+		_, privateKey := scheme.DeriveKey(shaSeed[:])
 		return privateKey.MarshalBinary()
 	}
 }
@@ -36,16 +39,10 @@ func (s mldsaAlgo) Derive() DeriveFn {
 func (s mldsaAlgo) Generate() GenerateFn {
 	return func(bz []byte) types.PrivKey {
 		scheme := mldsa44.Scheme()
-		_, privateKey, err := scheme.GenerateKey()
-		if err != nil {
-			panic(err)
-		}
-		data, err := privateKey.MarshalBinary()
-		if err != nil {
-			panic(fmt.Errorf("failed to marshal generated private key: %w", err))
-		}
+		bzArr := make([]byte, scheme.PrivateKeySize())
+		copy(bzArr, bz)
 		return &mldsa.PrivKey{
-			Key: data,
+			Key: bzArr,
 		}
 	}
 }

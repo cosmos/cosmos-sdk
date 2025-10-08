@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto"
 	"crypto/rand"
+	"crypto/sha256"
 	"crypto/subtle"
 	"fmt"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
+	"golang.org/x/crypto/ripemd160"
 )
 
 var (
@@ -98,8 +100,10 @@ func (m *PubKey) String() string {
 }
 
 func (m *PubKey) Address() cryptotypes.Address {
-	//TODO implement me
-	panic("implement me")
+	sha := sha256.Sum256(m.Key)
+	hasherRIPEMD160 := ripemd160.New() //nolint:gosec // keeping around for backwards compatibility
+	hasherRIPEMD160.Write(sha[:])      // does not error
+	return hasherRIPEMD160.Sum(nil)
 }
 
 func (m *PubKey) Bytes() []byte {

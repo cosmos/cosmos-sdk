@@ -91,7 +91,7 @@ Example:
 	f.Uint32(flagCoinType, sdk.GetConfig().GetCoinType(), "coin type number for HD derivation")
 	f.Uint32(flagAccount, 0, "Account number for HD derivation (less than equal 2147483647)")
 	f.Uint32(flagIndex, 0, "Address index number for HD derivation (less than equal 2147483647)")
-	f.String(flags.FlagKeyType, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
+	f.String(flags.FlagKeyType, string(hd.MLDSA44Type), "Key signing algorithm to generate keys for")
 	f.String(flagMnemonicSrc, "", "Import mnemonic from a file (only usable when recover or interactive is passed)")
 
 	// support old flags name for backwards compatibility

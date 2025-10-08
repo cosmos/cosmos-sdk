@@ -58,6 +58,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (types) [#25342](https://github.com/cosmos/cosmos-sdk/pull/25342) Undeprecated `EmitEvent` and `EmitEvents` on the `EventManager`.  These functions will continue to be maintained.
 * (types) [#24668](https://github.com/cosmos/cosmos-sdk/pull/24668) Scope the global config to a particular binary so that multiple SDK binaries can be properly run on the same machine.
 * (baseapp) [#24655](https://github.com/cosmos/cosmos-sdk/pull/24655) Add mutex locks for `state` and make `lastCommitInfo` atomic to prevent race conditions between `Commit` and `CreateQueryContext`.
 * (proto) [#24161](https://github.com/cosmos/cosmos-sdk/pull/24161) Remove unnecessary annotations from `x/staking` authz proto.
@@ -71,6 +72,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/epochs) [#24770](https://github.com/cosmos/cosmos-sdk/pull/24770) Fix register of epoch hooks in `InvokeSetHooks`.
 * (x/epochs) [#25087](https://github.com/cosmos/cosmos-sdk/pull/25087) Remove redundant error check in BeginBlocker.
 * [GHSA-p22h-3m2v-cmgh](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-p22h-3m2v-cmgh) Fix x/distribution can halt when historical rewards overflow.
+* (x/staking) [#25258](https://github.com/cosmos/cosmos-sdk/pull/25258) Add delegator address to redelegate event.
 
 ### Deprecated
 

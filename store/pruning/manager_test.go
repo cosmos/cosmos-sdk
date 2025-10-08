@@ -491,14 +491,7 @@ func TestInt64SliceToBytes(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := int64SliceToBytes(tt.input...)
-			if len(got) != len(tt.expect) {
-				t.Fatalf("length mismatch: got %d, expect %d", len(got), len(tt.expect))
-			}
-			for i := range got {
-				if got[i] != tt.expect[i] {
-					t.Errorf("byte mismatch at %d: got %x, expect %x", i, got[i], tt.expect[i])
-				}
-			}
+			require.Equal(t, tt.expect, got, "bytes mismatch")
 		})
 	}
 }

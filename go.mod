@@ -16,6 +16,7 @@ require (
 	github.com/bgentry/speakeasy v0.2.0
 	github.com/bits-and-blooms/bitset v1.24.0
 	github.com/chzyer/readline v1.5.1
+	github.com/cloudflare/circl v1.6.1
 	github.com/cockroachdb/apd/v2 v2.0.2
 	github.com/cockroachdb/errors v1.12.0
 	github.com/cometbft/cometbft v0.38.18
@@ -249,6 +250,8 @@ replace (
 )
 
 replace cosmossdk.io/store => ./store
+
+replace github.com/cosmos/cosmos-sdk => .
 
 retract (
 	// false start by tagging the wrong branch

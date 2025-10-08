@@ -1,0 +1,28 @@
+syntax = "proto3";
+package cosmos.crypto.mldsa;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/crypto/keys/mldsa";
+
+// PubKey defines a mldsa public key
+// Key is the compressed form of the pubkey. The first byte depends is a 0x02 byte
+// if the y-coordinate is the lexicographically largest of the two associated with
+// the x-coordinate. Otherwise the first byte is a 0x03.
+// This prefix is followed with the x-coordinate.
+message PubKey {
+  option (amino.name)                 = "tendermint/PubKeyMldsa";
+  option (amino.message_encoding)     = "key_field";
+  option (gogoproto.goproto_stringer) = false;
+
+  bytes key = 1;
+}
+
+// PrivKey defines a mldsa private key.
+message PrivKey {
+  option (amino.name)             = "tendermint/PrivKeyMldsa";
+  option (amino.message_encoding) = "key_field";
+
+  bytes key = 1;
+}

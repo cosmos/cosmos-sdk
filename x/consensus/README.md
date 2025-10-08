@@ -43,19 +43,25 @@ The module manages the following CometBFT consensus parameters:
 To update consensus parameters, submit a governance proposal with `MsgUpdateParams`:
 
 ```go
+import (
+    "time"
+    govtypes "cosmossdk.io/x/gov/types"
+    authtypes "cosmossdk.io/x/auth/types"
+)
+
 msg := &types.MsgUpdateParams{
-    Authority: "cosmos1...", // governance authority
+    Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(), // governance authority
     Block: &types.BlockParams{
         MaxBytes: 22020096,
         MaxGas:   10000000,
     },
     Evidence: &types.EvidenceParams{
         MaxAgeNumBlocks: 100000,
-        MaxAgeDuration:  "48h",
+        MaxAgeDuration:  48 * time.Hour,
         MaxBytes:        1048576,
     },
     Validator: &types.ValidatorParams{
-        PubKeyTypes: []string{"ed25519", "secp256k1"},
+        PubKeyTypes: []string{"ed25519"},
     },
 }
 ```
@@ -65,7 +71,7 @@ msg := &types.MsgUpdateParams{
 Retrieve current consensus parameters:
 
 ```bash
-cosmos-sdk query consensus params
+<appd> q consensus params
 ```
 
 ## Architecture

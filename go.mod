@@ -59,7 +59,7 @@ require (
 	golang.org/x/crypto v0.42.0
 	golang.org/x/sync v0.17.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20250818200422-3122310a409c
-	google.golang.org/grpc v1.75.1
+	google.golang.org/grpc v1.76.0
 	google.golang.org/protobuf v1.36.10
 	gotest.tools/v3 v3.5.2
 	pgregory.net/rapid v1.2.0

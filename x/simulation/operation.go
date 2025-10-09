@@ -5,6 +5,8 @@ import (
 	"math/rand"
 	"sort"
 
+	"container/heap"
+
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
@@ -73,7 +75,7 @@ func NewOperationQueue() OperationQueue {
 }
 
 // queueOperations adds all future operations into the operation queue.
-func queueOperations(queuedOps OperationQueue, queuedTimeOps, futureOps []simulation.FutureOperation) {
+func queueOperations(queuedOps OperationQueue, queuedTimeOps *timeOpQueue, futureOps []simulation.FutureOperation) {
 	if futureOps == nil {
 		return
 	}
@@ -89,18 +91,8 @@ func queueOperations(queuedOps OperationQueue, queuedTimeOps, futureOps []simula
 			continue
 		}
 
-		// TODO: Replace with proper sorted data structure, so don't have the
-		// copy entire slice
-		index := sort.Search(
-			len(queuedTimeOps),
-			func(i int) bool {
-				return queuedTimeOps[i].BlockTime.After(futureOp.BlockTime)
-			},
-		)
-
-		queuedTimeOps = append(queuedTimeOps, simulation.FutureOperation{})
-		copy(queuedTimeOps[index+1:], queuedTimeOps[index:])
-		queuedTimeOps[index] = futureOp
+		// Use min-heap for efficient insertion by BlockTime.
+		heap.Push(queuedTimeOps, futureOp)
 	}
 }
 

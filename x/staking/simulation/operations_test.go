@@ -124,8 +124,6 @@ func (s *SimTestSuite) SetupTest() {
 func (s *SimTestSuite) TestWeightedOperations() {
 	require := s.Require()
 
-	s.ctx.WithChainID("test-chain")
-
 	cdc := s.encCfg.Codec
 	appParams := make(simtypes.AppParams)
 

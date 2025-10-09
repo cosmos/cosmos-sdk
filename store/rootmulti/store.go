@@ -543,6 +543,8 @@ func (rs *Store) Commit() types.CommitID {
 
 	defer func() {
 		height := rs.lastCommitInfo.Version
+		current := rs.memStore.Load()
+		(*current).Commit()
 		rs.memStoreManager.Commit(height)
 		// Create a new isolated memstore for the next block and replace the current one
 		newIsolatedMemStore := rs.memStoreManager.Branch()

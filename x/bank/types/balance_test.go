@@ -196,8 +196,7 @@ func benchmarkSanitizeBalances(b *testing.B, nAddresses int) {
 	coins := sdk.Coins{coin}
 	addrs, _ := makeRandomAddressesAndPublicKeys(nAddresses)
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		var balances []bank.Balance
 		for _, addr := range addrs {
 			balances = append(balances, bank.Balance{

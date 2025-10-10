@@ -93,7 +93,10 @@ func SetSkipDERConversion() {
 	options.skipDERConversion = true
 }
 
-// Set the skip DER Conversion requirement to default false
+// SetDERConversion enables DER signature conversion (default behavior).
+// When enabled, signatures returned from the Ledger device are converted
+// from DER format to BER format. This is the standard behavior for most
+// Cosmos SDK applications. To disable DER conversion, use SetSkipDERConversion().
 func SetDERConversion() {
 	options.skipDERConversion = false
 }

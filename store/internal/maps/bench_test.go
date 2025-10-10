@@ -7,7 +7,7 @@ func BenchmarkKVPairBytes(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		b.SetBytes(int64(len(kvp.Bytes())))
 	}
 }

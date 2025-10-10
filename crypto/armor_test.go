@@ -187,7 +187,7 @@ func BenchmarkBcryptGenerateFromPassword(b *testing.B) {
 			b.ReportAllocs()
 			saltBytes := cmtcrypto.CRandBytes(16)
 			b.ResetTimer()
-			for i := 0; i < b.N; i++ {
+			for b.Loop() {
 				_, err := bcrypt.GenerateFromPassword(saltBytes, passphrase, param)
 				require.Nil(b, err)
 			}

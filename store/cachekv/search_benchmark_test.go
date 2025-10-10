@@ -8,7 +8,7 @@ import (
 )
 
 func BenchmarkLargeUnsortedMisses(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		b.StopTimer()
 		store := generateStore()
 		b.StartTimer()

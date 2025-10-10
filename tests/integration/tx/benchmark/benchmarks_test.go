@@ -49,7 +49,7 @@ func BenchmarkTx(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for _, tc := range testCases {
 			res, err := s.queryClient.Simulate(context.Background(), tc.req)
 			assert.NilError(b, err)

@@ -655,7 +655,7 @@ func TestNewIntFromString(t *testing.T) {
 
 func BenchmarkIntSize(b *testing.B) {
 	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for _, st := range sizeTests {
 			ii, _ := math.NewIntFromString(st.s)
 			got := ii.Size()
@@ -681,7 +681,7 @@ func BenchmarkIntOverflowCheckTime(b *testing.B) {
 	b.ResetTimer()
 
 	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for j := range sizeTests {
 			got := math.NewIntFromBigIntMut(ints[j])
 			sink = got

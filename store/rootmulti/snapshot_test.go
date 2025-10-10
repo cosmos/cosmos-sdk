@@ -242,7 +242,7 @@ func benchmarkMultistoreSnapshot(b *testing.B, stores uint8, storeKeys uint64) {
 	require.EqualValues(b, 1, version)
 	b.StartTimer()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		target := rootmulti.NewStore(dbm.NewMemDB(), log.NewNopLogger(), metrics.NewNoOpMetrics())
 		for _, key := range source.StoreKeysByName() {
 			target.MountStoreWithDB(key, types.StoreTypeIAVL, nil)
@@ -278,7 +278,7 @@ func benchmarkMultistoreSnapshotRestore(b *testing.B, stores uint8, storeKeys ui
 	require.EqualValues(b, 1, version)
 	b.StartTimer()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		target := rootmulti.NewStore(dbm.NewMemDB(), log.NewNopLogger(), metrics.NewNoOpMetrics())
 		for _, key := range source.StoreKeysByName() {
 			target.MountStoreWithDB(key, types.StoreTypeIAVL, nil)

@@ -56,7 +56,7 @@ func benchmarkRejectUnknownFields(b *testing.B, parallel bool) {
 
 	if !parallel {
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			n1A := new(testdata.Nested1A)
 			if err := unknownproto.RejectUnknownFieldsStrict(n1BBlob, n1A, unknownproto.DefaultAnyResolver{}); err == nil {
 				b.Fatal("expected an error")
@@ -94,7 +94,7 @@ func benchmarkProtoUnmarshal(b *testing.B, parallel bool) {
 	b.ReportAllocs()
 
 	if !parallel {
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			n1A := new(testdata.Nested1A)
 			if err := proto.Unmarshal(n1BBlob, n1A); err == nil {
 				b.Fatal("expected an error")

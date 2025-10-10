@@ -251,7 +251,7 @@ func unMarshalLegacyInfo(bz []byte) (info LegacyInfo, err error) {
 		return multi, err
 	}
 
-	return
+	return info, err
 }
 
 // privKeyFromLegacyInfo exports a private key from LegacyInfo

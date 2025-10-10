@@ -214,7 +214,7 @@ func isProtov2(md grpc.MethodDesc) (isV2Type bool, err error) {
 	// we are allowed to pass in a nil context and nil request, since we are not actually executing the request.
 	// this is made possible by the doNotExecute function which immediately returns without calling other handlers.
 	_, _ = md.Handler(nil, nil, pullRequestType, doNotExecute)
-	return
+	return isV2Type, err
 }
 
 // RequestFullNameFromMethodDesc returns the fully-qualified name of the request message of the provided service's method.

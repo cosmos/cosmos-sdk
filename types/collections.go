@@ -83,10 +83,10 @@ func (a genericAddressKey[T]) EncodeJSON(value T) ([]byte, error) {
 func (a genericAddressKey[T]) DecodeJSON(b []byte) (v T, err error) {
 	s, err := collections.StringKey.DecodeJSON(b)
 	if err != nil {
-		return
+		return v, err
 	}
 	v, err = a.stringDecoder(s)
-	return
+	return v, err
 }
 
 func (a genericAddressKey[T]) Stringify(key T) string {

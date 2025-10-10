@@ -287,7 +287,7 @@ func safeExecuteHandler(ctx sdk.Context, msg sdk.Msg, handler baseapp.MsgService
 		}
 	}()
 	res, err = handler(ctx, msg)
-	return
+	return res, err
 }
 
 // failUnsupportedProposal fails a proposal that cannot be processed by gov

@@ -130,6 +130,10 @@ func (k BaseKeeper) DelegateCoins(ctx context.Context, delegatorAddr, moduleAccA
 	if !amt.IsValid() {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
+	// Reject zero/negative amounts up-front to avoid TrackDelegation errors after deductions.
+	if !amt.IsAllPositive() {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, "amount must be > 0")
+	}
 
 	balances := sdk.NewCoins()
 
@@ -149,7 +153,7 @@ func (k BaseKeeper) DelegateCoins(ctx context.Context, delegatorAddr, moduleAccA
 	}
 
 	if err := k.trackDelegation(ctx, delegatorAddr, balances, amt); err != nil {
-		return errorsmod.Wrap(err, "failed to track delegation")
+		return err
 	}
 	// emit coin spent event
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -179,6 +183,9 @@ func (k BaseKeeper) UndelegateCoins(ctx context.Context, moduleAccAddr, delegato
 	if !amt.IsValid() {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, amt.String())
 	}
+	if !amt.IsAllPositive() {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, "amount must be > 0")
+	}
 
 	err := k.subUnlockedCoins(ctx, moduleAccAddr, amt)
 	if err != nil {
@@ -186,7 +193,7 @@ func (k BaseKeeper) UndelegateCoins(ctx context.Context, moduleAccAddr, delegato
 	}
 
 	if err := k.trackUndelegation(ctx, delegatorAddr, amt); err != nil {
-		return errorsmod.Wrap(err, "failed to track undelegation")
+		return err
 	}
 
 	err = k.addCoins(ctx, delegatorAddr, amt)
@@ -438,9 +445,11 @@ func (k BaseKeeper) trackDelegation(ctx context.Context, addr sdk.AccAddress, ba
 
 	vacc, ok := acc.(types.VestingAccount)
 	if ok {
-		// TODO: return error on account.TrackDelegation
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
-		vacc.TrackDelegation(sdkCtx.BlockHeader().Time, balance, amt)
+		err := vacc.TrackDelegation(sdkCtx.BlockHeader().Time, balance, amt)
+		if err != nil {
+			return errorsmod.Wrapf(err, "failed to track delegation for account %s", addr)
+		}
 		k.ak.SetAccount(ctx, acc)
 	}
 
@@ -456,8 +465,10 @@ func (k BaseKeeper) trackUndelegation(ctx context.Context, addr sdk.AccAddress, 
 
 	vacc, ok := acc.(types.VestingAccount)
 	if ok {
-		// TODO: return error on account.TrackUndelegation
-		vacc.TrackUndelegation(amt)
+		err := vacc.TrackUndelegation(amt)
+		if err != nil {
+			return errorsmod.Wrapf(err, "failed to track undelegation for account %s", addr)
+		}
 		k.ak.SetAccount(ctx, acc)
 	}
 

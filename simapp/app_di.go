@@ -76,7 +76,7 @@ type SimApp struct {
 	// supplementary keepers
 	FeeGrantKeeper     feegrantkeeper.Keeper
 	AuthzKeeper        authzkeeper.Keeper
-	EpochsKeeper       epochskeeper.Keeper
+	EpochsKeeper       *epochskeeper.Keeper
 	ProtocolPoolKeeper protocolpoolkeeper.Keeper
 
 	// simulation manager
@@ -232,7 +232,12 @@ func NewSimApp(
 	// NOTE: this is not required apps that don't use the simulator for fuzz testing
 	// transactions
 	overrideModules := map[string]module.AppModuleSimulation{
-		authtypes.ModuleName: auth.NewAppModule(app.appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts, nil),
+		authtypes.ModuleName: auth.NewAppModule(
+			app.appCodec,
+			app.AccountKeeper,
+			authsims.RandomGenesisAccounts,
+			nil,
+		),
 	}
 	app.sm = module.NewSimulationManagerFromAppModules(app.ModuleManager.Modules, overrideModules)
 

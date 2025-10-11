@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/mldsa"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	errorsmod "cosmossdk.io/errors"
@@ -570,6 +571,7 @@ func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 func DefaultSigVerificationGasConsumer(
 	meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params,
 ) error {
+	fmt.Printf("parameters: %+v\n", params)
 	pubkey := sig.PubKey
 	switch pubkey := pubkey.(type) {
 	case *ed25519.PubKey:
@@ -594,7 +596,8 @@ func DefaultSigVerificationGasConsumer(
 			return err
 		}
 		return nil
-
+	case *mldsa.PubKey:
+		return nil
 	default:
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)
 	}

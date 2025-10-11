@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 	"slices"
 	"strconv"
 	"time"
@@ -35,6 +36,7 @@ var _ types.MsgServer = msgServer{}
 
 // CreateValidator defines a method for creating a new validator
 func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateValidator) (*types.MsgCreateValidatorResponse, error) {
+	fmt.Println("CreateValidator called", msg)
 	valAddr, err := k.validatorAddressCodec.StringToBytes(msg.ValidatorAddress)
 	if err != nil {
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)

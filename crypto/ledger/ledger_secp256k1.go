@@ -17,6 +17,9 @@ import (
 // options stores the Ledger Options that can be used to customize Ledger usage
 var options Options
 
+// AppName defines the Ledger app used for signing. Cosmos SDK uses the Cosmos app
+const AppName = "Cosmos"
+
 type (
 	// discoverLedgerFn defines a Ledger discovery function that returns a
 	// connected device or an error upon failure. Its allows a method to avoid CGO
@@ -66,7 +69,7 @@ func initOptionsDefault() {
 	options.createPubkey = func(key []byte) types.PubKey {
 		return &secp256k1.PubKey{Key: key}
 	}
-	options.appName = "Cosmos"
+	options.appName = AppName
 	options.skipDERConversion = false
 }
 
@@ -88,6 +91,14 @@ func SetAppName(appName string) {
 // SetSkipDERConversion sets the DER Conversion requirement to true (false by default)
 func SetSkipDERConversion() {
 	options.skipDERConversion = true
+}
+
+// SetDERConversion enables DER signature conversion (default behavior).
+// When enabled, signatures returned from the Ledger device are converted
+// from DER format to BER format. This is the standard behavior for most
+// Cosmos SDK applications. To disable DER conversion, use SetSkipDERConversion().
+func SetDERConversion() {
+	options.skipDERConversion = false
 }
 
 // NewPrivKeySecp256k1Unsafe will generate a new key and store the public key for later use.

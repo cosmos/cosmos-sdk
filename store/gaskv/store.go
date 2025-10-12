@@ -2,11 +2,27 @@ package gaskv
 
 import (
 	"io"
+	"math"
 
 	"cosmossdk.io/store/types"
 )
 
 var _ types.KVStore = &Store{}
+
+// multiplyGasSafely performs multiplication of gas cost per byte with byte length
+// and returns the result or panics with ErrorGasOverflow if overflow occurs.
+func multiplyGasSafely(costPerByte types.Gas, byteLength int) types.Gas {
+	if costPerByte == 0 || byteLength == 0 {
+		return 0
+	}
+
+	// Check for overflow: if costPerByte > math.MaxUint64 / byteLength, then overflow
+	if costPerByte > math.MaxUint64/uint64(byteLength) {
+		panic(types.ErrorGasOverflow{Descriptor: "gas calculation overflow"})
+	}
+
+	return costPerByte * types.Gas(byteLength)
+}
 
 // Store applies gas tracking to an underlying KVStore. It implements the
 // KVStore interface.
@@ -37,9 +53,9 @@ func (gs *Store) Get(key []byte) (value []byte) {
 	gs.gasMeter.ConsumeGas(gs.gasConfig.ReadCostFlat, types.GasReadCostFlatDesc)
 	value = gs.parent.Get(key)
 
-	// TODO overflow-safe math?
-	gs.gasMeter.ConsumeGas(gs.gasConfig.ReadCostPerByte*types.Gas(len(key)), types.GasReadPerByteDesc)
-	gs.gasMeter.ConsumeGas(gs.gasConfig.ReadCostPerByte*types.Gas(len(value)), types.GasReadPerByteDesc)
+	// Use overflow-safe math for gas calculation
+	gs.gasMeter.ConsumeGas(multiplyGasSafely(gs.gasConfig.ReadCostPerByte, len(key)), types.GasReadPerByteDesc)
+	gs.gasMeter.ConsumeGas(multiplyGasSafely(gs.gasConfig.ReadCostPerByte, len(value)), types.GasReadPerByteDesc)
 
 	return value
 }
@@ -49,9 +65,9 @@ func (gs *Store) Set(key, value []byte) {
 	types.AssertValidKey(key)
 	types.AssertValidValue(value)
 	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostFlat, types.GasWriteCostFlatDesc)
-	// TODO overflow-safe math?
-	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostPerByte*types.Gas(len(key)), types.GasWritePerByteDesc)
-	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostPerByte*types.Gas(len(value)), types.GasWritePerByteDesc)
+	// Use overflow-safe math for gas calculation
+	gs.gasMeter.ConsumeGas(multiplyGasSafely(gs.gasConfig.WriteCostPerByte, len(key)), types.GasWritePerByteDesc)
+	gs.gasMeter.ConsumeGas(multiplyGasSafely(gs.gasConfig.WriteCostPerByte, len(value)), types.GasWritePerByteDesc)
 	gs.parent.Set(key, value)
 }
 
@@ -170,8 +186,9 @@ func (gi *gasIterator) consumeSeekGas() {
 		key := gi.Key()
 		value := gi.Value()
 
-		gi.gasMeter.ConsumeGas(gi.gasConfig.ReadCostPerByte*types.Gas(len(key)), types.GasValuePerByteDesc)
-		gi.gasMeter.ConsumeGas(gi.gasConfig.ReadCostPerByte*types.Gas(len(value)), types.GasValuePerByteDesc)
+		// Use overflow-safe math for gas calculation
+		gi.gasMeter.ConsumeGas(multiplyGasSafely(gi.gasConfig.ReadCostPerByte, len(key)), types.GasValuePerByteDesc)
+		gi.gasMeter.ConsumeGas(multiplyGasSafely(gi.gasConfig.ReadCostPerByte, len(value)), types.GasValuePerByteDesc)
 	}
 	gi.gasMeter.ConsumeGas(gi.gasConfig.IterNextCostFlat, types.GasIterNextCostFlatDesc)
 }

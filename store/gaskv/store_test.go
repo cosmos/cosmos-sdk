@@ -2,6 +2,7 @@ package gaskv_test
 
 import (
 	"fmt"
+	"math"
 	"testing"
 
 	dbm "github.com/cosmos/cosmos-db"
@@ -117,4 +118,79 @@ func TestGasKVStoreOutOfGasIterator(t *testing.T) {
 	iterator := st.Iterator(nil, nil)
 	iterator.Next()
 	require.Panics(t, func() { iterator.Value() }, "Expected out-of-gas")
+}
+
+func TestGasKVStoreOverflowSafeMath(t *testing.T) {
+	t.Parallel()
+
+	// Test with very large values that would cause overflow
+	mem := dbadapter.Store{DB: dbm.NewMemDB()}
+	meter := types.NewInfiniteGasMeter() // Use infinite meter to avoid out-of-gas
+
+	// Create a gas config with high per-byte costs to trigger overflow
+	// Use a value that when multiplied by MaxKeyLength would cause overflow
+	highCostPerByte := types.Gas(math.MaxUint64/uint64(types.MaxKeyLength) + 1)
+	config := types.GasConfig{
+		HasCost:          1000,
+		DeleteCost:       1000,
+		ReadCostFlat:     1000,
+		ReadCostPerByte:  highCostPerByte,
+		WriteCostFlat:    2000,
+		WriteCostPerByte: highCostPerByte,
+		IterNextCostFlat: 30,
+	}
+
+	st := gaskv.NewStore(mem, meter, config)
+
+	// Test Get with large key that would cause overflow
+	largeKey := make([]byte, types.MaxKeyLength) // Max key length * high cost > MaxUint64
+	require.Panics(t, func() { st.Get(largeKey) }, "Expected gas overflow for large key in Get")
+
+	// Test Set with large value that would cause overflow
+	smallKey := []byte("key")
+	largeValue := make([]byte, types.MaxKeyLength) // Max key length * high cost > MaxUint64
+	require.Panics(t, func() { st.Set(smallKey, largeValue) }, "Expected gas overflow for large value in Set")
+
+	// Test that normal operations still work with lower cost
+	normalConfig := types.GasConfig{
+		HasCost:          1000,
+		DeleteCost:       1000,
+		ReadCostFlat:     1000,
+		ReadCostPerByte:  1, // Low cost per byte
+		WriteCostFlat:    2000,
+		WriteCostPerByte: 1, // Low cost per byte
+		IterNextCostFlat: 30,
+	}
+	normalSt := gaskv.NewStore(mem, meter, normalConfig)
+	normalKey := []byte("normal")
+	normalValue := []byte("value")
+	require.NotPanics(t, func() { normalSt.Set(normalKey, normalValue) }, "Normal operations should not panic")
+	require.NotPanics(t, func() { normalSt.Get(normalKey) }, "Normal operations should not panic")
+}
+
+func TestGasKVStoreOverflowSafeMathWithZeroCost(t *testing.T) {
+	t.Parallel()
+
+	// Test with zero cost per byte (should not cause overflow)
+	mem := dbadapter.Store{DB: dbm.NewMemDB()}
+	meter := types.NewInfiniteGasMeter()
+
+	config := types.GasConfig{
+		HasCost:          1000,
+		DeleteCost:       1000,
+		ReadCostFlat:     1000,
+		ReadCostPerByte:  0, // Zero cost per byte
+		WriteCostFlat:    2000,
+		WriteCostPerByte: 0, // Zero cost per byte
+		IterNextCostFlat: 30,
+	}
+
+	st := gaskv.NewStore(mem, meter, config)
+
+	// Test with reasonably large data within limits - should not panic with zero cost
+	largeKey := make([]byte, 1000)   // Within MaxKeyLength limit
+	largeValue := make([]byte, 1000) // Within MaxValueLength limit
+
+	require.NotPanics(t, func() { st.Set(largeKey, largeValue) }, "Zero cost should not cause overflow")
+	require.NotPanics(t, func() { st.Get(largeKey) }, "Zero cost should not cause overflow")
 }

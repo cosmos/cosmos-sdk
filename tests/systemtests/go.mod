@@ -6,6 +6,7 @@ replace (
 	// always use latest versions in tests
 	cosmossdk.io/systemtests => ../../systemtests
 	github.com/cosmos/cosmos-sdk => ../..
+	github.com/cometbft/cometbft => github.com/btcq-org/cometbft v0.0.0-20251013035941-2d2d31bd6086
 )
 
 require (

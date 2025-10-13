@@ -571,7 +571,6 @@ func (vscd ValidateSigCountDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, sim
 func DefaultSigVerificationGasConsumer(
 	meter storetypes.GasMeter, sig signing.SignatureV2, params types.Params,
 ) error {
-	fmt.Printf("parameters: %+v\n", params)
 	pubkey := sig.PubKey
 	switch pubkey := pubkey.(type) {
 	case *ed25519.PubKey:
@@ -597,6 +596,7 @@ func DefaultSigVerificationGasConsumer(
 		}
 		return nil
 	case *mldsa.PubKey:
+		// currently verify MLDSA signatures doesn't consume gas
 		return nil
 	default:
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)

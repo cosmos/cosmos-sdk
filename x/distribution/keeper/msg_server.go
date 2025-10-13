@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/go-metrics"
 
@@ -209,6 +210,36 @@ func (k msgServer) DepositValidatorRewardsPool(ctx context.Context, msg *types.M
 	reward := sdk.NewDecCoinsFromCoins(msg.Amount...)
 	if err = k.AllocateTokensToValidator(ctx, validator, reward); err != nil {
 		return nil, err
+	}
+
+	// make sure the reward pool isn't already full.
+	if !validator.GetTokens().IsZero() {
+		rewards, err := k.GetValidatorCurrentRewards(ctx, valAddr)
+		if err != nil {
+			return nil, err
+		}
+		current := rewards.Rewards
+		historical, err := k.GetValidatorHistoricalRewards(ctx, valAddr, rewards.Period-1)
+		if err != nil {
+			return nil, err
+		}
+		if !historical.CumulativeRewardRatio.IsZero() {
+			rewardRatio := historical.CumulativeRewardRatio
+			var panicErr error
+			func() {
+				defer func() {
+					if r := recover(); r != nil {
+						panicErr = fmt.Errorf("deposit is too large: %v", r)
+					}
+				}()
+				rewardRatio.Add(current...)
+			}()
+
+			// Check if the deferred function caught a panic
+			if panicErr != nil {
+				return nil, fmt.Errorf("unable to deposit coins: %w", panicErr)
+			}
+		}
 	}
 
 	logger := k.Logger(ctx)

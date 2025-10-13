@@ -13,3 +13,9 @@ Additionally, the SDK includes in-place migrations for its core modules. These i
 Migration from a version older than the last two major releases is not supported.
 
 When migrating from a previous version, refer to the [`UPGRADING.md`](../../../../UPGRADING.md) and the `CHANGELOG.md` of the version you are migrating to.
+
+## Migration Guides
+
+For specific version-to-version migrations, see our detailed migration guides:
+
+* [Migration Guide: v0.53.x to v0.54.x](./04-migration-guide-v053-to-v054.md) - Complete guide for upgrading to CometBFT v2

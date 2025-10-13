@@ -59,12 +59,15 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.msgSendExec(s.grantee[0])
 
 	// create a proposal with deposit
-	_, err = govtestutil.MsgSubmitLegacyProposal(val.ClientCtx, val.Address.String(),
+	outProposal, err := govtestutil.MsgSubmitLegacyProposal(val.ClientCtx, val.Address.String(),
 		"Text Proposal 1", "Where is the title!?", govv1beta1.ProposalTypeText,
+		fmt.Sprintf("--%s=%s", flags.FlagGas, "300000"),
 		fmt.Sprintf("--%s=%s", govcli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, govv1.DefaultMinDepositTokens).String()))
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
-
+	var proposalRes sdk.TxResponse
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(outProposal.Bytes(), &proposalRes), outProposal.String())
+	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, proposalRes.TxHash, 0))
 	// Create new account in the keyring.
 	s.grantee[1] = s.createAccount("grantee2")
 	// Send some funds to the new account.
@@ -720,7 +723,7 @@ func (s *E2ETestSuite) TestExecDelegateAuthorization() {
 			"valid txn: (delegate half tokens)",
 			[]string{
 				execMsg.Name(),
-				fmt.Sprintf("--%s=%s", flags.FlagGas, flags.GasFlagAuto),
+				fmt.Sprintf("--%s=%s", flags.FlagGas, "400000"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
@@ -734,7 +737,7 @@ func (s *E2ETestSuite) TestExecDelegateAuthorization() {
 			"valid txn: (delegate remaining half tokens)",
 			[]string{
 				execMsg.Name(),
-				fmt.Sprintf("--%s=%s", flags.FlagGas, flags.GasFlagAuto),
+				fmt.Sprintf("--%s=%s", flags.FlagGas, "400000"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
@@ -814,7 +817,7 @@ func (s *E2ETestSuite) TestExecDelegateAuthorization() {
 			"valid txn",
 			[]string{
 				execMsg.Name(),
-				fmt.Sprintf("--%s=%s", flags.FlagGas, flags.GasFlagAuto),
+				fmt.Sprintf("--%s=%s", flags.FlagGas, "400000"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
@@ -943,7 +946,7 @@ func (s *E2ETestSuite) TestExecUndelegateAuthorization() {
 			"valid txn: (undelegate half tokens)",
 			[]string{
 				execMsg.Name(),
-				fmt.Sprintf("--%s=%s", flags.FlagGas, flags.GasFlagAuto),
+				fmt.Sprintf("--%s=%s", flags.FlagGas, "410000"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
@@ -957,7 +960,7 @@ func (s *E2ETestSuite) TestExecUndelegateAuthorization() {
 			"valid txn: (undelegate remaining half tokens)",
 			[]string{
 				execMsg.Name(),
-				fmt.Sprintf("--%s=%s", flags.FlagGas, flags.GasFlagAuto),
+				fmt.Sprintf("--%s=%s", flags.FlagGas, "410000"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
@@ -1038,7 +1041,7 @@ func (s *E2ETestSuite) TestExecUndelegateAuthorization() {
 			"valid txn",
 			[]string{
 				execMsg.Name(),
-				fmt.Sprintf("--%s=%s", flags.FlagGas, flags.GasFlagAuto),
+				fmt.Sprintf("--%s=%s", flags.FlagGas, "410000"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, grantee.String()),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),

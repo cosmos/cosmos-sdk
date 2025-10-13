@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/math"
@@ -43,7 +44,7 @@ func (s *DepositTestSuite) submitProposal(val *network.Validator, initialDeposit
 	if !initialDeposit.IsZero() {
 		exactArgs = append(exactArgs, fmt.Sprintf("--%s=%s", cli.FlagDeposit, initialDeposit.String()))
 	}
-
+	exactArgs = append(exactArgs, fmt.Sprintf("--%s=%s", flags.FlagGas, "300000"))
 	_, err := govclitestutil.MsgSubmitLegacyProposal(
 		val.ClientCtx,
 		val.Address.String(),

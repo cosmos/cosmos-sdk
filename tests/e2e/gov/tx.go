@@ -49,6 +49,7 @@ func (s *E2ETestSuite) SetupSuite() {
 	// create a proposal with deposit
 	out, err := govclitestutil.MsgSubmitLegacyProposal(val.ClientCtx, val.Address.String(),
 		"Text Proposal 1", "Where is the title!?", v1beta1.ProposalTypeText,
+		fmt.Sprintf("--%s=%s", flags.FlagGas, "300000"),
 		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens).String()))
 	s.Require().NoError(err)
 	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
@@ -64,6 +65,7 @@ func (s *E2ETestSuite) SetupSuite() {
 	minimumAcceptedDep := v1.DefaultMinDepositTokens.ToLegacyDec().Mul(v1.DefaultMinDepositRatio).Ceil().TruncateInt()
 	out, err = govclitestutil.MsgSubmitLegacyProposal(val.ClientCtx, val.Address.String(),
 		"Text Proposal 2", "Where is the title!?", v1beta1.ProposalTypeText,
+		fmt.Sprintf("--%s=%s", flags.FlagGas, "300000"),
 		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, minimumAcceptedDep).String()))
 
 	s.Require().NoError(err)
@@ -73,6 +75,7 @@ func (s *E2ETestSuite) SetupSuite() {
 	// create a proposal3 with deposit
 	out, err = govclitestutil.MsgSubmitLegacyProposal(val.ClientCtx, val.Address.String(),
 		"Text Proposal 3", "Where is the title!?", v1beta1.ProposalTypeText,
+		fmt.Sprintf("--%s=%s", flags.FlagGas, "300000"),
 		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens).String()))
 	s.Require().NoError(err)
 	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
@@ -81,6 +84,7 @@ func (s *E2ETestSuite) SetupSuite() {
 	// create a proposal4 with deposit to check the cancel proposal cli tx
 	out, err = govclitestutil.MsgSubmitLegacyProposal(val.ClientCtx, val.Address.String(),
 		"Text Proposal 4", "Where is the title!?", v1beta1.ProposalTypeText,
+		fmt.Sprintf("--%s=%s", flags.FlagGas, "300000"),
 		fmt.Sprintf("--%s=%s", cli.FlagDeposit, sdk.NewCoin(s.cfg.BondDenom, v1.DefaultMinDepositTokens).String()))
 	s.Require().NoError(err)
 	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
@@ -155,6 +159,7 @@ func (s *E2ETestSuite) TestNewCmdSubmitProposal() {
 			"valid proposal",
 			[]string{
 				validPropFile.Name(),
+				fmt.Sprintf("--%s=%s", flags.FlagGas, "300000"),
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -234,6 +239,7 @@ func (s *E2ETestSuite) TestNewCmdSubmitLegacyProposal() {
 			"valid transaction (file)",
 
 			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagGas, "300000"),
 				fmt.Sprintf("--%s=%s", cli.FlagProposal, validPropFile.Name()), //nolint:staticcheck // keep deprecated flag for test
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
@@ -245,6 +251,7 @@ func (s *E2ETestSuite) TestNewCmdSubmitLegacyProposal() {
 		{
 			"valid transaction",
 			[]string{
+				fmt.Sprintf("--%s=%s", flags.FlagGas, "300000"),
 				fmt.Sprintf("--%s='Text Proposal'", cli.FlagTitle),
 				fmt.Sprintf("--%s='Where is the title!?'", cli.FlagDescription),        //nolint:staticcheck // keep deprecated flag for test
 				fmt.Sprintf("--%s=%s", cli.FlagProposalType, v1beta1.ProposalTypeText), //nolint:staticcheck // keep deprecated flag for test

@@ -24,6 +24,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/cli"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -85,6 +86,7 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &s.txRes))
 	s.Require().Equal(uint32(0), s.txRes.Code, s.txRes)
+	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, s.txRes.TxHash, 0))
 
 	out, err = cli.MsgSendExec(
 		val.ClientCtx,
@@ -107,6 +109,7 @@ func (s *E2ETestSuite) SetupSuite() {
 	var tr sdk.TxResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &tr))
 	s.Require().Equal(uint32(0), tr.Code)
+	s.Require().NoError(clitestutil.CheckTxCode(s.network, val.ClientCtx, tr.TxHash, 0))
 
 	resp, err := cli.GetTxResponse(s.network, val.ClientCtx, tr.TxHash)
 	s.Require().NoError(err)
@@ -392,10 +395,12 @@ func (s *E2ETestSuite) TestGetTxEvents_GRPCGateway() {
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
 			res, err := testutil.GetRequest(tc.url)
+			fmt.Println(tc.url)
 			s.Require().NoError(err)
 			if tc.expErr {
 				s.Require().Contains(string(res), tc.expErrMsg)
 			} else {
+				fmt.Printf("response: %s\n", string(res))
 				var result tx.GetTxsEventResponse
 				err = val.ClientCtx.Codec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err, "failed to unmarshal JSON: %s", res)

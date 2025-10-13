@@ -264,14 +264,13 @@ func (s *E2ETestSuite) TestCLISignBatch() {
 	s.Require().NoError(err)
 
 	// Send coins from validator to multisig.
-	output, err := s.createBankMsg(
+	_, err = s.createBankMsg(
 		val,
 		addr,
 		sdk.NewCoins(sdk.NewInt64Coin(s.cfg.BondDenom, 1000)),
 	)
 	s.Require().NoError(err)
 	s.Require().NoError(s.network.WaitForNextBlock())
-	fmt.Printf("create bank msg: %s\n", output.String())
 
 	// fetch the sequence after a tx, should be incremented.
 	_, seq1, err := val.ClientCtx.AccountRetriever.GetAccountNumberSequence(val.ClientCtx, val.Address)

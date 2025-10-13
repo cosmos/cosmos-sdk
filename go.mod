@@ -254,7 +254,7 @@ replace cosmossdk.io/store => ./store
 
 replace github.com/cosmos/cosmos-sdk => .
 
-replace github.com/cometbft/cometbft => github.com/btcq-org/cometbft v0.0.0-20251013035941-2d2d31bd6086
+replace github.com/cometbft/cometbft => ../cometbft // github.com/btcq-org/cometbft v0.0.0-20251013035941-2d2d31bd6086
 
 retract (
 	// false start by tagging the wrong branch

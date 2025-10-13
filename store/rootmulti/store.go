@@ -548,7 +548,9 @@ func (rs *Store) Commit() types.CommitID {
 		rs.memStoreManager.Commit(height)
 		// Create a new isolated memstore for the next block and replace the current one
 		newIsolatedMemStore := rs.memStoreManager.Branch()
-		rs.memStore.Store(&newIsolatedMemStore)
+		if !rs.memStore.CompareAndSwap(current, &newIsolatedMemStore) {
+			panic("memStore pointer swap failed - current pointer was changed concurrently")
+		}
 	}()
 
 	// remove remnants of removed stores

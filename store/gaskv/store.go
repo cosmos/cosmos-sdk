@@ -1,9 +1,11 @@
 package gaskv
 
 import (
-	"io"
+    "io"
+    "math"
+    "math/bits"
 
-	"cosmossdk.io/store/types"
+    "cosmossdk.io/store/types"
 )
 
 var _ types.KVStore = &Store{}
@@ -38,8 +40,8 @@ func (gs *Store) Get(key []byte) (value []byte) {
 	value = gs.parent.Get(key)
 
 	// TODO overflow-safe math?
-	gs.gasMeter.ConsumeGas(gs.gasConfig.ReadCostPerByte*types.Gas(len(key)), types.GasReadPerByteDesc)
-	gs.gasMeter.ConsumeGas(gs.gasConfig.ReadCostPerByte*types.Gas(len(value)), types.GasReadPerByteDesc)
+    gs.gasMeter.ConsumeGas(safeMulGasPerByte(gs.gasConfig.ReadCostPerByte, len(key)), types.GasReadPerByteDesc)
+    gs.gasMeter.ConsumeGas(safeMulGasPerByte(gs.gasConfig.ReadCostPerByte, len(value)), types.GasReadPerByteDesc)
 
 	return value
 }
@@ -50,8 +52,8 @@ func (gs *Store) Set(key, value []byte) {
 	types.AssertValidValue(value)
 	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostFlat, types.GasWriteCostFlatDesc)
 	// TODO overflow-safe math?
-	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostPerByte*types.Gas(len(key)), types.GasWritePerByteDesc)
-	gs.gasMeter.ConsumeGas(gs.gasConfig.WriteCostPerByte*types.Gas(len(value)), types.GasWritePerByteDesc)
+    gs.gasMeter.ConsumeGas(safeMulGasPerByte(gs.gasConfig.WriteCostPerByte, len(key)), types.GasWritePerByteDesc)
+    gs.gasMeter.ConsumeGas(safeMulGasPerByte(gs.gasConfig.WriteCostPerByte, len(value)), types.GasWritePerByteDesc)
 	gs.parent.Set(key, value)
 }
 
@@ -121,6 +123,22 @@ func newGasIterator(gasMeter types.GasMeter, gasConfig types.GasConfig, parent t
 	}
 }
 
+// safeMulGasPerByte multiplies a per-byte gas cost by a length using
+// overflow-safe semantics. If the 64-bit multiplication would overflow,
+// it returns math.MaxUint64 so the downstream GasMeter can handle it
+// consistently (e.g. saturate or panic per implementation).
+func safeMulGasPerByte(perByte types.Gas, length int) types.Gas {
+    if length <= 0 {
+        return 0
+    }
+
+    lo, hi := bits.Mul64(uint64(perByte), uint64(length))
+    if hi != 0 {
+        return types.Gas(math.MaxUint64)
+    }
+    return types.Gas(lo)
+}
+
 // Domain implements Iterator, getting the underlying iterator's domain.
 func (gi *gasIterator) Domain() (start, end []byte) {
 	return gi.parent.Domain()
@@ -170,8 +188,8 @@ func (gi *gasIterator) consumeSeekGas() {
 		key := gi.Key()
 		value := gi.Value()
 
-		gi.gasMeter.ConsumeGas(gi.gasConfig.ReadCostPerByte*types.Gas(len(key)), types.GasValuePerByteDesc)
-		gi.gasMeter.ConsumeGas(gi.gasConfig.ReadCostPerByte*types.Gas(len(value)), types.GasValuePerByteDesc)
+        gi.gasMeter.ConsumeGas(safeMulGasPerByte(gi.gasConfig.ReadCostPerByte, len(key)), types.GasValuePerByteDesc)
+        gi.gasMeter.ConsumeGas(safeMulGasPerByte(gi.gasConfig.ReadCostPerByte, len(value)), types.GasValuePerByteDesc)
 	}
 	gi.gasMeter.ConsumeGas(gi.gasConfig.IterNextCostFlat, types.GasIterNextCostFlatDesc)
 }

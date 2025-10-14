@@ -113,6 +113,11 @@ func (cms Store) LatestVersion() int64 {
 	panic("cannot get latest version from branch cached multi-store")
 }
 
+// EarliestVersion returns the branch version of the store
+func (cms Store) EarliestVersion() int64 {
+	panic("cannot get earliest version from branch cached multi-store")
+}
+
 // GetStoreType returns the type of the store.
 func (cms Store) GetStoreType() types.StoreType {
 	return types.StoreTypeMulti

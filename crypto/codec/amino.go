@@ -3,6 +3,7 @@ package codec
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/mldsa"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -18,6 +19,7 @@ func RegisterCrypto(cdc *codec.LegacyAmino) {
 		secp256k1.PubKeyName, nil)
 	cdc.RegisterConcrete(&kmultisig.LegacyAminoPubKey{},
 		kmultisig.PubKeyAminoRoute, nil)
+	cdc.RegisterConcrete(&mldsa.PubKey{}, mldsa.PubKeyName, nil)
 	// cdc.RegisterConcrete(&bls12_381.PubKey{}, bls12381.PubKeyName, nil)
 
 	cdc.RegisterInterface((*cryptotypes.PrivKey)(nil), nil)
@@ -25,5 +27,6 @@ func RegisterCrypto(cdc *codec.LegacyAmino) {
 		ed25519.PrivKeyName, nil)
 	cdc.RegisterConcrete(&secp256k1.PrivKey{},
 		secp256k1.PrivKeyName, nil)
+	cdc.RegisterConcrete(&mldsa.PrivKey{}, mldsa.PrivKeyName, nil)
 	// cdc.RegisterConcrete(&bls12_381.PrivKey{}, bls12381.PrivKeyName, nil)
 }

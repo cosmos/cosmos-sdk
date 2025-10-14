@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/mldsa"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	errorsmod "cosmossdk.io/errors"
@@ -594,7 +595,9 @@ func DefaultSigVerificationGasConsumer(
 			return err
 		}
 		return nil
-
+	case *mldsa.PubKey:
+		// currently verify MLDSA signatures doesn't consume gas
+		return nil
 	default:
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidPubKey, "unrecognized public key type: %T", pubkey)
 	}

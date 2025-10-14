@@ -25,7 +25,6 @@ func CheckTxCode(network *network.Network, clientCtx client.Context, txHash stri
 	if err != nil {
 		return err
 	}
-
 	var response sdk.TxResponse
 	if err := clientCtx.Codec.UnmarshalJSON(out.Bytes(), &response); err != nil {
 		return err

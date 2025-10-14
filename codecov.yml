@@ -45,24 +45,6 @@ ignore:
   - "**/mock*.go"            # Mock files
   - "**/*.pb.gateway.go"     # Gateway files
 
-# Flags for different test suites to track coverage separately
-flags:
-  unittests:
-    paths:
-      - "!tests/integration/"
-      - "!tests/e2e/"
-    carryforward: true
-
-  integration:
-    paths:
-      - "tests/integration/"
-    carryforward: true
-
-  e2e:
-    paths:
-      - "tests/e2e/"
-    carryforward: true
-
 # How to handle multiple coverage reports
 # The workflow uploads: 00profile.out, 01profile.out, 02profile.out, 03profile.out,
 # integration-profile.out, e2e-profile.out

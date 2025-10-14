@@ -52,14 +52,18 @@ func (s queryServer) Status(ctx context.Context, _ *StatusRequest) (*StatusRespo
 
 	blockTime := sdkCtx.BlockTime()
 
+	// Get the earliest version from the store
+	earliestStoreHeight := uint64(0)
+	if multiStore := sdkCtx.MultiStore(); multiStore != nil {
+		earliestVersion := multiStore.EarliestVersion()
+		earliestStoreHeight = uint64(earliestVersion)
+	}
+
 	return &StatusResponse{
-		// TODO: Get earliest version from store.
-		//
-		// Ref: ...
-		// EarliestStoreHeight: sdkCtx.MultiStore(),
-		Height:        uint64(sdkCtx.BlockHeight()),
-		Timestamp:     &blockTime,
-		AppHash:       sdkCtx.BlockHeader().AppHash,
-		ValidatorHash: sdkCtx.BlockHeader().NextValidatorsHash,
+		EarliestStoreHeight: earliestStoreHeight,
+		Height:              uint64(sdkCtx.BlockHeight()),
+		Timestamp:           &blockTime,
+		AppHash:             sdkCtx.BlockHeader().AppHash,
+		ValidatorHash:       sdkCtx.BlockHeader().NextValidatorsHash,
 	}, nil
 }

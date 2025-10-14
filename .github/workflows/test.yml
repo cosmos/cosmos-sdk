@@ -184,6 +184,15 @@ jobs:
         with:
           name: "${{ github.sha }}-e2e-coverage"
         continue-on-error: true
+      - name: Upload coverage to Codecov
+        if: env.GIT_DIFF
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./00profile.out,./01profile.out,./02profile.out,./03profile.out,./tests/integration-profile.out,./tests/e2e-profile.out
+          flags: unittests,integration,e2e
+          fail_ci_if_error: false
+          verbose: true
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   test-sim-nondeterminism:
     runs-on: depot-ubuntu-22.04-4

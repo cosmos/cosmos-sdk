@@ -80,7 +80,7 @@ func (s *E2ETestSuite) SetupSuite() {
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
-		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
+		fmt.Sprintf("--gas=%d", 300000),
 		fmt.Sprintf("--%s=foobar", flags.FlagNote),
 	)
 	s.Require().NoError(err)
@@ -102,7 +102,7 @@ func (s *E2ETestSuite) SetupSuite() {
 		fmt.Sprintf("--%s=2", flags.FlagSequence),
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))).String()),
-		fmt.Sprintf("--gas=%d", flags.DefaultGasLimit),
+		fmt.Sprintf("--gas=%d", 300000),
 		fmt.Sprintf("--%s=foobar", flags.FlagNote),
 	)
 	s.Require().NoError(err)

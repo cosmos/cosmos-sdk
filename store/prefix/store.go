@@ -64,7 +64,7 @@ func cloneAppend(bz, tail []byte) (res []byte) {
 	res = make([]byte, len(bz)+len(tail))
 	copy(res, bz)
 	copy(res[len(bz):], tail)
-	return
+	return res
 }
 
 func (s GStore[V]) key(key []byte) (res []byte) {
@@ -72,7 +72,7 @@ func (s GStore[V]) key(key []byte) (res []byte) {
 		panic("nil key on Store")
 	}
 	res = cloneAppend(s.prefix, key)
-	return
+	return res
 }
 
 // GetStoreType implements Store, returning the parent store's type
@@ -201,7 +201,7 @@ func (pi *prefixIterator[V]) Key() (key []byte) {
 	key = pi.iter.Key()
 	key = stripPrefix(key, pi.prefix)
 
-	return
+	return key
 }
 
 // Implements Iterator

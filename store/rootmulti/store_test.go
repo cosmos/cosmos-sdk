@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -1139,4 +1140,66 @@ func TestCommitStores(t *testing.T) {
 			require.Equal(t, tc.exptectCommit, store.Committed)
 		})
 	}
+}
+
+func TestGetEarliestVersion(t *testing.T) {
+	db := dbm.NewMemDB()
+
+	// Test with empty database
+	earliestVersion := GetEarliestVersion(db)
+	require.Equal(t, int64(0), earliestVersion)
+
+	// Create a store and commit some versions
+	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	store.MountStoreWithDB(types.NewKVStoreKey("store1"), types.StoreTypeIAVL, db)
+
+	// Load initial version
+	err := store.LoadLatestVersion()
+	require.NoError(t, err)
+
+	// Commit some versions
+	for i := 1; i <= 5; i++ {
+		store.SetCommitHeader(cmtproto.Header{Height: int64(i)})
+		store.Commit()
+	}
+
+	// Test GetEarliestVersion
+	earliestVersion = GetEarliestVersion(db)
+	require.Equal(t, int64(1), earliestVersion)
+
+	// Test with a gap in versions (simulate pruning)
+	// Remove version 1 and 2 by directly deleting from database
+	db.Delete([]byte("s/1"))
+	db.Delete([]byte("s/2"))
+
+	earliestVersion = GetEarliestVersion(db)
+	require.Equal(t, int64(3), earliestVersion)
+}
+
+func TestStoreEarliestVersion(t *testing.T) {
+	db := dbm.NewMemDB()
+	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
+	store.MountStoreWithDB(types.NewKVStoreKey("store1"), types.StoreTypeIAVL, db)
+
+	// Load initial version
+	err := store.LoadLatestVersion()
+	require.NoError(t, err)
+
+	// Initially, earliest version should be 0 (no commits yet)
+	earliestVersion := store.EarliestVersion()
+	require.Equal(t, int64(0), earliestVersion)
+
+	// Commit some versions
+	for i := 1; i <= 3; i++ {
+		store.SetCommitHeader(cmtproto.Header{Height: int64(i)})
+		store.Commit()
+	}
+
+	// Now earliest version should be 1
+	earliestVersion = store.EarliestVersion()
+	require.Equal(t, int64(1), earliestVersion)
+
+	// Latest version should be 3
+	latestVersion := store.LatestVersion()
+	require.Equal(t, int64(3), latestVersion)
 }

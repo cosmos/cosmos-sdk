@@ -395,12 +395,10 @@ func (s *E2ETestSuite) TestGetTxEvents_GRPCGateway() {
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
 			res, err := testutil.GetRequest(tc.url)
-			fmt.Println(tc.url)
 			s.Require().NoError(err)
 			if tc.expErr {
 				s.Require().Contains(string(res), tc.expErrMsg)
 			} else {
-				fmt.Printf("response: %s\n", string(res))
 				var result tx.GetTxsEventResponse
 				err = val.ClientCtx.Codec.UnmarshalJSON(res, &result)
 				s.Require().NoError(err, "failed to unmarshal JSON: %s", res)

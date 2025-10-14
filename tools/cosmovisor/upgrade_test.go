@@ -6,8 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"slices"
-	"strings"
+    "slices"
 	"testing"
 
 	"github.com/otiai10/copy"
@@ -116,7 +115,6 @@ func (s *upgradeTestSuite) assertCurrentLink(cfg *cosmovisor.Config, target stri
 	s.Require().Equal(target, dest)
 }
 
-// TODO: test with download (and test all download functions)
 func (s *upgradeTestSuite) TestUpgradeBinaryNoDownloadUrl() {
 	cfg := prepareConfig(
 		s.T(),
@@ -175,13 +173,11 @@ func (s *upgradeTestSuite) TestUpgradeBinary() {
 	cases := map[string]struct {
 		url         string
 		canDownload bool
-		validBinary bool
 	}{
 		"get raw binary with checksum": {
 			// sha256sum ./testdata/repo/raw_binary/autod
 			url:         workDir + "/testdata/repo/raw_binary/autod?checksum=sha256:e6bc7851600a2a9917f7bf88eb7bdee1ec162c671101485690b4deb089077b0d",
 			canDownload: true,
-			validBinary: true,
 		},
 		"get raw binary with invalid checksum": {
 			url:         workDir + "/testdata/repo/raw_binary/autod?checksum=sha256:73e2bd6cbb99261733caf137015d5cc58e3f96248d8b01da68be8564989dd906",
@@ -190,7 +186,6 @@ func (s *upgradeTestSuite) TestUpgradeBinary() {
 		"get zipped directory with valid checksum": {
 			url:         workDir + "/testdata/repo/chain3-zip_dir/autod.zip?checksum=sha256:8951f52a0aea8617de0ae459a20daf704c29d259c425e60d520e363df0f166b4",
 			canDownload: true,
-			validBinary: true,
 		},
 		"get zipped directory with invalid checksum": {
 			url:         workDir + "/testdata/repo/chain3-zip_dir/autod.zip?checksum=sha256:73e2bd6cbb99261733caf137015d5cc58e3f96248d8b01da68be8564989dd906",
@@ -203,7 +198,6 @@ func (s *upgradeTestSuite) TestUpgradeBinary() {
 		"valid remote": {
 			url:         "https://github.com/cosmos/cosmos-sdk/raw/main/tools/cosmovisor/testdata/repo/chain3-zip_dir/autod.zip?checksum=sha256:8951f52a0aea8617de0ae459a20daf704c29d259c425e60d520e363df0f166b4",
 			canDownload: true,
-			validBinary: true,
 		},
 	}
 
@@ -219,11 +213,7 @@ func (s *upgradeTestSuite) TestUpgradeBinary() {
 				},
 			)
 
-			url := tc.url
-			if strings.HasPrefix(url, "./") {
-				url, err = filepath.Abs(url)
-				s.Require().NoError(err)
-			}
+            url := tc.url
 
 			plan := upgradetypes.Plan{
 				Name: "amazonas",

@@ -449,6 +449,11 @@ func (rs *Store) LatestVersion() int64 {
 	return rs.LastCommitID().Version
 }
 
+// EarliestVersion returns the earliest version available in the store
+func (rs *Store) EarliestVersion() int64 {
+	return GetEarliestVersion(rs.db)
+}
+
 // LastCommitID implements Committer/CommitStore.
 func (rs *Store) LastCommitID() types.CommitID {
 	info := rs.lastCommitInfo.Load()
@@ -1187,6 +1192,53 @@ func GetLatestVersion(db dbm.DB) int64 {
 	}
 
 	return latestVersion
+}
+
+// GetEarliestVersion returns the earliest version available in the store.
+// It iterates through all commit info keys to find the minimum version.
+func GetEarliestVersion(db dbm.DB) int64 {
+	// Start with the latest version as a fallback
+	latestVersion := GetLatestVersion(db)
+	if latestVersion == 0 {
+		return 0
+	}
+
+	// Iterate through commit info keys to find the earliest version
+	// Keys are in format "s/<version>"
+	iter, err := db.Iterator([]byte("s/"), []byte("s/"+string([]byte{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF})))
+	if err != nil {
+		// If iteration fails, return the latest version as fallback
+		return latestVersion
+	}
+	defer iter.Close()
+
+	earliestVersion := latestVersion
+	for ; iter.Valid(); iter.Next() {
+		key := iter.Key()
+		// Skip the latest version key
+		if string(key) == latestVersionKey {
+			continue
+		}
+
+		// Parse version from key "s/<version>"
+		if len(key) > 2 && key[0] == 's' && key[1] == '/' {
+			versionStr := string(key[2:])
+			// Try to parse as int64
+			var version int64
+			if _, err := fmt.Sscanf(versionStr, "%d", &version); err == nil {
+				if version < earliestVersion {
+					earliestVersion = version
+				}
+			}
+		}
+	}
+
+	if err := iter.Error(); err != nil {
+		// If iteration error occurs, return the latest version as fallback
+		return latestVersion
+	}
+
+	return earliestVersion
 }
 
 // commitStores commits each store and returns a new commitInfo.

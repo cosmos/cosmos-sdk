@@ -143,6 +143,7 @@ github.com/bits-and-blooms/bitset v1.24.0 h1:H4x4TuulnokZKvHLfzVRTHJfFfnHEeSYJiz
 github.com/bits-and-blooms/bitset v1.24.0/go.mod h1:7hO7Gc7Pp1vODcmWvKMRA9BNmbv6a/7QIWpPxHddWR8=
 github.com/btcq-org/cometbft v0.0.0-20251013035941-2d2d31bd6086 h1:Jd9dYV93OqkV7CrKKkj3cQyJXiGl3mFUILbat9VRdHw=
 github.com/btcq-org/cometbft v0.0.0-20251013035941-2d2d31bd6086/go.mod h1:sZIdinwS7Y/3cNFyeLrjDakSWSJcHfJUdf812mm5KLI=
+github.com/btcq-org/cometbft v0.0.0-20251013222417-a202e4a462b5/go.mod h1:sZIdinwS7Y/3cNFyeLrjDakSWSJcHfJUdf812mm5KLI=
 github.com/btcsuite/btcd/btcec/v2 v2.3.5 h1:dpAlnAwmT1yIBm3exhT1/8iUSD98RDJM5vqJVQDQLiU=
 github.com/btcsuite/btcd/btcec/v2 v2.3.5/go.mod h1:m22FrOAiuxl/tht9wIqAoGHcbnCCaPWyauO8y2LGGtQ=
 github.com/btcsuite/btcd/btcutil v1.1.6 h1:zFL2+c3Lb9gEgqKNzowKUPQNb8jV7v5Oaodi/AYFd6c=

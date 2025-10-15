@@ -26,7 +26,7 @@ message PubKey {
   option (amino.message_encoding)     = "key_field";
   option (gogoproto.goproto_stringer) = false;
 
-  bytes key = 1 [(gogoproto.casttype) = "crypto/bls12_381.PublicKey"];
+  bytes key = 1;
 }
 
 // PrivKey defines a bls12_381 private key.
@@ -34,5 +34,5 @@ message PrivKey {
   option (amino.name)             = "cometbft/PrivKeyBls12_381";
   option (amino.message_encoding) = "key_field";
 
-  bytes key = 1 [(gogoproto.casttype) = "crypto/bls12_381.PrivateKey"];
+  bytes key = 1;
 }

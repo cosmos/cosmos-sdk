@@ -35,7 +35,7 @@ func DoBenchmarkDeepCacheStack(b *testing.B, depth int) {
 	store := stack.CurrentStore()
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		it := store.Iterator(nil, nil)
 		items := make([][]byte, 0, nItems)
 		for ; it.Valid(); it.Next() {

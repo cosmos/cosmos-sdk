@@ -6,6 +6,7 @@ import (
 	"io"
 
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/spf13/cast"
 
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/depinject"
@@ -91,6 +92,10 @@ func init() {
 	}
 }
 
+func ProvideStakingCacheSize(appOpts servertypes.AppOptions) int {
+	return cast.ToInt(appOpts.Get(server.FlagStakingCacheSize))
+}
+
 // NewSimApp returns a reference to an initialized SimApp.
 func NewSimApp(
 	logger log.Logger,
@@ -152,6 +157,7 @@ func NewSimApp(
 				// custom minting function that implements the mintkeeper.MintFn
 				// interface.
 			),
+			depinject.Provide(ProvideStakingCacheSize),
 		)
 	)
 

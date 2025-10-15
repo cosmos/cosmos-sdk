@@ -48,4 +48,5 @@ var (
 	ErrInvalidSigner                   = errors.Register(ModuleName, 43, "expected authority account as only signer for proposal message")
 	ErrBadRedelegationSrc              = errors.Register(ModuleName, 44, "redelegation source validator not found")
 	ErrNoUnbondingType                 = errors.Register(ModuleName, 45, "unbonding type not found")
+	ErrCacheMaxSizeReached             = errors.Register(ModuleName, 46, "cache max size reached")
 )

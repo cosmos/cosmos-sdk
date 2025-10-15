@@ -326,6 +326,7 @@ func NewSimApp(
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		authcodec.NewBech32Codec(sdk.Bech32PrefixValAddr),
 		authcodec.NewBech32Codec(sdk.Bech32PrefixConsAddr),
+		stakingCacheSize,
 	)
 	app.MintKeeper = mintkeeper.NewKeeper(
 		appCodec,

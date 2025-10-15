@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math/bits"
 
-	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	ics23 "github.com/cosmos/ics23/go"
 )
 
@@ -67,7 +67,7 @@ func convertInnerOps(p *cmtprotocrypto.Proof) ([]*ics23.InnerOp, error) {
 }
 
 // buildPath returns a list of steps from leaf to root
-// in each step, true means index is left side, false index is right side
+// in each step, true means index is left side, false means index is right side
 // code adapted from merkle/simple_proof.go:computeHashFromAunts
 func buildPath(idx, total int64) []bool {
 	if total < 2 {

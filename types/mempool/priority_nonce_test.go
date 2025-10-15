@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
@@ -922,8 +922,8 @@ func TestNextSenderTx_TxReplacement(t *testing.T) {
 
 	txs := []testTx{
 		{priority: 20, nonce: 1, address: sa},
-		{priority: 15, nonce: 1, address: sa}, // priority is less than the first Tx, failed tx replacement when the option enabled.
-		{priority: 23, nonce: 1, address: sa}, // priority is not 20% more than the first Tx, failed tx replacement when the option enabled.
+		{priority: 15, nonce: 1, address: sa}, // priority is less than the first Tx, failed tx replacement when the option is enabled.
+		{priority: 23, nonce: 1, address: sa}, // priority is not 20% more than the first Tx, failed tx replacement when the option is enabled.
 		{priority: 24, nonce: 1, address: sa}, // priority is 20% more than the first Tx, the first tx will be replaced.
 	}
 
@@ -939,7 +939,7 @@ func TestNextSenderTx_TxReplacement(t *testing.T) {
 	}
 
 	// test Priority with TxReplacement
-	// we set a TestTxReplacement rule which the priority of the new Tx must be 20% more than the priority of the old Tx
+	// we set a TestTxReplacement rule where the priority of the new Tx must be 20% more than the priority of the old Tx
 	// otherwise, the Insert will return error
 	feeBump := 20
 	mp = mempool.NewPriorityMempool(

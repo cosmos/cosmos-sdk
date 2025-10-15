@@ -174,7 +174,7 @@ func (p Params) ValidateBasic() error {
 	}
 
 	if p.VotingPeriod == nil {
-		return fmt.Errorf("voting period must not be nil: %d", p.VotingPeriod)
+		return fmt.Errorf("voting period must not be nil")
 	}
 	if p.VotingPeriod.Seconds() <= 0 {
 		return fmt.Errorf("voting period must be positive: %s", p.VotingPeriod)
@@ -187,18 +187,18 @@ func (p Params) ValidateBasic() error {
 		return fmt.Errorf("expedited voting period must be positive: %s", p.ExpeditedVotingPeriod)
 	}
 	if p.ExpeditedVotingPeriod.Seconds() >= p.VotingPeriod.Seconds() {
-		return fmt.Errorf("expedited voting period %s must be strictly less that the regular voting period %s", p.ExpeditedVotingPeriod, p.VotingPeriod)
+		return fmt.Errorf("expedited voting period %s must be strictly less than the regular voting period %s", p.ExpeditedVotingPeriod, p.VotingPeriod)
 	}
 
 	minInitialDepositRatio, err := sdkmath.LegacyNewDecFromStr(p.MinInitialDepositRatio)
 	if err != nil {
-		return fmt.Errorf("invalid mininum initial deposit ratio of proposal: %w", err)
+		return fmt.Errorf("invalid minimum initial deposit ratio of proposal: %w", err)
 	}
 	if minInitialDepositRatio.IsNegative() {
-		return fmt.Errorf("mininum initial deposit ratio of proposal must be positive: %s", minInitialDepositRatio)
+		return fmt.Errorf("minimum initial deposit ratio of proposal must be positive: %s", minInitialDepositRatio)
 	}
 	if minInitialDepositRatio.GT(sdkmath.LegacyOneDec()) {
-		return fmt.Errorf("mininum initial deposit ratio of proposal is too large: %s", minInitialDepositRatio)
+		return fmt.Errorf("minimum initial deposit ratio of proposal is too large: %s", minInitialDepositRatio)
 	}
 
 	proposalCancelRate, err := sdkmath.LegacyNewDecFromStr(p.ProposalCancelRatio)

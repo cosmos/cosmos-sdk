@@ -18,10 +18,10 @@ jobs:
   test-sim-multi-seed-long:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
         with:
-          go-version: "1.23"
+          go-version: "1.25"
           check-latest: true
       - name: test-sim-multi-seed-long
         env:
@@ -33,41 +33,16 @@ jobs:
     runs-on: depot-ubuntu-22.04-4
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
         with:
-          go-version: "1.23"
+          go-version: "1.25"
           check-latest: true
       - name: test-sim-import-export
         env:
           GOMEMLIMIT: 14GiB # reserve 2 GiB as buffer for GC to avoid OOM
         run: |
           make test-sim-import-export
-
-  sims-notify-success:
-    needs: [test-sim-multi-seed-long, test-sim-import-export]
-    runs-on: depot-ubuntu-22.04-4
-    if: ${{ success() }}
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-      - name: Get previous workflow status
-        uses: ./.github/actions/last-workflow-status
-        id: last_status
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Notify Slack on success
-        if: ${{ steps.last_status.outputs.last_status == 'failure' }}
-        uses: rtCamp/action-slack-notify@v2.3.3
-        env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_CHANNEL: sdk-sims
-          SLACK_USERNAME: Sim Tests
-          SLACK_ICON_EMOJI: ":white_check_mark:"
-          SLACK_COLOR: good
-          SLACK_MESSAGE: Sims Nightly (Long) are passing
-          SLACK_FOOTER: ""
 
   sims-notify-failure:
     permissions:

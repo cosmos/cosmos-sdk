@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
+	"cosmossdk.io/x/upgrade/plan"
 )
 
 type argsTestSuite struct {
@@ -192,7 +192,7 @@ func (s *argsTestSuite) TestConfigPaths() {
 }
 
 // Test validate
-// add more test in test validate
+// add more tests to test validate
 func (s *argsTestSuite) TestValidate() {
 	relPath := filepath.Join("testdata", "validate")
 	absPath, err := filepath.Abs(relPath)

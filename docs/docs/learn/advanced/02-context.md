@@ -30,16 +30,16 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/types/context.go#L40-L67
 * **Chain ID:** The unique identification number of the blockchain a block pertains to.
 * **Transaction Bytes:** The `[]byte` representation of a transaction being processed using the context. Every transaction is processed by various parts of the Cosmos SDK and consensus engine (e.g. CometBFT) throughout its [lifecycle](../beginner/01-tx-lifecycle.md), some of which do not have any understanding of transaction types. Thus, transactions are marshaled into the generic `[]byte` type using some kind of [encoding format](./05-encoding.md) such as [Amino](./05-encoding.md).
 * **Logger:** A `logger` from the CometBFT libraries. Learn more about logs [here](https://docs.cometbft.com/v0.37/core/configuration). Modules call this method to create their own unique module-specific logger.
-* **VoteInfo:** A list of the ABCI type [`VoteInfo`](https://docs.cometbft.com/master/spec/abci/abci.html#voteinfo), which includes the name of a validator and a boolean indicating whether they have signed the block.
+* **VoteInfo:** A list of the ABCI type [`VoteInfo`](https://docs.cometbft.com/main/spec/abci/abci++_methods.html#voteinfo), which includes the name of a validator and a boolean indicating whether they have signed the block.
 * **Gas Meters:** Specifically, a [`gasMeter`](../beginner/04-gas-fees.md#main-gas-meter) for the transaction currently being processed using the context and a [`blockGasMeter`](../beginner/04-gas-fees.md#block-gas-meter) for the entire block it belongs to. Users specify how much in fees they wish to pay for the execution of their transaction; these gas meters keep track of how much [gas](../beginner/04-gas-fees.md) has been used in the transaction or block so far. If the gas meter runs out, execution halts.
 * **CheckTx Mode:** A boolean value indicating whether a transaction should be processed in `CheckTx` or `DeliverTx` mode.
 * **Min Gas Price:** The minimum [gas](../beginner/04-gas-fees.md) price a node is willing to take in order to include a transaction in its block. This price is a local value configured by each node individually, and should therefore **not be used in any functions used in sequences leading to state-transitions**.
-* **Consensus Params:** The ABCI type [Consensus Parameters](https://docs.cometbft.com/master/spec/abci/apps.html#consensus-parameters), which specify certain limits for the blockchain, such as maximum gas for a block.
+* **Consensus Params:** The ABCI type [Consensus Parameters](https://docs.cometbft.com/v0.37/spec/abci/abci++_app_requirements#consensus-parameters), which specify certain limits for the blockchain, such as maximum gas for a block.
 * **Event Manager:** The event manager allows any caller with access to a `Context` to emit [`Events`](./08-events.md). Modules may define module specific
   `Events` by defining various `Types` and `Attributes` or use the common definitions found in `types/`. Clients can subscribe or query for these `Events`. These `Events` are collected throughout `FinalizeBlock` and are returned to CometBFT for indexing.
 * **Priority:** The transaction priority, only relevant in `CheckTx`.
 * **KV `GasConfig`:** Enables applications to set a custom `GasConfig` for the `KVStore`.
-* **Transient KV `GasConfig`:** Enables applications to set a custom `GasConfig` for the transiant `KVStore`.
+* **Transient KV `GasConfig`:** Enables applications to set a custom `GasConfig` for the transient `KVStore`.
 * **StreamingManager:** The streamingManager field provides access to the streaming manager, which allows modules to subscribe to state changes emitted by the blockchain. The streaming manager is used by the state listening API, which is described in [ADR 038](https://docs.cosmos.network/main/architecture/adr-038-state-listening).
 * **CometInfo:** A lightweight field that contains information about the current block, such as the block height, time, and hash. This information can be used for validating evidence, providing historical data, and enhancing the user experience. For further details see [here](https://github.com/cosmos/cosmos-sdk/blob/main/core/comet/service.go#L14).
 * **HeaderInfo:** The `headerInfo` field contains information about the current block header, such as the chain ID, gas limit, and timestamp. For further details see [here](https://github.com/cosmos/cosmos-sdk/blob/main/core/header/service.go#L14).
@@ -64,14 +64,14 @@ explicitly pass a context `ctx` as the first argument of a process.
 
 The `Context` contains a `MultiStore`, which allows for branching and caching functionality using `CacheMultiStore`
 (queries in `CacheMultiStore` are cached to avoid future round trips).
-Each `KVStore` is branched in a safe and isolated ephemeral storage. Processes are free to write changes to
+Each `KVStore` is branched into safe and isolated ephemeral storage. Processes are free to write changes to
 the `CacheMultiStore`. If a state-transition sequence is performed without issue, the store branch can
 be committed to the underlying store at the end of the sequence or disregard them if something
 goes wrong. The pattern of usage for a Context is as follows:
 
 1. A process receives a Context `ctx` from its parent process, which provides information needed to
    perform the process.
-2. The `ctx.ms` is a **branched store**, i.e. a branch of the [multistore](./04-store.md#multistore) is made so that the process can make changes to the state as it executes, without changing the original`ctx.ms`. This is useful to protect the underlying multistore in case the changes need to be reverted at some point in the execution.
+2. The `ctx.ms` is a **branched store**, i.e. a branch of the [multistore](./04-store.md#multistore) is made so that the process can make changes to the state as it executes, without changing the original `ctx.ms`. This is useful to protect the underlying multistore in case the changes need to be reverted at some point in the execution.
 3. The process may read and write from `ctx` as it is executing. It may call a subprocess and pass
    `ctx` to it as needed.
 4. When a subprocess returns, it checks if the result is a success or failure. If a failure, nothing

@@ -51,7 +51,7 @@ func StatusCommand() *cobra.Command {
 				return err
 			}
 
-			// In order to maintain backwards compatibility, the default json format output
+			// In order to maintain backwards compatibility, the default json format output is used
 			outputFormat, _ := cmd.Flags().GetString(flags.FlagOutput)
 			if outputFormat == flags.OutputFormatJSON {
 				clientCtx = clientCtx.WithOutputFormat(flags.OutputFormatJSON)
@@ -155,7 +155,7 @@ func VersionCmd() *cobra.Command {
 				BlockProtocol uint64
 				P2PProtocol   uint64
 			}{
-				CometBFT:      cmtversion.CMTSemVer,
+				CometBFT:      cmtversion.TMCoreSemVer,
 				ABCI:          cmtversion.ABCIVersion,
 				BlockProtocol: cmtversion.BlockProtocol,
 				P2PProtocol:   cmtversion.P2PProtocol,
@@ -384,10 +384,8 @@ func BootstrapStateCmd(appCreator types.AppCreator) *cobra.Command {
 				app := appCreator(logger, db, nil, serverCtx.Viper)
 				height = app.CommitMultiStore().LastCommitID().Version
 			}
-			if height < 0 {
-				return fmt.Errorf("height must be non-negative, got %d", height)
-			}
-			return node.BootstrapState(cmd.Context(), cfg, cmtcfg.DefaultDBProvider, getGenDocProvider(cfg), uint64(height), nil)
+
+			return node.BootstrapStateWithGenProvider(cmd.Context(), cfg, cmtcfg.DefaultDBProvider, getGenDocProvider(cfg), uint64(height), nil)
 		},
 	}
 

@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	gogotypes "github.com/cosmos/gogoproto/types"
 
 	corestore "cosmossdk.io/core/store"
@@ -78,7 +78,7 @@ func (k Keeper) SetValidator(ctx context.Context, validator types.Validator) err
 	return store.Set(types.GetValidatorKey(str), bz)
 }
 
-// SetValidatorByConsAddr sets a validator by conesensus address
+// SetValidatorByConsAddr sets a validator by consensus address
 func (k Keeper) SetValidatorByConsAddr(ctx context.Context, validator types.Validator) error {
 	consPk, err := validator.GetConsAddr()
 	if err != nil {
@@ -529,7 +529,7 @@ func (k Keeper) DeleteValidatorQueue(ctx context.Context, val types.Validator) e
 	return k.SetUnbondingValidatorsQueue(ctx, val.UnbondingTime, val.UnbondingHeight, newAddrs)
 }
 
-// ValidatorQueueIterator returns an interator ranging over validators that are
+// ValidatorQueueIterator returns an iterator ranging over validators that are
 // unbonding whose unbonding completion occurs at the given height and time.
 func (k Keeper) ValidatorQueueIterator(ctx context.Context, endTime time.Time, endHeight int64) (corestore.Iterator, error) {
 	store := k.storeService.OpenKVStore(ctx)
@@ -543,7 +543,7 @@ func (k Keeper) UnbondAllMatureValidators(ctx context.Context) error {
 	blockTime := sdkCtx.BlockTime()
 	blockHeight := sdkCtx.BlockHeight()
 
-	// unbondingValIterator will contains all validator addresses indexed under
+	// unbondingValIterator will contain all validator addresses indexed under
 	// the ValidatorQueueKey prefix. Note, the entire index key is composed as
 	// ValidatorQueueKey | timeBzLen (8-byte big endian) | timeBz | heightBz (8-byte big endian),
 	// so it may be possible that certain validator addresses that are iterated

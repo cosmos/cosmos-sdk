@@ -38,7 +38,7 @@ func NewLegacySingleNodeInitializer(
 	}
 }
 
-func (s LegacySingleNode) Initialize() {
+func (s LegacySingleNode) Initialize(xargs ...string) {
 	args := []string{
 		"testnet",
 		"init-files",
@@ -48,6 +48,7 @@ func (s LegacySingleNode) Initialize() {
 		"--keyring-backend=test",
 		"--minimum-gas-prices=" + s.minGasPrice,
 	}
+	args = append(args, xargs...)
 
 	s.log(fmt.Sprintf("+++ %s %s\n", s.execBinary, strings.Join(args, " ")))
 	out, err := RunShellCmd(s.execBinary, args...)
@@ -107,7 +108,7 @@ func InitializerWithBinary(binary string, sut *SystemUnderTest) TestnetInitializ
 	)
 }
 
-func (s SingleHostTestnetCmdInitializer) Initialize() {
+func (s SingleHostTestnetCmdInitializer) Initialize(xargs ...string) {
 	args := []string{
 		"testnet",
 		"init-files",
@@ -119,6 +120,7 @@ func (s SingleHostTestnetCmdInitializer) Initialize() {
 		"--single-host",
 		"--minimum-gas-prices=" + s.minGasPrice,
 	}
+	args = append(args, xargs...)
 
 	s.log(fmt.Sprintf("+++ %s %s\n", s.execBinary, strings.Join(args, " ")))
 	out, err := RunShellCmd(s.execBinary, args...)
@@ -155,7 +157,7 @@ func NewModifyConfigYamlInitializer(exec string, s *SystemUnderTest) *ModifyConf
 	}
 }
 
-func (s ModifyConfigYamlInitializer) Initialize() {
+func (s ModifyConfigYamlInitializer) Initialize(xargs ...string) {
 	// init with legacy testnet command
 	args := []string{
 		"testnet",
@@ -166,6 +168,7 @@ func (s ModifyConfigYamlInitializer) Initialize() {
 		"--keyring-backend=test",
 		"--minimum-gas-prices=" + s.minGasPrice,
 	}
+	args = append(args, xargs...)
 
 	s.log(fmt.Sprintf("+++ %s %s\n", s.execBinary, strings.Join(args, " ")))
 
@@ -178,7 +181,7 @@ func (s ModifyConfigYamlInitializer) Initialize() {
 	nodeAddresses := make([]string, s.initialNodesCount)
 	for i := 0; i < s.initialNodesCount; i++ {
 		nodeDir := filepath.Join(WorkDir, NodePath(i, s.outputDir, s.projectName), "config")
-		id := string(mustV(p2p.LoadNodeKey(filepath.Join(nodeDir, "node_key.json"))).ID())
+		id := mustV(p2p.LoadNodeKey(filepath.Join(nodeDir, "node_key.json"))).ID()
 		nodeAddresses[i] = fmt.Sprintf("%s@127.0.0.1:%d", id, DefaultP2PPort+i)
 	}
 

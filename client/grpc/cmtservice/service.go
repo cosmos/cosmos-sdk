@@ -25,7 +25,7 @@ var (
 )
 
 type (
-	abciQueryFn = func(context.Context, *abci.QueryRequest) (*abci.QueryResponse, error)
+	abciQueryFn = func(context.Context, *abci.RequestQuery) (*abci.ResponseQuery, error)
 
 	queryServer struct {
 		clientCtx         client.Context

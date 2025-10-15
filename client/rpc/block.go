@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	cmt "github.com/cometbft/cometbft/api/cometbft/types/v1"
+	cmt "github.com/cometbft/cometbft/proto/tendermint/types"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/client"

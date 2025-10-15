@@ -120,6 +120,26 @@ func TestCacheMultiStoreWithVersion(t *testing.T) {
 	})
 }
 
+func TestCacheMultiStoreWithVersionStoreNotExist(t *testing.T) {
+	db := dbm.NewMemDB()
+	ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
+	err := ms.LoadLatestVersion()
+	require.Nil(t, err)
+	cID := ms.Commit()
+	require.Equal(t, int64(1), cID.Version)
+	// add new module stores (store4 and store5) to multi stores and commit
+	key4, key5 := types.NewKVStoreKey("store4"), types.NewKVStoreKey("store5")
+	ms.MountStoreWithDB(key4, types.StoreTypeIAVL, nil)
+	ms.MountStoreWithDB(key5, types.StoreTypeIAVL, nil)
+	err = ms.LoadLatestVersionAndUpgrade(&types.StoreUpgrades{Added: []string{"store4", "store5"}})
+	require.NoError(t, err)
+	ms.Commit()
+	// cache multistore of version before adding store4 should works
+	cms2, err := ms.CacheMultiStoreWithVersion(1)
+	require.NoError(t, err)
+	require.Empty(t, cms2.GetKVStore(key4).Get([]byte("key")))
+}
+
 func TestHashStableWithEmptyCommit(t *testing.T) {
 	var db dbm.DB = dbm.NewMemDB()
 	ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
@@ -416,7 +436,7 @@ func TestMultiStoreRestart(t *testing.T) {
 	reloadedCid := multi.LastCommitID()
 	require.Equal(t, int64(4), reloadedCid.Version, "Reloaded CID is not the same as last flushed CID")
 
-	// Check that store1 and store2 retained date from 3rd commit
+	// Check that store1 and store2 retained data from 3rd commit
 	store1 = multi.GetStoreByName("store1").(types.KVStore)
 	val := store1.Get([]byte(k))
 	require.Equal(t, []byte(fmt.Sprintf("%s:%d", v, 3)), val, "Reloaded value not the same as last flushed value")

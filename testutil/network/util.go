@@ -14,6 +14,7 @@ import (
 	pvm "github.com/cometbft/cometbft/privval"
 	"github.com/cometbft/cometbft/proxy"
 	"github.com/cometbft/cometbft/rpc/client/local"
+	cmttypes "github.com/cometbft/cometbft/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
 	"golang.org/x/sync/errgroup"
 
@@ -46,34 +47,19 @@ func startInProcess(cfg Config, val *Validator) error {
 	app := cfg.AppConstructor(*val)
 	val.app = app
 
-	appGenesisProvider := func() (node.ChecksummedGenesisDoc, error) {
+	appGenesisProvider := func() (*cmttypes.GenesisDoc, error) {
 		appGenesis, err := genutiltypes.AppGenesisFromFile(cmtCfg.GenesisFile())
 		if err != nil {
-			return node.ChecksummedGenesisDoc{
-				Sha256Checksum: []byte{},
-			}, err
+			return nil, err
 		}
-		gen, err := appGenesis.ToGenesisDoc()
-		if err != nil {
-			return node.ChecksummedGenesisDoc{
-				Sha256Checksum: []byte{},
-			}, err
-		}
-		return node.ChecksummedGenesisDoc{GenesisDoc: gen, Sha256Checksum: make([]byte, 0)}, nil
+
+		return appGenesis.ToGenesisDoc()
 	}
 
 	cmtApp := server.NewCometABCIWrapper(app)
-
-	// CometBFT uses the ed25519 key generator as default if the given generator function is nil.
-	pv, err := pvm.LoadOrGenFilePV(cmtCfg.PrivValidatorKeyFile(), cmtCfg.PrivValidatorStateFile(), nil)
-	if err != nil {
-		return err
-	}
-
 	tmNode, err := node.NewNode( //resleak:notresource
-		context.TODO(),
 		cmtCfg,
-		pv,
+		pvm.LoadOrGenFilePV(cmtCfg.PrivValidatorKeyFile(), cmtCfg.PrivValidatorStateFile()),
 		nodeKey,
 		proxy.NewLocalClientCreator(cmtApp),
 		appGenesisProvider,
@@ -246,5 +232,5 @@ func FreeTCPAddr() (addr, port string, closeFn func() error, err error) {
 	portI := l.Addr().(*net.TCPAddr).Port
 	port = fmt.Sprintf("%d", portI)
 	addr = fmt.Sprintf("tcp://0.0.0.0:%s", port)
-	return
+	return addr, port, closeFn, err
 }

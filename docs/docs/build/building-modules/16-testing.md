@@ -6,8 +6,8 @@ sidebar_position: 1
 
 The Cosmos SDK contains different types of [tests](https://martinfowler.com/articles/practical-test-pyramid.html).
 These tests have different goals and are used at different stages of the development cycle.
-We advice, as a general rule, to use tests at all stages of the development cycle.
-It is adviced, as a chain developer, to test your application and modules in a similar way than the SDK.
+We advise, as a general rule, to use tests at all stages of the development cycle.
+It is advised, as a chain developer, to test your application and modules in a similar way to the SDK.
 
 The rationale behind testing can be found in [ADR-59](https://docs.cosmos.network/main/build/architecture/adr-059-test-scopes).
 
@@ -46,7 +46,7 @@ This allows us to test the `x/gov` module without having to import other modules
 https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/gov/keeper/keeper_test.go#L3-L42
 ```
 
-We can test then create unit tests using the newly created `Keeper` instance.
+We can then create unit tests using the newly created `Keeper` instance.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/x/gov/keeper/keeper_test.go#L83-L107
@@ -59,7 +59,7 @@ In the SDK, we locate our integration tests under [`/tests/integrations`](https:
 
 The goal of these integration tests is to test how a component interacts with other dependencies. Compared to unit tests, integration tests do not mock dependencies. Instead, they use the direct dependencies of the component. This differs as well from end-to-end tests, which test the component with a full application.
 
-Integration tests interact with the tested module via the defined `Msg` and `Query` services. The result of the test can be verified by checking the state of the application, by checking the emitted events or the response. It is adviced to combine two of these methods to verify the result of the test.
+Integration tests interact with the tested module via the defined `Msg` and `Query` services. The result of the test can be verified by checking the state of the application, by checking the emitted events or the response. It is advised to combine two of these methods to verify the result of the test.
 
 The SDK provides small helpers for quickly setting up an integration tests. These helpers can be found at <https://github.com/cosmos/cosmos-sdk/blob/main/testutil/integration>.
 
@@ -116,9 +116,9 @@ Here are some examples:
 * Osmosis E2E tests: <https://github.com/osmosis-labs/osmosis/tree/main/tests/e2e>.
 
 :::note warning
-The SDK is in the process of creating its E2E tests, as defined in [ADR-59](https://docs.cosmos.network/main/architecture/adr-059-test-scopes.html). This page will eventually be updated with better examples.
+The SDK is in the process of creating its E2E tests, as defined in [ADR-59](https://docs.cosmos.network/main/build/architecture/adr-059-test-scopes). This page will eventually be updated with better examples.
 :::
 
 ## Learn More
 
-Learn more about testing scope in [ADR-59](https://docs.cosmos.network/main/architecture/adr-059-test-scopes.html).
+Learn more about testing scope in [ADR-59](https://docs.cosmos.network/main/build/architecture/adr-059-test-scopes).

@@ -6,10 +6,10 @@ Usage:
 
 Available Commands:
   completion     Generate the autocompletion script for the specified shell
-  deprecatedecho Querying commands for the testpb.Query service
+  deprecatedecho Querying commands for the testpbpulsar.Query service
   echo           echo echos the value provided by the user
   help           Help about any command
-  skipecho       Querying commands for the testpb.Query service
+  skipecho       Querying commands for the testpbpulsar.Query service
 
 Flags:
   -h, --help   help for test

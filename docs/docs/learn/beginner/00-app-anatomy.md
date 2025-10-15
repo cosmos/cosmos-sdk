@@ -50,10 +50,10 @@ In general, the core of the state-machine is defined in a file called `app.go`. 
 
 The first thing defined in `app.go` is the `type` of the application. It is generally comprised of the following parts:
 
-* **Embeding [runtime.App](../../build/building-apps/00-runtime.md)** The runtime package manages the application's core components and modules through dependency injection. It provides declarative configuration for module management, state storage, and ABCI handling.
+* **Embedding [runtime.App](../../build/building-apps/00-runtime.md)** The runtime package manages the application's core components and modules through dependency injection. It provides declarative configuration for module management, state storage, and ABCI handling.
     * `Runtime` wraps `BaseApp`, meaning when a transaction is relayed by CometBFT to the application, `app` uses `runtime`'s methods to route them to the appropriate module. `BaseApp` implements all the [ABCI methods](https://docs.cometbft.com/v0.38/spec/abci/) and the [routing logic](../advanced/00-baseapp.md#service-routers).
     * It automatically configures the **[module manager](../../build/building-modules/01-module-manager.md#manager)** based on the app wiring configuration. The module manager facilitates operations related to these modules, like registering their [`Msg` service](../../build/building-modules/03-msg-services.md) and [gRPC `Query` service](#grpc-query-services), or setting the order of execution between modules for various functions like [`InitChainer`](#initchainer), [`PreBlocker`](#preblocker) and [`BeginBlocker` and `EndBlocker`](#beginblocker-and-endblocker).
-* [**An App Wiring configuration file**](../../build/building-apps/00-runtime.md) The app wiring configuration file contains the list of application's modules that `runtime` must instantiate. The instantiation of the modules are done using `depinject`. It also contains the order in which all module's `InitGenesis` and `Pre/Begin/EndBlocker` methods should be executed.
+* [**An App Wiring configuration file**](../../build/building-apps/00-runtime.md) The app wiring configuration file contains the list of application's modules that `runtime` must instantiate. The instantiation of the modules is done using `depinject`. It also contains the order in which all modules' `InitGenesis` and `Pre/Begin/EndBlocker` methods should be executed.
 * **A reference to an [`appCodec`](../advanced/05-encoding.md).** The application's `appCodec` is used to serialize and deserialize data structures in order to store them, as stores can only persist `[]bytes`. The default codec is [Protocol Buffers](../advanced/05-encoding.md).
 * **A reference to a [`legacyAmino`](../advanced/05-encoding.md) codec.** Some parts of the Cosmos SDK have not been migrated to use the `appCodec` above, and are still hardcoded to use Amino. Other parts explicitly use Amino for backwards compatibility. For these reasons, the application still holds a reference to the legacy Amino codec. Please note that the Amino codec will be removed from the SDK in the upcoming releases.
 
@@ -100,7 +100,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/app.go#L190-L708
 
 The `InitChainer` is a function that initializes the state of the application from a genesis file (i.e. token balances of genesis accounts). It is called when the application receives the `InitChain` message from the CometBFT engine, which happens when the node is started at `appBlockHeight == 0` (i.e. on genesis). The application must set the `InitChainer` in its [constructor](#constructor-function) via the [`SetInitChainer`](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/baseapp#BaseApp.SetInitChainer) method.
 
-In general, the `InitChainer` is mostly composed of the [`InitGenesis`](../../build/building-modules/08-genesis.md#initgenesis) function of each of the application's modules. This is done by calling the `InitGenesis` function of the module manager, which in turn calls the `InitGenesis` function of each of the modules it contains. Note that the order in which the modules' `InitGenesis` functions must be called has to be set in the module manager using the [module manager's](../../build/building-modules/01-module-manager.md) `SetOrderInitGenesis` method. This is done in the [application's constructor](#application-constructor), and the `SetOrderInitGenesis` has to be called before the `SetInitChainer`.
+In general, the `InitChainer` is mostly composed of the [`InitGenesis`](../../build/building-modules/08-genesis.md#initgenesis) function of each of the application's modules. This is done by calling the `InitGenesis` function of the module manager, which in turn calls the `InitGenesis` function of each of the modules it contains. Note that the order in which the modules' `InitGenesis` functions must be called has to be set in the module manager using the [module manager's](../../build/building-modules/01-module-manager.md) `SetOrderInitGenesis` method. This is done in the [application's constructor](#constructor-function), and the `SetOrderInitGenesis` has to be called before the `SetInitChainer`.
 
 See an example of an `InitChainer` from `simapp`:
 
@@ -131,7 +131,7 @@ In general, the `BeginBlocker` and `EndBlocker` functions are mostly composed of
 
 As a sidenote, it is important to remember that application-specific blockchains are deterministic. Developers must be careful not to introduce non-determinism in `BeginBlocker` or `EndBlocker`, and must also be careful not to make them too computationally expensive, as [gas](./04-gas-fees.md) does not constrain the cost of `BeginBlocker` and `EndBlocker` execution.
 
-See an example of `BeginBlocker` and `EndBlocker` functions from `simapp`
+See an example of `BeginBlocker` and `EndBlocker` functions from `simapp`:
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/app.go#L752-L759
@@ -179,7 +179,7 @@ Note that `sdk.Msg`s are bundled in [transactions](../advanced/01-transactions.m
 
 When a valid block of transactions is received by the full-node, CometBFT relays each one to the application via [`DeliverTx`](https://docs.cometbft.com/v0.37/spec/abci/abci++_app_requirements#specifics-of-responsedelivertx). Then, the application handles the transaction:
 
-1. Upon receiving the transaction, the application first unmarshalls it from `[]byte`.
+1. Upon receiving the transaction, the application first unmarshals it from `[]byte`.
 2. Then, it verifies a few things about the transaction like [fee payment and signatures](./04-gas-fees.md#antehandler) before extracting the `Msg`(s) contained in the transaction.
 3. `sdk.Msg`s are encoded using Protobuf [`Any`s](#register-codec). By analyzing each `Any`'s `type_url`, baseapp's `msgServiceRouter` routes the `sdk.Msg` to the corresponding module's `Msg` service.
 4. If the message is successfully processed, the state is updated.

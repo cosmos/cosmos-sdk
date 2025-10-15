@@ -153,12 +153,12 @@ func TestPruningHeight_Inputs(t *testing.T) {
 			0,
 			types.PruningEverything,
 		},
-		"currentHeight is  zero - prune everything - invalid currentHeight": {
+		"currentHeight is zero - prune everything - invalid currentHeight": {
 			0,
 			0,
 			types.PruningEverything,
 		},
-		"currentHeight is positive but within keep recent- prune everything - not kept": {
+		"currentHeight is positive but within keep recent - prune everything - not kept": {
 			keepRecent,
 			0,
 			types.PruningEverything,
@@ -383,7 +383,7 @@ func TestHandleSnapshotHeight_LoadFromDisk(t *testing.T) {
 
 	expected := 0
 	for snapshotHeight := int64(-1); snapshotHeight < 100; snapshotHeight++ {
-		snapshotHeightStr := fmt.Sprintf("snaphost height: %d", snapshotHeight)
+		snapshotHeightStr := fmt.Sprintf("snapshot height: %d", snapshotHeight)
 		if snapshotHeight > int64(snapshotInterval) && snapshotHeight%int64(snapshotInterval) == 1 {
 			// Test flush
 			manager.HandleSnapshotHeight(snapshotHeight - 1)

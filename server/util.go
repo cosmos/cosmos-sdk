@@ -71,7 +71,7 @@ func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) 
 
 	cmd.Flags().VisitAll(func(f *pflag.Flag) {
 		// Environment variables can't have dashes in them, so bind them to their equivalent
-		// keys with underscores, e.g. --favorite-color to STING_FAVORITE_COLOR
+		// keys with underscores, e.g. --favorite-color to STRING_FAVORITE_COLOR
 		err = v.BindEnv(f.Name, fmt.Sprintf("%s_%s", basename, strings.ToUpper(strings.ReplaceAll(f.Name, "-", "_"))))
 		if err != nil {
 			panic(err)
@@ -165,7 +165,7 @@ func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplat
 	return serverCtx, nil
 }
 
-// CreateSDKLogger creates a the default SDK logger.
+// CreateSDKLogger creates the default SDK logger.
 // It reads the log level and format from the server context.
 func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 	var opts []log.Option
@@ -176,6 +176,15 @@ func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 		log.ColorOption(!ctx.Viper.GetBool(flags.FlagLogNoColor)),
 		// We use CometBFT flag (cmtcli.TraceFlag) for trace logging.
 		log.TraceOption(ctx.Viper.GetBool(FlagTrace)))
+
+	verboseLogLevelStr := ctx.Viper.GetString(flags.FlagVerboseLogLevel)
+	if verboseLogLevelStr != "" {
+		verboseLogLvl, err := parseVerboseLogLevel(verboseLogLevelStr)
+		if err != nil {
+			return nil, fmt.Errorf("invalid verbose log level: %s: %w", verboseLogLevelStr, err)
+		}
+		opts = append(opts, log.VerboseLevelOption(verboseLogLvl))
+	}
 
 	// check and set filter level or keys for the logger if any
 	logLvlStr := ctx.Viper.GetString(flags.FlagLogLevel)
@@ -198,6 +207,14 @@ func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 	}
 
 	return log.NewLogger(out, opts...), nil
+}
+
+// parseVerboseLogLevel parses the string "none" as zerolog.NoLevel and all other level strings using zerolog.ParseLevel.
+func parseVerboseLogLevel(verboseLogLevelStr string) (zerolog.Level, error) {
+	if verboseLogLevelStr == "none" {
+		return zerolog.NoLevel, nil
+	}
+	return zerolog.ParseLevel(verboseLogLevelStr)
 }
 
 // GetServerContextFromCmd returns a Context from a command or an empty Context
@@ -487,7 +504,7 @@ func openDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
 
 func openTraceWriter(traceWriterFile string) (w io.WriteCloser, err error) {
 	if traceWriterFile == "" {
-		return
+		return w, err
 	}
 	return os.OpenFile(
 		traceWriterFile,

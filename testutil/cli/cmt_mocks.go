@@ -18,12 +18,12 @@ var _ client.CometRPC = (*MockCometRPC)(nil)
 type MockCometRPC struct {
 	rpcclientmock.Client
 
-	responseQuery abci.QueryResponse
+	responseQuery abci.ResponseQuery
 }
 
 // NewMockCometRPC returns a mock CometBFT RPC implementation.
 // It is used for CLI testing.
-func NewMockCometRPC(respQuery abci.QueryResponse) MockCometRPC {
+func NewMockCometRPC(respQuery abci.ResponseQuery) MockCometRPC {
 	return MockCometRPC{responseQuery: respQuery}
 }
 

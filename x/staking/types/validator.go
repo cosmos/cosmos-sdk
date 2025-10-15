@@ -8,8 +8,7 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
-	"github.com/cometbft/cometbft/crypto/encoding"
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/errors"
@@ -93,12 +92,12 @@ func (v Validators) Sort() {
 	sort.Sort(v)
 }
 
-// Len implements sort interface
+// Len implements Len sort interface
 func (v Validators) Len() int {
 	return len(v.Validators)
 }
 
-// Less implements sort interface
+// Less implements Less sort interface
 func (v Validators) Less(i, j int) bool {
 	vi, err := v.ValidatorCodec.StringToBytes(v.Validators[i].GetOperator())
 	if err != nil {
@@ -112,7 +111,7 @@ func (v Validators) Less(i, j int) bool {
 	return bytes.Compare(vi, vj) == -1
 }
 
-// Swap implements sort interface
+// Swap implements Swap sort interface
 func (v Validators) Swap(i, j int) {
 	v.Validators[i], v.Validators[j] = v.Validators[j], v.Validators[i]
 }
@@ -152,12 +151,12 @@ func (v Validators) UnpackInterfaces(c codectypes.AnyUnpacker) error {
 	return nil
 }
 
-// MustMarshalValidator marshals a validator to a store value. Panics on error.
+// MustMarshalValidator returns the redelegation
 func MustMarshalValidator(cdc codec.BinaryCodec, validator *Validator) []byte {
 	return cdc.MustMarshal(validator)
 }
 
-// MustUnmarshalValidator unmarshals a validator from a store value. Panics on error.
+// MustUnmarshalValidator unmarshals a redelegation from a store value
 func MustUnmarshalValidator(cdc codec.BinaryCodec, value []byte) Validator {
 	validator, err := UnmarshalValidator(cdc, value)
 	if err != nil {
@@ -167,7 +166,7 @@ func MustUnmarshalValidator(cdc codec.BinaryCodec, value []byte) Validator {
 	return validator
 }
 
-// UnmarshalValidator unmarshals a validator from a store value
+// UnmarshalValidator unmarshals a redelegation from a store value
 func UnmarshalValidator(cdc codec.BinaryCodec, value []byte) (v Validator, err error) {
 	err = cdc.Unmarshal(value, &v)
 	return v, err
@@ -265,14 +264,10 @@ func (v Validator) ABCIValidatorUpdate(r math.Int) abci.ValidatorUpdate {
 	if err != nil {
 		panic(err)
 	}
-	tmPk, err := encoding.PubKeyFromProto(tmProtoPk)
-	if err != nil {
-		panic(err)
-	}
+
 	return abci.ValidatorUpdate{
-		PubKeyBytes: tmPk.Bytes(),
-		PubKeyType:  tmPk.Type(),
-		Power:       v.ConsensusPower(r),
+		PubKey: tmProtoPk,
+		Power:  v.ConsensusPower(r),
 	}
 }
 
@@ -283,14 +278,10 @@ func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
 	if err != nil {
 		panic(err)
 	}
-	tmPk, err := encoding.PubKeyFromProto(tmProtoPk)
-	if err != nil {
-		panic(err)
-	}
+
 	return abci.ValidatorUpdate{
-		PubKeyBytes: tmPk.Bytes(),
-		PubKeyType:  tmPk.Type(),
-		Power:       0,
+		PubKey: tmProtoPk,
+		Power:  0,
 	}
 }
 
@@ -306,9 +297,7 @@ func (v Validator) SetInitialCommission(commission Commission) (Validator, error
 	return v, nil
 }
 
-// InvalidExRate returns if the Validator has an invalid exchange rate.
-//
-// In some situations, the exchange rate becomes invalid, e.g. if
+// InvalidExRate checks if the exchange rate becomes invalid, e.g. if
 // Validator loses all tokens due to slashing. In this case,
 // make all future delegations invalid.
 func (v Validator) InvalidExRate() bool {

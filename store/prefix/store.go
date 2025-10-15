@@ -12,9 +12,9 @@ import (
 
 var _ types.KVStore = Store{}
 
-// Store is similar with cometbft/cometbft/libs/db/prefix_db
-// both gives access only to the limited subset of the store
-// for convinience or safety
+// Store is similar to cometbft/cometbft/libs/db/prefix_db
+// both give access only to the limited subset of the store
+// for convenience or safety
 type Store struct {
 	parent types.KVStore
 	prefix []byte
@@ -31,7 +31,7 @@ func cloneAppend(bz, tail []byte) (res []byte) {
 	res = make([]byte, len(bz)+len(tail))
 	copy(res, bz)
 	copy(res[len(bz):], tail)
-	return
+	return res
 }
 
 func (s Store) key(key []byte) (res []byte) {
@@ -39,10 +39,10 @@ func (s Store) key(key []byte) (res []byte) {
 		panic("nil key on Store")
 	}
 	res = cloneAppend(s.prefix, key)
-	return
+	return res
 }
 
-// GetStoreType implements Store, returning the parent store's type'
+// GetStoreType implements Store, returning the parent store's type
 func (s Store) GetStoreType() types.StoreType {
 	return s.parent.GetStoreType()
 }
@@ -75,13 +75,13 @@ func (s Store) Set(key, value []byte) {
 	s.parent.Set(s.key(key), value)
 }
 
-// Delete implements KVStore, calls delete on the parent store with the key prefixed with the prefix
+// Delete implements KVStore, calls Delete on the parent store with the key prefixed with the prefix
 func (s Store) Delete(key []byte) {
 	s.parent.Delete(s.key(key))
 }
 
 // Iterator implements KVStore
-// Check https://github.com/cometbft/cometbft/blob/master/libs/db/prefix_db.go#L106
+// Check https://github.com/cometbft/cometbft-db/blob/main/prefixdb_iterator.go#L106
 func (s Store) Iterator(start, end []byte) types.Iterator {
 	newStart := cloneAppend(s.prefix, start)
 
@@ -98,7 +98,7 @@ func (s Store) Iterator(start, end []byte) types.Iterator {
 }
 
 // ReverseIterator implements KVStore
-// Check https://github.com/cometbft/cometbft/blob/master/libs/db/prefix_db.go#L129
+// Check https://github.com/cometbft/cometbft-db/blob/main/prefixdb_iterator.go#L129
 func (s Store) ReverseIterator(start, end []byte) types.Iterator {
 	newstart := cloneAppend(s.prefix, start)
 
@@ -165,7 +165,7 @@ func (pi *prefixIterator) Key() (key []byte) {
 	key = pi.iter.Key()
 	key = stripPrefix(key, pi.prefix)
 
-	return
+	return key
 }
 
 // Implements Iterator

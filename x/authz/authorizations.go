@@ -29,7 +29,7 @@ type Authorization interface {
 // AcceptResponse instruments the controller of an authz message if the request is accepted
 // and if it should be updated or deleted.
 type AcceptResponse struct {
-	// If Accept=true, the controller can accept and authorization and handle the update.
+	// If Accept=true, the controller can accept an authorization and handle the update.
 	Accept bool
 	// If Delete=true, the controller must delete the authorization object and release
 	// storage resources.

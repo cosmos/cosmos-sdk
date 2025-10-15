@@ -56,7 +56,6 @@ func TestNewAnyWithCustomTypeURLWithErrorNoAllocation(t *testing.T) {
 var sink any
 
 func BenchmarkNewAnyWithCustomTypeURLWithErrorReturned(b *testing.B) {
-	b.ResetTimer()
 	b.ReportAllocs()
 	for b.Loop() {
 		any, err := types.NewAnyWithValue(eom)

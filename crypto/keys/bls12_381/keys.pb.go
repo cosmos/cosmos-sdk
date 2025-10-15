@@ -4,8 +4,6 @@
 
 package bls12_381
 
-/*
-
 import (
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
@@ -506,5 +504,3 @@ var (
 	ErrUnexpectedEndOfGroupKeys = fmt.Errorf("proto: unexpected end of group")
 )
 
-
- */

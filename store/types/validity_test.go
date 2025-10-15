@@ -47,4 +47,11 @@ func TestAssertValidValueGeneric(t *testing.T) {
 			bytesValueLen,
 		)
 	})
+	require.Panics(t, func() {
+		types.AssertValidValueGeneric(
+			make([]byte, types.MaxValueLength+1),
+			bytesIsZero,
+			bytesValueLen,
+		)
+	})
 }

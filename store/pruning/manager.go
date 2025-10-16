@@ -224,11 +224,9 @@ func loadPruningSnapshotHeights(db dbm.DB) ([]int64, error) {
 }
 
 func int64SliceToBytes(slice ...int64) []byte {
-	bz := make([]byte, 0, len(slice)*8)
-	for _, ph := range slice {
-		buf := make([]byte, 8)
-		binary.BigEndian.PutUint64(buf, uint64(ph))
-		bz = append(bz, buf...)
+	bz := make([]byte, len(slice)*8)
+	for i, ph := range slice {
+		binary.BigEndian.PutUint64(bz[i<<3:], uint64(ph))
 	}
 	return bz
 }

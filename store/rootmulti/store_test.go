@@ -36,7 +36,7 @@ func TestGetObjKVStore(t *testing.T) {
 	err := ms.LoadLatestVersion()
 	require.Nil(t, err)
 
-	key := ms.keysByName["store5"]
+	key := ms.keysByName["store6"]
 
 	store1 := ms.GetObjKVStore(key)
 	require.NotNil(t, store1)
@@ -120,10 +120,10 @@ func TestCacheMultiStoreWithVersion(t *testing.T) {
 	require.NotNil(t, kvStore)
 	require.Equal(t, kvStore.Get(k), v)
 
-	// add new module stores (store4 and store6) to multi stores and commit
+	// add new module stores (store4 and store5) to multi stores and commit
 	ms.MountStoreWithDB(types.NewKVStoreKey("store4"), types.StoreTypeIAVL, nil)
-	ms.MountStoreWithDB(types.NewKVStoreKey("store6"), types.StoreTypeIAVL, nil)
-	err = ms.LoadLatestVersionAndUpgrade(&types.StoreUpgrades{Added: []string{"store4", "store6"}})
+	ms.MountStoreWithDB(types.NewKVStoreKey("store5"), types.StoreTypeIAVL, nil)
+	err = ms.LoadLatestVersionAndUpgrade(&types.StoreUpgrades{Added: []string{"store4", "store5"}})
 	require.NoError(t, err)
 	ms.Commit()
 
@@ -957,7 +957,7 @@ var (
 	testStoreKey2 = types.NewKVStoreKey("store2")
 	testStoreKey3 = types.NewKVStoreKey("store3")
 	testStoreKey4 = types.NewKVStoreKey("store4")
-	testStoreKey5 = types.NewObjectStoreKey("store5")
+	testStoreKey6 = types.NewObjectStoreKey("store6")
 )
 
 func newMultiStoreWithMounts(db dbm.DB, pruningOpts pruningtypes.PruningOptions) *Store {
@@ -967,7 +967,7 @@ func newMultiStoreWithMounts(db dbm.DB, pruningOpts pruningtypes.PruningOptions)
 	store.MountStoreWithDB(testStoreKey1, types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(testStoreKey2, types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(testStoreKey3, types.StoreTypeIAVL, nil)
-	store.MountStoreWithDB(testStoreKey5, types.StoreTypeObject, nil)
+	store.MountStoreWithDB(testStoreKey6, types.StoreTypeObject, nil)
 
 	return store
 }
@@ -1034,6 +1034,9 @@ func getExpectedCommitID(store *Store, ver int64) types.CommitID {
 func hashStores(stores map[types.StoreKey]types.CommitStore) []byte {
 	m := make(map[string][]byte, len(stores))
 	for key, store := range stores {
+		if store.GetStoreType() != types.StoreTypeIAVL {
+			continue
+		}
 		name := key.Name()
 		m[name] = types.StoreInfo{
 			Name:     name,

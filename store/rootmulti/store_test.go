@@ -120,10 +120,10 @@ func TestCacheMultiStoreWithVersion(t *testing.T) {
 	require.NotNil(t, kvStore)
 	require.Equal(t, kvStore.Get(k), v)
 
-	// add new module stores (store4 and store5) to multi stores and commit
+	// add new module stores (store4 and store6) to multi stores and commit
 	ms.MountStoreWithDB(types.NewKVStoreKey("store4"), types.StoreTypeIAVL, nil)
-	ms.MountStoreWithDB(types.NewKVStoreKey("store5"), types.StoreTypeIAVL, nil)
-	err = ms.LoadLatestVersionAndUpgrade(&types.StoreUpgrades{Added: []string{"store4", "store5"}})
+	ms.MountStoreWithDB(types.NewKVStoreKey("store6"), types.StoreTypeIAVL, nil)
+	err = ms.LoadLatestVersionAndUpgrade(&types.StoreUpgrades{Added: []string{"store4", "store6"}})
 	require.NoError(t, err)
 	ms.Commit()
 

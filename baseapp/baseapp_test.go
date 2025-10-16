@@ -998,10 +998,13 @@ func TestMountStores(t *testing.T) {
 	memKey := storetypes.NewMemoryStoreKey("mem")
 	objKey := storetypes.NewObjectStoreKey("obj")
 	app.MountStores(kvKey, transKey, memKey, objKey)
+	objKey2 := storetypes.NewObjectStoreKey("obj2")
+	app.MountObjectStores(map[string]*storetypes.ObjectStoreKey{"obj2": objKey2})
 	require.NoError(t, app.LoadLatestVersion())
 	for _, keyName := range []storetypes.StoreKey{kvKey, transKey, memKey, objKey} {
 		require.NotNil(t, app.CommitMultiStore().GetStore(keyName))
 	}
+	require.NotNil(t, app.CommitMultiStore().GetStore(objKey2))
 }
 
 func TestLoadVersionPruning(t *testing.T) {

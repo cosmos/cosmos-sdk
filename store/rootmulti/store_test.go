@@ -20,6 +20,7 @@ import (
 	sdkmaps "cosmossdk.io/store/internal/maps"
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
+	"cosmossdk.io/store/transient"
 	"cosmossdk.io/store/types"
 )
 
@@ -27,6 +28,23 @@ func TestStoreType(t *testing.T) {
 	db := dbm.NewMemDB()
 	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	store.MountStoreWithDB(types.NewKVStoreKey("store1"), types.StoreTypeIAVL, db)
+}
+
+func TestGetObjKVStore(t *testing.T) {
+	var db dbm.DB = dbm.NewMemDB()
+	ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningDefault))
+	err := ms.LoadLatestVersion()
+	require.Nil(t, err)
+
+	key := ms.keysByName["store5"]
+
+	store1 := ms.GetObjKVStore(key)
+	require.NotNil(t, store1)
+	require.IsType(t, &transient.ObjStore{}, store1)
+
+	store2 := ms.GetCommitStore(key)
+	require.NotNil(t, store2)
+	require.IsType(t, &transient.ObjStore{}, store2)
 }
 
 func TestGetCommitKVStore(t *testing.T) {
@@ -939,6 +957,7 @@ var (
 	testStoreKey2 = types.NewKVStoreKey("store2")
 	testStoreKey3 = types.NewKVStoreKey("store3")
 	testStoreKey4 = types.NewKVStoreKey("store4")
+	testStoreKey5 = types.NewObjectStoreKey("store5")
 )
 
 func newMultiStoreWithMounts(db dbm.DB, pruningOpts pruningtypes.PruningOptions) *Store {
@@ -948,6 +967,7 @@ func newMultiStoreWithMounts(db dbm.DB, pruningOpts pruningtypes.PruningOptions)
 	store.MountStoreWithDB(testStoreKey1, types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(testStoreKey2, types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(testStoreKey3, types.StoreTypeIAVL, nil)
+	store.MountStoreWithDB(testStoreKey5, types.StoreTypeObject, nil)
 
 	return store
 }

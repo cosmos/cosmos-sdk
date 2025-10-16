@@ -126,6 +126,9 @@ func TestObjPrefixStoreIterate(t *testing.T) {
 	bIter := types.KVStorePrefixIterator(baseStore, prefix)
 	objIter := prefixObjStore.Iterator(nil, nil)
 
+	start, end := objIter.Domain()
+	require.Equal(t, start, end)
+
 	for bIter.Valid() && objIter.Valid() {
 		require.Equal(t, bIter.Key(), append(prefix, objIter.Key()...))
 		require.Equal(t, bIter.Value(), objIter.Value())

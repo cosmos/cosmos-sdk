@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/gaskv"
 	"cosmossdk.io/store/iavl"
+	"cosmossdk.io/store/transient"
 	"cosmossdk.io/store/types"
 	"cosmossdk.io/store/wrapper"
 )
@@ -46,6 +47,15 @@ func genRandomKVPairs(t *testing.T) []kvpair {
 }
 
 func setRandomKVPairs(t *testing.T, store types.KVStore) []kvpair {
+	t.Helper()
+	kvps := genRandomKVPairs(t)
+	for _, kvp := range kvps {
+		store.Set(kvp.key, kvp.value)
+	}
+	return kvps
+}
+
+func setRandomObjKVPairs(t *testing.T, store types.ObjKVStore) []kvpair {
 	t.Helper()
 	kvps := genRandomKVPairs(t)
 	for _, kvp := range kvps {
@@ -103,6 +113,29 @@ func TestPrefixKVStoreNoNilSet(t *testing.T) {
 	mem := dbadapter.Store{DB: dbm.NewMemDB()}
 	gasStore := gaskv.NewStore(mem, meter, types.KVGasConfig())
 	require.Panics(t, func() { gasStore.Set([]byte("key"), nil) }, "setting a nil value should panic")
+}
+
+func TestObjPrefixStoreIterate(t *testing.T) {
+	db := dbm.NewMemDB()
+	baseStore := dbadapter.Store{DB: db}
+	prefix := []byte("test")
+	prefixObjStore := NewObjStore(transient.NewObjStore(), prefix)
+
+	setRandomObjKVPairs(t, prefixObjStore)
+
+	bIter := types.KVStorePrefixIterator(baseStore, prefix)
+	objIter := prefixObjStore.Iterator(nil, nil)
+
+	for bIter.Valid() && objIter.Valid() {
+		require.Equal(t, bIter.Key(), append(prefix, objIter.Key()...))
+		require.Equal(t, bIter.Value(), objIter.Value())
+
+		bIter.Next()
+		objIter.Next()
+	}
+
+	bIter.Close()
+	objIter.Close()
 }
 
 func TestPrefixStoreIterate(t *testing.T) {

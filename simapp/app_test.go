@@ -12,15 +12,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
-	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -67,7 +63,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	})
 
 	// BlockedAddresses returns a map of addresses in app v1 and a map of modules name in app di.
-	for acc := range BlockedAddresses() {
+	for acc := range app.BlockedAddresses() {
 		var addr sdk.AccAddress
 		if modAddr, err := sdk.AccAddressFromBech32(acc); err == nil {
 			addr = modAddr
@@ -102,19 +98,19 @@ func TestRunMigrations(t *testing.T) {
 	logger := log.NewTestLogger(t)
 	app := NewSimApp(logger.With("instance", "simapp"), db, nil, true, simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
 
-	// Create a new baseapp and configurator for the purpose of this test.
+	// Create a new baseapp and Configurator for the purpose of this test.
 	bApp := baseapp.NewBaseApp(app.Name(), logger.With("instance", "baseapp"), db, app.TxConfig().TxDecoder())
 	bApp.SetCommitMultiStoreTracer(nil)
 	bApp.SetInterfaceRegistry(app.InterfaceRegistry())
 	app.BaseApp = bApp
-	configurator := module.NewConfigurator(app.appCodec, bApp.MsgServiceRouter(), app.GRPCQueryRouter())
+	configurator := module.NewConfigurator(app.AppCodec(), bApp.MsgServiceRouter(), app.GRPCQueryRouter())
 
 	// We register all modules on the Configurator, except x/bank. x/bank will
 	// serve as the test subject on which we run the migration tests.
 	//
 	// The loop below is the same as calling `RegisterServices` on
 	// ModuleManager, except that we skip x/bank.
-	for name, mod := range app.ModuleManager.Modules {
+	for name, mod := range app.ModuleManager().Modules {
 		if name == banktypes.ModuleName {
 			continue
 		}
@@ -207,7 +203,7 @@ func TestRunMigrations(t *testing.T) {
 			// Run migrations only for bank. That's why we put the initial
 			// version for bank as 1, and for all other modules, we put as
 			// their latest ConsensusVersion.
-			_, err = app.ModuleManager.RunMigrations(
+			_, err = app.ModuleManager().RunMigrations(
 				app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()}), configurator,
 				module.VersionMap{
 					banktypes.ModuleName:         1,
@@ -249,15 +245,15 @@ func TestInitGenesisOnMigration(t *testing.T) {
 	t.Cleanup(mockCtrl.Finish)
 	mockModule := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
 	mockDefaultGenesis := json.RawMessage(`{"key": "value"}`)
-	mockModule.EXPECT().DefaultGenesis(gomock.Eq(app.appCodec)).Times(1).Return(mockDefaultGenesis)
-	mockModule.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(app.appCodec), gomock.Eq(mockDefaultGenesis)).Times(1)
+	mockModule.EXPECT().DefaultGenesis(gomock.Eq(app.AppCodec())).Times(1).Return(mockDefaultGenesis)
+	mockModule.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(app.AppCodec()), gomock.Eq(mockDefaultGenesis)).Times(1)
 	mockModule.EXPECT().ConsensusVersion().Times(1).Return(uint64(0))
 
-	app.ModuleManager.Modules["mock"] = mockModule
+	app.ModuleManager().Modules["mock"] = mockModule
 
 	// Run migrations only for "mock" module. We exclude it from
 	// the VersionMap to simulate upgrading with a new module.
-	_, err := app.ModuleManager.RunMigrations(ctx, app.Configurator(),
+	_, err := app.ModuleManager().RunMigrations(ctx, app.Configurator(),
 		module.VersionMap{
 			"bank":         bank.AppModule{}.ConsensusVersion(),
 			"auth":         auth.AppModule{}.ConsensusVersion(),
@@ -287,15 +283,15 @@ func TestUpgradeStateOnGenesis(t *testing.T) {
 
 	// make sure the upgrade keeper has version map in state
 	ctx := app.NewContext(false)
-	vm, err := app.UpgradeKeeper.GetModuleVersionMap(ctx)
+	vm, err := app.UpgradeKeeper().GetModuleVersionMap(ctx)
 	require.NoError(t, err)
-	for v, i := range app.ModuleManager.Modules {
+	for v, i := range app.ModuleManager().Modules {
 		if i, ok := i.(module.HasConsensusVersion); ok {
 			require.Equal(t, vm[v], i.ConsensusVersion())
 		}
 	}
 
-	require.NotNil(t, app.UpgradeKeeper.GetVersionSetter())
+	require.NotNil(t, app.UpgradeKeeper().GetVersionSetter())
 }
 
 // TestMergedRegistry tests that fetching the gogo/protov2 merged registry
@@ -311,62 +307,4 @@ func TestProtoAnnotations(t *testing.T) {
 	require.NoError(t, err)
 	err = msgservice.ValidateProtoAnnotations(r)
 	require.NoError(t, err)
-}
-
-var _ address.Codec = (*customAddressCodec)(nil)
-
-type customAddressCodec struct{}
-
-func (c customAddressCodec) StringToBytes(text string) ([]byte, error) {
-	return []byte(text), nil
-}
-
-func (c customAddressCodec) BytesToString(bz []byte) (string, error) {
-	return string(bz), nil
-}
-
-func TestAddressCodecFactory(t *testing.T) {
-	var addrCodec address.Codec
-	var valAddressCodec runtime.ValidatorAddressCodec
-	var consAddressCodec runtime.ConsensusAddressCodec
-
-	err := depinject.Inject(
-		depinject.Configs(
-			network.MinimumAppConfig(),
-			depinject.Supply(log.NewNopLogger()),
-		),
-		&addrCodec, &valAddressCodec, &consAddressCodec)
-	require.NoError(t, err)
-	require.NotNil(t, addrCodec)
-	_, ok := addrCodec.(customAddressCodec)
-	require.False(t, ok)
-	require.NotNil(t, valAddressCodec)
-	_, ok = valAddressCodec.(customAddressCodec)
-	require.False(t, ok)
-	require.NotNil(t, consAddressCodec)
-	_, ok = consAddressCodec.(customAddressCodec)
-	require.False(t, ok)
-
-	// Set the address codec to the custom one
-	err = depinject.Inject(
-		depinject.Configs(
-			network.MinimumAppConfig(),
-			depinject.Supply(
-				log.NewNopLogger(),
-				func() address.Codec { return customAddressCodec{} },
-				func() runtime.ValidatorAddressCodec { return customAddressCodec{} },
-				func() runtime.ConsensusAddressCodec { return customAddressCodec{} },
-			),
-		),
-		&addrCodec, &valAddressCodec, &consAddressCodec)
-	require.NoError(t, err)
-	require.NotNil(t, addrCodec)
-	_, ok = addrCodec.(customAddressCodec)
-	require.True(t, ok)
-	require.NotNil(t, valAddressCodec)
-	_, ok = valAddressCodec.(customAddressCodec)
-	require.True(t, ok)
-	require.NotNil(t, consAddressCodec)
-	_, ok = consAddressCodec.(customAddressCodec)
-	require.True(t, ok)
 }

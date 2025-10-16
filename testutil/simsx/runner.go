@@ -14,12 +14,14 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
+	pruningtypes "cosmossdk.io/store/pruning/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -376,6 +378,8 @@ func NewSimulationAppInstance[T SimulationApp](
 	})
 	appOptions := make(simtestutil.AppOptionsMap)
 	appOptions[flags.FlagHome] = workDir
+	appOptions[server.FlagPruning] = pruningtypes.PruningOptionNothing
+	appOptions[flags.FlagChainID] = tCfg.ChainID
 	opts := []func(*baseapp.BaseApp){baseapp.SetChainID(tCfg.ChainID)}
 	if tCfg.FauxMerkle {
 		opts = append(opts, FauxMerkleModeOpt)

@@ -870,6 +870,10 @@ func testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB, tra
 
 	// Sign the vote, and copy the proto changes from the act of signing to the vote itself
 	voteProto := vote.ToProto()
+	// clear vote exts. otherwise, the chain will try to replay the last commit, and it is highly unlikely that
+	// the provided operator address will match the vote's signature.
+	voteProto.Extension = nil
+	voteProto.ExtensionSignature = nil
 	err = privValidator.SignVote(newChainID, voteProto)
 	if err != nil {
 		return nil, err

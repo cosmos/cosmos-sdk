@@ -319,7 +319,7 @@ func (s *E2ETestSuite) TestGetTxEvents_GRPC() {
 				s.Require().NoError(err)
 				s.Require().GreaterOrEqual(len(grpcRes.Txs), 1)
 				s.Require().Equal("foobar", grpcRes.Txs[0].Body.Memo)
-				s.Require().Equal(tc.expLen, len(grpcRes.Txs), fmt.Sprintf("%q", grpcRes.Txs[0]))
+				s.Require().Equal(tc.expLen, len(grpcRes.Txs), fmt.Sprintf("%q", grpcRes.Txs))
 
 				// Make sure fields are populated.
 				// ref: https://github.com/cosmos/cosmos-sdk/issues/8680

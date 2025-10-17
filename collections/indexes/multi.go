@@ -119,6 +119,12 @@ func (m *Multi[ReferenceKey, PrimaryKey, Value]) Iterate(ctx context.Context, ra
 	return (MultiIterator[ReferenceKey, PrimaryKey])(iter), err
 }
 
+func (m *Multi[ReferenceKey, PrimaryKey, Value]) IterateRaw(
+	ctx context.Context, start, end []byte, order collections.Order,
+) (collections.Iterator[collections.Pair[ReferenceKey, PrimaryKey], collections.NoValue], error) {
+	return m.refKeys.IterateRaw(ctx, start, end, order)
+}
+
 func (m *Multi[ReferenceKey, PrimaryKey, Value]) Walk(
 	ctx context.Context,
 	ranger collections.Ranger[collections.Pair[ReferenceKey, PrimaryKey]],

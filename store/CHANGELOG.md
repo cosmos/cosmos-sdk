@@ -35,6 +35,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [#24090](https://github.com/cosmos/cosmos-sdk/pull/24090) Running the `prune` command now disables async pruning.
 
+### Features
+
+* [#25470](https://github.com/cosmos/cosmos-sdk/pull/25470) Support mount object store in baseapp, add `ObjectStore` api in context.
+
 ## v1.1.1 (September 06, 2024)
 
 ### Improvements

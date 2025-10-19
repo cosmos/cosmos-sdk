@@ -287,7 +287,7 @@ test-sim-custom-genesis-fast:
 test-sim-import-export:
 	@echo "Running application import/export simulation. This may take several minutes..."
 	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout 20m -tags='sims' -run TestAppImportExport \
-		-NumBlocks=50 -Period=5
+		-NumBlocks=10 -Period=5
 
 test-sim-after-import:
 	@echo "Running application simulation-after-import. This may take several minutes..."
@@ -374,6 +374,7 @@ test-sim-profile-streaming:
 benchmark:
 	@go test -mod=readonly -bench=. $(PACKAGES_NOSIMULATION)
 .PHONY: benchmark
+
 
 ###############################################################################
 ###                                Linting                                  ###

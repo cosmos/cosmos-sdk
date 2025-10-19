@@ -1,0 +1,37 @@
+syntax = "proto3";
+package timechain;
+
+option go_package = "github.com/cosmos/cosmos-sdk/x/timechain/types";
+
+// Msg defines the Msg service.
+service Msg {
+  rpc ProposeSlot(MsgProposeSlot) returns (MsgProposeSlotResponse);
+  rpc ConfirmSlot(MsgConfirmSlot) returns (MsgConfirmSlotResponse);
+  rpc RelayEvent(MsgRelayEvent) returns (MsgRelayEventResponse);
+}
+
+message MsgProposeSlot {
+  string creator = 1;
+  uint64 slot = 2;
+  bytes vdf_output = 3;
+  bytes payload_hash = 4;
+}
+
+message MsgProposeSlotResponse {}
+
+message MsgConfirmSlot {
+  string creator = 1;
+  uint64 slot_id = 2;
+  string validator = 3;
+  bytes sig = 4;
+}
+
+message MsgConfirmSlotResponse {}
+
+message MsgRelayEvent {
+  string creator = 1;
+  bytes event = 2;
+  bytes tss_sig = 3;
+}
+
+message MsgRelayEventResponse {}

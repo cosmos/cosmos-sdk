@@ -97,6 +97,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/cosmos/cosmos-sdk/x/timechain"
+	timechainkeeper "github.com/cosmos/cosmos-sdk/x/timechain/keeper"
+	timechaintypes "github.com/cosmos/cosmos-sdk/x/timechain/types"
 )
 
 const appName = "SimApp"
@@ -152,6 +155,7 @@ type SimApp struct {
 	AuthzKeeper        authzkeeper.Keeper
 	EpochsKeeper       epochskeeper.Keeper
 	ProtocolPoolKeeper protocolpoolkeeper.Keeper
+	TimechainKeeper    timechainkeeper.Keeper
 
 	// the module manager
 	ModuleManager      *module.Manager
@@ -257,6 +261,7 @@ func NewSimApp(
 		authzkeeper.StoreKey,
 		epochstypes.StoreKey,
 		protocolpooltypes.StoreKey,
+		"timechain",
 	)
 
 	// register streaming services
@@ -403,6 +408,14 @@ func NewSimApp(
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
+	app.TimechainKeeper = *timechainkeeper.NewKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keys[timechaintypes.StoreKey]),
+		nil,
+		app.GetSubspace(timechaintypes.ModuleName),
+	)
+
+
 	// Register the proposal types
 	// Deprecated: Avoid adding new handlers, instead use the new proposal flow
 	// by granting the governance module the right to execute the message.
@@ -483,6 +496,7 @@ func NewSimApp(
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
 		epochs.NewAppModule(app.EpochsKeeper),
 		protocolpool.NewAppModule(app.ProtocolPoolKeeper, app.AccountKeeper, app.BankKeeper),
+		timechain.NewAppModule(appCodec, app.TimechainKeeper, app.AccountKeeper, app.BankKeeper),
 	)
 
 	// BasicModuleManager defines the module BasicManager is in charge of setting up basic,
@@ -548,6 +562,7 @@ func NewSimApp(
 		consensusparamtypes.ModuleName,
 		epochstypes.ModuleName,
 		protocolpooltypes.ModuleName,
+		timechaintypes.ModuleName,
 	}
 
 	exportModuleOrder := []string{
@@ -567,6 +582,7 @@ func NewSimApp(
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
 		epochstypes.ModuleName,
+		timechaintypes.ModuleName,
 	}
 
 	app.ModuleManager.SetOrderInitGenesis(genesisModuleOrder...)

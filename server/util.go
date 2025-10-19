@@ -169,17 +169,31 @@ func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplat
 // CreateSDKLogger creates a the default SDK logger.
 // It reads the log level and format from the server context.
 func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
-	// If memlogger is enabled, return the in-memory compressing logger.
-	if ctx.Viper.GetBool(FlagMemLog) {
-		// Use default memlogger config; can be extended to read from app config.
-		return log.NewMemLogger(log.MemLoggerConfig{
-			Interval:             5 * time.Minute,
-			MaxUncompressedBytes: 0,
-			MaxChunks:            0,
-			DropOldest:           false,
-			GzipLevel:            0,
-			OutputDir:            ctx.Viper.GetString(flags.FlagHome),
-		}), nil
+	// If memlogger is enabled (via flag or app config), return the in-memory compressing logger.
+	useMemlog := ctx.Viper.GetBool(FlagMemLog) || ctx.Viper.GetBool("memlogger.enabled")
+	if useMemlog {
+		mcfg := log.MemLoggerConfig{}
+		if iv := ctx.Viper.GetString("memlogger.interval"); iv != "" {
+			if d, err := time.ParseDuration(iv); err == nil {
+				mcfg.Interval = d
+			}
+		}
+		if mb := ctx.Viper.GetInt("memlogger.max-bytes"); mb > 0 {
+			mcfg.MaxUncompressedBytes = mb
+		}
+		// Resolve output directory relative to app root by default.
+		outDir := ctx.Viper.GetString("memlogger.dir")
+		if outDir == "" && ctx.Config != nil {
+			outDir = ctx.Config.RootDir
+		}
+		if outDir != "" {
+			if !filepath.IsAbs(outDir) && ctx.Config != nil {
+				outDir = filepath.Join(ctx.Config.RootDir, outDir)
+			}
+			_ = os.MkdirAll(outDir, 0o700)
+			mcfg.OutputDir = outDir
+		}
+		return log.NewMemLogger(mcfg), nil
 	}
 	var opts []log.Option
 	if ctx.Viper.GetString(flags.FlagLogFormat) == flags.OutputFormatJSON {

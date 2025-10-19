@@ -183,6 +183,18 @@ type (
 		Plugin        string   `mapstructure:"plugin"`
 		StopNodeOnErr bool     `mapstructure:"stop-node-on-err"`
 	}
+
+	// MemLoggerConfig defines configuration for the in-memory compressing logger.
+	MemLoggerConfig struct {
+		// Enabled toggles the in-memory logger.
+		Enabled bool `mapstructure:"enabled"`
+		// Interval controls how often the current buffer is compressed (e.g. "2s").
+		Interval string `mapstructure:"interval"`
+		// MaxBytes triggers early compression when uncompressed buffer exceeds this size (bytes).
+		MaxBytes int `mapstructure:"max-bytes"`
+		// Dir is the output directory where compressed logs are written on shutdown.
+		Dir string `mapstructure:"dir"`
+	}
 )
 
 // Config defines the server's top level configuration
@@ -197,6 +209,8 @@ type Config struct {
 	StateSync StateSyncConfig  `mapstructure:"state-sync"`
 	Streaming StreamingConfig  `mapstructure:"streaming"`
 	Mempool   MempoolConfig    `mapstructure:"mempool"`
+	// MemLogger defines optional in-memory logger configuration.
+	MemLogger MemLoggerConfig `mapstructure:"memlogger"`
 }
 
 // SetMinGasPrices sets the validator's minimum gas prices.
@@ -268,6 +282,12 @@ func DefaultConfig() *Config {
 		},
 		Mempool: MempoolConfig{
 			MaxTxs: -1,
+		},
+		MemLogger: MemLoggerConfig{
+			Enabled:  false,
+			Interval: "2s",
+			MaxBytes: 0,
+			Dir:      "",
 		},
 	}
 }

@@ -133,6 +133,26 @@ statsd-addr = "{{ .Telemetry.StatsdAddr }}"
 datadog-hostname = "{{ .Telemetry.DatadogHostname }}"
 
 ###############################################################################
+###                        MemLogger Configuration                          ###
+###############################################################################
+
+[memlogger]
+
+# Enable defines if the in-memory compressing logger should be used.
+enabled = {{ .MemLogger.Enabled }}
+
+# Interval controls how often the current buffer is compressed into a chunk.
+# Examples: "2s", "1m".
+interval = "{{ .MemLogger.Interval }}"
+
+# MaxBytes triggers an early compression when the current uncompressed buffer
+# grows beyond this size. 0 disables the size trigger.
+max-bytes = {{ .MemLogger.MaxBytes }}
+
+# Dir is the directory where memlogger writes compressed logs on shutdown.
+dir = "{{ .MemLogger.Dir }}"
+
+###############################################################################
 ###                           API Configuration                             ###
 ###############################################################################
 

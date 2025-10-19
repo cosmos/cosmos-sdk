@@ -29,6 +29,8 @@ func Execute(rootCmd *cobra.Command, envPrefix, defaultHome string) error {
 	// NOTE: The default logger is only checking for the "json" value, any other value will default to plain text.
 	rootCmd.PersistentFlags().String(flags.FlagLogFormat, "plain", "The logging format (json|plain)")
 	rootCmd.PersistentFlags().Bool(flags.FlagLogNoColor, false, "Disable colored logs")
+	// Experimental: in-memory compressing logger (similar to CometBFT memlog)
+	rootCmd.PersistentFlags().Bool(server.FlagMemLog, false, "Use in-memory compressing logger (experimental)")
 
 	executor := cmtcli.PrepareBaseCmd(rootCmd, envPrefix, defaultHome)
 	return executor.ExecuteContext(ctx)

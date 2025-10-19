@@ -169,6 +169,18 @@ func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplat
 // CreateSDKLogger creates a the default SDK logger.
 // It reads the log level and format from the server context.
 func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
+	// If memlogger is enabled, return the in-memory compressing logger.
+	if ctx.Viper.GetBool(FlagMemLog) {
+		// Use default memlogger config; can be extended to read from app config.
+		return log.NewMemLogger(log.MemLoggerConfig{
+			Interval:             5 * time.Minute,
+			MaxUncompressedBytes: 0,
+			MaxChunks:            0,
+			DropOldest:           false,
+			GzipLevel:            0,
+			OutputDir:            ctx.Viper.GetString(flags.FlagHome),
+		}), nil
+	}
 	var opts []log.Option
 	if ctx.Viper.GetString(flags.FlagLogFormat) == flags.OutputFormatJSON {
 		opts = append(opts, log.OutputJSONOption())
@@ -425,6 +437,13 @@ func ListenForQuitSignals(g *errgroup.Group, block bool, cancelFn context.Cancel
 		cancelFn()
 
 		logger.Info("caught signal", "signal", sig.String())
+		// Close first to stop background workers and enqueue pending buffers.
+		_ = logger.Close()
+		// Then flush to persist compressed logs (if supported).
+		if err := logger.Flush(); err != nil {
+			// Best-effort: report flush errors to stderr.
+			fmt.Fprintln(os.Stderr, "logger flush:", err)
+		}
 	}
 
 	if block {

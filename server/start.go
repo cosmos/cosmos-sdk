@@ -77,6 +77,9 @@ const (
 	FlagIAVLSyncPruning     = "iavl-sync-pruning"
 	FlagShutdownGrace       = "shutdown-grace"
 
+	// logging flags
+	FlagMemLog = "memlog"
+
 	// state sync-related flags
 	FlagStateSyncSnapshotInterval   = "state-sync.snapshot-interval"
 	FlagStateSyncSnapshotKeepRecent = "state-sync.snapshot-keep-recent"

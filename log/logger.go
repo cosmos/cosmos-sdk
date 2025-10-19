@@ -60,6 +60,14 @@ type Logger interface {
 	// It is used to access the full functionalities of the underlying logger.
 	// Advanced users can type cast the returned value to the actual logger.
 	Impl() any
+
+	// Flush flushes any buffered logs to the underlying sink, if applicable.
+	// Implementations that do not buffer should return nil.
+	Flush() error
+
+	// Close releases resources held by the logger, if applicable.
+	// Implementations that do not hold resources should return nil.
+	Close() error
 }
 
 // WithJSONMarshal configures zerolog global json encoding.
@@ -179,6 +187,12 @@ func (l zeroLogWrapper) Impl() interface{} {
 	return l.Logger
 }
 
+// Flush is a no-op for the zerolog-backed logger.
+func (l zeroLogWrapper) Flush() error { return nil }
+
+// Close is a no-op for the zerolog-backed logger.
+func (l zeroLogWrapper) Close() error { return nil }
+
 // NewNopLogger returns a new logger that does nothing.
 func NewNopLogger() Logger {
 	// The custom nopLogger is about 3x faster than a zeroLogWrapper with zerolog.Nop().
@@ -197,3 +211,5 @@ func (nopLogger) Debug(string, ...any)   {}
 func (nopLogger) With(...any) Logger     { return nopLogger{} }
 func (nopLogger) WithContext(...any) any { return nopLogger{} }
 func (nopLogger) Impl() any              { return nopLogger{} }
+func (nopLogger) Flush() error           { return nil }
+func (nopLogger) Close() error           { return nil }

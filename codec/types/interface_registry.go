@@ -30,8 +30,8 @@ type AnyUnpacker = gogoprotoany.AnyUnpacker
 
 // UnpackInterfaces is a convenience function that calls UnpackInterfaces
 // on x if x implements UnpackInterfacesMessage
-func UnpackInterfaces(x interface{}, unpacker gogoprotoany.AnyUnpacker) error {
-	if msg, ok := x.(gogoprotoany.UnpackInterfacesMessage); ok {
+func UnpackInterfaces(x interface{}, unpacker AnyUnpacker) error {
+	if msg, ok := x.(UnpackInterfacesMessage); ok {
 		return msg.UnpackInterfaces(unpacker)
 	}
 	return nil
@@ -42,7 +42,7 @@ var protoMessageType = reflect.TypeOf((*proto.Message)(nil)).Elem()
 // InterfaceRegistry provides a mechanism for registering interfaces and
 // implementations that can be safely unpacked from Any
 type InterfaceRegistry interface {
-	gogoprotoany.AnyUnpacker
+	AnyUnpacker
 	jsonpb.AnyResolver
 
 	// RegisterInterface associates protoName as the public name for the
@@ -109,7 +109,7 @@ type UnpackInterfacesMessage interface {
 	//		}
 	//		return nil
 	//	 }
-	UnpackInterfaces(unpacker gogoprotoany.AnyUnpacker) error
+	UnpackInterfaces(unpacker AnyUnpacker) error
 }
 
 type interfaceRegistry struct {
@@ -171,8 +171,8 @@ func NewInterfaceRegistryWithOptions(options InterfaceRegistryOptions) (Interfac
 
 func (registry *interfaceRegistry) RegisterInterface(protoName string, iface any, impls ...proto.Message) {
 	typ := reflect.TypeOf(iface)
-	if typ.Elem().Kind() != reflect.Interface {
-		panic(fmt.Errorf("%T is not an interface type", iface))
+	if typ == nil || typ.Kind() != reflect.Ptr || typ.Elem().Kind() != reflect.Interface {
+		panic(fmt.Errorf("%T is not a pointer to interface type", iface))
 	}
 
 	registry.interfaceNames[protoName] = typ
@@ -232,10 +232,6 @@ func (registry *interfaceRegistry) registerImpl(iface any, typeURL string, impl 
 		panic(fmt.Errorf("type %T doesn't actually implement interface %+v", impl, ityp))
 	}
 
-	// Check if we already registered something under the given typeURL. It's
-	// okay to register the same concrete type again, but if we are registering
-	// a new concrete type under the same typeURL, then we throw an error (here,
-	// we panic).
 	foundImplType, found := imap[typeURL]
 	if found && foundImplType != implType {
 		panic(
@@ -292,20 +288,16 @@ func (registry *interfaceRegistry) UnpackAny(any *Any, iface any) error {
 	return unpacker.UnpackAny(any, iface)
 }
 
-// sharedCounter is a type that encapsulates a counter value
 type sharedCounter struct {
 	count int
 }
 
-// statefulUnpacker is a struct that helps in deserializing and unpacking
-// protobuf Any messages while maintaining certain stateful constraints.
 type statefulUnpacker struct {
 	registry *interfaceRegistry
 	maxDepth int
 	maxCalls *sharedCounter
 }
 
-// cloneForRecursion returns a new statefulUnpacker instance with maxDepth reduced by one, preserving the registry and maxCalls.
 func (r statefulUnpacker) cloneForRecursion() *statefulUnpacker {
 	return &statefulUnpacker{
 		registry: r.registry,
@@ -314,8 +306,6 @@ func (r statefulUnpacker) cloneForRecursion() *statefulUnpacker {
 	}
 }
 
-// UnpackAny deserializes a protobuf Any message into the provided interface, ensuring the interface is a pointer.
-// It applies stateful constraints such as max depth and call limits, and unpacks interfaces if required.
 func (r *statefulUnpacker) UnpackAny(any *Any, iface interface{}) error {
 	if r.maxDepth <= 0 {
 		return errors.New("max depth exceeded")
@@ -323,13 +313,11 @@ func (r *statefulUnpacker) UnpackAny(any *Any, iface interface{}) error {
 	if r.maxCalls.count <= 0 {
 		return errors.New("call limit exceeded")
 	}
-	// here we gracefully handle the case in which `any` itself is `nil`, which may occur in message decoding
 	if any == nil {
 		return nil
 	}
 
 	if any.TypeUrl == "" {
-		// if TypeUrl is empty return nil because without it we can't actually unpack anything
 		return nil
 	}
 
@@ -360,10 +348,8 @@ func (r *statefulUnpacker) UnpackAny(any *Any, iface interface{}) error {
 		return fmt.Errorf("no concrete type registered for type URL %s against interface %T", any.TypeUrl, iface)
 	}
 
-	// Firstly check if the type implements proto.Message to avoid
-	// unnecessary invocations to reflect.New
 	if !typ.Implements(protoMessageType) {
-		return fmt.Errorf("can't proto unmarshal %T", typ)
+		return fmt.Errorf("can't proto unmarshal %v", typ)
 	}
 
 	msg := reflect.New(typ.Elem()).Interface().(proto.Message)
@@ -388,9 +374,6 @@ func (r *statefulUnpacker) UnpackAny(any *Any, iface interface{}) error {
 	return nil
 }
 
-// Resolve returns the proto message given its typeURL. It works with types
-// registered with RegisterInterface/RegisterImplementations, as well as those
-// registered with RegisterWithCustomTypeURL.
 func (registry *interfaceRegistry) Resolve(typeURL string) (proto.Message, error) {
 	typ, found := registry.typeURLMap[typeURL]
 	if !found {

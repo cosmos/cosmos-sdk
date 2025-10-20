@@ -3,15 +3,15 @@ package iavlx
 import (
 	"errors"
 	"fmt"
-	"log/slog"
 	"sync"
 	"sync/atomic"
 
+	"cosmossdk.io/log"
 	"github.com/tidwall/btree"
 )
 
 type TreeStore struct {
-	logger *slog.Logger
+	logger log.Logger
 	dir    string
 
 	currentWriter         *ChangesetWriter
@@ -38,7 +38,7 @@ type changesetEntry struct {
 	changeset atomic.Pointer[Changeset]
 }
 
-func NewTreeStore(dir string, options Options, logger *slog.Logger) (*TreeStore, error) {
+func NewTreeStore(dir string, options Options, logger log.Logger) (*TreeStore, error) {
 	ts := &TreeStore{
 		dir:        dir,
 		changesets: &btree.Map[uint32, *changesetEntry]{},

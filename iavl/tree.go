@@ -1,37 +1,93 @@
 package iavlx
 
-import corestore "cosmossdk.io/core/store"
+import (
+	io "io"
+
+	corestore "cosmossdk.io/core/store"
+	storetypes "cosmossdk.io/store/types"
+)
 
 type Tree struct {
+	parent      parentTree
 	origRoot    *NodePointer
 	root        *NodePointer
-	updateBatch *KVUpdateBatch
+	updateBatch KVUpdateBatch
 	zeroCopy    bool
 }
 
-func NewTree(root *NodePointer, updateBatch *KVUpdateBatch, zeroCopy bool) *Tree {
-	return &Tree{origRoot: root, root: root, updateBatch: updateBatch, zeroCopy: zeroCopy}
+type parentTree interface {
+	Root() *NodePointer
+	ApplyChanges(origRoot, newRoot *NodePointer, updateBatch KVUpdateBatch) error
 }
 
-func (tree *Tree) Get(key []byte) ([]byte, error) {
+func NewTree(parent parentTree, stagedVersion uint32, zeroCopy bool) *Tree {
+	root := parent.Root()
+	return &Tree{
+		parent:      parent,
+		root:        root,
+		origRoot:    root,
+		updateBatch: KVUpdateBatch{Version: stagedVersion},
+		zeroCopy:    zeroCopy,
+	}
+}
+
+func (tree *Tree) Root() *NodePointer {
+	return tree.root
+}
+
+func (tree *Tree) ApplyChanges(origRoot, newRoot *NodePointer, updateBatch KVUpdateBatch) error {
+	if tree.root != origRoot {
+		panic("cannot apply changes: root has changed")
+	}
+	tree.root = newRoot
+	tree.updateBatch.Updates = append(tree.updateBatch.Updates, updateBatch.Updates...)
+	tree.updateBatch.Orphans = append(tree.updateBatch.Orphans, updateBatch.Orphans...)
+	return nil
+}
+
+func (tree *Tree) GetStoreType() storetypes.StoreType {
+	return storetypes.StoreTypeIAVL
+}
+
+func (tree *Tree) CacheWrap() storetypes.CacheWrap {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (tree *Tree) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) storetypes.CacheWrap {
+	// TODO support tracing
+	return tree.CacheWrap()
+}
+
+func (tree *Tree) Write() {
+	err := tree.parent.ApplyChanges(tree.origRoot, tree.root, tree.updateBatch)
+	if err != nil {
+		panic(err)
+	}
+	tree.updateBatch.Updates = nil
+	tree.updateBatch.Orphans = nil
+	tree.root = tree.parent.Root()
+}
+
+func (tree *Tree) Get(key []byte) []byte {
 	if tree.root == nil {
-		return nil, nil
+		return nil
 	}
 
 	root, err := tree.root.Resolve()
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
 	value, _, err := root.Get(key)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
-	return value, nil
+	return value
 }
 
-func (tree *Tree) Set(key, value []byte) error {
+func (tree *Tree) Set(key, value []byte) {
 	leafNode := &MemNode{
 		height:  0,
 		size:    1,
@@ -42,7 +98,7 @@ func (tree *Tree) Set(key, value []byte) error {
 	ctx := &MutationContext{Version: tree.updateBatch.Version}
 	newRoot, _, err := setRecursive(tree.root, leafNode, ctx)
 	if err != nil {
-		return err
+		panic(err)
 	}
 
 	tree.root = newRoot
@@ -50,38 +106,34 @@ func (tree *Tree) Set(key, value []byte) error {
 		SetNode: leafNode,
 	})
 	tree.updateBatch.Orphans = append(tree.updateBatch.Orphans, ctx.Orphans)
-	return nil
 }
 
-func (tree *Tree) Delete(key []byte) error {
+func (tree *Tree) Delete(key []byte) {
 	ctx := &MutationContext{Version: tree.updateBatch.Version}
 	_, newRoot, _, err := removeRecursive(tree.root, key, ctx)
 	if err != nil {
-		return err
+		panic(err)
 	}
 	tree.root = newRoot
 	tree.updateBatch.Updates = append(tree.updateBatch.Updates, KVUpdate{
 		DeleteKey: key,
 	})
 	tree.updateBatch.Orphans = append(tree.updateBatch.Orphans, ctx.Orphans)
-	return nil
 }
 
-func (tree *Tree) Has(key []byte) (bool, error) {
-	// TODO optimize this
-	val, err := tree.Get(key)
-	if err != nil {
-		return false, err
-	}
-	return val != nil, nil
+func (tree *Tree) Has(key []byte) bool {
+	// TODO optimize this if possible
+	val := tree.Get(key)
+	return val != nil
 }
 
-func (tree *Tree) Iterator(start, end []byte) (corestore.Iterator, error) {
-	return NewIterator(start, end, true, tree.root, tree.zeroCopy), nil
+func (tree *Tree) Iterator(start, end []byte) corestore.Iterator {
+	return NewIterator(start, end, true, tree.root, tree.zeroCopy)
 }
 
-func (tree *Tree) ReverseIterator(start, end []byte) (corestore.Iterator, error) {
-	return NewIterator(start, end, false, tree.root, tree.zeroCopy), nil
+func (tree *Tree) ReverseIterator(start, end []byte) corestore.Iterator {
+	return NewIterator(start, end, false, tree.root, tree.zeroCopy)
 }
 
-var _ corestore.KVStore = &Tree{}
+var _ storetypes.CacheKVStore = &Tree{}
+var _ parentTree = &Tree{}

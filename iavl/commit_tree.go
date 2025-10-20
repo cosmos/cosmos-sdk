@@ -2,9 +2,13 @@ package iavlx
 
 import (
 	"fmt"
-	"log/slog"
+	"io"
 	"sync"
 	"sync/atomic"
+
+	"cosmossdk.io/log"
+	pruningtypes "cosmossdk.io/store/pruning/types"
+	storetypes "cosmossdk.io/store/types"
 )
 
 type CommitTree struct {
@@ -25,10 +29,186 @@ type CommitTree struct {
 
 	pendingOrphans [][]NodeID
 
-	logger *slog.Logger
+	logger log.Logger
+
+	commitCtx       *commitContext
+	lastCommitId    storetypes.CommitID
+	workingCommitId storetypes.CommitID
 }
 
-func NewCommitTree(dir string, opts Options, logger *slog.Logger) (*CommitTree, error) {
+func (c *CommitTree) Root() *NodePointer {
+	return c.root
+}
+
+func (c *CommitTree) ApplyChanges(origRoot, newRoot *NodePointer, updateBatch KVUpdateBatch) error {
+	// TODO check channel errors
+	c.writeMutex.Lock()
+	defer c.writeMutex.Unlock()
+
+	if updateBatch.Version != c.stagedVersion() {
+		return fmt.Errorf("tree version %d does not match staged version %d", updateBatch.Version, c.stagedVersion())
+	}
+	if origRoot != c.root {
+		// TODO find a way to apply the changes incrementally when roots don't match
+		return fmt.Errorf("tree original root does not match current root")
+	}
+	c.root = newRoot
+	c.pendingOrphans = append(c.pendingOrphans, updateBatch.Orphans...)
+
+	if c.writeWal {
+		c.walChan <- updateBatch.Updates
+	}
+
+	// TODO prevent further writes to the branch tree
+
+	return nil
+}
+
+func (c *CommitTree) Commit() storetypes.CommitID {
+	commitId, err := c.commit()
+	if err != nil {
+		panic(fmt.Sprintf("failed to commit: %v", err))
+	}
+	return commitId
+}
+
+func (c *CommitTree) commit() (storetypes.CommitID, error) {
+	c.WorkingHash()
+	commitId := c.workingCommitId
+
+	stagedVersion := c.stagedVersion()
+	if c.writeWal {
+		// wait for WAL write to complete
+		err := <-c.walDone
+		if err != nil {
+			return storetypes.CommitID{}, err
+		}
+
+		err = c.store.WriteWALCommit(stagedVersion)
+		if err != nil {
+			return storetypes.CommitID{}, err
+		}
+
+		c.reinitWalProc()
+	}
+
+	err := c.store.SaveRoot(stagedVersion, c.root, c.commitCtx.leafNodeIdx, c.commitCtx.branchNodeIdx)
+	if err != nil {
+		return storetypes.CommitID{}, err
+	}
+
+	c.store.MarkOrphans(stagedVersion, c.pendingOrphans)
+	c.pendingOrphans = nil
+
+	// start eviction if needed
+	c.startEvict(c.store.SavedVersion())
+
+	// cache the committed tree as the latest version
+	c.latest.Store(c.root)
+	c.version++
+	c.lastCommitId = commitId
+	c.commitCtx = nil
+
+	return commitId, nil
+}
+
+func (c *CommitTree) LastCommitID() storetypes.CommitID {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c *CommitTree) WorkingHash() []byte {
+	if c.commitCtx != nil {
+		return c.workingCommitId.Hash
+	}
+
+	c.writeMutex.Lock()
+	defer c.writeMutex.Unlock()
+
+	if c.writeWal {
+		close(c.walChan)
+	}
+
+	var hash []byte
+	savedVersion := c.store.SavedVersion()
+	stagedVersion := c.stagedVersion()
+	c.commitCtx = &commitContext{
+		version:      stagedVersion,
+		savedVersion: savedVersion,
+	}
+	if c.root == nil {
+		hash = emptyHash
+	} else {
+		// compute hash and assign node IDs
+		var err error
+		hash, err = commitTraverse(c.commitCtx, c.root, 0)
+		if err != nil {
+			panic(fmt.Sprintf("failed to compute working hash: %v", err))
+		}
+	}
+
+	c.workingCommitId = storetypes.CommitID{
+		Version: int64(stagedVersion),
+		Hash:    hash,
+	}
+	return hash
+}
+
+func (c *CommitTree) SetPruning(pruningtypes.PruningOptions) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c *CommitTree) GetPruning() pruningtypes.PruningOptions {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c *CommitTree) GetStoreType() storetypes.StoreType {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c *CommitTree) CacheWrap() storetypes.CacheWrap {
+	return NewTree(c, c.stagedVersion(), c.zeroCopy)
+}
+
+func (c *CommitTree) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) storetypes.CacheWrap {
+	// TODO support tracing
+	return c.CacheWrap()
+}
+
+func (c *CommitTree) Get(key []byte) []byte {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c *CommitTree) Has(key []byte) bool {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c *CommitTree) Set(key, value []byte) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c *CommitTree) Delete(key []byte) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c *CommitTree) Iterator(start, end []byte) storetypes.Iterator {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (c *CommitTree) ReverseIterator(start, end []byte) storetypes.Iterator {
+	//TODO implement me
+	panic("implement me")
+}
+
+func NewCommitTree(dir string, opts Options, logger log.Logger) (*CommitTree, error) {
 	ts, err := NewTreeStore(dir, opts, logger)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create tree store: %w", err)
@@ -74,35 +254,6 @@ func (c *CommitTree) reinitWalProc() {
 	}()
 }
 
-func (c *CommitTree) Branch() *Tree {
-	return NewTree(c.root, NewKVUpdateBatch(c.stagedVersion()), c.zeroCopy)
-}
-
-func (c *CommitTree) Apply(tree *Tree) error {
-	// TODO check channel errors
-	c.writeMutex.Lock()
-	defer c.writeMutex.Unlock()
-
-	if tree.updateBatch.Version != c.stagedVersion() {
-		return fmt.Errorf("tree version %d does not match staged version %d", tree.updateBatch.Version, c.stagedVersion())
-	}
-	if tree.origRoot != c.root {
-		// TODO find a way to apply the changes incrementally when roots don't match
-		return fmt.Errorf("tree original root does not match current root")
-	}
-	c.root = tree.root
-	batch := tree.updateBatch
-	c.pendingOrphans = append(c.pendingOrphans, batch.Orphans...)
-
-	if c.writeWal {
-		c.walChan <- batch.Updates
-	}
-
-	// TODO prevent further writes to the branch tree
-
-	return nil
-}
-
 func (c *CommitTree) startEvict(evictVersion uint32) {
 	if c.evictorRunning {
 		// eviction in progress
@@ -128,65 +279,6 @@ func (c *CommitTree) startEvict(evictVersion uint32) {
 		c.lastEvictVersion = evictVersion
 		c.evictorRunning = false
 	}()
-}
-
-func (c *CommitTree) Commit() ([]byte, error) {
-	c.writeMutex.Lock()
-	defer c.writeMutex.Unlock()
-
-	if c.writeWal {
-		close(c.walChan)
-	}
-
-	var hash []byte
-	savedVersion := c.store.SavedVersion()
-	stagedVersion := c.stagedVersion()
-	commitCtx := &commitContext{
-		version:      stagedVersion,
-		savedVersion: savedVersion,
-	}
-	if c.root == nil {
-		hash = emptyHash
-	} else {
-		// compute hash and assign node IDs
-		var err error
-		hash, err = commitTraverse(commitCtx, c.root, 0)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	if c.writeWal {
-		// wait for WAL write to complete
-		err := <-c.walDone
-		if err != nil {
-			return nil, err
-		}
-
-		err = c.store.WriteWALCommit(stagedVersion)
-		if err != nil {
-			return nil, err
-		}
-
-		c.reinitWalProc()
-	}
-
-	err := c.store.SaveRoot(stagedVersion, c.root, commitCtx.leafNodeIdx, commitCtx.branchNodeIdx)
-	if err != nil {
-		return nil, err
-	}
-
-	c.store.MarkOrphans(stagedVersion, c.pendingOrphans)
-	c.pendingOrphans = nil
-
-	// start eviction if needed
-	c.startEvict(savedVersion)
-
-	// cache the committed tree as the latest version
-	c.latest.Store(c.root)
-	c.version++
-
-	return hash, nil
 }
 
 func (c *CommitTree) Close() error {
@@ -268,3 +360,6 @@ func evictTraverse(np *NodePointer, depth, evictionDepth uint8, evictVersion uin
 	count += evictTraverse(memNode.right, depth+1, evictionDepth, evictVersion)
 	return
 }
+
+var _ storetypes.CommitKVStore = &CommitTree{}
+var _ parentTree = &CommitTree{}

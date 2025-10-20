@@ -25,10 +25,12 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"cosmossdk.io/log"
+
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
+	iavlx "github.com/cosmos/cosmos-sdk/iavl"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -582,6 +584,17 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		defaultMempool,
 		baseapp.SetChainID(chainID),
 		baseapp.SetQueryGasLimit(cast.ToUint64(appOpts.Get(FlagQueryGasLimit))),
+		func(bapp *baseapp.BaseApp) {
+			db, err := iavlx.LoadDB(
+				filepath.Join(homeDir, "data", "iavlx"),
+				&iavlx.Options{},
+				bapp.Logger(),
+			)
+			if err != nil {
+				panic(fmt.Errorf("failed to load iavlx db: %w", err))
+			}
+			bapp.SetCMS(db)
+		},
 	}
 }
 

@@ -3,7 +3,6 @@ package iavlx
 import (
 	"bytes"
 	"fmt"
-	"log/slog"
 	"os"
 	"runtime/debug"
 	"testing"
@@ -21,55 +20,55 @@ func TestBasicTest(t *testing.T) {
 	dir, err := os.MkdirTemp("", "iavlx")
 	require.NoError(t, err)
 	defer os.RemoveAll(dir)
-	commitTree, err := NewCommitTree(dir, Options{}, slog.Default())
+	commitTree, err := NewCommitTree(dir, Options{}, sdklog.NewNopLogger())
 	require.NoError(t, err)
-	tree := commitTree.Branch()
-	require.NoError(t, tree.Set([]byte{0}, []byte{1}))
+	tree := commitTree.CacheWrap().(*Tree)
+	tree.Set([]byte{0}, []byte{1})
 	// renderTree(t, tree)
 
-	val, err := tree.Get([]byte{0})
+	val := tree.Get([]byte{0})
 	require.NoError(t, err)
 	require.Equal(t, []byte{1}, val)
 
-	require.NoError(t, tree.Set([]byte{1}, []byte{2}))
+	tree.Set([]byte{1}, []byte{2})
 	//renderTree(t, tree)
 
-	val, err = tree.Get([]byte{0})
+	val = tree.Get([]byte{0})
 	require.NoError(t, err)
 	require.Equal(t, []byte{1}, val)
-	val, err = tree.Get([]byte{1})
+	val = tree.Get([]byte{1})
 	require.NoError(t, err)
 	require.Equal(t, []byte{2}, val)
 
-	require.NoError(t, tree.Set([]byte{2}, []byte{3}))
+	tree.Set([]byte{2}, []byte{3})
 	//renderTree(t, tree)
 
-	val, err = tree.Get([]byte{0})
+	val = tree.Get([]byte{0})
 	require.NoError(t, err)
 	require.Equal(t, []byte{1}, val)
-	val, err = tree.Get([]byte{1})
+	val = tree.Get([]byte{1})
 	require.NoError(t, err)
 	require.Equal(t, []byte{2}, val)
-	val, err = tree.Get([]byte{2})
+	val = tree.Get([]byte{2})
 	require.NoError(t, err)
 	require.Equal(t, []byte{3}, val)
 
-	val, err = tree.Get([]byte{3})
+	val = tree.Get([]byte{3})
 	require.NoError(t, err)
 	require.Nil(t, val)
 
-	require.NoError(t, tree.Delete([]byte{1}))
+	tree.Delete([]byte{1})
 	//renderTree(t, tree)
 
-	val, err = tree.Get([]byte{1})
+	val = tree.Get([]byte{1})
 	require.NoError(t, err)
 	require.Nil(t, val)
 
-	require.NoError(t, commitTree.Apply(tree))
-	hash, err := commitTree.Commit()
+	tree.Write()
+	commitId := commitTree.Commit()
 	require.NoError(t, err)
-	require.NotNil(t, hash)
-	t.Logf("committed with root hash: %X", hash)
+	require.NotNil(t, commitId)
+	t.Logf("committed with root commitId: %X", commitId)
 	require.NoError(t, commitTree.Close())
 }
 
@@ -118,7 +117,7 @@ func testIAVLXSims(t *rapid.T) {
 		ChangesetMaxTarget:    1,
 		CompactAfterVersions:  0,
 		ReaderUpdateInterval:  1,
-	}, slog.Default())
+	}, sdklog.NewNopLogger())
 	require.NoError(t, err, "failed to create iavlx tree")
 	simMachine := &SimMachine{
 		treeV1:       treeV1,
@@ -178,9 +177,9 @@ func (s *SimMachine) set(t *rapid.T) {
 	// set in both trees
 	updated, errV1 := s.treeV1.Set(key, value)
 	require.NoError(t, errV1, "failed to set key in V1 tree")
-	branch := s.treeV2.Branch()
-	require.NoError(t, branch.Set(key, value), "failed to set key in V2 tree")
-	require.NoError(t, s.treeV2.Apply(branch), "failed to apply batch to V2 tree")
+	branch := s.treeV2.CacheWrap().(*Tree)
+	branch.Set(key, value)
+	branch.Write()
 	//require.Equal(t, updated, updatedV2, "update status mismatch between V1 and V2 trees")
 	if updated {
 		require.NotNil(t, s.existingKeys[string(key)], "key shouldn't have been marked as updated")
@@ -197,8 +196,7 @@ func (s *SimMachine) get(t *rapid.T) {
 	var key = s.selectKey(t)
 	valueV1, errV1 := s.treeV1.Get(key)
 	require.NoError(t, errV1, "failed to get key from V1 tree")
-	valueV2, errV2 := s.treeV2.Branch().Get(key)
-	require.NoError(t, errV2, "failed to get key from V2 tree")
+	valueV2 := s.treeV2.CacheWrap().(*Tree).Get(key)
 	require.Equal(t, valueV1, valueV2, "value mismatch between V1 and V2 trees")
 	expectedValue, found := s.existingKeys[string(key)]
 	if found {
@@ -224,9 +222,9 @@ func (s *SimMachine) delete(t *rapid.T) {
 	// delete in both trees
 	_, removedV1, errV1 := s.treeV1.Remove(key)
 	require.NoError(t, errV1, "failed to remove key from V1 tree")
-	branch := s.treeV2.Branch()
-	require.NoError(t, branch.Delete(key), "failed to remove key from V2 tree")
-	require.NoError(t, s.treeV2.Apply(branch), "failed to apply batch to V2 tree")
+	branch := s.treeV2.CacheWrap().(*Tree)
+	branch.Delete(key)
+	branch.Write()
 	//require.Equal(t, removedV1, removedV2, "removed status mismatch between V1 and V2 trees")
 	// TODO v1 & v2 have slightly different behaviors for the value returned on removal. We should re-enable this and check.
 	//if valueV1 == nil || len(valueV1) == 0 {
@@ -258,7 +256,7 @@ func (s *SimMachine) Iterate(t *rapid.T) {
 func (s *SimMachine) Commit(t *rapid.T) {
 	hash1, _, err := s.treeV1.SaveVersion()
 	require.NoError(t, err, "failed to save version in V1 tree")
-	hash2, err := s.treeV2.Commit()
+	commitId2 := s.treeV2.Commit()
 	require.NoError(t, err, "failed to save version in V2 tree")
 	//s.debugDump(t)
 	err = VerifyTree(s.treeV2)
@@ -278,10 +276,7 @@ func (s *SimMachine) Commit(t *rapid.T) {
 	//	require.NoError(t, os.WriteFile("wal_dump.txt", buf.Bytes(), 0o644))
 	//}
 	require.NoError(t, err, "failed to verify V2 tree")
-	if !bytes.Equal(hash1, hash2) {
-		t.Logf("WARNING: hash mismatch between V1 and V2 trees: %X vs %X", hash1, hash2)
-	}
-	require.Equal(t, hash1, hash2, "hash mismatch between V1 and V2 trees")
+	require.Equal(t, hash1, commitId2.Hash, "hash mismatch between V1 and V2 trees")
 	//require.Equal(t, v1, v2, "version mismatch between V1 and V2 trees")
 }
 
@@ -292,8 +287,7 @@ func (s *SimMachine) debugDump(t *rapid.T) {
 	iavl.WriteDOTGraph(graph1, s.treeV1.ImmutableTree, nil)
 	t.Logf("V1 tree:\n%s", graph1.String())
 	//renderTree(t, s.treeV2.Branch())
-	iter2, err := s.treeV2.Branch().Iterator(nil, nil)
-	require.NoError(t, err, "failed to create iterator for V2 tree")
+	iter2 := s.treeV2.CacheWrap().(*Tree).Iterator(nil, nil)
 	s.debugDumpTree(t, iter2)
 }
 
@@ -334,8 +328,7 @@ func (s *SimMachine) debugDumpTree(t *rapid.T, iter corestore.Iterator) {
 func (s *SimMachine) compareIterators(t *rapid.T, start, end []byte, ascending bool) {
 	iter1, err1 := s.treeV1.Iterator(start, end, ascending)
 	require.NoError(t, err1, "failed to create iterator for V1 tree")
-	iter2, err2 := s.treeV2.Branch().Iterator(start, end)
-	require.NoError(t, err2, "failed to create iterator for V2 tree")
+	iter2 := s.treeV2.CacheWrap().(*Tree).Iterator(start, end)
 	compareIteratorsAtVersion(t, iter1, iter2)
 }
 
@@ -363,40 +356,4 @@ func compareIteratorsAtVersion(t *rapid.T, iterV1 corestore.Iterator, iterV2 cor
 		iterV1.Next()
 		iterV2.Next()
 	}
-}
-
-func TestSimpleOperations(t *testing.T) {
-	batch := &KVUpdateBatch{Version: 1}
-	tree := NewTree(nil, batch, false)
-	require.NoError(t, tree.Set([]byte{1}, []byte{1}))
-	renderTree(t, tree)
-	batch.Version = 2
-	require.NoError(t, tree.Set([]byte{2}, []byte{2}))
-	renderTree(t, tree)
-	batch.Version = 3
-	require.NoError(t, tree.Set([]byte{1}, []byte{2}))
-	renderTree(t, tree)
-	batch.Version = 4
-	require.NoError(t, tree.Set([]byte{3}, []byte{3}))
-	renderTree(t, tree)
-}
-
-func TestEx1(t *testing.T) {
-	batch := &KVUpdateBatch{Version: 1}
-	tree := NewTree(nil, batch, false)
-	require.NoError(t, tree.Set([]byte{1}, []byte{1}))
-	require.NoError(t, tree.Set([]byte{2}, []byte{2}))
-	require.NoError(t, tree.Set([]byte{3}, []byte{3}))
-	require.NoError(t, tree.Set([]byte{1}, []byte{2}))
-	require.NoError(t, tree.Set([]byte{3}, []byte{4}))
-	renderTree(t, tree)
-}
-
-func TestEx2(t *testing.T) {
-	batch := &KVUpdateBatch{Version: 1}
-	tree := NewTree(nil, batch, false)
-	require.NoError(t, tree.Set([]byte{3}, []byte{4}))
-	require.NoError(t, tree.Set([]byte{2}, []byte{2}))
-	require.NoError(t, tree.Set([]byte{1}, []byte{2}))
-	renderTree(t, tree)
 }

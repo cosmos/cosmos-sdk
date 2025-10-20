@@ -114,8 +114,7 @@ func (c *CommitTree) commit() (storetypes.CommitID, error) {
 }
 
 func (c *CommitTree) LastCommitID() storetypes.CommitID {
-	//TODO implement me
-	panic("implement me")
+	return c.lastCommitId
 }
 
 func (c *CommitTree) WorkingHash() []byte {
@@ -155,19 +154,14 @@ func (c *CommitTree) WorkingHash() []byte {
 	return hash
 }
 
-func (c *CommitTree) SetPruning(pruningtypes.PruningOptions) {
-	//TODO implement me
-	panic("implement me")
-}
+func (c *CommitTree) SetPruning(pruningtypes.PruningOptions) {}
 
 func (c *CommitTree) GetPruning() pruningtypes.PruningOptions {
-	//TODO implement me
-	panic("implement me")
+	return pruningtypes.NewPruningOptions(pruningtypes.PruningDefault)
 }
 
 func (c *CommitTree) GetStoreType() storetypes.StoreType {
-	//TODO implement me
-	panic("implement me")
+	return storetypes.StoreTypeIAVL
 }
 
 func (c *CommitTree) CacheWrap() storetypes.CacheWrap {
@@ -180,33 +174,45 @@ func (c *CommitTree) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext)
 }
 
 func (c *CommitTree) Get(key []byte) []byte {
-	//TODO implement me
-	panic("implement me")
+	if c.root == nil {
+		return nil
+	}
+
+	root, err := c.root.Resolve()
+	if err != nil {
+		panic(err)
+	}
+
+	value, _, err := root.Get(key)
+	if err != nil {
+		panic(err)
+	}
+
+	return value
 }
 
 func (c *CommitTree) Has(key []byte) bool {
-	//TODO implement me
-	panic("implement me")
+	return c.Get(key) != nil
 }
 
 func (c *CommitTree) Set(key, value []byte) {
-	//TODO implement me
-	panic("implement me")
+	tree := c.CacheWrap().(*Tree)
+	tree.Set(key, value)
+	tree.Write()
 }
 
 func (c *CommitTree) Delete(key []byte) {
-	//TODO implement me
-	panic("implement me")
+	tree := c.CacheWrap().(*Tree)
+	tree.Delete(key)
+	tree.Write()
 }
 
 func (c *CommitTree) Iterator(start, end []byte) storetypes.Iterator {
-	//TODO implement me
-	panic("implement me")
+	return NewIterator(start, end, true, c.root, c.zeroCopy)
 }
 
 func (c *CommitTree) ReverseIterator(start, end []byte) storetypes.Iterator {
-	//TODO implement me
-	panic("implement me")
+	return NewIterator(start, end, false, c.root, c.zeroCopy)
 }
 
 func NewCommitTree(dir string, opts Options, logger log.Logger) (*CommitTree, error) {

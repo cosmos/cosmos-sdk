@@ -4,6 +4,7 @@ import (
 	io "io"
 
 	corestore "cosmossdk.io/core/store"
+
 	storetypes "cosmossdk.io/store/types"
 )
 
@@ -50,8 +51,7 @@ func (tree *Tree) GetStoreType() storetypes.StoreType {
 }
 
 func (tree *Tree) CacheWrap() storetypes.CacheWrap {
-	//TODO implement me
-	panic("implement me")
+	return NewTree(tree, tree.updateBatch.Version, tree.zeroCopy)
 }
 
 func (tree *Tree) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) storetypes.CacheWrap {

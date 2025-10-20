@@ -95,12 +95,11 @@ func (db *CommitMultiTree) Commit() storetypes.CommitID {
 }
 
 func (db *CommitMultiTree) SetPruning(options pruningtypes.PruningOptions) {
-	//TODO implement me
-	panic("implement me")
+	db.logger.Warn("SetPruning is not implemented for CommitMultiTree")
 }
 
 func (db *CommitMultiTree) GetPruning() pruningtypes.PruningOptions {
-	return pruningtypes.PruningOptions{}
+	return pruningtypes.NewPruningOptions(pruningtypes.PruningDefault)
 }
 
 func (db *CommitMultiTree) GetStoreType() storetypes.StoreType {
@@ -151,33 +150,29 @@ func (db *CommitMultiTree) TracingEnabled() bool {
 }
 
 func (db *CommitMultiTree) SetTracer(w io.Writer) storetypes.MultiStore {
-	//TODO implement me
-	panic("implement me")
+	db.logger.Warn("SetTracer is not implemented for CommitMultiTree")
+	return db
 }
 
 func (db *CommitMultiTree) SetTracingContext(context storetypes.TraceContext) storetypes.MultiStore {
-	//TODO implement me
-	panic("implement me")
+	db.logger.Warn("SetTracingContext is not implemented for CommitMultiTree")
+	return db
 }
 
 func (db *CommitMultiTree) Snapshot(height uint64, protoWriter protoio.Writer) error {
-	//TODO implement me
-	panic("implement me")
+	return fmt.Errorf("snapshotting has not been implemented yet")
 }
 
 func (db *CommitMultiTree) PruneSnapshotHeight(height int64) {
-	//TODO implement me
-	panic("implement me")
+	db.logger.Warn("PruneSnapshotHeight is not implemented for CommitMultiTree")
 }
 
 func (db *CommitMultiTree) SetSnapshotInterval(snapshotInterval uint64) {
-	//TODO implement me
-	panic("implement me")
+	db.logger.Warn("SetSnapshotInterval is not implemented for CommitMultiTree")
 }
 
 func (db *CommitMultiTree) Restore(height uint64, format uint32, protoReader protoio.Reader) (snapshottypes.SnapshotItem, error) {
-	//TODO implement me
-	panic("implement me")
+	return snapshottypes.SnapshotItem{}, fmt.Errorf("restoring from snapshot has not been implemented yet")
 }
 
 func (db *CommitMultiTree) MountStoreWithDB(key storetypes.StoreKey, typ storetypes.StoreType, _ dbm.DB) {
@@ -238,18 +233,15 @@ func (db *CommitMultiTree) loadStore(key storetypes.StoreKey, typ storetypes.Sto
 }
 
 func (db *CommitMultiTree) LoadLatestVersionAndUpgrade(upgrades *storetypes.StoreUpgrades) error {
-	//TODO implement me
-	panic("implement me")
+	return fmt.Errorf("LoadLatestVersionAndUpgrade has not been implemented yet")
 }
 
 func (db *CommitMultiTree) LoadVersionAndUpgrade(ver int64, upgrades *storetypes.StoreUpgrades) error {
-	//TODO implement me
-	panic("implement me")
+	return fmt.Errorf("LoadVersionAndUpgrade has not been implemented yet")
 }
 
 func (db *CommitMultiTree) LoadVersion(ver int64) error {
-	//TODO implement me
-	panic("implement me")
+	return fmt.Errorf("LoadVersion has not been implemented yet")
 }
 
 func (db *CommitMultiTree) SetInterBlockCache(cache storetypes.MultiStorePersistentCache) {
@@ -257,8 +249,7 @@ func (db *CommitMultiTree) SetInterBlockCache(cache storetypes.MultiStorePersist
 }
 
 func (db *CommitMultiTree) SetInitialVersion(version int64) error {
-	//TODO implement me
-	panic("implement me")
+	return fmt.Errorf("SetInitialVersion has not been implemented yet")
 }
 
 func (db *CommitMultiTree) SetIAVLCacheSize(size int) {
@@ -271,18 +262,16 @@ func (db *CommitMultiTree) SetIAVLSyncPruning(sync bool) {
 }
 
 func (db *CommitMultiTree) RollbackToVersion(version int64) error {
-	//TODO implement me
-	panic("implement me")
+	return fmt.Errorf("RollbackToVersion has not been implemented yet")
 }
 
 func (db *CommitMultiTree) ListeningEnabled(key storetypes.StoreKey) bool {
-	//TODO implement me
-	panic("implement me")
+	db.logger.Warn("ListeningEnabled is not implemented for CommitMultiTree")
+	return false
 }
 
 func (db *CommitMultiTree) AddListeners(keys []storetypes.StoreKey) {
-	//TODO implement me
-	panic("implement me")
+	db.logger.Warn("AddListeners is not implemented for CommitMultiTree")
 }
 
 func (db *CommitMultiTree) PopStateCache() []*storetypes.StoreKVPair {
@@ -291,8 +280,7 @@ func (db *CommitMultiTree) PopStateCache() []*storetypes.StoreKVPair {
 }
 
 func (db *CommitMultiTree) SetMetrics(metrics metrics.StoreMetrics) {
-	//TODO implement me
-	panic("implement me")
+	db.logger.Warn("SetMetrics is not implemented for CommitMultiTree")
 }
 
 func LoadDB(path string, opts *Options, logger log.Logger) (*CommitMultiTree, error) {

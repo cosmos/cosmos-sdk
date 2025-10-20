@@ -3,7 +3,8 @@ package iavlx
 import (
 	"errors"
 	"fmt"
-	"log/slog"
+
+	"cosmossdk.io/log"
 )
 
 type CompactOptions struct {
@@ -15,7 +16,7 @@ type CompactOptions struct {
 type RetainCriteria func(createVersion, orphanVersion uint32) bool
 
 type Compactor struct {
-	logger *slog.Logger
+	logger log.Logger
 
 	criteria   RetainCriteria
 	compactWAL bool
@@ -40,7 +41,7 @@ type Compactor struct {
 	branchOrphanVersionTotal uint64
 }
 
-func NewCompacter(logger *slog.Logger, reader *Changeset, opts CompactOptions, store *TreeStore) (*Compactor, error) {
+func NewCompacter(logger log.Logger, reader *Changeset, opts CompactOptions, store *TreeStore) (*Compactor, error) {
 	if reader.files == nil {
 		return nil, fmt.Errorf("changeset has no associated files, cannot compact a shared changeset reader which files set to nil")
 	}

@@ -7,15 +7,16 @@ import (
 	"runtime"
 
 	"cosmossdk.io/log"
+	"github.com/alitto/pond/v2"
+	dbm "github.com/cosmos/cosmos-db"
+	protoio "github.com/cosmos/gogoproto/io"
+
 	"cosmossdk.io/store/mem"
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	"cosmossdk.io/store/transient"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/alitto/pond/v2"
-	dbm "github.com/cosmos/cosmos-db"
-	protoio "github.com/cosmos/gogoproto/io"
 )
 
 type CommitMultiTree struct {
@@ -117,11 +118,11 @@ func (db *CommitMultiTree) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceCo
 
 func (db *CommitMultiTree) CacheMultiStore() storetypes.CacheMultiStore {
 	mt := &MultiTree{
-		trees:      make([]storetypes.CacheWrap, len(db.trees)),
+		trees:      make([]storetypes.CacheKVStore, len(db.trees)),
 		treesByKey: db.treesByKey, // share the map
 	}
 	for i, root := range db.trees {
-		mt.trees[i] = root.CacheWrap()
+		mt.trees[i] = root.CacheWrap().(storetypes.CacheKVStore)
 	}
 	return mt
 }

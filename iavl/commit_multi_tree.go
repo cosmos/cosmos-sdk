@@ -121,15 +121,21 @@ func (db *CommitMultiTree) CacheMultiStore() storetypes.CacheMultiStore {
 		trees:      make([]storetypes.CacheKVStore, len(db.trees)),
 		treesByKey: db.treesByKey, // share the map
 	}
-	for i, root := range db.trees {
-		mt.trees[i] = root.CacheWrap().(storetypes.CacheKVStore)
+	for i, tree := range db.trees {
+		mt.trees[i] = tree.CacheWrap().(storetypes.CacheKVStore)
 	}
 	return mt
 }
 
 func (db *CommitMultiTree) CacheMultiStoreWithVersion(version int64) (storetypes.CacheMultiStore, error) {
-	//TODO implement me
-	panic("implement me")
+	if version == 0 {
+		version = int64(db.version)
+	}
+	if uint64(version) == db.version {
+		// TODO we actually want to cache wrap the latest saved version, not the working version
+		return db.CacheMultiStore(), nil
+	}
+	return nil, fmt.Errorf("checking out historical versions has not been implemented yet")
 }
 
 func (db *CommitMultiTree) GetStore(key storetypes.StoreKey) storetypes.Store {
@@ -247,8 +253,7 @@ func (db *CommitMultiTree) LoadVersion(ver int64) error {
 }
 
 func (db *CommitMultiTree) SetInterBlockCache(cache storetypes.MultiStorePersistentCache) {
-	//TODO implement me
-	panic("implement me")
+	db.logger.Warn("SetInterBlockCache is not implemented for CommitMultiTree")
 }
 
 func (db *CommitMultiTree) SetInitialVersion(version int64) error {

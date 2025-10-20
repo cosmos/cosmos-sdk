@@ -7,6 +7,7 @@ import (
 	"sync/atomic"
 
 	"cosmossdk.io/log"
+
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	storetypes "cosmossdk.io/store/types"
 )

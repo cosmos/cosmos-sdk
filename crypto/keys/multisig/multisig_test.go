@@ -315,7 +315,7 @@ func generatePubKeysAndSignatures(n int, msg []byte) (pubKeys []cryptotypes.PubK
 		sig, _ := privkey.Sign(msg)
 		signatures[i] = &signing.SingleSignatureData{Signature: sig}
 	}
-	return
+	return pubKeys, signatures
 }
 
 func generateNestedMultiSignature(n int, msg []byte) (multisig.PubKey, *signing.MultiSignatureData) {
@@ -348,7 +348,7 @@ func reorderPubKey(pk *kmultisig.LegacyAminoPubKey) (other *kmultisig.LegacyAmin
 	pubkeysCpy[0] = pk.PubKeys[1]
 	pubkeysCpy[1] = pk.PubKeys[0]
 	other = &kmultisig.LegacyAminoPubKey{Threshold: 2, PubKeys: pubkeysCpy}
-	return
+	return other
 }
 
 func TestDisplay(t *testing.T) {

@@ -9,7 +9,7 @@ import (
 
 type MultiTree struct {
 	latestVersion int64
-	trees         []storetypes.CacheWrap      // always ordered by tree name
+	trees         []storetypes.CacheKVStore   // always ordered by tree name
 	treesByKey    map[storetypes.StoreKey]int // index of the trees by name
 }
 
@@ -34,8 +34,8 @@ func (t *MultiTree) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) 
 
 func (t *MultiTree) CacheMultiStore() storetypes.CacheMultiStore {
 	wrapped := &MultiTree{
-		trees:      make([]storetypes.CacheKVStore, len(t.trees)),
 		treesByKey: t.treesByKey,
+		trees:      make([]storetypes.CacheKVStore, len(t.trees)),
 	}
 	for i, tree := range t.trees {
 		wrapped.trees[i] = tree.CacheWrap().(storetypes.CacheKVStore)

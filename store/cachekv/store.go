@@ -35,8 +35,8 @@ var _ types.CacheKVStore = (*Store)(nil)
 func NewStore(parent types.KVStore) *Store {
 	return NewGStore(
 		parent,
-		func(v []byte) bool { return v == nil },
-		func(v []byte) int { return len(v) },
+		types.BytesIsZero,
+		types.BytesValueLen,
 	)
 }
 
@@ -49,9 +49,8 @@ type GStore[V any] struct {
 	parent        types.GKVStore[V]
 
 	// isZero is a function that returns true if the value is considered "zero", for []byte and pointers the zero value
-	// is `nil`, zero value is not allowed to set to a key, and it's returned if the key is not found.
-	isZero    func(V) bool
-	zeroValue V
+	// is `nil`, the zero value is not allowed to set to a key, and it's returned if the key is not found.
+	isZero func(V) bool
 	// valueLen validates the value before it's set
 	valueLen func(V) int
 }
@@ -110,11 +109,12 @@ func (store *GStore[V]) Has(key []byte) bool {
 // Delete implements types.KVStore.
 func (store *GStore[V]) Delete(key []byte) {
 	types.AssertValidKey(key)
+	var zeroValue V
 
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
 
-	store.setCacheValue(key, store.zeroValue, true)
+	store.setCacheValue(key, zeroValue, true)
 }
 
 func (store *GStore[V]) resetCaches() {
@@ -319,7 +319,7 @@ const (
 
 const minSortSize = 1024
 
-// Constructs a slice of dirty items, to use w/ memIterator.
+// dirtyItems constructs a slice of dirty items, to use w/ memIterator.
 func (store *GStore[V]) dirtyItems(start, end []byte) {
 	startStr, endStr := conv.UnsafeBytesToStr(start), conv.UnsafeBytesToStr(end)
 	if end != nil && startStr > endStr {

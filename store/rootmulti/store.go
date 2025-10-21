@@ -1222,7 +1222,7 @@ func GetLatestVersion(db dbm.DB) int64 {
 	return latestVersion
 }
 
-// Commits each store and returns a new commitInfo.
+// commitStores commits each store and returns a new commitInfo.
 func commitStores(version int64, storeMap map[types.StoreKey]types.CommitStore, removalMap map[types.StoreKey]bool) *types.CommitInfo {
 	storeInfos := make([]types.StoreInfo, 0, len(storeMap))
 	storeKeys := keysFromStoreKeyMap(storeMap)

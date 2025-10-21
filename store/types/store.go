@@ -483,12 +483,12 @@ func NewObjectStoreKey(name string) *ObjectStoreKey {
 	}
 }
 
-// Name returns the key's name field
+// Name returns the name of the ObjectStoreKey
 func (key *ObjectStoreKey) Name() string {
 	return key.name
 }
 
-// String returns a human readable key, name string
+// String returns a string representation of the ObjectStoreKey
 func (key *ObjectStoreKey) String() string {
 	return fmt.Sprintf("ObjectStoreKey{%p, %s}", key, key.name)
 }

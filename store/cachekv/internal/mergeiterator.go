@@ -164,7 +164,7 @@ func (iter *cacheMergeIterator[V]) assertValid() {
 	}
 }
 
-// Like bytes.Compare but opposite if not ascending.
+// compare is like bytes.Compare but opposite if not ascending.
 func (iter *cacheMergeIterator[V]) compare(a, b []byte) int {
 	if iter.ascending {
 		return bytes.Compare(a, b)

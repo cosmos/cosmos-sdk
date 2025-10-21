@@ -20,6 +20,7 @@ import (
 	sdkmaps "cosmossdk.io/store/internal/maps"
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
+	"cosmossdk.io/store/transient"
 	"cosmossdk.io/store/types"
 )
 
@@ -27,6 +28,23 @@ func TestStoreType(t *testing.T) {
 	db := dbm.NewMemDB()
 	store := NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	store.MountStoreWithDB(types.NewKVStoreKey("store1"), types.StoreTypeIAVL, db)
+}
+
+func TestGetObjKVStore(t *testing.T) {
+	var db dbm.DB = dbm.NewMemDB()
+	ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningDefault))
+	err := ms.LoadLatestVersion()
+	require.Nil(t, err)
+
+	key := ms.keysByName["store6"]
+
+	store1 := ms.GetObjKVStore(key)
+	require.NotNil(t, store1)
+	require.IsType(t, &transient.ObjStore{}, store1)
+
+	store2 := ms.GetCommitStore(key)
+	require.NotNil(t, store2)
+	require.IsType(t, &transient.ObjStore{}, store2)
 }
 
 func TestGetCommitKVStore(t *testing.T) {
@@ -939,6 +957,7 @@ var (
 	testStoreKey2 = types.NewKVStoreKey("store2")
 	testStoreKey3 = types.NewKVStoreKey("store3")
 	testStoreKey4 = types.NewKVStoreKey("store4")
+	testStoreKey6 = types.NewObjectStoreKey("store6")
 )
 
 func newMultiStoreWithMounts(db dbm.DB, pruningOpts pruningtypes.PruningOptions) *Store {
@@ -948,6 +967,7 @@ func newMultiStoreWithMounts(db dbm.DB, pruningOpts pruningtypes.PruningOptions)
 	store.MountStoreWithDB(testStoreKey1, types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(testStoreKey2, types.StoreTypeIAVL, nil)
 	store.MountStoreWithDB(testStoreKey3, types.StoreTypeIAVL, nil)
+	store.MountStoreWithDB(testStoreKey6, types.StoreTypeObject, nil)
 
 	return store
 }
@@ -1014,6 +1034,9 @@ func getExpectedCommitID(store *Store, ver int64) types.CommitID {
 func hashStores(stores map[types.StoreKey]types.CommitStore) []byte {
 	m := make(map[string][]byte, len(stores))
 	for key, store := range stores {
+		if store.GetStoreType() != types.StoreTypeIAVL {
+			continue
+		}
 		name := key.Name()
 		m[name] = types.StoreInfo{
 			Name:     name,

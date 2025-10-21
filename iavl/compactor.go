@@ -30,9 +30,10 @@ type Compactor struct {
 	versionsWriter    *StructWriter[VersionInfo]
 	kvlogWriter       *KVLogWriter
 
-	leafOffsetRemappings map[uint32]uint32
-	keyCache             map[string]uint32
-	offsetCache          map[NodeID]uint32
+	keyCache map[string]uint32
+	// offsetCache holds the updated 1-based offsets of nodes affected by compacting.
+	// these are then used to update BranchLayout's left and right offsets.
+	offsetCache map[NodeID]uint32
 
 	// Running totals across all processed changesets
 	leafOrphanCount          uint32

@@ -32,9 +32,8 @@ type CommitTree struct {
 
 	logger log.Logger
 
-	commitCtx       *commitContext
-	lastCommitId    storetypes.CommitID
-	workingCommitId storetypes.CommitID
+	lastCommitId storetypes.CommitID
+	commitCtx    *commitContext
 }
 
 func (c *CommitTree) getRoot() *NodePointer {
@@ -63,6 +62,43 @@ func (c *CommitTree) applyChangesToParent(origRoot, newRoot *NodePointer, update
 	return nil
 }
 
+func (c *CommitTree) WorkingHash() []byte {
+	c.writeMutex.Lock()
+	defer c.writeMutex.Unlock()
+
+	return c.workingHash()
+}
+
+func (c *CommitTree) workingHash() []byte {
+	// IMPORTANT: this function assumes the write lock is held
+
+	// if we have no root, return empty hash
+	if c.root == nil {
+		c.commitCtx = nil
+		return emptyHash
+	}
+
+	root := c.root.mem.Load()
+	if root != nil {
+		// already computed working hash
+		return root.hash
+	}
+
+	savedVersion := c.store.SavedVersion()
+	stagedVersion := c.stagedVersion()
+	c.commitCtx = &commitContext{
+		version:      stagedVersion,
+		savedVersion: savedVersion,
+	}
+
+	// compute hash and assign node IDs
+	hash, err := commitTraverse(c.commitCtx, c.root, 0)
+	if err != nil {
+		panic(fmt.Sprintf("failed to compute working hash: %v", err))
+	}
+	return hash
+}
+
 func (c *CommitTree) Commit() storetypes.CommitID {
 	commitId, err := c.commit()
 	if err != nil {
@@ -72,8 +108,15 @@ func (c *CommitTree) Commit() storetypes.CommitID {
 }
 
 func (c *CommitTree) commit() (storetypes.CommitID, error) {
-	c.WorkingHash()
-	commitId := c.workingCommitId
+	c.writeMutex.Lock()
+	defer c.writeMutex.Unlock()
+
+	if c.writeWal {
+		close(c.walChan)
+	}
+
+	// compute hash and assign node IDs
+	hash := c.workingHash()
 
 	stagedVersion := c.stagedVersion()
 	if c.writeWal {
@@ -91,7 +134,12 @@ func (c *CommitTree) commit() (storetypes.CommitID, error) {
 		c.reinitWalProc()
 	}
 
-	err := c.store.SaveRoot(stagedVersion, c.root, c.commitCtx.leafNodeIdx, c.commitCtx.branchNodeIdx)
+	commitCtx := c.commitCtx
+	if commitCtx == nil {
+		// make sure we have a non-nil commit context
+		commitCtx = &commitContext{}
+	}
+	err := c.store.SaveRoot(stagedVersion, c.root, commitCtx.leafNodeIdx, commitCtx.branchNodeIdx)
 	if err != nil {
 		return storetypes.CommitID{}, err
 	}
@@ -105,6 +153,10 @@ func (c *CommitTree) commit() (storetypes.CommitID, error) {
 	// cache the committed tree as the latest version
 	c.latest.Store(c.root)
 	c.version++
+	commitId := storetypes.CommitID{
+		Version: int64(stagedVersion),
+		Hash:    hash,
+	}
 	c.lastCommitId = commitId
 	c.commitCtx = nil
 
@@ -113,43 +165,6 @@ func (c *CommitTree) commit() (storetypes.CommitID, error) {
 
 func (c *CommitTree) LastCommitID() storetypes.CommitID {
 	return c.lastCommitId
-}
-
-func (c *CommitTree) WorkingHash() []byte {
-	if c.commitCtx != nil {
-		return c.workingCommitId.Hash
-	}
-
-	c.writeMutex.Lock()
-	defer c.writeMutex.Unlock()
-
-	if c.writeWal {
-		close(c.walChan)
-	}
-
-	var hash []byte
-	savedVersion := c.store.SavedVersion()
-	stagedVersion := c.stagedVersion()
-	c.commitCtx = &commitContext{
-		version:      stagedVersion,
-		savedVersion: savedVersion,
-	}
-	if c.root == nil {
-		hash = emptyHash
-	} else {
-		// compute hash and assign node IDs
-		var err error
-		hash, err = commitTraverse(c.commitCtx, c.root, 0)
-		if err != nil {
-			panic(fmt.Sprintf("failed to compute working hash: %v", err))
-		}
-	}
-
-	c.workingCommitId = storetypes.CommitID{
-		Version: int64(stagedVersion),
-		Hash:    hash,
-	}
-	return hash
 }
 
 func (c *CommitTree) SetPruning(pruningtypes.PruningOptions) {}
@@ -318,6 +333,8 @@ type commitContext struct {
 	leafNodeIdx   uint32
 }
 
+// commitTraverse performs a post-order traversal of the tree to compute hashes and assign node IDs.
+// if it is run multiple times and the tree has been mutated before being committed, node IDs will be reassigned.
 func commitTraverse(ctx *commitContext, np *NodePointer, depth uint8) (hash []byte, err error) {
 	memNode := np.mem.Load()
 	if memNode == nil {
@@ -353,7 +370,7 @@ func commitTraverse(ctx *commitContext, np *NodePointer, depth uint8) (hash []by
 	}
 
 	if memNode.hash != nil {
-		// not sure when we would encounter this but if the hash is already computed, just return it
+		// hash previously computed node
 		return memNode.hash, nil
 	}
 

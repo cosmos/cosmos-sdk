@@ -1,6 +1,7 @@
 package iavlx
 
 import (
+	"bytes"
 	"fmt"
 	io "io"
 	"os"
@@ -29,10 +30,11 @@ type CommitMultiTree struct {
 	storeTypes []storetypes.StoreType      // store types by tree index
 	treesByKey map[storetypes.StoreKey]int // index of the trees by name
 
-	version         uint64
-	lastCommitId    storetypes.CommitID
-	commitPool      pond.ResultPool[storetypes.CommitID]
-	workingCommitId *storetypes.CommitID
+	version           uint64
+	lastCommitId      storetypes.CommitID
+	commitPool        pond.ResultPool[[]byte]
+	workingCommitInfo *storetypes.CommitInfo
+	workingHash       []byte
 }
 
 func (db *CommitMultiTree) LastCommitID() storetypes.CommitID {
@@ -40,16 +42,13 @@ func (db *CommitMultiTree) LastCommitID() storetypes.CommitID {
 }
 
 func (db *CommitMultiTree) WorkingHash() []byte {
+	// NOTE: this may invoke some hash recomputation each time even if there is no change
 	taskGroup := db.commitPool.NewGroup()
 	stagedVersion := db.version + 1
 	for _, tree := range db.trees {
 		t := tree
-		taskGroup.Submit(func() storetypes.CommitID {
-			hash := t.WorkingHash()
-			return storetypes.CommitID{
-				Version: int64(stagedVersion),
-				Hash:    hash,
-			}
+		taskGroup.Submit(func() []byte {
+			return t.WorkingHash()
 		})
 	}
 	hashes, err := taskGroup.Wait()
@@ -58,41 +57,81 @@ func (db *CommitMultiTree) WorkingHash() []byte {
 	}
 
 	commitInfo := &storetypes.CommitInfo{}
+	commitInfo.StoreInfos = make([]storetypes.StoreInfo, len(db.treeKeys))
 	for i, treeKey := range db.treeKeys {
 		commitInfo.StoreInfos[i] = storetypes.StoreInfo{
-			Name:     treeKey.Name(),
-			CommitId: hashes[i],
+			Name: treeKey.Name(),
+			CommitId: storetypes.CommitID{
+				Version: int64(stagedVersion),
+				Hash:    hashes[i],
+			},
 		}
 	}
-	db.workingCommitId = &storetypes.CommitID{
-		Version: int64(stagedVersion),
-		Hash:    commitInfo.Hash(),
-	}
-	return db.workingCommitId.Hash
+	db.workingCommitInfo = commitInfo
+	hash := commitInfo.Hash()
+	db.workingHash = hash
+	return hash
 }
 
 func (db *CommitMultiTree) Commit() storetypes.CommitID {
-	// comput hash (if not done already)
-	db.WorkingHash()
-
-	// actually commit all trees
+	// NOTE: this function is maybe unnecessarily complex because the SDK has both WorkingHash and Commit methods
+	// and we're trying to avoid recomputing the hash
+	// so we check if we already have a hash that was computed in WorkingHash that hasn't changed to avoid recomputation
+	// in the future we should evaluate if there is any need to retain both WorkingHash and Commit methods separately
 	taskGroup := db.commitPool.NewGroup()
 	for _, tree := range db.trees {
 		t := tree
-		taskGroup.Submit(func() storetypes.CommitID {
-			return t.Commit()
+		taskGroup.Submit(func() []byte {
+			commitId := t.Commit()
+			return commitId.Hash
 		})
 	}
-	_, err := taskGroup.Wait()
+
+	hashes, err := taskGroup.Wait()
 	if err != nil {
 		panic(fmt.Errorf("failed to commit trees: %w", err))
 	}
 
+	stagedVersion := db.version + 1
+	commitInfo := db.workingCommitInfo
+	var hash []byte
+	if commitInfo == nil {
+		commitInfo = &storetypes.CommitInfo{}
+		commitInfo.StoreInfos = make([]storetypes.StoreInfo, len(db.treeKeys))
+		for i, treeKey := range db.treeKeys {
+			commitInfo.StoreInfos[i] = storetypes.StoreInfo{
+				Name: treeKey.Name(),
+				CommitId: storetypes.CommitID{
+					Version: int64(stagedVersion),
+					Hash:    hashes[i],
+				},
+			}
+		}
+		hash = commitInfo.Hash()
+	} else {
+		hashChanged := false
+		for i, storeInfo := range commitInfo.StoreInfos {
+			if !bytes.Equal(storeInfo.CommitId.Hash, hashes[i]) {
+				hashChanged = true
+				commitInfo.StoreInfos[i].CommitId.Hash = hashes[i]
+			}
+		}
+		if !hashChanged {
+			hash = db.workingHash
+		} else {
+			hash = commitInfo.Hash()
+		}
+		db.workingCommitInfo = nil
+		db.workingHash = nil
+	}
+
 	db.version++
-	commitId := db.workingCommitId
-	db.workingCommitId = nil
-	db.lastCommitId = *commitId
-	return *commitId
+	commitId := storetypes.CommitID{
+		Version: int64(db.version),
+		Hash:    hash,
+	}
+	db.lastCommitId = commitId
+	return commitId
 }
 
 func (db *CommitMultiTree) SetPruning(options pruningtypes.PruningOptions) {
@@ -338,7 +377,7 @@ func LoadDB(path string, opts *Options, logger log.Logger) (*CommitMultiTree, er
 	db := &CommitMultiTree{
 		dir:        path,
 		opts:       *opts,
-		commitPool: pond.NewResultPool[storetypes.CommitID](runtime.NumCPU()),
+		commitPool: pond.NewResultPool[[]byte](runtime.NumCPU()),
 		logger:     logger,
 		treesByKey: make(map[storetypes.StoreKey]int),
 	}

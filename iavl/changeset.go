@@ -397,3 +397,19 @@ func (cr *Changeset) TotalBytes() int {
 func (cr *Changeset) HasOrphans() bool {
 	return cr.info.LeafOrphans > 0 || cr.info.BranchOrphans > 0
 }
+
+func (cr *Changeset) ResolveRoot(version uint32) (*NodePointer, error) {
+	startVersion := cr.info.StartVersion
+	endVersion := startVersion + uint32(cr.versionsData.Count()) - 1
+	if version < startVersion || version > endVersion {
+		return nil, fmt.Errorf("version %d out of range for changeset (have %d..%d)", version, startVersion, endVersion)
+	}
+	vi, err := cr.getVersionInfo(version)
+	if err != nil {
+		return nil, err
+	}
+	return &NodePointer{
+		id:    vi.RootID,
+		store: cr,
+	}, nil
+}

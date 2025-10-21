@@ -60,8 +60,6 @@ func (c *CommitTree) ApplyChanges(origRoot, newRoot *NodePointer, updateBatch KV
 		c.walChan <- updateBatch.Updates
 	}
 
-	// TODO prevent further writes to the branch tree
-
 	return nil
 }
 
@@ -286,6 +284,22 @@ func (c *CommitTree) startEvict(evictVersion uint32) {
 		c.lastEvictVersion = evictVersion
 		c.evictorRunning = false
 	}()
+}
+
+func (c *CommitTree) GetImmutable(version int64) (storetypes.CacheKVStore, error) {
+	var rootPtr *NodePointer
+	if version == c.lastCommitId.Version {
+		rootPtr = c.root
+	} else {
+		var err error
+		rootPtr, err = c.store.ResolveRoot(uint32(version))
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &Tree{
+		root: rootPtr,
+	}, nil
 }
 
 func (c *CommitTree) Close() error {

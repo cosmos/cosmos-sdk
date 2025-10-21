@@ -164,6 +164,14 @@ func (ts *TreeStore) Resolve(nodeId NodeID, _ uint32) (Node, error) {
 	return cs.Resolve(nodeId, 0)
 }
 
+func (ts *TreeStore) ResolveRoot(version uint32) (*NodePointer, error) {
+	cs := ts.getChangesetForVersion(version)
+	if cs == nil {
+		return nil, fmt.Errorf("no changeset found for version %d", version)
+	}
+	return cs.ResolveRoot(version)
+}
+
 func (ts *TreeStore) SavedVersion() uint32 {
 	return ts.savedVersion.Load()
 }

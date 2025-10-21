@@ -41,6 +41,7 @@ func (tree *Tree) ApplyChanges(origRoot, newRoot *NodePointer, updateBatch KVUpd
 		panic("cannot apply changes: root has changed")
 	}
 	tree.root = newRoot
+	tree.origRoot = newRoot
 	tree.updateBatch.Updates = append(tree.updateBatch.Updates, updateBatch.Updates...)
 	tree.updateBatch.Orphans = append(tree.updateBatch.Orphans, updateBatch.Orphans...)
 	return nil
@@ -60,6 +61,9 @@ func (tree *Tree) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) st
 }
 
 func (tree *Tree) Write() {
+	if tree.parent == nil {
+		panic("cannot write: tree is immutable")
+	}
 	err := tree.parent.ApplyChanges(tree.origRoot, tree.root, tree.updateBatch)
 	if err != nil {
 		panic(err)
@@ -67,6 +71,7 @@ func (tree *Tree) Write() {
 	tree.updateBatch.Updates = nil
 	tree.updateBatch.Orphans = nil
 	tree.root = tree.parent.Root()
+	tree.origRoot = tree.root
 }
 
 func (tree *Tree) Get(key []byte) []byte {

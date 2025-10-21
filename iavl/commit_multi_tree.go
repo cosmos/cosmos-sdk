@@ -4,6 +4,7 @@ import (
 	"fmt"
 	io "io"
 	"os"
+	"path/filepath"
 	"runtime"
 
 	"cosmossdk.io/log"
@@ -130,11 +131,30 @@ func (db *CommitMultiTree) CacheMultiStoreWithVersion(version int64) (storetypes
 	if version == 0 {
 		version = int64(db.version)
 	}
-	if uint64(version) == db.version {
-		// TODO we actually want to cache wrap the latest saved version, not the working version
-		return db.CacheMultiStore(), nil
+
+	mt := &MultiTree{
+		latestVersion: version,
+		treesByKey:    db.treesByKey, // share the map
+		trees:         make([]storetypes.CacheKVStore, len(db.trees)),
 	}
-	return nil, fmt.Errorf("checking out historical versions has not been implemented yet")
+
+	for i, tree := range db.trees {
+		typ := db.storeTypes[i]
+		switch typ {
+		case storetypes.StoreTypeIAVL, storetypes.StoreTypeDB:
+			var err error
+			mt.trees[i], err = tree.(*CommitTree).GetImmutable(version)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create cache multi store for tree %s at version %d: %w", db.treeKeys[i].Name(), version, err)
+			}
+		case storetypes.StoreTypeTransient, storetypes.StoreTypeMemory:
+			mt.trees[i] = tree.CacheWrap().(storetypes.CacheKVStore)
+		default:
+			return nil, fmt.Errorf("unsupported store type: %s", typ.String())
+		}
+	}
+
+	return mt, nil
 }
 
 func (db *CommitMultiTree) GetStore(key storetypes.StoreKey) storetypes.Store {
@@ -208,7 +228,10 @@ func (db *CommitMultiTree) LoadLatestVersion() error {
 func (db *CommitMultiTree) loadStore(key storetypes.StoreKey, typ storetypes.StoreType) (storetypes.CommitKVStore, error) {
 	switch typ {
 	case storetypes.StoreTypeIAVL, storetypes.StoreTypeDB:
-		dir := fmt.Sprintf("%s/%s", db.dir, key.Name())
+		dir := filepath.Join(db.dir, key.Name())
+		if _, err := os.Stat(dir); !os.IsNotExist(err) {
+			return nil, fmt.Errorf("store directory %s already exists, reloading isn't supported yet", dir)
+		}
 		err := os.MkdirAll(dir, 0o755)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create store dir %s: %w", dir, err)

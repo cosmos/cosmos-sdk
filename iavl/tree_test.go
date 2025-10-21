@@ -152,7 +152,7 @@ func (s *SimMachine) Check(t *rapid.T) {
 }
 
 func (s *SimMachine) UpdateN(t *rapid.T) {
-	n := rapid.IntRange(1, 1000).Draw(t, "n")
+	n := rapid.IntRange(1, 5000).Draw(t, "n")
 	for i := 0; i < n; i++ {
 		del := rapid.Bool().Draw(t, "del")
 		if del {
@@ -164,7 +164,7 @@ func (s *SimMachine) UpdateN(t *rapid.T) {
 }
 
 func (s *SimMachine) GetN(t *rapid.T) {
-	n := rapid.IntRange(1, 1000).Draw(t, "n")
+	n := rapid.IntRange(1, 5000).Draw(t, "n")
 	for i := 0; i < n; i++ {
 		s.get(t)
 	}

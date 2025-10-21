@@ -18,8 +18,8 @@ const (
 type BranchLayout struct {
 	Id            NodeID
 	Left          NodeID
-	LeftOffset    uint32 // absolute offset
 	Right         NodeID
+	LeftOffset    uint32 // absolute offset
 	RightOffset   uint32 // absolute offset
 	KeyOffset     uint32
 	Height        uint8

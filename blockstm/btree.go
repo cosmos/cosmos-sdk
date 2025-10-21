@@ -49,7 +49,7 @@ func (bt *BTree[T]) Set(item T) (prev T, ok bool) {
 		c := t.Copy()
 		prev, ok = c.Set(item)
 		if bt.CompareAndSwap(t, c) {
-			return
+			return prev, ok
 		}
 	}
 }
@@ -60,7 +60,7 @@ func (bt *BTree[T]) Delete(item T) (prev T, ok bool) {
 		c := t.Copy()
 		prev, ok = c.Delete(item)
 		if bt.CompareAndSwap(t, c) {
-			return
+			return prev, ok
 		}
 	}
 }
@@ -84,5 +84,5 @@ func (bt *BTree[T]) ReverseSeek(pivot T) (result T, ok bool) {
 		ok = true
 		return false
 	})
-	return
+	return result, ok
 }

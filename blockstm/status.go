@@ -44,7 +44,7 @@ func (s *StatusEntry) IsExecuted() (ok bool, incarnation Incarnation) {
 	}
 
 	s.Unlock()
-	return
+	return ok, incarnation
 }
 
 func (s *StatusEntry) TrySetExecuting() (Incarnation, bool) {

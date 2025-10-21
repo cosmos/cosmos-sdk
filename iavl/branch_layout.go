@@ -12,7 +12,7 @@ func init() {
 }
 
 const (
-	SizeBranch = 88
+	SizeBranch = 80
 )
 
 type BranchLayout struct {

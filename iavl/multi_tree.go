@@ -52,7 +52,14 @@ func (t *MultiTree) GetStore(key storetypes.StoreKey) storetypes.Store {
 }
 
 func (t *MultiTree) GetKVStore(key storetypes.StoreKey) storetypes.KVStore {
-	return t.trees[t.treesByKey[key]]
+	index, ok := t.treesByKey[key]
+	if !ok {
+		panic(fmt.Sprintf("store not found for key: %s (key type: %T)", key.Name(), key))
+	}
+	if index >= len(t.trees) {
+		panic(fmt.Sprintf("store index %d out of bounds for key %s (trees length: %d)", index, key.Name(), len(t.trees)))
+	}
+	return t.trees[index]
 }
 
 func (t *MultiTree) TracingEnabled() bool {

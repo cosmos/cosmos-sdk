@@ -162,7 +162,14 @@ func (db *CommitMultiTree) GetStore(key storetypes.StoreKey) storetypes.Store {
 }
 
 func (db *CommitMultiTree) GetKVStore(key storetypes.StoreKey) storetypes.KVStore {
-	return db.trees[db.treesByKey[key]]
+	index, ok := db.treesByKey[key]
+	if !ok {
+		panic(fmt.Sprintf("store not found for key: %s (key type: %T)", key.Name(), key))
+	}
+	if index >= len(db.trees) {
+		panic(fmt.Sprintf("store index %d out of bounds for key %s (trees length: %d)", index, key.Name(), len(db.trees)))
+	}
+	return db.trees[index]
 }
 
 func (db *CommitMultiTree) TracingEnabled() bool {
@@ -199,10 +206,10 @@ func (db *CommitMultiTree) MountStoreWithDB(key storetypes.StoreKey, typ storety
 	if _, exists := db.treesByKey[key]; exists {
 		panic(fmt.Sprintf("store with key %s already mounted", key.Name()))
 	}
-	index := len(db.trees)
+	index := len(db.treeKeys)
+	db.treesByKey[key] = index
 	db.treeKeys = append(db.treeKeys, key)
 	db.storeTypes = append(db.storeTypes, typ)
-	db.treesByKey[key] = index
 }
 
 func (db *CommitMultiTree) GetCommitStore(key storetypes.StoreKey) storetypes.CommitStore {

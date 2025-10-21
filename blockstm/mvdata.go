@@ -165,7 +165,7 @@ func (d *GMVData[V]) Snapshot() (snapshot []GKVPair[V]) {
 		snapshot = append(snapshot, GKVPair[V]{key, value})
 		return true
 	})
-	return
+	return snapshot
 }
 
 func (d *GMVData[V]) SnapshotTo(cb func(Key, V) bool) {

@@ -1,12 +1,31 @@
 package iavlx
 
-import "bytes"
+import (
+	"bytes"
+	"sync/atomic"
+)
 
 type BranchPersisted struct {
-	store             *Changeset
-	selfIdx           uint32
-	layout            BranchLayout
-	leftPtr, rightPtr *NodePointer
+	store  *Changeset
+	layout BranchLayout
+}
+
+func (node *BranchPersisted) Left() *NodePointer {
+	return &NodePointer{
+		mem:     atomic.Pointer[MemNode]{},
+		store:   node.store,
+		fileIdx: node.layout.LeftOffset,
+		id:      node.layout.Left,
+	}
+}
+
+func (node *BranchPersisted) Right() *NodePointer {
+	return &NodePointer{
+		mem:     atomic.Pointer[MemNode]{},
+		store:   node.store,
+		fileIdx: node.layout.RightOffset,
+		id:      node.layout.Right,
+	}
 }
 
 func (node *BranchPersisted) ID() NodeID {
@@ -37,14 +56,6 @@ func (node *BranchPersisted) Value() ([]byte, error) {
 	return nil, nil
 }
 
-func (node *BranchPersisted) Left() *NodePointer {
-	return node.leftPtr
-}
-
-func (node *BranchPersisted) Right() *NodePointer {
-	return node.rightPtr
-}
-
 func (node *BranchPersisted) Hash() []byte {
 	return node.layout.Hash[:]
 }
@@ -58,6 +69,7 @@ func (node *BranchPersisted) MutateBranch(version uint32) (*MemNode, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	memNode := &MemNode{
 		height:  node.Height(),
 		size:    node.Size(),

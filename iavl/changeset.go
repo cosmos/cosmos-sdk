@@ -170,56 +170,6 @@ func (cr *Changeset) resolveBranchWithIdx(nodeId NodeID, fileIdx uint32) (Branch
 	}
 }
 
-func (cr *Changeset) resolveNodeID(id NodeID) *NodePointer {
-	return &NodePointer{
-		id:    id,
-		store: cr.treeStore.getChangesetForVersion(uint32(id.Version())),
-	}
-}
-
-// TODO(technicallyty): remove this?
-func (cr *Changeset) resolveNodeRef(nodeRef NodeRef, selfIdx uint32) *NodePointer {
-	if nodeRef.IsNodeID() {
-		id := nodeRef.AsNodeID()
-		return &NodePointer{
-			id:    id,
-			store: cr.treeStore.getChangesetForVersion(uint32(id.Version())),
-		}
-	}
-	relPtr := nodeRef.AsRelativePointer()
-	offset := relPtr.Offset()
-	if nodeRef.IsLeaf() {
-		if offset < 1 {
-			panic(fmt.Sprintf("invalid leaf offset: %d", offset))
-		}
-		itemIdx := uint32(offset - 1)
-		if itemIdx >= uint32(cr.leavesData.Count()) {
-			panic(fmt.Sprintf("leaf offset %d out of bounds (have %d leaves)", offset, cr.leavesData.Count()))
-		}
-		layout := cr.leavesData.UnsafeItem(itemIdx)
-		return &NodePointer{
-			id:      layout.Id,
-			store:   cr,
-			fileIdx: uint32(offset),
-		}
-	} else {
-		idx := int64(selfIdx) + offset
-		if idx < 1 {
-			panic(fmt.Sprintf("invalid branch index: %d (selfIdx=%d, offset=%d)", idx, selfIdx, offset))
-		}
-		itemIdx := uint32(idx - 1)
-		if itemIdx >= uint32(cr.branchesData.Count()) {
-			panic(fmt.Sprintf("branch index %d out of bounds (have %d branches)", idx, cr.branchesData.Count()))
-		}
-		layout := cr.branchesData.UnsafeItem(itemIdx)
-		return &NodePointer{
-			id:      layout.Id,
-			store:   cr,
-			fileIdx: uint32(idx),
-		}
-	}
-}
-
 func (cr *Changeset) Resolve(nodeId NodeID, fileIdx uint32) (Node, error) {
 	if cr.evicted.Load() {
 		return cr.treeStore.Resolve(nodeId, fileIdx)
@@ -234,20 +184,14 @@ func (cr *Changeset) Resolve(nodeId NodeID, fileIdx uint32) (Node, error) {
 		}
 		return &LeafPersisted{layout: layout, store: cr}, nil
 	} else {
-		layout, actualIdx, err := cr.resolveBranchWithIdx(nodeId, fileIdx)
+		layout, _, err := cr.resolveBranchWithIdx(nodeId, fileIdx)
 		if err != nil {
 			return nil, err
 		}
 
-		leftPtr := cr.resolveNodeID(layout.Left)
-		rightPtr := cr.resolveNodeID(layout.Right)
-
 		return &BranchPersisted{
-			layout:   layout,
-			store:    cr,
-			selfIdx:  actualIdx,
-			leftPtr:  leftPtr,
-			rightPtr: rightPtr,
+			layout: layout,
+			store:  cr,
 		}, nil
 	}
 }

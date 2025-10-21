@@ -35,8 +35,8 @@ var _ types.CacheKVStore = (*Store)(nil)
 func NewStore(parent types.KVStore) *Store {
 	return NewGStore(
 		parent,
-		func(v []byte) bool { return v == nil },
-		func(v []byte) int { return len(v) },
+		types.BytesIsZero,
+		types.BytesValueLen,
 	)
 }
 

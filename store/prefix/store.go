@@ -23,16 +23,16 @@ var (
 func NewStore(parent types.KVStore, prefix []byte) Store {
 	return NewGStore(
 		parent, prefix,
-		func(v []byte) bool { return v == nil },
-		func(v []byte) int { return len(v) },
+		types.BytesIsZero,
+		types.BytesValueLen,
 	)
 }
 
 func NewObjStore(parent types.ObjKVStore, prefix []byte) ObjStore {
 	return NewGStore(
 		parent, prefix,
-		func(v any) bool { return v == nil },
-		func(v any) int { return 1 },
+		types.AnyIsZero,
+		types.AnyValueLen,
 	)
 }
 

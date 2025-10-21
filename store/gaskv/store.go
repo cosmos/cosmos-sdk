@@ -6,17 +6,14 @@ import (
 	"cosmossdk.io/store/types"
 )
 
-// ObjectValueLength is the emulated number of bytes for storing transient objects in gas accounting.
-const ObjectValueLength = 16
-
 var _ types.KVStore = &Store{}
 
 type Store = GStore[[]byte]
 
 func NewStore(parent types.KVStore, gasMeter types.GasMeter, gasConfig types.GasConfig) *Store {
 	return NewGStore(parent, gasMeter, gasConfig,
-		func(v []byte) bool { return v == nil },
-		func(v []byte) int { return len(v) },
+		types.BytesIsZero,
+		types.BytesValueLen,
 	)
 }
 
@@ -24,8 +21,8 @@ type ObjStore = GStore[any]
 
 func NewObjStore(parent types.ObjKVStore, gasMeter types.GasMeter, gasConfig types.GasConfig) *ObjStore {
 	return NewGStore(parent, gasMeter, gasConfig,
-		func(v any) bool { return v == nil },
-		func(v any) int { return ObjectValueLength },
+		types.AnyIsZero,
+		types.AnyValueLen,
 	)
 }
 

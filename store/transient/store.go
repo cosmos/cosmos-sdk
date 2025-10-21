@@ -32,8 +32,8 @@ type Store struct {
 
 func NewStore() *Store {
 	return &Store{*NewGStore(
-		func(v []byte) bool { return v == nil },
-		func(v []byte) int { return len(v) },
+		types.BytesIsZero,
+		types.BytesValueLen,
 	)}
 }
 
@@ -48,8 +48,8 @@ type ObjStore struct {
 
 func NewObjStore() *ObjStore {
 	return &ObjStore{*NewGStore(
-		func(v any) bool { return v == nil },
-		func(v any) int { return 1 }, // for value length validation
+		types.AnyIsZero,
+		types.AnyValueLen,
 	)}
 }
 

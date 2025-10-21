@@ -73,19 +73,18 @@ func NewCompacter(logger *slog.Logger, reader *Changeset, opts CompactOptions, s
 	}
 
 	c := &Compactor{
-		logger:               logger,
-		criteria:             opts.RetainCriteria,
-		compactWAL:           opts.CompactWAL,
-		treeStore:            store,
-		files:                newFiles,
-		originalKvLogPath:    reader.files.KVLogPath(),
-		kvlogWriter:          kvlogWriter,
-		leavesWriter:         NewStructWriter[LeafLayout](newFiles.leavesFile),
-		branchesWriter:       NewStructWriter[BranchLayout](newFiles.branchesFile),
-		versionsWriter:       NewStructWriter[VersionInfo](newFiles.versionsFile),
-		keyCache:             make(map[string]uint32),
-		leafOffsetRemappings: make(map[uint32]uint32),
-		offsetCache:          make(map[NodeID]uint32),
+		logger:            logger,
+		criteria:          opts.RetainCriteria,
+		compactWAL:        opts.CompactWAL,
+		treeStore:         store,
+		files:             newFiles,
+		originalKvLogPath: reader.files.KVLogPath(),
+		kvlogWriter:       kvlogWriter,
+		leavesWriter:      NewStructWriter[LeafLayout](newFiles.leavesFile),
+		branchesWriter:    NewStructWriter[BranchLayout](newFiles.branchesFile),
+		versionsWriter:    NewStructWriter[VersionInfo](newFiles.versionsFile),
+		keyCache:          make(map[string]uint32),
+		offsetCache:       make(map[NodeID]uint32),
 	}
 
 	// Process first changeset immediately
@@ -164,8 +163,6 @@ func (c *Compactor) processChangeset(reader *Changeset) error {
 				return fmt.Errorf("failed to append leaf %s: %w", id, err)
 			}
 
-			oldLeafFileIdx := leafStartOffset + j
-			c.leafOffsetRemappings[oldLeafFileIdx] = uint32(c.leavesWriter.Count())
 			c.offsetCache[id] = uint32(c.leavesWriter.Count())
 		}
 

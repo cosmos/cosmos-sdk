@@ -37,11 +37,11 @@ type CommitTree struct {
 	workingCommitId storetypes.CommitID
 }
 
-func (c *CommitTree) Root() *NodePointer {
+func (c *CommitTree) getRoot() *NodePointer {
 	return c.root
 }
 
-func (c *CommitTree) ApplyChanges(origRoot, newRoot *NodePointer, updateBatch KVUpdateBatch) error {
+func (c *CommitTree) applyChangesToParent(origRoot, newRoot *NodePointer, updateBatch KVUpdateBatch) error {
 	// TODO check channel errors
 	c.writeMutex.Lock()
 	defer c.writeMutex.Unlock()

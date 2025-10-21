@@ -17,12 +17,12 @@ type Tree struct {
 }
 
 type parentTree interface {
-	Root() *NodePointer
-	ApplyChanges(origRoot, newRoot *NodePointer, updateBatch KVUpdateBatch) error
+	getRoot() *NodePointer
+	applyChangesToParent(origRoot, newRoot *NodePointer, updateBatch KVUpdateBatch) error
 }
 
 func NewTree(parent parentTree, stagedVersion uint32, zeroCopy bool) *Tree {
-	root := parent.Root()
+	root := parent.getRoot()
 	return &Tree{
 		parent:      parent,
 		root:        root,
@@ -32,16 +32,15 @@ func NewTree(parent parentTree, stagedVersion uint32, zeroCopy bool) *Tree {
 	}
 }
 
-func (tree *Tree) Root() *NodePointer {
+func (tree *Tree) getRoot() *NodePointer {
 	return tree.root
 }
 
-func (tree *Tree) ApplyChanges(origRoot, newRoot *NodePointer, updateBatch KVUpdateBatch) error {
+func (tree *Tree) applyChangesToParent(origRoot, newRoot *NodePointer, updateBatch KVUpdateBatch) error {
 	if tree.root != origRoot {
 		panic("cannot apply changes: root has changed")
 	}
 	tree.root = newRoot
-	tree.origRoot = newRoot
 	tree.updateBatch.Updates = append(tree.updateBatch.Updates, updateBatch.Updates...)
 	tree.updateBatch.Orphans = append(tree.updateBatch.Orphans, updateBatch.Orphans...)
 	return nil
@@ -64,13 +63,13 @@ func (tree *Tree) Write() {
 	if tree.parent == nil {
 		panic("cannot write: tree is immutable")
 	}
-	err := tree.parent.ApplyChanges(tree.origRoot, tree.root, tree.updateBatch)
+	err := tree.parent.applyChangesToParent(tree.origRoot, tree.root, tree.updateBatch)
 	if err != nil {
 		panic(err)
 	}
 	tree.updateBatch.Updates = nil
 	tree.updateBatch.Orphans = nil
-	tree.root = tree.parent.Root()
+	tree.root = tree.parent.getRoot()
 	tree.origRoot = tree.root
 }
 
@@ -140,5 +139,5 @@ func (tree *Tree) ReverseIterator(start, end []byte) corestore.Iterator {
 	return NewIterator(start, end, false, tree.root, tree.zeroCopy)
 }
 
-var _ storetypes.CacheKVStore = &Tree{}
-var _ parentTree = &Tree{}
+var _ storetypes.CacheKVStore = (*Tree)(nil)
+var _ parentTree = (*Tree)(nil)

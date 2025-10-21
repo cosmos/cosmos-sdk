@@ -79,7 +79,7 @@ func (c *CommitTree) workingHash() []byte {
 	}
 
 	root := c.root.mem.Load()
-	if root != nil {
+	if root != nil && root.hash != nil {
 		// already computed working hash
 		return root.hash
 	}

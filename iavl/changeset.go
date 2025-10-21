@@ -170,6 +170,14 @@ func (cr *Changeset) resolveBranchWithIdx(nodeId NodeID, fileIdx uint32) (Branch
 	}
 }
 
+func (cr *Changeset) resolveNodeID(id NodeID) *NodePointer {
+	return &NodePointer{
+		id:    id,
+		store: cr.treeStore.getChangesetForVersion(uint32(id.Version())),
+	}
+}
+
+// TODO(technicallyty): remove this?
 func (cr *Changeset) resolveNodeRef(nodeRef NodeRef, selfIdx uint32) *NodePointer {
 	if nodeRef.IsNodeID() {
 		id := nodeRef.AsNodeID()
@@ -231,8 +239,8 @@ func (cr *Changeset) Resolve(nodeId NodeID, fileIdx uint32) (Node, error) {
 			return nil, err
 		}
 
-		leftPtr := cr.resolveNodeRef(layout.Left, actualIdx)
-		rightPtr := cr.resolveNodeRef(layout.Right, actualIdx)
+		leftPtr := cr.resolveNodeID(layout.Left)
+		rightPtr := cr.resolveNodeID(layout.Right)
 
 		return &BranchPersisted{
 			layout:   layout,

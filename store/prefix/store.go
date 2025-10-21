@@ -128,7 +128,7 @@ func (s GStore[V]) Iterator(start, end []byte) types.GIterator[V] {
 		newEnd = cloneAppend(s.prefix, end)
 	}
 
-	iter := s.parent.Iterator(newstart, newEnd)
+	iter := s.parent.Iterator(newStart, newEnd)
 
 	return newPrefixIterator(s.prefix, start, end, iter)
 }

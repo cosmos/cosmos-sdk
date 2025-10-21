@@ -176,4 +176,5 @@ replace (
 	cosmossdk.io/store => ../../store
 	github.com/cosmos/cosmos-sdk => ../../.
 	github.com/cosmos/cosmos-sdk/blockstm => ../../blockstm
+	github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-20250924232609-2c6195d95951
 )

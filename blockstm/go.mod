@@ -9,8 +9,10 @@ require (
 	cosmossdk.io/store v1.1.2
 	github.com/cometbft/cometbft v0.39.0-beta.2
 	github.com/cosmos/cosmos-sdk v0.0.0-00010101000000-000000000000
+	github.com/stretchr/testify v1.11.1
 	github.com/test-go/testify v1.1.4
 	github.com/tidwall/btree v1.8.1
+	google.golang.org/protobuf v1.36.10
 )
 
 require (
@@ -86,7 +88,6 @@ require (
 	github.com/spf13/cast v1.10.0 // indirect
 	github.com/spf13/cobra v1.10.1 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
-	github.com/stretchr/testify v1.11.1 // indirect
 	github.com/supranational/blst v0.3.16 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
@@ -106,7 +107,6 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20250818200422-3122310a409c // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250818200422-3122310a409c // indirect
 	google.golang.org/grpc v1.76.0 // indirect
-	google.golang.org/protobuf v1.36.10 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )

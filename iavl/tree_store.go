@@ -6,8 +6,9 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"cosmossdk.io/log"
 	"github.com/tidwall/btree"
+
+	"cosmossdk.io/log"
 )
 
 type TreeStore struct {

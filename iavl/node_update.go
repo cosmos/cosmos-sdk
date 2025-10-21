@@ -93,7 +93,7 @@ func setRecursive(nodePtr *NodePointer, leafNode *MemNode, ctx *MutationContext)
 
 type newKeyWrapper struct {
 	key []byte
-	//keyRef keyRefLink
+	// keyRef keyRefLink
 }
 
 // removeRecursive returns:
@@ -138,7 +138,7 @@ func removeRecursive(nodePtr *NodePointer, key []byte, ctx *MutationContext) (va
 			ctx.AddOrphan(nodePtr.id)
 			return value, node.Right(), &newKeyWrapper{
 				key: nodeKey,
-				//keyRef: nodePtr,
+				// keyRef: nodePtr,
 			}, nil
 		}
 
@@ -181,7 +181,7 @@ func removeRecursive(nodePtr *NodePointer, key []byte, ctx *MutationContext) (va
 	newNode.right = newRight
 	if newKey != nil {
 		newNode.key = newKey.key
-		//newNode._keyRef = newKey.keyRef
+		// newNode._keyRef = newKey.keyRef
 	}
 
 	err = newNode.updateHeightSize()

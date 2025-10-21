@@ -5,7 +5,7 @@ import (
 	"io"
 )
 
-func DebugTraverse(nodePtr *NodePointer, onNode func(node Node, parent Node, direction string) error) error {
+func DebugTraverse(nodePtr *NodePointer, onNode func(node, parent Node, direction string) error) error {
 	if nodePtr == nil {
 		return nil
 	}
@@ -52,7 +52,7 @@ func RenderDotGraph(writer io.Writer, nodePtr *NodePointer) error {
 		return finishGraph()
 	}
 
-	err = DebugTraverse(nodePtr, func(node Node, parent Node, direction string) error {
+	err = DebugTraverse(nodePtr, func(node, parent Node, direction string) error {
 		key, err := node.Key()
 		if err != nil {
 			return err

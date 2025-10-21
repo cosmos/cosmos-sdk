@@ -16,13 +16,12 @@ func NewKVDataWriter(file *os.File) *KVLogWriter {
 	return &KVLogWriter{
 		FileWriter: fw,
 	}
-
 }
 
 func (kvs *KVLogWriter) WriteK(key []byte) (offset uint32, err error) {
 	_, err = kvs.Write([]byte{KVLogEntryTypeExtraK})
 	if err != nil {
-		return
+		return offset, err
 	}
 
 	return kvs.writeLenPrefixedBytes(key)
@@ -31,7 +30,7 @@ func (kvs *KVLogWriter) WriteK(key []byte) (offset uint32, err error) {
 func (kvs *KVLogWriter) WriteKV(key, value []byte) (offset uint32, err error) {
 	_, err = kvs.Write([]byte{KVLogEntryTypeExtraKV})
 	if err != nil {
-		return
+		return offset, err
 	}
 
 	offset, err = kvs.writeLenPrefixedBytes(key)
@@ -95,13 +94,13 @@ func (kvs *KVLogWriter) writeLenPrefixedBytes(key []byte) (offset uint32, err er
 	// write little endian uint32 length prefix
 	err = kvs.writeLEU32(uint32(lenKey))
 	if err != nil {
-		return
+		return offset, err
 	}
 
 	// write key bytes
 	_, err = kvs.Write(key)
 	if err != nil {
-		return
+		return offset, err
 	}
 
 	return offset, nil

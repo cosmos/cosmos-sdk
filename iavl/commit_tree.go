@@ -7,7 +7,6 @@ import (
 	"sync/atomic"
 
 	"cosmossdk.io/log"
-
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	storetypes "cosmossdk.io/store/types"
 )
@@ -321,8 +320,8 @@ func (c *CommitTree) Close() error {
 	if c.walChan != nil {
 		close(c.walChan)
 	}
-	//close(c.commitChan)
-	//return <-c.commitDone
+	// close(c.commitChan)
+	// return <-c.commitDone
 	return c.store.Close()
 }
 
@@ -390,14 +389,16 @@ func evictTraverse(np *NodePointer, depth, evictionDepth uint8, evictVersion uin
 	}
 
 	if memNode.IsLeaf() {
-		return
+		return count
 	}
 
 	// Continue traversing to find nodes to evict
 	count += evictTraverse(memNode.left, depth+1, evictionDepth, evictVersion)
 	count += evictTraverse(memNode.right, depth+1, evictionDepth, evictVersion)
-	return
+	return count
 }
 
-var _ storetypes.CommitKVStore = &CommitTree{}
-var _ parentTree = &CommitTree{}
+var (
+	_ storetypes.CommitKVStore = &CommitTree{}
+	_ parentTree               = &CommitTree{}
+)

@@ -25,9 +25,7 @@ func computeHash(node Node, leftHash, rightHash []byte) ([]byte, error) {
 	return hasher.Sum(nil), nil
 }
 
-var (
-	emptyHash = sha256.New().Sum(nil)
-)
+var emptyHash = sha256.New().Sum(nil)
 
 // Writes the node's hash to the given `io.Writer`. This function recursively calls
 // children to update hashes.

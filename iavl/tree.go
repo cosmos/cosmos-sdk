@@ -4,7 +4,6 @@ import (
 	io "io"
 
 	corestore "cosmossdk.io/core/store"
-
 	storetypes "cosmossdk.io/store/types"
 )
 
@@ -139,5 +138,7 @@ func (tree *Tree) ReverseIterator(start, end []byte) corestore.Iterator {
 	return NewIterator(start, end, false, tree.root, tree.zeroCopy)
 }
 
-var _ storetypes.CacheKVStore = (*Tree)(nil)
-var _ parentTree = (*Tree)(nil)
+var (
+	_ storetypes.CacheKVStore = (*Tree)(nil)
+	_ parentTree              = (*Tree)(nil)
+)

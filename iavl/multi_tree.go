@@ -28,7 +28,7 @@ func (t *MultiTree) CacheWrap() storetypes.CacheWrap {
 }
 
 func (t *MultiTree) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) storetypes.CacheWrap {
-	//TODO implement tracing
+	// TODO implement tracing
 	return t.CacheWrap()
 }
 
@@ -67,12 +67,12 @@ func (t *MultiTree) TracingEnabled() bool {
 }
 
 func (t *MultiTree) SetTracer(w io.Writer) storetypes.MultiStore {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (t *MultiTree) SetTracingContext(context storetypes.TraceContext) storetypes.MultiStore {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 

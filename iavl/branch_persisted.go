@@ -99,7 +99,7 @@ func (node *BranchPersisted) Get(key []byte) (value []byte, index int64, err err
 }
 
 func (node *BranchPersisted) String() string {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 

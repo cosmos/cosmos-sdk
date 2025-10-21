@@ -81,7 +81,7 @@ func (node *LeafPersisted) Get(key []byte) (value []byte, index int64, err error
 }
 
 func (node *LeafPersisted) String() string {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 

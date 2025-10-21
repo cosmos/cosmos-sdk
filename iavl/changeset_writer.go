@@ -47,7 +47,7 @@ func (cs *ChangesetWriter) WriteWALCommit(version uint32) error {
 	return cs.kvlog.WriteCommit(version)
 }
 
-func (cs *ChangesetWriter) SaveRoot(root *NodePointer, version uint32, totalLeaves, totalBranches uint32) error {
+func (cs *ChangesetWriter) SaveRoot(root *NodePointer, version, totalLeaves, totalBranches uint32) error {
 	if version != cs.stagedVersion {
 		return fmt.Errorf("version mismatch: expected %d, got %d", cs.stagedVersion, version)
 	}
@@ -217,7 +217,7 @@ func (cs *ChangesetWriter) writeLeaf(np *NodePointer, node *MemNode) error {
 func (cs *ChangesetWriter) createNodeRef(parentIdx int64, np *NodePointer) NodeRef {
 	if np.store == cs.reader {
 		if np.id.IsLeaf() {
-			//return NodeRef(np.id)
+			// return NodeRef(np.id)
 			return NodeRef(NewNodeRelativePointer(true, int64(np.fileIdx)))
 		} else {
 			// for branch nodes the relative offset is the difference between the parent ID index and the branch ID index

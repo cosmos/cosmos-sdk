@@ -7,13 +7,14 @@ import (
 	"runtime/debug"
 	"testing"
 
-	corestore "cosmossdk.io/core/store"
-	sdklog "cosmossdk.io/log"
 	"github.com/cosmos/iavl"
 	dbm "github.com/cosmos/iavl/db"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/maps"
 	"pgregory.net/rapid"
+
+	corestore "cosmossdk.io/core/store"
+	sdklog "cosmossdk.io/log"
 )
 
 func TestBasicTest(t *testing.T) {
@@ -31,7 +32,7 @@ func TestBasicTest(t *testing.T) {
 	require.Equal(t, []byte{1}, val)
 
 	tree.Set([]byte{1}, []byte{2})
-	//renderTree(t, tree)
+	// renderTree(t, tree)
 
 	val = tree.Get([]byte{0})
 	require.NoError(t, err)
@@ -41,7 +42,7 @@ func TestBasicTest(t *testing.T) {
 	require.Equal(t, []byte{2}, val)
 
 	tree.Set([]byte{2}, []byte{3})
-	//renderTree(t, tree)
+	// renderTree(t, tree)
 
 	val = tree.Get([]byte{0})
 	require.NoError(t, err)
@@ -58,7 +59,7 @@ func TestBasicTest(t *testing.T) {
 	require.Nil(t, val)
 
 	tree.Delete([]byte{1})
-	//renderTree(t, tree)
+	// renderTree(t, tree)
 
 	val = tree.Get([]byte{1})
 	require.NoError(t, err)
@@ -75,7 +76,8 @@ func TestBasicTest(t *testing.T) {
 func renderTree(t interface {
 	require.TestingT
 	Logf(format string, args ...any)
-}, tree *Tree) {
+}, tree *Tree,
+) {
 	graph := &bytes.Buffer{}
 	require.NoError(t, RenderDotGraph(graph, tree.root))
 	t.Logf("tree graph:\n%s", graph.String())
@@ -95,7 +97,7 @@ func testIAVLXSims(t *rapid.T) {
 			t.Fatalf("panic recovered: %v\nStack trace:\n%s", r, debug.Stack())
 		}
 	}()
-	//logger := sdklog.NewTestLogger(t)
+	// logger := sdklog.NewTestLogger(t)
 	logger := sdklog.NewNopLogger()
 	dbV1 := dbm.NewMemDB()
 	treeV1 := iavl.NewMutableTree(dbV1, 500000, true, logger)
@@ -180,7 +182,7 @@ func (s *SimMachine) set(t *rapid.T) {
 	branch := s.treeV2.CacheWrap().(*Tree)
 	branch.Set(key, value)
 	branch.Write()
-	//require.Equal(t, updated, updatedV2, "update status mismatch between V1 and V2 trees")
+	// require.Equal(t, updated, updatedV2, "update status mismatch between V1 and V2 trees")
 	if updated {
 		require.NotNil(t, s.existingKeys[string(key)], "key shouldn't have been marked as updated")
 	} else {
@@ -193,7 +195,7 @@ func (s *SimMachine) set(t *rapid.T) {
 }
 
 func (s *SimMachine) get(t *rapid.T) {
-	var key = s.selectKey(t)
+	key := s.selectKey(t)
 	valueV1, errV1 := s.treeV1.Get(key)
 	require.NoError(t, errV1, "failed to get key from V1 tree")
 	valueV2 := s.treeV2.CacheWrap().(*Tree).Get(key)
@@ -225,7 +227,7 @@ func (s *SimMachine) delete(t *rapid.T) {
 	branch := s.treeV2.CacheWrap().(*Tree)
 	branch.Delete(key)
 	branch.Write()
-	//require.Equal(t, removedV1, removedV2, "removed status mismatch between V1 and V2 trees")
+	// require.Equal(t, removedV1, removedV2, "removed status mismatch between V1 and V2 trees")
 	// TODO v1 & v2 have slightly different behaviors for the value returned on removal. We should re-enable this and check.
 	//if valueV1 == nil || len(valueV1) == 0 {
 	//	require.Empty(t, valueV2, "value should be empty for removed key in V2 tree")
@@ -248,9 +250,9 @@ func (s *SimMachine) Iterate(t *rapid.T) {
 
 	// TODO add cases where we nudge start or end up or down a little
 
-	//ascending := rapid.Bool().Draw(t, "ascending")
+	// ascending := rapid.Bool().Draw(t, "ascending")
 
-	//s.compareIterators(t, start, end, ascending)
+	// s.compareIterators(t, start, end, ascending)
 }
 
 func (s *SimMachine) Commit(t *rapid.T) {
@@ -258,9 +260,9 @@ func (s *SimMachine) Commit(t *rapid.T) {
 	require.NoError(t, err, "failed to save version in V1 tree")
 	commitId2 := s.treeV2.Commit()
 	require.NoError(t, err, "failed to save version in V2 tree")
-	//s.debugDump(t)
+	// s.debugDump(t)
 	err = VerifyTree(s.treeV2)
-	//if err != nil {
+	// if err != nil {
 	//	branches := s.treeV2.rollingDiff.branchData
 	//	n := branches.Count()
 	//	buf := &bytes.Buffer{}
@@ -277,7 +279,7 @@ func (s *SimMachine) Commit(t *rapid.T) {
 	//}
 	require.NoError(t, err, "failed to verify V2 tree")
 	require.Equal(t, hash1, commitId2.Hash, "hash mismatch between V1 and V2 trees")
-	//require.Equal(t, v1, v2, "version mismatch between V1 and V2 trees")
+	// require.Equal(t, v1, v2, "version mismatch between V1 and V2 trees")
 }
 
 func (s *SimMachine) debugDump(t *rapid.T) {
@@ -286,7 +288,7 @@ func (s *SimMachine) debugDump(t *rapid.T) {
 	graph1 := &bytes.Buffer{}
 	iavl.WriteDOTGraph(graph1, s.treeV1.ImmutableTree, nil)
 	t.Logf("V1 tree:\n%s", graph1.String())
-	//renderTree(t, s.treeV2.Branch())
+	// renderTree(t, s.treeV2.Branch())
 	iter2 := s.treeV2.CacheWrap().(*Tree).Iterator(nil, nil)
 	s.debugDumpTree(t, iter2)
 }
@@ -305,7 +307,7 @@ func (s *SimMachine) debugDumpTree(t *rapid.T, iter corestore.Iterator) {
 	t.Log(dumpStr)
 }
 
-//func (s *SimMachine) CheckoutVersion(t *rapid.T) {
+// func (s *SimMachine) CheckoutVersion(t *rapid.T) {
 //	if s.treeV1.Version() <= 1 {
 //		// cannot checkout version 1 or lower
 //		return
@@ -332,7 +334,7 @@ func (s *SimMachine) compareIterators(t *rapid.T, start, end []byte, ascending b
 	compareIteratorsAtVersion(t, iter1, iter2)
 }
 
-func compareIteratorsAtVersion(t *rapid.T, iterV1 corestore.Iterator, iterV2 corestore.Iterator) {
+func compareIteratorsAtVersion(t *rapid.T, iterV1, iterV2 corestore.Iterator) {
 	defer func() {
 		require.NoError(t, iterV1.Close(), "failed to close iterator for V1 tree")
 	}()

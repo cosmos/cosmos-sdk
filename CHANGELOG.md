@@ -54,6 +54,11 @@ This patch update also includes minor dependency bumps.
 ### Bug Fixes
 
 * [GHSA-p22h-3m2v-cmgh](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-p22h-3m2v-cmgh) Fix x/distribution can halt when historical rewards overflow.
+<<<<<<< HEAD
+=======
+* (x/staking) [#25258](https://github.com/cosmos/cosmos-sdk/pull/25258) Add delegator address to redelegate event.
+* (cli) [#25485](https://github.com/cosmos/cosmos-sdk/pull/25485) Avoid failed to convert address field in `withdraw-validator-commission` cmd.
+>>>>>>> 5e022baf9 (fix(cli): failed to convert address field in withdraw-validator-commission (#25485))
 
 
 ## [v0.53.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.2) - 2025-06-02

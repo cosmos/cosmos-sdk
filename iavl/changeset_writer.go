@@ -20,7 +20,8 @@ type ChangesetWriter struct {
 	keyCache map[string]uint32
 }
 
-func NewChangesetWriter(treeDir string, startVersion uint32, treeStore *TreeStore) (*ChangesetWriter, error) {
+func NewChangesetWriter(treeStore *TreeStore, startVersion uint32) (*ChangesetWriter, error) {
+	treeDir := treeStore.dir
 	files, err := OpenChangesetFiles(treeDir, startVersion, 0, "")
 	if err != nil {
 		return nil, fmt.Errorf("failed to open changeset files: %w", err)

@@ -66,7 +66,7 @@ func NewTreeStore(dir string, options Options, logger log.Logger) (*TreeStore, e
 
 func (ts *TreeStore) initNewWriter() error {
 	stagedVersion := ts.savedVersion.Load() + 1
-	writer, err := NewChangesetWriter(ts.dir, stagedVersion, ts)
+	writer, err := NewChangesetWriter(ts, stagedVersion)
 	if err != nil {
 		return fmt.Errorf("failed to create changeset writer: %w", err)
 	}

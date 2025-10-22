@@ -207,7 +207,7 @@ message DepositParams {
   ];
 
   // Maximum period for Atom holders to deposit on a proposal. Initial value: 2
-  // months.
+  // days.
   google.protobuf.Duration max_deposit_period = 2 [
     (gogoproto.nullable)    = false,
     (gogoproto.stdduration) = true,

@@ -47,13 +47,23 @@ func NewTreeStore(dir string, options Options, logger log.Logger) (*TreeStore, e
 		opts:       options,
 	}
 
+	err := ts.init()
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize TreeStore: %w", err)
+	}
+
+	return ts, nil
+}
+
+func (ts *TreeStore) init() error {
 	err := ts.initNewWriter()
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize first writer: %w", err)
+		return fmt.Errorf("failed to initialize first writer: %w", err)
 	}
 
 	ts.cleanupProc = newCleanupProc(ts)
 
+	options := ts.opts
 	if options.WriteWAL && options.WalSyncBuffer >= 0 {
 		bufferSize := options.GetWalSyncBufferSize()
 		ts.syncQueue = make(chan *ChangesetFiles, bufferSize)
@@ -61,7 +71,7 @@ func NewTreeStore(dir string, options Options, logger log.Logger) (*TreeStore, e
 		go ts.syncProc()
 	}
 
-	return ts, nil
+	return nil
 }
 
 func (ts *TreeStore) initNewWriter() error {

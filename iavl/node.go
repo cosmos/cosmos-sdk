@@ -18,4 +18,6 @@ type Node interface {
 	Get(key []byte) (value []byte, index int64, err error)
 
 	fmt.Stringer
+
+	hashableNode
 }

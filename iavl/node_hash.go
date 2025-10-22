@@ -17,7 +17,16 @@ func computeAndSetHash(node *MemNode, leftHash, rightHash []byte) ([]byte, error
 	return h, nil
 }
 
-func computeHash(node Node, leftHash, rightHash []byte) ([]byte, error) {
+type hashableNode interface {
+	Height() uint8
+	Size() int64
+	Version() uint32
+	Key() ([]byte, error)
+	Value() ([]byte, error)
+	IsLeaf() bool
+}
+
+func computeHash(node hashableNode, leftHash, rightHash []byte) ([]byte, error) {
 	hasher := sha256.New()
 	if err := writeHashBytes(node, leftHash, rightHash, hasher); err != nil {
 		return nil, err
@@ -29,7 +38,7 @@ var emptyHash = sha256.New().Sum(nil)
 
 // Writes the node's hash to the given `io.Writer`. This function recursively calls
 // children to update hashes.
-func writeHashBytes(node Node, leftHash, rightHash []byte, w io.Writer) error {
+func writeHashBytes(node hashableNode, leftHash, rightHash []byte, w io.Writer) error {
 	var (
 		n   int
 		buf [binary.MaxVarintLen64]byte

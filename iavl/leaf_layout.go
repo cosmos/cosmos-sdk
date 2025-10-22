@@ -17,7 +17,7 @@ const (
 
 type LeafLayout struct {
 	Id            NodeID
-	KeyOffset     uint32
+	KeyOffset     uint32 // TODO 5 bytes?
 	OrphanVersion uint32 // TODO 5 bytes?
 	Hash          [32]byte
 }

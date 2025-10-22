@@ -195,7 +195,7 @@ func SimulateMsgMultiSend(txGen client.TxConfig, ak types.AccountKeeper, bk keep
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		msgType := sdk.MsgTypeURL(&types.MsgMultiSend{})
 
-		// random number of inputs/outputs between [1, 3]
+		// number of inputs fixed to 1, outputs randomized between [1, 3]
 		inputs := make([]types.Input, r.Intn(1)+1) //nolint:staticcheck // SA4030: (*math/rand.Rand).Intn(n) generates a random value 0 <= x < n; that is, the generated values don't include n; r.Intn(1) therefore always returns 0
 		outputs := make([]types.Output, r.Intn(3)+1)
 

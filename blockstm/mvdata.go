@@ -14,7 +14,7 @@ const (
 type MVData = GMVData[[]byte]
 
 func NewMVData() *MVData {
-	return NewGMVData(BytesIsZero, BytesLen)
+	return NewGMVData(storetypes.BytesIsZero, storetypes.BytesValueLen)
 }
 
 type GMVData[V any] struct {
@@ -26,9 +26,9 @@ type GMVData[V any] struct {
 func NewMVStore(key storetypes.StoreKey) MVStore {
 	switch key.(type) {
 	case *storetypes.ObjectStoreKey:
-		return NewGMVData(ObjIsZero, ObjLen)
+		return NewGMVData(storetypes.AnyIsZero, storetypes.AnyValueLen)
 	default:
-		return NewGMVData(BytesIsZero, BytesLen)
+		return NewGMVData(storetypes.BytesIsZero, storetypes.BytesValueLen)
 	}
 }
 

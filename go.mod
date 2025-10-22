@@ -55,6 +55,8 @@ require (
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
 	github.com/tendermint/go-amino v0.16.0
+	github.com/test-go/testify v1.1.4
+	github.com/tidwall/btree v1.8.1
 	go.uber.org/mock v0.6.0
 	golang.org/x/crypto v0.43.0
 	golang.org/x/sync v0.17.0
@@ -195,7 +197,6 @@ require (
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/supranational/blst v0.3.16 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
-	github.com/tidwall/btree v1.8.1 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ulikunitz/xz v0.5.15 // indirect
 	github.com/zeebo/errs v1.4.0 // indirect
@@ -247,6 +248,8 @@ replace (
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
 	// replace broken goleveldb
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
+	// BlockSTM requires patches to the btree package
+	github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-20250924232609-2c6195d95951
 )
 
 replace cosmossdk.io/store => ./store

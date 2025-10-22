@@ -82,19 +82,3 @@ func BytesBeyond(a, b []byte, ascending bool) bool {
 	}
 	return bytes.Compare(a, b) < 0
 }
-
-func BytesIsZero(v []byte) bool {
-	return v == nil
-}
-
-func BytesLen(v []byte) int {
-	return len(v)
-}
-
-func ObjIsZero(v any) bool {
-	return v == nil
-}
-
-func ObjLen(v any) int {
-	return 1
-}

@@ -254,7 +254,7 @@ func readTrailersFromBytes(t *testing.T, dataBytes []byte) Trailer {
 	// However, it normalizes header names by textproto.CanonicalMIMEHeaderKey.
 	// In the next step, replace header names by raw ones.
 	mimeHeader, err := tp.ReadMIMEHeader()
-	if err == nil {
+	if err != nil {
 		return Trailer{}
 	}
 

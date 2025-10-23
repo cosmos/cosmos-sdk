@@ -318,6 +318,8 @@ func NewSimApp(
 	}
 	app.txConfig = txConfig
 
+	stakingCacheSize := cast.ToInt(appOpts.Get(server.FlagStakingCacheSize))
+
 	app.StakingKeeper = stakingkeeper.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(keys[stakingtypes.StoreKey]),

@@ -14,16 +14,9 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-type (
-	DeliverTxFunc func(tx []byte, ms storetypes.MultiStore, txIndex int, incarnationCache map[string]any) *abci.ExecTxResult
-	TxRunner      interface {
-		Run(context.Context, storetypes.MultiStore, [][]byte, DeliverTxFunc) ([]*abci.ExecTxResult, error)
-	}
-)
-
 var (
-	_ TxRunner = DefaultRunner{}
-	_ TxRunner = STMRunner{}
+	_ sdk.TxRunner = DefaultRunner{}
+	_ sdk.TxRunner = STMRunner{}
 )
 
 func NewDefaultRunner(txDecoder sdk.TxDecoder) *DefaultRunner {
@@ -37,7 +30,7 @@ type DefaultRunner struct {
 	txDecoder sdk.TxDecoder
 }
 
-func (d DefaultRunner) Run(ctx context.Context, _ storetypes.MultiStore, txs [][]byte, deliverTx DeliverTxFunc) ([]*abci.ExecTxResult, error) {
+func (d DefaultRunner) Run(ctx context.Context, _ storetypes.MultiStore, txs [][]byte, deliverTx sdk.DeliverTxFunc) ([]*abci.ExecTxResult, error) {
 	// Fallback to the default execution logic
 	txResults := make([]*abci.ExecTxResult, 0, len(txs))
 	for i, rawTx := range txs {
@@ -94,7 +87,7 @@ type STMRunner struct {
 	coinDenom string
 }
 
-func (e STMRunner) Run(ctx context.Context, ms storetypes.MultiStore, txs [][]byte, deliverTx DeliverTxFunc) ([]*abci.ExecTxResult, error) {
+func (e STMRunner) Run(ctx context.Context, ms storetypes.MultiStore, txs [][]byte, deliverTx sdk.DeliverTxFunc) ([]*abci.ExecTxResult, error) {
 	var authStore, bankStore int
 	index := make(map[storetypes.StoreKey]int, len(e.stores))
 	for i, k := range e.stores {

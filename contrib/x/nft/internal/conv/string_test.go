@@ -52,7 +52,7 @@ func (s *StringSuite) TestUnsafeBytesToStr() {
 }
 
 func BenchmarkUnsafeStrToBytes(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for i := 0; b.Loop(); i++ {
 		UnsafeStrToBytes(strconv.Itoa(i))
 	}
 }

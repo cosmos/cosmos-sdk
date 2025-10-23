@@ -18,7 +18,7 @@ var coinStrs = []string{
 func BenchmarkParseCoin(b *testing.B) {
 	var blankCoin sdk.Coin
 	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for _, coinStr := range coinStrs {
 			coin, err := sdk.ParseCoinNormalized(coinStr)
 			if err != nil {
@@ -44,7 +44,7 @@ func BenchmarkUintMarshal(b *testing.B) {
 
 	var scratch [20]byte
 	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for _, value := range values {
 			u := sdkmath.NewUint(value)
 			n, err := u.MarshalTo(scratch[:])
@@ -69,7 +69,7 @@ func BenchmarkIntMarshal(b *testing.B) {
 
 	var scratch [20]byte
 	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for _, value := range values {
 			in := sdkmath.NewInt(value)
 			n, err := in.MarshalTo(scratch[:])

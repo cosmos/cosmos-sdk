@@ -232,5 +232,5 @@ func FreeTCPAddr() (addr, port string, closeFn func() error, err error) {
 	portI := l.Addr().(*net.TCPAddr).Port
 	port = fmt.Sprintf("%d", portI)
 	addr = fmt.Sprintf("tcp://0.0.0.0:%s", port)
-	return
+	return addr, port, closeFn, err
 }

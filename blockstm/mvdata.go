@@ -4,6 +4,8 @@ import (
 	"bytes"
 
 	storetypes "cosmossdk.io/store/types"
+
+	"github.com/cosmos/cosmos-sdk/blockstm/tree"
 )
 
 const (
@@ -18,7 +20,7 @@ func NewMVData() *MVData {
 }
 
 type GMVData[V any] struct {
-	BTree[dataItem[V]]
+	tree.BTree[dataItem[V]]
 	isZero   func(V) bool
 	valueLen func(V) int
 }
@@ -34,23 +36,23 @@ func NewMVStore(key storetypes.StoreKey) MVStore {
 
 func NewGMVData[V any](isZero func(V) bool, valueLen func(V) int) *GMVData[V] {
 	return &GMVData[V]{
-		BTree:    *NewBTree(KeyItemLess[dataItem[V]], OuterBTreeDegree),
+		BTree:    *tree.NewBTree(tree.KeyItemLess[dataItem[V]], OuterBTreeDegree),
 		isZero:   isZero,
 		valueLen: valueLen,
 	}
 }
 
 // getTree returns `nil` if not found
-func (d *GMVData[V]) getTree(key Key) *BTree[secondaryDataItem[V]] {
+func (d *GMVData[V]) getTree(key Key) *tree.BTree[secondaryDataItem[V]] {
 	outer, _ := d.Get(dataItem[V]{Key: key})
 	return outer.Tree
 }
 
 // getTreeOrDefault set a new tree atomically if not found.
-func (d *GMVData[V]) getTreeOrDefault(key Key) *BTree[secondaryDataItem[V]] {
+func (d *GMVData[V]) getTreeOrDefault(key Key) *tree.BTree[secondaryDataItem[V]] {
 	return d.GetOrDefault(dataItem[V]{Key: key}, func(item *dataItem[V]) {
 		if item.Tree == nil {
-			item.Tree = NewBTree(secondaryLesser[V], InnerBTreeDegree)
+			item.Tree = tree.NewBTree(secondaryLesser[V], InnerBTreeDegree)
 		}
 	}).Tree
 }
@@ -203,10 +205,10 @@ type KVPair = GKVPair[[]byte]
 
 type dataItem[V any] struct {
 	Key  Key
-	Tree *BTree[secondaryDataItem[V]]
+	Tree *tree.BTree[secondaryDataItem[V]]
 }
 
-var _ KeyItem = dataItem[[]byte]{}
+var _ tree.KeyItem = dataItem[[]byte]{}
 
 func (item dataItem[V]) GetKey() []byte {
 	return item.Key
@@ -228,6 +230,6 @@ func (item secondaryDataItem[V]) Version() TxnVersion {
 }
 
 // seekClosestTxn returns the closest txn that's less than the given txn.
-func seekClosestTxn[V any](tree *BTree[secondaryDataItem[V]], txn TxnIndex) (secondaryDataItem[V], bool) {
+func seekClosestTxn[V any](tree *tree.BTree[secondaryDataItem[V]], txn TxnIndex) (secondaryDataItem[V], bool) {
 	return tree.ReverseSeek(secondaryDataItem[V]{Index: txn - 1})
 }

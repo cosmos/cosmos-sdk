@@ -5,6 +5,8 @@ import (
 
 	"github.com/tidwall/btree"
 
+	"github.com/cosmos/cosmos-sdk/blockstm/tree"
+
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/tracekv"
 	storetypes "cosmossdk.io/store/types"
@@ -39,7 +41,7 @@ func NewGMemDB[V any](
 	valueLen func(V) int,
 ) *GMemDB[V] {
 	return &GMemDB[V]{
-		BTreeG:   *btree.NewBTreeG[memdbItem[V]](KeyItemLess),
+		BTreeG:   *btree.NewBTreeG[memdbItem[V]](tree.KeyItemLess),
 		isZero:   isZero,
 		valueLen: valueLen,
 	}
@@ -51,7 +53,7 @@ func NewGMemDBNonConcurrent[V any](
 	valueLen func(V) int,
 ) *GMemDB[V] {
 	return &GMemDB[V]{
-		BTreeG: *btree.NewBTreeGOptions[memdbItem[V]](KeyItemLess, btree.Options{
+		BTreeG: *btree.NewBTreeGOptions[memdbItem[V]](tree.KeyItemLess, btree.Options{
 			NoLocks: true,
 		}),
 		isZero:   isZero,
@@ -137,13 +139,13 @@ func (db *GMemDB[V]) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext)
 }
 
 type MemDBIterator[V any] struct {
-	BTreeIteratorG[memdbItem[V]]
+	tree.BTreeIteratorG[memdbItem[V]]
 }
 
 var _ storetypes.Iterator = (*MemDBIterator[[]byte])(nil)
 
 func NewMemDBIterator[V any](start, end Key, iter btree.IterG[memdbItem[V]], ascending bool) *MemDBIterator[V] {
-	return &MemDBIterator[V]{*NewBTreeIteratorG(
+	return &MemDBIterator[V]{*tree.NewBTreeIteratorG(
 		memdbItem[V]{key: start},
 		memdbItem[V]{key: end},
 		iter,
@@ -152,12 +154,12 @@ func NewMemDBIterator[V any](start, end Key, iter btree.IterG[memdbItem[V]], asc
 }
 
 func NewNoopIterator[V any](start, end Key, ascending bool) storetypes.GIterator[V] {
-	return &MemDBIterator[V]{BTreeIteratorG[memdbItem[V]]{
-		start:     start,
-		end:       end,
-		ascending: ascending,
-		valid:     false,
-	}}
+	return &MemDBIterator[V]{tree.NewNoopBTreeIteratorG[memdbItem[V]](
+		start,
+		end,
+		ascending,
+		false,
+	)}
 }
 
 func (it *MemDBIterator[V]) Value() V {
@@ -169,7 +171,7 @@ type memdbItem[V any] struct {
 	value V
 }
 
-var _ KeyItem = memdbItem[[]byte]{}
+var _ tree.KeyItem = memdbItem[[]byte]{}
 
 func (item memdbItem[V]) GetKey() []byte {
 	return item.key

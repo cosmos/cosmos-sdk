@@ -1,4 +1,4 @@
-package blockstm
+package tree
 
 import (
 	"sync/atomic"

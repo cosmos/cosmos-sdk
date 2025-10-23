@@ -85,7 +85,6 @@ require (
 	github.com/cometbft/cometbft-db v0.14.1 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
-	github.com/cosmos/cosmos-sdk/blockstm v0.0.0-00010101000000-000000000000 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/iavl v1.2.6 // indirect
@@ -234,10 +233,7 @@ require (
 )
 
 // cosmossdk.io/store => ../store
-replace (
-	cosmossdk.io/store => ../store
-	github.com/cosmos/cosmos-sdk/blockstm => ../blockstm/
-)
+replace cosmossdk.io/store => ../store
 
 // Below are the long-lived replace of the SimApp
 replace (

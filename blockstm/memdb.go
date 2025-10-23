@@ -22,20 +22,24 @@ var (
 	_ storetypes.ObjKVStore = (*ObjMemDB)(nil)
 )
 
+// NewnMemDB constructs a new in memory store over a []byte value type.
 func NewMemDB() *MemDB {
 	return NewGMemDB(storetypes.BytesIsZero, storetypes.BytesValueLen)
 }
 
+// NewObjMemDB constructs a new in memory store over a generic any type.
 func NewObjMemDB() *ObjMemDB {
 	return NewGMemDB(storetypes.AnyIsZero, storetypes.AnyValueLen)
 }
 
+// GMemDB is a generic implementation of an in memory Store backed by tidwall/btree.
 type GMemDB[V any] struct {
 	btree.BTreeG[memdbItem[V]]
 	isZero   func(V) bool
 	valueLen func(V) int
 }
 
+// NewGMemDB is the generic constructor for a GMemDB.
 func NewGMemDB[V any](
 	isZero func(V) bool,
 	valueLen func(V) int,
@@ -138,6 +142,8 @@ func (db *GMemDB[V]) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext)
 	return db.CacheWrap()
 }
 
+// MemDBIterator wraps a generic BTreeIteratorG over a memdbItem.
+// It is used as an iterator over a GMemDB implementation.
 type MemDBIterator[V any] struct {
 	tree.BTreeIteratorG[memdbItem[V]]
 }
@@ -153,6 +159,7 @@ func NewMemDBIterator[V any](start, end Key, iter btree.IterG[memdbItem[V]], asc
 	)}
 }
 
+// NewNoopIterator constructs a storetypes.GIterator with an invalidated wrapped iterator.
 func NewNoopIterator[V any](start, end Key, ascending bool) storetypes.GIterator[V] {
 	return &MemDBIterator[V]{tree.NewNoopBTreeIteratorG[memdbItem[V]](
 		start,

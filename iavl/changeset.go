@@ -177,22 +177,52 @@ func (cr *Changeset) Resolve(nodeId NodeID, fileIdx uint32) (Node, error) {
 	cr.Pin()
 	defer cr.Unpin()
 
-	if nodeId.IsLeaf() {
-		layout, err := cr.ResolveLeaf(nodeId, fileIdx)
+	if fileIdx == 0 {
+		cs := cr.treeStore.getChangesetForVersion(uint32(nodeId.Version()))
+		cs.Pin()
+		defer cs.Unpin()
+		version := uint32(nodeId.Version())
+		vi, err := cs.getVersionInfo(version)
 		if err != nil {
 			return nil, err
 		}
-		return &LeafPersisted{layout: layout, store: cr}, nil
+		if nodeId.IsLeaf() {
+			leaf, err := cs.leavesData.FindByID(nodeId, &vi.Leaves)
+			if err != nil {
+				return nil, err
+			}
+			return &LeafPersisted{
+				store:   cs,
+				selfIdx: 0,
+				layout:  *leaf,
+			}, nil
+		} else {
+			branch, err := cs.branchesData.FindByID(nodeId, &vi.Branches)
+			if err != nil {
+				return nil, err
+			}
+			return &BranchPersisted{
+				store:  cs,
+				layout: *branch,
+			}, nil
+		}
 	} else {
-		layout, _, err := cr.resolveBranchWithIdx(nodeId, fileIdx)
-		if err != nil {
-			return nil, err
+		if nodeId.IsLeaf() {
+			layout, err := cr.ResolveLeaf(nodeId, fileIdx)
+			if err != nil {
+				return nil, err
+			}
+			return &LeafPersisted{layout: layout, store: cr}, nil
+		} else {
+			layout, _, err := cr.resolveBranchWithIdx(nodeId, fileIdx)
+			if err != nil {
+				return nil, err
+			}
+			return &BranchPersisted{
+				layout: layout,
+				store:  cr,
+			}, nil
 		}
-
-		return &BranchPersisted{
-			layout: layout,
-			store:  cr,
-		}, nil
 	}
 }
 

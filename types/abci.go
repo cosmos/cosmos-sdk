@@ -105,7 +105,7 @@ type DeliverTxFunc func(tx []byte, ms storetypes.MultiStore, txIndex int, incarn
 // It should return an array of *abci.ExecTxResult corresponding to the result of executing each transaction
 // provided to the Run function.
 type TxRunner interface {
-	Run(context.Context, storetypes.MultiStore, [][]byte, DeliverTxFunc) ([]*abci.ExecTxResult, error)
+	Run(ctx context.Context, ms storetypes.MultiStore, txs [][]byte, deliverTx DeliverTxFunc) ([]*abci.ExecTxResult, error)
 }
 
 // PeerFilter responds to p2p filtering queries from Tendermint

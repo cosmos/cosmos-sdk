@@ -1,8 +1,6 @@
 package blockstm
 
 import (
-	"bytes"
-
 	storetypes "cosmossdk.io/store/types"
 )
 
@@ -59,14 +57,6 @@ type ReadSet struct {
 }
 
 type MultiReadSet = map[int]*ReadSet
-
-type KeyItem interface {
-	GetKey() []byte
-}
-
-func KeyItemLess[T KeyItem](a, b T) bool {
-	return bytes.Compare(a.GetKey(), b.GetKey()) < 0
-}
 
 // TxExecutor executes transactions on top of a multi-version memory view.
 type TxExecutor func(TxnIndex, MultiStore)

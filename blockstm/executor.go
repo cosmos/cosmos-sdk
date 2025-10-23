@@ -2,6 +2,7 @@ package blockstm
 
 import (
 	"context"
+	"fmt"
 )
 
 // Executor fields are not mutated during execution.
@@ -36,7 +37,7 @@ func NewExecutor(
 //   - `NextTask` increases it if returns a valid task.
 //   - `TryExecute` and `NeedsReexecution` don't change it if it returns a new valid task to run,
 //     otherwise it decreases it.
-func (e *Executor) Run() {
+func (e *Executor) Run() error {
 	var kind TaskKind
 	version := InvalidTxnVersion
 	for !e.scheduler.Done() {
@@ -44,7 +45,7 @@ func (e *Executor) Run() {
 			// check for cancellation
 			select {
 			case <-e.ctx.Done():
-				return
+				return nil
 			default:
 			}
 
@@ -57,8 +58,11 @@ func (e *Executor) Run() {
 			version, kind = e.TryExecute(version)
 		case TaskKindValidation:
 			version, kind = e.NeedsReexecution(version)
+		default:
+			return fmt.Errorf("unknown task kind %v", kind)
 		}
 	}
+	return nil
 }
 
 func (e *Executor) TryExecute(version TxnVersion) (TxnVersion, TaskKind) {

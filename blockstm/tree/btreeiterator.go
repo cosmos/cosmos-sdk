@@ -1,4 +1,4 @@
-package blockstm
+package tree
 
 import (
 	"bytes"
@@ -16,6 +16,19 @@ type BTreeIteratorG[T KeyItem] struct {
 	end       []byte
 	ascending bool
 	valid     bool
+}
+
+func NewNoopBTreeIteratorG[T KeyItem](
+	start, end []byte,
+	ascending bool,
+	valid bool,
+) BTreeIteratorG[T] {
+	return BTreeIteratorG[T]{
+		start:     start,
+		end:       end,
+		ascending: ascending,
+		valid:     valid,
+	}
 }
 
 func NewBTreeIteratorG[T KeyItem](
@@ -80,6 +93,10 @@ func (mi *BTreeIteratorG[T]) Error() error {
 
 func (mi *BTreeIteratorG[T]) Valid() bool {
 	return mi.valid
+}
+
+func (mi *BTreeIteratorG[T]) Invalidate() {
+	mi.valid = false
 }
 
 func (mi *BTreeIteratorG[T]) Next() {

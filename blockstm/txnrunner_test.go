@@ -567,8 +567,8 @@ func TestPreEstimates_KeyEncoding(t *testing.T) {
 func TestTxRunnerInterface(t *testing.T) {
 	decoder := mockTxDecoder
 
-	var _ TxRunner = NewDefaultRunner(decoder)
-	var _ TxRunner = NewSTMRunner(decoder, []storetypes.StoreKey{}, 1, false, "")
+	var _ sdk.TxRunner = NewDefaultRunner(decoder)
+	var _ sdk.TxRunner = NewSTMRunner(decoder, []storetypes.StoreKey{}, 1, false, "")
 }
 
 // TestSTMRunner_Integration tests integration between STMRunner and actual block execution

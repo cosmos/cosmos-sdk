@@ -40,7 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
-* (x/staking) [#22795](https://github.com/crypto-org-chain/cosmos-sdk/pull/1725) Optimize staking endblocker execution by caching queue entries from iterators.
+* (x/staking) [#25486](https://github.com/cosmos/cosmos-sdk/pull/25486) Optimize staking endblocker execution by caching queue entries from iterators.
 
 ### Breaking Changes
 

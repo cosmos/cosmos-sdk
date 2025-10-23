@@ -25,6 +25,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+
+* [#25195](https://github.com/cosmos/cosmos-sdk/pull/25195) Improve overflow handling in gaskv store by using deterministic gas consumption instead of maximum uint64 values.
+
 ### Bug Fixes
 
 * [#20425](https://github.com/cosmos/cosmos-sdk/pull/20425) Fix nil pointer panic when querying historical state where a new store does not exist.

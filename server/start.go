@@ -106,7 +106,7 @@ const (
 
 	FlagMempoolMaxTxs = "mempool.max-txs"
 
-	// staking flags
+	// staking flags //nolint: revive // we can ignore this, to be consistent with the other flags' comments
 	FlagStakingCacheSize = "staking.cache-size"
 
 	// testnet keys

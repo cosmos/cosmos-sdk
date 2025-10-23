@@ -25,6 +25,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+
+* [#24608](https://github.com/cosmos/cosmos-sdk/pull/24608) Introduced pooled versions of cache stores to avoid allocating new caches.
+
 ### Bug Fixes
 
 * [#20425](https://github.com/cosmos/cosmos-sdk/pull/20425) Fix nil pointer panic when querying historical state where a new store does not exist.

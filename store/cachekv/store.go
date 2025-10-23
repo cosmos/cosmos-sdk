@@ -32,7 +32,16 @@ type Store struct {
 	parent        types.KVStore
 }
 
-var _ types.CacheKVStore = (*Store)(nil)
+// PooledStore wraps a Store object and implements the types.PooledCacheKVStore interface,
+// which allows it to be pooled and reused without the overhead of allocation.
+type PooledStore struct {
+	Store
+}
+
+var (
+	_ types.CacheKVStore       = (*Store)(nil)
+	_ types.PooledCacheKVStore = (*PooledStore)(nil)
+)
 
 // NewStore creates a new Store object
 func NewStore(parent types.KVStore) *Store {
@@ -42,6 +51,37 @@ func NewStore(parent types.KVStore) *Store {
 		sortedCache:   internal.NewBTree(),
 		parent:        parent,
 	}
+}
+
+// storePool is a pool of PooledStore instances. It contains a set of objects
+// that can be reused instead of allocating new ones. It's thread safe.
+// Callers can use Get() to retrieve a store (or allocate a new one if none are available).
+// Callers should use Put() when done with the store to return it to the pool.
+var storePool = sync.Pool{
+	New: func() any {
+		return &PooledStore{
+			Store: Store{
+				cache:         make(map[string]*cValue),
+				unsortedCache: make(map[string]struct{}),
+				sortedCache:   internal.NewBTree(),
+			},
+		}
+	},
+}
+
+// Release releases the PooledStore object back to the pool.
+func (store *PooledStore) Release() {
+	store.resetCaches()
+	store.parent = nil
+	store.mtx = sync.Mutex{}
+	storePool.Put(store)
+}
+
+// NewPooledStore gets a PooledStore object from the pool.
+func NewPooledStore(parent types.KVStore) *PooledStore {
+	store := storePool.Get().(*PooledStore)
+	store.parent = parent
+	return store
 }
 
 // GetStoreType implements Store.
@@ -112,7 +152,7 @@ func (store *Store) resetCaches() {
 			delete(store.unsortedCache, key)
 		}
 	}
-	store.sortedCache = internal.NewBTree()
+	store.sortedCache.Clear()
 }
 
 // Write implements Cachetypes.KVStore.
@@ -121,7 +161,7 @@ func (store *Store) Write() {
 	defer store.mtx.Unlock()
 
 	if len(store.cache) == 0 && len(store.unsortedCache) == 0 {
-		store.sortedCache = internal.NewBTree()
+		store.sortedCache.Clear()
 		return
 	}
 

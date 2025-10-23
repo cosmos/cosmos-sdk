@@ -36,6 +36,11 @@ func NewBTree() BTree {
 	}
 }
 
+// Clear resets the tree by setting the root node to nil, dropping all items.
+func (bt BTree) Clear() {
+	bt.tree.Clear()
+}
+
 func (bt BTree) Set(key, value []byte) {
 	bt.tree.Set(newItem(key, value))
 }

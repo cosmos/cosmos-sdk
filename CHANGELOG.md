@@ -64,6 +64,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (types) [#24668](https://github.com/cosmos/cosmos-sdk/pull/24668) Scope the global config to a particular binary so that multiple SDK binaries can be properly run on the same machine.
 * (baseapp) [#24655](https://github.com/cosmos/cosmos-sdk/pull/24655) Add mutex locks for `state` and make `lastCommitInfo` atomic to prevent race conditions between `Commit` and `CreateQueryContext`.
 * (proto) [#24161](https://github.com/cosmos/cosmos-sdk/pull/24161) Remove unnecessary annotations from `x/staking` authz proto.
+* (baseapp) [#24608](https://github.com/cosmos/cosmos-sdk/pull/24608) Use a `PooledCacheMultiStore` in `cacheTxContext` to prevent allocating a new cache for every transaction.
 * (x/bank) [#24660](https://github.com/cosmos/cosmos-sdk/pull/24660) Improve performance of the `GetAllBalances` and `GetAccountsBalances` keeper methods.
 * (collections) [#25464](https://github.com/cosmos/cosmos-sdk/pull/25464) Add `IterateRaw` method to `Multi` index type to satisfty query `Collection` interface.
 

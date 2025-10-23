@@ -124,6 +124,11 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 		sdk.NewDecCoinFromDec("mytoken", math.LegacyNewDec(1).Quo(math.LegacyNewDec(4))),
 		sdk.NewDecCoinFromDec("stake", math.LegacyNewDec(1).Quo(math.LegacyNewDec(2))),
 	}, remainder)
+
+	events := ctx.EventManager().Events()
+	validator, found := events.GetAttributes(types.AttributeKeyValidator)
+	require.True(t, found)
+	require.Equal(t, validator[0].Value, valAddr.String())
 }
 
 func TestGetTotalRewards(t *testing.T) {

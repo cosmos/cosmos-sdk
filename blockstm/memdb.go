@@ -21,11 +21,11 @@ var (
 )
 
 func NewMemDB() *MemDB {
-	return NewGMemDB(BytesIsZero, BytesLen)
+	return NewGMemDB(storetypes.BytesIsZero, storetypes.BytesValueLen)
 }
 
 func NewObjMemDB() *ObjMemDB {
-	return NewGMemDB(ObjIsZero, ObjLen)
+	return NewGMemDB(storetypes.AnyIsZero, storetypes.AnyValueLen)
 }
 
 type GMemDB[V any] struct {

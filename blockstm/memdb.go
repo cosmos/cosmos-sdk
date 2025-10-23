@@ -5,11 +5,11 @@ import (
 
 	"github.com/tidwall/btree"
 
-	"github.com/cosmos/cosmos-sdk/blockstm/tree"
-
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/tracekv"
 	storetypes "cosmossdk.io/store/types"
+
+	"github.com/cosmos/cosmos-sdk/blockstm/tree"
 )
 
 type (

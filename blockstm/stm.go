@@ -5,7 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"runtime"
-	"sync"
+
+	"golang.org/x/sync/errgroup"
 
 	storetypes "cosmossdk.io/store/types"
 
@@ -46,16 +47,16 @@ func ExecuteBlockWithEstimates(
 	scheduler := NewScheduler(blockSize)
 	mvMemory := NewMVMemoryWithEstimates(blockSize, stores, storage, scheduler, estimates)
 
-	var wg sync.WaitGroup
-	wg.Add(executors)
+	// var wg sync.WaitGroup
+	var wg errgroup.Group
+	wg.SetLimit(executors)
 	for i := 0; i < executors; i++ {
 		e := NewExecutor(ctx, scheduler, txExecutor, mvMemory, i)
-		go func() {
-			defer wg.Done()
-			e.Run()
-		}()
+		wg.Go(e.Run)
 	}
-	wg.Wait()
+	if err := wg.Wait(); err != nil {
+		return err
+	}
 
 	if !scheduler.Done() {
 		if ctx.Err() != nil {

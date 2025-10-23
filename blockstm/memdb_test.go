@@ -3,9 +3,10 @@ package blockstm
 import (
 	"testing"
 
+	"github.com/test-go/testify/require"
+
 	"cosmossdk.io/store/cachekv"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/test-go/testify/require"
 )
 
 type (

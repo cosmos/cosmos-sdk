@@ -87,6 +87,7 @@ func (s GStore[V]) CacheWrap() types.CacheWrap {
 
 // CacheWrapWithTrace implements the KVStore interface.
 func (s GStore[V]) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
+	// We need to make a type assertion here as the tracekv store requires bytes value types for serialization.
 	if store, ok := any(s).(*GStore[[]byte]); ok {
 		return cachekv.NewGStore(tracekv.NewStore(store, w, tc), store.isZero, store.valueLen)
 	}

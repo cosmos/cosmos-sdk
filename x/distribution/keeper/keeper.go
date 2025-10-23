@@ -224,6 +224,7 @@ func (k Keeper) WithdrawValidatorCommission(ctx context.Context, valAddr sdk.Val
 		sdk.NewEvent(
 			types.EventTypeWithdrawCommission,
 			sdk.NewAttribute(sdk.AttributeKeyAmount, commission.String()),
+			sdk.NewAttribute(types.AttributeKeyValidator, valAddr.String()),
 		),
 	)
 

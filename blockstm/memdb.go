@@ -22,7 +22,7 @@ var (
 	_ storetypes.ObjKVStore = (*ObjMemDB)(nil)
 )
 
-// NewnMemDB constructs a new in memory store over a []byte value type.
+// NewMemDB constructs a new in memory store over a []byte value type.
 func NewMemDB() *MemDB {
 	return NewGMemDB(storetypes.BytesIsZero, storetypes.BytesValueLen)
 }

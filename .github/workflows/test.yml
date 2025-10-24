@@ -237,6 +237,11 @@ jobs:
       - uses: actions/download-artifact@v4
         if: env.GIT_DIFF
         with:
+          name: "${{ github.sha }}-blockstm-coverage"
+        continue-on-error: true
+      - uses: actions/download-artifact@v4
+        if: env.GIT_DIFF
+        with:
           name: "${{ github.sha }}-log-coverage"
         continue-on-error: true
       - uses: actions/download-artifact@v4
@@ -253,7 +258,7 @@ jobs:
         if: env.GIT_DIFF
         uses: codecov/codecov-action@v5
         with:
-          files: ./00profile.out,./01profile.out,./02profile.out,./03profile.out,./integration-profile.out,./e2e-profile.out,./client/v2/coverage.out,./core/coverage.out,./depinject/coverage.out,./errors/coverage.out,./math/coverage.out,./schema/coverage.out,./collections/coverage.out,./tools/cosmovisor/coverage.out,./tools/confix/coverage.out,./store/coverage.out,./log/coverage.out,./x/tx/coverage.out,./tools/benchmark/coverage.out
+          files: ./00profile.out,./01profile.out,./02profile.out,./03profile.out,./integration-profile.out,./e2e-profile.out,./client/v2/coverage.out,./core/coverage.out,./depinject/coverage.out,./errors/coverage.out,./math/coverage.out,./schema/coverage.out,./collections/coverage.out,./tools/cosmovisor/coverage.out,./tools/confix/coverage.out,./store/coverage.out,./log/coverage.out,./x/tx/coverage.out,./tools/benchmark/coverage.out,./blockstm/coverage.out
           fail_ci_if_error: false
           verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -570,6 +575,33 @@ jobs:
         with:
           name: "${{ github.sha }}-store-coverage"
           path: ./store/coverage.out
+  test-blockstm:
+    runs-on: depot-ubuntu-22.04-4
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.25"
+          check-latest: true
+          cache: true
+          cache-dependency-path: store/go.sum
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: git_diff
+        with:
+          PATTERNS: |
+            blockstm/**/*.go
+            blockstm/go.mod
+            blockstm/go.sum
+      - name: tests
+        if: env.GIT_DIFF
+        run: |
+          cd blockstm
+          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -coverpkg=./,./tree -tags='norace ledger test_ledger_mock' ./...
+      - uses: actions/upload-artifact@v4
+        if: env.GIT_DIFF
+        with:
+          name: "${{ github.sha }}-blockstm-coverage"
+          path: ./blockstm/coverage.out
 
   test-log:
     runs-on: depot-ubuntu-22.04-4

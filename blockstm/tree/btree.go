@@ -37,6 +37,7 @@ func (bt *BTree[T]) GetOrDefault(item T, fillDefaults func(*T)) T {
 		fillDefaults(&item)
 		c := t.Copy()
 		c.Set(item)
+		c.Freeze()
 		if bt.CompareAndSwap(t, c) {
 			return item
 		}
@@ -48,6 +49,7 @@ func (bt *BTree[T]) Set(item T) (prev T, ok bool) {
 		t := bt.Load()
 		c := t.Copy()
 		prev, ok = c.Set(item)
+		c.Freeze()
 		if bt.CompareAndSwap(t, c) {
 			return prev, ok
 		}
@@ -59,6 +61,7 @@ func (bt *BTree[T]) Delete(item T) (prev T, ok bool) {
 		t := bt.Load()
 		c := t.Copy()
 		prev, ok = c.Delete(item)
+		c.Freeze()
 		if bt.CompareAndSwap(t, c) {
 			return prev, ok
 		}

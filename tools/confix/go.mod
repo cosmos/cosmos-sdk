@@ -12,9 +12,9 @@ require (
 	gotest.tools/v3 v3.5.2
 )
 
-require go.yaml.in/yaml/v2 v2.4.3 // indirect
-
 require (
+go.yaml.in/yaml/v2 v2.4.3 // indirect
+
 	cosmossdk.io/api v1.0.0-rc.1 // indirect
 	cosmossdk.io/collections v1.3.1 // indirect
 	cosmossdk.io/core v0.11.3 // indirect

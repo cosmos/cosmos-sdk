@@ -300,7 +300,7 @@ func (c *CommitTree) startEvict(evictVersion uint32) {
 	}()
 }
 
-func (c *CommitTree) GetImmutable(version int64) (storetypes.CacheKVStore, error) {
+func (c *CommitTree) GetImmutable(version int64) (storetypes.CacheWrap, error) {
 	var rootPtr *NodePointer
 	if version == c.lastCommitId.Version {
 		rootPtr = c.root
@@ -399,6 +399,6 @@ func evictTraverse(np *NodePointer, depth, evictionDepth uint8, evictVersion uin
 }
 
 var (
-	_ storetypes.CommitKVStore = &CommitTree{}
-	_ parentTree               = &CommitTree{}
+	_ storetypes.CommitStore = &CommitTree{}
+	_ parentTree             = &CommitTree{}
 )

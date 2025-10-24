@@ -9,8 +9,40 @@ import (
 
 type MultiTree struct {
 	latestVersion int64
-	trees         []storetypes.CacheKVStore   // always ordered by tree name
+	trees         []storetypes.CacheWrap      // always ordered by tree name
 	treesByKey    map[storetypes.StoreKey]int // index of the trees by name
+
+	parentTree func(storetypes.StoreKey) storetypes.CacheWrapper
+}
+
+func (t *MultiTree) GetObjKVStore(key storetypes.StoreKey) storetypes.ObjKVStore {
+	store, ok := t.getCacheWrapper(key).(storetypes.ObjKVStore)
+	if !ok {
+		panic(fmt.Sprintf("store with key %v is not ObjKVStore", key))
+	}
+	return store
+}
+
+func (t *MultiTree) getCacheWrapper(key storetypes.StoreKey) storetypes.CacheWrapper {
+	var store storetypes.CacheWrapper
+	treeIdx, ok := t.treesByKey[key]
+	if !ok && t.parentTree != nil {
+		// load on demand
+		store = t.initStore(key, t.parentTree(key))
+	} else {
+		store = t.trees[treeIdx]
+	}
+	if key == nil || store == nil {
+		panic(fmt.Sprintf("kv store with key %v has not been registered in stores", key))
+	}
+	return store
+}
+
+func (t *MultiTree) initStore(key storetypes.StoreKey, store storetypes.CacheWrapper) storetypes.CacheWrap {
+	cache := store.CacheWrap()
+	t.trees = append(t.trees, cache)
+	t.treesByKey[key] = len(t.trees) - 1
+	return cache
 }
 
 func (t *MultiTree) Write() {
@@ -35,7 +67,8 @@ func (t *MultiTree) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) 
 func (t *MultiTree) CacheMultiStore() storetypes.CacheMultiStore {
 	wrapped := &MultiTree{
 		treesByKey: t.treesByKey,
-		trees:      make([]storetypes.CacheKVStore, len(t.trees)),
+		trees:      make([]storetypes.CacheWrap, len(t.trees)),
+		parentTree: t.getCacheWrapper,
 	}
 	for i, tree := range t.trees {
 		wrapped.trees[i] = tree.CacheWrap().(storetypes.CacheKVStore)
@@ -48,18 +81,19 @@ func (t *MultiTree) CacheMultiStoreWithVersion(version int64) (storetypes.CacheM
 }
 
 func (t *MultiTree) GetStore(key storetypes.StoreKey) storetypes.Store {
-	return t.trees[t.treesByKey[key]]
+	store, ok := t.getCacheWrapper(key).(storetypes.Store)
+	if !ok {
+		panic(fmt.Sprintf("store with key %v is not Store", key))
+	}
+	return store
 }
 
 func (t *MultiTree) GetKVStore(key storetypes.StoreKey) storetypes.KVStore {
-	index, ok := t.treesByKey[key]
+	store, ok := t.getCacheWrapper(key).(storetypes.KVStore)
 	if !ok {
-		panic(fmt.Sprintf("store not found for key: %s (key type: %T)", key.Name(), key))
+		panic(fmt.Sprintf("store with key %v is not KVStore", key))
 	}
-	if index >= len(t.trees) {
-		panic(fmt.Sprintf("store index %d out of bounds for key %s (trees length: %d)", index, key.Name(), len(t.trees)))
-	}
-	return t.trees[index]
+	return store
 }
 
 func (t *MultiTree) TracingEnabled() bool {
@@ -80,4 +114,4 @@ func (t *MultiTree) LatestVersion() int64 {
 	return t.latestVersion
 }
 
-var _ storetypes.CacheMultiStore = &MultiTree{}
+var _ storetypes.MultiStore = &MultiTree{}

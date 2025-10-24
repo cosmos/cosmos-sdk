@@ -139,6 +139,6 @@ func (tree *Tree) ReverseIterator(start, end []byte) corestore.Iterator {
 }
 
 var (
-	_ storetypes.CacheKVStore = (*Tree)(nil)
-	_ parentTree              = (*Tree)(nil)
+	_ storetypes.CacheWrap = (*Tree)(nil)
+	_ parentTree           = (*Tree)(nil)
 )

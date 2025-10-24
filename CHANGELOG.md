@@ -36,7 +36,30 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## [Unreleased]
+## [v0.53.4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.3) - 2025-07-25
+
+This patch update also includes minor dependency bumps.
+
+### Features
+
+* (abci_utils) [#25008](https://github.com/cosmos/cosmos-sdk/pull/24861) add the ability to assign a custom signer extraction adapter in `DefaultProposalHandler`.
+
+## [v0.53.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.3) - 2025-07-08
+
+### Bug Fixes
+
+* [GHSA-p22h-3m2v-cmgh](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-p22h-3m2v-cmgh) Fix x/distribution can halt when historical rewards overflow.
+
+
+## [v0.53.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.2) - 2025-06-02
+
+This patch update also includes minor dependency bumps.
+
+### Bug Fixes
+
+* (x/epochs) [#24770](https://github.com/cosmos/cosmos-sdk/pull/24770) Fix register of epoch hooks in `InvokeSetHooks`.
+
+## [v0.53.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.0) - 2025-04-29
 
 
 ### Breaking Changes
@@ -112,6 +135,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * The `InflationCalculationFn` argument to `mint.NewAppModule()` is now ignored and must be nil.  To set a custom `InflationCalculationFn` on the default minter, use `mintkeeper.WithMintFn(mintkeeper.DefaultMintFn(customInflationFn))`.
 * (api) [#24428](https://github.com/cosmos/cosmos-sdk/pull/24428) Add block height to response headers
 * (baseapp) [#25470](https://github.com/cosmos/cosmos-sdk/pull/25470) Support mount object store in baseapp, add `ObjectStore` api in context.
+* (baseapp) [#25334](https://github.com/cosmos/cosmos-sdk/pull/25334) Add `Executor` to support custom execution logic and incarnation cache for performance optimisation
 
 ### Improvements
 

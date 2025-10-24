@@ -16,8 +16,9 @@ require (
 	google.golang.org/grpc v1.76.0
 )
 
+require cosmossdk.io/collections v1.3.1 // indirect
+
 require (
-	cosmossdk.io/collections v1.3.1 // indirect
 	cosmossdk.io/errors v1.0.2 // indirect
 	cosmossdk.io/math v1.5.3 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect

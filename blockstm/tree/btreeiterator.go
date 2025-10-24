@@ -1,21 +1,16 @@
-package internal
+package tree
 
 import (
 	"bytes"
 	"errors"
 
 	"github.com/tidwall/btree"
-
-	"cosmossdk.io/store/types"
 )
 
-var _ types.Iterator = (*memIterator)(nil)
-
-// memIterator iterates over iterKVCache items.
-// if value is nil, means it was deleted.
+// BTreeIteratorG iterates over btree.
 // Implements Iterator.
-type memIterator struct {
-	iter btree.IterG[item]
+type BTreeIteratorG[T KeyItem] struct {
+	iter btree.IterG[T]
 
 	start     []byte
 	end       []byte
@@ -23,18 +18,37 @@ type memIterator struct {
 	valid     bool
 }
 
-func newMemIterator(start, end []byte, items BTree, ascending bool) *memIterator {
-	iter := items.tree.Iter()
+func NewNoopBTreeIteratorG[T KeyItem](
+	start, end []byte,
+	ascending bool,
+	valid bool,
+) BTreeIteratorG[T] {
+	return BTreeIteratorG[T]{
+		start:     start,
+		end:       end,
+		ascending: ascending,
+		valid:     valid,
+	}
+}
+
+func NewBTreeIteratorG[T KeyItem](
+	startItem, endItem T,
+	iter btree.IterG[T],
+	ascending bool,
+) *BTreeIteratorG[T] {
+	start := startItem.GetKey()
+	end := endItem.GetKey()
+
 	var valid bool
 	if ascending {
 		if start != nil {
-			valid = iter.Seek(newItem(start, nil))
+			valid = iter.Seek(startItem)
 		} else {
 			valid = iter.First()
 		}
 	} else {
 		if end != nil {
-			valid = iter.Seek(newItem(end, nil))
+			valid = iter.Seek(endItem)
 			if !valid {
 				valid = iter.Last()
 			} else {
@@ -46,7 +60,7 @@ func newMemIterator(start, end []byte, items BTree, ascending bool) *memIterator
 		}
 	}
 
-	mi := &memIterator{
+	mi := &BTreeIteratorG[T]{
 		iter:      iter,
 		start:     start,
 		end:       end,
@@ -61,27 +75,31 @@ func newMemIterator(start, end []byte, items BTree, ascending bool) *memIterator
 	return mi
 }
 
-func (mi *memIterator) Domain() (start, end []byte) {
+func (mi *BTreeIteratorG[T]) Domain() (start, end []byte) {
 	return mi.start, mi.end
 }
 
-func (mi *memIterator) Close() error {
+func (mi *BTreeIteratorG[T]) Close() error {
 	mi.iter.Release()
 	return nil
 }
 
-func (mi *memIterator) Error() error {
+func (mi *BTreeIteratorG[T]) Error() error {
 	if !mi.Valid() {
 		return errors.New("invalid memIterator")
 	}
 	return nil
 }
 
-func (mi *memIterator) Valid() bool {
+func (mi *BTreeIteratorG[T]) Valid() bool {
 	return mi.valid
 }
 
-func (mi *memIterator) Next() {
+func (mi *BTreeIteratorG[T]) Invalidate() {
+	mi.valid = false
+}
+
+func (mi *BTreeIteratorG[T]) Next() {
 	mi.assertValid()
 
 	if mi.ascending {
@@ -95,7 +113,7 @@ func (mi *memIterator) Next() {
 	}
 }
 
-func (mi *memIterator) keyInRange(key []byte) bool {
+func (mi *BTreeIteratorG[T]) keyInRange(key []byte) bool {
 	if mi.ascending && mi.end != nil && bytes.Compare(key, mi.end) >= 0 {
 		return false
 	}
@@ -105,15 +123,15 @@ func (mi *memIterator) keyInRange(key []byte) bool {
 	return true
 }
 
-func (mi *memIterator) Key() []byte {
-	return mi.iter.Item().key
+func (mi *BTreeIteratorG[T]) Item() T {
+	return mi.iter.Item()
 }
 
-func (mi *memIterator) Value() []byte {
-	return mi.iter.Item().value
+func (mi *BTreeIteratorG[T]) Key() []byte {
+	return mi.Item().GetKey()
 }
 
-func (mi *memIterator) assertValid() {
+func (mi *BTreeIteratorG[T]) assertValid() {
 	if err := mi.Error(); err != nil {
 		panic(err)
 	}

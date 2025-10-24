@@ -26,7 +26,8 @@ import (
 
 func TestBankStateCompatibility(t *testing.T) {
 	key := storetypes.NewKVStoreKey(banktypes.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	oKey := storetypes.NewObjectStoreKey(banktypes.ObjectStoreKey)
+	testCtx := testutil.DefaultContextWithObjectStore(t, key, storetypes.NewTransientStoreKey("transient_test"), oKey)
 	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 
@@ -45,6 +46,7 @@ func TestBankStateCompatibility(t *testing.T) {
 		authtypes.NewModuleAddress("gov").String(),
 		log.NewNopLogger(),
 	)
+	k = k.WithObjStoreKey(oKey)
 
 	// test we can decode balances without problems
 	// using the old value format of the denom to address index

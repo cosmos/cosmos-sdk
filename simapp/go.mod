@@ -1,6 +1,6 @@
 module cosmossdk.io/simapp
 
-go 1.24.0
+go 1.25.0
 
 require (
 	cosmossdk.io/api v0.9.2
@@ -232,11 +232,8 @@ require (
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
 
-// Here are the short-lived replace from the SimApp
-// Replace here are pending PRs, or version to be tagged
-// replace (
-// 	<temporary replace>
-// )
+// cosmossdk.io/store => ../store
+replace cosmossdk.io/store => ../store
 
 // Below are the long-lived replace of the SimApp
 replace (
@@ -249,4 +246,6 @@ replace (
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
 	// replace broken goleveldb
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
+	// Use fork for blockstm
+	github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-20250924232609-2c6195d95951
 )

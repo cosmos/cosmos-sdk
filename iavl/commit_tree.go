@@ -7,6 +7,7 @@ import (
 	"sync/atomic"
 
 	"cosmossdk.io/log"
+
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	storetypes "cosmossdk.io/store/types"
 )
@@ -20,7 +21,7 @@ type CommitTree struct {
 	zeroCopy   bool
 
 	evictionDepth    uint8
-	evictorRunning   bool
+	evictorRunning   atomic.Bool
 	lastEvictVersion uint32
 
 	writeWal bool
@@ -274,7 +275,7 @@ func (c *CommitTree) reinitWalProc() {
 }
 
 func (c *CommitTree) startEvict(evictVersion uint32) {
-	if c.evictorRunning {
+	if c.evictorRunning.Load() {
 		// eviction in progress
 		return
 	}
@@ -291,12 +292,12 @@ func (c *CommitTree) startEvict(evictVersion uint32) {
 	}
 
 	c.logger.Debug("start eviction", "version", evictVersion, "depth", c.evictionDepth)
-	c.evictorRunning = true
+	c.evictorRunning.Store(true)
 	go func() {
 		evictedCount := evictTraverse(latest, 0, c.evictionDepth, evictVersion)
 		c.logger.Debug("eviction completed", "version", evictVersion, "lastEvict", c.lastEvictVersion, "evictedNodes", evictedCount)
 		c.lastEvictVersion = evictVersion
-		c.evictorRunning = false
+		c.evictorRunning.Store(false)
 	}()
 }
 

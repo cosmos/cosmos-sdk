@@ -33,11 +33,11 @@ const ConsensusVersion = 1
 
 // AppModule implements the AppModule interface for the epochs module.
 type AppModule struct {
-	keeper keeper.Keeper
+	keeper *keeper.Keeper
 }
 
 // NewAppModule creates a new AppModule object.
-func NewAppModule(keeper keeper.Keeper) AppModule {
+func NewAppModule(keeper *keeper.Keeper) AppModule {
 	return AppModule{
 		keeper: keeper,
 	}
@@ -66,7 +66,7 @@ func (AppModule) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *gwrunt
 
 // RegisterServices registers module services.
 func (am AppModule) RegisterServices(registrar grpc.ServiceRegistrar) error {
-	types.RegisterQueryServer(registrar, keeper.NewQuerier(am.keeper))
+	types.RegisterQueryServer(registrar, keeper.NewQuerier(*am.keeper))
 	return nil
 }
 

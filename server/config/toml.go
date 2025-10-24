@@ -246,6 +246,18 @@ stop-node-on-err = {{ .Streaming.ABCI.StopNodeOnErr }}
 # Note, this configuration only applies to SDK built-in app-side mempool
 # implementations.
 max-txs = {{ .Mempool.MaxTxs }}
+
+###############################################################################
+###                               Modules                                   ###
+###############################################################################
+
+[staking]
+# cache-size defines the maximum number of time-based queue entries to cache
+# for unbonding validators, unbonding delegations, and redelegations.
+# cache-size = 0 means unlimited cache (no size limit).
+# cache-size < 0 means the cache is disabled.
+# cache-size > 0 sets a size limit for the cache.
+cache-size = {{ .Staking.CacheSize }}
 `
 
 var configTemplate *template.Template

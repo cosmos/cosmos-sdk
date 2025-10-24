@@ -13,6 +13,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/staking/cache"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -32,6 +33,8 @@ type Keeper struct {
 	authority             string
 	validatorAddressCodec addresscodec.Codec
 	consensusAddressCodec addresscodec.Codec
+
+	cache *cache.ValidatorsQueueCache
 }
 
 // NewKeeper creates a new staking Keeper instance
@@ -43,6 +46,7 @@ func NewKeeper(
 	authority string,
 	validatorAddressCodec addresscodec.Codec,
 	consensusAddressCodec addresscodec.Codec,
+	maxCacheSize int,
 ) *Keeper {
 	// ensure bonded and not bonded module accounts are set
 	if addr := ak.GetModuleAddress(types.BondedPoolName); addr == nil {
@@ -62,7 +66,7 @@ func NewKeeper(
 		panic("validator and/or consensus address codec are nil")
 	}
 
-	return &Keeper{
+	k := &Keeper{
 		storeService:          storeService,
 		cdc:                   cdc,
 		authKeeper:            ak,
@@ -72,6 +76,18 @@ func NewKeeper(
 		validatorAddressCodec: validatorAddressCodec,
 		consensusAddressCodec: consensusAddressCodec,
 	}
+
+	if maxCacheSize >= 0 {
+		k.cache = cache.NewValidatorsQueueCache(
+			uint(maxCacheSize),
+			k.Logger,
+			k.GetAllUnbondingValidatorsFromStore,
+			k.GetAllUnbondingDelegationsQueueFromStore,
+			k.GetAllRedelegationsQueueFromStore,
+		)
+	}
+
+	return k
 }
 
 // Logger returns a module-specific logger.

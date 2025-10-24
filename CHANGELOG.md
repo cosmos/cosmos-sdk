@@ -61,6 +61,9 @@ This patch update also includes minor dependency bumps.
 
 ## [v0.53.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.0) - 2025-04-29
 
+### Improvements
+
+* (x/staking) [#25486](https://github.com/cosmos/cosmos-sdk/pull/25486) Optimize staking endblocker execution by caching queue entries from iterators.
 
 ### Breaking Changes
 

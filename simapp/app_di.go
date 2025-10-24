@@ -3,7 +3,11 @@
 package simapp
 
 import (
+	"encoding/json"
+	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 
 	dbm "github.com/cosmos/cosmos-db"
 
@@ -14,8 +18,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	iavlx "github.com/cosmos/cosmos-sdk/iavl"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
@@ -100,6 +106,23 @@ func NewSimApp(
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *SimApp {
+	iavlxOpts, useIavlx := os.LookupEnv("IAVLX")
+	if useIavlx && iavlxOpts != "" {
+		fmt.Println("Setting up IAVLX as the underlying commit multi-store")
+		var opts iavlx.Options
+		err := json.Unmarshal([]byte(iavlxOpts), &opts)
+		if err != nil {
+			panic(err)
+		}
+		baseAppOptions = append(baseAppOptions, func(bApp *baseapp.BaseApp) {
+			dir := filepath.Join(appOpts.Get(flags.FlagHome).(string), "data", "iavlx")
+			db, err := iavlx.LoadDB(dir, &opts, logger)
+			if err != nil {
+				panic(err)
+			}
+			bApp.SetCMS(db)
+		})
+	}
 	var (
 		app        = &SimApp{}
 		appBuilder *runtime.AppBuilder

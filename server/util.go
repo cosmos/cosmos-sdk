@@ -26,6 +26,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"cosmossdk.io/log"
+
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
@@ -585,6 +586,7 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		baseapp.SetChainID(chainID),
 		baseapp.SetQueryGasLimit(cast.ToUint64(appOpts.Get(FlagQueryGasLimit))),
 		func(bapp *baseapp.BaseApp) {
+			fmt.Println("Loading IAVLX as the commit multi-store...")
 			opts := &iavlx.Options{}
 			optsJson, ok := appOpts.Get(FlagIAVLXOptions).(string)
 			if ok && optsJson != "" {

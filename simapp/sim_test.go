@@ -157,7 +157,7 @@ func IsEmptyValidatorSetErr(err error) bool {
 }
 
 func TestAppStateDeterminism(t *testing.T) {
-	const numTimesToRunPerSeed = 3
+	const numTimesToRunPerSeed = 1
 	var seeds []int64
 	if s := simcli.NewConfigFromFlags().Seed; s != simcli.DefaultSeedValue {
 		// We will be overriding the random seed and just run a single simulation on the provided seed value

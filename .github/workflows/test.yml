@@ -596,7 +596,7 @@ jobs:
         if: env.GIT_DIFF
         run: |
           cd blockstm
-          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
+          go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -coverpkg=./,./tree -tags='norace ledger test_ledger_mock' ./...
       - uses: actions/upload-artifact@v4
         if: env.GIT_DIFF
         with:

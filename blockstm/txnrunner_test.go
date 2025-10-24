@@ -14,8 +14,8 @@ import (
 	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp/txnrunner"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // Mock TxDecoder for testing
@@ -76,147 +76,6 @@ func mockTxDecoderWithFeeTx(txBytes []byte) (sdk.Tx, error) {
 		mockTx:   mockTx{txBytes: txBytes},
 		feePayer: feePayer,
 	}, nil
-}
-
-// TestNewDefaultRunner tests the constructor
-func TestNewDefaultRunner(t *testing.T) {
-	decoder := mockTxDecoder
-	runner := NewDefaultRunner(decoder)
-
-	require.NotNil(t, runner)
-	require.NotNil(t, runner.txDecoder)
-}
-
-// TestDefaultRunner_Run_Success tests successful execution of transactions
-func TestDefaultRunner_Run_Success(t *testing.T) {
-	decoder := mockTxDecoder
-	runner := NewDefaultRunner(decoder)
-
-	txs := [][]byte{
-		{0x01, 0x02, 0x03},
-		{0x04, 0x05, 0x06},
-		{0x07, 0x08, 0x09},
-	}
-
-	executionCount := atomic.Int32{}
-	deliverTx := func(tx []byte, ms storetypes.MultiStore, txIndex int, cache map[string]any) *abci.ExecTxResult {
-		executionCount.Add(1)
-		return &abci.ExecTxResult{
-			Code: 0,
-			Data: tx,
-		}
-	}
-
-	ctx := context.Background()
-	results, err := runner.Run(ctx, nil, txs, deliverTx)
-
-	require.NoError(t, err)
-	require.Len(t, results, len(txs))
-	require.Equal(t, int32(len(txs)), executionCount.Load())
-
-	for i, result := range results {
-		require.Equal(t, uint32(0), result.Code)
-		require.Equal(t, txs[i], result.Data)
-	}
-}
-
-// TestDefaultRunner_Run_EmptyTxs tests execution with no transactions
-func TestDefaultRunner_Run_EmptyTxs(t *testing.T) {
-	decoder := mockTxDecoder
-	runner := NewDefaultRunner(decoder)
-
-	deliverTx := func(tx []byte, ms storetypes.MultiStore, txIndex int, cache map[string]any) *abci.ExecTxResult {
-		t.Fatal("deliverTx should not be called for empty txs")
-		return nil
-	}
-
-	ctx := context.Background()
-	results, err := runner.Run(ctx, nil, [][]byte{}, deliverTx)
-
-	require.NoError(t, err)
-	require.Empty(t, results)
-}
-
-// TestDefaultRunner_Run_InvalidTx tests handling of invalid transactions
-func TestDefaultRunner_Run_InvalidTx(t *testing.T) {
-	decoder := mockTxDecoder
-	runner := NewDefaultRunner(decoder)
-
-	txs := [][]byte{
-		{0x01, 0x02, 0x03}, // valid
-		{0xFF, 0xFF, 0xFF}, // invalid (0xFF marker)
-		{0x07, 0x08, 0x09}, // valid
-	}
-
-	validTxCount := atomic.Int32{}
-	deliverTx := func(tx []byte, ms storetypes.MultiStore, txIndex int, cache map[string]any) *abci.ExecTxResult {
-		validTxCount.Add(1)
-		return &abci.ExecTxResult{Code: 0}
-	}
-
-	ctx := context.Background()
-	results, err := runner.Run(ctx, nil, txs, deliverTx)
-
-	require.NoError(t, err)
-	require.Len(t, results, len(txs))
-	// Only 2 valid transactions should be executed
-	require.Equal(t, int32(2), validTxCount.Load())
-
-	// The invalid tx should get an error response
-	require.Equal(t, sdkerrors.ErrTxDecode.ABCICode(), results[1].Code)
-}
-
-// TestDefaultRunner_Run_ContextCancellation tests that execution stops on context cancellation
-func TestDefaultRunner_Run_ContextCancellation(t *testing.T) {
-	decoder := mockTxDecoder
-	runner := NewDefaultRunner(decoder)
-
-	txs := [][]byte{
-		{0x01, 0x02, 0x03},
-		{0x04, 0x05, 0x06},
-		{0x07, 0x08, 0x09},
-		{0x0A, 0x0B, 0x0C},
-	}
-
-	ctx, cancel := context.WithCancel(context.Background())
-
-	executionCount := atomic.Int32{}
-	deliverTx := func(tx []byte, ms storetypes.MultiStore, txIndex int, cache map[string]any) *abci.ExecTxResult {
-		count := executionCount.Add(1)
-		// Cancel after second transaction
-		if count == 2 {
-			cancel()
-		}
-		return &abci.ExecTxResult{Code: 0}
-	}
-
-	_, err := runner.Run(ctx, nil, txs, deliverTx)
-
-	require.Error(t, err)
-	require.Equal(t, context.Canceled, err)
-	// Results may be nil or partial depending on when cancellation occurs
-	// The key assertion is that execution was stopped
-	require.LessOrEqual(t, executionCount.Load(), int32(len(txs)))
-}
-
-// TestDefaultRunner_Run_MultiStoreIsNil tests that nil multistore is handled correctly
-func TestDefaultRunner_Run_MultiStoreIsNil(t *testing.T) {
-	decoder := mockTxDecoder
-	runner := NewDefaultRunner(decoder)
-
-	txs := [][]byte{{0x01}}
-
-	deliverTx := func(tx []byte, ms storetypes.MultiStore, txIndex int, cache map[string]any) *abci.ExecTxResult {
-		require.Nil(t, ms, "multistore should be nil for DefaultRunner")
-		require.Nil(t, cache, "cache should be nil for DefaultRunner")
-		return &abci.ExecTxResult{Code: 0}
-	}
-
-	ctx := context.Background()
-	results, err := runner.Run(ctx, nil, txs, deliverTx)
-
-	require.NoError(t, err)
-	require.Len(t, results, 1)
 }
 
 // TestNewSTMRunner tests the STMRunner constructor
@@ -567,7 +426,6 @@ func TestPreEstimates_KeyEncoding(t *testing.T) {
 func TestTxRunnerInterface(t *testing.T) {
 	decoder := mockTxDecoder
 
-	var _ sdk.TxRunner = NewDefaultRunner(decoder)
 	var _ sdk.TxRunner = NewSTMRunner(decoder, []storetypes.StoreKey{}, 1, false, "")
 }
 
@@ -612,44 +470,6 @@ func TestSTMRunner_Integration(t *testing.T) {
 	require.Len(t, results, blk.Size())
 }
 
-// TestDefaultRunner_Integration tests integration with sequential execution
-func TestDefaultRunner_Integration(t *testing.T) {
-	decoder := mockTxDecoder
-	runner := NewDefaultRunner(decoder)
-
-	ctx := context.Background()
-	storeIndex := map[storetypes.StoreKey]int{
-		StoreKeyAuth: 0,
-		StoreKeyBank: 1,
-	}
-	msRaw := NewMultiMemDB(storeIndex)
-
-	// Create a mock block
-	blk := noConflictBlock(10)
-
-	deliverTx := func(tx []byte, _ storetypes.MultiStore, txIndex int, cache map[string]any) *abci.ExecTxResult {
-		if txIndex < blk.Size() {
-			blk.ExecuteTx(TxnIndex(txIndex), msRaw)
-		}
-		return &abci.ExecTxResult{Code: 0}
-	}
-
-	txs := make([][]byte, blk.Size())
-	for i := range txs {
-		txs[i] = []byte{byte(i)}
-	}
-
-	results, err := runner.Run(ctx, nil, txs, deliverTx)
-
-	require.NoError(t, err)
-	require.Len(t, results, blk.Size())
-
-	// Verify all transactions succeeded
-	for i, err := range blk.Results {
-		require.NoError(t, err, "transaction %d should succeed", i)
-	}
-}
-
 // TestRunnerComparison tests that both DefaultRunner and STMRunner can execute successfully
 func TestRunnerComparison(t *testing.T) {
 	decoder := mockTxDecoder
@@ -670,7 +490,7 @@ func TestRunnerComparison(t *testing.T) {
 
 	// Test DefaultRunner
 	t.Run("DefaultRunner", func(t *testing.T) {
-		runner := NewDefaultRunner(decoder)
+		runner := txnrunner.NewDefaultRunner(decoder)
 		executionCount.Store(0)
 
 		results, err := runner.Run(ctx, nil, txs, deliverTx)

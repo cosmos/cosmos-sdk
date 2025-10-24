@@ -1,6 +1,6 @@
 module cosmossdk.io/tests/systemtests
 
-go 1.24.0
+go 1.25.0
 
 replace (
 	// always use latest versions in tests
@@ -177,4 +177,8 @@ require (
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
 
-replace cosmossdk.io/store => ../../store
+replace (
+	cosmossdk.io/store => ../../store
+	// Use fork for blockstm
+	github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-20250924232609-2c6195d95951
+)

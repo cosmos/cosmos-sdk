@@ -1,6 +1,6 @@
 module cosmossdk.io/systemtests
 
-go 1.24.0
+go 1.25.0
 
 require (
 	cosmossdk.io/math v1.5.3
@@ -173,3 +173,6 @@ require (
 replace cosmossdk.io/store => ../store
 
 replace github.com/cosmos/cosmos-sdk => ../
+
+// Use fork for blockstm
+replace github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-20250924232609-2c6195d95951

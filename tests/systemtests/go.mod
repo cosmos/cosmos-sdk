@@ -1,6 +1,6 @@
 module cosmossdk.io/tests/systemtests
 
-go 1.24.0
+go 1.25.0
 
 replace (
 	// always use latest versions in tests
@@ -46,7 +46,7 @@ require (
 	github.com/cockroachdb/pebble v1.1.5 // indirect
 	github.com/cockroachdb/redact v1.1.6 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb // indirect
-	github.com/cometbft/cometbft v0.39.0-beta.2 // indirect
+	github.com/cometbft/cometbft v0.39.0-beta.2.0.20251020144122-cd33e1fff685 // indirect
 	github.com/cometbft/cometbft-db v0.14.1 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.1.3 // indirect
@@ -177,4 +177,10 @@ require (
 	nhooyr.io/websocket v1.8.17 // indirect
 	pgregory.net/rapid v1.2.0 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
+)
+
+replace (
+	cosmossdk.io/store => ../../store
+	// Use fork for blockstm
+	github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-20250924232609-2c6195d95951
 )

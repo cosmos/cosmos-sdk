@@ -37,6 +37,9 @@ type Options struct {
 	// Setting to 0 means create reader every version (high mmap churn)
 	// Higher values reduce mmap overhead but delay when data becomes readable
 	ReaderUpdateInterval uint32 `json:"reader_update_interval"`
+
+	// FsyncInterval defines how often to fsync WAL when using async mode (in versions).
+	FsyncInterval uint32 `json:"fsync_interval"`
 }
 
 // GetWalSyncBufferSize returns the actual buffer size to use (handling 0 = 1 case)

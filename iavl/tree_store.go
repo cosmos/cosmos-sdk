@@ -210,7 +210,7 @@ func (ts *TreeStore) SaveRoot(version uint32, root *NodePointer, totalLeaves, to
 		default:
 		}
 		files := ts.currentWriter.files
-		if files.needsSync.CompareAndSwap(false, true) {
+		if version%ts.opts.FsyncInterval == 0 && files.needsSync.CompareAndSwap(false, true) {
 			ts.syncQueue <- files
 		}
 	} else {

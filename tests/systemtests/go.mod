@@ -11,7 +11,7 @@ replace (
 require (
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/systemtests v1.2.1
-	github.com/cosmos/cosmos-sdk v0.53.4
+	github.com/cosmos/cosmos-sdk v0.54.0-beta.0
 	github.com/stretchr/testify v1.11.1
 	github.com/tidwall/gjson v1.18.0
 	github.com/tidwall/sjson v1.2.5

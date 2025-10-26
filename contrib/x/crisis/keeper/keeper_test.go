@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/contrib/x/crisis"
@@ -17,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 func TestLogger(t *testing.T) {
@@ -65,4 +67,32 @@ func TestAssertInvariants(t *testing.T) {
 
 	keeper.RegisterRoute("testModule", "testRoute2", func(sdk.Context) (string, bool) { return "", true })
 	require.Panics(t, func() { keeper.AssertInvariants(testCtx.Ctx) })
+}
+
+func TestAssertInvariantsErrorMessage(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	supplyKeeper := crisistestutil.NewMockSupplyKeeper(ctrl)
+
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	encCfg := moduletestutil.MakeTestEncodingConfig(crisis.AppModuleBasic{})
+	keeper := keeper.NewKeeper(encCfg.Codec, storeService, 5, supplyKeeper, "", "", addresscodec.NewBech32Codec("cosmos"))
+
+	// Register an invariant that will fail
+	keeper.RegisterRoute("testModule", "testRoute", func(sdk.Context) (string, bool) {
+		return "test invariant broken", true
+	})
+
+	// Test that the panic occurs and contains the app name
+	defer func() {
+		if r := recover(); r != nil {
+			errMsg := fmt.Sprintf("%v", r)
+			require.Contains(t, errMsg, version.AppName+" tx crisis invariant-broken testModule testRoute")
+		} else {
+			t.Fatal("Expected panic but none occurred")
+		}
+	}()
+
+	keeper.AssertInvariants(testCtx.Ctx)
 }

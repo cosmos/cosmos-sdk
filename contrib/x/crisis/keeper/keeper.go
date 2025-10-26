@@ -13,6 +13,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 // Keeper - crisis keeper
@@ -110,11 +111,9 @@ func (k *Keeper) AssertInvariants(ctx sdk.Context) {
 
 		invCtx, _ := ctx.CacheContext()
 		if res, stop := ir.Invar(invCtx); stop {
-			// TODO: Include app name as part of context to allow for this to be
-			// variable.
 			panic(fmt.Errorf("invariant broken: %s\n"+
 				"\tCRITICAL please submit the following transaction:\n"+
-				"\t\t tx crisis invariant-broken %s %s", res, ir.ModuleName, ir.Route))
+				"\t\t %s tx crisis invariant-broken %s %s", res, version.AppName, ir.ModuleName, ir.Route))
 		}
 	}
 

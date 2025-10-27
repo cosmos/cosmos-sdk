@@ -27,14 +27,14 @@ func (t *MultiTree) getCacheWrapper(key storetypes.StoreKey) storetypes.CacheWra
 	var store storetypes.CacheWrapper
 	treeIdx, ok := t.treesByKey[key]
 	if !ok && t.parentTree != nil {
-		// load on demand
-		store = t.initStore(key, t.parentTree(key))
-	} else {
-		store = t.trees[treeIdx]
+		if t.parentTree != nil {
+			store = t.initStore(key, t.parentTree(key))
+
+		} else {
+			panic(fmt.Sprintf("kv store with key %v has not been registered in stores", key))
+		}
 	}
-	if key == nil || store == nil {
-		panic(fmt.Sprintf("kv store with key %v has not been registered in stores", key))
-	}
+	store = t.trees[treeIdx]
 	return store
 }
 
@@ -71,7 +71,7 @@ func (t *MultiTree) CacheMultiStore() storetypes.CacheMultiStore {
 		parentTree: t.getCacheWrapper,
 	}
 	for i, tree := range t.trees {
-		wrapped.trees[i] = tree.CacheWrap().(storetypes.CacheKVStore)
+		wrapped.trees[i] = tree.CacheWrap()
 	}
 	return wrapped
 }
@@ -89,11 +89,13 @@ func (t *MultiTree) GetStore(key storetypes.StoreKey) storetypes.Store {
 }
 
 func (t *MultiTree) GetKVStore(key storetypes.StoreKey) storetypes.KVStore {
-	store, ok := t.getCacheWrapper(key).(storetypes.KVStore)
+	store := t.getCacheWrapper(key)
+
+	kvStore, ok := store.(storetypes.KVStore)
 	if !ok {
-		panic(fmt.Sprintf("store with key %v is not KVStore", key))
+		panic(fmt.Sprintf("store with key %v is not KVStore: store type=%T", key, store))
 	}
-	return store
+	return kvStore
 }
 
 func (t *MultiTree) TracingEnabled() bool {

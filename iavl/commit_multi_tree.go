@@ -179,7 +179,7 @@ func (db *CommitMultiTree) CacheMultiStore() storetypes.CacheMultiStore {
 		treesByKey: db.treesByKey, // share the map
 	}
 	for i, tree := range db.trees {
-		mt.trees[i] = tree.CacheWrap().(storetypes.CacheKVStore)
+		mt.trees[i] = tree.CacheWrap()
 	}
 	return mt
 }
@@ -206,6 +206,8 @@ func (db *CommitMultiTree) CacheMultiStoreWithVersion(version int64) (storetypes
 			}
 		case storetypes.StoreTypeTransient, storetypes.StoreTypeMemory:
 			mt.trees[i] = tree.CacheWrap().(storetypes.CacheKVStore)
+		case storetypes.StoreTypeObject:
+			continue
 		default:
 			return nil, fmt.Errorf("unsupported store type: %s", typ.String())
 		}
@@ -324,6 +326,11 @@ func (db *CommitMultiTree) loadStore(key storetypes.StoreKey, typ storetypes.Sto
 		}
 
 		return mem.NewStore(), nil
+	case storetypes.StoreTypeObject:
+		if _, ok := key.(*storetypes.ObjectStoreKey); !ok {
+			return nil, fmt.Errorf("unexpected key type for a ObjectStoreKey: %s", key.String())
+		}
+		return transient.NewObjStore(), nil
 	default:
 		return nil, fmt.Errorf("unsupported store type: %s", typ.String())
 	}

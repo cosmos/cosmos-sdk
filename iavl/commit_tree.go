@@ -209,9 +209,25 @@ func (c *CommitTree) Has(key []byte) bool {
 }
 
 func (c *CommitTree) Set(key, value []byte) {
-	tree := c.CacheWrap().(*Tree)
-	tree.Set(key, value)
-	tree.Write()
+	stagedVersion := c.stagedVersion()
+	leafNode := &MemNode{
+		height:  0,
+		size:    1,
+		version: stagedVersion,
+		key:     key,
+		value:   value,
+	}
+	ctx := &MutationContext{Version: stagedVersion}
+	newRoot, _, err := setRecursive(c.root, leafNode, ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	c.root = newRoot
+	tree.updateBatch.Updates = append(tree.updateBatch.Updates, KVUpdate{
+		SetNode: leafNode,
+	})
+	tree.updateBatch.Orphans = append(tree.updateBatch.Orphans, ctx.Orphans)
 }
 
 func (c *CommitTree) Delete(key []byte) {

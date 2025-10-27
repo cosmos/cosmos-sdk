@@ -3,6 +3,7 @@ package iavlx
 import (
 	"fmt"
 	io "io"
+	"sync"
 
 	storetypes "cosmossdk.io/store/types"
 )
@@ -14,9 +15,16 @@ type MultiTree struct {
 }
 
 func (t *MultiTree) Write() {
+	var wg sync.WaitGroup
 	for _, tree := range t.trees {
-		tree.Write()
+		// TODO check if trees are dirty before spinning off a goroutine
+		wg.Add(1)
+		go func(t storetypes.CacheKVStore) {
+			defer wg.Done()
+			t.Write()
+		}(tree)
 	}
+	wg.Wait()
 }
 
 func (t *MultiTree) GetStoreType() storetypes.StoreType {

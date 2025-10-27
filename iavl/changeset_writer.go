@@ -3,12 +3,14 @@ package iavlx
 import (
 	"errors"
 	"fmt"
+	"sync/atomic"
 )
 
 type ChangesetWriter struct {
 	stagedVersion uint32
 
-	files *ChangesetFiles
+	files     *ChangesetFiles
+	needsSync atomic.Bool
 
 	kvlog        *KVLogWriter
 	branchesData *StructWriter[BranchLayout]
@@ -48,6 +50,8 @@ func (cs *ChangesetWriter) WriteWALCommit(version uint32) error {
 }
 
 func (cs *ChangesetWriter) SaveRoot(root *NodePointer, version, totalLeaves, totalBranches uint32) error {
+	cs.needsSync.Store(true)
+
 	if version != cs.stagedVersion {
 		return fmt.Errorf("version mismatch: expected %d, got %d", cs.stagedVersion, version)
 	}
@@ -260,4 +264,11 @@ func (cs *ChangesetWriter) Seal() (*Changeset, error) {
 
 func (cs *ChangesetWriter) StartVersion() uint32 {
 	return cs.files.StartVersion()
+}
+
+func (cs *ChangesetWriter) SyncWAL() error {
+	if !cs.needsSync.CompareAndSwap(true, false) {
+		return nil
+	}
+	return cs.files.kvlogFile.Sync()
 }

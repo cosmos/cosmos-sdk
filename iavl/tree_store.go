@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/tidwall/btree"
 
@@ -24,7 +25,7 @@ type TreeStore struct {
 
 	opts Options
 
-	syncQueue chan *ChangesetFiles
+	syncQueue *NonBlockingQueue[*ChangesetFiles]
 	syncDone  chan error
 
 	cleanupProc *cleanupProc
@@ -54,9 +55,8 @@ func NewTreeStore(dir string, options Options, logger log.Logger) (*TreeStore, e
 
 	ts.cleanupProc = newCleanupProc(ts)
 
-	if options.WriteWAL && options.WalSyncBuffer >= 0 {
-		bufferSize := options.GetWalSyncBufferSize()
-		ts.syncQueue = make(chan *ChangesetFiles, bufferSize)
+	if options.WriteWAL && options.FsyncInterval > 0 {
+		ts.syncQueue = NewNonBlockingQueue[*ChangesetFiles]()
 		ts.syncDone = make(chan error)
 		go ts.syncProc()
 	}
@@ -209,10 +209,6 @@ func (ts *TreeStore) SaveRoot(version uint32, root *NodePointer, totalLeaves, to
 			}
 		default:
 		}
-		files := ts.currentWriter.files
-		if version%ts.opts.FsyncInterval == 0 && files.needsSync.CompareAndSwap(false, true) {
-			ts.syncQueue <- files
-		}
 	} else {
 		// Otherwise, sync immediately
 		err := ts.currentWriter.files.kvlogFile.Sync()
@@ -248,6 +244,10 @@ func (ts *TreeStore) SaveRoot(version uint32, root *NodePointer, totalLeaves, to
 		reader, err = ts.currentWriter.Seal()
 		if err != nil {
 			return fmt.Errorf("failed to seal changeset for version %d: %w", version, err)
+		}
+		if ts.syncQueue != nil {
+			// if sync queue is enabled, queue the files for fsync
+			ts.syncQueue.Send(reader.files)
 		}
 	} else {
 		// Create shared reader for periodic update
@@ -300,13 +300,26 @@ func (ts *TreeStore) MarkOrphans(version uint32, nodeIds [][]NodeID) {
 }
 
 func (ts *TreeStore) syncProc() {
+	tick := time.NewTicker(time.Duration(ts.opts.FsyncInterval) * time.Millisecond)
 	defer close(ts.syncDone)
-	for files := range ts.syncQueue {
-		if err := files.kvlogFile.Sync(); err != nil {
+	for {
+		<-tick.C
+		curWriter := ts.currentWriter
+		err := curWriter.SyncWAL()
+		if err != nil {
 			ts.syncDone <- fmt.Errorf("failed to sync WAL file: %w", err)
 			return
 		}
-		files.needsSync.Store(false)
+		needsSync, closed := ts.syncQueue.MaybeReceive()
+		for _, f := range needsSync {
+			if err := f.kvlogFile.Sync(); err != nil {
+				ts.syncDone <- fmt.Errorf("failed to sync WAL file: %w", err)
+				return
+			}
+		}
+		if closed {
+			return
+		}
 	}
 }
 
@@ -314,7 +327,7 @@ func (ts *TreeStore) Close() error {
 	ts.cleanupProc.shutdown()
 
 	if ts.syncQueue != nil {
-		close(ts.syncQueue)
+		ts.syncQueue.Close()
 		err := <-ts.syncDone
 		if err != nil {
 			return err

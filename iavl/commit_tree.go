@@ -25,7 +25,7 @@ type CommitTree struct {
 	lastEvictVersion uint32
 
 	writeWal bool
-	walChan  chan<- []KVUpdate
+	walQueue *NonBlockingQueue[[]KVUpdate]
 	walDone  <-chan error
 
 	pendingOrphans [][]NodeID
@@ -56,7 +56,7 @@ func (c *CommitTree) applyChangesToParent(origRoot, newRoot *NodePointer, update
 	c.pendingOrphans = append(c.pendingOrphans, updateBatch.Orphans...)
 
 	if c.writeWal {
-		c.walChan <- updateBatch.Updates
+		c.walQueue.Send(updateBatch.Updates)
 	}
 
 	return nil
@@ -112,7 +112,7 @@ func (c *CommitTree) commit() (storetypes.CommitID, error) {
 	defer c.writeMutex.Unlock()
 
 	if c.writeWal {
-		close(c.walChan)
+		c.walQueue.Close()
 	}
 
 	// compute hash and assign node IDs
@@ -257,18 +257,24 @@ func (c *CommitTree) reinitWalProc() {
 		return
 	}
 
-	walChan := make(chan []KVUpdate, 2048)
+	walQueue := NewNonBlockingQueue[[]KVUpdate]()
 	walDone := make(chan error, 1)
-	c.walChan = walChan
+	c.walQueue = walQueue
 	c.walDone = walDone
 
 	go func() {
-		defer close(walDone)
-		for updates := range walChan {
-			err := c.store.WriteWALUpdates(updates)
-			if err != nil {
-				walDone <- err
+		for {
+			batch := walQueue.Receive()
+			if batch == nil {
+				close(walDone)
 				return
+			}
+			for _, updates := range batch {
+				err := c.store.WriteWALUpdates(updates)
+				if err != nil {
+					walDone <- err
+					return
+				}
 			}
 		}
 	}()
@@ -318,11 +324,10 @@ func (c *CommitTree) GetImmutable(version int64) (storetypes.CacheKVStore, error
 }
 
 func (c *CommitTree) Close() error {
-	if c.walChan != nil {
-		close(c.walChan)
+	if c.walQueue != nil {
+		c.walQueue.Close()
+		// TODO do we need to wait for WAL done??
 	}
-	// close(c.commitChan)
-	// return <-c.commitDone
 	return c.store.Close()
 }
 
@@ -378,6 +383,8 @@ func commitTraverse(ctx *commitContext, np *NodePointer, depth uint8) (hash []by
 }
 
 func evictTraverse(np *NodePointer, depth, evictionDepth uint8, evictVersion uint32) (count int) {
+	// TODO check height, and don't traverse if tree is too short
+
 	memNode := np.mem.Load()
 	if memNode == nil {
 		return 0

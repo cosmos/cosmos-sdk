@@ -25,7 +25,7 @@ type TreeStore struct {
 
 	opts Options
 
-	syncQueue *NonBlockingQueue[*ChangesetFiles]
+	syncQueue *NonBlockingQueue[*ChangesetWriter]
 	syncDone  chan error
 
 	cleanupProc *cleanupProc
@@ -56,7 +56,7 @@ func NewTreeStore(dir string, options Options, logger log.Logger) (*TreeStore, e
 	ts.cleanupProc = newCleanupProc(ts)
 
 	if options.WriteWAL && options.FsyncInterval > 0 {
-		ts.syncQueue = NewNonBlockingQueue[*ChangesetFiles]()
+		ts.syncQueue = NewNonBlockingQueue[*ChangesetWriter]()
 		ts.syncDone = make(chan error)
 		go ts.syncProc()
 	}
@@ -241,13 +241,14 @@ func (ts *TreeStore) SaveRoot(version uint32, root *NodePointer, totalLeaves, to
 	var reader *Changeset
 	if shouldSeal {
 		// Size limit reached - seal the current batch
-		reader, err = ts.currentWriter.Seal()
+		curWriter := ts.currentWriter
+		reader, err = curWriter.Seal()
 		if err != nil {
 			return fmt.Errorf("failed to seal changeset for version %d: %w", version, err)
 		}
 		if ts.syncQueue != nil {
 			// if sync queue is enabled, queue the files for fsync
-			ts.syncQueue.Send(reader.files)
+			ts.syncQueue.Send(curWriter)
 		}
 	} else {
 		// Create shared reader for periodic update
@@ -312,7 +313,7 @@ func (ts *TreeStore) syncProc() {
 		}
 		needsSync, closed := ts.syncQueue.MaybeReceive()
 		for _, f := range needsSync {
-			if err := f.kvlogFile.Sync(); err != nil {
+			if err := f.SyncWAL(); err != nil {
 				ts.syncDone <- fmt.Errorf("failed to sync WAL file: %w", err)
 				return
 			}

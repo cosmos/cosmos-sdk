@@ -3,8 +3,6 @@ package server
 import (
 	"bufio"
 	"context"
-	"crypto/sha256"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -14,21 +12,21 @@ import (
 	"strings"
 	"time"
 
-	cmtstate "github.com/cometbft/cometbft/api/cometbft/state/v2"
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
-	"github.com/cometbft/cometbft/v2/abci/server"
-	cmtcmd "github.com/cometbft/cometbft/v2/cmd/cometbft/commands"
-	cmtcfg "github.com/cometbft/cometbft/v2/config"
-	cmtjson "github.com/cometbft/cometbft/v2/libs/json"
-	"github.com/cometbft/cometbft/v2/node"
-	"github.com/cometbft/cometbft/v2/p2p"
-	pvm "github.com/cometbft/cometbft/v2/privval"
-	"github.com/cometbft/cometbft/v2/proxy"
-	rpchttp "github.com/cometbft/cometbft/v2/rpc/client/http"
-	"github.com/cometbft/cometbft/v2/rpc/client/local"
-	sm "github.com/cometbft/cometbft/v2/state"
-	"github.com/cometbft/cometbft/v2/store"
-	cmttypes "github.com/cometbft/cometbft/v2/types"
+	"github.com/cometbft/cometbft/abci/server"
+	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
+	cmtcfg "github.com/cometbft/cometbft/config"
+	cmtjson "github.com/cometbft/cometbft/libs/json"
+	"github.com/cometbft/cometbft/node"
+	"github.com/cometbft/cometbft/p2p"
+	pvm "github.com/cometbft/cometbft/privval"
+	cmtstate "github.com/cometbft/cometbft/proto/tendermint/state"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/cometbft/cometbft/proxy"
+	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
+	"github.com/cometbft/cometbft/rpc/client/local"
+	sm "github.com/cometbft/cometbft/state"
+	"github.com/cometbft/cometbft/store"
+	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/hashicorp/go-metrics"
 	"github.com/spf13/cobra"
@@ -130,7 +128,7 @@ type StartCmdOptions struct {
 	PostSetupStandalone func(svrCtx *Context, clientCtx client.Context, ctx context.Context, g *errgroup.Group) error
 	// AddFlags add custom flags to start cmd
 	AddFlags func(cmd *cobra.Command)
-	// StartCommandHanlder can be used to customize the start command handler
+	// StartCommandHandler can be used to customize the start command handler
 	StartCommandHandler func(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreator, inProcessConsensus bool, opts StartCmdOptions) error
 }
 
@@ -265,7 +263,7 @@ func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clie
 	if svrCfg.API.Enable || svrCfg.GRPC.Enable {
 		// create tendermint client
 		// assumes the rpc listen address is where tendermint has its rpc server
-		rpcclient, err := rpchttp.New(svrCtx.Config.RPC.ListenAddress)
+		rpcclient, err := rpchttp.New(svrCtx.Config.RPC.ListenAddress, "/websocket")
 		if err != nil {
 			return err
 		}
@@ -281,12 +279,12 @@ func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clie
 
 	grpcSrv, clientCtx, err := startGrpcServer(ctx, g, svrCfg.GRPC, clientCtx, svrCtx, app)
 	if err != nil {
-		return fmt.Errorf("failed to start grpc server: %w", err)
+		return err
 	}
 
 	err = startAPIServer(ctx, g, svrCfg, clientCtx, svrCtx, app, svrCtx.Config.RootDir, grpcSrv, metrics)
 	if err != nil {
-		return fmt.Errorf("failed to start api server: %w", err)
+		return err
 	}
 
 	if opts.PostSetupStandalone != nil {
@@ -375,20 +373,14 @@ func startCmtNode(
 ) (tmNode *node.Node, cleanupFn func(), err error) {
 	nodeKey, err := p2p.LoadOrGenNodeKey(cfg.NodeKeyFile())
 	if err != nil {
-		return nil, cleanupFn, fmt.Errorf("failed to load or generate node key: %w", err)
-	}
-
-	// CometBFT uses the ed25519 key generator as default if the given generator function is nil.
-	pv, err := pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile(), nil)
-	if err != nil {
-		return nil, cleanupFn, fmt.Errorf("failed to load or generate priv_validator: %w", err)
+		return nil, cleanupFn, err
 	}
 
 	cmtApp := NewCometABCIWrapper(app)
-	tmNode, err = node.NewNode(
+	tmNode, err = node.NewNodeWithContext(
 		ctx,
 		cfg,
-		pv,
+		pvm.LoadOrGenFilePV(cfg.PrivValidatorKeyFile(), cfg.PrivValidatorStateFile()),
 		nodeKey,
 		proxy.NewLocalClientCreator(cmtApp),
 		getGenDocProvider(cfg),
@@ -397,11 +389,11 @@ func startCmtNode(
 		servercmtlog.CometLoggerWrapper{Logger: svrCtx.Logger},
 	)
 	if err != nil {
-		return tmNode, cleanupFn, fmt.Errorf("failed to create new comet node: %w", err)
+		return tmNode, cleanupFn, err
 	}
 
 	if err := tmNode.Start(); err != nil {
-		return tmNode, cleanupFn, fmt.Errorf("failed to start comet node: %w", err)
+		return tmNode, cleanupFn, err
 	}
 
 	cleanupFn = func() {
@@ -425,38 +417,15 @@ func getAndValidateConfig(svrCtx *Context) (serverconfig.Config, error) {
 	return config, nil
 }
 
-// getGenDocProvider returns a function which returns the genesis doc from the genesis file.
-func getGenDocProvider(cfg *cmtcfg.Config) func() (node.ChecksummedGenesisDoc, error) {
-	return func() (node.ChecksummedGenesisDoc, error) {
-		defaultGenesisDoc := node.ChecksummedGenesisDoc{
-			Sha256Checksum: []byte{},
-		}
-
+// returns a function which returns the genesis doc from the genesis file.
+func getGenDocProvider(cfg *cmtcfg.Config) func() (*cmttypes.GenesisDoc, error) {
+	return func() (*cmttypes.GenesisDoc, error) {
 		appGenesis, err := genutiltypes.AppGenesisFromFile(cfg.GenesisFile())
 		if err != nil {
-			return defaultGenesisDoc, err
+			return nil, err
 		}
 
-		gen, err := appGenesis.ToGenesisDoc()
-		if err != nil {
-			return defaultGenesisDoc, err
-		}
-
-		genbz, err := gen.AppState.MarshalJSON()
-		if err != nil {
-			return defaultGenesisDoc, err
-		}
-
-		bz, err := json.Marshal(genbz)
-		if err != nil {
-			return defaultGenesisDoc, err
-		}
-		sum := sha256.Sum256(bz)
-
-		return node.ChecksummedGenesisDoc{
-			GenesisDoc:     gen,
-			Sha256Checksum: sum[:],
-		}, nil
+		return appGenesis.ToGenesisDoc()
 	}
 }
 
@@ -679,7 +648,7 @@ func InPlaceTestnetCreator(testnetAppCreator types.AppCreator) *cobra.Command {
 		Short: "Create and start a testnet from current local state",
 		Long: `Create and start a testnet from current local state.
 After utilizing this command the network will start. If the network is stopped,
-the normal "start" command should be used. Re-using this command on state that
+the normal "start" command should be used. Reusing this command on state that
 has already been modified by this command could result in unexpected behavior.
 
 Additionally, the first block may take up to one minute to be committed, depending
@@ -812,12 +781,7 @@ func testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB, tra
 	defer blockStore.Close()
 	defer stateDB.Close()
 
-	// CometBFT uses the ed25519 key generator as default if the given generator function is nil.
-	privValidator, err := pvm.LoadOrGenFilePV(config.PrivValidatorKeyFile(), config.PrivValidatorStateFile(), nil)
-	if err != nil {
-		return nil, err
-	}
-
+	privValidator := pvm.LoadOrGenFilePV(config.PrivValidatorKeyFile(), config.PrivValidatorStateFile())
 	userPubKey, err := privValidator.GetPubKey()
 	if err != nil {
 		return nil, err
@@ -828,7 +792,7 @@ func testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB, tra
 		DiscardABCIResponses: config.Storage.DiscardABCIResponses,
 	})
 
-	state, genDoc, err := node.LoadStateFromDBOrGenesisDocProvider(stateDB, genDocProvider, "")
+	state, genDoc, err := node.LoadStateFromDBOrGenesisDocProvider(stateDB, genDocProvider)
 	if err != nil {
 		return nil, err
 	}
@@ -844,12 +808,12 @@ func testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB, tra
 	_, context := getCtx(ctx, true)
 	clientCreator := proxy.NewLocalClientCreator(cmtApp)
 	metrics := node.DefaultMetricsProvider(cmtcfg.DefaultConfig().Instrumentation)
-	_, _, _, _, _, proxyMetrics, _, _ := metrics(genDoc.ChainID) //nolint: dogsled // function from comet
+	_, _, _, _, proxyMetrics, _, _ := metrics(genDoc.ChainID)
 	proxyApp := proxy.NewAppConns(clientCreator, proxyMetrics)
 	if err := proxyApp.Start(); err != nil {
 		return nil, fmt.Errorf("error starting proxy app connections: %w", err)
 	}
-	res, err := proxyApp.Query().Info(context, proxy.InfoRequest)
+	res, err := proxyApp.Query().Info(context, proxy.RequestInfo)
 	if err != nil {
 		return nil, fmt.Errorf("error calling Info: %w", err)
 	}
@@ -863,7 +827,7 @@ func testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB, tra
 	var block *cmttypes.Block
 	switch {
 	case appHeight == blockStore.Height():
-		block, _ = blockStore.LoadBlock(blockStore.Height())
+		block = blockStore.LoadBlock(blockStore.Height())
 		// If the state's last blockstore height does not match the app and blockstore height, we likely stopped with the halt height flag.
 		if state.LastBlockHeight != appHeight {
 			state.LastBlockHeight = appHeight
@@ -882,10 +846,10 @@ func testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB, tra
 		if err != nil {
 			return nil, err
 		}
-		block, _ = blockStore.LoadBlock(blockStore.Height())
+		block = blockStore.LoadBlock(blockStore.Height())
 	default:
 		// If there is any other state, we just load the block
-		block, _ = blockStore.LoadBlock(blockStore.Height())
+		block = blockStore.LoadBlock(blockStore.Height())
 	}
 
 	block.ChainID = newChainID
@@ -908,7 +872,7 @@ func testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB, tra
 
 	// Sign the vote and copy the proto changes from the act of signing to the vote itself
 	voteProto := vote.ToProto()
-	err = privValidator.SignVote(newChainID, voteProto, false)
+	err = privValidator.SignVote(newChainID, voteProto)
 	if err != nil {
 		return nil, err
 	}
@@ -969,7 +933,7 @@ func testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB, tra
 		return nil, err
 	}
 
-	// Modfiy Validators stateDB entry.
+	// Modify Validators stateDB entry.
 	err = stateDB.Set(fmt.Appendf(nil, "validatorsKey:%v", blockStore.Height()), buf)
 	if err != nil {
 		return nil, err

@@ -18,10 +18,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cometbft/cometbft/v2/libs/sync"
-	client "github.com/cometbft/cometbft/v2/rpc/client/http"
-	ctypes "github.com/cometbft/cometbft/v2/rpc/core/types"
-	tmtypes "github.com/cometbft/cometbft/v2/types"
+	"github.com/cometbft/cometbft/libs/sync"
+	client "github.com/cometbft/cometbft/rpc/client/http"
+	ctypes "github.com/cometbft/cometbft/rpc/core/types"
+	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/sjson"
 
@@ -47,7 +47,7 @@ var (
 )
 
 type TestnetInitializer interface {
-	Initialize()
+	Initialize(xargs ...string)
 }
 
 // SystemUnderTest blockchain provisioning
@@ -80,7 +80,7 @@ type SystemUnderTest struct {
 	chainID  string
 }
 
-func NewSystemUnderTest(execBinary string, verbose bool, nodesCount int, blockTime time.Duration, initer ...TestnetInitializer) *SystemUnderTest {
+func NewSystemUnderTest(execBinary string, verbose bool, nodesCount int, blockTime time.Duration, chainID string, initer ...TestnetInitializer) *SystemUnderTest {
 	if execBinary == "" {
 		panic("executable binary name must not be empty")
 	}
@@ -90,7 +90,7 @@ func NewSystemUnderTest(execBinary string, verbose bool, nodesCount int, blockTi
 	}
 	execBinary = filepath.Join(WorkDir, "binaries", execBinary)
 	s := &SystemUnderTest{
-		chainID:           "testing",
+		chainID:           chainID,
 		execBinary:        execBinary,
 		outputDir:         "./testnet",
 		blockTime:         blockTime,
@@ -139,12 +139,12 @@ func (s *SystemUnderTest) CommitTimeout() time.Duration {
 	return time.Duration((int64(s.blockTime) * 90) / 100) // leave 10% for all other operations
 }
 
-func (s *SystemUnderTest) SetupChain() {
+func (s *SystemUnderTest) SetupChain(initArgs ...string) {
 	s.Logf("Setup chain: %s\n", s.outputDir)
 	if err := os.RemoveAll(filepath.Join(WorkDir, s.outputDir)); err != nil {
 		panic(err.Error())
 	}
-	s.testnetInitializer.Initialize()
+	s.testnetInitializer.Initialize(initArgs...)
 	s.nodesCount = s.initialNodesCount
 
 	// modify genesis with system test defaults
@@ -177,8 +177,7 @@ func (s *SystemUnderTest) StartChain(t *testing.T, xargs ...string) {
 	t.Helper()
 	s.Log("Start chain\n")
 	s.ChainStarted = true
-	// HACK: force db_backend
-	s.startNodesAsync(t, append([]string{"start", "--log_level=info", "--log_no_color", "--db_backend=goleveldb"}, xargs...)...)
+	s.startNodesAsync(t, append([]string{"start", "--log_level=info", "--log_no_color"}, xargs...)...)
 
 	s.AwaitNodeUp(t, s.rpcAddr)
 
@@ -299,7 +298,7 @@ func (s *SystemUnderTest) AwaitNodeUp(t *testing.T, rpcAddr string) {
 	go func() { // query for a non empty block on status page
 		t.Logf("Checking node status: %s\n", rpcAddr)
 		for {
-			con, err := client.New(rpcAddr)
+			con, err := client.New(rpcAddr, "/websocket")
 			if err != nil || con.Start() != nil {
 				time.Sleep(time.Second)
 				continue
@@ -314,11 +313,13 @@ func (s *SystemUnderTest) AwaitNodeUp(t *testing.T, rpcAddr string) {
 			started <- struct{}{}
 		}
 	}()
+	timer := time.NewTimer(timeout)
+	defer timer.Stop()
 	select {
 	case <-started:
 	case <-ctx.Done():
 		require.NoError(t, ctx.Err())
-	case <-time.NewTimer(timeout).C:
+	case <-timer.C:
 		t.Fatalf("timeout waiting for node start: %s", timeout)
 	}
 }
@@ -403,7 +404,9 @@ func (s *SystemUnderTest) AwaitBlockHeight(t *testing.T, targetHeight int64, tim
 	} else {
 		maxWaitTime = time.Duration(targetHeight-s.currentHeight.Load()+4) * s.blockTime
 	}
-	abort := time.NewTimer(maxWaitTime).C
+	timer := time.NewTimer(maxWaitTime)
+	defer timer.Stop()
+	abort := timer.C
 	for {
 		select {
 		case <-abort:
@@ -433,10 +436,12 @@ func (s *SystemUnderTest) AwaitNextBlock(t *testing.T, timeout ...time.Duration)
 		done <- s.currentHeight.Load()
 		close(done)
 	}()
+	timer := time.NewTimer(maxWaitTime)
+	defer timer.Stop()
 	select {
 	case v := <-done:
 		return v
-	case <-time.NewTimer(maxWaitTime).C:
+	case <-timer.C:
 		t.Fatalf("Timeout - no block within %s", maxWaitTime)
 		return -1
 	}
@@ -755,7 +760,6 @@ func (s *SystemUnderTest) AddFullnode(t *testing.T, beforeStart ...func(nodeNumb
 		"--log_level=info",
 		"--log_no_color",
 		"--home", nodePath,
-		"--db_backend", "goleveldb", // HACK: force db_backend
 	}
 	s.Logf("Execute `%s %s`\n", s.execBinary, strings.Join(args, " "))
 	cmd = exec.Command( //nolint:gosec // used by tests only
@@ -852,7 +856,7 @@ type EventListener struct {
 // NewEventListener event listener
 func NewEventListener(t *testing.T, rpcAddr string) *EventListener {
 	t.Helper()
-	httpClient, err := client.New(rpcAddr)
+	httpClient, err := client.New(rpcAddr, "/websocket")
 	require.NoError(t, err)
 	require.NoError(t, httpClient.Start())
 	return &EventListener{client: httpClient, t: t}
@@ -866,7 +870,7 @@ type (
 )
 
 // Subscribe to receive events for a topic. Does not block.
-// For query syntax See https://docs.cosmos.network/master/core/events.html#subscribing-to-events
+// For query syntax See https://docs.cosmos.network/v0.46/core/events.html#subscribing-to-events
 func (l *EventListener) Subscribe(query string, cb EventConsumer) func() {
 	ctx, done := context.WithCancel(context.Background())
 	l.t.Cleanup(done)
@@ -888,7 +892,7 @@ func (l *EventListener) Subscribe(query string, cb EventConsumer) func() {
 }
 
 // AwaitQuery blocks and waits for a single result or timeout. This can be used with `broadcast-mode=async`.
-// For query syntax See https://docs.cosmos.network/master/core/events.html#subscribing-to-events
+// For query syntax See https://docs.cosmos.network/v0.46/core/events.html#subscribing-to-events
 func (l *EventListener) AwaitQuery(query string, optMaxWaitTime ...time.Duration) *ctypes.ResultEvent {
 	c, result := CaptureSingleEventConsumer()
 	maxWaitTime := DefaultWaitTime
@@ -907,6 +911,7 @@ func TimeoutConsumer(t *testing.T, maxWaitTime time.Duration, next EventConsumer
 	ctx, done := context.WithCancel(context.Background())
 	t.Cleanup(done)
 	timeout := time.NewTimer(maxWaitTime)
+	t.Cleanup(func() { timeout.Stop() })
 	timedOut := make(chan struct{}, 1)
 	go func() {
 		select {
@@ -922,6 +927,13 @@ func TimeoutConsumer(t *testing.T, maxWaitTime time.Duration, next EventConsumer
 			t.Fatalf("Timeout waiting for new events %s", maxWaitTime)
 			return false
 		default:
+			if !timeout.Stop() {
+				// Drain the channel if the timer already fired
+				select {
+				case <-timeout.C:
+				default:
+				}
+			}
 			timeout.Reset(maxWaitTime)
 			result := next(e)
 			if !result {

@@ -25,7 +25,7 @@ const (
 	// DefaultMaxEntries in a UBD/RED pair
 	DefaultMaxEntries uint32 = 7
 
-	// DefaultHistoricalEntries entries is 10000. Apps that don't use IBC can ignore this
+	// DefaultHistoricalEntries is 10000. Apps that don't use IBC can ignore this
 	// value by not adding the staking module to the application module manager's
 	// SetOrderBeginBlockers.
 	DefaultHistoricalEntries uint32 = 10000
@@ -72,10 +72,10 @@ func MustUnmarshalParams(cdc *codec.LegacyAmino, value []byte) Params {
 func UnmarshalParams(cdc *codec.LegacyAmino, value []byte) (params Params, err error) {
 	err = cdc.Unmarshal(value, &params)
 	if err != nil {
-		return
+		return params, err
 	}
 
-	return
+	return params, err
 }
 
 // Validate validates a set of Params

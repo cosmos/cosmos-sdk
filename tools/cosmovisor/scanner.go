@@ -13,9 +13,9 @@ import (
 	"time"
 
 	dbm "github.com/cometbft/cometbft-db"
-	"github.com/cometbft/cometbft/v2/store"
+	"github.com/cometbft/cometbft/store"
 
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
 var errUntestAble = errors.New("untestable")
@@ -86,7 +86,7 @@ func (fw *fileWatcher) IsStop() bool {
 	}
 }
 
-// MonitorUpdate pools the filesystem to check for new upgrade currentInfo.
+// MonitorUpdate polls the filesystem to check for new upgrade currentInfo.
 // currentName is the name of currently running upgrade.  The check is rejected if it finds
 // an upgrade with the same name.
 func (fw *fileWatcher) MonitorUpdate(currentUpgrade upgradetypes.Plan) <-chan struct{} {

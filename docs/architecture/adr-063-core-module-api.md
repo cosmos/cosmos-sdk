@@ -192,14 +192,12 @@ func NewKeeper(logger log.Logger) Keeper {
 }
 ```
 
-```
-
 ### Core `AppModule` extension interfaces
 
 
 Modules will provide their core services to the runtime module via extension interfaces built on top of the
 `cosmossdk.io/core/appmodule.AppModule` tag interface. This tag interface requires only two empty methods which
-allow `depinject` to identify implementors as `depinject.OnePerModule` types and as app module implementations:
+allow `depinject` to identify implementers as `depinject.OnePerModule` types and as app module implementations:
 
 ```go
 type AppModule interface {
@@ -226,7 +224,7 @@ type HasServices interface {
 
 ```
 
-Because of the `cosmos.msg.v1.service` protobuf option, required for `Msg` services, the same `ServiceRegitrar` can be
+Because of the `cosmos.msg.v1.service` protobuf option, required for `Msg` services, the same `ServiceRegistrar` can be
 used to register both `Msg` and query services.
 
 #### Genesis
@@ -282,7 +280,7 @@ type HasGenesis interface {
 
 #### Pre Blockers
 
-Modules that have functionality that runs before BeginBlock and should implement the has `HasPreBlocker` interfaces:
+Modules that have functionality that runs before BeginBlock and should implement the `HasPreBlocker` interfaces:
 
 ```go
 type HasPreBlocker interface {
@@ -388,7 +386,7 @@ Additional `AppModule` extension interfaces either inside or outside of core wil
 these concerns.
 
 In the case of gogo proto and amino interfaces, the registration of these generally should happen as early
-as possible during initialization and in [ADR 057: App Wiring](./adr-057-app-wiring-1.md), protobuf type registration  
+as possible during initialization and in [ADR 057: App Wiring](./adr-057-app-wiring.md), protobuf type registration  
 happens before dependency injection (although this could alternatively be done dedicated DI providers).
 
 gRPC gateway registration should probably be handled by the runtime module, but the core API shouldn't depend on gRPC
@@ -408,7 +406,7 @@ which modules can return in a provider:
 
 ```go
 func ProvideGrpcGateway() GrpcGatewayInfo {
-    return GrpcGatewayinfo {
+    return GrpcGatewayInfo {
         Handlers: []Handler {types.RegisterQueryHandlerClient}
     }
 }
@@ -496,7 +494,7 @@ a dependency on `github.com/cosmos/cosmos-sdk` would no longer be required.
 In short, modules would depend primarily on `cosmossdk.io/core`, and each `cosmossdk.io/runtime/{consensus-engine}`
 would implement the `cosmossdk.io/core` functionality for that consensus engine.
 
-On additional piece that would need to be resolved as part of this architecture is how runtimes relate to the server.
+One additional piece that would need to be resolved as part of this architecture is how runtimes relate to the server.
 Likely it would make sense to modularize the current server architecture so that it can be used with any runtime even
 if that is based on a consensus engine besides Comet. This means that eventually the Comet runtime would need to
 encapsulate the logic for starting Comet and the ABCI app.
@@ -558,7 +556,7 @@ as by providing service implementations by wrapping `sdk.Context`.
 ## References
 
 * [ADR 033: Protobuf-based Inter-Module Communication](./adr-033-protobuf-inter-module-comm.md)
-* [ADR 057: App Wiring](./adr-057-app-wiring-1.md)
+* [ADR 057: App Wiring](./adr-057-app-wiring.md)
 * [ADR 055: ORM](./adr-055-orm.md)
 * [ADR 028: Public Key Addresses](./adr-028-public-key-addresses.md)
 * [Keeping Your Modules Compatible](https://go.dev/blog/module-compatibility)

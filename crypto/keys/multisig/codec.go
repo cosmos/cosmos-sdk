@@ -1,7 +1,7 @@
 package multisig
 
 import (
-	"github.com/cometbft/cometbft/v2/crypto/bls12381"
+	"github.com/cometbft/cometbft/crypto/bls12381"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	bls12_381 "github.com/cosmos/cosmos-sdk/crypto/keys/bls12_381"
@@ -12,6 +12,7 @@ import (
 
 // TODO: Figure out API for others to either add their own pubkey types, or
 // to make verify / marshal accept a AminoCdc.
+
 const (
 	PubKeyAminoRoute = "tendermint/PubKeyMultisigThreshold"
 )

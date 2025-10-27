@@ -13,8 +13,8 @@ import (
 	"testing"
 	"unsafe"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
-	cmttypes "github.com/cometbft/cometbft/v2/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 

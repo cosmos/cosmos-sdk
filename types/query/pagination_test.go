@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/depinject"
@@ -123,7 +123,7 @@ func (s *paginationTestSuite) TestPagination() {
 	s.accountKeeper.SetAccount(s.ctx, acc1)
 	s.Require().NoError(testutil.FundAccount(s.ctx, s.bankKeeper, addr1, balances))
 
-	s.T().Log("verify empty page request results a max of defaultLimit records and counts total records")
+	s.T().Log("verify empty page request results in a max of defaultLimit records and counts total records")
 	pageReq := &query.PageRequest{}
 	request := types.NewQueryAllBalancesRequest(addr1, pageReq, false)
 	res, err := queryClient.AllBalances(gocontext.Background(), request)
@@ -132,7 +132,7 @@ func (s *paginationTestSuite) TestPagination() {
 	s.Require().NotNil(res.Pagination.NextKey)
 	s.Require().LessOrEqual(res.Balances.Len(), defaultLimit)
 
-	s.T().Log("verify page request with limit > defaultLimit, returns less or equal to `limit` records")
+	s.T().Log("verify page request with limit > defaultLimit, returns less than or equal to `limit` records")
 	pageReq = &query.PageRequest{Limit: overLimit}
 	request = types.NewQueryAllBalancesRequest(addr1, pageReq, false)
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
@@ -275,7 +275,7 @@ func (s *paginationTestSuite) TestReversePagination() {
 	s.Require().Nil(res.Pagination.NextKey)
 	s.Require().Equal(res.Pagination.Total, uint64(0))
 
-	s.T().Log("verify page request with limit > defaultLimit, returns less or equal to `limit` records")
+	s.T().Log("verify page request with limit > defaultLimit, returns less than or equal to `limit` records")
 	pageReq = &query.PageRequest{Limit: overLimit, Reverse: true}
 	request = types.NewQueryAllBalancesRequest(addr1, pageReq, false)
 	res, err = queryClient.AllBalances(gocontext.Background(), request)

@@ -24,7 +24,7 @@ const config = {
   organizationName: "cosmos",
   projectName: "cosmos-sdk",
 
-  // Even if you don't use internalization, you can use this field to set useful
+  // Even if you don't use internationalization, you can use this field to set useful
   // metadata like html lang. For example, if your site is Chinese, you may want
   // to replace "en" with "zh-Hans".
   i18n: {
@@ -62,7 +62,7 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
-      image: "img/banner.jpg",
+      image: "img/banner.svg",
       docs: {
         sidebar: {
           autoCollapseCategories: true,

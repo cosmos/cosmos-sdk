@@ -27,7 +27,7 @@ func NewMintingRestrictionTestHelper() *MintingRestrictionTestHelper {
 	return &MintingRestrictionTestHelper{Calls: make([]*MintingRestrictionArgs, 0, 2)}
 }
 
-// RecordCall makes note that the provided args were used as a funcion call.
+// RecordCall makes note that the provided args were used as a function call.
 func (s *MintingRestrictionTestHelper) RecordCall(name string, coins sdk.Coins) {
 	s.Calls = append(s.Calls, s.NewArgs(name, coins))
 }
@@ -391,7 +391,7 @@ func TestNoOpMintingRestrictionFn(t *testing.T) {
 		err = types.NoOpMintingRestrictionFn(sdk.Context{}, sdk.Coins{})
 	}
 	require.NotPanics(t, testFunc, "NoOpMintingRestrictionFn")
-	assert.NoError(t, err, "NoOpSendRestrictionFn error")
+	assert.NoError(t, err, "NoOpMintingRestrictionFn error")
 }
 
 // SendRestrictionArgs are the args provided to a SendRestrictionFn function.
@@ -411,7 +411,7 @@ func NewSendRestrictionTestHelper() *SendRestrictionTestHelper {
 	return &SendRestrictionTestHelper{Calls: make([]*SendRestrictionArgs, 0, 2)}
 }
 
-// RecordCall makes note that the provided args were used as a funcion call.
+// RecordCall makes note that the provided args were used as a function call.
 func (s *SendRestrictionTestHelper) RecordCall(name string, fromAddr, toAddr sdk.AccAddress, coins sdk.Coins) {
 	s.Calls = append(s.Calls, s.NewArgs(name, fromAddr, toAddr, coins))
 }

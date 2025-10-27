@@ -7,8 +7,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/cometbft/cometbft/v2/crypto"
-	bls "github.com/cometbft/cometbft/v2/crypto/bls12381"
+	"github.com/cometbft/cometbft/crypto"
+	bls "github.com/cometbft/cometbft/crypto/bls12381"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -109,7 +109,7 @@ func (pubKey PubKey) Address() crypto.Address {
 }
 
 // VerifySignature verifies the given signature.
-func (pubKey PubKey) VerifySignature(msg, sig []byte) bool {
+func (pubKey PubKey) VerifySignature(_, _ []byte) bool {
 	panic("not implemented, build flags are required to use bls12_381 keys")
 }
 
@@ -128,7 +128,7 @@ func (pubKey PubKey) Equals(other cryptotypes.PubKey) bool {
 	return pubKey.Type() == other.Type() && bytes.Equal(pubKey.Bytes(), other.Bytes())
 }
 
-// String returns Hex representation of a pubkey with it's type
+// String returns Hex representation of a pubkey with its type
 func (pubKey PubKey) String() string {
 	return fmt.Sprintf("PubKeyBLS12_381{%X}", pubKey.Key)
 }

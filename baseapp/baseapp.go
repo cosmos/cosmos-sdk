@@ -8,12 +8,11 @@ import (
 	"slices"
 	"strconv"
 	"sync"
-	"time"
 
 	"github.com/cockroachdb/errors"
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
-	abci "github.com/cometbft/cometbft/v2/abci/types"
-	"github.com/cometbft/cometbft/v2/crypto/tmhash"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/crypto/tmhash"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
 	protov2 "google.golang.org/protobuf/proto"
@@ -121,7 +120,7 @@ type BaseApp struct {
 	// ResponseCommit.RetainHeight value during ABCI Commit. A value of 0 indicates
 	// that no blocks should be pruned.
 	//
-	// Note: CometBFT block pruning is dependant on this parameter in conjunction
+	// Note: CometBFT block pruning is dependent on this parameter in conjunction
 	// with the unbonding (safety threshold) period, state pruning and state sync
 	// snapshot parameters to determine the correct minimum value of
 	// ResponseCommit.RetainHeight.
@@ -163,11 +162,8 @@ type BaseApp struct {
 	// SAFETY: it's safe to do if validators validate the total gas wanted in the `ProcessProposal`, which is the case in the default handler.
 	disableBlockGasMeter bool
 
-	// nextBlockDelay is the delay to wait until the next block after ABCI has committed.
-	// This gives the application more time to receive precommits.  This is the same as TimeoutCommit,
-	// but can new be set from the application.  This value defaults to 0, and CometBFT will use the
-	// legacy value set in config.toml if it is 0.
-	nextBlockDelay time.Duration
+	// Optional alternative tx runner, used for block-stm parallel transaction execution. If nil, default txRunner is used.
+	txRunner sdk.TxRunner
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -188,7 +184,6 @@ func NewBaseApp(
 		fauxMerkleMode:   false,
 		sigverifyTx:      true,
 		gasConfig:        config.GasConfig{QueryGasLimit: math.MaxUint64},
-		nextBlockDelay:   0, // default to 0 so that the legacy CometBFT config.toml value is used
 	}
 
 	for _, option := range options {
@@ -291,6 +286,9 @@ func (app *BaseApp) MountStores(keys ...storetypes.StoreKey) {
 		case *storetypes.MemoryStoreKey:
 			app.MountStore(key, storetypes.StoreTypeMemory)
 
+		case *storetypes.ObjectStoreKey:
+			app.MountStore(key, storetypes.StoreTypeObject)
+
 		default:
 			panic(fmt.Sprintf("Unrecognized store key type :%T", key))
 		}
@@ -326,6 +324,16 @@ func (app *BaseApp) MountMemoryStores(keys map[string]*storetypes.MemoryStoreKey
 	for _, key := range skeys {
 		memKey := keys[key]
 		app.MountStore(memKey, storetypes.StoreTypeMemory)
+	}
+}
+
+// MountObjectStores mounts all transient object stores with the BaseApp's internal
+// commit multi-store.
+func (app *BaseApp) MountObjectStores(keys map[string]*storetypes.ObjectStoreKey) {
+	skeys := slices.Sorted(maps.Keys(keys))
+	for _, key := range skeys {
+		memKey := keys[key]
+		app.MountStore(memKey, storetypes.StoreTypeObject)
 	}
 }
 
@@ -536,7 +544,7 @@ func (app *BaseApp) GetMaximumBlockGas(ctx sdk.Context) uint64 {
 	}
 }
 
-func (app *BaseApp) validateFinalizeBlockHeight(req *abci.FinalizeBlockRequest) error {
+func (app *BaseApp) validateFinalizeBlockHeight(req *abci.RequestFinalizeBlock) error {
 	if req.Height < 1 {
 		return fmt.Errorf("invalid height: %d", req.Height)
 	}
@@ -597,9 +605,7 @@ func (app *BaseApp) getBlockGasMeter(ctx sdk.Context) storetypes.GasMeter {
 	return storetypes.NewInfiniteGasMeter()
 }
 
-// getContextForTx retrieves the context for the tx w/ txBytes and other memoized values.
-// retrieve the context for the tx w/ txBytes and other memoized values.
-func (app *BaseApp) getContextForTx(mode sdk.ExecMode, txBytes []byte) sdk.Context {
+func (app *BaseApp) getContextForTx(mode sdk.ExecMode, txBytes []byte, txIndex int) sdk.Context {
 	app.mu.Lock()
 	defer app.mu.Unlock()
 
@@ -609,6 +615,7 @@ func (app *BaseApp) getContextForTx(mode sdk.ExecMode, txBytes []byte) sdk.Conte
 	}
 	ctx := modeState.Context().
 		WithTxBytes(txBytes).
+		WithTxIndex(txIndex).
 		WithGasMeter(storetypes.NewInfiniteGasMeter())
 	// WithVoteInfos(app.voteInfos) // TODO: identify if this is needed
 
@@ -644,7 +651,7 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 	return ctx.WithMultiStore(msCache), msCache
 }
 
-func (app *BaseApp) preBlock(req *abci.FinalizeBlockRequest) ([]abci.Event, error) {
+func (app *BaseApp) preBlock(req *abci.RequestFinalizeBlock) ([]abci.Event, error) {
 	var events []abci.Event
 	if app.abciHandlers.PreBlocker != nil {
 		finalizeState := app.stateManager.GetState(execModeFinalize)
@@ -667,7 +674,7 @@ func (app *BaseApp) preBlock(req *abci.FinalizeBlockRequest) ([]abci.Event, erro
 	return events, nil
 }
 
-func (app *BaseApp) beginBlock(_ *abci.FinalizeBlockRequest) (sdk.BeginBlock, error) {
+func (app *BaseApp) beginBlock(_ *abci.RequestFinalizeBlock) (sdk.BeginBlock, error) {
 	var (
 		resp sdk.BeginBlock
 		err  error
@@ -693,7 +700,7 @@ func (app *BaseApp) beginBlock(_ *abci.FinalizeBlockRequest) (sdk.BeginBlock, er
 	return resp, nil
 }
 
-func (app *BaseApp) deliverTx(tx []byte) *abci.ExecTxResult {
+func (app *BaseApp) deliverTx(tx []byte, txMultiStore storetypes.MultiStore, txIndex int, incarnationCache map[string]any) *abci.ExecTxResult {
 	gInfo := sdk.GasInfo{}
 	resultStr := "successful"
 
@@ -706,7 +713,7 @@ func (app *BaseApp) deliverTx(tx []byte) *abci.ExecTxResult {
 		telemetry.SetGauge(float32(gInfo.GasWanted), "tx", "gas", "wanted")
 	}()
 
-	gInfo, result, anteEvents, err := app.runTx(execModeFinalize, tx, nil)
+	gInfo, result, anteEvents, err := app.RunTx(execModeFinalize, tx, nil, txIndex, txMultiStore, incarnationCache)
 	if err != nil {
 		resultStr = "failed"
 		resp = sdkerrors.ResponseExecTxResultWithEvents(
@@ -756,7 +763,7 @@ func (app *BaseApp) endBlock(_ context.Context) (sdk.EndBlock, error) {
 	return endblock, nil
 }
 
-// runTx processes a transaction within a given execution mode, encoded transaction
+// RunTx processes a transaction within a given execution mode, encoded transaction
 // bytes, and the decoded transaction itself. All state transitions occur through
 // a cached Context depending on the mode provided. State only gets persisted
 // if all messages get executed successfully and the execution mode is DeliverTx.
@@ -765,17 +772,23 @@ func (app *BaseApp) endBlock(_ context.Context) (sdk.EndBlock, error) {
 // and execute successfully. An error is returned otherwise.
 // both txbytes and the decoded tx are passed to runTx to avoid the state machine encoding the tx and decoding the transaction twice
 // passing the decoded tx to runTX is optional, it will be decoded if the tx is nil
-func (app *BaseApp) runTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) {
+func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex int, txMultiStore storetypes.MultiStore, incarnationCache map[string]any) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) {
 	// NOTE: GasWanted should be returned by the AnteHandler. GasUsed is
 	// determined by the GasMeter. We need access to the context to get the gas
 	// meter, so we initialize upfront.
 	var gasWanted uint64
 
-	ctx := app.getContextForTx(mode, txBytes)
+	ctx := app.getContextForTx(mode, txBytes, txIndex)
+	if incarnationCache != nil {
+		ctx = ctx.WithIncarnationCache(incarnationCache)
+	}
+	if txMultiStore != nil {
+		ctx = ctx.WithMultiStore(txMultiStore)
+	}
 	ms := ctx.MultiStore()
 
 	// only run the tx if there is block gas remaining
-	if mode == execModeFinalize && ctx.BlockGasMeter().IsOutOfGas() {
+	if mode == sdk.ExecModeFinalize && ctx.BlockGasMeter().IsOutOfGas() {
 		return gInfo, nil, nil, errorsmod.Wrap(sdkerrors.ErrOutOfGas, "no block gas left to run tx")
 	}
 
@@ -964,6 +977,8 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 			break
 		}
 
+		ctx = ctx.WithMsgIndex(i)
+
 		handler := app.msgServiceRouter.Handler(msg)
 		if handler == nil {
 			return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "no message handler found for %T", msg)
@@ -1062,7 +1077,7 @@ func (app *BaseApp) PrepareProposalVerifyTx(tx sdk.Tx) ([]byte, error) {
 		return nil, err
 	}
 
-	_, _, _, err = app.runTx(execModePrepareProposal, bz, tx)
+	_, _, _, err = app.RunTx(execModePrepareProposal, bz, tx, -1, nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -1081,7 +1096,7 @@ func (app *BaseApp) ProcessProposalVerifyTx(txBz []byte) (sdk.Tx, error) {
 		return nil, err
 	}
 
-	_, _, _, err = app.runTx(execModeProcessProposal, txBz, tx)
+	_, _, _, err = app.RunTx(execModeProcessProposal, txBz, tx, -1, nil, nil)
 	if err != nil {
 		return nil, err
 	}

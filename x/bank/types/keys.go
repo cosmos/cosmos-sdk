@@ -17,6 +17,9 @@ const (
 
 	// RouterKey defines the module's message routing key
 	RouterKey = ModuleName
+
+	// ObjectStoreKey defines the store name for the object store
+	ObjectStoreKey = "object:" + ModuleName
 )
 
 // KVStore keys

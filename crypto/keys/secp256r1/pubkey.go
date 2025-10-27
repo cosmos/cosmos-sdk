@@ -3,11 +3,14 @@ package secp256r1
 import (
 	"encoding/base64"
 
-	cmtcrypto "github.com/cometbft/cometbft/v2/crypto"
+	cmtcrypto "github.com/cometbft/cometbft/crypto"
 	"github.com/cosmos/gogoproto/proto"
+
+	errorsmod "cosmossdk.io/errors"
 
 	ecdsa "github.com/cosmos/cosmos-sdk/crypto/keys/internal/ecdsa"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // customProtobufType is here to make sure that ecdsaPK and ecdsaSK implement the
@@ -98,4 +101,19 @@ func (pk *ecdsaPK) Size() int {
 // Unmarshal implements proto.Marshaler interface
 func (pk *ecdsaPK) Unmarshal(bz []byte) error {
 	return pk.PubKey.Unmarshal(bz, secp256r1, pubKeySize)
+}
+
+// NewPubKeyFromBytes creates a secp256r1 PubKey from bytes.
+func NewPubKeyFromBytes(bytes []byte) (*PubKey, error) {
+	if len(bytes) != pubKeySize {
+		return nil, errorsmod.Wrapf(errors.ErrInvalidPubKey,
+			"wrong secp256r1 pubkey size, expecting %d bytes, got %d",
+			pubKeySize, len(bytes))
+	}
+	pk := &ecdsaPK{}
+	err := pk.Unmarshal(bytes)
+	if err != nil {
+		return nil, errorsmod.Wrap(errors.ErrInvalidPubKey, err.Error())
+	}
+	return &PubKey{Key: pk}, nil
 }

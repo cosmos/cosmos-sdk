@@ -56,7 +56,7 @@ Tests which exercise a whole module's function with dependencies mocked, are *jo
 These are almost like integration tests in that they exercise many things together but still
 use mocks.
 
-Example 1 journey vs illustrative tests - [depinject's BDD style tests](https://github.com/cosmos/cosmos-sdk/blob/main/depinject/features/bindings.feature), show how we can
+Example 1 journey vs illustrative tests - [depinject's BDD style tests](https://github.com/cosmos/cosmos-sdk/blob/main/depinject/binding_test.go), show how we can
 rapidly build up many illustrative cases demonstrating behavioral rules without [very much code](https://github.com/cosmos/cosmos-sdk/blob/main/depinject/binding_test.go) while maintaining high level readability.
 
 Example 2 [depinject table driven tests](https://github.com/cosmos/cosmos-sdk/blob/main/depinject/provider_desc_test.go)
@@ -98,7 +98,7 @@ exercises [HandleEquivocationEvidence](https://github.com/cosmos/cosmos-sdk/blob
 keeper.
 
 Example 3 - Integration suite app configurations may also be specified via golang (not
-YAML as above) [statically](https://github.com/cosmos/cosmos-sdk/blob/main/x/nft/testutil/app_config.go) or [dynamically](https://github.com/cosmos/cosmos-sdk/blob/8c23f6f957d1c0bedd314806d1ac65bea59b084c/tests/integration/bank/keeper/keeper_test.go#L129-L134).
+YAML as above) [statically](https://github.com/cosmos/cosmos-sdk/blob/main/contrib/x/nft/testutil/app_config.go) or [dynamically](https://github.com/cosmos/cosmos-sdk/blob/8c23f6f957d1c0bedd314806d1ac65bea59b084c/tests/integration/bank/keeper/keeper_test.go#L129-L134).
 
 #### Limitations
 
@@ -148,12 +148,12 @@ to a production environment as is practical. Presently these tests are located a
 [tests/e2e](https://github.com/cosmos/cosmos-sdk/tree/main/tests/e2e) and rely on [testutil/network](https://github.com/cosmos/cosmos-sdk/tree/main/testutil/network) to start up an in-process Tendermint node.
 
 An application should be built as minimally as possible to exercise the desired functionality.
-The SDK uses an application will only the required modules for the tests. The application developer is adviced to use its own application for e2e tests.
+The SDK uses an application will only the required modules for the tests. The application developer is advised to use its own application for e2e tests.
 
 #### Limitations
 
 In general the limitations of end to end tests are orchestration and compute cost.
-Scaffolding is required to start up and run a prod-like environment and the this
+Scaffolding is required to start up and run a prod-like environment and this
 process takes much longer to start and run than unit or integration tests.
 
 Global locks present in Tendermint code cause stateful starting/stopping to sometimes hang
@@ -242,7 +242,7 @@ demonstrated in [PR#12706](https://github.com/cosmos/cosmos-sdk/pull/12706).
 
 It may be useful if test suites could be run in integration mode (with mocked tendermint) or
 with e2e fixtures (with real tendermint and many nodes). Integration fixtures could be used
-for quicker runs, e2e fixures could be used for more battle hardening.
+for quicker runs, e2e fixtures could be used for more battle hardening.
 
 A PoC `x/gov` was completed in PR [#12847](https://github.com/cosmos/cosmos-sdk/pull/12847)
 is in progress for unit tests demonstrating BDD [Rejected].

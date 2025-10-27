@@ -265,7 +265,7 @@ func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
 	assert.Assert(t, tallyResults.Equals(v1.EmptyTallyResult()) == false)
 }
 
-func TestTallyDelgatorOverride(t *testing.T) {
+func TestTallyDelegatorOverride(t *testing.T) {
 	t.Parallel()
 
 	f := initFixture(t)
@@ -305,7 +305,7 @@ func TestTallyDelgatorOverride(t *testing.T) {
 	assert.Assert(t, tallyResults.Equals(v1.EmptyTallyResult()) == false)
 }
 
-func TestTallyDelgatorInherit(t *testing.T) {
+func TestTallyDelegatorInherit(t *testing.T) {
 	t.Parallel()
 
 	f := initFixture(t)
@@ -344,7 +344,7 @@ func TestTallyDelgatorInherit(t *testing.T) {
 	assert.Assert(t, tallyResults.Equals(v1.EmptyTallyResult()) == false)
 }
 
-func TestTallyDelgatorMultipleOverride(t *testing.T) {
+func TestTallyDelegatorMultipleOverride(t *testing.T) {
 	t.Parallel()
 
 	f := initFixture(t)
@@ -388,7 +388,7 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 	assert.Assert(t, tallyResults.Equals(v1.EmptyTallyResult()) == false)
 }
 
-func TestTallyDelgatorMultipleInherit(t *testing.T) {
+func TestTallyDelegatorMultipleInherit(t *testing.T) {
 	t.Parallel()
 
 	f := initFixture(t)

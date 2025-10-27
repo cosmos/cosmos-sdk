@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
-	abci "github.com/cometbft/cometbft/v2/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
@@ -45,8 +45,6 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	grouptypes "github.com/cosmos/cosmos-sdk/x/group"   //nolint:staticcheck // deprecated and to be removed
-	group "github.com/cosmos/cosmos-sdk/x/group/module" //nolint:staticcheck // deprecated and to be removed
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/protocolpool"
@@ -85,7 +83,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 	}
 
 	// finalize block so we have CheckTx state set
-	_, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: 1,
 	})
 	require.NoError(t, err)
@@ -134,7 +132,7 @@ func TestRunMigrations(t *testing.T) {
 	}
 
 	// Initialize the chain
-	_, err := app.InitChain(&abci.InitChainRequest{})
+	_, err := app.InitChain(&abci.RequestInitChain{})
 	require.NoError(t, err)
 	_, err = app.Commit()
 	require.NoError(t, err)
@@ -220,7 +218,6 @@ func TestRunMigrations(t *testing.T) {
 					distrtypes.ModuleName:        distribution.AppModule{}.ConsensusVersion(),
 					slashingtypes.ModuleName:     slashing.AppModule{}.ConsensusVersion(),
 					govtypes.ModuleName:          gov.AppModule{}.ConsensusVersion(),
-					grouptypes.ModuleName:        group.AppModule{}.ConsensusVersion(),
 					upgradetypes.ModuleName:      upgrade.AppModule{}.ConsensusVersion(),
 					vestingtypes.ModuleName:      vesting.AppModule{}.ConsensusVersion(),
 					feegrant.ModuleName:          feegrantmodule.AppModule{}.ConsensusVersion(),

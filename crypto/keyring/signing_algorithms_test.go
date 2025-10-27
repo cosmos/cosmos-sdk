@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 )
 
-func TestNewSigningAlgoByString(t *testing.T) {
+func TestNewSigningAlgoFromString(t *testing.T) {
 	tests := []struct {
 		name         string
 		algoStr      string

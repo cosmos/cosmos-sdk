@@ -147,7 +147,7 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 
 func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommunityPoolSpend) (*types.MsgCommunityPoolSpendResponse, error) {
 	if k.HasExternalCommunityPool() {
-		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "external community pool is enabled -  use the DistributFromCommunityPool method exposed by the external community pool")
+		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "external community pool is enabled - use the DistributeFromCommunityPool method exposed by the external community pool")
 	}
 
 	if err := k.validateAuthority(msg.Authority); err != nil {
@@ -199,7 +199,7 @@ func (k msgServer) DepositValidatorRewardsPool(ctx context.Context, msg *types.M
 	}
 
 	if validator == nil {
-		return nil, errors.Wrapf(types.ErrNoValidatorExists, msg.ValidatorAddress)
+		return nil, errors.Wrapf(types.ErrNoValidatorExists, "%s", msg.ValidatorAddress)
 	}
 
 	// Allocate tokens from the distribution module to the validator, which are

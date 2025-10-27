@@ -12,7 +12,7 @@ import (
 	"testing"
 
 	"github.com/99designs/keyring"
-	cmtcrypto "github.com/cometbft/cometbft/v2/crypto"
+	cmtcrypto "github.com/cometbft/cometbft/crypto"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/bcrypt"
 
@@ -75,7 +75,7 @@ func TestNewKeyring(t *testing.T) {
 			dir:         t.TempDir(),
 			userInput:   strings.NewReader(""),
 			cdc:         cdc,
-			expectedErr: ErrUnknownBacked,
+			expectedErr: ErrUnknownBackend,
 		},
 	}
 	for _, tt := range tests {
@@ -1973,14 +1973,14 @@ func TestRenameKey(t *testing.T) {
 			},
 		},
 		{
-			name: "cant rename a key that doesnt exist",
+			name: "can't rename a key that doesn't exist",
 			run: func(kr Keyring) {
 				err := kr.Rename("bogus", "bogus2")
 				require.Error(t, err)
 			},
 		},
 		{
-			name: "cant rename a key to an already existing key name",
+			name: "can't rename a key to an already existing key name",
 			run: func(kr Keyring) {
 				key1, key2 := "existingKey", "existingKey2" // create 2 keys
 				newKeyRecord(t, kr, key1)
@@ -1991,7 +1991,7 @@ func TestRenameKey(t *testing.T) {
 			},
 		},
 		{
-			name: "cant rename key to itself",
+			name: "can't rename key to itself",
 			run: func(kr Keyring) {
 				keyName := "keyName"
 				newKeyRecord(t, kr, keyName)
@@ -2013,7 +2013,7 @@ func TestRenameKey(t *testing.T) {
 
 // TestChangeBcrypt tests the compatibility from upstream Bcrypt and our own
 func TestChangeBcrypt(t *testing.T) {
-	pw := []byte("somepasswword!")
+	pw := []byte("somepassword!")
 
 	saltBytes := cmtcrypto.CRandBytes(16)
 	cosmosHash, err := cosmosbcrypt.GenerateFromPassword(saltBytes, pw, 2)

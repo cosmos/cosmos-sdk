@@ -1,6 +1,7 @@
 package pruning
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"testing"
@@ -153,12 +154,12 @@ func TestPruningHeight_Inputs(t *testing.T) {
 			0,
 			types.PruningEverything,
 		},
-		"currentHeight is  zero - prune everything - invalid currentHeight": {
+		"currentHeight is zero - prune everything - invalid currentHeight": {
 			0,
 			0,
 			types.PruningEverything,
 		},
-		"currentHeight is positive but within keep recent- prune everything - not kept": {
+		"currentHeight is positive but within keep recent - prune everything - not kept": {
 			keepRecent,
 			0,
 			types.PruningEverything,
@@ -383,7 +384,7 @@ func TestHandleSnapshotHeight_LoadFromDisk(t *testing.T) {
 
 	expected := 0
 	for snapshotHeight := int64(-1); snapshotHeight < 100; snapshotHeight++ {
-		snapshotHeightStr := fmt.Sprintf("snaphost height: %d", snapshotHeight)
+		snapshotHeightStr := fmt.Sprintf("snapshot height: %d", snapshotHeight)
 		if snapshotHeight > int64(snapshotInterval) && snapshotHeight%int64(snapshotInterval) == 1 {
 			// Test flush
 			manager.HandleSnapshotHeight(snapshotHeight - 1)
@@ -453,4 +454,55 @@ func TestLoadSnapshotHeights_PruneNothing(t *testing.T) {
 	manager.SetOptions(types.NewPruningOptions(types.PruningNothing))
 
 	require.Nil(t, manager.LoadSnapshotHeights(db.NewMemDB()))
+}
+
+func TestInt64SliceToBytes(t *testing.T) {
+	tests := []struct {
+		name   string
+		input  []int64
+		expect []byte
+	}{
+		{
+			name:   "empty slice",
+			input:  []int64{},
+			expect: []byte{},
+		},
+		{
+			name:  "single value",
+			input: []int64{1},
+			expect: func() []byte {
+				b := make([]byte, 8)
+				binary.BigEndian.PutUint64(b, 1)
+				return b
+			}(),
+		},
+		{
+			name:  "multiple values",
+			input: []int64{1, 2},
+			expect: func() []byte {
+				b := make([]byte, 16)
+				binary.BigEndian.PutUint64(b[0:], 1)
+				binary.BigEndian.PutUint64(b[8:], 2)
+				return b
+			}(),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := int64SliceToBytes(tt.input...)
+			require.Equal(t, tt.expect, got, "bytes mismatch")
+		})
+	}
+}
+
+func BenchmarkInt64SliceToBytes(b *testing.B) {
+	data := make([]int64, 1024)
+	for i := range data {
+		data[i] = int64(i)
+	}
+
+	for b.Loop() {
+		_ = int64SliceToBytes(data...)
+	}
 }

@@ -32,10 +32,12 @@ var (
 	key                = make([]byte, secp256k1.PubKeySize)
 	simSecp256k1Pubkey = &secp256k1.PubKey{Key: key}
 	simSecp256k1Sig    [64]byte
+
+	SigVerificationResultCacheKey = "ante:SigVerificationResult"
 )
 
 func init() {
-	// This decodes a valid hex string into a sepc256k1Pubkey for use in transaction simulation
+	// This decodes a valid hex string into a secp256k1Pubkey for use in transaction simulation
 	bz, _ := hex.DecodeString("035AD6810A47F073553FF30D2FCC7E0D3B1C0B74B61A1AAA2582344037151E143A")
 	copy(key, bz)
 	simSecp256k1Pubkey.Key = key
@@ -100,7 +102,7 @@ func (spkd SetPubKeyDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate b
 		if err != nil {
 			return ctx, err
 		}
-		// account already has pubkey set,no need to reset
+		// account already has pubkey set, no need to reset
 		if acc.GetPubKey() != nil {
 			continue
 		}
@@ -303,10 +305,10 @@ func OnlyLegacyAminoSigners(sigData signing.SignatureData) bool {
 	}
 }
 
-func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+func (svd SigVerificationDecorator) anteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool) error {
 	sigTx, ok := tx.(authsigning.Tx)
 	if !ok {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
+		return errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
 
 	utx, ok := tx.(sdk.TxWithUnordered)
@@ -314,24 +316,24 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	unorderedEnabled := svd.ak.UnorderedTransactionsEnabled()
 
 	if isUnordered && !unorderedEnabled {
-		return ctx, errorsmod.Wrap(sdkerrors.ErrNotSupported, "unordered transactions are not enabled")
+		return errorsmod.Wrap(sdkerrors.ErrNotSupported, "unordered transactions are not enabled")
 	}
 
 	// stdSigs contains the sequence number, account number, and signatures.
 	// When simulating, this would just be a 0-length slice.
 	sigs, err := sigTx.GetSignaturesV2()
 	if err != nil {
-		return ctx, err
+		return err
 	}
 
 	signers, err := sigTx.GetSigners()
 	if err != nil {
-		return ctx, err
+		return err
 	}
 
 	// check that signer length and signature length are the same
 	if len(sigs) != len(signers) {
-		return ctx, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "invalid number of signer;  expected: %d, got %d", len(signers), len(sigs))
+		return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "invalid number of signer;  expected: %d, got %d", len(signers), len(sigs))
 	}
 
 	// In normal transactions, each signer has a sequence value. In unordered transactions, the nonce value is at the tx body level,
@@ -339,29 +341,29 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	// Because of this, we verify the unordered nonce outside the sigs loop, to avoid verifying the same nonce multiple times.
 	if isUnordered {
 		if err := svd.verifyUnorderedNonce(ctx, utx); err != nil {
-			return ctx, err
+			return err
 		}
 	}
 
 	for i, sig := range sigs {
 		if sig.Sequence > 0 && isUnordered {
-			return ctx, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "sequence is not allowed for unordered transactions")
+			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "sequence is not allowed for unordered transactions")
 		}
 		acc, err := GetSignerAcc(ctx, svd.ak, signers[i])
 		if err != nil {
-			return ctx, err
+			return err
 		}
 
 		// retrieve pubkey
 		pubKey := acc.GetPubKey()
 		if !simulate && pubKey == nil {
-			return ctx, errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
+			return errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "pubkey on account is not set")
 		}
 
 		// Check account sequence number.
 		if !isUnordered {
 			if sig.Sequence != acc.GetSequence() {
-				return ctx, errorsmod.Wrapf(
+				return errorsmod.Wrapf(
 					sdkerrors.ErrWrongSequence,
 					"account sequence mismatch, expected %d, got %d", acc.GetSequence(), sig.Sequence,
 				)
@@ -392,7 +394,7 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 			}
 			adaptableTx, ok := tx.(authsigning.V2AdaptableTx)
 			if !ok {
-				return ctx, fmt.Errorf("expected tx to implement V2AdaptableTx, got %T", tx)
+				return fmt.Errorf("expected tx to implement V2AdaptableTx, got %T", tx)
 			}
 			txData := adaptableTx.GetSigningTxData()
 			err = authsigning.VerifySignature(ctx, pubKey, signerData, sig.Data, svd.signModeHandler, txData)
@@ -405,12 +407,28 @@ func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 				} else {
 					errMsg = fmt.Sprintf("signature verification failed; please verify account number (%d) and chain-id (%s): (%s)", accNum, chainID, err.Error())
 				}
-				return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, errMsg)
+				return errorsmod.Wrap(sdkerrors.ErrUnauthorized, errMsg)
 
 			}
 		}
 	}
 
+	return nil
+}
+
+func (svd SigVerificationDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (newCtx sdk.Context, err error) {
+	if v, ok := ctx.GetIncarnationCache(SigVerificationResultCacheKey); ok {
+		// can't convert `nil` to interface
+		if v != nil {
+			err = v.(error)
+		}
+	} else {
+		err = svd.anteHandle(ctx, tx, simulate)
+		ctx.SetIncarnationCache(SigVerificationResultCacheKey, err)
+	}
+	if err != nil {
+		return ctx, err
+	}
 	return next(ctx, tx, simulate)
 }
 
@@ -483,7 +501,7 @@ func extractSignersBytes(tx sdk.Tx) ([][]byte, error) {
 // BaseApp.Commit() will set the check state based on the latest header.
 //
 // NOTE: Since CheckTx and DeliverTx state are managed separately, subsequent and
-// sequential txs orginating from the same account cannot be handled correctly in
+// sequential txs originating from the same account cannot be handled correctly in
 // a reliable way unless sequence numbers are managed and tracked manually by a
 // client. It is recommended to instead use multiple messages in a tx.
 type IncrementSequenceDecorator struct {
@@ -638,7 +656,7 @@ func GetSignerAcc(ctx sdk.Context, ak AccountKeeper, addr sdk.AccAddress) (sdk.A
 }
 
 // CountSubKeys counts the total number of keys for a multi-sig public key.
-// A non-multisig, i.e. a regular signature, it naturally a count of 1. If it is a multisig,
+// A non-multisig, i.e. a regular signature, it naturally has a count of 1. If it is a multisig,
 // then it recursively calls it on its pubkeys.
 func CountSubKeys(pub cryptotypes.PubKey) int {
 	if pub == nil {

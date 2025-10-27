@@ -1,7 +1,7 @@
 package genutil
 
 import (
-	abci "github.com/cometbft/cometbft/v2/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	"cosmossdk.io/core/genesis"
 
@@ -19,5 +19,5 @@ func InitGenesis(
 	if len(genesisState.GenTxs) > 0 {
 		validators, err = DeliverGenTxs(ctx, genesisState.GenTxs, stakingKeeper, deliverTx, txEncodingConfig)
 	}
-	return
+	return validators, err
 }

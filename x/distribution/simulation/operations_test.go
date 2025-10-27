@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/v2/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
@@ -67,14 +67,14 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 }
 
 // TestSimulateMsgSetWithdrawAddress tests the normal scenario of a valid message of type TypeMsgSetWithdrawAddress.
-// Abonormal scenarios, where the message is created by an errors, are not tested here.
+// Abnormal scenarios, where the message is created by an error, are not tested here.
 func (suite *SimTestSuite) TestSimulateMsgSetWithdrawAddress() {
 	// setup 3 accounts
 	s := rand.NewSource(1)
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 3)
 
-	_, err := suite.app.FinalizeBlock(&abci.FinalizeBlockRequest{
+	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: suite.app.LastBlockHeight() + 1,
 		Hash:   suite.app.LastCommitID().Hash,
 	})
@@ -97,7 +97,7 @@ func (suite *SimTestSuite) TestSimulateMsgSetWithdrawAddress() {
 
 // TestSimulateMsgWithdrawDelegatorReward tests the normal scenario of a valid message
 // of type TypeMsgWithdrawDelegatorReward.
-// Abonormal scenarios, where the message is created by an errors, are not tested here.
+// Abnormal scenarios, where the message is created by an error, are not tested here.
 func (suite *SimTestSuite) TestSimulateMsgWithdrawDelegatorReward() {
 	// setup 3 accounts
 	s := rand.NewSource(4)
@@ -120,7 +120,7 @@ func (suite *SimTestSuite) TestSimulateMsgWithdrawDelegatorReward() {
 
 	suite.setupValidatorRewards(valBz)
 
-	_, err = suite.app.FinalizeBlock(&abci.FinalizeBlockRequest{
+	_, err = suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: suite.app.LastBlockHeight() + 1,
 		Hash:   suite.app.LastCommitID().Hash,
 	})
@@ -143,7 +143,7 @@ func (suite *SimTestSuite) TestSimulateMsgWithdrawDelegatorReward() {
 
 // TestSimulateMsgWithdrawValidatorCommission tests the normal scenario of a valid message
 // of type TypeMsgWithdrawValidatorCommission.
-// Abonormal scenarios, where the message is created by an errors, are not tested here.
+// Abnormal scenarios, where the message is created by an error, are not tested here.
 func (suite *SimTestSuite) TestSimulateMsgWithdrawValidatorCommission() {
 	suite.testSimulateMsgWithdrawValidatorCommission("atoken")
 	suite.testSimulateMsgWithdrawValidatorCommission("tokenxxx")
@@ -187,7 +187,7 @@ func (suite *SimTestSuite) testSimulateMsgWithdrawValidatorCommission(tokenName 
 	suite.Require().NoError(suite.distrKeeper.SetValidatorAccumulatedCommission(suite.ctx, val0, types.ValidatorAccumulatedCommission{Commission: valCommission}))
 	suite.Require().NoError(suite.distrKeeper.SetValidatorAccumulatedCommission(suite.ctx, genVal0, types.ValidatorAccumulatedCommission{Commission: valCommission}))
 
-	_, err = suite.app.FinalizeBlock(&abci.FinalizeBlockRequest{
+	_, err = suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: suite.app.LastBlockHeight() + 1,
 		Hash:   suite.app.LastCommitID().Hash,
 	})
@@ -212,14 +212,14 @@ func (suite *SimTestSuite) testSimulateMsgWithdrawValidatorCommission(tokenName 
 }
 
 // TestSimulateMsgFundCommunityPool tests the normal scenario of a valid message of type TypeMsgFundCommunityPool.
-// Abonormal scenarios, where the message is created by an errors, are not tested here.
+// Abnormal scenarios, where the message is created by an errors, are not tested here.
 func (suite *SimTestSuite) TestSimulateMsgFundCommunityPool() {
 	// setup 3 accounts
 	s := rand.NewSource(1)
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 3)
 
-	_, err := suite.app.FinalizeBlock(&abci.FinalizeBlockRequest{
+	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: suite.app.LastBlockHeight() + 1,
 		Hash:   suite.app.LastCommitID().Hash,
 	})
@@ -327,7 +327,7 @@ func (suite *SimTestSuite) setupValidatorRewards(valAddress sdk.ValAddress) {
 	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, math.LegacyOneDec())}
 	historicalRewards := types.NewValidatorHistoricalRewards(decCoins, 2)
 	suite.Require().NoError(suite.distrKeeper.SetValidatorHistoricalRewards(suite.ctx, valAddress, 2, historicalRewards))
-	// setup current revards
+	// setup current rewards
 	currentRewards := types.NewValidatorCurrentRewards(decCoins, 3)
 	suite.Require().NoError(suite.distrKeeper.SetValidatorCurrentRewards(suite.ctx, valAddress, currentRewards))
 }

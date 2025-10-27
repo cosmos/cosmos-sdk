@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"math"
-	"time"
 
 	dbm "github.com/cosmos/cosmos-db"
 
@@ -23,20 +22,6 @@ import (
 
 // File for storing in-package BaseApp optional functions,
 // for options that need access to non-exported fields of the BaseApp
-
-// SetNextBlockDelay sets the next block delay for the baseapp.
-//
-// The application is initialized with a default value of 0.
-//
-// More information on this value and how it affects CometBFT can be found here:
-// https://github.com/cometbft/cometbft/blob/88ef3d267de491db98a654be0af6d791e8724ed0/spec/abci/abci%2B%2B_methods.md?plain=1#L689
-func (app *BaseApp) SetNextBlockDelay(delay time.Duration) {
-	if app.sealed {
-		panic("SetNextBlockDelay() on sealed BaseApp")
-	}
-
-	app.nextBlockDelay = delay
-}
 
 // SetPruning sets a pruning option on the multistore associated with the app
 func SetPruning(opts pruningtypes.PruningOptions) func(*BaseApp) {
@@ -137,6 +122,11 @@ func SetOptimisticExecution(opts ...func(*oe.OptimisticExecution)) func(*BaseApp
 	return func(app *BaseApp) {
 		app.optimisticExec = oe.NewOptimisticExecution(app.logger, app.internalFinalizeBlock, opts...)
 	}
+}
+
+// SetBlockSTMTxRunner sets the block stm tx runner for the BaseApp for parallel execution.
+func (app *BaseApp) SetBlockSTMTxRunner(txRunner sdk.TxRunner) {
+	app.txRunner = txRunner
 }
 
 // DisableBlockGasMeter disables the block gas meter.

@@ -88,7 +88,7 @@ func TestBuilderWithAux(t *testing.T) {
 		malleate func()
 		expErr   bool
 	}{
-		{"address and msg signer mistacher", func() { txBuilder.SetAddress("foobar") }, true},
+		{"address and msg signer mismatch", func() { txBuilder.SetAddress("foobar") }, true},
 		{"memo mismatch", func() { txBuilder.SetMemo("mismatch") }, true},
 		{"timeout height mismatch", func() { txBuilder.SetTimeoutHeight(98) }, true},
 		{"extension options length mismatch", func() { txBuilder.SetExtensionOptions() }, true},

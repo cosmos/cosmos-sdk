@@ -42,7 +42,7 @@ until `Commit()` is called on the `CommitMultiStore`.
 
 ### `CommitMultiStore`
 
-The `CommitMultiStore` interface exposes the the top-level interface that is used
+The `CommitMultiStore` interface exposes the top-level interface that is used
 to manage state commitment and storage by an SDK application and abstracts the
 concept of multiple `KVStore`s which are used by multiple modules. Specifically,
 it supports the following high-level primitives:
@@ -53,7 +53,7 @@ it supports the following high-level primitives:
 * Allows for loading state storage at a particular height/version in the past to
   provide current head and historical queries.
 * Provides the ability to rollback state to a previous height/version.
-* Provides the ability to to load state storage at a particular height/version
+* Provides the ability to load state storage at a particular height/version
   while also performing store upgrades, which are used during live hard-fork
   application state migrations.
 * Provides the ability to commit all current accumulated state to disk and performs
@@ -103,7 +103,7 @@ responsibility of the caller to ensure that concurrent access to the store is
 not performed. 
 
 The main issue with concurrent use is when data is written at the same time as
-it's being iterated over. Doing so will cause a irrecoverable fatal error because
+it's being iterated over. Doing so will cause an irrecoverable fatal error because
 of concurrent reads and writes to an internal map.
 
 Although it's not recommended, you can iterate through values while writing to
@@ -156,7 +156,7 @@ state from each `KVStore` to disk and returning an application state Merkle root
 Queries can be performed to return state data along with associated state
 commitment proofs for both previous heights/versions and the current state root.
 Queries are routed based on store name, i.e. a module, along with other parameters
-which are defined in `abci.QueryRequest`.
+which are defined in `abci.RequestQuery`.
 
 The `rootmulti.Store` also provides primitives for pruning data at a given
 height/version from state storage. When a height is committed, the `rootmulti.Store`

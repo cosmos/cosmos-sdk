@@ -83,10 +83,10 @@ func (a genericAddressKey[T]) EncodeJSON(value T) ([]byte, error) {
 func (a genericAddressKey[T]) DecodeJSON(b []byte) (v T, err error) {
 	s, err := collections.StringKey.DecodeJSON(b)
 	if err != nil {
-		return
+		return v, err
 	}
 	v, err = a.stringDecoder(s)
-	return
+	return v, err
 }
 
 func (a genericAddressKey[T]) Stringify(key T) string {
@@ -263,7 +263,7 @@ var timeSize = len(FormatTimeBytes(time.Time{}))
 
 func (timeKeyCodec) Decode(buffer []byte) (int, time.Time, error) {
 	if len(buffer) != timeSize {
-		return 0, time.Time{}, fmt.Errorf("invalid time buffer buffer size")
+		return 0, time.Time{}, fmt.Errorf("invalid time buffer size")
 	}
 	t, err := ParseTimeBytes(buffer)
 	if err != nil {

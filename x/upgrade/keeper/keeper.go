@@ -33,7 +33,7 @@ import (
 // UpgradeInfoFileName file to store upgrade information
 // use x/upgrade/types.UpgradeInfoFilename instead.
 //
-// Deprecated:will be removed in the future.
+// Deprecated: will be removed in the future.
 const UpgradeInfoFileName string = "upgrade-info.json"
 
 type Keeper struct {
@@ -487,7 +487,7 @@ func (k Keeper) ApplyUpgrade(ctx context.Context, plan types.Plan) error {
 		return err
 	}
 
-	// incremement the protocol version and set it in state and baseapp
+	// increment the protocol version and set it in state and baseapp
 	nextProtocolVersion, err := k.getProtocolVersion(ctx)
 	if err != nil {
 		return err

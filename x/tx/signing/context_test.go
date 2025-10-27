@@ -288,7 +288,7 @@ func TestDefineCustomGetSigners(t *testing.T) {
 	})
 	context, err = NewContext(options)
 	require.NoError(t, err)
-	require.ErrorContains(t, context.Validate(), "a custom signer function as been defined for message SimpleSigner")
+	require.ErrorContains(t, context.Validate(), "a custom signer function has been defined for message SimpleSigner")
 }
 
 type dummyAddressCodec struct{}

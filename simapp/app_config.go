@@ -1,16 +1,11 @@
 package simapp
 
 import (
-	"time"
-
-	"google.golang.org/protobuf/types/known/durationpb"
-
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
 	authzmodulev1 "cosmossdk.io/api/cosmos/authz/module/v1"
 	bankmodulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
-	circuitmodulev1 "cosmossdk.io/api/cosmos/circuit/module/v1"
 	consensusmodulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
 	distrmodulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
 	epochsmodulev1 "cosmossdk.io/api/cosmos/epochs/module/v1"
@@ -18,9 +13,7 @@ import (
 	feegrantmodulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
 	genutilmodulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
 	govmodulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
-	groupmodulev1 "cosmossdk.io/api/cosmos/group/module/v1"
 	mintmodulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
-	nftmodulev1 "cosmossdk.io/api/cosmos/nft/module/v1"
 	protocolpoolmodulev1 "cosmossdk.io/api/cosmos/protocolpool/module/v1"
 	slashingmodulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
@@ -40,8 +33,6 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/authz/module" // import for side-effects
 	_ "github.com/cosmos/cosmos-sdk/x/bank"         // import for side-effects
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	_ "github.com/cosmos/cosmos-sdk/x/circuit" // import for side-effects
-	circuittypes "github.com/cosmos/cosmos-sdk/x/circuit/types"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus" // import for side-effects
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	_ "github.com/cosmos/cosmos-sdk/x/distribution" // import for side-effects
@@ -57,12 +48,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/group"          //nolint:staticcheck // deprecated and to be removed
-	_ "github.com/cosmos/cosmos-sdk/x/group/module" //nolint:staticcheck // deprecated and to be removed // import for side-effects
-	_ "github.com/cosmos/cosmos-sdk/x/mint"         // import for side-effects
+	_ "github.com/cosmos/cosmos-sdk/x/mint" // import for side-effects
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/cosmos/cosmos-sdk/x/nft"            //nolint:staticcheck // deprecated and to be removed
-	_ "github.com/cosmos/cosmos-sdk/x/nft/module"   //nolint:staticcheck // deprecated and to be removed import for side-effects
 	_ "github.com/cosmos/cosmos-sdk/x/protocolpool" // import for side-effects
 	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 	_ "github.com/cosmos/cosmos-sdk/x/slashing" // import for side-effects
@@ -82,7 +69,6 @@ var (
 		{Account: stakingtypes.BondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
 		{Account: stakingtypes.NotBondedPoolName, Permissions: []string{authtypes.Burner, stakingtypes.ModuleName}},
 		{Account: govtypes.ModuleName, Permissions: []string{authtypes.Burner}},
-		{Account: nft.ModuleName},
 		{Account: protocolpooltypes.ModuleName},
 		{Account: protocolpooltypes.ProtocolPoolEscrowAccount},
 	}
@@ -94,7 +80,6 @@ var (
 		minttypes.ModuleName,
 		stakingtypes.BondedPoolName,
 		stakingtypes.NotBondedPoolName,
-		nft.ModuleName,
 		// We allow the following module accounts to receive funds:
 		// govtypes.ModuleName
 	}
@@ -124,10 +109,10 @@ var (
 					epochstypes.ModuleName,
 				},
 				EndBlockers: []string{
+					banktypes.ModuleName,
 					govtypes.ModuleName,
 					stakingtypes.ModuleName,
 					feegrant.ModuleName,
-					group.ModuleName,
 					protocolpooltypes.ModuleName,
 				},
 				OverrideStoreKeys: []*runtimev1alpha1.StoreKeyConfig{
@@ -154,11 +139,8 @@ var (
 					evidencetypes.ModuleName,
 					authz.ModuleName,
 					feegrant.ModuleName,
-					nft.ModuleName,
-					group.ModuleName,
 					upgradetypes.ModuleName,
 					vestingtypes.ModuleName,
-					circuittypes.ModuleName,
 					epochstypes.ModuleName,
 					protocolpooltypes.ModuleName,
 				},
@@ -178,11 +160,8 @@ var (
 					evidencetypes.ModuleName,
 					authz.ModuleName,
 					feegrant.ModuleName,
-					nft.ModuleName,
-					group.ModuleName,
 					upgradetypes.ModuleName,
 					vestingtypes.ModuleName,
-					circuittypes.ModuleName,
 					epochstypes.ModuleName,
 				},
 				// Uncomment if you want to set a custom migration order here.
@@ -214,7 +193,7 @@ var (
 			Name: stakingtypes.ModuleName,
 			Config: appconfig.WrapAny(&stakingmodulev1.Module{
 				// NOTE: specifying a prefix is only necessary when using bech32 addresses
-				// If not specfied, the auth Bech32Prefix appended with "valoper" and "valcons" is used by default
+				// If not specified, the auth Bech32Prefix appended with "valoper" and "valcons" is used by default
 				Bech32PrefixValidator: "cosmosvaloper",
 				Bech32PrefixConsensus: "cosmosvalcons",
 			}),
@@ -246,39 +225,24 @@ var (
 			Config: appconfig.WrapAny(&distrmodulev1.Module{}),
 		},
 		{
-			Name:   evidencetypes.ModuleName,
-			Config: appconfig.WrapAny(&evidencemodulev1.Module{}),
-		},
-		{
 			Name:   minttypes.ModuleName,
 			Config: appconfig.WrapAny(&mintmodulev1.Module{}),
-		},
-		{
-			Name: group.ModuleName,
-			Config: appconfig.WrapAny(&groupmodulev1.Module{
-				MaxExecutionPeriod: durationpb.New(time.Second * 1209600),
-				MaxMetadataLen:     255,
-			}),
-		},
-		{
-			Name:   nft.ModuleName,
-			Config: appconfig.WrapAny(&nftmodulev1.Module{}),
-		},
-		{
-			Name:   feegrant.ModuleName,
-			Config: appconfig.WrapAny(&feegrantmodulev1.Module{}),
 		},
 		{
 			Name:   govtypes.ModuleName,
 			Config: appconfig.WrapAny(&govmodulev1.Module{}),
 		},
 		{
-			Name:   consensustypes.ModuleName,
-			Config: appconfig.WrapAny(&consensusmodulev1.Module{}),
+			Name:   evidencetypes.ModuleName,
+			Config: appconfig.WrapAny(&evidencemodulev1.Module{}),
 		},
 		{
-			Name:   circuittypes.ModuleName,
-			Config: appconfig.WrapAny(&circuitmodulev1.Module{}),
+			Name:   feegrant.ModuleName,
+			Config: appconfig.WrapAny(&feegrantmodulev1.Module{}),
+		},
+		{
+			Name:   consensustypes.ModuleName,
+			Config: appconfig.WrapAny(&consensusmodulev1.Module{}),
 		},
 		{
 			Name:   epochstypes.ModuleName,

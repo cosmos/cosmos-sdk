@@ -8,6 +8,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,6 +25,7 @@ var _ Keeper = (*BaseKeeper)(nil)
 type Keeper interface {
 	SendKeeper
 	WithMintCoinsRestriction(types.MintingRestrictionFn) BaseKeeper
+	WithObjStoreKey(storetypes.StoreKey) BaseKeeper
 
 	InitGenesis(context.Context, *types.GenesisState)
 	ExportGenesis(context.Context) *types.GenesisState
@@ -46,6 +48,12 @@ type Keeper interface {
 	MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
 	BurnCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
 
+	SendCoinsFromAccountToModuleVirtual(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+	SendCoinsFromModuleToAccountVirtual(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+	CreditVirtualAccounts(ctx context.Context) error
+	SendCoinsFromVirtual(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error
+	SendCoinsToVirtual(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error
+
 	DelegateCoins(ctx context.Context, delegatorAddr, moduleAccAddr sdk.AccAddress, amt sdk.Coins) error
 	UndelegateCoins(ctx context.Context, moduleAccAddr, delegatorAddr sdk.AccAddress, amt sdk.Coins) error
 
@@ -61,6 +69,11 @@ type BaseKeeper struct {
 	storeService           store.KVStoreService
 	mintCoinsRestrictionFn types.MintingRestrictionFn
 	logger                 log.Logger
+}
+
+func (k BaseKeeper) WithObjStoreKey(okey storetypes.StoreKey) BaseKeeper {
+	k.objStoreKey = okey
+	return k
 }
 
 // GetPaginatedTotalSupply queries for the supply, ignoring 0 coins, with a given pagination
@@ -382,7 +395,7 @@ func (k BaseKeeper) MintCoins(ctx context.Context, moduleName string, amounts sd
 	return nil
 }
 
-// BurnCoins burns coins deletes coins from the balance of the module account.
+// BurnCoins burns coins from the balance of the module account.
 // It will panic if the module account does not exist or is unauthorized.
 func (k BaseKeeper) BurnCoins(ctx context.Context, moduleName string, amounts sdk.Coins) error {
 	acc := k.ak.GetModuleAccount(ctx, moduleName)
@@ -447,7 +460,7 @@ func (k BaseKeeper) trackDelegation(ctx context.Context, addr sdk.AccAddress, ba
 	return nil
 }
 
-// trackUndelegation trakcs undelegation of the given account if it is a vesting account
+// trackUndelegation tracks undelegation of the given account if it is a vesting account
 func (k BaseKeeper) trackUndelegation(ctx context.Context, addr sdk.AccAddress, amt sdk.Coins) error {
 	acc := k.ak.GetAccount(ctx, addr)
 	if acc == nil {

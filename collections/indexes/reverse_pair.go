@@ -83,7 +83,7 @@ func NewReversePair[Value, K1, K2 any](
 func (i *ReversePair[K1, K2, Value]) Iterate(ctx context.Context, ranger collections.Ranger[collections.Pair[K2, K1]]) (iter ReversePairIterator[K2, K1], err error) {
 	sIter, err := i.refKeys.Iterate(ctx, ranger)
 	if err != nil {
-		return
+		return iter, err
 	}
 	return (ReversePairIterator[K2, K1])(sIter), nil
 }

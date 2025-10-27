@@ -67,6 +67,7 @@ func ExecuteBlockWithEstimates(
 		return errors.New("scheduler did not complete")
 	}
 
+	telemetry.SetGauge(float32(scheduler.blockSize), TelemetrySubsystem, KeyNumTxs)
 	telemetry.SetGauge(float32(scheduler.executedTxns.Load()), TelemetrySubsystem, KeyExecutedTxs)
 	telemetry.SetGauge(float32(scheduler.validatedTxns.Load()), TelemetrySubsystem, KeyValidatedTxs)
 

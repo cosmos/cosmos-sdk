@@ -8,6 +8,8 @@ import (
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/tracekv"
 	storetypes "cosmossdk.io/store/types"
+
+	"github.com/cosmos/cosmos-sdk/blockstm/tree"
 )
 
 type (
@@ -20,26 +22,30 @@ var (
 	_ storetypes.ObjKVStore = (*ObjMemDB)(nil)
 )
 
+// NewMemDB constructs a new in memory store over a []byte value type.
 func NewMemDB() *MemDB {
 	return NewGMemDB(storetypes.BytesIsZero, storetypes.BytesValueLen)
 }
 
+// NewObjMemDB constructs a new in memory store over a generic any type.
 func NewObjMemDB() *ObjMemDB {
 	return NewGMemDB(storetypes.AnyIsZero, storetypes.AnyValueLen)
 }
 
+// GMemDB is a generic implementation of an in memory Store backed by tidwall/btree.
 type GMemDB[V any] struct {
 	btree.BTreeG[memdbItem[V]]
 	isZero   func(V) bool
 	valueLen func(V) int
 }
 
+// NewGMemDB is the generic constructor for a GMemDB.
 func NewGMemDB[V any](
 	isZero func(V) bool,
 	valueLen func(V) int,
 ) *GMemDB[V] {
 	return &GMemDB[V]{
-		BTreeG:   *btree.NewBTreeG[memdbItem[V]](KeyItemLess),
+		BTreeG:   *btree.NewBTreeG[memdbItem[V]](tree.KeyItemLess),
 		isZero:   isZero,
 		valueLen: valueLen,
 	}
@@ -51,7 +57,7 @@ func NewGMemDBNonConcurrent[V any](
 	valueLen func(V) int,
 ) *GMemDB[V] {
 	return &GMemDB[V]{
-		BTreeG: *btree.NewBTreeGOptions[memdbItem[V]](KeyItemLess, btree.Options{
+		BTreeG: *btree.NewBTreeGOptions[memdbItem[V]](tree.KeyItemLess, btree.Options{
 			NoLocks: true,
 		}),
 		isZero:   isZero,
@@ -136,14 +142,16 @@ func (db *GMemDB[V]) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext)
 	return db.CacheWrap()
 }
 
+// MemDBIterator wraps a generic BTreeIteratorG over a memdbItem.
+// It is used as an iterator over a GMemDB implementation.
 type MemDBIterator[V any] struct {
-	BTreeIteratorG[memdbItem[V]]
+	tree.BTreeIteratorG[memdbItem[V]]
 }
 
 var _ storetypes.Iterator = (*MemDBIterator[[]byte])(nil)
 
 func NewMemDBIterator[V any](start, end Key, iter btree.IterG[memdbItem[V]], ascending bool) *MemDBIterator[V] {
-	return &MemDBIterator[V]{*NewBTreeIteratorG(
+	return &MemDBIterator[V]{*tree.NewBTreeIteratorG(
 		memdbItem[V]{key: start},
 		memdbItem[V]{key: end},
 		iter,
@@ -151,13 +159,14 @@ func NewMemDBIterator[V any](start, end Key, iter btree.IterG[memdbItem[V]], asc
 	)}
 }
 
+// NewNoopIterator constructs a storetypes.GIterator with an invalidated wrapped iterator.
 func NewNoopIterator[V any](start, end Key, ascending bool) storetypes.GIterator[V] {
-	return &MemDBIterator[V]{BTreeIteratorG[memdbItem[V]]{
-		start:     start,
-		end:       end,
-		ascending: ascending,
-		valid:     false,
-	}}
+	return &MemDBIterator[V]{tree.NewNoopBTreeIteratorG[memdbItem[V]](
+		start,
+		end,
+		ascending,
+		false,
+	)}
 }
 
 func (it *MemDBIterator[V]) Value() V {
@@ -169,7 +178,7 @@ type memdbItem[V any] struct {
 	value V
 }
 
-var _ KeyItem = memdbItem[[]byte]{}
+var _ tree.KeyItem = memdbItem[[]byte]{}
 
 func (item memdbItem[V]) GetKey() []byte {
 	return item.key

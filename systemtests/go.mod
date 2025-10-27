@@ -1,11 +1,11 @@
 module cosmossdk.io/systemtests
 
-go 1.24.0
+go 1.25.0
 
 require (
 	cosmossdk.io/math v1.5.3
 	github.com/cometbft/cometbft v0.39.0-beta.2.0.20251020144122-cd33e1fff685
-	github.com/cosmos/cosmos-sdk v0.53.4
+	github.com/cosmos/cosmos-sdk v0.54.0-beta.0
 	github.com/creachadair/tomledit v0.0.29
 	github.com/stretchr/testify v1.11.1
 	github.com/tidwall/gjson v1.18.0
@@ -21,7 +21,7 @@ require (
 	cosmossdk.io/errors v1.0.2 // indirect
 	cosmossdk.io/log v1.6.1 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
-	cosmossdk.io/store v1.1.2 // indirect
+	cosmossdk.io/store v1.3.0-beta.0 // indirect
 	cosmossdk.io/x/tx v0.14.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -170,6 +170,7 @@ require (
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
 
-replace cosmossdk.io/store => ../store
-
 replace github.com/cosmos/cosmos-sdk => ../
+
+// Use fork for blockstm
+replace github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-20250924232609-2c6195d95951

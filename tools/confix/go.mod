@@ -1,9 +1,9 @@
 module cosmossdk.io/tools/confix
 
-go 1.24.0
+go 1.25.0
 
 require (
-	github.com/cosmos/cosmos-sdk v0.53.4
+	github.com/cosmos/cosmos-sdk v0.54.0-beta.0
 	github.com/creachadair/atomicfile v0.3.8
 	github.com/creachadair/tomledit v0.0.29
 	github.com/pelletier/go-toml/v2 v2.2.4
@@ -21,14 +21,13 @@ require (
 	cosmossdk.io/log v1.6.1 // indirect
 	cosmossdk.io/math v1.5.3 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
-	cosmossdk.io/store v1.1.2 // indirect
+	cosmossdk.io/store v1.3.0-beta.0 // indirect
 	cosmossdk.io/x/tx v0.14.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
 	github.com/DataDog/datadog-go v3.2.0+incompatible // indirect
 	github.com/DataDog/zstd v1.5.7 // indirect
-	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/speakeasy v0.2.0 // indirect
 	github.com/bytedance/sonic v1.14.0 // indirect
@@ -42,7 +41,7 @@ require (
 	github.com/cockroachdb/pebble v1.1.5 // indirect
 	github.com/cockroachdb/redact v1.1.6 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb // indirect
-	github.com/cometbft/cometbft v0.38.19 // indirect
+	github.com/cometbft/cometbft v0.39.0-beta.2 // indirect
 	github.com/cometbft/cometbft-db v0.14.1 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-db v1.1.3 // indirect
@@ -105,7 +104,7 @@ require (
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lib/pq v1.10.9 // indirect
-	github.com/linxGnu/grocksdb v1.9.8 // indirect
+	github.com/linxGnu/grocksdb v1.10.1 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/minio/highwayhash v1.0.3 // indirect
@@ -113,7 +112,6 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20230904125328-1f23a7beb09a // indirect
 	github.com/oklog/run v1.1.0 // indirect
-	github.com/opencontainers/image-spec v1.1.0-rc5 // indirect
 	github.com/petermattis/goid v0.0.0-20250813065127-a731cc31b4fe // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
@@ -133,13 +131,14 @@ require (
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/stretchr/testify v1.11.1 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
+	github.com/supranational/blst v0.3.16 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
-	github.com/tidwall/btree v1.7.0 // indirect
+	github.com/tidwall/btree v1.8.1 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/zondax/golem v0.27.0 // indirect
 	github.com/zondax/hid v0.9.2 // indirect
-	github.com/zondax/ledger-go v1.0.1 // indirect; indirectÎ
+	github.com/zondax/ledger-go v1.0.1 // indirect
 	go.etcd.io/bbolt v1.4.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/otel v1.37.0 // indirect
@@ -159,7 +158,7 @@ require (
 	golang.org/x/term v0.36.0 // indirect
 	golang.org/x/text v0.30.0 // indirect
 	google.golang.org/genproto v0.0.0-20250603155806-513f23925822 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20250804133106-a7a43d27e69b // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20250818200422-3122310a409c // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250818200422-3122310a409c // indirect
 	google.golang.org/grpc v1.76.0 // indirect
 	google.golang.org/protobuf v1.36.10 // indirect

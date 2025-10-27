@@ -1,6 +1,6 @@
 module cosmossdk.io/client/v2
 
-go 1.24.0
+go 1.25.0
 
 require (
 	cosmossdk.io/api v0.9.2
@@ -10,7 +10,7 @@ require (
 	cosmossdk.io/x/tx v0.14.0
 	github.com/cockroachdb/errors v1.12.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
-	github.com/cosmos/cosmos-sdk v0.53.4
+	github.com/cosmos/cosmos-sdk v0.54.0-beta.0
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/spf13/cobra v1.10.1
 	github.com/spf13/pflag v1.0.10
@@ -26,7 +26,7 @@ require (
 	cosmossdk.io/errors v1.0.2 // indirect
 	cosmossdk.io/log v1.6.1 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
-	cosmossdk.io/store v1.1.2 // indirect
+	cosmossdk.io/store v1.3.0-beta.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
@@ -174,4 +174,5 @@ require (
 replace (
 	cosmossdk.io/store => ../../store
 	github.com/cosmos/cosmos-sdk => ../../.
+	github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-20250924232609-2c6195d95951
 )

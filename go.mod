@@ -1,4 +1,4 @@
-go 1.24.0
+go 1.25.0
 
 module github.com/cosmos/cosmos-sdk
 
@@ -10,7 +10,7 @@ require (
 	cosmossdk.io/errors v1.0.2
 	cosmossdk.io/log v1.6.1
 	cosmossdk.io/math v1.5.3
-	cosmossdk.io/store v1.1.2
+	cosmossdk.io/store v1.3.0-beta.0
 	cosmossdk.io/x/tx v0.14.0
 	github.com/99designs/keyring v1.2.1
 	github.com/alitto/pond/v2 v2.5.0
@@ -58,6 +58,7 @@ require (
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
 	github.com/tendermint/go-amino v0.16.0
+	github.com/test-go/testify v1.1.4
 	github.com/tidwall/btree v1.8.1
 	go.uber.org/mock v0.6.0
 	golang.org/x/crypto v0.43.0
@@ -177,7 +178,6 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
-	github.com/nxadm/tail v1.4.11 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20230904125328-1f23a7beb09a // indirect
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc5 // indirect
@@ -249,11 +249,14 @@ replace (
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
 	// replace broken goleveldb
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
+	// BlockSTM requires patches to the btree package
+	github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-20250924232609-2c6195d95951
 )
 
-replace cosmossdk.io/store => ./store
-
 retract (
+	// incorrect tag for patch version
+	v0.53.1
+
 	// false start by tagging the wrong branch
 	v0.50.0
 	// revert fix https://github.com/cosmos/cosmos-sdk/pull/16331

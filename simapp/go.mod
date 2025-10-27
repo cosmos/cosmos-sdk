@@ -1,6 +1,6 @@
 module cosmossdk.io/simapp
 
-go 1.24.0
+go 1.25.0
 
 require (
 	cosmossdk.io/api v0.9.2
@@ -9,13 +9,13 @@ require (
 	cosmossdk.io/depinject v1.2.1
 	cosmossdk.io/log v1.6.1
 	cosmossdk.io/math v1.5.3
-	cosmossdk.io/store v1.1.2
+	cosmossdk.io/store v1.3.0-beta.0
 	cosmossdk.io/tools/confix v0.1.2
 	cosmossdk.io/x/tx v0.14.0
 	github.com/cometbft/cometbft v0.39.0-beta.2
 	github.com/cosmos/cosmos-db v1.1.3
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
-	github.com/cosmos/cosmos-sdk v0.53.4
+	github.com/cosmos/cosmos-sdk v0.54.0-beta.0
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/spf13/cast v1.10.0
 	github.com/spf13/cobra v1.10.1
@@ -234,12 +234,6 @@ require (
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
 
-// Here are the short-lived replace from the SimApp
-// Replace here are pending PRs, or version to be tagged
-// replace (
-// 	<temporary replace>
-// )
-
 // Below are the long-lived replace of the SimApp
 replace (
 	// use cosmos fork of keyring
@@ -251,4 +245,6 @@ replace (
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
 	// replace broken goleveldb
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
+	// Use fork for blockstm
+	github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-20250924232609-2c6195d95951
 )

@@ -34,7 +34,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	iavlx "github.com/cosmos/cosmos-sdk/iavl"
+	"github.com/cosmos/cosmos-sdk/iavlx"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"

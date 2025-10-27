@@ -177,10 +177,12 @@ func (db *CommitMultiTree) CacheMultiStoreWithVersion(version int64) (storetypes
 		switch typ {
 		case storetypes.StoreTypeIAVL, storetypes.StoreTypeDB:
 			var err error
-			mt.trees[i], err = tree.(*CommitTree).GetImmutable(version)
+			var t storetypes.KVStore
+			t, err = tree.(*CommitTree).GetImmutable(version)
 			if err != nil {
 				return nil, fmt.Errorf("failed to create cache multi store for tree %s at version %d: %w", db.treeKeys[i].Name(), version, err)
 			}
+			mt.trees[i] = t.CacheWrap().(storetypes.CacheKVStore)
 		case storetypes.StoreTypeTransient, storetypes.StoreTypeMemory:
 			mt.trees[i] = tree.CacheWrap().(storetypes.CacheKVStore)
 		default:

@@ -15,6 +15,8 @@ import (
 
 	corestore "cosmossdk.io/core/store"
 	sdklog "cosmossdk.io/log"
+
+	"cosmossdk.io/store/types"
 )
 
 func TestBasicTest(t *testing.T) {
@@ -23,7 +25,7 @@ func TestBasicTest(t *testing.T) {
 	defer os.RemoveAll(dir)
 	commitTree, err := NewCommitTree(dir, Options{}, sdklog.NewNopLogger())
 	require.NoError(t, err)
-	tree := commitTree.CacheWrap().(*Tree)
+	tree := commitTree.CacheWrap().(types.CacheKVStore)
 	tree.Set([]byte{0}, []byte{1})
 	// renderTree(t, tree)
 
@@ -76,7 +78,7 @@ func TestBasicTest(t *testing.T) {
 func renderTree(t interface {
 	require.TestingT
 	Logf(format string, args ...any)
-}, tree *Tree,
+}, tree *ImmutableTree,
 ) {
 	graph := &bytes.Buffer{}
 	require.NoError(t, RenderDotGraph(graph, tree.root))
@@ -179,7 +181,7 @@ func (s *SimMachine) set(t *rapid.T) {
 	// set in both trees
 	updated, errV1 := s.treeV1.Set(key, value)
 	require.NoError(t, errV1, "failed to set key in V1 tree")
-	branch := s.treeV2.CacheWrap().(*Tree)
+	branch := s.treeV2.CacheWrap().(types.CacheKVStore)
 	branch.Set(key, value)
 	branch.Write()
 	// require.Equal(t, updated, updatedV2, "update status mismatch between V1 and V2 trees")
@@ -198,7 +200,7 @@ func (s *SimMachine) get(t *rapid.T) {
 	key := s.selectKey(t)
 	valueV1, errV1 := s.treeV1.Get(key)
 	require.NoError(t, errV1, "failed to get key from V1 tree")
-	valueV2 := s.treeV2.CacheWrap().(*Tree).Get(key)
+	valueV2 := s.treeV2.CacheWrap().(types.CacheKVStore).Get(key)
 	require.Equal(t, valueV1, valueV2, "value mismatch between V1 and V2 trees")
 	expectedValue, found := s.existingKeys[string(key)]
 	if found {
@@ -213,7 +215,7 @@ func (s *SimMachine) selectKey(t *rapid.T) []byte {
 		return []byte(rapid.SampledFrom(maps.Keys(s.existingKeys)).Draw(t, "key"))
 	} else {
 		// TODO consider testing longer keys
-		return rapid.SliceOfN(rapid.Byte(), 0, 10).Draw(t, "key")
+		return rapid.SliceOfN(rapid.Byte(), 1, 10).Draw(t, "key")
 	}
 }
 
@@ -224,7 +226,7 @@ func (s *SimMachine) delete(t *rapid.T) {
 	// delete in both trees
 	_, removedV1, errV1 := s.treeV1.Remove(key)
 	require.NoError(t, errV1, "failed to remove key from V1 tree")
-	branch := s.treeV2.CacheWrap().(*Tree)
+	branch := s.treeV2.CacheWrap().(types.CacheKVStore)
 	branch.Delete(key)
 	branch.Write()
 	// require.Equal(t, removedV1, removedV2, "removed status mismatch between V1 and V2 trees")
@@ -289,7 +291,7 @@ func (s *SimMachine) debugDump(t *rapid.T) {
 	iavl.WriteDOTGraph(graph1, s.treeV1.ImmutableTree, nil)
 	t.Logf("V1 tree:\n%s", graph1.String())
 	// renderTree(t, s.treeV2.Branch())
-	iter2 := s.treeV2.CacheWrap().(*Tree).Iterator(nil, nil)
+	iter2 := s.treeV2.CacheWrap().(types.CacheKVStore).Iterator(nil, nil)
 	s.debugDumpTree(t, iter2)
 }
 
@@ -330,7 +332,7 @@ func (s *SimMachine) debugDumpTree(t *rapid.T, iter corestore.Iterator) {
 func (s *SimMachine) compareIterators(t *rapid.T, start, end []byte, ascending bool) {
 	iter1, err1 := s.treeV1.Iterator(start, end, ascending)
 	require.NoError(t, err1, "failed to create iterator for V1 tree")
-	iter2 := s.treeV2.CacheWrap().(*Tree).Iterator(start, end)
+	iter2 := s.treeV2.CacheWrap().(types.CacheKVStore).Iterator(start, end)
 	compareIteratorsAtVersion(t, iter1, iter2)
 }
 

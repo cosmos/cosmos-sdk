@@ -4,26 +4,19 @@ import (
 	io "io"
 	"sync"
 
-	"github.com/tidwall/btree"
-
 	storetypes "cosmossdk.io/store/types"
-	"github.com/cosmos/cosmos-sdk/internal/conv"
+	"github.com/cosmos/cosmos-sdk/iavlx/internal"
 )
 
 type CacheTree struct {
 	mtx    sync.Mutex // TODO do we really need a mutex or could this be part of the caller contract?
 	parent storetypes.KVStore
 	dirty  bool
-	cache  btree.Map[string, cacheEntry]
+	cache  internal.BTree
 }
 
 func NewCacheTree(parent storetypes.KVStore) *CacheTree {
-	return &CacheTree{parent: parent}
-}
-
-type cacheEntry struct {
-	value []byte
-	dirty bool
+	return &CacheTree{parent: parent, cache: internal.NewBTree()}
 }
 
 func (store *CacheTree) GetStoreType() storetypes.StoreType {
@@ -45,13 +38,11 @@ func (store *CacheTree) Get(key []byte) (value []byte) {
 
 	storetypes.AssertValidKey(key)
 
-	keyStr := conv.UnsafeBytesToStr(key)
-	cacheValue, ok := store.cache.Get(keyStr)
+	var ok bool
+	value, ok = store.cache.Get(key)
 	if !ok {
 		value = store.parent.Get(key)
-		store.setCacheValue(keyStr, value, false)
-	} else {
-		value = cacheValue.value
+		store.cache.SetCached(key, value)
 	}
 	return value
 }
@@ -67,7 +58,8 @@ func (store *CacheTree) Set(key, value []byte) {
 
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
-	store.setCacheValue(conv.UnsafeBytesToStr(key), value, true)
+	store.cache.Set(key, value)
+	store.dirty = true
 }
 
 func (store *CacheTree) Delete(key []byte) {
@@ -76,17 +68,16 @@ func (store *CacheTree) Delete(key []byte) {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
 
-	store.setCacheValue(conv.UnsafeBytesToStr(key), nil, true)
+	store.cache.Delete(key)
+	store.dirty = true
 }
 
 func (store *CacheTree) Iterator(start, end []byte) storetypes.Iterator {
-	//TODO implement me
-	panic("implement me")
+	return store.iterator(start, end, true)
 }
 
 func (store *CacheTree) ReverseIterator(start, end []byte) storetypes.Iterator {
-	//TODO implement me
-	panic("implement me")
+	return store.iterator(start, end, false)
 }
 
 func (store *CacheTree) Write() {
@@ -98,8 +89,8 @@ func (store *CacheTree) Write() {
 	}
 
 	// TODO if we are concerned about retaining the whole tree in memory, we could maybe drain the cache using Map.PopMin
-	store.cache.Scan(func(key string, value cacheEntry) bool {
-		if !value.dirty {
+	store.cache.Scan(func(key, value []byte, dirty bool) bool {
+		if !dirty {
 			// TODO we could save these cached reads in the tree but for now we just clear the whole cache
 			return true
 		}
@@ -108,10 +99,10 @@ func (store *CacheTree) Write() {
 		// be sure if the underlying store might do a save with the byteslice or
 		// not. Once we get confirmation that .Delete is guaranteed not to
 		// save the byteslice, then we can assume only a read-only copy is sufficient.
-		if value.value == nil {
-			store.parent.Delete([]byte(key))
+		if value == nil {
+			store.parent.Delete(key)
 		} else {
-			store.parent.Set([]byte(key), value.value)
+			store.parent.Set(key, value)
 		}
 		return true
 	})
@@ -120,26 +111,15 @@ func (store *CacheTree) Write() {
 	store.dirty = false
 }
 
-func (store *CacheTree) setCacheValue(key string, value []byte, dirty bool) {
-	if dirty {
-		store.dirty = true
-	}
-	store.cache.Set(key, cacheEntry{
-		value: value,
-		dirty: dirty,
-	})
-}
-
-func (store *CacheTree) iterator(start, end []byte, ascending bool) types.Iterator {
+func (store *CacheTree) iterator(start, end []byte, ascending bool) storetypes.Iterator {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
 
-	store.dirtyItems(start, end)
-	isoSortedCache := store.sortedCache.Copy()
+	isoSortedCache := store.cache.Copy()
 
 	var (
 		err           error
-		parent, cache types.Iterator
+		parent, cache storetypes.Iterator
 	)
 
 	if ascending {

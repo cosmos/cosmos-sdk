@@ -40,28 +40,6 @@ func (c *CommitTree) getRoot() *NodePointer {
 	return c.root
 }
 
-func (c *CommitTree) applyChangesToParent(origRoot, newRoot *NodePointer, updateBatch KVUpdateBatch) error {
-	// TODO check channel errors
-	c.writeMutex.Lock()
-	defer c.writeMutex.Unlock()
-
-	if updateBatch.Version != c.stagedVersion() {
-		return fmt.Errorf("tree version %d does not match staged version %d", updateBatch.Version, c.stagedVersion())
-	}
-	if origRoot != c.root {
-		// TODO find a way to apply the changes incrementally when roots don't match
-		return fmt.Errorf("tree original root does not match current root")
-	}
-	c.root = newRoot
-	c.pendingOrphans = append(c.pendingOrphans, updateBatch.Orphans...)
-
-	if c.writeWal {
-		c.walQueue.Send(updateBatch.Updates)
-	}
-
-	return nil
-}
-
 func (c *CommitTree) WorkingHash() []byte {
 	c.writeMutex.Lock()
 	defer c.writeMutex.Unlock()
@@ -178,7 +156,7 @@ func (c *CommitTree) GetStoreType() storetypes.StoreType {
 }
 
 func (c *CommitTree) CacheWrap() storetypes.CacheWrap {
-	return NewTree(c, c.stagedVersion(), c.zeroCopy)
+	return NewCacheTree(c)
 }
 
 func (c *CommitTree) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) storetypes.CacheWrap {
@@ -209,6 +187,12 @@ func (c *CommitTree) Has(key []byte) bool {
 }
 
 func (c *CommitTree) Set(key, value []byte) {
+	storetypes.AssertValidKey(key)
+	storetypes.AssertValidValue(value)
+
+	c.writeMutex.Lock()
+	defer c.writeMutex.Unlock()
+
 	stagedVersion := c.stagedVersion()
 	leafNode := &MemNode{
 		height:  0,
@@ -224,16 +208,30 @@ func (c *CommitTree) Set(key, value []byte) {
 	}
 
 	c.root = newRoot
-	tree.updateBatch.Updates = append(tree.updateBatch.Updates, KVUpdate{
-		SetNode: leafNode,
-	})
-	tree.updateBatch.Orphans = append(tree.updateBatch.Orphans, ctx.Orphans)
+	c.applyUpdates([]KVUpdate{{SetNode: leafNode}}, ctx.Orphans)
 }
 
 func (c *CommitTree) Delete(key []byte) {
-	tree := c.CacheWrap().(*Tree)
-	tree.Delete(key)
-	tree.Write()
+	storetypes.AssertValidKey(key)
+
+	c.writeMutex.Lock()
+	defer c.writeMutex.Unlock()
+
+	ctx := &MutationContext{Version: c.stagedVersion()}
+	_, newRoot, _, err := removeRecursive(c.root, key, ctx)
+	if err != nil {
+		panic(err)
+	}
+	c.root = newRoot
+	c.applyUpdates([]KVUpdate{{DeleteKey: key}}, ctx.Orphans)
+}
+
+func (c *CommitTree) applyUpdates(updates []KVUpdate, orphans []NodeID) {
+	c.pendingOrphans = append(c.pendingOrphans, orphans)
+
+	if c.writeWal {
+		c.walQueue.Send(updates)
+	}
 }
 
 func (c *CommitTree) Iterator(start, end []byte) storetypes.Iterator {
@@ -323,7 +321,7 @@ func (c *CommitTree) startEvict(evictVersion uint32) {
 	}()
 }
 
-func (c *CommitTree) GetImmutable(version int64) (storetypes.CacheKVStore, error) {
+func (c *CommitTree) GetImmutable(version int64) (storetypes.KVStore, error) {
 	var rootPtr *NodePointer
 	if version == c.lastCommitId.Version {
 		rootPtr = c.root
@@ -334,9 +332,7 @@ func (c *CommitTree) GetImmutable(version int64) (storetypes.CacheKVStore, error
 			return nil, err
 		}
 	}
-	return &Tree{
-		root: rootPtr,
-	}, nil
+	return NewImmutableTree(rootPtr), nil
 }
 
 func (c *CommitTree) Close() error {
@@ -424,5 +420,4 @@ func evictTraverse(np *NodePointer, depth, evictionDepth uint8, evictVersion uin
 
 var (
 	_ storetypes.CommitKVStore = &CommitTree{}
-	_ parentTree               = &CommitTree{}
 )

@@ -6,13 +6,13 @@ import (
 	io "io"
 	"os"
 	"path/filepath"
-	"runtime"
+	"sync"
 
-	"github.com/alitto/pond/v2"
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 
 	"cosmossdk.io/log"
+
 	"cosmossdk.io/store/mem"
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
@@ -32,7 +32,6 @@ type CommitMultiTree struct {
 
 	version           uint64
 	lastCommitId      storetypes.CommitID
-	commitPool        pond.ResultPool[[]byte]
 	workingCommitInfo *storetypes.CommitInfo
 	workingHash       []byte
 }
@@ -43,18 +42,17 @@ func (db *CommitMultiTree) LastCommitID() storetypes.CommitID {
 
 func (db *CommitMultiTree) WorkingHash() []byte {
 	// NOTE: this may invoke some hash recomputation each time even if there is no change
-	taskGroup := db.commitPool.NewGroup()
 	stagedVersion := db.version + 1
-	for _, tree := range db.trees {
-		t := tree
-		taskGroup.Submit(func() []byte {
-			return t.WorkingHash()
-		})
+	hashes := make([][]byte, len(db.trees))
+	var wg sync.WaitGroup
+	for i, tree := range db.trees {
+		wg.Add(1)
+		go func(i int, t storetypes.CommitKVStore) {
+			defer wg.Done()
+			hashes[i] = t.WorkingHash()
+		}(i, tree)
 	}
-	hashes, err := taskGroup.Wait()
-	if err != nil {
-		panic(fmt.Errorf("failed to commit trees: %w", err))
-	}
+	wg.Wait()
 
 	commitInfo := &storetypes.CommitInfo{}
 	commitInfo.StoreInfos = make([]storetypes.StoreInfo, len(db.treeKeys))
@@ -78,19 +76,16 @@ func (db *CommitMultiTree) Commit() storetypes.CommitID {
 	// and we're trying to avoid recomputing the hash
 	// so we check if we already have a hash that was computed in WorkingHash that hasn't changed to avoid recomputation
 	// in the future we should evaluate if there is any need to retain both WorkingHash and Commit methods separately
-	taskGroup := db.commitPool.NewGroup()
-	for _, tree := range db.trees {
-		t := tree
-		taskGroup.Submit(func() []byte {
-			commitId := t.Commit()
-			return commitId.Hash
-		})
+	hashes := make([][]byte, len(db.trees))
+	var wg sync.WaitGroup
+	for i, tree := range db.trees {
+		wg.Add(1)
+		go func(i int, t storetypes.CommitKVStore) {
+			defer wg.Done()
+			hashes[i] = t.Commit().Hash
+		}(i, tree)
 	}
-
-	hashes, err := taskGroup.Wait()
-	if err != nil {
-		panic(fmt.Errorf("failed to commit trees: %w", err))
-	}
+	wg.Wait()
 
 	stagedVersion := db.version + 1
 	commitInfo := db.workingCommitInfo
@@ -377,7 +372,6 @@ func LoadDB(path string, opts *Options, logger log.Logger) (*CommitMultiTree, er
 	db := &CommitMultiTree{
 		dir:        path,
 		opts:       *opts,
-		commitPool: pond.NewResultPool[[]byte](runtime.NumCPU()),
 		logger:     logger,
 		treesByKey: make(map[storetypes.StoreKey]int),
 	}

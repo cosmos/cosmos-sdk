@@ -988,6 +988,25 @@ func TestGetEmptyConsensusParams(t *testing.T) {
 	require.Equal(t, uint64(0), suite.baseApp.GetMaximumBlockGas(ctx))
 }
 
+func TestMountStores(t *testing.T) {
+	logger := log.NewNopLogger()
+	db := dbm.NewMemDB()
+	name := t.Name()
+	app := baseapp.NewBaseApp(name, logger, db, nil)
+	kvKey := storetypes.NewKVStoreKey("kv")
+	transKey := storetypes.NewTransientStoreKey("trans")
+	memKey := storetypes.NewMemoryStoreKey("mem")
+	objKey := storetypes.NewObjectStoreKey("obj")
+	app.MountStores(kvKey, transKey, memKey, objKey)
+	objKey2 := storetypes.NewObjectStoreKey("obj2")
+	app.MountObjectStores(map[string]*storetypes.ObjectStoreKey{"obj2": objKey2})
+	require.NoError(t, app.LoadLatestVersion())
+	for _, keyName := range []storetypes.StoreKey{kvKey, transKey, memKey, objKey} {
+		require.NotNil(t, app.CommitMultiStore().GetStore(keyName))
+	}
+	require.NotNil(t, app.CommitMultiStore().GetStore(objKey2))
+}
+
 func TestLoadVersionPruning(t *testing.T) {
 	logger := log.NewNopLogger()
 	pruningOptions := pruningtypes.NewCustomPruningOptions(10, 15)

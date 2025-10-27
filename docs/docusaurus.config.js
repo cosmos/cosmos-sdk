@@ -62,7 +62,7 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
-      image: "img/banner.jpg",
+      image: "img/banner.svg",
       docs: {
         sidebar: {
           autoCollapseCategories: true,

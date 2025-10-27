@@ -1,0 +1,72 @@
+name: Enforce Signed Commits on PRs
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read          # needed to read commits
+  pull-requests: write    # needed to close the PR
+  issues: write           # needed to post a comment
+
+jobs:
+  check-signed-commits:
+    # Skip drafts to avoid noise while a PR is still being prepared
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Verify all PR commits are signed
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const prNumber = context.payload.pull_request.number;
+
+            // Get all commits in the PR (handles pagination)
+            const commits = await github.paginate(
+              github.rest.pulls.listCommits,
+              { owner, repo, pull_number: prNumber, per_page: 100 }
+            );
+
+            // Any commit without a verified signature?
+            const unsigned = commits.filter(c => !(c.commit?.verification?.verified));
+
+            if (unsigned.length === 0) {
+              core.info("All commits are verified-signed. ✅");
+              return;
+            }
+
+            // Build a helpful message & list the offending commits
+            const list = unsigned
+              .map(c => `- ${c.sha.substring(0,7)} — ${c.commit.message.split('\n')[0]}`)
+              .join('\n');
+
+            const msg = [
+              "🔒 **PR closed: unsigned commits detected**",
+              "",
+              `This pull request contains **${unsigned.length}** commit(s) without a *verified* signature.`,
+              "",
+              "**How to fix:**",
+              "1. Set up commit signing (GPG or SSH).",
+              "2. Amend/rebase so **every** commit in this PR is verified-signed.",
+              "3. Push the updated branch and open a new PR, or ask a maintainer to reopen once fixed.",
+              "",
+              "Docs: https://docs.github.com/authentication/managing-commit-signature-verification",
+              "",
+              "**Unsigned commits:**",
+              list
+            ].join("\n");
+
+            // Post the explanation as a PR comment (PRs are Issues in the API)
+            await github.rest.issues.createComment({
+              owner, repo, issue_number: prNumber, body: msg
+            });
+
+            // Close the PR
+            await github.rest.pulls.update({
+              owner, repo, pull_number: prNumber, state: "closed"
+            });
+
+            // Mark the job as failed so it’s obvious in checks
+            core.setFailed(`Closed PR: found ${unsigned.length} unsigned commit(s).`);

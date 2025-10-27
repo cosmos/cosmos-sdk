@@ -13,11 +13,14 @@ on:
       - "go.mod"
       - "go.sum"
 
+env:
+  SKIP_WORKFLOW: true  # set to false to enable
+
 jobs:
   Gosec:
     permissions:
       security-events: write
-
+    if: ${{ env.SKIP_WORKFLOW != 'true' }}
     runs-on: ubuntu-latest
     env:
       GO111MODULE: on

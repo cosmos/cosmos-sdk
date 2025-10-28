@@ -161,15 +161,27 @@ func (cs *ChangesetWriter) writeBranch(np *NodePointer, node *MemNode) error {
 		}
 	}
 
-	// now write parent
-	parentIdx := int64(cs.branchesData.Count() + 1) // +1 to account for the node being written
-	leftRef := cs.createNodeRef(parentIdx, node.left)
-	rightRef := cs.createNodeRef(parentIdx, node.right)
+	leftVersion := node.left.id.Version()
+	rightVersion := node.right.id.Version()
+
+	var leftOffset uint32
+	var rightOffset uint32
+
+	// If the child node is in the same changeset, store its 1-based file offset.
+	// fileIdx is already 1-based (set to Count() after append), and 0 means no offset.
+	if leftVersion >= uint64(cs.StartVersion()) {
+		leftOffset = node.left.fileIdx
+	}
+	if rightVersion >= uint64(cs.StartVersion()) {
+		rightOffset = node.right.fileIdx
+	}
 
 	layout := BranchLayout{
 		Id:            np.id,
-		Left:          leftRef,
-		Right:         rightRef,
+		Left:          node.left.id,
+		Right:         node.right.id,
+		LeftOffset:    leftOffset,
+		RightOffset:   rightOffset,
 		KeyOffset:     keyOffset,
 		Height:        node.height,
 		Size:          uint32(node.size), // TODO check overflow

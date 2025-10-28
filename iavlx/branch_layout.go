@@ -12,13 +12,15 @@ func init() {
 }
 
 const (
-	SizeBranch = 72
+	SizeBranch = 80
 )
 
 type BranchLayout struct {
 	Id            NodeID
-	Left          NodeRef
-	Right         NodeRef
+	Left          NodeID
+	Right         NodeID
+	LeftOffset    uint32 // absolute offset
+	RightOffset   uint32 // absolute offset
 	KeyOffset     uint32
 	Height        uint8
 	Size          uint32 // TODO 5 bytes?

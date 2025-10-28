@@ -9,6 +9,8 @@ type LeafPersisted struct {
 	store   *Changeset
 	selfIdx uint32
 	layout  LeafLayout
+	// TODO do these need to be atomic?
+	key, value []byte
 }
 
 func (node *LeafPersisted) ID() NodeID {
@@ -32,12 +34,32 @@ func (node *LeafPersisted) Version() uint32 {
 }
 
 func (node *LeafPersisted) Key() ([]byte, error) {
-	return node.store.ReadK(node.layout.Id, node.layout.KeyOffset)
+	err := node.getKV()
+	if err != nil {
+		return nil, err
+	}
+	return node.key, nil
 }
 
 func (node *LeafPersisted) Value() ([]byte, error) {
-	_, v, err := node.store.ReadKV(node.layout.Id, node.layout.KeyOffset)
-	return v, err
+	err := node.getKV()
+	if err != nil {
+		return nil, err
+	}
+	return node.value, nil
+}
+
+func (node *LeafPersisted) getKV() error {
+	if node.key != nil {
+		return nil
+	}
+	k, v, err := node.store.ReadKV(node.layout.Id, node.layout.KeyOffset)
+	if err != nil {
+		return err
+	}
+	node.key = k
+	node.value = v
+	return nil
 }
 
 func (node *LeafPersisted) Left() *NodePointer {

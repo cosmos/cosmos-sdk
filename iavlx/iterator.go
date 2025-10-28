@@ -14,10 +14,10 @@ type Iterator struct {
 	err   error
 	valid bool
 
-	stack []*NodePointer
+	stack []Node
 }
 
-func NewIterator(start, end []byte, ascending bool, root *NodePointer, zeroCopy bool) *Iterator {
+func NewIterator(start, end []byte, ascending bool, rootPtr *NodePointer, zeroCopy bool) *Iterator {
 	iter := &Iterator{
 		start:     start,
 		end:       end,
@@ -26,8 +26,12 @@ func NewIterator(start, end []byte, ascending bool, root *NodePointer, zeroCopy 
 		zeroCopy:  zeroCopy,
 	}
 
-	if root != nil {
-		iter.stack = []*NodePointer{root}
+	if rootPtr != nil {
+		root, err := rootPtr.Resolve()
+		if err != nil {
+			panic(err)
+		}
+		iter.stack = []Node{root}
 	}
 
 	// cache the first key-value
@@ -73,14 +77,8 @@ func (iter *Iterator) Next() {
 
 	for len(iter.stack) > 0 {
 		// pop node
-		nodePtr := iter.stack[len(iter.stack)-1]
+		node := iter.stack[len(iter.stack)-1]
 		iter.stack = iter.stack[:len(iter.stack)-1]
-
-		node, err := nodePtr.Resolve()
-		if err != nil {
-			iter.fail(err)
-			return
-		}
 
 		key, err := node.Key()
 		if err != nil {
@@ -107,23 +105,32 @@ func (iter *Iterator) Next() {
 			// push children to stack
 			if iter.ascending {
 				if beforeEnd {
-					iter.stack = append(iter.stack, node.Right())
+					iter.pushStack(node.Right())
 				}
 				if afterStart {
-					iter.stack = append(iter.stack, node.Left())
+					iter.pushStack(node.Left())
 				}
 			} else {
 				if afterStart {
-					iter.stack = append(iter.stack, node.Left())
+					iter.pushStack(node.Left())
 				}
 				if beforeEnd {
-					iter.stack = append(iter.stack, node.Right())
+					iter.pushStack(node.Right())
 				}
 			}
 		}
 	}
 
 	iter.valid = false
+}
+
+func (iter *Iterator) pushStack(nodePtr *NodePointer) {
+	node, err := nodePtr.Resolve()
+	if err != nil {
+		iter.fail(err)
+		return
+	}
+	iter.stack = append(iter.stack, node)
 }
 
 func (iter *Iterator) fail(err error) {

@@ -204,12 +204,8 @@ func (db *CommitMultiTree) CacheMultiStoreWithVersion(version int64) (storetypes
 			if err != nil {
 				return nil, fmt.Errorf("failed to create cache multi store for tree %s at version %d: %w", db.treeKeys[i].Name(), version, err)
 			}
-		case storetypes.StoreTypeTransient, storetypes.StoreTypeMemory:
-			mt.trees[i] = tree.CacheWrap().(storetypes.CacheKVStore)
-		case storetypes.StoreTypeObject:
-			continue
 		default:
-			return nil, fmt.Errorf("unsupported store type: %s", typ.String())
+			mt.trees[i] = tree.CacheWrap()
 		}
 	}
 

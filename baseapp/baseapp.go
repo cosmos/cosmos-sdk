@@ -19,6 +19,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
+
 	"cosmossdk.io/store"
 	storemetrics "cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/snapshots"
@@ -161,6 +162,8 @@ type BaseApp struct {
 	//
 	// SAFETY: it's safe to do if validators validate the total gas wanted in the `ProcessProposal`, which is the case in the default handler.
 	disableBlockGasMeter bool
+
+	tracer telemetry.Tracer
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -206,7 +209,7 @@ func NewBaseApp(
 		app.SetVerifyVoteExtensionHandler(NoOpVerifyVoteExtensionHandler())
 	}
 	if app.interBlockCache != nil {
-		app.cms.SetInterBlockCache(app.interBlockCache)
+		//app.cms.SetInterBlockCache(app.interBlockCache)
 	}
 
 	app.runTxRecoveryMiddleware = newDefaultRecoveryMiddleware()
@@ -636,7 +639,11 @@ func (app *BaseApp) cacheTxContext(ctx sdk.Context, txBytes []byte) (sdk.Context
 	return ctx.WithMultiStore(msCache), msCache
 }
 
-func (app *BaseApp) preBlock(req *abci.RequestFinalizeBlock) ([]abci.Event, error) {
+func (app *BaseApp) preBlock(ctx context.Context, req *abci.RequestFinalizeBlock) ([]abci.Event, error) {
+	var span telemetry.Span
+	ctx, span = app.tracer.StartSpanContext(ctx, "preBlock")
+	defer span.End()
+
 	var events []abci.Event
 	if app.abciHandlers.PreBlocker != nil {
 		finalizeState := app.stateManager.GetState(execModeFinalize)
@@ -659,7 +666,11 @@ func (app *BaseApp) preBlock(req *abci.RequestFinalizeBlock) ([]abci.Event, erro
 	return events, nil
 }
 
-func (app *BaseApp) beginBlock(_ *abci.RequestFinalizeBlock) (sdk.BeginBlock, error) {
+func (app *BaseApp) beginBlock(ctx context.Context, _ *abci.RequestFinalizeBlock) (sdk.BeginBlock, error) {
+	var span telemetry.Span
+	ctx, span = app.tracer.StartSpanContext(ctx, "beginBlock")
+	defer span.End()
+
 	var (
 		resp sdk.BeginBlock
 		err  error
@@ -685,7 +696,11 @@ func (app *BaseApp) beginBlock(_ *abci.RequestFinalizeBlock) (sdk.BeginBlock, er
 	return resp, nil
 }
 
-func (app *BaseApp) deliverTx(tx []byte) *abci.ExecTxResult {
+func (app *BaseApp) deliverTx(ctx context.Context, tx []byte) *abci.ExecTxResult {
+	var span telemetry.Span
+	ctx, span = app.tracer.StartSpanContext(ctx, "deliverTx")
+	defer span.End()
+
 	gInfo := sdk.GasInfo{}
 	resultStr := "successful"
 
@@ -724,7 +739,11 @@ func (app *BaseApp) deliverTx(tx []byte) *abci.ExecTxResult {
 
 // endBlock is an application-defined function that is called after transactions
 // have been processed in FinalizeBlock.
-func (app *BaseApp) endBlock(_ context.Context) (sdk.EndBlock, error) {
+func (app *BaseApp) endBlock(ctx context.Context) (sdk.EndBlock, error) {
+	var span telemetry.Span
+	ctx, span = app.tracer.StartSpanContext(context.Background(), "endBlock")
+	defer span.End()
+
 	var endblock sdk.EndBlock
 
 	if app.abciHandlers.EndBlocker != nil {

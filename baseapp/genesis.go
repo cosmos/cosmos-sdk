@@ -1,6 +1,7 @@
 package baseapp
 
 import (
+	"context"
 	"errors"
 
 	"github.com/cometbft/cometbft/abci/types"
@@ -13,7 +14,7 @@ var _ genesis.TxHandler = (*BaseApp)(nil)
 // ExecuteGenesisTx implements genesis.GenesisState from
 // cosmossdk.io/core/genesis to set initial state in genesis
 func (ba *BaseApp) ExecuteGenesisTx(tx []byte) error {
-	res := ba.deliverTx(tx)
+	res := ba.deliverTx(context.Background(), tx)
 
 	if res.Code != types.CodeTypeOK {
 		return errors.New(res.Log)

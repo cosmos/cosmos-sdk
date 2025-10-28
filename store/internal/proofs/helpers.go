@@ -71,14 +71,14 @@ func GetKey(allkeys []string, loc Where) string {
 // GetNonKey returns a missing key - Left of all, Right of all, or in the Middle
 func GetNonKey(allkeys []string, loc Where) string {
 	if loc == Left {
-		return string([]byte{1, 1, 1, 1})
+		return "\x01\x01\x01\x01"
 	}
 	if loc == Right {
-		return string([]byte{0xff, 0xff, 0xff, 0xff})
+		return "\xff\xff\xff\xff"
 	}
 	// otherwise, next to an existing key (copy before mod)
 	key := GetKey(allkeys, loc)
-	key = key[:len(key)-2] + string([]byte{255, 255})
+	key = key[:len(key)-2] + "\xff\xff"
 	return key
 }
 

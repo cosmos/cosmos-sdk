@@ -85,7 +85,7 @@ func TestMigrateVestingAccounts(t *testing.T) {
 	testCases := []struct {
 		name        string
 		prepareFunc func(ctx sdk.Context, validator stakingtypes.Validator, delegatorAddr sdk.AccAddress)
-		garbageFunc func(ctx sdk.Context, vesting exported.VestingAccount, accounKeeper keeper.AccountKeeper) error
+		garbageFunc func(ctx sdk.Context, vesting exported.VestingAccount, accountKeeper keeper.AccountKeeper) error
 		tokenAmount int64
 		expVested   int64
 		expFree     int64

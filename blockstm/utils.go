@@ -37,7 +37,7 @@ func IncrAtomic(a *atomic.Uint64) {
 	a.Add(1)
 }
 
-// FetchIncr increaes the atomic value by 1 and returns the old value
+// FetchIncr increases the atomic value by 1 and returns the old value
 func FetchIncr(a *atomic.Uint64) uint64 {
 	return a.Add(1) - 1
 }

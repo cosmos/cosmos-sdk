@@ -36,5 +36,3 @@ cp -r cosmossdk.io/** ./
 rm -rf github.com cosmossdk.io
 
 go mod tidy
-
-./scripts/protocgen-pulsar.sh

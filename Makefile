@@ -123,10 +123,7 @@ $(BUILD_TARGETS): go.sum $(BUILDDIR)/
 $(BUILDDIR)/:
 	mkdir -p $(BUILDDIR)/
 
-confix:
-	$(MAKE) -C tools/confix confix
-
-.PHONY: build build-linux-amd64 build-linux-arm64 confix
+.PHONY: build build-linux-amd64 build-linux-arm64
 
 
 mocks: $(MOCKS_DIR)

@@ -35,7 +35,7 @@ jobs:
           args: "-exclude=G101,G107 -no-fail -fmt sarif -out results.sarif -exclude-generated ./..."
 
       - name: Upload SARIF file
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           # Path to SARIF file relative to the root of the repository
           sarif_file: results.sarif

@@ -2,23 +2,8 @@ go 1.24.4
 
 use (
 	.
-	./api
 	./client/v2
 	./collections
-	./core
-	./depinject
-	./errors
-	./log
-	./math
-	./orm
 	./simapp
 	./tests
-	./store
-	./tools/confix
-	./x/tx
-	./x/nft
-	./x/circuit
-	./x/feegrant
-	./x/evidence
-	./x/upgrade
 )

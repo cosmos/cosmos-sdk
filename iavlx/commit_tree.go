@@ -201,6 +201,12 @@ func (c *CommitTree) Set(key, value []byte) {
 		key:     key,
 		value:   value,
 	}
+
+	if c.writeWal {
+		// start writing this to the WAL asynchronously before we even mutate the tree
+		c.walQueue.Send([]KVUpdate{{SetNode: leafNode}})
+	}
+
 	ctx := &MutationContext{Version: stagedVersion}
 	newRoot, _, err := setRecursive(c.root, leafNode, ctx)
 	if err != nil {
@@ -208,7 +214,7 @@ func (c *CommitTree) Set(key, value []byte) {
 	}
 
 	c.root = newRoot
-	c.applyUpdates([]KVUpdate{{SetNode: leafNode}}, ctx.Orphans)
+	c.pendingOrphans = append(c.pendingOrphans, ctx.Orphans)
 }
 
 func (c *CommitTree) Delete(key []byte) {
@@ -217,21 +223,18 @@ func (c *CommitTree) Delete(key []byte) {
 	c.writeMutex.Lock()
 	defer c.writeMutex.Unlock()
 
+	if c.writeWal {
+		// start writing this to the WAL asynchronously before we even mutate the tree
+		c.walQueue.Send([]KVUpdate{{DeleteKey: key}})
+	}
+
 	ctx := &MutationContext{Version: c.stagedVersion()}
 	_, newRoot, _, err := removeRecursive(c.root, key, ctx)
 	if err != nil {
 		panic(err)
 	}
 	c.root = newRoot
-	c.applyUpdates([]KVUpdate{{DeleteKey: key}}, ctx.Orphans)
-}
-
-func (c *CommitTree) applyUpdates(updates []KVUpdate, orphans []NodeID) {
-	c.pendingOrphans = append(c.pendingOrphans, orphans)
-
-	if c.writeWal {
-		c.walQueue.Send(updates)
-	}
+	c.pendingOrphans = append(c.pendingOrphans, ctx.Orphans)
 }
 
 func (c *CommitTree) Iterator(start, end []byte) storetypes.Iterator {

@@ -50,6 +50,8 @@ func PairPrefix[K1, K2 any](key K1) Pair[K1, K2] {
 // first part of the key and the KeyCodec of the second part of the key.
 func PairKeyCodec[K1, K2 any](keyCodec1 codec.KeyCodec[K1], keyCodec2 codec.KeyCodec[K2]) codec.KeyCodec[Pair[K1, K2]] {
 	return pairKeyCodec[K1, K2]{
+		key1Name:  "k1",
+		key2Name:  "k2",
 		keyCodec1: keyCodec1,
 		keyCodec2: keyCodec2,
 	}

@@ -1,3 +1,6 @@
+// Package types provides codec registration functions for the upgrade module.
+// It handles the registration of concrete types with both LegacyAmino and Interface Registry
+// for proper serialization and deserialization of upgrade-related messages and proposals.
 package types
 
 import (
@@ -9,7 +12,9 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
-// RegisterLegacyAminoCodec registers concrete types on the LegacyAmino codec
+// RegisterLegacyAminoCodec registers concrete types with the LegacyAmino codec.
+// This function registers all upgrade module types including Plan, upgrade proposals,
+// and upgrade messages for backward compatibility with the legacy amino encoding.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(Plan{}, "cosmos-sdk/Plan", nil)
 	cdc.RegisterConcrete(&SoftwareUpgradeProposal{}, "cosmos-sdk/SoftwareUpgradeProposal", nil)
@@ -18,7 +23,10 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	legacy.RegisterAminoMsg(cdc, &MsgCancelUpgrade{}, "cosmos-sdk/MsgCancelUpgrade")
 }
 
-// RegisterInterfaces registers the interfaces types with the Interface Registry.
+// RegisterInterfaces registers the interface types with the Interface Registry.
+// This function registers upgrade proposals as governance content types and
+// upgrade messages as SDK message types, enabling proper type resolution
+// and interface-based polymorphism throughout the Cosmos SDK.
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*govtypes.Content)(nil),

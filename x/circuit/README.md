@@ -62,7 +62,7 @@ type Access struct {
 
 List of type urls that are disabled.
 
-* DisableList `0x2 | msg_type_url -> []byte{}` <!--- should this be stored in json to skip encoding and decoding each block, does it matter?-->
+* DisableList `0x2 | msg_type_url -> []byte{}` {/* - should this be stored in json to skip encoding and decoding each block, does it matter? */}
 
 ## State Transitions
 
@@ -137,29 +137,29 @@ The circuit module emits the following events:
 
 | Type    | Attribute Key | Attribute Value           |
 |---------|---------------|---------------------------|
-| string  | granter       | {granterAddress}          |
-| string  | grantee       | {granteeAddress}          |
-| string  | permission    | {granteePermissions}      |
-| message | module        | circuit                   |
-| message | action        | authorize_circuit_breaker |
+| string  | granter       | `{granterAddress}` |
+| string  | grantee       | `{granteeAddress}` |
+| string  | permission    | `{granteePermissions}` |
+| message | module        | `circuit`                   |
+| message | action        | `authorize_circuit_breaker` |
 
 #### MsgTripCircuitBreaker
 
 | Type     | Attribute Key | Attribute Value    |
 |----------|---------------|--------------------|
-| string   | authority     | {authorityAddress} |
-| []string | msg_urls      | []string{msg_urls} |
-| message  | module        | circuit            |
-| message  | action        | trip_circuit_breaker |
+| string   | authority     | `{authorityAddress}` |
+| []string | msg_urls      | `[]string{msg_urls}` |
+| message  | module        | `circuit`            |
+| message  | action        | `trip_circuit_breaker` |
 
 #### ResetCircuitBreaker
 
 | Type     | Attribute Key | Attribute Value    |
 |----------|---------------|--------------------|
-| string   | authority     | {authorityAddress} |
-| []string | msg_urls      | []string{msg_urls} |
-| message  | module        | circuit            |
-| message  | action        | reset_circuit_breaker |
+| string   | authority     | `{authorityAddress}` |
+| []string | msg_urls      | `[]string{msg_urls}` |
+| message  | module        | `circuit`            |
+| message  | action        | `reset_circuit_breaker` |
 
 
 ## Keys - list of key prefixes used by the circuit module

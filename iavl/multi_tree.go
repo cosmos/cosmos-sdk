@@ -26,7 +26,7 @@ func (t *MultiTree) GetObjKVStore(key storetypes.StoreKey) storetypes.ObjKVStore
 func (t *MultiTree) getCacheWrapper(key storetypes.StoreKey) storetypes.CacheWrapper {
 	var store storetypes.CacheWrapper
 	treeIdx, ok := t.treesByKey[key]
-	if !ok && t.parentTree != nil {
+	if !ok {
 		if t.parentTree != nil {
 			store = t.initStore(key, t.parentTree(key))
 		} else {
@@ -66,15 +66,16 @@ func (t *MultiTree) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) 
 }
 
 func (t *MultiTree) CacheMultiStore() storetypes.CacheMultiStore {
-	wrapped := &MultiTree{
-		treesByKey: t.treesByKey,
-		trees:      make([]storetypes.CacheWrap, len(t.trees)),
-		parentTree: t.getCacheWrapper,
+	return NewFromParent(t.getCacheWrapper, t.latestVersion)
+}
+
+func NewFromParent(parentStore func(storetypes.StoreKey) storetypes.CacheWrapper, version int64) *MultiTree {
+	return &MultiTree{
+		latestVersion: version,
+		parentTree:    parentStore,
+		trees:         make([]storetypes.CacheWrap, 0),
+		treesByKey:    make(map[storetypes.StoreKey]int),
 	}
-	for i, tree := range t.trees {
-		wrapped.trees[i] = tree.CacheWrap()
-	}
-	return wrapped
 }
 
 func (t *MultiTree) CacheMultiStoreWithVersion(version int64) (storetypes.CacheMultiStore, error) {

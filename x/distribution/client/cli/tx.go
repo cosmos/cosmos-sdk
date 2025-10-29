@@ -193,7 +193,7 @@ func NewSetWithdrawAddrCmd(ac address.Codec) *cobra.Command {
 		Use:   "set-withdraw-addr [withdraw-addr]",
 		Short: "change the default withdraw address for rewards associated with an address",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Set the withdraw address for rewards associated with a delegator address.
+			fmt.Sprintf(`Set the withdrawal address for rewards associated with a delegator address.
 
 Example:
 $ %s tx distribution set-withdraw-addr %s1gghjut3ccd8ay0zduzj64hwre2fxs9ld75ru9p --from mykey

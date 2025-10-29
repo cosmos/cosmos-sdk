@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/store/types"
 
+	"cosmossdk.io/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -78,7 +79,7 @@ func (e STMRunner) Run(ctx context.Context, ms storetypes.MultiStore, txs [][]by
 		stmMultiStoreWrapper{ms},
 		e.workers,
 		estimates,
-		func(txn TxnIndex, ms MultiStore) {
+		func(txn TxnIndex, ms MultiStore, tracer log.Tracer) {
 			var cache map[string]any
 
 			// only one of the concurrent incarnations gets the cache if there are any, otherwise execute without
@@ -92,7 +93,7 @@ func (e STMRunner) Run(ctx context.Context, ms storetypes.MultiStore, txs [][]by
 			if memTxs != nil {
 				memTx = memTxs[txn]
 			}
-			results[txn] = deliverTx(memTx, msWrapper{ms}, int(txn), cache)
+			results[txn] = deliverTx(memTx, msWrapper{ms}, int(txn), cache, tracer)
 
 			if v != nil {
 				incarnationCache[txn].Store(v)

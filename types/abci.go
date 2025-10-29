@@ -6,6 +6,8 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 
 	storetypes "cosmossdk.io/store/types"
+
+	"cosmossdk.io/log"
 )
 
 // ABCIHandlers aggregates all ABCI handlers needed for an application.
@@ -99,7 +101,7 @@ func (r ResponsePreBlock) IsConsensusParamsChanged() bool {
 type RunTx = func(txBytes []byte, tx Tx) (gInfo GasInfo, result *Result, anteEvents []abci.Event, err error)
 
 // DeliverTxFunc is the function called for each transaction in order to produce a single ExecTxResult
-type DeliverTxFunc func(tx []byte, ms storetypes.MultiStore, txIndex int, incarnationCache map[string]any) *abci.ExecTxResult
+type DeliverTxFunc func(tx []byte, ms storetypes.MultiStore, txIndex int, incarnationCache map[string]any, tracer log.Tracer) *abci.ExecTxResult
 
 // TxRunner defines an interface for types which can be used to execute the DeliverTxFunc.
 // It should return an array of *abci.ExecTxResult corresponding to the result of executing each transaction

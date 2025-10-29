@@ -5,6 +5,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
+	"cosmossdk.io/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -19,13 +20,13 @@ func (app *BaseApp) SimCheck(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *
 		return sdk.GasInfo{}, nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "%s", err)
 	}
 
-	gasInfo, result, _, err := app.RunTx(execModeCheck, bz, tx, -1, nil, nil)
+	gasInfo, result, _, err := app.RunTx(execModeCheck, bz, tx, -1, nil, nil, log.NewNopTracer())
 	return gasInfo, result, err
 }
 
 // Simulate executes a tx in simulate mode to get result and gas info.
 func (app *BaseApp) Simulate(txBytes []byte) (sdk.GasInfo, *sdk.Result, error) {
-	gasInfo, result, _, err := app.RunTx(execModeSimulate, txBytes, nil, -1, nil, nil)
+	gasInfo, result, _, err := app.RunTx(execModeSimulate, txBytes, nil, -1, nil, nil, log.NewNopTracer())
 	return gasInfo, result, err
 }
 
@@ -36,7 +37,7 @@ func (app *BaseApp) SimDeliver(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo,
 		return sdk.GasInfo{}, nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "%s", err)
 	}
 
-	gasInfo, result, _, err := app.RunTx(execModeFinalize, bz, tx, -1, nil, nil)
+	gasInfo, result, _, err := app.RunTx(execModeFinalize, bz, tx, -1, nil, nil, log.NewNopTracer())
 	return gasInfo, result, err
 }
 
@@ -47,7 +48,7 @@ func (app *BaseApp) SimTxFinalizeBlock(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.
 		return sdk.GasInfo{}, nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "%s", err)
 	}
 
-	gasInfo, result, _, err := app.RunTx(execModeFinalize, bz, tx, -1, nil, nil)
+	gasInfo, result, _, err := app.RunTx(execModeFinalize, bz, tx, -1, nil, nil, log.NewNopTracer())
 	return gasInfo, result, err
 }
 

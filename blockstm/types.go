@@ -2,6 +2,8 @@ package blockstm
 
 import (
 	storetypes "cosmossdk.io/store/types"
+
+	"cosmossdk.io/log"
 )
 
 const (
@@ -59,7 +61,7 @@ type ReadSet struct {
 type MultiReadSet = map[int]*ReadSet
 
 // TxExecutor executes transactions on top of a multi-version memory view.
-type TxExecutor func(TxnIndex, MultiStore)
+type TxExecutor func(TxnIndex, MultiStore, log.Tracer)
 
 type MultiStore interface {
 	GetStore(storetypes.StoreKey) storetypes.Store

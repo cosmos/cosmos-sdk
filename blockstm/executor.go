@@ -3,6 +3,8 @@ package blockstm
 import (
 	"context"
 	"fmt"
+
+	"cosmossdk.io/log"
 )
 
 // Executor fields are not mutated during execution.
@@ -84,6 +86,6 @@ func (e *Executor) NeedsReexecution(version TxnVersion) (TxnVersion, TaskKind) {
 
 func (e *Executor) execute(txn TxnIndex) *MultiMVMemoryView {
 	view := e.mvMemory.View(txn)
-	e.txExecutor(txn, view)
+	e.txExecutor(txn, view, log.TracerFromContext(e.ctx))
 	return view
 }

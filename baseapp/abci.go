@@ -39,6 +39,9 @@ const (
 )
 
 func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
+	span := app.tracer.StartSpan("InitChain")
+	defer span.End()
+
 	if req.ChainId != app.chainID {
 		return nil, fmt.Errorf("invalid chain-id on InitChain; expected: %s, got: %s", app.chainID, req.ChainId)
 	}
@@ -153,6 +156,9 @@ func (app *BaseApp) Info(_ *abci.RequestInfo) (*abci.ResponseInfo, error) {
 // Query implements the ABCI interface. It delegates to CommitMultiStore if it
 // implements Queryable.
 func (app *BaseApp) Query(_ context.Context, req *abci.RequestQuery) (resp *abci.ResponseQuery, err error) {
+	span := app.tracer.StartSpan("Query")
+	defer span.End()
+
 	// add panic recovery for all queries
 	//
 	// Ref: https://github.com/cosmos/cosmos-sdk/pull/8039
@@ -342,6 +348,9 @@ func (app *BaseApp) ApplySnapshotChunk(req *abci.RequestApplySnapshotChunk) (*ab
 // will contain relevant error information. Regardless of tx execution outcome,
 // the ResponseCheckTx will contain the relevant gas execution context.
 func (app *BaseApp) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, error) {
+	span := app.tracer.StartSpan("CheckTx")
+	defer span.End()
+
 	var mode sdk.ExecMode
 
 	switch req.Type {
@@ -356,7 +365,7 @@ func (app *BaseApp) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, er
 	}
 
 	if app.abciHandlers.CheckTxHandler == nil {
-		gasInfo, result, anteEvents, err := app.RunTx(mode, req.Tx, nil, -1, nil, nil)
+		gasInfo, result, anteEvents, err := app.RunTx(mode, req.Tx, nil, -1, nil, nil, span)
 		if err != nil {
 			return sdkerrors.ResponseCheckTxWithEvents(err, gasInfo.GasWanted, gasInfo.GasUsed, anteEvents, app.trace), nil
 		}
@@ -372,7 +381,7 @@ func (app *BaseApp) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, er
 
 	// Create wrapper to avoid users overriding the execution mode
 	runTx := func(txBytes []byte, tx sdk.Tx) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) {
-		return app.RunTx(mode, txBytes, tx, -1, nil, nil)
+		return app.RunTx(mode, txBytes, tx, -1, nil, nil, span)
 	}
 
 	return app.abciHandlers.CheckTxHandler(runTx, req)
@@ -392,6 +401,9 @@ func (app *BaseApp) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, er
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/cometbft/cometbft/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abci.ResponsePrepareProposal, err error) {
+	span := app.tracer.StartSpan("PrepareProposal")
+	defer span.End()
+
 	if app.abciHandlers.PrepareProposalHandler == nil {
 		return nil, errors.New("PrepareProposal handler not set")
 	}
@@ -479,6 +491,9 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/cometbft/cometbft/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abci.ResponseProcessProposal, err error) {
+	span := app.tracer.StartSpan("ProcessProposal")
+	defer span.End()
+
 	if app.abciHandlers.ProcessProposalHandler == nil {
 		return nil, errors.New("ProcessProposal handler not set")
 	}
@@ -576,6 +591,9 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 // height and are committed in the subsequent height, i.e. H+2. An error is
 // returned if vote extensions are not enabled or if extendVote fails or panics.
 func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (resp *abci.ResponseExtendVote, err error) {
+	span := app.tracer.StartSpan("ExtendVote")
+	defer span.End()
+
 	// Always reset state given that ExtendVote and VerifyVoteExtension can timeout
 	// and be called again in a subsequent round.
 	var ctx sdk.Context
@@ -649,6 +667,9 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 // phase. The response MUST be deterministic. An error is returned if vote
 // extensions are not enabled or if verifyVoteExt fails or panics.
 func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (resp *abci.ResponseVerifyVoteExtension, err error) {
+	span := app.tracer.StartSpan("VerifyVoteExtension")
+	defer span.End()
+
 	if app.abciHandlers.VerifyVoteExtensionHandler == nil {
 		return nil, errors.New("application VerifyVoteExtension handler not set")
 	}
@@ -717,6 +738,9 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 // only used to handle early cancellation, for anything related to state app.stateManager.GetState(execModeFinalize).Context()
 // must be used.
 func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
+	span := app.tracer.StartSpan("internalFinalizeBlock")
+	defer span.End()
+
 	var events []abci.Event
 
 	if err := app.checkHalt(req.Height, req.Time); err != nil {
@@ -782,14 +806,14 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 			WithHeaderHash(req.Hash))
 	}
 
-	preblockEvents, err := app.preBlock(req)
+	preblockEvents, err := app.preBlock(span, req)
 	if err != nil {
 		return nil, err
 	}
 
 	events = append(events, preblockEvents...)
 
-	beginBlock, err := app.beginBlock(req)
+	beginBlock, err := app.beginBlock(span, req)
 	if err != nil {
 		return nil, err
 	}
@@ -846,7 +870,7 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 			WithBlockGasUsed(blockGasUsed).
 			WithBlockGasWanted(blockGasWanted),
 	)
-	endBlock, err := app.endBlock(finalizeState.Context())
+	endBlock, err := app.endBlock(span, finalizeState.Context())
 	if err != nil {
 		return nil, err
 	}
@@ -874,6 +898,7 @@ func (app *BaseApp) executeTxsWithExecutor(ctx context.Context, ms storetypes.Mu
 	if app.txRunner == nil {
 		app.txRunner = txnrunner.NewDefaultRunner(
 			app.txDecoder,
+			app.tracer,
 		)
 	}
 
@@ -891,6 +916,9 @@ func (app *BaseApp) executeTxsWithExecutor(ctx context.Context, ms storetypes.Mu
 // extensions into the proposal, which should not themselves be executed in cases
 // where they adhere to the sdk.Tx interface.
 func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.ResponseFinalizeBlock, err error) {
+	span := app.tracer.StartSpan("FinalizeBlock")
+	defer span.End()
+
 	defer func() {
 		if res == nil {
 			return
@@ -958,6 +986,9 @@ func (app *BaseApp) checkHalt(height int64, time time.Time) error {
 // against that height and gracefully halt if it matches the latest committed
 // height.
 func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
+	span := app.tracer.StartSpan("Commit")
+	defer span.End()
+
 	finalizeState := app.stateManager.GetState(execModeFinalize)
 	header := finalizeState.Context().BlockHeader()
 	retainHeight := app.GetBlockRetentionHeight(header.Height)

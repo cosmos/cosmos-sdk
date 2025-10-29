@@ -580,10 +580,10 @@ The governance module emits the following events:
 
 | Type              | Attribute Key   | Attribute Value  |
 |-------------------|-----------------|------------------|
-| inactive_proposal | proposal_id     | {proposalID}     |
-| inactive_proposal | proposal_result | {proposalResult} |
-| active_proposal   | proposal_id     | {proposalID}     |
-| active_proposal   | proposal_result | {proposalResult} |
+| inactive_proposal | proposal_id     | `{proposalID}` |
+| inactive_proposal | proposal_result | `{proposalResult}` |
+| active_proposal   | proposal_id     | `{proposalID}` |
+| active_proposal   | proposal_result | `{proposalResult}` |
 
 ### Handlers
 
@@ -591,13 +591,13 @@ The governance module emits the following events:
 
 | Type                | Attribute Key       | Attribute Value |
 |---------------------|---------------------|-----------------|
-| submit_proposal     | proposal_id         | {proposalID}    |
-| submit_proposal [0] | voting_period_start | {proposalID}    |
-| proposal_deposit    | amount              | {depositAmount} |
-| proposal_deposit    | proposal_id         | {proposalID}    |
-| message             | module              | governance      |
-| message             | action              | submit_proposal |
-| message             | sender              | {senderAddress} |
+| submit_proposal     | proposal_id         | `{proposalID}` |
+| submit_proposal [0] | voting_period_start | `{proposalID}` |
+| proposal_deposit    | amount              | `{depositAmount}` |
+| proposal_deposit    | proposal_id         | `{proposalID}` |
+| message             | module              | `governance`      |
+| message             | action              | `submit_proposal` |
+| message             | sender              | `{senderAddress}` |
 
 * [0] Event only emitted if the voting period starts during the submission.
 
@@ -605,32 +605,32 @@ The governance module emits the following events:
 
 | Type          | Attribute Key | Attribute Value |
 |---------------|---------------|-----------------|
-| proposal_vote | option        | {voteOption}    |
-| proposal_vote | proposal_id   | {proposalID}    |
-| message       | module        | governance      |
-| message       | action        | vote            |
-| message       | sender        | {senderAddress} |
+| proposal_vote | option        | `{voteOption}` |
+| proposal_vote | proposal_id   | `{proposalID}` |
+| message       | module        | `governance`      |
+| message       | action        | `vote`            |
+| message       | sender        | `{senderAddress}` |
 
 #### MsgVoteWeighted
 
 | Type          | Attribute Key | Attribute Value       |
 |---------------|---------------|-----------------------|
-| proposal_vote | option        | {weightedVoteOptions} |
-| proposal_vote | proposal_id   | {proposalID}          |
-| message       | module        | governance            |
-| message       | action        | vote                  |
-| message       | sender        | {senderAddress}       |
+| proposal_vote | option        | `{weightedVoteOptions}` |
+| proposal_vote | proposal_id   | `{proposalID}` |
+| message       | module        | `governance`            |
+| message       | action        | `vote`                  |
+| message       | sender        | `{senderAddress}` |
 
 #### MsgDeposit
 
 | Type                 | Attribute Key       | Attribute Value |
 |----------------------|---------------------|-----------------|
-| proposal_deposit     | amount              | {depositAmount} |
-| proposal_deposit     | proposal_id         | {proposalID}    |
-| proposal_deposit [0] | voting_period_start | {proposalID}    |
-| message              | module              | governance      |
-| message              | action              | deposit         |
-| message              | sender              | {senderAddress} |
+| proposal_deposit     | amount              | `{depositAmount}` |
+| proposal_deposit     | proposal_id         | `{proposalID}` |
+| proposal_deposit [0] | voting_period_start | `{proposalID}` |
+| message              | module              | `governance`      |
+| message              | action              | `deposit`         |
+| message              | sender              | `{senderAddress}` |
 
 * [0] Event only emitted if the voting period starts during the submission.
 
@@ -640,19 +640,19 @@ The governance module contains the following parameters:
 
 | Key                           | Type             | Example                                 |
 |-------------------------------|------------------|-----------------------------------------|
-| min_deposit                   | array (coins)    | [{"denom":"uatom","amount":"10000000"}] |
-| max_deposit_period            | string (time ns) | "172800000000000" (17280s)              |
-| voting_period                 | string (time ns) | "172800000000000" (17280s)              |
-| quorum                        | string (dec)     | "0.334000000000000000"                  |
-| threshold                     | string (dec)     | "0.500000000000000000"                  |
-| veto                          | string (dec)     | "0.334000000000000000"                  |
-| expedited_threshold           | string (time ns) | "0.667000000000000000"                  |
-| expedited_voting_period       | string (time ns) | "86400000000000" (8600s)                |
-| expedited_min_deposit         | array (coins)    | [{"denom":"uatom","amount":"50000000"}] |
-| burn_proposal_deposit_prevote | bool             | false                                    |
-| burn_vote_quorum              | bool             | false                                   |
-| burn_vote_veto                | bool             | true                                    |
-| min_initial_deposit_ratio                | string             | "0.1"                                    |
+| min_deposit                   | array (coins)    | `[{"denom":"uatom","amount":"10000000"}]` |
+| max_deposit_period            | string (time ns) | `"172800000000000"` (17280s)              |
+| voting_period                 | string (time ns) | `"172800000000000"` (17280s)              |
+| quorum                        | string (dec)     | `"0.334000000000000000"`                  |
+| threshold                     | string (dec)     | `"0.500000000000000000"`                  |
+| veto                          | string (dec)     | `"0.334000000000000000"`                  |
+| expedited_threshold           | string (time ns) | `"0.667000000000000000"`                  |
+| expedited_voting_period       | string (time ns) | `"86400000000000"` (8600s)                |
+| expedited_min_deposit         | array (coins)    | `[{"denom":"uatom","amount":"50000000"}]` |
+| burn_proposal_deposit_prevote | bool             | `false`                                    |
+| burn_vote_quorum              | bool             | `false`                                   |
+| burn_vote_veto                | bool             | `true`                                    |
+| min_initial_deposit_ratio                | string             | `"0.1"`                                    |
 
 
 **NOTE**: The governance module contains parameters that are objects unlike other

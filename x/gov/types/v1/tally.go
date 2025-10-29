@@ -38,7 +38,7 @@ func NewTallyResult(yes, abstain, no, noWithVeto math.Int) TallyResult {
 	}
 }
 
-// NewTallyResultFromMap creates a new TallyResult instance from a Option -> Dec map
+// NewTallyResultFromMap creates a new TallyResult instance from an Option -> Dec map
 func NewTallyResultFromMap(results map[VoteOption]math.LegacyDec) TallyResult {
 	return NewTallyResult(
 		results[OptionYes].TruncateInt(),

@@ -23,16 +23,15 @@ type Tracer interface {
 	// The function also returns a context with the span added to it.
 	StartSpanContext(ctx context.Context, operation string, kvs ...any) (context.Context, Span)
 
-	// RootTracer returns a root-level tracer that is not part of any existing span.
+	// StartRootSpan returns a root-level span that doesn't have a parent.
 	// Use this when starting async work to ensure its spans are not timed as part of the current span.
 	// Example usage:
-	//   rootTracer := tracer.RootTracer()
 	// 	 go func() {
-	//		span := rootTracer.StartSpan("my-go-routine")
+	//		ctx, span := outerSpan.StartRootSpan(ctx, "my-go-routine")
 	// 	 	defer span.End()
 	// 	 	doSomething()
 	//	 }()
-	RootTracer() Tracer
+	StartRootSpan(ctx context.Context, operation string, kvs ...any) (context.Context, Span)
 }
 
 // Span is an interface for managing spans and creating nested spans via the embedded Tracer interface.
@@ -63,23 +62,6 @@ type Span interface {
 	End()
 }
 
-type traceContextKeyType string
-
-const traceContextKey traceContextKeyType = "trace-context"
-
-func ContextWithTracer(ctx context.Context, tracer Tracer) context.Context {
-	return context.WithValue(ctx, traceContextKey, tracer)
-}
-
-// TracerFromContext returns the Tracer from the context.
-// If no Tracer is found, it returns a no-op Tracer that is safe to use.
-func TracerFromContext(ctx context.Context) Tracer {
-	if tracer, ok := ctx.Value(traceContextKey).(Tracer); ok {
-		return tracer
-	}
-	return NewNopTracer()
-}
-
 // NewNopTracer returns a Tracer that does nothing.
 func NewNopTracer() Tracer {
 	return nopTracer{}
@@ -89,21 +71,16 @@ type nopTracer struct {
 	nopLogger
 }
 
-func (n nopTracer) StartSpanContext(ctx context.Context, operation string, kvs ...any) (context.Context, Span) {
-	if tracer, ok := ctx.Value(traceContextKey).(Tracer); ok {
-		span := tracer.StartSpan(operation, kvs...)
-		return ContextWithTracer(ctx, span), span
-	}
-	// no tracer found in context, create a new span, no need to add to context
+func (n nopTracer) StartRootSpan(ctx context.Context, operation string, kvs ...any) (context.Context, Span) {
+	return ctx, nopSpan{}
+}
+
+func (n nopTracer) StartSpanContext(ctx context.Context, _ string, _ ...any) (context.Context, Span) {
 	return ctx, nopSpan{}
 }
 
 func (n nopTracer) StartSpan(string, ...any) Span {
 	return nopSpan{}
-}
-
-func (n nopTracer) RootTracer() Tracer {
-	return n
 }
 
 type nopSpan struct {

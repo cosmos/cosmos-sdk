@@ -20,7 +20,7 @@ minimum deposit is reached, the proposal enters voting period. The minimum depos
 * **Vote:** Participants can vote on proposals that reached MinDeposit and entered voting period.
 * **Inheritance and penalties:** Delegators inherit their validator's vote if
 they don't vote themselves.
-* **Claiming deposit:** Users that deposited on proposals can recover their
+* **Claiming deposit:** Users who deposited on proposals can recover their
 deposits if the proposal was accepted or rejected. If the proposal was vetoed, or never entered voting period (minimum deposit not reached within deposit period), the deposit is burned.
 
 This module is in use on the Cosmos Hub (a.k.a [gaia](https://github.com/cosmos/gaia)).
@@ -64,7 +64,7 @@ staking token of the chain.
 
 ## Concepts
 
-*Disclaimer: This is work in progress. Mechanisms are susceptible to change.*
+*Disclaimer: This is a work in progress. Mechanisms are susceptible to change.*
 
 The governance process is divided in a few steps that are outlined below:
 
@@ -131,10 +131,10 @@ according to the final tally of the proposal:
 
 #### Participants
 
-*Participants* are users that have the right to vote on proposals. On the
+*Participants* are users who have the right to vote on proposals. On the
 Cosmos Hub, participants are bonded Atom holders. Unbonded Atom holders and
 other users do not get the right to participate in governance. However, they
-can submit and deposit on proposals.
+can submit and deposit proposals.
 
 Note that when *participants* have bonded and unbonded Atoms, their voting power is calculated from their bonded Atom holdings only.
 
@@ -157,7 +157,7 @@ The initial option set includes the following options:
 * `Abstain`
 
 `NoWithVeto` counts as `No` but also adds a `Veto` vote. `Abstain` option
-allows voters to signal that they do not intend to vote in favor or against the
+allows voters to signal that they do not intend to vote in favor of or against the
 proposal but accept the result of the vote.
 
 *Note: from the UI, for urgent proposals we should maybe add a ‘Not Urgent’ option that casts a `NoWithVeto` vote.*
@@ -301,9 +301,9 @@ Since this is more of a social feature than a technical feature, we'll now get i
 * What is the purpose of the chain, specifically?
     * best example of this is the Cosmos hub, where different founding groups, have different interpretations of the purpose of the network.
 
-This genesis entry, "constitution" hasn't been designed for existing chains, who should likely just ratify a constitution using their governance system.  Instead, this is for new chains.  It will allow for validators to have a much clearer idea of purpose and the expectations placed on them while operating their nodes.  Likewise, for community members, the constitution will give them some idea of what to expect from both the "chain team" and the validators, respectively.
+This genesis entry, "constitution" hasn't been designed for existing chains, which should likely just ratify a constitution using their governance system.  Instead, this is for new chains.  It will allow for validators to have a much clearer idea of purpose and the expectations placed on them while operating their nodes.  Likewise, for community members, the constitution will give them some idea of what to expect from both the "chain team" and the validators, respectively.
 
-This constitution is designed to be immutable, and placed only in genesis, though that could change over time by a pull request to the cosmos-sdk that allows for the constitution to be changed by governance.  Communities whishing to make amendments to their original constitution should use the governance mechanism and a "signaling proposal" to do exactly that.
+This constitution is designed to be immutable, and placed only in genesis, though that could change over time by a pull request to the cosmos-sdk that allows for the constitution to be changed by governance.  Communities wishing to make amendments to their original constitution should use the governance mechanism and a "signaling proposal" to do exactly that.
 
 **Ideal use scenario for a cosmos chain constitution**
 
@@ -331,7 +331,7 @@ A proposal will generally require more than just a set of messages to explain it
 purpose but need some greater justification and allow a means for interested participants
 to discuss and debate the proposal.
 In most cases, **it is encouraged to have an off-chain system that supports the on-chain governance process**.
-To accommodate for this, a proposal contains a special **`metadata`** field, a string,
+To accommodate this, a proposal contains a special **`metadata`** field, a string,
 which can be used to add context to the proposal. The `metadata` field allows custom use for networks,
 however, it is expected that the field contains a URL or some form of CID using a system such as
 [IPFS](https://docs.ipfs.io/concepts/content-addressing/). To support the case of
@@ -413,7 +413,7 @@ type ProposalStatus byte
 
 const (
     StatusNil           ProposalStatus = 0x00
-    StatusDepositPeriod ProposalStatus = 0x01  // Proposal is submitted. Participants can deposit on it but not vote
+    StatusDepositPeriod ProposalStatus = 0x01  // Proposal is submitted. Participants can deposit in it but not vote
     StatusVotingPeriod  ProposalStatus = 0x02  // MinDeposit is reached, participants can vote
     StatusPassed        ProposalStatus = 0x03  // Proposal passed and successfully executed
     StatusRejected      ProposalStatus = 0x04  // Proposal has been rejected
@@ -455,7 +455,7 @@ We will use one KVStore `Governance` to store four mappings:
 * A mapping from `VotingPeriodProposalKeyPrefix|proposalID` to a single byte. This allows
   us to know if a proposal is in the voting period or not with very low gas cost.
   
-For pseudocode purposes, here are the two function we will use to read or write in stores:
+For pseudocode purposes, here are the two functions we will use to read or write in stores:
 
 * `load(StoreKey, Key)`: Retrieve item stored at key `Key` in store found at key `StoreKey` in the multistore
 * `store(StoreKey, Key, value)`: Write value `Value` at key `Key` in store found at key `StoreKey` in the multistore
@@ -580,7 +580,7 @@ A deposit is accepted iff:
 
 * The proposal exists
 * The proposal is not in the voting period
-* The deposited coins are conform to the accepted denom from the `MinDeposit` param
+* The deposited coins conform to the accepted denom from the `MinDeposit` param
 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/tx.proto#L134-L147
@@ -697,7 +697,7 @@ The governance module contains the following parameters:
 
 
 **NOTE**: The governance module contains parameters that are objects unlike other
-modules. If only a subset of parameters are desired to be changed, only they need
+modules. If only a subset of parameters is desired to be changed, only those need
 to be included and not the entire parameter object structure.
 
 ## Client
@@ -1105,7 +1105,7 @@ where `proposal.json` contains:
 ```
 
 :::note
-By default the metadata, summary and title are both limited by 255 characters, this can be overridden by the application developer.
+By default the metadata, summary and title are all limited by 255 characters, this can be overridden by the application developer.
 :::
 
 :::tip
@@ -2584,5 +2584,5 @@ governance module. Future improvements may include:
   words, they would only inherit the vote of their validator if their other
   appointed representative did not vote.
 * **Better process for proposal review:** There would be two parts to
-  `proposal.Deposit`, one for anti-spam (same as in MVP) and an other one to
+  `proposal.Deposit`, one for anti-spam (same as in MVP) and another one to
   reward third party auditors.

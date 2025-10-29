@@ -17,8 +17,9 @@ import (
 	sdklog "cosmossdk.io/log"
 )
 
+// TODO: this test isn't for expected behavior.
+// It should eventually be updated such that having a default ReaderUpdateInterval shouldn't error on old version queries.
 func TestTree_ErrorsOnOldVersion(t *testing.T) {
-
 	testCases := []struct {
 		name     string
 		getTree  func() *CommitTree
@@ -32,6 +33,7 @@ func TestTree_ErrorsOnOldVersion(t *testing.T) {
 				require.NoError(t, err)
 				return commitTree
 			},
+			// TODO: this shouldn't error!
 			expError: fmt.Errorf("no changeset found for version 2"),
 		},
 		{

@@ -1548,7 +1548,7 @@ Example Output:
 
 The `Params` endpoint allows users to query all parameters for the `gov` module.
 
-<!-- TODO: #10197 Querying governance params outputs nil values -->
+{/* TODO: #10197 Querying governance params outputs nil values */}
 
 Using legacy v1beta1:
 
@@ -2229,7 +2229,7 @@ Example Output:
 
 The `params` endpoint allows users to query all parameters for the `gov` module.
 
-<!-- TODO: #10197 Querying governance params outputs nil values -->
+{/* TODO: #10197 Querying governance params outputs nil values */}
 
 Using legacy v1beta1:
 

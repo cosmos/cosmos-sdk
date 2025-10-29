@@ -62,7 +62,7 @@ type Access struct {
 
 List of type urls that are disabled.
 
-* DisableList `0x2 | msg_type_url -> []byte{}` <!--- should this be stored in json to skip encoding and decoding each block, does it matter?-->
+* DisableList `0x2 | msg_type_url -> []byte{}` {/* - should this be stored in json to skip encoding and decoding each block, does it matter? */}
 
 ## State Transitions
 

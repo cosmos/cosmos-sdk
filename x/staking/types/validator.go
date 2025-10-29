@@ -1,3 +1,6 @@
+// Package types defines the core data structures for the staking module.
+// It provides validator types, delegation mechanics, and consensus power calculations
+// that form the foundation of the Cosmos SDK's proof-of-stake consensus mechanism.
 package types
 
 import (
@@ -41,7 +44,9 @@ var (
 
 var _ ValidatorI = Validator{}
 
-// NewValidator constructs a new Validator
+// NewValidator creates a new validator with the given operator address, public key, and description.
+// The validator is initialized in Unbonded status with zero tokens and delegator shares.
+// This function is typically called when a new validator is being registered in the system.
 func NewValidator(operator string, pubKey cryptotypes.PubKey, description Description) (Validator, error) {
 	pkAny, err := codectypes.NewAnyWithValue(pubKey)
 	if err != nil {
@@ -64,7 +69,8 @@ func NewValidator(operator string, pubKey cryptotypes.PubKey, description Descri
 	}, nil
 }
 
-// Validators is a collection of Validator
+// Validators represents a collection of validators with associated address codec.
+// It provides methods for sorting, iteration, and conversion to SDK validator interfaces.
 type Validators struct {
 	Validators     []Validator
 	ValidatorCodec address.Codec

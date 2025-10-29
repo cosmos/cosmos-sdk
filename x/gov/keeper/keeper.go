@@ -164,7 +164,7 @@ func (k *Keeper) SetHooks(gh types.GovHooks) *Keeper {
 
 // SetLegacyRouter sets the legacy router for governance
 func (k *Keeper) SetLegacyRouter(router v1beta1.Router) {
-	// It is vital to seal the governance proposal router here as to not allow
+	// It is vital to seal the governance proposal router here so as not to allow
 	// further handlers to be registered after the keeper is created since this
 	// could create invalid or non-deterministic behavior.
 	router.Seal()

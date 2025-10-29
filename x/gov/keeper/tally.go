@@ -116,7 +116,7 @@ func defaultCalculateVoteResultsAndVotingPower(
 	return totalVotingPower, results, nil
 }
 
-// getCurrentValidators fetches all the bonded validators, insert them into currValidators
+// getCurrentValidators fetches all the bonded validators, inserts them into currValidators
 func (k Keeper) getCurrentValidators(ctx context.Context) (map[string]v1.ValidatorGovInfo, error) {
 	currValidators := make(map[string]v1.ValidatorGovInfo)
 	if err := k.sk.IterateBondedValidatorsByPower(ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
@@ -157,7 +157,7 @@ func (k Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, burnDe
 	tallyResults = v1.NewTallyResultFromMap(results)
 
 	// TODO: Upgrade the spec to cover all of these cases & remove pseudocode.
-	// If there is no staked coins, the proposal fails
+	// If there are no staked coins, the proposal fails
 	totalBonded, err := k.sk.TotalBondedTokens(ctx)
 	if err != nil {
 		return false, false, tallyResults, err

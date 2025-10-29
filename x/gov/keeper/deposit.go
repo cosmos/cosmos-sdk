@@ -89,7 +89,7 @@ func (k Keeper) AddDeposit(ctx context.Context, proposalID uint64, depositorAddr
 		return false, err
 	}
 
-	// If minDepositRatio is set, the deposit must be equal or greater than minDepositAmount*minDepositRatio
+	// If minDepositRatio is set, the deposit must be equal to or greater than minDepositAmount*minDepositRatio
 	// for at least one denom. If minDepositRatio is zero we skip this check.
 	if !minDepositRatio.IsZero() {
 		var (
@@ -184,7 +184,7 @@ func (k Keeper) AddDeposit(ctx context.Context, proposalID uint64, depositorAddr
 
 // ChargeDeposit will charge proposal cancellation fee (deposits * proposal_cancel_burn_rate)  and
 // send to a destAddress if defined or burn otherwise.
-// Remaining funds are send back to the depositor.
+// Remaining funds are sent back to the depositor.
 func (k Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destAddress, proposalCancelRate string) error {
 	rate := sdkmath.LegacyMustNewDecFromStr(proposalCancelRate)
 	var cancellationCharges sdk.Coins

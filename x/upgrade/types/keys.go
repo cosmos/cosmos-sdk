@@ -1,3 +1,6 @@
+// Package types defines the core data structures and constants for the upgrade module.
+// It provides key management utilities for storing and retrieving upgrade plans,
+// completed upgrades, and version mappings in the blockchain state.
 package types
 
 import "fmt"
@@ -36,22 +39,23 @@ const (
 	KeyUpgradedConsState = "upgradedConsState"
 )
 
-// PlanKey is the key under which the current plan is saved
-// We store PlanByte as a const to keep it immutable (unlike a []byte)
+// PlanKey returns the storage key for the current upgrade plan.
+// The key is constructed from PlanByte constant to ensure immutability.
+// This key is used to store the pending upgrade plan in the module's store.
 func PlanKey() []byte {
 	return []byte{PlanByte}
 }
 
-// UpgradedClientKey is the key under which the upgraded client state is saved
-// Connecting IBC chains can verify against the upgraded client in this path before
-// upgrading their clients
+// UpgradedClientKey returns the storage key for the upgraded IBC client state at the given height.
+// This key is used by connecting IBC chains to verify the upgraded client state
+// before upgrading their own clients. The key format is: "upgradedIBCState/{height}/upgradedClient".
 func UpgradedClientKey(height int64) []byte {
 	return []byte(fmt.Sprintf("%s/%d/%s", KeyUpgradedIBCState, height, KeyUpgradedClient))
 }
 
-// UpgradedConsStateKey is the key under which the upgraded consensus state is saved
-// Connecting IBC chains can verify against the upgraded consensus state in this path before
-// upgrading their clients.
+// UpgradedConsStateKey returns the storage key for the upgraded IBC consensus state at the given height.
+// This key is used by connecting IBC chains to verify the upgraded consensus state
+// before upgrading their own clients. The key format is: "upgradedIBCState/{height}/upgradedConsState".
 func UpgradedConsStateKey(height int64) []byte {
 	return []byte(fmt.Sprintf("%s/%d/%s", KeyUpgradedIBCState, height, KeyUpgradedConsState))
 }

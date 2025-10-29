@@ -29,12 +29,13 @@ func (t *MultiTree) getCacheWrapper(key storetypes.StoreKey) storetypes.CacheWra
 	if !ok && t.parentTree != nil {
 		if t.parentTree != nil {
 			store = t.initStore(key, t.parentTree(key))
-
 		} else {
 			panic(fmt.Sprintf("kv store with key %v has not been registered in stores", key))
 		}
+	} else {
+		store = t.trees[treeIdx]
 	}
-	store = t.trees[treeIdx]
+
 	return store
 }
 

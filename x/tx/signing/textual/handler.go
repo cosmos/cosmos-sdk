@@ -1,3 +1,6 @@
+// Package textual implements the SIGN_MODE_TEXTUAL signing mode for Cosmos SDK transactions.
+// It provides human-readable text representation of transaction data for hardware wallet
+// signing and user verification, following ADR-050 specification for textual signing.
 package textual
 
 import (
@@ -66,7 +69,10 @@ type SignModeHandler struct {
 	messages map[protoreflect.FullName]ValueRenderer
 }
 
-// NewSignModeHandler returns a new SignModeHandler which generates sign bytes and provides  value renderers.
+// NewSignModeHandler creates a new SignModeHandler for SIGN_MODE_TEXTUAL.
+// The handler generates human-readable sign bytes and provides value renderers
+// for converting protobuf values to textual representation. It requires a
+// coin metadata querier to properly format coin amounts with their denominations.
 func NewSignModeHandler(o SignModeOptions) (*SignModeHandler, error) {
 	if o.CoinMetadataQuerier == nil {
 		return nil, errors.New("coinMetadataQuerier must be non-empty")

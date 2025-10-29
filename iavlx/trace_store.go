@@ -4,35 +4,12 @@ import (
 	io "io"
 
 	"cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 )
-
-type Tracer interface {
-	StartSpan(operation TraceOperation, kvs ...any) Span
-	WithContextPtr(ctxPtr any) Tracer
-}
-
-type TraceOperation int
-
-const (
-	TraceOperationGet TraceOperation = iota
-	TraceOperationHas
-	TraceOperationSet
-	TraceOperationDelete
-	TraceOperationIterator
-	TraceOperationReverseIterator
-	TraceOperationIteratorNext
-	TraceOperationIteratorClose
-	TraceOperationWorkingHash
-	TraceOperationCommit
-)
-
-type Span interface {
-	End(kvs ...any)
-}
 
 type TraceStore struct {
 	store  types.KVStore
-	tracer Tracer
+	tracer telemetry.Tracer
 }
 
 func (t *TraceStore) GetStoreType() types.StoreType {
@@ -48,48 +25,46 @@ func (t *TraceStore) CacheWrapWithTrace(io.Writer, types.TraceContext) types.Cac
 }
 
 func (t *TraceStore) Get(key []byte) []byte {
-	span := t.tracer.StartSpan(TraceOperationGet, "key", key)
+	span := t.tracer.StartSpan("get", "key", key)
 	value := t.store.Get(key)
 	span.End("value", value)
 	return value
 }
 
 func (t *TraceStore) Has(key []byte) bool {
-	span := t.tracer.StartSpan(TraceOperationHas, "key", key)
+	span := t.tracer.StartSpan("has", "key", key)
 	value := t.store.Has(key)
 	span.End("has", value)
 	return value
 }
 
 func (t *TraceStore) Set(key, value []byte) {
-	span := t.tracer.StartSpan(TraceOperationSet, "key", key, "value", value)
+	span := t.tracer.StartSpan("set", "key", key, "value", value)
 	defer span.End()
 	t.store.Set(key, value)
 }
 
 func (t *TraceStore) Delete(key []byte) {
-	span := t.tracer.StartSpan(TraceOperationDelete, "key", key)
+	span := t.tracer.StartSpan("delete", "key", key)
 	defer span.End()
 	t.store.Delete(key)
 }
 
 func (t *TraceStore) Iterator(start, end []byte) types.Iterator {
-	span := t.tracer.StartSpan(TraceOperationIterator, "start", start, "end", end)
+	span := t.tracer.StartSpan("iterate", "start", start, "end", end)
 	iter := t.store.Iterator(start, end)
-	span.End()
-	return &traceIterator{iter: iter, tracer: t.tracer.WithContextPtr(iter)}
+	return &traceIterator{iter: iter, parentSpan: span}
 }
 
 func (t *TraceStore) ReverseIterator(start, end []byte) types.Iterator {
-	span := t.tracer.StartSpan(TraceOperationReverseIterator, "start", start, "end", end)
+	span := t.tracer.StartSpan("iterate", "start", start, "end", end, "reverse", true)
 	iter := t.store.ReverseIterator(start, end)
-	span.End()
-	return &traceIterator{iter: iter, tracer: t.tracer.WithContextPtr(iter)}
+	return &traceIterator{iter: iter, parentSpan: span}
 }
 
 type traceIterator struct {
-	iter   types.Iterator
-	tracer Tracer
+	iter       types.Iterator
+	parentSpan telemetry.Span
 }
 
 func (t *traceIterator) Domain() (start []byte, end []byte) {
@@ -101,7 +76,7 @@ func (t *traceIterator) Valid() bool {
 }
 
 func (t *traceIterator) Next() {
-	span := t.tracer.StartSpan(TraceOperationIteratorNext)
+	span := t.parentSpan.StartSpan("next")
 	defer span.End()
 	t.iter.Next()
 }
@@ -119,9 +94,12 @@ func (t *traceIterator) Error() error {
 }
 
 func (t *traceIterator) Close() error {
-	span := t.tracer.StartSpan(TraceOperationIteratorClose)
+	span := t.parentSpan.StartSpan("close")
 	defer span.End()
-	return t.iter.Close()
+	err := t.iter.Close()
+	// close the parent span
+	t.parentSpan.End()
+	return err
 }
 
 var _ types.KVStore = (*TraceStore)(nil)

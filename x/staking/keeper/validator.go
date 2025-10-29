@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync/atomic"
 	"time"
 
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
@@ -13,6 +14,7 @@ import (
 	corestore "cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
+
 	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -260,8 +262,12 @@ func (k Keeper) RemoveValidator(ctx context.Context, address sdk.ValAddress) err
 
 // get groups of validators
 
+var GetAllValidatorsTime atomic.Int64
+
 // GetAllValidators gets the set of all validators with no limits, used during genesis dump
 func (k Keeper) GetAllValidators(ctx context.Context) (validators []types.Validator, err error) {
+	start := time.Now()
+	defer func() { GetAllValidatorsTime.Add(time.Since(start).Nanoseconds()) }()
 	store := k.storeService.OpenKVStore(ctx)
 
 	iterator, err := store.Iterator(types.ValidatorsKey, storetypes.PrefixEndBytes(types.ValidatorsKey))
@@ -271,13 +277,15 @@ func (k Keeper) GetAllValidators(ctx context.Context) (validators []types.Valida
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
-		validator, err := types.UnmarshalValidator(k.cdc, iterator.Value())
+		value := iterator.Value()
+		validator, err := types.UnmarshalValidator(k.cdc, value)
 		if err != nil {
 			return nil, err
 		}
 		validators = append(validators, validator)
 	}
 
+	// Track metrics
 	return validators, nil
 }
 

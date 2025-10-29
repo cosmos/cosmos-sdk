@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"flag"
+	fmt "fmt"
 	"io"
 	"math/rand"
 	"strings"
@@ -24,6 +25,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sims "github.com/cosmos/cosmos-sdk/testutil/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,6 +35,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -157,6 +160,7 @@ func IsEmptyValidatorSetErr(err error) bool {
 }
 
 func TestAppStateDeterminism(t *testing.T) {
+	telemetry.EnableTelemetry()
 	const numTimesToRunPerSeed = 1
 	var seeds []int64
 	if s := simcli.NewConfigFromFlags().Seed; s != simcli.DefaultSeedValue {
@@ -189,6 +193,10 @@ func TestAppStateDeterminism(t *testing.T) {
 				return others.Get(k)
 			})
 		}
+
+		//_, err := metrics.NewGlobal(&metrics.Config{FilterDefault: true}, telemetry.NewLoggerSink(log.NewLogger(os.Stdout)))
+		//require.NoError(t, err)
+
 		return NewSimApp(logger, db, nil, true, appOpts, append(baseAppOptions, interBlockCacheOpt())...)
 	}
 	var mx sync.Mutex
@@ -222,6 +230,13 @@ func TestAppStateDeterminism(t *testing.T) {
 	}
 	// run simulations
 	sims.RunWithSeeds(t, interBlockCachingAppFactory, setupStateFactory, seeds, []byte{}, captureAndCheckHash)
+
+	t.Cleanup(func() {
+		fmt.Printf("\nUnmarshalValidatorCount %d\n", stakingtypes.UnmarshalValidatorCount.Load())
+		fmt.Printf("UnmarshalValidatorTime %d\n", stakingtypes.UnmarshalValidatorTime.Load())
+		fmt.Printf("UnmarshalValidatorBytes %d\n", stakingtypes.UnmarshalValidatorBytes.Load())
+		fmt.Printf("GetAllValidatorsTime %d\n", stakingkeeper.GetAllValidatorsTime.Load())
+	})
 }
 
 type ComparableStoreApp interface {

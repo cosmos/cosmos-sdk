@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -166,9 +167,17 @@ func MustUnmarshalValidator(cdc codec.BinaryCodec, value []byte) Validator {
 	return validator
 }
 
+var UnmarshalValidatorCount atomic.Uint64
+var UnmarshalValidatorTime atomic.Int64
+var UnmarshalValidatorBytes atomic.Uint64
+
 // UnmarshalValidator unmarshals a redelegation from a store value
 func UnmarshalValidator(cdc codec.BinaryCodec, value []byte) (v Validator, err error) {
+	UnmarshalValidatorCount.Add(1)
+	UnmarshalValidatorBytes.Add(uint64(len(value)))
+	start := time.Now()
 	err = cdc.Unmarshal(value, &v)
+	UnmarshalValidatorTime.Add(int64(time.Since(start)))
 	return v, err
 }
 

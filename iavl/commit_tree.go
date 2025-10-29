@@ -209,13 +209,19 @@ func (c *CommitTree) Has(key []byte) bool {
 }
 
 func (c *CommitTree) Set(key, value []byte) {
-	tree := c.CacheWrap().(*Tree)
+	tree, ok := c.CacheWrap().(*Tree)
+	if !ok {
+		panic("CommitTree could not cast to Tree for Set")
+	}
 	tree.Set(key, value)
 	tree.Write()
 }
 
 func (c *CommitTree) Delete(key []byte) {
-	tree := c.CacheWrap().(*Tree)
+	tree, ok := c.CacheWrap().(*Tree)
+	if !ok {
+		panic("CommitTree could not cast to Tree for Delete")
+	}
 	tree.Delete(key)
 	tree.Write()
 }

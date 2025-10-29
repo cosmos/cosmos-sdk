@@ -6,7 +6,6 @@ import (
 
 const (
 	TelemetrySubsystem = "blockstm"
-	KeyNumTxs          = "num_txs"
 	KeyExecutedTxs     = "executed_txs"
 	KeyValidatedTxs    = "validated_txs"
 )

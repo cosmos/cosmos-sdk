@@ -324,7 +324,7 @@ func (m *Metrics) Start(ctx context.Context) error {
 // exporters and close any open files.
 func (m *Metrics) Shutdown(ctx context.Context) error {
 	n := len(m.shutdownFuncs)
-	// shutdown in reverse order because some exporters may depend on others
+	// shutdown in reverse order because we can't close files until after the exporter is stopped
 	for i := n - 1; i >= 0; i-- {
 		if err := m.shutdownFuncs[i](ctx); err != nil {
 			return err

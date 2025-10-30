@@ -192,10 +192,9 @@ func TestAppStateDeterminism(t *testing.T) {
 			})
 		}
 		metrics := telemetry.TestingInit(t, nil, logger)
-		span := metrics.Tracer().StartSpan("test-span")
-		span.Info("test span created")
-		span.End()
-		return NewSimApp(metrics.Tracer(), db, nil, true, appOpts, append(baseAppOptions, interBlockCacheOpt())...)
+		baseAppSpan := metrics.Tracer().StartSpan("baseapp")
+		t.Cleanup(baseAppSpan.End)
+		return NewSimApp(baseAppSpan, db, nil, true, appOpts, append(baseAppOptions, interBlockCacheOpt())...)
 	}
 	var mx sync.Mutex
 	appHashResults := make(map[int64][][]byte)

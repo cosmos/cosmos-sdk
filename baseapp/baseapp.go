@@ -66,6 +66,7 @@ type BaseApp struct {
 	mu                sync.Mutex // mu protects the fields below.
 	logger            log.Logger
 	tracer            log.Tracer
+	blockSpan         log.Span
 	name              string                      // application name from abci.BlockInfo
 	db                dbm.DB                      // common DB backend
 	cms               storetypes.CommitMultiStore // Main (uncached) state
@@ -181,6 +182,7 @@ func NewBaseApp(
 	app := &BaseApp{
 		logger:           logger.With(log.ModuleKey, "baseapp"),
 		tracer:           tracer,
+		blockSpan:        tracer.StartSpan("block"),
 		name:             name,
 		db:               db,
 		cms:              store.NewCommitMultiStore(db, logger, storemetrics.NewNoOpMetrics()), // by default, we use a no-op metric gather in store

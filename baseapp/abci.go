@@ -39,7 +39,7 @@ const (
 )
 
 func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
-	span := app.tracer.StartSpan("InitChain")
+	span := app.blockSpan.StartSpan("InitChain")
 	defer span.End()
 
 	if req.ChainId != app.chainID {
@@ -401,7 +401,7 @@ func (app *BaseApp) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, er
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/cometbft/cometbft/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abci.ResponsePrepareProposal, err error) {
-	span := app.tracer.StartSpan("PrepareProposal")
+	span := app.blockSpan.StartSpan("PrepareProposal")
 	defer span.End()
 
 	if app.abciHandlers.PrepareProposalHandler == nil {
@@ -491,7 +491,7 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/cometbft/cometbft/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abci.ResponseProcessProposal, err error) {
-	span := app.tracer.StartSpan("ProcessProposal")
+	span := app.blockSpan.StartSpan("ProcessProposal")
 	defer span.End()
 
 	if app.abciHandlers.ProcessProposalHandler == nil {
@@ -591,7 +591,7 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 // height and are committed in the subsequent height, i.e. H+2. An error is
 // returned if vote extensions are not enabled or if extendVote fails or panics.
 func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (resp *abci.ResponseExtendVote, err error) {
-	span := app.tracer.StartSpan("ExtendVote")
+	span := app.blockSpan.StartSpan("ExtendVote")
 	defer span.End()
 
 	// Always reset state given that ExtendVote and VerifyVoteExtension can timeout
@@ -667,7 +667,7 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 // phase. The response MUST be deterministic. An error is returned if vote
 // extensions are not enabled or if verifyVoteExt fails or panics.
 func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (resp *abci.ResponseVerifyVoteExtension, err error) {
-	span := app.tracer.StartSpan("VerifyVoteExtension")
+	span := app.blockSpan.StartSpan("VerifyVoteExtension")
 	defer span.End()
 
 	if app.abciHandlers.VerifyVoteExtensionHandler == nil {
@@ -738,7 +738,7 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 // only used to handle early cancellation, for anything related to state app.stateManager.GetState(execModeFinalize).Context()
 // must be used.
 func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
-	span := app.tracer.StartSpan("internalFinalizeBlock")
+	ctx, span := app.tracer.StartSpanContext(ctx, "internalFinalizeBlock")
 	defer span.End()
 
 	var events []abci.Event
@@ -916,7 +916,7 @@ func (app *BaseApp) executeTxsWithExecutor(ctx context.Context, ms storetypes.Mu
 // extensions into the proposal, which should not themselves be executed in cases
 // where they adhere to the sdk.Tx interface.
 func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.ResponseFinalizeBlock, err error) {
-	span := app.tracer.StartSpan("FinalizeBlock")
+	ctx, span := app.blockSpan.StartSpanContext(context.Background(), "FinalizeBlock")
 	defer span.End()
 
 	defer func() {
@@ -952,7 +952,7 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 	}
 
 	// if no OE is running, just run the block (this is either a block replay or a OE that got aborted)
-	res, err = app.internalFinalizeBlock(context.Background(), req)
+	res, err = app.internalFinalizeBlock(ctx, req)
 	if res != nil {
 		res.AppHash = app.workingHash()
 	}
@@ -986,8 +986,12 @@ func (app *BaseApp) checkHalt(height int64, time time.Time) error {
 // against that height and gracefully halt if it matches the latest committed
 // height.
 func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
-	span := app.tracer.StartSpan("Commit")
-	defer span.End()
+	span := app.blockSpan.StartSpan("Commit")
+	defer func() {
+		span.End()
+		app.blockSpan.End()
+		app.blockSpan = app.tracer.StartSpan("block")
+	}()
 
 	finalizeState := app.stateManager.GetState(execModeFinalize)
 	header := finalizeState.Context().BlockHeader()

@@ -209,13 +209,19 @@ func (c *CommitTree) Has(key []byte) bool {
 }
 
 func (c *CommitTree) Set(key, value []byte) {
-	tree := c.CacheWrap().(*Tree)
+	tree, ok := c.CacheWrap().(*Tree)
+	if !ok {
+		panic("CommitTree could not cast to Tree for Set")
+	}
 	tree.Set(key, value)
 	tree.Write()
 }
 
 func (c *CommitTree) Delete(key []byte) {
-	tree := c.CacheWrap().(*Tree)
+	tree, ok := c.CacheWrap().(*Tree)
+	if !ok {
+		panic("CommitTree could not cast to Tree for Delete")
+	}
 	tree.Delete(key)
 	tree.Write()
 }
@@ -301,7 +307,7 @@ func (c *CommitTree) startEvict(evictVersion uint32) {
 	}()
 }
 
-func (c *CommitTree) GetImmutable(version int64) (storetypes.CacheKVStore, error) {
+func (c *CommitTree) GetImmutable(version int64) (storetypes.CacheWrap, error) {
 	var rootPtr *NodePointer
 	if version == c.lastCommitId.Version {
 		rootPtr = c.root
@@ -400,6 +406,6 @@ func evictTraverse(np *NodePointer, depth, evictionDepth uint8, evictVersion uin
 }
 
 var (
-	_ storetypes.CommitKVStore = &CommitTree{}
-	_ parentTree               = &CommitTree{}
+	_ storetypes.CommitStore = &CommitTree{}
+	_ parentTree             = &CommitTree{}
 )

@@ -31,13 +31,15 @@ func (app *BaseApp) Simulate(txBytes []byte) (sdk.GasInfo, *sdk.Result, error) {
 }
 
 func (app *BaseApp) SimDeliver(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *sdk.Result, error) {
+	span := app.blockSpan.StartSpan("SimDeliver")
+	defer span.End()
 	// See comment for Check().
 	bz, err := txEncoder(tx)
 	if err != nil {
 		return sdk.GasInfo{}, nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "%s", err)
 	}
 
-	gasInfo, result, _, err := app.RunTx(execModeFinalize, bz, tx, -1, nil, nil, log.NewNopTracer(log.NewNopLogger()))
+	gasInfo, result, _, err := app.RunTx(execModeFinalize, bz, tx, -1, nil, nil, span)
 	return gasInfo, result, err
 }
 

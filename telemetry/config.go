@@ -141,6 +141,11 @@ type OtelTraceExportConfig struct {
 	// Insecure disables TLS certificate verification for OTLP exporters.
 	Insecure bool `mapstructure:"insecure" json:"insecure"`
 
+	// Headers is a map of HTTP headers to send with each request to the OTLP exporter.
+	// Useful for authentication, authorization, or custom metadata.
+	// Example: {"Authorization": "Bearer token123", "X-Custom-Header": "value"}
+	Headers map[string]string `mapstructure:"headers" json:"headers"`
+
 	// File is the file path to write trace data to when using the "stdout" exporter.
 	// If it is empty, the trace data is written to stdout.
 	File string `mapstructure:"file" json:"file"`

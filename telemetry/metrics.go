@@ -18,7 +18,9 @@ import (
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
+	"go.opentelemetry.io/otel/sdk/resource"
 	otelsdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.17.0"
 
 	"cosmossdk.io/log"
 )
@@ -158,11 +160,17 @@ func New(cfg Config, opts ...Option) (_ *Metrics, rerr error) {
 					if exporterOpts.Insecure {
 						opts = append(opts, otlptracegrpc.WithInsecure())
 					}
+					if len(exporterOpts.Headers) > 0 {
+						opts = append(opts, otlptracegrpc.WithHeaders(exporterOpts.Headers))
+					}
 					client = otlptracegrpc.NewClient(opts...)
 				default:
 					opts := []otlptracehttp.Option{otlptracehttp.WithEndpoint(endpoint)}
 					if exporterOpts.Insecure {
 						opts = append(opts, otlptracehttp.WithInsecure())
+					}
+					if len(exporterOpts.Headers) > 0 {
+						opts = append(opts, otlptracehttp.WithHeaders(exporterOpts.Headers))
 					}
 					client = otlptracehttp.NewClient(opts...)
 				}
@@ -196,13 +204,27 @@ func New(cfg Config, opts ...Option) (_ *Metrics, rerr error) {
 			}
 		}
 
+		// Determine service name for both resource and tracer
+		serviceName := cfg.ServiceName
+		if serviceName == "" {
+			serviceName = "cosmos-sdk"
+		}
+
+		// Create OpenTelemetry resource with service name
+		res, err := resource.New(context.Background(),
+			resource.WithAttributes(
+				semconv.ServiceName(serviceName),
+			),
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create trace resource: %w", err)
+		}
+
+		// Add resource to tracer provider options
+		tracerProviderOpts = append(tracerProviderOpts, otelsdktrace.WithResource(res))
 		tracerProvider := otelsdktrace.NewTracerProvider(tracerProviderOpts...)
 		m.shutdownFuncs = append(m.shutdownFuncs, tracerProvider.Shutdown)
-		tracerName := cfg.ServiceName
-		if tracerName == "" {
-			tracerName = "cosmos-sdk"
-		}
-		m.tracer = NewOtelTracer(tracerProvider.Tracer(tracerName), m.logger)
+		m.tracer = NewOtelTracer(tracerProvider.Tracer(serviceName), m.logger)
 	case "metrics":
 		m.tracer = m.metricsTracer
 	default:

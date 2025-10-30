@@ -24,7 +24,10 @@ func TestingInit(t *testing.T, ctx context.Context, logger log.Logger) *Metrics 
 	}
 
 	// configure metrics and tracing for testing
-	telemetryCfg := Config{Enabled: true}
+	telemetryCfg := Config{
+		Enabled:     true,
+		ServiceName: "cosmos-sdk-test",
+	}
 	telemetryCfgJson, ok := os.LookupEnv("COSMOS_TELEMETRY")
 	if ok && telemetryCfgJson != "" {
 		err := json.Unmarshal([]byte(telemetryCfgJson), &telemetryCfg)

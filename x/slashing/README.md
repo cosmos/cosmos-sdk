@@ -106,7 +106,7 @@ long as it contains precommits from +2/3 of total voting power.
 
 Proposers are incentivized to include precommits from all validators in the CometBFT `LastCommitInfo`
 by receiving additional fees proportional to the difference between the voting
-power included in the `LastCommitInfo` and +2/3 (see [fee distribution](../distribution/README.md#begin-block)).
+power included in the `LastCommitInfo` and +2/3 (see [fee distribution](./distribution/#begin-block)).
 
 ```go
 type LastCommitInfo struct {

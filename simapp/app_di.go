@@ -13,9 +13,9 @@ import (
 
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
+	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

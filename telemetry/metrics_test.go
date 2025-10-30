@@ -1,7 +1,9 @@
 package telemetry
 
 import (
+	"context"
 	"encoding/json"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -57,9 +59,38 @@ func TestMetrics_Prom(t *testing.T) {
 
 	gr, err := m.Gather(FormatPrometheus)
 	require.NoError(t, err)
-	require.Equal(t, gr.ContentType, string(ContentTypeText))
+	require.Equal(t, gr.ContentType, ContentTypeText)
 
 	require.True(t, strings.Contains(string(gr.Metrics), "test_dummy_counter 30"))
+}
+
+func TestMetrics_FileSink(t *testing.T) {
+	tmpfile := t.TempDir() + "/metrics.jsonl"
+
+	m, err := New(Config{
+		MetricsSink:    MetricSinkFile,
+		MetricsFile:    tmpfile,
+		Enabled:        true,
+		EnableHostname: false,
+		ServiceName:    "test",
+	})
+	require.NoError(t, err)
+	require.NotNil(t, m)
+
+	// Emit a few metrics
+	metrics.IncrCounter([]string{"test_counter"}, 5.0)
+	metrics.SetGauge([]string{"test_gauge"}, 42.0)
+
+	// Close to flush buffered data
+	require.NoError(t, m.Shutdown(context.Background()))
+
+	// Verify file was created and contains metrics
+	data, err := os.ReadFile(tmpfile)
+	require.NoError(t, err)
+	require.NotEmpty(t, data)
+	require.Contains(t, string(data), `"type":"counter"`)
+	require.Contains(t, string(data), `"type":"gauge"`)
+	require.Contains(t, string(data), `"key":["test","test_counter"]`)
 }
 
 func emitMetrics() {

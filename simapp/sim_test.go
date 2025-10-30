@@ -19,6 +19,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
+	"github.com/cosmos/cosmos-sdk/telemetry"
+
 	"cosmossdk.io/store"
 	storetypes "cosmossdk.io/store/types"
 
@@ -189,7 +191,10 @@ func TestAppStateDeterminism(t *testing.T) {
 				return others.Get(k)
 			})
 		}
-		return NewSimApp(logger, db, nil, true, appOpts, append(baseAppOptions, interBlockCacheOpt())...)
+		metrics := telemetry.TestingInit(t, nil, logger)
+		baseAppSpan := metrics.Tracer().StartSpan("baseapp")
+		t.Cleanup(baseAppSpan.End)
+		return NewSimApp(baseAppSpan, db, nil, true, appOpts, append(baseAppOptions, interBlockCacheOpt())...)
 	}
 	var mx sync.Mutex
 	appHashResults := make(map[int64][][]byte)

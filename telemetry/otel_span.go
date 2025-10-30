@@ -65,7 +65,7 @@ type OtelSpan struct {
 func (o *OtelSpan) addEvent(level, msg string, keyVals ...any) {
 	o.span.AddEvent(msg,
 		oteltrace.WithAttributes(o.persistentAttrs...),
-		oteltrace.WithAttributes(toKVs(keyVals...)...),
+		oteltrace.WithAttributes(toKVs(keyVals)...),
 		oteltrace.WithAttributes(otelattr.String("level", level)),
 	)
 }
@@ -87,7 +87,7 @@ func (o *OtelSpan) Debug(msg string, keyVals ...any) {
 }
 
 func (o *OtelSpan) With(keyVals ...any) log.Logger {
-	attrs := toKVs(keyVals...)
+	attrs := toKVs(keyVals)
 	persistentAttrs := make([]otelattr.KeyValue, 0, len(o.persistentAttrs)+len(attrs))
 	persistentAttrs = append(persistentAttrs, o.persistentAttrs...)
 	persistentAttrs = append(persistentAttrs, attrs...)
@@ -107,7 +107,7 @@ func (o *OtelSpan) startSpan(ctx context.Context, operation string, kvs []any, o
 	if len(o.persistentAttrs) > 0 {
 		opts = append(opts, oteltrace.WithAttributes(o.persistentAttrs...))
 	}
-	opts = append(opts, oteltrace.WithAttributes(toKVs(kvs...)...))
+	opts = append(opts, oteltrace.WithAttributes(toKVs(kvs)...))
 	ctx, span := o.tracer.Start(ctx, operation, opts...)
 	return &OtelSpan{
 		tracer:          o.tracer,
@@ -136,7 +136,7 @@ func (o *OtelSpan) StartRootSpan(ctx context.Context, operation string, kvs ...a
 }
 
 func (o *OtelSpan) SetAttrs(kvs ...any) {
-	o.span.SetAttributes(toKVs(kvs...)...)
+	o.span.SetAttributes(toKVs(kvs)...)
 }
 
 func (o *OtelSpan) SetErr(err error, kvs ...any) error {
@@ -147,7 +147,7 @@ func (o *OtelSpan) SetErr(err error, kvs ...any) error {
 		o.span.SetStatus(otelcodes.Error, err.Error())
 	}
 	if len(kvs) > 0 {
-		o.span.SetAttributes(toKVs(kvs...)...)
+		o.span.SetAttributes(toKVs(kvs)...)
 	}
 	return err
 }
@@ -158,7 +158,7 @@ func (o *OtelSpan) End() {
 
 var _ log.Span = (*OtelSpan)(nil)
 
-func toKVs(kvs ...any) []otelattr.KeyValue {
+func toKVs(kvs []any) []otelattr.KeyValue {
 	if len(kvs)%2 != 0 {
 		panic(fmt.Sprintf("kvs must have even length, got %d", len(kvs)))
 	}

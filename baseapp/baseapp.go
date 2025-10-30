@@ -174,8 +174,13 @@ type BaseApp struct {
 func NewBaseApp(
 	name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
 ) *BaseApp {
+	tracer, ok := logger.(log.Tracer)
+	if !ok {
+		tracer = log.NewNopTracer(logger)
+	}
 	app := &BaseApp{
 		logger:           logger.With(log.ModuleKey, "baseapp"),
+		tracer:           tracer,
 		name:             name,
 		db:               db,
 		cms:              store.NewCommitMultiStore(db, logger, storemetrics.NewNoOpMetrics()), // by default, we use a no-op metric gather in store
@@ -189,11 +194,6 @@ func NewBaseApp(
 	}
 
 	// initialize tracer
-	tracer, ok := app.logger.(log.Tracer)
-	if !ok {
-		tracer = log.NewNopTracer(app.logger)
-	}
-	app.tracer = tracer
 
 	for _, option := range options {
 		option(app)

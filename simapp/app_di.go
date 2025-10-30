@@ -3,13 +3,7 @@
 package simapp
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
 	"io"
-	"os"
-	"os/signal"
-	"syscall"
 
 	dbm "github.com/cosmos/cosmos-db"
 
@@ -18,8 +12,6 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"cosmossdk.io/log"
-	"github.com/cosmos/cosmos-sdk/telemetry"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -108,37 +100,6 @@ func NewSimApp(
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *SimApp {
-	// configure metrics and tracing for testing
-	telemetryCfgJson, ok := os.LookupEnv("SIMAPP_TELEMETRY")
-	if ok && telemetryCfgJson != "" {
-		var telemetryCfg telemetry.Config
-		err := json.Unmarshal([]byte(telemetryCfgJson), &telemetryCfg)
-		if err != nil {
-			panic(fmt.Errorf("failed to parse simapp telemetry config: %v\n", err))
-		} else {
-			fmt.Printf("\nConfiguring telemetry for simapp: %+v\n", telemetryCfg)
-			metrics, err := telemetry.New(telemetryCfg, telemetry.WithLogger(logger))
-			if err != nil {
-				panic(fmt.Errorf("failed to initialize simapp telemetry: %v\n", err))
-			}
-			logger = metrics.Tracer()
-			err = metrics.Start(context.Background())
-			if err != nil {
-				panic(fmt.Errorf("failed to start simapp telemetry: %v\n", err))
-			}
-			shutdownChan := make(chan os.Signal, 1)
-			signal.Notify(shutdownChan, os.Interrupt, syscall.SIGTERM)
-			go func() {
-				// shutdown when there's a shutdown signal
-				<-shutdownChan
-				err := metrics.Shutdown(context.Background())
-				if err != nil {
-					fmt.Printf("failed to shutdown simapp telemetry: %v\n", err)
-				}
-			}()
-		}
-	}
-
 	var (
 		app        = &SimApp{}
 		appBuilder *runtime.AppBuilder

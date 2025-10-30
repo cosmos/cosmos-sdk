@@ -11,17 +11,17 @@ import (
 	"cosmossdk.io/log"
 )
 
-type OtelTracerBase struct {
+type OtelTraceProvider struct {
 	tracer oteltrace.Tracer
 }
 
-func NewOtelTraceProvider(tracer oteltrace.Tracer) *OtelTracerBase {
-	return &OtelTracerBase{
+func NewOtelTraceProvider(tracer oteltrace.Tracer) *OtelTraceProvider {
+	return &OtelTraceProvider{
 		tracer: tracer,
 	}
 }
 
-func (o *OtelTracerBase) StartSpan(operation string, kvs ...any) log.Span {
+func (o *OtelTraceProvider) StartSpan(operation string, kvs ...any) log.Span {
 	ctx, span := o.tracer.Start(context.Background(), operation, oteltrace.WithAttributes(toKVs(kvs)...))
 	return &OtelSpan{
 		tracer: o.tracer,
@@ -30,7 +30,7 @@ func (o *OtelTracerBase) StartSpan(operation string, kvs ...any) log.Span {
 	}
 }
 
-func (o *OtelTracerBase) StartSpanContext(ctx context.Context, operation string, kvs ...any) (context.Context, log.Span) {
+func (o *OtelTraceProvider) StartSpanContext(ctx context.Context, operation string, kvs ...any) (context.Context, log.Span) {
 	ctx, span := o.tracer.Start(ctx, operation, oteltrace.WithAttributes(toKVs(kvs)...))
 	return ctx, &OtelSpan{
 		tracer: o.tracer,
@@ -39,7 +39,7 @@ func (o *OtelTracerBase) StartSpanContext(ctx context.Context, operation string,
 	}
 }
 
-func (o *OtelTracerBase) StartRootSpan(ctx context.Context, operation string, kvs ...any) (context.Context, log.Span) {
+func (o *OtelTraceProvider) StartRootSpan(ctx context.Context, operation string, kvs ...any) (context.Context, log.Span) {
 	ctx, span := o.tracer.Start(ctx, operation, oteltrace.WithAttributes(toKVs(kvs)...), oteltrace.WithNewRoot())
 	return ctx, &OtelSpan{
 		tracer: o.tracer,
@@ -48,7 +48,7 @@ func (o *OtelTracerBase) StartRootSpan(ctx context.Context, operation string, kv
 	}
 }
 
-var _ log.TraceProvider = (*OtelTracerBase)(nil)
+var _ log.TraceProvider = (*OtelTraceProvider)(nil)
 
 type OtelSpan struct {
 	tracer          oteltrace.Tracer

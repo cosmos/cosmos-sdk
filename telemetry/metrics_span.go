@@ -25,7 +25,7 @@ func (m *MetricsTraceProvider) startSpan(existingPath []string, operation string
 	path[len(path)-1] = operation
 	return &MetricsSpan{
 		MetricsTraceProvider: m,
-		path:                 []string{operation},
+		path:                 path,
 		start:                time.Now(),
 	}
 }
@@ -35,11 +35,11 @@ func (m *MetricsTraceProvider) StartSpan(operation string, _ ...any) log.Span {
 }
 
 func (m *MetricsTraceProvider) StartSpanContext(ctx context.Context, operation string, kvs ...any) (context.Context, log.Span) {
-	return ctx, m.StartSpan(operation, kvs...)
+	return ctx, m.startSpan(m.rootPath, operation)
 }
 
 func (m *MetricsTraceProvider) StartRootSpan(ctx context.Context, operation string, kvs ...any) (context.Context, log.Span) {
-	return ctx, m.StartSpan(operation, kvs...)
+	return ctx, m.startSpan(m.rootPath, operation)
 }
 
 var _ log.TraceProvider = (*MetricsTraceProvider)(nil)
@@ -62,29 +62,6 @@ type MetricsSpan struct {
 	*MetricsTraceProvider
 	start time.Time
 	path  []string
-}
-
-// NewMetricsTracer creates a new MetricsSpan that acts as a root tracer.
-// The rootPath defines the base metric name. If empty, metrics start from the root.
-// The rootLabels are applied to all metrics emitted by this tracer and its children.
-//
-// Example:
-//
-//	labels := []metrics.Label{{Name: "module", Value: "staking"}}
-//	tracer := NewMetricsTracer(metrics, []string{"app", "tx"}, labels)
-//	span := tracer.StartSpan("validate")
-//	defer span.End()
-//	// Emits: "app.tx.validate.time" and "app.tx.validate.count" with module=staking label
-func NewMetricsTracer(m *metrics.Metrics, rootPath []string, rootLabels []metrics.Label) *MetricsSpan {
-	return &MetricsSpan{
-		MetricsTraceProvider: &MetricsTraceProvider{
-			metrics:    m,
-			rootPath:   rootPath,
-			rootLabels: rootLabels,
-		},
-		path:  rootPath,
-		start: time.Now(),
-	}
 }
 
 // Logger methods are no-ops - MetricsSpan does not support logging.

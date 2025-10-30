@@ -311,7 +311,7 @@ func (m *Metrics) TraceProvider() log.TraceProvider {
 // Use this when you specifically want to configure a code path to only emit metrics
 // and not actual logging spans (useful for benchmarking small operations such as store operations).
 func (m *Metrics) MetricsTraceProvider() log.TraceProvider {
-	return m.traceProvider
+	return m.metricsTraceProvider
 }
 
 // Start starts all configured exporters.

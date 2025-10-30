@@ -1,50 +1,11 @@
-// Package telemetry provides observability through metrics and distributed tracing.
-//
-// # Metrics Collection
-//
-// Metrics collection uses hashicorp/go-metrics with support for multiple sink backends:
-//   - mem: In-memory aggregation with SIGUSR1 signal dumping to stderr
-//   - prometheus: Prometheus registry for pull-based scraping via /metrics endpoint
-//   - statsd: Push-based metrics to StatsD daemon
-//   - dogstatsd: Push-based metrics to Datadog StatsD daemon with tagging
-//   - file: Write metrics to a file as JSON lines (useful for tests and debugging)
-//
-// Multiple sinks can be active simultaneously via FanoutSink (e.g., both in-memory and Prometheus).
-//
-// # Distributed Tracing
-//
-// Tracing support is provided via OtelSpan, which wraps OpenTelemetry for hierarchical span tracking.
-// See otel.go for the log.Tracer implementation.
-//
-// # Usage
-//
-// Initialize metrics at application startup:
-//
-//	m, err := telemetry.New(telemetry.Config{
-//		Enabled:                 true,
-//		ServiceName:             "cosmos-app",
-//		PrometheusRetentionTime: 60,
-//		GlobalLabels:            [][]string{{"chain_id", "cosmoshub-1"}},
-//	})
-//	if err != nil {
-//		log.Fatal(err)
-//	}
-//	defer m.Close()
-//
-// Emit metrics from anywhere in the application:
-//
-//	telemetry.IncrCounter(1, "tx", "processed")
-//	telemetry.SetGauge(1024, "mempool", "size")
-//	defer telemetry.MeasureSince(telemetry.Now(), "block", "execution")
 package telemetry
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"time"
 
@@ -53,109 +14,14 @@ import (
 	metricsprom "github.com/hashicorp/go-metrics/prometheus"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/expfmt"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
+	otelsdktrace "go.opentelemetry.io/otel/sdk/trace"
+
+	"cosmossdk.io/log"
 )
-
-// globalTelemetryEnabled is a private variable that stores the telemetry enabled state.
-// It is set on initialization and does not change for the lifetime of the program.
-var globalTelemetryEnabled bool
-
-// IsTelemetryEnabled provides controlled access to check if telemetry is enabled.
-func IsTelemetryEnabled() bool {
-	return globalTelemetryEnabled
-}
-
-// EnableTelemetry allows for the global telemetry enabled state to be set.
-func EnableTelemetry() {
-	globalTelemetryEnabled = true
-}
-
-// globalLabels defines the set of global labels that will be applied to all
-// metrics emitted using the telemetry package function wrappers.
-var globalLabels = []metrics.Label{}
-
-// Metrics supported format types.
-const (
-	FormatDefault    = ""
-	FormatPrometheus = "prometheus"
-	FormatText       = "text"
-	ContentTypeText  = `text/plain; version=` + expfmt.TextVersion + `; charset=utf-8`
-
-	MetricSinkInMem      = "mem"
-	MetricSinkStatsd     = "statsd"
-	MetricSinkDogsStatsd = "dogstatsd"
-	MetricSinkFile       = "file"
-)
-
-// DisplayableSink is an interface that defines a method for displaying metrics.
-type DisplayableSink interface {
-	DisplayMetrics(resp http.ResponseWriter, req *http.Request) (any, error)
-}
-
-// Config defines the configuration options for application telemetry.
-type Config struct {
-	// ServiceName is the identifier for this service, used as a prefix for all metric keys.
-	// Example: "cosmos-app" → metrics like "cosmos-app.tx.count"
-	ServiceName string `mapstructure:"service-name"`
-
-	// Enabled controls whether telemetry is active. When false, all telemetry operations
-	// become no-ops with zero overhead. When true, metrics collection is activated.
-	Enabled bool `mapstructure:"enabled"`
-
-	// EnableHostname prefixes gauge values with the hostname.
-	// Useful in multi-node deployments to identify which node emitted a metric.
-	EnableHostname bool `mapstructure:"enable-hostname"`
-
-	// EnableHostnameLabel adds a "hostname" label to all metrics.
-	// Alternative to EnableHostname that works better with label-based systems like Prometheus.
-	EnableHostnameLabel bool `mapstructure:"enable-hostname-label"`
-
-	// EnableServiceLabel adds a "service" label with the ServiceName to all metrics.
-	// Useful when aggregating metrics from multiple services in one monitoring system.
-	EnableServiceLabel bool `mapstructure:"enable-service-label"`
-
-	// PrometheusRetentionTime, when positive, enables a Prometheus metrics sink.
-	// Defines how long (in seconds) metrics are retained in memory for scraping.
-	// The Prometheus sink is added to a FanoutSink alongside the primary sink.
-	// Recommended value: 60 seconds or more.
-	PrometheusRetentionTime int64 `mapstructure:"prometheus-retention-time"`
-
-	// GlobalLabels defines a set of key-value label pairs applied to ALL metrics.
-	// These labels are automatically attached to every metric emission.
-	// Useful for static identifiers like chain ID, environment, region, etc.
-	//
-	// Example: [][]string{{"chain_id", "cosmoshub-1"}, {"env", "production"}}
-	//
-	// Note: The outer array contains label pairs, each inner array has exactly 2 elements [key, value].
-	GlobalLabels [][]string `mapstructure:"global-labels"`
-
-	// MetricsSink defines the metrics backend type. Supported values:
-	//   - "mem" (default): In-memory sink with SIGUSR1 dump-to-stderr capability
-	//   - "prometheus": Prometheus exposition format (use with PrometheusRetentionTime)
-	//   - "statsd": StatsD protocol (push-based, requires StatsdAddr)
-	//   - "dogstatsd": Datadog-enhanced StatsD with tags (requires StatsdAddr, DatadogHostname)
-	//   - "file": JSON lines written to a file (requires MetricsFile)
-	//
-	// Multiple sinks can be active via FanoutSink (e.g., mem + prometheus).
-	MetricsSink string `mapstructure:"metrics-sink" default:"mem"`
-
-	// StatsdAddr is the address of the StatsD or DogStatsD server (host:port).
-	// Only used when MetricsSink is "statsd" or "dogstatsd".
-	// Example: "localhost:8125"
-	StatsdAddr string `mapstructure:"statsd-addr"`
-
-	// DatadogHostname is the hostname to report when using DogStatsD.
-	// Only used when MetricsSink is "dogstatsd".
-	// If empty, the system hostname is used.
-	DatadogHostname string `mapstructure:"datadog-hostname"`
-
-	// MetricsFile is the file path to write metrics to in JSONL format.
-	// Only used when MetricsSink is "file".
-	// Each metric emission creates a JSON line: {"timestamp":"...","type":"counter","key":[...],"value":1.0}
-	// Example: "/tmp/metrics.jsonl" or "./metrics.jsonl"
-	MetricsFile string `mapstructure:"metrics-file"`
-
-	TraceSink string `mapstructure:"trace-sink"`
-}
 
 // Metrics provides access to the application's metrics collection system.
 // It wraps the go-metrics global registry and configured sinks.
@@ -171,9 +37,12 @@ type Config struct {
 // Note: go-metrics uses a singleton global registry. Only one Metrics instance
 // should be created per process.
 type Metrics struct {
-	sink              metrics.MetricSink
-	prometheusEnabled bool
-	closer            io.Closer // non-nil when using file sink
+	sink                 metrics.MetricSink
+	prometheusEnabled    bool
+	startFuncs           []func(ctx context.Context) error
+	shutdownFuncs        []func(context.Context) error
+	traceProvider        log.TraceProvider
+	metricsTraceProvider *MetricsTraceProvider
 }
 
 // GatherResponse contains collected metrics in the requested format.
@@ -226,10 +95,12 @@ func New(cfg Config) (_ *Metrics, rerr error) {
 	metricsConf.EnableHostname = cfg.EnableHostname
 	metricsConf.EnableHostnameLabel = cfg.EnableHostnameLabel
 
+	var startFuncs []func(context.Context) error
+	var shutdownFuncs []func(context.Context) error
+
 	var (
-		sink   metrics.MetricSink
-		closer io.Closer
-		err    error
+		sink metrics.MetricSink
+		err  error
 	)
 	switch cfg.MetricsSink {
 	case MetricSinkStatsd:
@@ -246,7 +117,9 @@ func New(cfg Config) (_ *Metrics, rerr error) {
 		}
 		fileSink := NewFileSink(file)
 		sink = fileSink
-		closer = fileSink
+		shutdownFuncs = append(shutdownFuncs, func(ctx context.Context) error {
+			return fileSink.Close()
+		})
 	default:
 		memSink := metrics.NewInmemSink(10*time.Second, time.Minute)
 		sink = memSink
@@ -258,11 +131,89 @@ func New(cfg Config) (_ *Metrics, rerr error) {
 		}()
 	}
 
+	metricsTraceProvider := NewMetricsTraceProvider(nil, globalLabels, metrics.Default())
+
+	var tracerBase log.TraceProvider
+	switch cfg.TraceSink {
+	case TraceSinkOtel:
+		var tracerProviderOpts []otelsdktrace.TracerProviderOption
+		for _, exporterOpts := range cfg.OtelTraceExporters {
+			switch exporterOpts.Type {
+			case "otlp":
+				endpoint := exporterOpts.Endpoint
+				if endpoint == "" {
+					return nil, fmt.Errorf("otlp endpoint must be set")
+				}
+				var client otlptrace.Client
+				switch exporterOpts.OTLPTransport {
+				case "grpc":
+					opts := []otlptracegrpc.Option{otlptracegrpc.WithEndpoint(endpoint)}
+					if exporterOpts.Insecure {
+						opts = append(opts, otlptracegrpc.WithInsecure())
+					}
+					client = otlptracegrpc.NewClient(opts...)
+				default:
+					opts := []otlptracehttp.Option{otlptracehttp.WithEndpoint(endpoint)}
+					if exporterOpts.Insecure {
+						opts = append(opts, otlptracehttp.WithInsecure())
+					}
+					client = otlptracehttp.NewClient(opts...)
+				}
+				exporter := otlptrace.NewUnstarted(client)
+				startFuncs = append(startFuncs, exporter.Start)
+				batcherOpt := otelsdktrace.WithBatcher(exporter)
+				tracerProviderOpts = append(tracerProviderOpts, batcherOpt)
+			case "stdout":
+				var opts []stdouttrace.Option
+				if exporterOpts.File != "" {
+					file, err := os.OpenFile(exporterOpts.File, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+					if err != nil {
+						return nil, fmt.Errorf("failed to open stdout trace file %s: %w", exporterOpts.File, err)
+					}
+					opts = append(opts, stdouttrace.WithWriter(file))
+					shutdownFuncs = append(shutdownFuncs, func(ctx context.Context) error {
+						return file.Close()
+					})
+				}
+				if exporterOpts.PrettyPrint {
+					opts = append(opts, stdouttrace.WithPrettyPrint())
+				}
+				exporter, err := stdouttrace.New(opts...)
+				if err != nil {
+					return nil, fmt.Errorf("failed to create stdout trace exporter: %w", err)
+				}
+				batcher := otelsdktrace.WithBatcher(exporter)
+				tracerProviderOpts = append(tracerProviderOpts, batcher)
+			default:
+				return nil, fmt.Errorf("unknown trace exporter type: %s", exporterOpts.Type)
+			}
+		}
+
+		tracerProvider := otelsdktrace.NewTracerProvider(tracerProviderOpts...)
+		shutdownFuncs = append(shutdownFuncs, tracerProvider.Shutdown)
+		tracerName := cfg.ServiceName
+		if tracerName == "" {
+			tracerName = "cosmos-sdk"
+		}
+		tracerBase = NewOtelTraceProvider(tracerProvider.Tracer(tracerName))
+
+	case "metrics":
+		tracerBase = metricsTraceProvider
+	default:
+		tracerBase = log.NewNopTracer()
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
-	m := &Metrics{sink: sink, closer: closer}
+	m := &Metrics{
+		sink:                 sink,
+		startFuncs:           startFuncs,
+		shutdownFuncs:        shutdownFuncs,
+		traceProvider:        tracerBase,
+		metricsTraceProvider: metricsTraceProvider,
+	}
 	fanout := metrics.FanoutSink{sink}
 
 	if cfg.PrometheusRetentionTime > 0 {
@@ -351,22 +302,37 @@ func (m *Metrics) gatherGeneric() (GatherResponse, error) {
 	return GatherResponse{ContentType: "application/json", Metrics: content}, nil
 }
 
-// Close flushes any buffered data and closes resources associated with the metrics system.
-// This is primarily needed when using the file sink to ensure all data is written to disk.
-// It is safe to call Close() multiple times, and safe to call on a nil Metrics object.
-//
-// For other sink types (mem, statsd, prometheus), Close() is a no-op.
-//
-// Example:
-//
-//	m, err := telemetry.New(cfg)
-//	if err != nil {
-//		return err
-//	}
-//	defer m.Close()
-func (m *Metrics) Close() error {
-	if m == nil || m.closer == nil {
-		return nil
+// TraceProvider returns the base trace provider for creating spans.
+func (m *Metrics) TraceProvider() log.TraceProvider {
+	return m.traceProvider
+}
+
+// MetricsTraceProvider returns a trace provider that only emits metrics for spans.
+// Use this when you specifically want to configure a code path to only emit metrics
+// and not actual logging spans (useful for benchmarking small operations such as store operations).
+func (m *Metrics) MetricsTraceProvider() log.TraceProvider {
+	return m.traceProvider
+}
+
+// Start starts all configured exporters.
+// Start should be called after New() in order to ensure that all configured
+// exporters are started.
+func (m *Metrics) Start(ctx context.Context) error {
+	for _, f := range m.startFuncs {
+		if err := f(ctx); err != nil {
+			return err
+		}
 	}
-	return m.closer.Close()
+	return nil
+}
+
+// Shutdown must be called before the application exits to shutdown any
+// exporters and close any open files.
+func (m *Metrics) Shutdown(ctx context.Context) error {
+	for _, f := range m.shutdownFuncs {
+		if err := f(ctx); err != nil {
+			return err
+		}
+	}
+	return nil
 }

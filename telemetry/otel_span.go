@@ -11,20 +11,50 @@ import (
 	"cosmossdk.io/log"
 )
 
+type OtelTracerBase struct {
+	tracer oteltrace.Tracer
+}
+
+func NewOtelTraceProvider(tracer oteltrace.Tracer) *OtelTracerBase {
+	return &OtelTracerBase{
+		tracer: tracer,
+	}
+}
+
+func (o *OtelTracerBase) StartSpan(operation string, kvs ...any) log.Span {
+	ctx, span := o.tracer.Start(context.Background(), operation, oteltrace.WithAttributes(toKVs(kvs)...))
+	return &OtelSpan{
+		tracer: o.tracer,
+		ctx:    ctx,
+		span:   span,
+	}
+}
+
+func (o *OtelTracerBase) StartSpanContext(ctx context.Context, operation string, kvs ...any) (context.Context, log.Span) {
+	ctx, span := o.tracer.Start(ctx, operation, oteltrace.WithAttributes(toKVs(kvs)...))
+	return ctx, &OtelSpan{
+		tracer: o.tracer,
+		ctx:    ctx,
+		span:   span,
+	}
+}
+
+func (o *OtelTracerBase) StartRootSpan(ctx context.Context, operation string, kvs ...any) (context.Context, log.Span) {
+	ctx, span := o.tracer.Start(ctx, operation, oteltrace.WithAttributes(toKVs(kvs)...), oteltrace.WithNewRoot())
+	return ctx, &OtelSpan{
+		tracer: o.tracer,
+		ctx:    ctx,
+		span:   span,
+	}
+}
+
+var _ log.TraceProvider = (*OtelTracerBase)(nil)
+
 type OtelSpan struct {
 	tracer          oteltrace.Tracer
 	ctx             context.Context
 	span            oteltrace.Span
 	persistentAttrs []otelattr.KeyValue
-}
-
-func NewOtelSpan(tracer oteltrace.Tracer, ctx context.Context, operation string, kvs ...any) (context.Context, *OtelSpan) {
-	ctx, span := tracer.Start(ctx, operation, oteltrace.WithAttributes(toKVs(kvs)...))
-	return ctx, &OtelSpan{
-		tracer: tracer,
-		ctx:    ctx,
-		span:   span,
-	}
 }
 
 func (o *OtelSpan) addEvent(level, msg string, keyVals ...any) {

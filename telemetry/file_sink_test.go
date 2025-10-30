@@ -139,11 +139,16 @@ func TestFileSink_WritesAfterClose(t *testing.T) {
 	data, err := os.ReadFile(tmpfile)
 	require.NoError(t, err)
 
-	scanner := bufio.NewScanner(bufio.NewReader(os.Open(tmpfile)))
+	file3, err := os.Open(tmpfile)
+	require.NoError(t, err)
+	defer file3.Close()
+
+	scanner := bufio.NewScanner(file3)
 	lineCount := 0
 	for scanner.Scan() {
 		lineCount++
 	}
+	require.NoError(t, scanner.Err())
 	require.Equal(t, 1, lineCount, "only metric before close should be written")
 	require.Contains(t, string(data), `"key":["before"]`)
 	require.NotContains(t, string(data), `"key":["after"]`)

@@ -9,6 +9,41 @@ import (
 	"cosmossdk.io/log"
 )
 
+type MetricsTraceProvider struct {
+	rootPath   []string        // Base path set at tracer creation, preserved across all spans
+	rootLabels []metrics.Label // Labels applied to all metrics emitted by this tracer
+	metrics    *metrics.Metrics
+}
+
+func NewMetricsTraceProvider(rootPath []string, rootLabels []metrics.Label, metrics *metrics.Metrics) *MetricsTraceProvider {
+	return &MetricsTraceProvider{rootPath: rootPath, rootLabels: rootLabels, metrics: metrics}
+}
+
+func (m *MetricsTraceProvider) startSpan(existingPath []string, operation string, _ ...any) log.Span {
+	path := make([]string, len(existingPath)+1)
+	copy(path, existingPath)
+	path[len(path)-1] = operation
+	return &MetricsSpan{
+		MetricsTraceProvider: m,
+		path:                 []string{operation},
+		start:                time.Now(),
+	}
+}
+
+func (m *MetricsTraceProvider) StartSpan(operation string, _ ...any) log.Span {
+	return m.startSpan(m.rootPath, operation)
+}
+
+func (m *MetricsTraceProvider) StartSpanContext(ctx context.Context, operation string, kvs ...any) (context.Context, log.Span) {
+	return ctx, m.StartSpan(operation, kvs...)
+}
+
+func (m *MetricsTraceProvider) StartRootSpan(ctx context.Context, operation string, kvs ...any) (context.Context, log.Span) {
+	return ctx, m.StartSpan(operation, kvs...)
+}
+
+var _ log.TraceProvider = (*MetricsTraceProvider)(nil)
+
 // MetricsSpan is a log.Span implementation that emits timing and count metrics
 // to go-metrics when the span ends.
 //
@@ -24,11 +59,9 @@ import (
 // Root path and labels are preserved across all spans created from this tracer,
 // ensuring consistent metric namespacing and labeling throughout the span hierarchy.
 type MetricsSpan struct {
-	metrics    *metrics.Metrics
-	start      time.Time
-	path       []string
-	rootPath   []string        // Base path set at tracer creation, preserved across all spans
-	rootLabels []metrics.Label // Labels applied to all metrics emitted by this tracer
+	*MetricsTraceProvider
+	start time.Time
+	path  []string
 }
 
 // NewMetricsTracer creates a new MetricsSpan that acts as a root tracer.
@@ -44,11 +77,13 @@ type MetricsSpan struct {
 //	// Emits: "app.tx.validate.time" and "app.tx.validate.count" with module=staking label
 func NewMetricsTracer(m *metrics.Metrics, rootPath []string, rootLabels []metrics.Label) *MetricsSpan {
 	return &MetricsSpan{
-		metrics:    m,
-		path:       rootPath,
-		rootPath:   rootPath,
-		rootLabels: rootLabels,
-		start:      time.Now(),
+		MetricsTraceProvider: &MetricsTraceProvider{
+			metrics:    m,
+			rootPath:   rootPath,
+			rootLabels: rootLabels,
+		},
+		path:  rootPath,
+		start: time.Now(),
 	}
 }
 
@@ -64,22 +99,13 @@ func (m *MetricsSpan) Impl() any                        { return nil }
 // Root path and labels are preserved in the child span.
 // The kvs parameters are ignored (metrics don't support dynamic attributes).
 func (m *MetricsSpan) StartSpan(operation string, kvs ...any) log.Span {
-	path := make([]string, len(m.path)+1)
-	copy(path, m.path)
-	path[len(path)-1] = operation
-	return &MetricsSpan{
-		metrics:    m.metrics,
-		path:       path,
-		rootPath:   m.rootPath,
-		rootLabels: m.rootLabels,
-		start:      time.Now(),
-	}
+	return m.startSpan(m.path, operation)
 }
 
 // StartSpanContext creates a child span and returns the context unchanged.
 // The span is not stored in the context.
-func (m *MetricsSpan) StartSpanContext(ctx context.Context, operation string, kvs ...any) (context.Context, log.Span) {
-	return ctx, m.StartSpan(operation, kvs...)
+func (m *MetricsSpan) StartSpanContext(ctx context.Context, operation string, _ ...any) (context.Context, log.Span) {
+	return ctx, m.startSpan(m.path, operation)
 }
 
 // StartRootSpan creates a new root span by combining the tracer's root path with the operation.
@@ -93,30 +119,23 @@ func (m *MetricsSpan) StartSpanContext(ctx context.Context, operation string, kv
 //	defer span.End()
 //	// Emits: "app.process.time" and "app.process.count"
 func (m *MetricsSpan) StartRootSpan(ctx context.Context, operation string, kvs ...any) (context.Context, log.Span) {
-	// Preserve root path and add operation to it
-	rootPath := append([]string{}, m.rootPath...)
-	rootPath = append(rootPath, operation)
-
-	return ctx, &MetricsSpan{
-		metrics:    m.metrics,
-		path:       rootPath,
-		rootPath:   m.rootPath,
-		rootLabels: m.rootLabels,
-		start:      time.Now(),
-	}
+	return ctx, m.startSpan(m.rootPath, operation)
 }
 
 // SetAttrs is a no-op - metrics don't support dynamic attributes.
-func (m *MetricsSpan) SetAttrs(kvs ...any) {}
+func (m *MetricsSpan) SetAttrs(...any) {}
 
 // SetErr is a no-op but returns the error unchanged for convenience.
-func (m *MetricsSpan) SetErr(err error, kvs ...any) error { return err }
+func (m *MetricsSpan) SetErr(err error, _ ...any) error { return err }
 
 // End emits timing and count metrics with ".time" and ".count" suffixes.
+// Root labels are applied to both metrics.
 //
 // For a span with path ["query", "get"], this emits:
 //   - Timer: "query.get.time" with duration since start
 //   - Counter: "query.get.count" incremented by 1
+//
+// If root labels were set (e.g., module=staking), they are included in both metrics.
 func (m *MetricsSpan) End() {
 	// Create paths with suffixes to avoid metric type conflicts
 	timePath := make([]string, len(m.path)+1)
@@ -127,8 +146,14 @@ func (m *MetricsSpan) End() {
 	copy(countPath, m.path)
 	countPath[len(countPath)-1] = "count"
 
-	m.metrics.MeasureSince(timePath, m.start)
-	m.metrics.IncrCounter(countPath, 1)
+	// Apply root labels to metrics
+	if len(m.rootLabels) > 0 {
+		m.metrics.MeasureSinceWithLabels(timePath, m.start, m.rootLabels)
+		m.metrics.IncrCounterWithLabels(countPath, 1, m.rootLabels)
+	} else {
+		m.metrics.MeasureSince(timePath, m.start)
+		m.metrics.IncrCounter(countPath, 1)
+	}
 }
 
 var _ log.Span = (*MetricsSpan)(nil)

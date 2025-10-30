@@ -2,8 +2,13 @@ package log
 
 import "context"
 
-// TraceProvider is an interface for creating and managing tracing spans.
-type TraceProvider interface {
+// Tracer is an interface for creating and managing spans.
+// It may be backed by open telemetry or other tracing libraries,
+// Spans may also be used for collecting timing metrics.
+// It embeds the Logger interface. Log events may be associated with spans.
+type Tracer interface {
+	Logger
+
 	// StartSpan starts a new span with the given operation name and key-value pair attributes.
 	// If there is a parent span, the new span will be a child of that span.
 	// It is recommended to use a defer statement to end the span like this:
@@ -27,15 +32,6 @@ type TraceProvider interface {
 	// 	 	doSomething()
 	//	 }()
 	StartRootSpan(ctx context.Context, operation string, kvs ...any) (context.Context, Span)
-}
-
-// Tracer is an interface for creating and managing spans.
-// It may be backed by open telemetry or other tracing libraries,
-// Spans may also be used for collecting timing metrics.
-// It embeds the Logger interface. Log events may be associated with spans.
-type Tracer interface {
-	Logger
-	TraceProvider
 }
 
 // Span is an interface for managing spans and creating nested spans via the embedded Tracer interface.
@@ -66,25 +62,27 @@ type Span interface {
 	End()
 }
 
-// NewNopTracer returns a Tracer that does nothing.
-func NewNopTracer() Tracer {
-	return nopTracer{}
+// NewNopTracer returns a Tracer that wraps a logger for logging methods but does not emit any spans.
+func NewNopTracer(logger Logger) Tracer {
+	return nopTracer{
+		Logger: logger,
+	}
 }
 
 type nopTracer struct {
-	nopLogger
+	Logger
 }
 
 func (n nopTracer) StartRootSpan(ctx context.Context, operation string, kvs ...any) (context.Context, Span) {
-	return ctx, nopSpan{}
+	return ctx, nopSpan{n}
 }
 
 func (n nopTracer) StartSpanContext(ctx context.Context, _ string, _ ...any) (context.Context, Span) {
-	return ctx, nopSpan{}
+	return ctx, nopSpan{n}
 }
 
 func (n nopTracer) StartSpan(string, ...any) Span {
-	return nopSpan{}
+	return nopSpan{n}
 }
 
 type nopSpan struct {

@@ -11,17 +11,22 @@ import (
 	"cosmossdk.io/log"
 )
 
-type OtelTraceProvider struct {
+// OtelTracer is a log.Tracer implementation that uses OpenTelemetry for distributed tracing.
+// It wraps a logger and forwards all log calls to it, while creating OtelSpan instances
+// that emit trace spans.
+type OtelTracer struct {
+	log.Logger
 	tracer oteltrace.Tracer
 }
 
-func NewOtelTraceProvider(tracer oteltrace.Tracer) *OtelTraceProvider {
-	return &OtelTraceProvider{
+func NewOtelTracer(tracer oteltrace.Tracer, logger log.Logger) *OtelTracer {
+	return &OtelTracer{
+		Logger: logger,
 		tracer: tracer,
 	}
 }
 
-func (o *OtelTraceProvider) StartSpan(operation string, kvs ...any) log.Span {
+func (o *OtelTracer) StartSpan(operation string, kvs ...any) log.Span {
 	ctx, span := o.tracer.Start(context.Background(), operation, oteltrace.WithAttributes(toKVs(kvs)...))
 	return &OtelSpan{
 		tracer: o.tracer,
@@ -30,7 +35,7 @@ func (o *OtelTraceProvider) StartSpan(operation string, kvs ...any) log.Span {
 	}
 }
 
-func (o *OtelTraceProvider) StartSpanContext(ctx context.Context, operation string, kvs ...any) (context.Context, log.Span) {
+func (o *OtelTracer) StartSpanContext(ctx context.Context, operation string, kvs ...any) (context.Context, log.Span) {
 	ctx, span := o.tracer.Start(ctx, operation, oteltrace.WithAttributes(toKVs(kvs)...))
 	return ctx, &OtelSpan{
 		tracer: o.tracer,
@@ -39,7 +44,7 @@ func (o *OtelTraceProvider) StartSpanContext(ctx context.Context, operation stri
 	}
 }
 
-func (o *OtelTraceProvider) StartRootSpan(ctx context.Context, operation string, kvs ...any) (context.Context, log.Span) {
+func (o *OtelTracer) StartRootSpan(ctx context.Context, operation string, kvs ...any) (context.Context, log.Span) {
 	ctx, span := o.tracer.Start(ctx, operation, oteltrace.WithAttributes(toKVs(kvs)...), oteltrace.WithNewRoot())
 	return ctx, &OtelSpan{
 		tracer: o.tracer,
@@ -48,7 +53,7 @@ func (o *OtelTraceProvider) StartRootSpan(ctx context.Context, operation string,
 	}
 }
 
-var _ log.TraceProvider = (*OtelTraceProvider)(nil)
+var _ log.Tracer = (*OtelTracer)(nil)
 
 type OtelSpan struct {
 	tracer          oteltrace.Tracer

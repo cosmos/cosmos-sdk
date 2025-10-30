@@ -50,29 +50,29 @@ type DisplayableSink interface {
 type Config struct {
 	// ServiceName is the identifier for this service, used as a prefix for all metric keys.
 	// Example: "cosmos-app" → metrics like "cosmos-app.tx.count"
-	ServiceName string `mapstructure:"service-name"`
+	ServiceName string `mapstructure:"service-name" json:"service-name"`
 
 	// Enabled controls whether telemetry is active. When false, all telemetry operations
 	// become no-ops with zero overhead. When true, metrics collection is activated.
-	Enabled bool `mapstructure:"enabled"`
+	Enabled bool `mapstructure:"enabled" json:"enabled"`
 
 	// EnableHostname prefixes gauge values with the hostname.
 	// Useful in multi-node deployments to identify which node emitted a metric.
-	EnableHostname bool `mapstructure:"enable-hostname"`
+	EnableHostname bool `mapstructure:"enable-hostname" json:"enable-hostname"`
 
 	// EnableHostnameLabel adds a "hostname" label to all metrics.
 	// Alternative to EnableHostname that works better with label-based systems like Prometheus.
-	EnableHostnameLabel bool `mapstructure:"enable-hostname-label"`
+	EnableHostnameLabel bool `mapstructure:"enable-hostname-label" json:"enable-hostname-label"`
 
 	// EnableServiceLabel adds a "service" label with the ServiceName to all metrics.
 	// Useful when aggregating metrics from multiple services in one monitoring system.
-	EnableServiceLabel bool `mapstructure:"enable-service-label"`
+	EnableServiceLabel bool `mapstructure:"enable-service-label" json:"enable-service-label"`
 
 	// PrometheusRetentionTime, when positive, enables a Prometheus metrics sink.
 	// Defines how long (in seconds) metrics are retained in memory for scraping.
 	// The Prometheus sink is added to a FanoutSink alongside the primary sink.
 	// Recommended value: 60 seconds or more.
-	PrometheusRetentionTime int64 `mapstructure:"prometheus-retention-time"`
+	PrometheusRetentionTime int64 `mapstructure:"prometheus-retention-time" json:"prometheus-retention-time"`
 
 	// GlobalLabels defines a set of key-value label pairs applied to ALL metrics.
 	// These labels are automatically attached to every metric emission.
@@ -81,7 +81,7 @@ type Config struct {
 	// Example: [][]string{{"chain_id", "cosmoshub-1"}, {"env", "production"}}
 	//
 	// Note: The outer array contains label pairs, each inner array has exactly 2 elements [key, value].
-	GlobalLabels [][]string `mapstructure:"global-labels"`
+	GlobalLabels [][]string `mapstructure:"global-labels" json:"global-labels"`
 
 	// MetricsSink defines the metrics backend type. Supported values:
 	//   - "mem" (default): In-memory sink with SIGUSR1 dump-to-stderr capability
@@ -91,33 +91,33 @@ type Config struct {
 	//   - "file": JSON lines written to a file (requires MetricsFile)
 	//
 	// Multiple sinks can be active via FanoutSink (e.g., mem + prometheus).
-	MetricsSink string `mapstructure:"metrics-sink" default:"mem"`
+	MetricsSink string `mapstructure:"metrics-sink" json:"metrics-sink" default:"mem"`
 
 	// StatsdAddr is the address of the StatsD or DogStatsD server (host:port).
 	// Only used when MetricsSink is "statsd" or "dogstatsd".
 	// Example: "localhost:8125"
-	StatsdAddr string `mapstructure:"statsd-addr"`
+	StatsdAddr string `mapstructure:"statsd-addr" json:"statsd-addr"`
 
 	// DatadogHostname is the hostname to report when using DogStatsD.
 	// Only used when MetricsSink is "dogstatsd".
 	// If empty, the system hostname is used.
-	DatadogHostname string `mapstructure:"datadog-hostname"`
+	DatadogHostname string `mapstructure:"datadog-hostname" json:"datadog-hostname"`
 
 	// MetricsFile is the file path to write metrics to in JSONL format.
 	// Only used when MetricsSink is "file".
 	// Each metric emission creates a JSON line: {"timestamp":"...","type":"counter","key":[...],"value":1.0}
 	// Example: "/tmp/metrics.jsonl" or "./metrics.jsonl"
-	MetricsFile string `mapstructure:"metrics-file"`
+	MetricsFile string `mapstructure:"metrics-file" json:"metrics-file"`
 
 	// TraceSink is the sink for trace data. Supported values:
 	// - "otel": OpenTelemetry trace sink
 	// - "metrics": all spans will be redirected to emit invocation counter and timing histogram metrics
 	// - "noop": No-op trace sink (default)
-	TraceSink string `mapstructure:"trace-sink"`
+	TraceSink string `mapstructure:"trace-sink" json:"trace-sink"`
 
 	// OtelTraceExporters is a list of OTLP exporters to use for trace data.
 	// This is only used when trace sink is set to "otel".
-	OtelTraceExporters []OtelTraceExportConfig `mapstructure:"otel-trace-exporters"`
+	OtelTraceExporters []OtelTraceExportConfig `mapstructure:"otel-trace-exporters" json:"otel-trace-exporters"`
 }
 
 type OtelTraceExportConfig struct {
@@ -127,24 +127,24 @@ type OtelTraceExportConfig struct {
 	//   - "otlp"
 	//
 	// OTLP exporters must set the endpoint URL and can optionally set the transport protocol.
-	Type string `mapstructure:"type"`
+	Type string `mapstructure:"type" json:"type"`
 
 	// OTLPTransport is the transport protocol to use for OTLP.
 	// Must be one of:
 	// 	- "http" (default)
 	//  - "grpc"
-	OTLPTransport string `mapstructure:"otlp-transport"`
+	OTLPTransport string `mapstructure:"otlp-transport" json:"otlp-transport"`
 
 	// Endpoint is the OTLP exporter endpoint URL (grpc or http).
-	Endpoint string `mapstructure:"endpoint"`
+	Endpoint string `mapstructure:"endpoint" json:"endpoint"`
 
 	// Insecure disables TLS certificate verification for OTLP exporters.
-	Insecure bool `mapstructure:"insecure"`
+	Insecure bool `mapstructure:"insecure" json:"insecure"`
 
 	// File is the file path to write trace data to when using the "stdout" exporter.
 	// If it is empty, the trace data is written to stdout.
-	File string `mapstructure:"file"`
+	File string `mapstructure:"file" json:"file"`
 
 	// PrettyPrint enables pretty-printing of JSON output when using the "stdout" exporter.
-	PrettyPrint bool `mapstructure:"pretty-print"`
+	PrettyPrint bool `mapstructure:"pretty-print" json:"pretty-print"`
 }

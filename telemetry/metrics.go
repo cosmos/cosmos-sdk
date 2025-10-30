@@ -37,12 +37,13 @@ import (
 // Note: go-metrics uses a singleton global registry. Only one Metrics instance
 // should be created per process.
 type Metrics struct {
-	sink                 metrics.MetricSink
-	prometheusEnabled    bool
-	startFuncs           []func(ctx context.Context) error
-	shutdownFuncs        []func(context.Context) error
-	traceProvider        log.TraceProvider
-	metricsTraceProvider *MetricsTraceProvider
+	sink              metrics.MetricSink
+	prometheusEnabled bool
+	startFuncs        []func(ctx context.Context) error
+	shutdownFuncs     []func(context.Context) error
+	logger            log.Logger
+	tracer            log.Tracer
+	metricsTracer     *MetricsTracer
 }
 
 // GatherResponse contains collected metrics in the requested format.
@@ -77,7 +78,7 @@ type GatherResponse struct {
 //		return err
 //	}
 //	defer m.Close()
-func New(cfg Config) (_ *Metrics, rerr error) {
+func New(cfg Config, opts ...Option) (_ *Metrics, rerr error) {
 	globalTelemetryEnabled = cfg.Enabled
 	if !cfg.Enabled {
 		return nil, nil
@@ -95,18 +96,21 @@ func New(cfg Config) (_ *Metrics, rerr error) {
 	metricsConf.EnableHostname = cfg.EnableHostname
 	metricsConf.EnableHostnameLabel = cfg.EnableHostnameLabel
 
-	var startFuncs []func(context.Context) error
-	var shutdownFuncs []func(context.Context) error
+	// Initialize Metrics struct early with default logger
+	m := &Metrics{
+		logger: log.NewNopLogger(), // Default to nop logger
+	}
+	// Apply functional options to set logger
+	for _, opt := range opts {
+		opt(m)
+	}
 
-	var (
-		sink metrics.MetricSink
-		err  error
-	)
+	var err error
 	switch cfg.MetricsSink {
 	case MetricSinkStatsd:
-		sink, err = metrics.NewStatsdSink(cfg.StatsdAddr)
+		m.sink, err = metrics.NewStatsdSink(cfg.StatsdAddr)
 	case MetricSinkDogsStatsd:
-		sink, err = datadog.NewDogStatsdSink(cfg.StatsdAddr, cfg.DatadogHostname)
+		m.sink, err = datadog.NewDogStatsdSink(cfg.StatsdAddr, cfg.DatadogHostname)
 	case MetricSinkFile:
 		if cfg.MetricsFile == "" {
 			return nil, errors.New("metrics-file must be set when metrics-sink is 'file'")
@@ -116,13 +120,13 @@ func New(cfg Config) (_ *Metrics, rerr error) {
 			return nil, fmt.Errorf("failed to open metrics file: %w", err)
 		}
 		fileSink := NewFileSink(file)
-		sink = fileSink
-		shutdownFuncs = append(shutdownFuncs, func(ctx context.Context) error {
-			return fileSink.Close()
+		m.shutdownFuncs = append(m.shutdownFuncs, func(ctx context.Context) error {
+			return file.Close()
 		})
+		m.sink = fileSink
 	default:
 		memSink := metrics.NewInmemSink(10*time.Second, time.Minute)
-		sink = memSink
+		m.sink = memSink
 		inMemSig := metrics.DefaultInmemSignal(memSink)
 		defer func() {
 			if rerr != nil {
@@ -130,10 +134,13 @@ func New(cfg Config) (_ *Metrics, rerr error) {
 			}
 		}()
 	}
+	if err != nil {
+		return nil, err
+	}
 
-	metricsTraceProvider := NewMetricsTraceProvider(nil, globalLabels, metrics.Default())
+	m.tracer = log.NewNopTracer(m.logger)
+	m.metricsTracer = NewMetricsTracer(metrics.Default(), nil, globalLabels, m.logger)
 
-	var tracerBase log.TraceProvider
 	switch cfg.TraceSink {
 	case TraceSinkOtel:
 		var tracerProviderOpts []otelsdktrace.TracerProviderOption
@@ -160,7 +167,7 @@ func New(cfg Config) (_ *Metrics, rerr error) {
 					client = otlptracehttp.NewClient(opts...)
 				}
 				exporter := otlptrace.NewUnstarted(client)
-				startFuncs = append(startFuncs, exporter.Start)
+				m.startFuncs = append(m.startFuncs, exporter.Start)
 				batcherOpt := otelsdktrace.WithBatcher(exporter)
 				tracerProviderOpts = append(tracerProviderOpts, batcherOpt)
 			case "stdout":
@@ -171,7 +178,7 @@ func New(cfg Config) (_ *Metrics, rerr error) {
 						return nil, fmt.Errorf("failed to open stdout trace file %s: %w", exporterOpts.File, err)
 					}
 					opts = append(opts, stdouttrace.WithWriter(file))
-					shutdownFuncs = append(shutdownFuncs, func(ctx context.Context) error {
+					m.shutdownFuncs = append(m.shutdownFuncs, func(ctx context.Context) error {
 						return file.Close()
 					})
 				}
@@ -190,31 +197,18 @@ func New(cfg Config) (_ *Metrics, rerr error) {
 		}
 
 		tracerProvider := otelsdktrace.NewTracerProvider(tracerProviderOpts...)
-		shutdownFuncs = append(shutdownFuncs, tracerProvider.Shutdown)
+		m.shutdownFuncs = append(m.shutdownFuncs, tracerProvider.Shutdown)
 		tracerName := cfg.ServiceName
 		if tracerName == "" {
 			tracerName = "cosmos-sdk"
 		}
-		tracerBase = NewOtelTraceProvider(tracerProvider.Tracer(tracerName))
-
+		m.tracer = NewOtelTracer(tracerProvider.Tracer(tracerName), m.logger)
 	case "metrics":
-		tracerBase = metricsTraceProvider
+		m.tracer = m.metricsTracer
 	default:
-		tracerBase = log.NewNopTracer()
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	m := &Metrics{
-		sink:                 sink,
-		startFuncs:           startFuncs,
-		shutdownFuncs:        shutdownFuncs,
-		traceProvider:        tracerBase,
-		metricsTraceProvider: metricsTraceProvider,
-	}
-	fanout := metrics.FanoutSink{sink}
+	fanout := metrics.FanoutSink{m.sink}
 
 	if cfg.PrometheusRetentionTime > 0 {
 		m.prometheusEnabled = true
@@ -302,16 +296,16 @@ func (m *Metrics) gatherGeneric() (GatherResponse, error) {
 	return GatherResponse{ContentType: "application/json", Metrics: content}, nil
 }
 
-// TraceProvider returns the base trace provider for creating spans.
-func (m *Metrics) TraceProvider() log.TraceProvider {
-	return m.traceProvider
+// Tracer returns the base tracer for creating spans and logging.
+func (m *Metrics) Tracer() log.Tracer {
+	return m.tracer
 }
 
-// MetricsTraceProvider returns a trace provider that only emits metrics for spans.
+// MetricsTracer returns a tracer that only emits metrics for spans.
 // Use this when you specifically want to configure a code path to only emit metrics
 // and not actual logging spans (useful for benchmarking small operations such as store operations).
-func (m *Metrics) MetricsTraceProvider() log.TraceProvider {
-	return m.metricsTraceProvider
+func (m *Metrics) MetricsTracer() log.Tracer {
+	return m.metricsTracer
 }
 
 // Start starts all configured exporters.

@@ -191,7 +191,7 @@ func NewBaseApp(
 	// initialize tracer
 	tracer, ok := app.logger.(log.Tracer)
 	if !ok {
-		tracer = log.NewNopTracer()
+		tracer = log.NewNopTracer(app.logger)
 	}
 	app.tracer = tracer
 
@@ -992,7 +992,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 	// extract the tracer from the context
 	tracer, ok := ctx.Logger().(log.Tracer)
 	if !ok {
-		tracer = log.NewNopTracer()
+		tracer = log.NewNopTracer(app.logger)
 	}
 	span := tracer.StartSpan("runMsgs")
 	defer span.End()

@@ -9,40 +9,50 @@ import (
 	"cosmossdk.io/log"
 )
 
-type MetricsTraceProvider struct {
+// MetricsTracer is a log.Tracer implementation that emits metrics for span operations.
+// It wraps a logger and forwards all log calls to it, while creating MetricsSpan instances
+// that emit timing and count metrics.
+type MetricsTracer struct {
+	log.Logger                 // Logger to forward log calls to
 	rootPath   []string        // Base path set at tracer creation, preserved across all spans
 	rootLabels []metrics.Label // Labels applied to all metrics emitted by this tracer
 	metrics    *metrics.Metrics
 }
 
-func NewMetricsTraceProvider(rootPath []string, rootLabels []metrics.Label, metrics *metrics.Metrics) *MetricsTraceProvider {
-	return &MetricsTraceProvider{rootPath: rootPath, rootLabels: rootLabels, metrics: metrics}
+// NewMetricsTracer creates a new MetricsTracer with the given configuration.
+func NewMetricsTracer(metrics *metrics.Metrics, rootPath []string, rootLabels []metrics.Label, logger log.Logger) *MetricsTracer {
+	return &MetricsTracer{
+		Logger:     logger,
+		rootPath:   rootPath,
+		rootLabels: rootLabels,
+		metrics:    metrics,
+	}
 }
 
-func (m *MetricsTraceProvider) startSpan(existingPath []string, operation string, _ ...any) log.Span {
+func (m *MetricsTracer) startSpan(existingPath []string, operation string, _ ...any) log.Span {
 	path := make([]string, len(existingPath)+1)
 	copy(path, existingPath)
 	path[len(path)-1] = operation
 	return &MetricsSpan{
-		MetricsTraceProvider: m,
-		path:                 path,
-		start:                time.Now(),
+		MetricsTracer: m,
+		path:          path,
+		start:         time.Now(),
 	}
 }
 
-func (m *MetricsTraceProvider) StartSpan(operation string, _ ...any) log.Span {
+func (m *MetricsTracer) StartSpan(operation string, _ ...any) log.Span {
 	return m.startSpan(m.rootPath, operation)
 }
 
-func (m *MetricsTraceProvider) StartSpanContext(ctx context.Context, operation string, kvs ...any) (context.Context, log.Span) {
+func (m *MetricsTracer) StartSpanContext(ctx context.Context, operation string, kvs ...any) (context.Context, log.Span) {
 	return ctx, m.startSpan(m.rootPath, operation)
 }
 
-func (m *MetricsTraceProvider) StartRootSpan(ctx context.Context, operation string, kvs ...any) (context.Context, log.Span) {
+func (m *MetricsTracer) StartRootSpan(ctx context.Context, operation string, kvs ...any) (context.Context, log.Span) {
 	return ctx, m.startSpan(m.rootPath, operation)
 }
 
-var _ log.TraceProvider = (*MetricsTraceProvider)(nil)
+var _ log.Tracer = (*MetricsTracer)(nil)
 
 // MetricsSpan is a log.Span implementation that emits timing and count metrics
 // to go-metrics when the span ends.
@@ -59,18 +69,10 @@ var _ log.TraceProvider = (*MetricsTraceProvider)(nil)
 // Root path and labels are preserved across all spans created from this tracer,
 // ensuring consistent metric namespacing and labeling throughout the span hierarchy.
 type MetricsSpan struct {
-	*MetricsTraceProvider
+	*MetricsTracer
 	start time.Time
 	path  []string
 }
-
-// Logger methods are no-ops - MetricsSpan does not support logging.
-func (m *MetricsSpan) Info(msg string, keyVals ...any)  {}
-func (m *MetricsSpan) Warn(msg string, keyVals ...any)  {}
-func (m *MetricsSpan) Error(msg string, keyVals ...any) {}
-func (m *MetricsSpan) Debug(msg string, keyVals ...any) {}
-func (m *MetricsSpan) With(keyVals ...any) log.Logger   { return m }
-func (m *MetricsSpan) Impl() any                        { return nil }
 
 // StartSpan creates a child span by appending the operation name to the current path.
 // Root path and labels are preserved in the child span.

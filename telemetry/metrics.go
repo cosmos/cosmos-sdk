@@ -323,8 +323,10 @@ func (m *Metrics) Start(ctx context.Context) error {
 // Shutdown must be called before the application exits to shutdown any
 // exporters and close any open files.
 func (m *Metrics) Shutdown(ctx context.Context) error {
-	for _, f := range m.shutdownFuncs {
-		if err := f(ctx); err != nil {
+	n := len(m.shutdownFuncs)
+	// shutdown in reverse order because some exporters may depend on others
+	for i := n - 1; i >= 0; i-- {
+		if err := m.shutdownFuncs[i](ctx); err != nil {
 			return err
 		}
 	}

@@ -24,6 +24,9 @@ type Manager struct {
 	// - checkState: Used for CheckTx, which is set based on the previous block's
 	// state. This state is never committed.
 	//
+	// - simulationState: Mirrors the last committed state for simulations. It shares
+	// the same root snapshot as CheckTx but is never written back.
+	//
 	// - prepareProposalState: Used for PrepareProposal, which is set based on the
 	// previous block's state. This state is never committed. In case of multiple
 	// consensus rounds, the state is always reset to the previous block's state.
@@ -35,6 +38,7 @@ type Manager struct {
 	// - finalizeBlockState: Used for FinalizeBlock, which is set based on the
 	// previous block's state. This state is committed.
 	checkState           *State
+	simulationState      *State
 	prepareProposalState *State
 	processProposalState *State
 	finalizeBlockState   *State
@@ -63,6 +67,15 @@ func (mgr *Manager) GetState(mode sdk.ExecMode) *State {
 	case sdk.ExecModeProcessProposal:
 		return mgr.processProposalState
 
+	case sdk.ExecModeSimulate:
+		// Keep the simulation context aligned with the CheckTx context while
+		// preserving its own store branch.
+		if mgr.checkState != nil && mgr.simulationState != nil {
+			mgr.simulationState.SetContext(mgr.checkState.Context().WithMultiStore(mgr.simulationState.MultiStore))
+		}
+
+		return mgr.simulationState
+
 	default:
 		return mgr.checkState
 	}
@@ -79,6 +92,20 @@ func (mgr *Manager) SetState(
 	streamingManager storetypes.StreamingManager,
 ) {
 	ms := unbranchedStore.CacheMultiStore()
+	if mode == sdk.ExecModeCheck {
+		// Load the last committed version so CheckTx (and by extension simulations)
+		// operate on the same state that DeliverTx committed in the previous block.
+		// Ref: https://github.com/cosmos/cosmos-sdk/issues/20685
+		//
+		// Using the versioned cache also unwraps any inter-block cache layers,
+		// preventing simulation runs from polluting the global inter-block cache
+		// with transient writes.
+		// Ref: https://github.com/cosmos/cosmos-sdk/issues/23891
+		if versionedCache, err := unbranchedStore.CacheMultiStoreWithVersion(h.Height); err == nil {
+			ms = versionedCache
+		}
+	}
+
 	headerInfo := header.Info{
 		Height:  h.Height,
 		Time:    h.Time,
@@ -97,8 +124,14 @@ func (mgr *Manager) SetState(
 
 	switch mode {
 	case sdk.ExecModeCheck:
-		baseState.SetContext(baseState.Context().WithIsCheckTx(true).WithMinGasPrices(mgr.gasConfig.MinGasPrices))
-		mgr.checkState = baseState
+		// Simulations never persist state, so they can reuse the base snapshot
+		// that was branched off the last committed height.
+		mgr.simulationState = baseState
+
+		// Branch again for CheckTx so AnteHandler writes do not leak back into
+		// the shared simulation snapshot.
+		checkMs := ms.CacheMultiStore()
+		mgr.checkState = NewState(baseState.Context().WithIsCheckTx(true).WithMinGasPrices(mgr.gasConfig.MinGasPrices).WithMultiStore(checkMs), checkMs)
 
 	case sdk.ExecModePrepareProposal:
 		mgr.prepareProposalState = baseState
@@ -121,6 +154,7 @@ func (mgr *Manager) ClearState(mode sdk.ExecMode) {
 	switch mode {
 	case sdk.ExecModeCheck:
 		mgr.checkState = nil
+		mgr.simulationState = nil
 
 	case sdk.ExecModePrepareProposal:
 		mgr.prepareProposalState = nil

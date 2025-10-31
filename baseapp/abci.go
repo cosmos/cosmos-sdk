@@ -39,6 +39,9 @@ const (
 )
 
 func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
+	_, span := tracer.Start(context.Background(), "InitChain")
+	defer span.End()
+
 	if req.ChainId != app.chainID {
 		return nil, fmt.Errorf("invalid chain-id on InitChain; expected: %s, got: %s", app.chainID, req.ChainId)
 	}
@@ -152,7 +155,10 @@ func (app *BaseApp) Info(_ *abci.RequestInfo) (*abci.ResponseInfo, error) {
 
 // Query implements the ABCI interface. It delegates to CommitMultiStore if it
 // implements Queryable.
-func (app *BaseApp) Query(_ context.Context, req *abci.RequestQuery) (resp *abci.ResponseQuery, err error) {
+func (app *BaseApp) Query(ctx context.Context, req *abci.RequestQuery) (resp *abci.ResponseQuery, err error) {
+	ctx, span := tracer.Start(ctx, "Query")
+	defer span.End()
+
 	// add panic recovery for all queries
 	//
 	// Ref: https://github.com/cosmos/cosmos-sdk/pull/8039
@@ -342,6 +348,9 @@ func (app *BaseApp) ApplySnapshotChunk(req *abci.RequestApplySnapshotChunk) (*ab
 // will contain relevant error information. Regardless of tx execution outcome,
 // the ResponseCheckTx will contain the relevant gas execution context.
 func (app *BaseApp) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, error) {
+	_, span := tracer.Start(context.Background(), "CheckTx")
+	defer span.End()
+
 	var mode sdk.ExecMode
 
 	switch req.Type {
@@ -454,7 +463,10 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 		}
 	}()
 
-	resp, err = app.abciHandlers.PrepareProposalHandler(prepareProposalState.Context(), req)
+	ctx := prepareProposalState.Context()
+	ctx, span := ctx.StartSpan(tracer, "PrepareProposal")
+	defer span.End()
+	resp, err = app.abciHandlers.PrepareProposalHandler(ctx, req)
 	if err != nil {
 		app.logger.Error("failed to prepare proposal", "height", req.Height, "time", req.Time, "err", err)
 		return &abci.ResponsePrepareProposal{Txs: req.Txs}, nil
@@ -513,7 +525,10 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 	}
 
 	processProposalState := app.stateManager.GetState(execModeProcessProposal)
-	processProposalState.SetContext(app.getContextForProposal(processProposalState.Context(), req.Height).
+	ctx := processProposalState.Context()
+	ctx, span := ctx.StartSpan(tracer, "ProcessProposal")
+	defer span.End()
+	processProposalState.SetContext(app.getContextForProposal(ctx, req.Height).
 		WithVoteInfos(req.ProposedLastCommit.Votes). // this is a set of votes that are not finalized yet, wait for commit
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
@@ -595,6 +610,9 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 		return nil, errors.New("application ExtendVote handler not set")
 	}
 
+	ctx, span := ctx.StartSpan(tracer, "ExtendVote")
+	defer span.End()
+
 	// If vote extensions are not enabled, as a safety precaution, we return an
 	// error.
 	cp := app.GetConsensusParams(ctx)
@@ -666,6 +684,9 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 		ctx = sdk.NewContext(ms, emptyHeader, false, app.logger).WithStreamingManager(app.streamingManager)
 	}
 
+	ctx, span := ctx.StartSpan(tracer, "VerifyVoteExtension")
+	defer span.End()
+
 	// If vote extensions are not enabled, as a safety precaution, we return an
 	// error.
 	cp := app.GetConsensusParams(ctx)
@@ -716,7 +737,7 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 // Execution flow or by the FinalizeBlock ABCI method. The context received is
 // only used to handle early cancellation, for anything related to state app.stateManager.GetState(execModeFinalize).Context()
 // must be used.
-func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
+func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
 	var events []abci.Event
 
 	if err := app.checkHalt(req.Height, req.Time); err != nil {
@@ -750,9 +771,12 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 		app.stateManager.SetState(execModeFinalize, app.cms, header, app.logger, app.streamingManager)
 		finalizeState = app.stateManager.GetState(execModeFinalize)
 	}
+	ctx := finalizeState.Context().WithContext(goCtx)
+	ctx, span := ctx.StartSpan(tracer, "internalFinalizeBlock")
+	defer span.End()
 
 	// Context is now updated with Header information.
-	finalizeState.SetContext(finalizeState.Context().
+	finalizeState.SetContext(ctx.
 		WithBlockHeader(header).
 		WithHeaderHash(req.Hash).
 		WithHeaderInfo(coreheader.Info{
@@ -846,7 +870,7 @@ func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.Request
 			WithBlockGasUsed(blockGasUsed).
 			WithBlockGasWanted(blockGasWanted),
 	)
-	endBlock, err := app.endBlock(finalizeState.Context())
+	endBlock, err := app.endBlock()
 	if err != nil {
 		return nil, err
 	}
@@ -959,7 +983,11 @@ func (app *BaseApp) checkHalt(height int64, time time.Time) error {
 // height.
 func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 	finalizeState := app.stateManager.GetState(execModeFinalize)
-	header := finalizeState.Context().BlockHeader()
+	ctx := finalizeState.Context()
+	ctx, span := ctx.StartSpan(tracer, "Commit")
+	defer span.End()
+
+	header := ctx.BlockHeader()
 	retainHeight := app.GetBlockRetentionHeight(header.Height)
 
 	if app.abciHandlers.Precommiter != nil {
@@ -1004,6 +1032,10 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 
 	// The SnapshotIfApplicable method will create the snapshot by starting the goroutine
 	app.snapshotManager.SnapshotIfApplicable(header.Height)
+
+	blockCnt.Add(ctx, 1)
+	blockTime.Record(ctx, time.Since(app.blockStartTime).Seconds())
+	app.blockStartTime = time.Now()
 
 	return resp, nil
 }

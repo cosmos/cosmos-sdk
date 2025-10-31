@@ -8,7 +8,7 @@ import (
 
 	pruningtypes "cosmossdk.io/store/pruning/types"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
+	_ "github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -190,13 +190,12 @@ type Config struct {
 	BaseConfig `mapstructure:",squash"`
 
 	// Telemetry defines the application telemetry configuration
-	Telemetry telemetry.Config `mapstructure:"telemetry"`
-	API       APIConfig        `mapstructure:"api"`
-	GRPC      GRPCConfig       `mapstructure:"grpc"`
-	GRPCWeb   GRPCWebConfig    `mapstructure:"grpc-web"`
-	StateSync StateSyncConfig  `mapstructure:"state-sync"`
-	Streaming StreamingConfig  `mapstructure:"streaming"`
-	Mempool   MempoolConfig    `mapstructure:"mempool"`
+	API       APIConfig       `mapstructure:"api"`
+	GRPC      GRPCConfig      `mapstructure:"grpc"`
+	GRPCWeb   GRPCWebConfig   `mapstructure:"grpc-web"`
+	StateSync StateSyncConfig `mapstructure:"state-sync"`
+	Streaming StreamingConfig `mapstructure:"streaming"`
+	Mempool   MempoolConfig   `mapstructure:"mempool"`
 }
 
 // SetMinGasPrices sets the validator's minimum gas prices.
@@ -233,10 +232,6 @@ func DefaultConfig() *Config {
 			IAVLCacheSize:       781250,
 			IAVLDisableFastNode: false,
 			AppDBBackend:        "",
-		},
-		Telemetry: telemetry.Config{
-			Enabled:      false,
-			GlobalLabels: [][]string{},
 		},
 		API: APIConfig{
 			Enable:             false,

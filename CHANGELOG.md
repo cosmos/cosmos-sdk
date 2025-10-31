@@ -45,6 +45,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * (cli) [#25485](https://github.com/cosmos/cosmos-sdk/pull/25485) Avoid failed to convert address field in `withdraw-validator-commission` cmd.
+* (baseapp) [#25531](https://github.com/cosmos/cosmos-sdk/pull/25531) isolate CheckTx and simulation state from DeliverTx commits by loading the last committed snapshot and keeping the simulation context in sync.
 
 ## [v0.53.4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.3) - 2025-07-25
 

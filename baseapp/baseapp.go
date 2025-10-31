@@ -109,6 +109,9 @@ type BaseApp struct {
 	// - checkState: Used for CheckTx, which is set based on the previous block's
 	// state. This state is never committed.
 	//
+	// - simulationState: Mirrors the last committed state for simulations. It shares
+	// the same root snapshot as CheckTx but is never written back.
+	//
 	// - prepareProposalState: Used for PrepareProposal, which is set based on the
 	// previous block's state. This state is never committed. In case of multiple
 	// consensus rounds, the state is always reset to the previous block's state.
@@ -120,6 +123,7 @@ type BaseApp struct {
 	// - finalizeBlockState: Used for FinalizeBlock, which is set based on the
 	// previous block's state. This state is committed.
 	checkState           *state
+	simulationState      *state
 	prepareProposalState *state
 	processProposalState *state
 	finalizeBlockState   *state
@@ -493,6 +497,19 @@ func (app *BaseApp) IsSealed() bool { return app.sealed }
 // multi-store branch, and provided header.
 func (app *BaseApp) setState(mode execMode, h cmtproto.Header) {
 	ms := app.cms.CacheMultiStore()
+	if mode == execModeCheck {
+		// Load the last committed version so CheckTx (and by extension simulations)
+		// operate on the same state that DeliverTx committed in the previous block.
+		// Ref: https://github.com/cosmos/cosmos-sdk/issues/20685
+		//
+		// Using the versioned cache also unwraps any inter-block cache layers,
+		// preventing simulation runs from polluting the global inter-block cache
+		// with transient writes.
+		// Ref: https://github.com/cosmos/cosmos-sdk/issues/23891
+		if versionedCache, err := app.cms.CacheMultiStoreWithVersion(h.Height); err == nil {
+			ms = versionedCache
+		}
+	}
 	headerInfo := header.Info{
 		Height:  h.Height,
 		Time:    h.Time,
@@ -508,8 +525,14 @@ func (app *BaseApp) setState(mode execMode, h cmtproto.Header) {
 
 	switch mode {
 	case execModeCheck:
-		baseState.SetContext(baseState.Context().WithIsCheckTx(true).WithMinGasPrices(app.minGasPrices))
-		app.checkState = baseState
+		// Simulations never persist state, so they can reuse the base snapshot
+		// that was branched off the last committed height.
+		app.simulationState = baseState
+
+		// Branch again for CheckTx so AnteHandler writes do not leak back into
+		// the shared simulation snapshot.
+		checkMs := ms.CacheMultiStore()
+		app.checkState = &state{ctx: baseState.Context().WithIsCheckTx(true).WithMinGasPrices(app.minGasPrices).WithMultiStore(checkMs), ms: checkMs}
 
 	case execModePrepareProposal:
 		app.prepareProposalState = baseState
@@ -655,7 +678,14 @@ func (app *BaseApp) getState(mode execMode) *state {
 
 	case execModeProcessProposal:
 		return app.processProposalState
+	case execModeSimulate:
+		// Keep the simulation context aligned with the CheckTx context while
+		// preserving its own store branch.
+		if app.checkState != nil && app.simulationState != nil {
+			app.simulationState.SetContext(app.checkState.Context().WithMultiStore(app.simulationState.ms))
+		}
 
+		return app.simulationState
 	default:
 		return app.checkState
 	}

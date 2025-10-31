@@ -25,7 +25,7 @@ type CommitMultiTree struct {
 	dir        string
 	opts       Options
 	logger     log.Logger
-	trees      []storetypes.CommitKVStore  // always ordered by tree name
+	trees      []storetypes.CommitStore    // always ordered by tree name
 	treeKeys   []storetypes.StoreKey       // always ordered by tree name
 	storeTypes []storetypes.StoreType      // store types by tree index
 	treesByKey map[storetypes.StoreKey]int // index of the trees by name
@@ -34,6 +34,24 @@ type CommitMultiTree struct {
 	lastCommitId      storetypes.CommitID
 	workingCommitInfo *storetypes.CommitInfo
 	workingHash       []byte
+}
+
+// GetObjKVStore returns a mounted ObjKVStore for a given StoreKey.
+func (db *CommitMultiTree) GetObjKVStore(key storetypes.StoreKey) storetypes.ObjKVStore {
+	treeIdx, ok := db.treesByKey[key]
+	if !ok {
+		panic(fmt.Sprintf("tree key not found in treesByKey: %v", key))
+	}
+	s := db.trees[treeIdx]
+	if s == nil {
+		panic(fmt.Sprintf("store does not exist for key: %s", key.Name()))
+	}
+	store, ok := s.(storetypes.ObjKVStore)
+	if !ok {
+		panic(fmt.Sprintf("store with key %v is not ObjKVStore", key))
+	}
+
+	return store
 }
 
 func (db *CommitMultiTree) LastCommitID() storetypes.CommitID {
@@ -152,11 +170,11 @@ func (db *CommitMultiTree) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceCo
 
 func (db *CommitMultiTree) CacheMultiStore() storetypes.CacheMultiStore {
 	mt := &MultiTree{
-		trees:      make([]storetypes.CacheKVStore, len(db.trees)),
+		trees:      make([]storetypes.CacheWrap, len(db.trees)),
 		treesByKey: db.treesByKey, // share the map
 	}
 	for i, tree := range db.trees {
-		mt.trees[i] = tree.CacheWrap().(storetypes.CacheKVStore)
+		mt.trees[i] = tree.CacheWrap()
 	}
 	return mt
 }
@@ -169,7 +187,7 @@ func (db *CommitMultiTree) CacheMultiStoreWithVersion(version int64) (storetypes
 	mt := &MultiTree{
 		latestVersion: version,
 		treesByKey:    db.treesByKey, // share the map
-		trees:         make([]storetypes.CacheKVStore, len(db.trees)),
+		trees:         make([]storetypes.CacheWrap, len(db.trees)),
 	}
 
 	for i, tree := range db.trees {
@@ -182,11 +200,8 @@ func (db *CommitMultiTree) CacheMultiStoreWithVersion(version int64) (storetypes
 			if err != nil {
 				return nil, fmt.Errorf("failed to create cache multi store for tree %s at version %d: %w", db.treeKeys[i].Name(), version, err)
 			}
-			mt.trees[i] = t.CacheWrap().(storetypes.CacheKVStore)
-		case storetypes.StoreTypeTransient, storetypes.StoreTypeMemory:
-			mt.trees[i] = tree.CacheWrap().(storetypes.CacheKVStore)
 		default:
-			return nil, fmt.Errorf("unsupported store type: %s", typ.String())
+			mt.trees[i] = tree.CacheWrap()
 		}
 	}
 
@@ -205,7 +220,12 @@ func (db *CommitMultiTree) GetKVStore(key storetypes.StoreKey) storetypes.KVStor
 	if index >= len(db.trees) {
 		panic(fmt.Sprintf("store index %d out of bounds for key %s (trees length: %d)", index, key.Name(), len(db.trees)))
 	}
-	return db.trees[index]
+	s := db.trees[index]
+	store, ok := s.(storetypes.KVStore)
+	if !ok {
+		panic(fmt.Sprintf("store with key %v is not KVStore", key))
+	}
+	return store
 }
 
 func (db *CommitMultiTree) TracingEnabled() bool {
@@ -253,7 +273,12 @@ func (db *CommitMultiTree) GetCommitStore(key storetypes.StoreKey) storetypes.Co
 }
 
 func (db *CommitMultiTree) GetCommitKVStore(key storetypes.StoreKey) storetypes.CommitKVStore {
-	return db.trees[db.treesByKey[key]]
+	s := db.trees[db.treesByKey[key]]
+	store, ok := s.(storetypes.CommitKVStore)
+	if !ok {
+		panic(fmt.Sprintf("store with key %s is not CommitKVStore", key.Name()))
+	}
+	return store
 }
 
 func (db *CommitMultiTree) LoadLatestVersion() error {
@@ -268,7 +293,7 @@ func (db *CommitMultiTree) LoadLatestVersion() error {
 	return nil
 }
 
-func (db *CommitMultiTree) loadStore(key storetypes.StoreKey, typ storetypes.StoreType) (storetypes.CommitKVStore, error) {
+func (db *CommitMultiTree) loadStore(key storetypes.StoreKey, typ storetypes.StoreType) (storetypes.CommitStore, error) {
 	switch typ {
 	case storetypes.StoreTypeIAVL, storetypes.StoreTypeDB:
 		dir := filepath.Join(db.dir, key.Name())
@@ -293,6 +318,11 @@ func (db *CommitMultiTree) loadStore(key storetypes.StoreKey, typ storetypes.Sto
 		}
 
 		return mem.NewStore(), nil
+	case storetypes.StoreTypeObject:
+		if _, ok := key.(*storetypes.ObjectStoreKey); !ok {
+			return nil, fmt.Errorf("unexpected key type for a ObjectStoreKey: %s", key.String())
+		}
+		return transient.NewObjStore(), nil
 	default:
 		return nil, fmt.Errorf("unsupported store type: %s", typ.String())
 	}

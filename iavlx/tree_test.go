@@ -19,6 +19,69 @@ import (
 	"cosmossdk.io/store/types"
 )
 
+// TODO: this test isn't for expected behavior.
+// It should eventually be updated such that having a default ReaderUpdateInterval shouldn't error on old version queries.
+func TestTree_ErrorsOnOldVersion(t *testing.T) {
+	testCases := []struct {
+		name     string
+		getTree  func() *CommitTree
+		expError error
+	}{
+		{
+			name: "should error",
+			getTree: func() *CommitTree {
+				dir := t.TempDir()
+				commitTree, err := NewCommitTree(dir, Options{}, sdklog.NewNopLogger())
+				require.NoError(t, err)
+				return commitTree
+			},
+			// TODO: this shouldn't error!
+			expError: fmt.Errorf("no changeset found for version 2"),
+		},
+		{
+			name: "should NOT error",
+			getTree: func() *CommitTree {
+				dir := t.TempDir()
+				commitTree, err := NewCommitTree(dir, Options{ReaderUpdateInterval: 1}, sdklog.NewNopLogger())
+				require.NoError(t, err)
+				return commitTree
+			},
+			expError: nil,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			commitTree := tc.getTree()
+			for range 7 {
+				tree := commitTree.CacheWrap().(*Tree)
+				tree.Set([]byte{0}, []byte{1})
+				tree.Write()
+				commitTree.Commit()
+			}
+			_, err := commitTree.GetImmutable(2)
+			require.Equal(t, tc.expError, err)
+		})
+	}
+
+}
+
+func TestTree_NonExistentChangeset(t *testing.T) {
+	dir := t.TempDir()
+	commitTree, err := NewCommitTree(dir, Options{ReaderUpdateInterval: 1}, sdklog.NewNopLogger())
+	require.NoError(t, err)
+
+	for range 7 {
+		tree := commitTree.CacheWrap().(*Tree)
+		tree.Set([]byte{0}, []byte{1})
+		tree.Write()
+		commitTree.Commit()
+	}
+
+	_, err = commitTree.GetImmutable(2)
+	require.NoError(t, err)
+}
+
 func TestBasicTest(t *testing.T) {
 	dir, err := os.MkdirTemp("", "iavlx")
 	require.NoError(t, err)

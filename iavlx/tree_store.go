@@ -89,7 +89,12 @@ func (ts *TreeStore) getChangesetEntryForVersion(version uint32) *changesetEntry
 }
 
 func (ts *TreeStore) getChangesetForVersion(version uint32) *Changeset {
-	return ts.getChangesetEntryForVersion(version).changeset.Load()
+	cs := ts.getChangesetEntryForVersion(version)
+	if cs == nil {
+		return nil
+	} else {
+		return cs.changeset.Load()
+	}
 }
 
 func (ts *TreeStore) ReadK(nodeId NodeID, _ uint32) (key []byte, err error) {

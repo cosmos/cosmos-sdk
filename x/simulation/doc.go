@@ -19,7 +19,7 @@ parameters are pseudo-randomly generated.
 
 2. From a genesis file where the initial state and the module parameters are defined.
 This mode is helpful for running simulations on a known state such as a live
-network export where a new (mostly likely breaking) version of the application
+network export where a new (most likely breaking) version of the application
 needs to be tested.
 
 3. From a params file where the initial state is pseudo-randomly generated but the

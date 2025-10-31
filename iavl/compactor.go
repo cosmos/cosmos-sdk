@@ -31,8 +31,10 @@ type Compactor struct {
 	versionsWriter    *StructWriter[VersionInfo]
 	kvlogWriter       *KVLogWriter
 
-	leafOffsetRemappings map[uint32]uint32
-	keyCache             map[string]uint32
+	keyCache map[string]uint32
+	// offsetCache holds the updated 1-based offsets of nodes affected by compacting.
+	// these are then used to update BranchLayout's left and right offsets.
+	offsetCache map[NodeID]uint32
 
 	// Running totals across all processed changesets
 	leafOrphanCount          uint32
@@ -72,18 +74,18 @@ func NewCompacter(logger log.Logger, reader *Changeset, opts CompactOptions, sto
 	}
 
 	c := &Compactor{
-		logger:               logger,
-		criteria:             opts.RetainCriteria,
-		compactWAL:           opts.CompactWAL,
-		treeStore:            store,
-		files:                newFiles,
-		originalKvLogPath:    reader.files.KVLogPath(),
-		kvlogWriter:          kvlogWriter,
-		leavesWriter:         NewStructWriter[LeafLayout](newFiles.leavesFile),
-		branchesWriter:       NewStructWriter[BranchLayout](newFiles.branchesFile),
-		versionsWriter:       NewStructWriter[VersionInfo](newFiles.versionsFile),
-		keyCache:             make(map[string]uint32),
-		leafOffsetRemappings: make(map[uint32]uint32),
+		logger:            logger,
+		criteria:          opts.RetainCriteria,
+		compactWAL:        opts.CompactWAL,
+		treeStore:         store,
+		files:             newFiles,
+		originalKvLogPath: reader.files.KVLogPath(),
+		kvlogWriter:       kvlogWriter,
+		leavesWriter:      NewStructWriter[LeafLayout](newFiles.leavesFile),
+		branchesWriter:    NewStructWriter[BranchLayout](newFiles.branchesFile),
+		versionsWriter:    NewStructWriter[VersionInfo](newFiles.versionsFile),
+		keyCache:          make(map[string]uint32),
+		offsetCache:       make(map[NodeID]uint32),
 	}
 
 	// Process first changeset immediately
@@ -162,8 +164,7 @@ func (c *Compactor) processChangeset(reader *Changeset) error {
 				return fmt.Errorf("failed to append leaf %s: %w", id, err)
 			}
 
-			oldLeafFileIdx := leafStartOffset + j
-			c.leafOffsetRemappings[oldLeafFileIdx] = uint32(c.leavesWriter.Count()) - 1
+			c.offsetCache[id] = uint32(c.leavesWriter.Count())
 		}
 
 		newBranchStartIdx := uint32(0)
@@ -192,24 +193,11 @@ func (c *Compactor) processChangeset(reader *Changeset) error {
 			newBranchEndIdx = id.Index()
 			newBranchCount++
 
-			var err error
-			left := branch.Left
-			branch.Left, err = c.updateNodeRef(reader, left, skippedBranches)
-			if err != nil {
-				c.logger.Error("failed to update left ref",
-					"branchId", id,
-					"branchOrphanVersion", branch.OrphanVersion,
-					"leftRef", left)
-				return fmt.Errorf("failed to update left ref for branch %s: %w", id, err)
+			if newLeftOffset, ok := c.offsetCache[branch.Left]; ok {
+				branch.LeftOffset = newLeftOffset
 			}
-			right := branch.Right
-			branch.Right, err = c.updateNodeRef(reader, right, skippedBranches)
-			if err != nil {
-				c.logger.Error("failed to update right ref",
-					"branchId", id,
-					"branchOrphanVersion", branch.OrphanVersion,
-					"rightRef", right)
-				return fmt.Errorf("failed to update right ref for branch %s: %w", id, err)
+			if newRightOffset, ok := c.offsetCache[branch.Right]; ok {
+				branch.RightOffset = newRightOffset
 			}
 
 			if c.compactWAL {
@@ -230,10 +218,11 @@ func (c *Compactor) processChangeset(reader *Changeset) error {
 				branch.KeyOffset += kvOffsetDelta
 			}
 
-			err = c.branchesWriter.Append(&branch)
+			err := c.branchesWriter.Append(&branch)
 			if err != nil {
 				return fmt.Errorf("failed to append branch %s: %w", id, err)
 			}
+			c.offsetCache[id] = uint32(c.branchesWriter.Count())
 		}
 
 		verInfo = VersionInfo{
@@ -306,33 +295,6 @@ func (c *Compactor) Seal() (*Changeset, error) {
 	}
 
 	return cs, nil
-}
-
-func (c *Compactor) updateNodeRef(reader *Changeset, ref NodeRef, skipped int) (NodeRef, error) {
-	if ref.IsNodeID() {
-		return ref, nil
-	}
-	relPtr := ref.AsRelativePointer()
-	if relPtr.IsLeaf() {
-		oldOffset := relPtr.Offset()
-		newOffset, ok := c.leafOffsetRemappings[uint32(oldOffset)]
-		if !ok {
-			// Debug: look up the orphaned leaf
-			oldLeaf := reader.leavesData.UnsafeItem(uint32(oldOffset) - 1)
-			c.logger.Error("leaf remapping failed - orphaned leaf still referenced",
-				"leafOffset", oldOffset,
-				"leafId", oldLeaf.Id,
-				"leafOrphanVersion", oldLeaf.OrphanVersion,
-				"remappings", c.leafOffsetRemappings)
-			return 0, fmt.Errorf("failed to find remapping for leaf offset %d", oldOffset)
-		}
-		return NodeRef(NewNodeRelativePointer(true, int64(newOffset))), nil
-	} else {
-		// branch nodes we reduce by the number of skipped nodes
-		oldOffset := relPtr.Offset()
-		newOffset := oldOffset - int64(skipped)
-		return NodeRef(NewNodeRelativePointer(false, newOffset)), nil
-	}
 }
 
 func (c *Compactor) Abort() error {

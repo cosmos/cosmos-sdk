@@ -170,48 +170,6 @@ func (cr *Changeset) resolveBranchWithIdx(nodeId NodeID, fileIdx uint32) (Branch
 	}
 }
 
-func (cr *Changeset) resolveNodeRef(nodeRef NodeRef, selfIdx uint32) *NodePointer {
-	if nodeRef.IsNodeID() {
-		id := nodeRef.AsNodeID()
-		return &NodePointer{
-			id:    id,
-			store: cr.treeStore.getChangesetForVersion(uint32(id.Version())),
-		}
-	}
-	relPtr := nodeRef.AsRelativePointer()
-	offset := relPtr.Offset()
-	if nodeRef.IsLeaf() {
-		if offset < 1 {
-			panic(fmt.Sprintf("invalid leaf offset: %d", offset))
-		}
-		itemIdx := uint32(offset - 1)
-		if itemIdx >= uint32(cr.leavesData.Count()) {
-			panic(fmt.Sprintf("leaf offset %d out of bounds (have %d leaves)", offset, cr.leavesData.Count()))
-		}
-		layout := cr.leavesData.UnsafeItem(itemIdx)
-		return &NodePointer{
-			id:      layout.Id,
-			store:   cr,
-			fileIdx: uint32(offset),
-		}
-	} else {
-		idx := int64(selfIdx) + offset
-		if idx < 1 {
-			panic(fmt.Sprintf("invalid branch index: %d (selfIdx=%d, offset=%d)", idx, selfIdx, offset))
-		}
-		itemIdx := uint32(idx - 1)
-		if itemIdx >= uint32(cr.branchesData.Count()) {
-			panic(fmt.Sprintf("branch index %d out of bounds (have %d branches)", idx, cr.branchesData.Count()))
-		}
-		layout := cr.branchesData.UnsafeItem(itemIdx)
-		return &NodePointer{
-			id:      layout.Id,
-			store:   cr,
-			fileIdx: uint32(idx),
-		}
-	}
-}
-
 func (cr *Changeset) Resolve(nodeId NodeID, fileIdx uint32) (Node, error) {
 	if cr.evicted.Load() {
 		return cr.treeStore.Resolve(nodeId, fileIdx)
@@ -219,28 +177,54 @@ func (cr *Changeset) Resolve(nodeId NodeID, fileIdx uint32) (Node, error) {
 	cr.Pin()
 	defer cr.Unpin()
 
-	if nodeId.IsLeaf() {
-		layout, err := cr.ResolveLeaf(nodeId, fileIdx)
+	// we don't have a fileIdx, so its probably not in this changeset.
+	if fileIdx == 0 {
+		// load up the changeset for this node
+		cs := cr.treeStore.getChangesetForVersion(uint32(nodeId.Version()))
+		cs.Pin()
+		defer cs.Unpin()
+
+		// get version data
+		version := uint32(nodeId.Version())
+		vi, err := cs.getVersionInfo(version)
 		if err != nil {
 			return nil, err
 		}
-		return &LeafPersisted{layout: layout, store: cr}, nil
+		if nodeId.IsLeaf() {
+			leaf, err := cs.leavesData.FindByID(nodeId, &vi.Leaves)
+			if err != nil {
+				return nil, err
+			}
+			return &LeafPersisted{
+				store:   cs,
+				selfIdx: 0,
+				layout:  *leaf,
+			}, nil
+		} else {
+			branch, err := cs.branchesData.FindByID(nodeId, &vi.Branches)
+			if err != nil {
+				return nil, err
+			}
+			return &BranchPersisted{
+				store:  cs,
+				layout: *branch,
+			}, nil
+		}
 	} else {
-		layout, actualIdx, err := cr.resolveBranchWithIdx(nodeId, fileIdx)
-		if err != nil {
-			return nil, err
+		// since we have the fileIdx, we know it's in this changeset.
+		// we can just directly index in this changeset's leaf/branch data.
+		if nodeId.IsLeaf() {
+			itemIdx := fileIdx - 1
+			leafLayout := *cr.leavesData.UnsafeItem(itemIdx)
+			return &LeafPersisted{layout: leafLayout, store: cr}, nil
+		} else {
+			itemIdx := fileIdx - 1
+			branchLayout := *cr.branchesData.UnsafeItem(itemIdx)
+			return &BranchPersisted{
+				layout: branchLayout,
+				store:  cr,
+			}, nil
 		}
-
-		leftPtr := cr.resolveNodeRef(layout.Left, actualIdx)
-		rightPtr := cr.resolveNodeRef(layout.Right, actualIdx)
-
-		return &BranchPersisted{
-			layout:   layout,
-			store:    cr,
-			selfIdx:  actualIdx,
-			leftPtr:  leftPtr,
-			rightPtr: rightPtr,
-		}, nil
 	}
 }
 

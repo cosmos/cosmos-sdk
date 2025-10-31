@@ -1,6 +1,10 @@
 // Package telemetry initializes OpenTelemetry and provides legacy metrics wrapper functions.
-// End users only need to set the COSMOS_TELEMETRY environment variable to the path of
-// an OpenTelemetry declarative configuration file: https://opentelemetry.io/docs/languages/sdk-configuration/declarative-configuration/
+// While manual OpenTelemetry initialization is still supported, this package provides a single
+// point of initialization such that end users can just use the official
+// OpenTelemetry declarative configuration spec: https://opentelemetry.io/docs/languages/sdk-configuration/declarative-configuration/
+// End users only need to set the OTEL_EXPERIMENTAL_CONFIG_FILE environment variable to the path of
+// an OpenTelemetry configuration file and that's it.
+// All the documentation necessary is provided in the OpenTelemetry documentation.
 //
 // Developers need to do two things:
 //  1. Import this package before declaring any otel Tracer, Meter or Logger instances.

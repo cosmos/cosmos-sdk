@@ -22,7 +22,7 @@ func init() {
 
 	var opts []otelconf.ConfigurationOption
 
-	confFilename := os.Getenv("COSMOS_TELEMETRY")
+	confFilename := os.Getenv("OTEL_EXPERIMENTAL_CONFIG_FILE")
 	if confFilename != "" {
 		bz, err := os.ReadFile(confFilename)
 		if err != nil {

@@ -441,6 +441,9 @@ func (c Context) WithIncarnationCache(cache map[string]any) Context {
 	return c
 }
 
+// StartSpan starts an otel span and returns a new context with the span attached.
+// Use this instead of calling tracer.Start directly to have the span correctly
+// attached to this context type.
 func (c Context) StartSpan(tracer trace.Tracer, spanName string, opts ...trace.SpanStartOption) (Context, trace.Span) {
 	goCtx, span := tracer.Start(c.baseCtx, spanName, opts...)
 	return c.WithContext(goCtx), span

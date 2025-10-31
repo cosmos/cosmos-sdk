@@ -5,10 +5,13 @@ import (
 	"testing"
 )
 
-// TestingInit initializes telemetry for testing.
+// TestingInit initializes telemetry for testing so that it is automatically
+// shutdown after the test completes.
 // If ctx is nil, context.Background() is used.
-// If logger is nil, a new test logger is created.
 func TestingInit(t *testing.T, ctx context.Context) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	t.Cleanup(func() {
 		if err := Shutdown(ctx); err != nil {
 			t.Fatalf("failed to shutdown telemetry: %v", err)

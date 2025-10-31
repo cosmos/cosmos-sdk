@@ -20,6 +20,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 
 	"cosmossdk.io/store"
@@ -161,9 +162,10 @@ func IsEmptyValidatorSetErr(err error) bool {
 
 func TestAppStateDeterminism(t *testing.T) {
 	telemetry.TestingInit(t, context.Background())
-	const numTimesToRunPerSeed = 1
+	cfg := simcli.NewConfigFromFlags()
+	numTimesToRunPerSeed := cfg.NumRuns
 	var seeds []int64
-	if s := simcli.NewConfigFromFlags().Seed; s != simcli.DefaultSeedValue {
+	if s := cfg.Seed; s != simcli.DefaultSeedValue {
 		// We will be overriding the random seed and just run a single simulation on the provided seed value
 		for j := 0; j < numTimesToRunPerSeed; j++ { // multiple rounds
 			seeds = append(seeds, s)

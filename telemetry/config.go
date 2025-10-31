@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 
+	"go.opentelemetry.io/contrib/bridges/otelslog"
 	"go.opentelemetry.io/contrib/otelconf/v0.3.0"
 	"go.opentelemetry.io/otel"
 	logglobal "go.opentelemetry.io/otel/log/global"
@@ -46,9 +48,14 @@ func init() {
 		panic(fmt.Sprintf("failed to initialize telemetry: %v", err))
 	}
 
+	// setup otel global providers
 	otel.SetTracerProvider(sdk.TracerProvider())
 	otel.SetMeterProvider(sdk.MeterProvider())
 	logglobal.SetLoggerProvider(sdk.LoggerProvider())
+	// setup slog default provider so that any logs emitted the default slog will be traced
+	slog.SetDefault(otelslog.NewLogger("", otelslog.WithSource(true)))
+	// emit an initialized message which verifies basic telemetry is working
+	slog.Info("Telemetry initialized")
 }
 
 func Shutdown(ctx context.Context) error {

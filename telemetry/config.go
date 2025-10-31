@@ -5,6 +5,7 @@ import (
 
 	"github.com/hashicorp/go-metrics"
 	"github.com/prometheus/common/expfmt"
+	otelconf "go.opentelemetry.io/contrib/otelconf/v0.3.0"
 )
 
 // globalTelemetryEnabled is a private variable that stores the telemetry enabled state.
@@ -115,41 +116,57 @@ type Config struct {
 	// - "noop": No-op trace sink (default)
 	TraceSink string `mapstructure:"trace-sink" json:"trace-sink"`
 
-	// OtelTraceExporters is a list of OTLP exporters to use for trace data.
+	// OtelTraceExporters is a list of exporters to use for trace data.
 	// This is only used when trace sink is set to "otel".
-	OtelTraceExporters []OtelTraceExportConfig `mapstructure:"otel-trace-exporters" json:"otel-trace-exporters"`
+	OtelTraceExporters []OtelExportConfig `mapstructure:"otel-trace-exporters" json:"otel-trace-exporters"`
+
+	// OtelMetricsExporters is a list of exporters to use for metrics data via OpenTelemetry.
+	// When configured, wrapper functions (IncrCounter, SetGauge, etc.) will use OTel instruments
+	// instead of go-metrics, and metrics will be exported through these exporters.
+	OtelMetricsExporters []OtelExportConfig `mapstructure:"otel-metrics-exporters" json:"otel-metrics-exporters"`
 }
 
-type OtelTraceExportConfig struct {
+// OtelExportConfig defines configuration for an OpenTelemetry exporter.
+// This is used for both traces and metrics exporters.
+type OtelExportConfig struct {
 	// Type is the exporter type.
-	// Must be one of:
-	//   - "stdout"
-	//   - "otlp"
-	//
-	// OTLP exporters must set the endpoint URL and can optionally set the transport protocol.
+	// For traces: "stdout", "otlp"
+	// For metrics: "stdout", "otlp", "prometheus"
 	Type string `mapstructure:"type" json:"type"`
 
 	// OTLPTransport is the transport protocol to use for OTLP.
 	// Must be one of:
 	// 	- "http" (default)
 	//  - "grpc"
+	// Only used when Type is "otlp".
 	OTLPTransport string `mapstructure:"otlp-transport" json:"otlp-transport"`
 
 	// Endpoint is the OTLP exporter endpoint URL (grpc or http).
+	// Only used when Type is "otlp".
+	// Example: "localhost:4318" for HTTP, "localhost:4317" for gRPC
 	Endpoint string `mapstructure:"endpoint" json:"endpoint"`
 
 	// Insecure disables TLS certificate verification for OTLP exporters.
+	// Only used when Type is "otlp".
 	Insecure bool `mapstructure:"insecure" json:"insecure"`
 
 	// Headers is a map of HTTP headers to send with each request to the OTLP exporter.
 	// Useful for authentication, authorization, or custom metadata.
+	// Only used when Type is "otlp".
 	// Example: {"Authorization": "Bearer token123", "X-Custom-Header": "value"}
 	Headers map[string]string `mapstructure:"headers" json:"headers"`
 
-	// File is the file path to write trace data to when using the "stdout" exporter.
-	// If it is empty, the trace data is written to stdout.
+	// File is the file path to write data to when using the "stdout" exporter.
+	// If empty, data is written to stdout.
+	// Only used when Type is "stdout".
 	File string `mapstructure:"file" json:"file"`
 
 	// PrettyPrint enables pretty-printing of JSON output when using the "stdout" exporter.
+	// Only used when Type is "stdout" for traces.
 	PrettyPrint bool `mapstructure:"pretty-print" json:"pretty-print"`
+
+	// ListenAddress is the address to listen on for Prometheus scraping.
+	// Only used when Type is "prometheus" for metrics.
+	// Example: ":8080" or "localhost:9090"
+	ListenAddress string `mapstructure:"listen-address" json:"listen-address"`
 }

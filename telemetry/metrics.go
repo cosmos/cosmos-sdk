@@ -46,6 +46,16 @@ type Metrics struct {
 	logger            log.Logger
 	tracer            log.Tracer
 	metricsTracer     *MetricsTracer
+
+	// OpenTelemetry metrics (when OtelMetricsExporters is configured)
+	meterProvider *sdkmetric.MeterProvider
+	meter         metric.Meter
+
+	// Instrument cache for wrapper functions
+	counters   map[string]metric.Int64Counter
+	gauges     map[string]metric.Float64Gauge
+	histograms map[string]metric.Float64Histogram
+	mu         sync.RWMutex
 }
 
 // GatherResponse contains collected metrics in the requested format.

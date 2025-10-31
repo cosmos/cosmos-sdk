@@ -1,39 +1,18 @@
-// Package telemetry provides observability through metrics and distributed tracing.
+// Package telemetry initializes OpenTelemetry and provides legacy metrics wrapper functions.
+// End users only need to set the COSMOS_TELEMETRY environment variable to the path of
+// an OpenTelemetry declarative configuration file: https://opentelemetry.io/docs/languages/sdk-configuration/declarative-configuration/
 //
-// # Metrics Collection
+// Developers need to do two things:
+//  1. Import this package before declaring any otel Tracer, Meter or Logger instances.
+//  2. Make sure Shutdown() is called when the application is shutting down.
+//     Tests can use the TestingInit function at startup to accomplish this.
 //
-// Metrics collection uses hashicorp/go-metrics with support for multiple sink backends:
-//   - mem: In-memory aggregation with SIGUSR1 signal dumping to stderr
-//   - prometheus: Prometheus registry for pull-based scraping via /metrics endpoint
-//   - statsd: Push-based metrics to StatsD daemon
-//   - dogstatsd: Push-based metrics to Datadog StatsD daemon with tagging
-//   - file: Write metrics to a file as JSON lines (useful for tests and debugging)
-//
-// Multiple sinks can be active simultaneously via FanoutSink (e.g., both in-memory and Prometheus).
-//
-// # Distributed Tracing
-//
-// Tracing support is provided via OtelSpan, which wraps OpenTelemetry for hierarchical span tracking.
-// See otel.go for the log.Tracer implementation.
-//
-// # Usage
-//
-// Initialize metrics at application startup:
-//
-//	m, err := telemetry.New(telemetry.Config{
-//		Enabled:                 true,
-//		ServiceName:             "cosmos-app",
-//		PrometheusRetentionTime: 60,
-//		GlobalLabels:            [][]string{{"chain_id", "cosmoshub-1"}},
-//	})
-//	if err != nil {
-//		log.Fatal(err)
-//	}
-//	defer m.Close()
-//
-// Emit metrics from anywhere in the application:
-//
-//	telemetry.IncrCounter(1, "tx", "processed")
-//	telemetry.SetGauge(1024, "mempool", "size")
-//	defer telemetry.MeasureSince(telemetry.Now(), "block", "execution")
+// If these steps are followed, developers can follow the official golang otel conventions
+// of declaring package-level tracer and meter instances using otel.Tracer() and otel.Meter().
+// NOTE: it is important to thread context.Context properly for spans, metrics and logs to be
+// correlated correctly.
+// When using the SDK's context type, spans must be started with Context.StartSpan to
+// get an SDK context which has the span set correctly.
+// For logging, go.opentelemetry.io/contrib/bridges/otelslog provides a way to do this with the standard
+// library slog package.
 package telemetry

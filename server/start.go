@@ -231,20 +231,15 @@ func start(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreato
 	}
 	defer appCleanupFn()
 
-	metrics, err := startTelemetry(svrCfg)
-	if err != nil {
-		return fmt.Errorf("failed to start telemetry: %w", err)
-	}
-
 	emitServerInfoMetrics()
 
 	if !withCmt {
-		return startStandAlone(svrCtx, svrCfg, clientCtx, app, metrics, opts)
+		return startStandAlone(svrCtx, svrCfg, clientCtx, app, opts)
 	}
-	return startInProcess(svrCtx, svrCfg, clientCtx, app, metrics, opts)
+	return startInProcess(svrCtx, svrCfg, clientCtx, app, opts)
 }
 
-func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx client.Context, app types.Application, metrics *telemetry.Metrics, opts StartCmdOptions) error {
+func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx client.Context, app types.Application, opts StartCmdOptions) error {
 	addr := svrCtx.Viper.GetString(flagAddress)
 	transport := svrCtx.Viper.GetString(flagTransport)
 
@@ -283,7 +278,7 @@ func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clie
 		return err
 	}
 
-	err = startAPIServer(ctx, g, svrCfg, clientCtx, svrCtx, app, svrCtx.Config.RootDir, grpcSrv, metrics)
+	err = startAPIServer(ctx, g, svrCfg, clientCtx, svrCtx, app, svrCtx.Config.RootDir, grpcSrv)
 	if err != nil {
 		return err
 	}
@@ -310,9 +305,7 @@ func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clie
 	return g.Wait()
 }
 
-func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx client.Context, app types.Application,
-	metrics *telemetry.Metrics, opts StartCmdOptions,
-) error {
+func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx client.Context, app types.Application, opts StartCmdOptions) error {
 	cmtCfg := svrCtx.Config
 	gRPCOnly := svrCtx.Viper.GetBool(flagGRPCOnly)
 
@@ -349,7 +342,7 @@ func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clien
 		return fmt.Errorf("failed to start grpc server: %w", err)
 	}
 
-	err = startAPIServer(ctx, g, svrCfg, clientCtx, svrCtx, app, cmtCfg.RootDir, grpcSrv, metrics)
+	err = startAPIServer(ctx, g, svrCfg, clientCtx, svrCtx, app, cmtCfg.RootDir, grpcSrv)
 	if err != nil {
 		return fmt.Errorf("failed to start api server: %w", err)
 	}
@@ -518,7 +511,6 @@ func startAPIServer(
 	app types.Application,
 	home string,
 	grpcSrv *grpc.Server,
-	metrics *telemetry.Metrics,
 ) error {
 	if !svrCfg.API.Enable {
 		return nil
@@ -529,18 +521,10 @@ func startAPIServer(
 	apiSrv := api.New(clientCtx, svrCtx.Logger.With("module", "api-server"), grpcSrv)
 	app.RegisterAPIRoutes(apiSrv, svrCfg.API)
 
-	if svrCfg.Telemetry.Enabled {
-		apiSrv.SetTelemetry(metrics)
-	}
-
 	g.Go(func() error {
 		return apiSrv.Start(ctx, svrCfg)
 	})
 	return nil
-}
-
-func startTelemetry(cfg serverconfig.Config) (*telemetry.Metrics, error) {
-	return telemetry.New(cfg.Telemetry)
 }
 
 // wrapCPUProfile starts CPU profiling, if enabled, and executes the provided
@@ -624,6 +608,12 @@ func startApp(svrCtx *Context, appCreator types.AppCreator, opts StartCmdOptions
 
 	cleanupFn = func() {
 		traceCleanupFn()
+
+		shutdownCtx, _ := context.WithTimeout(context.Background(), 5*time.Second)
+		if err := telemetry.Shutdown(shutdownCtx); err != nil {
+			svrCtx.Logger.Error("failed to shutdown telemetry", "error", err)
+		}
+
 		if localErr := app.Close(); localErr != nil {
 			svrCtx.Logger.Error(localErr.Error())
 		}

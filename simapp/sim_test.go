@@ -3,6 +3,7 @@
 package simapp
 
 import (
+	"context"
 	"encoding/binary"
 	"encoding/json"
 	"flag"
@@ -159,6 +160,7 @@ func IsEmptyValidatorSetErr(err error) bool {
 }
 
 func TestAppStateDeterminism(t *testing.T) {
+	telemetry.TestingInit(t, context.Background())
 	const numTimesToRunPerSeed = 1
 	var seeds []int64
 	if s := simcli.NewConfigFromFlags().Seed; s != simcli.DefaultSeedValue {
@@ -191,10 +193,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				return others.Get(k)
 			})
 		}
-		metrics := telemetry.TestingInit(t, nil, logger)
-		baseAppSpan := metrics.Tracer().StartSpan("baseapp")
-		t.Cleanup(baseAppSpan.End)
-		return NewSimApp(baseAppSpan, db, nil, true, appOpts, append(baseAppOptions, interBlockCacheOpt())...)
+		return NewSimApp(logger, db, nil, true, appOpts, append(baseAppOptions, interBlockCacheOpt())...)
 	}
 	var mx sync.Mutex
 	appHashResults := make(map[int64][][]byte)

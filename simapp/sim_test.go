@@ -18,7 +18,6 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.opentelemetry.io/otel"
 
 	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -162,9 +161,6 @@ func IsEmptyValidatorSetErr(err error) bool {
 
 func TestAppStateDeterminism(t *testing.T) {
 	telemetry.TestingInit(t, context.Background())
-	tracer := otel.Tracer("test")
-	_, span := tracer.Start(context.Background(), "TestAppStateDeterminism")
-	defer span.End()
 	const numTimesToRunPerSeed = 1
 	var seeds []int64
 	if s := simcli.NewConfigFromFlags().Seed; s != simcli.DefaultSeedValue {

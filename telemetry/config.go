@@ -7,6 +7,8 @@ import (
 	"os"
 
 	"go.opentelemetry.io/contrib/otelconf/v0.3.0"
+	"go.opentelemetry.io/otel"
+	logglobal "go.opentelemetry.io/otel/log/global"
 )
 
 var sdk otelconf.SDK
@@ -43,6 +45,10 @@ func init() {
 	if err != nil {
 		panic(fmt.Sprintf("failed to initialize telemetry: %v", err))
 	}
+
+	otel.SetTracerProvider(sdk.TracerProvider())
+	otel.SetMeterProvider(sdk.MeterProvider())
+	logglobal.SetLoggerProvider(sdk.LoggerProvider())
 }
 
 func Shutdown(ctx context.Context) error {

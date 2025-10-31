@@ -3,6 +3,7 @@
 package simapp
 
 import (
+	"context"
 	"encoding/binary"
 	"encoding/json"
 	"flag"
@@ -17,6 +18,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.opentelemetry.io/otel"
 
 	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -159,6 +161,10 @@ func IsEmptyValidatorSetErr(err error) bool {
 }
 
 func TestAppStateDeterminism(t *testing.T) {
+	telemetry.TestingInit(t, context.Background())
+	tracer := otel.Tracer("test")
+	_, span := tracer.Start(context.Background(), "TestAppStateDeterminism")
+	defer span.End()
 	const numTimesToRunPerSeed = 1
 	var seeds []int64
 	if s := simcli.NewConfigFromFlags().Seed; s != simcli.DefaultSeedValue {
@@ -191,10 +197,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				return others.Get(k)
 			})
 		}
-		metrics := telemetry.TestingInit(t, nil, logger)
-		baseAppSpan := metrics.Tracer().StartSpan("baseapp")
-		t.Cleanup(baseAppSpan.End)
-		return NewSimApp(baseAppSpan, db, nil, true, appOpts, append(baseAppOptions, interBlockCacheOpt())...)
+		return NewSimApp(logger, db, nil, true, appOpts, append(baseAppOptions, interBlockCacheOpt())...)
 	}
 	var mx sync.Mutex
 	appHashResults := make(map[int64][][]byte)

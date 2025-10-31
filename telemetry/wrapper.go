@@ -6,6 +6,8 @@ import (
 	"github.com/hashicorp/go-metrics"
 )
 
+var globalLabels []metrics.Label
+
 // Common metric key constants
 const (
 	MetricKeyPreBlocker   = "pre_blocker"

@@ -7,24 +7,21 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
-	"cosmossdk.io/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 var _ sdk.TxRunner = DefaultRunner{}
 
-func NewDefaultRunner(txDecoder sdk.TxDecoder, tracer log.Tracer) *DefaultRunner {
+func NewDefaultRunner(txDecoder sdk.TxDecoder) *DefaultRunner {
 	return &DefaultRunner{
 		txDecoder: txDecoder,
-		tracer:    tracer,
 	}
 }
 
 // DefaultRunner is the default TxnRunner implementation which executes the transactions in a block sequentially.
 type DefaultRunner struct {
 	txDecoder sdk.TxDecoder
-	tracer    log.Tracer
 }
 
 func (d DefaultRunner) Run(ctx context.Context, _ storetypes.MultiStore, txs [][]byte, deliverTx sdk.DeliverTxFunc) ([]*abci.ExecTxResult, error) {
@@ -34,7 +31,7 @@ func (d DefaultRunner) Run(ctx context.Context, _ storetypes.MultiStore, txs [][
 		var response *abci.ExecTxResult
 
 		if _, err := d.txDecoder(rawTx); err == nil {
-			response = deliverTx(rawTx, nil, i, nil, d.tracer)
+			response = deliverTx(rawTx, nil, i, nil)
 		} else {
 			// In the case where a transaction included in a block proposal is malformed,
 			// we still want to return a default response to comet. This is because comet

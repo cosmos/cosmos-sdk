@@ -66,7 +66,7 @@ staking token of the chain.
 
 *Disclaimer: This is a work in progress. Mechanisms are susceptible to change.*
 
-The governance process is divided in a few steps that are outlined below:
+The governance process is divided into a few steps that are outlined below:
 
 * **Proposal submission:** Proposal is submitted to the blockchain with a
   deposit.
@@ -166,7 +166,7 @@ proposal but accept the result of the vote.
 
 [ADR-037](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-037-gov-split-vote.md) introduces the weighted vote feature which allows a staker to split their votes into several voting options. For example, it could use 70% of its voting power to vote Yes and 30% of its voting power to vote No.
 
-Often times the entity owning that address might not be a single individual. For example, a company might have different stakeholders who want to vote differently, and so it makes sense to allow them to split their voting power. Currently, it is not possible for them to do "passthrough voting" and giving their users voting rights over their tokens. However, with this system, exchanges can poll their users for voting preferences, and then vote on-chain proportionally to the results of the poll.
+Oftentimes the entity owning that address might not be a single individual. For example, a company might have different stakeholders who want to vote differently, and so it makes sense to allow them to split their voting power. Currently, it is not possible for them to do "passthrough voting" and giving their users voting rights over their tokens. However, with this system, exchanges can poll their users for voting preferences, and then vote on-chain proportionally to the results of the poll.
 
 To represent weighted vote on chain, we use the following Protobuf message.
 
@@ -272,7 +272,7 @@ Later, we may add permissioned keys that could only sign txs from certain module
 
 #### Burnable Params
 
-There are three parameters that define if the deposit of a proposal should be burned or returned to the depositors. 
+There are three parameters that define whether the deposit of a proposal should be burned or returned to the depositors. 
 
 * `BurnVoteVeto` burns the proposal deposit if the proposal gets vetoed. 
 * `BurnVoteQuorum` burns the proposal deposit if the proposal deposit if the vote does not reach quorum.
@@ -441,7 +441,7 @@ This type is used in a temp map when tallying
 ## Stores
 
 :::note
-Stores are KVStores in the multi-store. The key to find the store is the first parameter in the list
+Stores are KVStores in the multi-store. The key to finding the store is the first parameter in the list
 :::
 
 We will use one KVStore `Governance` to store four mappings:
@@ -450,7 +450,7 @@ We will use one KVStore `Governance` to store four mappings:
 * A mapping from `proposalID|'addresses'|address` to `Vote`. This mapping allows
   us to query all addresses that voted on the proposal along with their vote by
   doing a range query on `proposalID:addresses`.
-* A mapping from `ParamsKey|'Params'` to `Params`. This map allows to query all
+* A mapping from `ParamsKey|'Params'` to `Params`. This map allows querying all
   x/gov params.
 * A mapping from `VotingPeriodProposalKeyPrefix|proposalID` to a single byte. This allows
   us to know if a proposal is in the voting period or not with very low gas cost.
@@ -1149,7 +1149,7 @@ simd tx gov submit-legacy-proposal param-change proposal.json --from cosmos1..
 
 #### cancel-proposal
 
-Once proposal is canceled, from the deposits of proposal `deposits * proposal_cancel_ratio` will be burned or sent to `ProposalCancelDest` address , if `ProposalCancelDest` is empty then deposits will be burned. The `remaining deposits` will be sent to depositors.
+Once proposal is canceled, from the deposits of proposal `deposits * proposal_cancel_ratio` will be burned or sent to `ProposalCancelDest` address, if `ProposalCancelDest` is empty then deposits will be burned. The `remaining deposits` will be sent to depositors.
 
 ```bash
 simd tx gov cancel-proposal [proposal-id] [flags]

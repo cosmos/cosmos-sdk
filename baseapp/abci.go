@@ -1033,6 +1033,10 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 	// The SnapshotIfApplicable method will create the snapshot by starting the goroutine
 	app.snapshotManager.SnapshotIfApplicable(header.Height)
 
+	blockCnt.Add(ctx, 1)
+	blockTime.Record(ctx, time.Since(app.blockStartTime).Seconds())
+	app.blockStartTime = time.Now()
+
 	return resp, nil
 }
 

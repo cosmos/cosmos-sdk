@@ -115,7 +115,7 @@ func SimulateFromSeedX(
 
 	config.ChainID = chainID
 
-	// remove module account address if they exist in accs
+	// remove module account address if it exists in accs
 	var tmpAccs []simulation.Account
 
 	for _, acc := range accs {
@@ -153,7 +153,7 @@ func SimulateFromSeedX(
 		validators.randomProposer(r),
 	)
 
-	// These are operations which have been queued by previous operations
+	// These are operations that have been queued by previous operations
 	operationQueue := NewOperationQueue()
 
 	blockSimulator := createBlockSimulator(

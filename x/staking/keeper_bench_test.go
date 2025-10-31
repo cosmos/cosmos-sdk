@@ -91,6 +91,7 @@ func newTestEnvironment(tb testing.TB) *KeeperTestEnvironment {
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		address.NewBech32Codec("cosmosvaloper"),
 		address.NewBech32Codec("cosmosvalcons"),
+		0,
 	)
 	require.NoError(tb, keeper.SetParams(ctx, types.DefaultParams()))
 

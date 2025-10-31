@@ -171,6 +171,16 @@ type MempoolConfig struct {
 	MaxTxs int `mapstructure:"max-txs"`
 }
 
+// StakingConfig defines the staking module configuration
+type StakingConfig struct {
+	// CacheSize defines the maximum number of time-based queue entries to cache
+	// for unbonding validators, unbonding delegations, and redelegations.
+	// cache-size = 0 means unlimited cache (no size limit).
+	// cache-size < 0 means the cache is disabled.
+	// cache-size > 0 sets a size limit for the cache.
+	CacheSize int `mapstructure:"cache-size"`
+}
+
 // State Streaming configuration
 type (
 	// StreamingConfig defines application configuration for external streaming services
@@ -197,6 +207,7 @@ type Config struct {
 	StateSync StateSyncConfig  `mapstructure:"state-sync"`
 	Streaming StreamingConfig  `mapstructure:"streaming"`
 	Mempool   MempoolConfig    `mapstructure:"mempool"`
+	Staking   StakingConfig    `mapstructure:"staking"`
 }
 
 // SetMinGasPrices sets the validator's minimum gas prices.
@@ -268,6 +279,9 @@ func DefaultConfig() *Config {
 		},
 		Mempool: MempoolConfig{
 			MaxTxs: -1,
+		},
+		Staking: StakingConfig{
+			CacheSize: 0,
 		},
 	}
 }

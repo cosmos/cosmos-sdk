@@ -1,9 +1,12 @@
 package telemetry
 
 import (
+	"sync"
 	"time"
 
 	"github.com/hashicorp/go-metrics"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/metric"
 )
 
 var globalLabels []metrics.Label
@@ -15,6 +18,17 @@ const (
 	MetricKeyEndBlocker   = "end_blocker"
 	MetricLabelNameModule = "module"
 )
+
+var meter = otel.Meter("cosmos-sdk")
+var mtx sync.RWMutex
+var counters map[string]metric.Float64Counter
+var gauges map[string]metric.Float64Gauge
+var histograms map[string]metric.Float64Histogram
+
+type Label struct {
+	Name  string
+	Value string
+}
 
 // NewLabel creates a new instance of Label with name and value
 func NewLabel(name, value string) metrics.Label {

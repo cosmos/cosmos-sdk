@@ -76,7 +76,7 @@ type SimApp struct {
 	// supplementary keepers
 	FeeGrantKeeper     feegrantkeeper.Keeper
 	AuthzKeeper        authzkeeper.Keeper
-	EpochsKeeper       epochskeeper.Keeper
+	EpochsKeeper       *epochskeeper.Keeper
 	ProtocolPoolKeeper protocolpoolkeeper.Keeper
 
 	// simulation manager

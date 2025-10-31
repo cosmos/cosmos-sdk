@@ -3,8 +3,6 @@ package iavlx
 import (
 	io "io"
 
-	corestore "cosmossdk.io/core/store"
-
 	storetypes "cosmossdk.io/store/types"
 )
 
@@ -62,11 +60,11 @@ func (tree *ImmutableTree) Has(key []byte) bool {
 	return val != nil
 }
 
-func (tree *ImmutableTree) Iterator(start, end []byte) corestore.Iterator {
+func (tree *ImmutableTree) Iterator(start, end []byte) storetypes.Iterator {
 	return NewIterator(start, end, true, tree.root, true)
 }
 
-func (tree *ImmutableTree) ReverseIterator(start, end []byte) corestore.Iterator {
+func (tree *ImmutableTree) ReverseIterator(start, end []byte) storetypes.Iterator {
 	return NewIterator(start, end, false, tree.root, true)
 }
 

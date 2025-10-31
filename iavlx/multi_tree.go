@@ -52,7 +52,7 @@ func (t *MultiTree) Write() {
 	for _, tree := range t.trees {
 		// TODO check if trees are dirty before spinning off a goroutine
 		wg.Add(1)
-		go func(t storetypes.CacheKVStore) {
+		go func(t storetypes.CacheWrap) {
 			defer wg.Done()
 			t.Write()
 		}(tree)

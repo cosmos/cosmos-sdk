@@ -65,7 +65,7 @@ func (db *CommitMultiTree) WorkingHash() []byte {
 	var wg sync.WaitGroup
 	for i, tree := range db.trees {
 		wg.Add(1)
-		go func(i int, t storetypes.CommitKVStore) {
+		go func(i int, t storetypes.CommitStore) {
 			defer wg.Done()
 			hashes[i] = t.WorkingHash()
 		}(i, tree)
@@ -98,7 +98,7 @@ func (db *CommitMultiTree) Commit() storetypes.CommitID {
 	var wg sync.WaitGroup
 	for i, tree := range db.trees {
 		wg.Add(1)
-		go func(i int, t storetypes.CommitKVStore) {
+		go func(i int, t storetypes.CommitStore) {
 			defer wg.Done()
 			hashes[i] = t.Commit().Hash
 		}(i, tree)
@@ -194,12 +194,11 @@ func (db *CommitMultiTree) CacheMultiStoreWithVersion(version int64) (storetypes
 		typ := db.storeTypes[i]
 		switch typ {
 		case storetypes.StoreTypeIAVL, storetypes.StoreTypeDB:
-			var err error
-			var t storetypes.KVStore
-			t, err = tree.(*CommitTree).GetImmutable(version)
+			t, err := tree.(*CommitTree).GetImmutable(version)
 			if err != nil {
 				return nil, fmt.Errorf("failed to create cache multi store for tree %s at version %d: %w", db.treeKeys[i].Name(), version, err)
 			}
+			mt.trees[i] = t.CacheWrap()
 		default:
 			mt.trees[i] = tree.CacheWrap()
 		}

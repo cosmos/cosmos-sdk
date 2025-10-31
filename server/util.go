@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -32,6 +33,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	iavlx "github.com/cosmos/cosmos-sdk/iavl"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -582,6 +584,26 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		defaultMempool,
 		baseapp.SetChainID(chainID),
 		baseapp.SetQueryGasLimit(cast.ToUint64(appOpts.Get(FlagQueryGasLimit))),
+		func(bapp *baseapp.BaseApp) {
+			opts := &iavlx.Options{}
+			optsJson, ok := appOpts.Get(FlagIAVLXOptions).(string)
+			if ok && optsJson != "" {
+				err := json.Unmarshal([]byte(optsJson), opts)
+				if err != nil {
+					panic(fmt.Errorf("failed to unmarshal iavlx options: %w", err))
+				}
+			}
+
+			db, err := iavlx.LoadDB(
+				filepath.Join(homeDir, "data", "iavlx"),
+				opts,
+				bapp.Logger(),
+			)
+			if err != nil {
+				panic(fmt.Errorf("failed to load iavlx db: %w", err))
+			}
+			bapp.SetCMS(db)
+		},
 	}
 }
 

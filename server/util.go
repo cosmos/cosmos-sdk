@@ -170,7 +170,7 @@ func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplat
 // It reads the log level and format from the server context.
 func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 	// If memlogger is enabled (via flag or app config), return the in-memory compressing logger.
-	useMemlog := ctx.Viper.GetBool(FlagMemLog) || ctx.Viper.GetBool("memlogger.enabled")
+	useMemlog := ctx.Viper.GetBool("memlogger.enabled")
 	if useMemlog {
 		mcfg := log.MemLoggerConfig{}
 		if iv := ctx.Viper.GetString("memlogger.interval"); iv != "" {
@@ -178,8 +178,8 @@ func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 				mcfg.Interval = d
 			}
 		}
-		if mb := ctx.Viper.GetInt("memlogger.max-bytes"); mb > 0 {
-			mcfg.MaxUncompressedBytes = mb
+		if mb := ctx.Viper.GetInt("memlogger.memory-bytes"); mb > 0 {
+			mcfg.MemoryLimitBytes = mb
 		}
 		// Resolve output directory relative to app root by default.
 		outDir := ctx.Viper.GetString("memlogger.dir")

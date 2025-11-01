@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -16,31 +17,22 @@ import (
 
 // MemLoggerConfig configures the in-memory compressing logger.
 type MemLoggerConfig struct {
-	// Interval controls how often the current buffer is compressed into a chunk.
-	// If zero, defaults to 2 seconds.
+	// Interval controls how often the current in-memory buffer is compressed
+	// and asynchronously appended to the WAL. If zero, defaults to 2 seconds.
 	Interval time.Duration
 
-	// MaxUncompressedBytes triggers an early compression when the current
-	// uncompressed buffer grows beyond this size. If zero, no size-based
-	// trigger is applied.
-	MaxUncompressedBytes int
-
-	// MaxChunks caps the number of retained compressed chunks in memory.
-	// When exceeded and DropOldest is true, the oldest chunks are dropped.
-	// If zero, chunks are unbounded.
-	MaxChunks int
-
-	// DropOldest defines the eviction policy when MaxChunks is exceeded.
-	// If true, drops oldest chunks to make room; if false, keeps all
-	// chunks (which may grow memory).
-	DropOldest bool
+	// MemoryLimitBytes caps how many uncompressed bytes are held in memory.
+	// When the buffer reaches this size, it is immediately compressed and
+	// appended to the WAL (async). If zero, only the time-based trigger is used.
+	MemoryLimitBytes int
 
 	// GzipLevel controls compression level for gzip. If 0, uses gzip.DefaultCompression.
 	GzipLevel int
 
-	// OutputDir, when set, is used by Flush to write a timestamped
-	// concatenated gzip file under this directory. If empty, Flush returns
-	// an error.
+	// OutputDir is the application root directory from which the WAL path
+	// is derived ("<OutputDir>/data/wal/..."). If empty, the current
+	// working directory is used as the root ("./data/wal/..."). This is not
+	// a behavior knob; it's where files are written.
 	OutputDir string
 }
 
@@ -107,16 +99,17 @@ func (l *MemLogger) Close() error { l.agg.close(); return nil }
 // DumpUncompressed writes all logs as plain JSONL without compression.
 func (l *MemLogger) DumpUncompressed(w io.Writer) error { return l.agg.dumpUncompressed(w) }
 
-// Flush writes the concatenated gzip stream to a timestamped file under
-// OutputDir. Returns an error if OutputDir is empty or on write failure.
+// Flush compresses any pending in-memory buffer, appends it to the WAL,
+// and performs an fsync to ensure durability.
 func (l *MemLogger) Flush() error {
-	dir := l.agg.cfg.OutputDir
-	if dir == "" {
-		return errors.New("memlogger: OutputDir is not set")
+	// Forced WAL mode: compress any pending buffer and fsync.
+	if l.agg.wal == nil {
+		return errors.New("memlogger: WAL not initialized")
 	}
-	name := time.Now().UTC().Format("memlog-20060102T150405.000000000Z.gz")
-	p := dir + string(os.PathSeparator) + name
-	return l.FlushToFile(p)
+	if err := l.agg.flushToWAL(); err != nil {
+		return err
+	}
+	return l.agg.wal.Sync()
 }
 
 // ---- Internal aggregator ----
@@ -124,9 +117,8 @@ func (l *MemLogger) Flush() error {
 type memAggregator struct {
 	cfg MemLoggerConfig
 
-	mu   sync.Mutex
-	buf  bytes.Buffer // current uncompressed JSONL buffer
-	chks [][]byte     // compressed gzip chunks (each is a full gzip member)
+	mu  sync.Mutex
+	buf bytes.Buffer // current uncompressed JSONL buffer
 
 	tick   *time.Ticker
 	stopCh chan struct{}
@@ -139,6 +131,10 @@ type memAggregator struct {
 	// pools to reduce allocations during compression
 	gzPool  sync.Pool // *gzip.Writer
 	bufPool sync.Pool // *bytes.Buffer
+
+	// optional append-only WAL writer; when present, compressed chunks
+	// are appended to disk immediately after compression.
+	wal *walWriter
 }
 
 // event is encoded to a single flat JSON object similar to TM JSON logger
@@ -154,6 +150,35 @@ func newMemAggregator(cfg MemLoggerConfig) *memAggregator {
 		workCh:  make(chan []byte, 2),
 		gzPool:  sync.Pool{New: func() any { w, _ := gzip.NewWriterLevel(io.Discard, cfg.GzipLevel); return w }},
 		bufPool: sync.Pool{New: func() any { return new(bytes.Buffer) }},
+	}
+
+	// Initialize a WAL writer so that compressed chunks are appended to disk
+	// as they are produced. If OutputDir is empty, fall back to CWD.
+	root := cfg.OutputDir
+	if root == "" {
+		root = "."
+	}
+	dataDir := root
+	if base := filepath.Base(root); base != "data" {
+		dataDir = filepath.Join(root, "data")
+	}
+	// Derive WAL buffer size from the memory limit using a simple heuristic
+	// informed by benchmarks. This reduces syscall churn for large chunks.
+	// - memory-bytes >= 1 GiB  -> bufSize = 16 MiB
+	// - memory-bytes >= 256 MiB-> bufSize = 8 MiB
+	// - otherwise              -> bufSize = 4 MiB
+	bufSize := 4 << 20
+	if cfg.MemoryLimitBytes >= (1 << 30) {
+		bufSize = 16 << 20
+	} else if cfg.MemoryLimitBytes >= (256 << 20) {
+		bufSize = 8 << 20
+	}
+	if w, err := newWalWriter(walWriterConfig{
+		DataDir: dataDir,
+		NodeID:  "default",
+		BufSize: bufSize,
+	}); err == nil {
+		m.wal = w
 	}
 	m.wg.Add(1)
 	go m.run()
@@ -212,7 +237,7 @@ func (m *memAggregator) append(level string, ctx []any, msg string, keyvals ...a
 
 	// Size-based early compression: swap buffer and enqueue to background worker.
 	var toCompress []byte
-	if max := m.cfg.MaxUncompressedBytes; max > 0 && m.buf.Len() >= max {
+	if max := m.cfg.MemoryLimitBytes; max > 0 && m.buf.Len() >= max {
 		toCompress = m.takeBufferLocked()
 	}
 	m.mu.Unlock()
@@ -247,13 +272,8 @@ func (m *memAggregator) takeBufferLocked() []byte {
 
 // addChunkLocked appends a compressed chunk and enforces the capacity policy.
 // Caller must hold m.mu.
-func (m *memAggregator) addChunkLocked(chunk []byte) {
-	m.chks = append(m.chks, chunk)
-	if m.cfg.MaxChunks > 0 && len(m.chks) > m.cfg.MaxChunks && m.cfg.DropOldest {
-		overflow := len(m.chks) - m.cfg.MaxChunks
-		m.chks = append([][]byte{}, m.chks[overflow:]...)
-	}
-}
+// addChunkLocked was used for in-memory retention of compressed chunks.
+// In the simplified WAL-only mode, compressed chunks are not retained.
 
 func (m *memAggregator) enqueueData(data []byte) {
 	// Block to preserve backpressure but outside locks; this avoids dropping logs
@@ -272,9 +292,10 @@ func (m *memAggregator) compressor() {
 			m.mu.Unlock()
 			continue
 		}
-		m.mu.Lock()
-		m.addChunkLocked(chunk)
-		m.mu.Unlock()
+		// Append to WAL; we do not retain compressed chunks in memory.
+		if m.wal != nil {
+			_ = m.wal.AppendCompressed(chunk)
+		}
 	}
 }
 
@@ -314,26 +335,20 @@ func (m *memAggregator) flushToWriter(w io.Writer) error {
 	if m.buf.Len() > 0 {
 		data = m.takeBufferLocked()
 	}
-	// Snapshot existing chunks.
-	chunks := make([][]byte, len(m.chks))
-	copy(chunks, m.chks)
 	m.mu.Unlock()
 
-	if len(data) > 0 {
-		gzChunk, err := m.gzipWithPool(data)
-		if err != nil {
-			// If compression fails during flush, return error.
-			return err
-		}
-		chunks = append(chunks, gzChunk)
+	if len(data) == 0 {
+		return nil
 	}
-
-	for _, c := range chunks {
-		if _, err := w.Write(c); err != nil {
-			return err
-		}
+	gzChunk, err := m.gzipWithPool(data)
+	if err != nil {
+		return err
 	}
-	return nil
+	if m.wal != nil {
+		_ = m.wal.AppendCompressed(gzChunk)
+	}
+	_, err = w.Write(gzChunk)
+	return err
 }
 
 func (m *memAggregator) flushToFile(path string) error {
@@ -348,28 +363,40 @@ func (m *memAggregator) flushToFile(path string) error {
 	return m.flushToWriter(f)
 }
 
-func (m *memAggregator) dumpUncompressed(w io.Writer) error {
-	// Snapshot chunks and current buffer.
+// flushToWAL compresses any pending uncompressed buffer and appends it
+// synchronously to the WAL. No-op if buffer is empty or WAL is not configured.
+func (m *memAggregator) flushToWAL() error {
+	if m.wal == nil {
+		return nil
+	}
 	m.mu.Lock()
-	chunks := make([][]byte, len(m.chks))
-	copy(chunks, m.chks)
+	if m.buf.Len() == 0 {
+		m.mu.Unlock()
+		return nil
+	}
+	data := m.takeBufferLocked()
+	m.mu.Unlock()
+
+	gzChunk, err := m.gzipWithPool(data)
+	if err != nil {
+		return err
+	}
+	// Append to WAL; no in-memory retention.
+	return m.wal.AppendCompressed(gzChunk)
+}
+
+func (m *memAggregator) dumpUncompressed(w io.Writer) error {
+	// Only the current uncompressed tail is available in memory in WAL-only mode.
+	m.mu.Lock()
 	bufCopy := make([]byte, m.buf.Len())
 	copy(bufCopy, m.buf.Bytes())
 	m.mu.Unlock()
 
-	// Expand compressed chunks.
-	for _, c := range chunks {
-		if err := ungzipTo(c, w); err != nil {
-			return err
-		}
+	if len(bufCopy) == 0 {
+		return nil
 	}
-	// Write the pending uncompressed tail.
-	if len(bufCopy) > 0 {
-		if _, err := w.Write(bufCopy); err != nil {
-			return err
-		}
-	}
-	return nil
+	_, err := w.Write(bufCopy)
+	return err
 }
 
 func (m *memAggregator) close() {
@@ -392,21 +419,17 @@ func (m *memAggregator) close() {
 	// Stop compressor and wait.
 	close(m.workCh)
 	m.compWg.Wait()
+
+	// Ensure WAL is flushed to disk and closed.
+	if m.wal != nil {
+		_ = m.wal.Sync()
+		_ = m.wal.Close()
+	}
 }
 
 // ---- helpers ----
 
-func ungzipTo(in []byte, w io.Writer) error {
-	zr, err := gzip.NewReader(bytes.NewReader(in))
-	if err != nil {
-		return err
-	}
-	defer zr.Close()
-	if _, err := io.Copy(w, zr); err != nil {
-		return err
-	}
-	return nil
-}
+// ungzipTo was used for expanding retained compressed chunks; not used in WAL-only mode.
 
 func toString(v any) string {
 	switch t := v.(type) {
@@ -445,3 +468,5 @@ func normalizeValue(v any) any {
 		return v
 	}
 }
+
+// pickNodeID removed: WAL uses a default node identifier unless higher-level wiring provides one.

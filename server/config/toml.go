@@ -141,15 +141,16 @@ datadog-hostname = "{{ .Telemetry.DatadogHostname }}"
 # Enable defines if the in-memory compressing logger should be used.
 enabled = {{ .MemLogger.Enabled }}
 
-# Interval controls how often the current buffer is compressed into a chunk.
-# Examples: "2s", "1m".
+# Interval controls how often the current in-memory buffer is compressed
+# and appended to the WAL. Examples: "2s", "1m".
 interval = "{{ .MemLogger.Interval }}"
 
-# MaxBytes triggers an early compression when the current uncompressed buffer
-# grows beyond this size. 0 disables the size trigger.
-max-bytes = {{ .MemLogger.MaxBytes }}
+# MemoryBytes caps the uncompressed bytes held in memory. When reached,
+# the buffer is immediately compressed and appended to the WAL. 0 disables
+# the size trigger (timer-only).
+memory-bytes = {{ .MemLogger.MemoryBytes }}
 
-# Dir is the directory where memlogger writes compressed logs on shutdown.
+# Dir is the application root; WAL files are stored under "<dir>/data/wal/...".
 dir = "{{ .MemLogger.Dir }}"
 
 ###############################################################################

@@ -185,14 +185,17 @@ type (
 	}
 
 	// MemLoggerConfig defines configuration for the in-memory compressing logger.
+	// Keep it minimal and unambiguous: a timer trigger, a memory cap, and an
+	// optional output directory (where WAL files are stored).
 	MemLoggerConfig struct {
-		// Enabled toggles the in-memory logger.
+		// Enabled toggles the in-memory compressing logger with WAL appends.
 		Enabled bool `mapstructure:"enabled"`
-		// Interval controls how often the current buffer is compressed (e.g. "2s").
+		// Interval: compress + append to WAL on this cadence (e.g. "2s").
 		Interval string `mapstructure:"interval"`
-		// MaxBytes triggers early compression when uncompressed buffer exceeds this size (bytes).
-		MaxBytes int `mapstructure:"max-bytes"`
-		// Dir is the output directory where compressed logs are written on shutdown.
+		// MemoryBytes: maximum uncompressed bytes to keep before an immediate
+		// compress + append to WAL. Use 0 to rely only on Interval.
+		MemoryBytes int `mapstructure:"memory-bytes"`
+		// Dir: app root (WAL is placed under "<dir>/data/wal/..."). Optional.
 		Dir string `mapstructure:"dir"`
 	}
 )
@@ -284,10 +287,10 @@ func DefaultConfig() *Config {
 			MaxTxs: -1,
 		},
 		MemLogger: MemLoggerConfig{
-			Enabled:  false,
-			Interval: "2s",
-			MaxBytes: 0,
-			Dir:      "",
+			Enabled:     false,
+			Interval:    "2s",
+			MemoryBytes: 0,
+			Dir:         "",
 		},
 	}
 }

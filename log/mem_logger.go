@@ -30,8 +30,8 @@ type MemLoggerConfig struct {
 	GzipLevel int
 
 	// OutputDir is the application root directory from which the WAL path
-	// is derived ("<OutputDir>/data/wal/..."). If empty, the current
-	// working directory is used as the root ("./data/wal/..."). This is not
+	// is derived ("<OutputDir>/log.wal/..."). If empty, the current
+	// working directory is used as the root ("./log.wal/..."). This is not
 	// a behavior knob; it's where files are written.
 	OutputDir string
 }

@@ -150,7 +150,7 @@ interval = "{{ .MemLogger.Interval }}"
 # the size trigger (timer-only).
 memory-bytes = {{ .MemLogger.MemoryBytes }}
 
-# Dir is the application root; WAL files are stored under "<dir>/data/wal/...".
+# Dir is the application root; WAL files are stored under "<dir>/log.wal/...".
 dir = "{{ .MemLogger.Dir }}"
 
 ###############################################################################

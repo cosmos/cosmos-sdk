@@ -195,7 +195,7 @@ type (
 		// MemoryBytes: maximum uncompressed bytes to keep before an immediate
 		// compress + append to WAL. Use 0 to rely only on Interval.
 		MemoryBytes int `mapstructure:"memory-bytes"`
-		// Dir: app root (WAL is placed under "<dir>/data/wal/..."). Optional.
+		// Dir: app root (WAL is placed under "<dir>/log.wal/..."). Optional.
 		Dir string `mapstructure:"dir"`
 	}
 )

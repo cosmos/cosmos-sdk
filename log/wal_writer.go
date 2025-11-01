@@ -15,13 +15,17 @@ import (
 // unbounded growth without adding user-facing configuration complexity.
 const defaultWalRollSizeBytes int64 = 1 << 30 // 1 GiB
 
+// walDirName is the fixed directory name under dataDir used to store WAL files.
+// Keep this as a single source of truth to avoid string typos.
+const walDirName = "log.wal"
+
 // walWriter is a minimal append-only writer for concatenated gzip members.
 // It buffers writes in userspace and only touches the disk on buffer flushes.
 // Durability is guaranteed when the caller invokes Sync() or Close().
 type walWriter struct {
 	mu sync.Mutex
 	// dataDir: base data directory under which WAL files are stored.
-	// Files are organized as: <dataDir>/wal/node-<nodeID>/<YYYY-MM-DD>/seg-XXXXXX.wal.gz
+	// Files are organized as: <dataDir>/log.wal/node-<nodeID>/<YYYY-MM-DD>/seg-XXXXXX.wal.gz
 	dataDir string
 	// nodeID: optional node identifier used in the WAL path. If empty, "default" is used.
 	nodeID string
@@ -78,12 +82,10 @@ func newWalWriter(cfg walWriterConfig) (*walWriter, error) {
 	// Apply a sane default roll size to avoid unbounded segment growth.
 	w.rollSizeBytes = defaultWalRollSizeBytes
 	// Ensure base wal directory exists.
-	if err := os.MkdirAll(filepath.Join(cfg.DataDir, "wal"), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Join(cfg.DataDir, walDirName), 0o755); err != nil {
 		return nil, err
 	}
-	if err := w.rotateLocked(true); err != nil {
-		return nil, err
-	}
+	// Lazy-open: do not create a segment until the first append.
 	return w, nil
 }
 
@@ -134,6 +136,12 @@ func (w *walWriter) AppendCompressed(member []byte) error {
 	if w.stopped {
 		return errors.New("wal: closed")
 	}
+	// Lazy-open the first segment on first write.
+	if w.f == nil {
+		if err := w.rotateLocked(true); err != nil {
+			return err
+		}
+	}
 	n, err := w.bw.Write(member)
 	if err != nil {
 		return err
@@ -162,7 +170,7 @@ func (w *walWriter) rotateLocked(first bool) error {
 		}
 	}
 	day := time.Now().UTC().Format("2006-01-02")
-	dir := filepath.Join(w.dataDir, "wal", fmt.Sprintf("node-%s", w.nodeID), day)
+	dir := filepath.Join(w.dataDir, walDirName, fmt.Sprintf("node-%s", w.nodeID), day)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return err
 	}

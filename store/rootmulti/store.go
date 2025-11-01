@@ -535,6 +535,7 @@ func (rs *Store) WorkingHash() []byte {
 					Hash: store.WorkingHash(),
 				},
 			}
+			rs.logger.Debug("Store working hash", "name", si.Name, "hash", fmt.Sprintf("%x", si.CommitId.Hash))
 			storeInfos = append(storeInfos, si)
 		}
 	}

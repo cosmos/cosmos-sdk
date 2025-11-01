@@ -49,6 +49,9 @@ func buildDefaultAllowedDebug() map[string]struct{} {
 		"Updating valid block because of POL",
 		"Precommit step: +2/3 prevoted proposal block; locking",
 		"Scheduled timeout",
+
+		// Storage
+		"Store working hash",
 	}
 	out := make(map[string]struct{}, len(msgs))
 	for _, m := range msgs {

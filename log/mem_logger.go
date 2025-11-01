@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -135,6 +136,11 @@ type memAggregator struct {
 	// optional append-only WAL writer; when present, compressed chunks
 	// are appended to disk immediately after compression.
 	wal *walWriter
+
+	// allowedDebug holds lowercased allowed Debug messages for exact matching.
+	// If non-empty, Debug logs are kept only when their msg matches a key in
+	// this set after lowercasing (case-insensitive). Checked before any JSON/gzip.
+	allowedDebug map[string]struct{}
 }
 
 // event is encoded to a single flat JSON object similar to TM JSON logger
@@ -151,6 +157,8 @@ func newMemAggregator(cfg MemLoggerConfig) *memAggregator {
 		gzPool:  sync.Pool{New: func() any { w, _ := gzip.NewWriterLevel(io.Discard, cfg.GzipLevel); return w }},
 		bufPool: sync.Pool{New: func() any { return new(bytes.Buffer) }},
 	}
+	// Initialize default Debug allow-list (exact match, case-insensitive).
+	m.allowedDebug = buildDefaultAllowedDebug()
 
 	// Initialize a WAL writer so that compressed chunks are appended to disk
 	// as they are produced. If OutputDir is empty, fall back to CWD.
@@ -200,6 +208,13 @@ func (m *memAggregator) run() {
 }
 
 func (m *memAggregator) append(level string, ctx []any, msg string, keyvals ...any) {
+	// Early filter for Debug logs based on message text (case-insensitive).
+	if level == "debug" && len(m.allowedDebug) > 0 {
+		lm := strings.ToLower(msg)
+		if _, ok := m.allowedDebug[lm]; !ok {
+			return
+		}
+	}
 	// Build flat event to mirror go-kit JSON logger format used by TMJSONLogger.
 	ev := make(event, 4+len(ctx)+len(keyvals))
 	ev["ts"] = time.Now().UTC()

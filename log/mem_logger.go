@@ -30,6 +30,9 @@ type MemLoggerConfig struct {
 	// GzipLevel controls compression level for gzip. If 0, uses gzip.DefaultCompression.
 	GzipLevel int
 
+	// The peer's canonical ID - the hash of its public key.
+	P2pNodeId string
+
 	// OutputDir is the application root directory from which the WAL path
 	// is derived ("<OutputDir>/log.wal/..."). If empty, the current
 	// working directory is used as the root ("./log.wal/..."). This is not
@@ -183,7 +186,7 @@ func newMemAggregator(cfg MemLoggerConfig) *memAggregator {
 	}
 	if w, err := newWalWriter(walWriterConfig{
 		DataDir: dataDir,
-		NodeID:  "default",
+		NodeID:  cfg.P2pNodeId,
 		BufSize: bufSize,
 	}); err == nil {
 		m.wal = w

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/cometbft/cometbft/p2p"
 	"io"
 	"net"
 	"os"
@@ -172,7 +173,14 @@ func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 	// If memlogger is enabled (via flag or app config), return the in-memory compressing logger.
 	useMemlog := ctx.Viper.GetBool("memlogger.enabled")
 	if useMemlog {
-		mcfg := log.MemLoggerConfig{}
+		nodeKey, err := p2p.LoadOrGenNodeKey(ctx.Config.NodeKeyFile())
+		if err != nil {
+			return nil, fmt.Errorf("failed to load or gen node key: %w", err)
+		}
+		p2pNodeId := nodeKey.ID()
+		mcfg := log.MemLoggerConfig{
+			P2pNodeId: string(p2pNodeId),
+		}
 		if iv := ctx.Viper.GetString("memlogger.interval"); iv != "" {
 			if d, err := time.ParseDuration(iv); err == nil {
 				mcfg.Interval = d

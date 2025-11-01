@@ -46,6 +46,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (baseapp) [#23879](https://github.com/cosmos/cosmos-sdk/pull/23879) Ensure finalize block response is not empty in the defer check of FinalizeBlock to avoid panic by nil pointer.
 * (query) [#23884](https://github.com/cosmos/cosmos-sdk/pull/23884) Fix NPE in query pagination.
+* (baseapp) [#25530](https://github.com/cosmos/cosmos-sdk/pull/25530) isolate CheckTx and simulation state from DeliverTx commits by loading the last committed snapshot and keeping the simulation context in sync.
 
 ## [v0.50.14](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.14) - 2025-07-08
 

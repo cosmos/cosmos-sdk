@@ -189,18 +189,8 @@ func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 		if mb := ctx.Viper.GetInt("memlogger.memory-bytes"); mb > 0 {
 			mcfg.MemoryLimitBytes = mb
 		}
-		// Resolve output directory relative to app root by default.
-		outDir := ctx.Viper.GetString("memlogger.dir")
-		if outDir == "" && ctx.Config != nil {
-			outDir = ctx.Config.RootDir
-		}
-		if outDir != "" {
-			if !filepath.IsAbs(outDir) && ctx.Config != nil {
-				outDir = filepath.Join(ctx.Config.RootDir, outDir)
-			}
-			_ = os.MkdirAll(outDir, 0o700)
-			mcfg.OutputDir = outDir
-		}
+		// Always use the app's home directory as output root.
+		mcfg.OutputDir = ctx.Config.RootDir
 		return log.NewMemLogger(mcfg), nil
 	}
 	var opts []log.Option

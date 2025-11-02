@@ -2,10 +2,10 @@ package log
 
 import "strings"
 
-// buildDefaultAllowedDebug returns a lowercased allow-list for Debug messages
-// that should be recorded by memlogger. Matching is case-insensitive and uses
+// buildDefaultAllowedMsgs returns a lowercased allow-list for messages
+// that should be recorded by memlogger when filtering is enabled. Matching is case-insensitive and uses
 // exact string equality after lowercasing.
-func buildDefaultAllowedDebug() map[string]struct{} {
+func buildDefaultAllowedMsgs() map[string]struct{} {
 	msgs := []string{
 		// Node identity
 		"This node is a validator",

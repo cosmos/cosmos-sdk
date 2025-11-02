@@ -38,6 +38,12 @@ type MemLoggerConfig struct {
 	// working directory is used as the root ("./log.wal/..."). This is not
 	// a behavior knob; it's where files are written.
 	OutputDir string
+
+	// EnableFilter toggles message filtering using the allow-list built by
+	// buildDefaultAllowedMsgs. When true, only messages whose text matches an
+	// entry in the allow-list (case-insensitive, exact match) are logged,
+	// regardless of level. When false, all messages are logged.
+	EnableFilter bool
 }
 
 // MemLogger implements Logger and buffers JSONL log events in memory.
@@ -140,10 +146,11 @@ type memAggregator struct {
 	// are appended to disk immediately after compression.
 	wal *walWriter
 
-	// allowedDebug holds lowercased allowed Debug messages for exact matching.
-	// If non-empty, Debug logs are kept only when their msg matches a key in
-	// this set after lowercasing (case-insensitive). Checked before any JSON/gzip.
-	allowedDebug map[string]struct{}
+	// allowedMsgs holds lowercased allowed messages for exact matching.
+	// If non-empty, logs are kept only when their msg matches a key in
+	// this set after lowercasing (case-insensitive), regardless of level.
+	// Checked before any JSON/gzip.
+	allowedMsgs map[string]struct{}
 }
 
 // event is encoded to a single flat JSON object similar to TM JSON logger
@@ -160,8 +167,11 @@ func newMemAggregator(cfg MemLoggerConfig) *memAggregator {
 		gzPool:  sync.Pool{New: func() any { w, _ := gzip.NewWriterLevel(io.Discard, cfg.GzipLevel); return w }},
 		bufPool: sync.Pool{New: func() any { return new(bytes.Buffer) }},
 	}
-	// Initialize default Debug allow-list (exact match, case-insensitive).
-	m.allowedDebug = buildDefaultAllowedDebug()
+	// Initialize allow-list only when filtering is enabled. If filtering is
+	// disabled, leave the map nil so the fast-path check naturally passes.
+	if cfg.EnableFilter {
+		m.allowedMsgs = buildDefaultAllowedMsgs()
+	}
 
 	// Initialize a WAL writer so that compressed chunks are appended to disk
 	// as they are produced. If OutputDir is empty, fall back to CWD.
@@ -211,10 +221,10 @@ func (m *memAggregator) run() {
 }
 
 func (m *memAggregator) append(level string, ctx []any, msg string, keyvals ...any) {
-	// Early filter for Debug logs based on message text (case-insensitive).
-	if level == "debug" && len(m.allowedDebug) > 0 {
+	// Early filter based on message text (case-insensitive), applied to all levels.
+	if len(m.allowedMsgs) > 0 {
 		lm := strings.ToLower(msg)
-		if _, ok := m.allowedDebug[lm]; !ok {
+		if _, ok := m.allowedMsgs[lm]; !ok {
 			return
 		}
 	}

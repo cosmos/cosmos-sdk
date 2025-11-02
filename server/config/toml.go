@@ -141,6 +141,10 @@ datadog-hostname = "{{ .Telemetry.DatadogHostname }}"
 # Enable defines if the in-memory compressing logger should be used.
 enabled = {{ .MemLogger.Enabled }}
 
+# Filter controls whether memlogger filters messages by an allow-list.
+# Set to true to apply filtering; false disables it.
+filter = {{ .MemLogger.Filter }}
+
 # Interval controls how often the current in-memory buffer is compressed
 # and appended to the WAL. Examples: "2s", "1m".
 interval = "{{ .MemLogger.Interval }}"

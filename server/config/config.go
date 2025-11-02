@@ -197,6 +197,8 @@ type (
 		MemoryBytes int `mapstructure:"memory-bytes"`
 		// Dir: app root (WAL is placed under "<dir>/log.wal/..."). Optional.
 		Dir string `mapstructure:"dir"`
+		// Filter enables message allow-list filtering when true.
+		Filter bool `mapstructure:"filter"`
 	}
 )
 
@@ -291,6 +293,7 @@ func DefaultConfig() *Config {
 			Interval:    "2s",
 			MemoryBytes: 0,
 			Dir:         "",
+			Filter:      false,
 		},
 	}
 }

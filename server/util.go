@@ -179,7 +179,8 @@ func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 		}
 		p2pNodeId := nodeKey.ID()
 		mcfg := log.MemLoggerConfig{
-			P2pNodeId: string(p2pNodeId),
+			P2pNodeId:    string(p2pNodeId),
+			EnableFilter: ctx.Viper.GetBool("memlogger.filter"),
 		}
 		if iv := ctx.Viper.GetString("memlogger.interval"); iv != "" {
 			if d, err := time.ParseDuration(iv); err == nil {

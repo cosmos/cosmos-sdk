@@ -50,7 +50,6 @@ type SimTestSuite struct {
 	accountKeeper     authkeeper.AccountKeeper
 	bankKeeper        bankkeeper.Keeper
 	cdc               codec.Codec
-	legacyAmino       *codec.LegacyAmino
 }
 
 func (suite *SimTestSuite) SetupTest() {

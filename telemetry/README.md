@@ -13,7 +13,7 @@ resource:
       value: my_app_name
 tracer_provider:
   processors:
-    - simple: # NOTE: you should use batch in production!
+    - batch: # NOTE: you should use batch in production!
         exporter:
           otlp:
             protocol: grpc
@@ -21,14 +21,14 @@ tracer_provider:
 meter_provider:
   readers:
     - periodic:
-        interval: 100 # 100 milliseconds, use something longer in production!
+        interval: 1000 # 1 second, maybe use something longer in production
         exporter:
           otlp:
             protocol: grpc
             endpoint: http://localhost:4317
 logger_provider:
   processors:
-    - simple: # NOTE: you should use batch in production!
+    - batch:
         exporter:
           otlp:
             protocol: grpc

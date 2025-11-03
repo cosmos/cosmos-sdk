@@ -109,6 +109,7 @@ func (coin Coin) IsLTE(other Coin) bool {
 }
 
 // IsEqual returns true if the two sets of Coins have the same value
+//
 // Deprecated: Use Coin.Equal instead.
 func (coin Coin) IsEqual(other Coin) bool {
 	return coin.Equal(other)
@@ -700,6 +701,7 @@ func (coins Coins) AmountOf(denom string) math.Int {
 
 // AmountOfNoDenomValidation returns the amount of a denom from coins
 // without validating the denomination.
+//
 // Deprecated: use AmountOf
 func (coins Coins) AmountOfNoDenomValidation(denom string) math.Int {
 	return coins.AmountOf(denom)

@@ -23,7 +23,7 @@ import (
 )
 
 // SetupSimulation creates the config, db (levelDB), temporary directory and logger for the simulation tests.
-// If `skip` is false it skips the current test. `skip` should be set using the `FlagEnabledValue` flag.
+// If `skip` is false it skips the current test.
 // Returns error on an invalid db instantiation or temp dir creation.
 func SetupSimulation(config simtypes.Config, dirPrefix, dbName string, verbose, skip bool) (dbm.DB, string, log.Logger, bool, error) {
 	if !skip {
@@ -151,16 +151,15 @@ func DiffKVStores(a, b storetypes.KVStore, prefixesToSkip [][]byte) (diffA, diff
 	defer iterB.Close()
 
 	var wg sync.WaitGroup
-
 	wg.Add(1)
-	kvAs := make([]kv.Pair, 0)
+	var kvAs []kv.Pair
 	go func() {
 		defer wg.Done()
 		kvAs = getKVPairs(iterA, prefixesToSkip)
 	}()
 
 	wg.Add(1)
-	kvBs := make([]kv.Pair, 0)
+	var kvBs []kv.Pair
 	go func() {
 		defer wg.Done()
 		kvBs = getKVPairs(iterB, prefixesToSkip)

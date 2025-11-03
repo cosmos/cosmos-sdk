@@ -10,7 +10,7 @@ jobs:
       pull-requests: write # For reading the PR and adding the label    
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/stale@v9
+      - uses: actions/stale@v10
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           stale-pr-message: "This pull request has been automatically marked as stale because it has not had recent activity. It will be closed in 7 days-before-close if no further activity occurs."

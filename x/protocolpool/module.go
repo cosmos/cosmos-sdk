@@ -28,7 +28,7 @@ var (
 	_ module.AppModuleSimulation = AppModule{}
 	_ module.HasGenesis          = AppModule{}
 	_ module.HasServices         = AppModule{}
-	_ module.AppModule           = AppModule{}
+	_ module.AppModule           = AppModule{} //nolint:staticcheck // maintain for legacy
 
 	_ appmodule.AppModule       = AppModule{}
 	_ appmodule.HasBeginBlocker = AppModule{}
@@ -56,6 +56,7 @@ func NewAppModule(keeper keeper.Keeper,
 func (AppModule) IsAppModule() {}
 
 // Name returns the protocolpool module's name.
+//
 // Deprecated: kept for legacy reasons.
 func (AppModule) Name() string { return types.ModuleName }
 

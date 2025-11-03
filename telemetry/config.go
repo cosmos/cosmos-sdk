@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 
+	"go.opentelemetry.io/contrib/bridges/otelslog"
 	"go.opentelemetry.io/contrib/otelconf/v0.3.0"
 	"go.opentelemetry.io/otel"
 	logglobal "go.opentelemetry.io/otel/log/global"
@@ -20,7 +22,7 @@ func init() {
 
 	var opts []otelconf.ConfigurationOption
 
-	confFilename := os.Getenv("COSMOS_TELEMETRY")
+	confFilename := os.Getenv("OTEL_EXPERIMENTAL_CONFIG_FILE")
 	if confFilename != "" {
 		bz, err := os.ReadFile(confFilename)
 		if err != nil {
@@ -46,9 +48,14 @@ func init() {
 		panic(fmt.Sprintf("failed to initialize telemetry: %v", err))
 	}
 
+	// setup otel global providers
 	otel.SetTracerProvider(sdk.TracerProvider())
 	otel.SetMeterProvider(sdk.MeterProvider())
 	logglobal.SetLoggerProvider(sdk.LoggerProvider())
+	// setup slog default provider so that any logs emitted the default slog will be traced
+	slog.SetDefault(otelslog.NewLogger("", otelslog.WithSource(true)))
+	// emit an initialized message which verifies basic telemetry is working
+	slog.Info("Telemetry initialized")
 }
 
 func Shutdown(ctx context.Context) error {

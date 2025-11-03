@@ -57,6 +57,7 @@ require (
 	github.com/tendermint/go-amino v0.16.0
 	github.com/test-go/testify v1.1.4
 	github.com/tidwall/btree v1.8.1
+	go.opentelemetry.io/contrib/bridges/otelslog v0.13.0
 	go.opentelemetry.io/contrib/otelconf v0.18.0
 	go.opentelemetry.io/otel v1.38.0
 	go.opentelemetry.io/otel/log v0.14.0

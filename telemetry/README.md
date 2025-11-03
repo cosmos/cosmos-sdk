@@ -2,38 +2,38 @@
 
 To quickly setup a local telemetry environment where OpenTelemetry data is sent to a local instance of Grafana LGTM:
 1. start the [Grafana LGTM docker image](https://hub.docker.com/r/grafana/otel-lgtm):
-    ```shell
-    docker run -p 3000:3000 -p 4317:4317 -p 4318:4318 --rm -ti grafana/otel-lgtm
-    ```
+```shell
+docker run -p 3000:3000 -p 4317:4317 -p 4318:4318 --rm -ti grafana/otel-lgtm
+```
 2. create a basic OpenTelemetry configuration file which will send data to the local instance of Grafana LGTM:
-    ```yaml
-    resource:
-      attributes:
-        - name: service.name
-          value: my_app_name
-    tracer_provider:
-      processors:
-        - simple: # NOTE: you should use batch in production!
-            exporter:
-              otlp:
-                protocol: grpc
-                endpoint: http://localhost:4317
-    meter_provider:
-      readers:
-        - periodic:
-            interval: 100 # 100 milliseconds, use something longer in production!
-            exporter:
-              otlp:
-                protocol: grpc
-                endpoint: http://localhost:4317
-    logger_provider:
-      processors:
-        - simple: # NOTE: you should use batch in production!
-            exporter:
-              otlp:
-                protocol: grpc
-                endpoint: http://localhost:4317
-    ```
+```yaml
+resource:
+  attributes:
+    - name: service.name
+      value: my_app_name
+tracer_provider:
+  processors:
+    - simple: # NOTE: you should use batch in production!
+        exporter:
+          otlp:
+            protocol: grpc
+            endpoint: http://localhost:4317
+meter_provider:
+  readers:
+    - periodic:
+        interval: 100 # 100 milliseconds, use something longer in production!
+        exporter:
+          otlp:
+            protocol: grpc
+            endpoint: http://localhost:4317
+logger_provider:
+  processors:
+    - simple: # NOTE: you should use batch in production!
+        exporter:
+          otlp:
+            protocol: grpc
+            endpoint: http://localhost:4317
+```
 3. set the `OTEL_EXPERIMENTAL_CONFIG_FILE` environment variable to the path of the configuration file:
 `export OTEL_EXPERIMENTAL_CONFIG_FILE=path/to/config.yaml`
 4. start your application or tests

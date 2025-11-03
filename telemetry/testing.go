@@ -2,19 +2,26 @@ package telemetry
 
 import (
 	"context"
+	"fmt"
+	"os"
 	"testing"
 )
 
-// TestingInit initializes telemetry for testing so that it is automatically
-// shutdown after the test completes.
+// TestingMain should be used in tests where you want to run telemetry and need clean shutdown
+// behavior at the end of the test, for instance to collect benchmark metrics.
 // If ctx is nil, context.Background() is used.
-func TestingInit(t *testing.T, ctx context.Context) {
+// Example:
+//
+//	func TestMain(m *testing.M) {
+//	    telemetry.TestingMain(m, nil)
+//	}
+func TestingMain(m *testing.M, ctx context.Context) {
+	code := m.Run()
 	if ctx == nil {
 		ctx = context.Background()
 	}
-	t.Cleanup(func() {
-		if err := Shutdown(ctx); err != nil {
-			t.Fatalf("failed to shutdown telemetry: %v", err)
-		}
-	})
+	if err := Shutdown(ctx); err != nil {
+		fmt.Printf("failed to shutdown telemetry after test completion: %v\n", err)
+	}
+	os.Exit(code)
 }

@@ -3,7 +3,6 @@
 package simapp
 
 import (
-	"context"
 	"encoding/binary"
 	"encoding/json"
 	"flag"
@@ -21,13 +20,12 @@ import (
 
 	"cosmossdk.io/log"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
-
 	"cosmossdk.io/store"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sims "github.com/cosmos/cosmos-sdk/testutil/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -46,6 +44,10 @@ var FlagEnableStreamingValue bool
 func init() {
 	simcli.GetSimulatorFlags()
 	flag.BoolVar(&FlagEnableStreamingValue, "EnableStreaming", false, "Enable streaming service")
+}
+
+func TestMain(m *testing.M) {
+	telemetry.TestingMain(m, nil)
 }
 
 // interBlockCacheOpt returns a BaseApp option function that sets the persistent
@@ -161,7 +163,6 @@ func IsEmptyValidatorSetErr(err error) bool {
 }
 
 func TestAppStateDeterminism(t *testing.T) {
-	telemetry.TestingInit(t, context.Background())
 	cfg := simcli.NewConfigFromFlags()
 	numTimesToRunPerSeed := cfg.NumRuns
 	var seeds []int64

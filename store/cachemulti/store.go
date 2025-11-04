@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"maps"
+	"sync"
 
 	"cosmossdk.io/store/tracekv"
 	"cosmossdk.io/store/types"
@@ -21,7 +22,10 @@ const storeNameCtxKey = "store_name"
 // NOTE: a Store (and MultiStores in general) should never expose the
 // keys for the substores.
 type Store struct {
-	stores map[types.StoreKey]types.CacheWrap
+	// storesMut ensures concurrent callers (e.g. ExportGenesisForModules goroutines)
+	// don't race when lazily creating substores.
+	storesMut *sync.RWMutex
+	stores    map[types.StoreKey]types.CacheWrap
 
 	traceWriter  io.Writer
 	traceContext types.TraceContext
@@ -38,6 +42,7 @@ func NewFromKVStore(
 	traceWriter io.Writer, traceContext types.TraceContext,
 ) Store {
 	cms := Store{
+		storesMut:    &sync.RWMutex{},
 		stores:       make(map[types.StoreKey]types.CacheWrap, len(stores)),
 		traceWriter:  traceWriter,
 		traceContext: traceContext,
@@ -66,6 +71,7 @@ func NewFromParent(
 	traceWriter io.Writer, traceContext types.TraceContext,
 ) Store {
 	return Store{
+		storesMut:    &sync.RWMutex{},
 		stores:       make(map[types.StoreKey]types.CacheWrap),
 		traceWriter:  traceWriter,
 		traceContext: traceContext,
@@ -126,7 +132,12 @@ func (cms Store) GetStoreType() types.StoreType {
 
 // Write calls Write on each underlying store.
 func (cms Store) Write() {
-	for _, store := range cms.stores {
+	cms.storesMut.RLock()
+	stores := make(map[types.StoreKey]types.CacheWrap, len(cms.stores))
+	maps.Copy(stores, cms.stores)
+	cms.storesMut.RUnlock()
+
+	for _, store := range stores {
 		store.Write()
 	}
 }
@@ -157,6 +168,9 @@ func (cms Store) CacheMultiStoreWithVersion(_ int64) (types.CacheMultiStore, err
 }
 
 func (cms Store) getCacheWrapper(key types.StoreKey) types.CacheWrapper {
+	cms.storesMut.Lock()
+	defer cms.storesMut.Unlock()
+
 	store, ok := cms.stores[key]
 	if !ok && cms.parentStore != nil {
 		// load on demand

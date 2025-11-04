@@ -114,7 +114,8 @@ var (
 		stakingtypes.NotBondedPoolName:              {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:                         {authtypes.Burner},
 		protocolpooltypes.ModuleName:                nil,
-		protocolpooltypes.ProtocolPoolEscrowAccount: nil}
+		protocolpooltypes.ProtocolPoolEscrowAccount: nil,
+	}
 )
 
 var (
@@ -150,7 +151,7 @@ type SimApp struct {
 	// supplementary keepers
 	FeeGrantKeeper     feegrantkeeper.Keeper
 	AuthzKeeper        authzkeeper.Keeper
-	EpochsKeeper       epochskeeper.Keeper
+	EpochsKeeper       *epochskeeper.Keeper
 	ProtocolPoolKeeper protocolpoolkeeper.Keeper
 
 	// the module manager
@@ -448,10 +449,12 @@ func NewSimApp(
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	app.EvidenceKeeper = *evidenceKeeper
 
-	app.EpochsKeeper = epochskeeper.NewKeeper(
+	epochsKeeper := epochskeeper.NewKeeper(
 		runtime.NewKVStoreService(keys[epochstypes.StoreKey]),
 		appCodec,
 	)
+
+	app.EpochsKeeper = &epochsKeeper
 
 	app.EpochsKeeper.SetHooks(
 		epochstypes.NewMultiEpochHooks(
@@ -521,6 +524,7 @@ func NewSimApp(
 		epochstypes.ModuleName,
 	)
 	app.ModuleManager.SetOrderEndBlockers(
+		banktypes.ModuleName,
 		govtypes.ModuleName,
 		stakingtypes.ModuleName,
 		genutiltypes.ModuleName,

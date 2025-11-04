@@ -1210,7 +1210,7 @@ func generatePubKeysAndSignatures(n int, msg []byte, _ bool) (pubkeys []cryptoty
 		pubkeys[i] = privkey.PubKey()
 		signatures[i], _ = privkey.Sign(msg)
 	}
-	return
+	return pubkeys, signatures
 }
 
 func expectedGasCostByKeys(pubkeys []cryptotypes.PubKey) uint64 {

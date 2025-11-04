@@ -21,7 +21,6 @@ import (
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
@@ -72,12 +71,11 @@ type AppI interface { //nolint:revive // keeping this name for clarity
 	EncodingConfig() EncodingConfig
 
 	AutoCliOpts() autocli.AppOptions
+
+	DefaultGenesis() map[string]json.RawMessage
 }
 
-var (
-	_ AppI         = &SDKApp{}
-	_ runtime.AppI = &SDKApp{}
-)
+var _ AppI = &SDKApp{}
 
 type SDKApp struct {
 	loaded sync.Once
@@ -557,4 +555,11 @@ func (app *SDKApp) UpgradeKeeper() *upgradekeeper.Keeper {
 
 func (app *SDKApp) EncodingConfig() EncodingConfig {
 	return app.encodingConfig
+}
+
+// UnsafeFindStoreKey fetches a registered StoreKey from the App in linear time.
+//
+// NOTE: This should only be used in testing.
+func (a *SDKApp) UnsafeFindStoreKey(storeKey string) storetypes.StoreKey {
+	return a.storeKeys[storeKey]
 }

@@ -457,6 +457,10 @@ func openTraceWriter(traceWriterFile string) (w io.WriteCloser, err error) {
 func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 	var cache storetypes.MultiStorePersistentCache
 
+	if appOpts == nil {
+		return nil
+	}
+
 	if cast.ToBool(appOpts.Get(FlagInterBlockCache)) {
 		cache = store.NewCommitKVStoreCacheManager()
 	}

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"time"
 
 	"go.opentelemetry.io/contrib/bridges/otelslog"
 	"go.opentelemetry.io/contrib/instrumentation/host"
@@ -107,8 +108,20 @@ func doInit() error {
 					if err != nil {
 						return fmt.Errorf("failed to create stdout metric exporter: %w", err)
 					}
+
+					// Configure periodic reader with custom interval if specified
+					readerOpts := []metricsdk.PeriodicReaderOption{}
+					if extra.MetricsFileInterval != "" {
+						interval, err := time.ParseDuration(extra.MetricsFileInterval)
+						if err != nil {
+							return fmt.Errorf("failed to parse metrics_file_interval: %w", err)
+						}
+						fmt.Printf("Configuring metrics export interval: %v\n", interval)
+						readerOpts = append(readerOpts, metricsdk.WithInterval(interval))
+					}
+
 					opts = append(opts, otelconf.WithMeterProviderOptions(
-						metricsdk.WithReader(metricsdk.NewPeriodicReader(exporter)),
+						metricsdk.WithReader(metricsdk.NewPeriodicReader(exporter, readerOpts...)),
 					))
 				}
 				if extra.LogsFile != "" {
@@ -173,11 +186,12 @@ type extraConfig struct {
 }
 
 type cosmosExtra struct {
-	TraceFile         string `json:"trace_file" yaml:"trace_file" mapstructure:"trace_file"`
-	MetricsFile       string `json:"metrics_file" yaml:"metrics_file" mapstructure:"metrics_file"`
-	LogsFile          string `json:"logs_file" yaml:"logs_file" mapstructure:"logs_file"`
-	InstrumentHost    bool   `json:"instrument_host" yaml:"instrument_host" mapstructure:"instrument_host"`
-	InstrumentRuntime bool   `json:"instrument_runtime" yaml:"instrument_runtime" mapstructure:"instrument_runtime"`
+	TraceFile           string `json:"trace_file" yaml:"trace_file" mapstructure:"trace_file"`
+	MetricsFile         string `json:"metrics_file" yaml:"metrics_file" mapstructure:"metrics_file"`
+	MetricsFileInterval string `json:"metrics_file_interval" yaml:"metrics_file_interval" mapstructure:"metrics_file_interval"`
+	LogsFile            string `json:"logs_file" yaml:"logs_file" mapstructure:"logs_file"`
+	InstrumentHost      bool   `json:"instrument_host" yaml:"instrument_host" mapstructure:"instrument_host"`
+	InstrumentRuntime   bool   `json:"instrument_runtime" yaml:"instrument_runtime" mapstructure:"instrument_runtime"`
 }
 
 func Shutdown(ctx context.Context) error {

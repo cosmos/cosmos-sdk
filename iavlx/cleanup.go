@@ -1,10 +1,18 @@
 package iavlx
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"sync"
 	"time"
+
+	"go.opentelemetry.io/otel"
+)
+
+var (
+	tracer = otel.Tracer("iavlx")
 )
 
 type cleanupProc struct {
@@ -42,7 +50,10 @@ func newCleanupProc(treeStore *TreeStore) *cleanupProc {
 }
 
 func (cp *cleanupProc) run() {
+	ctx, span := tracer.Start(context.Background(), "cleanupProc")
+	defer span.End()
 	defer close(cp.cleanupProcDone)
+
 	minCompactorInterval := time.Second * time.Duration(cp.opts.MinCompactionSeconds)
 	var lastCompactorStart time.Time
 
@@ -80,7 +91,7 @@ func (cp *cleanupProc) run() {
 			if i+1 < len(entries) {
 				nextEntry = entries[i+1]
 			}
-			err := cp.processEntry(entry, nextEntry)
+			err := cp.processEntry(ctx, entry, nextEntry)
 			if err != nil {
 				cp.logger.Error("failed to process changeset entry", "error", err)
 				// on error, clean up any failed compaction and stop processing further entries this round
@@ -172,7 +183,10 @@ func (cp *cleanupProc) doMarkOrphans() error {
 	return nil
 }
 
-func (cp *cleanupProc) processEntry(entry, nextEntry *changesetEntry) error {
+func (cp *cleanupProc) processEntry(ctx context.Context, entry, nextEntry *changesetEntry) error {
+	ctx, span := tracer.Start(ctx, "cleanupProc.processEntry")
+	defer span.End()
+
 	cs := entry.changeset.Load()
 
 	if cs.files == nil {
@@ -208,7 +222,7 @@ func (cp *cleanupProc) processEntry(entry, nextEntry *changesetEntry) error {
 		if cp.opts.CompactWAL &&
 			cs.TotalBytes()+cp.activeCompactor.TotalBytes() <= int(cp.opts.GetCompactionMaxTarget()) {
 			// add to active compactor
-			cp.logger.Debug("joining changeset to active compactor", "info", cs.info, "size", cs.TotalBytes(), "dir", cs.files.dir,
+			slog.DebugContext(ctx, "joining changeset to active compactor", "info", cs.info, "size", cs.TotalBytes(), "dir", cs.files.dir,
 				"newDir", cp.activeCompactor.files.dir)
 			err = cp.activeCompactor.AddChangeset(cs)
 			if err != nil {
@@ -286,9 +300,9 @@ func (cp *cleanupProc) processEntry(entry, nextEntry *changesetEntry) error {
 		}
 	}
 
-	cp.logger.Info("compacting changeset", "info", cs.info, "size", cs.TotalBytes(), "dir", cs.files.dir)
+	slog.Info("compacting changeset", "info", cs.info, "size", cs.TotalBytes(), "dir", cs.files.dir)
 
-	cp.activeCompactor, err = NewCompacter(cp.logger, cs, CompactOptions{
+	cp.activeCompactor, err = NewCompacter(ctx, cs, CompactOptions{
 		RetainCriteria: retainCriteria,
 		CompactWAL:     cp.opts.CompactWAL,
 		CompactedAt:    savedVersion,

@@ -39,9 +39,6 @@ const (
 )
 
 func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
-	_, span := tracer.Start(context.Background(), "InitChain")
-	defer span.End()
-
 	if req.ChainId != app.chainID {
 		return nil, fmt.Errorf("invalid chain-id on InitChain; expected: %s, got: %s", app.chainID, req.ChainId)
 	}
@@ -109,10 +106,13 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 	// add block gas meter for any genesis transactions (allow infinite gas)
 	finalizeState.SetContext(finalizeState.Context().WithBlockGasMeter(storetypes.NewInfiniteGasMeter()))
 
-	res, err := app.abciHandlers.InitChainer(finalizeState.Context(), req)
+	ctx := finalizeState.Context()
+	ctx, span := ctx.StartSpan(tracer, "InitChain")
+	res, err := app.abciHandlers.InitChainer(ctx, req)
 	if err != nil {
 		return nil, err
 	}
+	span.End()
 
 	if len(req.Validators) > 0 {
 		if len(req.Validators) != len(res.Validators) {
@@ -771,12 +771,8 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 		app.stateManager.SetState(execModeFinalize, app.cms, header, app.logger, app.streamingManager)
 		finalizeState = app.stateManager.GetState(execModeFinalize)
 	}
-	ctx := finalizeState.Context().WithContext(goCtx)
-	ctx, span := ctx.StartSpan(tracer, "internalFinalizeBlock")
-	defer span.End()
-
 	// Context is now updated with Header information.
-	finalizeState.SetContext(ctx.
+	finalizeState.SetContext(finalizeState.Context().
 		WithBlockHeader(header).
 		WithHeaderHash(req.Hash).
 		WithHeaderInfo(coreheader.Info{
@@ -806,6 +802,16 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 			WithHeaderHash(req.Hash))
 	}
 
+	// instrument FinalizeBlock here and capture block context, because we'll switch back to that after FinalizeBlock
+	blockCtx := finalizeState.Context()
+	ctx, span := blockCtx.StartSpan(tracer, "FinalizeBlock")
+	finalizeState.SetContext(ctx)
+	defer span.End()
+	defer func() {
+		// restore the go context to block context so that Commit is not instrumented as a child of FinalizeBlock
+		finalizeState.SetContext(finalizeState.Context().WithContext(blockCtx.Context()))
+	}()
+
 	preblockEvents, err := app.preBlock(req)
 	if err != nil {
 		return nil, err
@@ -820,9 +826,11 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 
 	// First check for an abort signal after beginBlock, as it's the first place
 	// we spend any significant amount of time.
+	// NOTE: we use the go context here because that is used for cancellation
+	// whereas the finalize state context is used for block execution
 	select {
-	case <-ctx.Done():
-		return nil, ctx.Err()
+	case <-goCtx.Done():
+		return nil, goCtx.Err()
 	default:
 		// continue
 	}
@@ -876,9 +884,11 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 	}
 
 	// check after endBlock if we should abort, to avoid propagating the result
+	// NOTE: we use the go context here because that is used for cancellation
+	// whereas the finalize state context is used for block execution
 	select {
-	case <-ctx.Done():
-		return nil, ctx.Err()
+	case <-goCtx.Done():
+		return nil, goCtx.Err()
 	default:
 		// continue
 	}
@@ -1033,6 +1043,8 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 	// The SnapshotIfApplicable method will create the snapshot by starting the goroutine
 	app.snapshotManager.SnapshotIfApplicable(header.Height)
 
+	// track metrics and setup span for next block
+	// TODO: should this be in the state manager instead?
 	blockCnt.Add(ctx, 1)
 	blockTime.Record(ctx, time.Since(app.blockStartTime).Seconds())
 	app.blockStartTime = time.Now()

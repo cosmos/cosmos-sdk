@@ -1,10 +1,10 @@
 package iavlx
 
 import (
+	"context"
 	"errors"
 	"fmt"
-
-	"cosmossdk.io/log"
+	"log/slog"
 )
 
 type CompactOptions struct {
@@ -16,8 +16,6 @@ type CompactOptions struct {
 type RetainCriteria func(createVersion, orphanVersion uint32) bool
 
 type Compactor struct {
-	logger log.Logger
-
 	criteria   RetainCriteria
 	compactWAL bool
 
@@ -41,9 +39,10 @@ type Compactor struct {
 	branchOrphanCount        uint32
 	leafOrphanVersionTotal   uint64
 	branchOrphanVersionTotal uint64
+	ctx                      context.Context
 }
 
-func NewCompacter(logger log.Logger, reader *Changeset, opts CompactOptions, store *TreeStore) (*Compactor, error) {
+func NewCompacter(ctx context.Context, reader *Changeset, opts CompactOptions, store *TreeStore) (*Compactor, error) {
 	if reader.files == nil {
 		return nil, fmt.Errorf("changeset has no associated files, cannot compact a shared changeset reader which files set to nil")
 	}
@@ -74,7 +73,7 @@ func NewCompacter(logger log.Logger, reader *Changeset, opts CompactOptions, sto
 	}
 
 	c := &Compactor{
-		logger:            logger,
+		ctx:               ctx,
 		criteria:          opts.RetainCriteria,
 		compactWAL:        opts.CompactWAL,
 		treeStore:         store,
@@ -110,9 +109,8 @@ func (c *Compactor) processChangeset(reader *Changeset) error {
 	branchesData := reader.branchesData
 	skippedBranches := 0
 
-	c.logger.Debug("processing changeset for compaction", "versions", numVersions)
+	slog.DebugContext(c.ctx, "processing changeset for compaction", "versions", numVersions)
 	for i := 0; i < numVersions; i++ {
-		c.logger.Debug("compacting version", "version", reader.info.StartVersion+uint32(i))
 		verInfo := *versionsData.UnsafeItem(uint32(i)) // copy
 		newLeafStartIdx := uint32(0)
 		newLeafEndIdx := uint32(0)

@@ -486,6 +486,10 @@ func (m *Manager) RegisterServices(cfg Configurator) error {
 // module must return a non-empty validator set update to correctly initialize
 // the chain.
 func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData map[string]json.RawMessage) (*abci.ResponseInitChain, error) {
+	var span trace.Span
+	ctx, span = ctx.StartSpan(tracer, "Manager.InitGenesis")
+	defer span.End()
+
 	var validatorUpdates []abci.ValidatorUpdate
 	ctx.Logger().Info("initializing blockchain state from genesis.json")
 	for _, moduleName := range m.OrderInitGenesis {
@@ -493,6 +497,8 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 			continue
 		}
 
+		var modSpan trace.Span
+		ctx, modSpan = ctx.StartSpan(tracer, fmt.Sprintf("InitGenesis.%s", moduleName))
 		mod := m.Modules[moduleName]
 		// we might get an adapted module, a native core API module or a legacy module
 		if module, ok := mod.(appmodule.HasGenesis); ok {
@@ -523,6 +529,7 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 				validatorUpdates = moduleValUpdates
 			}
 		}
+		modSpan.End()
 	}
 
 	// a chain must initialize with a non-empty validator set

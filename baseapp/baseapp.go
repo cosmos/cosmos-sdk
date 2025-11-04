@@ -1,5 +1,8 @@
 package baseapp
 
+// need to import telemetry before anything else for side effects
+import _ "github.com/cosmos/cosmos-sdk/telemetry"
+
 import (
 	"fmt"
 	"maps"
@@ -36,7 +39,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	_ "github.com/cosmos/cosmos-sdk/telemetry" // need to initialize telemetry before we declare tracer and metrics
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/mempool"

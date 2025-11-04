@@ -1054,18 +1054,22 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 			return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "no message handler found for %T", msg)
 		}
 
+		msgTypeUrl := sdk.MsgTypeURL(msg)
+		// we create two spans here for easy visualization in trace logs, this can be removed later if deemed unnecessary
 		msgCtx, msgSpan := msgCtx.StartSpan(tracer, "msgHandler",
 			trace.WithAttributes(
-				attribute.String("msg_type", sdk.MsgTypeURL(msg)),
+				attribute.String("msg_type", msgTypeUrl),
 				attribute.Int("msg_index", i),
 			),
 		)
+		msgCtx, msgSpan2 := msgCtx.StartSpan(tracer, fmt.Sprintf("msgHandler.%s", msgTypeUrl))
 		// ADR 031 request type routing
 		msgResult, err := handler(ctx, msg)
+		msgSpan2.End()
+		msgSpan.End()
 		if err != nil {
 			return nil, errorsmod.Wrapf(err, "failed to execute message; message index: %d", i)
 		}
-		msgSpan.End()
 
 		// create message events
 		msgEvents, err := createEvents(app.cdc, msgResult.GetEvents(), msg, msgsV2[i])

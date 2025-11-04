@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	tracer = otel.Tracer("cosmos-sdk/baseapp/state")
+	tracer = otel.Tracer("cosmos-sdk/baseapp")
 )
 
 type Manager struct {

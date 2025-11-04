@@ -36,25 +36,50 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## [Unreleased]
+## [v0.53.4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.3) - 2025-07-25
+
+This patch update also includes minor dependency bumps.
+
+### Features
+
+* (abci_utils) [#25008](https://github.com/cosmos/cosmos-sdk/pull/24861) add the ability to assign a custom signer extraction adapter in `DefaultProposalHandler`.
+
+## [v0.53.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.3) - 2025-07-08
+
+### Bug Fixes
+
+* [GHSA-p22h-3m2v-cmgh](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-p22h-3m2v-cmgh) Fix x/distribution can halt when historical rewards overflow.
+
+
+## [v0.53.2](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.2) - 2025-06-02
+
+This patch update also includes minor dependency bumps.
+
+### Bug Fixes
+
+* (x/epochs) [#24770](https://github.com/cosmos/cosmos-sdk/pull/24770) Fix register of epoch hooks in `InvokeSetHooks`.
+
+## [v0.53.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.0) - 2025-04-29
 
 
 ### Breaking Changes
 
 * [#25090](https://github.com/cosmos/cosmos-sdk/pull/25090) Moved deprecated modules to `./contrib`.  These modules are still available but will no longer be actively maintained or supported in the Cosmos SDK Bug Bounty program.
-  * `x/group`
-  * `x/nft`
-  * `x/circuit`
-  * `x/crisis`
+    * `x/group`
+    * `x/nft`
+    * `x/circuit`
+    * `x/crisis`
 * (crypto) [#24414](https://github.com/cosmos/cosmos-sdk/pull/24414) Remove sr25519 support, since it was removed in CometBFT v1.x (see: CometBFT [#3646](https://github.com/cometbft/cometbft/pull/3646)).
 
 ### Features
 
+* [#25471](https://github.com/cosmos/cosmos-sdk/pull/25471) Full BLS 12-381 support enabled.
 * [#24872](https://github.com/cosmos/cosmos-sdk/pull/24872) Support BLS 12-381 for cli `init`, `gentx`, `collect-gentx`
 * (crypto) [#24919](https://github.com/cosmos/cosmos-sdk/pull/24919) add `NewPubKeyFromBytes` function to the `secp256r1` package to create `PubKey` from bytes
 * (server) [#24720](https://github.com/cosmos/cosmos-sdk/pull/24720) add `verbose_log_level` flag for configuring the log level when switching to verbose logging mode during sensitive operations (such as chain upgrades).
 * (crypto) [#24861](https://github.com/cosmos/cosmos-sdk/pull/24861) add `PubKeyFromCometTypeAndBytes` helper function to convert from `comet/v2` PubKeys to the `cryptotypes.Pubkey` interface.
 * (abci_utils) [#25008](https://github.com/cosmos/cosmos-sdk/pull/25008) add the ability to assign a custom signer extraction adapter in `DefaultProposalHandler`.
+* (crypto/ledger) [#25435](https://github.com/cosmos/cosmos-sdk/pull/25435) Add SetDERConversion to reset skipDERConversion and App name for ledger.
 
 ### Improvements
 
@@ -63,9 +88,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (baseapp) [#24655](https://github.com/cosmos/cosmos-sdk/pull/24655) Add mutex locks for `state` and make `lastCommitInfo` atomic to prevent race conditions between `Commit` and `CreateQueryContext`.
 * (proto) [#24161](https://github.com/cosmos/cosmos-sdk/pull/24161) Remove unnecessary annotations from `x/staking` authz proto.
 * (x/bank) [#24660](https://github.com/cosmos/cosmos-sdk/pull/24660) Improve performance of the `GetAllBalances` and `GetAccountsBalances` keeper methods.
+* (collections) [#25464](https://github.com/cosmos/cosmos-sdk/pull/25464) Add `IterateRaw` method to `Multi` index type to satisfty query `Collection` interface.
 
 ### Bug Fixes
 
+* (x/epochs) [#25425](https://github.com/cosmos/cosmos-sdk/pull/25425) Fix `InvokeSetHooks` being called with a nil keeper and `AppModule` containing a copy instead of a pointer (hooks set post creating the `AppModule` like with depinject didn't apply because it's a different instance).
 * (client, client/rpc, x/auth/tx) [#24551](https://github.com/cosmos/cosmos-sdk/pull/24551) Handle cancellation properly when supplying context to client methods.
 * (x/authz) [#24638](https://github.com/cosmos/cosmos-sdk/pull/24638) Fixed a minor bug where the grant key was cast as a string and dumped directly into the error message leading to an error string possibly containing invalid UTF-8.
 * (client, client/rpc, x/auth/tx) [#24551](https://github.com/cosmos/cosmos-sdk/pull/24551) Handle cancellation properly when supplying context to client methods.
@@ -73,6 +100,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/epochs) [#25087](https://github.com/cosmos/cosmos-sdk/pull/25087) Remove redundant error check in BeginBlocker.
 * [GHSA-p22h-3m2v-cmgh](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-p22h-3m2v-cmgh) Fix x/distribution can halt when historical rewards overflow.
 * (x/staking) [#25258](https://github.com/cosmos/cosmos-sdk/pull/25258) Add delegator address to redelegate event.
+* (cli) [#25485](https://github.com/cosmos/cosmos-sdk/pull/25485) Avoid failed to convert address field in `withdraw-validator-commission` cmd.
 
 ### Deprecated
 
@@ -107,6 +135,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/mint) [#24436](https://github.com/cosmos/cosmos-sdk/pull/24436) Allow users to set a custom minting function used in the `x/mint` begin blocker.
     * The `InflationCalculationFn` argument to `mint.NewAppModule()` is now ignored and must be nil.  To set a custom `InflationCalculationFn` on the default minter, use `mintkeeper.WithMintFn(mintkeeper.DefaultMintFn(customInflationFn))`.
 * (api) [#24428](https://github.com/cosmos/cosmos-sdk/pull/24428) Add block height to response headers
+* (baseapp) [#25470](https://github.com/cosmos/cosmos-sdk/pull/25470) Support mount object store in baseapp, add `ObjectStore` api in context.
+* (baseapp) [#25334](https://github.com/cosmos/cosmos-sdk/pull/25334) Add `Executor` to support custom execution logic and incarnation cache for performance optimisation
 
 ### Improvements
 

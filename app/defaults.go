@@ -81,6 +81,7 @@ var (
 	}
 
 	defaultOrderEndBlockers = []string{
+		banktypes.ModuleName,
 		govtypes.ModuleName,
 		stakingtypes.ModuleName,
 		genutiltypes.ModuleName,

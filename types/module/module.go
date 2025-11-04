@@ -228,6 +228,7 @@ type HasConsensusVersion interface {
 }
 
 // HasABCIEndblock is a released typo of HasABCIEndBlock.
+//
 // Deprecated: use HasABCIEndBlock instead.
 type HasABCIEndblock HasABCIEndBlock
 

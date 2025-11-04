@@ -485,6 +485,6 @@ func (app *SDKApp) initEpochsModule(cfg SDKAppConfig) {
 			// insert epoch hooks receivers here
 			),
 		)
-		app.optionalModules = append(app.optionalModules, epochs.NewAppModule(*app.EpochsKeeper))
+		app.optionalModules = append(app.optionalModules, epochs.NewAppModule(app.EpochsKeeper))
 	}
 }

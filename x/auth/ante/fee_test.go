@@ -100,7 +100,7 @@ func TestEnsureMempoolFees(t *testing.T) {
 	// Set IsCheckTx back to true for testing sufficient mempool fee
 	s.ctx = s.ctx.WithIsCheckTx(true)
 
-	atomPrice = sdk.NewDecCoinFromDec("atom", math.LegacyNewDec(0).Quo(math.LegacyNewDec(100000)))
+	atomPrice = sdk.NewDecCoinFromDec("atom", math.LegacyNewDec(1).Quo(math.LegacyNewDec(100000)))
 	lowGasPrice := []sdk.DecCoin{atomPrice}
 	s.ctx = s.ctx.WithMinGasPrices(lowGasPrice)
 

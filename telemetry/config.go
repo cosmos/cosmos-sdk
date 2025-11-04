@@ -79,7 +79,7 @@ func doInit() error {
 					})
 					exporter, err := stdouttrace.New(
 						stdouttrace.WithWriter(traceFile),
-						stdouttrace.WithPrettyPrint(),
+						//stdouttrace.WithPrettyPrint(),
 					)
 					if err != nil {
 						return fmt.Errorf("failed to create stdout trace exporter: %w", err)
@@ -102,7 +102,7 @@ func doInit() error {
 					})
 					exporter, err := stdoutmetric.New(
 						stdoutmetric.WithWriter(metricsFile),
-						stdoutmetric.WithPrettyPrint(),
+						//stdoutmetric.WithPrettyPrint(),
 					)
 					if err != nil {
 						return fmt.Errorf("failed to create stdout metric exporter: %w", err)
@@ -125,7 +125,7 @@ func doInit() error {
 					})
 					exporter, err := stdoutlog.New(
 						stdoutlog.WithWriter(logsFile),
-						stdoutlog.WithPrettyPrint(),
+						//stdoutlog.WithPrettyPrint(),
 					)
 					if err != nil {
 						return fmt.Errorf("failed to create stdout log exporter: %w", err)

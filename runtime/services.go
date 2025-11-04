@@ -8,8 +8,8 @@ import (
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/header"
+	services2 "github.com/cosmos/cosmos-sdk/app/services"
 
-	"github.com/cosmos/cosmos-sdk/runtime/services"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
@@ -18,11 +18,11 @@ func (a *App) registerRuntimeServices(cfg module.Configurator) error {
 	// no app config service if user is using app.yaml / app.json
 	// it is as in v0.52, this whole query service does not exist at all.
 	if a.appConfig != nil {
-		appv1alpha1.RegisterQueryServer(cfg.QueryServer(), services.NewAppQueryService(a.appConfig))
+		appv1alpha1.RegisterQueryServer(cfg.QueryServer(), services2.NewAppQueryService(a.appConfig))
 	}
-	autocliv1.RegisterQueryServer(cfg.QueryServer(), services.NewAutoCLIQueryService(a.ModuleManager.Modules))
+	autocliv1.RegisterQueryServer(cfg.QueryServer(), services2.NewAutoCLIQueryService(a.ModuleManager.Modules))
 
-	reflectionSvc, err := services.NewReflectionService()
+	reflectionSvc, err := services2.NewReflectionService()
 	if err != nil {
 		return err
 	}

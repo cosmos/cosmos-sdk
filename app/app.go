@@ -8,6 +8,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-sdk/app/services"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli"
@@ -21,7 +22,6 @@ import (
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
-	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
@@ -313,7 +313,7 @@ func (app *SDKApp) loadModules() {
 		panic(err)
 	}
 
-	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.moduleManager.Modules))
+	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), services.NewAutoCLIQueryService(app.moduleManager.Modules))
 
 	// create the simulation manager and define the order of the modules for deterministic simulations
 	//
@@ -534,7 +534,7 @@ func (app *SDKApp) AutoCliOpts() autocli.AppOptions {
 	return autocli.AppOptions{
 		Modules: modules,
 		// TODO options?????
-		ModuleOptions:         runtimeservices.ExtractAutoCLIOptions(app.moduleManager.Modules),
+		ModuleOptions:         services.ExtractAutoCLIOptions(app.moduleManager.Modules),
 		AddressCodec:          authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
 		ValidatorAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
 		ConsensusAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),

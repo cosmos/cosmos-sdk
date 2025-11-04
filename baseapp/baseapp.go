@@ -66,8 +66,8 @@ const (
 var _ servertypes.ABCI = (*BaseApp)(nil)
 
 var (
-	tracer    = otel.Tracer("baseapp")
-	meter     = otel.Meter("baseapp")
+	tracer    = otel.Tracer("cosmos-sdk/baseapp")
+	meter     = otel.Meter("cosmos-sdk/baseapp")
 	blockCnt  metric.Int64Counter
 	txCnt     metric.Int64Counter
 	blockTime metric.Float64Histogram

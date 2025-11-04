@@ -497,28 +497,27 @@ func (m *Manager) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, genesisData 
 			continue
 		}
 
-		var modSpan trace.Span
-		ctx, modSpan = ctx.StartSpan(tracer, fmt.Sprintf("InitGenesis.%s", moduleName))
+		modCtx, modSpan := ctx.StartSpan(tracer, fmt.Sprintf("InitGenesis.%s", moduleName))
 		mod := m.Modules[moduleName]
 		// we might get an adapted module, a native core API module or a legacy module
 		if module, ok := mod.(appmodule.HasGenesis); ok {
-			ctx.Logger().Debug("running initialization for module", "module", moduleName)
+			modCtx.Logger().Debug("running initialization for module", "module", moduleName)
 			// core API genesis
 			source, err := genesis.SourceFromRawJSON(genesisData[moduleName])
 			if err != nil {
 				return &abci.ResponseInitChain{}, err
 			}
 
-			err = module.InitGenesis(ctx, source)
+			err = module.InitGenesis(modCtx, source)
 			if err != nil {
 				return &abci.ResponseInitChain{}, err
 			}
 		} else if module, ok := mod.(HasGenesis); ok {
-			ctx.Logger().Debug("running initialization for module", "module", moduleName)
-			module.InitGenesis(ctx, cdc, genesisData[moduleName])
+			modCtx.Logger().Debug("running initialization for module", "module", moduleName)
+			module.InitGenesis(modCtx, cdc, genesisData[moduleName])
 		} else if module, ok := mod.(HasABCIGenesis); ok {
-			ctx.Logger().Debug("running initialization for module", "module", moduleName)
-			moduleValUpdates := module.InitGenesis(ctx, cdc, genesisData[moduleName])
+			modCtx.Logger().Debug("running initialization for module", "module", moduleName)
+			moduleValUpdates := module.InitGenesis(modCtx, cdc, genesisData[moduleName])
 
 			// use these validator updates if provided, the module manager assumes
 			// only one module will update the validator set
@@ -771,10 +770,9 @@ func (m *Manager) PreBlock(ctx sdk.Context) (*sdk.ResponsePreBlock, error) {
 
 	paramsChanged := false
 	for _, moduleName := range m.OrderPreBlockers {
-		var modSpan trace.Span
-		ctx, modSpan = ctx.StartSpan(tracer, fmt.Sprintf("PreBlock.%s", moduleName))
+		modCtx, modSpan := ctx.StartSpan(tracer, fmt.Sprintf("PreBlock.%s", moduleName))
 		if module, ok := m.Modules[moduleName].(appmodule.HasPreBlocker); ok {
-			rsp, err := module.PreBlock(ctx)
+			rsp, err := module.PreBlock(modCtx)
 			if err != nil {
 				return nil, err
 			}
@@ -800,9 +798,9 @@ func (m *Manager) BeginBlock(ctx sdk.Context) (sdk.BeginBlock, error) {
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
 	for _, moduleName := range m.OrderBeginBlockers {
 		var modSpan trace.Span
-		ctx, modSpan = ctx.StartSpan(tracer, fmt.Sprintf("BeginBlock.%s", moduleName))
+		modCtx, modSpan := ctx.StartSpan(tracer, fmt.Sprintf("BeginBlock.%s", moduleName))
 		if module, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
-			if err := module.BeginBlock(ctx); err != nil {
+			if err := module.BeginBlock(modCtx); err != nil {
 				return sdk.BeginBlock{}, err
 			}
 		}
@@ -826,15 +824,14 @@ func (m *Manager) EndBlock(ctx sdk.Context) (sdk.EndBlock, error) {
 	validatorUpdates := []abci.ValidatorUpdate{}
 
 	for _, moduleName := range m.OrderEndBlockers {
-		var modSpan trace.Span
-		ctx, modSpan = ctx.StartSpan(tracer, fmt.Sprintf("EndBlock.%s", moduleName))
+		modCtx, modSpan := ctx.StartSpan(tracer, fmt.Sprintf("EndBlock.%s", moduleName))
 		if module, ok := m.Modules[moduleName].(appmodule.HasEndBlocker); ok {
-			err := module.EndBlock(ctx)
+			err := module.EndBlock(modCtx)
 			if err != nil {
 				return sdk.EndBlock{}, err
 			}
 		} else if module, ok := m.Modules[moduleName].(HasABCIEndBlock); ok {
-			moduleValUpdates, err := module.EndBlock(ctx)
+			moduleValUpdates, err := module.EndBlock(modCtx)
 			if err != nil {
 				return sdk.EndBlock{}, err
 			}

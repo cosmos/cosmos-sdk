@@ -924,6 +924,8 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 		anteCtx, anteSpan := anteCtx.StartSpan(tracer, "anteHandler")
 		newCtx, err := app.anteHandler(anteCtx, tx, mode == execModeSimulate)
 		anteSpan.End()
+		// now we should back to the previous go context which didn't capture the anteHandler instrumentation span
+		newCtx = newCtx.WithContext(ctx)
 
 		if !newCtx.IsZero() {
 			// At this point, newCtx.MultiStore() is a store branch, or something else
@@ -1045,14 +1047,14 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 			break
 		}
 
-		ctx = ctx.WithMsgIndex(i)
+		msgCtx := ctx.WithMsgIndex(i)
 
 		handler := app.msgServiceRouter.Handler(msg)
 		if handler == nil {
 			return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "no message handler found for %T", msg)
 		}
 
-		ctx, msgSpan := ctx.StartSpan(tracer, "msgHandler",
+		msgCtx, msgSpan := msgCtx.StartSpan(tracer, "msgHandler",
 			trace.WithAttributes(
 				attribute.String("msg_type", sdk.MsgTypeURL(msg)),
 				attribute.Int("msg_index", i),
@@ -1094,7 +1096,6 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 			}
 			msgResponses = append(msgResponses, msgResponse)
 		}
-
 	}
 
 	data, err := makeABCIData(msgResponses)

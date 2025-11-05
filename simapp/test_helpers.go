@@ -37,6 +37,7 @@ type SetupOptions struct {
 	AppOpts servertypes.AppOptions
 }
 
+// setup initializes a new SimApp with optional genesis state.
 func setup(withGenesis bool, invCheckPeriod uint) (*SimApp, GenesisState) {
 	db := dbm.NewMemDB()
 
@@ -57,11 +58,12 @@ func NewSimappWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptio
 	privVal := mock.NewPV()
 	pubKey, err := privVal.GetPubKey()
 	require.NoError(t, err)
-	// create validator set with single validator
+	
+	// Create validator set with single validator
 	validator := cmttypes.NewValidator(pubKey, 1)
 	valSet := cmttypes.NewValidatorSet([]*cmttypes.Validator{validator})
 
-	// generate genesis account
+	// Generate genesis account
 	senderPrivKey := secp256k1.GenPrivKey()
 	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
 	balance := banktypes.Balance{
@@ -75,7 +77,7 @@ func NewSimappWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptio
 	require.NoError(t, err)
 
 	if !isCheckTx {
-		// init chain must be called to stop deliverState from being nil
+		// Init chain must be called to stop deliverState from being nil
 		stateBytes, err := cmtjson.MarshalIndent(genesisState, "", " ")
 		require.NoError(t, err)
 
@@ -99,11 +101,11 @@ func Setup(t *testing.T, isCheckTx bool) *SimApp {
 	pubKey, err := privVal.GetPubKey()
 	require.NoError(t, err)
 
-	// create validator set with single validator
+	// Create validator set with single validator
 	validator := cmttypes.NewValidator(pubKey, 1)
 	valSet := cmttypes.NewValidatorSet([]*cmttypes.Validator{validator})
 
-	// generate genesis account
+	// Generate genesis account
 	senderPrivKey := secp256k1.GenPrivKey()
 	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
 	balance := banktypes.Balance{
@@ -112,14 +114,12 @@ func Setup(t *testing.T, isCheckTx bool) *SimApp {
 	}
 
 	app := SetupWithGenesisValSet(t, valSet, []authtypes.GenesisAccount{acc}, balance)
-
 	return app
 }
 
-// SetupWithGenesisValSet initializes a new SimApp with a validator set and genesis accounts
-// that also act as delegators. For simplicity, each validator is bonded with a delegation
-// of one consensus engine unit in the default token of the simapp from first genesis
-// account. A Nop logger is set in SimApp.
+// SetupWithGenesisValSet initializes a new SimApp with a validator set and genesis accounts.
+// For simplicity, each validator is bonded with a delegation of one consensus engine unit
+// in the default token of the simapp from first genesis account.
 func SetupWithGenesisValSet(t *testing.T, valSet *cmttypes.ValidatorSet, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *SimApp {
 	t.Helper()
 
@@ -130,16 +130,14 @@ func SetupWithGenesisValSet(t *testing.T, valSet *cmttypes.ValidatorSet, genAccs
 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
 	require.NoError(t, err)
 
-	// init chain will set the validator set and initialize the genesis accounts
+	// Init chain will set the validator set and initialize the genesis accounts
 	_, err = app.InitChain(&abci.RequestInitChain{
 		Validators:      []abci.ValidatorUpdate{},
 		ConsensusParams: simtestutil.DefaultConsensusParams,
 		AppStateBytes:   stateBytes,
-	},
-	)
+	})
 	require.NoError(t, err)
 
-	require.NoError(t, err)
 	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height:             app.LastBlockHeight() + 1,
 		Hash:               app.LastCommitID().Hash,
@@ -150,8 +148,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *cmttypes.ValidatorSet, genAccs
 	return app
 }
 
-// GenesisStateWithSingleValidator initializes GenesisState with a single validator and genesis accounts
-// that also act as delegators.
+// GenesisStateWithSingleValidator initializes GenesisState with a single validator and genesis accounts.
 func GenesisStateWithSingleValidator(t *testing.T, app *SimApp) GenesisState {
 	t.Helper()
 
@@ -159,11 +156,11 @@ func GenesisStateWithSingleValidator(t *testing.T, app *SimApp) GenesisState {
 	pubKey, err := privVal.GetPubKey()
 	require.NoError(t, err)
 
-	// create validator set with single validator
+	// Create validator set with single validator
 	validator := cmttypes.NewValidator(pubKey, 1)
 	valSet := cmttypes.NewValidatorSet([]*cmttypes.Validator{validator})
 
-	// generate genesis account
+	// Generate genesis account
 	senderPrivKey := secp256k1.GenPrivKey()
 	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
 	balances := []banktypes.Balance{
@@ -181,11 +178,12 @@ func GenesisStateWithSingleValidator(t *testing.T, app *SimApp) GenesisState {
 }
 
 // AddTestAddrsIncremental constructs and returns accNum amount of accounts with an
-// initial balance of accAmt in random order
+// initial balance of accAmt in random order.
 func AddTestAddrsIncremental(app *SimApp, ctx sdk.Context, accNum int, accAmt sdkmath.Int) []sdk.AccAddress {
 	return addTestAddrs(app, ctx, accNum, accAmt, simtestutil.CreateIncrementalAccounts)
 }
 
+// addTestAddrs creates test accounts with the specified strategy and initial coins.
 func addTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt sdkmath.Int, strategy simtestutil.GenerateAccountStrategy) []sdk.AccAddress {
 	testAddrs := strategy(accNum)
 	bondDenom, err := app.StakingKeeper.BondDenom(ctx)
@@ -202,6 +200,7 @@ func addTestAddrs(app *SimApp, ctx sdk.Context, accNum int, accAmt sdkmath.Int, 
 	return testAddrs
 }
 
+// initAccountWithCoins initializes an account with the specified coins.
 func initAccountWithCoins(app *SimApp, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins) {
 	err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, coins)
 	if err != nil {
@@ -214,7 +213,7 @@ func initAccountWithCoins(app *SimApp, ctx sdk.Context, addr sdk.AccAddress, coi
 	}
 }
 
-// NewTestNetworkFixture returns a new simapp AppConstructor for network simulation tests
+// NewTestNetworkFixture returns a new simapp AppConstructor for network simulation tests.
 func NewTestNetworkFixture() network.TestFixture {
 	dir, err := os.MkdirTemp("", "simapp")
 	if err != nil {
@@ -226,7 +225,10 @@ func NewTestNetworkFixture() network.TestFixture {
 
 	appCtr := func(val network.ValidatorI) servertypes.Application {
 		return NewSimApp(
-			val.GetCtx().Logger, dbm.NewMemDB(), nil, true,
+			val.GetCtx().Logger,
+			dbm.NewMemDB(),
+			nil,
+			true,
 			simtestutil.NewAppOptionsWithFlagHome(val.GetCtx().Config.RootDir),
 			bam.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
 			bam.SetMinGasPrices(val.GetAppConfig().MinGasPrices),

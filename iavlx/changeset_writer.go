@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"sync/atomic"
+	"unsafe"
 )
 
 type ChangesetWriter struct {

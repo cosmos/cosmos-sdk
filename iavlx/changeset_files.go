@@ -17,10 +17,9 @@ type ChangesetFiles struct {
 	branchesFile *os.File
 	leavesFile   *os.File
 	versionsFile *os.File
+	orphansFile  *os.File
 	infoFile     *os.File
-
-	info     *ChangesetInfo
-	infoMmap *StructMmap[ChangesetInfo]
+	info         *ChangesetInfo
 
 	closed bool
 }
@@ -70,37 +69,21 @@ func OpenChangesetFiles(treeDir string, startVersion, compactedAt uint32, kvlogP
 		return nil, fmt.Errorf("failed to create versions data file: %w", err)
 	}
 
+	orphansPath := filepath.Join(dir, "orphans.dat")
+	orphansFile, err := os.OpenFile(orphansPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0o644)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create orphans data file: %w", err)
+	}
+
 	infoPath := filepath.Join(dir, "info.dat")
 	infoFile, err := os.OpenFile(infoPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0o644)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create changeset info file: %w", err)
 	}
 
-	// check file size to see if we need to initialize
-	stat, err := infoFile.Stat()
+	info, err := ReadChangesetInfo(infoFile)
 	if err != nil {
-		return nil, fmt.Errorf("failed to stat info file: %w", err)
-	}
-
-	if stat.Size() == 0 {
-		// file is empty, initialize it
-		infoWriter := NewStructWriter[ChangesetInfo](infoFile)
-		if err := infoWriter.Append(&ChangesetInfo{}); err != nil {
-			return nil, fmt.Errorf("failed to write initial changeset info: %w", err)
-		}
-		if err := infoWriter.Flush(); err != nil {
-			return nil, fmt.Errorf("failed to flush initial changeset info: %w", err)
-		}
-	}
-
-	// now create the mmap reader
-	infoMmap, err := NewStructReader[ChangesetInfo](infoFile)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open changeset info: %w", err)
-	}
-
-	if infoMmap.Count() != 1 {
-		return nil, fmt.Errorf("changeset info file has unexpected item count: %d", infoMmap.Count())
+		return nil, fmt.Errorf("failed to read changeset info: %w", err)
 	}
 
 	return &ChangesetFiles{
@@ -112,9 +95,9 @@ func OpenChangesetFiles(treeDir string, startVersion, compactedAt uint32, kvlogP
 		branchesFile: branchesFile,
 		leavesFile:   leavesFile,
 		versionsFile: versionsFile,
+		orphansFile:  orphansFile,
 		infoFile:     infoFile,
-		info:         infoMmap.UnsafeItem(0),
-		infoMmap:     infoMmap,
+		info:         info,
 	}, nil
 }
 
@@ -134,6 +117,14 @@ func (cr *ChangesetFiles) CompactedAtVersion() uint32 {
 	return cr.compactedAt
 }
 
+func (cr *ChangesetFiles) Info() *ChangesetInfo {
+	return cr.info
+}
+
+func (cr *ChangesetFiles) RewriteInfo() error {
+	return RewriteChangesetInfo(cr.infoFile, cr.info)
+}
+
 type ChangesetDeleteArgs struct {
 	SaveKVLogPath string
 }
@@ -144,15 +135,17 @@ func (cr *ChangesetFiles) Close() error {
 	}
 
 	cr.closed = true
-	cr.info = nil
-	return errors.Join(
+	err := errors.Join(
+		cr.RewriteInfo(),
 		cr.kvlogFile.Close(),
 		cr.branchesFile.Close(),
 		cr.leavesFile.Close(),
 		cr.versionsFile.Close(),
+		cr.orphansFile.Close(),
 		cr.infoFile.Close(),
-		cr.infoMmap.Close(),
 	)
+	cr.info = nil
+	return err
 }
 
 func (cr *ChangesetFiles) DeleteFiles(args ChangesetDeleteArgs) error {
@@ -161,6 +154,7 @@ func (cr *ChangesetFiles) DeleteFiles(args ChangesetDeleteArgs) error {
 		os.Remove(cr.leavesFile.Name()),
 		os.Remove(cr.branchesFile.Name()),
 		os.Remove(cr.versionsFile.Name()),
+		os.Remove(cr.orphansFile.Name()),
 	}
 	if cr.kvlogFile.Name() != args.SaveKVLogPath {
 		errs = append(errs, os.Remove(cr.kvlogFile.Name()))

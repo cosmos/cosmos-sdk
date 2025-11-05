@@ -16,10 +16,9 @@ const (
 )
 
 type LeafLayout struct {
-	Id            NodeID
-	KeyOffset     uint32
-	OrphanVersion uint32 // TODO 5 bytes?
-	Hash          [32]byte
+	Id        NodeID
+	Hash      [32]byte
+	KeyOffset uint32 // TODO check if we have extra padding here
 }
 
 func (l LeafLayout) ID() NodeID {

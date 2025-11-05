@@ -55,7 +55,7 @@ func NewTreeStore(dir string, options Options, logger log.Logger) (*TreeStore, e
 
 	ts.cleanupProc = newCleanupProc(ts)
 
-	if options.WriteWAL && options.FsyncInterval > 0 {
+	if options.FsyncEnabled() {
 		ts.syncQueue = NewNonBlockingQueue[*ChangesetWriter]()
 		ts.syncDone = make(chan error)
 		go ts.syncProc()
@@ -214,12 +214,6 @@ func (ts *TreeStore) SaveRoot(version uint32, root *NodePointer, totalLeaves, to
 			}
 		default:
 		}
-	} else {
-		// Otherwise, sync immediately
-		err := ts.currentWriter.files.kvlogFile.Sync()
-		if err != nil {
-			return fmt.Errorf("failed to sync WAL file: %w", err)
-		}
 	}
 
 	// Determine if we should create a reader
@@ -306,7 +300,7 @@ func (ts *TreeStore) MarkOrphans(version uint32, nodeIds [][]NodeID) {
 }
 
 func (ts *TreeStore) syncProc() {
-	tick := time.NewTicker(time.Duration(ts.opts.FsyncInterval) * time.Millisecond)
+	tick := time.NewTicker(ts.opts.GetFsyncInterval())
 	defer close(ts.syncDone)
 	for {
 		<-tick.C

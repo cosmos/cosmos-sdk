@@ -199,16 +199,6 @@ func (cp *cleanupProc) processEntry(ctx context.Context, entry, nextEntry *chang
 		return fmt.Errorf("evicted/disposed changeset: %s found in queue", cs.files.dir)
 	}
 
-	// safety check - ensure info is valid
-	if cs.info == nil {
-		return fmt.Errorf("changeset has nil info: %s found in queue", cs.files.dir)
-	}
-
-	err := cs.FlushOrphans()
-	if err != nil {
-		return fmt.Errorf("failed to flush orphans for changeset %s: %w", cs.files.dir, err)
-	}
-
 	if cp.opts.DisableCompaction {
 		return nil
 	}
@@ -224,14 +214,14 @@ func (cp *cleanupProc) processEntry(ctx context.Context, entry, nextEntry *chang
 			// add to active compactor
 			slog.DebugContext(ctx, "joining changeset to active compactor", "info", cs.info, "size", cs.TotalBytes(), "dir", cs.files.dir,
 				"newDir", cp.activeCompactor.files.dir)
-			err = cp.activeCompactor.AddChangeset(cs)
+			err := cp.activeCompactor.AddChangeset(cs)
 			if err != nil {
 				return fmt.Errorf("failed to add changeset to active compactor: %w", err)
 			}
 			cp.beingCompacted = append(cp.beingCompacted, compactionEntry{entry: entry, cs: cs})
 			return nil
 		} else {
-			err = cp.sealActiveCompactor()
+			err := cp.sealActiveCompactor()
 			if err != nil {
 				cp.cleanupFailedCompaction()
 				return fmt.Errorf("failed to seal active compactor: %w", err)
@@ -240,7 +230,7 @@ func (cp *cleanupProc) processEntry(ctx context.Context, entry, nextEntry *chang
 	}
 
 	// mark any pending orphans here when we don't have an active compactor
-	err = cp.doMarkOrphans()
+	err := cp.doMarkOrphans()
 	if err != nil {
 		cp.logger.Error("failed to mark orphans", "error", err)
 	}

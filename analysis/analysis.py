@@ -34,7 +34,7 @@ def block_summary(con: duckdb.DuckDBPyConnection) -> BlockSummary:
         - block_count: Total number of blocks processed
 
     Example:
-        >>> from read_otel import load_otel_data
+        >>> from analysis.read_otel import load_otel_data
         >>> con = load_otel_data('/path/to/data')
         >>> summary = block_summary(con)
         >>> print(f"Processed {summary.block_count} blocks in {summary.total_duration_seconds:.2f}s")
@@ -57,7 +57,7 @@ def block_summary(con: duckdb.DuckDBPyConnection) -> BlockSummary:
     )
 
 
-def block_durations(con: duckdb.DuckDBPyConnection) -> pd.DataFrame:
+def block_durations(con: duckdb.DuckDBPyConnection, span_name: str = 'Block') -> pd.DataFrame:
     """
     Get duration for each block.
 
@@ -70,7 +70,7 @@ def block_durations(con: duckdb.DuckDBPyConnection) -> pd.DataFrame:
         - duration_ms: Block duration in milliseconds
 
     Example:
-        >>> from read_otel import load_otel_data
+        >>> from analysis.read_otel import load_otel_data
         >>> con = load_otel_data('/path/to/data')
         >>> df = block_durations(con)
         >>> df.head()
@@ -80,12 +80,12 @@ def block_durations(con: duckdb.DuckDBPyConnection) -> pd.DataFrame:
             ROW_NUMBER() OVER (ORDER BY start_time) AS block_number,
             EXTRACT(EPOCH FROM duration) * 1000 AS duration_ms
         FROM spans
-        WHERE span_name = 'Block' AND scope = 'cosmos-sdk/baseapp'
+        WHERE span_name = ? AND scope = 'cosmos-sdk/baseapp'
         ORDER BY start_time
-    """).df()
+    """, params=[span_name]).df()
 
 
-def plot_block_durations(runs: Runs) -> go.Figure:
+def plot_block_durations(runs: Runs, span_name: str = 'Block') -> go.Figure:
     """
     Create a plotly line chart comparing block durations across runs.
 
@@ -96,7 +96,7 @@ def plot_block_durations(runs: Runs) -> go.Figure:
         Plotly Figure object with block duration traces for each run
 
     Example:
-        >>> from read_otel import load_otel_runs
+        >>> from analysis.read_otel import load_otel_runs
         >>> runs = load_otel_runs('/path/to/data')
         >>> fig = plot_block_durations(runs)
         >>> fig.show()
@@ -104,7 +104,7 @@ def plot_block_durations(runs: Runs) -> go.Figure:
     fig = go.Figure()
 
     for run_name, con in runs.items():
-        df = block_durations(con)
+        df = block_durations(con, span_name)
         fig.add_trace(go.Scatter(
             x=df['block_number'],
             y=df['duration_ms'],
@@ -114,7 +114,7 @@ def plot_block_durations(runs: Runs) -> go.Figure:
         ))
 
     fig.update_layout(
-        title='Block Duration Comparison',
+        title=f'{span_name} Duration Comparison',
         xaxis_title='Block Number',
         yaxis_title='Duration (ms)',
         hovermode='x unified',

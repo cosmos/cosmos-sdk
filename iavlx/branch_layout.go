@@ -16,16 +16,15 @@ const (
 )
 
 type BranchLayout struct {
-	Id            NodeID
-	Left          NodeID
-	Right         NodeID
-	LeftOffset    uint32 // absolute offset
-	RightOffset   uint32 // absolute offset
-	KeyOffset     uint32
-	Height        uint8
-	Size          uint32 // TODO 5 bytes?
-	OrphanVersion uint32 // TODO 5 bytes?
-	Hash          [32]byte
+	Id          NodeID
+	Left        NodeID
+	Right       NodeID
+	LeftOffset  uint32 // absolute offset
+	RightOffset uint32 // absolute offset
+	KeyOffset   uint32
+	Height      uint8
+	Size        uint32 // TODO 5 bytes? (there are 3 bytes of padding here)
+	Hash        [32]byte
 }
 
 func (b BranchLayout) ID() NodeID {

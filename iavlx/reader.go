@@ -59,10 +59,6 @@ func (df *StructMmap[T]) Count() int {
 	return len(df.items)
 }
 
-func (df *StructMmap[T]) Flush() error {
-	return df.file.Flush()
-}
-
 func (df *StructMmap[T]) TotalBytes() int {
 	return df.file.TotalBytes()
 }

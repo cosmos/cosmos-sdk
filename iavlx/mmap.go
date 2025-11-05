@@ -28,7 +28,7 @@ func NewMmapFile(file *os.File) (*MmapFile, error) {
 	}
 
 	// maybe we can make read/write configurable? not sure if the OS optimizes read-only mapping
-	handle, err := mmap.Map(file, mmap.RDWR, 0)
+	handle, err := mmap.Map(file, mmap.RDONLY, 0)
 	if err != nil {
 		_ = file.Close()
 		return nil, fmt.Errorf("failed to mmap file: %w", err)
@@ -60,15 +60,6 @@ func (m *MmapFile) UnsafeSliceExact(offset, size int) ([]byte, error) {
 
 func (m *MmapFile) Data() []byte {
 	return m.handle
-}
-
-func (m *MmapFile) Flush() error {
-	if m.handle != nil {
-		if err := m.handle.Flush(); err != nil {
-			return fmt.Errorf("failed to flush mmap: %w", err)
-		}
-	}
-	return nil
 }
 
 func (m *MmapFile) Close() error {

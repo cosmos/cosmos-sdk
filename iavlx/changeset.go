@@ -9,15 +9,15 @@ import (
 
 type Changeset struct {
 	files *ChangesetFiles
+	info  *ChangesetInfo // we copy this so that it can be accessed even in shared changesets
 
 	treeStore *TreeStore
 
-	info         *ChangesetInfo
-	infoMmap     *StructMmap[ChangesetInfo]
 	kvLog        *KVLog // TODO make sure we handle compaction here too
 	branchesData *NodeMmap[BranchLayout]
 	leavesData   *NodeMmap[LeafLayout]
 	versionsData *StructMmap[VersionInfo]
+	orphanWriter *OrphanWriter
 
 	refCount      atomic.Int32
 	evicted       atomic.Bool
@@ -65,18 +65,19 @@ func (cr *Changeset) InitShared(files *ChangesetFiles) error {
 		return fmt.Errorf("failed to open versions data file: %w", err)
 	}
 
-	// we need a reference to the changeset info mmap to be able to flush it later when orphans are marked
+	cr.orphanWriter = NewOrphanWriter(files.orphansFile)
+
 	cr.info = files.info
-	cr.infoMmap = files.infoMmap
 
 	return nil
 }
 
 func (cr *Changeset) getVersionInfo(version uint32) (*VersionInfo, error) {
-	if version < cr.info.StartVersion || version >= cr.info.StartVersion+uint32(cr.versionsData.Count()) {
-		return nil, fmt.Errorf("version %d out of range for changeset (have %d..%d)", version, cr.info.StartVersion, cr.info.StartVersion+uint32(cr.versionsData.Count())-1)
+	info := cr.info
+	if version < info.StartVersion || version >= info.StartVersion+uint32(cr.versionsData.Count()) {
+		return nil, fmt.Errorf("version %d out of range for changeset (have %d..%d)", version, info.StartVersion, info.StartVersion+uint32(cr.versionsData.Count())-1)
 	}
-	return cr.versionsData.UnsafeItem(version - cr.info.StartVersion), nil
+	return cr.versionsData.UnsafeItem(version - info.StartVersion), nil
 }
 
 func (cr *Changeset) ReadK(nodeId NodeID, offset uint32) (key []byte, err error) {
@@ -231,62 +232,39 @@ func (cr *Changeset) Resolve(nodeId NodeID, fileIdx uint32) (Node, error) {
 var ErrDisposed = errors.New("changeset disposed")
 
 func (cr *Changeset) MarkOrphan(version uint32, nodeId NodeID) error {
-	if cr.evicted.Load() {
-		return ErrDisposed
-	}
-	cr.Pin()
-	defer cr.Unpin()
-
-	nodeVersion := uint32(nodeId.Version())
-	vi, err := cr.getVersionInfo(nodeVersion)
+	err := cr.orphanWriter.WriteOrphan(version, nodeId)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to write orphan node: %w", err)
 	}
 
+	info := cr.info
 	if nodeId.IsLeaf() {
-		leaf, err := cr.leavesData.FindByID(nodeId, &vi.Leaves)
-		if err != nil {
-			return err
-		}
-
-		if leaf.OrphanVersion == 0 {
-			leaf.OrphanVersion = version
-			cr.info.LeafOrphans++
-			cr.info.LeafOrphanVersionTotal += uint64(version)
-			cr.dirtyLeaves.Store(true)
-		}
+		info.LeafOrphans++
+		info.LeafOrphanVersionTotal += uint64(version)
 	} else {
-		branch, err := cr.branchesData.FindByID(nodeId, &vi.Branches)
-		if err != nil {
-			return err
-		}
-
-		if branch.OrphanVersion == 0 {
-			branch.OrphanVersion = version
-			cr.info.BranchOrphans++
-			cr.info.BranchOrphanVersionTotal += uint64(version)
-			cr.dirtyBranches.Store(true)
-		}
+		info.BranchOrphans++
+		info.BranchOrphanVersionTotal += uint64(version)
 	}
 
 	return nil
 }
 
 func (cr *Changeset) ReadyToCompact(orphanPercentTarget float64, orphanAgeTarget uint32) bool {
-	leafOrphanCount := cr.info.LeafOrphans
+	info := cr.info
+	leafOrphanCount := info.LeafOrphans
 	if leafOrphanCount > 0 {
 		leafOrphanPercent := float64(leafOrphanCount) / float64(cr.leavesData.Count())
-		leafOrphanAge := uint32(cr.info.LeafOrphanVersionTotal / uint64(cr.info.LeafOrphans))
+		leafOrphanAge := uint32(info.LeafOrphanVersionTotal / uint64(info.LeafOrphans))
 
 		if leafOrphanPercent >= orphanPercentTarget && leafOrphanAge <= orphanAgeTarget {
 			return true
 		}
 	}
 
-	branchOrphanCount := cr.info.BranchOrphans
+	branchOrphanCount := info.BranchOrphans
 	if branchOrphanCount > 0 {
 		branchOrphanPercent := float64(branchOrphanCount) / float64(cr.branchesData.Count())
-		branchOrphanAge := uint32(cr.info.BranchOrphanVersionTotal / uint64(cr.info.BranchOrphans))
+		branchOrphanAge := uint32(info.BranchOrphanVersionTotal / uint64(info.BranchOrphans))
 		if branchOrphanPercent >= orphanPercentTarget && branchOrphanAge <= orphanAgeTarget {
 			return true
 		}
@@ -295,42 +273,13 @@ func (cr *Changeset) ReadyToCompact(orphanPercentTarget float64, orphanAgeTarget
 	return false
 }
 
-func (cr *Changeset) FlushOrphans() error {
-	cr.Pin()
-	defer cr.Unpin()
-
-	wasDirty := false
-	if cr.dirtyLeaves.Load() {
-		wasDirty = true
-		err := cr.leavesData.Flush()
-		if err != nil {
-			return fmt.Errorf("failed to flush leaf data: %w", err)
-		}
-		cr.dirtyLeaves.Store(false)
-	}
-	if cr.dirtyBranches.Load() {
-		wasDirty = true
-		err := cr.branchesData.Flush()
-		if err != nil {
-			return fmt.Errorf("failed to flush branch data: %w", err)
-		}
-		cr.dirtyBranches.Store(false)
-	}
-	if wasDirty {
-		err := cr.infoMmap.Flush()
-		if err != nil {
-			return fmt.Errorf("failed to flush changeset info: %w", err)
-		}
-	}
-	return nil
-}
-
 func (cr *Changeset) Close() error {
 	errs := []error{
 		cr.kvLog.Close(),
 		cr.leavesData.Close(),
 		cr.branchesData.Close(),
 		cr.versionsData.Close(),
+		cr.orphanWriter.Flush(),
 	}
 	if cr.files != nil {
 		errs = append(errs, cr.files.Close())
@@ -361,8 +310,6 @@ func (cr *Changeset) TryDispose() bool {
 			cr.branchesData = nil
 			cr.leavesData = nil
 			cr.kvLog = nil
-			cr.info = nil
-			cr.infoMmap = nil
 			// DO NOT set treeStore to nil, as deposed changesets should still forward calls to the main tree store
 			// DO NOT set files to nil, as we might need to delete them later
 			return true
@@ -379,7 +326,8 @@ func (cr *Changeset) TotalBytes() int {
 }
 
 func (cr *Changeset) HasOrphans() bool {
-	return cr.info.LeafOrphans > 0 || cr.info.BranchOrphans > 0
+	info := cr.info
+	return info.LeafOrphans > 0 || info.BranchOrphans > 0
 }
 
 func (cr *Changeset) ResolveRoot(version uint32) (*NodePointer, error) {

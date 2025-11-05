@@ -40,6 +40,7 @@ type Compactor struct {
 	leafOrphanVersionTotal   uint64
 	branchOrphanVersionTotal uint64
 	ctx                      context.Context
+	retainedOrphans          map[NodeID]uint32
 }
 
 func NewCompacter(ctx context.Context, reader *Changeset, opts CompactOptions, store *TreeStore) (*Compactor, error) {
@@ -85,6 +86,7 @@ func NewCompacter(ctx context.Context, reader *Changeset, opts CompactOptions, s
 		versionsWriter:    NewStructWriter[VersionInfo](newFiles.versionsFile),
 		keyCache:          make(map[string]uint32),
 		offsetCache:       make(map[NodeID]uint32),
+		retainedOrphans:   make(map[NodeID]uint32),
 	}
 
 	// Process first changeset immediately
@@ -107,7 +109,16 @@ func (c *Compactor) processChangeset(reader *Changeset) error {
 	numVersions := versionsData.Count()
 	leavesData := reader.leavesData
 	branchesData := reader.branchesData
-	skippedBranches := 0
+
+	// flush orphan writer to ensure all orphans are written before reading
+	err := reader.orphanWriter.Flush()
+	if err != nil {
+		return fmt.Errorf("failed to flush orphan writer before reading orphan map: %w", err)
+	}
+	orphanMap, err := ReadOrphanMap(reader.files.orphansFile)
+	if err != nil {
+		return fmt.Errorf("failed to read orphan map: %w", err)
+	}
 
 	slog.DebugContext(c.ctx, "processing changeset for compaction", "versions", numVersions)
 	for i := 0; i < numVersions; i++ {
@@ -123,14 +134,15 @@ func (c *Compactor) processChangeset(reader *Changeset) error {
 		for j := uint32(0); j < leafCount; j++ {
 			leaf := *leavesData.UnsafeItem(leafStartOffset + j) // copy
 			id := leaf.Id
-			retain := leaf.OrphanVersion == 0 || c.criteria(uint32(id.Version()), leaf.OrphanVersion)
+			orphanVersion := orphanMap[id]
+			retain := orphanVersion == 0 || c.criteria(uint32(id.Version()), orphanVersion)
 			if !retain {
 				continue
 			}
 
-			if leaf.OrphanVersion != 0 {
+			if orphanVersion != 0 {
 				c.leafOrphanCount++
-				c.leafOrphanVersionTotal += uint64(leaf.OrphanVersion)
+				c.leafOrphanVersionTotal += uint64(orphanVersion)
 			}
 
 			if newLeafStartIdx == 0 {
@@ -163,6 +175,8 @@ func (c *Compactor) processChangeset(reader *Changeset) error {
 			}
 
 			c.offsetCache[id] = uint32(c.leavesWriter.Count())
+
+			c.retainedOrphans[id] = orphanVersion
 		}
 
 		newBranchStartIdx := uint32(0)
@@ -174,15 +188,15 @@ func (c *Compactor) processChangeset(reader *Changeset) error {
 		for j := uint32(0); j < branchCount; j++ {
 			branch := *branchesData.UnsafeItem(branchStartOffset + j) // copy
 			id := branch.Id
-			retain := branch.OrphanVersion == 0 || c.criteria(uint32(id.Version()), branch.OrphanVersion)
+			orphanVersion := orphanMap[id]
+			retain := orphanVersion == 0 || c.criteria(uint32(id.Version()), orphanVersion)
 			if !retain {
-				skippedBranches++
 				continue
 			}
 
-			if branch.OrphanVersion != 0 {
+			if orphanVersion != 0 {
 				c.branchOrphanCount++
-				c.branchOrphanVersionTotal += uint64(branch.OrphanVersion)
+				c.branchOrphanVersionTotal += uint64(orphanVersion)
 			}
 
 			if newBranchStartIdx == 0 {
@@ -221,6 +235,8 @@ func (c *Compactor) processChangeset(reader *Changeset) error {
 				return fmt.Errorf("failed to append branch %s: %w", id, err)
 			}
 			c.offsetCache[id] = uint32(c.branchesWriter.Count())
+
+			c.retainedOrphans[id] = orphanVersion
 		}
 
 		verInfo = VersionInfo{
@@ -241,7 +257,7 @@ func (c *Compactor) processChangeset(reader *Changeset) error {
 
 		err := c.versionsWriter.Append(&verInfo)
 		if err != nil {
-			return fmt.Errorf("failed to append version info for version %d: %w", reader.info.StartVersion+uint32(i), err)
+			return fmt.Errorf("failed to append version info for version %d: %w", reader.files.info.StartVersion+uint32(i), err)
 		}
 	}
 
@@ -266,8 +282,8 @@ func (c *Compactor) Seal() (*Changeset, error) {
 	}
 
 	info := c.files.info
-	info.StartVersion = c.processedChangesets[0].info.StartVersion
-	info.EndVersion = c.processedChangesets[len(c.processedChangesets)-1].info.EndVersion
+	info.StartVersion = c.processedChangesets[0].files.info.StartVersion
+	info.EndVersion = c.processedChangesets[len(c.processedChangesets)-1].files.info.EndVersion
 	info.LeafOrphans = c.leafOrphanCount
 	info.BranchOrphans = c.branchOrphanCount
 	info.LeafOrphanVersionTotal = c.leafOrphanVersionTotal
@@ -277,7 +293,7 @@ func (c *Compactor) Seal() (*Changeset, error) {
 		c.leavesWriter.Flush(),
 		c.branchesWriter.Flush(),
 		c.versionsWriter.Flush(),
-		c.files.infoMmap.Flush(),
+		c.files.RewriteInfo(),
 	}
 	if c.kvlogWriter != nil {
 		errs = append(errs, c.kvlogWriter.Flush())
@@ -290,6 +306,12 @@ func (c *Compactor) Seal() (*Changeset, error) {
 	err := cs.InitOwned(c.files)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize sealed changeset: %w", err)
+	}
+
+	// write orphan map
+	err = cs.orphanWriter.WriteOrphanMap(c.retainedOrphans)
+	if err != nil {
+		return nil, fmt.Errorf("failed to write orphan map during compaction seal: %w", err)
 	}
 
 	return cs, nil

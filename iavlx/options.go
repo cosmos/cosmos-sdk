@@ -1,15 +1,13 @@
 package iavlx
 
+import "time"
+
 type Options struct {
 	// EvictDepth defines the depth at which eviction occurs. 255 means no eviction.
 	EvictDepth uint8 `json:"evict_depth"`
 
 	// WriteWAL enables write-ahead logging for durability
 	WriteWAL bool `json:"write_wal"`
-
-	// WalSyncBuffer controls WAL sync behavior: -1 = blocking fsync, 0 = async sync immediately (buffer=1), >0 = buffer size
-	WalSyncBuffer int `json:"wal_sync_buffer"`
-
 	// CompactWAL determines if KV data is copied during compaction (true) or reused (false)
 	CompactWAL bool `json:"compact_wal"`
 	// DisableCompaction turns off background compaction entirely
@@ -36,18 +34,10 @@ type Options struct {
 	ReaderUpdateInterval uint32 `json:"reader_update_interval"`
 
 	// FsyncInterval defines how often to fsync WAL when using async mode (in millisconds).
-	FsyncInterval uint32 `json:"fsync_interval"`
+	FsyncInterval int `json:"fsync_interval"`
 
 	// ZeroCopy attempts to reduce copying of buffers, but this isn't really implemented yet and may not even be safe to implement.
 	ZeroCopy bool `json:"zero_copy"`
-}
-
-// GetWalSyncBufferSize returns the actual buffer size to use (handling 0 = 1 case)
-func (o Options) GetWalSyncBufferSize() int {
-	if o.WalSyncBuffer == 0 {
-		return 1 // 0 means async sync immediately with buffer of 1
-	}
-	return o.WalSyncBuffer
 }
 
 // GetCompactionOrphanAge returns the orphan age threshold with default
@@ -95,4 +85,15 @@ func (o Options) GetReaderUpdateInterval() uint32 {
 		return 100 // Default to updating reader every 100 versions
 	}
 	return o.ReaderUpdateInterval
+}
+
+func (o Options) FsyncEnabled() bool {
+	return o.FsyncInterval != 0
+}
+
+func (o Options) GetFsyncInterval() time.Duration {
+	if o.FsyncInterval < 0 {
+		return 0
+	}
+	return time.Millisecond * time.Duration(o.FsyncInterval)
 }

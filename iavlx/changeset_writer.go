@@ -117,7 +117,7 @@ func (cs *ChangesetWriter) CreatedSharedReader() (*Changeset, error) {
 
 func (cs *ChangesetWriter) Flush() error {
 	return errors.Join(
-		cs.files.infoMmap.Flush(),
+		cs.files.RewriteInfo(),
 		cs.leavesData.Flush(),
 		cs.branchesData.Flush(),
 		cs.kvlog.Flush(),
@@ -177,15 +177,14 @@ func (cs *ChangesetWriter) writeBranch(np *NodePointer, node *MemNode) error {
 	}
 
 	layout := BranchLayout{
-		Id:            np.id,
-		Left:          node.left.id,
-		Right:         node.right.id,
-		LeftOffset:    leftOffset,
-		RightOffset:   rightOffset,
-		KeyOffset:     keyOffset,
-		Height:        node.height,
-		Size:          uint32(node.size), // TODO check overflow
-		OrphanVersion: 0,
+		Id:          np.id,
+		Left:        node.left.id,
+		Right:       node.right.id,
+		LeftOffset:  leftOffset,
+		RightOffset: rightOffset,
+		KeyOffset:   keyOffset,
+		Height:      node.height,
+		Size:        uint32(node.size), // TODO check overflow
 	}
 	copy(layout.Hash[:], node.hash) // TODO check length
 
@@ -211,9 +210,8 @@ func (cs *ChangesetWriter) writeLeaf(np *NodePointer, node *MemNode) error {
 	}
 
 	layout := LeafLayout{
-		Id:            np.id,
-		KeyOffset:     keyOffset,
-		OrphanVersion: 0,
+		Id:        np.id,
+		KeyOffset: keyOffset,
 	}
 	copy(layout.Hash[:], node.hash) // TODO check length
 
@@ -228,21 +226,6 @@ func (cs *ChangesetWriter) writeLeaf(np *NodePointer, node *MemNode) error {
 	cs.keyCache[string(node.key)] = keyOffset
 
 	return nil
-}
-
-func (cs *ChangesetWriter) createNodeRef(parentIdx int64, np *NodePointer) NodeRef {
-	if np.store == cs.reader {
-		if np.id.IsLeaf() {
-			// return NodeRef(np.id)
-			return NodeRef(NewNodeRelativePointer(true, int64(np.fileIdx)))
-		} else {
-			// for branch nodes the relative offset is the difference between the parent ID index and the branch ID index
-			relOffset := int64(np.fileIdx) - parentIdx
-			return NodeRef(NewNodeRelativePointer(false, relOffset))
-		}
-	} else {
-		return NodeRef(np.id)
-	}
 }
 
 func (cs *ChangesetWriter) TotalBytes() int {

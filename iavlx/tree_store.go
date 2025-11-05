@@ -97,7 +97,7 @@ func (ts *TreeStore) getChangesetForVersion(version uint32) *Changeset {
 	}
 }
 
-func (ts *TreeStore) ReadK(nodeId NodeID, _ uint32) (key []byte, err error) {
+func (ts *TreeStore) ReadK(nodeId NodeID) (key []byte, err error) {
 	cs := ts.getChangesetForVersion(uint32(nodeId.Version()))
 	cs.Pin()
 	defer cs.Unpin()
@@ -124,18 +124,18 @@ func (ts *TreeStore) ReadK(nodeId NodeID, _ uint32) (key []byte, err error) {
 	return cs.ReadK(nodeId, offset)
 }
 
-func (ts *TreeStore) ReadKV(nodeId NodeID, _ uint32) (key, value []byte, err error) {
-	cs := ts.getChangesetForVersion(uint32(nodeId.Version()))
-	cs.Pin()
-	defer cs.Unpin()
+func (ts *TreeStore) ReadKV(nodeId NodeID) (key, value []byte, err error) {
+	if !nodeId.IsLeaf() {
+		return nil, nil, fmt.Errorf("node %s is not a leaf", nodeId.String())
+	}
 
+	cs := ts.getChangesetForVersion(uint32(nodeId.Version()))
 	if cs == nil {
 		return nil, nil, fmt.Errorf("no changeset found for version %d", nodeId.Version())
 	}
 
-	if !nodeId.IsLeaf() {
-		return nil, nil, fmt.Errorf("node %s is not a leaf", nodeId.String())
-	}
+	cs.Pin()
+	defer cs.Unpin()
 
 	leaf, err := cs.ResolveLeaf(nodeId, 0)
 	if err != nil {
@@ -143,6 +143,28 @@ func (ts *TreeStore) ReadKV(nodeId NodeID, _ uint32) (key, value []byte, err err
 	}
 
 	return cs.ReadKV(nodeId, leaf.KeyOffset)
+}
+
+func (ts *TreeStore) ReadV(nodeId NodeID) ([]byte, error) {
+	// TODO reduce code duplication with ReadKV
+
+	if !nodeId.IsLeaf() {
+		return nil, fmt.Errorf("node %s is not a leaf", nodeId.String())
+	}
+
+	cs := ts.getChangesetForVersion(uint32(nodeId.Version()))
+	if cs == nil {
+		return nil, fmt.Errorf("no changeset found for version %d", nodeId.Version())
+	}
+
+	cs.Pin()
+	defer cs.Unpin()
+	leaf, err := cs.ResolveLeaf(nodeId, 0)
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve leaf %s: %w", nodeId.String(), err)
+	}
+
+	return cs.ReadV(nodeId, leaf.KeyOffset)
 }
 
 func (ts *TreeStore) ResolveLeaf(nodeId NodeID) (LeafLayout, error) {

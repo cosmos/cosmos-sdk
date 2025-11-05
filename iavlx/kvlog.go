@@ -37,7 +37,7 @@ func (kvs *KVLog) UnsafeReadK(offset uint32) (key []byte, err error) {
 	return kvs.UnsafeSliceExact(int(offset)+4, int(lenKey))
 }
 
-func (kvs *KVLog) ReadKV(offset uint32) (key, value []byte, err error) {
+func (kvs *KVLog) UnsafeReadKV(offset uint32) (key, value []byte, err error) {
 	key, err = kvs.UnsafeReadK(offset)
 	if err != nil {
 		return nil, nil, err

@@ -36,8 +36,7 @@ func (node *LeafPersisted) Key() ([]byte, error) {
 }
 
 func (node *LeafPersisted) Value() ([]byte, error) {
-	_, v, err := node.store.ReadKV(node.layout.Id, node.layout.KeyOffset)
-	return v, err
+	return node.store.ReadV(node.layout.Id, node.layout.KeyOffset)
 }
 
 func (node *LeafPersisted) Left() *NodePointer {

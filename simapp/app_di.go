@@ -1,5 +1,3 @@
-//go:build !app_v1
-
 package simapp
 
 import (
@@ -15,7 +13,6 @@ import (
 	"cosmossdk.io/depinject"
 	storetypes "cosmossdk.io/store/types"
 
-	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -47,6 +44,8 @@ import (
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
+
+	"cosmossdk.io/log"
 )
 
 // DefaultNodeHome default home directories for the application daemon

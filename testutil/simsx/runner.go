@@ -112,7 +112,7 @@ func RunWithSeeds[T SimulationApp](
 	postRunActions ...func(t testing.TB, app TestInstance[T], accs []simtypes.Account),
 ) {
 	t.Helper()
-	RunWithSeedsAndRandAcc(t, appFactory, setupStateFactory, seeds, fuzzSeed, simtypes.RandomAccounts, postRunActions...)
+	RunWithSeedsAndRandAcc(t, appFactory, setupStateFactory, seeds, fuzzSeed, postRunActions...)
 }
 
 // RunWithSeedsAndRandAcc calls RunWithSeeds with randAccFn
@@ -129,7 +129,6 @@ func RunWithSeedsAndRandAcc[T SimulationApp](
 	setupStateFactory func(app T) SimStateFactory,
 	seeds []int64,
 	fuzzSeed []byte,
-	randAccFn simtypes.RandomAccountFn,
 	postRunActions ...func(t testing.TB, app TestInstance[T], accs []simtypes.Account),
 ) {
 	t.Helper()

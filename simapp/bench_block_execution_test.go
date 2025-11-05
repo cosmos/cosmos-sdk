@@ -13,6 +13,8 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
+
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 
@@ -39,6 +41,10 @@ type BlockExecutionBenchConfig struct {
 	CommitBlocks   bool
 	SendAmount     int64
 	InitialBalance int64
+}
+
+func TestMain(m *testing.M) {
+	telemetry.TestingMain(m, nil)
 }
 
 // DefaultBlockExecutionBenchConfig returns a default configuration
@@ -249,7 +255,7 @@ func runBlockExecutionBenchmark(b *testing.B, config BlockExecutionBenchConfig) 
 
 	// Execute blocks (start from height 1 after genesis)
 	height := int64(1)
-	for blockIdx := 0; blockIdx < config.NumBlocks; blockIdx++ {
+	for blockIdx := range config.NumBlocks {
 		_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
 			Height: height,
 			Txs:    allBlockTxs[blockIdx],

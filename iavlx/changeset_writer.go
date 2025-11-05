@@ -245,7 +245,6 @@ func (cs *ChangesetWriter) Seal() (*Changeset, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize owned changeset reader: %w", err)
 	}
-	cs.files = nil
 	cs.leavesData = nil
 	cs.branchesData = nil
 	cs.versionsData = nil

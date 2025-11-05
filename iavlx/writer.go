@@ -15,7 +15,7 @@ type FileWriter struct {
 
 func NewFileWriter(file *os.File) *FileWriter {
 	return &FileWriter{
-		writer: bufio.NewWriter(file),
+		writer: bufio.NewWriterSize(file, 512*1024 /* 512kb */), // TODO: maybe we can have this as a config option?
 	}
 }
 

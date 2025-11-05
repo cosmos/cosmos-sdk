@@ -152,7 +152,7 @@ func (cs *ChangesetWriter) writeBranch(np *NodePointer, node *MemNode) error {
 	}
 
 	// TODO cache key offset in memory to avoid duplicate writes
-	keyOffset, ok := cs.keyCache[string(node.key)]
+	keyOffset, ok := cs.keyCache[unsafeBytesToString(node.key)]
 	if !ok {
 		var err error
 		keyOffset, err = cs.kvlog.WriteK(node.key)
@@ -223,7 +223,7 @@ func (cs *ChangesetWriter) writeLeaf(np *NodePointer, node *MemNode) error {
 	np.fileIdx = uint32(cs.leavesData.Count())
 	np.store = cs.reader
 
-	cs.keyCache[string(node.key)] = keyOffset
+	cs.keyCache[unsafeBytesToString(node.key)] = keyOffset
 
 	return nil
 }
@@ -265,4 +265,8 @@ func (cs *ChangesetWriter) SyncWAL() error {
 		return nil
 	}
 	return cs.files.kvlogFile.Sync()
+}
+
+func unsafeBytesToString(b []byte) string {
+	return unsafe.String(unsafe.SliceData(b), len(b))
 }

@@ -163,7 +163,7 @@ func (c *Compactor) processChangeset(reader *Changeset) error {
 				}
 
 				leaf.KeyOffset = offset
-				c.keyCache[string(k)] = offset
+				c.keyCache[unsafeBytesToString(k)] = offset
 			} else {
 				// When not compacting WAL, add offset delta
 				leaf.KeyOffset += kvOffsetDelta
@@ -217,7 +217,7 @@ func (c *Compactor) processChangeset(reader *Changeset) error {
 				if err != nil {
 					return fmt.Errorf("failed to read key for branch %s: %w", id, err)
 				}
-				offset, ok := c.keyCache[string(k)]
+				offset, ok := c.keyCache[unsafeBytesToString(k)]
 				if !ok {
 					offset, err = c.kvlogWriter.WriteK(k)
 				}

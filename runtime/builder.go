@@ -3,12 +3,20 @@ package runtime
 import (
 	"encoding/json"
 	"io"
+	"runtime"
 
 	dbm "github.com/cosmos/cosmos-db"
+
+	"github.com/cosmos/cosmos-sdk/blockstm"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module/testutil"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
+
+	"cosmossdk.io/store/types"
 )
 
 // AppBuilder is a type that is injected into a container by the runtime module
@@ -45,6 +53,38 @@ func (a *AppBuilder) Build(db dbm.DB, traceStore io.Writer, baseAppOptions ...fu
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(a.app.interfaceRegistry)
 	bApp.MountStores(a.app.storeKeys...)
+
+	bApp.SetDisableBlockGasMeter(true)
+
+	oKeys := types.NewObjectStoreKeys(banktypes.ObjectStoreKey)
+	bApp.MountObjectStores(oKeys)
+	keys := a.app.storeKeys
+	nonTransientKeys := make([]types.StoreKey, len(keys)+len(oKeys))
+	i := 0
+	for _, k := range keys {
+		nonTransientKeys[i] = k
+		i++
+	}
+	for _, k := range oKeys {
+		nonTransientKeys[i] = k
+		i++
+	}
+
+	var basicMods []module.AppModuleBasic
+	for _, mod := range a.app.ModuleManager.Modules {
+		if basic, ok := mod.(module.AppModuleBasic); ok {
+			basicMods = append(basicMods, basic)
+		}
+	}
+	enc := testutil.MakeTestEncodingConfig(basicMods...)
+	// Setup Parallel Execution via blockstm txn runner
+	bApp.SetBlockSTMTxRunner(blockstm.NewSTMRunner(
+		enc.TxConfig.TxDecoder(),
+		nonTransientKeys,
+		min(runtime.GOMAXPROCS(0), runtime.NumCPU()),
+		true,
+		sdk.DefaultBondDenom,
+	))
 
 	a.app.BaseApp = bApp
 	a.app.configurator = module.NewConfigurator(a.app.cdc, a.app.MsgServiceRouter(), a.app.GRPCQueryRouter())

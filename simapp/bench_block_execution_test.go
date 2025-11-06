@@ -15,9 +15,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -29,6 +26,9 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 )
 
 // BlockExecutionBenchConfig holds configuration for block execution benchmarks
@@ -51,7 +51,7 @@ func TestMain(m *testing.M) {
 func DefaultBlockExecutionBenchConfig() BlockExecutionBenchConfig {
 	return BlockExecutionBenchConfig{
 		NumAccounts:    65_000,
-		TxsPerBlock:    5000,
+		TxsPerBlock:    25_000,
 		NumBlocks:      150,
 		DBBackend:      "memdb",
 		IAVLXOptions:   nil,
@@ -77,7 +77,7 @@ func BenchmarkBlockExecution(b *testing.B) {
 // BenchmarkBlockExecutionMemDB runs the benchmark with memdb
 func BenchmarkBlockExecutionPebbleDB(b *testing.B) {
 	config := DefaultBlockExecutionBenchConfig()
-	config.DBBackend = string(dbm.PebbleDBBackend)
+	config.DBBackend = string(dbm.GoLevelDBBackend)
 	config.CommitBlocks = true
 	runBlockExecutionBenchmark(b, config)
 }
@@ -256,9 +256,10 @@ func runBlockExecutionBenchmark(b *testing.B, config BlockExecutionBenchConfig) 
 	// Execute blocks (start from height 1 after genesis)
 	height := int64(1)
 	for blockIdx := range config.NumBlocks {
+		txs := allBlockTxs[blockIdx]
 		_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
 			Height: height,
-			Txs:    allBlockTxs[blockIdx],
+			Txs:    txs,
 			Time:   time.Now(),
 		})
 		if err != nil {
@@ -281,6 +282,8 @@ func runBlockExecutionBenchmark(b *testing.B, config BlockExecutionBenchConfig) 
 	totalTxs := config.TxsPerBlock * config.NumBlocks
 	b.ReportMetric(float64(totalTxs)/b.Elapsed().Seconds(), "txs/sec")
 	b.ReportMetric(float64(config.NumBlocks)/b.Elapsed().Seconds(), "blocks/sec")
+	b.ReportMetric(float64(config.NumBlocks), "blocks_executed")
+	b.ReportMetric(b.Elapsed().Seconds(), "execution_elapsed_time")
 	b.ReportMetric(float64(totalTxs), "total_txs")
 }
 

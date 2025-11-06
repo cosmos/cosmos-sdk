@@ -16,7 +16,6 @@ type Config struct {
 	InitialBlockHeight int    // initial block to start the simulation
 	GenesisTime        int64  // genesis time to start the simulation
 	NumBlocks          int    // number of new blocks to simulate from the initial block height
-	NumRuns            int    // number of times to run the simulation for simulations that have multiple runs
 	BlockSize          int    // operations per block
 	ChainID            string // chain-id used on the simulation
 

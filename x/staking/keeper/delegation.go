@@ -1,3 +1,6 @@
+// Package keeper provides the core business logic for the staking module.
+// This file implements delegation operations including creating, updating, removing delegations,
+// handling unbonding delegations, redelegations, and managing delegation queues.
 package keeper
 
 import (
@@ -17,7 +20,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// GetDelegation returns a specific delegation.
+// GetDelegation retrieves a specific delegation from the store given the delegator
+// and validator addresses. Returns an error if the delegation is not found.
 func (k Keeper) GetDelegation(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (types.Delegation, error) {
 	store := k.storeService.OpenKVStore(ctx)
 	key := types.GetDelegationKey(delAddr, valAddr)
@@ -34,7 +38,8 @@ func (k Keeper) GetDelegation(ctx context.Context, delAddr sdk.AccAddress, valAd
 	return types.UnmarshalDelegation(k.cdc, value)
 }
 
-// IterateAllDelegations iterates through all of the delegations.
+// IterateAllDelegations iterates through all delegations in the store, calling the callback
+// function for each delegation. The iteration stops if the callback returns true.
 func (k Keeper) IterateAllDelegations(ctx context.Context, cb func(delegation types.Delegation) (stop bool)) error {
 	store := k.storeService.OpenKVStore(ctx)
 	iterator, err := store.Iterator(types.DelegationKey, storetypes.PrefixEndBytes(types.DelegationKey))
@@ -53,7 +58,8 @@ func (k Keeper) IterateAllDelegations(ctx context.Context, cb func(delegation ty
 	return nil
 }
 
-// GetAllDelegations returns all delegations used during genesis dump.
+// GetAllDelegations retrieves all delegations from the store. This is primarily used
+// during genesis export to dump the complete delegation state.
 func (k Keeper) GetAllDelegations(ctx context.Context) (delegations []types.Delegation, err error) {
 	err = k.IterateAllDelegations(ctx, func(delegation types.Delegation) bool {
 		delegations = append(delegations, delegation)
@@ -63,8 +69,8 @@ func (k Keeper) GetAllDelegations(ctx context.Context) (delegations []types.Dele
 	return delegations, err
 }
 
-// GetValidatorDelegations returns all delegations to a specific validator.
-// Useful for querier.
+// GetValidatorDelegations retrieves all delegations to a specific validator.
+// This is used by query handlers to return all delegations for a given validator.
 func (k Keeper) GetValidatorDelegations(ctx context.Context, valAddr sdk.ValAddress) (delegations []types.Delegation, err error) {
 	store := k.storeService.OpenKVStore(ctx)
 	prefix := types.GetDelegationsByValPrefixKey(valAddr)
@@ -96,8 +102,8 @@ func (k Keeper) GetValidatorDelegations(ctx context.Context, valAddr sdk.ValAddr
 	return delegations, nil
 }
 
-// GetDelegatorDelegations returns a given amount of all the delegations from a
-// delegator.
+// GetDelegatorDelegations retrieves up to maxRetrieve delegations from a specific delegator.
+// The delegations are returned in order and limited by the maxRetrieve parameter.
 func (k Keeper) GetDelegatorDelegations(ctx context.Context, delegator sdk.AccAddress, maxRetrieve uint16) (delegations []types.Delegation, err error) {
 	delegations = make([]types.Delegation, maxRetrieve)
 	store := k.storeService.OpenKVStore(ctx)
@@ -122,7 +128,8 @@ func (k Keeper) GetDelegatorDelegations(ctx context.Context, delegator sdk.AccAd
 	return delegations[:i], nil // trim if the array length < maxRetrieve
 }
 
-// SetDelegation sets a delegation.
+// SetDelegation stores a delegation in the store and updates the validator-delegator index.
+// The delegation is stored with keys that allow efficient lookup by both delegator and validator.
 func (k Keeper) SetDelegation(ctx context.Context, delegation types.Delegation) error {
 	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(delegation.DelegatorAddress)
 	if err != nil {
@@ -145,7 +152,8 @@ func (k Keeper) SetDelegation(ctx context.Context, delegation types.Delegation) 
 	return store.Set(types.GetDelegationsByValKey(valAddr, delegatorAddress), []byte{})
 }
 
-// RemoveDelegation removes a delegation
+// RemoveDelegation removes a delegation from the store and deletes the associated indexes.
+// It calls the BeforeDelegationRemoved hook before removal.
 func (k Keeper) RemoveDelegation(ctx context.Context, delegation types.Delegation) error {
 	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(delegation.DelegatorAddress)
 	if err != nil {
@@ -171,7 +179,8 @@ func (k Keeper) RemoveDelegation(ctx context.Context, delegation types.Delegatio
 	return store.Delete(types.GetDelegationsByValKey(valAddr, delegatorAddress))
 }
 
-// GetUnbondingDelegations returns a given amount of all the delegator unbonding-delegations.
+// GetUnbondingDelegations retrieves up to maxRetrieve unbonding delegations from a specific delegator.
+// The unbonding delegations are returned in order and limited by the maxRetrieve parameter.
 func (k Keeper) GetUnbondingDelegations(ctx context.Context, delegator sdk.AccAddress, maxRetrieve uint16) (unbondingDelegations []types.UnbondingDelegation, err error) {
 	unbondingDelegations = make([]types.UnbondingDelegation, maxRetrieve)
 
@@ -197,7 +206,8 @@ func (k Keeper) GetUnbondingDelegations(ctx context.Context, delegator sdk.AccAd
 	return unbondingDelegations[:i], nil // trim if the array length < maxRetrieve
 }
 
-// GetUnbondingDelegation returns a unbonding delegation.
+// GetUnbondingDelegation retrieves a specific unbonding delegation from the store given
+// the delegator and validator addresses. Returns an error if the unbonding delegation is not found.
 func (k Keeper) GetUnbondingDelegation(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (ubd types.UnbondingDelegation, err error) {
 	store := k.storeService.OpenKVStore(ctx)
 	key := types.GetUBDKey(delAddr, valAddr)
@@ -213,8 +223,8 @@ func (k Keeper) GetUnbondingDelegation(ctx context.Context, delAddr sdk.AccAddre
 	return types.UnmarshalUBD(k.cdc, value)
 }
 
-// GetUnbondingDelegationsFromValidator returns all unbonding delegations from a
-// particular validator.
+// GetUnbondingDelegationsFromValidator retrieves all unbonding delegations from a specific validator.
+// This is used to query all unbonding operations associated with a particular validator.
 func (k Keeper) GetUnbondingDelegationsFromValidator(ctx context.Context, valAddr sdk.ValAddress) (ubds []types.UnbondingDelegation, err error) {
 	store := k.storeService.OpenKVStore(ctx)
 	prefix := types.GetUBDsByValIndexKey(valAddr)
@@ -240,7 +250,9 @@ func (k Keeper) GetUnbondingDelegationsFromValidator(ctx context.Context, valAdd
 	return ubds, nil
 }
 
-// IterateUnbondingDelegations iterates through all of the unbonding delegations.
+// IterateUnbondingDelegations iterates through all unbonding delegations in the store,
+// calling the callback function for each delegation with its index. The iteration stops
+// if the callback returns true.
 func (k Keeper) IterateUnbondingDelegations(ctx context.Context, fn func(index int64, ubd types.UnbondingDelegation) (stop bool)) error {
 	store := k.storeService.OpenKVStore(ctx)
 	prefix := types.UnbondingDelegationKey
@@ -264,7 +276,8 @@ func (k Keeper) IterateUnbondingDelegations(ctx context.Context, fn func(index i
 	return nil
 }
 
-// GetDelegatorUnbonding returns the total amount a delegator has unbonding.
+// GetDelegatorUnbonding calculates and returns the total amount of tokens a delegator
+// currently has in unbonding across all their unbonding delegations.
 func (k Keeper) GetDelegatorUnbonding(ctx context.Context, delegator sdk.AccAddress) (math.Int, error) {
 	unbonding := math.ZeroInt()
 	err := k.IterateDelegatorUnbondingDelegations(ctx, delegator, func(ubd types.UnbondingDelegation) bool {
@@ -280,7 +293,8 @@ func (k Keeper) GetDelegatorUnbonding(ctx context.Context, delegator sdk.AccAddr
 	return unbonding, nil
 }
 
-// IterateDelegatorUnbondingDelegations iterates through a delegator's unbonding delegations.
+// IterateDelegatorUnbondingDelegations iterates through a specific delegator's unbonding delegations,
+// calling the callback function for each unbonding delegation. The iteration stops if the callback returns true.
 func (k Keeper) IterateDelegatorUnbondingDelegations(ctx context.Context, delegator sdk.AccAddress, cb func(ubd types.UnbondingDelegation) (stop bool)) error {
 	store := k.storeService.OpenKVStore(ctx)
 	prefix := types.GetUBDsKey(delegator)
@@ -303,7 +317,8 @@ func (k Keeper) IterateDelegatorUnbondingDelegations(ctx context.Context, delega
 	return nil
 }
 
-// GetDelegatorBonded returns the total amount a delegator has bonded.
+// GetDelegatorBonded calculates and returns the total amount of tokens a delegator
+// currently has bonded across all their delegations, converted from shares to tokens.
 func (k Keeper) GetDelegatorBonded(ctx context.Context, delegator sdk.AccAddress) (math.Int, error) {
 	bonded := math.LegacyZeroDec()
 
@@ -323,7 +338,8 @@ func (k Keeper) GetDelegatorBonded(ctx context.Context, delegator sdk.AccAddress
 	return bonded.RoundInt(), err
 }
 
-// IterateDelegatorDelegations iterates through one delegator's delegations.
+// IterateDelegatorDelegations iterates through a specific delegator's delegations,
+// calling the callback function for each delegation. The iteration stops if the callback returns true.
 func (k Keeper) IterateDelegatorDelegations(ctx context.Context, delegator sdk.AccAddress, cb func(delegation types.Delegation) (stop bool)) error {
 	store := k.storeService.OpenKVStore(ctx)
 	prefix := types.GetDelegationsKey(delegator)
@@ -345,7 +361,8 @@ func (k Keeper) IterateDelegatorDelegations(ctx context.Context, delegator sdk.A
 	return nil
 }
 
-// IterateDelegatorRedelegations iterates through one delegator's redelegations.
+// IterateDelegatorRedelegations iterates through a specific delegator's redelegations,
+// calling the callback function for each redelegation. The iteration stops if the callback returns true.
 func (k Keeper) IterateDelegatorRedelegations(ctx context.Context, delegator sdk.AccAddress, cb func(red types.Redelegation) (stop bool)) error {
 	store := k.storeService.OpenKVStore(ctx)
 	delegatorPrefixKey := types.GetREDsKey(delegator)
@@ -366,7 +383,8 @@ func (k Keeper) IterateDelegatorRedelegations(ctx context.Context, delegator sdk
 	return nil
 }
 
-// HasMaxUnbondingDelegationEntries checks if unbonding delegation has maximum number of entries.
+// HasMaxUnbondingDelegationEntries checks if an unbonding delegation has reached the maximum
+// number of entries allowed. Returns true if the limit is reached, false otherwise.
 func (k Keeper) HasMaxUnbondingDelegationEntries(ctx context.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) (bool, error) {
 	ubd, err := k.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)
 	if err != nil && !errors.Is(err, types.ErrNoUnbondingDelegation) {
@@ -380,7 +398,8 @@ func (k Keeper) HasMaxUnbondingDelegationEntries(ctx context.Context, delegatorA
 	return len(ubd.Entries) >= int(maxEntries), nil
 }
 
-// SetUnbondingDelegation sets the unbonding delegation and associated index.
+// SetUnbondingDelegation stores an unbonding delegation in the store and updates the
+// validator-delegator index for efficient lookup of unbonding delegations by validator.
 func (k Keeper) SetUnbondingDelegation(ctx context.Context, ubd types.UnbondingDelegation) error {
 	delAddr, err := k.authKeeper.AddressCodec().StringToBytes(ubd.DelegatorAddress)
 	if err != nil {
@@ -402,7 +421,8 @@ func (k Keeper) SetUnbondingDelegation(ctx context.Context, ubd types.UnbondingD
 	return store.Set(types.GetUBDByValIndexKey(delAddr, valAddr), []byte{}) // index, store empty bytes
 }
 
-// RemoveUnbondingDelegation removes the unbonding delegation object and associated index.
+// RemoveUnbondingDelegation removes an unbonding delegation from the store and deletes
+// the associated validator-delegator index entry.
 func (k Keeper) RemoveUnbondingDelegation(ctx context.Context, ubd types.UnbondingDelegation) error {
 	delegatorAddress, err := k.authKeeper.AddressCodec().StringToBytes(ubd.DelegatorAddress)
 	if err != nil {
@@ -423,8 +443,9 @@ func (k Keeper) RemoveUnbondingDelegation(ctx context.Context, ubd types.Unbondi
 	return store.Delete(types.GetUBDByValIndexKey(delegatorAddress, addr))
 }
 
-// SetUnbondingDelegationEntry adds an entry to the unbonding delegation at
-// the given addresses. It creates the unbonding delegation if it does not exist.
+// SetUnbondingDelegationEntry adds a new entry to an unbonding delegation at the given addresses.
+// It creates the unbonding delegation if it does not exist, or merges the entry if one with the
+// same creation height and completion time already exists. Calls hooks for new entries.
 func (k Keeper) SetUnbondingDelegationEntry(
 	ctx context.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
 	creationHeight int64, minTime time.Time, balance math.Int,
@@ -862,8 +883,9 @@ func (k Keeper) DequeueAllMatureRedelegationQueue(ctx context.Context, currTime 
 	return matureRedelegations, nil
 }
 
-// Delegate performs a delegation, set/update everything necessary within the store.
-// tokenSrc indicates the bond status of the incoming funds.
+// Delegate performs a delegation operation, updating all necessary state in the store.
+// It handles token transfers between pools, updates validator shares, and calls appropriate hooks.
+// The tokenSrc parameter indicates the bond status of the incoming funds (bonded, unbonded, or unbonding).
 func (k Keeper) Delegate(
 	ctx context.Context, delAddr sdk.AccAddress, bondAmt math.Int, tokenSrc types.BondStatus,
 	validator types.Validator, subtractAccount bool,
@@ -973,7 +995,9 @@ func (k Keeper) Delegate(
 	return newShares, nil
 }
 
-// Unbond unbonds a particular delegation and perform associated store operations.
+// Unbond removes shares from a delegation and performs associated store operations.
+// It handles validator token removal, delegation share updates, and validator jailing
+// if the validator's self-delegation would fall below the minimum after unbonding.
 func (k Keeper) Unbond(
 	ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, shares math.LegacyDec,
 ) (amount math.Int, err error) {
@@ -1100,11 +1124,10 @@ func (k Keeper) getBeginInfo(
 	}
 }
 
-// Undelegate unbonds an amount of delegator shares from a given validator. It
-// will verify that the unbonding entries between the delegator and validator
-// are not exceeded and unbond the staked tokens (based on shares) by creating
-// an unbonding object and inserting it into the unbonding queue which will be
-// processed during the staking EndBlocker.
+// Undelegate unbonds an amount of delegator shares from a given validator. It verifies that
+// the unbonding entries limit is not exceeded, unbonds the staked tokens (converted from shares),
+// creates an unbonding delegation entry, and inserts it into the unbonding queue for processing
+// during the staking EndBlocker. Returns the completion time and return amount.
 func (k Keeper) Undelegate(
 	ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, sharesAmount math.LegacyDec,
 ) (time.Time, math.Int, error) {
@@ -1155,9 +1178,9 @@ func (k Keeper) Undelegate(
 	return completionTime, returnAmount, nil
 }
 
-// CompleteUnbonding completes the unbonding of all mature entries in the
-// retrieved unbonding delegation object and returns the total unbonding balance
-// or an error upon failure.
+// CompleteUnbonding completes the unbonding of all mature entries in the unbonding delegation.
+// It removes mature entries that are not on hold, transfers tokens from the module to the delegator,
+// and updates or removes the unbonding delegation. Returns the total unbonded balance.
 func (k Keeper) CompleteUnbonding(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sdk.Coins, error) {
 	ubd, err := k.GetUnbondingDelegation(ctx, delAddr, valAddr)
 	if err != nil {
@@ -1216,8 +1239,9 @@ func (k Keeper) CompleteUnbonding(ctx context.Context, delAddr sdk.AccAddress, v
 	return balances, nil
 }
 
-// BeginRedelegation begins unbonding / redelegation and creates a redelegation
-// record.
+// BeginRedelegation begins a redelegation operation by unbonding shares from the source validator
+// and delegating them to the destination validator. It validates the redelegation, creates a
+// redelegation entry, and inserts it into the redelegation queue. Returns the completion time.
 func (k Keeper) BeginRedelegation(
 	ctx context.Context, delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress, sharesAmount math.LegacyDec,
 ) (completionTime time.Time, err error) {
@@ -1298,9 +1322,9 @@ func (k Keeper) BeginRedelegation(
 	return completionTime, nil
 }
 
-// CompleteRedelegation completes the redelegations of all mature entries in the
-// retrieved redelegation object and returns the total redelegation (initial)
-// balance or an error upon failure.
+// CompleteRedelegation completes the redelegation of all mature entries in the redelegation object.
+// It removes mature entries that are not on hold, updates or removes the redelegation, and returns
+// the total initial balance that was redelegated.
 func (k Keeper) CompleteRedelegation(
 	ctx context.Context, delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress,
 ) (sdk.Coins, error) {
@@ -1348,9 +1372,9 @@ func (k Keeper) CompleteRedelegation(
 	return balances, nil
 }
 
-// ValidateUnbondAmount validates that a given unbond or redelegation amount is
-// valid based on upon the converted shares. If the amount is valid, the total
-// amount of respective shares is returned, otherwise an error is returned.
+// ValidateUnbondAmount validates that a given unbond or redelegation amount is valid based on
+// the converted shares. It checks that the shares do not exceed the delegation's shares and
+// caps the shares at the delegation's total if rounding causes an overage. Returns the validated shares.
 func (k Keeper) ValidateUnbondAmount(
 	ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt math.Int,
 ) (shares math.LegacyDec, err error) {

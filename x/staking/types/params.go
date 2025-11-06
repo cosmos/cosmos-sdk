@@ -1,3 +1,6 @@
+// Package types defines the core data structures for the staking module.
+// This file provides parameter types and validation for staking module configuration,
+// including unbonding time, validator limits, entry limits, and commission constraints.
 package types
 
 import (
@@ -34,7 +37,9 @@ const (
 // DefaultMinCommissionRate is set to 0%
 var DefaultMinCommissionRate = math.LegacyZeroDec()
 
-// NewParams creates a new Params instance
+// NewParams creates a new Params instance with the given unbonding time, maximum validators,
+// maximum entries, historical entries, bond denomination, and minimum commission rate.
+// These parameters control the behavior and limits of the staking module.
 func NewParams(unbondingTime time.Duration, maxValidators, maxEntries, historicalEntries uint32, bondDenom string, minCommissionRate math.LegacyDec) Params {
 	return Params{
 		UnbondingTime:     unbondingTime,
@@ -46,7 +51,8 @@ func NewParams(unbondingTime time.Duration, maxValidators, maxEntries, historica
 	}
 }
 
-// DefaultParams returns a default set of parameters.
+// DefaultParams returns a default set of staking module parameters using the predefined
+// default values for unbonding time, validator limits, entry limits, and commission rates.
 func DefaultParams() Params {
 	return NewParams(
 		DefaultUnbondingTime,
@@ -58,7 +64,8 @@ func DefaultParams() Params {
 	)
 }
 
-// MustUnmarshalParams unmarshals the current staking Params value from store key. Panics on error.
+// MustUnmarshalParams unmarshals staking parameters from bytes using the provided codec.
+// Panics if unmarshaling fails.
 func MustUnmarshalParams(cdc *codec.LegacyAmino, value []byte) Params {
 	params, err := UnmarshalParams(cdc, value)
 	if err != nil {
@@ -68,7 +75,8 @@ func MustUnmarshalParams(cdc *codec.LegacyAmino, value []byte) Params {
 	return params
 }
 
-// UnmarshalParams unmarshals the current staking params value from store key
+// UnmarshalParams unmarshals staking parameters from bytes using the provided codec.
+// Returns an error if unmarshaling fails.
 func UnmarshalParams(cdc *codec.LegacyAmino, value []byte) (params Params, err error) {
 	err = cdc.Unmarshal(value, &params)
 	if err != nil {
@@ -78,7 +86,10 @@ func UnmarshalParams(cdc *codec.LegacyAmino, value []byte) (params Params, err e
 	return params, err
 }
 
-// Validate validates a set of Params
+// Validate performs validation checks on all staking parameters to ensure they are within
+// acceptable bounds. It validates unbonding time, maximum validators, maximum entries,
+// bond denomination, minimum commission rate, and historical entries. Returns an error
+// if any validation check fails.
 func (p Params) Validate() error {
 	if err := validateUnbondingTime(p.UnbondingTime); err != nil {
 		return err

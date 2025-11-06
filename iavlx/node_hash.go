@@ -4,7 +4,9 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
+	"hash"
 	"io"
+	"sync"
 )
 
 func computeAndSetHash(node *MemNode, leftHash, rightHash []byte) ([]byte, error) {
@@ -17,8 +19,20 @@ func computeAndSetHash(node *MemNode, leftHash, rightHash []byte) ([]byte, error
 	return h, nil
 }
 
+var hasherPool = sync.Pool{
+	New: func() any {
+		return sha256.New()
+	},
+}
+
+func putBackHasher(h hash.Hash) {
+	h.Reset()
+	hasherPool.Put(h)
+}
+
 func computeHash(node Node, leftHash, rightHash []byte) ([]byte, error) {
-	hasher := sha256.New()
+	hasher := hasherPool.Get().(hash.Hash)
+	defer putBackHasher(hasher)
 	if err := writeHashBytes(node, leftHash, rightHash, hasher); err != nil {
 		return nil, err
 	}
@@ -26,6 +40,15 @@ func computeHash(node Node, leftHash, rightHash []byte) ([]byte, error) {
 }
 
 var emptyHash = sha256.New().Sum(nil)
+
+func shaSum256(bz []byte) []byte {
+	hasher := hasherPool.Get().(hash.Hash)
+	defer putBackHasher(hasher)
+	hasher.Write(bz)
+	var sum [sha256.Size]byte
+	hasher.Sum(sum[:0])
+	return sum[:]
+}
 
 // Writes the node's hash to the given `io.Writer`. This function recursively calls
 // children to update hashes.
@@ -67,8 +90,7 @@ func writeHashBytes(node Node, leftHash, rightHash []byte, w io.Writer) error {
 
 		// Indirection needed to provide proofs without values.
 		// (e.g. ProofLeafNode.ValueHash)
-		valueHash := sha256.Sum256(value)
-		if err := encodeVarintPrefixedBytes(w, valueHash[:]); err != nil {
+		if err := encodeVarintPrefixedBytes(w, shaSum256(value)); err != nil {
 			return fmt.Errorf("writing value, %w", err)
 		}
 	} else {

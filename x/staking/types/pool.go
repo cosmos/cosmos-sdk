@@ -1,20 +1,24 @@
+// Package types defines the core data structures for the staking module.
+// This file provides pool types that track bonded and unbonded token balances
+// in the staking module's token pools.
 package types
 
 import (
 	"cosmossdk.io/math"
 )
 
-// names used as root for pool module accounts:
+// Pool account names used for tracking token balances:
 //
-// - NotBondedPool -> "not_bonded_tokens_pool"
+// - NotBondedPoolName -> "not_bonded_tokens_pool" - tracks tokens that are not bonded to validators
 //
-// - BondedPool -> "bonded_tokens_pool"
+// - BondedPoolName -> "bonded_tokens_pool" - tracks tokens that are bonded to validators
 const (
 	NotBondedPoolName = "not_bonded_tokens_pool"
 	BondedPoolName    = "bonded_tokens_pool"
 )
 
-// NewPool creates a new Pool instance used for queries
+// NewPool creates a new Pool instance with the given bonded and unbonded token amounts.
+// The pool is used for querying the current state of bonded and unbonded tokens in the staking module.
 func NewPool(notBonded, bonded math.Int) Pool {
 	return Pool{
 		NotBondedTokens: notBonded,

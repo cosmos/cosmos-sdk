@@ -2,6 +2,7 @@ package telemetry
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,6 +14,7 @@ import (
 	metricsprom "github.com/hashicorp/go-metrics/prometheus"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/expfmt"
+	"go.opentelemetry.io/otel"
 )
 
 // globalTelemetryEnabled is a private variable that stores the telemetry enabled state.
@@ -90,6 +92,7 @@ type Config struct {
 	GlobalLabels [][]string `mapstructure:"global-labels"`
 
 	// MetricsSink defines the type of metrics backend to use.
+	// Can be one of "mem", "statsd", "dogstatsd", or "otel".
 	MetricsSink string `mapstructure:"metrics-sink" default:"mem"`
 
 	// StatsdAddr defines the address of a statsd server to send metrics to.
@@ -145,6 +148,8 @@ func New(cfg Config) (_ *Metrics, rerr error) {
 		sink, err = metrics.NewStatsdSink(cfg.StatsdAddr)
 	case MetricSinkDogsStatsd:
 		sink, err = datadog.NewDogStatsdSink(cfg.StatsdAddr, cfg.DatadogHostname)
+	case MetricSinkOtel:
+		sink = newOtelGoMetricsSink(context.Background(), otel.Meter("gometrics"))
 	default:
 		memSink := metrics.NewInmemSink(10*time.Second, time.Minute)
 		sink = memSink

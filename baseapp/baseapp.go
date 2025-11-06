@@ -7,7 +7,6 @@ import (
 	"slices"
 	"strconv"
 	"sync"
-	"time"
 
 	"github.com/cockroachdb/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -66,12 +65,10 @@ const (
 var _ servertypes.ABCI = (*BaseApp)(nil)
 
 var (
-	tracer    = otel.Tracer("cosmos-sdk/baseapp")
-	meter     = otel.Meter("cosmos-sdk/baseapp")
-	blockCnt  metric.Int64Counter
-	txCnt     metric.Int64Counter
-	blockTime metric.Float64Histogram
-	txTime    metric.Int64Histogram
+	tracer   = otel.Tracer("cosmos-sdk/baseapp")
+	meter    = otel.Meter("cosmos-sdk/baseapp")
+	blockCnt metric.Int64Counter
+	txCnt    metric.Int64Counter
 )
 
 func init() {
@@ -81,20 +78,6 @@ func init() {
 		panic(err)
 	}
 	txCnt, err = meter.Int64Counter("tx.count")
-	if err != nil {
-		panic(err)
-	}
-	blockTime, err = meter.Float64Histogram("block.time",
-		metric.WithUnit("s"),
-		metric.WithDescription("Block time in seconds"),
-	)
-	if err != nil {
-		panic(err)
-	}
-	txTime, err = meter.Int64Histogram("tx.time",
-		metric.WithUnit("us"),
-		metric.WithDescription("Transaction time in microseconds"),
-	)
 	if err != nil {
 		panic(err)
 	}
@@ -205,8 +188,6 @@ type BaseApp struct {
 
 	// Optional alternative tx runner, used for block-stm parallel transaction execution. If nil, default txRunner is used.
 	txRunner sdk.TxRunner
-
-	blockStartTime time.Time
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a
@@ -227,7 +208,6 @@ func NewBaseApp(
 		fauxMerkleMode:   false,
 		sigverifyTx:      true,
 		gasConfig:        config.GasConfig{QueryGasLimit: math.MaxUint64},
-		blockStartTime:   time.Now(),
 	}
 
 	// initialize tracer
@@ -827,7 +807,6 @@ func (app *BaseApp) endBlock() (sdk.EndBlock, error) {
 // both txbytes and the decoded tx are passed to runTx to avoid the state machine encoding the tx and decoding the transaction twice
 // passing the decoded tx to runTX is optional, it will be decoded if the tx is nil
 func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex int, txMultiStore storetypes.MultiStore, incarnationCache map[string]any) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) {
-	startTime := time.Now()
 	ctx := app.getContextForTx(mode, txBytes, txIndex)
 	ctx, span := ctx.StartSpan(tracer, "runTx")
 	defer span.End()
@@ -1013,7 +992,6 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 			msCache.Write()
 
 			txCnt.Add(ctx, 1)
-			txTime.Record(ctx, time.Since(startTime).Microseconds())
 		}
 
 		if len(anteEvents) > 0 && (mode == execModeFinalize || mode == execModeSimulate) {

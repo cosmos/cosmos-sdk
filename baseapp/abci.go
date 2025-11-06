@@ -156,7 +156,8 @@ func (app *BaseApp) Info(_ *abci.RequestInfo) (*abci.ResponseInfo, error) {
 // Query implements the ABCI interface. It delegates to CommitMultiStore if it
 // implements Queryable.
 func (app *BaseApp) Query(ctx context.Context, req *abci.RequestQuery) (resp *abci.ResponseQuery, err error) {
-	ctx, span := tracer.Start(ctx, "Query")
+	// TODO: propagate context with span into the sdk.Context used for queries
+	_, span := tracer.Start(ctx, "Query")
 	defer span.End()
 
 	// add panic recovery for all queries
@@ -1034,8 +1035,6 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 	app.snapshotManager.SnapshotIfApplicable(header.Height)
 
 	blockCnt.Add(ctx, 1)
-	blockTime.Record(ctx, time.Since(app.blockStartTime).Seconds())
-	app.blockStartTime = time.Now()
 
 	return resp, nil
 }

@@ -121,7 +121,7 @@ func (s *internalIntTestSuite) TestImmutabilityArithInt() {
 		bi := new(big.Int).SetInt64(n)
 
 		for j := 0; j < size; j++ {
-			op := ops[rand.Intn(len(ops))]
+			op := ops[rand.Intn(len(ops))] //nolint:gosec // testing
 			uis[j], bis[j] = op(ui, bi)
 		}
 

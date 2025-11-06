@@ -1,3 +1,6 @@
+// Package types defines the core data structures for the staking module.
+// This file provides delegation types, including standard delegations, unbonding delegations,
+// and redelegations that track delegator-validator relationships and token movements.
 package types
 
 import (
@@ -16,7 +19,9 @@ import (
 // Implements Delegation interface
 var _ DelegationI = Delegation{}
 
-// NewDelegation creates a new delegation object
+// NewDelegation creates a new delegation object with the given delegator address,
+// validator address, and initial shares. The delegation represents a delegator's
+// stake in a validator and tracks the shares allocated to the delegator.
 func NewDelegation(delegatorAddr, validatorAddr string, shares math.LegacyDec) Delegation {
 	return Delegation{
 		DelegatorAddress: delegatorAddr,
@@ -25,13 +30,14 @@ func NewDelegation(delegatorAddr, validatorAddr string, shares math.LegacyDec) D
 	}
 }
 
-// MustMarshalDelegation returns the delegation bytes. Panics if fails
+// MustMarshalDelegation marshals a delegation to bytes using the provided codec.
+// Panics if marshaling fails.
 func MustMarshalDelegation(cdc codec.BinaryCodec, delegation Delegation) []byte {
 	return cdc.MustMarshal(&delegation)
 }
 
-// MustUnmarshalDelegation return the unmarshaled delegation from bytes.
-// Panics if fails.
+// MustUnmarshalDelegation unmarshals a delegation from bytes using the provided codec.
+// Panics if unmarshaling fails.
 func MustUnmarshalDelegation(cdc codec.BinaryCodec, value []byte) Delegation {
 	delegation, err := UnmarshalDelegation(cdc, value)
 	if err != nil {
@@ -41,7 +47,8 @@ func MustUnmarshalDelegation(cdc codec.BinaryCodec, value []byte) Delegation {
 	return delegation
 }
 
-// UnmarshalDelegation unmarshals the delegation.
+// UnmarshalDelegation unmarshals a delegation from bytes using the provided codec.
+// Returns an error if unmarshaling fails.
 func UnmarshalDelegation(cdc codec.BinaryCodec, value []byte) (delegation Delegation, err error) {
 	err = cdc.Unmarshal(value, &delegation)
 	return delegation, err
@@ -56,7 +63,8 @@ func (d Delegation) GetValidatorAddr() string {
 }
 func (d Delegation) GetShares() math.LegacyDec { return d.Shares }
 
-// Delegations is a collection of delegations
+// Delegations represents a collection of delegation objects.
+// It provides methods for string representation and iteration.
 type Delegations []Delegation
 
 func (d Delegations) String() (out string) {
@@ -67,6 +75,9 @@ func (d Delegations) String() (out string) {
 	return strings.TrimSpace(out)
 }
 
+// NewUnbondingDelegationEntry creates a new unbonding delegation entry with the given
+// creation height, completion time, balance, and unbonding ID. The entry tracks a single
+// unbonding operation that will complete at the specified time.
 func NewUnbondingDelegationEntry(creationHeight int64, completionTime time.Time, balance math.Int, unbondingID uint64) UnbondingDelegationEntry {
 	return UnbondingDelegationEntry{
 		CreationHeight:          creationHeight,
@@ -78,22 +89,26 @@ func NewUnbondingDelegationEntry(creationHeight int64, completionTime time.Time,
 	}
 }
 
-// IsMature - is the current entry mature
+// IsMature checks if the unbonding delegation entry has reached its completion time.
+// An entry is mature when the current time is equal to or after the completion time.
 func (e UnbondingDelegationEntry) IsMature(currentTime time.Time) bool {
 	return !e.CompletionTime.After(currentTime)
 }
 
-// OnHold - is the current entry on hold due to external modules
+// OnHold checks if the unbonding delegation entry is currently on hold.
+// An entry is on hold when external modules have placed a hold on it, preventing completion.
 func (e UnbondingDelegationEntry) OnHold() bool {
 	return e.UnbondingOnHoldRefCount > 0
 }
 
-// MustMarshalUBDE marshals the unbonding delegation entry. Panics if fails.
+// MustMarshalUBDE marshals an unbonding delegation entry to bytes using the provided codec.
+// Panics if marshaling fails.
 func MustMarshalUBDE(cdc codec.BinaryCodec, ubd UnbondingDelegationEntry) []byte {
 	return cdc.MustMarshal(&ubd)
 }
 
-// MustUnmarshalUBDE unmarshals a unbonding delegation entry from a store value. Panics if fails.
+// MustUnmarshalUBDE unmarshals an unbonding delegation entry from bytes using the provided codec.
+// Panics if unmarshaling fails.
 func MustUnmarshalUBDE(cdc codec.BinaryCodec, value []byte) UnbondingDelegationEntry {
 	ubd, err := UnmarshalUBDE(cdc, value)
 	if err != nil {
@@ -103,13 +118,16 @@ func MustUnmarshalUBDE(cdc codec.BinaryCodec, value []byte) UnbondingDelegationE
 	return ubd
 }
 
-// UnmarshalUBDE unmarshals a unbonding delegation entry from a store value
+// UnmarshalUBDE unmarshals an unbonding delegation entry from bytes using the provided codec.
+// Returns an error if unmarshaling fails.
 func UnmarshalUBDE(cdc codec.BinaryCodec, value []byte) (ubd UnbondingDelegationEntry, err error) {
 	err = cdc.Unmarshal(value, &ubd)
 	return ubd, err
 }
 
-// NewUnbondingDelegation - create a new unbonding delegation object
+// NewUnbondingDelegation creates a new unbonding delegation object with the given
+// delegator and validator addresses, creation height, completion time, balance, and unbonding ID.
+// The unbonding delegation tracks tokens that are in the process of being unbonded.
 func NewUnbondingDelegation(
 	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
 	creationHeight int64, minTime time.Time, balance math.Int, id uint64,
@@ -132,7 +150,9 @@ func NewUnbondingDelegation(
 	}
 }
 
-// AddEntry - append entry to the unbonding delegation
+// AddEntry adds a new unbonding entry to the unbonding delegation. If an entry with the same
+// creation height and completion time already exists, it merges the balances. Returns true
+// if a new entry was created, false if an existing entry was updated.
 func (ubd *UnbondingDelegation) AddEntry(creationHeight int64, minTime time.Time, balance math.Int, unbondingID uint64) bool {
 	// Check the entries exists with creation_height and complete_time
 	entryIndex := -1
@@ -158,17 +178,20 @@ func (ubd *UnbondingDelegation) AddEntry(creationHeight int64, minTime time.Time
 	return true
 }
 
-// RemoveEntry - remove entry at index i to the unbonding delegation
+// RemoveEntry removes the unbonding delegation entry at the specified index.
+// The entry is deleted from the entries slice.
 func (ubd *UnbondingDelegation) RemoveEntry(i int64) {
 	ubd.Entries = slices.Delete(ubd.Entries, int(i), int(i+1))
 }
 
-// MustMarshalUBD marshals the unbonding delegation. Panics if fails.
+// MustMarshalUBD marshals an unbonding delegation to bytes using the provided codec.
+// Panics if marshaling fails.
 func MustMarshalUBD(cdc codec.BinaryCodec, ubd UnbondingDelegation) []byte {
 	return cdc.MustMarshal(&ubd)
 }
 
-// MustUnmarshalUBD unmarshals a unbonding delegation from a store value. Panics if fails.
+// MustUnmarshalUBD unmarshals an unbonding delegation from bytes using the provided codec.
+// Panics if unmarshaling fails.
 func MustUnmarshalUBD(cdc codec.BinaryCodec, value []byte) UnbondingDelegation {
 	ubd, err := UnmarshalUBD(cdc, value)
 	if err != nil {
@@ -178,13 +201,15 @@ func MustUnmarshalUBD(cdc codec.BinaryCodec, value []byte) UnbondingDelegation {
 	return ubd
 }
 
-// UnmarshalUBD unmarshals a unbonding delegation from a store value.
+// UnmarshalUBD unmarshals an unbonding delegation from bytes using the provided codec.
+// Returns an error if unmarshaling fails.
 func UnmarshalUBD(cdc codec.BinaryCodec, value []byte) (ubd UnbondingDelegation, err error) {
 	err = cdc.Unmarshal(value, &ubd)
 	return ubd, err
 }
 
-// UnbondingDelegations is a collection of UnbondingDelegation
+// UnbondingDelegations represents a collection of unbonding delegation objects.
+// It provides methods for string representation and iteration.
 type UnbondingDelegations []UnbondingDelegation
 
 func (ubds UnbondingDelegations) String() (out string) {
@@ -195,6 +220,9 @@ func (ubds UnbondingDelegations) String() (out string) {
 	return strings.TrimSpace(out)
 }
 
+// NewRedelegationEntry creates a new redelegation entry with the given creation height,
+// completion time, balance, destination shares, and unbonding ID. The entry tracks a single
+// redelegation operation that will complete at the specified time.
 func NewRedelegationEntry(creationHeight int64, completionTime time.Time, balance math.Int, sharesDst math.LegacyDec, id uint64) RedelegationEntry {
 	return RedelegationEntry{
 		CreationHeight:          creationHeight,
@@ -206,16 +234,21 @@ func NewRedelegationEntry(creationHeight int64, completionTime time.Time, balanc
 	}
 }
 
-// IsMature - is the current entry mature
+// IsMature checks if the redelegation entry has reached its completion time.
+// An entry is mature when the current time is equal to or after the completion time.
 func (e RedelegationEntry) IsMature(currentTime time.Time) bool {
 	return !e.CompletionTime.After(currentTime)
 }
 
-// OnHold - is the current entry on hold due to external modules
+// OnHold checks if the redelegation entry is currently on hold.
+// An entry is on hold when external modules have placed a hold on it, preventing completion.
 func (e RedelegationEntry) OnHold() bool {
 	return e.UnbondingOnHoldRefCount > 0
 }
 
+// NewRedelegation creates a new redelegation object with the given delegator address,
+// source and destination validator addresses, creation height, completion time, balance,
+// destination shares, and unbonding ID. The redelegation tracks tokens being moved between validators.
 func NewRedelegation(
 	delegatorAddr sdk.AccAddress, validatorSrcAddr, validatorDstAddr sdk.ValAddress,
 	creationHeight int64, minTime time.Time, balance math.Int, sharesDst math.LegacyDec, id uint64,
@@ -244,23 +277,27 @@ func NewRedelegation(
 	}
 }
 
-// AddEntry - append entry to the unbonding delegation
+// AddEntry adds a new redelegation entry to the redelegation object.
+// The entry is appended to the entries slice and tracks a single redelegation operation.
 func (red *Redelegation) AddEntry(creationHeight int64, minTime time.Time, balance math.Int, sharesDst math.LegacyDec, id uint64) {
 	entry := NewRedelegationEntry(creationHeight, minTime, balance, sharesDst, id)
 	red.Entries = append(red.Entries, entry)
 }
 
-// RemoveEntry - remove entry at index i to the unbonding delegation
+// RemoveEntry removes the redelegation entry at the specified index.
+// The entry is deleted from the entries slice.
 func (red *Redelegation) RemoveEntry(i int64) {
 	red.Entries = slices.Delete(red.Entries, int(i), int(i+1))
 }
 
-// MustMarshalRED returns the Redelegation bytes. Panics if fails.
+// MustMarshalRED marshals a redelegation to bytes using the provided codec.
+// Panics if marshaling fails.
 func MustMarshalRED(cdc codec.BinaryCodec, red Redelegation) []byte {
 	return cdc.MustMarshal(&red)
 }
 
-// MustUnmarshalRED unmarshals a redelegation from a store value. Panics if fails.
+// MustUnmarshalRED unmarshals a redelegation from bytes using the provided codec.
+// Panics if unmarshaling fails.
 func MustUnmarshalRED(cdc codec.BinaryCodec, value []byte) Redelegation {
 	red, err := UnmarshalRED(cdc, value)
 	if err != nil {
@@ -270,13 +307,15 @@ func MustUnmarshalRED(cdc codec.BinaryCodec, value []byte) Redelegation {
 	return red
 }
 
-// UnmarshalRED unmarshals a redelegation from a store value
+// UnmarshalRED unmarshals a redelegation from bytes using the provided codec.
+// Returns an error if unmarshaling fails.
 func UnmarshalRED(cdc codec.BinaryCodec, value []byte) (red Redelegation, err error) {
 	err = cdc.Unmarshal(value, &red)
 	return red, err
 }
 
-// Redelegations are a collection of Redelegation
+// Redelegations represents a collection of redelegation objects.
+// It provides methods for string representation and iteration.
 type Redelegations []Redelegation
 
 func (d Redelegations) String() (out string) {
@@ -290,7 +329,9 @@ func (d Redelegations) String() (out string) {
 // ----------------------------------------------------------------------------
 // Client Types
 
-// NewDelegationResp creates a new DelegationResponse instance
+// NewDelegationResp creates a new DelegationResponse instance with the given delegator address,
+// validator address, shares, and balance. The response combines delegation information with
+// the current token balance for client queries.
 func NewDelegationResp(
 	delegatorAddr, validatorAddr string, shares math.LegacyDec, balance sdk.Coin,
 ) DelegationResponse {
@@ -314,7 +355,8 @@ func (d *DelegationResponse) UnmarshalJSON(bz []byte) error {
 	return json.Unmarshal(bz, (*delegationRespAlias)(d))
 }
 
-// DelegationResponses is a collection of DelegationResp
+// DelegationResponses represents a collection of delegation response objects.
+// It provides methods for string representation and iteration.
 type DelegationResponses []DelegationResponse
 
 // String implements the Stringer interface for DelegationResponses.
@@ -326,7 +368,9 @@ func (d DelegationResponses) String() (out string) {
 	return strings.TrimSpace(out)
 }
 
-// NewRedelegationResponse crates a new RedelegationEntryResponse instance.
+// NewRedelegationResponse creates a new RedelegationResponse instance with the given delegator address,
+// source and destination validator addresses, and redelegation entry responses. The response combines
+// redelegation information with entry details for client queries.
 func NewRedelegationResponse(
 	delegatorAddr, validatorSrc, validatorDst string, entries []RedelegationEntryResponse,
 ) RedelegationResponse {
@@ -340,7 +384,9 @@ func NewRedelegationResponse(
 	}
 }
 
-// NewRedelegationEntryResponse creates a new RedelegationEntryResponse instance.
+// NewRedelegationEntryResponse creates a new RedelegationEntryResponse instance with the given
+// creation height, completion time, destination shares, initial balance, current balance, and
+// unbonding ID. The response combines redelegation entry information with the current balance.
 func NewRedelegationEntryResponse(
 	creationHeight int64, completionTime time.Time, sharesDst math.LegacyDec, initialBalance, balance math.Int, unbondingID uint64,
 ) RedelegationEntryResponse {
@@ -364,7 +410,8 @@ func (r *RedelegationResponse) UnmarshalJSON(bz []byte) error {
 	return json.Unmarshal(bz, (*redelegationRespAlias)(r))
 }
 
-// RedelegationResponses are a collection of RedelegationResp
+// RedelegationResponses represents a collection of redelegation response objects.
+// It provides methods for string representation and iteration.
 type RedelegationResponses []RedelegationResponse
 
 func (r RedelegationResponses) String() (out string) {

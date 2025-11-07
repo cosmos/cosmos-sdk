@@ -40,8 +40,7 @@ import (
 type fixture struct {
 	ctx sdk.Context
 
-	queryClient       v1.QueryClient
-	legacyQueryClient v1beta1.QueryClient
+	queryClient v1.QueryClient
 
 	bankKeeper    bankkeeper.Keeper
 	stakingKeeper *stakingkeeper.Keeper

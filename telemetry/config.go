@@ -180,14 +180,28 @@ func doInit() error {
 	// emit an initialized message which verifies basic telemetry is working
 	slog.Info("Telemetry initialized")
 
+	// extract service name from config for go-metrics compatibility layer
+	serviceName := "cosmos-sdk" // default fallback
+	if cfg.Resource != nil && cfg.Resource.Attributes != nil {
+		for _, attr := range cfg.Resource.Attributes {
+			if attr.Name == "service.name" {
+				if svcNameStr, ok := attr.Value.(string); ok {
+					serviceName = svcNameStr
+				}
+				break
+			}
+		}
+	}
+
 	// setup go-metrics compatibility layer
-	_, err = metrics.NewGlobal(metrics.DefaultConfig("cosmos-sdk"), newOtelGoMetricsSink(
+	_, err = metrics.NewGlobal(metrics.DefaultConfig(serviceName), newOtelGoMetricsSink(
 		context.Background(),
 		sdk.MeterProvider().Meter("gometrics"),
 	))
 	if err != nil {
 		return fmt.Errorf("failed to initialize go-metrics compatibility layer: %w", err)
 	}
+	globalTelemetryEnabled = true
 
 	return nil
 }

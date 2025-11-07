@@ -2,11 +2,11 @@ package keeper
 
 // Migrator is a struct for handling in-place store migrations.
 type Migrator struct {
-	keeper *Keeper
+	keeper Keeper
 }
 
 // NewMigrator returns a new Migrator instance.
-func NewMigrator(keeper *Keeper) Migrator {
+func NewMigrator(keeper Keeper) Migrator {
 	return Migrator{
 		keeper: keeper,
 	}

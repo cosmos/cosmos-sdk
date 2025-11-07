@@ -16,7 +16,6 @@ import (
 	address "cosmossdk.io/core/address"
 	math "cosmossdk.io/math"
 	types "github.com/cosmos/cosmos-sdk/types"
-	types0 "github.com/cosmos/cosmos-sdk/x/params/types"
 	types1 "github.com/cosmos/cosmos-sdk/x/staking/types"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -187,57 +186,6 @@ func (mr *MockParamSubspaceMockRecorder) Get(ctx, key, ptr any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockParamSubspace)(nil).Get), ctx, key, ptr)
 }
 
-// GetParamSet mocks base method.
-func (m *MockParamSubspace) GetParamSet(ctx types.Context, ps types0.ParamSet) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "GetParamSet", ctx, ps)
-}
-
-// GetParamSet indicates an expected call of GetParamSet.
-func (mr *MockParamSubspaceMockRecorder) GetParamSet(ctx, ps any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetParamSet", reflect.TypeOf((*MockParamSubspace)(nil).GetParamSet), ctx, ps)
-}
-
-// HasKeyTable mocks base method.
-func (m *MockParamSubspace) HasKeyTable() bool {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "HasKeyTable")
-	ret0, _ := ret[0].(bool)
-	return ret0
-}
-
-// HasKeyTable indicates an expected call of HasKeyTable.
-func (mr *MockParamSubspaceMockRecorder) HasKeyTable() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasKeyTable", reflect.TypeOf((*MockParamSubspace)(nil).HasKeyTable))
-}
-
-// SetParamSet mocks base method.
-func (m *MockParamSubspace) SetParamSet(ctx types.Context, ps types0.ParamSet) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetParamSet", ctx, ps)
-}
-
-// SetParamSet indicates an expected call of SetParamSet.
-func (mr *MockParamSubspaceMockRecorder) SetParamSet(ctx, ps any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetParamSet", reflect.TypeOf((*MockParamSubspace)(nil).SetParamSet), ctx, ps)
-}
-
-// WithKeyTable mocks base method.
-func (m *MockParamSubspace) WithKeyTable(table types0.KeyTable) types0.Subspace {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "WithKeyTable", table)
-	ret0, _ := ret[0].(types0.Subspace)
-	return ret0
-}
-
-// WithKeyTable indicates an expected call of WithKeyTable.
-func (mr *MockParamSubspaceMockRecorder) WithKeyTable(table any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WithKeyTable", reflect.TypeOf((*MockParamSubspace)(nil).WithKeyTable), table)
-}
 
 // MockStakingKeeper is a mock of StakingKeeper interface.
 type MockStakingKeeper struct {

@@ -125,11 +125,11 @@ func initFixture(tb testing.TB) *fixture {
 	err = govKeeper.Params.Set(newCtx, v1.DefaultParams())
 	assert.NilError(tb, err)
 
-	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts, nil)
-	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper, nil)
-	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper, nil)
-	distrModule := distribution.NewAppModule(cdc, distrKeeper, accountKeeper, bankKeeper, stakingKeeper, nil)
-	govModule := gov.NewAppModule(cdc, govKeeper, accountKeeper, bankKeeper, nil)
+	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts)
+	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
+	stakingModule := staking.NewAppModule(cdc, stakingKeeper, accountKeeper, bankKeeper)
+	distrModule := distribution.NewAppModule(cdc, distrKeeper, accountKeeper, bankKeeper, stakingKeeper)
+	govModule := gov.NewAppModule(cdc, govKeeper, accountKeeper, bankKeeper)
 
 	integrationApp := integration.NewIntegrationApp(newCtx, logger, keys, cdc, map[string]appmodule.AppModule{
 		authtypes.ModuleName:    authModule,
@@ -149,17 +149,14 @@ func initFixture(tb testing.TB) *fixture {
 	v1beta1.RegisterMsgServer(router, legacyMsgSrvr)
 
 	v1.RegisterQueryServer(integrationApp.QueryHelper(), keeper.NewQueryServer(govKeeper))
-	v1beta1.RegisterQueryServer(integrationApp.QueryHelper(), keeper.NewLegacyQueryServer(govKeeper))
 
 	queryClient := v1.NewQueryClient(integrationApp.QueryHelper())
-	legacyQueryClient := v1beta1.NewQueryClient(integrationApp.QueryHelper())
 
 	return &fixture{
-		ctx:               sdkCtx,
-		queryClient:       queryClient,
-		legacyQueryClient: legacyQueryClient,
-		bankKeeper:        bankKeeper,
-		stakingKeeper:     stakingKeeper,
-		govKeeper:         govKeeper,
+		ctx:           sdkCtx,
+		queryClient:   queryClient,
+		bankKeeper:    bankKeeper,
+		stakingKeeper: stakingKeeper,
+		govKeeper:     govKeeper,
 	}
 }

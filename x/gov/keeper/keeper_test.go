@@ -27,18 +27,17 @@ var address1 = "cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"
 type KeeperTestSuite struct {
 	suite.Suite
 
-	cdc               codec.Codec
-	ctx               sdk.Context
-	govKeeper         *keeper.Keeper
-	acctKeeper        *govtestutil.MockAccountKeeper
-	bankKeeper        *govtestutil.MockBankKeeper
-	stakingKeeper     *govtestutil.MockStakingKeeper
-	distKeeper        *govtestutil.MockDistributionKeeper
-	queryClient       v1.QueryClient
-	legacyQueryClient v1beta1.QueryClient
-	addrs             []sdk.AccAddress
-	msgSrvr           v1.MsgServer
-	legacyMsgSrvr     v1beta1.MsgServer
+	cdc           codec.Codec
+	ctx           sdk.Context
+	govKeeper     *keeper.Keeper
+	acctKeeper    *govtestutil.MockAccountKeeper
+	bankKeeper    *govtestutil.MockBankKeeper
+	stakingKeeper *govtestutil.MockStakingKeeper
+	distKeeper    *govtestutil.MockDistributionKeeper
+	queryClient   v1.QueryClient
+	addrs         []sdk.AccAddress
+	msgSrvr       v1.MsgServer
+	legacyMsgSrvr v1beta1.MsgServer
 }
 
 func (suite *KeeperTestSuite) SetupSuite() {
@@ -58,10 +57,7 @@ func (suite *KeeperTestSuite) reset() {
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
 	v1.RegisterQueryServer(queryHelper, keeper.NewQueryServer(govKeeper))
-	legacyQueryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
-	v1beta1.RegisterQueryServer(legacyQueryHelper, keeper.NewLegacyQueryServer(govKeeper))
 	queryClient := v1.NewQueryClient(queryHelper)
-	legacyQueryClient := v1beta1.NewQueryClient(legacyQueryHelper)
 
 	suite.ctx = ctx
 	suite.govKeeper = govKeeper
@@ -71,7 +67,6 @@ func (suite *KeeperTestSuite) reset() {
 	suite.distKeeper = distKeeper
 	suite.cdc = encCfg.Codec
 	suite.queryClient = queryClient
-	suite.legacyQueryClient = legacyQueryClient
 	suite.msgSrvr = keeper.NewMsgServerImpl(suite.govKeeper)
 
 	suite.legacyMsgSrvr = keeper.NewLegacyMsgServerImpl(govAcct.String(), suite.msgSrvr)

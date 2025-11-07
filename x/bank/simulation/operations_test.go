@@ -49,7 +49,6 @@ func (suite *SimTestSuite) SetupTest() {
 		depinject.Configs(
 			configurator.NewAppConfig(
 				configurator.AuthModule(),
-				configurator.ParamsModule(),
 				configurator.BankModule(),
 				configurator.StakingModule(),
 				configurator.ConsensusModule(),

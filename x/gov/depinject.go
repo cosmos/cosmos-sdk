@@ -23,7 +23,9 @@ import (
 func init() {
 	appmodule.Register(
 		&modulev1.Module{},
-		appmodule.Invoke(InvokeAddRoutes, InvokeSetHooks))
+		appmodule.Provide(ProvideModule),
+		appmodule.Invoke(InvokeAddRoutes, InvokeSetHooks),
+	)
 }
 
 type ModuleInputs struct {

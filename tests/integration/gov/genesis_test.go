@@ -47,7 +47,6 @@ type suite struct {
 }
 
 var appConfig = configurator.NewAppConfig(
-	configurator.ParamsModule(),
 	configurator.AuthModule(),
 	configurator.StakingModule(),
 	configurator.BankModule(),

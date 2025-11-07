@@ -19,7 +19,6 @@ var AppConfig = configurator.NewAppConfig(
 	configurator.SlashingModule(),
 	configurator.TxModule(),
 	configurator.ConsensusModule(),
-	configurator.ParamsModule(),
 	configurator.EvidenceModule(),
 	configurator.GenutilModule(),
 )

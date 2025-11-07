@@ -164,7 +164,6 @@ func DefaultConfig(factory TestFixtureFactory) Config {
 func MinimumAppConfig() depinject.Config {
 	return configurator.NewAppConfig(
 		configurator.AuthModule(),
-		configurator.ParamsModule(),
 		configurator.BankModule(),
 		configurator.GenutilModule(),
 		configurator.StakingModule(),

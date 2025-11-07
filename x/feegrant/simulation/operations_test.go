@@ -62,7 +62,6 @@ func (suite *SimTestSuite) SetupTest() {
 				configurator.StakingModule(),
 				configurator.TxModule(),
 				configurator.ConsensusModule(),
-				configurator.ParamsModule(),
 				configurator.GenutilModule(),
 				configurator.FeegrantModule(),
 			),

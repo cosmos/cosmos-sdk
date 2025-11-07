@@ -70,7 +70,6 @@ func (s *paginationTestSuite) SetupTest() {
 			configurator.NewAppConfig(
 				configurator.AuthModule(),
 				configurator.BankModule(),
-				configurator.ParamsModule(),
 				configurator.ConsensusModule(),
 				configurator.OmitInitGenesis(),
 			),

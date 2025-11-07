@@ -421,7 +421,6 @@ func createTestSuite(t *testing.T, isCheckTx bool) (suite, sdk.Context) {
 			configurator.NewAppConfig(
 				configurator.AuthModule(),
 				configurator.TxModule(),
-				configurator.ParamsModule(),
 				configurator.BankModule(),
 				configurator.StakingModule(),
 				configurator.ConsensusModule(),

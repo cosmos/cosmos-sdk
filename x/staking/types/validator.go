@@ -260,13 +260,13 @@ func (d Description) EnsureLength() (Description, error) {
 // ABCIValidatorUpdate returns an abci.ValidatorUpdate from a staking validator type
 // with the full validator power
 func (v Validator) ABCIValidatorUpdate(r math.Int) abci.ValidatorUpdate {
-	tmProtoPk, err := v.TmConsPublicKey()
+	cmtProtoPk, err := v.CmtConsPublicKey()
 	if err != nil {
 		panic(err)
 	}
 
 	return abci.ValidatorUpdate{
-		PubKey: tmProtoPk,
+		PubKey: cmtProtoPk,
 		Power:  v.ConsensusPower(r),
 	}
 }
@@ -274,13 +274,13 @@ func (v Validator) ABCIValidatorUpdate(r math.Int) abci.ValidatorUpdate {
 // ABCIValidatorUpdateZero returns an abci.ValidatorUpdate from a staking validator type
 // with zero power used for validator updates.
 func (v Validator) ABCIValidatorUpdateZero() abci.ValidatorUpdate {
-	tmProtoPk, err := v.TmConsPublicKey()
+	cmtProtoPk, err := v.CmtConsPublicKey()
 	if err != nil {
 		panic(err)
 	}
 
 	return abci.ValidatorUpdate{
-		PubKey: tmProtoPk,
+		PubKey: cmtProtoPk,
 		Power:  0,
 	}
 }
@@ -351,17 +351,17 @@ func (v Validator) BondedTokens() math.Int {
 
 // ConsensusPower gets the consensus-engine power. Aa reduction of 10^6 from
 // validator tokens is applied
-func (v Validator) ConsensusPower(r math.Int) int64 {
+func (v Validator) ConsensusPower(powerReduction math.Int) int64 {
 	if v.IsBonded() {
-		return v.PotentialConsensusPower(r)
+		return v.PotentialConsensusPower(powerReduction)
 	}
 
 	return 0
 }
 
 // PotentialConsensusPower returns the potential consensus-engine power.
-func (v Validator) PotentialConsensusPower(r math.Int) int64 {
-	return sdk.TokensToConsensusPower(v.Tokens, r)
+func (v Validator) PotentialConsensusPower(powerReduction math.Int) int64 {
+	return sdk.TokensToConsensusPower(v.Tokens, powerReduction)
 }
 
 // UpdateStatus updates the location of the shares within a validator

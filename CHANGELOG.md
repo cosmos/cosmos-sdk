@@ -34,6 +34,13 @@ Types of changes (Stanzas):
 Ref: https://keepachangelog.com/en/1.0.0/
 -->
 
+# Unreleased
+
+### Breaking Changes
+
+* [#25546](https://github.com/cosmos/cosmos-sdk/pull/25546) Removed `x/params`:
+  * Removes all `legacySubspace` arguments from Keeper and Module instantiation
+
 # Changelog
 
 ## [v0.53.4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.3) - 2025-07-25

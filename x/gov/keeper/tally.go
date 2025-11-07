@@ -38,7 +38,7 @@ func defaultCalculateVoteResultsAndVotingPower(
 	results[v1.OptionNoWithVeto] = math.LegacyZeroDec()
 
 	rng := collections.NewPrefixedPairRange[uint64, sdk.AccAddress](proposal.Id)
-	votesToRemove := []collections.Pair[uint64, sdk.AccAddress]{}
+	var votesToRemove []collections.Pair[uint64, sdk.AccAddress]
 	err = k.Votes.Walk(ctx, rng, func(key collections.Pair[uint64, sdk.AccAddress], vote v1.Vote) (bool, error) {
 		// if validator, just record it in the map
 		voter, err := k.authKeeper.AddressCodec().StringToBytes(vote.Voter)
@@ -119,6 +119,7 @@ func defaultCalculateVoteResultsAndVotingPower(
 // getCurrentValidators fetches all the bonded validators, insert them into currValidators
 func (k Keeper) getCurrentValidators(ctx context.Context) (map[string]v1.ValidatorGovInfo, error) {
 	currValidators := make(map[string]v1.ValidatorGovInfo)
+	// TODO: IterateCurrentValidatorSet()
 	if err := k.sk.IterateBondedValidatorsByPower(ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
 		valBz, err := k.sk.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
 		if err != nil {
@@ -158,6 +159,8 @@ func (k Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, burnDe
 
 	// TODO: Upgrade the spec to cover all of these cases & remove pseudocode.
 	// If there is no staked coins, the proposal fails
+	//
+	// TODO: TotalVotingPower
 	totalBonded, err := k.sk.TotalBondedTokens(ctx)
 	if err != nil {
 		return false, false, tallyResults, err

@@ -234,6 +234,9 @@ func (k Keeper) RemoveValidator(ctx context.Context, address sdk.ValAddress) err
 
 	// delete the old validator record
 	store := k.storeService.OpenKVStore(ctx)
+
+	// TODO: k.DeleteValidator() -> x/validator
+
 	if err = store.Delete(types.GetValidatorKey(address)); err != nil {
 		return err
 	}
@@ -264,6 +267,8 @@ func (k Keeper) RemoveValidator(ctx context.Context, address sdk.ValAddress) err
 func (k Keeper) GetAllValidators(ctx context.Context) (validators []types.Validator, err error) {
 	store := k.storeService.OpenKVStore(ctx)
 
+	// TODO: k.GetAllValidators() -> x/validator
+
 	iterator, err := store.Iterator(types.ValidatorsKey, storetypes.PrefixEndBytes(types.ValidatorsKey))
 	if err != nil {
 		return nil, err
@@ -285,6 +290,8 @@ func (k Keeper) GetAllValidators(ctx context.Context) (validators []types.Valida
 func (k Keeper) GetValidators(ctx context.Context, maxRetrieve uint32) (validators []types.Validator, err error) {
 	store := k.storeService.OpenKVStore(ctx)
 	validators = make([]types.Validator, maxRetrieve)
+
+	// TODO: k.GetValidators() -> x/validator
 
 	iterator, err := store.Iterator(types.ValidatorsKey, storetypes.PrefixEndBytes(types.ValidatorsKey))
 	if err != nil {

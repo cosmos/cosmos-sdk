@@ -218,7 +218,7 @@ func (k Keeper) ApplyAndReturnValidatorSetUpdates(ctx context.Context) (updates 
 	}
 
 	for _, valAddrBytes := range noLongerBonded {
-		validator, err := k.GetValidator(ctx, sdk.ValAddress(valAddrBytes))
+		validator, err := k.GetValidator(ctx, valAddrBytes)
 		if err != nil {
 			return nil, fmt.Errorf("validator record not found for address: %X", sdk.ValAddress(valAddrBytes))
 		}

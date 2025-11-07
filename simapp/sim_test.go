@@ -19,7 +19,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/log"
-
 	"cosmossdk.io/store"
 	storetypes "cosmossdk.io/store/types"
 
@@ -163,10 +162,9 @@ func IsEmptyValidatorSetErr(err error) bool {
 }
 
 func TestAppStateDeterminism(t *testing.T) {
-	cfg := simcli.NewConfigFromFlags()
-	numTimesToRunPerSeed := cfg.NumRuns
+	const numTimesToRunPerSeed = 3
 	var seeds []int64
-	if s := cfg.Seed; s != simcli.DefaultSeedValue {
+	if s := simcli.NewConfigFromFlags().Seed; s != simcli.DefaultSeedValue {
 		// We will be overriding the random seed and just run a single simulation on the provided seed value
 		for j := 0; j < numTimesToRunPerSeed; j++ { // multiple rounds
 			seeds = append(seeds, s)

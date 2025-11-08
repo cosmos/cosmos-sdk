@@ -146,7 +146,8 @@ enabled = {{ .MemLogger.Enabled }}
 filter = {{ .MemLogger.Filter }}
 
 # Interval controls how often the current in-memory buffer is compressed
-# and appended to the WAL. Examples: "2s", "1m".
+# and appended to the WAL. Examples: "2s", "1m". Set to "0" to disable
+# time-based flushing (size-only mode, if memory-bytes > 0).
 interval = "{{ .MemLogger.Interval }}"
 
 # MemoryBytes caps the uncompressed bytes held in memory. When reached,

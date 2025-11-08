@@ -3,6 +3,7 @@ package log
 import (
 	"bytes"
 	"compress/gzip"
+	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -19,7 +20,11 @@ import (
 // MemLoggerConfig configures the in-memory compressing logger.
 type MemLoggerConfig struct {
 	// Interval controls how often the current in-memory buffer is compressed
-	// and asynchronously appended to the WAL. If zero, defaults to 2 seconds.
+	// and asynchronously appended to the WAL.
+	// - > 0: enable time-based flushing at the given cadence.
+	// - == 0: disable time-based flushing (size-only mode when MemoryLimitBytes > 0).
+	// When both Interval == 0 and MemoryLimitBytes <= 0, a 2s default is used
+	// to avoid unbounded buffering.
 	Interval time.Duration
 
 	// MemoryLimitBytes caps how many uncompressed bytes are held in memory.
@@ -58,16 +63,26 @@ type MemLogger struct {
 var _ Logger = (*MemLogger)(nil)
 
 // NewMemLogger creates a new in-memory compressing logger with the given config.
-func NewMemLogger(cfg MemLoggerConfig) Logger {
-	if cfg.Interval == 0 {
+// WAL is required; if the WAL cannot be initialized, returns an error.
+func NewMemLogger(cfg MemLoggerConfig) (Logger, error) {
+	// Interval semantics:
+	// - Interval > 0: enable time-based flushing at the given cadence.
+	// - Interval == 0: disable time-based flushing. Combined with a positive
+	//   MemoryLimitBytes, this yields a size-only policy.
+	// If both Interval == 0 and MemoryLimitBytes <= 0, fall back to a sane
+	// default interval to avoid never flushing.
+	if cfg.Interval <= 0 && cfg.MemoryLimitBytes <= 0 {
 		cfg.Interval = 2 * time.Second
 	}
 	if cfg.GzipLevel == 0 {
 		// Favor speed to minimize runtime overhead.
 		cfg.GzipLevel = gzip.BestSpeed
 	}
-	agg := newMemAggregator(cfg)
-	return &MemLogger{agg: agg}
+	agg, err := newMemAggregator(cfg)
+	if err != nil {
+		return nil, err
+	}
+	return &MemLogger{agg: agg}, nil
 }
 
 // Info logs a message at level info.
@@ -129,13 +144,19 @@ type memAggregator struct {
 
 	mu  sync.Mutex
 	buf bytes.Buffer // current uncompressed JSONL buffer
+	// running stats for current buffer
+	curRecs uint32
+	firstTS int64
+	lastTS  int64
 
 	tick   *time.Ticker
 	stopCh chan struct{}
 	wg     sync.WaitGroup
 
 	// compression pipeline
-	workCh chan []byte
+	// workCh carries a workItem with the buffer and precomputed metadata.
+	// Capacity is sized to reduce blocking on the hot path.
+	workCh chan workItem
 	compWg sync.WaitGroup
 
 	// pools to reduce allocations during compression
@@ -158,12 +179,23 @@ type memAggregator struct {
 // plus any contextual keyvals, without nesting.
 type event map[string]any
 
-func newMemAggregator(cfg MemLoggerConfig) *memAggregator {
+// workItem bundles an uncompressed buffer and metadata collected during
+// logging so the compressor can avoid rescanning the payload.
+type workItem struct {
+	data    []byte
+	recs    uint32
+	firstTS int64
+	lastTS  int64
+}
+
+func newMemAggregator(cfg MemLoggerConfig) (*memAggregator, error) {
 	m := &memAggregator{
-		cfg:     cfg,
-		tick:    time.NewTicker(cfg.Interval),
-		stopCh:  make(chan struct{}),
-		workCh:  make(chan []byte, 2),
+		cfg:    cfg,
+		stopCh: make(chan struct{}),
+		// Size the work queue based on the configured uncompressed
+		// memory limit. A larger queue helps avoid blocking when
+		// the limit is small and many small chunks are enqueued.
+		workCh:  make(chan workItem, workQueueCap(cfg.MemoryLimitBytes)),
 		gzPool:  sync.Pool{New: func() any { w, _ := gzip.NewWriterLevel(io.Discard, cfg.GzipLevel); return w }},
 		bufPool: sync.Pool{New: func() any { return new(bytes.Buffer) }},
 	}
@@ -194,18 +226,24 @@ func newMemAggregator(cfg MemLoggerConfig) *memAggregator {
 	} else if cfg.MemoryLimitBytes >= (256 << 20) {
 		bufSize = 8 << 20
 	}
-	if w, err := newWalWriter(walWriterConfig{
+	w, err := newWalWriter(walWriterConfig{
 		DataDir: dataDir,
 		NodeID:  cfg.P2pNodeId,
 		BufSize: bufSize,
-	}); err == nil {
-		m.wal = w
+	})
+	if err != nil {
+		return nil, fmt.Errorf("memlogger: WAL initialization failed: %w", err)
 	}
-	m.wg.Add(1)
-	go m.run()
+	m.wal = w
+	// Start periodic flushing only when enabled (Interval > 0).
+	if cfg.Interval > 0 {
+		m.tick = time.NewTicker(cfg.Interval)
+		m.wg.Add(1)
+		go m.run()
+	}
 	m.compWg.Add(1)
 	go m.compressor()
-	return m
+	return m, nil
 }
 
 func (m *memAggregator) run() {
@@ -230,7 +268,8 @@ func (m *memAggregator) append(level string, ctx []any, msg string, keyvals ...a
 	}
 	// Build flat event to mirror go-kit JSON logger format used by TMJSONLogger.
 	ev := make(event, 4+len(ctx)+len(keyvals))
-	ev["ts"] = time.Now().UTC()
+	now := time.Now().UTC()
+	ev["ts"] = now
 	ev["level"] = level
 	ev["_msg"] = msg
 
@@ -262,16 +301,22 @@ func (m *memAggregator) append(level string, ctx []any, msg string, keyvals ...a
 
 	m.mu.Lock()
 	_, _ = m.buf.Write(b)
+	// update running stats for current buffer
+	if m.curRecs == 0 {
+		m.firstTS = now.UnixNano()
+	}
+	m.curRecs++
+	m.lastTS = now.UnixNano()
 
 	// Size-based early compression: swap buffer and enqueue to background worker.
-	var toCompress []byte
+	var wi workItem
 	if max := m.cfg.MemoryLimitBytes; max > 0 && m.buf.Len() >= max {
-		toCompress = m.takeBufferLocked()
+		wi = m.takeBufferWithMetaLocked()
 	}
 	m.mu.Unlock()
 
-	if len(toCompress) > 0 {
-		m.enqueueData(toCompress)
+	if len(wi.data) > 0 {
+		m.enqueueItem(wi)
 	}
 }
 
@@ -282,20 +327,25 @@ func (m *memAggregator) enqueueCurrentBuffer() {
 		m.mu.Unlock()
 		return
 	}
-	data := m.takeBufferLocked()
+	wi := m.takeBufferWithMetaLocked()
 	m.mu.Unlock()
 
-	m.enqueueData(data)
+	m.enqueueItem(wi)
 }
 
-// takeBufferLocked swaps out the current uncompressed buffer and returns its bytes.
-// Caller must hold m.mu.
-func (m *memAggregator) takeBufferLocked() []byte {
+// takeBufferWithMetaLocked swaps out the current uncompressed buffer and returns
+// its bytes along with the collected metadata. Caller must hold m.mu.
+func (m *memAggregator) takeBufferWithMetaLocked() workItem {
 	data := m.buf.Bytes()
 	out := make([]byte, len(data))
 	copy(out, data)
+	wi := workItem{data: out, recs: m.curRecs, firstTS: m.firstTS, lastTS: m.lastTS}
+	// reset for next buffer
 	m.buf.Reset()
-	return out
+	m.curRecs = 0
+	m.firstTS = 0
+	m.lastTS = 0
+	return wi
 }
 
 // addChunkLocked appends a compressed chunk and enforces the capacity policy.
@@ -303,26 +353,38 @@ func (m *memAggregator) takeBufferLocked() []byte {
 // addChunkLocked was used for in-memory retention of compressed chunks.
 // In the simplified WAL-only mode, compressed chunks are not retained.
 
-func (m *memAggregator) enqueueData(data []byte) {
+func (m *memAggregator) enqueueItem(wi workItem) {
 	// Block to preserve backpressure but outside locks; this avoids dropping logs
 	// and keeps compression off the hot path of logging.
-	m.workCh <- data
+	m.workCh <- wi
 }
 
 func (m *memAggregator) compressor() {
 	defer m.compWg.Done()
-	for data := range m.workCh {
-		chunk, err := m.gzipWithPool(data)
+	for wi := range m.workCh {
+		// compress first, then read CRC32 from gzip trailer to avoid rescanning
+		chunk, err := m.gzipWithPool(wi.data)
 		if err != nil {
 			// Best-effort: if compression fails, re-append uncompressed to current buffer.
 			m.mu.Lock()
-			_, _ = m.buf.Write(data)
+			_, _ = m.buf.Write(wi.data)
+			// best effort to preserve counters
+			m.curRecs += wi.recs
+			if m.firstTS == 0 || (wi.firstTS != 0 && wi.firstTS < m.firstTS) {
+				m.firstTS = wi.firstTS
+			}
+			if wi.lastTS > m.lastTS {
+				m.lastTS = wi.lastTS
+			}
 			m.mu.Unlock()
 			continue
 		}
-		// Append to WAL; we do not retain compressed chunks in memory.
-		if m.wal != nil {
-			_ = m.wal.AppendCompressed(chunk)
+		// Append to WAL with metadata extracted from gzip trailer.
+		if crc, ok := gzipCRC32FromMember(chunk); ok {
+			_ = m.wal.AppendCompressedWithMeta(chunk, wi.recs, wi.firstTS, wi.lastTS, crc)
+		} else {
+			// CRC32 unknown; pass 0 (allowed by semantics)
+			_ = m.wal.AppendCompressedWithMeta(chunk, wi.recs, wi.firstTS, wi.lastTS, 0)
 		}
 	}
 }
@@ -359,21 +421,23 @@ func (m *memAggregator) gzipWithPool(in []byte) ([]byte, error) {
 func (m *memAggregator) flushToWriter(w io.Writer) error {
 	// Compress any pending buffer into a final chunk.
 	m.mu.Lock()
-	var data []byte
+	var wi workItem
 	if m.buf.Len() > 0 {
-		data = m.takeBufferLocked()
+		wi = m.takeBufferWithMetaLocked()
 	}
 	m.mu.Unlock()
 
-	if len(data) == 0 {
+	if len(wi.data) == 0 {
 		return nil
 	}
-	gzChunk, err := m.gzipWithPool(data)
+	gzChunk, err := m.gzipWithPool(wi.data)
 	if err != nil {
 		return err
 	}
-	if m.wal != nil {
-		_ = m.wal.AppendCompressed(gzChunk)
+	if crc, ok := gzipCRC32FromMember(gzChunk); ok {
+		_ = m.wal.AppendCompressedWithMeta(gzChunk, wi.recs, wi.firstTS, wi.lastTS, crc)
+	} else {
+		_ = m.wal.AppendCompressedWithMeta(gzChunk, wi.recs, wi.firstTS, wi.lastTS, 0)
 	}
 	_, err = w.Write(gzChunk)
 	return err
@@ -402,15 +466,17 @@ func (m *memAggregator) flushToWAL() error {
 		m.mu.Unlock()
 		return nil
 	}
-	data := m.takeBufferLocked()
+	wi := m.takeBufferWithMetaLocked()
 	m.mu.Unlock()
 
-	gzChunk, err := m.gzipWithPool(data)
+	gzChunk, err := m.gzipWithPool(wi.data)
 	if err != nil {
 		return err
 	}
-	// Append to WAL; no in-memory retention.
-	return m.wal.AppendCompressed(gzChunk)
+	if crc, ok := gzipCRC32FromMember(gzChunk); ok {
+		return m.wal.AppendCompressedWithMeta(gzChunk, wi.recs, wi.firstTS, wi.lastTS, crc)
+	}
+	return m.wal.AppendCompressedWithMeta(gzChunk, wi.recs, wi.firstTS, wi.lastTS, 0)
 }
 
 func (m *memAggregator) dumpUncompressed(w io.Writer) error {
@@ -430,16 +496,18 @@ func (m *memAggregator) dumpUncompressed(w io.Writer) error {
 func (m *memAggregator) close() {
 	// Stop periodic enqueues.
 	close(m.stopCh)
-	m.tick.Stop()
+	if m.tick != nil {
+		m.tick.Stop()
+	}
 	m.wg.Wait()
 
 	// Enqueue any remaining buffer before shutting down compressor.
 	m.mu.Lock()
 	if m.buf.Len() > 0 {
-		data := m.takeBufferLocked()
+		wi := m.takeBufferWithMetaLocked()
 		m.mu.Unlock()
 		// Best effort: enqueue; if blocked, still wait — we are shutting down.
-		m.workCh <- data
+		m.workCh <- wi
 	} else {
 		m.mu.Unlock()
 	}
@@ -449,10 +517,8 @@ func (m *memAggregator) close() {
 	m.compWg.Wait()
 
 	// Ensure WAL is flushed to disk and closed.
-	if m.wal != nil {
-		_ = m.wal.Sync()
-		_ = m.wal.Close()
-	}
+	_ = m.wal.Sync()
+	_ = m.wal.Close()
 }
 
 // ---- helpers ----
@@ -498,3 +564,36 @@ func normalizeValue(v any) any {
 }
 
 // pickNodeID removed: WAL uses a default node identifier unless higher-level wiring provides one.
+
+// workQueueCap returns a buffered channel capacity for the compression work
+// queue based on the uncompressed memory limit. The goal is to allow a backlog
+// of roughly ~8 MiB of uncompressed data before producers block, while keeping
+// caps modest to avoid excessive memory usage for large chunk sizes.
+//
+// When limit <= 0 (time-based flushing), use a conservative default.
+func workQueueCap(limit int) int {
+	// Default when no size trigger is set.
+	if limit <= 0 {
+		return 16
+	}
+	const targetBacklogBytes = 8 << 20 // ~8 MiB
+	cap := targetBacklogBytes / limit
+	if cap < 4 {
+		cap = 4
+	}
+	if cap > 64 {
+		cap = 64
+	}
+	return cap
+}
+
+// gzipCRC32FromMember extracts the CRC32 of the uncompressed payload from the
+// gzip trailer of a compressed member. Returns false if the member is too short.
+func gzipCRC32FromMember(m []byte) (uint32, bool) {
+	if len(m) < 8 {
+		return 0, false
+	}
+	// Trailer layout: CRC32 (4 bytes LE) + ISIZE (4 bytes LE)
+	crc := binary.LittleEndian.Uint32(m[len(m)-8 : len(m)-4])
+	return crc, true
+}

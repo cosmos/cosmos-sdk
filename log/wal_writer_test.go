@@ -2,12 +2,38 @@ package log
 
 import (
 	"bytes"
+	"compress/gzip"
+	"encoding/json"
+	"hash/crc32"
+	"io"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 )
+
+// gzipBytes compresses the input using gzip and returns the compressed bytes.
+func gzipBytes(p []byte) []byte {
+	var buf bytes.Buffer
+	zw, _ := gzip.NewWriterLevel(&buf, gzip.BestSpeed)
+	_, _ = zw.Write(p)
+	_ = zw.Close()
+	return buf.Bytes()
+}
+
+// makeIncompressible returns a deterministic, pseudo-random byte slice of length n.
+// Using a fixed seed ensures reproducible sizes in tests.
+func makeIncompressible(n int) []byte {
+	b := make([]byte, n)
+	r := rand.New(rand.NewSource(1))
+	for i := range b {
+		b[i] = byte(r.Intn(256))
+	}
+	return b
+}
 
 // TestWalWriter_AppendAndSync verifies basic append and sync behavior.
 func TestWalWriter_AppendAndSync(t *testing.T) {
@@ -18,18 +44,23 @@ func TestWalWriter_AppendAndSync(t *testing.T) {
 	}
 	defer func() { _ = w.Close() }()
 
-	// Append a few chunks of varying sizes.
-	chunks := [][]byte{
-		bytes.Repeat([]byte("a"), 8<<10),   // 8 KiB
-		bytes.Repeat([]byte("b"), 64<<10),  // 64 KiB
-		bytes.Repeat([]byte("c"), 256<<10), // 256 KiB
+	// Append a few newline-delimited chunks (JSONL-like) so recs and line counts are meaningful.
+	// Use 2-byte lines ("a\n", "b\n", "c\n") so total raw sizes approximate 8KiB/64KiB/256KiB.
+	rawChunks := [][]byte{
+		bytes.Repeat([]byte("a"), 4<<10),   // ~8 KiB raw
+		bytes.Repeat([]byte("b"), 32<<10),  // ~64 KiB raw
+		bytes.Repeat([]byte("c"), 128<<10), // ~256 KiB raw
 	}
-	var total int
-	for _, c := range chunks {
-		if err := w.AppendCompressed(c); err != nil {
+	var totalCompressed int
+	for _, raw := range rawChunks {
+		gz := gzipBytes(append(raw, '\n'))
+		recs := uint32(bytes.Count(raw, []byte{'\n'}))
+		crc := crc32.ChecksumIEEE(raw)
+		now := time.Now().UTC().UnixNano()
+		if err := w.AppendCompressedWithMeta(gz, recs, now, now, crc); err != nil {
 			t.Fatalf("append: %v", err)
 		}
-		total += len(c)
+		totalCompressed += len(gz)
 	}
 
 	if err := w.Sync(); err != nil {
@@ -41,8 +72,8 @@ func TestWalWriter_AppendAndSync(t *testing.T) {
 	if err != nil {
 		t.Fatalf("stat current segment: %v", err)
 	}
-	if fi.Size() < int64(total) {
-		t.Fatalf("segment size too small: got %d want >= %d", fi.Size(), total)
+	if fi.Size() < int64(totalCompressed) {
+		t.Fatalf("segment size too small: got %d want >= %d", fi.Size(), totalCompressed)
 	}
 
 	// Layout sanity check: .../wal/node-<nodeID>/<YYYY-MM-DD>/seg-XXXXXX.wal.gz
@@ -66,8 +97,9 @@ func TestWalWriter_RotateBySize(t *testing.T) {
 	firstPath := w.currentPath
 	firstIndex := w.currentIndex
 
-	// Append two 48 KiB chunks -> should roll after second write.
-	chunk := bytes.Repeat([]byte("x"), 48<<10)
+	// Append two ~48 KiB incompressible chunks (gzip-compressed) -> should roll after second write.
+	raw := makeIncompressible(48 << 10)
+	chunk := gzipBytes(raw)
 	if err := w.AppendCompressed(chunk); err != nil {
 		t.Fatal(err)
 	}
@@ -116,8 +148,9 @@ func BenchmarkWalWriter_Append(b *testing.B) {
 			}
 			defer func() { _ = w.Close() }()
 
-			chunk := bytes.Repeat([]byte("z"), sz)
-			b.SetBytes(int64(sz))
+			// Use incompressible data so gzip size ~= input size.
+			chunk := gzipBytes(makeIncompressible(sz))
+			b.SetBytes(int64(len(chunk)))
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
 				if err := w.AppendCompressed(chunk); err != nil {
@@ -151,8 +184,8 @@ func BenchmarkWalWriter_BufSizeVsChunk(b *testing.B) {
 					}
 					defer func() { _ = w.Close() }()
 
-					chunk := bytes.Repeat([]byte("w"), cs)
-					b.SetBytes(int64(cs))
+					chunk := gzipBytes(makeIncompressible(cs))
+					b.SetBytes(int64(len(chunk)))
 					b.ResetTimer()
 					for i := 0; i < b.N; i++ {
 						if err := w.AppendCompressed(chunk); err != nil {
@@ -180,5 +213,86 @@ func byteSize(n int) string {
 		return strconv.Itoa(n/KiB) + "KiB"
 	default:
 		return strconv.Itoa(n) + "B"
+	}
+}
+
+// TestWalWriter_AppendWithMeta_Index verifies index metadata matches compressor logic
+// and that the compressed span decompresses correctly using the recorded off/len.
+func TestWalWriter_AppendWithMeta_Index(t *testing.T) {
+	dir := t.TempDir()
+	w, err := newWalWriter(walWriterConfig{DataDir: dir, NodeID: "meta", BufSize: 1 << 20})
+	if err != nil {
+		t.Fatalf("newWalWriter: %v", err)
+	}
+	defer func() { _ = w.Close() }()
+
+	// Prepare raw data with newlines to validate recs and CRC.
+	raw := []byte("a\nb\nc\n") // 3 records
+	recs := uint32(bytes.Count(raw, []byte{'\n'}))
+	crc := crc32.ChecksumIEEE(raw)
+	now := time.Now().UTC().UnixNano()
+	gz := gzipBytes(raw)
+
+	if err := w.AppendCompressedWithMeta(gz, recs, now, now, crc); err != nil {
+		t.Fatalf("append with meta: %v", err)
+	}
+	if err := w.Sync(); err != nil {
+		t.Fatalf("sync: %v", err)
+	}
+
+	// Read index line.
+	idxPath := strings.TrimSuffix(w.currentPath, ".wal.gz") + ".wal.idx"
+	f, err := os.Open(idxPath)
+	if err != nil {
+		t.Fatalf("open idx: %v", err)
+	}
+	defer f.Close()
+	type idxEntry struct {
+		File    string `json:"file"`
+		Frame   uint64 `json:"frame"`
+		Off     uint64 `json:"off"`
+		Len     uint64 `json:"len"`
+		Recs    uint32 `json:"recs"`
+		FirstTS int64  `json:"first_ts"`
+		LastTS  int64  `json:"last_ts"`
+		CRC32   uint32 `json:"crc32"`
+	}
+	var ent idxEntry
+	dec := json.NewDecoder(f)
+	if err := dec.Decode(&ent); err != nil {
+		t.Fatalf("decode idx: %v", err)
+	}
+
+	if ent.Frame != 1 || ent.Off != 0 {
+		t.Fatalf("unexpected frame/offset: frame=%d off=%d", ent.Frame, ent.Off)
+	}
+	if int(ent.Len) != len(gz) {
+		t.Fatalf("len mismatch: got %d want %d", ent.Len, len(gz))
+	}
+	if ent.Recs != recs {
+		t.Fatalf("recs mismatch: got %d want %d", ent.Recs, recs)
+	}
+	if ent.CRC32 != crc {
+		t.Fatalf("crc mismatch: got %08x want %08x", ent.CRC32, crc)
+	}
+
+	// Decompress the recorded span and verify CRC.
+	wf, err := os.Open(w.currentPath)
+	if err != nil {
+		t.Fatalf("open wal: %v", err)
+	}
+	defer wf.Close()
+	sr := io.NewSectionReader(wf, int64(ent.Off), int64(ent.Len))
+	zr, err := gzip.NewReader(sr)
+	if err != nil {
+		t.Fatalf("gzip reader: %v", err)
+	}
+	defer zr.Close()
+	h := crc32.NewIEEE()
+	if _, err := io.Copy(h, zr); err != nil && err != io.EOF {
+		t.Fatalf("decompress copy: %v", err)
+	}
+	if got := h.Sum32(); got != crc {
+		t.Fatalf("crc after decompress mismatch: got %08x want %08x", got, crc)
 	}
 }

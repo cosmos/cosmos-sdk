@@ -192,7 +192,7 @@ func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 		}
 		// Always use the app's home directory as output root.
 		mcfg.OutputDir = ctx.Config.RootDir
-		return log.NewMemLogger(mcfg), nil
+		return log.NewMemLogger(mcfg)
 	}
 	var opts []log.Option
 	if ctx.Viper.GetString(flags.FlagLogFormat) == flags.OutputFormatJSON {

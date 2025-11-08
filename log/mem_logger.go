@@ -49,6 +49,11 @@ type MemLoggerConfig struct {
 	// entry in the allow-list (case-insensitive, exact match) are logged,
 	// regardless of level. When false, all messages are logged.
 	EnableFilter bool
+
+	// Console, when non-nil, receives a copy of INFO-level JSONL events
+	// as they are logged. All events still go to the gzip/WAL pipeline.
+	// If nil, no console mirroring is performed.
+	Console io.Writer
 }
 
 // MemLogger implements Logger and buffers JSONL log events in memory.
@@ -172,6 +177,9 @@ type memAggregator struct {
 	// this set after lowercasing (case-insensitive), regardless of level.
 	// Checked before any JSON/gzip.
 	allowedMsgs map[string]struct{}
+
+	// out is an optional mirror target for INFO logs (typically stdout).
+	out io.Writer
 }
 
 // event is encoded to a single flat JSON object similar to TM JSON logger
@@ -199,6 +207,9 @@ func newMemAggregator(cfg MemLoggerConfig) (*memAggregator, error) {
 		gzPool:  sync.Pool{New: func() any { w, _ := gzip.NewWriterLevel(io.Discard, cfg.GzipLevel); return w }},
 		bufPool: sync.Pool{New: func() any { return new(bytes.Buffer) }},
 	}
+	// Mirror target: prefer configured Console; fallback to os.Stdout if explicitly requested via nil?
+	// We only mirror when cfg.Console is non-nil to avoid changing default behavior silently.
+	m.out = cfg.Console
 	// Initialize allow-list only when filtering is enabled. If filtering is
 	// disabled, leave the map nil so the fast-path check naturally passes.
 	if cfg.EnableFilter {
@@ -298,6 +309,12 @@ func (m *memAggregator) append(level string, ctx []any, msg string, keyvals ...a
 	// encode as JSONL
 	b, _ := json.Marshal(ev)
 	b = append(b, '\n')
+
+	// Mirror INFO, WARN, and ERROR logs to console (non-blocking w.r.t. internal locks),
+	// matching the default logger behavior at log level=info.
+	if (level == "info" || level == "warn" || level == "error") && m.out != nil {
+		_, _ = m.out.Write(b)
+	}
 
 	m.mu.Lock()
 	_, _ = m.buf.Write(b)

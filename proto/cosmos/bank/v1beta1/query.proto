@@ -144,7 +144,7 @@ message QueryBalanceResponse {
   cosmos.base.v1beta1.Coin balance = 1;
 }
 
-// QueryBalanceRequest is the request type for the Query/AllBalances RPC method.
+// QueryAllBalancesRequest is the request type for the Query/AllBalances RPC method.
 message QueryAllBalancesRequest {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;

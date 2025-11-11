@@ -5,11 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 
 	"github.com/bytedance/sonic"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
+	slogzerolog "github.com/samber/slog-zerolog/v2"
 )
 
 func init() {
@@ -145,12 +147,20 @@ func NewLogger(dst io.Writer, options ...Option) Logger {
 	logger = logger.Level(logCfg.Level)
 	logger = logger.Hook(logCfg.Hooks...)
 
-	return zeroLogWrapper{
+	wrapper := zeroLogWrapper{
 		Logger:       &logger,
 		regularLevel: logCfg.Level,
 		verboseLevel: logCfg.VerboseLevel,
 		filterWriter: fltWtr,
 	}
+
+	if logCfg.SetDefaultSlog {
+		slog.SetDefault(slog.New(slogzerolog.Option{
+			// NOTE: this slog default logger won't respect any verbose level changes
+			Logger: wrapper.Logger,
+		}.NewZerologHandler()))
+	}
+	return wrapper
 }
 
 // NewCustomLogger returns a new logger with the given zerolog logger.

@@ -1,11 +1,15 @@
 ## Quick Start For Local Telemetry
 
 To quickly setup a local telemetry environment where OpenTelemetry data is sent to a local instance of Grafana LGTM:
+
 1. start the [Grafana LGTM docker image](https://hub.docker.com/r/grafana/otel-lgtm):
+
 ```shell
 docker run -p 3000:3000 -p 4317:4317 -p 4318:4318 --rm -ti grafana/otel-lgtm
 ```
+
 2. create a basic OpenTelemetry configuration file which will send data to the local instance of Grafana LGTM:
+
 ```yaml
 resource:
   attributes:
@@ -34,8 +38,9 @@ logger_provider:
             protocol: grpc
             endpoint: http://localhost:4317
 ```
+
 3. set the `OTEL_EXPERIMENTAL_CONFIG_FILE` environment variable to the path of the configuration file:
-`export OTEL_EXPERIMENTAL_CONFIG_FILE=path/to/config.yaml`
+   `export OTEL_EXPERIMENTAL_CONFIG_FILE=path/to/config.yaml`
 4. start your application or tests
 5. view the data in Grafana LGTM at http://localhost:3000/. The Drilldown views are suggested for getting started.
 
@@ -43,7 +48,8 @@ logger_provider:
 
 While manual OpenTelemetry initialization is still supported, this package provides a single
 point of initialization such that end users can just use the official
-OpenTelemetry declarative configuration spec: https://opentelemetry.io/docs/languages/sdk-configuration/declarative-configuration/
+OpenTelemetry declarative configuration
+spec: https://opentelemetry.io/docs/languages/sdk-configuration/declarative-configuration/
 End users only need to set the `OTEL_EXPERIMENTAL_CONFIG_FILE` environment variable to the path of
 an OpenTelemetry configuration file and that's it.
 All the documentation necessary is provided in the OpenTelemetry documentation.
@@ -51,9 +57,10 @@ All the documentation necessary is provided in the OpenTelemetry documentation.
 ## Developer Usage
 
 Developers need to do two things to use this package properly:
- 1. Import this package before declaring any otel Tracer, Meter or Logger instances.
- 2. Make sure Shutdown() is called when the application is shutting down.
-    Tests can use the TestingInit function at startup to accomplish this.
+
+1. Import this package before declaring any otel Tracer, Meter or Logger instances.
+2. Make sure Shutdown() is called when the application is shutting down.
+   Tests can use the TestingInit function at startup to accomplish this.
 
 If these steps are followed, developers can follow the official golang otel conventions
 of declaring package-level tracer and meter instances using otel.Tracer() and otel.Meter().
@@ -61,5 +68,15 @@ NOTE: it is important to thread context.Context properly for spans, metrics and 
 correlated correctly.
 When using the SDK's context type, spans must be started with Context.StartSpan to
 get an SDK context which has the span set correctly.
-For logging, go.opentelemetry.io/contrib/bridges/otelslog provides a way to do this with the standard
-library slog package.
+If developers would like to emit log messages which are correlated with the current span,
+for now they should use the global `log/slog` default context logging methods directly, i.e., `slog.InfoContext`,
+`slog.ErrorContext`, etc.
+Other approaches to logging with `context.Context` may be supported in the future.
+
+## Overriding Automatic OpenTelemetry Configuration
+
+If a user would like to provide their own configuration for OpenTelemetry instead of using the
+declarative configuration file approach, their code must call `cosmossdk.io/log.SetOpenTelemetryConfigured`
+before importing this package.
+This package will not perform OpenTelemetry initialization if `cosmossdk.io/log.IsOpenTelemetryConfigured()`
+returns true.

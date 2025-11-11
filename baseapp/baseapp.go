@@ -210,8 +210,6 @@ func NewBaseApp(
 		gasConfig:        config.GasConfig{QueryGasLimit: math.MaxUint64},
 	}
 
-	// initialize tracer
-
 	for _, option := range options {
 		option(app)
 	}

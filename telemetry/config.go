@@ -22,6 +22,8 @@ import (
 	metricsdk "go.opentelemetry.io/otel/sdk/metric"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	"go.yaml.in/yaml/v3"
+
+	"cosmossdk.io/log"
 )
 
 var sdk otelconf.SDK
@@ -35,6 +37,11 @@ func init() {
 }
 
 func doInit() error {
+	// if otel is already marked as configured, skip
+	if log.IsOpenTelemetryConfigured() {
+		return nil
+	}
+
 	var err error
 
 	var opts []otelconf.ConfigurationOption
@@ -177,6 +184,8 @@ func doInit() error {
 	logglobal.SetLoggerProvider(sdk.LoggerProvider())
 	// setup slog default provider so that any logs emitted the default slog will be traced
 	slog.SetDefault(otelslog.NewLogger("", otelslog.WithSource(true)))
+	// mark otel as configured in the log package
+	log.SetOpenTelemetryConfigured(true)
 	// emit an initialized message which verifies basic telemetry is working
 	slog.Info("Telemetry initialized")
 

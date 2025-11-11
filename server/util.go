@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net"
 	"os"
 	"os/signal"
@@ -24,11 +25,12 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 
-	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
+
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -167,7 +169,16 @@ func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplat
 
 // CreateSDKLogger creates the default SDK logger.
 // It reads the log level and format from the server context.
+// If OpenTelemetry is configured, then that will take precedence over any server
+// settings and all logs will be routed to OpenTelemetry.
+// If OpenTelemetry is not configured, the SDK logger will also capture any
+// logs sent to the default log/slog logger.
 func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
+	if log.IsOpenTelemetryConfigured() {
+		// NOTE: we assume that the default slog logger is already configured to route to OpenTelemetry
+		return log.NewSlogLogger(slog.Default()), nil
+	}
+
 	var opts []log.Option
 	if ctx.Viper.GetString(flags.FlagLogFormat) == flags.OutputFormatJSON {
 		opts = append(opts, log.OutputJSONOption())
@@ -175,7 +186,9 @@ func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 	opts = append(opts,
 		log.ColorOption(!ctx.Viper.GetBool(flags.FlagLogNoColor)),
 		// We use CometBFT flag (cmtcli.TraceFlag) for trace logging.
-		log.TraceOption(ctx.Viper.GetBool(FlagTrace)))
+		log.TraceOption(ctx.Viper.GetBool(FlagTrace)),
+		log.SetDefaultSlogOption(),
+	)
 
 	verboseLogLevelStr := ctx.Viper.GetString(flags.FlagVerboseLogLevel)
 	if verboseLogLevelStr != "" {

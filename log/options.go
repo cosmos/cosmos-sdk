@@ -35,6 +35,9 @@ type Config struct {
 	StackTrace bool
 	TimeFormat string
 	Hooks      []zerolog.Hook
+	// SetDefaultSlog indicates whether to set this logger instance as the default slog logger globally
+	// to capture logs from libraries using slog.Default().
+	SetDefaultSlog bool
 }
 
 type Option func(*Config)
@@ -75,6 +78,13 @@ func OutputJSONOption() Option {
 func ColorOption(val bool) Option {
 	return func(cfg *Config) {
 		cfg.Color = val
+	}
+}
+
+// SetDefaultSlogOption adds an option to set logger this logger to be the default slog logger
+func SetDefaultSlogOption() Option {
+	return func(cfg *Config) {
+		cfg.SetDefaultSlog = true
 	}
 }
 

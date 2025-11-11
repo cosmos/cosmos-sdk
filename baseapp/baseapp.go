@@ -906,7 +906,8 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 		}
 	}
 
-	if mode == execModeCheck {
+	switch mode {
+	case execModeCheck:
 		if err := app.mempool.Insert(mempoolCtx, tx); err != nil {
 			return gInfo, nil, anteEvents, err
 		}
@@ -915,7 +916,7 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 			commitAnteCache()
 			commitAnteCache = nil
 		}
-	} else if mode == execModeFinalize {
+	case execModeFinalize:
 		err = app.mempool.Remove(tx)
 		if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
 			return gInfo, nil, anteEvents,

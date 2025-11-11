@@ -36,6 +36,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## Unreleased
+
+### Bug Fixes
+
+* (baseapp) [#25550](https://github.com/cosmos/cosmos-sdk/pull/25550) Prevent updating check state before mempool insert
+
 ## [v0.53.4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.3) - 2025-07-25
 
 This patch update also includes minor dependency bumps.

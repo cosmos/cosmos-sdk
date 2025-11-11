@@ -11,6 +11,8 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
+	otelattr "go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
 
@@ -156,8 +158,9 @@ func (app *BaseApp) Info(_ *abci.RequestInfo) (*abci.ResponseInfo, error) {
 // Query implements the ABCI interface. It delegates to CommitMultiStore if it
 // implements Queryable.
 func (app *BaseApp) Query(ctx context.Context, req *abci.RequestQuery) (resp *abci.ResponseQuery, err error) {
-	// TODO: propagate context with span into the sdk.Context used for queries
-	_, span := tracer.Start(ctx, "Query")
+	ctx, span := tracer.Start(ctx, "Query",
+		trace.WithAttributes(otelattr.String("path", req.Path)),
+	)
 	defer span.End()
 
 	// add panic recovery for all queries
@@ -185,7 +188,7 @@ func (app *BaseApp) Query(ctx context.Context, req *abci.RequestQuery) (resp *ab
 	// handle gRPC routes first rather than calling splitPath because '/' characters
 	// are used as part of gRPC paths
 	if grpcHandler := app.grpcQueryRouter.Route(req.Path); grpcHandler != nil {
-		return app.handleQueryGRPC(grpcHandler, req), nil
+		return app.handleQueryGRPC(grpcHandler, req, ctx), nil
 	}
 
 	path := SplitABCIQueryPath(req.Path)
@@ -193,6 +196,7 @@ func (app *BaseApp) Query(ctx context.Context, req *abci.RequestQuery) (resp *ab
 		return sdkerrors.QueryResult(errorsmod.Wrap(sdkerrors.ErrUnknownRequest, "no query path provided"), app.trace), nil
 	}
 
+	// TODO: propagate context with span into the sdk.Context used for queries so that we can trace queries properly
 	switch path[0] {
 	case QueryPathApp:
 		// "/app" prefix for special application queries
@@ -1205,11 +1209,14 @@ func (app *BaseApp) getContextForProposal(ctx sdk.Context, height int64) sdk.Con
 	return ctx
 }
 
-func (app *BaseApp) handleQueryGRPC(handler GRPCQueryHandler, req *abci.RequestQuery) *abci.ResponseQuery {
+func (app *BaseApp) handleQueryGRPC(handler GRPCQueryHandler, req *abci.RequestQuery, baseCtx context.Context) *abci.ResponseQuery {
 	ctx, err := app.CreateQueryContext(req.Height, req.Prove)
 	if err != nil {
 		return sdkerrors.QueryResult(err, app.trace)
 	}
+
+	// add base context for tracing
+	ctx = ctx.WithContext(baseCtx)
 
 	resp, err := handler(ctx, req)
 	if err != nil {

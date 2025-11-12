@@ -11,7 +11,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"cosmossdk.io/client/v2/internal/util"
+	"github.com/cosmos/cosmos-sdk/client/v2/internal/util"
 )
 
 var isJSONFileRegex = regexp.MustCompile(`\.json$`)

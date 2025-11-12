@@ -5,7 +5,7 @@ import (
 
 	"gotest.tools/v3/assert"
 
-	"cosmossdk.io/client/v2/internal/strcase"
+	"github.com/cosmos/cosmos-sdk/client/v2/internal/strcase"
 )
 
 func toKebab(t testing.TB) {

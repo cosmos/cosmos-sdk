@@ -14,11 +14,11 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv2alpha1 "cosmossdk.io/api/cosmos/base/reflection/v2alpha1"
-	"cosmossdk.io/client/v2/autocli/flag"
-	"cosmossdk.io/client/v2/internal/testpb"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/v2/autocli/flag"
+	"github.com/cosmos/cosmos-sdk/client/v2/internal/testpb"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	sdkkeyring "github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"

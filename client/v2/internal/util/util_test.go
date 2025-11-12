@@ -7,7 +7,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
-	_ "cosmossdk.io/client/v2/internal/testpb"
+	_ "github.com/cosmos/cosmos-sdk/client/v2/internal/testpb"
 )
 
 func TestIsSupportedVersion(t *testing.T) {

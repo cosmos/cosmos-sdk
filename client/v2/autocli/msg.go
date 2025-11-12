@@ -10,11 +10,11 @@ import (
 	"google.golang.org/protobuf/types/dynamicpb"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	"cosmossdk.io/client/v2/autocli/flag"
-	"cosmossdk.io/client/v2/internal/util"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	clienttx "github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/client/v2/autocli/flag"
+	"github.com/cosmos/cosmos-sdk/client/v2/internal/util"
 )
 
 // BuildMsgCommand builds the msg commands for all the provided modules. If a custom command is provided for a

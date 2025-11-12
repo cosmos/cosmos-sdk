@@ -7,7 +7,7 @@ import (
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"cosmossdk.io/client/v2/internal/strcase"
+	"github.com/cosmos/cosmos-sdk/client/v2/internal/strcase"
 )
 
 type enumType struct {

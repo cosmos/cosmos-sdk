@@ -14,9 +14,8 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
-	"cosmossdk.io/client/v2/internal/flags"
-	"cosmossdk.io/client/v2/internal/util"
-
+	"github.com/cosmos/cosmos-sdk/client/v2/internal/flags"
+	"github.com/cosmos/cosmos-sdk/client/v2/internal/util"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -124,7 +123,6 @@ func (b *Builder) BuildQueryMethodCommand(_ context.Context, descriptor protoref
 		EnumAsString:       true,
 		DoNotSortFields:    true,
 		AminoNameAsTypeURL: true,
-		MarshalMappings:    true,
 		TypeResolver:       b.TypeResolver,
 		FileResolver:       b.FileResolver,
 	}

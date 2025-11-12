@@ -52,6 +52,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (proto) [#15](https://github.com/atomone-hub/cosmos-sdk/pull/15) bump grpc to `v1.72.0` and go to `v1.24.5`.
 * [#22](https://github.com/atomone-hub/cosmos-sdk/pull/22) Remove unnecessary project workspaces.
+* [#25](https://github.com/atomone-hub/cosmos-sdk/pull/25) feat: remove `client/v2` workspace.
 
 ## [Unreleased]
 

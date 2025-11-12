@@ -16,10 +16,10 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
-	"cosmossdk.io/client/v2/internal/flags"
-	"cosmossdk.io/client/v2/internal/util"
 	"cosmossdk.io/core/address"
 
+	"github.com/cosmos/cosmos-sdk/client/v2/internal/flags"
+	"github.com/cosmos/cosmos-sdk/client/v2/internal/util"
 	"github.com/cosmos/cosmos-sdk/runtime"
 )
 

@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
-	"cosmossdk.io/client/v2/autocli/flag"
+	"github.com/cosmos/cosmos-sdk/client/v2/autocli/flag"
 )
 
 // Builder manages options for building CLI commands.

@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	clientv2helpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/simapp"
 	"cosmossdk.io/simapp/simd/cmd"
 
+	clientv2helpers "github.com/cosmos/cosmos-sdk/client/v2/helpers"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 )
 

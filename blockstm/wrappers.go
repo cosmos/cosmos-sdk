@@ -17,7 +17,8 @@ type msWrapper struct {
 }
 
 func (ms msWrapper) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) storetypes.CacheWrap {
-	return cachemulti.NewFromParent(ms.getCacheWrapper, w, tc).(storetypes.CacheWrap)
+	cms := cachemulti.NewFromParent(ms.getCacheWrapper, w, tc)
+	return cms.CacheWrap()
 }
 
 func (ms msWrapper) CacheMultiStoreWithVersion(version int64) (storetypes.CacheMultiStore, error) {

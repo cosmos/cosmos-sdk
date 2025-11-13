@@ -11,25 +11,16 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
-
-type Application interface {
-	servertypes.Application
-	DefaultGenesis() map[string]json.RawMessage
-	Codec() codec.Codec
-}
 
 type AccountCreator func() (*authtypes.BaseAccount, sdk.Coins)
 
 type GenerateTx func() []byte
-
-type GenesisModifier func(cdc codec.Codec, genesis map[string]json.RawMessage)
 
 var (
 	numAccounts    = 10_000
@@ -40,7 +31,16 @@ var (
 	verifyTxs      = false
 )
 
-func SpeedTestCmd(createAccount AccountCreator, generateTx GenerateTx, app Application, chainID string, genesisModifiers ...GenesisModifier) *cobra.Command {
+// SpeedTestCmd returns a command that will run an execution test on your application.
+// Balances and accounts are automatically added to the chain's state via AccountCreator.
+func SpeedTestCmd(
+	createAccount AccountCreator,
+	generateTx GenerateTx,
+	app servertypes.ABCI,
+	cdc codec.Codec,
+	genstate map[string]json.RawMessage,
+	chainID string,
+) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "speedtest",
 		Short: "execution speedtest",
@@ -66,18 +66,13 @@ func SpeedTestCmd(createAccount AccountCreator, generateTx GenerateTx, app Appli
 				return err
 			}
 
-			cdc := app.Codec()
 			genAccs := make([]authtypes.GenesisAccount, 0, len(accounts))
 			for _, acc := range accounts {
 				genAccs = append(genAccs, acc.GenesisAccount)
 			}
-			genesisState, err := simtestutil.GenesisStateWithValSet(cdc, app.DefaultGenesis(), vals, genAccs, balances...)
+			genesisState, err := simtestutil.GenesisStateWithValSet(cdc, genstate, vals, genAccs, balances...)
 			if err != nil {
 				return err
-			}
-
-			for _, genModifier := range genesisModifiers {
-				genModifier(cdc, genesisState)
 			}
 
 			// init chain must be called to stop deliverState from being nil

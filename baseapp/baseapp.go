@@ -914,7 +914,6 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 
 		if commitAnteCache != nil {
 			commitAnteCache()
-			commitAnteCache = nil
 		}
 	case execModeFinalize:
 		err = app.mempool.Remove(tx)

@@ -38,13 +38,14 @@ func SpeedTestCmd(
 	generateTx GenerateTx,
 	app servertypes.ABCI,
 	cdc codec.Codec,
-	genstate map[string]json.RawMessage,
+	genState map[string]json.RawMessage,
 	chainID string,
 ) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "speedtest",
-		Short: "execution speedtest",
-		Long:  "speedtest is a tool for measuring raw execution TPS of your application",
+		Use:     "speedtest",
+		Short:   "execution speedtest",
+		Long:    "speedtest is a tool for measuring raw execution TPS of your application",
+		Example: "speedtest --accounts 20000 --txs 2000 --blocks 10 --block-max-gas 1000000000 --block-max-bytes 1000000000 --verify-txs",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			accounts := make([]simtestutil.GenesisAccount, 0, numAccounts)
 			balances := make([]banktypes.Balance, 0, numAccounts)
@@ -70,7 +71,7 @@ func SpeedTestCmd(
 			for _, acc := range accounts {
 				genAccs = append(genAccs, acc.GenesisAccount)
 			}
-			genesisState, err := simtestutil.GenesisStateWithValSet(cdc, genstate, vals, genAccs, balances...)
+			genesisState, err := simtestutil.GenesisStateWithValSet(cdc, genState, vals, genAccs, balances...)
 			if err != nil {
 				return err
 			}

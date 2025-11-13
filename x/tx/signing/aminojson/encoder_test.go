@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"testing"
 
-	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"gotest.tools/v3/assert"
+
+	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
+	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 )
 
 func TestCosmosInlineJSON(t *testing.T) {

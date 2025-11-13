@@ -189,7 +189,7 @@ type (
 type Config struct {
 	BaseConfig `mapstructure:",squash"`
 
-	// Deprecated: Telemetry defines the application telemetry configuration
+	// Deprecated: Use OpenTelemetry instead, see the `telemetry` package for more details.
 	Telemetry telemetry.Config `mapstructure:"telemetry"`
 	API       APIConfig        `mapstructure:"api"`
 	GRPC      GRPCConfig       `mapstructure:"grpc"`

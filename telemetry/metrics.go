@@ -61,7 +61,7 @@ type DisplayableSink interface {
 	DisplayMetrics(resp http.ResponseWriter, req *http.Request) (any, error)
 }
 
-// Deprecated: Config defines the configuration options for application telemetry.
+// Deprecated: Use OpenTelemetry instead.
 type Config struct {
 	// Prefixed with keys to separate services
 	ServiceName string `mapstructure:"service-name"`

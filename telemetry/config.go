@@ -61,11 +61,7 @@ func doInit() error {
 		return fmt.Errorf("failed to parse telemetry config file: %w", err)
 	}
 
-	cfgJson, err := json.Marshal(cfg)
-	if err != nil {
-		return fmt.Errorf("failed to marshal telemetry config file: %w", err)
-	}
-	fmt.Printf("\nInitializing telemetry with config:\n%s\n\n", cfgJson)
+	fmt.Printf("\nInitializing OpenTelemetry\n")
 
 	opts = append(opts, otelconf.WithOpenTelemetryConfiguration(*cfg))
 
@@ -187,7 +183,7 @@ func doInit() error {
 	// mark otel as configured in the log package
 	log.SetOpenTelemetryConfigured(true)
 	// emit an initialized message which verifies basic telemetry is working
-	slog.Info("Telemetry initialized")
+	slog.Info("OpenTelemetry initialized", "config", cfg)
 
 	// extract service name from config for go-metrics compatibility layer
 	serviceName := "cosmos-sdk" // default fallback

@@ -3,4 +3,6 @@
 // github.com/hashicorp/go-metrics.
 // By default, this package configures the github.com/hashicorp/go-metrics default instance to
 // send all metrics to OpenTelemetry.
+// Existing users of the legacy wrapper functions in this package should begin to migrate their
+// code to use OpenTelemetry APIs directly.
 package telemetry

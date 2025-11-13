@@ -3,6 +3,7 @@ package speedtest
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/cometbft/cometbft/abci/types"
@@ -32,8 +33,11 @@ type GenesisModifier func(cdc codec.Codec, genesis map[string]json.RawMessage)
 
 var (
 	numAccounts    = 10_000
-	numTxsPerBlock = 3_000
+	numTxsPerBlock = 4_000
 	numBlocksToRun = 100
+	blockMaxGas    = math.MaxInt64
+	blockMaxBytes  = math.MaxInt64
+	verifyTxs      = false
 )
 
 func SpeedTestCmd(createAccount AccountCreator, generateTx GenerateTx, app Application, chainID string, genesisModifiers ...GenesisModifier) *cobra.Command {
@@ -82,10 +86,13 @@ func SpeedTestCmd(createAccount AccountCreator, generateTx GenerateTx, app Appli
 				return err
 			}
 
+			cp := simtestutil.DefaultConsensusParams
+			cp.Block.MaxGas = int64(blockMaxGas)
+			cp.Block.MaxBytes = int64(blockMaxBytes)
 			_, err = app.InitChain(&types.RequestInitChain{
 				ChainId:         chainID,
 				Validators:      []types.ValidatorUpdate{},
-				ConsensusParams: simtestutil.DefaultConsensusParams,
+				ConsensusParams: cp,
 				AppStateBytes:   stateBytes,
 			})
 			if err != nil {
@@ -111,7 +118,7 @@ func SpeedTestCmd(createAccount AccountCreator, generateTx GenerateTx, app Appli
 				blocks = append(blocks, block)
 			}
 
-			elapsed, err := runBlocks(blocks, app, vals.Proposer.Address)
+			elapsed, err := runBlocks(blocks, app, vals.Proposer.Address, verifyTxs)
 			if err != nil {
 				return fmt.Errorf("failed to run blocks: %w", err)
 			}
@@ -127,14 +134,17 @@ func SpeedTestCmd(createAccount AccountCreator, generateTx GenerateTx, app Appli
 	cmd.Flags().IntVar(&numAccounts, "accounts", numAccounts, "number of accounts")
 	cmd.Flags().IntVar(&numTxsPerBlock, "txs", numTxsPerBlock, "number of txs")
 	cmd.Flags().IntVar(&numBlocksToRun, "blocks", numBlocksToRun, "number of blocks")
+	cmd.Flags().BoolVar(&verifyTxs, "verify-txs", verifyTxs, "verify txs passed. this will loop over all tx results and ensure the code == 0.")
+	cmd.Flags().IntVar(&blockMaxGas, "block-max-gas", blockMaxGas, "block max gas")
+	cmd.Flags().IntVar(&blockMaxBytes, "block-max-bytes", blockMaxBytes, "block max bytes")
 	return cmd
 }
 
-func runBlocks(blocks [][][]byte, app servertypes.ABCI, proposer []byte) (time.Duration, error) {
+func runBlocks(blocks [][][]byte, app servertypes.ABCI, proposer []byte, verify bool) (time.Duration, error) {
 	start := time.Now()
 	height := int64(1)
 	for blockNum, txs := range blocks {
-		_, err := app.FinalizeBlock(&types.RequestFinalizeBlock{
+		res, err := app.FinalizeBlock(&types.RequestFinalizeBlock{
 			Height:          height,
 			Txs:             txs,
 			Time:            time.Now(),
@@ -142,6 +152,13 @@ func runBlocks(blocks [][][]byte, app servertypes.ABCI, proposer []byte) (time.D
 		})
 		if err != nil {
 			return 0, fmt.Errorf("failed to finalize block #%d: %w", blockNum, err)
+		}
+		if verify {
+			for _, result := range res.TxResults {
+				if result.Code != 0 {
+					return 0, fmt.Errorf("tx failed in block %d: code=%d codespace=%s", blockNum, result.Code, result.Codespace)
+				}
+			}
 		}
 		_, err = app.Commit()
 		if err != nil {

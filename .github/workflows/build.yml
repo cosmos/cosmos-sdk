@@ -36,9 +36,9 @@ jobs:
       - name: Build with legacy app.go
         run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS="legacy" make build
       # TODO re-add with comet v1
-      #- name: Build with BLS12381
-      #  if: matrix.go-arch == 'amd64'
-      #  run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS="bls12381" make build
+      - name: Build with BLS12381
+        if: matrix.go-arch == 'amd64'
+        run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS="bls12381" make build
       - name: Build with Secp_cgo
         if: matrix.go-arch == 'amd64'
         run: GOARCH=${{ matrix.go-arch }} COSMOS_BUILD_OPTIONS="secp" make build

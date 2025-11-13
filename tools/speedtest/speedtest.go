@@ -31,21 +31,21 @@ type GenerateTx func() []byte
 type GenesisModifier func(cdc codec.Codec, genesis map[string]json.RawMessage)
 
 var (
-	numAccounts    = 100
-	numTxsPerBlock = 5_000
-	numBlocksToRun = 10_000
+	numAccounts    = 10_000
+	numTxsPerBlock = 3_000
+	numBlocksToRun = 100
 )
 
-func SpeedTestCmd(ac AccountCreator, gentxer GenerateTx, app Application, chainID string, genesisModifiers ...GenesisModifier) *cobra.Command {
+func SpeedTestCmd(createAccount AccountCreator, generateTx GenerateTx, app Application, chainID string, genesisModifiers ...GenesisModifier) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "speedtest",
 		Short: "execution speedtest",
 		Long:  "speedtest is a tool for measuring raw execution TPS of your application",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			accounts := make([]authtypes.GenesisAccount, 0, numAccounts)
+			accounts := make([]simtestutil.GenesisAccount, 0, numAccounts)
 			balances := make([]banktypes.Balance, 0, numAccounts)
 			for range numAccounts {
-				account, balance := ac()
+				account, balance := createAccount()
 				genesisAcc := simtestutil.GenesisAccount{
 					GenesisAccount: account,
 					Coins:          balance,
@@ -57,23 +57,17 @@ func SpeedTestCmd(ac AccountCreator, gentxer GenerateTx, app Application, chainI
 				})
 			}
 
-			blocks := make([][][]byte, 0, numBlocksToRun)
-			for range numBlocksToRun {
-				block := make([][]byte, 0, numBlocksToRun)
-				for range numTxsPerBlock {
-					tx := gentxer()
-					block = append(block, tx)
-				}
-				blocks = append(blocks, block)
-			}
-
 			vals, err := simtestutil.CreateRandomValidatorSet()
 			if err != nil {
 				return err
 			}
 
 			cdc := app.Codec()
-			genesisState, err := simtestutil.GenesisStateWithValSet(cdc, app.DefaultGenesis(), vals, accounts, balances...)
+			genAccs := make([]authtypes.GenesisAccount, 0, len(accounts))
+			for _, acc := range accounts {
+				genAccs = append(genAccs, acc.GenesisAccount)
+			}
+			genesisState, err := simtestutil.GenesisStateWithValSet(cdc, app.DefaultGenesis(), vals, genAccs, balances...)
 			if err != nil {
 				return err
 			}
@@ -88,7 +82,6 @@ func SpeedTestCmd(ac AccountCreator, gentxer GenerateTx, app Application, chainI
 				return err
 			}
 
-			// init chain will set the validator set and initialize the genesis accounts
 			_, err = app.InitChain(&types.RequestInitChain{
 				ChainId:         chainID,
 				Validators:      []types.ValidatorUpdate{},
@@ -108,9 +101,25 @@ func SpeedTestCmd(ac AccountCreator, gentxer GenerateTx, app Application, chainI
 				return fmt.Errorf("failed to finalize genesis block: %w", err)
 			}
 
-			if err := runBlocks(blocks, app, vals.Proposer.Address); err != nil {
+			blocks := make([][][]byte, 0, numBlocksToRun)
+			for range numBlocksToRun {
+				block := make([][]byte, 0, numBlocksToRun)
+				for range numTxsPerBlock {
+					tx := generateTx()
+					block = append(block, tx)
+				}
+				blocks = append(blocks, block)
+			}
+
+			elapsed, err := runBlocks(blocks, app, vals.Proposer.Address)
+			if err != nil {
 				return fmt.Errorf("failed to run blocks: %w", err)
 			}
+
+			cmd.Printf("Finished %d blocks in %s\n", numBlocksToRun, elapsed)
+			numTxs := numBlocksToRun * numTxsPerBlock
+			tps := float64(numTxs) / elapsed.Seconds()
+			cmd.Printf("TPS: %f", tps)
 
 			return nil
 		},
@@ -121,8 +130,8 @@ func SpeedTestCmd(ac AccountCreator, gentxer GenerateTx, app Application, chainI
 	return cmd
 }
 
-func runBlocks(blocks [][][]byte, app servertypes.ABCI, proposer []byte) error {
-
+func runBlocks(blocks [][][]byte, app servertypes.ABCI, proposer []byte) (time.Duration, error) {
+	start := time.Now()
 	height := int64(1)
 	for blockNum, txs := range blocks {
 		_, err := app.FinalizeBlock(&types.RequestFinalizeBlock{
@@ -132,13 +141,14 @@ func runBlocks(blocks [][][]byte, app servertypes.ABCI, proposer []byte) error {
 			ProposerAddress: proposer,
 		})
 		if err != nil {
-			return fmt.Errorf("failed to finalize block #%d: %w", blockNum, err)
+			return 0, fmt.Errorf("failed to finalize block #%d: %w", blockNum, err)
 		}
 		_, err = app.Commit()
 		if err != nil {
-			return fmt.Errorf("failed to commit block #%d: %w", blockNum, err)
+			return 0, fmt.Errorf("failed to commit block #%d: %w", blockNum, err)
 		}
 		height++
 	}
-	return nil
+	end := time.Since(start)
+	return end, nil
 }

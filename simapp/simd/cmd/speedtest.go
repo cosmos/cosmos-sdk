@@ -5,9 +5,11 @@ import (
 	"os"
 	"time"
 
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 
-	dbm "github.com/cosmos/cosmos-db"
+	"cosmossdk.io/log"
+	"cosmossdk.io/simapp"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -17,9 +19,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	"cosmossdk.io/log"
-	"cosmossdk.io/simapp"
 )
 
 var r = rand.New(rand.NewSource(time.Now().UnixNano()))

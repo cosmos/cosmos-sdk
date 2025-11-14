@@ -1,11 +1,9 @@
 package log
 
 import (
-	"log/slog"
 	"time"
 
 	"github.com/rs/zerolog"
-	slogzerolog "github.com/samber/slog-zerolog/v2"
 )
 
 // TestingT is the interface required for logging in tests.
@@ -40,19 +38,11 @@ func NewTestLoggerInfo(t TestingT) Logger {
 //
 // This is primarily helpful during active debugging of a test
 // with verbose logs.
-//
-// If OpenTelemetry is configured, all log messages will be
-// routed to the OpenTelemetry instead.
-// If OpenTelemetry is not configured, the default global log/slog logger
-// will be routed to the test output we have configured at the Error level.
 func NewTestLoggerError(t TestingT) Logger {
 	return newTestLogger(t, zerolog.ErrorLevel)
 }
 
 func newTestLogger(t TestingT, lvl zerolog.Level) Logger {
-	if IsOpenTelemetryConfigured() {
-		return NewSlogLogger(slog.Default())
-	}
 	cw := zerolog.ConsoleWriter{
 		NoColor:    true,
 		TimeFormat: time.Kitchen,
@@ -66,11 +56,5 @@ func newTestLogger(t TestingT, lvl zerolog.Level) Logger {
 			Frame: 7,
 		},
 	}
-	logger := NewCustomLogger(zerolog.New(cw).Level(lvl)).(zeroLogWrapper)
-
-	// set this as the default slog logger to capture logs from libraries using slog.Default()
-	slog.SetDefault(slog.New(slogzerolog.Option{Logger: logger.Logger}.NewZerologHandler()))
-
-	return logger
-
+	return NewCustomLogger(zerolog.New(cw).Level(lvl))
 }

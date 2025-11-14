@@ -2,14 +2,11 @@ package telemetry
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"log/slog"
 	"os"
 	"time"
 
 	"github.com/hashicorp/go-metrics"
-	"go.opentelemetry.io/contrib/bridges/otelslog"
 	"go.opentelemetry.io/contrib/instrumentation/host"
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/contrib/otelconf/v0.3.0"
@@ -22,8 +19,6 @@ import (
 	metricsdk "go.opentelemetry.io/otel/sdk/metric"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	"go.yaml.in/yaml/v3"
-
-	"cosmossdk.io/log"
 )
 
 var sdk otelconf.SDK
@@ -37,11 +32,6 @@ func init() {
 }
 
 func doInit() error {
-	// if otel is already marked as configured, skip
-	if log.IsOpenTelemetryConfigured() {
-		return nil
-	}
-
 	var err error
 
 	var opts []otelconf.ConfigurationOption
@@ -178,12 +168,7 @@ func doInit() error {
 	otel.SetTracerProvider(sdk.TracerProvider())
 	otel.SetMeterProvider(sdk.MeterProvider())
 	logglobal.SetLoggerProvider(sdk.LoggerProvider())
-	// setup slog default provider so that any logs emitted the default slog will be traced
-	slog.SetDefault(otelslog.NewLogger("", otelslog.WithSource(true)))
-	// mark otel as configured in the log package
-	log.SetOpenTelemetryConfigured(true)
-	// emit an initialized message which verifies basic telemetry is working
-	slog.Info("OpenTelemetry initialized", "config", cfg)
+	fmt.Printf("\nOpenTelemetry initialized successfully\n")
 
 	// extract service name from config for go-metrics compatibility layer
 	serviceName := "cosmos-sdk" // default fallback

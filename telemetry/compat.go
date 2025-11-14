@@ -102,8 +102,10 @@ func (o *otelGoMetricsSink) SetPrecisionGaugeWithLabels(key []string, val float6
 	o.getGauge(flattenKey(key)).Record(o.ctx, val, toOtelAttrs(labels))
 }
 
-var _ gometrics.MetricSink = &otelGoMetricsSink{}
-var _ gometrics.PrecisionGaugeMetricSink = &otelGoMetricsSink{}
+var (
+	_ gometrics.MetricSink               = &otelGoMetricsSink{}
+	_ gometrics.PrecisionGaugeMetricSink = &otelGoMetricsSink{}
+)
 
 var spaceReplacer = strings.NewReplacer(" ", "_")
 

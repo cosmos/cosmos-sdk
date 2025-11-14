@@ -21,8 +21,10 @@ import (
 	"go.yaml.in/yaml/v3"
 )
 
-var sdk otelconf.SDK
-var shutdownFuncs []func(context.Context) error
+var (
+	sdk           otelconf.SDK
+	shutdownFuncs []func(context.Context) error
+)
 
 func init() {
 	err := doInit()
@@ -63,7 +65,7 @@ func doInit() error {
 			extra := *extraCfg.CosmosExtra
 			if extra.TraceFile != "" {
 				fmt.Printf("Initializing trace file: %s\n", extra.TraceFile)
-				traceFile, err := os.OpenFile(extra.TraceFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+				traceFile, err := os.OpenFile(extra.TraceFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
 				if err != nil {
 					return fmt.Errorf("failed to open trace file: %w", err)
 				}
@@ -75,7 +77,7 @@ func doInit() error {
 				})
 				exporter, err := stdouttrace.New(
 					stdouttrace.WithWriter(traceFile),
-					//stdouttrace.WithPrettyPrint(),
+					// stdouttrace.WithPrettyPrint(),
 				)
 				if err != nil {
 					return fmt.Errorf("failed to create stdout trace exporter: %w", err)
@@ -86,7 +88,7 @@ func doInit() error {
 			}
 			if extra.MetricsFile != "" {
 				fmt.Printf("Initializing metrics file: %s\n", extra.MetricsFile)
-				metricsFile, err := os.OpenFile(extra.MetricsFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+				metricsFile, err := os.OpenFile(extra.MetricsFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
 				if err != nil {
 					return fmt.Errorf("failed to open metrics file: %w", err)
 				}
@@ -98,7 +100,7 @@ func doInit() error {
 				})
 				exporter, err := stdoutmetric.New(
 					stdoutmetric.WithWriter(metricsFile),
-					//stdoutmetric.WithPrettyPrint(),
+					// stdoutmetric.WithPrettyPrint(),
 				)
 				if err != nil {
 					return fmt.Errorf("failed to create stdout metric exporter: %w", err)
@@ -121,7 +123,7 @@ func doInit() error {
 			}
 			if extra.LogsFile != "" {
 				fmt.Printf("Initializing logs file: %s\n", extra.LogsFile)
-				logsFile, err := os.OpenFile(extra.LogsFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+				logsFile, err := os.OpenFile(extra.LogsFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
 				if err != nil {
 					return fmt.Errorf("failed to open logs file: %w", err)
 				}
@@ -133,7 +135,7 @@ func doInit() error {
 				})
 				exporter, err := stdoutlog.New(
 					stdoutlog.WithWriter(logsFile),
-					//stdoutlog.WithPrettyPrint(),
+					// stdoutlog.WithPrettyPrint(),
 				)
 				if err != nil {
 					return fmt.Errorf("failed to create stdout log exporter: %w", err)

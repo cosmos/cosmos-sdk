@@ -10,10 +10,9 @@ import (
 
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/header"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/gaskv"
 	storetypes "cosmossdk.io/store/types"
-
-	"cosmossdk.io/log"
 )
 
 // ExecMode defines the execution mode which can be set on a Context.

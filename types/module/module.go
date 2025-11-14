@@ -54,9 +54,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-var (
-	tracer = otel.Tracer("cosmos-sdk/types/module")
-)
+var tracer = otel.Tracer("cosmos-sdk/types/module")
 
 // AppModuleBasic is the standard form for basic non-dependent elements of an application module.
 type AppModuleBasic interface {

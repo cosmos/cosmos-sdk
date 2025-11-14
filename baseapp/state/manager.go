@@ -17,9 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var (
-	tracer = otel.Tracer("cosmos-sdk/baseapp")
-)
+var tracer = otel.Tracer("cosmos-sdk/baseapp")
 
 type Manager struct {
 	// volatile states:

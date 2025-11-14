@@ -3,8 +3,9 @@ package state
 import (
 	"sync"
 
-	storetypes "cosmossdk.io/store/types"
 	"go.opentelemetry.io/otel/trace"
+
+	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

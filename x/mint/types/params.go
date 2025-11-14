@@ -64,106 +64,76 @@ func (p Params) Validate() error {
 	return nil
 }
 
-func validateMintDenom(i any) error {
-	v, ok := i.(string)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	if strings.TrimSpace(v) == "" {
+func validateMintDenom(denom string) error {
+	if strings.TrimSpace(denom) == "" {
 		return errors.New("mint denom cannot be blank")
 	}
-	if err := sdk.ValidateDenom(v); err != nil {
+	if err := sdk.ValidateDenom(denom); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func validateInflationRateChange(i any) error {
-	v, ok := i.(math.LegacyDec)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
+func validateInflationRateChange(rateChange math.LegacyDec) error {
+	if rateChange.IsNil() {
+		return fmt.Errorf("inflation rate change cannot be nil: %s", rateChange)
 	}
-
-	if v.IsNil() {
-		return fmt.Errorf("inflation rate change cannot be nil: %s", v)
+	if rateChange.IsNegative() {
+		return fmt.Errorf("inflation rate change cannot be negative: %s", rateChange)
 	}
-	if v.IsNegative() {
-		return fmt.Errorf("inflation rate change cannot be negative: %s", v)
-	}
-	if v.GT(math.LegacyOneDec()) {
-		return fmt.Errorf("inflation rate change too large: %s", v)
+	if rateChange.GT(math.LegacyOneDec()) {
+		return fmt.Errorf("inflation rate change too large: %s", rateChange)
 	}
 
 	return nil
 }
 
-func validateInflationMax(i any) error {
-	v, ok := i.(math.LegacyDec)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
+func validateInflationMax(inflationMax math.LegacyDec) error {
+	if inflationMax.IsNil() {
+		return fmt.Errorf("max inflation cannot be nil: %s", inflationMax)
 	}
-
-	if v.IsNil() {
-		return fmt.Errorf("max inflation cannot be nil: %s", v)
+	if inflationMax.IsNegative() {
+		return fmt.Errorf("max inflation cannot be negative: %s", inflationMax)
 	}
-	if v.IsNegative() {
-		return fmt.Errorf("max inflation cannot be negative: %s", v)
-	}
-	if v.GT(math.LegacyOneDec()) {
-		return fmt.Errorf("max inflation too large: %s", v)
+	if inflationMax.GT(math.LegacyOneDec()) {
+		return fmt.Errorf("max inflation too large: %s", inflationMax)
 	}
 
 	return nil
 }
 
-func validateInflationMin(i any) error {
-	v, ok := i.(math.LegacyDec)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
+func validateInflationMin(inflationMin math.LegacyDec) error {
+	if inflationMin.IsNil() {
+		return fmt.Errorf("min inflation cannot be nil: %s", inflationMin)
 	}
-
-	if v.IsNil() {
-		return fmt.Errorf("min inflation cannot be nil: %s", v)
+	if inflationMin.IsNegative() {
+		return fmt.Errorf("min inflation cannot be negative: %s", inflationMin)
 	}
-	if v.IsNegative() {
-		return fmt.Errorf("min inflation cannot be negative: %s", v)
-	}
-	if v.GT(math.LegacyOneDec()) {
-		return fmt.Errorf("min inflation too large: %s", v)
+	if inflationMin.GT(math.LegacyOneDec()) {
+		return fmt.Errorf("min inflation too large: %s", inflationMin)
 	}
 
 	return nil
 }
 
-func validateGoalBonded(i any) error {
-	v, ok := i.(math.LegacyDec)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
+func validateGoalBonded(goalBonded math.LegacyDec) error {
+	if goalBonded.IsNil() {
+		return fmt.Errorf("goal bonded cannot be nil: %s", goalBonded)
 	}
-
-	if v.IsNil() {
-		return fmt.Errorf("goal bonded cannot be nil: %s", v)
+	if goalBonded.IsNegative() || goalBonded.IsZero() {
+		return fmt.Errorf("goal bonded must be positive: %s", goalBonded)
 	}
-	if v.IsNegative() || v.IsZero() {
-		return fmt.Errorf("goal bonded must be positive: %s", v)
-	}
-	if v.GT(math.LegacyOneDec()) {
-		return fmt.Errorf("goal bonded too large: %s", v)
+	if goalBonded.GT(math.LegacyOneDec()) {
+		return fmt.Errorf("goal bonded too large: %s", goalBonded)
 	}
 
 	return nil
 }
 
-func validateBlocksPerYear(i any) error {
-	v, ok := i.(uint64)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	if v == 0 {
-		return fmt.Errorf("blocks per year must be positive: %d", v)
+func validateBlocksPerYear(blocksPerYear uint64) error {
+	if blocksPerYear == 0 {
+		return fmt.Errorf("blocks per year must be positive: %d", blocksPerYear)
 	}
 
 	return nil

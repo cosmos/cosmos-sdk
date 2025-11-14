@@ -38,6 +38,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+This patch introduces a state machine breaking change in `x/feegrant`. Revoking a grant previously attempted to delete expiration entries under the wrong store key (`prefix|grantee|granter` instead of `prefix|granter|grantee`), leaving stale queues behind. Chains must execute a software upgrade to this release so future revocations clean up the queue correctly; no additional migration scripts or manual sweeping of existing queues are required.
+
 ### Improvements
 
 * (x/gov) [#24386](https://github.com/cosmos/cosmos-sdk/pull/24386) Improve helpers to easily create governance proposals from CLI.
@@ -46,7 +48,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (baseapp) [#23879](https://github.com/cosmos/cosmos-sdk/pull/23879) Ensure finalize block response is not empty in the defer check of FinalizeBlock to avoid panic by nil pointer.
 * (query) [#23884](https://github.com/cosmos/cosmos-sdk/pull/23884) Fix NPE in query pagination.
-* (x/feegrant) [#25541](https://github.com/cosmos/cosmos-sdk/pull/23884) Clear expiration queues on revoke
+* (x/feegrant) [#25541](https://github.com/cosmos/cosmos-sdk/pull/23884) Fix revocation cleanup by deleting expiration entries with the correct `prefix|granter|grantee` store key.
 
 ## [v0.50.14](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.50.14) - 2025-07-08
 

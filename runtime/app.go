@@ -37,6 +37,8 @@ import (
 // App can be used to create a hybrid app.go setup where some configuration is
 // done declaratively with an app config and the rest of it is done the old way.
 // See simapp/app.go for an example of this setup.
+//
+// Deprecated: this will be removed in an SDK release post v0.54
 type App struct {
 	*baseapp.BaseApp
 
@@ -62,7 +64,9 @@ type App struct {
 // RegisterModules registers the provided modules with the module manager and
 // the basic module manager. This is the primary hook for integrating with
 // modules which are not registered using the app config.
-func (a *App) RegisterModules(modules ...module.AppModule) error { //nolint:staticcheck // needed for legacy compatibility
+//
+// Deprecated: this will be removed in an SDK release post v0.54
+func (a *App) RegisterModules(modules ...module.AppModule) error {
 	for _, appModule := range modules {
 		name := appModule.Name()
 		if _, ok := a.ModuleManager.Modules[name]; ok {
@@ -94,6 +98,8 @@ func (a *App) RegisterModules(modules ...module.AppModule) error { //nolint:stat
 // This method should only be used for registering extra stores
 // which is necessary for modules that not registered using the app config.
 // To be used in combination of RegisterModules.
+//
+// Deprecated: this will be removed in an SDK release post v0.54
 func (a *App) RegisterStores(keys ...storetypes.StoreKey) error {
 	a.storeKeys = append(a.storeKeys, keys...)
 	a.MountStores(keys...)
@@ -102,6 +108,8 @@ func (a *App) RegisterStores(keys ...storetypes.StoreKey) error {
 }
 
 // Load finishes all initialization operations and loads the app.
+//
+// Deprecated: this will be removed in an SDK release post v0.54
 func (a *App) Load(loadLatest bool) error {
 	if len(a.config.InitGenesis) != 0 {
 		a.ModuleManager.SetOrderInitGenesis(a.config.InitGenesis...)

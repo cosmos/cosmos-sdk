@@ -27,6 +27,7 @@ import (
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/app"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/baseapp/state"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
@@ -56,9 +57,9 @@ import (
 
 var ParamStoreKey = []byte("paramstore")
 
-// GenesisStateWithSingleValidator initializes GenesisState with a single validator and genesis accounts
+// genesisStateWithSingleValidator initializes GenesisState with a single validator and genesis accounts
 // that also act as delegators.
-func GenesisStateWithSingleValidator(t *testing.T, codec codec.Codec, builder *runtime.AppBuilder) map[string]json.RawMessage {
+func genesisStateWithSingleValidator(t *testing.T, codec codec.Codec, appI app.AppI) map[string]json.RawMessage {
 	t.Helper()
 
 	privVal := mock.NewPV()
@@ -79,7 +80,7 @@ func GenesisStateWithSingleValidator(t *testing.T, codec codec.Codec, builder *r
 		},
 	}
 
-	genesisState := builder.DefaultGenesis()
+	genesisState := appI.DefaultGenesis()
 	// sus
 	genesisState, err = simtestutil.GenesisStateWithValSet(codec, genesisState, valSet, []authtypes.GenesisAccount{acc}, balances...)
 	require.NoError(t, err)

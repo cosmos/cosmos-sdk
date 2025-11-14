@@ -10,28 +10,22 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	store "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/app"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
@@ -70,58 +64,33 @@ func TestBaseApp_BlockGas(t *testing.T) {
 	}
 
 	for _, tc := range testcases {
-		var (
-			bankKeeper        bankkeeper.Keeper
-			accountKeeper     authkeeper.AccountKeeper
-			appBuilder        *runtime.AppBuilder
-			txConfig          client.TxConfig
-			cdc               codec.Codec
-			interfaceRegistry codectypes.InterfaceRegistry
-			err               error
-		)
 
-		err = depinject.Inject(
-			depinject.Configs(
-				configurator.NewAppConfig(
-					configurator.AuthModule(),
-					configurator.TxModule(),
-					configurator.ConsensusModule(),
-					configurator.BankModule(),
-					configurator.StakingModule(),
-				),
-				depinject.Supply(log.NewNopLogger()),
-			),
-			&bankKeeper,
-			&accountKeeper,
-			&interfaceRegistry,
-			&txConfig,
-			&cdc,
-			&appBuilder)
-		require.NoError(t, err)
+		sdkAppConfig := app.DefaultSDKAppConfig("test", simtestutil.NewAppOptionsWithFlagHome(t.TempDir()))
+		bApp := app.NewSDKApp(log.NewTestLogger(t), dbm.NewMemDB(), nil, sdkAppConfig)
 
-		bapp := appBuilder.Build(dbm.NewMemDB(), nil)
-		err = bapp.Load(true)
-		require.NoError(t, err)
+		bApp.LoadModules()
+		require.NoError(t, bApp.LoadLatestVersion())
 
 		t.Run(tc.name, func(t *testing.T) {
-			baseapptestutil.RegisterInterfaces(interfaceRegistry)
-			baseapptestutil.RegisterKeyValueServer(bapp.MsgServiceRouter(), BlockGasImpl{
+			baseapptestutil.RegisterInterfaces(bApp.InterfaceRegistry())
+			baseapptestutil.RegisterKeyValueServer(bApp.MsgServiceRouter(), BlockGasImpl{
 				panicTx:      tc.panicTx,
 				gasToConsume: tc.gasToConsume,
-				key:          bapp.UnsafeFindStoreKey(banktypes.ModuleName),
+				key:          bApp.UnsafeFindStoreKey(banktypes.ModuleName),
 			})
 
-			genState := GenesisStateWithSingleValidator(t, cdc, appBuilder)
+			genState := genesisStateWithSingleValidator(t, bApp.AppCodec(), bApp)
 			stateBytes, err := cmtjson.MarshalIndent(genState, "", " ")
 			require.NoError(t, err)
-			_, err = bapp.InitChain(&abci.RequestInitChain{
+			_, err = bApp.InitChain(&abci.RequestInitChain{
+				ChainId:         bApp.ChainID(),
 				Validators:      []abci.ValidatorUpdate{},
 				ConsensusParams: simtestutil.DefaultConsensusParams,
 				AppStateBytes:   stateBytes,
 			})
 
 			require.NoError(t, err)
-			ctx := bapp.NewContext(false)
+			ctx := bApp.NewContext(false).WithChainID(bApp.ChainID())
 
 			// tx fee
 			feeCoin := sdk.NewCoin("atom", sdkmath.NewInt(150))
@@ -129,12 +98,12 @@ func TestBaseApp_BlockGas(t *testing.T) {
 
 			// test account and fund
 			priv1, _, addr1 := testdata.KeyTestPubAddr()
-			err = bankKeeper.MintCoins(ctx, minttypes.ModuleName, feeAmount)
+			err = bApp.BankKeeper.MintCoins(ctx, minttypes.ModuleName, feeAmount)
 			require.NoError(t, err)
-			err = bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr1, feeAmount)
+			err = bApp.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr1, feeAmount)
 			require.NoError(t, err)
-			require.Equal(t, feeCoin.Amount, bankKeeper.GetBalance(ctx, addr1, feeCoin.Denom).Amount)
-			seq := accountKeeper.GetAccount(ctx, addr1).GetSequence()
+			require.Equal(t, feeCoin.Amount, bApp.BankKeeper.GetBalance(ctx, addr1, feeCoin.Denom).Amount)
+			seq := bApp.AccountKeeper.GetAccount(ctx, addr1).GetSequence()
 			require.Equal(t, uint64(0), seq)
 
 			// msg and signatures
@@ -144,33 +113,33 @@ func TestBaseApp_BlockGas(t *testing.T) {
 				Signer: addr1.String(),
 			}
 
-			txBuilder := txConfig.NewTxBuilder()
+			txBuilder := bApp.TxConfig().NewTxBuilder()
 
 			require.NoError(t, txBuilder.SetMsgs(msg))
 			txBuilder.SetFeeAmount(feeAmount)
 			txBuilder.SetGasLimit(uint64(simtestutil.DefaultConsensusParams.Block.MaxGas))
 
-			senderAccountNumber := accountKeeper.GetAccount(ctx, addr1).GetAccountNumber()
+			senderAccountNumber := bApp.AccountKeeper.GetAccount(ctx, addr1).GetAccountNumber()
 			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{senderAccountNumber}, []uint64{0}
-			_, txBytes, err := createTestTx(txConfig, txBuilder, privs, accNums, accSeqs, ctx.ChainID())
+			_, txBytes, err := createTestTx(bApp.TxConfig(), txBuilder, privs, accNums, accSeqs, ctx.ChainID())
 			require.NoError(t, err)
 
-			rsp, err := bapp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+			rsp, err := bApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
 			require.NoError(t, err)
 
 			// check result
-			ctx = bapp.GetContextForFinalizeBlock(txBytes)
-			okValue := ctx.KVStore(bapp.UnsafeFindStoreKey(banktypes.ModuleName)).Get([]byte("ok"))
+			ctx = bApp.GetContextForFinalizeBlock(txBytes)
+			okValue := ctx.KVStore(bApp.UnsafeFindStoreKey(banktypes.ModuleName)).Get([]byte("ok"))
 
 			if tc.expErr {
 				if tc.panicTx {
-					require.Equal(t, sdkerrors.ErrPanic.ABCICode(), rsp.TxResults[0].Code)
+					require.Equal(t, sdkerrors.ErrPanic.ABCICode(), rsp.TxResults[0].Code, rsp.TxResults[0].Log)
 				} else {
-					require.Equal(t, sdkerrors.ErrOutOfGas.ABCICode(), rsp.TxResults[0].Code)
+					require.Equal(t, sdkerrors.ErrOutOfGas.ABCICode(), rsp.TxResults[0].Code, rsp.TxResults[0].Log)
 				}
 				require.Empty(t, okValue)
 			} else {
-				require.Equal(t, uint32(0), rsp.TxResults[0].Code)
+				require.Equal(t, uint32(0), rsp.TxResults[0].Code, rsp.TxResults[0].Log)
 				require.Equal(t, []byte("ok"), okValue)
 			}
 			// check block gas is always consumed
@@ -178,9 +147,9 @@ func TestBaseApp_BlockGas(t *testing.T) {
 			expGasConsumed := min(addUint64Saturating(tc.gasToConsume, baseGas), uint64(simtestutil.DefaultConsensusParams.Block.MaxGas))
 			require.Equal(t, int(expGasConsumed), int(ctx.BlockGasMeter().GasConsumed()))
 			// tx fee is always deducted
-			require.Equal(t, int64(0), bankKeeper.GetBalance(ctx, addr1, feeCoin.Denom).Amount.Int64())
+			require.Equal(t, int64(0), bApp.BankKeeper.GetBalance(ctx, addr1, feeCoin.Denom).Amount.Int64())
 			// sender's sequence is always increased
-			seq = accountKeeper.GetAccount(ctx, addr1).GetSequence()
+			seq = bApp.AccountKeeper.GetAccount(ctx, addr1).GetSequence()
 			require.NoError(t, err)
 			require.Equal(t, uint64(1), seq)
 		})

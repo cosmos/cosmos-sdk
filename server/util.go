@@ -2,10 +2,8 @@ package server
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
-	"net"
 	"os"
 	"os/signal"
 	"path"
@@ -393,40 +391,6 @@ func AddTestnetCreatorCommand(rootCmd *cobra.Command, appCreator types.AppCreato
 	rootCmd.AddCommand(testnetCreateCmd)
 }
 
-// ExternalIP gets the external IP address of the machine.
-//
-// https://stackoverflow.com/questions/23558425/how-do-i-get-the-local-ip-address-in-go
-// TODO there must be a better way to get external IP
-func ExternalIP() (string, error) {
-	ifaces, err := net.Interfaces()
-	if err != nil {
-		return "", err
-	}
-
-	for _, iface := range ifaces {
-		if skipInterface(iface) {
-			continue
-		}
-		addrs, err := iface.Addrs()
-		if err != nil {
-			return "", err
-		}
-
-		for _, addr := range addrs {
-			ip := addrToIP(addr)
-			if ip == nil || ip.IsLoopback() {
-				continue
-			}
-			ip = ip.To4()
-			if ip == nil {
-				continue // not an ipv4 address
-			}
-			return ip.String(), nil
-		}
-	}
-	return "", errors.New("are you connected to the network?")
-}
-
 // ListenForQuitSignals listens for SIGINT and SIGTERM. When a signal is received,
 // the cleanup function is called, indicating the caller can gracefully exit or
 // return.
@@ -473,30 +437,6 @@ func GetAppDBBackend(opts types.AppOptions) dbm.BackendType {
 	return dbm.GoLevelDBBackend
 }
 
-func skipInterface(iface net.Interface) bool {
-	if iface.Flags&net.FlagUp == 0 {
-		return true // interface down
-	}
-
-	if iface.Flags&net.FlagLoopback != 0 {
-		return true // loopback interface
-	}
-
-	return false
-}
-
-func addrToIP(addr net.Addr) net.IP {
-	var ip net.IP
-
-	switch v := addr.(type) {
-	case *net.IPNet:
-		ip = v.IP
-	case *net.IPAddr:
-		ip = v.IP
-	}
-	return ip
-}
-
 func openDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
 	dataDir := filepath.Join(rootDir, "data")
 	return dbm.NewDB("application", backendType, dataDir)
@@ -516,6 +456,10 @@ func openTraceWriter(traceWriterFile string) (w io.WriteCloser, err error) {
 // DefaultBaseappOptions returns the default baseapp options provided by the Cosmos SDK
 func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 	var cache storetypes.MultiStorePersistentCache
+
+	if appOpts == nil {
+		return nil
+	}
 
 	if cast.ToBool(appOpts.Get(FlagInterBlockCache)) {
 		cache = store.NewCommitKVStoreCacheManager()
@@ -546,17 +490,6 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 			panic(fmt.Errorf("failed to parse chain-id from genesis file: %w", err))
 		}
 	}
-
-	snapshotStore, err := GetSnapshotStore(appOpts)
-	if err != nil {
-		panic(err)
-	}
-
-	snapshotOptions := snapshottypes.NewSnapshotOptions(
-		cast.ToUint64(appOpts.Get(FlagStateSyncSnapshotInterval)),
-		cast.ToUint32(appOpts.Get(FlagStateSyncSnapshotKeepRecent)),
-	)
-
 	defaultMempool := baseapp.SetMempool(mempool.NoOpMempool{})
 	if maxTxs := cast.ToInt(appOpts.Get(FlagMempoolMaxTxs)); maxTxs >= 0 {
 		defaultMempool = baseapp.SetMempool(
@@ -566,7 +499,7 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		)
 	}
 
-	return []func(*baseapp.BaseApp){
+	opts := []func(*baseapp.BaseApp){
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(FlagMinGasPrices))),
 		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(FlagHaltHeight))),
@@ -575,7 +508,6 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		baseapp.SetInterBlockCache(cache),
 		baseapp.SetTrace(cast.ToBool(appOpts.Get(FlagTrace))),
 		baseapp.SetIndexEvents(cast.ToStringSlice(appOpts.Get(FlagIndexEvents))),
-		baseapp.SetSnapshot(snapshotStore, snapshotOptions),
 		baseapp.SetIAVLCacheSize(cast.ToInt(appOpts.Get(FlagIAVLCacheSize))),
 		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(FlagDisableIAVLFastNode))),
 		baseapp.SetIAVLSyncPruning(cast.ToBool(appOpts.Get(FlagIAVLSyncPruning))),
@@ -583,6 +515,22 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		baseapp.SetChainID(chainID),
 		baseapp.SetQueryGasLimit(cast.ToUint64(appOpts.Get(FlagQueryGasLimit))),
 	}
+
+	if snapshotInterval := cast.ToUint64(appOpts.Get(FlagStateSyncSnapshotInterval)); snapshotInterval > 0 {
+		snapshotStore, err := GetSnapshotStore(appOpts)
+		if err != nil {
+			panic(err)
+		}
+
+		snapshotOptions := snapshottypes.NewSnapshotOptions(
+			cast.ToUint64(snapshotInterval),
+			cast.ToUint32(appOpts.Get(FlagStateSyncSnapshotKeepRecent)),
+		)
+
+		opts = append(opts, baseapp.SetSnapshot(snapshotStore, snapshotOptions))
+	}
+
+	return opts
 }
 
 func GetSnapshotStore(appOpts types.AppOptions) (*snapshots.Store, error) {
@@ -592,13 +540,14 @@ func GetSnapshotStore(appOpts types.AppOptions) (*snapshots.Store, error) {
 		return nil, fmt.Errorf("failed to create snapshots directory: %w", err)
 	}
 
-	snapshotDB, err := dbm.NewDB("metadata", GetAppDBBackend(appOpts), snapshotDir)
+	dbBackend := GetAppDBBackend(appOpts)
+	snapshotDB, err := dbm.NewDB("metadata", dbBackend, snapshotDir)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create snapshots for %s database: %w", dbBackend, err)
 	}
 	snapshotStore, err := snapshots.NewStore(snapshotDB, snapshotDir)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create snapshots store: %w", err)
 	}
 
 	return snapshotStore, nil

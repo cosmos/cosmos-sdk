@@ -190,7 +190,7 @@ type CommitMultiStore interface {
 	LoadVersion(ver int64) error
 
 	// Set an inter-block (persistent) cache that maintains a mapping from
-	// StoreKeys to CommitKVStores.
+	// storeKeys to CommitKVStores.
 	SetInterBlockCache(MultiStorePersistentCache)
 
 	// SetInitialVersion sets the initial version of the IAVL tree. It is used when
@@ -409,6 +409,8 @@ type StoreKey interface {
 // generation in the IBC protocol as defined in https://github.com/cosmos/ibc/tree/master/spec/core/ics-005-port-allocation#data-structures
 type CapabilityKey StoreKey
 
+var _ StoreKey = &KVStoreKey{}
+
 // KVStoreKey is used for accessing substores.
 // Only the pointer value should ever be used - it functions as a capabilities key.
 type KVStoreKey struct {
@@ -538,7 +540,7 @@ func (tc TraceContext) Merge(newTc TraceContext) TraceContext {
 }
 
 // MultiStorePersistentCache defines an interface which provides inter-block
-// (persistent) caching capabilities for multiple CommitKVStores based on StoreKeys.
+// (persistent) caching capabilities for multiple CommitKVStores based on storeKeys.
 type MultiStorePersistentCache interface {
 	// Wrap and return the provided CommitKVStore with an inter-block (persistent)
 	// cache.

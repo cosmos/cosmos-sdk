@@ -1,5 +1,3 @@
-//go:build e2e
-
 package server_test
 
 import (
@@ -29,14 +27,16 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
+const chainID = "test-1"
+
 func TestExportCmd_ConsensusParams(t *testing.T) {
 	tempDir := t.TempDir()
-	_, ctx, _, cmd := setupApp(t, tempDir)
+	_, ctx, _, exportCmd := setupApp(t, tempDir)
 
 	output := &bytes.Buffer{}
-	cmd.SetOut(output)
-	cmd.SetArgs([]string{fmt.Sprintf("--%s=%s", flags.FlagHome, tempDir)})
-	assert.NilError(t, cmd.ExecuteContext(ctx))
+	exportCmd.SetOut(output)
+	exportCmd.SetArgs([]string{fmt.Sprintf("--%s=%s", flags.FlagHome, tempDir)})
+	assert.NilError(t, exportCmd.ExecuteContext(ctx))
 
 	var exportedAppGenesis genutiltypes.AppGenesis
 	err := json.Unmarshal(output.Bytes(), &exportedAppGenesis)
@@ -52,11 +52,11 @@ func TestExportCmd_ConsensusParams(t *testing.T) {
 }
 
 func TestExportCmd_HomeDir(t *testing.T) {
-	_, ctx, _, cmd := setupApp(t, t.TempDir())
+	_, ctx, _, exportCmd := setupApp(t, t.TempDir())
 
-	cmd.SetArgs([]string{fmt.Sprintf("--%s=%s", flags.FlagHome, "foobar")})
+	exportCmd.SetArgs([]string{fmt.Sprintf("--%s=%s", flags.FlagHome, "foobar")})
 
-	err := cmd.ExecuteContext(ctx)
+	err := exportCmd.ExecuteContext(ctx)
 	assert.ErrorContains(t, err, "stat foobar/config/genesis.json: no such file or directory")
 }
 
@@ -91,7 +91,7 @@ func TestExportCmd_Height(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tempDir := t.TempDir()
-			app, ctx, _, cmd := setupApp(t, tempDir)
+			app, ctx, _, exportCmd := setupApp(t, tempDir)
 
 			// Fast forward to block `tc.fastForward`.
 			for i := int64(2); i <= tc.fastForward; i++ {
@@ -104,10 +104,10 @@ func TestExportCmd_Height(t *testing.T) {
 			}
 
 			output := &bytes.Buffer{}
-			cmd.SetOut(output)
+			exportCmd.SetOut(output)
 			args := append(tc.flags, fmt.Sprintf("--%s=%s", flags.FlagHome, tempDir))
-			cmd.SetArgs(args)
-			assert.NilError(t, cmd.ExecuteContext(ctx))
+			exportCmd.SetArgs(args)
+			assert.NilError(t, exportCmd.ExecuteContext(ctx))
 
 			var exportedAppGenesis genutiltypes.AppGenesis
 			err := json.Unmarshal(output.Bytes(), &exportedAppGenesis)
@@ -135,13 +135,13 @@ func TestExportCmd_Output(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tempDir := t.TempDir()
-			_, ctx, _, cmd := setupApp(t, tempDir)
+			_, ctx, _, exportCmd := setupApp(t, tempDir)
 
 			output := &bytes.Buffer{}
-			cmd.SetOut(output)
+			exportCmd.SetOut(output)
 			args := append(tc.flags, fmt.Sprintf("--%s=%s", flags.FlagHome, tempDir))
-			cmd.SetArgs(args)
-			assert.NilError(t, cmd.ExecuteContext(ctx))
+			exportCmd.SetArgs(args)
+			assert.NilError(t, exportCmd.ExecuteContext(ctx))
 
 			var exportedAppGenesis genutiltypes.AppGenesis
 			f, err := os.ReadFile(tc.outputDocument)
@@ -162,18 +162,19 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 	assert.NilError(t, err)
 
 	db := dbm.NewMemDB()
-	app := simapp.NewSimApp(logger, db, nil, true, simtestutil.NewAppOptionsWithFlagHome(tempDir))
+	appOpts := simtestutil.NewAppOptionsWithFlagHome(tempDir)
+	simApp := simapp.NewSimApp(logger, db, nil, true, appOpts)
 
-	genesisState := simapp.GenesisStateWithSingleValidator(t, app)
+	genesisState := simapp.GenesisStateWithSingleValidator(t, simApp)
 	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
 	assert.NilError(t, err)
 
 	serverCtx := server.NewDefaultContext()
 	serverCtx.Config.RootDir = tempDir
 
-	clientCtx := client.Context{}.WithCodec(app.AppCodec())
+	clientCtx := client.Context{}.WithCodec(simApp.AppCodec())
 	appGenesis := genutiltypes.AppGenesis{
-		ChainID:  "theChainId",
+		ChainID:  chainID,
 		AppState: stateBytes,
 		Consensus: &genutiltypes.ConsensusGenesis{
 			Validators: nil,
@@ -184,31 +185,29 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 	err = genutil.ExportGenesisFile(&appGenesis, serverCtx.Config.GenesisFile())
 	assert.NilError(t, err)
 
-	_, err = app.InitChain(&abci.RequestInitChain{
+	_, err = simApp.InitChain(&abci.RequestInitChain{
+		ChainId:         chainID,
 		Validators:      []abci.ValidatorUpdate{},
 		ConsensusParams: simtestutil.DefaultConsensusParams,
 		AppStateBytes:   appGenesis.AppState,
 	})
 	assert.NilError(t, err)
 
-	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err = simApp.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: 1,
 	})
 	assert.NilError(t, err)
 
-	_, err = app.Commit()
+	_, err = simApp.Commit()
 	assert.NilError(t, err)
 
 	cmd := server.ExportCmd(
 		func(_ log.Logger, _ dbm.DB, _ io.Writer, height int64, forZeroHeight bool, jailAllowedAddrs []string, appOptions types.AppOptions, modulesToExport []string) (types.ExportedApp, error) {
-			var simApp *simapp.SimApp
 			if height != -1 {
-				simApp = simapp.NewSimApp(logger, db, nil, false, appOptions)
+				simApp = simapp.NewSimApp(logger, db, nil, false, appOpts)
 				if err := simApp.LoadHeight(height); err != nil {
 					return types.ExportedApp{}, err
 				}
-			} else {
-				simApp = simapp.NewSimApp(logger, db, nil, true, appOptions)
 			}
 
 			return simApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
@@ -218,7 +217,7 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 	ctx = context.WithValue(ctx, client.ClientContextKey, &clientCtx)
 	ctx = context.WithValue(ctx, server.ServerContextKey, serverCtx)
 
-	return app, ctx, appGenesis, cmd
+	return simApp, ctx, appGenesis, cmd
 }
 
 func createConfigFolder(dir string) error {

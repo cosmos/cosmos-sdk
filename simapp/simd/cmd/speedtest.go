@@ -5,15 +5,15 @@ import (
 	"os"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/tools/speedtest"
+	"github.com/spf13/cobra"
 
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	"github.com/cosmos/cosmos-sdk/tools/speedtest"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -22,9 +22,7 @@ import (
 	"cosmossdk.io/simapp"
 )
 
-var (
-	r = rand.New(rand.NewSource(time.Now().UnixNano()))
-)
+var r = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 func NewBankSpeedTest() *cobra.Command {
 	dir, err := os.MkdirTemp("", "bankspeedtest-*")
@@ -41,7 +39,7 @@ func NewBankSpeedTest() *cobra.Command {
 		app:      app,
 		accounts: make([]accountInfo, 0),
 	}
-	cmd := speedtest.SpeedTestCmd(gen.createAccount, gen.generateTx, app, app.AppCodec(), app.DefaultGenesis(), chainID)
+	cmd := speedtest.NewCmd(gen.createAccount, gen.generateTx, app, app.AppCodec(), app.DefaultGenesis(), chainID)
 	cmd.PostRunE = func(_ *cobra.Command, _ []string) error {
 		return os.RemoveAll(dir)
 	}

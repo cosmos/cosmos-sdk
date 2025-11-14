@@ -31,9 +31,9 @@ var (
 	verifyTxs      = false
 )
 
-// SpeedTestCmd returns a command that will run an execution test on your application.
+// NewCmd returns a command that will run an execution test on your application.
 // Balances and accounts are automatically added to the chain's state via AccountCreator.
-func SpeedTestCmd(
+func NewCmd(
 	createAccount AccountCreator,
 	generateTx GenerateTx,
 	app servertypes.ABCI,

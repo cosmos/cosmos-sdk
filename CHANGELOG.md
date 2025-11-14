@@ -38,6 +38,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## UNRELEASED
 
+This patch introduces a state machine breaking change in `x/feegrant`. Revoking a grant previously attempted to delete expiration entries under the wrong store key (`prefix|grantee|granter` instead of `prefix|granter|grantee`), leaving stale queues behind. Chains must execute a software upgrade to this release so future revocations clean up the queue correctly; no additional migration scripts or manual sweeping of existing queues are required.
+
 ### Features
 
 * (crypto/ledger) [#25435](https://github.com/cosmos/cosmos-sdk/pull/25435) Add SetDERConversion to reset skipDERConversion and App name for ledger.
@@ -45,7 +47,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Bug Fixes
 
 * (cli) [#25485](https://github.com/cosmos/cosmos-sdk/pull/25485) Avoid failed to convert address field in `withdraw-validator-commission` cmd.
-* (x/feegrant) [#25540](https://github.com/cosmos/cosmos-sdk/pull/25540) Clear expiration queues on revoke
+* (x/feegrant) [#25540](https://github.com/cosmos/cosmos-sdk/pull/25540) Fix revocation cleanup by deleting expiration entries with the correct `prefix|granter|grantee` store key.
 
 ## [v0.53.4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.3) - 2025-07-25
 

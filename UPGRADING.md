@@ -27,7 +27,7 @@ initialization in `app.go`.  Setting this value to any non-zero value will overr
 
 #### Adoption of OpenTelemetry and Deprecation of `github.com/hashicorp/go-metrics`
 
-Existing Cosmos SDK telemetry support is provide by `github.com/hashicorp/go-metrics` which is undermaintained and only supported metrics instrumentation.
+Existing Cosmos SDK telemetry support is provided by `github.com/hashicorp/go-metrics` which is undermaintained and only supported metrics instrumentation.
 OpenTelemetry provides an integrated solution for metrics, traces and logging which is widely adopted and actively maintained.
 Also the existing wrapper functions in the `telemetry` package required acquiring mutex locks and map lookups for every metric operation which is sub-optimal. OpenTelemetry's API uses atomic concurrency wherever possible and should introduce less performance overhead during metric collection.
 

@@ -24,7 +24,7 @@ type ChangesetWriter struct {
 }
 
 func NewChangesetWriter(treeDir string, startVersion uint32, treeStore *TreeStore) (*ChangesetWriter, error) {
-	files, err := OpenChangesetFiles(treeDir, startVersion, 0, "")
+	files, err := CreateChangesetFiles(treeDir, startVersion, 0, "")
 	if err != nil {
 		return nil, fmt.Errorf("failed to open changeset files: %w", err)
 	}

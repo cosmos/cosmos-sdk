@@ -48,7 +48,12 @@ func NewTreeStore(dir string, options Options, logger log.Logger) (*TreeStore, e
 		opts:       options,
 	}
 
-	err := ts.initNewWriter()
+	err := ts.load()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load existing changesets: %w", err)
+	}
+
+	err = ts.initNewWriter()
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize first writer: %w", err)
 	}

@@ -62,7 +62,7 @@ func NewCompacter(ctx context.Context, reader *Changeset, opts CompactOptions, s
 		kvlogPath = ""
 	}
 
-	newFiles, err := OpenChangesetFiles(files.TreeDir(), files.StartVersion(), opts.CompactedAt, kvlogPath)
+	newFiles, err := CreateChangesetFiles(files.TreeDir(), files.StartVersion(), opts.CompactedAt, kvlogPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open new changeset files: %w", err)
 	}
@@ -300,6 +300,9 @@ func (c *Compactor) Seal() (*Changeset, error) {
 	}
 	if err := errors.Join(errs...); err != nil {
 		return nil, fmt.Errorf("failed to flush data during compaction seal: %w", err)
+	}
+	if err := c.files.MarkReady(); err != nil {
+		return nil, fmt.Errorf("failed to mark changeset as ready during compaction seal: %w", err)
 	}
 
 	cs := NewChangeset(c.treeStore)

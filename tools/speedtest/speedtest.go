@@ -31,15 +31,23 @@ var (
 	verifyTxs      = false
 )
 
+type GenesisModifier func(codec.Codec, map[string]json.RawMessage)
+
 // NewCmd returns a command that will run an execution test on your application.
 // Balances and accounts are automatically added to the chain's state via AccountCreator.
+// Your genesis will be modified when instantiating a validator set, so please only modify the genesis by supplying the
+// GenesisModifier argument.
+// IMPORTANT: When testing the limits of your application, use --verify-txs. If you fill up your blocks passed the allowed
+// max gas or max bytes, txs will be ignored, and this can muddy your results. Once you've verified that your configuration
+// is processing completely, you may remove the --verify-txs flag to get cleaner results.
 func NewCmd(
 	createAccount AccountCreator,
 	generateTx GenerateTx,
 	app servertypes.ABCI,
 	cdc codec.Codec,
-	genState map[string]json.RawMessage,
+	defaultGenesis map[string]json.RawMessage,
 	chainID string,
+	genesisModifiers ...GenesisModifier,
 ) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "speedtest",
@@ -71,9 +79,12 @@ func NewCmd(
 			for _, acc := range accounts {
 				genAccs = append(genAccs, acc.GenesisAccount)
 			}
-			genesisState, err := simtestutil.GenesisStateWithValSet(cdc, genState, vals, genAccs, balances...)
+			genesisState, err := simtestutil.GenesisStateWithValSet(cdc, defaultGenesis, vals, genAccs, balances...)
 			if err != nil {
 				return err
+			}
+			for _, genModifier := range genesisModifiers {
+				genModifier(cdc, genesisState)
 			}
 
 			// init chain must be called to stop deliverState from being nil
@@ -119,10 +130,12 @@ func NewCmd(
 				return fmt.Errorf("failed to run blocks: %w", err)
 			}
 
-			cmd.Printf("Finished %d blocks in %s\n", numBlocksToRun, elapsed)
 			numTxs := numBlocksToRun * numTxsPerBlock
 			tps := float64(numTxs) / elapsed.Seconds()
-			cmd.Printf("TPS: %f", tps)
+			bps := float64(numBlocksToRun) / elapsed.Seconds()
+			cmd.Printf("Finished %d blocks (%d txs) in %s\n", numBlocksToRun, numTxs, elapsed)
+			cmd.Printf("TPS: %f\n", tps)
+			cmd.Printf("BPS: %f\n", bps)
 
 			return nil
 		},

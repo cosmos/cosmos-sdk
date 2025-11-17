@@ -33,6 +33,19 @@ func NewChangeset(treeStore *TreeStore) *Changeset {
 	}
 }
 
+func OpenChangeset(treeStore *TreeStore, dir string) (*Changeset, error) {
+	files, err := OpenChangesetFiles(dir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open changeset files: %w", err)
+	}
+	cs := NewChangeset(treeStore)
+	err = cs.InitOwned(files)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize changeset: %w", err)
+	}
+	return cs, nil
+}
+
 func (cr *Changeset) InitOwned(files *ChangesetFiles) error {
 	err := cr.InitShared(files)
 	if err != nil {

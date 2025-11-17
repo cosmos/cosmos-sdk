@@ -33,6 +33,8 @@ func (ts *TreeStore) load() error {
 		caMap.Set(compactedAt, dir)
 	}
 
+	ts.savedVersion.Store(0)
+	ts.stagedVersion = 1
 	// load changesets in order
 	for {
 		startVersion, compactionMap, ok := dirMap.PopMin()
@@ -40,9 +42,19 @@ func (ts *TreeStore) load() error {
 			return nil
 		}
 
-		lastCompaction, dirName, ok := compactionMap.PopMax()
+		_, dirName, ok := compactionMap.PopMax()
 		if !ok {
 			return fmt.Errorf("internal error: no changeset entries for start version %d", startVersion)
+		}
+
+		if startVersion < uint64(ts.stagedVersion) {
+			ts.logger.Warn("found undeleted compaction", "startVersion", startVersion, "stagedVersion", ts.stagedVersion, "dir", dirName)
+			// TODO delete undeleted compactions
+			continue
+		}
+
+		if startVersion > uint64(ts.stagedVersion) {
+			return fmt.Errorf("missing changeset for staged version %d", ts.stagedVersion)
 		}
 
 		ready, err := IsChangesetReady(dirName)
@@ -59,6 +71,16 @@ func (ts *TreeStore) load() error {
 			continue
 		}
 
-		cf, err := ReopenChangesetFiles(dirName)
+		cs, err := OpenChangeset(ts, dirName)
+		if err != nil {
+			return fmt.Errorf("failed to open changeset in %s: %w", dirName, err)
+		}
+
+		ce := &changesetEntry{}
+		ce.changeset.Store(cs)
+		ts.changesets.Set(uint32(startVersion), ce)
+
+		ts.savedVersion.Store(cs.info.EndVersion)
+		ts.stagedVersion = cs.info.EndVersion + 1
 	}
 }

@@ -170,7 +170,38 @@ func testIAVLXSims(t *rapid.T) {
 	tempDir, err := os.MkdirTemp("", "iavlx")
 	require.NoError(t, err, "failed to create temp directory")
 	defer os.RemoveAll(tempDir)
-	treeV2, err := NewCommitTree(tempDir, Options{
+	simMachine := &SimMachine{
+		treeV1:       treeV1,
+		dirV2:        tempDir,
+		existingKeys: map[string][]byte{},
+	}
+	simMachine.openV2Tree(t)
+
+	// TODO switch from StateMachineActions to manually setting up the actions map, this is going to be too magical for other maintainers otherwise
+	t.Repeat(map[string]func(*rapid.T){
+		"":            simMachine.Check,
+		"UpdateN":     simMachine.UpdateN,
+		"GetN":        simMachine.GetN,
+		"Iterate":     simMachine.Iterate,
+		"Commit":      simMachine.Commit,
+		"CloseReopen": simMachine.CloseReopen,
+	})
+
+	require.NoError(t, treeV1.Close(), "failed to close iavl tree")
+	require.NoError(t, simMachine.treeV2.Close(), "failed to close iavlx tree")
+}
+
+type SimMachine struct {
+	treeV1 *iavl.MutableTree
+	treeV2 *CommitTree
+	dirV2  string
+	// existingKeys keeps track of keys that have been set in the tree or deleted. Deleted keys are retained as nil values.
+	existingKeys map[string][]byte
+}
+
+func (s *SimMachine) openV2Tree(t require.TestingT) {
+	var err error
+	s.treeV2, err = NewCommitTree(s.dirV2, Options{
 		WriteWAL:              true,
 		CompactWAL:            true,
 		DisableCompaction:     true,
@@ -185,30 +216,6 @@ func testIAVLXSims(t *rapid.T) {
 		ReaderUpdateInterval:  1,
 	}, sdklog.NewNopLogger())
 	require.NoError(t, err, "failed to create iavlx tree")
-	simMachine := &SimMachine{
-		treeV1:       treeV1,
-		treeV2:       treeV2,
-		existingKeys: map[string][]byte{},
-	}
-
-	// TODO switch from StateMachineActions to manually setting up the actions map, this is going to be too magical for other maintainers otherwise
-	t.Repeat(map[string]func(*rapid.T){
-		"":        simMachine.Check,
-		"UpdateN": simMachine.UpdateN,
-		"GetN":    simMachine.GetN,
-		"Iterate": simMachine.Iterate,
-		"Commit":  simMachine.Commit,
-	})
-
-	require.NoError(t, treeV1.Close(), "failed to close iavl tree")
-	require.NoError(t, treeV2.Close(), "failed to close iavlx tree")
-}
-
-type SimMachine struct {
-	treeV1 *iavl.MutableTree
-	treeV2 *CommitTree
-	// existingKeys keeps track of keys that have been set in the tree or deleted. Deleted keys are retained as nil values.
-	existingKeys map[string][]byte
 }
 
 func (s *SimMachine) Check(t *rapid.T) {
@@ -234,6 +241,11 @@ func (s *SimMachine) GetN(t *rapid.T) {
 	for i := 0; i < n; i++ {
 		s.get(t)
 	}
+}
+
+func (s *SimMachine) CloseReopen(t *rapid.T) {
+	require.NoError(t, s.treeV2.Close(), "failed to close iavlx tree")
+	s.openV2Tree(t)
 }
 
 func (s *SimMachine) set(t *rapid.T) {

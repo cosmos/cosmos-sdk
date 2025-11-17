@@ -43,7 +43,10 @@ var (
 	_ module.AppModuleSimulation = AppModule{}
 	_ module.HasServices         = AppModule{}
 	_ module.HasABCIGenesis      = AppModule{}
-	_ appmodule.AppModule        = AppModule{}
+	_ module.HasABCIEndBlock     = AppModule{}
+	_ appmodule.HasBeginBlocker  = AppModule{}
+
+	_ appmodule.AppModule = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the staking module.
@@ -168,18 +171,16 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return consensusVersion }
 
-//// BeginBlock returns the begin blocker for the staking module.
-//func (am AppModule) BeginBlock(ctx context.Context) error {
-//	return nil
-//	//return am.keeper.BeginBlocker(ctx)
-//}
-//
-//// EndBlock returns the end blocker for the staking module. It returns no validator
-//// updates.
-//func (am AppModule) EndBlock(ctx context.Context) ([]abci.ValidatorUpdate, error) {
-//	return nil, nil
-//	//return am.keeper.EndBlocker(ctx)
-//}
+// BeginBlock returns the begin blocker for the staking module.
+func (am AppModule) BeginBlock(ctx context.Context) error {
+	return am.keeper.BeginBlocker(ctx)
+}
+
+// EndBlock returns the end blocker for the staking module. It returns no validator
+// updates.
+func (am AppModule) EndBlock(ctx context.Context) ([]abci.ValidatorUpdate, error) {
+	return am.keeper.EndBlocker(ctx)
+}
 
 func init() {
 	appmodule.Register(

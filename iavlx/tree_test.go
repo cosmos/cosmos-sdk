@@ -144,7 +144,7 @@ func renderTree(t interface {
 }, tree *ImmutableTree,
 ) {
 	graph := &bytes.Buffer{}
-	require.NoError(t, RenderDotGraph(graph, tree.root))
+	require.NoError(t, RenderNodeDotGraph(graph, tree.root))
 	t.Logf("tree graph:\n%s", graph.String())
 }
 
@@ -419,4 +419,61 @@ func compareIteratorsAtVersion(t *rapid.T, iterV1, iterV2 corestore.Iterator) {
 		iterV1.Next()
 		iterV2.Next()
 	}
+}
+
+func TestGraphvizDump(t *testing.T) {
+	dir := t.TempDir()
+	tree, err := NewCommitTree(dir, Options{}, sdklog.NewNopLogger())
+	require.NoError(t, err)
+
+	dump := func() {
+		buf := &bytes.Buffer{}
+		version := tree.Version()
+		require.NoError(t, err)
+		err = RenderNodeDotGraph(buf, tree.root)
+		require.NoError(t, err)
+		require.NoError(t, os.WriteFile(fmt.Sprintf("ex%d.dot", version), buf.Bytes(), 0644))
+		cs, err := tree.store.currentWriter.CreatedSharedReader()
+		require.NoError(t, err)
+		buf = &bytes.Buffer{}
+		require.NoError(t, RenderChangesetDotGraph(buf, cs))
+		require.NoError(t, os.WriteFile(fmt.Sprintf("ex%d_cs.dot", version), buf.Bytes(), 0644))
+	}
+
+	tree.Set([]byte{1}, []byte{10})
+	tree.Set([]byte{2}, []byte{20})
+	tree.Set([]byte{3}, []byte{30})
+	tree.Set([]byte{4}, []byte{40})
+	tree.Commit()
+	dump()
+
+	tree.Set([]byte{2}, []byte{25})
+	tree.Set([]byte{5}, []byte{50})
+	tree.Delete([]byte{3})
+	tree.Set([]byte{6}, []byte{60})
+	tree.Commit()
+	dump()
+
+	tree.Set([]byte{1}, []byte{15})
+	tree.Delete([]byte{4})
+	tree.Set([]byte{7}, []byte{70})
+	tree.Set([]byte{8}, []byte{80})
+	tree.Commit()
+	dump()
+
+	tree.Set([]byte{0}, []byte{5})
+	tree.Set([]byte{2}, []byte{10})
+	tree.Set([]byte{9}, []byte{90})
+	tree.Delete([]byte{2})
+	tree.Set([]byte{10}, []byte{100})
+	tree.Commit()
+	dump()
+
+	tree.Set([]byte{11}, []byte{110})
+	tree.Delete([]byte{1})
+	tree.Set([]byte{3}, []byte{35})
+	tree.Set([]byte{12}, []byte{120})
+	tree.Set([]byte{4}, []byte{45})
+	tree.Commit()
+	dump()
 }

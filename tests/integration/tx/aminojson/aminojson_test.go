@@ -162,7 +162,7 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 				signBz, err := handler.GetSignBytes(context.Background(), signerData, txData)
 				require.NoError(t, err)
 
-				legacyHandler := tx.NewSignModeLegacyAminoJSONHandler()
+				legacyHandler := tx.NewSignModeLegacyAminoJSONHandler() // nolint:staticcheck // legacy testing
 				txBuilder := encCfg.TxConfig.NewTxBuilder()
 				require.NoError(t, txBuilder.SetMsgs([]types.Msg{tt.Gogo}...))
 				txBuilder.SetMemo(handlerOptions.Memo)
@@ -482,7 +482,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			signBz, err := handler.GetSignBytes(context.Background(), signerData, txData)
 			require.NoError(t, err)
 
-			legacyHandler := tx.NewSignModeLegacyAminoJSONHandler()
+			legacyHandler := tx.NewSignModeLegacyAminoJSONHandler() // nolint:staticcheck // legacy testing
 			txBuilder := encCfg.TxConfig.NewTxBuilder()
 			require.NoError(t, txBuilder.SetMsgs([]types.Msg{msg}...))
 			txBuilder.SetMemo(handlerOptions.Memo)

@@ -15,7 +15,6 @@ import (
 type CommitTree struct {
 	latest     atomic.Pointer[NodePointer]
 	root       *NodePointer
-	version    uint32
 	writeMutex sync.Mutex
 	store      *TreeStore
 	zeroCopy   bool
@@ -63,7 +62,7 @@ func (c *CommitTree) workingHash() []byte {
 	}
 
 	savedVersion := c.store.SavedVersion()
-	stagedVersion := c.stagedVersion()
+	stagedVersion := c.store.stagedVersion
 	c.commitCtx = &commitContext{
 		version:      stagedVersion,
 		savedVersion: savedVersion,
@@ -96,7 +95,7 @@ func (c *CommitTree) commit() (storetypes.CommitID, error) {
 	// compute hash and assign node IDs
 	hash := c.workingHash()
 
-	stagedVersion := c.stagedVersion()
+	stagedVersion := c.store.stagedVersion
 	if c.writeWal {
 		// wait for WAL write to complete
 		err := <-c.walDone
@@ -117,7 +116,7 @@ func (c *CommitTree) commit() (storetypes.CommitID, error) {
 		// make sure we have a non-nil commit context
 		commitCtx = &commitContext{}
 	}
-	err := c.store.SaveRoot(stagedVersion, c.root, commitCtx.leafNodeIdx, commitCtx.branchNodeIdx)
+	err := c.store.SaveRoot(c.root, commitCtx.leafNodeIdx, commitCtx.branchNodeIdx)
 	if err != nil {
 		return storetypes.CommitID{}, err
 	}
@@ -130,7 +129,6 @@ func (c *CommitTree) commit() (storetypes.CommitID, error) {
 
 	// cache the committed tree as the latest version
 	c.latest.Store(c.root)
-	c.version++
 	commitId := storetypes.CommitID{
 		Version: int64(stagedVersion),
 		Hash:    hash,
@@ -193,7 +191,7 @@ func (c *CommitTree) Set(key, value []byte) {
 	c.writeMutex.Lock()
 	defer c.writeMutex.Unlock()
 
-	stagedVersion := c.stagedVersion()
+	stagedVersion := c.store.stagedVersion
 	leafNode := &MemNode{
 		height:  0,
 		size:    1,
@@ -228,7 +226,7 @@ func (c *CommitTree) Delete(key []byte) {
 		c.walQueue.Send([]KVUpdate{{DeleteKey: key}})
 	}
 
-	ctx := &MutationContext{Version: c.stagedVersion()}
+	ctx := &MutationContext{Version: c.store.stagedVersion}
 	_, newRoot, _, err := removeRecursive(c.root, key, ctx)
 	if err != nil {
 		panic(err)
@@ -254,7 +252,6 @@ func NewCommitTree(dir string, opts Options, logger log.Logger) (*CommitTree, er
 	tree := &CommitTree{
 		root:          nil,
 		zeroCopy:      opts.ZeroCopy,
-		version:       0,
 		logger:        logger,
 		store:         ts,
 		evictionDepth: opts.EvictDepth,
@@ -263,10 +260,6 @@ func NewCommitTree(dir string, opts Options, logger log.Logger) (*CommitTree, er
 	tree.reinitWalProc()
 
 	return tree, nil
-}
-
-func (c *CommitTree) stagedVersion() uint32 {
-	return c.version + 1
 }
 
 func (c *CommitTree) reinitWalProc() {

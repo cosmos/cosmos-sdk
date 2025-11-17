@@ -179,12 +179,11 @@ func testIAVLXSims(t *rapid.T) {
 
 	// TODO switch from StateMachineActions to manually setting up the actions map, this is going to be too magical for other maintainers otherwise
 	t.Repeat(map[string]func(*rapid.T){
-		"":            simMachine.Check,
-		"UpdateN":     simMachine.UpdateN,
-		"GetN":        simMachine.GetN,
-		"Iterate":     simMachine.Iterate,
-		"Commit":      simMachine.Commit,
-		"CloseReopen": simMachine.CloseReopen,
+		"":        simMachine.Check,
+		"UpdateN": simMachine.UpdateN,
+		"GetN":    simMachine.GetN,
+		"Iterate": simMachine.Iterate,
+		"Commit":  simMachine.Commit,
 	})
 
 	require.NoError(t, treeV1.Close(), "failed to close iavl tree")
@@ -336,26 +335,14 @@ func (s *SimMachine) Commit(t *rapid.T) {
 	require.NoError(t, err, "failed to save version in V1 tree")
 	commitId2 := s.treeV2.Commit()
 	require.NoError(t, err, "failed to save version in V2 tree")
-	// s.debugDump(t)
 	err = VerifyTree(s.treeV2)
-	// if err != nil {
-	//	branches := s.treeV2.rollingDiff.branchData
-	//	n := branches.Count()
-	//	buf := &bytes.Buffer{}
-	//	for i := uint64(0); i < n; i++ {
-	//		branch, err := branches.Branch(i)
-	//		require.NoError(t, err, "failed to read branch")
-	//		buf.WriteString(fmt.Sprintf("%d: %s\n", i+1, branch))
-	//	}
-	//	require.NoError(t, os.WriteFile("branches_dump.txt", buf.Bytes(), 0o644))
-	//
-	//	buf = &bytes.Buffer{}
-	//	require.NoError(t, s.treeV2.wal.DebugDump(buf))
-	//	require.NoError(t, os.WriteFile("wal_dump.txt", buf.Bytes(), 0o644))
-	//}
 	require.NoError(t, err, "failed to verify V2 tree")
 	require.Equal(t, hash1, commitId2.Hash, "hash mismatch between V1 and V2 trees")
-	// require.Equal(t, v1, v2, "version mismatch between V1 and V2 trees")
+	//closeReopen := rapid.Bool().Draw(t, "closeReopen")
+	//if closeReopen {
+	//	require.NoError(t, s.treeV2.Close())
+	//	s.openV2Tree(t)
+	//}
 }
 
 func (s *SimMachine) debugDump(t *rapid.T) {

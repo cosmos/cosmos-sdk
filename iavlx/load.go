@@ -33,8 +33,6 @@ func (ts *TreeStore) load() error {
 		caMap.Set(compactedAt, dir)
 	}
 
-	ts.savedVersion.Store(0)
-	ts.stagedVersion = 1
 	// load changesets in order
 	for {
 		startVersion, compactionMap, ok := dirMap.PopMin()

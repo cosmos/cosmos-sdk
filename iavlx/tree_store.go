@@ -42,10 +42,11 @@ type changesetEntry struct {
 
 func NewTreeStore(dir string, options Options, logger log.Logger) (*TreeStore, error) {
 	ts := &TreeStore{
-		dir:        dir,
-		changesets: &btree.Map[uint32, *changesetEntry]{},
-		logger:     logger,
-		opts:       options,
+		dir:           dir,
+		changesets:    &btree.Map[uint32, *changesetEntry]{},
+		logger:        logger,
+		opts:          options,
+		stagedVersion: 1,
 	}
 
 	err := ts.load()
@@ -217,14 +218,14 @@ func (ts *TreeStore) WriteWALCommit(version uint32) error {
 	return ts.currentWriter.WriteWALCommit(version)
 }
 
-func (ts *TreeStore) SaveRoot(version uint32, root *NodePointer, totalLeaves, totalBranches uint32) error {
+func (ts *TreeStore) SaveRoot(root *NodePointer, totalLeaves, totalBranches uint32) error {
+	version := ts.stagedVersion
 	ts.logger.Debug("saving root", "version", version)
 	err := ts.currentWriter.SaveRoot(root, version, totalLeaves, totalBranches)
 	if err != nil {
 		return err
 	}
-
-	ts.stagedVersion = version
+	ts.stagedVersion++
 
 	currentSize := ts.currentWriter.TotalBytes()
 	maxSize := ts.opts.GetChangesetMaxTarget()

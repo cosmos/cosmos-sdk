@@ -5,6 +5,8 @@ import (
 	"io"
 
 	"cosmossdk.io/core/store"
+	"cosmossdk.io/store/cachekv"
+	"cosmossdk.io/store/tracekv"
 	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -106,16 +108,19 @@ type kvStoreAdapter struct {
 	store store.KVStore
 }
 
-func (kvStoreAdapter) CacheWrap() storetypes.CacheWrap {
-	panic("unimplemented")
+func (s kvStoreAdapter) CacheWrap() storetypes.CacheWrap {
+	return cachekv.NewStore(s)
 }
 
-func (kvStoreAdapter) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) storetypes.CacheWrap {
-	panic("unimplemented")
+func (s kvStoreAdapter) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) storetypes.CacheWrap {
+	return cachekv.NewStore(tracekv.NewStore(s, w, tc))
 }
 
-func (kvStoreAdapter) GetStoreType() storetypes.StoreType {
-	panic("unimplemented")
+func (s kvStoreAdapter) GetStoreType() storetypes.StoreType {
+	if ck, ok := s.store.(coreKVStore); ok {
+		return ck.kvStore.GetStoreType()
+	}
+	return storetypes.StoreTypePersistent
 }
 
 func (s kvStoreAdapter) Delete(key []byte) {

@@ -97,7 +97,7 @@ func GetDelegatorStartingInfoAddresses(key []byte) (valAddr sdk.ValAddress, delA
 	delAddr = sdk.AccAddress(key[3+valAddrLen:])
 	kv.AssertKeyLength(delAddr.Bytes(), delAddrLen)
 
-	return
+	return valAddr, delAddr
 }
 
 // GetValidatorHistoricalRewardsAddressPeriod creates the address & period from a validator's historical rewards key.
@@ -111,7 +111,7 @@ func GetValidatorHistoricalRewardsAddressPeriod(key []byte) (valAddr sdk.ValAddr
 	b := key[2+valAddrLen:]
 	kv.AssertKeyLength(b, 8)
 	period = binary.LittleEndian.Uint64(b)
-	return
+	return valAddr, period
 }
 
 // GetValidatorCurrentRewardsAddress creates the address from a validator's current rewards key.
@@ -152,7 +152,7 @@ func GetValidatorSlashEventAddressHeight(key []byte) (valAddr sdk.ValAddress, he
 	kv.AssertKeyAtLeastLength(key, startB+9)
 	b := key[startB : startB+8] // the next 8 bytes represent the height
 	height = binary.BigEndian.Uint64(b)
-	return
+	return valAddr, height
 }
 
 // GetValidatorOutstandingRewardsKey creates the outstanding rewards key for a validator.

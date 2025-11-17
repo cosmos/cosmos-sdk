@@ -85,7 +85,7 @@ func CreateChangesetFiles(treeDir string, startVersion, compactedAt uint32, kvlo
 }
 
 func OpenChangesetFiles(dirName string) (*ChangesetFiles, error) {
-	startVersion, compactedAt, valid := ParseChangesetDirName(dirName)
+	startVersion, compactedAt, valid := ParseChangesetDirName(filepath.Base(dirName))
 	if !valid {
 		return nil, fmt.Errorf("invalid changeset dir name: %s", dirName)
 	}

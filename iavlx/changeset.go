@@ -368,6 +368,10 @@ func (cr *Changeset) ResolveRoot(version uint32) (*NodePointer, error) {
 	if err != nil {
 		return nil, err
 	}
+	if vi.RootID == 0 {
+		// empty tree
+		return nil, nil
+	}
 	return &NodePointer{
 		id:    vi.RootID,
 		store: cr,

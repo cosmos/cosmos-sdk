@@ -198,7 +198,10 @@ type SimMachine struct {
 	existingKeys map[string][]byte
 }
 
-func (s *SimMachine) openV2Tree(t require.TestingT) {
+func (s *SimMachine) openV2Tree(t interface {
+	require.TestingT
+	sdklog.TestingT
+}) {
 	var err error
 	s.treeV2, err = NewCommitTree(s.dirV2, Options{
 		WriteWAL:              true,
@@ -213,7 +216,7 @@ func (s *SimMachine) openV2Tree(t require.TestingT) {
 		ChangesetMaxTarget:    1,
 		CompactAfterVersions:  0,
 		ReaderUpdateInterval:  1,
-	}, sdklog.NewNopLogger())
+	}, sdklog.NewTestLogger(t))
 	require.NoError(t, err, "failed to create iavlx tree")
 }
 
@@ -240,11 +243,6 @@ func (s *SimMachine) GetN(t *rapid.T) {
 	for i := 0; i < n; i++ {
 		s.get(t)
 	}
-}
-
-func (s *SimMachine) CloseReopen(t *rapid.T) {
-	require.NoError(t, s.treeV2.Close(), "failed to close iavlx tree")
-	s.openV2Tree(t)
 }
 
 func (s *SimMachine) set(t *rapid.T) {
@@ -338,11 +336,11 @@ func (s *SimMachine) Commit(t *rapid.T) {
 	err = VerifyTree(s.treeV2)
 	require.NoError(t, err, "failed to verify V2 tree")
 	require.Equal(t, hash1, commitId2.Hash, "hash mismatch between V1 and V2 trees")
-	//closeReopen := rapid.Bool().Draw(t, "closeReopen")
-	//if closeReopen {
-	//	require.NoError(t, s.treeV2.Close())
-	//	s.openV2Tree(t)
-	//}
+	closeReopen := rapid.Bool().Draw(t, "closeReopen")
+	if closeReopen {
+		require.NoError(t, s.treeV2.Close())
+		s.openV2Tree(t)
+	}
 }
 
 func (s *SimMachine) debugDump(t *rapid.T) {

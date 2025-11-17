@@ -35,8 +35,46 @@ type CommitTree struct {
 	commitCtx    *commitContext
 }
 
-func (c *CommitTree) getRoot() *NodePointer {
-	return c.root
+func NewCommitTree(dir string, opts Options, logger log.Logger) (*CommitTree, error) {
+	ts, err := NewTreeStore(dir, opts, logger)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create tree store: %w", err)
+	}
+
+	var root *NodePointer
+	var lastCommitId storetypes.CommitID
+	savedVersion := ts.SavedVersion()
+	if savedVersion > 0 {
+		root, err = ts.ResolveRoot(savedVersion)
+		if err != nil {
+			return nil, fmt.Errorf("failed to resolve root for saved version %d: %w", savedVersion, err)
+		}
+		if root != nil {
+			rootNode, err := root.Resolve()
+			if err != nil {
+				return nil, fmt.Errorf("failed to resolve root node for saved version %d: %w", savedVersion, err)
+			}
+			hash := rootNode.Hash()
+			lastCommitId = storetypes.CommitID{
+				Version: int64(savedVersion),
+				Hash:    hash,
+			}
+		}
+	}
+
+	tree := &CommitTree{
+		store:         ts,
+		root:          root,
+		lastCommitId:  lastCommitId,
+		zeroCopy:      opts.ZeroCopy,
+		logger:        logger,
+		evictionDepth: opts.EvictDepth,
+		writeWal:      opts.WriteWAL,
+	}
+	tree.latest.Store(root)
+	tree.reinitWalProc()
+
+	return tree, nil
 }
 
 func (c *CommitTree) WorkingHash() []byte {
@@ -241,25 +279,6 @@ func (c *CommitTree) Iterator(start, end []byte) storetypes.Iterator {
 
 func (c *CommitTree) ReverseIterator(start, end []byte) storetypes.Iterator {
 	return NewIterator(start, end, false, c.root, c.zeroCopy)
-}
-
-func NewCommitTree(dir string, opts Options, logger log.Logger) (*CommitTree, error) {
-	ts, err := NewTreeStore(dir, opts, logger)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create tree store: %w", err)
-	}
-
-	tree := &CommitTree{
-		root:          nil,
-		zeroCopy:      opts.ZeroCopy,
-		logger:        logger,
-		store:         ts,
-		evictionDepth: opts.EvictDepth,
-		writeWal:      opts.WriteWAL,
-	}
-	tree.reinitWalProc()
-
-	return tree, nil
 }
 
 func (c *CommitTree) reinitWalProc() {

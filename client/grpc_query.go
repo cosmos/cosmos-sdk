@@ -16,10 +16,55 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/server/config"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 )
+
+// GRPCConn provides a method to get the appropriate gRPC connection based on block height.
+type GRPCConn interface {
+	GetGRPCConn(height int64) *grpc.ClientConn
+}
+
+// GRPCConnProvider manages gRPC connections with optional backup connections for historical queries.
+type GRPCConnProvider struct {
+	// DefaultConn is the primary gRPC connection
+	DefaultConn *grpc.ClientConn
+	// BackupConns maps block ranges to backup gRPC connections for routing historical queries
+	BackupConns config.BackupGRPCConnections
+}
+
+// NewGRPCConnProvider creates a new GRPCConnProvider with the given connections.
+func NewGRPCConnProvider(defaultConn *grpc.ClientConn, backupConns config.BackupGRPCConnections) *GRPCConnProvider {
+	if backupConns == nil {
+		backupConns = make(config.BackupGRPCConnections)
+	}
+	return &GRPCConnProvider{
+		DefaultConn: defaultConn,
+		BackupConns: backupConns,
+	}
+}
+
+// GetGRPCConn returns the appropriate gRPC connection based on the block height.
+// For height <= 0 (latest block), it returns the default connection.
+// For positive heights, it checks if a backup connection exists for that height range.
+func (g *GRPCConnProvider) GetGRPCConn(height int64) *grpc.ClientConn {
+	// height = 0 means latest block, use the default connection
+	if height <= 0 {
+		return g.DefaultConn
+	}
+
+	// Check if there's a backup connection for this height
+	for blockRange, conn := range g.BackupConns {
+		if int64(blockRange[0]) <= height && int64(blockRange[1]) >= height {
+			return conn
+		}
+	}
+
+	// Default to the primary connection if no backup matches
+	return g.DefaultConn
+}
 
 var _ gogogrpc.ClientConn = Context{}
 
@@ -58,7 +103,11 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply a
 
 	if ctx.GRPCClient != nil {
 		// Case 2-1. Invoke grpc.
-		return ctx.GRPCClient.Invoke(grpcCtx, method, req, reply, opts...)
+		grpcConn := ctx.GRPCClient
+		if ctx.GRPCConnProvider != nil {
+			grpcConn = ctx.GRPCConnProvider.GetGRPCConn(ctx.Height)
+		}
+		return grpcConn.Invoke(grpcCtx, method, req, reply, opts...)
 	}
 
 	// Case 2-2. Querying state via abci query.

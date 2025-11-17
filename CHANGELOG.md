@@ -44,6 +44,7 @@ This patch update also includes minor dependency bumps.
 
 * (abci_utils) [#25008](https://github.com/cosmos/cosmos-sdk/pull/24861) add the ability to assign a custom signer extraction adapter in `DefaultProposalHandler`.
 * (x/tx) [#25539](https://github.com/cosmos/cosmos-sdk/pull/25539) Expose `NullSliceAsEmptyEncoder` as a public function and add `null_slice_as_empty` encoding option for protobuf annotations.
+* (gRPC) [#25565](https://github.com/cosmos/cosmos-sdk/pull/25565) Support for multi gRPC query clients serve with old binary.
 
 ## [v0.53.3](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.3) - 2025-07-08
 

@@ -182,6 +182,13 @@ max-recv-msg-size = "{{ .GRPC.MaxRecvMsgSize }}"
 # The default value is math.MaxInt32.
 max-send-msg-size = "{{ .GRPC.MaxSendMsgSize }}"
 
+# Backup gRPC addresses with block ranges for historical query routing.
+# This should be a JSON string mapping gRPC addresses to block ranges.
+# Format: '{"address1": [start_block, end_block], "address2": [start_block, end_block]}'
+# Example: '{"0.0.0.0:26113": [0, 1000], "0.0.0.0:26114": [1001, 2000]}'
+# Leave empty to disable backup gRPC routing.
+backup-grpc-address-block-range = "{{ printf "{" }}{{ range $k, $v := .GRPC.BackupGRPCBlockAddressBlockRange }}\"{{ $v }}\": [{{index $k 0 }}, {{ index $k 1}}]{{ end }}{{ printf "}" }}"
+
 ###############################################################################
 ###                        gRPC Web Configuration                           ###
 ###############################################################################

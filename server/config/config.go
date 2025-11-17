@@ -1,10 +1,12 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
 	"math"
 
 	"github.com/spf13/viper"
+	"google.golang.org/grpc"
 
 	pruningtypes "cosmossdk.io/store/pruning/types"
 
@@ -124,6 +126,12 @@ type APIConfig struct {
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/6420
 }
 
+type BlockRange [2]int
+
+// BackupGRPCConnections is a map of block ranges to gRPC client connections
+// used for routing requests to different backend nodes based on block height.
+type BackupGRPCConnections map[BlockRange]*grpc.ClientConn
+
 // GRPCConfig defines configuration for the gRPC server.
 type GRPCConfig struct {
 	// Enable defines if the gRPC server should be enabled.
@@ -142,6 +150,9 @@ type GRPCConfig struct {
 
 	// SkipCheckHeader defines if the gRPC server should bypass header checking.
 	SkipCheckHeader bool `mapstructure:"skip-check-header"`
+
+	// BackupGRPCBlockAddressBlockRange maps block ranges to gRPC addresses for routing historical queries.
+	BackupGRPCBlockAddressBlockRange map[BlockRange]string `mapstructure:"-"`
 }
 
 // GRPCWebConfig defines configuration for the gRPC-web server.
@@ -277,6 +288,26 @@ func GetConfig(v *viper.Viper) (Config, error) {
 	conf := DefaultConfig()
 	if err := v.Unmarshal(conf); err != nil {
 		return Config{}, fmt.Errorf("error extracting app config: %w", err)
+	}
+	raw := v.GetString("grpc.backup-grpc-address-block-range")
+	if len(raw) > 0 {
+		data := make(map[string]BlockRange)
+		if err := json.Unmarshal([]byte(raw), &data); err != nil {
+			return Config{}, fmt.Errorf("failed to parse backup-grpc-address-block-range as JSON: %w (value: %s)", err, raw)
+		}
+		backupGRPCBlockAddressBlockRange := make(map[BlockRange]string, len(data))
+		for address, blockRange := range data {
+			if blockRange[0] < 0 || blockRange[1] < 0 {
+				return Config{}, fmt.Errorf("invalid block range [%d, %d] for address %s: block numbers cannot be negative",
+					blockRange[0], blockRange[1], address)
+			}
+			if blockRange[0] > blockRange[1] {
+				return Config{}, fmt.Errorf("invalid block range [%d, %d] for address %s: start block must be <= end block",
+					blockRange[0], blockRange[1], address)
+			}
+			backupGRPCBlockAddressBlockRange[blockRange] = address
+		}
+		conf.GRPC.BackupGRPCBlockAddressBlockRange = backupGRPCBlockAddressBlockRange
 	}
 	return *conf, nil
 }

@@ -35,6 +35,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -96,11 +98,12 @@ const (
 
 	// gRPC-related flags
 
-	flagGRPCOnly            = "grpc-only"
-	flagGRPCEnable          = "grpc.enable"
-	flagGRPCAddress         = "grpc.address"
-	flagGRPCWebEnable       = "grpc-web.enable"
-	flagGRPCSkipCheckHeader = "grpc.skip-check-header"
+	flagGRPCOnly                         = "grpc-only"
+	flagGRPCEnable                       = "grpc.enable"
+	flagGRPCAddress                      = "grpc.address"
+	flagGRPCWebEnable                    = "grpc-web.enable"
+	flagGRPCSkipCheckHeader              = "grpc.skip-check-header"
+	flagBackupGRPCBlockAddressBlockRange = "grpc.backup-grpc-address-block-range"
 
 	// mempool flags
 
@@ -451,6 +454,53 @@ func setupTraceWriter(svrCtx *Context) (traceWriter io.WriteCloser, cleanup func
 	return traceWriter, cleanup, nil
 }
 
+func parseGrpcAddress(address string) (string, error) {
+	host, port, err := net.SplitHostPort(address)
+	if err != nil {
+		return "", errorsmod.Wrapf(err, "invalid grpc address %s", address)
+	}
+	return fmt.Sprintf("%s:%s", host, port), nil
+}
+
+// SetupBackupGRPCConnections creates backup gRPC connections based on the configuration
+// and returns a client context with the GRPCConnProvider configured.
+func SetupBackupGRPCConnections(
+	clientCtx client.Context,
+	grpcClient *grpc.ClientConn,
+	backupAddresses map[serverconfig.BlockRange]string,
+	maxRecvMsgSize, maxSendMsgSize int,
+	logger log.Logger,
+) (client.Context, error) {
+	if len(backupAddresses) == 0 {
+		return clientCtx, nil
+	}
+
+	backupConns := make(serverconfig.BackupGRPCConnections)
+	for blockRange, address := range backupAddresses {
+		grpcAddr, err := parseGrpcAddress(address)
+		if err != nil {
+			return clientCtx, err
+		}
+		conn, err := grpc.NewClient(
+			grpcAddr,
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+			grpc.WithDefaultCallOptions(
+				grpc.ForceCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry).GRPCCodec()),
+				grpc.MaxCallRecvMsgSize(maxRecvMsgSize),
+				grpc.MaxCallSendMsgSize(maxSendMsgSize),
+			),
+		)
+		if err != nil {
+			return clientCtx, err
+		}
+		backupConns[blockRange] = conn
+	}
+
+	clientCtx = clientCtx.WithGRPCConnProvider(client.NewGRPCConnProvider(grpcClient, backupConns))
+	logger.Info("backup gRPC connections configured", "count", len(backupConns))
+	return clientCtx, nil
+}
+
 func startGrpcServer(
 	ctx context.Context,
 	g *errgroup.Group,
@@ -479,7 +529,7 @@ func startGrpcServer(
 	}
 
 	// if gRPC is enabled, configure gRPC client for gRPC gateway
-	grpcClient, err := grpc.Dial( //nolint: staticcheck // ignore this line for this linter
+	grpcClient, err := grpc.NewClient(
 		config.Address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultCallOptions(
@@ -494,6 +544,19 @@ func startGrpcServer(
 
 	clientCtx = clientCtx.WithGRPCClient(grpcClient)
 	svrCtx.Logger.Debug("gRPC client assigned to client context", "target", config.Address)
+
+	// Setup backup gRPC connections if configured
+	clientCtx, err = SetupBackupGRPCConnections(
+		clientCtx,
+		grpcClient,
+		config.BackupGRPCBlockAddressBlockRange,
+		maxRecvMsgSize,
+		maxSendMsgSize,
+		svrCtx.Logger,
+	)
+	if err != nil {
+		return nil, clientCtx, err
+	}
 
 	grpcSrv, err := servergrpc.NewGRPCServer(clientCtx, app, config)
 	if err != nil {
@@ -994,6 +1057,7 @@ func addStartNodeFlags(cmd *cobra.Command, opts StartCmdOptions) {
 	cmd.Flags().Bool(flagGRPCEnable, true, "Define if the gRPC server should be enabled")
 	cmd.Flags().String(flagGRPCAddress, serverconfig.DefaultGRPCAddress, "the gRPC server address to listen on")
 	cmd.Flags().Bool(flagGRPCWebEnable, true, "Define if the gRPC-Web server should be enabled. (Note: gRPC must also be enabled)")
+	cmd.Flags().String(flagBackupGRPCBlockAddressBlockRange, "", "Define if backup grpc and block range is available")
 	cmd.Flags().Uint64(FlagStateSyncSnapshotInterval, 0, "State sync snapshot interval")
 	cmd.Flags().Uint32(FlagStateSyncSnapshotKeepRecent, 2, "State sync snapshot to keep")
 	cmd.Flags().Bool(FlagDisableIAVLFastNode, false, "Disable fast node for IAVL tree")

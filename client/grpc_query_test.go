@@ -9,6 +9,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 
 	"cosmossdk.io/depinject"
@@ -16,10 +17,12 @@ import (
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -135,4 +138,104 @@ func (s *IntegrationTestSuite) TestGRPCQuery() {
 
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
+}
+
+func (s *IntegrationTestSuite) TestGetGRPCConnWithContext() {
+	defaultConn, err := grpc.NewClient("localhost:9090",
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	s.Require().NoError(err)
+	defer defaultConn.Close()
+
+	backupConn, err := grpc.NewClient("localhost:9091",
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	s.Require().NoError(err)
+	defer backupConn.Close()
+
+	backupConns := config.BackupGRPCConnections{
+		config.BlockRange{100, 500}: backupConn,
+	}
+	provider := client.NewGRPCConnProvider(defaultConn, backupConns)
+	testCases := []struct {
+		name         string
+		height       int64
+		setupCtx     func() client.Context
+		expectedConn *grpc.ClientConn
+	}{
+		{
+			name:   "context with GRPCConnProvider and historical height",
+			height: 300,
+			setupCtx: func() client.Context {
+				return client.Context{}.
+					WithCodec(s.cdc).
+					WithGRPCClient(defaultConn).
+					WithGRPCConnProvider(provider).
+					WithHeight(300)
+			},
+			expectedConn: backupConn,
+		},
+		{
+			name:   "context with GRPCConnProvider and latest height",
+			height: 0,
+			setupCtx: func() client.Context {
+				return client.Context{}.
+					WithCodec(s.cdc).
+					WithGRPCClient(defaultConn).
+					WithGRPCConnProvider(provider).
+					WithHeight(0)
+			},
+			expectedConn: defaultConn,
+		},
+		{
+			name:   "context without GRPCConnProvider",
+			height: 300,
+			setupCtx: func() client.Context {
+				return client.Context{}.
+					WithCodec(s.cdc).
+					WithGRPCClient(defaultConn).
+					WithHeight(300)
+			},
+			expectedConn: defaultConn,
+		},
+		{
+			name:   "context with nil backup connections map",
+			height: 100,
+			setupCtx: func() client.Context {
+				nilProvider := client.NewGRPCConnProvider(defaultConn, nil)
+				return client.Context{}.
+					WithCodec(s.cdc).
+					WithGRPCClient(defaultConn).
+					WithGRPCConnProvider(nilProvider).
+					WithHeight(100)
+			},
+			expectedConn: defaultConn,
+		},
+		{
+			name:   "context with empty backup connections map",
+			height: 100,
+			setupCtx: func() client.Context {
+				emptyProvider := client.NewGRPCConnProvider(defaultConn, config.BackupGRPCConnections{})
+				return client.Context{}.
+					WithCodec(s.cdc).
+					WithGRPCClient(defaultConn).
+					WithGRPCConnProvider(emptyProvider).
+					WithHeight(100)
+			},
+			expectedConn: defaultConn,
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			ctx := tc.setupCtx()
+			var actualConn *grpc.ClientConn
+			if ctx.GRPCConnProvider != nil {
+				actualConn = ctx.GRPCConnProvider.GetGRPCConn(ctx.Height)
+			} else {
+				actualConn = ctx.GRPCClient
+			}
+			s.Require().Equal(tc.expectedConn, actualConn)
+		})
+	}
 }

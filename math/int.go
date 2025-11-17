@@ -492,7 +492,14 @@ func (i *Int) MarshalTo(data []byte) (n int, err error) {
 // Unmarshal implements the gogo proto custom type interface.
 func (i *Int) Unmarshal(data []byte) error {
 	if len(data) == 0 {
-		i = nil
+		if i == nil {
+			return errors.New("cannot unmarshal Int into nil receiver")
+		}
+		if i.i == nil {
+			i.i = new(big.Int)
+		} else {
+			i.i.SetInt64(0)
+		}
 		return nil
 	}
 

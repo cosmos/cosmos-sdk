@@ -487,7 +487,7 @@ func openDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
 
 func openTraceWriter(traceWriterFile string) (w io.WriteCloser, err error) {
 	if traceWriterFile == "" {
-		return
+		return w, err
 	}
 	return os.OpenFile(
 		traceWriterFile,

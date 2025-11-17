@@ -457,7 +457,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			require.Equal(t, string(gogoBytes), string(newGogoBytes))
 
 			// test amino json signer handler equivalence
-			msg, ok := tc.gogo.(legacytx.LegacyMsg)
+			msg, ok := tc.gogo.(legacytx.LegacyMsg) //nolint:staticcheck // legacy
 			if !ok {
 				// not signable
 				return

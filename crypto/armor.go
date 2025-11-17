@@ -128,15 +128,15 @@ func UnarmorPubKeyBytes(armorStr string) (bz []byte, algo string, err error) {
 func unarmorBytes(armorStr, blockType string) (bz []byte, header map[string]string, err error) {
 	bType, header, bz, err := DecodeArmor(armorStr)
 	if err != nil {
-		return
+		return bz, header, err
 	}
 
 	if bType != blockType {
 		err = fmt.Errorf("unrecognized armor type %q, expected: %q", bType, blockType)
-		return
+		return bz, header, err
 	}
 
-	return
+	return bz, header, err
 }
 
 //-----------------------------------------------------------------

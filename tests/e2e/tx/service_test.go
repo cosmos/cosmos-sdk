@@ -1136,8 +1136,8 @@ func (s *E2ETestSuite) mkTxBuilder() client.TxBuilder {
 
 // protoTxProvider is a type which can provide a proto transaction. It is a
 // workaround to get access to the wrapper TxBuilder's method GetProtoTx().
-// Deprecated: It's only used for testing the deprecated Simulate gRPC endpoint
-// using a proto Tx field.
+//
+// Deprecated: It's only used for testing the deprecated Simulate gRPC endpoint using a proto Tx field.
 type protoTxProvider interface {
 	GetProtoTx() *tx.Tx
 }

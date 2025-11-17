@@ -1,5 +1,4 @@
 //go:build !race
-// +build !race
 
 // Disabled -race because the package github.com/manifoldco/promptui@v0.9.0
 // has a data race and this code exposes it, but fixing it would require

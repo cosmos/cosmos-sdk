@@ -11,7 +11,7 @@ import (
 	"go.opentelemetry.io/contrib/bridges/otelslog"
 	"go.opentelemetry.io/contrib/instrumentation/host"
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
-	"go.opentelemetry.io/contrib/otelconf/v0.3.0"
+	otelconf "go.opentelemetry.io/contrib/otelconf/v0.3.0"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/stdout/stdoutlog"
 	"go.opentelemetry.io/otel/exporters/stdout/stdoutmetric"
@@ -29,13 +29,13 @@ var shutdownFuncs []func(context.Context) error
 var isTelemetryEnabled = true
 
 func init() {
-	err := doInit()
+	err := initOpenTelemetry()
 	if err != nil {
 		panic(err)
 	}
 }
 
-func doInit() error {
+func initOpenTelemetry() error {
 	var err error
 
 	var opts []otelconf.ConfigurationOption

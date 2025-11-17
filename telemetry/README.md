@@ -57,7 +57,7 @@ Developers need to do two things to use this package properly:
 
 If these steps are followed, developers can follow the official golang otel conventions
 of declaring package-level tracer and meter instances using otel.Tracer() and otel.Meter().
-NOTE: it is important to thread context.Context properly for spans, metrics and logs to be
+NOTE: it is important to thread context.Context properly for spans, metrics, and logs to be
 correlated correctly.
 When using the SDK's context type, spans must be started with Context.StartSpan to
 get an SDK context which has the span set correctly.

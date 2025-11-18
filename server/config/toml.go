@@ -90,6 +90,10 @@ app-db-backend = "{{ .BaseConfig.AppDBBackend }}"
 ###                         Telemetry Configuration                         ###
 ###############################################################################
 
+# DEPRECATED: telemetry will be removed in a future release as we migrate to OpenTelemetry.
+# To route the existing metrics to OpenTelemetry, set metrics-sink to 'otel'.
+# It is highly encouraged to begin migrating telemetry data to use native OpenTelemetry.
+# See https://opentelemetry.io/docs/languages/go/getting-started/ to get started.
 [telemetry]
 
 # Prefixed with keys to separate services.

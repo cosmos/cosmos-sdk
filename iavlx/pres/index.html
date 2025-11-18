@@ -6,9 +6,8 @@
     <title>IAVL Tree Visualization</title>
 
     <!-- Reveal.js CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/dist/reveal.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/dist/theme/black.css">
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.2.1/reveal.min.css" integrity="sha512-ZIo9ivf88U0L1S+0D/npMNTTkjez5B9cK5xIecN4IA2OmtbTNBbPAZo/0cBC195sq7FU7cEOVPwtit37f/+1rQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.2.1/theme/black.min.css" integrity="sha512-8xTQdrxFqvj1S4G+pM5d0AwjjKm5vHbi6gZwDX2FDq8HHvfPDf1BEIjBC0fvIh/EFiPeGdDVJZtx66b+4veM9g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         /* Custom styles for tree visualization */
         .reveal .slides section {
@@ -187,36 +186,29 @@
             <h1>IAVL Performance Improvements</h1>
         </section>
 
-        <section>
-            <h1>IAVLX Changeset Serialization</h1>
-            <p><strong>IAVLX uses a custom file format which is based on natural properties of IAVL tree
-                traversal:</strong></p>
-            <ul>
-                <li>each node is assigned a persistent identifier based on its version and post-order traversal index:
-                    <ul>
-                        <li>leaf nodes: L&lt;version&gt;_&lt;index&gt;</li>
-                        <li>branch nodes: B&lt;version&gt;_&lt;index&gt;</li>
-                    </ul>
-                </li>
-                <li>leaf and branch nodes are stored in order as fixed sized records on disk</li>
-            </ul>
+        <section data-markdown>
+            <textarea data-template>
+                # IAVLX Changeset Serialization
+                **IAVLX uses a custom file format which is based on natural properties of IAVL tree
+                    traversal:**
+                - each node is assigned a persistent `NodeID` based on its version and post-order traversal index:
+                    - leaf nodes: `L{version}|{index}`
+                    - branch nodes: `B{version}|{index}`
+                - leaf and branch nodes are stored in `NodeID` order as fixed sized records on disk
+            </textarea>
         </section>
 
-        <section>
-            <h1>IAVLX Changeset Serialization</h1>
-            <ul>
-                <li>nodes can always be located in O(log n) complexity and often O(1)</li>
-                <li>child nodes within the same changeset are resolved by offset for O(1) lookup</li>
+        <section data-markdown>
+            <textarea data-template>
+            # IAVLX Changeset Lookup
+            - when traversing tree nodes within a single changeset:
+                - parent nodes store direct integer offsets to children
+                - so within a changeset, tree traversal is always O(1) (_best case_)
+            - when traversing a tree across multiple changesets:
+                - nodes are always stored in `NodeID` order within each changeset
+                - so node lookup is O(log n) via binary search (_worst case_)
             </ul>
-        </section>
-
-        <section>
-            <h1>IAVLX Changeset Serialization</h1>
-            <ul>
-                <li>each changeset stores nodes from a contiguous range of versions</li>
-                <li>changesets can be pruned in the background without blocking other operations</li>
-                <li>changeset size is configurable and defines a bounded</li>
-            </ul>
+            </textarea>
         </section>
 
         <!-- Tree Version 1 -->
@@ -231,6 +223,11 @@
                     <h3>Changeset (Serialized)</h3>
                     <div class="svg-container" id="changeset-v1"></div>
                 </div>
+                <ul>
+                    <li>Nodes are written in post-traversal order</li>
+                    <li>Children are always written before parents</li>
+                    <li>Parents contain direct offset references to children</li>
+                </ul>
             </div>
         </section>
 
@@ -246,6 +243,10 @@
                     <h3>Changeset (Serialized)</h3>
                     <div class="svg-container" id="changeset-v2"></div>
                 </div>
+                <ul>
+                    <li>Newer version data is always at the root of the tree</li>
+                    <li>Child nodes node version is always <= parent node version</li>
+                </ul>
             </div>
         </section>
 
@@ -294,9 +295,22 @@
             </div>
         </section>
 
+        <section data-markdown>
+            <textarea data-template>
+            # IAVLX Changeset Compaction
+            - one changeset stores a continuous range of versions
+            - changesets are size bound (ex. 2GB max size, this is configurable)
+            - a background process periodically compacts old changesets by:
+                - linearly iterating over all nodes and copying only retained nodes
+                - joining small changesets into larger ones
+            - pruning is fast with only linear disk IO and doesn't block normal operations
+            </textarea>
+        </section>
+
         <!-- Tree Compaction Animation -->
         <section data-animation="compaction">
             <h2>Changeset Compaction</h2>
+            <p>Let's compact this changeset to only save version 4 and 5 data</p>
             <div class="dual-svg-container">
                 <div class="svg-section">
                     <h3>Original Changeset</h3>
@@ -327,6 +341,15 @@
                 </div>
             </div>
         </section>
+        <section data-markdown>
+            <textarea data-template>
+            # Implementation Details
+            - changeset writing is always append-only
+            - changeset reading is done via memory-mapped files (optimal for random access)
+            - disk IO patterns for writing, pruning and reading are simple and easy to reason about
+            - any work which is CPU bound is done concurrently (eg. tree balancing and hashing)
+            </textarea>
+        </section>
 
     </div>
 </div>
@@ -340,7 +363,9 @@
 </div>
 
 <!-- Reveal.js -->
-<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/dist/reveal.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.2.1/reveal.js" integrity="sha512-GvouLVZT+gJSJW5eOfpG46xTaBb2c3VeNnbzmDYTRQkFlgvxNhnzZQqiQ/jAyAYPh+a9roBvAHJP6zvXIVq34Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.2.1/plugin/markdown/markdown.min.js" integrity="sha512-4exkEeyVuaWUFKozXl6L3UCugl6ai1cKnrVFkWUstdrNB2sDxxmPEaHBzTlYm9wX78EjPzEBG0s8k37oPeUFIw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.2.1/plugin/markdown/plugin.min.js" integrity="sha512-E+ALGzPpaGdI2k+lrxWGIfjTvxzwqwiZSinFSZGZsgBU7CZ4pViiLvCiYF92T+wNHigtF99VNFYszeirNqsCXQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 <!-- Animation utilities -->
 <script src="animations.js"></script>
@@ -357,6 +382,7 @@
         slideNumber: true,
         width: 1920,
         height: 1080,
+        plugins: [RevealMarkdown],
     });
 
     // NEW nodes for each version in post-order traversal (only nodes added in that version)

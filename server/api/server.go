@@ -10,7 +10,7 @@ import (
 
 	cmtrpcserver "github.com/cometbft/cometbft/rpc/jsonrpc/server"
 	gateway "github.com/cosmos/gogogateway"
-	"github.com/golang/protobuf/proto" //nolint:staticcheck // keep for compat
+	"github.com/golang/protobuf/proto" //nolint:staticcheck // needed for compatibility
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"

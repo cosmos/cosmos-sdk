@@ -9,7 +9,7 @@ require (
 	cosmossdk.io/log v1.6.1
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/cosmos/cosmos-sdk v0.54.0-beta.0
-	github.com/cosmos/gogoproto v1.7.0
+	github.com/cosmos/gogoproto v1.7.2
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/spf13/cobra v1.10.1
 	github.com/stretchr/testify v1.11.1
@@ -57,7 +57,7 @@ require (
 	github.com/dgraph-io/badger/v4 v4.6.0 // indirect
 	github.com/dgraph-io/ristretto/v2 v2.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/dvsekhvalnov/jose2go v1.6.0 // indirect
+	github.com/dvsekhvalnov/jose2go v1.7.0 // indirect
 	github.com/emicklei/dot v1.8.0 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect

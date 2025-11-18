@@ -35,8 +35,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -454,53 +452,6 @@ func setupTraceWriter(svrCtx *Context) (traceWriter io.WriteCloser, cleanup func
 	return traceWriter, cleanup, nil
 }
 
-func parseGrpcAddress(address string) (string, error) {
-	host, port, err := net.SplitHostPort(address)
-	if err != nil {
-		return "", errorsmod.Wrapf(err, "invalid grpc address %s", address)
-	}
-	return fmt.Sprintf("%s:%s", host, port), nil
-}
-
-// SetupBackupGRPCConnections creates backup gRPC connections based on the configuration
-// and returns a client context with the GRPCConnProvider configured.
-func SetupBackupGRPCConnections(
-	clientCtx client.Context,
-	grpcClient *grpc.ClientConn,
-	backupAddresses map[serverconfig.BlockRange]string,
-	maxRecvMsgSize, maxSendMsgSize int,
-	logger log.Logger,
-) (client.Context, error) {
-	if len(backupAddresses) == 0 {
-		return clientCtx, nil
-	}
-
-	backupConns := make(serverconfig.BackupGRPCConnections)
-	for blockRange, address := range backupAddresses {
-		grpcAddr, err := parseGrpcAddress(address)
-		if err != nil {
-			return clientCtx, err
-		}
-		conn, err := grpc.NewClient(
-			grpcAddr,
-			grpc.WithTransportCredentials(insecure.NewCredentials()),
-			grpc.WithDefaultCallOptions(
-				grpc.ForceCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry).GRPCCodec()),
-				grpc.MaxCallRecvMsgSize(maxRecvMsgSize),
-				grpc.MaxCallSendMsgSize(maxSendMsgSize),
-			),
-		)
-		if err != nil {
-			return clientCtx, err
-		}
-		backupConns[blockRange] = conn
-	}
-
-	clientCtx = clientCtx.WithGRPCConnProvider(client.NewGRPCConnProvider(grpcClient, backupConns))
-	logger.Info("backup gRPC connections configured", "count", len(backupConns))
-	return clientCtx, nil
-}
-
 func startGrpcServer(
 	ctx context.Context,
 	g *errgroup.Group,
@@ -545,20 +496,9 @@ func startGrpcServer(
 	clientCtx = clientCtx.WithGRPCClient(grpcClient)
 	svrCtx.Logger.Debug("gRPC client assigned to client context", "target", config.Address)
 
-	// Setup backup gRPC connections if configured
-	clientCtx, err = SetupBackupGRPCConnections(
-		clientCtx,
-		grpcClient,
-		config.BackupGRPCBlockAddressBlockRange,
-		maxRecvMsgSize,
-		maxSendMsgSize,
-		svrCtx.Logger,
-	)
-	if err != nil {
-		return nil, clientCtx, err
-	}
-
-	grpcSrv, err := servergrpc.NewGRPCServer(clientCtx, app, config)
+	logger := svrCtx.Logger.With("module", "grpc-server")
+	var grpcSrv *grpc.Server
+	grpcSrv, clientCtx, err = servergrpc.NewGRPCServer(clientCtx, app, config, logger)
 	if err != nil {
 		return nil, clientCtx, err
 	}
@@ -566,7 +506,7 @@ func startGrpcServer(
 	// Start the gRPC server in a goroutine. Note, the provided ctx will ensure
 	// that the server is gracefully shut down.
 	g.Go(func() error {
-		return servergrpc.StartGRPCServer(ctx, svrCtx.Logger.With("module", "grpc-server"), config, grpcSrv)
+		return servergrpc.StartGRPCServer(ctx, logger, config, grpcSrv)
 	})
 	return grpcSrv, clientCtx, nil
 }

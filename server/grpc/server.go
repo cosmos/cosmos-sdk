@@ -6,6 +6,7 @@ import (
 	"net"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"cosmossdk.io/log"
 
@@ -21,7 +22,7 @@ import (
 
 // NewGRPCServer returns a correctly configured and initialized gRPC server.
 // Note, the caller is responsible for starting the server. See StartGRPCServer.
-func NewGRPCServer(clientCtx client.Context, app types.Application, cfg config.GRPCConfig) (*grpc.Server, error) {
+func NewGRPCServer(clientCtx client.Context, app types.Application, cfg config.GRPCConfig, logger log.Logger) (*grpc.Server, client.Context, error) {
 	maxSendMsgSize := cfg.MaxSendMsgSize
 	if maxSendMsgSize == 0 {
 		maxSendMsgSize = config.DefaultGRPCMaxSendMsgSize
@@ -30,6 +31,21 @@ func NewGRPCServer(clientCtx client.Context, app types.Application, cfg config.G
 	maxRecvMsgSize := cfg.MaxRecvMsgSize
 	if maxRecvMsgSize == 0 {
 		maxRecvMsgSize = config.DefaultGRPCMaxRecvMsgSize
+	}
+
+	// Setup backup gRPC connections if configured
+	if len(cfg.BackupGRPCBlockAddressBlockRange) > 0 {
+		updatedCtx, err := setupBackupGRPCConnections(
+			clientCtx,
+			cfg.BackupGRPCBlockAddressBlockRange,
+			maxRecvMsgSize,
+			maxSendMsgSize,
+			logger,
+		)
+		if err != nil {
+			return nil, clientCtx, fmt.Errorf("failed to setup backup gRPC connections: %w", err)
+		}
+		clientCtx = updatedCtx
 	}
 
 	grpcSrv := grpc.NewServer(
@@ -58,14 +74,55 @@ func NewGRPCServer(clientCtx client.Context, app types.Application, cfg config.G
 		InterfaceRegistry: clientCtx.InterfaceRegistry,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to register reflection service: %w", err)
+		return nil, clientCtx, fmt.Errorf("failed to register reflection service: %w", err)
 	}
 
 	// Reflection allows external clients to see what services and methods
 	// the gRPC server exposes.
 	gogoreflection.Register(grpcSrv)
 
-	return grpcSrv, nil
+	return grpcSrv, clientCtx, nil
+}
+
+// setupBackupGRPCConnections creates backup gRPC connections based on the configuration.
+func setupBackupGRPCConnections(
+	clientCtx client.Context,
+	backupAddresses map[config.BlockRange]string,
+	maxRecvMsgSize, maxSendMsgSize int,
+	logger log.Logger,
+) (client.Context, error) {
+	if len(backupAddresses) == 0 {
+		return clientCtx, nil
+	}
+
+	backupConns := make(config.BackupGRPCConnections)
+	for blockRange, address := range backupAddresses {
+		conn, err := grpc.NewClient(
+			address,
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+			grpc.WithDefaultCallOptions(
+				grpc.ForceCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry).GRPCCodec()),
+				grpc.MaxCallRecvMsgSize(maxRecvMsgSize),
+				grpc.MaxCallSendMsgSize(maxSendMsgSize),
+			),
+		)
+		if err != nil {
+			return clientCtx, fmt.Errorf("failed to create backup gRPC connection for %s: %w", address, err)
+		}
+		backupConns[blockRange] = conn
+	}
+
+	// Get the default connection from the clientCtx
+	defaultConn := clientCtx.GRPCClient
+	if defaultConn == nil {
+		return clientCtx, fmt.Errorf("default gRPC client not set in clientCtx")
+	}
+
+	provider := client.NewGRPCConnProvider(defaultConn, backupConns)
+	clientCtx = clientCtx.WithGRPCConnProvider(provider)
+
+	logger.Info("backup gRPC connections configured", "count", len(backupConns))
+	return clientCtx, nil
 }
 
 // StartGRPCServer starts the provided gRPC server on the address specified in cfg.

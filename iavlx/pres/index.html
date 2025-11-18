@@ -154,7 +154,7 @@
     }
 
     .animate {
-      animation: treeGrow 2s ease-out !important;
+      animation: treeGrow 0.5s ease-out !important;
       filter: drop-shadow(0 0 8px gold) !important;
       transform-box: fill-box !important;
       transform-origin: center center !important;
@@ -165,7 +165,7 @@
     }
 
     .changeset-appear {
-      animation: changesetGrow 2s ease-out !important;
+      animation: changesetGrow 0.5s ease-out !important;
       transform-box: fill-box !important;
       transform-origin: center center !important;
     }
@@ -298,9 +298,9 @@
     // NEW nodes for each version in post-order traversal (only nodes added in that version)
     const versionNodes = {
       1: ['L1_1', 'L1_2', 'B1_1', 'L1_3', 'L1_4', 'B1_2', 'B1_3'],
-      2: ['L2_1', 'B2_2', 'B2_2', 'L2_2', 'L2_3', 'B2_3', 'B2_4'],
-      3: ['L3_2', 'L3_3', 'B3_2', 'L3_1', 'B3_1', 'B3_4', 'L3_4', 'L3_5', 'B3_3', 'B3_5'],
-      4: ['L4_1', 'L4_2', 'L4_3', 'B4_3'],
+      2: ['L2_1', 'B2_1', 'L2_2', 'L2_3', 'B2_2', 'B2_3', 'B2_4'],
+      3: ['L3_1', 'B3_1', 'B3_2', 'L3_2', 'L3_3', 'B3_3', 'B3_4', 'B3_5'],
+      4: ['L4_1', 'B4_1', 'B4_2', 'B4_2', 'B4_3', 'L4_2', 'L4_3', 'B4_4', 'B4_5', 'B4_6'],
       5: ['L5_1', 'L5_2', 'B5_1', 'B5_2', 'B5_3', 'B5_4', 'L5_3', 'L5_4', 'B5_5', 'B5_6', 'B5_7', 'B5_8']
     };
 

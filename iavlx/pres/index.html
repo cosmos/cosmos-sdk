@@ -1,333 +1,382 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IAVL Tree Visualization</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IAVL Tree Visualization</title>
 
-  <!-- Reveal.js CSS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/dist/reveal.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/dist/theme/black.css">
+    <!-- Reveal.js CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/dist/reveal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/dist/theme/black.css">
 
-  <style>
-    /* Custom styles for tree visualization */
-    .reveal .slides section {
-      height: 100%;
-      display: flex !important;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-    }
+    <style>
+        /* Custom styles for tree visualization */
+        .reveal .slides section {
+            height: 100%;
+            display: flex !important;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
 
-    .dual-svg-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      width: 100%;
-      max-width: 95%;
-    }
+        .dual-svg-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            max-width: 95%;
+        }
 
-    .svg-section {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+        .svg-section {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-    .svg-section h3 {
-      margin: 0 0 5px 0;
-      font-size: 1em;
-      color: #4a90e2;
-    }
+        .svg-section h3 {
+            margin: 0 0 5px 0;
+            font-size: 1em;
+            color: #4a90e2;
+        }
 
-    .svg-container {
-      background: white;
-      border-radius: 8px;
-      padding: 15px;
-      width: 100%;
-      max-height: 35vh;
-      overflow: visible;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
+        .svg-container {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            width: 100%;
+            max-height: 35vh;
+            overflow: visible;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
 
-    .svg-container svg {
-      max-width: 100%;
-      max-height: 100%;
-      height: auto;
-    }
+        .svg-container svg {
+            max-width: 100%;
+            max-height: 100%;
+            height: auto;
+        }
 
-    .reveal .slides {
-      text-align: center;
-    }
+        .reveal .slides {
+            text-align: center;
+        }
 
-    /* Animation controls */
-    .animation-controls {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.9);
-      padding: 15px 25px;
-      border-radius: 8px;
-      z-index: 1000;
-      display: flex;
-      gap: 15px;
-      align-items: center;
-    }
+        /* Animation controls */
+        .animation-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px 25px;
+            border-radius: 8px;
+            z-index: 1000;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
 
-    .animation-controls button {
-      padding: 10px 20px;
-      font-size: 14px;
-      cursor: pointer;
-      background: #4a90e2;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      transition: background 0.2s;
-      min-width: 80px;
-    }
+        .animation-controls button {
+            padding: 10px 20px;
+            font-size: 14px;
+            cursor: pointer;
+            background: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            transition: background 0.2s;
+            min-width: 80px;
+        }
 
-    .animation-controls button:hover {
-      background: #357abd;
-    }
+        .animation-controls button:hover {
+            background: #357abd;
+        }
 
-    .animation-controls button:disabled {
-      background: #666;
-      cursor: not-allowed;
-      opacity: 0.5;
-    }
+        .animation-controls button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
 
-    #status {
-      font-size: 14px;
-      color: #4a90e2;
-      min-width: 150px;
-      text-align: center;
-    }
+        #status {
+            font-size: 14px;
+            color: #4a90e2;
+            min-width: 150px;
+            text-align: center;
+        }
 
-    /* SVG animation effects */
-    @keyframes treeGrow {
-      0% {
-        transform: scale(1);
-      }
-      40% {
-        transform: scale(1.5);
-      }
-      70% {
-        transform: scale(1.5);
-      }
-      85% {
-        transform: scale(1.1);
-      }
-      100% {
-        transform: scale(1);
-      }
-    }
+        /* SVG animation effects */
+        @keyframes treeGrow {
+            0% {
+                transform: scale(1);
+            }
+            40% {
+                transform: scale(1.5);
+            }
+            70% {
+                transform: scale(1.5);
+            }
+            85% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
 
-    @keyframes changesetGrow {
-      0% {
-        transform: scale(0);
-        opacity: 0;
-      }
-      30% {
-        transform: scale(0);
-        opacity: 0;
-      }
-      60% {
-        transform: scale(1.5);
-        opacity: 1;
-      }
-      85% {
-        transform: scale(1.1);
-      }
-      100% {
-        transform: scale(1);
-      }
-    }
+        @keyframes changesetGrow {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            30% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            60% {
+                transform: scale(1.5);
+                opacity: 1;
+            }
+            85% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
 
-    /* Force all SVG groups to use center transform origin */
-    .svg-container svg g {
-      transform-box: fill-box;
-      transform-origin: center center;
-    }
+        /* Force all SVG groups to use center transform origin */
+        .svg-container svg g {
+            transform-box: fill-box;
+            transform-origin: center center;
+        }
 
-    .animate {
-      animation: treeGrow 0.5s ease-out !important;
-      filter: drop-shadow(0 0 8px gold) !important;
-      transform-box: fill-box !important;
-      transform-origin: center center !important;
-    }
+        .animate {
+            animation: treeGrow 0.5s ease-out !important;
+            filter: drop-shadow(0 0 8px gold) !important;
+            transform-box: fill-box !important;
+            transform-origin: center center !important;
+        }
 
-    .visited {
-      filter: drop-shadow(0 0 3px rgba(255, 215, 0, 0.5)) !important;
-    }
+        .visited {
+            filter: drop-shadow(0 0 3px rgba(255, 215, 0, 0.5)) !important;
+        }
 
-    .changeset-appear {
-      animation: changesetGrow 0.5s ease-out !important;
-      transform-box: fill-box !important;
-      transform-origin: center center !important;
-    }
+        .changeset-appear {
+            animation: changesetGrow 0.5s ease-out !important;
+            transform-box: fill-box !important;
+            transform-origin: center center !important;
+        }
 
-    /* Instructions */
-    .instructions {
-      font-size: 0.9em;
-      color: #888;
-      margin-top: 20px;
-    }
-  </style>
+        /* Instructions */
+        .instructions {
+            font-size: 0.9em;
+            color: #888;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-  <div class="reveal">
+<div class="reveal">
     <div class="slides">
 
-      <!-- Slide 1: Title -->
-      <section>
-        <h1>IAVL Tree Visualization</h1>
-        <p>Post-Order Traversal & Changeset Serialization</p>
-        <p class="instructions">Use arrow keys to navigate slides<br>Use Next/Previous buttons to step through tree traversal</p>
-      </section>
+        <!-- Slide 1: Title -->
+        <section>
+            <h1>IAVL Performance Improvements</h1>
+        </section>
 
-      <!-- Slide 2: Version 1 -->
-      <section>
-        <h2>Version 1</h2>
-        <div class="dual-svg-container">
-          <div class="svg-section">
-            <h3>Tree Structure</h3>
-            <div class="svg-container" id="tree-v1"></div>
-          </div>
-          <div class="svg-section">
-            <h3>Changeset (Serialized)</h3>
-            <div class="svg-container" id="changeset-v1"></div>
-          </div>
-        </div>
-      </section>
+        <section>
+            <h1>IAVLX Changeset Serialization</h1>
+            <p><strong>IAVLX uses a custom file format which is based on natural properties of IAVL tree
+                traversal:</strong></p>
+            <ul>
+                <li>each node is assigned a persistent identifier based on its version and post-order traversal index:
+                    <ul>
+                        <li>leaf nodes: L&lt;version&gt;_&lt;index&gt;</li>
+                        <li>branch nodes: B&lt;version&gt;_&lt;index&gt;</li>
+                    </ul>
+                </li>
+                <li>leaf and branch nodes are stored in order as fixed sized records on disk</li>
+            </ul>
+        </section>
 
-      <!-- Slide 3: Version 2 -->
-      <section>
-        <h2>Version 2</h2>
-        <div class="dual-svg-container">
-          <div class="svg-section">
-            <h3>Tree Structure</h3>
-            <div class="svg-container" id="tree-v2"></div>
-          </div>
-          <div class="svg-section">
-            <h3>Changeset (Serialized)</h3>
-            <div class="svg-container" id="changeset-v2"></div>
-          </div>
-        </div>
-      </section>
+        <section>
+            <h1>IAVLX Changeset Serialization</h1>
+            <ul>
+                <li>nodes can always be located in O(log n) complexity and often O(1)</li>
+                <li>child nodes within the same changeset are resolved by offset for O(1) lookup</li>
+            </ul>
+        </section>
 
-      <!-- Slide 4: Version 3 -->
-      <section>
-        <h2>Version 3</h2>
-        <div class="dual-svg-container">
-          <div class="svg-section">
-            <h3>Tree Structure</h3>
-            <div class="svg-container" id="tree-v3"></div>
-          </div>
-          <div class="svg-section">
-            <h3>Changeset (Serialized)</h3>
-            <div class="svg-container" id="changeset-v3"></div>
-          </div>
-        </div>
-      </section>
+        <section>
+            <h1>IAVLX Changeset Serialization</h1>
+            <ul>
+                <li>each changeset stores nodes from a contiguous range of versions</li>
+                <li>changesets can be pruned in the background without blocking other operations</li>
+                <li>changeset size is configurable and defines a bounded</li>
+            </ul>
+        </section>
 
-      <!-- Slide 5: Version 4 -->
-      <section>
-        <h2>Version 4</h2>
-        <div class="dual-svg-container">
-          <div class="svg-section">
-            <h3>Tree Structure</h3>
-            <div class="svg-container" id="tree-v4"></div>
-          </div>
-          <div class="svg-section">
-            <h3>Changeset (Serialized)</h3>
-            <div class="svg-container" id="changeset-v4"></div>
-          </div>
-        </div>
-      </section>
+        <!-- Tree Version 1 -->
+        <section data-animation="version" data-version="1">
+            <h2>Version 1</h2>
+            <div class="dual-svg-container">
+                <div class="svg-section">
+                    <h3>Tree Structure</h3>
+                    <div class="svg-container" id="tree-v1"></div>
+                </div>
+                <div class="svg-section">
+                    <h3>Changeset (Serialized)</h3>
+                    <div class="svg-container" id="changeset-v1"></div>
+                </div>
+            </div>
+        </section>
 
-      <!-- Slide 6: Version 5 -->
-      <section>
-        <h2>Version 5</h2>
-        <div class="dual-svg-container">
-          <div class="svg-section">
-            <h3>Tree Structure</h3>
-            <div class="svg-container" id="tree-v5"></div>
-          </div>
-          <div class="svg-section">
-            <h3>Changeset (Serialized)</h3>
-            <div class="svg-container" id="changeset-v5"></div>
-          </div>
-        </div>
-      </section>
+        <!-- Tree Version 2 -->
+        <section data-animation="version" data-version="2">
+            <h2>Version 2</h2>
+            <div class="dual-svg-container">
+                <div class="svg-section">
+                    <h3>Tree Structure</h3>
+                    <div class="svg-container" id="tree-v2"></div>
+                </div>
+                <div class="svg-section">
+                    <h3>Changeset (Serialized)</h3>
+                    <div class="svg-container" id="changeset-v2"></div>
+                </div>
+            </div>
+        </section>
 
-      <!-- Slide 7: Compaction -->
-      <section>
-        <h2>Changeset Compaction</h2>
-        <div class="dual-svg-container">
-          <div class="svg-section">
-            <h3>Original Changeset</h3>
-            <div class="svg-container" id="compaction-original"></div>
-          </div>
-          <div class="svg-section">
-            <h3>Compacted Changeset (Pruned)</h3>
-            <div class="svg-container" id="compaction-compacted"></div>
-          </div>
-        </div>
-      </section>
+        <!-- Tree Version 3 -->
+        <section data-animation="version" data-version="3">
+            <h2>Version 3</h2>
+            <div class="dual-svg-container">
+                <div class="svg-section">
+                    <h3>Tree Structure</h3>
+                    <div class="svg-container" id="tree-v3"></div>
+                </div>
+                <div class="svg-section">
+                    <h3>Changeset (Serialized)</h3>
+                    <div class="svg-container" id="changeset-v3"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tree Version 4 -->
+        <section data-animation="version" data-version="4">
+            <h2>Version 4</h2>
+            <div class="dual-svg-container">
+                <div class="svg-section">
+                    <h3>Tree Structure</h3>
+                    <div class="svg-container" id="tree-v4"></div>
+                </div>
+                <div class="svg-section">
+                    <h3>Changeset (Serialized)</h3>
+                    <div class="svg-container" id="changeset-v4"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tree Version 5 -->
+        <section data-animation="version" data-version="5">
+            <h2>Version 5</h2>
+            <div class="dual-svg-container">
+                <div class="svg-section">
+                    <h3>Tree Structure</h3>
+                    <div class="svg-container" id="tree-v5"></div>
+                </div>
+                <div class="svg-section">
+                    <h3>Changeset (Serialized)</h3>
+                    <div class="svg-container" id="changeset-v5"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tree Compaction Animation -->
+        <section data-animation="compaction">
+            <h2>Changeset Compaction</h2>
+            <div class="dual-svg-container">
+                <div class="svg-section">
+                    <h3>Original Changeset</h3>
+                    <div class="svg-container" id="compaction-original"></div>
+                </div>
+                <div class="svg-section">
+                    <h3>Compacted Changeset (Pruned)</h3>
+                    <div class="svg-container" id="compaction-compacted"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 8: Static - Trees 4 & 5 vs Compacted -->
+        <section>
+            <h2>Version 4 & 5 Trees → Compacted Changeset</h2>
+            <div class="dual-svg-container">
+                <div class="svg-section">
+                    <h3>Version 4 Tree</h3>
+                    <div class="svg-container" id="static-tree-v4"></div>
+                </div>
+                <div class="svg-section">
+                    <h3>Version 5 Tree</h3>
+                    <div class="svg-container" id="static-tree-v5"></div>
+                </div>
+                <div class="svg-section">
+                    <h3>Compacted Changeset (Only v4 & v5 nodes)</h3>
+                    <div class="svg-container" id="static-compacted"></div>
+                </div>
+            </div>
+        </section>
 
     </div>
-  </div>
+</div>
 
-  <!-- Animation Controls -->
-  <div class="animation-controls">
+<!-- Animation Controls -->
+<div class="animation-controls">
     <button id="reset-btn" onclick="resetAnimation()">Reset</button>
     <button id="prev-btn" onclick="previousNode()">Previous</button>
     <button id="next-btn" onclick="nextNode()">Next</button>
     <div id="status"></div>
-  </div>
+</div>
 
-  <!-- Reveal.js -->
-  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/dist/reveal.js"></script>
+<!-- Reveal.js -->
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/dist/reveal.js"></script>
 
-  <!-- Animation utilities -->
-  <script src="animations.js"></script>
+<!-- Animation utilities -->
+<script src="animations.js"></script>
 
-  <!-- Main presentation script -->
-  <script>
+<!-- Main presentation script -->
+<script>
     // Initialize Reveal.js
     Reveal.initialize({
-      hash: true,
-      controls: true,
-      progress: true,
-      center: true,
-      transition: 'slide',
-      slideNumber: true,
-      width: 1920,
-      height: 1080,
+        hash: true,
+        controls: true,
+        progress: true,
+        center: true,
+        transition: 'slide',
+        slideNumber: true,
+        width: 1920,
+        height: 1080,
     });
 
     // NEW nodes for each version in post-order traversal (only nodes added in that version)
     const versionNodes = {
-      1: ['L1_1', 'L1_2', 'B1_1', 'L1_3', 'L1_4', 'B1_2', 'B1_3'],
-      2: ['L2_1', 'B2_1', 'L2_2', 'L2_3', 'B2_2', 'B2_3', 'B2_4'],
-      3: ['L3_1', 'B3_1', 'B3_2', 'L3_2', 'L3_3', 'B3_3', 'B3_4', 'B3_5'],
-      4: ['L4_1', 'B4_1', 'B4_2', 'B4_2', 'B4_3', 'L4_2', 'L4_3', 'B4_4', 'B4_5', 'B4_6'],
-      5: ['L5_1', 'L5_2', 'B5_1', 'B5_2', 'B5_3', 'B5_4', 'L5_3', 'L5_4', 'B5_5', 'B5_6', 'B5_7', 'B5_8']
+        1: ['L1_1', 'L1_2', 'B1_1', 'L1_3', 'L1_4', 'B1_2', 'B1_3'],
+        2: ['L2_1', 'B2_1', 'L2_2', 'L2_3', 'B2_2', 'B2_3', 'B2_4'],
+        3: ['L3_1', 'B3_1', 'B3_2', 'L3_2', 'L3_3', 'B3_3', 'B3_4', 'B3_5'],
+        4: ['L4_1', 'B4_1', 'B4_2', 'B4_2', 'B4_3', 'L4_2', 'L4_3', 'B4_4', 'B4_5', 'B4_6'],
+        5: ['L5_1', 'L5_2', 'B5_1', 'B5_2', 'B5_3', 'B5_4', 'L5_3', 'L5_4', 'B5_5', 'B5_6', 'B5_7', 'B5_8']
     };
 
     // Get all nodes from previous versions (cumulative)
     function getPreviousVersionNodes(version) {
-      let allNodes = [];
-      for (let v = 1; v < version; v++) {
-        if (versionNodes[v]) {
-          allNodes = allNodes.concat(versionNodes[v]);
+        let allNodes = [];
+        for (let v = 1; v < version; v++) {
+            if (versionNodes[v]) {
+                allNodes = allNodes.concat(versionNodes[v]);
+            }
         }
-      }
-      return allNodes;
+        return allNodes;
     }
 
     // Current animator instance
@@ -339,195 +388,240 @@
 
     // Load SVGs for a specific version
     async function loadVersionSVGs(version) {
-      try {
-        await loadSVG(`ex${version}.dot.svg`, `tree-v${version}`);
-        await loadSVG(`ex${version}_cs.dot.svg`, `changeset-v${version}`);
-        return true;
-      } catch (err) {
-        console.error(`Failed to load SVGs for version ${version}:`, err);
-        status.update(`Error loading version ${version} SVGs`);
-        return false;
-      }
+        try {
+            await loadSVG(`ex${version}.dot.svg`, `tree-v${version}`);
+            await loadSVG(`ex${version}_cs.dot.svg`, `changeset-v${version}`);
+            return true;
+        } catch (err) {
+            console.error(`Failed to load SVGs for version ${version}:`, err);
+            status.update(`Error loading version ${version} SVGs`);
+            return false;
+        }
     }
 
     // Initialize animator for current slide
     function initializeAnimator(version) {
-      if (currentAnimator) {
-        currentAnimator.reset();
-      }
+        if (currentAnimator) {
+            currentAnimator.reset();
+        }
 
-      const nodes = versionNodes[version] || [];
-      const previousNodes = getPreviousVersionNodes(version);
+        const nodes = versionNodes[version] || [];
+        const previousNodes = getPreviousVersionNodes(version);
 
-      currentAnimator = new DualSVGAnimator(
-        `tree-v${version}`,
-        `changeset-v${version}`,
-        nodes,
-        previousNodes
-      );
+        currentAnimator = new DualSVGAnimator(
+            `tree-v${version}`,
+            `changeset-v${version}`,
+            nodes,
+            previousNodes
+        );
 
-      currentAnimator.onUpdate = (current, total) => {
-        status.update(`${current} / ${total}`);
+        currentAnimator.onUpdate = (current, total) => {
+            status.update(`${current} / ${total}`);
+            updateButtons();
+        };
+
+        currentAnimator.init();
+        currentVersion = version;
         updateButtons();
-      };
-
-      currentAnimator.init();
-      currentVersion = version;
-      updateButtons();
     }
 
     // Update button states
     function updateButtons() {
-      const prevBtn = document.getElementById('prev-btn');
-      const nextBtn = document.getElementById('next-btn');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
 
-      if (currentAnimator) {
-        prevBtn.disabled = currentAnimator.isAtBeginning();
-        nextBtn.disabled = currentAnimator.isAtEnd();
-      } else {
-        prevBtn.disabled = true;
-        nextBtn.disabled = true;
-      }
+        if (currentAnimator) {
+            prevBtn.disabled = currentAnimator.isAtBeginning();
+            nextBtn.disabled = currentAnimator.isAtEnd();
+        } else {
+            prevBtn.disabled = true;
+            nextBtn.disabled = true;
+        }
     }
 
     // Control functions
     function nextNode() {
-      if (currentAnimator) {
-        currentAnimator.next();
-      }
+        if (currentAnimator) {
+            currentAnimator.next();
+        }
     }
 
     function previousNode() {
-      if (currentAnimator) {
-        currentAnimator.previous();
-      }
+        if (currentAnimator) {
+            currentAnimator.previous();
+        }
     }
 
     function resetAnimation() {
-      if (currentAnimator) {
-        currentAnimator.reset();
-      }
+        if (currentAnimator) {
+            currentAnimator.reset();
+        }
     }
 
     // Compaction node lists (leaves first, then branches)
     const compactionNodes = {
-      all: [
-        // All leaves first
-        'L1_1', 'L1_2', 'L1_3', 'L1_4',
-        'L2_1', 'L2_2', 'L2_3',
-        'L3_1', 'L3_2', 'L3_3',
-        'L4_1', 'L4_2', 'L4_3',
-        'L5_1', 'L5_2', 'L5_3', 'L5_4',
-        // All branches second
-        'B1_1', 'B1_2', 'B1_3',
-        'B2_1', 'B2_2', 'B2_3', 'B2_4',
-        'B3_1', 'B3_2', 'B3_3', 'B3_4', 'B3_5',
-        'B4_1', 'B4_2', 'B4_3', 'B4_4', 'B4_5', 'B4_6',
-        'B5_1', 'B5_2', 'B5_3', 'B5_4', 'B5_5', 'B5_6', 'B5_7', 'B5_8'
-      ],
-      copied: ['L2_2', 'L2_3', 'L3_1', 'L3_2', 'L3_3', 'L4_1', 'L4_2', 'L4_3', 'L5_1', 'L5_2', 'L5_3', 'L5_4', 'B3_2', 'B4_1', 'B4_2', 'B4_3', 'B4_4', 'B4_5', 'B4_6', 'B5_1', 'B5_2', 'B5_3', 'B5_4', 'B5_5', 'B5_6', 'B5_7', 'B5_8']
+        all: [
+            // All leaves first
+            'L1_1', 'L1_2', 'L1_3', 'L1_4',
+            'L2_1', 'L2_2', 'L2_3',
+            'L3_1', 'L3_2', 'L3_3',
+            'L4_1', 'L4_2', 'L4_3',
+            'L5_1', 'L5_2', 'L5_3', 'L5_4',
+            // All branches second
+            'B1_1', 'B1_2', 'B1_3',
+            'B2_1', 'B2_2', 'B2_3', 'B2_4',
+            'B3_1', 'B3_2', 'B3_3', 'B3_4', 'B3_5',
+            'B4_1', 'B4_2', 'B4_3', 'B4_4', 'B4_5', 'B4_6',
+            'B5_1', 'B5_2', 'B5_3', 'B5_4', 'B5_5', 'B5_6', 'B5_7', 'B5_8'
+        ],
+        copied: ['L2_2', 'L2_3', 'L3_1', 'L3_2', 'L3_3', 'L4_1', 'L4_2', 'L4_3', 'L5_1', 'L5_2', 'L5_3', 'L5_4', 'B3_2', 'B4_1', 'B4_2', 'B4_3', 'B4_4', 'B4_5', 'B4_6', 'B5_1', 'B5_2', 'B5_3', 'B5_4', 'B5_5', 'B5_6', 'B5_7', 'B5_8']
     };
 
     // Load compaction SVGs
     async function loadCompactionSVGs() {
-      try {
-        await loadSVG('ex5_cs.dot.svg', 'compaction-original');
-        await loadSVG('ex5_cs_compacted.dot.svg', 'compaction-compacted');
-        return true;
-      } catch (err) {
-        console.error('Failed to load compaction SVGs:', err);
-        status.update('Error loading compaction SVGs');
-        return false;
-      }
+        try {
+            await loadSVG('ex5_cs.dot.svg', 'compaction-original');
+            await loadSVG('ex5_cs_compacted.dot.svg', 'compaction-compacted');
+            return true;
+        } catch (err) {
+            console.error('Failed to load compaction SVGs:', err);
+            status.update('Error loading compaction SVGs');
+            return false;
+        }
     }
 
     // Initialize compaction animator
     function initializeCompactionAnimator() {
-      if (currentAnimator) {
-        currentAnimator.reset();
-      }
+        if (currentAnimator) {
+            currentAnimator.reset();
+        }
 
-      currentAnimator = new CompactionAnimator(
-        'compaction-original',
-        'compaction-compacted',
-        compactionNodes.all,
-        compactionNodes.copied
-      );
+        currentAnimator = new CompactionAnimator(
+            'compaction-original',
+            'compaction-compacted',
+            compactionNodes.all,
+            compactionNodes.copied
+        );
 
-      currentAnimator.onUpdate = (current, total) => {
-        status.update(`${current} / ${total}`);
+        currentAnimator.onUpdate = (current, total) => {
+            status.update(`${current} / ${total}`);
+            updateButtons();
+        };
+
+        currentAnimator.init();
+        currentVersion = 'compaction';
         updateButtons();
-      };
+    }
 
-      currentAnimator.init();
-      currentVersion = 'compaction';
-      updateButtons();
+    // Show/hide animation controls
+    function showControls() {
+        document.querySelector('.animation-controls').style.display = 'flex';
+    }
+
+    function hideControls() {
+        document.querySelector('.animation-controls').style.display = 'none';
+    }
+
+    // Load static SVGs (no animation)
+    async function loadStaticSVGs() {
+        try {
+            await loadSVG('ex4.dot.svg', 'static-tree-v4');
+            await loadSVG('ex5.dot.svg', 'static-tree-v5');
+            await loadSVG('ex5_cs_compacted.dot.svg', 'static-compacted');
+            return true;
+        } catch (err) {
+            console.error('Failed to load static SVGs:', err);
+            return false;
+        }
     }
 
     // Handle slide changes
     Reveal.on('slidechanged', async event => {
-      const slideIndex = event.indexh;
+        const slide = event.currentSlide;
+        const animationType = slide.getAttribute('data-animation');
 
-      if (slideIndex >= 1 && slideIndex <= 5) {
-        // Version slides
-        const loaded = await loadVersionSVGs(slideIndex);
-        if (loaded) {
-          setTimeout(() => {
-            initializeAnimator(slideIndex);
-          }, 100);
+        if (animationType === 'version') {
+            // Version animation slide
+            const version = parseInt(slide.getAttribute('data-version'));
+            const loaded = await loadVersionSVGs(version);
+            if (loaded) {
+                setTimeout(() => {
+                    initializeAnimator(version);
+                    showControls();
+                }, 100);
+            }
+        } else if (animationType === 'compaction') {
+            // Compaction animation slide
+            const loaded = await loadCompactionSVGs();
+            if (loaded) {
+                setTimeout(() => {
+                    initializeCompactionAnimator();
+                    showControls();
+                }, 100);
+            }
+        } else {
+            // Static slide - no animation
+            currentAnimator = null;
+            currentVersion = null;
+            status.clear();
+            hideControls();
+
+            // Load static SVGs if this is the static slide
+            if (slide.querySelector('#static-tree-v4')) {
+                loadStaticSVGs();
+            }
         }
-      } else if (slideIndex === 6) {
-        // Compaction slide
-        const loaded = await loadCompactionSVGs();
-        if (loaded) {
-          setTimeout(() => {
-            initializeCompactionAnimator();
-          }, 100);
-        }
-      } else {
-        currentAnimator = null;
-        currentVersion = null;
-        status.clear();
-        updateButtons();
-      }
     });
 
     // Handle keyboard shortcuts
     document.addEventListener('keydown', (e) => {
-      // Only handle shortcuts if we're on a version slide
-      if (currentVersion === null) return;
+        // Only handle shortcuts if we're on a version slide
+        if (currentVersion === null) return;
 
-      // Space or right arrow for next
-      if (e.key === ' ' && !e.shiftKey) {
-        e.preventDefault();
-        nextNode();
-      }
-      // Shift+Space or left arrow for previous
-      else if ((e.key === ' ' && e.shiftKey) || e.key === 'Backspace') {
-        e.preventDefault();
-        previousNode();
-      }
-      // R for reset
-      else if (e.key === 'r' || e.key === 'R') {
-        e.preventDefault();
-        resetAnimation();
-      }
-    });
-
-    // Load initial slide if starting on a version slide
-    Reveal.on('ready', async event => {
-      const slideIndex = event.indexh;
-      const version = slideIndex;
-
-      if (version >= 1 && version <= 5) {
-        const loaded = await loadVersionSVGs(version);
-        if (loaded) {
-          setTimeout(() => {
-            initializeAnimator(version);
-          }, 100);
+        // Space or right arrow for next
+        if (e.key === ' ' && !e.shiftKey) {
+            e.preventDefault();
+            nextNode();
         }
-      }
+        // Shift+Space or left arrow for previous
+        else if ((e.key === ' ' && e.shiftKey) || e.key === 'Backspace') {
+            e.preventDefault();
+            previousNode();
+        }
+        // R for reset
+        else if (e.key === 'r' || e.key === 'R') {
+            e.preventDefault();
+            resetAnimation();
+        }
     });
-  </script>
+
+    // Load initial slide
+    Reveal.on('ready', async event => {
+        const slide = event.currentSlide;
+        const animationType = slide.getAttribute('data-animation');
+
+        // Start with controls hidden
+        hideControls();
+
+        if (animationType === 'version') {
+            const version = parseInt(slide.getAttribute('data-version'));
+            const loaded = await loadVersionSVGs(version);
+            if (loaded) {
+                setTimeout(() => {
+                    initializeAnimator(version);
+                    showControls();
+                }, 100);
+            }
+        } else if (animationType === 'compaction') {
+            const loaded = await loadCompactionSVGs();
+            if (loaded) {
+                setTimeout(() => {
+                    initializeCompactionAnimator();
+                    showControls();
+                }, 100);
+            }
+        }
+    });
+</script>
 </body>
 </html>

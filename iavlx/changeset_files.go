@@ -100,6 +100,12 @@ func OpenChangesetFiles(dirName string) (*ChangesetFiles, error) {
 	localKVLogPath := filepath.Join(dir, "kv.log")
 	kvlogPath, err := filepath.EvalSymlinks(localKVLogPath)
 	if err != nil {
+		// Check if it's a broken symlink
+		linkTarget, linkErr := os.Readlink(localKVLogPath)
+		if linkErr == nil {
+			// It's a symlink but the target doesn't exist (broken symlink)
+			return nil, fmt.Errorf("changeset has broken symlink: %s -> %s (target missing): %w", localKVLogPath, linkTarget, err)
+		}
 		return nil, fmt.Errorf("failed to eval kvlog symlink: %w", err)
 	}
 
@@ -267,10 +273,34 @@ func (cr *ChangesetFiles) DeleteFiles(args ChangesetDeleteArgs) error {
 		os.Remove(cr.versionsFile.Name()),
 		os.Remove(cr.orphansFile.Name()),
 	}
-	if cr.kvlogFile.Name() != args.SaveKVLogPath {
-		errs = append(errs, os.Remove(cr.kvlogFile.Name()))
+
+	// Delete the local kv.log file or symlink, unless it's the actual file we want to save.
+	// This handles both:
+	// 1. Regular kv.log files (when CompactWAL=true)
+	// 2. Symlinks to shared kv.log files (when CompactWAL=false)
+	localKVLogPath := filepath.Join(cr.dir, "kv.log")
+
+	// Normalize both paths before comparison to handle symlink resolution differences
+	// (e.g., /var vs /private/var on macOS)
+	actualKVLogPath, err := filepath.EvalSymlinks(cr.kvlogFile.Name())
+	if err != nil {
+		actualKVLogPath = cr.kvlogFile.Name() // fallback to original if eval fails
 	}
-	err := errors.Join(errs...)
+	saveKVLogPath := args.SaveKVLogPath
+	if saveKVLogPath != "" {
+		normalized, err := filepath.EvalSymlinks(saveKVLogPath)
+		if err == nil {
+			saveKVLogPath = normalized
+		}
+	}
+
+	// If this changeset's actual kvlog file is the one we want to save, don't delete anything
+	if actualKVLogPath != saveKVLogPath {
+		// Delete the local kv.log (which might be a symlink)
+		errs = append(errs, os.Remove(localKVLogPath))
+	}
+
+	err = errors.Join(errs...)
 	if err != nil {
 		return fmt.Errorf("failed to delete changeset files: %w", err)
 	}

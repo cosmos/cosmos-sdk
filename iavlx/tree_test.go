@@ -427,6 +427,7 @@ func TestGraphvizDump(t *testing.T) {
 	require.NoError(t, err)
 
 	dump := func() {
+		require.NoError(t, err)
 		buf := &bytes.Buffer{}
 		version := tree.Version()
 		require.NoError(t, err)
@@ -436,7 +437,15 @@ func TestGraphvizDump(t *testing.T) {
 		cs, err := tree.store.currentWriter.CreatedSharedReader()
 		require.NoError(t, err)
 		buf = &bytes.Buffer{}
-		require.NoError(t, RenderChangesetDotGraph(buf, cs))
+		orphans := make(map[NodeID]uint32)
+		for _, req := range tree.store.cleanupProc.stagedOrphanQueue {
+			for _, xs := range req.orphans {
+				for _, id := range xs {
+					orphans[id] = req.version
+				}
+			}
+		}
+		require.NoError(t, RenderChangesetDotGraph(buf, cs, orphans))
 		require.NoError(t, os.WriteFile(fmt.Sprintf("ex%d_cs.dot", version), buf.Bytes(), 0644))
 	}
 

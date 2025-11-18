@@ -236,6 +236,7 @@ func (c *Compactor) processChangeset(reader *Changeset) error {
 			}
 			c.offsetCache[id] = uint32(c.branchesWriter.Count())
 
+			// TODO we actually don't need to have this retained orphans map in memory at all, we can just write orphans directly to the orphan writer here
 			c.retainedOrphans[id] = orphanVersion
 		}
 

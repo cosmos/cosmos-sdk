@@ -39,6 +39,8 @@ func DebugTraverseNode(nodePtr *NodePointer, onNode func(node, parent Node, dire
 	return traverse(nodePtr, nil, "")
 }
 
+var graphvizColors = []string{"purple", "green", "red", "blue", "yellow"}
+
 func RenderNodeDotGraph(writer io.Writer, nodePtr *NodePointer) error {
 	_, err := fmt.Fprintln(writer, "digraph G {\n\trankdir=BT")
 	if err != nil {
@@ -52,7 +54,6 @@ func RenderNodeDotGraph(writer io.Writer, nodePtr *NodePointer) error {
 		return finishGraph()
 	}
 
-	colors := []string{"red", "green", "blue", "orange", "purple"}
 	err = DebugTraverseNode(nodePtr, func(node, parent Node, direction string) error {
 		key, err := node.Key()
 		if err != nil {
@@ -64,7 +65,7 @@ func RenderNodeDotGraph(writer io.Writer, nodePtr *NodePointer) error {
 
 		label := fmt.Sprintf("ver: %d idx: %d key:0x%x ", version, id.Index(), key)
 		attrs := ""
-		color := colors[version%uint32(len(colors))]
+		color := graphvizColors[version%uint32(len(graphvizColors))]
 		attrs += fmt.Sprintf(" color=%s", color)
 		if node.IsLeaf() {
 			value, err := node.Value()
@@ -100,8 +101,8 @@ func RenderNodeDotGraph(writer io.Writer, nodePtr *NodePointer) error {
 	return finishGraph()
 }
 
-func RenderChangesetDotGraph(writer io.Writer, cs *Changeset) error {
-	_, err := fmt.Fprintln(writer, "digraph G {")
+func RenderChangesetDotGraph(writer io.Writer, cs *Changeset, orphans map[NodeID]uint32) error {
+	_, err := fmt.Fprintln(writer, "digraph G {\n\trankdir=LR")
 	if err != nil {
 		return err
 	}
@@ -117,6 +118,7 @@ func RenderChangesetDotGraph(writer io.Writer, cs *Changeset) error {
 
 	numBranches := cs.branchesData.Count()
 	curVersion := uint64(0)
+	var lastBranchId NodeID
 	for i := 0; i < numBranches; i++ {
 		branchLayout := cs.branchesData.UnsafeItem(uint32(i))
 		id := branchLayout.ID()
@@ -125,13 +127,88 @@ func RenderChangesetDotGraph(writer io.Writer, cs *Changeset) error {
 			if curVersion != 0 {
 				_, err = fmt.Fprintln(writer, "\t}")
 			}
-			_, err = fmt.Fprintf(writer, "\tsubgraph cluster_B%d {\nlabel=\"Version %d\"\n", nodeVersion, nodeVersion)
+			color := graphvizColors[nodeVersion%uint64(len(graphvizColors))]
+			_, err = fmt.Fprintf(writer, "\tsubgraph cluster_B%d {\n\t\tlabel=\"Version %d\" color=%s style=filled\n", nodeVersion, nodeVersion, color)
 		}
 		curVersion = nodeVersion
+		if lastBranchId != 0 {
+			_, err = fmt.Fprintf(writer, "\t\tN%d -> N%d [style=invis];\n", lastBranchId, id)
+		}
+		lastBranchId = id
 
 		nodeName := fmt.Sprintf("N%d", id)
 		label := fmt.Sprintf("idx: %d", id.Index())
-		_, err = fmt.Fprintf(writer, "\t%s [label=\"%s\"];\n", nodeName, label)
+		orphanVersion, isOrphan := orphans[id]
+		if isOrphan {
+			label += fmt.Sprintf("<BR/>orphaned: <B>%d</B>", orphanVersion)
+		}
+		attrs := ""
+		if isOrphan {
+			attrs = " style=dashed"
+		}
+		_, err = fmt.Fprintf(writer, "\t\t%s [label=<%s>%s];\n", nodeName, label, attrs)
+		if err != nil {
+			return err
+		}
+
+		//leftNodeName := fmt.Sprintf("N%d", branchLayout.Left)
+		//rightNodeName := fmt.Sprintf("N%d", branchLayout.Right)
+		//_, err = fmt.Fprintf(writer, "\t\t%s -> %s [constraint=false style=dashed label=\"L\"];\n", nodeName, leftNodeName)
+		//if err != nil {
+		//	return err
+		//}
+		//_, err = fmt.Fprintf(writer, "\t\t%s -> %s [constraint=false style=dashed label=\"R\"];\n", nodeName, rightNodeName)
+		//if err != nil {
+		//	return err
+		//}
+	}
+	// finish last version subgraph
+	_, err = fmt.Fprintln(writer, "\t}")
+	if err != nil {
+		return err
+	}
+
+	// finish branches subgraph
+	_, err = fmt.Fprintln(writer, "\t}")
+	if err != nil {
+		return err
+	}
+
+	_, err = fmt.Fprintln(writer, "\tsubgraph cluster_leaves {\t\nlabel=\"Leaves\"")
+	if err != nil {
+		return err
+	}
+	numLeaves := cs.leavesData.Count()
+	curVersion = 0
+	var lastLeafId NodeID
+	for i := 0; i < numLeaves; i++ {
+		leafLayout := cs.leavesData.UnsafeItem(uint32(i))
+		id := leafLayout.ID()
+		nodeVersion := id.Version()
+		if nodeVersion != curVersion {
+			if curVersion != 0 {
+				_, err = fmt.Fprintln(writer, "\t}")
+			}
+			color := graphvizColors[nodeVersion%uint64(len(graphvizColors))]
+			_, err = fmt.Fprintf(writer, "\tsubgraph cluster_L%d {\n\t\tlabel=\"Version %d\" color=%s style=filled\n", nodeVersion, nodeVersion, color)
+		}
+		curVersion = nodeVersion
+		if lastLeafId != 0 {
+			_, err = fmt.Fprintf(writer, "\t\tN%d -> N%d [style=invis];\n", lastLeafId, id)
+		}
+		lastLeafId = id
+
+		nodeName := fmt.Sprintf("N%d", id)
+		label := fmt.Sprintf("idx: %d", id.Index())
+		orphanVersion, isOrphan := orphans[id]
+		if isOrphan {
+			label += fmt.Sprintf("<BR/>orphaned: <B>%d</B>", orphanVersion)
+		}
+		attrs := ""
+		if isOrphan {
+			attrs = " style=dashed"
+		}
+		_, err = fmt.Fprintf(writer, "\t\t%s [label=<%s> shape=box%s];\n", nodeName, label, attrs)
 		if err != nil {
 			return err
 		}
@@ -142,7 +219,7 @@ func RenderChangesetDotGraph(writer io.Writer, cs *Changeset) error {
 		return err
 	}
 
-	// finish branches subgraph
+	// finish leaves subgraph
 	_, err = fmt.Fprintln(writer, "\t}")
 	if err != nil {
 		return err

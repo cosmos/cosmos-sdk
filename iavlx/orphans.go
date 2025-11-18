@@ -3,6 +3,7 @@ package iavlx
 import (
 	"bufio"
 	"encoding/binary"
+	"fmt"
 	"io"
 	"os"
 )
@@ -36,8 +37,12 @@ func (ow *OrphanWriter) WriteOrphanMap(orphanMap map[NodeID]uint32) error {
 }
 
 func ReadOrphanMap(file *os.File) (map[NodeID]uint32, error) {
+	file2, err := os.Open(file.Name())
+	if err != nil {
+		return nil, fmt.Errorf("failed to open orphan file for reading: %w", err)
+	}
 	orphanMap := make(map[NodeID]uint32)
-	rdr := bufio.NewReader(file)
+	rdr := bufio.NewReader(file2)
 	var buf [12]byte
 	for {
 		_, err := rdr.Read(buf[:])

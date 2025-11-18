@@ -2,6 +2,7 @@ package iavlx
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"runtime/debug"
@@ -485,4 +486,30 @@ func TestGraphvizDump(t *testing.T) {
 	tree.Set([]byte{4}, []byte{45})
 	tree.Commit()
 	dump()
+
+	// compact and retain last 2 versions
+	require.NoError(t, tree.Close())
+	ts, err := NewTreeStore(dir, Options{}, sdklog.NewNopLogger())
+	require.NoError(t, err)
+	cse, ok := ts.changesets.Get(1)
+	require.True(t, ok)
+	cs := cse.changeset.Load()
+	orphans, err := ReadOrphanMap(cs.files.orphansFile)
+	t.Logf("orphans: %+v", orphans)
+	compactor, err := NewCompacter(context.Background(), cs, CompactOptions{
+		CompactWAL:  true,
+		CompactedAt: 5,
+		RetainCriteria: func(createVersion, orphanVersion uint32) bool {
+			return orphanVersion > 4
+		},
+	}, ts)
+	require.NoError(t, err)
+	newCs, err := compactor.Seal()
+	require.NoError(t, err)
+	orphans, err = ReadOrphanMap(newCs.files.orphansFile)
+	t.Logf("orphans: %+v", orphans)
+	require.NoError(t, err)
+	buf := &bytes.Buffer{}
+	require.NoError(t, RenderChangesetDotGraph(buf, newCs, orphans))
+	require.NoError(t, os.WriteFile(fmt.Sprintf("ex5_cs_compacted.dot"), buf.Bytes(), 0644))
 }

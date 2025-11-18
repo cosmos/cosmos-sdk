@@ -63,7 +63,8 @@ func RenderNodeDotGraph(writer io.Writer, nodePtr *NodePointer) error {
 		version := node.Version()
 		id := node.ID()
 
-		label := fmt.Sprintf("ver: %d idx: %d key:0x%x ", version, id.Index(), key)
+		idx := id.Index()
+		label := fmt.Sprintf("ver: %d idx: %d key:0x%x ", version, idx, key)
 		attrs := ""
 		color := graphvizColors[version%uint32(len(graphvizColors))]
 		attrs += fmt.Sprintf(" color=%s", color)
@@ -137,7 +138,8 @@ func RenderChangesetDotGraph(writer io.Writer, cs *Changeset, orphans map[NodeID
 		lastBranchId = id
 
 		nodeName := fmt.Sprintf("N%d", id)
-		label := fmt.Sprintf("idx: %d", id.Index())
+		idx := id.Index()
+		label := fmt.Sprintf("idx: %d", idx)
 		orphanVersion, isOrphan := orphans[id]
 		if isOrphan {
 			label += fmt.Sprintf("<BR/>orphaned: <B>%d</B>", orphanVersion)
@@ -146,21 +148,17 @@ func RenderChangesetDotGraph(writer io.Writer, cs *Changeset, orphans map[NodeID
 		if isOrphan {
 			attrs = " style=dashed"
 		}
+		vi, err := cs.getVersionInfo(uint32(nodeVersion))
+		if err != nil {
+			return err
+		}
+		if vi.RootID == id {
+			attrs += " shape=doublecircle"
+		}
 		_, err = fmt.Fprintf(writer, "\t\t%s [label=<%s>%s];\n", nodeName, label, attrs)
 		if err != nil {
 			return err
 		}
-
-		//leftNodeName := fmt.Sprintf("N%d", branchLayout.Left)
-		//rightNodeName := fmt.Sprintf("N%d", branchLayout.Right)
-		//_, err = fmt.Fprintf(writer, "\t\t%s -> %s [constraint=false style=dashed label=\"L\"];\n", nodeName, leftNodeName)
-		//if err != nil {
-		//	return err
-		//}
-		//_, err = fmt.Fprintf(writer, "\t\t%s -> %s [constraint=false style=dashed label=\"R\"];\n", nodeName, rightNodeName)
-		//if err != nil {
-		//	return err
-		//}
 	}
 	// finish last version subgraph
 	_, err = fmt.Fprintln(writer, "\t}")

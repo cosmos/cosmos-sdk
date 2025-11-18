@@ -52,6 +52,13 @@ func newCleanupProc(treeStore *TreeStore) *cleanupProc {
 func (cp *cleanupProc) run() {
 	ctx, span := tracer.Start(context.Background(), "cleanupProc")
 	defer span.End()
+	// before we shutdown save any pending orphans
+	defer func() {
+		err := cp.doMarkOrphans()
+		if err != nil {
+			cp.logger.Error("failed to mark orphans at shutdown", "error", err)
+		}
+	}()
 	defer close(cp.cleanupProcDone)
 
 	minCompactorInterval := time.Second * time.Duration(cp.opts.MinCompactionSeconds)

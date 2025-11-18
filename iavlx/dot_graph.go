@@ -39,7 +39,8 @@ func DebugTraverseNode(nodePtr *NodePointer, onNode func(node, parent Node, dire
 	return traverse(nodePtr, nil, "")
 }
 
-var graphvizColors = []string{"purple", "green", "red", "blue", "yellow"}
+var graphvizFillColors = []string{"purple", "green", "red", "blue", "yellow"}
+var graphvizTextColors = []string{"white", "black", "white", "white", "black"}
 
 func RenderNodeDotGraph(writer io.Writer, nodePtr *NodePointer) error {
 	_, err := fmt.Fprintln(writer, "digraph G {\n\trankdir=BT")
@@ -66,8 +67,9 @@ func RenderNodeDotGraph(writer io.Writer, nodePtr *NodePointer) error {
 		idx := id.Index()
 		label := fmt.Sprintf("ver: %d idx: %d key:0x%x ", version, idx, key)
 		attrs := ""
-		color := graphvizColors[version%uint32(len(graphvizColors))]
-		attrs += fmt.Sprintf(" color=%s", color)
+		fillColor := graphvizFillColors[version%uint32(len(graphvizFillColors))]
+		textColor := graphvizTextColors[version%uint32(len(graphvizTextColors))]
+		attrs += fmt.Sprintf(" fillcolor=%s fontcolor=%s style=filled", fillColor, textColor)
 		if node.IsLeaf() {
 			value, err := node.Value()
 			if err != nil {
@@ -80,14 +82,14 @@ func RenderNodeDotGraph(writer io.Writer, nodePtr *NodePointer) error {
 			label += fmt.Sprintf("ht:%d sz:%d", node.Height(), node.Size())
 		}
 
-		nodeName := fmt.Sprintf("n%p", node)
+		nodeName := graphvizNodeID(id)
 
-		_, err = fmt.Fprintf(writer, "\t%s [label=\"%s\"%s];\n", nodeName, label, attrs)
+		_, err = fmt.Fprintf(writer, "\t%s [id=%s label=\"%s\"%s];\n", nodeName, nodeName, label, attrs)
 		if err != nil {
 			return err
 		}
 		if parent != nil {
-			parentName := fmt.Sprintf("n%p", parent)
+			parentName := graphvizNodeID(parent.ID())
 			_, err = fmt.Fprintf(writer, "\t%s -> %s [label=\"%s\"];\n", parentName, nodeName, direction)
 			if err != nil {
 				return err
@@ -128,16 +130,17 @@ func RenderChangesetDotGraph(writer io.Writer, cs *Changeset, orphans map[NodeID
 			if curVersion != 0 {
 				_, err = fmt.Fprintln(writer, "\t}")
 			}
-			color := graphvizColors[nodeVersion%uint64(len(graphvizColors))]
-			_, err = fmt.Fprintf(writer, "\tsubgraph cluster_B%d {\n\t\tlabel=\"Version %d\" color=%s style=filled\n", nodeVersion, nodeVersion, color)
+			fillColor := graphvizFillColors[nodeVersion%uint64(len(graphvizFillColors))]
+			textColor := graphvizTextColors[nodeVersion%uint64(len(graphvizTextColors))]
+			_, err = fmt.Fprintf(writer, "\tsubgraph cluster_B%d {\n\t\tlabel=\"Version %d\" color=%s style=filled fontcolor=%s node [fontcolor=%s]\n", nodeVersion, nodeVersion, fillColor, textColor, textColor)
 		}
 		curVersion = nodeVersion
 		if lastBranchId != 0 {
-			_, err = fmt.Fprintf(writer, "\t\tN%d -> N%d [style=invis];\n", lastBranchId, id)
+			_, err = fmt.Fprintf(writer, "\t\t%s -> %s [style=invis];\n", graphvizNodeID(lastBranchId), graphvizNodeID(id))
 		}
 		lastBranchId = id
 
-		nodeName := fmt.Sprintf("N%d", id)
+		nodeName := graphvizNodeID(id)
 		idx := id.Index()
 		label := fmt.Sprintf("idx: %d", idx)
 		orphanVersion, isOrphan := orphans[id]
@@ -155,7 +158,7 @@ func RenderChangesetDotGraph(writer io.Writer, cs *Changeset, orphans map[NodeID
 		if vi.RootID == id {
 			attrs += " shape=doublecircle"
 		}
-		_, err = fmt.Fprintf(writer, "\t\t%s [label=<%s>%s];\n", nodeName, label, attrs)
+		_, err = fmt.Fprintf(writer, "\t\t%s [id=%s label=<%s>%s];\n", nodeName, nodeName, label, attrs)
 		if err != nil {
 			return err
 		}
@@ -187,16 +190,17 @@ func RenderChangesetDotGraph(writer io.Writer, cs *Changeset, orphans map[NodeID
 			if curVersion != 0 {
 				_, err = fmt.Fprintln(writer, "\t}")
 			}
-			color := graphvizColors[nodeVersion%uint64(len(graphvizColors))]
-			_, err = fmt.Fprintf(writer, "\tsubgraph cluster_L%d {\n\t\tlabel=\"Version %d\" color=%s style=filled\n", nodeVersion, nodeVersion, color)
+			fillColor := graphvizFillColors[nodeVersion%uint64(len(graphvizFillColors))]
+			textColor := graphvizTextColors[nodeVersion%uint64(len(graphvizTextColors))]
+			_, err = fmt.Fprintf(writer, "\tsubgraph cluster_L%d {\n\t\tlabel=\"Version %d\" color=%s fontcolor=%s style=filled node [fontcolor=%s]\n", nodeVersion, nodeVersion, fillColor, textColor, textColor)
 		}
 		curVersion = nodeVersion
 		if lastLeafId != 0 {
-			_, err = fmt.Fprintf(writer, "\t\tN%d -> N%d [style=invis];\n", lastLeafId, id)
+			_, err = fmt.Fprintf(writer, "\t\t%s -> %s [style=invis];\n", graphvizNodeID(lastLeafId), graphvizNodeID(id))
 		}
 		lastLeafId = id
 
-		nodeName := fmt.Sprintf("N%d", id)
+		nodeName := graphvizNodeID(id)
 		label := fmt.Sprintf("idx: %d", id.Index())
 		orphanVersion, isOrphan := orphans[id]
 		if isOrphan {
@@ -206,7 +210,7 @@ func RenderChangesetDotGraph(writer io.Writer, cs *Changeset, orphans map[NodeID
 		if isOrphan {
 			attrs = " style=dashed"
 		}
-		_, err = fmt.Fprintf(writer, "\t\t%s [label=<%s> shape=box%s];\n", nodeName, label, attrs)
+		_, err = fmt.Fprintf(writer, "\t\t%s [id=%s label=<%s> shape=box%s];\n", nodeName, nodeName, label, attrs)
 		if err != nil {
 			return err
 		}
@@ -224,4 +228,12 @@ func RenderChangesetDotGraph(writer io.Writer, cs *Changeset, orphans map[NodeID
 	}
 
 	return finishGraph()
+}
+
+func graphvizNodeID(node NodeID) string {
+	if node.IsLeaf() {
+		return fmt.Sprintf("L%d_%d", node.Version(), node.Index())
+	} else {
+		return fmt.Sprintf("B%d_%d", node.Version(), node.Index())
+	}
 }

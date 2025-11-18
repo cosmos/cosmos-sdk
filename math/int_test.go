@@ -692,3 +692,19 @@ func BenchmarkIntOverflowCheckTime(b *testing.B) {
 	}
 	sink = nil
 }
+
+// TestIntUnmarshalEmpty demonstrates the bug where Unmarshal with empty bytes
+// doesn't reset the Int value to zero
+func TestIntUnmarshalEmpty(t *testing.T) {
+	// Create an Int with a non-zero value
+	i := math.NewInt(12345)
+	require.Equal(t, int64(12345), i.Int64(), "initial value should be 12345")
+
+	// Unmarshal empty bytes - should reset to zero
+	err := i.Unmarshal([]byte{})
+	require.NoError(t, err)
+
+	// With the bug: i still has value 12345
+	// After fix: i should be 0
+	require.True(t, i.IsZero(), "after unmarshaling empty bytes, Int should be zero, but got: %s", i.String())
+}

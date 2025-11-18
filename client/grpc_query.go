@@ -27,42 +27,42 @@ type GRPCConn interface {
 	GetGRPCConn(height int64) *grpc.ClientConn
 }
 
-// GRPCConnProvider manages gRPC connections with optional backup connections for historical queries.
+// GRPCConnProvider manages gRPC connections with optional historical connections for historical queries.
 type GRPCConnProvider struct {
 	// DefaultConn is the primary gRPC connection
 	DefaultConn *grpc.ClientConn
-	// BackupConns maps block ranges to backup gRPC connections for routing historical queries
-	BackupConns config.BackupGRPCConnections
+	// HistoricalConns maps block ranges to historical gRPC connections for routing historical queries
+	HistoricalConns config.HistoricalGRPCConnections
 }
 
 // NewGRPCConnProvider creates a new GRPCConnProvider with the given connections.
-func NewGRPCConnProvider(defaultConn *grpc.ClientConn, backupConns config.BackupGRPCConnections) *GRPCConnProvider {
-	if backupConns == nil {
-		backupConns = make(config.BackupGRPCConnections)
+func NewGRPCConnProvider(defaultConn *grpc.ClientConn, historicalConns config.HistoricalGRPCConnections) *GRPCConnProvider {
+	if historicalConns == nil {
+		historicalConns = make(config.HistoricalGRPCConnections)
 	}
 	return &GRPCConnProvider{
-		DefaultConn: defaultConn,
-		BackupConns: backupConns,
+		DefaultConn:     defaultConn,
+		HistoricalConns: historicalConns,
 	}
 }
 
 // GetGRPCConn returns the appropriate gRPC connection based on the block height.
 // For height <= 0 (latest block), it returns the default connection.
-// For positive heights, it checks if a backup connection exists for that height range.
+// For positive heights, it checks if a historical connection exists for that height range.
 func (g *GRPCConnProvider) GetGRPCConn(height int64) *grpc.ClientConn {
 	// height = 0 means latest block, use the default connection
 	if height <= 0 {
 		return g.DefaultConn
 	}
 
-	// Check if there's a backup connection for this height
-	for blockRange, conn := range g.BackupConns {
+	// Check if there's a historical connection for this height
+	for blockRange, conn := range g.HistoricalConns {
 		if int64(blockRange[0]) <= height && int64(blockRange[1]) >= height {
 			return conn
 		}
 	}
 
-	// Default to the primary connection if no backup matches
+	// Default to the primary connection if no historical matches
 	return g.DefaultConn
 }
 

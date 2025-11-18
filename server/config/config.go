@@ -127,7 +127,7 @@ type APIConfig struct {
 }
 
 // BlockRange represents a range of block heights as [start_block, end_block] (inclusive).
-// It is used to map gRPC backup connections to specific block height ranges for routing
+// It is used to map gRPC historical connections to specific block height ranges for routing
 // historical queries to appropriate archive nodes.
 //
 // Example:
@@ -137,9 +137,9 @@ type APIConfig struct {
 // Both start and end blocks must be non-negative, and start must be less than or equal to end.
 type BlockRange [2]int
 
-// BackupGRPCConnections is a map of block ranges to gRPC client connections
+// HistoricalGRPCConnections is a map of block ranges to gRPC client connections
 // used for routing requests to different backend nodes based on block height.
-type BackupGRPCConnections map[BlockRange]*grpc.ClientConn
+type HistoricalGRPCConnections map[BlockRange]*grpc.ClientConn
 
 // GRPCConfig defines configuration for the gRPC server.
 type GRPCConfig struct {

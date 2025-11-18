@@ -149,16 +149,16 @@ func (s *IntegrationTestSuite) TestGetGRPCConnWithContext() {
 	s.Require().NoError(err)
 	defer defaultConn.Close()
 
-	backupConn, err := grpc.NewClient("localhost:9091",
+	historicalConn, err := grpc.NewClient("localhost:9091",
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
 	s.Require().NoError(err)
-	defer backupConn.Close()
+	defer historicalConn.Close()
 
-	backupConns := config.BackupGRPCConnections{
-		config.BlockRange{100, 500}: backupConn,
+	historicalConns := config.HistoricalGRPCConnections{
+		config.BlockRange{100, 500}: historicalConn,
 	}
-	provider := client.NewGRPCConnProvider(defaultConn, backupConns)
+	provider := client.NewGRPCConnProvider(defaultConn, historicalConns)
 	testCases := []struct {
 		name         string
 		height       int64
@@ -175,7 +175,7 @@ func (s *IntegrationTestSuite) TestGetGRPCConnWithContext() {
 					WithGRPCConnProvider(provider).
 					WithHeight(300)
 			},
-			expectedConn: backupConn,
+			expectedConn: historicalConn,
 		},
 		{
 			name:   "context with GRPCConnProvider and latest height",
@@ -201,7 +201,7 @@ func (s *IntegrationTestSuite) TestGetGRPCConnWithContext() {
 			expectedConn: defaultConn,
 		},
 		{
-			name:   "context with nil backup connections map",
+			name:   "context with nil historical connections map",
 			height: 100,
 			setupCtx: func() client.Context {
 				nilProvider := client.NewGRPCConnProvider(defaultConn, nil)
@@ -214,10 +214,10 @@ func (s *IntegrationTestSuite) TestGetGRPCConnWithContext() {
 			expectedConn: defaultConn,
 		},
 		{
-			name:   "context with empty backup connections map",
+			name:   "context with empty historical connections map",
 			height: 100,
 			setupCtx: func() client.Context {
-				emptyProvider := client.NewGRPCConnProvider(defaultConn, config.BackupGRPCConnections{})
+				emptyProvider := client.NewGRPCConnProvider(defaultConn, config.HistoricalGRPCConnections{})
 				return client.Context{}.
 					WithCodec(s.cdc).
 					WithGRPCClient(defaultConn).

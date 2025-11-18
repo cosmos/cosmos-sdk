@@ -244,7 +244,7 @@ func TestGetConfig_HistoricalGRPCAddressBlockRange(t *testing.T) {
 		validate    func(*testing.T, Config)
 	}{
 		{
-			name: "valid single backup address",
+			name: "valid single historical grpc address",
 			setupViper: func(v *viper.Viper) {
 				v.Set("grpc.historical-grpc-address-block-range", `{"localhost:9091": [0, 1000]}`)
 			},
@@ -259,7 +259,7 @@ func TestGetConfig_HistoricalGRPCAddressBlockRange(t *testing.T) {
 			},
 		},
 		{
-			name: "valid multiple backup addresses",
+			name: "valid multiple historical grpc addresses",
 			setupViper: func(v *viper.Viper) {
 				v.Set("grpc.historical-grpc-address-block-range",
 					`{"localhost:9091": [0, 1000], "localhost:9092": [1001, 2000], "localhost:9093": [2001, 3000]}`)

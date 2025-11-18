@@ -453,7 +453,7 @@ func setupTraceWriter(svrCtx *Context) (traceWriter io.WriteCloser, cleanup func
 }
 
 // StartGrpcServer starts a gRPC server with the provided configuration.
-// It returns the gRPC server instance, updated client context with backup connections,
+// It returns the gRPC server instance, updated client context with historical connections,
 // and any error encountered during setup.
 //
 // The function will:
@@ -1007,7 +1007,7 @@ func addStartNodeFlags(cmd *cobra.Command, opts StartCmdOptions) {
 	cmd.Flags().Bool(flagGRPCEnable, true, "Define if the gRPC server should be enabled")
 	cmd.Flags().String(flagGRPCAddress, serverconfig.DefaultGRPCAddress, "the gRPC server address to listen on")
 	cmd.Flags().Bool(flagGRPCWebEnable, true, "Define if the gRPC-Web server should be enabled. (Note: gRPC must also be enabled)")
-	cmd.Flags().String(flagHistoricalGRPCBlockAddressBlockRange, "", "Define if backup grpc and block range is available")
+	cmd.Flags().String(flagHistoricalGRPCBlockAddressBlockRange, "", "Define if historical grpc and block range is available")
 	cmd.Flags().Uint64(FlagStateSyncSnapshotInterval, 0, "State sync snapshot interval")
 	cmd.Flags().Uint32(FlagStateSyncSnapshotKeepRecent, 2, "State sync snapshot to keep")
 	cmd.Flags().Bool(FlagDisableIAVLFastNode, false, "Disable fast node for IAVL tree")

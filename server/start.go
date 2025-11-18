@@ -101,7 +101,7 @@ const (
 	flagGRPCAddress                      = "grpc.address"
 	flagGRPCWebEnable                    = "grpc-web.enable"
 	flagGRPCSkipCheckHeader              = "grpc.skip-check-header"
-	flagBackupGRPCBlockAddressBlockRange = "grpc.backup-grpc-address-block-range"
+	flagHistoricalGRPCBlockAddressBlockRange = "grpc.historical-grpc-address-block-range"
 
 	// mempool flags
 
@@ -458,7 +458,7 @@ func setupTraceWriter(svrCtx *Context) (traceWriter io.WriteCloser, cleanup func
 //
 // The function will:
 // - Create a gRPC client connection
-// - Setup backup gRPC connections if configured
+// - Setup historical gRPC connections if configured
 // - Start the gRPC server in a goroutine
 //
 // Note: The provided context will ensure that the server is gracefully shut down.

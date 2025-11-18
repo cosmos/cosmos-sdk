@@ -56,7 +56,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (crypto) [#24861](https://github.com/cosmos/cosmos-sdk/pull/24861) add `PubKeyFromCometTypeAndBytes` helper function to convert from `comet/v2` PubKeys to the `cryptotypes.Pubkey` interface.
 * (abci_utils) [#25008](https://github.com/cosmos/cosmos-sdk/pull/25008) add the ability to assign a custom signer extraction adapter in `DefaultProposalHandler`.
 * (crypto/ledger) [#25435](https://github.com/cosmos/cosmos-sdk/pull/25435) Add SetDERConversion to reset skipDERConversion and App name for ledger.
-* (gRPC) [#25565](https://github.com/cosmos/cosmos-sdk/pull/25565) Support for multi gRPC query clients serve with old binary.
+* (gRPC) [#25565](https://github.com/cosmos/cosmos-sdk/pull/25565) Support for multi gRPC query clients serve with historical binaries to serve proper historical state.
 
 ### Improvements
 

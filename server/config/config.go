@@ -161,7 +161,7 @@ type GRPCConfig struct {
 	SkipCheckHeader bool `mapstructure:"skip-check-header"`
 
 	// BackupGRPCBlockAddressBlockRange maps block ranges to gRPC addresses for routing historical queries.
-	BackupGRPCBlockAddressBlockRange map[BlockRange]string `mapstructure:"-"`
+	HistoricalGRPCBlockAddressBlockRange map[BlockRange]string `mapstructure:"-"`
 }
 
 // GRPCWebConfig defines configuration for the gRPC-web server.

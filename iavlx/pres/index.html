@@ -11,13 +11,21 @@
 
   <style>
     /* Custom styles for tree visualization */
+    .reveal .slides section {
+      height: 100%;
+      display: flex !important;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
     .dual-svg-container {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 20px;
+      gap: 10px;
       width: 100%;
-      padding: 20px;
+      max-width: 95%;
     }
 
     .svg-section {
@@ -28,22 +36,26 @@
     }
 
     .svg-section h3 {
-      margin: 0 0 10px 0;
-      font-size: 1.2em;
+      margin: 0 0 5px 0;
+      font-size: 1em;
       color: #4a90e2;
     }
 
     .svg-container {
       background: white;
       border-radius: 8px;
-      padding: 20px;
-      max-width: 90%;
+      padding: 15px;
+      width: 100%;
       max-height: 35vh;
-      overflow: auto;
+      overflow: visible;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
 
     .svg-container svg {
       max-width: 100%;
+      max-height: 100%;
       height: auto;
     }
 
@@ -96,29 +108,66 @@
     }
 
     /* SVG animation effects */
-    @keyframes pulse {
+    @keyframes treeGrow {
       0% {
         transform: scale(1);
-        opacity: 1;
       }
-      50% {
-        transform: scale(1.3);
-        opacity: 0.7;
+      40% {
+        transform: scale(1.5);
+      }
+      70% {
+        transform: scale(1.5);
+      }
+      85% {
+        transform: scale(1.1);
       }
       100% {
         transform: scale(1);
-        opacity: 1;
       }
     }
 
+    @keyframes changesetGrow {
+      0% {
+        transform: scale(0);
+        opacity: 0;
+      }
+      30% {
+        transform: scale(0);
+        opacity: 0;
+      }
+      60% {
+        transform: scale(1.5);
+        opacity: 1;
+      }
+      85% {
+        transform: scale(1.1);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    /* Force all SVG groups to use center transform origin */
+    .svg-container svg g {
+      transform-box: fill-box;
+      transform-origin: center center;
+    }
+
     .animate {
-      animation: pulse 0.5s ease !important;
+      animation: treeGrow 2s ease-out !important;
       filter: drop-shadow(0 0 8px gold) !important;
-      transform-origin: center !important;
+      transform-box: fill-box !important;
+      transform-origin: center center !important;
     }
 
     .visited {
       filter: drop-shadow(0 0 3px rgba(255, 215, 0, 0.5)) !important;
+    }
+
+    .changeset-appear {
+      animation: changesetGrow 2s ease-out !important;
+      transform-box: fill-box !important;
+      transform-origin: center center !important;
     }
 
     /* Instructions */

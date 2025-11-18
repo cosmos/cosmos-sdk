@@ -157,7 +157,7 @@ class DualSVGAnimator {
   }
 
   /**
-   * Show a changeset node
+   * Show a changeset node with elastic grow animation
    */
   showChangesetNode(nodeId) {
     const changesetContainer = document.getElementById(this.changesetContainerId);
@@ -165,6 +165,14 @@ class DualSVGAnimator {
 
     const node = changesetContainer.querySelector(`#${nodeId}`);
     if (node) {
+      // Remove any existing animation class
+      node.classList.remove('changeset-appear');
+
+      // Trigger reflow
+      void node.offsetWidth;
+
+      // Add animation class
+      node.classList.add('changeset-appear');
       node.style.opacity = '1';
     }
   }
@@ -178,6 +186,7 @@ class DualSVGAnimator {
 
     const node = changesetContainer.querySelector(`#${nodeId}`);
     if (node) {
+      node.classList.remove('changeset-appear');
       node.style.opacity = '0';
     }
   }

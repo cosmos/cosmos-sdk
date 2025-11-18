@@ -295,14 +295,25 @@
       height: 1080,
     });
 
-    // Node IDs for each version in post-order traversal
+    // NEW nodes for each version in post-order traversal (only nodes added in that version)
     const versionNodes = {
       1: ['L1_1', 'L1_2', 'B1_1', 'L1_3', 'L1_4', 'B1_2', 'B1_3'],
-      2: ['L1_1', 'L1_2', 'B1_1', 'L2_2', 'L2_3', 'B2_2', 'B2_3', 'L2_1', 'B2_1', 'B2_4'],
-      3: ['L1_1', 'L1_2', 'B1_1', 'L2_2', 'L2_3', 'B2_2', 'B2_3', 'L3_2', 'L3_3', 'B3_2', 'L3_1', 'B3_1', 'B3_4', 'L3_4', 'L3_5', 'B3_3', 'B3_5'],
-      4: ['L4_1', 'L5_1', 'L5_2', 'B5_1', 'B5_2', 'L2_2', 'L2_3', 'B3_2', 'B5_3', 'L3_2', 'L3_3', 'B4_3', 'L4_2', 'L4_3', 'B5_4', 'B5_6', 'B5_7', 'B5_8'],
+      2: ['L2_1', 'B2_2', 'B2_2', 'L2_2', 'L2_3', 'B2_3', 'B2_4'],
+      3: ['L3_2', 'L3_3', 'B3_2', 'L3_1', 'B3_1', 'B3_4', 'L3_4', 'L3_5', 'B3_3', 'B3_5'],
+      4: ['L4_1', 'L4_2', 'L4_3', 'B4_3'],
       5: ['L5_1', 'L5_2', 'B5_1', 'B5_2', 'B5_3', 'B5_4', 'L5_3', 'L5_4', 'B5_5', 'B5_6', 'B5_7', 'B5_8']
     };
+
+    // Get all nodes from previous versions (cumulative)
+    function getPreviousVersionNodes(version) {
+      let allNodes = [];
+      for (let v = 1; v < version; v++) {
+        if (versionNodes[v]) {
+          allNodes = allNodes.concat(versionNodes[v]);
+        }
+      }
+      return allNodes;
+    }
 
     // Current animator instance
     let currentAnimator = null;
@@ -331,10 +342,13 @@
       }
 
       const nodes = versionNodes[version] || [];
+      const previousNodes = getPreviousVersionNodes(version);
+
       currentAnimator = new DualSVGAnimator(
         `tree-v${version}`,
         `changeset-v${version}`,
-        nodes
+        nodes,
+        previousNodes
       );
 
       currentAnimator.onUpdate = (current, total) => {

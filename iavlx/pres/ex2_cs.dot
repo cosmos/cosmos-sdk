@@ -2,10 +2,46 @@ digraph G {
 	rankdir=LR
 	subgraph cluster_branches {	
 label="Branches"
+	subgraph cluster_B1 {
+		label="Version 1" color=green style=filled fontcolor=black node [fontcolor=black]
+		B1_1 [id=B1_1 label=<idx: 1<BR/>orphaned: <B>2</B>> style=dashed];
+		B1_1 -> B1_2 [style=invis];
+		B1_2 [id=B1_2 label=<idx: 2<BR/>orphaned: <B>2</B>> style=dashed];
+		B1_2 -> B1_3 [style=invis];
+		B1_3 [id=B1_3 label=<idx: 3<BR/>orphaned: <B>2</B>> style=dashed shape=doublecircle];
+	}
+	subgraph cluster_B2 {
+		label="Version 2" color=red style=filled fontcolor=white node [fontcolor=white]
+		B1_3 -> B2_1 [style=invis];
+		B2_1 [id=B2_1 label=<idx: 1>];
+		B2_1 -> B2_2 [style=invis];
+		B2_2 [id=B2_2 label=<idx: 2>];
+		B2_2 -> B2_3 [style=invis];
+		B2_3 [id=B2_3 label=<idx: 3>];
+		B2_3 -> B2_4 [style=invis];
+		B2_4 [id=B2_4 label=<idx: 4> shape=doublecircle];
 	}
 	}
 	subgraph cluster_leaves {	
 label="Leaves"
+	subgraph cluster_L1 {
+		label="Version 1" color=green fontcolor=black style=filled node [fontcolor=black]
+		L1_1 [id=L1_1 label=<idx: 1> shape=box];
+		L1_1 -> L1_2 [style=invis];
+		L1_2 [id=L1_2 label=<idx: 2<BR/>orphaned: <B>2</B>> shape=box style=dashed];
+		L1_2 -> L1_3 [style=invis];
+		L1_3 [id=L1_3 label=<idx: 3<BR/>orphaned: <B>2</B>> shape=box style=dashed];
+		L1_3 -> L1_4 [style=invis];
+		L1_4 [id=L1_4 label=<idx: 4> shape=box];
+	}
+	subgraph cluster_L2 {
+		label="Version 2" color=red fontcolor=white style=filled node [fontcolor=white]
+		L1_4 -> L2_1 [style=invis];
+		L2_1 [id=L2_1 label=<idx: 1> shape=box];
+		L2_1 -> L2_2 [style=invis];
+		L2_2 [id=L2_2 label=<idx: 2> shape=box];
+		L2_2 -> L2_3 [style=invis];
+		L2_3 [id=L2_3 label=<idx: 3> shape=box];
 	}
 	}
 }

@@ -18,10 +18,11 @@ async function loadSVG(svgPath, containerId) {
  * Click-through animation controller for dual SVG (tree + changeset)
  */
 class DualSVGAnimator {
-  constructor(treeContainerId, changesetContainerId, nodeIds) {
+  constructor(treeContainerId, changesetContainerId, nodeIds, previousNodes = []) {
     this.treeContainerId = treeContainerId;
     this.changesetContainerId = changesetContainerId;
     this.nodeIds = nodeIds;
+    this.previousNodes = previousNodes;
     this.currentIndex = 0;
     this.onUpdate = null;
   }
@@ -32,10 +33,27 @@ class DualSVGAnimator {
   init() {
     this.currentIndex = 0;
     this.hideAllChangesetNodes();
+    this.showPreviousVersionNodes();
     this.clearTreeAnimations();
     if (this.onUpdate) {
       this.onUpdate(0, this.nodeIds.length);
     }
+  }
+
+  /**
+   * Show all nodes from previous versions (already written to changeset)
+   */
+  showPreviousVersionNodes() {
+    const changesetContainer = document.getElementById(this.changesetContainerId);
+    if (!changesetContainer) return;
+
+    this.previousNodes.forEach(nodeId => {
+      const node = changesetContainer.querySelector(`#${nodeId}`);
+      if (node) {
+        node.style.opacity = '1';
+        node.classList.remove('changeset-appear');
+      }
+    });
   }
 
   /**

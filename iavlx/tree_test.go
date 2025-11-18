@@ -424,7 +424,7 @@ func compareIteratorsAtVersion(t *rapid.T, iterV1, iterV2 corestore.Iterator) {
 
 func TestGraphvizDump(t *testing.T) {
 	dir := t.TempDir()
-	tree, err := NewCommitTree(dir, Options{}, sdklog.NewNopLogger())
+	tree, err := NewCommitTree(dir, Options{DisableCompaction: true}, sdklog.NewNopLogger())
 	require.NoError(t, err)
 
 	dump := func() {
@@ -447,7 +447,7 @@ func TestGraphvizDump(t *testing.T) {
 			}
 		}
 		require.NoError(t, RenderChangesetDotGraph(buf, cs, orphans))
-		require.NoError(t, os.WriteFile(fmt.Sprintf("ex%d_cs.dot", version), buf.Bytes(), 0644))
+		require.NoError(t, os.WriteFile(fmt.Sprintf("pres/ex%d_cs.dot", version), buf.Bytes(), 0644))
 	}
 
 	tree.Set([]byte{1}, []byte{10})
@@ -511,5 +511,5 @@ func TestGraphvizDump(t *testing.T) {
 	require.NoError(t, err)
 	buf := &bytes.Buffer{}
 	require.NoError(t, RenderChangesetDotGraph(buf, newCs, orphans))
-	require.NoError(t, os.WriteFile(fmt.Sprintf("ex5_cs_compacted.dot"), buf.Bytes(), 0644))
+	require.NoError(t, os.WriteFile(fmt.Sprintf("pres/ex5_cs_compacted.dot"), buf.Bytes(), 0644))
 }

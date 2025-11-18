@@ -264,6 +264,21 @@
         </div>
       </section>
 
+      <!-- Slide 7: Compaction -->
+      <section>
+        <h2>Changeset Compaction</h2>
+        <div class="dual-svg-container">
+          <div class="svg-section">
+            <h3>Original Changeset</h3>
+            <div class="svg-container" id="compaction-original"></div>
+          </div>
+          <div class="svg-section">
+            <h3>Compacted Changeset (Pruned)</h3>
+            <div class="svg-container" id="compaction-compacted"></div>
+          </div>
+        </div>
+      </section>
+
     </div>
   </div>
 
@@ -394,19 +409,79 @@
       }
     }
 
+    // Compaction node lists (leaves first, then branches)
+    const compactionNodes = {
+      all: [
+        // All leaves first
+        'L1_1', 'L1_2', 'L1_3', 'L1_4',
+        'L2_1', 'L2_2', 'L2_3',
+        'L3_1', 'L3_2', 'L3_3',
+        'L4_1', 'L4_2', 'L4_3',
+        'L5_1', 'L5_2', 'L5_3', 'L5_4',
+        // All branches second
+        'B1_1', 'B1_2', 'B1_3',
+        'B2_1', 'B2_2', 'B2_3', 'B2_4',
+        'B3_1', 'B3_2', 'B3_3', 'B3_4', 'B3_5',
+        'B4_1', 'B4_2', 'B4_3', 'B4_4', 'B4_5', 'B4_6',
+        'B5_1', 'B5_2', 'B5_3', 'B5_4', 'B5_5', 'B5_6', 'B5_7', 'B5_8'
+      ],
+      copied: ['L2_2', 'L2_3', 'L3_1', 'L3_2', 'L3_3', 'L4_1', 'L4_2', 'L4_3', 'L5_1', 'L5_2', 'L5_3', 'L5_4', 'B3_2', 'B4_1', 'B4_2', 'B4_3', 'B4_4', 'B4_5', 'B4_6', 'B5_1', 'B5_2', 'B5_3', 'B5_4', 'B5_5', 'B5_6', 'B5_7', 'B5_8']
+    };
+
+    // Load compaction SVGs
+    async function loadCompactionSVGs() {
+      try {
+        await loadSVG('ex5_cs.dot.svg', 'compaction-original');
+        await loadSVG('ex5_cs_compacted.dot.svg', 'compaction-compacted');
+        return true;
+      } catch (err) {
+        console.error('Failed to load compaction SVGs:', err);
+        status.update('Error loading compaction SVGs');
+        return false;
+      }
+    }
+
+    // Initialize compaction animator
+    function initializeCompactionAnimator() {
+      if (currentAnimator) {
+        currentAnimator.reset();
+      }
+
+      currentAnimator = new CompactionAnimator(
+        'compaction-original',
+        'compaction-compacted',
+        compactionNodes.all,
+        compactionNodes.copied
+      );
+
+      currentAnimator.onUpdate = (current, total) => {
+        status.update(`${current} / ${total}`);
+        updateButtons();
+      };
+
+      currentAnimator.init();
+      currentVersion = 'compaction';
+      updateButtons();
+    }
+
     // Handle slide changes
     Reveal.on('slidechanged', async event => {
       const slideIndex = event.indexh;
 
-      // Map slide index to version (slide 0 = title, slides 1-5 = versions 1-5)
-      const version = slideIndex;
-
-      if (version >= 1 && version <= 5) {
-        const loaded = await loadVersionSVGs(version);
+      if (slideIndex >= 1 && slideIndex <= 5) {
+        // Version slides
+        const loaded = await loadVersionSVGs(slideIndex);
         if (loaded) {
-          // Give SVGs time to render before initializing animator
           setTimeout(() => {
-            initializeAnimator(version);
+            initializeAnimator(slideIndex);
+          }, 100);
+        }
+      } else if (slideIndex === 6) {
+        // Compaction slide
+        const loaded = await loadCompactionSVGs();
+        if (loaded) {
+          setTimeout(() => {
+            initializeCompactionAnimator();
           }, 100);
         }
       } else {

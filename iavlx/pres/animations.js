@@ -263,11 +263,245 @@ function createStatusDisplay(containerId) {
   };
 }
 
+/**
+ * Compaction animation controller
+ */
+class CompactionAnimator {
+  constructor(originalContainerId, compactedContainerId, allNodes, copiedNodes) {
+    this.originalContainerId = originalContainerId;
+    this.compactedContainerId = compactedContainerId;
+    this.allNodes = allNodes;
+    this.copiedNodes = new Set(copiedNodes);
+    this.currentIndex = 0;
+    this.onUpdate = null;
+  }
+
+  /**
+   * Initialize the animation state
+   */
+  init() {
+    this.currentIndex = 0;
+    this.hideAllCompactedNodes();
+    if (this.onUpdate) {
+      this.onUpdate(0, this.allNodes.length);
+    }
+  }
+
+  /**
+   * Hide all compacted changeset nodes initially
+   */
+  hideAllCompactedNodes() {
+    const compactedContainer = document.getElementById(this.compactedContainerId);
+    if (!compactedContainer) return;
+
+    this.copiedNodes.forEach(nodeId => {
+      const node = compactedContainer.querySelector(`#${nodeId}`);
+      if (node) {
+        node.style.opacity = '0';
+      }
+    });
+  }
+
+  /**
+   * Advance to next node in sequence
+   */
+  next() {
+    if (this.currentIndex >= this.allNodes.length) {
+      return false;
+    }
+
+    const nodeId = this.allNodes[this.currentIndex];
+    const isCopied = this.copiedNodes.has(nodeId);
+
+    if (isCopied) {
+      // Node is copied - show it in compacted changeset
+      this.showCompactedNode(nodeId);
+      this.highlightOriginalNode(nodeId);
+    } else {
+      // Node is pruned - mark it as pruned in original
+      this.markPrunedNode(nodeId);
+    }
+
+    this.currentIndex++;
+
+    if (this.onUpdate) {
+      this.onUpdate(this.currentIndex, this.allNodes.length);
+    }
+
+    return true;
+  }
+
+  /**
+   * Go back to previous node
+   */
+  previous() {
+    if (this.currentIndex <= 0) {
+      return false;
+    }
+
+    this.currentIndex--;
+    const nodeId = this.allNodes[this.currentIndex];
+    const isCopied = this.copiedNodes.has(nodeId);
+
+    if (isCopied) {
+      this.hideCompactedNode(nodeId);
+      this.unhighlightOriginalNode(nodeId);
+    } else {
+      this.unmarkPrunedNode(nodeId);
+    }
+
+    if (this.onUpdate) {
+      this.onUpdate(this.currentIndex, this.allNodes.length);
+    }
+
+    return true;
+  }
+
+  /**
+   * Show a node in the compacted changeset
+   */
+  showCompactedNode(nodeId) {
+    const compactedContainer = document.getElementById(this.compactedContainerId);
+    if (!compactedContainer) return;
+
+    const node = compactedContainer.querySelector(`#${nodeId}`);
+    if (node) {
+      node.classList.remove('changeset-appear');
+      void node.offsetWidth;
+      node.classList.add('changeset-appear');
+      node.style.opacity = '1';
+    }
+  }
+
+  /**
+   * Hide a node in the compacted changeset
+   */
+  hideCompactedNode(nodeId) {
+    const compactedContainer = document.getElementById(this.compactedContainerId);
+    if (!compactedContainer) return;
+
+    const node = compactedContainer.querySelector(`#${nodeId}`);
+    if (node) {
+      node.classList.remove('changeset-appear');
+      node.style.opacity = '0';
+    }
+  }
+
+  /**
+   * Highlight a copied node in original
+   */
+  highlightOriginalNode(nodeId) {
+    const originalContainer = document.getElementById(this.originalContainerId);
+    if (!originalContainer) return;
+
+    const node = originalContainer.querySelector(`#${nodeId}`);
+    if (node) {
+      node.classList.add('animate');
+      setTimeout(() => {
+        node.classList.remove('animate');
+        node.classList.add('visited');
+      }, 500);
+    }
+  }
+
+  /**
+   * Unhighlight a node in original
+   */
+  unhighlightOriginalNode(nodeId) {
+    const originalContainer = document.getElementById(this.originalContainerId);
+    if (!originalContainer) return;
+
+    const node = originalContainer.querySelector(`#${nodeId}`);
+    if (node) {
+      node.classList.remove('animate', 'visited');
+    }
+  }
+
+  /**
+   * Mark a node as pruned (turn black/gray)
+   */
+  markPrunedNode(nodeId) {
+    const originalContainer = document.getElementById(this.originalContainerId);
+    if (!originalContainer) return;
+
+    const node = originalContainer.querySelector(`#${nodeId}`);
+    if (node) {
+      // Find all child elements (ellipse, polygon, text) and make them gray
+      const shapes = node.querySelectorAll('ellipse, polygon, rect');
+      const texts = node.querySelectorAll('text');
+
+      shapes.forEach(shape => {
+        shape.setAttribute('data-original-fill', shape.getAttribute('fill'));
+        shape.setAttribute('fill', '#666');
+        shape.setAttribute('stroke', '#333');
+      });
+
+      texts.forEach(text => {
+        text.setAttribute('data-original-fill', text.getAttribute('fill'));
+        text.setAttribute('fill', '#999');
+      });
+    }
+  }
+
+  /**
+   * Unmark a pruned node (restore original color)
+   */
+  unmarkPrunedNode(nodeId) {
+    const originalContainer = document.getElementById(this.originalContainerId);
+    if (!originalContainer) return;
+
+    const node = originalContainer.querySelector(`#${nodeId}`);
+    if (node) {
+      const shapes = node.querySelectorAll('ellipse, polygon, rect');
+      const texts = node.querySelectorAll('text');
+
+      shapes.forEach(shape => {
+        const originalFill = shape.getAttribute('data-original-fill');
+        if (originalFill) {
+          shape.setAttribute('fill', originalFill);
+          shape.removeAttribute('data-original-fill');
+        }
+        shape.removeAttribute('stroke');
+      });
+
+      texts.forEach(text => {
+        const originalFill = text.getAttribute('data-original-fill');
+        if (originalFill) {
+          text.setAttribute('fill', originalFill);
+          text.removeAttribute('data-original-fill');
+        }
+      });
+    }
+  }
+
+  /**
+   * Reset to beginning
+   */
+  reset() {
+    this.init();
+  }
+
+  /**
+   * Check if at the end
+   */
+  isAtEnd() {
+    return this.currentIndex >= this.allNodes.length;
+  }
+
+  /**
+   * Check if at the beginning
+   */
+  isAtBeginning() {
+    return this.currentIndex === 0;
+  }
+}
+
 // Export for use in presentation
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     loadSVG,
     DualSVGAnimator,
+    CompactionAnimator,
     createStatusDisplay
   };
 }

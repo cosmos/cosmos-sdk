@@ -38,7 +38,7 @@ func defaultCalculateVoteResultsAndVotingPower(
 	results[v1.OptionNoWithVeto] = math.LegacyZeroDec()
 
 	rng := collections.NewPrefixedPairRange[uint64, sdk.AccAddress](proposal.Id)
-	votesToRemove := []collections.Pair[uint64, sdk.AccAddress]{}
+	var votesToRemove []collections.Pair[uint64, sdk.AccAddress]
 	err = k.Votes.Walk(ctx, rng, func(key collections.Pair[uint64, sdk.AccAddress], vote v1.Vote) (bool, error) {
 		// if validator, just record it in the map
 		voter, err := k.authKeeper.AddressCodec().StringToBytes(vote.Voter)
@@ -116,7 +116,7 @@ func defaultCalculateVoteResultsAndVotingPower(
 	return totalVotingPower, results, nil
 }
 
-// getCurrentValidators fetches all the bonded validators, insert them into currValidators
+// getCurrentValidators fetches all the active set validators, inserts them into currValidators
 func (k Keeper) getCurrentValidators(ctx context.Context) (map[string]v1.ValidatorGovInfo, error) {
 	currValidators := make(map[string]v1.ValidatorGovInfo)
 	if err := k.sk.IterateBondedValidatorsByPower(ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {

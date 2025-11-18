@@ -73,6 +73,25 @@ var _ gogogrpc.ClientConn = Context{}
 // interfaces in their types.
 var fallBackCodec = codec.NewProtoCodec(types.NewInterfaceRegistry())
 
+func getHeightFromMetadata(grpcCtx gocontext.Context) int64 {
+	md, ok := metadata.FromOutgoingContext(grpcCtx)
+	if !ok {
+		return 0
+	}
+	heights := md.Get(grpctypes.GRPCBlockHeightHeader)
+	if len(heights) == 0 {
+		return 0
+	}
+	height, err := strconv.ParseInt(heights[0], 10, 64)
+	if err != nil {
+		return 0
+	}
+	if height < 0 {
+		return 0
+	}
+	return height
+}
+
 // Invoke implements the grpc ClientConn.Invoke method
 func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply any, opts ...grpc.CallOption) (err error) {
 	// Two things can happen here:
@@ -105,7 +124,12 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply a
 		// Case 2-1. Invoke grpc.
 		grpcConn := ctx.GRPCClient
 		if ctx.GRPCConnProvider != nil {
-			grpcConn = ctx.GRPCConnProvider.GetGRPCConn(ctx.Height)
+			height := ctx.Height
+			if height <= 0 {
+				height = getHeightFromMetadata(grpcCtx)
+			}
+
+			grpcConn = ctx.GRPCConnProvider.GetGRPCConn(height)
 		}
 		return grpcConn.Invoke(grpcCtx, method, req, reply, opts...)
 	}
@@ -117,18 +141,14 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply a
 	}
 
 	// parse height header
-	md, _ := metadata.FromOutgoingContext(grpcCtx)
-	if heights := md.Get(grpctypes.GRPCBlockHeightHeader); len(heights) > 0 {
-		height, err := strconv.ParseInt(heights[0], 10, 64)
-		if err != nil {
-			return err
-		}
-		if height < 0 {
-			return errorsmod.Wrapf(
-				sdkerrors.ErrInvalidRequest,
-				"client.Context.Invoke: height (%d) from %q must be >= 0", height, grpctypes.GRPCBlockHeightHeader)
-		}
+	height := getHeightFromMetadata(grpcCtx)
+	if height < 0 {
+		return errorsmod.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"client.Context.Invoke: height (%d) from %q must be >= 0", height, grpctypes.GRPCBlockHeightHeader)
+	}
 
+	if height > 0 {
 		ctx = ctx.WithHeight(height)
 	}
 
@@ -153,7 +173,7 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply a
 	// We then parse all the call options, if the call option is a
 	// HeaderCallOption, then we manually set the value of that header to the
 	// metadata.
-	md = metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(res.Height, 10))
+	md := metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(res.Height, 10))
 	for _, callOpt := range opts {
 		header, ok := callOpt.(grpc.HeaderCallOption)
 		if !ok {

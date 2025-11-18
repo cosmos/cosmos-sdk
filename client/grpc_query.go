@@ -73,7 +73,9 @@ var _ gogogrpc.ClientConn = Context{}
 // interfaces in their types.
 var fallBackCodec = codec.NewProtoCodec(types.NewInterfaceRegistry())
 
-func getHeightFromMetadata(grpcCtx gocontext.Context) int64 {
+// GetHeightFromMetadata extracts the block height from gRPC metadata in the context.
+// Returns 0 if no valid height is found.
+func GetHeightFromMetadata(grpcCtx gocontext.Context) int64 {
 	md, ok := metadata.FromOutgoingContext(grpcCtx)
 	if !ok {
 		return 0
@@ -126,7 +128,7 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply a
 		if ctx.GRPCConnProvider != nil {
 			height := ctx.Height
 			if height <= 0 {
-				height = getHeightFromMetadata(grpcCtx)
+				height = GetHeightFromMetadata(grpcCtx)
 			}
 
 			grpcConn = ctx.GRPCConnProvider.GetGRPCConn(height)
@@ -141,7 +143,7 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply a
 	}
 
 	// parse height header
-	height := getHeightFromMetadata(grpcCtx)
+	height := GetHeightFromMetadata(grpcCtx)
 	if height < 0 {
 		return errorsmod.Wrapf(
 			sdkerrors.ErrInvalidRequest,

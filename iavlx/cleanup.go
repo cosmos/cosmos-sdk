@@ -246,10 +246,9 @@ func (cp *cleanupProc) processEntry(ctx context.Context, entry, nextEntry *chang
 	savedVersion := cp.savedVersion.Load()
 	retainVersions := cp.opts.RetainVersions
 	retentionWindowBottom := savedVersion - retainVersions
-
-	// Skip changesets within retention window
-	if cs.info.EndVersion >= retentionWindowBottom {
-		return nil
+	if retainVersions == 0 {
+		// retain everything
+		retentionWindowBottom = 0
 	}
 
 	compactOrphanAge := cp.opts.GetCompactionOrphanAge()

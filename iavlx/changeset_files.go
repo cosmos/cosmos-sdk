@@ -56,7 +56,14 @@ func CreateChangesetFiles(treeDir string, startVersion, compactedAt uint32, kvlo
 
 	localKVLogPath := filepath.Join(dir, "kv.log")
 	if kvlogPath == "" {
-		kvlogPath = localKVLogPath
+		// For original (non-compacted) changesets, normalize the path by evaluating
+		// symlinks in the directory path to ensure consistent comparisons later.
+		// This handles platform differences like /var vs /private/var on macOS.
+		normalizedDir, err := filepath.EvalSymlinks(dir)
+		if err != nil {
+			return nil, fmt.Errorf("failed to eval directory path: %w", err)
+		}
+		kvlogPath = filepath.Join(normalizedDir, "kv.log")
 	} else {
 		// create symlink to kvlog so that it can be reopened later
 		err := os.Symlink(kvlogPath, localKVLogPath)
@@ -202,7 +209,9 @@ func (cr *ChangesetFiles) TreeDir() string {
 }
 
 func (cr *ChangesetFiles) KVLogPath() string {
-	return cr.kvlogFile.Name()
+	// Return the normalized kvlogPath that was set during creation/opening via EvalSymlinks.
+	// This ensures consistent path comparison across platforms (e.g., /var vs /private/var on macOS).
+	return cr.kvlogPath
 }
 
 func (cr *ChangesetFiles) StartVersion() uint32 {
@@ -280,19 +289,12 @@ func (cr *ChangesetFiles) DeleteFiles(args ChangesetDeleteArgs) error {
 	// 2. Symlinks to shared kv.log files (when CompactWAL=false)
 	localKVLogPath := filepath.Join(cr.dir, "kv.log")
 
-	// Normalize both paths before comparison to handle symlink resolution differences
-	// (e.g., /var vs /private/var on macOS)
-	actualKVLogPath, err := filepath.EvalSymlinks(cr.kvlogFile.Name())
-	if err != nil {
-		actualKVLogPath = cr.kvlogFile.Name() // fallback to original if eval fails
-	}
+	// Use cr.kvlogPath which was already normalized via EvalSymlinks during creation/opening.
+	// This avoids calling EvalSymlinks again on potentially deleted/non-existent files.
+	// Both cr.kvlogPath and SaveKVLogPath should already be normalized from their respective
+	// EvalSymlinks calls, handling platform differences like /var vs /private/var on macOS.
+	actualKVLogPath := cr.kvlogPath
 	saveKVLogPath := args.SaveKVLogPath
-	if saveKVLogPath != "" {
-		normalized, err := filepath.EvalSymlinks(saveKVLogPath)
-		if err == nil {
-			saveKVLogPath = normalized
-		}
-	}
 
 	// If this changeset's actual kvlog file is the one we want to save, don't delete anything
 	if actualKVLogPath != saveKVLogPath {
@@ -300,7 +302,7 @@ func (cr *ChangesetFiles) DeleteFiles(args ChangesetDeleteArgs) error {
 		errs = append(errs, os.Remove(localKVLogPath))
 	}
 
-	err = errors.Join(errs...)
+	err := errors.Join(errs...)
 	if err != nil {
 		return fmt.Errorf("failed to delete changeset files: %w", err)
 	}

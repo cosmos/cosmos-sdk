@@ -508,7 +508,7 @@ func StartGrpcServer(
 
 	logger := svrCtx.Logger.With("module", "grpc-server")
 	var grpcSrv *grpc.Server
-	grpcSrv, clientCtx, err = servergrpc.NewGRPCServer(clientCtx, app, config, logger)
+	grpcSrv, clientCtx, err = servergrpc.NewGRPCServerAndContext(clientCtx, app, config, logger)
 	if err != nil {
 		return nil, clientCtx, err
 	}

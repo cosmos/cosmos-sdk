@@ -100,7 +100,7 @@ func startInProcess(cfg Config, val *Validator) error {
 	if grpcCfg.Enable {
 		grpcLogger := logger.With(log.ModuleKey, "grpc-server")
 		var grpcSrv *grpc.Server
-		grpcSrv, val.ClientCtx, err = servergrpc.NewGRPCServer(val.ClientCtx, app, grpcCfg, grpcLogger)
+		grpcSrv, val.ClientCtx, err = servergrpc.NewGRPCServerAndContext(val.ClientCtx, app, grpcCfg, grpcLogger)
 		if err != nil {
 			return err
 		}

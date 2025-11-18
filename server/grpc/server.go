@@ -22,7 +22,14 @@ import (
 
 // NewGRPCServer returns a correctly configured and initialized gRPC server.
 // Note, the caller is responsible for starting the server. See StartGRPCServer.
-func NewGRPCServer(clientCtx client.Context, app types.Application, cfg config.GRPCConfig, logger log.Logger) (*grpc.Server, client.Context, error) {
+func NewGRPCServer(clientCtx client.Context, app types.Application, cfg config.GRPCConfig) (*grpc.Server, error) {
+	srv, _, err := NewGRPCServerAndContext(clientCtx, app, cfg, log.NewNopLogger())
+	return srv, err
+}
+
+// NewGRPCServerAndContext returns a correctly configured and initialized gRPC server
+// along with an updated client context that may include backup gRPC connections.
+func NewGRPCServerAndContext(clientCtx client.Context, app types.Application, cfg config.GRPCConfig, logger log.Logger) (*grpc.Server, client.Context, error) {
 	maxSendMsgSize := cfg.MaxSendMsgSize
 	if maxSendMsgSize == 0 {
 		maxSendMsgSize = config.DefaultGRPCMaxSendMsgSize

@@ -1,0 +1,16 @@
+digraph G {
+	rankdir=BT
+	B1_3 [id=B1_3 label="ver: 1 idx: 3 key:0x03 ht:2 sz:4" fillcolor=green fontcolor=black style=filled];
+	B1_1 [id=B1_1 label="ver: 1 idx: 1 key:0x02 ht:1 sz:2" fillcolor=green fontcolor=black style=filled];
+	B1_3 -> B1_1 [label="l"];
+	L1_1 [id=L1_1 label="ver: 1 idx: 1 key:0x01 val:0x0A" fillcolor=green fontcolor=black style=filled shape=box];
+	B1_1 -> L1_1 [label="l"];
+	L1_2 [id=L1_2 label="ver: 1 idx: 2 key:0x02 val:0x14" fillcolor=green fontcolor=black style=filled shape=box];
+	B1_1 -> L1_2 [label="r"];
+	B1_2 [id=B1_2 label="ver: 1 idx: 2 key:0x04 ht:1 sz:2" fillcolor=green fontcolor=black style=filled];
+	B1_3 -> B1_2 [label="r"];
+	L1_3 [id=L1_3 label="ver: 1 idx: 3 key:0x03 val:0x1E" fillcolor=green fontcolor=black style=filled shape=box];
+	B1_2 -> L1_3 [label="l"];
+	L1_4 [id=L1_4 label="ver: 1 idx: 4 key:0x04 val:0x28" fillcolor=green fontcolor=black style=filled shape=box];
+	B1_2 -> L1_4 [label="r"];
+}

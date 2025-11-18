@@ -1,0 +1,44 @@
+digraph G {
+	rankdir=BT
+	B5_8 [id=B5_8 label="ver: 5 idx: 8 key:0x07 ht:4 sz:11" fillcolor=purple fontcolor=white style=filled];
+	B5_3 [id=B5_3 label="ver: 5 idx: 3 key:0x05 ht:3 sz:5" fillcolor=purple fontcolor=white style=filled];
+	B5_8 -> B5_3 [label="l"];
+	B5_2 [id=B5_2 label="ver: 5 idx: 2 key:0x03 ht:2 sz:3" fillcolor=purple fontcolor=white style=filled];
+	B5_3 -> B5_2 [label="l"];
+	L4_1 [id=L4_1 label="ver: 4 idx: 1 key:0x00 val:0x05" fillcolor=yellow fontcolor=black style=filled shape=box];
+	B5_2 -> L4_1 [label="l"];
+	B5_1 [id=B5_1 label="ver: 5 idx: 1 key:0x04 ht:1 sz:2" fillcolor=purple fontcolor=white style=filled];
+	B5_2 -> B5_1 [label="r"];
+	L5_1 [id=L5_1 label="ver: 5 idx: 1 key:0x03 val:0x23" fillcolor=purple fontcolor=white style=filled shape=box];
+	B5_1 -> L5_1 [label="l"];
+	L5_2 [id=L5_2 label="ver: 5 idx: 2 key:0x04 val:0x2D" fillcolor=purple fontcolor=white style=filled shape=box];
+	B5_1 -> L5_2 [label="r"];
+	B3_2 [id=B3_2 label="ver: 3 idx: 2 key:0x06 ht:1 sz:2" fillcolor=blue fontcolor=white style=filled];
+	B5_3 -> B3_2 [label="r"];
+	L2_2 [id=L2_2 label="ver: 2 idx: 2 key:0x05 val:0x32" fillcolor=red fontcolor=white style=filled shape=box];
+	B3_2 -> L2_2 [label="l"];
+	L2_3 [id=L2_3 label="ver: 2 idx: 3 key:0x06 val:0x3C" fillcolor=red fontcolor=white style=filled shape=box];
+	B3_2 -> L2_3 [label="r"];
+	B5_7 [id=B5_7 label="ver: 5 idx: 7 key:0x09 ht:3 sz:6" fillcolor=purple fontcolor=white style=filled];
+	B5_8 -> B5_7 [label="r"];
+	B4_3 [id=B4_3 label="ver: 4 idx: 3 key:0x08 ht:1 sz:2" fillcolor=yellow fontcolor=black style=filled];
+	B5_7 -> B4_3 [label="l"];
+	L3_2 [id=L3_2 label="ver: 3 idx: 2 key:0x07 val:0x46" fillcolor=blue fontcolor=white style=filled shape=box];
+	B4_3 -> L3_2 [label="l"];
+	L3_3 [id=L3_3 label="ver: 3 idx: 3 key:0x08 val:0x50" fillcolor=blue fontcolor=white style=filled shape=box];
+	B4_3 -> L3_3 [label="r"];
+	B5_6 [id=B5_6 label="ver: 5 idx: 6 key:0x0b ht:2 sz:4" fillcolor=purple fontcolor=white style=filled];
+	B5_7 -> B5_6 [label="r"];
+	B5_4 [id=B5_4 label="ver: 5 idx: 4 key:0x0a ht:1 sz:2" fillcolor=purple fontcolor=white style=filled];
+	B5_6 -> B5_4 [label="l"];
+	L4_2 [id=L4_2 label="ver: 4 idx: 2 key:0x09 val:0x5A" fillcolor=yellow fontcolor=black style=filled shape=box];
+	B5_4 -> L4_2 [label="l"];
+	L4_3 [id=L4_3 label="ver: 4 idx: 3 key:0x0a val:0x64" fillcolor=yellow fontcolor=black style=filled shape=box];
+	B5_4 -> L4_3 [label="r"];
+	B5_5 [id=B5_5 label="ver: 5 idx: 5 key:0x0c ht:1 sz:2" fillcolor=purple fontcolor=white style=filled];
+	B5_6 -> B5_5 [label="r"];
+	L5_3 [id=L5_3 label="ver: 5 idx: 3 key:0x0b val:0x6E" fillcolor=purple fontcolor=white style=filled shape=box];
+	B5_5 -> L5_3 [label="l"];
+	L5_4 [id=L5_4 label="ver: 5 idx: 4 key:0x0c val:0x78" fillcolor=purple fontcolor=white style=filled shape=box];
+	B5_5 -> L5_4 [label="r"];
+}

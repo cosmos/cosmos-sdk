@@ -1,0 +1,29 @@
+digraph G {
+	rankdir=LR
+	subgraph cluster_branches {	
+label="Branches"
+	subgraph cluster_B3 {
+		label="Version 3" color=blue style=filled fontcolor=white node [fontcolor=white]
+		B3_1 [id=B3_1 label=<idx: 1>];
+		B3_1 -> B3_2 [style=invis];
+		B3_2 [id=B3_2 label=<idx: 2>];
+		B3_2 -> B3_3 [style=invis];
+		B3_3 [id=B3_3 label=<idx: 3>];
+		B3_3 -> B3_4 [style=invis];
+		B3_4 [id=B3_4 label=<idx: 4>];
+		B3_4 -> B3_5 [style=invis];
+		B3_5 [id=B3_5 label=<idx: 5> shape=doublecircle];
+	}
+	}
+	subgraph cluster_leaves {	
+label="Leaves"
+	subgraph cluster_L3 {
+		label="Version 3" color=blue fontcolor=white style=filled node [fontcolor=white]
+		L3_1 [id=L3_1 label=<idx: 1> shape=box];
+		L3_1 -> L3_2 [style=invis];
+		L3_2 [id=L3_2 label=<idx: 2> shape=box];
+		L3_2 -> L3_3 [style=invis];
+		L3_3 [id=L3_3 label=<idx: 3> shape=box];
+	}
+	}
+}

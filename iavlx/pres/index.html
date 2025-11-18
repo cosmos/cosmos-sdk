@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IAVL Tree Visualization</title>
+
+  <!-- Reveal.js CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/dist/theme/black.css">
+
+  <style>
+    /* Custom styles for tree visualization */
+    .dual-svg-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      width: 100%;
+      padding: 20px;
+    }
+
+    .svg-section {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .svg-section h3 {
+      margin: 0 0 10px 0;
+      font-size: 1.2em;
+      color: #4a90e2;
+    }
+
+    .svg-container {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      max-width: 90%;
+      max-height: 35vh;
+      overflow: auto;
+    }
+
+    .svg-container svg {
+      max-width: 100%;
+      height: auto;
+    }
+
+    .reveal .slides {
+      text-align: center;
+    }
+
+    /* Animation controls */
+    .animation-controls {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.9);
+      padding: 15px 25px;
+      border-radius: 8px;
+      z-index: 1000;
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .animation-controls button {
+      padding: 10px 20px;
+      font-size: 14px;
+      cursor: pointer;
+      background: #4a90e2;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      transition: background 0.2s;
+      min-width: 80px;
+    }
+
+    .animation-controls button:hover {
+      background: #357abd;
+    }
+
+    .animation-controls button:disabled {
+      background: #666;
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    #status {
+      font-size: 14px;
+      color: #4a90e2;
+      min-width: 150px;
+      text-align: center;
+    }
+
+    /* SVG animation effects */
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: scale(1.3);
+        opacity: 0.7;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    .animate {
+      animation: pulse 0.5s ease !important;
+      filter: drop-shadow(0 0 8px gold) !important;
+      transform-origin: center !important;
+    }
+
+    .visited {
+      filter: drop-shadow(0 0 3px rgba(255, 215, 0, 0.5)) !important;
+    }
+
+    /* Instructions */
+    .instructions {
+      font-size: 0.9em;
+      color: #888;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- Slide 1: Title -->
+      <section>
+        <h1>IAVL Tree Visualization</h1>
+        <p>Post-Order Traversal & Changeset Serialization</p>
+        <p class="instructions">Use arrow keys to navigate slides<br>Use Next/Previous buttons to step through tree traversal</p>
+      </section>
+
+      <!-- Slide 2: Version 1 -->
+      <section>
+        <h2>Version 1</h2>
+        <div class="dual-svg-container">
+          <div class="svg-section">
+            <h3>Tree Structure</h3>
+            <div class="svg-container" id="tree-v1"></div>
+          </div>
+          <div class="svg-section">
+            <h3>Changeset (Serialized)</h3>
+            <div class="svg-container" id="changeset-v1"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 3: Version 2 -->
+      <section>
+        <h2>Version 2</h2>
+        <div class="dual-svg-container">
+          <div class="svg-section">
+            <h3>Tree Structure</h3>
+            <div class="svg-container" id="tree-v2"></div>
+          </div>
+          <div class="svg-section">
+            <h3>Changeset (Serialized)</h3>
+            <div class="svg-container" id="changeset-v2"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 4: Version 3 -->
+      <section>
+        <h2>Version 3</h2>
+        <div class="dual-svg-container">
+          <div class="svg-section">
+            <h3>Tree Structure</h3>
+            <div class="svg-container" id="tree-v3"></div>
+          </div>
+          <div class="svg-section">
+            <h3>Changeset (Serialized)</h3>
+            <div class="svg-container" id="changeset-v3"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 5: Version 4 -->
+      <section>
+        <h2>Version 4</h2>
+        <div class="dual-svg-container">
+          <div class="svg-section">
+            <h3>Tree Structure</h3>
+            <div class="svg-container" id="tree-v4"></div>
+          </div>
+          <div class="svg-section">
+            <h3>Changeset (Serialized)</h3>
+            <div class="svg-container" id="changeset-v4"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 6: Version 5 -->
+      <section>
+        <h2>Version 5</h2>
+        <div class="dual-svg-container">
+          <div class="svg-section">
+            <h3>Tree Structure</h3>
+            <div class="svg-container" id="tree-v5"></div>
+          </div>
+          <div class="svg-section">
+            <h3>Changeset (Serialized)</h3>
+            <div class="svg-container" id="changeset-v5"></div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- Animation Controls -->
+  <div class="animation-controls">
+    <button id="reset-btn" onclick="resetAnimation()">Reset</button>
+    <button id="prev-btn" onclick="previousNode()">Previous</button>
+    <button id="next-btn" onclick="nextNode()">Next</button>
+    <div id="status"></div>
+  </div>
+
+  <!-- Reveal.js -->
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.0.4/dist/reveal.js"></script>
+
+  <!-- Animation utilities -->
+  <script src="animations.js"></script>
+
+  <!-- Main presentation script -->
+  <script>
+    // Initialize Reveal.js
+    Reveal.initialize({
+      hash: true,
+      controls: true,
+      progress: true,
+      center: true,
+      transition: 'slide',
+      slideNumber: true,
+      width: 1920,
+      height: 1080,
+    });
+
+    // Node IDs for each version in post-order traversal
+    const versionNodes = {
+      1: ['L1_1', 'L1_2', 'B1_1', 'L1_3', 'L1_4', 'B1_2', 'B1_3'],
+      2: ['L1_1', 'L1_2', 'B1_1', 'L2_2', 'L2_3', 'B2_2', 'B2_3', 'L2_1', 'B2_1', 'B2_4'],
+      3: ['L1_1', 'L1_2', 'B1_1', 'L2_2', 'L2_3', 'B2_2', 'B2_3', 'L3_2', 'L3_3', 'B3_2', 'L3_1', 'B3_1', 'B3_4', 'L3_4', 'L3_5', 'B3_3', 'B3_5'],
+      4: ['L4_1', 'L5_1', 'L5_2', 'B5_1', 'B5_2', 'L2_2', 'L2_3', 'B3_2', 'B5_3', 'L3_2', 'L3_3', 'B4_3', 'L4_2', 'L4_3', 'B5_4', 'B5_6', 'B5_7', 'B5_8'],
+      5: ['L5_1', 'L5_2', 'B5_1', 'B5_2', 'B5_3', 'B5_4', 'L5_3', 'L5_4', 'B5_5', 'B5_6', 'B5_7', 'B5_8']
+    };
+
+    // Current animator instance
+    let currentAnimator = null;
+    let currentVersion = null;
+
+    // Status display
+    const status = createStatusDisplay('status');
+
+    // Load SVGs for a specific version
+    async function loadVersionSVGs(version) {
+      try {
+        await loadSVG(`ex${version}.dot.svg`, `tree-v${version}`);
+        await loadSVG(`ex${version}_cs.dot.svg`, `changeset-v${version}`);
+        return true;
+      } catch (err) {
+        console.error(`Failed to load SVGs for version ${version}:`, err);
+        status.update(`Error loading version ${version} SVGs`);
+        return false;
+      }
+    }
+
+    // Initialize animator for current slide
+    function initializeAnimator(version) {
+      if (currentAnimator) {
+        currentAnimator.reset();
+      }
+
+      const nodes = versionNodes[version] || [];
+      currentAnimator = new DualSVGAnimator(
+        `tree-v${version}`,
+        `changeset-v${version}`,
+        nodes
+      );
+
+      currentAnimator.onUpdate = (current, total) => {
+        status.update(`${current} / ${total}`);
+        updateButtons();
+      };
+
+      currentAnimator.init();
+      currentVersion = version;
+      updateButtons();
+    }
+
+    // Update button states
+    function updateButtons() {
+      const prevBtn = document.getElementById('prev-btn');
+      const nextBtn = document.getElementById('next-btn');
+
+      if (currentAnimator) {
+        prevBtn.disabled = currentAnimator.isAtBeginning();
+        nextBtn.disabled = currentAnimator.isAtEnd();
+      } else {
+        prevBtn.disabled = true;
+        nextBtn.disabled = true;
+      }
+    }
+
+    // Control functions
+    function nextNode() {
+      if (currentAnimator) {
+        currentAnimator.next();
+      }
+    }
+
+    function previousNode() {
+      if (currentAnimator) {
+        currentAnimator.previous();
+      }
+    }
+
+    function resetAnimation() {
+      if (currentAnimator) {
+        currentAnimator.reset();
+      }
+    }
+
+    // Handle slide changes
+    Reveal.on('slidechanged', async event => {
+      const slideIndex = event.indexh;
+
+      // Map slide index to version (slide 0 = title, slides 1-5 = versions 1-5)
+      const version = slideIndex;
+
+      if (version >= 1 && version <= 5) {
+        const loaded = await loadVersionSVGs(version);
+        if (loaded) {
+          // Give SVGs time to render before initializing animator
+          setTimeout(() => {
+            initializeAnimator(version);
+          }, 100);
+        }
+      } else {
+        currentAnimator = null;
+        currentVersion = null;
+        status.clear();
+        updateButtons();
+      }
+    });
+
+    // Handle keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      // Only handle shortcuts if we're on a version slide
+      if (currentVersion === null) return;
+
+      // Space or right arrow for next
+      if (e.key === ' ' && !e.shiftKey) {
+        e.preventDefault();
+        nextNode();
+      }
+      // Shift+Space or left arrow for previous
+      else if ((e.key === ' ' && e.shiftKey) || e.key === 'Backspace') {
+        e.preventDefault();
+        previousNode();
+      }
+      // R for reset
+      else if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault();
+        resetAnimation();
+      }
+    });
+
+    // Load initial slide if starting on a version slide
+    Reveal.on('ready', async event => {
+      const slideIndex = event.indexh;
+      const version = slideIndex;
+
+      if (version >= 1 && version <= 5) {
+        const loaded = await loadVersionSVGs(version);
+        if (loaded) {
+          setTimeout(() => {
+            initializeAnimator(version);
+          }, 100);
+        }
+      }
+    });
+  </script>
+</body>
+</html>

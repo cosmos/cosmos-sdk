@@ -1,0 +1,20 @@
+digraph G {
+	rankdir=BT
+	B2_4 [id=B2_4 label="ver: 2 idx: 4 key:0x04 ht:3 sz:5" fillcolor=red fontcolor=white style=filled];
+	B2_1 [id=B2_1 label="ver: 2 idx: 1 key:0x02 ht:1 sz:2" fillcolor=red fontcolor=white style=filled];
+	B2_4 -> B2_1 [label="l"];
+	L1_1 [id=L1_1 label="ver: 1 idx: 1 key:0x01 val:0x0A" fillcolor=green fontcolor=black style=filled shape=box];
+	B2_1 -> L1_1 [label="l"];
+	L2_1 [id=L2_1 label="ver: 2 idx: 1 key:0x02 val:0x19" fillcolor=red fontcolor=white style=filled shape=box];
+	B2_1 -> L2_1 [label="r"];
+	B2_3 [id=B2_3 label="ver: 2 idx: 3 key:0x05 ht:2 sz:3" fillcolor=red fontcolor=white style=filled];
+	B2_4 -> B2_3 [label="r"];
+	L1_4 [id=L1_4 label="ver: 1 idx: 4 key:0x04 val:0x28" fillcolor=green fontcolor=black style=filled shape=box];
+	B2_3 -> L1_4 [label="l"];
+	B2_2 [id=B2_2 label="ver: 2 idx: 2 key:0x06 ht:1 sz:2" fillcolor=red fontcolor=white style=filled];
+	B2_3 -> B2_2 [label="r"];
+	L2_2 [id=L2_2 label="ver: 2 idx: 2 key:0x05 val:0x32" fillcolor=red fontcolor=white style=filled shape=box];
+	B2_2 -> L2_2 [label="l"];
+	L2_3 [id=L2_3 label="ver: 2 idx: 3 key:0x06 val:0x3C" fillcolor=red fontcolor=white style=filled shape=box];
+	B2_2 -> L2_3 [label="r"];
+}

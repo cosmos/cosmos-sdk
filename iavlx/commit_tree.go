@@ -350,6 +350,20 @@ func (c *CommitTree) GetImmutable(version int64) (storetypes.KVStore, error) {
 	return NewImmutableTree(rootPtr), nil
 }
 
+func (c *CommitTree) GetImmutableImpl(version int64) (*ImmutableTree, error) {
+	var rootPtr *NodePointer
+	if version == c.lastCommitId.Version {
+		rootPtr = c.root
+	} else {
+		var err error
+		rootPtr, err = c.store.ResolveRoot(uint32(version))
+		if err != nil {
+			return nil, err
+		}
+	}
+	return NewImmutableTree(rootPtr), nil
+}
+
 func (c *CommitTree) Close() error {
 	if c.walQueue != nil {
 		c.walQueue.Close()

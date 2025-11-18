@@ -7,6 +7,7 @@ import (
 	"runtime/debug"
 	"testing"
 
+	"github.com/cometbft/cometbft/libs/rand"
 	"github.com/cosmos/iavl"
 	dbm "github.com/cosmos/iavl/db"
 	"github.com/stretchr/testify/require"
@@ -18,6 +19,31 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 )
+
+func TestTreeProof(t *testing.T) {
+	dir := t.TempDir()
+	commitTree, err := NewCommitTree(dir, Options{}, sdklog.NewNopLogger())
+	require.NoError(t, err)
+	// Add more items so it's not all persisted
+	var key string
+	var value string
+	for i := 0; i < 10; i++ {
+		key, value = rand.Str(20), rand.Str(20)
+		commitTree.Set([]byte(key), []byte(value))
+	}
+	commitTree.Commit()
+
+	itree, err := commitTree.GetImmutableImpl(1)
+	require.NoError(t, err)
+
+	proof, err := itree.GetMembershipProof([]byte(key))
+	require.NoError(t, err)
+
+	ok, err := itree.VerifyMembership(proof, []byte(key))
+	require.NoError(t, err)
+	require.True(t, ok)
+
+}
 
 // TODO: this test isn't for expected behavior.
 // It should eventually be updated such that having a default ReaderUpdateInterval shouldn't error on old version queries.

@@ -126,6 +126,15 @@ type APIConfig struct {
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/6420
 }
 
+// BlockRange represents a range of block heights as [start_block, end_block] (inclusive).
+// It is used to map gRPC backup connections to specific block height ranges for routing
+// historical queries to appropriate archive nodes.
+//
+// Example:
+//   - [0, 1000] represents blocks from genesis (0) through block 1000
+//   - [1001, 2000] represents blocks from 1001 through 2000
+//
+// Both start and end blocks must be non-negative, and start must be less than or equal to end.
 type BlockRange [2]int
 
 // BackupGRPCConnections is a map of block ranges to gRPC client connections

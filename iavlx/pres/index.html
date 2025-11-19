@@ -642,6 +642,44 @@
                 </li>
             </ul>
         </section>
+        <section>
+            <h2>Latest Ops/Sec Performance</h2>
+            <image class="fragment" src="iavlx_memiavl1.heic"/>
+            <ul>
+                <li class="fragment"><strong>NOTE:</strong> These are totally unscientific laptop benchmarks on a small dataset (~15GB
+                    across
+                    1000
+                    blocks)
+                </li>
+                <li class="fragment">But with the latest optimizations, it appears that iavlx may be able to match or
+                    beat
+                    memiavl's raw ops/second performance.
+                </li>
+            </ul>
+        </section>
+        <section>
+            <h2>Large Scale Benchmark</h2>
+            <p class="fragment">These benchmarks compare iavl/v1, iavl/v2 and iavlx on a large dataset (~1TB across
+                20,000 blocks) running for 16-35 hours.</p>
+            <div class="fragment" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 100%;">
+                <div>
+                    <div style="font-size: 0.7em; margin-bottom: 5px; text-align: center;">Ops/Sec</div>
+                    <img src="iavlx_perf_large.heic" style="width: 100%; display: block; margin: 0; padding: 0;"/>
+                </div>
+                <div>
+                    <div style="font-size: 0.7em; margin-bottom: 5px; text-align: center;">Disk Usage</div>
+                    <img src="iavlx_disk_large.heic" style="width: 100%; display: block; margin: 0; padding: 0;"/>
+                </div>
+                <div>
+                    <div style="font-size: 0.7em; margin-bottom: 5px; text-align: center;">Memory</div>
+                    <img src="iavlx_mem_large.heic" style="width: 100%; display: block; margin: 0; padding: 0;"/>
+                </div>
+            </div>
+            <p class="fragment">iavlx was able to manage memory through eviction and disk usage through pruning while maintaining higher ops/second performance.</p>
+        </section>
+        <section>
+            <h2>Next Steps</h2>
+        </section>
     </div>
 </div>
 

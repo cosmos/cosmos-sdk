@@ -20,8 +20,74 @@ type CalculateVoteResultsAndVotingPowerFn func(
 	ctx context.Context,
 	k Keeper,
 	proposal v1.Proposal,
-	validators map[string]v1.ValidatorGovInfo,
+	validators map[string]v1.ValidatorGovInfo, // map[operatorAddr] -> GovInfo
 ) (totalVoterPower math.LegacyDec, results map[v1.VoteOption]math.LegacyDec, err error)
+
+func validatorCommitteeTallyFn(
+	ctx context.Context,
+	k Keeper,
+	proposal v1.Proposal,
+	validators map[string]v1.ValidatorGovInfo,
+) (totalVoterPower math.LegacyDec, results map[v1.VoteOption]math.LegacyDec, err error) {
+	totalVotingPower := math.LegacyZeroDec()
+
+	results = make(map[v1.VoteOption]math.LegacyDec)
+	results[v1.OptionYes] = math.LegacyZeroDec()
+	results[v1.OptionAbstain] = math.LegacyZeroDec()
+	results[v1.OptionNo] = math.LegacyZeroDec()
+	results[v1.OptionNoWithVeto] = math.LegacyZeroDec()
+
+	rng := collections.NewPrefixedPairRange[uint64, sdk.AccAddress](proposal.Id)
+	var votesToRemove []collections.Pair[uint64, sdk.AccAddress]
+	err = k.Votes.Walk(ctx, rng, func(key collections.Pair[uint64, sdk.AccAddress], vote v1.Vote) (bool, error) {
+		// if validator, just record it in the map
+		voter, err := k.authKeeper.AddressCodec().StringToBytes(vote.Voter)
+		if err != nil {
+			return false, err
+		}
+
+		valAddrStr, err := k.sk.ValidatorAddressCodec().BytesToString(voter)
+		if err != nil {
+			return false, err
+		}
+
+		// record the vote
+		if val, ok := validators[valAddrStr]; ok {
+			val.Vote = vote.Options
+			validators[valAddrStr] = val
+		}
+
+		votesToRemove = append(votesToRemove, key)
+		return false, nil
+	})
+	if err != nil {
+		return math.LegacyZeroDec(), nil, fmt.Errorf("error while iterating delegations: %w", err)
+	}
+
+	// remove all votes from store
+	for _, key := range votesToRemove {
+		if err := k.Votes.Remove(ctx, key); err != nil {
+			return math.LegacyDec{}, nil, fmt.Errorf("error while removing vote (%d/%s): %w", key.K1(), key.K2(), err)
+		}
+	}
+
+	// iterate over the validators again to tally their voting power
+	for _, val := range validators {
+		if len(val.Vote) == 0 {
+			continue
+		}
+
+		votingPower := val.BondedTokens.ToLegacyDec()
+		for _, option := range val.Vote {
+			weight, _ := math.LegacyNewDecFromStr(option.Weight)
+			subPower := votingPower.Mul(weight)
+			results[option.Option] = results[option.Option].Add(subPower)
+		}
+		totalVotingPower = totalVotingPower.Add(votingPower)
+	}
+
+	return totalVotingPower, results, nil
+}
 
 func defaultCalculateVoteResultsAndVotingPower(
 	ctx context.Context,

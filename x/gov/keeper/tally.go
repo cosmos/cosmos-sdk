@@ -23,6 +23,17 @@ type CalculateVoteResultsAndVotingPowerFn func(
 	validators map[string]v1.ValidatorGovInfo, // map[operatorAddr] -> GovInfo
 ) (totalVoterPower math.LegacyDec, results map[v1.VoteOption]math.LegacyDec, err error)
 
+// validatorCommitteeTallyFn calculates vote results and voting power for validator committee-based governance.
+// This function implements a simplified tally mechanism where only validators vote directly.
+// It processes votes from validators, removes them from storage, and calculates the final tally
+// based on each validator's bonded tokens and vote options.
+//
+// The function:
+//  1. Iterates through all votes for the proposal
+//  2. Records validator votes in the validators map
+//  3. Removes all votes from storage after processing
+//  4. Calculates voting power based on validator bonded tokens
+//  5. Applies vote weights to distribute voting power across options
 func validatorCommitteeTallyFn(
 	ctx context.Context,
 	k Keeper,
@@ -89,6 +100,26 @@ func validatorCommitteeTallyFn(
 	return totalVotingPower, results, nil
 }
 
+// defaultCalculateVoteResultsAndVotingPower calculates vote results and voting power using the default
+// delegation-aware tally mechanism. This is the standard governance tally function that handles
+// both validator votes and delegator votes.
+//
+// The function implements the following logic:
+//  1. Iterates through all votes for the proposal
+//  2. For each vote:
+//     - Records validator votes in the validators map
+//     - If the voter is a delegator, iterates through their delegations and:
+//     - Deducts the delegator's voting power from their validators' delegator deductions
+//     - Calculates the delegator's voting power based on their delegation shares
+//     - Applies the delegator's vote to the tally
+//  3. Removes all votes from storage after processing
+//  4. Calculates remaining validator voting power (after delegator deductions)
+//  5. Applies validator votes to the tally
+//
+// This ensures that:
+//   - Delegators can vote independently, and their voting power is deducted from their validators
+//   - Validators vote with their remaining voting power (after delegator deductions)
+//   - Voting power is calculated proportionally based on delegation shares
 func defaultCalculateVoteResultsAndVotingPower(
 	ctx context.Context,
 	k Keeper,
@@ -182,7 +213,15 @@ func defaultCalculateVoteResultsAndVotingPower(
 	return totalVotingPower, results, nil
 }
 
-// getCurrentValidators fetches all the active set validators, inserts them into currValidators
+// getCurrentValidators fetches all active bonded validators and creates a map of ValidatorGovInfo
+// for use in tally calculations. The validators are iterated by power (highest first).
+//
+// For each validator, it creates a ValidatorGovInfo struct containing:
+//   - Address: The validator's operator address
+//   - BondedTokens: The validator's bonded token amount
+//   - DelegatorShares: The total delegator shares for the validator
+//   - DelegatorDeductions: Initialized to zero (will be updated during tally)
+//   - Vote: Empty vote options (will be populated if validator votes)
 func (k Keeper) getCurrentValidators(ctx context.Context) (map[string]v1.ValidatorGovInfo, error) {
 	currValidators := make(map[string]v1.ValidatorGovInfo)
 	if err := k.sk.IterateBondedValidatorsByPower(ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
@@ -206,8 +245,19 @@ func (k Keeper) getCurrentValidators(ctx context.Context) (map[string]v1.Validat
 	return currValidators, nil
 }
 
-// Tally iterates over the votes and updates the tally of a proposal based on the voting power of the
-// voters
+// Tally calculates the final tally results for a proposal and determines if it passes or fails.
+// The function implements the governance proposal decision logic based on voting power and thresholds.
+//
+// The tally process:
+//  1. Fetches all current bonded validators
+//  2. Calculates vote results and total voting power using the configured tally function
+//  3. Checks various conditions to determine if the proposal passes:
+//     - If there are no bonded tokens, the proposal fails
+//     - If quorum is not met, the proposal fails (may burn deposits based on params)
+//     - If everyone abstains, the proposal fails
+//     - If veto threshold is exceeded, the proposal fails (may burn deposits based on params)
+//     - If yes votes exceed the threshold (1/2 for regular, 2/3 for expedited), proposal passes
+//     - Otherwise, the proposal fails
 func (k Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, burnDeposits bool, tallyResults v1.TallyResult, err error) {
 	currValidators, err := k.getCurrentValidators(ctx)
 	if err != nil {

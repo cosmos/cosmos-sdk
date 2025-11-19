@@ -888,7 +888,10 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 		// only return if we are not aborting
 		if !aborted {
 			if res != nil {
-				res.AppHash = app.workingHash()
+				appHash := app.workingHash()
+
+				// CONSENSUS BREAK TEST: Inject consensus breaking for the OE path.
+				res.AppHash = app.injectConsensusBreak(appHash, req.Height, "Optimistic Execution path")
 			}
 
 			return res, err
@@ -902,7 +905,10 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 	// if no OE is running, just run the block (this is either a block replay or a OE that got aborted)
 	res, err = app.internalFinalizeBlock(context.Background(), req)
 	if res != nil {
-		res.AppHash = app.workingHash()
+		appHash := app.workingHash()
+
+		// CONSENSUS BREAK TEST: Inject consensus breaking for the non-OE/aborted OE path.
+		res.AppHash = app.injectConsensusBreak(appHash, req.Height, "Normal/Aborted OE path")
 	}
 
 	return res, err

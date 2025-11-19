@@ -217,22 +217,26 @@
         </section>
 
         <section>
-            <h2>Brief History of IAVL & Store Improvement Efforts</h2>
+            <h2>Brief History of IAVL & Improvement Efforts</h2>
             <ul>
                 <li class="fragment">First IAVL code is from <a
                         href="https://github.com/cosmos/iavl/commit/56cfba1d1965debba4c77c4345d303a8fe2d700b">Jae on Oct
                     21, 2015</a> (10 years ago!)
                 </li>
-                <li class="fragment">First attempt at store/v2 in 2021 based on SMT (Sparse Merkle Tree) and separating
-                    SS (state storage) and SC (state commitment) (Cosmos SDK ADR-040)
+                <li class="fragment">Performance problems seem to have been flagged early on
+                    (<code>PERFORMANCE.md</code> dates from 2017)
                 </li>
-                <li class="fragment">IAVL node key format refactored in 2022 to <code>version|nonce</code> (IAVL
-                    ADR-001)
+                <li class="fragment">First attempt at store/v2 in 2021 based on SMT (Sparse Merkle Tree) and separating
+                    SS (state storage) and SC (state commitment), see Cosmos SDK ADR-040
+                </li>
+                <li class="fragment">IAVL node key format refactored in 2022 to <code>version|nonce</code>, see IAVL
+                    ADR-001
                 </li>
                 <li class="fragment">iavl/v1 released in 2023</li>
                 <li class="fragment">Cronos's memiavl originated around 2023</li>
-                <li class="fragment">Second attempt at store/v2 in 2023-2024 also based on separating SS and SC (Cosmos
-                    SDK ADR-065)
+                <li class="fragment">Second attempt at store/v2 in 2023-2024 also based on separating SS and SC, see
+                    Cosmos
+                    SDK ADR-065
                 </li>
                 <li class="fragment">iavl/v2 design based on sqlite in 2024-2025</li>
             </ul>
@@ -384,12 +388,12 @@
                         <li class="fragment"><code>branches.dat</code> - append-only log of fixed size branch node
                             structs
                         </li>
-                        <li class="fragment"><code>versions.dat</code> - append-only log of version -> changeset file
-                            mapping for fast node lookups across changesets
+                        <li class="fragment"><code>versions.dat</code> - append-only log of version -> leaf/branch file
+                            offsets for fast node lookups across changesets, plus version metadata
                         </li>
-                        <li class="fragment"><code>orphans.dat</code> - append-only log of orphan node ID/version pairs
-                            for
-                            pruning
+                        <li class="fragment"><code>orphans.dat</code> - append-only log of orphan node ID/orphan version
+                            pairs
+                            for pruning
                         </li>
                         <li class="fragment"><code>info.dat</code> - metadata about the changeset (version range, orphan
                             statistics)
@@ -522,10 +526,28 @@
                 <li class="fragment">a background process periodically compacts old changesets by:
                     <ul>
                         <li>linearly iterating over all nodes and copying only retained nodes</li>
-                        <li>joining small changesets into larger ones</li>
+                        <li>joining small pruned changesets into larger ones</li>
                     </ul>
                 </li>
                 <li class="fragment">pruning is fast with only linear disk IO and doesn't block normal operations</li>
+                <li class="fragment">when to trigger compaction is an open design question
+                    <ul>
+                        <li class="fragment">current triggers are metric based (how many orphans) and time-based (time
+                            since last compaction)
+                        </li>
+                        <li class="fragment">even though compaction happens in the background, it competes for the same
+                            disk IO bandwidth
+                        </li>
+                        <li class="fragment">doing it too often wastes disk IO</li>
+                        <li class="fragment">but compacting and joining old changesets increases node locality and
+                            improves
+                            read performance
+                        </li>
+                        <li class="fragment">the compaction/cleanup code is the most complex part of the codebase and
+                            configuration is confusing
+                        </li>
+                    </ul>
+                </li>
             </ul>
         </section>
 

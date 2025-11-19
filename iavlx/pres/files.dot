@@ -1,0 +1,17 @@
+digraph G {
+    layout=osage
+    leaves [shape=box label="leaves.dat" style=filled color=lightgrey]
+    branches [shape=box label="branches.dat" style=filled color=lightgrey]
+    subgraph cluster_KVLog {
+        label=<kv.log<br/><i>WAL and KV data storage</i>>
+        color=lightgrey
+        style=filled
+        key1 [label="key1: value1" shape=note style=filled color=white]
+        key2 [label="key2: value2" shape=note style=filled color=white]
+        key3 [label="key3: value3" shape=note style=filled color=white]
+        key1 -> key2 [style=invis]
+        key2 -> key3 [style=invis]
+    }
+    versions [shape=box label="versions.dat" style=filled color=lightgrey]
+
+}

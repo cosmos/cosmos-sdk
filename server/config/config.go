@@ -160,8 +160,8 @@ type GRPCConfig struct {
 	// SkipCheckHeader defines if the gRPC server should bypass header checking.
 	SkipCheckHeader bool `mapstructure:"skip-check-header"`
 
-	// HistoricalGRPCBlockAddressBlockRange maps block ranges to gRPC addresses for routing historical queries.
-	HistoricalGRPCBlockAddressBlockRange map[BlockRange]string `mapstructure:"-"`
+	// HistoricalGRPCAddressBlockRange maps block ranges to gRPC addresses for routing historical queries.
+	HistoricalGRPCAddressBlockRange map[BlockRange]string `mapstructure:"-"`
 }
 
 // GRPCWebConfig defines configuration for the gRPC-web server.
@@ -304,7 +304,7 @@ func GetConfig(v *viper.Viper) (Config, error) {
 		if err := json.Unmarshal([]byte(raw), &data); err != nil {
 			return Config{}, fmt.Errorf("failed to parse historical-grpc-address-block-range as JSON: %w (value: %s)", err, raw)
 		}
-		historicalGRPCBlockAddressBlockRange := make(map[BlockRange]string, len(data))
+		historicalGRPCAddressBlockRange := make(map[BlockRange]string, len(data))
 		for address, blockRange := range data {
 			if blockRange[0] < 0 || blockRange[1] < 0 {
 				return Config{}, fmt.Errorf("invalid block range [%d, %d] for address %s: block numbers cannot be negative",
@@ -314,9 +314,9 @@ func GetConfig(v *viper.Viper) (Config, error) {
 				return Config{}, fmt.Errorf("invalid block range [%d, %d] for address %s: start block must be <= end block",
 					blockRange[0], blockRange[1], address)
 			}
-			historicalGRPCBlockAddressBlockRange[blockRange] = address
+			historicalGRPCAddressBlockRange[blockRange] = address
 		}
-		conf.GRPC.HistoricalGRPCBlockAddressBlockRange = historicalGRPCBlockAddressBlockRange
+		conf.GRPC.HistoricalGRPCAddressBlockRange = historicalGRPCAddressBlockRange
 	}
 	return *conf, nil
 }

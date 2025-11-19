@@ -41,10 +41,10 @@ func NewGRPCServerAndContext(clientCtx client.Context, app types.Application, cf
 	}
 
 	// Setup historical gRPC connections if configured
-	if len(cfg.HistoricalGRPCBlockAddressBlockRange) > 0 {
+	if len(cfg.HistoricalGRPCAddressBlockRange) > 0 {
 		updatedCtx, err := setupHistoricalGRPCConnections(
 			clientCtx,
-			cfg.HistoricalGRPCBlockAddressBlockRange,
+			cfg.HistoricalGRPCAddressBlockRange,
 			maxRecvMsgSize,
 			maxSendMsgSize,
 			logger,

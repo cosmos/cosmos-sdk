@@ -96,12 +96,12 @@ const (
 
 	// gRPC-related flags
 
-	flagGRPCOnly                             = "grpc-only"
-	flagGRPCEnable                           = "grpc.enable"
-	flagGRPCAddress                          = "grpc.address"
-	flagGRPCWebEnable                        = "grpc-web.enable"
-	flagGRPCSkipCheckHeader                  = "grpc.skip-check-header"
-	flagHistoricalGRPCBlockAddressBlockRange = "grpc.historical-grpc-address-block-range"
+	flagGRPCOnly                        = "grpc-only"
+	flagGRPCEnable                      = "grpc.enable"
+	flagGRPCAddress                     = "grpc.address"
+	flagGRPCWebEnable                   = "grpc-web.enable"
+	flagGRPCSkipCheckHeader             = "grpc.skip-check-header"
+	flagHistoricalGRPCAddressBlockRange = "grpc.historical-grpc-address-block-range"
 
 	// mempool flags
 
@@ -1007,7 +1007,7 @@ func addStartNodeFlags(cmd *cobra.Command, opts StartCmdOptions) {
 	cmd.Flags().Bool(flagGRPCEnable, true, "Define if the gRPC server should be enabled")
 	cmd.Flags().String(flagGRPCAddress, serverconfig.DefaultGRPCAddress, "the gRPC server address to listen on")
 	cmd.Flags().Bool(flagGRPCWebEnable, true, "Define if the gRPC-Web server should be enabled. (Note: gRPC must also be enabled)")
-	cmd.Flags().String(flagHistoricalGRPCBlockAddressBlockRange, "", "Define if historical grpc and block range is available")
+	cmd.Flags().String(flagHistoricalGRPCAddressBlockRange, "", "Define if historical grpc and block range is available")
 	cmd.Flags().Uint64(FlagStateSyncSnapshotInterval, 0, "State sync snapshot interval")
 	cmd.Flags().Uint32(FlagStateSyncSnapshotKeepRecent, 2, "State sync snapshot to keep")
 	cmd.Flags().Bool(FlagDisableIAVLFastNode, false, "Disable fast node for IAVL tree")

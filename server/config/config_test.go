@@ -251,9 +251,9 @@ func TestGetConfig_HistoricalGRPCAddressBlockRange(t *testing.T) {
 			expectError: false,
 			validate: func(t *testing.T, cfg Config) {
 				t.Helper()
-				require.Len(t, cfg.GRPC.HistoricalGRPCBlockAddressBlockRange, 1)
+				require.Len(t, cfg.GRPC.HistoricalGRPCAddressBlockRange, 1)
 				expectedRange := BlockRange{0, 1000}
-				address, exists := cfg.GRPC.HistoricalGRPCBlockAddressBlockRange[expectedRange]
+				address, exists := cfg.GRPC.HistoricalGRPCAddressBlockRange[expectedRange]
 				require.True(t, exists, "Block range [0, 1000] should exist")
 				require.Equal(t, "localhost:9091", address)
 			},
@@ -267,7 +267,7 @@ func TestGetConfig_HistoricalGRPCAddressBlockRange(t *testing.T) {
 			expectError: false,
 			validate: func(t *testing.T, cfg Config) {
 				t.Helper()
-				require.Len(t, cfg.GRPC.HistoricalGRPCBlockAddressBlockRange, 3)
+				require.Len(t, cfg.GRPC.HistoricalGRPCAddressBlockRange, 3)
 				testCases := []struct {
 					blockRange BlockRange
 					address    string
@@ -277,7 +277,7 @@ func TestGetConfig_HistoricalGRPCAddressBlockRange(t *testing.T) {
 					{BlockRange{2001, 3000}, "localhost:9093"},
 				}
 				for _, tc := range testCases {
-					address, exists := cfg.GRPC.HistoricalGRPCBlockAddressBlockRange[tc.blockRange]
+					address, exists := cfg.GRPC.HistoricalGRPCAddressBlockRange[tc.blockRange]
 					require.True(t, exists, "Block range %v should exist", tc.blockRange)
 					require.Equal(t, tc.address, address)
 				}
@@ -291,7 +291,7 @@ func TestGetConfig_HistoricalGRPCAddressBlockRange(t *testing.T) {
 			expectError: false,
 			validate: func(t *testing.T, cfg Config) {
 				t.Helper()
-				require.Nil(t, cfg.GRPC.HistoricalGRPCBlockAddressBlockRange)
+				require.Nil(t, cfg.GRPC.HistoricalGRPCAddressBlockRange)
 			},
 		},
 		{
@@ -300,7 +300,7 @@ func TestGetConfig_HistoricalGRPCAddressBlockRange(t *testing.T) {
 			expectError: false,
 			validate: func(t *testing.T, cfg Config) {
 				t.Helper()
-				require.Nil(t, cfg.GRPC.HistoricalGRPCBlockAddressBlockRange)
+				require.Nil(t, cfg.GRPC.HistoricalGRPCAddressBlockRange)
 			},
 		},
 		{
@@ -344,9 +344,9 @@ func TestGetConfig_HistoricalGRPCAddressBlockRange(t *testing.T) {
 			expectError: false,
 			validate: func(t *testing.T, cfg Config) {
 				t.Helper()
-				require.Len(t, cfg.GRPC.HistoricalGRPCBlockAddressBlockRange, 1)
+				require.Len(t, cfg.GRPC.HistoricalGRPCAddressBlockRange, 1)
 				expectedRange := BlockRange{1000, 1000}
-				address, exists := cfg.GRPC.HistoricalGRPCBlockAddressBlockRange[expectedRange]
+				address, exists := cfg.GRPC.HistoricalGRPCAddressBlockRange[expectedRange]
 				require.True(t, exists)
 				require.Equal(t, "localhost:9091", address)
 			},
@@ -359,9 +359,9 @@ func TestGetConfig_HistoricalGRPCAddressBlockRange(t *testing.T) {
 			expectError: false,
 			validate: func(t *testing.T, cfg Config) {
 				t.Helper()
-				require.Len(t, cfg.GRPC.HistoricalGRPCBlockAddressBlockRange, 1)
+				require.Len(t, cfg.GRPC.HistoricalGRPCAddressBlockRange, 1)
 				expectedRange := BlockRange{0, 0}
-				address, exists := cfg.GRPC.HistoricalGRPCBlockAddressBlockRange[expectedRange]
+				address, exists := cfg.GRPC.HistoricalGRPCAddressBlockRange[expectedRange]
 				require.True(t, exists)
 				require.Equal(t, "localhost:9091", address)
 			},
@@ -374,9 +374,9 @@ func TestGetConfig_HistoricalGRPCAddressBlockRange(t *testing.T) {
 			expectError: false,
 			validate: func(t *testing.T, cfg Config) {
 				t.Helper()
-				require.Len(t, cfg.GRPC.HistoricalGRPCBlockAddressBlockRange, 1)
+				require.Len(t, cfg.GRPC.HistoricalGRPCAddressBlockRange, 1)
 				expectedRange := BlockRange{1000000, 2000000}
-				address, exists := cfg.GRPC.HistoricalGRPCBlockAddressBlockRange[expectedRange]
+				address, exists := cfg.GRPC.HistoricalGRPCAddressBlockRange[expectedRange]
 				require.True(t, exists)
 				require.Equal(t, "localhost:9091", address)
 			},
@@ -397,9 +397,9 @@ func TestGetConfig_HistoricalGRPCAddressBlockRange(t *testing.T) {
 			expectError: false,
 			validate: func(t *testing.T, cfg Config) {
 				t.Helper()
-				require.Len(t, cfg.GRPC.HistoricalGRPCBlockAddressBlockRange, 1)
+				require.Len(t, cfg.GRPC.HistoricalGRPCAddressBlockRange, 1)
 				expectedRange := BlockRange{0, 1000}
-				address, exists := cfg.GRPC.HistoricalGRPCBlockAddressBlockRange[expectedRange]
+				address, exists := cfg.GRPC.HistoricalGRPCAddressBlockRange[expectedRange]
 				require.True(t, exists)
 				require.Equal(t, "localhost:9091", address)
 			},
@@ -412,9 +412,9 @@ func TestGetConfig_HistoricalGRPCAddressBlockRange(t *testing.T) {
 			expectError: false,
 			validate: func(t *testing.T, cfg Config) {
 				t.Helper()
-				require.Len(t, cfg.GRPC.HistoricalGRPCBlockAddressBlockRange, 1)
+				require.Len(t, cfg.GRPC.HistoricalGRPCAddressBlockRange, 1)
 				expectedRange := BlockRange{0, 1000}
-				address, exists := cfg.GRPC.HistoricalGRPCBlockAddressBlockRange[expectedRange]
+				address, exists := cfg.GRPC.HistoricalGRPCAddressBlockRange[expectedRange]
 				require.True(t, exists)
 				require.Equal(t, "https://archive.example.com:9091", address)
 			},

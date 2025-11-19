@@ -30,6 +30,7 @@ type Context struct {
 	FromAddress           sdk.AccAddress
 	Client                CometRPC
 	GRPCClient            *grpc.ClientConn
+	GRPCConnProvider      *GRPCConnProvider
 	ChainID               string
 	Codec                 codec.Codec
 	InterfaceRegistry     codectypes.InterfaceRegistry
@@ -153,6 +154,22 @@ func (ctx Context) WithClient(client CometRPC) Context {
 func (ctx Context) WithGRPCClient(grpcClient *grpc.ClientConn) Context {
 	ctx.GRPCClient = grpcClient
 	return ctx
+}
+
+// WithGRPCConnProvider returns a copy of the context with an updated GRPCConnProvider.
+func (ctx Context) WithGRPCConnProvider(provider *GRPCConnProvider) Context {
+	ctx.GRPCConnProvider = provider
+	return ctx
+}
+
+// GetGRPCConn returns the appropriate gRPC connection for the given height.
+// If GRPCConnProvider is set, it uses it to determine the connection.
+// Otherwise, it falls back to the default GRPCClient.
+func (ctx Context) GetGRPCConn(height int64) *grpc.ClientConn {
+	if ctx.GRPCConnProvider != nil {
+		return ctx.GRPCConnProvider.GetGRPCConn(height)
+	}
+	return ctx.GRPCClient
 }
 
 // WithUseLedger returns a copy of the context with an updated UseLedger flag.

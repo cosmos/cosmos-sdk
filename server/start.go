@@ -92,21 +92,12 @@ const (
 	FlagAPIEnableUnsafeCORS   = "api.enabled-unsafe-cors"
 
 	// gRPC-related flags
-<<<<<<< HEAD
-	flagGRPCOnly            = "grpc-only"
-	flagGRPCEnable          = "grpc.enable"
-	flagGRPCAddress         = "grpc.address"
-	flagGRPCWebEnable       = "grpc-web.enable"
-	flagGRPCSkipCheckHeader = "grpc.skip-check-header"
-=======
-
 	flagGRPCOnly                        = "grpc-only"
 	flagGRPCEnable                      = "grpc.enable"
 	flagGRPCAddress                     = "grpc.address"
 	flagGRPCWebEnable                   = "grpc-web.enable"
 	flagGRPCSkipCheckHeader             = "grpc.skip-check-header"
 	flagHistoricalGRPCAddressBlockRange = "grpc.historical-grpc-address-block-range"
->>>>>>> f4e2ce0ea (feat: support for multi gRPC query clients serve with old binary (#25565))
 
 	// mempool flags
 	FlagMempoolMaxTxs = "mempool.max-txs"

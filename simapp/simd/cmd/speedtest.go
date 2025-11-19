@@ -24,24 +24,31 @@ import (
 var r = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 func NewBankSpeedTest() *cobra.Command {
-	dir, err := os.MkdirTemp("", "bankspeedtest-*")
-	if err != nil {
-		panic(err)
+	cmd := &cobra.Command{
+		Use: "speedtest",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			dir, err := os.MkdirTemp("", "bankspeedtest-*")
+			if err != nil {
+				return err
+			}
+			defer os.RemoveAll(dir)
+			db, err := dbm.NewDB("app", dbm.PebbleDBBackend, dir)
+			if err != nil {
+				return err
+			}
+			defer db.Close()
+			chainID := "foo"
+			app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, simtestutil.NewAppOptionsWithFlagHome(dir), baseapp.SetChainID(chainID))
+			gen := generator{
+				app:      app,
+				accounts: make([]accountInfo, 0),
+			}
+			speedCmd := speedtest.NewCmd(gen.createAccount, gen.generateTx, app, app.AppCodec(), app.DefaultGenesis(), chainID)
+			speedCmd.SetArgs(args)
+			return speedCmd.Execute()
+		},
 	}
-	db, err := dbm.NewDB("app", dbm.PebbleDBBackend, dir)
-	if err != nil {
-		panic(err)
-	}
-	chainID := "foo"
-	app := simapp.NewSimApp(log.NewNopLogger(), db, nil, true, simtestutil.NewAppOptionsWithFlagHome(dir), baseapp.SetChainID(chainID))
-	gen := generator{
-		app:      app,
-		accounts: make([]accountInfo, 0),
-	}
-	cmd := speedtest.NewCmd(gen.createAccount, gen.generateTx, app, app.AppCodec(), app.DefaultGenesis(), chainID)
-	cmd.PostRunE = func(_ *cobra.Command, _ []string) error {
-		return os.RemoveAll(dir)
-	}
+	cmd.DisableFlagParsing = true
 	return cmd
 }
 

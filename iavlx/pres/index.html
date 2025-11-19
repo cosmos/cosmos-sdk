@@ -213,8 +213,95 @@
         </section>
 
         <section>
+            <h2>Memiavl Architecture</h2>
+            <ul>
+                <li class="fragment">Initially the full tree is stored only in memory, but a WAL is maintained for replayability</li>
+                <li class="fragment">At a configurable interval, a snapshot of the full tree is written to disk</li>
+                <li class="fragment">A tree at a given height can be recovered by loading the latest snapshot tree and replaying the WAL on top of it</li>
+                <li class="fragment">To reclaim any memory, snapshot writing must complete and the WAL must be replayed up to the current height</li>
+                <li class="fragment">Native file format (no leveldb/rocksdb) and relatively easy to follow code</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>iavl/v2 Architecture</h2>
+            <ul>
+                <li class="fragment">Inspiration appears to be taken from memiavl and iavl/v1</li>
+                <li class="fragment">Initially, the full tree is stored only in memory with WAL logging for replayability</li>
+                <li class="fragment">The WAL, however, serves a dual purpose as leaf node storage</li>
+                <li class="fragment">At a configurable interval, a "checkpoint" of the changes since the last checkpoint is written to disk</li>
+                <li class="fragment">Nodes are identified by a persistent <code>version|nonce</code> node ID (like iavl/v1)</li>
+                <li class="fragment">After checkpoints, an eviction process reclaims memory</li>
+                <li class="fragment">Data is stored in sqlite</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>iavl/v2 vs memiavl Ops/Sec Comparison</h2>
+            <p>Initial benchmarks showed big improvements over iavl/v1, with iavl/2 and memiavl achieving roughly 2x and 4x improvements respectively</p>
+            <img src="iavl2_memiavl_perf1.heic" />
+        </section>
+
+        <section>
+            <h2>iavl/v2 vs memiavl Memory Comparison</h2>
+            <p>But memiavl is a memory hog and it seems to get worse as the tree grows in size.</p>
+            <img src="iavl2_memiavl_mem1.heic" />
+        </section>
+
+        <section>
+            <h2>iavl/v2 vs memiavl Large Benchmark</h2>
+            <p>As a tree grows larger, memiavl eventually crashes due to out-of-control memory consumption and slow snapshot writing.</p>
+            <img src="iavl2_memiavl_perf2.heic" />
+            <img src="iavl2_memiavl_mem2.heic" />
+        </section>
+
+        <section>
+            <h2>memiavl Snapshot Behavior at Scale</h2>
+            <img src="memiavl_snapshot_timing.heic" />
+            <ul>
+                <li class="fragment">As tree size grows, snapshots take several minutes to write</li>
+                <li class="fragment">Snapshots have great read performance due to data locality, but long snapshot write times block normal operations</li>
+                <li class="fragment">We know some real world trees are much larger than our benchmarks (eg. Osmosis with ~300 million keys)</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>iavl/v2 & Memiavl Disk Usage & Pruning</h2>
+            <img src="iavl2_memiavl_disk1.heic" />
+            <ul>
+                <li class="fragment">Both memiavl & iavl/v2 consider pruning first class behavior, but this doesn't always work so well</li>
+                <li class="fragment">memiavl disk quickly exceeds iavl/v1 disk usage if we set a smaller snapshot interval to manage memory</li>
+                <li class="fragment">iavl/v2 disk usage spirals out of control in an effort to rewrite checkpoints before deleting old data</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>IAVLX Motivation</h2>
+            <ul>
+                <li class="fragment">memiavl and iavl/v2 both showed promising performance improvements with significant gotchas compared to iavl/v1</li>
+                <li class="fragment">memiavl's native file format and simplicity were appealing, but snapshot behavior is like a time-bomb for large trees - whenever the full tree needs to be rewritten/traversed for normal operations, this will always be a problem at scale</li>
+                <li class="fragment">iavl/v2's checkpoint architecture is more sensible, but use of sqlite adds complexity and unpredictable performance characteristics</li>
+                <li class="fragment">using a secondary db like leveldb or sqlite will always add O(log N) complexity between every node traversal</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>IAVLX Design Overview</h2>
+            <ul>
+                <li class="fragment">Native file format like memiavl</li>
+                <li class="fragment">Store changesets rather than full snapshots</li>
+                <li class="fragment">Persistent <code>version|index</code> node IDs similar iavl/v1 and iavl/v2, but designed as an ordered index key</li>
+                <li class="fragment">Simple append-only format that is <em>always indexed</em> for fast lookups</li>
+                <li class="fragment">Files stay indexed even when nodes are pruned</li>
+                <li class="fragment">Changesets roll over based on size limit, so that pruning/compaction is a bounded unit of work</li>
+                <li class="fragment">No spikey snapshot or checkpoint behavior, just flush everything to disk as quickly as possible</li>
+                <li class="fragment">Use concurrency whenever possible</li>
+            </ul>
+        </section>
+
+        <section>
             <h2>IAVLX Changeset Serialization</h2>
-            <p><strong>IAVLX uses a custom file format which is based on natural properties of IAVL tree traversal:</strong></p>
+            <p>IAVLX uses a custom file format which is based on natural properties of IAVL tree traversal:</p>
             <ul>
                 <li class="fragment">each node is assigned a persistent <code>NodeID</code> based on its version and post-order traversal index:
                     <ul>
@@ -313,7 +400,7 @@
         <section>
             <h2>IAVLX Changeset Compaction</h2>
             <ul>
-                <li class="fragment">one changeset stores a continuous range of versions</li>
+                <li class="fragment">one changeset stores a contiguous range of versions</li>
                 <li class="fragment">changesets are size bound (ex. 2GB max size, this is configurable)</li>
                 <li class="fragment">a background process periodically compacts old changesets by:
                     <ul>
@@ -365,14 +452,15 @@
             <ul>
                 <li class="fragment">when traversing tree nodes within a single changeset:
                     <ul>
-                        <li>parent nodes store direct integer offsets to children</li>
-                        <li>so within a changeset, tree traversal is always O(1) (<em>best case</em>)</li>
+                        <li class="fragment">parent nodes store direct integer offsets to children</li>
+                        <li class="fragment">within a changeset, tree traversal is always O(1)</li>
                     </ul>
                 </li>
                 <li class="fragment">when traversing a tree across multiple changesets:
                     <ul>
-                        <li>nodes are always stored in <code>NodeID</code> order within each changeset</li>
-                        <li>so node lookup is O(log n) via binary search (<em>worst case</em>)</li>
+                        <li class="fragment">nodes are always stored in <code>NodeID</code> order within each changeset</li>
+                        <li class="fragment">so node lookup is O(log n) via binary search (<em>worst case</em>)</li>
+                        <li class="fragment">but a version index speeds this in practice (O(1) for uncompacted changesets)</li>
                     </ul>
                 </li>
             </ul>

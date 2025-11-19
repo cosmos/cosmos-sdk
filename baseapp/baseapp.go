@@ -1067,21 +1067,13 @@ func createEvents(cdc codec.Codec, events sdk.Events, msg sdk.Msg, msgV2 protov2
 }
 
 // PrepareProposalVerifyTx performs transaction verification when a proposer is
-// creating a block proposal during PrepareProposal. Any state committed to the
-// PrepareProposal state internally will be discarded. <nil, err> will be
-// returned if the transaction cannot be encoded. <bz, nil> will be returned if
-// the transaction is valid, otherwise <bz, err> will be returned.
+// creating a block proposal during PrepareProposal. <nil, err> will be
+// returned if the transaction cannot be encoded. <bz, nil> will be returned otherwise.
 func (app *BaseApp) PrepareProposalVerifyTx(tx sdk.Tx) ([]byte, error) {
 	bz, err := app.txEncoder(tx)
 	if err != nil {
 		return nil, err
 	}
-
-	_, _, _, err = app.RunTx(execModePrepareProposal, bz, tx, -1, nil, nil)
-	if err != nil {
-		return nil, err
-	}
-
 	return bz, nil
 }
 

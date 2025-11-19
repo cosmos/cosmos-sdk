@@ -224,7 +224,7 @@
                     21, 2015</a> (10 years ago!)
                 </li>
                 <li class="fragment">Performance problems seem to have been flagged early on
-                    (<code>PERFORMANCE.md</code> dates from 2017)
+                    (<code>PERFORMANCE.md</code> dates to 2017)
                 </li>
                 <li class="fragment">First attempt at store/v2 in 2021 based on SMT (Sparse Merkle Tree) and separating
                     SS (state storage) and SC (state commitment), see Cosmos SDK ADR-040
@@ -235,10 +235,15 @@
                 <li class="fragment">iavl/v1 released in 2023</li>
                 <li class="fragment">Cronos's memiavl originated around 2023</li>
                 <li class="fragment">Second attempt at store/v2 in 2023-2024 also based on separating SS and SC, see
-                    Cosmos
-                    SDK ADR-065
+                    Cosmos SDK ADR-065
                 </li>
                 <li class="fragment">iavl/v2 design based on sqlite in 2024-2025</li>
+                <li class="fragment">Efforts to replace iavl with a different tree (SMT) or explore a split SS/SC
+                    architecture have so far been unsuccessful
+                </li>
+                <li class="fragment">As of mid-2025, memiavl and iavl/v2 appeared to be the best alternatives worth
+                    considering
+                </li>
             </ul>
         </section>
 
@@ -297,8 +302,8 @@
 
         <section>
             <h2>iavl/v2 vs memiavl Large Benchmark</h2>
-            <p>As a tree grows larger, memiavl eventually crashes due to out-of-control memory consumption and slow
-                snapshot writing.</p>
+            <p>With larger trees, memiavl eventually crashes due to out-of-control memory consumption and slow
+                snapshot writing whereas iavl/v1 and iavl/v2 can (more or less) keep going.</p>
             <img src="iavl2_memiavl_perf2.heic"/>
             <img src="iavl2_memiavl_mem2.heic"/>
         </section>
@@ -336,19 +341,21 @@
         <section>
             <h2>IAVLX Motivation</h2>
             <ul>
-                <li class="fragment">memiavl and iavl/v2 both showed promising performance improvements with significant
+                <li class="fragment">memiavl and iavl/v2 both showed promising performance improvements, but with
+                    significant
                     gotchas compared to iavl/v1
                 </li>
                 <li class="fragment">memiavl's native file format and simplicity were appealing, but snapshot behavior
-                    is like a time-bomb for large trees - whenever the full tree needs to be rewritten/traversed for
-                    normal operations, this will always be a problem at scale
+                    is like a time-bomb for large trees - whenever the full tree needs to be rewritten/traversed, this
+                    will always be a problem at scale
                 </li>
                 <li class="fragment">iavl/v2's checkpoint architecture is more sensible, but use of sqlite adds
                     complexity and unpredictable performance characteristics
                 </li>
                 <li class="fragment">using a secondary db like leveldb or sqlite will always add O(log N) complexity
-                    between every node traversal
+                    between every node traversal, on top of IAVL's intrinsic O(log N) traversal complexity
                 </li>
+                <li class="fragment">we decided to experiment with combining the best of both designs</li>
             </ul>
         </section>
 
@@ -521,12 +528,13 @@
         <section>
             <h2>IAVLX Changeset Compaction</h2>
             <ul>
-                <li class="fragment">one changeset stores a contiguous range of versions</li>
+                <li class="fragment">each changeset stores some contiguous range of versions, ex. <code>405-673</code>
+                </li>
                 <li class="fragment">changesets are size bound (ex. 2GB max size, this is configurable)</li>
                 <li class="fragment">a background process periodically compacts old changesets by:
                     <ul>
-                        <li>linearly iterating over all nodes and copying only retained nodes</li>
-                        <li>joining small pruned changesets into larger ones</li>
+                        <li class="fragment">linearly iterating over all nodes and copying only retained nodes</li>
+                        <li class="fragment">joining small pruned changesets into larger ones</li>
                     </ul>
                 </li>
                 <li class="fragment">pruning is fast with only linear disk IO and doesn't block normal operations</li>
@@ -538,13 +546,13 @@
                         <li class="fragment">even though compaction happens in the background, it competes for the same
                             disk IO bandwidth
                         </li>
-                        <li class="fragment">doing it too often wastes disk IO</li>
+                        <li class="fragment">compacting too often wastes disk IO</li>
                         <li class="fragment">but compacting and joining old changesets increases node locality and
                             improves
                             read performance
                         </li>
                         <li class="fragment">the compaction/cleanup code is the most complex part of the codebase and
-                            configuration is confusing
+                            configuration is still evolving
                         </li>
                     </ul>
                 </li>
@@ -644,16 +652,17 @@
         </section>
         <section>
             <h2>Latest Ops/Sec Performance</h2>
+            <p>iavlx vs memiavl showdown</p>
             <image class="fragment" src="iavlx_memiavl1.heic"/>
             <ul>
-                <li class="fragment"><strong>NOTE:</strong> These are totally unscientific laptop benchmarks on a small dataset (~15GB
+                <li class="fragment"><strong>NOTE:</strong> These are totally unscientific laptop benchmarks on a small
+                    dataset (~15GB
                     across
                     1000
                     blocks)
                 </li>
-                <li class="fragment">But with the latest optimizations, it appears that iavlx may be able to match or
-                    beat
-                    memiavl's raw ops/second performance.
+                <li class="fragment">But with the latest optimizations, iavlx may be able to beat or match
+                    memiavl in ops/second
                 </li>
             </ul>
         </section>
@@ -675,7 +684,8 @@
                     <img src="iavlx_mem_large.heic" style="width: 100%; display: block; margin: 0; padding: 0;"/>
                 </div>
             </div>
-            <p class="fragment">iavlx was able to manage memory through eviction and disk usage through pruning while maintaining higher ops/second performance.</p>
+            <p class="fragment">iavlx was able to manage memory through eviction and disk usage through pruning while
+                maintaining higher ops/second performance.</p>
         </section>
         <section>
             <h2>Next Steps</h2>

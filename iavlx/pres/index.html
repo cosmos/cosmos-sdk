@@ -69,13 +69,25 @@
         /* Animation controls */
         .animation-controls {
             position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
+            top: 20px;
+            right: 20px;
             background: rgba(0, 0, 0, 0.9);
             padding: 15px 25px;
             border-radius: 8px;
             z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .animation-controls .label {
+            font-size: 14px;
+            color: #4a90e2;
+            font-weight: bold;
+        }
+
+        .animation-controls .button-row {
             display: flex;
             gap: 15px;
             align-items: center;
@@ -317,6 +329,7 @@
         <!-- Tree Version 1 -->
         <section data-animation="version" data-version="1">
             <h2>Version 1</h2>
+            <p><em>Click the animation controls on the right to visualization how a changeset is written</em></p>
             <div class="dual-svg-container">
                 <div class="svg-section">
                     <h3>Tree Structure</h3>
@@ -434,15 +447,15 @@
             <h2>Version 4 & 5 Trees → Compacted Changeset</h2>
             <div class="dual-svg-container">
                 <div class="svg-section">
-                    <h3>Version 4 Tree</h3>
+                    <h5>Version 4 Tree</h5>
                     <div class="svg-container" id="static-tree-v4"></div>
                 </div>
                 <div class="svg-section">
-                    <h3>Version 5 Tree</h3>
+                    <h5>Version 5 Tree</h5>
                     <div class="svg-container" id="static-tree-v5"></div>
                 </div>
                 <div class="svg-section">
-                    <h3>Compacted Changeset (Only v4 & v5 nodes)</h3>
+                    <h5>Compacted Changeset (Only v4 & v5 nodes)</h5>
                     <div class="svg-container" id="static-compacted"></div>
                 </div>
             </div>
@@ -469,8 +482,8 @@
 
         <!-- Tree Navigation Animation -->
         <section data-animation="navigation">
-            <h2>Tree Navigation: Performing a simple get query</h2>
-            <p>Target key 0x7</p>
+            <h2>Tree Navigation</h2>
+            <p>Getting the value for key 0x7</p>
             <div class="dual-svg-container">
                 <div class="svg-section">
                     <div class="svg-container" id="nav-tree"></div>
@@ -500,6 +513,7 @@
 
 <!-- Animation Controls -->
 <div class="animation-controls">
+    <span class="label">Animation Controls:</span>
     <button id="reset-btn" onclick="resetAnimation()">Reset</button>
     <button id="prev-btn" onclick="previousNode()">Previous</button>
     <button id="next-btn" onclick="nextNode()">Next</button>

@@ -1,9 +1,9 @@
 package iavlx
 
 type ProofInnerNode struct {
-	Height  uint8  `json:"height"`
+	Height  int8   `json:"height"`
 	Size    int64  `json:"size"`
-	Version uint64 `json:"version"`
+	Version int64  `json:"version"`
 	Left    []byte `json:"left"`
 	Right   []byte `json:"right"`
 }

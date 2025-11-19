@@ -24,25 +24,25 @@ func TestTreeProof(t *testing.T) {
 	dir := t.TempDir()
 	commitTree, err := NewCommitTree(dir, Options{}, sdklog.NewNopLogger())
 	require.NoError(t, err)
-	// Add more items so it's not all persisted
-	var key string
-	var value string
+
+	keys := make([]string, 0)
 	for i := 0; i < 10; i++ {
-		key, value = rand.Str(20), rand.Str(20)
+		key, value := rand.Str(20), rand.Str(20)
 		commitTree.Set([]byte(key), []byte(value))
+		keys = append(keys, key)
 	}
 	commitTree.Commit()
-
 	itree, err := commitTree.GetImmutableImpl(1)
 	require.NoError(t, err)
 
-	proof, err := itree.GetMembershipProof([]byte(key))
-	require.NoError(t, err)
+	for _, key := range keys {
+		proof, err := itree.GetMembershipProof([]byte(key))
+		require.NoError(t, err)
 
-	ok, err := itree.VerifyMembership(proof, []byte(key))
-	require.NoError(t, err)
-	require.True(t, ok)
-
+		ok, err := itree.VerifyMembership(proof, []byte(key))
+		require.NoError(t, err)
+		require.True(t, ok)
+	}
 }
 
 // TODO: this test isn't for expected behavior.

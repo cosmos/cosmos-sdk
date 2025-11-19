@@ -103,17 +103,18 @@ func (t *ImmutableTree) VerifyMembership(proof *ics23.CommitmentProof, key []byt
 }
 
 func (tree *ImmutableTree) createExistenceProof(key []byte) (*ics23.ExistenceProof, error) {
-	nodeVersion := tree.root.id.Version()
 	path := new(PathToLeaf)
 	root, err := tree.root.Resolve()
 	if err != nil {
 		return nil, err
 	}
-	node, err := pathToLeaf(tree, root, key, nodeVersion, path)
+	nodeVersion := root.Version()
+
+	node, err := pathToLeaf(tree, root, key, uint64(nodeVersion), path)
 	if err != nil {
 		return nil, err
 	}
-	nodeVersion = node.ID().Version()
+	nodeVersion = node.Version()
 
 	nodeKey, err := node.Key()
 	if err != nil {
@@ -127,17 +128,17 @@ func (tree *ImmutableTree) createExistenceProof(key []byte) (*ics23.ExistencePro
 	return &ics23.ExistenceProof{
 		Key:   nodeKey,
 		Value: nodeValue,
-		Leaf:  convertLeafOp(nodeVersion),
+		Leaf:  convertLeafOp(int64(nodeVersion)),
 		Path:  convertInnerOps(*path),
 	}, nil
 }
 
-func convertLeafOp(version uint64) *ics23.LeafOp {
+func convertLeafOp(version int64) *ics23.LeafOp {
 	var varintBuf [binary.MaxVarintLen64]byte
 	// this is adapted from iavl/proof.go:proofLeafNode.Hash()
 	prefix := convertVarIntToBytes(0, varintBuf)
 	prefix = append(prefix, convertVarIntToBytes(1, varintBuf)...)
-	prefix = append(prefix, convertVarIntToBytes(int64(version), varintBuf)...)
+	prefix = append(prefix, convertVarIntToBytes(version, varintBuf)...)
 
 	return &ics23.LeafOp{
 		Hash:         ics23.HashOp_SHA256,
@@ -168,7 +169,7 @@ func convertInnerOps(path PathToLeaf) []*ics23.InnerOp {
 		// suffix = <length>-rightHash
 		prefix := convertVarIntToBytes(int64(path[i].Height), varintBuf)
 		prefix = append(prefix, convertVarIntToBytes(path[i].Size, varintBuf)...)
-		prefix = append(prefix, convertVarIntToBytes(int64(path[i].Version), varintBuf)...)
+		prefix = append(prefix, convertVarIntToBytes(path[i].Version, varintBuf)...)
 
 		var suffix []byte
 		if len(path[i].Left) > 0 {
@@ -207,7 +208,10 @@ func pathToLeaf(tree *ImmutableTree, node Node, key []byte, version uint64, path
 			return node, errors.New("key does not exist")
 		}
 	}
-	nodeVersion := node.ID().Version()
+	nodeVersion := version
+	if node.ID().Index() != 0 {
+		nodeVersion = node.ID().Version()
+	}
 	if bytes.Compare(key, nodeKey) < 0 {
 		// left side
 		rightNodePtr := node.Right()
@@ -216,9 +220,9 @@ func pathToLeaf(tree *ImmutableTree, node Node, key []byte, version uint64, path
 			return nil, err
 		}
 		pin := ProofInnerNode{
-			Height:  node.Height(),
+			Height:  int8(node.Height()),
 			Size:    node.Size(),
-			Version: nodeVersion,
+			Version: int64(nodeVersion),
 			Left:    nil,
 			Right:   rightNode.Hash(),
 		}
@@ -239,9 +243,9 @@ func pathToLeaf(tree *ImmutableTree, node Node, key []byte, version uint64, path
 		return nil, err
 	}
 	pin := ProofInnerNode{
-		Height:  node.Height(),
+		Height:  int8(node.Height()),
 		Size:    node.Size(),
-		Version: nodeVersion,
+		Version: int64(nodeVersion),
 		Left:    leftNode.Hash(),
 		Right:   nil,
 	}

@@ -169,6 +169,15 @@
             transform-origin: center center !important;
         }
 
+        /* Navigation highlight - nodes stay big */
+        .nav-highlight {
+            transform: scale(1.5) !important;
+            filter: drop-shadow(0 0 8px #4a90e2) !important;
+            transform-box: fill-box !important;
+            transform-origin: center center !important;
+            transition: transform 0.3s ease-out, filter 0.3s ease-out !important;
+        }
+
         /* Instructions */
         .instructions {
             font-size: 0.9em;
@@ -341,6 +350,23 @@
                 </div>
             </div>
         </section>
+
+        <!-- Tree Navigation Animation -->
+        <section data-animation="navigation">
+            <h2>Tree Navigation: Finding a Leaf Node</h2>
+            <p>Click through to navigate from root to target leaf (L3_2)</p>
+            <div class="dual-svg-container">
+                <div class="svg-section">
+                    <h3>Tree Structure</h3>
+                    <div class="svg-container" id="nav-tree"></div>
+                </div>
+                <div class="svg-section">
+                    <h3>Compacted Changeset</h3>
+                    <div class="svg-container" id="nav-changeset"></div>
+                </div>
+            </div>
+        </section>
+
         <section data-markdown>
             <textarea data-template>
             # Implementation Details
@@ -561,6 +587,45 @@
         }
     }
 
+    // Navigation path from root to target leaf (L3_2)
+    const navigationPath = ['B5_8', 'B5_7', 'B4_3', 'L3_2'];
+
+    // Load navigation SVGs
+    async function loadNavigationSVGs() {
+        try {
+            await loadSVG('ex5.dot.svg', 'nav-tree');
+            await loadSVG('ex5_cs_compacted.dot.svg', 'nav-changeset');
+            return true;
+        } catch (err) {
+            console.error('Failed to load navigation SVGs:', err);
+            status.update('Error loading navigation SVGs');
+            return false;
+        }
+    }
+
+    // Initialize navigation animator
+    function initializeNavigationAnimator() {
+        if (currentAnimator) {
+            currentAnimator.reset();
+        }
+
+        currentAnimator = new NavigationAnimator(
+            'nav-tree',
+            'nav-changeset',
+            navigationPath
+        );
+
+        currentAnimator.onUpdate = (current, total) => {
+            const currentNode = navigationPath[current - 1] || 'Start';
+            status.update(`Node: ${currentNode} (${current} / ${total})`);
+            updateButtons();
+        };
+
+        currentAnimator.init();
+        currentVersion = 'navigation';
+        updateButtons();
+    }
+
     // Handle slide changes
     Reveal.on('slidechanged', async event => {
         const slide = event.currentSlide;
@@ -582,6 +647,15 @@
             if (loaded) {
                 setTimeout(() => {
                     initializeCompactionAnimator();
+                    showControls();
+                }, 100);
+            }
+        } else if (animationType === 'navigation') {
+            // Navigation animation slide
+            const loaded = await loadNavigationSVGs();
+            if (loaded) {
+                setTimeout(() => {
+                    initializeNavigationAnimator();
                     showControls();
                 }, 100);
             }
@@ -643,6 +717,14 @@
             if (loaded) {
                 setTimeout(() => {
                     initializeCompactionAnimator();
+                    showControls();
+                }, 100);
+            }
+        } else if (animationType === 'navigation') {
+            const loaded = await loadNavigationSVGs();
+            if (loaded) {
+                setTimeout(() => {
+                    initializeNavigationAnimator();
                     showControls();
                 }, 100);
             }

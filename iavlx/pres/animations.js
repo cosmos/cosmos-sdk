@@ -496,12 +496,166 @@ class CompactionAnimator {
   }
 }
 
+/**
+ * Navigation animation controller for tree traversal
+ * Shows path from root to target leaf, highlighting nodes in both tree and changeset
+ */
+class NavigationAnimator {
+  constructor(treeContainerId, changesetContainerId, navigationPath) {
+    this.treeContainerId = treeContainerId;
+    this.changesetContainerId = changesetContainerId;
+    this.navigationPath = navigationPath;
+    this.currentIndex = 0;
+    this.onUpdate = null;
+  }
+
+  /**
+   * Initialize the animation state
+   */
+  init() {
+    this.currentIndex = 0;
+    this.resetAllNodes();
+    if (this.onUpdate) {
+      this.onUpdate(0, this.navigationPath.length);
+    }
+  }
+
+  /**
+   * Reset all nodes to normal size
+   */
+  resetAllNodes() {
+    const treeContainer = document.getElementById(this.treeContainerId);
+    const changesetContainer = document.getElementById(this.changesetContainerId);
+
+    if (treeContainer) {
+      const allNodes = treeContainer.querySelectorAll('g[id]');
+      allNodes.forEach(node => {
+        node.classList.remove('nav-highlight');
+      });
+    }
+
+    if (changesetContainer) {
+      const allNodes = changesetContainer.querySelectorAll('g[id]');
+      allNodes.forEach(node => {
+        node.classList.remove('nav-highlight');
+      });
+    }
+  }
+
+  /**
+   * Advance to next node in navigation path
+   */
+  next() {
+    if (this.currentIndex >= this.navigationPath.length) {
+      return false;
+    }
+
+    // Unhighlight previous node if there was one
+    if (this.currentIndex > 0) {
+      const prevNodeId = this.navigationPath[this.currentIndex - 1];
+      this.unhighlightNode(this.treeContainerId, prevNodeId);
+      this.unhighlightNode(this.changesetContainerId, prevNodeId);
+    }
+
+    const nodeId = this.navigationPath[this.currentIndex];
+
+    // Highlight current node in both tree and changeset
+    this.highlightNode(this.treeContainerId, nodeId);
+    this.highlightNode(this.changesetContainerId, nodeId);
+
+    this.currentIndex++;
+
+    if (this.onUpdate) {
+      this.onUpdate(this.currentIndex, this.navigationPath.length);
+    }
+
+    return true;
+  }
+
+  /**
+   * Go back to previous node
+   */
+  previous() {
+    if (this.currentIndex <= 0) {
+      return false;
+    }
+
+    // Unhighlight current node
+    const currentNodeId = this.navigationPath[this.currentIndex - 1];
+    this.unhighlightNode(this.treeContainerId, currentNodeId);
+    this.unhighlightNode(this.changesetContainerId, currentNodeId);
+
+    this.currentIndex--;
+
+    // Highlight previous node if we're not at the beginning
+    if (this.currentIndex > 0) {
+      const prevNodeId = this.navigationPath[this.currentIndex - 1];
+      this.highlightNode(this.treeContainerId, prevNodeId);
+      this.highlightNode(this.changesetContainerId, prevNodeId);
+    }
+
+    if (this.onUpdate) {
+      this.onUpdate(this.currentIndex, this.navigationPath.length);
+    }
+
+    return true;
+  }
+
+  /**
+   * Highlight a node (make it bigger and keep it big)
+   */
+  highlightNode(containerId, nodeId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const node = container.querySelector(`#${nodeId}`);
+    if (node) {
+      node.classList.add('nav-highlight');
+    }
+  }
+
+  /**
+   * Remove highlight from a node
+   */
+  unhighlightNode(containerId, nodeId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const node = container.querySelector(`#${nodeId}`);
+    if (node) {
+      node.classList.remove('nav-highlight');
+    }
+  }
+
+  /**
+   * Reset to beginning
+   */
+  reset() {
+    this.init();
+  }
+
+  /**
+   * Check if at the end
+   */
+  isAtEnd() {
+    return this.currentIndex >= this.navigationPath.length;
+  }
+
+  /**
+   * Check if at the beginning
+   */
+  isAtBeginning() {
+    return this.currentIndex === 0;
+  }
+}
+
 // Export for use in presentation
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     loadSVG,
     DualSVGAnimator,
     CompactionAnimator,
+    NavigationAnimator,
     createStatusDisplay
   };
 }

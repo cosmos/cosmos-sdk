@@ -173,10 +173,10 @@
             transform-origin: center center !important;
         }
 
-        /* Navigation highlight - nodes stay big */
+        /* Navigation highlight - current node is very prominent */
         .nav-highlight {
-            transform: scale(1.5) !important;
-            filter: drop-shadow(0 0 8px #4a90e2) !important;
+            transform: scale(2.5) !important;
+            filter: drop-shadow(0 0 20px #4a90e2) drop-shadow(0 0 40px #4a90e2) !important;
             transform-box: fill-box !important;
             transform-origin: center center !important;
             transition: transform 0.3s ease-out, filter 0.3s ease-out !important;
@@ -199,36 +199,31 @@
             <h1>IAVL Performance Improvements</h1>
         </section>
 
-<!--        <section data-markdown>-->
-<!--            <textarea data-template>-->
-<!--            ## Brief History of Store Improvement Efforts-->
-<!--            *-->
-<!--            </textarea>-->
-<!--        </section>-->
-
-        <section data-markdown>
-            <textarea data-template>
-                ## IAVLX Changeset Serialization
-                **IAVLX uses a custom file format which is based on natural properties of IAVL tree
-                    traversal:**
-                - each node is assigned a persistent `NodeID` based on its version and post-order traversal index:
-                    - leaf nodes: `L{version}|{index}`
-                    - branch nodes: `B{version}|{index}`
-                - leaf and branch nodes are stored in `NodeID` order as fixed sized records on disk
-            </textarea>
+        <section>
+            <h2>Brief History of IAVL & Store Improvement Efforts</h2>
+            <ul>
+                <li class="fragment">First IAVL code is from <a href="https://github.com/cosmos/iavl/commit/56cfba1d1965debba4c77c4345d303a8fe2d700b">Jae on Oct 21, 2015</a> (10 years ago!)</li>
+                <li class="fragment">First attempt at store/v2 in 2021 based on SMT (Sparse Merkle Tree) and separating SS (state storage) and SC (state commitment) (Cosmos SDK ADR-040)</li>
+                <li class="fragment">IAVL node key format refactored in 2022 to <code>version|nonce</code> (IAVL ADR-001)</li>
+                <li class="fragment">iavl/v1 released in 2023</li>
+                <li class="fragment">Cronos's memiavl originated around 2023</li>
+                <li class="fragment">Second attempt at store/v2 in 2023-2024 also based on separating SS and SC (Cosmos SDK ADR-065)</li>
+                <li class="fragment">iavl/v2 design based on sqlite in 2024-2025</li>
+            </ul>
         </section>
 
-        <section data-markdown>
-            <textarea data-template>
-            ## IAVLX Changeset Lookup
-            - when traversing tree nodes within a single changeset:
-                - parent nodes store direct integer offsets to children
-                - so within a changeset, tree traversal is always O(1) (_best case_)
-            - when traversing a tree across multiple changesets:
-                - nodes are always stored in `NodeID` order within each changeset
-                - so node lookup is O(log n) via binary search (_worst case_)
+        <section>
+            <h2>IAVLX Changeset Serialization</h2>
+            <p><strong>IAVLX uses a custom file format which is based on natural properties of IAVL tree traversal:</strong></p>
+            <ul>
+                <li class="fragment">each node is assigned a persistent <code>NodeID</code> based on its version and post-order traversal index:
+                    <ul>
+                        <li>leaf nodes: <code>L{version}|{index}</code></li>
+                        <li>branch nodes: <code>B{version}|{index}</code></li>
+                    </ul>
+                </li>
+                <li class="fragment">leaf and branch nodes are stored in <code>NodeID</code> order as fixed sized records on disk</li>
             </ul>
-            </textarea>
         </section>
 
         <!-- Tree Version 1 -->
@@ -315,16 +310,19 @@
             </div>
         </section>
 
-        <section data-markdown>
-            <textarea data-template>
-            # IAVLX Changeset Compaction
-            - one changeset stores a continuous range of versions
-            - changesets are size bound (ex. 2GB max size, this is configurable)
-            - a background process periodically compacts old changesets by:
-                - linearly iterating over all nodes and copying only retained nodes
-                - joining small changesets into larger ones
-            - pruning is fast with only linear disk IO and doesn't block normal operations
-            </textarea>
+        <section>
+            <h2>IAVLX Changeset Compaction</h2>
+            <ul>
+                <li class="fragment">one changeset stores a continuous range of versions</li>
+                <li class="fragment">changesets are size bound (ex. 2GB max size, this is configurable)</li>
+                <li class="fragment">a background process periodically compacts old changesets by:
+                    <ul>
+                        <li>linearly iterating over all nodes and copying only retained nodes</li>
+                        <li>joining small changesets into larger ones</li>
+                    </ul>
+                </li>
+                <li class="fragment">pruning is fast with only linear disk IO and doesn't block normal operations</li>
+            </ul>
         </section>
 
         <!-- Tree Compaction Animation -->
@@ -362,6 +360,24 @@
             </div>
         </section>
 
+        <section>
+            <h2>IAVLX Changeset Lookup</h2>
+            <ul>
+                <li class="fragment">when traversing tree nodes within a single changeset:
+                    <ul>
+                        <li>parent nodes store direct integer offsets to children</li>
+                        <li>so within a changeset, tree traversal is always O(1) (<em>best case</em>)</li>
+                    </ul>
+                </li>
+                <li class="fragment">when traversing a tree across multiple changesets:
+                    <ul>
+                        <li>nodes are always stored in <code>NodeID</code> order within each changeset</li>
+                        <li>so node lookup is O(log n) via binary search (<em>worst case</em>)</li>
+                    </ul>
+                </li>
+            </ul>
+        </section>
+
         <!-- Tree Navigation Animation -->
         <section data-animation="navigation">
             <h2>Tree Navigation: Performing a simple get query</h2>
@@ -374,20 +390,20 @@
                     <div class="svg-container" id="nav-changeset"></div>
                 </div>
                 <p>
-                    Finding a leaf node involves linear IO, starting at the back of the file
-                    and moving towards the front. Child nodes always come before parent nodes.
+                    Finding a leaf node involves scanning the branches file from the root backwards and then one hop to the leaves file.
+                    Child branches always come before parent nodes.
                 </p>
             </div>
         </section>
 
-        <section data-markdown>
-            <textarea data-template>
-            # Implementation Details
-            - changeset writing is always append-only
-            - changeset reading is done via memory-mapped files (optimal for random access)
-            - disk IO patterns for writing, pruning and reading are simple and easy to reason about
-            - any work which is CPU bound is done concurrently (eg. tree balancing and hashing)
-            </textarea>
+        <section>
+            <h2>Implementation Details</h2>
+            <ul>
+                <li class="fragment">changeset writing is always append-only</li>
+                <li class="fragment">changeset reading is done via memory-mapped files (optimal for random access)</li>
+                <li class="fragment">disk IO patterns for writing, pruning and reading are simple and easy to reason about</li>
+                <li class="fragment">any work which is CPU bound is done concurrently (eg. tree balancing and hashing)</li>
+            </ul>
         </section>
 
     </div>

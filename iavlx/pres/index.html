@@ -231,8 +231,9 @@
                 <li class="fragment">The WAL, however, serves a dual purpose as leaf node storage</li>
                 <li class="fragment">At a configurable interval, a "checkpoint" of the changes since the last checkpoint is written to disk</li>
                 <li class="fragment">Nodes are identified by a persistent <code>version|nonce</code> node ID (like iavl/v1)</li>
-                <li class="fragment">After checkpoints, an eviction process reclaims memory</li>
                 <li class="fragment">Data is stored in sqlite</li>
+                <li class="fragment">After checkpoints, an eviction process reclaims memory</li>
+                <li class="fragment">The eviction height can be configured to use less memory or achieve more performance. With higher memory usage, iavl/v2 is ~75% as fast as memiavl.</li>
             </ul>
         </section>
 
@@ -460,7 +461,7 @@
                     <ul>
                         <li class="fragment">nodes are always stored in <code>NodeID</code> order within each changeset</li>
                         <li class="fragment">so node lookup is O(log n) via binary search (<em>worst case</em>)</li>
-                        <li class="fragment">but a version index speeds this in practice (O(1) for uncompacted changesets)</li>
+                        <li class="fragment">but a version index speeds this in practice to O(1) for uncompacted changesets and O(log log n) after compaction</li>
                     </ul>
                 </li>
             </ul>

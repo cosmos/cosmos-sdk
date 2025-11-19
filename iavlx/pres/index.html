@@ -6,8 +6,12 @@
     <title>IAVL Tree Visualization</title>
 
     <!-- Reveal.js CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.2.1/reveal.min.css" integrity="sha512-ZIo9ivf88U0L1S+0D/npMNTTkjez5B9cK5xIecN4IA2OmtbTNBbPAZo/0cBC195sq7FU7cEOVPwtit37f/+1rQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.2.1/theme/black.min.css" integrity="sha512-8xTQdrxFqvj1S4G+pM5d0AwjjKm5vHbi6gZwDX2FDq8HHvfPDf1BEIjBC0fvIh/EFiPeGdDVJZtx66b+4veM9g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.2.1/reveal.min.css"
+          integrity="sha512-ZIo9ivf88U0L1S+0D/npMNTTkjez5B9cK5xIecN4IA2OmtbTNBbPAZo/0cBC195sq7FU7cEOVPwtit37f/+1rQ=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.2.1/theme/black.min.css"
+          integrity="sha512-8xTQdrxFqvj1S4G+pM5d0AwjjKm5vHbi6gZwDX2FDq8HHvfPDf1BEIjBC0fvIh/EFiPeGdDVJZtx66b+4veM9g=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
     <style>
         /* Custom styles for tree visualization */
         .reveal .slides section {
@@ -195,9 +199,16 @@
             <h1>IAVL Performance Improvements</h1>
         </section>
 
+<!--        <section data-markdown>-->
+<!--            <textarea data-template>-->
+<!--            ## Brief History of Store Improvement Efforts-->
+<!--            *-->
+<!--            </textarea>-->
+<!--        </section>-->
+
         <section data-markdown>
             <textarea data-template>
-                # IAVLX Changeset Serialization
+                ## IAVLX Changeset Serialization
                 **IAVLX uses a custom file format which is based on natural properties of IAVL tree
                     traversal:**
                 - each node is assigned a persistent `NodeID` based on its version and post-order traversal index:
@@ -209,7 +220,7 @@
 
         <section data-markdown>
             <textarea data-template>
-            # IAVLX Changeset Lookup
+            ## IAVLX Changeset Lookup
             - when traversing tree nodes within a single changeset:
                 - parent nodes store direct integer offsets to children
                 - so within a changeset, tree traversal is always O(1) (_best case_)
@@ -353,17 +364,19 @@
 
         <!-- Tree Navigation Animation -->
         <section data-animation="navigation">
-            <h2>Tree Navigation: Finding a Leaf Node</h2>
-            <p>Click through to navigate from root to target leaf (L3_2)</p>
+            <h2>Tree Navigation: Performing a simple get query</h2>
+            <p>Target key 0x7</p>
             <div class="dual-svg-container">
                 <div class="svg-section">
-                    <h3>Tree Structure</h3>
                     <div class="svg-container" id="nav-tree"></div>
                 </div>
                 <div class="svg-section">
-                    <h3>Compacted Changeset</h3>
                     <div class="svg-container" id="nav-changeset"></div>
                 </div>
+                <p>
+                    Finding a leaf node involves linear IO, starting at the back of the file
+                    and moving towards the front. Child nodes always come before parent nodes.
+                </p>
             </div>
         </section>
 
@@ -389,9 +402,15 @@
 </div>
 
 <!-- Reveal.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.2.1/reveal.js" integrity="sha512-GvouLVZT+gJSJW5eOfpG46xTaBb2c3VeNnbzmDYTRQkFlgvxNhnzZQqiQ/jAyAYPh+a9roBvAHJP6zvXIVq34Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.2.1/plugin/markdown/markdown.min.js" integrity="sha512-4exkEeyVuaWUFKozXl6L3UCugl6ai1cKnrVFkWUstdrNB2sDxxmPEaHBzTlYm9wX78EjPzEBG0s8k37oPeUFIw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.2.1/plugin/markdown/plugin.min.js" integrity="sha512-E+ALGzPpaGdI2k+lrxWGIfjTvxzwqwiZSinFSZGZsgBU7CZ4pViiLvCiYF92T+wNHigtF99VNFYszeirNqsCXQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.2.1/reveal.js"
+        integrity="sha512-GvouLVZT+gJSJW5eOfpG46xTaBb2c3VeNnbzmDYTRQkFlgvxNhnzZQqiQ/jAyAYPh+a9roBvAHJP6zvXIVq34Q=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.2.1/plugin/markdown/markdown.min.js"
+        integrity="sha512-4exkEeyVuaWUFKozXl6L3UCugl6ai1cKnrVFkWUstdrNB2sDxxmPEaHBzTlYm9wX78EjPzEBG0s8k37oPeUFIw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.2.1/plugin/markdown/plugin.min.js"
+        integrity="sha512-E+ALGzPpaGdI2k+lrxWGIfjTvxzwqwiZSinFSZGZsgBU7CZ4pViiLvCiYF92T+wNHigtF99VNFYszeirNqsCXQ=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 <!-- Animation utilities -->
 <script src="animations.js"></script>

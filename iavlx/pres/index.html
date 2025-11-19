@@ -368,20 +368,63 @@
                 <li class="fragment">Configurable eviction like iavl/v2 instead of a separate cache</li>
             </ul>
         </section>
-
         <section>
-            <h2>IAVLX Changeset Serialization</h2>
-            <p>IAVLX uses a custom file format which is based on natural properties of IAVL tree traversal:</p>
+            <h2>IAVLX Disk Format</h2>
             <ul>
-                <li class="fragment">each node is assigned a persistent <code>NodeID</code> based on its version and
+                <li class="fragment">IAVLX uses a custom disk format composed of changesets which spans a contiguous
+                    range of versions, ex. <code>1-53</code>, <code>54-75</code>, <code>76-105</code>, etc.
+                <li class="fragment">each changeset is a directory composed of the following files:
+                    <ul>
+                        <li class="fragment"><code>kv.log</code> - append-only log of key/value data for leaf nodes,
+                            doubles
+                            as write-ahead log (WAL) for replay
+                        </li>
+                        <li class="fragment"><code>leaves.dat</code> - append-only log of fixed size leaf node structs
+                        </li>
+                        <li class="fragment"><code>branches.dat</code> - append-only log of fixed size branch node
+                            structs
+                        </li>
+                        <li class="fragment"><code>versions.dat</code> - append-only log of version -> changeset file
+                            mapping for fast node lookups across changesets
+                        </li>
+                        <li class="fragment"><code>orphans.dat</code> - append-only log of orphan node ID/version pairs
+                            for
+                            pruning
+                        </li>
+                        <li class="fragment"><code>info.dat</code> - metadata about the changeset (version range, orphan
+                            statistics)
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </section>
+        <section>
+            <h2>IAVLX Node ID Format & Changeset Serialization</h2>
+            <ul>
+                <li class="fragment">Each node is assigned a persistent <code>NodeID</code> based on its version and
                     post-order traversal index:
                     <ul>
                         <li>leaf nodes: <code>L{version}|{index}</code></li>
                         <li>branch nodes: <code>B{version}|{index}</code></li>
                     </ul>
                 </li>
-                <li class="fragment">leaf and branch nodes are stored in <code>NodeID</code> order as fixed sized
-                    records on disk
+                <li class="fragment">Leaf and branch nodes are appended to <code>leaves.dat</code> and
+                    <code>branches.dat</code> in post-traversal order as fixed sized records.
+                </li>
+                <li class="fragment">Because <code>NodeID</code> is assigned based on post-order traversal and nodes are
+                    written in post-order:
+                    <ul>
+                        <li class="fragment">Changesets are always ordered by <code>NodeID</code>, meaning O(log N)
+                            binary search is always possible
+                        </li>
+                        <li class="fragment">Parents are written after children and contain direct offsets to children,
+                            meaning O(1) traversal within a changeset
+                        </li>
+                    </ul>
+                </li>
+                <li class="fragment">This <code>NodeID</code> design and serialization order is IAVLX's
+                    <em>fundamental</em>
+                    design choice for fast writing, reading and pruning
                 </li>
             </ul>
         </section>
@@ -555,25 +598,28 @@
                 </div>
             </div>
             <ul>
-                <li class="fragment">To traverse from root to leaf, we navigate backwards in the branches file then jump to the leaf file</li>
-                <li class="fragment">Within the same changeset, parents store direct offsets to children, so each traversal step is O(1)</li>
+                <li class="fragment">To traverse from root to leaf, we navigate backwards in <code>branches.dat</code>
+                    then jump
+                    to <code>leaves.dat</code>
+                </li>
+                <li class="fragment">Within the same changeset, parents store direct offsets to children, so each
+                    traversal step is O(1)
+                </li>
             </ul>
         </section>
         <section>
-            <h2>Disk IO and CPU Optimizations</h2>
+            <h2>Disk IO and CPU Optimization Summary</h2>
             <ul>
                 <li class="fragment">changeset writing is always append-only</li>
                 <li class="fragment">changeset reading is done via memory-mapped files (optimal for random access)</li>
                 <li class="fragment">changeset compaction/pruning is linear read/linear write operation</li>
                 <li class="fragment">any work which is CPU bound is done concurrently (eg. tree balancing and hashing)
                 </li>
+                <li class="fragment">nodes are linked via atomic pointers so memory can be cleaned up in the
+                    background
+                </li>
             </ul>
         </section>
-        <section>
-            <h2>IAVLX Performance</h2>
-            <p>Close to memiavl in ops/sec</p>
-        </section>
-
     </div>
 </div>
 

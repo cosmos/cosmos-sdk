@@ -64,27 +64,27 @@ func NextIndex(node Node, key []byte) (int64, error) {
 
 func createExistenceProof(root Node, key []byte) (*ics23.ExistenceProof, error) {
 	path := new(leafPath)
-	nodeVersion := root.Version()
+	leafVersion := root.Version()
 
-	node, err := pathToLeaf(root, key, uint64(nodeVersion), path)
+	leaf, err := pathToLeaf(root, key, uint64(leafVersion), path)
 	if err != nil {
 		return nil, err
 	}
-	nodeVersion = node.Version()
+	leafVersion = leaf.Version()
 
-	nodeKey, err := node.Key()
+	leafKey, err := leaf.Key()
 	if err != nil {
 		return nil, err
 	}
 
-	nodeValue, err := node.Value()
+	leafValue, err := leaf.Value()
 	if err != nil {
 		return nil, err
 	}
 	return &ics23.ExistenceProof{
-		Key:   nodeKey,
-		Value: nodeValue,
-		Leaf:  convertLeafOp(int64(nodeVersion)),
+		Key:   leafKey,
+		Value: leafValue,
+		Leaf:  convertLeafOp(int64(leafVersion)),
 		Path:  convertInnerOps(*path),
 	}, nil
 }

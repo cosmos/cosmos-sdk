@@ -1,8 +1,6 @@
 package iavlx
 
 import (
-	"bytes"
-	"encoding/binary"
 	"errors"
 	io "io"
 
@@ -74,13 +72,81 @@ func (tree *ImmutableTree) ReverseIterator(start, end []byte) storetypes.Iterato
 }
 
 func (tree *ImmutableTree) GetMembershipProof(key []byte) (*ics23.CommitmentProof, error) {
-	exist, err := tree.createExistenceProof(key)
+	root, err := tree.root.Resolve()
+	if err != nil {
+		return nil, err
+	}
+	exist, err := createExistenceProof(root, key)
 	if err != nil {
 		return nil, err
 	}
 	proof := &ics23.CommitmentProof{
 		Proof: &ics23.CommitmentProof_Exist{
 			Exist: exist,
+		},
+	}
+	return proof, nil
+}
+
+/*
+GetNonMembershipProof will produce a CommitmentProof that the given key doesn't exist in the iavl tree.
+If the key exists in the tree, this will return an error.
+*/
+func (t *ImmutableTree) GetNonMembershipProof(key []byte) (*ics23.CommitmentProof, error) {
+	// idx is one node right of what we want....
+	exists := t.Has(key)
+	if exists {
+		return nil, errors.New("cannot create non-membership proof with key that exists in tree")
+	}
+
+	nonexist := &ics23.NonExistenceProof{
+		Key: key,
+	}
+
+	root, err := t.root.Resolve()
+	if err != nil {
+		return nil, err
+	}
+	idx, err := NextIndex(root, key)
+	if err != nil {
+		return nil, err
+	}
+
+	if idx >= 1 {
+		leftNode, err := getByIndex(root, idx-1)
+		if err != nil {
+			return nil, err
+		}
+		leftKey, err := leftNode.Key()
+		if err != nil {
+			return nil, err
+		}
+
+		nonexist.Left, err = createExistenceProof(root, leftKey)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// this will be nil if nothing right of the queried key
+	rightNode, err := getByIndex(root, idx)
+	if err != nil {
+		return nil, err
+	}
+	if rightNode != nil {
+		rightKey, err := rightNode.Key()
+
+		if rightKey != nil {
+			nonexist.Right, err = createExistenceProof(root, rightKey)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	proof := &ics23.CommitmentProof{
+		Proof: &ics23.CommitmentProof_Nonexist{
+			Nonexist: nonexist,
 		},
 	}
 	return proof, nil
@@ -102,162 +168,15 @@ func (t *ImmutableTree) VerifyMembership(proof *ics23.CommitmentProof, key []byt
 	return ics23.VerifyMembership(ics23.IavlSpec, root, proof, key, val), nil
 }
 
-func (tree *ImmutableTree) createExistenceProof(key []byte) (*ics23.ExistenceProof, error) {
-	path := new(PathToLeaf)
-	root, err := tree.root.Resolve()
+// VerifyNonMembership returns true iff proof is a NonExistenceProof for the given key.
+func (t *ImmutableTree) VerifyNonMembership(proof *ics23.CommitmentProof, key []byte) (bool, error) {
+	root, err := t.root.Resolve()
 	if err != nil {
-		return nil, err
+		return false, err
 	}
-	nodeVersion := root.Version()
+	rootHash := root.Hash()
 
-	node, err := pathToLeaf(tree, root, key, uint64(nodeVersion), path)
-	if err != nil {
-		return nil, err
-	}
-	nodeVersion = node.Version()
-
-	nodeKey, err := node.Key()
-	if err != nil {
-		return nil, err
-	}
-
-	nodeValue, err := node.Value()
-	if err != nil {
-		return nil, err
-	}
-	return &ics23.ExistenceProof{
-		Key:   nodeKey,
-		Value: nodeValue,
-		Leaf:  convertLeafOp(int64(nodeVersion)),
-		Path:  convertInnerOps(*path),
-	}, nil
-}
-
-func convertLeafOp(version int64) *ics23.LeafOp {
-	var varintBuf [binary.MaxVarintLen64]byte
-	// this is adapted from iavl/proof.go:proofLeafNode.Hash()
-	prefix := convertVarIntToBytes(0, varintBuf)
-	prefix = append(prefix, convertVarIntToBytes(1, varintBuf)...)
-	prefix = append(prefix, convertVarIntToBytes(version, varintBuf)...)
-
-	return &ics23.LeafOp{
-		Hash:         ics23.HashOp_SHA256,
-		PrehashValue: ics23.HashOp_SHA256,
-		Length:       ics23.LengthOp_VAR_PROTO,
-		Prefix:       prefix,
-	}
-}
-
-func convertVarIntToBytes(orig int64, buf [binary.MaxVarintLen64]byte) []byte {
-	n := binary.PutVarint(buf[:], orig)
-	return buf[:n]
-}
-
-func convertInnerOps(path PathToLeaf) []*ics23.InnerOp {
-	steps := make([]*ics23.InnerOp, 0, len(path))
-
-	// lengthByte is the length prefix prepended to each of the sha256 sub-hashes
-	var lengthByte byte = 0x20
-
-	var varintBuf [binary.MaxVarintLen64]byte
-
-	// we need to go in reverse order, iavl starts from root to leaf,
-	// we want to go up from the leaf to the root
-	for i := len(path) - 1; i >= 0; i-- {
-		// this is adapted from iavl/proof.go:proofInnerNode.Hash()
-		// prefix = bytes of height-size-version ++ <length>-leftHash-<length>
-		// suffix = <length>-rightHash
-		prefix := convertVarIntToBytes(int64(path[i].Height), varintBuf)
-		prefix = append(prefix, convertVarIntToBytes(path[i].Size, varintBuf)...)
-		prefix = append(prefix, convertVarIntToBytes(path[i].Version, varintBuf)...)
-
-		var suffix []byte
-		if len(path[i].Left) > 0 {
-			// length prefixed left side
-			prefix = append(prefix, lengthByte)
-			prefix = append(prefix, path[i].Left...)
-			// prepend the length prefix for child
-			prefix = append(prefix, lengthByte)
-		} else {
-			// prepend the length prefix for child
-			prefix = append(prefix, lengthByte)
-			// length-prefixed right side
-			suffix = []byte{lengthByte}
-			suffix = append(suffix, path[i].Right...)
-		}
-
-		op := &ics23.InnerOp{
-			Hash:   ics23.HashOp_SHA256,
-			Prefix: prefix,
-			Suffix: suffix,
-		}
-		steps = append(steps, op)
-	}
-	return steps
-}
-
-func pathToLeaf(tree *ImmutableTree, node Node, key []byte, version uint64, path *PathToLeaf) (Node, error) {
-	nodeKey, err := node.Key()
-	if err != nil {
-		return nil, err
-	}
-	if node.IsLeaf() {
-		if bytes.Equal(nodeKey, key) {
-			return node, nil
-		} else {
-			return node, errors.New("key does not exist")
-		}
-	}
-	nodeVersion := version
-	if node.ID().Index() != 0 {
-		nodeVersion = node.ID().Version()
-	}
-	if bytes.Compare(key, nodeKey) < 0 {
-		// left side
-		rightNodePtr := node.Right()
-		rightNode, err := rightNodePtr.Resolve()
-		if err != nil {
-			return nil, err
-		}
-		pin := ProofInnerNode{
-			Height:  int8(node.Height()),
-			Size:    node.Size(),
-			Version: int64(nodeVersion),
-			Left:    nil,
-			Right:   rightNode.Hash(),
-		}
-		*path = append(*path, pin)
-
-		leftNodePtr := node.Left()
-
-		leftNode, err := leftNodePtr.Resolve()
-		if err != nil {
-			return nil, err
-		}
-		n, err := pathToLeaf(tree, leftNode, key, version, path)
-		return n, err
-	}
-	// right side
-	leftNode, err := node.Left().Resolve()
-	if err != nil {
-		return nil, err
-	}
-	pin := ProofInnerNode{
-		Height:  int8(node.Height()),
-		Size:    node.Size(),
-		Version: int64(nodeVersion),
-		Left:    leftNode.Hash(),
-		Right:   nil,
-	}
-	*path = append(*path, pin)
-
-	rightNode, err := node.Right().Resolve()
-	if err != nil {
-		return nil, err
-	}
-
-	n, err := pathToLeaf(tree, rightNode, key, version, path)
-	return n, err
+	return ics23.VerifyNonMembership(ics23.IavlSpec, rootHash, proof, key), nil
 }
 
 var (

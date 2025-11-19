@@ -20,13 +20,14 @@ import (
 	storetypes "cosmossdk.io/store/types"
 )
 
-func TestTreeProof(t *testing.T) {
+func TestTree_MembershipProof(t *testing.T) {
 	dir := t.TempDir()
 	commitTree, err := NewCommitTree(dir, Options{}, sdklog.NewNopLogger())
 	require.NoError(t, err)
 
-	keys := make([]string, 0)
-	for i := 0; i < 10; i++ {
+	iterations := 100
+	keys := make([]string, 0, iterations)
+	for range iterations {
 		key, value := rand.Str(20), rand.Str(20)
 		commitTree.Set([]byte(key), []byte(value))
 		keys = append(keys, key)
@@ -43,6 +44,42 @@ func TestTreeProof(t *testing.T) {
 		require.NoError(t, err)
 		require.True(t, ok)
 	}
+}
+
+func TestTree_NonMembershipProof(t *testing.T) {
+	dir := t.TempDir()
+	commitTree, err := NewCommitTree(dir, Options{}, sdklog.NewNopLogger())
+	require.NoError(t, err)
+
+	for range 100 {
+		key, value := rand.Str(20), rand.Str(20)
+		commitTree.Set([]byte(key), []byte(value))
+	}
+	commitTree.Commit()
+	itree, err := commitTree.GetImmutableImpl(1)
+	require.NoError(t, err)
+
+	for range 100 {
+		notExistKey := []byte(rand.Str(21))
+		proof, err := itree.GetNonMembershipProof(notExistKey)
+		require.NoError(t, err)
+		require.NotNil(t, proof)
+
+		valid, err := itree.VerifyNonMembership(proof, notExistKey)
+		require.NoError(t, err)
+		require.True(t, valid)
+	}
+	for range 100 {
+		notExistKey := []byte(rand.Str(19))
+		proof, err := itree.GetNonMembershipProof(notExistKey)
+		require.NoError(t, err)
+		require.NotNil(t, proof)
+
+		valid, err := itree.VerifyNonMembership(proof, notExistKey)
+		require.NoError(t, err)
+		require.True(t, valid)
+	}
+
 }
 
 // TODO: this test isn't for expected behavior.

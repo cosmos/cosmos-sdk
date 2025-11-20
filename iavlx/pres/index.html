@@ -205,6 +205,14 @@
             color: #888;
             margin-top: 20px;
         }
+
+        /* Scale compaction SVGs larger */
+        #compaction-original svg {
+            transform: scale(1.45, 1.45);  /* horizontal, vertical */
+        }
+        #compaction-compacted svg {
+            transform: scale(1.1, 1.1);  /* horizontal, vertical */
+        }
     </style>
 </head>
 <body>
@@ -510,18 +518,19 @@
 
         <!-- Tree Version 2 -->
         <section data-animation="version" data-version="2">
-            <h2>Version 2</h2>
-            <div class="dual-svg-container">
+            <h2 style="margin: 0 0 0 0;">Version 2</h2>
+            <div class="dual-svg-container" style="gap: 5px;">
                 <div class="svg-section">
-                    <h6>Tree Structure</h6>
-                    <div class="svg-container" id="tree-v2"></div>
+                    <h6 style="margin: 0;">Tree Structure</h6>
+                    <div class="svg-container" id="tree-v2" style="padding: 0; max-height: 30vh;"></div>
                 </div>
                 <div class="svg-section">
-                    <h6>Changeset (Serialized)</h6>
-                    <div class="svg-container" id="changeset-v2"></div>
+                    <h6 style="margin: 0;">Changeset (Serialized)</h6>
+                    <div class="svg-container" id="changeset-v2" style="padding: 0; max-height: 30vh;"></div>
                 </div>
-                <ul>
-                    <li>Newer version data is always at the root of the tree</li>
+                <ul style="margin: 0">
+                    <li>Newer version data is always at the root of the tree, so we always traverse a shallow sub-tree
+                    </li>
                     <li>Child nodes node version is always <= parent node version</li>
                 </ul>
             </div>
@@ -599,8 +608,8 @@
                             improves
                             read performance
                         </li>
-                        <li class="fragment">the compaction/cleanup code is the most complex part of the codebase and
-                            configuration is still evolving
+                        <li class="fragment">the compaction/cleanup code is fairly complex and configuration is still
+                            evolving
                         </li>
                     </ul>
                 </li>
@@ -609,15 +618,13 @@
 
         <!-- Tree Compaction Animation -->
         <section data-animation="compaction">
-            <h2>Changeset Compaction</h2>
-            <p>Let's compact this changeset to only save version 4 and 5 data</p>
-            <div class="dual-svg-container">
+            <h2 style="margin: 0 0 5px 0;">Changeset Compaction</h2>
+            <p style="margin: 50px 0;">Let's compact this changeset to only save version 4 and 5 data</p>
+            <div class="dual-svg-container" style="gap: 20px;">
                 <div class="svg-section">
-                    <h3>Original Changeset</h3>
                     <div class="svg-container" id="compaction-original"></div>
                 </div>
                 <div class="svg-section">
-                    <h3>Compacted Changeset (Pruned)</h3>
                     <div class="svg-container" id="compaction-compacted"></div>
                 </div>
             </div>
@@ -627,15 +634,15 @@
         <section class="three-svg-slide">
             <div class="dual-svg-container">
                 <div class="svg-section">
-                    <h5>Version 4 Tree</h5>
+                    <h6 style="margin: 0">Version 4 Tree</h6>
                     <div class="svg-container" id="static-tree-v4"></div>
                 </div>
                 <div class="svg-section">
-                    <h5>Version 5 Tree</h5>
+                    <h6 style="margin: 0">Version 5 Tree</h6>
                     <div class="svg-container" id="static-tree-v5"></div>
                 </div>
                 <div class="svg-section">
-                    <h5>Compacted Changeset (Only v4 & v5 nodes)</h5>
+                    <h6 style="margin: 0">Compacted Changeset (Only v4 & v5 nodes)</h6>
                     <div class="svg-container" id="static-compacted"></div>
                 </div>
             </div>
@@ -738,11 +745,6 @@
         <section>
             <h2>Next Steps</h2>
             <ul>
-            </ul>
-        </section>
-        <section>
-            <h2>Next Steps</h2>
-            <ul>
                 <li class="fragment">Production Readiness
                     <ul>
                         <li class="fragment">Reliable DB reloading and historical queries</li>
@@ -759,6 +761,10 @@
                     </ul>
                 </li>
             </ul>
+        </section>
+        <section>
+            <h2>Questions?</h2>
+            <p>Thank you for your attention!</p>
         </section>
     </div>
 </div>

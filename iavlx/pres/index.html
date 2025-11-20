@@ -700,9 +700,10 @@
                 <li class="fragment">changeset compaction/pruning is linear read/linear write operation</li>
                 <li class="fragment">any work which is CPU bound is done concurrently (eg. tree balancing and hashing)
                 </li>
-                <li class="fragment">nodes are linked via atomic pointers so memory can be cleaned up in the
+                <li class="fragment">memory nodes are linked via atomic pointers so memory can be cleaned up in the
                     background
                 </li>
+                <li class="fragment">configurable fsync interval, fsync'ing too often slows things down and isn't really necessary</li>
             </ul>
         </section>
         <section>
@@ -719,6 +720,7 @@
                 <li class="fragment">But with the latest optimizations, iavlx may be able to beat or match
                     memiavl in ops/second
                 </li>
+                <li class="fragment">iavl/v1 not pictured because it was too slow to run on my laptop (was averaging 785 ops/sec)</li>
             </ul>
         </section>
         <section>

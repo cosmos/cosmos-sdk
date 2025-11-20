@@ -226,7 +226,8 @@
                 <li class="fragment">Performance problems seem to have been flagged early on
                     (<code>PERFORMANCE.md</code> dates to 2017)
                 </li>
-                <li class="fragment">First attempt at store/v2 in 2021 based on SMT (Sparse Merkle Tree) and separating
+                <li class="fragment">First attempt at store/v2 in 2021 based on SMT (Sparse Merkle Tree, essentially a
+                    radix 2 tree) and separating
                     SS (state storage) and SC (state commitment), see Cosmos SDK ADR-040
                 </li>
                 <li class="fragment">IAVL node key format refactored in 2022 to <code>version|nonce</code>, see IAVL
@@ -242,7 +243,23 @@
                     architecture have so far been unsuccessful
                 </li>
                 <li class="fragment">As of mid-2025, memiavl and iavl/v2 appeared to be the best alternatives worth
-                    considering
+                    considering, both showing improved performance over iavl/v1
+                </li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>iavl/v1 Architecture</h2>
+            <ul>
+                <li class="fragment">Data is stored in leveldb by default, can be configured to use other key value
+                    databases
+                </li>
+                <li class="fragment">Two layers of in-memory LRU caches</li>
+                <li class="fragment">Originally, persistent node identifiers were based on hashes which resulted in
+                    terrible data locality
+                </li>
+                <li class="fragment">Nodes are now identified a <code>version|nonce</code> ID which has better data
+                    locality
                 </li>
             </ul>
         </section>
@@ -250,7 +267,8 @@
         <section>
             <h2>Memiavl Architecture</h2>
             <ul>
-                <li class="fragment">Initially the full tree is stored only in memory, but a WAL is maintained for
+                <li class="fragment">Initially the full tree is stored only in memory, but a WAL of KV updates is
+                    recorded for
                     replayability
                 </li>
                 <li class="fragment">At a configurable interval, a snapshot of the full tree is written to disk</li>
@@ -258,9 +276,10 @@
                     replaying the WAL on top of it
                 </li>
                 <li class="fragment">To reclaim any memory, snapshot writing must complete and the WAL must be replayed
-                    up to the current height
+                    up to the current height, then the old tree can be flus
                 </li>
-                <li class="fragment">Native file format (no leveldb/rocksdb) and relatively easy to follow code</li>
+                <li class="fragment">Native file format (no leveldb/rocksdb) and well-structured, easy to follow code
+                </li>
             </ul>
         </section>
 
@@ -283,7 +302,9 @@
                 <li class="fragment">The eviction height can be configured to use less memory or achieve more
                     performance. With higher memory usage, iavl/v2 is ~75% as fast as memiavl.
                 </li>
-                <li class="fragment">In-memory tree + configurable eviction height replaces a separate cache</li>
+                <li class="fragment">Retaining nodes in memory up to a configurable eviction height replaces a separate
+                    cache
+                </li>
             </ul>
         </section>
 
@@ -302,8 +323,8 @@
 
         <section>
             <h2>iavl/v2 vs memiavl Large Benchmark</h2>
-            <p>With larger trees, memiavl eventually crashes due to out-of-control memory consumption and slow
-                snapshot writing whereas iavl/v1 and iavl/v2 can (more or less) keep going.</p>
+            <p>With larger trees, memiavl eventually crashes due to out-of-control memory usage and slow
+                snapshot writing. iavl/v1 and iavl/v2 can (more or less) keep going.</p>
             <img src="iavl2_memiavl_perf2.heic"/>
             <img src="iavl2_memiavl_mem2.heic"/>
         </section>
@@ -313,11 +334,24 @@
             <img src="memiavl_snapshot_timing.heic"/>
             <ul>
                 <li class="fragment">As tree size grows, snapshots take several minutes to write</li>
-                <li class="fragment">Snapshots have great read performance due to data locality, but long snapshot write
-                    times block normal operations
+                <li class="fragment">In this chart there are three phases:
+                    <ol>
+                        <li class="fragment"><code>snapshot_duration</code>: write snapshot</li>
+                        <li class="fragment"><code>best_effort_wal_duration</code>: replay WAL in the background to
+                            catch up to the height when the snapshot completed
+                        </li>
+                        <li class="fragment"><code>wal_sync_duration</code>: stop all processing and replay the WAL
+                            until caught up to the current height to reclaim memory. In this example, memiavl crashed
+                            and ran out of memory before this completed.
+                        </li>
+                    </ol>
+                </li>
+                <li class="fragment">Snapshots have great read performance due to data locality</li>
+                <li class="fragment">But long snapshot write times could force other processing to pause for several
+                    minutes or even crash the process
                 </li>
                 <li class="fragment">We know some real world trees are much larger than our benchmarks (eg. Osmosis with
-                    ~300 million keys)
+                    ~300 million keys), so this could be problematic
                 </li>
             </ul>
         </section>
@@ -329,10 +363,13 @@
                 <li class="fragment">Both memiavl & iavl/v2 consider pruning first class behavior, but this doesn't
                     always work so well
                 </li>
-                <li class="fragment">memiavl disk quickly exceeds iavl/v1 disk usage if we set a smaller snapshot
-                    interval to manage memory
+                <li class="fragment">memiavl quickly exceeds iavl/v1 disk usage if we use a smaller snapshot
+                    interval to try to manage memory more aggressively. The memiavl-100-2 run is snapshotting every 100
+                    blocks and manages to survive a little longer than with the default snapshot interval of 1000
+                    blocks, but it also crashes
                 </li>
-                <li class="fragment">iavl/v2 disk usage spirals out of control in an effort to rewrite checkpoints
+                <li class="fragment">Eventually iavl/v2 disk usage spirals out of control in an effort to rewrite
+                    checkpoints
                     before deleting old data
                 </li>
             </ul>
@@ -345,27 +382,37 @@
                     significant
                     gotchas compared to iavl/v1
                 </li>
-                <li class="fragment">memiavl's native file format and simplicity were appealing, but snapshot behavior
-                    is like a time-bomb for large trees - whenever the full tree needs to be rewritten/traversed, this
-                    will always be a problem at scale
+                <li class="fragment">memiavl's intial performance is impressive, but long snapshot behavior
+                    with the potential of out-of-control memory usage and long pauses is an unacceptable risk for larger
+                    trees
                 </li>
-                <li class="fragment">iavl/v2's checkpoint architecture is more sensible, but use of sqlite adds
-                    complexity and unpredictable performance characteristics
+                <li class="fragment">iavl/v2 provided decent performance, but its code wasn't production ready and
+                    showed disk usage problems at scale. Also, its dependency on sqlite introduces complexity and
+                    unpredictable
+                    performance characteristics
                 </li>
-                <li class="fragment">using a secondary db like leveldb or sqlite will always add O(log N) complexity
-                    between every node traversal, on top of IAVL's intrinsic O(log N) traversal complexity
+                <li class="fragment">we decided to try an experimental hybrid codenamed IAVLX (X for experimental),
+                    which aimed to combined the best parts of both designs:
+                    <ul>
+                        <li class="fragment">Native file format like memiavl. Whenever nodes are stored in a
+                            secondary db like leveldb or sqlite, we pay O(log N) complexity when traversing from node to
+                            node, on top of IAVL's
+                            intrinsic O(log N) traversal
+                            complexity
+                        <li class="fragment">Write incremental diffs or checkpoints like iavl/v2 instead of all or
+                            nothing snapshots, and clean up memory and disk usage incrementally.
+                        </li>
+                    </ul>
                 </li>
-                <li class="fragment">we decided to experiment with combining the best of both designs</li>
+
             </ul>
         </section>
 
         <section>
             <h2>IAVLX Design Overview</h2>
             <ul>
-                <li class="fragment">Native file format like memiavl</li>
-                <li class="fragment">Store changesets rather than full snapshots</li>
                 <li class="fragment">Persistent <code>version|index</code> node IDs similar iavl/v1 and iavl/v2, but
-                    designed as an ordered index key
+                    designed as an ordered index key based on post-order traversal
                 </li>
                 <li class="fragment">Simple append-only format that is <em>always indexed</em> for fast lookups</li>
                 <li class="fragment">Files stay indexed even when nodes are pruned</li>
@@ -412,7 +459,8 @@
         <section>
             <h2>IAVLX Node ID Format & Changeset Serialization</h2>
             <ul>
-                <li class="fragment">Each node is assigned a persistent <code>NodeID</code> based on its version and
+                <li class="fragment">Each node is assigned a persistent 64-bit <code>NodeID</code> based on its version
+                    and
                     post-order traversal index:
                     <ul>
                         <li>leaf nodes: <code>L{version}|{index}</code></li>
@@ -422,8 +470,8 @@
                 <li class="fragment">Leaf and branch nodes are appended to <code>leaves.dat</code> and
                     <code>branches.dat</code> in post-traversal order as fixed sized records.
                 </li>
-                <li class="fragment">Because <code>NodeID</code> is assigned based on post-order traversal and nodes are
-                    written in post-order:
+                <li class="fragment">Because <code>NodeID</code> is assigned in post-order traversal and nodes are
+                    serialized in this order:
                     <ul>
                         <li class="fragment">Changesets are always ordered by <code>NodeID</code>, meaning O(log N)
                             binary search is always possible
@@ -433,8 +481,7 @@
                         </li>
                     </ul>
                 </li>
-                <li class="fragment">This <code>NodeID</code> design and serialization order is IAVLX's
-                    <em>fundamental</em>
+                <li class="fragment">This <code>NodeID</code> design and serialization order is IAVLX's fundamental
                     design choice for fast writing, reading and pruning
                 </li>
             </ul>
@@ -446,11 +493,11 @@
             <p><em>Click the animation controls on the right to visualization how a changeset is written</em></p>
             <div class="dual-svg-container">
                 <div class="svg-section">
-                    <h3>Tree Structure</h3>
+                    <h6>Tree Structure</h6>
                     <div class="svg-container" id="tree-v1"></div>
                 </div>
                 <div class="svg-section">
-                    <h3>Changeset (Serialized)</h3>
+                    <h6>Changeset (Serialized)</h6>
                     <div class="svg-container" id="changeset-v1"></div>
                 </div>
                 <ul>
@@ -466,11 +513,11 @@
             <h2>Version 2</h2>
             <div class="dual-svg-container">
                 <div class="svg-section">
-                    <h3>Tree Structure</h3>
+                    <h6>Tree Structure</h6>
                     <div class="svg-container" id="tree-v2"></div>
                 </div>
                 <div class="svg-section">
-                    <h3>Changeset (Serialized)</h3>
+                    <h6>Changeset (Serialized)</h6>
                     <div class="svg-container" id="changeset-v2"></div>
                 </div>
                 <ul>
@@ -485,11 +532,11 @@
             <h2>Version 3</h2>
             <div class="dual-svg-container">
                 <div class="svg-section">
-                    <h3>Tree Structure</h3>
+                    <h6>Tree Structure</h6>
                     <div class="svg-container" id="tree-v3"></div>
                 </div>
                 <div class="svg-section">
-                    <h3>Changeset (Serialized)</h3>
+                    <h6>Changeset (Serialized)</h6>
                     <div class="svg-container" id="changeset-v3"></div>
                 </div>
             </div>
@@ -500,11 +547,11 @@
             <h2>Version 4</h2>
             <div class="dual-svg-container">
                 <div class="svg-section">
-                    <h3>Tree Structure</h3>
+                    <h6>Tree Structure</h6>
                     <div class="svg-container" id="tree-v4"></div>
                 </div>
                 <div class="svg-section">
-                    <h3>Changeset (Serialized)</h3>
+                    <h6>Changeset (Serialized)</h6>
                     <div class="svg-container" id="changeset-v4"></div>
                 </div>
             </div>
@@ -515,11 +562,11 @@
             <h2>Version 5</h2>
             <div class="dual-svg-container">
                 <div class="svg-section">
-                    <h3>Tree Structure</h3>
+                    <h6>Tree Structure</h6>
                     <div class="svg-container" id="tree-v5"></div>
                 </div>
                 <div class="svg-section">
-                    <h3>Changeset (Serialized)</h3>
+                    <h6>Changeset (Serialized)</h6>
                     <div class="svg-container" id="changeset-v5"></div>
                 </div>
             </div>
@@ -535,6 +582,7 @@
                     <ul>
                         <li class="fragment">linearly iterating over all nodes and copying only retained nodes</li>
                         <li class="fragment">joining small pruned changesets into larger ones</li>
+
                     </ul>
                 </li>
                 <li class="fragment">pruning is fast with only linear disk IO and doesn't block normal operations</li>
@@ -689,6 +737,28 @@
         </section>
         <section>
             <h2>Next Steps</h2>
+            <ul>
+            </ul>
+        </section>
+        <section>
+            <h2>Next Steps</h2>
+            <ul>
+                <li class="fragment">Production Readiness
+                    <ul>
+                        <li class="fragment">Reliable DB reloading and historical queries</li>
+                        <li class="fragment">Fault tolerance</li>
+                        <li class="fragment">Migrations</li>
+                        <li class="fragment">Easy configuration for validator vs query-oriented nodes (nice to have)
+                        </li>
+                    </ul>
+                </li>
+                <li class="fragment">Optimizations
+                    <ul>
+                        <li class="fragment">Better compaction scheduling</li>
+                        <li class="fragment">Less allocation and copying on read paths for serving queries</li>
+                    </ul>
+                </li>
+            </ul>
         </section>
     </div>
 </div>

@@ -14,6 +14,7 @@ type AccountKeeper interface {
 	GetModuleAddress(name string) sdk.AccAddress
 	GetModuleAccount(ctx context.Context, name string) sdk.ModuleAccountI
 	SetModuleAccount(ctx context.Context, macc sdk.ModuleAccountI)
+	IsModuleAccount(ctx context.Context, addr sdk.AccAddress) bool
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.

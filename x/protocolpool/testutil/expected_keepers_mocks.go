@@ -110,6 +110,20 @@ func (mr *MockAccountKeeperMockRecorder) SetModuleAccount(ctx, macc any) *gomock
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetModuleAccount", reflect.TypeOf((*MockAccountKeeper)(nil).SetModuleAccount), ctx, macc)
 }
 
+// IsModuleAccount mocks base method.
+func (m *MockAccountKeeper) IsModuleAccount(ctx context.Context, addr types.AccAddress) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsModuleAccount", ctx, addr)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// IsModuleAccount indicates an expected call of IsModuleAccount.
+func (mr *MockAccountKeeperMockRecorder) IsModuleAccount(ctx, addr any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsModuleAccount", reflect.TypeOf((*MockAccountKeeper)(nil).IsModuleAccount), ctx, addr)
+}
+
 // MockBankKeeper is a mock of BankKeeper interface.
 type MockBankKeeper struct {
 	ctrl     *gomock.Controller

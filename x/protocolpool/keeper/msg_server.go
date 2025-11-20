@@ -86,6 +86,24 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 		return nil, fmt.Errorf("recipient is blocked in the bank keeper: %s", msg.Recipient)
 	}
 
+	// If the address belongs to a module (custom or standard), we must ensure 
+    // the account actually exists in state as a ModuleAccount.
+    if k.authKeeper.IsModuleAccount(ctx, recipient) {
+        acc := k.authKeeper.GetAccount(ctx, recipient)
+        
+        // Scenario A: Account does not exist (nil).
+        // Attempting to send funds here would create a BaseAccount and break invariants.
+        if acc == nil {
+            return nil, fmt.Errorf("recipient %s is an uninitialized module account; module accounts must be initialized at genesis", msg.Recipient)
+        }
+
+        // Scenario B: Account exists, but check strictly if it is a ModuleAccount interface.
+        // This handles edge cases where a BaseAccount might have been created at a module address erroneously in the past.
+        if _, ok := acc.(sdk.ModuleAccountI); !ok {
+            return nil, fmt.Errorf("recipient %s is a module address but the account type is not ModuleAccount", msg.Recipient)
+        }
+    }
+
 	has, err := k.ContinuousFunds.Has(sdkCtx, recipient)
 	if err != nil {
 		return nil, err

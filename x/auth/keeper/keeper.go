@@ -377,3 +377,16 @@ func (ak AccountKeeper) RemoveExpiredUnorderedNonces(ctx sdk.Context) error {
 
 	return nil
 }
+
+// IsModuleAccount checks if the given address belongs to a module account
+func (k AccountKeeper) IsModuleAccount(ctx context.Context, addr sdk.AccAddress) bool {
+    // permAddrs maps module names to permissions.
+    // We iterate through all registered modules to check if the address matches.
+    for name := range k.permAddrs {
+        moduleAddr := k.GetModuleAddress(name)
+        if moduleAddr.Equals(addr) {
+            return true
+        }
+    }
+    return false
+}

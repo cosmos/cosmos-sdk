@@ -24,6 +24,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sims "github.com/cosmos/cosmos-sdk/testutil/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -42,6 +43,10 @@ var FlagEnableStreamingValue bool
 func init() {
 	simcli.GetSimulatorFlags()
 	flag.BoolVar(&FlagEnableStreamingValue, "EnableStreaming", false, "Enable streaming service")
+}
+
+func TestMain(m *testing.M) {
+	telemetry.TestingMain(m, nil)
 }
 
 // interBlockCacheOpt returns a BaseApp option function that sets the persistent

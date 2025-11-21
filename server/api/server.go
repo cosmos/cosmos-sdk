@@ -191,6 +191,7 @@ func (s *Server) Close() error {
 	return s.listener.Close()
 }
 
+// Deprecated: Use OpenTelemetry instead, see the `telemetry` package for more details.
 func (s *Server) SetTelemetry(m *telemetry.Metrics) {
 	s.mtx.Lock()
 	s.registerMetrics(m)

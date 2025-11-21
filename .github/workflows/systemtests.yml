@@ -21,7 +21,7 @@ jobs:
     outputs:
       git_diff: ${{ steps.git_diff.outputs.diff }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-tags: true
 
@@ -54,7 +54,7 @@ jobs:
     if: needs.setup.outputs.git_diff
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Run system tests
         run: |
@@ -73,7 +73,7 @@ jobs:
     if: needs.setup.outputs.git_diff
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Run legacy system tests
         run: |

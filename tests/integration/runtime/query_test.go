@@ -24,7 +24,6 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	_ "github.com/cosmos/cosmos-sdk/x/bank"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
-	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
 )
 
@@ -45,7 +44,6 @@ func initFixture(t assert.TestingT) *fixture {
 			configurator.NewAppConfig(
 				configurator.AuthModule(),
 				configurator.TxModule(),
-				configurator.ParamsModule(),
 				configurator.ConsensusModule(),
 				configurator.BankModule(),
 				configurator.StakingModule(),
@@ -83,7 +81,7 @@ func TestQueryAppConfig(t *testing.T) {
 	}
 
 	// has all expected modules
-	for _, modName := range []string{"auth", "bank", "tx", "consensus", "runtime", "params", "staking"} {
+	for _, modName := range []string{"auth", "bank", "tx", "consensus", "runtime", "staking"} {
 		modConfig := moduleConfigs[modName]
 		if modConfig == nil {
 			t.Fatalf("missing %s", modName)

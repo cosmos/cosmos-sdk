@@ -16,7 +16,6 @@ import (
 	groupmodulev1 "cosmossdk.io/api/cosmos/group/module/v1"
 	mintmodulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
 	nftmodulev1 "cosmossdk.io/api/cosmos/nft/module/v1"
-	paramsmodulev1 "cosmossdk.io/api/cosmos/params/module/v1"
 	protocolpoolmodulev1 "cosmossdk.io/api/cosmos/protocolpool/module/v1"
 	slashingmodulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
@@ -58,7 +57,6 @@ func defaultConfig() *Config {
 			"feegrant",
 			"nft",
 			"group",
-			"params",
 			"consensus",
 			"vesting",
 			"circuit",
@@ -78,7 +76,6 @@ func defaultConfig() *Config {
 			"feegrant",
 			"nft",
 			"group",
-			"params",
 			"consensus",
 			"upgrade",
 			"vesting",
@@ -99,7 +96,6 @@ func defaultConfig() *Config {
 			"feegrant",
 			"nft",
 			"group",
-			"params",
 			"consensus",
 			"upgrade",
 			"vesting",
@@ -163,15 +159,6 @@ func AuthModule() ModuleOption {
 					{Account: protocolpooltypes.ProtocolPoolEscrowAccount},
 				},
 			}),
-		}
-	}
-}
-
-func ParamsModule() ModuleOption {
-	return func(config *Config) {
-		config.ModuleConfigs["params"] = &appv1alpha1.ModuleConfig{
-			Name:   "params",
-			Config: appconfig.WrapAny(&paramsmodulev1.Module{}),
 		}
 	}
 }

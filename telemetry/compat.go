@@ -74,7 +74,11 @@ func (o *otelGoMetricsSink) getHistogram(key string) otelmetric.Float64Histogram
 	if ok {
 		return entry.(otelmetric.Float64Histogram)
 	}
-	hist, err := o.meter.Float64Histogram(key)
+	// Otel doesn't have a histogram summary like go-metrics does, and the default bucket boundaries are not suitable for
+	// the main processes that use it, so we will set some reasonable default here.
+	// If these defaults are not suitable the user can override them by supplying their own values in the otel yaml config.
+	// See example here: https://github.com/open-telemetry/opentelemetry-configuration/blob/65274d8cde98640e91932903e35287b330e482f4/examples/kitchen-sink.yaml#L177
+	hist, err := o.meter.Float64Histogram(key, otelmetric.WithExplicitBucketBoundaries(0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10))
 	if err != nil {
 		panic(fmt.Sprintf("failed to create histogram metric %s: %v", key, err))
 	}

@@ -12,11 +12,11 @@ import (
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 
-	modulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	store "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/depinject/appconfig"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -31,6 +31,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/simulation"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	modulev1 "github.com/cosmos/cosmos-sdk/x/gov/types/module"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -154,10 +155,10 @@ func (am AppModule) IsOnePerModuleType() {}
 func (am AppModule) IsAppModule() {}
 
 func init() {
-	appmodule.Register(
+	appconfig.RegisterModule(
 		&modulev1.Module{},
-		appmodule.Provide(ProvideModule, ProvideKeyTable),
-		appmodule.Invoke(InvokeAddRoutes, InvokeSetHooks))
+		appconfig.Provide(ProvideModule, ProvideKeyTable),
+		appconfig.Invoke(InvokeAddRoutes, InvokeSetHooks))
 }
 
 type ModuleInputs struct {

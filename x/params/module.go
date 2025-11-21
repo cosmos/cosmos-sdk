@@ -5,9 +5,9 @@ import (
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 
-	modulev1 "cosmossdk.io/api/cosmos/params/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/depinject/appconfig"
 	store "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -18,6 +18,7 @@ import (
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/params/keeper"
 	"github.com/cosmos/cosmos-sdk/x/params/types"
+	modulev1 "github.com/cosmos/cosmos-sdk/x/params/types/module"
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
 
@@ -102,8 +103,8 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 //
 
 func init() {
-	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(
+	appconfig.RegisterModule(&modulev1.Module{},
+		appconfig.Provide(
 			ProvideModule,
 			ProvideSubspace,
 		))

@@ -6,11 +6,11 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 
-	modulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/event"
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/depinject/appconfig"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -21,6 +21,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	"github.com/cosmos/cosmos-sdk/x/consensus/types"
+	modulev1 "github.com/cosmos/cosmos-sdk/x/consensus/types/module"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -91,10 +92,10 @@ func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
 func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 func init() {
-	appmodule.Register(
+	appconfig.RegisterModule(
 		&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
-		appmodule.Provide(ProvideAppVersionModifier),
+		appconfig.Provide(ProvideModule),
+		appconfig.Provide(ProvideAppVersionModifier),
 	)
 }
 

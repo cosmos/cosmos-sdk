@@ -8,10 +8,10 @@ import (
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
-	modulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/depinject/appconfig"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -21,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	modulev1 "github.com/cosmos/cosmos-sdk/x/auth/vesting/types/module"
 )
 
 var (
@@ -119,8 +120,8 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 //
 
 func init() {
-	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
+	appconfig.RegisterModule(&modulev1.Module{},
+		appconfig.Provide(ProvideModule),
 	)
 }
 

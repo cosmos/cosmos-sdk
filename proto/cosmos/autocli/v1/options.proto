@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package cosmos.autocli.v1;
 
+// TODO Fix go_package option to remove api pkg
 option go_package = "cosmossdk.io/api/cosmos/base/cli/v1;cliv1";
 
 // ModuleOptions describes the CLI options for a Cosmos SDK module.

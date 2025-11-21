@@ -7,10 +7,10 @@ import (
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 
-	modulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
 	"cosmossdk.io/core/appmodule"
 	store "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/depinject/appconfig"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -24,6 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	"github.com/cosmos/cosmos-sdk/x/slashing/simulation"
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
+	modulev1 "github.com/cosmos/cosmos-sdk/x/slashing/types/module"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -198,9 +199,9 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 //
 
 func init() {
-	appmodule.Register(
+	appconfig.RegisterModule(
 		&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
+		appconfig.Provide(ProvideModule),
 	)
 }
 

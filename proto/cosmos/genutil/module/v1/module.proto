@@ -4,6 +4,8 @@ package cosmos.genutil.module.v1;
 
 import "cosmos/app/v1alpha1/module.proto";
 
+option go_package = "github.com/cosmos/cosmos-sdk/x/genutil/types/module";
+
 // Module is the config object for the genutil module.
 message Module {
   option (cosmos.app.v1alpha1.module) = {

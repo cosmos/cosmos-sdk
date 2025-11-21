@@ -7,10 +7,10 @@ import (
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 
-	modulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/depinject/appconfig"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -24,6 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	"github.com/cosmos/cosmos-sdk/x/mint/simulation"
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
+	modulev1 "github.com/cosmos/cosmos-sdk/x/mint/types/module"
 )
 
 // ConsensusVersion defines the current x/mint module consensus version.
@@ -189,8 +190,8 @@ func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.Weighte
 //
 
 func init() {
-	appmodule.Register(&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
+	appconfig.RegisterModule(&modulev1.Module{},
+		appconfig.Provide(ProvideModule),
 	)
 }
 

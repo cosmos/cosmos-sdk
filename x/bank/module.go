@@ -10,11 +10,11 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
 
-	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	corestore "cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -30,6 +30,7 @@ import (
 	v1bank "github.com/cosmos/cosmos-sdk/x/bank/migrations/v1"
 	"github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
+	modulev1 "github.com/cosmos/cosmos-sdk/x/bank/types/module"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -196,10 +197,10 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 // App Wiring Setup
 
 func init() {
-	appmodule.Register(
+	appconfig.RegisterModule(
 		&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
-		appmodule.Invoke(InvokeSetSendRestrictions),
+		appconfig.Provide(ProvideModule),
+		appconfig.Invoke(InvokeSetSendRestrictions),
 	)
 }
 

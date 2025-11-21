@@ -3,10 +3,10 @@ package authz
 import (
 	"fmt"
 
-	authzv1beta1 "cosmossdk.io/api/cosmos/authz/v1beta1"
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 
 	"github.com/cosmos/cosmos-sdk/version"
+	authzv1beta1 "github.com/cosmos/cosmos-sdk/x/authz"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -14,7 +14,7 @@ import (
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 	return &autocliv1.ModuleOptions{
 		Query: &autocliv1.ServiceCommandDescriptor{
-			Service: authzv1beta1.Query_ServiceDesc.ServiceName,
+			Service: authzv1beta1.Query_serviceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "Grants",
@@ -47,7 +47,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
-			Service:              authzv1beta1.Msg_ServiceDesc.ServiceName,
+			Service:              authzv1beta1.Msg_serviceDesc.ServiceName,
 			EnhanceCustomCommand: false, // use custom commands only until v0.51
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{

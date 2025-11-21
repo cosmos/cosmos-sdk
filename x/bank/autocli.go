@@ -4,14 +4,15 @@ import (
 	"strings"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+
+	bankv1beta1 "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 	return &autocliv1.ModuleOptions{
 		Query: &autocliv1.ServiceCommandDescriptor{
-			Service: bankv1beta1.Query_ServiceDesc.ServiceName,
+			Service: bankv1beta1.Query_serviceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod:      "Balance",
@@ -87,7 +88,7 @@ To look up all denoms, do not provide any arguments.`,
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
-			Service:              bankv1beta1.Msg_ServiceDesc.ServiceName,
+			Service:              bankv1beta1.Msg_serviceDesc.ServiceName,
 			EnhanceCustomCommand: false, // use custom commands only until v0.51
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{

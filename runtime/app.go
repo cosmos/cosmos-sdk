@@ -7,7 +7,6 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	"golang.org/x/exp/slices"
 
-	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
@@ -19,6 +18,7 @@ import (
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	runtimemodule "github.com/cosmos/cosmos-sdk/runtime/module"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
@@ -42,7 +42,7 @@ type App struct {
 
 	ModuleManager     *module.Manager
 	configurator      module.Configurator
-	config            *runtimev1alpha1.Module
+	config            *runtimemodule.Module
 	storeKeys         []storetypes.StoreKey
 	interfaceRegistry codectypes.InterfaceRegistry
 	cdc               codec.Codec

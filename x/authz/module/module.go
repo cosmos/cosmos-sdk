@@ -8,11 +8,11 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	modulev1 "cosmossdk.io/api/cosmos/authz/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -26,6 +26,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	"github.com/cosmos/cosmos-sdk/x/authz/simulation"
+	modulev1 "github.com/cosmos/cosmos-sdk/x/authz/types/module"
 )
 
 var (
@@ -151,9 +152,9 @@ func (am AppModule) BeginBlock(ctx context.Context) error {
 }
 
 func init() {
-	appmodule.Register(
+	appconfig.RegisterModule(
 		&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
+		appconfig.Provide(ProvideModule),
 	)
 }
 

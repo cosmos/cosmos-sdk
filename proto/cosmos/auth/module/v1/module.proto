@@ -4,6 +4,8 @@ package cosmos.auth.module.v1;
 
 import "cosmos/app/v1alpha1/module.proto";
 
+option go_package = "github.com/cosmos/cosmos-sdk/x/auth/types/module";
+
 // Module is the config object for the auth module.
 message Module {
   option (cosmos.app.v1alpha1.module) = {

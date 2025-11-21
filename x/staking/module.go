@@ -11,10 +11,10 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/maps"
 
-	modulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/depinject/appconfig"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -30,6 +30,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/cosmos/cosmos-sdk/x/staking/simulation"
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	modulev1 "github.com/cosmos/cosmos-sdk/x/staking/types/module"
 )
 
 const (
@@ -188,10 +189,10 @@ func (am AppModule) EndBlock(ctx context.Context) ([]abci.ValidatorUpdate, error
 }
 
 func init() {
-	appmodule.Register(
+	appconfig.RegisterModule(
 		&modulev1.Module{},
-		appmodule.Provide(ProvideModule),
-		appmodule.Invoke(InvokeSetStakingHooks),
+		appconfig.Provide(ProvideModule),
+		appconfig.Invoke(InvokeSetStakingHooks),
 	)
 }
 

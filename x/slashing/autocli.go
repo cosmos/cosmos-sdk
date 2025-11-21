@@ -4,15 +4,15 @@ import (
 	"fmt"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	slashingv1beta "cosmossdk.io/api/cosmos/slashing/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/version"
+	slashingv1beta "github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 	return &autocliv1.ModuleOptions{
 		Query: &autocliv1.ServiceCommandDescriptor{
-			Service: slashingv1beta.Query_ServiceDesc.ServiceName,
+			Service: slashingv1beta.Query_serviceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "Params",
@@ -37,7 +37,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
-			Service: slashingv1beta.Msg_ServiceDesc.ServiceName,
+			Service: slashingv1beta.Msg_serviceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "Unjail",

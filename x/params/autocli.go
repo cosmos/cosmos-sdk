@@ -2,14 +2,15 @@ package params
 
 import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	paramsv1beta1 "cosmossdk.io/api/cosmos/params/v1beta1"
+
+	paramsv1beta1 "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 )
 
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 	return &autocliv1.ModuleOptions{
 		Query: &autocliv1.ServiceCommandDescriptor{
-			Service: paramsv1beta1.Query_ServiceDesc.ServiceName,
+			Service: paramsv1beta1.Query_serviceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "Params",

@@ -18,11 +18,10 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 
-	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/depinject/appconfig"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
@@ -34,6 +33,7 @@ import (
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	runtimemodule "github.com/cosmos/cosmos-sdk/runtime/module"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -100,7 +100,7 @@ func makeMinimalConfig() depinject.Config {
 			Modules: []*appv1alpha1.ModuleConfig{
 				{
 					Name: "runtime",
-					Config: appconfig.WrapAny(&runtimev1alpha1.Module{
+					Config: appconfig.WrapAny(&runtimemodule.Module{
 						AppName: "BaseAppApp",
 					}),
 				},

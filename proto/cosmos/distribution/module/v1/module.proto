@@ -4,6 +4,8 @@ package cosmos.distribution.module.v1;
 
 import "cosmos/app/v1alpha1/module.proto";
 
+option go_package = "github.com/cosmos/cosmos-sdk/x/distribution/types/module";
+
 // Module is the config object of the distribution module.
 message Module {
   option (cosmos.app.v1alpha1.module) = {

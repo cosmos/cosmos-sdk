@@ -16,7 +16,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 )
 
-// An sdk.Tx which is its own sdk.Msg.
+// KVStoreTx an sdk.Tx which is its own sdk.Msg.
 type KVStoreTx struct {
 	key     []byte
 	value   []byte
@@ -85,11 +85,11 @@ var (
 )
 
 func NewTx(key, value string, accAddress sdk.AccAddress) *KVStoreTx {
-	bytes := fmt.Sprintf("%s=%s=%s", key, value, accAddress)
+	b := fmt.Sprintf("%s=%s=%s", key, value, accAddress)
 	return &KVStoreTx{
 		key:     []byte(key),
 		value:   []byte(value),
-		bytes:   []byte(bytes),
+		bytes:   []byte(b),
 		address: accAddress,
 	}
 }

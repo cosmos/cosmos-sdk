@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	// without this import amino json encoding will fail when resolving any types
-	_ "cosmossdk.io/api/cosmos/authz/v1beta1"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"

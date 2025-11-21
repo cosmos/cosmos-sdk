@@ -2,16 +2,16 @@ package consensus
 
 import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	consensusv1 "cosmossdk.io/api/cosmos/consensus/v1"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
+	consensusv1 "github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
 
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 	return &autocliv1.ModuleOptions{
 		Query: &autocliv1.ServiceCommandDescriptor{
-			Service: consensusv1.Query_ServiceDesc.ServiceName,
+			Service: consensusv1.Query_serviceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "Params",
@@ -24,7 +24,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
-			Service: consensusv1.Msg_ServiceDesc.ServiceName,
+			Service: consensusv1.Msg_serviceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "UpdateParams",

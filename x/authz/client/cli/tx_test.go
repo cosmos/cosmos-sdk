@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/suite"
 
-	_ "cosmossdk.io/api/cosmos/authz/v1beta1"
 	"cosmossdk.io/core/address"
 	sdkmath "cosmossdk.io/math"
 
@@ -24,6 +23,7 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	_ "github.com/cosmos/cosmos-sdk/x/authz"
 	"github.com/cosmos/cosmos-sdk/x/authz/client/cli"
 	authzclitestutil "github.com/cosmos/cosmos-sdk/x/authz/client/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank"

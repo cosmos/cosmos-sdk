@@ -12,8 +12,8 @@ import (
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/depinject/appconfig"
 	txsigning "cosmossdk.io/x/tx/signing"
 	"cosmossdk.io/x/tx/signing/textual"
 
@@ -32,9 +32,9 @@ import (
 )
 
 func init() {
-	appmodule.Register(&txconfigv1.Config{},
-		appmodule.Provide(ProvideModule),
-		appmodule.Provide(ProvideProtoRegistry),
+	appconfig.RegisterModule(&txconfigv1.Config{},
+		appconfig.Provide(ProvideModule),
+		appconfig.Provide(ProvideProtoRegistry),
 	)
 }
 

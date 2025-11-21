@@ -3,19 +3,19 @@ package auth
 import (
 	"fmt"
 
-	authv1beta1 "cosmossdk.io/api/cosmos/auth/v1beta1"
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1" // register so that it shows up in protoregistry.GlobalTypes
 	_ "cosmossdk.io/api/cosmos/crypto/secp256r1" // register so that it shows up in protoregistry.GlobalTypes
 
 	"github.com/cosmos/cosmos-sdk/version"
+	authv1beta1 "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 	return &autocliv1.ModuleOptions{
 		Query: &autocliv1.ServiceCommandDescriptor{
-			Service: authv1beta1.Query_ServiceDesc.ServiceName,
+			Service: authv1beta1.Query_serviceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "Accounts",
@@ -77,7 +77,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
-			Service: authv1beta1.Msg_ServiceDesc.ServiceName,
+			Service: authv1beta1.Msg_serviceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod:      "UpdateParams",

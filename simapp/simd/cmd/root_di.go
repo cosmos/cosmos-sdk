@@ -1,5 +1,3 @@
-//go:build !app_v1
-
 package cmd
 
 import (

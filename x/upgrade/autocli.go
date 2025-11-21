@@ -2,13 +2,14 @@ package upgrade
 
 import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	upgradev1beta1 "cosmossdk.io/api/cosmos/upgrade/v1beta1"
+
+	upgradev1beta1 "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 	return &autocliv1.ModuleOptions{
 		Query: &autocliv1.ServiceCommandDescriptor{
-			Service: upgradev1beta1.Query_ServiceDesc.ServiceName,
+			Service: upgradev1beta1.Query_serviceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "CurrentPlan",
@@ -47,7 +48,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
-			Service: upgradev1beta1.Msg_ServiceDesc.ServiceName,
+			Service: upgradev1beta1.Msg_serviceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "SoftwareUpgrade",

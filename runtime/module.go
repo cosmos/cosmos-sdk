@@ -8,10 +8,7 @@ import (
 	"google.golang.org/protobuf/reflect/protodesc"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
-	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
-	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
-	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/comet"
@@ -20,6 +17,7 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/depinject/appconfig"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/tx/signing"
@@ -28,9 +26,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	runtimemodule "github.com/cosmos/cosmos-sdk/runtime/module"
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
+	authmodulev1 "github.com/cosmos/cosmos-sdk/x/auth/types/module"
+	stakingmodulev1 "github.com/cosmos/cosmos-sdk/x/staking/types/module"
 )
 
 type appModule struct {
@@ -60,8 +61,8 @@ type BaseAppOption func(*baseapp.BaseApp)
 func (b BaseAppOption) IsManyPerContainerType() {}
 
 func init() {
-	appmodule.Register(&runtimev1alpha1.Module{},
-		appmodule.Provide(
+	appconfig.RegisterModule(&runtimemodule.Module{},
+		appconfig.Provide(
 			ProvideApp,
 			ProvideInterfaceRegistry,
 			ProvideKVStoreKey,
@@ -77,7 +78,7 @@ func init() {
 			ProvideBasicManager,
 			ProvideAddressCodec,
 		),
-		appmodule.Invoke(SetupAppBuilder),
+		appconfig.Invoke(SetupAppBuilder),
 	)
 }
 
@@ -128,7 +129,7 @@ type AppInputs struct {
 	depinject.In
 
 	AppConfig          *appv1alpha1.Config `optional:"true"`
-	Config             *runtimev1alpha1.Module
+	Config             *runtimemodule.Module
 	AppBuilder         *AppBuilder
 	Modules            map[string]appmodule.AppModule
 	CustomModuleBasics map[string]module.AppModuleBasic `optional:"true"`
@@ -189,7 +190,7 @@ func registerStoreKey(wrapper *AppBuilder, key storetypes.StoreKey) {
 	wrapper.app.storeKeys = append(wrapper.app.storeKeys, key)
 }
 
-func storeKeyOverride(config *runtimev1alpha1.Module, moduleName string) *runtimev1alpha1.StoreKeyConfig {
+func storeKeyOverride(config *runtimemodule.Module, moduleName string) *runtimemodule.StoreKeyConfig {
 	for _, cfg := range config.OverrideStoreKeys {
 		if cfg.ModuleName == moduleName {
 			return cfg
@@ -198,7 +199,7 @@ func storeKeyOverride(config *runtimev1alpha1.Module, moduleName string) *runtim
 	return nil
 }
 
-func ProvideKVStoreKey(config *runtimev1alpha1.Module, key depinject.ModuleKey, app *AppBuilder) *storetypes.KVStoreKey {
+func ProvideKVStoreKey(config *runtimemodule.Module, key depinject.ModuleKey, app *AppBuilder) *storetypes.KVStoreKey {
 	override := storeKeyOverride(config, key.Name())
 
 	var storeKeyName string
@@ -229,7 +230,7 @@ func ProvideGenesisTxHandler(appBuilder *AppBuilder) genesis.TxHandler {
 	return appBuilder.app
 }
 
-func ProvideKVStoreService(config *runtimev1alpha1.Module, key depinject.ModuleKey, app *AppBuilder) store.KVStoreService {
+func ProvideKVStoreService(config *runtimemodule.Module, key depinject.ModuleKey, app *AppBuilder) store.KVStoreService {
 	storeKey := ProvideKVStoreKey(config, key, app)
 	return kvStoreService{key: storeKey}
 }

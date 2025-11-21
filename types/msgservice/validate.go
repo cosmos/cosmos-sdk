@@ -31,7 +31,7 @@ func ValidateProtoAnnotations(protoFiles signing.ProtoFileResolver) error {
 			if sd.Name() == "Msg" {
 				// We use the heuristic that services name Msg are exactly the
 				// ones that need the proto annotations check.
-				err := validateMsgServiceAnnotations(sd)
+				err := ValidateMsgServiceAnnotations(sd)
 				if err != nil {
 					serviceErrs = append(serviceErrs, err)
 				}
@@ -44,9 +44,9 @@ func ValidateProtoAnnotations(protoFiles signing.ProtoFileResolver) error {
 	return errors.Join(serviceErrs...)
 }
 
-// validateMsgServiceAnnotations validates that the service has the
+// ValidateMsgServiceAnnotations validates that the service has the
 // `(cosmos.msg.v1.service) = true` proto annotation.
-func validateMsgServiceAnnotations(sd protoreflect.ServiceDescriptor) error {
+func ValidateMsgServiceAnnotations(sd protoreflect.ServiceDescriptor) error {
 	ext := proto.GetExtension(sd.Options(), msg.E_Service)
 	isService, ok := ext.(bool)
 	if !ok {

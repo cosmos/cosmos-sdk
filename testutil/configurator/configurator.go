@@ -1,28 +1,29 @@
 package configurator
 
 import (
-	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
-	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
-	authzmodulev1 "cosmossdk.io/api/cosmos/authz/module/v1"
-	bankmodulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	circuitmodulev1 "cosmossdk.io/api/cosmos/circuit/module/v1"
-	consensusmodulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
-	distrmodulev1 "cosmossdk.io/api/cosmos/distribution/module/v1"
 	evidencemodulev1 "cosmossdk.io/api/cosmos/evidence/module/v1"
 	feegrantmodulev1 "cosmossdk.io/api/cosmos/feegrant/module/v1"
-	genutilmodulev1 "cosmossdk.io/api/cosmos/genutil/module/v1"
-	govmodulev1 "cosmossdk.io/api/cosmos/gov/module/v1"
 	groupmodulev1 "cosmossdk.io/api/cosmos/group/module/v1"
-	mintmodulev1 "cosmossdk.io/api/cosmos/mint/module/v1"
 	nftmodulev1 "cosmossdk.io/api/cosmos/nft/module/v1"
-	paramsmodulev1 "cosmossdk.io/api/cosmos/params/module/v1"
-	slashingmodulev1 "cosmossdk.io/api/cosmos/slashing/module/v1"
-	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
-	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
-	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/depinject/appconfig"
+
+	runtimemodule "github.com/cosmos/cosmos-sdk/runtime/module"
+	authmodulev1 "github.com/cosmos/cosmos-sdk/x/auth/types/module"
+	vestingmodulev1 "github.com/cosmos/cosmos-sdk/x/auth/vesting/types/module"
+	authzmodulev1 "github.com/cosmos/cosmos-sdk/x/authz/types/module"
+	bankmodulev1 "github.com/cosmos/cosmos-sdk/x/bank/types/module"
+	consensusmodulev1 "github.com/cosmos/cosmos-sdk/x/consensus/types/module"
+	distrmodulev1 "github.com/cosmos/cosmos-sdk/x/distribution/types/module"
+	genutilmodulev1 "github.com/cosmos/cosmos-sdk/x/genutil/types/module"
+	govmodulev1 "github.com/cosmos/cosmos-sdk/x/gov/types/module"
+	mintmodulev1 "github.com/cosmos/cosmos-sdk/x/mint/types/module"
+	paramsmodulev1 "github.com/cosmos/cosmos-sdk/x/params/types/module"
+	slashingmodulev1 "github.com/cosmos/cosmos-sdk/x/slashing/types/module"
+	stakingmodulev1 "github.com/cosmos/cosmos-sdk/x/staking/types/module"
 )
 
 // Config should never need to be instantiated manually and is solely used for ModuleOption.
@@ -328,7 +329,7 @@ func NewAppConfig(opts ...ModuleOption) depinject.Config {
 	beginBlockers := make([]string, 0)
 	endBlockers := make([]string, 0)
 	initGenesis := make([]string, 0)
-	overrides := make([]*runtimev1alpha1.StoreKeyConfig, 0)
+	overrides := make([]*runtimemodule.StoreKeyConfig, 0)
 
 	for _, s := range cfg.PreBlockersOrder {
 		if _, ok := cfg.ModuleConfigs[s]; ok {
@@ -355,10 +356,10 @@ func NewAppConfig(opts ...ModuleOption) depinject.Config {
 	}
 
 	if _, ok := cfg.ModuleConfigs["auth"]; ok {
-		overrides = append(overrides, &runtimev1alpha1.StoreKeyConfig{ModuleName: "auth", KvStoreKey: "acc"})
+		overrides = append(overrides, &runtimemodule.StoreKeyConfig{ModuleName: "auth", KvStoreKey: "acc"})
 	}
 
-	runtimeConfig := &runtimev1alpha1.Module{
+	runtimeConfig := &runtimemodule.Module{
 		AppName:           "TestApp",
 		PreBlockers:       preBlockers,
 		BeginBlockers:     beginBlockers,

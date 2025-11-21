@@ -5,15 +5,15 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	_ "cosmossdk.io/api/cosmos/crypto/ed25519" // register to that it shows up in protoregistry.GlobalTypes
-	stakingv1beta "cosmossdk.io/api/cosmos/staking/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/version"
+	stakingv1beta "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 	return &autocliv1.ModuleOptions{
 		Query: &autocliv1.ServiceCommandDescriptor{
-			Service: stakingv1beta.Query_ServiceDesc.ServiceName,
+			Service: stakingv1beta.Query_serviceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "Validators",
@@ -140,7 +140,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
-			Service: stakingv1beta.Msg_ServiceDesc.ServiceName,
+			Service: stakingv1beta.Msg_serviceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod:      "Delegate",

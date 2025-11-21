@@ -4,16 +4,16 @@ import (
 	"fmt"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	govv1 "cosmossdk.io/api/cosmos/gov/v1"
 
 	"github.com/cosmos/cosmos-sdk/version"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 	return &autocliv1.ModuleOptions{
 		Query: &autocliv1.ServiceCommandDescriptor{
-			Service: govv1.Query_ServiceDesc.ServiceName,
+			Service: govv1.Query_serviceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "Params",
@@ -94,7 +94,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			EnhanceCustomCommand: true, // We still have manual commands in gov that we want to keep
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
-			Service: govv1.Msg_ServiceDesc.ServiceName,
+			Service: govv1.Msg_serviceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "Deposit",

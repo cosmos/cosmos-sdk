@@ -293,11 +293,6 @@ jobs:
         run: |
           cd simapp
           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock rocksdb_build' ./...
-      - name: tests simapp v1
-        if: env.GIT_DIFF
-        run: |
-          cd simapp
-          go test -mod=readonly -timeout 30m -tags='app_v1 norace ledger test_ledger_mock rocksdb_build' ./...
 
   #############################
   ### Cosmos SDK x/{module} ###

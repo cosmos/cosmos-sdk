@@ -24,4 +24,9 @@ type (
 		Has(ctx context.Context) (bool, error)
 		Set(ctx context.Context, cp cmtproto.ConsensusParams) error
 	}
+
+	Authority interface {
+		GetAuthority(ctx context.Context) (string, error)
+		ValidateAuthority(ctx context.Context, address string) error
+	}
 )

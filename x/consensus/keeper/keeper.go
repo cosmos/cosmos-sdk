@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"cosmossdk.io/core/address"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
@@ -11,13 +12,11 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/event"
 	storetypes "cosmossdk.io/core/store"
-	"cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/consensus/exported"
 	"github.com/cosmos/cosmos-sdk/x/consensus/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 var StoreKey = "Consensus"
@@ -25,25 +24,21 @@ var StoreKey = "Consensus"
 type Keeper struct {
 	storeService storetypes.KVStoreService
 	event        event.Service
+	addressCodec address.Codec
 
-	authority   string
 	ParamsStore collections.Item[cmtproto.ConsensusParams]
 }
 
 var _ exported.ConsensusParamSetter = Keeper{}.ParamsStore
 
-func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService, authority string, em event.Service) Keeper {
+func NewKeeper(cdc codec.BinaryCodec, storeService storetypes.KVStoreService, em event.Service, addressCodec address.Codec) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
 	return Keeper{
 		storeService: storeService,
-		authority:    authority,
 		event:        em,
+		addressCodec: addressCodec,
 		ParamsStore:  collections.NewItem(sb, collections.NewPrefix("Consensus"), "params", codec.CollValue[cmtproto.ConsensusParams](cdc)),
 	}
-}
-
-func (k *Keeper) GetAuthority() string {
-	return k.authority
 }
 
 // Querier
@@ -65,8 +60,8 @@ func (k Keeper) Params(ctx context.Context, _ *types.QueryParamsRequest) (*types
 var _ types.MsgServer = Keeper{}
 
 func (k Keeper) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
-	if k.GetAuthority() != msg.Authority {
-		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.GetAuthority(), msg.Authority)
+	if err := k.ValidateAuthority(ctx, msg.Authority); err != nil {
+		return nil, err
 	}
 
 	consensusParams, err := msg.ToProtoConsensusParams()

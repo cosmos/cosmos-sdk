@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/hashicorp/go-metrics"
@@ -149,6 +150,10 @@ func New(cfg Config) (_ *Metrics, rerr error) {
 	case MetricSinkDogsStatsd:
 		sink, err = datadog.NewDogStatsdSink(cfg.StatsdAddr, cfg.DatadogHostname)
 	case MetricSinkOtel:
+		otelCfg := os.Getenv(OtelConfigEnvVar)
+		if otelCfg == "" {
+			return nil, fmt.Errorf("using the %s sink requires %s environment variable to be set. see: https://opentelemetry.io/docs/languages/sdk-configuration/declarative-configuration/ for details", MetricSinkOtel, OtelConfigEnvVar)
+		}
 		sink = newOtelGoMetricsSink(context.Background(), otel.Meter("gometrics"))
 	default:
 		memSink := metrics.NewInmemSink(10*time.Second, time.Minute)

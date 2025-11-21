@@ -20,8 +20,12 @@ import (
 	"go.yaml.in/yaml/v3"
 )
 
+const (
+	OtelConfigEnvVar = "OTEL_EXPERIMENTAL_CONFIG_FILE"
+)
+
 var (
-	sdk           otelconf.SDK
+	sdk           *otelconf.SDK
 	shutdownFuncs []func(context.Context) error
 )
 
@@ -37,7 +41,7 @@ func initOpenTelemetry() error {
 
 	var opts []otelconf.ConfigurationOption
 
-	confFilename := os.Getenv("OTEL_EXPERIMENTAL_CONFIG_FILE")
+	confFilename := os.Getenv(OtelConfigEnvVar)
 	if confFilename == "" {
 		return nil
 	}
@@ -160,10 +164,11 @@ func initOpenTelemetry() error {
 		fmt.Printf("failed to parse cosmos extra config: %v\n", err)
 	}
 
-	sdk, err = otelconf.NewSDK(opts...)
+	otelSDK, err := otelconf.NewSDK(opts...)
 	if err != nil {
 		return fmt.Errorf("failed to initialize telemetry: %w", err)
 	}
+	sdk = &otelSDK
 
 	// setup otel global providers
 	otel.SetTracerProvider(sdk.TracerProvider())
@@ -188,13 +193,15 @@ type cosmosExtra struct {
 }
 
 func Shutdown(ctx context.Context) error {
-	err := sdk.Shutdown(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to shutdown telemetry: %w", err)
-	}
-	for _, f := range shutdownFuncs {
-		if err := f(ctx); err != nil {
+	if sdk != nil {
+		err := sdk.Shutdown(ctx)
+		if err != nil {
 			return fmt.Errorf("failed to shutdown telemetry: %w", err)
+		}
+		for _, f := range shutdownFuncs {
+			if err := f(ctx); err != nil {
+				return fmt.Errorf("failed to shutdown telemetry: %w", err)
+			}
 		}
 	}
 	return nil

@@ -3,6 +3,7 @@ package baseapp
 import (
 	"context"
 	"fmt"
+	"math"
 	"sort"
 	"strings"
 	"time"
@@ -335,6 +336,15 @@ func (app *BaseApp) ApplySnapshotChunk(req *abci.RequestApplySnapshotChunk) (*ab
 	}
 }
 
+// safeInt64FromUint64 converts uint64 to int64 with overflow checking.
+// If the value is too large to fit in int64, it returns math.MaxInt64.
+func safeInt64FromUint64(val uint64) int64 {
+	if val > math.MaxInt64 {
+		return math.MaxInt64
+	}
+	return int64(val)
+}
+
 // CheckTx implements the ABCI interface and executes a tx in CheckTx mode. In
 // CheckTx mode, messages are not executed. This means messages are only validated
 // and only the AnteHandler is executed. State is persisted to the BaseApp's
@@ -362,8 +372,8 @@ func (app *BaseApp) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, er
 		}
 
 		return &abci.ResponseCheckTx{
-			GasWanted: int64(gasInfo.GasWanted), // TODO: Should type accept unsigned ints?
-			GasUsed:   int64(gasInfo.GasUsed),   // TODO: Should type accept unsigned ints?
+			GasWanted: safeInt64FromUint64(gasInfo.GasWanted),
+			GasUsed:   safeInt64FromUint64(gasInfo.GasUsed),
 			Log:       result.Log,
 			Data:      result.Data,
 			Events:    sdk.MarkEventsToIndex(result.Events, app.indexEvents),

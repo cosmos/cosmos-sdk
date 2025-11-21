@@ -3,6 +3,7 @@ package math_test
 import (
 	"encoding/json"
 	"fmt"
+	stdmath "math"
 	"math/big"
 	"math/rand"
 	"os"
@@ -691,4 +692,45 @@ func BenchmarkIntOverflowCheckTime(b *testing.B) {
 		b.Fatal("Benchmark did not run!")
 	}
 	sink = nil
+}
+
+func TestSafeInt64FromUint64(t *testing.T) {
+	testCases := []struct {
+		name     string
+		input    uint64
+		expected int64
+	}{
+		{
+			name:     "zero",
+			input:    0,
+			expected: 0,
+		},
+		{
+			name:     "small positive",
+			input:    1000,
+			expected: 1000,
+		},
+		{
+			name:     "max int64",
+			input:    stdmath.MaxInt64,
+			expected: stdmath.MaxInt64,
+		},
+		{
+			name:     "max int64 + 1",
+			input:    stdmath.MaxInt64 + 1,
+			expected: stdmath.MaxInt64,
+		},
+		{
+			name:     "max uint64",
+			input:    stdmath.MaxUint64,
+			expected: stdmath.MaxInt64,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := math.SafeInt64FromUint64(tc.input)
+			require.Equal(t, tc.expected, result)
+		})
+	}
 }

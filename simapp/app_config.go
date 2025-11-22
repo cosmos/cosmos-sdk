@@ -15,6 +15,9 @@ import (
 	"cosmossdk.io/x/feegrant"
 	_ "cosmossdk.io/x/feegrant/module" // import for side-effects
 
+	_ "cosmossdk.io/x/upgrade" // import for side-effects
+	upgradetypes "cosmossdk.io/x/upgrade/types"
+	upgrademodulev1 "cosmossdk.io/x/upgrade/types/module"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	runtimemodule "github.com/cosmos/cosmos-sdk/runtime/module"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -56,9 +59,6 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/staking" // import for side-effects
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	stakingmodulev1 "github.com/cosmos/cosmos-sdk/x/staking/types/module"
-	_ "github.com/cosmos/cosmos-sdk/x/upgrade" // import for side-effects
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	upgrademodulev1 "github.com/cosmos/cosmos-sdk/x/upgrade/types/module"
 )
 
 var (

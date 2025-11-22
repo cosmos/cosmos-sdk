@@ -3,7 +3,7 @@ package upgrade
 import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 
-	upgradev1beta1 "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	upgradev1beta1 "cosmossdk.io/x/upgrade/types"
 )
 
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {

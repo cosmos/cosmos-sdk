@@ -17,7 +17,7 @@ jobs:
     runs-on: depot-ubuntu-22.04-4
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           ref: "release/v0.50.x"
       - uses: actions/setup-go@v6
@@ -48,7 +48,7 @@ jobs:
     needs: [build, install-runsim]
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           ref: "release/v0.50.x"
       - uses: actions/setup-go@v6
@@ -67,7 +67,7 @@ jobs:
     runs-on: depot-ubuntu-22.04-4
     needs: [build, install-runsim]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           ref: "release/v0.50.x"
       - uses: actions/setup-go@v6
@@ -86,7 +86,7 @@ jobs:
     runs-on: depot-ubuntu-22.04-4
     needs: [build, install-runsim]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           ref: "release/v0.50.x"
       - uses: actions/setup-go@v6

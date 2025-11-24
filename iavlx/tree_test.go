@@ -144,7 +144,7 @@ func renderTree(t interface {
 }, tree *ImmutableTree,
 ) {
 	graph := &bytes.Buffer{}
-	require.NoError(t, RenderDotGraph(graph, tree.root))
+	require.NoError(t, RenderNodeDotGraph(graph, tree.root))
 	t.Logf("tree graph:\n%s", graph.String())
 }
 

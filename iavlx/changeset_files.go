@@ -56,7 +56,14 @@ func CreateChangesetFiles(treeDir string, startVersion, compactedAt uint32, kvlo
 
 	localKVLogPath := filepath.Join(dir, "kv.log")
 	if kvlogPath == "" {
-		kvlogPath = localKVLogPath
+		// For original (non-compacted) changesets, normalize the path by evaluating
+		// symlinks in the directory path to ensure consistent comparisons later.
+		// This handles platform differences like /var vs /private/var on macOS.
+		normalizedDir, err := filepath.EvalSymlinks(dir)
+		if err != nil {
+			return nil, fmt.Errorf("failed to eval directory path: %w", err)
+		}
+		kvlogPath = filepath.Join(normalizedDir, "kv.log")
 	} else {
 		// create symlink to kvlog so that it can be reopened later
 		err := os.Symlink(kvlogPath, localKVLogPath)
@@ -267,8 +274,11 @@ func (cr *ChangesetFiles) DeleteFiles(args ChangesetDeleteArgs) error {
 		os.Remove(cr.versionsFile.Name()),
 		os.Remove(cr.orphansFile.Name()),
 	}
-	if cr.kvlogFile.Name() != args.SaveKVLogPath {
-		errs = append(errs, os.Remove(cr.kvlogFile.Name()))
+
+	localKVLogPath := filepath.Join(cr.dir, "kv.log")
+	if cr.kvlogPath != args.SaveKVLogPath {
+		// delete the local kv.log (which might be a symlink)
+		errs = append(errs, os.Remove(localKVLogPath))
 	}
 	err := errors.Join(errs...)
 	if err != nil {

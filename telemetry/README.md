@@ -64,19 +64,8 @@ Developers need to do two things to use this package properly:
 
 If these steps are followed, developers can follow the official golang otel conventions
 of declaring package-level tracer and meter instances using otel.Tracer() and otel.Meter().
-NOTE: it is important to thread context.Context properly for spans, metrics and logs to be
+NOTE: it is important to thread context.Context properly for spans and metrics to be
 correlated correctly.
 When using the SDK's context type, spans must be started with Context.StartSpan to
 get an SDK context which has the span set correctly.
-If developers would like to emit log messages which are correlated with the current span,
-for now they should use the global `log/slog` default context logging methods directly, i.e., `slog.InfoContext`,
-`slog.ErrorContext`, etc.
-Other approaches to logging with `context.Context` may be supported in the future.
 
-## Overriding Automatic OpenTelemetry Configuration
-
-If a user would like to provide their own configuration for OpenTelemetry instead of using the
-declarative configuration file approach, their code must call `cosmossdk.io/log.SetOpenTelemetryConfigured`
-before importing this package.
-This package will not perform OpenTelemetry initialization if `cosmossdk.io/log.IsOpenTelemetryConfigured()`
-returns true.

@@ -12,7 +12,7 @@ import (
 )
 
 // NewParams returns Params instance with the given values.
-func NewParams(mintDenom string, inflationRateChange, inflationMax, inflationMin, goalBonded sdkmath.LegacyDec, blocksPerYear uint64, maxSupply math.Int) Params {
+func NewParams(mintDenom string, inflationRateChange, inflationMax, inflationMin, goalBonded sdkmath.LegacyDec, blocksPerYear uint64, maxSupply sdkmath.Int) Params {
 	return Params{
 		MintDenom:           mintDenom,
 		InflationRateChange: inflationRateChange,
@@ -33,7 +33,7 @@ func DefaultParams() Params {
 		InflationMin:        sdkmath.LegacyNewDecWithPrec(7, 2),
 		GoalBonded:          sdkmath.LegacyNewDecWithPrec(67, 2),
 		BlocksPerYear:       uint64(60 * 60 * 8766 / 5), // assuming 5 second block times
-		MaxSupply:           math.ZeroInt(),             // assuming zero is infinite
+		MaxSupply:           sdkmath.ZeroInt(),          // assuming zero is infinite
 	}
 }
 
@@ -150,7 +150,7 @@ func validateBlocksPerYear(blocksPerYear uint64) error {
 }
 
 func validateMaxSupply(i interface{}) error {
-	v, ok := i.(math.Int)
+	v, ok := i.(sdkmath.Int)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}

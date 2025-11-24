@@ -10,12 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
-const (
-	ModuleName = "mint"
-)
-
-var ParamsKey = []byte{0x01}
-
 // Migrate migrates the x/mint module state from the consensus version 2 to
 // version 3.
 func Migrate(
@@ -34,6 +28,5 @@ func Migrate(
 		return err
 	}
 
-	bz := cdc.MustMarshal(&currParams)
-	return store.Set(ParamsKey, bz)
+	return params.Set(ctx, currParams)
 }

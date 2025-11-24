@@ -352,6 +352,17 @@ func (ts *TreeStore) syncProc() {
 }
 
 func (ts *TreeStore) Close() error {
+	// save the current writer if it has uncommitted data
+	startVersion := ts.currentWriter.files.info.StartVersion
+	if startVersion != 0 {
+		cs, err := ts.currentWriter.Seal()
+		if err != nil {
+			return fmt.Errorf("failed to seal current changeset on close: %w", err)
+		}
+		ts.setActiveReader(startVersion, cs)
+		ts.savedVersion.Store(ts.currentWriter.files.info.EndVersion)
+	}
+
 	ts.cleanupProc.shutdown()
 
 	if ts.syncQueue != nil {

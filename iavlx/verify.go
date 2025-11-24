@@ -37,7 +37,7 @@ var _ error = &DebugError{}
 //				return err
 //			} else {
 //				buf := &bytes.Buffer{}
-//				err2 := RenderDotGraph(buf, np)
+//				err2 := RenderNodeDotGraph(buf, np)
 //				if err2 == nil {
 //					err = &DebugError{
 //						Graph: buf.String(),

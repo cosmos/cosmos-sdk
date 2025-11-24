@@ -28,6 +28,7 @@ type Compactor struct {
 	branchesWriter    *StructWriter[BranchLayout]
 	versionsWriter    *StructWriter[VersionInfo]
 	kvlogWriter       *KVLogWriter
+	orphanWriter      *OrphanWriter
 
 	keyCache map[string]uint32
 	// offsetCache holds the updated 1-based offsets of nodes affected by compacting.
@@ -40,7 +41,6 @@ type Compactor struct {
 	leafOrphanVersionTotal   uint64
 	branchOrphanVersionTotal uint64
 	ctx                      context.Context
-	retainedOrphans          map[NodeID]uint32
 }
 
 func NewCompacter(ctx context.Context, reader *Changeset, opts CompactOptions, store *TreeStore) (*Compactor, error) {
@@ -84,9 +84,9 @@ func NewCompacter(ctx context.Context, reader *Changeset, opts CompactOptions, s
 		leavesWriter:      NewStructWriter[LeafLayout](newFiles.leavesFile),
 		branchesWriter:    NewStructWriter[BranchLayout](newFiles.branchesFile),
 		versionsWriter:    NewStructWriter[VersionInfo](newFiles.versionsFile),
+		orphanWriter:      NewOrphanWriter(newFiles.orphansFile),
 		keyCache:          make(map[string]uint32),
 		offsetCache:       make(map[NodeID]uint32),
-		retainedOrphans:   make(map[NodeID]uint32),
 	}
 
 	// Process first changeset immediately
@@ -176,7 +176,11 @@ func (c *Compactor) processChangeset(reader *Changeset) error {
 
 			c.offsetCache[id] = uint32(c.leavesWriter.Count())
 
-			c.retainedOrphans[id] = orphanVersion
+			if orphanVersion != 0 {
+				if err := c.orphanWriter.WriteOrphan(orphanVersion, id); err != nil {
+					return fmt.Errorf("failed to write retained orphan leaf %s: %w", id, err)
+				}
+			}
 		}
 
 		newBranchStartIdx := uint32(0)
@@ -236,7 +240,11 @@ func (c *Compactor) processChangeset(reader *Changeset) error {
 			}
 			c.offsetCache[id] = uint32(c.branchesWriter.Count())
 
-			c.retainedOrphans[id] = orphanVersion
+			if orphanVersion != 0 {
+				if err := c.orphanWriter.WriteOrphan(orphanVersion, id); err != nil {
+					return fmt.Errorf("failed to write retained orphan leaf %s: %w", id, err)
+				}
+			}
 		}
 
 		verInfo = VersionInfo{
@@ -293,6 +301,7 @@ func (c *Compactor) Seal() (*Changeset, error) {
 		c.leavesWriter.Flush(),
 		c.branchesWriter.Flush(),
 		c.versionsWriter.Flush(),
+		c.orphanWriter.Flush(),
 		c.files.RewriteInfo(),
 	}
 	if c.kvlogWriter != nil {
@@ -312,7 +321,6 @@ func (c *Compactor) Seal() (*Changeset, error) {
 	}
 
 	// write orphan map
-	err = cs.orphanWriter.WriteOrphanMap(c.retainedOrphans)
 	if err != nil {
 		return nil, fmt.Errorf("failed to write orphan map during compaction seal: %w", err)
 	}

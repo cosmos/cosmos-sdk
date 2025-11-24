@@ -350,6 +350,17 @@ func (c *CommitTree) GetImmutable(version int64) (storetypes.KVStore, error) {
 	return NewImmutableTree(rootPtr), nil
 }
 
+func (c *CommitTree) ResolveRoot(version uint32) (*NodePointer, error) {
+	if version == 0 {
+		version = c.store.stagedVersion - 1
+	}
+	return c.store.ResolveRoot(version)
+}
+
+func (c *CommitTree) Version() uint32 {
+	return c.store.stagedVersion - 1
+}
+
 func (c *CommitTree) Close() error {
 	if c.walQueue != nil {
 		c.walQueue.Close()
@@ -382,9 +393,10 @@ func commitTraverse(ctx *commitContext, np *NodePointer, depth uint8) (hash []by
 	}
 
 	var leftHash, rightHash []byte
+	var id NodeID
 	if memNode.IsLeaf() {
 		ctx.leafNodeIdx++
-		np.id = NewNodeID(true, uint64(ctx.version), ctx.leafNodeIdx)
+		id = NewNodeID(true, uint64(ctx.version), ctx.leafNodeIdx)
 	} else {
 		// post-order traversal
 		leftHash, err = commitTraverse(ctx, memNode.left, depth+1)
@@ -397,9 +409,10 @@ func commitTraverse(ctx *commitContext, np *NodePointer, depth uint8) (hash []by
 		}
 
 		ctx.branchNodeIdx++
-		np.id = NewNodeID(false, uint64(ctx.version), ctx.branchNodeIdx)
-
+		id = NewNodeID(false, uint64(ctx.version), ctx.branchNodeIdx)
 	}
+	np.id = id
+	memNode.nodeId = id
 
 	if memNode.hash != nil {
 		// hash previously computed node

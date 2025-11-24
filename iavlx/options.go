@@ -18,7 +18,8 @@ type Options struct {
 	// CompactionOrphanAge is the average age of orphans (in versions) at which compaction is triggered
 	CompactionOrphanAge uint32 `json:"compaction_orphan_age"`
 
-	// RetainVersions is the number of recent versions to keep uncompacted
+	// RetainVersions is the number of recent versions to keep uncompacted.
+	// If this is set to 0, all versions will be retained, and the compactor will only join changesets without removing any.
 	RetainVersions uint32 `json:"retain_versions"`
 	// MinCompactionSeconds is the minimum interval between compaction runs
 	MinCompactionSeconds uint32 `json:"min_compaction_seconds"`

@@ -336,21 +336,7 @@ func (c *CommitTree) startEvict(evictVersion uint32) {
 	}()
 }
 
-func (c *CommitTree) GetImmutable(version int64) (storetypes.KVStore, error) {
-	var rootPtr *NodePointer
-	if version == c.lastCommitId.Version {
-		rootPtr = c.root
-	} else {
-		var err error
-		rootPtr, err = c.store.ResolveRoot(uint32(version))
-		if err != nil {
-			return nil, err
-		}
-	}
-	return NewImmutableTree(rootPtr), nil
-}
-
-func (c *CommitTree) GetImmutableImpl(version int64) (*ImmutableTree, error) {
+func (c *CommitTree) GetImmutable(version int64) (*ImmutableTree, error) {
 	var rootPtr *NodePointer
 	if version == c.lastCommitId.Version {
 		rootPtr = c.root

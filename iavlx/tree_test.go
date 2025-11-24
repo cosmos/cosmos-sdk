@@ -33,7 +33,7 @@ func TestTree_MembershipProof(t *testing.T) {
 		keys = append(keys, key)
 	}
 	commitTree.Commit()
-	itree, err := commitTree.GetImmutableImpl(1)
+	itree, err := commitTree.GetImmutable(1)
 	require.NoError(t, err)
 
 	for _, key := range keys {
@@ -56,7 +56,7 @@ func TestTree_NonMembershipProof(t *testing.T) {
 		commitTree.Set([]byte(key), []byte(value))
 	}
 	commitTree.Commit()
-	itree, err := commitTree.GetImmutableImpl(1)
+	itree, err := commitTree.GetImmutable(1)
 	require.NoError(t, err)
 
 	for range 100 {

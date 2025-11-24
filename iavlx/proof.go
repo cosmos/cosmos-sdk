@@ -18,10 +18,10 @@ type proofInnerNode struct {
 
 type leafPath []proofInnerNode
 
-// NextIndex returns the index that would be assigned to the key.
+// nextIndex returns the index that would be assigned to the key.
 // This method assumes the key does not exist.
 // Callers are expected to check that t.Has(key) == false.
-func NextIndex(node Node, key []byte) (int64, error) {
+func nextIndex(node Node, key []byte) (int64, error) {
 	if node == nil {
 		return 0, nil
 	}
@@ -45,7 +45,7 @@ func NextIndex(node Node, key []byte) (int64, error) {
 			return 0, err
 		}
 
-		return NextIndex(leftNode, key)
+		return nextIndex(leftNode, key)
 	}
 
 	rightNode, err := node.Right().Resolve()
@@ -53,7 +53,7 @@ func NextIndex(node Node, key []byte) (int64, error) {
 		return 0, err
 	}
 
-	index, err := NextIndex(rightNode, key)
+	index, err := nextIndex(rightNode, key)
 	if err != nil {
 		return 0, err
 	}

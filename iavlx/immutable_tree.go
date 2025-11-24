@@ -107,7 +107,7 @@ func (t *ImmutableTree) GetNonMembershipProof(key []byte) (*ics23.CommitmentProo
 	if err != nil {
 		return nil, err
 	}
-	idx, err := NextIndex(root, key)
+	idx, err := nextIndex(root, key)
 	if err != nil {
 		return nil, err
 	}

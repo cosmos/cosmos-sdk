@@ -59,7 +59,7 @@ func DefaultMintFn(ic types.InflationCalculationFn) MintFn {
 			// calculate the difference between maxSupply and totalSupply
 			diff := maxSupply.Sub(totalSupply)
 			if diff.Sign() == -1 {
-				// ignore if total supply already exceeds max supply
+				// mint nothing if total supply already exceeds max supply
 				diff = sdkmath.ZeroInt()
 			}
 			// mint the difference

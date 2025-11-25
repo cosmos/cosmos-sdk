@@ -18,7 +18,7 @@ require (
 	github.com/chzyer/readline v1.5.1
 	github.com/cockroachdb/apd/v2 v2.0.2
 	github.com/cockroachdb/errors v1.12.0
-	github.com/cometbft/cometbft v0.39.0-beta.2
+	github.com/cometbft/cometbft v0.39.0-beta.2.0.20251125214254-bd5d82be3938
 	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/cosmos-db v1.1.3
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
@@ -306,8 +306,6 @@ require (
 replace (
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
-
-	github.com/cometbft/cometbft => ../cometbft
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates.
 	// TODO: remove it: https://github.com/cosmos/cosmos-sdk/issues/13134
 	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt/v4 v4.4.2

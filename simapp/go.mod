@@ -12,7 +12,7 @@ require (
 	cosmossdk.io/store v1.3.0-beta.0
 	cosmossdk.io/tools/confix v0.1.2
 	cosmossdk.io/x/tx v0.14.0
-	github.com/cometbft/cometbft v0.39.0-beta.2
+	github.com/cometbft/cometbft v0.39.0-beta.2.0.20251125214254-bd5d82be3938
 	github.com/cosmos/cosmos-db v1.1.3
 	// this version is not used as it is always replaced by the latest Cosmos SDK version
 	github.com/cosmos/cosmos-sdk v0.53.4
@@ -304,7 +304,6 @@ replace (
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 
-	github.com/cometbft/cometbft => ../../cometbft
 	// Simapp always use the latest version of the cosmos-sdk
 	github.com/cosmos/cosmos-sdk => ../.
 	// Fix upstream GHSA-h395-qcrw-5vmq and GHSA-3vp4-m3rf-835h vulnerabilities.

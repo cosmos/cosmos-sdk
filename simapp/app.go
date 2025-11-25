@@ -204,6 +204,8 @@ func NewSimApp(
 	std.RegisterLegacyAminoCodec(legacyAmino)
 	std.RegisterInterfaces(interfaceRegistry)
 
+	addressCodec := authcodec.NewBech32Codec(sdk.Bech32MainPrefix)
+
 	// Below we could construct and set an application specific mempool and
 	// ABCI 1.0 PrepareProposal and ProcessProposal handlers. These defaults are
 	// already set in the SDK's BaseApp, this shows an example of how to override
@@ -278,22 +280,13 @@ func NewSimApp(
 	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]),
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		runtime.EventService{},
+		addressCodec,
 	)
 	bApp.SetParamStore(app.ConsensusParamsKeeper.ParamsStore)
 
 	// add keepers
-	app.AccountKeeper = authkeeper.NewAccountKeeper(
-		appCodec,
-		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
-		authtypes.ProtoBaseAccount,
-		maccPerms,
-		authcodec.NewBech32Codec(sdk.Bech32MainPrefix),
-		sdk.Bech32MainPrefix,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		authkeeper.WithUnorderedTransactions(true),
-	)
+	app.AccountKeeper = authkeeper.NewAccountKeeper(appCodec, runtime.NewKVStoreService(keys[authtypes.StoreKey]), authtypes.ProtoBaseAccount, maccPerms, addressCodec, sdk.Bech32MainPrefix, authkeeper.WithUnorderedTransactions(true))
 
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec,

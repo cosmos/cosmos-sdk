@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	cmtypes "github.com/cometbft/cometbft/types"
 	"testing"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -66,7 +67,9 @@ func (suite *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{})
+	consensusParams := cmtypes.DefaultConsensusParams()
+	consensusParams.Authority.Authority = "authority"
+	suite.ctx = testCtx.Ctx.WithHeaderInfo(header.Info{}).WithConsensusParams(consensusParams.ToProto())
 
 	suite.accountKeeper = keeper.NewAccountKeeper(
 		suite.encCfg.Codec,
@@ -75,7 +78,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 		getMaccPerms(),
 		authcodec.NewBech32Codec("cosmos"),
 		"cosmos",
-		types.NewModuleAddress("gov").String(),
 	)
 	suite.msgServer = keeper.NewMsgServerImpl(suite.accountKeeper)
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)
@@ -239,7 +241,6 @@ func setupAccountKeeper(t *testing.T) (sdk.Context, keeper.AccountKeeper, store.
 		getMaccPerms(),
 		authcodec.NewBech32Codec("cosmos"),
 		"cosmos",
-		types.NewModuleAddress("gov").String(),
 	)
 
 	return ctx, ak, storeService

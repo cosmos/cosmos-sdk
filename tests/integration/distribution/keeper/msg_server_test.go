@@ -89,11 +89,10 @@ func initFixture(tb testing.TB) *fixture {
 		maccPerms,
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
-		authority.String(),
 	)
 
 	blockedAddresses := map[string]bool{
-		accountKeeper.GetAuthority(): false,
+		authority.String(): false,
 	}
 	bankKeeper := bankkeeper.NewBaseKeeper(
 		cdc,

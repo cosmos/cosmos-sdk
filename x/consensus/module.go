@@ -2,6 +2,7 @@ package consensus
 
 import (
 	"context"
+	"cosmossdk.io/core/address"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
@@ -18,10 +19,8 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	"github.com/cosmos/cosmos-sdk/x/consensus/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // ConsensusVersion defines the current x/consensus module consensus version.
@@ -102,6 +101,7 @@ type ModuleInputs struct {
 
 	Config       *modulev1.Module
 	Cdc          codec.Codec
+	AddressCodec address.Codec
 	StoreService storetypes.KVStoreService
 	EventManager event.Service
 }
@@ -115,13 +115,7 @@ type ModuleOutputs struct {
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
-	// default to governance authority if not provided
-	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
-	if in.Config.Authority != "" {
-		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
-	}
-
-	k := keeper.NewKeeper(in.Cdc, in.StoreService, authority.String(), in.EventManager)
+	k := keeper.NewKeeper(in.Cdc, in.StoreService, in.EventManager, in.AddressCodec)
 	m := NewAppModule(in.Cdc, k)
 	baseappOpt := func(app *baseapp.BaseApp) {
 		app.SetParamStore(k.ParamsStore)

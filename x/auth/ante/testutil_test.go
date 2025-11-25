@@ -79,10 +79,7 @@ func setupSuite(t *testing.T, isCheckTx, enableUnorderedTxs bool) *AnteTestSuite
 		"random":                 {"random"},
 	}
 
-	suite.accountKeeper = keeper.NewAccountKeeper(
-		suite.encCfg.Codec, runtime.NewKVStoreService(key), types.ProtoBaseAccount, maccPerms, authcodec.NewBech32Codec("cosmos"),
-		sdk.Bech32MainPrefix, types.NewModuleAddress("gov").String(), keeper.WithUnorderedTransactions(enableUnorderedTxs),
-	)
+	suite.accountKeeper = keeper.NewAccountKeeper(suite.encCfg.Codec, runtime.NewKVStoreService(key), types.ProtoBaseAccount, maccPerms, authcodec.NewBech32Codec("cosmos"), sdk.Bech32MainPrefix, keeper.WithUnorderedTransactions(enableUnorderedTxs))
 	suite.accountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)
 	err := suite.accountKeeper.Params.Set(suite.ctx, types.DefaultParams())
 	require.NoError(t, err)

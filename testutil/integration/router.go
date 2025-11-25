@@ -3,6 +3,7 @@ package integration
 import (
 	"context"
 	"fmt"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 
 	cmtabcitypes "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -22,7 +23,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 )
@@ -83,7 +83,7 @@ func NewIntegrationApp(
 
 	if keys[consensusparamtypes.StoreKey] != nil {
 		// set baseApp param store
-		consensusParamsKeeper := consensusparamkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), authtypes.NewModuleAddress("gov").String(), runtime.EventService{})
+		consensusParamsKeeper := consensusparamkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]), runtime.EventService{}, authcodec.NewBech32Codec(sdk.Bech32MainPrefix))
 		bApp.SetParamStore(consensusParamsKeeper.ParamsStore)
 
 		if err := bApp.LoadLatestVersion(); err != nil {

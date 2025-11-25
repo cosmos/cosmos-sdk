@@ -60,7 +60,6 @@ func (s *VestingTestSuite) SetupTest() {
 		maccPerms,
 		authcodec.NewBech32Codec("cosmos"),
 		"cosmos",
-		authtypes.NewModuleAddress("gov").String(),
 	)
 
 	vestingtypes.RegisterInterfaces(encCfg.InterfaceRegistry)

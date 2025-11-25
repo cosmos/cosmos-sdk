@@ -2,6 +2,7 @@ package integration_test
 
 import (
 	"fmt"
+	cmtypes "github.com/cometbft/cometbft/types"
 	"io"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -47,7 +48,6 @@ func Example() {
 		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
 		addresscodec.NewBech32Codec("cosmos"),
 		"cosmos",
-		authority,
 	)
 
 	// subspace is nil because we don't test params (which is legacy anyway)
@@ -127,7 +127,9 @@ func Example_oneModule() {
 	logger := log.NewLogger(io.Discard)
 
 	cms := integration.CreateMultiStore(keys, logger)
-	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)
+	consensusParams := cmtypes.DefaultConsensusParams()
+	consensusParams.Authority.Authority = authority
+	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger).WithConsensusParams(consensusParams.ToProto())
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		encodingCfg.Codec,
@@ -136,7 +138,6 @@ func Example_oneModule() {
 		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
 		addresscodec.NewBech32Codec("cosmos"),
 		"cosmos",
-		authority,
 	)
 
 	// subspace is nil because we don't test params (which is legacy anyway)

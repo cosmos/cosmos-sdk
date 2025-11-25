@@ -38,5 +38,9 @@ func (msg MsgUpdateParams) ToProtoConsensusParams() (cmtproto.ConsensusParams, e
 		}
 	}
 
+	if msg.Auth != nil {
+		cp.Authority = msg.Auth
+	}
+
 	return cp, nil
 }

@@ -61,7 +61,6 @@ func (s *VestingAccountTestSuite) SetupTest() {
 		maccPerms,
 		authcodec.NewBech32Codec("cosmos"),
 		"cosmos",
-		authtypes.NewModuleAddress("gov").String(),
 	)
 }
 

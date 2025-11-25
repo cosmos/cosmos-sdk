@@ -540,7 +540,17 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 
 	processProposalState := app.stateManager.GetState(execModeProcessProposal)
 	ctx := processProposalState.Context()
-	ctx, span := ctx.StartSpan(tracer, "ProcessProposal")
+	ctx, span := ctx.StartSpan(
+		tracer,
+		"ProcessProposal",
+		trace.WithAttributes(
+			otelattr.Int64("height", req.Height),
+			otelattr.String("timestamp", req.Time.String()),
+			otelattr.String("proposer", sdk.ValAddress(req.ProposerAddress).String()),
+			otelattr.Int("num_txs", len(req.Txs)),
+			otelattr.String("hash", string(req.Hash)),
+		),
+	)
 	defer span.End()
 	processProposalState.SetContext(app.getContextForProposal(ctx, req.Height).
 		WithVoteInfos(req.ProposedLastCommit.Votes). // this is a set of votes that are not finalized yet, wait for commit

@@ -469,7 +469,16 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 	}()
 
 	ctx := prepareProposalState.Context()
-	ctx, span := ctx.StartSpan(tracer, "PrepareProposal")
+	ctx, span := ctx.StartSpan(
+		tracer,
+		"PrepareProposal",
+		trace.WithAttributes(
+			otelattr.Int64("height", req.Height),
+			otelattr.String("timestamp", req.Time.String()),
+			otelattr.Int("num_txs", len(req.Txs)),
+			otelattr.String("proposer", sdk.ValAddress(req.ProposerAddress).String()),
+		),
+	)
 	defer span.End()
 	resp, err = app.abciHandlers.PrepareProposalHandler(ctx, req)
 	if err != nil {

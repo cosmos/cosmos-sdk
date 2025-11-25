@@ -93,7 +93,11 @@ func (app *BaseApp) RegisterGRPCServerWithSkipCheckHeader(server gogogrpc.Server
 			}
 		}()
 
-		return handler(grpcCtx, req)
+		// set the grpc context back into the SDK context.
+		// we do this because grpc context has values injected into it that are necessary to retain for systems
+		// such as OpenTelemetry.
+		sdkCtx = sdkCtx.WithContext(grpcCtx)
+		return handler(sdkCtx, req)
 	}
 
 	// Loop through all services and methods, add the interceptor, and register

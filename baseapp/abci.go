@@ -353,7 +353,7 @@ func (app *BaseApp) ApplySnapshotChunk(req *abci.RequestApplySnapshotChunk) (*ab
 // will contain relevant error information. Regardless of tx execution outcome,
 // the ResponseCheckTx will contain the relevant gas execution context.
 func (app *BaseApp) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, error) {
-	_, span := tracer.Start(context.Background(), "CheckTx")
+	_, span := tracer.Start(context.Background(), "CheckTx", trace.WithAttributes(otelattr.String("ExecMode", req.Type.String())))
 	defer span.End()
 
 	var mode sdk.ExecMode

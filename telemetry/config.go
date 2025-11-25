@@ -9,11 +9,14 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/host"
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
 	otelconf "go.opentelemetry.io/contrib/otelconf/v0.3.0"
+	"go.opentelemetry.io/contrib/propagators/b3"
+	"go.opentelemetry.io/contrib/propagators/jaeger"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/stdout/stdoutlog"
 	"go.opentelemetry.io/otel/exporters/stdout/stdoutmetric"
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	logglobal "go.opentelemetry.io/otel/log/global"
+	"go.opentelemetry.io/otel/propagation"
 	logsdk "go.opentelemetry.io/otel/sdk/log"
 	metricsdk "go.opentelemetry.io/otel/sdk/metric"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
@@ -159,6 +162,12 @@ func initOpenTelemetry() error {
 					return fmt.Errorf("failed to start runtime instrumentation: %w", err)
 				}
 			}
+
+			// TODO: this code should be removed once propagation is properly supported by otelconf.
+			if len(extra.Propagators) > 0 {
+				propagator := initPropagator(extra.Propagators)
+				otel.SetTextMapPropagator(propagator)
+			}
 		}
 	} else {
 		fmt.Printf("failed to parse cosmos extra config: %v\n", err)
@@ -179,17 +188,48 @@ func initOpenTelemetry() error {
 	return nil
 }
 
+func initPropagator(propagatorTypes []string) propagation.TextMapPropagator {
+	var propagators []propagation.TextMapPropagator
+
+	for _, name := range propagatorTypes {
+		switch name {
+		case "tracecontext":
+			propagators = append(propagators, propagation.TraceContext{})
+		case "baggage":
+			propagators = append(propagators, propagation.Baggage{})
+		case "b3":
+			propagators = append(propagators, b3.New())
+		case "b3multi":
+			propagators = append(propagators, b3.New(b3.WithInjectEncoding(b3.B3MultipleHeader)))
+		case "jaeger":
+			propagators = append(propagators, jaeger.Jaeger{})
+			// Add others as needed
+		}
+	}
+
+	if len(propagators) == 0 {
+		// Default to W3C TraceContext + Baggage
+		return propagation.NewCompositeTextMapPropagator(
+			propagation.TraceContext{},
+			propagation.Baggage{},
+		)
+	}
+
+	return propagation.NewCompositeTextMapPropagator(propagators...)
+}
+
 type extraConfig struct {
 	CosmosExtra *cosmosExtra `json:"cosmos_extra" yaml:"cosmos_extra" mapstructure:"cosmos_extra"`
 }
 
 type cosmosExtra struct {
-	TraceFile           string `json:"trace_file" yaml:"trace_file" mapstructure:"trace_file"`
-	MetricsFile         string `json:"metrics_file" yaml:"metrics_file" mapstructure:"metrics_file"`
-	MetricsFileInterval string `json:"metrics_file_interval" yaml:"metrics_file_interval" mapstructure:"metrics_file_interval"`
-	LogsFile            string `json:"logs_file" yaml:"logs_file" mapstructure:"logs_file"`
-	InstrumentHost      bool   `json:"instrument_host" yaml:"instrument_host" mapstructure:"instrument_host"`
-	InstrumentRuntime   bool   `json:"instrument_runtime" yaml:"instrument_runtime" mapstructure:"instrument_runtime"`
+	TraceFile           string   `json:"trace_file" yaml:"trace_file" mapstructure:"trace_file"`
+	MetricsFile         string   `json:"metrics_file" yaml:"metrics_file" mapstructure:"metrics_file"`
+	MetricsFileInterval string   `json:"metrics_file_interval" yaml:"metrics_file_interval" mapstructure:"metrics_file_interval"`
+	LogsFile            string   `json:"logs_file" yaml:"logs_file" mapstructure:"logs_file"`
+	InstrumentHost      bool     `json:"instrument_host" yaml:"instrument_host" mapstructure:"instrument_host"`
+	InstrumentRuntime   bool     `json:"instrument_runtime" yaml:"instrument_runtime" mapstructure:"instrument_runtime"`
+	Propagators         []string `json:"propagators" yaml:"propagators" mapstructure:"propagators"`
 }
 
 func Shutdown(ctx context.Context) error {

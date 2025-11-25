@@ -70,9 +70,6 @@ func (app *BaseApp) RegisterGRPCServerWithSkipCheckHeader(server gogogrpc.Server
 			height = sdkCtx.BlockHeight() // If height was not set in the request, set it to the latest
 		}
 
-		// Attach the sdk.Context into the gRPC's context.Context.
-		// grpcCtx = context.WithValue(grpcCtx, sdk.SdkContextKey, sdkCtx)
-
 		md = metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(height, 10))
 		if err = grpc.SetHeader(grpcCtx, md); err != nil {
 			app.logger.Error("failed to set gRPC header", "err", err)

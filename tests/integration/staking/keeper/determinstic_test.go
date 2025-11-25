@@ -103,7 +103,6 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
 		accountKeeper,
 		blockedAddresses,
-		authority.String(),
 		log.NewNopLogger(),
 	)
 

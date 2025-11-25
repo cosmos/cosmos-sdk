@@ -115,7 +115,6 @@ func initFixture(tb testing.TB) *fixture {
 		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
 		accountKeeper,
 		blockedAddresses,
-		authority.String(),
 		log.NewNopLogger(),
 	)
 

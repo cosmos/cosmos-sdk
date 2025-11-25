@@ -1,6 +1,7 @@
 package bank_test
 
 import (
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -378,7 +379,7 @@ func TestMsgSetSendEnabled(t *testing.T) {
 	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("foocoin", 101))))
 	require.NoError(t, testutil.FundAccount(ctx, s.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("stake", 100000))))
 	addr1Str := addr1.String()
-	govAddr := s.BankKeeper.GetAuthority()
+	govAddr := authtypes.NewModuleAddress(govtypes.ModuleName).String()
 	goodGovProp, err := govv1.NewMsgSubmitProposal(
 		[]sdk.Msg{
 			types.NewMsgSetSendEnabled(govAddr, nil, nil),

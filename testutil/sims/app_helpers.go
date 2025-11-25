@@ -3,6 +3,7 @@ package sims
 import (
 	"encoding/json"
 	"fmt"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -47,6 +48,9 @@ var DefaultConsensusParams = &cmtproto.ConsensusParams{
 		PubKeyTypes: []string{
 			cmttypes.ABCIPubKeyTypeEd25519,
 		},
+	},
+	Authority: &cmtproto.AuthorityParams{
+		Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	},
 }
 

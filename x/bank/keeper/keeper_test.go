@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	cmtypes "github.com/cometbft/cometbft/types"
 	"slices"
 	"strings"
 	"testing"
@@ -37,7 +38,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
@@ -116,7 +116,7 @@ func addIBCMetadata(ctx context.Context, k keeper.BaseKeeper) {
 type KeeperTestSuite struct {
 	suite.Suite
 
-	ctx        context.Context
+	ctx        sdk.Context
 	bankKeeper keeper.BaseKeeper
 	authKeeper *banktestutil.MockAccountKeeper
 
@@ -134,7 +134,9 @@ func (suite *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(banktypes.StoreKey)
 	oKey := storetypes.NewObjectStoreKey(banktypes.ObjectStoreKey)
 	testCtx := testutil.DefaultContextWithObjectStore(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"), oKey)
-	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
+	consensusParams := cmtypes.DefaultConsensusParams()
+	consensusParams.Authority.Authority = authtypes.NewModuleAddress("gov").String()
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()}).WithConsensusParams(consensusParams.ToProto())
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 
 	storeService := runtime.NewKVStoreService(key)
@@ -150,7 +152,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 		storeService,
 		suite.authKeeper,
 		map[string]bool{accAddrs[4].String(): true},
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		log.NewNopLogger(),
 	)
 	suite.bankKeeper = suite.bankKeeper.WithObjStoreKey(oKey)
@@ -322,34 +323,6 @@ func (suite *KeeperTestSuite) TestPrependSendRestriction() {
 	calls = nil
 	_, _ = suite.bankKeeper.GetSendRestrictionFn()(suite.ctx, nil, nil, nil)
 	suite.Require().Equal([]int{2, 1}, calls, "restriction calls from original bank keeper")
-}
-
-func (suite *KeeperTestSuite) TestGetAuthority() {
-	storeService := runtime.NewKVStoreService(storetypes.NewKVStoreKey(banktypes.StoreKey))
-	NewKeeperWithAuthority := func(authority string) keeper.BaseKeeper {
-		return keeper.NewBaseKeeper(
-			moduletestutil.MakeTestEncodingConfig().Codec,
-			storeService,
-			suite.authKeeper,
-			nil,
-			authority,
-			log.NewNopLogger(),
-		)
-	}
-
-	tests := map[string]string{
-		"some random account":    "cosmos139f7kncmglres2nf3h4hc4tade85ekfr8sulz5",
-		"gov module account":     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		"another module account": authtypes.NewModuleAddress(minttypes.ModuleName).String(),
-	}
-
-	for name, expected := range tests {
-		suite.T().Run(name, func(t *testing.T) {
-			kpr := NewKeeperWithAuthority(expected)
-			actual := kpr.GetAuthority()
-			suite.Require().Equal(expected, actual)
-		})
-	}
 }
 
 func (suite *KeeperTestSuite) TestSupply() {

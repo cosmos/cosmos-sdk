@@ -2,6 +2,7 @@ package iavlx
 
 import (
 	"context"
+	"sync/atomic"
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -50,26 +51,52 @@ func (cp *cleanupProc) startEvict() {
 	}()
 }
 
-func evictTraverse(np *NodePointer, depth, evictionDepth uint8, evictVersion uint32) (count int) {
-	// TODO check height, and don't traverse if tree is too short
+type evictTracker struct {
+	evictedBytes int
+	budget       *atomic.Int64
+}
+
+func (t *evictTracker) trackEvict(memNode *MemNode) bool {
+	var sz int
+	if memNode.IsLeaf() {
+		sz = SizeLeaf + len(memNode.key) + len(memNode.value)
+	} else {
+		sz = SizeBranch + len(memNode.key)
+	}
+	t.evictedBytes += sz
+	if t.budget.Add(int64(-sz)) <= 0 {
+		return false
+	}
+	return true
+}
+
+func (t *evictTracker) done() bool {
+	return t.budget.Load() <= 0
+}
+
+func evictTraverse(np *NodePointer, tracker *evictTracker, evictVersion uint32) bool {
+	if tracker.done() {
+		return false
+	}
 
 	memNode := np.mem.Load()
 	if memNode == nil {
-		return 0
+		return true
 	}
 
-	// Evict nodes at or below the eviction depth
-	if memNode.version <= evictVersion && depth >= evictionDepth {
+	if !evictTraverse(memNode.left, tracker, evictVersion) {
+		return false
+	}
+	if !evictTraverse(memNode.right, tracker, evictVersion) {
+		return false
+	}
+
+	if memNode.version <= evictVersion {
 		np.mem.Store(nil)
-		count = 1
+		if !tracker.trackEvict(memNode) {
+			return false
+		}
 	}
 
-	if memNode.IsLeaf() {
-		return count
-	}
-
-	// Continue traversing to find nodes to evict
-	count += evictTraverse(memNode.left, depth+1, evictionDepth, evictVersion)
-	count += evictTraverse(memNode.right, depth+1, evictionDepth, evictVersion)
-	return count
+	return true
 }

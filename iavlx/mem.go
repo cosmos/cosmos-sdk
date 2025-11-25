@@ -2,24 +2,21 @@ package iavlx
 
 import (
 	"context"
+	"runtime"
 	"sync/atomic"
 	"time"
-
-	"github.com/shirou/gopsutil/v4/mem"
 )
 
 type memoryMonitor struct {
-	memThreshold  uint64
 	evictBudget   atomic.Int64
 	underPressure func()
 	ctx           context.Context
-	// TODO: memLimit             uint64
+	memoryLimit   uint64
 }
 
-func newMemoryMonitor(ctx context.Context, underPressure func()) *memoryMonitor {
-	const defaultMemThreshold = 2 * 1024 * 1024 * 1024 // 2 GB
+func newMemoryMonitor(ctx context.Context, memoryLimit uint64, underPressure func()) *memoryMonitor {
 	mc := &memoryMonitor{
-		memThreshold:  defaultMemThreshold,
+		memoryLimit:   memoryLimit,
 		ctx:           ctx,
 		underPressure: underPressure,
 	}
@@ -36,12 +33,9 @@ func (mc *memoryMonitor) run() {
 		case <-mc.ctx.Done():
 			return
 		case <-ticker.C:
-			vm, err := mem.VirtualMemory()
-			if err != nil {
-				// TODO log
-				continue
-			}
-			pressure := int64(mc.memThreshold) - int64(vm.Available)
+			var mem runtime.MemStats
+			runtime.ReadMemStats(&mem)
+			pressure := int64(mem.Alloc) - int64(mc.memoryLimit)
 			if pressure > 0 {
 				mc.evictBudget.Store(pressure)
 				mc.underPressure()

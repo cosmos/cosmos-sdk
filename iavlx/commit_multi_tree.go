@@ -395,7 +395,7 @@ func LoadDB(path string, opts *Options, logger log.Logger) (*CommitMultiTree, er
 		logger:     logger,
 		treesByKey: make(map[storetypes.StoreKey]int),
 	}
-	db.memMonitor = newMemoryMonitor(ctx, db.wakeEviction)
+	db.memMonitor = newMemoryMonitor(ctx, opts.GetMemoryLimit(), db.wakeEviction)
 	return db, nil
 }
 

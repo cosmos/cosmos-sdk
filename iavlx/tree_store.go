@@ -74,7 +74,7 @@ func newTreeStore(ctx context.Context, dir string, options Options, logger log.L
 	ts.cleanupProc = newCleanupProc(ts)
 	ts.evictor = newEvictor(ts, ctx)
 	if memMonitor == nil {
-		memMonitor = newMemoryMonitor(ctx, ts.evictor.wake)
+		memMonitor = newMemoryMonitor(ctx, options.GetMemoryLimit(), ts.evictor.wake)
 	}
 	ts.memMonitor = memMonitor
 

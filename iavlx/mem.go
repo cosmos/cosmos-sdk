@@ -2,52 +2,62 @@ package iavlx
 
 import (
 	"context"
-	"runtime"
+	"sync"
 	"sync/atomic"
-	"time"
 )
 
 type memoryMonitor struct {
-	evictBudget   atomic.Int64
-	underPressure func()
-	ctx           context.Context
-	memoryLimit   uint64
+	evictBudget atomic.Int64
+	mu          sync.Mutex
+	cond        *sync.Cond
+	ctx         context.Context
 }
 
-func newMemoryMonitor(ctx context.Context, memoryLimit uint64, underPressure func()) *memoryMonitor {
+func newMemoryMonitor(ctx context.Context, memoryLimit uint64) *memoryMonitor {
 	mc := &memoryMonitor{
-		memoryLimit:   memoryLimit,
-		ctx:           ctx,
-		underPressure: underPressure,
+		ctx: ctx,
 	}
-	go mc.run()
+	mc.evictBudget.Store(-int64(memoryLimit))
+	mc.cond = sync.NewCond(&mc.mu)
+
+	// Broadcast on context cancellation to wake waiting evictors
+	go func() {
+		<-ctx.Done()
+		mc.cond.Broadcast()
+	}()
+
 	return mc
 }
 
-func (mc *memoryMonitor) run() {
-	ticker := time.NewTicker(time.Millisecond * 500)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-mc.ctx.Done():
-			return
-		case <-ticker.C:
-			var mem runtime.MemStats
-			runtime.ReadMemStats(&mem)
-			pressure := int64(mem.Alloc) - int64(mc.memoryLimit)
-			if pressure > 0 {
-				mc.evictBudget.Store(pressure)
-				mc.underPressure()
-			}
-		}
+// Wait blocks until there is memory pressure or the context is cancelled.
+// Returns true if there is work to do, false if cancelled.
+func (mc *memoryMonitor) Wait() bool {
+	mc.mu.Lock()
+	for mc.evictBudget.Load() <= 0 && mc.ctx.Err() == nil {
+		mc.cond.Wait()
 	}
-}
-
-func (mc *memoryMonitor) EvictBudget() *atomic.Int64 {
-	return &mc.evictBudget
+	mc.mu.Unlock()
+	return mc.ctx.Err() == nil
 }
 
 func (mc *memoryMonitor) UnderPressure() bool {
 	return mc.evictBudget.Load() > 0
+}
+
+func (mc *memoryMonitor) AddUsage(usage uint64) {
+	pressure := mc.evictBudget.Add(int64(usage))
+	if pressure > 0 {
+		mc.cond.Broadcast()
+	}
+}
+
+// TrackEviction tracks memory that has been dereferenced due to eviction and returns true if eviction should continue.
+func (mc *memoryMonitor) TrackEviction(memNode *MemNode) bool {
+	var sz int
+	if memNode.IsLeaf() {
+		sz = SizeLeaf + len(memNode.key) + len(memNode.value)
+	} else {
+		sz = SizeBranch + len(memNode.key)
+	}
+	return mc.evictBudget.Add(int64(-sz)) >= 0
 }

@@ -9,6 +9,7 @@ import (
 
 type KVLogWriter struct {
 	*FileWriter
+	versionStart uint64
 }
 
 func NewKVDataWriter(file *os.File) *KVLogWriter {
@@ -74,13 +75,17 @@ func (kvs *KVLogWriter) WriteUpdates(updates []KVUpdate) error {
 	return nil
 }
 
-func (kvs *KVLogWriter) WriteCommit(version uint32) error {
-	_, err := kvs.Write([]byte{KVLogEntryTypeCommit})
+func (kvs *KVLogWriter) WriteCommit(version uint32) (bytesWritten uint64, err error) {
+	_, err = kvs.Write([]byte{KVLogEntryTypeCommit})
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	return kvs.writeLEU32(version)
+	sz := uint64(kvs.Size())
+	bytesWritten = sz - kvs.versionStart
+	kvs.versionStart = sz
+
+	return bytesWritten, kvs.writeLEU32(version)
 }
 
 func (kvs *KVLogWriter) writeLenPrefixedBytes(key []byte) (offset uint32, err error) {

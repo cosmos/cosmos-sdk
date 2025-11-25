@@ -395,7 +395,12 @@ func LoadDB(path string, opts *Options, logger log.Logger) (*CommitMultiTree, er
 		logger:     logger,
 		treesByKey: make(map[storetypes.StoreKey]int),
 	}
-	db.memMonitor = newMemoryMonitor(ctx, opts.GetMemoryLimit(), db.wakeEviction)
+	memLimit := opts.MemoryLimit
+	if memLimit == 0 {
+		// default to 4gb
+		memLimit = 4 * 1024 * 1024 * 1024
+	}
+	db.memMonitor = newMemoryMonitor(ctx, memLimit)
 	return db, nil
 }
 
@@ -405,14 +410,6 @@ func (db *CommitMultiTree) stagedVersion() uint64 {
 
 func (db *CommitMultiTree) LatestVersion() int64 {
 	return int64(db.version)
-}
-
-func (db *CommitMultiTree) wakeEviction() {
-	for _, tree := range db.trees {
-		if ct, ok := tree.(*CommitTree); ok {
-			ct.wakeEviction()
-		}
-	}
 }
 
 func (db *CommitMultiTree) Close() error {

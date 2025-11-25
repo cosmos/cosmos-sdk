@@ -1,53 +1,33 @@
 package iavlx
 
-import (
-	"context"
-	"sync/atomic"
-)
-
 type evictor struct {
 	*TreeStore
-	wakeChan chan struct{}
+	wakeCh chan struct{}
 }
 
-func newEvictor(ts *TreeStore, ctx context.Context) *evictor {
+func newEvictor(ts *TreeStore) *evictor {
 	ev := &evictor{
 		TreeStore: ts,
-		wakeChan:  make(chan struct{}, 1),
+		wakeCh:    make(chan struct{}, 1),
 	}
-	go ev.evictLoop(ctx)
+	go ev.evictLoop()
 	return ev
 }
 
 func (ev *evictor) wake() {
 	select {
-	case ev.wakeChan <- struct{}{}:
-	default: // already woken
+	case ev.wakeCh <- struct{}{}:
+	default:
 	}
 }
 
-func (ev *evictor) evictLoop(ctx context.Context) {
+func (ev *evictor) evictLoop() {
 	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ev.wakeChan:
-			ev.processEviction()
-		}
-	}
-}
-
-func (ev *evictor) processEviction() {
-	_, span := tracer.Start(context.Background(), "processEviction")
-	defer span.End()
-
-	tracker := &evictTracker{
-		budget: ev.memMonitor.EvictBudget(),
-	}
-
-	for {
-		if tracker.done() {
-			return
+		if !ev.memMonitor.UnderPressure() {
+			if !ev.memMonitor.Wait() {
+				// done
+				return
+			}
 		}
 
 		ev.latestMapLock.RLock()
@@ -55,11 +35,16 @@ func (ev *evictor) processEviction() {
 		ev.latestMapLock.RUnlock()
 		evictVersion := ev.savedVersion.Load()
 		if !ok || version > evictVersion {
-			// no more versions to evict
-			return
+			ev.needReader.Store(true)
+			select {
+			case <-ev.wakeCh:
+				continue
+			case <-ev.ctx.Done():
+				return
+			}
 		}
 
-		evictTraverse(tree, tracker, evictVersion)
+		evictTraverse(tree, ev.memMonitor, evictVersion)
 
 		if tree.mem.Load() == nil {
 			// if we fully evicted this version, remove it from latest map
@@ -70,31 +55,8 @@ func (ev *evictor) processEviction() {
 	}
 }
 
-type evictTracker struct {
-	evictedBytes int
-	budget       *atomic.Int64
-}
-
-func (t *evictTracker) trackEvict(memNode *MemNode) bool {
-	var sz int
-	if memNode.IsLeaf() {
-		sz = SizeLeaf + len(memNode.key) + len(memNode.value)
-	} else {
-		sz = SizeBranch + len(memNode.key)
-	}
-	t.evictedBytes += sz
-	if t.budget.Add(int64(-sz)) <= 0 {
-		return false
-	}
-	return true
-}
-
-func (t *evictTracker) done() bool {
-	return t.budget.Load() <= 0
-}
-
-func evictTraverse(np *NodePointer, tracker *evictTracker, evictVersion uint32) bool {
-	if tracker.done() {
+func evictTraverse(np *NodePointer, tracker *memoryMonitor, evictVersion uint32) bool {
+	if !tracker.UnderPressure() {
 		return false
 	}
 
@@ -114,7 +76,7 @@ func evictTraverse(np *NodePointer, tracker *evictTracker, evictVersion uint32) 
 
 	if memNode.version <= evictVersion {
 		np.mem.Store(nil)
-		if !tracker.trackEvict(memNode) {
+		if !tracker.TrackEviction(memNode) {
 			return false
 		}
 	}

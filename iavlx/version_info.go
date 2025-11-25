@@ -25,3 +25,13 @@ type NodeSetInfo struct {
 	StartIndex  uint32
 	EndIndex    uint32
 }
+
+type VersionStats struct {
+	TotalLeaves   uint32
+	TotalBranches uint32
+	KVDataSize    uint64
+}
+
+func (v VersionStats) TotalBytes() uint64 {
+	return uint64(SizeLeaf*v.TotalLeaves+SizeBranch*v.TotalBranches) + v.KVDataSize
+}

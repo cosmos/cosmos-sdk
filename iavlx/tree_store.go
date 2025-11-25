@@ -38,6 +38,7 @@ type TreeStore struct {
 
 	cleanupProc *cleanupProc
 	evictor     *evictor
+	needReader  atomic.Bool
 	memMonitor  *memoryMonitor
 }
 
@@ -72,9 +73,14 @@ func newTreeStore(ctx context.Context, dir string, options Options, logger log.L
 	}
 
 	ts.cleanupProc = newCleanupProc(ts)
-	ts.evictor = newEvictor(ts, ctx)
+	ts.evictor = newEvictor(ts)
 	if memMonitor == nil {
-		memMonitor = newMemoryMonitor(ctx, options.GetMemoryLimit(), ts.evictor.wake)
+		memLimit := options.MemoryLimit
+		if memLimit == 0 {
+			// default to 256mb
+			memLimit = 256 * 1024 * 1024
+		}
+		memMonitor = newMemoryMonitor(ctx, memLimit)
 	}
 	ts.memMonitor = memMonitor
 
@@ -240,11 +246,11 @@ func (ts *TreeStore) WriteWALUpdates(updates []KVUpdate) error {
 	return ts.currentWriter.WriteWALUpdates(updates)
 }
 
-func (ts *TreeStore) WriteWALCommit(version uint32) error {
+func (ts *TreeStore) WriteWALCommit(version uint32) (bytesWritten uint64, err error) {
 	return ts.currentWriter.WriteWALCommit(version)
 }
 
-func (ts *TreeStore) SaveRoot(root *NodePointer, totalLeaves, totalBranches uint32) error {
+func (ts *TreeStore) SaveRoot(root *NodePointer, stats VersionStats) error {
 	version := ts.stagedVersion
 	ts.logger.Debug("saving root", "version", version)
 
@@ -253,7 +259,9 @@ func (ts *TreeStore) SaveRoot(root *NodePointer, totalLeaves, totalBranches uint
 	ts.latest.Set(version, root)
 	ts.latestMapLock.Unlock()
 
-	err := ts.currentWriter.SaveRoot(root, version, totalLeaves, totalBranches)
+	ts.memMonitor.AddUsage(stats.TotalBytes())
+
+	err := ts.currentWriter.SaveRoot(root, version, stats)
 	if err != nil {
 		return err
 	}
@@ -282,7 +290,7 @@ func (ts *TreeStore) SaveRoot(root *NodePointer, totalLeaves, totalBranches uint
 	startVersion := ts.currentWriter.StartVersion()
 	if shouldSeal {
 		shouldCreateReader = true
-	} else if ts.memMonitor.UnderPressure() {
+	} else if ts.needReader.CompareAndSwap(true, false) {
 		shouldCreateReader = true
 	}
 
@@ -310,11 +318,11 @@ func (ts *TreeStore) SaveRoot(root *NodePointer, totalLeaves, totalBranches uint
 		if err != nil {
 			return fmt.Errorf("failed to create updated changeset reader: %w", err)
 		}
-		ts.evictor.wake()
 	}
 
 	ts.setActiveReader(startVersion, reader)
 	ts.savedVersion.Store(version)
+	ts.evictor.wake()
 
 	if shouldSeal {
 		ts.currentChangesetEntry = nil // Reset for next batch

@@ -20,7 +20,6 @@ type CommitTree struct {
 	store      *TreeStore
 	zeroCopy   bool
 
-	writeWal bool
 	walQueue *NonBlockingQueue[[]KVUpdate]
 	walDone  <-chan error
 
@@ -65,7 +64,6 @@ func NewCommitTree(ctx context.Context, dir string, opts Options, logger log.Log
 		lastCommitId: lastCommitId,
 		zeroCopy:     opts.ZeroCopy,
 		logger:       logger,
-		writeWal:     opts.WriteWAL,
 	}
 	tree.latest.Store(root)
 	tree.reinitWalProc()
@@ -122,35 +120,35 @@ func (c *CommitTree) commit() (storetypes.CommitID, error) {
 	c.writeMutex.Lock()
 	defer c.writeMutex.Unlock()
 
-	if c.writeWal {
-		c.walQueue.Close()
-	}
+	c.walQueue.Close()
 
 	// compute hash and assign node IDs
 	hash := c.workingHash()
 
 	stagedVersion := c.store.stagedVersion
-	if c.writeWal {
-		// wait for WAL write to complete
-		err := <-c.walDone
-		if err != nil {
-			return storetypes.CommitID{}, err
-		}
-
-		err = c.store.WriteWALCommit(stagedVersion)
-		if err != nil {
-			return storetypes.CommitID{}, err
-		}
-
-		c.reinitWalProc()
+	// wait for WAL write to complete
+	err := <-c.walDone
+	if err != nil {
+		return storetypes.CommitID{}, err
 	}
+
+	_, err = c.store.WriteWALCommit(stagedVersion)
+	if err != nil {
+		return storetypes.CommitID{}, err
+	}
+
+	c.reinitWalProc()
 
 	commitCtx := c.commitCtx
 	if commitCtx == nil {
 		// make sure we have a non-nil commit context
 		commitCtx = &commitContext{}
 	}
-	err := c.store.SaveRoot(c.root, commitCtx.leafNodeIdx, commitCtx.branchNodeIdx)
+	err = c.store.SaveRoot(c.root, VersionStats{
+		TotalLeaves:   commitCtx.leafNodeIdx,
+		TotalBranches: commitCtx.branchNodeIdx,
+		KVDataSize:    commitCtx.kvDataBytes,
+	})
 	if err != nil {
 		return storetypes.CommitID{}, err
 	}
@@ -231,10 +229,8 @@ func (c *CommitTree) Set(key, value []byte) {
 		value:   value,
 	}
 
-	if c.writeWal {
-		// start writing this to the WAL asynchronously before we even mutate the tree
-		c.walQueue.Send([]KVUpdate{{SetNode: leafNode}})
-	}
+	// start writing this to the WAL asynchronously before we even mutate the tree
+	c.walQueue.Send([]KVUpdate{{SetNode: leafNode}})
 
 	ctx := &MutationContext{Version: stagedVersion}
 	newRoot, _, err := setRecursive(c.root, leafNode, ctx)
@@ -252,10 +248,8 @@ func (c *CommitTree) Delete(key []byte) {
 	c.writeMutex.Lock()
 	defer c.writeMutex.Unlock()
 
-	if c.writeWal {
-		// start writing this to the WAL asynchronously before we even mutate the tree
-		c.walQueue.Send([]KVUpdate{{DeleteKey: key}})
-	}
+	// start writing this to the WAL asynchronously before we even mutate the tree
+	c.walQueue.Send([]KVUpdate{{DeleteKey: key}})
 
 	ctx := &MutationContext{Version: c.store.stagedVersion}
 	_, newRoot, _, err := removeRecursive(c.root, key, ctx)
@@ -275,10 +269,6 @@ func (c *CommitTree) ReverseIterator(start, end []byte) storetypes.Iterator {
 }
 
 func (c *CommitTree) reinitWalProc() {
-	if !c.writeWal {
-		return
-	}
-
 	walQueue := NewNonBlockingQueue[[]KVUpdate]()
 	walDone := make(chan error, 1)
 	c.walQueue = walQueue
@@ -335,15 +325,12 @@ func (c *CommitTree) Close() error {
 	return c.store.Close()
 }
 
-func (c *CommitTree) wakeEviction() {
-	c.store.evictor.wake()
-}
-
 type commitContext struct {
 	version       uint32
 	savedVersion  uint32
 	branchNodeIdx uint32
 	leafNodeIdx   uint32
+	kvDataBytes   uint64
 }
 
 // commitTraverse performs a post-order traversal of the tree to compute hashes and assign node IDs.
@@ -367,6 +354,7 @@ func commitTraverse(ctx *commitContext, np *NodePointer, depth uint8) (hash []by
 	if memNode.IsLeaf() {
 		ctx.leafNodeIdx++
 		id = NewNodeID(true, uint64(ctx.version), ctx.leafNodeIdx)
+		ctx.kvDataBytes += uint64(len(memNode.key) + len(memNode.value))
 	} else {
 		// post-order traversal
 		leftHash, err = commitTraverse(ctx, memNode.left, depth+1)
@@ -379,6 +367,7 @@ func commitTraverse(ctx *commitContext, np *NodePointer, depth uint8) (hash []by
 		}
 
 		ctx.branchNodeIdx++
+		ctx.kvDataBytes += uint64(len(memNode.key))
 		id = NewNodeID(false, uint64(ctx.version), ctx.branchNodeIdx)
 	}
 	np.id = id

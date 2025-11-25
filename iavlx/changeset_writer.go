@@ -46,11 +46,11 @@ func (cs *ChangesetWriter) WriteWALUpdates(updates []KVUpdate) error {
 	return cs.kvlog.WriteUpdates(updates)
 }
 
-func (cs *ChangesetWriter) WriteWALCommit(version uint32) error {
+func (cs *ChangesetWriter) WriteWALCommit(version uint32) (bytesWritten uint64, err error) {
 	return cs.kvlog.WriteCommit(version)
 }
 
-func (cs *ChangesetWriter) SaveRoot(root *NodePointer, version, totalLeaves, totalBranches uint32) error {
+func (cs *ChangesetWriter) SaveRoot(root *NodePointer, version uint32, stats VersionStats) error {
 	cs.needsSync.Store(true)
 
 	if version != cs.stagedVersion {
@@ -60,11 +60,13 @@ func (cs *ChangesetWriter) SaveRoot(root *NodePointer, version, totalLeaves, tot
 	var versionInfo VersionInfo
 	versionInfo.Branches.StartOffset = uint32(cs.branchesData.Count())
 	versionInfo.Leaves.StartOffset = uint32(cs.leavesData.Count())
+	totalBranches := stats.TotalBranches
 	if totalBranches > 0 {
 		versionInfo.Branches.StartIndex = 1
 		versionInfo.Branches.Count = totalBranches
 		versionInfo.Branches.EndIndex = totalBranches
 	}
+	totalLeaves := stats.TotalLeaves
 	if totalLeaves > 0 {
 		versionInfo.Leaves.StartIndex = 1
 		versionInfo.Leaves.Count = totalLeaves

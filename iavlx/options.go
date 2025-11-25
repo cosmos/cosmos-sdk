@@ -4,8 +4,7 @@ import "time"
 
 type Options struct {
 	MemoryLimit uint64 `json:"memory_limit"`
-	// WriteWAL enables write-ahead logging for durability
-	WriteWAL bool `json:"write_wal"`
+
 	// CompactWAL determines if KV data is copied during compaction (true) or reused (false)
 	CompactWAL bool `json:"compact_wal"`
 	// DisableCompaction turns off background compaction entirely
@@ -83,12 +82,4 @@ func (o Options) GetFsyncInterval() time.Duration {
 		return 0
 	}
 	return time.Millisecond * time.Duration(o.FsyncInterval)
-}
-
-func (o Options) GetMemoryLimit() uint64 {
-	if o.MemoryLimit == 0 {
-		// default to 4gb
-		return 4 * 1024 * 1024 * 1024
-	}
-	return o.MemoryLimit
 }

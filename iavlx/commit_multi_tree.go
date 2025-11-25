@@ -2,6 +2,7 @@ package iavlx
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	io "io"
 	"os"
@@ -22,9 +23,12 @@ import (
 )
 
 type CommitMultiTree struct {
-	dir        string
-	opts       Options
-	logger     log.Logger
+	dir    string
+	opts   Options
+	ctx    context.Context
+	cancel context.CancelFunc
+	logger log.Logger
+
 	trees      []storetypes.CommitStore    // always ordered by tree name
 	treeKeys   []storetypes.StoreKey       // always ordered by tree name
 	storeTypes []storetypes.StoreType      // store types by tree index
@@ -34,6 +38,8 @@ type CommitMultiTree struct {
 	lastCommitId      storetypes.CommitID
 	workingCommitInfo *storetypes.CommitInfo
 	workingHash       []byte
+
+	memMonitor *memoryMonitor
 }
 
 // GetObjKVStore returns a mounted ObjKVStore for a given StoreKey.
@@ -303,7 +309,7 @@ func (db *CommitMultiTree) loadStore(key storetypes.StoreKey, typ storetypes.Sto
 		if err != nil {
 			return nil, fmt.Errorf("failed to create store dir %s: %w", dir, err)
 		}
-		return NewCommitTree(dir, db.opts, db.logger.With("store", key.Name()))
+		return NewCommitTree(db.ctx, dir, db.opts, db.logger.With("store", key.Name()), db.memMonitor)
 	case storetypes.StoreTypeTransient:
 		_, ok := key.(*storetypes.TransientStoreKey)
 		if !ok {
@@ -379,33 +385,17 @@ func (db *CommitMultiTree) SetMetrics(metrics metrics.StoreMetrics) {
 }
 
 func LoadDB(path string, opts *Options, logger log.Logger) (*CommitMultiTree, error) {
-	// n := len(treeNames)
-	//trees := make([]*CommitTree, n)
-	//treesByName := make(map[string]int, n)
-	//for i, name := range treeNames {
-	//	if _, exists := treesByName[name]; exists {
-	//		return nil, fmt.Errorf("duplicate tree name: %s", name)
-	//	}
-	//	treesByName[name] = i
-	//	dir := filepath.Join(path, name)
-	//	err := os.MkdirAll(dir, 0o755)
-	//	if err != nil {
-	//		return nil, fmt.Errorf("failed to create tree dir %s: %w", dir, err)
-	//	}
-	//	// Create a logger with tree name context
-	//	treeLogger := logger.With("tree", name)
-	//	trees[i], err = NewCommitTree(dir, *opts, treeLogger)
-	//	if err != nil {
-	//		return nil, fmt.Errorf("failed to load tree %s: %w", name, err)
-	//	}
-	//}
-	//
+	// TODO allow passing in a context
+	ctx, cancel := context.WithCancel(context.Background())
 	db := &CommitMultiTree{
 		dir:        path,
+		ctx:        ctx,
+		cancel:     cancel,
 		opts:       *opts,
 		logger:     logger,
 		treesByKey: make(map[storetypes.StoreKey]int),
 	}
+	db.memMonitor = newMemoryMonitor(ctx, db.wakeEviction)
 	return db, nil
 }
 
@@ -417,7 +407,16 @@ func (db *CommitMultiTree) LatestVersion() int64 {
 	return int64(db.version)
 }
 
+func (db *CommitMultiTree) wakeEviction() {
+	for _, tree := range db.trees {
+		if ct, ok := tree.(*CommitTree); ok {
+			ct.wakeEviction()
+		}
+	}
+}
+
 func (db *CommitMultiTree) Close() error {
+	db.cancel()
 	for _, tree := range db.trees {
 		if closer, ok := tree.(io.Closer); ok {
 			err := closer.Close()

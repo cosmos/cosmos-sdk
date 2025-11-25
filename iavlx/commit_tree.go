@@ -1,6 +1,7 @@
 package iavlx
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"sync"
@@ -19,10 +20,6 @@ type CommitTree struct {
 	store      *TreeStore
 	zeroCopy   bool
 
-	evictionDepth    uint8
-	evictorRunning   atomic.Bool
-	lastEvictVersion uint32
-
 	writeWal bool
 	walQueue *NonBlockingQueue[[]KVUpdate]
 	walDone  <-chan error
@@ -35,8 +32,8 @@ type CommitTree struct {
 	commitCtx    *commitContext
 }
 
-func NewCommitTree(dir string, opts Options, logger log.Logger) (*CommitTree, error) {
-	ts, err := NewTreeStore(dir, opts, logger)
+func NewCommitTree(ctx context.Context, dir string, opts Options, logger log.Logger, memMonitor *memoryMonitor) (*CommitTree, error) {
+	ts, err := newTreeStore(ctx, dir, opts, logger, memMonitor)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create tree store: %w", err)
 	}
@@ -63,13 +60,12 @@ func NewCommitTree(dir string, opts Options, logger log.Logger) (*CommitTree, er
 	}
 
 	tree := &CommitTree{
-		store:         ts,
-		root:          root,
-		lastCommitId:  lastCommitId,
-		zeroCopy:      opts.ZeroCopy,
-		logger:        logger,
-		evictionDepth: opts.EvictDepth,
-		writeWal:      opts.WriteWAL,
+		store:        ts,
+		root:         root,
+		lastCommitId: lastCommitId,
+		zeroCopy:     opts.ZeroCopy,
+		logger:       logger,
+		writeWal:     opts.WriteWAL,
 	}
 	tree.latest.Store(root)
 	tree.reinitWalProc()
@@ -161,9 +157,6 @@ func (c *CommitTree) commit() (storetypes.CommitID, error) {
 
 	c.store.MarkOrphans(stagedVersion, c.pendingOrphans)
 	c.pendingOrphans = nil
-
-	// start eviction if needed
-	c.startEvict(c.store.SavedVersion())
 
 	// cache the committed tree as the latest version
 	c.latest.Store(c.root)
@@ -309,33 +302,6 @@ func (c *CommitTree) reinitWalProc() {
 	}()
 }
 
-func (c *CommitTree) startEvict(evictVersion uint32) {
-	if c.evictorRunning.Load() {
-		// eviction in progress
-		return
-	}
-
-	if evictVersion <= c.lastEvictVersion {
-		// no new version to evict
-		return
-	}
-
-	latest := c.latest.Load()
-	if latest == nil {
-		// nothing to evict
-		return
-	}
-
-	c.logger.Debug("start eviction", "version", evictVersion, "depth", c.evictionDepth)
-	c.evictorRunning.Store(true)
-	go func() {
-		evictedCount := evictTraverse(latest, 0, c.evictionDepth, evictVersion)
-		c.logger.Debug("eviction completed", "version", evictVersion, "lastEvict", c.lastEvictVersion, "evictedNodes", evictedCount)
-		c.lastEvictVersion = evictVersion
-		c.evictorRunning.Store(false)
-	}()
-}
-
 func (c *CommitTree) GetImmutable(version int64) (storetypes.KVStore, error) {
 	var rootPtr *NodePointer
 	if version == c.lastCommitId.Version {
@@ -367,6 +333,10 @@ func (c *CommitTree) Close() error {
 		// TODO do we need to wait for WAL done??
 	}
 	return c.store.Close()
+}
+
+func (c *CommitTree) wakeEviction() {
+	c.store.evictor.wake()
 }
 
 type commitContext struct {

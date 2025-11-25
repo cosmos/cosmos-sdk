@@ -2,7 +2,6 @@ package iavlx
 
 import (
 	"context"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -10,42 +9,28 @@ import (
 )
 
 type memoryMonitor struct {
-	hasPressure  atomic.Bool
-	memThreshold uint64
-	mu           sync.Mutex
-	cond         *sync.Cond
-	evictBudget  *atomic.Int64
-	ctx          context.Context
+	memThreshold  uint64
+	evictBudget   atomic.Int64
+	underPressure func()
+	ctx           context.Context
 	// TODO: memLimit             uint64
 }
 
-func newMemoryMonitor(ctx context.Context) *memoryMonitor {
+func newMemoryMonitor(ctx context.Context, underPressure func()) *memoryMonitor {
 	const defaultMemThreshold = 2 * 1024 * 1024 * 1024 // 2 GB
 	mc := &memoryMonitor{
-		memThreshold: defaultMemThreshold,
-		ctx:          ctx,
+		memThreshold:  defaultMemThreshold,
+		ctx:           ctx,
+		underPressure: underPressure,
 	}
-	mc.cond = sync.NewCond(&mc.mu)
 	go mc.run()
 	return mc
 }
 
-func (mc *memoryMonitor) HasPressure() bool {
-	return mc.hasPressure.Load()
-}
-
-func (mc *memoryMonitor) Wait() {
-	mc.mu.Lock()
-	defer mc.mu.Unlock()
-
-	mc.cond.Wait()
-}
-
 func (mc *memoryMonitor) run() {
-	ticker := time.NewTicker(time.Second * 1)
+	ticker := time.NewTicker(time.Millisecond * 500)
 	defer ticker.Stop()
 
-	wasPressure := false
 	for {
 		select {
 		case <-mc.ctx.Done():
@@ -56,17 +41,19 @@ func (mc *memoryMonitor) run() {
 				// TODO log
 				continue
 			}
-			isPressure := vm.Available <= mc.memThreshold
-			mc.hasPressure.Store(isPressure)
-
-			if isPressure && !wasPressure {
-				mc.cond.Broadcast()
+			pressure := int64(mc.memThreshold) - int64(vm.Available)
+			if pressure > 0 {
+				mc.evictBudget.Store(pressure)
+				mc.underPressure()
 			}
-			wasPressure = isPressure
 		}
 	}
 }
 
 func (mc *memoryMonitor) EvictBudget() *atomic.Int64 {
-	return mc.evictBudget
+	return &mc.evictBudget
+}
+
+func (mc *memoryMonitor) UnderPressure() bool {
+	return mc.evictBudget.Load() > 0
 }

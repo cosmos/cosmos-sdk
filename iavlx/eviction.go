@@ -3,52 +3,71 @@ package iavlx
 import (
 	"context"
 	"sync/atomic"
-
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
 )
 
-func (cp *cleanupProc) startEvict() {
-	if cp.evictorRunning.Load() {
-		// eviction in progress
-		return
+type evictor struct {
+	*TreeStore
+	wakeChan chan struct{}
+}
+
+func newEvictor(ts *TreeStore, ctx context.Context) *evictor {
+	ev := &evictor{
+		TreeStore: ts,
+		wakeChan:  make(chan struct{}, 1),
+	}
+	go ev.evictLoop(ctx)
+	return ev
+}
+
+func (ev *evictor) wake() {
+	select {
+	case ev.wakeChan <- struct{}{}:
+	default: // already woken
+	}
+}
+
+func (ev *evictor) evictLoop(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ev.wakeChan:
+			ev.processEviction()
+		}
+	}
+}
+
+func (ev *evictor) processEviction() {
+	_, span := tracer.Start(context.Background(), "processEviction")
+	defer span.End()
+
+	tracker := &evictTracker{
+		budget: ev.memMonitor.EvictBudget(),
 	}
 
-	depth := cp.opts.EvictDepth
-	cp.evictorRunning.Store(true)
-	go func() {
-		_, span := tracer.Start(context.Background(), "evictor",
-			trace.WithAttributes(
-				attribute.Int("depth", int(depth)),
-			),
-		)
-		defer span.End()
-		defer cp.evictorRunning.Store(false)
-		for {
-			cp.latestMapLock.RLock()
-			version, _, ok := cp.latest.Min()
-			cp.latestMapLock.Unlock()
-			if !ok || version > cp.savedVersion.Load() {
-				// no more versions to evict
-				return
-			}
-
-			cp.latestMapLock.RLock()
-			tree, ok := cp.latest.Delete(version)
-			cp.latestMapLock.RUnlock()
-			if !ok {
-				return
-			}
-			cp.latestMapLock.Unlock()
-
-			evictedCount := evictTraverse(tree, 0, depth, evictVersion)
-			span.AddEvent("finish eviction", trace.WithAttributes(
-				attribute.Int("version", int(version)),
-				attribute.Int("evictedCount", evictedCount),
-			))
-			cp.lastEvictVersion = evictVersion
+	for {
+		if tracker.done() {
+			return
 		}
-	}()
+
+		ev.latestMapLock.RLock()
+		version, tree, ok := ev.latest.Min()
+		ev.latestMapLock.RUnlock()
+		evictVersion := ev.savedVersion.Load()
+		if !ok || version > evictVersion {
+			// no more versions to evict
+			return
+		}
+
+		evictTraverse(tree, tracker, evictVersion)
+
+		if tree.mem.Load() == nil {
+			// if we fully evicted this version, remove it from latest map
+			ev.latestMapLock.Lock()
+			ev.latest.Delete(version)
+			ev.latestMapLock.Unlock()
+		}
+	}
 }
 
 type evictTracker struct {
@@ -84,11 +103,13 @@ func evictTraverse(np *NodePointer, tracker *evictTracker, evictVersion uint32) 
 		return true
 	}
 
-	if !evictTraverse(memNode.left, tracker, evictVersion) {
-		return false
-	}
-	if !evictTraverse(memNode.right, tracker, evictVersion) {
-		return false
+	if !memNode.IsLeaf() {
+		if !evictTraverse(memNode.left, tracker, evictVersion) {
+			return false
+		}
+		if !evictTraverse(memNode.right, tracker, evictVersion) {
+			return false
+		}
 	}
 
 	if memNode.version <= evictVersion {

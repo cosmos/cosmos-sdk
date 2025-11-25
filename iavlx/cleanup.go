@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log/slog"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"go.opentelemetry.io/otel"
@@ -32,10 +31,6 @@ type cleanupProc struct {
 
 	// Disposal queue for evicted changesets awaiting refcount=0
 	disposalQueue sync.Map // *Changeset -> struct{}
-
-	// eviction related
-	evictorRunning   atomic.Bool
-	lastEvictVersion uint32
 }
 
 type compactionEntry struct {

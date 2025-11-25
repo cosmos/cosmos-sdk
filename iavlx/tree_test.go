@@ -2,6 +2,7 @@ package iavlx
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"runtime/debug"
@@ -19,7 +20,6 @@ import (
 	storetypes "cosmossdk.io/store/types"
 )
 
-// TODO: this test isn't for expected behavior.
 // It should eventually be updated such that having a default ReaderUpdateInterval shouldn't error on old version queries.
 func TestTree_ErrorsOnOldVersion(t *testing.T) {
 	testCases := []struct {
@@ -28,21 +28,10 @@ func TestTree_ErrorsOnOldVersion(t *testing.T) {
 		expError error
 	}{
 		{
-			name: "should error",
+			name: "should not error",
 			getTree: func() *CommitTree {
 				dir := t.TempDir()
-				commitTree, err := NewCommitTree(dir, Options{}, sdklog.NewNopLogger())
-				require.NoError(t, err)
-				return commitTree
-			},
-			// TODO: this shouldn't error!
-			expError: fmt.Errorf("no changeset found for version 2"),
-		},
-		{
-			name: "should NOT error",
-			getTree: func() *CommitTree {
-				dir := t.TempDir()
-				commitTree, err := NewCommitTree(dir, Options{ReaderUpdateInterval: 1}, sdklog.NewNopLogger())
+				commitTree, err := NewCommitTree(context.Background(), dir, Options{}, sdklog.NewNopLogger(), nil)
 				require.NoError(t, err)
 				return commitTree
 			},
@@ -68,7 +57,7 @@ func TestTree_ErrorsOnOldVersion(t *testing.T) {
 
 func TestTree_NonExistentChangeset(t *testing.T) {
 	dir := t.TempDir()
-	commitTree, err := NewCommitTree(dir, Options{ReaderUpdateInterval: 1}, sdklog.NewNopLogger())
+	commitTree, err := NewCommitTree(context.Background(), dir, Options{}, sdklog.NewNopLogger(), nil)
 	require.NoError(t, err)
 
 	for range 7 {
@@ -86,7 +75,7 @@ func TestBasicTest(t *testing.T) {
 	dir, err := os.MkdirTemp("", "iavlx")
 	require.NoError(t, err)
 	defer os.RemoveAll(dir)
-	commitTree, err := NewCommitTree(dir, Options{}, sdklog.NewNopLogger())
+	commitTree, err := NewCommitTree(context.Background(), dir, Options{}, sdklog.NewNopLogger(), nil)
 	require.NoError(t, err)
 	tree := commitTree.CacheWrap().(storetypes.CacheKVStore)
 	tree.Set([]byte{0}, []byte{1})
@@ -203,20 +192,18 @@ func (s *SimMachine) openV2Tree(t interface {
 	sdklog.TestingT
 }) {
 	var err error
-	s.treeV2, err = NewCommitTree(s.dirV2, Options{
+	s.treeV2, err = NewCommitTree(context.Background(), s.dirV2, Options{
 		WriteWAL:              true,
 		CompactWAL:            true,
 		DisableCompaction:     true,
 		ZeroCopy:              false,
-		EvictDepth:            0,
 		CompactionOrphanRatio: 0,
 		CompactionOrphanAge:   0,
 		RetainVersions:        0,
 		MinCompactionSeconds:  0,
 		ChangesetMaxTarget:    1,
 		CompactAfterVersions:  0,
-		ReaderUpdateInterval:  1,
-	}, sdklog.NewTestLogger(t))
+	}, sdklog.NewTestLogger(t), nil)
 	require.NoError(t, err, "failed to create iavlx tree")
 }
 

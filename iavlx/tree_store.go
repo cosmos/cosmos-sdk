@@ -1,6 +1,7 @@
 package iavlx
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sync"
@@ -15,6 +16,8 @@ import (
 type TreeStore struct {
 	logger log.Logger
 	dir    string
+	ctx    context.Context
+	cancel context.CancelFunc
 
 	currentWriter         *ChangesetWriter
 	currentChangesetEntry *changesetEntry // Entry for the current batch being written
@@ -34,6 +37,8 @@ type TreeStore struct {
 	syncDone  chan error
 
 	cleanupProc *cleanupProc
+	evictor     *evictor
+	memMonitor  *memoryMonitor
 }
 
 type markOrphansReq struct {
@@ -45,8 +50,11 @@ type changesetEntry struct {
 	changeset atomic.Pointer[Changeset]
 }
 
-func NewTreeStore(dir string, options Options, logger log.Logger) (*TreeStore, error) {
+func newTreeStore(ctx context.Context, dir string, options Options, logger log.Logger, memMonitor *memoryMonitor) (*TreeStore, error) {
+	ctx, cancel := context.WithCancel(ctx)
 	ts := &TreeStore{
+		ctx:           ctx,
+		cancel:        cancel,
 		dir:           dir,
 		logger:        logger,
 		opts:          options,
@@ -64,6 +72,11 @@ func NewTreeStore(dir string, options Options, logger log.Logger) (*TreeStore, e
 	}
 
 	ts.cleanupProc = newCleanupProc(ts)
+	ts.evictor = newEvictor(ts, ctx)
+	if memMonitor == nil {
+		memMonitor = newMemoryMonitor(ctx, ts.evictor.wake)
+	}
+	ts.memMonitor = memMonitor
 
 	if options.FsyncEnabled() {
 		ts.syncQueue = NewNonBlockingQueue[*ChangesetWriter]()
@@ -248,7 +261,6 @@ func (ts *TreeStore) SaveRoot(root *NodePointer, totalLeaves, totalBranches uint
 
 	currentSize := ts.currentWriter.TotalBytes()
 	maxSize := ts.opts.GetChangesetMaxTarget()
-	readerInterval := ts.opts.GetReaderUpdateInterval()
 
 	ts.logger.Debug("saved root", "version", version, "changeset_size", currentSize, "max_size", maxSize, "start_version", ts.currentWriter.StartVersion())
 
@@ -270,12 +282,8 @@ func (ts *TreeStore) SaveRoot(root *NodePointer, totalLeaves, totalBranches uint
 	startVersion := ts.currentWriter.StartVersion()
 	if shouldSeal {
 		shouldCreateReader = true
-	} else if readerInterval > 0 {
-		// Create reader periodically based on interval
-		versions := version - startVersion + 1
-		if versions%readerInterval == 0 {
-			shouldCreateReader = true
-		}
+	} else if ts.memMonitor.UnderPressure() {
+		shouldCreateReader = true
 	}
 
 	if !shouldCreateReader {
@@ -302,6 +310,7 @@ func (ts *TreeStore) SaveRoot(root *NodePointer, totalLeaves, totalBranches uint
 		if err != nil {
 			return fmt.Errorf("failed to create updated changeset reader: %w", err)
 		}
+		ts.evictor.wake()
 	}
 
 	ts.setActiveReader(startVersion, reader)
@@ -371,6 +380,7 @@ func (ts *TreeStore) syncProc() {
 }
 
 func (ts *TreeStore) Close() error {
+	ts.cancel()
 	// save the current writer if it has uncommitted data
 	startVersion := ts.currentWriter.files.info.StartVersion
 	if startVersion != 0 {

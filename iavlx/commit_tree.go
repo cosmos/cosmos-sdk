@@ -422,30 +422,6 @@ func commitTraverse(ctx *commitContext, np *NodePointer, depth uint8) (hash []by
 	return computeAndSetHash(memNode, leftHash, rightHash)
 }
 
-func evictTraverse(np *NodePointer, depth, evictionDepth uint8, evictVersion uint32) (count int) {
-	// TODO check height, and don't traverse if tree is too short
-
-	memNode := np.mem.Load()
-	if memNode == nil {
-		return 0
-	}
-
-	// Evict nodes at or below the eviction depth
-	if memNode.version <= evictVersion && depth >= evictionDepth {
-		np.mem.Store(nil)
-		count = 1
-	}
-
-	if memNode.IsLeaf() {
-		return count
-	}
-
-	// Continue traversing to find nodes to evict
-	count += evictTraverse(memNode.left, depth+1, evictionDepth, evictVersion)
-	count += evictTraverse(memNode.right, depth+1, evictionDepth, evictVersion)
-	return count
-}
-
 var (
 	_ storetypes.CommitStore = &CommitTree{}
 )

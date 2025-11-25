@@ -18,10 +18,15 @@ type TreeStore struct {
 
 	currentWriter         *ChangesetWriter
 	currentChangesetEntry *changesetEntry // Entry for the current batch being written
-	changesets            *btree.Map[uint32, *changesetEntry]
-	changesetsMapLock     sync.RWMutex
-	savedVersion          atomic.Uint32 // Last version with a readable changeset
-	stagedVersion         uint32        // Latest written version (may not be readable yet)
+
+	changesetsMapLock sync.RWMutex
+	changesets        btree.Map[uint32, *changesetEntry]
+
+	latestMapLock sync.RWMutex
+	latest        btree.Map[uint32, *NodePointer] // Cache of latest root pointers per version
+
+	savedVersion  atomic.Uint32 // Last version with a readable changeset
+	stagedVersion uint32        // Latest written version (may not be readable yet)
 
 	opts Options
 
@@ -43,7 +48,6 @@ type changesetEntry struct {
 func NewTreeStore(dir string, options Options, logger log.Logger) (*TreeStore, error) {
 	ts := &TreeStore{
 		dir:           dir,
-		changesets:    &btree.Map[uint32, *changesetEntry]{},
 		logger:        logger,
 		opts:          options,
 		stagedVersion: 1,
@@ -199,6 +203,15 @@ func (ts *TreeStore) Resolve(nodeId NodeID, _ uint32) (Node, error) {
 }
 
 func (ts *TreeStore) ResolveRoot(version uint32) (*NodePointer, error) {
+	if ts.savedVersion.Load() < version {
+		ts.latestMapLock.RLock()
+		defer ts.latestMapLock.RUnlock()
+		root, ok := ts.latest.Get(version)
+		if !ok {
+			return nil, fmt.Errorf("no root found for version %d", version)
+		}
+		return root, nil
+	}
 	cs := ts.getChangesetForVersion(version)
 	if cs == nil {
 		return nil, fmt.Errorf("no changeset found for version %d", version)
@@ -221,6 +234,12 @@ func (ts *TreeStore) WriteWALCommit(version uint32) error {
 func (ts *TreeStore) SaveRoot(root *NodePointer, totalLeaves, totalBranches uint32) error {
 	version := ts.stagedVersion
 	ts.logger.Debug("saving root", "version", version)
+
+	// save the latest root pointer to memory
+	ts.latestMapLock.Lock()
+	ts.latest.Set(version, root)
+	ts.latestMapLock.Unlock()
+
 	err := ts.currentWriter.SaveRoot(root, version, totalLeaves, totalBranches)
 	if err != nil {
 		return err

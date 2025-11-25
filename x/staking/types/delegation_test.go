@@ -59,10 +59,10 @@ func TestUnbondingDelegationString(t *testing.T) {
 
 func TestRedelegationEqual(t *testing.T) {
 	r1 := types.NewRedelegation(sdk.AccAddress(valAddr1), valAddr2, valAddr3, 0,
-		time.Unix(0, 0), math.NewInt(0),
+		time.Unix(0, 0).UTC(), math.NewInt(0),
 		math.LegacyNewDec(0), 1, addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"))
 	r2 := types.NewRedelegation(sdk.AccAddress(valAddr1), valAddr2, valAddr3, 0,
-		time.Unix(0, 0), math.NewInt(0),
+		time.Unix(0, 0).UTC(), math.NewInt(0),
 		math.LegacyNewDec(0), 1, addresscodec.NewBech32Codec("cosmosvaloper"), addresscodec.NewBech32Codec("cosmos"))
 	require.True(t, proto.Equal(&r1, &r2))
 

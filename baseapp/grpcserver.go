@@ -16,7 +16,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 )
@@ -72,7 +71,7 @@ func (app *BaseApp) RegisterGRPCServerWithSkipCheckHeader(server gogogrpc.Server
 		}
 
 		// Attach the sdk.Context into the gRPC's context.Context.
-		grpcCtx = context.WithValue(grpcCtx, sdk.SdkContextKey, sdkCtx)
+		// grpcCtx = context.WithValue(grpcCtx, sdk.SdkContextKey, sdkCtx)
 
 		md = metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(height, 10))
 		if err = grpc.SetHeader(grpcCtx, md); err != nil {

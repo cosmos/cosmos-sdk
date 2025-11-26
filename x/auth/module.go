@@ -235,12 +235,6 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		maccPerms[permission.Account] = permission.Permissions
 	}
 
-	// default to governance authority if not provided
-	authority := types.NewModuleAddress(GovModuleName)
-	if in.Config.Authority != "" {
-		authority = types.NewModuleAddressOrBech32Address(in.Config.Authority)
-	}
-
 	if in.RandomGenesisAccountsFn == nil {
 		in.RandomGenesisAccountsFn = simulation.RandomGenesisAccounts
 	}
@@ -251,7 +245,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 
 	keeperOpts := []keeper.InitOption{keeper.WithUnorderedTransactions(in.Config.EnableUnorderedTransactions)}
 
-	k := keeper.NewAccountKeeper(in.Cdc, in.StoreService, in.AccountI, maccPerms, in.AddressCodec, in.Config.Bech32Prefix, authority.String(), keeperOpts...)
+	k := keeper.NewAccountKeeper(in.Cdc, in.StoreService, in.AccountI, maccPerms, in.AddressCodec, in.Config.Bech32Prefix, keeperOpts...)
 	m := NewAppModule(in.Cdc, k, in.RandomGenesisAccountsFn, in.LegacySubspace)
 
 	return ModuleOutputs{AccountKeeper: k, Module: m}

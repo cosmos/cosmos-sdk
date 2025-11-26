@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtypes "github.com/cometbft/cometbft/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -65,7 +66,9 @@ func setupGovKeeper(t *testing.T) (
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
+	consensusParams := cmtypes.DefaultConsensusParams()
+	consensusParams.Authority.Authority = authtypes.NewModuleAddress(types.ModuleName).String()
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()}).WithConsensusParams(consensusParams.ToProto())
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 	v1.RegisterInterfaces(encCfg.InterfaceRegistry)
 	v1beta1.RegisterInterfaces(encCfg.InterfaceRegistry)
@@ -100,7 +103,7 @@ func setupGovKeeper(t *testing.T) (
 
 	// Gov keeper initializations
 
-	govKeeper := keeper.NewKeeper(encCfg.Codec, storeService, acctKeeper, bankKeeper, stakingKeeper, distributionKeeper, msr, types.DefaultConfig(), govAcct.String())
+	govKeeper := keeper.NewKeeper(encCfg.Codec, storeService, acctKeeper, bankKeeper, stakingKeeper, distributionKeeper, msr, types.DefaultConfig())
 	require.NoError(t, govKeeper.ProposalID.Set(ctx, 1))
 	govRouter := v1beta1.NewRouter() // Also register legacy gov handlers to test them too.
 	govRouter.AddRoute(types.RouterKey, v1beta1.ProposalHandler)

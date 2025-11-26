@@ -74,7 +74,6 @@ func (suite *DeterministicTestSuite) SetupTest() {
 		maccPerms,
 		authcodec.NewBech32Codec("cosmos"),
 		"cosmos",
-		types.NewModuleAddress("gov").String(),
 	)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.encCfg.InterfaceRegistry)
@@ -296,7 +295,6 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccounts() {
 			maccPerms,
 			authcodec.NewBech32Codec("cosmos"),
 			"cosmos",
-			types.NewModuleAddress("gov").String(),
 		)
 		suite.setModuleAccounts(suite.ctx, ak, maccs)
 
@@ -343,7 +341,6 @@ func (suite *DeterministicTestSuite) TestGRPCQueryModuleAccountByName() {
 			maccPerms,
 			authcodec.NewBech32Codec("cosmos"),
 			"cosmos",
-			types.NewModuleAddress("gov").String(),
 		)
 		suite.setModuleAccounts(suite.ctx, ak, []string{mName})
 

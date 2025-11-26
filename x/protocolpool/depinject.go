@@ -8,8 +8,6 @@ import (
 	"cosmossdk.io/depinject/appconfig"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/protocolpool/keeper"
 	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
@@ -45,18 +43,7 @@ type ModuleOutputs struct {
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
-	// default to governance authority if not provided
-	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
-	if in.Config.Authority != "" {
-		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
-	}
-
-	authorityAddr, err := in.AccountKeeper.AddressCodec().BytesToString(authority)
-	if err != nil {
-		panic(err)
-	}
-
-	k := keeper.NewKeeper(in.Codec, in.StoreService, in.AccountKeeper, in.BankKeeper, authorityAddr)
+	k := keeper.NewKeeper(in.Codec, in.StoreService, in.AccountKeeper, in.BankKeeper)
 	m := NewAppModule(k, in.AccountKeeper, in.BankKeeper)
 
 	return ModuleOutputs{

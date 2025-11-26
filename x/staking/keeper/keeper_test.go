@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtypes "github.com/cometbft/cometbft/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -47,7 +48,9 @@ func (s *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(stakingtypes.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
+	consensusParams := cmtypes.DefaultConsensusParams()
+	consensusParams.Authority.Authority = authtypes.NewModuleAddress(govtypes.ModuleName).String()
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()}).WithConsensusParams(consensusParams.ToProto())
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 
 	ctrl := gomock.NewController(s.T())
@@ -63,7 +66,6 @@ func (s *KeeperTestSuite) SetupTest() {
 		storeService,
 		accountKeeper,
 		bankKeeper,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		address.NewBech32Codec("cosmosvaloper"),
 		address.NewBech32Codec("cosmosvalcons"),
 	)

@@ -5,6 +5,7 @@ import (
 	"io"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtypes "github.com/cometbft/cometbft/types"
 	"github.com/google/go-cmp/cmp"
 
 	"cosmossdk.io/core/appmodule"
@@ -20,6 +21,7 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -38,7 +40,9 @@ func Example() {
 	logger := log.NewNopLogger()
 
 	cms := integration.CreateMultiStore(keys, logger)
-	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)
+	consensusParams := cmtypes.DefaultConsensusParams()
+	consensusParams.Authority.Authority = authtypes.NewModuleAddress(govtypes.ModuleName).String()
+	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger).WithConsensusParams(consensusParams.ToProto())
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		encodingCfg.Codec,
@@ -47,7 +51,6 @@ func Example() {
 		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
 		addresscodec.NewBech32Codec("cosmos"),
 		"cosmos",
-		authority,
 	)
 
 	// subspace is nil because we don't test params (which is legacy anyway)
@@ -55,7 +58,7 @@ func Example() {
 
 	// here bankkeeper and staking keeper is nil because we are not testing them
 	// subspace is nil because we don't test params (which is legacy anyway)
-	mintKeeper := mintkeeper.NewKeeper(encodingCfg.Codec, runtime.NewKVStoreService(keys[minttypes.StoreKey]), nil, accountKeeper, nil, authtypes.FeeCollectorName, authority)
+	mintKeeper := mintkeeper.NewKeeper(encodingCfg.Codec, runtime.NewKVStoreService(keys[minttypes.StoreKey]), nil, accountKeeper, nil, authtypes.FeeCollectorName)
 	mintModule := mint.NewAppModule(encodingCfg.Codec, mintKeeper, accountKeeper, nil, nil)
 
 	// create the application and register all the modules from the previous step
@@ -127,7 +130,9 @@ func Example_oneModule() {
 	logger := log.NewLogger(io.Discard)
 
 	cms := integration.CreateMultiStore(keys, logger)
-	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)
+	consensusParams := cmtypes.DefaultConsensusParams()
+	consensusParams.Authority.Authority = authority
+	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger).WithConsensusParams(consensusParams.ToProto())
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		encodingCfg.Codec,
@@ -136,7 +141,6 @@ func Example_oneModule() {
 		map[string][]string{minttypes.ModuleName: {authtypes.Minter}},
 		addresscodec.NewBech32Codec("cosmos"),
 		"cosmos",
-		authority,
 	)
 
 	// subspace is nil because we don't test params (which is legacy anyway)

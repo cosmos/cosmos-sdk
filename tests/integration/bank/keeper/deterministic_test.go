@@ -87,18 +87,16 @@ func initDeterministicFixture(t *testing.T) *deterministicFixture {
 		maccPerms,
 		addresscodec.NewBech32Codec(sdk.Bech32MainPrefix),
 		sdk.Bech32MainPrefix,
-		authority.String(),
 	)
 
 	blockedAddresses := map[string]bool{
-		accountKeeper.GetAuthority(): false,
+		authority.String(): false,
 	}
 	bankKeeper := keeper.NewBaseKeeper(
 		cdc,
 		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
 		accountKeeper,
 		blockedAddresses,
-		authority.String(),
 		log.NewNopLogger(),
 	)
 

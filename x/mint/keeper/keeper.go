@@ -22,10 +22,6 @@ type Keeper struct {
 	bankKeeper       types.BankKeeper
 	feeCollectorName string
 
-	// the address capable of executing a MsgUpdateParams message. Typically, this
-	// should be the x/gov module account.
-	authority string
-
 	Schema collections.Schema
 	Params collections.Item[types.Params]
 	Minter collections.Item[types.Minter]
@@ -54,7 +50,6 @@ func NewKeeper(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	feeCollectorName string,
-	authority string,
 	opts ...InitOption,
 ) Keeper {
 	// ensure mint module account is set
@@ -69,7 +64,6 @@ func NewKeeper(
 		stakingKeeper:    sk,
 		bankKeeper:       bk,
 		feeCollectorName: feeCollectorName,
-		authority:        authority,
 		Params:           collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 		Minter:           collections.NewItem(sb, types.MinterKey, "minter", codec.CollValue[types.Minter](cdc)),
 		mintFn:           DefaultMintFn(types.DefaultInflationCalculationFn),
@@ -86,11 +80,6 @@ func NewKeeper(
 	}
 
 	return k
-}
-
-// GetAuthority returns the x/mint module's authority.
-func (k Keeper) GetAuthority() string {
-	return k.authority
 }
 
 // Logger returns a module-specific logger.

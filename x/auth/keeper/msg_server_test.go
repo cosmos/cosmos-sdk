@@ -22,7 +22,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		{
 			name: "set invalid max memo characters",
 			req: &types.MsgUpdateParams{
-				Authority: s.accountKeeper.GetAuthority(),
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
 				Params: types.Params{
 					MaxMemoCharacters:      0,
 					TxSigLimit:             9,
@@ -37,7 +37,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		{
 			name: "set invalid tx sig limit",
 			req: &types.MsgUpdateParams{
-				Authority: s.accountKeeper.GetAuthority(),
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
 				Params: types.Params{
 					MaxMemoCharacters:      140,
 					TxSigLimit:             0,
@@ -52,7 +52,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		{
 			name: "set invalid tx size cost per bytes",
 			req: &types.MsgUpdateParams{
-				Authority: s.accountKeeper.GetAuthority(),
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
 				Params: types.Params{
 					MaxMemoCharacters:      140,
 					TxSigLimit:             9,
@@ -67,7 +67,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		{
 			name: "set invalid sig verify cost ED25519",
 			req: &types.MsgUpdateParams{
-				Authority: s.accountKeeper.GetAuthority(),
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
 				Params: types.Params{
 					MaxMemoCharacters:      140,
 					TxSigLimit:             9,
@@ -82,7 +82,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		{
 			name: "set invalid sig verify cost Secp256k1",
 			req: &types.MsgUpdateParams{
-				Authority: s.accountKeeper.GetAuthority(),
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
 				Params: types.Params{
 					MaxMemoCharacters:      140,
 					TxSigLimit:             9,

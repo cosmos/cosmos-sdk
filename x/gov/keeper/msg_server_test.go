@@ -9,7 +9,9 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
@@ -1441,7 +1443,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgDeposit() {
 }
 
 func (suite *KeeperTestSuite) TestMsgUpdateParams() {
-	authority := suite.govKeeper.GetAuthority()
+	authority := types.NewModuleAddress(govtypes.ModuleName).String()
 	params := v1.DefaultParams()
 	testCases := []struct {
 		name      string

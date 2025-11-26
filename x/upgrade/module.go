@@ -26,8 +26,6 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -213,14 +211,8 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		homePath = cast.ToString(in.AppOpts.Get(flags.FlagHome))
 	}
 
-	// default to governance authority if not provided
-	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
-	if in.Config.Authority != "" {
-		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
-	}
-
 	// set the governance module account as the authority for conducting upgrades
-	k := keeper.NewKeeper(skipUpgradeHeights, in.StoreService, in.Cdc, homePath, nil, authority.String())
+	k := keeper.NewKeeper(skipUpgradeHeights, in.StoreService, in.Cdc, homePath, nil)
 	baseappOpt := func(app *baseapp.BaseApp) {
 		k.SetVersionSetter(app)
 	}

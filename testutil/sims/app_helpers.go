@@ -26,6 +26,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -47,6 +48,9 @@ var DefaultConsensusParams = &cmtproto.ConsensusParams{
 		PubKeyTypes: []string{
 			cmttypes.ABCIPubKeyTypeEd25519,
 		},
+	},
+	Authority: &cmtproto.AuthorityParams{
+		Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	},
 }
 

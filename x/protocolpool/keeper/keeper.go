@@ -26,8 +26,6 @@ type Keeper struct {
 
 	cdc codec.BinaryCodec
 
-	authority string
-
 	// State
 	Schema          collections.Schema
 	ContinuousFunds collections.Map[sdk.AccAddress, types.ContinuousFund]
@@ -38,7 +36,7 @@ const (
 	errModuleAccountNotSet = "%s module account has not been set"
 )
 
-func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, ak types.AccountKeeper, bk types.BankKeeper, authority string,
+func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, ak types.AccountKeeper, bk types.BankKeeper,
 ) Keeper {
 	// ensure pool module account is set
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
@@ -56,7 +54,6 @@ func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, ak type
 		authKeeper:      ak,
 		bankKeeper:      bk,
 		cdc:             cdc,
-		authority:       authority,
 		ContinuousFunds: collections.NewMap(sb, types.ContinuousFundsKey, "continuous_funds", sdk.AccAddressKey, codec.CollValue[types.ContinuousFund](cdc)),
 		Params:          collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 	}
@@ -68,11 +65,6 @@ func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService, ak type
 	keeper.Schema = schema
 
 	return keeper
-}
-
-// GetAuthority returns the x/protocolpool module's authority.
-func (k Keeper) GetAuthority() string {
-	return k.authority
 }
 
 // GetCommunityPoolModule gets the module name that funds should be sent to for the community pool.
@@ -204,13 +196,13 @@ func (k Keeper) GetAllContinuousFunds(ctx sdk.Context) ([]types.ContinuousFund, 
 	return cf, nil
 }
 
-func (k Keeper) validateAuthority(authority string) error {
+func (k Keeper) validateAuthority(ctx sdk.Context, authority string) error {
 	if _, err := k.authKeeper.AddressCodec().StringToBytes(authority); err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid authority address: %s", err)
 	}
 
-	if k.authority != authority {
-		return errorsmod.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, authority)
+	if ctx.ConsensusParams().Authority.Authority != authority {
+		return errorsmod.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", ctx.ConsensusParams().Authority.Authority, authority)
 	}
 
 	return nil

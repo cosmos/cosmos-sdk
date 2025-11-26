@@ -438,20 +438,6 @@ func (mr *MockBankKeeperMockRecorder) GetAllSendEnabledEntries(ctx any) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllSendEnabledEntries", reflect.TypeOf((*MockBankKeeper)(nil).GetAllSendEnabledEntries), ctx)
 }
 
-// GetAuthority mocks base method.
-func (m *MockBankKeeper) GetAuthority() string {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetAuthority")
-	ret0, _ := ret[0].(string)
-	return ret0
-}
-
-// GetAuthority indicates an expected call of GetAuthority.
-func (mr *MockBankKeeperMockRecorder) GetAuthority() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAuthority", reflect.TypeOf((*MockBankKeeper)(nil).GetAuthority))
-}
-
 // GetBalance mocks base method.
 func (m *MockBankKeeper) GetBalance(ctx context.Context, addr types0.AccAddress, denom string) types0.Coin {
 	m.ctrl.T.Helper()

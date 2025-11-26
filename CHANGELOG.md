@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Breaking Changes
 
+* (x/consensus) [#25607](https://github.com/cosmos/cosmos-sdk/pull/25607) Move authority management from individual module keepers to consensus params. Modules no longer accept an `authority` parameter in keeper constructors.
 * [#25090](https://github.com/cosmos/cosmos-sdk/pull/25090) Moved deprecated modules to `./contrib`.  These modules are still available but will no longer be actively maintained or supported in the Cosmos SDK Bug Bounty program.
     * `x/group`
     * `x/nft`

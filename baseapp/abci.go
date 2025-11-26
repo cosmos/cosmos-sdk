@@ -196,7 +196,6 @@ func (app *BaseApp) Query(ctx context.Context, req *abci.RequestQuery) (resp *ab
 		return sdkerrors.QueryResult(errorsmod.Wrap(sdkerrors.ErrUnknownRequest, "no query path provided"), app.trace), nil
 	}
 
-	// TODO: propagate context with span into the sdk.Context used for queries so that we can trace queries properly
 	switch path[0] {
 	case QueryPathApp:
 		// "/app" prefix for special application queries

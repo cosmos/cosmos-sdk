@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	cmtypes "github.com/cometbft/cometbft/types"
 	"testing"
 	"time"
 
@@ -20,7 +21,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	poolkeeper "github.com/cosmos/cosmos-sdk/x/protocolpool/keeper"
 	pooltestutil "github.com/cosmos/cosmos-sdk/x/protocolpool/testutil"
 	"github.com/cosmos/cosmos-sdk/x/protocolpool/types"
@@ -52,7 +52,9 @@ func (suite *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()})
+	consensusParams := cmtypes.DefaultConsensusParams()
+	consensusParams.Authority.Authority = authtypes.NewModuleAddress(types.ModuleName).String()
+	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now()}).WithConsensusParams(consensusParams.ToProto())
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 
 	// gomock initializations
@@ -66,20 +68,16 @@ func (suite *KeeperTestSuite) SetupTest() {
 	bankKeeper := pooltestutil.NewMockBankKeeper(ctrl)
 	suite.bankKeeper = bankKeeper
 
-	authority, err := accountKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress(govtypes.ModuleName))
-	suite.Require().NoError(err)
-
 	poolKeeper := poolkeeper.NewKeeper(
 		encCfg.Codec,
 		storeService,
 		accountKeeper,
 		bankKeeper,
-		authority,
 	)
 	suite.ctx = ctx
 	suite.poolKeeper = poolKeeper
 
-	err = suite.poolKeeper.Params.Set(ctx, types.Params{
+	err := suite.poolKeeper.Params.Set(ctx, types.Params{
 		EnabledDistributionDenoms: []string{sdk.DefaultBondDenom},
 	})
 	suite.Require().NoError(err)

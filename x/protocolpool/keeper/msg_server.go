@@ -46,7 +46,7 @@ func (k MsgServer) FundCommunityPool(ctx context.Context, msg *types.MsgFundComm
 func (k MsgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommunityPoolSpend) (*types.MsgCommunityPoolSpendResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	if err := k.validateAuthority(msg.Authority); err != nil {
+	if err := k.validateAuthority(sdkCtx, msg.Authority); err != nil {
 		return nil, err
 	}
 
@@ -72,7 +72,7 @@ func (k MsgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommuni
 func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreateContinuousFund) (*types.MsgCreateContinuousFundResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	if err := k.validateAuthority(msg.Authority); err != nil {
+	if err := k.validateAuthority(sdkCtx, msg.Authority); err != nil {
 		return nil, err
 	}
 
@@ -134,7 +134,7 @@ func (k MsgServer) CreateContinuousFund(ctx context.Context, msg *types.MsgCreat
 func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCancelContinuousFund) (*types.MsgCancelContinuousFundResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	if err := k.validateAuthority(msg.Authority); err != nil {
+	if err := k.validateAuthority(sdkCtx, msg.Authority); err != nil {
 		return nil, err
 	}
 
@@ -169,7 +169,7 @@ func (k MsgServer) CancelContinuousFund(ctx context.Context, msg *types.MsgCance
 func (k MsgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	if err := k.validateAuthority(msg.GetAuthority()); err != nil {
+	if err := k.validateAuthority(sdkCtx, msg.GetAuthority()); err != nil {
 		return nil, err
 	}
 

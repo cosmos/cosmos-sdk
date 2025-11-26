@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"context"
 	"fmt"
+	cmtypes "github.com/cometbft/cometbft/types"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -37,11 +38,13 @@ func (suite *UpgradeTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	suite.ctx = testCtx.Ctx
+	consensusParams := cmtypes.DefaultConsensusParams()
+	consensusParams.Authority.Authority = authtypes.NewModuleAddress(govtypes.ModuleName).String()
+	suite.ctx = testCtx.Ctx.WithConsensusParams(consensusParams.ToProto())
 
 	skipUpgradeHeights := make(map[int64]bool)
 
-	suite.upgradeKeeper = keeper.NewKeeper(skipUpgradeHeights, storeService, suite.encCfg.Codec, suite.T().TempDir(), nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	suite.upgradeKeeper = keeper.NewKeeper(skipUpgradeHeights, storeService, suite.encCfg.Codec, suite.T().TempDir(), nil)
 	suite.Require().NoError(suite.upgradeKeeper.SetModuleVersionMap(suite.ctx, module.VersionMap{
 		"bank": 0,
 	}))
@@ -223,12 +226,6 @@ func (suite *UpgradeTestSuite) TestModuleVersions() {
 			}
 		})
 	}
-}
-
-func (suite *UpgradeTestSuite) TestAuthority() {
-	res, err := suite.queryClient.Authority(context.Background(), &types.QueryAuthorityRequest{})
-	suite.Require().NoError(err)
-	suite.Require().Equal(authtypes.NewModuleAddress(govtypes.ModuleName).String(), res.Address)
 }
 
 func TestUpgradeTestSuite(t *testing.T) {

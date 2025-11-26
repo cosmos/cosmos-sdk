@@ -334,7 +334,6 @@ func NewSimApp(
 		app.AccountKeeper,
 		app.BankKeeper,
 		authtypes.FeeCollectorName,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		// mintkeeper.WithMintFn(mintkeeper.DefaultMintFn(minttypes.DefaultInflationCalculationFn)), custom mintFn can be added here
 	)
 
@@ -430,7 +429,7 @@ func NewSimApp(
 
 	app.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
-			// register the governance hooks
+		// register the governance hooks
 		),
 	)
 
@@ -453,7 +452,7 @@ func NewSimApp(
 
 	app.EpochsKeeper.SetHooks(
 		epochstypes.NewMultiEpochHooks(
-			// insert epoch hooks receivers here
+		// insert epoch hooks receivers here
 		),
 	)
 

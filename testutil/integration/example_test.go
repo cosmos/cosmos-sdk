@@ -3,6 +3,7 @@ package integration_test
 import (
 	"fmt"
 	cmtypes "github.com/cometbft/cometbft/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"io"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -39,7 +40,9 @@ func Example() {
 	logger := log.NewNopLogger()
 
 	cms := integration.CreateMultiStore(keys, logger)
-	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)
+	consensusParams := cmtypes.DefaultConsensusParams()
+	consensusParams.Authority.Authority = authtypes.NewModuleAddress(govtypes.ModuleName).String()
+	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger).WithConsensusParams(consensusParams.ToProto())
 
 	accountKeeper := authkeeper.NewAccountKeeper(
 		encodingCfg.Codec,
@@ -55,7 +58,7 @@ func Example() {
 
 	// here bankkeeper and staking keeper is nil because we are not testing them
 	// subspace is nil because we don't test params (which is legacy anyway)
-	mintKeeper := mintkeeper.NewKeeper(encodingCfg.Codec, runtime.NewKVStoreService(keys[minttypes.StoreKey]), nil, accountKeeper, nil, authtypes.FeeCollectorName, authority)
+	mintKeeper := mintkeeper.NewKeeper(encodingCfg.Codec, runtime.NewKVStoreService(keys[minttypes.StoreKey]), nil, accountKeeper, nil, authtypes.FeeCollectorName)
 	mintModule := mint.NewAppModule(encodingCfg.Codec, mintKeeper, accountKeeper, nil, nil)
 
 	// create the application and register all the modules from the previous step

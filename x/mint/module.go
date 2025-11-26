@@ -20,7 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/mint/exported"
 	"github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	"github.com/cosmos/cosmos-sdk/x/mint/simulation"
@@ -100,7 +99,7 @@ func NewAppModule(
 	cdc codec.Codec,
 	keeper keeper.Keeper,
 	ak types.AccountKeeper,
-	// This input is unused as of Cosmos SDK v0.53 and will be removed in a future release of the Cosmos SDK.
+// This input is unused as of Cosmos SDK v0.53 and will be removed in a future release of the Cosmos SDK.
 	ic types.InflationCalculationFn,
 	ss exported.Subspace,
 ) AppModule {
@@ -229,12 +228,6 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		feeCollectorName = authtypes.FeeCollectorName
 	}
 
-	// default to governance authority if not provided
-	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
-	if in.Config.Authority != "" {
-		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
-	}
-
 	if in.InflationCalculationFn != nil {
 		panic("inflation calculation function argument must be nil as it is no longer used.  This argument will be removed in a future release of the Cosmos SDK.  To set a custom inflation calculation function, while using depinject ")
 	}
@@ -251,7 +244,6 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.AccountKeeper,
 		in.BankKeeper,
 		feeCollectorName,
-		authority.String(),
 		opts...,
 	)
 

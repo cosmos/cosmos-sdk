@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	cmtypes "github.com/cometbft/cometbft/types"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -14,7 +15,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	minttestutil "github.com/cosmos/cosmos-sdk/x/mint/testutil"
@@ -39,8 +39,10 @@ func (s *IntegrationTestSuite) SetupTest() {
 	encCfg := moduletestutil.MakeTestEncodingConfig(mint.AppModuleBasic{})
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
+	consensusParams := cmtypes.DefaultConsensusParams()
+	consensusParams.Authority.Authority = authtypes.NewModuleAddress(types.ModuleName).String()
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	s.ctx = testCtx.Ctx
+	s.ctx = testCtx.Ctx.WithConsensusParams(consensusParams.ToProto())
 
 	// gomock initializations
 	ctrl := gomock.NewController(s.T())
@@ -57,7 +59,6 @@ func (s *IntegrationTestSuite) SetupTest() {
 		accountKeeper,
 		bankKeeper,
 		authtypes.FeeCollectorName,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	s.stakingKeeper = stakingKeeper
 	s.bankKeeper = bankKeeper

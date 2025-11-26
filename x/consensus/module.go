@@ -2,12 +2,12 @@ package consensus
 
 import (
 	"context"
-	"cosmossdk.io/core/address"
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 
 	modulev1 "cosmossdk.io/api/cosmos/consensus/module/v1"
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/event"
 	storetypes "cosmossdk.io/core/store"

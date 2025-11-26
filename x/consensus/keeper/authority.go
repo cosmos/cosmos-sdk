@@ -2,7 +2,9 @@ package keeper
 
 import (
 	"context"
+
 	"cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/x/consensus/exported"
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 )

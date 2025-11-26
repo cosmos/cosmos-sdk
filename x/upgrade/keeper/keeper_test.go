@@ -2,11 +2,11 @@ package keeper_test
 
 import (
 	"context"
-	cmtypes "github.com/cometbft/cometbft/types"
 	"path/filepath"
 	"testing"
 	"time"
 
+	cmtypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/header"

@@ -2,10 +2,10 @@ package keeper_test
 
 import (
 	"fmt"
-	cmtypes "github.com/cometbft/cometbft/types"
 	"testing"
 	"time"
 
+	cmtypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 

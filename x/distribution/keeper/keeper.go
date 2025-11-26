@@ -22,9 +22,6 @@ type Keeper struct {
 	authKeeper    types.AccountKeeper
 	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
-	// the address capable of executing a MsgUpdateParams message. Typically, this
-	// should be the x/gov module account.
-	authority string
 
 	Schema  collections.Schema
 	Params  collections.Item[types.Params]
@@ -57,7 +54,7 @@ func NewKeeper(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	sk types.StakingKeeper,
-	feeCollectorName, authority string,
+	feeCollectorName string,
 	opts ...InitOption,
 ) Keeper {
 	// ensure distribution module account is set
@@ -73,7 +70,6 @@ func NewKeeper(
 		bankKeeper:            bk,
 		stakingKeeper:         sk,
 		feeCollectorName:      feeCollectorName,
-		authority:             authority,
 		Params:                collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 		FeePool:               collections.NewItem(sb, types.FeePoolKey, "fee_pool", codec.CollValue[types.FeePool](cdc)),
 		externalCommunityPool: nil,
@@ -98,11 +94,6 @@ func NewKeeper(
 	}
 
 	return k
-}
-
-// GetAuthority returns the x/distribution module's authority.
-func (k Keeper) GetAuthority() string {
-	return k.authority
 }
 
 // HasExternalCommunityPool is a helper function to denote whether the x/distribution module

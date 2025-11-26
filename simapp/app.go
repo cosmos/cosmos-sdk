@@ -286,14 +286,20 @@ func NewSimApp(
 	bApp.SetParamStore(app.ConsensusParamsKeeper.ParamsStore)
 
 	// add keepers
-	app.AccountKeeper = authkeeper.NewAccountKeeper(appCodec, runtime.NewKVStoreService(keys[authtypes.StoreKey]), authtypes.ProtoBaseAccount, maccPerms, addressCodec, sdk.Bech32MainPrefix, authkeeper.WithUnorderedTransactions(true))
+	app.AccountKeeper = authkeeper.NewAccountKeeper(appCodec,
+		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
+		authtypes.ProtoBaseAccount,
+		maccPerms,
+		addressCodec,
+		sdk.Bech32MainPrefix,
+		authkeeper.WithUnorderedTransactions(true),
+	)
 
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec,
 		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
 		app.AccountKeeper,
 		BlockedAddresses(),
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		logger,
 	)
 
@@ -347,7 +353,6 @@ func NewSimApp(
 		app.BankKeeper,
 		app.StakingKeeper,
 		authtypes.FeeCollectorName,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		distrkeeper.WithExternalCommunityPool(app.ProtocolPoolKeeper),
 	)
 

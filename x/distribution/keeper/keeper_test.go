@@ -16,7 +16,6 @@ import (
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtestutil "github.com/cosmos/cosmos-sdk/x/distribution/testutil"
@@ -51,7 +50,6 @@ func TestSetWithdrawAddr(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		"fee_collector",
-		authtypes.NewModuleAddress("gov").String(),
 	)
 
 	params := types.DefaultParams()
@@ -99,7 +97,6 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		"fee_collector",
-		authtypes.NewModuleAddress("gov").String(),
 	)
 
 	// set outstanding rewards
@@ -151,7 +148,6 @@ func TestGetTotalRewards(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		"fee_collector",
-		authtypes.NewModuleAddress("gov").String(),
 	)
 
 	valCommission := sdk.DecCoins{
@@ -190,7 +186,6 @@ func TestFundCommunityPool(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		"fee_collector",
-		authtypes.NewModuleAddress("gov").String(),
 	)
 
 	// reset fee pool

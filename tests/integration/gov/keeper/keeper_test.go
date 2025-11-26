@@ -96,7 +96,7 @@ func initFixture(tb testing.TB) *fixture {
 	assert.NilError(tb, stakingKeeper.SetParams(newCtx, stakingtypes.DefaultParams()))
 
 	distrKeeper := distrkeeper.NewKeeper(
-		cdc, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, distrtypes.ModuleName, authority.String(),
+		cdc, runtime.NewKVStoreService(keys[distrtypes.StoreKey]), accountKeeper, bankKeeper, stakingKeeper, distrtypes.ModuleName,
 	)
 
 	// Create MsgServiceRouter, but don't populate it before creating the gov

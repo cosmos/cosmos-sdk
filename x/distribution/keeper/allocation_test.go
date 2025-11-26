@@ -49,7 +49,6 @@ func TestAllocateTokensToValidatorWithCommission(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		"fee_collector",
-		authtypes.NewModuleAddress("gov").String(),
 	)
 
 	// create validator with 50% commission
@@ -106,7 +105,6 @@ func TestAllocateTokensToManyValidators(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		"fee_collector",
-		authtypes.NewModuleAddress("gov").String(),
 	)
 
 	// reset fee pool & set params
@@ -239,7 +237,6 @@ func TestAllocateTokensTruncation(t *testing.T) {
 		bankKeeper,
 		stakingKeeper,
 		"fee_collector",
-		authtypes.NewModuleAddress("gov").String(),
 	)
 
 	// reset fee pool

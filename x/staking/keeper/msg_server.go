@@ -586,8 +586,9 @@ func (k msgServer) CancelUnbondingDelegation(ctx context.Context, msg *types.Msg
 
 // UpdateParams defines a method to perform updation of params exist in x/staking module.
 func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
-	if k.authority != msg.Authority {
-		return nil, errorsmod.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	if sdkCtx.ConsensusParams().Authority.Authority != msg.Authority {
+		return nil, errorsmod.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", sdkCtx.ConsensusParams().Authority.Authority, msg.Authority)
 	}
 
 	if err := msg.Params.Validate(); err != nil {

@@ -987,7 +987,7 @@ func (s *KeeperTestSuite) TestMsgCancelUnbondingDelegation() {
 }
 
 func (s *KeeperTestSuite) TestMsgUpdateParams() {
-	ctx, keeper, msgServer := s.ctx, s.stakingKeeper, s.msgServer
+	ctx, msgServer := s.ctx, s.msgServer
 	require := s.Require()
 
 	testCases := []struct {
@@ -999,7 +999,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 		{
 			name: "valid params",
 			input: &stakingtypes.MsgUpdateParams{
-				Authority: keeper.GetAuthority(),
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
 				Params:    stakingtypes.DefaultParams(),
 			},
 			expErr: false,
@@ -1016,7 +1016,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 		{
 			name: "negative commission rate",
 			input: &stakingtypes.MsgUpdateParams{
-				Authority: keeper.GetAuthority(),
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
 				Params: stakingtypes.Params{
 					MinCommissionRate: math.LegacyNewDec(-10),
 					UnbondingTime:     stakingtypes.DefaultUnbondingTime,
@@ -1032,7 +1032,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 		{
 			name: "commission rate cannot be bigger than 100",
 			input: &stakingtypes.MsgUpdateParams{
-				Authority: keeper.GetAuthority(),
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
 				Params: stakingtypes.Params{
 					MinCommissionRate: math.LegacyNewDec(2),
 					UnbondingTime:     stakingtypes.DefaultUnbondingTime,
@@ -1048,7 +1048,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 		{
 			name: "invalid bond denom",
 			input: &stakingtypes.MsgUpdateParams{
-				Authority: keeper.GetAuthority(),
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
 				Params: stakingtypes.Params{
 					MinCommissionRate: stakingtypes.DefaultMinCommissionRate,
 					UnbondingTime:     stakingtypes.DefaultUnbondingTime,
@@ -1064,7 +1064,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 		{
 			name: "max validators must be positive",
 			input: &stakingtypes.MsgUpdateParams{
-				Authority: keeper.GetAuthority(),
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
 				Params: stakingtypes.Params{
 					MinCommissionRate: stakingtypes.DefaultMinCommissionRate,
 					UnbondingTime:     stakingtypes.DefaultUnbondingTime,
@@ -1080,7 +1080,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 		{
 			name: "max entries must be positive",
 			input: &stakingtypes.MsgUpdateParams{
-				Authority: keeper.GetAuthority(),
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
 				Params: stakingtypes.Params{
 					MinCommissionRate: stakingtypes.DefaultMinCommissionRate,
 					UnbondingTime:     stakingtypes.DefaultUnbondingTime,
@@ -1096,7 +1096,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 		{
 			name: "negative unbounding time",
 			input: &stakingtypes.MsgUpdateParams{
-				Authority: keeper.GetAuthority(),
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
 				Params: stakingtypes.Params{
 					UnbondingTime:     time.Hour * 24 * 7 * 3 * -1,
 					MaxEntries:        stakingtypes.DefaultMaxEntries,

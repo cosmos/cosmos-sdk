@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	cmtypes "github.com/cometbft/cometbft/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"testing"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -19,7 +21,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtestutil "github.com/cosmos/cosmos-sdk/x/staking/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -47,7 +48,9 @@ func (s *KeeperTestSuite) SetupTest() {
 	key := storetypes.NewKVStoreKey(stakingtypes.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
 	testCtx := testutil.DefaultContextWithDB(s.T(), key, storetypes.NewTransientStoreKey("transient_test"))
-	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()})
+	consensusParams := cmtypes.DefaultConsensusParams()
+	consensusParams.Authority.Authority = authtypes.NewModuleAddress(govtypes.ModuleName).String()
+	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Time: cmttime.Now()}).WithConsensusParams(consensusParams.ToProto())
 	encCfg := moduletestutil.MakeTestEncodingConfig()
 
 	ctrl := gomock.NewController(s.T())
@@ -63,7 +66,6 @@ func (s *KeeperTestSuite) SetupTest() {
 		storeService,
 		accountKeeper,
 		bankKeeper,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 		address.NewBech32Codec("cosmosvaloper"),
 		address.NewBech32Codec("cosmosvalcons"),
 	)

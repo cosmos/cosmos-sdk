@@ -40,6 +40,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 
 	"cosmossdk.io/core/appmodule"
@@ -754,29 +755,50 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM Ver
 	return updatedVM, nil
 }
 
-// PreBlock performs begin block functionality for upgrade module.
-// It takes the current context as a parameter and returns a boolean value
-// indicating whether the migration was successfully executed or not.
+// PreBlock performs begin block functionality for the upgrade module.
+// It takes the current context as a parameter and returns a ResponsePreBlock
+// indicating whether the consensus parameters were changed during this block.
 func (m *Manager) PreBlock(ctx sdk.Context) (*sdk.ResponsePreBlock, error) {
+	// Root span for the whole PreBlock flow.
 	var span trace.Span
-	ctx, span = ctx.StartSpan(tracer, "Manager.PreBlock")
+	ctx, span = ctx.StartSpan(tracer, "PreBlock")
 	defer span.End()
 
 	paramsChanged := false
+
 	for _, moduleName := range m.OrderPreBlockers {
+		// Child span per module.
 		var modSpan trace.Span
-		ctx, modSpan = ctx.StartSpan(tracer, fmt.Sprintf("PreBlock.%s", moduleName))
-		if module, ok := m.Modules[moduleName].(appmodule.HasPreBlocker); ok {
-			rsp, err := module.PreBlock(ctx)
-			if err != nil {
-				return nil, err
-			}
-			if rsp.IsConsensusParamsChanged() {
-				paramsChanged = true
-			}
+		modCtx, modSpan := ctx.StartSpan(tracer, fmt.Sprintf("PreBlock.%s", moduleName))
+
+		module, ok := m.Modules[moduleName].(appmodule.HasPreBlocker)
+		if !ok {
+			// If the module doesn't implement PreBlock, just end the span and continue.
+			modSpan.End()
+			continue
 		}
+
+		rsp, err := module.PreBlock(modCtx)
+		if err != nil {
+			// Record error on the module span.
+			modSpan.RecordError(err)
+			modSpan.SetStatus(codes.Error, err.Error())
+			modSpan.End()
+
+			// also record on the parent span for easy surfacing.
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+
+			return nil, err
+		}
+
+		if rsp.IsConsensusParamsChanged() {
+			paramsChanged = true
+		}
+
 		modSpan.End()
 	}
+
 	return &sdk.ResponsePreBlock{
 		ConsensusParamsChanged: paramsChanged,
 	}, nil

@@ -113,7 +113,6 @@ func initFixture(tb testing.TB) *fixture {
 		distrKeeper,
 		router,
 		types.DefaultConfig(),
-		authority.String(),
 	)
 	err := govKeeper.ProposalID.Set(newCtx, 1)
 	assert.NilError(tb, err)

@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"strings"
 	"time"
 
@@ -1441,7 +1443,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgDeposit() {
 }
 
 func (suite *KeeperTestSuite) TestMsgUpdateParams() {
-	authority := suite.govKeeper.GetAuthority()
+	authority := types.NewModuleAddress(govtypes.ModuleName).String()
 	params := v1.DefaultParams()
 	testCases := []struct {
 		name      string

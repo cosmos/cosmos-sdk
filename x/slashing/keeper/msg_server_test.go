@@ -43,7 +43,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		{
 			name: "set invalid signed blocks window",
 			request: &slashingtypes.MsgUpdateParams{
-				Authority: s.slashingKeeper.GetAuthority(),
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
 				Params: slashingtypes.Params{
 					SignedBlocksWindow:      0,
 					MinSignedPerWindow:      minSignedPerWindow,
@@ -58,7 +58,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		{
 			name: "set invalid min signed per window",
 			request: &slashingtypes.MsgUpdateParams{
-				Authority: s.slashingKeeper.GetAuthority(),
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
 				Params: slashingtypes.Params{
 					SignedBlocksWindow:      int64(750),
 					MinSignedPerWindow:      invalidVal,
@@ -73,7 +73,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		{
 			name: "set invalid downtime jail duration",
 			request: &slashingtypes.MsgUpdateParams{
-				Authority: s.slashingKeeper.GetAuthority(),
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
 				Params: slashingtypes.Params{
 					SignedBlocksWindow:      int64(750),
 					MinSignedPerWindow:      minSignedPerWindow,
@@ -88,7 +88,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		{
 			name: "set invalid slash fraction double sign",
 			request: &slashingtypes.MsgUpdateParams{
-				Authority: s.slashingKeeper.GetAuthority(),
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
 				Params: slashingtypes.Params{
 					SignedBlocksWindow:      int64(750),
 					MinSignedPerWindow:      minSignedPerWindow,
@@ -103,7 +103,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		{
 			name: "set invalid slash fraction downtime",
 			request: &slashingtypes.MsgUpdateParams{
-				Authority: s.slashingKeeper.GetAuthority(),
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
 				Params: slashingtypes.Params{
 					SignedBlocksWindow:      int64(750),
 					MinSignedPerWindow:      minSignedPerWindow,
@@ -118,7 +118,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 		{
 			name: "set full valid params",
 			request: &slashingtypes.MsgUpdateParams{
-				Authority: s.slashingKeeper.GetAuthority(),
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
 				Params: slashingtypes.Params{
 					SignedBlocksWindow:      int64(750),
 					MinSignedPerWindow:      minSignedPerWindow,

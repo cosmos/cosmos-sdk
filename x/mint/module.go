@@ -209,7 +209,6 @@ type ModuleInputs struct {
 
 	AccountKeeper types.AccountKeeper
 	BankKeeper    types.BankKeeper
-	StakingKeeper types.StakingKeeper
 }
 
 type ModuleOutputs struct {
@@ -235,20 +234,14 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		panic("inflation calculation function argument must be nil as it is no longer used.  This argument will be removed in a future release of the Cosmos SDK.  To set a custom inflation calculation function, while using depinject ")
 	}
 
-	var opts []keeper.InitOption
-	if in.MintFn != nil {
-		opts = append(opts, keeper.WithMintFn(in.MintFn))
-	}
-
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.StoreService,
-		in.StakingKeeper,
 		in.AccountKeeper,
 		in.BankKeeper,
 		feeCollectorName,
 		authority.String(),
-		opts...,
+		in.MintFn,
 	)
 
 	// when no inflation calculation function is provided it will use the default types.DefaultInflationCalculationFn

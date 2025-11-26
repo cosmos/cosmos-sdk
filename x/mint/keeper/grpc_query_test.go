@@ -48,11 +48,11 @@ func (suite *MintTestSuite) SetupTest() {
 	suite.mintKeeper = keeper.NewKeeper(
 		encCfg.Codec,
 		storeService,
-		stakingKeeper,
 		accountKeeper,
 		bankKeeper,
 		authtypes.FeeCollectorName,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		keeper.DefaultMintFn(stakingKeeper, types.DefaultInflationCalculationFn),
 	)
 
 	err := suite.mintKeeper.Params.Set(suite.ctx, types.DefaultParams())

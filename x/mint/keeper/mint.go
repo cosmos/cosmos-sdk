@@ -16,7 +16,7 @@ func (k *Keeper) MintFn(ctx sdk.Context) error {
 
 // DefaultMintFn returns a default mint function.
 // The default MintFn has a requirement on staking as it uses bond to calculate inflation.
-func DefaultMintFn(ic types.InflationCalculationFn) MintFn {
+func DefaultMintFn(sk types.StakingKeeper, ic types.InflationCalculationFn) MintFn {
 	return func(ctx sdk.Context, k *Keeper) error {
 		// fetch stored minter & params
 		minter, err := k.Minter.Get(ctx)
@@ -30,12 +30,12 @@ func DefaultMintFn(ic types.InflationCalculationFn) MintFn {
 		}
 
 		// recalculate inflation rate
-		totalStakingSupply, err := k.StakingTokenSupply(ctx)
+		totalStakingSupply, err := sk.StakingTokenSupply(ctx)
 		if err != nil {
 			return err
 		}
 
-		bondedRatio, err := k.BondedRatio(ctx)
+		bondedRatio, err := sk.BondedRatio(ctx)
 		if err != nil {
 			return err
 		}

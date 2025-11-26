@@ -7,7 +7,6 @@ import (
 	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
-	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,7 +17,6 @@ import (
 type Keeper struct {
 	cdc              codec.BinaryCodec
 	storeService     storetypes.KVStoreService
-	stakingKeeper    types.StakingKeeper
 	bankKeeper       types.BankKeeper
 	feeCollectorName string
 
@@ -34,15 +32,6 @@ type Keeper struct {
 	mintFn MintFn
 }
 
-type InitOption func(*Keeper)
-
-// WithMintFn sets a custom minting function for the x/mint keeper.
-func WithMintFn(mintFn MintFn) InitOption {
-	return func(k *Keeper) {
-		k.mintFn = mintFn
-	}
-}
-
 // NewKeeper creates a new mint Keeper instance.
 //
 // The mint keeper is always initialized with the DefaultMintFn but this can be overridden with the
@@ -50,12 +39,11 @@ func WithMintFn(mintFn MintFn) InitOption {
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeService storetypes.KVStoreService,
-	sk types.StakingKeeper,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	feeCollectorName string,
 	authority string,
-	opts ...InitOption,
+	mintFn MintFn,
 ) Keeper {
 	// ensure mint module account is set
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
@@ -66,13 +54,12 @@ func NewKeeper(
 	k := Keeper{
 		cdc:              cdc,
 		storeService:     storeService,
-		stakingKeeper:    sk,
 		bankKeeper:       bk,
 		feeCollectorName: feeCollectorName,
 		authority:        authority,
 		Params:           collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 		Minter:           collections.NewItem(sb, types.MinterKey, "minter", codec.CollValue[types.Minter](cdc)),
-		mintFn:           DefaultMintFn(types.DefaultInflationCalculationFn),
+		mintFn:           mintFn,
 	}
 
 	schema, err := sb.Build()
@@ -80,10 +67,6 @@ func NewKeeper(
 		panic(err)
 	}
 	k.Schema = schema
-
-	for _, opt := range opts {
-		opt(&k)
-	}
 
 	return k
 }
@@ -97,18 +80,6 @@ func (k Keeper) GetAuthority() string {
 func (k Keeper) Logger(ctx context.Context) log.Logger {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	return sdkCtx.Logger().With("module", "x/"+types.ModuleName)
-}
-
-// StakingTokenSupply implements an alias call to the underlying staking keeper's
-// StakingTokenSupply to be used in BeginBlocker.
-func (k Keeper) StakingTokenSupply(ctx context.Context) (math.Int, error) {
-	return k.stakingKeeper.StakingTokenSupply(ctx)
-}
-
-// BondedRatio implements an alias call to the underlying staking keeper's
-// BondedRatio to be used in BeginBlocker.
-func (k Keeper) BondedRatio(ctx context.Context) (math.LegacyDec, error) {
-	return k.stakingKeeper.BondedRatio(ctx)
 }
 
 // MintCoins implements an alias call to the underlying supply keeper's

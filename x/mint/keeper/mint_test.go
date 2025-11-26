@@ -58,11 +58,11 @@ func (s *MintFnTestSuite) SetupTest() {
 	s.mintKeeper = keeper.NewKeeper(
 		encCfg.Codec,
 		storeService,
-		s.stakingKeeper,
 		accountKeeper,
 		s.bankKeeper,
 		authtypes.FeeCollectorName,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		keeper.DefaultMintFn(s.stakingKeeper, types.DefaultInflationCalculationFn),
 	)
 
 	// Set default parameters.
@@ -168,12 +168,11 @@ func (s *MintFnTestSuite) TestCustomMintFn() {
 	s.mintKeeper = keeper.NewKeeper(
 		encCfg.Codec,
 		storeService,
-		s.stakingKeeper,
 		accountKeeper,
 		s.bankKeeper,
 		authtypes.FeeCollectorName,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		keeper.WithMintFn(customMintFn),
+		customMintFn,
 	)
 
 	// Set default parameters and initial minter.

@@ -784,11 +784,6 @@ func (m *Manager) PreBlock(ctx sdk.Context) (*sdk.ResponsePreBlock, error) {
 			modSpan.RecordError(err)
 			modSpan.SetStatus(codes.Error, err.Error())
 			modSpan.End()
-
-			// also record on the parent span for easy surfacing.
-			span.RecordError(err)
-			span.SetStatus(codes.Error, err.Error())
-
 			return nil, err
 		}
 
@@ -818,6 +813,9 @@ func (m *Manager) BeginBlock(ctx sdk.Context) (sdk.BeginBlock, error) {
 		ctx, modSpan = ctx.StartSpan(tracer, fmt.Sprintf("BeginBlock.%s", moduleName))
 		if module, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
 			if err := module.BeginBlock(ctx); err != nil {
+				modSpan.RecordError(err)
+				modSpan.SetStatus(codes.Error, err.Error())
+				modSpan.End()
 				return sdk.BeginBlock{}, err
 			}
 		}
@@ -846,26 +844,34 @@ func (m *Manager) EndBlock(ctx sdk.Context) (sdk.EndBlock, error) {
 		if module, ok := m.Modules[moduleName].(appmodule.HasEndBlocker); ok {
 			err := module.EndBlock(ctx)
 			if err != nil {
+				modSpan.RecordError(err)
+				modSpan.SetStatus(codes.Error, err.Error())
+				modSpan.End()
 				return sdk.EndBlock{}, err
 			}
 		} else if module, ok := m.Modules[moduleName].(HasABCIEndBlock); ok {
 			moduleValUpdates, err := module.EndBlock(ctx)
 			if err != nil {
+				modSpan.RecordError(err)
+				modSpan.SetStatus(codes.Error, err.Error())
+				modSpan.End()
 				return sdk.EndBlock{}, err
 			}
 			// use these validator updates if provided, the module manager assumes
 			// only one module will update the validator set
 			if len(moduleValUpdates) > 0 {
 				if len(validatorUpdates) > 0 {
-					return sdk.EndBlock{}, errors.New("validator EndBlock updates already set by a previous module")
+					err := errors.New("validator EndBlock updates already set by a previous module")
+					modSpan.RecordError(err)
+					modSpan.SetStatus(codes.Error, err.Error())
+					modSpan.End()
+					return sdk.EndBlock{}, err
 				}
 
 				for _, updates := range moduleValUpdates {
 					validatorUpdates = append(validatorUpdates, abci.ValidatorUpdate{PubKey: updates.PubKey, Power: updates.Power})
 				}
 			}
-		} else {
-			continue
 		}
 		modSpan.End()
 	}

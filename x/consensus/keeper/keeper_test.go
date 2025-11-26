@@ -300,6 +300,54 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 			expErr:    true,
 			expErrMsg: "vote extensions cannot be updated to a past or current height",
 		},
+		{
+			name: "update authority to new address",
+			input: &types.MsgUpdateParams{
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
+				Block:     defaultConsensusParams.Block,
+				Validator: defaultConsensusParams.Validator,
+				Evidence:  defaultConsensusParams.Evidence,
+				Auth:      &cmtproto.AuthorityParams{Authority: "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"},
+			},
+			expErr:    false,
+			expErrMsg: "",
+		},
+		{
+			name: "update authority to governance module",
+			input: &types.MsgUpdateParams{
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
+				Block:     defaultConsensusParams.Block,
+				Validator: defaultConsensusParams.Validator,
+				Evidence:  defaultConsensusParams.Evidence,
+				Auth:      &cmtproto.AuthorityParams{Authority: "governance-module"},
+			},
+			expErr:    false,
+			expErrMsg: "",
+		},
+		{
+			name: "update authority to empty string",
+			input: &types.MsgUpdateParams{
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
+				Block:     defaultConsensusParams.Block,
+				Validator: defaultConsensusParams.Validator,
+				Evidence:  defaultConsensusParams.Evidence,
+				Auth:      &cmtproto.AuthorityParams{Authority: ""},
+			},
+			expErr:    false,
+			expErrMsg: "",
+		},
+		{
+			name: "update authority to long string (255 chars)",
+			input: &types.MsgUpdateParams{
+				Authority: s.ctx.ConsensusParams().Authority.Authority,
+				Block:     defaultConsensusParams.Block,
+				Validator: defaultConsensusParams.Validator,
+				Evidence:  defaultConsensusParams.Evidence,
+				Auth:      &cmtproto.AuthorityParams{Authority: string(make([]byte, 255))},
+			},
+			expErr:    false,
+			expErrMsg: "",
+		},
 	}
 
 	for _, tc := range testCases {
@@ -317,6 +365,10 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 
 				if tc.input.Abci != nil {
 					s.Require().Equal(tc.input.Abci, res.Params.Abci)
+				}
+				if tc.input.Auth != nil {
+					s.Require().NotNil(res.Params.Authority)
+					s.Require().Equal(tc.input.Auth.Authority, res.Params.Authority.Authority)
 				}
 				s.Require().Equal(tc.input.Block, res.Params.Block)
 				s.Require().Equal(tc.input.Evidence, res.Params.Evidence)

@@ -38,14 +38,10 @@ type ModuleInputs struct {
 	ModuleKey        depinject.OwnModuleKey
 	MsgServiceRouter baseapp.MessageRouter
 
-	AccountKeeper      govtypes.AccountKeeper
-	BankKeeper         govtypes.BankKeeper
-	StakingKeeper      govtypes.StakingKeeper
-	DistributionKeeper govtypes.DistributionKeeper
-
-	// CustomCalculateVoteResultsAndVotingPowerFn is an optional input to set a custom CalculateVoteResultsAndVotingPowerFn.
-	// If this function is not provided, the default function is used.
-	CustomCalculateVoteResultsAndVotingPowerFn keeper.CalculateVoteResultsAndVotingPowerFn `optional:"true"`
+	AccountKeeper                          govtypes.AccountKeeper
+	BankKeeper                             govtypes.BankKeeper
+	DistributionKeeper                     govtypes.DistributionKeeper
+	CalculateVoteResultsAndVotingPowerFn   keeper.CalculateVoteResultsAndVotingPowerFn
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace govtypes.ParamSubspace `optional:"true"`
@@ -71,22 +67,16 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
-	var opts []keeper.InitOption
-	if in.CustomCalculateVoteResultsAndVotingPowerFn != nil {
-		opts = append(opts, keeper.WithCustomCalculateVoteResultsAndVotingPowerFn(in.CustomCalculateVoteResultsAndVotingPowerFn))
-	}
-
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.StoreService,
 		in.AccountKeeper,
 		in.BankKeeper,
-		in.StakingKeeper,
+		in.CalculateVoteResultsAndVotingPowerFn,
 		in.DistributionKeeper,
 		in.MsgServiceRouter,
 		defaultConfig,
 		authority.String(),
-		opts...,
 	)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.LegacySubspace)
 	hr := v1beta1.HandlerRoute{Handler: v1beta1.ProposalHandler, RouteKey: govtypes.RouterKey}

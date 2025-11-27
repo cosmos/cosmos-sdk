@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
@@ -23,17 +24,16 @@ type CalculateVoteResultsAndVotingPowerFn func(
 	proposal v1.Proposal,
 ) (totalVoterPower math.LegacyDec, totalValPower math.Int, results map[v1.VoteOption]math.LegacyDec, err error)
 
-func DefaultCalculateVoteResultsAndVotingPower(
-	ctx context.Context,
-	k Keeper,
-	proposal v1.Proposal,
-) (totalVoterPower math.LegacyDec, totalValPower math.Int, results map[v1.VoteOption]math.LegacyDec, err error) {
+// NewDefaultCalculateVoteResultsAndVotingPower returns a CalculateVoteResultsAndVotingPowerFn
+// that uses the provided StakingKeeper to calculate voting power
+func NewDefaultCalculateVoteResultsAndVotingPower(sk types.StakingKeeper) CalculateVoteResultsAndVotingPowerFn {
+	return func(ctx context.Context, k Keeper, proposal v1.Proposal) (totalVoterPower math.LegacyDec, totalValPower math.Int, results map[v1.VoteOption]math.LegacyDec, err error) {
 	// Fetch all bonded validators and calculate total validator power
 	validators := make(map[string]v1.ValidatorGovInfo)
 	totalValPower = math.ZeroInt()
 
-	if err := k.sk.IterateBondedValidatorsByPower(ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
-		valBz, err := k.sk.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
+	if err := sk.IterateBondedValidatorsByPower(ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
+		valBz, err := sk.ValidatorAddressCodec().StringToBytes(validator.GetOperator())
 		if err != nil {
 			return false
 		}
@@ -69,7 +69,7 @@ func DefaultCalculateVoteResultsAndVotingPower(
 			return false, err
 		}
 
-		valAddrStr, err := k.sk.ValidatorAddressCodec().BytesToString(voter)
+		valAddrStr, err := sk.ValidatorAddressCodec().BytesToString(voter)
 		if err != nil {
 			return false, err
 		}
@@ -79,7 +79,7 @@ func DefaultCalculateVoteResultsAndVotingPower(
 		}
 
 		// iterate over all delegations from voter, deduct from any delegated-to validators
-		err = k.sk.IterateDelegations(ctx, voter, func(index int64, delegation stakingtypes.DelegationI) (stop bool) {
+		err = sk.IterateDelegations(ctx, voter, func(index int64, delegation stakingtypes.DelegationI) (stop bool) {
 			valAddrStr := delegation.GetValidatorAddr()
 
 			if val, ok := validators[valAddrStr]; ok {
@@ -136,7 +136,8 @@ func DefaultCalculateVoteResultsAndVotingPower(
 		totalVotingPower = totalVotingPower.Add(votingPower)
 	}
 
-	return totalVotingPower, totalValPower, results, nil
+		return totalVotingPower, totalValPower, results, nil
+	}
 }
 
 // Tally iterates over the votes and updates the tally of a proposal based on the voting power of the

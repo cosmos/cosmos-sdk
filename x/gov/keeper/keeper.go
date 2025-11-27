@@ -23,9 +23,6 @@ type Keeper struct {
 	bankKeeper  types.BankKeeper
 	distrKeeper types.DistributionKeeper
 
-	// The reference to the DelegationSet and ValidatorSet to get information about validators and delegators
-	sk types.StakingKeeper
-
 	// GovHooks
 	hooks types.GovHooks
 
@@ -89,7 +86,7 @@ func (k Keeper) GetAuthority() string {
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
 	cdc codec.Codec, storeService corestoretypes.KVStoreService, authKeeper types.AccountKeeper,
-	bankKeeper types.BankKeeper, sk types.StakingKeeper, distrKeeper types.DistributionKeeper,
+	bankKeeper types.BankKeeper, calculateVoteResultsAndVotingPowerFn CalculateVoteResultsAndVotingPowerFn, distrKeeper types.DistributionKeeper,
 	router baseapp.MessageRouter, config types.Config, authority string, initOptions ...InitOption,
 ) *Keeper {
 	// ensure governance module account is set
@@ -112,11 +109,10 @@ func NewKeeper(
 		authKeeper:                           authKeeper,
 		bankKeeper:                           bankKeeper,
 		distrKeeper:                          distrKeeper,
-		sk:                                   sk,
 		cdc:                                  cdc,
 		router:                               router,
 		config:                               config,
-		calculateVoteResultsAndVotingPowerFn: DefaultCalculateVoteResultsAndVotingPower,
+		calculateVoteResultsAndVotingPowerFn: calculateVoteResultsAndVotingPowerFn,
 		authority:                            authority,
 		Constitution:                         collections.NewItem(sb, types.ConstitutionKey, "constitution", collections.StringValue),
 		Params:                               collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[v1.Params](cdc)),

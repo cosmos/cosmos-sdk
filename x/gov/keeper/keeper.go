@@ -21,7 +21,7 @@ import (
 type Keeper struct {
 	authKeeper  types.AccountKeeper
 	bankKeeper  types.BankKeeper
-	distrKeeper types.DistributionKeeper
+	DistrKeeper types.DistributionKeeper
 
 	// GovHooks
 	hooks types.GovHooks
@@ -108,7 +108,7 @@ func NewKeeper(
 		storeService:                         storeService,
 		authKeeper:                           authKeeper,
 		bankKeeper:                           bankKeeper,
-		distrKeeper:                          distrKeeper,
+		DistrKeeper:                          distrKeeper,
 		cdc:                                  cdc,
 		router:                               router,
 		config:                               config,

@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/collections"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -16,6 +17,10 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 	err := k.ProposalID.Set(ctx, data.StartingProposalId)
 	if err != nil {
 		panic(err)
+	}
+
+	if data.Params.ProposalCancelDest == ak.GetModuleAddress(disttypes.ModuleName).String() && k.DistrKeeper == nil {
+		panic("must set DistrKeeper first if using distribution module as proposal cancel destination")
 	}
 
 	err = k.Params.Set(ctx, *data.Params)

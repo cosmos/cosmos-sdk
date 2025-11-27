@@ -58,20 +58,6 @@ type Keeper struct {
 	VotingPeriodProposals  collections.Map[uint64, []byte]                              // TODO(tip): this could be a keyset or index.
 }
 
-type InitOption func(*Keeper)
-
-// WithCustomCalculateVoteResultsAndVotingPowerFn is an optional input to set a custom CalculateVoteResultsAndVotingPowerFn.
-// If this function is not provided, the default function is used.
-func WithCustomCalculateVoteResultsAndVotingPowerFn(calculateVoteResultsAndVotingPowerFn CalculateVoteResultsAndVotingPowerFn) InitOption {
-	return func(k *Keeper) {
-		if calculateVoteResultsAndVotingPowerFn == nil {
-			panic("calculateVoteResultsAndVotingPowerFn cannot be nil")
-		}
-
-		k.calculateVoteResultsAndVotingPowerFn = calculateVoteResultsAndVotingPowerFn
-	}
-}
-
 // GetAuthority returns the x/gov module's authority.
 func (k Keeper) GetAuthority() string {
 	return k.authority
@@ -85,9 +71,15 @@ func (k Keeper) GetAuthority() string {
 //
 // CONTRACT: the parameter Subspace must have the param key table already initialized
 func NewKeeper(
-	cdc codec.Codec, storeService corestoretypes.KVStoreService, authKeeper types.AccountKeeper,
-	bankKeeper types.BankKeeper, calculateVoteResultsAndVotingPowerFn CalculateVoteResultsAndVotingPowerFn, distrKeeper types.DistributionKeeper,
-	router baseapp.MessageRouter, config types.Config, authority string, initOptions ...InitOption,
+	cdc codec.Codec,
+	storeService corestoretypes.KVStoreService,
+	authKeeper types.AccountKeeper,
+	bankKeeper types.BankKeeper,
+	distrKeeper types.DistributionKeeper,
+	router baseapp.MessageRouter,
+	config types.Config,
+	authority string,
+	calculateVoteResultsAndVotingPowerFn CalculateVoteResultsAndVotingPowerFn,
 ) *Keeper {
 	// ensure governance module account is set
 	if addr := authKeeper.GetModuleAddress(types.ModuleName); addr == nil {
@@ -108,7 +100,7 @@ func NewKeeper(
 		storeService:                         storeService,
 		authKeeper:                           authKeeper,
 		bankKeeper:                           bankKeeper,
-		DistrKeeper:                          distrKeeper,
+		distrKeeper:                          distrKeeper,
 		cdc:                                  cdc,
 		router:                               router,
 		config:                               config,
@@ -123,10 +115,6 @@ func NewKeeper(
 		ActiveProposalsQueue:                 collections.NewMap(sb, types.ActiveProposalQueuePrefix, "active_proposals_queue", collections.PairKeyCodec(sdk.TimeKey, collections.Uint64Key), collections.Uint64Value),     // nolint:staticcheck // sdk.TimeKey is needed to retain state compatibility
 		InactiveProposalsQueue:               collections.NewMap(sb, types.InactiveProposalQueuePrefix, "inactive_proposals_queue", collections.PairKeyCodec(sdk.TimeKey, collections.Uint64Key), collections.Uint64Value), // nolint:staticcheck // sdk.TimeKey is needed to retain state compatibility
 		VotingPeriodProposals:                collections.NewMap(sb, types.VotingPeriodProposalKeyPrefix, "voting_period_proposals", collections.Uint64Key, collections.BytesValue),
-	}
-
-	for _, opt := range initOptions {
-		opt(k)
 	}
 
 	schema, err := sb.Build()

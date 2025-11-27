@@ -47,7 +47,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
     * `x/crisis`
 * (crypto) [#24414](https://github.com/cosmos/cosmos-sdk/pull/24414) Remove sr25519 support, since it was removed in CometBFT v1.x (see: CometBFT [#3646](https://github.com/cometbft/cometbft/pull/3646)).
 * (x/gov) [#25615](https://github.com/cosmos/cosmos-sdk/pull/25615) Decouple `x/gov` from `x/staking` by making `CalculateVoteResultsAndVotingPowerFn` a required parameter to `keeper.NewKeeper` instead of `StakingKeeper`.
-* (x/gov) [#25616](https://github.com/cosmos/cosmos-sdk/pull/25616) Make `x/distribution` keeper optional in `x/gov` by making the `DistrKeeper` field public and allowing it to be `nil`.
+`BondedTokens` has been renamed to `ValidatorPower` and `TotalBondedTokens` has been renamed to `TotalValidatorPower` to allow for multiple validator power representations.
 
 ### Features
 

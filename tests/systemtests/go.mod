@@ -178,6 +178,8 @@ require (
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
 
+replace cosmossdk.io/api => github.com/yihuang/cosmos-sdk/api v0.1.0-alpha1.0.20251127061539-64b8e21eb752
+
 replace (
 	cosmossdk.io/store => ../../store
 	// Use fork for blockstm

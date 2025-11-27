@@ -3,9 +3,9 @@ package simulation
 import (
 	"math/rand"
 
+	nft "cosmossdk.io/contrib/x/nft"
 	"cosmossdk.io/core/address"
 
-	nft "github.com/cosmos/cosmos-sdk/contrib/x/nft"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )

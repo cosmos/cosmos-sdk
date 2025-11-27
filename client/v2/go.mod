@@ -173,6 +173,7 @@ require (
 // 	<temporary replace>
 // )
 replace (
+	cosmossdk.io/contrib => ../../contrib
 	cosmossdk.io/store => ../../store
 	github.com/cosmos/cosmos-sdk => ../../.
 	github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-20250924232609-2c6195d95951

@@ -6,11 +6,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/contrib/x/group"
-	"github.com/cosmos/cosmos-sdk/contrib/x/group/internal/orm"
-	"github.com/cosmos/cosmos-sdk/contrib/x/group/keeper"
-	"github.com/cosmos/cosmos-sdk/contrib/x/group/module"
-	"github.com/cosmos/cosmos-sdk/contrib/x/group/simulation"
+	"cosmossdk.io/contrib/x/group"
+	"cosmossdk.io/contrib/x/group/internal/orm"
+	"cosmossdk.io/contrib/x/group/keeper"
+	"cosmossdk.io/contrib/x/group/module"
+	"cosmossdk.io/contrib/x/group/simulation"
+
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"

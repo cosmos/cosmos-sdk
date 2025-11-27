@@ -3,9 +3,8 @@ package orm
 import (
 	"fmt"
 
+	"cosmossdk.io/contrib/x/group/errors"
 	errorsmod "cosmossdk.io/errors"
-
-	"github.com/cosmos/cosmos-sdk/contrib/x/group/errors"
 )
 
 // MaxBytesLen is the maximum allowed length for a key part of type []byte

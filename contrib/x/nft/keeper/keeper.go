@@ -1,11 +1,11 @@
 package keeper
 
 import (
+	nft "cosmossdk.io/contrib/x/nft"
 	"cosmossdk.io/core/address"
 	store "cosmossdk.io/core/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	nft "github.com/cosmos/cosmos-sdk/contrib/x/nft"
 )
 
 // Keeper of the nft store

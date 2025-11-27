@@ -1,8 +1,8 @@
 package keeper
 
 import (
-	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/exported"
-	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/migrations/v2"
+	"cosmossdk.io/contrib/x/crisis/exported"
+	v2 "cosmossdk.io/contrib/x/crisis/migrations/v2"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

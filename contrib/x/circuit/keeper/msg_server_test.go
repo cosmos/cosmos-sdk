@@ -7,9 +7,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/contrib/x/circuit/keeper"
+	"cosmossdk.io/contrib/x/circuit/types"
 
-	"github.com/cosmos/cosmos-sdk/contrib/x/circuit/keeper"
-	"github.com/cosmos/cosmos-sdk/contrib/x/circuit/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

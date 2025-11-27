@@ -8,13 +8,13 @@ import (
 
 	"github.com/spf13/cobra"
 
+	group "cosmossdk.io/contrib/x/group"
+	"cosmossdk.io/contrib/x/group/internal/math"
 	"cosmossdk.io/core/address"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
-	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
-	"github.com/cosmos/cosmos-sdk/contrib/x/group/internal/math"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 

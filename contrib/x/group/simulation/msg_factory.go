@@ -7,8 +7,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
-	"github.com/cosmos/cosmos-sdk/contrib/x/group/keeper"
+	group "cosmossdk.io/contrib/x/group"
+	"cosmossdk.io/contrib/x/group/keeper"
+
 	"github.com/cosmos/cosmos-sdk/testutil/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

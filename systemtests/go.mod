@@ -171,7 +171,9 @@ require (
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
 
-replace github.com/cosmos/cosmos-sdk => ../
-
-// Use fork for blockstm
-replace github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-20250924232609-2c6195d95951
+replace (
+	cosmossdk.io/contrib => ../contrib
+	github.com/cosmos/cosmos-sdk => ../
+	// Use fork for blockstm
+	github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-20250924232609-2c6195d95951
+)

@@ -3,10 +3,10 @@ package keeper_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/contrib/x/crisis"
-	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/keeper"
-	crisistestutil "github.com/cosmos/cosmos-sdk/contrib/x/crisis/testutil"
-	types2 "github.com/cosmos/cosmos-sdk/contrib/x/crisis/types"
+	"cosmossdk.io/contrib/x/crisis"
+	"cosmossdk.io/contrib/x/crisis/keeper"
+	crisistestutil "cosmossdk.io/contrib/x/crisis/testutil"
+	types2 "cosmossdk.io/contrib/x/crisis/types"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 

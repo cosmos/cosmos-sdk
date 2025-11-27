@@ -11,10 +11,11 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	"go.uber.org/mock/gomock"
 
+	group "cosmossdk.io/contrib/x/group"
+	"cosmossdk.io/contrib/x/group/internal/math"
+	"cosmossdk.io/contrib/x/group/keeper"
+
 	"github.com/cosmos/cosmos-sdk/codec/address"
-	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
-	"github.com/cosmos/cosmos-sdk/contrib/x/group/internal/math"
-	"github.com/cosmos/cosmos-sdk/contrib/x/group/keeper"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"

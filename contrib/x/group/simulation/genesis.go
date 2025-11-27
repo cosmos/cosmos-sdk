@@ -4,8 +4,9 @@ import (
 	"math/rand"
 	"time"
 
+	group "cosmossdk.io/contrib/x/group"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"

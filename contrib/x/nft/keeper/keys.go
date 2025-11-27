@@ -3,8 +3,9 @@ package keeper
 import (
 	"bytes"
 
-	"github.com/cosmos/cosmos-sdk/contrib/x/nft"
-	"github.com/cosmos/cosmos-sdk/contrib/x/nft/internal/conv"
+	"cosmossdk.io/contrib/x/nft"
+	"cosmossdk.io/contrib/x/nft/internal/conv"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 )

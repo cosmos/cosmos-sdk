@@ -8,11 +8,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/contrib/x/group/errors"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
-
-	"github.com/cosmos/cosmos-sdk/contrib/x/group/errors"
 )
 
 func TestNewIndexer(t *testing.T) {

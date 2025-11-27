@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	types2 "github.com/cosmos/cosmos-sdk/contrib/x/crisis/types"
+	types2 "cosmossdk.io/contrib/x/crisis/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

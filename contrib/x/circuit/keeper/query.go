@@ -3,7 +3,8 @@ package keeper
 import (
 	"context"
 
-	"github.com/cosmos/cosmos-sdk/contrib/x/circuit/types"
+	"cosmossdk.io/contrib/x/circuit/types"
+
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 

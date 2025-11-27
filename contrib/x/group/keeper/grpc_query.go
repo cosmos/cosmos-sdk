@@ -7,11 +7,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	group "cosmossdk.io/contrib/x/group"
+	"cosmossdk.io/contrib/x/group/errors"
+	orm2 "cosmossdk.io/contrib/x/group/internal/orm"
 	errorsmod "cosmossdk.io/errors"
 
-	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
-	"github.com/cosmos/cosmos-sdk/contrib/x/group/errors"
-	orm2 "github.com/cosmos/cosmos-sdk/contrib/x/group/internal/orm"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )

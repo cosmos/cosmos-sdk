@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/contrib/x/circuit/types"
 	errorsmod "cosmossdk.io/errors"
 
-	"github.com/cosmos/cosmos-sdk/contrib/x/circuit/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )

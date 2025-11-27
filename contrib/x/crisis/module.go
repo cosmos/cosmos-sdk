@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/exported"
-	keeper2 "github.com/cosmos/cosmos-sdk/contrib/x/crisis/keeper"
-	types2 "github.com/cosmos/cosmos-sdk/contrib/x/crisis/types"
+	"cosmossdk.io/contrib/x/crisis/exported"
+	keeper2 "cosmossdk.io/contrib/x/crisis/keeper"
+	types2 "cosmossdk.io/contrib/x/crisis/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"

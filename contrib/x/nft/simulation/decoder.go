@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"fmt"
 
+	"cosmossdk.io/contrib/x/nft"
+	"cosmossdk.io/contrib/x/nft/keeper"
+
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/contrib/x/nft"
-	"github.com/cosmos/cosmos-sdk/contrib/x/nft/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )

@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/contrib/x/group"
+	"cosmossdk.io/contrib/x/group/errors"
+	orm2 "cosmossdk.io/contrib/x/group/internal/orm"
 	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
@@ -11,9 +14,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/contrib/x/group"
-	"github.com/cosmos/cosmos-sdk/contrib/x/group/errors"
-	orm2 "github.com/cosmos/cosmos-sdk/contrib/x/group/internal/orm"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

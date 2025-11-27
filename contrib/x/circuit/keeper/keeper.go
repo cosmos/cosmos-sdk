@@ -4,11 +4,11 @@ import (
 	context "context"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/contrib/x/circuit/types"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/store"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/contrib/x/circuit/types"
 )
 
 // Keeper defines the circuit module's keeper.

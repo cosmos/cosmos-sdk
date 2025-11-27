@@ -4,10 +4,10 @@ import (
 	"encoding/binary"
 	"fmt"
 
+	group "cosmossdk.io/contrib/x/group"
+	orm2 "cosmossdk.io/contrib/x/group/internal/orm"
 	storetypes "cosmossdk.io/store/types"
 
-	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
-	orm2 "github.com/cosmos/cosmos-sdk/contrib/x/group/internal/orm"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"

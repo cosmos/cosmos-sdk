@@ -5,15 +5,15 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	group "cosmossdk.io/contrib/x/group"
+	orm2 "cosmossdk.io/contrib/x/group/internal/orm"
+	groupkeeper "cosmossdk.io/contrib/x/group/keeper"
+	v2 "cosmossdk.io/contrib/x/group/migrations/v2"
+	groupmodule "cosmossdk.io/contrib/x/group/module"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
-	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
-	orm2 "github.com/cosmos/cosmos-sdk/contrib/x/group/internal/orm"
-	groupkeeper "github.com/cosmos/cosmos-sdk/contrib/x/group/keeper"
-	"github.com/cosmos/cosmos-sdk/contrib/x/group/migrations/v2"
-	groupmodule "github.com/cosmos/cosmos-sdk/contrib/x/group/module"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"

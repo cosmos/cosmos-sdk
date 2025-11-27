@@ -1,11 +1,11 @@
 package keeper
 
 import (
+	group "cosmossdk.io/contrib/x/group"
+	"cosmossdk.io/contrib/x/group/errors"
+	"cosmossdk.io/contrib/x/group/internal/orm"
 	errorsmod "cosmossdk.io/errors"
 
-	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
-	"github.com/cosmos/cosmos-sdk/contrib/x/group/errors"
-	"github.com/cosmos/cosmos-sdk/contrib/x/group/internal/orm"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )

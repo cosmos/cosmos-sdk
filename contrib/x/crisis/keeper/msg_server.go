@@ -3,8 +3,8 @@ package keeper
 import (
 	"context"
 
+	types2 "cosmossdk.io/contrib/x/crisis/types"
 	"cosmossdk.io/errors"
-	types2 "github.com/cosmos/cosmos-sdk/contrib/x/crisis/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

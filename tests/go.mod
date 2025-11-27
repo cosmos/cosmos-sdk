@@ -4,6 +4,7 @@ go 1.25.0
 
 require (
 	cosmossdk.io/api v0.9.2
+	cosmossdk.io/contrib v0.0.0-00010101000000-000000000000
 	cosmossdk.io/core v0.11.3
 	cosmossdk.io/depinject v1.2.1
 	cosmossdk.io/errors v1.0.2
@@ -236,6 +237,7 @@ require (
 
 // Below are the long-lived replace for tests.
 replace (
+	cosmossdk.io/contrib => ../contrib
 	// We always want to test against the latest version of the simapp.
 	cosmossdk.io/simapp => ../simapp
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0

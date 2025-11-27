@@ -3,7 +3,8 @@ package keeper
 import (
 	"sort"
 
-	nft "github.com/cosmos/cosmos-sdk/contrib/x/nft"
+	nft "cosmossdk.io/contrib/x/nft"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

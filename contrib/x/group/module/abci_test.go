@@ -9,6 +9,10 @@ import (
 	cmttime "github.com/cometbft/cometbft/types/time"
 	"github.com/stretchr/testify/suite"
 
+	group "cosmossdk.io/contrib/x/group"
+	"cosmossdk.io/contrib/x/group/keeper"
+	"cosmossdk.io/contrib/x/group/module"
+	grouptestutil "cosmossdk.io/contrib/x/group/testutil"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
@@ -16,10 +20,6 @@ import (
 
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
-	"github.com/cosmos/cosmos-sdk/contrib/x/group/keeper"
-	"github.com/cosmos/cosmos-sdk/contrib/x/group/module"
-	grouptestutil "github.com/cosmos/cosmos-sdk/contrib/x/group/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"

@@ -1,7 +1,8 @@
 package testutil
 
 import (
-	_ "github.com/cosmos/cosmos-sdk/contrib/x/group/module"
+	_ "cosmossdk.io/contrib/x/group/module"
+
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import as blank for app wiring

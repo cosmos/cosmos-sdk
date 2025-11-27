@@ -5,11 +5,11 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
+	"cosmossdk.io/contrib/x/group/errors"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
 	"cosmossdk.io/store/types"
 
-	"github.com/cosmos/cosmos-sdk/contrib/x/group/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 

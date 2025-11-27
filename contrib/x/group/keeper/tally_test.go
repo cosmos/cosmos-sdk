@@ -4,7 +4,8 @@ import (
 	"context"
 	"time"
 
-	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
+	group "cosmossdk.io/contrib/x/group"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )

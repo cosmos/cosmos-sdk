@@ -106,12 +106,14 @@ func initFixture(tb testing.TB) *fixture {
 	router := baseapp.NewMsgServiceRouter()
 	router.SetInterfaceRegistry(cdc.InterfaceRegistry())
 
+	tallyFn := keeper.NewDefaultCalculateVoteResultsAndVotingPower(stakingKeeper)
+
 	govKeeper := keeper.NewKeeper(
 		cdc,
 		runtime.NewKVStoreService(keys[types.StoreKey]),
 		accountKeeper,
 		bankKeeper,
-		stakingKeeper,
+		tallyFn,
 		distrKeeper,
 		router,
 		types.DefaultConfig(),

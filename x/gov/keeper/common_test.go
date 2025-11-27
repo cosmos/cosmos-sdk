@@ -100,7 +100,7 @@ func setupGovKeeper(t *testing.T) (
 
 	// Gov keeper initializations
 
-	govKeeper := keeper.NewKeeper(encCfg.Codec, storeService, acctKeeper, bankKeeper, keeper.NewDefaultCalculateVoteResultsAndVotingPower(stakingKeeper), distributionKeeper, msr, types.DefaultConfig(), govAcct.String())
+	govKeeper := keeper.NewKeeper(encCfg.Codec, storeService, acctKeeper, bankKeeper, distributionKeeper, msr, types.DefaultConfig(), govAcct.String(), keeper.NewDefaultCalculateVoteResultsAndVotingPower(stakingKeeper))
 	require.NoError(t, govKeeper.ProposalID.Set(ctx, 1))
 	govRouter := v1beta1.NewRouter() // Also register legacy gov handlers to test them too.
 	govRouter.AddRoute(types.RouterKey, v1beta1.ProposalHandler)

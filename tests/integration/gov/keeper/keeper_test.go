@@ -113,11 +113,11 @@ func initFixture(tb testing.TB) *fixture {
 		runtime.NewKVStoreService(keys[types.StoreKey]),
 		accountKeeper,
 		bankKeeper,
-		tallyFn,
 		distrKeeper,
 		router,
 		types.DefaultConfig(),
 		authority.String(),
+		tallyFn,
 	)
 	err := govKeeper.ProposalID.Set(newCtx, 1)
 	assert.NilError(tb, err)

@@ -29,21 +29,21 @@ func TestMigrate(t *testing.T) {
 	encCfg := moduletestutil.MakeTestEncodingConfig(mint.AppModuleBasic{})
 	cdc := encCfg.Codec
 
-	storeKey := storetypes.NewKVStoreKey(v3.ModuleName)
+	storeKey := storetypes.NewKVStoreKey(types.ModuleName)
 	tKey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := testutil.DefaultContext(storeKey, tKey)
 	kvStoreService := runtime.NewKVStoreService(storeKey)
 	store := kvStoreService.OpenKVStore(ctx)
 
 	sb := collections.NewSchemaBuilder(kvStoreService)
-	params := collections.NewItem(sb, v3.ParamsKey, "params", codec.CollValue[types.Params](cdc))
+	params := collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc))
 
 	dp := newMockSubspace(types.DefaultParams())
 	require.NoError(t, params.Set(ctx, dp.ps))
 	require.NoError(t, v3.Migrate(ctx, store, cdc, params))
 
 	var res types.Params
-	bz, err := store.Get(v3.ParamsKey)
+	bz, err := store.Get(types.ParamsKey)
 	require.NoError(t, err)
 	require.NoError(t, cdc.Unmarshal(bz, &res))
 	require.Equal(t, dp.ps, res)

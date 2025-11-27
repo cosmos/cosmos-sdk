@@ -20,7 +20,7 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 	}
 
 	distrAddress := ak.GetModuleAddress(disttypes.ModuleName).String()
-	if data.Params.ProposalCancelDest == distrAddress && k.DistrKeeper == nil {
+	if data.Params.ProposalCancelDest == distrAddress && distrAddress != "" && k.DistrKeeper == nil {
 		panic(fmt.Sprintf("must set DistrKeeper first if using distribution module (%s) as proposal cancel destination", distrAddress))
 	}
 

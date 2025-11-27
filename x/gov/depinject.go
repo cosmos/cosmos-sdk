@@ -38,10 +38,10 @@ type ModuleInputs struct {
 	ModuleKey        depinject.OwnModuleKey
 	MsgServiceRouter baseapp.MessageRouter
 
-	AccountKeeper                          govtypes.AccountKeeper
-	BankKeeper                             govtypes.BankKeeper
-	DistributionKeeper                     govtypes.DistributionKeeper
-	CalculateVoteResultsAndVotingPowerFn   keeper.CalculateVoteResultsAndVotingPowerFn `optional:"true"`
+	AccountKeeper                        govtypes.AccountKeeper
+	BankKeeper                           govtypes.BankKeeper
+	DistributionKeeper                   govtypes.DistributionKeeper
+	CalculateVoteResultsAndVotingPowerFn keeper.CalculateVoteResultsAndVotingPowerFn `optional:"true"`
 
 	// StakingKeeper is required if CalculateVoteResultsAndVotingPowerFn is not provided
 	StakingKeeper govtypes.StakingKeeper `optional:"true"`

@@ -21,7 +21,7 @@ import (
 type Keeper struct {
 	authKeeper  types.AccountKeeper
 	bankKeeper  types.BankKeeper
-	DistrKeeper types.DistributionKeeper
+	distrKeeper types.DistributionKeeper
 
 	// GovHooks
 	hooks types.GovHooks

@@ -245,7 +245,7 @@ func (k Keeper) ChargeDeposit(ctx context.Context, proposalID uint64, destAddres
 				return err
 			}
 		case distributionAddress.String() == destAddress:
-			err := k.DistrKeeper.FundCommunityPool(ctx, cancellationCharges, k.ModuleAccountAddress())
+			err := k.distrKeeper.FundCommunityPool(ctx, cancellationCharges, k.ModuleAccountAddress())
 			if err != nil {
 				return err
 			}

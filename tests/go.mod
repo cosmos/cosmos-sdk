@@ -233,6 +233,7 @@ require (
 // replace (
 // 	<temporary replace>
 // )
+replace cosmossdk.io/api => github.com/yihuang/cosmos-sdk/api v0.1.0-alpha1.0.20251127061539-64b8e21eb752
 
 // Below are the long-lived replace for tests.
 replace (

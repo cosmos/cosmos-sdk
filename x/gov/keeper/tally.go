@@ -126,7 +126,7 @@ func (k Keeper) getCurrentValidators(ctx context.Context) (map[string]v1.Validat
 		}
 		currValidators[validator.GetOperator()] = v1.NewValidatorGovInfo(
 			valBz,
-			validator.GetBondedTokens(),
+			validator.GetValidatorPower(),
 			validator.GetDelegatorShares(),
 			math.LegacyZeroDec(),
 			v1.WeightedVoteOptions{},
@@ -157,13 +157,13 @@ func (k Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, burnDe
 	tallyResults = v1.NewTallyResultFromMap(results)
 
 	// TODO: Upgrade the spec to cover all of these cases & remove pseudocode.
-	// If there is no staked coins, the proposal fails
-	totalBonded, err := k.sk.TotalBondedTokens(ctx)
+	// If there is no validator power, the proposal fails
+	totalValPower, err := k.sk.TotalValidatorPower(ctx)
 	if err != nil {
 		return false, false, tallyResults, err
 	}
 
-	if totalBonded.IsZero() {
+	if totalValPower.IsZero() {
 		return false, false, tallyResults, nil
 	}
 

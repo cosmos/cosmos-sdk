@@ -116,7 +116,7 @@ func NewKeeper(
 		cdc:                                  cdc,
 		router:                               router,
 		config:                               config,
-		calculateVoteResultsAndVotingPowerFn: defaultCalculateVoteResultsAndVotingPower,
+		calculateVoteResultsAndVotingPowerFn: DefaultCalculateVoteResultsAndVotingPower,
 		authority:                            authority,
 		Constitution:                         collections.NewItem(sb, types.ConstitutionKey, "constitution", collections.StringValue),
 		Params:                               collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[v1.Params](cdc)),

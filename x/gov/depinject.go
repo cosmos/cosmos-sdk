@@ -41,7 +41,10 @@ type ModuleInputs struct {
 	AccountKeeper                          govtypes.AccountKeeper
 	BankKeeper                             govtypes.BankKeeper
 	DistributionKeeper                     govtypes.DistributionKeeper
-	CalculateVoteResultsAndVotingPowerFn   keeper.CalculateVoteResultsAndVotingPowerFn
+	CalculateVoteResultsAndVotingPowerFn   keeper.CalculateVoteResultsAndVotingPowerFn `optional:"true"`
+
+	// StakingKeeper is required if CalculateVoteResultsAndVotingPowerFn is not provided
+	StakingKeeper govtypes.StakingKeeper `optional:"true"`
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace govtypes.ParamSubspace `optional:"true"`
@@ -67,12 +70,21 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
+	// If no custom tally function is provided, use the default with staking keeper
+	tallyFn := in.CalculateVoteResultsAndVotingPowerFn
+	if tallyFn == nil {
+		if in.StakingKeeper == nil {
+			panic("either CalculateVoteResultsAndVotingPowerFn or StakingKeeper must be provided")
+		}
+		tallyFn = keeper.NewDefaultCalculateVoteResultsAndVotingPower(in.StakingKeeper)
+	}
+
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.StoreService,
 		in.AccountKeeper,
 		in.BankKeeper,
-		in.CalculateVoteResultsAndVotingPowerFn,
+		tallyFn,
 		in.DistributionKeeper,
 		in.MsgServiceRouter,
 		defaultConfig,

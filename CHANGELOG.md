@@ -49,6 +49,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/gov) [#25615](https://github.com/cosmos/cosmos-sdk/pull/25615) Decouple `x/gov` from `x/staking` by making `CalculateVoteResultsAndVotingPowerFn` a required parameter to `keeper.NewKeeper` instead of `StakingKeeper`.
 `BondedTokens` has been renamed to `ValidatorPower` and `TotalBondedTokens` has been renamed to `TotalValidatorPower` to allow for multiple validator power representations.
 * (x/gov) [#25617](https://github.com/cosmos/cosmos-sdk/pull/25617) `AfterProposalSubmission` hook now includes proposer address as a parameter.
+* (x/gov) [#25616](https://github.com/cosmos/cosmos-sdk/pull/25616) `DistrKeeper` `x/distribution` is now optional. Genesis validation ensures `distrKeeper` is set if distribution module is used as proposal cancel destination.
 
 ### Features
 

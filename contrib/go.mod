@@ -171,8 +171,9 @@ require (
 )
 
 replace (
-	github.com/cosmos/cosmos-sdk => ../.
 	cosmossdk.io/api => ../api
+	cosmossdk.io/x/tx => ../x/tx
+	github.com/cosmos/cosmos-sdk => ../.
 	github.com/cosmos/cosmos-sdk/x/auth => ../../x/auth
 	github.com/cosmos/cosmos-sdk/x/authz => ../../x/authz
 	github.com/cosmos/cosmos-sdk/x/bank => ../../x/bank

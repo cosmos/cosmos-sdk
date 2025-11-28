@@ -33,7 +33,10 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace cosmossdk.io/contrib => ../../contrib
+replace (
+	cosmossdk.io/api => ../../api
+	cosmossdk.io/contrib => ../../contrib
+)
 
 // NOTE: we do not want to replace to the development version of cosmossdk.io/api yet
 // Until https://github.com/cosmos/cosmos-sdk/issues/19228 is resolved

@@ -7,7 +7,7 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 
-	modulev1 "cosmossdk.io/api/cosmos/nft/module/v1"
+	modulev1 "cosmossdk.io/contrib/contrib/nft/module/v1"
 	"cosmossdk.io/contrib/x/nft"
 	"cosmossdk.io/contrib/x/nft/keeper"
 	simulation2 "cosmossdk.io/contrib/x/nft/simulation"

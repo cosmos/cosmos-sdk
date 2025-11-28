@@ -8,7 +8,7 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	modulev1 "cosmossdk.io/api/cosmos/group/module/v1"
+	modulev1 "cosmossdk.io/contrib/contrib/group/module/v1"
 	"cosmossdk.io/contrib/x/group"
 	"cosmossdk.io/contrib/x/group/client/cli"
 	"cosmossdk.io/contrib/x/group/keeper"

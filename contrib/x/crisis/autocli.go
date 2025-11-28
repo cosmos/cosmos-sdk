@@ -2,14 +2,14 @@ package crisis
 
 import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	crisisv1beta1 "cosmossdk.io/api/cosmos/crisis/v1beta1"
+	crisisv1beta1 "cosmossdk.io/contrib/x/crisis/types"
 )
 
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 	return &autocliv1.ModuleOptions{
 		Tx: &autocliv1.ServiceCommandDescriptor{
-			Service: crisisv1beta1.Msg_ServiceDesc.ServiceName,
+			Service: crisisv1beta1.Msg_serviceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "VerifyInvariant",

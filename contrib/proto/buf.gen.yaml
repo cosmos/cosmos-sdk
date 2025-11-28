@@ -1,0 +1,17 @@
+version: v1
+managed:
+  enabled: true
+  go_package_prefix:
+    default: cosmossdk.io/api
+    except:
+      - buf.build/googleapis/googleapis
+      - buf.build/cosmos/gogo-proto
+      - buf.build/cosmos/cosmos-proto
+    override:
+plugins:
+  - name: go-pulsar
+    out: ../../contrib
+    opt: paths=source_relative
+  - name: gocosmos
+    out: ../../contrib
+    opt: plugins=grpc,Mgoogle/protobuf/any.proto=github.com/cosmos/gogoproto/types/any

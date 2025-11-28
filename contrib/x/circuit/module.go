@@ -7,7 +7,7 @@ import (
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 
-	modulev1 "cosmossdk.io/api/cosmos/circuit/module/v1"
+	modulev1 "cosmossdk.io/contrib/contrib/circuit/module/v1"
 	"cosmossdk.io/contrib/x/circuit/keeper"
 	"cosmossdk.io/contrib/x/circuit/types"
 	"cosmossdk.io/core/address"

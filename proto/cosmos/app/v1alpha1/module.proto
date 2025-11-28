@@ -12,8 +12,8 @@ extend google.protobuf.MessageOptions {
   // It is recommended that a new module config object and go module is versioned
   // for every state machine breaking version of a module. The recommended
   // pattern for doing this is to put module config objects in a separate proto
-  // package from the API they expose. Ex: the cosmos.group.v1 API would be
-  // exposed by module configs cosmos.group.module.v1, cosmos.group.module.v2, etc.
+  // package from the API they expose. Ex: the contrib.group.v1 API would be
+  // exposed by module configs contrib.group.module.v1, contrib.group.module.v2, etc.
   ModuleDescriptor module = 57193479;
 }
 
@@ -88,6 +88,6 @@ message PackageReference {
 message MigrateFromInfo {
 
   // module is the fully-qualified protobuf name of the module config object
-  // for the previous module version, ex: "cosmos.group.module.v1.Module".
+  // for the previous module version, ex: "contrib.group.module.v1.Module".
   string module = 1;
 }

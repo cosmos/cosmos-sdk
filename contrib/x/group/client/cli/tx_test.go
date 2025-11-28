@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	// without this import amino json encoding will fail when resolving any types
-	_ "cosmossdk.io/api/cosmos/group/v1"
+	_ "cosmossdk.io/contrib/contrib/group/v1"
 	"cosmossdk.io/contrib/x/group"
 	"cosmossdk.io/contrib/x/group/client/cli"
 	groupmodule "cosmossdk.io/contrib/x/group/module"

@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
-	modulev1 "cosmossdk.io/api/cosmos/crisis/module/v1"
+	modulev1 "cosmossdk.io/contrib/contrib/crisis/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"

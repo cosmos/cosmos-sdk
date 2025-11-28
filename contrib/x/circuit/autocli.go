@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	circuitv1 "cosmossdk.io/api/cosmos/circuit/v1"
+	circuitv1 "cosmossdk.io/contrib/x/circuit/types"
 
 	"github.com/cosmos/cosmos-sdk/version"
 )
@@ -12,7 +12,7 @@ import (
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 	return &autocliv1.ModuleOptions{
 		Query: &autocliv1.ServiceCommandDescriptor{
-			Service: circuitv1.Query_ServiceDesc.ServiceName,
+			Service: circuitv1.Query_serviceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod:      "Account",
@@ -33,7 +33,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
-			Service: circuitv1.Msg_ServiceDesc.ServiceName,
+			Service: circuitv1.Msg_serviceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "AuthorizeCircuitBreaker",

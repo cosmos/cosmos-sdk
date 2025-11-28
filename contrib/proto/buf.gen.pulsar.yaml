@@ -10,8 +10,8 @@ managed:
     override:
 plugins:
   - name: go-pulsar
-    out: ../../contrib
+    out: ..
     opt: paths=source_relative
-  - name: gocosmos
-    out: ../../contrib
-    opt: plugins=grpc,Mgoogle/protobuf/any.proto=github.com/cosmos/gogoproto/types/any
+  - name: go-grpc
+    out: ..
+    opt: paths=source_relative

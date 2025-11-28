@@ -6,7 +6,6 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 
 	"github.com/cosmos/cosmos-sdk/contrib/x/nft"
-	nftv1beta1 "github.com/cosmos/cosmos-sdk/contrib/x/nft/v1beta1"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 
@@ -14,7 +13,7 @@ import (
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 	return &autocliv1.ModuleOptions{
 		Query: &autocliv1.ServiceCommandDescriptor{
-			Service: nftv1beta1.Query_serviceDesc.ServiceName,
+			Service: nft.Query_serviceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "Balance",
@@ -82,7 +81,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
-			Service: nftv1beta1.Msg_serviceDesc.ServiceName,
+			Service: nft.Msg_serviceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "Send",

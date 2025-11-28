@@ -3,7 +3,7 @@ package module
 import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 
-	groupv1 "github.com/cosmos/cosmos-sdk/contrib/x/group/v1"
+	groupv1 "github.com/cosmos/cosmos-sdk/contrib/x/group"
 )
 
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.

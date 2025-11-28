@@ -8,13 +8,13 @@ import (
 	cmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/contrib/x/circuit"
-	"cosmossdk.io/contrib/x/circuit/keeper"
-	"cosmossdk.io/contrib/x/circuit/types"
 	"cosmossdk.io/core/address"
 	storetypes "cosmossdk.io/store/types"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/contrib/x/circuit"
+	"github.com/cosmos/cosmos-sdk/contrib/x/circuit/keeper"
+	"github.com/cosmos/cosmos-sdk/contrib/x/circuit/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"

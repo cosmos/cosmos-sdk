@@ -5,9 +5,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/contrib/x/group"
-	"cosmossdk.io/contrib/x/group/module"
-
+	"github.com/cosmos/cosmos-sdk/contrib/x/group"
+	"github.com/cosmos/cosmos-sdk/contrib/x/group/module"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 

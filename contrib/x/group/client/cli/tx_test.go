@@ -12,15 +12,15 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	// without this import amino json encoding will fail when resolving any types
-	_ "cosmossdk.io/contrib/contrib/group/v1"
-	"cosmossdk.io/contrib/x/group"
-	"cosmossdk.io/contrib/x/group/client/cli"
-	groupmodule "cosmossdk.io/contrib/x/group/module"
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	_ "github.com/cosmos/cosmos-sdk/contrib/contrib/group/v1"
+	"github.com/cosmos/cosmos-sdk/contrib/x/group"
+	"github.com/cosmos/cosmos-sdk/contrib/x/group/client/cli"
+	groupmodule "github.com/cosmos/cosmos-sdk/contrib/x/group/module"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"

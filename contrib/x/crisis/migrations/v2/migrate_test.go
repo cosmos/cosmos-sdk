@@ -3,9 +3,9 @@ package v2_test
 import (
 	"testing"
 
-	"cosmossdk.io/contrib/x/crisis"
-	v2 "cosmossdk.io/contrib/x/crisis/migrations/v2"
-	"cosmossdk.io/contrib/x/crisis/types"
+	"github.com/cosmos/cosmos-sdk/contrib/x/crisis"
+	v2 "github.com/cosmos/cosmos-sdk/contrib/x/crisis/migrations/v2"
+	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/types"
 	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"

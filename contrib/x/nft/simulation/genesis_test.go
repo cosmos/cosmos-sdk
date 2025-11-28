@@ -7,12 +7,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	nft "cosmossdk.io/contrib/x/nft"
-	nftmodule "cosmossdk.io/contrib/x/nft/module"
-	"cosmossdk.io/contrib/x/nft/simulation"
 	sdkmath "cosmossdk.io/math"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	nft "github.com/cosmos/cosmos-sdk/contrib/x/nft"
+	nftmodule "github.com/cosmos/cosmos-sdk/contrib/x/nft/module"
+	"github.com/cosmos/cosmos-sdk/contrib/x/nft/simulation"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"

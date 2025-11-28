@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package contrib.group.v1;
 
-option go_package = "cosmossdk.io/contrib/x/group";
+option go_package = "github.com/cosmos/cosmos-sdk/contrib/x/group";
 
 import "gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";

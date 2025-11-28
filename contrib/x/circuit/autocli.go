@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	circuitv1 "cosmossdk.io/contrib/x/circuit/types"
 
+	circuitv1 "github.com/cosmos/cosmos-sdk/contrib/x/circuit/types"
 	"github.com/cosmos/cosmos-sdk/version"
 )
 

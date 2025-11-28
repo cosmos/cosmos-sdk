@@ -28,8 +28,8 @@ import (
 	stakingapi "cosmossdk.io/api/cosmos/staking/v1beta1"
 	upgradeapi "cosmossdk.io/api/cosmos/upgrade/v1beta1"
 	vestingapi "cosmossdk.io/api/cosmos/vesting/v1beta1"
-	groupapi "cosmossdk.io/contrib/contrib/group/v1"
 
+	groupapi "github.com/cosmos/cosmos-sdk/contrib/contrib/group/v1"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"

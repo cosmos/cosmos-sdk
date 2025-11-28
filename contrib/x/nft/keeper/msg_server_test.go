@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"fmt"
 
-	nft "cosmossdk.io/contrib/x/nft"
+	nft "github.com/cosmos/cosmos-sdk/contrib/x/nft"
 )
 
 var (

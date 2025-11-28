@@ -12,12 +12,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	group "cosmossdk.io/contrib/x/group"
-	"cosmossdk.io/contrib/x/group/internal/math"
 	coreaddress "cosmossdk.io/core/address"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
+	"github.com/cosmos/cosmos-sdk/contrib/x/group/internal/math"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"

@@ -1,7 +1,7 @@
 syntax = "proto3";
 package contrib.circuit.v1;
 
-option go_package = "cosmossdk.io/contrib/x/circuit/types";
+option go_package = "github.com/cosmos/cosmos-sdk/contrib/x/circuit/types";
 
 import "cosmos/msg/v1/msg.proto";
 import "contrib/circuit/v1/types.proto";

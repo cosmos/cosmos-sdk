@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"fmt"
 
-	group "cosmossdk.io/contrib/x/group"
-	"cosmossdk.io/contrib/x/group/errors"
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
+	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
+	"github.com/cosmos/cosmos-sdk/contrib/x/group/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )

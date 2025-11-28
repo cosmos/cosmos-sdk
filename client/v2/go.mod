@@ -174,7 +174,6 @@ require (
 // )
 replace (
 	cosmossdk.io/api => ../../api
-	cosmossdk.io/contrib => ../../contrib
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/tx => ../../x/tx
 	github.com/cosmos/cosmos-sdk => ../../.

@@ -1,7 +1,7 @@
 syntax = "proto3";
 package contrib.nft.v1beta1;
 
-option go_package = "cosmossdk.io/contrib/x/nft";
+option go_package = "github.com/cosmos/cosmos-sdk/contrib/x/nft";
 
 // EventSend is emitted on Msg/Send
 message EventSend {

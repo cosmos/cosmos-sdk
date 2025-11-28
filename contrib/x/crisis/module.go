@@ -5,18 +5,18 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"cosmossdk.io/contrib/x/crisis/exported"
-	keeper2 "cosmossdk.io/contrib/x/crisis/keeper"
-	types2 "cosmossdk.io/contrib/x/crisis/types"
+	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/exported"
+	keeper2 "github.com/cosmos/cosmos-sdk/contrib/x/crisis/keeper"
+	types2 "github.com/cosmos/cosmos-sdk/contrib/x/crisis/types"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
-	modulev1 "cosmossdk.io/contrib/contrib/crisis/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
+	modulev1 "github.com/cosmos/cosmos-sdk/contrib/contrib/crisis/module/v1"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

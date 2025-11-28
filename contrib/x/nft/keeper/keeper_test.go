@@ -8,14 +8,14 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 
-	nft "cosmossdk.io/contrib/x/nft"
-	"cosmossdk.io/contrib/x/nft/keeper"
-	"cosmossdk.io/contrib/x/nft/module"
-	nfttestutil "cosmossdk.io/contrib/x/nft/testutil"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	nft "github.com/cosmos/cosmos-sdk/contrib/x/nft"
+	"github.com/cosmos/cosmos-sdk/contrib/x/nft/keeper"
+	"github.com/cosmos/cosmos-sdk/contrib/x/nft/module"
+	nfttestutil "github.com/cosmos/cosmos-sdk/contrib/x/nft/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"

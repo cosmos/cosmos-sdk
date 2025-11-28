@@ -7,11 +7,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	group "cosmossdk.io/contrib/x/group"
-	groupmodule "cosmossdk.io/contrib/x/group/module"
-	"cosmossdk.io/contrib/x/group/simulation"
 	sdkmath "cosmossdk.io/math"
 
+	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
+	groupmodule "github.com/cosmos/cosmos-sdk/contrib/x/group/module"
+	"github.com/cosmos/cosmos-sdk/contrib/x/group/simulation"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"

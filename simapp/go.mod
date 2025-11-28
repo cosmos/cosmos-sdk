@@ -36,7 +36,6 @@ require (
 	cloud.google.com/go/monitoring v1.24.2 // indirect
 	cloud.google.com/go/storage v1.56.1 // indirect
 	cosmossdk.io/collections v1.3.1 // indirect
-	cosmossdk.io/contrib v0.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/errors v1.0.2 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -236,7 +235,6 @@ require (
 // Below are the long-lived replace of the SimApp
 replace (
 	cosmossdk.io/api => ../api
-	cosmossdk.io/contrib => ../contrib
 	cosmossdk.io/x/tx => ../x/tx
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0

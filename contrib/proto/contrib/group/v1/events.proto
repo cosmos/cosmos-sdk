@@ -5,7 +5,7 @@ package contrib.group.v1;
 import "cosmos_proto/cosmos.proto";
 import "contrib/group/v1/types.proto";
 
-option go_package = "cosmossdk.io/contrib/x/group";
+option go_package = "github.com/cosmos/cosmos-sdk/contrib/x/group";
 
 // EventCreateGroup is an event emitted when a group is created.
 message EventCreateGroup {

@@ -5,8 +5,7 @@ package testutil
 import (
 	context "context"
 
-	"cosmossdk.io/contrib/x/group"
-
+	"github.com/cosmos/cosmos-sdk/contrib/x/group"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 )

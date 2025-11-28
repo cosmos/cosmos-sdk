@@ -1,8 +1,7 @@
 package module
 
 import (
-	"cosmossdk.io/contrib/x/group/keeper"
-
+	"github.com/cosmos/cosmos-sdk/contrib/x/group/keeper"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

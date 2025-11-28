@@ -3,9 +3,8 @@ package simulation
 import (
 	"context"
 
-	"cosmossdk.io/contrib/x/nft"
-	"cosmossdk.io/contrib/x/nft/keeper"
-
+	"github.com/cosmos/cosmos-sdk/contrib/x/nft"
+	"github.com/cosmos/cosmos-sdk/contrib/x/nft/keeper"
 	"github.com/cosmos/cosmos-sdk/testutil/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

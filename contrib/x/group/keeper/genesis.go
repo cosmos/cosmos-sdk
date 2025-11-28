@@ -5,10 +5,10 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
-	group "cosmossdk.io/contrib/x/group"
 	"cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
 	"github.com/cosmos/cosmos-sdk/types"
 )
 

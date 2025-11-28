@@ -6,12 +6,12 @@ import (
 
 	proto "github.com/cosmos/gogoproto/proto"
 
-	"cosmossdk.io/contrib/x/group/errors"
-	"cosmossdk.io/contrib/x/group/internal/math"
-	"cosmossdk.io/contrib/x/group/internal/orm"
 	errorsmod "cosmossdk.io/errors"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/contrib/x/group/errors"
+	"github.com/cosmos/cosmos-sdk/contrib/x/group/internal/math"
+	"github.com/cosmos/cosmos-sdk/contrib/x/group/internal/orm"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )

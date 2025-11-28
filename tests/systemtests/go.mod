@@ -180,7 +180,6 @@ require (
 
 replace (
 	cosmossdk.io/api => ../../api
-	cosmossdk.io/contrib => ../../contrib
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/tx => ../../x/tx
 	// Use fork for blockstm

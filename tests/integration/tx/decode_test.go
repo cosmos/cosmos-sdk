@@ -10,13 +10,13 @@ import (
 	"pgregory.net/rapid"
 
 	msgv1 "cosmossdk.io/api/cosmos/msg/v1"
-	groupmodule "cosmossdk.io/contrib/x/group/module"
 	"cosmossdk.io/math"
 	"cosmossdk.io/x/tx/decode"
 	txsigning "cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	groupmodule "github.com/cosmos/cosmos-sdk/contrib/x/group/module"
 	"github.com/cosmos/cosmos-sdk/tests/integration/rapidgen"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"

@@ -19,12 +19,12 @@ import (
 	stakingmodulev1 "cosmossdk.io/api/cosmos/staking/module/v1"
 	txconfigv1 "cosmossdk.io/api/cosmos/tx/config/v1"
 	vestingmodulev1 "cosmossdk.io/api/cosmos/vesting/module/v1"
-	circuitmodulev1 "cosmossdk.io/contrib/contrib/circuit/module/v1"
-	groupmodulev1 "cosmossdk.io/contrib/contrib/group/module/v1"
-	nftmodulev1 "cosmossdk.io/contrib/contrib/nft/module/v1"
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
 
+	circuitmodulev1 "github.com/cosmos/cosmos-sdk/contrib/contrib/circuit/module/v1"
+	groupmodulev1 "github.com/cosmos/cosmos-sdk/contrib/contrib/group/module/v1"
+	nftmodulev1 "github.com/cosmos/cosmos-sdk/contrib/contrib/nft/module/v1"
 	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 

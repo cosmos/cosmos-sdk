@@ -1,9 +1,8 @@
 package v047
 
 import (
-	groupv2 "cosmossdk.io/contrib/x/group/migrations/v2"
-
 	"github.com/cosmos/cosmos-sdk/client"
+	groupv2 "github.com/cosmos/cosmos-sdk/contrib/x/group/migrations/v2"
 	v1auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v1"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankv4 "github.com/cosmos/cosmos-sdk/x/bank/migrations/v4"

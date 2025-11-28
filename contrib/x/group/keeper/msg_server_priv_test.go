@@ -108,7 +108,7 @@ func TestDoTallyAndUpdate(t *testing.T) {
 			expVotesCleared: true,
 			expEvents: func(proposalID uint64) sdk.Events {
 				return sdk.Events{
-					sdk.NewEvent("cosmos.group.v1.EventTallyError",
+					sdk.NewEvent("contrib.group.v1.EventTallyError",
 						sdk.Attribute{Key: "error_message", Value: `"my test error"`},
 						sdk.Attribute{Key: "proposal_id", Value: fmt.Sprintf(`"%d"`, proposalID)},
 					),

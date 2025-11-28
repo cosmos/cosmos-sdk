@@ -35,7 +35,7 @@ type MockCircuitBreaker struct {
 }
 
 func (m MockCircuitBreaker) IsAllowed(ctx context.Context, typeURL string) (bool, error) {
-	return typeURL == "/cosmos.circuit.v1.MsgAuthorizeCircuitBreaker", nil
+	return typeURL == "/contrib.circuit.v1.MsgAuthorizeCircuitBreaker", nil
 }
 
 func initFixture(t *testing.T) *fixture {

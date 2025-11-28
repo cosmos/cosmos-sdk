@@ -23,7 +23,7 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
-var EventProposalPruned = "cosmos.group.v1.EventProposalPruned"
+var EventProposalPruned = "contrib.group.v1.EventProposalPruned"
 
 func (s *TestSuite) TestCreateGroupWithLotsOfMembers() {
 	for i := 50; i < 70; i++ {

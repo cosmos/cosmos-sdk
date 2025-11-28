@@ -379,7 +379,7 @@ func (app *BaseApp) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, er
 }
 
 // InsertTx inserts a tx into the applications mempool.
-func (app *BaseApp) InserTx(req *abci.RequestInsertTx) (*abci.ResponseInsertTx, error) {
+func (app *BaseApp) InsertTx(req *abci.RequestInsertTx) (*abci.ResponseInsertTx, error) {
 	if app.abciHandlers.InsertTxHandler == nil {
 		return nil, errors.New("InsertTx handler not set")
 	}

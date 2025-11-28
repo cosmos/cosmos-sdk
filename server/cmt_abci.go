@@ -28,6 +28,14 @@ func (w cometABCIWrapper) CheckTx(_ context.Context, req *abci.RequestCheckTx) (
 	return w.app.CheckTx(req)
 }
 
+func (w cometABCIWrapper) InsertTx(_ context.Context, req *abci.RequestInsertTx) (*abci.ResponseInsertTx, error) {
+	return w.app.InserTx(req)
+}
+
+func (w cometABCIWrapper) ReapTxs(_ context.Context, req *abci.RequestReapTxs) (*abci.ResponseReapTxs, error) {
+	return w.app.ReapTxs(req)
+}
+
 func (w cometABCIWrapper) InitChain(_ context.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
 	return w.app.InitChain(req)
 }

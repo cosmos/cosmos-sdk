@@ -378,6 +378,22 @@ func (app *BaseApp) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, er
 	return app.abciHandlers.CheckTxHandler(runTx, req)
 }
 
+// InsertTx inserts a tx into the applications mempool.
+func (app *BaseApp) InserTx(req *abci.RequestInsertTx) (*abci.ResponseInsertTx, error) {
+	if app.abciHandlers.InsertTxHandler == nil {
+		return nil, errors.New("InsertTx handler not set")
+	}
+	return app.abciHandlers.InsertTxHandler(req)
+}
+
+// ReapTxs returns new valid txs from the applications mempool.
+func (app *BaseApp) ReapTxs(req *abci.RequestReapTxs) (*abci.ResponseReapTxs, error) {
+	if app.abciHandlers.ReapTxsHandler == nil {
+		return nil, errors.New("ReapTxs handler not set")
+	}
+	return app.abciHandlers.ReapTxsHandler(req)
+}
+
 // PrepareProposal implements the PrepareProposal ABCI method and returns a
 // ResponsePrepareProposal object to the client. The PrepareProposal method is
 // responsible for allowing the block proposer to perform application-dependent

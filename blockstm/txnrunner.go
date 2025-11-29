@@ -18,8 +18,7 @@ var _ sdk.TxRunner = STMRunner{}
 func NewSTMRunner(
 	txDecoder sdk.TxDecoder,
 	stores []storetypes.StoreKey,
-	workers int, estimate bool,
-	coinDenom func(storetypes.MultiStore) string,
+	workers int, estimate bool, coinDenom string,
 ) *STMRunner {
 	return &STMRunner{
 		txDecoder: txDecoder,
@@ -36,7 +35,7 @@ type STMRunner struct {
 	stores    []storetypes.StoreKey
 	workers   int
 	estimate  bool
-	coinDenom func(storetypes.MultiStore) string
+	coinDenom string
 }
 
 func (e STMRunner) Run(ctx context.Context, ms storetypes.MultiStore, txs [][]byte, deliverTx sdk.DeliverTxFunc) ([]*abci.ExecTxResult, error) {
@@ -69,7 +68,7 @@ func (e STMRunner) Run(ctx context.Context, ms storetypes.MultiStore, txs [][]by
 	)
 
 	if e.estimate {
-		memTxs, estimates = preEstimates(txs, e.workers, authStore, bankStore, e.coinDenom(ms), e.txDecoder)
+		memTxs, estimates = preEstimates(txs, e.workers, authStore, bankStore, e.coinDenom, e.txDecoder)
 	}
 
 	if err := ExecuteBlockWithEstimates(

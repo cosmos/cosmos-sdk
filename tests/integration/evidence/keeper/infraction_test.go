@@ -189,7 +189,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	)
 	val, err := f.stakingKeeper.Validator(ctx, operatorAddr)
 	assert.NilError(t, err)
-	assert.DeepEqual(t, selfDelegation, val.GetBondedTokens())
+	assert.DeepEqual(t, selfDelegation, val.GetValidatorPower())
 
 	assert.NilError(t, f.slashingKeeper.AddPubkey(f.sdkCtx, valpubkey))
 
@@ -282,7 +282,7 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 	)
 	val, err := f.stakingKeeper.Validator(ctx, operatorAddr)
 	assert.NilError(t, err)
-	assert.DeepEqual(t, amt, val.GetBondedTokens())
+	assert.DeepEqual(t, amt, val.GetValidatorPower())
 
 	nci := NewCometInfo(abci.RequestFinalizeBlock{
 		Misbehavior: []abci.Misbehavior{{

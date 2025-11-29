@@ -9,10 +9,9 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	groupv1 "cosmossdk.io/api/cosmos/group/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/x/tx/internal/testpb"
-
-	groupv1 "github.com/cosmos/cosmos-sdk/contrib/contrib/group/v1"
 )
 
 var deeplyNestedRepeatedSigner = &testpb.DeeplyNestedRepeatedSigner{

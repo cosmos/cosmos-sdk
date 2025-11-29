@@ -12,7 +12,7 @@ import (
 	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
 	orm2 "github.com/cosmos/cosmos-sdk/contrib/x/group/internal/orm"
 	groupkeeper "github.com/cosmos/cosmos-sdk/contrib/x/group/keeper"
-	v2 "github.com/cosmos/cosmos-sdk/contrib/x/group/migrations/v2"
+	"github.com/cosmos/cosmos-sdk/contrib/x/group/migrations/v2"
 	groupmodule "github.com/cosmos/cosmos-sdk/contrib/x/group/module"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"

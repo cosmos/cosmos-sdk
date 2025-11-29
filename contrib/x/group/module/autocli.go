@@ -2,15 +2,14 @@ package module
 
 import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-
-	groupv1 "github.com/cosmos/cosmos-sdk/contrib/x/group"
+	groupv1 "cosmossdk.io/api/cosmos/group/v1"
 )
 
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.
 func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 	return &autocliv1.ModuleOptions{
 		Query: &autocliv1.ServiceCommandDescriptor{
-			Service: groupv1.Query_serviceDesc.ServiceName,
+			Service: groupv1.Query_ServiceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "GroupInfo",
@@ -125,7 +124,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
-			Service:              groupv1.Msg_serviceDesc.ServiceName,
+			Service:              groupv1.Msg_ServiceDesc.ServiceName,
 			EnhanceCustomCommand: false, // use custom commands only until v0.51
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{

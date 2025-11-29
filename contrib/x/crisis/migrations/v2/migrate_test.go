@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/contrib/x/crisis"
-	v2 "github.com/cosmos/cosmos-sdk/contrib/x/crisis/migrations/v2"
+	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/migrations/v2"
 	"github.com/cosmos/cosmos-sdk/contrib/x/crisis/types"
 	"github.com/stretchr/testify/require"
 

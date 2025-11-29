@@ -312,7 +312,7 @@ where members.json contains:
 and policy.json contains:
 
 {
-    "@type": "/contrib.group.v1.ThresholdDecisionPolicy",
+    "@type": "/cosmos.group.v1.ThresholdDecisionPolicy",
     "threshold": "1",
     "windows": {
         "voting_period": "120h",
@@ -389,7 +389,7 @@ func MsgCreateGroupPolicyCmd() *cobra.Command {
 where policy.json contains:
 
 {
-    "@type": "/contrib.group.v1.ThresholdDecisionPolicy",
+    "@type": "/cosmos.group.v1.ThresholdDecisionPolicy",
     "threshold": "1",
     "windows": {
         "voting_period": "120h",
@@ -400,7 +400,7 @@ where policy.json contains:
 Here, we can use percentage decision policy when needed, where 0 < percentage <= 1:
 
 {
-    "@type": "/contrib.group.v1.PercentageDecisionPolicy",
+    "@type": "/cosmos.group.v1.PercentageDecisionPolicy",
     "percentage": "0.5",
     "windows": {
         "voting_period": "120h",

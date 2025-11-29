@@ -12,11 +12,11 @@ import (
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
+	modulev1 "cosmossdk.io/api/cosmos/crisis/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
-	modulev1 "github.com/cosmos/cosmos-sdk/contrib/contrib/crisis/module/v1"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

@@ -12,12 +12,12 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	// without this import amino json encoding will fail when resolving any types
+	_ "cosmossdk.io/api/cosmos/group/v1"
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec/address"
-	_ "github.com/cosmos/cosmos-sdk/contrib/contrib/group/v1"
 	"github.com/cosmos/cosmos-sdk/contrib/x/group"
 	"github.com/cosmos/cosmos-sdk/contrib/x/group/client/cli"
 	groupmodule "github.com/cosmos/cosmos-sdk/contrib/x/group/module"
@@ -583,7 +583,7 @@ func (s *CLITestSuite) TestTxCreateGroupWithPolicy() {
 	}]}`, accounts[0].Address.String())
 	invalidMembersWeightFile := testutil.WriteToNewTempFile(s.T(), invalidMembersWeight)
 
-	thresholdDecisionPolicyFile := testutil.WriteToNewTempFile(s.T(), `{"@type": "/contrib.group.v1.ThresholdDecisionPolicy","threshold": "1","windows": {"voting_period":"1s"}}`)
+	thresholdDecisionPolicyFile := testutil.WriteToNewTempFile(s.T(), `{"@type": "/cosmos.group.v1.ThresholdDecisionPolicy","threshold": "1","windows": {"voting_period":"1s"}}`)
 
 	testCases := []struct {
 		name         string
@@ -689,11 +689,11 @@ func (s *CLITestSuite) TestTxCreateGroupPolicy() {
 
 	groupID := s.group.Id
 
-	thresholdDecisionPolicyFile := testutil.WriteToNewTempFile(s.T(), `{"@type": "/contrib.group.v1.ThresholdDecisionPolicy","threshold": "1","windows": {"voting_period":"1s"}}`)
+	thresholdDecisionPolicyFile := testutil.WriteToNewTempFile(s.T(), `{"@type": "/cosmos.group.v1.ThresholdDecisionPolicy","threshold": "1","windows": {"voting_period":"1s"}}`)
 
-	percentageDecisionPolicyFile := testutil.WriteToNewTempFile(s.T(), `{"@type":"/contrib.group.v1.PercentageDecisionPolicy", "percentage":"0.5", "windows":{"voting_period":"1s"}}`)
-	invalidNegativePercentageDecisionPolicyFile := testutil.WriteToNewTempFile(s.T(), `{"@type":"/contrib.group.v1.PercentageDecisionPolicy", "percentage":"-0.5", "windows":{"voting_period":"1s"}}`)
-	invalidPercentageDecisionPolicyFile := testutil.WriteToNewTempFile(s.T(), `{"@type":"/contrib.group.v1.PercentageDecisionPolicy", "percentage":"2", "windows":{"voting_period":"1s"}}`)
+	percentageDecisionPolicyFile := testutil.WriteToNewTempFile(s.T(), `{"@type":"/cosmos.group.v1.PercentageDecisionPolicy", "percentage":"0.5", "windows":{"voting_period":"1s"}}`)
+	invalidNegativePercentageDecisionPolicyFile := testutil.WriteToNewTempFile(s.T(), `{"@type":"/cosmos.group.v1.PercentageDecisionPolicy", "percentage":"-0.5", "windows":{"voting_period":"1s"}}`)
+	invalidPercentageDecisionPolicyFile := testutil.WriteToNewTempFile(s.T(), `{"@type":"/cosmos.group.v1.PercentageDecisionPolicy", "percentage":"2", "windows":{"voting_period":"1s"}}`)
 
 	cmd := cli.MsgCreateGroupPolicyCmd()
 	cmd.SetOut(io.Discard)
@@ -925,8 +925,8 @@ func (s *CLITestSuite) TestTxUpdateGroupPolicyDecisionPolicy() {
 	commonFlags := s.commonFlags
 	commonFlags = append(commonFlags, fmt.Sprintf("--%s=%d", flags.FlagGas, 300000))
 
-	thresholdDecisionPolicy := testutil.WriteToNewTempFile(s.T(), `{"@type":"/contrib.group.v1.ThresholdDecisionPolicy", "threshold":"1", "windows":{"voting_period":"40000s"}}`)
-	percentageDecisionPolicy := testutil.WriteToNewTempFile(s.T(), `{"@type":"/contrib.group.v1.PercentageDecisionPolicy", "percentage":"0.5", "windows":{"voting_period":"40000s"}}`)
+	thresholdDecisionPolicy := testutil.WriteToNewTempFile(s.T(), `{"@type":"/cosmos.group.v1.ThresholdDecisionPolicy", "threshold":"1", "windows":{"voting_period":"40000s"}}`)
+	percentageDecisionPolicy := testutil.WriteToNewTempFile(s.T(), `{"@type":"/cosmos.group.v1.PercentageDecisionPolicy", "percentage":"0.5", "windows":{"voting_period":"40000s"}}`)
 
 	cmd := cli.MsgUpdateGroupPolicyDecisionPolicyCmd(address.NewBech32Codec("cosmos"))
 	cmd.SetOut(io.Discard)

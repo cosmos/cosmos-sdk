@@ -1,10 +1,10 @@
 version: v1
 deps:
-  - buf.build/cosmos/cosmos-proto:04467658e59e44bbb22fe568206e1f70
-  - buf.build/cosmos/cosmos-sdk:05419252bcc241ea8023acf1ed4cadc5
-  - buf.build/cosmos/gogo-proto:88ef6483f90f478fb938c37dde52ece3
-  - buf.build/googleapis/googleapis:751cbe31638d43a9bfb6162cd2352e67
-  - buf.build/protocolbuffers/wellknowntypes:3ddd61d1f53d485abd3d3a2b47a62b8e
+  - buf.build/cosmos/cosmos-proto
+  - buf.build/cosmos/cosmos-sdk
+  - buf.build/cosmos/gogo-proto
+  - buf.build/googleapis/googleapis
+  - buf.build/protocolbuffers/wellknowntypes
 breaking:
   use:
     - FILE

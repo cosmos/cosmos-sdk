@@ -445,19 +445,19 @@ func (mr *MockValidatorSetMockRecorder) StakingTokenSupply(arg0 any) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StakingTokenSupply", reflect.TypeOf((*MockValidatorSet)(nil).StakingTokenSupply), arg0)
 }
 
-// TotalValidatorPower mocks base method.
-func (m *MockValidatorSet) TotalValidatorPower(arg0 context.Context) (math.Int, error) {
+// TotalBondedTokens mocks base method.
+func (m *MockValidatorSet) TotalBondedTokens(arg0 context.Context) (math.Int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "TotalValidatorPower", arg0)
+	ret := m.ctrl.Call(m, "TotalBondedTokens", arg0)
 	ret0, _ := ret[0].(math.Int)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// TotalValidatorPower indicates an expected call of TotalValidatorPower.
-func (mr *MockValidatorSetMockRecorder) TotalValidatorPower(arg0 any) *gomock.Call {
+// TotalBondedTokens indicates an expected call of TotalBondedTokens.
+func (mr *MockValidatorSetMockRecorder) TotalBondedTokens(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TotalValidatorPower", reflect.TypeOf((*MockValidatorSet)(nil).TotalValidatorPower), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TotalBondedTokens", reflect.TypeOf((*MockValidatorSet)(nil).TotalBondedTokens), arg0)
 }
 
 // Unjail mocks base method.

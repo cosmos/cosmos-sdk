@@ -1200,19 +1200,19 @@ func (mr *MockStakingKeeperMockRecorder) TokensFromConsensusPower(ctx, power any
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TokensFromConsensusPower", reflect.TypeOf((*MockStakingKeeper)(nil).TokensFromConsensusPower), ctx, power)
 }
 
-// TotalBondedTokens mocks base method.
-func (m *MockStakingKeeper) TotalBondedTokens(arg0 context.Context) (math.Int, error) {
+// TotalValidatorPower mocks base method.
+func (m *MockStakingKeeper) TotalValidatorPower(arg0 context.Context) (math.Int, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "TotalBondedTokens", arg0)
+	ret := m.ctrl.Call(m, "TotalValidatorPower", arg0)
 	ret0, _ := ret[0].(math.Int)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// TotalBondedTokens indicates an expected call of TotalBondedTokens.
-func (mr *MockStakingKeeperMockRecorder) TotalBondedTokens(arg0 any) *gomock.Call {
+// TotalValidatorPower indicates an expected call of TotalValidatorPower.
+func (mr *MockStakingKeeperMockRecorder) TotalValidatorPower(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TotalBondedTokens", reflect.TypeOf((*MockStakingKeeper)(nil).TotalBondedTokens), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TotalValidatorPower", reflect.TypeOf((*MockStakingKeeper)(nil).TotalValidatorPower), arg0)
 }
 
 // ValidatorAddressCodec mocks base method.

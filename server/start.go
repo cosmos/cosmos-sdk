@@ -16,6 +16,7 @@ import (
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
+	"github.com/cometbft/cometbft/libs/tempfile" // Added for ForceSync control
 	"github.com/cometbft/cometbft/node"
 	"github.com/cometbft/cometbft/p2p"
 	pvm "github.com/cometbft/cometbft/privval"
@@ -182,6 +183,21 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 `,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			serverCtx := GetServerContextFromCmd(cmd)
+
+			// Logic: Safety Delay is only active when O_SYNC is disabled.
+			if serverCtx.Config.DisableOSSync {
+				serverCtx.Logger.Info("Disabling O_SYNC for atomic file writes (Performance Mode)")
+				tempfile.ForceSync(false)
+
+				// Apply Safety Start Delay only when O_SYNC is disabled
+				if delay := serverCtx.Config.SafetyStartDelay; delay > 0 {
+					serverCtx.Logger.Info("Safety Start Delay active due to disabled O_SYNC", "duration", delay)
+					time.Sleep(delay)
+				}
+			} else {
+				// Default safe behavior
+				tempfile.ForceSync(true)
+			}
 
 			_, err := GetPruningOptionsFromFlags(serverCtx.Viper)
 			if err != nil {

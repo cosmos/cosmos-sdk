@@ -183,6 +183,24 @@ is performed. Note, when enabled, gRPC will also be automatically enabled.
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			serverCtx := GetServerContextFromCmd(cmd)
 
+			// Logic: Safety Delay is only active when O_SYNC is disabled.
+			// Use Viper to read config safely (decoupled from CometBFT struct changes)
+			disableOSSync := serverCtx.Viper.GetBool("disable_os_sync")
+
+			if disableOSSync {
+				// We don't call ForceSync here anymore to avoid dependency on CometBFT changes.
+				// CometBFT node initialization will handle the actual O_SYNC toggling.
+
+				// Apply Safety Start Delay only when O_SYNC is disabled
+				// Also read from Viper for safety
+				startDelayStr := serverCtx.Viper.GetString("safety_start_delay")
+				startDelay, err := time.ParseDuration(startDelayStr)
+				if err == nil && startDelay > 0 {
+					serverCtx.Logger.Info("Safety Start Delay active due to disabled O_SYNC", "duration", startDelay)
+					time.Sleep(startDelay)
+				}
+			}
+
 			_, err := GetPruningOptionsFromFlags(serverCtx.Viper)
 			if err != nil {
 				return fmt.Errorf("failed to get pruning options: %w", err)

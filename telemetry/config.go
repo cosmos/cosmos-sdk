@@ -49,7 +49,9 @@ func initOpenTelemetry() error {
 
 	confFilename := os.Getenv(OtelConfigEnvVar)
 	if confFilename == "" {
-		initNoop()
+		otel.SetTracerProvider(tracenoop.NewTracerProvider())
+		otel.SetMeterProvider(metricnoop.NewMeterProvider())
+		logglobal.SetLoggerProvider(lognoop.NewLoggerProvider())
 		return nil
 	}
 
@@ -61,11 +63,6 @@ func initOpenTelemetry() error {
 	cfg, err := otelconf.ParseYAML(bz)
 	if err != nil {
 		return fmt.Errorf("failed to parse telemetry config file: %w", err)
-	}
-
-	if cfg.Disabled != nil && *cfg.Disabled {
-		initNoop()
-		return nil
 	}
 
 	fmt.Printf("\nInitializing OpenTelemetry\n")
@@ -195,12 +192,6 @@ func initOpenTelemetry() error {
 	fmt.Printf("\nOpenTelemetry initialized successfully\n")
 
 	return nil
-}
-
-func initNoop() {
-	otel.SetTracerProvider(tracenoop.NewTracerProvider())
-	otel.SetMeterProvider(metricnoop.NewMeterProvider())
-	logglobal.SetLoggerProvider(lognoop.NewLoggerProvider())
 }
 
 func initPropagator(propagatorTypes []string) propagation.TextMapPropagator {

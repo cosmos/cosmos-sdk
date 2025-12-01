@@ -1,4 +1,4 @@
-package iavlx
+package internal
 
 import (
 	"fmt"

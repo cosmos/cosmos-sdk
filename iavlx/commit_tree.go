@@ -93,7 +93,7 @@ func (c *CommitTree) workingHash() []byte {
 	}
 
 	savedVersion := c.store.SavedVersion()
-	stagedVersion := c.store.stagedVersion
+	stagedVersion := c.store.stagedVersion()
 	c.commitCtx = &commitContext{
 		version:      stagedVersion,
 		savedVersion: savedVersion,
@@ -124,7 +124,7 @@ func (c *CommitTree) commit() (storetypes.CommitID, error) {
 	// compute hash and assign node IDs
 	hash := c.workingHash()
 
-	stagedVersion := c.store.stagedVersion
+	stagedVersion := c.store.stagedVersion()
 	// wait for WAL write to complete
 	err := <-c.walDone
 	if err != nil {
@@ -219,7 +219,7 @@ func (c *CommitTree) Set(key, value []byte) {
 	c.writeMutex.Lock()
 	defer c.writeMutex.Unlock()
 
-	stagedVersion := c.store.stagedVersion
+	stagedVersion := c.store.stagedVersion()
 	leafNode := &MemNode{
 		height:  0,
 		size:    1,
@@ -250,7 +250,7 @@ func (c *CommitTree) Delete(key []byte) {
 	// start writing this to the WAL asynchronously before we even mutate the tree
 	c.walQueue.Send([]KVUpdate{{DeleteKey: key}})
 
-	ctx := &MutationContext{Version: c.store.stagedVersion}
+	ctx := &MutationContext{Version: c.store.stagedVersion()}
 	_, newRoot, _, err := removeRecursive(c.root, key, ctx)
 	if err != nil {
 		panic(err)
@@ -307,13 +307,13 @@ func (c *CommitTree) GetImmutable(version int64) (storetypes.KVStore, error) {
 
 func (c *CommitTree) ResolveRoot(version uint32) (*NodePointer, error) {
 	if version == 0 {
-		version = c.store.stagedVersion - 1
+		version = c.store.version
 	}
 	return c.store.ResolveRoot(version)
 }
 
 func (c *CommitTree) Version() uint32 {
-	return c.store.stagedVersion - 1
+	return c.store.version
 }
 
 func (c *CommitTree) Close() error {

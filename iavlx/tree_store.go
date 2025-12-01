@@ -27,8 +27,8 @@ type TreeStore struct {
 	latestMapLock sync.RWMutex
 	latest        btree.Map[uint32, *NodePointer] // Cache of latest root pointers per version
 
-	savedVersion  atomic.Uint32 // Last version with a readable changeset
-	stagedVersion uint32        // Latest written version (may not be readable yet)
+	savedVersion atomic.Uint32 // Last version with a readable changeset
+	version      uint32        // Latest written version (may not be readable yet)
 
 	opts Options
 
@@ -53,12 +53,11 @@ type changesetEntry struct {
 func newTreeStore(ctx context.Context, dir string, options Options, logger *slog.Logger, memMonitor *memoryMonitor) (*TreeStore, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	ts := &TreeStore{
-		ctx:           ctx,
-		cancel:        cancel,
-		dir:           dir,
-		logger:        logger,
-		opts:          options,
-		stagedVersion: 1,
+		ctx:    ctx,
+		cancel: cancel,
+		dir:    dir,
+		logger: logger,
+		opts:   options,
 	}
 
 	err := ts.load()
@@ -250,7 +249,7 @@ func (ts *TreeStore) WriteWALCommit(version uint32) (bytesWritten uint64, err er
 }
 
 func (ts *TreeStore) SaveRoot(root *NodePointer, stats VersionStats) error {
-	version := ts.stagedVersion
+	version := ts.version + 1
 
 	ts.logger.DebugContext(ts.ctx, "SaveRoot", "version", version, "totalBytes", stats.TotalBytes(), "leaves", stats.TotalLeaves, "branches", stats.TotalBranches, "kvDataSize", stats.KVDataSize, "budgetBefore", ts.memMonitor.evictBudget.Load())
 
@@ -265,10 +264,13 @@ func (ts *TreeStore) SaveRoot(root *NodePointer, stats VersionStats) error {
 	if err != nil {
 		return err
 	}
-	ts.stagedVersion++
+	ts.version++
 
 	currentSize := ts.currentWriter.TotalBytes()
 	maxSize := ts.opts.GetChangesetMaxTarget()
+	readerInterval := ts.opts.GetReaderUpdateInterval()
+
+	ts.logger.Debug("saved root", "version", version, "changeset_size", currentSize, "max_size", maxSize, "start_version", ts.currentWriter.StartVersion())
 
 	// Queue changeset for async WAL sync if enabled
 	if ts.syncQueue != nil {
@@ -286,14 +288,15 @@ func (ts *TreeStore) SaveRoot(root *NodePointer, stats VersionStats) error {
 	shouldSeal := uint64(currentSize) >= maxSize
 
 	startVersion := ts.currentWriter.StartVersion()
-	needReaderSet := ts.needReader.CompareAndSwap(true, false)
 	if shouldSeal {
 		shouldCreateReader = true
-	} else if needReaderSet {
-		shouldCreateReader = true
+	} else if readerInterval > 0 {
+		// Create reader periodically based on interval
+		versions := version - startVersion + 1
+		if versions%readerInterval == 0 {
+			shouldCreateReader = true
+		}
 	}
-
-	ts.logger.DebugContext(ts.ctx, "SaveRoot reader decision", "version", version, "shouldSeal", shouldSeal, "needReaderSet", needReaderSet, "shouldCreateReader", shouldCreateReader, "savedVersion", ts.savedVersion.Load(), "budget", ts.memMonitor.evictBudget.Load())
 
 	if !shouldCreateReader {
 		// Just continue batching without creating reader
@@ -338,6 +341,10 @@ func (ts *TreeStore) SaveRoot(root *NodePointer, stats VersionStats) error {
 	}
 
 	return nil
+}
+
+func (ts *TreeStore) stagedVersion() uint32 {
+	return ts.version + 1
 }
 
 func (ts *TreeStore) setActiveReader(version uint32, reader *Changeset) {

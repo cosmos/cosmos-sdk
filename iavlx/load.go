@@ -44,15 +44,15 @@ func (ts *TreeStore) load() error {
 		}
 
 		// startVersion should be equal to stagedVersion
-
-		if startVersion < uint64(ts.stagedVersion) {
-			ts.logger.Warn("found undeleted changeset that was already compacted", "startVersion", startVersion, "stagedVersion", ts.stagedVersion)
+		stagedVersion := ts.stagedVersion()
+		if startVersion < uint64(stagedVersion) {
+			ts.logger.Warn("found undeleted changeset that was already compacted", "startVersion", startVersion, "stagedVersion", stagedVersion)
 			// TODO delete undeleted compactions
 			continue
 		}
 
-		if startVersion > uint64(ts.stagedVersion) {
-			return fmt.Errorf("missing changeset for staged version %d", ts.stagedVersion)
+		if startVersion > uint64(stagedVersion) {
+			return fmt.Errorf("missing changeset for staged version %d", stagedVersion)
 		}
 
 		for {
@@ -104,7 +104,7 @@ func (ts *TreeStore) load() error {
 			ts.changesets.Set(uint32(startVersion), ce)
 
 			ts.savedVersion.Store(cs.info.EndVersion)
-			ts.stagedVersion = cs.info.EndVersion + 1
+			ts.version = cs.info.EndVersion
 			break
 		}
 	}

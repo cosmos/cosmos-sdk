@@ -23,72 +23,43 @@ func (ev *evictor) wake() {
 
 func (ev *evictor) evictLoop() {
 	for {
-		if !ev.memMonitor.UnderPressure() {
-			ev.logger.DebugContext(ev.ctx, "evictor waiting", "budget", ev.memMonitor.evictBudget.Load())
-			if !ev.memMonitor.Wait() {
-				ev.logger.DebugContext(ev.ctx, "evictor exiting (context cancelled)")
-				return
-			}
-			ev.logger.DebugContext(ev.ctx, "evictor woke from Wait", "budget", ev.memMonitor.evictBudget.Load())
-		}
-
 		ev.latestMapLock.RLock()
-		version, tree, ok := ev.latest.Min()
+		version, _, ok := ev.latest.Min()
 		ev.latestMapLock.RUnlock()
 		evictVersion := ev.savedVersion.Load()
-		ev.logger.DebugContext(ev.ctx, "evictor checking", "latestMinVersion", version, "latestOk", ok, "evictVersion", evictVersion, "budget", ev.memMonitor.evictBudget.Load())
 		if !ok || version > evictVersion {
-			ev.logger.DebugContext(ev.ctx, "evictor needs reader", "version", version, "evictVersion", evictVersion, "ok", ok)
-			ev.needReader.Store(true)
 			select {
 			case <-ev.wakeCh:
-				ev.logger.DebugContext(ev.ctx, "evictor woke from wakeCh")
 				continue
 			case <-ev.ctx.Done():
-				ev.logger.DebugContext(ev.ctx, "evictor exiting (context cancelled while waiting for reader)")
 				return
 			}
 		}
 
-		budgetBefore := ev.memMonitor.evictBudget.Load()
-		evictTraverse(tree, ev.memMonitor, evictVersion)
-		budgetAfter := ev.memMonitor.evictBudget.Load()
-		ev.logger.DebugContext(ev.ctx, "evictTraverse completed", "version", version, "evictVersion", evictVersion, "budgetBefore", budgetBefore, "budgetAfter", budgetAfter, "evicted", budgetBefore-budgetAfter)
-
-		if tree.mem.Load() == nil {
-			ev.logger.DebugContext(ev.ctx, "removing fully evicted version from latest", "version", version)
-			ev.latestMapLock.Lock()
-			ev.latest.Delete(version)
-			ev.latestMapLock.Unlock()
-		}
+		ev.latest.Delete(version)
 	}
 }
 
-func evictTraverse(np *NodePointer, tracker *memoryMonitor, evictVersion uint32) bool {
-	if !tracker.UnderPressure() {
-		return false
-	}
+func evictTraverse(np *NodePointer, depth, evictionDepth uint8, evictVersion uint32) (count int) {
+	// TODO check height, and don't traverse if tree is too short
 
 	memNode := np.mem.Load()
 	if memNode == nil {
-		return true
+		return 0
 	}
 
-	if !memNode.IsLeaf() {
-		if !evictTraverse(memNode.left, tracker, evictVersion) {
-			return false
-		}
-		if !evictTraverse(memNode.right, tracker, evictVersion) {
-			return false
-		}
-	}
-
-	if memNode.version <= evictVersion {
+	// Evict nodes at or below the eviction depth
+	if memNode.version <= evictVersion && depth >= evictionDepth {
 		np.mem.Store(nil)
-		if !tracker.TrackEviction(memNode) {
-			return false
-		}
+		count = 1
 	}
 
-	return true
+	if memNode.IsLeaf() {
+		return count
+	}
+
+	// Continue traversing to find nodes to evict
+	count += evictTraverse(memNode.left, depth+1, evictionDepth, evictVersion)
+	count += evictTraverse(memNode.right, depth+1, evictionDepth, evictVersion)
+	return count
 }

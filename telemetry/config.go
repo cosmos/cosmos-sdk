@@ -16,10 +16,13 @@ import (
 	"go.opentelemetry.io/otel/exporters/stdout/stdoutmetric"
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	logglobal "go.opentelemetry.io/otel/log/global"
+	lognoop "go.opentelemetry.io/otel/log/noop"
+	metricnoop "go.opentelemetry.io/otel/metric/noop"
 	"go.opentelemetry.io/otel/propagation"
 	logsdk "go.opentelemetry.io/otel/sdk/log"
 	metricsdk "go.opentelemetry.io/otel/sdk/metric"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
+	tracenoop "go.opentelemetry.io/otel/trace/noop"
 	"go.yaml.in/yaml/v3"
 )
 
@@ -46,6 +49,9 @@ func initOpenTelemetry() error {
 
 	confFilename := os.Getenv(OtelConfigEnvVar)
 	if confFilename == "" {
+		otel.SetTracerProvider(tracenoop.NewTracerProvider())
+		otel.SetMeterProvider(metricnoop.NewMeterProvider())
+		logglobal.SetLoggerProvider(lognoop.NewLoggerProvider())
 		return nil
 	}
 

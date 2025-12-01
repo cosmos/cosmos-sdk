@@ -627,7 +627,7 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 				"panic recovered in ExtendVote",
 				"height", req.Height,
 				"hash", fmt.Sprintf("%X", req.Hash),
-				"panic", err,
+				"panic", r,
 			)
 			err = fmt.Errorf("recovered application panic in ExtendVote: %v", r)
 		}

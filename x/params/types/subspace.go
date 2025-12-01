@@ -163,7 +163,7 @@ func (s Subspace) Modified(ctx sdk.Context, key []byte) bool {
 	return tstore.Has(key)
 }
 
-// checkType verifies that the provided key and value are comptable and registered.
+// checkType verifies that the provided key and value are compatible and registered.
 func (s Subspace) checkType(key []byte, value any) {
 	attr, ok := s.table.m[string(key)]
 	if !ok {

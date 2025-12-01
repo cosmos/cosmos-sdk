@@ -105,7 +105,7 @@ type Keyring interface {
 	Migrator
 }
 
-type KeyringWithDB interface {
+type KeyringWithDB interface { //nolint: revive // we can ignore this, as this type is being used
 	Keyring
 
 	// Get the db keyring used in the keystore.
@@ -189,7 +189,7 @@ func newKeyringGeneric(
 	case BackendPass:
 		db, err = keyring.Open(newPassBackendKeyringConfig(appName, rootDir, userInput))
 	default:
-		return nil, errorsmod.Wrap(ErrUnknownBacked, backend)
+		return nil, errorsmod.Wrap(ErrUnknownBackend, backend)
 	}
 
 	if err != nil {
@@ -890,7 +890,7 @@ func (ks keystore) writeOfflineKey(name string, pk types.PubKey) (*Record, error
 	return k, ks.writeRecord(k)
 }
 
-// writeMultisigKey investigate where thisf function is called maybe remove it
+// writeMultisigKey investigate where this function is called maybe remove it
 func (ks keystore) writeMultisigKey(name string, pk types.PubKey) (*Record, error) {
 	k, err := NewMultiRecord(name, pk)
 	if err != nil {

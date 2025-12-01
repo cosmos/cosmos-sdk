@@ -111,12 +111,12 @@ simd query blocks --query 'message.sender=cosmos...' --page 1 --limit 30
 
 #### Transactions
 
-The `x/auth/tx` module provides a convinient CLI command for decoding and encoding transactions.
+The `x/auth/tx` module provides a convenient CLI command for decoding and encoding transactions.
 
 #### `encode`
 
 The `encode` command encodes a transaction created with the `--generate-only` flag or signed with the sign command.
-The transaction is seralized it to Protobuf and returned as base64.
+The transaction is serialized it to Protobuf and returned as base64.
 
 ```bash
 $ simd tx encode tx.json

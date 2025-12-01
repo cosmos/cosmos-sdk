@@ -33,13 +33,11 @@ import (
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	vestingapi "cosmossdk.io/api/cosmos/vesting/v1beta1"
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/evidence"
-	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/tx/signing/aminojson"
 	signing_testutil "cosmossdk.io/x/tx/signing/testutil"
-	"cosmossdk.io/x/upgrade"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	groupmodule "github.com/cosmos/cosmos-sdk/contrib/x/group/module"
 	ed25519types "github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	secp256k1types "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -65,16 +63,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/consensus"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/cosmos/cosmos-sdk/x/evidence"
+	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	gov_v1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	gov_v1beta1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	groupmodule "github.com/cosmos/cosmos-sdk/x/group/module"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/x/upgrade"
 )
 
 // TestAminoJSON_Equivalence tests that x/tx/Encoder encoding is equivalent to the legacy Encoder encoding.
@@ -162,7 +162,7 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 				signBz, err := handler.GetSignBytes(context.Background(), signerData, txData)
 				require.NoError(t, err)
 
-				legacyHandler := tx.NewSignModeLegacyAminoJSONHandler()
+				legacyHandler := tx.NewSignModeLegacyAminoJSONHandler() //nolint:staticcheck // needed for legacy testing
 				txBuilder := encCfg.TxConfig.NewTxBuilder()
 				require.NoError(t, txBuilder.SetMsgs([]types.Msg{tt.Gogo}...))
 				txBuilder.SetMemo(handlerOptions.Memo)
@@ -457,7 +457,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			require.Equal(t, string(gogoBytes), string(newGogoBytes))
 
 			// test amino json signer handler equivalence
-			msg, ok := tc.gogo.(legacytx.LegacyMsg)
+			msg, ok := tc.gogo.(legacytx.LegacyMsg) //nolint:staticcheck // needed for legacy testing
 			if !ok {
 				// not signable
 				return
@@ -482,7 +482,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			signBz, err := handler.GetSignBytes(context.Background(), signerData, txData)
 			require.NoError(t, err)
 
-			legacyHandler := tx.NewSignModeLegacyAminoJSONHandler()
+			legacyHandler := tx.NewSignModeLegacyAminoJSONHandler() //nolint:staticcheck // needed for legacy testing
 			txBuilder := encCfg.TxConfig.NewTxBuilder()
 			require.NoError(t, txBuilder.SetMsgs([]types.Msg{msg}...))
 			txBuilder.SetMemo(handlerOptions.Memo)

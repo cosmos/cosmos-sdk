@@ -15,10 +15,6 @@ import (
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/evidence"
-	"cosmossdk.io/x/evidence/exported"
-	"cosmossdk.io/x/evidence/keeper"
-	evidencetypes "cosmossdk.io/x/evidence/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -37,6 +33,10 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
+	"github.com/cosmos/cosmos-sdk/x/evidence"
+	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
+	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
+	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
@@ -189,7 +189,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	)
 	val, err := f.stakingKeeper.Validator(ctx, operatorAddr)
 	assert.NilError(t, err)
-	assert.DeepEqual(t, selfDelegation, val.GetBondedTokens())
+	assert.DeepEqual(t, selfDelegation, val.GetValidatorPower())
 
 	assert.NilError(t, f.slashingKeeper.AddPubkey(f.sdkCtx, valpubkey))
 
@@ -282,7 +282,7 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 	)
 	val, err := f.stakingKeeper.Validator(ctx, operatorAddr)
 	assert.NilError(t, err)
-	assert.DeepEqual(t, amt, val.GetBondedTokens())
+	assert.DeepEqual(t, amt, val.GetValidatorPower())
 
 	nci := NewCometInfo(abci.RequestFinalizeBlock{
 		Misbehavior: []abci.Misbehavior{{

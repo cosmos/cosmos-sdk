@@ -17,11 +17,16 @@ func RequireProof(subpath string) bool {
 
 //-----------------------------------------------------------------------------
 
+// DefaultProofRuntime returns a default proof runtime for the rootMultiStore.
+//
+// The default proof runtime registers the commitment op decoder for IAVL and
+// SimpleMerkle commitments.
+//
 // XXX: This should be managed by the rootMultiStore which may want to register
 // more proof ops?
 func DefaultProofRuntime() (prt *merkle.ProofRuntime) {
 	prt = merkle.NewProofRuntime()
 	prt.RegisterOpDecoder(storetypes.ProofOpIAVLCommitment, storetypes.CommitmentOpDecoder)
 	prt.RegisterOpDecoder(storetypes.ProofOpSimpleMerkleCommitment, storetypes.CommitmentOpDecoder)
-	return
+	return prt
 }

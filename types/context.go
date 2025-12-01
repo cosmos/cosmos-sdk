@@ -64,12 +64,27 @@ type Context struct {
 	streamingManager     storetypes.StreamingManager
 	cometInfo            comet.BlockInfo
 	headerInfo           header.Info
+
+	// For block-stm
+	// // the index of the current tx in the block, -1 means not in finalize block context
+	txIndex int
+	// the index of the current msg in the tx, -1 means not in finalize block context
+	msgIndex int
+	// the total number of transactions in current block
+	txCount int
+	// sum the gas used by all the transactions in the current block, only accessible by end blocker
+	blockGasUsed     uint64
+	incarnationCache map[string]any // incarnationCache is shared between multiple incarnations of the same transaction, it must only cache stateless computation results that only depends on tx body and block level information that don't change during block execution, like the result of tx signature verification.
+	// sum the gas wanted by all the transactions in the current block, only accessible by end blocker
+	blockGasWanted uint64
 }
 
 // Proposed rename, not done to avoid API breakage
+
 type Request = Context
 
 // Read-only accessors
+
 func (c Context) Context() context.Context                      { return c.baseCtx }
 func (c Context) MultiStore() storetypes.MultiStore             { return c.ms }
 func (c Context) BlockHeight() int64                            { return c.header.Height }
@@ -92,6 +107,12 @@ func (c Context) TransientKVGasConfig() storetypes.GasConfig    { return c.trans
 func (c Context) StreamingManager() storetypes.StreamingManager { return c.streamingManager }
 func (c Context) CometInfo() comet.BlockInfo                    { return c.cometInfo }
 func (c Context) HeaderInfo() header.Info                       { return c.headerInfo }
+func (c Context) TxIndex() int                                  { return c.txIndex }
+func (c Context) MsgIndex() int                                 { return c.msgIndex }
+func (c Context) TxCount() int                                  { return c.txCount }
+func (c Context) BlockGasUsed() uint64                          { return c.blockGasUsed }
+func (c Context) IncarnationCache() map[string]any              { return c.incarnationCache }
+func (c Context) BlockGasWanted() uint64                        { return c.blockGasWanted }
 
 // BlockHeader returns the header by value.
 func (c Context) BlockHeader() cmtproto.Header {
@@ -121,7 +142,6 @@ func (c Context) Err() error {
 	return c.baseCtx.Err()
 }
 
-// create a new context
 func NewContext(ms storetypes.MultiStore, header cmtproto.Header, isCheckTx bool, logger log.Logger) Context {
 	// https://github.com/gogo/protobuf/issues/519
 	header.Time = header.Time.UTC()
@@ -138,6 +158,8 @@ func NewContext(ms storetypes.MultiStore, header cmtproto.Header, isCheckTx bool
 		eventManager:         NewEventManager(),
 		kvGasConfig:          storetypes.KVGasConfig(),
 		transientKVGasConfig: storetypes.TransientGasConfig(),
+		txIndex:              -1,
+		msgIndex:             -1,
 	}
 }
 
@@ -250,7 +272,7 @@ func (c Context) WithIsCheckTx(isCheckTx bool) Context {
 	return c
 }
 
-// WithIsRecheckTx called with true will also set true on checkTx in order to
+// WithIsReCheckTx called with true will also set true on checkTx in order to
 // enforce the invariant that if recheckTx = true then checkTx = true as well.
 func (c Context) WithIsReCheckTx(isRecheckTx bool) Context {
 	if isRecheckTx {
@@ -317,7 +339,33 @@ func (c Context) WithHeaderInfo(headerInfo header.Info) Context {
 	return c
 }
 
+func (c Context) WithTxIndex(txIndex int) Context {
+	c.txIndex = txIndex
+	return c
+}
+
+func (c Context) WithTxCount(txCount int) Context {
+	c.txCount = txCount
+	return c
+}
+
+func (c Context) WithMsgIndex(msgIndex int) Context {
+	c.msgIndex = msgIndex
+	return c
+}
+
+func (c Context) WithBlockGasUsed(gasUsed uint64) Context {
+	c.blockGasUsed = gasUsed
+	return c
+}
+
+func (c Context) WithBlockGasWanted(gasWanted uint64) Context {
+	c.blockGasWanted = gasWanted
+	return c
+}
+
 // TODO: remove???
+
 func (c Context) IsZero() bool {
 	return c.ms == nil
 }
@@ -349,6 +397,11 @@ func (c Context) TransientStore(key storetypes.StoreKey) storetypes.KVStore {
 	return gaskv.NewStore(c.ms.GetKVStore(key), c.gasMeter, c.transientKVGasConfig)
 }
 
+// ObjectStore fetches an object store from the MultiStore,
+func (c Context) ObjectStore(key storetypes.StoreKey) storetypes.ObjKVStore {
+	return gaskv.NewObjStore(c.ms.GetObjKVStore(key), c.gasMeter, c.transientKVGasConfig)
+}
+
 // CacheContext returns a new Context with the multi-store cached and a new
 // EventManager. The cached context is written to the context when writeCache
 // is called. Note, events are automatically emitted on the parent context's
@@ -363,6 +416,27 @@ func (c Context) CacheContext() (cc Context, writeCache func()) {
 	}
 
 	return cc, writeCache
+}
+
+func (c Context) GetIncarnationCache(key string) (any, bool) {
+	if c.incarnationCache == nil {
+		return nil, false
+	}
+	val, ok := c.incarnationCache[key]
+	return val, ok
+}
+
+func (c Context) SetIncarnationCache(key string, value any) {
+	if c.incarnationCache == nil {
+		// noop if cache is not initialized
+		return
+	}
+	c.incarnationCache[key] = value
+}
+
+func (c Context) WithIncarnationCache(cache map[string]any) Context {
+	c.incarnationCache = cache
+	return c
 }
 
 var (

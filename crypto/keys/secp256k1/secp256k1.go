@@ -99,7 +99,7 @@ func genPrivKey(rand io.Reader) []byte {
 		}
 
 		d.SetBytes(privKeyBytes[:])
-		// break if we found a valid point (i.e. > 0 and < N == curverOrder)
+		// break if we found a valid point (i.e. > 0 and < N == curveOrder)
 		isValidFieldElement := 0 < d.Sign() && d.Cmp(secp256k1.S256().N) < 0
 		if isValidFieldElement {
 			break

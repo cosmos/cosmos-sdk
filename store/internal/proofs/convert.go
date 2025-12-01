@@ -28,7 +28,7 @@ func ConvertExistenceProof(p *cmtprotocrypto.Proof, key, value []byte) (*ics23.E
 	return proof, nil
 }
 
-// this is adapted from merkle/hash.go:leafHash()
+// convertLeafOp is adapted from merkle/hash.go:leafHash()
 // and merkle/simple_map.go:KVPair.Bytes()
 func convertLeafOp() *ics23.LeafOp {
 	prefix := []byte{0}
@@ -67,7 +67,7 @@ func convertInnerOps(p *cmtprotocrypto.Proof) ([]*ics23.InnerOp, error) {
 }
 
 // buildPath returns a list of steps from leaf to root
-// in each step, true means index is left side, false index is right side
+// in each step, true means index is left side, false means index is right side
 // code adapted from merkle/simple_proof.go:computeHashFromAunts
 func buildPath(idx, total int64) []bool {
 	if total < 2 {

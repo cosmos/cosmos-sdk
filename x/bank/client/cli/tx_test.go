@@ -56,7 +56,6 @@ func (s *CLITestSuite) TestSendTxCmd() {
 	extraArgs := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("photon", sdkmath.NewInt(10))).String()),
 		fmt.Sprintf("--%s=test-chain", flags.FlagChainID),
 	}
@@ -141,7 +140,6 @@ func (s *CLITestSuite) TestMultiSendTxCmd() {
 	extraArgs := []string{
 		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin("photon", sdkmath.NewInt(10))).String()),
 		fmt.Sprintf("--%s=test-chain", flags.FlagChainID),
 	}

@@ -4,8 +4,6 @@ import (
 	"math/rand"
 
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/x/feegrant"
-	"cosmossdk.io/x/feegrant/keeper"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -13,6 +11,8 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 )
 
@@ -31,11 +31,11 @@ var (
 	TypeMsgRevokeAllowance = sdk.MsgTypeURL(&feegrant.MsgRevokeAllowance{})
 )
 
-// will be removed in the future in favor of msg factory
+// WeightedOperations will be removed in the future in favor of msg factory
 func WeightedOperations(
 	registry codectypes.InterfaceRegistry,
 	appParams simtypes.AppParams,
-	cdc codec.JSONCodec,
+	_ codec.JSONCodec,
 	txConfig client.TxConfig,
 	ak feegrant.AccountKeeper,
 	bk feegrant.BankKeeper,

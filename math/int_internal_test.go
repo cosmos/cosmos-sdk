@@ -121,13 +121,13 @@ func (s *internalIntTestSuite) TestImmutabilityArithInt() {
 		bi := new(big.Int).SetInt64(n)
 
 		for j := 0; j < size; j++ {
-			op := ops[rand.Intn(len(ops))]
+			op := ops[rand.Intn(len(ops))] //nolint:gosec // testing
 			uis[j], bis[j] = op(ui, bi)
 		}
 
 		for j := 0; j < size; j++ {
 			s.Require().Equal(0, bis[j].Cmp(uis[j].BigInt()), "Int is different from *big.Int. tc #%d, Int %s, *big.Int %s", j, uis[j].String(), bis[j].String())
-			s.Require().Equal(NewIntFromBigInt(bis[j]), uis[j], "Int is different from *big.Int. tc #%d, Int %s, *big.Int %s", j, uis[j].String(), bis[j].String())
+			s.Require().True(NewIntFromBigInt(bis[j]).Equal(uis[j]), "Int is different from *big.Int. tc #%d, Int %s, *big.Int %s", j, uis[j].String(), bis[j].String())
 			s.Require().True(uis[j].i != bis[j], "Pointer addresses are equal. tc #%d, Int %s, *big.Int %s", j, uis[j].String(), bis[j].String())
 		}
 	}

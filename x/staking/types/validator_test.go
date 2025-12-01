@@ -93,7 +93,7 @@ func TestRemoveTokens(t *testing.T) {
 	validator = validator.RemoveTokens(math.NewInt(10))
 	require.Equal(t, int64(90), validator.Tokens.Int64())
 
-	// update validator to from bonded -> unbonded
+	// update validator from bonded -> unbonded
 	validator = validator.UpdateStatus(types.Unbonded)
 	require.Equal(t, types.Unbonded, validator.Status)
 

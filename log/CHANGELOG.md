@@ -22,9 +22,13 @@ Each entry must include the Github issue reference in the following format:
 
 ## [Unreleased]
 
+## [v1.6.0](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v1.6.0) - 2025-05-13
+
+* [#24720](https://github.com/cosmos/cosmos-sdk/pull/24720) add `VerboseModeLogger` extension interface and `VerboseLevel` configuration option for increasing log verbosity during sensitive operations such as upgrades.
+
 ## [v1.5.1](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v1.5.1) - 2025-03-07
 
-* [#23928](https://github.com/cosmos/cosmos-sdk/pull/23928) Bump sonic json library to [v1.3.1](https://github.com/bytedance/sonic/releases/tag/v1.13.1) for Go 1.24 compatibility.
+* [#23928](https://github.com/cosmos/cosmos-sdk/pull/23928) Bump sonic json library to [v1.13.1](https://github.com/bytedance/sonic/releases/tag/v1.13.1) for Go 1.24 compatibility.
 
 ## [v1.5.0](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v1.5.0) - 2024-11-07
 
@@ -71,7 +75,7 @@ Each entry must include the Github issue reference in the following format:
 
 ## [v0.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v0.1.0) - 2023-03-13
 
-* Introducing a standalone SDK logger package (`comossdk.io/log`).
+* Introducing a standalone SDK logger package (`cosmossdk.io/log`).
   It replaces CometBFT logger and provides a common interface for all SDK components.
   The default logger (`NewLogger`) is using [zerolog](https://github.com/rs/zerolog),
   but it can be easily replaced with any implementation that implements the `log.Logger` interface.

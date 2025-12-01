@@ -193,7 +193,7 @@ func TestLaunchProcessWithRestartDelay(t *testing.T) {
 	}
 }
 
-// TestPlanShutdownGrace will test upgrades without lower case plan names
+// TestPlanShutdownGrace will test the shutdown grace period functionality
 func TestPlanShutdownGrace(t *testing.T) {
 	// binaries from testdata/validate directory
 	cfg := prepareConfig(
@@ -465,7 +465,7 @@ func TestLaunchProcessWithDownloadsAndPreupgrade(t *testing.T) {
 	require.Equal(t, rPath, currentBin)
 }
 
-// TestSkipUpgrade tests heights that are identified to be skipped and return if upgrade height matches the skip heights
+// TestSkipUpgrade tests heights that are identified to be skipped and returns whether the upgrade height matches the skip heights
 func TestSkipUpgrade(t *testing.T) {
 	cases := []struct {
 		args        []string

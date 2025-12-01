@@ -1,9 +1,8 @@
 package transient
 
 import (
-	dbm "github.com/cosmos/cosmos-db"
-
-	"cosmossdk.io/store/dbadapter"
+	"cosmossdk.io/store/internal"
+	"cosmossdk.io/store/internal/btree"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/types"
 )
@@ -11,43 +10,73 @@ import (
 var (
 	_ types.Committer = (*Store)(nil)
 	_ types.KVStore   = (*Store)(nil)
+
+	_ types.Committer  = (*ObjStore)(nil)
+	_ types.ObjKVStore = (*ObjStore)(nil)
 )
 
-// Store is a wrapper for a MemDB with Commiter implementation
+// GStore is a wrapper for a MemDB with Committer implementation
+type GStore[V any] struct {
+	internal.BTreeStore[V]
+}
+
+// NewGStore constructs new generic transient store
+func NewGStore[V any](isZero func(V) bool, valueLen func(V) int) *GStore[V] {
+	return &GStore[V]{*internal.NewBTreeStore(btree.NewBTree[V](), isZero, valueLen)}
+}
+
+// Store specializes GStore for []byte
 type Store struct {
-	dbadapter.Store
+	GStore[[]byte]
 }
 
-// Constructs new MemDB adapter
 func NewStore() *Store {
-	return &Store{Store: dbadapter.Store{DB: dbm.NewMemDB()}}
+	return &Store{*NewGStore(
+		types.BytesIsZero,
+		types.BytesValueLen,
+	)}
 }
 
-// Implements CommitStore
+func (*Store) GetStoreType() types.StoreType {
+	return types.StoreTypeTransient
+}
+
+// ObjStore specializes GStore for any
+type ObjStore struct {
+	GStore[any]
+}
+
+func NewObjStore() *ObjStore {
+	return &ObjStore{*NewGStore(
+		types.AnyIsZero,
+		types.AnyValueLen,
+	)}
+}
+
+func (*ObjStore) GetStoreType() types.StoreType {
+	return types.StoreTypeObject
+}
+
 // Commit cleans up Store.
-func (ts *Store) Commit() (id types.CommitID) {
-	ts.Store = dbadapter.Store{DB: dbm.NewMemDB()}
-	return
+// Implements CommitStore
+func (ts *GStore[V]) Commit() (id types.CommitID) {
+	ts.Clear()
+	return id
 }
 
-func (ts *Store) SetPruning(_ pruningtypes.PruningOptions) {}
+func (ts *GStore[V]) SetPruning(_ pruningtypes.PruningOptions) {}
 
 // GetPruning is a no-op as pruning options cannot be directly set on this store.
 // They must be set on the root commit multi-store.
-func (ts *Store) GetPruning() pruningtypes.PruningOptions {
+func (ts *GStore[V]) GetPruning() pruningtypes.PruningOptions {
 	return pruningtypes.NewPruningOptions(pruningtypes.PruningUndefined)
 }
 
-// Implements CommitStore
-func (ts *Store) LastCommitID() types.CommitID {
+// LastCommitID implements CommitStore, returns empty CommitID.
+func (ts *GStore[V]) LastCommitID() types.CommitID {
 	return types.CommitID{}
 }
 
-func (ts *Store) WorkingHash() []byte {
+func (ts *GStore[V]) WorkingHash() []byte {
 	return []byte{}
-}
-
-// Implements Store.
-func (ts *Store) GetStoreType() types.StoreType {
-	return types.StoreTypeTransient
 }

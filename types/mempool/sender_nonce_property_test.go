@@ -23,7 +23,7 @@ var (
 
 // Property Based Testing
 // Split the senders tx in independent slices and then test the following properties in each slice
-// same elements input on the mempool should be in the output except for sender nonce duplicates, which are overwritten by the later duplicate entries.
+// same elements input to the mempool should be in the output except for sender nonce duplicates, which are overwritten by the later duplicate entries.
 // for every sender transaction tx_n, tx_0.nonce < tx_1.nonce ... < tx_n.nonce
 
 func AddressGenerator(t *rapid.T) *rapid.Generator[sdk.AccAddress] {

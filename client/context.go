@@ -30,6 +30,7 @@ type Context struct {
 	FromAddress           sdk.AccAddress
 	Client                CometRPC
 	GRPCClient            *grpc.ClientConn
+	GRPCConnProvider      *GRPCConnProvider
 	ChainID               string
 	Codec                 codec.Codec
 	InterfaceRegistry     codectypes.InterfaceRegistry
@@ -153,6 +154,22 @@ func (ctx Context) WithClient(client CometRPC) Context {
 func (ctx Context) WithGRPCClient(grpcClient *grpc.ClientConn) Context {
 	ctx.GRPCClient = grpcClient
 	return ctx
+}
+
+// WithGRPCConnProvider returns a copy of the context with an updated GRPCConnProvider.
+func (ctx Context) WithGRPCConnProvider(provider *GRPCConnProvider) Context {
+	ctx.GRPCConnProvider = provider
+	return ctx
+}
+
+// GetGRPCConn returns the appropriate gRPC connection for the given height.
+// If GRPCConnProvider is set, it uses it to determine the connection.
+// Otherwise, it falls back to the default GRPCClient.
+func (ctx Context) GetGRPCConn(height int64) *grpc.ClientConn {
+	if ctx.GRPCConnProvider != nil {
+		return ctx.GRPCConnProvider.GetGRPCConn(height)
+	}
+	return ctx.GRPCClient
 }
 
 // WithUseLedger returns a copy of the context with an updated UseLedger flag.
@@ -294,7 +311,7 @@ func (ctx Context) WithAux(isAux bool) Context {
 	return ctx
 }
 
-// WithLedgerHasProto returns the context with the provided boolean value, indicating
+// WithLedgerHasProtobuf returns the context with the provided boolean value, indicating
 // whether the target Ledger application can support Protobuf payloads.
 func (ctx Context) WithLedgerHasProtobuf(val bool) Context {
 	ctx.LedgerHasProtobuf = val
@@ -306,6 +323,15 @@ func (ctx Context) WithLedgerHasProtobuf(val bool) Context {
 func (ctx Context) WithPreprocessTxHook(preprocessFn PreprocessTxFn) Context {
 	ctx.PreprocessTxHook = preprocessFn
 	return ctx
+}
+
+// GetCmdContextWithFallback returns the CmdContext if it is not nil, otherwise it
+// returns context.Background()
+func (ctx Context) GetCmdContextWithFallback() context.Context {
+	if ctx.CmdContext != nil {
+		return ctx.CmdContext
+	}
+	return context.Background()
 }
 
 // PrintString prints the raw string to ctx.Output if it's defined, otherwise to os.Stdout
@@ -339,6 +365,7 @@ func (ctx Context) PrintProto(toPrint proto.Message) error {
 
 // PrintObjectLegacy is a variant of PrintProto that doesn't require a proto.Message type
 // and uses amino JSON encoding.
+//
 // Deprecated: It will be removed in the near future!
 func (ctx Context) PrintObjectLegacy(toPrint any) error {
 	out, err := ctx.LegacyAmino.MarshalJSON(toPrint)

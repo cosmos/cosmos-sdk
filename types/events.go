@@ -43,13 +43,11 @@ func NewEventManager() *EventManager {
 func (em *EventManager) Events() Events { return em.events }
 
 // EmitEvent stores a single Event object.
-// Deprecated: Use EmitTypedEvent
 func (em *EventManager) EmitEvent(event Event) {
 	em.events = em.events.AppendEvent(event)
 }
 
 // EmitEvents stores a series of Event objects.
-// Deprecated: Use EmitTypedEvents
 func (em *EventManager) EmitEvents(events Events) {
 	em.events = em.events.AppendEvents(events)
 }
@@ -268,7 +266,7 @@ const (
 )
 
 type (
-	// StringAttributes defines a slice of StringEvents objects.
+	// StringEvents defines a slice of StringEvents objects.
 	StringEvents []StringEvent
 )
 

@@ -32,7 +32,7 @@ func TestCacheKVStore(t *testing.T) {
 	st.Set(keyFmt(1), valFmt(1))
 	require.Equal(t, valFmt(1), st.Get(keyFmt(1)))
 
-	// update it in cache, shoudn't change mem
+	// update it in cache, shouldn't change mem
 	st.Set(keyFmt(1), valFmt(2))
 	require.Equal(t, valFmt(2), st.Get(keyFmt(1)))
 	require.Equal(t, valFmt(1), mem.Get(keyFmt(1)))
@@ -91,7 +91,7 @@ func TestCacheKVStoreNested(t *testing.T) {
 	require.Equal(t, valFmt(1), st.Get(keyFmt(1)))
 	require.Equal(t, valFmt(3), st2.Get(keyFmt(1)))
 
-	// st2 writes to its parent, st. doesnt effect mem
+	// st2 writes to its parent, st. doesn't effect mem
 	st2.Write()
 	require.Equal(t, []byte(nil), mem.Get(keyFmt(1)))
 	require.Equal(t, valFmt(3), st.Get(keyFmt(1)))
@@ -238,13 +238,13 @@ func TestCacheKVMergeIteratorBasics(t *testing.T) {
 	st.Write()
 	assertIterateDomain(t, st, 0)
 
-	// add two keys and assert theyre there
+	// add two keys and assert they're there
 	k1, v1 := keyFmt(1), valFmt(1)
 	st.Set(k, v)
 	st.Set(k1, v1)
 	assertIterateDomain(t, st, 2)
 
-	// write it and assert theyre there
+	// write it and assert they're there
 	st.Write()
 	assertIterateDomain(t, st, 2)
 
@@ -475,18 +475,18 @@ func doOp(t *testing.T, st types.CacheKVStore, truth dbm.DB, op int, args ...int
 		require.NoError(t, err)
 	case opSetRange:
 		require.True(t, len(args) > 1)
-		start := args[0]
-		end := args[1] //nolint:gosec // this is not out of range
+		start := args[0] //nolint:gosec // this is not out of range
+		end := args[1]   //nolint:gosec // this is not out of range
 		setRange(t, st, truth, start, end)
 	case opDel:
-		k := args[0]
+		k := args[0] //nolint:gosec // this is not out of range
 		st.Delete(keyFmt(k))
 		err := truth.Delete(keyFmt(k))
 		require.NoError(t, err)
 	case opDelRange:
 		require.True(t, len(args) > 1)
-		start := args[0]
-		end := args[1] //nolint:gosec // this is not out of range
+		start := args[0] //nolint:gosec // this is not out of range
+		end := args[1]   //nolint:gosec // this is not out of range
 		deleteRange(t, st, truth, start, end)
 	case opWrite:
 		st.Write()
@@ -674,8 +674,10 @@ func BenchmarkCacheKVStoreGetNoKeyFound(b *testing.B) {
 	st := newCacheKVStore()
 	b.ResetTimer()
 	// assumes b.N < 2**24
-	for i := 0; i < b.N; i++ {
-		st.Get([]byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)})
+	idx := 0
+	for b.Loop() {
+		st.Get([]byte{byte((idx & 0xFF0000) >> 16), byte((idx & 0xFF00) >> 8), byte(idx & 0xFF)})
+		idx++
 	}
 }
 
@@ -688,7 +690,9 @@ func BenchmarkCacheKVStoreGetKeyFound(b *testing.B) {
 	}
 	b.ResetTimer()
 	// assumes b.N < 2**24
-	for i := 0; i < b.N; i++ {
-		st.Get([]byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)})
+	idx := 0
+	for b.Loop() {
+		st.Get([]byte{byte((idx & 0xFF0000) >> 16), byte((idx & 0xFF00) >> 8), byte(idx & 0xFF)})
+		idx++
 	}
 }

@@ -14,7 +14,7 @@ jobs:
     runs-on: depot-ubuntu-22.04-4
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: bufbuild/buf-setup-action@v1.50.0
       - uses: bufbuild/buf-lint-action@v1
         with:
@@ -23,7 +23,7 @@ jobs:
   break-check:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: bufbuild/buf-setup-action@v1.50.0
       - uses: bufbuild/buf-breaking-action@v1
         with:

@@ -342,7 +342,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 			expErrMsg: "validator does not exist",
 		},
 		{
-			name: "change commmission rate in <24hrs",
+			name: "change commission rate in <24hrs",
 			ctx:  ctx,
 			input: &stakingtypes.MsgEditValidator{
 				Description: stakingtypes.Description{
@@ -693,6 +693,10 @@ func (s *KeeperTestSuite) TestMsgBeginRedelegate() {
 				require.Contains(err.Error(), tc.expErrMsg)
 			} else {
 				require.NoError(err)
+				events := ctx.EventManager().Events()
+				delegator, found := events.GetAttributes("delegator")
+				s.Require().Equal(delegator[0].Value, tc.input.DelegatorAddress)
+				s.Require().Equal(true, found)
 			}
 		})
 	}
@@ -1074,7 +1078,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 			expErrMsg: "max validators must be positive",
 		},
 		{
-			name: "max entries most be positive",
+			name: "max entries must be positive",
 			input: &stakingtypes.MsgUpdateParams{
 				Authority: keeper.GetAuthority(),
 				Params: stakingtypes.Params{

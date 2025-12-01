@@ -44,18 +44,18 @@ approach to the approach described below.
 ### Transactions
 
 Since interface values are encoded with `google.protobuf.Any` in state (see [ADR 019](adr-019-protobuf-state-encoding.md)),
-`sdk.Msg`s are encoding with `Any` in transactions.
+`sdk.Msg`s are encoded with `Any` in transactions.
 
 One of the main goals of using `Any` to encode interface values is to have a
 core set of types which is reused by apps so that
 clients can safely be compatible with as many chains as possible.
 
 It is one of the goals of this specification to provide a flexible cross-chain transaction
-format that can serve a wide variety of use cases without breaking client
+format that can serve a wide variety of use cases without breaking the client
 compatibility.
 
 In order to facilitate signing, transactions are separated into `TxBody`,
-which will be re-used by `SignDoc` below, and `signatures`:
+which will be reused by `SignDoc` below, and `signatures`:
 
 ```protobuf
 // types/types.proto
@@ -69,7 +69,7 @@ message Tx {
     repeated bytes signatures = 3;
 }
 
-// A variant of Tx that pins the signer's exact binary represenation of body and
+// A variant of Tx that pins the signer's exact binary representation of body and
 // auth_info. This is used for signing, broadcasting and verification. The binary
 // `serialize(tx: TxRaw)` is stored in Tendermint and the hash `sha256(serialize(tx: TxRaw))`
 // becomes the "txhash", commonly used as the transaction ID.
@@ -173,7 +173,7 @@ All of the signing modes below aim to provide the following guarantees:
 * **Predictable Gas**: if I am signing a transaction where I am paying a fee,
   the final gas is fully dependent on what I am signing
 
-These guarantees give the maximum amount confidence to message signers that
+These guarantees give the maximum amount of confidence to message signers that
 manipulation of `Tx`s by intermediaries can't result in any meaningful changes.
 
 #### `SIGN_MODE_DIRECT`
@@ -228,7 +228,7 @@ Signature verifiers do:
 
 In order to support legacy wallets and exchanges, Amino JSON will be temporarily
 supported transaction signing. Once wallets and exchanges have had a
-chance to upgrade to protobuf based signing, this option will be disabled. In
+chance to upgrade to protobuf-based signing, this option will be disabled. In
 the meantime, it is foreseen that disabling the current Amino signing would cause
 too much breakage to be feasible. Note that this is mainly a requirement of the
 Cosmos Hub and other chains may choose to disable Amino signing immediately.
@@ -260,7 +260,7 @@ by `SIGN_MODE_TEXTUAL` when it is implemented.
 
 ### Unknown Field Filtering
 
-Unknown fields in protobuf messages should generally be rejected by transaction
+Unknown fields in protobuf messages should generally be rejected by the transaction
 processors because:
 
 * important data may be present in the unknown fields, that if ignored, will
@@ -415,7 +415,7 @@ To generate a signature in `SIGN_MODE_DIRECT_AUX` these steps would be followed:
         // PublicKey is included in SignDocAux :
         // 1. as a special case for multisig public keys. For multisig public keys,
         // the signer should use the top-level multisig public key they are signing
-        // against, not their own public key. This is to prevent against a form
+        // against, not their own public key. This is to prevent a form
         // of malleability where a signature could be taken out of context of the
         // multisig key that was intended to be signed for
         // 2. to guard against scenario where configuration information is encoded
@@ -431,7 +431,7 @@ To generate a signature in `SIGN_MODE_DIRECT_AUX` these steps would be followed:
     ```
 
 2. Sign the encoded `SignDocAux` bytes
-3. Send their signature and `SignerInfo` to primary signer who will then
+3. Send their signature and `SignerInfo` to the primary signer who will then
    sign and broadcast the final transaction (with `SIGN_MODE_DIRECT` and `AuthInfo`
    added) once enough signatures have been collected
 

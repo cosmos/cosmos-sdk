@@ -3,6 +3,7 @@ package listenkv
 import (
 	"io"
 
+	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/types"
 )
 
@@ -52,19 +53,19 @@ func (s *Store) Has(key []byte) bool {
 }
 
 // Iterator implements the KVStore interface. It delegates the Iterator call
-// the to the parent KVStore.
+// to the parent KVStore.
 func (s *Store) Iterator(start, end []byte) types.Iterator {
 	return s.iterator(start, end, true)
 }
 
 // ReverseIterator implements the KVStore interface. It delegates the
-// ReverseIterator call the to the parent KVStore.
+// ReverseIterator call to the parent KVStore.
 func (s *Store) ReverseIterator(start, end []byte) types.Iterator {
 	return s.iterator(start, end, false)
 }
 
 // iterator facilitates iteration over a KVStore. It delegates the necessary
-// calls to it's parent KVStore.
+// calls to its parent KVStore.
 func (s *Store) iterator(start, end []byte, ascending bool) types.Iterator {
 	var parent types.Iterator
 
@@ -129,10 +130,9 @@ func (s *Store) GetStoreType() types.StoreType {
 	return s.parent.GetStoreType()
 }
 
-// CacheWrap implements the KVStore interface. It panics as a Store
-// cannot be cache wrapped.
+// CacheWrap implements the KVStore interface. It branches the kv store via creating a new cachekv around s.
 func (s *Store) CacheWrap() types.CacheWrap {
-	panic("cannot CacheWrap a ListenKVStore")
+	return cachekv.NewStore(s)
 }
 
 // CacheWrapWithTrace implements the KVStore interface. It panics as a

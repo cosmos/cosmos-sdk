@@ -8,15 +8,15 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/feegrant"
-	v2 "cosmossdk.io/x/feegrant/migrations/v2"
-	"cosmossdk.io/x/feegrant/module"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
+	v2 "github.com/cosmos/cosmos-sdk/x/feegrant/migrations/v2"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/module"
 )
 
 func TestMigration(t *testing.T) {

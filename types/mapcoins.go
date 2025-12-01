@@ -2,7 +2,7 @@ package types
 
 import "cosmossdk.io/math"
 
-// map coins is a map representation of sdk.Coins
+// MapCoins is a map representation of sdk.Coins
 // intended solely for use in bulk additions.
 // All serialization and iteration should be done after conversion to sdk.Coins.
 type MapCoins map[string]math.Int

@@ -62,7 +62,7 @@ type App struct {
 // RegisterModules registers the provided modules with the module manager and
 // the basic module manager. This is the primary hook for integrating with
 // modules which are not registered using the app config.
-func (a *App) RegisterModules(modules ...module.AppModule) error {
+func (a *App) RegisterModules(modules ...module.AppModule) error { //nolint:staticcheck // needed for legacy compatibility
 	for _, appModule := range modules {
 		name := appModule.Name()
 		if _, ok := a.ModuleManager.Modules[name]; ok {
@@ -92,7 +92,7 @@ func (a *App) RegisterModules(modules ...module.AppModule) error {
 
 // RegisterStores registers the provided store keys.
 // This method should only be used for registering extra stores
-// wiich is necessary for modules that not registered using the app config.
+// which is necessary for modules that not registered using the app config.
 // To be used in combination of RegisterModules.
 func (a *App) RegisterStores(keys ...storetypes.StoreKey) error {
 	a.storeKeys = append(a.storeKeys, keys...)

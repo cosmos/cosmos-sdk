@@ -7,7 +7,7 @@ import (
 	proto "github.com/cosmos/gogoproto/proto"
 )
 
-// Codec defines a interface needed for the store package to marshal data
+// Codec defines an interface needed for the store package to marshal data
 type Codec interface {
 	// Marshal returns binary encoding of v.
 	Marshal(proto.Message) ([]byte, error)
@@ -19,12 +19,13 @@ type Codec interface {
 	// in the value pointed to by v.
 	Unmarshal(bz []byte, ptr proto.Message) error
 
-	// Unmarshal parses the data encoded with UnmarshalLengthPrefixed method and stores
+	// UnmarshalLengthPrefixed parses the data encoded with UnmarshalLengthPrefixed method and stores
 	// the result in the value pointed to by v.
 	UnmarshalLengthPrefixed(bz []byte, ptr proto.Message) error
 }
 
 // ============= TestCodec =============
+
 // TestCodec defines a codec that utilizes Protobuf for both binary and JSON
 // encoding.
 type TestCodec struct{}

@@ -62,7 +62,7 @@ var BcryptSecurityParameter uint32 = 12
 //-----------------------------------------------------------------
 // add armor
 
-// Armor the InfoBytes
+// ArmorInfoBytes returns the info from info bytes.
 func ArmorInfoBytes(bz []byte) string {
 	header := map[string]string{
 		headerType:    "Info",
@@ -72,7 +72,7 @@ func ArmorInfoBytes(bz []byte) string {
 	return EncodeArmor(blockTypeKeyInfo, header, bz)
 }
 
-// Armor the PubKeyBytes
+// ArmorPubKeyBytes return the pubkey from info bytes.
 func ArmorPubKeyBytes(bz []byte, algo string) string {
 	header := map[string]string{
 		headerVersion: "0.0.1",
@@ -87,7 +87,7 @@ func ArmorPubKeyBytes(bz []byte, algo string) string {
 //-----------------------------------------------------------------
 // remove armor
 
-// Unarmor the InfoBytes
+// UnarmorInfoBytes returns the info bytes from an armored string.
 func UnarmorInfoBytes(armorStr string) ([]byte, error) {
 	bz, header, err := unarmorBytes(armorStr, blockTypeKeyInfo)
 	if err != nil {
@@ -128,21 +128,21 @@ func UnarmorPubKeyBytes(armorStr string) (bz []byte, algo string, err error) {
 func unarmorBytes(armorStr, blockType string) (bz []byte, header map[string]string, err error) {
 	bType, header, bz, err := DecodeArmor(armorStr)
 	if err != nil {
-		return
+		return bz, header, err
 	}
 
 	if bType != blockType {
 		err = fmt.Errorf("unrecognized armor type %q, expected: %q", bType, blockType)
-		return
+		return bz, header, err
 	}
 
-	return
+	return bz, header, err
 }
 
 //-----------------------------------------------------------------
 // encrypt/decrypt with armor
 
-// Encrypt and armor the private key.
+// EncryptArmorPrivKey encrypts and armors the private key.
 func EncryptArmorPrivKey(privKey cryptotypes.PrivKey, passphrase, algo string) string {
 	saltBytes, encBytes := encryptPrivKey(privKey, passphrase)
 	header := map[string]string{
@@ -170,7 +170,7 @@ func encryptPrivKey(privKey cryptotypes.PrivKey, passphrase string) (saltBytes, 
 		panic(errorsmod.Wrap(err, "error generating cypher from key"))
 	}
 
-	nonce := make([]byte, aead.NonceSize(), aead.NonceSize()+len(privKeyBytes)+aead.Overhead()) // Nonce is fixed to maintain consistency, each key is generated  at every encryption using a random salt.
+	nonce := make([]byte, aead.NonceSize(), aead.NonceSize()+len(privKeyBytes)+aead.Overhead()) // Nonce is fixed to maintain consistency, each key is generated at every encryption using a random salt.
 
 	encBytes = aead.Seal(nil, nonce, privKeyBytes, nil)
 

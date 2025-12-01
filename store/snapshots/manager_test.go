@@ -68,8 +68,9 @@ func TestManager_Take(t *testing.T) {
 		{7, 8, 9},
 	}
 	snapshotter := &mockSnapshotter{
-		items:         items,
-		prunedHeights: make(map[int64]struct{}),
+		items:            items,
+		announcedHeights: make(map[int64]struct{}),
+		prunedHeights:    make(map[int64]struct{}),
 	}
 	extSnapshotter := newExtSnapshotter(10)
 
@@ -138,7 +139,8 @@ func TestManager_Prune(t *testing.T) {
 func TestManager_Restore(t *testing.T) {
 	store := setupStore(t)
 	target := &mockSnapshotter{
-		prunedHeights: make(map[int64]struct{}),
+		announcedHeights: make(map[int64]struct{}),
+		prunedHeights:    make(map[int64]struct{}),
 	}
 	extSnapshotter := newExtSnapshotter(0)
 	manager := snapshots.NewManager(store, opts, target, nil, log.NewNopLogger())
@@ -168,7 +170,7 @@ func TestManager_Restore(t *testing.T) {
 	err = manager.Restore(types.Snapshot{Height: 3, Format: types.CurrentFormat, Hash: []byte{1, 2, 3}})
 	require.Error(t, err)
 
-	// Restore errors on chunk and chunkhashes mismatch
+	// Restore errors on chunk and chunk hashes mismatch
 	err = manager.Restore(types.Snapshot{
 		Height:   3,
 		Format:   types.CurrentFormat,

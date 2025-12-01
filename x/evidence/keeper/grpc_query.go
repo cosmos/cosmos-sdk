@@ -9,12 +9,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"cosmossdk.io/x/evidence/exported"
-	"cosmossdk.io/x/evidence/types"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
+	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -56,7 +55,7 @@ func (k Querier) Evidence(c context.Context, req *types.QueryEvidenceRequest) (*
 
 	evidenceAny, err := codectypes.NewAnyWithValue(msg)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, err.Error())
+		return nil, status.Errorf(codes.Internal, "%s", err.Error())
 	}
 
 	return &types.QueryEvidenceResponse{Evidence: evidenceAny}, nil

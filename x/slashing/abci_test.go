@@ -63,7 +63,7 @@ func TestBeginBlocker(t *testing.T) {
 	)
 	val, err := stakingKeeper.Validator(ctx, addr)
 	require.NoError(t, err)
-	require.Equal(t, amt, val.GetBondedTokens())
+	require.Equal(t, amt, val.GetValidatorPower())
 
 	abciVal := abci.Validator{
 		Address: pk.Address(),

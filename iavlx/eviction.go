@@ -24,30 +24,39 @@ func (ev *evictor) wake() {
 func (ev *evictor) evictLoop() {
 	for {
 		if !ev.memMonitor.UnderPressure() {
+			ev.logger.DebugContext(ev.ctx, "evictor waiting", "budget", ev.memMonitor.evictBudget.Load())
 			if !ev.memMonitor.Wait() {
-				// done
+				ev.logger.DebugContext(ev.ctx, "evictor exiting (context cancelled)")
 				return
 			}
+			ev.logger.DebugContext(ev.ctx, "evictor woke from Wait", "budget", ev.memMonitor.evictBudget.Load())
 		}
 
 		ev.latestMapLock.RLock()
 		version, tree, ok := ev.latest.Min()
 		ev.latestMapLock.RUnlock()
 		evictVersion := ev.savedVersion.Load()
+		ev.logger.DebugContext(ev.ctx, "evictor checking", "latestMinVersion", version, "latestOk", ok, "evictVersion", evictVersion, "budget", ev.memMonitor.evictBudget.Load())
 		if !ok || version > evictVersion {
+			ev.logger.DebugContext(ev.ctx, "evictor needs reader", "version", version, "evictVersion", evictVersion, "ok", ok)
 			ev.needReader.Store(true)
 			select {
 			case <-ev.wakeCh:
+				ev.logger.DebugContext(ev.ctx, "evictor woke from wakeCh")
 				continue
 			case <-ev.ctx.Done():
+				ev.logger.DebugContext(ev.ctx, "evictor exiting (context cancelled while waiting for reader)")
 				return
 			}
 		}
 
+		budgetBefore := ev.memMonitor.evictBudget.Load()
 		evictTraverse(tree, ev.memMonitor, evictVersion)
+		budgetAfter := ev.memMonitor.evictBudget.Load()
+		ev.logger.DebugContext(ev.ctx, "evictTraverse completed", "version", version, "evictVersion", evictVersion, "budgetBefore", budgetBefore, "budgetAfter", budgetAfter, "evicted", budgetBefore-budgetAfter)
 
 		if tree.mem.Load() == nil {
-			// if we fully evicted this version, remove it from latest map
+			ev.logger.DebugContext(ev.ctx, "removing fully evicted version from latest", "version", version)
 			ev.latestMapLock.Lock()
 			ev.latest.Delete(version)
 			ev.latestMapLock.Unlock()

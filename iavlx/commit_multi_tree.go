@@ -4,15 +4,14 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	io "io"
+	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"sync"
 
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
-
-	"cosmossdk.io/log"
 
 	"cosmossdk.io/store/mem"
 	"cosmossdk.io/store/metrics"
@@ -27,7 +26,7 @@ type CommitMultiTree struct {
 	opts   Options
 	ctx    context.Context
 	cancel context.CancelFunc
-	logger log.Logger
+	logger *slog.Logger
 
 	trees      []storetypes.CommitStore    // always ordered by tree name
 	treeKeys   []storetypes.StoreKey       // always ordered by tree name
@@ -384,7 +383,7 @@ func (db *CommitMultiTree) SetMetrics(metrics metrics.StoreMetrics) {
 	db.logger.Warn("SetMetrics is not implemented for CommitMultiTree")
 }
 
-func LoadDB(path string, opts *Options, logger log.Logger) (*CommitMultiTree, error) {
+func LoadDB(path string, opts *Options, logger *slog.Logger) (*CommitMultiTree, error) {
 	// TODO allow passing in a context
 	ctx, cancel := context.WithCancel(context.Background())
 	db := &CommitMultiTree{
@@ -400,7 +399,7 @@ func LoadDB(path string, opts *Options, logger log.Logger) (*CommitMultiTree, er
 		// default to 4gb
 		memLimit = 4 * 1024 * 1024 * 1024
 	}
-	db.memMonitor = newMemoryMonitor(ctx, memLimit)
+	db.memMonitor = newMemoryMonitor(ctx, logger, memLimit)
 	return db, nil
 }
 

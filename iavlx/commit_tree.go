@@ -4,10 +4,9 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"sync"
 	"sync/atomic"
-
-	"cosmossdk.io/log"
 
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	storetypes "cosmossdk.io/store/types"
@@ -25,13 +24,13 @@ type CommitTree struct {
 
 	pendingOrphans [][]NodeID
 
-	logger log.Logger
+	logger *slog.Logger
 
 	lastCommitId storetypes.CommitID
 	commitCtx    *commitContext
 }
 
-func NewCommitTree(ctx context.Context, dir string, opts Options, logger log.Logger, memMonitor *memoryMonitor) (*CommitTree, error) {
+func NewCommitTree(ctx context.Context, dir string, opts Options, logger *slog.Logger, memMonitor *memoryMonitor) (*CommitTree, error) {
 	ts, err := newTreeStore(ctx, dir, opts, logger, memMonitor)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create tree store: %w", err)

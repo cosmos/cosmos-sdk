@@ -4,17 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/tidwall/btree"
-
-	"cosmossdk.io/log"
 )
 
 type TreeStore struct {
-	logger log.Logger
+	logger *slog.Logger
 	dir    string
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -51,7 +50,7 @@ type changesetEntry struct {
 	changeset atomic.Pointer[Changeset]
 }
 
-func newTreeStore(ctx context.Context, dir string, options Options, logger log.Logger, memMonitor *memoryMonitor) (*TreeStore, error) {
+func newTreeStore(ctx context.Context, dir string, options Options, logger *slog.Logger, memMonitor *memoryMonitor) (*TreeStore, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	ts := &TreeStore{
 		ctx:           ctx,
@@ -80,7 +79,7 @@ func newTreeStore(ctx context.Context, dir string, options Options, logger log.L
 			// default to 256mb
 			memLimit = 256 * 1024 * 1024
 		}
-		memMonitor = newMemoryMonitor(ctx, memLimit)
+		memMonitor = newMemoryMonitor(ctx, logger, memLimit)
 	}
 	ts.memMonitor = memMonitor
 
@@ -252,7 +251,8 @@ func (ts *TreeStore) WriteWALCommit(version uint32) (bytesWritten uint64, err er
 
 func (ts *TreeStore) SaveRoot(root *NodePointer, stats VersionStats) error {
 	version := ts.stagedVersion
-	ts.logger.Debug("saving root", "version", version)
+
+	ts.logger.DebugContext(ts.ctx, "SaveRoot", "version", version, "totalBytes", stats.TotalBytes(), "leaves", stats.TotalLeaves, "branches", stats.TotalBranches, "kvDataSize", stats.KVDataSize, "budgetBefore", ts.memMonitor.evictBudget.Load())
 
 	// save the latest root pointer to memory
 	ts.latestMapLock.Lock()
@@ -270,8 +270,6 @@ func (ts *TreeStore) SaveRoot(root *NodePointer, stats VersionStats) error {
 	currentSize := ts.currentWriter.TotalBytes()
 	maxSize := ts.opts.GetChangesetMaxTarget()
 
-	ts.logger.Debug("saved root", "version", version, "changeset_size", currentSize, "max_size", maxSize, "start_version", ts.currentWriter.StartVersion())
-
 	// Queue changeset for async WAL sync if enabled
 	if ts.syncQueue != nil {
 		select {
@@ -288,11 +286,14 @@ func (ts *TreeStore) SaveRoot(root *NodePointer, stats VersionStats) error {
 	shouldSeal := uint64(currentSize) >= maxSize
 
 	startVersion := ts.currentWriter.StartVersion()
+	needReaderSet := ts.needReader.CompareAndSwap(true, false)
 	if shouldSeal {
 		shouldCreateReader = true
-	} else if ts.needReader.CompareAndSwap(true, false) {
+	} else if needReaderSet {
 		shouldCreateReader = true
 	}
+
+	ts.logger.DebugContext(ts.ctx, "SaveRoot reader decision", "version", version, "shouldSeal", shouldSeal, "needReaderSet", needReaderSet, "shouldCreateReader", shouldCreateReader, "savedVersion", ts.savedVersion.Load(), "budget", ts.memMonitor.evictBudget.Load())
 
 	if !shouldCreateReader {
 		// Just continue batching without creating reader
@@ -320,8 +321,10 @@ func (ts *TreeStore) SaveRoot(root *NodePointer, stats VersionStats) error {
 		}
 	}
 
+	oldSavedVersion := ts.savedVersion.Load()
 	ts.setActiveReader(startVersion, reader)
 	ts.savedVersion.Store(version)
+	ts.logger.DebugContext(ts.ctx, "SaveRoot updated savedVersion", "version", version, "oldSavedVersion", oldSavedVersion, "budget", ts.memMonitor.evictBudget.Load())
 	ts.evictor.wake()
 
 	if shouldSeal {

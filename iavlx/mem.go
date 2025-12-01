@@ -2,6 +2,7 @@ package iavlx
 
 import (
 	"context"
+	"log/slog"
 	"sync"
 	"sync/atomic"
 )
@@ -11,14 +12,18 @@ type memoryMonitor struct {
 	mu          sync.Mutex
 	cond        *sync.Cond
 	ctx         context.Context
+	logger      *slog.Logger
 }
 
-func newMemoryMonitor(ctx context.Context, memoryLimit uint64) *memoryMonitor {
+func newMemoryMonitor(ctx context.Context, logger *slog.Logger, memoryLimit uint64) *memoryMonitor {
 	mc := &memoryMonitor{
-		ctx: ctx,
+		ctx:    ctx,
+		logger: logger,
 	}
 	mc.evictBudget.Store(-int64(memoryLimit))
 	mc.cond = sync.NewCond(&mc.mu)
+
+	logger.InfoContext(ctx, "memoryMonitor initialized", "memoryLimit", memoryLimit, "initialBudget", -int64(memoryLimit))
 
 	// Broadcast on context cancellation to wake waiting evictors
 	go func() {
@@ -45,7 +50,9 @@ func (mc *memoryMonitor) UnderPressure() bool {
 }
 
 func (mc *memoryMonitor) AddUsage(usage uint64) {
+	before := mc.evictBudget.Load()
 	pressure := mc.evictBudget.Add(int64(usage))
+	mc.logger.DebugContext(mc.ctx, "AddUsage", "usage", usage, "budgetBefore", before, "budgetAfter", pressure, "underPressure", pressure > 0)
 	if pressure > 0 {
 		mc.cond.Broadcast()
 	}

@@ -11,13 +11,11 @@ import (
 	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 	"github.com/stretchr/testify/suite"
 
-	// without this import amino json encoding will fail when resolving any types
 	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec/address"
-	_ "github.com/cosmos/cosmos-sdk/contrib/api/group/v1"
 	"github.com/cosmos/cosmos-sdk/contrib/x/group"
 	"github.com/cosmos/cosmos-sdk/contrib/x/group/client/cli"
 	groupmodule "github.com/cosmos/cosmos-sdk/contrib/x/group/module"

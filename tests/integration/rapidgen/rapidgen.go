@@ -29,7 +29,6 @@ import (
 	upgradeapi "cosmossdk.io/api/cosmos/upgrade/v1beta1"
 	vestingapi "cosmossdk.io/api/cosmos/vesting/v1beta1"
 
-	groupapi "github.com/cosmos/cosmos-sdk/contrib/api/group/v1"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -59,16 +58,6 @@ func GenType(gogo gogoproto.Message, pulsar proto.Message, opts rapidproto.Gener
 		Gogo:   gogo,
 		Opts:   opts,
 	}
-}
-
-func WithDecisionPolicy(opts rapidproto.GeneratorOptions) rapidproto.GeneratorOptions {
-	return opts.
-		WithAnyTypes(
-			&groupapi.ThresholdDecisionPolicy{},
-			&groupapi.PercentageDecisionPolicy{}).
-		WithDisallowNil().
-		WithInterfaceHint("cosmos.group.v1.DecisionPolicy", &groupapi.ThresholdDecisionPolicy{}).
-		WithInterfaceHint("cosmos.group.v1.DecisionPolicy", &groupapi.PercentageDecisionPolicy{})
 }
 
 func GeneratorFieldMapper(t *rapid.T, field protoreflect.FieldDescriptor, name string) (protoreflect.Value, bool) {

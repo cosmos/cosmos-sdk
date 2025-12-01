@@ -20,7 +20,7 @@ func TestVotes(t *testing.T) {
 	authKeeper.EXPECT().AddressCodec().Return(address.NewBech32Codec("cosmos")).AnyTimes()
 
 	tp := TestProposal
-	proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "title", "description", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"), false)
+	proposal, err := govKeeper.SubmitProposal(ctx, tp, "", "title", "description", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))
 	require.NoError(t, err)
 	proposalID := proposal.Id
 	metadata := "metadata"
@@ -57,22 +57,19 @@ func TestVotes(t *testing.T) {
 	require.NoError(t, govKeeper.AddVote(ctx, proposalID, addrs[1], v1.WeightedVoteOptions{
 		v1.NewWeightedVoteOption(v1.OptionYes, sdkmath.LegacyNewDecWithPrec(60, 2)),
 		v1.NewWeightedVoteOption(v1.OptionNo, sdkmath.LegacyNewDecWithPrec(30, 2)),
-		v1.NewWeightedVoteOption(v1.OptionAbstain, sdkmath.LegacyNewDecWithPrec(5, 2)),
-		v1.NewWeightedVoteOption(v1.OptionNoWithVeto, sdkmath.LegacyNewDecWithPrec(5, 2)),
+		v1.NewWeightedVoteOption(v1.OptionAbstain, sdkmath.LegacyNewDecWithPrec(10, 2)),
 	}, ""))
 	vote, err = govKeeper.Votes.Get(ctx, collections.Join(proposalID, addrs[1]))
 	require.Nil(t, err)
 	require.Equal(t, addrs[1].String(), vote.Voter)
 	require.Equal(t, proposalID, vote.ProposalId)
-	require.True(t, len(vote.Options) == 4)
+	require.True(t, len(vote.Options) == 3)
 	require.Equal(t, v1.OptionYes, vote.Options[0].Option)
 	require.Equal(t, v1.OptionNo, vote.Options[1].Option)
 	require.Equal(t, v1.OptionAbstain, vote.Options[2].Option)
-	require.Equal(t, v1.OptionNoWithVeto, vote.Options[3].Option)
 	require.Equal(t, vote.Options[0].Weight, sdkmath.LegacyNewDecWithPrec(60, 2).String())
 	require.Equal(t, vote.Options[1].Weight, sdkmath.LegacyNewDecWithPrec(30, 2).String())
-	require.Equal(t, vote.Options[2].Weight, sdkmath.LegacyNewDecWithPrec(5, 2).String())
-	require.Equal(t, vote.Options[3].Weight, sdkmath.LegacyNewDecWithPrec(5, 2).String())
+	require.Equal(t, vote.Options[2].Weight, sdkmath.LegacyNewDecWithPrec(10, 2).String())
 
 	// Test vote iterator
 	// NOTE order of deposits is determined by the addresses
@@ -94,11 +91,10 @@ func TestVotes(t *testing.T) {
 	require.Equal(t, v1.OptionYes, votes[0].Options[0].Option)
 	require.Equal(t, addrs[1].String(), votes[1].Voter)
 	require.Equal(t, proposalID, votes[1].ProposalId)
-	require.True(t, len(votes[1].Options) == 4)
+	require.True(t, len(votes[1].Options) == 3)
 	require.Equal(t, votes[1].Options[0].Weight, sdkmath.LegacyNewDecWithPrec(60, 2).String())
 	require.Equal(t, votes[1].Options[1].Weight, sdkmath.LegacyNewDecWithPrec(30, 2).String())
-	require.Equal(t, votes[1].Options[2].Weight, sdkmath.LegacyNewDecWithPrec(5, 2).String())
-	require.Equal(t, votes[1].Options[3].Weight, sdkmath.LegacyNewDecWithPrec(5, 2).String())
+	require.Equal(t, votes[1].Options[2].Weight, sdkmath.LegacyNewDecWithPrec(10, 2).String())
 
 	// non existent vote
 	_, err = govKeeper.Votes.Get(ctx, collections.Join(proposalID+100, addrs[1]))

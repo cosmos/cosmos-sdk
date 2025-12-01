@@ -78,7 +78,7 @@ func ValidWeightedVoteOption(option WeightedVoteOption) bool {
 func VoteOptionFromString(str string) (VoteOption, error) {
 	option, ok := VoteOption_value[str]
 	if !ok {
-		return OptionEmpty, fmt.Errorf("'%s' is not a valid vote option, available options: yes/no/no_with_veto/abstain", str)
+		return OptionEmpty, fmt.Errorf("'%s' is not a valid vote option, available options: yes/no/abstain", str)
 	}
 	return VoteOption(option), nil
 }
@@ -109,8 +109,7 @@ func WeightedVoteOptionsFromString(str string) (WeightedVoteOptions, error) {
 func ValidVoteOption(option VoteOption) bool {
 	if option == OptionYes ||
 		option == OptionAbstain ||
-		option == OptionNo ||
-		option == OptionNoWithVeto {
+		option == OptionNo {
 		return true
 	}
 	return false

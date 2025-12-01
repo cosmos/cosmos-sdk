@@ -8,7 +8,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/errors"
-	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -27,7 +27,7 @@ func NewQueryServer(k *Keeper) v1.QueryServer {
 
 func (q queryServer) Constitution(ctx context.Context, _ *v1.QueryConstitutionRequest) (*v1.QueryConstitutionResponse, error) {
 	constitution, err := q.k.Constitution.Get(ctx)
-	if err != nil {
+	if err != nil && !errors.IsOf(err, collections.ErrNotFound) {
 		return nil, err
 	}
 	return &v1.QueryConstitutionResponse{Constitution: constitution}, nil
@@ -164,6 +164,13 @@ func (q queryServer) Params(ctx context.Context, req *v1.QueryParamsRequest) (*v
 	if err != nil {
 		return nil, err
 	}
+
+	// NOTE: feed deprecated parameters with dynamic values for backward compat
+	params.MinDeposit = q.k.GetMinDeposit(ctx)
+	params.Quorum = q.k.GetQuorum(ctx).String()
+	params.ConstitutionAmendmentQuorum = q.k.GetConstitutionAmendmentQuorum(ctx).String()
+	params.LawQuorum = q.k.GetLawQuorum(ctx).String()
+
 	response := &v1.QueryParamsResponse{}
 
 	//nolint:staticcheck // needed for legacy parameters
@@ -177,10 +184,14 @@ func (q queryServer) Params(ctx context.Context, req *v1.QueryParamsRequest) (*v
 		response.VotingParams = &votingParams
 
 	case v1.ParamTallying:
-		tallyParams := v1.NewTallyParams(params.Quorum, params.Threshold, params.VetoThreshold)
+		tallyParams := v1.NewTallyParams(
+			params.Quorum, params.Threshold,
+			params.ConstitutionAmendmentQuorum, params.ConstitutionAmendmentThreshold,
+			params.LawQuorum, params.LawThreshold,
+		)
 		response.TallyParams = &tallyParams
 	default:
-		if len(req.ParamsType) > 0 {
+		if len(req.ParamsType) > 1 {
 			return nil, status.Errorf(codes.InvalidArgument, "unknown params type: %s", req.ParamsType)
 		}
 	}
@@ -266,13 +277,65 @@ func (q queryServer) TallyResult(ctx context.Context, req *v1.QueryTallyResultRe
 	default:
 		// proposal is in voting period
 		var err error
-		_, _, tallyResult, err = q.k.Tally(ctx, proposal)
+		_, _, _, tallyResult, err = q.k.Tally(ctx, proposal)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	return &v1.QueryTallyResultResponse{Tally: &tallyResult}, nil
+}
+
+// MinDeposit returns the minimum deposit currently required for a proposal to enter voting period
+func (q queryServer) MinDeposit(c context.Context, req *v1.QueryMinDepositRequest) (*v1.QueryMinDepositResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	minDeposit := q.k.GetMinDeposit(ctx)
+
+	return &v1.QueryMinDepositResponse{MinDeposit: minDeposit}, nil
+}
+
+// MinInitialDeposit returns the minimum deposit required for a proposal to be submitted
+func (q queryServer) MinInitialDeposit(c context.Context, req *v1.QueryMinInitialDepositRequest) (*v1.QueryMinInitialDepositResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	minInitialDeposit := q.k.GetMinInitialDeposit(ctx)
+
+	return &v1.QueryMinInitialDepositResponse{MinInitialDeposit: minInitialDeposit}, nil
+}
+
+// Quorums returns the current quorums
+func (q queryServer) Quorums(c context.Context, _ *v1.QueryQuorumsRequest) (*v1.QueryQuorumsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	return &v1.QueryQuorumsResponse{
+		Quorum:                      q.k.GetQuorum(ctx).String(),
+		ConstitutionAmendmentQuorum: q.k.GetConstitutionAmendmentQuorum(ctx).String(),
+		LawQuorum:                   q.k.GetLawQuorum(ctx).String(),
+	}, nil
+}
+
+// ParticipationEMAs queries the state of the proposal participation exponential moving averages.
+func (q queryServer) ParticipationEMAs(c context.Context, _ *v1.QueryParticipationEMAsRequest) (*v1.QueryParticipationEMAsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	participation, err := q.k.ParticipationEMA.Get(ctx)
+	if err != nil && !errors.IsOf(err, collections.ErrNotFound) {
+		panic(err)
+	}
+
+	constitutionParticipation, err := q.k.ConstitutionAmendmentParticipationEMA.Get(ctx)
+	if err != nil && !errors.IsOf(err, collections.ErrNotFound) {
+		panic(err)
+	}
+
+	lawParticipation, err := q.k.LawParticipationEMA.Get(ctx)
+	if err != nil && !errors.IsOf(err, collections.ErrNotFound) {
+		panic(err)
+	}
+
+	return &v1.QueryParticipationEMAsResponse{
+		ParticipationEma:                      participation.String(),
+		ConstitutionAmendmentParticipationEma: constitutionParticipation.String(),
+		LawParticipationEma:                   lawParticipation.String(),
+	}, nil
 }
 
 var _ v1beta1.QueryServer = legacyQueryServer{}
@@ -376,10 +439,6 @@ func (q legacyQueryServer) Params(ctx context.Context, req *v1beta1.QueryParamsR
 
 	response := &v1beta1.QueryParamsResponse{}
 
-	if resp.DepositParams == nil && resp.VotingParams == nil && resp.TallyParams == nil {
-		return nil, status.Errorf(codes.InvalidArgument, "%s is not a valid parameter type", req.ParamsType)
-	}
-
 	if resp.DepositParams != nil {
 		minDeposit := sdk.NewCoins(resp.DepositParams.MinDeposit...)
 		response.DepositParams = v1beta1.NewDepositParams(minDeposit, *resp.DepositParams.MaxDepositPeriod)
@@ -390,20 +449,16 @@ func (q legacyQueryServer) Params(ctx context.Context, req *v1beta1.QueryParamsR
 	}
 
 	if resp.TallyParams != nil {
-		quorum, err := sdkmath.LegacyNewDecFromStr(resp.TallyParams.Quorum)
+		quorumRes, err := q.qs.Quorums(ctx, &v1.QueryQuorumsRequest{})
 		if err != nil {
 			return nil, err
 		}
-		threshold, err := sdkmath.LegacyNewDecFromStr(resp.TallyParams.Threshold)
+		threshold, err := math.LegacyNewDecFromStr(resp.TallyParams.Threshold)
 		if err != nil {
 			return nil, err
 		}
-		vetoThreshold, err := sdkmath.LegacyNewDecFromStr(resp.TallyParams.VetoThreshold)
-		if err != nil {
-			return nil, err
-		}
-
-		response.TallyParams = v1beta1.NewTallyParams(quorum, threshold, vetoThreshold)
+		quorum := math.LegacyMustNewDecFromStr(quorumRes.Quorum)
+		response.TallyParams = v1beta1.NewTallyParams(quorum, threshold, math.LegacyZeroDec())
 	}
 
 	return response, nil

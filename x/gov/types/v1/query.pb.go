@@ -7,7 +7,9 @@ import (
 	context "context"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
+	types "github.com/cosmos/cosmos-sdk/types"
 	query "github.com/cosmos/cosmos-sdk/types/query"
+	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
@@ -975,6 +977,376 @@ func (m *QueryTallyResultResponse) GetTally() *TallyResult {
 	return nil
 }
 
+// QueryMinDepositRequest is the request type for the Query/MinDeposit RPC method.
+type QueryMinDepositRequest struct {
+}
+
+func (m *QueryMinDepositRequest) Reset()         { *m = QueryMinDepositRequest{} }
+func (m *QueryMinDepositRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryMinDepositRequest) ProtoMessage()    {}
+func (*QueryMinDepositRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_46a436d1109b50d0, []int{18}
+}
+func (m *QueryMinDepositRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryMinDepositRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryMinDepositRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryMinDepositRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryMinDepositRequest.Merge(m, src)
+}
+func (m *QueryMinDepositRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryMinDepositRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryMinDepositRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryMinDepositRequest proto.InternalMessageInfo
+
+// QueryMinDepositResponse is the response type for the Query/MinDeposit RPC method.
+type QueryMinDepositResponse struct {
+	// min_deposit defines the minimum deposit required for a proposal to enter voting period.
+	MinDeposit []types.Coin `protobuf:"bytes,1,rep,name=min_deposit,json=minDeposit,proto3" json:"min_deposit"`
+}
+
+func (m *QueryMinDepositResponse) Reset()         { *m = QueryMinDepositResponse{} }
+func (m *QueryMinDepositResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryMinDepositResponse) ProtoMessage()    {}
+func (*QueryMinDepositResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_46a436d1109b50d0, []int{19}
+}
+func (m *QueryMinDepositResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryMinDepositResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryMinDepositResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryMinDepositResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryMinDepositResponse.Merge(m, src)
+}
+func (m *QueryMinDepositResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryMinDepositResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryMinDepositResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryMinDepositResponse proto.InternalMessageInfo
+
+func (m *QueryMinDepositResponse) GetMinDeposit() []types.Coin {
+	if m != nil {
+		return m.MinDeposit
+	}
+	return nil
+}
+
+// QueryMinInitialDepositRequest is the request type for the Query/MinInitialDeposit RPC method.
+type QueryMinInitialDepositRequest struct {
+}
+
+func (m *QueryMinInitialDepositRequest) Reset()         { *m = QueryMinInitialDepositRequest{} }
+func (m *QueryMinInitialDepositRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryMinInitialDepositRequest) ProtoMessage()    {}
+func (*QueryMinInitialDepositRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_46a436d1109b50d0, []int{20}
+}
+func (m *QueryMinInitialDepositRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryMinInitialDepositRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryMinInitialDepositRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryMinInitialDepositRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryMinInitialDepositRequest.Merge(m, src)
+}
+func (m *QueryMinInitialDepositRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryMinInitialDepositRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryMinInitialDepositRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryMinInitialDepositRequest proto.InternalMessageInfo
+
+// QueryMinInitialDepositResponse is the response type for the Query/MinInitialDeposit RPC method.
+type QueryMinInitialDepositResponse struct {
+	// min_initial_deposit defines the minimum initial deposit required for a proposal to be submitted.
+	MinInitialDeposit []types.Coin `protobuf:"bytes,1,rep,name=min_initial_deposit,json=minInitialDeposit,proto3" json:"min_initial_deposit"`
+}
+
+func (m *QueryMinInitialDepositResponse) Reset()         { *m = QueryMinInitialDepositResponse{} }
+func (m *QueryMinInitialDepositResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryMinInitialDepositResponse) ProtoMessage()    {}
+func (*QueryMinInitialDepositResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_46a436d1109b50d0, []int{21}
+}
+func (m *QueryMinInitialDepositResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryMinInitialDepositResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryMinInitialDepositResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryMinInitialDepositResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryMinInitialDepositResponse.Merge(m, src)
+}
+func (m *QueryMinInitialDepositResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryMinInitialDepositResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryMinInitialDepositResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryMinInitialDepositResponse proto.InternalMessageInfo
+
+func (m *QueryMinInitialDepositResponse) GetMinInitialDeposit() []types.Coin {
+	if m != nil {
+		return m.MinInitialDeposit
+	}
+	return nil
+}
+
+// QueryQuorumsRequest is the request type for the Query/Quorums RPC method.
+type QueryQuorumsRequest struct {
+}
+
+func (m *QueryQuorumsRequest) Reset()         { *m = QueryQuorumsRequest{} }
+func (m *QueryQuorumsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryQuorumsRequest) ProtoMessage()    {}
+func (*QueryQuorumsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_46a436d1109b50d0, []int{22}
+}
+func (m *QueryQuorumsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryQuorumsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryQuorumsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryQuorumsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryQuorumsRequest.Merge(m, src)
+}
+func (m *QueryQuorumsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryQuorumsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryQuorumsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryQuorumsRequest proto.InternalMessageInfo
+
+// QueryQuorumsResponse is the response type for the Query/Quorums RPC method.
+type QueryQuorumsResponse struct {
+	// quorum defines the requested quorum.
+	Quorum string `protobuf:"bytes,1,opt,name=quorum,proto3" json:"quorum,omitempty"`
+	// constitution_amendment_quorum defines the requested quorum for
+	// constitution amendment proposals.
+	ConstitutionAmendmentQuorum string `protobuf:"bytes,2,opt,name=constitution_amendment_quorum,json=constitutionAmendmentQuorum,proto3" json:"constitution_amendment_quorum,omitempty"`
+	// law_quorum defines the requested quorum for law proposals.
+	LawQuorum string `protobuf:"bytes,3,opt,name=law_quorum,json=lawQuorum,proto3" json:"law_quorum,omitempty"`
+}
+
+func (m *QueryQuorumsResponse) Reset()         { *m = QueryQuorumsResponse{} }
+func (m *QueryQuorumsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryQuorumsResponse) ProtoMessage()    {}
+func (*QueryQuorumsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_46a436d1109b50d0, []int{23}
+}
+func (m *QueryQuorumsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryQuorumsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryQuorumsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryQuorumsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryQuorumsResponse.Merge(m, src)
+}
+func (m *QueryQuorumsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryQuorumsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryQuorumsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryQuorumsResponse proto.InternalMessageInfo
+
+func (m *QueryQuorumsResponse) GetQuorum() string {
+	if m != nil {
+		return m.Quorum
+	}
+	return ""
+}
+
+func (m *QueryQuorumsResponse) GetConstitutionAmendmentQuorum() string {
+	if m != nil {
+		return m.ConstitutionAmendmentQuorum
+	}
+	return ""
+}
+
+func (m *QueryQuorumsResponse) GetLawQuorum() string {
+	if m != nil {
+		return m.LawQuorum
+	}
+	return ""
+}
+
+// QueryParticipationEMAsRequest is the request type for the Query/ParticipationEMAs RPC method.
+type QueryParticipationEMAsRequest struct {
+}
+
+func (m *QueryParticipationEMAsRequest) Reset()         { *m = QueryParticipationEMAsRequest{} }
+func (m *QueryParticipationEMAsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryParticipationEMAsRequest) ProtoMessage()    {}
+func (*QueryParticipationEMAsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_46a436d1109b50d0, []int{24}
+}
+func (m *QueryParticipationEMAsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryParticipationEMAsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryParticipationEMAsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryParticipationEMAsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryParticipationEMAsRequest.Merge(m, src)
+}
+func (m *QueryParticipationEMAsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryParticipationEMAsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryParticipationEMAsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryParticipationEMAsRequest proto.InternalMessageInfo
+
+// QueryParticipationEMAsResponse is the response type for the Query/ParticipationEMAs RPC method.
+type QueryParticipationEMAsResponse struct {
+	// participation_ema defines the requested participation EMA for proposals.
+	ParticipationEma string `protobuf:"bytes,1,opt,name=participation_ema,json=participationEma,proto3" json:"participation_ema,omitempty"`
+	// constitution_amendment_participation_ema defines the requested participation EMA for
+	// constitution amendment proposals.
+	ConstitutionAmendmentParticipationEma string `protobuf:"bytes,2,opt,name=constitution_amendment_participation_ema,json=constitutionAmendmentParticipationEma,proto3" json:"constitution_amendment_participation_ema,omitempty"`
+	// law_participation_ema defines the requestedparticipation EMA for law proposals.
+	LawParticipationEma string `protobuf:"bytes,3,opt,name=law_participation_ema,json=lawParticipationEma,proto3" json:"law_participation_ema,omitempty"`
+}
+
+func (m *QueryParticipationEMAsResponse) Reset()         { *m = QueryParticipationEMAsResponse{} }
+func (m *QueryParticipationEMAsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryParticipationEMAsResponse) ProtoMessage()    {}
+func (*QueryParticipationEMAsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_46a436d1109b50d0, []int{25}
+}
+func (m *QueryParticipationEMAsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryParticipationEMAsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryParticipationEMAsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryParticipationEMAsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryParticipationEMAsResponse.Merge(m, src)
+}
+func (m *QueryParticipationEMAsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryParticipationEMAsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryParticipationEMAsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryParticipationEMAsResponse proto.InternalMessageInfo
+
+func (m *QueryParticipationEMAsResponse) GetParticipationEma() string {
+	if m != nil {
+		return m.ParticipationEma
+	}
+	return ""
+}
+
+func (m *QueryParticipationEMAsResponse) GetConstitutionAmendmentParticipationEma() string {
+	if m != nil {
+		return m.ConstitutionAmendmentParticipationEma
+	}
+	return ""
+}
+
+func (m *QueryParticipationEMAsResponse) GetLawParticipationEma() string {
+	if m != nil {
+		return m.LawParticipationEma
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*QueryConstitutionRequest)(nil), "cosmos.gov.v1.QueryConstitutionRequest")
 	proto.RegisterType((*QueryConstitutionResponse)(nil), "cosmos.gov.v1.QueryConstitutionResponse")
@@ -994,76 +1366,107 @@ func init() {
 	proto.RegisterType((*QueryDepositsResponse)(nil), "cosmos.gov.v1.QueryDepositsResponse")
 	proto.RegisterType((*QueryTallyResultRequest)(nil), "cosmos.gov.v1.QueryTallyResultRequest")
 	proto.RegisterType((*QueryTallyResultResponse)(nil), "cosmos.gov.v1.QueryTallyResultResponse")
+	proto.RegisterType((*QueryMinDepositRequest)(nil), "cosmos.gov.v1.QueryMinDepositRequest")
+	proto.RegisterType((*QueryMinDepositResponse)(nil), "cosmos.gov.v1.QueryMinDepositResponse")
+	proto.RegisterType((*QueryMinInitialDepositRequest)(nil), "cosmos.gov.v1.QueryMinInitialDepositRequest")
+	proto.RegisterType((*QueryMinInitialDepositResponse)(nil), "cosmos.gov.v1.QueryMinInitialDepositResponse")
+	proto.RegisterType((*QueryQuorumsRequest)(nil), "cosmos.gov.v1.QueryQuorumsRequest")
+	proto.RegisterType((*QueryQuorumsResponse)(nil), "cosmos.gov.v1.QueryQuorumsResponse")
+	proto.RegisterType((*QueryParticipationEMAsRequest)(nil), "cosmos.gov.v1.QueryParticipationEMAsRequest")
+	proto.RegisterType((*QueryParticipationEMAsResponse)(nil), "cosmos.gov.v1.QueryParticipationEMAsResponse")
 }
 
 func init() { proto.RegisterFile("cosmos/gov/v1/query.proto", fileDescriptor_46a436d1109b50d0) }
 
 var fileDescriptor_46a436d1109b50d0 = []byte{
-	// 1023 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x57, 0x5b, 0x6f, 0xdc, 0x44,
-	0x14, 0x8e, 0x37, 0x97, 0x66, 0x4f, 0x2e, 0xc0, 0xe9, 0x25, 0xae, 0xdb, 0x6e, 0x83, 0x43, 0x93,
-	0x40, 0x89, 0xcd, 0xa6, 0x37, 0x09, 0x8a, 0x50, 0xd3, 0x92, 0x82, 0xc4, 0x43, 0x70, 0x2b, 0x1e,
-	0x78, 0x89, 0x9c, 0xac, 0x65, 0x2c, 0x36, 0x1e, 0x77, 0x67, 0x76, 0x45, 0x48, 0x23, 0xa4, 0x4a,
-	0x5c, 0x9e, 0x00, 0x89, 0x0a, 0xf8, 0x21, 0xfc, 0x08, 0x1e, 0x2b, 0x78, 0xe1, 0x11, 0x25, 0xfc,
-	0x10, 0xe4, 0x99, 0x63, 0xaf, 0xed, 0x78, 0x6f, 0x55, 0xd5, 0xa7, 0x95, 0x67, 0xbe, 0xf3, 0x9d,
-	0xef, 0x9c, 0x39, 0x73, 0xce, 0x2c, 0x9c, 0xdf, 0x65, 0x7c, 0x8f, 0x71, 0xdb, 0x67, 0x1d, 0xbb,
-	0x53, 0xb7, 0x1f, 0xb5, 0xbd, 0xd6, 0xbe, 0x15, 0xb5, 0x98, 0x60, 0x38, 0xa7, 0xb6, 0x2c, 0x9f,
-	0x75, 0xac, 0x4e, 0xdd, 0x78, 0x8b, 0x90, 0x3b, 0x2e, 0xf7, 0x14, 0xce, 0xee, 0xd4, 0x77, 0x3c,
-	0xe1, 0xd6, 0xed, 0xc8, 0xf5, 0x83, 0xd0, 0x15, 0x01, 0x0b, 0x95, 0xa9, 0x71, 0xd1, 0x67, 0xcc,
-	0x6f, 0x7a, 0xb6, 0x1b, 0x05, 0xb6, 0x1b, 0x86, 0x4c, 0xc8, 0x4d, 0x4e, 0xbb, 0x0b, 0x79, 0x9f,
-	0x31, 0xbf, 0xda, 0x20, 0x31, 0xdb, 0xf2, 0xcb, 0x26, 0xf7, 0xf2, 0xc3, 0x34, 0x40, 0xff, 0x34,
-	0xf6, 0x79, 0x97, 0x85, 0x5c, 0x04, 0xa2, 0x1d, 0xf3, 0x39, 0xde, 0xa3, 0xb6, 0xc7, 0x85, 0xf9,
-	0x01, 0x9c, 0x2f, 0xd9, 0xe3, 0x11, 0x0b, 0xb9, 0x87, 0x26, 0xcc, 0xee, 0x66, 0xd6, 0x75, 0x6d,
-	0x51, 0x5b, 0xad, 0x3a, 0xb9, 0x35, 0xf3, 0x16, 0x9c, 0x91, 0x04, 0x5b, 0x2d, 0x16, 0x31, 0xee,
-	0x36, 0x89, 0x18, 0x2f, 0xc3, 0x4c, 0x44, 0x4b, 0xdb, 0x41, 0x43, 0x9a, 0x4e, 0x38, 0x90, 0x2c,
-	0x7d, 0xdc, 0x30, 0x3f, 0x81, 0xb3, 0x05, 0x43, 0xf2, 0x7a, 0x0d, 0xa6, 0x13, 0x98, 0x34, 0x9b,
-	0x59, 0x5f, 0xb0, 0x72, 0xe9, 0xb4, 0x52, 0x93, 0x14, 0x68, 0xfe, 0x54, 0x29, 0xd0, 0xf1, 0x44,
-	0xc8, 0x26, 0xbc, 0x92, 0x0a, 0xe1, 0xc2, 0x15, 0x6d, 0x2e, 0x59, 0xe7, 0xd7, 0x2f, 0xf5, 0x60,
-	0x7d, 0x20, 0x41, 0xce, 0x7c, 0x94, 0xfb, 0x46, 0x0b, 0x26, 0x3b, 0x4c, 0x78, 0x2d, 0xbd, 0x12,
-	0x67, 0x61, 0x43, 0xff, 0xeb, 0x8f, 0xb5, 0x33, 0x44, 0x70, 0xa7, 0xd1, 0x68, 0x79, 0x9c, 0x3f,
-	0x10, 0xad, 0x20, 0xf4, 0x1d, 0x05, 0xc3, 0x9b, 0x50, 0x6d, 0x78, 0x11, 0xe3, 0x81, 0x60, 0x2d,
-	0x7d, 0x7c, 0x80, 0x4d, 0x17, 0x8a, 0x9b, 0x00, 0xdd, 0x9a, 0xd0, 0x27, 0x64, 0x02, 0x96, 0x13,
-	0xa9, 0x71, 0x01, 0x59, 0xaa, 0xd0, 0xa8, 0x80, 0xac, 0x2d, 0xd7, 0xf7, 0x28, 0x56, 0x27, 0x63,
-	0x69, 0xfe, 0xae, 0xc1, 0xb9, 0x62, 0x46, 0x28, 0xc3, 0x37, 0xa0, 0x9a, 0x04, 0x17, 0x27, 0x63,
-	0xbc, 0x5f, 0x8a, 0xbb, 0x48, 0xbc, 0x9f, 0x53, 0x56, 0x91, 0xca, 0x56, 0x06, 0x2a, 0x53, 0x3e,
-	0x73, 0xd2, 0x76, 0xe1, 0x55, 0xa9, 0xec, 0x33, 0x26, 0xbc, 0x61, 0xeb, 0x65, 0xd4, 0xfc, 0x9b,
-	0xb7, 0xe1, 0xb5, 0x8c, 0x13, 0x8a, 0x7c, 0x05, 0x26, 0xe2, 0x5d, 0xaa, 0xab, 0xd3, 0x85, 0xa0,
-	0x25, 0x54, 0x02, 0xcc, 0xc7, 0x19, 0x6b, 0x3e, 0xb4, 0xc6, 0xcd, 0x92, 0x0c, 0x3d, 0xcf, 0xd9,
-	0xfd, 0xa0, 0x01, 0x66, 0xdd, 0x93, 0xfa, 0x37, 0x55, 0x0a, 0x92, 0x33, 0x2b, 0x95, 0xaf, 0x10,
-	0x2f, 0xee, 0xac, 0x6e, 0x90, 0x92, 0x2d, 0xb7, 0xe5, 0xee, 0xe5, 0x32, 0x21, 0x17, 0xb6, 0xc5,
-	0x7e, 0xe4, 0x51, 0x63, 0x00, 0xb5, 0xf4, 0x70, 0x3f, 0xf2, 0xcc, 0x5f, 0x2b, 0x70, 0x3a, 0x67,
-	0x47, 0x21, 0xdc, 0x83, 0xb9, 0x0e, 0x13, 0x41, 0xe8, 0x6f, 0x2b, 0x30, 0x9d, 0xc4, 0x85, 0x93,
-	0xa1, 0x04, 0xa1, 0xaf, 0x6c, 0x37, 0x2a, 0xba, 0xe6, 0xcc, 0x76, 0x32, 0x2b, 0x78, 0x1f, 0xe6,
-	0xe9, 0xc2, 0x24, 0x34, 0x2a, 0xc2, 0x8b, 0x05, 0x9a, 0x7b, 0x0a, 0x94, 0xe1, 0x99, 0x6b, 0x64,
-	0x97, 0xf0, 0x0e, 0xcc, 0x0a, 0xb7, 0xd9, 0xdc, 0x4f, 0x68, 0xc6, 0x25, 0x8d, 0x51, 0xa0, 0x79,
-	0x18, 0x43, 0x32, 0x24, 0x33, 0xa2, 0xbb, 0x80, 0x6b, 0x30, 0x45, 0xc6, 0xea, 0xae, 0x9e, 0x2d,
-	0xde, 0x24, 0x95, 0x00, 0x02, 0x99, 0x21, 0xe5, 0x85, 0xa4, 0x0d, 0x5d, 0x5a, 0xb9, 0x76, 0x52,
-	0x19, 0xba, 0x9d, 0x98, 0x1f, 0x51, 0x7f, 0x4e, 0xfd, 0xd1, 0x41, 0xbc, 0x03, 0xa7, 0x08, 0x44,
-	0x47, 0x70, 0xae, 0x3c, 0x77, 0x4e, 0x02, 0x33, 0xbf, 0xc9, 0x33, 0xbd, 0xfc, 0x5b, 0xf1, 0x54,
-	0xa3, 0x1e, 0xdf, 0x55, 0x40, 0xc1, 0xac, 0xc3, 0x34, 0xa9, 0x4c, 0xee, 0x46, 0xaf, 0x68, 0x52,
-	0xdc, 0x8b, 0xbb, 0x21, 0xef, 0xc2, 0x82, 0x54, 0x25, 0xab, 0xc4, 0xf1, 0x78, 0xbb, 0x29, 0x46,
-	0x18, 0x82, 0xfa, 0x49, 0xdb, 0xf4, 0x84, 0x26, 0x65, 0x9d, 0xd1, 0xf9, 0x94, 0x16, 0x25, 0x99,
-	0x28, 0xe0, 0xfa, 0x71, 0x15, 0x26, 0x25, 0x1d, 0x7e, 0xa7, 0xc1, 0x6c, 0x76, 0xa4, 0xe3, 0x4a,
-	0xc1, 0xba, 0xd7, 0x83, 0xc0, 0x58, 0x1d, 0x0c, 0x54, 0xfa, 0xcc, 0xa5, 0x27, 0x7f, 0xff, 0xf7,
-	0x4b, 0xe5, 0x12, 0x5e, 0xb0, 0xf3, 0x6f, 0x92, 0xec, 0xf3, 0x00, 0xbf, 0xd5, 0x60, 0x3a, 0x99,
-	0x25, 0xb8, 0x54, 0xc6, 0x5d, 0x78, 0x38, 0x18, 0x6f, 0xf4, 0x07, 0x91, 0x73, 0x4b, 0x3a, 0x5f,
-	0xc5, 0xe5, 0x82, 0xf3, 0x74, 0x5a, 0xd9, 0x07, 0x99, 0xcc, 0x1f, 0xe2, 0xd7, 0x50, 0x4d, 0xe7,
-	0x20, 0xf6, 0x75, 0x91, 0xd4, 0xb5, 0x71, 0x65, 0x00, 0x8a, 0x94, 0x2c, 0x4a, 0x25, 0x06, 0xea,
-	0xbd, 0x94, 0xe0, 0xf7, 0x1a, 0x4c, 0xc4, 0xbd, 0x19, 0x2f, 0x97, 0x31, 0x66, 0x86, 0xa0, 0xb1,
-	0xd8, 0x1b, 0x40, 0xde, 0x6e, 0x4b, 0x6f, 0x37, 0xf1, 0xfa, 0x70, 0x71, 0xdb, 0x72, 0x1a, 0xd8,
-	0x07, 0x72, 0x24, 0x1e, 0xe2, 0x13, 0x0d, 0x26, 0xe5, 0x48, 0xc1, 0x9e, 0x9e, 0xd2, 0xf0, 0x5f,
-	0xef, 0x83, 0x20, 0x31, 0xd7, 0xa5, 0x18, 0x0b, 0xdf, 0x1e, 0x45, 0x0c, 0x3e, 0x86, 0x29, 0x6a,
-	0x9d, 0xa5, 0x2e, 0x72, 0x83, 0xc6, 0x30, 0xfb, 0x41, 0x48, 0xc6, 0x55, 0x29, 0xe3, 0x0a, 0x2e,
-	0x15, 0x65, 0x48, 0x98, 0x7d, 0x90, 0x99, 0x54, 0x87, 0xf8, 0x9b, 0x06, 0xa7, 0xa8, 0x19, 0x60,
-	0x29, 0x79, 0xbe, 0x31, 0x1b, 0x4b, 0x7d, 0x31, 0xa4, 0xe0, 0xae, 0x54, 0xf0, 0x3e, 0xbe, 0x37,
-	0x64, 0x22, 0x92, 0x26, 0x64, 0x1f, 0xa4, 0x8d, 0xfa, 0x10, 0x7f, 0xd4, 0x60, 0x3a, 0xe9, 0x6c,
-	0xd8, 0xcf, 0x2d, 0xef, 0x7b, 0x55, 0x8a, 0xcd, 0xd1, 0xbc, 0x25, 0xc5, 0xd5, 0xd1, 0x1e, 0x51,
-	0x1c, 0x3e, 0xd5, 0x60, 0x26, 0xd3, 0x65, 0x70, 0xb9, 0xcc, 0xdd, 0xc9, 0xae, 0x67, 0xac, 0x0c,
-	0xc4, 0x3d, 0x67, 0xfd, 0xc8, 0x2e, 0xb7, 0xf1, 0xe1, 0x9f, 0x47, 0x35, 0xed, 0xd9, 0x51, 0x4d,
-	0xfb, 0xf7, 0xa8, 0xa6, 0xfd, 0x7c, 0x5c, 0x1b, 0x7b, 0x76, 0x5c, 0x1b, 0xfb, 0xe7, 0xb8, 0x36,
-	0xf6, 0xf9, 0x55, 0x3f, 0x10, 0x5f, 0xb4, 0x77, 0xac, 0x5d, 0xb6, 0x97, 0x30, 0xaa, 0x9f, 0x35,
-	0xde, 0xf8, 0xd2, 0xfe, 0x4a, 0xd2, 0xc7, 0x55, 0xc0, 0xe3, 0x7f, 0x5f, 0x53, 0xf2, 0xcf, 0xd1,
-	0xb5, 0xff, 0x03, 0x00, 0x00, 0xff, 0xff, 0x34, 0xfb, 0x7f, 0x51, 0xc6, 0x0d, 0x00, 0x00,
+	// 1391 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x58, 0x4b, 0x6f, 0xdb, 0x46,
+	0x17, 0x35, 0xe5, 0x47, 0xec, 0x6b, 0xc7, 0x5f, 0x3c, 0x8e, 0x63, 0x99, 0x8e, 0x65, 0x87, 0xfe,
+	0xfc, 0x68, 0x13, 0x89, 0x95, 0xf3, 0x02, 0x9a, 0x14, 0xad, 0xe5, 0x47, 0x1a, 0xa0, 0x41, 0x1d,
+	0x26, 0xe8, 0xa2, 0x5d, 0x08, 0xb4, 0x44, 0xb0, 0x44, 0x45, 0x0e, 0x2d, 0x52, 0x72, 0x5d, 0xc7,
+	0x2d, 0x10, 0xa0, 0x0f, 0x74, 0xd1, 0x07, 0x1a, 0xb4, 0x45, 0x7f, 0x47, 0xfe, 0x40, 0x77, 0x59,
+	0x06, 0xe9, 0xa6, 0xab, 0xa2, 0xb0, 0xfb, 0x43, 0x0a, 0xce, 0x5c, 0x52, 0x24, 0x45, 0x4a, 0x72,
+	0x10, 0x74, 0x65, 0x6b, 0xe6, 0xdc, 0x73, 0xcf, 0x9c, 0xb9, 0x33, 0x73, 0x41, 0x98, 0xa9, 0x50,
+	0xc7, 0xa4, 0x8e, 0xac, 0xd3, 0xa6, 0xdc, 0x2c, 0xca, 0x7b, 0x0d, 0xad, 0x7e, 0x50, 0xb0, 0xeb,
+	0xd4, 0xa5, 0xe4, 0x2c, 0x9f, 0x2a, 0xe8, 0xb4, 0x59, 0x68, 0x16, 0xc5, 0xd7, 0x11, 0xb9, 0xab,
+	0x3a, 0x1a, 0xc7, 0xc9, 0xcd, 0xe2, 0xae, 0xe6, 0xaa, 0x45, 0xd9, 0x56, 0x75, 0xc3, 0x52, 0x5d,
+	0x83, 0x5a, 0x3c, 0x54, 0xbc, 0xa8, 0x53, 0xaa, 0xd7, 0x34, 0x59, 0xb5, 0x0d, 0x59, 0xb5, 0x2c,
+	0xea, 0xb2, 0x49, 0x07, 0x67, 0xa7, 0xa3, 0x39, 0x3d, 0x7e, 0x3e, 0x81, 0x62, 0xca, 0xec, 0x97,
+	0x8c, 0xe9, 0xf9, 0xd4, 0x79, 0x9d, 0xea, 0x94, 0x8f, 0x7b, 0xff, 0xe1, 0x68, 0x2e, 0xac, 0xc9,
+	0x57, 0x53, 0xa1, 0x06, 0xea, 0x90, 0x44, 0xc8, 0xde, 0xf7, 0x94, 0x6e, 0x50, 0xcb, 0x71, 0x0d,
+	0xb7, 0xe1, 0xa9, 0x50, 0xb4, 0xbd, 0x86, 0xe6, 0xb8, 0xd2, 0xdb, 0x30, 0x93, 0x30, 0xe7, 0xd8,
+	0xd4, 0x72, 0x34, 0x22, 0xc1, 0x58, 0x25, 0x34, 0x9e, 0x15, 0x16, 0x84, 0xd5, 0x11, 0x25, 0x32,
+	0x26, 0xdd, 0x84, 0xf3, 0x8c, 0x60, 0xa7, 0x4e, 0x6d, 0xea, 0xa8, 0x35, 0x24, 0x26, 0xf3, 0x30,
+	0x6a, 0xe3, 0x50, 0xd9, 0xa8, 0xb2, 0xd0, 0x01, 0x05, 0xfc, 0xa1, 0xbb, 0x55, 0xe9, 0x3d, 0x98,
+	0x8a, 0x05, 0x62, 0xd6, 0xab, 0x30, 0xec, 0xc3, 0x58, 0xd8, 0xe8, 0xda, 0x74, 0x21, 0xb2, 0x09,
+	0x85, 0x20, 0x24, 0x00, 0x4a, 0xdf, 0x67, 0x62, 0x74, 0x8e, 0x2f, 0x64, 0x1b, 0xfe, 0x17, 0x08,
+	0x71, 0x5c, 0xd5, 0x6d, 0x38, 0x8c, 0x75, 0x7c, 0x6d, 0x2e, 0x85, 0xf5, 0x01, 0x03, 0x29, 0xe3,
+	0x76, 0xe4, 0x37, 0x29, 0xc0, 0x60, 0x93, 0xba, 0x5a, 0x3d, 0x9b, 0xf1, 0x5c, 0x28, 0x65, 0x5f,
+	0x3c, 0xcd, 0x9f, 0x47, 0x82, 0xf5, 0x6a, 0xb5, 0xae, 0x39, 0xce, 0x03, 0xb7, 0x6e, 0x58, 0xba,
+	0xc2, 0x61, 0xe4, 0x06, 0x8c, 0x54, 0x35, 0x9b, 0x3a, 0x86, 0x4b, 0xeb, 0xd9, 0xfe, 0x2e, 0x31,
+	0x2d, 0x28, 0xd9, 0x06, 0x68, 0x55, 0x52, 0x76, 0x80, 0x19, 0xb0, 0xec, 0x4b, 0xf5, 0xb6, 0xb8,
+	0xc0, 0xcb, 0x13, 0x37, 0xba, 0xb0, 0xa3, 0xea, 0x1a, 0xae, 0x55, 0x09, 0x45, 0x4a, 0xbf, 0x0a,
+	0x70, 0x21, 0xee, 0x08, 0x3a, 0x7c, 0x1d, 0x46, 0xfc, 0xc5, 0x79, 0x66, 0xf4, 0x77, 0xb2, 0xb8,
+	0x85, 0x24, 0x77, 0x22, 0xca, 0x32, 0x4c, 0xd9, 0x4a, 0x57, 0x65, 0x3c, 0x67, 0x44, 0x5a, 0x05,
+	0xce, 0x31, 0x65, 0x1f, 0x50, 0x57, 0xeb, 0xb5, 0x5e, 0x4e, 0xeb, 0xbf, 0x74, 0x1b, 0x26, 0x42,
+	0x49, 0x70, 0xe5, 0x2b, 0x30, 0xe0, 0xcd, 0x62, 0x5d, 0x4d, 0xc6, 0x16, 0xcd, 0xa0, 0x0c, 0x20,
+	0x3d, 0x0a, 0x45, 0x3b, 0x3d, 0x6b, 0xdc, 0x4e, 0x70, 0xe8, 0x65, 0xf6, 0xee, 0x1b, 0x01, 0x48,
+	0x38, 0x3d, 0xaa, 0x7f, 0x8d, 0x5b, 0xe0, 0xef, 0x59, 0xa2, 0x7c, 0x8e, 0x78, 0x75, 0x7b, 0x75,
+	0x1d, 0x95, 0xec, 0xa8, 0x75, 0xd5, 0x8c, 0x38, 0xc1, 0x06, 0xca, 0xee, 0x81, 0xad, 0xe1, 0xc5,
+	0x00, 0x7c, 0xe8, 0xe1, 0x81, 0xad, 0x49, 0x3f, 0x67, 0x60, 0x32, 0x12, 0x87, 0x4b, 0xd8, 0x84,
+	0xb3, 0x4d, 0xea, 0x1a, 0x96, 0x5e, 0xe6, 0x60, 0xdc, 0x89, 0xd9, 0xf6, 0xa5, 0x18, 0x96, 0xce,
+	0x63, 0x4b, 0x99, 0xac, 0xa0, 0x8c, 0x35, 0x43, 0x23, 0xe4, 0x0e, 0x8c, 0xe3, 0x81, 0xf1, 0x69,
+	0xf8, 0x0a, 0x2f, 0xc6, 0x68, 0x36, 0x39, 0x28, 0xc4, 0x73, 0xb6, 0x1a, 0x1e, 0x22, 0xeb, 0x30,
+	0xe6, 0xaa, 0xb5, 0xda, 0x81, 0x4f, 0xd3, 0xcf, 0x68, 0xc4, 0x18, 0xcd, 0x43, 0x0f, 0x12, 0x22,
+	0x19, 0x75, 0x5b, 0x03, 0x24, 0x0f, 0x43, 0x18, 0xcc, 0xcf, 0xea, 0x54, 0xfc, 0x24, 0x71, 0x03,
+	0x10, 0x24, 0x59, 0xe8, 0x0b, 0x4a, 0xeb, 0xb9, 0xb4, 0x22, 0xd7, 0x49, 0xa6, 0xe7, 0xeb, 0x44,
+	0x7a, 0x17, 0xef, 0xe7, 0x20, 0x1f, 0x6e, 0xc4, 0x1b, 0x70, 0x06, 0x41, 0xb8, 0x05, 0x17, 0x92,
+	0xbd, 0x53, 0x7c, 0x98, 0xf4, 0x45, 0x94, 0xe9, 0xbf, 0x3f, 0x15, 0x4f, 0x04, 0xbc, 0xe3, 0x5b,
+	0x0a, 0x70, 0x31, 0x6b, 0x30, 0x8c, 0x2a, 0xfd, 0xb3, 0x91, 0xb6, 0x9a, 0x00, 0xf7, 0xea, 0x4e,
+	0xc8, 0x9b, 0x30, 0xcd, 0x54, 0xb1, 0x2a, 0x51, 0x34, 0xa7, 0x51, 0x73, 0x4f, 0xf1, 0x08, 0x66,
+	0xdb, 0x63, 0x83, 0x1d, 0x1a, 0x64, 0x75, 0x86, 0xfb, 0x93, 0x58, 0x94, 0x18, 0xc2, 0x81, 0x52,
+	0x16, 0x6f, 0xfc, 0x7b, 0x86, 0x15, 0x2d, 0x2f, 0xe9, 0x23, 0xd4, 0x18, 0x9e, 0xc1, 0x34, 0xef,
+	0xc0, 0xa8, 0x69, 0x58, 0xe5, 0x56, 0x31, 0x78, 0xf6, 0xcd, 0x44, 0x8c, 0xf0, 0x2d, 0xd8, 0xa0,
+	0x86, 0x55, 0x1a, 0x78, 0xf6, 0xd7, 0x7c, 0x9f, 0x02, 0x66, 0xc0, 0x24, 0xcd, 0xc3, 0x9c, 0x4f,
+	0x7e, 0xd7, 0x32, 0x5c, 0x43, 0xad, 0xc5, 0xb2, 0xef, 0x41, 0x2e, 0x0d, 0x80, 0x22, 0xde, 0x87,
+	0x49, 0x4f, 0x84, 0xc1, 0x67, 0x4f, 0x2b, 0x66, 0xc2, 0x8c, 0x13, 0x4b, 0x53, 0x78, 0xcc, 0xee,
+	0x37, 0x68, 0xbd, 0x11, 0xdc, 0x5b, 0xd2, 0xef, 0x02, 0x16, 0x71, 0x30, 0x8e, 0x02, 0x96, 0x61,
+	0x68, 0x8f, 0x0d, 0xf1, 0xbb, 0xac, 0x34, 0xfe, 0xe2, 0x69, 0x1e, 0x30, 0xed, 0xa6, 0x56, 0x51,
+	0x70, 0x96, 0x28, 0x30, 0x17, 0x6e, 0x7f, 0xca, 0xaa, 0xa9, 0x59, 0x55, 0x53, 0xb3, 0xdc, 0x32,
+	0x86, 0x67, 0x12, 0xc3, 0x67, 0xc3, 0x41, 0xeb, 0x7e, 0x0c, 0x17, 0x41, 0xf2, 0x00, 0x35, 0x75,
+	0xdf, 0x27, 0xe8, 0x4f, 0x24, 0x18, 0xa9, 0xa9, 0xfb, 0x1c, 0x1e, 0xd8, 0xbd, 0xa3, 0xd6, 0x5d,
+	0xa3, 0x62, 0xd8, 0xac, 0x0a, 0xb7, 0xee, 0xad, 0x07, 0x8b, 0xfc, 0x36, 0x83, 0x7e, 0x27, 0x20,
+	0x70, 0xb9, 0xb7, 0x60, 0xc2, 0x0e, 0x4f, 0x96, 0x35, 0x53, 0x4d, 0x59, 0xf9, 0xb9, 0x08, 0x70,
+	0xcb, 0x54, 0x89, 0x0e, 0xab, 0x29, 0x1e, 0xb4, 0x73, 0x26, 0xdb, 0xb1, 0x94, 0x68, 0xc7, 0x4e,
+	0x3c, 0x51, 0x09, 0xa6, 0x3c, 0x63, 0xda, 0x59, 0x93, 0x3d, 0x9a, 0xac, 0xa9, 0xfb, 0x71, 0x8e,
+	0xb5, 0x1f, 0xc7, 0x61, 0x90, 0x99, 0x41, 0xbe, 0x12, 0x60, 0x2c, 0xdc, 0xe6, 0x92, 0x95, 0xd8,
+	0x89, 0x4a, 0x6b, 0x92, 0xc5, 0xd5, 0xee, 0x40, 0xee, 0xab, 0xb4, 0xf8, 0xf8, 0x8f, 0x7f, 0x7e,
+	0xca, 0xcc, 0x91, 0x59, 0x39, 0xda, 0xdd, 0x87, 0xd7, 0x4b, 0xbe, 0x14, 0x60, 0xd8, 0xef, 0xaf,
+	0xc8, 0x62, 0x12, 0x77, 0xac, 0x99, 0x16, 0xff, 0xdf, 0x19, 0x84, 0xc9, 0x0b, 0x2c, 0xf9, 0x2a,
+	0x59, 0x8e, 0x25, 0x0f, 0x3a, 0x38, 0xf9, 0x30, 0x74, 0x1b, 0x1d, 0x91, 0xcf, 0x60, 0x24, 0xe8,
+	0x0d, 0x49, 0xc7, 0x14, 0x7e, 0x69, 0x89, 0x4b, 0x5d, 0x50, 0xa8, 0x64, 0x81, 0x29, 0x11, 0x49,
+	0x36, 0x4d, 0x09, 0xf9, 0x5a, 0x80, 0x01, 0xaf, 0x5f, 0x21, 0xf3, 0x49, 0x8c, 0xa1, 0xc6, 0x50,
+	0x5c, 0x48, 0x07, 0x60, 0xb6, 0xdb, 0x2c, 0xdb, 0x0d, 0x72, 0xad, 0xb7, 0x75, 0xcb, 0xac, 0x43,
+	0x92, 0x0f, 0x59, 0x9b, 0x78, 0x44, 0x1e, 0x0b, 0x30, 0xc8, 0xda, 0x2c, 0x92, 0x9a, 0x29, 0x58,
+	0xfe, 0xa5, 0x0e, 0x08, 0x14, 0x73, 0x8d, 0x89, 0x29, 0x90, 0x2b, 0xa7, 0x11, 0x43, 0x1e, 0xc1,
+	0x10, 0xb6, 0x13, 0x89, 0x29, 0x22, 0xcd, 0x97, 0x28, 0x75, 0x82, 0xa0, 0x8c, 0xcb, 0x4c, 0xc6,
+	0x12, 0x59, 0x8c, 0xcb, 0x60, 0x30, 0xf9, 0x30, 0xd4, 0xbd, 0x1d, 0x91, 0x5f, 0x04, 0x38, 0x83,
+	0x17, 0x27, 0x49, 0x24, 0x8f, 0xde, 0xe7, 0xe2, 0x62, 0x47, 0x0c, 0x2a, 0xd8, 0x60, 0x0a, 0xde,
+	0x22, 0xb7, 0x7a, 0x34, 0xc2, 0x7f, 0x98, 0xe5, 0xc3, 0xa0, 0x79, 0x39, 0x22, 0xdf, 0x09, 0x30,
+	0xec, 0xbf, 0xf6, 0xa4, 0x53, 0x5a, 0xa7, 0xe3, 0x51, 0x89, 0x37, 0x0c, 0xd2, 0x4d, 0x26, 0xae,
+	0x48, 0xe4, 0x53, 0x8a, 0x23, 0x4f, 0x04, 0x18, 0x0d, 0xbd, 0xbc, 0x64, 0x39, 0x29, 0x5d, 0x7b,
+	0x27, 0x20, 0xae, 0x74, 0xc5, 0xbd, 0x64, 0xfd, 0xb0, 0x97, 0x9f, 0x7c, 0x0e, 0xd0, 0x7a, 0xda,
+	0x49, 0xe2, 0x29, 0x6d, 0x6b, 0x0a, 0xc4, 0xe5, 0x6e, 0x30, 0x94, 0x74, 0x89, 0x49, 0x9a, 0x25,
+	0x33, 0x31, 0x49, 0xa6, 0x61, 0xa1, 0x2f, 0xe4, 0x37, 0x01, 0x26, 0xda, 0x5e, 0x77, 0x72, 0x25,
+	0x25, 0x41, 0x62, 0x97, 0x20, 0xe6, 0x7b, 0x44, 0xa3, 0xaa, 0x55, 0xa6, 0x4a, 0x22, 0x0b, 0xed,
+	0xaa, 0xb0, 0x8d, 0xf0, 0xc5, 0xd5, 0xe1, 0x0c, 0x3e, 0xf7, 0xc9, 0xd5, 0x1d, 0xed, 0x11, 0x92,
+	0xab, 0x3b, 0xd6, 0x2f, 0x48, 0x39, 0x96, 0x3d, 0x4b, 0x2e, 0xc8, 0xf1, 0x4f, 0x47, 0x3c, 0x91,
+	0x67, 0x48, 0xdb, 0xf3, 0x9b, 0x6c, 0x48, 0xda, 0x3b, 0x9e, 0x6c, 0x48, 0xea, 0x9b, 0x9e, 0x6a,
+	0x48, 0xe4, 0xf9, 0xd4, 0x4c, 0xd5, 0x29, 0x6d, 0x3d, 0x3b, 0xce, 0x09, 0xcf, 0x8f, 0x73, 0xc2,
+	0xdf, 0xc7, 0x39, 0xe1, 0x87, 0x93, 0x5c, 0xdf, 0xf3, 0x93, 0x5c, 0xdf, 0x9f, 0x27, 0xb9, 0xbe,
+	0x0f, 0x2f, 0xeb, 0x86, 0xfb, 0x71, 0x63, 0xb7, 0x50, 0xa1, 0xa6, 0xcf, 0xc2, 0xff, 0xe4, 0x9d,
+	0xea, 0x27, 0xf2, 0xa7, 0x8c, 0xd2, 0xbb, 0x33, 0x1c, 0xb9, 0x59, 0xdc, 0x1d, 0x62, 0x9f, 0x97,
+	0xae, 0xfe, 0x1b, 0x00, 0x00, 0xff, 0xff, 0x17, 0x2c, 0xbd, 0xc2, 0x3e, 0x13, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1096,6 +1499,16 @@ type QueryClient interface {
 	Deposits(ctx context.Context, in *QueryDepositsRequest, opts ...grpc.CallOption) (*QueryDepositsResponse, error)
 	// TallyResult queries the tally of a proposal vote.
 	TallyResult(ctx context.Context, in *QueryTallyResultRequest, opts ...grpc.CallOption) (*QueryTallyResultResponse, error)
+	// MinDeposit queries the minimum deposit currently
+	// required for a proposal to enter voting period.
+	MinDeposit(ctx context.Context, in *QueryMinDepositRequest, opts ...grpc.CallOption) (*QueryMinDepositResponse, error)
+	// MinInitialDeposit queries the minimum initial deposit
+	// currently required for a proposal to be submitted.
+	MinInitialDeposit(ctx context.Context, in *QueryMinInitialDepositRequest, opts ...grpc.CallOption) (*QueryMinInitialDepositResponse, error)
+	// Quorums queries the dynamically set quorums.
+	Quorums(ctx context.Context, in *QueryQuorumsRequest, opts ...grpc.CallOption) (*QueryQuorumsResponse, error)
+	// ParticipationEMAs queries the state of the proposal participation exponential moving averages.
+	ParticipationEMAs(ctx context.Context, in *QueryParticipationEMAsRequest, opts ...grpc.CallOption) (*QueryParticipationEMAsResponse, error)
 }
 
 type queryClient struct {
@@ -1187,6 +1600,42 @@ func (c *queryClient) TallyResult(ctx context.Context, in *QueryTallyResultReque
 	return out, nil
 }
 
+func (c *queryClient) MinDeposit(ctx context.Context, in *QueryMinDepositRequest, opts ...grpc.CallOption) (*QueryMinDepositResponse, error) {
+	out := new(QueryMinDepositResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1.Query/MinDeposit", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) MinInitialDeposit(ctx context.Context, in *QueryMinInitialDepositRequest, opts ...grpc.CallOption) (*QueryMinInitialDepositResponse, error) {
+	out := new(QueryMinInitialDepositResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1.Query/MinInitialDeposit", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) Quorums(ctx context.Context, in *QueryQuorumsRequest, opts ...grpc.CallOption) (*QueryQuorumsResponse, error) {
+	out := new(QueryQuorumsResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1.Query/Quorums", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) ParticipationEMAs(ctx context.Context, in *QueryParticipationEMAsRequest, opts ...grpc.CallOption) (*QueryParticipationEMAsResponse, error) {
+	out := new(QueryParticipationEMAsResponse)
+	err := c.cc.Invoke(ctx, "/cosmos.gov.v1.Query/ParticipationEMAs", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Constitution queries the chain's constitution.
@@ -1207,6 +1656,16 @@ type QueryServer interface {
 	Deposits(context.Context, *QueryDepositsRequest) (*QueryDepositsResponse, error)
 	// TallyResult queries the tally of a proposal vote.
 	TallyResult(context.Context, *QueryTallyResultRequest) (*QueryTallyResultResponse, error)
+	// MinDeposit queries the minimum deposit currently
+	// required for a proposal to enter voting period.
+	MinDeposit(context.Context, *QueryMinDepositRequest) (*QueryMinDepositResponse, error)
+	// MinInitialDeposit queries the minimum initial deposit
+	// currently required for a proposal to be submitted.
+	MinInitialDeposit(context.Context, *QueryMinInitialDepositRequest) (*QueryMinInitialDepositResponse, error)
+	// Quorums queries the dynamically set quorums.
+	Quorums(context.Context, *QueryQuorumsRequest) (*QueryQuorumsResponse, error)
+	// ParticipationEMAs queries the state of the proposal participation exponential moving averages.
+	ParticipationEMAs(context.Context, *QueryParticipationEMAsRequest) (*QueryParticipationEMAsResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -1239,6 +1698,18 @@ func (*UnimplementedQueryServer) Deposits(ctx context.Context, req *QueryDeposit
 }
 func (*UnimplementedQueryServer) TallyResult(ctx context.Context, req *QueryTallyResultRequest) (*QueryTallyResultResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TallyResult not implemented")
+}
+func (*UnimplementedQueryServer) MinDeposit(ctx context.Context, req *QueryMinDepositRequest) (*QueryMinDepositResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MinDeposit not implemented")
+}
+func (*UnimplementedQueryServer) MinInitialDeposit(ctx context.Context, req *QueryMinInitialDepositRequest) (*QueryMinInitialDepositResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MinInitialDeposit not implemented")
+}
+func (*UnimplementedQueryServer) Quorums(ctx context.Context, req *QueryQuorumsRequest) (*QueryQuorumsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Quorums not implemented")
+}
+func (*UnimplementedQueryServer) ParticipationEMAs(ctx context.Context, req *QueryParticipationEMAsRequest) (*QueryParticipationEMAsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ParticipationEMAs not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -1407,6 +1878,78 @@ func _Query_TallyResult_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_MinDeposit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryMinDepositRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).MinDeposit(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.gov.v1.Query/MinDeposit",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).MinDeposit(ctx, req.(*QueryMinDepositRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_MinInitialDeposit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryMinInitialDepositRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).MinInitialDeposit(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.gov.v1.Query/MinInitialDeposit",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).MinInitialDeposit(ctx, req.(*QueryMinInitialDepositRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_Quorums_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryQuorumsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Quorums(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.gov.v1.Query/Quorums",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Quorums(ctx, req.(*QueryQuorumsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_ParticipationEMAs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryParticipationEMAsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ParticipationEMAs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cosmos.gov.v1.Query/ParticipationEMAs",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ParticipationEMAs(ctx, req.(*QueryParticipationEMAsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var Query_serviceDesc = _Query_serviceDesc
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.gov.v1.Query",
@@ -1447,6 +1990,22 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "TallyResult",
 			Handler:    _Query_TallyResult_Handler,
+		},
+		{
+			MethodName: "MinDeposit",
+			Handler:    _Query_MinDeposit_Handler,
+		},
+		{
+			MethodName: "MinInitialDeposit",
+			Handler:    _Query_MinInitialDeposit_Handler,
+		},
+		{
+			MethodName: "Quorums",
+			Handler:    _Query_Quorums_Handler,
+		},
+		{
+			MethodName: "ParticipationEMAs",
+			Handler:    _Query_ParticipationEMAs_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -2154,6 +2713,260 @@ func (m *QueryTallyResultResponse) MarshalToSizedBuffer(dAtA []byte) (int, error
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryMinDepositRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryMinDepositRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryMinDepositRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryMinDepositResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryMinDepositResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryMinDepositResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.MinDeposit) > 0 {
+		for iNdEx := len(m.MinDeposit) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.MinDeposit[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryMinInitialDepositRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryMinInitialDepositRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryMinInitialDepositRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryMinInitialDepositResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryMinInitialDepositResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryMinInitialDepositResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.MinInitialDeposit) > 0 {
+		for iNdEx := len(m.MinInitialDeposit) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.MinInitialDeposit[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryQuorumsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryQuorumsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryQuorumsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryQuorumsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryQuorumsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryQuorumsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.LawQuorum) > 0 {
+		i -= len(m.LawQuorum)
+		copy(dAtA[i:], m.LawQuorum)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.LawQuorum)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.ConstitutionAmendmentQuorum) > 0 {
+		i -= len(m.ConstitutionAmendmentQuorum)
+		copy(dAtA[i:], m.ConstitutionAmendmentQuorum)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.ConstitutionAmendmentQuorum)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Quorum) > 0 {
+		i -= len(m.Quorum)
+		copy(dAtA[i:], m.Quorum)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Quorum)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryParticipationEMAsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryParticipationEMAsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryParticipationEMAsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryParticipationEMAsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryParticipationEMAsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryParticipationEMAsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.LawParticipationEma) > 0 {
+		i -= len(m.LawParticipationEma)
+		copy(dAtA[i:], m.LawParticipationEma)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.LawParticipationEma)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.ConstitutionAmendmentParticipationEma) > 0 {
+		i -= len(m.ConstitutionAmendmentParticipationEma)
+		copy(dAtA[i:], m.ConstitutionAmendmentParticipationEma)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.ConstitutionAmendmentParticipationEma)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.ParticipationEma) > 0 {
+		i -= len(m.ParticipationEma)
+		copy(dAtA[i:], m.ParticipationEma)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.ParticipationEma)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -2441,6 +3254,114 @@ func (m *QueryTallyResultResponse) Size() (n int) {
 	_ = l
 	if m.Tally != nil {
 		l = m.Tally.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryMinDepositRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryMinDepositResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.MinDeposit) > 0 {
+		for _, e := range m.MinDeposit {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *QueryMinInitialDepositRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryMinInitialDepositResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.MinInitialDeposit) > 0 {
+		for _, e := range m.MinInitialDeposit {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *QueryQuorumsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryQuorumsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Quorum)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = len(m.ConstitutionAmendmentQuorum)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = len(m.LawQuorum)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryParticipationEMAsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryParticipationEMAsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ParticipationEma)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = len(m.ConstitutionAmendmentParticipationEma)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = len(m.LawParticipationEma)
+	if l > 0 {
 		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
@@ -4261,6 +5182,666 @@ func (m *QueryTallyResultResponse) Unmarshal(dAtA []byte) error {
 			if err := m.Tally.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryMinDepositRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryMinDepositRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryMinDepositRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryMinDepositResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryMinDepositResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryMinDepositResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MinDeposit", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MinDeposit = append(m.MinDeposit, types.Coin{})
+			if err := m.MinDeposit[len(m.MinDeposit)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryMinInitialDepositRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryMinInitialDepositRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryMinInitialDepositRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryMinInitialDepositResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryMinInitialDepositResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryMinInitialDepositResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MinInitialDeposit", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MinInitialDeposit = append(m.MinInitialDeposit, types.Coin{})
+			if err := m.MinInitialDeposit[len(m.MinInitialDeposit)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryQuorumsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryQuorumsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryQuorumsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryQuorumsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryQuorumsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryQuorumsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Quorum", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Quorum = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ConstitutionAmendmentQuorum", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ConstitutionAmendmentQuorum = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LawQuorum", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.LawQuorum = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryParticipationEMAsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryParticipationEMAsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryParticipationEMAsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryParticipationEMAsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryParticipationEMAsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryParticipationEMAsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ParticipationEma", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ParticipationEma = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ConstitutionAmendmentParticipationEma", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ConstitutionAmendmentParticipationEma = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LawParticipationEma", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.LawParticipationEma = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

@@ -30,16 +30,16 @@ func TestNormalizeWeightedVoteOptions(t *testing.T) {
 			normalized: "VOTE_OPTION_YES=0.5,VOTE_OPTION_NO=0.5",
 		},
 		"3 options": {
-			options:    "Yes=0.5,No=0.4,NoWithVeto=0.1",
-			normalized: "VOTE_OPTION_YES=0.5,VOTE_OPTION_NO=0.4,VOTE_OPTION_NO_WITH_VETO=0.1",
+			options:    "Yes=0.5,No=0.4,Abstain=0.1",
+			normalized: "VOTE_OPTION_YES=0.5,VOTE_OPTION_NO=0.4,VOTE_OPTION_ABSTAIN=0.1",
 		},
 		"zero weight option": {
-			options:    "Yes=0.5,No=0.5,NoWithVeto=0",
-			normalized: "VOTE_OPTION_YES=0.5,VOTE_OPTION_NO=0.5,VOTE_OPTION_NO_WITH_VETO=0",
+			options:    "Yes=0.5,No=0.5,Abstain=0",
+			normalized: "VOTE_OPTION_YES=0.5,VOTE_OPTION_NO=0.5,VOTE_OPTION_ABSTAIN=0",
 		},
 		"minus weight option": {
-			options:    "Yes=0.5,No=0.6,NoWithVeto=-0.1",
-			normalized: "VOTE_OPTION_YES=0.5,VOTE_OPTION_NO=0.6,VOTE_OPTION_NO_WITH_VETO=-0.1",
+			options:    "Yes=0.5,No=0.6,Abstain=-0.1",
+			normalized: "VOTE_OPTION_YES=0.5,VOTE_OPTION_NO=0.6,VOTE_OPTION_ABSTAIN=-0.1",
 		},
 		"empty options": {
 			options:    "",
@@ -53,7 +53,7 @@ func TestNormalizeWeightedVoteOptions(t *testing.T) {
 
 	for _, tc := range cases {
 		normalized := utils.NormalizeWeightedVoteOptions(tc.options)
-		require.Equal(t, normalized, tc.normalized)
+		require.Equal(t, tc.normalized, normalized)
 	}
 }
 

@@ -10,10 +10,15 @@ import (
 )
 
 // NewGenesisState creates a new genesis state for the governance module
-func NewGenesisState(startingProposalID uint64, params Params) *GenesisState {
+func NewGenesisState(startingProposalID uint64, participationEma,
+	constitutionParticipationEma, lawParticipationEma string, params Params,
+) *GenesisState {
 	return &GenesisState{
-		StartingProposalId: startingProposalID,
-		Params:             &params,
+		StartingProposalId:                    startingProposalID,
+		ParticipationEma:                      participationEma,
+		ConstitutionAmendmentParticipationEma: constitutionParticipationEma,
+		LawParticipationEma:                   lawParticipationEma,
+		Params:                                &params,
 	}
 }
 
@@ -21,6 +26,9 @@ func NewGenesisState(startingProposalID uint64, params Params) *GenesisState {
 func DefaultGenesisState() *GenesisState {
 	return NewGenesisState(
 		DefaultStartingProposalID,
+		DefaultParticipationEma,
+		DefaultParticipationEma,
+		DefaultParticipationEma,
 		DefaultParams(),
 	)
 }
@@ -42,33 +50,33 @@ func ValidateGenesis(data *GenesisState) error {
 	var errGroup errgroup.Group
 
 	// weed out duplicate proposals
-	proposalIDs := make(map[uint64]struct{})
+	proposalIds := make(map[uint64]struct{})
 	for _, p := range data.Proposals {
-		if _, ok := proposalIDs[p.Id]; ok {
+		if _, ok := proposalIds[p.Id]; ok {
 			return fmt.Errorf("duplicate proposal id: %d", p.Id)
 		}
 
-		proposalIDs[p.Id] = struct{}{}
+		proposalIds[p.Id] = struct{}{}
 	}
 
 	// weed out duplicate deposits
 	errGroup.Go(func() error {
 		type depositKey struct {
-			ProposalId uint64 //nolint:revive // staying consistent with main and v0.47
+			ProposalId uint64
 			Depositor  string
 		}
-		depositIDs := make(map[depositKey]struct{})
+		depositIds := make(map[depositKey]struct{})
 		for _, d := range data.Deposits {
-			if _, ok := proposalIDs[d.ProposalId]; !ok {
+			if _, ok := proposalIds[d.ProposalId]; !ok {
 				return fmt.Errorf("deposit %v has non-existent proposal id: %d", d, d.ProposalId)
 			}
 
 			dk := depositKey{d.ProposalId, d.Depositor}
-			if _, ok := depositIDs[dk]; ok {
+			if _, ok := depositIds[dk]; ok {
 				return fmt.Errorf("duplicate deposit: %v", d)
 			}
 
-			depositIDs[dk] = struct{}{}
+			depositIds[dk] = struct{}{}
 		}
 
 		return nil
@@ -77,21 +85,21 @@ func ValidateGenesis(data *GenesisState) error {
 	// weed out duplicate votes
 	errGroup.Go(func() error {
 		type voteKey struct {
-			ProposalId uint64 //nolint:revive // staying consistent with main and v0.47
+			ProposalId uint64
 			Voter      string
 		}
-		voteIDs := make(map[voteKey]struct{})
+		voteIds := make(map[voteKey]struct{})
 		for _, v := range data.Votes {
-			if _, ok := proposalIDs[v.ProposalId]; !ok {
+			if _, ok := proposalIds[v.ProposalId]; !ok {
 				return fmt.Errorf("vote %v has non-existent proposal id: %d", v, v.ProposalId)
 			}
 
 			vk := voteKey{v.ProposalId, v.Voter}
-			if _, ok := voteIDs[vk]; ok {
+			if _, ok := voteIds[vk]; ok {
 				return fmt.Errorf("duplicate vote: %v", v)
 			}
 
-			voteIDs[vk] = struct{}{}
+			voteIds[vk] = struct{}{}
 		}
 
 		return nil

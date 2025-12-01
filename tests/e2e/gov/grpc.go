@@ -152,8 +152,7 @@ func (s *E2ETestSuite) TestGetProposalVoteGRPC() {
 			v1.WeightedVoteOptions{
 				&v1.WeightedVoteOption{Option: v1.OptionYes, Weight: math.LegacyNewDecWithPrec(60, 2).String()},
 				&v1.WeightedVoteOption{Option: v1.OptionNo, Weight: math.LegacyNewDecWithPrec(30, 2).String()},
-				&v1.WeightedVoteOption{Option: v1.OptionAbstain, Weight: math.LegacyNewDecWithPrec(5, 2).String()},
-				&v1.WeightedVoteOption{Option: v1.OptionNoWithVeto, Weight: math.LegacyNewDecWithPrec(5, 2).String()},
+				&v1.WeightedVoteOption{Option: v1.OptionAbstain, Weight: math.LegacyNewDecWithPrec(10, 2).String()},
 			},
 		},
 	}
@@ -358,42 +357,41 @@ func (s *E2ETestSuite) TestGetParamsGRPC() {
 	val := s.network.Validators[0]
 
 	params := v1.DefaultParams()
-	dp := v1.NewDepositParams(params.MinDeposit, params.MaxDepositPeriod)          //nolint:staticcheck // we use deprecated gov commands here, but we don't want to remove them
-	vp := v1.NewVotingParams(params.VotingPeriod)                                  //nolint:staticcheck // we use deprecated gov commands here, but we don't want to remove them
-	tp := v1.NewTallyParams(params.Quorum, params.Threshold, params.VetoThreshold) //nolint:staticcheck // we use deprecated gov commands here, but we don't want to remove them
 
 	testCases := []struct {
-		name       string
-		url        string
-		expErr     bool
-		respType   proto.Message
-		expectResp proto.Message
+		name         string
+		url          string
+		expErr       bool
+		respType     proto.Message
+		checkDeposit bool
+		checkVoting  bool
+		checkTally   bool
 	}{
 		{
 			"request params with empty params type",
 			fmt.Sprintf("%s/cosmos/gov/v1/params/%s", val.APIAddress, ""),
-			true, nil, nil,
+			true, nil, false, false, false,
 		},
 		{
 			"get deposit params",
 			fmt.Sprintf("%s/cosmos/gov/v1/params/%s", val.APIAddress, v1.ParamDeposit),
 			false,
 			&v1.QueryParamsResponse{},
-			&v1.QueryParamsResponse{DepositParams: &dp, Params: &params},
+			true, false, false,
 		},
 		{
 			"get vote params",
 			fmt.Sprintf("%s/cosmos/gov/v1/params/%s", val.APIAddress, v1.ParamVoting),
 			false,
 			&v1.QueryParamsResponse{},
-			&v1.QueryParamsResponse{VotingParams: &vp, Params: &params},
+			false, true, false,
 		},
 		{
 			"get tally params",
 			fmt.Sprintf("%s/cosmos/gov/v1/params/%s", val.APIAddress, v1.ParamTallying),
 			false,
 			&v1.QueryParamsResponse{},
-			&v1.QueryParamsResponse{TallyParams: &tp, Params: &params},
+			false, false, true,
 		},
 	}
 
@@ -408,7 +406,26 @@ func (s *E2ETestSuite) TestGetParamsGRPC() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-				s.Require().Equal(tc.expectResp.String(), tc.respType.String())
+				queryResp := tc.respType.(*v1.QueryParamsResponse)
+				s.Require().NotNil(queryResp.Params)
+
+				// Check that the params match expected values
+				s.Require().Equal(params.MaxDepositPeriod, queryResp.Params.MaxDepositPeriod)
+				s.Require().Equal(params.VotingPeriod, queryResp.Params.VotingPeriod)
+				s.Require().Equal(params.Threshold, queryResp.Params.Threshold)
+
+				if tc.checkDeposit {
+					s.Require().NotNil(queryResp.DepositParams)
+					s.Require().Equal(params.MaxDepositPeriod, queryResp.DepositParams.MaxDepositPeriod)
+				}
+				if tc.checkVoting {
+					s.Require().NotNil(queryResp.VotingParams)
+					s.Require().Equal(params.VotingPeriod, queryResp.VotingParams.VotingPeriod)
+				}
+				if tc.checkTally {
+					s.Require().NotNil(queryResp.TallyParams)
+					s.Require().Equal(params.Threshold, queryResp.TallyParams.Threshold)
+				}
 			}
 		})
 	}

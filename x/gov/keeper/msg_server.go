@@ -76,7 +76,7 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		return nil, fmt.Errorf("failed to get governance parameters: %w", err)
 	}
 
-	if err := k.validateInitialDeposit(ctx, params, initialDeposit, msg.Expedited); err != nil {
+	if err := k.validateInitialDeposit(ctx, params, initialDeposit); err != nil {
 		return nil, err
 	}
 
@@ -84,7 +84,7 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		return nil, err
 	}
 
-	proposal, err := k.Keeper.SubmitProposal(ctx, proposalMsgs, msg.Metadata, msg.Title, msg.Summary, proposer, msg.Expedited)
+	proposal, err := k.Keeper.SubmitProposal(ctx, proposalMsgs, msg.Metadata, msg.Title, msg.Summary, proposer)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +100,9 @@ func (k msgServer) SubmitProposal(goCtx context.Context, msg *v1.MsgSubmitPropos
 		"submit proposal",
 	)
 
-	votingStarted, err := k.Keeper.AddDeposit(ctx, proposal.Id, proposer, msg.GetInitialDeposit())
+	// skip min deposit ratio check since for proposal submissions the initial deposit is the threshold
+	// to check against.
+	votingStarted, err := k.Keeper.AddDeposit(ctx, proposal.Id, proposer, msg.GetInitialDeposit(), true)
 	if err != nil {
 		return nil, err
 	}
@@ -249,7 +251,7 @@ func (k msgServer) Deposit(goCtx context.Context, msg *v1.MsgDeposit) (*v1.MsgDe
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	votingStarted, err := k.Keeper.AddDeposit(ctx, msg.ProposalId, accAddr, msg.Amount)
+	votingStarted, err := k.Keeper.AddDeposit(ctx, msg.ProposalId, accAddr, msg.Amount, false)
 	if err != nil {
 		return nil, err
 	}
@@ -272,16 +274,69 @@ func (k msgServer) UpdateParams(goCtx context.Context, msg *v1.MsgUpdateParams) 
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)
 	}
 
+	// before params change, trigger an update of the last min deposit
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	blockTime := ctx.BlockTime()
+	minDeposit := k.GetMinDeposit(ctx)
+	newMinDeposit := v1.GetNewMinDeposit(msg.Params.MinDepositThrottler.FloorValue, minDeposit, math.LegacyOneDec())
+
+	if !minDeposit.Equal(newMinDeposit) {
+		k.LastMinDeposit.Set(ctx, v1.LastMinDeposit{
+			Value: newMinDeposit,
+			Time:  &blockTime,
+		})
+	}
+
+	minInitialDeposit := k.GetMinInitialDeposit(ctx)
+	newMinInitialDeposit := v1.GetNewMinDeposit(msg.Params.MinInitialDepositThrottler.FloorValue, minInitialDeposit, math.LegacyOneDec())
+
+	if !minInitialDeposit.Equal(newMinInitialDeposit) {
+		k.LastMinInitialDeposit.Set(ctx, v1.LastMinDeposit{
+			Value: newMinInitialDeposit,
+			Time:  &blockTime,
+		})
+	}
+
 	if err := msg.Params.ValidateBasic(); err != nil {
 		return nil, err
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
 	if err := k.Params.Set(ctx, msg.Params); err != nil {
 		return nil, err
 	}
 
 	return &v1.MsgUpdateParamsResponse{}, nil
+}
+
+// ProposeLaw implements the MsgServer.ProposeLaw method.
+func (k msgServer) ProposeLaw(goCtx context.Context, msg *v1.MsgProposeLaw) (*v1.MsgProposeLawResponse, error) {
+	if k.authority != msg.Authority {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)
+	}
+	// only a no-op for now
+	return &v1.MsgProposeLawResponse{}, nil
+}
+
+// ProposeConstitutionAmendment implements the MsgServer.ProposeConstitutionAmendment method.
+func (k msgServer) ProposeConstitutionAmendment(goCtx context.Context, msg *v1.MsgProposeConstitutionAmendment) (*v1.MsgProposeConstitutionAmendmentResponse, error) {
+	if k.authority != msg.Authority {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)
+	}
+	if msg.Amendment == "" {
+		return nil, govtypes.ErrInvalidProposalMsg.Wrap("amendment cannot be empty")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	constitution, err := k.ApplyConstitutionAmendment(ctx, msg.Amendment)
+	if err != nil {
+		return nil, govtypes.ErrInvalidProposalMsg.Wrap(err.Error())
+	}
+
+	if err := k.Constitution.Set(ctx, constitution); err != nil {
+		return nil, err
+	}
+
+	return &v1.MsgProposeConstitutionAmendmentResponse{}, nil
 }
 
 type legacyMsgServer struct {
@@ -321,7 +376,6 @@ func (k legacyMsgServer) SubmitProposal(goCtx context.Context, msg *v1beta1.MsgS
 		"",
 		msg.GetContent().GetTitle(),
 		msg.GetContent().GetDescription(),
-		false, // legacy proposals cannot be expedited
 	)
 	if err != nil {
 		return nil, err

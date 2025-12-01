@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
@@ -16,7 +15,7 @@ import (
 )
 
 // SubmitProposal creates a new proposal given an array of messages
-func (keeper Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata, title, summary string, proposer sdk.AccAddress, expedited bool) (v1.Proposal, error) {
+func (keeper Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata, title, summary string, proposer sdk.AccAddress) (v1.Proposal, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	err := keeper.assertMetadataLength(metadata)
 	if err != nil {
@@ -99,7 +98,7 @@ func (keeper Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, met
 	submitTime := sdkCtx.BlockHeader().Time
 	depositPeriod := params.MaxDepositPeriod
 
-	proposal, err := v1.NewProposal(messages, proposalID, submitTime, submitTime.Add(*depositPeriod), metadata, title, summary, proposer, expedited)
+	proposal, err := v1.NewProposal(messages, proposalID, submitTime, submitTime.Add(*depositPeriod), metadata, title, summary, proposer)
 	if err != nil {
 		return v1.Proposal{}, err
 	}
@@ -243,17 +242,12 @@ func (keeper Keeper) ActivateVotingPeriod(ctx context.Context, proposal v1.Propo
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	startTime := sdkCtx.BlockHeader().Time
 	proposal.VotingStartTime = &startTime
-	var votingPeriod *time.Duration
 	params, err := keeper.Params.Get(ctx)
 	if err != nil {
 		return err
 	}
 
-	if proposal.Expedited {
-		votingPeriod = params.ExpeditedVotingPeriod
-	} else {
-		votingPeriod = params.VotingPeriod
-	}
+	votingPeriod := params.VotingPeriod
 	endTime := proposal.VotingStartTime.Add(*votingPeriod)
 	proposal.VotingEndTime = &endTime
 	proposal.Status = v1.StatusVotingPeriod
@@ -267,5 +261,41 @@ func (keeper Keeper) ActivateVotingPeriod(ctx context.Context, proposal v1.Propo
 		return err
 	}
 
-	return keeper.ActiveProposalsQueue.Set(ctx, collections.Join(*proposal.VotingEndTime, proposal.Id), proposal.Id)
+	err = keeper.ActiveProposalsQueue.Set(ctx, collections.Join(*proposal.VotingEndTime, proposal.Id), proposal.Id)
+	if err != nil {
+		return err
+	}
+
+	// Add proposal to quorum check queue
+	quorumTimeoutTime := proposal.VotingStartTime.Add(*params.QuorumTimeout)
+	quorumCheckEntry := v1.NewQuorumCheckQueueEntry(quorumTimeoutTime, params.QuorumCheckCount)
+	return keeper.QuorumCheckQueue.Set(ctx, collections.Join(quorumTimeoutTime, proposal.Id), quorumCheckEntry)
+}
+
+// ProposalKinds returns a v1.ProposalKinds useful to determine which kind of
+// messages are included in a proposal.
+func (k Keeper) ProposalKinds(p v1.Proposal) v1.ProposalKinds {
+	if len(p.Messages) == 0 {
+		return v1.ProposalKindAny
+	}
+	var kinds v1.ProposalKinds
+	for _, msg := range p.Messages {
+		var sdkMsg sdk.Msg
+		if err := k.cdc.UnpackAny(msg, &sdkMsg); err == nil {
+			switch sdkMsg.(type) {
+			case *v1.MsgProposeConstitutionAmendment:
+				kinds |= v1.ProposalKindConstitutionAmendment
+			case *v1.MsgProposeLaw:
+				kinds |= v1.ProposalKindLaw
+			default:
+				kinds |= v1.ProposalKindAny
+			}
+		} else {
+			// If we can't unpack the message, it's likely a broken proposal.
+			// although almost impossible, we still want to handle it gracefully.
+			// We assume that the proposal is of any kind.
+			kinds |= v1.ProposalKindAny
+		}
+	}
+	return kinds
 }

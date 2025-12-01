@@ -61,7 +61,7 @@ func TestGRPCQueryTally(t *testing.T) {
 			"create a proposal and get tally",
 			func() {
 				var err error
-				proposal, err = f.govKeeper.SubmitProposal(ctx, TestProposal, "", "test", "description", addrs[0], false)
+				proposal, err = f.govKeeper.SubmitProposal(ctx, TestProposal, "", "test", "description", addrs[0])
 				assert.NilError(t, err)
 				assert.Assert(t, proposal.String() != "")
 
@@ -89,10 +89,9 @@ func TestGRPCQueryTally(t *testing.T) {
 
 				expRes = &v1.QueryTallyResultResponse{
 					Tally: &v1.TallyResult{
-						YesCount:        math.NewInt(3 * 5 * 1000000).String(),
-						NoCount:         "0",
-						AbstainCount:    "0",
-						NoWithVetoCount: "0",
+						YesCount:     math.NewInt(3 * 5 * 1000000).String(),
+						NoCount:      "0",
+						AbstainCount: "0",
 					},
 				}
 			},
@@ -183,7 +182,7 @@ func TestLegacyGRPCQueryTally(t *testing.T) {
 			"create a proposal and get tally",
 			func() {
 				var err error
-				proposal, err = f.govKeeper.SubmitProposal(ctx, TestProposal, "", "test", "description", addrs[0], false)
+				proposal, err = f.govKeeper.SubmitProposal(ctx, TestProposal, "", "test", "description", addrs[0])
 				assert.NilError(t, err)
 				assert.Assert(t, proposal.String() != "")
 
@@ -259,12 +258,11 @@ func TestLegacyGRPCQueryTally(t *testing.T) {
 func v1TallyToV1Beta1Tally(t v1.TallyResult) v1beta1.TallyResult {
 	yes, _ := math.NewIntFromString(t.YesCount)
 	no, _ := math.NewIntFromString(t.NoCount)
-	noWithVeto, _ := math.NewIntFromString(t.NoWithVetoCount)
 	abstain, _ := math.NewIntFromString(t.AbstainCount)
 	return v1beta1.TallyResult{
 		Yes:        yes,
 		No:         no,
-		NoWithVeto: noWithVeto,
+		NoWithVeto: math.ZeroInt(), // AtomOne removed NoWithVeto option
 		Abstain:    abstain,
 	}
 }

@@ -24,5 +24,14 @@ var (
 	DepositsKeyPrefix             = collections.NewPrefix(16) // DepositsKeyPrefix stores deposits.
 	VotesKeyPrefix                = collections.NewPrefix(32) // VotesKeyPrefix stores the votes of proposals.
 	ParamsKey                     = collections.NewPrefix(48) // ParamsKey stores the module's params.
-	ConstitutionKey               = collections.NewPrefix(49) // ConstitutionKey stores a chain's constitution.
+
+	// NOTE, this is changed compared to normal Cosmos-SDK v0.50 to match AtomOne.
+	// When another chain adopts the AtomOne fork, it must set the its current constitution (key 49) to this one.
+	ConstitutionKey                          = collections.NewPrefix(64) // ConstitutionKey stores a chain's constitution.
+	QuorumCheckQueuePrefix                   = collections.NewPrefix(5)
+	LastMinDepositKey                        = collections.NewPrefix(7)
+	LastMinInitialDepositKey                 = collections.NewPrefix(9)
+	ParticipationEMAKey                      = collections.NewPrefix(80)
+	ConstitutionAmendmentParticipationEMAKey = collections.NewPrefix(96)
+	LawParticipationEMAKey                   = collections.NewPrefix(112)
 )

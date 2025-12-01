@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
@@ -25,6 +26,43 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 
 	err = k.Constitution.Set(ctx, data.Constitution)
 	if err != nil {
+		panic(err)
+	}
+
+	// Use default values for participation EMAs if not provided
+	participationEmaStr := data.ParticipationEma
+	if participationEmaStr == "" {
+		participationEmaStr = v1.DefaultParticipationEma
+	}
+	participationEma, err := math.LegacyNewDecFromStr(participationEmaStr)
+	if err != nil {
+		panic(fmt.Sprintf("invalid value for participationEma %s: %v", participationEmaStr, err))
+	}
+	if err := k.ParticipationEMA.Set(ctx, participationEma); err != nil {
+		panic(err)
+	}
+
+	constitutionAmendmentParticipationEmaStr := data.ConstitutionAmendmentParticipationEma
+	if constitutionAmendmentParticipationEmaStr == "" {
+		constitutionAmendmentParticipationEmaStr = v1.DefaultParticipationEma
+	}
+	constitutionAmendmentparticipationEma, err := math.LegacyNewDecFromStr(constitutionAmendmentParticipationEmaStr)
+	if err != nil {
+		panic(fmt.Sprintf("invalid value for constitutionAmendmentparticipationEma %s: %v", constitutionAmendmentParticipationEmaStr, err))
+	}
+	if err := k.ConstitutionAmendmentParticipationEMA.Set(ctx, constitutionAmendmentparticipationEma); err != nil {
+		panic(err)
+	}
+
+	lawParticipationEmaStr := data.LawParticipationEma
+	if lawParticipationEmaStr == "" {
+		lawParticipationEmaStr = v1.DefaultParticipationEma
+	}
+	lawParticipationEma, err := math.LegacyNewDecFromStr(lawParticipationEmaStr)
+	if err != nil {
+		panic(fmt.Sprintf("invalid value for lawParticipationEma %s: %v", lawParticipationEmaStr, err))
+	}
+	if err := k.LawParticipationEMA.Set(ctx, lawParticipationEma); err != nil {
 		panic(err)
 	}
 
@@ -71,6 +109,29 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 		if err != nil {
 			panic(err)
 		}
+
+		if data.Params.QuorumCheckCount > 0 && proposal.Status == v1.StatusVotingPeriod {
+			quorumTimeoutTime := proposal.VotingStartTime.Add(*data.Params.QuorumTimeout)
+			quorumCheckEntry := v1.NewQuorumCheckQueueEntry(quorumTimeoutTime, data.Params.QuorumCheckCount)
+			quorum := false
+			if ctx.BlockTime().After(quorumTimeoutTime) {
+				quorum, err = k.HasReachedQuorum(ctx, *proposal)
+				if err != nil {
+					panic(fmt.Sprintf("HasReachedQuorum returned an error: %v", err))
+				}
+				if !quorum {
+					// since we don't export the state of the quorum check queue, we can't know how many checks were actually
+					// done. However, in order to trigger a vote time extension, it is enough to have QuorumChecksDone > 0 to
+					// trigger a vote time extension, so we set it to 1
+					quorumCheckEntry.QuorumChecksDone = 1
+				}
+			}
+			if !quorum {
+				if err := k.QuorumCheckQueue.Set(ctx, collections.Join(quorumTimeoutTime, proposal.Id), quorumCheckEntry); err != nil {
+					panic(fmt.Sprintf("QuorumCheckQueue.Set returned an error: %v", err))
+				}
+			}
+		}
 	}
 
 	// if account has zero balance it probably means it's not set, so we set it
@@ -82,6 +143,33 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 	// check if total deposits equals balance, if it doesn't panic because there were export/import errors
 	if !balance.Equal(totalDeposits) {
 		panic(fmt.Sprintf("expected module account was %s but we got %s", balance.String(), totalDeposits.String()))
+	}
+
+	t := ctx.BlockTime()
+	if data.LastMinDeposit != nil {
+		if err := k.LastMinDeposit.Set(ctx, *data.LastMinDeposit); err != nil {
+			panic(err)
+		}
+	} else {
+		if err := k.LastMinDeposit.Set(ctx, v1.LastMinDeposit{
+			Value: data.Params.MinDepositThrottler.FloorValue,
+			Time:  &t,
+		}); err != nil {
+			panic(err)
+		}
+	}
+
+	if data.LastMinInitialDeposit != nil {
+		if err := k.LastMinInitialDeposit.Set(ctx, *data.LastMinInitialDeposit); err != nil {
+			panic(err)
+		}
+	} else {
+		if err := k.LastMinInitialDeposit.Set(ctx, v1.LastMinDeposit{
+			Value: data.Params.MinInitialDepositThrottler.FloorValue,
+			Time:  &t,
+		}); err != nil {
+			panic(err)
+		}
 	}
 }
 
@@ -130,12 +218,43 @@ func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) (*v1.GenesisState, error) 
 		panic(err)
 	}
 
+	blockTime := ctx.BlockTime()
+	lastMinDeposit := v1.LastMinDeposit{
+		Value: k.GetMinDeposit(ctx),
+		Time:  &blockTime,
+	}
+
+	lastMinInitialDeposit := v1.LastMinDeposit{
+		Value: k.GetMinInitialDeposit(ctx),
+		Time:  &blockTime,
+	}
+
+	participationEma, err := k.ParticipationEMA.Get(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	constitutionAmendmentParticipationEma, err := k.ConstitutionAmendmentParticipationEMA.Get(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	lawParticipationEma, err := k.LawParticipationEMA.Get(ctx)
+	if err != nil {
+		panic(err)
+	}
+
 	return &v1.GenesisState{
-		StartingProposalId: startingProposalID,
-		Deposits:           proposalsDeposits,
-		Votes:              proposalsVotes,
-		Proposals:          proposals,
-		Params:             &params,
-		Constitution:       constitution,
+		StartingProposalId:                    startingProposalID,
+		Deposits:                              proposalsDeposits,
+		Votes:                                 proposalsVotes,
+		Proposals:                             proposals,
+		Params:                                &params,
+		Constitution:                          constitution,
+		LastMinDeposit:                        &lastMinDeposit,
+		LastMinInitialDeposit:                 &lastMinInitialDeposit,
+		ParticipationEma:                      participationEma.String(),
+		ConstitutionAmendmentParticipationEma: constitutionAmendmentParticipationEma.String(),
+		LawParticipationEma:                   lawParticipationEma.String(),
 	}, nil
 }

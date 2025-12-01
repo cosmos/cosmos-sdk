@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govutils "github.com/cosmos/cosmos-sdk/x/gov/client/utils"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -74,6 +75,7 @@ func NewTxCmd(legacyPropCmds []*cobra.Command) *cobra.Command {
 		NewCmdSubmitProposal(),
 		NewCmdDraftProposal(),
 		NewCmdCancelProposal(),
+		NewCmdGenerateConstitutionAmendment(),
 
 		// Deprecated
 		cmdSubmitLegacyProp,
@@ -116,12 +118,12 @@ Where proposal.json contains:
   "expedited": false
 }
 
-metadata example: 
+metadata example:
 {
 	"title": "",
 	"authors": [""],
 	"summary": "",
-	"details": "", 
+	"details": "",
 	"proposal_forum_url": "",
 	"vote_option_context": "",
 }
@@ -140,7 +142,7 @@ metadata example:
 				return err
 			}
 
-			msg, err := v1.NewMsgSubmitProposal(msgs, deposit, clientCtx.GetFromAddress().String(), proposal.Metadata, proposal.Title, proposal.Summary, proposal.Expedited)
+			msg, err := v1.NewMsgSubmitProposal(msgs, deposit, clientCtx.GetFromAddress().String(), proposal.Metadata, proposal.Title, proposal.Summary)
 			if err != nil {
 				return fmt.Errorf("invalid message: %w", err)
 			}
@@ -306,7 +308,7 @@ func NewCmdVote() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "vote [proposal-id] [option]",
 		Args:  cobra.ExactArgs(2),
-		Short: "Vote for an active proposal, options: yes/no/no_with_veto/abstain",
+		Short: "Vote for an active proposal, options: yes/no/abstain",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Submit a vote for an active proposal. You can
 find the proposal-id by running "%s query gov proposals".
@@ -360,13 +362,13 @@ func NewCmdWeightedVote() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "weighted-vote [proposal-id] [weighted-options]",
 		Args:  cobra.ExactArgs(2),
-		Short: "Vote for an active proposal, options: yes/no/no_with_veto/abstain",
+		Short: "Vote for an active proposal, options: yes/no/abstain",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Submit a vote for an active proposal. You can
 find the proposal-id by running "%s query gov proposals".
 
 Example:
-$ %s tx gov weighted-vote 1 yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05 --from mykey
+$ %s tx gov weighted-vote 1 yes=0.6,no=0.3,abstain=0.05 --from mykey
 `,
 				version.AppName, version.AppName,
 			),
@@ -405,6 +407,100 @@ $ %s tx gov weighted-vote 1 yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05 --from
 
 	cmd.Flags().String(FlagMetadata, "", "Specify metadata of the weighted vote")
 	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewCmdConstitutionAmendmentMsg returns the command to generate the sdk.Msg
+// required for a constitution amendment proposal generating the unified diff
+// between the current constitution (queried) and the updated constitution
+// from the provided markdown file.
+func NewCmdGenerateConstitutionAmendment() *cobra.Command {
+	flagCurrentConstitution := "current-constitution"
+
+	cmd := &cobra.Command{
+		Use:   "generate-constitution-amendment [path/to/updated/constitution.md]",
+		Args:  cobra.ExactArgs(1),
+		Short: "Generate a constitution amendment proposal message",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Generate a constitution amendment proposal message from the current
+constitution and the provided updated constitution.
+Queries the current constitution from the node (unless --current-constitution is used)
+and generates a valid constitution amendment proposal message containing the unified diff
+between the current constitution and the updated constitution provided
+in a markdown file.
+
+NOTE: this is just a utility command, it is not able to generate or
+submit a valid Tx. Use the 'tx gov submit-proposal' command in
+conjunction with the result of this one to submit the proposal.
+See also 'tx gov draft-proposal' for a more general proposal drafting tool.
+
+Example:
+$ %s tx gov generate-constitution-amendment path/to/updated/constitution.md
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Read the updated constitution from the provided markdown file
+			updatedConstitution, err := readFromMarkdownFile(args[0])
+			if err != nil {
+				return err
+			}
+
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			var currentConstitution string
+			currentConstitutionPath, err := cmd.Flags().GetString(flagCurrentConstitution)
+			if err != nil {
+				return err
+			}
+
+			if currentConstitutionPath != "" {
+				// Read the current constitution from the provided file
+				currentConstitution, err = readFromMarkdownFile(currentConstitutionPath)
+				if err != nil {
+					return err
+				}
+			} else {
+				// Query the current constitution from the node
+				queryClient := v1.NewQueryClient(clientCtx)
+				resp, err := queryClient.Constitution(cmd.Context(), &v1.QueryConstitutionRequest{})
+				if err != nil {
+					return err
+				}
+				currentConstitution = resp.Constitution
+			}
+
+			// Generate the unified diff between the current and updated constitutions
+			diff, err := govutils.GenerateUnifiedDiff(currentConstitution, updatedConstitution)
+			if err != nil {
+				return err
+			}
+
+			msg := v1.NewMsgProposeConstitutionAmendment(authtypes.NewModuleAddress(types.ModuleName), diff)
+			return clientCtx.PrintProto(msg)
+		},
+	}
+
+	// This is not a tx command (but a utility for the proposal tx), so we don't need to add tx flags.
+	// It might actually be confusing, so we just add the query flags.
+	flags.AddQueryFlagsToCmd(cmd)
+
+	// query commands have the FlagOutput default to "text", but we want to override it to "json"
+	// in this case.
+	cmd.Flags().Lookup(flags.FlagOutput).DefValue = flags.OutputFormatJSON
+	err := cmd.Flags().Set(flags.FlagOutput, flags.OutputFormatJSON)
+	if err != nil {
+		panic(err)
+	}
+
+	// add flag to pass input constitution file instead of querying node
+	// for the current constitution
+	cmd.Flags().String(flagCurrentConstitution, "", "Path to the current constitution markdown file (optional, if not provided, the current constitution will be queried from the node)")
 
 	return cmd
 }

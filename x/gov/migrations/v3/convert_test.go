@@ -61,10 +61,10 @@ func TestConvertToLegacyProposal(t *testing.T) {
 				require.Equal(t, v1beta1Proposal.VotingEndTime, *proposal.VotingEndTime)
 				require.Equal(t, v1beta1Proposal.SubmitTime, *proposal.SubmitTime)
 				require.Equal(t, v1beta1Proposal.DepositEndTime, *proposal.DepositEndTime)
-				require.Equal(t, v1beta1Proposal.FinalTallyResult.Yes, math.NewInt(0))
-				require.Equal(t, v1beta1Proposal.FinalTallyResult.No, math.NewInt(0))
-				require.Equal(t, v1beta1Proposal.FinalTallyResult.NoWithVeto, math.NewInt(0))
-				require.Equal(t, v1beta1Proposal.FinalTallyResult.Abstain, math.NewInt(0))
+				require.True(t, v1beta1Proposal.FinalTallyResult.Yes.IsZero())
+				require.True(t, v1beta1Proposal.FinalTallyResult.No.IsZero())
+				require.True(t, v1beta1Proposal.FinalTallyResult.NoWithVeto.IsZero())
+				require.True(t, v1beta1Proposal.FinalTallyResult.Abstain.IsZero())
 				tp, ok := v1beta1Proposal.Content.GetCachedValue().(*v1beta1.TextProposal)
 				require.Truef(t, ok, "expected *TextProposal, got %T", v1beta1Proposal.Content.GetCachedValue())
 				require.Equal(t, tp.Title, "title")
@@ -116,37 +116,25 @@ func TestConvertToLegacyTallyResult(t *testing.T) {
 		},
 		"invalid yes count": {
 			tallyResult: v1.TallyResult{
-				YesCount:        "invalid",
-				NoCount:         tallyResult.NoCount,
-				AbstainCount:    tallyResult.AbstainCount,
-				NoWithVetoCount: tallyResult.NoWithVetoCount,
+				YesCount:     "invalid",
+				NoCount:      tallyResult.NoCount,
+				AbstainCount: tallyResult.AbstainCount,
 			},
 			expErr: true,
 		},
 		"invalid no count": {
 			tallyResult: v1.TallyResult{
-				YesCount:        tallyResult.YesCount,
-				NoCount:         "invalid",
-				AbstainCount:    tallyResult.AbstainCount,
-				NoWithVetoCount: tallyResult.NoWithVetoCount,
+				YesCount:     tallyResult.YesCount,
+				NoCount:      "invalid",
+				AbstainCount: tallyResult.AbstainCount,
 			},
 			expErr: true,
 		},
 		"invalid abstain count": {
 			tallyResult: v1.TallyResult{
-				YesCount:        tallyResult.YesCount,
-				NoCount:         tallyResult.NoCount,
-				AbstainCount:    "invalid",
-				NoWithVetoCount: tallyResult.NoWithVetoCount,
-			},
-			expErr: true,
-		},
-		"invalid no with veto count": {
-			tallyResult: v1.TallyResult{
-				YesCount:        tallyResult.YesCount,
-				NoCount:         tallyResult.NoCount,
-				AbstainCount:    tallyResult.AbstainCount,
-				NoWithVetoCount: "invalid",
+				YesCount:     tallyResult.YesCount,
+				NoCount:      tallyResult.NoCount,
+				AbstainCount: "invalid",
 			},
 			expErr: true,
 		},

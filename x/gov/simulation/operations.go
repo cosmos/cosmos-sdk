@@ -228,8 +228,7 @@ func simulateMsgSubmitProposal(
 		chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		simAccount, _ := simtypes.RandomAcc(r, accs)
-		expedited := r.Intn(2) == 0
-		deposit, skip, err := randomDeposit(r, ctx, ak, bk, k, simAccount.Address, true, expedited)
+		deposit, skip, err := randomDeposit(r, ctx, ak, bk, k, simAccount.Address, true)
 		switch {
 		case skip:
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgSubmitProposal, "skip deposit"), nil, nil
@@ -244,7 +243,6 @@ func simulateMsgSubmitProposal(
 			simtypes.RandStringOfLength(r, 100),
 			simtypes.RandStringOfLength(r, 100),
 			simtypes.RandStringOfLength(r, 100),
-			expedited,
 		)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "unable to generate a submit proposal msg"), nil, err
@@ -322,12 +320,12 @@ func SimulateMsgDeposit(
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgDeposit, "unable to generate proposalID"), nil, nil
 		}
 
-		p, err := k.Proposals.Get(ctx, proposalID)
+		_, err := k.Proposals.Get(ctx, proposalID)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgDeposit, "unable to get proposal"), nil, err
 		}
 
-		deposit, skip, err := randomDeposit(r, ctx, ak, bk, k, simAccount.Address, false, p.Expedited)
+		deposit, skip, err := randomDeposit(r, ctx, ak, bk, k, simAccount.Address, false)
 		switch {
 		case skip:
 			return simtypes.NoOpMsg(types.ModuleName, TypeMsgDeposit, "skip deposit"), nil, nil
@@ -548,7 +546,6 @@ func randomDeposit(
 	k *keeper.Keeper,
 	addr sdk.AccAddress,
 	useMinAmount bool,
-	expedited bool,
 ) (deposit sdk.Coins, skip bool, err error) {
 	account := ak.GetAccount(ctx, addr)
 	spendable := bk.SpendableCoins(ctx, account.GetAddress())
@@ -558,9 +555,9 @@ func randomDeposit(
 	}
 
 	params, _ := k.Params.Get(ctx)
-	minDeposit := params.MinDeposit
-	if expedited {
-		minDeposit = params.ExpeditedMinDeposit
+	minDeposit := params.MinDepositThrottler.FloorValue
+	if len(minDeposit) == 0 {
+		return nil, true, nil // skip if no deposit denoms configured
 	}
 	denomIndex := r.Intn(len(minDeposit))
 	denom := minDeposit[denomIndex].Denom
@@ -581,12 +578,7 @@ func randomDeposit(
 
 	minAmount := sdkmath.ZeroInt()
 	if useMinAmount {
-		minDepositPercent, err := sdkmath.LegacyNewDecFromStr(params.MinInitialDepositRatio)
-		if err != nil {
-			return nil, false, err
-		}
-
-		minAmount = sdkmath.LegacyNewDecFromInt(minDepositAmount).Mul(minDepositPercent).TruncateInt()
+		minAmount = k.GetMinInitialDeposit(ctx)[denomIndex].Amount
 	}
 
 	amount, err := simtypes.RandPositiveInt(r, minDepositAmount.Sub(minAmount))
@@ -647,15 +639,13 @@ func randomProposalID(r *rand.Rand, k *keeper.Keeper, ctx sdk.Context, status v1
 
 // Pick a random voting option
 func randomVotingOption(r *rand.Rand) v1.VoteOption {
-	switch r.Intn(4) {
+	switch r.Intn(3) {
 	case 0:
 		return v1.OptionYes
 	case 1:
 		return v1.OptionAbstain
 	case 2:
 		return v1.OptionNo
-	case 3:
-		return v1.OptionNoWithVeto
 	default:
 		panic("invalid vote option")
 	}
@@ -665,8 +655,7 @@ func randomVotingOption(r *rand.Rand) v1.VoteOption {
 func randomWeightedVotingOptions(r *rand.Rand) v1.WeightedVoteOptions {
 	w1 := r.Intn(100 + 1)
 	w2 := r.Intn(100 - w1 + 1)
-	w3 := r.Intn(100 - w1 - w2 + 1)
-	w4 := 100 - w1 - w2 - w3
+	w3 := 100 - w1 - w2
 	weightedVoteOptions := v1.WeightedVoteOptions{}
 	if w1 > 0 {
 		weightedVoteOptions = append(weightedVoteOptions, &v1.WeightedVoteOption{
@@ -686,11 +675,6 @@ func randomWeightedVotingOptions(r *rand.Rand) v1.WeightedVoteOptions {
 			Weight: sdkmath.LegacyNewDecWithPrec(int64(w3), 2).String(),
 		})
 	}
-	if w4 > 0 {
-		weightedVoteOptions = append(weightedVoteOptions, &v1.WeightedVoteOption{
-			Option: v1.OptionNoWithVeto,
-			Weight: sdkmath.LegacyNewDecWithPrec(int64(w4), 2).String(),
-		})
-	}
+
 	return weightedVoteOptions
 }

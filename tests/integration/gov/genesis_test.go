@@ -82,17 +82,16 @@ func TestImportExportQueues(t *testing.T) {
 
 	ctx = s1.app.BaseApp.NewContext(false)
 	// Create two proposals, put the second into the voting period
-	proposal1, err := s1.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", "test", "description", addrs[0], false)
+	proposal1, err := s1.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", "test", "description", addrs[0])
 	assert.NilError(t, err)
 	proposalID1 := proposal1.Id
 
-	proposal2, err := s1.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", "test", "description", addrs[0], false)
+	proposal2, err := s1.GovKeeper.SubmitProposal(ctx, []sdk.Msg{mkTestLegacyContent(t)}, "", "test", "description", addrs[0])
 	assert.NilError(t, err)
 	proposalID2 := proposal2.Id
 
-	params, err := s1.GovKeeper.Params.Get(ctx)
-	assert.NilError(t, err)
-	votingStarted, err := s1.GovKeeper.AddDeposit(ctx, proposalID2, addrs[0], params.MinDeposit)
+	minDeposit := s1.GovKeeper.GetMinDeposit(ctx)
+	votingStarted, err := s1.GovKeeper.AddDeposit(ctx, proposalID2, addrs[0], minDeposit, false)
 	assert.NilError(t, err)
 	assert.Assert(t, votingStarted)
 
@@ -160,7 +159,7 @@ func TestImportExportQueues(t *testing.T) {
 
 	ctx2 := s2.app.BaseApp.NewContext(false)
 
-	params, err = s2.GovKeeper.Params.Get(ctx2)
+	params, err := s2.GovKeeper.Params.Get(ctx2)
 	assert.NilError(t, err)
 	// Jump the time forward past the DepositPeriod and VotingPeriod
 	ctx2 = ctx2.WithBlockTime(ctx2.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(*params.VotingPeriod))
@@ -174,7 +173,7 @@ func TestImportExportQueues(t *testing.T) {
 	assert.Assert(t, proposal2.Status == v1.StatusVotingPeriod)
 
 	macc := s2.GovKeeper.GetGovernanceAccount(ctx2)
-	assert.DeepEqual(t, sdk.Coins(params.MinDeposit), s2.BankKeeper.GetAllBalances(ctx2, macc.GetAddress()))
+	assert.DeepEqual(t, sdk.Coins(minDeposit), s2.BankKeeper.GetAllBalances(ctx2, macc.GetAddress()))
 
 	// Run the endblocker. Check to make sure that proposal1 is removed from state, and proposal2 is finished VotingPeriod.
 	err = gov.EndBlocker(ctx2, s2.GovKeeper)

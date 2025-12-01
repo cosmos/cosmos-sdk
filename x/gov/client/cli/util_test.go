@@ -205,7 +205,6 @@ func TestParseSubmitProposal(t *testing.T) {
 	require.Equal(t, "My awesome description", textProp.Description)
 	require.Equal(t, "My awesome title", proposal.Title)
 	require.Equal(t, "My awesome summary", proposal.Summary)
-	require.Equal(t, true, proposal.Expedited)
 
 	err = okJSON.Close()
 	require.Nil(t, err, "unexpected error")

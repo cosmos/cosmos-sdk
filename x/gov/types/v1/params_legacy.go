@@ -70,17 +70,6 @@ func validateTallyParams(i interface{}) error {
 		return fmt.Errorf("vote threshold too large: %s", v)
 	}
 
-	vetoThreshold, err := math.LegacyNewDecFromStr(v.VetoThreshold)
-	if err != nil {
-		return fmt.Errorf("invalid vetoThreshold string: %w", err)
-	}
-	if !vetoThreshold.IsPositive() {
-		return fmt.Errorf("veto threshold must be positive: %s", vetoThreshold)
-	}
-	if vetoThreshold.GT(math.LegacyOneDec()) {
-		return fmt.Errorf("veto threshold too large: %s", v)
-	}
-
 	return nil
 }
 

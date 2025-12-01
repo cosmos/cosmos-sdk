@@ -3,10 +3,10 @@ package v5
 import (
 	"cosmossdk.io/collections"
 	corestoretypes "cosmossdk.io/core/store"
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v4 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v4"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
@@ -14,7 +14,10 @@ var (
 	// ParamsKey is the key of x/gov params
 	ParamsKey = []byte{0x30}
 	// ConstitutionKey is the key of x/gov constitution
-	ConstitutionKey = collections.NewPrefix(49)
+	ConstitutionKey                          = collections.NewPrefix(49)
+	ParticipationEMAKey                      = collections.NewPrefix(80)
+	ConstitutionAmendmentParticipationEMAKey = collections.NewPrefix(96)
+	LawParticipationEMAKey                   = collections.NewPrefix(112)
 )
 
 // MigrateStore performs in-place store migrations from v4 (v0.47) to v5 (v0.50). The
@@ -22,9 +25,17 @@ var (
 //
 // Addition of the new proposal expedited parameters that are set to 0 by default.
 // Set of default chain constitution.
-func MigrateStore(ctx sdk.Context, storeService corestoretypes.KVStoreService, cdc codec.BinaryCodec, constitutionCollection collections.Item[string]) error {
+func MigrateStore(
+	ctx sdk.Context,
+	storeService corestoretypes.KVStoreService,
+	cdc codec.BinaryCodec,
+	constitutionItem collections.Item[string],
+	participationEMAItem collections.Item[math.LegacyDec],
+	constitutionAmendmentParticipationEMAItem collections.Item[math.LegacyDec],
+	lawParticipationEMAItem collections.Item[math.LegacyDec],
+) error {
 	store := storeService.OpenKVStore(ctx)
-	paramsBz, err := store.Get(v4.ParamsKey)
+	paramsBz, err := store.Get(ParamsKey)
 	if err != nil {
 		return err
 	}
@@ -36,12 +47,17 @@ func MigrateStore(ctx sdk.Context, storeService corestoretypes.KVStoreService, c
 	}
 
 	defaultParams := govv1.DefaultParams()
-	params.ExpeditedMinDeposit = defaultParams.ExpeditedMinDeposit
-	params.ExpeditedVotingPeriod = defaultParams.ExpeditedVotingPeriod
-	params.ExpeditedThreshold = defaultParams.ExpeditedThreshold
 	params.ProposalCancelRatio = defaultParams.ProposalCancelRatio
 	params.ProposalCancelDest = defaultParams.ProposalCancelDest
 	params.MinDepositRatio = defaultParams.MinDepositRatio
+	params.MinDepositThrottler = defaultParams.MinDepositThrottler
+	params.MinDepositThrottler.FloorValue[0].Denom = sdk.DefaultBondDenom
+	params.MinInitialDepositThrottler = defaultParams.MinInitialDepositThrottler
+	params.MinInitialDepositThrottler.FloorValue[0].Denom = sdk.DefaultBondDenom
+	params.BurnDepositNoThreshold = defaultParams.BurnDepositNoThreshold
+	params.QuorumRange = defaultParams.QuorumRange
+	params.ConstitutionAmendmentQuorumRange = defaultParams.ConstitutionAmendmentQuorumRange
+	params.LawQuorumRange = defaultParams.LawQuorumRange
 
 	bz, err := cdc.Marshal(&params)
 	if err != nil {
@@ -52,9 +68,29 @@ func MigrateStore(ctx sdk.Context, storeService corestoretypes.KVStoreService, c
 		return err
 	}
 
-	// Set the default consisitution if it is not set
-	if ok, err := constitutionCollection.Has(ctx); !ok || err != nil {
-		if err := constitutionCollection.Set(ctx, "This chain has no constitution."); err != nil {
+	// Set other gov params
+	initParticipationEma := math.LegacyNewDecWithPrec(12, 2)
+	if ok, err := participationEMAItem.Has(ctx); !ok || err != nil {
+		if err := participationEMAItem.Set(ctx, initParticipationEma); err != nil {
+			return err
+		}
+	}
+
+	if ok, err := constitutionAmendmentParticipationEMAItem.Has(ctx); !ok || err != nil {
+		if err := constitutionAmendmentParticipationEMAItem.Set(ctx, initParticipationEma); err != nil {
+			return err
+		}
+	}
+
+	if ok, err := lawParticipationEMAItem.Has(ctx); !ok || err != nil {
+		if err := lawParticipationEMAItem.Set(ctx, initParticipationEma); err != nil {
+			return err
+		}
+	}
+
+	// Set the default consitution if it is not set
+	if ok, err := constitutionItem.Has(ctx); !ok || err != nil {
+		if err := constitutionItem.Set(ctx, "This chain has no constitution."); err != nil {
 			return err
 		}
 	}

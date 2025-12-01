@@ -4,6 +4,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktx "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
@@ -17,7 +18,6 @@ func NewMsgSubmitProposal(
 	messages []sdk.Msg,
 	initialDeposit sdk.Coins,
 	proposer, metadata, title, summary string,
-	expedited bool,
 ) (*MsgSubmitProposal, error) {
 	m := &MsgSubmitProposal{
 		InitialDeposit: initialDeposit,
@@ -25,7 +25,6 @@ func NewMsgSubmitProposal(
 		Metadata:       metadata,
 		Title:          title,
 		Summary:        summary,
-		Expedited:      expedited,
 	}
 
 	anys, err := sdktx.SetMsgs(messages)
@@ -105,4 +104,25 @@ func NewMsgCancelProposal(proposalID uint64, proposer string) *MsgCancelProposal
 		ProposalId: proposalID,
 		Proposer:   proposer,
 	}
+}
+
+func NewMsgProposeConstitutionAmendment(authority sdk.AccAddress, amendment string) *MsgProposeConstitutionAmendment {
+	return &MsgProposeConstitutionAmendment{
+		Authority: authority.String(),
+		Amendment: amendment,
+	}
+}
+
+// ValidateBasic implements the sdk.Msg interface.
+func (msg MsgProposeConstitutionAmendment) ValidateBasic() error {
+	if msg.Amendment == "" {
+		return types.ErrInvalidProposalContent.Wrap("amendment cannot be empty")
+	}
+
+	_, err := types.ParseUnifiedDiff(msg.Amendment)
+	if err != nil {
+		return types.ErrInvalidProposalContent.Wrap(err.Error())
+	}
+
+	return nil
 }

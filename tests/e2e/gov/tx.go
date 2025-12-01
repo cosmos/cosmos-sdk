@@ -87,7 +87,7 @@ func (s *E2ETestSuite) SetupSuite() {
 	s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
 
 	// vote for proposal3 as val
-	out, err = govclitestutil.MsgVote(val.ClientCtx, val.Address.String(), "3", "yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05")
+	out, err = govclitestutil.MsgVote(val.ClientCtx, val.Address.String(), "3", "yes=0.6,no=0.3,abstain=0.1")
 	s.Require().NoError(err)
 	s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), &resp), out.String())
 	s.Require().NoError(clitestutil.CheckTxCode(s.network, clientCtx, resp.TxHash, 0))
@@ -520,7 +520,7 @@ func (s *E2ETestSuite) TestNewCmdWeightedVote() {
 			"invalid valid split vote string",
 			[]string{
 				"1",
-				"yes/0.6,no/0.3,abstain/0.05,no_with_veto/0.05",
+				"yes/0.6,no/0.3,abstain/0.1",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
@@ -532,7 +532,7 @@ func (s *E2ETestSuite) TestNewCmdWeightedVote() {
 			"valid split vote",
 			[]string{
 				"1",
-				"yes=0.6,no=0.3,abstain=0.05,no_with_veto=0.05",
+				"yes=0.6,no=0.3,abstain=0.1",
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),

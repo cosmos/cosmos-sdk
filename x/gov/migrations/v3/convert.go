@@ -80,10 +80,7 @@ func ConvertToLegacyTallyResult(tally *v1.TallyResult) (v1beta1.TallyResult, err
 	if !ok {
 		return v1beta1.TallyResult{}, fmt.Errorf("unable to convert no tally string (%s) to int", tally.NoCount)
 	}
-	veto, ok := math.NewIntFromString(tally.NoWithVetoCount)
-	if !ok {
-		return v1beta1.TallyResult{}, fmt.Errorf("unable to convert no with veto tally string (%s) to int", tally.NoWithVetoCount)
-	}
+
 	abstain, ok := math.NewIntFromString(tally.AbstainCount)
 	if !ok {
 		return v1beta1.TallyResult{}, fmt.Errorf("unable to convert abstain tally string (%s) to int", tally.AbstainCount)
@@ -92,8 +89,8 @@ func ConvertToLegacyTallyResult(tally *v1.TallyResult) (v1beta1.TallyResult, err
 	return v1beta1.TallyResult{
 		Yes:        yes,
 		No:         no,
-		NoWithVeto: veto,
 		Abstain:    abstain,
+		NoWithVeto: math.ZeroInt(),
 	}, nil
 }
 
@@ -132,75 +129,8 @@ func ConvertToLegacyDeposit(deposit *v1.Deposit) v1beta1.Deposit {
 	}
 }
 
-func convertToNewDeposits(oldDeps v1beta1.Deposits) v1.Deposits {
-	newDeps := make([]*v1.Deposit, len(oldDeps))
-	for i, oldDep := range oldDeps {
-		newDeps[i] = &v1.Deposit{
-			ProposalId: oldDep.ProposalId,
-			Depositor:  oldDep.Depositor,
-			Amount:     oldDep.Amount,
-		}
-	}
-
-	return newDeps
-}
-
-func convertToNewVotes(oldVotes v1beta1.Votes) (v1.Votes, error) {
-	newVotes := make([]*v1.Vote, len(oldVotes))
-	for i, oldVote := range oldVotes {
-		var newWVOs []*v1.WeightedVoteOption
-
-		// We deprecated Vote.Option in v043. However, it might still be set.
-		// - if only Options is set, or both Option & Options are set, we read from Options,
-		// - if Options is not set, and Option is set, we read from Option,
-		// - if none are set, we throw error.
-		switch {
-		case oldVote.Options != nil:
-			newWVOs = make([]*v1.WeightedVoteOption, len(oldVote.Options))
-			for j, oldWVO := range oldVote.Options {
-				newWVOs[j] = v1.NewWeightedVoteOption(v1.VoteOption(oldWVO.Option), oldWVO.Weight)
-			}
-
-		case oldVote.Option != v1beta1.OptionEmpty:
-			newWVOs = v1.NewNonSplitVoteOption(v1.VoteOption(oldVote.Option))
-
-		default:
-			return nil, fmt.Errorf("vote does not have neither InterfaceRegistryOptions nor Option")
-		}
-
-		newVotes[i] = &v1.Vote{
-			ProposalId: oldVote.ProposalId,
-			Voter:      oldVote.Voter,
-			Options:    newWVOs,
-		}
-	}
-
-	return newVotes, nil
-}
-
-func convertToNewDepParams(oldDepParams v1beta1.DepositParams) v1.DepositParams {
-	return v1.DepositParams{
-		MinDeposit:       oldDepParams.MinDeposit,
-		MaxDepositPeriod: &oldDepParams.MaxDepositPeriod,
-	}
-}
-
-func convertToNewVotingParams(oldVoteParams v1beta1.VotingParams) v1.VotingParams {
-	return v1.VotingParams{
-		VotingPeriod: &oldVoteParams.VotingPeriod,
-	}
-}
-
-func convertToNewTallyParams(oldTallyParams v1beta1.TallyParams) v1.TallyParams {
-	return v1.TallyParams{
-		Quorum:        oldTallyParams.Quorum.String(),
-		Threshold:     oldTallyParams.Threshold.String(),
-		VetoThreshold: oldTallyParams.VetoThreshold.String(),
-	}
-}
-
 func convertToNewProposal(oldProp v1beta1.Proposal) (v1.Proposal, error) {
-	msg, err := v1.NewLegacyContent(oldProp.GetContent(), authtypes.NewModuleAddress(ModuleName).String())
+	msg, err := v1.NewLegacyContent(oldProp.GetContent(), authtypes.NewModuleAddress("gov").String())
 	if err != nil {
 		return v1.Proposal{}, err
 	}
@@ -214,10 +144,9 @@ func convertToNewProposal(oldProp v1beta1.Proposal) (v1.Proposal, error) {
 		Messages: []*codectypes.Any{msgAny},
 		Status:   v1.ProposalStatus(oldProp.Status),
 		FinalTallyResult: &v1.TallyResult{
-			YesCount:        oldProp.FinalTallyResult.Yes.String(),
-			NoCount:         oldProp.FinalTallyResult.No.String(),
-			AbstainCount:    oldProp.FinalTallyResult.Abstain.String(),
-			NoWithVetoCount: oldProp.FinalTallyResult.NoWithVeto.String(),
+			YesCount:     oldProp.FinalTallyResult.Yes.String(),
+			NoCount:      oldProp.FinalTallyResult.No.String(),
+			AbstainCount: oldProp.FinalTallyResult.Abstain.String(),
 		},
 		SubmitTime:      &oldProp.SubmitTime,
 		DepositEndTime:  &oldProp.DepositEndTime,

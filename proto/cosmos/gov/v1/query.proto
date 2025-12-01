@@ -6,6 +6,8 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "google/api/annotations.proto";
 import "cosmos/gov/v1/gov.proto";
 import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types/v1";
 
@@ -54,6 +56,28 @@ service Query {
   // TallyResult queries the tally of a proposal vote.
   rpc TallyResult(QueryTallyResultRequest) returns (QueryTallyResultResponse) {
     option (google.api.http).get = "/cosmos/gov/v1/proposals/{proposal_id}/tally";
+  }
+
+  // MinDeposit queries the minimum deposit currently
+  // required for a proposal to enter voting period.
+  rpc MinDeposit(QueryMinDepositRequest) returns (QueryMinDepositResponse) {
+    option (google.api.http).get = "/cosmos/gov/v1/mindeposit";
+  }
+
+  // MinInitialDeposit queries the minimum initial deposit
+  // currently required for a proposal to be submitted.
+  rpc MinInitialDeposit(QueryMinInitialDepositRequest) returns (QueryMinInitialDepositResponse) {
+    option (google.api.http).get = "/cosmos/gov/v1/mininitialdeposit";
+  }
+
+  // Quorums queries the dynamically set quorums.
+  rpc Quorums(QueryQuorumsRequest) returns (QueryQuorumsResponse) {
+    option (google.api.http).get = "/cosmos/gov/v1/quorums";
+  }
+
+  // ParticipationEMAs queries the state of the proposal participation exponential moving averages.
+  rpc ParticipationEMAs(QueryParticipationEMAsRequest) returns (QueryParticipationEMAsResponse) {
+    option (google.api.http).get = "/cosmos/gov/v1/participationemas";
   }
 }
 
@@ -202,4 +226,54 @@ message QueryTallyResultRequest {
 message QueryTallyResultResponse {
   // tally defines the requested tally.
   TallyResult tally = 1;
+}
+
+// QueryMinDepositRequest is the request type for the Query/MinDeposit RPC method.
+message QueryMinDepositRequest {}
+
+// QueryMinDepositResponse is the response type for the Query/MinDeposit RPC method.
+message QueryMinDepositResponse {
+  // min_deposit defines the minimum deposit required for a proposal to enter voting period.
+  repeated cosmos.base.v1beta1.Coin min_deposit = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryMinInitialDepositRequest is the request type for the Query/MinInitialDeposit RPC method.
+message QueryMinInitialDepositRequest {}
+
+// QueryMinInitialDepositResponse is the response type for the Query/MinInitialDeposit RPC method.
+message QueryMinInitialDepositResponse {
+  // min_initial_deposit defines the minimum initial deposit required for a proposal to be submitted.
+  repeated cosmos.base.v1beta1.Coin min_initial_deposit = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryQuorumsRequest is the request type for the Query/Quorums RPC method.
+message QueryQuorumsRequest {}
+
+// QueryQuorumsResponse is the response type for the Query/Quorums RPC method.
+message QueryQuorumsResponse {
+  // quorum defines the requested quorum.
+  string quorum = 1 [(cosmos_proto.scalar) = "cosmos.Dec"];
+
+  // constitution_amendment_quorum defines the requested quorum for
+  // constitution amendment proposals.
+  string constitution_amendment_quorum = 2 [(cosmos_proto.scalar) = "cosmos.Dec"];
+
+  // law_quorum defines the requested quorum for law proposals.
+  string law_quorum = 3 [(cosmos_proto.scalar) = "cosmos.Dec"];
+}
+
+// QueryParticipationEMAsRequest is the request type for the Query/ParticipationEMAs RPC method.
+message QueryParticipationEMAsRequest {}
+
+// QueryParticipationEMAsResponse is the response type for the Query/ParticipationEMAs RPC method.
+message QueryParticipationEMAsResponse {
+  // participation_ema defines the requested participation EMA for proposals.
+  string participation_ema = 1 [(cosmos_proto.scalar) = "cosmos.Dec"];
+
+  // constitution_amendment_participation_ema defines the requested participation EMA for
+  // constitution amendment proposals.
+  string constitution_amendment_participation_ema = 2 [(cosmos_proto.scalar) = "cosmos.Dec"];
+
+  // law_participation_ema defines the requestedparticipation EMA for law proposals.
+  string law_participation_ema = 3 [(cosmos_proto.scalar) = "cosmos.Dec"];
 }

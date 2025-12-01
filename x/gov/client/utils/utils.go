@@ -18,9 +18,6 @@ func NormalizeVoteOption(option string) string {
 	case "No", "no":
 		return v1beta1.OptionNo.String()
 
-	case "NoWithVeto", "no_with_veto":
-		return v1beta1.OptionNoWithVeto.String()
-
 	default:
 		return option
 	}
@@ -62,6 +59,8 @@ func NormalizeProposalStatus(status string) string {
 		return v1beta1.StatusPassed.String()
 	case "Rejected", "rejected":
 		return v1beta1.StatusRejected.String()
+	case "Vetoed", "vetoed":
+		return v1beta1.StatusVetoed.String()
 	default:
 		return status
 	}

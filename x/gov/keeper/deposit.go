@@ -60,7 +60,7 @@ func (keeper Keeper) IterateDeposits(ctx context.Context, proposalID uint64, cb 
 
 // AddDeposit adds or updates a deposit of a specific depositor on a specific proposal.
 // Activates voting period when appropriate and returns true in that case, else returns false.
-func (keeper Keeper) AddDeposit(ctx context.Context, proposalID uint64, depositorAddr sdk.AccAddress, depositAmount sdk.Coins) (bool, error) {
+func (keeper Keeper) AddDeposit(ctx context.Context, proposalID uint64, depositorAddr sdk.AccAddress, depositAmount sdk.Coins, skipMinDepositRatioCheck bool) (bool, error) {
 	// Checks to see if proposal exists
 	proposal, err := keeper.Proposals.Get(ctx, proposalID)
 	if err != nil {
@@ -78,20 +78,27 @@ func (keeper Keeper) AddDeposit(ctx context.Context, proposalID uint64, deposito
 		return false, err
 	}
 
-	minDepositAmount := proposal.GetMinDepositFromParams(params)
-	minDepositRatio, err := sdkmath.LegacyNewDecFromStr(params.GetMinDepositRatio())
-	if err != nil {
-		return false, err
-	}
-
 	// the deposit must only contain valid denoms (listed in the min deposit param)
 	if err := keeper.validateDepositDenom(ctx, params, depositAmount); err != nil {
 		return false, err
 	}
 
+	minDepositAmount := keeper.GetMinDeposit(ctx)
+	// Check if deposit has already sufficient total funds to transition the proposal into the voting period
+	// perhaps because the min deposit was lowered in the meantime. If so, the minDepositRatio check is skipped,
+	// the user is using this message to trigger activation for a proposal already meeting the minimum deposit.
+	if proposal.Status == v1.StatusDepositPeriod && sdk.NewCoins(proposal.TotalDeposit...).IsAllGTE(minDepositAmount) {
+		skipMinDepositRatioCheck = true
+	}
+
+	minDepositRatio, err := sdkmath.LegacyNewDecFromStr(params.GetMinDepositRatio())
+	if err != nil {
+		return false, err
+	}
+
 	// If minDepositRatio is set, the deposit must be equal or greater than minDepositAmount*minDepositRatio
 	// for at least one denom. If minDepositRatio is zero we skip this check.
-	if !minDepositRatio.IsZero() {
+	if !minDepositRatio.IsZero() || !skipMinDepositRatioCheck {
 		var (
 			depositThresholdMet bool
 			thresholds          []string
@@ -282,40 +289,33 @@ func (keeper Keeper) RefundAndDeleteDeposits(ctx context.Context, proposalID uin
 // validateInitialDeposit validates if initial deposit is greater than or equal to the minimum
 // required at the time of proposal submission. This threshold amount is determined by
 // the deposit parameters. Returns nil on success, error otherwise.
-func (keeper Keeper) validateInitialDeposit(_ context.Context, params v1.Params, initialDeposit sdk.Coins, expedited bool) error {
+func (keeper Keeper) validateInitialDeposit(ctx context.Context, params v1.Params, initialDeposit sdk.Coins) error {
 	if !initialDeposit.IsValid() || initialDeposit.IsAnyNegative() {
 		return errors.Wrap(sdkerrors.ErrInvalidCoins, initialDeposit.String())
 	}
 
-	minInitialDepositRatio, err := sdkmath.LegacyNewDecFromStr(params.MinInitialDepositRatio)
-	if err != nil {
-		return err
-	}
-	if minInitialDepositRatio.IsZero() {
-		return nil
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	minInitialDepositCoins := keeper.GetMinInitialDeposit(sdkCtx)
+	if !initialDeposit.IsAllGTE(minInitialDepositCoins) {
+		return types.ErrMinDepositTooSmall.Wrapf("was (%s), need (%s)", initialDeposit, minInitialDepositCoins)
 	}
 
-	var minDepositCoins sdk.Coins
-	if expedited {
-		minDepositCoins = params.ExpeditedMinDeposit
-	} else {
-		minDepositCoins = params.MinDeposit
-	}
-
-	for i := range minDepositCoins {
-		minDepositCoins[i].Amount = sdkmath.LegacyNewDecFromInt(minDepositCoins[i].Amount).Mul(minInitialDepositRatio).RoundInt()
-	}
-	if !initialDeposit.IsAllGTE(minDepositCoins) {
-		return errors.Wrapf(types.ErrMinDepositTooSmall, "was (%s), need (%s)", initialDeposit, minDepositCoins)
-	}
 	return nil
 }
 
 // validateDepositDenom validates if the deposit denom is accepted by the governance module.
-func (keeper Keeper) validateDepositDenom(_ context.Context, params v1.Params, depositAmount sdk.Coins) error {
+func (keeper Keeper) validateDepositDenom(ctx context.Context, params v1.Params, depositAmount sdk.Coins) error {
+	// Use the floor value from MinDepositThrottler to determine accepted denoms
+	// The floor defines which denominations are acceptable
+	acceptedCoins := params.MinDepositThrottler.FloorValue
+	if len(acceptedCoins) == 0 {
+		// Fallback to deprecated params.MinDeposit for backward compatibility
+		acceptedCoins = params.MinDeposit
+	}
+
 	denoms := []string{}
-	acceptedDenoms := make(map[string]bool, len(params.MinDeposit))
-	for _, coin := range params.MinDeposit {
+	acceptedDenoms := make(map[string]bool, len(acceptedCoins))
+	for _, coin := range acceptedCoins {
 		acceptedDenoms[coin.Denom] = true
 		denoms = append(denoms, coin.Denom)
 	}
@@ -325,6 +325,5 @@ func (keeper Keeper) validateDepositDenom(_ context.Context, params v1.Params, d
 			return errors.Wrapf(types.ErrInvalidDepositDenom, "deposited %s, but gov accepts only the following denom(s): %v", depositAmount, denoms)
 		}
 	}
-
 	return nil
 }

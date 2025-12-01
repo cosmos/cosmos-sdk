@@ -20,11 +20,16 @@ import (
 func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyEndBlocker)
 
+	params, err := keeper.Params.Get(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get params: %w", err)
+	}
+
 	logger := ctx.Logger().With("module", "x/"+types.ModuleName)
 	// delete dead proposals from store and returns theirs deposits.
 	// A proposal is dead when it's inactive and didn't get enough deposit on time to get into voting phase.
 	rng := collections.NewPrefixUntilPairRange[time.Time, uint64](ctx.BlockTime())
-	err := keeper.InactiveProposalsQueue.Walk(ctx, rng, func(key collections.Pair[time.Time, uint64], _ uint64) (bool, error) {
+	err = keeper.InactiveProposalsQueue.Walk(ctx, rng, func(key collections.Pair[time.Time, uint64], _ uint64) (bool, error) {
 		proposal, err := keeper.Proposals.Get(ctx, key.K2())
 		if err != nil {
 			// if the proposal has an encoding error, this means it cannot be processed by x/gov
@@ -46,20 +51,23 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 			return false, err
 		}
 
+		// before deleting, check one last time if the proposal has enough deposits to get into voting phase,
+		// maybe because min deposit decreased in the meantime.
+		minDeposit := keeper.GetMinDeposit(ctx)
+		if proposal.Status == v1.StatusDepositPeriod && sdk.NewCoins(proposal.TotalDeposit...).IsAllGTE(minDeposit) {
+			keeper.ActivateVotingPeriod(ctx, proposal)
+			return false, nil
+		}
+
 		if err = keeper.DeleteProposal(ctx, proposal.Id); err != nil {
 			return false, err
 		}
 
-		params, err := keeper.Params.Get(ctx)
-		if err != nil {
-			return false, err
-		}
 		if !params.BurnProposalDepositPrevote {
 			err = keeper.RefundAndDeleteDeposits(ctx, proposal.Id) // refund deposit if proposal got removed without getting 100% of the proposal
 		} else {
 			err = keeper.DeleteAndBurnDeposits(ctx, proposal.Id) // burn the deposit if proposal got removed without getting 100% of the proposal
 		}
-
 		if err != nil {
 			return false, err
 		}
@@ -84,9 +92,8 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 		logger.Info(
 			"proposal did not meet minimum deposit; deleted",
 			"proposal", proposal.Id,
-			"expedited", proposal.Expedited,
 			"title", proposal.Title,
-			"min_deposit", sdk.NewCoins(proposal.GetMinDepositFromParams(params)...).String(),
+			"min_deposit", sdk.NewCoins(minDeposit...).String(),
 			"total_deposit", sdk.NewCoins(proposal.TotalDeposit...).String(),
 		)
 
@@ -95,6 +102,100 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 	if err != nil {
 		return err
 	}
+
+	// fetch proposals that are due to be checked for quorum
+	rng = collections.NewPrefixUntilPairRange[time.Time, uint64](ctx.BlockTime())
+	keeper.QuorumCheckQueue.Walk(ctx, rng, func(key collections.Pair[time.Time, uint64], quorumCheckEntry v1.QuorumCheckQueueEntry) (bool, error) {
+		// remove from queue
+		keeper.QuorumCheckQueue.Remove(ctx, key)
+
+		proposal, err := keeper.Proposals.Get(ctx, key.K2())
+		if err != nil {
+			return false, err
+		}
+
+		// check if proposal passed quorum
+		quorum, err := keeper.HasReachedQuorum(ctx, proposal)
+		if err != nil {
+			logger.Error(
+				"proposal quorum check",
+				"proposal", proposal.Id,
+				"title", proposal.Title,
+				"error", err,
+			)
+			return false, err
+		}
+		logMsg := "proposal did not pass quorum after timeout, but was removed from quorum check queue"
+		tagValue := types.AttributeValueProposalQuorumNotMet
+
+		if quorum {
+			logMsg = "proposal passed quorum before timeout, vote period was not extended"
+			tagValue = types.AttributeValueProposalQuorumMet
+			if quorumCheckEntry.QuorumChecksDone > 0 {
+				// proposal passed quorum after timeout, extend voting period.
+				// canonically, we consider the first quorum check to be "right after" the  quorum timeout has elapsed,
+				// so if quorum is reached at the first check, we don't extend the voting period.
+				endTime := ctx.BlockTime().Add(*params.MaxVotingPeriodExtension)
+				logMsg = fmt.Sprintf("proposal passed quorum after timeout, but vote end %s is already after %s", proposal.VotingEndTime, endTime)
+				if endTime.After(*proposal.VotingEndTime) {
+					logMsg = fmt.Sprintf("proposal passed quorum after timeout, vote end was extended from %s to %s", proposal.VotingEndTime, endTime)
+					// Update ActiveProposalsQueue with new VotingEndTime
+					if err := keeper.ActiveProposalsQueue.Remove(ctx, collections.Join(*proposal.VotingEndTime, proposal.Id)); err != nil {
+						return false, err
+					}
+					proposal.VotingEndTime = &endTime
+					proposal.TimesVotingPeriodExtended++
+					if err := keeper.ActiveProposalsQueue.Set(ctx, collections.Join(*proposal.VotingEndTime, proposal.Id), proposal.Id); err != nil {
+						return false, err
+					}
+
+					if err := keeper.SetProposal(ctx, proposal); err != nil {
+						return false, err
+					}
+				}
+			}
+		} else if quorumCheckEntry.QuorumChecksDone < quorumCheckEntry.QuorumCheckCount && proposal.VotingEndTime.After(ctx.BlockTime()) {
+			// proposal did not pass quorum and is still active, add back to queue with updated time key and counter.
+			// compute time interval between quorum checks
+			quorumCheckPeriod := proposal.VotingEndTime.Sub(*quorumCheckEntry.QuorumTimeoutTime)
+			t := quorumCheckPeriod / time.Duration(quorumCheckEntry.QuorumCheckCount)
+			// find time for next quorum check
+			nextQuorumCheckTime := key.K1().Add(t)
+			if !nextQuorumCheckTime.After(ctx.BlockTime()) {
+				// next quorum check time is in the past, so add enough time intervals to get to the next quorum check time in the future.
+				d := ctx.BlockTime().Sub(nextQuorumCheckTime)
+				n := d / t
+				nextQuorumCheckTime = nextQuorumCheckTime.Add(t * (n + 1))
+			}
+			if nextQuorumCheckTime.After(*proposal.VotingEndTime) {
+				// next quorum check time is after the voting period ends, so adjust it to be equal to the voting period end time
+				nextQuorumCheckTime = *proposal.VotingEndTime
+			}
+			quorumCheckEntry.QuorumChecksDone++
+			if err := keeper.QuorumCheckQueue.Set(ctx, collections.Join(nextQuorumCheckTime, proposal.Id), quorumCheckEntry); err != nil {
+				return false, err
+			}
+
+			logMsg = fmt.Sprintf("proposal did not pass quorum after timeout, next check happening at %s", nextQuorumCheckTime)
+		}
+
+		logger.Info(
+			"proposal quorum check",
+			"proposal", proposal.Id,
+			"title", proposal.Title,
+			"results", logMsg,
+		)
+
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypeQuorumCheck,
+				sdk.NewAttribute(types.AttributeKeyProposalID, fmt.Sprintf("%d", proposal.Id)),
+				sdk.NewAttribute(types.AttributeKeyProposalResult, tagValue),
+			),
+		)
+
+		return false, nil
+	})
 
 	// fetch active proposals whose voting periods have ended (are passed the block time)
 	rng = collections.NewPrefixUntilPairRange[time.Time, uint64](ctx.BlockTime())
@@ -122,24 +223,15 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 
 		var tagValue, logMsg string
 
-		passes, burnDeposits, tallyResults, err := keeper.Tally(ctx, proposal)
+		passes, burnDeposits, participation, tallyResults, err := keeper.Tally(ctx, proposal)
 		if err != nil {
 			return false, err
 		}
 
-		// If an expedited proposal fails, we do not want to update
-		// the deposit at this point since the proposal is converted to regular.
-		// As a result, the deposits are either deleted or refunded in all cases
-		// EXCEPT when an expedited proposal fails.
-		if !(proposal.Expedited && !passes) {
-			if burnDeposits {
-				err = keeper.DeleteAndBurnDeposits(ctx, proposal.Id)
-			} else {
-				err = keeper.RefundAndDeleteDeposits(ctx, proposal.Id)
-			}
-			if err != nil {
-				return false, err
-			}
+		if burnDeposits {
+			err = keeper.DeleteAndBurnDeposits(ctx, proposal.Id)
+		} else {
+			err = keeper.RefundAndDeleteDeposits(ctx, proposal.Id)
 		}
 
 		if err = keeper.ActiveProposalsQueue.Remove(ctx, collections.Join(*proposal.VotingEndTime, proposal.Id)); err != nil {
@@ -199,26 +291,6 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 				tagValue = types.AttributeValueProposalFailed
 				logMsg = fmt.Sprintf("passed, but msg %d (%s) failed on execution: %s", idx, sdk.MsgTypeURL(msg), err)
 			}
-		case proposal.Expedited:
-			// When expedited proposal fails, it is converted
-			// to a regular proposal. As a result, the voting period is extended, and,
-			// once the regular voting period expires again, the tally is repeated
-			// according to the regular proposal rules.
-			proposal.Expedited = false
-			params, err := keeper.Params.Get(ctx)
-			if err != nil {
-				return false, err
-			}
-			endTime := proposal.VotingStartTime.Add(*params.VotingPeriod)
-			proposal.VotingEndTime = &endTime
-
-			err = keeper.ActiveProposalsQueue.Set(ctx, collections.Join(*proposal.VotingEndTime, proposal.Id), proposal.Id)
-			if err != nil {
-				return false, err
-			}
-
-			tagValue = types.AttributeValueExpeditedProposalRejected
-			logMsg = "expedited proposal converted to regular"
 		default:
 			proposal.Status = v1.StatusRejected
 			proposal.FailedReason = "proposal did not get enough votes to pass"
@@ -232,6 +304,7 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 		if err != nil {
 			return false, err
 		}
+		keeper.UpdateParticipationEMA(ctx, proposal, participation)
 
 		// when proposal become active
 		cacheCtx, writeCache := ctx.CacheContext()
@@ -246,7 +319,6 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 			"proposal tallied",
 			"proposal", proposal.Id,
 			"status", proposal.Status.String(),
-			"expedited", proposal.Expedited,
 			"title", proposal.Title,
 			"results", logMsg,
 		)
@@ -265,6 +337,10 @@ func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
 	if err != nil {
 		return err
 	}
+
+	keeper.UpdateMinInitialDeposit(ctx, true)
+	keeper.UpdateMinDeposit(ctx, true)
+
 	return nil
 }
 
@@ -317,7 +393,6 @@ func failUnsupportedProposal(
 	logger.Info(
 		"proposal failed to decode; deleted",
 		"proposal", proposal.Id,
-		"expedited", proposal.Expedited,
 		"title", proposal.Title,
 		"results", errMsg,
 	)

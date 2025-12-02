@@ -14,28 +14,23 @@ func TestUint40(t *testing.T) {
 		str         string
 	}{
 		{
-			"zero",
-			0,
-			false,
-			"0",
+			name: "zero",
+			str:  "0",
 		},
 		{
-			"max",
-			1<<40 - 1,
-			false,
-			"1099511627775",
+			name:  "max",
+			value: 1<<40 - 1,
+			str:   "1099511627775",
 		},
 		{
-			"arbitrary",
-			109951162777,
-			false,
-			"109951162777",
+			name:  "arbitrary",
+			value: 109951162777,
+			str:   "109951162777",
 		},
 		{
-			"overflow",
-			1 << 40,
-			true,
-			"",
+			name:        "overflow",
+			value:       1 << 40,
+			expectPanic: true,
 		},
 	}
 	for _, tt := range tests {

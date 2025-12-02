@@ -547,7 +547,7 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 			otelattr.String("timestamp", req.Time.String()),
 			otelattr.String("proposer", sdk.ValAddress(req.ProposerAddress).String()),
 			otelattr.Int("num_txs", len(req.Txs)),
-			otelattr.String("hash", string(req.Hash)),
+			otelattr.String("hash", fmt.Sprintf("%X", req.Hash)),
 		),
 	)
 	defer span.End()

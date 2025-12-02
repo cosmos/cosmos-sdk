@@ -15,14 +15,13 @@ func TestNodeID(t *testing.T) {
 		str     string
 	}{
 		{
-			"leaf1_1",
-			true, 1, 1,
-			"NodeID{leaf:true, version:1, index:1}",
+			name: "leaf1_1",
+			leaf: true, version: 1, index: 1,
+			str: "NodeID{leaf:true, version:1, index:1}",
 		},
 		{
-			"branch2_3",
-			false, 2, 3,
-			"NodeID{leaf:false, version:2, index:3}",
+			name: "branch2_3", version: 2, index: 3,
+			str: "NodeID{leaf:false, version:2, index:3}",
 		},
 	}
 	for _, test := range tests {

@@ -1,0 +1,51 @@
+package internal
+
+import "fmt"
+
+// Node represents a traversable node in the IAVL tree.
+type Node interface {
+	// ID returns the unique identifier of the node.
+	// If the node has not been assigned an ID yet, it returns the zero value of NodeID.
+	ID() NodeID
+
+	// IsLeaf indicates whether this node is a leaf node.
+	IsLeaf() bool
+
+	// Key returns the key of this node.
+	Key() ([]byte, error)
+
+	// Value returns the value of this node. It is an error to call this method on non-leaf nodes.
+	Value() ([]byte, error)
+
+	// Left returns a pointer to the left child node.
+	// If this is called on a leaf node, it returns nil.
+	Left() *NodePointer
+
+	// Right returns a pointer to the right child node.
+	// If this is called on a leaf node, it returns nil.
+	Right() *NodePointer
+
+	// Hash returns the hash of this node.
+	// Hash may or may not have been computed yet.
+	Hash() []byte
+
+	// Height returns the height of the subtree rooted at this node.
+	Height() uint8
+
+	// Size returns the number of leaf nodes in the subtree rooted at this node.
+	Size() int64
+
+	// Version returns the version at which this node was created.
+	Version() uint32
+
+	// Get traverses this subtree to find the value associated with the given key.
+	Get(key []byte) (value []byte, index int64, err error)
+
+	// MutateBranch creates a mutable copy of this branch node created at the specified version.
+	// Since this is an immutable tree, whenever we need to modify a branch node, we should call this method
+	// to create a mutable copy of it with its version updated.
+	// This method should only be called on branch nodes; calling it on leaf nodes will result in an error.
+	MutateBranch(version uint32) (*MemNode, error)
+
+	fmt.Stringer
+}

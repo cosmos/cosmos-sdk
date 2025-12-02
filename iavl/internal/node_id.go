@@ -3,6 +3,13 @@ package internal
 import "fmt"
 
 // NodeID is a stable identifier for a node in the IAVL tree.
+// A NodeID allows for a 32-bit version and a 31-bit index within that version,
+// with 1 bit used to indicate whether the node is a leaf or branch.
+// A 32-bit version should allow for 136 years of 1-second blocks.
+// If block production significantly speeds up, we can increase the width of the version field in the future.
+// This sort of change can be done without any major on-disk migration because we can simply create a "wide changeset"
+// format that lives alongside the existing "compact" format.
+// Because the cost of migration is low, we have decided to keep things simple and compact for now.
 type NodeID struct {
 	// Version is the version of the tree at which this node was created.
 	Version uint32

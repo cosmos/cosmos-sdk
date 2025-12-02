@@ -11,26 +11,31 @@ func TestUint40(t *testing.T) {
 		name        string
 		value       uint64
 		expectPanic bool
+		str         string
 	}{
 		{
 			"zero",
 			0,
 			false,
+			"0",
 		},
 		{
 			"max",
 			1<<40 - 1,
 			false,
+			"1099511627775",
 		},
 		{
 			"arbitrary",
 			109951162777,
 			false,
+			"109951162777",
 		},
 		{
 			"overflow",
 			1 << 40,
 			true,
+			"",
 		},
 	}
 	for _, tt := range tests {
@@ -43,6 +48,7 @@ func TestUint40(t *testing.T) {
 				u := NewUint40(tt.value)
 				got := u.ToUint64()
 				require.Equal(t, tt.value, got)
+				require.Equal(t, tt.str, u.String())
 			}
 		})
 	}

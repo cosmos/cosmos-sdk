@@ -37,6 +37,11 @@ func (id NodeID) IsLeaf() bool {
 	return id.FlagIndex.IsLeaf()
 }
 
+// String returns a string representation of the NodeID.
+func (id NodeID) String() string {
+	return fmt.Sprintf("NodeID{leaf:%t, version:%d, index:%d}", id.IsLeaf(), id.Version, id.FlagIndex.Index())
+}
+
 // NewNodeFlagIndex creates a new NodeFlagIndex.
 func NewNodeFlagIndex(isLeaf bool, index uint32) NodeFlagIndex {
 	idx := NodeFlagIndex(index)
@@ -54,9 +59,4 @@ func (index NodeFlagIndex) IsLeaf() bool {
 // Index returns the index of the node in the tree.
 func (index NodeFlagIndex) Index() uint32 {
 	return uint32(index) & 0x7FFFFFFF
-}
-
-// String returns a string representation of the NodeID.
-func (id NodeID) String() string {
-	return fmt.Sprintf("NodeID{leaf:%t, version:%d, index:%d}", id.IsLeaf(), id.Version, id.FlagIndex.Index())
 }

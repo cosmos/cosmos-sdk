@@ -1,4 +1,4 @@
-package gov
+package keeper
 
 import (
 	"fmt"
@@ -6,16 +6,21 @@ import (
 	"cosmossdk.io/collections"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
+	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 // InitGenesis - store genesis parameters
-func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k *keeper.Keeper, data *v1.GenesisState) {
+func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k *Keeper, data *v1.GenesisState) {
 	err := k.ProposalID.Set(ctx, data.StartingProposalId)
 	if err != nil {
 		panic(err)
+	}
+
+	distrAddress := ak.GetModuleAddress(disttypes.ModuleName).String()
+	if data.Params.ProposalCancelDest == distrAddress && distrAddress != "" && k.distrKeeper == nil {
+		panic(fmt.Sprintf("must set DistrKeeper first if using distribution module (%s) as proposal cancel destination", distrAddress))
 	}
 
 	err = k.Params.Set(ctx, *data.Params)
@@ -86,7 +91,7 @@ func InitGenesis(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, k
 }
 
 // ExportGenesis - output genesis parameters
-func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) (*v1.GenesisState, error) {
+func ExportGenesis(ctx sdk.Context, k *Keeper) (*v1.GenesisState, error) {
 	startingProposalID, err := k.ProposalID.Peek(ctx)
 	if err != nil {
 		return nil, err

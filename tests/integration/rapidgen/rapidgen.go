@@ -22,7 +22,6 @@ import (
 	feegrantapi "cosmossdk.io/api/cosmos/feegrant/v1beta1"
 	gov_v1_api "cosmossdk.io/api/cosmos/gov/v1"
 	gov_v1beta1_api "cosmossdk.io/api/cosmos/gov/v1beta1"
-	groupapi "cosmossdk.io/api/cosmos/group/v1"
 	mintapi "cosmossdk.io/api/cosmos/mint/v1beta1"
 	paramsapi "cosmossdk.io/api/cosmos/params/v1beta1"
 	slashingapi "cosmossdk.io/api/cosmos/slashing/v1beta1"
@@ -59,16 +58,6 @@ func GenType(gogo gogoproto.Message, pulsar proto.Message, opts rapidproto.Gener
 		Gogo:   gogo,
 		Opts:   opts,
 	}
-}
-
-func WithDecisionPolicy(opts rapidproto.GeneratorOptions) rapidproto.GeneratorOptions {
-	return opts.
-		WithAnyTypes(
-			&groupapi.ThresholdDecisionPolicy{},
-			&groupapi.PercentageDecisionPolicy{}).
-		WithDisallowNil().
-		WithInterfaceHint("cosmos.group.v1.DecisionPolicy", &groupapi.ThresholdDecisionPolicy{}).
-		WithInterfaceHint("cosmos.group.v1.DecisionPolicy", &groupapi.PercentageDecisionPolicy{})
 }
 
 func GeneratorFieldMapper(t *rapid.T, field protoreflect.FieldDescriptor, name string) (protoreflect.Value, bool) {

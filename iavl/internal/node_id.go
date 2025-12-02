@@ -4,7 +4,10 @@ import "fmt"
 
 // NodeID is a stable identifier for a node in the IAVL tree.
 type NodeID struct {
-	Version   uint32
+	// Version is the version of the tree at which this node was created.
+	Version uint32
+
+	// FlagIndex indicates whether this is a branch or leaf node and stores its index in the tree.
 	FlagIndex NodeFlagIndex
 }
 
@@ -14,6 +17,7 @@ type NodeID struct {
 // Bit 31 indicates whether this is a branch or leaf node (0 for branch, 1 for leaf).
 type NodeFlagIndex uint32
 
+// NewNodeID creates a new NodeID.
 func NewNodeID(isLeaf bool, version, index uint32) NodeID {
 	return NodeID{
 		Version:   version,
@@ -21,10 +25,12 @@ func NewNodeID(isLeaf bool, version, index uint32) NodeID {
 	}
 }
 
+// IsLeaf returns true if the node is a leaf node.
 func (id NodeID) IsLeaf() bool {
 	return id.FlagIndex.IsLeaf()
 }
 
+// NewNodeFlagIndex creates a new NodeFlagIndex.
 func NewNodeFlagIndex(isLeaf bool, index uint32) NodeFlagIndex {
 	idx := NodeFlagIndex(index)
 	if isLeaf {
@@ -33,14 +39,17 @@ func NewNodeFlagIndex(isLeaf bool, index uint32) NodeFlagIndex {
 	return idx
 }
 
+// IsLeaf returns true if the node is a leaf node.
 func (index NodeFlagIndex) IsLeaf() bool {
 	return index&(1<<31) != 0
 }
 
+// Index returns the index of the node in the tree.
 func (index NodeFlagIndex) Index() uint32 {
 	return uint32(index) & 0x7FFFFFFF
 }
 
+// String returns a string representation of the NodeID.
 func (id NodeID) String() string {
 	return fmt.Sprintf("NodeID{leaf:%t, version:%d, index:%d}", id.IsLeaf(), id.Version, id.FlagIndex.Index())
 }

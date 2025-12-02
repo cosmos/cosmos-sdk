@@ -12,14 +12,17 @@ func TestNodeID(t *testing.T) {
 		leaf    bool
 		version uint32
 		index   uint32
+		str     string
 	}{
 		{
 			"leaf1_1",
 			true, 1, 1,
+			"NodeID{leaf:true, version:1, index:1}",
 		},
 		{
 			"branch2_3",
 			false, 2, 3,
+			"NodeID{leaf:false, version:2, index:3}",
 		},
 	}
 	for _, test := range tests {
@@ -28,6 +31,7 @@ func TestNodeID(t *testing.T) {
 			require.Equal(t, test.leaf, id.IsLeaf())
 			require.Equal(t, test.index, id.FlagIndex.Index())
 			require.Equal(t, test.version, id.Version)
+			require.Equal(t, test.str, id.String())
 		})
 	}
 }

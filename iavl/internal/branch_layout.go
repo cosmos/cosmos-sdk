@@ -5,24 +5,56 @@ import (
 	"unsafe"
 )
 
+const (
+	sizeBranch = 76
+)
+
 func init() {
-	if unsafe.Sizeof(BranchLayout{}) != SizeBranch {
-		panic(fmt.Sprintf("invalid BranchLayout size: got %d, want %d", unsafe.Sizeof(BranchLayout{}), SizeBranch))
+	// Verify the size of BranchLayout is what we expect it to be at runtime.
+	if unsafe.Sizeof(BranchLayout{}) != sizeBranch {
+		panic(fmt.Sprintf("invalid BranchLayout size: got %d, want %d", unsafe.Sizeof(BranchLayout{}), sizeBranch))
 	}
 }
 
-const (
-	SizeBranch = 76
-)
-
+// BranchLayout is the on-disk layout of a branch node.
+// NOTE: changes to this struct will affect on-disk compatibility.
 type BranchLayout struct {
-	ID          NodeID
-	Left        NodeID
-	Right       NodeID
-	LeftOffset  uint32 // absolute offset
-	RightOffset uint32 // absolute offset
-	KeyOffset   uint32
-	Height      uint8
-	Size        uint32 // TODO 5 bytes? (there are 3 bytes of padding here)
-	Hash        [32]byte
+	// ID is the NodeID of this branch node.
+	ID NodeID
+
+	// Left is the NodeID of the left child node.
+	Left NodeID
+
+	// Right is the NodeID of the right child node.
+	Right NodeID
+
+	// NOTE: Left and right offsets are included for performance and take up an extra 8 bytes of storage for each branch node.
+	// In an alternate design we stored only NodeID or offset for left and right depending on whether they are local
+	// to this changeset or in a different changeset.
+	// This saved 8 bytes of storage per branch node but made the implementation significantly more complex.
+	// For now, we are including both the left and right IDs and offsets, but if storage space becomes a problem
+	// we can revisit the earlier design and have an 8-byte NodeIDOrOffset type for Left and Right.
+
+	// LeftOffset is the 1-based offset of the left child node if it is in this changeset, 0 otherwise.
+	// The Left NodeID will indicate whether this is a branch or leaf node.
+	LeftOffset uint32
+
+	// RightOffset is the 1-based offset of the right child node if it is in this changeset, 0 otherwise.
+	// The Right NodeID will indicate whether this is a branch or leaf node.
+	RightOffset uint32
+
+	// KeyOffset is the offset the key data for this node in the key value data file.
+	KeyOffset uint32
+
+	// Height is the height of this branch node in the tree.
+	Height uint8
+
+	// NOTE: there are two bytes of padding here that could be used for something else in the future if needed
+	// such as an extra byte to allow for 40-bit key offsets.
+
+	// Size is the number of leaf nodes in the subtree rooted at this branch node.
+	Size Uint40
+
+	// Hash is the hash of this branch node.
+	Hash [32]byte
 }

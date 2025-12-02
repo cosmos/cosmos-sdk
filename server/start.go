@@ -236,6 +236,10 @@ func start(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreato
 		return fmt.Errorf("failed to start telemetry: %w", err)
 	}
 
+	if err := telemetry.InitializeOpenTelemetry(clientCtx.HomeDir); err != nil {
+		return fmt.Errorf("failed to initialize OpenTelemetry: %w", err)
+	}
+
 	emitServerInfoMetrics()
 
 	if !withCmt {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"go.opentelemetry.io/contrib/instrumentation/host"
@@ -27,7 +28,7 @@ import (
 )
 
 const (
-	OtelConfigEnvVar = "OTEL_EXPERIMENTAL_CONFIG_FILE"
+	OtelFileName = "otel.yaml"
 )
 
 var (
@@ -35,29 +36,28 @@ var (
 	shutdownFuncs []func(context.Context) error
 )
 
-func init() {
-	err := initOpenTelemetry()
-	if err != nil {
-		panic(err)
-	}
-}
-
-func initOpenTelemetry() error {
+func InitializeOpenTelemetry(homeDir string) error {
 	var err error
 
 	var opts []otelconf.ConfigurationOption
 
-	confFilename := os.Getenv(OtelConfigEnvVar)
-	if confFilename == "" {
-		otel.SetTracerProvider(tracenoop.NewTracerProvider())
-		otel.SetMeterProvider(metricnoop.NewMeterProvider())
-		logglobal.SetLoggerProvider(lognoop.NewLoggerProvider())
-		return nil
+	fp := filepath.Join(homeDir, "config", OtelFileName)
+
+	if _, err := os.Stat(fp); err != nil {
+		if os.IsNotExist(err) {
+			setNoop()
+			return nil
+		}
+		return err // return other errors (permission issues, etc.)
 	}
 
-	bz, err := os.ReadFile(confFilename)
+	bz, err := os.ReadFile(fp)
 	if err != nil {
 		return fmt.Errorf("failed to read telemetry config file: %w", err)
+	}
+	if len(bz) == 0 {
+		setNoop()
+		return nil
 	}
 
 	cfg, err := otelconf.ParseYAML(bz)
@@ -222,6 +222,12 @@ func initPropagator(propagatorTypes []string) propagation.TextMapPropagator {
 	}
 
 	return propagation.NewCompositeTextMapPropagator(propagators...)
+}
+
+func setNoop() {
+	otel.SetTracerProvider(tracenoop.NewTracerProvider())
+	otel.SetMeterProvider(metricnoop.NewMeterProvider())
+	logglobal.SetLoggerProvider(lognoop.NewLoggerProvider())
 }
 
 type extraConfig struct {

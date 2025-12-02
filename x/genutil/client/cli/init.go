@@ -182,6 +182,12 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			toPrint := newPrintInfo(config.Moniker, chainID, nodeID, "", appState)
 
 			cfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
+
+			otelFile := filepath.Join(clientCtx.HomeDir, "config", "otel.yaml")
+			if err := os.WriteFile(otelFile, []byte{}, 0o644); err != nil {
+				return errorsmod.Wrap(err, "Failed to create otel.yaml file")
+			}
+
 			return displayInfo(toPrint)
 		},
 	}

@@ -3,10 +3,9 @@ package iavlx
 import (
 	"fmt"
 	"io"
+	"log/slog"
 	"sync"
 	"sync/atomic"
-
-	"cosmossdk.io/log"
 
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	storetypes "cosmossdk.io/store/types"
@@ -29,13 +28,13 @@ type CommitTree struct {
 
 	pendingOrphans [][]NodeID
 
-	logger log.Logger
+	logger *slog.Logger
 
 	lastCommitId storetypes.CommitID
 	commitCtx    *commitContext
 }
 
-func NewCommitTree(dir string, opts Options, logger log.Logger) (*CommitTree, error) {
+func NewCommitTree(dir string, opts Options, logger *slog.Logger) (*CommitTree, error) {
 	ts, err := NewTreeStore(dir, opts, logger)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create tree store: %w", err)

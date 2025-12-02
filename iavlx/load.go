@@ -104,7 +104,7 @@ func (ts *TreeStore) load() error {
 			ts.changesets.Set(uint32(startVersion), ce)
 
 			ts.savedVersion.Store(cs.info.EndVersion)
-			ts.version = cs.info.EndVersion
+			ts.latestVersion.Store(cs.info.EndVersion)
 			break
 		}
 	}

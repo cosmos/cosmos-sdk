@@ -27,8 +27,8 @@ type TreeStore struct {
 	latestMapLock sync.RWMutex
 	latest        btree.Map[uint32, *NodePointer] // Cache of latest root pointers per version
 
-	savedVersion atomic.Uint32 // Last version with a readable changeset
-	version      uint32        // Latest written version (may not be readable yet)
+	savedVersion  atomic.Uint32 // Last version with a readable changeset
+	latestVersion atomic.Uint32 // Latest version (may not be readable from disk yet)
 
 	opts Options
 
@@ -249,7 +249,7 @@ func (ts *TreeStore) WriteWALCommit(version uint32) (bytesWritten uint64, err er
 }
 
 func (ts *TreeStore) SaveRoot(root *NodePointer, stats VersionStats) error {
-	version := ts.version + 1
+	version := ts.latestVersion.Load() + 1
 
 	ts.logger.DebugContext(ts.ctx, "SaveRoot", "version", version, "totalBytes", stats.TotalBytes(), "leaves", stats.TotalLeaves, "branches", stats.TotalBranches, "kvDataSize", stats.KVDataSize, "budgetBefore", ts.memMonitor.evictBudget.Load())
 
@@ -257,14 +257,14 @@ func (ts *TreeStore) SaveRoot(root *NodePointer, stats VersionStats) error {
 	ts.latestMapLock.Lock()
 	ts.latest.Set(version, root)
 	ts.latestMapLock.Unlock()
+	ts.latestVersion.Add(1)
 
-	ts.memMonitor.AddUsage(stats.TotalBytes())
+	//ts.memMonitor.AddUsage(stats.TotalBytes())
 
 	err := ts.currentWriter.SaveRoot(root, version, stats)
 	if err != nil {
 		return err
 	}
-	ts.version++
 
 	currentSize := ts.currentWriter.TotalBytes()
 	maxSize := ts.opts.GetChangesetMaxTarget()
@@ -344,7 +344,7 @@ func (ts *TreeStore) SaveRoot(root *NodePointer, stats VersionStats) error {
 }
 
 func (ts *TreeStore) stagedVersion() uint32 {
-	return ts.version + 1
+	return ts.latestVersion.Load() + 1
 }
 
 func (ts *TreeStore) setActiveReader(version uint32, reader *Changeset) {

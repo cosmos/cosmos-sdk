@@ -307,13 +307,13 @@ func (c *CommitTree) GetImmutable(version int64) (storetypes.KVStore, error) {
 
 func (c *CommitTree) ResolveRoot(version uint32) (*NodePointer, error) {
 	if version == 0 {
-		version = c.store.version
+		version = c.store.latestVersion.Load()
 	}
 	return c.store.ResolveRoot(version)
 }
 
 func (c *CommitTree) Version() uint32 {
-	return c.store.version
+	return c.store.latestVersion.Load()
 }
 
 func (c *CommitTree) Close() error {

@@ -2,7 +2,8 @@ package iavlx
 
 type evictor struct {
 	*TreeStore
-	wakeCh chan struct{}
+	wakeCh           chan struct{}
+	lastEvictVersion uint32
 }
 
 func newEvictor(ts *TreeStore) *evictor {
@@ -23,11 +24,31 @@ func (ev *evictor) wake() {
 
 func (ev *evictor) evictLoop() {
 	for {
+		// check for context cancellation
+		select {
+		case <-ev.ctx.Done():
+			return
+		default:
+		}
+
 		ev.latestMapLock.RLock()
 		version, _, ok := ev.latest.Min()
 		ev.latestMapLock.RUnlock()
-		evictVersion := ev.savedVersion.Load()
-		if !ok || version > evictVersion {
+		savedVersion := ev.savedVersion.Load()
+		latestVersion := ev.latestVersion.Load()
+		if ok && version <= savedVersion && version < latestVersion {
+			// delete the saved version that is not the latest
+			ev.latestMapLock.Lock()
+			ev.latest.Delete(version)
+			ev.latestMapLock.Unlock()
+		} else if latestVersion > ev.lastEvictVersion {
+			// do an evict traverse on the latest tree if it is newer than last version that was evict traversed
+			tree, _ := ev.latest.Get(latestVersion)
+			evictCount := evictTraverse(tree, 0, ev.opts.EvictDepth, savedVersion)
+			ev.logger.DebugContext(ev.ctx, "evicted nodes", "version", version, "count", evictCount, "evictVersion", savedVersion, "lastEvictVersion", ev.lastEvictVersion)
+			ev.lastEvictVersion = version
+		} else {
+			// wait for wake signal or context cancellation
 			select {
 			case <-ev.wakeCh:
 				continue
@@ -35,8 +56,6 @@ func (ev *evictor) evictLoop() {
 				return
 			}
 		}
-
-		ev.latest.Delete(version)
 	}
 }
 

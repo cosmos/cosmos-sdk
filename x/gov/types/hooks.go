@@ -16,10 +16,10 @@ func NewMultiGovHooks(hooks ...GovHooks) MultiGovHooks {
 	return hooks
 }
 
-func (h MultiGovHooks) AfterProposalSubmission(ctx context.Context, proposalID uint64) error {
+func (h MultiGovHooks) AfterProposalSubmission(ctx context.Context, proposalID uint64, proposerAddr sdk.AccAddress) error {
 	var errs error
 	for i := range h {
-		errs = errors.Join(errs, h[i].AfterProposalSubmission(ctx, proposalID))
+		errs = errors.Join(errs, h[i].AfterProposalSubmission(ctx, proposalID, proposerAddr))
 	}
 
 	return errs

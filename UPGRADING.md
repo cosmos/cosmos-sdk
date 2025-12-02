@@ -4,7 +4,7 @@ This document provides a quick reference for the upgrades from `v0.53.x` to `v0.
 
 Note, always read the **App Wiring Changes** section for more information on application wiring updates.
 
-### TLDR
+## TLDR
 
 For a full list of changes, see the [Changelog](https://github.com/cosmos/cosmos-sdk/blob/release/v0.54.x/CHANGELOG.md).
 
@@ -64,7 +64,7 @@ func (h MyGovHooks) AfterProposalSubmission(ctx context.Context, proposalID uint
 }
 ```
 
-#### Adoption of OpenTelemetry and Deprecation of `github.com/hashicorp/go-metrics`
+## Adoption of OpenTelemetry and Deprecation of `github.com/hashicorp/go-metrics`
 
 Existing Cosmos SDK telemetry support is provided by `github.com/hashicorp/go-metrics` which is undermaintained and only supported metrics instrumentation.
 OpenTelemetry provides an integrated solution for metrics, traces, and logging which is widely adopted and actively maintained.

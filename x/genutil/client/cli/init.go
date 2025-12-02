@@ -13,6 +13,8 @@ import (
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
+
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math/unsafe"
 
@@ -183,7 +185,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 
 			cfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
 
-			otelFile := filepath.Join(clientCtx.HomeDir, "config", "otel.yaml")
+			otelFile := filepath.Join(clientCtx.HomeDir, "config", telemetry.OtelFileName)
 			if err := os.WriteFile(otelFile, []byte{}, 0o644); err != nil {
 				return errorsmod.Wrap(err, "Failed to create otel.yaml file")
 			}

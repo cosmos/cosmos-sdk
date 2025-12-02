@@ -27,15 +27,16 @@ import (
 	"go.yaml.in/yaml/v3"
 )
 
-const (
-	OtelFileName = "otel.yaml"
-)
+const OtelFileName = "otel.yaml"
 
 var (
 	sdk           *otelconf.SDK
 	shutdownFuncs []func(context.Context) error
 )
 
+// InitializeOpenTelemetry initializes the OpenTelemetry SDK.
+// We assume that the otel configuration file is in `~/.<your_node_home>/config/otel.yaml`.
+// An empty otel.yaml is automatically placed in the directory above in the `appd init` command.
 func InitializeOpenTelemetry(homeDir string) error {
 	var err error
 
@@ -65,8 +66,6 @@ func InitializeOpenTelemetry(homeDir string) error {
 		return fmt.Errorf("failed to parse telemetry config file: %w", err)
 	}
 
-	fmt.Printf("\nInitializing OpenTelemetry\n")
-
 	opts = append(opts, otelconf.WithOpenTelemetryConfiguration(*cfg))
 
 	// parse cosmos extra config
@@ -76,7 +75,6 @@ func InitializeOpenTelemetry(homeDir string) error {
 		if extraCfg.CosmosExtra != nil {
 			extra := *extraCfg.CosmosExtra
 			if extra.TraceFile != "" {
-				fmt.Printf("Initializing trace file: %s\n", extra.TraceFile)
 				traceFile, err := os.OpenFile(extra.TraceFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
 				if err != nil {
 					return fmt.Errorf("failed to open trace file: %w", err)
@@ -99,7 +97,6 @@ func InitializeOpenTelemetry(homeDir string) error {
 				))
 			}
 			if extra.MetricsFile != "" {
-				fmt.Printf("Initializing metrics file: %s\n", extra.MetricsFile)
 				metricsFile, err := os.OpenFile(extra.MetricsFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
 				if err != nil {
 					return fmt.Errorf("failed to open metrics file: %w", err)
@@ -125,7 +122,6 @@ func InitializeOpenTelemetry(homeDir string) error {
 					if err != nil {
 						return fmt.Errorf("failed to parse metrics_file_interval: %w", err)
 					}
-					fmt.Printf("Configuring metrics export interval: %v\n", interval)
 					readerOpts = append(readerOpts, metricsdk.WithInterval(interval))
 				}
 
@@ -134,7 +130,6 @@ func InitializeOpenTelemetry(homeDir string) error {
 				))
 			}
 			if extra.LogsFile != "" {
-				fmt.Printf("Initializing logs file: %s\n", extra.LogsFile)
 				logsFile, err := os.OpenFile(extra.LogsFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
 				if err != nil {
 					return fmt.Errorf("failed to open logs file: %w", err)
@@ -175,8 +170,6 @@ func InitializeOpenTelemetry(homeDir string) error {
 				otel.SetTextMapPropagator(propagator)
 			}
 		}
-	} else {
-		fmt.Printf("failed to parse cosmos extra config: %v\n", err)
 	}
 
 	otelSDK, err := otelconf.NewSDK(opts...)
@@ -189,7 +182,6 @@ func InitializeOpenTelemetry(homeDir string) error {
 	otel.SetTracerProvider(sdk.TracerProvider())
 	otel.SetMeterProvider(sdk.MeterProvider())
 	logglobal.SetLoggerProvider(sdk.LoggerProvider())
-	fmt.Printf("\nOpenTelemetry initialized successfully\n")
 
 	return nil
 }

@@ -142,7 +142,7 @@ func (cr *ChangesetFiles) open(mode int) error {
 	}
 
 	infoPath := filepath.Join(cr.dir, "info.dat")
-	cr.infoFile, err = os.OpenFile(infoPath, writeModeFlags, 0o644) // the info file is always opened for writing
+	cr.infoFile, err = os.OpenFile(infoPath, os.O_RDWR|os.O_CREATE, 0o644) // info file uses random access, not append
 	if err != nil {
 		return fmt.Errorf("failed to create changeset info file: %w", err)
 	}

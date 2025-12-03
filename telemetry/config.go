@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path/filepath"
 	"time"
 
 	"go.opentelemetry.io/contrib/instrumentation/host"
@@ -27,24 +26,46 @@ import (
 	"go.yaml.in/yaml/v3"
 )
 
-const OtelFileName = "otel.yaml"
+const (
+	OtelFileName = "otel.yaml"
+
+	otelConfigEnvVar = "OTEL_EXPERIMENTAL_CONFIG_FILE"
+)
 
 var (
 	sdk           *otelconf.SDK
 	shutdownFuncs []func(context.Context) error
 )
 
+func init() {
+	if sdk != nil {
+		if otelFilePath := os.Getenv(otelConfigEnvVar); otelFilePath != "" {
+			if err := InitializeOpenTelemetry(otelFilePath); err != nil {
+				panic(err)
+			}
+		}
+	}
+}
+
 // InitializeOpenTelemetry initializes the OpenTelemetry SDK.
 // We assume that the otel configuration file is in `~/.<your_node_home>/config/otel.yaml`.
 // An empty otel.yaml is automatically placed in the directory above in the `appd init` command.
-func InitializeOpenTelemetry(homeDir string) error {
+//
+// Note that a late initialization of the open telemetry SDK causes meters/tracers to utilize a delegate, which incurs
+// an atomic load.
+// In our benchmarks, we saw only a few nanoseconds incurred from this atomic operation.
+// If you wish to avoid this overhead entirely, you may set the OTEL_EXPERIMENTAL_CONFIG_FILE environment variable,'
+// and the OpenTelemetry SDK will be instantiated via init.
+// This will eliminate the atomic operation overhead.
+func InitializeOpenTelemetry(filePath string) error {
+	if sdk != nil {
+		return nil
+	}
 	var err error
 
 	var opts []otelconf.ConfigurationOption
 
-	fp := filepath.Join(homeDir, "config", OtelFileName)
-
-	if _, err := os.Stat(fp); err != nil {
+	if _, err := os.Stat(filePath); err != nil {
 		if os.IsNotExist(err) {
 			setNoop()
 			return nil
@@ -52,7 +73,7 @@ func InitializeOpenTelemetry(homeDir string) error {
 		return err // return other errors (permission issues, etc.)
 	}
 
-	bz, err := os.ReadFile(fp)
+	bz, err := os.ReadFile(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to read telemetry config file: %w", err)
 	}

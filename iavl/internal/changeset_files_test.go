@@ -128,8 +128,9 @@ func TestChangesetFiles_OpenExisting(t *testing.T) {
 	cf.Info().EndVersion = 150
 	cf.Info().LeafOrphans = 42
 
-	err = cf.Close() // Close should persist info
-	require.NoError(t, err)
+	// Persist info
+	require.NoError(t, cf.RewriteInfo())
+	require.NoError(t, cf.Close())
 
 	// Reopen
 	cf2, err := OpenChangesetFiles(filepath.Join(treeDir, "100"))

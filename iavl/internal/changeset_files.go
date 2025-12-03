@@ -278,7 +278,6 @@ func (cr *ChangesetFiles) MarkReady() error {
 }
 
 // Close closes all changeset files.
-// Before closing files, the current info struct is persisted to disk.
 func (cr *ChangesetFiles) Close() error {
 	if cr.closed {
 		return nil
@@ -286,7 +285,6 @@ func (cr *ChangesetFiles) Close() error {
 
 	cr.closed = true
 	err := errors.Join(
-		cr.RewriteInfo(),
 		cr.kvDataFile.Close(),
 		cr.branchesFile.Close(),
 		cr.leavesFile.Close(),

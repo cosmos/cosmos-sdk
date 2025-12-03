@@ -25,10 +25,6 @@ var (
 	// account number is stored.
 	GlobalAccountNumberKey = collections.NewPrefix(2)
 
-	// StoreLockKey is an optional key used when a SchemaBuilderWithLock is enabled in Keeper initialization.
-	// This is used as a semaphore blocking concurrent writes to the wrapped store.
-	StoreLockKey = collections.NewPrefix(3)
-
 	// AccountNumberStoreKeyPrefix prefix for account-by-id store
 	AccountNumberStoreKeyPrefix = collections.NewPrefix("accountNumber")
 

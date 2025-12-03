@@ -40,31 +40,6 @@ func NewSchemaBuilder(service core.KVStoreService) *SchemaBuilder {
 	return NewSchemaBuilderFromAccessor(service.OpenKVStore)
 }
 
-func NewSchemaBuilderWithLock(service core.KVStoreService, lockKey string) *SchemaBuilder {
-	mu, _ := storeLocks.LoadOrStore(lockKey, &sync.Mutex{})
-	mutex := mu.(*sync.Mutex)
-
-	return NewSchemaBuilderFromAccessor(func(ctx context.Context) core.KVStore {
-		// Check if already locked for this context
-		if ctx.Value(lockKey) != nil {
-			return service.OpenKVStore(ctx)
-		}
-
-		// Acquire lock
-		mutex.Lock()
-
-		// Release on context done
-		go func() {
-			<-ctx.Done()
-			mutex.Unlock()
-		}()
-
-		// Mark as locked
-		ctx = context.WithValue(ctx, lockKey, true)
-		return service.OpenKVStore(ctx)
-	})
-}
-
 // Build should be called after all collections that are part of the schema
 // have been initialized in order to get a reference to the Schema. It is
 // important to check the returned error for any initialization errors.

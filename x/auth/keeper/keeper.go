@@ -141,7 +141,6 @@ func NewAccountKeeper(
 	}
 
 	sb := collections.NewSchemaBuilder(storeService)
-	lsb := collections.NewSchemaBuilderWithLock(storeService, types.StoreLockKey)
 
 	ak := AccountKeeper{
 		addressCodec:    ac,
@@ -152,7 +151,7 @@ func NewAccountKeeper(
 		permAddrs:       permAddrs,
 		authority:       authority,
 		Params:          collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		AccountNumber:   collections.NewSequence(lsb, types.GlobalAccountNumberKey, "account_number"),
+		AccountNumber:   collections.NewSequence(sb, types.GlobalAccountNumberKey, "account_number"),
 		Accounts:        collections.NewIndexedMap(sb, types.AddressStoreKeyPrefix, "accounts", sdk.AccAddressKey, codec.CollInterfaceValue[sdk.AccountI](cdc), NewAccountIndexes(sb)),
 		UnorderedNonces: collections.NewKeySet(sb, types.UnorderedNoncesKey, "unordered_nonces", collections.PairKeyCodec(collections.Int64Key, collections.BytesKey)),
 	}
@@ -223,7 +222,7 @@ func (ak AccountKeeper) getAccountNumberLegacy(ctx context.Context) (uint64, err
 // NextAccountNumber returns and increments the global account number counter.
 // If the global account number is not set, it initializes it with value 0.
 func (ak AccountKeeper) NextAccountNumber(ctx context.Context) uint64 {
-	n, err := collections.Item[uint64](ak.AccountNumber).Get(ctx)
+	n, err := ak.AccountNumber.AtomicIncr(ctx)
 	if err != nil && errors.Is(err, collections.ErrNotFound) {
 		// this won't happen in the tip of production network,
 		// but can happen when query historical states,
@@ -233,10 +232,6 @@ func (ak AccountKeeper) NextAccountNumber(ctx context.Context) uint64 {
 	}
 
 	if err != nil {
-		panic(err)
-	}
-
-	if err := ak.AccountNumber.Set(ctx, n+1); err != nil {
 		panic(err)
 	}
 

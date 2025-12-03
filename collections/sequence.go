@@ -20,8 +20,8 @@ func NewSequence(schema *SchemaBuilder, prefix Prefix, name string) Sequence {
 // Peek returns the current sequence value, if no number
 // is set then the DefaultSequenceStart is returned.
 // Errors on encoding issues.
-func (s Sequence) Peek(ctx context.Context) (uint64, error) {
-	n, err := (Item[uint64])(s).Get(ctx)
+func (s *Sequence) Peek(ctx context.Context) (uint64, error) {
+	n, err := (*Item[uint64])(s).Get(ctx)
 	switch {
 	case err == nil:
 		return n, nil
@@ -34,7 +34,7 @@ func (s Sequence) Peek(ctx context.Context) (uint64, error) {
 
 // Next returns the current sequence number, and sets the next expected sequence.
 // Errors on encoding issues.
-func (s Sequence) Next(ctx context.Context) (uint64, error) {
+func (s *Sequence) Next(ctx context.Context) (uint64, error) {
 	seq, err := s.Peek(ctx)
 	if err != nil {
 		return 0, err
@@ -44,6 +44,13 @@ func (s Sequence) Next(ctx context.Context) (uint64, error) {
 
 // Set hard resets the sequence to the provided value.
 // Errors on encoding issues.
-func (s Sequence) Set(ctx context.Context, value uint64) error {
-	return (Item[uint64])(s).Set(ctx, value)
+func (s *Sequence) Set(ctx context.Context, value uint64) error {
+	return (*Item[uint64])(s).Set(ctx, value)
+}
+
+// AtomicIncr is a locking function that increments the sequence by 1 and returns the previous value.
+func (s *Sequence) AtomicIncr(ctx context.Context) (uint64, error) {
+	s.mtx.Lock()
+	defer s.mtx.Unlock()
+	return s.Next(ctx)
 }

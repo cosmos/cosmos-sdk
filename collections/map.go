@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"sync"
 
 	"cosmossdk.io/collections/codec"
 	store "cosmossdk.io/collections/corecompat"
@@ -13,8 +14,9 @@ import (
 // It is used to map arbitrary keys to arbitrary
 // objects.
 type Map[K, V any] struct {
-	kc codec.KeyCodec[K]
-	vc codec.ValueCodec[V]
+	mtx sync.Mutex
+	kc  codec.KeyCodec[K]
+	vc  codec.ValueCodec[V]
 
 	// store accessor
 	sa     func(context.Context) store.KVStore

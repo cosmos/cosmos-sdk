@@ -31,6 +31,10 @@ type LeafLayout struct {
 	// this existing "compact" format.
 	KeyOffset uint32
 
+	// ValueOffset is the offset the value data for this node in the key value data file.
+	// The same size considerations apply here as for KeyOffset.
+	ValueOffset uint32
+
 	// Hash is the hash of this leaf node.
 	Hash [32]byte
 }

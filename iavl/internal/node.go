@@ -14,7 +14,8 @@ type Node interface {
 	// Key returns the key of this node.
 	Key() ([]byte, error)
 
-	// Value returns the value of this node. It is an error to call this method on non-leaf nodes.
+	// Value returns the value of this node.
+	// Calling this on a non-leaf node will return nil and possibly an error.
 	Value() ([]byte, error)
 
 	// Left returns a pointer to the left child node.

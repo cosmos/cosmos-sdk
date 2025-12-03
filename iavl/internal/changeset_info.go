@@ -31,7 +31,7 @@ type ChangesetInfo struct {
 	BranchOrphanVersionTotal uint64
 }
 
-// RewriteChangesetInfo truncates and rewrites the info file with the given changeset info.
+// RewriteChangesetInfo rewrites the info file with the given changeset info.
 // This method is okay to call the first time the file is created as well.
 func RewriteChangesetInfo(file *os.File, info *ChangesetInfo) error {
 	data := unsafe.Slice((*byte)(unsafe.Pointer(info)), int(unsafe.Sizeof(*info)))

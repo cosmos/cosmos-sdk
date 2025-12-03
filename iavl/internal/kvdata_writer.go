@@ -48,14 +48,16 @@ func (kvs *KVDataWriter) WriteUpdates(updates []KVUpdate) error {
 					return err
 				}
 			} else {
-				_, err := kvs.writeLenPrefixedBytes(deleteKey)
+				keyOffset, err := kvs.writeLenPrefixedBytes(deleteKey)
 				if err != nil {
 					return err
 				}
+
+				kvs.keyCache[unsafeBytesToString(deleteKey)] = keyOffset
 			}
 		} else if memNode := update.SetNode; memNode != nil {
 			key := memNode.key
-			cachedOffset, cached := kvs.keyCache[unsafeBytesToString(key)]
+			keyOffset, cached := kvs.keyCache[unsafeBytesToString(key)]
 			typ := KVEntryWALSet
 			if cached {
 				typ |= KVFlagCachedKey
@@ -66,16 +68,16 @@ func (kvs *KVDataWriter) WriteUpdates(updates []KVUpdate) error {
 			}
 
 			if cached {
-				err = kvs.writeLEU32(cachedOffset)
+				err = kvs.writeLEU32(keyOffset)
 				if err != nil {
 					return err
 				}
 			} else {
-				keyOffset, err := kvs.writeLenPrefixedBytes(key)
+				var err error
+				keyOffset, err = kvs.writeLenPrefixedBytes(key)
 				if err != nil {
 					return err
 				}
-				memNode.keyOffset = keyOffset
 				kvs.keyCache[unsafeBytesToString(key)] = keyOffset
 			}
 
@@ -83,6 +85,8 @@ func (kvs *KVDataWriter) WriteUpdates(updates []KVUpdate) error {
 			if err != nil {
 				return err
 			}
+
+			memNode.keyOffset = keyOffset
 			memNode.valueOffset = valueOffset
 		} else {
 			return fmt.Errorf("invalid update: neither SetNode nor DeleteKey is set")
@@ -115,18 +119,18 @@ func (kvs *KVDataWriter) WriteKey(key []byte) (offset uint32, err error) {
 	return offset, nil
 }
 
-func (kvs *KVDataWriter) WriteKeyValue(key, value []byte) (keyOffset, branchOffset uint32, err error) {
+func (kvs *KVDataWriter) WriteKeyValue(key, value []byte) (keyOffset, valueOffset uint32, err error) {
 	keyOffset, err = kvs.WriteKey(key)
 	if err != nil {
 		return 0, 0, err
 	}
 
-	branchOffset, err = kvs.writeBlob(value)
+	valueOffset, err = kvs.writeBlob(value)
 	if err != nil {
 		return 0, 0, err
 	}
 
-	return keyOffset, branchOffset, nil
+	return keyOffset, valueOffset, nil
 }
 
 func (kvs *KVDataWriter) writeBlob(bz []byte) (offset uint32, err error) {
@@ -147,23 +151,23 @@ func (kvs *KVDataWriter) writeType(x KVEntryType) error {
 	return err
 }
 
-func (kvs *KVDataWriter) writeLenPrefixedBytes(key []byte) (offset uint32, err error) {
-	lenKey := len(key)
-	err = kvs.writeVarUint(uint64(lenKey))
-	if err != nil {
-		return 0, err
-	}
-
+func (kvs *KVDataWriter) writeLenPrefixedBytes(bz []byte) (offset uint32, err error) {
 	sz := kvs.Size()
 	if sz > math.MaxUint32 {
 		return 0, fmt.Errorf("file size overflows uint32: %d", sz)
 	}
 	offset = uint32(sz)
 
-	// write key bytes
-	_, err = kvs.Write(key)
+	lenKey := len(bz)
+	err = kvs.writeVarUint(uint64(lenKey))
 	if err != nil {
-		return offset, err
+		return 0, err
+	}
+
+	// write bytes
+	_, err = kvs.Write(bz)
+	if err != nil {
+		return 0, err
 	}
 
 	return offset, nil

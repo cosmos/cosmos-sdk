@@ -35,11 +35,13 @@ type BranchLayout struct {
 	// For now, we are including both the left and right IDs and offsets, but if storage space becomes a problem
 	// we can revisit the earlier design and have an 8-byte NodeIDOrOffset type for Left and Right.
 
-	// LeftOffset is the 1-based offset of the left child node if it is in this changeset, 0 otherwise.
+	// LeftOffset is the 1-based array offset of the left child node if it is in this changeset, 0 otherwise.
+	// This is not a byte offset but an index into the virtual array of nodes in this changeset.
 	// The Left NodeID will indicate whether this is a branch or leaf node.
 	LeftOffset uint32
 
-	// RightOffset is the 1-based offset of the right child node if it is in this changeset, 0 otherwise.
+	// RightOffset is the 1-based array offset of the right child node if it is in this changeset, 0 otherwise.
+	// This is not a byte offset but an index into the virtual array of nodes in this changeset.
 	// The Right NodeID will indicate whether this is a branch or leaf node.
 	RightOffset uint32
 

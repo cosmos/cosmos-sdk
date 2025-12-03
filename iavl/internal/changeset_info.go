@@ -37,46 +37,31 @@ func RewriteChangesetInfo(file *os.File, info *ChangesetInfo) error {
 	if err := file.Truncate(0); err != nil {
 		return fmt.Errorf("failed to truncate info file: %w", err)
 	}
-	if _, err := file.Seek(0, 0); err != nil {
-		return fmt.Errorf("failed to seek info file: %w", err)
-	}
 
 	size := int(unsafe.Sizeof(*info))
 	data := unsafe.Slice((*byte)(unsafe.Pointer(info)), size)
-	if _, err := file.Write(data); err != nil {
+	if _, err := file.WriteAt(data, 0); err != nil {
 		return fmt.Errorf("failed to write changeset info: %w", err)
 	}
 
 	return nil
 }
 
-// ReadChangesetInfo reads changeset info from a file. Returns an empty default struct if file is zero length
-// or doesn't exist.
+// ReadChangesetInfo reads changeset info from a file. Returns an empty default struct if file is zero length.
 func ReadChangesetInfo(file *os.File) (*ChangesetInfo, error) {
-	stat, err := file.Stat()
-	if err != nil {
-		return nil, fmt.Errorf("failed to stat info file: %w", err)
-	}
-
-	if stat.Size() == 0 {
-		return &ChangesetInfo{}, nil
-	}
-
 	var info ChangesetInfo
 	size := int(unsafe.Sizeof(info))
-
-	if stat.Size() != int64(size) {
-		return nil, fmt.Errorf("info file has unexpected size: %d, expected %d", stat.Size(), size)
-	}
-
-	if _, err := file.Seek(0, 0); err != nil {
-		return nil, fmt.Errorf("failed to seek info file: %w", err)
-	}
-
-	// Read directly into the struct
 	data := unsafe.Slice((*byte)(unsafe.Pointer(&info)), size)
-	if _, err := io.ReadFull(file, data); err != nil {
+
+	n, err := file.ReadAt(data, 0)
+	if err == io.EOF && n == 0 {
+		return &ChangesetInfo{}, nil // empty file
+	}
+	if err != nil && err != io.EOF {
 		return nil, fmt.Errorf("failed to read changeset info: %w", err)
+	}
+	if n != size {
+		return nil, fmt.Errorf("info file has unexpected size: %d, expected %d", n, size)
 	}
 
 	return &info, nil

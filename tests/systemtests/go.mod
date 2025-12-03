@@ -1,6 +1,6 @@
 module cosmossdk.io/tests/systemtests
 
-go 1.25.0
+go 1.25.5
 
 replace (
 	// always use latest versions in tests

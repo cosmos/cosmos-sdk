@@ -6,9 +6,13 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
 
 	core "cosmossdk.io/collections/corecompat"
 )
+
+// storeLocks manages per-prefix mutexes for concurrent access control in BlockSTM
+var storeLocks = &sync.Map{} // map[string]*sync.Mutex
 
 // SchemaBuilder is used for building schemas. The Build method should always
 // be called after all collections have been initialized. Initializing new
@@ -34,6 +38,31 @@ func NewSchemaBuilderFromAccessor(accessorFunc func(ctx context.Context) core.KV
 // done adding collections to the schema.
 func NewSchemaBuilder(service core.KVStoreService) *SchemaBuilder {
 	return NewSchemaBuilderFromAccessor(service.OpenKVStore)
+}
+
+func NewSchemaBuilderWithLock(service core.KVStoreService, lockKey string) *SchemaBuilder {
+	mu, _ := storeLocks.LoadOrStore(lockKey, &sync.Mutex{})
+	mutex := mu.(*sync.Mutex)
+
+	return NewSchemaBuilderFromAccessor(func(ctx context.Context) core.KVStore {
+		// Check if already locked for this context
+		if ctx.Value(lockKey) != nil {
+			return service.OpenKVStore(ctx)
+		}
+
+		// Acquire lock
+		mutex.Lock()
+
+		// Release on context done
+		go func() {
+			<-ctx.Done()
+			mutex.Unlock()
+		}()
+
+		// Mark as locked
+		ctx = context.WithValue(ctx, lockKey, true)
+		return service.OpenKVStore(ctx)
+	})
 }
 
 // Build should be called after all collections that are part of the schema

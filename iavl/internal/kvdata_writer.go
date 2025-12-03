@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"unsafe"
 )
 
 type KVDataWriter struct {
@@ -31,31 +32,58 @@ func (kvs *KVDataWriter) StartWAL(version uint64) error {
 func (kvs *KVDataWriter) WriteUpdates(updates []KVUpdate) error {
 	for _, update := range updates {
 		if deleteKey := update.DeleteKey; deleteKey != nil {
-			cachedOffset, cached := kvs.keyCache[string(deleteKey)]
-			err := kvs.writeType(KVEntryWALDelete | KVFlagCachedKey)
+			cachedOffset, cached := kvs.keyCache[unsafeBytesToString(deleteKey)]
+			typ := KVEntryWALDelete
+			if cached {
+				typ |= KVFlagCachedKey
+			}
+			err := kvs.writeType(typ)
 			if err != nil {
 				return err
 			}
 
 			if cached {
+				err = kvs.writeLEU32(cachedOffset)
+				if err != nil {
+					return err
+				}
 			} else {
-
+				_, err := kvs.writeLenPrefixedBytes(deleteKey)
+				if err != nil {
+					return err
+				}
 			}
 		} else if memNode := update.SetNode; memNode != nil {
-			_, err := kvs.Write([]byte{KVDataEntryTypeSet})
+			key := memNode.key
+			cachedOffset, cached := kvs.keyCache[unsafeBytesToString(key)]
+			typ := KVEntryWALSet
+			if cached {
+				typ |= KVFlagCachedKey
+			}
+			err := kvs.writeType(typ)
 			if err != nil {
 				return err
 			}
-			offset, err := kvs.writeLenPrefixedBytes(memNode.key)
-			if err != nil {
-				return err
-			}
-			memNode.kvOffset = offset
 
-			_, err = kvs.writeLenPrefixedBytes(memNode.value)
+			if cached {
+				err = kvs.writeLEU32(cachedOffset)
+				if err != nil {
+					return err
+				}
+			} else {
+				keyOffset, err := kvs.writeLenPrefixedBytes(key)
+				if err != nil {
+					return err
+				}
+				memNode.keyOffset = keyOffset
+				kvs.keyCache[unsafeBytesToString(key)] = keyOffset
+			}
+
+			valueOffset, err := kvs.writeLenPrefixedBytes(memNode.value)
 			if err != nil {
 				return err
 			}
+			memNode.valueOffset = valueOffset
 		} else {
 			return fmt.Errorf("invalid update: neither SetNode nor DeleteKey is set")
 		}
@@ -63,51 +91,74 @@ func (kvs *KVDataWriter) WriteUpdates(updates []KVUpdate) error {
 	return nil
 }
 
-func (kvs *KVDataWriter) WriteCommit(version uint32) error {
-	_, err := kvs.Write([]byte{KVDataEntryTypeCommit})
+func (kvs *KVDataWriter) WriteCommit(version uint64) error {
+	err := kvs.writeType(KVEntryWALCommit)
 	if err != nil {
 		return err
 	}
 
-	return kvs.writeLEU32(version)
+	return kvs.writeVarUint(version)
 }
 
-func (kvs *KVDataWriter) WriteK(key []byte) (offset uint64, err error) {
-	_, err = kvs.Write([]byte{KVDataEntryTypeExtraK})
-	if err != nil {
-		return offset, err
+func (kvs *KVDataWriter) WriteKey(key []byte) (offset uint32, err error) {
+	if offset, found := kvs.keyCache[unsafeBytesToString(key)]; found {
+		return offset, nil
 	}
 
-	return kvs.writeLenPrefixedBytes(key)
-}
-
-func (kvs *KVDataWriter) WriteKV(key, value []byte) (offset uint32, err error) {
-	_, err = kvs.Write([]byte{KVDataEntryTypeExtraKV})
-	if err != nil {
-		return offset, err
-	}
-
-	offset, err = kvs.writeLenPrefixedBytes(key)
+	offset, err = kvs.writeBlob(key)
 	if err != nil {
 		return 0, err
 	}
-	_, err = kvs.writeLenPrefixedBytes(value)
-	return offset, err
+
+	kvs.keyCache[unsafeBytesToString(key)] = offset
+
+	return offset, nil
 }
 
-func (kvs *KVDataWriter) writeLenPrefixedBytes(key []byte) (offset uint64, err error) {
-	lenKey := len(key)
-	if lenKey > math.MaxUint32 {
-		return 0, fmt.Errorf("key too large: %d bytes", lenKey)
-	}
-
-	offset = uint64(kvs.Size())
-
-	// write little endian uint32 length prefix
-	err = kvs.writeLEU32(uint32(lenKey))
+func (kvs *KVDataWriter) WriteKeyValue(key, value []byte) (keyOffset, branchOffset uint32, err error) {
+	keyOffset, err = kvs.WriteKey(key)
 	if err != nil {
-		return offset, err
+		return 0, 0, err
 	}
+
+	branchOffset, err = kvs.writeBlob(value)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return keyOffset, branchOffset, nil
+}
+
+func (kvs *KVDataWriter) writeBlob(bz []byte) (offset uint32, err error) {
+	err = kvs.writeType(KVEntryBlob)
+	if err != nil {
+		return 0, err
+	}
+	offset, err = kvs.writeLenPrefixedBytes(bz)
+	if err != nil {
+		return 0, err
+	}
+
+	return offset, nil
+}
+
+func (kvs *KVDataWriter) writeType(x KVEntryType) error {
+	_, err := kvs.Write([]byte{byte(x)})
+	return err
+}
+
+func (kvs *KVDataWriter) writeLenPrefixedBytes(key []byte) (offset uint32, err error) {
+	lenKey := len(key)
+	err = kvs.writeVarUint(uint64(lenKey))
+	if err != nil {
+		return 0, err
+	}
+
+	sz := kvs.Size()
+	if sz > math.MaxUint32 {
+		return 0, fmt.Errorf("file size overflows uint32: %d", sz)
+	}
+	offset = uint32(sz)
 
 	// write key bytes
 	_, err = kvs.Write(key)
@@ -118,26 +169,6 @@ func (kvs *KVDataWriter) writeLenPrefixedBytes(key []byte) (offset uint64, err e
 	return offset, nil
 }
 
-func (kvs *KVDataWriter) writeKey(typ KVEntryType, key []byte) error {
-	cachedOffset, cached := kvs.keyCache[string(key)]
-	if cached {
-		typ |= KVFlagCachedKey
-	}
-	if err := kvs.writeType(typ); err != nil {
-		return err
-	}
-	if cached {
-		return kvs.writeLEU32(uint32(cachedOffset))
-	} else {
-
-	}
-}
-
-func (kvs *KVDataWriter) writeType(x KVEntryType) error {
-	_, err := kvs.Write([]byte{byte(x)})
-	return err
-}
-
 func (kvs *KVDataWriter) writeVarUint(x uint64) error {
 	var buf [binary.MaxVarintLen64]byte
 	n := binary.PutUvarint(buf[:], x)
@@ -145,19 +176,13 @@ func (kvs *KVDataWriter) writeVarUint(x uint64) error {
 	return err
 }
 
-func (kvs *KVDataWriter) writeLEU16(x uint64) error {
-	if x > math.MaxUint16 {
-		return fmt.Errorf("value overflows uint16: %d", x)
-	}
-}
-
-func (kvs *KVDataWriter) writeLEU32(x uint64) error {
-	if x > math.MaxUint32 {
-		return fmt.Errorf("value overflows uint32: %d", x)
-	}
-
+func (kvs *KVDataWriter) writeLEU32(x uint32) error {
 	var buf [4]byte
 	binary.LittleEndian.PutUint32(buf[:], x)
 	_, err := kvs.Write(buf[:])
 	return err
+}
+
+func unsafeBytesToString(b []byte) string {
+	return unsafe.String(unsafe.SliceData(b), len(b))
 }

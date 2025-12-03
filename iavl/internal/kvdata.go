@@ -10,24 +10,25 @@ const (
 	KVEntryWALStart KVEntryType = 0x0
 
 	// KVEntryWALSet indicates a set operation for a key-value pair.
-	// This should be followed by a varint-encoded length and the raw bytes OR
-	// if the KVFlagCachedKey flag is set, a 32-bit little-endian offset referencing a cached key,
-	// AND then a varint-encoded length and the value bytes.
+	// This should be followed by:
+	//   - varint key length + key bytes, OR if KVFlagCachedKey is set, a 32-bit LE offset to a cached key
+	//   - varint value length + value bytes
+	// Offsets point to the start of the varint length field, not the type byte.
 	KVEntryWALSet KVEntryType = 0x1
 
 	// KVEntryWALDelete indicates a delete operation for a key.
-	// This should be followed by a varint-encoded length and the key bytes OR
-	// if the KVFlagCachedKey flag is set, a 32-bit little-endian offset referencing a cached key.
+	// This should be followed by:
+	//   - varint key length + key bytes, OR if KVFlagCachedKey is set, a 32-bit LE offset to a cached key
+	// Offsets point to the start of the varint length field, not the type byte.
 	KVEntryWALDelete KVEntryType = 0x2
 
 	// KVEntryWALCommit indicates the commit operation for a version.
 	// This must be followed by a varint-encoded version number.
 	KVEntryWALCommit KVEntryType = 0x3
 
-	// KVEntryBlob indicates a blob entry storing raw key-value data.
-	// This should be followed by a varint-encoded length and the raw bytes.
-	// This entry type is used for compacted (non-WAL) KV data files or
-	// for branch keys that aren't otherwise cached.
+	// KVEntryBlob indicates a standalone blob entry (key or value data).
+	// This should be followed by varint length + raw bytes.
+	// Used for compacted (non-WAL) data or branch keys not already cached.
 	KVEntryBlob KVEntryType = 0x4
 
 	// KVFlagCachedKey indicates that the key for this entry is cached and should be referenced by

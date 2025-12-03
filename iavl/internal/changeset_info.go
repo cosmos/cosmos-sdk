@@ -73,12 +73,11 @@ func ReadChangesetInfo(file *os.File) (*ChangesetInfo, error) {
 		return nil, fmt.Errorf("failed to seek info file: %w", err)
 	}
 
-	buf := make([]byte, size)
-	if _, err := io.ReadFull(file, buf); err != nil {
+	// Read directly into the struct
+	data := unsafe.Slice((*byte)(unsafe.Pointer(&info)), size)
+	if _, err := io.ReadFull(file, data); err != nil {
 		return nil, fmt.Errorf("failed to read changeset info: %w", err)
 	}
 
-	// Copy the data to avoid returning a pointer to the local buf slice
-	info = *(*ChangesetInfo)(unsafe.Pointer(&buf[0]))
 	return &info, nil
 }

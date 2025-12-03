@@ -28,7 +28,7 @@ type ChangesetFiles struct {
 	closed bool
 }
 
-// CreateChangesetFiles creates a new changeset directory and files that is ready to be written to.
+// CreateChangesetFiles creates a new changeset directory and files that are ready to be written to.
 // If compactedAt is 0, the changeset is considered original and uncompacted.
 // If compactedAt is greater than 0, the changeset is considered compacted and a pending marker file
 // will be created to indicate that the changeset is not yet ready for use.

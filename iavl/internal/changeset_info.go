@@ -32,14 +32,9 @@ type ChangesetInfo struct {
 }
 
 // RewriteChangesetInfo truncates and rewrites the info file with the given changeset info.
-// If the file does not exist, it will be created.
+// This method is okay to call the first time the file is created as well.
 func RewriteChangesetInfo(file *os.File, info *ChangesetInfo) error {
-	if err := file.Truncate(0); err != nil {
-		return fmt.Errorf("failed to truncate info file: %w", err)
-	}
-
-	size := int(unsafe.Sizeof(*info))
-	data := unsafe.Slice((*byte)(unsafe.Pointer(info)), size)
+	data := unsafe.Slice((*byte)(unsafe.Pointer(info)), int(unsafe.Sizeof(*info)))
 	if _, err := file.WriteAt(data, 0); err != nil {
 		return fmt.Errorf("failed to write changeset info: %w", err)
 	}
@@ -47,7 +42,7 @@ func RewriteChangesetInfo(file *os.File, info *ChangesetInfo) error {
 	return nil
 }
 
-// ReadChangesetInfo reads changeset info from a file. Returns an empty default struct if file is zero length.
+// ReadChangesetInfo reads changeset info from a file. It returns an empty default struct if file is empty.
 func ReadChangesetInfo(file *os.File) (*ChangesetInfo, error) {
 	var info ChangesetInfo
 	size := int(unsafe.Sizeof(info))

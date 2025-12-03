@@ -2,13 +2,17 @@
 
 To quickly setup a local telemetry environment where OpenTelemetry data is sent to a local instance of Grafana LGTM:
 
-1. start the [Grafana LGTM docker image](https://hub.docker.com/r/grafana/otel-lgtm):
+start the [Grafana LGTM docker image](https://hub.docker.com/r/grafana/otel-lgtm):
 
 ```shell
 docker run -p 3000:3000 -p 4317:4317 -p 4318:4318 --rm -ti grafana/otel-lgtm
 ```
+## Environment Variable
 
-2. create a basic OpenTelemetry configuration file which will send data to the local instance of Grafana LGTM:
+Using the environment variable method will instantiate the OpenTelemetry SDK before global meters and spans. 
+This allows meters and traces to use direct references to the underlying instrument.
+
+Create a basic OpenTelemetry configuration file which will send data to the local instance of Grafana LGTM:
 
 ```yaml
 resource:
@@ -44,6 +48,14 @@ logger_provider:
 4. start your application or tests
 5. view the data in Grafana LGTM at http://localhost:3000/. The Drilldown views are suggested for getting started.
 
+## Node Home OpenTelemetry file
+
+The node's `init` command will generate an empty otel file in the `~/.<node_home>/config` directory. Place your otel configuration
+here. 
+
+When the node's `start` command is ran, the OpenTelemetry SDK will be initialized using this file. 
+If left empty, all meters and tracers will be noop.
+
 ## OpenTelemetry Initialization
 
 While manual OpenTelemetry initialization is still supported, this package provides a single
@@ -51,16 +63,17 @@ point of initialization such that end users can just use the official
 OpenTelemetry declarative configuration
 spec: https://opentelemetry.io/docs/languages/sdk-configuration/declarative-configuration/
 End users only need to set the `OTEL_EXPERIMENTAL_CONFIG_FILE` environment variable to the path of
-an OpenTelemetry configuration file and that's it.
+an OpenTelemetry configuration file, or fill out the otel.yaml file in the node's config directory and that's it.
 All the documentation necessary is provided in the OpenTelemetry documentation.
 
 ## Developer Usage
 
-Developers need to do two things to use this package properly:
+If using the environment variable method, importing the baseapp package will cause the telemetry's initialization to run.
+Otherwise, ensure the otel.yaml file in the node's config directory is filled out.
 
-1. Import this package before declaring any otel Tracer, Meter or Logger instances.
-2. Make sure Shutdown() is called when the application is shutting down.
-   Tests can use the TestingInit function at startup to accomplish this.
+IMPORTANT: Make sure Shutdown() is called when the application is shutting down.
+
+Tests can use the TestingInit function at startup to accomplish this.
 
 If these steps are followed, developers can follow the official golang otel conventions
 of declaring package-level tracer and meter instances using otel.Tracer() and otel.Meter().

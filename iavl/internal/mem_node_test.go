@@ -130,3 +130,181 @@ func TestMemNode_MutateBranch(t *testing.T) {
 	require.Equal(t, uint32(5), original.Version())
 	require.Equal(t, []byte("oldhash"), original.Hash())
 }
+
+func TestMemNode_Get_Leaf(t *testing.T) {
+	tests := []struct {
+		name      string
+		nodeKey   string
+		nodeValue string
+		searchKey string
+		wantValue []byte
+		wantIndex int64
+	}{
+		{
+			name:      "exact match",
+			nodeKey:   "b",
+			nodeValue: "val_b",
+			searchKey: "b",
+			wantValue: []byte("val_b"),
+			wantIndex: 0,
+		},
+		{
+			name:      "search key less than node key",
+			nodeKey:   "b",
+			nodeValue: "val_b",
+			searchKey: "a",
+			wantValue: nil,
+			wantIndex: 0,
+		},
+		{
+			name:      "search key greater than node key",
+			nodeKey:   "b",
+			nodeValue: "val_b",
+			searchKey: "c",
+			wantValue: nil,
+			wantIndex: 1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			node := &MemNode{
+				height: 0,
+				size:   1,
+				key:    []byte(tt.nodeKey),
+				value:  []byte(tt.nodeValue),
+			}
+			val, idx, err := node.Get([]byte(tt.searchKey))
+			require.NoError(t, err)
+			require.Equal(t, tt.wantValue, val)
+			require.Equal(t, tt.wantIndex, idx)
+		})
+	}
+}
+
+func TestMemNode_Get_Branch(t *testing.T) {
+	// Hand-construct a simple tree:
+	//
+	//       [b]          <- branch, key="b", size=2
+	//      /   \
+	//    [a]   [b]       <- leaves
+	//
+	// In IAVL, branch key = smallest key in right subtree
+
+	leftLeaf := &MemNode{
+		height: 0,
+		size:   1,
+		key:    []byte("a"),
+		value:  []byte("val_a"),
+	}
+	rightLeaf := &MemNode{
+		height: 0,
+		size:   1,
+		key:    []byte("b"),
+		value:  []byte("val_b"),
+	}
+	root := &MemNode{
+		height: 1,
+		size:   2,
+		key:    []byte("b"), // smallest key in right subtree
+		left:   NewNodePointer(leftLeaf),
+		right:  NewNodePointer(rightLeaf),
+	}
+
+	tests := []struct {
+		name      string
+		searchKey string
+		wantValue []byte
+		wantIndex int64
+	}{
+		{
+			name:      "find in left subtree",
+			searchKey: "a",
+			wantValue: []byte("val_a"),
+			wantIndex: 0,
+		},
+		{
+			name:      "find in right subtree",
+			searchKey: "b",
+			wantValue: []byte("val_b"),
+			wantIndex: 1,
+		},
+		{
+			name:      "key not found - less than all",
+			searchKey: "0",
+			wantValue: nil,
+			wantIndex: 0,
+		},
+		{
+			name:      "key not found - greater than all",
+			searchKey: "z",
+			wantValue: nil,
+			wantIndex: 2,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			val, idx, err := root.Get([]byte(tt.searchKey))
+			require.NoError(t, err)
+			require.Equal(t, tt.wantValue, val)
+			require.Equal(t, tt.wantIndex, idx)
+		})
+	}
+}
+
+func TestMemNode_Get_DeeperTree(t *testing.T) {
+	// Hand-construct a 3-level tree:
+	//
+	//            [c]              <- root, size=4
+	//          /     \
+	//       [b]       [d]         <- branches, size=2 each
+	//      /   \     /   \
+	//    [a]   [b] [c]   [d]      <- leaves
+	//
+	// Sorted keys: a=0, b=1, c=2, d=3
+
+	leafA := &MemNode{height: 0, size: 1, key: []byte("a"), value: []byte("val_a")}
+	leafB := &MemNode{height: 0, size: 1, key: []byte("b"), value: []byte("val_b")}
+	leafC := &MemNode{height: 0, size: 1, key: []byte("c"), value: []byte("val_c")}
+	leafD := &MemNode{height: 0, size: 1, key: []byte("d"), value: []byte("val_d")}
+
+	branchLeft := &MemNode{
+		height: 1,
+		size:   2,
+		key:    []byte("b"),
+		left:   NewNodePointer(leafA),
+		right:  NewNodePointer(leafB),
+	}
+	branchRight := &MemNode{
+		height: 1,
+		size:   2,
+		key:    []byte("d"),
+		left:   NewNodePointer(leafC),
+		right:  NewNodePointer(leafD),
+	}
+	root := &MemNode{
+		height: 2,
+		size:   4,
+		key:    []byte("c"), // smallest key in right subtree
+		left:   NewNodePointer(branchLeft),
+		right:  NewNodePointer(branchRight),
+	}
+
+	tests := []struct {
+		searchKey string
+		wantValue []byte
+		wantIndex int64
+	}{
+		{"a", []byte("val_a"), 0},
+		{"b", []byte("val_b"), 1},
+		{"c", []byte("val_c"), 2},
+		{"d", []byte("val_d"), 3},
+	}
+	for _, tt := range tests {
+		t.Run(tt.searchKey, func(t *testing.T) {
+			val, idx, err := root.Get([]byte(tt.searchKey))
+			require.NoError(t, err)
+			require.Equal(t, tt.wantValue, val)
+			require.Equal(t, tt.wantIndex, idx)
+		})
+	}
+}

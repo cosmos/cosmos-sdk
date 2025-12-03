@@ -132,6 +132,11 @@ func TestMemNode_MutateBranch(t *testing.T) {
 }
 
 func TestMemNode_Get_Leaf(t *testing.T) {
+	// When Get is called on a leaf node:
+	// - If key matches: returns (value, 0, nil)
+	// - If key not found: returns (nil, index, nil) where index is the insertion point
+	//   - key < nodeKey: index=0 (would insert before this leaf)
+	//   - key > nodeKey: index=1 (would insert after this leaf)
 	tests := []struct {
 		name      string
 		nodeKey   string
@@ -154,7 +159,7 @@ func TestMemNode_Get_Leaf(t *testing.T) {
 			nodeValue: "val_b",
 			searchKey: "a",
 			wantValue: nil,
-			wantIndex: 0,
+			wantIndex: 0, // "a" would be inserted before "b"
 		},
 		{
 			name:      "search key greater than node key",
@@ -162,7 +167,7 @@ func TestMemNode_Get_Leaf(t *testing.T) {
 			nodeValue: "val_b",
 			searchKey: "c",
 			wantValue: nil,
-			wantIndex: 1,
+			wantIndex: 1, // "c" would be inserted after "b"
 		},
 	}
 	for _, tt := range tests {
@@ -186,9 +191,13 @@ func TestMemNode_Get_Branch(t *testing.T) {
 	//
 	//       [b]          <- branch, key="b", size=2
 	//      /   \
-	//    [a]   [b]       <- leaves
+	//    [a]   [b]       <- leaves (index 0, index 1)
 	//
 	// In IAVL, branch key = smallest key in right subtree
+	//
+	// Index is the 0-based position in sorted leaf order:
+	// - "a" is at index 0, "b" is at index 1
+	// - Keys not found return the insertion point
 
 	leftLeaf := &MemNode{
 		height: 0,
@@ -232,13 +241,13 @@ func TestMemNode_Get_Branch(t *testing.T) {
 			name:      "key not found - less than all",
 			searchKey: "0",
 			wantValue: nil,
-			wantIndex: 0,
+			wantIndex: 0, // "0" would be inserted at position 0
 		},
 		{
 			name:      "key not found - greater than all",
 			searchKey: "z",
 			wantValue: nil,
-			wantIndex: 2,
+			wantIndex: 2, // "z" would be inserted at position 2 (after both leaves)
 		},
 	}
 	for _, tt := range tests {

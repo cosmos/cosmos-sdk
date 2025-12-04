@@ -33,12 +33,12 @@ const (
 )
 
 var (
-	sdk           *otelconf.SDK
-	shutdownFuncs []func(context.Context) error
+	openTelemetrySDK *otelconf.SDK
+	shutdownFuncs    []func(context.Context) error
 )
 
 func init() {
-	if sdk != nil {
+	if openTelemetrySDK != nil {
 		if otelFilePath := os.Getenv(otelConfigEnvVar); otelFilePath != "" {
 			if err := InitializeOpenTelemetry(otelFilePath); err != nil {
 				panic(err)
@@ -58,7 +58,7 @@ func init() {
 // and the OpenTelemetry SDK will be instantiated via init.
 // This will eliminate the atomic operation overhead.
 func InitializeOpenTelemetry(filePath string) error {
-	if sdk != nil {
+	if openTelemetrySDK != nil {
 		return nil
 	}
 	var err error
@@ -197,12 +197,12 @@ func InitializeOpenTelemetry(filePath string) error {
 	if err != nil {
 		return fmt.Errorf("failed to initialize telemetry: %w", err)
 	}
-	sdk = &otelSDK
+	openTelemetrySDK = &otelSDK
 
 	// setup otel global providers
-	otel.SetTracerProvider(sdk.TracerProvider())
-	otel.SetMeterProvider(sdk.MeterProvider())
-	logglobal.SetLoggerProvider(sdk.LoggerProvider())
+	otel.SetTracerProvider(openTelemetrySDK.TracerProvider())
+	otel.SetMeterProvider(openTelemetrySDK.MeterProvider())
+	logglobal.SetLoggerProvider(openTelemetrySDK.LoggerProvider())
 
 	return nil
 }
@@ -258,8 +258,8 @@ type cosmosExtra struct {
 }
 
 func Shutdown(ctx context.Context) error {
-	if sdk != nil {
-		err := sdk.Shutdown(ctx)
+	if openTelemetrySDK != nil {
+		err := openTelemetrySDK.Shutdown(ctx)
 		if err != nil {
 			return fmt.Errorf("failed to shutdown telemetry: %w", err)
 		}

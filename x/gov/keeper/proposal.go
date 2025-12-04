@@ -274,14 +274,14 @@ func (keeper Keeper) ActivateVotingPeriod(ctx context.Context, proposal v1.Propo
 
 // ProposalKinds returns a v1.ProposalKinds useful to determine which kind of
 // messages are included in a proposal.
-func (k Keeper) ProposalKinds(p v1.Proposal) v1.ProposalKinds {
+func (keeper Keeper) ProposalKinds(p v1.Proposal) v1.ProposalKinds {
 	if len(p.Messages) == 0 {
 		return v1.ProposalKindAny
 	}
 	var kinds v1.ProposalKinds
 	for _, msg := range p.Messages {
 		var sdkMsg sdk.Msg
-		if err := k.cdc.UnpackAny(msg, &sdkMsg); err == nil {
+		if err := keeper.cdc.UnpackAny(msg, &sdkMsg); err == nil {
 			switch sdkMsg.(type) {
 			case *v1.MsgProposeConstitutionAmendment:
 				kinds |= v1.ProposalKindConstitutionAmendment

@@ -27,7 +27,6 @@ func (suite *KeeperTestSuite) TestGetSetProposal() {
 	gotProposal, err := suite.govKeeper.Proposals.Get(suite.ctx, proposalID)
 	suite.Require().Nil(err)
 	suite.Require().Equal(proposal, gotProposal)
-
 }
 
 // TODO(tip): remove this
@@ -65,7 +64,6 @@ func (suite *KeeperTestSuite) TestActivateVotingPeriod() {
 }
 
 func (suite *KeeperTestSuite) TestDeleteProposalInVotingPeriod() {
-
 	suite.reset()
 	tp := TestProposal
 	proposal, err := suite.govKeeper.SubmitProposal(suite.ctx, tp, "", "test", "summary", suite.addrs[0])

@@ -126,10 +126,10 @@ func ProposalStatusFromString(str string) (ProposalStatus, error) {
 func (status ProposalStatus) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
-		s.Write([]byte(status.String())) //nolint:errcheck
+		s.Write([]byte(status.String())) //nolint:errcheck // unhandled error
 	default:
 		// TODO: Do this conversion more directly
-		s.Write([]byte(fmt.Sprintf("%v", byte(status)))) //nolint:errcheck
+		s.Write([]byte(fmt.Sprintf("%v", byte(status)))) //nolint:errcheck // unhandled error
 	}
 }
 

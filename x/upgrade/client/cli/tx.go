@@ -8,9 +8,9 @@ import (
 	"github.com/spf13/cobra"
 
 	addresscodec "cosmossdk.io/core/address"
-
 	"cosmossdk.io/x/upgrade/plan"
 	"cosmossdk.io/x/upgrade/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"

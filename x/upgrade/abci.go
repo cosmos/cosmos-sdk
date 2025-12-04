@@ -7,9 +7,9 @@ import (
 
 	"cosmossdk.io/core/appmodule"
 	storetypes "cosmossdk.io/store/types"
-
 	"cosmossdk.io/x/upgrade/keeper"
 	"cosmossdk.io/x/upgrade/types"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

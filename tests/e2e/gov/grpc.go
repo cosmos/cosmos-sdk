@@ -415,16 +415,16 @@ func (s *E2ETestSuite) TestGetParamsGRPC() {
 				s.Require().Equal(params.Threshold, queryResp.Params.Threshold)
 
 				if tc.checkDeposit {
-					s.Require().NotNil(queryResp.DepositParams)
-					s.Require().Equal(params.MaxDepositPeriod, queryResp.DepositParams.MaxDepositPeriod)
+					s.Require().NotNil(queryResp.DepositParams)                                          //nolint:staticcheck // keep for backward compatibility
+					s.Require().Equal(params.MaxDepositPeriod, queryResp.DepositParams.MaxDepositPeriod) //nolint:staticcheck // keep for backward compatibility
 				}
 				if tc.checkVoting {
-					s.Require().NotNil(queryResp.VotingParams)
-					s.Require().Equal(params.VotingPeriod, queryResp.VotingParams.VotingPeriod)
+					s.Require().NotNil(queryResp.VotingParams)                                  //nolint:staticcheck // keep for backward compatibility
+					s.Require().Equal(params.VotingPeriod, queryResp.VotingParams.VotingPeriod) //nolint:staticcheck // keep for backward compatibility
 				}
 				if tc.checkTally {
-					s.Require().NotNil(queryResp.TallyParams)
-					s.Require().Equal(params.Threshold, queryResp.TallyParams.Threshold)
+					s.Require().NotNil(queryResp.TallyParams)                            //nolint:staticcheck // keep for backward compatibility
+					s.Require().Equal(params.Threshold, queryResp.TallyParams.Threshold) //nolint:staticcheck // keep for backward compatibility
 				}
 			}
 		})

@@ -119,7 +119,7 @@ func parseHunkHeader(header string) (*Hunk, error) {
 }
 
 // parseHunkRange parses a range string like "-srcLine,srcSpan" or "+dstLine"
-func parseHunkRange(rangeStr string) (line int, span int, err error) {
+func parseHunkRange(rangeStr string) (line, span int, err error) {
 	if len(rangeStr) == 0 {
 		return 0, 0, fmt.Errorf("empty range string")
 	}

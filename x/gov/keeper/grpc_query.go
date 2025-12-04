@@ -287,7 +287,7 @@ func (q queryServer) TallyResult(ctx context.Context, req *v1.QueryTallyResultRe
 }
 
 // MinDeposit returns the minimum deposit currently required for a proposal to enter voting period
-func (q queryServer) MinDeposit(c context.Context, req *v1.QueryMinDepositRequest) (*v1.QueryMinDepositResponse, error) {
+func (q queryServer) MinDeposit(c context.Context, _ *v1.QueryMinDepositRequest) (*v1.QueryMinDepositResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	minDeposit := q.k.GetMinDeposit(ctx)
 
@@ -295,7 +295,7 @@ func (q queryServer) MinDeposit(c context.Context, req *v1.QueryMinDepositReques
 }
 
 // MinInitialDeposit returns the minimum deposit required for a proposal to be submitted
-func (q queryServer) MinInitialDeposit(c context.Context, req *v1.QueryMinInitialDepositRequest) (*v1.QueryMinInitialDepositResponse, error) {
+func (q queryServer) MinInitialDeposit(c context.Context, _ *v1.QueryMinInitialDepositRequest) (*v1.QueryMinInitialDepositResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	minInitialDeposit := q.k.GetMinInitialDeposit(ctx)
 

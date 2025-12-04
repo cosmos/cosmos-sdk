@@ -8,7 +8,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
@@ -127,47 +126,4 @@ func ConvertToLegacyDeposit(deposit *v1.Deposit) v1beta1.Deposit {
 		Depositor:  deposit.Depositor,
 		Amount:     types.NewCoins(deposit.Amount...),
 	}
-}
-
-func convertToNewProposal(oldProp v1beta1.Proposal) (v1.Proposal, error) {
-	msg, err := v1.NewLegacyContent(oldProp.GetContent(), authtypes.NewModuleAddress("gov").String())
-	if err != nil {
-		return v1.Proposal{}, err
-	}
-	msgAny, err := codectypes.NewAnyWithValue(msg)
-	if err != nil {
-		return v1.Proposal{}, err
-	}
-
-	return v1.Proposal{
-		Id:       oldProp.ProposalId,
-		Messages: []*codectypes.Any{msgAny},
-		Status:   v1.ProposalStatus(oldProp.Status),
-		FinalTallyResult: &v1.TallyResult{
-			YesCount:     oldProp.FinalTallyResult.Yes.String(),
-			NoCount:      oldProp.FinalTallyResult.No.String(),
-			AbstainCount: oldProp.FinalTallyResult.Abstain.String(),
-		},
-		SubmitTime:      &oldProp.SubmitTime,
-		DepositEndTime:  &oldProp.DepositEndTime,
-		TotalDeposit:    oldProp.TotalDeposit,
-		VotingStartTime: &oldProp.VotingStartTime,
-		VotingEndTime:   &oldProp.VotingEndTime,
-		Title:           oldProp.GetContent().GetTitle(),
-		Summary:         oldProp.GetContent().GetDescription(),
-	}, nil
-}
-
-func convertToNewProposals(oldProps v1beta1.Proposals) (v1.Proposals, error) {
-	newProps := make([]*v1.Proposal, len(oldProps))
-	for i, oldProp := range oldProps {
-		p, err := convertToNewProposal(oldProp)
-		if err != nil {
-			return nil, err
-		}
-
-		newProps[i] = &p
-	}
-
-	return newProps, nil
 }

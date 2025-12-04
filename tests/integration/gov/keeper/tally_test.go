@@ -90,6 +90,7 @@ func TestTallyOnlyValidatorsAllYes(t *testing.T) {
 	proposal, ok := f.govKeeper.Proposals.Get(ctx, proposalID)
 	assert.Assert(t, ok)
 	passes, burnDeposits, _, tallyResults, err := f.govKeeper.Tally(ctx, proposal)
+	assert.NilError(t, err)
 
 	assert.Assert(t, passes)
 	assert.Assert(t, burnDeposits == false)
@@ -118,7 +119,7 @@ func TestTallyOnlyValidators51No(t *testing.T) {
 	proposal, ok := f.govKeeper.Proposals.Get(ctx, proposalID)
 	assert.Assert(t, ok)
 	passes, burnDeposits, _, _, err := f.govKeeper.Tally(ctx, proposal)
-
+	assert.NilError(t, err)
 	assert.Assert(t, passes == false)
 	assert.Assert(t, burnDeposits == false)
 }
@@ -145,6 +146,7 @@ func TestTallyOnlyValidators51Yes(t *testing.T) {
 	proposal, ok := f.govKeeper.Proposals.Get(ctx, proposalID)
 	assert.Assert(t, ok)
 	passes, burnDeposits, _, tallyResults, err := f.govKeeper.Tally(ctx, proposal)
+	assert.NilError(t, err)
 
 	assert.Assert(t, !passes) // only validators doesn't pass quorum
 	assert.Assert(t, burnDeposits == false)
@@ -173,7 +175,9 @@ func TestTallyOnlyValidatorsAbstain(t *testing.T) {
 
 	proposal, ok := f.govKeeper.Proposals.Get(ctx, proposalID)
 	assert.Assert(t, ok)
+
 	passes, burnDeposits, participation, tallyResults, err := f.govKeeper.Tally(ctx, proposal)
+	assert.NilError(t, err)
 
 	assert.Assert(t, !passes)
 	assert.Assert(t, burnDeposits == false)
@@ -204,6 +208,7 @@ func TestTallyOnlyValidatorsAbstainFails(t *testing.T) {
 	proposal, ok := f.govKeeper.Proposals.Get(ctx, proposalID)
 	assert.Assert(t, ok)
 	passes, burnDeposits, _, tallyResults, err := f.govKeeper.Tally(ctx, proposal)
+	assert.NilError(t, err)
 
 	assert.Assert(t, passes == false)
 	assert.Assert(t, burnDeposits == false)
@@ -233,6 +238,7 @@ func TestTallyOnlyValidatorsNonVoter(t *testing.T) {
 	proposal, ok := f.govKeeper.Proposals.Get(ctx, proposalID)
 	assert.Assert(t, ok)
 	passes, burnDeposits, _, tallyResults, err := f.govKeeper.Tally(ctx, proposal)
+	assert.NilError(t, err)
 
 	assert.Assert(t, passes == false)
 	assert.Assert(t, burnDeposits == false)
@@ -272,6 +278,7 @@ func TestTallyDelgatorOverride(t *testing.T) {
 	proposal, ok := f.govKeeper.Proposals.Get(ctx, proposalID)
 	assert.Assert(t, ok)
 	passes, burnDeposits, _, tallyResults, err := f.govKeeper.Tally(ctx, proposal)
+	assert.NilError(t, err)
 
 	assert.Assert(t, passes == false)
 	assert.Assert(t, burnDeposits == false)
@@ -310,6 +317,7 @@ func TestTallyDelgatorInheritDisabled(t *testing.T) {
 	proposal, err = f.govKeeper.Proposals.Get(ctx, proposalID)
 	assert.NilError(t, err)
 	passes, burnDeposits, _, tallyResults, err := f.govKeeper.Tally(ctx, proposal)
+	assert.NilError(t, err)
 
 	assert.Assert(t, !passes) // vote not inherited, proposal not passing
 	assert.Assert(t, burnDeposits == false)
@@ -353,6 +361,7 @@ func TestTallyDelgatorMultipleOverride(t *testing.T) {
 	proposal, ok := f.govKeeper.Proposals.Get(ctx, proposalID)
 	assert.Assert(t, ok)
 	passes, burnDeposits, _, tallyResults, err := f.govKeeper.Tally(ctx, proposal)
+	assert.NilError(t, err)
 
 	assert.Assert(t, passes == false)
 	assert.Assert(t, burnDeposits == false)
@@ -397,6 +406,7 @@ func TestTallyDelgatorMultipleInherit(t *testing.T) {
 	proposal, ok := f.govKeeper.Proposals.Get(ctx, proposalID)
 	assert.Assert(t, ok)
 	passes, burnDeposits, _, tallyResults, err := f.govKeeper.Tally(ctx, proposal)
+	assert.NilError(t, err)
 
 	assert.Assert(t, passes == false)
 	assert.Assert(t, burnDeposits == false)
@@ -443,6 +453,7 @@ func TestTallyJailedValidator(t *testing.T) {
 	proposal, ok := f.govKeeper.Proposals.Get(ctx, proposalID)
 	assert.Assert(t, ok)
 	passes, burnDeposits, _, tallyResults, err := f.govKeeper.Tally(ctx, proposal)
+	assert.NilError(t, err)
 
 	assert.Assert(t, passes)
 	assert.Assert(t, burnDeposits == false)
@@ -479,6 +490,7 @@ func TestTallyValidatorMultipleDelegations(t *testing.T) {
 	proposal, ok := f.govKeeper.Proposals.Get(ctx, proposalID)
 	assert.Assert(t, ok)
 	passes, burnDeposits, _, tallyResults, err := f.govKeeper.Tally(ctx, proposal)
+	assert.NilError(t, err)
 
 	assert.Assert(t, passes)
 	assert.Assert(t, burnDeposits == false)

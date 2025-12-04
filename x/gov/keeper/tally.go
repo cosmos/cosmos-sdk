@@ -8,15 +8,14 @@ import (
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Tally iterates over the votes and updates the tally of a proposal based on the voting power of the
 // voters
 // CONTRACT: passes is always false when err!=nil
-func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes bool, burnDeposits bool, participation math.LegacyDec, tallyResults v1.TallyResult, err error) {
+func (keeper Keeper) Tally(ctx context.Context, proposal v1.Proposal) (passes, burnDeposits bool, participation math.LegacyDec, tallyResults v1.TallyResult, err error) {
 	// fetch all the bonded validators
 	currValidators, err := keeper.getBondedValidatorsByAddress(ctx)
 	if err != nil {
@@ -133,7 +132,7 @@ func (keeper Keeper) HasReachedQuorum(ctx sdk.Context, proposal v1.Proposal) (bo
 // them in map using their operator address as the key.
 func (keeper Keeper) getBondedValidatorsByAddress(ctx context.Context) (map[string]stakingtypes.ValidatorI, error) {
 	vals := make(map[string]stakingtypes.ValidatorI)
-	err := keeper.sk.IterateBondedValidatorsByPower(ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
+	err := keeper.sk.IterateBondedValidatorsByPower(ctx, func(_ int64, validator stakingtypes.ValidatorI) (stop bool) {
 		vals[validator.GetOperator()] = validator
 		return false
 	})
@@ -165,7 +164,7 @@ func (keeper Keeper) tallyVotes(
 		}
 
 		// iterate over all delegations from voter, deduct from any delegated-to validators
-		err = keeper.sk.IterateDelegations(ctx, voter, func(index int64, delegation stakingtypes.DelegationI) (stop bool) {
+		err = keeper.sk.IterateDelegations(ctx, voter, func(_ int64, delegation stakingtypes.DelegationI) (stop bool) {
 			valAddrStr := delegation.GetValidatorAddr()
 
 			if val, ok := currValidators[valAddrStr]; ok {
@@ -225,7 +224,7 @@ func (keeper Keeper) tallyVotes(
 // getQuorumAndThreshold returns the appropriate quorum and threshold according
 // to proposal kind. If the proposal contains multiple kinds, the highest
 // quorum and threshold is returned.
-func (keeper Keeper) getQuorumAndThreshold(ctx context.Context, proposal v1.Proposal) (quorum math.LegacyDec, threshold math.LegacyDec) {
+func (keeper Keeper) getQuorumAndThreshold(ctx context.Context, proposal v1.Proposal) (quorum, threshold math.LegacyDec) {
 	params, err := keeper.Params.Get(ctx)
 	if err != nil {
 		return math.LegacyZeroDec(), math.LegacyZeroDec()

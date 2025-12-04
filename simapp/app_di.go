@@ -11,8 +11,8 @@ import (
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
 	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
-
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	clienthelpers "github.com/cosmos/cosmos-sdk/client/v2/helpers"

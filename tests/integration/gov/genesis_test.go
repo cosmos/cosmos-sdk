@@ -173,7 +173,7 @@ func TestImportExportQueues(t *testing.T) {
 	assert.Assert(t, proposal2.Status == v1.StatusVotingPeriod)
 
 	macc := s2.GovKeeper.GetGovernanceAccount(ctx2)
-	assert.DeepEqual(t, sdk.Coins(minDeposit), s2.BankKeeper.GetAllBalances(ctx2, macc.GetAddress()))
+	assert.DeepEqual(t, minDeposit, s2.BankKeeper.GetAllBalances(ctx2, macc.GetAddress()))
 
 	// Run the endblocker. Check to make sure that proposal1 is removed from state, and proposal2 is finished VotingPeriod.
 	err = gov.EndBlocker(ctx2, s2.GovKeeper)

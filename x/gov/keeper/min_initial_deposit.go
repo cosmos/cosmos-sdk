@@ -10,7 +10,6 @@ import (
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
@@ -75,7 +74,7 @@ func (keeper Keeper) UpdateMinInitialDeposit(ctx context.Context, checkElapsedTi
 	var alpha math.LegacyDec
 
 	var countInactiveProposals uint64
-	err = keeper.InactiveProposalsQueue.Walk(ctx, nil, func(key collections.Pair[time.Time, uint64], _ uint64) (bool, error) {
+	err = keeper.InactiveProposalsQueue.Walk(ctx, nil, func(collections.Pair[time.Time, uint64], uint64) (bool, error) {
 		countInactiveProposals++
 		return false, nil
 	})

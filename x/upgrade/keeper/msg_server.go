@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"cosmossdk.io/errors"
-
 	"cosmossdk.io/x/upgrade/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

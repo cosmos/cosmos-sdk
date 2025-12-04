@@ -2,7 +2,6 @@ package upgrade
 
 import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-
 	upgradev1beta1 "cosmossdk.io/x/upgrade/types"
 )
 

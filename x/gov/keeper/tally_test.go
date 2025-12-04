@@ -13,11 +13,10 @@ import (
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtestutil "github.com/cosmos/cosmos-sdk/x/gov/testutil"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type tallyFixture struct {

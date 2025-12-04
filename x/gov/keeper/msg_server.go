@@ -309,7 +309,7 @@ func (k msgServer) UpdateParams(goCtx context.Context, msg *v1.MsgUpdateParams) 
 }
 
 // ProposeLaw implements the MsgServer.ProposeLaw method.
-func (k msgServer) ProposeLaw(goCtx context.Context, msg *v1.MsgProposeLaw) (*v1.MsgProposeLawResponse, error) {
+func (k msgServer) ProposeLaw(_ context.Context, msg *v1.MsgProposeLaw) (*v1.MsgProposeLawResponse, error) {
 	if k.authority != msg.Authority {
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)
 	}

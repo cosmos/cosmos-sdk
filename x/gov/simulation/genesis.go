@@ -13,9 +13,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
-
 	"github.com/cosmos/cosmos-sdk/x/gov/types"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 // Simulation parameter constants
@@ -79,14 +78,14 @@ func GenTallyParamsThreshold(r *rand.Rand) math.LegacyDec {
 }
 
 // GenMinDepositRatio returns randomized DepositMinRatio
-func GenMinDepositRatio(r *rand.Rand) math.LegacyDec {
+func GenMinDepositRatio(*rand.Rand) math.LegacyDec {
 	return math.LegacyMustNewDecFromStr("0.01")
 }
 
-// GenTallyParamsThreshold returns randomized TallyParamsConstitutionalThreshold
+// GenTallyParamsConstitutionalThreshold returns randomized TallyParamsConstitutionalThreshold
 func GenTallyParamsConstitutionalThreshold(r *rand.Rand, minDec math.LegacyDec) math.LegacyDec {
-	min := int(minDec.Mul(math.LegacyNewDec(1000)).RoundInt64())
-	return math.LegacyNewDecWithPrec(int64(simulation.RandIntBetween(r, min, 950)), 3)
+	minimum := int(minDec.Mul(math.LegacyNewDec(1000)).RoundInt64())
+	return math.LegacyNewDecWithPrec(int64(simulation.RandIntBetween(r, minimum, 950)), 3)
 }
 
 // GenQuorumTimeout returns a randomized QuorumTimeout between 0 and votingPeriod
@@ -126,11 +125,11 @@ func GenDepositParamsMinDepositSensitivityTargetDistance(r *rand.Rand) uint64 {
 }
 
 // GenDepositParamsMinDepositChangeRatio returns randomized DepositParamsMinDepositChangeRatio
-func GenDepositParamsMinDepositChangeRatio(r *rand.Rand, max, prec int) math.LegacyDec {
-	if max <= 0 {
+func GenDepositParamsMinDepositChangeRatio(r *rand.Rand, maximum, prec int) math.LegacyDec {
+	if maximum <= 0 {
 		return math.LegacyZeroDec()
 	}
-	return math.LegacyNewDecWithPrec(int64(simulation.RandIntBetween(r, 0, max)), int64(prec))
+	return math.LegacyNewDecWithPrec(int64(simulation.RandIntBetween(r, 0, maximum)), int64(prec))
 }
 
 // GenDepositParamsTargetActiveProposals returns randomized DepositParamsTargetActiveProposals
@@ -149,11 +148,11 @@ func GenDepositParamsMinInitialDepositSensitivityTargetDistance(r *rand.Rand) ui
 }
 
 // GenDepositParamsMinInitialDepositChangeRatio returns randomized DepositParamsMinInitialDepositChangeRatio
-func GenDepositParamsMinInitialDepositChangeRatio(r *rand.Rand, max, prec int) math.LegacyDec {
-	if max <= 0 {
+func GenDepositParamsMinInitialDepositChangeRatio(r *rand.Rand, maximum, prec int) math.LegacyDec {
+	if maximum <= 0 {
 		return math.LegacyZeroDec()
 	}
-	return math.LegacyNewDecWithPrec(int64(simulation.RandIntBetween(r, 0, max)), int64(prec))
+	return math.LegacyNewDecWithPrec(int64(simulation.RandIntBetween(r, 0, maximum)), int64(prec))
 }
 
 func GenDepositParamsMinInitialDepositTargetProposals(r *rand.Rand) uint64 {

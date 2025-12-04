@@ -3,12 +3,13 @@ package keeper_test
 import (
 	"testing"
 
-	"cosmossdk.io/math"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/stretchr/testify/assert"
+
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
 func TestGetSetParticipationEma(t *testing.T) {

@@ -13,8 +13,8 @@ import (
 
 // UpdateParticipationEMA updates the governance participation EMA
 func (k Keeper) UpdateParticipationEMA(ctx context.Context, proposal v1.Proposal, participation math.LegacyDec) {
-	formula := func(old, new math.LegacyDec) math.LegacyDec {
-		return old.Mul(math.LegacyNewDecWithPrec(8, 1)).Add(new.Mul(math.LegacyNewDecWithPrec(2, 1)))
+	formula := func(oldValue, newValue math.LegacyDec) math.LegacyDec {
+		return oldValue.Mul(math.LegacyNewDecWithPrec(8, 1)).Add(newValue.Mul(math.LegacyNewDecWithPrec(2, 1)))
 	}
 
 	kinds := k.ProposalKinds(proposal)

@@ -88,7 +88,7 @@ func MigrateStore(
 		}
 	}
 
-	// Set the default consitution if it is not set
+	// Set the default constitution if it is not set
 	if ok, err := constitutionItem.Has(ctx); !ok || err != nil {
 		if err := constitutionItem.Set(ctx, "This chain has no constitution."); err != nil {
 			return err

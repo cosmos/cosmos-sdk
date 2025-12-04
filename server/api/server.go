@@ -35,7 +35,9 @@ type Server struct {
 	ClientCtx         client.Context
 	GRPCSrv           *grpc.Server
 	logger            log.Logger
-	metrics           *telemetry.Metrics
+
+	//nolint:staticcheck // TODO: switch to OpenTelemetry
+	metrics *telemetry.Metrics
 
 	// Start() is blocking and generally called from a separate goroutine.
 	// Close() can be called asynchronously and access shared memory
@@ -198,6 +200,7 @@ func (s *Server) SetTelemetry(m *telemetry.Metrics) {
 	s.mtx.Unlock()
 }
 
+//nolint:staticcheck // TODO: switch to OpenTelemetry
 func (s *Server) registerMetrics(m *telemetry.Metrics) {
 	s.metrics = m
 

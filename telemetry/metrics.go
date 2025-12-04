@@ -56,11 +56,15 @@ const (
 	MetricSinkOtel = "otel"
 )
 
+// DisplayableSink defines an interface for a sink to provide human-readable metrics.
+//
 // Deprecated: DisplayableSink is an interface that defines a method for displaying metrics.
 type DisplayableSink interface {
 	DisplayMetrics(resp http.ResponseWriter, req *http.Request) (any, error)
 }
 
+// Config is the telemetry configuration.
+//
 // Deprecated: Use OpenTelemetry instead.
 type Config struct {
 	// Prefixed with keys to separate services
@@ -104,23 +108,29 @@ type Config struct {
 	DatadogHostname string `mapstructure:"datadog-hostname"`
 }
 
-// Deprecated: Metrics defines a wrapper around application telemetry functionality. It allows
+// Metrics defines a wrapper around application telemetry functionality. It allows
 // metrics to be gathered at any point in time. When creating a Metrics object,
 // internally, a global metrics is registered with a set of sinks as configured
 // by the operator. In addition to the sinks, when a process gets a SIGUSR1, a
 // dump of formatted recent metrics will be sent to STDERR.
+//
+// Deprecated: users should switch to OpenTelemetry.
 type Metrics struct {
 	sink              metrics.MetricSink
 	prometheusEnabled bool
 }
 
-// Deprecated: GatherResponse is the response type of registered metrics
+// GatherResponse is the response type of registered metrics
+//
+// Depreacated: users should switch to OpenTelemetry.
 type GatherResponse struct {
 	Metrics     []byte
 	ContentType string
 }
 
-// Deprecated: New creates a new instance of Metrics
+// New creates a new instance of Metrics
+//
+// Deprecated: users should switch to OpenTelemetry.
 func New(cfg Config) (_ *Metrics, rerr error) {
 	globalTelemetryEnabled = cfg.Enabled
 	if !cfg.Enabled {

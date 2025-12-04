@@ -119,7 +119,7 @@ func flattenKey(parts []string) string {
 
 	joined := strings.Join(parts, ".")
 
-	spaceReplacer.WriteString(buf, joined)
+	spaceReplacer.WriteString(buf, joined) //nolint: errcheck // unlikely and non-critical.
 
 	return buf.String()
 }

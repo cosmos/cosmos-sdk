@@ -13,8 +13,6 @@ import (
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
-
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math/unsafe"
 
@@ -23,6 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"

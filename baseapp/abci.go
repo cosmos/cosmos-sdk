@@ -177,8 +177,11 @@ func (app *BaseApp) Query(ctx context.Context, req *abci.RequestQuery) (resp *ab
 		req.Height = app.LastBlockHeight()
 	}
 
+	//nolint:staticcheck // TODO: switch to OpenTelemetry
 	telemetry.IncrCounter(1, "query", "count")
+	//nolint:staticcheck // TODO: switch to OpenTelemetry
 	telemetry.IncrCounter(1, "query", req.Path)
+	//nolint:staticcheck // TODO: switch to OpenTelemetry
 	defer telemetry.MeasureSince(telemetry.Now(), req.Path)
 
 	if req.Path == QueryPathBroadcastTx {

@@ -34,7 +34,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	_ "github.com/cosmos/cosmos-sdk/telemetry" // need to initialize telemetry before we declare tracer and metrics
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
@@ -735,10 +734,10 @@ func (app *BaseApp) deliverTx(tx []byte, txMultiStore storetypes.MultiStore, txI
 	var resp *abci.ExecTxResult
 
 	defer func() {
-		telemetry.IncrCounter(1, "tx", "count")
-		telemetry.IncrCounter(1, "tx", resultStr)
-		telemetry.SetGauge(float32(gInfo.GasUsed), "tx", "gas", "used")
-		telemetry.SetGauge(float32(gInfo.GasWanted), "tx", "gas", "wanted")
+		telemetry.IncrCounter(1, "tx", "count")                             //nolint:staticcheck // TODO: switch to OpenTelemetry
+		telemetry.IncrCounter(1, "tx", resultStr)                           //nolint:staticcheck // TODO: switch to OpenTelemetry
+		telemetry.SetGauge(float32(gInfo.GasUsed), "tx", "gas", "used")     //nolint:staticcheck // TODO: switch to OpenTelemetry
+		telemetry.SetGauge(float32(gInfo.GasWanted), "tx", "gas", "wanted") //nolint:staticcheck // TODO: switch to OpenTelemetry
 	}()
 
 	gInfo, result, anteEvents, err := app.RunTx(execModeFinalize, tx, nil, txIndex, txMultiStore, incarnationCache)

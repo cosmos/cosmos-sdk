@@ -250,6 +250,7 @@ func start(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreato
 	return startInProcess(svrCtx, svrCfg, clientCtx, app, metrics, opts)
 }
 
+//nolint:staticcheck // TODO: switch to OpenTelemetry
 func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx client.Context, app types.Application, metrics *telemetry.Metrics, opts StartCmdOptions) error {
 	addr := svrCtx.Viper.GetString(flagAddress)
 	transport := svrCtx.Viper.GetString(flagTransport)
@@ -317,7 +318,7 @@ func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clie
 }
 
 func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx client.Context, app types.Application,
-	metrics *telemetry.Metrics, opts StartCmdOptions,
+	metrics *telemetry.Metrics, opts StartCmdOptions, //nolint:staticcheck // TODO: switch to OpenTelemetry
 ) error {
 	cmtCfg := svrCtx.Config
 	gRPCOnly := svrCtx.Viper.GetBool(flagGRPCOnly)
@@ -537,7 +538,7 @@ func startAPIServer(
 	app types.Application,
 	home string,
 	grpcSrv *grpc.Server,
-	metrics *telemetry.Metrics,
+	metrics *telemetry.Metrics, //nolint:staticcheck // TODO: switch to OpenTelemetry
 ) error {
 	if !svrCfg.API.Enable {
 		return nil
@@ -548,7 +549,9 @@ func startAPIServer(
 	apiSrv := api.New(clientCtx, svrCtx.Logger.With("module", "api-server"), grpcSrv)
 	app.RegisterAPIRoutes(apiSrv, svrCfg.API)
 
+	//nolint:staticcheck // TODO: switch to OpenTelemetry
 	if svrCfg.Telemetry.Enabled {
+		//nolint:staticcheck // TODO: switch to OpenTelemetry
 		apiSrv.SetTelemetry(metrics)
 	}
 
@@ -558,7 +561,9 @@ func startAPIServer(
 	return nil
 }
 
+//nolint:staticcheck // TODO: switch to OpenTelemetry
 func startTelemetry(cfg serverconfig.Config) (*telemetry.Metrics, error) {
+	//nolint:staticcheck // TODO: switch to OpenTelemetry
 	return telemetry.New(cfg.Telemetry)
 }
 
@@ -599,17 +604,17 @@ func emitServerInfoMetrics() {
 
 	versionInfo := version.NewInfo()
 	if len(versionInfo.GoVersion) > 0 {
-		ls = append(ls, telemetry.NewLabel("go", versionInfo.GoVersion))
+		ls = append(ls, telemetry.NewLabel("go", versionInfo.GoVersion)) //nolint:staticcheck // TODO: switch to OpenTelemetry
 	}
 	if len(versionInfo.CosmosSdkVersion) > 0 {
-		ls = append(ls, telemetry.NewLabel("version", versionInfo.CosmosSdkVersion))
+		ls = append(ls, telemetry.NewLabel("version", versionInfo.CosmosSdkVersion)) //nolint:staticcheck // TODO: switch to OpenTelemetry
 	}
 
 	if len(ls) == 0 {
 		return
 	}
 
-	telemetry.SetGaugeWithLabels([]string{"server", "info"}, 1, ls)
+	telemetry.SetGaugeWithLabels([]string{"server", "info"}, 1, ls) //nolint:staticcheck // TODO: switch to OpenTelemetry
 }
 
 func getCtx(svrCtx *Context, block bool) (*errgroup.Group, context.Context) {

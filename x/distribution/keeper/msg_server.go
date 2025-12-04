@@ -65,10 +65,10 @@ func (k msgServer) WithdrawDelegatorReward(ctx context.Context, msg *types.MsgWi
 	defer func() {
 		for _, a := range amount {
 			if a.Amount.IsInt64() {
-				telemetry.SetGaugeWithLabels(
+				telemetry.SetGaugeWithLabels( //nolint:staticcheck // TODO: switch to OpenTelemetry
 					[]string{"tx", "msg", "withdraw_reward"},
 					float32(a.Amount.Int64()),
-					[]metrics.Label{telemetry.NewLabel("denom", a.Denom)},
+					[]metrics.Label{telemetry.NewLabel("denom", a.Denom)}, //nolint:staticcheck // TODO: switch to OpenTelemetry
 				)
 			}
 		}
@@ -91,10 +91,10 @@ func (k msgServer) WithdrawValidatorCommission(ctx context.Context, msg *types.M
 	defer func() {
 		for _, a := range amount {
 			if a.Amount.IsInt64() {
-				telemetry.SetGaugeWithLabels(
+				telemetry.SetGaugeWithLabels( //nolint:staticcheck // TODO: switch to OpenTelemetry
 					[]string{"tx", "msg", "withdraw_commission"},
 					float32(a.Amount.Int64()),
-					[]metrics.Label{telemetry.NewLabel("denom", a.Denom)},
+					[]metrics.Label{telemetry.NewLabel("denom", a.Denom)}, //nolint:staticcheck // TODO: switch to OpenTelemetry
 				)
 			}
 		}

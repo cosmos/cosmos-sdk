@@ -377,6 +377,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		appCfg.MinGasPrices = cfg.MinGasPrices
 		appCfg.API.Enable = true
 		appCfg.API.Swagger = false
+		//nolint:staticcheck // TODO: switch to OpenTelemetry
 		appCfg.Telemetry.Enabled = false
 
 		ctx := server.NewDefaultContext()

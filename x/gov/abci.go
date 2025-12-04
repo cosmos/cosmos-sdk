@@ -18,7 +18,7 @@ import (
 
 // EndBlocker called every block, process inflation, update validator set.
 func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyEndBlocker)
+	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyEndBlocker) //nolint:staticcheck // TODO: switch to OpenTelemetry
 
 	logger := ctx.Logger().With("module", "x/"+types.ModuleName)
 	// delete dead proposals from store and returns their deposits.

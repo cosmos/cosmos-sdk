@@ -210,7 +210,7 @@ type Config struct {
 	BaseConfig `mapstructure:",squash"`
 
 	// Deprecated: Use OpenTelemetry instead, see the `telemetry` package for more details.
-	Telemetry telemetry.Config `mapstructure:"telemetry"`
+	Telemetry telemetry.Config `mapstructure:"telemetry"` //nolint:staticcheck // TODO: switch to OpenTelemetry
 	API       APIConfig        `mapstructure:"api"`
 	GRPC      GRPCConfig       `mapstructure:"grpc"`
 	GRPCWeb   GRPCWebConfig    `mapstructure:"grpc-web"`
@@ -254,6 +254,7 @@ func DefaultConfig() *Config {
 			IAVLDisableFastNode: false,
 			AppDBBackend:        "",
 		},
+		//nolint:staticcheck // TODO: switch to OpenTelemetry
 		Telemetry: telemetry.Config{
 			Enabled:      false,
 			GlobalLabels: [][]string{},

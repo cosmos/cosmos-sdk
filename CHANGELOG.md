@@ -40,6 +40,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Breaking Changes
 
+* [#25546](https://github.com/cosmos/cosmos-sdk/pull/25546) Removed `x/params`:
+    * Removes all `legacySubspace` arguments from Keeper and Module instantiation
 * [#25090](https://github.com/cosmos/cosmos-sdk/pull/25090) Moved deprecated modules to `./contrib`.  These modules are still available but will no longer be actively maintained or supported in the Cosmos SDK Bug Bounty program.
     * `x/group`
     * `x/nft`
@@ -96,6 +98,12 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/group) [#24571](https://github.com/cosmos/cosmos-sdk/pull/24571) Deprecate the `x/group` module in the Cosmos SDK repository.  This module will not be maintained to the extent that our core modules will and will be kept in a [legacy repo](https://github.com/cosmos/cosmos-legacy).
 * (types) [#24664](https://github.com/cosmos/cosmos-sdk/pull/24664) Deprecate the `Invariant` type in the Cosmos SDK.
 
+<<<<<<< HEAD
+# Changelog
+
+||||||| 0d6228eaab
+=======
+>>>>>>> main
 ## [v0.53.4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.3) - 2025-07-25
 
 This patch update also includes minor dependency bumps.

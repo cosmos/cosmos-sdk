@@ -37,6 +37,11 @@ func (id NodeID) IsLeaf() bool {
 	return id.FlagIndex.IsLeaf()
 }
 
+// IsEmpty returns true if the NodeID is the zero value.
+func (id NodeID) IsEmpty() bool {
+	return id.Version == 0 && id.FlagIndex == 0
+}
+
 // String returns a string representation of the NodeID.
 func (id NodeID) String() string {
 	return fmt.Sprintf("NodeID{leaf:%t, version:%d, index:%d}", id.IsLeaf(), id.Version, id.FlagIndex.Index())

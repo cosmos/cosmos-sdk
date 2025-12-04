@@ -50,16 +50,17 @@ func (kvr *KVDataReader) hasWAL() (ok bool, startVersion uint64, bytesRead int, 
 // If the data does not start with a valid WAL start entry, an error is returned.
 func (kvr *KVDataReader) ReadWAL() (*WALReader, error) {
 	haveWal, startVersion, bytesRead, err := kvr.hasWAL()
-	if !haveWal {
-		return nil, fmt.Errorf("data does not contain a valid WAL start entry")
-	}
 	if err != nil {
 		return nil, err
 	}
+	if !haveWal {
+		return nil, fmt.Errorf("data does not contain a valid WAL start entry")
+	}
 	return &WALReader{
-		rdr:     kvr,
-		offset:  1 + bytesRead,
-		Version: startVersion,
+		rdr:         kvr,
+		offset:      bytesRead,
+		Version:     startVersion,
+		keyMappings: make(map[int][]byte),
 	}, nil
 }
 
@@ -77,6 +78,9 @@ func (kvr *KVDataReader) UnsafeReadBlob(offset int) ([]byte, error) {
 func (kvr *KVDataReader) unsafeReadBlob(offset int) ([]byte, int, error) {
 	// Read size prefix
 	size, bytesRead, err := kvr.readVarint(offset)
+	if err != nil {
+		return nil, 0, err
+	}
 
 	// Read blob data
 	offset += bytesRead
@@ -147,6 +151,11 @@ func (wr *WALReader) Next() (entryType KVEntryType, ok bool, err error) {
 }
 
 func (wr *WALReader) next() (entryType KVEntryType, ok bool, err error) {
+	// check for end of data
+	if wr.offset >= wr.rdr.Len() {
+		return 0, false, nil
+	}
+
 	entryType = KVEntryType(wr.rdr.At(wr.offset))
 	wr.offset++
 	switch entryType {
@@ -193,26 +202,29 @@ func (wr *WALReader) next() (entryType KVEntryType, ok bool, err error) {
 			return 0, false, fmt.Errorf("failed to read key blob at offset %d: %w", wr.offset, err)
 		}
 	case KVEntryValueBlob:
-		_, err = wr.rdr.UnsafeReadBlob(wr.offset)
+		var bytesRead int
+		_, bytesRead, err = wr.rdr.unsafeReadBlob(wr.offset)
 		if err != nil {
 			return 0, false, fmt.Errorf("failed to read blob at offset %d: %w", wr.offset, err)
 		}
+
+		wr.offset += bytesRead
 	default:
-		return 0, false, fmt.Errorf("invalid KV entry type %d at offset %d", entryType, wr.offset)
+		return 0, false, fmt.Errorf("invalid KV entry type %d at offset %d", entryType, wr.offset-1)
 	}
 	return entryType, true, nil
 }
 
 func (wr *WALReader) readKey() error {
-	var n int
+	var bytesRead int
 	var err error
-	wr.Key, n, err = wr.rdr.unsafeReadBlob(wr.offset)
+	wr.Key, bytesRead, err = wr.rdr.unsafeReadBlob(wr.offset)
 	if err != nil {
 		return fmt.Errorf("failed to read WAL key at offset %d: %w", wr.offset, err)
 	}
 	// cache the key
 	wr.keyMappings[wr.offset] = wr.Key
-	wr.offset += n
+	wr.offset += bytesRead
 	return nil
 }
 

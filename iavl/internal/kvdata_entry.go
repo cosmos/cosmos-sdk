@@ -28,12 +28,12 @@ const (
 
 	// KVEntryKeyBlob indicates a standalone key data entry.
 	// This should be followed by varint length + raw bytes.
-	// Used for compacted (non-WAL) data or branch keys not already cached.
+	// Used for compacted (non-WAL) leaf or branch keys not already cached.
 	KVEntryKeyBlob KVEntryType = 0x4
 
-	// KVEntryValueBlob indicates a standalone blob value data entry.
+	// KVEntryValueBlob indicates a standalone value data entry.
 	// This should be followed by varint length + raw bytes.
-	// Used for compacted (non-WAL) data or branch keys not already cached.
+	// Used for compacted (non-WAL) leaf values.
 	// The main difference between KVEntryKeyBlob and KVEntryValueBlob is that key
 	// entries may be cached for faster access, while value entries are not cached.
 	KVEntryValueBlob KVEntryType = 0x5

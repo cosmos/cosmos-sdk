@@ -64,19 +64,19 @@ const (
 var _ servertypes.ABCI = (*BaseApp)(nil)
 
 var (
-	tracer   = otel.Tracer("cosmos-sdk/baseapp")
-	meter    = otel.Meter("cosmos-sdk/baseapp")
-	blockCnt metric.Int64Counter
-	txCnt    metric.Int64Counter
+	tracer       = otel.Tracer("cosmos-sdk/baseapp")
+	meter        = otel.Meter("cosmos-sdk/baseapp")
+	blockCounter metric.Int64Counter
+	txCounter    metric.Int64Counter
 )
 
 func init() {
 	var err error
-	blockCnt, err = meter.Int64Counter("block.count")
+	blockCounter, err = meter.Int64Counter("block.count")
 	if err != nil {
 		panic(err)
 	}
-	txCnt, err = meter.Int64Counter("tx.count")
+	txCounter, err = meter.Int64Counter("tx.count")
 	if err != nil {
 		panic(err)
 	}
@@ -988,7 +988,7 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 
 			msCache.Write()
 
-			txCnt.Add(ctx, 1)
+			txCounter.Add(ctx, 1)
 		}
 
 		if len(anteEvents) > 0 && (mode == execModeFinalize || mode == execModeSimulate) {

@@ -247,14 +247,45 @@ type extraConfig struct {
 	CosmosExtra *cosmosExtra `json:"cosmos_extra" yaml:"cosmos_extra" mapstructure:"cosmos_extra"`
 }
 
+// cosmosExtra provides extensions to the OpenTelemetry declarative configuration.
+// These options allow features not yet supported by otelconf, such as writing traces/metrics/logs to local
+// files, enabling additional host/runtime instrumentation, and configuring custom propagators.
+//
+// When present in otel.yaml under the `cosmos_extra` key, these fields
+// augment/override portions of the OpenTelemetry SDK initialization.
+//
+// For an example configuration, see the README in this package.
 type cosmosExtra struct {
-	TraceFile           string   `json:"trace_file" yaml:"trace_file" mapstructure:"trace_file"`
-	MetricsFile         string   `json:"metrics_file" yaml:"metrics_file" mapstructure:"metrics_file"`
-	MetricsFileInterval string   `json:"metrics_file_interval" yaml:"metrics_file_interval" mapstructure:"metrics_file_interval"`
-	LogsFile            string   `json:"logs_file" yaml:"logs_file" mapstructure:"logs_file"`
-	InstrumentHost      bool     `json:"instrument_host" yaml:"instrument_host" mapstructure:"instrument_host"`
-	InstrumentRuntime   bool     `json:"instrument_runtime" yaml:"instrument_runtime" mapstructure:"instrument_runtime"`
-	Propagators         []string `json:"propagators" yaml:"propagators" mapstructure:"propagators"`
+	// TraceFile is an optional path to a file where spans should be exported
+	// using the stdouttrace exporter. If empty, no file-based trace export is
+	// configured.
+	TraceFile string `json:"trace_file" yaml:"trace_file" mapstructure:"trace_file"`
+
+	// MetricsFile is an optional path to a file where metrics should be written
+	// using the stdoutmetric exporter. If unset, no file-based metrics export
+	// is performed.
+	MetricsFile string `json:"metrics_file" yaml:"metrics_file" mapstructure:"metrics_file"`
+
+	// MetricsFileInterval defines how frequently metric data should be flushed
+	// to MetricsFile. It must be a valid Go duration string (e.g. "10s",
+	// "1m"). If empty, the default PeriodicReader interval is used.
+	MetricsFileInterval string `json:"metrics_file_interval" yaml:"metrics_file_interval" mapstructure:"metrics_file_interval"`
+
+	// LogsFile is an optional output file for structured logs exported through
+	// the stdoutlog exporter. If unset, log exporting to file is disabled.
+	LogsFile string `json:"logs_file" yaml:"logs_file" mapstructure:"logs_file"`
+
+	// InstrumentHost enables collection of host-level metrics such as CPU,
+	// memory, and network statistics using the otel host instrumentation.
+	InstrumentHost bool `json:"instrument_host" yaml:"instrument_host" mapstructure:"instrument_host"`
+
+	// InstrumentRuntime enables runtime instrumentation that reports Go runtime
+	// metrics such as GC activity, heap usage, and goroutine count.
+	InstrumentRuntime bool `json:"instrument_runtime" yaml:"instrument_runtime" mapstructure:"instrument_runtime"`
+
+	// Propagators configures additional or alternative TextMapPropagators
+	// (e.g. "tracecontext", "baggage", "b3", "b3multi", "jaeger").
+	Propagators []string `json:"propagators" yaml:"propagators" mapstructure:"propagators"`
 }
 
 func Shutdown(ctx context.Context) error {

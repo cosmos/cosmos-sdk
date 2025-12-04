@@ -18,7 +18,8 @@ Create a basic OpenTelemetry configuration file which will send data to the loca
 resource:
   attributes:
     - name: service.name
-      value: my_app_name
+      value: simapp
+
 tracer_provider:
   processors:
     - batch: # NOTE: you should use batch in production!
@@ -26,14 +27,26 @@ tracer_provider:
           otlp:
             protocol: grpc
             endpoint: http://localhost:4317
+
 meter_provider:
   readers:
-    - periodic:
-        interval: 1000 # 1 second, maybe use something longer in production
+    - pull:
         exporter:
-          otlp:
-            protocol: grpc
-            endpoint: http://localhost:4317
+          prometheus: # pushes directly to prometheus backend. 
+            host: 0.0.0.0
+            port: 9464
+            # optional: include resource attributes as constant labels
+            with_resource_constant_labels:
+              include:
+                - service.name
+  views:
+    - selector:
+        instrument_type: histogram
+      stream:
+        aggregation:
+          explicit_bucket_histogram:
+            boundaries: [ 0.2, 0.25, 0.3, 0.35, 0.4, 0.5, 0.75, 1, 2, 5 ]
+
 logger_provider:
   processors:
     - batch:
@@ -41,7 +54,20 @@ logger_provider:
           otlp:
             protocol: grpc
             endpoint: http://localhost:4317
+
+
+cosmos_extra:
+  trace_file: ""
+  metrics_file: ""
+  metrics_file_interval: ""
+  logs_file: ""
+  instrument_host: true
+  instrument_runtime: true
+  propagators:
+    - tracecontext
 ```
+
+For a full list of configurable options see: https://github.com/open-telemetry/opentelemetry-configuration/blob/main/examples/kitchen-sink.yaml
 
 3. set the `OTEL_EXPERIMENTAL_CONFIG_FILE` environment variable to the path of the configuration file:
    `export OTEL_EXPERIMENTAL_CONFIG_FILE=path/to/config.yaml`

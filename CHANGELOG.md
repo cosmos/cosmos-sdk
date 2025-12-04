@@ -46,11 +46,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Improvements
 
 * (x/mint) [#25562](https://github.com/cosmos/cosmos-sdk/pull/25562) Improve and test `x/mint` params validation.
-<<<<<<< HEAD
-=======
-* (api) [#25613](https://github.com/cosmos/cosmos-sdk/pull/25613) Separated deprecated modules into the contrib directory, distinct from api, to enable and unblock new proto changes without affecting legacy code.
 * (server) [#25632](https://github.com/cosmos/cosmos-sdk/pull/25632) Add missing call to close the app on shutdown.
->>>>>>> 3516334eb (fix: add missing close when graceful shutdown (#25632))
 
 ### Bug Fixes
 

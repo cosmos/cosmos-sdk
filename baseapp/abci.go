@@ -188,7 +188,7 @@ func (app *BaseApp) Query(ctx context.Context, req *abci.RequestQuery) (resp *ab
 	// handle gRPC routes first rather than calling splitPath because '/' characters
 	// are used as part of gRPC paths
 	if grpcHandler := app.grpcQueryRouter.Route(req.Path); grpcHandler != nil {
-		return app.handleQueryGRPC(grpcHandler, req, ctx), nil
+		return app.handleQueryGRPC(ctx, grpcHandler, req), nil
 	}
 
 	path := SplitABCIQueryPath(req.Path)
@@ -1227,14 +1227,14 @@ func (app *BaseApp) getContextForProposal(ctx sdk.Context, height int64) sdk.Con
 	return ctx
 }
 
-func (app *BaseApp) handleQueryGRPC(handler GRPCQueryHandler, req *abci.RequestQuery, baseCtx context.Context) *abci.ResponseQuery {
+func (app *BaseApp) handleQueryGRPC(goCtx context.Context, handler GRPCQueryHandler, req *abci.RequestQuery) *abci.ResponseQuery {
 	ctx, err := app.CreateQueryContext(req.Height, req.Prove)
 	if err != nil {
 		return sdkerrors.QueryResult(err, app.trace)
 	}
 
 	// add base context for tracing
-	ctx = ctx.WithContext(baseCtx)
+	ctx = ctx.WithContext(goCtx)
 
 	resp, err := handler(ctx, req)
 	if err != nil {

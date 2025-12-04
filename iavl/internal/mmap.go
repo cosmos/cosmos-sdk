@@ -33,6 +33,12 @@ func NewMmap(file *os.File) (*Mmap, error) {
 	return &Mmap{handle: handle}, nil
 }
 
+// At returns the byte at the given index in the mmap-ed data.
+// If the index is out of bounds, it panics.
+func (m Mmap) At(i int) byte {
+	return m.handle[i]
+}
+
 // UnsafeSlice returns a byte slice pointing to the mmap-ed data at the given offset and size.
 // If the offset and size exceed the mapped data, an error is returned.
 // WARNING: The returned byte slice is unsafe and should not be used after the mmap is closed.

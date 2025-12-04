@@ -26,10 +26,17 @@ const (
 	// This must be followed by a varint-encoded version number.
 	KVEntryWALCommit KVEntryType = 0x3
 
-	// KVEntryBlob indicates a standalone blob entry (key or value data).
+	// KVEntryKeyBlob indicates a standalone key data entry.
 	// This should be followed by varint length + raw bytes.
 	// Used for compacted (non-WAL) data or branch keys not already cached.
-	KVEntryBlob KVEntryType = 0x4
+	KVEntryKeyBlob KVEntryType = 0x4
+
+	// KVEntryValueBlob indicates a standalone blob value data entry.
+	// This should be followed by varint length + raw bytes.
+	// Used for compacted (non-WAL) data or branch keys not already cached.
+	// The main difference between KVEntryKeyBlob and KVEntryValueBlob is that key
+	// entries may be cached for faster access, while value entries are not cached.
+	KVEntryValueBlob KVEntryType = 0x5
 
 	// KVFlagCachedKey indicates that the key for this entry is cached and should be referenced by
 	// a 32-bit little-endian offset instead of being stored inline.

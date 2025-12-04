@@ -147,7 +147,7 @@ func (kvs *KVDataWriter) WriteKeyValueBlobs(key, value []byte) (keyOffset, value
 		return 0, 0, err
 	}
 
-	valueOffset, err = kvs.writeBlob(KVEntryKeyBlob, value)
+	valueOffset, err = kvs.writeBlob(KVEntryValueBlob, value)
 	if err != nil {
 		return 0, 0, err
 	}

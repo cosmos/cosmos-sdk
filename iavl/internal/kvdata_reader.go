@@ -36,7 +36,7 @@ func (kvr *KVDataReader) HasWAL() (ok bool, startVersion uint64) {
 }
 
 func (kvr *KVDataReader) hasWAL() (ok bool, startVersion uint64, bytesRead int, err error) {
-	if kvr.At(0) != byte(KVEntryWALStart) {
+	if kvr.Len() == 0 || kvr.At(0) != byte(KVEntryWALStart) {
 		return false, 0, 0, nil
 	}
 	startVersion, bytesRead, err = kvr.readVarint(1)

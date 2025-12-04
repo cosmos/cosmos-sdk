@@ -173,5 +173,7 @@ require (
 
 replace github.com/cosmos/cosmos-sdk => ../
 
+replace cosmossdk.io/api => github.com/yihuang/cosmos-sdk/api v0.1.0-alpha1.0.20251127061539-64b8e21eb752
+
 // Use fork for blockstm
 replace github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-20250924232609-2c6195d95951

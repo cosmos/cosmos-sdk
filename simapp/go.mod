@@ -234,6 +234,8 @@ require (
 
 // Below are the long-lived replace of the SimApp
 replace (
+	// remove replace after api dependency is tagged
+	cosmossdk.io/api => github.com/yihuang/cosmos-sdk/api v0.1.0-alpha1.0.20251127061539-64b8e21eb752
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk

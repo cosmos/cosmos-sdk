@@ -20,6 +20,8 @@ type MemNode struct {
 	keyOffset uint32
 }
 
+var _ Node = (*MemNode)(nil)
+
 // ID implements the Node interface.
 func (node *MemNode) ID() NodeID {
 	return node.nodeId
@@ -122,5 +124,3 @@ func (node *MemNode) String() string {
 		return fmt.Sprintf("MemNode{key:%x, version:%d, size:%d, height:%d, left:%s, right:%s}", node.key, node.version, node.size, node.height, node.left, node.right)
 	}
 }
-
-var _ Node = (*MemNode)(nil)

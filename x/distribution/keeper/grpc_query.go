@@ -419,7 +419,7 @@ func (k Querier) ValidatorCurrentRewards(ctx context.Context, req *types.QueryVa
 	}
 
 	if validator == nil {
-		return nil, errors.Wrapf(types.ErrNoValidatorExists, req.ValidatorAddress)
+		return nil, errors.Wrap(types.ErrNoValidatorExists, req.ValidatorAddress)
 	}
 
 	rewards, err := k.GetValidatorCurrentRewards(ctx, valAddr)
@@ -460,7 +460,7 @@ func (k Querier) DelegatorStartingInfo(ctx context.Context, req *types.QueryDele
 	}
 
 	if validator == nil {
-		return nil, errors.Wrapf(types.ErrNoValidatorExists, req.ValidatorAddress)
+		return nil, errors.Wrap(types.ErrNoValidatorExists, req.ValidatorAddress)
 	}
 
 	delegation, err := k.stakingKeeper.Delegation(ctx, delAddr, valAddr)

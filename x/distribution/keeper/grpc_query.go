@@ -429,3 +429,53 @@ func (k Querier) ValidatorCurrentRewards(ctx context.Context, req *types.QueryVa
 
 	return &types.QueryValidatorCurrentRewardsResponse{Rewards: rewards}, nil
 }
+
+// DelegatorStartingInfo queries the starting info for a delegator
+func (k Querier) DelegatorStartingInfo(ctx context.Context, req *types.QueryDelegatorStartingInfoRequest) (*types.QueryDelegatorStartingInfoResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	if req.DelegatorAddress == "" {
+		return nil, status.Error(codes.InvalidArgument, "empty delegator address")
+	}
+
+	if req.ValidatorAddress == "" {
+		return nil, status.Error(codes.InvalidArgument, "empty validator address")
+	}
+
+	delAddr, err := k.authKeeper.AddressCodec().StringToBytes(req.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(req.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	validator, err := k.stakingKeeper.Validator(ctx, valAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	if validator == nil {
+		return nil, errors.Wrapf(types.ErrNoValidatorExists, req.ValidatorAddress)
+	}
+
+	delegation, err := k.stakingKeeper.Delegation(ctx, delAddr, valAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	if delegation == nil {
+		return nil, types.ErrNoDelegationExists
+	}
+
+	startingInfo, err := k.GetDelegatorStartingInfo(ctx, valAddr, delAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryDelegatorStartingInfoResponse{StartingInfo: startingInfo}, nil
+}

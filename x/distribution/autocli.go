@@ -104,6 +104,16 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "validator_address"},
 					},
 				},
+				{
+					RpcMethod: "DelegatorStartingInfo",
+					Use:       "delegator-starting-info [delegator-address] [validator-address]",
+					Short:     "Query delegator starting info for a delegation",
+					Example:   fmt.Sprintf(`$ %s query distribution delegator-starting-info [delegator-address] [validator-address]`, version.AppName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "delegator_address"},
+						{ProtoField: "validator_address"},
+					},
+				},
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{

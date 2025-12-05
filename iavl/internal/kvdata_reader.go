@@ -70,9 +70,9 @@ func (kvr *KVDataReader) ReadWAL() (*WALReader, error) {
 // However, this function doesn't do any checking to ensure that the offset does indeed point to a valid blob.
 // The returned byte slice is unsafe and should not be used after the underlying mmap is closed.
 // If it is to be retained longer, it should be copied first.
-func (kvr *KVDataReader) UnsafeReadBlob(offset int) ([]byte, error) {
+func (kvr *KVDataReader) UnsafeReadBlob(offset int) (UnsafeBytes, error) {
 	bz, _, err := kvr.unsafeReadBlob(offset)
-	return bz, err
+	return WrapUnsafeBytes(bz), err
 }
 
 func (kvr *KVDataReader) unsafeReadBlob(offset int) ([]byte, int, error) {

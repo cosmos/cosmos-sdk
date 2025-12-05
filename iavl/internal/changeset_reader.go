@@ -6,8 +6,9 @@ import (
 )
 
 type ChangesetReader struct {
-	files *ChangesetFiles
-	info  *ChangesetInfo // we copy this so that it can be accessed even in shared changesets
+	changeset *Changeset      // we keep a reference to the parent changeset handle
+	files     *ChangesetFiles // files is only non-nil if this reader "owns" the changeset files
+	info      *ChangesetInfo  // we reference this so that it can be accessed even in shared changesets
 
 	kvDataReader *KVDataReader
 	branchesData *NodeMmap[BranchLayout]
@@ -119,6 +120,10 @@ func (cr *ChangesetReader) ResolveBranchByID(id NodeID) (*BranchLayout, error) {
 		return nil, err
 	}
 	return cr.branchesData.FindByID(id, &info.Branches)
+}
+
+func (cr *ChangesetReader) Changeset() *Changeset {
+	return cr.changeset
 }
 
 //var ErrDisposed = errors.New("changeset disposed")

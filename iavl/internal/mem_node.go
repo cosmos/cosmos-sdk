@@ -8,20 +8,17 @@ import (
 // MemNode represents an in-memory node that has recently been created and may or may not have
 // been serialized to disk yet.
 type MemNode struct {
-	height      uint8
-	version     uint32
-	size        int64
-	key         []byte
-	value       []byte
-	left        *NodePointer
-	right       *NodePointer
-	hash        []byte
-	nodeId      NodeID // ID of this node, 0 if not yet assigned
-	keyOffset   uint32
-	valueOffset uint32
+	height    uint8
+	version   uint32
+	size      int64
+	key       []byte
+	value     []byte
+	left      *NodePointer
+	right     *NodePointer
+	hash      []byte
+	nodeId    NodeID // ID of this node, 0 if not yet assigned
+	keyOffset uint32
 }
-
-var _ Node = (*MemNode)(nil)
 
 // ID implements the Node interface.
 func (node *MemNode) ID() NodeID {
@@ -44,13 +41,13 @@ func (node *MemNode) Version() uint32 {
 }
 
 // Key implements the Node interface.
-func (node *MemNode) Key() ([]byte, error) {
-	return node.key, nil
+func (node *MemNode) Key() (UnsafeBytes, error) {
+	return WrapUnsafeBytes(node.key), nil
 }
 
 // Value implements the Node interface.
-func (node *MemNode) Value() ([]byte, error) {
-	return node.value, nil
+func (node *MemNode) Value() (UnsafeBytes, error) {
+	return WrapSafeBytes(node.value), nil
 }
 
 // Left implements the Node interface.
@@ -64,8 +61,8 @@ func (node *MemNode) Right() *NodePointer {
 }
 
 // Hash implements the Node interface.
-func (node *MemNode) Hash() []byte {
-	return node.hash
+func (node *MemNode) Hash() UnsafeBytes {
+	return WrapSafeBytes(node.hash)
 }
 
 // MutateBranch implements the Node interface.
@@ -77,35 +74,37 @@ func (node *MemNode) MutateBranch(version uint32) (*MemNode, error) {
 }
 
 // Get implements the Node interface.
-func (node *MemNode) Get(key []byte) (value []byte, index int64, err error) {
+func (node *MemNode) Get(key []byte) (value UnsafeBytes, index int64, err error) {
 	if node.IsLeaf() {
 		switch bytes.Compare(node.key, key) {
 		case -1:
-			return nil, 1, nil
+			return UnsafeBytes{}, 1, nil
 		case 1:
-			return nil, 0, nil
+			return UnsafeBytes{}, 0, nil
 		default:
-			return node.value, 0, nil
+			return WrapSafeBytes(node.value), 0, nil
 		}
 	}
 
 	if bytes.Compare(key, node.key) < 0 {
-		leftNode, err := node.left.Resolve()
+		leftNode, pin, err := node.left.Resolve()
+		defer pin.Unpin()
 		if err != nil {
-			return nil, 0, err
+			return UnsafeBytes{}, 0, err
 		}
 
 		return leftNode.Get(key)
 	}
 
-	rightNode, err := node.right.Resolve()
+	rightNode, pin, err := node.right.Resolve()
+	defer pin.Unpin()
 	if err != nil {
-		return nil, 0, err
+		return UnsafeBytes{}, 0, err
 	}
 
 	value, index, err = rightNode.Get(key)
 	if err != nil {
-		return nil, 0, err
+		return UnsafeBytes{}, 0, err
 	}
 
 	index += node.size - rightNode.Size()
@@ -125,3 +124,5 @@ func (node *MemNode) String() string {
 		return fmt.Sprintf("MemNode{key:%x, version:%d, size:%d, height:%d, left:%s, right:%s}", node.key, node.version, node.size, node.height, node.left, node.right)
 	}
 }
+
+var _ Node = (*MemNode)(nil)

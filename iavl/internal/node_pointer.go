@@ -21,12 +21,12 @@ func NewNodePointer(memNode *MemNode) *NodePointer {
 }
 
 // Resolve resolves the NodePointer to a Node, loading from memory or disk as necessary.
-func (p *NodePointer) Resolve() (Node, error) {
+func (p *NodePointer) Resolve() (Node, Pin, error) {
 	mem := p.mem.Load()
 	if mem != nil {
-		return mem, nil
+		return mem, NoopPin{}, nil
 	}
-	return p.changeset.Resolve(p.id, p.fileIdx)
+	panic("not implemented: loading from disk")
 }
 
 // String implements the fmt.Stringer interface.

@@ -2,7 +2,7 @@ package internal
 
 import "sync/atomic"
 
-type ChangesetReaderPinner struct {
+type ChangesetReaderRef struct {
 	rdr      *ChangesetReader
 	refCount atomic.Int32
 	evicted  atomic.Bool
@@ -10,7 +10,7 @@ type ChangesetReaderPinner struct {
 }
 
 type changesetReaderPin struct {
-	pinner *ChangesetReaderPinner
+	pinner *ChangesetReaderRef
 }
 
 func (p *changesetReaderPin) Unpin() {
@@ -21,11 +21,11 @@ func (p *changesetReaderPin) Unpin() {
 	p.pinner = nil
 }
 
-func (p *ChangesetReaderPinner) Evict() {
+func (p *ChangesetReaderRef) Evict() {
 	p.evicted.Store(true)
 }
 
-func (p *ChangesetReaderPinner) TryPin() (*ChangesetReader, Pin) {
+func (p *ChangesetReaderRef) TryPin() (*ChangesetReader, Pin) {
 	p.refCount.Add(1)
 	if p.evicted.Load() {
 		p.refCount.Add(-1)
@@ -34,7 +34,7 @@ func (p *ChangesetReaderPinner) TryPin() (*ChangesetReader, Pin) {
 	return p.rdr, &changesetReaderPin{pinner: p}
 }
 
-func (p *ChangesetReaderPinner) TryDispose() bool {
+func (p *ChangesetReaderRef) TryDispose() bool {
 	if p.disposed.Load() {
 		return true
 	}

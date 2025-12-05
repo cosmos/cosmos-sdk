@@ -72,6 +72,13 @@ service Query {
   rpc CommunityPool(QueryCommunityPoolRequest) returns (QueryCommunityPoolResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/community_pool";
   }
+
+  // ValidatorHistoricalRewards queries historical rewards for a validator at a specific period.
+  rpc ValidatorHistoricalRewards(QueryValidatorHistoricalRewardsRequest)
+      returns (QueryValidatorHistoricalRewardsResponse) {
+    option (google.api.http).get = "/cosmos/distribution/v1beta1/validators/"
+                                   "{validator_address}/historical_rewards/{period}";
+  }
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -254,4 +261,20 @@ message QueryCommunityPoolResponse {
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true
   ];
+}
+
+// QueryValidatorHistoricalRewardsRequest is the request type for the
+// Query/ValidatorHistoricalRewards RPC method.
+message QueryValidatorHistoricalRewardsRequest {
+  // validator_address defines the validator address to query for.
+  string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+  // period defines the period to query historical rewards for.
+  uint64 period = 2;
+}
+
+// QueryValidatorHistoricalRewardsResponse is the response type for the
+// Query/ValidatorHistoricalRewards RPC method.
+message QueryValidatorHistoricalRewardsResponse {
+  // rewards defines the historical rewards of a validator.
+  ValidatorHistoricalRewards rewards = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }

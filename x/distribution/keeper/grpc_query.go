@@ -374,3 +374,26 @@ func (k Querier) CommunityPool(ctx context.Context, _ *types.QueryCommunityPoolR
 
 	return &types.QueryCommunityPoolResponse{Pool: pool.CommunityPool}, nil
 }
+
+// ValidatorHistoricalRewards queries historical rewards for a validator at a specific period
+func (k Querier) ValidatorHistoricalRewards(ctx context.Context, req *types.QueryValidatorHistoricalRewardsRequest) (*types.QueryValidatorHistoricalRewardsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	if req.ValidatorAddress == "" {
+		return nil, status.Error(codes.InvalidArgument, "empty validator address")
+	}
+
+	valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(req.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	rewards, err := k.GetValidatorHistoricalRewards(ctx, valAddr, req.Period)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryValidatorHistoricalRewardsResponse{Rewards: rewards}, nil
+}

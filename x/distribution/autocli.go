@@ -85,6 +85,16 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:     "Query the amount of coins in the community pool",
 					Example:   fmt.Sprintf(`$ %s query distribution community-pool`, version.AppName),
 				},
+				{
+					RpcMethod: "ValidatorHistoricalRewards",
+					Use:       "validator-historical-rewards [validator] [period]",
+					Short:     "Query validator historical rewards for a specific period",
+					Example:   fmt.Sprintf(`$ %s query distribution validator-historical-rewards [validator-address] 5`, version.AppName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "validator_address"},
+						{ProtoField: "period"},
+					},
+				},
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{

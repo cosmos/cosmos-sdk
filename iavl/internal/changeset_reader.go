@@ -17,18 +17,18 @@ type ChangesetReader struct {
 	//orphanWriter *OrphanWriter
 }
 
-func OpenChangeset(dir string) (*ChangesetReader, error) {
-	files, err := OpenChangesetFiles(dir)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open changeset files: %w", err)
-	}
-	cs := &ChangesetReader{}
-	err = cs.InitOwned(files)
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize changeset: %w", err)
-	}
-	return cs, nil
-}
+//func OpenChangeset(dir string) (*ChangesetReader, error) {
+//	files, err := OpenChangesetFiles(dir)
+//	if err != nil {
+//		return nil, fmt.Errorf("failed to open changeset files: %w", err)
+//	}
+//	cs := &ChangesetReader{}
+//	err = cs.InitOwned(files)
+//	if err != nil {
+//		return nil, fmt.Errorf("failed to initialize changeset: %w", err)
+//	}
+//	return cs, nil
+//}
 
 func (cr *ChangesetReader) InitOwned(files *ChangesetFiles) error {
 	err := cr.InitShared(files)

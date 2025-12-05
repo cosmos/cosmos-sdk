@@ -7,27 +7,30 @@ import (
 )
 
 type ChangesetWriter struct {
+	changeset *Changeset
+	files     *ChangesetFiles
+
 	stagedVersion uint32
 
-	files     *ChangesetFiles
 	needsSync atomic.Bool
 
-	kvlog        *KVDataWriter
+	kvDataWriter *KVDataWriter
 	branchesData *StructWriter[BranchLayout]
 	leavesData   *StructWriter[LeafLayout]
 	versionsData *StructWriter[VersionInfo]
 }
 
-func NewChangesetWriter(treeDir string, startVersion uint32) (*ChangesetWriter, error) {
+func NewChangesetWriter(changeset *Changeset, treeDir string, startVersion uint32) (*ChangesetWriter, error) {
 	files, err := CreateChangesetFiles(treeDir, startVersion, 0)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open changeset files: %w", err)
 	}
 
 	cs := &ChangesetWriter{
-		stagedVersion: startVersion,
 		files:         files,
-		kvlog:         NewKVDataWriter(files.KVDataFile()),
+		changeset:     changeset,
+		stagedVersion: startVersion,
+		kvDataWriter:  NewKVDataWriter(files.KVDataFile()),
 		branchesData:  NewStructWriter[BranchLayout](files.BranchesFile()),
 		leavesData:    NewStructWriter[LeafLayout](files.LeavesFile()),
 		versionsData:  NewStructWriter[VersionInfo](files.VersionsFile()),
@@ -36,11 +39,11 @@ func NewChangesetWriter(treeDir string, startVersion uint32) (*ChangesetWriter, 
 }
 
 //	func (cs *ChangesetWriter) WriteWALUpdates(updates []KVUpdate) error {
-//		return cs.kvlog.WriteUpdates(updates)
+//		return cs.kvDataWriter.WriteUpdates(updates)
 //	}
 //
 //	func (cs *ChangesetWriter) WriteWALCommit(version uint32) error {
-//		return cs.kvlog.WriteCommit(version)
+//		return cs.kvDataWriter.WriteCommit(version)
 //	}
 func (cs *ChangesetWriter) SaveRoot(root *NodePointer, version, totalLeaves, totalBranches uint32) error {
 	cs.needsSync.Store(true)
@@ -92,20 +95,19 @@ func (cs *ChangesetWriter) SaveRoot(root *NodePointer, version, totalLeaves, tot
 	return nil
 }
 
-func (cs *ChangesetWriter) CreatedSharedReader() (*Changeset, error) {
+func (cs *ChangesetWriter) CreatedSharedReader() (*ChangesetReader, error) {
 	err := cs.Flush()
 	if err != nil {
 		return nil, fmt.Errorf("failed to flush data before creating shared reader: %w", err)
 	}
+	rdr := &ChangesetReader{changeset: cs.changeset}
 
-	err = cs.reader.InitShared(cs.files)
+	err = rdr.InitShared(cs.files)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize shared changeset reader: %w", err)
 	}
 
-	reader := cs.reader
-	cs.reader = NewChangeset(reader.treeStore)
-	return reader, nil
+	return rdr, nil
 }
 
 func (cs *ChangesetWriter) Flush() error {
@@ -113,7 +115,7 @@ func (cs *ChangesetWriter) Flush() error {
 		cs.files.RewriteInfo(),
 		cs.leavesData.Flush(),
 		cs.branchesData.Flush(),
-		cs.kvlog.Flush(),
+		cs.kvDataWriter.Flush(),
 		cs.versionsData.Flush(),
 	)
 }
@@ -145,39 +147,33 @@ func (cs *ChangesetWriter) writeBranch(np *NodePointer, node *MemNode) error {
 	}
 
 	// TODO cache key offset in memory to avoid duplicate writes
-	keyOffset, ok := cs.keyCache[unsafeBytesToString(node.key)]
-	if !ok {
-		var err error
-		keyOffset, err = cs.kvlog.WriteK(node.key)
-		if err != nil {
-			return fmt.Errorf("failed to write key data: %w", err)
-		}
+	keyOffset, err := cs.kvDataWriter.WriteKeyBlob(node.key)
+	if err != nil {
+		return fmt.Errorf("failed to write key blob data: %w", err)
 	}
-
-	leftVersion := node.left.id.Version()
-	rightVersion := node.right.id.Version()
 
 	var leftOffset uint32
 	var rightOffset uint32
 
 	// If the child node is in the same changeset, store its 1-based file offset.
 	// fileIdx is already 1-based (set to Count() after append), and 0 means no offset.
-	if leftVersion >= uint64(cs.StartVersion()) {
+	csStartVersion := cs.StartVersion()
+	if node.left.id.Version >= csStartVersion {
 		leftOffset = node.left.fileIdx
 	}
-	if rightVersion >= uint64(cs.StartVersion()) {
+	if node.right.id.Version >= csStartVersion {
 		rightOffset = node.right.fileIdx
 	}
 
 	layout := BranchLayout{
-		Id:          np.id,
+		ID:          np.id,
 		Left:        node.left.id,
 		Right:       node.right.id,
 		LeftOffset:  leftOffset,
 		RightOffset: rightOffset,
 		KeyOffset:   keyOffset,
 		Height:      node.height,
-		Size:        uint32(node.size), // TODO check overflow
+		Size:        NewUint40(uint64(node.size)),
 	}
 	copy(layout.Hash[:], node.hash) // TODO check length
 
@@ -187,24 +183,28 @@ func (cs *ChangesetWriter) writeBranch(np *NodePointer, node *MemNode) error {
 	}
 
 	np.fileIdx = uint32(cs.branchesData.Count())
-	np.store = cs.reader
+	np.changeset = cs.changeset
 
 	return nil
 }
 
 func (cs *ChangesetWriter) writeLeaf(np *NodePointer, node *MemNode) error {
 	keyOffset := node.keyOffset
+	valueOffset := node.valueOffset
 	if keyOffset == 0 {
 		var err error
-		keyOffset, err = cs.kvlog.WriteKV(node.key, node.value)
+		keyOffset, valueOffset, err := cs.kvDataWriter.WriteKeyValueBlobs(node.key, node.value)
 		if err != nil {
 			return fmt.Errorf("failed to write key-value data: %w", err)
 		}
+		node.keyOffset = keyOffset
+		node.valueOffset = valueOffset
 	}
 
 	layout := LeafLayout{
-		Id:        np.id,
-		KeyOffset: keyOffset,
+		ID:          np.id,
+		KeyOffset:   keyOffset,
+		ValueOffset: valueOffset,
 	}
 	copy(layout.Hash[:], node.hash) // TODO check length
 
@@ -214,9 +214,7 @@ func (cs *ChangesetWriter) writeLeaf(np *NodePointer, node *MemNode) error {
 	}
 
 	np.fileIdx = uint32(cs.leavesData.Count())
-	np.store = cs.reader
-
-	cs.keyCache[unsafeBytesToString(node.key)] = keyOffset
+	np.changeset = cs.changeset
 
 	return nil
 }
@@ -225,27 +223,24 @@ func (cs *ChangesetWriter) TotalBytes() int {
 	return cs.leavesData.Size() +
 		cs.branchesData.Size() +
 		cs.versionsData.Size() +
-		cs.kvlog.Size()
+		cs.kvDataWriter.Size()
 }
 
-func (cs *ChangesetWriter) Seal() (*Changeset, error) {
+func (cs *ChangesetWriter) Seal() (*ChangesetReader, error) {
 	err := cs.Flush()
 	if err != nil {
 		return nil, fmt.Errorf("failed to flush changeset data: %w", err)
 	}
 
-	err = cs.reader.InitOwned(cs.files)
+	reader := &ChangesetReader{changeset: cs.changeset}
+	err = reader.InitOwned(cs.files)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize owned changeset reader: %w", err)
 	}
 	cs.leavesData = nil
 	cs.branchesData = nil
 	cs.versionsData = nil
-	cs.kvlog = nil
-	cs.keyCache = nil
-	reader := cs.reader
-	cs.reader = nil
-
+	cs.kvDataWriter = nil
 	return reader, nil
 }
 
@@ -257,5 +252,5 @@ func (cs *ChangesetWriter) SyncWAL() error {
 	if !cs.needsSync.CompareAndSwap(true, false) {
 		return nil
 	}
-	return cs.files.kvlogFile.Sync()
+	return cs.files.kvDataFile.Sync()
 }

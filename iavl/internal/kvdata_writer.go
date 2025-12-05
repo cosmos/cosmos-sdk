@@ -13,6 +13,7 @@ import (
 type KVDataWriter struct {
 	*FileWriter
 	keyCache map[string]uint32
+	walMode  bool
 }
 
 // NewKVDataWriter creates a new KVDataWriter.
@@ -24,10 +25,22 @@ func NewKVDataWriter(file *os.File) *KVDataWriter {
 	}
 }
 
+// IsInWALMode returns true if the writer is in WAL mode.
+// This is set to true after WriteStartWAL is called.
+// If the writer is not in WAL mode, only key-value blobs can be written.
+func (kvs *KVDataWriter) IsInWALMode() bool {
+	return kvs.walMode
+}
+
+// WriteStartWAL writes a WAL start entry with the given version.
+// This method can ONLY be called on an empty file at the start of creating a KV data file.
+// An error is returned if the file is not empty.
+// This puts the writer into WAL mode.
 func (kvs *KVDataWriter) WriteStartWAL(version uint64) error {
 	if kvs.Size() != 0 {
 		return fmt.Errorf("cannot write WAL start to non-empty file")
 	}
+	kvs.walMode = true
 	err := kvs.writeType(KVEntryWALStart)
 	if err != nil {
 		return err
@@ -35,6 +48,8 @@ func (kvs *KVDataWriter) WriteStartWAL(version uint64) error {
 	return kvs.writeVarUint(version)
 }
 
+// WriteWALUpdates writes a batch of WAL updates.
+// This can ONLY be called when the writer is in WAL mode.
 func (kvs *KVDataWriter) WriteWALUpdates(updates []KVUpdate) error {
 	for _, update := range updates {
 		if deleteKey := update.DeleteKey; deleteKey != nil {
@@ -56,7 +71,12 @@ func (kvs *KVDataWriter) WriteWALUpdates(updates []KVUpdate) error {
 	return nil
 }
 
+// WriteWALSet writes a WAL set entry for the given key and value and returns their offsets in the file.
+// This can ONLY be called when the writer is in WAL mode.
 func (kvs *KVDataWriter) WriteWALSet(key, value []byte) (keyOffset, valueOffset uint32, err error) {
+	if !kvs.walMode {
+		return 0, 0, fmt.Errorf("cannot write WAL set entry when not in WAL mode")
+	}
 	keyOffset, cached := kvs.keyCache[unsafeBytesToString(key)]
 	typ := KVEntryWALSet
 	if cached {
@@ -89,7 +109,12 @@ func (kvs *KVDataWriter) WriteWALSet(key, value []byte) (keyOffset, valueOffset 
 	return keyOffset, valueOffset, nil
 }
 
+// WriteWALDelete writes a WAL delete entry for the given key.
+// This can ONLY be called when the writer is in WAL mode.
 func (kvs *KVDataWriter) WriteWALDelete(key []byte) error {
+	if !kvs.walMode {
+		return fmt.Errorf("cannot write WAL delete entry when not in WAL mode")
+	}
 	cachedOffset, cached := kvs.keyCache[unsafeBytesToString(key)]
 	typ := KVEntryWALDelete
 	if cached {
@@ -117,7 +142,12 @@ func (kvs *KVDataWriter) WriteWALDelete(key []byte) error {
 	return nil
 }
 
+// WriteWALCommit writes a WAL commit entry for the given version.
+// This can ONLY be called when the writer is in WAL mode.
 func (kvs *KVDataWriter) WriteWALCommit(version uint64) error {
+	if !kvs.walMode {
+		return fmt.Errorf("cannot write WAL commit entry when not in WAL mode")
+	}
 	err := kvs.writeType(KVEntryWALCommit)
 	if err != nil {
 		return err
@@ -126,6 +156,8 @@ func (kvs *KVDataWriter) WriteWALCommit(version uint64) error {
 	return kvs.writeVarUint(version)
 }
 
+// WriteKeyBlob writes a key blob and returns its offset in the file.
+// This should be used for writing keys outside of WAL entries to take advantage of key caching.
 func (kvs *KVDataWriter) WriteKeyBlob(key []byte) (offset uint32, err error) {
 	if offset, found := kvs.keyCache[unsafeBytesToString(key)]; found {
 		return offset, nil
@@ -141,6 +173,8 @@ func (kvs *KVDataWriter) WriteKeyBlob(key []byte) (offset uint32, err error) {
 	return offset, nil
 }
 
+// WriteKeyValueBlobs writes a key blob and a value blob and returns their offsets in the file.
+// This should be used for writing key-value pairs in changesets where the WAL has been dropped.
 func (kvs *KVDataWriter) WriteKeyValueBlobs(key, value []byte) (keyOffset, valueOffset uint32, err error) {
 	keyOffset, err = kvs.WriteKeyBlob(key)
 	if err != nil {
@@ -220,6 +254,9 @@ func (kvs *KVDataWriter) writeLEU32(x uint32) error {
 	return err
 }
 
+// unsafeBytesToString converts a byte slice to a string without allocation.
+// This should be used with caution and only when the byte slice is not modified.
+// But generally when we are storing a byte slice as a key in a map, this is what we should use.
 func unsafeBytesToString(b []byte) string {
 	return unsafe.String(unsafe.SliceData(b), len(b))
 }

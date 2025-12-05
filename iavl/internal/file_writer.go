@@ -17,8 +17,9 @@ type FileWriter struct {
 // Currently, it uses a buffer size of 512kb.
 // If we want to make that configurable, we can add a constructor with a buffer size parameter in the future.
 func NewFileWriter(file *os.File) *FileWriter {
+	const defaultBufferSize = 512 * 1024 // 512kb
 	return &FileWriter{
-		writer: bufio.NewWriterSize(file, 512*1024 /* 512kb */), // TODO: maybe we can have this as a config option?
+		writer: bufio.NewWriterSize(file, defaultBufferSize),
 	}
 }
 

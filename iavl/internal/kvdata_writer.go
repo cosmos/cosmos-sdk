@@ -104,7 +104,6 @@ func (kvs *KVDataWriter) WriteWALSet(key, value []byte) (keyOffset, valueOffset 
 			return 0, 0, err
 		}
 	} else {
-		var err error
 		keyOffset, err = kvs.writeLenPrefixedBytes(key)
 		if err != nil {
 			return 0, 0, err
@@ -214,7 +213,8 @@ func (kvs *KVDataWriter) writeBlob(blobType KVEntryType, bz []byte) (offset uint
 }
 
 func (kvs *KVDataWriter) addKeyToCache(key []byte, offset uint32) {
-	if len(key) < 4 {
+	const minCacheKeyLen = 4 // we choose 4 because offsets are uint32 (4 bytes)
+	if len(key) < minCacheKeyLen {
 		// don't cache very small keys
 		return
 	}

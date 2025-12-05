@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+
+	"github.com/edsrzf/mmap-go"
 )
-import "github.com/edsrzf/mmap-go"
 
 // Mmap represents a read-only memory map into a file.
 type Mmap struct {
@@ -73,6 +74,9 @@ func (m Mmap) Len() int {
 
 // Close unmaps the memory-mapped file but does not close the underlying file.
 func (m Mmap) Close() error {
+	if m.handle == nil {
+		return nil
+	}
 	return m.handle.Unmap()
 }
 

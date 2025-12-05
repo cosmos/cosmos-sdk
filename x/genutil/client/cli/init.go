@@ -185,7 +185,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			cfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
 
 			otelFile := filepath.Join(clientCtx.HomeDir, "config", telemetry.OtelFileName)
-			if err := os.WriteFile(otelFile, []byte{}, 0o644); err != nil {
+			if err := os.WriteFile(otelFile, []byte{}, 0o600); err != nil {
 				return errorsmod.Wrap(err, "Failed to create otel.yaml file")
 			}
 

@@ -79,6 +79,12 @@ service Query {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/validators/"
                                    "{validator_address}/historical_rewards/{period}";
   }
+
+  // ValidatorCurrentRewards queries current rewards for a validator.
+  rpc ValidatorCurrentRewards(QueryValidatorCurrentRewardsRequest) returns (QueryValidatorCurrentRewardsResponse) {
+    option (google.api.http).get = "/cosmos/distribution/v1beta1/validators/"
+                                   "{validator_address}/current_rewards";
+  }
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -277,4 +283,18 @@ message QueryValidatorHistoricalRewardsRequest {
 message QueryValidatorHistoricalRewardsResponse {
   // rewards defines the historical rewards of a validator.
   ValidatorHistoricalRewards rewards = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+// QueryValidatorCurrentRewardsRequest is the request type for the
+// Query/ValidatorCurrentRewards RPC method.
+message QueryValidatorCurrentRewardsRequest {
+  // validator_address defines the validator address to query for.
+  string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+}
+
+// QueryValidatorCurrentRewardsResponse is the response type for the
+// Query/ValidatorCurrentRewards RPC method.
+message QueryValidatorCurrentRewardsResponse {
+  // rewards defines the current rewards of a validator.
+  ValidatorCurrentRewards rewards = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }

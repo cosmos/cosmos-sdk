@@ -30,6 +30,7 @@ const (
 	Query_DelegatorWithdrawAddress_FullMethodName    = "/cosmos.distribution.v1beta1.Query/DelegatorWithdrawAddress"
 	Query_CommunityPool_FullMethodName               = "/cosmos.distribution.v1beta1.Query/CommunityPool"
 	Query_ValidatorHistoricalRewards_FullMethodName  = "/cosmos.distribution.v1beta1.Query/ValidatorHistoricalRewards"
+	Query_ValidatorCurrentRewards_FullMethodName     = "/cosmos.distribution.v1beta1.Query/ValidatorCurrentRewards"
 )
 
 // QueryClient is the client API for Query service.
@@ -63,6 +64,8 @@ type QueryClient interface {
 	CommunityPool(ctx context.Context, in *QueryCommunityPoolRequest, opts ...grpc.CallOption) (*QueryCommunityPoolResponse, error)
 	// ValidatorHistoricalRewards queries historical rewards for a validator at a specific period.
 	ValidatorHistoricalRewards(ctx context.Context, in *QueryValidatorHistoricalRewardsRequest, opts ...grpc.CallOption) (*QueryValidatorHistoricalRewardsResponse, error)
+	// ValidatorCurrentRewards queries current rewards for a validator.
+	ValidatorCurrentRewards(ctx context.Context, in *QueryValidatorCurrentRewardsRequest, opts ...grpc.CallOption) (*QueryValidatorCurrentRewardsResponse, error)
 }
 
 type queryClient struct {
@@ -183,6 +186,16 @@ func (c *queryClient) ValidatorHistoricalRewards(ctx context.Context, in *QueryV
 	return out, nil
 }
 
+func (c *queryClient) ValidatorCurrentRewards(ctx context.Context, in *QueryValidatorCurrentRewardsRequest, opts ...grpc.CallOption) (*QueryValidatorCurrentRewardsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(QueryValidatorCurrentRewardsResponse)
+	err := c.cc.Invoke(ctx, Query_ValidatorCurrentRewards_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility.
@@ -214,6 +227,8 @@ type QueryServer interface {
 	CommunityPool(context.Context, *QueryCommunityPoolRequest) (*QueryCommunityPoolResponse, error)
 	// ValidatorHistoricalRewards queries historical rewards for a validator at a specific period.
 	ValidatorHistoricalRewards(context.Context, *QueryValidatorHistoricalRewardsRequest) (*QueryValidatorHistoricalRewardsResponse, error)
+	// ValidatorCurrentRewards queries current rewards for a validator.
+	ValidatorCurrentRewards(context.Context, *QueryValidatorCurrentRewardsRequest) (*QueryValidatorCurrentRewardsResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -256,6 +271,9 @@ func (UnimplementedQueryServer) CommunityPool(context.Context, *QueryCommunityPo
 }
 func (UnimplementedQueryServer) ValidatorHistoricalRewards(context.Context, *QueryValidatorHistoricalRewardsRequest) (*QueryValidatorHistoricalRewardsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ValidatorHistoricalRewards not implemented")
+}
+func (UnimplementedQueryServer) ValidatorCurrentRewards(context.Context, *QueryValidatorCurrentRewardsRequest) (*QueryValidatorCurrentRewardsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ValidatorCurrentRewards not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 func (UnimplementedQueryServer) testEmbeddedByValue()               {}
@@ -476,6 +494,24 @@ func _Query_ValidatorHistoricalRewards_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_ValidatorCurrentRewards_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryValidatorCurrentRewardsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ValidatorCurrentRewards(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_ValidatorCurrentRewards_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ValidatorCurrentRewards(ctx, req.(*QueryValidatorCurrentRewardsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -526,6 +562,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ValidatorHistoricalRewards",
 			Handler:    _Query_ValidatorHistoricalRewards_Handler,
+		},
+		{
+			MethodName: "ValidatorCurrentRewards",
+			Handler:    _Query_ValidatorCurrentRewards_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

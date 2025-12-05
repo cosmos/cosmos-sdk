@@ -397,3 +397,35 @@ func (k Querier) ValidatorHistoricalRewards(ctx context.Context, req *types.Quer
 
 	return &types.QueryValidatorHistoricalRewardsResponse{Rewards: rewards}, nil
 }
+
+// ValidatorCurrentRewards queries current rewards for a validator
+func (k Querier) ValidatorCurrentRewards(ctx context.Context, req *types.QueryValidatorCurrentRewardsRequest) (*types.QueryValidatorCurrentRewardsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	if req.ValidatorAddress == "" {
+		return nil, status.Error(codes.InvalidArgument, "empty validator address")
+	}
+
+	valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(req.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	validator, err := k.stakingKeeper.Validator(ctx, valAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	if validator == nil {
+		return nil, errors.Wrapf(types.ErrNoValidatorExists, req.ValidatorAddress)
+	}
+
+	rewards, err := k.GetValidatorCurrentRewards(ctx, valAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryValidatorCurrentRewardsResponse{Rewards: rewards}, nil
+}

@@ -95,6 +95,15 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "period"},
 					},
 				},
+				{
+					RpcMethod: "ValidatorCurrentRewards",
+					Use:       "validator-current-rewards [validator]",
+					Short:     "Query validator current rewards",
+					Example:   fmt.Sprintf(`$ %s query distribution validator-current-rewards [validator-address]`, version.AppName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "validator_address"},
+					},
+				},
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{

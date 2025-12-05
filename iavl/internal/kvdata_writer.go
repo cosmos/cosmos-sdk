@@ -55,20 +55,28 @@ func (kvs *KVDataWriter) WriteWALUpdates(updates []KVUpdate) error {
 		return fmt.Errorf("cannot write WAL updates when not in WAL mode")
 	}
 	for _, update := range updates {
-		if deleteKey := update.DeleteKey; deleteKey != nil {
+		deleteKey := update.DeleteKey
+		setNode := update.SetNode
+		if deleteKey != nil && setNode != nil {
+			return fmt.Errorf("invalid update: both SetNode and DeleteKey are set")
+		}
+
+		if deleteKey == nil && setNode == nil {
+			return fmt.Errorf("invalid update: neither SetNode nor DeleteKey is set")
+		}
+
+		if deleteKey != nil {
 			err := kvs.WriteWALDelete(deleteKey)
 			if err != nil {
 				return err
 			}
-		} else if memNode := update.SetNode; memNode != nil {
-			keyOffset, valueOffset, err := kvs.WriteWALSet(memNode.key, memNode.value)
+		} else { // setNode != nil
+			keyOffset, valueOffset, err := kvs.WriteWALSet(setNode.key, setNode.value)
 			if err != nil {
 				return err
 			}
-			memNode.keyOffset = keyOffset
-			memNode.valueOffset = valueOffset
-		} else {
-			return fmt.Errorf("invalid update: neither SetNode nor DeleteKey is set")
+			setNode.keyOffset = keyOffset
+			setNode.valueOffset = valueOffset
 		}
 	}
 	return nil

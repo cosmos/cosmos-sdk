@@ -120,6 +120,23 @@ func TestKVData_WAL(t *testing.T) {
 	// short key should NOT be cached
 	require.NotEqual(t, shortKeyOffset, blobKeyOffset2)
 
+	// write invalid updates, should error
+	require.Error(t, writer.WriteWALUpdates([]KVUpdate{
+		{},
+	}))
+	require.Error(t, writer.WriteWALUpdates([]KVUpdate{
+		{
+			DeleteKey: shortKey,
+			SetNode: &MemNode{
+				key:   shortKey,
+				value: shortValue,
+			},
+		},
+	}))
+
+	// write an empty commit
+	require.NoError(t, writer.WriteWALCommit(44))
+
 	// open reader
 	r := writer.openReader(t)
 	// Verify that the reader has a WAL
@@ -203,6 +220,12 @@ func TestKVData_WAL(t *testing.T) {
 	require.True(t, ok)
 	require.Equal(t, KVEntryWALCommit, entryType)
 	require.Equal(t, uint64(43), wr.Version)
+	// Entry 12: WAL Commit (empty)
+	entryType, ok, err = wr.Next()
+	require.NoError(t, err)
+	require.True(t, ok)
+	require.Equal(t, KVEntryWALCommit, entryType)
+	require.Equal(t, uint64(44), wr.Version)
 
 	// No more entries
 	_, ok, err = wr.Next()

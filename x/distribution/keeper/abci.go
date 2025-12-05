@@ -9,8 +9,8 @@ import (
 // BeginBlocker sets the proposer for determining distribution during endblock
 // and distribute rewards for the previous block.
 func (k Keeper) BeginBlocker(ctx sdk.Context) error {
-	start := telemetry.Now()
-	defer telemetry.ModuleMeasureSince(types.ModuleName, start, telemetry.MetricKeyBeginBlocker)
+	start := telemetry.Now()                                                                     //nolint:staticcheck // TODO: switch to OpenTelemetry
+	defer telemetry.ModuleMeasureSince(types.ModuleName, start, telemetry.MetricKeyBeginBlocker) //nolint:staticcheck // TODO: switch to OpenTelemetry
 
 	// determine the total power signing the block
 	var previousTotalPower int64

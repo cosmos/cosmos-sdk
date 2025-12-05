@@ -284,11 +284,11 @@ func (k msgServer) Delegate(ctx context.Context, msg *types.MsgDelegate) (*types
 
 	if msg.Amount.Amount.IsInt64() {
 		defer func() {
-			telemetry.IncrCounter(1, types.ModuleName, "delegate")
-			telemetry.SetGaugeWithLabels(
+			telemetry.IncrCounter(1, types.ModuleName, "delegate") //nolint:staticcheck // TODO: switch to OpenTelemetry
+			telemetry.SetGaugeWithLabels(                          //nolint:staticcheck // TODO: switch to OpenTelemetry
 				[]string{"tx", "msg", sdk.MsgTypeURL(msg)},
 				float32(msg.Amount.Amount.Int64()),
-				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
+				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)}, //nolint:staticcheck // TODO: switch to OpenTelemetry
 			)
 		}()
 	}
@@ -358,11 +358,11 @@ func (k msgServer) BeginRedelegate(ctx context.Context, msg *types.MsgBeginRedel
 
 	if msg.Amount.Amount.IsInt64() {
 		defer func() {
-			telemetry.IncrCounter(1, types.ModuleName, "redelegate")
-			telemetry.SetGaugeWithLabels(
+			telemetry.IncrCounter(1, types.ModuleName, "redelegate") //nolint:staticcheck // TODO: switch to OpenTelemetry
+			telemetry.SetGaugeWithLabels(                            //nolint:staticcheck // TODO: switch to OpenTelemetry
 				[]string{"tx", "msg", sdk.MsgTypeURL(msg)},
 				float32(msg.Amount.Amount.Int64()),
-				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
+				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)}, //nolint:staticcheck // TODO: switch to OpenTelemetry
 			)
 		}()
 	}
@@ -430,11 +430,11 @@ func (k msgServer) Undelegate(ctx context.Context, msg *types.MsgUndelegate) (*t
 
 	if msg.Amount.Amount.IsInt64() {
 		defer func() {
-			telemetry.IncrCounter(1, types.ModuleName, "undelegate")
-			telemetry.SetGaugeWithLabels(
+			telemetry.IncrCounter(1, types.ModuleName, "undelegate") //nolint:staticcheck // TODO: switch to OpenTelemetry
+			telemetry.SetGaugeWithLabels(                            //nolint:staticcheck // TODO: switch to OpenTelemetry
 				[]string{"tx", "msg", sdk.MsgTypeURL(msg)},
 				float32(msg.Amount.Amount.Int64()),
-				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
+				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)}, //nolint:staticcheck // TODO: switch to OpenTelemetry
 			)
 		}()
 	}

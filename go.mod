@@ -27,6 +27,7 @@ require (
 	github.com/cosmos/gogoproto v1.7.2
 	github.com/cosmos/ledger-cosmos-go v0.16.0
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.0
+	github.com/edsrzf/mmap-go v1.0.0
 	github.com/golang/protobuf v1.5.4
 	github.com/google/go-cmp v0.7.0
 	github.com/google/gofuzz v1.2.0
@@ -50,7 +51,7 @@ require (
 	github.com/prometheus/common v0.67.4
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/cast v1.10.0
-	github.com/spf13/cobra v1.10.1
+	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1

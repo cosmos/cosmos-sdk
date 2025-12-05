@@ -12,7 +12,7 @@ func TestChangesetInfo_RoundTrip(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "info.dat")
 
-	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0o644)
+	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0o600)
 	require.NoError(t, err)
 	defer file.Close()
 
@@ -43,7 +43,7 @@ func TestChangesetInfo_RewriteOverwrites(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "info.dat")
 
-	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0o644)
+	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0o600)
 	require.NoError(t, err)
 	defer file.Close()
 
@@ -68,7 +68,7 @@ func TestChangesetInfo_ReadEmptyFile(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "info.dat")
 
-	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0o644)
+	file, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0o600)
 	require.NoError(t, err)
 	defer file.Close()
 
@@ -83,10 +83,10 @@ func TestChangesetInfo_ReadWrongSize(t *testing.T) {
 	path := filepath.Join(dir, "info.dat")
 
 	// Write garbage data of wrong size
-	err := os.WriteFile(path, []byte("short"), 0o644)
+	err := os.WriteFile(path, []byte("short"), 0o600)
 	require.NoError(t, err)
 
-	file, err := os.OpenFile(path, os.O_RDONLY, 0o644)
+	file, err := os.OpenFile(path, os.O_RDONLY, 0o600)
 	require.NoError(t, err)
 	defer file.Close()
 

@@ -52,7 +52,7 @@ type BranchLayout struct {
 	// and an additional byte of padding is already reserved below for this purpose.
 	KeyOffset uint32
 
-	// Height is the height of this branch node in the tree.
+	// Height is the height of the subtree rooted at this branch node.
 	Height uint8
 
 	// NOTE: there are two bytes of padding here that could be used for something else in the future if needed

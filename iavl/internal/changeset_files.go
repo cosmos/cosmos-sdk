@@ -55,7 +55,7 @@ func CreateChangesetFiles(treeDir string, startVersion, compactedAt uint32) (*Ch
 
 	// create pending marker file for compacted changesets
 	if compactedAt > 0 {
-		err := os.WriteFile(pendingFilename(dir), []byte{}, 0o644)
+		err := os.WriteFile(pendingFilename(dir), []byte{}, 0o600)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create pending marker file for compacted changeset: %w", err)
 		}
@@ -112,37 +112,37 @@ func (cr *ChangesetFiles) open(mode int) error {
 	var err error
 
 	kvFile := filepath.Join(cr.dir, "kv.dat")
-	cr.kvDataFile, err = os.OpenFile(kvFile, mode, 0o644)
+	cr.kvDataFile, err = os.OpenFile(kvFile, mode, 0o600)
 	if err != nil {
 		return fmt.Errorf("failed to open KV data file: %w", err)
 	}
 
 	leavesPath := filepath.Join(cr.dir, "leaves.dat")
-	cr.leavesFile, err = os.OpenFile(leavesPath, mode, 0o644)
+	cr.leavesFile, err = os.OpenFile(leavesPath, mode, 0o600)
 	if err != nil {
 		return fmt.Errorf("failed to open leaves data file: %w", err)
 	}
 
 	branchesPath := filepath.Join(cr.dir, "branches.dat")
-	cr.branchesFile, err = os.OpenFile(branchesPath, mode, 0o644)
+	cr.branchesFile, err = os.OpenFile(branchesPath, mode, 0o600)
 	if err != nil {
 		return fmt.Errorf("failed to open branches data file: %w", err)
 	}
 
 	versionsPath := filepath.Join(cr.dir, "versions.dat")
-	cr.versionsFile, err = os.OpenFile(versionsPath, mode, 0o644)
+	cr.versionsFile, err = os.OpenFile(versionsPath, mode, 0o600)
 	if err != nil {
 		return fmt.Errorf("failed to open versions data file: %w", err)
 	}
 
 	orphansPath := filepath.Join(cr.dir, "orphans.dat")
-	cr.orphansFile, err = os.OpenFile(orphansPath, writeModeFlags, 0o644) // the orphans file is always opened for writing
+	cr.orphansFile, err = os.OpenFile(orphansPath, writeModeFlags, 0o600) // the orphans file is always opened for writing
 	if err != nil {
 		return fmt.Errorf("failed to open orphans data file: %w", err)
 	}
 
 	infoPath := filepath.Join(cr.dir, "info.dat")
-	cr.infoFile, err = os.OpenFile(infoPath, os.O_RDWR|os.O_CREATE, 0o644) // info file uses random access, not append
+	cr.infoFile, err = os.OpenFile(infoPath, os.O_RDWR|os.O_CREATE, 0o600) // info file uses random access, not append
 	if err != nil {
 		return fmt.Errorf("failed to open changeset info file: %w", err)
 	}

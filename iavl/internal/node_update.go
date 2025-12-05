@@ -34,7 +34,7 @@ func setRecursive(nodePtr *NodePointer, leafNode *MemNode, ctx *mutationContext)
 		leafNodePtr := NewNodePointer(leafNode)
 		cmp := bytes.Compare(leafNode.key, nodeKey.UnsafeBytes())
 		if cmp == 0 {
-			ctx.AddOrphan(nodePtr.id)
+			ctx.addOrphan(nodePtr.id)
 			return leafNodePtr, true, nil
 		}
 		n := &MemNode{
@@ -126,7 +126,7 @@ func removeRecursive(nodePtr *NodePointer, key []byte, ctx *mutationContext) (re
 
 	if node.IsLeaf() {
 		if bytes.Equal(nodeKey.UnsafeBytes(), key) {
-			ctx.AddOrphan(nodePtr.id)
+			ctx.addOrphan(nodePtr.id)
 			return true, nil, nil, nil
 		}
 		return false, nodePtr, nil, nil
@@ -143,7 +143,7 @@ func removeRecursive(nodePtr *NodePointer, key []byte, ctx *mutationContext) (re
 		}
 
 		if newLeft == nil {
-			ctx.AddOrphan(nodePtr.id)
+			ctx.addOrphan(nodePtr.id)
 			return true, node.Right(), nodeKey.SafeCopy(), nil
 		}
 
@@ -174,7 +174,7 @@ func removeRecursive(nodePtr *NodePointer, key []byte, ctx *mutationContext) (re
 	}
 
 	if newRight == nil {
-		ctx.AddOrphan(nodePtr.id)
+		ctx.addOrphan(nodePtr.id)
 		return true, node.Left(), nil, nil
 	}
 
@@ -381,7 +381,7 @@ func (ctx *mutationContext) mutateBranch(node Node) (*MemNode, error) {
 	return node.MutateBranch(ctx.version)
 }
 
-func (ctx *mutationContext) AddOrphan(id NodeID) {
+func (ctx *mutationContext) addOrphan(id NodeID) {
 	if !id.IsEmpty() {
 		ctx.orphans = append(ctx.orphans, id)
 	}

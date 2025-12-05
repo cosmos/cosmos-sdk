@@ -45,3 +45,21 @@ govKeeper := keeper.NewKeeper(
 ```
 
 For applications using depinject, the governance module now accepts an optional `CalculateVoteResultsAndVotingPowerFn`. If not provided, it will use the `StakingKeeper` (also optional) to create the default function.
+
+### GovHooks Interface
+
+The `AfterProposalSubmission` hook now includes the proposer address as a parameter.
+
+**Before:**
+```go
+func (h MyGovHooks) AfterProposalSubmission(ctx context.Context, proposalID uint64) error {
+    // implementation
+}
+```
+
+**After:**
+```go
+func (h MyGovHooks) AfterProposalSubmission(ctx context.Context, proposalID uint64, proposerAddr sdk.AccAddress) error {
+    // implementation
+}
+```

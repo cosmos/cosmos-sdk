@@ -51,6 +51,9 @@ func (kvs *KVDataWriter) WriteStartWAL(version uint64) error {
 // WriteWALUpdates writes a batch of WAL updates.
 // This can ONLY be called when the writer is in WAL mode.
 func (kvs *KVDataWriter) WriteWALUpdates(updates []KVUpdate) error {
+	if !kvs.walMode {
+		return fmt.Errorf("cannot write WAL updates when not in WAL mode")
+	}
 	for _, update := range updates {
 		if deleteKey := update.DeleteKey; deleteKey != nil {
 			err := kvs.WriteWALDelete(deleteKey)

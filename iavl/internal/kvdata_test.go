@@ -12,6 +12,8 @@ type kvDataWriterHelper struct {
 }
 
 func openTestKVDataWriter(t *testing.T) *kvDataWriterHelper {
+	t.Helper()
+
 	files, err := CreateChangesetFiles(t.TempDir(), 1, 0)
 	require.NoError(t, err)
 	t.Cleanup(func() {
@@ -25,6 +27,8 @@ func openTestKVDataWriter(t *testing.T) *kvDataWriterHelper {
 }
 
 func (h *kvDataWriterHelper) openReader(t *testing.T) *KVDataReader {
+	t.Helper()
+
 	require.NoError(t, h.writer.Flush())
 	rdr, err := NewKVDataReader(h.files.KVDataFile())
 	require.NoError(t, err)

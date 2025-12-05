@@ -20,7 +20,8 @@ func setRecursive(nodePtr *NodePointer, leafNode *MemNode, ctx *mutationContext)
 		return NewNodePointer(leafNode), true, nil
 	}
 
-	node, err := nodePtr.Resolve()
+	node, pin, err := nodePtr.Resolve()
+	defer pin.Unpin()
 	if err != nil {
 		return nil, false, err
 	}
@@ -31,7 +32,7 @@ func setRecursive(nodePtr *NodePointer, leafNode *MemNode, ctx *mutationContext)
 	}
 	if node.IsLeaf() {
 		leafNodePtr := NewNodePointer(leafNode)
-		cmp := bytes.Compare(leafNode.key, nodeKey)
+		cmp := bytes.Compare(leafNode.key, nodeKey.UnsafeBytes())
 		if cmp == 0 {
 			ctx.AddOrphan(nodePtr.id)
 			return leafNodePtr, true, nil
@@ -45,7 +46,7 @@ func setRecursive(nodePtr *NodePointer, leafNode *MemNode, ctx *mutationContext)
 		case -1:
 			n.left = leafNodePtr
 			n.right = nodePtr
-			n.key = nodeKey
+			n.key = nodeKey.SafeCopy()
 			// n._keyRef = node
 		case 1:
 			n.left = nodePtr
@@ -63,7 +64,7 @@ func setRecursive(nodePtr *NodePointer, leafNode *MemNode, ctx *mutationContext)
 			updated     bool
 			err         error
 		)
-		if bytes.Compare(leafNode.key, nodeKey) == -1 {
+		if bytes.Compare(leafNode.key, nodeKey.UnsafeBytes()) == -1 {
 			newChildPtr, updated, err = setRecursive(node.Left(), leafNode, ctx)
 			if err != nil {
 				return nil, false, err
@@ -101,21 +102,17 @@ func setRecursive(nodePtr *NodePointer, leafNode *MemNode, ctx *mutationContext)
 	}
 }
 
-type newKeyWrapper struct {
-	key []byte
-	// keyRef keyRefLink
-}
-
 // removeRecursive returns:
 // - (nil, origNode, nil) -> nothing changed in subtree
 // - (value, nil, nil) -> leaf node is removed
 // - (value, new node, newKey) -> subtree changed
-func removeRecursive(nodePtr *NodePointer, key []byte, ctx *mutationContext) (value []byte, newNodePtr *NodePointer, newKey *newKeyWrapper, err error) {
+func removeRecursive(nodePtr *NodePointer, key []byte, ctx *mutationContext) (value []byte, newNodePtr *NodePointer, newKey []byte, err error) {
 	if nodePtr == nil {
 		return nil, nil, nil, nil
 	}
 
-	node, err := nodePtr.Resolve()
+	node, pin, err := nodePtr.Resolve()
+	defer pin.Unpin()
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -126,7 +123,7 @@ func removeRecursive(nodePtr *NodePointer, key []byte, ctx *mutationContext) (va
 	}
 
 	if node.IsLeaf() {
-		if bytes.Equal(nodeKey, key) {
+		if bytes.Equal(nodeKey.UnsafeBytes(), key) {
 			ctx.AddOrphan(nodePtr.id)
 			value, err := node.Value()
 			return value, nil, nil, err
@@ -134,7 +131,7 @@ func removeRecursive(nodePtr *NodePointer, key []byte, ctx *mutationContext) (va
 		return nil, nodePtr, nil, nil
 	}
 
-	if bytes.Compare(key, nodeKey) == -1 {
+	if bytes.Compare(key, nodeKey.UnsafeBytes()) == -1 {
 		value, newLeft, newKey, err := removeRecursive(node.Left(), key, ctx)
 		if err != nil {
 			return nil, nil, nil, err

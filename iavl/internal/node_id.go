@@ -47,6 +47,12 @@ func (id NodeID) String() string {
 	return fmt.Sprintf("NodeID{leaf:%t, version:%d, index:%d}", id.IsLeaf(), id.Version, id.FlagIndex.Index())
 }
 
+// Index returns the 1-based index of the node in the version.
+// Indexes are tracked separately for leaf and branch nodes.
+func (id NodeID) Index() uint32 {
+	return id.FlagIndex.Index()
+}
+
 // NewNodeFlagIndex creates a new NodeFlagIndex.
 func NewNodeFlagIndex(isLeaf bool, index uint32) NodeFlagIndex {
 	idx := NodeFlagIndex(index)

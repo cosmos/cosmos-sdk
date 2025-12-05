@@ -103,116 +103,115 @@ func setRecursive(nodePtr *NodePointer, leafNode *MemNode, ctx *mutationContext)
 }
 
 // removeRecursive returns:
-// - (nil, origNode, nil) -> nothing changed in subtree
-// - (value, nil, nil) -> leaf node is removed
-// - (value, new node, newKey) -> subtree changed
-func removeRecursive(nodePtr *NodePointer, key []byte, ctx *mutationContext) (value []byte, newNodePtr *NodePointer, newKey []byte, err error) {
+// - (false, origNode, nil) -> nothing changed in subtree
+// - (true, nil, nil) -> leaf node is removed
+// - (true, new node, newKey) -> subtree changed
+// a previous version returned the value instead of the removed flag, but this is never used and it's just unnecessary copying and disk IO at this point
+// if we ever want to implement a "get and remove" operation, we can add it back then, but there should be bool flag on this function to indicate whether to return the value or not
+func removeRecursive(nodePtr *NodePointer, key []byte, ctx *mutationContext) (removed bool, newNodePtr *NodePointer, newKey []byte, err error) {
 	if nodePtr == nil {
-		return nil, nil, nil, nil
+		return false, nil, nil, nil
 	}
 
 	node, pin, err := nodePtr.Resolve()
 	defer pin.Unpin()
 	if err != nil {
-		return nil, nil, nil, err
+		return false, nil, nil, err
 	}
 
 	nodeKey, err := node.Key()
 	if err != nil {
-		return nil, nil, nil, err
+		return false, nil, nil, err
 	}
 
 	if node.IsLeaf() {
 		if bytes.Equal(nodeKey.UnsafeBytes(), key) {
 			ctx.AddOrphan(nodePtr.id)
-			value, err := node.Value()
-			return value, nil, nil, err
+			return true, nil, nil, nil
 		}
-		return nil, nodePtr, nil, nil
+		return false, nodePtr, nil, nil
 	}
 
 	if bytes.Compare(key, nodeKey.UnsafeBytes()) == -1 {
-		value, newLeft, newKey, err := removeRecursive(node.Left(), key, ctx)
+		leftRemoved, newLeft, newKey, err := removeRecursive(node.Left(), key, ctx)
 		if err != nil {
-			return nil, nil, nil, err
+			return false, nil, nil, err
 		}
 
-		if value == nil {
-			return nil, nodePtr, nil, nil
+		if !leftRemoved {
+			return false, nodePtr, nil, nil
 		}
 
 		if newLeft == nil {
 			ctx.AddOrphan(nodePtr.id)
-			return value, node.Right(), &newKeyWrapper{
-				key: nodeKey,
-				// keyRef: nodePtr,
-			}, nil
+			return true, node.Right(), nodeKey.SafeCopy(), nil
 		}
 
 		newNode, err := ctx.mutateBranch(node)
 		if err != nil {
-			return nil, nil, nil, err
+			return false, nil, nil, err
 		}
 		newNode.left = newLeft
 		err = newNode.updateHeightSize()
 		if err != nil {
-			return nil, nil, nil, err
+			return false, nil, nil, err
 		}
 		newNode, err = newNode.reBalance(ctx)
 		if err != nil {
-			return nil, nil, nil, err
+			return false, nil, nil, err
 		}
 
-		return value, NewNodePointer(newNode), newKey, nil
+		return true, NewNodePointer(newNode), newKey, nil
 	}
 
-	value, newRight, newKey, err := removeRecursive(node.Right(), key, ctx)
+	rightRemoved, newRight, newKey, err := removeRecursive(node.Right(), key, ctx)
 	if err != nil {
-		return nil, nil, nil, err
+		return false, nil, nil, err
 	}
 
-	if value == nil {
-		return nil, nodePtr, nil, nil
+	if !rightRemoved {
+		return false, nodePtr, nil, nil
 	}
 
 	if newRight == nil {
 		ctx.AddOrphan(nodePtr.id)
-		return value, node.Left(), nil, nil
+		return true, node.Left(), nil, nil
 	}
 
 	newNode, err := ctx.mutateBranch(node)
 	if err != nil {
-		return nil, nil, nil, err
+		return false, nil, nil, err
 	}
 
 	newNode.right = newRight
 	if newKey != nil {
-		newNode.key = newKey.key
-		// newNode._keyRef = newKey.keyRef
+		newNode.key = newKey
 	}
 
 	err = newNode.updateHeightSize()
 	if err != nil {
-		return nil, nil, nil, err
+		return false, nil, nil, err
 	}
 
 	newNode, err = newNode.reBalance(ctx)
 	if err != nil {
-		return nil, nil, nil, err
+		return false, nil, nil, err
 	}
 
-	return value, NewNodePointer(newNode), nil, nil
+	return true, NewNodePointer(newNode), nil, nil
 }
 
 // IMPORTANT: nodes called with this method must be new or copies first.
 // Code reviewers should use find usages to ensure that all callers follow this rule!
 func (node *MemNode) updateHeightSize() error {
-	leftNode, err := node.left.Resolve()
+	leftNode, leftPin, err := node.left.Resolve()
+	defer leftPin.Unpin()
 	if err != nil {
 		return err
 	}
 
-	rightNode, err := node.right.Resolve()
+	rightNode, rightPin, err := node.right.Resolve()
+	defer rightPin.Unpin()
 	if err != nil {
 		return err
 	}
@@ -238,7 +237,8 @@ func (node *MemNode) reBalance(ctx *mutationContext) (*MemNode, error) {
 	}
 	switch {
 	case balance > 1:
-		left, err := node.left.Resolve()
+		left, leftPin, err := node.left.Resolve()
+		defer leftPin.Unpin()
 		if err != nil {
 			return nil, err
 		}
@@ -265,7 +265,8 @@ func (node *MemNode) reBalance(ctx *mutationContext) (*MemNode, error) {
 		node.left = NewNodePointer(newLeft)
 		return node.rotateRight(ctx)
 	case balance < -1:
-		right, err := node.right.Resolve()
+		right, rightPin, err := node.right.Resolve()
+		defer rightPin.Unpin()
 		if err != nil {
 			return nil, err
 		}
@@ -295,12 +296,14 @@ func (node *MemNode) reBalance(ctx *mutationContext) (*MemNode, error) {
 }
 
 func calcBalance(node Node) (int, error) {
-	leftNode, err := node.Left().Resolve()
+	leftNode, leftPin, err := node.Left().Resolve()
+	defer leftPin.Unpin()
 	if err != nil {
 		return 0, err
 	}
 
-	rightNode, err := node.Right().Resolve()
+	rightNode, rightPin, err := node.Right().Resolve()
+	defer rightPin.Unpin()
 	if err != nil {
 		return 0, err
 	}
@@ -311,7 +314,8 @@ func calcBalance(node Node) (int, error) {
 // IMPORTANT: nodes called with this method must be new or copies first.
 // Code reviewers should use find usages to ensure that all callers follow this rule!
 func (node *MemNode) rotateRight(ctx *mutationContext) (*MemNode, error) {
-	left, err := node.left.Resolve()
+	left, leftPin, err := node.left.Resolve()
+	defer leftPin.Unpin()
 	if err != nil {
 		return nil, err
 	}
@@ -337,7 +341,8 @@ func (node *MemNode) rotateRight(ctx *mutationContext) (*MemNode, error) {
 // IMPORTANT: nodes called with this method must be new or copies first.
 // Code reviewers should use find usages to ensure that all callers follow this rule!
 func (node *MemNode) rotateLeft(ctx *mutationContext) (*MemNode, error) {
-	right, err := node.right.Resolve()
+	right, rightPin, err := node.right.Resolve()
+	defer rightPin.Unpin()
 	if err != nil {
 		return nil, err
 	}

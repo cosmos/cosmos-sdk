@@ -137,6 +137,19 @@ func TestKVData_WAL(t *testing.T) {
 	// write an empty commit
 	require.NoError(t, writer.WriteWALCommit(44))
 
+	// Test empty key/value edge cases via WriteWALUpdates
+	emptyKey := []byte{}
+	emptyValue := []byte{}
+	emptyMemNode := &MemNode{key: emptyKey, value: emptyValue}
+	err = writer.WriteWALUpdates([]KVUpdate{
+		{DeleteKey: emptyKey},
+		{SetNode: emptyMemNode},
+	})
+	require.NoError(t, err)
+	require.NotZero(t, emptyMemNode.keyOffset)
+	require.NotZero(t, emptyMemNode.valueOffset)
+	require.NoError(t, writer.WriteWALCommit(45))
+
 	// open reader
 	r := writer.openReader(t)
 	// Verify that the reader has a WAL
@@ -227,6 +240,28 @@ func TestKVData_WAL(t *testing.T) {
 	require.Equal(t, KVEntryWALCommit, entryType)
 	require.Equal(t, uint64(44), wr.Version)
 
+	// Entry 13: WAL Delete with empty key
+	entryType, ok, err = wr.Next()
+	require.NoError(t, err)
+	require.True(t, ok)
+	require.Equal(t, KVEntryWALDelete, entryType)
+	require.Equal(t, emptyKey, wr.Key)
+
+	// Entry 14: WAL Set with empty key and empty value
+	entryType, ok, err = wr.Next()
+	require.NoError(t, err)
+	require.True(t, ok)
+	require.Equal(t, KVEntryWALSet, entryType)
+	require.Equal(t, emptyKey, wr.Key)
+	require.Equal(t, emptyValue, wr.Value)
+
+	// Entry 15: WAL Commit
+	entryType, ok, err = wr.Next()
+	require.NoError(t, err)
+	require.True(t, ok)
+	require.Equal(t, KVEntryWALCommit, entryType)
+	require.Equal(t, uint64(45), wr.Version)
+
 	// No more entries
 	_, ok, err = wr.Next()
 	require.NoError(t, err)
@@ -282,6 +317,13 @@ func TestKVData_WAL(t *testing.T) {
 	memValue3Read, err := r.UnsafeReadBlob(int(memNode3.valueOffset))
 	require.NoError(t, err)
 	require.Equal(t, reinsertedValue, memValue3Read)
+	// check empty memNode offsets
+	emptyKeyRead, err := r.UnsafeReadBlob(int(emptyMemNode.keyOffset))
+	require.NoError(t, err)
+	require.Equal(t, emptyKey, emptyKeyRead)
+	emptyValueRead, err := r.UnsafeReadBlob(int(emptyMemNode.valueOffset))
+	require.NoError(t, err)
+	require.Equal(t, emptyValue, emptyValueRead)
 }
 
 func TestKVData_BlobStore(t *testing.T) {
@@ -304,6 +346,16 @@ func TestKVData_BlobStore(t *testing.T) {
 	require.NotEqual(t, key1Offset, key1Offset2)
 	// key2 should be cached
 	require.Equal(t, key2Offset, key2Offset2)
+
+	// Test empty key/value edge cases
+	emptyKey := []byte{}
+	emptyValue := []byte{}
+	emptyKeyOffset, err := writer.WriteKeyBlob(emptyKey)
+	require.NoError(t, err)
+	emptyKeyOffset2, emptyValueOffset, err := writer.WriteKeyValueBlobs(emptyKey, emptyValue)
+	require.NoError(t, err)
+	// empty key should NOT be cached (len < 4)
+	require.NotEqual(t, emptyKeyOffset, emptyKeyOffset2)
 
 	// verify we're not in WAL mode and that WAL operations fail
 	require.False(t, writer.IsInWALMode())
@@ -343,4 +395,14 @@ func TestKVData_BlobStore(t *testing.T) {
 	value2Read, err := r.UnsafeReadBlob(int(value2Offset))
 	require.NoError(t, err)
 	require.Equal(t, value2, value2Read)
+	// check empty key/value offsets
+	emptyKeyRead, err := r.UnsafeReadBlob(int(emptyKeyOffset))
+	require.NoError(t, err)
+	require.Equal(t, emptyKey, emptyKeyRead)
+	emptyKeyRead2, err := r.UnsafeReadBlob(int(emptyKeyOffset2))
+	require.NoError(t, err)
+	require.Equal(t, emptyKey, emptyKeyRead2)
+	emptyValueRead, err := r.UnsafeReadBlob(int(emptyValueOffset))
+	require.NoError(t, err)
+	require.Equal(t, emptyValue, emptyValueRead)
 }

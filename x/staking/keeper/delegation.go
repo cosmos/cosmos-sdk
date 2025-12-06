@@ -353,6 +353,7 @@ func (k Keeper) IterateDelegatorRedelegations(ctx context.Context, delegator sdk
 	if err != nil {
 		return err
 	}
+	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
 		red, err := types.UnmarshalRED(k.cdc, iterator.Value())
@@ -560,6 +561,7 @@ func (k Keeper) GetRedelegations(ctx context.Context, delegator sdk.AccAddress, 
 	if err != nil {
 		return nil, err
 	}
+	defer iterator.Close()
 
 	i := 0
 	for ; iterator.Valid() && i < int(maxRetrieve); iterator.Next() {

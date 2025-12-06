@@ -126,6 +126,10 @@ message GetSyncingRequest {}
 // GetSyncingResponse is the response type for the Query/GetSyncing RPC method.
 message GetSyncingResponse {
   bool syncing = 1;
+  // earliest_block_height is the earliest block height available on this node.
+  int64 earliest_block_height = 2;
+  // latest_block_height is the latest block height available on this node.
+  int64 latest_block_height = 3;
 }
 
 // GetNodeInfoRequest is the request type for the Query/GetNodeInfo RPC method.

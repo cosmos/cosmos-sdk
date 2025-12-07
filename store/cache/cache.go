@@ -2,6 +2,7 @@ package cache
 
 import (
 	"fmt"
+	"sync"
 
 	lru "github.com/hashicorp/golang-lru"
 
@@ -25,9 +26,16 @@ type (
 	// and cached. Deletes and writes always happen to both the cache and the
 	// CommitKVStore in a write-through manner. Caching performed in the
 	// CommitKVStore and below is completely irrelevant to this layer.
+	//
+	// Thread-safety: All cache operations are protected by a RWMutex to prevent
+	// race conditions between concurrent queries and state mutations. Specifically,
+	// this prevents a concurrent Get() from re-populating the cache with a stale
+	// value after Delete() has marked the key as deleted but before the underlying
+	// CommitKVStore has persisted the deletion.
 	CommitKVStoreCache struct {
 		types.CommitKVStore
 		cache *lru.ARCCache
+		mtx   sync.RWMutex // protects cache operations
 	}
 
 	// CommitKVStoreCacheManager maintains a mapping from a StoreKey to a
@@ -97,17 +105,43 @@ func (ckv *CommitKVStoreCache) CacheWrap() types.CacheWrap {
 // Get retrieves a value by key. It will first look in the write-through cache.
 // If the value doesn't exist in the write-through cache, the query is delegated
 // to the underlying CommitKVStore.
+//
+// Thread-safety: Uses double-check locking pattern to prevent race conditions
+// with concurrent Delete() operations. A deleted key is represented as nil in
+// the cache to prevent stale value re-population.
 func (ckv *CommitKVStoreCache) Get(key []byte) []byte {
 	types.AssertValidKey(key)
 
 	keyStr := string(key)
+
+	// First check with read lock (fast path)
+	ckv.mtx.RLock()
 	valueI, ok := ckv.cache.Get(keyStr)
+	ckv.mtx.RUnlock()
+
 	if ok {
-		// cache hit
+		// cache hit - nil means key was deleted
+		if valueI == nil {
+			return nil
+		}
 		return valueI.([]byte)
 	}
 
-	// cache miss; write to cache
+	// cache miss; need write lock to update cache
+	ckv.mtx.Lock()
+	defer ckv.mtx.Unlock()
+
+	// Double-check after acquiring write lock - another goroutine may have
+	// updated the cache (including marking as deleted) while we were waiting
+	valueI, ok = ckv.cache.Get(keyStr)
+	if ok {
+		if valueI == nil {
+			return nil
+		}
+		return valueI.([]byte)
+	}
+
+	// Still a miss - fetch from underlying store and cache it
 	value := ckv.CommitKVStore.Get(key)
 	ckv.cache.Add(keyStr, value)
 
@@ -120,13 +154,29 @@ func (ckv *CommitKVStoreCache) Set(key, value []byte) {
 	types.AssertValidKey(key)
 	types.AssertValidValue(value)
 
+	ckv.mtx.Lock()
 	ckv.cache.Add(string(key), value)
+	ckv.mtx.Unlock()
+
 	ckv.CommitKVStore.Set(key, value)
 }
 
 // Delete removes a key/value pair from both the write-through cache and the
 // underlying CommitKVStore.
+//
+// Thread-safety: Instead of removing the key from cache (which would allow a
+// concurrent Get() to re-populate with stale data), we store nil as a sentinel
+// value indicating deletion. This ensures any concurrent or subsequent Get()
+// will return nil rather than fetching a potentially stale value from the
+// underlying store.
 func (ckv *CommitKVStoreCache) Delete(key []byte) {
-	ckv.cache.Remove(string(key))
+	keyStr := string(key)
+
+	// Mark as deleted in cache BEFORE deleting from underlying store.
+	// This prevents concurrent Get() from re-populating with stale data.
+	ckv.mtx.Lock()
+	ckv.cache.Add(keyStr, nil)
+	ckv.mtx.Unlock()
+
 	ckv.CommitKVStore.Delete(key)
 }

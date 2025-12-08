@@ -12,8 +12,19 @@ package internal
 //	if err != nil {
 //		// handle error
 //	}
+//
+// When we are using arrays directly addressed to memory mapped files, these arrays
+// are not part of the normal Go garbage collected memory. We must map and unmap
+// these regions of memory explicitly. Pin represents a commitment to keep the memory
+// mapped at least until Unpin() is called. During normal operation, changeset files
+// will be mapped and unmapped as needed either because the file size has grown, we have
+// compacted a changeset, or simply to manage open file descriptors.
+// Under the hood pins use a reference counting mechanism to keep track of how many
+// active users there are of a particular memory-mapped region.
 type Pin interface {
 	// Unpin releases the Pin, allowing the underlying memory to be unmapped.
+	// Implementors should ensure that Unpin() is idempotent and only unpins the
+	// memory once even if called multiple times.
 	Unpin()
 }
 

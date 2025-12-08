@@ -877,6 +877,11 @@ func (app *BaseApp) executeTxs(ctx context.Context, txs [][]byte) ([]*abci.ExecT
 
 		txResults = append(txResults, response)
 	}
+
+	if app.txResultsPostHook != nil {
+		txResults = app.txResultsPostHook(txResults)
+	}
+
 	return txResults, nil
 }
 

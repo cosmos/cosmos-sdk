@@ -347,6 +347,22 @@ func TestValidateInitialDeposit(t *testing.T) {
 	}
 }
 
+func TestValidateInitialDepositDoesNotMutateParams(t *testing.T) {
+	govKeeper, _, _, _, _, _, ctx := setupGovKeeper(t)
+
+	params := v1.DefaultParams()
+	params.MinDeposit = sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(1000)))
+	params.MinInitialDepositRatio = "0.5"
+
+	initialDeposit := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(500)))
+
+	err := govKeeper.ValidateInitialDepositWithParams(ctx, params, initialDeposit, false)
+	require.NoError(t, err)
+
+	// params.MinDeposit must not be mutated
+	require.Equal(t, sdkmath.NewInt(1000), params.MinDeposit[0].Amount)
+}
+
 func TestChargeDeposit(t *testing.T) {
 	testCases := []struct {
 		name                      string

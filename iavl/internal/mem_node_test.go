@@ -11,9 +11,9 @@ func TestMemNode_Getters(t *testing.T) {
 	right := NewNodePointer(&MemNode{})
 	nodeId := NewNodeID(true, 5, 10)
 
-	var testKey = []byte("testkey")
-	var testValue = []byte("testvalue")
-	var testHash = []byte("testhash")
+	testKey := []byte("testkey")
+	testValue := []byte("testvalue")
+	testHash := []byte("testhash")
 	node := &MemNode{
 		height:    3,
 		version:   7,

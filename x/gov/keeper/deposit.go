@@ -302,6 +302,8 @@ func (k Keeper) validateInitialDeposit(ctx context.Context, params v1.Params, in
 		minDepositCoins = params.MinDeposit
 	}
 
+	// Create a copy to avoid mutating the original params
+	minDepositCoins = sdk.NewCoins(minDepositCoins...)
 	for i := range minDepositCoins {
 		minDepositCoins[i].Amount = sdkmath.LegacyNewDecFromInt(minDepositCoins[i].Amount).Mul(minInitialDepositRatio).RoundInt()
 	}

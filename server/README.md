@@ -34,7 +34,12 @@ var (
 				return err
 			}
 
-			return server.InterceptConfigsPreRunHandler(cmd)
+			return server.InterceptConfigsPreRunHandler(
+				cmd,
+				"",                 // custom app.toml template (optional)
+				nil,                // custom app config struct (optional)
+				cmtcfg.DefaultConfig(), // base CometBFT config
+			)
 		},
 	}
     // add root sub-commands ...

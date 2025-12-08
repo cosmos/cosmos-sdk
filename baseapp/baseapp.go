@@ -694,6 +694,7 @@ func (app *BaseApp) preBlock(req *abci.RequestFinalizeBlock) ([]abci.Event, erro
 			finalizeState.SetContext(ctx)
 		}
 		events = ctx.EventManager().ABCIEvents()
+		events = sdk.MarkEventsToIndex(events, app.indexEvents)
 	}
 	return events, nil
 }

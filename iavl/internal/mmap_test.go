@@ -55,11 +55,11 @@ func TestMmap_ReadWrite(t *testing.T) {
 	require.Equal(t, []byte("hello world"), bz)
 
 	// UnsafeSliceVar - no data
-	_, bz, err = m.UnsafeSliceVar(11, 5)
+	_, _, err = m.UnsafeSliceVar(11, 5)
 	require.Error(t, err)
 
 	// UnsafeSliceVar - out of bounds
-	_, bz, err = m.UnsafeSliceVar(20, 5)
+	_, _, err = m.UnsafeSliceVar(20, 5)
 	require.Error(t, err)
 }
 

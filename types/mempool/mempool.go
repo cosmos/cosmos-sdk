@@ -32,6 +32,19 @@ type ExtMempool interface {
 
 	// SelectBy use callback to iterate over the mempool, it's thread-safe to use.
 	SelectBy(context.Context, [][]byte, func(sdk.Tx) bool)
+
+	// RemoveWithReason removes a transaction from the mempool with specific reason
+	// allowing the mempool to handle the removal differently.
+	RemoveWithReason(context.Context, sdk.Tx, RemoveReason) error
+}
+
+// RemoveReason is the reason for removing a transaction from the mempool.
+type RemoveReason struct {
+	// Origin is the origin of the removal (eg. baseapp, cometbft, etc.)
+	Caller string
+
+	// Error is an optional	 error that caused the removal.
+	Error error
 }
 
 // Iterator defines an app-side mempool iterator interface that is as minimal as

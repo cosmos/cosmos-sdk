@@ -133,7 +133,7 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryProposal() {
 			false,
 		},
 		{
-			"valid request",
+			"valid request with proposal containing no msg",
 			func() {
 				req = &v1beta1.QueryProposalRequest{ProposalId: 1}
 				testProposal := v1beta1.NewTextProposal("Proposal", "testing proposal")
@@ -149,13 +149,11 @@ func (suite *KeeperTestSuite) TestLegacyGRPCQueryProposal() {
 			true,
 		},
 		{
-			"valid request - expedited",
+			"valid request with proposal containing no msg",
 			func() {
 				req = &v1beta1.QueryProposalRequest{ProposalId: 2}
-				testProposal := v1beta1.NewTextProposal("Proposal", "testing proposal")
-				msgContent, err := v1.NewLegacyContent(testProposal, govAcct.String())
-				suite.Require().NoError(err)
-				submittedProposal, err := suite.govKeeper.SubmitProposal(ctx, []sdk.Msg{msgContent}, "", "title", "summary", addrs[0])
+
+				submittedProposal, err := suite.govKeeper.SubmitProposal(ctx, nil, "metadata", "test", "summary", sdk.AccAddress("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r"))
 				suite.Require().NoError(err)
 				suite.Require().NotEmpty(submittedProposal)
 

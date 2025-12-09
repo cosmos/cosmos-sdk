@@ -55,6 +55,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * [#22](https://github.com/atomone-hub/cosmos-sdk/pull/22) Remove non forked go modules from repository.
 * [#25](https://github.com/atomone-hub/cosmos-sdk/pull/25) feat: remove `client/v2` workspace.
 
+### Bug Fixes
+
+* (x/gov) [#35](https://github.com/atomone-hub/cosmos-sdk/pull/35) Cherry-pick [proposal v1 to v1beta1 converter fix from AtomOne](https://github.com/atomone-hub/atomone/pull/102)
+
 ## [Unreleased]
 
 ### Improvements

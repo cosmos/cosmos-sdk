@@ -99,10 +99,10 @@ func TestConvertToLegacyProposalContent(t *testing.T) {
 	_, err = v3.ConvertToLegacyProposal(proposal)
 	require.ErrorIs(t, sdkerrors.ErrInvalidType, err)
 
-	// zero messages is not supported
+	// zero messages is supported
 	proposal.Messages = nil
 	_, err = v3.ConvertToLegacyProposal(proposal)
-	require.ErrorIs(t, sdkerrors.ErrInvalidType, err)
+	require.NoError(t, err)
 }
 
 func TestConvertToLegacyTallyResult(t *testing.T) {

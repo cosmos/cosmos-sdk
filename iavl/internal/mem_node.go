@@ -44,7 +44,7 @@ func (node *MemNode) Version() uint32 {
 
 // Key implements the Node interface.
 func (node *MemNode) Key() (UnsafeBytes, error) {
-	return WrapUnsafeBytes(node.key), nil
+	return WrapSafeBytes(node.key), nil
 }
 
 // Value implements the Node interface.

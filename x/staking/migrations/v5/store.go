@@ -14,6 +14,7 @@ import (
 
 func migrateDelegationsByValidatorIndex(ctx sdk.Context, store storetypes.KVStore, cdc codec.BinaryCodec) error {
 	iterator := storetypes.KVStorePrefixIterator(store, DelegationKey)
+	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
 		key := iterator.Key()

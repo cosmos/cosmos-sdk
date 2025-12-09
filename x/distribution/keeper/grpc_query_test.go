@@ -271,3 +271,95 @@ func TestQueryValidatorCurrentRewards(t *testing.T) {
 		})
 	}
 }
+
+func TestQueryDelegatorStartingInfo(t *testing.T) {
+	f := setupValidatorQueryTest(t, true)
+	f.allocateRewardsAndIncrementPeriod(t, 100)
+
+	testCases := []struct {
+		name           string
+		req            *disttypes.QueryDelegatorStartingInfoRequest
+		expectErr      bool
+		errContains    string
+		expectedPeriod uint64
+		expectedHeight uint64
+	}{
+		{
+			name: "valid delegator and validator",
+			req: &disttypes.QueryDelegatorStartingInfoRequest{
+				DelegatorAddress: f.addr.String(),
+				ValidatorAddress: f.valAddr.String(),
+			},
+			expectErr:      false,
+			expectedPeriod: 1,
+			expectedHeight: 1,
+		},
+		{
+			name:        "nil request",
+			req:         nil,
+			expectErr:   true,
+			errContains: "invalid request",
+		},
+		{
+			name: "empty delegator address",
+			req: &disttypes.QueryDelegatorStartingInfoRequest{
+				DelegatorAddress: "",
+				ValidatorAddress: f.valAddr.String(),
+			},
+			expectErr:   true,
+			errContains: "empty delegator address",
+		},
+		{
+			name: "empty validator address",
+			req: &disttypes.QueryDelegatorStartingInfoRequest{
+				DelegatorAddress: f.addr.String(),
+				ValidatorAddress: "",
+			},
+			expectErr:   true,
+			errContains: "empty validator address",
+		},
+		{
+			name: "invalid delegator address",
+			req: &disttypes.QueryDelegatorStartingInfoRequest{
+				DelegatorAddress: "invalid",
+				ValidatorAddress: f.valAddr.String(),
+			},
+			expectErr: true,
+		},
+		{
+			name: "invalid validator address",
+			req: &disttypes.QueryDelegatorStartingInfoRequest{
+				DelegatorAddress: f.addr.String(),
+				ValidatorAddress: "invalid",
+			},
+			expectErr: true,
+		},
+		{
+			name: "non-existent validator",
+			req: &disttypes.QueryDelegatorStartingInfoRequest{
+				DelegatorAddress: f.addr.String(),
+				ValidatorAddress: sdk.ValAddress([]byte("nonexistent")).String(),
+			},
+			expectErr:   true,
+			errContains: "validator does not exist",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			resp, err := f.querier.DelegatorStartingInfo(f.ctx, tc.req)
+			if tc.expectErr {
+				require.Error(t, err)
+				if tc.errContains != "" {
+					require.Contains(t, err.Error(), tc.errContains)
+				}
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, resp)
+				require.Equal(t, tc.expectedPeriod, resp.StartingInfo.PreviousPeriod)
+				require.Equal(t, tc.expectedHeight, resp.StartingInfo.Height)
+				require.False(t, resp.StartingInfo.Stake.IsNegative())
+			}
+		})
+	}
+}

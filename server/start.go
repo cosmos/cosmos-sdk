@@ -987,7 +987,6 @@ func testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB, tra
 	success = true
 	return testnetApp, nil
 }
-}
 
 // addStartNodeFlags should be added to any CLI commands that start the network.
 func addStartNodeFlags(cmd *cobra.Command, opts StartCmdOptions) {

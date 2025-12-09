@@ -10,10 +10,10 @@ import (
 	"gotest.tools/v3/golden"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/v2/internal/testpb"
+	bankv1beta1 "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 var buildModuleMsgCommand = func(moduleName string, f *fixture) (*cobra.Command, error) {
@@ -33,7 +33,7 @@ func buildCustomModuleMsgCommand(cmdDescriptor *autocliv1.ServiceCommandDescript
 }
 
 var bankAutoCLI = &autocliv1.ServiceCommandDescriptor{
-	Service: bankv1beta1.Msg_ServiceDesc.ServiceName,
+	Service: bankv1beta1.Msg_serviceDesc.ServiceName,
 	RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 		{
 			RpcMethod:      "Send",
@@ -56,7 +56,7 @@ func TestMsg(t *testing.T) {
 	golden.Assert(t, out.String(), "msg-output.golden")
 
 	out, err = runCmd(fixture, buildCustomModuleMsgCommand(&autocliv1.ServiceCommandDescriptor{
-		Service: bankv1beta1.Msg_ServiceDesc.ServiceName,
+		Service: bankv1beta1.Msg_serviceDesc.ServiceName,
 		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 			{
 				RpcMethod:      "Send",
@@ -75,7 +75,7 @@ func TestMsg(t *testing.T) {
 	golden.Assert(t, out.String(), "msg-output.golden")
 
 	out, err = runCmd(fixture, buildCustomModuleMsgCommand(&autocliv1.ServiceCommandDescriptor{
-		Service: bankv1beta1.Msg_ServiceDesc.ServiceName,
+		Service: bankv1beta1.Msg_serviceDesc.ServiceName,
 		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 			{
 				RpcMethod:      "Send",
@@ -96,7 +96,7 @@ func TestMsg(t *testing.T) {
 	golden.Assert(t, out.String(), "msg-output.golden")
 
 	out, err = runCmd(fixture, buildCustomModuleMsgCommand(&autocliv1.ServiceCommandDescriptor{
-		Service: bankv1beta1.Msg_ServiceDesc.ServiceName,
+		Service: bankv1beta1.Msg_serviceDesc.ServiceName,
 		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 			{
 				RpcMethod:      "Send",

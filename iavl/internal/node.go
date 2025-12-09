@@ -39,6 +39,11 @@ type Node interface {
 	Version() uint32
 
 	// Get traverses this subtree to find the value associated with the given key.
+	// If the key is found, value contains the associated value.
+	// If the key is not found, value is nil (not an error).
+	// The index is the 0-based position where the key exists or would be inserted
+	// in sorted order among all leaf keys in this subtree. This is useful for
+	// range queries and determining a key's position even when it doesn't exist.
 	Get(key []byte) (value UnsafeBytes, index int64, err error)
 
 	// MutateBranch creates a mutable copy of this branch node created at the specified version.

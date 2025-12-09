@@ -26,4 +26,14 @@ func TestUnsafeBytes(t *testing.T) {
 	require.True(t, nilUnsafe.IsNil())
 	require.Nil(t, nilUnsafe.UnsafeBytes())
 	require.Nil(t, nilUnsafe.SafeCopy())
+
+	nilSafe := WrapSafeBytes(nil)
+	require.True(t, nilSafe.IsNil())
+	require.Nil(t, nilSafe.UnsafeBytes())
+	require.Nil(t, nilSafe.SafeCopy())
+
+	nilInit := UnsafeBytes{}
+	require.True(t, nilInit.IsNil())
+	require.Nil(t, nilInit.UnsafeBytes())
+	require.Nil(t, nilInit.SafeCopy())
 }

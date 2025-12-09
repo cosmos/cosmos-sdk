@@ -23,7 +23,17 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func TestQueryValidatorHistoricalRewards(t *testing.T) {
+type validatorQueryTestFixture struct {
+	ctx         sdk.Context
+	distrKeeper keeper.Keeper
+	querier     keeper.Querier
+	valAddr     sdk.ValAddress
+	addr        sdk.AccAddress
+	val         stakingtypes.Validator
+}
+
+func setupValidatorQueryTest(t *testing.T, expectNonExistentValidator bool) *validatorQueryTestFixture {
+	t.Helper()
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
@@ -61,24 +71,37 @@ func TestQueryValidatorHistoricalRewards(t *testing.T) {
 	del := stakingtypes.NewDelegation(addr.String(), valAddr.String(), val.DelegatorShares)
 
 	stakingKeeper.EXPECT().Validator(gomock.Any(), valAddr).Return(val, nil).AnyTimes()
+	if expectNonExistentValidator {
+		stakingKeeper.EXPECT().Validator(gomock.Any(), gomock.Not(gomock.Eq(valAddr))).Return(nil, nil).AnyTimes()
+	}
 	stakingKeeper.EXPECT().Delegation(gomock.Any(), addr, valAddr).Return(del, nil).AnyTimes()
 
 	err = distrtestutil.CallCreateValidatorHooks(ctx, distrKeeper, addr, valAddr)
 	require.NoError(t, err)
 
-	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(100)}}
-	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens))
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
-	_, err = distrKeeper.IncrementValidatorPeriod(ctx, val)
-	require.NoError(t, err)
+	return &validatorQueryTestFixture{
+		ctx:         ctx,
+		distrKeeper: distrKeeper,
+		querier:     keeper.NewQuerier(distrKeeper),
+		valAddr:     valAddr,
+		addr:        addr,
+		val:         val,
+	}
+}
 
-	tokens2 := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(200)}}
-	require.NoError(t, distrKeeper.AllocateTokensToValidator(ctx, val, tokens2))
-	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
-	_, err = distrKeeper.IncrementValidatorPeriod(ctx, val)
+func (f *validatorQueryTestFixture) allocateRewardsAndIncrementPeriod(t *testing.T, amount int64) {
+	t.Helper()
+	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: math.LegacyNewDec(amount)}}
+	require.NoError(t, f.distrKeeper.AllocateTokensToValidator(f.ctx, f.val, tokens))
+	f.ctx = f.ctx.WithBlockHeight(f.ctx.BlockHeight() + 1)
+	_, err := f.distrKeeper.IncrementValidatorPeriod(f.ctx, f.val)
 	require.NoError(t, err)
+}
 
-	querier := keeper.NewQuerier(distrKeeper)
+func TestQueryValidatorHistoricalRewards(t *testing.T) {
+	f := setupValidatorQueryTest(t, false)
+	f.allocateRewardsAndIncrementPeriod(t, 100)
+	f.allocateRewardsAndIncrementPeriod(t, 200)
 
 	testCases := []struct {
 		name               string
@@ -91,7 +114,7 @@ func TestQueryValidatorHistoricalRewards(t *testing.T) {
 		{
 			name: "period 1 has reference count 1",
 			req: &disttypes.QueryValidatorHistoricalRewardsRequest{
-				ValidatorAddress: valAddr.String(),
+				ValidatorAddress: f.valAddr.String(),
 				Period:           1,
 			},
 			expectErr:          false,
@@ -101,7 +124,7 @@ func TestQueryValidatorHistoricalRewards(t *testing.T) {
 		{
 			name: "period 2 deleted (reference count 0)",
 			req: &disttypes.QueryValidatorHistoricalRewardsRequest{
-				ValidatorAddress: valAddr.String(),
+				ValidatorAddress: f.valAddr.String(),
 				Period:           2,
 			},
 			expectErr:          false,
@@ -111,7 +134,7 @@ func TestQueryValidatorHistoricalRewards(t *testing.T) {
 		{
 			name: "period 3 is current with rewards",
 			req: &disttypes.QueryValidatorHistoricalRewardsRequest{
-				ValidatorAddress: valAddr.String(),
+				ValidatorAddress: f.valAddr.String(),
 				Period:           3,
 			},
 			expectErr:          false,
@@ -144,7 +167,7 @@ func TestQueryValidatorHistoricalRewards(t *testing.T) {
 		{
 			name: "non-existent period returns empty",
 			req: &disttypes.QueryValidatorHistoricalRewardsRequest{
-				ValidatorAddress: valAddr.String(),
+				ValidatorAddress: f.valAddr.String(),
 				Period:           999,
 			},
 			expectErr:          false,
@@ -155,7 +178,7 @@ func TestQueryValidatorHistoricalRewards(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			resp, err := querier.ValidatorHistoricalRewards(ctx, tc.req)
+			resp, err := f.querier.ValidatorHistoricalRewards(f.ctx, tc.req)
 			if tc.expectErr {
 				require.Error(t, err)
 				if tc.errContains != "" {
@@ -169,6 +192,80 @@ func TestQueryValidatorHistoricalRewards(t *testing.T) {
 					require.False(t, resp.Rewards.CumulativeRewardRatio.IsZero())
 				} else {
 					require.True(t, resp.Rewards.CumulativeRewardRatio.IsZero())
+				}
+			}
+		})
+	}
+}
+
+func TestQueryValidatorCurrentRewards(t *testing.T) {
+	f := setupValidatorQueryTest(t, true)
+	f.allocateRewardsAndIncrementPeriod(t, 100)
+
+	testCases := []struct {
+		name                 string
+		req                  *disttypes.QueryValidatorCurrentRewardsRequest
+		expectErr            bool
+		errContains          string
+		expectedPeriod       uint64
+		expectNonZeroRewards bool
+	}{
+		{
+			name: "valid validator with current rewards",
+			req: &disttypes.QueryValidatorCurrentRewardsRequest{
+				ValidatorAddress: f.valAddr.String(),
+			},
+			expectErr:            false,
+			expectedPeriod:       3,
+			expectNonZeroRewards: false,
+		},
+		{
+			name:        "nil request",
+			req:         nil,
+			expectErr:   true,
+			errContains: "invalid request",
+		},
+		{
+			name: "empty validator address",
+			req: &disttypes.QueryValidatorCurrentRewardsRequest{
+				ValidatorAddress: "",
+			},
+			expectErr:   true,
+			errContains: "empty validator address",
+		},
+		{
+			name: "invalid validator address",
+			req: &disttypes.QueryValidatorCurrentRewardsRequest{
+				ValidatorAddress: "invalid",
+			},
+			expectErr: true,
+		},
+		{
+			name: "non-existent validator",
+			req: &disttypes.QueryValidatorCurrentRewardsRequest{
+				ValidatorAddress: sdk.ValAddress([]byte("nonexistent")).String(),
+			},
+			expectErr:   true,
+			errContains: "validator does not exist",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			resp, err := f.querier.ValidatorCurrentRewards(f.ctx, tc.req)
+			if tc.expectErr {
+				require.Error(t, err)
+				if tc.errContains != "" {
+					require.Contains(t, err.Error(), tc.errContains)
+				}
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, resp)
+				require.Equal(t, tc.expectedPeriod, resp.Rewards.Period)
+				if tc.expectNonZeroRewards {
+					require.False(t, resp.Rewards.Rewards.IsZero())
+				} else {
+					require.True(t, resp.Rewards.Rewards.IsZero())
 				}
 			}
 		})

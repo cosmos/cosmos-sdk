@@ -28,7 +28,7 @@ type Pin interface {
 	Unpin()
 }
 
-// NoopPin is a Pin that has nothing on Unpin().
+// NoopPin is a Pin that does nothing on Unpin().
 type NoopPin struct{}
 
 // Unpin implements the Pin interface.

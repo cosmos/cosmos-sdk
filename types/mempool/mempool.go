@@ -26,7 +26,7 @@ type Mempool interface {
 
 // ExtMempool is an extension of Mempool interface introduced in v0.50
 // for not be breaking in a patch release.
-// In v0.52+, this interface will be merged into Mempool interface.
+// In v0.54+, this function is removed and RemoveWithReason is merged into Mempool interface.
 type ExtMempool interface {
 	Mempool
 
@@ -77,4 +77,14 @@ func SelectBy(ctx context.Context, mempool Mempool, txs [][]byte, callback func(
 	for iter != nil && callback(iter.Tx()) {
 		iter = iter.Next()
 	}
+}
+
+// RemoveWithReason is compatible with old interface to avoid breaking api.
+// In v0.54+, this function is removed and RemoveWithReason is merged into Mempool interface.
+func RemoveWithReason(ctx context.Context, mempool Mempool, tx sdk.Tx, reason RemoveReason) error {
+	if ext, ok := mempool.(ExtMempool); ok {
+		return ext.RemoveWithReason(ctx, tx, reason)
+	}
+
+	return mempool.Remove(tx)
 }

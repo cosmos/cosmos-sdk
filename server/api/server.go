@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"net/http"
 	"strings"
@@ -23,6 +24,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	cmtlogwrapper "github.com/cosmos/cosmos-sdk/server/log"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 )
 
@@ -33,6 +35,7 @@ type Server struct {
 	ClientCtx         client.Context
 	GRPCSrv           *grpc.Server
 	logger            log.Logger
+	metrics           *telemetry.Metrics
 
 	// Start() is blocking and generally called from a separate goroutine.
 	// Close() can be called asynchronously and access shared memory
@@ -186,6 +189,31 @@ func (s *Server) Close() error {
 	s.mtx.Lock()
 	defer s.mtx.Unlock()
 	return s.listener.Close()
+}
+
+func (s *Server) SetTelemetry(m *telemetry.Metrics) {
+	s.mtx.Lock()
+	s.registerMetrics(m)
+	s.mtx.Unlock()
+}
+
+func (s *Server) registerMetrics(m *telemetry.Metrics) {
+	s.metrics = m
+
+	metricsHandler := func(w http.ResponseWriter, r *http.Request) {
+		format := strings.TrimSpace(r.FormValue("format"))
+
+		gr, err := s.metrics.Gather(format)
+		if err != nil {
+			writeErrorResponse(w, http.StatusBadRequest, fmt.Sprintf("failed to gather metrics: %s", err))
+			return
+		}
+
+		w.Header().Set("Content-Type", gr.ContentType)
+		_, _ = w.Write(gr.Metrics)
+	}
+
+	s.Router.HandleFunc("/metrics", metricsHandler).Methods("GET")
 }
 
 // errorResponse defines the attributes of a JSON error response.

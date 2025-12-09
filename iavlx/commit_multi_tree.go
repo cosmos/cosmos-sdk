@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	io "io"
-	"log/slog"
 	"os"
 	"path/filepath"
 	"sync"
@@ -12,6 +11,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/mem"
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
@@ -23,7 +23,7 @@ import (
 type CommitMultiTree struct {
 	dir        string
 	opts       Options
-	logger     *slog.Logger
+	logger     log.Logger
 	trees      []storetypes.CommitStore    // always ordered by tree name
 	treeKeys   []storetypes.StoreKey       // always ordered by tree name
 	storeTypes []storetypes.StoreType      // store types by tree index
@@ -377,7 +377,7 @@ func (db *CommitMultiTree) SetMetrics(metrics metrics.StoreMetrics) {
 	db.logger.Warn("SetMetrics is not implemented for CommitMultiTree")
 }
 
-func LoadDB(path string, opts *Options, logger *slog.Logger) (*CommitMultiTree, error) {
+func LoadDB(path string, opts *Options, logger log.Logger) (*CommitMultiTree, error) {
 	// n := len(treeNames)
 	//trees := make([]*CommitTree, n)
 	//treesByName := make(map[string]int, n)

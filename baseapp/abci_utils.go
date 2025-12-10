@@ -379,7 +379,7 @@ func (h *DefaultProposalHandler) PrepareProposalHandler() sdk.PrepareProposalHan
 
 		for _, invalidTx := range invalidTxs {
 			reason := mempool.RemoveReason{
-				Caller: "prepare_proposal.remove_invalid_tx",
+				Caller: mempool.CallerPrepareProposalRemoveInvalid,
 				Error:  invalidTx.err,
 			}
 

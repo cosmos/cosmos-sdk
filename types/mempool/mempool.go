@@ -38,12 +38,21 @@ type ExtMempool interface {
 	RemoveWithReason(context.Context, sdk.Tx, RemoveReason) error
 }
 
+// RemovalCaller is the origin of the removal
+type RemovalCaller string
+
+// Various callers
+const (
+	CallerRunTxRecheck                 RemovalCaller = "run_tx.recheck"
+	CallerRunTxFinalize                RemovalCaller = "run_tx.finalize"
+	CallerPrepareProposalRemoveInvalid RemovalCaller = "prepare_proposal.remove_invalid"
+)
+
 // RemoveReason is the reason for removing a transaction from the mempool.
 type RemoveReason struct {
-	// Origin is the origin of the removal (eg. baseapp, cometbft, etc.)
-	Caller string
+	Caller RemovalCaller
 
-	// Error is an optional	 error that caused the removal.
+	// Error is an optional error that caused the removal.
 	Error error
 }
 

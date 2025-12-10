@@ -38,7 +38,7 @@ var (
 )
 
 func init() {
-	if openTelemetrySDK != nil {
+	if openTelemetrySDK == nil {
 		if otelFilePath := os.Getenv(otelConfigEnvVar); otelFilePath != "" {
 			if err := InitializeOpenTelemetry(otelFilePath); err != nil {
 				panic(err)
@@ -163,7 +163,7 @@ func InitializeOpenTelemetry(filePath string) error {
 				})
 				exporter, err := stdoutlog.New(
 					stdoutlog.WithWriter(logsFile),
-					// stdoutlog.WithPrettyPrint(),
+					stdoutlog.WithPrettyPrint(),
 				)
 				if err != nil {
 					return fmt.Errorf("failed to create stdout log exporter: %w", err)
@@ -204,6 +204,7 @@ func InitializeOpenTelemetry(filePath string) error {
 	otel.SetMeterProvider(openTelemetrySDK.MeterProvider())
 	logglobal.SetLoggerProvider(openTelemetrySDK.LoggerProvider())
 
+	fmt.Println("otel initialized successfully...")
 	return nil
 }
 

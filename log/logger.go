@@ -1,6 +1,7 @@
 package log
 
 import (
+	"context"
 	"encoding"
 	"encoding/json"
 	"fmt"
@@ -52,6 +53,22 @@ type Logger interface {
 	// Debug takes a message and a set of key/value pairs and logs with level DEBUG.
 	// The key of the tuple must be a string.
 	Debug(msg string, keyVals ...any)
+
+	// InfoContext takes a context, message and key/value pairs and logs with level INFO.
+	// The context is used for trace/span correlation when using OpenTelemetry.
+	InfoContext(ctx context.Context, msg string, keyVals ...any)
+
+	// WarnContext takes a context, message and key/value pairs and logs with level WARN.
+	// The context is used for trace/span correlation when using OpenTelemetry.
+	WarnContext(ctx context.Context, msg string, keyVals ...any)
+
+	// ErrorContext takes a context, message and key/value pairs and logs with level ERROR.
+	// The context is used for trace/span correlation when using OpenTelemetry.
+	ErrorContext(ctx context.Context, msg string, keyVals ...any)
+
+	// DebugContext takes a context, message and key/value pairs and logs with level DEBUG.
+	// The context is used for trace/span correlation when using OpenTelemetry.
+	DebugContext(ctx context.Context, msg string, keyVals ...any)
 
 	// With returns a new wrapped logger with additional context provided by a set.
 	With(keyVals ...any) Logger
@@ -187,6 +204,30 @@ func (l zeroLogWrapper) Debug(msg string, keyVals ...interface{}) {
 	l.Logger.Debug().Fields(keyVals).Msg(msg)
 }
 
+// InfoContext takes a context, message and key/value pairs and logs with level INFO.
+// For zeroLogWrapper, the context is not used for trace correlation.
+func (l zeroLogWrapper) InfoContext(_ context.Context, msg string, keyVals ...interface{}) {
+	l.Info(msg, keyVals...)
+}
+
+// WarnContext takes a context, message and key/value pairs and logs with level WARN.
+// For zeroLogWrapper, the context is not used for trace correlation.
+func (l zeroLogWrapper) WarnContext(_ context.Context, msg string, keyVals ...interface{}) {
+	l.Warn(msg, keyVals...)
+}
+
+// ErrorContext takes a context, message and key/value pairs and logs with level ERROR.
+// For zeroLogWrapper, the context is not used for trace correlation.
+func (l zeroLogWrapper) ErrorContext(_ context.Context, msg string, keyVals ...interface{}) {
+	l.Error(msg, keyVals...)
+}
+
+// DebugContext takes a context, message and key/value pairs and logs with level DEBUG.
+// For zeroLogWrapper, the context is not used for trace correlation.
+func (l zeroLogWrapper) DebugContext(_ context.Context, msg string, keyVals ...interface{}) {
+	l.Debug(msg, keyVals...)
+}
+
 // With returns a new wrapped logger with additional context provided by a set.
 func (l zeroLogWrapper) With(keyVals ...interface{}) Logger {
 	logger := l.Logger.With().Fields(keyVals).Logger()
@@ -235,10 +276,14 @@ func NewNopLogger() Logger {
 // The custom implementation is about 3x faster.
 type nopLogger struct{}
 
-func (nopLogger) Info(string, ...any)    {}
-func (nopLogger) Warn(string, ...any)    {}
-func (nopLogger) Error(string, ...any)   {}
-func (nopLogger) Debug(string, ...any)   {}
-func (nopLogger) With(...any) Logger     { return nopLogger{} }
-func (nopLogger) WithContext(...any) any { return nopLogger{} }
-func (nopLogger) Impl() any              { return nopLogger{} }
+func (nopLogger) Info(string, ...any)                          {}
+func (nopLogger) Warn(string, ...any)                          {}
+func (nopLogger) Error(string, ...any)                         {}
+func (nopLogger) Debug(string, ...any)                         {}
+func (nopLogger) InfoContext(context.Context, string, ...any)  {}
+func (nopLogger) WarnContext(context.Context, string, ...any)  {}
+func (nopLogger) ErrorContext(context.Context, string, ...any) {}
+func (nopLogger) DebugContext(context.Context, string, ...any) {}
+func (nopLogger) With(...any) Logger                           { return nopLogger{} }
+func (nopLogger) WithContext(...any) any                       { return nopLogger{} }
+func (nopLogger) Impl() any                                    { return nopLogger{} }

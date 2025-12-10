@@ -835,6 +835,15 @@ func testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB, tra
 	ctx.Viper.Set(KeyUserPubKey, userPubKey)
 	testnetApp := testnetAppCreator(ctx.Logger, db, traceWriter, ctx.Viper)
 
+	var success bool
+	defer func() {
+		if !success {
+			if err := testnetApp.Close(); err != nil {
+				ctx.Logger.Error("failed to close testnet app on error", "err", err)
+			}
+		}
+	}()
+
 	// We need to create a temporary proxyApp to get the initial state of the application.
 	// Depending on how the node was stopped, the application height can differ from the blockStore height.
 	// This height difference changes how we go about modifying the state.
@@ -994,7 +1003,8 @@ func testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB, tra
 		return nil, err
 	}
 
-	return testnetApp, err
+	success = true
+	return testnetApp, nil
 }
 
 // addStartNodeFlags should be added to any CLI commands that start the network.

@@ -38,6 +38,7 @@ func NewAppModule(keeper *keeper.Keeper) AppModule {
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // Name returns the module's name.
+//
 // Deprecated: kept for legacy reasons.
 func (AppModule) Name() string { return types.ModuleName }
 

@@ -47,6 +47,7 @@ func NewAppModule(keeper keeper.Keeper) AppModule {
 func (am AppModule) IsAppModule() {}
 
 // Name returns the epochs module's name.
+//
 // Deprecated: kept for legacy reasons.
 func (AppModule) Name() string {
 	return types.ModuleName

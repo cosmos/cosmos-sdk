@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net"
 	"os"
 	"os/signal"
@@ -599,7 +600,7 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 			db, err := iavlx.LoadDB(
 				filepath.Join(homeDir, "data", "iavlx"),
 				opts,
-				bapp.Logger(),
+				slog.Default(),
 			)
 			if err != nil {
 				panic(fmt.Errorf("failed to load iavlx db: %w", err))

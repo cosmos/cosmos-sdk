@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 
@@ -16,6 +17,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -116,7 +118,7 @@ func NewSimApp(
 		}
 		baseAppOptions = append(baseAppOptions, func(bApp *baseapp.BaseApp) {
 			dir := filepath.Join(appOpts.Get(flags.FlagHome).(string), "data", "iavlx")
-			db, err := iavlx.LoadDB(dir, &opts, logger)
+			db, err := iavlx.LoadDB(dir, &opts, slog.Default())
 			if err != nil {
 				panic(err)
 			}

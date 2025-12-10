@@ -48,7 +48,7 @@ func formatCoin(coin *basev1beta1.Coin, metadata *bankv1beta1.Metadata) (string,
 
 	// If we didn't find either exponent, then we return early.
 	if !foundCoinExp || !foundDispExp {
-		vr, err := math.FormatInt(coin.Amount)
+		vr, err := math.FormatDec(coin.Amount)
 		return vr + " " + coin.Denom, err
 	}
 

@@ -254,6 +254,11 @@ func (snm *SenderNonceMempool) Remove(tx sdk.Tx) error {
 	return nil
 }
 
+// RemoveWithReason is a proxy to Remove for this mempool.
+func (snm *SenderNonceMempool) RemoveWithReason(_ context.Context, tx sdk.Tx, _ RemoveReason) error {
+	return snm.Remove(tx)
+}
+
 type senderNonceMempoolIterator struct {
 	rnd           *rand.Rand
 	currentTx     *skiplist.Element

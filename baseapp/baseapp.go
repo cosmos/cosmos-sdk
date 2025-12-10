@@ -881,10 +881,16 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 		if err != nil {
 			if mode == execModeReCheck {
 				// if the ante handler fails on recheck, we want to remove the tx from the mempool
-				if mempoolErr := app.mempool.Remove(tx); mempoolErr != nil {
-					return gInfo, nil, anteEvents, errors.Join(err, mempoolErr)
+				errMempool := mempool.RemoveWithReason(ctx, app.mempool, tx, mempool.RemoveReason{
+					Caller: mempool.CallerRunTxRecheck,
+					Error:  err,
+				})
+
+				if errMempool != nil {
+					return gInfo, nil, anteEvents, errors.Join(err, errMempool)
 				}
 			}
+
 			return gInfo, nil, nil, err
 		}
 
@@ -899,10 +905,10 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 			return gInfo, nil, anteEvents, err
 		}
 	case execModeFinalize:
-		err = app.mempool.Remove(tx)
+		reason := mempool.RemoveReason{Caller: mempool.CallerRunTxFinalize}
+		err = mempool.RemoveWithReason(ctx, app.mempool, tx, reason)
 		if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
-			return gInfo, nil, anteEvents,
-				fmt.Errorf("failed to remove tx from mempool: %w", err)
+			return gInfo, nil, anteEvents, fmt.Errorf("failed to remove tx from mempool: %w", err)
 		}
 	}
 

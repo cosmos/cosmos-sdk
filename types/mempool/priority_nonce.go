@@ -485,6 +485,11 @@ func (mp *PriorityNonceMempool[C]) Remove(tx sdk.Tx) error {
 	return nil
 }
 
+// RemoveWithReason is a proxy to Remove for this mempool.
+func (mp *PriorityNonceMempool[C]) RemoveWithReason(_ context.Context, tx sdk.Tx, _ RemoveReason) error {
+	return mp.Remove(tx)
+}
+
 func IsEmpty[C comparable](mempool Mempool) error {
 	mp := mempool.(*PriorityNonceMempool[C])
 	if mp.priorityIndex.Len() != 0 {

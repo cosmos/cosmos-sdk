@@ -41,11 +41,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 ### Features
 
 * (crypto/ledger) [#25435](https://github.com/cosmos/cosmos-sdk/pull/25435) Add SetDERConversion to reset skipDERConversion and App name for ledger.
+* (gRPC) [#25565](https://github.com/cosmos/cosmos-sdk/pull/25565) Support for multi gRPC query clients serve with historical binaries to serve proper historical state.
+
+### Improvements
+
+* (x/mint) [#25562](https://github.com/cosmos/cosmos-sdk/pull/25562) Improve and test `x/mint` params validation.
+* (server) [#25632](https://github.com/cosmos/cosmos-sdk/pull/25632) Add missing call to close the app on shutdown.
 
 ### Bug Fixes
 
 * (cli) [#25485](https://github.com/cosmos/cosmos-sdk/pull/25485) Avoid failed to convert address field in `withdraw-validator-commission` cmd.
 * (baseapp) [#25551](https://github.com/cosmos/cosmos-sdk/pull/25551) Prevent updating check state before mempool insert
+* (baseapp) [#25642](https://github.com/cosmos/cosmos-sdk/pull/25642) Mark pre-block events for indexing based on local configuration.
 
 ## [v0.53.4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.3) - 2025-07-25
 

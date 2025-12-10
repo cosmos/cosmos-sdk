@@ -36,6 +36,10 @@ func TestStakeUnstake(t *testing.T) {
 	rsp = cli.Run("tx", "staking", "delegate", valAddr, "10000stake", "--from="+account1Addr, "--fees=1stake")
 	systemtests.RequireTxSuccess(t, rsp)
 
+	sut.StopChain()
+	sut.AwaitChainStopped()
+	sut.StartChain(t)
+
 	t.Log(cli.QueryBalance(account1Addr, "stake"))
 	assert.Equal(t, int64(9989999), cli.QueryBalance(account1Addr, "stake"))
 
@@ -46,6 +50,10 @@ func TestStakeUnstake(t *testing.T) {
 	// unstake tokens
 	rsp = cli.Run("tx", "staking", "unbond", valAddr, "5000stake", "--from="+account1Addr, "--fees=1stake")
 	systemtests.RequireTxSuccess(t, rsp)
+
+	sut.StopChain()
+	sut.AwaitChainStopped()
+	sut.StartChain(t)
 
 	rsp = cli.CustomQuery("q", "staking", "delegation", account1Addr, valAddr)
 	assert.Equal(t, "5000", gjson.Get(rsp, "delegation_response.balance.amount").String(), rsp)

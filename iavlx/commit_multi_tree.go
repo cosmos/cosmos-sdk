@@ -295,12 +295,11 @@ func (db *CommitMultiTree) loadStore(key storetypes.StoreKey, typ storetypes.Sto
 	switch typ {
 	case storetypes.StoreTypeIAVL, storetypes.StoreTypeDB:
 		dir := filepath.Join(db.dir, key.Name())
-		if _, err := os.Stat(dir); !os.IsNotExist(err) {
-			return nil, fmt.Errorf("store directory %s already exists, reloading isn't supported yet", dir)
-		}
-		err := os.MkdirAll(dir, 0o755)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create store dir %s: %w", dir, err)
+		if _, err := os.Stat(dir); os.IsNotExist(err) {
+			err := os.MkdirAll(dir, 0o755)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create store dir %s: %w", dir, err)
+			}
 		}
 		return NewCommitTree(dir, db.opts, db.logger.With("store", key.Name()))
 	case storetypes.StoreTypeTransient:

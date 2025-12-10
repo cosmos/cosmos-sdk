@@ -34,3 +34,8 @@ func TestNodeID(t *testing.T) {
 		})
 	}
 }
+
+func TestNodeID_IsEmpty(t *testing.T) {
+	require.True(t, NodeID{}.IsEmpty())
+	require.False(t, NewNodeID(true, 1, 1).IsEmpty())
+}

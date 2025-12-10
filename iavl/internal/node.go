@@ -39,6 +39,11 @@ type Node interface {
 	Version() uint32
 
 	// Get traverses this subtree to find the value associated with the given key.
+	// If the key is found, value contains the associated value.
+	// If the key is not found, value is nil (not an error).
+	// The index is the 0-based position where the key exists or would be inserted
+	// in sorted order among all leaf keys in this subtree. This is useful for
+	// range queries and determining a key's position even when it doesn't exist.
 	Get(key []byte) (value UnsafeBytes, index int64, err error)
 
 	// MutateBranch creates a mutable copy of this branch node created at the specified version.
@@ -48,33 +53,4 @@ type Node interface {
 	MutateBranch(version uint32) (*MemNode, error)
 
 	fmt.Stringer
-}
-
-type UnsafeBytes struct {
-	bz   []byte
-	safe bool
-}
-
-func WrapUnsafeBytes(bz []byte) UnsafeBytes {
-	return UnsafeBytes{bz: bz, safe: false}
-}
-
-func WrapSafeBytes(bz []byte) UnsafeBytes {
-	return UnsafeBytes{bz: bz, safe: true}
-}
-
-func (ub UnsafeBytes) UnsafeBytes() []byte {
-	return ub.bz
-}
-
-func (ub UnsafeBytes) SafeCopy() []byte {
-	if ub.safe {
-		return ub.bz
-	}
-	if ub.bz == nil {
-		return nil
-	}
-	copied := make([]byte, len(ub.bz))
-	copy(copied, ub.bz)
-	return copied
 }

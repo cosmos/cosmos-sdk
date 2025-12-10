@@ -11,13 +11,16 @@ func TestMemNode_Getters(t *testing.T) {
 	right := NewNodePointer(&MemNode{})
 	nodeId := NewNodeID(true, 5, 10)
 
+	testKey := []byte("testkey")
+	testValue := []byte("testvalue")
+	testHash := []byte("testhash")
 	node := &MemNode{
 		height:    3,
 		version:   7,
 		size:      42,
-		key:       []byte("testkey"),
-		value:     []byte("testvalue"),
-		hash:      []byte("testhash"),
+		key:       testKey,
+		value:     testValue,
+		hash:      testHash,
 		left:      left,
 		right:     right,
 		nodeId:    nodeId,
@@ -29,16 +32,16 @@ func TestMemNode_Getters(t *testing.T) {
 	require.Equal(t, int64(42), node.Size())
 	require.Equal(t, left, node.Left())
 	require.Equal(t, right, node.Right())
-	require.Equal(t, []byte("testhash"), node.Hash())
+	require.Equal(t, testHash, node.Hash().UnsafeBytes())
 	require.Equal(t, nodeId, node.ID())
 
 	key, err := node.Key()
 	require.NoError(t, err)
-	require.Equal(t, []byte("testkey"), key)
+	require.Equal(t, testKey, key.UnsafeBytes())
 
 	value, err := node.Value()
 	require.NoError(t, err)
-	require.Equal(t, []byte("testvalue"), value)
+	require.Equal(t, testValue, value.UnsafeBytes())
 }
 
 func TestMemNode_IsLeaf(t *testing.T) {
@@ -98,12 +101,14 @@ func TestMemNode_String(t *testing.T) {
 }
 
 func TestMemNode_MutateBranch(t *testing.T) {
+	key := []byte("key")
+	origHash := []byte("origHash")
 	original := &MemNode{
 		height:  2,
 		version: 5,
 		size:    10,
-		key:     []byte("key"),
-		hash:    []byte("oldhash"),
+		key:     key,
+		hash:    origHash,
 		left:    NewNodePointer(&MemNode{}),
 		right:   NewNodePointer(&MemNode{}),
 	}
@@ -113,13 +118,13 @@ func TestMemNode_MutateBranch(t *testing.T) {
 
 	// Version updated, hash cleared
 	require.Equal(t, uint32(12), mutated.Version())
-	require.Nil(t, mutated.Hash())
+	require.Nil(t, mutated.Hash().UnsafeBytes())
 
 	// Other fields preserved
 	require.Equal(t, original.Height(), mutated.Height())
 	require.Equal(t, original.Size(), mutated.Size())
-	key, _ := mutated.Key()
-	require.Equal(t, []byte("key"), key)
+	key2, _ := mutated.Key()
+	require.Equal(t, key, key2.UnsafeBytes())
 	require.Equal(t, original.Left(), mutated.Left())
 	require.Equal(t, original.Right(), mutated.Right())
 
@@ -128,5 +133,192 @@ func TestMemNode_MutateBranch(t *testing.T) {
 
 	// Original unchanged
 	require.Equal(t, uint32(5), original.Version())
-	require.Equal(t, []byte("oldhash"), original.Hash())
+	require.Equal(t, origHash, original.Hash().UnsafeBytes())
+}
+
+func TestMemNode_Get_Leaf(t *testing.T) {
+	// When Get is called on a leaf node:
+	// - If key matches: returns (value, 0, nil)
+	// - If key not found: returns (nil, index, nil) where index is the insertion point
+	//   - key < nodeKey: index=0 (would insert before this leaf)
+	//   - key > nodeKey: index=1 (would insert after this leaf)
+	tests := []struct {
+		name      string
+		nodeKey   string
+		nodeValue string
+		searchKey string
+		wantValue []byte
+		wantIndex int64
+	}{
+		{
+			name:      "exact match",
+			nodeKey:   "b",
+			nodeValue: "val_b",
+			searchKey: "b",
+			wantValue: []byte("val_b"),
+			wantIndex: 0,
+		},
+		{
+			name:      "search key less than node key",
+			nodeKey:   "b",
+			nodeValue: "val_b",
+			searchKey: "a",
+			wantValue: nil,
+			wantIndex: 0, // "a" would be inserted before "b"
+		},
+		{
+			name:      "search key greater than node key",
+			nodeKey:   "b",
+			nodeValue: "val_b",
+			searchKey: "c",
+			wantValue: nil,
+			wantIndex: 1, // "c" would be inserted after "b"
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			node := &MemNode{
+				height: 0,
+				size:   1,
+				key:    []byte(tt.nodeKey),
+				value:  []byte(tt.nodeValue),
+			}
+			val, idx, err := node.Get([]byte(tt.searchKey))
+			require.NoError(t, err)
+			require.Equal(t, tt.wantValue, val.UnsafeBytes())
+			require.Equal(t, tt.wantIndex, idx)
+		})
+	}
+}
+
+func TestMemNode_Get_Branch(t *testing.T) {
+	// Hand-construct a simple tree:
+	//
+	//       [b]          <- branch, key="b", size=2
+	//      /   \
+	//    [a]   [b]       <- leaves (index 0, index 1)
+	//
+	// In IAVL, branch key = smallest key in right subtree
+	//
+	// Index is the 0-based position in sorted leaf order:
+	// - "a" is at index 0, "b" is at index 1
+	// - Keys not found return the insertion point
+
+	leftLeaf := &MemNode{
+		height: 0,
+		size:   1,
+		key:    []byte("a"),
+		value:  []byte("val_a"),
+	}
+	rightLeaf := &MemNode{
+		height: 0,
+		size:   1,
+		key:    []byte("b"),
+		value:  []byte("val_b"),
+	}
+	root := &MemNode{
+		height: 1,
+		size:   2,
+		key:    []byte("b"), // smallest key in right subtree
+		left:   NewNodePointer(leftLeaf),
+		right:  NewNodePointer(rightLeaf),
+	}
+
+	tests := []struct {
+		name      string
+		searchKey string
+		wantValue []byte
+		wantIndex int64
+	}{
+		{
+			name:      "find in left subtree",
+			searchKey: "a",
+			wantValue: []byte("val_a"),
+			wantIndex: 0,
+		},
+		{
+			name:      "find in right subtree",
+			searchKey: "b",
+			wantValue: []byte("val_b"),
+			wantIndex: 1,
+		},
+		{
+			name:      "key not found - less than all",
+			searchKey: "0",
+			wantValue: nil,
+			wantIndex: 0, // "0" would be inserted at position 0
+		},
+		{
+			name:      "key not found - greater than all",
+			searchKey: "z",
+			wantValue: nil,
+			wantIndex: 2, // "z" would be inserted at position 2 (after both leaves)
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			val, idx, err := root.Get([]byte(tt.searchKey))
+			require.NoError(t, err)
+			require.Equal(t, tt.wantValue, val.UnsafeBytes())
+			require.Equal(t, tt.wantIndex, idx)
+		})
+	}
+}
+
+func TestMemNode_Get_DeeperTree(t *testing.T) {
+	// Hand-construct a 3-level tree:
+	//
+	//            [c]              <- root, size=4
+	//          /     \
+	//       [b]       [d]         <- branches, size=2 each
+	//      /   \     /   \
+	//    [a]   [b] [c]   [d]      <- leaves
+	//
+	// Sorted keys: a=0, b=1, c=2, d=3
+
+	leafA := &MemNode{height: 0, size: 1, key: []byte("a"), value: []byte("val_a")}
+	leafB := &MemNode{height: 0, size: 1, key: []byte("b"), value: []byte("val_b")}
+	leafC := &MemNode{height: 0, size: 1, key: []byte("c"), value: []byte("val_c")}
+	leafD := &MemNode{height: 0, size: 1, key: []byte("d"), value: []byte("val_d")}
+
+	branchLeft := &MemNode{
+		height: 1,
+		size:   2,
+		key:    []byte("b"),
+		left:   NewNodePointer(leafA),
+		right:  NewNodePointer(leafB),
+	}
+	branchRight := &MemNode{
+		height: 1,
+		size:   2,
+		key:    []byte("d"),
+		left:   NewNodePointer(leafC),
+		right:  NewNodePointer(leafD),
+	}
+	root := &MemNode{
+		height: 2,
+		size:   4,
+		key:    []byte("c"), // smallest key in right subtree
+		left:   NewNodePointer(branchLeft),
+		right:  NewNodePointer(branchRight),
+	}
+
+	tests := []struct {
+		searchKey string
+		wantValue []byte
+		wantIndex int64
+	}{
+		{"a", []byte("val_a"), 0},
+		{"b", []byte("val_b"), 1},
+		{"c", []byte("val_c"), 2},
+		{"d", []byte("val_d"), 3},
+	}
+	for _, tt := range tests {
+		t.Run(tt.searchKey, func(t *testing.T) {
+			val, idx, err := root.Get([]byte(tt.searchKey))
+			require.NoError(t, err)
+			require.Equal(t, tt.wantValue, val.UnsafeBytes())
+			require.Equal(t, tt.wantIndex, idx)
+		})
+	}
 }

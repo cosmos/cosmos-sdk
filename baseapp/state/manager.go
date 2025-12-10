@@ -17,9 +17,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var (
-	tracer = otel.Tracer("cosmos-sdk/baseapp")
-)
+var tracer = otel.Tracer("cosmos-sdk/baseapp")
 
 type Manager struct {
 	// volatile states:
@@ -115,13 +113,9 @@ func (mgr *Manager) SetState(
 
 	case sdk.ExecModeFinalize:
 		// add tracing span instrumentation here when the context is initialized for the block
-		height := h.Height
-		if height == 0 {
-			height = 1
-		}
 		baseState.ctx, baseState.span = baseState.ctx.StartSpan(tracer, "Block",
 			trace.WithAttributes(
-				otelattr.Int64("height", height),
+				otelattr.Int64("height", h.Height),
 				otelattr.Int64("time_unix_nano", h.Time.UnixNano()),
 			),
 		)

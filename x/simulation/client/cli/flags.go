@@ -20,7 +20,6 @@ var (
 	FlagSeedValue               int64
 	FlagInitialBlockHeightValue int
 	FlagNumBlocksValue          int
-	FlagNumRunsValue            int
 	FlagBlockSizeValue          int
 	FlagLeanValue               bool
 	FlagCommitValue             bool
@@ -52,7 +51,6 @@ func GetSimulatorFlags() {
 	flag.StringVar(&FlagExportStatsPathValue, "ExportStatsPath", "", "custom file path to save the exported simulation statistics JSON")
 	flag.Int64Var(&FlagSeedValue, "Seed", DefaultSeedValue, "simulation random seed")
 	flag.IntVar(&FlagInitialBlockHeightValue, "InitialBlockHeight", 1, "initial block to start the simulation")
-	flag.IntVar(&FlagNumRunsValue, "NumRuns", 3, "number of runs to run for simulations that do multiple runs at once")
 	flag.IntVar(&FlagNumBlocksValue, "NumBlocks", 500, "number of new blocks to simulate from the initial block height")
 	flag.IntVar(&FlagBlockSizeValue, "BlockSize", 200, "operations per block")
 	flag.BoolVar(&FlagLeanValue, "Lean", false, "lean simulation log output")
@@ -83,7 +81,6 @@ func NewConfigFromFlags() simulation.Config {
 		Seed:               FlagSeedValue,
 		InitialBlockHeight: FlagInitialBlockHeightValue,
 		GenesisTime:        FlagGenesisTimeValue,
-		NumRuns:            FlagNumRunsValue,
 		NumBlocks:          FlagNumBlocksValue,
 		BlockSize:          FlagBlockSizeValue,
 		Lean:               FlagLeanValue,

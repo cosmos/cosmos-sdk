@@ -25,11 +25,10 @@ import (
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/depinject"
+	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/math/unsafe"
 	pruningtypes "cosmossdk.io/store/pruning/types"
-
-	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -378,6 +377,8 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		appCfg.MinGasPrices = cfg.MinGasPrices
 		appCfg.API.Enable = true
 		appCfg.API.Swagger = false
+		//nolint:staticcheck // TODO: switch to OpenTelemetry
+		appCfg.Telemetry.Enabled = false
 
 		ctx := server.NewDefaultContext()
 		cmtCfg := ctx.Config

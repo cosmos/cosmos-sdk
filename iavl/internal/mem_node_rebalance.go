@@ -132,7 +132,8 @@ func (node *MemNode) reBalance(ctx *mutationContext) (*MemNode, error) {
 	}
 }
 
-// calcBalance computes the balance factor of a node: height(left) - height(right).
+// calcBalance computes the balance factor of a branch node: height(left) - height(right).
+// This method MUST NOT be called on leaf nodes, or it will panic.
 //
 // Return values:
 //   - positive: left subtree is taller (left-heavy)
@@ -157,6 +158,7 @@ func calcBalance(node Node) (int, error) {
 }
 
 // updateHeightSize recalculates the height and size of a branch node from its children.
+// This method MUST NOT be called on leaf nodes, or it will panic.
 //
 // Height is set to max(left.height, right.height) + 1 (for the current node).
 // Size is set to left.size + right.size (total leaf node count in subtree).

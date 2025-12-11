@@ -20,6 +20,17 @@ type MemNode struct {
 	keyOffset uint32
 }
 
+// newLeafNode creates a new leaf MemNode with the given key, value, and version.
+func newLeafNode(key, value []byte, version uint32) *MemNode {
+	return &MemNode{
+		height:  0,
+		size:    1,
+		version: version,
+		key:     key,
+		value:   value,
+	}
+}
+
 var _ Node = (*MemNode)(nil)
 
 // ID implements the Node interface.

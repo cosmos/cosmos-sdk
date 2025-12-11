@@ -1,13 +1,76 @@
 package internal
 
-// IMPORTANT: nodes called with this method must be new or copies first.
-// Code reviewers should use find usages to ensure that all callers follow this rule!
+// reBalance implements AVL tree rebalancing.
+//
+// AVL trees maintain a balance invariant: for every node, the height of its
+// left and right subtrees may differ by at most 1. This ensures O(log n) operations.
+//
+// The balance factor of a node is: height(left) - height(right)
+//   - balance > 1:  left-heavy, needs right rotation(s)
+//   - balance < -1: right-heavy, needs left rotation(s)
+//   - -1 <= balance <= 1: balanced, no rotation needed
+//
+// There are four imbalance cases, each resolved by one or two rotations:
+//
+//	Left-Left (LL):   Single right rotation
+//	Left-Right (LR):  Left rotation on left child, then right rotation
+//	Right-Right (RR): Single left rotation
+//	Right-Left (RL):  Right rotation on right child, then left rotation
+
+// reBalance checks the balance factor of a node and performs rotations if needed
+// to restore the AVL balance invariant.
+//
+// The four cases handled:
+//
+//	Left-Left (balance > 1, leftBalance >= 0)
+//	Needs single right rotation on root (Z):
+//	        Z                      Y
+//	       / \                   /   \
+//	      Y   T4                X     Z
+//	     / \        =>         / \   / \
+//	    X   T3                T1 T2 T3 T4
+//	   / \
+//	  T1  T2
+//
+//	Left-Right (balance > 1, leftBalance < 0)
+//	Needs left rotation on left child (Y), then right rotation on root (Z):
+//	      Z                    Z                     X
+//	     / \                  / \                  /   \
+//	    Y   T4               X   T4               Y     Z
+//	   / \        =>        / \        =>        / \   / \
+//	  T1  X                Y   T3               T1 T2 T3 T4
+//	     / \              / \
+//	    T2  T3           T1  T2
+//
+//	Right-Right (balance < -1, rightBalance <= 0)
+//	Needs single left rotation on root (Z):
+//	    Z                        Y
+//	   / \                     /   \
+//	  T1  Y                   Z     X
+//	     / \       =>        / \   / \
+//	    T2  X               T1 T2 T3 T4
+//	       / \
+//	      T3  T4
+//
+//	Right-Left (balance < -1, rightBalance > 0)
+//	Needs right rotation on right child (Y), then left rotation on root (Z):
+//	    Z                   Z                       X
+//	   / \                 / \                    /   \
+//	  T1  Y               T1  X                  Z     Y
+//	     / \      =>         / \       =>       / \   / \
+//	    X   T4              T2  Y              T1 T2 T3 T4
+//	   / \                     / \
+//	  T2  T3                  T3  T4
+//
+// IMPORTANT: This method must only be called on newly created or copied nodes.
+// Code reviewers should check that the node is new or copied by doing a find usages check on this method.
 func (node *MemNode) reBalance(ctx *mutationContext) (*MemNode, error) {
 	balance, err := calcBalance(node)
 	if err != nil {
 		return nil, err
 	}
 	switch {
+	// left heavy
 	case balance > 1:
 		left, leftPin, err := node.left.Resolve()
 		defer leftPin.Unpin()
@@ -20,12 +83,13 @@ func (node *MemNode) reBalance(ctx *mutationContext) (*MemNode, error) {
 			return nil, err
 		}
 
+		// Left-Left (LL) case, needs single right rotation on root
 		if leftBalance >= 0 {
 			// left left
 			return node.rotateRight(ctx)
 		}
 
-		// left right
+		// Left-Right (LR) case, needs left rotation on left-child then right rotation on root
 		newLeft, err := ctx.mutateBranch(left)
 		if err != nil {
 			return nil, err
@@ -48,12 +112,13 @@ func (node *MemNode) reBalance(ctx *mutationContext) (*MemNode, error) {
 			return nil, err
 		}
 
+		// Right-Right (RR) case, needs single left rotation on root
 		if rightBalance <= 0 {
 			// right right
 			return node.rotateLeft(ctx)
 		}
 
-		// right left
+		// Right-Left (RL) case, needs right rotation on right-child then left rotation on root
 		newRight, err := ctx.mutateBranch(right)
 		if err != nil {
 			return nil, err
@@ -67,6 +132,14 @@ func (node *MemNode) reBalance(ctx *mutationContext) (*MemNode, error) {
 	}
 }
 
+// calcBalance computes the balance factor of a node: height(left) - height(right).
+//
+// Return values:
+//   - positive: left subtree is taller (left-heavy)
+//   - negative: right subtree is taller (right-heavy)
+//   - zero: subtrees have equal height (perfectly balanced)
+//
+// An AVL tree requires that -1 <= balance <= 1 for all nodes.
 func calcBalance(node Node) (int, error) {
 	leftNode, leftPin, err := node.Left().Resolve()
 	defer leftPin.Unpin()
@@ -83,10 +156,16 @@ func calcBalance(node Node) (int, error) {
 	return int(leftNode.Height()) - int(rightNode.Height()), nil
 }
 
-// updateHeightSize updates the height and size of the node based on its children.
-// This is only used during insertion, deletion, and rebalancing.
-// IMPORTANT: nodes called with this method must be new or copies first.
-// Code reviewers should use find usages to ensure that all callers follow this rule!
+// updateHeightSize recalculates the height and size of a branch node from its children.
+//
+// Height is set to max(left.height, right.height) + 1 (for the current node).
+// Size is set to left.size + right.size (total leaf node count in subtree).
+//
+// This must be called after any structural change to a node's children
+// (insertion, deletion, rotation) to maintain correct metadata.
+//
+// IMPORTANT: This method must only be called on newly created or copied nodes.
+// Code reviewers should check that the node is new or copied by doing a find usages check on this method.
 func (node *MemNode) updateHeightSize() error {
 	leftNode, leftPin, err := node.left.Resolve()
 	defer leftPin.Unpin()
@@ -113,35 +192,67 @@ func maxUint8(a, b uint8) uint8 {
 	return b
 }
 
-// IMPORTANT: nodes called with this method must be new or copies first.
-// Code reviewers should use find usages to ensure that all callers follow this rule!
+// rotateRight performs a right rotation around this node.
+//
+// The left child becomes the new root of this subtree, and the current node
+// becomes the right child of the new root.
+// The original left child's right subtree becomes the current node's new left subtree.
+//
+//	    node                    left
+//	    /  \                   /    \
+//	 left   C      =>         A    node
+//	 /  \                          /  \
+//	A    B                        B    C
+//
+// After rotation, heights and sizes are recalculated bottom-up (node first,
+// then the new root) since node is now a child of the new root.
+//
+// IMPORTANT: This method must only be called on newly created or copied nodes.
+// Code reviewers should check that the node is new or copied by doing a find usages check on this method.
 func (node *MemNode) rotateRight(ctx *mutationContext) (*MemNode, error) {
 	left, leftPin, err := node.left.Resolve()
 	defer leftPin.Unpin()
 	if err != nil {
 		return nil, err
 	}
-	newSelf, err := ctx.mutateBranch(left)
+	newRoot, err := ctx.mutateBranch(left)
 	if err != nil {
 		return nil, err
 	}
+
+	// move left's right subtree (B) to node's left
 	node.left = left.Right()
-	newSelf.right = NewNodePointer(node)
+	// node becomes the right child of the new root
+	newRoot.right = NewNodePointer(node)
 
-	err = node.updateHeightSize()
-	if err != nil {
+	// update node's size/height first (it's now a child), then the new root's
+	if err := node.updateHeightSize(); err != nil {
 		return nil, err
 	}
-	err = newSelf.updateHeightSize()
-	if err != nil {
+	if err := newRoot.updateHeightSize(); err != nil {
 		return nil, err
 	}
 
-	return newSelf, nil
+	return newRoot, nil
 }
 
-// IMPORTANT: nodes called with this method must be new or copies first.
-// Code reviewers should use find usages to ensure that all callers follow this rule!
+// rotateLeft performs a left rotation around this node.
+//
+// The right child becomes the new root of this subtree, and the current node
+// becomes the left child of the new root.
+// The original right child's left subtree becomes the current node's new right subtree.
+//
+//	 node                     right
+//	 /  \                     /    \
+//	A  right      =>       node     C
+//	   /  \                /  \
+//	  B    C              A    B
+//
+// After rotation, heights and sizes are recalculated bottom-up (node first,
+// then the new root) since node is now a child of the new root.
+//
+// IMPORTANT: This method must only be called on newly created or copied nodes.
+// Code reviewers should check that the node is new or copied by doing a find usages check on this method.
 func (node *MemNode) rotateLeft(ctx *mutationContext) (*MemNode, error) {
 	right, rightPin, err := node.right.Resolve()
 	defer rightPin.Unpin()
@@ -149,23 +260,23 @@ func (node *MemNode) rotateLeft(ctx *mutationContext) (*MemNode, error) {
 		return nil, err
 	}
 
-	newSelf, err := ctx.mutateBranch(right)
+	newRoot, err := ctx.mutateBranch(right)
 	if err != nil {
 		return nil, err
 	}
 
+	// move right's left subtree (B) to node's right
 	node.right = right.Left()
-	newSelf.left = NewNodePointer(node)
+	// node becomes the left child of the new root
+	newRoot.left = NewNodePointer(node)
 
-	err = node.updateHeightSize()
-	if err != nil {
+	// update node's height/size first (it's now a child), then the new root's
+	if err := node.updateHeightSize(); err != nil {
+		return nil, err
+	}
+	if err := newRoot.updateHeightSize(); err != nil {
 		return nil, err
 	}
 
-	err = newSelf.updateHeightSize()
-	if err != nil {
-		return nil, err
-	}
-
-	return newSelf, nil
+	return newRoot, nil
 }

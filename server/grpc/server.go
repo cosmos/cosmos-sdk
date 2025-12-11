@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -59,6 +60,7 @@ func NewGRPCServerAndContext(clientCtx client.Context, app types.Application, cf
 		grpc.ForceServerCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry).GRPCCodec()),
 		grpc.MaxSendMsgSize(maxSendMsgSize),
 		grpc.MaxRecvMsgSize(maxRecvMsgSize),
+		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 	)
 
 	app.RegisterGRPCServerWithSkipCheckHeader(grpcSrv, cfg.SkipCheckHeader)

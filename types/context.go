@@ -6,6 +6,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"go.opentelemetry.io/otel/trace"
 
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/header"
@@ -437,6 +438,14 @@ func (c Context) SetIncarnationCache(key string, value any) {
 func (c Context) WithIncarnationCache(cache map[string]any) Context {
 	c.incarnationCache = cache
 	return c
+}
+
+// StartSpan starts an otel span and returns a new context with the span attached.
+// Use this instead of calling tracer.Start directly to have the span correctly
+// attached to this context type.
+func (c Context) StartSpan(tracer trace.Tracer, spanName string, opts ...trace.SpanStartOption) (Context, trace.Span) {
+	goCtx, span := tracer.Start(c.baseCtx, spanName, opts...)
+	return c.WithContext(goCtx), span
 }
 
 var (

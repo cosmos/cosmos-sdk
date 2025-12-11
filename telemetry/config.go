@@ -38,7 +38,7 @@ var (
 )
 
 func init() {
-	if openTelemetrySDK != nil {
+	if openTelemetrySDK == nil {
 		if otelFilePath := os.Getenv(otelConfigEnvVar); otelFilePath != "" {
 			if err := InitializeOpenTelemetry(otelFilePath); err != nil {
 				panic(err)

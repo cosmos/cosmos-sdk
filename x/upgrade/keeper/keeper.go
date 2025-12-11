@@ -273,7 +273,7 @@ func (k Keeper) ScheduleUpgrade(ctx context.Context, plan types.Plan) error {
 		return err
 	}
 
-	telemetry.SetGaugeWithLabels([]string{"server", "info"}, 1, []metrics.Label{telemetry.NewLabel("upgrade_height", strconv.FormatInt(plan.Height, 10))})
+	telemetry.SetGaugeWithLabels([]string{"server", "info"}, 1, []metrics.Label{telemetry.NewLabel("upgrade_height", strconv.FormatInt(plan.Height, 10))}) //nolint:staticcheck // TODO: switch to OpenTelemetry
 
 	return nil
 }
@@ -584,7 +584,7 @@ func (k Keeper) ReadUpgradeInfoFromDisk() (types.Plan, error) {
 	}
 
 	if upgradeInfo.Height > 0 {
-		telemetry.SetGaugeWithLabels([]string{"server", "info"}, 1, []metrics.Label{telemetry.NewLabel("upgrade_height", strconv.FormatInt(upgradeInfo.Height, 10))})
+		telemetry.SetGaugeWithLabels([]string{"server", "info"}, 1, []metrics.Label{telemetry.NewLabel("upgrade_height", strconv.FormatInt(upgradeInfo.Height, 10))}) //nolint:staticcheck // TODO: switch to OpenTelemetry
 	}
 
 	return upgradeInfo, nil

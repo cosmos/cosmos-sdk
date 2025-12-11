@@ -16,7 +16,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 )
@@ -71,9 +70,6 @@ func (app *BaseApp) RegisterGRPCServerWithSkipCheckHeader(server gogogrpc.Server
 			height = sdkCtx.BlockHeight() // If height was not set in the request, set it to the latest
 		}
 
-		// Attach the sdk.Context into the gRPC's context.Context.
-		grpcCtx = context.WithValue(grpcCtx, sdk.SdkContextKey, sdkCtx)
-
 		md = metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(height, 10))
 		if err = grpc.SetHeader(grpcCtx, md); err != nil {
 			app.logger.Error("failed to set gRPC header", "err", err)
@@ -93,7 +89,11 @@ func (app *BaseApp) RegisterGRPCServerWithSkipCheckHeader(server gogogrpc.Server
 			}
 		}()
 
-		return handler(grpcCtx, req)
+		// set the grpc context back into the SDK context.
+		// we do this because grpc context has values injected into it that are necessary to retain for systems
+		// such as OpenTelemetry.
+		sdkCtx = sdkCtx.WithContext(grpcCtx)
+		return handler(sdkCtx, req)
 	}
 
 	// Loop through all services and methods, add the interceptor, and register

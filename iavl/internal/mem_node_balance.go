@@ -22,45 +22,53 @@ package internal
 //
 // The four cases handled:
 //
-//	Left-Left (balance > 1, leftBalance >= 0)
-//	Needs single right rotation on root (node):
-//	       node (mutable)         copy of Y
-//	       / \                   /   \
-//	      Y   T4                X   node (immutable)
-//	     / \        =>         / \     / \              +    orphans: Y
-//	    X   T3                T1 T2   T3 T4
-//	   / \
-//	  T1  T2
+//		Left-Left (balance > 1, leftBalance >= 0)
+//		Needs single right rotation on root (node):
+//		       node (mutable)         copy of Y
+//		       / \                   /   \
+//		      Y   T4                X   node (immutable)
+//		     / \        =>         / \     / \
+//		    X   T3                T1 T2   T3 T4
+//		   / \
+//		  T1  T2
 //
-//	Left-Right (balance > 1, leftBalance < 0)
-//	Needs left rotation on left child (Y), then right rotation on root (Z):
-//	      Z                    Z                     X
-//	     / \                  / \                  /   \
-//	    Y   T4               X   T4               Y     Z
-//	   / \        =>        / \        =>        / \   / \
-//	  T1  X                Y   T3               T1 T2 T3 T4
-//	     / \              / \
-//	    T2  T3           T1  T2
+//		orphans: Y
 //
-//	Right-Right (balance < -1, rightBalance <= 0)
-//	Needs single left rotation on root (Z):
-//	    Z                        Y
-//	   / \                     /   \
-//	  T1  Y                   Z     X
-//	     / \       =>        / \   / \
-//	    T2  X               T1 T2 T3 T4
-//	       / \
-//	      T3  T4
+//		Left-Right (balance > 1, leftBalance < 0)
+//		Needs left rotation on left child (Y), then right rotation on root (node):
+//		    node (mutable)       node                 copy of X
+//		     / \                  / \                  /   \
+//		    Y   T4         copy of X   T4      copy of Y   node (immutable)
+//		   / \        =>        / \        =>        / \     / \
+//		  T1  X          copy of Y   T3             T1 T2   T3 T4
+//		     / \              / \
+//		    T2  T3           T1  T2
 //
-//	Right-Left (balance < -1, rightBalance > 0)
-//	Needs right rotation on right child (Y), then left rotation on root (Z):
-//	    Z                   Z                       X
-//	   / \                 / \                    /   \
-//	  T1  Y               T1  X                  Z     Y
-//	     / \      =>         / \       =>       / \   / \
-//	    X   T4              T2  Y              T1 T2 T3 T4
-//	   / \                     / \
-//	  T2  T3                  T3  T4
+//		orphans: Y, X
+//
+//		Right-Right (balance < -1, rightBalance <= 0)
+//		Needs single left rotation on root (node):
+//		       node (mutable)              copy of Y
+//		       / \                        /   \
+//		      T1  Y          node (immutable)  X
+//		         / \       =>        / \      / \
+//		        T2  X               T1 T2    T3 T4
+//		           / \
+//		          T3  T4
+//
+//	 orphans: Y
+//
+//		Right-Left (balance < -1, rightBalance > 0)
+//		Needs right rotation on right child (Y), then left rotation on root (node):
+//		    node (mutable)       node                      copy of X
+//		       / \                 / \                      /   \
+//		      T1  Y               T1  copy of X     node (immutable)  copy of Y
+//		         / \      =>         / \       =>       / \            / \
+//		        X   T4        copy of Y   T4           T1 T2          T3 T4
+//		       / \                 / \
+//		      T2  T3              T2  T3
+//
+//		orphans: Y, X
 //
 // IMPORTANT: This method must only be called on newly created or copied nodes.
 // Code reviewers should check that the node is new or copied by doing a find usages check on this method.

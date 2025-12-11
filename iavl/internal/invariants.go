@@ -5,99 +5,103 @@ import (
 	"fmt"
 )
 
-func verifyAVLInvariants(np *NodePointer) error {
-	node, pin, err := np.Resolve()
-	defer pin.Unpin()
+func verifyAVLInvariants(node Node) error {
+	key, err := node.Key()
 	if err != nil {
-		return fmt.Errorf("resolve node %s: %w", np.id, err)
+		return fmt.Errorf("get key: %w", err)
 	}
 
-	if node.Version() != np.id.Version {
-		return fmt.Errorf("node %s has version %d, expected %d", np.id, node.Version(), np.id.Version)
-	}
+	// Node identifier for error messages. Key alone doesn't uniquely identify a node
+	// since branch nodes store the first key of their right subtree, which means
+	// the same key can appear in multiple branch nodes along the path to a leaf,
+	// as well as in the leaf itself. We include height to disambiguate.
+	nodeID := fmt.Sprintf("key=%x, height=%d", key.UnsafeBytes(), node.Height())
 
 	if node.IsLeaf() {
 		if node.Height() != 0 {
-			return fmt.Errorf("leaf node %s has height %d", np.id, node.Height())
+			return fmt.Errorf("leaf node (%s) has height %d, expected 0", nodeID, node.Height())
 		}
 
 		if node.Size() != 1 {
-			return fmt.Errorf("leaf node %s has size %d, expected 1", np.id, node.Size())
+			return fmt.Errorf("leaf node (%s) has size %d, expected 1", nodeID, node.Size())
 		}
 
 		if node.Left() != nil {
-			return fmt.Errorf("leaf node %s has non-nil left child", np.id)
+			return fmt.Errorf("leaf node (%s) has non-nil left child", nodeID)
 		}
 
 		if node.Right() != nil {
-			return fmt.Errorf("leaf node %s has non-nil right child", np.id)
+			return fmt.Errorf("leaf node (%s) has non-nil right child", nodeID)
 		}
 	} else {
 		leftPtr := node.Left()
 		if leftPtr == nil {
-			return fmt.Errorf("branch node %s has nil left child", np.id)
+			return fmt.Errorf("branch node (%s) has nil left child", nodeID)
 		}
 
 		rightPtr := node.Right()
 		if rightPtr == nil {
-			return fmt.Errorf("branch node %s has nil right child", np.id)
+			return fmt.Errorf("branch node (%s) has nil right child", nodeID)
 		}
 
 		left, leftPin, err := leftPtr.Resolve()
 		defer leftPin.Unpin()
 		if err != nil {
-			return fmt.Errorf("resolve left child of node %s: %w", np.id, err)
+			return fmt.Errorf("resolve left child of node (%s): %w", nodeID, err)
 		}
 
 		right, rightPin, err := rightPtr.Resolve()
 		defer rightPin.Unpin()
 		if err != nil {
-			return fmt.Errorf("resolve right child of node %s: %w", np.id, err)
-		}
-
-		key, err := node.Key()
-		if err != nil {
-			return fmt.Errorf("get key of node %s: %w", np.id, err)
+			return fmt.Errorf("resolve right child of node (%s): %w", nodeID, err)
 		}
 
 		leftKey, err := left.Key()
 		if err != nil {
-			return fmt.Errorf("get key of left child of node %s: %w", np.id, err)
+			return fmt.Errorf("get key of left child of node (%s): %w", nodeID, err)
 		}
 
 		rightKey, err := right.Key()
 		if err != nil {
-			return fmt.Errorf("get key of right child of node %s: %w", np.id, err)
+			return fmt.Errorf("get key of right child of node (%s): %w", nodeID, err)
 		}
 
+		// IAVL key ordering: branch nodes store the first key of their right subtree as a separator.
+		// This means:
+		//   - All keys in left subtree < node.key
+		//   - All keys in right subtree >= node.key (the leftmost leaf in right subtree has key == node.key)
+		//
+		// We check immediate children here; recursive calls verify the full subtrees.
 		if bytes.Compare(leftKey.UnsafeBytes(), key.UnsafeBytes()) >= 0 {
-			return fmt.Errorf("branch node %s with id %s has key %x, but left child %s, has key %x", node, np.id, key, left, leftKey)
+			return fmt.Errorf("branch node (%s) has left child with key %x which is >= node key", nodeID, leftKey.UnsafeBytes())
 		}
 
 		if bytes.Compare(rightKey.UnsafeBytes(), key.UnsafeBytes()) < 0 {
-			return fmt.Errorf("branch node %s with id %s has key %x, but right child %s, has key %x", node, np.id, key, right, rightKey)
+			return fmt.Errorf("branch node (%s) has right child with key %x which is < node key", nodeID, rightKey.UnsafeBytes())
 		}
 
+		// Size invariant
 		if left.Size()+right.Size() != node.Size() {
-			return fmt.Errorf("branch node %s has size %d, but children sizes are %d and %d", np.id, node.Size(), left.Size(), right.Size())
+			return fmt.Errorf("branch node (%s) has size %d, but children sizes are %d + %d = %d", nodeID, node.Size(), left.Size(), right.Size(), left.Size()+right.Size())
 		}
 
+		// Height invariant
 		expectedHeight := maxUint8(left.Height(), right.Height()) + 1
 		if node.Height() != expectedHeight {
-			return fmt.Errorf("branch node %s has height %d, expected %d, left height %d, right height %d", np.id, node.Height(), expectedHeight, left.Height(), right.Height())
+			return fmt.Errorf("branch node (%s) has height %d, expected %d (left height %d, right height %d)", nodeID, node.Height(), expectedHeight, left.Height(), right.Height())
 		}
 
-		// ensure balanced
+		// AVL balance invariant
 		balance := int(left.Height()) - int(right.Height())
 		if balance < -1 || balance > 1 {
-			return fmt.Errorf("branch node %s is unbalanced: left height %d, right height %d", np.id, left.Height(), right.Height())
+			return fmt.Errorf("branch node (%s) is unbalanced: balance=%d (left height %d, right height %d)", nodeID, balance, left.Height(), right.Height())
 		}
 
-		if err := verifyAVLInvariants(leftPtr); err != nil {
+		if err := verifyAVLInvariants(left); err != nil {
 			return err
 		}
 
-		if err := verifyAVLInvariants(rightPtr); err != nil {
+		if err := verifyAVLInvariants(right); err != nil {
 			return err
 		}
 	}

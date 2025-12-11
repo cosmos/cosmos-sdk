@@ -24,13 +24,13 @@ package internal
 //
 //		Left-Left (balance > 1, leftBalance >= 0)
 //		Needs single right rotation on root (node):
-//		       node (mutable)         copy of Y
-//		       / \                   /   \
-//		      Y   T4                X   node (immutable)
-//		     / \        =>         / \     / \
-//		    X   T3                T1 T2   T3 T4
+//		        Z (mutable)         copy of Y
+//		       / \                   /      \
+//		      Y   [Z]               X     Z (immutable)
+//		     / \        =>         / \      / \
+//		    X   [Y]              [W] [X]  [Y] [Z]
 //		   / \
-//		  T1  T2
+//		[W]  [X]
 //
 //		orphans: Y
 //

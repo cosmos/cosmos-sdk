@@ -82,11 +82,11 @@ func TestCalcBalance_UpdateHeightSize(t *testing.T) {
 
 func TestRotateLeft(t *testing.T) {
 	// Construct a simple tree (all version 1):
-	//	    node
-	//	    /  \
-	//	 left   C
-	//	 /  \
-	//	A    B
+	//	node (mutable)
+	//	   /  \
+	//	  A  right
+	//	     /  \
+	//	    B    C
 	A := newLeafNode([]byte("A"), []byte("valueA"), 1)
 	B := newLeafNode([]byte("B"), []byte("valueB"), 1)
 	C := newLeafNode([]byte("C"), []byte("valueC"), 1)
@@ -94,11 +94,12 @@ func TestRotateLeft(t *testing.T) {
 	node := newTestBranchNode(left, C)
 
 	// After rotation, the tree should look like:
-	//	    left (version 2)
-	//	    /  \
-	//	   A (version 1)   node (version 2)
-	//	      /  \
-	//	     B    C
+	//	copy of right (new version)
+	//	   /                      \
+	//	  node (now immutable)     C
+	//	     /  \
+	//	    A    B
+	// with orphans: right
 	ctx := &mutationContext{version: 2}
 	newRoot, err := node.rotateRight(ctx)
 	require.NoError(t, err)

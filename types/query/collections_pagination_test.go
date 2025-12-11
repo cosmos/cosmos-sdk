@@ -154,6 +154,23 @@ func TestCollectionPagination(t *testing.T) {
 				{Key: 295, Value: 295},
 			},
 		},
+		"filtered with offset": {
+			req: &PageRequest{
+				Offset: 3,
+				Limit:  3,
+			},
+			expResp: &PageResponse{
+				NextKey: encodeKey(12),
+			},
+			filter: func(key, value uint64) (bool, error) {
+				return key%2 == 0, nil
+			},
+			expResults: []collections.KeyValue[uint64, uint64]{
+				{Key: 6, Value: 6},
+				{Key: 8, Value: 8},
+				{Key: 10, Value: 10},
+			},
+		},
 		"filtered no key with error": {
 			req: &PageRequest{
 				Limit: 3,

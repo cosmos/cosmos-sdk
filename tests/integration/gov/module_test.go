@@ -22,7 +22,6 @@ func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {
 	app, err := simtestutil.SetupAtGenesis(
 		depinject.Configs(
 			configurator.NewAppConfig(
-				configurator.ParamsModule(),
 				configurator.AuthModule(),
 				configurator.StakingModule(),
 				configurator.BankModule(),

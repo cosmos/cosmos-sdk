@@ -20,55 +20,72 @@ package internal
 // reBalance checks the balance factor of a node and performs rotations if needed
 // to restore the AVL balance invariant.
 //
+// Also, an IAVL tree is an AVL+ tree, so all values are contained in leaf nodes only.
+// This means that a branch node's key is always the smallest key in its right subtree.
+//
+// Because an IAVL tree is immutable, we must copy existing branch nodes before modifying them.
+//
+// In the diagrams below [] is used to indicate leaf nodes, and the node names can be considered as realistic keys.
+//
+// When looking at each diagram, you should verify the following invariants are maintained after rotation:
+// 1. Leaf keys remain in sorted order (left to right): [W] < [X] < [Y] < [Z]
+// 2. Each branch key equals its right child's key (the smallest key in its right subtree)
+// 3. The tree is balanced (no node has children differing in height by more than 1)
+// 4. Mutated branch nodes are copied and originals are marked as orphans
+//
+// Additional invariants maintained by the code but not shown in diagrams:
+// 5. Height = max(left.height, right.height) + 1 for all branch nodes
+// 6. Size = left.size + right.size for all branch nodes (total leaf count)
+//
 // The four cases handled:
 //
-//		Left-Left (balance > 1, leftBalance >= 0)
-//		Needs single right rotation on root (node):
-//		        Z (mutable)         copy of Y
-//		       / \                   /      \
-//		      Y   [Z]               X     Z (immutable)
-//		     / \        =>         / \      / \
-//		    X   [Y]              [W] [X]  [Y] [Z]
-//		   / \
-//		[W]  [X]
+//	Left-Left (balance > 1, leftBalance >= 0)
+//	Needs single right rotation on root (node):
+//	        Z (mutable)         copy of Y
+//	       / \                   /      \
+//	      Y   [Z]               X     Z (immutable)
+//	     / \        =>         / \      / \
+//	    X   [Y]              [W] [X]  [Y] [Z]
+//	   / \
+//	[W]  [X]
 //
-//		orphans: Y
+//	orphans: Y
 //
-//		Left-Right (balance > 1, leftBalance < 0)
-//		Needs left rotation on left child (Y), then right rotation on root (node):
-//		    node (mutable)       node                 copy of X
-//		     / \                  / \                  /   \
-//		    Y   T4         copy of X   T4      copy of Y   node (immutable)
-//		   / \        =>        / \        =>        / \     / \
-//		  T1  X          copy of Y   T3             T1 T2   T3 T4
-//		     / \              / \
-//		    T2  T3           T1  T2
+//	Left-Right (balance > 1, leftBalance < 0)
+//	Needs left rotation on left child (W), then right rotation on root (node):
+//	      Z (mutable)         Z                   copy of X
+//	       / \                 / \                  /      \
+//	      W   [Z]       copy of X  [Z]      copy of W     Z (immutable)
+//	     / \        =>        / \        =>        / \      / \
+//	   [W]  X          copy of W  [Y]            [W] [X]  [Y] [Z]
+//	       / \              / \
+//	     [X] [Y]          [W] [X]
 //
-//		orphans: Y, X
+//	orphans: W, X
 //
-//		Right-Right (balance < -1, rightBalance <= 0)
-//		Needs single left rotation on root (node):
-//		       node (mutable)              copy of Y
-//		       / \                        /   \
-//		      T1  Y          node (immutable)  X
-//		         / \       =>        / \      / \
-//		        T2  X               T1 T2    T3 T4
-//		           / \
-//		          T3  T4
+//	Right-Right (balance < -1, rightBalance <= 0)
+//	Needs single left rotation on root (node):
+//	       W (mutable)                copy of X
+//	       / \                        /      \
+//	     [W]  X          W (immutable)        Y
+//	         / \       =>        / \        / \
+//	       [X]  Y              [W] [X]   [Y] [Z]
+//	           / \
+//	         [Y] [Z]
 //
-//	 orphans: Y
+//	orphans: X
 //
-//		Right-Left (balance < -1, rightBalance > 0)
-//		Needs right rotation on right child (Y), then left rotation on root (node):
-//		    node (mutable)       node                      copy of X
-//		       / \                 / \                      /   \
-//		      T1  Y               T1  copy of X     node (immutable)  copy of Y
-//		         / \      =>         / \       =>       / \            / \
-//		        X   T4        copy of Y   T4           T1 T2          T3 T4
-//		       / \                 / \
-//		      T2  T3              T2  T3
+//	Right-Left (balance < -1, rightBalance > 0)
+//	Needs right rotation on right child (Z), then left rotation on root (node):
+//	      W (mutable)         W                    copy of X
+//	       / \                 / \                  /      \
+//	     [W]  Z              [W]  copy of X   W (immutable)  copy of Z
+//	         / \      =>         / \       =>       / \        / \
+//	        X  [Z]            [X]  copy of Z      [W] [X]   [Y] [Z]
+//	       / \                    / \
+//	     [X] [Y]                [Y] [Z]
 //
-//		orphans: Y, X
+//	orphans: Z, X
 //
 // IMPORTANT: This method must only be called on newly created or copied nodes.
 // Code reviewers should check that the node is new or copied by doing a find usages check on this method.
@@ -209,14 +226,14 @@ func maxUint8(a, b uint8) uint8 {
 // The current node becomes the right child of the new root.
 // The original left child's right subtree becomes the current node's new left subtree.
 //
-//	 node (mutable)                 copy of left (new version)
-//	    /  \                       /              \
-//	 left   C      =>             A          node (now immutable)    +     orphans: left
-//	 /  \                                        /  \
-//	A    B                                      B    C
+//	  Y (mutable)                copy of X
+//	    /  \                      /      \
+//	   X   [Y]      =>          [W]    Y (immutable)     +    orphans: X
+//	  / \                                /  \
+//	[W] [X]                            [X]  [Y]
 //
-// After rotation, heights and sizes are recalculated bottom-up (node first,
-// then the new root) since node is now a child of the new root.
+// After rotation, heights and sizes are recalculated bottom-up (Y first,
+// then the new root) since Y is now a child of the new root.
 //
 // IMPORTANT: This method must only be called on newly created or copied nodes.
 // Code reviewers should check that the node is new or copied by doing a find usages check on this method.
@@ -254,14 +271,14 @@ func (node *MemNode) rotateRight(ctx *mutationContext) (*MemNode, error) {
 // The current node becomes the left child of the new root.
 // The original right child's left subtree becomes the current node's new right subtree.
 //
-//	node (mutable)                copy of right (new version)
-//	   /  \                       /                      \
-//	  A  right      =>       node (now immutable)        C    +     orphans: right
-//	     /  \                   /  \
-//	    B    C                 A    B
+//	X (mutable)                  copy of Y
+//	  /  \                        /      \
+//	[X]   Y      =>       X (immutable)  [Z]     +    orphans: Y
+//	     / \                   /  \
+//	   [Y] [Z]               [X]  [Y]
 //
-// After rotation, heights and sizes are recalculated bottom-up (node first,
-// then the new root) since node is now a child of the new root.
+// After rotation, heights and sizes are recalculated bottom-up (X first,
+// then the new root) since X is now a child of the new root.
 //
 // IMPORTANT: This method must only be called on newly created or copied nodes.
 // Code reviewers should check that the node is new or copied by doing a find usages check on this method.

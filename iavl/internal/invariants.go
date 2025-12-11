@@ -5,6 +5,22 @@ import (
 	"fmt"
 )
 
+// verifyAVLInvariants recursively verifies all IAVL tree invariants starting from the given node.
+//
+// For leaf nodes, it verifies:
+//   - Height is 0
+//   - Size is 1
+//   - Left and right children are nil
+//
+// For branch nodes, it verifies:
+//  1. Key ordering: left child key < node key <= right child key
+//  2. Branch key property: node key equals right child's key (smallest key in right subtree)
+//  3. AVL balance: |left.height - right.height| <= 1
+//  4. Height invariant: height = max(left.height, right.height) + 1
+//  5. Size invariant: size = left.size + right.size
+//
+// Note: This function does NOT verify orphan tracking or hash correctness.
+// Those require separate verification with access to the mutation context or hash computation.
 func verifyAVLInvariants(node Node) error {
 	key, err := node.Key()
 	if err != nil {

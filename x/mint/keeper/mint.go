@@ -62,7 +62,7 @@ func DefaultMintFn(ic types.InflationCalculationFn) MintFn {
 		}
 
 		if mintedCoin.Amount.IsInt64() {
-			defer telemetry.ModuleSetGauge(types.ModuleName, float32(mintedCoin.Amount.Int64()), "minted_tokens")
+			defer telemetry.ModuleSetGauge(types.ModuleName, float32(mintedCoin.Amount.Int64()), "minted_tokens") //nolint:staticcheck // TODO: switch to OpenTelemetry
 		}
 
 		ctx.EventManager().EmitEvent(

@@ -11,6 +11,7 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
+	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/store/mem"
 	"cosmossdk.io/store/metrics"
@@ -137,6 +138,11 @@ func (db *CommitMultiTree) Commit() storetypes.CommitID {
 		db.workingHash = nil
 	}
 
+	err := saveCommitInfo(db.dir, stagedVersion, commitInfo)
+	if err != nil {
+		panic(fmt.Sprintf("failed to save commit info for version %d: %v", stagedVersion, err))
+	}
+
 	db.version++
 	commitId := storetypes.CommitID{
 		Version: int64(db.version),
@@ -144,6 +150,70 @@ func (db *CommitMultiTree) Commit() storetypes.CommitID {
 	}
 	db.lastCommitId = commitId
 	return commitId
+}
+
+const commitInfoSubPath = "commit_info"
+const latestFilename = "latest"
+
+// saveCommitInfo saves the CommitInfo for a given version to a <version>.ci file,
+// and updates the latest.version file to point to the latest version.
+func saveCommitInfo(dir string, version uint64, commitInfo *storetypes.CommitInfo) error {
+	commitInfoDir := filepath.Join(dir, commitInfoSubPath)
+	commitInfoPath := filepath.Join(commitInfoDir, fmt.Sprintf("%d", version))
+	bz, err := proto.Marshal(commitInfo)
+	if err != nil {
+		return fmt.Errorf("failed to marshal commit info for version %d: %w", version, err)
+	}
+	err = os.WriteFile(commitInfoPath, bz, 0o600)
+	if err != nil {
+		return fmt.Errorf("failed to write commit info file for version %d: %w", version, err)
+	}
+
+	latestVersionPath := filepath.Join(commitInfoDir, latestFilename)
+	err = os.WriteFile(latestVersionPath, []byte(fmt.Sprintf("%d", version)), 0o600)
+	if err != nil {
+		return fmt.Errorf("failed to write latest version file: %w", err)
+	}
+
+	return nil
+}
+
+// loadLatestCommitInfo loads the latest.version file to determine the latest version,
+// and then loads the <version>.ci file to get the CommitInfo for that version.
+func loadLatestCommitInfo(dir string) (uint64, *storetypes.CommitInfo, error) {
+	commitInfoDir := filepath.Join(dir, commitInfoSubPath)
+	err := os.MkdirAll(commitInfoDir, 0o700)
+	if err != nil {
+		return 0, nil, fmt.Errorf("failed to create commit info dir: %w", err)
+	}
+
+	latestVersionPath := filepath.Join(commitInfoDir, latestFilename)
+	if _, err := os.Stat(latestVersionPath); os.IsNotExist(err) {
+		return 0, nil, nil
+	}
+
+	bz, err := os.ReadFile(latestVersionPath)
+	if err != nil {
+		return 0, nil, fmt.Errorf("failed to read latest version file: %w", err)
+	}
+	var version uint64
+	_, err = fmt.Sscanf(string(bz), "%d", &version)
+	if err != nil {
+		return 0, nil, fmt.Errorf("failed to parse latest version: %w", err)
+	}
+	commitInfoPath := filepath.Join(commitInfoDir, fmt.Sprintf("%d", version))
+	bz, err = os.ReadFile(commitInfoPath)
+	if err != nil {
+		return 0, nil, fmt.Errorf("failed to read commit info file for version %d: %w", version, err)
+	}
+
+	commitInfo := &storetypes.CommitInfo{}
+	err = proto.Unmarshal(bz, commitInfo)
+	if err != nil {
+		return 0, nil, fmt.Errorf("failed to unmarshal commit info for version %d: %w", version, err)
+	}
+
+	return version, commitInfo, nil
 }
 
 func (db *CommitMultiTree) SetPruning(options pruningtypes.PruningOptions) {
@@ -189,6 +259,7 @@ func (db *CommitMultiTree) CacheMultiStoreWithVersion(version int64) (storetypes
 		trees:         make([]storetypes.CacheWrap, len(db.trees)),
 	}
 
+	// TODO: we should actually use the CommitInfo for this version to load the correct set of trees (because there may have been store additions/removals)
 	for i, tree := range db.trees {
 		typ := db.storeTypes[i]
 		switch typ {
@@ -288,13 +359,28 @@ func (db *CommitMultiTree) LoadLatestVersion() error {
 		}
 		db.trees = append(db.trees, tree)
 	}
+
+	version, ci, err := loadLatestCommitInfo(db.dir)
+	if err != nil {
+		return fmt.Errorf("failed to load latest commit info: %w", err)
+	}
+
+	db.version = version
+	if ci != nil {
+		// should be nil on initial creation
+		db.lastCommitId = storetypes.CommitID{
+			Version: int64(version),
+			Hash:    ci.Hash(),
+		}
+	}
+
 	return nil
 }
 
 func (db *CommitMultiTree) loadStore(key storetypes.StoreKey, typ storetypes.StoreType) (storetypes.CommitStore, error) {
 	switch typ {
 	case storetypes.StoreTypeIAVL, storetypes.StoreTypeDB:
-		dir := filepath.Join(db.dir, key.Name())
+		dir := filepath.Join(db.dir, "stores", key.Name())
 		if _, err := os.Stat(dir); os.IsNotExist(err) {
 			err := os.MkdirAll(dir, 0o755)
 			if err != nil {
@@ -377,27 +463,6 @@ func (db *CommitMultiTree) SetMetrics(metrics metrics.StoreMetrics) {
 }
 
 func LoadDB(path string, opts *Options, logger *slog.Logger) (*CommitMultiTree, error) {
-	// n := len(treeNames)
-	//trees := make([]*CommitTree, n)
-	//treesByName := make(map[string]int, n)
-	//for i, name := range treeNames {
-	//	if _, exists := treesByName[name]; exists {
-	//		return nil, fmt.Errorf("duplicate tree name: %s", name)
-	//	}
-	//	treesByName[name] = i
-	//	dir := filepath.Join(path, name)
-	//	err := os.MkdirAll(dir, 0o755)
-	//	if err != nil {
-	//		return nil, fmt.Errorf("failed to create tree dir %s: %w", dir, err)
-	//	}
-	//	// Create a logger with tree name context
-	//	treeLogger := logger.With("tree", name)
-	//	trees[i], err = NewCommitTree(dir, *opts, treeLogger)
-	//	if err != nil {
-	//		return nil, fmt.Errorf("failed to load tree %s: %w", name, err)
-	//	}
-	//}
-	//
 	db := &CommitMultiTree{
 		dir:        path,
 		opts:       *opts,

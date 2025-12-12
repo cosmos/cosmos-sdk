@@ -3,6 +3,7 @@ package iavlx
 import (
 	"bytes"
 	"fmt"
+	"log/slog"
 	"os"
 	"runtime/debug"
 	"testing"
@@ -31,7 +32,7 @@ func TestTree_ErrorsOnOldVersion(t *testing.T) {
 			name: "should error",
 			getTree: func() *CommitTree {
 				dir := t.TempDir()
-				commitTree, err := NewCommitTree(dir, Options{}, sdklog.NewNopLogger())
+				commitTree, err := NewCommitTree(dir, Options{}, slog.Default())
 				require.NoError(t, err)
 				return commitTree
 			},
@@ -42,7 +43,7 @@ func TestTree_ErrorsOnOldVersion(t *testing.T) {
 			name: "should NOT error",
 			getTree: func() *CommitTree {
 				dir := t.TempDir()
-				commitTree, err := NewCommitTree(dir, Options{ReaderUpdateInterval: 1}, sdklog.NewNopLogger())
+				commitTree, err := NewCommitTree(dir, Options{ReaderUpdateInterval: 1}, slog.Default())
 				require.NoError(t, err)
 				return commitTree
 			},
@@ -68,7 +69,7 @@ func TestTree_ErrorsOnOldVersion(t *testing.T) {
 
 func TestTree_NonExistentChangeset(t *testing.T) {
 	dir := t.TempDir()
-	commitTree, err := NewCommitTree(dir, Options{ReaderUpdateInterval: 1}, sdklog.NewNopLogger())
+	commitTree, err := NewCommitTree(dir, Options{ReaderUpdateInterval: 1}, slog.Default())
 	require.NoError(t, err)
 
 	for range 7 {
@@ -86,7 +87,7 @@ func TestBasicTest(t *testing.T) {
 	dir, err := os.MkdirTemp("", "iavlx")
 	require.NoError(t, err)
 	defer os.RemoveAll(dir)
-	commitTree, err := NewCommitTree(dir, Options{}, sdklog.NewNopLogger())
+	commitTree, err := NewCommitTree(dir, Options{}, slog.Default())
 	require.NoError(t, err)
 	tree := commitTree.CacheWrap().(storetypes.CacheKVStore)
 	tree.Set([]byte{0}, []byte{1})
@@ -216,7 +217,7 @@ func (s *SimMachine) openV2Tree(t interface {
 		ChangesetMaxTarget:    1,
 		CompactAfterVersions:  0,
 		ReaderUpdateInterval:  1,
-	}, sdklog.NewTestLogger(t))
+	}, slog.Default())
 	require.NoError(t, err, "failed to create iavlx tree")
 }
 

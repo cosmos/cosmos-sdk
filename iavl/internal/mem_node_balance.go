@@ -25,7 +25,8 @@ package internal
 //
 // Because an IAVL tree is immutable, we must copy existing branch nodes before modifying them.
 //
-// In the diagrams below [] is used to indicate leaf nodes, and the node names can be considered as realistic keys.
+// In the diagrams below [] indicates leaf nodes with concrete keys, and uppercase letters
+// (P, Q, R, S) are abstract names for branch nodes (their actual keys follow IAVL rules).
 //
 // When looking at each diagram, you should verify the following invariants are maintained after rotation:
 // 1. Leaf keys remain in sorted order (left to right): [W] < [X] < [Y] < [Z]
@@ -41,51 +42,51 @@ package internal
 //
 //	Left-Left (balance > 1, leftBalance >= 0)
 //	Needs single right rotation on root (node):
-//	        Z (mutable)         copy of Y
-//	       / \                   /      \
-//	      Y   [Z]               X     Z (immutable)
-//	     / \        =>         / \      / \
-//	    X   [Y]              [W] [X]  [Y] [Z]
+//	        P (mutable)              copy of Q
+//	       / \                        /      \
+//	      Q   [Z]                    R    P (immutable)
+//	     / \        =>              / \      / \
+//	    R   [Y]                   [W] [X]  [Y] [Z]
 //	   / \
-//	[W]  [X]
+//	 [W] [X]
 //
-//	orphans: Y
+//	orphans: Q
 //
 //	Left-Right (balance > 1, leftBalance < 0)
-//	Needs left rotation on left child (W), then right rotation on root (node):
-//	      Z (mutable)         Z                   copy of X
+//	Needs left rotation on left child (Q), then right rotation on root (node):
+//	      P (mutable)         P                   copy of R
 //	       / \                 / \                  /      \
-//	      W   [Z]       copy of X  [Z]      copy of W     Z (immutable)
+//	      Q   [Z]       copy of R  [Z]      copy of Q     P (immutable)
 //	     / \        =>        / \        =>        / \      / \
-//	   [W]  X          copy of W  [Y]            [W] [X]  [Y] [Z]
+//	   [W]  R          copy of Q  [Y]            [W] [X]  [Y] [Z]
 //	       / \              / \
 //	     [X] [Y]          [W] [X]
 //
-//	orphans: W, X
+//	orphans: Q, R
 //
 //	Right-Right (balance < -1, rightBalance <= 0)
 //	Needs single left rotation on root (node):
-//	       W (mutable)                copy of X
+//	       P (mutable)                copy of Q
 //	       / \                        /      \
-//	     [W]  X          W (immutable)        Y
+//	     [W]  Q          P (immutable)        R
 //	         / \       =>        / \        / \
-//	       [X]  Y              [W] [X]   [Y] [Z]
+//	       [X]  R              [W] [X]   [Y] [Z]
 //	           / \
 //	         [Y] [Z]
 //
-//	orphans: X
+//	orphans: Q
 //
 //	Right-Left (balance < -1, rightBalance > 0)
-//	Needs right rotation on right child (Z), then left rotation on root (node):
-//	      W (mutable)         W                    copy of X
+//	Needs right rotation on right child (Q), then left rotation on root (node):
+//	      P (mutable)         P                    copy of R
 //	       / \                 / \                  /      \
-//	     [W]  Z              [W]  copy of X   W (immutable)  copy of Z
+//	     [W]  Q              [W]  copy of R   P (immutable)  copy of Q
 //	         / \      =>         / \       =>       / \        / \
-//	        X  [Z]            [X]  copy of Z      [W] [X]   [Y] [Z]
+//	        R  [Z]            [X]  copy of Q      [W] [X]   [Y] [Z]
 //	       / \                    / \
 //	     [X] [Y]                [Y] [Z]
 //
-//	orphans: Z, X
+//	orphans: Q, R
 //
 // IMPORTANT: This method must only be called on newly created or copied nodes.
 // Code reviewers should check that the node is new or copied by doing a find usages check on this method.

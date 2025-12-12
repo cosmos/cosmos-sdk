@@ -87,7 +87,7 @@ func (s queryServer) GetBlockByHeight(ctx context.Context, req *GetBlockByHeight
 	}
 
 	if req.Height > blockHeight {
-		return nil, status.Error(codes.InvalidArgument, "requested block height is bigger then the chain length")
+		return nil, status.Error(codes.InvalidArgument, "requested block height is bigger than the chain length")
 	}
 
 	protoBlockID, protoBlock, err := GetProtoBlock(ctx, s.clientCtx, &req.Height)

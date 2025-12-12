@@ -152,12 +152,14 @@ func (db *CommitMultiTree) Commit() storetypes.CommitID {
 	return commitId
 }
 
-const latestVersionFile = "latest.version"
+const commitInfoSubPath = "commit_info"
+const latestFilename = "latest"
 
 // saveCommitInfo saves the CommitInfo for a given version to a <version>.ci file,
 // and updates the latest.version file to point to the latest version.
 func saveCommitInfo(dir string, version uint64, commitInfo *storetypes.CommitInfo) error {
-	commitInfoPath := filepath.Join(dir, fmt.Sprintf("%d.ci", version))
+	commitInfoDir := filepath.Join(dir, commitInfoSubPath)
+	commitInfoPath := filepath.Join(commitInfoDir, fmt.Sprintf("%d", version))
 	bz, err := proto.Marshal(commitInfo)
 	if err != nil {
 		return fmt.Errorf("failed to marshal commit info for version %d: %w", version, err)
@@ -167,7 +169,7 @@ func saveCommitInfo(dir string, version uint64, commitInfo *storetypes.CommitInf
 		return fmt.Errorf("failed to write commit info file for version %d: %w", version, err)
 	}
 
-	latestVersionPath := filepath.Join(dir, latestVersionFile)
+	latestVersionPath := filepath.Join(commitInfoDir, latestFilename)
 	err = os.WriteFile(latestVersionPath, []byte(fmt.Sprintf("%d", version)), 0o600)
 	if err != nil {
 		return fmt.Errorf("failed to write latest version file: %w", err)
@@ -179,7 +181,17 @@ func saveCommitInfo(dir string, version uint64, commitInfo *storetypes.CommitInf
 // loadLatestCommitInfo loads the latest.version file to determine the latest version,
 // and then loads the <version>.ci file to get the CommitInfo for that version.
 func loadLatestCommitInfo(dir string) (uint64, *storetypes.CommitInfo, error) {
-	latestVersionPath := filepath.Join(dir, latestVersionFile)
+	commitInfoDir := filepath.Join(dir, commitInfoSubPath)
+	err := os.MkdirAll(commitInfoDir, 0o700)
+	if err != nil {
+		return 0, nil, fmt.Errorf("failed to create commit info dir: %w", err)
+	}
+
+	latestVersionPath := filepath.Join(commitInfoDir, latestFilename)
+	if _, err := os.Stat(latestVersionPath); os.IsNotExist(err) {
+		return 0, nil, nil
+	}
+
 	bz, err := os.ReadFile(latestVersionPath)
 	if err != nil {
 		return 0, nil, fmt.Errorf("failed to read latest version file: %w", err)
@@ -189,7 +201,7 @@ func loadLatestCommitInfo(dir string) (uint64, *storetypes.CommitInfo, error) {
 	if err != nil {
 		return 0, nil, fmt.Errorf("failed to parse latest version: %w", err)
 	}
-	commitInfoPath := filepath.Join(dir, fmt.Sprintf("%d.ci", version))
+	commitInfoPath := filepath.Join(commitInfoDir, fmt.Sprintf("%d", version))
 	bz, err = os.ReadFile(commitInfoPath)
 	if err != nil {
 		return 0, nil, fmt.Errorf("failed to read commit info file for version %d: %w", version, err)
@@ -354,9 +366,12 @@ func (db *CommitMultiTree) LoadLatestVersion() error {
 	}
 
 	db.version = version
-	db.lastCommitId = storetypes.CommitID{
-		Version: int64(version),
-		Hash:    ci.Hash(),
+	if ci != nil {
+		// should be nil on initial creation
+		db.lastCommitId = storetypes.CommitID{
+			Version: int64(version),
+			Hash:    ci.Hash(),
+		}
 	}
 
 	return nil
@@ -365,7 +380,7 @@ func (db *CommitMultiTree) LoadLatestVersion() error {
 func (db *CommitMultiTree) loadStore(key storetypes.StoreKey, typ storetypes.StoreType) (storetypes.CommitStore, error) {
 	switch typ {
 	case storetypes.StoreTypeIAVL, storetypes.StoreTypeDB:
-		dir := filepath.Join(db.dir, key.Name())
+		dir := filepath.Join(db.dir, "stores", key.Name())
 		if _, err := os.Stat(dir); os.IsNotExist(err) {
 			err := os.MkdirAll(dir, 0o755)
 			if err != nil {

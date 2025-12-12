@@ -6,11 +6,32 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func newTestBranchNode(left, right *MemNode) *MemNode {
-	return &MemNode{
-		left:  NewNodePointer(left),
-		right: NewNodePointer(right),
+func newTestLeafNode(key string, version uint32) *MemNode {
+	node := newLeafNode([]byte(key), []byte("value_"+key), version)
+	assignTestID(node)
+	return node
+}
+
+func newTestBranchNode(left, right *MemNode, key string, version uint32) *MemNode {
+	node := &MemNode{
+		key:     []byte(key), // branch key = smallest key in right subtree (caller must set correctly)
+		left:    NewNodePointer(left),
+		right:   NewNodePointer(right),
+		version: version,
 	}
+	_ = node.updateHeightSize() // ignore error - test nodes always have valid children
+	assignTestID(node)
+	return node
+}
+
+// testIDCounter is used to assign unique node IDs in tests.
+var testIDCounter uint32
+
+// assignTestID assigns a unique test ID to a node based on its version and type.
+// this is not a real node ID, but is extremely simple for testing purposes.
+func assignTestID(node *MemNode) {
+	testIDCounter++
+	node.nodeId = NewNodeID(node.IsLeaf(), node.version, testIDCounter)
 }
 
 func TestCalcBalance(t *testing.T) {
@@ -21,17 +42,17 @@ func TestCalcBalance(t *testing.T) {
 	}{
 		{
 			name:    "balanced",
-			node:    newTestBranchNode(&MemNode{height: 2}, &MemNode{height: 2}),
+			node:    newTestBranchNode(&MemNode{height: 2}, &MemNode{height: 2}, "", 1),
 			balance: 0,
 		},
 		{
 			name:    "left heavy",
-			node:    newTestBranchNode(&MemNode{height: 3}, &MemNode{height: 1}),
+			node:    newTestBranchNode(&MemNode{height: 3}, &MemNode{height: 1}, "", 1),
 			balance: 2,
 		},
 		{
 			name:    "right heavy",
-			node:    newTestBranchNode(&MemNode{height: 1}, &MemNode{height: 4}),
+			node:    newTestBranchNode(&MemNode{height: 1}, &MemNode{height: 4}, "", 1),
 			balance: -3,
 		},
 	}
@@ -44,38 +65,47 @@ func TestCalcBalance(t *testing.T) {
 	}
 }
 
-func TestCalcBalance_UpdateHeightSize(t *testing.T) {
+func TestUpdateHeightSize(t *testing.T) {
+	// Construct branch nodes manually (without newTestBranchNode which already calls updateHeightSize)
 	tests := []struct {
 		name   string
-		node   *MemNode
+		left   *MemNode
+		right  *MemNode
 		height uint8
 		size   int64
 	}{
 		{
 			name:   "two leaves",
-			node:   newTestBranchNode(&MemNode{height: 0, size: 1}, &MemNode{height: 0, size: 1}),
+			left:   newTestLeafNode("A", 1),
+			right:  newTestLeafNode("B", 1),
 			height: 1,
 			size:   2,
 		},
 		{
-			name:   "left child h 2 s 3, right child h 1 s 2",
-			node:   newTestBranchNode(&MemNode{height: 2, size: 3}, &MemNode{height: 1, size: 2}),
-			height: 3,
-			size:   5,
+			name:   "left subtree taller",
+			left:   newTestBranchNode(newTestLeafNode("A", 1), newTestLeafNode("B", 1), "B", 1),
+			right:  newTestLeafNode("C", 1),
+			height: 2,
+			size:   3,
 		},
 		{
-			name:   "left child h 1 s 2, right child h 3 s 4",
-			node:   newTestBranchNode(&MemNode{height: 1, size: 2}, &MemNode{height: 3, size: 4}),
-			height: 4,
-			size:   6,
+			name:   "right subtree taller",
+			left:   newTestLeafNode("A", 1),
+			right:  newTestBranchNode(newTestLeafNode("B", 1), newTestLeafNode("C", 1), "C", 1),
+			height: 2,
+			size:   3,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.node.updateHeightSize()
+			node := &MemNode{
+				left:  NewNodePointer(tt.left),
+				right: NewNodePointer(tt.right),
+			}
+			err := node.updateHeightSize()
 			require.NoError(t, err)
-			require.Equal(t, tt.height, tt.node.height)
-			require.Equal(t, tt.size, tt.node.size)
+			require.Equal(t, tt.height, node.height)
+			require.Equal(t, tt.size, node.size)
 		})
 	}
 }

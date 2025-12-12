@@ -16,12 +16,12 @@ func (ctx *mutationContext) mutateBranch(node Node) (*MemNode, error) {
 	return node.MutateBranch(ctx.version)
 }
 
-// addOrphan adds the given node ID to the list of orphaned nodes.
+// addOrphan adds the given node's ID to the list of orphaned nodes.
 // this is to be called when a node is deleted without being replaced, use mutateBranch for nodes that are replaced.
-// an empty NodeID is ignored, which would be the case when a node is inserted transiently and dropped before it is
-// even committed to a version.
+// only nodes with an empty version or a version older than the current mutation version are considered orphans.
 func (ctx *mutationContext) addOrphan(id NodeID) {
-	if !id.IsEmpty() {
+	version := id.Version
+	if version == 0 || version < ctx.version {
 		ctx.orphans = append(ctx.orphans, id)
 	}
 }

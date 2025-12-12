@@ -83,6 +83,7 @@ func (node *MemNode) MutateBranch(version uint32) (*MemNode, error) {
 	n := *node
 	n.version = version
 	n.hash = nil
+	n.nodeId = NodeID{} // clear ID - new node gets ID assigned during commit
 	return &n, nil
 }
 

@@ -11,6 +11,7 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
+	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/store/mem"
 	"cosmossdk.io/store/metrics"
@@ -137,6 +138,11 @@ func (db *CommitMultiTree) Commit() storetypes.CommitID {
 		db.workingHash = nil
 	}
 
+	err := saveCommitInfo(db.dir, stagedVersion, commitInfo)
+	if err != nil {
+		panic(fmt.Sprintf("failed to save commit info for version %d: %v", stagedVersion, err))
+	}
+
 	db.version++
 	commitId := storetypes.CommitID{
 		Version: int64(db.version),
@@ -144,6 +150,54 @@ func (db *CommitMultiTree) Commit() storetypes.CommitID {
 	}
 	db.lastCommitId = commitId
 	return commitId
+}
+
+const latestVersionFile = "latest.version"
+
+func saveCommitInfo(dir string, version uint64, commitInfo *storetypes.CommitInfo) error {
+	commitInfoPath := filepath.Join(dir, fmt.Sprintf("%d.ci", version))
+	bz, err := proto.Marshal(commitInfo)
+	if err != nil {
+		return fmt.Errorf("failed to marshal commit info for version %d: %w", version, err)
+	}
+	err = os.WriteFile(commitInfoPath, bz, 0o600)
+	if err != nil {
+		return fmt.Errorf("failed to write commit info file for version %d: %w", version, err)
+	}
+
+	latestVersionPath := filepath.Join(dir, latestVersionFile)
+	err = os.WriteFile(latestVersionPath, []byte(fmt.Sprintf("%d", version)), 0o600)
+	if err != nil {
+		return fmt.Errorf("failed to write latest version file: %w", err)
+	}
+
+	return nil
+}
+
+func loadLatestCommitInfo(dir string) (uint64, *storetypes.CommitInfo, error) {
+	latestVersionPath := filepath.Join(dir, latestVersionFile)
+	bz, err := os.ReadFile(latestVersionPath)
+	if err != nil {
+		return 0, nil, fmt.Errorf("failed to read latest version file: %w", err)
+	}
+	var version uint64
+	_, err = fmt.Sscanf(string(bz), "%d", &version)
+	if err != nil {
+		return 0, nil, fmt.Errorf("failed to parse latest version: %w", err)
+	}
+	commitInfoPath := filepath.Join(dir, fmt.Sprintf("%d.ci", version))
+	bz, err = os.ReadFile(commitInfoPath)
+	if err != nil {
+		return 0, nil, fmt.Errorf("failed to read commit info file for version %d: %w", version, err)
+	}
+
+	commitInfo := &storetypes.CommitInfo{}
+	err = proto.Unmarshal(bz, commitInfo)
+	if err != nil {
+		return 0, nil, fmt.Errorf("failed to unmarshal commit info for version %d: %w", version, err)
+	}
+
+	return version, commitInfo, nil
 }
 
 func (db *CommitMultiTree) SetPruning(options pruningtypes.PruningOptions) {
@@ -288,6 +342,18 @@ func (db *CommitMultiTree) LoadLatestVersion() error {
 		}
 		db.trees = append(db.trees, tree)
 	}
+
+	version, ci, err := loadLatestCommitInfo(db.dir)
+	if err != nil {
+		return fmt.Errorf("failed to load latest commit info: %w", err)
+	}
+
+	db.version = version
+	db.lastCommitId = storetypes.CommitID{
+		Version: int64(version),
+		Hash:    ci.Hash(),
+	}
+
 	return nil
 }
 

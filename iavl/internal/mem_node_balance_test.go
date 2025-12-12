@@ -111,27 +111,157 @@ func TestUpdateHeightSize(t *testing.T) {
 }
 
 func TestRotateLeft(t *testing.T) {
-	// Construct a simple tree (all version 1):
-	//	node (mutable)
-	//	   /  \
-	//	  A  right
-	//	     /  \
-	//	    B    C
-	A := newLeafNode([]byte("A"), []byte("valueA"), 1)
-	B := newLeafNode([]byte("B"), []byte("valueB"), 1)
-	C := newLeafNode([]byte("C"), []byte("valueC"), 1)
-	left := newTestBranchNode(A, B)
-	node := newTestBranchNode(left, C)
+	// Construct the tree from rotateLeft docs (all version 1):
+	//
+	//	X (mutable)
+	//	  /  \
+	//	[X]   Y
+	//	     / \
+	//	   [Y] [Z]
+	//
+	leafX := newTestLeafNode("X", 1)
+	leafY := newTestLeafNode("Y", 1)
+	leafZ := newTestLeafNode("Z", 1)
+
+	// Y's key is Z (smallest key in right subtree, which is just [Z])
+	Y := newTestBranchNode(leafY, leafZ, "Z", 1)
+
+	// X's key is Y (smallest key in right subtree, which starts at [Y] in Y's left)
+	X := newTestBranchNode(leafX, Y, "Y", 1)
 
 	// After rotation, the tree should look like:
-	//	copy of right (new version)
-	//	   /                      \
-	//	  node (now immutable)     C
-	//	     /  \
-	//	    A    B
-	// with orphans: right
+	//
+	//	     copy of Y
+	//	  /            \
+	//	X (immutable)  [Z]
+	//	   /  \
+	//	 [X]  [Y]
+	//
+	// orphans: Y
+
 	ctx := &mutationContext{version: 2}
-	newRoot, err := node.rotateRight(ctx)
+	newRoot, err := X.rotateLeft(ctx)
 	require.NoError(t, err)
 
+	// Verify new root is copy of Y with new version
+	// Y's key was Z (smallest in right subtree [Z])
+	require.Equal(t, []byte("Z"), newRoot.key)
+	require.Equal(t, uint32(2), newRoot.version)
+
+	// Verify left child is X (now immutable, still version 1)
+	leftChild, leftPin, err := newRoot.left.Resolve()
+	require.NoError(t, err)
+	defer leftPin.Unpin()
+	require.Equal(t, []byte("Y"), leftChild.(*MemNode).key) // X's key was Y (first key of right subtree)
+	require.Equal(t, uint32(1), leftChild.Version())
+
+	// Verify right child is [Z]
+	rightChild, rightPin, err := newRoot.right.Resolve()
+	require.NoError(t, err)
+	defer rightPin.Unpin()
+	require.Equal(t, []byte("Z"), rightChild.(*MemNode).key)
+	require.True(t, rightChild.IsLeaf())
+
+	// Verify X's children are now [X] and [Y]
+	xLeft, xLeftPin, err := leftChild.Left().Resolve()
+	require.NoError(t, err)
+	defer xLeftPin.Unpin()
+	require.Equal(t, []byte("X"), xLeft.(*MemNode).key)
+	require.True(t, xLeft.IsLeaf())
+
+	xRight, xRightPin, err := leftChild.Right().Resolve()
+	require.NoError(t, err)
+	defer xRightPin.Unpin()
+	require.Equal(t, []byte("Y"), xRight.(*MemNode).key)
+	require.True(t, xRight.IsLeaf())
+
+	// Verify orphans contains Y
+	require.Len(t, ctx.orphans, 1)
+
+	// Verify heights and sizes are correct
+	require.Equal(t, uint8(2), newRoot.height)
+	require.Equal(t, int64(3), newRoot.size)
+	require.Equal(t, uint8(1), leftChild.Height())
+	require.Equal(t, int64(2), leftChild.Size())
+
+	// Verify all invariants
+	require.NoError(t, verifyAVLInvariants(newRoot))
+}
+
+func TestRotateRight(t *testing.T) {
+	// Construct the tree from rotateRight docs (all version 1):
+	//
+	//	  Y (mutable)
+	//	    /  \
+	//	   X   [Y]
+	//	  / \
+	//	[W] [X]
+	//
+	leafW := newTestLeafNode("W", 1)
+	leafX := newTestLeafNode("X", 1)
+	leafY := newTestLeafNode("Y", 1)
+
+	// X's key is X (smallest key in right subtree, which is just [X])
+	X := newTestBranchNode(leafW, leafX, "X", 1)
+
+	// Y's key is Y (smallest key in right subtree, which is just [Y])
+	Y := newTestBranchNode(X, leafY, "Y", 1)
+
+	// After rotation, the tree should look like:
+	//
+	//	copy of X
+	//	  /      \
+	//	[W]    Y (immutable)
+	//	         /  \
+	//	       [X]  [Y]
+	//
+	// orphans: X
+
+	ctx := &mutationContext{version: 2}
+	newRoot, err := Y.rotateRight(ctx)
+	require.NoError(t, err)
+
+	// Verify new root is copy of X with new version
+	// X's key was X (smallest in right subtree [X])
+	require.Equal(t, []byte("X"), newRoot.key)
+	require.Equal(t, uint32(2), newRoot.version)
+
+	// Verify left child is [W]
+	leftChild, leftPin, err := newRoot.left.Resolve()
+	require.NoError(t, err)
+	defer leftPin.Unpin()
+	require.Equal(t, []byte("W"), leftChild.(*MemNode).key)
+	require.True(t, leftChild.IsLeaf())
+
+	// Verify right child is Y (now immutable, still version 1)
+	rightChild, rightPin, err := newRoot.right.Resolve()
+	require.NoError(t, err)
+	defer rightPin.Unpin()
+	require.Equal(t, []byte("Y"), rightChild.(*MemNode).key) // Y's key was Y (first key of right subtree)
+	require.Equal(t, uint32(1), rightChild.Version())
+
+	// Verify Y's children are now [X] and [Y]
+	yLeft, yLeftPin, err := rightChild.Left().Resolve()
+	require.NoError(t, err)
+	defer yLeftPin.Unpin()
+	require.Equal(t, []byte("X"), yLeft.(*MemNode).key)
+	require.True(t, yLeft.IsLeaf())
+
+	yRight, yRightPin, err := rightChild.Right().Resolve()
+	require.NoError(t, err)
+	defer yRightPin.Unpin()
+	require.Equal(t, []byte("Y"), yRight.(*MemNode).key)
+	require.True(t, yRight.IsLeaf())
+
+	// Verify orphans contains X
+	require.Len(t, ctx.orphans, 1)
+
+	// Verify heights and sizes are correct
+	require.Equal(t, uint8(2), newRoot.height)
+	require.Equal(t, int64(3), newRoot.size)
+	require.Equal(t, uint8(1), rightChild.Height())
+	require.Equal(t, int64(2), rightChild.Size())
+
+	// Verify all invariants
+	require.NoError(t, verifyAVLInvariants(newRoot))
 }

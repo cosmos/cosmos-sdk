@@ -184,7 +184,16 @@ func TestRotateRight(t *testing.T) {
 }
 
 func TestNodeRebalance(t *testing.T) {
-
+	tests := []struct {
+		name           string
+		root           *MemNode
+		beforeRotation string
+		afterRotation  string
+	}{
+		{
+			name: "left-left case",
+		},
+	}
 }
 
 // printTreeStructure returns a string representation of the tree structure.

@@ -161,7 +161,7 @@ require (
 	go.opentelemetry.io/contrib/instrumentation/host v0.63.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.63.0 // indirect
 	go.opentelemetry.io/contrib/otelconf v0.19.0 // indirect
-	go.opentelemetry.io/contrib/propagators/b3 v1.37.0 // indirect
+	go.opentelemetry.io/contrib/propagators/b3 v1.39.0 // indirect
 	go.opentelemetry.io/contrib/propagators/jaeger v1.37.0 // indirect
 	go.opentelemetry.io/otel v1.39.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc v0.15.0 // indirect

@@ -156,11 +156,13 @@ func TestCollectionPagination(t *testing.T) {
 		},
 		"filtered with offset": {
 			req: &PageRequest{
-				Offset: 3,
-				Limit:  3,
+				Offset:     3,
+				Limit:      3,
+				CountTotal: true,
 			},
 			expResp: &PageResponse{
 				NextKey: encodeKey(12),
+				Total:   150,
 			},
 			filter: func(key, value uint64) (bool, error) {
 				return key%2 == 0, nil

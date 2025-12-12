@@ -837,11 +837,13 @@ following hooks can registered with staking:
     * called when a delegation is created
 * `BeforeDelegationSharesModified(Context, AccAddress, ValAddress) error`
     * called when a delegation's shares are modified
-* `AfterDelegationModified(Context, AccAddress, ValAddress) error`
-    * called when a delegation is created or modified
 * `BeforeDelegationRemoved(Context, AccAddress, ValAddress) error`
     * called when a delegation is removed
-* `AfterUnbondingInitiated(Context, UnbondingID)`
+* `AfterDelegationModified(Context, AccAddress, ValAddress) error`
+    * called when a delegation is created or modified
+* `BeforeValidatorSlashed(Context, ValAddress, math.LegacyDec) error`
+    * called when a validator is about to be slashed
+* `AfterUnbondingInitiated(Context, UnbondingID) error`
     * called when an unbonding operation (validator unbonding, unbonding delegation, redelegation) was initiated
 
 

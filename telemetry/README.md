@@ -79,7 +79,7 @@ For a full list of configurable options see: https://github.com/open-telemetry/o
 The node's `init` command will generate an empty otel file in the `~/.<node_home>/config` directory. Place your otel configuration
 here. 
 
-When the node's `start` command is ran, the OpenTelemetry SDK will be initialized using this file. 
+When the node's `start` command is run, the OpenTelemetry SDK will be initialized using this file. 
 If left empty, all meters and tracers will be noop.
 
 ## OpenTelemetry Initialization
@@ -107,4 +107,3 @@ NOTE: it is important to thread context.Context properly for spans and metrics t
 correlated correctly.
 When using the SDK's context type, spans must be started with Context.StartSpan to
 get an SDK context which has the span set correctly.
-

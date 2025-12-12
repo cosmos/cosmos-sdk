@@ -154,6 +154,8 @@ func (db *CommitMultiTree) Commit() storetypes.CommitID {
 
 const latestVersionFile = "latest.version"
 
+// saveCommitInfo saves the CommitInfo for a given version to a <version>.ci file,
+// and updates the latest.version file to point to the latest version.
 func saveCommitInfo(dir string, version uint64, commitInfo *storetypes.CommitInfo) error {
 	commitInfoPath := filepath.Join(dir, fmt.Sprintf("%d.ci", version))
 	bz, err := proto.Marshal(commitInfo)
@@ -174,6 +176,8 @@ func saveCommitInfo(dir string, version uint64, commitInfo *storetypes.CommitInf
 	return nil
 }
 
+// loadLatestCommitInfo loads the latest.version file to determine the latest version,
+// and then loads the <version>.ci file to get the CommitInfo for that version.
 func loadLatestCommitInfo(dir string) (uint64, *storetypes.CommitInfo, error) {
 	latestVersionPath := filepath.Join(dir, latestVersionFile)
 	bz, err := os.ReadFile(latestVersionPath)
@@ -243,6 +247,7 @@ func (db *CommitMultiTree) CacheMultiStoreWithVersion(version int64) (storetypes
 		trees:         make([]storetypes.CacheWrap, len(db.trees)),
 	}
 
+	// TODO: we should actually use the CommitInfo for this version to load the correct set of trees (because there may have been store additions/removals)
 	for i, tree := range db.trees {
 		typ := db.storeTypes[i]
 		switch typ {
@@ -443,27 +448,6 @@ func (db *CommitMultiTree) SetMetrics(metrics metrics.StoreMetrics) {
 }
 
 func LoadDB(path string, opts *Options, logger *slog.Logger) (*CommitMultiTree, error) {
-	// n := len(treeNames)
-	//trees := make([]*CommitTree, n)
-	//treesByName := make(map[string]int, n)
-	//for i, name := range treeNames {
-	//	if _, exists := treesByName[name]; exists {
-	//		return nil, fmt.Errorf("duplicate tree name: %s", name)
-	//	}
-	//	treesByName[name] = i
-	//	dir := filepath.Join(path, name)
-	//	err := os.MkdirAll(dir, 0o755)
-	//	if err != nil {
-	//		return nil, fmt.Errorf("failed to create tree dir %s: %w", dir, err)
-	//	}
-	//	// Create a logger with tree name context
-	//	treeLogger := logger.With("tree", name)
-	//	trees[i], err = NewCommitTree(dir, *opts, treeLogger)
-	//	if err != nil {
-	//		return nil, fmt.Errorf("failed to load tree %s: %w", name, err)
-	//	}
-	//}
-	//
 	db := &CommitMultiTree{
 		dir:        path,
 		opts:       *opts,

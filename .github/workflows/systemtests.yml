@@ -63,7 +63,7 @@ jobs:
 
       - name: Upload system test logs if failed
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: system-test-logs
           path: ./tests/systemtests/testnet/*.out
@@ -82,7 +82,7 @@ jobs:
 
       - name: Upload legacy system test logs if failed
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: legacy-system-test-logs
           path: ./tests/systemtests/testnet/*.out

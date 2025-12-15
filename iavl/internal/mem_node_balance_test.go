@@ -231,16 +231,52 @@ func TestRotateRight(t *testing.T) {
 }
 
 func TestNodeRebalance(t *testing.T) {
-	//tests := []struct {
-	//	name           string
-	//	root           *MemNode
-	//	beforeRotation string
-	//	afterRotation  string
-	//}{
-	//	{
-	//		name: "left-left case",
-	//	},
-	//}
+	tests := []struct {
+		name           string
+		root           *MemNode
+		beforeRotation string
+		afterRotation  string
+		orphans        []NodeID
+	}{
+		{
+			name: "left-left case",
+			root: newTestBranchNode(2,
+				newTestBranchNode(1,
+					newTestBranchNode(1,
+						newTestLeafNode("W", 1),
+						newTestLeafNode("X", 1),
+					),
+					newTestLeafNode("Y", 1),
+				),
+				newTestLeafNode("Z", 1),
+			),
+			beforeRotation: "(Z.2 (Y.1 (X.1 [W.1] [X.1]) [Y.1]) [Z.1])",
+			afterRotation:  "(Y.2 (X.1 [W.1] [X.1]) (Z.2 [Y.1] [Z.1]))",
+		},
+		{
+			name: "left-right case",
+			root: newTestBranchNode(2,
+				newTestBranchNode(1,
+					newTestLeafNode("W", 1),
+					newTestBranchNode(1,
+						newTestLeafNode("X", 1),
+						newTestLeafNode("Y", 1),
+					),
+				),
+				newTestLeafNode("Z", 1),
+			),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.beforeRotation, printTreeStructure(t, tt.root))
+			ctx := &mutationContext{version: 2}
+			newRoot, err := tt.root.reBalance(ctx)
+			require.NoError(t, err)
+			require.Equal(t, tt.afterRotation, printTreeStructure(t, newRoot))
+			require.NoError(t, verifyAVLInvariants(newRoot))
+		})
+	}
 }
 
 // printTreeStructure returns a string representation of the tree structure.

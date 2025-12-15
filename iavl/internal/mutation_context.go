@@ -20,7 +20,7 @@ func (ctx *mutationContext) mutateBranch(node Node) (*MemNode, error) {
 // this is to be called when a node is deleted without being replaced, use mutateBranch for nodes that are replaced.
 // only nodes with an empty version or a version older than the current mutation version are considered orphans.
 func (ctx *mutationContext) addOrphan(id NodeID) {
-	version := id.Version
+	version := id.Version()
 	if version == 0 || version < ctx.version {
 		ctx.orphans = append(ctx.orphans, id)
 	}

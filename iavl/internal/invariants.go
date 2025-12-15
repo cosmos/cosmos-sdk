@@ -30,8 +30,8 @@ func verifyAVLInvariants(node Node) error {
 
 	// Verify ID consistency (if ID is set)
 	if !id.IsEmpty() {
-		if id.Version != node.Version() {
-			return fmt.Errorf("node %s has version %d, expected %d", id, node.Version(), id.Version)
+		if id.Version() != node.Version() {
+			return fmt.Errorf("node %s has version %d, expected %d", id, node.Version(), id.Version())
 		}
 		if id.IsLeaf() != node.IsLeaf() {
 			return fmt.Errorf("node %s has IsLeaf=%t, expected %t", id, node.IsLeaf(), id.IsLeaf())

@@ -28,8 +28,8 @@ func TestNodeID(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			id := NewNodeID(test.leaf, test.version, test.index)
 			require.Equal(t, test.leaf, id.IsLeaf())
-			require.Equal(t, test.index, id.FlagIndex.Index())
-			require.Equal(t, test.version, id.Version)
+			require.Equal(t, test.index, id.Index())
+			require.Equal(t, test.version, id.Version())
 			require.Equal(t, test.str, id.String())
 		})
 	}

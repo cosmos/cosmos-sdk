@@ -52,6 +52,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* [#38](https://github.com/atomone-hub/cosmos-sdk/pull/38) Remove proposer reward params from `x/distribution` (base_proposer_reward and bonus_proposer_reward)
 * [#22](https://github.com/atomone-hub/cosmos-sdk/pull/22), [#25](https://github.com/atomone-hub/cosmos-sdk/pull/25) Remove non forked go modules from repository.
 
 ### Bug Fixes

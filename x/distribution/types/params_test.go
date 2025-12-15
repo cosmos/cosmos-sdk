@@ -15,8 +15,6 @@ func TestParams_ValidateBasic(t *testing.T) {
 
 	type fields struct {
 		CommunityTax        sdkmath.LegacyDec
-		BaseProposerReward  sdkmath.LegacyDec
-		BonusProposerReward sdkmath.LegacyDec
 		WithdrawAddrEnabled bool
 	}
 	tests := []struct {
@@ -24,13 +22,13 @@ func TestParams_ValidateBasic(t *testing.T) {
 		fields  fields
 		wantErr bool
 	}{
-		{"success", fields{toDec("0.1"), toDec("0"), toDec("0"), false}, false},
-		{"negative community tax", fields{toDec("-0.1"), toDec("0"), toDec("0"), false}, true},
-		{"negative base proposer reward (must not matter)", fields{toDec("0.1"), toDec("0"), toDec("-0.1"), false}, false},
-		{"negative bonus proposer reward (must not matter)", fields{toDec("0.1"), toDec("0"), toDec("-0.1"), false}, false},
-		{"total sum greater than 1 (must not matter)", fields{toDec("0.2"), toDec("0.5"), toDec("0.4"), false}, false},
-		{"community tax greater than 1", fields{toDec("1.1"), toDec("0"), toDec("0"), false}, true},
-		{"community tax nil", fields{sdkmath.LegacyDec{}, toDec("0"), toDec("0"), false}, true},
+		{"success", fields{toDec("0.1"), false}, false},
+		{"negative community tax", fields{toDec("-0.1"), false}, true},
+		{"negative base proposer reward (must not matter)", fields{toDec("0.1"), false}, false},
+		{"negative bonus proposer reward (must not matter)", fields{toDec("0.1"), false}, false},
+		{"total sum greater than 1 (must not matter)", fields{toDec("0.2"), false}, false},
+		{"community tax greater than 1", fields{toDec("1.1"), false}, true},
+		{"community tax nil", fields{sdkmath.LegacyDec{}, false}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -14,10 +14,9 @@ will therefore be upgraded in the future.
 The mechanism operates as follows. Collected rewards are pooled globally and
 divided out passively to validators and delegators. Each validator has the
 opportunity to charge commission to the delegators on the rewards collected on
-behalf of the delegators. Fees are collected directly into a global reward pool
-and validator proposer-reward pool. Due to the nature of passive accounting,
-whenever changes to parameters which affect the rate of reward distribution
-occurs, withdrawal of rewards must also occur.
+behalf of the delegators. Fees are collected directly into a global reward pool. 
+Due to the nature of passive accounting, whenever changes to parameters which 
+affect the rate of reward distribution occurs, withdrawal of rewards must also occur.
 
 * Whenever withdrawing, one must withdraw the maximum amount they are entitled
    to, leaving nothing in the pool.
@@ -475,8 +474,6 @@ The distribution module emits the following events:
 
 | Type            | Attribute Key | Attribute Value    |
 |-----------------|---------------|--------------------|
-| proposer_reward | validator     | {validatorAddress} |
-| proposer_reward | reward        | {proposerReward}   |
 | commission      | amount        | {commissionAmount} |
 | commission      | validator     | {validatorAddress} |
 | rewards         | amount        | {rewardAmount}     |
@@ -522,7 +519,6 @@ The distribution module contains the following parameters:
 | withdrawaddrenabled | bool         | true                       |
 
 * [0] `communitytax` must be positive and cannot exceed 1.00.
-* `baseproposerreward` and `bonusproposerreward` were parameters that are deprecated in v0.47 and are not used.
 
 :::note
 The reserve pool is the pool of collected funds for use by governance taken via the `CommunityTax`.
@@ -604,8 +600,6 @@ simd query distribution params
 Example Output:
 
 ```yml
-base_proposer_reward: "0.000000000000000000"
-bonus_proposer_reward: "0.000000000000000000"
 community_tax: "0.020000000000000000"
 withdraw_addr_enabled: true
 ```
@@ -791,8 +785,6 @@ Example Output:
 {
   "params": {
     "communityTax": "20000000000000000",
-    "baseProposerReward": "00000000000000000",
-    "bonusProposerReward": "00000000000000000",
     "withdrawAddrEnabled": true
   }
 }

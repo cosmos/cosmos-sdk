@@ -689,8 +689,6 @@ func TestMsgUpdateParams(t *testing.T) {
 				Params: distrtypes.Params{
 					CommunityTax:        math.LegacyNewDecWithPrec(2, 0),
 					WithdrawAddrEnabled: withdrawAddrEnabled,
-					BaseProposerReward:  math.LegacyZeroDec(),
-					BonusProposerReward: math.LegacyZeroDec(),
 				},
 			},
 			expErr:    true,
@@ -703,8 +701,6 @@ func TestMsgUpdateParams(t *testing.T) {
 				Params: distrtypes.Params{
 					CommunityTax:        math.LegacyDec{},
 					WithdrawAddrEnabled: withdrawAddrEnabled,
-					BaseProposerReward:  math.LegacyZeroDec(),
-					BonusProposerReward: math.LegacyZeroDec(),
 				},
 			},
 			expErr:    true,
@@ -717,8 +713,6 @@ func TestMsgUpdateParams(t *testing.T) {
 				Params: distrtypes.Params{
 					CommunityTax:        math.LegacyNewDecWithPrec(2, 0),
 					WithdrawAddrEnabled: withdrawAddrEnabled,
-					BaseProposerReward:  math.LegacyZeroDec(),
-					BonusProposerReward: math.LegacyZeroDec(),
 				},
 			},
 			expErr:    true,
@@ -731,40 +725,10 @@ func TestMsgUpdateParams(t *testing.T) {
 				Params: distrtypes.Params{
 					CommunityTax:        math.LegacyNewDecWithPrec(-2, 1),
 					WithdrawAddrEnabled: withdrawAddrEnabled,
-					BaseProposerReward:  math.LegacyZeroDec(),
-					BonusProposerReward: math.LegacyZeroDec(),
 				},
 			},
 			expErr:    true,
 			expErrMsg: "community tax must be positive: -0.200000000000000000",
-		},
-		{
-			name: "base proposer reward set",
-			msg: &distrtypes.MsgUpdateParams{
-				Authority: f.distrKeeper.GetAuthority(),
-				Params: distrtypes.Params{
-					CommunityTax:        communityTax,
-					BaseProposerReward:  math.LegacyNewDecWithPrec(1, 2),
-					BonusProposerReward: math.LegacyZeroDec(),
-					WithdrawAddrEnabled: withdrawAddrEnabled,
-				},
-			},
-			expErr:    true,
-			expErrMsg: "cannot update base or bonus proposer reward because these are deprecated fields",
-		},
-		{
-			name: "bonus proposer reward set",
-			msg: &distrtypes.MsgUpdateParams{
-				Authority: f.distrKeeper.GetAuthority(),
-				Params: distrtypes.Params{
-					CommunityTax:        communityTax,
-					BaseProposerReward:  math.LegacyZeroDec(),
-					BonusProposerReward: math.LegacyNewDecWithPrec(1, 2),
-					WithdrawAddrEnabled: withdrawAddrEnabled,
-				},
-			},
-			expErr:    true,
-			expErrMsg: "cannot update base or bonus proposer reward because these are deprecated fields",
 		},
 		{
 			name: "all good",
@@ -772,8 +736,6 @@ func TestMsgUpdateParams(t *testing.T) {
 				Authority: f.distrKeeper.GetAuthority(),
 				Params: distrtypes.Params{
 					CommunityTax:        communityTax,
-					BaseProposerReward:  math.LegacyZeroDec(),
-					BonusProposerReward: math.LegacyZeroDec(),
 					WithdrawAddrEnabled: withdrawAddrEnabled,
 				},
 			},

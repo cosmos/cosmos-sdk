@@ -10,8 +10,6 @@ import (
 func DefaultParams() Params {
 	return Params{
 		CommunityTax:        math.LegacyNewDecWithPrec(2, 2), // 2%
-		BaseProposerReward:  math.LegacyZeroDec(),            // deprecated
-		BonusProposerReward: math.LegacyZeroDec(),            // deprecated
 		WithdrawAddrEnabled: true,
 	}
 }

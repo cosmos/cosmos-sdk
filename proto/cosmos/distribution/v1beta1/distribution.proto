@@ -20,25 +20,9 @@ message Params {
     (gogoproto.nullable)   = false
   ];
 
-  // Deprecated: The base_proposer_reward field is deprecated and is no longer used
-  // in the x/distribution module's reward mechanism.
-  string base_proposer_reward = 2 [
-    (cosmos_proto.scalar)  = "cosmos.Dec",
-    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
-    (gogoproto.nullable)   = false,
-    (amino.dont_omitempty) = true,
-    deprecated             = true
-  ];
-
-  // Deprecated: The bonus_proposer_reward field is deprecated and is no longer used
-  // in the x/distribution module's reward mechanism.
-  string bonus_proposer_reward = 3 [
-    (cosmos_proto.scalar)  = "cosmos.Dec",
-    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
-    (gogoproto.nullable)   = false,
-    (amino.dont_omitempty) = true,
-    deprecated             = true
-  ];
+  // Removed: the following fields were used respectively for the
+  // base_proposer_reward and bonus_proposer_reward
+  reserved 2, 3;
 
   bool withdraw_addr_enabled = 4;
 }

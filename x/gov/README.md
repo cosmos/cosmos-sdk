@@ -16,8 +16,8 @@ on proposals on a 1 token 1 vote basis. Next is a list of features the module
 currently supports:
 
 * **Proposal submission:** Users can submit proposals with a deposit. Once the
-minimum deposit is reached, the proposal enters voting period. The minimum deposit can be reached by collecting deposits from different users (including proposer) within deposit period.
-* **Vote:** Participants can vote on proposals that reached MinDeposit and entered voting period.
+minimum deposit is reached, the proposal enters the voting period. The minimum deposit can be reached by collecting deposits from different users (including proposer) within the deposit period.
+* **Vote:** Participants can vote on proposals that reached MinDeposit and entered the voting period.
 * **Inheritance and penalties:** Delegators inherit their validator's vote if
 they don't vote themselves.
 * **Claiming deposit:** Users that deposited on proposals can recover their
@@ -66,12 +66,12 @@ staking token of the chain.
 
 *Disclaimer: This is work in progress. Mechanisms are susceptible to change.*
 
-The governance process is divided in a few steps that are outlined below:
+The governance process is divided into a few steps that are outlined below:
 
 * **Proposal submission:** Proposal is submitted to the blockchain with a
   deposit.
-* **Vote:** Once deposit reaches a certain value (`MinDeposit`), proposal is
-  confirmed and vote opens. Bonded Atom holders can then send `TxGovVote`
+* **Vote:** Once the deposit reaches a certain value (`MinDeposit`), the proposal is
+  confirmed and the vote opens. Bonded Atom holders can then send `TxGovVote`
   transactions to vote on the proposal.
 * **Execution** After a period of time, the votes are tallied and depending
   on the result, the messages in the proposal will be executed.
@@ -166,7 +166,7 @@ proposal but accept the result of the vote.
 
 [ADR-037](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-037-gov-split-vote.md) introduces the weighted vote feature which allows a staker to split their votes into several voting options. For example, it could use 70% of its voting power to vote Yes and 30% of its voting power to vote No.
 
-Often times the entity owning that address might not be a single individual. For example, a company might have different stakeholders who want to vote differently, and so it makes sense to allow them to split their voting power. Currently, it is not possible for them to do "passthrough voting" and giving their users voting rights over their tokens. However, with this system, exchanges can poll their users for voting preferences, and then vote on-chain proportionally to the results of the poll.
+Oftentimes the entity owning that address might not be a single individual. For example, a company might have different stakeholders who want to vote differently, and so it makes sense to allow them to split their voting power. Currently, it is not possible for them to do "passthrough voting" and give their users voting rights over their tokens. However, with this system, exchanges can poll their users for voting preferences, and then vote on-chain proportionally to the results of the poll.
 
 To represent weighted vote on chain, we use the following Protobuf message.
 

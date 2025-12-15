@@ -212,7 +212,7 @@ func TestNodeRebalance(t *testing.T) {
 			afterRotation:  "(Y.2.1 [X.1.2] [Y.1.3])", // unchanged
 		},
 		{
-			name: "-1 <= balance <= 1 - no rotation",
+			name: "balance = -1",
 			root: newTestBranchNode(2, 1,
 				newTestLeafNode(1, 2, "X"),
 				newTestBranchNode(1, 3,
@@ -227,6 +227,23 @@ func TestNodeRebalance(t *testing.T) {
 			//          [Y.1.4] [Z.1.5]
 			beforeRotation: "(Y.2.1 [X.1.2] (Z.1.3 [Y.1.4] [Z.1.5]))",
 			afterRotation:  "(Y.2.1 [X.1.2] (Z.1.3 [Y.1.4] [Z.1.5]))", // unchanged
+		},
+		{
+			name: "balance = 1",
+			root: newTestBranchNode(2, 1,
+				newTestBranchNode(1, 2,
+					newTestLeafNode(1, 3, "W"),
+					newTestLeafNode(1, 4, "X"),
+				),
+				newTestLeafNode(1, 5, "Y"),
+			),
+			//       X.2.1
+			//      /      \
+			//   W.1.2     [Y.1.5]
+			//  /     \
+			//[W.1.3] [X.1.4]
+			beforeRotation: "(Y.2.1 (X.1.2 [W.1.3] [X.1.4]) [Y.1.5])",
+			afterRotation:  "(Y.2.1 (X.1.2 [W.1.3] [X.1.4]) [Y.1.5])", // unchanged
 		},
 		{
 			// left heavy, left child also left heavy

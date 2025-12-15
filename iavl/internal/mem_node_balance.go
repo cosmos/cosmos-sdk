@@ -150,6 +150,9 @@ func (node *MemNode) reBalance(ctx *mutationContext) (*MemNode, error) {
 			return nil, err
 		}
 		newRight, err = newRight.rotateRight(ctx)
+		if err != nil {
+			return nil, err
+		}
 		node.right = NewNodePointer(newRight)
 		return node.rotateLeft(ctx)
 	default:

@@ -249,7 +249,7 @@ simd query auth --help
 
 #### account
 
-The `account` command allow users to query for an account by it's address.
+The `account` command allows users to query for an account by its address.
 
 ```bash
 simd query auth account [address] [flags]
@@ -504,7 +504,7 @@ A user can query the `auth` module using gRPC endpoints.
 
 #### Account
 
-The `account` endpoint allow users to query for an account by it's address.
+The `account` endpoint allows users to query for an account by its address.
 
 ```bash
 cosmos.auth.v1beta1.Query/Account
@@ -687,7 +687,7 @@ A user can query the `auth` module using REST endpoints.
 
 #### Account
 
-The `account` endpoint allow users to query for an account by it's address.
+The `account` endpoint allows users to query for an account by its address.
 
 ```bash
 /cosmos/auth/v1beta1/account?address={address}
@@ -695,7 +695,7 @@ The `account` endpoint allow users to query for an account by it's address.
 
 #### Accounts
 
-The `accounts` endpoint allow users to query all the available accounts.
+The `accounts` endpoint allows users to query all the available accounts.
 
 ```bash
 /cosmos/auth/v1beta1/accounts
@@ -703,7 +703,7 @@ The `accounts` endpoint allow users to query all the available accounts.
 
 #### Params
 
-The `params` endpoint allow users to query the current auth parameters.
+The `params` endpoint allows users to query the current auth parameters.
 
 ```bash
 /cosmos/auth/v1beta1/params

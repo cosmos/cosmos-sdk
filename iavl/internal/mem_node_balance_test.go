@@ -228,9 +228,23 @@ func TestNodeRebalance(t *testing.T) {
 				),
 				newTestLeafNode(1, 7, "Z"),
 			),
+			//        Z.2.1 (mutable)
+			//       /           \
+			//      Y.1.2      [Z.1.7]
+			//     /     \
+			//    X.1.3  [Y.1.6]
+			//    /    \
+			// [W.1.4] [X.1.5]
 			beforeRotation: "(Z.2.1 (Y.1.2 (X.1.3 [W.1.4] [X.1.5]) [Y.1.6]) [Z.1.7])",
-			afterRotation:  "(Y.2.2 (X.1.3 [W.1.4] [X.1.5]) (Z.2.1 [Y.1.6] [Z.1.7]))",
-			orphans:        []NodeID{NewNodeID(false, 1, 2)},
+			//         Y.2.2 (copy of Y.1.2)
+			//        /                \
+			//      X.1.3         Z.2.1 (immutable)
+			//     /     \           /     \
+			//   [W.1.4] [X.1.5]  [Y.1.6] [Z.1.7]
+			//
+			// orphans: Y.1.2 (the original branch, now replaced by Y.2.2)
+			afterRotation: "(Y.2.2 (X.1.3 [W.1.4] [X.1.5]) (Z.2.1 [Y.1.6] [Z.1.7]))",
+			orphans:       []NodeID{NewNodeID(false, 1, 2)},
 		},
 		{
 			name: "left-right case",

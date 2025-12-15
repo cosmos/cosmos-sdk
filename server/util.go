@@ -190,6 +190,11 @@ func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 		opts = append(opts, cosmosslog.WithJSONOutput())
 	}
 
+	// Disable colors if configured
+	if ctx.Viper.GetBool(flags.FlagLogNoColor) {
+		opts = append(opts, cosmosslog.WithNoColor())
+	}
+
 	// Parse and set log level
 	logLvlStr := ctx.Viper.GetString(flags.FlagLogLevel)
 	if logLvlStr != "" {
@@ -204,18 +209,19 @@ func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 }
 
 // parseLogLevel parses a log level string into slog.Level.
+// Returns an error for unknown log levels.
 func parseLogLevel(levelStr string) (slog.Level, error) {
 	switch strings.ToLower(levelStr) {
 	case "debug":
 		return slog.LevelDebug, nil
-	case "info":
+	case "info", "":
 		return slog.LevelInfo, nil
 	case "warn", "warning":
 		return slog.LevelWarn, nil
 	case "error", "err":
 		return slog.LevelError, nil
 	default:
-		return slog.LevelInfo, fmt.Errorf("unknown log level: %s", levelStr)
+		return 0, fmt.Errorf("unknown log level: %s (valid levels: debug, info, warn, error)", levelStr)
 	}
 }
 

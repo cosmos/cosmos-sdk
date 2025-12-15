@@ -173,13 +173,11 @@ func InitializeOpenTelemetry(filePath string) error {
 				))
 			}
 			if extra.InstrumentHost {
-				fmt.Println("Initializing host instrumentation")
 				if err := host.Start(); err != nil {
 					return fmt.Errorf("failed to start host instrumentation: %w", err)
 				}
 			}
 			if extra.InstrumentRuntime {
-				fmt.Println("Initializing runtime instrumentation")
 				if err := runtime.Start(); err != nil {
 					return fmt.Errorf("failed to start runtime instrumentation: %w", err)
 				}
@@ -204,7 +202,6 @@ func InitializeOpenTelemetry(filePath string) error {
 	otel.SetMeterProvider(openTelemetrySDK.MeterProvider())
 	logglobal.SetLoggerProvider(openTelemetrySDK.LoggerProvider())
 
-	fmt.Println("otel initialized successfully...")
 	return nil
 }
 

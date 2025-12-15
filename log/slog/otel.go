@@ -2,9 +2,11 @@ package slog
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
+	"strings"
 	"time"
 
 	"go.opentelemetry.io/contrib/bridges/otelslog"
@@ -22,6 +24,7 @@ type otelLoggerConfig struct {
 	consoleHandler slog.Handler
 	level          slog.Level
 	jsonOutput     bool
+	noColor        bool
 }
 
 // WithLoggerProvider sets a custom OpenTelemetry LoggerProvider.
@@ -59,6 +62,13 @@ func WithLevel(level slog.Level) OtelLoggerOption {
 func WithJSONOutput() OtelLoggerOption {
 	return func(cfg *otelLoggerConfig) {
 		cfg.jsonOutput = true
+	}
+}
+
+// WithNoColor disables ANSI color codes in console output.
+func WithNoColor() OtelLoggerOption {
+	return func(cfg *otelLoggerConfig) {
+		cfg.noColor = true
 	}
 }
 
@@ -107,8 +117,9 @@ func NewOtelLogger(name string, opts ...OtelLoggerOption) log.Logger {
 			consoleHandler = slog.NewJSONHandler(cfg.consoleWriter, handlerOpts)
 		} else {
 			consoleHandler = &prettyHandler{
-				out:   cfg.consoleWriter,
-				level: cfg.level,
+				out:     cfg.consoleWriter,
+				level:   cfg.level,
+				noColor: cfg.noColor,
 			}
 		}
 		handler = &multiHandler{handlers: []slog.Handler{consoleHandler, otelHandler}}
@@ -121,10 +132,9 @@ func NewOtelLogger(name string, opts ...OtelLoggerOption) log.Logger {
 }
 
 // multiHandler fans out log records to multiple slog.Handlers.
+// It uses best-effort semantics: all handlers are attempted even if some fail.
 type multiHandler struct {
 	handlers []slog.Handler
-	attrs    []slog.Attr
-	group    string
 }
 
 func (h *multiHandler) Enabled(ctx context.Context, level slog.Level) bool {
@@ -137,14 +147,15 @@ func (h *multiHandler) Enabled(ctx context.Context, level slog.Level) bool {
 }
 
 func (h *multiHandler) Handle(ctx context.Context, r slog.Record) error {
+	var errs []error
 	for _, handler := range h.handlers {
 		if handler.Enabled(ctx, r.Level) {
 			if err := handler.Handle(ctx, r.Clone()); err != nil {
-				return err
+				errs = append(errs, err)
 			}
 		}
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
 func (h *multiHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
@@ -152,11 +163,7 @@ func (h *multiHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	for i, handler := range h.handlers {
 		newHandlers[i] = handler.WithAttrs(attrs)
 	}
-	return &multiHandler{
-		handlers: newHandlers,
-		attrs:    append(h.attrs, attrs...),
-		group:    h.group,
-	}
+	return &multiHandler{handlers: newHandlers}
 }
 
 func (h *multiHandler) WithGroup(name string) slog.Handler {
@@ -164,11 +171,7 @@ func (h *multiHandler) WithGroup(name string) slog.Handler {
 	for i, handler := range h.handlers {
 		newHandlers[i] = handler.WithGroup(name)
 	}
-	return &multiHandler{
-		handlers: newHandlers,
-		attrs:    h.attrs,
-		group:    name,
-	}
+	return &multiHandler{handlers: newHandlers}
 }
 
 // ANSI color codes
@@ -185,10 +188,11 @@ const (
 // prettyHandler is a simple slog.Handler that outputs logs in a human-readable format
 // similar to zerolog's console output.
 type prettyHandler struct {
-	out    io.Writer
-	level  slog.Level
-	attrs  []slog.Attr
-	groups []string
+	out     io.Writer
+	level   slog.Level
+	attrs   []slog.Attr
+	groups  []string
+	noColor bool
 }
 
 func (h *prettyHandler) Enabled(_ context.Context, level slog.Level) bool {
@@ -198,15 +202,22 @@ func (h *prettyHandler) Enabled(_ context.Context, level slog.Level) bool {
 func (h *prettyHandler) Handle(_ context.Context, r slog.Record) error {
 	// Format: 3:04PM INF message key=value key=value module=xxx
 	timeStr := r.Time.Format(time.Kitchen)
-	levelStr, levelColor := levelToShortAndColor(r.Level)
+	levelStr, levelColor := h.levelToShortAndColor(r.Level)
 
 	// Start with time and level
-	fmt.Fprintf(h.out, "%s%s%s %s%s%s %s", colorGray, timeStr, colorReset, levelColor, levelStr, colorReset, r.Message)
-
-	// Add pre-set attrs
-	for _, attr := range h.attrs {
-		h.writeAttr(attr)
+	if h.noColor {
+		fmt.Fprintf(h.out, "%s %s %s", timeStr, levelStr, r.Message)
+	} else {
+		fmt.Fprintf(h.out, "%s%s%s %s%s%s %s", colorGray, timeStr, colorReset, levelColor, levelStr, colorReset, r.Message)
 	}
+
+	// Add pre-set attrs (these already have group prefixes applied)
+	for _, attr := range h.attrs {
+		h.writeAttr(attr, "")
+	}
+
+	// Build group prefix for record attrs
+	groupPrefix := h.buildGroupPrefix()
 
 	// Add record attrs (skip complex objects like "impl" that contain nested loggers)
 	r.Attrs(func(attr slog.Attr) bool {
@@ -214,7 +225,7 @@ func (h *prettyHandler) Handle(_ context.Context, r slog.Record) error {
 		if attr.Key == "impl" {
 			return true
 		}
-		h.writeAttr(attr)
+		h.writeAttr(attr, groupPrefix)
 		return true
 	})
 
@@ -222,7 +233,14 @@ func (h *prettyHandler) Handle(_ context.Context, r slog.Record) error {
 	return nil
 }
 
-func (h *prettyHandler) writeAttr(attr slog.Attr) {
+func (h *prettyHandler) buildGroupPrefix() string {
+	if len(h.groups) == 0 {
+		return ""
+	}
+	return strings.Join(h.groups, ".") + "."
+}
+
+func (h *prettyHandler) writeAttr(attr slog.Attr, prefix string) {
 	val := attr.Value.Resolve()
 
 	// Skip empty values
@@ -230,8 +248,14 @@ func (h *prettyHandler) writeAttr(attr slog.Attr) {
 		return
 	}
 
-	// Print key in cyan
-	fmt.Fprintf(h.out, " %s%s=%s", colorCyan, attr.Key, colorReset)
+	key := prefix + attr.Key
+
+	// Print key
+	if h.noColor {
+		fmt.Fprintf(h.out, " %s=", key)
+	} else {
+		fmt.Fprintf(h.out, " %s%s=%s", colorCyan, key, colorReset)
+	}
 
 	// For simple types, print value
 	switch val.Kind() {
@@ -250,9 +274,10 @@ func (h *prettyHandler) writeAttr(attr slog.Attr) {
 	case slog.KindTime:
 		fmt.Fprint(h.out, val.Time().Format(time.RFC3339))
 	case slog.KindGroup:
-		// For groups, print nested attrs
+		// For groups, print nested attrs with the group name as prefix
+		groupPrefix := key + "."
 		for _, a := range val.Group() {
-			h.writeAttr(a)
+			h.writeAttr(a, groupPrefix)
 		}
 	default:
 		// For KindAny, check if it implements Stringer or can be formatted
@@ -267,24 +292,44 @@ func (h *prettyHandler) writeAttr(attr slog.Attr) {
 }
 
 func (h *prettyHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+	// Apply current group prefix to new attrs
+	groupPrefix := h.buildGroupPrefix()
+	prefixedAttrs := make([]slog.Attr, len(attrs))
+	for i, attr := range attrs {
+		prefixedAttrs[i] = slog.Attr{Key: groupPrefix + attr.Key, Value: attr.Value}
+	}
 	return &prettyHandler{
-		out:    h.out,
-		level:  h.level,
-		attrs:  append(h.attrs, attrs...),
-		groups: h.groups,
+		out:     h.out,
+		level:   h.level,
+		attrs:   append(h.attrs, prefixedAttrs...),
+		groups:  h.groups,
+		noColor: h.noColor,
 	}
 }
 
 func (h *prettyHandler) WithGroup(name string) slog.Handler {
 	return &prettyHandler{
-		out:    h.out,
-		level:  h.level,
-		attrs:  h.attrs,
-		groups: append(h.groups, name),
+		out:     h.out,
+		level:   h.level,
+		attrs:   h.attrs,
+		groups:  append(h.groups, name),
+		noColor: h.noColor,
 	}
 }
 
-func levelToShortAndColor(level slog.Level) (string, string) {
+func (h *prettyHandler) levelToShortAndColor(level slog.Level) (string, string) {
+	if h.noColor {
+		switch {
+		case level < slog.LevelInfo:
+			return "DBG", ""
+		case level < slog.LevelWarn:
+			return "INF", ""
+		case level < slog.LevelError:
+			return "WRN", ""
+		default:
+			return "ERR", ""
+		}
+	}
 	switch {
 	case level < slog.LevelInfo:
 		return "DBG", colorBlue

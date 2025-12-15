@@ -686,7 +686,6 @@ func (app *SimApp) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*s
 
 // BeginBlocker application updates every begin block
 func (app *SimApp) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
-	ctx.Logger().InfoContext(ctx, "beginning block....")
 	return app.ModuleManager.BeginBlock(ctx)
 }
 

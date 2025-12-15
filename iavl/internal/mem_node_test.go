@@ -11,13 +11,16 @@ func TestMemNode_Getters(t *testing.T) {
 	right := NewNodePointer(&MemNode{})
 	nodeId := NewNodeID(true, 5, 10)
 
+	testKey := []byte("testkey")
+	testValue := []byte("testvalue")
+	testHash := []byte("testhash")
 	node := &MemNode{
 		height:    3,
 		version:   7,
 		size:      42,
-		key:       []byte("testkey"),
-		value:     []byte("testvalue"),
-		hash:      []byte("testhash"),
+		key:       testKey,
+		value:     testValue,
+		hash:      testHash,
 		left:      left,
 		right:     right,
 		nodeId:    nodeId,
@@ -29,16 +32,16 @@ func TestMemNode_Getters(t *testing.T) {
 	require.Equal(t, int64(42), node.Size())
 	require.Equal(t, left, node.Left())
 	require.Equal(t, right, node.Right())
-	require.Equal(t, []byte("testhash"), node.Hash())
+	require.Equal(t, testHash, node.Hash().UnsafeBytes())
 	require.Equal(t, nodeId, node.ID())
 
 	key, err := node.Key()
 	require.NoError(t, err)
-	require.Equal(t, []byte("testkey"), key)
+	require.Equal(t, testKey, key.UnsafeBytes())
 
 	value, err := node.Value()
 	require.NoError(t, err)
-	require.Equal(t, []byte("testvalue"), value)
+	require.Equal(t, testValue, value.UnsafeBytes())
 }
 
 func TestMemNode_IsLeaf(t *testing.T) {
@@ -98,12 +101,14 @@ func TestMemNode_String(t *testing.T) {
 }
 
 func TestMemNode_MutateBranch(t *testing.T) {
+	key := []byte("key")
+	origHash := []byte("origHash")
 	original := &MemNode{
 		height:  2,
 		version: 5,
 		size:    10,
-		key:     []byte("key"),
-		hash:    []byte("oldhash"),
+		key:     key,
+		hash:    origHash,
 		left:    NewNodePointer(&MemNode{}),
 		right:   NewNodePointer(&MemNode{}),
 	}
@@ -113,13 +118,13 @@ func TestMemNode_MutateBranch(t *testing.T) {
 
 	// Version updated, hash cleared
 	require.Equal(t, uint32(12), mutated.Version())
-	require.Nil(t, mutated.Hash())
+	require.Nil(t, mutated.Hash().UnsafeBytes())
 
 	// Other fields preserved
 	require.Equal(t, original.Height(), mutated.Height())
 	require.Equal(t, original.Size(), mutated.Size())
-	key, _ := mutated.Key()
-	require.Equal(t, []byte("key"), key)
+	key2, _ := mutated.Key()
+	require.Equal(t, key, key2.UnsafeBytes())
 	require.Equal(t, original.Left(), mutated.Left())
 	require.Equal(t, original.Right(), mutated.Right())
 
@@ -128,7 +133,7 @@ func TestMemNode_MutateBranch(t *testing.T) {
 
 	// Original unchanged
 	require.Equal(t, uint32(5), original.Version())
-	require.Equal(t, []byte("oldhash"), original.Hash())
+	require.Equal(t, origHash, original.Hash().UnsafeBytes())
 }
 
 func TestMemNode_Get_Leaf(t *testing.T) {
@@ -180,7 +185,7 @@ func TestMemNode_Get_Leaf(t *testing.T) {
 			}
 			val, idx, err := node.Get([]byte(tt.searchKey))
 			require.NoError(t, err)
-			require.Equal(t, tt.wantValue, val)
+			require.Equal(t, tt.wantValue, val.UnsafeBytes())
 			require.Equal(t, tt.wantIndex, idx)
 		})
 	}
@@ -254,7 +259,7 @@ func TestMemNode_Get_Branch(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			val, idx, err := root.Get([]byte(tt.searchKey))
 			require.NoError(t, err)
-			require.Equal(t, tt.wantValue, val)
+			require.Equal(t, tt.wantValue, val.UnsafeBytes())
 			require.Equal(t, tt.wantIndex, idx)
 		})
 	}
@@ -312,7 +317,7 @@ func TestMemNode_Get_DeeperTree(t *testing.T) {
 		t.Run(tt.searchKey, func(t *testing.T) {
 			val, idx, err := root.Get([]byte(tt.searchKey))
 			require.NoError(t, err)
-			require.Equal(t, tt.wantValue, val)
+			require.Equal(t, tt.wantValue, val.UnsafeBytes())
 			require.Equal(t, tt.wantIndex, idx)
 		})
 	}

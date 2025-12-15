@@ -198,7 +198,7 @@ type ValidatorDistInfo struct {
 ### Delegation Distribution
 
 Each delegation distribution only needs to record the height at which it last
-withdrew fees. Because a delegation must withdraw fees each time it's
+withdrew fees. Because a delegation must withdraw fees each time its
 properties change (aka bonded tokens etc.) its properties will remain constant
 and the delegator's _accumulation_ factor can be calculated passively knowing
 only the height of the last withdrawal and its current properties.
@@ -213,7 +213,7 @@ type DelegationDistInfo struct {
 
 ### Params
 
-The distribution module stores it's params in state with the prefix of `0x09`,
+The distribution module stores its params in state with the prefix of `0x09`,
 it can be updated with governance or the address with authority.
 
 * Params: `0x09 | ProtocolBuffer(Params)`

@@ -12,11 +12,10 @@ type Node interface {
 	IsLeaf() bool
 
 	// Key returns the key of this node.
-	Key() ([]byte, error)
+	Key() (UnsafeBytes, error)
 
-	// Value returns the value of this node.
-	// Calling this on a non-leaf node will return nil and possibly an error.
-	Value() ([]byte, error)
+	// Value returns the value of this node. It is an error to call this method on non-leaf nodes.
+	Value() (UnsafeBytes, error)
 
 	// Left returns a pointer to the left child node.
 	// If this is called on a leaf node, it returns nil.
@@ -28,7 +27,7 @@ type Node interface {
 
 	// Hash returns the hash of this node.
 	// Hash may or may not have been computed yet.
-	Hash() []byte
+	Hash() UnsafeBytes
 
 	// Height returns the height of the subtree rooted at this node.
 	Height() uint8
@@ -45,7 +44,7 @@ type Node interface {
 	// The index is the 0-based position where the key exists or would be inserted
 	// in sorted order among all leaf keys in this subtree. This is useful for
 	// range queries and determining a key's position even when it doesn't exist.
-	Get(key []byte) (value []byte, index int64, err error)
+	Get(key []byte) (value UnsafeBytes, index int64, err error)
 
 	// MutateBranch creates a mutable copy of this branch node created at the specified version.
 	// Since this is an immutable tree, whenever we need to modify a branch node, we should call this method

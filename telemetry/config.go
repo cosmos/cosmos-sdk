@@ -38,11 +38,9 @@ var (
 )
 
 func init() {
-	if openTelemetrySDK == nil {
-		if otelFilePath := os.Getenv(otelConfigEnvVar); otelFilePath != "" {
-			if err := InitializeOpenTelemetry(otelFilePath); err != nil {
-				panic(err)
-			}
+	if otelFilePath := os.Getenv(otelConfigEnvVar); otelFilePath != "" {
+		if err := InitializeOpenTelemetry(otelFilePath); err != nil {
+			panic(err)
 		}
 	}
 }
@@ -163,7 +161,7 @@ func InitializeOpenTelemetry(filePath string) error {
 				})
 				exporter, err := stdoutlog.New(
 					stdoutlog.WithWriter(logsFile),
-					stdoutlog.WithPrettyPrint(),
+					// stdoutlog.WithPrettyPrint(),
 				)
 				if err != nil {
 					return fmt.Errorf("failed to create stdout log exporter: %w", err)
@@ -173,11 +171,13 @@ func InitializeOpenTelemetry(filePath string) error {
 				))
 			}
 			if extra.InstrumentHost {
+				fmt.Println("Initializing host instrumentation")
 				if err := host.Start(); err != nil {
 					return fmt.Errorf("failed to start host instrumentation: %w", err)
 				}
 			}
 			if extra.InstrumentRuntime {
+				fmt.Println("Initializing runtime instrumentation")
 				if err := runtime.Start(); err != nil {
 					return fmt.Errorf("failed to start runtime instrumentation: %w", err)
 				}

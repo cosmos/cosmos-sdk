@@ -122,7 +122,7 @@ var (
 
 #### Rules
 
-``collections.NewPrefix`` accepts either `uint8`, `string` or `[]bytes` it's good practice to use an always increasing `uint8`for disk space efficiency.
+``collections.NewPrefix`` accepts either `uint8`, `string` or `[]bytes` it's good practice to use an always increasing `uint8` for disk space efficiency.
 
 A collection **MUST NOT** share the same prefix as another collection in the same module, and a collection prefix **MUST NEVER** start with the same prefix as another, examples:
 
@@ -397,7 +397,7 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, validator sdk.ValAddress) error
 }
 ```
 
-The first difference we notice is that `KeySet` needs use to specify only one type parameter: the key (`sdk.ValAddress` in this case).
+The first difference we notice is that `KeySet` needs us to specify only one type parameter: the key (`sdk.ValAddress` in this case).
 The second difference we notice is that `KeySet` in its `NewKeySet` function does not require
 us to specify a `ValueCodec` but only a `KeyCodec`. This is because a `KeySet` only saves keys and not values.
 
@@ -605,7 +605,7 @@ we specified in the range.
 Then we use again the `Values` method of the `Iterator` to collect all the results.
 
 `collections.Range` also offers a `Prefix` API which is not applicable to all keys types,
-for example uint64 cannot be prefix because it is of constant size, but a `string` key
+for example uint64 cannot be prefixed because it is of constant size, but a `string` key
 can be prefixed.
 
 #### IterateAccounts
@@ -648,7 +648,7 @@ Let's see now how we can work with composite keys using collections.
 
 ### Example
 
-In our example we will show-case how we can use collections when we are dealing with balances, similar to bank,
+In our example we will showcase how we can use collections when we are dealing with balances, similar to bank,
 a balance is a mapping between `(address, denom) => math.Int` the composite key in our case is `(address, denom)`.
 
 ## Instantiation of a composite key collection

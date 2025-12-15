@@ -134,15 +134,11 @@ func TestUpdateHeightSize(t *testing.T) {
 }
 
 func TestRotateLeft(t *testing.T) {
-	// Construct tree:
-	//
-	//	 Y (mutable)
-	//	  /   \
-	//	[X]    Z
-	//	      / \
-	//	    [Y] [Z]
-	//
-
+	//     Y.2.1 (mutable)
+	//    /           \
+	// [X.1.2]       Z.1.3
+	//              /     \
+	//          [Y.1.4] [Z.1.5]
 	Y := newTestBranchNode(2, 1,
 		newTestLeafNode(1, 2, "X"),
 		newTestBranchNode(1, 3,
@@ -150,60 +146,47 @@ func TestRotateLeft(t *testing.T) {
 			newTestLeafNode(1, 5, "Z"),
 		),
 	)
+	require.Equal(t, "(Y.2.1 [X.1.2] (Z.1.3 [Y.1.4] [Z.1.5]))", printTreeStructure(Y))
 
-	require.Equal(t, "(Y.2.1 [X.1.2] (Z.1.3 [Y.1.4] [Z.1.5]))", printTreeStructure(t, Y))
-
-	// After rotation:
+	//         Z.2.2 (copy of Z.1.3)
+	//        /                \
+	//     Y.2.1 (immutable)  [Z.1.5]
+	//    /      \
+	// [X.1.2] [Y.1.4]
 	//
-	//	        copy of Z
-	//	    /              \
-	//	   Y (immutable)    [Z]
-	//	  / \
-	//	[X] [Y]
-	//
-	// orphans: Z (the original branch, now replaced by newRoot)
-
+	// orphans: Z.1.3 (replaced by Z.2.2)
 	ctx := &mutationContext{version: 2}
 	newRoot, err := Y.rotateLeft(ctx)
 	require.NoError(t, err)
-
-	require.Equal(t, "(Z.2.2 (Y.2.1 [X.1.2] [Y.1.4]) [Z.1.5])", printTreeStructure(t, newRoot))
+	require.Equal(t, "(Z.2.2 (Y.2.1 [X.1.2] [Y.1.4]) [Z.1.5])", printTreeStructure(newRoot))
 	require.Equal(t, []NodeID{NewNodeID(false, 1, 3)}, ctx.orphans)
 	require.NoError(t, verifyAVLInvariants(newRoot))
 }
 
 func TestRotateRight(t *testing.T) {
-	// Construct tree:
-	//
-	//	   Y (mutable)
-	//	    /   \
-	//	   X    [Y]
-	//	  / \
-	//	[W] [X]
-	//
+	//       Y.2.1 (mutable)
+	//      /           \
+	//    X.1.2       [Y.1.5]
+	//   /     \
+	// [W.1.3] [X.1.4]
 	Y := newTestBranchNode(2, 1,
 		newTestBranchNode(1, 2,
 			newTestLeafNode(1, 3, "W"),
 			newTestLeafNode(1, 4, "X")),
 		newTestLeafNode(1, 5, "Y"))
+	require.Equal(t, "(Y.2.1 (X.1.2 [W.1.3] [X.1.4]) [Y.1.5])", printTreeStructure(Y))
 
-	require.Equal(t, "(Y.2.1 (X.1.2 [W.1.3] [X.1.4]) [Y.1.5])", printTreeStructure(t, Y))
-
-	// After rotation:
+	//      X.2.2 (copy of X.1.2)
+	//     /                \
+	// [W.1.3]      Y.2.1 (immutable)
+	//             /      \
+	//         [X.1.4] [Y.1.5]
 	//
-	//	  copy of X
-	//	  /   \
-	//	[W]    Y (immutable)
-	//	      / \
-	//	    [X] [Y]
-	//
-	// orphans: X (the original branch, now replaced by newRoot)
-
+	// orphans: X.1.2 (replaced by X.2.2)
 	ctx := &mutationContext{version: 2}
 	newRoot, err := Y.rotateRight(ctx)
 	require.NoError(t, err)
-
-	require.Equal(t, "(X.2.2 [W.1.3] (Y.2.1 [X.1.4] [Y.1.5]))", printTreeStructure(t, newRoot))
+	require.Equal(t, "(X.2.2 [W.1.3] (Y.2.1 [X.1.4] [Y.1.5]))", printTreeStructure(newRoot))
 	require.Equal(t, []NodeID{NewNodeID(false, 1, 2)}, ctx.orphans)
 	require.NoError(t, verifyAVLInvariants(newRoot))
 }
@@ -217,7 +200,19 @@ func TestNodeRebalance(t *testing.T) {
 		orphans        []NodeID
 	}{
 		{
-			name: "balanced tree - no rotation",
+			name: "perfectly balanced tree - no rotation",
+			root: newTestBranchNode(2, 1,
+				newTestLeafNode(1, 2, "X"),
+				newTestLeafNode(1, 3, "Y"),
+			),
+			//       Y.2.1
+			//      /      \
+			//  [X.1.2]   [Y.1.3]
+			beforeRotation: "(Y.2.1 [X.1.2] [Y.1.3])",
+			afterRotation:  "(Y.2.1 [X.1.2] [Y.1.3])", // unchanged
+		},
+		{
+			name: "-1 <= balance <= 1 - no rotation",
 			root: newTestBranchNode(2, 1,
 				newTestLeafNode(1, 2, "X"),
 				newTestBranchNode(1, 3,
@@ -364,11 +359,11 @@ func TestNodeRebalance(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.beforeRotation, printTreeStructure(t, tt.root), "tree structure before reBalance")
+			require.Equal(t, tt.beforeRotation, printTreeStructure(tt.root), "tree structure before reBalance")
 			ctx := &mutationContext{version: 2}
 			newRoot, err := tt.root.reBalance(ctx)
 			require.NoError(t, err, "reBalance error")
-			require.Equal(t, tt.afterRotation, printTreeStructure(t, newRoot), "tree structure after reBalance")
+			require.Equal(t, tt.afterRotation, printTreeStructure(newRoot), "tree structure after reBalance")
 			require.NoError(t, verifyAVLInvariants(newRoot))
 			// check orphans
 			require.Equal(t, tt.orphans, ctx.orphans, "orphans after reBalance")
@@ -379,7 +374,7 @@ func TestNodeRebalance(t *testing.T) {
 // printTreeStructure returns a string representation of the tree structure.
 // Leaves are formatted as [key.version], branches as (key.version left right).
 // Example: (Y.1 [X.1] (Z.1 [Y.1] [Z.1]))
-func printTreeStructure(t *testing.T, node *MemNode) string {
+func printTreeStructure(node *MemNode) string {
 	seen := map[NodeID]bool{}
 	// collect all existing IDs to avoid temporary ID collisions
 	var collectIds func(node *MemNode)

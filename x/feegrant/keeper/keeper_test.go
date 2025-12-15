@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
@@ -32,6 +33,7 @@ type KeeperTestSuite struct {
 	feegrantKeeper keeper.Keeper
 	accountKeeper  *feegranttestutil.MockAccountKeeper
 	bankKeeper     *feegranttestutil.MockBankKeeper
+	storeKey       storetypes.StoreKey
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -41,6 +43,7 @@ func TestKeeperTestSuite(t *testing.T) {
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.addrs = simtestutil.CreateIncrementalAccounts(20)
 	key := storetypes.NewKVStoreKey(feegrant.StoreKey)
+	suite.storeKey = key
 	testCtx := testutil.DefaultContextWithDB(suite.T(), key, storetypes.NewTransientStoreKey("transient_test"))
 	encCfg := moduletestutil.MakeTestEncodingConfig(module.AppModuleBasic{})
 
@@ -185,6 +188,34 @@ func (suite *KeeperTestSuite) TestKeeperCrud() {
 
 	_, err = suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{Granter: suite.addrs[3].String(), Grantee: address})
 	suite.Require().NoError(err)
+}
+
+func (suite *KeeperTestSuite) TestRevokeAllowanceClearsQueue() {
+	expiration := suite.ctx.BlockTime().Add(24 * time.Hour)
+	allowance := &feegrant.BasicAllowance{
+		SpendLimit: suite.atom,
+		Expiration: &expiration,
+	}
+	err := suite.feegrantKeeper.GrantAllowance(suite.ctx, suite.addrs[0], suite.addrs[1], allowance)
+	suite.Require().NoError(err)
+	suite.Require().Equal(1, suite.feeAllowanceQueueEntryCount())
+	_, err = suite.msgSrvr.RevokeAllowance(suite.ctx, &feegrant.MsgRevokeAllowance{
+		Granter: suite.addrs[0].String(),
+		Grantee: suite.addrs[1].String(),
+	})
+	suite.Require().NoError(err)
+	suite.Require().Equal(0, suite.feeAllowanceQueueEntryCount())
+}
+
+func (suite *KeeperTestSuite) feeAllowanceQueueEntryCount() int {
+	store := suite.ctx.KVStore(suite.storeKey)
+	iterator := storetypes.KVStorePrefixIterator(store, feegrant.FeeAllowanceQueueKeyPrefix)
+	defer iterator.Close()
+	var count int
+	for ; iterator.Valid(); iterator.Next() {
+		count++
+	}
+	return count
 }
 
 func (suite *KeeperTestSuite) TestUseGrantedFee() {

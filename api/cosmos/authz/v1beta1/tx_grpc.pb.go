@@ -43,7 +43,9 @@ type MsgClient interface {
 	// Revoke revokes any authorization corresponding to the provided method name on the
 	// granter's account that has been granted to the grantee.
 	Revoke(ctx context.Context, in *MsgRevoke, opts ...grpc.CallOption) (*MsgRevokeResponse, error)
+	// Deprecated: Do not use.
 	// ExecCompat has same functionality as Exec but accepts array of json-encoded message string instead of []*Any
+	// Deprecated: This RPC is deprecated and will be removed in a future version.
 	ExecCompat(ctx context.Context, in *MsgExecCompat, opts ...grpc.CallOption) (*MsgExecCompatResponse, error)
 }
 
@@ -82,6 +84,7 @@ func (c *msgClient) Revoke(ctx context.Context, in *MsgRevoke, opts ...grpc.Call
 	return out, nil
 }
 
+// Deprecated: Do not use.
 func (c *msgClient) ExecCompat(ctx context.Context, in *MsgExecCompat, opts ...grpc.CallOption) (*MsgExecCompatResponse, error) {
 	out := new(MsgExecCompatResponse)
 	err := c.cc.Invoke(ctx, Msg_ExecCompat_FullMethodName, in, out, opts...)
@@ -107,7 +110,9 @@ type MsgServer interface {
 	// Revoke revokes any authorization corresponding to the provided method name on the
 	// granter's account that has been granted to the grantee.
 	Revoke(context.Context, *MsgRevoke) (*MsgRevokeResponse, error)
+	// Deprecated: Do not use.
 	// ExecCompat has same functionality as Exec but accepts array of json-encoded message string instead of []*Any
+	// Deprecated: This RPC is deprecated and will be removed in a future version.
 	ExecCompat(context.Context, *MsgExecCompat) (*MsgExecCompatResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }

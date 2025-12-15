@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 
 	errorsmod "cosmossdk.io/errors"
@@ -11,7 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/authz"
-	"github.com/cosmos/cosmos-sdk/x/authz/codec"
 )
 
 var _ authz.MsgServer = Keeper{}
@@ -143,36 +141,7 @@ func validateMsgs(msgs []sdk.Msg) error {
 }
 
 // ExecCompat implements the MsgServer.ExecCompat method.
+// Deprecated: This method is deprecated and disabled. It will be removed in a future version.
 func (k Keeper) ExecCompat(goCtx context.Context, msg *authz.MsgExecCompat) (*authz.MsgExecCompatResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	grantee, err := sdk.AccAddressFromBech32(msg.Grantee)
-	if err != nil {
-		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid grantee address: %s", err)
-	}
-
-	if len(msg.Msgs) == 0 {
-		return nil, sdkerrors.ErrInvalidRequest.Wrapf("messages cannot be empty")
-	}
-
-	subMsgs := make([]sdk.Msg, len(msg.Msgs))
-	for idx, m := range msg.Msgs {
-		var iMsg sdk.Msg
-		err := codec.GlobalCdc.UnmarshalInterfaceJSON([]byte(m), &iMsg)
-		if err != nil {
-			return nil, fmt.Errorf("parse message at index %d error: %w", idx, err)
-		}
-		subMsgs[idx] = iMsg
-	}
-
-	if err := validateMsgs(subMsgs); err != nil {
-		return nil, err
-	}
-
-	results, err := k.DispatchActions(ctx, grantee, subMsgs)
-	if err != nil {
-		return nil, fmt.Errorf("dispatch err: %w", err)
-	}
-
-	return &authz.MsgExecCompatResponse{Results: results}, nil
+	return nil, sdkerrors.ErrInvalidRequest.Wrap("MsgExecCompat is deprecated and has been disabled")
 }

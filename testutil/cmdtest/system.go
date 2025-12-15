@@ -61,7 +61,7 @@ func (s *System) RunWithInputC(ctx context.Context, in io.Reader, args ...string
 	rootCmd.SetIn(in)
 
 	var res RunResult
-	rootCmd.SetOutput(&res.Stdout)
+	rootCmd.SetOut(&res.Stdout)
 	rootCmd.SetErr(&res.Stderr)
 
 	rootCmd.SetArgs(args)

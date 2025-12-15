@@ -3,13 +3,13 @@ module github.com/cosmos/cosmos-sdk/tests
 go 1.24.4
 
 require (
-	cosmossdk.io/api v0.7.6
+	cosmossdk.io/api v0.9.2
 	cosmossdk.io/core v0.11.1
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.4.1
 	cosmossdk.io/math v1.4.0
-	cosmossdk.io/simapp v0.0.0-20230620040119-e078f1a49e8b
+	cosmossdk.io/simapp v0.0.0-00010101000000-000000000000
 	cosmossdk.io/store v1.1.1
 	cosmossdk.io/x/evidence v0.1.1
 	cosmossdk.io/x/feegrant v0.1.1 // indirect
@@ -110,6 +110,8 @@ require (
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-viper/mapstructure/v2 v2.3.0 // indirect
+	github.com/gobwas/httphead v0.1.0 // indirect
+	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
@@ -224,17 +226,12 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-// Here are the short-lived replace from the SimApp
-// Replace here are pending PRs, or version to be tagged
-// replace (
-// 	<temporary replace>
-// )
-replace cosmossdk.io/x/upgrade => ../x/upgrade
-
 // Below are the long-lived replace for tests.
 replace (
 	// We always want to test against the latest version of the simapp.
 	cosmossdk.io/simapp => ../simapp
+	// We always want to test against the latest version of the upgrade module.
+	cosmossdk.io/x/upgrade => ../x/upgrade
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// We always want to test against the latest version of the SDK.
 	github.com/cosmos/cosmos-sdk => ../.

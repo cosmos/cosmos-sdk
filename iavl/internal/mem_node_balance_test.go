@@ -7,13 +7,22 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func newTestLeafNode(key string, version uint32) *MemNode {
+func newTestLeafNode(version uint32, index uint32, key string) *MemNode {
 	node := newLeafNode([]byte(key), []byte("value_"+key), version)
-	assignTestID(node)
+	node.nodeId = NewNodeID(true, version, index)
 	return node
 }
 
-func newTestBranchNode(version uint32, left, right *MemNode) *MemNode {
+func newTestBranchNode(version, index uint32, left, right *MemNode) *MemNode {
+	var getSmallestKey func(n *MemNode) []byte
+	getSmallestKey = func(n *MemNode) []byte {
+		if n.IsLeaf() {
+			return n.key
+		} else {
+			return getSmallestKey(n.left.mem.Load())
+		}
+	}
+
 	node := &MemNode{
 		key:     getSmallestKey(right), // branch key = smallest key in right subtree
 		left:    NewNodePointer(left),
@@ -21,35 +30,8 @@ func newTestBranchNode(version uint32, left, right *MemNode) *MemNode {
 		version: version,
 	}
 	_ = node.updateHeightSize() // ignore error - test nodes always have valid children
-	assignTestID(node)
+	node.nodeId = NewNodeID(false, version, index)
 	return node
-}
-
-func getSmallestKey(n Node) []byte {
-	if n.IsLeaf() {
-		key, err := n.Key()
-		if err != nil {
-			panic(fmt.Sprintf("failed to get key of leaf node: %v", err))
-		}
-		return key.SafeCopy()
-	} else {
-		leftChild, leftPin, err := n.Left().Resolve()
-		defer leftPin.Unpin()
-		if err != nil {
-			panic(fmt.Sprintf("failed to resolve left child: %v", err))
-		}
-		return getSmallestKey(leftChild)
-	}
-}
-
-// testIDCounter is used to assign unique node IDs in tests.
-var testIDCounter uint32
-
-// assignTestID assigns a unique test ID to a node based on its version and type.
-// this is not a real node ID, but is extremely simple for testing purposes.
-func assignTestID(node *MemNode) {
-	testIDCounter++
-	node.nodeId = NewNodeID(node.IsLeaf(), node.version, testIDCounter)
 }
 
 func TestCalcBalance(t *testing.T) {
@@ -60,34 +42,34 @@ func TestCalcBalance(t *testing.T) {
 	}{
 		{
 			name: "balanced",
-			node: newTestBranchNode(1,
-				newTestLeafNode("A", 1),
-				newTestLeafNode("B", 1)),
+			node: newTestBranchNode(1, 1,
+				newTestLeafNode(1, 2, "A"),
+				newTestLeafNode(1, 3, "B"),
+			),
 			balance: 0,
 		},
 		{
 			name: "left heavy",
-			node: newTestBranchNode(1,
-				newTestBranchNode(1,
-					newTestLeafNode("A", 1),
-					newTestLeafNode("B", 1),
+			node: newTestBranchNode(1, 1,
+				newTestBranchNode(1, 2,
+					newTestLeafNode(1, 3, "A"),
+					newTestLeafNode(1, 4, "B"),
 				),
-				newTestLeafNode("C", 1),
+				newTestLeafNode(1, 5, "C"),
 			),
 			balance: 1,
 		},
 		{
 			name: "right heavy",
-			node: newTestBranchNode(1,
-				newTestLeafNode("A", 1),
-				newTestBranchNode(1,
-					newTestLeafNode("B", 1),
-					newTestBranchNode(1,
-						newTestLeafNode("C", 1),
-						newTestLeafNode("D", 1),
+			node: newTestBranchNode(1, 1,
+				newTestLeafNode(1, 2, "A"),
+				newTestBranchNode(1, 3,
+					newTestLeafNode(1, 4, "B"),
+					newTestBranchNode(1, 5,
+						newTestLeafNode(1, 6, "C"),
+						newTestLeafNode(1, 7, "D"),
 					),
-				),
-			),
+				)),
 			balance: -2,
 		},
 	}
@@ -111,27 +93,27 @@ func TestUpdateHeightSize(t *testing.T) {
 	}{
 		{
 			name:   "two leaves",
-			left:   newTestLeafNode("A", 1),
-			right:  newTestLeafNode("B", 1),
+			left:   newTestLeafNode(1, 1, "A"),
+			right:  newTestLeafNode(1, 2, "B"),
 			height: 1,
 			size:   2,
 		},
 		{
 			name: "left subtree taller",
-			left: newTestBranchNode(1,
-				newTestLeafNode("A", 1),
-				newTestLeafNode("B", 1),
+			left: newTestBranchNode(1, 1,
+				newTestLeafNode(1, 2, "A"),
+				newTestLeafNode(1, 3, "B"),
 			),
-			right:  newTestLeafNode("C", 1),
+			right:  newTestLeafNode(1, 4, "C"),
 			height: 2,
 			size:   3,
 		},
 		{
 			name: "right subtree taller",
-			left: newTestLeafNode("A", 1),
-			right: newTestBranchNode(1,
-				newTestLeafNode("B", 1),
-				newTestLeafNode("C", 1),
+			left: newTestLeafNode(1, 1, "A"),
+			right: newTestBranchNode(1, 2,
+				newTestLeafNode(1, 3, "B"),
+				newTestLeafNode(1, 4, "C"),
 			),
 			height: 2,
 			size:   3,
@@ -161,16 +143,15 @@ func TestRotateLeft(t *testing.T) {
 	//	    [Y] [Z]
 	//
 
-	Z := newTestBranchNode(1,
-		newTestLeafNode("Y", 1),
-		newTestLeafNode("Z", 1),
-	)
-	Y := newTestBranchNode(2, // a new mutable node in version 2 at the root
-		newTestLeafNode("X", 1),
-		Z,
+	Y := newTestBranchNode(2, 1,
+		newTestLeafNode(1, 2, "X"),
+		newTestBranchNode(1, 3,
+			newTestLeafNode(1, 4, "Y"),
+			newTestLeafNode(1, 5, "Z"),
+		),
 	)
 
-	require.Equal(t, "(Y.2 [X.1] (Z.1 [Y.1] [Z.1]))", printTreeStructure(t, Y))
+	require.Equal(t, "(Y.2.1 [X.1.2] (Z.1.3 [Y.1.4] [Z.1.5]))", printTreeStructure(t, Y))
 
 	// After rotation:
 	//
@@ -186,8 +167,8 @@ func TestRotateLeft(t *testing.T) {
 	newRoot, err := Y.rotateLeft(ctx)
 	require.NoError(t, err)
 
-	require.Equal(t, "(Z.2 (Y.2 [X.1] [Y.1]) [Z.1])", printTreeStructure(t, newRoot))
-	require.Equal(t, []NodeID{Z.ID()}, ctx.orphans)
+	require.Equal(t, "(Z.2.2 (Y.2.1 [X.1.2] [Y.1.4]) [Z.1.5])", printTreeStructure(t, newRoot))
+	require.Equal(t, []NodeID{NewNodeID(false, 1, 3)}, ctx.orphans)
 	require.NoError(t, verifyAVLInvariants(newRoot))
 }
 
@@ -200,16 +181,13 @@ func TestRotateRight(t *testing.T) {
 	//	  / \
 	//	[W] [X]
 	//
-	X := newTestBranchNode(1,
-		newTestLeafNode("W", 1),
-		newTestLeafNode("X", 1),
-	)
-	Y := newTestBranchNode(2, // a new mutable node in version 2 at the root
-		X,
-		newTestLeafNode("Y", 1),
-	)
+	Y := newTestBranchNode(2, 1,
+		newTestBranchNode(1, 2,
+			newTestLeafNode(1, 3, "W"),
+			newTestLeafNode(1, 4, "X")),
+		newTestLeafNode(1, 5, "Y"))
 
-	require.Equal(t, "(Y.2 (X.1 [W.1] [X.1]) [Y.1])", printTreeStructure(t, Y))
+	require.Equal(t, "(Y.2.1 (X.1.2 [W.1.3] [X.1.4]) [Y.1.5])", printTreeStructure(t, Y))
 
 	// After rotation:
 	//
@@ -225,8 +203,8 @@ func TestRotateRight(t *testing.T) {
 	newRoot, err := Y.rotateRight(ctx)
 	require.NoError(t, err)
 
-	require.Equal(t, "(X.2 [W.1] (Y.2 [X.1] [Y.1]))", printTreeStructure(t, newRoot))
-	require.Equal(t, []NodeID{X.ID()}, ctx.orphans)
+	require.Equal(t, "(X.2.2 [W.1.3] (Y.2.1 [X.1.4] [Y.1.5]))", printTreeStructure(t, newRoot))
+	require.Equal(t, []NodeID{NewNodeID(false, 1, 2)}, ctx.orphans)
 	require.NoError(t, verifyAVLInvariants(newRoot))
 }
 
@@ -240,41 +218,79 @@ func TestNodeRebalance(t *testing.T) {
 	}{
 		{
 			name: "left-left case",
-			root: newTestBranchNode(2,
-				newTestBranchNode(1,
-					newTestBranchNode(1,
-						newTestLeafNode("W", 1),
-						newTestLeafNode("X", 1),
+			root: newTestBranchNode(2, 1,
+				newTestBranchNode(1, 2,
+					newTestBranchNode(1, 3,
+						newTestLeafNode(1, 4, "W"),
+						newTestLeafNode(1, 5, "X"),
 					),
-					newTestLeafNode("Y", 1),
+					newTestLeafNode(1, 6, "Y"),
 				),
-				newTestLeafNode("Z", 1),
+				newTestLeafNode(1, 7, "Z"),
 			),
-			beforeRotation: "(Z.2 (Y.1 (X.1 [W.1] [X.1]) [Y.1]) [Z.1])",
-			afterRotation:  "(Y.2 (X.1 [W.1] [X.1]) (Z.2 [Y.1] [Z.1]))",
+			beforeRotation: "(Z.2.1 (Y.1.2 (X.1.3 [W.1.4] [X.1.5]) [Y.1.6]) [Z.1.7])",
+			afterRotation:  "(Y.2.2 (X.1.3 [W.1.4] [X.1.5]) (Z.2.1 [Y.1.6] [Z.1.7]))",
+			orphans:        []NodeID{NewNodeID(false, 1, 2)},
 		},
 		{
 			name: "left-right case",
-			root: newTestBranchNode(2,
-				newTestBranchNode(1,
-					newTestLeafNode("W", 1),
-					newTestBranchNode(1,
-						newTestLeafNode("X", 1),
-						newTestLeafNode("Y", 1),
+			root: newTestBranchNode(2, 1,
+				newTestBranchNode(1, 2,
+					newTestLeafNode(1, 3, "W"),
+					newTestBranchNode(1, 4,
+						newTestLeafNode(1, 5, "X"),
+						newTestLeafNode(1, 6, "Y"),
 					),
 				),
-				newTestLeafNode("Z", 1),
+				newTestLeafNode(1, 7, "Z"),
 			),
+			beforeRotation: "(Z.2.1 (X.1.2 [W.1.3] (Y.1.4 [X.1.5] [Y.1.6])) [Z.1.7])",
+			afterRotation:  "(Y.2.2 (X.2.3 [W.1.3] [X.1.5]) (Z.2.1 [Y.1.6] [Z.1.7]))",
+			orphans:        []NodeID{NewNodeID(false, 1, 2), NewNodeID(false, 1, 4)},
+		},
+		{
+			name: "right-right case",
+			root: newTestBranchNode(2, 1,
+				newTestLeafNode(1, 2, "W"),
+				newTestBranchNode(1, 3,
+					newTestLeafNode(1, 4, "X"),
+					newTestBranchNode(1, 5,
+						newTestLeafNode(1, 6, "Y"),
+						newTestLeafNode(1, 7, "Z"),
+					),
+				),
+			),
+			beforeRotation: "(X.2.1 [W.1.2] (Y.1.3 [X.1.4] (Z.1.5 [Y.1.6] [Z.1.7])))",
+			afterRotation:  "(Y.2.2 (X.2.1 [W.1.2] [X.1.4]) (Z.1.5 [Y.1.6] [Z.1.7]))",
+			orphans:        []NodeID{NewNodeID(false, 1, 3)},
+		},
+		{
+			name: "right-left case",
+			root: newTestBranchNode(2, 1,
+				newTestLeafNode(1, 2, "W"),
+				newTestBranchNode(1, 3,
+					newTestBranchNode(1, 4,
+						newTestLeafNode(1, 5, "X"),
+						newTestLeafNode(1, 6, "Y"),
+					),
+					newTestLeafNode(1, 7, "Z"),
+				),
+			),
+			beforeRotation: "(X.2.1 [W.1.2] (Z.1.3 (Y.1.4 [X.1.5] [Y.1.6]) [Z.1.7]))",
+			afterRotation:  "(Y.2.2 (X.2.1 [W.1.2] [X.1.5]) (Z.2.3 [Y.1.6] [Z.1.7]))",
+			orphans:        []NodeID{NewNodeID(false, 1, 3), NewNodeID(false, 1, 4)},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.beforeRotation, printTreeStructure(t, tt.root))
+			require.Equal(t, tt.beforeRotation, printTreeStructure(t, tt.root), "tree structure before reBalance")
 			ctx := &mutationContext{version: 2}
 			newRoot, err := tt.root.reBalance(ctx)
-			require.NoError(t, err)
-			require.Equal(t, tt.afterRotation, printTreeStructure(t, newRoot))
+			require.NoError(t, err, "reBalance error")
+			require.Equal(t, tt.afterRotation, printTreeStructure(t, newRoot), "tree structure after reBalance")
 			require.NoError(t, verifyAVLInvariants(newRoot))
+			// check orphans
+			require.Equal(t, tt.orphans, ctx.orphans, "orphans after reBalance")
 		})
 	}
 }
@@ -282,17 +298,46 @@ func TestNodeRebalance(t *testing.T) {
 // printTreeStructure returns a string representation of the tree structure.
 // Leaves are formatted as [key.version], branches as (key.version left right).
 // Example: (Y.1 [X.1] (Z.1 [Y.1] [Z.1]))
-func printTreeStructure(t *testing.T, node Node) string {
-	key, err := node.Key()
-	require.NoError(t, err)
-	if node.IsLeaf() {
-		return fmt.Sprintf("[%s.%d]", key.UnsafeBytes(), node.Version())
+func printTreeStructure(t *testing.T, node *MemNode) string {
+	seen := map[NodeID]bool{}
+	// collect all existing IDs to avoid temporary ID collisions
+	var collectIds func(node *MemNode)
+	collectIds = func(node *MemNode) {
+		if !node.nodeId.IsEmpty() {
+			seen[node.nodeId] = true
+		}
+		if !node.IsLeaf() {
+			collectIds(node.left.mem.Load())
+			collectIds(node.right.mem.Load())
+		}
 	}
-	leftNode, leftPin, err := node.Left().Resolve()
-	require.NoError(t, err)
-	defer leftPin.Unpin()
-	rightNode, rightPin, err := node.Right().Resolve()
-	require.NoError(t, err)
-	defer rightPin.Unpin()
-	return fmt.Sprintf("(%s.%d %s %s)", key.UnsafeBytes(), node.Version(), printTreeStructure(t, leftNode), printTreeStructure(t, rightNode))
+	collectIds(node)
+
+	var doPrintNode func(node *MemNode) string
+	doPrintNode = func(node *MemNode) string {
+		id := node.nodeId
+		// assign temporary ID if missing
+		if id.IsEmpty() {
+			n := uint32(1)
+			for {
+				id = NewNodeID(node.IsLeaf(), node.version, n)
+				if !seen[id] {
+					seen[id] = true
+					break
+				}
+				n++
+			}
+		}
+
+		key := node.key
+		if node.IsLeaf() {
+			return fmt.Sprintf("[%s.%d.%d]", key, id.Version(), id.Index())
+		}
+		return fmt.Sprintf("(%s.%d.%d %s %s)",
+			key, id.Version(), id.Index(),
+			doPrintNode(node.left.mem.Load()),
+			doPrintNode(node.right.mem.Load()),
+		)
+	}
+	return doPrintNode(node)
 }

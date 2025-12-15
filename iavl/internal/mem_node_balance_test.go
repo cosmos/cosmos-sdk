@@ -234,6 +234,8 @@ func TestNodeRebalance(t *testing.T) {
 			afterRotation:  "(Y.2.1 [X.1.2] (Z.1.3 [Y.1.4] [Z.1.5]))", // unchanged
 		},
 		{
+			// left heavy, left child also left heavy
+			// needs single right rotation
 			name: "left-left case",
 			root: newTestBranchNode(2, 1,
 				newTestBranchNode(1, 2,
@@ -264,6 +266,8 @@ func TestNodeRebalance(t *testing.T) {
 			orphans:       []NodeID{NewNodeID(false, 1, 2)},
 		},
 		{
+			// left heavy, left child right heavy
+			// needs left rotation on left child, then right rotation on root
 			name: "left-right case",
 			root: newTestBranchNode(2, 1,
 				newTestBranchNode(1, 2,
@@ -294,6 +298,8 @@ func TestNodeRebalance(t *testing.T) {
 			orphans:       []NodeID{NewNodeID(false, 1, 2), NewNodeID(false, 1, 4)},
 		},
 		{
+			// right heavy, right child also right heavy
+			// needs single left rotation
 			name: "right-right case",
 			root: newTestBranchNode(2, 1,
 				newTestLeafNode(1, 2, "W"),
@@ -324,6 +330,8 @@ func TestNodeRebalance(t *testing.T) {
 			orphans:       []NodeID{NewNodeID(false, 1, 3)},
 		},
 		{
+			// right heavy, right child left heavy
+			// needs right rotation on right child, then left rotation on root
 			name: "right-left case",
 			root: newTestBranchNode(2, 1,
 				newTestLeafNode(1, 2, "W"),

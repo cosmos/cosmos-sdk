@@ -15,16 +15,17 @@ func TestMemNode_Getters(t *testing.T) {
 	testValue := []byte("testvalue")
 	testHash := []byte("testhash")
 	node := &MemNode{
-		height:    3,
-		version:   7,
-		size:      42,
-		key:       testKey,
-		value:     testValue,
-		hash:      testHash,
-		left:      left,
-		right:     right,
-		nodeId:    nodeId,
-		keyOffset: 100,
+		height:      3,
+		version:     7,
+		size:        42,
+		key:         testKey,
+		value:       testValue,
+		hash:        testHash,
+		left:        left,
+		right:       right,
+		nodeId:      nodeId,
+		keyOffset:   100,
+		valueOffset: 200,
 	}
 
 	require.Equal(t, uint8(3), node.Height())

@@ -10,7 +10,7 @@ This paper specifies the Governance module of the Cosmos SDK, which was first
 described in the [Cosmos Whitepaper](https://cosmos.network/about/whitepaper) in
 June 2016.
 
-The module enables Cosmos SDK based blockchain to support an on-chain governance
+The module enables Cosmos SDK-based blockchains to support an on-chain governance
 system. In this system, holders of the native staking token of the chain can vote
 on proposals on a 1 token 1 vote basis. Next is a list of features the module
 currently supports:

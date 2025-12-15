@@ -217,6 +217,23 @@ func TestNodeRebalance(t *testing.T) {
 		orphans        []NodeID
 	}{
 		{
+			name: "balanced tree - no rotation",
+			root: newTestBranchNode(2, 1,
+				newTestLeafNode(1, 2, "X"),
+				newTestBranchNode(1, 3,
+					newTestLeafNode(1, 4, "Y"),
+					newTestLeafNode(1, 5, "Z"),
+				),
+			),
+			//         Y.2.1
+			//       /      \
+			//   [X.1.2]     Z.1.3
+			//              /     \
+			//          [Y.1.4] [Z.1.5]
+			beforeRotation: "(Y.2.1 [X.1.2] (Z.1.3 [Y.1.4] [Z.1.5]))",
+			afterRotation:  "(Y.2.1 [X.1.2] (Z.1.3 [Y.1.4] [Z.1.5]))", // unchanged
+		},
+		{
 			name: "left-left case",
 			root: newTestBranchNode(2, 1,
 				newTestBranchNode(1, 2,

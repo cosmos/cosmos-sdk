@@ -37,7 +37,7 @@ A `Plan` is created once a (frozen) release candidate along with an appropriate 
 `Handler` (see below) is agreed upon, where the `Name` of a `Plan` corresponds to a
 specific `Handler`. Typically, a `Plan` is created through a governance proposal
 process, where if voted upon and passed, will be scheduled. The `Info` of a `Plan`
-may contain various metadata about the upgrade, typically application specific
+may contain various metadata about the upgrade, typically application-specific
 upgrade info to be included on-chain such as a git commit that validators could
 automatically upgrade to.
 
@@ -79,7 +79,7 @@ or if the binary was upgraded too early, the node will gracefully panic and exit
 
 The `x/upgrade` module also facilitates store migrations as part of the upgrade. The
 `StoreLoader` sets the migrations that need to occur before the new binary can
-successfully run the chain. This `StoreLoader` is also application specific and
+successfully run the chain. This `StoreLoader` is also application-specific and
 not defined on a per-module basis. Registering this `StoreLoader` is done via
 `app#SetStoreLoader` in the application.
 
@@ -89,10 +89,10 @@ func UpgradeStoreLoader (upgradeHeight int64, storeUpgrades *store.StoreUpgrades
 
 If there's a planned upgrade and the upgrade height is reached, the old binary writes `Plan` to the disk before panicking.
 
-This information is critical to ensure the `StoreUpgrades` happens smoothly at correct height and
+This information is critical to ensure the `StoreUpgrades` happens smoothly at the correct height and
 expected upgrade. It eliminates the chances for the new binary to execute `StoreUpgrades` multiple
-times every time on restart. Also if there are multiple upgrades planned on same height, the `Name`
-will ensure these `StoreUpgrades` takes place only in planned upgrade handler.
+times every time on restart. Also if there are multiple upgrades planned on the same height, the `Name`
+will ensure these `StoreUpgrades` take place only in the planned upgrade handler.
 
 ### Proposal
 

@@ -13,9 +13,9 @@ func newTestLeafNode(key string, version uint32) *MemNode {
 	return node
 }
 
-func newTestBranchNode(left, right *MemNode, key string, version uint32) *MemNode {
+func newTestBranchNode(version uint32, left, right *MemNode) *MemNode {
 	node := &MemNode{
-		key:     []byte(key), // branch key = smallest key in right subtree (caller must set correctly)
+		key:     getSmallestKey(right), // branch key = smallest key in right subtree
 		left:    NewNodePointer(left),
 		right:   NewNodePointer(right),
 		version: version,
@@ -23,6 +23,23 @@ func newTestBranchNode(left, right *MemNode, key string, version uint32) *MemNod
 	_ = node.updateHeightSize() // ignore error - test nodes always have valid children
 	assignTestID(node)
 	return node
+}
+
+func getSmallestKey(n Node) []byte {
+	if n.IsLeaf() {
+		key, err := n.Key()
+		if err != nil {
+			panic(fmt.Sprintf("failed to get key of leaf node: %v", err))
+		}
+		return key.SafeCopy()
+	} else {
+		leftChild, leftPin, err := n.Left().Resolve()
+		defer leftPin.Unpin()
+		if err != nil {
+			panic(fmt.Sprintf("failed to resolve left child: %v", err))
+		}
+		return getSmallestKey(leftChild)
+	}
 }
 
 // testIDCounter is used to assign unique node IDs in tests.
@@ -42,19 +59,36 @@ func TestCalcBalance(t *testing.T) {
 		balance int
 	}{
 		{
-			name:    "balanced",
-			node:    newTestBranchNode(&MemNode{height: 2}, &MemNode{height: 2}, "", 1),
+			name: "balanced",
+			node: newTestBranchNode(1,
+				newTestLeafNode("A", 1),
+				newTestLeafNode("B", 1)),
 			balance: 0,
 		},
 		{
-			name:    "left heavy",
-			node:    newTestBranchNode(&MemNode{height: 3}, &MemNode{height: 1}, "", 1),
-			balance: 2,
+			name: "left heavy",
+			node: newTestBranchNode(1,
+				newTestBranchNode(1,
+					newTestLeafNode("A", 1),
+					newTestLeafNode("B", 1),
+				),
+				newTestLeafNode("C", 1),
+			),
+			balance: 1,
 		},
 		{
-			name:    "right heavy",
-			node:    newTestBranchNode(&MemNode{height: 1}, &MemNode{height: 4}, "", 1),
-			balance: -3,
+			name: "right heavy",
+			node: newTestBranchNode(1,
+				newTestLeafNode("A", 1),
+				newTestBranchNode(1,
+					newTestLeafNode("B", 1),
+					newTestBranchNode(1,
+						newTestLeafNode("C", 1),
+						newTestLeafNode("D", 1),
+					),
+				),
+			),
+			balance: -2,
 		},
 	}
 	for _, tt := range tests {
@@ -83,16 +117,22 @@ func TestUpdateHeightSize(t *testing.T) {
 			size:   2,
 		},
 		{
-			name:   "left subtree taller",
-			left:   newTestBranchNode(newTestLeafNode("A", 1), newTestLeafNode("B", 1), "B", 1),
+			name: "left subtree taller",
+			left: newTestBranchNode(1,
+				newTestLeafNode("A", 1),
+				newTestLeafNode("B", 1),
+			),
 			right:  newTestLeafNode("C", 1),
 			height: 2,
 			size:   3,
 		},
 		{
-			name:   "right subtree taller",
-			left:   newTestLeafNode("A", 1),
-			right:  newTestBranchNode(newTestLeafNode("B", 1), newTestLeafNode("C", 1), "C", 1),
+			name: "right subtree taller",
+			left: newTestLeafNode("A", 1),
+			right: newTestBranchNode(1,
+				newTestLeafNode("B", 1),
+				newTestLeafNode("C", 1),
+			),
 			height: 2,
 			size:   3,
 		},
@@ -120,11 +160,15 @@ func TestRotateLeft(t *testing.T) {
 	//	      / \
 	//	    [Y] [Z]
 	//
-	leafX := newTestLeafNode("X", 1)
-	leafY := newTestLeafNode("Y", 1)
-	leafZ := newTestLeafNode("Z", 1)
-	Z := newTestBranchNode(leafY, leafZ, "Z", 1)
-	Y := newTestBranchNode(leafX, Z, "Y", 2) // a new mutable node in version 2 at the root
+
+	Z := newTestBranchNode(1,
+		newTestLeafNode("Y", 1),
+		newTestLeafNode("Z", 1),
+	)
+	Y := newTestBranchNode(2, // a new mutable node in version 2 at the root
+		newTestLeafNode("X", 1),
+		Z,
+	)
 
 	require.Equal(t, "(Y.2 [X.1] (Z.1 [Y.1] [Z.1]))", printTreeStructure(t, Y))
 
@@ -156,11 +200,14 @@ func TestRotateRight(t *testing.T) {
 	//	  / \
 	//	[W] [X]
 	//
-	leafW := newTestLeafNode("W", 1)
-	leafX := newTestLeafNode("X", 1)
-	leafY := newTestLeafNode("Y", 1)
-	X := newTestBranchNode(leafW, leafX, "X", 1)
-	Y := newTestBranchNode(X, leafY, "Y", 2) // a new mutable node in version 2 at the root
+	X := newTestBranchNode(1,
+		newTestLeafNode("W", 1),
+		newTestLeafNode("X", 1),
+	)
+	Y := newTestBranchNode(2, // a new mutable node in version 2 at the root
+		X,
+		newTestLeafNode("Y", 1),
+	)
 
 	require.Equal(t, "(Y.2 (X.1 [W.1] [X.1]) [Y.1])", printTreeStructure(t, Y))
 
@@ -184,16 +231,16 @@ func TestRotateRight(t *testing.T) {
 }
 
 func TestNodeRebalance(t *testing.T) {
-	tests := []struct {
-		name           string
-		root           *MemNode
-		beforeRotation string
-		afterRotation  string
-	}{
-		{
-			name: "left-left case",
-		},
-	}
+	//tests := []struct {
+	//	name           string
+	//	root           *MemNode
+	//	beforeRotation string
+	//	afterRotation  string
+	//}{
+	//	{
+	//		name: "left-left case",
+	//	},
+	//}
 }
 
 // printTreeStructure returns a string representation of the tree structure.

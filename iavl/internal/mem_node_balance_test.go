@@ -258,9 +258,23 @@ func TestNodeRebalance(t *testing.T) {
 				),
 				newTestLeafNode(1, 7, "Z"),
 			),
+			//        Z.2.1 (mutable)
+			//       /           \
+			//     X.1.2       [Z.1.7]
+			//    /      \
+			// [W.1.3]  Y.1.4
+			//          /    \
+			//      [X.1.5] [Y.1.6]
 			beforeRotation: "(Z.2.1 (X.1.2 [W.1.3] (Y.1.4 [X.1.5] [Y.1.6])) [Z.1.7])",
-			afterRotation:  "(Y.2.2 (X.2.3 [W.1.3] [X.1.5]) (Z.2.1 [Y.1.6] [Z.1.7]))",
-			orphans:        []NodeID{NewNodeID(false, 1, 2), NewNodeID(false, 1, 4)},
+			//              Y.2.2 (copy of Y.1.4)
+			//             /                \
+			//  X.2.3 (copy of X.1.2)   Z.2.1 (immutable)
+			//    /      \                 /     \
+			// [W.1.3] [X.1.5]        [Y.1.6] [Z.1.7]
+			//
+			// orphans: X.1.2 (replaced by X.2.3), Y.1.4 (replaced by Y.2.2)
+			afterRotation: "(Y.2.2 (X.2.3 [W.1.3] [X.1.5]) (Z.2.1 [Y.1.6] [Z.1.7]))",
+			orphans:       []NodeID{NewNodeID(false, 1, 2), NewNodeID(false, 1, 4)},
 		},
 		{
 			name: "right-right case",
@@ -274,9 +288,23 @@ func TestNodeRebalance(t *testing.T) {
 					),
 				),
 			),
+			//     X.2.1 (mutable)
+			//    /           \
+			// [W.1.2]       Y.1.3
+			//              /     \
+			//          [X.1.4]  Z.1.5
+			//                   /    \
+			//               [Y.1.6] [Z.1.7]
 			beforeRotation: "(X.2.1 [W.1.2] (Y.1.3 [X.1.4] (Z.1.5 [Y.1.6] [Z.1.7])))",
-			afterRotation:  "(Y.2.2 (X.2.1 [W.1.2] [X.1.4]) (Z.1.5 [Y.1.6] [Z.1.7]))",
-			orphans:        []NodeID{NewNodeID(false, 1, 3)},
+			//         Y.2.2 (copy of Y.1.3)
+			//        /                \
+			//     X.2.1 (immutable)  Z.1.5
+			//    /      \           /     \
+			// [W.1.2] [X.1.4]  [Y.1.6] [Z.1.7]
+			//
+			// orphans: Y.1.3 (replaced by Y.2.2)
+			afterRotation: "(Y.2.2 (X.2.1 [W.1.2] [X.1.4]) (Z.1.5 [Y.1.6] [Z.1.7]))",
+			orphans:       []NodeID{NewNodeID(false, 1, 3)},
 		},
 		{
 			name: "right-left case",
@@ -290,9 +318,23 @@ func TestNodeRebalance(t *testing.T) {
 					newTestLeafNode(1, 7, "Z"),
 				),
 			),
+			//     X.2.1 (mutable)
+			//    /           \
+			// [W.1.2]       Z.1.3
+			//              /     \
+			//           Y.1.4  [Z.1.7]
+			//           /    \
+			//       [X.1.5] [Y.1.6]
 			beforeRotation: "(X.2.1 [W.1.2] (Z.1.3 (Y.1.4 [X.1.5] [Y.1.6]) [Z.1.7]))",
-			afterRotation:  "(Y.2.2 (X.2.1 [W.1.2] [X.1.5]) (Z.2.3 [Y.1.6] [Z.1.7]))",
-			orphans:        []NodeID{NewNodeID(false, 1, 3), NewNodeID(false, 1, 4)},
+			//              Y.2.2 (copy of Y.1.4)
+			//             /                \
+			//  X.2.1 (immutable)    Z.2.3 (copy of Z.1.3)
+			//    /      \                 /     \
+			// [W.1.2] [X.1.5]        [Y.1.6] [Z.1.7]
+			//
+			// orphans: Z.1.3 (replaced by Z.2.3), Y.1.4 (replaced by Y.2.2)
+			afterRotation: "(Y.2.2 (X.2.1 [W.1.2] [X.1.5]) (Z.2.3 [Y.1.6] [Z.1.7]))",
+			orphans:       []NodeID{NewNodeID(false, 1, 3), NewNodeID(false, 1, 4)},
 		},
 	}
 	for _, tt := range tests {

@@ -11,7 +11,7 @@ import "fmt"
 // format that lives alongside the existing "compact" format.
 // Because the cost of migration is low, we have decided to keep things simple and compact for now.
 type NodeID struct {
-	// Version is the version of the tree at which this node was created.
+	// version is the version of the tree at which this node was created.
 	version uint32
 
 	// flagIndex indicates whether this is a branch or leaf node and stores its index in the tree.
@@ -42,14 +42,19 @@ func (id NodeID) IsEmpty() bool {
 	return id.version == 0 && id.flagIndex == 0
 }
 
+// Version is the version of the tree at which this node was created.
 func (id NodeID) Version() uint32 {
 	return id.version
 }
 
+// Index returns the index of the node in the tree.
+// For leaf nodes, this should be the 1-based in-order index of the leaf node with reference to other leaf nodes in this version.
+// For branch nodes, this should be the 1-based post-order traversal index of the node within this version.
 func (id NodeID) Index() uint32 {
 	return id.flagIndex.Index()
 }
 
+// Equal returns true if the two NodeIDs are equal.
 func (id NodeID) Equal(other NodeID) bool {
 	return id.version == other.version && id.flagIndex == other.flagIndex
 }

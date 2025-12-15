@@ -40,7 +40,7 @@ package internal
 //
 // The four cases handled:
 //
-//	Left-Left (balance > 1, leftBalance >= 0)
+//	Left-Left - left heavy and left child is also left heavy (balance > 1, leftBalance >= 0)
 //	Needs single right rotation on root (node):
 //	        P (mutable)              copy of Q
 //	       / \                        /      \
@@ -52,7 +52,7 @@ package internal
 //
 //	orphans: Q
 //
-//	Left-Right (balance > 1, leftBalance < 0)
+//	Left-Right - left heavy but left child is right heavy (balance > 1, leftBalance < 0)
 //	Needs left rotation on left child (Q), then right rotation on root (node):
 //	      P (mutable)         P                   copy of R
 //	       / \                 / \                  /      \
@@ -64,7 +64,7 @@ package internal
 //
 //	orphans: Q, R
 //
-//	Right-Right (balance < -1, rightBalance <= 0)
+//	Right-Right - right heavy and right child is also right heavy (balance < -1, rightBalance <= 0)
 //	Needs single left rotation on root (node):
 //	       P (mutable)                copy of Q
 //	       / \                        /      \
@@ -76,7 +76,7 @@ package internal
 //
 //	orphans: Q
 //
-//	Right-Left (balance < -1, rightBalance > 0)
+//	Right-Left - right heavy but right child is left heavy (balance < -1, rightBalance > 0)
 //	Needs right rotation on right child (Q), then left rotation on root (node):
 //	      P (mutable)         P                    copy of R
 //	       / \                 / \                  /      \
@@ -168,8 +168,6 @@ func (node *MemNode) reBalance(ctx *mutationContext) (*MemNode, error) {
 //   - positive: left subtree is taller (left-heavy)
 //   - negative: right subtree is taller (right-heavy)
 //   - zero: subtrees have equal height (perfectly balanced)
-//
-// An AVL tree requires that -1 <= balance <= 1 for all nodes.
 func calcBalance(node Node) (int, error) {
 	leftNode, leftPin, err := node.Left().Resolve()
 	defer leftPin.Unpin()
@@ -225,9 +223,9 @@ func maxUint8(a, b uint8) uint8 {
 
 // rotateRight performs a right rotation around this node.
 //
-// A new node is created from the left child (with updated version), which becomes
+// A new node is created by copying the left child, which becomes
 // the new root of this subtree. The original left child is orphaned.
-// The current node becomes the right child of the new root.
+// The current node (which must be new and mutable) becomes the right child of the new root.
 // The original left child's right subtree becomes the current node's new left subtree.
 //
 //	  Y (mutable)                copy of X
@@ -270,9 +268,9 @@ func (node *MemNode) rotateRight(ctx *mutationContext) (*MemNode, error) {
 
 // rotateLeft performs a left rotation around this node.
 //
-// A new node is created from the right child (with updated version), which becomes
+// A new node is created by copying the right child, which becomes
 // the new root of this subtree. The original right child is orphaned.
-// The current node becomes the left child of the new root.
+// The current node (which must be new and mutable) becomes the left child of the new root.
 // The original right child's left subtree becomes the current node's new right subtree.
 //
 //	Y (mutable)                  copy of Z

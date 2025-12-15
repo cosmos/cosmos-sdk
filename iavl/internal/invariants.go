@@ -18,17 +18,14 @@ import (
 //
 // For branch nodes, it verifies:
 //  1. Key ordering: left child key < node key <= right child key
-//  2. Branch key property: node key equals right child's key (smallest key in right subtree)
+//  2. Branch key property: key equals smallest key in right subtree
 //  3. AVL balance: |left.height - right.height| <= 1
 //  4. Height invariant: height = max(left.height, right.height) + 1
 //  5. Size invariant: size = left.size + right.size
-//
-// Note: This function does NOT verify orphan tracking or hash correctness.
-// Those require separate verification with access to the mutation context or hash computation.
 func verifyAVLInvariants(node Node) error {
 	id := node.ID()
 
-	// Verify ID consistency (if ID is set)
+	// Verify ID correctness (if ID is set)
 	if !id.IsEmpty() {
 		if id.Version() != node.Version() {
 			return fmt.Errorf("node %s has version %d, expected %d", id, node.Version(), id.Version())
@@ -104,12 +101,6 @@ func verifyAVLInvariants(node Node) error {
 			return fmt.Errorf("get key of right child of node %s: %w", id, err)
 		}
 
-		// IAVL key ordering: branch nodes store the first key of their right subtree as a separator.
-		// This means:
-		//   - All keys in left subtree < node.key
-		//   - All keys in right subtree >= node.key (the leftmost leaf in right subtree has key == node.key)
-		//
-		// We check immediate children here; recursive calls verify the full subtrees.
 		if bytes.Compare(leftKey.UnsafeBytes(), key.UnsafeBytes()) >= 0 {
 			return fmt.Errorf("branch node %s has left child with key %x which is >= node key %x", id, leftKey.UnsafeBytes(), key.UnsafeBytes())
 		}

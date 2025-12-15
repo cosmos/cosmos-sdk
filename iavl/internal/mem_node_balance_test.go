@@ -7,12 +7,22 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// newTestLeafNode creates a test leaf node with the given version, index, and key.
+// This introduces a simple way to create test nodes with predictable NodeIDs
+// so that we can do orphan tracking.
+// These test NodeIDs don't follow the normal NodeID assignment logic, but this
+// approach is more convenient for testing.
 func newTestLeafNode(version uint32, index uint32, key string) *MemNode {
 	node := newLeafNode([]byte(key), []byte("value_"+key), version)
 	node.nodeId = NewNodeID(true, version, index)
 	return node
 }
 
+// newTestBranchNode creates a test branch node with the given version, index, left, and right children.
+// This introduces a simple way to create test nodes with predictable NodeIDs
+// so that we can do orphan tracking.
+// These test NodeIDs don't follow the normal NodeID assignment logic, but this
+// approach is more convenient for testing.
 func newTestBranchNode(version, index uint32, left, right *MemNode) *MemNode {
 	var getSmallestKey func(n *MemNode) []byte
 	getSmallestKey = func(n *MemNode) []byte {
@@ -83,7 +93,8 @@ func TestCalcBalance(t *testing.T) {
 }
 
 func TestUpdateHeightSize(t *testing.T) {
-	// Construct branch nodes manually (without newTestBranchNode which already calls updateHeightSize)
+	// Construct branch nodes manually from their left and right children,
+	// without calling newTestBranchNode which already calls updateHeightSize
 	tests := []struct {
 		name   string
 		left   *MemNode
@@ -155,7 +166,7 @@ func TestRotateLeft(t *testing.T) {
 	// [X.1.2] [Y.1.4]
 	//
 	// orphans: Z.1.3 (replaced by Z.2.2)
-	ctx := &mutationContext{version: 2}
+	ctx := newMutationContext(2)
 	newRoot, err := Y.rotateLeft(ctx)
 	require.NoError(t, err)
 	require.Equal(t, "(Z.2.2 (Y.2.1 [X.1.2] [Y.1.4]) [Z.1.5])", printTreeStructure(newRoot))
@@ -183,7 +194,7 @@ func TestRotateRight(t *testing.T) {
 	//         [X.1.4] [Y.1.5]
 	//
 	// orphans: X.1.2 (replaced by X.2.2)
-	ctx := &mutationContext{version: 2}
+	ctx := newMutationContext(2)
 	newRoot, err := Y.rotateRight(ctx)
 	require.NoError(t, err)
 	require.Equal(t, "(X.2.2 [W.1.3] (Y.2.1 [X.1.4] [Y.1.5]))", printTreeStructure(newRoot))
@@ -377,7 +388,7 @@ func TestNodeRebalance(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			require.Equal(t, tt.beforeRotation, printTreeStructure(tt.root), "tree structure before reBalance")
-			ctx := &mutationContext{version: 2}
+			ctx := newMutationContext(2)
 			newRoot, err := tt.root.reBalance(ctx)
 			require.NoError(t, err, "reBalance error")
 			require.Equal(t, tt.afterRotation, printTreeStructure(newRoot), "tree structure after reBalance")
@@ -391,6 +402,7 @@ func TestNodeRebalance(t *testing.T) {
 // printTreeStructure returns a string representation of the tree structure.
 // Leaves are formatted as [key.version], branches as (key.version left right).
 // Example: (Y.1 [X.1] (Z.1 [Y.1] [Z.1]))
+// Any nodes without IDs assigned temporary IDs to avoid ambiguity.
 func printTreeStructure(node *MemNode) string {
 	seen := map[NodeID]bool{}
 	// collect all existing IDs to avoid temporary ID collisions

@@ -2,21 +2,27 @@ package internal
 
 import "fmt"
 
-// mutationContext is a small helper that keeps track of the current mutation version and orphaned nodes.
-// it is used in all mutation operations such as insertion, deletion, and rebalancing.
+// mutationContext is a small helper that keeps track of the current version and orphaned nodes.
+// It is used in all mutation operations such as insertion, deletion, and rebalancing.
 type mutationContext struct {
 	version uint32
 	orphans []NodeID
 }
 
+// newMutationContext creates a new mutationContext for the given version.
+func newMutationContext(version uint32) *mutationContext {
+	return &mutationContext{
+		version: version,
+	}
+}
+
 // mutateBranch mutates the given branch node for the current version
 // and tracks the existing node as an orphan.
-// If the node is from the current version or doesn't have an ID assigned
-// (meaning it hasn't been persisted yet),
+// If the node's ID is from the current version or is empty (meaning it hasn't been persisted yet),
 // the node is returned as-is without mutation or orphan tracking.
 // NOTE: if we do decide to implement nested cache wrapper functionality
 // directly using the IAVL tree structures (instead of a btree wrapper),
-// then we change the code to ALWAYS mutate nodes here,
+// then we MUST change this code to ALWAYS mutate nodes here,
 // even if they are from the current version.
 func (ctx *mutationContext) mutateBranch(node Node) (*MemNode, error) {
 	if ctx.addOrphan(node.ID()) {

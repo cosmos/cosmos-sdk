@@ -159,7 +159,7 @@ require (
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.61.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/host v0.64.0 // indirect
-	go.opentelemetry.io/contrib/instrumentation/runtime v0.63.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/runtime v0.64.0 // indirect
 	go.opentelemetry.io/contrib/otelconf v0.19.0 // indirect
 	go.opentelemetry.io/contrib/propagators/b3 v1.39.0 // indirect
 	go.opentelemetry.io/contrib/propagators/jaeger v1.37.0 // indirect

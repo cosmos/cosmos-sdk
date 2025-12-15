@@ -9,7 +9,15 @@ type mutationContext struct {
 	orphans []NodeID
 }
 
-// mutateBranch mutates the given branch node for the current version and tracks the existing node as an orphan.
+// mutateBranch mutates the given branch node for the current version
+// and tracks the existing node as an orphan.
+// If the node is from the current version or doesn't have an ID assigned
+// (meaning it hasn't been persisted yet),
+// the node is returned as-is without mutation or orphan tracking.
+// NOTE: if we do decide to implement nested cache wrapper functionality
+// directly using the IAVL tree structures (instead of a btree wrapper),
+// then we change the code to ALWAYS mutate nodes here,
+// even if they are from the current version.
 func (ctx *mutationContext) mutateBranch(node Node) (*MemNode, error) {
 	if ctx.addOrphan(node.ID()) {
 		return node.MutateBranch(ctx.version)

@@ -61,7 +61,7 @@ func TestMutationContext_MutateNode(t *testing.T) {
 		{
 			name:       "mutate uncommitted node returns same node",
 			currentVer: 5,
-			node:       newTestBranchNode(0, 1, newTestLeafNode(1, 1, "A"), newTestLeafNode(2, 2, "B")),
+			node:       newTestBranchNode(0, 0, newTestLeafNode(1, 1, "A"), newTestLeafNode(2, 2, "B")),
 			expectSame: true,
 		},
 	}

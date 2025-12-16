@@ -21,9 +21,9 @@ type FilterFunc func(key, level string) bool
 // ParseLogLevel("consensus:debug,mempool:debug,*:error")
 //
 // This function attempts to keep the same behavior as the CometBFT ParseLogLevel.
-func ParseLogLevel(levelStr string) (FilterFunc, slog.Level, error) {
+func ParseLogLevel(levelStr string) (FilterFunc, error) {
 	if levelStr == "" {
-		return nil, slog.LevelInfo, errors.New("empty log level")
+		return nil, errors.New("empty log level")
 	}
 
 	// prefix simple one word levels (e.g. "info") with "*"
@@ -38,34 +38,28 @@ func ParseLogLevel(levelStr string) (FilterFunc, slog.Level, error) {
 	for _, item := range list {
 		moduleAndLevel := strings.Split(item, ":")
 		if len(moduleAndLevel) != 2 {
-			return nil, slog.LevelInfo, fmt.Errorf("expected list in a form of \"module:level\" pairs, given pair %s, list %s", item, list)
+			return nil, fmt.Errorf("expected list in a form of \"module:level\" pairs, given pair %s, list %s", item, list)
 		}
 
 		module := moduleAndLevel[0]
 		levelName := moduleAndLevel[1]
 
 		if _, ok := filterMap[module]; ok {
-			return nil, slog.LevelInfo, fmt.Errorf("duplicate module %s in log level list %s", module, list)
+			return nil, fmt.Errorf("duplicate module %s in log level list %s", module, list)
 		}
 
 		level, err := ParseLevel(levelName)
 		if err != nil {
-			return nil, slog.LevelInfo, fmt.Errorf("invalid log level %s in log level list %s", levelName, list)
+			return nil, fmt.Errorf("invalid log level %s in log level list %s", levelName, list)
 		}
 
 		filterMap[module] = level
 	}
 
-	// Get default level for logger initialization
-	defaultLevel := slog.LevelInfo
-	if lvl, ok := filterMap[defaultLogLevelKey]; ok {
-		defaultLevel = lvl
-	}
-
 	// If there's only a default level and no module-specific levels, no filter needed
 	if len(filterMap) == 1 {
 		if _, ok := filterMap[defaultLogLevelKey]; ok {
-			return nil, defaultLevel, nil
+			return nil, nil
 		}
 	}
 
@@ -88,7 +82,7 @@ func ParseLogLevel(levelStr string) (FilterFunc, slog.Level, error) {
 		return msgLevel < level
 	}
 
-	return filterFunc, defaultLevel, nil
+	return filterFunc, nil
 }
 
 // ParseLevel parses a level string into a slog.Level.

@@ -8,27 +8,24 @@ import (
 )
 
 func TestParseLogLevel(t *testing.T) {
-	_, _, err := log.ParseLogLevel("")
+	_, err := log.ParseLogLevel("")
 	if err == nil {
 		t.Errorf("expected error for empty log level, got nil")
 	}
 
 	level := "consensus:foo,mempool:debug,*:error"
-	_, _, err = log.ParseLogLevel(level)
+	_, err = log.ParseLogLevel(level)
 	if err == nil {
 		t.Errorf("expected error for invalid log level foo in log level list [consensus:foo mempool:debug *:error], got nil")
 	}
 
 	level = "consensus:debug,mempool:debug,*:error"
-	filter, defaultLevel, err := log.ParseLogLevel(level)
+	filter, err := log.ParseLogLevel(level)
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
 	if filter == nil {
 		t.Fatalf("expected non-nil filter, got nil")
-	}
-	if defaultLevel != slog.LevelError {
-		t.Errorf("expected default level to be error, got %v", defaultLevel)
 	}
 
 	if filter("consensus", "debug") {
@@ -64,16 +61,13 @@ func TestParseLogLevel(t *testing.T) {
 	}
 
 	level = "error"
-	filter, defaultLevel, err = log.ParseLogLevel(level)
+	filter, err = log.ParseLogLevel(level)
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
 	// For simple levels, filter should be nil
 	if filter != nil {
 		t.Fatalf("expected nil filter for simple level, got non-nil")
-	}
-	if defaultLevel != slog.LevelError {
-		t.Errorf("expected default level to be error, got %v", defaultLevel)
 	}
 }
 

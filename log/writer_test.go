@@ -13,7 +13,7 @@ func TestFilteredWriter(t *testing.T) {
 	buf := new(bytes.Buffer)
 
 	level := "consensus:debug,mempool:debug,*:error"
-	filter, defaultLevel, err := log.ParseLogLevel(level)
+	filter, err := log.ParseLogLevel(level)
 	if err != nil {
 		t.Fatalf("failed to parse log level: %v", err)
 	}
@@ -24,7 +24,6 @@ func TestFilteredWriter(t *testing.T) {
 		log.WithLevel(slog.LevelDebug), // Allow debug level through
 		log.WithFilter(filter),
 	)
-	_ = defaultLevel // not used in this test
 
 	logger.Debug("this log line should be displayed", log.ModuleKey, "consensus")
 	if !strings.Contains(buf.String(), "this log line should be displayed") {

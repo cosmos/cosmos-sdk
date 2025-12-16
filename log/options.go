@@ -26,9 +26,6 @@ type Config struct {
 	// ConsoleWriter is the writer for console output.
 	// If nil and DisableConsole is false, defaults to os.Stderr.
 	ConsoleWriter io.Writer
-	// ConsoleHandler is a custom slog.Handler for console output.
-	// Takes precedence over ConsoleWriter if both are set.
-	ConsoleHandler slog.Handler
 	// DisableConsole disables console output entirely.
 	// When true, logs are only sent to OpenTelemetry.
 	DisableConsole bool
@@ -86,14 +83,6 @@ func WithConsoleWriter(w io.Writer) Option {
 func WithoutConsole() Option {
 	return func(cfg *Config) {
 		cfg.DisableConsole = true
-	}
-}
-
-// WithConsoleHandler sets a custom slog.Handler for console output.
-// This takes precedence over WithConsoleWriter if both are set.
-func WithConsoleHandler(h slog.Handler) Option {
-	return func(cfg *Config) {
-		cfg.ConsoleHandler = h
 	}
 }
 

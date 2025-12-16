@@ -122,7 +122,8 @@ func (l *verboseModeLogger) With(keyVals ...any) Logger {
 //	logger := log.NewLogger("cosmos-sdk", log.WithoutConsole())
 func NewLogger(name string, opts ...Option) Logger {
 	cfg := &Config{
-		Level: slog.LevelInfo,
+		Level:        slog.LevelInfo,
+		VerboseLevel: NoLevel, // disabled by default
 	}
 	for _, opt := range opts {
 		opt(cfg)
@@ -142,12 +143,8 @@ func NewLogger(name string, opts ...Option) Logger {
 	if cfg.DisableConsole {
 		// OTEL-only
 		handler = otelHandler
-	} else if cfg.ConsoleHandler != nil {
-		// Use provided console handler + OTEL handler
-		handler = &multiHandler{handlers: []slog.Handler{cfg.ConsoleHandler, otelHandler}}
 	} else {
 		// Default: console + OTEL
-		// Use provided writer or default to stderr
 		consoleWriter := cfg.ConsoleWriter
 		if consoleWriter == nil {
 			consoleWriter = os.Stderr

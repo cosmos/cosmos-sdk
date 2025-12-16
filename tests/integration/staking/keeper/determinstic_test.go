@@ -414,7 +414,7 @@ func TestGRPCValidatorDelegations(t *testing.T) {
 		ValidatorAddr: validator.OperatorAddress,
 	}
 
-	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.ValidatorDelegations, 14475, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.ValidatorDelegations, 14664, false)
 }
 
 func TestGRPCValidatorUnbondingDelegations(t *testing.T) {
@@ -494,7 +494,7 @@ func TestGRPCDelegation(t *testing.T) {
 		DelegatorAddr: delegator1,
 	}
 
-	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.Delegation, 4635, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.Delegation, 4698, false)
 }
 
 func TestGRPCUnbondingDelegation(t *testing.T) {
@@ -569,7 +569,7 @@ func TestGRPCDelegatorDelegations(t *testing.T) {
 		DelegatorAddr: delegator1,
 	}
 
-	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.DelegatorDelegations, 4238, false)
+	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.DelegatorDelegations, 4301, false)
 }
 
 func TestGRPCDelegatorValidator(t *testing.T) {
@@ -749,7 +749,7 @@ func TestGRPCPool(t *testing.T) {
 
 	f = initDeterministicFixture(t) // reset
 	getStaticValidator(f, t)
-	testdata.DeterministicIterations(f.ctx, t, &stakingtypes.QueryPoolRequest{}, f.queryClient.Pool, 6242, false)
+	testdata.DeterministicIterations(f.ctx, t, &stakingtypes.QueryPoolRequest{}, f.queryClient.Pool, 6305, false)
 }
 
 func TestGRPCRedelegations(t *testing.T) {
@@ -849,5 +849,5 @@ func TestGRPCParams(t *testing.T) {
 	err := f.stakingKeeper.SetParams(f.ctx, params)
 	assert.NilError(t, err)
 
-	testdata.DeterministicIterations(f.ctx, t, &stakingtypes.QueryParamsRequest{}, f.queryClient.Params, 1114, false)
+	testdata.DeterministicIterations(f.ctx, t, &stakingtypes.QueryParamsRequest{}, f.queryClient.Params, 1123, false)
 }

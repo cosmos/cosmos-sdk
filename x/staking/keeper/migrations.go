@@ -8,6 +8,7 @@ import (
 	v3 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v3"
 	v4 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v4"
 	v5 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v5"
+	v6 "github.com/cosmos/cosmos-sdk/x/staking/migrations/v6"
 )
 
 // Migrator is a struct for handling in-place store migrations.
@@ -46,4 +47,9 @@ func (m Migrator) Migrate3to4(ctx sdk.Context) error {
 func (m Migrator) Migrate4to5(ctx sdk.Context) error {
 	store := runtime.KVStoreAdapter(m.keeper.storeService.OpenKVStore(ctx))
 	return v5.MigrateStore(ctx, store, m.keeper.cdc)
+}
+
+// Migrate5to6 migrates x/staking state from consensus version 5 to 6.
+func (m Migrator) Migrate5to6(ctx sdk.Context) error {
+	return v6.MigrateStore(ctx, m.keeper.storeService, m.keeper.cdc)
 }

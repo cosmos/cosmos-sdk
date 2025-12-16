@@ -10,7 +10,6 @@ import (
 	"google.golang.org/grpc/status"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/math"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -48,8 +47,16 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 		return nil, err
 	}
 
-	if msg.Commission.Rate.LT(minCommRate) {
-		return nil, errorsmod.Wrapf(types.ErrCommissionLTMinRate, "cannot set validator commission to less than minimum rate of %s", minCommRate)
+	maxCommRate, err := k.MaxCommissionRate(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if msg.Commission.Rate.LT(minCommRate) || msg.Commission.Rate.GT(maxCommRate) {
+		return nil, errorsmod.Wrapf(types.ErrCommissionOutOfBound,
+			"commission rate (%s) must be between %s and %s",
+			msg.Commission.Rate.String(), minCommRate.String(), maxCommRate.String(),
+		)
 	}
 
 	// check to see if the pubkey or sender has been registered before
@@ -175,17 +182,21 @@ func (k msgServer) EditValidator(ctx context.Context, msg *types.MsgEditValidato
 	}
 
 	if msg.CommissionRate != nil {
-		if msg.CommissionRate.GT(math.LegacyOneDec()) || msg.CommissionRate.IsNegative() {
-			return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "commission rate must be between 0 and 1 (inclusive)")
-		}
-
 		minCommissionRate, err := k.MinCommissionRate(ctx)
 		if err != nil {
 			return nil, errorsmod.Wrap(sdkerrors.ErrLogic, err.Error())
 		}
 
-		if msg.CommissionRate.LT(minCommissionRate) {
-			return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "commission rate cannot be less than the min commission rate %s", minCommissionRate.String())
+		maxCommissionRate, err := k.MaxCommissionRate(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		if msg.CommissionRate.LT(minCommissionRate) || msg.CommissionRate.GT(maxCommissionRate) {
+			return nil, errorsmod.Wrapf(types.ErrCommissionOutOfBound,
+				"commission rate (%s) must be between %s and %s",
+				msg.CommissionRate.String(), minCommissionRate.String(), maxCommissionRate.String(),
+			)
 		}
 	}
 

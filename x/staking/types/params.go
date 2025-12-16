@@ -19,23 +19,28 @@ const (
 	// TODO: Justify our choice of default here.
 	DefaultUnbondingTime time.Duration = time.Hour * 24 * 7 * 3
 
-	// DefaultMaxValidators of bonded validators
+	// DefaultMaxValidators default maximum number of bonded validators
 	DefaultMaxValidators uint32 = 100
 
-	// DefaultMaxEntries in a UBD/RED pair
+	// DefaultMaxEntries default maximum entries in a UBD/RED pair
 	DefaultMaxEntries uint32 = 7
 
-	// DefaultHistoricalEntries is 10000. Apps that don't use IBC can ignore this
+	// DefaultHistoricalEntries default historical entries is 10000. Apps that don't use IBC can ignore this
 	// value by not adding the staking module to the application module manager's
 	// SetOrderBeginBlockers.
 	DefaultHistoricalEntries uint32 = 10000
 )
 
-// DefaultMinCommissionRate is set to 0%
-var DefaultMinCommissionRate = math.LegacyZeroDec()
+var (
+	// DefaultMinCommissionRate is set to 0%
+	DefaultMinCommissionRate = math.LegacyZeroDec()
+
+	// DefaultMaxCommissionRate is set to 100%
+	DefaultMaxCommissionRate = math.LegacyOneDec()
+)
 
 // NewParams creates a new Params instance
-func NewParams(unbondingTime time.Duration, maxValidators, maxEntries, historicalEntries uint32, bondDenom string, minCommissionRate math.LegacyDec) Params {
+func NewParams(unbondingTime time.Duration, maxValidators, maxEntries, historicalEntries uint32, bondDenom string, minCommissionRate, maxCommissionRate math.LegacyDec) Params {
 	return Params{
 		UnbondingTime:     unbondingTime,
 		MaxValidators:     maxValidators,
@@ -43,6 +48,7 @@ func NewParams(unbondingTime time.Duration, maxValidators, maxEntries, historica
 		HistoricalEntries: historicalEntries,
 		BondDenom:         bondDenom,
 		MinCommissionRate: minCommissionRate,
+		MaxCommissionRate: maxCommissionRate,
 	}
 }
 
@@ -55,10 +61,11 @@ func DefaultParams() Params {
 		DefaultHistoricalEntries,
 		sdk.DefaultBondDenom,
 		DefaultMinCommissionRate,
+		DefaultMaxCommissionRate,
 	)
 }
 
-// MustUnmarshalParams unmarshals the current staking Params value from store key. Panics on error.
+// MustUnmarshalParams unmarshal the current staking params value from store key or panic
 func MustUnmarshalParams(cdc *codec.LegacyAmino, value []byte) Params {
 	params, err := UnmarshalParams(cdc, value)
 	if err != nil {
@@ -68,7 +75,7 @@ func MustUnmarshalParams(cdc *codec.LegacyAmino, value []byte) Params {
 	return params
 }
 
-// UnmarshalParams unmarshals the current staking params value from store key
+// UnmarshalParams unmarshal the current staking params value from store key
 func UnmarshalParams(cdc *codec.LegacyAmino, value []byte) (params Params, err error) {
 	err = cdc.Unmarshal(value, &params)
 	if err != nil {
@@ -78,7 +85,7 @@ func UnmarshalParams(cdc *codec.LegacyAmino, value []byte) (params Params, err e
 	return
 }
 
-// Validate validates a set of Params
+// Validate validates a set of params
 func (p Params) Validate() error {
 	if err := validateUnbondingTime(p.UnbondingTime); err != nil {
 		return err
@@ -96,11 +103,11 @@ func (p Params) Validate() error {
 		return err
 	}
 
-	if err := validateMinCommissionRate(p.MinCommissionRate); err != nil {
+	if err := validateHistoricalEntries(p.HistoricalEntries); err != nil {
 		return err
 	}
 
-	if err := validateHistoricalEntries(p.HistoricalEntries); err != nil {
+	if err := validateCommissionRates(p.MinCommissionRate, p.MaxCommissionRate); err != nil {
 		return err
 	}
 
@@ -185,20 +192,37 @@ func ValidatePowerReduction(i interface{}) error {
 	return nil
 }
 
-func validateMinCommissionRate(i interface{}) error {
+func validateCommissionRate(i interface{}) error {
 	v, ok := i.(math.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
 	if v.IsNil() {
-		return fmt.Errorf("minimum commission rate cannot be nil: %s", v)
+		return fmt.Errorf("commission rate cannot be nil: %s", v)
 	}
 	if v.IsNegative() {
-		return fmt.Errorf("minimum commission rate cannot be negative: %s", v)
+		return fmt.Errorf("commission rate cannot be negative: %s", v)
 	}
 	if v.GT(math.LegacyOneDec()) {
-		return fmt.Errorf("minimum commission rate cannot be greater than 100%%: %s", v)
+		return fmt.Errorf("commission rate cannot be greater than 100%%: %s", v)
+	}
+
+	return nil
+}
+
+func validateCommissionRates(minimum, maximum math.LegacyDec) error {
+	if err := validateCommissionRate(minimum); err != nil {
+		return fmt.Errorf("minimum commission rate: %w", err)
+	}
+
+	if err := validateCommissionRate(maximum); err != nil {
+		return fmt.Errorf("maximum commission rate: %w", err)
+	}
+
+	if minimum.GT(maximum) {
+		return fmt.Errorf("minimum commission (%s) rate cannot be greater than the maximum (%s)",
+			minimum.String(), maximum.String())
 	}
 
 	return nil

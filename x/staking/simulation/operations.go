@@ -164,11 +164,20 @@ func SimulateMsgCreateValidator(
 			simtypes.RandStringOfLength(r, 10),
 		)
 
-		maxCommission := math.LegacyNewDecWithPrec(int64(simtypes.RandIntBetween(r, 0, 100)), 2)
+		minCommRate, err := k.MinCommissionRate(ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to get min commission rate"), nil, err
+		}
+		maxCommRate, err := k.MinCommissionRate(ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to get max commission rate"), nil, err
+		}
+
+		commissionRate := simtypes.RandomDecAmount(r, maxCommRate.Sub(minCommRate)).Add(minCommRate)
 		commission := types.NewCommissionRates(
-			simtypes.RandomDecAmount(r, maxCommission),
-			maxCommission,
-			simtypes.RandomDecAmount(r, maxCommission),
+			commissionRate,
+			maxCommRate,
+			simtypes.RandomDecAmount(r, maxCommRate),
 		)
 
 		msg, err := types.NewMsgCreateValidator(address.String(), simAccount.ConsKey.PubKey(), selfDelegation, description, commission, math.OneInt())
@@ -219,8 +228,17 @@ func SimulateMsgEditValidator(
 		}
 
 		address := val.GetOperator()
-		newCommissionRate := simtypes.RandomDecAmount(r, val.Commission.MaxRate)
 
+		minCommRate, err := k.MinCommissionRate(ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to get min commission rate"), nil, err
+		}
+		maxCommRate, err := k.MinCommissionRate(ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, msgType, "unable to get max commission rate"), nil, err
+		}
+
+		newCommissionRate := simtypes.RandomDecAmount(r, maxCommRate.Sub(minCommRate)).Add(minCommRate)
 		if err := val.Commission.ValidateNewRate(newCommissionRate, ctx.BlockHeader().Time); err != nil {
 			// skip as the commission is invalid
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "invalid commission rate"), nil, nil

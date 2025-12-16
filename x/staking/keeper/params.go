@@ -56,6 +56,12 @@ func (k Keeper) MinCommissionRate(ctx context.Context) (math.LegacyDec, error) {
 	return params.MinCommissionRate, err
 }
 
+// MaxCommissionRate - Maximum validator commission rate
+func (k Keeper) MaxCommissionRate(ctx context.Context) (math.LegacyDec, error) {
+	params, err := k.GetParams(ctx)
+	return params.MaxCommissionRate, err
+}
+
 // SetParams sets the x/staking module parameters.
 // CONTRACT: This method performs no validation of the parameters.
 func (k Keeper) SetParams(ctx context.Context, params types.Params) error {

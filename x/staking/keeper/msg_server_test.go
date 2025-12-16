@@ -203,6 +203,30 @@ func (s *KeeperTestSuite) TestMsgCreateValidator() {
 			expErrMsg: "validator's self delegation must be greater than their minimum self delegation",
 		},
 		{
+			name: "rate more than expected msg",
+			input: &stakingtypes.MsgCreateValidator{
+				Description: stakingtypes.Description{
+					Moniker:         "NewValidator",
+					Identity:        "xyz",
+					Website:         "xyz.com",
+					SecurityContact: "xyz@gmail.com",
+					Details:         "details",
+				},
+				Commission: stakingtypes.CommissionRates{
+					Rate:          math.LegacyNewDec(1000),
+					MaxRate:       math.LegacyNewDecWithPrec(5, 1),
+					MaxChangeRate: math.LegacyNewDec(0),
+				},
+				MinSelfDelegation: math.NewInt(1),
+				DelegatorAddress:  Addr.String(),
+				ValidatorAddress:  ValAddr.String(),
+				Pubkey:            pubkey,
+				Value:             sdk.NewInt64Coin("stake", 10000),
+			},
+			expErr:    true,
+			expErrMsg: "commission cannot be more than the max rate",
+		},
+		{
 			name: "valid msg",
 			input: &stakingtypes.MsgCreateValidator{
 				Description: stakingtypes.Description{
@@ -325,7 +349,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 				MinSelfDelegation: &newSelfDel,
 			},
 			expErr:    true,
-			expErrMsg: "commission rate must be between 0 and 1 (inclusive)",
+			expErrMsg: "commission rate (2.000000000000000000) must be between 0.000000000000000000 and 1.000000000000000000: commission rate is out of bounds",
 		},
 		{
 			name: "validator does not exist",
@@ -1023,7 +1047,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 				},
 			},
 			expErr:    true,
-			expErrMsg: "minimum commission rate cannot be negative",
+			expErrMsg: "minimum commission rate: commission rate cannot be negative: -10.000000000000000000",
 		},
 		{
 			name: "commission rate cannot be bigger than 100",
@@ -1039,7 +1063,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 				},
 			},
 			expErr:    true,
-			expErrMsg: "minimum commission rate cannot be greater than 100%",
+			expErrMsg: "minimum commission rate: commission rate cannot be greater than 100%: 2.000000000000000000",
 		},
 		{
 			name: "invalid bond denom",

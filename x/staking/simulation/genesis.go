@@ -14,9 +14,11 @@ import (
 
 // Simulation parameter constants
 const (
-	unbondingTime     = "unbonding_time"
-	maxValidators     = "max_validators"
-	historicalEntries = "historical_entries"
+	unbondingTime         = "unbonding_time"
+	maxValidators         = "max_validators"
+	historicalEntries     = "historical_entries"
+	minimumCommissionRate = "min_commission_rate"
+	maximumCommissionRate = "max_commission_rate"
 )
 
 // genUnbondingTime returns randomized UnbondingTime
@@ -34,6 +36,16 @@ func getHistEntries(r *rand.Rand) uint32 {
 	return uint32(r.Intn(int(types.DefaultHistoricalEntries + 1)))
 }
 
+// getMinCommissionRate returns randomized MinCommissionRate between 0-10.
+func getMinCommissionRate(r *rand.Rand) sdkmath.LegacyDec {
+	return sdkmath.LegacyNewDecWithPrec(int64(r.Intn(10)), 2)
+}
+
+// getMaxCommissionRate returns randomized MaxCommissionRate between 11-100.
+func getMaxCommissionRate(r *rand.Rand) sdkmath.LegacyDec {
+	return sdkmath.LegacyNewDecWithPrec(int64(r.Intn(90)+11), 2)
+}
+
 // RandomizedGenState generates a random GenesisState for staking
 func RandomizedGenState(simState *module.SimulationState) {
 	// params
@@ -42,6 +54,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		maxVals           uint32
 		histEntries       uint32
 		minCommissionRate sdkmath.LegacyDec
+		maxCommissionRate sdkmath.LegacyDec
 	)
 
 	simState.AppParams.GetOrGenerate(unbondingTime, &unbondTime, simState.Rand, func(r *rand.Rand) { unbondTime = genUnbondingTime(r) })
@@ -50,10 +63,14 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	simState.AppParams.GetOrGenerate(historicalEntries, &histEntries, simState.Rand, func(r *rand.Rand) { histEntries = getHistEntries(r) })
 
+	simState.AppParams.GetOrGenerate(minimumCommissionRate, &minCommissionRate, simState.Rand, func(r *rand.Rand) { minCommissionRate = getMinCommissionRate(r) })
+
+	simState.AppParams.GetOrGenerate(maximumCommissionRate, &maxCommissionRate, simState.Rand, func(r *rand.Rand) { maxCommissionRate = getMaxCommissionRate(r) })
+
 	// NOTE: the slashing module need to be defined after the staking module on the
 	// NewSimulationManager constructor for this to work
 	simState.UnbondTime = unbondTime
-	params := types.NewParams(simState.UnbondTime, maxVals, 7, histEntries, simState.BondDenom, minCommissionRate)
+	params := types.NewParams(simState.UnbondTime, maxVals, 7, histEntries, simState.BondDenom, minCommissionRate, maxCommissionRate)
 
 	// validators & delegations
 	var (

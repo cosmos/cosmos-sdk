@@ -312,9 +312,19 @@ message Params {
   uint32 historical_entries = 4;
   // bond_denom defines the bondable coin denomination.
   string bond_denom = 5;
-  // min_commission_rate is the chain-wide minimum commission rate that a validator can charge their delegators
+
+  // min_commission_rate represents the minimum commission rate that a validator can charge their delegators
   string min_commission_rate = 6 [
     (gogoproto.moretags)   = "yaml:\"min_commission_rate\"",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true,
+    (cosmos_proto.scalar)  = "cosmos.Dec"
+  ];
+
+  // max_commission_rate represents the maximum commission rate that a validator can charge their delegators
+  string max_commission_rate = 7 [
+    (gogoproto.moretags)   = "yaml:\"max_commission_rate\"",
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable)   = false,
     (amino.dont_omitempty) = true,

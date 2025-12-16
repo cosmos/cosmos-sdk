@@ -62,7 +62,7 @@ require (
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.64.0
 	go.opentelemetry.io/contrib/otelconf v0.19.0
 	go.opentelemetry.io/contrib/propagators/b3 v1.39.0
-	go.opentelemetry.io/contrib/propagators/jaeger v1.37.0
+	go.opentelemetry.io/contrib/propagators/jaeger v1.39.0
 	go.opentelemetry.io/otel v1.39.0
 	go.opentelemetry.io/otel/exporters/stdout/stdoutlog v0.15.0
 	go.opentelemetry.io/otel/exporters/stdout/stdoutmetric v1.39.0

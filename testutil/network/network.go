@@ -434,7 +434,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 
 		logger := log.NewNopLogger()
 		if cfg.EnableLogging {
-			logger = log.NewLogger(os.Stdout) // TODO(mr): enable selection of log destination.
+			logger = log.NewLogger("network", log.WithConsoleWriter(os.Stdout)) // TODO(mr): enable selection of log destination.
 		}
 
 		ctx.Logger = logger

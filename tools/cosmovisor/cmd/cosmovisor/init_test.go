@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-	"time"
 
 	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/viper"
@@ -275,7 +274,7 @@ func (p *BufferedPipe) panicIfStarted(msg string) {
 func (s *InitTestSuite) NewCapturingLogger() (*BufferedPipe, log.Logger) {
 	bufferedStdOut, err := StartNewBufferedPipe("stdout", os.Stdout)
 	s.Require().NoError(err, "creating stdout buffered pipe")
-	logger := log.NewLogger(bufferedStdOut, log.ColorOption(false), log.TimeFormatOption(time.RFC3339Nano)).With(log.ModuleKey, cosmovisorDirName)
+	logger := log.NewLogger("cosmovisor", log.WithConsoleWriter(bufferedStdOut), log.WithColor(false)).With(log.ModuleKey, cosmovisorDirName)
 	return bufferedStdOut, logger
 }
 

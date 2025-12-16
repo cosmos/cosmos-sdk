@@ -25,7 +25,6 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"cosmossdk.io/log"
-	cosmosslog "cosmossdk.io/log/slog"
 	"cosmossdk.io/store"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -58,7 +57,7 @@ func NewDefaultContext() *Context {
 	return NewContext(
 		viper.New(),
 		cmtcfg.DefaultConfig(),
-		cosmosslog.NewOtelLogger("cosmos-sdk", cosmosslog.WithConsoleWriter(os.Stdout)),
+		log.NewLogger("cosmos-sdk", log.WithConsoleWriter(os.Stdout)),
 	)
 }
 
@@ -180,49 +179,48 @@ func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplat
 // CreateSDKLogger creates the default SDK logger.
 // It reads the log level and format from the server context.
 func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
-	var opts []cosmosslog.OtelLoggerOption
+	var opts []log.Option
 
 	// Set console output
-	opts = append(opts, cosmosslog.WithConsoleWriter(out))
+	opts = append(opts, log.WithConsoleWriter(out))
 
 	// Set JSON output if configured
 	if ctx.Viper.GetString(flags.FlagLogFormat) == flags.OutputFormatJSON {
-		opts = append(opts, cosmosslog.WithJSONOutput())
+		opts = append(opts, log.WithJSONOutput())
 	}
 
 	// Disable colors if configured
 	if ctx.Viper.GetBool(flags.FlagLogNoColor) {
-		opts = append(opts, cosmosslog.WithNoColor())
+		opts = append(opts, log.WithColor(false))
 	}
 
 	// Parse and set log level
 	logLvlStr := ctx.Viper.GetString(flags.FlagLogLevel)
-	if logLvlStr != "" {
-		level, err := parseLogLevel(logLvlStr)
+	level, err := parseLogLevel(logLvlStr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid log level %s: %w", logLvlStr, err)
+	}
+	opts = append(opts, log.WithLevel(level))
+
+	// Parse and set verbose log level
+	verboseLvlStr := ctx.Viper.GetString(flags.FlagVerboseLogLevel)
+	if verboseLvlStr != "" {
+		verboseLevel, err := log.ParseLevel(verboseLvlStr)
 		if err != nil {
-			return nil, fmt.Errorf("invalid log level %s: %w", logLvlStr, err)
+			return nil, fmt.Errorf("invalid verbose log level %s: %w", verboseLvlStr, err)
 		}
-		opts = append(opts, cosmosslog.WithLevel(level))
+		opts = append(opts, log.WithVerboseLevel(verboseLevel))
 	}
 
-	return cosmosslog.NewOtelLogger("cosmos-sdk", opts...), nil
+	return log.NewLogger("cosmos-sdk", opts...), nil
 }
 
-// parseLogLevel parses a log level string into slog.Level.
-// Returns an error for unknown log levels.
+// parseLogLevel parses a log level string, defaulting to info for empty strings.
 func parseLogLevel(levelStr string) (slog.Level, error) {
-	switch strings.ToLower(levelStr) {
-	case "debug":
-		return slog.LevelDebug, nil
-	case "info", "":
+	if levelStr == "" {
 		return slog.LevelInfo, nil
-	case "warn", "warning":
-		return slog.LevelWarn, nil
-	case "error", "err":
-		return slog.LevelError, nil
-	default:
-		return 0, fmt.Errorf("unknown log level: %s (valid levels: debug, info, warn, error)", levelStr)
 	}
+	return log.ParseLevel(levelStr)
 }
 
 // GetServerContextFromCmd returns a Context from a command or an empty Context

@@ -1,115 +1,131 @@
 package log
 
 import (
-	"time"
+	"io"
+	"log/slog"
 
-	"github.com/rs/zerolog"
+	otellog "go.opentelemetry.io/otel/log"
 )
 
-// defaultConfig has all the options disabled, except Color and TimeFormat
-var defaultConfig = Config{
-	Level:      zerolog.TraceLevel, // this is the default level that zerolog initializes new Logger's with
-	Filter:     nil,
-	OutputJSON: false,
-	Color:      true,
-	StackTrace: false,
-	TimeFormat: time.Kitchen,
-	Hooks:      nil,
-}
+// NoLevel indicates that verbose mode should not change logging behavior.
+const NoLevel slog.Level = -100
 
 // Config defines configuration for the logger.
 type Config struct {
-	// Level is the default logging level.
-	Level zerolog.Level
+	// Level is the minimum log level. Messages with a lower level will be discarded.
+	Level slog.Level
 	// VerboseLevel is the logging level to use when verbose mode is enabled.
 	// If there is a filter enabled, it will be disabled when verbose mode is enabled
 	// and all log messages will be emitted at the VerboseLevel.
 	// If this is set to NoLevel, then no changes to the logging level or filter will be made
 	// when verbose mode is enabled.
-	VerboseLevel zerolog.Level
-	// Filter is the filter function to use that allows for filtering by key and level.
-	// When verbose mode is enabled, the filter will be disabled unless VerboseLevel is set to NoLevel.
-	Filter     FilterFunc
+	VerboseLevel slog.Level
+	// LoggerProvider is the OpenTelemetry logger provider to use.
+	// If nil, the global logger provider is used.
+	LoggerProvider otellog.LoggerProvider
+	// ConsoleWriter is the writer for console output.
+	// If nil and DisableConsole is false, defaults to os.Stderr.
+	ConsoleWriter io.Writer
+	// ConsoleHandler is a custom slog.Handler for console output.
+	// Takes precedence over ConsoleWriter if both are set.
+	ConsoleHandler slog.Handler
+	// DisableConsole disables console output entirely.
+	// When true, logs are only sent to OpenTelemetry.
+	DisableConsole bool
+	// OutputJSON configures the console handler to output JSON instead of text.
 	OutputJSON bool
-	Color      bool
-	StackTrace bool
+	// Color enables/disables ANSI color codes in console output.
+	Color bool
+	// TimeFormat is the time format string for console output.
+	// If empty, defaults to time.Kitchen ("3:04PM").
 	TimeFormat string
-	Hooks      []zerolog.Hook
+	// Filter is an optional filter function to selectively discard logs.
+	Filter FilterFunc
 }
 
+// Option configures a Logger.
 type Option func(*Config)
 
-// FilterOption sets the filter for the Logger.
-func FilterOption(filter FilterFunc) Option {
-	return func(cfg *Config) {
-		cfg.Filter = filter
-	}
-}
-
-// LevelOption sets the level for the Logger.
+// WithLevel sets the minimum log level.
 // Messages with a lower level will be discarded.
-func LevelOption(level zerolog.Level) Option {
+func WithLevel(level slog.Level) Option {
 	return func(cfg *Config) {
 		cfg.Level = level
 	}
 }
 
-// VerboseLevelOption sets the verbose level for the Logger.
-// When verbose mode is enabled, the logger will be switched to this level.
-func VerboseLevelOption(level zerolog.Level) Option {
+// WithVerboseLevel sets the verbose level for the Logger.
+// When verbose mode is enabled via SetVerboseMode(true), the logger will be switched to this level
+// and any filters will be disabled.
+// Set to NoLevel to disable verbose mode changes entirely.
+func WithVerboseLevel(level slog.Level) Option {
 	return func(cfg *Config) {
 		cfg.VerboseLevel = level
 	}
 }
 
-// OutputJSONOption sets the output of the logger to JSON.
-// By default, the logger outputs to a human-readable format.
-func OutputJSONOption() Option {
+// WithLoggerProvider sets a custom OpenTelemetry LoggerProvider.
+// If not provided, the global LoggerProvider is used.
+func WithLoggerProvider(provider otellog.LoggerProvider) Option {
+	return func(cfg *Config) {
+		cfg.LoggerProvider = provider
+	}
+}
+
+// WithConsoleWriter overrides the default console writer (os.Stderr).
+// By default, logs are written to both console and OpenTelemetry.
+// Use this to redirect console output to a different writer.
+func WithConsoleWriter(w io.Writer) Option {
+	return func(cfg *Config) {
+		cfg.ConsoleWriter = w
+	}
+}
+
+// WithoutConsole disables console output entirely.
+// When enabled, logs are only sent to OpenTelemetry.
+func WithoutConsole() Option {
+	return func(cfg *Config) {
+		cfg.DisableConsole = true
+	}
+}
+
+// WithConsoleHandler sets a custom slog.Handler for console output.
+// This takes precedence over WithConsoleWriter if both are set.
+func WithConsoleHandler(h slog.Handler) Option {
+	return func(cfg *Config) {
+		cfg.ConsoleHandler = h
+	}
+}
+
+// WithJSONOutput configures the console handler to output JSON instead of text.
+func WithJSONOutput() Option {
 	return func(cfg *Config) {
 		cfg.OutputJSON = true
 	}
 }
 
-// ColorOption adds an option to enable/disable coloring
-// of the logs when console writer is in use
-func ColorOption(val bool) Option {
+// WithColor enables/disables ANSI color codes in console output.
+// Defaults to true (colors enabled).
+func WithColor(enabled bool) Option {
 	return func(cfg *Config) {
-		cfg.Color = val
+		cfg.Color = enabled
 	}
 }
 
-// TimeFormatOption configures timestamp format of the logger
-// Timestamps are disabled if empty.
-// It is the responsibility of the caller to provide correct values
-// Supported formats:
-//   - time.Layout
-//   - time.ANSIC
-//   - time.UnixDate
-//   - time.RubyDate
-//   - time.RFC822
-//   - time.RFC822Z
-//   - time.RFC850
-//   - time.RFC1123
-//   - time.RFC1123Z
-//   - time.RFC3339
-//   - time.RFC3339Nano
-//   - time.Kitchen
-func TimeFormatOption(format string) Option {
+// WithTimeFormat sets the time format string for console output.
+// The format uses Go's time layout format (e.g., time.Kitchen, time.RFC3339).
+// If not set, defaults to time.Kitchen ("3:04PM").
+func WithTimeFormat(format string) Option {
 	return func(cfg *Config) {
 		cfg.TimeFormat = format
 	}
 }
 
-// TraceOption adds an option to enable/disable print of stacktrace on error log
-func TraceOption(val bool) Option {
+// WithFilter sets the filter for the Logger.
+// The filter function is called with the module and level of each log entry.
+// If the filter returns true, the log entry is discarded.
+func WithFilter(filter FilterFunc) Option {
 	return func(cfg *Config) {
-		cfg.StackTrace = val
-	}
-}
-
-// HooksOption appends hooks to the Logger hooks
-func HooksOption(hooks ...zerolog.Hook) Option {
-	return func(cfg *Config) {
-		cfg.Hooks = append(cfg.Hooks, hooks...)
+		cfg.Filter = filter
 	}
 }

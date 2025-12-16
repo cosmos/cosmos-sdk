@@ -2,60 +2,98 @@ package log_test
 
 import (
 	"bytes"
-	"errors"
 	"strings"
 	"testing"
-
-	"github.com/rs/zerolog"
 
 	"cosmossdk.io/log"
 )
 
-func inner() error {
-	return errors.New("seems we have an error here")
-}
-
-type _MockHook string
-
-func (h _MockHook) Run(e *zerolog.Event, l zerolog.Level, msg string) {
-	e.Bool(string(h), true)
-}
-
-func TestLoggerOptionHooks(t *testing.T) {
+func TestLoggerBasic(t *testing.T) {
 	buf := new(bytes.Buffer)
-	var (
-		mockHook1 _MockHook = "mock_message1"
-		mockHook2 _MockHook = "mock_message2"
-	)
-	logger := log.NewLogger(buf, log.HooksOption(mockHook1, mockHook2), log.ColorOption(false))
-	logger.Info("hello world")
-	if !strings.Contains(buf.String(), "mock_message1=true") {
-		t.Fatalf("expected mock_message1=true, got: %s", buf.String())
-	}
-	if !strings.Contains(buf.String(), "mock_message2=true") {
-		t.Fatalf("expected mock_message2=true, got: %s", buf.String())
-	}
-
-	buf.Reset()
-	logger = log.NewLogger(buf, log.HooksOption(), log.ColorOption(false))
+	logger := log.NewLogger("test", log.WithConsoleWriter(buf), log.WithColor(false))
 	logger.Info("hello world")
 	if !strings.Contains(buf.String(), "hello world") {
 		t.Fatalf("expected hello world, got: %s", buf.String())
 	}
+	if !strings.Contains(buf.String(), "INF") {
+		t.Fatalf("expected INF level, got: %s", buf.String())
+	}
 }
 
-func TestLoggerOptionStackTrace(t *testing.T) {
+func TestLoggerWithKeyVals(t *testing.T) {
 	buf := new(bytes.Buffer)
-	logger := log.NewLogger(buf, log.TraceOption(true), log.ColorOption(false))
-	logger.Error("this log should be displayed", "error", inner())
-	if strings.Count(buf.String(), "logger_test.go") != 1 {
-		t.Fatalf("stack trace not found, got: %s", buf.String())
+	logger := log.NewLogger("test", log.WithConsoleWriter(buf), log.WithColor(false))
+	logger.Info("hello world", "key1", "value1", "key2", 42)
+	output := buf.String()
+	if !strings.Contains(output, "hello world") {
+		t.Fatalf("expected hello world, got: %s", output)
 	}
-	buf.Reset()
+	if !strings.Contains(output, "key1=value1") {
+		t.Fatalf("expected key1=value1, got: %s", output)
+	}
+	if !strings.Contains(output, "key2=42") {
+		t.Fatalf("expected key2=42, got: %s", output)
+	}
+}
 
-	logger = log.NewLogger(buf, log.TraceOption(false), log.ColorOption(false))
-	logger.Error("this log should be displayed", "error", inner())
-	if strings.Count(buf.String(), "logger_test.go") > 0 {
-		t.Fatalf("stack trace found, got: %s", buf.String())
+func TestLoggerWith(t *testing.T) {
+	buf := new(bytes.Buffer)
+	logger := log.NewLogger("test", log.WithConsoleWriter(buf), log.WithColor(false))
+	logger = logger.With("module", "test-module")
+	logger.Info("hello world")
+	output := buf.String()
+	if !strings.Contains(output, "module=test-module") {
+		t.Fatalf("expected module=test-module, got: %s", output)
 	}
+}
+
+func TestLoggerLevels(t *testing.T) {
+	tests := []struct {
+		name     string
+		logFunc  func(log.Logger)
+		expected string
+	}{
+		{"debug", func(l log.Logger) { l.Debug("test") }, "DBG"},
+		{"info", func(l log.Logger) { l.Info("test") }, "INF"},
+		{"warn", func(l log.Logger) { l.Warn("test") }, "WRN"},
+		{"error", func(l log.Logger) { l.Error("test") }, "ERR"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			buf := new(bytes.Buffer)
+			logger := log.NewLogger("test",
+				log.WithConsoleWriter(buf),
+				log.WithColor(false),
+				log.WithLevel(-4), // slog.LevelDebug
+			)
+			tc.logFunc(logger)
+			if !strings.Contains(buf.String(), tc.expected) {
+				t.Fatalf("expected %s level, got: %s", tc.expected, buf.String())
+			}
+		})
+	}
+}
+
+func TestLoggerJSON(t *testing.T) {
+	buf := new(bytes.Buffer)
+	logger := log.NewLogger("test", log.WithConsoleWriter(buf), log.WithJSONOutput())
+	logger.Info("hello world", "key", "value")
+	output := buf.String()
+	if !strings.Contains(output, `"msg":"hello world"`) {
+		t.Fatalf("expected JSON output with msg field, got: %s", output)
+	}
+	if !strings.Contains(output, `"key":"value"`) {
+		t.Fatalf("expected JSON output with key field, got: %s", output)
+	}
+}
+
+func TestNopLogger(t *testing.T) {
+	logger := log.NewNopLogger()
+	// Should not panic
+	logger.Info("test")
+	logger.Debug("test")
+	logger.Warn("test")
+	logger.Error("test")
+	logger.With("key", "value").Info("test")
 }

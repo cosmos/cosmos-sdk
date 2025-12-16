@@ -16,7 +16,7 @@ import (
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
 
-	cosmosslog "cosmossdk.io/log/slog"
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -367,7 +367,7 @@ func BootstrapStateCmd(appCreator types.AppCreator) *cobra.Command {
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serverCtx := GetServerContextFromCmd(cmd)
-			logger := cosmosslog.NewOtelLogger("cosmos-sdk", cosmosslog.WithConsoleWriter(cmd.OutOrStdout()))
+			logger := log.NewLogger("cosmos-sdk", log.WithConsoleWriter(cmd.OutOrStdout()))
 			cfg := serverCtx.Config
 
 			height, err := cmd.Flags().GetInt64("height")

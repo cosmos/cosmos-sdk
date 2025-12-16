@@ -312,9 +312,10 @@ func (cfg *Config) Logger(dst io.Writer) log.Logger {
 	if cfg.DisableLogs {
 		logger = log.NewNopLogger()
 	} else {
-		logger = log.NewLogger(dst,
-			log.ColorOption(cfg.ColorLogs),
-			log.TimeFormatOption(cfg.TimeFormatLogs)).With(log.ModuleKey, "cosmovisor")
+		logger = log.NewLogger("cosmovisor",
+			log.WithConsoleWriter(dst),
+			log.WithColor(cfg.ColorLogs),
+			log.WithTimeFormat(cfg.TimeFormatLogs)).With(log.ModuleKey, "cosmovisor")
 	}
 
 	return logger

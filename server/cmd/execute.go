@@ -4,7 +4,6 @@ import (
 	"context"
 
 	cmtcli "github.com/cometbft/cometbft/libs/cli"
-	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -25,11 +24,11 @@ func Execute(rootCmd *cobra.Command, envPrefix, defaultHome string) error {
 	// https://github.com/spf13/cobra/pull/1118.
 	ctx := CreateExecuteContext(context.Background())
 
-	rootCmd.PersistentFlags().String(flags.FlagLogLevel, zerolog.InfoLevel.String(), "The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:<level>,<key>:<level>')")
+	rootCmd.PersistentFlags().String(flags.FlagLogLevel, "info", "The logging level (debug|info|warn|error|disabled or '*:<level>,<key>:<level>')")
 	// NOTE: The default logger is only checking for the "json" value, any other value will default to plain text.
 	rootCmd.PersistentFlags().String(flags.FlagLogFormat, "plain", "The logging format (json|plain)")
 	rootCmd.PersistentFlags().Bool(flags.FlagLogNoColor, false, "Disable colored logs")
-	rootCmd.PersistentFlags().String(flags.FlagVerboseLogLevel, zerolog.DebugLevel.String(), "The logging level (trace|debug|info|warn|error|fatal|panic|disabled|none) to use when performing operations which require extra verbosity (such as upgrades). When enabled, verbose mode disables any custom log filters. Set this to none to make verbose mode equivalent to normal logging.")
+	rootCmd.PersistentFlags().String(flags.FlagVerboseLogLevel, "debug", "The logging level (debug|info|warn|error|disabled) to use when performing operations which require extra verbosity (such as upgrades). When enabled, verbose mode disables any custom log filters.")
 
 	executor := cmtcli.PrepareBaseCmd(rootCmd, envPrefix, defaultHome)
 	return executor.ExecuteContext(ctx)

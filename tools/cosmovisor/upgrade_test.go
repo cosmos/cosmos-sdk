@@ -127,7 +127,7 @@ func (s *upgradeTestSuite) TestUpgradeBinaryNoDownloadUrl() {
 		},
 	)
 
-	logger := log.NewLogger(os.Stdout).With(log.ModuleKey, "cosmovisor")
+	logger := log.NewLogger("cosmovisor", log.WithConsoleWriter(os.Stdout)).With(log.ModuleKey, "cosmovisor")
 
 	currentBin, err := cfg.CurrentBin()
 	s.Require().NoError(err)
@@ -170,7 +170,7 @@ func (s *upgradeTestSuite) TestUpgradeBinaryNoDownloadUrl() {
 }
 
 func (s *upgradeTestSuite) TestUpgradeBinary() {
-	logger := log.NewLogger(os.Stdout).With(log.ModuleKey, "cosmovisor")
+	logger := log.NewLogger("cosmovisor", log.WithConsoleWriter(os.Stdout)).With(log.ModuleKey, "cosmovisor")
 
 	cases := map[string]struct {
 		url         string

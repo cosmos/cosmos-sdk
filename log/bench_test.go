@@ -4,10 +4,9 @@ import (
 	"bytes"
 	"errors"
 	"io"
+	"log/slog"
 	"testing"
 	"time"
-
-	"github.com/rs/zerolog"
 
 	"cosmossdk.io/log"
 )
@@ -70,22 +69,20 @@ func BenchmarkLoggers(b *testing.B) {
 		checkBuf := new(bytes.Buffer)
 		for _, bc := range benchCases {
 			checkBuf.Reset()
-			zl := zerolog.New(checkBuf)
-			logger := log.NewCustomLogger(zl)
+			logger := log.NewCustomLogger(slog.New(slog.NewJSONHandler(checkBuf, nil)))
 			logger.Info(message, bc.keyVals...)
 
-			b.Logf("zero logger output for %s: %s", bc.name, checkBuf.String())
+			b.Logf("slog logger output for %s: %s", bc.name, checkBuf.String())
 		}
 	}
 
 	// The real logger exposed by this package,
 	// writing to an io.Discard writer,
 	// so that real write time is negligible.
-	b.Run("zerolog", func(b *testing.B) {
+	b.Run("slog", func(b *testing.B) {
 		for _, bc := range benchCases {
 			b.Run(bc.name, func(b *testing.B) {
-				zl := zerolog.New(io.Discard)
-				logger := log.NewCustomLogger(zl)
+				logger := log.NewCustomLogger(slog.New(slog.NewJSONHandler(io.Discard, nil)))
 
 				for b.Loop() {
 					logger.Info(message, bc.keyVals...)
@@ -94,27 +91,11 @@ func BenchmarkLoggers(b *testing.B) {
 		}
 	})
 
-	// The nop logger we expose in the public API,
-	// also useful as a reference for how expensive zerolog is.
+	// The nop logger we expose in the public API.
 	b.Run("specialized nop logger", func(b *testing.B) {
 		for _, bc := range nopCases {
 			b.Run(bc.name, func(b *testing.B) {
 				logger := log.NewNopLogger()
-
-				for b.Loop() {
-					logger.Info(message, bc.keyVals...)
-				}
-			})
-		}
-	})
-
-	// To compare with the custom nop logger.
-	// The zerolog wrapper is about 1/3 the speed of the specialized nop logger,
-	// so we offer the specialized version in the exported API.
-	b.Run("zerolog nop logger", func(b *testing.B) {
-		for _, bc := range nopCases {
-			b.Run(bc.name, func(b *testing.B) {
-				logger := log.NewCustomLogger(zerolog.Nop())
 
 				for b.Loop() {
 					logger.Info(message, bc.keyVals...)
@@ -130,25 +111,22 @@ func BenchmarkLoggers_StructuredVsFields(b *testing.B) {
 	errorToLog := errors.New("error")
 	byteSliceToLog := []byte{0xde, 0xad, 0xbe, 0xef}
 
-	b.Run("logger structured", func(b *testing.B) {
-		zl := zerolog.New(io.Discard)
-		logger := log.NewCustomLogger(zl)
-		zerolog := logger.Impl().(*zerolog.Logger)
+	b.Run("slog structured", func(b *testing.B) {
+		logger := slog.New(slog.NewJSONHandler(io.Discard, nil))
 		for b.Loop() {
-			zerolog.Info().Int64("foo", 100000).Msg(message)
-			zerolog.Info().Str("foo", "foo").Msg(message)
-			zerolog.Error().
-				Int64("foo", 100000).
-				Str("bar", "foo").
-				Bytes("other", byteSliceToLog).
-				Err(errorToLog).
-				Msg(message)
+			logger.Info(message, slog.Int64("foo", 100000))
+			logger.Info(message, slog.String("foo", "foo"))
+			logger.Error(message,
+				slog.Int64("foo", 100000),
+				slog.String("bar", "foo"),
+				slog.Any("other", byteSliceToLog),
+				slog.Any("error", errorToLog),
+			)
 		}
 	})
 
 	b.Run("logger", func(b *testing.B) {
-		zl := zerolog.New(io.Discard)
-		logger := log.NewCustomLogger(zl)
+		logger := log.NewCustomLogger(slog.New(slog.NewJSONHandler(io.Discard, nil)))
 		for b.Loop() {
 			logger.Info(message, "foo", 100000)
 			logger.Info(message, "foo", "foo")

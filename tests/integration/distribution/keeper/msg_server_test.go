@@ -689,6 +689,13 @@ func TestMsgUpdateParams(t *testing.T) {
 				Params: distrtypes.Params{
 					CommunityTax:        math.LegacyNewDecWithPrec(2, 0),
 					WithdrawAddrEnabled: withdrawAddrEnabled,
+					NakamotoBonus: distrtypes.NakamotoBonus{
+						Enabled:            true,
+						Step:               distrtypes.DefaultNakamotoBonusStep,
+						Period:             distrtypes.DefaultNakamotoBonusPeriod,
+						MinimumCoefficient: distrtypes.DefaultNakamotoBonusMinimumCoefficient,
+						MaximumCoefficient: distrtypes.DefaultNakamotoBonusMaximumCoefficient,
+					},
 				},
 			},
 			expErr:    true,
@@ -701,6 +708,13 @@ func TestMsgUpdateParams(t *testing.T) {
 				Params: distrtypes.Params{
 					CommunityTax:        math.LegacyDec{},
 					WithdrawAddrEnabled: withdrawAddrEnabled,
+					NakamotoBonus: distrtypes.NakamotoBonus{
+						Enabled:            true,
+						Step:               distrtypes.DefaultNakamotoBonusStep,
+						Period:             distrtypes.DefaultNakamotoBonusPeriod,
+						MinimumCoefficient: distrtypes.DefaultNakamotoBonusMinimumCoefficient,
+						MaximumCoefficient: distrtypes.DefaultNakamotoBonusMaximumCoefficient,
+					},
 				},
 			},
 			expErr:    true,
@@ -713,6 +727,13 @@ func TestMsgUpdateParams(t *testing.T) {
 				Params: distrtypes.Params{
 					CommunityTax:        math.LegacyNewDecWithPrec(2, 0),
 					WithdrawAddrEnabled: withdrawAddrEnabled,
+					NakamotoBonus: distrtypes.NakamotoBonus{
+						Enabled:            true,
+						Step:               distrtypes.DefaultNakamotoBonusStep,
+						Period:             distrtypes.DefaultNakamotoBonusPeriod,
+						MinimumCoefficient: distrtypes.DefaultNakamotoBonusMinimumCoefficient,
+						MaximumCoefficient: distrtypes.DefaultNakamotoBonusMaximumCoefficient,
+					},
 				},
 			},
 			expErr:    true,
@@ -725,6 +746,13 @@ func TestMsgUpdateParams(t *testing.T) {
 				Params: distrtypes.Params{
 					CommunityTax:        math.LegacyNewDecWithPrec(-2, 1),
 					WithdrawAddrEnabled: withdrawAddrEnabled,
+					NakamotoBonus: distrtypes.NakamotoBonus{
+						Enabled:            true,
+						Step:               distrtypes.DefaultNakamotoBonusStep,
+						Period:             distrtypes.DefaultNakamotoBonusPeriod,
+						MinimumCoefficient: distrtypes.DefaultNakamotoBonusMinimumCoefficient,
+						MaximumCoefficient: distrtypes.DefaultNakamotoBonusMaximumCoefficient,
+					},
 				},
 			},
 			expErr:    true,
@@ -737,12 +765,54 @@ func TestMsgUpdateParams(t *testing.T) {
 				Params: distrtypes.Params{
 					CommunityTax:        communityTax,
 					WithdrawAddrEnabled: withdrawAddrEnabled,
+					NakamotoBonus: distrtypes.NakamotoBonus{
+						Enabled:            true,
+						Step:               distrtypes.DefaultNakamotoBonusStep,
+						Period:             distrtypes.DefaultNakamotoBonusPeriod,
+						MinimumCoefficient: distrtypes.DefaultNakamotoBonusMinimumCoefficient,
+						MaximumCoefficient: distrtypes.DefaultNakamotoBonusMaximumCoefficient,
+					},
 				},
 			},
 			expErr: false,
 		},
+		{
+			name: "invalid nakamoto bonus step",
+			msg: &distrtypes.MsgUpdateParams{
+				Authority: f.distrKeeper.GetAuthority(),
+				Params: distrtypes.Params{
+					CommunityTax:        communityTax,
+					WithdrawAddrEnabled: withdrawAddrEnabled,
+					NakamotoBonus: distrtypes.NakamotoBonus{
+						Enabled:            true,
+						Step:               math.LegacyNewDec(10),
+						Period:             distrtypes.DefaultNakamotoBonusPeriod,
+						MinimumCoefficient: distrtypes.DefaultNakamotoBonusMinimumCoefficient,
+						MaximumCoefficient: distrtypes.DefaultNakamotoBonusMaximumCoefficient,
+					},
+				},
+			},
+			expErr: true,
+		},
+		{
+			name: "invalid nakamoto bonus period",
+			msg: &distrtypes.MsgUpdateParams{
+				Authority: f.distrKeeper.GetAuthority(),
+				Params: distrtypes.Params{
+					CommunityTax:        communityTax,
+					WithdrawAddrEnabled: withdrawAddrEnabled,
+					NakamotoBonus: distrtypes.NakamotoBonus{
+						Enabled:            true,
+						Step:               distrtypes.DefaultNakamotoBonusStep,
+						Period:             0,
+						MinimumCoefficient: distrtypes.DefaultNakamotoBonusMinimumCoefficient,
+						MaximumCoefficient: distrtypes.DefaultNakamotoBonusMaximumCoefficient,
+					},
+				},
+			},
+			expErr: true,
+		},
 	}
-
 	for _, tc := range testCases {
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {

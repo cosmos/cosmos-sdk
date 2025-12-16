@@ -70,6 +70,11 @@ service Query {
   rpc CommunityPool(QueryCommunityPoolRequest) returns (QueryCommunityPoolResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/community_pool";
   }
+
+  // NakamotoBonusCoefficient queries the current NakamotoBonusCoefficient parameter.
+  rpc NakamotoBonusCoefficient(QueryNakamotoBonusCoefficientRequest) returns (QueryNakamotoBonusCoefficientResponse) {
+    option (google.api.http).get = "/cosmos/distribution/v1beta1/nakamoto_bonus_coefficient";
+  }
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -251,5 +256,20 @@ message QueryCommunityPoolResponse {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins",
     (gogoproto.nullable)     = false,
     (amino.dont_omitempty)   = true
+  ];
+}
+
+// QueryNakamotoBonusCoefficientRequest is the request type for the Query/NakamotoBonusCoefficientRequest RPC
+// method.
+message QueryNakamotoBonusCoefficientRequest {}
+
+// QueryNakamotoBonusCoefficientResponse is the response type for the Query/NakamotoBonusCoefficientRequest
+// RPC method.
+message QueryNakamotoBonusCoefficientResponse {
+  string coefficient = 1 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (amino.dont_omitempty) = true,
+    (gogoproto.nullable)   = false
   ];
 }

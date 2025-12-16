@@ -152,4 +152,11 @@ message GenesisState {
   // fee_pool defines the validator slash events at genesis.
   repeated ValidatorSlashEventRecord validator_slash_events = 10
       [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+
+  string nakamoto_bonus = 11 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (amino.dont_omitempty) = true,
+    (gogoproto.nullable)   = false
+  ];
 }

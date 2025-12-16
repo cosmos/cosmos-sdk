@@ -56,6 +56,8 @@ var (
 	ValidatorSlashEventPrefix            = []byte{0x08} // key for validator slash fraction
 
 	ParamsKey = collections.NewPrefix(9) // key for distribution module params
+
+	NakamotoBonusKey = collections.NewPrefix(10) // key for nakamoto bonus
 )
 
 // GetValidatorOutstandingRewardsAddress creates an address from a validator's outstanding rewards key.

@@ -1,13 +1,43 @@
 syntax = "proto3";
 package cosmos.distribution.v1beta1;
 
+import "amino/amino.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
 option go_package            = "github.com/cosmos/cosmos-sdk/x/distribution/types";
 option (gogoproto.equal_all) = true;
 
-import "gogoproto/gogo.proto";
-import "cosmos/base/v1beta1/coin.proto";
-import "cosmos_proto/cosmos.proto";
-import "amino/amino.proto";
+// NakamotoBonus defines the nakamoto bonus parameters
+message NakamotoBonus {
+  option (gogoproto.equal) = true;
+
+  bool enabled = 1;
+
+  string step = 2 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (amino.dont_omitempty) = true,
+    (gogoproto.nullable)   = false
+  ];
+
+  uint64 period = 3;
+
+  string minimum_coefficient = 4 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (amino.dont_omitempty) = true,
+    (gogoproto.nullable)   = false
+  ];
+
+  string maximum_coefficient = 5 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (amino.dont_omitempty) = true,
+    (gogoproto.nullable)   = false
+  ];
+}
 
 // Params defines the set of params for the distribution module.
 message Params {
@@ -25,6 +55,8 @@ message Params {
   reserved 2, 3;
 
   bool withdraw_addr_enabled = 4;
+
+  NakamotoBonus nakamoto_bonus = 5 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
 }
 
 // ValidatorHistoricalRewards represents historical rewards for a validator.

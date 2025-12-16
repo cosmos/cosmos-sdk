@@ -105,7 +105,8 @@ func TestImportExportQueues(t *testing.T) {
 	authGenState := s1.AccountKeeper.ExportGenesis(ctx)
 	bankGenState := s1.BankKeeper.ExportGenesis(ctx)
 	stakingGenState := s1.StakingKeeper.ExportGenesis(ctx)
-	distributionGenState := s1.DistrKeeper.ExportGenesis(ctx)
+	distributionGenState, err := s1.DistrKeeper.ExportGenesis(ctx)
+	assert.NilError(t, err)
 
 	// export the state and import it into a new app
 	govGenState, _ := gov.ExportGenesis(ctx, s1.GovKeeper)

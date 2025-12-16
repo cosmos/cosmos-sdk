@@ -48,6 +48,13 @@ func TestGRPCParams(t *testing.T) {
 				params = types.Params{
 					CommunityTax:        math.LegacyNewDecWithPrec(3, 1),
 					WithdrawAddrEnabled: true,
+					NakamotoBonus: types.NakamotoBonus{
+						Enabled:            true,
+						Step:               types.DefaultNakamotoBonusStep,
+						Period:             types.DefaultNakamotoBonusPeriod,
+						MinimumCoefficient: types.DefaultNakamotoBonusMinimumCoefficient,
+						MaximumCoefficient: types.DefaultNakamotoBonusMaximumCoefficient,
+					},
 				}
 
 				assert.NilError(t, f.distrKeeper.Params.Set(f.sdkCtx, params))

@@ -13,6 +13,7 @@ import (
 	codec "github.com/cosmos/cosmos-sdk/codec"
 	types0 "github.com/cosmos/cosmos-sdk/types"
 	exported "github.com/cosmos/cosmos-sdk/x/bank/exported"
+	types1 "github.com/cosmos/cosmos-sdk/x/staking/types"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -52,6 +53,21 @@ func (m *MockStakingKeeper) ApplyAndReturnValidatorSetUpdates(arg0 context.Conte
 func (mr *MockStakingKeeperMockRecorder) ApplyAndReturnValidatorSetUpdates(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ApplyAndReturnValidatorSetUpdates", reflect.TypeOf((*MockStakingKeeper)(nil).ApplyAndReturnValidatorSetUpdates), arg0)
+}
+
+// GetBondedValidatorsByPower mocks base method.
+func (m *MockStakingKeeper) GetBondedValidatorsByPower(arg0 context.Context) ([]types1.Validator, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetBondedValidatorsByPower", arg0)
+	ret0, _ := ret[0].([]types1.Validator)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetBondedValidatorsByPower indicates an expected call of GetBondedValidatorsByPower.
+func (mr *MockStakingKeeperMockRecorder) GetBondedValidatorsByPower(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBondedValidatorsByPower", reflect.TypeOf((*MockStakingKeeper)(nil).GetBondedValidatorsByPower), arg0)
 }
 
 // MockAccountKeeper is a mock of AccountKeeper interface.

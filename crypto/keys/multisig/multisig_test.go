@@ -396,7 +396,7 @@ func TestAminoMarshalJSON(t *testing.T) {
 	require.NoError(t, err)
 
 	// Note the quotes around `"2"`. They are present because we are overriding
-	// the Amino JSON marshaling of LegacyAminoPubKey (using tmMultisig).
+	// the Amino JSON marshaling of LegacyAminoPubKey (using TMMultisig).
 	// Without the override, there would not be any quotes.
 	require.Contains(t, string(bz), "\"threshold\":\"2\"")
 }

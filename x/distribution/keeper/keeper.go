@@ -2,12 +2,14 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,9 +28,10 @@ type Keeper struct {
 	// should be the x/gov module account.
 	authority string
 
-	Schema  collections.Schema
-	Params  collections.Item[types.Params]
-	FeePool collections.Item[types.FeePool]
+	Schema                   collections.Schema
+	Params                   collections.Item[types.Params]
+	FeePool                  collections.Item[types.FeePool]
+	NakamotoBonusCoefficient collections.Item[math.LegacyDec]
 
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 }
@@ -39,22 +42,23 @@ func NewKeeper(
 	ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper,
 	feeCollectorName, authority string,
 ) Keeper {
-	// ensure distribution module account is set
+	// ensure the distribution module account is set
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
 
 	sb := collections.NewSchemaBuilder(storeService)
 	k := Keeper{
-		storeService:     storeService,
-		cdc:              cdc,
-		authKeeper:       ak,
-		bankKeeper:       bk,
-		stakingKeeper:    sk,
-		feeCollectorName: feeCollectorName,
-		authority:        authority,
-		Params:           collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		FeePool:          collections.NewItem(sb, types.FeePoolKey, "fee_pool", codec.CollValue[types.FeePool](cdc)),
+		storeService:             storeService,
+		cdc:                      cdc,
+		authKeeper:               ak,
+		bankKeeper:               bk,
+		stakingKeeper:            sk,
+		feeCollectorName:         feeCollectorName,
+		authority:                authority,
+		Params:                   collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		FeePool:                  collections.NewItem(sb, types.FeePoolKey, "fee_pool", codec.CollValue[types.FeePool](cdc)),
+		NakamotoBonusCoefficient: collections.NewItem(sb, types.NakamotoBonusKey, "nakamoto_bonus", sdk.LegacyDecValue),
 	}
 
 	schema, err := sb.Build()
@@ -99,11 +103,10 @@ func (k Keeper) SetWithdrawAddr(ctx context.Context, delegatorAddr, withdrawAddr
 		),
 	)
 
-	k.SetDelegatorWithdrawAddr(ctx, delegatorAddr, withdrawAddr)
-	return nil
+	return k.SetDelegatorWithdrawAddr(ctx, delegatorAddr, withdrawAddr)
 }
 
-// withdraw rewards from a delegation
+// WithdrawDelegationRewards withdraw rewards from a delegation
 func (k Keeper) WithdrawDelegationRewards(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sdk.Coins, error) {
 	val, err := k.stakingKeeper.Validator(ctx, valAddr)
 	if err != nil {
@@ -137,7 +140,7 @@ func (k Keeper) WithdrawDelegationRewards(ctx context.Context, delAddr sdk.AccAd
 	return rewards, nil
 }
 
-// withdraw validator commission
+// WithdrawValidatorCommission withdraw validator commission
 func (k Keeper) WithdrawValidatorCommission(ctx context.Context, valAddr sdk.ValAddress) (sdk.Coins, error) {
 	// fetch validator accumulated commission
 	accumCommission, err := k.GetValidatorAccumulatedCommission(ctx, valAddr)
@@ -150,7 +153,10 @@ func (k Keeper) WithdrawValidatorCommission(ctx context.Context, valAddr sdk.Val
 	}
 
 	commission, remainder := accumCommission.Commission.TruncateDecimal()
-	k.SetValidatorAccumulatedCommission(ctx, valAddr, types.ValidatorAccumulatedCommission{Commission: remainder}) // leave remainder to withdraw later
+	// leave remainder to withdraw later
+	if err := k.SetValidatorAccumulatedCommission(ctx, valAddr, types.ValidatorAccumulatedCommission{Commission: remainder}); err != nil {
+		return nil, err
+	}
 
 	// update outstanding
 	outstanding, err := k.GetValidatorOutstandingRewards(ctx, valAddr)
@@ -185,6 +191,26 @@ func (k Keeper) WithdrawValidatorCommission(ctx context.Context, valAddr sdk.Val
 	)
 
 	return commission, nil
+}
+
+// GetNakamotoBonusCoefficient returns the nakamoto bonus from the store
+func (k Keeper) GetNakamotoBonusCoefficient(ctx context.Context) (math.LegacyDec, error) {
+	nb, err := k.NakamotoBonusCoefficient.Get(ctx)
+	if errors.Is(err, collections.ErrNotFound) {
+		return math.LegacyZeroDec(), nil
+	}
+	return nb, err
+}
+
+// SetNakamotoBonusCoefficient sets Nakamoto Bonus with bounds checks.
+func (k Keeper) SetNakamotoBonusCoefficient(ctx sdk.Context, nb math.LegacyDec) error {
+	if nb.IsNegative() || nb.GT(math.LegacyOneDec()) {
+		return fmt.Errorf("nakamoto bonus coefficient must be within [0,1], got %s", nb.String())
+	}
+	if err := k.NakamotoBonusCoefficient.Set(ctx, nb); err != nil {
+		return err
+	}
+	return nil
 }
 
 // GetTotalRewards returns the total amount of fee distribution rewards held in the store

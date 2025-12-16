@@ -8,7 +8,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// tmMultisig implements a K of N threshold multisig. It is used for
+// TMMultisig implements a K of N threshold multisig. It is used for
 // Amino JSON marshaling of LegacyAminoPubKey (see below for details).
 //
 // This struct is copy-pasted from:
@@ -26,30 +26,30 @@ import (
 // keyring, where multisigs are amino-binary-encoded.
 //
 // ref: https://github.com/cosmos/cosmos-sdk/issues/8776
-type tmMultisig struct {
+type TMMultisig struct {
 	K       uint                 `json:"threshold"`
 	PubKeys []cryptotypes.PubKey `json:"pubkeys"`
 }
 
-// protoToTm converts a LegacyAminoPubKey into a tmMultisig.
-func protoToTm(protoPk *LegacyAminoPubKey) (tmMultisig, error) {
+// protoToTm converts a LegacyAminoPubKey into a TMMultisig.
+func protoToTm(protoPk *LegacyAminoPubKey) (TMMultisig, error) {
 	var ok bool
 	pks := make([]cryptotypes.PubKey, len(protoPk.PubKeys))
 	for i, pk := range protoPk.PubKeys {
 		pks[i], ok = pk.GetCachedValue().(cryptotypes.PubKey)
 		if !ok {
-			return tmMultisig{}, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", (cryptotypes.PubKey)(nil), pk.GetCachedValue())
+			return TMMultisig{}, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "expected %T, got %T", (cryptotypes.PubKey)(nil), pk.GetCachedValue())
 		}
 	}
 
-	return tmMultisig{
+	return TMMultisig{
 		K:       uint(protoPk.Threshold),
 		PubKeys: pks,
 	}, nil
 }
 
-// tmToProto converts a tmMultisig into a LegacyAminoPubKey.
-func tmToProto(tmPk tmMultisig) (*LegacyAminoPubKey, error) {
+// tmToProto converts a TMMultisig into a LegacyAminoPubKey.
+func tmToProto(tmPk TMMultisig) (*LegacyAminoPubKey, error) {
 	var err error
 	pks := make([]*types.Any, len(tmPk.PubKeys))
 	for i, pk := range tmPk.PubKeys {
@@ -66,12 +66,12 @@ func tmToProto(tmPk tmMultisig) (*LegacyAminoPubKey, error) {
 }
 
 // MarshalAminoJSON overrides amino JSON unmarshaling.
-func (m LegacyAminoPubKey) MarshalAminoJSON() (tmMultisig, error) { //nolint:golint,revive // we need to override the default amino JSON marshaling
+func (m LegacyAminoPubKey) MarshalAminoJSON() (TMMultisig, error) { //nolint:golint // we need to override the default amino JSON marshaling
 	return protoToTm(&m)
 }
 
 // UnmarshalAminoJSON overrides amino JSON unmarshaling.
-func (m *LegacyAminoPubKey) UnmarshalAminoJSON(tmPk tmMultisig) error {
+func (m *LegacyAminoPubKey) UnmarshalAminoJSON(tmPk TMMultisig) error {
 	protoPk, err := tmToProto(tmPk)
 	if err != nil {
 		return err

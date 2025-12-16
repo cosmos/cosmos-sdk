@@ -1,0 +1,18 @@
+[package]
+name = "nocturne"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sha2 = "0.10"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+hex = "0.4"
+libc = "0.2"
+serde_with = "3.4.0"
+
+# The library itself
+[lib]
+name = "nocturne"
+path = "src/lib.rs"
+crate-type = ["cdylib", "staticlib"]

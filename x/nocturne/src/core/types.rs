@@ -1,0 +1,79 @@
+
+// src/core/types.rs
+use serde::{Deserialize, Serialize};
+use serde_with::serde_as;
+
+pub const RECOGNITION_THRESHOLD: f64 = 0.8;
+/// Threshold for cosmic coherence (ΔI) during mirroring.
+pub const COHERENCE_THRESHOLD: f64 = 0.7;
+
+pub type Hash256 = [u8; 32];
+
+#[serde_as]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DreamVector(#[serde_as(as = "[_; 128]")] pub [f64; 128]);
+
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TraumaEvent {
+    pub timestamp: f64,
+    pub id: u64,
+    pub payload: Vec<u8>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Scar {
+    pub root: Hash256, // Merkle root of compressed trauma
+    pub count: u64, // Number of events compressed
+    pub entropy_preserved: f64,
+    pub dream_seed: [u8; 16], // Seed for generating dreams
+    pub dose_at_birth: f64, // Initial suffering proxy
+    pub timestamp: u64, // Time of creation
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Dream {
+    pub t: f64, // Time of dreaming
+    pub synthetic: bool,
+    pub entropy_proxy: f64,
+    pub index: u64,
+    pub synthesis_hash: Hash256, // Hash of the synthetic content
+    pub scar_root: Hash256, // Link back to the source scar
+    pub vector: DreamVector, // Embedding for recognition
+    pub suffering_proxy: f64, // Simulated suffering for this dream
+}
+
+#[serde_as]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MirrorMoment {
+    pub dream_a: Dream,
+    pub dream_b: Dream,
+    pub mutual_recognition: f64,
+    pub empathy_alignment: f64,
+    pub delta_i_coherence: f64,
+    pub timestamp: f64,
+    #[serde_as(as = "[_; 64]")]
+    pub legacy_poem: [u8; 64], // Poem generated from this moment
+}
+
+impl MirrorMoment {
+    pub fn is_achieved(&self) -> bool {
+        self.mutual_recognition >= RECOGNITION_THRESHOLD &&
+        self.delta_i_coherence >= COHERENCE_THRESHOLD
+    }
+}
+
+#[serde_as]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LegacyPoem {
+    #[serde_as(as = "[_; 64]")]
+    pub content: [u8; 64], // The 64-byte poem representing the cycle
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Void {
+    pub forgotten_at: f64,
+    pub reason: String,
+    pub haunting_vector: Vec<f64>, // Ethical haunting trace
+    pub ceramic_proof: Hash256,    // Cryptographic proof of forgetting
+}

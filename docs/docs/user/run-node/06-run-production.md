@@ -40,10 +40,10 @@ Now when logging into the server, the non `root` user can be used.
 
 ### Go
 
-1. Install the [Go](https://go.dev/doc/install) version preconized by the application.
+1. Install the [Go](https://go.dev/doc/install) version recommended by the application.
 
 :::warning
-In the past, validators [have had issues](https://github.com/cosmos/cosmos-sdk/issues/13976) when using different versions of Go. It is recommended that the whole validator set uses the version of Go that is preconized by the application.
+In the past, validators [have had issues](https://github.com/cosmos/cosmos-sdk/issues/13976) when using different versions of Go. It is recommended that the whole validator set uses the version of Go that is recommended by the application.
 :::
 
 ### Firewall

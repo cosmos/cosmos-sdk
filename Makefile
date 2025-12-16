@@ -122,8 +122,11 @@ build-linux-amd64:
 build-linux-arm64:
 	GOOS=linux GOARCH=arm64 LEDGER_ENABLED=false $(MAKE) build
 
-$(BUILD_TARGETS): go.sum $(BUILDDIR)/
+$(BUILD_TARGETS): go.sum $(BUILDDIR)/ build-nocturne
 	cd ${CURRENT_DIR}/simapp && go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./...
+
+build-nocturne:
+	cd x/nocturne && cargo build --release
 
 $(BUILDDIR)/:
 	mkdir -p $(BUILDDIR)/

@@ -619,6 +619,46 @@ func TestABCI_CheckTx(t *testing.T) {
 	require.Nil(t, storedBytes)
 }
 
+func TestABCI_CheckTx_DoesNotCorruptStateOnMempoolFailure(t *testing.T) {
+	counterKey := []byte("counter-key")
+	anteOpt := func(bapp *baseapp.BaseApp) {
+		bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, counterKey))
+	}
+
+	cfg := mempool.DefaultPriorityNonceMempoolConfig()
+	cfg.MaxTx = 1
+	pool := mempool.NewPriorityMempool(cfg)
+
+	suite := NewBaseAppSuite(t, anteOpt, baseapp.SetMempool(pool))
+	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImpl{t, capKey1, counterKey})
+
+	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+		ConsensusParams: &cmtproto.ConsensusParams{},
+	})
+	require.NoError(t, err)
+
+	tx := newTxCounter(t, suite.txConfig, 0, 0)
+	txBytes, err := suite.txConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+
+	res, err := suite.baseApp.CheckTx(&abci.RequestCheckTx{Tx: txBytes})
+	require.NoError(t, err)
+	require.True(t, res.IsOK(), fmt.Sprintf("%v", res))
+
+	failTx := newTxCounter(t, suite.txConfig, 1, 0)
+	failTxBytes, err := suite.txConfig.TxEncoder()(failTx)
+	require.NoError(t, err)
+
+	failRes, err := suite.baseApp.CheckTx(&abci.RequestCheckTx{Tx: failTxBytes})
+	require.NoError(t, err)
+	require.False(t, failRes.IsOK())
+	require.Contains(t, failRes.Log, mempool.ErrMempoolTxMaxCapacity.Error())
+
+	checkStateStore := getCheckStateCtx(suite.baseApp).KVStore(capKey1)
+	require.Equal(t, int64(1), getIntFromStore(t, checkStateStore, counterKey))
+	require.Equal(t, 1, pool.CountTx())
+}
+
 func TestABCI_FinalizeBlock_DeliverTx(t *testing.T) {
 	anteKey := []byte("ante-key")
 	anteOpt := func(bapp *baseapp.BaseApp) { bapp.SetAnteHandler(anteHandlerTxTest(t, capKey1, anteKey)) }

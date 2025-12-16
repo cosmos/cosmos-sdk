@@ -90,7 +90,7 @@ type Proposals []Proposal
 
 var _ codectypes.UnpackInterfacesMessage = Proposals{}
 
-// Equal returns true if two slices (order-dependant) of proposals are equal.
+// Equal returns true if two slices (order-dependent) of proposals are equal.
 func (p Proposals) Equal(other Proposals) bool {
 	if len(p) != len(other) {
 		return false
@@ -140,10 +140,9 @@ func ProposalStatusFromString(str string) (ProposalStatus, error) {
 func (status ProposalStatus) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
-		s.Write([]byte(status.String()))
+		_, _ = s.Write([]byte(status.String()))
 	default:
-		// TODO: Do this conversion more directly
-		s.Write([]byte(fmt.Sprintf("%v", byte(status))))
+		_, _ = fmt.Fprintf(s, "%v", byte(status))
 	}
 }
 
@@ -246,7 +245,7 @@ func IsValidProposalType(ty string) bool {
 }
 
 // ProposalHandler implements the Handler interface for governance module-based
-// proposals (ie. TextProposal ). Since these are
+// proposals (ie. TextProposal). Since these are
 // merely signaling mechanisms at the moment and do not affect state, it
 // performs a no-op.
 func ProposalHandler(_ sdk.Context, c Content) error {

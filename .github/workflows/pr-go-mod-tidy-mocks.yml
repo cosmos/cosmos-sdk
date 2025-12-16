@@ -1,0 +1,52 @@
+name: "Checks dependencies and mocks generation"
+on:
+  merge_group:
+  pull_request:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ci-${{ github.ref }}-pr-go-mod-tidy-mocks
+  cancel-in-progress: true
+
+jobs:
+  go-mod-tidy:
+    name: Check go mod tidy
+    runs-on: depot-ubuntu-22.04-4
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: "1.25.5"
+          check-latest: true
+      - name: Run go mod tidy
+        run: ./scripts/go-mod-tidy-all.sh
+      - name: Check for diffs
+        run: |
+          git diff --exit-code || {
+            echo "Please run './scripts/go-mod-tidy-all.sh' and commit the changes";
+            exit 1;
+          }
+
+  generate-mocks:
+    name: Check up to date mocks
+    runs-on: depot-ubuntu-22.04-4
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v6
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: "1.25.5"
+          check-latest: true
+      - name: Generate mocks
+        run: make mocks
+      - name: Check for diffs
+        run: |
+          git diff --exit-code || {
+            echo "Please run 'make mocks' and commit the changes";
+            exit 1;
+          }

@@ -5,69 +5,90 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"testing"
 	"time"
 
-	"github.com/rs/zerolog"
+	dbm "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/store"
 
-	"cosmossdk.io/log"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
+var errUntestAble = errors.New("untestable")
+
 type fileWatcher struct {
-	logger log.Logger
+	daemonHome string
+	filename   string // full path to a watched file
+	interval   time.Duration
 
-	// full path to a watched file
-	filename string
-	interval time.Duration
-
+	currentBin  string
 	currentInfo upgradetypes.Plan
 	lastModTime time.Time
 	cancel      chan bool
 	ticker      *time.Ticker
-	needsUpdate bool
 
-	initialized bool
+	needsUpdate   bool
+	initialized   bool
+	disableRecase bool
 }
 
-func newUpgradeFileWatcher(logger log.Logger, filename string, interval time.Duration) (*fileWatcher, error) {
+func newUpgradeFileWatcher(cfg *Config) (*fileWatcher, error) {
+	filename := cfg.UpgradeInfoFilePath()
 	if filename == "" {
 		return nil, errors.New("filename undefined")
 	}
 
 	filenameAbs, err := filepath.Abs(filename)
 	if err != nil {
-		return nil,
-			fmt.Errorf("invalid path; %s must be a valid file path: %w", filename, err)
+		return nil, fmt.Errorf("invalid path: %s must be a valid file path: %w", filename, err)
 	}
 
 	dirname := filepath.Dir(filename)
-	info, err := os.Stat(dirname)
-	if err != nil || !info.IsDir() {
-		return nil, fmt.Errorf("invalid path; %s must be an existing directory: %w", dirname, err)
+	if info, err := os.Stat(dirname); err != nil || !info.IsDir() {
+		return nil, fmt.Errorf("invalid path: %s must be an existing directory: %w", dirname, err)
+	}
+
+	bin, err := cfg.CurrentBin()
+	if err != nil {
+		return nil, fmt.Errorf("error creating symlink to genesis: %w", err)
 	}
 
 	return &fileWatcher{
-		logger:      logger,
-		filename:    filenameAbs,
-		interval:    interval,
-		currentInfo: upgradetypes.Plan{},
-		lastModTime: time.Time{},
-		cancel:      make(chan bool),
-		ticker:      time.NewTicker(interval),
-		needsUpdate: false,
-		initialized: false,
+		daemonHome:    cfg.Home,
+		currentBin:    bin,
+		filename:      filenameAbs,
+		interval:      cfg.PollInterval,
+		currentInfo:   upgradetypes.Plan{},
+		lastModTime:   time.Time{},
+		cancel:        make(chan bool),
+		ticker:        time.NewTicker(cfg.PollInterval),
+		needsUpdate:   false,
+		initialized:   false,
+		disableRecase: cfg.DisableRecase,
 	}, nil
 }
 
 func (fw *fileWatcher) Stop() {
 	close(fw.cancel)
+	fw.ticker.Stop()
 }
 
-// pools the filesystem to check for new upgrade currentInfo. currentName is the name
-// of currently running upgrade. The check is rejected if it finds an upgrade with the same
-// name.
+func (fw *fileWatcher) IsStop() bool {
+	select {
+	case <-fw.cancel:
+		return true
+	default:
+		return false
+	}
+}
+
+// MonitorUpdate polls the filesystem to check for new upgrade currentInfo.
+// currentName is the name of currently running upgrade.  The check is rejected if it finds
+// an upgrade with the same name.
 func (fw *fileWatcher) MonitorUpdate(currentUpgrade upgradetypes.Plan) <-chan struct{} {
 	fw.ticker.Reset(fw.interval)
 	done := make(chan struct{})
@@ -102,18 +123,48 @@ func (fw *fileWatcher) CheckUpdate(currentUpgrade upgradetypes.Plan) bool {
 
 	stat, err := os.Stat(fw.filename)
 	if err != nil {
-		// file doesn't exists
+		if os.IsNotExist(err) {
+			return false
+		} else {
+			panic(fmt.Errorf("failed to stat upgrade info file: %w", err))
+		}
+	}
+
+	// check https://github.com/cosmos/cosmos-sdk/issues/21086
+	// If new file is still empty, wait a small amount of time for write to complete
+	if stat.Size() == 0 {
+		for range 10 {
+			time.Sleep(2 * time.Millisecond)
+			stat, err = os.Stat(fw.filename)
+			if err != nil {
+				if os.IsNotExist(err) {
+					return false
+				} else {
+					panic(fmt.Errorf("failed to stat upgrade info file: %w", err))
+				}
+			}
+			if stat.Size() == 0 {
+				break
+			}
+		}
+	}
+	if stat.Size() == 0 {
 		return false
 	}
 
+	// no update if the file already exists and has not been modified
 	if !stat.ModTime().After(fw.lastModTime) {
 		return false
 	}
 
-	info, err := parseUpgradeInfoFile(fw.filename)
+	info, err := parseUpgradeInfoFile(fw.filename, fw.disableRecase)
 	if err != nil {
-		zl := fw.logger.Impl().(*zerolog.Logger)
-		zl.Fatal().Err(err).Msg("failed to parse upgrade info file")
+		panic(fmt.Errorf("failed to parse upgrade info file: %w", err))
+	}
+
+	// file exist but too early in height
+	currentHeight, err := fw.checkHeight()
+	if (err != nil || currentHeight < info.Height) && !errors.Is(err, errUntestAble) { // ignore this check for tests
 		return false
 	}
 
@@ -123,7 +174,7 @@ func (fw *fileWatcher) CheckUpdate(currentUpgrade upgradetypes.Plan) bool {
 		fw.currentInfo = info
 		fw.lastModTime = stat.ModTime()
 
-		// Heuristic: Deamon has restarted, so we don't know if we successfully
+		// Heuristic: Daemon has restarted, so we don't know if we successfully
 		// downloaded the upgrade or not. So we try to compare the running upgrade
 		// name (read from the cosmovisor file) with the upgrade info.
 		if !strings.EqualFold(currentUpgrade.Name, fw.currentInfo.Name) {
@@ -142,27 +193,77 @@ func (fw *fileWatcher) CheckUpdate(currentUpgrade upgradetypes.Plan) bool {
 	return false
 }
 
-func parseUpgradeInfoFile(filename string) (upgradetypes.Plan, error) {
-	var ui upgradetypes.Plan
+// checkHeight checks if the current block height
+func (fw *fileWatcher) checkHeight() (int64, error) {
+	if testing.Testing() { // we cannot test the command in the test environment
+		return 0, errUntestAble
+	}
 
-	f, err := os.Open(filename)
+	if fw.IsStop() {
+		result, err := exec.Command(fw.currentBin, "config", "get", "config", "db_backend", "--home", fw.daemonHome).CombinedOutput() //nolint:gosec // we want to execute the config command
+		if err != nil {
+			result = []byte("goleveldb") // set default value, old version may not have config command
+		}
+		blockStoreDB, err := dbm.NewDB("blockstore", dbm.BackendType(result), filepath.Join(fw.daemonHome, "data"))
+		if err != nil {
+			return 0, err
+		}
+		defer blockStoreDB.Close()
+		return store.NewBlockStore(blockStoreDB).Height(), nil
+	}
+
+	result, err := exec.Command(fw.currentBin, "status", "--home", fw.daemonHome).CombinedOutput() //nolint:gosec // we want to execute the status command
+	if err != nil {
+		return 0, err
+	}
+
+	type response struct {
+		SyncInfo struct {
+			LatestBlockHeight string `json:"latest_block_height"`
+		} `json:"sync_info"`
+		AnotherCasingSyncInfo struct {
+			LatestBlockHeight string `json:"latest_block_height"`
+		} `json:"SyncInfo"`
+	}
+
+	var resp response
+	if err := json.Unmarshal(result, &resp); err != nil {
+		return 0, err
+	}
+
+	if resp.SyncInfo.LatestBlockHeight != "" {
+		return strconv.ParseInt(resp.SyncInfo.LatestBlockHeight, 10, 64)
+	} else if resp.AnotherCasingSyncInfo.LatestBlockHeight != "" {
+		return strconv.ParseInt(resp.AnotherCasingSyncInfo.LatestBlockHeight, 10, 64)
+	}
+
+	return 0, errors.New("latest block height is empty")
+}
+
+func parseUpgradeInfoFile(filename string, disableRecase bool) (upgradetypes.Plan, error) {
+	f, err := os.ReadFile(filename)
 	if err != nil {
 		return upgradetypes.Plan{}, err
 	}
-	defer f.Close()
 
-	d := json.NewDecoder(f)
-	if err := d.Decode(&ui); err != nil {
+	if len(f) == 0 {
+		return upgradetypes.Plan{}, fmt.Errorf("empty upgrade-info.json in %q", filename)
+	}
+
+	var upgradePlan upgradetypes.Plan
+	if err := json.Unmarshal(f, &upgradePlan); err != nil {
 		return upgradetypes.Plan{}, err
 	}
 
 	// required values must be set
-	if ui.Height <= 0 || ui.Name == "" {
-		return upgradetypes.Plan{}, fmt.Errorf("invalid upgrade-info.json content; name and height must be not empty; got: %v", ui)
+	if err := upgradePlan.ValidateBasic(); err != nil {
+		return upgradetypes.Plan{}, fmt.Errorf("invalid upgrade-info.json content: %w, got: %v", err, upgradePlan)
 	}
 
 	// normalize name to prevent operator error in upgrade name case sensitivity errors.
-	ui.Name = strings.ToLower(ui.Name)
+	if !disableRecase {
+		upgradePlan.Name = strings.ToLower(upgradePlan.Name)
+	}
 
-	return ui, err
+	return upgradePlan, nil
 }

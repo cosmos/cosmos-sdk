@@ -67,7 +67,7 @@ func (m Migrator) Migrate4To5(ctx sdk.Context) error {
 	return v5.Migrate(ctx, m.keeper.storeService, m.keeper.AccountNumber)
 }
 
-// V45_SetAccount implements V45_SetAccount
+// V45SetAccount implements V45_SetAccount
 // set the account without map to accAddr to accNumber.
 //
 // NOTE: This is used for testing purposes only.

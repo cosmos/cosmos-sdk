@@ -53,7 +53,7 @@ func SignTx(txFactory tx.Factory, clientCtx client.Context, name string, txBuild
 		return err
 	}
 	if !isTxSigner(addr, signers) {
-		return fmt.Errorf("%s: %s", errors.ErrorInvalidSigner, name)
+		return fmt.Errorf("%w: %s", errors.ErrorInvalidSigner, name)
 	}
 	if !offline {
 		txFactory, err = populateAccountFromState(txFactory, clientCtx, addr)
@@ -62,7 +62,7 @@ func SignTx(txFactory tx.Factory, clientCtx client.Context, name string, txBuild
 		}
 	}
 
-	return tx.Sign(clientCtx.CmdContext, txFactory, name, txBuilder, overwriteSig)
+	return tx.Sign(clientCtx.GetCmdContextWithFallback(), txFactory, name, txBuilder, overwriteSig)
 }
 
 // SignTxWithSignerAddress attaches a signature to a transaction.
@@ -78,16 +78,6 @@ func SignTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, add
 		txFactory = txFactory.WithSignMode(signing.SignMode_SIGN_MODE_LEGACY_AMINO_JSON)
 	}
 
-	// check whether the address is a signer
-	signers, err := txBuilder.GetTx().GetSigners()
-	if err != nil {
-		return err
-	}
-
-	if !isTxSigner(addr, signers) {
-		return fmt.Errorf("%s: %s", errors.ErrorInvalidSigner, name)
-	}
-
 	if !offline {
 		txFactory, err = populateAccountFromState(txFactory, clientCtx, addr)
 		if err != nil {
@@ -95,10 +85,10 @@ func SignTxWithSignerAddress(txFactory tx.Factory, clientCtx client.Context, add
 		}
 	}
 
-	return tx.Sign(clientCtx.CmdContext, txFactory, name, txBuilder, overwrite)
+	return tx.Sign(clientCtx.GetCmdContextWithFallback(), txFactory, name, txBuilder, overwrite)
 }
 
-// Read and decode a StdTx from the given filename. Can pass "-" to read from stdin.
+// ReadTxFromFile reads and decodes a StdTx from the given filename. Can pass "-" to read from stdin.
 func ReadTxFromFile(ctx client.Context, filename string) (tx sdk.Tx, err error) {
 	var bytes []byte
 
@@ -109,7 +99,7 @@ func ReadTxFromFile(ctx client.Context, filename string) (tx sdk.Tx, err error) 
 	}
 
 	if err != nil {
-		return
+		return tx, err
 	}
 
 	return ctx.TxConfig.TxJSONDecoder()(bytes)
@@ -131,7 +121,7 @@ func ReadTxsFromInput(txCfg client.TxConfig, filenames ...string) (scanner *Batc
 				return nil, fmt.Errorf("couldn't read %s: %w", f, err)
 			}
 
-			if _, err := buf.WriteString(string(bytes)); err != nil {
+			if _, err := buf.Write(bytes); err != nil {
 				return nil, fmt.Errorf("couldn't write to merged file: %w", err)
 			}
 		}

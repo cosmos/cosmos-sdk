@@ -14,11 +14,10 @@ import (
 	"github.com/spf13/viper"
 
 	clientcfg "github.com/cosmos/cosmos-sdk/client/config"
-	srvcfg "github.com/cosmos/cosmos-sdk/server/config"
 )
 
 // Upgrade reads the configuration file at configPath and applies any
-// transformations necessary to Upgrade it to the current version. If this
+// transformations necessary to upgrade it to the current version. If this
 // succeeds, the transformed output is written to outputPath. As a special
 // case, if outputPath == "" the output is written to stdout.
 //
@@ -28,34 +27,30 @@ import (
 // Upgrade is a convenience wrapper for calls to LoadConfig, ApplyFixes, and
 // CheckValid. If the caller requires more control over the behavior of the
 // Upgrade, call those functions directly.
-func Upgrade(ctx context.Context, plan transform.Plan, configPath, outputPath string, skipValidate bool) error {
+func Upgrade(ctx context.Context, plan transform.Plan, doc *tomledit.Document, configPath, outputPath string, skipValidate bool) error {
 	if configPath == "" {
 		return errors.New("empty input configuration path")
 	}
 
-	doc, err := LoadConfig(configPath)
-	if err != nil {
-		return fmt.Errorf("loading config: %v", err)
-	}
-
 	// transforms doc and reports whether it succeeded.
 	if err := plan.Apply(ctx, doc); err != nil {
-		return fmt.Errorf("updating %q: %v", configPath, err)
+		return fmt.Errorf("updating %q: %w", configPath, err)
 	}
 
 	var buf bytes.Buffer
 	if err := tomledit.Format(&buf, doc); err != nil {
-		return fmt.Errorf("formatting config: %v", err)
+		return fmt.Errorf("formatting config: %w", err)
 	}
 
 	// allow to skip validation
 	if !skipValidate {
-		// verify that file is valid after applying fixes
+		// verify that the file is valid after applying fixes
 		if err := CheckValid(configPath, buf.Bytes()); err != nil {
-			return fmt.Errorf("updated config is invalid: %v", err)
+			return fmt.Errorf("updated config is invalid: %w", err)
 		}
 	}
 
+	var err error
 	if outputPath == "" {
 		_, err = os.Stdout.Write(buf.Bytes())
 	} else {
@@ -77,14 +72,8 @@ func CheckValid(fileName string, data []byte) error {
 
 	switch {
 	case strings.HasSuffix(fileName, AppConfig):
-		var cfg srvcfg.Config
-		if err := v.Unmarshal(&cfg); err != nil {
-			return fmt.Errorf("failed to unmarshal as server config: %w", err)
-		}
-
-		if err := cfg.ValidateBasic(); err != nil {
-			return fmt.Errorf("server config invalid: %w", err)
-		}
+		// no validation of server config as v1 and v2 configs are both valid.
+		// any app.toml is simply considered as a server config.
 	case strings.HasSuffix(fileName, ClientConfig):
 		var cfg clientcfg.ClientConfig
 		if err := v.Unmarshal(&cfg); err != nil {

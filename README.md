@@ -1,8 +1,8 @@
-<div align="center">
+<div align="left">
   <h1> Cosmos SDK </h1>
 </div>
 
-![banner](docs/static/img/banner.jpg)
+![banner](docs/static/img/banner.svg)
 
 <div align="center">
   <a href="https://github.com/cosmos/cosmos-sdk/blob/main/LICENSE">
@@ -14,55 +14,65 @@
   <a href="https://goreportcard.com/report/github.com/cosmos/cosmos-sdk">
     <img alt="Go report card" src="https://goreportcard.com/badge/github.com/cosmos/cosmos-sdk" />
   </a>
-  <a href="https://sonarcloud.io/summary/overall?id=cosmos_cosmos-sdk">
-    <img alt="Code Coverage" src="https://sonarcloud.io/api/project_badges/measure?project=cosmos_cosmos-sdk&metric=coverage" />
-  </a>
-  <a href="https://sonarcloud.io/summary/overall?id=cosmos_cosmos-sdk">
-    <img alt="SonarCloud Analysis" src="https://sonarcloud.io/api/project_badges/measure?project=cosmos_cosmos-sdk&metric=alert_status">
-  </a>
 </div>
 <div align="center">
-  <a href="https://discord.gg/AzefAFd">
+  <a href="https://discord.com/invite/interchain">
     <img alt="Discord" src="https://img.shields.io/discord/669268347736686612.svg" />
   </a>
   <a href="https://sourcegraph.com/github.com/cosmos/cosmos-sdk?badge">
     <img alt="Imported by" src="https://sourcegraph.com/github.com/cosmos/cosmos-sdk/-/badge.svg" />
   </a>
-    <img alt="Sims" src="https://github.com/cosmos/cosmos-sdk/workflows/Sims/badge.svg" />
-    <img alt="Lint Satus" src="https://github.com/cosmos/cosmos-sdk/workflows/Lint/badge.svg" />
 </div>
 
-The Cosmos SDK is a framework for building blockchain applications. [CometBFT (BFT Consensus)](https://github.com/cometbft/cometbft) and the Cosmos SDK are written in the Go programming language. Cosmos SDK is used to build [Gaia](https://github.com/cosmos/gaia), the implementation of the Cosmos Hub.
+The Cosmos SDK is a modular, open-source blockchain SDK for building secure, high-performance Layer 1 chains with full customizability used by 200+ chains in production.   Developers can use the Cosmos SDK to easily and quickly spin up custom blockchains that can natively interoperate.
+
+The Cosmos SDK is tailored for building secure, sovereign application-specific blockchains. Developers building with the Cosmos SDK can use predefined modules that cover standard blockchain functionality or create custom modules for their specific use case. This composable architecture enables robust customization. The SDK provides abstractions for permissioning, governance, state management, account abstraction, tokenization processes, application logic, and more.
+
+Cosmos SDK blockchains get interoperability out-of-the-box via a native integration with the [Inter-Blockchain Communication Protocol (IBC)](https://github.com/cosmos/ibc-go). ibc-go is implemented as a Go module in the Cosmos SDK. 
+
+While the Cosmos SDK is plug-and-play with any consensus engine, we recommend using [CometBFT](https://github.com/cometbft/cometbft) for a fast, battle-tested, high-throughput, configurable BFT state machine. CometBFT is developed as part of the Cosmos Stack and its releases are updated alongside the SDK.
 
 **WARNING**: The Cosmos SDK has mostly stabilized, but we are still making some breaking changes.
 
-**Note**: We advise to always use the latest maintained [Go](https://go.dev/dl) version for building Cosmos SDK applications.
-
 ## Quick Start
 
-To learn how the Cosmos SDK works from a high-level perspective, see the Cosmos SDK [High-Level Intro](https://docs.cosmos.network/main/intro/overview.html).
+To learn how the Cosmos SDK works from a high-level perspective, see the Cosmos SDK [High-Level Intro](https://docs.cosmos.network/main/intro/overview).
 
 If you want to get started quickly and learn how to build on top of Cosmos SDK, visit [Cosmos SDK Tutorials](https://tutorials.cosmos.network). You can also fork the tutorial's repository to get started building your own Cosmos SDK application.
 
-For more information, see the [Cosmos SDK Documentation](https://docs.cosmos.network).
+Note: We advise to always use the latest maintained [Go version](https://go.dev/dl/) for building Cosmos SDK applications.
 
-## Contributing
+## Modules
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for details on how to contribute and participate in our [dev calls](./CONTRIBUTING.md#teams-dev-calls).
-If you want to follow the updates or learn more about the latest design then join our [Discord](https://discord.com/invite/cosmosnetwork).
+The Cosmos SDK maintains a set of modules that can be included in your blockchain application.  For more information
+on modules, see our [introduction doc](./x/README.md).
 
-## Tools and Frameworks
+## Maintainers
+[Cosmos Labs](https://cosmoslabs.io/) maintains the core components of the stack: Cosmos SDK, CometBFT, IBC, Cosmos EVM, and various developer tools and frameworks. The detailed maintenance policy can be found [here](https://github.com/cosmos/security/blob/main/POLICY.md). In addition to developing and maintaining the Cosmos Stack, Cosmos Labs provides advisory and engineering services for blockchain solutions. [Get in touch with Cosmos Labs](https://www.cosmoslabs.io/contact).
 
-The Cosmos ecosystem is vast.
-[Awesome Cosmos](https://github.com/cosmos/awesome-cosmos) is a community-curated list of notable frameworks, modules and tools.
+Cosmos Labs is a wholly-owned subsidiary of the [Interchain Foundation](https://interchain.io/), the Swiss nonprofit responsible for treasury management, funding public goods, and supporting governance for Cosmos. 
 
-### Cosmos Hub Mainnet
+The Cosmos Stack is supported by a robust community of open-source contributors. 
 
-The Cosmos Hub application, `gaia`, has its own [cosmos/gaia repository](https://github.com/cosmos/gaia). Go there to join the Cosmos Hub mainnet and more.
+## History
+The Cosmos SDK was first released in 2019, and the first blockchain to use the SDK in production was the [Cosmos Hub](https://hub.cosmos.network/main). Today, the Cosmos SDK is a popular, battle-tested, open-source framework used by hundreds of chains.
 
-### Inter-Blockchain Communication (IBC)
+The Cosmos Hub still receives the most up-to-date Cosmos SDK versions. The Cosmos Hub application, `gaia`, has its own [cosmos/gaia repository](https://github.com/cosmos/gaia). 
 
-The IBC module for the Cosmos SDK has its own [cosmos/ibc-go repository](https://github.com/cosmos/ibc-go). Go there to build and integrate with the IBC module.
+## Developer Community and Support
+
+The issue list of this repo is exclusively for bug reports and feature requests. We have active, helpful communities on Discord, Telegram, and Slack.
+
+**| Need Help? | Support & Community: [Discord](https://discord.com/invite/interchain) - [Telegram](https://t.me/CosmosOG) - [Talk to an Expert](https://cosmos.network/interest-form) - [Join the #Cosmos-tech Slack Channel](https://forms.gle/A8jawLgB8zuL1FN36) |**
+
+## Documentation and Resources
+**View the Cosmos SDK documentation: https://docs.cosmos.network/**
+
+### Cosmos Stack Libraries
+
+- [CometBFT](https://github.com/cometbft/cometbft) - High-performance, 10k+ TPS configurable BFT consensus engine.
+- [The Inter-Blockchain Communication Protocol (IBC)](https://github.com/cosmos/ibc-go/) - A blockchain interoperability protocol that allows blockchains to transfer any type of data encoded in bytes.
+- [Cosmos EVM](https://github.com/cosmos/evm) - Native EVM layer for Cosmos SDK chains. 
 
 ## Disambiguation
 

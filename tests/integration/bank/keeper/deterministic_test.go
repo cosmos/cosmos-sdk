@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 	"pgregory.net/rapid"
 
@@ -63,6 +64,8 @@ type deterministicFixture struct {
 }
 
 func initDeterministicFixture(t *testing.T) *deterministicFixture {
+	t.Helper()
+
 	keys := storetypes.NewKVStoreKeys(authtypes.StoreKey, banktypes.StoreKey)
 	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{}).Codec
 
@@ -311,7 +314,7 @@ func TestGRPCQueryParams(t *testing.T) {
 			DefaultSendEnabled: rapid.Bool().Draw(rt, "send"),
 		}
 
-		f.bankKeeper.SetParams(f.ctx, params)
+		require.NoError(t, f.bankKeeper.SetParams(f.ctx, params))
 
 		req := &banktypes.QueryParamsRequest{}
 		testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.Params, 0, true)
@@ -327,7 +330,7 @@ func TestGRPCQueryParams(t *testing.T) {
 		DefaultSendEnabled: false,
 	}
 
-	f.bankKeeper.SetParams(f.ctx, params)
+	require.NoError(t, f.bankKeeper.SetParams(f.ctx, params))
 
 	req := &banktypes.QueryParamsRequest{}
 	testdata.DeterministicIterations(f.ctx, t, req, f.queryClient.Params, 1003, false)

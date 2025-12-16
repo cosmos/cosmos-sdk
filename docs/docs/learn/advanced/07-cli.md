@@ -38,12 +38,12 @@ The `main.go` file needs to have a `main()` function that creates a root command
 * **setting configurations** by reading in configuration files (e.g. the Cosmos SDK config file).
 * **adding any flags** to it, such as `--chain-id`.
 * **instantiating the `codec`** by injecting the application codecs. The [`codec`](./05-encoding.md) is used to encode and decode data structures for the application - stores can only persist `[]byte`s so the developer must define a serialization format for their data structures or use the default, Protobuf.
-* **adding subcommand** for all the possible user interactions, including [transaction commands](#transaction-commands) and [query commands](#query-commands).
+* **adding subcommands** for all the possible user interactions, including [transaction commands](#transaction-commands) and [query commands](#query-commands).
 
 The `main()` function finally creates an executor and [execute](https://pkg.go.dev/github.com/spf13/cobra#Command.Execute) the root command. See an example of `main()` function from the `simapp` application:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/simd/main.go#L12-L24
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/simd/main.go#L14-L24
 ```
 
 The rest of the document will detail what needs to be implemented for each step and include smaller portions of code from the `simapp` CLI files.
@@ -57,21 +57,21 @@ Every application CLI first constructs a root command, then adds functionality b
 The root command (called `rootCmd`) is what the user first types into the command line to indicate which application they wish to interact with. The string used to invoke the command (the "Use" field) is typically the name of the application suffixed with `-d`, e.g. `simd` or `gaiad`. The root command typically includes the following commands to support basic functionality in the application.
 
 * **Status** command from the Cosmos SDK rpc client tools, which prints information about the status of the connected [`Node`](./03-node.md). The Status of a node includes `NodeInfo`,`SyncInfo` and `ValidatorInfo`.
-* **Keys** [commands](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/client/keys) from the Cosmos SDK client tools, which includes a collection of subcommands for using the key functions in the Cosmos SDK crypto tools, including adding a new key and saving it to the keyring, listing all public keys stored in the keyring, and deleting a key. For example, users can type `simd keys add <name>` to add a new key and save an encrypted copy to the keyring, using the flag `--recover` to recover a private key from a seed phrase or the flag `--multisig` to group multiple keys together to create a multisig key. For full details on the `add` key command, see the code [here](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/client/keys/add.go). For more details about usage of `--keyring-backend` for storage of key credentials look at the [keyring docs](../../user/run-node/00-keyring.md).
+* **Keys** [commands](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/client/keys) from the Cosmos SDK client tools, which includes a collection of subcommands for using the key functions in the Cosmos SDK crypto tools, including adding a new key and saving it to the keyring, listing all public keys stored in the keyring, and deleting a key. For example, users can type `simd keys add <name>` to add a new key and save an encrypted copy to the keyring, using the flag `--recover` to recover a private key from a seed phrase or the flag `--multisig` to group multiple keys together to create a multisig key. For full details on the `add` key command, see the code [here](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/client/keys/add.go). For more details about usage of `--keyring-backend` for storage of key credentials look at the [keyring docs](../../user/run-node/00-keyring.md).
 * **Server** commands from the Cosmos SDK server package. These commands are responsible for providing the mechanisms necessary to start an ABCI CometBFT application and provides the CLI framework (based on [cobra](https://github.com/spf13/cobra)) necessary to fully bootstrap an application. The package exposes two core functions: `StartCmd` and `ExportCmd` which creates commands to start the application and export state respectively.
-Learn more [here](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/server).
+Learn more [here](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/server).
 * [**Transaction**](#transaction-commands) commands.
 * [**Query**](#query-commands) commands.
 
 Next is an example `rootCmd` function from the `simapp` application. It instantiates the root command, adds a [*persistent* flag](#flags) and `PreRun` function to be run before every execution, and adds all of the necessary subcommands.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/simd/cmd/root_v2.go#L47-L130
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/simd/cmd/root_v2.go#L47-L130
 ```
 
 :::tip
 Use the `EnhanceRootCommand()` from the AutoCLI options to automatically add auto-generated commands from the modules to the root command.
-Additionnally it adds all manually defined modules commands (`tx` and `query`) as well.
+Additionally it adds all manually defined modules commands (`tx` and `query`) as well.
 Read more about [AutoCLI](https://docs.cosmos.network/main/core/autocli) in its dedicated section.
 :::
 
@@ -80,13 +80,13 @@ By default app uses CometBFT app config template from Cosmos SDK, which can be o
 Here's an example code to override default `app.toml` template.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/simd/cmd/root_v2.go#L144-L199
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/simd/cmd/root_v2.go#L144-L199
 ```
 
-The `initAppConfig()` also allows overriding the default Cosmos SDK's [server config](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/server/config/config.go#L235). One example is the `min-gas-prices` config, which defines the minimum gas prices a validator is willing to accept for processing a transaction. By default, the Cosmos SDK sets this parameter to `""` (empty string), which forces all validators to tweak their own `app.toml` and set a non-empty value, or else the node will halt on startup. This might not be the best UX for validators, so the chain developer can set a default `app.toml` value for validators inside this `initAppConfig()` function.
+The `initAppConfig()` also allows overriding the default Cosmos SDK's [server config](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/server/config/config.go#L231). One example is the `min-gas-prices` config, which defines the minimum gas prices a validator is willing to accept for processing a transaction. By default, the Cosmos SDK sets this parameter to `""` (empty string), which forces all validators to tweak their own `app.toml` and set a non-empty value, or else the node will halt on startup. This might not be the best UX for validators, so the chain developer can set a default `app.toml` value for validators inside this `initAppConfig()` function.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/simd/cmd/root_v2.go#L164-L180
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/simd/cmd/root_v2.go#L164-L180
 ```
 
 The root-level `status` and `keys` subcommands are common across most applications and do not interact with application state. The bulk of an application's functionality - what users can actually *do* with it - is enabled by its `tx` and `query` commands.
@@ -96,7 +96,7 @@ The root-level `status` and `keys` subcommands are common across most applicatio
 [Transactions](./01-transactions.md) are objects wrapping [`Msg`s](../../build/building-modules/02-messages-and-queries.md#messages) that trigger state changes. To enable the creation of transactions using the CLI interface, a function `txCommand` is generally added to the `rootCmd`:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/simd/cmd/root_v2.go#L222-L229
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/simd/cmd/root_v2.go#L222-L229
 ```
 
 This `txCommand` function adds all the transaction available to end-users for the application. This typically includes:
@@ -108,7 +108,7 @@ This `txCommand` function adds all the transaction available to end-users for th
 Here is an example of a `txCommand` aggregating these subcommands from the `simapp` application:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/simd/cmd/root_v2.go#L270-L292
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/simd/cmd/root_v2.go#L270-L292
 ```
 
 :::tip
@@ -121,7 +121,7 @@ Read more about [AutoCLI](https://docs.cosmos.network/main/core/autocli) in its 
 [**Queries**](../../build/building-modules/02-messages-and-queries.md#queries) are objects that allow users to retrieve information about the application's state. To enable the creation of queries using the CLI interface, a function `queryCommand` is generally added to the `rootCmd`:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/simd/cmd/root_v2.go#L222-L229
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/simd/cmd/root_v2.go#L222-L229
 ```
 
 This `queryCommand` function adds all the queries available to end-users for the application. This typically includes:
@@ -135,7 +135,7 @@ This `queryCommand` function adds all the queries available to end-users for the
 Here is an example of a `queryCommand` aggregating subcommands from the `simapp` application:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/simd/cmd/root_v2.go#L249-L268
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/simd/cmd/root_v2.go#L249-L268
 ```
 
 :::tip
@@ -145,7 +145,7 @@ Read more about [AutoCLI](https://docs.cosmos.network/main/core/autocli) in its 
 
 ## Flags
 
-Flags are used to modify commands; developers can include them in a `flags.go` file with their CLI. Users can explicitly include them in commands or pre-configure them by inside their [`app.toml`](../../user/run-node/01-run-node.md#configuring-the-node-using-apptoml-and-configtoml). Commonly pre-configured flags include the `--node` to connect to and `--chain-id` of the blockchain the user wishes to interact with.
+Flags are used to modify commands; developers can include them in a `flags.go` file with their CLI. Users can explicitly include them in commands or pre-configure them inside their [`app.toml`](../../user/run-node/01-run-node.md#configuring-the-node-using-apptoml-and-configtoml). Commonly pre-configured flags include the `--node` to connect to and `--chain-id` of the blockchain the user wishes to interact with.
 
 A *persistent* flag (as opposed to a *local* flag) added to a command transcends all of its children: subcommands will inherit the configured values for these flags. Additionally, all flags have default values when they are added to commands; some toggle an option off but others are empty values that the user needs to override to create valid commands. A flag can be explicitly marked as *required* so that an error is automatically thrown if the user does not provide a value, but it is also acceptable to handle unexpected missing flags differently.
 
@@ -153,7 +153,7 @@ Flags are added to commands directly (generally in the [module's CLI file](../..
 
 ## Environment variables
 
-Each flag is bound to its respective named environment variable. Then name of the environment variable consist of two parts - capital case `basename` followed by flag name of the flag. `-` must be substituted with `_`. For example flag `--home` for application with basename `GAIA` is bound to `GAIA_HOME`. It allows reducing the amount of flags typed for routine operations. For example instead of:
+Each flag is bound to its respective named environment variable. The name of the environment variable consists of two parts - capital case `basename` followed by flag name of the flag. `-` must be substituted with `_`. For example flag `--node` for application with basename `GAIA` is bound to `GAIA_NODE`. It allows reducing the amount of flags typed for routine operations. For example instead of:
 
 ```shell
 gaia --home=./ --node=<node address> --chain-id="testchain-1" --keyring-backend=test tx ... --from=<key name>
@@ -179,7 +179,7 @@ It is vital that the root command of an application uses `PersistentPreRun()` co
 Here is an example of an `PersistentPreRun()` function from `simapp`:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/simd/cmd/root_v2.go#L81-L120
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/simd/cmd/root_v2.go#L81-L120
 ```
 
 The `SetCmdClientContextHandler` call reads persistent flags via `ReadPersistentCommandFlags` which creates a `client.Context` and sets that on the root command's `Context`.

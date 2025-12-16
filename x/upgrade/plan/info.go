@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"strings"
 
-	"cosmossdk.io/x/upgrade/internal/conv"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/internal/conv"
 )
 
 // Info is the special structure that the Plan.Info string can be (as json).
@@ -20,7 +20,7 @@ type Info struct {
 	Binaries BinaryDownloadURLMap `json:"binaries"`
 }
 
-// BinaryDownloadURLMap is a map of os/architecture stings to a URL where the binary can be downloaded.
+// BinaryDownloadURLMap is a map of os/architecture strings to a URL where the binary can be downloaded.
 type BinaryDownloadURLMap map[string]string
 
 // ParseConfig is used to configure the parsing of a Plan.Info string.
@@ -68,7 +68,7 @@ func ParseInfo(infoStr string, opts ...ParseOption) (*Info, error) {
 	// Now, try to parse it into the expected structure.
 	var planInfo Info
 	if err := json.Unmarshal(conv.UnsafeStrToBytes(infoStr), &planInfo); err != nil {
-		return nil, fmt.Errorf("could not parse plan info: %v", err)
+		return nil, fmt.Errorf("could not parse plan info: %w", err)
 	}
 
 	planInfo.parseConfig = *parseConfig

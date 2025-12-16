@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"slices"
 	"strconv"
 	"time"
 
@@ -85,13 +86,7 @@ func (k msgServer) CreateValidator(ctx context.Context, msg *types.MsgCreateVali
 	cp := sdkCtx.ConsensusParams()
 	if cp.Validator != nil {
 		pkType := pk.Type()
-		hasKeyType := false
-		for _, keyType := range cp.Validator.PubKeyTypes {
-			if pkType == keyType {
-				hasKeyType = true
-				break
-			}
-		}
+		hasKeyType := slices.Contains(cp.Validator.PubKeyTypes, pkType)
 		if !hasKeyType {
 			return nil, errorsmod.Wrapf(
 				types.ErrValidatorPubKeyTypeNotSupported,
@@ -289,11 +284,11 @@ func (k msgServer) Delegate(ctx context.Context, msg *types.MsgDelegate) (*types
 
 	if msg.Amount.Amount.IsInt64() {
 		defer func() {
-			telemetry.IncrCounter(1, types.ModuleName, "delegate")
-			telemetry.SetGaugeWithLabels(
+			telemetry.IncrCounter(1, types.ModuleName, "delegate") //nolint:staticcheck // TODO: switch to OpenTelemetry
+			telemetry.SetGaugeWithLabels(                          //nolint:staticcheck // TODO: switch to OpenTelemetry
 				[]string{"tx", "msg", sdk.MsgTypeURL(msg)},
 				float32(msg.Amount.Amount.Int64()),
-				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
+				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)}, //nolint:staticcheck // TODO: switch to OpenTelemetry
 			)
 		}()
 	}
@@ -363,11 +358,11 @@ func (k msgServer) BeginRedelegate(ctx context.Context, msg *types.MsgBeginRedel
 
 	if msg.Amount.Amount.IsInt64() {
 		defer func() {
-			telemetry.IncrCounter(1, types.ModuleName, "redelegate")
-			telemetry.SetGaugeWithLabels(
+			telemetry.IncrCounter(1, types.ModuleName, "redelegate") //nolint:staticcheck // TODO: switch to OpenTelemetry
+			telemetry.SetGaugeWithLabels(                            //nolint:staticcheck // TODO: switch to OpenTelemetry
 				[]string{"tx", "msg", sdk.MsgTypeURL(msg)},
 				float32(msg.Amount.Amount.Int64()),
-				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
+				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)}, //nolint:staticcheck // TODO: switch to OpenTelemetry
 			)
 		}()
 	}
@@ -378,6 +373,7 @@ func (k msgServer) BeginRedelegate(ctx context.Context, msg *types.MsgBeginRedel
 			types.EventTypeRedelegate,
 			sdk.NewAttribute(types.AttributeKeySrcValidator, msg.ValidatorSrcAddress),
 			sdk.NewAttribute(types.AttributeKeyDstValidator, msg.ValidatorDstAddress),
+			sdk.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
 			sdk.NewAttribute(types.AttributeKeyCompletionTime, completionTime.Format(time.RFC3339)),
 		),
@@ -434,11 +430,11 @@ func (k msgServer) Undelegate(ctx context.Context, msg *types.MsgUndelegate) (*t
 
 	if msg.Amount.Amount.IsInt64() {
 		defer func() {
-			telemetry.IncrCounter(1, types.ModuleName, "undelegate")
-			telemetry.SetGaugeWithLabels(
+			telemetry.IncrCounter(1, types.ModuleName, "undelegate") //nolint:staticcheck // TODO: switch to OpenTelemetry
+			telemetry.SetGaugeWithLabels(                            //nolint:staticcheck // TODO: switch to OpenTelemetry
 				[]string{"tx", "msg", sdk.MsgTypeURL(msg)},
 				float32(msg.Amount.Amount.Int64()),
-				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
+				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)}, //nolint:staticcheck // TODO: switch to OpenTelemetry
 			)
 		}()
 	}

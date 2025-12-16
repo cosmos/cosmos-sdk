@@ -346,10 +346,10 @@ message ResponseVerifyVoteExtension {
 }
 
 message ResponseFinalizeBlock {
-  // set of block events emmitted as part of executing the block
+  // set of block events emitted as part of executing the block
   repeated Event events = 1 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "events,omitempty"];
   // the result of executing each transaction including the events
-  // the particular transction emitted. This should match the order
+  // the particular transaction emitted. This should match the order
   // of the transactions delivered in the block itself
   repeated ExecTxResult tx_results = 2;
   // a list of updates to the validator set. These will reflect the validator set at current height + 2.

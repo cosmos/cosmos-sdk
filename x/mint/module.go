@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/testutil/simsx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -91,10 +92,6 @@ type AppModule struct {
 
 	// legacySubspace is used solely for migration of x/params managed parameters
 	legacySubspace exported.Subspace
-
-	// inflationCalculator is used to calculate the inflation rate during BeginBlock.
-	// If inflationCalculator is nil, the default inflation calculation logic is used.
-	inflationCalculator types.InflationCalculationFn
 }
 
 // NewAppModule creates a new AppModule object. If the InflationCalculationFn
@@ -103,19 +100,19 @@ func NewAppModule(
 	cdc codec.Codec,
 	keeper keeper.Keeper,
 	ak types.AccountKeeper,
+	// This input is unused as of Cosmos SDK v0.53 and will be removed in a future release of the Cosmos SDK.
 	ic types.InflationCalculationFn,
 	ss exported.Subspace,
 ) AppModule {
-	if ic == nil {
-		ic = types.DefaultInflationCalculationFn
+	if ic != nil {
+		panic("inflation calculation function argument must be nil as it is no longer used.  This argument will be removed in a future release of the Cosmos SDK.  To set a custom inflation calculation function, use the WithMintFn option when constructing the x/mint keeper as follows: mintkeeper.WithMintFn(mintkeeper.DefaultMintFn(minttypes.DefaultInflationCalculationFn))")
 	}
 
 	return AppModule{
-		AppModuleBasic:      AppModuleBasic{cdc: cdc},
-		keeper:              keeper,
-		authKeeper:          ak,
-		inflationCalculator: ic,
-		legacySubspace:      ss,
+		AppModuleBasic: AppModuleBasic{cdc: cdc},
+		keeper:         keeper,
+		authKeeper:     ak,
+		legacySubspace: ss,
 	}
 }
 
@@ -131,11 +128,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServerImpl(am.keeper))
 
-	m := keeper.NewMigrator(am.keeper, am.legacySubspace)
-
-	if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2: %v", types.ModuleName, err))
-	}
+	_ = keeper.NewMigrator(am.keeper, am.legacySubspace)
 }
 
 // InitGenesis performs genesis initialization for the mint module. It returns
@@ -159,7 +152,7 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 
 // BeginBlock returns the begin blocker for the mint module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	return BeginBlocker(ctx, am.keeper, am.inflationCalculator)
+	return BeginBlocker(ctx, am.keeper)
 }
 
 // AppModuleSimulation functions
@@ -170,8 +163,14 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 }
 
 // ProposalMsgs returns msgs used for governance proposals for simulations.
-func (AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.WeightedProposalMsg {
+// migrate to ProposalMsgsX. This method is ignored when ProposalMsgsX exists and will be removed in the future.
+func (AppModule) ProposalMsgs(_ module.SimulationState) []simtypes.WeightedProposalMsg {
 	return simulation.ProposalMsgs()
+}
+
+// ProposalMsgsX returns msgs used for governance proposals for simulations.
+func (AppModule) ProposalMsgsX(weights simsx.WeightSource, reg simsx.Registry) {
+	reg.Add(weights.Get("msg_update_params", 100), simulation.MsgUpdateParamsFactory())
 }
 
 // RegisterStoreDecoder registers a decoder for mint module's types.
@@ -197,11 +196,13 @@ func init() {
 type ModuleInputs struct {
 	depinject.In
 
-	ModuleKey              depinject.OwnModuleKey
-	Config                 *modulev1.Module
-	StoreService           store.KVStoreService
-	Cdc                    codec.Codec
+	ModuleKey    depinject.OwnModuleKey
+	Config       *modulev1.Module
+	StoreService store.KVStoreService
+	Cdc          codec.Codec
+	// Deprecated: This input is unused as of Cosmos SDK v0.53 and will be removed in a future release of the Cosmos SDK.
 	InflationCalculationFn types.InflationCalculationFn `optional:"true"`
+	MintFn                 keeper.MintFn                `optional:"true"`
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace exported.Subspace `optional:"true"`
@@ -230,6 +231,15 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
+	if in.InflationCalculationFn != nil {
+		panic("inflation calculation function argument must be nil as it is no longer used.  This argument will be removed in a future release of the Cosmos SDK.  To set a custom inflation calculation function, while using depinject ")
+	}
+
+	var opts []keeper.InitOption
+	if in.MintFn != nil {
+		opts = append(opts, keeper.WithMintFn(in.MintFn))
+	}
+
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.StoreService,
@@ -238,10 +248,11 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.BankKeeper,
 		feeCollectorName,
 		authority.String(),
+		opts...,
 	)
 
 	// when no inflation calculation function is provided it will use the default types.DefaultInflationCalculationFn
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.InflationCalculationFn, in.LegacySubspace)
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, nil, in.LegacySubspace)
 
 	return ModuleOutputs{MintKeeper: k, Module: m}
 }

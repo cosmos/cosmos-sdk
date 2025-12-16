@@ -11,9 +11,6 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/upgrade"
-	"cosmossdk.io/x/upgrade/keeper"
-	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -24,6 +21,9 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/upgrade"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 type KeeperTestSuite struct {
@@ -121,11 +121,11 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 				Height: 123450000,
 			},
 			setup: func() {
-				s.upgradeKeeper.ScheduleUpgrade(s.ctx, types.Plan{
+				s.Require().NoError(s.upgradeKeeper.ScheduleUpgrade(s.ctx, types.Plan{
 					Name:   "alt-good",
 					Info:   "new text here",
 					Height: 543210000,
-				})
+				}))
 			},
 			expPass: true,
 		},
@@ -158,19 +158,17 @@ func (s *KeeperTestSuite) TestScheduleUpgrade() {
 				s.upgradeKeeper.SetUpgradeHandler("all-good", func(ctx context.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 					return vm, nil
 				})
-				s.upgradeKeeper.ApplyUpgrade(s.ctx, types.Plan{
+				s.Require().NoError(s.upgradeKeeper.ApplyUpgrade(s.ctx, types.Plan{
 					Name:   "all-good",
 					Info:   "some text here",
 					Height: 123450000,
-				})
+				}))
 			},
 			expPass: false,
 		},
 	}
 
 	for _, tc := range cases {
-		tc := tc
-
 		s.Run(tc.name, func() {
 			// reset suite
 			s.SetupTest()
@@ -208,7 +206,7 @@ func (s *KeeperTestSuite) TestSetUpgradedClient() {
 			name:   "success",
 			height: 10,
 			setup: func() {
-				s.upgradeKeeper.SetUpgradedClient(s.ctx, 10, cs)
+				s.Require().NoError(s.upgradeKeeper.SetUpgradedClient(s.ctx, 10, cs))
 			},
 			exists: true,
 		},
@@ -275,7 +273,7 @@ func (s *KeeperTestSuite) TestIncrementProtocolVersion() {
 	s.Require().EqualError(err, "ApplyUpgrade should never be called without first checking HasHandler")
 
 	s.upgradeKeeper.SetUpgradeHandler("dummy", func(_ context.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) { return vm, nil })
-	s.upgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
+	s.Require().NoError(s.upgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan))
 	upgradedProtocolVersion := s.baseApp.AppVersion()
 
 	s.Require().Equal(oldProtocolVersion+1, upgradedProtocolVersion)
@@ -285,7 +283,7 @@ func (s *KeeperTestSuite) TestIncrementProtocolVersion() {
 // an upgrade.
 func (s *KeeperTestSuite) TestMigrations() {
 	initialVM := module.VersionMap{"bank": uint64(1)}
-	s.upgradeKeeper.SetModuleVersionMap(s.ctx, initialVM)
+	s.Require().NoError(s.upgradeKeeper.SetModuleVersionMap(s.ctx, initialVM))
 	vmBefore, err := s.upgradeKeeper.GetModuleVersionMap(s.ctx)
 	s.Require().NoError(err)
 
@@ -300,7 +298,7 @@ func (s *KeeperTestSuite) TestMigrations() {
 		Height: 123450000,
 	}
 
-	s.upgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan)
+	s.Require().NoError(s.upgradeKeeper.ApplyUpgrade(s.ctx, dummyPlan))
 	vm, err := s.upgradeKeeper.GetModuleVersionMap(s.ctx)
 	s.Require().Equal(vmBefore["bank"]+1, vm["bank"])
 	s.Require().NoError(err)
@@ -320,10 +318,10 @@ func (s *KeeperTestSuite) TestLastCompletedUpgrade() {
 		return vm, nil
 	})
 
-	keeper.ApplyUpgrade(s.ctx, types.Plan{
+	s.Require().NoError(keeper.ApplyUpgrade(s.ctx, types.Plan{
 		Name:   "test0",
 		Height: 10,
-	})
+	}))
 
 	s.T().Log("verify valid upgrade name and height")
 	name, height, err = keeper.GetLastCompletedUpgrade(s.ctx)
@@ -336,10 +334,10 @@ func (s *KeeperTestSuite) TestLastCompletedUpgrade() {
 	})
 
 	newCtx := s.ctx.WithHeaderInfo(header.Info{Height: 15})
-	keeper.ApplyUpgrade(newCtx, types.Plan{
+	s.Require().NoError(keeper.ApplyUpgrade(newCtx, types.Plan{
 		Name:   "test1",
 		Height: 15,
-	})
+	}))
 
 	s.T().Log("verify valid upgrade name and height with multiple upgrades")
 	name, height, err = keeper.GetLastCompletedUpgrade(newCtx)
@@ -359,10 +357,10 @@ func (s *KeeperTestSuite) TestLastCompletedUpgradeOrdering() {
 		return vm, nil
 	})
 
-	keeper.ApplyUpgrade(s.ctx, types.Plan{
+	s.Require().NoError(keeper.ApplyUpgrade(s.ctx, types.Plan{
 		Name:   "test-v0.9",
 		Height: 10,
-	})
+	}))
 
 	name, height, err := keeper.GetLastCompletedUpgrade(s.ctx)
 	require.Equal("test-v0.9", name)

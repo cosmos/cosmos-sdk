@@ -20,7 +20,7 @@ Here is a simplified view of how transactions are handled by an application buil
 Here is an example of this from `simapp`, the Cosmos SDK demonstration app:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/app.go#L170-L212
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/app.go#L137-L180
 ```
 
 The goal of `baseapp` is to provide a secure interface between the store and the extensible state machine while defining as little about the state machine as possible (staying true to the ABCI).
@@ -39,49 +39,18 @@ The power of the Cosmos SDK lies in its modularity. Cosmos SDK applications are 
 
 Here is a simplified view of how a transaction is processed by the application of each full-node when it is received in a valid block:
 
-```text
-                                      +
-                                      |
-                                      |  Transaction relayed from the full-node's
-                                      |  CometBFT engine to the node's application
-                                      |  via DeliverTx
-                                      |
-                                      |
-                +---------------------v--------------------------+
-                |                 APPLICATION                    |
-                |                                                |
-                |     Using baseapp's methods: Decode the Tx,    |
-                |     extract and route the message(s)           |
-                |                                                |
-                +---------------------+--------------------------+
-                                      |
-                                      |
-                                      |
-                                      +---------------------------+
-                                                                  |
-                                                                  |
-                                                                  |  Message routed to
-                                                                  |  the correct module
-                                                                  |  to be processed
-                                                                  |
-                                                                  |
-+----------------+  +---------------+  +----------------+  +------v----------+
-|                |  |               |  |                |  |                 |
-|  AUTH MODULE   |  |  BANK MODULE  |  | STAKING MODULE |  |   GOV MODULE    |
-|                |  |               |  |                |  |                 |
-|                |  |               |  |                |  | Handles message,|
-|                |  |               |  |                |  | Updates state   |
-|                |  |               |  |                |  |                 |
-+----------------+  +---------------+  +----------------+  +------+----------+
-                                                                  |
-                                                                  |
-                                                                  |
-                                                                  |
-                                       +--------------------------+
-                                       |
-                                       | Return result to CometBFT
-                                       | (0=Ok, 1=Err)
-                                       v
+```mermaid
+ flowchart TD
+    A[Transaction relayed from the full-node's CometBFT engine to the node's application via DeliverTx] --> B[APPLICATION]
+    B -->|"Using baseapp's methods: Decode the Tx, extract and route the message(s)"| C[Message routed to the correct module to be processed]
+    C --> D1[AUTH MODULE]
+    C --> D2[BANK MODULE]
+    C --> D3[STAKING MODULE]
+    C --> D4[GOV MODULE]
+    D1 -->|Handle message, Update state| E["Return result to CometBFT (0=Ok, 1=Err)"]
+    D2 -->|Handle message, Update state| E["Return result to CometBFT (0=Ok, 1=Err)"]
+    D3 -->|Handle message, Update state| E["Return result to CometBFT (0=Ok, 1=Err)"]
+    D4 -->|Handle message, Update state| E["Return result to CometBFT (0=Ok, 1=Err)"]
 ```
 
 Each module can be seen as a little state-machine. Developers need to define the subset of the state handled by the module, as well as custom message types that modify the state (*Note:* `messages` are extracted from `transactions` by `baseapp`). In general, each module declares its own `KVStore` in the `multistore` to persist the subset of the state it defines. Most developers will need to access other 3rd party modules when building their own modules. Given that the Cosmos SDK is an open framework, some of the modules may be malicious, which means there is a need for security principles to reason about inter-module interactions. These principles are based on [object-capabilities](../advanced/10-ocap.md). In practice, this means that instead of having each module keep an access control list for other modules, each module implements special objects called `keepers` that can be passed to other modules to grant a pre-defined set of capabilities.
@@ -90,6 +59,6 @@ Cosmos SDK modules are defined in the `x/` folder of the Cosmos SDK. Some core m
 
 * `x/auth`: Used to manage accounts and signatures.
 * `x/bank`: Used to enable tokens and token transfers.
-* `x/staking` + `x/slashing`: Used to build Proof-Of-Stake blockchains.
+* `x/staking` + `x/slashing`: Used to build Proof-of-Stake blockchains.
 
-In addition to the already existing modules in `x/`, that anyone can use in their app, the Cosmos SDK lets you build your own custom modules. You can check an [example of that in the tutorial](https://tutorials.cosmos.network/).
+In addition to the already existing modules in `x/`, which anyone can use in their app, the Cosmos SDK lets you build your own custom modules. You can check an [example of that in the tutorial](https://tutorials.cosmos.network/).

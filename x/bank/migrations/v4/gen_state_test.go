@@ -28,7 +28,7 @@ func TestMigrateGenState(t *testing.T) {
 				}},
 				Supply: sdk.Coins{sdk.NewCoin("supplycoin", sdkmath.NewInt(800))},
 				DenomMetadata: []types.Metadata{{
-					Description: "metadesk",
+					Description: "metadesc",
 					DenomUnits:  nil,
 					Base:        "meta",
 					Display:     "meta",
@@ -47,7 +47,7 @@ func TestMigrateGenState(t *testing.T) {
 				}},
 				Supply: sdk.Coins{sdk.NewCoin("supplycoin", sdkmath.NewInt(800))},
 				DenomMetadata: []types.Metadata{{
-					Description: "metadesk",
+					Description: "metadesc",
 					DenomUnits:  nil,
 					Base:        "meta",
 					Display:     "meta",
@@ -156,6 +156,6 @@ func TestMigrateGenState(t *testing.T) {
 			},
 		}
 		_ = v4.MigrateGenState(&origState)
-		assert.Len(t, origState.Params.SendEnabled, 2) //nolint:staticcheck // keep for test (linter sometimes fails)
+		assert.Len(t, origState.Params.SendEnabled, 2)
 	})
 }

@@ -25,7 +25,7 @@ includes `ExtendVote`, `VerifyVoteExtension` and `FinalizeBlock`.
 ABCI 2.0 continues the promised updates from ABCI++, specifically three additional
 ABCI methods that the application can implement in order to gain further control,
 insight and customization of the consensus process, unlocking many novel use-cases
-that previously not possible. We describe these three new methods below:
+that were previously not possible. We describe these three new methods below:
 
 ### `ExtendVote`
 
@@ -120,7 +120,7 @@ Recall, an implementation of `ExtendVoteHandler` does NOT need to be determinist
 however, given a set of vote extensions, `VerifyVoteExtensionHandler` must be
 deterministic, otherwise the chain may suffer from liveness faults. In addition,
 recall CometBFT proceeds in rounds for each height, so if a decision cannot be
-made about about a block proposal at a given height, CometBFT will proceed to the
+made about a block proposal at a given height, CometBFT will proceed to the
 next round and thus will execute `ExtendVote` and `VerifyVoteExtension` again for
 the new round for each validator until 2/3 valid pre-commits can be obtained.
 
@@ -286,7 +286,7 @@ decision based on the vote extensions.
 > nor the vote extension verification mechanism described above is required for
 > applications to implement. In other words, a proposer is not required to verify
 > and propagate vote extensions along with their signatures nor are proposers
-> required to verify those signatures. An application can implement it's own
+> required to verify those signatures. An application can implement its own
 > PKI mechanism and use that to sign and verify vote extensions.
 
 #### Vote Extension Persistence
@@ -396,7 +396,7 @@ and rely on existing events, especially since applications will still define
 In order to facilitate existing event functionality, we propose that all `BeginBlock`
 and `EndBlock` events have a dedicated `EventAttribute` with `key=block` and
 `value=begin_block|end_block`. The `EventAttribute` will be appended to each event
-in both `BeginBlock` and `EndBlock` events`. 
+in both `BeginBlock` and `EndBlock` events. 
 
 
 ### Upgrading

@@ -28,6 +28,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/baseapp/state"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -133,6 +134,17 @@ func (m CounterServerImplGasMeterOnly) IncrementCounter(ctx context.Context, msg
 	return &baseapptestutil.MsgCreateCounterResponse{}, nil
 }
 
+type mockCounterServer struct {
+	incrementCounterFn func(context.Context, *baseapptestutil.MsgCounter) (*baseapptestutil.MsgCreateCounterResponse, error)
+}
+
+func (m mockCounterServer) IncrementCounter(ctx context.Context, req *baseapptestutil.MsgCounter) (*baseapptestutil.MsgCreateCounterResponse, error) {
+	if m.incrementCounterFn == nil {
+		panic("not expected to be called")
+	}
+	return m.incrementCounterFn(ctx, req)
+}
+
 type NoopCounterServerImpl struct{}
 
 func (m NoopCounterServerImpl) IncrementCounter(
@@ -168,6 +180,8 @@ func incrementCounter(ctx context.Context,
 	deliverKey []byte,
 	msg sdk.Msg,
 ) (*baseapptestutil.MsgCreateCounterResponse, error) {
+	t.Helper()
+
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	store := sdkCtx.KVStore(capKey)
 
@@ -210,6 +224,8 @@ func counterEvent(evType string, msgCount int64) sdk.Events {
 }
 
 func anteHandlerTxTest(t *testing.T, capKey storetypes.StoreKey, storeKey []byte) sdk.AnteHandler {
+	t.Helper()
+
 	return func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
 		store := ctx.KVStore(capKey)
 		counter, failOnAnte := parseTxMemo(t, tx)
@@ -233,6 +249,8 @@ func anteHandlerTxTest(t *testing.T, capKey storetypes.StoreKey, storeKey []byte
 }
 
 func incrementingCounter(t *testing.T, store storetypes.KVStore, counterKey []byte, counter int64) (*sdk.Result, error) {
+	t.Helper()
+
 	storedCounter := getIntFromStore(t, store, counterKey)
 	require.Equal(t, storedCounter, counter)
 	setIntOnStore(store, counterKey, counter+1)
@@ -283,6 +301,8 @@ func (ps paramStore) Get(_ context.Context) (cmtproto.ConsensusParams, error) {
 }
 
 func setTxSignature(t *testing.T, builder client.TxBuilder, nonce uint64) {
+	t.Helper()
+
 	privKey := secp256k1.GenPrivKeyFromSecret([]byte("test"))
 	pubKey := privKey.PubKey()
 	err := builder.SetSignatures(
@@ -296,27 +316,36 @@ func setTxSignature(t *testing.T, builder client.TxBuilder, nonce uint64) {
 }
 
 func testLoadVersionHelper(t *testing.T, app *baseapp.BaseApp, expectedHeight int64, expectedID storetypes.CommitID) {
+	t.Helper()
+
 	lastHeight := app.LastBlockHeight()
 	lastID := app.LastCommitID()
 	require.Equal(t, expectedHeight, lastHeight)
 	require.Equal(t, expectedID, lastID)
 }
 
-func getCheckStateCtx(app *baseapp.BaseApp) sdk.Context {
+// note: we use reflection in this test because we do not want to make the baseapp state publicly available
+
+func reflectGetStateCtx(app *baseapp.BaseApp, mode sdk.ExecMode) sdk.Context {
 	v := reflect.ValueOf(app).Elem()
-	f := v.FieldByName("checkState")
+	f := v.FieldByName("stateManager")
 	rf := reflect.NewAt(f.Type(), unsafe.Pointer(f.UnsafeAddr())).Elem()
-	return rf.MethodByName("Context").Call(nil)[0].Interface().(sdk.Context)
+	arg := reflect.ValueOf(mode)
+	st := rf.MethodByName("GetState").Call([]reflect.Value{arg})[0].Interface().(*state.State)
+	return st.Context()
+}
+
+func getCheckStateCtx(app *baseapp.BaseApp) sdk.Context {
+	return reflectGetStateCtx(app, sdk.ExecModeCheck)
 }
 
 func getFinalizeBlockStateCtx(app *baseapp.BaseApp) sdk.Context {
-	v := reflect.ValueOf(app).Elem()
-	f := v.FieldByName("finalizeBlockState")
-	rf := reflect.NewAt(f.Type(), unsafe.Pointer(f.UnsafeAddr())).Elem()
-	return rf.MethodByName("Context").Call(nil)[0].Interface().(sdk.Context)
+	return reflectGetStateCtx(app, sdk.ExecModeFinalize)
 }
 
 func parseTxMemo(t *testing.T, tx sdk.Tx) (counter int64, failOnAnte bool) {
+	t.Helper()
+
 	txWithMemo, ok := tx.(sdk.TxWithMemo)
 	require.True(t, ok)
 
@@ -332,6 +361,8 @@ func parseTxMemo(t *testing.T, tx sdk.Tx) (counter int64, failOnAnte bool) {
 }
 
 func newTxCounter(t *testing.T, cfg client.TxConfig, counter int64, msgCounters ...int64) signing.Tx {
+	t.Helper()
+
 	_, _, addr := testdata.KeyTestPubAddr()
 	msgs := make([]sdk.Msg, 0, len(msgCounters))
 	for _, c := range msgCounters {
@@ -340,7 +371,7 @@ func newTxCounter(t *testing.T, cfg client.TxConfig, counter int64, msgCounters 
 	}
 
 	builder := cfg.NewTxBuilder()
-	builder.SetMsgs(msgs...)
+	require.NoError(t, builder.SetMsgs(msgs...))
 	builder.SetMemo("counter=" + strconv.FormatInt(counter, 10) + "&failOnAnte=false")
 	setTxSignature(t, builder, uint64(counter))
 
@@ -348,6 +379,8 @@ func newTxCounter(t *testing.T, cfg client.TxConfig, counter int64, msgCounters 
 }
 
 func getIntFromStore(t *testing.T, store storetypes.KVStore, key []byte) int64 {
+	t.Helper()
+
 	bz := store.Get(key)
 	if len(bz) == 0 {
 		return 0
@@ -360,8 +393,10 @@ func getIntFromStore(t *testing.T, store storetypes.KVStore, key []byte) int64 {
 }
 
 func setFailOnAnte(t *testing.T, cfg client.TxConfig, tx signing.Tx, failOnAnte bool) signing.Tx {
+	t.Helper()
+
 	builder := cfg.NewTxBuilder()
-	builder.SetMsgs(tx.GetMsgs()...)
+	require.NoError(t, builder.SetMsgs(tx.GetMsgs()...))
 
 	memo := tx.GetMemo()
 	vals, err := url.ParseQuery(memo)
@@ -387,12 +422,16 @@ func setFailOnHandler(cfg client.TxConfig, tx signing.Tx, fail bool) signing.Tx 
 		}
 	}
 
-	builder.SetMsgs(msgs...)
+	if err := builder.SetMsgs(msgs...); err != nil {
+		panic(err)
+	}
 	return builder.GetTx()
 }
 
 // wonkyMsg is to be used to run a MsgCounter2 message when the MsgCounter2 handler is not registered.
 func wonkyMsg(t *testing.T, cfg client.TxConfig, tx signing.Tx) signing.Tx {
+	t.Helper()
+
 	t.Helper()
 	builder := cfg.NewTxBuilder()
 	builder.SetMemo(tx.GetMemo())

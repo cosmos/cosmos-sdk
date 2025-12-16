@@ -11,7 +11,7 @@ var (
 	// ParamsKey is the key of x/gov params
 	ParamsKey = []byte{0x30}
 
-	// - 0x04<proposalID_Bytes>: ProposalContents
+	// VotingPeriodProposalKeyPrefix - 0x04<proposalID_Bytes>: ProposalContents
 	VotingPeriodProposalKeyPrefix = []byte{0x04}
 )
 
@@ -24,5 +24,5 @@ func VotingPeriodProposalKey(proposalID uint64) []byte {
 func GetProposalIDBytes(proposalID uint64) (proposalIDBz []byte) {
 	proposalIDBz = make([]byte, 8)
 	binary.BigEndian.PutUint64(proposalIDBz, proposalID)
-	return
+	return proposalIDBz
 }

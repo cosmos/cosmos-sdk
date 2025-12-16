@@ -9,10 +9,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/feegrant"
 
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
 func TestBasicFeeValidAllow(t *testing.T) {
@@ -22,10 +22,10 @@ func TestBasicFeeValidAllow(t *testing.T) {
 	ctx := testCtx.Ctx.WithBlockHeader(cmtproto.Header{Height: 1})
 
 	badTime := ctx.BlockTime().AddDate(0, 0, -1)
-	allowace := &feegrant.BasicAllowance{
+	allowance := &feegrant.BasicAllowance{
 		Expiration: &badTime,
 	}
-	require.Error(t, allowace.ValidateBasic())
+	require.Error(t, allowance.ValidateBasic())
 
 	ctx = ctx.WithBlockHeader(cmtproto.Header{
 		Time: time.Now(),

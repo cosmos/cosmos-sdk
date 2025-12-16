@@ -4,6 +4,8 @@ package cosmos.app.v1alpha1;
 
 import "google/protobuf/any.proto";
 
+option go_package = "cosmossdk.io/depinject/appconfig/v1alpha1";
+
 // Config represents the configuration for a Cosmos SDK ABCI app.
 // It is intended that all state machine logic including the version of
 // baseapp and tx handlers (and possibly even Tendermint) that an app needs
@@ -32,7 +34,7 @@ message ModuleConfig {
   // cosmos.bank.module.v2.Module, the app-specific name "bank" stays the same
   // and the framework knows that the v2 module should receive all the same state
   // that the v1 module had. Note: modules should provide info on which versions
-  // they can migrate from in the ModuleDescriptor.can_migration_from field.
+  // they can migrate from in the ModuleDescriptor.can_migrate_from field.
   string name = 1;
 
   // config is the config object for the module. Module config messages should

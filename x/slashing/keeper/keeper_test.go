@@ -5,8 +5,8 @@ import (
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
@@ -60,7 +60,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	// set test params
-	s.slashingKeeper.SetParams(ctx, slashingtestutil.TestParams())
+	s.Require().NoError(s.slashingKeeper.SetParams(ctx, slashingtestutil.TestParams()))
 
 	slashingtypes.RegisterInterfaces(encCfg.InterfaceRegistry)
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
@@ -94,16 +94,16 @@ func (s *KeeperTestSuite) TestJailAndSlash() {
 		stakingtypes.Infraction_INFRACTION_UNSPECIFIED,
 	).Return(sdkmath.NewInt(0), nil)
 
-	s.slashingKeeper.Slash(
+	s.Require().NoError(s.slashingKeeper.Slash(
 		s.ctx,
 		consAddr,
 		slashFractionDoubleSign,
 		sdk.TokensToConsensusPower(sdkmath.NewInt(1), sdk.DefaultPowerReduction),
 		s.ctx.BlockHeight(),
-	)
+	))
 
 	s.stakingKeeper.EXPECT().Jail(s.ctx, consAddr).Return(nil)
-	s.slashingKeeper.Jail(s.ctx, consAddr)
+	s.Require().NoError(s.slashingKeeper.Jail(s.ctx, consAddr))
 }
 
 func (s *KeeperTestSuite) TestJailAndSlashWithInfractionReason() {
@@ -118,17 +118,17 @@ func (s *KeeperTestSuite) TestJailAndSlashWithInfractionReason() {
 		stakingtypes.Infraction_INFRACTION_DOUBLE_SIGN,
 	).Return(sdkmath.NewInt(0), nil)
 
-	s.slashingKeeper.SlashWithInfractionReason(
+	s.Require().NoError(s.slashingKeeper.SlashWithInfractionReason(
 		s.ctx,
 		consAddr,
 		slashFractionDoubleSign,
 		sdk.TokensToConsensusPower(sdkmath.NewInt(1), sdk.DefaultPowerReduction),
 		s.ctx.BlockHeight(),
 		stakingtypes.Infraction_INFRACTION_DOUBLE_SIGN,
-	)
+	))
 
 	s.stakingKeeper.EXPECT().Jail(s.ctx, consAddr).Return(nil)
-	s.slashingKeeper.Jail(s.ctx, consAddr)
+	s.Require().NoError(s.slashingKeeper.Jail(s.ctx, consAddr))
 }
 
 func TestKeeperTestSuite(t *testing.T) {

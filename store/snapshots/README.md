@@ -11,8 +11,8 @@ This document describes the Cosmos SDK implementation of the ABCI state sync
 interface, for more information on CometBFT state sync in general see:
 
 * [CometBFT State Sync for Developers](https://medium.com/cometbft/cometbft-core-state-sync-for-developers-70a96ba3ee35)
-* [ABCI State Sync Spec](https://docs.cometbft.com/v0.37/spec/p2p/messages/state-sync)
-* [ABCI State Sync Method/Type Reference](https://docs.cometbft.com/v0.37/spec/p2p/messages/state-sync)
+* [ABCI State Sync Spec](https://docs.cometbft.com/v0.37/spec/p2p/legacy-docs/messages/state-sync)
+* [ABCI State Sync Method/Type Reference](https://docs.cometbft.com/v0.37/spec/p2p/legacy-docs/messages/state-sync)
 
 ## Overview
 
@@ -87,13 +87,13 @@ to determine which heights are to be pruned (959 - 50 - 10 = 899-909 = 959 - 50)
 ## Configuration
 
 * `state-sync.snapshot-interval`
-  * the interval at which to take snapshots.
-  * the value of 0 disables snapshots.
-  * if pruning is enabled, it is done after a snapshot is complete for the heights that are multiples of this interval.
+    * the interval at which to take snapshots.
+    * the value of 0 disables snapshots.
+    * if pruning is enabled, it is done after a snapshot is complete for the heights that are multiples of this interval.
 
 * `state-sync.snapshot-keep-recent`:
-  * the number of recent snapshots to keep.
-  * 0 means keep all.
+    * the number of recent snapshots to keep.
+    * 0 means keep all.
 
 ## Snapshot Metadata
 

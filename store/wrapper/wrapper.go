@@ -7,7 +7,7 @@ import (
 
 var _ idb.DB = &DBWrapper{}
 
-// DBwrapper is a simple wrapper of dbm.DB that implements the iavl.DB interface.
+// DBWrapper is a simple wrapper of dbm.DB that implements the iavl.DB interface.
 type DBWrapper struct {
 	dbm.DB
 }

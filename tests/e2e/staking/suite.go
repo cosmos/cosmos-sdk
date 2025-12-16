@@ -58,6 +58,7 @@ func (s *E2ETestSuite) SetupSuite() {
 		val2.ValAddress,
 		unbond,
 		fmt.Sprintf("--%s=%d", flags.FlagGas, 300000),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
 	)
 	s.Require().NoError(err)
 	var txRes sdk.TxResponse
@@ -68,15 +69,26 @@ func (s *E2ETestSuite) SetupSuite() {
 	unbondingAmount := sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(5))
 
 	// unbonding the amount
-	out, err = MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbondingAmount)
+	out, err = MsgUnbondExec(
+		val.ClientCtx,
+		val.Address,
+		val.ValAddress,
+		unbondingAmount,
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+	)
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
 	s.Require().Equal(uint32(0), txRes.Code)
 	s.Require().NoError(s.network.WaitForNextBlock())
 
 	// unbonding the amount
-	out, err = MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbondingAmount)
-	s.Require().NoError(err)
+	out, err = MsgUnbondExec(
+		val.ClientCtx,
+		val.Address,
+		val.ValAddress,
+		unbondingAmount,
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastSync),
+	)
 	s.Require().NoError(err)
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
 	s.Require().Equal(uint32(0), txRes.Code)
@@ -133,7 +145,7 @@ func (s *E2ETestSuite) TestBlockResults() {
 
 	// Loop until we find a block result with the correct validator updates.
 	// By experience, it happens around 2 blocks after `delHeight`.
-	s.network.RetryForBlocks(func() error {
+	_ = s.network.RetryForBlocks(func() error {
 		latestHeight, err := s.network.LatestHeight()
 		require.NoError(err)
 		res, err := rpcClient.BlockResults(context.Background(), &latestHeight)
@@ -153,4 +165,5 @@ func (s *E2ETestSuite) TestBlockResults() {
 
 		return nil
 	}, 10)
+	// TODO: revisit if this test is doing anything useful
 }

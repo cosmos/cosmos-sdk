@@ -79,7 +79,7 @@ func TestGRPCQueryTally(t *testing.T) {
 			"request tally after few votes",
 			func() {
 				proposal.Status = v1.StatusVotingPeriod
-				f.govKeeper.SetProposal(ctx, proposal)
+				assert.NilError(t, f.govKeeper.SetProposal(ctx, proposal))
 
 				assert.NilError(t, f.govKeeper.AddVote(ctx, proposal.Id, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
 				assert.NilError(t, f.govKeeper.AddVote(ctx, proposal.Id, addrs[1], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
@@ -103,7 +103,7 @@ func TestGRPCQueryTally(t *testing.T) {
 			"request final tally after status changed",
 			func() {
 				proposal.Status = v1.StatusPassed
-				f.govKeeper.SetProposal(ctx, proposal)
+				assert.NilError(t, f.govKeeper.SetProposal(ctx, proposal))
 				proposal, _ = f.govKeeper.Proposals.Get(ctx, proposal.Id)
 
 				req = &v1.QueryTallyResultRequest{ProposalId: proposal.Id}
@@ -201,7 +201,7 @@ func TestLegacyGRPCQueryTally(t *testing.T) {
 			"request tally after few votes",
 			func() {
 				proposal.Status = v1.StatusVotingPeriod
-				f.govKeeper.SetProposal(ctx, proposal)
+				assert.NilError(t, f.govKeeper.SetProposal(ctx, proposal))
 
 				assert.NilError(t, f.govKeeper.AddVote(ctx, proposal.Id, addrs[0], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
 				assert.NilError(t, f.govKeeper.AddVote(ctx, proposal.Id, addrs[1], v1.NewNonSplitVoteOption(v1.OptionYes), ""))
@@ -225,7 +225,7 @@ func TestLegacyGRPCQueryTally(t *testing.T) {
 			"request final tally after status changed",
 			func() {
 				proposal.Status = v1.StatusPassed
-				f.govKeeper.SetProposal(ctx, proposal)
+				assert.NilError(t, f.govKeeper.SetProposal(ctx, proposal))
 				proposal, _ = f.govKeeper.Proposals.Get(ctx, proposal.Id)
 
 				req = &v1beta1.QueryTallyResultRequest{ProposalId: proposal.Id}

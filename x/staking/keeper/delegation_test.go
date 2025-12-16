@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"time"
 
-	"github.com/golang/mock/gomock"
+	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/math"
 
@@ -41,7 +41,7 @@ func (s *KeeperTestSuite) TestDelegation() {
 		validators[i] = stakingkeeper.TestingUpdateValidator(keeper, ctx, validators[i], true)
 	}
 
-	// first add a validators[0] to delegate too
+	// first add a validators[0] to delegate to
 	bond1to1 := stakingtypes.NewDelegation(addrDels[0].String(), valAddrs[0].String(), math.LegacyNewDec(9))
 
 	// check the empty keeper first
@@ -109,7 +109,7 @@ func (s *KeeperTestSuite) TestDelegation() {
 	require.NoError(err)
 	require.Equal(3, len(resVals.Validators))
 
-	for i := 0; i < 3; i++ {
+	for i := range 3 {
 		resVal, err := keeper.GetDelegatorValidator(ctx, addrDels[0], valAddrs[i])
 		require.Nil(err)
 		require.Equal(valAddrs[i].String(), resVal.GetOperator())

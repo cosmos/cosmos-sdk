@@ -1,7 +1,14 @@
 package client
 
 import (
+	"context"
 	"fmt"
+
+	"github.com/cometbft/cometbft/libs/bytes"
+	rpcclient "github.com/cometbft/cometbft/rpc/client"
+	"github.com/cometbft/cometbft/rpc/client/mock"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -80,4 +87,70 @@ func (t TestAccountRetriever) GetAccountNumberSequence(_ Context, addr sdk.AccAd
 		return 0, 0, fmt.Errorf("account %s not found", addr)
 	}
 	return acc.Num, acc.Seq, nil
+}
+
+type MockClient struct {
+	mock.Client
+	err error
+}
+
+func (c MockClient) ABCIQueryWithOptions(
+	ctx context.Context,
+	_ string,
+	_ bytes.HexBytes,
+	_ rpcclient.ABCIQueryOptions,
+) (*coretypes.ResultABCIQuery, error) {
+	return handleError[*coretypes.ResultABCIQuery](ctx, c.err)
+}
+
+func (c MockClient) BlockSearch(
+	ctx context.Context,
+	_ string,
+	_, _ *int,
+	_ string,
+) (*coretypes.ResultBlockSearch, error) {
+	return handleError[*coretypes.ResultBlockSearch](ctx, c.err)
+}
+
+func (c MockClient) BroadcastTxAsync(ctx context.Context, _ cmttypes.Tx) (*coretypes.ResultBroadcastTx, error) {
+	return handleError[*coretypes.ResultBroadcastTx](ctx, c.err)
+}
+
+func (c MockClient) BroadcastTxSync(ctx context.Context, _ cmttypes.Tx) (*coretypes.ResultBroadcastTx, error) {
+	return handleError[*coretypes.ResultBroadcastTx](ctx, c.err)
+}
+
+func (c MockClient) Block(ctx context.Context, _ *int64) (*coretypes.ResultBlock, error) {
+	return handleError[*coretypes.ResultBlock](ctx, c.err)
+}
+
+func (c MockClient) BlockByHash(ctx context.Context, _ []byte) (*coretypes.ResultBlock, error) {
+	return handleError[*coretypes.ResultBlock](ctx, c.err)
+}
+
+func (c MockClient) Status(ctx context.Context) (*coretypes.ResultStatus, error) {
+	return handleError[*coretypes.ResultStatus](ctx, c.err)
+}
+
+func (c MockClient) Tx(ctx context.Context, _ []byte, _ bool) (*coretypes.ResultTx, error) {
+	return handleError[*coretypes.ResultTx](ctx, c.err)
+}
+
+func (c MockClient) TxSearch(
+	ctx context.Context,
+	_ string,
+	_ bool,
+	_, _ *int,
+	_ string,
+) (*coretypes.ResultTxSearch, error) {
+	return handleError[*coretypes.ResultTxSearch](ctx, c.err)
+}
+
+func handleError[T any](ctx context.Context, err error) (T, error) {
+	var ret T
+	if ctx != nil && ctx.Err() != nil {
+		return ret, ctx.Err()
+	} else {
+		return ret, err
+	}
 }

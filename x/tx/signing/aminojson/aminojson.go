@@ -2,8 +2,10 @@ package aminojson
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
@@ -22,7 +24,7 @@ type SignModeHandler struct {
 // SignModeHandlerOptions are the options for the SignModeHandler.
 type SignModeHandlerOptions struct {
 	FileResolver signing.ProtoFileResolver
-	TypeResolver protoregistry.MessageTypeResolver
+	TypeResolver signing.TypeResolver
 	Encoder      *Encoder
 }
 
@@ -30,7 +32,7 @@ type SignModeHandlerOptions struct {
 func NewSignModeHandler(options SignModeHandlerOptions) *SignModeHandler {
 	h := &SignModeHandler{}
 	if options.FileResolver == nil {
-		h.fileResolver = protoregistry.GlobalFiles
+		h.fileResolver = gogoproto.HybridResolver
 	} else {
 		h.fileResolver = options.FileResolver
 	}
@@ -43,6 +45,7 @@ func NewSignModeHandler(options SignModeHandlerOptions) *SignModeHandler {
 		h.encoder = NewEncoder(EncoderOptions{
 			FileResolver: options.FileResolver,
 			TypeResolver: options.TypeResolver,
+			EnumAsString: false, // ensure enum as string is disabled
 		})
 	} else {
 		h.encoder = *options.Encoder
@@ -78,7 +81,7 @@ func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.Sign
 
 	f := txData.AuthInfo.Fee
 	if f == nil {
-		return nil, fmt.Errorf("fee cannot be nil when tipper is not signer")
+		return nil, errors.New("fee cannot be nil when tipper is not signer")
 	}
 	fee = &aminojsonpb.AminoSignFee{
 		Amount:  f.Amount,
@@ -88,13 +91,15 @@ func (h SignModeHandler) GetSignBytes(_ context.Context, signerData signing.Sign
 	}
 
 	signDoc := &aminojsonpb.AminoSignDoc{
-		AccountNumber: signerData.AccountNumber,
-		TimeoutHeight: body.TimeoutHeight,
-		ChainId:       signerData.ChainID,
-		Sequence:      signerData.Sequence,
-		Memo:          body.Memo,
-		Msgs:          txData.Body.Messages,
-		Fee:           fee,
+		AccountNumber:    signerData.AccountNumber,
+		TimeoutHeight:    body.TimeoutHeight,
+		ChainId:          signerData.ChainID,
+		Sequence:         signerData.Sequence,
+		Memo:             body.Memo,
+		Msgs:             txData.Body.Messages,
+		Unordered:        txData.Body.Unordered,
+		TimeoutTimestamp: txData.Body.TimeoutTimestamp,
+		Fee:              fee,
 	}
 
 	return h.encoder.Marshal(signDoc)

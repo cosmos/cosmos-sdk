@@ -13,9 +13,9 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/proto"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/header"
@@ -493,6 +493,9 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 	s.Require().NoError(err)
 	s.Require().Len(txBz, 152)
 
+	txDataSize := int(cmttypes.ComputeProtoSizeForTxs([]cmttypes.Tx{txBz}))
+	s.Require().Equal(txDataSize, 155)
+
 	testCases := map[string]struct {
 		ctx         sdk.Context
 		req         *abci.RequestPrepareProposal
@@ -514,7 +517,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 			}),
 			req: &abci.RequestPrepareProposal{
 				Txs:        [][]byte{txBz, txBz, txBz, txBz, txBz},
-				MaxTxBytes: 456,
+				MaxTxBytes: 465,
 			},
 			expectedTxs: 0,
 		},
@@ -522,9 +525,17 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 			ctx: s.ctx,
 			req: &abci.RequestPrepareProposal{
 				Txs:        [][]byte{txBz, txBz, txBz, txBz, txBz},
-				MaxTxBytes: 456,
+				MaxTxBytes: 465,
 			},
 			expectedTxs: 3,
+		},
+		"large max tx bytes len calculation": {
+			ctx: s.ctx,
+			req: &abci.RequestPrepareProposal{
+				Txs:        [][]byte{txBz, txBz, txBz, txBz, txBz},
+				MaxTxBytes: 456,
+			},
+			expectedTxs: 2,
 		},
 		"max gas and tx bytes": {
 			ctx: s.ctx.WithConsensusParams(cmtproto.ConsensusParams{
@@ -534,7 +545,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 			}),
 			req: &abci.RequestPrepareProposal{
 				Txs:        [][]byte{txBz, txBz, txBz, txBz, txBz},
-				MaxTxBytes: 456,
+				MaxTxBytes: 465,
 			},
 			expectedTxs: 2,
 		},
@@ -543,7 +554,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_NoOpMempoolTxSelection()
 	for name, tc := range testCases {
 		s.Run(name, func() {
 			// iterate multiple times to ensure the tx selector is cleared each time
-			for i := 0; i < 5; i++ {
+			for range 6 {
 				resp, err := handler(tc.ctx, tc.req)
 				s.Require().NoError(err)
 				s.Require().Len(resp.Txs, tc.expectedTxs)
@@ -645,7 +656,7 @@ func (s *ABCIUtilsTestSuite) TestDefaultProposalHandler_PriorityNonceMempoolTxSe
 			expectedTxs: []int{9},
 		},
 		"no txs added": {
-			// Becasuse the first tx was deemed valid but too big, the next expected valid sequence is tx[0].seq (3), so
+			// Because the first tx was deemed valid but too big, the next expected valid sequence is tx[0].seq (3), so
 			// the rest of the txs fail because they have a seq of 4.
 			ctx:      s.ctx,
 			txInputs: []testTx{testTxs[12], testTxs[13], testTxs[14]},

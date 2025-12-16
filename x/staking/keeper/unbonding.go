@@ -70,7 +70,7 @@ func (k Keeper) SetUnbondingType(ctx context.Context, id uint64, unbondingType t
 	return store.Set(types.GetUnbondingTypeKey(id), bz)
 }
 
-// GetUnbondingDelegationByUnbondingID returns a unbonding delegation that has an unbonding delegation entry with a certain ID
+// GetUnbondingDelegationByUnbondingID returns an unbonding delegation that has an unbonding delegation entry with a certain ID
 func (k Keeper) GetUnbondingDelegationByUnbondingID(ctx context.Context, id uint64) (ubd types.UnbondingDelegation, err error) {
 	store := k.storeService.OpenKVStore(ctx)
 

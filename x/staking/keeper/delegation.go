@@ -273,7 +273,11 @@ func (k Keeper) GetDelegatorUnbonding(ctx context.Context, delegator sdk.AccAddr
 		}
 		return false
 	})
-	return unbonding, err
+	if err != nil {
+		return unbonding, err
+	}
+
+	return unbonding, nil
 }
 
 // IterateDelegatorUnbondingDelegations iterates through a delegator's unbonding delegations.
@@ -299,7 +303,7 @@ func (k Keeper) IterateDelegatorUnbondingDelegations(ctx context.Context, delega
 	return nil
 }
 
-// GetDelegatorBonded returs the total amount a delegator has bonded.
+// GetDelegatorBonded returns the total amount a delegator has bonded.
 func (k Keeper) GetDelegatorBonded(ctx context.Context, delegator sdk.AccAddress) (math.Int, error) {
 	bonded := math.LegacyZeroDec()
 
@@ -349,6 +353,7 @@ func (k Keeper) IterateDelegatorRedelegations(ctx context.Context, delegator sdk
 	if err != nil {
 		return err
 	}
+	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
 		red, err := types.UnmarshalRED(k.cdc, iterator.Value())
@@ -556,6 +561,7 @@ func (k Keeper) GetRedelegations(ctx context.Context, delegator sdk.AccAddress, 
 	if err != nil {
 		return nil, err
 	}
+	defer iterator.Close()
 
 	i := 0
 	for ; iterator.Valid() && i < int(maxRetrieve); iterator.Next() {
@@ -630,7 +636,7 @@ func (k Keeper) HasReceivingRedelegation(ctx context.Context, delAddr sdk.AccAdd
 func (k Keeper) HasMaxRedelegationEntries(ctx context.Context, delegatorAddr sdk.AccAddress, validatorSrcAddr, validatorDstAddr sdk.ValAddress) (bool, error) {
 	red, err := k.GetRedelegation(ctx, delegatorAddr, validatorSrcAddr, validatorDstAddr)
 	if err != nil {
-		if err == types.ErrNoRedelegation {
+		if errors.Is(err, types.ErrNoRedelegation) {
 			return false, nil
 		}
 
@@ -1068,12 +1074,12 @@ func (k Keeper) getBeginInfo(
 ) (completionTime time.Time, height int64, completeNow bool, err error) {
 	validator, err := k.GetValidator(ctx, valSrcAddr)
 	if err != nil && errors.Is(err, types.ErrNoValidatorFound) {
-		return
+		return time.Time{}, 0, false, err
 	}
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	unbondingTime, err := k.UnbondingTime(ctx)
 	if err != nil {
-		return
+		return time.Time{}, 0, false, err
 	}
 
 	// TODO: When would the validator not be found?

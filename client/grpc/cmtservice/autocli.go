@@ -51,7 +51,7 @@ var CometBFTAutoCLIDescriptor = &autocliv1.ServiceCommandDescriptor{
 
 // NewCometBFTCommands is a fake `appmodule.Module` to be considered as a module
 // and be added in AutoCLI.
-func NewCometBFTCommands() *cometModule { //nolint:revive // fake module and limiting import of core
+func NewCometBFTCommands() *cometModule {
 	return &cometModule{}
 }
 

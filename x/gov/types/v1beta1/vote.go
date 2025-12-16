@@ -22,7 +22,7 @@ func (v Vote) Empty() bool {
 // Votes is an array of vote
 type Votes []Vote
 
-// Equal returns true if two slices (order-dependant) of votes are equal.
+// Equal returns true if two slices (order-dependent) of votes are equal.
 func (v Votes) Equal(other Votes) bool {
 	if len(v) != len(other) {
 		return false
@@ -54,7 +54,7 @@ func NewNonSplitVoteOption(option VoteOption) WeightedVoteOptions {
 	return WeightedVoteOptions{{option, sdkmath.LegacyNewDec(1)}}
 }
 
-// WeightedVoteOptions describes array of WeightedVoteOptions
+// WeightedVoteOptions describes an array of WeightedVoteOptions
 type WeightedVoteOptions []WeightedVoteOption
 
 func (v WeightedVoteOptions) String() (out string) {
@@ -120,8 +120,8 @@ func ValidVoteOption(option VoteOption) bool {
 func (vo VoteOption) Format(s fmt.State, verb rune) {
 	switch verb {
 	case 's':
-		s.Write([]byte(vo.String()))
+		_, _ = s.Write([]byte(vo.String()))
 	default:
-		s.Write([]byte(fmt.Sprintf("%v", byte(vo))))
+		_, _ = fmt.Fprintf(s, "%v", byte(vo))
 	}
 }

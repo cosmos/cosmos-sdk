@@ -17,7 +17,7 @@ Modules generally handle a subset of the state and, as such, they need to define
 
 ## Type Definition
 
-The subset of the genesis state defined from a given module is generally defined in a `genesis.proto` file ([more info](../../learn/advanced/05-encoding.md#gogoproto) on how to define protobuf messages). The struct defining the module's subset of the genesis state is usually called `GenesisState` and contains all the module-related values that need to be initialized during the genesis process.
+The subset of the genesis state defined by a given module is generally defined in a `genesis.proto` file ([more info](../../learn/advanced/05-encoding.md#gogoproto) on how to define protobuf messages). The struct defining the module's subset of the genesis state is usually called `GenesisState` and contains all the module-related values that need to be initialized during the genesis process.
 
 See an example of `GenesisState` protobuf message definition from the `auth` module:
 
@@ -29,7 +29,7 @@ Next we present the main genesis-related methods that need to be implemented by 
 
 ### `DefaultGenesis`
 
-The `DefaultGenesis()` method is a simple method that calls the constructor function for `GenesisState` with the default value for each parameter. See an example from the `auth` module:
+The `DefaultGenesis()` method is a simple function that calls the constructor function for `GenesisState` with the default value for each parameter. See an example from the `auth` module:
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/x/auth/module.go#L63-L67

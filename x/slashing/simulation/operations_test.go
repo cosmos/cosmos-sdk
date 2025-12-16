@@ -99,7 +99,7 @@ func (suite *SimTestSuite) SetupTest() {
 
 	suite.Require().NoError(err)
 	suite.app = app
-	suite.ctx = app.BaseApp.NewContext(false)
+	suite.ctx = app.NewContext(false)
 
 	// remove genesis validator account
 	suite.accounts = accounts[1:]
@@ -150,7 +150,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 }
 
 // TestSimulateMsgUnjail tests the normal scenario of a valid message of type types.MsgUnjail.
-// Abonormal scenarios, where the message is created by an errors, are not tested here.
+// Abnormal scenarios, where the message is created by an errors, are not tested here.
 func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 	blockTime := time.Now().UTC()
 	ctx := suite.ctx.WithBlockTime(blockTime)
@@ -160,15 +160,15 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 	suite.Require().NoError(err)
 
 	// setup validator0 by consensus address
-	suite.stakingKeeper.SetValidatorByConsAddr(ctx, validator0)
+	suite.Require().NoError(suite.stakingKeeper.SetValidatorByConsAddr(ctx, validator0))
 	val0ConsAddress, err := validator0.GetConsAddr()
 	suite.Require().NoError(err)
 	info := types.NewValidatorSigningInfo(val0ConsAddress, int64(4), int64(3),
 		time.Unix(2, 0), false, int64(10))
-	suite.slashingKeeper.SetValidatorSigningInfo(ctx, val0ConsAddress, info)
+	suite.Require().NoError(suite.slashingKeeper.SetValidatorSigningInfo(ctx, val0ConsAddress, info))
 
 	// put validator0 in jail
-	suite.stakingKeeper.Jail(ctx, val0ConsAddress)
+	suite.Require().NoError(suite.stakingKeeper.Jail(ctx, val0ConsAddress))
 
 	// setup self delegation
 	delTokens := suite.stakingKeeper.TokensFromConsensusPower(ctx, 2)
@@ -181,7 +181,8 @@ func (suite *SimTestSuite) TestSimulateMsgUnjail() {
 	suite.Require().NoError(suite.distrKeeper.SetDelegatorStartingInfo(ctx, val0AccAddress, val0AccAddress.Bytes(), distrtypes.NewDelegatorStartingInfo(2, math.LegacyOneDec(), 200)))
 
 	// begin a new block
-	suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: suite.app.LastBlockHeight() + 1, Hash: suite.app.LastCommitID().Hash, Time: blockTime})
+	_, err = suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: suite.app.LastBlockHeight() + 1, Hash: suite.app.LastCommitID().Hash, Time: blockTime})
+	suite.Require().NoError(err)
 
 	// execute operation
 	op := simulation.SimulateMsgUnjail(codec.NewProtoCodec(suite.interfaceRegistry), suite.txConfig, suite.accountKeeper, suite.bankKeeper, suite.slashingKeeper, suite.stakingKeeper)
@@ -218,7 +219,10 @@ func getTestingValidator(ctx sdk.Context, stakingKeeper *stakingkeeper.Keeper, a
 	validator.DelegatorShares = math.LegacyNewDec(100)
 	validator.Tokens = math.NewInt(1000000)
 
-	stakingKeeper.SetValidator(ctx, validator)
+	err = stakingKeeper.SetValidator(ctx, validator)
+	if err != nil {
+		return stakingtypes.Validator{}, fmt.Errorf("failed to set validator: %w", err)
+	}
 
 	return validator, nil
 }

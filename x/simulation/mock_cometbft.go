@@ -85,6 +85,8 @@ func updateValidators(
 	updates []abci.ValidatorUpdate,
 	event func(route, op, evResult string),
 ) map[string]mockValidator {
+	tb.Helper()
+
 	for _, update := range updates {
 		str := fmt.Sprintf("%X", update.PubKey.GetEd25519())
 
@@ -139,20 +141,24 @@ func RandomRequestFinalizeBlock(
 		mVal.livenessState = params.LivenessTransitionMatrix().NextState(r, mVal.livenessState)
 		signed := true
 
-		if mVal.livenessState == 1 {
+		switch mVal.livenessState {
+		case 1:
 			// spotty connection, 50% probability of success
 			// See https://github.com/golang/go/issues/23804#issuecomment-365370418
 			// for reasoning behind computing like this
 			signed = r.Int63()%2 == 0
-		} else if mVal.livenessState == 2 {
+		case 2:
 			// offline
 			signed = false
 		}
 
+		var commitStatus cmtproto.BlockIDFlag
 		if signed {
 			event("begin_block", "signing", "signed")
+			commitStatus = cmtproto.BlockIDFlagCommit
 		} else {
 			event("begin_block", "signing", "missed")
+			commitStatus = cmtproto.BlockIDFlagAbsent
 		}
 
 		pubkey, err := cryptoenc.PubKeyFromProto(mVal.val.PubKey)
@@ -165,7 +171,7 @@ func RandomRequestFinalizeBlock(
 				Address: pubkey.Address(),
 				Power:   mVal.val.Power,
 			},
-			BlockIdFlag: cmtproto.BlockIDFlagCommit,
+			BlockIdFlag: commitStatus,
 		}
 	}
 

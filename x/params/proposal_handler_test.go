@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	storetypes "cosmossdk.io/store/types"
 
@@ -41,7 +41,7 @@ func (suite *HandlerTestSuite) SetupTest() {
 
 	ctx := testutil.DefaultContext(key, tkey)
 	paramsKeeper := keeper.NewKeeper(encodingCfg.Codec, encodingCfg.Amino, key, tkey)
-	paramsKeeper.Subspace("staking").WithKeyTable(stakingtypes.ParamKeyTable()) //nolint:staticcheck // TODO: depreacte this test case
+	paramsKeeper.Subspace("staking").WithKeyTable(stakingtypes.ParamKeyTable()) //nolint:staticcheck // TODO: deprecate this test case
 	ctrl := gomock.NewController(suite.T())
 	stakingKeeper := paramstestutil.NewMockStakingKeeper(ctrl)
 	stakingKeeper.EXPECT().MaxValidators(ctx).Return(uint32(1), nil)
@@ -102,7 +102,6 @@ func (suite *HandlerTestSuite) TestProposalHandler() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		suite.Run(tc.name, func() {
 			err := suite.govHandler(suite.ctx, tc.proposal)
 			if tc.expErr {

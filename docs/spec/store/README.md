@@ -29,9 +29,9 @@ with, which also provides the basis of most state storage and commitment operati
 is the `KVStore`. The `KVStore` interface provides basic CRUD abilities and
 prefix-based iteration, including reverse iteration.
 
-Typically, each module has it's own dedicated `KVStore` instance, which it can
+Typically, each module has its own dedicated `KVStore` instance, which it can
 get access to via the `sdk.Context` and the use of a pointer-based named key --
-`KVStoreKey`. The `KVStoreKey` provides pseudo-OCAP. How a exactly a `KVStoreKey`
+`KVStoreKey`. The `KVStoreKey` provides pseudo-OCAP. How exactly a `KVStoreKey`
 maps to a `KVStore` will be illustrated below through the `CommitMultiStore`.
 
 Note, a `KVStore` cannot directly commit state. Instead, a `KVStore` can be wrapped
@@ -42,7 +42,7 @@ until `Commit()` is called on the `CommitMultiStore`.
 
 ### `CommitMultiStore`
 
-The `CommitMultiStore` interface exposes the the top-level interface that is used
+The `CommitMultiStore` interface exposes the top-level interface that is used
 to manage state commitment and storage by an SDK application and abstracts the
 concept of multiple `KVStore`s which are used by multiple modules. Specifically,
 it supports the following high-level primitives:
@@ -53,7 +53,7 @@ it supports the following high-level primitives:
 * Allows for loading state storage at a particular height/version in the past to
   provide current head and historical queries.
 * Provides the ability to rollback state to a previous height/version.
-* Provides the ability to to load state storage at a particular height/version
+* Provides the ability to load state storage at a particular height/version
   while also performing store upgrades, which are used during live hard-fork
   application state migrations.
 * Provides the ability to commit all current accumulated state to disk and performs
@@ -103,7 +103,7 @@ responsibility of the caller to ensure that concurrent access to the store is
 not performed. 
 
 The main issue with concurrent use is when data is written at the same time as
-it's being iterated over. Doing so will cause a irrecoverable fatal error because
+it's being iterated over. Doing so will cause an irrecoverable fatal error because
 of concurrent reads and writes to an internal map.
 
 Although it's not recommended, you can iterate through values while writing to
@@ -194,7 +194,7 @@ a `BaseApp` instance which internally has a reference to a `CommitMultiStore`
 that is implemented by a `rootmulti.Store`. The application then registers one or
 more `KVStoreKey` that pertain to a unique module and thus a `KVStore`. Through
 the use of an `sdk.Context` and a `KVStoreKey`, each module can get direct access
-to it's respective `KVStore` instance.
+to its respective `KVStore` instance.
 
 Example:
 
@@ -227,7 +227,7 @@ func NewApp(...) Application {
 The `rootmulti.Store` itself can be cache-wrapped which returns an instance of a
 `cachemulti.Store`. For each block, `BaseApp` ensures that the proper abstractions
 are created on the `CommitMultiStore`, i.e. ensuring that the `rootmulti.Store`
-is cached-wrapped and uses the resulting `cachemulti.Store` to be set on the
+is cache-wrapped and uses the resulting `cachemulti.Store` to be set on the
 `sdk.Context` which is then used for block and transaction execution. As a result,
 all state mutations due to block and transaction execution are actually held
 ephemerally until `Commit()` is called by the ABCI client. This concept is further

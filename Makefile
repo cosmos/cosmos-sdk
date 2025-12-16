@@ -2,7 +2,16 @@
 
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
-export VERSION := $(shell echo $(shell git describe --tags --always --match "v*") | sed 's/^v//')
+
+# Ensure all tags are fetched
+VERSION_RAW := $(shell git fetch --tags --force >/dev/null 2>&1; git describe --tags --always --match "v*")
+VERSION := $(shell echo $(VERSION_RAW) | sed -E 's/^v?([0-9]+\.[0-9]+\.[0-9]+.*)/\1/')
+
+# Fallback if the version is just a commit hash (not semver-like)
+ifeq ($(findstring -,$(VERSION)),)  # No "-" means it's just a hash
+    VERSION := 0.0.0-$(VERSION_RAW)
+endif
+export VERSION
 export CMTVERSION := $(shell go list -m github.com/cometbft/cometbft | sed 's:.* ::')
 export COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
@@ -53,7 +62,6 @@ comma := ,
 build_tags_comma_sep := $(subst $(whitespace),$(comma),$(build_tags))
 
 # process linker flags
-
 ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=sim \
 		-X github.com/cosmos/cosmos-sdk/version.AppName=simd \
 		-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
@@ -100,9 +108,6 @@ endif
 
 all: tools build lint test vulncheck
 
-# The below include contains the tools and runsim targets.
-include contrib/devtools/Makefile
-
 ###############################################################################
 ###                                  Build                                  ###
 ###############################################################################
@@ -129,14 +134,11 @@ cosmovisor:
 confix:
 	$(MAKE) -C tools/confix confix
 
-hubl:
-	$(MAKE) -C tools/hubl hubl
-
 .PHONY: build build-linux-amd64 build-linux-arm64 cosmovisor confix
 
-
+#? mocks: Generate mock file
 mocks: $(MOCKS_DIR)
-	@go install github.com/golang/mock/mockgen@v1.6.0
+	@go install go.uber.org/mock/mockgen@v0.6.0
 	sh ./scripts/mockgen.sh
 .PHONY: mocks
 
@@ -227,9 +229,10 @@ $(CHECK_TEST_TARGETS): EXTRA_ARGS=-run=none
 $(CHECK_TEST_TARGETS): run-tests
 
 ARGS += -tags "$(test_tags)"
-SUB_MODULES = $(shell find . -type f -name 'go.mod' -print0 | xargs -0 -n1 dirname | sort)
+SUB_MODULES = $(shell find . -type f -name 'go.mod' -print0 | xargs -0 -n1 dirname | sort | grep -v './tests/systemtests')
 CURRENT_DIR = $(shell pwd)
 run-tests:
+	@(cd store/streaming/abci/examples/file && go build .)
 ifneq (,$(shell which tparse 2>/dev/null))
 	@echo "Starting unit tests"; \
 	finalec=0; \
@@ -258,8 +261,8 @@ endif
 
 test-sim-nondeterminism:
 	@echo "Running non-determinism test..."
-	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -run TestAppStateDeterminism -Enabled=true \
-		-NumBlocks=100 -BlockSize=200 -Commit=true -Period=0 -v -timeout 24h
+	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout=30m -tags='sims' -run TestAppStateDeterminism \
+		-NumBlocks=100 -BlockSize=200 -Period=0
 
 # Requires an exported plugin. See store/streaming/README.md for documentation.
 #
@@ -272,41 +275,40 @@ test-sim-nondeterminism:
 #   make test-sim-nondeterminism-streaming
 test-sim-nondeterminism-streaming:
 	@echo "Running non-determinism-streaming test..."
-	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -run TestAppStateDeterminism -Enabled=true \
-		-NumBlocks=100 -BlockSize=200 -Commit=true -Period=0 -v -timeout 24h -EnableStreaming=true
+	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout=30m -tags='sims' -run TestAppStateDeterminism \
+		-NumBlocks=100 -BlockSize=200 -Period=0 -EnableStreaming=true
 
 test-sim-custom-genesis-fast:
 	@echo "Running custom genesis simulation..."
-	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
-	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -run TestFullAppSimulation -Genesis=${HOME}/.gaiad/config/genesis.json \
-		-Enabled=true -NumBlocks=100 -BlockSize=200 -Commit=true -Seed=99 -Period=5 -v -timeout 24h
+	@echo "By default, ${HOME}/.simapp/config/genesis.json will be used."
+	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout=30m -tags='sims' -run TestFullAppSimulation -Genesis=${HOME}/.simapp/config/genesis.json \
+		-NumBlocks=100 -BlockSize=200 -Seed=99 -Period=5 -SigverifyTx=false
 
-test-sim-import-export: runsim
+test-sim-import-export:
 	@echo "Running application import/export simulation. This may take several minutes..."
-	@cd ${CURRENT_DIR}/simapp && $(BINDIR)/runsim -Jobs=4 -SimAppPkg=. -ExitOnFail 50 5 TestAppImportExport
+	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout 20m -tags='sims' -run TestAppImportExport \
+		-NumBlocks=50 -Period=5
 
-test-sim-after-import: runsim
+test-sim-after-import:
 	@echo "Running application simulation-after-import. This may take several minutes..."
-	@cd ${CURRENT_DIR}/simapp && $(BINDIR)/runsim -Jobs=4 -SimAppPkg=. -ExitOnFail 50 5 TestAppSimulationAfterImport
+	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout 30m -tags='sims' -run TestAppSimulationAfterImport \
+		-NumBlocks=50 -Period=5
 
-test-sim-custom-genesis-multi-seed: runsim
+test-sim-custom-genesis-multi-seed:
 	@echo "Running multi-seed custom genesis simulation..."
-	@echo "By default, ${HOME}/.gaiad/config/genesis.json will be used."
-	@cd ${CURRENT_DIR}/simapp && $(BINDIR)/runsim -Genesis=${HOME}/.gaiad/config/genesis.json -SimAppPkg=. -ExitOnFail 400 5 TestFullAppSimulation
+	@echo "By default, ${HOME}/.simapp/config/genesis.json will be used."
+	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout 30m -tags='sims' -run TestFullAppSimulation -Genesis=${HOME}/.simapp/config/genesis.json \
+		-NumBlocks=400 -Period=5
 
-test-sim-multi-seed-long: runsim
+test-sim-multi-seed-long:
 	@echo "Running long multi-seed application simulation. This may take awhile!"
-	@cd ${CURRENT_DIR}/simapp && $(BINDIR)/runsim -Jobs=4 -SimAppPkg=. -ExitOnFail 500 50 TestFullAppSimulation
+	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout=1h -tags='sims' -run TestFullAppSimulation \
+		-NumBlocks=500 -Period=50
 
-test-sim-multi-seed-short: runsim
+test-sim-multi-seed-short:
 	@echo "Running short multi-seed application simulation. This may take awhile!"
-	@cd ${CURRENT_DIR}/simapp && $(BINDIR)/runsim -Jobs=4 -SimAppPkg=. -ExitOnFail 50 10 TestFullAppSimulation
-
-test-sim-benchmark-invariants:
-	@echo "Running simulation invariant benchmarks..."
-	cd ${CURRENT_DIR}/simapp && @go test -mod=readonly -benchmem -bench=BenchmarkInvariants -run=^$ \
-	-Enabled=true -NumBlocks=1000 -BlockSize=200 \
-	-Period=1 -Commit=true -Seed=57 -v -timeout 24h
+	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -timeout 30m -tags='sims' -run TestFullAppSimulation \
+		-NumBlocks=50 -Period=10
 
 .PHONY: \
 test-sim-nondeterminism \
@@ -316,17 +318,23 @@ test-sim-import-export \
 test-sim-after-import \
 test-sim-custom-genesis-multi-seed \
 test-sim-multi-seed-short \
-test-sim-multi-seed-long \
-test-sim-benchmark-invariants
+test-sim-multi-seed-long
 
 SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200
 SIM_COMMIT ?= true
 
+#? test-sim-fuzz: Run fuzz test for simapp
+test-sim-fuzz:
+	@echo "Running application fuzz for numBlocks=2, blockSize=20. This may take awhile!"
+#ld flags are a quick fix to make it work on current osx
+	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -json -tags='sims' -ldflags="-extldflags=-Wl,-ld_classic" -timeout=60m -fuzztime=60m -run=^$$ -fuzz=FuzzFullAppSimulation -GenesisTime=1714720615 -NumBlocks=2 -BlockSize=20
+
+#? test-sim-benchmark: Run benchmark test for simapp
 test-sim-benchmark:
 	@echo "Running application benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
-	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -run=^$$ $(.) -bench ^BenchmarkFullAppSimulation$$  \
-		-Enabled=true -NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -timeout 24h
+	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -tags='sims' -run=^$$ $(.) -bench ^BenchmarkFullAppSimulation$$  \
+		-NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -Seed=57 -timeout 30m
 
 # Requires an exported plugin. See store/streaming/README.md for documentation.
 #
@@ -339,13 +347,13 @@ test-sim-benchmark:
 #   make test-sim-benchmark-streaming
 test-sim-benchmark-streaming:
 	@echo "Running application benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
-	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -run=^$$ $(.) -bench ^BenchmarkFullAppSimulation$$  \
-		-Enabled=true -NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -timeout 24h -EnableStreaming=true
+	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -run=^$$ $(.) -bench ^BenchmarkFullAppSimulation$$  \
+		-NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -timeout 24h -EnableStreaming=true
 
 test-sim-profile:
 	@echo "Running application benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
-	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -benchmem -run=^$$ $(.) -bench ^BenchmarkFullAppSimulation$$ \
-		-Enabled=true -NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -timeout 24h -cpuprofile cpu.out -memprofile mem.out
+	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -benchmem -run=^$$ $(.) -bench ^BenchmarkFullAppSimulation$$ \
+		-NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -timeout 24h -cpuprofile cpu.out -memprofile mem.out
 
 # Requires an exported plugin. See store/streaming/README.md for documentation.
 #
@@ -358,10 +366,10 @@ test-sim-profile:
 #   make test-sim-profile-streaming
 test-sim-profile-streaming:
 	@echo "Running application benchmark for numBlocks=$(SIM_NUM_BLOCKS), blockSize=$(SIM_BLOCK_SIZE). This may take awhile!"
-	@cd ${CURRENT_DIR}/simapp && go test -mod=readonly -benchmem -run=^$$ $(.) -bench ^BenchmarkFullAppSimulation$$ \
-		-Enabled=true -NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -timeout 24h -cpuprofile cpu.out -memprofile mem.out -EnableStreaming=true
+	@cd ${CURRENT_DIR}/simapp && go test -failfast -mod=readonly -benchmem -run=^$$ $(.) -bench ^BenchmarkFullAppSimulation$$ \
+		-NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -timeout 24h -cpuprofile cpu.out -memprofile mem.out -EnableStreaming=true
 
-.PHONY: test-sim-profile test-sim-benchmark
+.PHONY: test-sim-profile test-sim-benchmark test-sim-fuzz
 
 benchmark:
 	@go test -mod=readonly -bench=. $(PACKAGES_NOSIMULATION)
@@ -371,20 +379,20 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
-golangci_version=v1.51.2
+golangci_version=v2.6.2
 
 lint-install:
 	@echo "--> Installing golangci-lint $(golangci_version)"
-	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(golangci_version)
+	@go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(golangci_version)
 
 lint:
-	@echo "--> Running linter"
-	$(MAKE) lint-install
+	@echo "--> Running linter on all files"
+	@$(MAKE) lint-install
 	@./scripts/go-lint-all.bash --timeout=15m
 
 lint-fix:
 	@echo "--> Running linter"
-	$(MAKE) lint-install
+	@$(MAKE) lint-install
 	@./scripts/go-lint-all.bash --fix
 
 .PHONY: lint lint-fix
@@ -393,7 +401,7 @@ lint-fix:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-protoVer=0.14.0
+protoVer=0.17.1
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 
@@ -401,7 +409,9 @@ proto-all: proto-format proto-lint proto-gen
 
 proto-gen:
 	@echo "Generating Protobuf files"
-	@$(protoImage) sh ./scripts/protocgen.sh
+	@$(protoImage) sh ./scripts/protocgen.sh 2>&1 | tee protocgen.log | \
+	awk '{print $$0} /contains the reserved field name/ && /tendermint/ {next} 1'
+
 
 proto-swagger-gen:
 	@echo "Generating Protobuf Swagger"
@@ -466,11 +476,11 @@ localnet-build-dlv:
 
 localnet-build-nodes:
 	$(DOCKER) run --rm -v $(CURDIR)/.testnets:/data cosmossdk/simd \
-			  testnet init-files --v 4 -o /data --starting-ip-address 192.168.10.2 --keyring-backend=test
-	docker-compose up -d
+			  testnet init-files --validator-count 4 -o /data --starting-ip-address 192.168.10.2 --keyring-backend=test
+	docker compose up -d
 
 localnet-stop:
-	docker-compose down
+	docker compose down
 
 # localnet-start will run a 4-node testnet locally. The nodes are
 # based off the docker images in: ./contrib/images/simd-env
@@ -481,3 +491,44 @@ localnet-start: localnet-stop localnet-build-env localnet-build-nodes
 localnet-debug: localnet-stop localnet-build-dlv localnet-build-nodes
 
 .PHONY: localnet-start localnet-stop localnet-debug localnet-build-env localnet-build-dlv localnet-build-nodes
+
+test-system: build-v53 build
+	mkdir -p ./tests/systemtests/binaries/
+	cp $(BUILDDIR)/simd ./tests/systemtests/binaries/
+	mkdir -p ./tests/systemtests/binaries/v0.53
+	mv $(BUILDDIR)/simdv53 ./tests/systemtests/binaries/v0.53/simd
+	$(MAKE) -C tests/systemtests test
+.PHONY: test-system
+
+# build-v53 checks out the v0.53.x branch, builds the binary, and renames it to simdv53.
+build-v53:
+	@echo "Starting v53 build process..."
+	git_status=$$(git status --porcelain) && \
+	has_changes=false && \
+	if [ -n "$$git_status" ]; then \
+		echo "Stashing uncommitted changes..." && \
+		git stash push -m "Temporary stash for v53 build" && \
+		has_changes=true; \
+	else \
+		echo "No changes to stash"; \
+	fi && \
+	echo "Saving current reference..." && \
+	CURRENT_REF=$$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse HEAD) && \
+	echo "Checking out release branch..." && \
+	git checkout release/v0.53.x && \
+	echo "Building v53 binary..." && \
+	make build && \
+	mv build/simd build/simdv53 && \
+	echo "Returning to original branch..." && \
+	if [ "$$CURRENT_REF" = "HEAD" ]; then \
+		git checkout $$(git rev-parse HEAD); \
+	else \
+		git checkout $$CURRENT_REF; \
+	fi && \
+	if [ "$$has_changes" = "true" ]; then \
+		echo "Reapplying stashed changes..." && \
+		git stash pop || echo "Warning: Could not pop stash, your changes may be in the stash list"; \
+	else \
+		echo "No changes to reapply"; \
+	fi
+.PHONY: build-v53

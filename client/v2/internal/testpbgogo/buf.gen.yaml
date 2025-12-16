@@ -1,0 +1,14 @@
+version: v1
+managed:
+  enabled: true
+  go_package_prefix:
+    default: github.com/cosmos/cosmos-sdk/client/v2/internal
+    except:
+      - buf.build/cosmos/cosmos-proto
+      - buf.build/cosmos/cosmos-sdk
+    override:
+      buf.build/cosmos/gogo-proto: github.com/cosmos/gogoproto
+plugins:
+  - name: gocosmos
+    out: .
+    opt: plugins=grpc,Mgoogle/protobuf/any.proto=github.com/cosmos/gogoproto/types/any

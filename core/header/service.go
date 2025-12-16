@@ -16,4 +16,5 @@ type Info struct {
 	Hash    []byte    // Hash returns the hash of the block header
 	Time    time.Time // Time returns the time of the block
 	ChainID string    // ChainId returns the chain ID of the block
+	AppHash []byte    // AppHash used in the current block header
 }

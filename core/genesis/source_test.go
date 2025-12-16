@@ -24,6 +24,7 @@ func TestSource(t *testing.T) {
 }
 
 func expectJSON(t *testing.T, source appmodule.GenesisSource, field, contents string) {
+	t.Helper()
 	r, err := source(field)
 	require.NoError(t, err)
 	bz, err := io.ReadAll(r)

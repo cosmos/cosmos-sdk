@@ -47,6 +47,7 @@ func NewIntegrationApp(
 	keys map[string]*storetypes.KVStoreKey,
 	appCodec codec.Codec,
 	modules map[string]appmodule.AppModule,
+	baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
 	db := dbm.NewMemDB()
 
@@ -56,13 +57,13 @@ func NewIntegrationApp(
 	basicModuleManager.RegisterInterfaces(interfaceRegistry)
 
 	txConfig := authtx.NewTxConfig(codec.NewProtoCodec(interfaceRegistry), authtx.DefaultSignModes)
-	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), baseapp.SetChainID(appName))
+	bApp := baseapp.NewBaseApp(appName, logger, db, txConfig.TxDecoder(), append(baseAppOptions, baseapp.SetChainID(appName))...)
 	bApp.MountKVStores(keys)
 
-	bApp.SetInitChainer(func(ctx sdk.Context, _ *cmtabcitypes.RequestInitChain) (*cmtabcitypes.ResponseInitChain, error) {
+	bApp.SetInitChainer(func(_ sdk.Context, _ *cmtabcitypes.RequestInitChain) (*cmtabcitypes.ResponseInitChain, error) {
 		for _, mod := range modules {
 			if m, ok := mod.(module.HasGenesis); ok {
-				m.InitGenesis(ctx, appCodec, m.DefaultGenesis(appCodec))
+				m.InitGenesis(sdkCtx, appCodec, m.DefaultGenesis(appCodec))
 			}
 		}
 
@@ -102,7 +103,10 @@ func NewIntegrationApp(
 		}
 	}
 
-	bApp.Commit()
+	_, err := bApp.Commit()
+	if err != nil {
+		panic(fmt.Errorf("failed to commit application: %w", err))
+	}
 
 	ctx := sdkCtx.WithBlockHeader(cmtproto.Header{ChainID: appName}).WithIsCheckTx(true)
 
@@ -129,7 +133,7 @@ func (app *App) RunMsg(msg sdk.Msg, option ...Option) (*codectypes.Any, error) {
 	}
 
 	if cfg.AutomaticCommit {
-		defer app.Commit()
+		defer app.Commit() //nolint:errcheck // not needed in testing
 	}
 
 	if cfg.AutomaticFinalizeBlock {

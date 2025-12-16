@@ -31,6 +31,24 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Changes
+ 
+* [#24568](https://github.com/cosmos/cosmos-sdk/pull/24568) Registering the same error code twice will no longer panic - a warning error will be logged to `stderr`.
+
+## [v1.0.2](https://github.com/cosmos/cosmos-sdk/releases/tag/errors%2Fv1.0.2)
+
+### Improvements 
+
+* [#23901](https://github.com/cosmos/cosmos-sdk/pull/23901) Minor dependency improvements.
+
+## [v1.0.1](https://github.com/cosmos/cosmos-sdk/releases/tag/errors%2Fv1.0.1)
+
+### Improvements
+
+* [#18918](https://github.com/cosmos/cosmos-sdk/pull/18918) Improve `IsOf` by returning earlier when the checked error is nil.
+
+## [v1.0.0](https://github.com/cosmos/cosmos-sdk/releases/tag/errors%2Fv1.0.0)
+
 ### Features
 
 * [#15989](https://github.com/cosmos/cosmos-sdk/pull/15989) Add `ErrStopIterating` for modules to use for breaking out of iteration.

@@ -1406,7 +1406,7 @@ func (suite *KeeperTestSuite) TestLegacyMsgDeposit() {
 			expErr:    true,
 			expErrMsg: "not found",
 		},
-		"empty depositer": {
+		"empty depositor": {
 			preRun: func() uint64 {
 				return pID
 			},
@@ -1688,7 +1688,6 @@ func (suite *KeeperTestSuite) TestMsgUpdateParams() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		suite.Run(tc.name, func() {
 			msg := tc.input()
 			exec := func(updateParams *v1.MsgUpdateParams) error {
@@ -1762,7 +1761,7 @@ func (suite *KeeperTestSuite) TestSubmitProposal_InitialDeposit() {
 			params := v1.DefaultParams()
 			params.MinDeposit = tc.minDeposit
 			params.MinInitialDepositRatio = tc.minInitialDepositRatio.String()
-			govKeeper.Params.Set(ctx, params)
+			suite.Require().NoError(govKeeper.Params.Set(ctx, params))
 
 			msg, err := v1.NewMsgSubmitProposal(TestProposal, tc.initialDeposit, address.String(), "test", "Proposal", "description of proposal", false)
 			suite.Require().NoError(err)

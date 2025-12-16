@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// function to create the cli handler
+// CLIHandlerFn is a function to create the cli handler
 type CLIHandlerFn func() *cobra.Command
 
 // ProposalHandler wraps CLIHandlerFn

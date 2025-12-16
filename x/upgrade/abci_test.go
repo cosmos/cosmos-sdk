@@ -13,9 +13,6 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/upgrade"
-	"cosmossdk.io/x/upgrade/keeper"
-	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -27,6 +24,9 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/upgrade"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 type TestSuite struct {
@@ -134,7 +134,7 @@ func TestRequireFutureBlock(t *testing.T) {
 	s := setupTest(t, 10, map[int64]bool{})
 	err := s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: s.ctx.HeaderInfo().Height - 1})
 	require.Error(t, err)
-	require.True(t, errors.Is(sdkerrors.ErrInvalidRequest, err), err)
+	require.True(t, errors.Is(err, sdkerrors.ErrInvalidRequest), err)
 }
 
 func TestDoHeightUpgrade(t *testing.T) {
@@ -209,7 +209,7 @@ func TestCantApplySameUpgradeTwice(t *testing.T) {
 	t.Log("Verify an executed upgrade \"test\" can't be rescheduled")
 	err = s.keeper.ScheduleUpgrade(s.ctx, types.Plan{Name: "test", Height: height})
 	require.Error(t, err)
-	require.True(t, errors.Is(sdkerrors.ErrInvalidRequest, err), err)
+	require.True(t, errors.Is(err, sdkerrors.ErrInvalidRequest), err)
 }
 
 func TestNoSpuriousUpgrades(t *testing.T) {
@@ -358,11 +358,10 @@ func TestUpgradeWithoutSkip(t *testing.T) {
 
 func TestDumpUpgradeInfoToFile(t *testing.T) {
 	s := setupTest(t, 10, map[int64]bool{})
-	require := require.New(t)
 
 	// require no error when the upgrade info file does not exist
 	_, err := s.keeper.ReadUpgradeInfoFromDisk()
-	require.NoError(err)
+	require.NoError(t, err)
 
 	planHeight := s.ctx.HeaderInfo().Height + 1
 	plan := types.Plan{
@@ -371,23 +370,22 @@ func TestDumpUpgradeInfoToFile(t *testing.T) {
 	}
 	t.Log("verify if upgrade height is dumped to file")
 	err = s.keeper.DumpUpgradeInfoToDisk(planHeight, plan)
-	require.Nil(err)
+	require.Nil(t, err)
 
 	upgradeInfo, err := s.keeper.ReadUpgradeInfoFromDisk()
-	require.NoError(err)
+	require.NoError(t, err)
 
-	t.Log("Verify upgrade height from file matches ")
-	require.Equal(upgradeInfo.Height, planHeight)
-	require.Equal(upgradeInfo.Name, plan.Name)
+	t.Log("Verify upgrade height from file matches")
+	require.Equal(t, upgradeInfo.Height, planHeight)
+	require.Equal(t, upgradeInfo.Name, plan.Name)
 
 	// clear the test file
 	upgradeInfoFilePath, err := s.keeper.GetUpgradeInfoPath()
-	require.Nil(err)
+	require.Nil(t, err)
 	err = os.Remove(upgradeInfoFilePath)
-	require.Nil(err)
+	require.Nil(t, err)
 }
 
-// TODO: add testcase to for `no upgrade handler is present for last applied upgrade`.
 func TestBinaryVersion(t *testing.T) {
 	var skipHeight int64 = 15
 	s := setupTest(t, 10, map[int64]bool{skipHeight: true})
@@ -415,10 +413,10 @@ func TestBinaryVersion(t *testing.T) {
 				require.NoError(t, err)
 
 				newCtx := s.ctx.WithHeaderInfo(header.Info{Height: 12})
-				s.keeper.ApplyUpgrade(newCtx, types.Plan{
+				require.NoError(t, s.keeper.ApplyUpgrade(newCtx, types.Plan{
 					Name:   "test0",
 					Height: 12,
-				})
+				}))
 
 				return newCtx
 			},
@@ -446,6 +444,54 @@ func TestBinaryVersion(t *testing.T) {
 			require.NoError(t, err)
 		}
 	}
+}
+
+// TestMissingUpgradeHandler tests the scenario when no upgrade handler is present for last applied upgrade
+func TestMissingUpgradeHandler(t *testing.T) {
+	// Setup test environment similar to TestDowngradeVerification
+	encCfg := moduletestutil.MakeTestEncodingConfig(upgrade.AppModuleBasic{})
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	storeService := runtime.NewKVStoreService(key)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
+	ctx := testCtx.Ctx.WithHeaderInfo(header.Info{Time: time.Now(), Height: 10})
+
+	// Use the same temp directory for both keepers to share storage
+	tempDir := t.TempDir()
+	skip := map[int64]bool{}
+	k := keeper.NewKeeper(skip, storeService, encCfg.Codec, tempDir, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	m := upgrade.NewAppModule(k, addresscodec.NewBech32Codec("cosmos"))
+
+	// Submit and execute an upgrade plan with handler
+	planName := "test_upgrade"
+	err := k.ScheduleUpgrade(ctx, types.Plan{Name: planName, Height: ctx.HeaderInfo().Height + 1})
+	require.NoError(t, err)
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 1})
+
+	// Set the handler and execute upgrade
+	k.SetUpgradeHandler(planName, func(_ context.Context, _ types.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		return vm, nil
+	})
+
+	// Successful upgrade
+	_, err = m.PreBlock(ctx)
+	require.NoError(t, err)
+	ctx = ctx.WithHeaderInfo(header.Info{Height: ctx.HeaderInfo().Height + 1})
+
+	// Now simulate a restart without the upgrade handler (missing handler scenario)
+	// Use the same temp directory and store service to maintain state
+	newKeeper := keeper.NewKeeper(skip, storeService, encCfg.Codec, tempDir, nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	newModule := upgrade.NewAppModule(newKeeper, addresscodec.NewBech32Codec("cosmos"))
+
+	// Verify that the last applied upgrade exists but no handler is present
+	lastAppliedPlan, _, err := newKeeper.GetLastCompletedUpgrade(ctx)
+	require.NoError(t, err)
+	require.Equal(t, planName, lastAppliedPlan)
+	require.False(t, newKeeper.HasHandler(planName))
+
+	// This should trigger an error because no handler exists for the last applied upgrade
+	_, err = newModule.PreBlock(ctx)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "upgrade handler is missing for test_upgrade upgrade plan")
 }
 
 func TestDowngradeVerification(t *testing.T) {

@@ -1,7 +1,6 @@
 package client
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -61,7 +60,7 @@ func (ctx Context) GetFromAddress() sdk.AccAddress {
 	return ctx.FromAddress
 }
 
-// GetFeePayerAddress returns the fee granter address from the context
+// GetFeePayerAddress returns the fee payer address from the context
 func (ctx Context) GetFeePayerAddress() sdk.AccAddress {
 	return ctx.FeePayer
 }
@@ -95,7 +94,7 @@ func (ctx Context) queryABCI(req abci.RequestQuery) (abci.ResponseQuery, error) 
 		Prove:  req.Prove,
 	}
 
-	result, err := node.ABCIQueryWithOptions(context.Background(), req.Path, req.Data, opts)
+	result, err := node.ABCIQueryWithOptions(ctx.GetCmdContextWithFallback(), req.Path, req.Data, opts)
 	if err != nil {
 		return abci.ResponseQuery{}, err
 	}

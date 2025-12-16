@@ -35,7 +35,7 @@ type GRPCQueryRouter struct {
 // serviceData represents a gRPC service, along with its handler.
 type serviceData struct {
 	serviceDesc *grpc.ServiceDesc
-	handler     interface{}
+	handler     any
 }
 
 var _ gogogrpc.Server = &GRPCQueryRouter{}
@@ -67,7 +67,7 @@ func (qrt *GRPCQueryRouter) Route(path string) GRPCQueryHandler {
 //
 // This functions PANICS:
 // - if a protobuf service is registered twice.
-func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interface{}) {
+func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler any) {
 	// adds a top-level query handler based on the gRPC service name
 	for _, method := range sd.Methods {
 		err := qrt.registerABCIQueryHandler(sd, method, handler)
@@ -86,7 +86,7 @@ func (qrt *GRPCQueryRouter) RegisterService(sd *grpc.ServiceDesc, handler interf
 	})
 }
 
-func (qrt *GRPCQueryRouter) registerABCIQueryHandler(sd *grpc.ServiceDesc, method grpc.MethodDesc, handler interface{}) error {
+func (qrt *GRPCQueryRouter) registerABCIQueryHandler(sd *grpc.ServiceDesc, method grpc.MethodDesc, handler any) error {
 	fqName := fmt.Sprintf("/%s/%s", sd.ServiceName, method.MethodName)
 	methodHandler := method.Handler
 
@@ -106,7 +106,7 @@ func (qrt *GRPCQueryRouter) registerABCIQueryHandler(sd *grpc.ServiceDesc, metho
 	qrt.routes[fqName] = func(ctx sdk.Context, req *abci.RequestQuery) (*abci.ResponseQuery, error) {
 		// call the method handler from the service description with the handler object,
 		// a wrapped sdk.Context with proto-unmarshaled data from the ABCI request data
-		res, err := methodHandler(handler, ctx, func(i interface{}) error {
+		res, err := methodHandler(handler, ctx, func(i any) error {
 			return qrt.cdc.Unmarshal(req.Data, i)
 		}, nil)
 		if err != nil {
@@ -133,7 +133,7 @@ func (qrt *GRPCQueryRouter) HybridHandlerByRequestName(name string) []func(ctx c
 	return qrt.hybridHandlers[name]
 }
 
-func (qrt *GRPCQueryRouter) registerHybridHandler(sd *grpc.ServiceDesc, method grpc.MethodDesc, handler interface{}) error {
+func (qrt *GRPCQueryRouter) registerHybridHandler(sd *grpc.ServiceDesc, method grpc.MethodDesc, handler any) error {
 	// extract message name from method descriptor
 	inputName, err := protocompat.RequestFullNameFromMethodDesc(sd, method)
 	if err != nil {

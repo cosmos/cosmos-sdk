@@ -1,4 +1,3 @@
-// Since: cosmos-sdk 0.43
 syntax = "proto3";
 package cosmos.crypto.secp256r1;
 

@@ -61,7 +61,7 @@ func (suite *SimTestSuite) SetupTest() {
 
 	suite.NoError(err)
 
-	suite.ctx = suite.app.BaseApp.NewContext(false)
+	suite.ctx = suite.app.NewContext(false)
 }
 
 // TestWeightedOperations tests the weights of the operations.
@@ -69,7 +69,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 	cdc := suite.cdc
 	appParams := make(simtypes.AppParams)
 
-	weightesOps := simulation.WeightedOperations(appParams, cdc, suite.txConfig, suite.accountKeeper, suite.bankKeeper)
+	weightedOps := simulation.WeightedOperations(appParams, cdc, suite.txConfig, suite.accountKeeper, suite.bankKeeper)
 
 	// setup 3 accounts
 	s := rand.NewSource(1)
@@ -85,7 +85,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		{10, types.ModuleName, sdk.MsgTypeURL(&types.MsgMultiSend{})},
 	}
 
-	for i, w := range weightesOps {
+	for i, w := range weightedOps {
 		operationMsg, _, err := w.Op()(r, suite.app.BaseApp, suite.ctx, accs, "")
 		suite.Require().NoError(err)
 
@@ -99,17 +99,18 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 }
 
 // TestSimulateMsgSend tests the normal scenario of a valid message of type TypeMsgSend.
-// Abonormal scenarios, where the message is created by an errors, are not tested here.
+// Abnormal scenarios, where the message is created by an errors, are not tested here.
 func (suite *SimTestSuite) TestSimulateMsgSend() {
 	// setup 3 accounts
 	s := rand.NewSource(1)
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 3)
 
-	suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: suite.app.LastBlockHeight() + 1,
 		Hash:   suite.app.LastCommitID().Hash,
 	})
+	suite.Require().NoError(err)
 
 	// execute operation
 	op := simulation.SimulateMsgSend(suite.txConfig, suite.accountKeeper, suite.bankKeeper)
@@ -128,17 +129,18 @@ func (suite *SimTestSuite) TestSimulateMsgSend() {
 }
 
 // TestSimulateMsgSend tests the normal scenario of a valid message of type TypeMsgMultiSend.
-// Abonormal scenarios, where the message is created by an errors, are not tested here.
+// Abnormal scenarios, where the message is created by an errors, are not tested here.
 func (suite *SimTestSuite) TestSimulateMsgMultiSend() {
 	// setup 3 accounts
 	s := rand.NewSource(1)
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, 3)
 
-	suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: suite.app.LastBlockHeight() + 1,
 		Hash:   suite.app.LastCommitID().Hash,
 	})
+	suite.Require().NoError(err)
 
 	// execute operation
 	op := simulation.SimulateMsgMultiSend(suite.txConfig, suite.accountKeeper, suite.bankKeeper)
@@ -170,11 +172,11 @@ func (suite *SimTestSuite) TestSimulateModuleAccountMsgSend() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, accCount)
 
-	suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: suite.app.LastBlockHeight() + 1,
 		Hash:   suite.app.LastCommitID().Hash,
-	},
-	)
+	})
+	suite.Require().NoError(err)
 
 	// execute operation
 	op := simulation.SimulateMsgSendToModuleAccount(suite.txConfig, suite.accountKeeper, suite.bankKeeper, moduleAccCount)
@@ -204,10 +206,11 @@ func (suite *SimTestSuite) TestSimulateMsgMultiSendToModuleAccount() {
 	r := rand.New(s)
 	accounts := suite.getTestingAccounts(r, accCount)
 
-	suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
+	_, err := suite.app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: suite.app.LastBlockHeight() + 1,
 		Hash:   suite.app.LastCommitID().Hash,
 	})
+	suite.Require().NoError(err)
 
 	// execute operation
 	op := simulation.SimulateMsgMultiSendToModuleAccount(suite.txConfig, suite.accountKeeper, suite.bankKeeper, mAccCount)

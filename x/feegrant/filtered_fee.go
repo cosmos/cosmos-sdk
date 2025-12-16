@@ -13,7 +13,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// TODO: Revisit this once we have propoer gas fee framework.
+// TODO: Revisit this once we have proper gas fee framework.
 // Tracking issues https://github.com/cosmos/cosmos-sdk/issues/9054, https://github.com/cosmos/cosmos-sdk/discussions/9072
 const (
 	gasCostPerIteration = uint64(10)
@@ -30,7 +30,7 @@ func (a *AllowedMsgAllowance) UnpackInterfaces(unpacker types.AnyUnpacker) error
 	return unpacker.UnpackAny(a.Allowance, &allowance)
 }
 
-// NewAllowedMsgFeeAllowance creates new filtered fee allowance.
+// NewAllowedMsgAllowance creates new filtered fee allowance.
 func NewAllowedMsgAllowance(allowance FeeAllowanceI, allowedMsgs []string) (*AllowedMsgAllowance, error) {
 	msg, ok := allowance.(proto.Message)
 	if !ok {

@@ -19,6 +19,7 @@ import (
 
 // LegacyMsg defines the old interface a message must fulfill,
 // containing Amino signing method.
+//
 // Deprecated: Please use `Msg` instead.
 type LegacyMsg interface {
 	sdk.Msg
@@ -59,6 +60,7 @@ func mustSortJSON(bz []byte) []byte {
 }
 
 // StdSignBytes returns the bytes to sign for a transaction.
+//
 // Deprecated: Please use x/tx/signing/aminojson instead.
 func StdSignBytes(chainID string, accnum, sequence, timeout uint64, fee StdFee, msgs []sdk.Msg, memo string) []byte {
 	if RegressionTestingAminoCodec == nil {
@@ -86,13 +88,17 @@ func StdSignBytes(chainID string, accnum, sequence, timeout uint64, fee StdFee, 
 	return mustSortJSON(bz)
 }
 
-// Deprecated: StdSignature represents a sig
+// StdSignature represents a sig
+//
+// Deprecated: will be removed in the future.
 type StdSignature struct {
 	cryptotypes.PubKey `json:"pub_key" yaml:"pub_key"` // optional
 	Signature          []byte                          `json:"signature" yaml:"signature"`
 }
 
-// Deprecated
+// NewStdSignature is a legacy function
+//
+// Deprecated: will be removed in the future.
 func NewStdSignature(pk cryptotypes.PubKey, sig []byte) StdSignature {
 	return StdSignature{PubKey: pk, Signature: sig}
 }
@@ -109,10 +115,10 @@ func (ss StdSignature) GetPubKey() cryptotypes.PubKey {
 }
 
 // MarshalYAML returns the YAML representation of the signature.
-func (ss StdSignature) MarshalYAML() (interface{}, error) {
+func (ss StdSignature) MarshalYAML() (any, error) {
 	pk := ""
 	if ss.PubKey != nil {
-		pk = ss.PubKey.String()
+		pk = ss.String()
 	}
 
 	bz, err := yaml.Marshal(struct {
@@ -126,7 +132,7 @@ func (ss StdSignature) MarshalYAML() (interface{}, error) {
 		return nil, err
 	}
 
-	return string(bz), err
+	return string(bz), nil
 }
 
 func (ss StdSignature) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
@@ -168,7 +174,7 @@ func pubKeySigToSigData(cdc *codec.LegacyAmino, key cryptotypes.PubKey, sig []by
 	n := multiSig.BitArray.Count()
 	signatures := multisig.NewMultisig(n)
 	sigIdx := 0
-	for i := 0; i < n; i++ {
+	for i := range n {
 		if bitArray.GetIndex(i) {
 			data, err := pubKeySigToSigData(cdc, pubKeys[i], multiSig.Sigs[sigIdx])
 			if err != nil {

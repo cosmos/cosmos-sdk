@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 )
 
-func TestNewSigningAlgoByString(t *testing.T) {
+func TestNewSigningAlgoFromString(t *testing.T) {
 	tests := []struct {
 		name         string
 		algoStr      string
@@ -36,7 +36,6 @@ func TestNewSigningAlgoByString(t *testing.T) {
 
 	list := SigningAlgoList{hd.Secp256k1}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			algorithm, err := NewSigningAlgoFromString(tt.algoStr, list)
 			if tt.isSupported {

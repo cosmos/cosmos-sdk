@@ -3,6 +3,7 @@ package types
 import (
 	"errors"
 	"fmt"
+	"math"
 )
 
 // PruningOptions defines the pruning strategy used when determining which
@@ -31,7 +32,7 @@ const (
 const (
 	// PruningDefault defines a pruning strategy where the last 362880 heights are
 	// kept where to-be pruned heights are pruned at every 10th height.
-	// The last 362880 heights are kept(approximately 3.5 weeks worth of state) assuming the typical
+	// The last 362880 heights are kept (approximately 3.5 weeks worth of state) assuming the typical
 	// block time is 6s. If these values do not match the applications' requirements, use the "custom" option.
 	PruningDefault PruningStrategy = iota
 	// PruningEverything defines a pruning strategy where all committed heights are
@@ -39,7 +40,7 @@ const (
 	// pruned at every 10th height.
 	PruningEverything
 	// PruningNothing defines a pruning strategy where all heights are kept on disk.
-	// This is the only stretegy where KeepEvery=1 is allowed with state-sync snapshots disabled.
+	// This is the only strategy where KeepEvery=1 is allowed with state-sync snapshots disabled.
 	PruningNothing
 	// PruningCustom defines a pruning strategy where the user specifies the pruning.
 	PruningCustom
@@ -56,6 +57,7 @@ var (
 	ErrPruningIntervalZero       = errors.New("'pruning-interval' must not be 0. If you want to disable pruning, select pruning = \"nothing\"")
 	ErrPruningIntervalTooSmall   = fmt.Errorf("'pruning-interval' must not be less than %d. For the most aggressive pruning, select pruning = \"everything\"", pruneEverythingInterval)
 	ErrPruningKeepRecentTooSmall = fmt.Errorf("'pruning-keep-recent' must not be less than %d. For the most aggressive pruning, select pruning = \"everything\"", pruneEverythingKeepRecent)
+	ErrPruningKeepRecentTooBig   = errors.New("'pruning-keep-recent' must not be greater than 2^63-1. Select pruning = \"nothing\"")
 )
 
 func NewPruningOptions(pruningStrategy PruningStrategy) PruningOptions {
@@ -109,6 +111,9 @@ func (po PruningOptions) Validate() error {
 	}
 	if po.KeepRecent < pruneEverythingKeepRecent {
 		return ErrPruningKeepRecentTooSmall
+	}
+	if po.KeepRecent > math.MaxInt64 {
+		return ErrPruningKeepRecentTooBig
 	}
 	return nil
 }

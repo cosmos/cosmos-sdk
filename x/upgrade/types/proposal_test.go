@@ -6,11 +6,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/x/upgrade/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 type ProposalWrapper struct {
@@ -50,7 +49,6 @@ func TestContentAccessors(t *testing.T) {
 	types.RegisterLegacyAminoCodec(cdc)
 
 	for name, tc := range cases {
-		tc := tc // copy to local variable for scopelint
 		t.Run(name, func(t *testing.T) {
 			assert.Equal(t, tc.title, tc.p.GetTitle())
 			assert.Equal(t, tc.desc, tc.p.GetDescription())
@@ -73,7 +71,6 @@ func TestContentAccessors(t *testing.T) {
 			assert.Equal(t, "upgrade", unwrap.Prop.ProposalRoute())
 			assert.Equal(t, tc.str, unwrap.Prop.String())
 		})
-
 	}
 }
 

@@ -8,7 +8,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// UpgradeInfoFileName file to store upgrade information
+// UpgradeInfoFilename is the file to store upgrade information
 const UpgradeInfoFilename = "upgrade-info.json"
 
 // ValidateBasic does basic validation of a Plan

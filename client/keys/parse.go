@@ -32,10 +32,6 @@ type hexOutput struct {
 	Bytes string `json:"bytes"`
 }
 
-func (ho hexOutput) String() string {
-	return fmt.Sprintf("Human readable part: %v\nBytes (hex): %s", ho.Human, ho.Bytes)
-}
-
 func newHexOutput(human string, bs []byte) hexOutput {
 	return hexOutput{Human: human, Bytes: fmt.Sprintf("%X", bs)}
 }
@@ -58,16 +54,6 @@ func newBech32Output(config *sdk.Config, bs []byte) bech32Output {
 	}
 
 	return out
-}
-
-func (bo bech32Output) String() string {
-	out := make([]string, len(bo.Formats))
-
-	for i, format := range bo.Formats {
-		out[i] = fmt.Sprintf("  - %s", format)
-	}
-
-	return fmt.Sprintf("Bech32 Formats:\n%s", strings.Join(out, "\n"))
 }
 
 // ParseKeyStringCommand parses an address from hex to bech32 and vice versa.
@@ -99,7 +85,7 @@ func doParseKey(cmd *cobra.Command, config *sdk.Config, args []string) error {
 	}
 
 	output, _ := cmd.Flags().GetString(flags.FlagOutput)
-	if !(runFromBech32(outstream, addr, output) || runFromHex(config, outstream, addr, output)) {
+	if !runFromBech32(outstream, addr, output) && !runFromHex(config, outstream, addr, output) {
 		return errors.New("couldn't find valid bech32 nor hex data")
 	}
 
@@ -130,7 +116,7 @@ func runFromHex(config *sdk.Config, w io.Writer, hexstr, output string) bool {
 	return true
 }
 
-func displayParseKeyInfo(w io.Writer, stringer fmt.Stringer, output string) {
+func displayParseKeyInfo(w io.Writer, value any, output string) {
 	var (
 		err error
 		out []byte
@@ -138,10 +124,10 @@ func displayParseKeyInfo(w io.Writer, stringer fmt.Stringer, output string) {
 
 	switch output {
 	case flags.OutputFormatText:
-		out, err = yaml.Marshal(&stringer)
+		out, err = yaml.Marshal(&value)
 
 	case flags.OutputFormatJSON:
-		out, err = json.Marshal(&stringer)
+		out, err = json.Marshal(&value)
 	}
 
 	if err != nil {

@@ -75,7 +75,7 @@ func TestNewKeyring(t *testing.T) {
 			dir:         t.TempDir(),
 			userInput:   strings.NewReader(""),
 			cdc:         cdc,
-			expectedErr: ErrUnknownBacked,
+			expectedErr: ErrUnknownBackend,
 		},
 	}
 	for _, tt := range tests {
@@ -930,7 +930,8 @@ func TestImportPubKey(t *testing.T) {
 			if tt.expectedErr == nil {
 				require.NoError(t, err)
 			} else {
-				require.Equal(t, err, tt.expectedErr)
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tt.expectedErr.Error())
 			}
 		})
 	}
@@ -1972,14 +1973,14 @@ func TestRenameKey(t *testing.T) {
 			},
 		},
 		{
-			name: "cant rename a key that doesnt exist",
+			name: "can't rename a key that doesn't exist",
 			run: func(kr Keyring) {
 				err := kr.Rename("bogus", "bogus2")
 				require.Error(t, err)
 			},
 		},
 		{
-			name: "cant rename a key to an already existing key name",
+			name: "can't rename a key to an already existing key name",
 			run: func(kr Keyring) {
 				key1, key2 := "existingKey", "existingKey2" // create 2 keys
 				newKeyRecord(t, kr, key1)
@@ -1990,7 +1991,7 @@ func TestRenameKey(t *testing.T) {
 			},
 		},
 		{
-			name: "cant rename key to itself",
+			name: "can't rename key to itself",
 			run: func(kr Keyring) {
 				keyName := "keyName"
 				newKeyRecord(t, kr, keyName)
@@ -2002,7 +2003,7 @@ func TestRenameKey(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
+
 		kr := newKeyring(t, "testKeyring")
 		t.Run(tc.name, func(t *testing.T) {
 			tc.run(kr)
@@ -2012,7 +2013,7 @@ func TestRenameKey(t *testing.T) {
 
 // TestChangeBcrypt tests the compatibility from upstream Bcrypt and our own
 func TestChangeBcrypt(t *testing.T) {
-	pw := []byte("somepasswword!")
+	pw := []byte("somepassword!")
 
 	saltBytes := cmtcrypto.CRandBytes(16)
 	cosmosHash, err := cosmosbcrypt.GenerateFromPassword(saltBytes, pw, 2)
@@ -2037,6 +2038,8 @@ func TestChangeBcrypt(t *testing.T) {
 }
 
 func requireEqualRenamedKey(t *testing.T, key, mnemonic *Record, nameMatch bool) {
+	t.Helper()
+
 	if nameMatch {
 		require.Equal(t, key.Name, mnemonic.Name)
 	}
@@ -2055,6 +2058,8 @@ func requireEqualRenamedKey(t *testing.T, key, mnemonic *Record, nameMatch bool)
 }
 
 func newKeyring(t *testing.T, name string) Keyring {
+	t.Helper()
+
 	cdc := getCodec()
 	kr, err := New(name, "test", t.TempDir(), nil, cdc)
 	require.NoError(t, err)
@@ -2062,12 +2067,16 @@ func newKeyring(t *testing.T, name string) Keyring {
 }
 
 func newKeyRecord(t *testing.T, kr Keyring, name string) *Record {
+	t.Helper()
+
 	k, _, err := kr.NewMnemonic(name, English, sdk.FullFundraiserPath, DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(t, err)
 	return k
 }
 
 func assertKeysExist(t *testing.T, kr Keyring, names ...string) {
+	t.Helper()
+
 	for _, n := range names {
 		_, err := kr.Key(n)
 		require.NoError(t, err)

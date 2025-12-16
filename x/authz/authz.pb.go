@@ -6,11 +6,11 @@ package authz
 import (
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
-	types "github.com/cosmos/cosmos-sdk/codec/types"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
 	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
+	any "github.com/cosmos/gogoproto/types/any"
 	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	math "math"
@@ -73,7 +73,7 @@ var xxx_messageInfo_GenericAuthorization proto.InternalMessageInfo
 // Grant gives permissions to execute
 // the provide method with expiration time.
 type Grant struct {
-	Authorization *types.Any `protobuf:"bytes,1,opt,name=authorization,proto3" json:"authorization,omitempty"`
+	Authorization *any.Any `protobuf:"bytes,1,opt,name=authorization,proto3" json:"authorization,omitempty"`
 	// time when the grant will expire and will be pruned. If null, then the grant
 	// doesn't have a time expiration (other conditions  in `authorization`
 	// may apply to invalidate the grant)
@@ -118,7 +118,7 @@ var xxx_messageInfo_Grant proto.InternalMessageInfo
 type GrantAuthorization struct {
 	Granter       string     `protobuf:"bytes,1,opt,name=granter,proto3" json:"granter,omitempty"`
 	Grantee       string     `protobuf:"bytes,2,opt,name=grantee,proto3" json:"grantee,omitempty"`
-	Authorization *types.Any `protobuf:"bytes,3,opt,name=authorization,proto3" json:"authorization,omitempty"`
+	Authorization *any.Any   `protobuf:"bytes,3,opt,name=authorization,proto3" json:"authorization,omitempty"`
 	Expiration    *time.Time `protobuf:"bytes,4,opt,name=expiration,proto3,stdtime" json:"expiration,omitempty"`
 }
 
@@ -629,7 +629,7 @@ func (m *Grant) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Authorization == nil {
-				m.Authorization = &types.Any{}
+				m.Authorization = &any.Any{}
 			}
 			if err := m.Authorization.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -815,7 +815,7 @@ func (m *GrantAuthorization) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Authorization == nil {
-				m.Authorization = &types.Any{}
+				m.Authorization = &any.Any{}
 			}
 			if err := m.Authorization.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err

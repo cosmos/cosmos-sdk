@@ -180,7 +180,7 @@ type compositeMapValue[T comparable] struct {
 	keyType          string
 	valueType        Type
 	values           map[T]protoreflect.Value
-	ctx              context.Context
+	ctx              *context.Context
 	opts             *Builder
 }
 
@@ -188,7 +188,7 @@ func (m compositeMapType[T]) DefaultValue() string {
 	return ""
 }
 
-func (m compositeMapType[T]) NewValue(ctx context.Context, opts *Builder) Value {
+func (m compositeMapType[T]) NewValue(ctx *context.Context, opts *Builder) Value {
 	return &compositeMapValue[T]{
 		keyValueResolver: m.keyValueResolver,
 		valueType:        m.valueType,
@@ -202,11 +202,10 @@ func (m compositeMapType[T]) NewValue(ctx context.Context, opts *Builder) Value 
 func (m *compositeMapValue[T]) Set(s string) error {
 	comaArgs := strings.Split(s, ",")
 	for _, arg := range comaArgs {
-		parts := strings.SplitN(arg, "=", 2)
-		if len(parts) != 2 {
+		key, val, found := strings.Cut(arg, "=")
+		if !found {
 			return errors.New("invalid format, expected key=value")
 		}
-		key, val := parts[0], parts[1]
 
 		keyValue, err := m.keyValueResolver(key)
 		if err != nil {

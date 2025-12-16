@@ -151,7 +151,7 @@ they should all be severely slashed.
 
 ## Status
 
-> Proposed
+Proposed
 
 ## Consequences
 

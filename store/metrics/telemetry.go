@@ -25,8 +25,8 @@ type Metrics struct {
 func NewMetrics(labels [][]string) Metrics {
 	gatherer := Metrics{}
 
-	if numGlobalLables := len(labels); numGlobalLables > 0 {
-		parsedGlobalLabels := make([]metrics.Label, numGlobalLables)
+	if numGlobalLabels := len(labels); numGlobalLabels > 0 {
+		parsedGlobalLabels := make([]metrics.Label, numGlobalLabels)
 		for i, gl := range labels {
 			parsedGlobalLabels[i] = metrics.Label{Name: gl[0], Value: gl[1]}
 		}

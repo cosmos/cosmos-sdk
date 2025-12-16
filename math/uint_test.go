@@ -17,7 +17,7 @@ type uintTestSuite struct {
 	suite.Suite
 }
 
-func TestUnitTestSuite(t *testing.T) {
+func TestUintTestSuite(t *testing.T) {
 	suite.Run(t, new(uintTestSuite))
 }
 
@@ -69,6 +69,8 @@ func (s *uintTestSuite) TestUintPanics() {
 	s.Require().Panics(func() { uintmin.Sub(sdkmath.OneUint()) })
 	s.Require().Panics(func() { uintmin.Decr() })
 
+	s.Require().NotPanics(func() { sdkmath.Uint{}.BigInt() })
+
 	s.Require().Equal(uint64(0), sdkmath.MinUint(sdkmath.ZeroUint(), sdkmath.OneUint()).Uint64())
 	s.Require().Equal(uint64(1), sdkmath.MaxUint(sdkmath.ZeroUint(), sdkmath.OneUint()).Uint64())
 
@@ -97,6 +99,26 @@ func (s *uintTestSuite) TestIsNil() {
 	s.Require().True(sdkmath.Uint{}.IsNil())
 }
 
+func (s *uintTestSuite) TestConvertToBigIntMutativeForUint() {
+	r := big.NewInt(30)
+	i := sdkmath.NewUintFromBigInt(r)
+
+	// Compare value of BigInt & BigIntMut
+	s.Require().Equal(i.BigInt(), i.BigIntMut())
+
+	// Modify BigIntMut() pointer and ensure i.BigIntMut() & i.BigInt() change
+	p1 := i.BigIntMut()
+	p1.SetInt64(40)
+	s.Require().Equal(big.NewInt(40), i.BigIntMut())
+	s.Require().Equal(big.NewInt(40), i.BigInt())
+
+	// Modify big.Int() pointer and ensure i.BigIntMut() & i.BigInt() don't change
+	p2 := i.BigInt()
+	p2.SetInt64(50)
+	s.Require().NotEqual(big.NewInt(50), i.BigIntMut())
+	s.Require().NotEqual(big.NewInt(50), i.BigInt())
+}
+
 func (s *uintTestSuite) TestArithUint() {
 	for d := 0; d < 1000; d++ {
 		n1 := uint64(rand.Uint32())
@@ -114,8 +136,8 @@ func (s *uintTestSuite) TestArithUint() {
 			{u1.AddUint64(n2), n1 + n2},
 			{u1.MulUint64(n2), n1 * n2},
 			{u1.QuoUint64(n2), n1 / n2},
-			{sdkmath.MinUint(u1, u2), minuint(n1, n2)},
-			{sdkmath.MaxUint(u1, u2), maxuint(n1, n2)},
+			{sdkmath.MinUint(u1, u2), min(n1, n2)},
+			{sdkmath.MaxUint(u1, u2), max(n1, n2)},
 			{u1.Incr(), n1 + 1},
 		}
 
@@ -222,7 +244,7 @@ func (s *uintTestSuite) TestSafeSub() {
 	}
 
 	for i, tc := range testCases {
-		tc := tc
+
 		if tc.panic {
 			s.Require().Panics(func() { tc.x.Sub(tc.y) })
 			continue
@@ -261,6 +283,16 @@ func (s *uintTestSuite) TestParseUint() {
 	}
 }
 
+func (s *uintTestSuite) TestNewUintFromBigInt() {
+	r := big.NewInt(42)
+	i := sdkmath.NewUintFromBigInt(r)
+	s.Require().Equal(r, i.BigInt())
+
+	// modify r and ensure i doesn't change
+	r = r.SetInt64(100)
+	s.Require().NotEqual(r, i.BigInt())
+}
+
 func randuint() sdkmath.Uint {
 	return sdkmath.NewUint(rand.Uint64())
 }
@@ -284,20 +316,6 @@ func (s *uintTestSuite) TestRelativePow() {
 	}
 }
 
-func minuint(i1, i2 uint64) uint64 {
-	if i1 < i2 {
-		return i1
-	}
-	return i2
-}
-
-func maxuint(i1, i2 uint64) uint64 {
-	if i1 > i2 {
-		return i1
-	}
-	return i2
-}
-
 func TestRoundTripMarshalToUint(t *testing.T) {
 	values := []uint64{
 		0,
@@ -311,7 +329,6 @@ func TestRoundTripMarshalToUint(t *testing.T) {
 	}
 
 	for _, value := range values {
-		value := value
 		t.Run(fmt.Sprintf("%d", value), func(t *testing.T) {
 			t.Parallel()
 

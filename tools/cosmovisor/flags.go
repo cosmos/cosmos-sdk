@@ -3,6 +3,8 @@ package cosmovisor
 const (
 	FlagOutput            = "output"
 	FlagSkipUpgradeHeight = "unsafe-skip-upgrades"
-	FlagNoAppVersion      = "no-app-version"
+	FlagCosmovisorOnly    = "cosmovisor-only"
 	FlagForce             = "force"
+	FlagUpgradeHeight     = "upgrade-height"
+	FlagCosmovisorConfig  = "cosmovisor-config"
 )

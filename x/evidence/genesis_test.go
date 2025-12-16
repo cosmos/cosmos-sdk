@@ -11,15 +11,15 @@ import (
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-	"cosmossdk.io/x/evidence"
-	"cosmossdk.io/x/evidence/exported"
-	"cosmossdk.io/x/evidence/keeper"
-	"cosmossdk.io/x/evidence/testutil"
-	"cosmossdk.io/x/evidence/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/evidence"
+	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
+	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
+	"github.com/cosmos/cosmos-sdk/x/evidence/testutil"
+	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 type GenesisTestSuite struct {
@@ -40,7 +40,7 @@ func (suite *GenesisTestSuite) SetupTest() {
 		&evidenceKeeper)
 	require.NoError(suite.T(), err)
 
-	suite.ctx = app.BaseApp.NewContextLegacy(false, cmtproto.Header{Height: 1})
+	suite.ctx = app.NewContextLegacy(false, cmtproto.Header{Height: 1})
 	suite.keeper = evidenceKeeper
 }
 

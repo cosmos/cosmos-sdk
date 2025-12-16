@@ -12,7 +12,7 @@ import (
 	"cosmossdk.io/x/tx/signing"
 )
 
-// ValidateAnnotations validates that the proto annotations are correct.
+// ValidateProtoAnnotations validates that the proto annotations are correct.
 // More specifically, it verifies:
 // - all services named "Msg" have `(cosmos.msg.v1.service) = true`,
 //
@@ -26,10 +26,10 @@ func ValidateProtoAnnotations(protoFiles signing.ProtoFileResolver) error {
 
 	var serviceErrs []error
 	protoFiles.RangeFiles(func(fd protoreflect.FileDescriptor) bool {
-		for i := 0; i < fd.Services().Len(); i++ {
+		for i := range fd.Services().Len() {
 			sd := fd.Services().Get(i)
 			if sd.Name() == "Msg" {
-				// We use the heuristic that services name Msg are exactly the
+				// We use the heuristic that services named Msg are exactly the
 				// ones that need the proto annotations check.
 				err := validateMsgServiceAnnotations(sd)
 				if err != nil {

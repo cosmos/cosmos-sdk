@@ -11,6 +11,8 @@ import (
 )
 
 // Keeper of the global paramstore
+//
+// Deprecated: the params keeper is deprecated and will be removed in the next Cosmos SDK major release.
 type Keeper struct {
 	cdc         codec.BinaryCodec
 	legacyAmino *codec.LegacyAmino
@@ -20,6 +22,8 @@ type Keeper struct {
 }
 
 // NewKeeper constructs a params keeper
+//
+// Deprecated: the params keeper is deprecated and will be removed in the next Cosmos SDK major release.
 func NewKeeper(cdc codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey storetypes.StoreKey) Keeper {
 	return Keeper{
 		cdc:         cdc,

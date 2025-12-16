@@ -1,5 +1,4 @@
 //go:build e2e
-// +build e2e
 
 package gov
 
@@ -7,13 +6,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+
 	"cosmossdk.io/simapp"
 
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 )
 
 func TestE2ETestSuite(t *testing.T) {

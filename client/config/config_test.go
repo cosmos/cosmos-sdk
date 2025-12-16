@@ -17,22 +17,22 @@ import (
 )
 
 const (
-	nodeEnv   = "NODE"
+	chainID   = "test-chain"
+	nodeEnv   = "CONFIG_TEST_NODE"
 	testNode1 = "http://localhost:1"
 	testNode2 = "http://localhost:2"
 )
 
 // initClientContext initiates client Context for tests
 func initClientContext(t *testing.T, envVar string) (client.Context, func()) {
+	t.Helper()
 	home := t.TempDir()
-	chainID := "test-chain"
 	clientCtx := client.Context{}.
 		WithHomeDir(home).
 		WithViper("").
 		WithCodec(codec.NewProtoCodec(codectypes.NewInterfaceRegistry())).
 		WithChainID(chainID)
 
-	require.NoError(t, clientCtx.Viper.BindEnv(nodeEnv))
 	if envVar != "" {
 		require.NoError(t, os.Setenv(nodeEnv, envVar))
 	}
@@ -41,7 +41,10 @@ func initClientContext(t *testing.T, envVar string) (client.Context, func()) {
 	require.NoError(t, err)
 	require.Equal(t, clientCtx.ChainID, chainID)
 
-	return clientCtx, func() { _ = os.RemoveAll(home) }
+	return clientCtx, func() {
+		_ = os.RemoveAll(home)
+		_ = os.Unsetenv(nodeEnv)
+	}
 }
 
 func TestConfigCmdEnvFlag(t *testing.T) {
@@ -58,7 +61,6 @@ func TestConfigCmdEnvFlag(t *testing.T) {
 	}
 
 	for _, tc := range tt {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			testCmd := &cobra.Command{
 				Use: "test",
@@ -76,7 +78,6 @@ func TestConfigCmdEnvFlag(t *testing.T) {
 			clientCtx, cleanup := initClientContext(t, tc.envVar)
 			defer func() {
 				cleanup()
-				_ = os.Unsetenv(nodeEnv)
 			}()
 			/*
 				env var is set with a flag

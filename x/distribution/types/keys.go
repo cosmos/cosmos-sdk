@@ -24,7 +24,7 @@ const (
 // Keys for distribution store
 // Items are stored with the following key: values
 //
-// - 0x00<proposalID_Bytes>: FeePol
+// - 0x00<proposalID_Bytes>: FeePool
 //
 // - 0x01: sdk.ConsAddress
 //
@@ -97,7 +97,7 @@ func GetDelegatorStartingInfoAddresses(key []byte) (valAddr sdk.ValAddress, delA
 	delAddr = sdk.AccAddress(key[3+valAddrLen:])
 	kv.AssertKeyLength(delAddr.Bytes(), delAddrLen)
 
-	return
+	return valAddr, delAddr
 }
 
 // GetValidatorHistoricalRewardsAddressPeriod creates the address & period from a validator's historical rewards key.
@@ -111,7 +111,7 @@ func GetValidatorHistoricalRewardsAddressPeriod(key []byte) (valAddr sdk.ValAddr
 	b := key[2+valAddrLen:]
 	kv.AssertKeyLength(b, 8)
 	period = binary.LittleEndian.Uint64(b)
-	return
+	return valAddr, period
 }
 
 // GetValidatorCurrentRewardsAddress creates the address from a validator's current rewards key.
@@ -130,7 +130,7 @@ func GetValidatorCurrentRewardsAddress(key []byte) (valAddr sdk.ValAddress) {
 // GetValidatorAccumulatedCommissionAddress creates the address from a validator's accumulated commission key.
 func GetValidatorAccumulatedCommissionAddress(key []byte) (valAddr sdk.ValAddress) {
 	// key is in the format:
-	// 0x07<valAddrLen (1 Byte)><valAddr_Bytes>: ValidatorCurrentRewards
+	// 0x07<valAddrLen (1 Byte)><valAddr_Bytes>: ValidatorAccumulatedCommission
 
 	// Remove prefix and address length.
 	kv.AssertKeyAtLeastLength(key, 3)
@@ -152,7 +152,7 @@ func GetValidatorSlashEventAddressHeight(key []byte) (valAddr sdk.ValAddress, he
 	kv.AssertKeyAtLeastLength(key, startB+9)
 	b := key[startB : startB+8] // the next 8 bytes represent the height
 	height = binary.BigEndian.Uint64(b)
-	return
+	return valAddr, height
 }
 
 // GetValidatorOutstandingRewardsKey creates the outstanding rewards key for a validator.

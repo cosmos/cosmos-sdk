@@ -89,7 +89,6 @@ func (s *E2ETestSuite) TestTotalSupplyGRPCHandler() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
 			s.Require().NoError(err)
@@ -210,7 +209,6 @@ func (s *E2ETestSuite) TestDenomMetadataGRPCHandler() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			resp, err := testutil.GetRequestWithHeaders(tc.url, tc.headers)
 			s.Require().NoError(err)
@@ -250,7 +248,7 @@ func (s *E2ETestSuite) TestBalancesGRPCHandler() {
 			},
 		},
 		{
-			"gPRC account balance of a denom",
+			"gRPC account balance of a denom",
 			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s/by_denom?denom=%s", baseURL, val.Address.String(), s.cfg.BondDenom),
 			&types.QueryBalanceResponse{},
 			&types.QueryBalanceResponse{
@@ -261,7 +259,7 @@ func (s *E2ETestSuite) TestBalancesGRPCHandler() {
 			},
 		},
 		{
-			"gPRC account balance of a bogus denom",
+			"gRPC account balance of a bogus denom",
 			fmt.Sprintf("%s/cosmos/bank/v1beta1/balances/%s/by_denom?denom=foobar", baseURL, val.Address.String()),
 			&types.QueryBalanceResponse{},
 			&types.QueryBalanceResponse{
@@ -274,7 +272,6 @@ func (s *E2ETestSuite) TestBalancesGRPCHandler() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			resp, err := testutil.GetRequest(tc.url)
 			s.Require().NoError(err)

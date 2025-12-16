@@ -11,18 +11,23 @@ import (
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/tools/cosmovisor"
-	cverrors "cosmossdk.io/tools/cosmovisor/errors"
 	"cosmossdk.io/x/upgrade/plan"
 )
 
-var initCmd = &cobra.Command{
-	Use:   "init <path to executable>",
-	Short: "Initialize a cosmovisor daemon home directory.",
-	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		logger := cmd.Context().Value(log.ContextKey).(log.Logger)
-		return InitializeCosmovisor(logger, args)
-	},
+func NewInitCmd() *cobra.Command {
+	initCmd := &cobra.Command{
+		Use:   "init <path to executable>",
+		Short: "Initialize a cosmovisor daemon home directory.",
+		Long: `Initialize a cosmovisor daemon home directory with the provided executable.
+Configuration file is initialized at the default path (<-home->/cosmovisor/config.toml).`,
+		Args:         cobra.ExactArgs(1),
+		SilenceUsage: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return InitializeCosmovisor(nil, args)
+		},
+	}
+
+	return initCmd
 }
 
 // InitializeCosmovisor initializes the cosmovisor directories, current link, and initial executable.
@@ -39,9 +44,20 @@ func InitializeCosmovisor(logger log.Logger, args []string) error {
 	case exeInfo.IsDir():
 		return errors.New("invalid path to executable: must not be a directory")
 	}
-	cfg, err := getConfigForInitCmd()
+
+	// skipping validation to not check if directories exist
+	cfg, err := cosmovisor.GetConfigFromEnv(true)
 	if err != nil {
 		return err
+	}
+
+	// proceed to minimal validation
+	if err := minConfigValidate(cfg); err != nil {
+		return err
+	}
+
+	if logger == nil {
+		logger = cfg.Logger(os.Stdout)
 	}
 
 	logger.Info("checking on the genesis/bin directory")
@@ -77,6 +93,12 @@ func InitializeCosmovisor(logger log.Logger, args []string) error {
 		return err
 	}
 
+	// set current working directory to $DAEMON_NAME/cosmosvisor
+	// to allow current symlink to be relative
+	if err = os.Chdir(cfg.Root()); err != nil {
+		return fmt.Errorf("failed to change directory to %s: %w", cfg.Root(), err)
+	}
+
 	logger.Info("checking on the current symlink and creating it if needed")
 	cur, curErr := cfg.CurrentBin()
 	if curErr != nil {
@@ -84,31 +106,29 @@ func InitializeCosmovisor(logger log.Logger, args []string) error {
 	}
 	logger.Info(fmt.Sprintf("the current symlink points to: %q", cur))
 
+	filePath, err := cfg.Export()
+	if err != nil {
+		return fmt.Errorf("failed to export configuration: %w", err)
+	}
+	logger.Info(fmt.Sprintf("cosmovisor config.toml created at: %s", filePath))
+
 	return nil
 }
 
-// getConfigForInitCmd gets just the configuration elements needed to initialize cosmovisor.
-func getConfigForInitCmd() (*cosmovisor.Config, error) {
+func minConfigValidate(cfg *cosmovisor.Config) error {
 	var errs []error
-	// Note: Not using GetConfigFromEnv here because that checks that the directories already exist.
-	// We also don't care about the rest of the configuration stuff in here.
-	cfg := &cosmovisor.Config{
-		Home: os.Getenv(cosmovisor.EnvHome),
-		Name: os.Getenv(cosmovisor.EnvName),
-	}
 	if len(cfg.Name) == 0 {
 		errs = append(errs, fmt.Errorf("%s is not set", cosmovisor.EnvName))
 	}
+
 	switch {
 	case len(cfg.Home) == 0:
 		errs = append(errs, fmt.Errorf("%s is not set", cosmovisor.EnvHome))
 	case !filepath.IsAbs(cfg.Home):
 		errs = append(errs, fmt.Errorf("%s must be an absolute path", cosmovisor.EnvHome))
 	}
-	if len(errs) > 0 {
-		return nil, cverrors.FlattenErrors(errs...)
-	}
-	return cfg, nil
+
+	return errors.Join(errs...)
 }
 
 // copyFile copies the file at the given source to the given destination.

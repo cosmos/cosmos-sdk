@@ -41,17 +41,17 @@ func TestParseSubmitLegacyProposal(t *testing.T) {
 	fs := NewCmdSubmitLegacyProposal().Flags()
 
 	// nonexistent json
-	fs.Set(FlagProposal, "fileDoesNotExist")
+	require.NoError(t, fs.Set(FlagProposal, "fileDoesNotExist"))
 	_, err := parseSubmitLegacyProposal(fs)
 	require.Error(t, err)
 
 	// invalid json
-	fs.Set(FlagProposal, badJSON.Name())
+	require.NoError(t, fs.Set(FlagProposal, badJSON.Name()))
 	_, err = parseSubmitLegacyProposal(fs)
 	require.Error(t, err)
 
 	// ok json
-	fs.Set(FlagProposal, okJSON.Name())
+	require.NoError(t, fs.Set(FlagProposal, okJSON.Name()))
 	proposal1, err := parseSubmitLegacyProposal(fs)
 	require.Nil(t, err, "unexpected error")
 	require.Equal(t, "Test Proposal", proposal1.Title)
@@ -61,14 +61,14 @@ func TestParseSubmitLegacyProposal(t *testing.T) {
 
 	// flags that can't be used with --proposal
 	for _, incompatibleFlag := range ProposalFlags {
-		fs.Set(incompatibleFlag, "some value")
+		require.NoError(t, fs.Set(incompatibleFlag, "some value"))
 		_, err := parseSubmitLegacyProposal(fs)
 		require.Error(t, err)
-		fs.Set(incompatibleFlag, "")
+		require.NoError(t, fs.Set(incompatibleFlag, ""))
 	}
 
 	// no --proposal, only flags
-	fs.Set(FlagProposal, "")
+	require.NoError(t, fs.Set(FlagProposal, ""))
 	flagTestCases := map[string]struct {
 		pTitle       string
 		pDescription string
@@ -102,10 +102,10 @@ func TestParseSubmitLegacyProposal(t *testing.T) {
 	}
 	for name, tc := range flagTestCases {
 		t.Run(name, func(t *testing.T) {
-			fs.Set(FlagTitle, tc.pTitle)
-			fs.Set(FlagDescription, tc.pDescription)
-			fs.Set(FlagProposalType, tc.pType)
-			fs.Set(FlagDeposit, proposal1.Deposit)
+			require.NoError(t, fs.Set(FlagTitle, tc.pTitle))
+			require.NoError(t, fs.Set(FlagDescription, tc.pDescription))
+			require.NoError(t, fs.Set(FlagProposalType, tc.pType))
+			require.NoError(t, fs.Set(FlagDeposit, proposal1.Deposit))
 			proposal2, err := parseSubmitLegacyProposal(fs)
 
 			if tc.expErr {
@@ -214,6 +214,8 @@ func TestParseSubmitProposal(t *testing.T) {
 }
 
 func getCommandHelp(t *testing.T, cmd *cobra.Command) string {
+	t.Helper()
+
 	// Create a pipe, so we can capture the help sent to stdout.
 	reader, writer, err := os.Pipe()
 	require.NoError(t, err, "creating os.Pipe()")

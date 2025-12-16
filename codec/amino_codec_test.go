@@ -2,7 +2,6 @@ package codec_test
 
 import (
 	"bytes"
-	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -23,7 +22,7 @@ func createTestCodec() *codec.LegacyAmino {
 	return cdc
 }
 
-func TestAminoMarsharlInterface(t *testing.T) {
+func TestAminoMarshalInterface(t *testing.T) {
 	cdc := codec.NewAminoCodec(createTestCodec())
 	m := interfaceMarshaler{cdc.MarshalInterface, cdc.UnmarshalInterface}
 	testInterfaceMarshaling(require.New(t), m, true)
@@ -71,8 +70,6 @@ func TestAminoCodecMarshalJSONIndent(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		t.Run(tc.name, func(t *testing.T) {
 			cdc := codec.NewAminoCodec(createTestCodec())
 			bz, err := cdc.MarshalJSONIndent(tc.input, "", "  ")
@@ -112,5 +109,5 @@ func TestAminoCodecUnpackAnyFails(t *testing.T) {
 	cdc := codec.NewAminoCodec(createTestCodec())
 	err := cdc.UnpackAny(new(types.Any), &testdata.Cat{})
 	require.Error(t, err)
-	require.Equal(t, err, errors.New("AminoCodec can't handle unpack protobuf Any's"))
+	require.EqualError(t, err, "AminoCodec can't handle unpack protobuf Any's")
 }

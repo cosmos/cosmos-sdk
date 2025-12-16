@@ -21,6 +21,8 @@ var header = cmtproto.Header{
 }
 
 func createValidators(t *testing.T) []types.Validator {
+	t.Helper()
+
 	return []types.Validator{
 		newValidator(t, valAddr1, pk1),
 		newValidator(t, valAddr2, pk2),

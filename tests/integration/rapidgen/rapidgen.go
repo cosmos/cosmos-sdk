@@ -19,20 +19,15 @@ import (
 	multisigapi "cosmossdk.io/api/cosmos/crypto/multisig"
 	"cosmossdk.io/api/cosmos/crypto/secp256k1"
 	distapi "cosmossdk.io/api/cosmos/distribution/v1beta1"
-	evidenceapi "cosmossdk.io/api/cosmos/evidence/v1beta1"
 	feegrantapi "cosmossdk.io/api/cosmos/feegrant/v1beta1"
 	gov_v1_api "cosmossdk.io/api/cosmos/gov/v1"
 	gov_v1beta1_api "cosmossdk.io/api/cosmos/gov/v1beta1"
-	groupapi "cosmossdk.io/api/cosmos/group/v1"
 	mintapi "cosmossdk.io/api/cosmos/mint/v1beta1"
 	paramsapi "cosmossdk.io/api/cosmos/params/v1beta1"
 	slashingapi "cosmossdk.io/api/cosmos/slashing/v1beta1"
 	stakingapi "cosmossdk.io/api/cosmos/staking/v1beta1"
 	upgradeapi "cosmossdk.io/api/cosmos/upgrade/v1beta1"
 	vestingapi "cosmossdk.io/api/cosmos/vesting/v1beta1"
-	evidencetypes "cosmossdk.io/x/evidence/types"
-	feegranttypes "cosmossdk.io/x/feegrant"
-	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -41,13 +36,14 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	disttypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	feegranttypes "github.com/cosmos/cosmos-sdk/x/feegrant"
 	gov_v1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	gov_v1beta1_types "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	grouptypes "github.com/cosmos/cosmos-sdk/x/group"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 type GeneratedType struct {
@@ -62,16 +58,6 @@ func GenType(gogo gogoproto.Message, pulsar proto.Message, opts rapidproto.Gener
 		Gogo:   gogo,
 		Opts:   opts,
 	}
-}
-
-func WithDecisionPolicy(opts rapidproto.GeneratorOptions) rapidproto.GeneratorOptions {
-	return opts.
-		WithAnyTypes(
-			&groupapi.ThresholdDecisionPolicy{},
-			&groupapi.PercentageDecisionPolicy{}).
-		WithDisallowNil().
-		WithInterfaceHint("cosmos.group.v1.DecisionPolicy", &groupapi.ThresholdDecisionPolicy{}).
-		WithInterfaceHint("cosmos.group.v1.DecisionPolicy", &groupapi.PercentageDecisionPolicy{})
 }
 
 func GeneratorFieldMapper(t *rapid.T, field protoreflect.FieldDescriptor, name string) (protoreflect.Value, bool) {
@@ -129,16 +115,10 @@ var (
 		GenType(&disttypes.MsgWithdrawDelegatorReward{}, &distapi.MsgWithdrawDelegatorReward{}, GenOpts),
 		GenType(&disttypes.MsgWithdrawValidatorCommission{}, &distapi.MsgWithdrawValidatorCommission{}, GenOpts),
 		GenType(&disttypes.MsgSetWithdrawAddress{}, &distapi.MsgSetWithdrawAddress{}, GenOpts),
-		GenType(&disttypes.MsgFundCommunityPool{}, &distapi.MsgFundCommunityPool{}, GenOpts), // nolint:staticcheck // testing legacy code path
+		GenType(&disttypes.MsgFundCommunityPool{}, &distapi.MsgFundCommunityPool{}, GenOpts),
 		GenType(&disttypes.MsgUpdateParams{}, &distapi.MsgUpdateParams{}, GenOpts.WithDisallowNil()),
-		GenType(&disttypes.MsgCommunityPoolSpend{}, &distapi.MsgCommunityPoolSpend{}, GenOpts), // nolint:staticcheck // testing legacy code path
+		GenType(&disttypes.MsgCommunityPoolSpend{}, &distapi.MsgCommunityPoolSpend{}, GenOpts),
 		GenType(&disttypes.MsgDepositValidatorRewardsPool{}, &distapi.MsgDepositValidatorRewardsPool{}, GenOpts),
-
-		// evidence
-		GenType(&evidencetypes.MsgSubmitEvidence{}, &evidenceapi.MsgSubmitEvidence{},
-			GenOpts.WithAnyTypes(&evidenceapi.Equivocation{}).
-				WithDisallowNil().
-				WithInterfaceHint("cosmos.evidence.v1beta1.Evidence", &evidenceapi.Equivocation{})),
 
 		// feegrant
 		GenType(&feegranttypes.MsgGrantAllowance{}, &feegrantapi.MsgGrantAllowance{},
@@ -177,29 +157,6 @@ var (
 				WithInterfaceHint("cosmos.gov.v1beta1.Content", &gov_v1beta1_api.TextProposal{})),
 		GenType(&gov_v1_types.MsgUpdateParams{}, &gov_v1_api.MsgUpdateParams{}, GenOpts.WithDisallowNil()),
 
-		// group
-		GenType(&grouptypes.MsgCreateGroup{}, &groupapi.MsgCreateGroup{}, GenOpts),
-		GenType(&grouptypes.MsgUpdateGroupMembers{}, &groupapi.MsgUpdateGroupMembers{}, GenOpts),
-		GenType(&grouptypes.MsgUpdateGroupAdmin{}, &groupapi.MsgUpdateGroupAdmin{}, GenOpts),
-		GenType(&grouptypes.MsgUpdateGroupMetadata{}, &groupapi.MsgUpdateGroupMetadata{}, GenOpts),
-		GenType(&grouptypes.MsgCreateGroupWithPolicy{}, &groupapi.MsgCreateGroupWithPolicy{},
-			WithDecisionPolicy(GenOpts)),
-		GenType(&grouptypes.MsgCreateGroupPolicy{}, &groupapi.MsgCreateGroupPolicy{},
-			WithDecisionPolicy(GenOpts)),
-		GenType(&grouptypes.MsgUpdateGroupPolicyAdmin{}, &groupapi.MsgUpdateGroupPolicyAdmin{}, GenOpts),
-		GenType(&grouptypes.MsgUpdateGroupPolicyDecisionPolicy{}, &groupapi.MsgUpdateGroupPolicyDecisionPolicy{},
-			WithDecisionPolicy(GenOpts)),
-		GenType(&grouptypes.MsgUpdateGroupPolicyMetadata{}, &groupapi.MsgUpdateGroupPolicyMetadata{}, GenOpts),
-		GenType(&grouptypes.MsgSubmitProposal{}, &groupapi.MsgSubmitProposal{},
-			GenOpts.WithDisallowNil().
-				WithAnyTypes(&groupapi.MsgCreateGroup{}, &groupapi.MsgUpdateGroupMembers{}).
-				WithInterfaceHint("cosmos.base.v1beta1.Msg", &groupapi.MsgCreateGroup{}).
-				WithInterfaceHint("cosmos.base.v1beta1.Msg", &groupapi.MsgUpdateGroupMembers{}),
-		),
-		GenType(&grouptypes.MsgVote{}, &groupapi.MsgVote{}, GenOpts),
-		GenType(&grouptypes.MsgExec{}, &groupapi.MsgExec{}, GenOpts),
-		GenType(&grouptypes.MsgLeaveGroup{}, &groupapi.MsgLeaveGroup{}, GenOpts),
-
 		// mint
 		GenType(&minttypes.MsgUpdateParams{}, &mintapi.MsgUpdateParams{}, GenOpts.WithDisallowNil()),
 
@@ -231,7 +188,6 @@ var (
 	NonsignableTypes = []GeneratedType{
 		GenType(&authtypes.Params{}, &authapi.Params{}, GenOpts),
 		GenType(&authtypes.BaseAccount{}, &authapi.BaseAccount{}, GenOpts.WithAnyTypes(&ed25519.PubKey{})),
-		GenType(&authtypes.ModuleAccount{}, &authapi.ModuleAccount{}, GenOpts.WithAnyTypes(&ed25519.PubKey{})),
 		GenType(&authtypes.ModuleCredential{}, &authapi.ModuleCredential{}, GenOpts),
 
 		GenType(&authztypes.GenericAuthorization{}, &authzapi.GenericAuthorization{}, GenOpts),
@@ -249,8 +205,6 @@ var (
 			GenOpts.WithAnyTypes(&ed25519.PubKey{}, &secp256k1.PubKey{})),
 
 		GenType(&disttypes.Params{}, &distapi.Params{}, GenOpts),
-
-		GenType(&evidencetypes.Equivocation{}, &evidenceapi.Equivocation{}, GenOpts.WithDisallowNil()),
 
 		GenType(&feegranttypes.BasicAllowance{}, &feegrantapi.BasicAllowance{}, GenOpts.WithDisallowNil()),
 		GenType(&feegranttypes.PeriodicAllowance{}, &feegrantapi.PeriodicAllowance{}, GenOpts.WithDisallowNil()),
@@ -274,8 +228,8 @@ var (
 
 		GenType(&stakingtypes.StakeAuthorization{}, &stakingapi.StakeAuthorization{}, GenOpts),
 
-		GenType(&upgradetypes.CancelSoftwareUpgradeProposal{}, &upgradeapi.CancelSoftwareUpgradeProposal{}, GenOpts),       // nolint:staticcheck // testing legacy code path
-		GenType(&upgradetypes.SoftwareUpgradeProposal{}, &upgradeapi.SoftwareUpgradeProposal{}, GenOpts.WithDisallowNil()), // nolint:staticcheck // testing legacy code path
+		GenType(&upgradetypes.CancelSoftwareUpgradeProposal{}, &upgradeapi.CancelSoftwareUpgradeProposal{}, GenOpts),       //nolint:staticcheck // testing registration of legacy deprecated type
+		GenType(&upgradetypes.SoftwareUpgradeProposal{}, &upgradeapi.SoftwareUpgradeProposal{}, GenOpts.WithDisallowNil()), //nolint:staticcheck // testing registration of legacy deprecated type
 		GenType(&upgradetypes.Plan{}, &upgradeapi.Plan{}, GenOpts.WithDisallowNil()),
 
 		GenType(&vestingtypes.BaseVestingAccount{}, &vestingapi.BaseVestingAccount{}, GenOpts.WithDisallowNil()),

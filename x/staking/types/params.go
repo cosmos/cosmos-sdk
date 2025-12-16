@@ -19,13 +19,13 @@ const (
 	// TODO: Justify our choice of default here.
 	DefaultUnbondingTime time.Duration = time.Hour * 24 * 7 * 3
 
-	// Default maximum number of bonded validators
+	// DefaultMaxValidators of bonded validators
 	DefaultMaxValidators uint32 = 100
 
-	// Default maximum entries in a UBD/RED pair
+	// DefaultMaxEntries in a UBD/RED pair
 	DefaultMaxEntries uint32 = 7
 
-	// DefaultHistorical entries is 10000. Apps that don't use IBC can ignore this
+	// DefaultHistoricalEntries is 10000. Apps that don't use IBC can ignore this
 	// value by not adding the staking module to the application module manager's
 	// SetOrderBeginBlockers.
 	DefaultHistoricalEntries uint32 = 10000
@@ -58,7 +58,7 @@ func DefaultParams() Params {
 	)
 }
 
-// unmarshal the current staking params value from store key or panic
+// MustUnmarshalParams unmarshals the current staking Params value from store key. Panics on error.
 func MustUnmarshalParams(cdc *codec.LegacyAmino, value []byte) Params {
 	params, err := UnmarshalParams(cdc, value)
 	if err != nil {
@@ -68,17 +68,17 @@ func MustUnmarshalParams(cdc *codec.LegacyAmino, value []byte) Params {
 	return params
 }
 
-// unmarshal the current staking params value from store key
+// UnmarshalParams unmarshals the current staking params value from store key
 func UnmarshalParams(cdc *codec.LegacyAmino, value []byte) (params Params, err error) {
 	err = cdc.Unmarshal(value, &params)
 	if err != nil {
-		return
+		return params, err
 	}
 
-	return
+	return params, err
 }
 
-// validate a set of params
+// Validate validates a set of Params
 func (p Params) Validate() error {
 	if err := validateUnbondingTime(p.UnbondingTime); err != nil {
 		return err
@@ -107,7 +107,7 @@ func (p Params) Validate() error {
 	return nil
 }
 
-func validateUnbondingTime(i interface{}) error {
+func validateUnbondingTime(i any) error {
 	v, ok := i.(time.Duration)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -120,7 +120,7 @@ func validateUnbondingTime(i interface{}) error {
 	return nil
 }
 
-func validateMaxValidators(i interface{}) error {
+func validateMaxValidators(i any) error {
 	v, ok := i.(uint32)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -133,7 +133,7 @@ func validateMaxValidators(i interface{}) error {
 	return nil
 }
 
-func validateMaxEntries(i interface{}) error {
+func validateMaxEntries(i any) error {
 	v, ok := i.(uint32)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -146,7 +146,7 @@ func validateMaxEntries(i interface{}) error {
 	return nil
 }
 
-func validateHistoricalEntries(i interface{}) error {
+func validateHistoricalEntries(i any) error {
 	_, ok := i.(uint32)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -155,7 +155,7 @@ func validateHistoricalEntries(i interface{}) error {
 	return nil
 }
 
-func validateBondDenom(i interface{}) error {
+func validateBondDenom(i any) error {
 	v, ok := i.(string)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -172,7 +172,7 @@ func validateBondDenom(i interface{}) error {
 	return nil
 }
 
-func ValidatePowerReduction(i interface{}) error {
+func ValidatePowerReduction(i any) error {
 	v, ok := i.(math.Int)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -185,7 +185,7 @@ func ValidatePowerReduction(i interface{}) error {
 	return nil
 }
 
-func validateMinCommissionRate(i interface{}) error {
+func validateMinCommissionRate(i any) error {
 	v, ok := i.(math.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

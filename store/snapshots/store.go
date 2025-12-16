@@ -91,7 +91,7 @@ func (s *Store) Get(height uint64, format uint32) (*types.Snapshot, error) {
 	return snapshot, nil
 }
 
-// Get fetches the latest snapshot from the database, if any.
+// GetLatest fetches the latest snapshot from the database, if any.
 func (s *Store) GetLatest() (*types.Snapshot, error) {
 	iter, err := s.db.ReverseIterator(encodeKey(0, 0), encodeKey(uint64(math.MaxUint64), math.MaxUint32))
 	if err != nil {

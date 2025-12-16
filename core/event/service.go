@@ -37,7 +37,7 @@ type Manager interface {
 	EmitNonConsensus(ctx context.Context, event protoiface.MessageV1) error
 }
 
-// KVEventAttribute is a kv-pair event attribute.
+// Attribute is a kv-pair event attribute.
 type Attribute struct {
 	Key, Value string
 }

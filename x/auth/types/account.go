@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/cometbft/cometbft/crypto"
@@ -142,7 +143,7 @@ func (acc BaseAccount) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	return unpacker.UnpackAny(acc.PubKey, &pubKey)
 }
 
-// NewModuleAddressOrAddress gets an input string and returns an AccAddress.
+// NewModuleAddressOrBech32Address gets an input string and returns an AccAddress.
 // If the input is a valid address, it returns the address.
 // If the input is a module name, it returns the module address.
 func NewModuleAddressOrBech32Address(input string) sdk.AccAddress {
@@ -189,12 +190,7 @@ func NewModuleAccount(ba *BaseAccount, name string, permissions ...string) *Modu
 
 // HasPermission returns whether or not the module account has permission.
 func (ma ModuleAccount) HasPermission(permission string) bool {
-	for _, perm := range ma.Permissions {
-		if perm == permission {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(ma.Permissions, permission)
 }
 
 // GetName returns the name of the holder's module

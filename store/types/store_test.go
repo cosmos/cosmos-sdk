@@ -53,7 +53,6 @@ func TestStoreUpgrades(t *testing.T) {
 	}
 
 	for name, tc := range cases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
 			for _, r := range tc.expectAdd {
 				assert.Equal(t, tc.upgrades.IsAdded(r.key), true)
@@ -98,6 +97,14 @@ func TestTransientStoreKey(t *testing.T) {
 	require.Equal(t, "test", key.name)
 	require.Equal(t, key.name, key.Name())
 	require.Equal(t, fmt.Sprintf("TransientStoreKey{%p, test}", key), key.String())
+}
+
+func TestObjectStoreKey(t *testing.T) {
+	t.Parallel()
+	key := NewObjectStoreKey("test")
+	require.Equal(t, "test", key.name)
+	require.Equal(t, key.name, key.Name())
+	require.Equal(t, fmt.Sprintf("ObjectStoreKey{%p, test}", key), key.String())
 }
 
 func TestMemoryStoreKey(t *testing.T) {
@@ -228,6 +235,11 @@ func TestTraceContext_Merge(t *testing.T) {
 func TestNewTransientStoreKeys(t *testing.T) {
 	assert.DeepEqual(t, map[string]*TransientStoreKey{}, NewTransientStoreKeys())
 	assert.DeepEqual(t, 1, len(NewTransientStoreKeys("one")))
+}
+
+func TestNewObjectStoreKeys(t *testing.T) {
+	assert.DeepEqual(t, map[string]*ObjectStoreKey{}, NewObjectStoreKeys())
+	assert.DeepEqual(t, 1, len(NewObjectStoreKeys("one")))
 }
 
 func TestNewInfiniteGasMeter(t *testing.T) {

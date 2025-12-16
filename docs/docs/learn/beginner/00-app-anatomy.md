@@ -50,17 +50,17 @@ In general, the core of the state-machine is defined in a file called `app.go`. 
 
 The first thing defined in `app.go` is the `type` of the application. It is generally comprised of the following parts:
 
-* **A reference to [`baseapp`](../advanced/00-baseapp.md).** The custom application defined in `app.go` is an extension of `baseapp`. When a transaction is relayed by CometBFT to the application, `app` uses `baseapp`'s methods to route them to the appropriate module. `baseapp` implements most of the core logic for the application, including all the [ABCI methods](https://docs.cometbft.com/v0.37/spec/abci/) and the [routing logic](../advanced/00-baseapp.md#routing).
-* **A list of store keys**. The [store](../advanced/04-store.md), which contains the entire state, is implemented as a [`multistore`](../advanced/04-store.md#multistore) (i.e. a store of stores) in the Cosmos SDK. Each module uses one or multiple stores in the multistore to persist their part of the state. These stores can be accessed with specific keys that are declared in the `app` type. These keys, along with the `keepers`, are at the heart of the [object-capabilities model](../advanced/10-ocap.md) of the Cosmos SDK.
-* **A list of module's `keeper`s.** Each module defines an abstraction called [`keeper`](../../build/building-modules/06-keeper.md), which handles reads and writes for this module's store(s). The `keeper`'s methods of one module can be called from other modules (if authorized), which is why they are declared in the application's type and exported as interfaces to other modules so that the latter can only access the authorized functions.
+* **Embedding [runtime.App](../../build/building-apps/00-runtime.md)** The runtime package manages the application's core components and modules through dependency injection. It provides declarative configuration for module management, state storage, and ABCI handling.
+    * `Runtime` wraps `BaseApp`, meaning when a transaction is relayed by CometBFT to the application, `app` uses `runtime`'s methods to route them to the appropriate module. `BaseApp` implements all the [ABCI methods](https://docs.cometbft.com/v0.38/spec/abci/) and the [routing logic](../advanced/00-baseapp.md#service-routers).
+    * It automatically configures the **[module manager](../../build/building-modules/01-module-manager.md#manager)** based on the app wiring configuration. The module manager facilitates operations related to these modules, like registering their [`Msg` service](../../build/building-modules/03-msg-services.md) and [gRPC `Query` service](#grpc-query-services), or setting the order of execution between modules for various functions like [`InitChainer`](#initchainer), [`PreBlocker`](#preblocker) and [`BeginBlocker` and `EndBlocker`](#beginblocker-and-endblocker).
+* [**An App Wiring configuration file**](../../build/building-apps/00-runtime.md) The app wiring configuration file contains the list of application's modules that `runtime` must instantiate. The instantiation of the modules is done using `depinject`. It also contains the order in which all modules' `InitGenesis` and `Pre/Begin/EndBlocker` methods should be executed.
 * **A reference to an [`appCodec`](../advanced/05-encoding.md).** The application's `appCodec` is used to serialize and deserialize data structures in order to store them, as stores can only persist `[]bytes`. The default codec is [Protocol Buffers](../advanced/05-encoding.md).
 * **A reference to a [`legacyAmino`](../advanced/05-encoding.md) codec.** Some parts of the Cosmos SDK have not been migrated to use the `appCodec` above, and are still hardcoded to use Amino. Other parts explicitly use Amino for backwards compatibility. For these reasons, the application still holds a reference to the legacy Amino codec. Please note that the Amino codec will be removed from the SDK in the upcoming releases.
-* **A reference to a [module manager](../../build/building-modules/01-module-manager.md#manager)** and a [basic module manager](../../build/building-modules/01-module-manager.md#basicmanager). The module manager is an object that contains a list of the application's modules. It facilitates operations related to these modules, like registering their [`Msg` service](../advanced/00-baseapp.md#msg-services) and [gRPC `Query` service](../advanced/00-baseapp.md#grpc-query-services), or setting the order of execution between modules for various functions like [`InitChainer`](#initchainer), [`PreBlocker`](#preblocker) and [`BeginBlocker` and `EndBlocker`](#beginblocker-and-endblocker).
 
 See an example of application type definition from `simapp`, the Cosmos SDK's own app used for demo and testing purposes:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/app.go#L173-L212
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/app_di.go#L57-L90
 ```
 
 ### Constructor Function
@@ -68,7 +68,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/app.go#L173-L21
 Also defined in `app.go` is the constructor function, which constructs a new application of the type defined in the preceding section. The function must fulfill the `AppCreator` signature in order to be used in the [`start` command](../advanced/03-node.md#start-command) of the application's daemon command.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/server/types/app.go#L66-L68
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/server/types/app.go#L67-L69
 ```
 
 Here are the main actions performed by this function:
@@ -93,19 +93,19 @@ Note that the constructor function only creates an instance of the app, while th
 See an example of application constructor from `simapp`:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/app.go#L223-L575
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/app.go#L190-L708
 ```
 
 ### InitChainer
 
 The `InitChainer` is a function that initializes the state of the application from a genesis file (i.e. token balances of genesis accounts). It is called when the application receives the `InitChain` message from the CometBFT engine, which happens when the node is started at `appBlockHeight == 0` (i.e. on genesis). The application must set the `InitChainer` in its [constructor](#constructor-function) via the [`SetInitChainer`](https://pkg.go.dev/github.com/cosmos/cosmos-sdk/baseapp#BaseApp.SetInitChainer) method.
 
-In general, the `InitChainer` is mostly composed of the [`InitGenesis`](../../build/building-modules/08-genesis.md#initgenesis) function of each of the application's modules. This is done by calling the `InitGenesis` function of the module manager, which in turn calls the `InitGenesis` function of each of the modules it contains. Note that the order in which the modules' `InitGenesis` functions must be called has to be set in the module manager using the [module manager's](../../build/building-modules/01-module-manager.md) `SetOrderInitGenesis` method. This is done in the [application's constructor](#application-constructor), and the `SetOrderInitGenesis` has to be called before the `SetInitChainer`.
+In general, the `InitChainer` is mostly composed of the [`InitGenesis`](../../build/building-modules/08-genesis.md#initgenesis) function of each of the application's modules. This is done by calling the `InitGenesis` function of the module manager, which in turn calls the `InitGenesis` function of each of the modules it contains. Note that the order in which the modules' `InitGenesis` functions must be called has to be set in the module manager using the [module manager's](../../build/building-modules/01-module-manager.md) `SetOrderInitGenesis` method. This is done in the [application's constructor](#constructor-function), and the `SetOrderInitGenesis` has to be called before the `SetInitChainer`.
 
 See an example of an `InitChainer` from `simapp`:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/app.go#L626-L634
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/app.go#L765-L773
 ```
 
 ### PreBlocker
@@ -131,10 +131,10 @@ In general, the `BeginBlocker` and `EndBlocker` functions are mostly composed of
 
 As a sidenote, it is important to remember that application-specific blockchains are deterministic. Developers must be careful not to introduce non-determinism in `BeginBlocker` or `EndBlocker`, and must also be careful not to make them too computationally expensive, as [gas](./04-gas-fees.md) does not constrain the cost of `BeginBlocker` and `EndBlocker` execution.
 
-See an example of `BeginBlocker` and `EndBlocker` functions from `simapp`
+See an example of `BeginBlocker` and `EndBlocker` functions from `simapp`:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/app.go#L613-L620
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/app.go#L752-L759
 ```
 
 ### Register Codec
@@ -142,12 +142,12 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/app.go#L613-L62
 The `EncodingConfig` structure is the last important part of the `app.go` file. The goal of this structure is to define the codecs that will be used throughout the app.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/params/encoding.go#L9-L16
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/params/encoding.go#L9-L16
 ```
 
 Here are descriptions of what each of the four fields means:
 
-* `InterfaceRegistry`: The `InterfaceRegistry` is used by the Protobuf codec to handle interfaces that are encoded and decoded (we also say "unpacked") using [`google.protobuf.Any`](https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/any.proto). `Any` could be thought as a struct that contains a `type_url` (name of a concrete type implementing the interface) and a `value` (its encoded bytes). `InterfaceRegistry` provides a mechanism for registering interfaces and implementations that can be safely unpacked from `Any`. Each application module implements the `RegisterInterfaces` method that can be used to register the module's own interfaces and implementations.
+* `InterfaceRegistry`: The `InterfaceRegistry` is used by the Protobuf codec to handle interfaces that are encoded and decoded (we also say "unpacked") using [`google.protobuf.Any`](https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/any.proto). `Any` could be thought of as a struct that contains a `type_url` (name of a concrete type implementing the interface) and a `value` (its encoded bytes). `InterfaceRegistry` provides a mechanism for registering interfaces and implementations that can be safely unpacked from `Any`. Each application module implements the `RegisterInterfaces` method that can be used to register the module's own interfaces and implementations.
     * You can read more about `Any` in [ADR-019](../../build/architecture/adr-019-protobuf-state-encoding.md).
     * To go more into details, the Cosmos SDK uses an implementation of the Protobuf specification called [`gogoprotobuf`](https://github.com/cosmos/gogoproto). By default, the [gogo protobuf implementation of `Any`](https://pkg.go.dev/github.com/cosmos/gogoproto/types) uses [global type registration](https://github.com/cosmos/gogoproto/blob/master/proto/properties.go#L540) to decode values packed in `Any` into concrete Go types. This introduces a vulnerability where any malicious module in the dependency tree could register a type with the global protobuf registry and cause it to be loaded and unmarshaled by a transaction that referenced it in the `type_url` field. For more information, please refer to [ADR-019](../../build/architecture/adr-019-protobuf-state-encoding.md).
 * `Codec`: The default codec used throughout the Cosmos SDK. It is composed of a `BinaryCodec` used to encode and decode state, and a `JSONCodec` used to output data to the users (for example, in the [CLI](#cli)). By default, the SDK uses Protobuf as `Codec`.
@@ -158,7 +158,7 @@ An application should create its own encoding config.
 See an example of a `simappparams.EncodingConfig` from `simapp`:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/simapp/params/encoding.go#L11-L16
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/params/encoding.go#L11-L16
 ```
 
 ## Modules
@@ -179,7 +179,7 @@ Note that `sdk.Msg`s are bundled in [transactions](../advanced/01-transactions.m
 
 When a valid block of transactions is received by the full-node, CometBFT relays each one to the application via [`DeliverTx`](https://docs.cometbft.com/v0.37/spec/abci/abci++_app_requirements#specifics-of-responsedelivertx). Then, the application handles the transaction:
 
-1. Upon receiving the transaction, the application first unmarshalls it from `[]byte`.
+1. Upon receiving the transaction, the application first unmarshals it from `[]byte`.
 2. Then, it verifies a few things about the transaction like [fee payment and signatures](./04-gas-fees.md#antehandler) before extracting the `Msg`(s) contained in the transaction.
 3. `sdk.Msg`s are encoded using Protobuf [`Any`s](#register-codec). By analyzing each `Any`'s `type_url`, baseapp's `msgServiceRouter` routes the `sdk.Msg` to the corresponding module's `Msg` service.
 4. If the message is successfully processed, the state is updated.
@@ -189,7 +189,7 @@ For more details, see [transaction lifecycle](./01-tx-lifecycle.md).
 Module developers create custom `Msg` services when they build their own module. The general practice is to define the `Msg` Protobuf service in a `tx.proto` file. For example, the `x/bank` module defines a service with two methods to transfer tokens:
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/proto/cosmos/bank/v1beta1/tx.proto#L13-L36
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/bank/v1beta1/tx.proto#L13-L36
 ```
 
 Service methods use `keeper` in order to update the module state.
@@ -255,7 +255,7 @@ The Cosmos SDK also provides a development endpoint to generate [Swagger](https:
 The main interface is the [Command-Line Interface](../advanced/07-cli.md). The CLI of a Cosmos SDK application is built by aggregating [CLI commands](#cli) defined in each of the modules used by the application. The CLI of an application is the same as the daemon (e.g. `appd`), and is defined in a file called `appd/main.go`. The file contains the following:
 
 * **A `main()` function**, which is executed to build the `appd` interface client. This function prepares each command and adds them to the `rootCmd` before building them. At the root of `appd`, the function adds generic commands like `status`, `keys`, and `config`, query commands, tx commands, and `rest-server`.
-* **Query commands**, which are added by calling the `queryCmd` function. This function returns a Cobra command that contains the query commands defined in each of the application's modules (passed as an array of `sdk.ModuleClients` from the `main()` function), as well as some other lower level query commands such as block or validator queries. Query command are called by using the command `appd query [query]` of the CLI.
+* **Query commands**, which are added by calling the `queryCmd` function. This function returns a Cobra command that contains the query commands defined in each of the application's modules (passed as an array of `sdk.ModuleClients` from the `main()` function), as well as some other lower level query commands such as block or validator queries. Query commands are called by using the command `appd query [query]` of the CLI.
 * **Transaction commands**, which are added by calling the `txCmd` function. Similar to `queryCmd`, the function returns a Cobra command that contains the tx commands defined in each of the application's modules, as well as lower level tx commands like transaction signing or broadcasting. Tx commands are called by using the command `appd tx [tx]` of the CLI.
 
 See an example of an application's main command-line file from the [Cosmos Hub](https://github.com/cosmos/gaia).

@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -19,8 +18,6 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
-	xp "cosmossdk.io/x/upgrade/exported"
-	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -29,10 +26,14 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	xp "github.com/cosmos/cosmos-sdk/x/upgrade/exported"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
-// Deprecated: UpgradeInfoFileName file to store upgrade information
+// UpgradeInfoFileName file to store upgrade information
 // use x/upgrade/types.UpgradeInfoFilename instead.
+//
+// Deprecated: will be removed in the future.
 const UpgradeInfoFileName string = "upgrade-info.json"
 
 type Keeper struct {
@@ -62,10 +63,6 @@ func NewKeeper(skipUpgradeHeights map[int64]bool, storeService corestore.KVStore
 		upgradeHandlers:    map[string]types.UpgradeHandler{},
 		versionSetter:      vs,
 		authority:          authority,
-	}
-
-	if upgradePlan, err := k.ReadUpgradeInfoFromDisk(); err == nil && upgradePlan.Height > 0 {
-		telemetry.SetGaugeWithLabels([]string{"server", "info"}, 1, []metrics.Label{telemetry.NewLabel("upgrade_height", strconv.FormatInt(upgradePlan.Height, 10))})
 	}
 
 	return k
@@ -276,7 +273,7 @@ func (k Keeper) ScheduleUpgrade(ctx context.Context, plan types.Plan) error {
 		return err
 	}
 
-	telemetry.SetGaugeWithLabels([]string{"server", "info"}, 1, []metrics.Label{telemetry.NewLabel("upgrade_height", strconv.FormatInt(plan.Height, 10))})
+	telemetry.SetGaugeWithLabels([]string{"server", "info"}, 1, []metrics.Label{telemetry.NewLabel("upgrade_height", strconv.FormatInt(plan.Height, 10))}) //nolint:staticcheck // TODO: switch to OpenTelemetry
 
 	return nil
 }
@@ -466,9 +463,23 @@ func (k Keeper) ApplyUpgrade(ctx context.Context, plan types.Plan) error {
 		return err
 	}
 
+	// Enable verbose mode logging, if possible
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	logger := sdkCtx.Logger()
+	if verboseLogger, ok := logger.(log.VerboseModeLogger); ok {
+		verboseLogger.SetVerboseMode(true)
+	}
+
+	logger.Info("Starting upgrade", "name", plan.Name, "height", plan.Height)
+
 	updatedVM, err := handler(ctx, plan, vm)
 	if err != nil {
 		return err
+	}
+
+	// Disable verbose mode logging
+	if verboseLogger, ok := logger.(log.VerboseModeLogger); ok {
+		verboseLogger.SetVerboseMode(false)
 	}
 
 	err = k.SetModuleVersionMap(ctx, updatedVM)
@@ -476,7 +487,7 @@ func (k Keeper) ApplyUpgrade(ctx context.Context, plan types.Plan) error {
 		return err
 	}
 
-	// incremement the protocol version and set it in state and baseapp
+	// increment the protocol version and set it in state and baseapp
 	nextProtocolVersion, err := k.getProtocolVersion(ctx)
 	if err != nil {
 		return err
@@ -534,17 +545,12 @@ func (k Keeper) DumpUpgradeInfoToDisk(height int64, p types.Plan) error {
 
 // GetUpgradeInfoPath returns the upgrade info file path
 func (k Keeper) GetUpgradeInfoPath() (string, error) {
-	upgradeInfoFileDir := path.Join(k.getHomeDir(), "data")
+	upgradeInfoFileDir := filepath.Join(k.homePath, "data")
 	if err := os.MkdirAll(upgradeInfoFileDir, os.ModePerm); err != nil {
 		return "", fmt.Errorf("could not create directory %q: %w", upgradeInfoFileDir, err)
 	}
 
 	return filepath.Join(upgradeInfoFileDir, types.UpgradeInfoFilename), nil
-}
-
-// getHomeDir returns the height at which the given upgrade was executed
-func (k Keeper) getHomeDir() string {
-	return k.homePath
 }
 
 // ReadUpgradeInfoFromDisk returns the name and height of the upgrade which is
@@ -575,6 +581,10 @@ func (k Keeper) ReadUpgradeInfoFromDisk() (types.Plan, error) {
 
 	if err := upgradeInfo.ValidateBasic(); err != nil {
 		return upgradeInfo, err
+	}
+
+	if upgradeInfo.Height > 0 {
+		telemetry.SetGaugeWithLabels([]string{"server", "info"}, 1, []metrics.Label{telemetry.NewLabel("upgrade_height", strconv.FormatInt(upgradeInfo.Height, 10))}) //nolint:staticcheck // TODO: switch to OpenTelemetry
 	}
 
 	return upgradeInfo, nil

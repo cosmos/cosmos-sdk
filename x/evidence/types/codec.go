@@ -1,13 +1,12 @@
 package types
 
 import (
-	"cosmossdk.io/x/evidence/exported"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
+	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
 )
 
 // RegisterLegacyAminoCodec registers all the necessary types and interfaces for the

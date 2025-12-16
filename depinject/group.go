@@ -4,12 +4,10 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/cockroachdb/errors"
-
 	"cosmossdk.io/depinject/internal/graphviz"
 )
 
-// ManyPerContainerType marks a type which automatically gets grouped together. For an ManyPerContainerType T,
+// ManyPerContainerType marks a type which automatically gets grouped together. For a ManyPerContainerType T,
 // T and []T can be declared as output parameters for providers as many times within the container
 // as desired. All of the provided values for T can be retrieved by declaring an
 // []T input parameter.
@@ -85,7 +83,7 @@ func (g *sliceGroupResolver) resolve(c *container, _ *moduleKey, caller Location
 }
 
 func (g *groupResolver) resolve(_ *container, _ *moduleKey, _ Location) (reflect.Value, error) {
-	return reflect.Value{}, errors.Errorf("%v is an many-per-container type and cannot be used as an input value, instead use %v", g.typ, g.sliceType)
+	return reflect.Value{}, fmt.Errorf("%v is a many-per-container type and cannot be used as an input value, instead use %v", g.typ, g.sliceType)
 }
 
 func (g *groupResolver) addNode(n *simpleProvider, i int) error {

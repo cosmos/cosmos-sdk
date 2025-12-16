@@ -20,7 +20,7 @@ var (
 	DelegationByValIndexKey = []byte{0x71} // key for delegations by a validator
 )
 
-// ParseDelegationKey parses given key and returns delagator, validator address bytes
+// ParseDelegationKey parses given key and returns delegator, validator address bytes
 func ParseDelegationKey(bz []byte) (sdk.AccAddress, sdk.ValAddress, error) {
 	prefixLength := len(DelegationKey)
 	if prefix := bz[:prefixLength]; !bytes.Equal(prefix, DelegationKey) {

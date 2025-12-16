@@ -9,16 +9,13 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-	"cosmossdk.io/x/evidence"
-	feegrantmodule "cosmossdk.io/x/feegrant/module"
-	"cosmossdk.io/x/upgrade"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -29,19 +26,35 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/crisis"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/cosmos/cosmos-sdk/x/epochs"
+	epochstypes "github.com/cosmos/cosmos-sdk/x/epochs/types"
+	"github.com/cosmos/cosmos-sdk/x/evidence"
+	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
+	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	group "github.com/cosmos/cosmos-sdk/x/group/module"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/mint"
-	"github.com/cosmos/cosmos-sdk/x/params"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	"github.com/cosmos/cosmos-sdk/x/protocolpool"
+	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/x/upgrade"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {
@@ -53,7 +66,7 @@ func TestSimAppExportAndBlockedAddrs(t *testing.T) {
 		AppOpts: simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
 	})
 
-	// BlockedAddresses returns a map of addresses in app v1 and a map of modules name in app v2.
+	// BlockedAddresses returns a map of addresses in app v1 and a map of modules name in app di.
 	for acc := range BlockedAddresses() {
 		var addr sdk.AccAddress
 		if modAddr, err := sdk.AccAddressFromBech32(acc); err == nil {
@@ -119,8 +132,10 @@ func TestRunMigrations(t *testing.T) {
 	}
 
 	// Initialize the chain
-	app.InitChain(&abci.RequestInitChain{})
-	app.Commit()
+	_, err := app.InitChain(&abci.RequestInitChain{})
+	require.NoError(t, err)
+	_, err = app.Commit()
+	require.NoError(t, err)
 
 	testCases := []struct {
 		name         string
@@ -195,22 +210,21 @@ func TestRunMigrations(t *testing.T) {
 			_, err = app.ModuleManager.RunMigrations(
 				app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()}), configurator,
 				module.VersionMap{
-					"bank":         1,
-					"auth":         auth.AppModule{}.ConsensusVersion(),
-					"authz":        authzmodule.AppModule{}.ConsensusVersion(),
-					"staking":      staking.AppModule{}.ConsensusVersion(),
-					"mint":         mint.AppModule{}.ConsensusVersion(),
-					"distribution": distribution.AppModule{}.ConsensusVersion(),
-					"slashing":     slashing.AppModule{}.ConsensusVersion(),
-					"gov":          gov.AppModule{}.ConsensusVersion(),
-					"group":        group.AppModule{}.ConsensusVersion(),
-					"params":       params.AppModule{}.ConsensusVersion(),
-					"upgrade":      upgrade.AppModule{}.ConsensusVersion(),
-					"vesting":      vesting.AppModule{}.ConsensusVersion(),
-					"feegrant":     feegrantmodule.AppModule{}.ConsensusVersion(),
-					"evidence":     evidence.AppModule{}.ConsensusVersion(),
-					"crisis":       crisis.AppModule{}.ConsensusVersion(),
-					"genutil":      genutil.AppModule{}.ConsensusVersion(),
+					banktypes.ModuleName:         1,
+					authtypes.ModuleName:         auth.AppModule{}.ConsensusVersion(),
+					authz.ModuleName:             authzmodule.AppModule{}.ConsensusVersion(),
+					stakingtypes.ModuleName:      staking.AppModule{}.ConsensusVersion(),
+					minttypes.ModuleName:         mint.AppModule{}.ConsensusVersion(),
+					distrtypes.ModuleName:        distribution.AppModule{}.ConsensusVersion(),
+					slashingtypes.ModuleName:     slashing.AppModule{}.ConsensusVersion(),
+					govtypes.ModuleName:          gov.AppModule{}.ConsensusVersion(),
+					upgradetypes.ModuleName:      upgrade.AppModule{}.ConsensusVersion(),
+					vestingtypes.ModuleName:      vesting.AppModule{}.ConsensusVersion(),
+					feegrant.ModuleName:          feegrantmodule.AppModule{}.ConsensusVersion(),
+					evidencetypes.ModuleName:     evidence.AppModule{}.ConsensusVersion(),
+					genutiltypes.ModuleName:      genutil.AppModule{}.ConsensusVersion(),
+					epochstypes.ModuleName:       epochs.AppModule{}.ConsensusVersion(),
+					protocolpooltypes.ModuleName: protocolpool.AppModule{}.ConsensusVersion(),
 				},
 			)
 			if tc.expRunErr {
@@ -253,12 +267,10 @@ func TestInitGenesisOnMigration(t *testing.T) {
 			"distribution": distribution.AppModule{}.ConsensusVersion(),
 			"slashing":     slashing.AppModule{}.ConsensusVersion(),
 			"gov":          gov.AppModule{}.ConsensusVersion(),
-			"params":       params.AppModule{}.ConsensusVersion(),
 			"upgrade":      upgrade.AppModule{}.ConsensusVersion(),
 			"vesting":      vesting.AppModule{}.ConsensusVersion(),
 			"feegrant":     feegrantmodule.AppModule{}.ConsensusVersion(),
 			"evidence":     evidence.AppModule{}.ConsensusVersion(),
-			"crisis":       crisis.AppModule{}.ConsensusVersion(),
 			"genutil":      genutil.AppModule{}.ConsensusVersion(),
 		},
 	)

@@ -1,4 +1,4 @@
-# ADR 048: Multi Tire Gas Price System
+# ADR 048: Multi Tier Gas Price System
 
 ## Changelog
 
@@ -14,7 +14,7 @@ This ADR describes a flexible mechanism to maintain a consensus level gas prices
 
 ## Context
 
-Currently, each validator configures it's own `minimal-gas-prices` in `app.yaml`. But setting a proper minimal gas price is critical to protect network from dos attack, and it's hard for all the validators to pick a sensible value, so we propose to maintain a gas price in consensus level.
+Currently, each validator configures its own `minimal-gas-prices` in `app.yaml`. But setting a proper minimal gas price is critical to protect network from DoS attack, and it's hard for all the validators to pick a sensible value, so we propose to maintain a gas price in consensus level.
 
 Since tendermint 0.34.20 has supported mempool prioritization, we can take advantage of that to implement more sophisticated gas fee system.
 
@@ -26,7 +26,7 @@ We propose a multi-tier price system on consensus to provide maximum flexibility
 * Tier 2: a dynamic gas price which is adjusted according to previous block load.
 * Tier 3: a dynamic gas price which is adjusted according to previous block load at a higher speed.
 
-The gas price of higher tier should bigger than the lower tier.
+The gas price of higher tier should be bigger than the lower tier.
 
 The transaction fees are charged with the exact gas price calculated on consensus.
 
@@ -72,7 +72,7 @@ This mechanism can be easily composed with prioritization mechanisms:
 * we can add extra tiers out of a user control:
     * Example 1: user can set tier 0, 10 or 20, but the protocol will create tiers 0, 1, 2 ... 29. For example IBC transactions will go to tier `user_tier + 5`: if user selected tier 1, then the transaction will go to tier 15.
     * Example 2: we can reserve tier 4, 5, ... only for special transaction types. For example, tier 5 is reserved for evidence tx. So if submits a bank.Send transaction and set tier 5, it will be delegated to tier 3 (the max tier level available for any transaction). 
-    * Example 3: we can enforce that all transactions of a sepecific type will go to specific tier. For example, tier 100 will be reserved for evidence transactions and all evidence transactions will always go to that tier.
+    * Example 3: we can enforce that all transactions of a specific type will go to specific tier. For example, tier 100 will be reserved for evidence transactions and all evidence transactions will always go to that tier.
 
 ### `min-gas-prices`
 

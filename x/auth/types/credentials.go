@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/address"
 )
 
-// NewBaseAccountWithPubKey creates an account with an a pubkey.
+// NewBaseAccountWithPubKey creates an account with a pubkey.
 func NewBaseAccountWithPubKey(pubkey cryptotypes.PubKey) (*BaseAccount, error) {
 	if pubkey == nil {
 		return nil, fmt.Errorf("pubkey cannot be nil")

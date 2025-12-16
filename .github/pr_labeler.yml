@@ -1,11 +1,32 @@
+"C:CLI":
+  - client/**/*
+  - x/*/client/**/*
+"C:Confix":
+  - tools/confix/**/*
+"C:Cosmovisor":
+  - tools/cosmovisor/**/*
+"C:Keys":
+  - client/keys/**/*
+"C:Simulations":
+  - types/simulation/**/*
+  - x/simulation/**/*
+  - x/*/simulation/**/*
+  - simsx/**/*
+  - tools/benchmark/**/*
+"C:Store":
+  - store/**/*
+"C:collections":
+  - collections/**/*
+"C:log":
+  - log/*
 "C:x/auth":
   - x/auth/**/*
 "C:x/authz":
   - x/authz/**/*
 "C:x/bank":
   - x/bank/**/*
-"C:x/crisis":
-  - x/crisis/**/*
+"C:x/consensus":
+  - x/consensus/**/*
 "C:x/distribution":
   - x/distribution/**/*
 "C:x/evidence":
@@ -16,59 +37,29 @@
   - x/genutil/**/*
 "C:x/gov":
   - x/gov/**/*
-"C:x/group":
-  - x/group/**/*
 "C:x/mint":
   - x/mint/**/*
-"C:x/nft":
-  - x/nft/**/*
-"C:x/params":
-  - x/params/**/*
-"C:Simulations":
-  - x/simulation/**/*
-  - x/*/simulation/**/*
+"C:x/protocolpool":
+  - x/protocolpool/**/*
 "C:x/slashing":
   - x/slashing/**/*
 "C:x/staking":
   - x/staking/**/*
-"C:x/upgrade":
-  - x/upgrade/**/*
-"C:x/consensus":
-  - x/consensus/**/*
-"C:x/circuit":
-  - x/circuit/**/*
 "C:x/tx":
   - x/tx/**/*
-"C:collections":
-  - collections/**/*
-"C:Cosmovisor":
-  - tools/cosmovisor/**/*
-"C:Confix":
-  - tools/confix/**/*
-"C:Hubl":
-  - tools/hubl/**/*
-"C:Keys":
-  - client/keys/**/*
+"C:x/upgrade":
+  - x/upgrade/**/*
+"C:x/epochs":
+  - x/epochs/**/*
+"Type: ADR":
+  - docs/architecture/**/*
 "Type: Build":
   - Makefile
   - Dockerfile
   - docker-compose.yml
   - scripts/*
 "Type: CI":
-  - .github/**/*.yml
+  - .github/**
   - buf.yaml
   - .mergify.yml
   - .golangci.yml
-"C:CLI":
-  - client/**/*
-  - x/*/client/**/*
-"Type: ADR":
-  - docs/architecture/**/*
-"C:container":
-  - container/**/*
-"C:Store":
-  - store/**/*
-"C:orm":
-  - orm/**/*
-"C:log":
-  - log/*

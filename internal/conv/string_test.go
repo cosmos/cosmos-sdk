@@ -20,12 +20,14 @@ func unsafeConvertStr() []byte {
 }
 
 func (s *StringSuite) TestUnsafeStrToBytes() {
-	// we convert in other function to trigger GC. We want to check that
+	// we convert in another function to trigger GC. We want to check that
 	// the underlying array in []bytes is accessible after GC will finish swapping.
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		b := unsafeConvertStr()
 		runtime.GC()
-		<-time.NewTimer(2 * time.Millisecond).C
+		timer := time.NewTimer(2 * time.Millisecond)
+		<-timer.C
+		timer.Stop()
 		b2 := append(b, 'd')
 		s.Equal("abc", string(b))
 		s.Equal("abcd", string(b2))
@@ -37,18 +39,20 @@ func unsafeConvertBytes() string {
 }
 
 func (s *StringSuite) TestUnsafeBytesToStr() {
-	// we convert in other function to trigger GC. We want to check that
+	// we convert in another function to trigger GC. We want to check that
 	// the underlying array in []bytes is accessible after GC will finish swapping.
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		str := unsafeConvertBytes()
 		runtime.GC()
-		<-time.NewTimer(2 * time.Millisecond).C
+		timer := time.NewTimer(2 * time.Millisecond)
+		<-timer.C
+		timer.Stop()
 		s.Equal("abc", str)
 	}
 }
 
 func BenchmarkUnsafeStrToBytes(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for i := 0; b.Loop(); i++ {
 		UnsafeStrToBytes(strconv.Itoa(i))
 	}
 }

@@ -19,7 +19,7 @@ var _ proto.Message = (*errOnMarshal)(nil)
 
 var errAlways = fmt.Errorf("always erroring")
 
-func (eom *errOnMarshal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) { //nolint:revive // XXX_ prefix is intentional
+func (eom *errOnMarshal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return nil, errAlways
 }
 
@@ -28,7 +28,7 @@ var eom = &errOnMarshal{}
 // Ensure that returning an error doesn't suddenly allocate and waste bytes.
 // See https://github.com/cosmos/cosmos-sdk/issues/8537
 func TestNewAnyWithCustomTypeURLWithErrorNoAllocation(t *testing.T) {
-	// This tests continues to fail inconsistently.
+	// This test continues to fail inconsistently.
 	//
 	// Example: https://github.com/cosmos/cosmos-sdk/pull/9246/checks?check_run_id=2643313958#step:6:118
 	// Ref: https://github.com/cosmos/cosmos-sdk/issues/9010
@@ -53,12 +53,11 @@ func TestNewAnyWithCustomTypeURLWithErrorNoAllocation(t *testing.T) {
 	}
 }
 
-var sink interface{}
+var sink any
 
 func BenchmarkNewAnyWithCustomTypeURLWithErrorReturned(b *testing.B) {
-	b.ResetTimer()
 	b.ReportAllocs()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		any, err := types.NewAnyWithValue(eom)
 		if err == nil {
 			b.Fatal("err wasn't returned")
@@ -71,5 +70,5 @@ func BenchmarkNewAnyWithCustomTypeURLWithErrorReturned(b *testing.B) {
 	if sink == nil {
 		b.Fatal("benchmark didn't run")
 	}
-	sink = (interface{})(nil)
+	sink = (any)(nil)
 }

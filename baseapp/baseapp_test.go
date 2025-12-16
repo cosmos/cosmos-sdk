@@ -5,13 +5,16 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
+	"io"
 	"math/rand"
+	"os"
 	"testing"
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	errorsmod "cosmossdk.io/errors"
@@ -32,6 +35,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 )
 
@@ -46,10 +50,9 @@ var (
 
 type (
 	BaseAppSuite struct {
-		baseApp   *baseapp.BaseApp
-		cdc       *codec.ProtoCodec
-		txConfig  client.TxConfig
-		logBuffer *bytes.Buffer
+		baseApp  *baseapp.BaseApp
+		cdc      *codec.ProtoCodec
+		txConfig client.TxConfig
 	}
 
 	SnapshotsConfig struct {
@@ -62,13 +65,14 @@ type (
 )
 
 func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite {
+	t.Helper()
+
 	cdc := codectestutil.CodecOptions{}.NewCodec()
 	baseapptestutil.RegisterInterfaces(cdc.InterfaceRegistry())
 
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
 	db := dbm.NewMemDB()
-	logBuffer := new(bytes.Buffer)
-	logger := log.NewLogger(logBuffer, log.ColorOption(false))
+	logger := log.NewLogger(os.Stdout, log.ColorOption(false))
 
 	app := baseapp.NewBaseApp(t.Name(), logger, db, txConfig.TxDecoder(), opts...)
 	require.Equal(t, t.Name(), app.Name())
@@ -84,10 +88,9 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 	require.Nil(t, app.LoadLatestVersion())
 
 	return &BaseAppSuite{
-		baseApp:   app,
-		cdc:       cdc,
-		txConfig:  txConfig,
-		logBuffer: logBuffer,
+		baseApp:  app,
+		cdc:      cdc,
+		txConfig: txConfig,
 	}
 }
 
@@ -112,6 +115,8 @@ func getQueryBaseapp(t *testing.T) *baseapp.BaseApp {
 }
 
 func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...func(*baseapp.BaseApp)) *BaseAppSuite {
+	t.Helper()
+
 	snapshotTimeout := 1 * time.Minute
 	snapshotStore, err := snapshots.NewStore(dbm.NewMemDB(), testutil.GetTempDir(t))
 	require.NoError(t, err)
@@ -139,10 +144,10 @@ func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...fun
 
 		_, _, addr := testdata.KeyTestPubAddr()
 		txs := [][]byte{}
-		for txNum := 0; txNum < cfg.blockTxs; txNum++ {
-			msgs := []sdk.Msg{}
-			for msgNum := 0; msgNum < 100; msgNum++ {
-				key := []byte(fmt.Sprintf("%v", keyCounter))
+		for range cfg.blockTxs {
+			var msgs []sdk.Msg
+			for range 100 {
+				key := fmt.Appendf(nil, "%v", keyCounter)
 				value := make([]byte, 10000)
 
 				_, err := r.Read(value)
@@ -153,7 +158,7 @@ func NewBaseAppSuiteWithSnapshots(t *testing.T, cfg SnapshotsConfig, opts ...fun
 			}
 
 			builder := suite.txConfig.NewTxBuilder()
-			builder.SetMsgs(msgs...)
+			require.NoError(t, builder.SetMsgs(msgs...))
 			setTxSignature(t, builder, 0)
 
 			txBytes, err := suite.txConfig.TxEncoder()(builder.GetTx())
@@ -294,6 +299,8 @@ func TestSetLoader(t *testing.T) {
 	}
 
 	initStore := func(t *testing.T, db dbm.DB, storeKey string, k, v []byte) {
+		t.Helper()
+
 		rs := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 		rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
 
@@ -314,6 +321,8 @@ func TestSetLoader(t *testing.T) {
 	}
 
 	checkStore := func(t *testing.T, db dbm.DB, ver int64, storeKey string, k, v []byte) {
+		t.Helper()
+
 		rs := rootmulti.NewStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 		rs.SetPruning(pruningtypes.NewPruningOptions(pruningtypes.PruningDefault))
 
@@ -529,7 +538,7 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	suite.baseApp.AddRunTxRecoveryHandler(func(recoveryObj interface{}) error {
+	suite.baseApp.AddRunTxRecoveryHandler(func(recoveryObj any) error {
 		err, ok := recoveryObj.(error)
 		if !ok {
 			return nil
@@ -549,7 +558,8 @@ func TestCustomRunTxPanicHandler(t *testing.T) {
 		require.PanicsWithValue(t, customPanicMsg, func() {
 			bz, err := suite.txConfig.TxEncoder()(tx)
 			require.NoError(t, err)
-			suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{bz}})
+			_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{bz}})
+			require.Error(t, err)
 		})
 	}
 }
@@ -623,7 +633,8 @@ func TestBaseAppAnteHandler(t *testing.T) {
 	require.Equal(t, int64(2), getIntFromStore(t, store, anteKey))
 	require.Equal(t, int64(1), getIntFromStore(t, store, deliverKey))
 
-	suite.baseApp.Commit()
+	_, err = suite.baseApp.Commit()
+	require.NoError(t, err)
 }
 
 func TestBaseAppPostHandler(t *testing.T) {
@@ -676,8 +687,91 @@ func TestBaseAppPostHandler(t *testing.T) {
 	txBytes, err = suite.txConfig.TxEncoder()(tx)
 	require.NoError(t, err)
 	_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+
+	output := captureStdout(t, func() {
+		_, err = suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+		require.NoError(t, err)
+	})
+	// Check the captured output
+	require.NotContains(t, output, "panic recovered in runTx")
+}
+
+func captureStdout(t *testing.T, fn func()) string {
+	t.Helper()
+	oldStdout := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	fn()
+
+	w.Close()
+	os.Stdout = oldStdout
+
+	var buf bytes.Buffer
+	_, err := io.Copy(&buf, r)
 	require.NoError(t, err)
-	require.NotContains(t, suite.logBuffer.String(), "panic recovered in runTx")
+	return buf.String()
+}
+
+func TestBaseAppPostHandlerErrorHandling(t *testing.T) {
+	specs := map[string]struct {
+		msgHandlerErr  error
+		postHandlerErr error
+		expCode        uint32
+		expLog         string
+	}{
+		"msg handler ok, post ok": {
+			expLog:  "",
+			expCode: 0,
+		},
+		"msg handler fails, post ok": {
+			msgHandlerErr: sdkerrors.ErrUnknownRequest.Wrap("my svc error"),
+			expCode:       sdkerrors.ErrUnknownRequest.ABCICode(),
+			expLog:        "failed to execute message; message index: 0: my svc error: unknown request",
+		},
+		"msg handler ok, post fails": {
+			postHandlerErr: sdkerrors.ErrInsufficientFunds.Wrap("my post handler error"),
+			expCode:        sdkerrors.ErrInsufficientFunds.ABCICode(),
+			expLog:         "my post handler error: insufficient funds",
+		},
+		"both fail": {
+			msgHandlerErr:  sdkerrors.ErrUnknownRequest.Wrap("my svc error"),
+			postHandlerErr: sdkerrors.ErrInsufficientFunds.Wrap("my post handler error"),
+			expCode:        sdkerrors.ErrUnknownRequest.ABCICode(),
+			expLog:         "postHandler: my post handler error: insufficient funds: failed to execute message; message index: 0: my svc error: unknown request",
+		},
+	}
+	for name, spec := range specs {
+		t.Run(name, func(t *testing.T) {
+			anteOpt := func(bapp *baseapp.BaseApp) {
+				bapp.SetPostHandler(func(ctx sdk.Context, tx sdk.Tx, simulate, success bool) (newCtx sdk.Context, err error) {
+					return ctx, spec.postHandlerErr
+				})
+			}
+			suite := NewBaseAppSuite(t, anteOpt)
+			csMock := mockCounterServer{
+				incrementCounterFn: func(ctx context.Context, counter *baseapptestutil.MsgCounter) (*baseapptestutil.MsgCreateCounterResponse, error) {
+					return &baseapptestutil.MsgCreateCounterResponse{}, spec.msgHandlerErr
+				},
+			}
+			baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), csMock)
+
+			_, err := suite.baseApp.InitChain(&abci.RequestInitChain{
+				ConsensusParams: &cmtproto.ConsensusParams{},
+			})
+			require.NoError(t, err)
+
+			txBytes, err := suite.txConfig.TxEncoder()(newTxCounter(t, suite.txConfig, 0, 0))
+			require.NoError(t, err)
+
+			// when
+			res, err := suite.baseApp.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1, Txs: [][]byte{txBytes}})
+			// then
+			require.NoError(t, err)
+			assert.Equal(t, spec.expCode, res.TxResults[0].Code)
+			assert.Equal(t, spec.expLog, res.TxResults[0].Log)
+		})
+	}
 }
 
 // Test and ensure that invalid block heights always cause errors.
@@ -686,20 +780,7 @@ func TestBaseAppPostHandler(t *testing.T) {
 // - https://github.com/cosmos/cosmos-sdk/issues/7662
 func TestABCI_CreateQueryContext(t *testing.T) {
 	t.Parallel()
-
-	db := dbm.NewMemDB()
-	name := t.Name()
-	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
-
-	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
-	require.NoError(t, err)
-	_, err = app.Commit()
-	require.NoError(t, err)
-
-	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 2})
-	require.NoError(t, err)
-	_, err = app.Commit()
-	require.NoError(t, err)
+	app := getQueryBaseapp(t)
 
 	testCases := []struct {
 		name         string
@@ -709,7 +790,7 @@ func TestABCI_CreateQueryContext(t *testing.T) {
 		expErr       bool
 	}{
 		{"valid height", 2, 2, true, false},
-		{"valid height with different initial height", 2, 1, true, false},
+		{"valid height with different initial height", 2, 1, true, true},
 		{"future height", 10, 10, true, true},
 		{"negative height, prove=true", -1, -1, true, true},
 		{"negative height, prove=false", -1, -1, false, true},
@@ -723,7 +804,11 @@ func TestABCI_CreateQueryContext(t *testing.T) {
 				})
 				require.NoError(t, err)
 			}
-			ctx, err := app.CreateQueryContext(tc.height, tc.prove)
+			height := tc.height
+			if tc.height > tc.headerHeight {
+				height = 0
+			}
+			ctx, err := app.CreateQueryContext(height, tc.prove)
 			if tc.expErr {
 				require.Error(t, err)
 			} else {
@@ -732,6 +817,81 @@ func TestABCI_CreateQueryContext(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestABCI_CreateQueryContextWithCheckHeader(t *testing.T) {
+	t.Parallel()
+	app := getQueryBaseapp(t)
+	var height int64 = 2
+	var headerHeight int64 = 1
+
+	testCases := []struct {
+		checkHeader bool
+		expErr      bool
+	}{
+		{true, true},
+		{false, false},
+	}
+
+	for _, tc := range testCases {
+		t.Run("valid height with different initial height", func(t *testing.T) {
+			_, err := app.InitChain(&abci.RequestInitChain{
+				InitialHeight: headerHeight,
+			})
+			require.NoError(t, err)
+			ctx, err := app.CreateQueryContextWithCheckHeader(0, true, tc.checkHeader)
+			if tc.expErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, height, ctx.BlockHeight())
+			}
+		})
+	}
+}
+
+func TestABCI_CreateQueryContext_Before_Set_CheckState(t *testing.T) {
+	t.Parallel()
+
+	db := dbm.NewMemDB()
+	name := t.Name()
+	var height int64 = 2
+	var headerHeight int64 = 1
+
+	t.Run("valid height with different initial height", func(t *testing.T) {
+		app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
+
+		_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 1})
+		require.NoError(t, err)
+		_, err = app.Commit()
+		require.NoError(t, err)
+
+		_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: 2})
+		require.NoError(t, err)
+
+		var queryCtx *sdk.Context
+		var queryCtxErr error
+		app.SetStreamingManager(storetypes.StreamingManager{
+			ABCIListeners: []storetypes.ABCIListener{
+				&mockABCIListener{
+					ListenCommitFn: func(context.Context, abci.ResponseCommit, []*storetypes.StoreKVPair) error {
+						qCtx, qErr := app.CreateQueryContext(0, true)
+						queryCtx = &qCtx
+						queryCtxErr = qErr
+						return nil
+					},
+				},
+			},
+		})
+		_, err = app.Commit()
+		require.NoError(t, err)
+		require.NoError(t, queryCtxErr)
+		require.Equal(t, height, queryCtx.BlockHeight())
+		_, err = app.InitChain(&abci.RequestInitChain{
+			InitialHeight: headerHeight,
+		})
+		require.NoError(t, err)
+	})
 }
 
 func TestSetMinGasPrices(t *testing.T) {
@@ -753,11 +913,12 @@ var ctxTypes = []ctxType{QueryCtx, CheckTxCtx}
 
 func (c ctxType) GetCtx(t *testing.T, bapp *baseapp.BaseApp) sdk.Context {
 	t.Helper()
-	if c == QueryCtx {
+	switch c {
+	case QueryCtx:
 		ctx, err := bapp.CreateQueryContext(1, false)
 		require.NoError(t, err)
 		return ctx
-	} else if c == CheckTxCtx {
+	case CheckTxCtx:
 		return getCheckStateCtx(bapp)
 	}
 	// TODO: Not supported yet
@@ -803,16 +964,16 @@ func TestGetMaximumBlockGas(t *testing.T) {
 
 	ctx := suite.baseApp.NewContext(true)
 
-	suite.baseApp.StoreConsensusParams(ctx, cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: 0}})
+	require.NoError(t, suite.baseApp.StoreConsensusParams(ctx, cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: 0}}))
 	require.Equal(t, uint64(0), suite.baseApp.GetMaximumBlockGas(ctx))
 
-	suite.baseApp.StoreConsensusParams(ctx, cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: -1}})
+	require.NoError(t, suite.baseApp.StoreConsensusParams(ctx, cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: -1}}))
 	require.Equal(t, uint64(0), suite.baseApp.GetMaximumBlockGas(ctx))
 
-	suite.baseApp.StoreConsensusParams(ctx, cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: 5000000}})
+	require.NoError(t, suite.baseApp.StoreConsensusParams(ctx, cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: 5000000}}))
 	require.Equal(t, uint64(5000000), suite.baseApp.GetMaximumBlockGas(ctx))
 
-	suite.baseApp.StoreConsensusParams(ctx, cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: -5000000}})
+	require.NoError(t, suite.baseApp.StoreConsensusParams(ctx, cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: -5000000}}))
 	require.Panics(t, func() { suite.baseApp.GetMaximumBlockGas(ctx) })
 }
 
@@ -825,6 +986,25 @@ func TestGetEmptyConsensusParams(t *testing.T) {
 	cp := suite.baseApp.GetConsensusParams(ctx)
 	require.Equal(t, cmtproto.ConsensusParams{}, cp)
 	require.Equal(t, uint64(0), suite.baseApp.GetMaximumBlockGas(ctx))
+}
+
+func TestMountStores(t *testing.T) {
+	logger := log.NewNopLogger()
+	db := dbm.NewMemDB()
+	name := t.Name()
+	app := baseapp.NewBaseApp(name, logger, db, nil)
+	kvKey := storetypes.NewKVStoreKey("kv")
+	transKey := storetypes.NewTransientStoreKey("trans")
+	memKey := storetypes.NewMemoryStoreKey("mem")
+	objKey := storetypes.NewObjectStoreKey("obj")
+	app.MountStores(kvKey, transKey, memKey, objKey)
+	objKey2 := storetypes.NewObjectStoreKey("obj2")
+	app.MountObjectStores(map[string]*storetypes.ObjectStoreKey{"obj2": objKey2})
+	require.NoError(t, app.LoadLatestVersion())
+	for _, keyName := range []storetypes.StoreKey{kvKey, transKey, memKey, objKey} {
+		require.NotNil(t, app.CommitMultiStore().GetStore(keyName))
+	}
+	require.NotNil(t, app.CommitMultiStore().GetStore(objKey2))
 }
 
 func TestLoadVersionPruning(t *testing.T) {

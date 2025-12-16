@@ -9,9 +9,9 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/golang/mock/gomock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/core/appmodule"
@@ -165,27 +165,6 @@ func TestManagerOrderSetters(t *testing.T) {
 	require.Equal(t, []string{"module3", "module2", "module1"}, mm.OrderPrecommiters)
 }
 
-func TestManager_RegisterInvariants(t *testing.T) {
-	mockCtrl := gomock.NewController(t)
-	t.Cleanup(mockCtrl.Finish)
-
-	mockAppModule1 := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
-	mockAppModule2 := mock.NewMockAppModuleWithAllExtensions(mockCtrl)
-	mockAppModule3 := mock.NewMockCoreAppModule(mockCtrl)
-	mockAppModule1.EXPECT().Name().Times(2).Return("module1")
-	mockAppModule2.EXPECT().Name().Times(2).Return("module2")
-	// TODO: This is not working for Core API modules yet
-	mm := module.NewManager(mockAppModule1, mockAppModule2, module.CoreAppModuleBasicAdaptor("mockAppModule3", mockAppModule3))
-	require.NotNil(t, mm)
-	require.Equal(t, 3, len(mm.Modules))
-
-	// test RegisterInvariants
-	mockInvariantRegistry := mock.NewMockInvariantRegistry(mockCtrl)
-	mockAppModule1.EXPECT().RegisterInvariants(gomock.Eq(mockInvariantRegistry)).Times(1)
-	mockAppModule2.EXPECT().RegisterInvariants(gomock.Eq(mockInvariantRegistry)).Times(1)
-	mm.RegisterInvariants(mockInvariantRegistry)
-}
-
 func TestManager_RegisterQueryServices(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	t.Cleanup(mockCtrl.Finish)
@@ -211,7 +190,7 @@ func TestManager_RegisterQueryServices(t *testing.T) {
 	mockAppModule1.EXPECT().RegisterServices(cfg).Times(1)
 	mockAppModule2.EXPECT().RegisterServices(cfg).Times(1)
 
-	require.NotPanics(t, func() { mm.RegisterServices(cfg) })
+	require.NotPanics(t, func() { _ = mm.RegisterServices(cfg) })
 }
 
 func TestManager_InitGenesis(t *testing.T) {
@@ -328,14 +307,14 @@ func TestManager_EndBlock(t *testing.T) {
 
 	mockAppModule1.EXPECT().EndBlock(gomock.Any()).Times(1).Return([]abci.ValidatorUpdate{{}}, nil)
 	mockAppModule2.EXPECT().EndBlock(gomock.Any()).Times(1)
-	ret, err := mm.EndBlock(sdk.Context{})
+	ret, err := mm.EndBlock(sdk.Context{}.WithContext(context.Background()))
 	require.NoError(t, err)
 	require.Equal(t, []abci.ValidatorUpdate{{}}, ret.ValidatorUpdates)
 
 	// test panic
 	mockAppModule1.EXPECT().EndBlock(gomock.Any()).Times(1).Return([]abci.ValidatorUpdate{{}}, nil)
 	mockAppModule2.EXPECT().EndBlock(gomock.Any()).Times(1).Return([]abci.ValidatorUpdate{{}}, nil)
-	_, err = mm.EndBlock(sdk.Context{})
+	_, err = mm.EndBlock(sdk.Context{}.WithContext(context.Background()))
 	require.Error(t, err)
 }
 
@@ -481,7 +460,7 @@ func TestCoreAPIManager_PreBlock(t *testing.T) {
 	mockAppModule1.EXPECT().PreBlock(gomock.Any()).Times(1).Return(&sdk.ResponsePreBlock{
 		ConsensusParamsChanged: true,
 	}, nil)
-	res, err := mm.PreBlock(sdk.Context{})
+	res, err := mm.PreBlock(sdk.Context{}.WithContext(context.Background()))
 	require.NoError(t, err)
 	require.True(t, res.ConsensusParamsChanged)
 
@@ -489,13 +468,13 @@ func TestCoreAPIManager_PreBlock(t *testing.T) {
 	mockAppModule1.EXPECT().PreBlock(gomock.Any()).Times(1).Return(&sdk.ResponsePreBlock{
 		ConsensusParamsChanged: false,
 	}, nil)
-	res, err = mm.PreBlock(sdk.Context{})
+	res, err = mm.PreBlock(sdk.Context{}.WithContext(context.Background()))
 	require.NoError(t, err)
 	require.False(t, res.ConsensusParamsChanged)
 
 	// test error
 	mockAppModule1.EXPECT().PreBlock(gomock.Any()).Times(1).Return(nil, errors.New("some error"))
-	_, err = mm.PreBlock(sdk.Context{})
+	_, err = mm.PreBlock(sdk.Context{}.WithContext(context.Background()))
 	require.EqualError(t, err, "some error")
 }
 
@@ -514,12 +493,12 @@ func TestCoreAPIManager_BeginBlock(t *testing.T) {
 
 	mockAppModule1.EXPECT().BeginBlock(gomock.Any()).Times(1).Return(nil)
 	mockAppModule2.EXPECT().BeginBlock(gomock.Any()).Times(1).Return(nil)
-	_, err := mm.BeginBlock(sdk.Context{})
+	_, err := mm.BeginBlock(sdk.Context{}.WithContext(context.Background()))
 	require.NoError(t, err)
 
 	// test panic
 	mockAppModule1.EXPECT().BeginBlock(gomock.Any()).Times(1).Return(errors.New("some error"))
-	_, err = mm.BeginBlock(sdk.Context{})
+	_, err = mm.BeginBlock(sdk.Context{}.WithContext(context.Background()))
 	require.EqualError(t, err, "some error")
 }
 
@@ -538,13 +517,13 @@ func TestCoreAPIManager_EndBlock(t *testing.T) {
 
 	mockAppModule1.EXPECT().EndBlock(gomock.Any()).Times(1).Return(nil)
 	mockAppModule2.EXPECT().EndBlock(gomock.Any()).Times(1).Return(nil)
-	res, err := mm.EndBlock(sdk.Context{})
+	res, err := mm.EndBlock(sdk.Context{}.WithContext(context.Background()))
 	require.NoError(t, err)
 	require.Len(t, res.ValidatorUpdates, 0)
 
 	// test panic
 	mockAppModule1.EXPECT().EndBlock(gomock.Any()).Times(1).Return(errors.New("some error"))
-	_, err = mm.EndBlock(sdk.Context{})
+	_, err = mm.EndBlock(sdk.Context{}.WithContext(context.Background()))
 	require.EqualError(t, err, "some error")
 }
 
@@ -563,11 +542,11 @@ func TestManager_PrepareCheckState(t *testing.T) {
 
 	mockAppModule1.EXPECT().PrepareCheckState(gomock.Any()).Times(1).Return(nil)
 	mockAppModule2.EXPECT().PrepareCheckState(gomock.Any()).Times(1).Return(nil)
-	err := mm.PrepareCheckState(sdk.Context{})
+	err := mm.PrepareCheckState(sdk.Context{}.WithContext(context.Background()))
 	require.NoError(t, err)
 
 	mockAppModule1.EXPECT().PrepareCheckState(gomock.Any()).Times(1).Return(errors.New("some error"))
-	err = mm.PrepareCheckState(sdk.Context{})
+	err = mm.PrepareCheckState(sdk.Context{}.WithContext(context.Background()))
 	require.EqualError(t, err, "some error")
 }
 
@@ -586,11 +565,11 @@ func TestManager_Precommit(t *testing.T) {
 
 	mockAppModule1.EXPECT().Precommit(gomock.Any()).Times(1).Return(nil)
 	mockAppModule2.EXPECT().Precommit(gomock.Any()).Times(1).Return(nil)
-	err := mm.Precommit(sdk.Context{})
+	err := mm.Precommit(sdk.Context{}.WithContext(context.Background()))
 	require.NoError(t, err)
 
 	mockAppModule1.EXPECT().Precommit(gomock.Any()).Times(1).Return(errors.New("some error"))
-	err = mm.Precommit(sdk.Context{})
+	err = mm.Precommit(sdk.Context{}.WithContext(context.Background()))
 	require.EqualError(t, err, "some error")
 }
 
@@ -612,7 +591,7 @@ func (MockCoreAppModule) DefaultGenesis(target appmodule.GenesisTarget) error {
 	if err != nil {
 		return err
 	}
-	someFieldWriter.Write([]byte(`"someKey"`))
+	_, _ = someFieldWriter.Write([]byte(`"someKey"`))
 	return someFieldWriter.Close()
 }
 
@@ -639,7 +618,7 @@ func (MockCoreAppModule) ExportGenesis(ctx context.Context, target appmodule.Gen
 	if err != nil {
 		return err
 	}
-	wrt.Write([]byte(`"someKey"`))
+	_, _ = wrt.Write([]byte(`"someKey"`))
 	return wrt.Close()
 }
 

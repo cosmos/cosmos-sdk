@@ -17,7 +17,7 @@ Sparse Merkle Tree ([SMT](https://osf.io/8mcnh/)) is a version of a Merkle Tree 
 Currently, Cosmos SDK uses IAVL for both state [commitments](https://cryptography.fandom.com/wiki/Commitment_scheme) and data storage.
 
 IAVL has effectively become an orphaned project within the Cosmos ecosystem and it's proven to be an inefficient state commitment data structure.
-In the current design, IAVL is used for both data storage and as a Merkle Tree for state commitments. IAVL is meant to be a standalone Merkelized key/value database, however it's using a KV DB engine to store all tree nodes. So, each node is stored in a separate record in the KV DB. This causes many inefficiencies and problems:
+In the current design, IAVL is used for both data storage and as a Merkle Tree for state commitments. IAVL is meant to be a standalone Merkleized key/value database, however it's using a KV DB engine to store all tree nodes. So, each node is stored in a separate record in the KV DB. This causes many inefficiencies and problems:
 
 * Each object query requires a tree traversal from the root. Subsequent queries for the same object are cached on the Cosmos SDK level.
 * Each edge traversal requires a DB query.
@@ -30,7 +30,7 @@ Moreover, the IAVL project lacks support and a maintainer and we already see bet
 
 ## Decision
 
-We propose to separate the concerns of state commitment (**SC**), needed for consensus, and state storage (**SS**), needed for state machine. Finally we replace IAVL with [Celestia's SMT](https://github.com/lazyledger/smt). Celestia SMT is based on Diem (called jellyfish) design [*] - it uses a compute-optimised SMT by replacing subtrees with only default values with a single node (same approach is used by Ethereum2) and implements compact proofs.
+We propose to separate the concerns of state commitment (**SC**), needed for consensus, and state storage (**SS**), needed for state machine. Finally we replace IAVL with [Celestia's SMT](https://github.com/lazyledger/smt). Celestia SMT is based on Diem (called jellyfish) design [*] - it uses a compute-optimized SMT by replacing subtrees with only default values with a single node (same approach is used by Ethereum2) and implements compact proofs.
 
 The storage model presented here doesn't deal with data structure nor serialization. It's a Key-Value database, where both key and value are binaries. The storage user is responsible for data serialization.
 
@@ -192,7 +192,7 @@ The presented workaround can be used until the IBC module is fully upgraded to s
 
 We consider a compression of prefix keys by creating a mapping from module key to an integer, and serializing the integer using varint coding. Varint coding assures that different values don't have common byte prefix. For Merkle Proofs we can't use prefix compression - so it should only apply for the `SS` keys. Moreover, the prefix compression should be only applied for the module namespace. More precisely:
 
-* each module has it's own namespace;
+* each module has its own namespace;
 * when accessing a module namespace we create a KVStore with embedded prefix;
 * that prefix will be compressed only when accessing and managing `SS`.
 
@@ -279,11 +279,11 @@ We were discussing use case where modules can use a support database, which is n
 ## References
 
 * [IAVL What's Next?](https://github.com/cosmos/cosmos-sdk/issues/7100)
-* [IAVL overview](https://docs.google.com/document/d/16Z_hW2rSAmoyMENO-RlAhQjAG3mSNKsQueMnKpmcBv0/edit#heading=h.yd2th7x3o1iv) of it's state v0.15
+* [IAVL overview](https://docs.google.com/document/d/16Z_hW2rSAmoyMENO-RlAhQjAG3mSNKsQueMnKpmcBv0/edit#heading=h.yd2th7x3o1iv) of its state v0.15
 * [State commitments and storage report](https://paper.dropbox.com/published/State-commitments-and-storage-review--BDvA1MLwRtOx55KRihJ5xxLbBw-KeEB7eOd11pNrZvVtqUgL3h)
 * [Celestia (LazyLedger) SMT](https://github.com/lazyledger/smt)
 * Facebook Diem (Libra) SMT [design](https://developers.diem.com/papers/jellyfish-merkle-tree/2021-01-14.pdf)
 * [Trillian Revocation Transparency](https://github.com/google/trillian/blob/master/docs/papers/RevocationTransparency.pdf), [Trillian Verifiable Data Structures](https://github.com/google/trillian/blob/master/docs/papers/VerifiableDataStructures.pdf).
 * Design and implementation [discussion](https://github.com/cosmos/cosmos-sdk/discussions/8297).
-* [How to Upgrade IBC Chains and their Clients](https://github.com/cosmos/ibc-go/blob/main/docs/ibc/upgrades/quick-guide.md)
+* [How to Upgrade IBC Chains and their Clients](https://ibc.cosmos.network/main/ibc/upgrades/quick-guide/)
 * [ADR-40 Effect on IBC](https://github.com/cosmos/ibc-go/discussions/256)

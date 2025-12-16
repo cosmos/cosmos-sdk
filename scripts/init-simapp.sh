@@ -4,9 +4,10 @@ SIMD_BIN=${SIMD_BIN:=$(which simd 2>/dev/null)}
 
 if [ -z "$SIMD_BIN" ]; then echo "SIMD_BIN is not set. Make sure to run make install before"; exit 1; fi
 echo "using $SIMD_BIN"
-if [ -d "$($SIMD_BIN config home)" ]; then rm -r $($SIMD_BIN config home); fi
+if [ -d "$($SIMD_BIN config home)" ]; then rm -rv $($SIMD_BIN config home); fi
 $SIMD_BIN config set client chain-id demo
 $SIMD_BIN config set client keyring-backend test
+$SIMD_BIN config set client keyring-default-keyname alice
 $SIMD_BIN config set app api.enable true
 $SIMD_BIN keys add alice
 $SIMD_BIN keys add bob

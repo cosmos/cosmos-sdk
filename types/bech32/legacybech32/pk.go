@@ -13,7 +13,9 @@ import (
 // + sdk:config.GetBech32AccountPubPrefix (and other related functions)
 // + Bech32PrefixAccAddr and other related constants
 
-// Deprecated: Bech32PubKeyType defines a string type alias for a Bech32 public key type.
+// Bech32PubKeyType defines a string type alias for a Bech32 public key type.
+//
+// Deprecated: to be removed in a future release.
 type Bech32PubKeyType string
 
 // Bech32 conversion constants

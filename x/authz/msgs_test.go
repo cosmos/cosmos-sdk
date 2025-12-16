@@ -40,7 +40,7 @@ func TestMsgGrantGetAuthorization(t *testing.T) {
 	require.Equal(a, &g)
 
 	g = authz.GenericAuthorization{Msg: "some_type2"}
-	m.SetAuthorization(&g)
+	require.NoError(m.SetAuthorization(&g))
 	a, err = m.GetAuthorization()
 	require.NoError(err)
 	require.Equal(a, &g)
@@ -57,7 +57,7 @@ func TestAminoJSON(t *testing.T) {
 		FileResolver: proto.HybridResolver,
 	})
 
-	tx := legacytx.StdTx{}
+	tx := legacytx.StdTx{} // nolint:staticcheck // legacy testing
 	blockTime := time.Date(1, 1, 1, 1, 1, 1, 1, time.UTC)
 	expiresAt := blockTime.Add(time.Hour)
 	msgSend := banktypes.MsgSend{FromAddress: "cosmos1ghi", ToAddress: "cosmos1jkl"}
@@ -111,7 +111,7 @@ func TestAminoJSON(t *testing.T) {
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
 			tx.Msgs = []sdk.Msg{tt.msg}
-			legacyJSON := string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{tt.msg}, "memo"))
+			legacyJSON := string(legacytx.StdSignBytes("foo", 1, 1, 1, legacytx.StdFee{}, []sdk.Msg{tt.msg}, "memo")) // nolint:staticcheck // maintain for legacy testing
 			require.Equal(t, tt.exp, legacyJSON)
 
 			legacyAny, err := cdctypes.NewAnyWithValue(tt.msg)

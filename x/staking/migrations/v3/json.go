@@ -2,7 +2,7 @@ package v3
 
 import "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-// MigrateJSON accepts exported v0.43 x/stakinng genesis state and migrates it to
+// MigrateJSON accepts exported v0.43 x/staking genesis state and migrates it to
 // v0.46 x/staking genesis state. The migration includes:
 //
 // - Add MinCommissionRate param.

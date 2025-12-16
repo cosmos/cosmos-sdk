@@ -45,6 +45,8 @@ var (
 
 // mkTestLegacyContent creates a MsgExecLegacyContent for testing purposes.
 func mkTestLegacyContent(t *testing.T) *v1.MsgExecLegacyContent {
+	t.Helper()
+
 	msgContent, err := v1.NewLegacyContent(TestProposal, authtypes.NewModuleAddress(types.ModuleName).String())
 	require.NoError(t, err)
 
@@ -113,6 +115,8 @@ type suite struct {
 }
 
 func createTestSuite(t *testing.T) suite {
+	t.Helper()
+
 	res := suite{}
 
 	app, err := simtestutil.SetupWithConfiguration(
@@ -129,7 +133,11 @@ func createTestSuite(t *testing.T) suite {
 			depinject.Supply(sdklog.NewNopLogger()),
 		),
 		simtestutil.DefaultStartUpConfig(),
-		&res.AccountKeeper, &res.BankKeeper, &res.GovKeeper, &res.DistributionKeeper, &res.StakingKeeper,
+		&res.AccountKeeper,
+		&res.BankKeeper,
+		&res.GovKeeper,
+		&res.DistributionKeeper,
+		&res.StakingKeeper,
 	)
 	require.NoError(t, err)
 

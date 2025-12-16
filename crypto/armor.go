@@ -3,6 +3,7 @@ package crypto
 import (
 	"bytes"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 
@@ -61,7 +62,7 @@ var BcryptSecurityParameter uint32 = 12
 //-----------------------------------------------------------------
 // add armor
 
-// Armor the InfoBytes
+// ArmorInfoBytes returns the info from info bytes.
 func ArmorInfoBytes(bz []byte) string {
 	header := map[string]string{
 		headerType:    "Info",
@@ -71,7 +72,7 @@ func ArmorInfoBytes(bz []byte) string {
 	return EncodeArmor(blockTypeKeyInfo, header, bz)
 }
 
-// Armor the PubKeyBytes
+// ArmorPubKeyBytes return the pubkey from info bytes.
 func ArmorPubKeyBytes(bz []byte, algo string) string {
 	header := map[string]string{
 		headerVersion: "0.0.1",
@@ -86,7 +87,7 @@ func ArmorPubKeyBytes(bz []byte, algo string) string {
 //-----------------------------------------------------------------
 // remove armor
 
-// Unarmor the InfoBytes
+// UnarmorInfoBytes returns the info bytes from an armored string.
 func UnarmorInfoBytes(armorStr string) ([]byte, error) {
 	bz, header, err := unarmorBytes(armorStr, blockTypeKeyInfo)
 	if err != nil {
@@ -104,7 +105,7 @@ func UnarmorInfoBytes(armorStr string) ([]byte, error) {
 func UnarmorPubKeyBytes(armorStr string) (bz []byte, algo string, err error) {
 	bz, header, err := unarmorBytes(armorStr, blockTypePubKey)
 	if err != nil {
-		return nil, "", fmt.Errorf("couldn't unarmor bytes: %v", err)
+		return nil, "", fmt.Errorf("couldn't unarmor bytes: %w", err)
 	}
 
 	switch header[headerVersion] {
@@ -127,21 +128,21 @@ func UnarmorPubKeyBytes(armorStr string) (bz []byte, algo string, err error) {
 func unarmorBytes(armorStr, blockType string) (bz []byte, header map[string]string, err error) {
 	bType, header, bz, err := DecodeArmor(armorStr)
 	if err != nil {
-		return
+		return bz, header, err
 	}
 
 	if bType != blockType {
 		err = fmt.Errorf("unrecognized armor type %q, expected: %q", bType, blockType)
-		return
+		return bz, header, err
 	}
 
-	return
+	return bz, header, err
 }
 
 //-----------------------------------------------------------------
 // encrypt/decrypt with armor
 
-// Encrypt and armor the private key.
+// EncryptArmorPrivKey encrypts and armors the private key.
 func EncryptArmorPrivKey(privKey cryptotypes.PrivKey, passphrase, algo string) string {
 	saltBytes, encBytes := encryptPrivKey(privKey, passphrase)
 	header := map[string]string{
@@ -169,7 +170,7 @@ func encryptPrivKey(privKey cryptotypes.PrivKey, passphrase string) (saltBytes, 
 		panic(errorsmod.Wrap(err, "error generating cypher from key"))
 	}
 
-	nonce := make([]byte, aead.NonceSize(), aead.NonceSize()+len(privKeyBytes)+aead.Overhead()) // Nonce is fixed to maintain consistency, each key is generated  at every encryption using a random salt.
+	nonce := make([]byte, aead.NonceSize(), aead.NonceSize()+len(privKeyBytes)+aead.Overhead()) // Nonce is fixed to maintain consistency, each key is generated at every encryption using a random salt.
 
 	encBytes = aead.Seal(nil, nonce, privKeyBytes, nil)
 
@@ -240,7 +241,7 @@ func decryptPrivKey(saltBytes, encBytes []byte, passphrase, kdf string) (privKey
 		key = crypto.Sha256(key) // Get 32 bytes
 		privKeyBytes, err = xsalsa20symmetric.DecryptSymmetric(encBytes, key)
 
-		if err == xsalsa20symmetric.ErrCiphertextDecrypt {
+		if errors.Is(err, xsalsa20symmetric.ErrCiphertextDecrypt) {
 			return privKey, sdkerrors.ErrWrongPassword
 		}
 	default:
@@ -261,15 +262,15 @@ func EncodeArmor(blockType string, headers map[string]string, data []byte) strin
 	buf := new(bytes.Buffer)
 	w, err := armor.Encode(buf, blockType, headers)
 	if err != nil {
-		panic(fmt.Errorf("could not encode ascii armor: %s", err))
+		panic(fmt.Errorf("could not encode ascii armor: %w", err))
 	}
 	_, err = w.Write(data)
 	if err != nil {
-		panic(fmt.Errorf("could not encode ascii armor: %s", err))
+		panic(fmt.Errorf("could not encode ascii armor: %w", err))
 	}
 	err = w.Close()
 	if err != nil {
-		panic(fmt.Errorf("could not encode ascii armor: %s", err))
+		panic(fmt.Errorf("could not encode ascii armor: %w", err))
 	}
 	return buf.String()
 }

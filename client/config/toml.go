@@ -19,6 +19,8 @@ const defaultConfigTemplate = `# This is a TOML config file.
 chain-id = "{{ .ChainID }}"
 # The keyring's backend, where the keys are stored (os|file|kwallet|pass|test|memory)
 keyring-backend = "{{ .KeyringBackend }}"
+# Default key name, if set, defines the default key to use for signing transaction when the --from flag is not specified
+keyring-default-keyname = "{{ .KeyringDefaultKeyName }}"
 # CLI output format (text|json)
 output = "{{ .Output }}"
 # <host>:<port> to CometBFT RPC interface for this chain
@@ -45,7 +47,7 @@ func writeConfigToFile(configFilePath string, config *ClientConfig) error {
 	return os.WriteFile(configFilePath, buffer.Bytes(), 0o600)
 }
 
-// getClientConfig reads values from client.toml file and unmarshalls them into ClientConfig
+// getClientConfig reads values from client.toml file and unmarshals them into ClientConfig
 func getClientConfig(configPath string, v *viper.Viper) (*ClientConfig, error) {
 	v.AddConfigPath(configPath)
 	v.SetConfigName("client")

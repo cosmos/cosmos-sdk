@@ -21,21 +21,21 @@ This section is currently incomplete. Track the progress of this document [here]
 ## General Workflow
 
 Let's assume we are running v0.38.0 of our software in our testnet and want to upgrade to v0.40.0.
-How would this look in practice? First of all, we want to finalize the v0.40.0 release candidate
-and there install a specially named upgrade handler (eg. "testnet-v2" or even "v0.40.0"). An upgrade
+How would this look in practice? First, we want to finalize the v0.40.0 release candidate
+and then install a specially named upgrade handler (e.g. "testnet-v2" or even "v0.40.0"). An upgrade
 handler should be defined in a new version of the software to define what migrations
 to run to migrate from the older version of the software. Naturally, this is app-specific rather
-than module specific, and  must be defined in `app.go`, even if it imports logic from various
+than module-specific, and must be defined in `app.go`, even if it imports logic from various
 modules to perform the actions. You can register them with `upgradeKeeper.SetUpgradeHandler`
 during the app initialization (before starting the abci server), and they serve not only to
-perform a migration, but also to identify if this is the old or new version (eg. presence of
+perform a migration, but also to identify if this is the old or new version (e.g. presence of
 a handler registered for the named upgrade).
 
 Once the release candidate along with an appropriate upgrade handler is frozen,
 we can have a governance vote to approve this upgrade at some future block height (e.g. 200000).
 This is known as an upgrade.Plan. The v0.38.0 code will not know of this handler, but will
 continue to run until block 200000, when the plan kicks in at `BeginBlock`. It will check
-for existence of the handler, and finding it missing, know that it is running the obsolete software,
+for the existence of the handler, and finding it missing, know that it is running the obsolete software,
 and gracefully exit.
 
 Generally the application binary will restart on exit, but then will execute this BeginBlocker
@@ -53,17 +53,17 @@ be a matter of minutes and not even require them to be awake at that time.
 ## Integrating With An App
 
 :::tip
-The following is not required for users using `depinject` / app v2, this is abstracted for them.
+The following is not required for users using `depinject`, this is abstracted for them.
 :::
 
-In addition to basic module wiring, setup the upgrade Keeper for the app and then define a `PreBlocker` that calls the upgrade
+In addition to basic module wiring, set up the upgrade Keeper for the app and then define a `PreBlocker` that calls the upgrade
 keeper's PreBlocker method:
 
 ```go
 func (app *myApp) PreBlocker(ctx sdk.Context, req req.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
       // For demonstration sake, the app PreBlocker only returns the upgrade module pre-blocker.
       // In a real app, the module manager should call all pre-blockers
-      // return return app.ModuleManager.PreBlock(ctx, req)
+      // return app.ModuleManager.PreBlock(ctx, req)
       return app.upgradeKeeper.PreBlocker(ctx, req)
 }
 ```
@@ -94,7 +94,7 @@ Here is a sample code to set store migrations with an upgrade:
 
 ```go
 // this configures a no-op upgrade handler for the "my-fancy-upgrade" upgrade
-app.UpgradeKeeper.SetUpgradeHandler("my-fancy-upgrade",  func(ctx context.Context, plan upgrade.Plan) {
+app.UpgradeKeeper.SetUpgradeHandler("my-fancy-upgrade", func(ctx context.Context, plan upgrade.Plan) {
  // upgrade changes here
 })
 upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()

@@ -63,7 +63,7 @@ extern "C" {
  *  Args: ctx:      a secp256k1 context object
  *  Out:  sig:      a pointer to a signature object
  *  In:   input:    a pointer to the signature to be parsed
- *        inputlen: the length of the array pointed to be input
+ *        inputlen: the length of the array pointed to by input
  *
  *  This function will accept any valid DER encoded signature, even if the
  *  encoded numbers are out of range. In addition, it will accept signatures

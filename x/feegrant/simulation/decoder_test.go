@@ -7,14 +7,14 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/x/feegrant"
-	"cosmossdk.io/x/feegrant/module"
-	"cosmossdk.io/x/feegrant/simulation"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/module"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/simulation"
 )
 
 var (
@@ -53,7 +53,6 @@ func TestDecodeStore(t *testing.T) {
 	}
 
 	for i, tt := range tests {
-		i, tt := i, tt
 		t.Run(tt.name, func(t *testing.T) {
 			switch i {
 			case len(tests) - 1:

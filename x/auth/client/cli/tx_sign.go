@@ -10,16 +10,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	kmultisig "github.com/cosmos/cosmos-sdk/crypto/keys/multisig"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
 )
 
 const (
-	flagMultisig        = "multisig"
-	flagOverwrite       = "overwrite"
-	flagSigOnly         = "signature-only"
-	flagNoAutoIncrement = "no-auto-increment"
-	flagAppend          = "append"
+	flagMultisig                  = "multisig"
+	flagOverwrite                 = "overwrite"
+	flagSigOnly                   = "signature-only"
+	flagSkipSignatureVerification = "skip-signature-verification"
+	flagNoAutoIncrement           = "no-auto-increment"
+	flagAppend                    = "append"
 )
 
 // GetSignBatchCommand returns the transaction sign-batch command.
@@ -57,8 +59,6 @@ account key. It implies --signature-only.
 	cmd.Flags().Bool(flagAppend, false, "Combine all message and generate single signed transaction for broadcast.")
 
 	flags.AddTxFlagsToCmd(cmd)
-
-	cmd.MarkFlagRequired(flags.FlagFrom)
 
 	return cmd
 }
@@ -144,8 +144,11 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 				// append messages
 				msgs = append(msgs, unsignedStdTx.GetMsgs()...)
 			}
-			// set the new appened msgs into builder
-			txBuilder.SetMsgs(msgs...)
+			// set the new appended msgs into builder
+			err := txBuilder.SetMsgs(msgs...)
+			if err != nil {
+				return err
+			}
 
 			// set the memo,fees,feeGranter,feePayer from cmd flags
 			txBuilder.SetMemo(txFactory.Memo())
@@ -228,16 +231,45 @@ func sign(clientCtx client.Context, txBuilder client.TxBuilder, txFactory tx.Fac
 }
 
 func multisigSign(clientCtx client.Context, txBuilder client.TxBuilder, txFactory tx.Factory, multisig string) error {
-	multisigAddr, _, _, err := client.GetFromFields(clientCtx, txFactory.Keybase(), multisig)
+	multisigAddr, multisigName, _, err := client.GetFromFields(clientCtx, txFactory.Keybase(), multisig)
 	if err != nil {
 		return fmt.Errorf("error getting account from keybase: %w", err)
+	}
+
+	fromRecord, err := clientCtx.Keyring.Key(clientCtx.FromName)
+	if err != nil {
+		return fmt.Errorf("error getting account from keybase: %w", err)
+	}
+
+	fromPubKey, err := fromRecord.GetPubKey()
+	if err != nil {
+		return err
+	}
+
+	multisigkey, err := clientCtx.Keyring.Key(multisigName)
+	if err != nil {
+		return err
+	}
+
+	multisigPubKey, err := multisigkey.GetPubKey()
+	if err != nil {
+		return err
+	}
+
+	isSigner, err := isMultisigSigner(clientCtx, multisigPubKey, fromPubKey)
+	if err != nil {
+		return err
+	}
+
+	if !isSigner {
+		return fmt.Errorf("signing key is not a part of multisig key")
 	}
 
 	if err = authclient.SignTxWithSignerAddress(
 		txFactory,
 		clientCtx,
 		multisigAddr,
-		clientCtx.GetFromName(),
+		clientCtx.FromName,
 		txBuilder,
 		clientCtx.Offline,
 		true,
@@ -246,6 +278,33 @@ func multisigSign(clientCtx client.Context, txBuilder client.TxBuilder, txFactor
 	}
 
 	return nil
+}
+
+// isMultisigSigner checks if the given pubkey is a signer in the multisig or in
+// any of the nested multisig signers.
+func isMultisigSigner(clientCtx client.Context, multisigPubKey, fromPubKey cryptotypes.PubKey) (bool, error) {
+	multisigLegacyPub := multisigPubKey.(*kmultisig.LegacyAminoPubKey)
+
+	var found bool
+	for _, pubkey := range multisigLegacyPub.GetPubKeys() {
+		if pubkey.Equals(fromPubKey) {
+			found = true
+			break
+		}
+
+		if nestedMultisig, ok := pubkey.(*kmultisig.LegacyAminoPubKey); ok {
+			var err error
+			found, err = isMultisigSigner(clientCtx, nestedMultisig, fromPubKey)
+			if err != nil {
+				return false, err
+			}
+			if found {
+				break
+			}
+		}
+	}
+
+	return found, nil
 }
 
 func setOutputFile(cmd *cobra.Command) (func(), error) {
@@ -261,7 +320,7 @@ func setOutputFile(cmd *cobra.Command) (func(), error) {
 
 	cmd.SetOut(fp)
 
-	return func() { fp.Close() }, nil
+	return func() { _ = fp.Close() }, nil
 }
 
 // GetSignCommand returns the transaction sign command.
@@ -294,8 +353,6 @@ be generated via the 'multisign' command.
 	cmd.Flags().String(flags.FlagOutputDocument, "", "The document will be written to the given file instead of STDOUT")
 	flags.AddTxFlagsToCmd(cmd)
 
-	cmd.MarkFlagRequired(flags.FlagFrom)
-
 	return cmd
 }
 
@@ -303,8 +360,8 @@ func preSignCmd(cmd *cobra.Command, _ []string) {
 	// Conditionally mark the account and sequence numbers required as no RPC
 	// query will be done.
 	if offline, _ := cmd.Flags().GetBool(flags.FlagOffline); offline {
-		cmd.MarkFlagRequired(flags.FlagAccountNumber)
-		cmd.MarkFlagRequired(flags.FlagSequence)
+		_ = cmd.MarkFlagRequired(flags.FlagAccountNumber)
+		_ = cmd.MarkFlagRequired(flags.FlagSequence)
 	}
 }
 
@@ -373,7 +430,6 @@ func signTx(cmd *cobra.Command, clientCtx client.Context, txF tx.Factory, newTx 
 		if err != nil {
 			return err
 		}
-		multisigLegacyPub := multisigPubKey.(*kmultisig.LegacyAminoPubKey)
 
 		fromRecord, err := clientCtx.Keyring.Key(fromName)
 		if err != nil {
@@ -384,15 +440,14 @@ func signTx(cmd *cobra.Command, clientCtx client.Context, txF tx.Factory, newTx 
 			return err
 		}
 
-		var found bool
-		for _, pubkey := range multisigLegacyPub.GetPubKeys() {
-			if pubkey.Equals(fromPubKey) {
-				found = true
-			}
+		isSigner, err := isMultisigSigner(clientCtx, multisigPubKey, fromPubKey)
+		if err != nil {
+			return err
 		}
-		if !found {
+		if !isSigner {
 			return fmt.Errorf("signing key is not a part of multisig key")
 		}
+
 		err = authclient.SignTxWithSignerAddress(
 			txF, clientCtx, multisigAddr, fromName, txBuilder, clientCtx.Offline, overwrite)
 		if err != nil {
@@ -400,7 +455,7 @@ func signTx(cmd *cobra.Command, clientCtx client.Context, txF tx.Factory, newTx 
 		}
 		printSignatureOnly = true
 	} else {
-		err = authclient.SignTx(txF, clientCtx, clientCtx.GetFromName(), txBuilder, clientCtx.Offline, overwrite)
+		err = authclient.SignTx(txF, clientCtx, clientCtx.FromName, txBuilder, clientCtx.Offline, overwrite)
 	}
 	if err != nil {
 		return err

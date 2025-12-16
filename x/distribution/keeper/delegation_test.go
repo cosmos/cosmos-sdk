@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
@@ -760,7 +760,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: initial}}, valCommission.Commission)
 }
 
-func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
+func TestCalculateRewardsMultiDelegatorMultiWithdraw(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	key := storetypes.NewKVStoreKey(disttypes.StoreKey)
 	storeService := runtime.NewKVStoreService(key)
@@ -989,7 +989,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 	require.NoError(t, distrKeeper.FeePool.Set(ctx, disttypes.InitialFeePool()))
 	require.NoError(t, distrKeeper.Params.Set(ctx, disttypes.DefaultParams()))
 
-	// create validator with 50% commission
+	// create validator with 100% commission
 	valAddr := sdk.ValAddress(valConsAddr0)
 	addr := sdk.AccAddress(valAddr)
 	val, err := distrtestutil.CreateValidator(valConsPk0, math.NewInt(100))

@@ -7,15 +7,15 @@ import (
 	"strings"
 	"time"
 
-	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	"cosmossdk.io/math"
-	"cosmossdk.io/x/tx/signing/aminojson"
 	"github.com/cockroachdb/errors"
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
+	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
+	"cosmossdk.io/math"
+	"cosmossdk.io/x/tx/signing/aminojson"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -52,7 +52,9 @@ func (b *Builder) AddQueryServiceCommands(cmd *cobra.Command, cmdDescriptor *aut
 			return err
 		}
 
-		cmd.AddCommand(subCmd)
+		if !subCmdDesc.EnhanceCustomCommand {
+			cmd.AddCommand(subCmd)
+		}
 	}
 
 	// skip empty command descriptors
@@ -118,11 +120,13 @@ func (b *Builder) BuildQueryMethodCommand(ctx context.Context, descriptor protor
 	methodName := fmt.Sprintf("/%s/%s", serviceDescriptor.FullName(), descriptor.Name())
 	outputType := util.ResolveMessageType(b.TypeResolver, descriptor.Output())
 	encoderOptions := aminojson.EncoderOptions{
-		Indent:          "  ",
-		EnumAsString:    true,
-		DoNotSortFields: true,
-		TypeResolver:    b.TypeResolver,
-		FileResolver:    b.FileResolver,
+		Indent:             "  ",
+		EnumAsString:       true,
+		DoNotSortFields:    true,
+		AminoNameAsTypeURL: true,
+		MarshalMappings:    true,
+		TypeResolver:       b.TypeResolver,
+		FileResolver:       b.FileResolver,
 	}
 
 	cmd, err := b.buildMethodCommandCommon(descriptor, options, func(cmd *cobra.Command, input protoreflect.Message) error {

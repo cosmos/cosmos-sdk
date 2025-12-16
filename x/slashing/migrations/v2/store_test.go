@@ -62,7 +62,6 @@ func TestStoreMigration(t *testing.T) {
 
 	// Make sure the new keys are set and old keys are deleted.
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			if !bytes.Equal(tc.oldKey, tc.newKey) {
 				v, err := store.Get(tc.oldKey)

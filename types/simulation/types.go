@@ -13,6 +13,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/kv"
 )
 
+// WeightedProposalContent is a legacy type.
+//
 // Deprecated: Use WeightedProposalMsg instead.
 type WeightedProposalContent interface {
 	AppParamsKey() string                   // key used to retrieve the value of the weight from the simulation application params
@@ -20,9 +22,13 @@ type WeightedProposalContent interface {
 	ContentSimulatorFn() ContentSimulatorFn // content simulator function
 }
 
+// ContentSimulatorFn is a legacy type.
+//
 // Deprecated: Use MsgSimulatorFn instead.
 type ContentSimulatorFn func(r *rand.Rand, ctx sdk.Context, accs []Account) Content
 
+// Content is a legacy type.
+//
 // Deprecated: Use MsgSimulatorFn instead.
 type Content interface {
 	GetTitle() string
@@ -63,7 +69,7 @@ type WeightedOperation interface {
 // which details what this fuzzed state machine transition actually did.
 //
 // Operations can optionally provide a list of "FutureOperations" to run later
-// These will be ran at the beginning of the corresponding block.
+// These will be run at the beginning of the corresponding block.
 type Operation func(r *rand.Rand, app *baseapp.BaseApp,
 	ctx sdk.Context, accounts []Account, chainID string) (
 	OperationMsg OperationMsg, futureOps []FutureOperation, err error)
@@ -108,7 +114,7 @@ func NoOpMsg(moduleName, msgType, comment string) OperationMsg {
 	return NewOperationMsgBasic(moduleName, msgType, comment, false, nil)
 }
 
-// log entry text for this operation msg
+// String logs entry text for this operation msg
 func (om OperationMsg) String() string {
 	out, err := json.Marshal(om)
 	if err != nil {
@@ -138,7 +144,7 @@ func (om OperationMsg) LogEvent(eventLogger func(route, op, evResult string)) {
 	eventLogger(om.Route, om.Name, pass)
 }
 
-// FutureOperation is an operation which will be ran at the beginning of the
+// FutureOperation is an operation which will be run at the beginning of the
 // provided BlockHeight. If both a BlockHeight and BlockTime are specified, it
 // will use the BlockHeight. In the (likely) event that multiple operations
 // are queued at the same block height, they will execute in a FIFO pattern.
@@ -150,14 +156,14 @@ type FutureOperation struct {
 
 // AppParams defines a flat JSON of key/values for all possible configurable
 // simulation parameters. It might contain: operation weights, simulation parameters
-// and flattened module state parameters (i.e not stored under it's respective module name).
+// and flattened module state parameters (i.e not stored under its respective module name).
 type AppParams map[string]json.RawMessage
 
 // GetOrGenerate attempts to get a given parameter by key from the AppParams
 // object. If it exists, it'll be decoded and returned. Otherwise, the provided
 // ParamSimulator is used to generate a random value or default value (eg: in the
 // case of operation weights where Rand is not used).
-func (sp AppParams) GetOrGenerate(key string, ptr interface{}, r *rand.Rand, ps ParamSimulator) {
+func (sp AppParams) GetOrGenerate(key string, ptr any, r *rand.Rand, ps ParamSimulator) {
 	if v, ok := sp[key]; ok && v != nil {
 		err := json.Unmarshal(v, ptr)
 		if err != nil {

@@ -27,7 +27,7 @@ type MockGovHooksReceiver struct {
 	AfterProposalVotingPeriodEndedValid bool
 }
 
-func (h *MockGovHooksReceiver) AfterProposalSubmission(ctx context.Context, proposalID uint64) error {
+func (h *MockGovHooksReceiver) AfterProposalSubmission(ctx context.Context, proposalID uint64, proposerAddr sdk.AccAddress) error {
 	h.AfterProposalSubmissionValid = true
 	return nil
 }
@@ -81,7 +81,7 @@ func TestHooks(t *testing.T) {
 	newHeader := ctx.BlockHeader()
 	newHeader.Time = ctx.BlockHeader().Time.Add(*params.MaxDepositPeriod).Add(time.Duration(1) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
-	gov.EndBlocker(ctx, govKeeper)
+	require.NoError(t, gov.EndBlocker(ctx, govKeeper))
 
 	require.True(t, govHooksReceiver.AfterProposalFailedMinDepositValid)
 
@@ -100,6 +100,6 @@ func TestHooks(t *testing.T) {
 	newHeader = ctx.BlockHeader()
 	newHeader.Time = ctx.BlockHeader().Time.Add(*params.VotingPeriod).Add(time.Duration(1) * time.Second)
 	ctx = ctx.WithBlockHeader(newHeader)
-	gov.EndBlocker(ctx, govKeeper)
+	require.NoError(t, gov.EndBlocker(ctx, govKeeper))
 	require.True(t, govHooksReceiver.AfterProposalVotingPeriodEndedValid)
 }

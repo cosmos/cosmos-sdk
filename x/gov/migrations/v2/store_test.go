@@ -80,14 +80,13 @@ func TestMigrateStore(t *testing.T) {
 		store.Set(tc.oldKey, tc.oldValue)
 	}
 
-	// Run migratio
+	// Run migration
 	storeService := runtime.NewKVStoreService(govKey)
 	err := v2.MigrateStore(ctx, storeService, cdc)
 	require.NoError(t, err)
 
 	// Make sure the new keys are set and old keys are deleted.
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			if !bytes.Equal(tc.oldKey, tc.newKey) {
 				require.Nil(t, store.Get(tc.oldKey))

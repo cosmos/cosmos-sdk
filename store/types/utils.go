@@ -7,6 +7,26 @@ import (
 	"strings"
 )
 
+// BytesIsZero returns whether the byte array is nil
+func BytesIsZero(v []byte) bool {
+	return v == nil
+}
+
+// BytesValueLen returns the length of the byte array
+func BytesValueLen(v []byte) int {
+	return len(v)
+}
+
+// AnyIsZero returns whether the underlying data is nil
+func AnyIsZero(v any) bool {
+	return v == nil
+}
+
+// AnyValueLen returns 16 because the any type has a constant size and functions like unsafe.Sizeof cannot introspect.
+func AnyValueLen[V any](v V) int {
+	return 16
+}
+
 // KVStorePrefixIterator iterates over all the keys with a certain prefix in ascending order
 func KVStorePrefixIterator(kvs KVStore, prefix []byte) Iterator {
 	return kvs.Iterator(prefix, PrefixEndBytes(prefix))
@@ -79,16 +99,4 @@ func BigEndianToUint64(bz []byte) uint64 {
 	}
 
 	return binary.BigEndian.Uint64(bz)
-}
-
-// SliceContains implements a generic function for checking if a slice contains
-// a certain value.
-func SliceContains[T comparable](elements []T, v T) bool {
-	for _, s := range elements {
-		if v == s {
-			return true
-		}
-	}
-
-	return false
 }

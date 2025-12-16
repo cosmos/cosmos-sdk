@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
+	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -70,6 +71,8 @@ func TestUnknownFields(t *testing.T) {
 			shouldAminoErr: fmt.Sprintf("%s: %s", aminoNonCriticalFieldsError, sdkerrors.ErrInvalidRequest.Error()),
 		},
 		{
+			// If new fields are added to TxBody the number for some_new_field in the proto definition must be set to
+			// one that it's not used in TxBody.
 			name: "critical fields in TxBody should error on decode",
 			body: &testdata.TestUpdatedTxBody{
 				Memo:         "foo",
@@ -101,7 +104,6 @@ func TestUnknownFields(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			bodyBz, err := tt.body.Marshal()
 			require.NoError(t, err)
@@ -188,14 +190,14 @@ func TestRejectNonADR027(t *testing.T) {
 	//
 	// Consume "BodyBytes" field.
 	_, _, m := protowire.ConsumeField(txBz)
-	bodyBz = append([]byte{}, txBz[:m]...)
+	bodyBz = slices.Clone(txBz[:m])
 	txBz = txBz[m:] // Skip over "BodyBytes" bytes.
 	// Consume "AuthInfoBytes" field.
 	_, _, m = protowire.ConsumeField(txBz)
-	authInfoBz = append([]byte{}, txBz[:m]...)
+	authInfoBz = slices.Clone(txBz[:m])
 	txBz = txBz[m:] // Skip over "AuthInfoBytes" bytes.
 	// Consume "Signature" field, it's the remaining bytes.
-	sigsBz := append([]byte{}, txBz...)
+	sigsBz := slices.Clone(txBz)
 
 	// bodyBz's length prefix is 5, with `5` as varint encoding. We also try a
 	// longer varint encoding for 5: `133 00`.
@@ -244,7 +246,6 @@ func TestRejectNonADR027(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			_, err = decoder(tt.txBz)
 			if tt.shouldErr {
@@ -282,7 +283,6 @@ func TestVarintMinLength(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(fmt.Sprintf("test %d", tt.n), func(t *testing.T) {
 			l1 := varintMinLength(tt.n)
 			buf := make([]byte, binary.MaxVarintLen64)

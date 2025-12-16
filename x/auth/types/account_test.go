@@ -84,8 +84,6 @@ func TestGenesisAccountValidate(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
-
 		t.Run(tt.name, func(t *testing.T) {
 			require.Equal(t, tt.expErr, tt.acc.Validate() != nil)
 		})
@@ -97,7 +95,7 @@ func TestModuleAccountString(t *testing.T) {
 	moduleAcc := types.NewEmptyModuleAccount(name, types.Minter, types.Burner, types.Staking)
 	want := `base_account:<address:"cosmos1n7rdpqvgf37ktx30a2sv2kkszk3m7ncmg5drhe" > name:"test" permissions:"minter" permissions:"burner" permissions:"staking" `
 	require.Equal(t, want, moduleAcc.String())
-	moduleAcc.SetSequence(10)
+	require.NoError(t, moduleAcc.SetSequence(10))
 	want = `base_account:<address:"cosmos1n7rdpqvgf37ktx30a2sv2kkszk3m7ncmg5drhe" sequence:10 > name:"test" permissions:"minter" permissions:"burner" permissions:"staking" `
 	require.Equal(t, want, moduleAcc.String())
 }
@@ -150,7 +148,6 @@ func TestValidate(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.acc.Validate()
 			require.Equal(t, tt.expErr, err)

@@ -47,7 +47,7 @@ func CreateDefaultCometConfig(rootDir string) (*cmtcfg.Config, error) {
 	cmtcfg.EnsureRoot(rootDir)
 
 	if err := conf.ValidateBasic(); err != nil {
-		return nil, fmt.Errorf("error in config file: %v", err)
+		return nil, fmt.Errorf("error in config file: %w", err)
 	}
 
 	return conf, nil

@@ -2,6 +2,7 @@ package autocli
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -52,14 +53,18 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 		Version:      options.Version,
 	}
 
-	binder, err := b.AddMessageFlags(cmd.Context(), cmd.Flags(), inputType, options)
+	// we need to use a pointer to the context as the correct context is set in the RunE function
+	// however we need to set the flags before the RunE function is called
+	ctx := cmd.Context()
+	binder, err := b.AddMessageFlags(&ctx, cmd.Flags(), inputType, options)
 	if err != nil {
 		return nil, err
 	}
-
 	cmd.Args = binder.CobraArgs
 
 	cmd.RunE = func(cmd *cobra.Command, args []string) error {
+		ctx = cmd.Context()
+
 		input, err := binder.BuildMessage(args)
 		if err != nil {
 			return err
@@ -67,23 +72,16 @@ func (b *Builder) buildMethodCommandCommon(descriptor protoreflect.MethodDescrip
 
 		// signer related logic, triggers only when there is a signer defined
 		if binder.SignerInfo.FieldName != "" {
-			// mark the signer flag as required if defined
-			// TODO(@julienrbrt): UX improvement by only marking the flag as required when there is more than one key in the keyring;
-			// when there is only one key, use that key by default.
 			if binder.SignerInfo.IsFlag {
-				if err := cmd.MarkFlagRequired(binder.SignerInfo.FieldName); err != nil {
-					return err
-				}
-
 				// the client context uses the from flag to determine the signer.
 				// this sets the signer flags to the from flag value if a custom signer flag is set.
-				if binder.SignerInfo.FieldName != flags.FlagFrom {
-					signer, err := cmd.Flags().GetString(binder.SignerInfo.FieldName)
-					if err != nil {
-						return fmt.Errorf("failed to get signer flag: %w", err)
+				// marks the custom flag as required.
+				if binder.SignerInfo.FlagName != flags.FlagFrom {
+					if err := cmd.MarkFlagRequired(binder.SignerInfo.FlagName); err != nil {
+						return err
 					}
 
-					if err := cmd.Flags().Set(flags.FlagFrom, signer); err != nil {
+					if err := cmd.Flags().Set(flags.FlagFrom, cmd.Flag(binder.SignerInfo.FlagName).Value.String()); err != nil {
 						return err
 					}
 				}
@@ -142,7 +140,16 @@ func (b *Builder) enhanceCommandCommon(
 
 		// if we have a custom command use that instead of generating one
 		if custom, ok := customCmds[moduleName]; ok {
-			if hasModuleOptions { // check if we need to enhance the existing command
+			// Custom may not be called the same as its module, so we need to have a separate check here
+			if subCmd := findSubCommand(cmd, custom.Name()); subCmd != nil {
+				if hasModuleOptions { // check if we need to enhance the existing command
+					if err := enhanceCustomCmd(b, subCmd, cmdType, modOpts); err != nil {
+						return err
+					}
+				}
+				continue
+			}
+			if hasModuleOptions { // check if we need to enhance the new command
 				if err := enhanceCustomCmd(b, custom, cmdType, modOpts); err != nil {
 					return err
 				}
@@ -251,6 +258,6 @@ func (b *Builder) outOrStdoutFormat(cmd *cobra.Command, out []byte) error {
 		}
 	}
 
-	_, err = fmt.Fprintln(cmd.OutOrStdout(), string(out))
-	return err
+	cmd.Println(strings.TrimSpace(string(out)))
+	return nil
 }

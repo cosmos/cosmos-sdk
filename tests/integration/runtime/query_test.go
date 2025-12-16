@@ -56,9 +56,9 @@ func initFixture(t assert.TestingT) *fixture {
 	)
 	assert.NilError(t, err)
 
-	f.ctx = app.BaseApp.NewContext(false)
+	f.ctx = app.NewContext(false)
 	queryHelper := &baseapp.QueryServiceTestHelper{
-		GRPCQueryRouter: app.BaseApp.GRPCQueryRouter(),
+		GRPCQueryRouter: app.GRPCQueryRouter(),
 		Ctx:             f.ctx,
 	}
 	f.appQueryClient = appv1alpha1.NewQueryClient(queryHelper)
@@ -72,7 +72,7 @@ func TestQueryAppConfig(t *testing.T) {
 	t.Parallel()
 	f := initFixture(t)
 
-	res, err := f.appQueryClient.Config(f.ctx, &appv1alpha1.QueryConfigRequest{})
+	res, err := f.appQueryClient.Config(f.ctx, &appv1alpha1.QueryConfigRequest{}) //nolint:staticcheck // used for testing the deprecated code
 	assert.NilError(t, err)
 	// app config is not nil
 	assert.Assert(t, res != nil && res.Config != nil)

@@ -43,7 +43,7 @@ func TestReadLineFromBuf(t *testing.T) {
 		require.ErrorIs(t, err, io.EOF)
 	})
 
-	t.Run("it returns the error if it's not EOF regardles if it read something or not", func(t *testing.T) {
+	t.Run("it returns the error if it's not EOF regardless if it read something or not", func(t *testing.T) {
 		expectedErr := errors.New("oh no")
 		fr.fnc = func(p []byte) (int, error) {
 			return copy(p, []byte("hello")), expectedErr

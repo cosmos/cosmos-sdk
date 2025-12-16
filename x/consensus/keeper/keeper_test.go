@@ -165,7 +165,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 			expErrMsg: "",
 		},
 		{
-			name: "invalid  params",
+			name: "invalid params",
 			input: &types.MsgUpdateParams{
 				Authority: s.consensusParamsKeeper.GetAuthority(),
 				Block:     &cmtproto.BlockParams{MaxGas: -10, MaxBytes: -10},
@@ -292,7 +292,6 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			s.SetupTest()
 			_, err := s.consensusParamsKeeper.UpdateParams(s.ctx, tc.input)

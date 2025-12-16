@@ -39,6 +39,17 @@ func Test_runAddCmdBasic(t *testing.T) {
 		_ = kb.Delete("keyname2")
 	})
 
+	// test empty name
+	cmd.SetArgs([]string{
+		"",
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagOutput, flags.OutputFormatText),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyType, hd.Secp256k1Type),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+	})
+	mockIn.Reset("y\n")
+	require.ErrorContains(t, cmd.ExecuteContext(ctx), "the provided name is invalid or empty after trimming whitespace")
+
 	cmd.SetArgs([]string{
 		"keyname1",
 		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
@@ -117,6 +128,74 @@ func Test_runAddCmdBasic(t *testing.T) {
 	// passwords don't match and fail interactive key generation
 	mockIn.Reset("\n" + password + "\n" + "fail" + "\n")
 	require.Error(t, cmd.ExecuteContext(ctx))
+}
+
+func Test_runAddCmdMultisigDupKeys(t *testing.T) {
+	cmd := AddKeyCommand()
+	cmd.Flags().AddFlagSet(Commands().PersistentFlags())
+
+	mockIn := testutil.ApplyMockIODiscardOutErr(cmd)
+	kbHome := t.TempDir()
+
+	cdc := moduletestutil.MakeTestEncodingConfig().Codec
+	kb, err := keyring.New(sdk.KeyringServiceName(), keyring.BackendTest, kbHome, mockIn, cdc)
+	require.NoError(t, err)
+
+	clientCtx := client.Context{}.
+		WithKeyringDir(kbHome).
+		WithInput(mockIn).
+		WithCodec(cdc)
+
+	ctx := context.WithValue(context.Background(), client.ClientContextKey, &clientCtx)
+
+	t.Cleanup(func() {
+		_ = kb.Delete("keyname1")
+		_ = kb.Delete("keyname2")
+		_ = kb.Delete("multisigname")
+	})
+
+	cmd.SetArgs([]string{
+		"keyname1",
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagOutput, flags.OutputFormatText),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyType, hd.Secp256k1Type),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+	})
+	require.NoError(t, cmd.ExecuteContext(ctx))
+
+	cmd.SetArgs([]string{
+		"keyname2",
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagOutput, flags.OutputFormatText),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyType, hd.Secp256k1Type),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+	})
+	require.NoError(t, cmd.ExecuteContext(ctx))
+
+	cmd.SetArgs([]string{
+		"multisigname",
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagOutput, flags.OutputFormatText),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyType, hd.Secp256k1Type),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+		fmt.Sprintf("--%s=%s", flagMultisig, "keyname1,keyname2"),
+		fmt.Sprintf("--%s=%s", flagMultiSigThreshold, "2"),
+	})
+	require.NoError(t, cmd.ExecuteContext(ctx))
+
+	cmd.SetArgs([]string{
+		"multisigname",
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringDir, kbHome),
+		fmt.Sprintf("--%s=%s", flags.FlagOutput, flags.OutputFormatText),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyType, hd.Secp256k1Type),
+		fmt.Sprintf("--%s=%s", flags.FlagKeyringBackend, keyring.BackendTest),
+		fmt.Sprintf("--%s=%s", flagMultisig, "keyname1,keyname1"),
+		fmt.Sprintf("--%s=%s", flagMultiSigThreshold, "2"),
+	})
+	mockIn.Reset("y\n")
+	require.Error(t, cmd.ExecuteContext(ctx))
+	mockIn.Reset("y\n")
+	require.EqualError(t, cmd.ExecuteContext(ctx), "duplicate multisig keys: keyname1")
 }
 
 func Test_runAddCmdDryRun(t *testing.T) {
@@ -202,7 +281,6 @@ func Test_runAddCmdDryRun(t *testing.T) {
 		},
 	}
 	for _, tt := range testData {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			cmd := AddKeyCommand()
 			cmd.Flags().AddFlagSet(Commands().PersistentFlags())

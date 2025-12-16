@@ -81,7 +81,7 @@ func (s *paginationTestSuite) SetupTest() {
 
 	s.NoError(err)
 
-	ctx := app.BaseApp.NewContextLegacy(false, cmtproto.Header{Height: 1})
+	ctx := app.NewContextLegacy(false, cmtproto.Header{Height: 1})
 
 	s.ctx, s.bankKeeper, s.accountKeeper, s.cdc, s.app, s.interfaceReg = ctx, bankKeeper, accountKeeper, cdc, app, reg
 }
@@ -112,7 +112,7 @@ func (s *paginationTestSuite) TestPagination() {
 
 	var balances sdk.Coins
 
-	for i := 0; i < numBalances; i++ {
+	for i := range numBalances {
 		denom := fmt.Sprintf("foo%ddenom", i)
 		balances = append(balances, sdk.NewInt64Coin(denom, 100))
 	}
@@ -123,7 +123,7 @@ func (s *paginationTestSuite) TestPagination() {
 	s.accountKeeper.SetAccount(s.ctx, acc1)
 	s.Require().NoError(testutil.FundAccount(s.ctx, s.bankKeeper, addr1, balances))
 
-	s.T().Log("verify empty page request results a max of defaultLimit records and counts total records")
+	s.T().Log("verify empty page request results in a max of defaultLimit records and counts total records")
 	pageReq := &query.PageRequest{}
 	request := types.NewQueryAllBalancesRequest(addr1, pageReq, false)
 	res, err := queryClient.AllBalances(gocontext.Background(), request)
@@ -132,7 +132,7 @@ func (s *paginationTestSuite) TestPagination() {
 	s.Require().NotNil(res.Pagination.NextKey)
 	s.Require().LessOrEqual(res.Balances.Len(), defaultLimit)
 
-	s.T().Log("verify page request with limit > defaultLimit, returns less or equal to `limit` records")
+	s.T().Log("verify page request with limit > defaultLimit, returns less than or equal to `limit` records")
 	pageReq = &query.PageRequest{Limit: overLimit}
 	request = types.NewQueryAllBalancesRequest(addr1, pageReq, false)
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
@@ -220,7 +220,7 @@ func (s *paginationTestSuite) TestReversePagination() {
 
 	var balances sdk.Coins
 
-	for i := 0; i < numBalances; i++ {
+	for i := range numBalances {
 		denom := fmt.Sprintf("foo%ddenom", i)
 		balances = append(balances, sdk.NewInt64Coin(denom, 100))
 	}
@@ -275,7 +275,7 @@ func (s *paginationTestSuite) TestReversePagination() {
 	s.Require().Nil(res.Pagination.NextKey)
 	s.Require().Equal(res.Pagination.Total, uint64(0))
 
-	s.T().Log("verify page request with limit > defaultLimit, returns less or equal to `limit` records")
+	s.T().Log("verify page request with limit > defaultLimit, returns less than or equal to `limit` records")
 	pageReq = &query.PageRequest{Limit: overLimit, Reverse: true}
 	request = types.NewQueryAllBalancesRequest(addr1, pageReq, false)
 	res, err = queryClient.AllBalances(gocontext.Background(), request)
@@ -339,7 +339,7 @@ func (s *paginationTestSuite) TestReversePagination() {
 func (s *paginationTestSuite) TestPaginate() {
 	var balances sdk.Coins
 
-	for i := 0; i < 2; i++ {
+	for i := range 2 {
 		denom := fmt.Sprintf("foo%ddenom", i)
 		balances = append(balances, sdk.NewInt64Coin(denom, 100))
 	}

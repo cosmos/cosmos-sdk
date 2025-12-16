@@ -89,7 +89,7 @@ must equal the constant `"message"`. The `@type` field corresponds to the type o
 structure the user will be signing in an application. For now, a user is only
 allowed to sign bytes of valid ASCII text ([see here](https://github.com/cometbft/cometbft/blob/v0.37.0/libs/strings/string.go#L35-L64)).
 However, this will change and evolve to support additional application-specific
-structures that are human-readable and machine-verifiable ([see Future Adaptations](#futureadaptations)).
+structures that are human-readable and machine-verifiable ([see Future Adaptations](#future-adaptations)).
 
 Thus, we can have a canonical JSON structure for signing Cosmos messages using
 the [JSON schema](http://json-schema.org/) specification as such:
@@ -152,7 +152,7 @@ more complex structures, apart from just string messages, and still be able to
 know exactly what they are signing (opposed to signing a bunch of arbitrary bytes).
 
 Thus, in the future, the Cosmos signing message specification will be expected
-to expand upon it's canonical JSON structure to include such functionality.
+to expand upon its canonical JSON structure to include such functionality.
 
 ## API
 

@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
-// GetValidatorSigningInfo retruns the ValidatorSigningInfo for a specific validator
+// GetValidatorSigningInfo returns the ValidatorSigningInfo for a specific validator
 // ConsAddress. If not found it returns ErrNoSigningInfoFound, but other errors
 // may be returned if there is an error reading from the store.
 func (k Keeper) GetValidatorSigningInfo(ctx context.Context, address sdk.ConsAddress) (types.ValidatorSigningInfo, error) {
@@ -193,8 +193,7 @@ func (k Keeper) SetMissedBlockBitmapValue(ctx context.Context, addr sdk.ConsAddr
 		return errors.Wrapf(err, "failed to encode bitmap chunk; index: %d", index)
 	}
 
-	k.setMissedBlockBitmapChunk(ctx, addr, chunkIndex, updatedChunk)
-	return nil
+	return k.setMissedBlockBitmapChunk(ctx, addr, chunkIndex, updatedChunk)
 }
 
 // DeleteMissedBlockBitmap removes a validator's missed block bitmap from state.

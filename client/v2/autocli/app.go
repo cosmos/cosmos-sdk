@@ -1,13 +1,13 @@
 package autocli
 
 import (
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/client/v2/autocli/flag"
-	"cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
@@ -42,9 +42,6 @@ type AppOptions struct {
 	ValidatorAddressCodec runtime.ValidatorAddressCodec
 	ConsensusAddressCodec runtime.ConsensusAddressCodec
 
-	// Keyring is the keyring to use for client/v2.
-	Keyring keyring.Keyring `optional:"true"`
-
 	// ClientCtx contains the necessary information needed to execute the commands.
 	ClientCtx client.Context
 }
@@ -65,20 +62,34 @@ type AppOptions struct {
 //	rootCmd := initRootCmd()
 //	err = autoCliOpts.EnhanceRootCommand(rootCmd)
 func (appOptions AppOptions) EnhanceRootCommand(rootCmd *cobra.Command) error {
+	var (
+		mergedFiles flag.FileResolver
+		err         error
+	)
+
+	mergedFiles, err = proto.MergedRegistry()
+	if err != nil {
+		// we can safely ignore this error, as this should have been called somewhere earlier
+		// in the app's lifecycle.
+		mergedFiles = appOptions.ClientCtx.InterfaceRegistry
+	}
+
 	builder := &Builder{
 		Builder: flag.Builder{
 			TypeResolver:          protoregistry.GlobalTypes,
-			FileResolver:          appOptions.ClientCtx.InterfaceRegistry,
+			FileResolver:          mergedFiles,
 			AddressCodec:          appOptions.AddressCodec,
 			ValidatorAddressCodec: appOptions.ValidatorAddressCodec,
 			ConsensusAddressCodec: appOptions.ConsensusAddressCodec,
-			Keyring:               appOptions.Keyring,
 		},
 		GetClientConn: func(cmd *cobra.Command) (grpc.ClientConnInterface, error) {
 			return client.GetClientQueryContext(cmd)
 		},
-		AddQueryConnFlags: sdkflags.AddQueryFlagsToCmd,
-		AddTxConnFlags:    sdkflags.AddTxFlagsToCmd,
+		AddQueryConnFlags: func(c *cobra.Command) {
+			sdkflags.AddQueryFlagsToCmd(c)
+			sdkflags.AddKeyringFlags(c.Flags())
+		},
+		AddTxConnFlags: sdkflags.AddTxFlagsToCmd,
 	}
 
 	return appOptions.EnhanceRootCommandWithBuilder(rootCmd, builder)

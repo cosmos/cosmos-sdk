@@ -26,7 +26,7 @@ func BenchmarkAccountMapperGetAccountFound(b *testing.B) {
 	)
 	require.NoError(b, err)
 
-	ctx := app.BaseApp.NewContext(false)
+	ctx := app.NewContext(false)
 
 	// assumes b.N < 2**24
 	for i := 0; i < b.N; i++ {
@@ -53,12 +53,10 @@ func BenchmarkAccountMapperSetAccount(b *testing.B) {
 		), &accountKeeper)
 	require.NoError(b, err)
 
-	ctx := app.BaseApp.NewContext(false)
-
-	b.ResetTimer()
+	ctx := app.NewContext(false)
 
 	// assumes b.N < 2**24
-	for i := 0; i < b.N; i++ {
+	for i := 0; b.Loop(); i++ {
 		arr := []byte{byte((i & 0xFF0000) >> 16), byte((i & 0xFF00) >> 8), byte(i & 0xFF)}
 		addr := sdk.AccAddress(arr)
 		acc := accountKeeper.NewAccountWithAddress(ctx, addr)

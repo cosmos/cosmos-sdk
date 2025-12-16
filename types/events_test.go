@@ -90,7 +90,7 @@ func (s *eventsTestSuite) TestEventManager() {
 
 func (s *eventsTestSuite) TestEmitTypedEvent() {
 	s.Run("deterministic key-value order", func() {
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			em := sdk.NewEventManager()
 			coin := sdk.NewCoin("fakedenom", math.NewInt(1999999))
 			s.Require().NoError(em.EmitTypedEvent(&coin))
@@ -268,7 +268,6 @@ func (s *eventsTestSuite) TestMarkEventsToIndex() {
 	}
 
 	for name, tc := range testCases {
-		tc := tc
 		s.T().Run(name, func(_ *testing.T) {
 			s.Require().Equal(tc.expected, sdk.MarkEventsToIndex(tc.events, tc.indexSet))
 		})

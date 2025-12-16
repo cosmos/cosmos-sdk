@@ -39,7 +39,23 @@ Additionally, there are several [flags](../advanced/07-cli.md) users can use to 
 
 The ultimate value of the fees paid is equal to the gas multiplied by the gas prices. In other words, `fees = ceil(gas * gasPrices)`. Thus, since fees can be calculated using gas prices and vice versa, the users specify only one of the two.
 
-Later, validators decide whether or not to include the transaction in their block by comparing the given or calculated `gas-prices` to their local `min-gas-prices`. `Tx` is rejected if its `gas-prices` is not high enough, so users are incentivized to pay more.
+Later, validators decide whether to include the transaction in their block by comparing the given or calculated `gas-prices` to their local `min-gas-prices`. `Tx` is rejected if its `gas-prices` is not high enough, so users are incentivized to pay more.
+
+#### Unordered Transactions
+
+With Cosmos SDK v0.53.0, users may send unordered transactions to chains that have this feature enabled.
+The following flags allow a user to build an unordered transaction from the CLI.
+
+* `--unordered` specifies that this transaction should be unordered. (transaction sequence must be unset)
+* `--timeout-duration` specifies the amount of time the unordered transaction should be valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + timeout duration.
+
+:::warning
+
+Unordered transactions MUST leave sequence values unset. When a transaction is both unordered and contains a non-zero sequence value,
+the transaction will be rejected. External services that operate on prior assumptions about transaction sequence values should be updated to handle unordered transactions.
+Services should be aware that when the transaction is unordered, the transaction sequence will always be zero.
+
+:::
 
 #### CLI Example
 
@@ -82,7 +98,7 @@ through several steps, beginning with decoding `Tx`.
 
 ### Decoding
 
-When `Tx` is received by the application from the underlying consensus engine (e.g. CometBFT ), it is still in its [encoded](../advanced/05-encoding.md) `[]byte` form and needs to be unmarshaled in order to be processed. Then, the [`runTx`](../advanced/00-baseapp.md#runtx-antehandler-runmsgs-posthandler) function is called to run in `runTxModeCheck` mode, meaning the function runs all checks but exits before executing messages and writing state changes.
+When `Tx` is received by the application from the underlying consensus engine (e.g. CometBFT), it is still in its [encoded](../advanced/05-encoding.md) `[]byte` form and needs to be unmarshaled in order to be processed. Then, the [`runTx`](../advanced/00-baseapp.md#runtx-antehandler-runmsgs-posthandler) function is called to run in `runTxModeCheck` mode, meaning the function runs all checks but exits before executing messages and writing state changes.
 
 ### ValidateBasic (deprecated)
 

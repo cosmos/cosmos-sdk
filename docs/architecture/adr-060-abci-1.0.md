@@ -84,7 +84,7 @@ type Mempool interface {
 
 	// Select returns an Iterator over the app-side mempool. If txs are specified,
 	// then they shall be incorporated into the Iterator. The Iterator must
-	// closed by the caller.
+	// be closed by the caller.
 	Select(sdk.Context, [][]byte) Iterator
 
 	// CountTx returns the number of transactions currently in the mempool.
@@ -137,7 +137,7 @@ transactions entirely with other transactions.
 
 When evaluating transactions from `RequestPrepareProposal`, the application will
 ignore *ALL* transactions sent to it in the request and instead reap up to
-`RequestPrepareProposal.max_tx_bytes` from it's own mempool.
+`RequestPrepareProposal.max_tx_bytes` from its own mempool.
 
 Since an application can technically insert or inject transactions on `Insert`
 during `CheckTx` execution, it is recommended that applications ensure transaction

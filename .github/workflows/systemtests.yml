@@ -1,0 +1,88 @@
+name: System Tests
+
+on:
+  pull_request:
+  merge_group:
+  push:
+    branches:
+      - main
+      - release/v0.53.x
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}-system-tests
+  cancel-in-progress: true
+
+jobs:
+  setup:
+    runs-on: depot-ubuntu-22.04-4
+    outputs:
+      git_diff: ${{ steps.git_diff.outputs.diff }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-tags: true
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.25.5"
+          check-latest: true
+          cache: true
+          cache-dependency-path: |
+            ./go.sum
+            **/go.mod
+            **/go.sum
+            **/Makefile
+            Makefile
+
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: git_diff
+        with:
+          PATTERNS: |
+            **/*.go
+            go.mod
+            go.sum
+            **/go.mod
+            **/go.sum
+            **/Makefile
+            Makefile
+
+  test-system:
+    needs: setup
+    if: needs.setup.outputs.git_diff
+    runs-on: depot-ubuntu-22.04-4
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Run system tests
+        run: |
+          mkdir -p ./tests/systemtests/testnet
+          make test-system
+
+      - name: Upload system test logs if failed
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: system-test-logs
+          path: ./tests/systemtests/testnet/*.out
+
+  test-system-legacy:
+    needs: setup
+    if: needs.setup.outputs.git_diff
+    runs-on: depot-ubuntu-22.04-4
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Run legacy system tests
+        run: |
+          mkdir -p ./tests/systemtests/testnet
+          COSMOS_BUILD_OPTIONS=legacy make test-system
+
+      - name: Upload legacy system test logs if failed
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: legacy-system-test-logs
+          path: ./tests/systemtests/testnet/*.out

@@ -13,7 +13,7 @@ import (
 type ABCIListener interface {
 	// ListenFinalizeBlock updates the streaming service with the latest FinalizeBlock messages
 	ListenFinalizeBlock(ctx context.Context, req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) error
-	// ListenCommit updates the steaming service with the latest Commit messages and state changes
+	// ListenCommit updates the streaming service with the latest Commit messages and state changes
 	ListenCommit(ctx context.Context, res abci.ResponseCommit, changeSet []*StoreKVPair) error
 }
 

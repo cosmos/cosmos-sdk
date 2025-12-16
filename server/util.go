@@ -44,7 +44,6 @@ import (
 // a command's Context.
 const ServerContextKey = sdk.ContextKey("server.context")
 
-// server context
 type Context struct {
 	Viper  *viper.Viper
 	Config *cmtcfg.Config
@@ -72,7 +71,7 @@ func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) 
 
 	cmd.Flags().VisitAll(func(f *pflag.Flag) {
 		// Environment variables can't have dashes in them, so bind them to their equivalent
-		// keys with underscores, e.g. --favorite-color to STING_FAVORITE_COLOR
+		// keys with underscores, e.g. --favorite-color to STRING_FAVORITE_COLOR
 		err = v.BindEnv(f.Name, fmt.Sprintf("%s_%s", basename, strings.ToUpper(strings.ReplaceAll(f.Name, "-", "_"))))
 		if err != nil {
 			panic(err)
@@ -99,7 +98,7 @@ func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) 
 
 // InterceptConfigsPreRunHandler is identical to InterceptConfigsAndCreateContext
 // except it also sets the server context on the command and the server logger.
-func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate string, customAppConfig interface{}, cmtConfig *cmtcfg.Config) error {
+func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate string, customAppConfig any, cmtConfig *cmtcfg.Config) error {
 	serverCtx, err := InterceptConfigsAndCreateContext(cmd, customAppConfigTemplate, customAppConfig, cmtConfig)
 	if err != nil {
 		return err
@@ -126,7 +125,7 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 // is used to read and parse the application configuration. Command handlers can
 // fetch the server Context to get the CometBFT configuration or to get access
 // to Viper.
-func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplate string, customAppConfig interface{}, cmtConfig *cmtcfg.Config) (*Context, error) {
+func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplate string, customAppConfig any, cmtConfig *cmtcfg.Config) (*Context, error) {
 	serverCtx := NewDefaultContext()
 
 	// Get the executable name and configure the viper instance so that environmental
@@ -166,7 +165,7 @@ func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplat
 	return serverCtx, nil
 }
 
-// CreateSDKLogger creates a the default SDK logger.
+// CreateSDKLogger creates the default SDK logger.
 // It reads the log level and format from the server context.
 func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 	var opts []log.Option
@@ -177,6 +176,15 @@ func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 		log.ColorOption(!ctx.Viper.GetBool(flags.FlagLogNoColor)),
 		// We use CometBFT flag (cmtcli.TraceFlag) for trace logging.
 		log.TraceOption(ctx.Viper.GetBool(FlagTrace)))
+
+	verboseLogLevelStr := ctx.Viper.GetString(flags.FlagVerboseLogLevel)
+	if verboseLogLevelStr != "" {
+		verboseLogLvl, err := parseVerboseLogLevel(verboseLogLevelStr)
+		if err != nil {
+			return nil, fmt.Errorf("invalid verbose log level: %s: %w", verboseLogLevelStr, err)
+		}
+		opts = append(opts, log.VerboseLevelOption(verboseLogLvl))
+	}
 
 	// check and set filter level or keys for the logger if any
 	logLvlStr := ctx.Viper.GetString(flags.FlagLogLevel)
@@ -199,6 +207,14 @@ func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 	}
 
 	return log.NewLogger(out, opts...), nil
+}
+
+// parseVerboseLogLevel parses the string "none" as zerolog.NoLevel and all other level strings using zerolog.ParseLevel.
+func parseVerboseLogLevel(verboseLogLevelStr string) (zerolog.Level, error) {
+	if verboseLogLevelStr == "none" {
+		return zerolog.NoLevel, nil
+	}
+	return zerolog.ParseLevel(verboseLogLevelStr)
 }
 
 // GetServerContextFromCmd returns a Context from a command or an empty Context
@@ -231,7 +247,7 @@ func SetCmdServerContext(cmd *cobra.Command, serverCtx *Context) error {
 // configuration file. The CometBFT configuration file is parsed given a root
 // Viper object, whereas the application is parsed with the private package-aware
 // viperCfg object.
-func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customConfig interface{}, cmtConfig *cmtcfg.Config) (*cmtcfg.Config, error) {
+func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customConfig any, cmtConfig *cmtcfg.Config) (*cmtcfg.Config, error) {
 	rootDir := rootViper.GetString(flags.FlagHome)
 	configPath := filepath.Join(rootDir, "config")
 	cmtCfgFile := filepath.Join(configPath, "config.toml")
@@ -311,7 +327,6 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 	return conf, nil
 }
 
-// add server commands
 func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator types.AppCreator, appExport types.AppExporter, addStartFlags types.ModuleInitFlags) {
 	cometCmd := &cobra.Command{
 		Use:     "comet",
@@ -338,6 +353,7 @@ func AddCommands(rootCmd *cobra.Command, defaultNodeHome string, appCreator type
 		ExportCmd(appExport, defaultNodeHome),
 		version.NewVersionCommand(),
 		NewRollbackCmd(appCreator, defaultNodeHome),
+		ModuleHashByHeightQuery(appCreator),
 	)
 }
 
@@ -377,6 +393,8 @@ func AddTestnetCreatorCommand(rootCmd *cobra.Command, appCreator types.AppCreato
 	rootCmd.AddCommand(testnetCreateCmd)
 }
 
+// ExternalIP gets the external IP address of the machine.
+//
 // https://stackoverflow.com/questions/23558425/how-do-i-get-the-local-ip-address-in-go
 // TODO there must be a better way to get external IP
 func ExternalIP() (string, error) {
@@ -486,7 +504,7 @@ func openDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
 
 func openTraceWriter(traceWriterFile string) (w io.WriteCloser, err error) {
 	if traceWriterFile == "" {
-		return
+		return w, err
 	}
 	return os.OpenFile(
 		traceWriterFile,
@@ -512,7 +530,12 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
 	if chainID == "" {
 		// fallback to genesis chain-id
-		reader, err := os.Open(filepath.Join(homeDir, "config", "genesis.json"))
+		genesisPathCfg, _ := appOpts.Get("genesis_file").(string)
+		if genesisPathCfg == "" {
+			genesisPathCfg = filepath.Join("config", "genesis.json")
+		}
+
+		reader, err := os.Open(filepath.Join(homeDir, genesisPathCfg))
 		if err != nil {
 			panic(err)
 		}
@@ -555,6 +578,7 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		baseapp.SetSnapshot(snapshotStore, snapshotOptions),
 		baseapp.SetIAVLCacheSize(cast.ToInt(appOpts.Get(FlagIAVLCacheSize))),
 		baseapp.SetIAVLDisableFastNode(cast.ToBool(appOpts.Get(FlagDisableIAVLFastNode))),
+		baseapp.SetIAVLSyncPruning(cast.ToBool(appOpts.Get(FlagIAVLSyncPruning))),
 		defaultMempool,
 		baseapp.SetChainID(chainID),
 		baseapp.SetQueryGasLimit(cast.ToUint64(appOpts.Get(FlagQueryGasLimit))),

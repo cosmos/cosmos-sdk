@@ -142,8 +142,8 @@ and writing parameters from and to state, especially if a specific set of parame
 are read on a consistent basis.
 
 However, this methodology will require developers to implement more types and
-Msg service metohds which can become burdensome if many parameters exist. In addition,
-developers are required to implement persistance logics of module parameters.
+Msg service methods which can become burdensome if many parameters exist. In addition,
+developers are required to implement persistence logics of module parameters.
 However, this should be trivial.
 
 ### Backwards Compatibility
@@ -162,7 +162,7 @@ module may be removed entirely in a future release.
 
 ### Negative
 
-* Module parameters becomes slightly more burdensome for module developers:
+* Module parameters become slightly more burdensome for module developers:
     * Modules are now responsible for persisting and retrieving parameter state
     * Modules are now required to have unique message handlers to handle parameter
       changes per unique parameter data structure.

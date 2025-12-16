@@ -268,7 +268,6 @@ func (s *CLITestSuite) TestCLIQueryTxCmdByHash() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := authcli.QueryTxCmd()
 			cmd.SetArgs(tc.args)
@@ -334,7 +333,6 @@ func (s *CLITestSuite) TestCLIQueryTxCmdByEvents() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := authcli.QueryTxCmd()
 			cmd.SetArgs(tc.args)
@@ -377,7 +375,6 @@ func (s *CLITestSuite) TestCLIQueryTxsCmdByEvents() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := authcli.QueryTxsByEventsCmd()
 
@@ -940,10 +937,10 @@ func (s *CLITestSuite) TestSignWithMultiSignersAminoJSON() {
 	// because DIRECT doesn't support multi signers via the CLI.
 	// Since we use amino, we don't need to pre-populate signer_infos.
 	txBuilder := s.clientCtx.TxConfig.NewTxBuilder()
-	txBuilder.SetMsgs(
+	s.Require().NoError(txBuilder.SetMsgs(
 		banktypes.NewMsgSend(val0, addr1, sdk.NewCoins(val0Coin)),
 		banktypes.NewMsgSend(val1, addr1, sdk.NewCoins(val1Coin)),
-	)
+	))
 	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin("stake", math.NewInt(10))))
 	txBuilder.SetGasLimit(testdata.NewTestGasLimit() * 2)
 	signers, err := txBuilder.GetTx().GetSigners()
@@ -1007,7 +1004,7 @@ func (s *CLITestSuite) TestAuxSigner() {
 			true,
 		},
 		{
-			"no error with SIGN_MDOE_DIRECT_AUX mode and generate-only set (ignores generate-only)",
+			"no error with SIGN_MODE_DIRECT_AUX mode and generate-only set (ignores generate-only)",
 			[]string{
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
 				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
@@ -1015,7 +1012,7 @@ func (s *CLITestSuite) TestAuxSigner() {
 			false,
 		},
 		{
-			"no error with SIGN_MDOE_DIRECT_AUX mode and generate-only, tip flag set",
+			"no error with SIGN_MODE_DIRECT_AUX mode and generate-only, tip flag set",
 			[]string{
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
 				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
@@ -1026,7 +1023,6 @@ func (s *CLITestSuite) TestAuxSigner() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			_, err := govtestutil.MsgSubmitLegacyProposal(
 				s.clientCtx,
@@ -1245,7 +1241,6 @@ func (s *CLITestSuite) TestAuxToFeeWithTips() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			res, err := govtestutil.MsgSubmitLegacyProposal(
 				s.clientCtx,

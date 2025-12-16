@@ -12,7 +12,7 @@ import (
 	"cosmossdk.io/core/coins"
 )
 
-// coinsJsonTest is the type of test cases in the coin.json file.
+// coinsJSONTest is the type of test cases in the coin.json file.
 type coinJSONTest struct {
 	Proto    *basev1beta1.Coin
 	Metadata *bankv1beta1.Metadata

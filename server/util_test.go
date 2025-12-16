@@ -59,7 +59,7 @@ func TestInterceptConfigsPreRunHandlerCreatesConfigFilesWhenMissing(t *testing.T
 
 	serverCtx := &server.Context{}
 	ctx := context.WithValue(context.Background(), server.ServerContextKey, serverCtx)
-	if err := cmd.ExecuteContext(ctx); err != errCanceledInPreRun {
+	if err := cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
@@ -91,7 +91,7 @@ func TestInterceptConfigsPreRunHandlerCreatesConfigFilesWhenMissing(t *testing.T
 	}
 
 	if !s.Mode().IsRegular() {
-		t.Fatal("appp.toml not created as regular file")
+		t.Fatal("app.toml not created as regular file")
 	}
 
 	if s.Size() == 0 {
@@ -136,7 +136,7 @@ func TestInterceptConfigsPreRunHandlerReadsConfigToml(t *testing.T) {
 	serverCtx := &server.Context{}
 	ctx := context.WithValue(context.Background(), server.ServerContextKey, serverCtx)
 
-	if err := cmd.ExecuteContext(ctx); err != errCanceledInPreRun {
+	if err := cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
@@ -173,7 +173,7 @@ func TestInterceptConfigsPreRunHandlerReadsAppToml(t *testing.T) {
 	serverCtx := &server.Context{}
 	ctx := context.WithValue(context.Background(), server.ServerContextKey, serverCtx)
 
-	if err := cmd.ExecuteContext(ctx); err != errCanceledInPreRun {
+	if err := cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
@@ -201,7 +201,7 @@ func TestInterceptConfigsPreRunHandlerReadsFlags(t *testing.T) {
 	serverCtx := &server.Context{}
 	ctx := context.WithValue(context.Background(), server.ServerContextKey, serverCtx)
 
-	if err := cmd.ExecuteContext(ctx); err != errCanceledInPreRun {
+	if err := cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
@@ -236,7 +236,7 @@ func TestInterceptConfigsPreRunHandlerReadsEnvVars(t *testing.T) {
 	serverCtx := &server.Context{}
 	ctx := context.WithValue(context.Background(), server.ServerContextKey, serverCtx)
 
-	if err := cmd.ExecuteContext(ctx); err != errCanceledInPreRun {
+	if err := cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
@@ -265,6 +265,8 @@ type precedenceCommon struct {
 }
 
 func newPrecedenceCommon(t *testing.T) precedenceCommon {
+	t.Helper()
+
 	retval := precedenceCommon{}
 
 	// Determine the env. var. name based off the executable name
@@ -306,6 +308,8 @@ func newPrecedenceCommon(t *testing.T) precedenceCommon {
 }
 
 func (v precedenceCommon) setAll(t *testing.T, setFlag, setEnvVar, setConfigFile *string) {
+	t.Helper()
+
 	if setFlag != nil {
 		if err := v.cmd.Flags().Set(v.flagName, *setFlag); err != nil {
 			t.Fatalf("Failed setting flag %q", v.flagName)
@@ -340,7 +344,7 @@ func TestInterceptConfigsPreRunHandlerPrecedenceFlag(t *testing.T) {
 	serverCtx := &server.Context{}
 	ctx := context.WithValue(context.Background(), server.ServerContextKey, serverCtx)
 
-	if err := testCommon.cmd.ExecuteContext(ctx); err != errCanceledInPreRun {
+	if err := testCommon.cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
@@ -356,7 +360,7 @@ func TestInterceptConfigsPreRunHandlerPrecedenceEnvVar(t *testing.T) {
 	serverCtx := &server.Context{}
 	ctx := context.WithValue(context.Background(), server.ServerContextKey, serverCtx)
 
-	if err := testCommon.cmd.ExecuteContext(ctx); err != errCanceledInPreRun {
+	if err := testCommon.cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
@@ -372,7 +376,7 @@ func TestInterceptConfigsPreRunHandlerPrecedenceConfigFile(t *testing.T) {
 	serverCtx := &server.Context{}
 	ctx := context.WithValue(context.Background(), server.ServerContextKey, serverCtx)
 
-	if err := testCommon.cmd.ExecuteContext(ctx); err != errCanceledInPreRun {
+	if err := testCommon.cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
@@ -388,7 +392,7 @@ func TestInterceptConfigsPreRunHandlerPrecedenceConfigDefault(t *testing.T) {
 	serverCtx := &server.Context{}
 	ctx := context.WithValue(context.Background(), server.ServerContextKey, serverCtx)
 
-	if err := testCommon.cmd.ExecuteContext(ctx); err != errCanceledInPreRun {
+	if err := testCommon.cmd.ExecuteContext(ctx); !errors.Is(err, errCanceledInPreRun) {
 		t.Fatalf("function failed with [%T] %v", err, err)
 	}
 
@@ -397,7 +401,7 @@ func TestInterceptConfigsPreRunHandlerPrecedenceConfigDefault(t *testing.T) {
 	}
 }
 
-// Ensure that if interceptConfigs encounters any error other than non-existen errors
+// Ensure that if interceptConfigs encounters any error other than non-existent errors
 // that we correctly return the offending error, for example a permission error.
 // See https://github.com/cosmos/cosmos-sdk/issues/7578
 func TestInterceptConfigsWithBadPermissions(t *testing.T) {
@@ -439,7 +443,7 @@ func TestEmptyMinGasPrices(t *testing.T) {
 	// Modify app.toml.
 	appCfgTempFilePath := filepath.Join(tempDir, "config", "app.toml")
 	appConf := config.DefaultConfig()
-	appConf.BaseConfig.MinGasPrices = ""
+	appConf.MinGasPrices = ""
 	config.WriteConfigFile(appCfgTempFilePath, appConf)
 
 	// Run StartCmd.
@@ -456,9 +460,9 @@ func TestEmptyMinGasPrices(t *testing.T) {
 	require.Errorf(t, err, sdkerrors.ErrAppConfig.Error())
 }
 
-type mapGetter map[string]interface{}
+type mapGetter map[string]any
 
-func (m mapGetter) Get(key string) interface{} {
+func (m mapGetter) Get(key string) any {
 	return m[key]
 }
 

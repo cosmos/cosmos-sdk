@@ -28,7 +28,7 @@ group Unbond(delAddr, valAddr, shares)
 
     alt complete unbonding, all shares removed
         keeper -> store : remove delegation object
-    else there are still shares delegated (not a complete undbonding)
+    else there are still shares delegated (not a complete unbonding)
         keeper -> store : update delegation object
         keeper -> keeper : AfterDelegationModified hook
     end

@@ -7,6 +7,6 @@ import "cosmos/app/v1alpha1/module.proto";
 // Module is the config object of the evidence module.
 message Module {
   option (cosmos.app.v1alpha1.module) = {
-    go_import: "cosmossdk.io/x/evidence"
+    go_import: "github.com/cosmos/cosmos-sdk/x/evidence"
   };
 }

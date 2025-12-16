@@ -14,7 +14,7 @@ import (
 // Takes a network, wait for two blocks and fetch the transaction from its hash
 func CheckTxCode(network *network.Network, clientCtx client.Context, txHash string, expectedCode uint32) error {
 	// wait for 2 blocks
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		if err := network.WaitForNextBlock(); err != nil {
 			return fmt.Errorf("failed to wait for next block: %w", err)
 		}
@@ -42,7 +42,7 @@ func CheckTxCode(network *network.Network, clientCtx client.Context, txHash stri
 // Takes a network, wait for two blocks and fetch the transaction from its hash
 func GetTxResponse(network *network.Network, clientCtx client.Context, txHash string) (sdk.TxResponse, error) {
 	// wait for 2 blocks
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		if err := network.WaitForNextBlock(); err != nil {
 			return sdk.TxResponse{}, fmt.Errorf("failed to wait for next block: %w", err)
 		}

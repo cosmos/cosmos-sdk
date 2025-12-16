@@ -1,13 +1,13 @@
 /*
 Package errors implements custom error interfaces for cosmos-sdk.
 
-Error declarations should be generic and cover broad range of cases. Each
+Error declarations should be generic and cover a broad range of cases. Each
 returned error instance can wrap a generic error declaration to provide more
 details.
 
-This package provides a broad range of errors declared that fits all common
-cases. If an error is very specific for an extension it can be registered outside
-of the errors package. If it will be needed my many extensions, please consider
+This package provides a broad range of errors declared that fit all common
+cases. If an error is very specific to an extension it can be registered outside
+of the errors package. If it will be needed by many extensions, please consider
 registering it in the errors package. To create a new error instance use Register
 function. You must provide a unique, non zero error code and a short description, for example:
 

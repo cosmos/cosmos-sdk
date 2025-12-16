@@ -69,7 +69,7 @@ func NewApp(rootDir string, logger log.Logger) (servertypes.ABCI, error) {
 }
 
 // KVStoreHandler is a simple handler that takes KVStoreTx and writes
-// them to the db.
+// it to the db.
 func KVStoreHandler(storeKey storetypes.StoreKey) bam.MsgServiceHandler {
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		dTx, ok := msg.(*KVStoreTx)
@@ -89,13 +89,11 @@ func KVStoreHandler(storeKey storetypes.StoreKey) bam.MsgServiceHandler {
 	}
 }
 
-// basic KV structure
 type KV struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
 }
 
-// What Genesis JSON is formatted as
 type GenesisJSON struct {
 	Values []KV `json:"values"`
 }
@@ -135,16 +133,17 @@ func AppGenState(_ *codec.LegacyAmino, _ genutiltypes.AppGenesis, _ []json.RawMe
     }
   ]
 }`)
-	return
+	return appState, err
 }
 
 // AppGenStateEmpty returns an empty transaction state for mocking.
 func AppGenStateEmpty(_ *codec.LegacyAmino, _ genutiltypes.AppGenesis, _ []json.RawMessage) (appState json.RawMessage, err error) {
 	appState = json.RawMessage(``)
-	return
+	return appState, err
 }
 
 // Manually write the handlers for this custom message
+
 type MsgServer interface {
 	Test(ctx context.Context, msg *KVStoreTx) (*sdk.Result, error)
 }
@@ -153,7 +152,7 @@ type MsgServerImpl struct {
 	capKeyMainStore *storetypes.KVStoreKey
 }
 
-func MsgTestHandler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) { // nolint: revive // refactor this in a followup pr
+func MsgTestHandler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(KVStoreTx)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -165,7 +164,7 @@ func MsgTestHandler(srv interface{}, ctx context.Context, dec func(interface{}) 
 		Server:     srv,
 		FullMethod: "/KVStoreTx",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(MsgServer).Test(ctx, req.(*KVStoreTx))
 	}
 	return interceptor(ctx, in, info, handler)

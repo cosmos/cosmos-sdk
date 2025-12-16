@@ -4,19 +4,19 @@ sidebar_position: 1
 
 # RunTx recovery middleware
 
-`BaseApp.runTx()` function handles Go panics that might occur during transactions execution, for example, keeper has faced an invalid state and paniced.
+`BaseApp.runTx()` function handles Go panics that might occur during transaction execution, for example, a keeper faces an invalid state and panics.
 Depending on the panic type different handler is used, for instance the default one prints an error log message.
 Recovery middleware is used to add custom panic recovery for Cosmos SDK application developers.
 
-More context can found in the corresponding [ADR-022](../../build/architecture/adr-022-custom-panic-handling.md) and the implementation in [recovery.go](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/recovery.go).
+More context can be found in the corresponding [ADR-022](../../build/architecture/adr-022-custom-panic-handling.md) and the implementation in [recovery.go](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/baseapp/recovery.go).
 
 ## Interface
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/baseapp/recovery.go#L14-L17
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/baseapp/recovery.go#L14-L17
 ```
 
-`recoveryObj` is a return value for `recover()` function from the `buildin` Go package.
+`recoveryObj` is a return value for `recover()` function from the `building` Go package.
 
 **Contract:**
 
@@ -45,7 +45,7 @@ func (k FooKeeper) Do(obj interface{}) {
 }
 ```
 
-By default that panic would be recovered and an error message will be printed to log. To override that behaviour we should register a custom RecoveryHandler:
+By default that panic would be recovered and an error message will be printed to the log. To override that behavior we should register a custom RecoveryHandler:
 
 ```go
 // Cosmos SDK application constructor

@@ -8,20 +8,22 @@ on:
   merge_group:
 permissions:
   contents: read
+
 jobs:
   golangci:
     name: golangci-lint
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
         with:
-          go-version: "1.21"
+          go-version: "1.25.5"
           check-latest: true
       - uses: technote-space/get-diff-action@v6.1.2
         id: git_diff
         with:
           PATTERNS: |
+            **/*.mk
             Makefile
             **/Makefile
             .golangci.yml
@@ -32,14 +34,10 @@ jobs:
           make lint
       - uses: technote-space/get-diff-action@v6.1.2
         if: steps.lint_long.outcome == 'skipped'
-        id: git_diff_all
         with:
           PATTERNS: |
             **/*.go
-            go.mod
-            go.sum
-            **/go.mod
-            **/go.sum
+            *.go
       - name: run linting (short)
         if: steps.lint_long.outcome == 'skipped' && env.GIT_DIFF
         run: |

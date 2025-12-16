@@ -74,7 +74,7 @@ hook to allow applications to recover vote extensions, perform any necessary
 computation on them, and then store the results in the cached store. These results
 will be available to the application during the subsequent `FinalizeBlock` call.
 
-An example of how a pre-FinalizeBlock hook could look like is shown below:
+An example of how a pre-FinalizeBlock hook could look is shown below:
 
 ```go
 app.SetPreBlocker(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) error {

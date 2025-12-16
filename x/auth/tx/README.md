@@ -35,19 +35,19 @@ This package represents the Cosmos SDK implementation of the `client.TxConfig`, 
 The interface defines a set of methods for creating a `client.TxBuilder`.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/client/tx_config.go#L25-L31
+https://github.com/cosmos/cosmos-sdk/tree/release/v0.50.x/client/tx_config.go#L25-L31
 ```
 
 The default implementation of `client.TxConfig` is instantiated by `NewTxConfig` in `x/auth/tx` module.
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/auth/tx/config.go#L22-L28
+https://github.com/cosmos/cosmos-sdk/tree/release/v0.50.x/x/auth/tx/config.go#L22-L28
 ```
 
 ### `TxBuilder`
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/client/tx_config.go#L33-L50
+https://github.com/cosmos/cosmos-sdk/tree/release/v0.50.x/client/tx_config.go#L33-L50
 ```
 
 The [`client.TxBuilder`](https://docs.cosmos.network/main/core/transactions#transaction-generation) interface is as well implemented by `x/auth/tx`.
@@ -111,12 +111,12 @@ simd query blocks --query 'message.sender=cosmos...' --page 1 --limit 30
 
 #### Transactions
 
-The `x/auth/tx` module provides a convinient CLI command for decoding and encoding transactions.
+The `x/auth/tx` module provides a convenient CLI command for decoding and encoding transactions.
 
 #### `encode`
 
 The `encode` command encodes a transaction created with the `--generate-only` flag or signed with the sign command.
-The transaction is seralized it to Protobuf and returned as base64.
+The transaction is serialized it to Protobuf and returned as base64.
 
 ```bash
 $ simd tx encode tx.json

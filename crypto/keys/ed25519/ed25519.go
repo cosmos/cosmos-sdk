@@ -22,18 +22,18 @@ import (
 const (
 	PrivKeyName = "tendermint/PrivKeyEd25519"
 	PubKeyName  = "tendermint/PubKeyEd25519"
-	// PubKeySize is is the size, in bytes, of public keys as used in this package.
+	// PubKeySize is the size, in bytes, of public keys as used in this package.
 	PubKeySize = 32
 	// PrivKeySize is the size, in bytes, of private keys as used in this package.
 	PrivKeySize = 64
-	// Size of an Edwards25519 signature. Namely the size of a compressed
+	// SignatureSize is the size of an Edwards25519 signature. Namely the size of a compressed
 	// Edwards25519 point, and a field element. Both of which are 32 bytes.
 	SignatureSize = 64
 	// SeedSize is the size, in bytes, of private key seeds. These are the
 	// private key representations used by RFC 8032.
 	SeedSize = 32
 
-	keyType = "ed25519"
+	KeyType = "ed25519"
 )
 
 var (
@@ -91,7 +91,7 @@ func (privKey *PrivKey) Equals(other cryptotypes.LedgerPrivKey) bool {
 }
 
 func (privKey *PrivKey) Type() string {
-	return keyType
+	return KeyType
 }
 
 // MarshalAmino overrides Amino binary marshaling.
@@ -192,7 +192,7 @@ func (pubKey *PubKey) String() string {
 }
 
 func (pubKey *PubKey) Type() string {
-	return keyType
+	return KeyType
 }
 
 func (pubKey *PubKey) Equals(other cryptotypes.PubKey) bool {

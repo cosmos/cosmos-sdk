@@ -36,6 +36,31 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v0.11.3](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.11.3)
+
+* [#24088](https://github.com/cosmos/cosmos-sdk/pull/24088) Convert store interface type definitions to type aliases for compatibility with `cosmossdk.io/collections` `v1.2.x`.
+
+## [v0.11.2](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.11.2)
+
+* [#21298](https://github.com/cosmos/cosmos-sdk/pull/21298) Backport [#19265](https://github.com/cosmos/cosmos-sdk/pull/19265) to core.
+* [#21298](https://github.com/cosmos/cosmos-sdk/pull/21298) Clean-up after depinject upgrade.
+
+## [v0.11.1](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.11.1)
+
+* [#21022](https://github.com/cosmos/cosmos-sdk/pull/21022) Upgrade depinject to v1.0.0.
+
+## [v0.11.0](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.11.0)
+
+* [#17468](https://github.com/cosmos/cosmos-sdk/pull/17468) Add `appmodule.HasPreBlocker` interface.
+
+## [v0.10.0](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.10.0)
+
+* [#17383](https://github.com/cosmos/cosmos-sdk/pull/17383) Add `appmodule.UpgradeModule` interface.
+
+## [v0.9.0](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.9.0)
+
+* [#16739](https://github.com/cosmos/cosmos-sdk/pull/16739) Add `AppHash` to header.Info.
+
 ## [v0.8.0](https://github.com/cosmos/cosmos-sdk/releases/tag/core%2Fv0.8.0)
 
 * [#15519](https://github.com/cosmos/cosmos-sdk/pull/15519) Update `comet.VoteInfo` for CometBFT v0.38.

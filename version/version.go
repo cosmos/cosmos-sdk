@@ -27,15 +27,13 @@ import (
 type ContextKey struct{}
 
 var (
-	// application's name
+	// Name is the application's name
 	Name = ""
-	// application binary name
+	// AppName is the application binary name
 	AppName = "<appd>"
-	// application's version string
-	Version = ""
-	// commit
-	Commit = ""
-	// build tags
+	// Version is the application's version string
+	Version   = ""
+	Commit    = ""
 	BuildTags = ""
 )
 
@@ -107,7 +105,7 @@ func depsFromBuildInfo() (deps []buildDep) {
 		deps = append(deps, buildDep{dep})
 	}
 
-	return
+	return deps
 }
 
 type buildDep struct {
@@ -122,5 +120,5 @@ func (d buildDep) String() string {
 	return fmt.Sprintf("%s@%s", d.Path, d.Version)
 }
 
-func (d buildDep) MarshalJSON() ([]byte, error)      { return json.Marshal(d.String()) }
-func (d buildDep) MarshalYAML() (interface{}, error) { return d.String(), nil }
+func (d buildDep) MarshalJSON() ([]byte, error) { return json.Marshal(d.String()) }
+func (d buildDep) MarshalYAML() (any, error)    { return d.String(), nil }

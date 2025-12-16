@@ -40,11 +40,12 @@ func BenchmarkAminoJSONDefaultSort(b *testing.B) {
 }
 
 func benchmarkAminoJSON(b *testing.B, addNaiveSort bool) {
+	b.Helper()
 	enc := aminojson.NewEncoder(aminojson.EncoderOptions{DoNotSortFields: addNaiveSort})
 	b.ReportAllocs()
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		sink = runAminoJSON(b, enc, addNaiveSort)
 	}
 	if sink == nil {
@@ -54,6 +55,7 @@ func benchmarkAminoJSON(b *testing.B, addNaiveSort bool) {
 }
 
 func runAminoJSON(b *testing.B, enc aminojson.Encoder, addNaiveSort bool) []byte {
+	b.Helper()
 	bz, err := enc.Marshal(msg)
 	if err != nil {
 		b.Fatal(err)

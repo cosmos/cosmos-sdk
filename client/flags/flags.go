@@ -18,7 +18,6 @@ const (
 	DefaultGasLimit      = 200000
 	GasFlagAuto          = "auto"
 
-	// DefaultKeyringBackend
 	DefaultKeyringBackend = keyring.BackendOS
 
 	// BroadcastSync defines a tx broadcasting mode where the client waits for
@@ -74,6 +73,8 @@ const (
 	FlagOffset           = "offset"
 	FlagCountTotal       = "count-total"
 	FlagTimeoutHeight    = "timeout-height"
+	TimeoutDuration      = "timeout-duration"
+	FlagUnordered        = "unordered"
 	FlagKeyAlgorithm     = "algo"
 	FlagKeyType          = "key-type"
 	FlagFeePayer         = "fee-payer"
@@ -86,9 +87,10 @@ const (
 	// This differs from FlagOutputDocument that is used to set the output file.
 	FlagOutput = "output"
 	// Logging flags
-	FlagLogLevel   = "log_level"
-	FlagLogFormat  = "log_format"
-	FlagLogNoColor = "log_no_color"
+	FlagLogLevel        = "log_level"
+	FlagVerboseLogLevel = "verbose_log_level"
+	FlagLogFormat       = "log_format"
+	FlagLogNoColor      = "log_no_color"
 )
 
 // List of supported output formats
@@ -128,14 +130,16 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 	f.String(FlagGasPrices, "", "Gas prices in decimal format to determine the transaction fee (e.g. 0.1uatom)")
 	f.String(FlagNode, "tcp://localhost:26657", "<host>:<port> to CometBFT rpc interface for this chain")
 	f.Bool(FlagUseLedger, false, "Use a connected Ledger device")
-	f.Float64(FlagGasAdjustment, DefaultGasAdjustment, "adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored ")
+	f.Float64(FlagGasAdjustment, DefaultGasAdjustment, "adjustment factor to be multiplied against the estimate returned by the tx simulation; if the gas limit is set manually this flag is ignored")
 	f.StringP(FlagBroadcastMode, "b", BroadcastSync, "Transaction broadcasting mode (sync|async)")
 	f.Bool(FlagDryRun, false, "ignore the --gas flag and perform a simulation of a transaction, but don't broadcast it (when enabled, the local Keybase is not accessible)")
 	f.Bool(FlagGenerateOnly, false, "Build an unsigned transaction and write it to STDOUT (when enabled, the local Keybase only accessed when providing a key name)")
 	f.Bool(FlagOffline, false, "Offline mode (does not allow any online functionality)")
 	f.BoolP(FlagSkipConfirmation, "y", false, "Skip tx broadcasting prompt confirmation")
 	f.String(FlagSignMode, "", "Choose sign mode (direct|amino-json|direct-aux|textual), this is an advanced feature")
-	f.Uint64(FlagTimeoutHeight, 0, "Set a block timeout height to prevent the tx from being committed past a certain height")
+	f.Uint64(FlagTimeoutHeight, 0, "DEPRECATED: Please use --timeout-duration instead. Set a block timeout height to prevent the tx from being committed past a certain height")
+	f.Duration(TimeoutDuration, 0, "TimeoutDuration is the duration the transaction will be considered valid in the mempool. The transaction's unordered nonce will be set to the time of transaction creation + the duration value passed. If the transaction is still in the mempool, and the block time has passed the time of submission + TimeoutTimestamp, the transaction will be rejected.")
+	f.Bool(FlagUnordered, false, "Enable unordered transaction delivery; must be used in conjunction with --timeout-duration")
 	f.String(FlagFeePayer, "", "Fee payer pays fees for the transaction instead of deducting from the signer")
 	f.String(FlagFeeGranter, "", "Fee granter grants fees for the transaction")
 	f.String(FlagTip, "", "Tip is the amount that is going to be transferred to the fee payer on the target chain. This flag is only valid when used with --aux, and is ignored if the target chain didn't enable the TipDecorator")
@@ -144,6 +148,11 @@ func AddTxFlagsToCmd(cmd *cobra.Command) {
 	// --gas can accept integers and "auto"
 	f.String(FlagGas, "", fmt.Sprintf("gas limit to set per-transaction; set to %q to calculate sufficient gas automatically. Note: %q option doesn't always report accurate results. Set a valid coin value to adjust the result. Can be used instead of %q. (default %d)",
 		GasFlagAuto, GasFlagAuto, FlagFees, DefaultGasLimit))
+
+	cmd.MarkFlagsMutuallyExclusive(FlagTimeoutHeight, TimeoutDuration)
+	// unordered transactions must not have sequence values.
+	cmd.MarkFlagsMutuallyExclusive(FlagUnordered, FlagSequence)
+	cmd.MarkFlagsRequiredTogether(FlagUnordered, TimeoutDuration)
 
 	AddKeyringFlags(f)
 }

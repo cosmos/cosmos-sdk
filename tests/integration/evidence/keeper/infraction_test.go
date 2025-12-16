@@ -15,10 +15,6 @@ import (
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/evidence"
-	"cosmossdk.io/x/evidence/exported"
-	"cosmossdk.io/x/evidence/keeper"
-	evidencetypes "cosmossdk.io/x/evidence/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -37,8 +33,11 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
+	"github.com/cosmos/cosmos-sdk/x/evidence"
+	"github.com/cosmos/cosmos-sdk/x/evidence/exported"
+	"github.com/cosmos/cosmos-sdk/x/evidence/keeper"
+	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	"github.com/cosmos/cosmos-sdk/x/slashing/testutil"
@@ -79,13 +78,14 @@ type fixture struct {
 	stakingKeeper  *stakingkeeper.Keeper
 }
 
-func initFixture(t testing.TB) *fixture {
+func initFixture(tb testing.TB) *fixture {
+	tb.Helper()
 	keys := storetypes.NewKVStoreKeys(
-		authtypes.StoreKey, banktypes.StoreKey, paramtypes.StoreKey, consensusparamtypes.StoreKey, evidencetypes.StoreKey, stakingtypes.StoreKey, slashingtypes.StoreKey,
+		authtypes.StoreKey, banktypes.StoreKey, consensusparamtypes.StoreKey, evidencetypes.StoreKey, stakingtypes.StoreKey, slashingtypes.StoreKey,
 	)
 	cdc := moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{}, evidence.AppModuleBasic{}).Codec
 
-	logger := log.NewTestLogger(t)
+	logger := log.NewTestLogger(tb)
 	cms := integration.CreateMultiStore(keys, logger)
 
 	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)
@@ -149,10 +149,10 @@ func initFixture(t testing.TB) *fixture {
 	evidencetypes.RegisterMsgServer(integrationApp.MsgServiceRouter(), keeper.NewMsgServerImpl(*evidenceKeeper))
 	evidencetypes.RegisterQueryServer(integrationApp.QueryHelper(), keeper.NewQuerier(evidenceKeeper))
 
-	assert.NilError(t, slashingKeeper.SetParams(sdkCtx, testutil.TestParams()))
+	assert.NilError(tb, slashingKeeper.SetParams(sdkCtx, testutil.TestParams()))
 
 	// set default staking params
-	assert.NilError(t, stakingKeeper.SetParams(sdkCtx, stakingtypes.DefaultParams()))
+	assert.NilError(tb, stakingKeeper.SetParams(sdkCtx, stakingtypes.DefaultParams()))
 
 	return &fixture{
 		app:            integrationApp,
@@ -189,15 +189,15 @@ func TestHandleDoubleSign(t *testing.T) {
 	)
 	val, err := f.stakingKeeper.Validator(ctx, operatorAddr)
 	assert.NilError(t, err)
-	assert.DeepEqual(t, selfDelegation, val.GetBondedTokens())
+	assert.DeepEqual(t, selfDelegation, val.GetValidatorPower())
 
 	assert.NilError(t, f.slashingKeeper.AddPubkey(f.sdkCtx, valpubkey))
 
 	info := slashingtypes.NewValidatorSigningInfo(sdk.ConsAddress(valpubkey.Address()), f.sdkCtx.BlockHeight(), int64(0), time.Unix(0, 0), false, int64(0))
-	f.slashingKeeper.SetValidatorSigningInfo(f.sdkCtx, sdk.ConsAddress(valpubkey.Address()), info)
+	assert.NilError(t, f.slashingKeeper.SetValidatorSigningInfo(f.sdkCtx, sdk.ConsAddress(valpubkey.Address()), info))
 
 	// handle a signature to set signing info
-	f.slashingKeeper.HandleValidatorSignature(ctx, valpubkey.Address(), selfDelegation.Int64(), comet.BlockIDFlagCommit)
+	assert.NilError(t, f.slashingKeeper.HandleValidatorSignature(ctx, valpubkey.Address(), selfDelegation.Int64(), comet.BlockIDFlagCommit))
 
 	// double sign less than max age
 	val, err = f.stakingKeeper.Validator(ctx, operatorAddr)
@@ -282,7 +282,7 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 	)
 	val, err := f.stakingKeeper.Validator(ctx, operatorAddr)
 	assert.NilError(t, err)
-	assert.DeepEqual(t, amt, val.GetBondedTokens())
+	assert.DeepEqual(t, amt, val.GetValidatorPower())
 
 	nci := NewCometInfo(abci.RequestFinalizeBlock{
 		Misbehavior: []abci.Misbehavior{{
@@ -293,8 +293,8 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 		}},
 	})
 
-	assert.NilError(t, f.app.BaseApp.StoreConsensusParams(ctx, *simtestutil.DefaultConsensusParams))
-	cp := f.app.BaseApp.GetConsensusParams(ctx)
+	assert.NilError(t, f.app.StoreConsensusParams(ctx, *simtestutil.DefaultConsensusParams))
+	cp := f.app.GetConsensusParams(ctx)
 
 	ctx = ctx.WithCometInfo(nci)
 	ctx = ctx.WithConsensusParams(cp)

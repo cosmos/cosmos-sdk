@@ -6,8 +6,8 @@ import (
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttime "github.com/cometbft/cometbft/types/time"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
@@ -137,6 +137,10 @@ func (s *TestSuite) TestKeeper() {
 	s.T().Log("verify removing non existing authorization returns error")
 	err = s.authzKeeper.DeleteGrant(ctx, granterAddr, granteeAddr, "abcd")
 	s.Require().Error(err)
+
+	s.T().Log("verify removing non existing authorization returns error with grant key in hex")
+	err = s.authzKeeper.DeleteGrant(ctx, granterAddr, granteeAddr, "abcd")
+	s.Require().Equal("failed to delete grant with key 0114a58856f0fd53bf058b4909a21aec019107ba610114a58856f0fd53bf058b4909a21aec019107ba610061626364: authorization not found", err.Error())
 }
 
 func (s *TestSuite) TestKeeperIter() {
@@ -148,8 +152,8 @@ func (s *TestSuite) TestKeeperIter() {
 	e := ctx.BlockTime().AddDate(1, 0, 0)
 	sendAuthz := banktypes.NewSendAuthorization(coins100, nil)
 
-	s.authzKeeper.SaveGrant(ctx, granteeAddr, granterAddr, sendAuthz, &e)
-	s.authzKeeper.SaveGrant(ctx, granteeAddr, granter2Addr, sendAuthz, &e)
+	s.Require().NoError(s.authzKeeper.SaveGrant(ctx, granteeAddr, granterAddr, sendAuthz, &e))
+	s.Require().NoError(s.authzKeeper.SaveGrant(ctx, granteeAddr, granter2Addr, sendAuthz, &e))
 
 	s.authzKeeper.IterateGrants(ctx, func(granter, grantee sdk.AccAddress, grant authz.Grant) bool {
 		s.Require().Equal(granteeAddr, grantee)
@@ -189,7 +193,7 @@ func (s *TestSuite) TestDispatchAction() {
 			"authorization not found",
 			func() sdk.Context {
 				// remove any existing authorizations
-				s.authzKeeper.DeleteGrant(s.ctx, granteeAddr, granterAddr, bankSendAuthMsgType)
+				_ = s.authzKeeper.DeleteGrant(s.ctx, granteeAddr, granterAddr, bankSendAuthMsgType)
 				return s.ctx
 			},
 			func() {},

@@ -3,6 +3,7 @@ package ante_test
 import (
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -47,7 +48,7 @@ func TestValidateBasic(t *testing.T) {
 	require.NoError(t, err)
 
 	_, err = antehandler(suite.ctx, validTx, false)
-	require.Nil(t, err, "ValidateBasicDecorator returned error on valid tx. err: %v", err)
+	require.NoError(t, err, "ValidateBasicDecorator returned error on valid tx. err: %v", err)
 
 	// test decorator skips on recheck
 	suite.ctx = suite.ctx.WithIsReCheckTx(true)
@@ -55,7 +56,7 @@ func TestValidateBasic(t *testing.T) {
 	// decorator should skip processing invalidTx on recheck and thus return nil-error
 	_, err = antehandler(suite.ctx, invalidTx, false)
 
-	require.Nil(t, err, "ValidateBasicDecorator ran on ReCheck")
+	require.NoError(t, err, "ValidateBasicDecorator ran on ReCheck")
 }
 
 func TestValidateMemo(t *testing.T) {
@@ -91,7 +92,7 @@ func TestValidateMemo(t *testing.T) {
 
 	// require small memos pass ValidateMemo Decorator
 	_, err = antehandler(suite.ctx, validTx, false)
-	require.Nil(t, err, "ValidateBasicDecorator returned error on valid tx. err: %v", err)
+	require.NoError(t, err, "ValidateMemoDecorator returned error on valid tx. err: %v", err)
 }
 
 func TestConsumeGasForTxSize(t *testing.T) {
@@ -129,7 +130,7 @@ func TestConsumeGasForTxSize(t *testing.T) {
 			require.NoError(t, err)
 
 			txBytes, err := suite.clientCtx.TxConfig.TxJSONEncoder()(tx)
-			require.Nil(t, err, "Cannot marshal tx: %v", err)
+			require.NoError(t, err, "Cannot marshal tx: %v", err)
 
 			params := suite.accountKeeper.GetParams(suite.ctx)
 			expectedGas := storetypes.Gas(len(txBytes)) * params.TxSizeCostPerByte
@@ -145,7 +146,7 @@ func TestConsumeGasForTxSize(t *testing.T) {
 
 			beforeGas = suite.ctx.GasMeter().GasConsumed()
 			suite.ctx, err = antehandler(suite.ctx, tx, false)
-			require.Nil(t, err, "ConsumeTxSizeGasDecorator returned error: %v", err)
+			require.NoError(t, err, "ConsumeTxSizeGasDecorator returned error: %v", err)
 
 			// require that decorator consumes expected amount of gas
 			consumedGas := suite.ctx.GasMeter().GasConsumed() - beforeGas
@@ -158,7 +159,7 @@ func TestConsumeGasForTxSize(t *testing.T) {
 			tx = txBuilder.GetTx()
 
 			simTxBytes, err := suite.clientCtx.TxConfig.TxJSONEncoder()(tx)
-			require.Nil(t, err, "Cannot marshal tx: %v", err)
+			require.NoError(t, err, "Cannot marshal tx: %v", err)
 			// require that simulated tx is smaller than tx with signatures
 			require.True(t, len(simTxBytes) < len(txBytes), "simulated tx still has signatures")
 
@@ -172,13 +173,13 @@ func TestConsumeGasForTxSize(t *testing.T) {
 			consumedSimGas := suite.ctx.GasMeter().GasConsumed() - beforeSimGas
 
 			// require that antehandler passes and does not underestimate decorator cost
-			require.Nil(t, err, "ConsumeTxSizeGasDecorator returned error: %v", err)
+			require.NoError(t, err, "ConsumeTxSizeGasDecorator returned error: %v", err)
 			require.True(t, consumedSimGas >= expectedGas, "Simulate mode underestimates gas on AnteDecorator. Simulated cost: %d, expected cost: %d", consumedSimGas, expectedGas)
 		})
 	}
 }
 
-func TestTxHeightTimeoutDecorator(t *testing.T) {
+func TestTxTimeoutHeightDecorator(t *testing.T) {
 	suite := SetupTestSuite(t, true)
 
 	antehandler := sdk.ChainAnteDecorators(ante.NewTxTimeoutHeightDecorator())
@@ -186,26 +187,33 @@ func TestTxHeightTimeoutDecorator(t *testing.T) {
 	// keys and addresses
 	priv1, _, addr1 := testdata.KeyTestPubAddr()
 
+	currentTime := time.Now()
+
 	// msg and signatures
 	msg := testdata.NewTestMsg(addr1)
 	feeAmount := testdata.NewTestFeeAmount()
 	gasLimit := testdata.NewTestGasLimit()
 
 	testCases := []struct {
-		name        string
-		timeout     uint64
-		height      int64
-		expectedErr error
+		name             string
+		timeout          uint64
+		height           int64
+		timeoutTimestamp time.Time
+		timestamp        time.Time
+		expectedErr      error
 	}{
-		{"default value", 0, 10, nil},
-		{"no timeout (greater height)", 15, 10, nil},
-		{"no timeout (same height)", 10, 10, nil},
-		{"timeout (smaller height)", 9, 10, sdkerrors.ErrTxTimeoutHeight},
+		{"default value", 0, 10, time.Time{}, time.Time{}, nil},
+		{"no timeout (greater height)", 15, 10, time.Time{}, time.Time{}, nil},
+		{"no timeout (same height)", 10, 10, time.Time{}, time.Time{}, nil},
+		{"timeout (smaller height)", 9, 10, time.Time{}, time.Time{}, sdkerrors.ErrTxTimeoutHeight},
+		{"no timeout (timeout after timestamp)", 0, 20, currentTime.Add(time.Minute), currentTime, nil},
+		{"no timeout (current time)", 0, 20, currentTime, currentTime, nil},
+		{"timeout before timestamp", 0, 20, currentTime, currentTime.Add(time.Minute), sdkerrors.ErrTxTimeout},
+		{"tx contain both timeouts, timeout (timeout before timestamp)", 15, 10, currentTime, currentTime.Add(time.Minute), sdkerrors.ErrTxTimeout},
+		{"tx contain both timeout, no timeout", 15, 10, currentTime.Add(time.Minute), currentTime, nil},
 	}
 
 	for _, tc := range testCases {
-		tc := tc
-
 		t.Run(tc.name, func(t *testing.T) {
 			suite.txBuilder = suite.clientCtx.TxConfig.NewTxBuilder()
 
@@ -215,12 +223,13 @@ func TestTxHeightTimeoutDecorator(t *testing.T) {
 			suite.txBuilder.SetGasLimit(gasLimit)
 			suite.txBuilder.SetMemo(strings.Repeat("01234567890", 10))
 			suite.txBuilder.SetTimeoutHeight(tc.timeout)
+			suite.txBuilder.SetTimeoutTimestamp(tc.timeoutTimestamp)
 
 			privs, accNums, accSeqs := []cryptotypes.PrivKey{priv1}, []uint64{0}, []uint64{0}
 			tx, err := suite.CreateTestTx(suite.ctx, privs, accNums, accSeqs, suite.ctx.ChainID(), signing.SignMode_SIGN_MODE_DIRECT)
 			require.NoError(t, err)
 
-			ctx := suite.ctx.WithBlockHeight(tc.height)
+			ctx := suite.ctx.WithBlockHeight(tc.height).WithBlockTime(tc.timestamp)
 			_, err = antehandler(ctx, tx, true)
 			require.ErrorIs(t, err, tc.expectedErr)
 		})

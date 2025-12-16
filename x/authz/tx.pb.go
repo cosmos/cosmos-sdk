@@ -7,12 +7,12 @@ import (
 	context "context"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
-	types "github.com/cosmos/cosmos-sdk/codec/types"
 	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
+	any "github.com/cosmos/gogoproto/types/any"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -118,7 +118,7 @@ type MsgExec struct {
 	// Execute Msg.
 	// The x/authz will try to find a grant matching (msg.signers[0], grantee, MsgTypeURL(msg))
 	// triple and validate it.
-	Msgs []*types.Any `protobuf:"bytes,2,rep,name=msgs,proto3" json:"msgs,omitempty"`
+	Msgs []*any.Any `protobuf:"bytes,2,rep,name=msgs,proto3" json:"msgs,omitempty"`
 }
 
 func (m *MsgExec) Reset()         { *m = MsgExec{} }
@@ -469,6 +469,7 @@ func _Msg_Revoke_Handler(srv interface{}, ctx context.Context, dec func(interfac
 	return interceptor(ctx, in, info, handler)
 }
 
+var Msg_serviceDesc = _Msg_serviceDesc
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.authz.v1beta1.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -1099,7 +1100,7 @@ func (m *MsgExec) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Msgs = append(m.Msgs, &types.Any{})
+			m.Msgs = append(m.Msgs, &any.Any{})
 			if err := m.Msgs[len(m.Msgs)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}

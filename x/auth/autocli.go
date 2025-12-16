@@ -5,8 +5,8 @@ import (
 
 	authv1beta1 "cosmossdk.io/api/cosmos/auth/v1beta1"
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
-	_ "cosmossdk.io/api/cosmos/crypto/secp256k1" // register to that it shows up in protoregistry.GlobalTypes
-	_ "cosmossdk.io/api/cosmos/crypto/secp256r1" // register to that it shows up in protoregistry.GlobalTypes
+	_ "cosmossdk.io/api/cosmos/crypto/secp256k1" // register so that it shows up in protoregistry.GlobalTypes
+	_ "cosmossdk.io/api/cosmos/crypto/secp256r1" // register so that it shows up in protoregistry.GlobalTypes
 
 	"github.com/cosmos/cosmos-sdk/version"
 )
@@ -38,7 +38,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod:      "AccountAddressByID",
 					Use:            "address-by-acc-num [acc-num]",
 					Short:          "Query account address by account number",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "id"}},
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "account_id"}},
 				},
 				{
 					RpcMethod: "ModuleAccounts",
@@ -80,8 +80,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			Service: authv1beta1.Msg_ServiceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
-					RpcMethod: "UpdateParams",
-					Skip:      true, // skipped because authority gated
+					RpcMethod:      "UpdateParams",
+					Use:            "update-params-proposal [params]",
+					Short:          "Submit a proposal to update auth module params. Note: the entire params must be provided.",
+					Example:        fmt.Sprintf(`%s tx auth update-params-proposal '{ "max_memo_characters": 0, "tx_sig_limit": 0, "tx_size_cost_per_byte": 0, "sig_verify_cost_ed25519": 0, "sig_verify_cost_secp256k1": 0 }'`, version.AppName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "params"}},
+					GovProposal:    true,
 				},
 			},
 		},

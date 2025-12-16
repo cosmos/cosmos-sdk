@@ -147,7 +147,7 @@ priv3, _, addr3 := testdata.KeyTestPubAddr()
 Populating the `TxBuilder` can be done via its methods:
 
 ```go reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/client/tx_config.go#L33-L50
+https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/client/tx_config.go#L39-L57
 ```
 
 ```go
@@ -161,7 +161,7 @@ func sendTx() error {
     // Define two x/bank MsgSend messages:
     // - from addr1 to addr3,
     // - from addr2 to addr3.
-    // This means that the transactions needs two signers: addr1 and addr2.
+    // This means that the transaction needs two signers: addr1 and addr2.
     msg1 := banktypes.NewMsgSend(addr1, addr3, types.NewCoins(types.NewInt64Coin("atom", 12)))
     msg2 := banktypes.NewMsgSend(addr2, addr3, types.NewCoins(types.NewInt64Coin("atom", 34)))
 
@@ -178,6 +178,48 @@ func sendTx() error {
 ```
 
 At this point, `TxBuilder`'s underlying transaction is ready to be signed.
+
+#### Generating an Unordered Transaction
+
+Starting with Cosmos SDK v0.53.0, users may send unordered transactions to chains that have the feature enabled.
+
+:::warning
+
+Unordered transactions MUST leave sequence values unset. When a transaction is both unordered and contains a non-zero sequence value,
+the transaction will be rejected. External services that operate on prior assumptions about transaction sequence values should be updated to handle unordered transactions.
+Services should be aware that when the transaction is unordered, the transaction sequence will always be zero.
+
+:::
+
+Using the example above, we can set the required fields to mark a transaction as unordered. 
+By default, unordered transactions charge an extra 2240 units of gas to offset the additional storage overhead that supports their functionality.
+The extra units of gas are customizable and therefore vary by chain, so be sure to check the chain's ante handler for the gas value set, if any.
+
+```go
+func sendTx() error {
+    // --snip--
+    expiration := 5 * time.Minute
+    txBuilder.SetUnordered(true)
+    txBuilder.SetTimeoutTimestamp(time.Now().Add(expiration + (1 * time.Nanosecond)))
+}
+```
+
+Unordered transactions from the same account must use a unique timeout timestamp value. The difference between each timeout timestamp value may be as small as a nanosecond, however.
+
+```go
+import (
+	"github.com/cosmos/cosmos-sdk/client"
+)
+
+func sendMessages(txBuilders []client.TxBuilder) error {
+    // --snip--
+    expiration := 5 * time.Minute
+    for _, txb := range txBuilders {
+        txb.SetUnordered(true)
+        txb.SetTimeoutTimestamp(time.Now().Add(expiration + (1 * time.Nanosecond)))
+    }
+}
+```
 
 ### Signing a Transaction
 
@@ -269,7 +311,7 @@ func sendTx() error {
 
 ### Broadcasting a Transaction
 
-The preferred way to broadcast a transaction is to use gRPC, though using REST (via `gRPC-gateway`) or the CometBFT RPC is also posible. An overview of the differences between these methods is exposed [here](../../learn/advanced/06-grpc_rest.md). For this tutorial, we will only describe the gRPC method.
+The preferred way to broadcast a transaction is to use gRPC, though using REST (via `gRPC-gateway`) or the CometBFT RPC is also possible. An overview of the differences between these methods is exposed [here](../../learn/advanced/06-grpc_rest.md). For this tutorial, we will only describe the gRPC method.
 
 ```go
 import (
@@ -378,10 +420,10 @@ Broadcasting a transaction using the REST endpoint (served by `gRPC-gateway`) ca
 ```bash
 curl -X POST \
     -H "Content-Type: application/json" \
-    -d'{"tx_bytes":"{{txBytes}}","mode":"BROADCAST_MODE_SYNC"}' \
+    -d' {"tx_bytes":"{{txBytes}}","mode":"BROADCAST_MODE_SYNC"}' \
     localhost:1317/cosmos/tx/v1beta1/txs
 ```
 
 ## Using CosmJS (JavaScript & TypeScript)
 
-CosmJS aims to build client libraries in JavaScript that can be embedded in web applications. Please see [https://cosmos.github.io/cosmjs](https://cosmos.github.io/cosmjs) for more information. As of January 2021, CosmJS documentation is still work in progress.
+CosmJS aims to build client libraries in JavaScript that can be embedded in web applications. Please see [https://cosmos.github.io/cosmjs](https://cosmos.github.io/cosmjs) for more information. As of January 2021, CosmJS documentation is still a work in progress.

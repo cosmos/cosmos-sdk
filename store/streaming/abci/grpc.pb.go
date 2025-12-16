@@ -362,6 +362,7 @@ func _ABCIListenerService_ListenCommit_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+var ABCIListenerService_serviceDesc = _ABCIListenerService_serviceDesc
 var _ABCIListenerService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.store.streaming.abci.ABCIListenerService",
 	HandlerType: (*ABCIListenerServiceServer)(nil),

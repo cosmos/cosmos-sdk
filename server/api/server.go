@@ -9,8 +9,9 @@ import (
 	"sync"
 	"time"
 
-	tmrpcserver "github.com/cometbft/cometbft/rpc/jsonrpc/server"
+	cmtrpcserver "github.com/cometbft/cometbft/rpc/jsonrpc/server"
 	gateway "github.com/cosmos/gogogateway"
+	"github.com/golang/protobuf/proto" //nolint:staticcheck // needed for compatibility
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -22,7 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	"github.com/cosmos/cosmos-sdk/server/config"
-	servercmtlog "github.com/cosmos/cosmos-sdk/server/log"
+	cmtlogwrapper "github.com/cosmos/cosmos-sdk/server/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 )
@@ -34,7 +35,9 @@ type Server struct {
 	ClientCtx         client.Context
 	GRPCSrv           *grpc.Server
 	logger            log.Logger
-	metrics           *telemetry.Metrics
+
+	//nolint:staticcheck // TODO: switch to OpenTelemetry
+	metrics *telemetry.Metrics
 
 	// Start() is blocking and generally called from a separate goroutine.
 	// Close() can be called asynchronously and access shared memory
@@ -47,7 +50,7 @@ type Server struct {
 // CustomGRPCHeaderMatcher for mapping request headers to
 // GRPC metadata.
 // HTTP headers that start with 'Grpc-Metadata-' are automatically mapped to
-// gRPC metadata after removing prefix 'Grpc-Metadata-'. We can use this
+// gRPC metadata after removing the prefix 'Grpc-Metadata-'. We can use this
 // CustomGRPCHeaderMatcher if headers don't start with `Grpc-Metadata-`
 func CustomGRPCHeaderMatcher(key string) (string, bool) {
 	switch strings.ToLower(key) {
@@ -84,9 +87,21 @@ func New(clientCtx client.Context, logger log.Logger, grpcSrv *grpc.Server) *Ser
 			// Custom header matcher for mapping request headers to
 			// GRPC metadata
 			runtime.WithIncomingHeaderMatcher(CustomGRPCHeaderMatcher),
+
+			// extension to set custom response headers
+			runtime.WithForwardResponseOption(customGRPCResponseHeaders),
 		),
 		GRPCSrv: grpcSrv,
 	}
+}
+
+func customGRPCResponseHeaders(ctx context.Context, w http.ResponseWriter, _ proto.Message) error {
+	if meta, ok := runtime.ServerMetadataFromContext(ctx); ok {
+		if values := meta.HeaderMD.Get(grpctypes.GRPCBlockHeightHeader); len(values) == 1 {
+			w.Header().Set(grpctypes.GRPCBlockHeightHeader, values[0])
+		}
+	}
+	return nil
 }
 
 // Start starts the API server. Internally, the API server leverages CometBFT's
@@ -99,13 +114,13 @@ func New(clientCtx client.Context, logger log.Logger, grpcSrv *grpc.Server) *Ser
 func (s *Server) Start(ctx context.Context, cfg config.Config) error {
 	s.mtx.Lock()
 
-	cmtCfg := tmrpcserver.DefaultConfig()
+	cmtCfg := cmtrpcserver.DefaultConfig()
 	cmtCfg.MaxOpenConnections = int(cfg.API.MaxOpenConnections)
 	cmtCfg.ReadTimeout = time.Duration(cfg.API.RPCReadTimeout) * time.Second
 	cmtCfg.WriteTimeout = time.Duration(cfg.API.RPCWriteTimeout) * time.Second
 	cmtCfg.MaxBodyBytes = int64(cfg.API.RPCMaxBodyBytes)
 
-	listener, err := tmrpcserver.Listen(cfg.API.Address, cmtCfg.MaxOpenConnections)
+	listener, err := cmtrpcserver.Listen(cfg.API.Address, cmtCfg.MaxOpenConnections)
 	if err != nil {
 		s.mtx.Unlock()
 		return err
@@ -132,7 +147,7 @@ func (s *Server) Start(ctx context.Context, cfg config.Config) error {
 				return
 			}
 
-			// Fall back to grpc gateway server.
+			// Fall back to the grpc gateway server.
 			s.GRPCGatewayRouter.ServeHTTP(w, req)
 		}))
 	}
@@ -150,9 +165,9 @@ func (s *Server) Start(ctx context.Context, cfg config.Config) error {
 
 		if enableUnsafeCORS {
 			allowAllCORS := handlers.CORS(handlers.AllowedHeaders([]string{"Content-Type"}))
-			errCh <- tmrpcserver.Serve(s.listener, allowAllCORS(s.Router), servercmtlog.CometLoggerWrapper{Logger: s.logger}, cmtCfg)
+			errCh <- cmtrpcserver.Serve(s.listener, allowAllCORS(s.Router), cmtlogwrapper.CometLoggerWrapper{Logger: s.logger}, cmtCfg)
 		} else {
-			errCh <- tmrpcserver.Serve(s.listener, s.Router, servercmtlog.CometLoggerWrapper{Logger: s.logger}, cmtCfg)
+			errCh <- cmtrpcserver.Serve(s.listener, s.Router, cmtlogwrapper.CometLoggerWrapper{Logger: s.logger}, cmtCfg)
 		}
 	}(cfg.API.EnableUnsafeCORS)
 
@@ -178,14 +193,17 @@ func (s *Server) Close() error {
 	return s.listener.Close()
 }
 
+// Deprecated: Use OpenTelemetry instead, see the `telemetry` package for more details.
 func (s *Server) SetTelemetry(m *telemetry.Metrics) {
 	s.mtx.Lock()
-	s.metrics = m
-	s.registerMetrics()
+	s.registerMetrics(m)
 	s.mtx.Unlock()
 }
 
-func (s *Server) registerMetrics() {
+//nolint:staticcheck // TODO: switch to OpenTelemetry
+func (s *Server) registerMetrics(m *telemetry.Metrics) {
+	s.metrics = m
+
 	metricsHandler := func(w http.ResponseWriter, r *http.Request) {
 		format := strings.TrimSpace(r.FormValue("format"))
 
@@ -213,7 +231,7 @@ func newErrorResponse(code int, err string) errorResponse {
 	return errorResponse{Code: code, Error: err}
 }
 
-// writeErrorResponse prepares and writes a HTTP error
+// writeErrorResponse prepares and writes an HTTP error
 // given a status code and an error message.
 func writeErrorResponse(w http.ResponseWriter, status int, err string) {
 	w.Header().Set("Content-Type", "application/json")

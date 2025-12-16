@@ -8,7 +8,7 @@ This is a location to record all high-level architecture decisions in the Cosmos
 
 An Architectural Decision (**AD**) is a software design choice that addresses a functional or non-functional requirement that is architecturally significant.
 An Architecturally Significant Requirement (**ASR**) is a requirement that has a measurable effect on a software system’s architecture and quality.
-An Architectural Decision Record (**ADR**) captures a single AD, such as often done when writing personal notes or meeting minutes; the collection of ADRs created and maintained in a project constitute its decision log. All these are within the topic of Architectural Knowledge Management (AKM).
+An Architectural Decision Record (**ADR**) captures a single AD, such as is often done when writing personal notes or meeting minutes; the collection of ADRs created and maintained in a project constitute its decision log. All these are within the topic of Architectural Knowledge Management (AKM).
 
 You can read more about the ADR concept in this [blog post](https://product.reverb.com/documenting-architecture-decisions-the-reverb-way-a3563bb24bd0#.78xhdix6t).
 
@@ -25,18 +25,18 @@ An ADR should provide:
 
 Note the distinction between an ADR and a spec. The ADR provides the context, intuition, reasoning, and
 justification for a change in architecture, or for the architecture of something
-new. The spec is much more compressed and streamlined summary of everything as
+new. The spec is a much more compressed and streamlined summary of everything as
 it stands today.
 
 If recorded decisions turned out to be lacking, convene a discussion, record the new decisions here, and then modify the code to match.
 
-## Creating new ADR
+## Creating a new ADR
 
 Read about the [PROCESS](./PROCESS.md).
 
 ### Use RFC 2119 Keywords
 
-When writing ADRs, follow the same best practices for writing RFCs. When writing RFCs, key words are used to signify the requirements in the specification. These words are often capitalized: "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL. They are to be interpreted as described in [RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119).
+When writing ADRs, follow the same best practices for writing RFCs. When writing RFCs, key words are used to signify the requirements in the specification. These words are often capitalized: "MUST," "MUST NOT," "REQUIRED," "SHALL," "SHALL NOT," "SHOULD," "SHOULD NOT," "RECOMMENDED," "MAY," and "OPTIONAL." They are to be interpreted as described in [RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119).
 
 ## ADR Table of Contents
 
@@ -86,6 +86,7 @@ When writing ADRs, follow the same best practices for writing RFCs. When writing
 * [ADR 062: Collections State Layer](./adr-062-collections-state-layer.md)
 * [ADR 063: Core Module API](./adr-063-core-module-api.md)
 * [ADR 065: Store V2](./adr-065-store-v2.md)
+* [ADR 076: Transaction Malleability Risk Review and Recommendations](./adr-076-tx-malleability.md)
 
 ### Draft
 

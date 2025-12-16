@@ -31,14 +31,14 @@ func newTestTxConfig() (client.TxConfig, codec.Codec) {
 	return authtx.NewTxConfig(codec.NewProtoCodec(encodingConfig.InterfaceRegistry), authtx.DefaultSignModes), encodingConfig.Codec
 }
 
-// mockContext is a mock client.Context to return abitrary simulation response, used to
+// mockContext is a mock client.Context to return arbitrary simulation response, used to
 // unit test CalculateGas.
 type mockContext struct {
 	gasUsed uint64
 	wantErr bool
 }
 
-func (m mockContext) Invoke(_ context.Context, _ string, _, reply interface{}, _ ...grpc.CallOption) (err error) {
+func (m mockContext) Invoke(_ context.Context, _ string, _, reply any, _ ...grpc.CallOption) (err error) {
 	if m.wantErr {
 		return fmt.Errorf("mock err")
 	}
@@ -74,7 +74,6 @@ func TestCalculateGas(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		stc := tc
 		txCfg, _ := newTestTxConfig()
 		defaultSignMode, err := signing.APISignModeToInternal(txCfg.SignModeHandler().DefaultMode())
 		require.NoError(t, err)
@@ -83,16 +82,16 @@ func TestCalculateGas(t *testing.T) {
 			WithChainID("test-chain").
 			WithTxConfig(txCfg).WithSignMode(defaultSignMode)
 
-		t.Run(stc.name, func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			mockClientCtx := mockContext{
 				gasUsed: tc.args.mockGasUsed,
 				wantErr: tc.args.mockWantErr,
 			}
-			simRes, gotAdjusted, err := CalculateGas(mockClientCtx, txf.WithGasAdjustment(stc.args.adjustment))
-			if stc.expPass {
+			simRes, gotAdjusted, err := CalculateGas(mockClientCtx, txf.WithGasAdjustment(tc.args.adjustment))
+			if tc.expPass {
 				require.NoError(t, err)
-				require.Equal(t, simRes.GasInfo.GasUsed, stc.wantEstimate)
-				require.Equal(t, gotAdjusted, stc.wantAdjusted)
+				require.Equal(t, simRes.GasInfo.GasUsed, tc.wantEstimate)
+				require.Equal(t, gotAdjusted, tc.wantAdjusted)
 				require.NotNil(t, simRes.Result)
 			} else {
 				require.Error(t, err)
@@ -316,7 +315,7 @@ func TestSign(t *testing.T) {
 		/**** test double sign Direct mode
 		  signing transaction with 2 or more DIRECT signers should fail in DIRECT mode ****/
 		{
-			"direct: should  append a DIRECT signature with existing AMINO",
+			"direct: should append a DIRECT signature with existing AMINO",
 			// txb already has 1 AMINO signature
 			txfDirect, txb, from1, false,
 			[]cryptotypes.PubKey{pubKey2, pubKey1},

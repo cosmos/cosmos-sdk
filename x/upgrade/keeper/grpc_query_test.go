@@ -9,9 +9,6 @@ import (
 
 	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
-	"cosmossdk.io/x/upgrade"
-	"cosmossdk.io/x/upgrade/keeper"
-	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -21,6 +18,9 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/cosmos/cosmos-sdk/x/upgrade"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 type UpgradeTestSuite struct {
@@ -42,9 +42,9 @@ func (suite *UpgradeTestSuite) SetupTest() {
 	skipUpgradeHeights := make(map[int64]bool)
 
 	suite.upgradeKeeper = keeper.NewKeeper(skipUpgradeHeights, storeService, suite.encCfg.Codec, suite.T().TempDir(), nil, authtypes.NewModuleAddress(govtypes.ModuleName).String())
-	suite.upgradeKeeper.SetModuleVersionMap(suite.ctx, module.VersionMap{
+	suite.Require().NoError(suite.upgradeKeeper.SetModuleVersionMap(suite.ctx, module.VersionMap{
 		"bank": 0,
-	})
+	}))
 
 	queryHelper := baseapp.NewQueryServerTestHelper(testCtx.Ctx, suite.encCfg.InterfaceRegistry)
 	types.RegisterQueryServer(queryHelper, suite.upgradeKeeper)
@@ -74,7 +74,7 @@ func (suite *UpgradeTestSuite) TestQueryCurrentPlan() {
 			"with current upgrade plan",
 			func() {
 				plan := types.Plan{Name: "test-plan", Height: 5}
-				suite.upgradeKeeper.ScheduleUpgrade(suite.ctx, plan)
+				suite.Require().NoError(suite.upgradeKeeper.ScheduleUpgrade(suite.ctx, plan))
 
 				req = &types.QueryCurrentPlanRequest{}
 				expResponse = types.QueryCurrentPlanResponse{Plan: &plan}
@@ -127,13 +127,13 @@ func (suite *UpgradeTestSuite) TestAppliedCurrentPlan() {
 
 				planName := "test-plan"
 				plan := types.Plan{Name: planName, Height: expHeight}
-				suite.upgradeKeeper.ScheduleUpgrade(suite.ctx, plan)
+				suite.Require().NoError(suite.upgradeKeeper.ScheduleUpgrade(suite.ctx, plan))
 
 				suite.ctx = suite.ctx.WithHeaderInfo(header.Info{Height: expHeight})
 				suite.upgradeKeeper.SetUpgradeHandler(planName, func(ctx context.Context, plan types.Plan, vm module.VersionMap) (module.VersionMap, error) {
 					return vm, nil
 				})
-				suite.upgradeKeeper.ApplyUpgrade(suite.ctx, plan)
+				suite.Require().NoError(suite.upgradeKeeper.ApplyUpgrade(suite.ctx, plan))
 
 				req = &types.QueryAppliedPlanRequest{Name: planName}
 			},

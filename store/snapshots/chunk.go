@@ -1,10 +1,11 @@
 package snapshots
 
 import (
+	"errors"
 	"io"
 	"math"
 
-	"cosmossdk.io/errors"
+	sdkerrors "cosmossdk.io/errors"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
 )
@@ -72,7 +73,7 @@ func (w *ChunkWriter) CloseWithError(err error) {
 // Write implements io.Writer.
 func (w *ChunkWriter) Write(data []byte) (int, error) {
 	if w.closed {
-		return 0, errors.Wrap(storetypes.ErrLogic, "cannot write to closed ChunkWriter")
+		return 0, sdkerrors.Wrap(storetypes.ErrLogic, "cannot write to closed ChunkWriter")
 	}
 	nTotal := 0
 	for len(data) > 0 {
@@ -149,7 +150,7 @@ func (r *ChunkReader) Read(p []byte) (int, error) {
 		}
 	}
 	n, err := r.reader.Read(p)
-	if err == io.EOF {
+	if errors.Is(err, io.EOF) {
 		err = r.reader.Close()
 		r.reader = nil
 		if err != nil {
@@ -170,14 +171,14 @@ func DrainChunks(chunks <-chan io.ReadCloser) {
 // ValidRestoreHeight will check height is valid for snapshot restore or not
 func ValidRestoreHeight(format uint32, height uint64) error {
 	if format != snapshottypes.CurrentFormat {
-		return errors.Wrapf(snapshottypes.ErrUnknownFormat, "format %v", format)
+		return sdkerrors.Wrapf(snapshottypes.ErrUnknownFormat, "format %v", format)
 	}
 
 	if height == 0 {
-		return errors.Wrap(storetypes.ErrLogic, "cannot restore snapshot at height 0")
+		return sdkerrors.Wrap(storetypes.ErrLogic, "cannot restore snapshot at height 0")
 	}
 	if height > uint64(math.MaxInt64) {
-		return errors.Wrapf(snapshottypes.ErrInvalidMetadata,
+		return sdkerrors.Wrapf(snapshottypes.ErrInvalidMetadata,
 			"snapshot height %v cannot exceed %v", height, int64(math.MaxInt64))
 	}
 

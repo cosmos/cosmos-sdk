@@ -28,7 +28,7 @@ signed it, and make sure that signatures are in the correct order.
 The command would check whether all required signers have signed the transactions, whether
 the signatures were collected in the right order, and if the signature is valid over the
 given transaction. If the --offline flag is also set, signature validation over the
-transaction will be not be performed as that will require RPC communication with a full node.
+transaction will not be performed as that will require RPC communication with a full node.
 `,
 		PreRun: preSignCmd,
 		RunE:   makeValidateSignaturesCmd(),

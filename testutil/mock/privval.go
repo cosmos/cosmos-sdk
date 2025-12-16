@@ -48,3 +48,7 @@ func (pv PV) SignProposal(chainID string, proposal *cmtproto.Proposal) error {
 	proposal.Signature = sig
 	return nil
 }
+
+func (pv PV) SignBytes(bytes []byte) ([]byte, error) {
+	return pv.PrivKey.Sign(bytes)
+}

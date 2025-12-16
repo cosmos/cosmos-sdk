@@ -10,7 +10,7 @@ import (
 
 	"github.com/cometbft/cometbft/crypto"
 	secp256k1 "github.com/decred/dcrd/dcrec/secp256k1/v4"
-	"golang.org/x/crypto/ripemd160" //nolint: staticcheck // keep around for backwards compatibility
+	"golang.org/x/crypto/ripemd160" //nolint // using just for backwards compat
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -99,7 +99,7 @@ func genPrivKey(rand io.Reader) []byte {
 		}
 
 		d.SetBytes(privKeyBytes[:])
-		// break if we found a valid point (i.e. > 0 and < N == curverOrder)
+		// break if we found a valid point (i.e. > 0 and < N == curveOrder)
 		isValidFieldElement := 0 < d.Sign() && d.Cmp(secp256k1.S256().N) < 0
 		if isValidFieldElement {
 			break
@@ -158,9 +158,9 @@ func (pubKey *PubKey) Address() crypto.Address {
 	}
 
 	sha := sha256.Sum256(pubKey.Key)
-	hasherRIPEMD160 := ripemd160.New()
-	hasherRIPEMD160.Write(sha[:]) // does not error
-	return crypto.Address(hasherRIPEMD160.Sum(nil))
+	hasherRIPEMD160 := ripemd160.New() //nolint:gosec // keeping around for backwards compatibility
+	hasherRIPEMD160.Write(sha[:])      // does not error
+	return hasherRIPEMD160.Sum(nil)
 }
 
 // Bytes returns the pubkey byte format.

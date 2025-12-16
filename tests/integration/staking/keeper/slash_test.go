@@ -20,7 +20,9 @@ import (
 
 // bootstrapSlashTest creates 3 validators and bootstrap the app.
 func bootstrapSlashTest(t *testing.T, power int64) (*fixture, []sdk.AccAddress, []sdk.ValAddress) {
+	t.Helper()
 	t.Parallel()
+
 	f := initFixture(t)
 
 	addrDels, addrVals := generateAddresses(f, 100)
@@ -66,7 +68,7 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 
 	assert.NilError(t, f.stakingKeeper.SetUnbondingDelegation(f.sdkCtx, ubd))
 
-	// unbonding started prior to the infraction height, stakw didn't contribute
+	// unbonding started prior to the infraction height, stake didn't contribute
 	slashAmount, err := f.stakingKeeper.SlashUnbondingDelegation(f.sdkCtx, ubd, 1, fraction)
 	assert.NilError(t, err)
 	assert.Assert(t, slashAmount.Equal(math.NewInt(0)))

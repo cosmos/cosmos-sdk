@@ -25,6 +25,22 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+### Improvements
+
+* [#24543](https://github.com/cosmos/cosmos-sdk/issues/24543) Use `telemetry.MetricKeyPreBlocker` metric key instead of `telemetry.MetricKeyBeginBlocker` in `PreBlocker`.
+* [#24720](https://github.com/cosmos/cosmos-sdk/pull/24720) switch to verbose mode logging when calling upgrading handlers.
+
+
+## [v0.2.0](https://github.com/cosmos/cosmos-sdk/releases/tag/x/upgrade/v0.2.0) - 2025-04-24
+
+* SDK v0.53.x support.
+
+## [v0.1.4](https://github.com/cosmos/cosmos-sdk/releases/tag/x/upgrade/v0.1.4) - 2024-07-15
+
+### Improvements
+
+* [#20771](https://github.com/cosmos/cosmos-sdk/pull/20771) Create upgrade directory only when necessary (upgrade flow and not init flow).
+
 ## [v0.1.3](https://github.com/cosmos/cosmos-sdk/releases/tag/x/upgrade/v0.1.3) - 2024-06-04
 
 * (deps) [#20530](https://github.com/cosmos/cosmos-sdk/pull/20530) Bump vulnerable `github.com/hashicorp/go-getter` to v1.7.4.

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
@@ -13,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func BenchmarkGetValidator(b *testing.B) {
+func BenchmarkGetValidator(tb *testing.B) {
 	// 900 is the max number we are allowed to use in order to avoid simtestutil.CreateTestPubKeys
 	// panic: encoding/hex: odd length hex string
 	powersNumber := 900
@@ -25,21 +27,21 @@ func BenchmarkGetValidator(b *testing.B) {
 		totalPower += int64(i)
 	}
 
-	f, _, valAddrs, vals := initValidators(b, totalPower, len(powers), powers)
+	f, _, valAddrs, vals := initValidators(tb, totalPower, len(powers), powers)
 
 	for _, validator := range vals {
-		f.stakingKeeper.SetValidator(f.sdkCtx, validator)
+		require.NoError(tb, f.stakingKeeper.SetValidator(f.sdkCtx, validator))
 	}
 
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
+	tb.ResetTimer()
+	for n := 0; n < tb.N; n++ {
 		for _, addr := range valAddrs {
 			_, _ = f.stakingKeeper.GetValidator(f.sdkCtx, addr)
 		}
 	}
 }
 
-func BenchmarkGetValidatorDelegations(b *testing.B) {
+func BenchmarkGetValidatorDelegations(tb *testing.B) {
 	var totalPower int64
 	powersNumber := 10
 
@@ -49,17 +51,17 @@ func BenchmarkGetValidatorDelegations(b *testing.B) {
 		totalPower += int64(i)
 	}
 
-	f, _, valAddrs, vals := initValidators(b, totalPower, len(powers), powers)
+	f, _, valAddrs, vals := initValidators(tb, totalPower, len(powers), powers)
 	for _, validator := range vals {
-		f.stakingKeeper.SetValidator(f.sdkCtx, validator)
+		require.NoError(tb, f.stakingKeeper.SetValidator(f.sdkCtx, validator))
 	}
 
 	delegationsNum := 1000
 	for _, val := range valAddrs {
 		for i := 0; i < delegationsNum; i++ {
 			delegator := sdk.AccAddress(fmt.Sprintf("address%d", i))
-			banktestutil.FundAccount(f.sdkCtx, f.bankKeeper, delegator,
-				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(int64(i)))))
+			require.NoError(tb, banktestutil.FundAccount(f.sdkCtx, f.bankKeeper, delegator,
+				sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(int64(i))))))
 			NewDel := types.NewDelegation(delegator.String(), val.String(), math.LegacyNewDec(int64(i)))
 
 			if err := f.stakingKeeper.SetDelegation(f.sdkCtx, NewDel); err != nil {
@@ -68,13 +70,13 @@ func BenchmarkGetValidatorDelegations(b *testing.B) {
 		}
 	}
 
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
+	tb.ResetTimer()
+	for n := 0; n < tb.N; n++ {
 		updateValidatorDelegations(f, valAddrs[0], sdk.ValAddress("val"))
 	}
 }
 
-func BenchmarkGetValidatorDelegationsLegacy(b *testing.B) {
+func BenchmarkGetValidatorDelegationsLegacy(tb *testing.B) {
 	var totalPower int64
 	powersNumber := 10
 
@@ -84,17 +86,17 @@ func BenchmarkGetValidatorDelegationsLegacy(b *testing.B) {
 		totalPower += int64(i)
 	}
 
-	f, _, valAddrs, vals := initValidators(b, totalPower, len(powers), powers)
+	f, _, valAddrs, vals := initValidators(tb, totalPower, len(powers), powers)
 
 	for _, validator := range vals {
-		f.stakingKeeper.SetValidator(f.sdkCtx, validator)
+		require.NoError(tb, f.stakingKeeper.SetValidator(f.sdkCtx, validator))
 	}
 
 	delegationsNum := 1000
 	for _, val := range valAddrs {
 		for i := 0; i < delegationsNum; i++ {
 			delegator := sdk.AccAddress(fmt.Sprintf("address%d", i))
-			banktestutil.FundAccount(f.sdkCtx, f.bankKeeper, delegator, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(int64(i)))))
+			require.NoError(tb, banktestutil.FundAccount(f.sdkCtx, f.bankKeeper, delegator, sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, math.NewInt(int64(i))))))
 			NewDel := types.NewDelegation(delegator.String(), val.String(), math.LegacyNewDec(int64(i)))
 			if err := f.stakingKeeper.SetDelegation(f.sdkCtx, NewDel); err != nil {
 				panic(err)
@@ -102,8 +104,8 @@ func BenchmarkGetValidatorDelegationsLegacy(b *testing.B) {
 		}
 	}
 
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
+	tb.ResetTimer()
+	for n := 0; n < tb.N; n++ {
 		updateValidatorDelegationsLegacy(f, valAddrs[0], sdk.ValAddress("val"))
 	}
 }
@@ -129,7 +131,9 @@ func updateValidatorDelegationsLegacy(f *fixture, existingValAddr, newValAddr sd
 				panic(err)
 			}
 			delegation.ValidatorAddress = newValAddr.String()
-			k.SetDelegation(f.sdkCtx, delegation)
+			if err := k.SetDelegation(f.sdkCtx, delegation); err != nil {
+				panic(err)
+			}
 		}
 	}
 }
@@ -160,6 +164,8 @@ func updateValidatorDelegations(f *fixture, existingValAddr, newValAddr sdk.ValA
 
 		delegation.ValidatorAddress = newValAddr.String()
 		// add with new operator addr
-		k.SetDelegation(f.sdkCtx, delegation)
+		if err := k.SetDelegation(f.sdkCtx, delegation); err != nil {
+			panic(err)
+		}
 	}
 }

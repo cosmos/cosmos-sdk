@@ -1,4 +1,3 @@
-// Since: cosmos-sdk 0.46
 syntax = "proto3";
 package cosmos.gov.v1;
 
@@ -153,10 +152,8 @@ message QueryParamsResponse {
   // Deprecated: Prefer to use `params` instead.
   // tally_params defines the parameters related to tally.
   TallyParams tally_params = 3 [deprecated = true];
-  // params defines all the paramaters of x/gov module.
-  //
-  // Since: cosmos-sdk 0.47
-  Params params = 4;
+  // params defines all the parameters of x/gov module.
+  Params params = 4 [(cosmos_proto.field_added_in) = "cosmos-sdk 0.47"];
 }
 
 // QueryDepositRequest is the request type for the Query/Deposit RPC method.

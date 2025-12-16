@@ -23,11 +23,12 @@ go get cosmossdk.io/collections
 ## Core types
 
 Collections offers 5 different APIs to work with state, which will be explored in the next sections, these APIs are:
-- ``Map``: to work with typed arbitrary KV pairings.
-- ``KeySet``: to work with just typed keys
-- ``Item``: to work with just one typed value
-- ``Sequence``: which is a monotonically increasing number.
-- ``IndexedMap``: which combines ``Map`` and `KeySet` to provide a `Map` with indexing capabilities.
+
+* ``Map``: to work with typed arbitrary KV pairings.
+* ``KeySet``: to work with just typed keys
+* ``Item``: to work with just one typed value
+* ``Sequence``: which is a monotonically increasing number.
+* ``IndexedMap``: which combines ``Map`` and `KeySet` to provide a `Map` with indexing capabilities.
 
 ## Preliminary components
 
@@ -82,15 +83,17 @@ The second argument passed to our ``KeySet`` is a `collections.Prefix`, a prefix
 where all the state of a specific collection will be saved. 
 
 Since a module can have multiple collections, the following is expected:
-- module params will become a `collections.Item`
-- the `AllowList` is a `collections.KeySet`
+
+* module params will become a `collections.Item`
+* the `AllowList` is a `collections.KeySet`
 
 We don't want a collection to write over the state of the other collection so we pass it a prefix, which defines a storage
 partition owned by the collection.
 
-If you already built modules, the prefix translates to the items you were creating in your ``types/keys.go`` file, example: https://github.com/cosmos/cosmos-sdk/blob/main/x/feegrant/key.go#L27
+If you already built modules, the prefix translates to the items you were creating in your ``types/keys.go`` file, example: https://github.com/cosmos/cosmos-sdk/blob/v0.52.0-rc.1/x/feegrant/key.go#L16~L22
 
 your old:
+
 ```go
 var (
 	// FeeAllowanceKeyPrefix is the set of the kvstore for fee allowance data
@@ -102,7 +105,9 @@ var (
 	FeeAllowanceQueueKeyPrefix = []byte{0x01}
 )
 ```
+
 becomes:
+
 ```go
 var (
 	// FeeAllowanceKeyPrefix is the set of the kvstore for fee allowance data
@@ -117,7 +122,7 @@ var (
 
 #### Rules
 
-``collections.NewPrefix`` accepts either `uint8`, `string` or `[]bytes` it's good practice to use an always increasing `uint8`for disk space efficiency.
+``collections.NewPrefix`` accepts either `uint8`, `string` or `[]bytes` it's good practice to use an always increasing `uint8` for disk space efficiency.
 
 A collection **MUST NOT** share the same prefix as another collection in the same module, and a collection prefix **MUST NEVER** start with the same prefix as another, examples:
 
@@ -130,6 +135,7 @@ prefix2 := collections.NewPrefix("prefix") // THIS IS BAD!
 prefix1 := collections.NewPrefix("a")
 prefix2 := collections.NewPrefix("aa") // prefix2 starts with the same as prefix1: BAD!!!
 ```
+
 ### Human-Readable Name
 
 The third parameter we pass to a collection is a string, which is a human-readable name.
@@ -157,7 +163,7 @@ You might need to implement them only if you're migrating to collections and the
 
 Let's explore an example:
 
-````go
+```go
 package collections
 
 import (
@@ -180,14 +186,14 @@ func NewKeeper(storeKey *storetypes.KVStoreKey) Keeper {
 		IDs: collections.NewMap(sb, IDsPrefix, "ids", collections.StringKey, collections.Uint64Value),
 	}
 }
-````
+```
 
 We're now instantiating a map where the key is string and the value is `uint64`.
 We already know the first three arguments of the ``NewMap`` function.
 
 The fourth parameter is our `KeyCodec`, we know that the ``Map`` has `string` as key so we pass it a `KeyCodec` that handles strings as keys.
 
-The fifth parameter is our `ValueCodec`, we know that the `Map` as a `uint64` as value so we pass it a `ValueCodec` that handles uint64.
+The fifth parameter is our `ValueCodec`, we know that the `Map` has a `uint64` as value so we pass it a `ValueCodec` that handles uint64.
 
 Collections already comes with all the required implementations for golang primitive types.
 
@@ -390,7 +396,8 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, validator sdk.ValAddress) error
 	return nil
 }
 ```
-The first difference we notice is that `KeySet` needs use to specify only one type parameter: the key (`sdk.ValAddress` in this case).
+
+The first difference we notice is that `KeySet` needs us to specify only one type parameter: the key (`sdk.ValAddress` in this case).
 The second difference we notice is that `KeySet` in its `NewKeySet` function does not require
 us to specify a `ValueCodec` but only a `KeyCodec`. This is because a `KeySet` only saves keys and not values.
 
@@ -416,7 +423,7 @@ The third type of collection is the `collections.Item`.
 It stores only one single item, it's useful for example for parameters, there's only one instance
 of parameters in state always.
 
-#### implementation curiosity
+### implementation curiosity
 
 A `collections.Item` is just a `collections.Map` with no key but just a value.
 The key is the prefix of the collection!
@@ -431,7 +438,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	stakingtypes "cosmossdk.io/x/staking/types"
 )
 
 var ParamsPrefix = collections.NewPrefix(0)
@@ -580,7 +587,7 @@ Let's analyse each method in the example and how it makes use of the `Iterate` a
 In `GetAllAccounts` we pass to our `Iterate` a nil `Ranger`. This means that the returned `Iterator` will include
 all the existing keys within the collection.
 
-Then we use some the `Values` method from the returned `Iterator` API to collect all the values into a slice.
+Then we use the `Values` method from the returned `Iterator` API to collect all the values into a slice.
 
 `Iterator` offers other methods such as `Keys()` to collect only the keys and not the values and `KeyValues` to collect
 all the keys and values.
@@ -595,10 +602,10 @@ we instruct it to report us results in reverse order through `Descending`
 Then we pass the range instruction to `Iterate` and get an `Iterator`, which will contain only the results
 we specified in the range.
 
-Then we use again th `Values` method of the `Iterator` to collect all the results.
+Then we use again the `Values` method of the `Iterator` to collect all the results.
 
-`collections.Range` also offers a `Prefix` API which is not appliable to all keys types,
-for example uint64 cannot be prefix because it is of constant size, but a `string` key
+`collections.Range` also offers a `Prefix` API which is not applicable to all keys types,
+for example uint64 cannot be prefixed because it is of constant size, but a `string` key
 can be prefixed.
 
 #### IterateAccounts
@@ -641,7 +648,7 @@ Let's see now how we can work with composite keys using collections.
 
 ### Example
 
-In our example we will show-case how we can use collections when we are dealing with balances, similar to bank,
+In our example we will showcase how we can use collections when we are dealing with balances, similar to bank,
 a balance is a mapping between `(address, denom) => math.Int` the composite key in our case is `(address, denom)`.
 
 ## Instantiation of a composite key collection
@@ -670,18 +677,19 @@ func NewKeeper(storeKey *storetypes.KVStoreKey) Keeper {
 		Balances: collections.NewMap(
 			sb, BalancesPrefix, "balances",
 			collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey),
-			math.IntValue,
+			sdk.IntValue,
 		),
 	}
 }
 ```
 
-#### The Map Key definition
+### The Map Key definition
 
 First of all we can see that in order to define a composite key of two elements we use the `collections.Pair` type:
-````go
+
+```go
 collections.Map[collections.Pair[sdk.AccAddress, string], math.Int]
-````
+```
 
 `collections.Pair` defines a key composed of two other keys, in our case the first part is `sdk.AccAddress`, the second
 part is `string`.
@@ -698,7 +706,7 @@ encode the second part of the key.
 
 Let's expand on the example we used before:
 
-````go
+```go
 var BalancesPrefix = collections.NewPrefix(1)
 
 type Keeper struct {
@@ -712,7 +720,7 @@ func NewKeeper(storeKey *storetypes.KVStoreKey) Keeper {
 		Balances: collections.NewMap(
 			sb, BalancesPrefix, "balances",
 			collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey),
-			math.IntValue,
+			sdk.IntValue,
 		),
 	}
 }
@@ -758,7 +766,7 @@ func (k Keeper) GetAllAddressBalancesBetween(ctx sdk.Context, address sdk.AccAdd
 	}
     ...
 }
-````
+```
 
 #### SetBalance
 
@@ -769,7 +777,7 @@ We use the `collections.Join` function to generate the composite key.
 `collections.Pair` contains the two keys we have joined, it also exposes two methods: `K1` to fetch the 1st part of the
 key and `K2` to fetch the second part.
 
-As always, we use the `collections.Map.Set` method to map the composite key to our value (`math.Int`in this case)
+As always, we use the `collections.Map.Set` method to map the composite key to our value (`math.Int` in this case)
 
 #### GetBalance
 
@@ -788,7 +796,7 @@ in `Pair` keys iterations.
 ```
 
 As we can see here we're passing the type parameters of the `collections.Pair` because golang type inference
-with respect to generics is not as permissive as other languages, so we need to explitly say what are the types of the pair key.
+with respect to generics is not as permissive as other languages, so we need to explicitly say what are the types of the pair key.
 
 #### GetAllAddressesBalancesBetween
 
@@ -811,7 +819,7 @@ type BaseAccount struct {
 ```
 
 First of all, when we save our accounts in state we map them using a primary key `sdk.AccAddress`.
-If it were to be a `collections.Map` it would be `collections.Map[sdk.AccAddres, authtypes.BaseAccount]`.
+If it were to be a `collections.Map` it would be `collections.Map[sdk.AccAddress, authtypes.BaseAccount]`.
 
 Then we also want to be able to get an account not only by its `sdk.AccAddress`, but also by its `AccountNumber`.
 
@@ -827,10 +835,6 @@ var AccountsNumberIndexPrefix = collections.NewPrefix(1)
 
 type AccountsIndexes struct {
 	Number *indexes.Unique[uint64, sdk.AccAddress, authtypes.BaseAccount]
-}
-
-func (a AccountsIndexes) IndexesList() []collections.Index[sdk.AccAddress, authtypes.BaseAccount] {
-	return []collections.Index[sdk.AccAddress, authtypes.BaseAccount]{a.Number}
 }
 
 func NewAccountIndexes(sb *collections.SchemaBuilder) AccountsIndexes {
@@ -856,17 +860,25 @@ Then we can see in our `AccountIndexes` struct the `Number` field is defined as:
 ```
 
 Where the first type parameter is `uint64`, which is the field type of our index.
-The second type parameter is the primary key `sdk.AccAddress`
+The second type parameter is the primary key `sdk.AccAddress`.
 And the third type parameter is the actual object we're storing `authtypes.BaseAccount`.
-
-Then we implement a function called `IndexesList` on our `AccountIndexes` struct, this will be used
-by the `IndexedMap` to keep the underlying map in sync with the indexes, in our case `Number`.
-This function just needs to return the slice of indexes contained in the struct.
 
 Then we create a `NewAccountIndexes` function that instantiates and returns the `AccountsIndexes` struct.
 
 The function takes a `SchemaBuilder`. Then we instantiate our `indexes.Unique`, let's analyse the arguments we pass to
 `indexes.NewUnique`.
+
+#### NOTE: indexes list
+
+The `AccountsIndexes` struct contains the indexes, the `NewIndexedMap` function will infer the indexes form that struct
+using reflection, this happens only at init and is not computationally expensive. In case you want to explicitly declare
+indexes: implement the `Indexes` interface in the `AccountsIndexes` struct:
+
+```go
+func (a AccountsIndexes) IndexesList() []collections.Index[sdk.AccAddress, authtypes.BaseAccount] {
+    return []collections.Index[sdk.AccAddress, authtypes.BaseAccount]{a.Number}
+}
+```
 
 #### Instantiating a `indexes.Unique`
 
@@ -1117,3 +1129,82 @@ func (k Keeper) GetAccount(ctx sdk.context, addr sdk.AccAddress) (sdk.AccountI, 
     return k.Accounts.Get(ctx, addr)
 }
 ```
+
+## Triple key
+
+The `collections.Triple` is a special type of key composed of three keys, it's identical to `collections.Pair`.
+
+Let's see an example.
+
+```go
+package example
+
+import (
+ "context"
+
+ "cosmossdk.io/collections"
+ storetypes "cosmossdk.io/store/types"
+ "github.com/cosmos/cosmos-sdk/codec"
+)
+
+type AccAddress = string
+type ValAddress = string
+
+type Keeper struct {
+ // let's simulate we have redelegations which are stored as a triple key composed of
+ // the delegator, the source validator and the destination validator.
+ Redelegations collections.KeySet[collections.Triple[AccAddress, ValAddress, ValAddress]]
+}
+
+func NewKeeper(storeKey *storetypes.KVStoreKey) Keeper {
+ sb := collections.NewSchemaBuilder(sdk.OpenKVStore(storeKey))
+ return Keeper{
+  Redelegations: collections.NewKeySet(sb, collections.NewPrefix(0), "redelegations", collections.TripleKeyCodec(collections.StringKey, collections.StringKey, collections.StringKey)
+ }
+}
+
+// RedelegationsByDelegator iterates over all the redelegations of a given delegator and calls onResult providing
+// each redelegation from source validator towards the destination validator.
+func (k Keeper) RedelegationsByDelegator(ctx context.Context, delegator AccAddress, onResult func(src, dst ValAddress) (stop bool, err error)) error {
+ rng := collections.NewPrefixedTripleRange[AccAddress, ValAddress, ValAddress](delegator)
+ return k.Redelegations.Walk(ctx, rng, func(key collections.Triple[AccAddress, ValAddress, ValAddress]) (stop bool, err error) {
+  return onResult(key.K2(), key.K3())
+ })
+}
+
+// RedelegationsByDelegatorAndValidator iterates over all the redelegations of a given delegator and its source validator and calls onResult for each
+// destination validator.
+func (k Keeper) RedelegationsByDelegatorAndValidator(ctx context.Context, delegator AccAddress, validator ValAddress, onResult func(dst ValAddress) (stop bool, err error)) error {
+ rng := collections.NewSuperPrefixedTripleRange[AccAddress, ValAddress, ValAddress](delegator, validator)
+ return k.Redelegations.Walk(ctx, rng, func(key collections.Triple[AccAddress, ValAddress, ValAddress]) (stop bool, err error) {
+  return onResult(key.K3())
+ })
+}
+```
+
+## Advanced Usages
+
+### Alternative Value Codec
+
+The `codec.AltValueCodec` allows a collection to decode values using a different codec than the one used to encode them.
+Basically it enables to decode two different byte representations of the same concrete value.
+It can be used to lazily migrate values from one bytes representation to another, as long as the new representation is
+not able to decode the old one.
+
+A concrete example can be found in `x/bank` where the balance was initially stored as `Coin` and then migrated to `Int`.
+
+```go
+
+var BankBalanceValueCodec = codec.NewAltValueCodec(sdk.IntValue, func(b []byte) (sdk.Int, error) {
+    coin := sdk.Coin{}
+    err := coin.Unmarshal(b)
+    if err != nil {
+        return sdk.Int{}, err
+    }
+    return coin.Amount, nil
+})
+```
+
+The above example shows how to create an `AltValueCodec` that can decode both `sdk.Int` and `sdk.Coin` values. The provided 
+decoder function will be used as a fallback in case the default decoder fails. When the value will be encoded back into state
+it will use the default encoder. This allows to lazily migrate values to a new bytes representation.

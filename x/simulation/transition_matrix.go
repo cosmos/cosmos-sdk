@@ -20,10 +20,28 @@ type TransitionMatrix struct {
 }
 
 // CreateTransitionMatrix creates a transition matrix from the provided weights.
-// TODO: Provide example usage
+//
+// Example:
+//
+//	weights := [][]int{
+//	  // From state 0 to states 0,1,2
+//	  {90, 10, 0},
+//	  // From state 1 to states 0,1,2
+//	  {20, 70, 10},
+//	  // From state 2 to states 0,1,2
+//	  {5,  15, 80},
+//	}
+//	tm, err := CreateTransitionMatrix(weights)
+//	if err != nil {
+//	  // handle error
+//	}
+//
+//	// NextState picks the next state from current state i.
+//	// r should be a deterministic *rand.Rand when used in simulations.
+//	// next := tm.NextState(r, i)
 func CreateTransitionMatrix(weights [][]int) (simulation.TransitionMatrix, error) {
 	n := len(weights)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		if len(weights[i]) != n {
 			return TransitionMatrix{},
 				fmt.Errorf("transition matrix: non-square matrix provided, error on row %d", i)
@@ -32,8 +50,8 @@ func CreateTransitionMatrix(weights [][]int) (simulation.TransitionMatrix, error
 
 	totals := make([]int, n)
 
-	for row := 0; row < n; row++ {
-		for col := 0; col < n; col++ {
+	for row := range n {
+		for col := range n {
 			totals[col] += weights[row][col]
 		}
 	}
@@ -45,7 +63,7 @@ func CreateTransitionMatrix(weights [][]int) (simulation.TransitionMatrix, error
 // provided in the transition matrix.
 func (t TransitionMatrix) NextState(r *rand.Rand, i int) int {
 	randNum := r.Intn(t.totals[i])
-	for row := 0; row < t.n; row++ {
+	for row := range t.n {
 		if randNum < t.weights[row][i] {
 			return row
 		}
@@ -62,13 +80,13 @@ func GetMemberOfInitialState(r *rand.Rand, weights []int) int {
 	n := len(weights)
 	total := 0
 
-	for i := 0; i < n; i++ {
+	for i := range n {
 		total += weights[i]
 	}
 
 	randNum := r.Intn(total)
 
-	for state := 0; state < n; state++ {
+	for state := range n {
 		if randNum < weights[state] {
 			return state
 		}

@@ -43,7 +43,7 @@ func TestHistoricalKeysMigration(t *testing.T) {
 	// random cases
 	seed := time.Now().UnixNano()
 	r := rand.New(rand.NewSource(seed))
-	for i := 0; i < 10; i++ {
+	for range 10 {
 		height := r.Intn(math.MaxInt32-2) + 2
 
 		testCases[int64(height)] = testCase{}

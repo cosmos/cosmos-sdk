@@ -12,10 +12,6 @@ import (
 
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-	"cosmossdk.io/x/feegrant"
-	"cosmossdk.io/x/feegrant/keeper"
-	_ "cosmossdk.io/x/feegrant/module"
-	"cosmossdk.io/x/feegrant/simulation"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -33,6 +29,10 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
+	_ "github.com/cosmos/cosmos-sdk/x/feegrant/module"
+	"github.com/cosmos/cosmos-sdk/x/feegrant/simulation"
 	_ "github.com/cosmos/cosmos-sdk/x/genutil"
 	_ "github.com/cosmos/cosmos-sdk/x/mint"
 	_ "github.com/cosmos/cosmos-sdk/x/params"
@@ -79,7 +79,7 @@ func (suite *SimTestSuite) SetupTest() {
 	)
 	suite.Require().NoError(err)
 
-	suite.ctx = suite.app.BaseApp.NewContextLegacy(false, cmtproto.Header{Time: time.Now()})
+	suite.ctx = suite.app.NewContextLegacy(false, cmtproto.Header{Time: time.Now()})
 }
 
 func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
@@ -178,7 +178,8 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeAllowance() {
 	accounts := suite.getTestingAccounts(r, 3)
 
 	// begin a new block
-	app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: suite.app.LastBlockHeight() + 1, Hash: suite.app.LastCommitID().Hash})
+	_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: suite.app.LastBlockHeight() + 1, Hash: suite.app.LastCommitID().Hash})
+	suite.Require().NoError(err)
 
 	feeAmt := sdk.TokensFromConsensusPower(200000, sdk.DefaultPowerReduction)
 	feeCoins := sdk.NewCoins(sdk.NewCoin("foo", feeAmt))
@@ -186,7 +187,7 @@ func (suite *SimTestSuite) TestSimulateMsgRevokeAllowance() {
 	granter, grantee := accounts[0], accounts[1]
 
 	oneYear := ctx.BlockTime().AddDate(1, 0, 0)
-	err := suite.feegrantKeeper.GrantAllowance(
+	err = suite.feegrantKeeper.GrantAllowance(
 		ctx,
 		granter.Address,
 		grantee.Address,

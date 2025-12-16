@@ -5,11 +5,11 @@ import (
 
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/store/prefix"
-	"cosmossdk.io/x/feegrant"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
 func addAllowancesByExpTimeQueue(ctx context.Context, store store.KVStore, cdc codec.BinaryCodec) error {
@@ -41,7 +41,10 @@ func addAllowancesByExpTimeQueue(ctx context.Context, store store.KVStore, cdc c
 				prefixStore.Delete(key)
 			} else {
 				grantByExpTimeQueueKey := FeeAllowancePrefixQueue(exp, key)
-				store.Set(grantByExpTimeQueueKey, []byte{})
+				err = store.Set(grantByExpTimeQueueKey, []byte{})
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -50,6 +53,6 @@ func addAllowancesByExpTimeQueue(ctx context.Context, store store.KVStore, cdc c
 }
 
 func MigrateStore(ctx context.Context, storeService store.KVStoreService, cdc codec.BinaryCodec) error {
-	store := storeService.OpenKVStore(ctx)
-	return addAllowancesByExpTimeQueue(ctx, store, cdc)
+	kvStore := storeService.OpenKVStore(ctx)
+	return addAllowancesByExpTimeQueue(ctx, kvStore, cdc)
 }

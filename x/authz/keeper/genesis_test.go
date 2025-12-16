@@ -5,8 +5,8 @@ import (
 	"time"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
 
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
@@ -82,7 +82,7 @@ func (suite *GenesisTestSuite) TestImportExportGenesis() {
 
 	// TODO, recheck!
 	// Clear keeper
-	suite.keeper.DeleteGrant(suite.ctx, granteeAddr, granterAddr, grant.MsgTypeURL())
+	suite.Require().NoError(suite.keeper.DeleteGrant(suite.ctx, granteeAddr, granterAddr, grant.MsgTypeURL()))
 	newGenesis := suite.keeper.ExportGenesis(suite.ctx)
 	suite.Require().NotEqual(genesis, newGenesis)
 	suite.Require().Empty(newGenesis)

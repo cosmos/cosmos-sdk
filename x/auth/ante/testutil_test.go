@@ -2,10 +2,11 @@ package ante_test
 
 import (
 	"testing"
+	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
 
 	// TODO We don't need to import these API types if we use gogo's registry
 	// ref: https://github.com/cosmos/cosmos-sdk/issues/14647
@@ -55,8 +56,9 @@ type AnteTestSuite struct {
 	encCfg         moduletestutil.TestEncodingConfig
 }
 
-// SetupTest setups a new test, with new app, context, and anteHandler.
-func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
+func setupSuite(t *testing.T, isCheckTx, enableUnorderedTxs bool) *AnteTestSuite {
+	t.Helper()
+
 	suite := &AnteTestSuite{}
 	ctrl := gomock.NewController(t)
 	suite.bankKeeper = authtestutil.NewMockBankKeeper(ctrl)
@@ -79,7 +81,7 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 
 	suite.accountKeeper = keeper.NewAccountKeeper(
 		suite.encCfg.Codec, runtime.NewKVStoreService(key), types.ProtoBaseAccount, maccPerms, authcodec.NewBech32Codec("cosmos"),
-		sdk.Bech32MainPrefix, types.NewModuleAddress("gov").String(),
+		sdk.Bech32MainPrefix, types.NewModuleAddress("gov").String(), keeper.WithUnorderedTransactions(enableUnorderedTxs),
 	)
 	suite.accountKeeper.GetModuleAccount(suite.ctx, types.FeeCollectorName)
 	err := suite.accountKeeper.Params.Set(suite.ctx, types.DefaultParams())
@@ -111,13 +113,28 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 	return suite
 }
 
+// SetupTest setups a new test, with new app, context, and anteHandler.
+func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
+	t.Helper()
+	return setupSuite(t, isCheckTx, false)
+}
+
+// SetupTest setups a new test, with new app, context, and anteHandler.
+func SetupTestSuiteWithUnordered(t *testing.T, isCheckTx, enableUnorderedTxs bool) *AnteTestSuite {
+	t.Helper()
+	return setupSuite(t, isCheckTx, enableUnorderedTxs)
+}
+
 func (suite *AnteTestSuite) CreateTestAccounts(numAccs int) []TestAccount {
 	var accounts []TestAccount
 
-	for i := 0; i < numAccs; i++ {
+	for i := range numAccs {
 		priv, _, addr := testdata.KeyTestPubAddr()
 		acc := suite.accountKeeper.NewAccountWithAddress(suite.ctx, addr)
-		acc.SetAccountNumber(uint64(i + 1000))
+		err := acc.SetAccountNumber(uint64(i + 1000))
+		if err != nil {
+			panic(err)
+		}
 		suite.accountKeeper.SetAccount(suite.ctx, acc)
 		accounts = append(accounts, TestAccount{acc, priv})
 	}
@@ -157,6 +174,8 @@ func (t TestCaseArgs) WithAccountsInfo(accs []TestAccount) TestCaseArgs {
 // DeliverMsgs constructs a tx and runs it through the ante handler. This is used to set the context for a test case, for
 // example to test for replay protection.
 func (suite *AnteTestSuite) DeliverMsgs(t *testing.T, privs []cryptotypes.PrivKey, msgs []sdk.Msg, feeAmount sdk.Coins, gasLimit uint64, accNums, accSeqs []uint64, chainID string, simulate bool) (sdk.Context, error) {
+	t.Helper()
+
 	require.NoError(t, suite.txBuilder.SetMsgs(msgs...))
 	suite.txBuilder.SetFeeAmount(feeAmount)
 	suite.txBuilder.SetGasLimit(gasLimit)
@@ -170,6 +189,8 @@ func (suite *AnteTestSuite) DeliverMsgs(t *testing.T, privs []cryptotypes.PrivKe
 }
 
 func (suite *AnteTestSuite) RunTestCase(t *testing.T, tc TestCase, args TestCaseArgs) {
+	t.Helper()
+
 	require.NoError(t, suite.txBuilder.SetMsgs(args.msgs...))
 	suite.txBuilder.SetFeeAmount(args.feeAmount)
 	suite.txBuilder.SetGasLimit(args.gasLimit)
@@ -206,11 +227,14 @@ func (suite *AnteTestSuite) RunTestCase(t *testing.T, tc TestCase, args TestCase
 }
 
 // CreateTestTx is a helper function to create a tx given multiple inputs.
-func (suite *AnteTestSuite) CreateTestTx(
+func (suite *AnteTestSuite) createTx(
 	ctx sdk.Context, privs []cryptotypes.PrivKey,
 	accNums, accSeqs []uint64,
-	chainID string, signMode signing.SignMode,
+	chainID string, signMode signing.SignMode, unordered bool, unorderedTimeout time.Time,
 ) (xauthsigning.Tx, error) {
+	suite.txBuilder.SetUnordered(unordered)
+	suite.txBuilder.SetTimeoutTimestamp(unorderedTimeout)
+
 	// First round: we gather all the signer infos. We use the "set empty
 	// signature" hack to do that.
 	var sigsV2 []signing.SignatureV2
@@ -256,4 +280,22 @@ func (suite *AnteTestSuite) CreateTestTx(
 	}
 
 	return suite.txBuilder.GetTx(), nil
+}
+
+// CreateTestTx is a helper function to create a tx given multiple inputs.
+func (suite *AnteTestSuite) CreateTestTx(
+	ctx sdk.Context, privs []cryptotypes.PrivKey,
+	accNums, accSeqs []uint64,
+	chainID string, signMode signing.SignMode,
+) (xauthsigning.Tx, error) {
+	return suite.createTx(ctx, privs, accNums, accSeqs, chainID, signMode, false, time.Time{})
+}
+
+func (suite *AnteTestSuite) CreateTestUnorderedTx(
+	ctx sdk.Context, privs []cryptotypes.PrivKey,
+	accNums, accSeqs []uint64,
+	chainID string, signMode signing.SignMode,
+	unordered bool, unorderedTimeout time.Time,
+) (xauthsigning.Tx, error) {
+	return suite.createTx(ctx, privs, accNums, accSeqs, chainID, signMode, unordered, unorderedTimeout)
 }

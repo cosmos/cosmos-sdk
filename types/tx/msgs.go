@@ -14,7 +14,7 @@ const (
 // MsgResponse is the interface all Msg server handlers' response types need to
 // implement. It's the interface that's representing all Msg responses packed
 // in Anys.
-type MsgResponse interface{}
+type MsgResponse any
 
 // SetMsgs takes a slice of sdk.Msg's and turn them into Any's.
 func SetMsgs(msgs []sdk.Msg) ([]*types.Any, error) {

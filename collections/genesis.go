@@ -32,7 +32,7 @@ func (m Map[K, V]) importGenesis(ctx context.Context, reader io.Reader) error {
 }
 
 func (m Map[K, V]) exportGenesis(ctx context.Context, writer io.Writer) error {
-	_, err := writer.Write([]byte("["))
+	_, err := io.WriteString(writer, "[")
 	if err != nil {
 		return err
 	}
@@ -48,7 +48,7 @@ func (m Map[K, V]) exportGenesis(ctx context.Context, writer io.Writer) error {
 		// add a comma before encoding the object
 		// for all objects besides the first one.
 		if !first {
-			_, err = writer.Write([]byte(","))
+			_, err = io.WriteString(writer, ",")
 			if err != nil {
 				return err
 			}
@@ -91,7 +91,7 @@ func (m Map[K, V]) exportGenesis(ctx context.Context, writer io.Writer) error {
 		}
 	}
 
-	_, err = writer.Write([]byte("]"))
+	_, err = io.WriteString(writer, "]")
 	return err
 }
 
@@ -148,6 +148,6 @@ func (m Map[K, V]) doDecodeJSON(reader io.Reader, onEntry func(key K, value V) e
 }
 
 func (m Map[K, V]) defaultGenesis(writer io.Writer) error {
-	_, err := writer.Write([]byte(`[]`))
+	_, err := io.WriteString(writer, `[]`)
 	return err
 }

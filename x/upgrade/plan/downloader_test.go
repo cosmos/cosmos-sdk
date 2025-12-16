@@ -90,7 +90,7 @@ func (z TestZip) SaveAs(path string) error {
 	return zipper.Close()
 }
 
-// saveTestZip saves a TestZip in this test's Home/src directory with the given name.
+// saveSrcTestZip saves a TestZip in this test's Home/src directory with the given name.
 // The full path to the saved archive is returned.
 func (s *DownloaderTestSuite) saveSrcTestZip(name string, z TestZip) string {
 	fullName := filepath.Join(s.Home, "src", name)
@@ -109,6 +109,7 @@ func (s *DownloaderTestSuite) saveSrcTestFile(f *TestFile) string {
 
 // requireFileExistsAndIsExecutable requires that the given file exists and is executable.
 func requireFileExistsAndIsExecutable(t *testing.T, path string) {
+	t.Helper()
 	info, err := os.Stat(path)
 	require.NoError(t, err, "stat error")
 	perm := info.Mode().Perm()
@@ -120,13 +121,15 @@ func requireFileExistsAndIsExecutable(t *testing.T, path string) {
 // requireFileEquals requires that the contents of the file at the given path
 // is equal to the contents of the given TestFile.
 func requireFileEquals(t *testing.T, path string, tf *TestFile) {
+	t.Helper()
 	file, err := os.ReadFile(path)
 	require.NoError(t, err, "reading file")
 	require.Equal(t, string(tf.Contents), string(file), "file contents")
 }
 
-// makeFileUrl converts the given path to a URL with the correct checksum query parameter.
+// makeFileURL converts the given path to a URL with the correct checksum query parameter.
 func makeFileURL(t *testing.T, path string) string {
+	t.Helper()
 	f, err := os.Open(path)
 	require.NoError(t, err, "opening file")
 	defer f.Close()

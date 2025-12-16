@@ -22,9 +22,9 @@ recover from.
 * [State](#state)
 * [Events](#events)
 * [Client](#client)
-  * [CLI](#cli)
-  * [REST](#rest)
-  * [gRPC](#grpc)
+    * [CLI](#cli)
+    * [REST](#rest)
+    * [gRPC](#grpc)
 * [Resources](#resources)
 
 ## Concepts
@@ -90,8 +90,8 @@ func UpgradeStoreLoader (upgradeHeight int64, storeUpgrades *store.StoreUpgrades
 If there's a planned upgrade and the upgrade height is reached, the old binary writes `Plan` to the disk before panicking.
 
 This information is critical to ensure the `StoreUpgrades` happens smoothly at correct height and
-expected upgrade. It eliminiates the chances for the new binary to execute `StoreUpgrades` multiple
-times everytime on restart. Also if there are multiple upgrades planned on same height, the `Name`
+expected upgrade. It eliminates the chances for the new binary to execute `StoreUpgrades` multiple
+times every time on restart. Also if there are multiple upgrades planned on same height, the `Name`
 will ensure these `StoreUpgrades` takes place only in planned upgrade handler.
 
 ### Proposal
@@ -246,8 +246,6 @@ module_versions:
   version: "1"
 - name: bank
   version: "2"
-- name: crisis
-  version: "1"
 - name: distribution
   version: "2"
 - name: evidence
@@ -411,10 +409,6 @@ Example Output:
       "version": "2"
     },
     {
-      "name": "crisis",
-      "version": "1"
-    },
-    {
       "name": "distribution",
       "version": "2"
     },
@@ -551,10 +545,6 @@ Example Output:
     {
       "name": "bank",
       "version": "2"
-    },
-    {
-      "name": "crisis",
-      "version": "1"
     },
     {
       "name": "distribution",

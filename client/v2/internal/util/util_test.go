@@ -7,7 +7,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
-	_ "cosmossdk.io/client/v2/internal/testpb"
+	_ "cosmossdk.io/client/v2/internal/testpbpulsar"
 )
 
 func TestIsSupportedVersion(t *testing.T) {
@@ -29,15 +29,15 @@ func TestIsSupportedVersion(t *testing.T) {
 		expected    bool
 	}{
 		{
-			messageName: "testpb.Msg.Send",
+			messageName: "testpbpulsar.Msg.Send",
 			expected:    true,
 		},
 		{
-			messageName: "testpb.Query.Echo",
+			messageName: "testpbpulsar.Query.Echo",
 			expected:    true,
 		},
 		{
-			messageName: "testpb.Msg.Clawback",
+			messageName: "testpbpulsar.Msg.Clawback",
 			expected:    false,
 		},
 	}

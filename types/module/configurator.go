@@ -59,7 +59,7 @@ type configurator struct {
 }
 
 // RegisterService implements the grpc.Server interface.
-func (c *configurator) RegisterService(sd *googlegrpc.ServiceDesc, ss interface{}) {
+func (c *configurator) RegisterService(sd *googlegrpc.ServiceDesc, ss any) {
 	desc, err := c.cdc.InterfaceRegistry().FindDescriptorByName(protoreflect.FullName(sd.ServiceName))
 	if err != nil {
 		c.err = err

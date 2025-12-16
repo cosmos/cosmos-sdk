@@ -51,7 +51,7 @@ func trimInternal(st errors.StackTrace) errors.StackTrace {
 		"cosmossdk.io/errors.Wrap",
 		"cosmossdk.io/errors.Wrapf",
 		"cosmossdk.io/errors.WithType",
-		// runtime are added on panics
+		// runtime is added on panics
 		"runtime.",
 		// _test is defined in coverage tests, causing failure
 		// "/_test/"
@@ -79,9 +79,7 @@ func writeSimpleFrame(s io.Writer, f errors.Frame) {
 // Format works like pkg/errors, with additions.
 // %s is just the error message
 // %+v is the full stack trace
-// %v appends a compressed [filename:line] where the error
-//
-//	was created
+// %v appends a compressed [filename:line] where the error was created
 //
 // Inspired by https://github.com/pkg/errors/blob/v0.8.1/errors.go#L162-L176
 func (e *wrappedError) Format(s fmt.State, verb rune) {

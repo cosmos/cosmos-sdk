@@ -340,7 +340,6 @@ func (s *E2ETestSuite) TestCLIQueryTxCmdByHash() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := authcli.QueryTxCmd()
 			clientCtx := val.ClientCtx
@@ -470,7 +469,6 @@ func (s *E2ETestSuite) TestCLIQueryTxCmdByEvents() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := authcli.QueryTxCmd()
 			clientCtx := val.ClientCtx
@@ -548,7 +546,6 @@ func (s *E2ETestSuite) TestCLIQueryTxsCmdByEvents() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			cmd := authcli.QueryTxsByEventsCmd()
 			clientCtx := val.ClientCtx
@@ -1339,10 +1336,10 @@ func (s *E2ETestSuite) TestSignWithMultiSignersAminoJSON() {
 	// because DIRECT doesn't support multi signers via the CLI.
 	// Since we use amino, we don't need to pre-populate signer_infos.
 	txBuilder := val0.ClientCtx.TxConfig.NewTxBuilder()
-	txBuilder.SetMsgs(
+	require.NoError(txBuilder.SetMsgs(
 		banktypes.NewMsgSend(val0.Address, addr1, sdk.NewCoins(val0Coin)),
 		banktypes.NewMsgSend(val1.Address, addr1, sdk.NewCoins(val1Coin)),
-	)
+	))
 	txBuilder.SetFeeAmount(sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, math.NewInt(10))))
 	txBuilder.SetGasLimit(testdata.NewTestGasLimit() * 2)
 	signers, err := txBuilder.GetTx().GetSigners()
@@ -1417,7 +1414,7 @@ func (s *E2ETestSuite) TestAuxSigner() {
 			true,
 		},
 		{
-			"no error with SIGN_MDOE_DIRECT_AUX mode and generate-only set (ignores generate-only)",
+			"no error with SIGN_MODE_DIRECT_AUX mode and generate-only set (ignores generate-only)",
 			[]string{
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
 				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
@@ -1425,7 +1422,7 @@ func (s *E2ETestSuite) TestAuxSigner() {
 			false,
 		},
 		{
-			"no error with SIGN_MDOE_DIRECT_AUX mode and generate-only, tip flag set",
+			"no error with SIGN_MODE_DIRECT_AUX mode and generate-only, tip flag set",
 			[]string{
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
 				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
@@ -1436,7 +1433,6 @@ func (s *E2ETestSuite) TestAuxSigner() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			_, err := govtestutil.MsgSubmitLegacyProposal(
 				val.ClientCtx,
@@ -1658,7 +1654,6 @@ func (s *E2ETestSuite) TestAuxToFeeWithTips() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			res, err := govtestutil.MsgSubmitLegacyProposal(
 				val.ClientCtx,

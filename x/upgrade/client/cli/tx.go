@@ -8,8 +8,6 @@ import (
 	"github.com/spf13/cobra"
 
 	addresscodec "cosmossdk.io/core/address"
-	"cosmossdk.io/x/upgrade/plan"
-	"cosmossdk.io/x/upgrade/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -17,6 +15,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 const (
@@ -58,7 +58,7 @@ func NewCmdSubmitUpgradeProposal(ac addresscodec.Codec) *cobra.Command {
 				return err
 			}
 
-			proposal, err := cli.ReadGovPropFlags(clientCtx, cmd.Flags())
+			proposal, err := cli.ReadGovPropCmdFlags(clientCtx.GetFromAddress().String(), cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -127,7 +127,7 @@ func NewCmdSubmitUpgradeProposal(ac addresscodec.Codec) *cobra.Command {
 	// add common proposal flags
 	flags.AddTxFlagsToCmd(cmd)
 	cli.AddGovPropFlagsToCmd(cmd)
-	cmd.MarkFlagRequired(cli.FlagTitle)
+	_ = cmd.MarkFlagRequired(cli.FlagTitle)
 
 	return cmd
 }
@@ -145,7 +145,7 @@ func NewCmdSubmitCancelUpgradeProposal(ac addresscodec.Codec) *cobra.Command {
 				return err
 			}
 
-			proposal, err := cli.ReadGovPropFlags(clientCtx, cmd.Flags())
+			proposal, err := cli.ReadGovPropCmdFlags(clientCtx.GetFromAddress().String(), cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -176,7 +176,7 @@ func NewCmdSubmitCancelUpgradeProposal(ac addresscodec.Codec) *cobra.Command {
 	// add common proposal flags
 	flags.AddTxFlagsToCmd(cmd)
 	cli.AddGovPropFlagsToCmd(cmd)
-	cmd.MarkFlagRequired(cli.FlagTitle)
+	_ = cmd.MarkFlagRequired(cli.FlagTitle)
 
 	return cmd
 }

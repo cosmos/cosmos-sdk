@@ -11,6 +11,7 @@ import (
 )
 
 // GenesisCoreCommand adds core sdk's sub-commands into genesis command.
+//
 // Deprecated: use Commands instead.
 func GenesisCoreCommand(txConfig client.TxConfig, moduleBasics module.BasicManager, defaultNodeHome string) *cobra.Command {
 	return Commands(txConfig, moduleBasics, defaultNodeHome)
@@ -39,6 +40,7 @@ func CommandsWithCustomMigrationMap(txConfig client.TxConfig, moduleBasics modul
 		CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, defaultNodeHome, gentxModule.GenTxValidator, txConfig.SigningContext().ValidatorAddressCodec()),
 		ValidateGenesisCmd(moduleBasics),
 		AddGenesisAccountCmd(defaultNodeHome, txConfig.SigningContext().AddressCodec()),
+		AddBulkGenesisAccountCmd(defaultNodeHome, txConfig.SigningContext().AddressCodec()),
 	)
 
 	return cmd

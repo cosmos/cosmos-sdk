@@ -21,7 +21,7 @@ Now that the application is ready and the keyring populated, it's time to see ho
 Make sure you can build your own binary, and replace `simd` with the name of your binary in the snippets.
 :::
 
-Before actually running the node, we need to initialize the chain, and most importantly its genesis file. This is done with the `init` subcommand:
+Before actually running the node, we need to initialize the chain, and most importantly, its genesis file. This is done with the `init` subcommand:
 
 ```bash
 # The argument <moniker> is the custom username of your node, it should be human-readable.
@@ -31,7 +31,7 @@ simd init <moniker> --chain-id my-test-chain
 The command above creates all the configuration files needed for your node to run, as well as a default genesis file, which defines the initial state of the network.
 
 :::tip
-All these configuration files are in `~/.simapp` by default, but you can overwrite the location of this folder by passing the `--home` flag to each commands,
+All these configuration files are in `~/.simapp` by default, but you can overwrite the location of this folder by passing the `--home` flag to each command,
 or set an `$APPD_HOME` environment variable (where `APPD` is the name of the binary).
 :::
 
@@ -50,7 +50,7 @@ The `~/.simapp` folder has the following structure:
 
 ## Updating Some Default Settings
 
-If you want to change any field values in configuration files (for ex: genesis.json) you can use `jq` ([installation](https://stedolan.github.io/jq/download/) & [docs](https://stedolan.github.io/jq/manual/#Assignment)) & `sed` commands to do that. Few examples are listed here.
+If you want to change any field values in configuration files (for ex: genesis.json) you can use `jq` ([installation](https://stedolan.github.io/jq/download/) & [docs](https://stedolan.github.io/jq/manual/#Assignment)) & `sed` commands to do that. A few examples are listed here.
 
 ```bash
 # to change the chain-id
@@ -68,7 +68,7 @@ jq '.app_state.mint.minter.inflation = "0.300000000000000000"' genesis.json > te
 
 ### Client Interaction
 
-When instantiating a node, GRPC and REST are defaulted to localhost to avoid unknown exposure of your node to the public. It is recommended to not expose these endpoints without a proxy that can handle load balancing or authentication is setup between your node and the public. 
+When instantiating a node, GRPC and REST are defaulted to localhost to avoid unknown exposure of your node to the public. It is recommended not to expose these endpoints without a proxy that can handle load balancing or authentication set up between your node and the public. 
 
 :::tip
 A commonly used tool for this is [nginx](https://nginx.org).
@@ -99,7 +99,7 @@ simd genesis collect-gentxs
 
 A `gentx` does three things:
 
-1. Registers the `validator` account you created as a validator operator account (i.e. the account that controls the validator).
+1. Registers the `validator` account you created as a validator operator account (i.e., the account that controls the validator).
 2. Self-delegates the provided `amount` of staking tokens.
 3. Link the operator account with a CometBFT node pubkey that will be used for signing blocks. If no `--pubkey` flag is provided, it defaults to the local node pubkey created via the `simd init` command above.
 
@@ -132,7 +132,7 @@ When running a node (not a validator!) and not wanting to run the application me
 
 ```toml
 [mempool]
-# Setting max-txs to 0 will allow for a unbounded amount of transactions in the mempool.
+# Setting max-txs to 0 will allow for an unbounded amount of transactions in the mempool.
 # Setting max_txs to negative 1 (-1) will disable transactions from being inserted into the mempool.
 # Setting max_txs to a positive number (> 0) will limit the number of transactions in the mempool, by the specified amount.
 #
@@ -153,9 +153,9 @@ simd start
 
 You should see blocks come in.
 
-The previous command allow you to run a single node. This is enough for the next section on interacting with this node, but you may wish to run multiple nodes at the same time, and see how consensus happens between them.
+The previous command allows you to run a single node. This is enough for the next section on interacting with this node, but you may wish to run multiple nodes at the same time, and see how consensus happens between them.
 
-The naive way would be to run the same commands again in separate terminal windows. This is possible, however in the Cosmos SDK, we leverage the power of [Docker Compose](https://docs.docker.com/compose/) to run a localnet. If you need inspiration on how to set up your own localnet with Docker Compose, you can have a look at the Cosmos SDK's [`docker-compose.yml`](https://github.com/cosmos/cosmos-sdk/blob/v0.50.0-alpha.0/docker-compose.yml).
+The naive way would be to run the same commands again in separate terminal windows. This is possible, however, in the Cosmos SDK, we leverage the power of [Docker Compose](https://docs.docker.com/compose/) to run a localnet. If you need inspiration on how to set up your own localnet with Docker Compose, you can have a look at the Cosmos SDK's [`docker-compose.yml`](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/docker-compose.yml).
 
 ### Standalone App/CometBFT
 
@@ -166,7 +166,7 @@ and set `rpc.laddr` in `config.toml` to the CometBFT node's RPC address.
 
 ## Logging
 
-Logging provides a way to see what is going on with a node. By default the info level is set. This is a global level and all info logs will be outputted to the terminal. If you would like to filter specific logs to the terminal instead of all, then setting `module:log_level` is how this can work. 
+Logging provides a way to see what is going on with a node. The default logging level is info. This is a global level and all info logs will be outputted to the terminal. If you would like to filter specific logs to the terminal instead of all, then setting `module:log_level` is how this can work. 
 
 Example: 
 
@@ -184,11 +184,11 @@ State sync works thanks to snapshots. Read how the SDK handles snapshots [here](
 
 ### Local State Sync
 
-Local state sync work similar to normal state sync except that it works off a local snapshot of state instead of one provided via the p2p network. The steps to start local state sync are similar to normal state sync with a few different designs. 
+Local state sync works similar to normal state sync except that it works off a local snapshot of state instead of one provided via the p2p network. The steps to start local state sync are similar to normal state sync with a few different designs. 
 
-1. As mentioned in https://docs.cometbft.com/v0.37/core/state-sync, one must set a height and hash in the config.toml along with a few rpc servers (the afromentioned link has instructions on how to do this). 
+1. As mentioned in https://docs.cometbft.com/v0.37/core/state-sync, one must set a height and hash in the config.toml along with a few rpc servers (the aforementioned link has instructions on how to do this). 
 2. Run `<appd snapshot restore <height> <format>` to restore a local snapshot (note: first load it from a file with the *load* command). 
-3. Bootsrapping Comet state in order to start the node after the snapshot has been ingested. This can be done with the bootstrap command `<app> comet bootstrap-state`
+3. Bootstrapping Comet state to start the node after the snapshot has been ingested. This can be done with the bootstrap command `<app> comet bootstrap-state`
 
 ### Snapshots Commands
 
@@ -208,11 +208,11 @@ func initRootCmd(/* ... */) {
 }
 ```
 
-Then following commands are available at `<appd> snapshots [command]`:
+Then the following commands are available at `<appd> snapshots [command]`:
 
 * **list**: list local snapshots
 * **load**: Load a snapshot archive file into snapshot store
 * **restore**: Restore app state from local snapshot
-* **export**:  Export app state to snapshot store
+* **export**: Export app state to snapshot store
 * **dump**: Dump the snapshot as portable archive format
 * **delete**: Delete a local snapshot

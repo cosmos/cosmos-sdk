@@ -1,14 +1,12 @@
 # Updating the docs
 
-If you want to open a PR in Cosmos SDK to update the documentation, please follow the guidelines in [`CONTRIBUTING.md`](https://github.com/cosmos/cosmos-sdk/tree/main/CONTRIBUTING.md#updating-documentation) and the [Documentation Writing Guidelines](./DOC_WRITING_GUIDELINES.md).
-
 ## Stack
 
 The documentation for Cosmos SDK is hosted at https://docs.cosmos.network and built from the files in the `/docs` directory.
 It is built using the following stack:
 
 * [Docusaurus 2](https://docusaurus.io)
-* Vuepress (pre v0.47)
+* VuePress (pre v0.47)
 * [Algolia DocSearch](https://docsearch.algolia.com/)
 
   ```js
@@ -24,12 +22,12 @@ It is built using the following stack:
 
 ## Docs Build Workflow
 
-The docs are built and deployed automatically on GitHub Pages by a [GitHub Action workflow](../.github/workflows/deploy-docs.yml).
-The workflow is triggered on every push to the `main` and `release/v**` branches, every time documentations or specs are modified.
+The docs are built and deployed automatically on GitHub Pages by a [GitHub Action workflow](../.github/workflows/build-docs.yml).
+The workflow is triggered on every push to the `main` and `release/v**` branches, every time documentation or specs are modified.
 
 ### How It Works
 
-There is a GitHub Action listening for changes in the `/docs` directory for the `main` branch and each supported version branch (e.g. `release/v0.46.x`). Any updates to files in the `/docs` directory will automatically trigger a website deployment. Under the hood, the private website repository has a `make build-docs` target consumed by a Github Action within that repository.
+There is a GitHub Action listening for changes in the `/docs` directory for the `main` branch and each supported version branch (e.g. `release/v0.46.x`). Any updates to files in the `/docs` directory will automatically trigger a website deployment. Under the hood, the private website repository has a `make build-docs` target consumed by a GitHub Action within that repository.
 
 ## How to Build the Docs Locally
 
@@ -49,7 +47,7 @@ npm start
 It runs `pre.sh` scripts to get all the docs that are not already in the `docs/docs` folder.
 It also runs `post.sh` scripts to clean up the docs and remove unnecessary files when quitting.
 
-Note, the command above only build the docs for the current versions.
+Note, the command above only builds the docs for the current versions.
 With the drawback that none of the redirections works. So, you'll need to go to /main to see the docs.
 
 To build all the docs (including versioned documentation), run:
@@ -58,11 +56,11 @@ To build all the docs (including versioned documentation), run:
 make build-docs
 ```
 
-## What to for new major SDK versions
+## What to do for new major SDK versions
 
 When a new major version of the SDK is released, the following steps should be taken:
 
-* On the `release/vX.Y.Z` branch, remove the deploy action (`.github/workflows/deploy-docs.yml`), for avoiding deploying the docs from the release branches.
+* On the `release/vX.Y.Z` branch, remove the deploy action (`.github/workflows/build-docs.yml`), for avoiding deploying the docs from the release branches.
 * On the `release/vX.Y.Z` branch, update `docusaurus.config.js` and set the `lastVersion` to `current`, remove all other versions from the config.
 * Each time a new version is released (on docusaurus), drop support from the oldest versions.
     * If the old version is still running vuepress (v0.45, v0.46), remove its line from `vuepress_versions`
@@ -75,8 +73,8 @@ When a new major version of the SDK is released, the following steps should be t
         },
       ```
 
-* Add the new version sidebar to the list of versionned sidebar and add the version to `versions.json`.
+* Add the new version sidebar to the list of versioned sidebar and add the version to `versions.json`.
 * Update the latest version (`presets[1].docs.lastVersion`) in `docusaurus.config.js`.
-* Add the new version with in `presets[1].docs.versions` in `docusaurus.config.js`.
+* Add the new version within `presets[1].docs.versions` in `docusaurus.config.js`.
 
 Learn more about [versioning](https://docusaurus.io/docs/versioning) in Docusaurus.

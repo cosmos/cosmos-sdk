@@ -61,7 +61,7 @@ func TestStakingMsgs(t *testing.T) {
 		),
 		startupCfg, &bankKeeper, &stakingKeeper)
 	require.NoError(t, err)
-	ctxCheck := app.BaseApp.NewContext(true)
+	ctxCheck := app.NewContext(true)
 
 	require.True(t, sdk.Coins{genCoin}.Equal(bankKeeper.GetAllBalances(ctxCheck, addr1)))
 	require.True(t, sdk.Coins{genCoin}.Equal(bankKeeper.GetAllBalances(ctxCheck, addr2)))
@@ -81,7 +81,7 @@ func TestStakingMsgs(t *testing.T) {
 
 	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{Height: app.LastBlockHeight() + 1})
 	require.NoError(t, err)
-	ctxCheck = app.BaseApp.NewContext(true)
+	ctxCheck = app.NewContext(true)
 	validator, err := stakingKeeper.GetValidator(ctxCheck, sdk.ValAddress(addr1))
 	require.NoError(t, err)
 
@@ -100,7 +100,7 @@ func TestStakingMsgs(t *testing.T) {
 	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, app.BaseApp, header, []sdk.Msg{editValidatorMsg}, "", []uint64{0}, []uint64{1}, true, true, priv1)
 	require.NoError(t, err)
 
-	ctxCheck = app.BaseApp.NewContext(true)
+	ctxCheck = app.NewContext(true)
 	validator, err = stakingKeeper.GetValidator(ctxCheck, sdk.ValAddress(addr1))
 	require.NoError(t, err)
 	require.Equal(t, description, validator.Description)
@@ -113,7 +113,7 @@ func TestStakingMsgs(t *testing.T) {
 	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, app.BaseApp, header, []sdk.Msg{delegateMsg}, "", []uint64{1}, []uint64{0}, true, true, priv2)
 	require.NoError(t, err)
 
-	ctxCheck = app.BaseApp.NewContext(true)
+	ctxCheck = app.NewContext(true)
 	require.True(t, sdk.Coins{genCoin.Sub(bondCoin)}.Equal(bankKeeper.GetAllBalances(ctxCheck, addr2)))
 	_, err = stakingKeeper.GetDelegation(ctxCheck, addr2, sdk.ValAddress(addr1))
 	require.NoError(t, err)
@@ -124,8 +124,8 @@ func TestStakingMsgs(t *testing.T) {
 	_, _, err = simtestutil.SignCheckDeliver(t, txConfig, app.BaseApp, header, []sdk.Msg{beginUnbondingMsg}, "", []uint64{1}, []uint64{1}, true, true, priv2)
 	require.NoError(t, err)
 
-	// delegation should exist anymore
-	ctxCheck = app.BaseApp.NewContext(true)
+	// delegation should not exist anymore
+	ctxCheck = app.NewContext(true)
 	_, err = stakingKeeper.GetDelegation(ctxCheck, addr2, sdk.ValAddress(addr1))
 	require.ErrorIs(t, err, types.ErrNoDelegation)
 

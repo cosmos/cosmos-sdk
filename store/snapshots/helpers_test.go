@@ -6,6 +6,7 @@ import (
 	"compress/zlib"
 	"crypto/sha256"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"testing"
@@ -62,7 +63,7 @@ func readChunks(chunks <-chan io.ReadCloser) [][]byte {
 	return bodies
 }
 
-// snapshotItems serialize a array of bytes as SnapshotItem_ExtensionPayload, and return the chunks.
+// snapshotItems serialize an array of bytes as SnapshotItem_ExtensionPayload, and return the chunks.
 func snapshotItems(items [][]byte, ext snapshottypes.ExtensionSnapshotter) [][]byte {
 	// copy the same parameters from the code
 	snapshotChunkSize := uint64(10e6)
@@ -108,8 +109,13 @@ func snapshotItems(items [][]byte, ext snapshottypes.ExtensionSnapshotter) [][]b
 
 type mockSnapshotter struct {
 	items            [][]byte
+	announcedHeights map[int64]struct{}
 	prunedHeights    map[int64]struct{}
 	snapshotInterval uint64
+}
+
+func (m *mockSnapshotter) AnnounceSnapshotHeight(height int64) {
+	m.announcedHeights[height] = struct{}{}
 }
 
 func (m *mockSnapshotter) Restore(
@@ -127,7 +133,7 @@ func (m *mockSnapshotter) Restore(
 	for {
 		item.Reset()
 		err := protoReader.ReadMsg(&item)
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		} else if err != nil {
 			return snapshottypes.SnapshotItem{}, errorsmod.Wrap(err, "invalid protobuf message")
@@ -160,6 +166,9 @@ func (m *mockSnapshotter) SupportedFormats() []uint32 {
 }
 
 func (m *mockSnapshotter) PruneSnapshotHeight(height int64) {
+	if _, ok := m.announcedHeights[height]; !ok {
+		panic(fmt.Sprintf("snap height %d was not announced", height))
+	}
 	m.prunedHeights[height] = struct{}{}
 }
 
@@ -171,9 +180,12 @@ func (m *mockSnapshotter) SetSnapshotInterval(snapshotInterval uint64) {
 	m.snapshotInterval = snapshotInterval
 }
 
+var _ snapshottypes.Snapshotter = (*mockErrorSnapshotter)(nil)
+
 type mockErrorSnapshotter struct{}
 
-var _ snapshottypes.Snapshotter = (*mockErrorSnapshotter)(nil)
+func (m *mockErrorSnapshotter) AnnounceSnapshotHeight(height int64) {
+}
 
 func (m *mockErrorSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) error {
 	return errors.New("mock snapshot error")
@@ -239,15 +251,17 @@ func setupBusyManager(t *testing.T) *snapshots.Manager {
 
 // hungSnapshotter can be used to test operations in progress. Call close to end the snapshot.
 type hungSnapshotter struct {
-	ch               chan struct{}
-	prunedHeights    map[int64]struct{}
-	snapshotInterval uint64
+	ch                   chan struct{}
+	announcedSnapHeights map[int64]struct{}
+	prunedHeights        map[int64]struct{}
+	snapshotInterval     uint64
 }
 
 func newHungSnapshotter() *hungSnapshotter {
 	return &hungSnapshotter{
-		ch:            make(chan struct{}),
-		prunedHeights: make(map[int64]struct{}),
+		ch:                   make(chan struct{}),
+		announcedSnapHeights: make(map[int64]struct{}),
+		prunedHeights:        make(map[int64]struct{}),
 	}
 }
 
@@ -260,7 +274,14 @@ func (m *hungSnapshotter) Snapshot(height uint64, protoWriter protoio.Writer) er
 	return nil
 }
 
+func (m *hungSnapshotter) AnnounceSnapshotHeight(height int64) {
+	m.announcedSnapHeights[height] = struct{}{}
+}
+
 func (m *hungSnapshotter) PruneSnapshotHeight(height int64) {
+	if _, ok := m.announcedSnapHeights[height]; !ok {
+		panic(fmt.Sprintf("snap height %d was not announced", height))
+	}
 	m.prunedHeights[height] = struct{}{}
 }
 
@@ -309,10 +330,10 @@ func (s *extSnapshotter) SnapshotExtension(height uint64, payloadWriter snapshot
 	return nil
 }
 
-func (s *extSnapshotter) RestoreExtension(height uint64, format uint32, payloadReader snapshottypes.ExtensionPayloadReader) error {
+func (s *extSnapshotter) RestoreExtension(_ uint64, _ uint32, payloadReader snapshottypes.ExtensionPayloadReader) error {
 	for {
 		payload, err := payloadReader()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		} else if err != nil {
 			return err
@@ -323,7 +344,7 @@ func (s *extSnapshotter) RestoreExtension(height uint64, format uint32, payloadR
 	return nil
 }
 
-// GetTempDir returns a writable temporary director for the test to use.
+// GetTempDir returns a writable temporary directory for the test to use.
 func GetTempDir(tb testing.TB) string {
 	tb.Helper()
 	// os.MkDir() is used instead of testing.T.TempDir()

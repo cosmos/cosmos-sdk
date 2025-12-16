@@ -16,7 +16,7 @@ type subspace interface {
 	GetParamSet(ctx sdk.Context, ps paramtypes.ParamSet)
 	HasKeyTable() bool
 	WithKeyTable(paramtypes.KeyTable) paramtypes.Subspace
-	Set(ctx sdk.Context, key []byte, value interface{})
+	Set(ctx sdk.Context, key []byte, value any)
 }
 
 // MigrateStore performs in-place store migrations from v0.43/v0.44/v0.45 to v0.46.

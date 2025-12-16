@@ -106,7 +106,7 @@ Examples:
 				}
 
 				// check for duplicates
-				for i := 0; i < len(allowList); i++ {
+				for i := range allowList {
 					for j := i + 1; j < len(allowList); j++ {
 						if allowList[i] == allowList[j] {
 							return fmt.Errorf("duplicate address %s in allow-list", allowList[i])

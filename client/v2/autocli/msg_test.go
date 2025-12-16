@@ -1,8 +1,12 @@
 package autocli
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -11,7 +15,8 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-	"cosmossdk.io/client/v2/internal/testpb"
+	"cosmossdk.io/client/v2/internal/testpbgogo"
+	testpb "cosmossdk.io/client/v2/internal/testpbpulsar"
 
 	"github.com/cosmos/cosmos-sdk/client"
 )
@@ -48,6 +53,26 @@ var bankAutoCLI = &autocliv1.ServiceCommandDescriptor{
 func TestMsg(t *testing.T) {
 	fixture := initFixture(t)
 	out, err := runCmd(fixture, buildModuleMsgCommand, "send",
+		"cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk", "1foo",
+		"--generate-only",
+		"--output", "json",
+		"--chain-id", "test-chain",
+	)
+	assert.NilError(t, err)
+	golden.Assert(t, out.String(), "msg-output.golden")
+
+	out, err = runCmd(fixture, buildCustomModuleMsgCommand(&autocliv1.ServiceCommandDescriptor{
+		Service: bankv1beta1.Msg_ServiceDesc.ServiceName,
+		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+			{
+				RpcMethod:      "Send",
+				Use:            "send [from_key_or_address] [to_address] [amount] [flags]",
+				Short:          "Send coins from one account to another",
+				PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "from_address"}, {ProtoField: "to_address"}, {ProtoField: "amount"}},
+			},
+		},
+		EnhanceCustomCommand: true,
+	}), "send",
 		"cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk", "1foo",
 		"--generate-only",
 		"--output", "json",
@@ -97,7 +122,85 @@ func TestMsg(t *testing.T) {
 		"--output", "json",
 	)
 	assert.NilError(t, err)
-	golden.Assert(t, out.String(), "msg-output.golden")
+	assertNormalizedJSONEqual(t, out.Bytes(), goldenLoad(t, "msg-output.golden"))
+}
+
+// TestMsgGogo set same as previous, but the message are only gogoproto generated.
+// There are no protov2 files registered in the global registry for those types.
+func TestMsgGogo(t *testing.T) {
+	fixture := initFixture(t)
+	out, err := runCmd(fixture, buildCustomModuleMsgCommand(&autocliv1.ServiceCommandDescriptor{
+		Service: testpbgogo.MsgGogoOnly_serviceDesc.ServiceName, // using gogoproto only test msg
+		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+			{
+				RpcMethod:      "Send",
+				Use:            "send [a_coin] [str] [flags]",
+				Short:          "Send coins from one account to another",
+				PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "a_coin"}, {ProtoField: "str"}},
+				// an_address should be automatically added
+			},
+		},
+	}), "send",
+		"1foo", "henlo",
+		"--from", "cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk",
+		"--generate-only",
+		"--output", "json",
+	)
+	assert.NilError(t, err)
+	golden.Assert(t, out.String(), "msg-gogo-output.golden")
+}
+
+func TestMsgWithFlattenFields(t *testing.T) {
+	fixture := initFixture(t)
+
+	out, err := runCmd(fixture, buildCustomModuleMsgCommand(&autocliv1.ServiceCommandDescriptor{
+		Service: bankv1beta1.Msg_ServiceDesc.ServiceName,
+		RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+			{
+				RpcMethod: "UpdateParams",
+				PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+					{ProtoField: "authority"},
+					{ProtoField: "params.send_enabled.denom"},
+					{ProtoField: "params.send_enabled.enabled"},
+					{ProtoField: "params.default_send_enabled"},
+				},
+			},
+		},
+		EnhanceCustomCommand: true,
+	}), "update-params",
+		"cosmos1y74p8wyy4enfhfn342njve6cjmj5c8dtl6emdk", "stake", "true", "true",
+		"--generate-only",
+		"--output", "json",
+		"--chain-id", "test-chain",
+	)
+	assert.NilError(t, err)
+	assertNormalizedJSONEqual(t, out.Bytes(), goldenLoad(t, "flatten-output.golden"))
+}
+
+func goldenLoad(t *testing.T, filename string) []byte {
+	t.Helper()
+	content, err := os.ReadFile(filepath.Join("testdata", filename))
+	assert.NilError(t, err)
+	return content
+}
+
+func assertNormalizedJSONEqual(t *testing.T, expected, actual []byte) {
+	t.Helper()
+	normalizedExpected, err := normalizeJSON(expected)
+	assert.NilError(t, err)
+	normalizedActual, err := normalizeJSON(actual)
+	assert.NilError(t, err)
+	assert.Equal(t, string(normalizedExpected), string(normalizedActual))
+}
+
+// normalizeJSON normalizes the JSON content by removing unnecessary white spaces and newlines.
+func normalizeJSON(content []byte) ([]byte, error) {
+	var buf bytes.Buffer
+	err := json.Compact(&buf, content)
+	if err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
 }
 
 func TestMsgOptionsError(t *testing.T) {

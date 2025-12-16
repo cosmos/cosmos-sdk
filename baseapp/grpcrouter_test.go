@@ -56,7 +56,7 @@ func TestGRPCQueryRouter(t *testing.T) {
 func TestGRPCRouterHybridHandlers(t *testing.T) {
 	assertRouterBehaviour := func(helper *baseapp.QueryServiceTestHelper) {
 		// test getting the handler by name
-		handlers := helper.GRPCQueryRouter.HybridHandlerByRequestName("testpb.EchoRequest")
+		handlers := helper.HybridHandlerByRequestName("testpb.EchoRequest")
 		require.NotNil(t, handlers)
 		require.Len(t, handlers, 1)
 		handler := handlers[0]
@@ -162,6 +162,7 @@ func TestQueryDataRaces_uniqueConnectionsToSameHandler(t *testing.T) {
 }
 
 func testQueryDataRacesSameHandler(t *testing.T, makeClientConn func(*baseapp.GRPCQueryRouter) *baseapp.QueryServiceTestHelper) {
+	t.Helper()
 	t.Parallel()
 
 	qr := baseapp.NewGRPCQueryRouter()
@@ -181,13 +182,13 @@ func testQueryDataRacesSameHandler(t *testing.T, makeClientConn func(*baseapp.GR
 	n := 1000
 	ready := make(chan bool, n)
 	go func() {
-		for i := 0; i < n; i++ {
+		for range n {
 			<-ready
 		}
 		close(greenlight)
 	}()
 
-	for i := 0; i < n; i++ {
+	for range n {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()

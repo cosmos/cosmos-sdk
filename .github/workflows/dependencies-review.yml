@@ -8,21 +8,39 @@ permissions:
 
 jobs:
   dependency-review:
-    runs-on: ubuntu-latest
+    runs-on: depot-ubuntu-22.04-4
     steps:
       - name: "Checkout Repository"
-        uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
+        uses: actions/checkout@v6
+      - name: "Setup Go"
+        uses: actions/setup-go@v6
         with:
-          go-version: "1.21"
+          go-version: "1.25.5"
           check-latest: true
       - name: "Dependency Review"
-        uses: actions/dependency-review-action@v3
+        uses: actions/dependency-review-action@v4
         with:
           base-ref: ${{ github.event.pull_request.base.sha || 'main' }}
           head-ref: ${{ github.event.pull_request.head.sha || github.ref }}
-          fail-on-severity: high # otherwise we fail on ourselves due to https://github.com/advisories/GHSA-qfc5-6r3j-jj22, https://github.com/advisories/GHSA-w44m-8mv2-v78h TODO(@julienrbrt) submit a PR to the action to ignore packages
+          fail-on-severity: high
       - name: "Dependency audit"
         run: ./scripts/dep-assert.sh
       - name: "Go vulnerability check"
-        run: make vulncheck
+        id: govuln
+        run: |
+          # Run the vulnerability check and capture its output (ignoring non-zero exit codes)
+          make vulncheck 2>&1 | tee govulncheck-output.txt || true
+
+          # Extract vulnerability identifiers from the output (e.g., GO-2025-3443)
+          vulnerabilities=$(grep -o 'GO-[0-9]\{4\}-[0-9]\+' govulncheck-output.txt | sort | uniq)
+          echo "Detected vulnerabilities: $vulnerabilities"
+
+          # Check if any vulnerability other than GO-2025-3443 exists
+          for vuln in $vulnerabilities; do
+            if [ "$vuln" != "GO-2025-3443" ]; then
+              echo "Found vulnerability $vuln, failing..."
+              exit 1
+            fi
+          done
+
+          echo "Only known vulnerability (GO-2025-3443) present. Continuing."

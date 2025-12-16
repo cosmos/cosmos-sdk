@@ -10,9 +10,9 @@ import (
 
 type (
 	// Codec defines a functionality for serializing other objects.
-	// Users can defin a custom Protobuf-based serialization.
+	// Users can define a custom Protobuf-based serialization.
 	// Note, Amino can still be used without any dependency on Protobuf.
-	// SDK provides to Codec implementations:
+	// SDK provides two Codec implementations:
 	//
 	// 1. AminoCodec: Provides full Amino serialization compatibility.
 	// 2. ProtoCodec: Provides full Protobuf serialization compatibility.
@@ -69,10 +69,10 @@ type (
 		// MarshalInterface is a helper method which will wrap `i` into `Any` for correct
 		// binary interface (de)serialization.
 		MarshalInterface(i proto.Message) ([]byte, error)
-		// UnmarshalInterface is a helper method which will parse binary enoded data
+		// UnmarshalInterface is a helper method which will parse binary encoded data
 		// into `Any` and unpack any into the `ptr`. It fails if the target interface type
 		// is not registered in codec, or is not compatible with the serialized data
-		UnmarshalInterface(bz []byte, ptr interface{}) error
+		UnmarshalInterface(bz []byte, ptr any) error
 
 		types.AnyUnpacker
 	}
@@ -85,10 +85,10 @@ type (
 		// MarshalInterfaceJSON is a helper method which will wrap `i` into `Any` for correct
 		// JSON interface (de)serialization.
 		MarshalInterfaceJSON(i proto.Message) ([]byte, error)
-		// UnmarshalInterfaceJSON is a helper method which will parse JSON enoded data
+		// UnmarshalInterfaceJSON is a helper method which will parse JSON encoded data
 		// into `Any` and unpack any into the `ptr`. It fails if the target interface type
 		// is not registered in codec, or is not compatible with the serialized data
-		UnmarshalInterfaceJSON(bz []byte, ptr interface{}) error
+		UnmarshalInterfaceJSON(bz []byte, ptr any) error
 
 		// UnmarshalJSON parses the data encoded with MarshalJSON method and stores the result
 		// in the value pointed to by v.

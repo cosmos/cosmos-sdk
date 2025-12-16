@@ -48,7 +48,7 @@ Inside these functions, you must perform any upgrade logic to include in the pro
 
 ## Running Migrations
 
-Migrations are run inside of an `UpgradeHandler` using `app.mm.RunMigrations(ctx, cfg, vm)`. The `UpgradeHandler` functions describe the functionality to occur during an upgrade. The `RunMigration` function loops through the `VersionMap` argument and runs the migration scripts for all versions that are less than the versions of the new binary app module. After the migrations are finished, a new `VersionMap` is returned to persist the upgraded module versions to state.
+Migrations are run inside of an `UpgradeHandler` using `app.mm.RunMigrations(ctx, cfg, vm)`. The `UpgradeHandler` functions describe the functionality to occur during an upgrade. The `RunMigrations` function loops through the `VersionMap` argument and runs the migration scripts for all versions that are less than the versions of the new binary app module. After the migrations are finished, a new `VersionMap` is returned to persist the upgraded module versions to state.
 
 ```go
 cfg := module.NewConfigurator(...)
@@ -157,6 +157,6 @@ app.UpgradeKeeper.SetUpgradeHandler("my-plan", func(ctx sdk.Context, plan upgrad
 
 You can sync a full node to an existing blockchain which has been upgraded using Cosmovisor
 
-To successfully sync, you must start with the initial binary that the blockchain started with at genesis. If all Software Upgrade Plans contain binary instruction, then you can run Cosmovisor with auto-download option to automatically handle downloading and switching to the binaries associated with each sequential upgrade. Otherwise, you need to manually provide all binaries to Cosmovisor.
+To successfully sync, you must start with the initial binary that the blockchain started with at genesis. If all Software Upgrade Plans contain binary instructions, then you can run Cosmovisor with auto-download option to automatically handle downloading and switching to the binaries associated with each sequential upgrade. Otherwise, you need to manually provide all binaries to Cosmovisor.
 
-To learn more about Cosmovisor, see the [Cosmovisor Quick Start](../../build/tooling/01-cosmovisor.md).
+To learn more about Cosmovisor, see the [Cosmovisor Quick Start](../../../../tools/cosmovisor/README.md).

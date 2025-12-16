@@ -18,7 +18,7 @@ func randCompactBitArray(bits int) (*CompactBitArray, []byte) {
 	src := unsafe.Bytes((bits + 7) / 8)
 	bA := NewCompactBitArray(bits)
 
-	for i := 0; i < numBytes-1; i++ {
+	for i := range numBytes - 1 {
 		for j := uint8(0); j < 8; j++ {
 			bA.SetIndex(i*8+int(j), src[i]&(uint8(1)<<(8-j)) > 0)
 		}
@@ -58,7 +58,6 @@ func TestBitArrayEqual(t *testing.T) {
 		{name: "different should not be equal", b1: big1, b2: big2, eq: false},
 	}
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			eq := tc.b1.Equal(tc.b2)
 			require.Equal(t, tc.eq, eq)
@@ -102,7 +101,6 @@ func TestJSONMarshalUnmarshal(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.bA.String(), func(t *testing.T) {
 			bz, err := json.Marshal(tc.bA)
 			require.NoError(t, err)
@@ -162,7 +160,6 @@ func TestCompactMarshalUnmarshal(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.bA.String(), func(t *testing.T) {
 			bz := tc.bA.CompactMarshal()
 
@@ -209,14 +206,12 @@ func TestCompactBitArrayNumOfTrueBitsBefore(t *testing.T) {
 		{`"______________xx"`, []int{14, 15}, []int{0, 1}},
 	}
 	for tcIndex, tc := range testCases {
-		tc := tc
-		tcIndex := tcIndex
 		t.Run(tc.marshalledBA, func(t *testing.T) {
 			var bA *CompactBitArray
 			err := json.Unmarshal([]byte(tc.marshalledBA), &bA)
 			require.NoError(t, err)
 
-			for i := 0; i < len(tc.bAIndex); i++ {
+			for i := range tc.bAIndex {
 				require.Equal(t, tc.trueValueIndex[i], bA.NumTrueBitsBefore(tc.bAIndex[i]), "tc %d, i %d", tcIndex, i)
 			}
 		})
@@ -227,11 +222,11 @@ func TestCompactBitArrayGetSetIndex(t *testing.T) {
 	r := rand.New(rand.NewSource(100))
 	numTests := 10
 	numBitsPerArr := 100
-	for i := 0; i < numTests; i++ {
+	for range numTests {
 		bits := r.Intn(1000)
 		bA, _ := randCompactBitArray(bits)
 
-		for j := 0; j < numBitsPerArr; j++ {
+		for range numBitsPerArr {
 			copy := bA.Copy()
 			index := r.Intn(bits)
 			val := (r.Int63() % 2) == 0
@@ -283,7 +278,6 @@ func TestNewCompactBitArrayCrashWithLimits(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		tt := tt
 		t.Run(fmt.Sprintf("%d", tt.in), func(t *testing.T) {
 			got := NewCompactBitArray(tt.in)
 			if g := got != nil; g != tt.mustPass {

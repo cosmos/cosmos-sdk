@@ -1,12 +1,11 @@
 package depinject
 
 import (
+	"fmt"
 	"reflect"
+	"slices"
 	"strings"
 	"unicode"
-
-	"github.com/cockroachdb/errors"
-	"golang.org/x/exp/slices"
 )
 
 // isExportedType checks if the type is exported and not in an internal
@@ -21,12 +20,12 @@ func isExportedType(typ reflect.Type) error {
 	pkgPath := typ.PkgPath()
 	if name != "" && pkgPath != "" {
 		if unicode.IsLower([]rune(name)[0]) {
-			return errors.Errorf("type must be exported: %s", typ)
+			return fmt.Errorf("type must be exported: %s", typ)
 		}
 
 		pkgParts := strings.Split(pkgPath, "/")
 		if slices.Contains(pkgParts, "internal") {
-			return errors.Errorf("type must not come from an internal package: %s", typ)
+			return fmt.Errorf("type must not come from an internal package: %s", typ)
 		}
 
 		return nil

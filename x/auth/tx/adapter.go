@@ -2,6 +2,7 @@ package tx
 
 import (
 	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	multisigv1beta1 "cosmossdk.io/api/cosmos/crypto/multisig/v1beta1"
@@ -79,10 +80,20 @@ func (w *wrapper) GetSigningTxData() txsigning.TxData {
 		},
 	}
 
+	// Only set TimeoutTimestamp if we have a non-zero time.Time.
+	// Setting timestamppb.New() with a zero/default value time.Time results in a non-zero timestamppb.Timestamp,
+	// which causes the value to show up in the signature - breaking <v0.53.x compatibility.
+	var ts *timestamppb.Timestamp
+	if body.TimeoutTimestamp != nil {
+		ts = timestamppb.New(*body.TimeoutTimestamp)
+	}
+
 	txBody := &txv1beta1.TxBody{
 		Messages:                    msgs,
 		Memo:                        body.Memo,
 		TimeoutHeight:               body.TimeoutHeight,
+		Unordered:                   body.Unordered,
+		TimeoutTimestamp:            ts,
 		ExtensionOptions:            extOptions,
 		NonCriticalExtensionOptions: nonCriticalExtOptions,
 	}

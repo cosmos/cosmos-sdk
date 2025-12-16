@@ -3,10 +3,9 @@ package keeper_test
 import (
 	"time"
 
-	"cosmossdk.io/x/evidence/types"
-
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/evidence/types"
 )
 
 func (s *KeeperTestSuite) TestSubmitEvidence() {
@@ -66,7 +65,6 @@ func (s *KeeperTestSuite) TestSubmitEvidence() {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			_, err := s.msgServer.SubmitEvidence(s.ctx, tc.req)
 			if tc.expErr {

@@ -21,12 +21,13 @@ import (
 func Test_runExportCmd(t *testing.T) {
 	cdc := moduletestutil.MakeTestEncodingConfig().Codec
 	testCases := []struct {
-		name           string
-		keyringBackend string
-		extraArgs      []string
-		userInput      string
-		mustFail       bool
-		expectedOutput string
+		name                  string
+		keyringBackend        string
+		extraArgs             []string
+		userInput             string
+		mustFail              bool
+		expectedOutput        string
+		expectedOutputContain string
 	}{
 		{
 			name:           "--unsafe only must fail",
@@ -49,12 +50,20 @@ func Test_runExportCmd(t *testing.T) {
 			expectedOutput: "",
 		},
 		{
-			name:           "--unsafe --unarmored-hex succeed",
-			keyringBackend: keyring.BackendTest,
-			extraArgs:      []string{"--unsafe", "--unarmored-hex"},
-			userInput:      "y\n",
-			mustFail:       false,
-			expectedOutput: "2485e33678db4175dc0ecef2d6e1fc493d4a0d7f7ce83324b6ed70afe77f3485\n",
+			name:                  "--unsafe --unarmored-hex --yes success",
+			keyringBackend:        keyring.BackendTest,
+			extraArgs:             []string{"--unsafe", "--unarmored-hex", "--yes"},
+			userInput:             "",
+			mustFail:              false,
+			expectedOutputContain: "2485e33678db4175dc0ecef2d6e1fc493d4a0d7f7ce83324b6ed70afe77f3485\n",
+		},
+		{
+			name:                  "--unsafe --unarmored-hex success",
+			keyringBackend:        keyring.BackendTest,
+			extraArgs:             []string{"--unsafe", "--unarmored-hex"},
+			userInput:             "y\n",
+			mustFail:              false,
+			expectedOutputContain: "2485e33678db4175dc0ecef2d6e1fc493d4a0d7f7ce83324b6ed70afe77f3485\n",
 		},
 		{
 			name:           "file keyring backend properly read password and user confirmation",
@@ -106,7 +115,11 @@ func Test_runExportCmd(t *testing.T) {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tc.expectedOutput, mockOut.String())
+				if tc.expectedOutput != "" {
+					require.Equal(t, tc.expectedOutput, mockOut.String())
+				} else if tc.expectedOutputContain != "" {
+					require.Contains(t, mockOut.String(), tc.expectedOutputContain)
+				}
 			}
 		})
 	}

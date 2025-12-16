@@ -9,10 +9,8 @@ This includes tools for development, operating a node, and ease of use of a Cosm
 
 ## CLI Tools
 
-* [Cosmovisor](./01-cosmovisor.md)
-* [Confix](./02-confix.md)
-* [Hubl](./03-hubl.md)
-* [Rosetta](https://docs.cosmos.network/main/run-node/rosetta)
+* [Cosmovisor](../../../tools/cosmovisor/README.md)
+* [Confix](../../../tools/confix/README.md)
 
 ## Other Tools
 

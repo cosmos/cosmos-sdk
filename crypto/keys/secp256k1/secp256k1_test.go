@@ -220,7 +220,7 @@ func TestSignAndValidateSecp256k1(t *testing.T) {
 // in creating the privkey.
 func TestSecp256k1LoadPrivkeyAndSerializeIsIdentity(t *testing.T) {
 	numberOfTests := 256
-	for i := 0; i < numberOfTests; i++ {
+	for range numberOfTests {
 		// Seed the test case with some random bytes
 		privKeyBytes := [32]byte{}
 		copy(privKeyBytes[:], crypto.CRandBytes(32))
@@ -238,7 +238,7 @@ func TestSecp256k1LoadPrivkeyAndSerializeIsIdentity(t *testing.T) {
 }
 
 func TestGenPrivKeyFromSecret(t *testing.T) {
-	// curve oder N
+	// curve order N
 	N := secp.S256().N
 	tests := []struct {
 		name   string
@@ -255,7 +255,6 @@ func TestGenPrivKeyFromSecret(t *testing.T) {
 		{"another seed used in cosmos tests #3", []byte("")},
 	}
 	for _, tt := range tests {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			gotPrivKey := secp256k1.GenPrivKeyFromSecret(tt.secret)
 			require.NotNil(t, gotPrivKey)
@@ -353,7 +352,7 @@ func TestMarshalAmino(t *testing.T) {
 	testCases := []struct {
 		desc      string
 		msg       codec.AminoMarshaler
-		typ       interface{}
+		typ       any
 		expBinary []byte
 		expJSON   string
 	}{
@@ -409,9 +408,9 @@ func TestMarshalAmino_BackwardsCompatibility(t *testing.T) {
 
 	testCases := []struct {
 		desc      string
-		tmKey     interface{}
-		ourKey    interface{}
-		marshalFn func(o interface{}) ([]byte, error)
+		tmKey     any
+		ourKey    any
+		marshalFn func(o any) ([]byte, error)
 	}{
 		{
 			"secp256k1 private key, binary",

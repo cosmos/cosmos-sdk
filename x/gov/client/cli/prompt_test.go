@@ -1,5 +1,4 @@
 //go:build !race
-// +build !race
 
 // Disabled -race because the package github.com/manifoldco/promptui@v0.9.0
 // has a data race and this code exposes it, but fixing it would require
@@ -47,7 +46,8 @@ func TestPromptIntegerOverflow(t *testing.T) {
 
 			fin, fw := readline.NewFillableStdin(os.Stdin)
 			readline.Stdin = fin
-			fw.Write([]byte(overflowStr + "\n"))
+			_, err := fw.Write([]byte(overflowStr + "\n"))
+			require.NoError(t, err)
 
 			v, err := cli.Prompt(st{}, "")
 			assert.Equal(t, st{}, v, "expected a value of zero")
@@ -58,7 +58,7 @@ func TestPromptIntegerOverflow(t *testing.T) {
 }
 
 func TestPromptParseInteger(t *testing.T) {
-	// Intentionally sending a value out of the range of
+	// Intentionally sending a value out of the range of int.
 	values := []struct {
 		in   string
 		want int
@@ -69,7 +69,6 @@ func TestPromptParseInteger(t *testing.T) {
 	}
 
 	for _, tc := range values {
-		tc := tc
 		t.Run(tc.in, func(t *testing.T) {
 			origStdin := readline.Stdin
 			defer func() {
@@ -78,7 +77,8 @@ func TestPromptParseInteger(t *testing.T) {
 
 			fin, fw := readline.NewFillableStdin(os.Stdin)
 			readline.Stdin = fin
-			fw.Write([]byte(tc.in + "\n"))
+			_, err := fw.Write([]byte(tc.in + "\n"))
+			assert.NoError(t, err)
 
 			v, err := cli.Prompt(st{}, "")
 			assert.Nil(t, err, "expected a nil error")

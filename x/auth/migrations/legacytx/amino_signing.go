@@ -39,7 +39,7 @@ func MultiSignatureDataToAminoMultisignature(cdc *codec.LegacyAmino, mSig *signi
 	n := len(mSig.Signatures)
 	sigs := make([][]byte, n)
 
-	for i := 0; i < n; i++ {
+	for i := range n {
 		var err error
 		sigs[i], err = SignatureDataToAminoSignature(cdc, mSig.Signatures[i])
 		if err != nil {

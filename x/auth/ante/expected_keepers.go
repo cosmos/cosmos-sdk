@@ -2,6 +2,7 @@ package ante
 
 import (
 	"context"
+	"time"
 
 	"cosmossdk.io/core/address"
 
@@ -17,6 +18,9 @@ type AccountKeeper interface {
 	SetAccount(ctx context.Context, acc sdk.AccountI)
 	GetModuleAddress(moduleName string) sdk.AccAddress
 	AddressCodec() address.Codec
+	UnorderedTransactionsEnabled() bool
+	RemoveExpiredUnorderedNonces(ctx sdk.Context) error
+	TryAddUnorderedNonce(ctx sdk.Context, sender []byte, timestamp time.Time) error
 }
 
 // FeegrantKeeper defines the expected feegrant keeper.

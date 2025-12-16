@@ -6,7 +6,7 @@
 
 Cosmos-SDK provides you with a local network to bootstrap a chain in your machine, but how does one debug a node or module?
 
-If we start a single node, we won't be able to debug transactions as the machine will be in bootstrapping phase trying to find peers to connect too, thats why we need to start a local network.
+If we start a single node, we won't be able to debug transactions as the machine will be in bootstrapping phase trying to find peers to connect too, that's why we need to start a local network.
 
 But the current `localnet-start` does not provide us with debugging tools so that's why there is a different image for debugging a local network, that is to avoid any issues in the future were debugging won't be needed.
 

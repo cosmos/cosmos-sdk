@@ -20,6 +20,10 @@ message WithAList {
   repeated string list                = 2;
 }
 
+message WithAJson {
+  bytes field1 = 1 [(amino.encoding) = "inline_json"];
+}
+
 message ABitOfEverything {
   option (amino.name) = "ABitOfEverything";
 
@@ -60,6 +64,11 @@ message ABitOfEverything {
   // google.protobuf.Duration.  There is no equivalent in pulsar generated types.
   //
   // google.protobuf.Duration duration = 24;
+}
+
+message Duration {
+  google.protobuf.Duration  duration  = 1;
+  google.protobuf.Timestamp timestamp = 2;
 }
 
 message NestedMessage {

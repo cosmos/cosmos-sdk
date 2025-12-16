@@ -34,7 +34,7 @@ func BenchmarkLoggers(b *testing.B) {
 			keyVals: []any{"foo", 1},
 		},
 		{
-			// Small numbers may be optimized, so check if an unusual/larger number performs different.
+			// Small numbers may be optimized, so check if an unusual/larger number performs differently.
 			name:    "single largeish int",
 			keyVals: []any{"foo", 123456789},
 		},
@@ -83,27 +83,25 @@ func BenchmarkLoggers(b *testing.B) {
 	// so that real write time is negligible.
 	b.Run("zerolog", func(b *testing.B) {
 		for _, bc := range benchCases {
-			bc := bc
 			b.Run(bc.name, func(b *testing.B) {
 				zl := zerolog.New(io.Discard)
 				logger := log.NewCustomLogger(zl)
 
-				for i := 0; i < b.N; i++ {
+				for b.Loop() {
 					logger.Info(message, bc.keyVals...)
 				}
 			})
 		}
 	})
 
-	// The nop logger we use expose in the public API,
+	// The nop logger we expose in the public API,
 	// also useful as a reference for how expensive zerolog is.
 	b.Run("specialized nop logger", func(b *testing.B) {
 		for _, bc := range nopCases {
-			bc := bc
 			b.Run(bc.name, func(b *testing.B) {
 				logger := log.NewNopLogger()
 
-				for i := 0; i < b.N; i++ {
+				for b.Loop() {
 					logger.Info(message, bc.keyVals...)
 				}
 			})
@@ -115,11 +113,10 @@ func BenchmarkLoggers(b *testing.B) {
 	// so we offer the specialized version in the exported API.
 	b.Run("zerolog nop logger", func(b *testing.B) {
 		for _, bc := range nopCases {
-			bc := bc
 			b.Run(bc.name, func(b *testing.B) {
 				logger := log.NewCustomLogger(zerolog.Nop())
 
-				for i := 0; i < b.N; i++ {
+				for b.Loop() {
 					logger.Info(message, bc.keyVals...)
 				}
 			})
@@ -137,7 +134,7 @@ func BenchmarkLoggers_StructuredVsFields(b *testing.B) {
 		zl := zerolog.New(io.Discard)
 		logger := log.NewCustomLogger(zl)
 		zerolog := logger.Impl().(*zerolog.Logger)
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			zerolog.Info().Int64("foo", 100000).Msg(message)
 			zerolog.Info().Str("foo", "foo").Msg(message)
 			zerolog.Error().
@@ -152,7 +149,7 @@ func BenchmarkLoggers_StructuredVsFields(b *testing.B) {
 	b.Run("logger", func(b *testing.B) {
 		zl := zerolog.New(io.Discard)
 		logger := log.NewCustomLogger(zl)
-		for i := 0; i < b.N; i++ {
+		for b.Loop() {
 			logger.Info(message, "foo", 100000)
 			logger.Info(message, "foo", "foo")
 			logger.Error(message, "foo", 100000, "bar", "foo", "other", byteSliceToLog, "error", errorToLog)

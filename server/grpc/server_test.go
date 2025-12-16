@@ -51,7 +51,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.Require().NoError(err)
 
 	val0 := s.network.Validators[0]
-	s.conn, err = grpc.Dial(
+	s.conn, err = grpc.Dial( //nolint:staticcheck // ignore this line for this linter
 		val0.AppConfig.GRPC.Address,
 		grpc.WithInsecure(), //nolint:staticcheck // ignore SA1019, we don't need to use a secure connection for tests
 		grpc.WithDefaultCallOptions(grpc.ForceCodec(codec.NewProtoCodec(s.cfg.InterfaceRegistry).GRPCCodec())),
@@ -185,7 +185,7 @@ func (s *IntegrationTestSuite) TestGRPCServer_BroadcastTx() {
 }
 
 // Test and enforce that we upfront reject any connections to baseapp containing
-// invalid initial x-cosmos-block-height that aren't positive  and in the range [0, max(int64)]
+// invalid initial x-cosmos-block-height that isn't positive  and in the range [0, max(int64)]
 // See issue https://github.com/cosmos/cosmos-sdk/issues/7662.
 func (s *IntegrationTestSuite) TestGRPCServerInvalidHeaderHeights() {
 	t := s.T()
@@ -199,7 +199,7 @@ func (s *IntegrationTestSuite) TestGRPCServerInvalidHeaderHeights() {
 		{"9223372036854775808", "value out of range"}, // > max(int64) by 1
 		{"-10", "height < 0"},
 		{"18446744073709551615", "value out of range"}, // max uint64, which is  > max(int64)
-		{"-9223372036854775809", "value out of range"}, // Out of the range of for negative int64
+		{"-9223372036854775809", "value out of range"}, // Out of the range for negative int64
 	}
 	for _, tt := range invalidHeightStrs {
 		t.Run(tt.value, func(t *testing.T) {
@@ -213,7 +213,7 @@ func (s *IntegrationTestSuite) TestGRPCServerInvalidHeaderHeights() {
 	}
 }
 
-// TestGRPCUnpacker - tests the grpc endpoint for Validator and using the interface registry unpack and extract the
+// TestGRPCUnpacker - tests the grpc endpoint for Validator and using the interface registry to unpack and extract the
 // ConsAddr. (ref: https://github.com/cosmos/cosmos-sdk/issues/8045)
 func (s *IntegrationTestSuite) TestGRPCUnpacker() {
 	ir := s.cfg.InterfaceRegistry

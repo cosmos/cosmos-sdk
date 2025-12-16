@@ -98,7 +98,7 @@ type voteInfoWrapper struct {
 var _ comet.VoteInfo = (*voteInfoWrapper)(nil)
 
 func (v voteInfoWrapper) GetBlockIDFlag() comet.BlockIDFlag {
-	return comet.BlockIDFlag(v.VoteInfo.BlockIdFlag)
+	return comet.BlockIDFlag(v.BlockIdFlag)
 }
 
 func (v voteInfoWrapper) Validator() comet.Validator {
@@ -159,11 +159,11 @@ func (r prepareProposalInfo) GetValidatorsHash() []byte {
 }
 
 func (r prepareProposalInfo) GetProposerAddress() []byte {
-	return r.RequestPrepareProposal.ProposerAddress
+	return r.ProposerAddress
 }
 
 func (r prepareProposalInfo) GetLastCommit() comet.CommitInfo {
-	return extendedCommitInfoWrapper{r.RequestPrepareProposal.LocalLastCommit}
+	return extendedCommitInfoWrapper{r.LocalLastCommit}
 }
 
 var _ comet.BlockInfo = (*prepareProposalInfo)(nil)
@@ -203,7 +203,7 @@ type extendedVoteInfoWrapper struct {
 var _ comet.VoteInfo = (*extendedVoteInfoWrapper)(nil)
 
 func (e extendedVoteInfoWrapper) GetBlockIDFlag() comet.BlockIDFlag {
-	return comet.BlockIDFlag(e.ExtendedVoteInfo.BlockIdFlag)
+	return comet.BlockIDFlag(e.BlockIdFlag)
 }
 
 func (e extendedVoteInfoWrapper) Validator() comet.Validator {

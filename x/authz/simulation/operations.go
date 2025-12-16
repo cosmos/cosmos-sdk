@@ -19,6 +19,7 @@ import (
 )
 
 // authz message types
+// will be removed in the future
 var (
 	TypeMsgGrant  = sdk.MsgTypeURL(&authz.MsgGrant{})
 	TypeMsgRevoke = sdk.MsgTypeURL(&authz.MsgRevoke{})
@@ -26,6 +27,7 @@ var (
 )
 
 // Simulation operation weights constants
+// will be removed in the future
 const (
 	OpWeightMsgGrant = "op_weight_msg_grant"
 	OpWeightRevoke   = "op_weight_msg_revoke"
@@ -33,6 +35,7 @@ const (
 )
 
 // authz operations weights
+// will be removed in the future
 const (
 	WeightGrant  = 100
 	WeightRevoke = 90
@@ -40,6 +43,7 @@ const (
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
+// will be removed in the future in favor of msg factory
 func WeightedOperations(
 	registry cdctypes.InterfaceRegistry,
 	appParams simtypes.AppParams,
@@ -86,6 +90,7 @@ func WeightedOperations(
 }
 
 // SimulateMsgGrant generates a MsgGrant with random values.
+// will be removed in the future in favor of msg factory
 func SimulateMsgGrant(
 	cdc *codec.ProtoCodec,
 	txCfg client.TxConfig,
@@ -159,6 +164,7 @@ func generateRandomAuthorization(r *rand.Rand, spendLimit sdk.Coins) authz.Autho
 }
 
 // SimulateMsgRevoke generates a MsgRevoke with random values.
+// will be removed in the future in favor of msg factory
 func SimulateMsgRevoke(
 	cdc *codec.ProtoCodec,
 	txCfg client.TxConfig,
@@ -228,6 +234,7 @@ func SimulateMsgRevoke(
 }
 
 // SimulateMsgExec generates a MsgExec with random values.
+// will be removed in the future in favor of msg factory
 func SimulateMsgExec(
 	cdc *codec.ProtoCodec,
 	txCfg client.TxConfig,

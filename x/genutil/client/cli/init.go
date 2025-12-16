@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	cfg "github.com/cometbft/cometbft/config"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/go-bip39"
 	"github.com/spf13/cobra"
 
@@ -18,7 +19,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/input"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -30,11 +33,14 @@ const (
 	// FlagOverwrite defines a flag to overwrite an existing genesis JSON file.
 	FlagOverwrite = "overwrite"
 
-	// FlagSeed defines a flag to initialize the private validator key from a specific seed.
+	// FlagRecover defines a flag to initialize the private validator key from a specific seed.
 	FlagRecover = "recover"
 
 	// FlagDefaultBondDenom defines the default denom to use in the genesis file.
 	FlagDefaultBondDenom = "default-denom"
+
+	// FlagConsensusKeyAlgo defines the algorithm to use for the consensus signing key.
+	FlagConsensusKeyAlgo = "consensus-key-algo"
 )
 
 type printInfo struct {
@@ -160,7 +166,15 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			appGenesis.InitialHeight = initHeight
 			appGenesis.Consensus = &types.ConsensusGenesis{
 				Validators: nil,
+				Params:     cmttypes.DefaultConsensusParams(),
 			}
+
+			consensusKey, err := cmd.Flags().GetString(FlagConsensusKeyAlgo)
+			if err != nil {
+				return errorsmod.Wrap(err, "Failed to get consensus key algo")
+			}
+
+			appGenesis.Consensus.Params.Validator.PubKeyTypes = []string{consensusKey}
 
 			if err = genutil.ExportGenesisFile(appGenesis, genFile); err != nil {
 				return errorsmod.Wrap(err, "Failed to export genesis file")
@@ -169,6 +183,12 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 			toPrint := newPrintInfo(config.Moniker, chainID, nodeID, "", appState)
 
 			cfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
+
+			otelFile := filepath.Join(clientCtx.HomeDir, "config", telemetry.OtelFileName)
+			if err := os.WriteFile(otelFile, []byte{}, 0o600); err != nil {
+				return errorsmod.Wrap(err, "Failed to create otel.yaml file")
+			}
+
 			return displayInfo(toPrint)
 		},
 	}
@@ -179,6 +199,7 @@ func InitCmd(mbm module.BasicManager, defaultNodeHome string) *cobra.Command {
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
 	cmd.Flags().String(FlagDefaultBondDenom, "", "genesis file default denomination, if left blank default value is 'stake'")
 	cmd.Flags().Int64(flags.FlagInitHeight, 1, "specify the initial block height at genesis")
+	cmd.Flags().String(FlagConsensusKeyAlgo, ed25519.KeyType, "algorithm to use for the consensus key")
 
 	return cmd
 }

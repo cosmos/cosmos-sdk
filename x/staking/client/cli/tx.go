@@ -113,8 +113,6 @@ where we can get the pubkey using "%s tendermint show-validator"
 	cmd.Flags().String(FlagNodeID, "", "The node's ID")
 	flags.AddTxFlagsToCmd(cmd)
 
-	_ = cmd.MarkFlagRequired(flags.FlagFrom)
-
 	return cmd
 }
 
@@ -142,7 +140,7 @@ func NewEditValidatorCmd(ac address.Codec) *cobra.Command {
 			if commissionRate != "" {
 				rate, err := math.LegacyNewDecFromStr(commissionRate)
 				if err != nil {
-					return fmt.Errorf("invalid new commission rate: %v", err)
+					return fmt.Errorf("invalid new commission rate: %w", err)
 				}
 
 				newRate = &rate
@@ -418,7 +416,7 @@ func newBuildCreateValidatorMsg(clientCtx client.Context, txf tx.Factory, fs *fl
 	return txf, msg, nil
 }
 
-// Return the flagset, particular flags, and a description of defaults
+// CreateValidatorMsgFlagSet returns the FlagSet, particular flags, and a description of defaults
 // this is anticipated to be used with the gen-tx
 func CreateValidatorMsgFlagSet(ipDefault string) (fs *flag.FlagSet, defaultsDesc string) {
 	fsCreateValidator := flag.NewFlagSet("", flag.ContinueOnError)
@@ -571,8 +569,8 @@ func PrepareConfigForTxCreateValidator(flagSet *flag.FlagSet, moniker, nodeID, c
 
 // BuildCreateValidatorMsg makes a new MsgCreateValidator.
 func BuildCreateValidatorMsg(clientCtx client.Context, config TxCreateValidatorConfig, txBldr tx.Factory, generateOnly bool, valCodec address.Codec) (tx.Factory, sdk.Msg, error) {
-	amounstStr := config.Amount
-	amount, err := sdk.ParseCoinNormalized(amounstStr)
+	amountStr := config.Amount
+	amount, err := sdk.ParseCoinNormalized(amountStr)
 	if err != nil {
 		return txBldr, nil, err
 	}

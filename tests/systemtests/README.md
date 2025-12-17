@@ -4,7 +4,7 @@ Go black box tests that setup and interact with a local blockchain. The system t
 works with the compiled binary of the chain artifact only.
 To get up to speed, checkout the [getting started guide](../../systemtests/GETTING_STARTED.md).
 
-Beside the Go tests and testdata files, this directory can contain the following directories:  
+Besides the Go tests and testdata files, this directory can contain the following directories: 
 
 * `binaries` - cache for binary
 * `testnet` - node files

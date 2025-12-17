@@ -1,6 +1,6 @@
 # Store
 
-The store package defines the interfaces, types and abstractions for Cosmos SDK
+The store package defines the interfaces, types, and abstractions for Cosmos SDK
 modules to read and write to Merkleized state within a Cosmos SDK application.
 The store package provides many primitives for developers to use in order to
 work with both state storage and state commitment. Below we describe the various

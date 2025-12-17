@@ -15,6 +15,7 @@ This allows meters and traces to use direct references to the underlying instrum
 Create a basic OpenTelemetry configuration file which will send data to the local instance of Grafana LGTM:
 
 ```yaml
+file_format: "1.0-rc.3"
 resource:
   attributes:
     - name: service.name
@@ -24,15 +25,14 @@ tracer_provider:
   processors:
     - batch: # NOTE: you should use batch in production!
         exporter:
-          otlp:
-            protocol: grpc
+          otlp_grpc:
             endpoint: http://localhost:4317
 
 meter_provider:
   readers:
     - pull:
         exporter:
-          prometheus: # pushes directly to prometheus backend. 
+          prometheus/development: # pushes directly to prometheus backend. 
             host: 0.0.0.0
             port: 9464
             # optional: include resource attributes as constant labels
@@ -51,8 +51,7 @@ logger_provider:
   processors:
     - batch:
         exporter:
-          otlp:
-            protocol: grpc
+          otlp_grpc:
             endpoint: http://localhost:4317
 
 

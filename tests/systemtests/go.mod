@@ -57,7 +57,7 @@ require (
 	github.com/cosmos/gogoproto v1.7.2 // indirect
 	github.com/cosmos/iavl v1.2.6 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
-	github.com/cosmos/ledger-cosmos-go v0.16.0 // indirect
+	github.com/cosmos/ledger-cosmos-go v1.0.0 // indirect
 	github.com/creachadair/tomledit v0.0.29 // indirect
 	github.com/danieljoos/wincred v1.2.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
@@ -168,7 +168,7 @@ require (
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.64.0 // indirect
 	go.opentelemetry.io/contrib/otelconf v0.19.0 // indirect
 	go.opentelemetry.io/contrib/propagators/b3 v1.39.0 // indirect
-	go.opentelemetry.io/contrib/propagators/jaeger v1.37.0 // indirect
+	go.opentelemetry.io/contrib/propagators/jaeger v1.39.0 // indirect
 	go.opentelemetry.io/otel v1.39.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc v0.15.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp v0.15.0 // indirect

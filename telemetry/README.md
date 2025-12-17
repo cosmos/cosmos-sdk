@@ -57,17 +57,14 @@ logger_provider:
 
 
 cosmos_extra:
-  trace_file: ""
-  metrics_file: ""
-  metrics_file_interval: ""
-  logs_file: ""
   instrument_host: true
   instrument_runtime: true
   propagators:
     - tracecontext
 ```
 
-For a full list of configurable options see: https://github.com/open-telemetry/opentelemetry-configuration/blob/main/examples/kitchen-sink.yaml
+For a full list of configurable options see: https://github.com/open-telemetry/opentelemetry-configuration/blob/main/examples/kitchen-sink.yaml.
+NOTE: the go implementation may not support all options, so check the go [otelconf](https://pkg.go.dev/go.opentelemetry.io/contrib/otelconf) documentation carefully to see what is actually supported.
 
 3. set the `OTEL_EXPERIMENTAL_CONFIG_FILE` environment variable to the path of the configuration file:
    `export OTEL_EXPERIMENTAL_CONFIG_FILE=path/to/config.yaml`

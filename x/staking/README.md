@@ -10,7 +10,7 @@ This paper specifies the Staking module of the Cosmos SDK that was first
 described in the [Cosmos Whitepaper](https://cosmos.network/about/whitepaper)
 in June 2016.
 
-The module enables Cosmos SDK-based blockchain to support an advanced
+The module enables Cosmos SDK-based blockchains to support an advanced
 Proof-of-Stake (PoS) system. In this system, holders of the native staking token of
 the chain can become validators and can delegate tokens to validators,
 ultimately determining the effective validator set for the system.

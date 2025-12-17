@@ -56,7 +56,7 @@ costs of gas in each token denomination they wish to support:
 
 `simd start ... --minimum-gas-prices=0.00001stake;0.05photinos`
 
-When adding transactions to mempool or gossipping transactions, validators check
+When adding transactions to mempool or gossiping transactions, validators check
 if the transaction's gas prices, which are determined by the provided fees, meet
 any of the validator's minimum gas prices. In other words, a transaction must
 provide a fee of at least one denomination that matches a validator's minimum

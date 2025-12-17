@@ -476,4 +476,3 @@ func (k Keeper) putValidatorOnHold(ctx context.Context, id uint64) error {
 	val.UnbondingOnHoldRefCount++
 	return k.SetValidator(ctx, val)
 }
-

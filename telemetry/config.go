@@ -121,10 +121,6 @@ func InitializeOpenTelemetry(filePath string) error {
 	return nil
 }
 
-type OpenTelemetryOptions struct {
-	ConfigFilePath string
-}
-
 func initPropagator(propagatorTypes []string) propagation.TextMapPropagator {
 	var propagators []propagation.TextMapPropagator
 

@@ -46,6 +46,8 @@ type (
 	StoreLoader func(ms storetypes.CommitMultiStore) error
 
 	contextKeyT string
+
+	TxResultsPostHook func([]*abci.ExecTxResult) []*abci.ExecTxResult
 )
 
 const (
@@ -206,6 +208,12 @@ type BaseApp struct {
 	StreamEvents   chan StreamEvents
 
 	traceFlightRecorder *metrics.TraceRecorder
+
+	// txResultsPostHook can be used to alter TxResults inside block results,
+	// For example, to fix EVM transaction logs and put correct tx and msg indexes in them, since
+	// we can't do that during execution of individual messages (we do not track indexes throughout block execution,
+	// thus can only fix them after block is ready)
+	txResultsPostHook TxResultsPostHook
 }
 
 // NewBaseApp returns a reference to an initialized BaseApp. It accepts a

@@ -32,7 +32,10 @@ service Msg {
   rpc Revoke(MsgRevoke) returns (MsgRevokeResponse);
 
   // ExecCompat has same functionality as Exec but accepts array of json-encoded message string instead of []*Any
-  rpc ExecCompat(MsgExecCompat) returns (MsgExecCompatResponse);
+  // Deprecated: This RPC is deprecated and will be removed in a future version.
+  rpc ExecCompat(MsgExecCompat) returns (MsgExecCompatResponse) {
+    option deprecated = true;
+  }
 }
 
 // MsgGrant is a request type for Grant method. It declares authorization to the grantee
@@ -84,13 +87,17 @@ message MsgRevoke {
 message MsgRevokeResponse {}
 
 // MsgExecCompatResponse defines the Msg/MsgExecCompatResponse response type.
+// Deprecated: This message is deprecated and will be removed in a future version.
 message MsgExecCompatResponse {
-  repeated bytes results = 1;
+  option         deprecated = true;
+  repeated bytes results    = 1;
 }
 
 // MsgExecCompat supports legacy amino codec for frontend metamask signing
 // Functions are same as MsgExec, but input for msgs is array of strings
+// Deprecated: This message is deprecated and will be removed in a future version.
 message MsgExecCompat {
+  option deprecated             = true;
   option (cosmos.msg.v1.signer) = "grantee";
   option (amino.name)           = "cosmos-sdk/MsgExec";
 

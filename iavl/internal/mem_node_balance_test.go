@@ -12,7 +12,7 @@ import (
 // so that we can do orphan tracking.
 // These test NodeIDs don't follow the normal NodeID assignment logic, but this
 // approach is more convenient for testing.
-func newTestLeafNode(version uint32, index uint32, key string) *MemNode {
+func newTestLeafNode(version, index uint32, key string) *MemNode {
 	node := newLeafNode([]byte(key), []byte("value_"+key), version)
 	node.nodeId = NewNodeID(true, version, index)
 	return node
@@ -252,7 +252,7 @@ func TestNodeRebalance(t *testing.T) {
 			//      /      \
 			//   W.1.2     [Y.1.5]
 			//  /     \
-			//[W.1.3] [X.1.4]
+			// [W.1.3] [X.1.4]
 			beforeRotation: "(Y.2.1 (X.1.2 [W.1.3] [X.1.4]) [Y.1.5])",
 			afterRotation:  "(Y.2.1 (X.1.2 [W.1.3] [X.1.4]) [Y.1.5])", // unchanged
 		},

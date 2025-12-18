@@ -56,7 +56,7 @@ costs of gas in each token denomination they wish to support:
 
 `simd start ... --minimum-gas-prices=0.00001stake;0.05photinos`
 
-When adding transactions to mempool or gossipping transactions, validators check
+When adding transactions to mempool or gossiping transactions, validators check
 if the transaction's gas prices, which are determined by the provided fees, meet
 any of the validator's minimum gas prices. In other words, a transaction must
 provide a fee of at least one denomination that matches a validator's minimum
@@ -190,34 +190,40 @@ all fields of all accounts, and to iterate over all stored accounts.
 // AccountKeeperI is the interface contract that x/auth's keeper implements.
 type AccountKeeperI interface {
 	// Return a new account with the next account number and the specified address. Does not save the new account to the store.
-	NewAccountWithAddress(sdk.Context, sdk.AccAddress) types.AccountI
+	NewAccountWithAddress(context.Context, sdk.AccAddress) sdk.AccountI
 
 	// Return a new account with the next account number. Does not save the new account to the store.
-	NewAccount(sdk.Context, types.AccountI) types.AccountI
+	NewAccount(context.Context, sdk.AccountI) sdk.AccountI
 
 	// Check if an account exists in the store.
-	HasAccount(sdk.Context, sdk.AccAddress) bool
+	HasAccount(context.Context, sdk.AccAddress) bool
 
 	// Retrieve an account from the store.
-	GetAccount(sdk.Context, sdk.AccAddress) types.AccountI
+	GetAccount(context.Context, sdk.AccAddress) sdk.AccountI
 
 	// Set an account in the store.
-	SetAccount(sdk.Context, types.AccountI)
+	SetAccount(context.Context, sdk.AccountI)
 
 	// Remove an account from the store.
-	RemoveAccount(sdk.Context, types.AccountI)
+	RemoveAccount(context.Context, sdk.AccountI)
 
 	// Iterate over all accounts, calling the provided function. Stop iteration when it returns true.
-	IterateAccounts(sdk.Context, func(types.AccountI) bool)
+	IterateAccounts(context.Context, func(sdk.AccountI) bool)
 
 	// Fetch the public key of an account at a specified address
-	GetPubKey(sdk.Context, sdk.AccAddress) (crypto.PubKey, error)
+	GetPubKey(context.Context, sdk.AccAddress) (cryptotypes.PubKey, error)
 
 	// Fetch the sequence of an account at a specified address.
-	GetSequence(sdk.Context, sdk.AccAddress) (uint64, error)
+	GetSequence(context.Context, sdk.AccAddress) (uint64, error)
 
 	// Fetch the next account number, and increment the internal counter.
-	NextAccountNumber(sdk.Context) uint64
+	NextAccountNumber(context.Context) uint64
+
+	// GetModulePermissions fetches per-module account permissions
+	GetModulePermissions() map[string]types.PermissionsForAddress
+
+	// AddressCodec returns the account address codec.
+	AddressCodec() address.Codec
 }
 ```
 

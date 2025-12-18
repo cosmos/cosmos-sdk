@@ -374,3 +374,108 @@ func (k Querier) CommunityPool(ctx context.Context, _ *types.QueryCommunityPoolR
 
 	return &types.QueryCommunityPoolResponse{Pool: pool.CommunityPool}, nil
 }
+
+// ValidatorHistoricalRewards queries historical rewards for a validator at a specific period
+func (k Querier) ValidatorHistoricalRewards(ctx context.Context, req *types.QueryValidatorHistoricalRewardsRequest) (*types.QueryValidatorHistoricalRewardsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	if req.ValidatorAddress == "" {
+		return nil, status.Error(codes.InvalidArgument, "empty validator address")
+	}
+
+	valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(req.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	rewards, err := k.GetValidatorHistoricalRewards(ctx, valAddr, req.Period)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryValidatorHistoricalRewardsResponse{Rewards: rewards}, nil
+}
+
+// ValidatorCurrentRewards queries current rewards for a validator
+func (k Querier) ValidatorCurrentRewards(ctx context.Context, req *types.QueryValidatorCurrentRewardsRequest) (*types.QueryValidatorCurrentRewardsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	if req.ValidatorAddress == "" {
+		return nil, status.Error(codes.InvalidArgument, "empty validator address")
+	}
+
+	valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(req.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	validator, err := k.stakingKeeper.Validator(ctx, valAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	if validator == nil {
+		return nil, errors.Wrap(types.ErrNoValidatorExists, req.ValidatorAddress)
+	}
+
+	rewards, err := k.GetValidatorCurrentRewards(ctx, valAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryValidatorCurrentRewardsResponse{Rewards: rewards}, nil
+}
+
+// DelegatorStartingInfo queries the starting info for a delegator
+func (k Querier) DelegatorStartingInfo(ctx context.Context, req *types.QueryDelegatorStartingInfoRequest) (*types.QueryDelegatorStartingInfoResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	if req.DelegatorAddress == "" {
+		return nil, status.Error(codes.InvalidArgument, "empty delegator address")
+	}
+
+	if req.ValidatorAddress == "" {
+		return nil, status.Error(codes.InvalidArgument, "empty validator address")
+	}
+
+	delAddr, err := k.authKeeper.AddressCodec().StringToBytes(req.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	valAddr, err := k.stakingKeeper.ValidatorAddressCodec().StringToBytes(req.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	validator, err := k.stakingKeeper.Validator(ctx, valAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	if validator == nil {
+		return nil, errors.Wrap(types.ErrNoValidatorExists, req.ValidatorAddress)
+	}
+
+	delegation, err := k.stakingKeeper.Delegation(ctx, delAddr, valAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	if delegation == nil {
+		return nil, types.ErrNoDelegationExists
+	}
+
+	startingInfo, err := k.GetDelegatorStartingInfo(ctx, valAddr, delAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryDelegatorStartingInfoResponse{StartingInfo: startingInfo}, nil
+}

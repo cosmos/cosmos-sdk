@@ -30,7 +30,7 @@ func (s *KeeperTestSuite) SetupTest() {
 var dummyErr = errors.New("9", 9, "dummyError")
 
 // dummyEpochHook is a struct satisfying the epoch hook interface,
-// that maintains a counter for how many times its been successfully called,
+// that maintains a counter for how many times it's been successfully called,
 // and a boolean for whether it should panic during its execution.
 type dummyEpochHook struct {
 	successCounter int

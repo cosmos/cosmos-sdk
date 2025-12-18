@@ -1,5 +1,4 @@
 //go:build ledger
-// +build ledger
 
 package ledger
 

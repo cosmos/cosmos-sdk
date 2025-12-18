@@ -52,6 +52,7 @@ func SetupSimulation(config simtypes.Config, dirPrefix, dbName string, verbose, 
 
 // SimulationOperations retrieves the simulation params from the provided file path
 // and returns all the modules weighted operations
+//
 // Deprecated: use BuildSimulationOperations with TxConfig
 func SimulationOperations(app runtime.AppI, cdc codec.JSONCodec, config simtypes.Config) []simtypes.WeightedOperation {
 	return BuildSimulationOperations(app, cdc, config, moduletestutil.MakeTestTxConfig())

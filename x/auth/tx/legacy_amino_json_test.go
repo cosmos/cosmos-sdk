@@ -56,28 +56,32 @@ func TestLegacyAminoJSONHandler_GetSignBytes(t *testing.T) {
 		expectedSignBz []byte
 	}{
 		{
-			"signer which is also fee payer (no tips)", addr1.String(),
-			func(w *wrapper) {},
-			legacytx.StdSignBytes(chainID, accNum, seqNum, timeout, legacytx.StdFee{Amount: coins, Gas: gas}, []sdk.Msg{msg}, memo),
+			name:           "signer which is also fee payer (no tips)",
+			signer:         addr1.String(),
+			malleate:       func(w *wrapper) {},
+			expectedSignBz: legacytx.StdSignBytes(chainID, accNum, seqNum, timeout, legacytx.StdFee{Amount: coins, Gas: gas}, []sdk.Msg{msg}, memo), //nolint:staticcheck // needed for legacy testing
 		},
 
 		{
-			"explicit fee payer", addr1.String(),
-			func(w *wrapper) { w.SetFeePayer(addr2) },
-			legacytx.StdSignBytes(chainID, accNum, seqNum, timeout, legacytx.StdFee{Amount: coins, Gas: gas, Payer: addr2.String()}, []sdk.Msg{msg}, memo),
+			name:           "explicit fee payer",
+			signer:         addr1.String(),
+			malleate:       func(w *wrapper) { w.SetFeePayer(addr2) },
+			expectedSignBz: legacytx.StdSignBytes(chainID, accNum, seqNum, timeout, legacytx.StdFee{Amount: coins, Gas: gas, Payer: addr2.String()}, []sdk.Msg{msg}, memo), //nolint:staticcheck // needed for legacy testing
 		},
 		{
-			"explicit fee granter", addr1.String(),
-			func(w *wrapper) { w.SetFeeGranter(addr2) },
-			legacytx.StdSignBytes(chainID, accNum, seqNum, timeout, legacytx.StdFee{Amount: coins, Gas: gas, Granter: addr2.String()}, []sdk.Msg{msg}, memo),
+			name:           "explicit fee granter",
+			signer:         addr1.String(),
+			malleate:       func(w *wrapper) { w.SetFeeGranter(addr2) },
+			expectedSignBz: legacytx.StdSignBytes(chainID, accNum, seqNum, timeout, legacytx.StdFee{Amount: coins, Gas: gas, Granter: addr2.String()}, []sdk.Msg{msg}, memo), //nolint:staticcheck // needed for legacy testing
 		},
 		{
-			"explicit fee payer and fee granter", addr1.String(),
-			func(w *wrapper) {
+			name:   "explicit fee payer and fee granter",
+			signer: addr1.String(),
+			malleate: func(w *wrapper) {
 				w.SetFeePayer(addr2)
 				w.SetFeeGranter(addr2)
 			},
-			legacytx.StdSignBytes(chainID, accNum, seqNum, timeout, legacytx.StdFee{Amount: coins, Gas: gas, Payer: addr2.String(), Granter: addr2.String()}, []sdk.Msg{msg}, memo),
+			expectedSignBz: legacytx.StdSignBytes(chainID, accNum, seqNum, timeout, legacytx.StdFee{Amount: coins, Gas: gas, Payer: addr2.String(), Granter: addr2.String()}, []sdk.Msg{msg}, memo), //nolint:staticcheck // needed for legacy testing
 		},
 	}
 
@@ -156,28 +160,32 @@ func TestLegacyAminoJSONHandler_AllGetSignBytesComparison(t *testing.T) {
 		expectedSignBz []byte
 	}{
 		{
-			"signer which is also fee payer (no tips)", addr1.String(),
-			func(w *wrapper) {},
-			legacytx.StdSignBytes(chainID, accNum, seqNum, timeout, legacytx.StdFee{Amount: coins, Gas: gas}, []sdk.Msg{msg}, memo),
+			name:           "signer which is also fee payer (no tips)",
+			signer:         addr1.String(),
+			malleate:       func(w *wrapper) {},
+			expectedSignBz: legacytx.StdSignBytes(chainID, accNum, seqNum, timeout, legacytx.StdFee{Amount: coins, Gas: gas}, []sdk.Msg{msg}, memo), // nolint:staticcheck // maintain for legacy testing
 		},
 
 		{
-			"explicit fee payer", addr1.String(),
-			func(w *wrapper) { w.SetFeePayer(addr2) },
-			legacytx.StdSignBytes(chainID, accNum, seqNum, timeout, legacytx.StdFee{Amount: coins, Gas: gas, Payer: addr2.String()}, []sdk.Msg{msg}, memo),
+			name:           "explicit fee payer",
+			signer:         addr1.String(),
+			malleate:       func(w *wrapper) { w.SetFeePayer(addr2) },
+			expectedSignBz: legacytx.StdSignBytes(chainID, accNum, seqNum, timeout, legacytx.StdFee{Amount: coins, Gas: gas, Payer: addr2.String()}, []sdk.Msg{msg}, memo), // nolint:staticcheck // maintain for legacy testing
 		},
 		{
-			"explicit fee granter", addr1.String(),
-			func(w *wrapper) { w.SetFeeGranter(addr2) },
-			legacytx.StdSignBytes(chainID, accNum, seqNum, timeout, legacytx.StdFee{Amount: coins, Gas: gas, Granter: addr2.String()}, []sdk.Msg{msg}, memo),
+			name:           "explicit fee granter",
+			signer:         addr1.String(),
+			malleate:       func(w *wrapper) { w.SetFeeGranter(addr2) },
+			expectedSignBz: legacytx.StdSignBytes(chainID, accNum, seqNum, timeout, legacytx.StdFee{Amount: coins, Gas: gas, Granter: addr2.String()}, []sdk.Msg{msg}, memo), // nolint:staticcheck // maintain for legacy testing
 		},
 		{
-			"explicit fee payer and fee granter", addr1.String(),
-			func(w *wrapper) {
+			name:   "explicit fee payer and fee granter",
+			signer: addr1.String(),
+			malleate: func(w *wrapper) {
 				w.SetFeePayer(addr2)
 				w.SetFeeGranter(addr2)
 			},
-			legacytx.StdSignBytes(chainID, accNum, seqNum, timeout, legacytx.StdFee{Amount: coins, Gas: gas, Payer: addr2.String(), Granter: addr2.String()}, []sdk.Msg{msg}, memo),
+			expectedSignBz: legacytx.StdSignBytes(chainID, accNum, seqNum, timeout, legacytx.StdFee{Amount: coins, Gas: gas, Payer: addr2.String(), Granter: addr2.String()}, []sdk.Msg{msg}, memo), // nolint:staticcheck // maintain for legacy testing
 		},
 	}
 

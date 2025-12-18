@@ -1,0 +1,21 @@
+name: "Close stale issues & pull requests"
+on:
+  schedule:
+    - cron: "0 0 * * *"
+permissions: read-all
+
+jobs:
+  stale:
+    permissions:
+      pull-requests: write # For reading the PR and adding the label    
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v10
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          stale-pr-message: "This pull request has been automatically marked as stale because it has not had recent activity. It will be closed in 7 days-before-close if no further activity occurs."
+          stale-issue-message: "This issue is stale because it has been open 45 days with no activity. Remove `Status: Stale` label or comment or this will be closed in 7 days."
+          days-before-stale: 45
+          days-before-close: 7
+          stale-pr-label: "Status: Stale"
+          stale-issue-label: "Status: Stale"

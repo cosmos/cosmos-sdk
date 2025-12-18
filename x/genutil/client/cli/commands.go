@@ -11,6 +11,7 @@ import (
 )
 
 // GenesisCoreCommand adds core sdk's sub-commands into genesis command.
+//
 // Deprecated: use Commands instead.
 func GenesisCoreCommand(txConfig client.TxConfig, moduleBasics module.BasicManager, defaultNodeHome string) *cobra.Command {
 	return Commands(txConfig, moduleBasics, defaultNodeHome)

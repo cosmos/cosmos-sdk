@@ -72,9 +72,9 @@ Epochs keeper module provides utility functions to manage epochs.
 
 ```go
   // the first block whose timestamp is after the duration is counted as the end of the epoch
-  AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64)
+  AfterEpochEnd(ctx context.Context, epochIdentifier string, epochNumber int64) error
   // new epoch is next block of epoch end block
-  BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64)
+  BeforeEpochStart(ctx context.Context, epochIdentifier string, epochNumber int64) error
 ```
 
 ### How modules receive hooks
@@ -87,13 +87,184 @@ modules so that they can be modified by governance.
 This is the standard dev UX of this:
 
 ```golang
-func (k MyModuleKeeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
+func (k MyModuleKeeper) AfterEpochEnd(ctx context.Context, epochIdentifier string, epochNumber int64) error {
     params := k.GetParams(ctx)
     if epochIdentifier == params.DistrEpochIdentifier {
     // my logic
   }
+  return nil
 }
 ```
+
+### Wiring Hooks
+
+**Manual Wiring:**
+
+Import the following:
+
+```go
+import (
+    // ...
+    "github.com/cosmos/cosmos-sdk/x/epochs"
+    epochskeeper "github.com/cosmos/cosmos-sdk/x/epochs/keeper"
+    epochstypes "github.com/cosmos/cosmos-sdk/x/epochs/types"
+)
+```
+
+Add the epochs keeper to your application struct:
+
+```go
+EpochsKeeper *epochskeeper.Keeper
+```
+
+Add the store key:
+
+```go
+keys := storetypes.NewKVStoreKeys(
+    // ...
+    epochstypes.StoreKey,
+)
+```
+
+Instantiate the keeper:
+
+```go
+epochsKeeper := epochskeeper.NewKeeper(
+    runtime.NewKVStoreService(keys[epochstypes.StoreKey]),
+    appCodec,
+)
+
+app.EpochsKeeper = &epochsKeeper
+```
+
+Set up hooks for the epochs keeper:
+
+```go
+app.EpochsKeeper.SetHooks(
+    epochstypes.NewMultiEpochHooks(
+        // insert epoch hooks receivers here
+        app.SomeOtherModule
+    ),
+)
+```
+
+Add the epochs module to the module manager:
+
+```go
+app.ModuleManager = module.NewManager(
+    // ...
+    epochs.NewAppModule(appCodec, app.EpochsKeeper),
+)
+```
+
+Add entries for SetOrderBeginBlockers and SetOrderInitGenesis:
+
+```go
+app.ModuleManager.SetOrderBeginBlockers(
+    // ...
+    epochstypes.ModuleName,
+)
+```
+
+```go
+app.ModuleManager.SetOrderInitGenesis(
+    // ...
+    epochstypes.ModuleName,
+)
+```
+
+**DI Wiring:**
+
+First, set up the keeper for the application.
+
+Import the epochs keeper:
+
+```go
+epochskeeper "github.com/cosmos/cosmos-sdk/x/epochs/keeper"
+```
+
+Add the keeper to your application struct:
+
+```go
+EpochsKeeper *epochskeeper.Keeper
+```
+
+Add the keeper to the depinject system:
+
+```go
+depinject.Inject(
+    appConfig,
+    &appBuilder,
+    &app.appCodec,
+    &app.legacyAmino,
+    &app.txConfig,
+    &app.interfaceRegistry,
+    // ... other modules
+    &app.EpochsKeeper, // NEW MODULE!
+)
+```
+
+Next, set up configuration for the module.
+
+Import the following:
+
+```go
+import (
+    epochsmodulev1 "cosmossdk.io/api/cosmos/epochs/module/v1"
+    
+    _ "github.com/cosmos/cosmos-sdk/x/epochs" // import for side-effects
+    epochstypes "github.com/cosmos/cosmos-sdk/x/epochs/types"
+)
+```
+
+Add an entry for BeginBlockers and InitGenesis:
+
+```go
+BeginBlockers: []string{
+    // ...
+    epochstypes.ModuleName,
+},
+```
+
+```go
+InitGenesis: []string{
+    // ...
+    epochstypes.ModuleName,
+},
+```
+
+Add an entry for epochs in the ModuleConfig:
+
+```go
+{
+    Name:   epochstypes.ModuleName,
+    Config: appconfig.WrapAny(&epochsmodulev1.Module{}),
+},
+```
+
+depinject can automatically add your hooks to the epochs `Keeper`. For it do so, specify an output of your module with the type `epochtypes.EpochHooksWrapper`, ie:
+
+```go
+type TestInputs struct {
+	depinject.In
+}
+
+type TestOutputs struct {
+	depinject.Out
+
+	Hooks types.EpochHooksWrapper
+}
+
+func DummyProvider(in TestInputs) TestOutputs {
+	return TestOutputs{
+		Hooks: types.EpochHooksWrapper{
+			EpochHooks: testEpochHooks{},
+		},
+	}
+}
+```
+
+for an example see [`depinject_test.go`](https://github.com/cosmos/cosmos-sdk/tree/main/x/epochs/depinject_test.go)
 
 ### Panic isolation
 

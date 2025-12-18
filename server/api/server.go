@@ -11,7 +11,7 @@ import (
 
 	cmtrpcserver "github.com/cometbft/cometbft/rpc/jsonrpc/server"
 	gateway "github.com/cosmos/gogogateway"
-	"github.com/golang/protobuf/proto" //nolint:staticcheck // keep for compat
+	"github.com/golang/protobuf/proto" //nolint:staticcheck // needed for compatibility
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -35,7 +35,9 @@ type Server struct {
 	ClientCtx         client.Context
 	GRPCSrv           *grpc.Server
 	logger            log.Logger
-	metrics           *telemetry.Metrics
+
+	//nolint:staticcheck // TODO: switch to OpenTelemetry
+	metrics *telemetry.Metrics
 
 	// Start() is blocking and generally called from a separate goroutine.
 	// Close() can be called asynchronously and access shared memory
@@ -191,12 +193,14 @@ func (s *Server) Close() error {
 	return s.listener.Close()
 }
 
+// Deprecated: Use OpenTelemetry instead, see the `telemetry` package for more details.
 func (s *Server) SetTelemetry(m *telemetry.Metrics) {
 	s.mtx.Lock()
 	s.registerMetrics(m)
 	s.mtx.Unlock()
 }
 
+//nolint:staticcheck // TODO: switch to OpenTelemetry
 func (s *Server) registerMetrics(m *telemetry.Metrics) {
 	s.metrics = m
 

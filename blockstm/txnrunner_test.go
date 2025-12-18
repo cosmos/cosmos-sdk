@@ -30,6 +30,12 @@ func mockTxDecoder(txBytes []byte) (sdk.Tx, error) {
 	return &mockTx{txBytes: txBytes}, nil
 }
 
+const TestCoinDenom = "stake"
+
+func testCoinDenomFunc(ms storetypes.MultiStore) string {
+	return TestCoinDenom
+}
+
 type mockTx struct {
 	txBytes []byte
 }
@@ -84,23 +90,22 @@ func TestNewSTMRunner(t *testing.T) {
 	stores := []storetypes.StoreKey{StoreKeyAuth, StoreKeyBank}
 	workers := 4
 	estimate := true
-	coinDenom := "stake"
 
-	runner := NewSTMRunner(decoder, stores, workers, estimate, coinDenom)
+	runner := NewSTMRunner(decoder, stores, workers, estimate, testCoinDenomFunc)
 
 	require.NotNil(t, runner)
 	require.NotNil(t, runner.txDecoder)
 	require.Equal(t, stores, runner.stores)
 	require.Equal(t, workers, runner.workers)
 	require.Equal(t, estimate, runner.estimate)
-	require.Equal(t, coinDenom, runner.coinDenom)
+	require.Equal(t, TestCoinDenom, runner.coinDenom(nil))
 }
 
 // TestSTMRunner_Run_EmptyBlock tests STMRunner with empty block
 func TestSTMRunner_Run_EmptyBlock(t *testing.T) {
 	decoder := mockTxDecoder
 	stores := []storetypes.StoreKey{StoreKeyAuth, StoreKeyBank}
-	runner := NewSTMRunner(decoder, stores, 4, false, "stake")
+	runner := NewSTMRunner(decoder, stores, 4, false, testCoinDenomFunc)
 
 	ctx := context.Background()
 	ms := msWrapper{NewMultiMemDB(map[storetypes.StoreKey]int{
@@ -123,7 +128,7 @@ func TestSTMRunner_Run_EmptyBlock(t *testing.T) {
 func TestSTMRunner_Run_WithoutEstimation(t *testing.T) {
 	decoder := mockTxDecoder
 	stores := []storetypes.StoreKey{StoreKeyAuth, StoreKeyBank}
-	runner := NewSTMRunner(decoder, stores, 2, false, "stake")
+	runner := NewSTMRunner(decoder, stores, 2, false, testCoinDenomFunc)
 
 	ctx := context.Background()
 	storeIndex := map[storetypes.StoreKey]int{
@@ -157,7 +162,7 @@ func TestSTMRunner_Run_WithoutEstimation(t *testing.T) {
 func TestSTMRunner_Run_WithEstimation(t *testing.T) {
 	decoder := mockTxDecoderWithFeeTx
 	stores := []storetypes.StoreKey{StoreKeyAuth, StoreKeyBank}
-	runner := NewSTMRunner(decoder, stores, 2, true, "stake")
+	runner := NewSTMRunner(decoder, stores, 2, true, testCoinDenomFunc)
 
 	ctx := context.Background()
 	storeIndex := map[storetypes.StoreKey]int{
@@ -191,7 +196,7 @@ func TestSTMRunner_Run_WithEstimation(t *testing.T) {
 func TestSTMRunner_Run_IncarnationCache(t *testing.T) {
 	decoder := mockTxDecoder
 	stores := []storetypes.StoreKey{StoreKeyAuth, StoreKeyBank}
-	runner := NewSTMRunner(decoder, stores, 2, false, "stake")
+	runner := NewSTMRunner(decoder, stores, 2, false, testCoinDenomFunc)
 
 	ctx := context.Background()
 	storeIndex := map[storetypes.StoreKey]int{
@@ -227,7 +232,7 @@ func TestSTMRunner_Run_IncarnationCache(t *testing.T) {
 func TestSTMRunner_Run_StoreIndexMapping(t *testing.T) {
 	decoder := mockTxDecoder
 	stores := []storetypes.StoreKey{StoreKeyAuth, StoreKeyBank}
-	runner := NewSTMRunner(decoder, stores, 2, false, "stake")
+	runner := NewSTMRunner(decoder, stores, 2, false, testCoinDenomFunc)
 
 	ctx := context.Background()
 	storeIndex := map[storetypes.StoreKey]int{
@@ -257,7 +262,7 @@ func TestSTMRunner_Run_StoreIndexMapping(t *testing.T) {
 func TestSTMRunner_Run_ContextCancellation(t *testing.T) {
 	decoder := mockTxDecoder
 	stores := []storetypes.StoreKey{StoreKeyAuth, StoreKeyBank}
-	runner := NewSTMRunner(decoder, stores, 2, false, "stake")
+	runner := NewSTMRunner(decoder, stores, 2, false, testCoinDenomFunc)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Millisecond)
 	defer cancel()
@@ -426,14 +431,14 @@ func TestPreEstimates_KeyEncoding(t *testing.T) {
 func TestTxRunnerInterface(t *testing.T) {
 	decoder := mockTxDecoder
 
-	var _ sdk.TxRunner = NewSTMRunner(decoder, []storetypes.StoreKey{}, 1, false, "")
+	var _ sdk.TxRunner = NewSTMRunner(decoder, []storetypes.StoreKey{}, 1, false, testCoinDenomFunc)
 }
 
 // TestSTMRunner_Integration tests integration between STMRunner and actual block execution
 func TestSTMRunner_Integration(t *testing.T) {
 	decoder := mockTxDecoder
 	stores := []storetypes.StoreKey{StoreKeyAuth, StoreKeyBank}
-	runner := NewSTMRunner(decoder, stores, 4, false, "stake")
+	runner := NewSTMRunner(decoder, stores, 4, false, testCoinDenomFunc)
 
 	ctx := context.Background()
 	storeIndex := map[storetypes.StoreKey]int{
@@ -503,7 +508,7 @@ func TestRunnerComparison(t *testing.T) {
 	// Test STMRunner
 	t.Run("STMRunner", func(t *testing.T) {
 		stores := []storetypes.StoreKey{StoreKeyAuth, StoreKeyBank}
-		runner := NewSTMRunner(decoder, stores, 2, false, "stake")
+		runner := NewSTMRunner(decoder, stores, 2, false, testCoinDenomFunc)
 		storeIndex := map[storetypes.StoreKey]int{
 			StoreKeyAuth: 0,
 			StoreKeyBank: 1,

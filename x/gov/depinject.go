@@ -38,14 +38,13 @@ type ModuleInputs struct {
 	ModuleKey        depinject.OwnModuleKey
 	MsgServiceRouter baseapp.MessageRouter
 
-	AccountKeeper      govtypes.AccountKeeper
-	BankKeeper         govtypes.BankKeeper
-	StakingKeeper      govtypes.StakingKeeper
-	DistributionKeeper govtypes.DistributionKeeper
+	AccountKeeper                        govtypes.AccountKeeper
+	BankKeeper                           govtypes.BankKeeper
+	DistributionKeeper                   govtypes.DistributionKeeper
+	CalculateVoteResultsAndVotingPowerFn keeper.CalculateVoteResultsAndVotingPowerFn `optional:"true"`
 
-	// CustomCalculateVoteResultsAndVotingPowerFn is an optional input to set a custom CalculateVoteResultsAndVotingPowerFn.
-	// If this function is not provided, the default function is used.
-	CustomCalculateVoteResultsAndVotingPowerFn keeper.CalculateVoteResultsAndVotingPowerFn `optional:"true"`
+	// StakingKeeper is required if CalculateVoteResultsAndVotingPowerFn is not provided
+	StakingKeeper govtypes.StakingKeeper `optional:"true"`
 
 	// LegacySubspace is used solely for migration of x/params managed parameters
 	LegacySubspace govtypes.ParamSubspace `optional:"true"`
@@ -71,9 +70,13 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
 	}
 
-	var opts []keeper.InitOption
-	if in.CustomCalculateVoteResultsAndVotingPowerFn != nil {
-		opts = append(opts, keeper.WithCustomCalculateVoteResultsAndVotingPowerFn(in.CustomCalculateVoteResultsAndVotingPowerFn))
+	// If no custom tally function is provided, use the default with staking keeper
+	tallyFn := in.CalculateVoteResultsAndVotingPowerFn
+	if tallyFn == nil {
+		if in.StakingKeeper == nil {
+			panic("either CalculateVoteResultsAndVotingPowerFn or StakingKeeper must be provided")
+		}
+		tallyFn = keeper.NewDefaultCalculateVoteResultsAndVotingPower(in.StakingKeeper)
 	}
 
 	k := keeper.NewKeeper(
@@ -81,12 +84,11 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.StoreService,
 		in.AccountKeeper,
 		in.BankKeeper,
-		in.StakingKeeper,
 		in.DistributionKeeper,
 		in.MsgServiceRouter,
 		defaultConfig,
 		authority.String(),
-		opts...,
+		tallyFn,
 	)
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.LegacySubspace)
 	hr := v1beta1.HandlerRoute{Handler: v1beta1.ProposalHandler, RouteKey: govtypes.RouterKey}

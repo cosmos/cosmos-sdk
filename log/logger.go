@@ -100,6 +100,15 @@ func (l *verboseModeLogger) With(keyVals ...any) Logger {
 	}
 }
 
+/*
+	TODO:
+		- explore possibility of zerolog as a handler
+		- check some of the out of the box solutions here: https://github.com/go-slog/awesome-slog?tab=readme-ov-file
+		- probably don't need verboseHandler, just set the Level Variable, unset when not in verbose.
+		- decide on global logger or pass-around logger - has implications for console logging
+		- look into if filtering affects the otel handler. probably don't want to be filtering OTEL logs.
+*/
+
 // NewLogger creates a Logger that exports logs to both console and OpenTelemetry.
 // The name identifies the instrumentation scope (e.g., "cosmos-sdk").
 //

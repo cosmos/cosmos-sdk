@@ -145,6 +145,9 @@ type MultiStore interface {
 
 	// LatestVersion returns the latest version in the store
 	LatestVersion() int64
+
+	// EarliestVersion returns the earliest version in the store
+	EarliestVersion() int64
 }
 
 // CacheMultiStore extends MultiStore with a Write() method.

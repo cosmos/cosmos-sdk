@@ -10,7 +10,7 @@ This paper specifies the Staking module of the Cosmos SDK that was first
 described in the [Cosmos Whitepaper](https://cosmos.network/about/whitepaper)
 in June 2016.
 
-The module enables Cosmos SDK-based blockchain to support an advanced
+The module enables Cosmos SDK-based blockchains to support an advanced
 Proof-of-Stake (PoS) system. In this system, holders of the native staking token of
 the chain can become validators and can delegate tokens to validators,
 ultimately determining the effective validator set for the system.
@@ -837,11 +837,13 @@ following hooks can registered with staking:
     * called when a delegation is created
 * `BeforeDelegationSharesModified(Context, AccAddress, ValAddress) error`
     * called when a delegation's shares are modified
-* `AfterDelegationModified(Context, AccAddress, ValAddress) error`
-    * called when a delegation is created or modified
 * `BeforeDelegationRemoved(Context, AccAddress, ValAddress) error`
     * called when a delegation is removed
-* `AfterUnbondingInitiated(Context, UnbondingID)`
+* `AfterDelegationModified(Context, AccAddress, ValAddress) error`
+    * called when a delegation is created or modified
+* `BeforeValidatorSlashed(Context, ValAddress, math.LegacyDec) error`
+    * called when a validator is about to be slashed
+* `AfterUnbondingInitiated(Context, UnbondingID) error`
     * called when an unbonding operation (validator unbonding, unbonding delegation, redelegation) was initiated
 
 

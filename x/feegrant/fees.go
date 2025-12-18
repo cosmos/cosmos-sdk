@@ -15,7 +15,7 @@ type FeeAllowanceI interface {
 	// Keeper.UseGrantedFees and the return values should match how it is handled there.
 	//
 	// If it returns an error, the fee payment is rejected, otherwise it is accepted.
-	// The FeeAllowance implementation is expected to update it's internal state
+	// The FeeAllowance implementation is expected to update its internal state
 	// and will be saved again after an acceptance.
 	//
 	// If remove is true (regardless of the error), the FeeAllowance will be deleted from storage

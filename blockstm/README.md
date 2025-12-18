@@ -38,4 +38,4 @@ The internal data structures are also adapted with multiple stores in mind.
 
 ### Attribution
 
-This package was originally authored in [go-block-stm](https://github.com/crypto-org-chain/go-block-stm). We have brought the full source tree into the SDK so that we can natively incorporate the library and required changes into the SDK. Over time we expect to incoporate optimizations and deviations from the upstream implementation.
+This package was originally authored in [go-block-stm](https://github.com/crypto-org-chain/go-block-stm). We have brought the full source tree into the SDK so that we can natively incorporate the library and required changes into the SDK. Over time we expect to incorporate optimizations and deviations from the upstream implementation.

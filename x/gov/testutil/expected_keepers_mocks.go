@@ -1065,6 +1065,36 @@ func (mr *MockStakingKeeperMockRecorder) BondDenom(ctx interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BondDenom", reflect.TypeOf((*MockStakingKeeper)(nil).BondDenom), ctx)
 }
 
+// GetDelegation mocks base method.
+func (m *MockStakingKeeper) GetDelegation(arg0 context.Context, arg1 types.AccAddress, arg2 types.ValAddress) (types1.Delegation, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDelegation", arg0, arg1, arg2)
+	ret0, _ := ret[0].(types1.Delegation)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDelegation indicates an expected call of GetDelegation.
+func (mr *MockStakingKeeperMockRecorder) GetDelegation(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDelegation", reflect.TypeOf((*MockStakingKeeper)(nil).GetDelegation), arg0, arg1, arg2)
+}
+
+// GetValidator mocks base method.
+func (m *MockStakingKeeper) GetValidator(arg0 context.Context, arg1 types.ValAddress) (types1.Validator, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetValidator", arg0, arg1)
+	ret0, _ := ret[0].(types1.Validator)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetValidator indicates an expected call of GetValidator.
+func (mr *MockStakingKeeperMockRecorder) GetValidator(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetValidator", reflect.TypeOf((*MockStakingKeeper)(nil).GetValidator), arg0, arg1)
+}
+
 // IterateBondedValidatorsByPower mocks base method.
 func (m *MockStakingKeeper) IterateBondedValidatorsByPower(arg0 context.Context, arg1 func(int64, types1.ValidatorI) bool) error {
 	m.ctrl.T.Helper()

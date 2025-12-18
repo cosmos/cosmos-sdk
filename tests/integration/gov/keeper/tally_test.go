@@ -9,6 +9,8 @@ import (
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -501,4 +503,62 @@ func TestTallyValidatorMultipleDelegations(t *testing.T) {
 	expectedTallyResult := v1.NewTallyResult(expectedYes, expectedAbstain, expectedNo)
 
 	assert.Assert(t, tallyResults.Equals(expectedTallyResult))
+}
+
+func TestTallyGovernors(t *testing.T) {
+	t.Parallel()
+
+	f := initFixture(t)
+	msgSrvr := keeper.NewMsgServerImpl(f.govKeeper)
+
+	// Create validators
+	addrs, vals := createValidators(t, f, []int64{50000, 60000, 70000})
+
+	// Create a governor
+	govTokens := math.NewInt(1000_000000)
+	govAddr := simtestutil.AddTestAddrs(f.bankKeeper, f.stakingKeeper, f.ctx, 1, govTokens)[0]
+	val3, found := f.stakingKeeper.GetValidator(f.ctx, vals[2])
+	assert.Assert(t, found)
+	_, err := f.stakingKeeper.Delegate(f.ctx, govAddr, govTokens, stakingtypes.Unbonded, val3, true)
+	assert.NilError(t, err)
+	f.stakingKeeper.EndBlocker(f.ctx)
+	_, err = msgSrvr.CreateGovernor(f.ctx, v1.NewMsgCreateGovernor(
+		govAddr, v1.GovernorDescription{},
+	))
+	assert.NilError(t, err)
+
+	// Create a big delegator
+	delTokens := math.NewInt(1_000_000_000000)
+	delAddr := simtestutil.AddTestAddrs(f.bankKeeper, f.stakingKeeper, f.ctx, 1, delTokens)[0]
+	_, err = f.stakingKeeper.Delegate(f.ctx, delAddr, delTokens, stakingtypes.Unbonded, val3, true)
+	assert.NilError(t, err)
+	f.stakingKeeper.EndBlocker(f.ctx)
+	// Delegate to governor
+	msgSrvr.DelegateGovernor(f.ctx, v1.NewMsgDelegateGovernor(delAddr, types.GovernorAddress(govAddr)))
+
+	tp := TestProposal
+	proposal, err := f.govKeeper.SubmitProposal(f.ctx, tp, "", "test", "description", addrs[0])
+	assert.NilError(t, err)
+	proposalID := proposal.Id
+	proposal.Status = v1.StatusVotingPeriod
+	f.govKeeper.SetProposal(f.ctx, proposal)
+
+	assert.NilError(t, f.govKeeper.AddVote(f.ctx, proposalID, addrs[0], v1.NewNonSplitVoteOption(v1.OptionNo), ""))
+	assert.NilError(t, f.govKeeper.AddVote(f.ctx, proposalID, addrs[1], v1.NewNonSplitVoteOption(v1.OptionNo), ""))
+	assert.NilError(t, f.govKeeper.AddVote(f.ctx, proposalID, addrs[2], v1.NewNonSplitVoteOption(v1.OptionNo), ""))
+	// governor vote
+	assert.NilError(t, f.govKeeper.AddVote(f.ctx, proposalID, govAddr, v1.NewNonSplitVoteOption(v1.OptionYes), ""))
+
+	proposal, err = f.govKeeper.Proposals.Get(f.ctx, proposalID)
+	assert.NilError(t, err)
+	passes, burnDeposits, _, tallyResults, err := f.govKeeper.Tally(f.ctx, proposal)
+	assert.NilError(t, err)
+
+	assert.Assert(t, passes)
+	assert.Assert(t, !burnDeposits)
+	// Expect yes count to be the sum of the governor and delegator's tokens.
+	// Delegator didnt vote but has delegated its voting power to the governor.
+	assert.Equal(t, tallyResults.YesCount, govTokens.Add(delTokens).String())
+	assert.Equal(t, tallyResults.NoCount, "180000000000")
+	assert.Equal(t, tallyResults.AbstainCount, "0")
 }

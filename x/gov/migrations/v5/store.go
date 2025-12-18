@@ -14,7 +14,7 @@ var (
 	// ParamsKey is the key of x/gov params
 	ParamsKey = []byte{0x30}
 	// ConstitutionKey is the key of x/gov constitution
-	ConstitutionKey                          = collections.NewPrefix(49)
+	ConstitutionKey                          = collections.NewPrefix(64)
 	ParticipationEMAKey                      = collections.NewPrefix(80)
 	ConstitutionAmendmentParticipationEMAKey = collections.NewPrefix(96)
 	LawParticipationEMAKey                   = collections.NewPrefix(112)
@@ -58,6 +58,8 @@ func MigrateStore(
 	params.QuorumRange = defaultParams.QuorumRange
 	params.ConstitutionAmendmentQuorumRange = defaultParams.ConstitutionAmendmentQuorumRange
 	params.LawQuorumRange = defaultParams.LawQuorumRange
+	params.GovernorStatusChangePeriod = defaultParams.GovernorStatusChangePeriod
+	params.MinGovernorSelfDelegation = defaultParams.MinGovernorSelfDelegation
 
 	bz, err := cdc.Marshal(&params)
 	if err != nil {

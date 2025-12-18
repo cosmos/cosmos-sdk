@@ -11,12 +11,12 @@ import (
 
 // ApplyConstitutionAmendment applies the amendment as a patch against the current constitution
 // and returns the updated constitution. If the amendment cannot be applied cleanly, an error is returned.
-func (k Keeper) ApplyConstitutionAmendment(ctx sdk.Context, amendment string) (updatedConstitution string, err error) {
+func (keeper Keeper) ApplyConstitutionAmendment(ctx sdk.Context, amendment string) (updatedConstitution string, err error) {
 	if amendment == "" {
 		return "", types.ErrInvalidConstitutionAmendment.Wrap("amendment cannot be empty")
 	}
 
-	currentConstitution, err := k.Constitution.Get(ctx)
+	currentConstitution, err := keeper.Constitution.Get(ctx)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return "", err
 	}

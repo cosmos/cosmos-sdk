@@ -2,17 +2,18 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	v3 "github.com/cosmos/cosmos-sdk/x/gov/migrations/v3"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
@@ -27,7 +28,7 @@ func NewQueryServer(k *Keeper) v1.QueryServer {
 
 func (q queryServer) Constitution(ctx context.Context, _ *v1.QueryConstitutionRequest) (*v1.QueryConstitutionResponse, error) {
 	constitution, err := q.k.Constitution.Get(ctx)
-	if err != nil && !errors.IsOf(err, collections.ErrNotFound) {
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return nil, err
 	}
 	return &v1.QueryConstitutionResponse{Constitution: constitution}, nil
@@ -45,7 +46,7 @@ func (q queryServer) Proposal(ctx context.Context, req *v1.QueryProposalRequest)
 
 	proposal, err := q.k.Proposals.Get(ctx, req.ProposalId)
 	if err != nil {
-		if errors.IsOf(err, collections.ErrNotFound) {
+		if errors.Is(err, collections.ErrNotFound) {
 			return nil, status.Errorf(codes.NotFound, "proposal %d doesn't exist", req.ProposalId)
 		}
 		return nil, status.Error(codes.Internal, err.Error())
@@ -97,7 +98,7 @@ func (q queryServer) Proposals(ctx context.Context, req *v1.QueryProposalsReques
 		return &value, nil
 	})
 
-	if err != nil && !errors.IsOf(err, collections.ErrInvalidIterator) {
+	if err != nil && !errors.Is(err, collections.ErrInvalidIterator) {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
@@ -124,7 +125,7 @@ func (q queryServer) Vote(ctx context.Context, req *v1.QueryVoteRequest) (*v1.Qu
 	}
 	vote, err := q.k.Votes.Get(ctx, collections.Join(req.ProposalId, sdk.AccAddress(voter)))
 	if err != nil {
-		if errors.IsOf(err, collections.ErrNotFound) {
+		if errors.Is(err, collections.ErrNotFound) {
 			return nil, status.Errorf(codes.InvalidArgument,
 				"voter: %v not found for proposal: %v", req.Voter, req.ProposalId)
 		}
@@ -259,7 +260,7 @@ func (q queryServer) TallyResult(ctx context.Context, req *v1.QueryTallyResultRe
 
 	proposal, err := q.k.Proposals.Get(ctx, req.ProposalId)
 	if err != nil {
-		if errors.IsOf(err, collections.ErrNotFound) {
+		if errors.Is(err, collections.ErrNotFound) {
 			return nil, status.Errorf(codes.NotFound, "proposal %d doesn't exist", req.ProposalId)
 		}
 		return nil, status.Error(codes.Internal, err.Error())
@@ -317,17 +318,17 @@ func (q queryServer) ParticipationEMAs(c context.Context, _ *v1.QueryParticipati
 	ctx := sdk.UnwrapSDKContext(c)
 
 	participation, err := q.k.ParticipationEMA.Get(ctx)
-	if err != nil && !errors.IsOf(err, collections.ErrNotFound) {
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		panic(err)
 	}
 
 	constitutionParticipation, err := q.k.ConstitutionAmendmentParticipationEMA.Get(ctx)
-	if err != nil && !errors.IsOf(err, collections.ErrNotFound) {
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		panic(err)
 	}
 
 	lawParticipation, err := q.k.LawParticipationEMA.Get(ctx)
-	if err != nil && !errors.IsOf(err, collections.ErrNotFound) {
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		panic(err)
 	}
 
@@ -336,6 +337,130 @@ func (q queryServer) ParticipationEMAs(c context.Context, _ *v1.QueryParticipati
 		ConstitutionAmendmentParticipationEma: constitutionParticipation.String(),
 		LawParticipationEma:                   lawParticipation.String(),
 	}, nil
+}
+
+// Governor queries governor information based on governor address.
+func (q queryServer) Governor(c context.Context, req *v1.QueryGovernorRequest) (*v1.QueryGovernorResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	if req.GovernorAddress == "" {
+		return nil, status.Error(codes.InvalidArgument, "empty governor address")
+	}
+
+	governorAddr, err := types.GovernorAddressFromBech32(req.GovernorAddress)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	governor, err := q.k.Governors.Get(ctx, governorAddr)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, err.Error())
+	}
+
+	return &v1.QueryGovernorResponse{Governor: &governor}, nil
+}
+
+// Governors queries all governors.
+func (q queryServer) Governors(c context.Context, req *v1.QueryGovernorsRequest) (*v1.QueryGovernorsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	var governors []*v1.Governor
+	governors, pageRes, err := query.CollectionPaginate(ctx, q.k.Governors, req.Pagination, func(_ types.GovernorAddress, governor v1.Governor) (*v1.Governor, error) {
+		return &governor, nil
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &v1.QueryGovernorsResponse{Governors: governors, Pagination: pageRes}, nil
+}
+
+// GovernanceDelegations queries all delegations of a governor.
+func (q queryServer) GovernanceDelegations(c context.Context, req *v1.QueryGovernanceDelegationsRequest) (*v1.QueryGovernanceDelegationsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	if req.GovernorAddress == "" {
+		return nil, status.Error(codes.InvalidArgument, "empty governor address")
+	}
+
+	governorAddr, err := types.GovernorAddressFromBech32(req.GovernorAddress)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	var delegations []*v1.GovernanceDelegation
+	delegations, pageRes, err := query.CollectionPaginate(ctx, q.k.GovernanceDelegationsByGovernor, req.Pagination, func(_ collections.Pair[types.GovernorAddress, sdk.AccAddress], delegation v1.GovernanceDelegation) (*v1.GovernanceDelegation, error) {
+		return &delegation, nil
+	}, query.WithCollectionPaginationPairPrefix[types.GovernorAddress, sdk.AccAddress](governorAddr))
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &v1.QueryGovernanceDelegationsResponse{Delegations: delegations, Pagination: pageRes}, nil
+}
+
+// GovernanceDelegation queries a delegation
+func (q queryServer) GovernanceDelegation(c context.Context, req *v1.QueryGovernanceDelegationRequest) (*v1.QueryGovernanceDelegationResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	if req.DelegatorAddress == "" {
+		return nil, status.Error(codes.InvalidArgument, "empty delegator address")
+	}
+
+	delegatorAddr, err := sdk.AccAddressFromBech32(req.DelegatorAddress)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	delegation, err := q.k.GovernanceDelegations.Get(ctx, delegatorAddr)
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+		panic(err)
+	}
+	if errors.Is(err, collections.ErrNotFound) {
+		return nil, status.Errorf(codes.NotFound, "governance delegation for %s does not exist", req.DelegatorAddress)
+	}
+
+	return &v1.QueryGovernanceDelegationResponse{GovernorAddress: delegation.GovernorAddress}, nil
+}
+
+// GovernorValShares queries all validator shares of a governor.
+func (q queryServer) GovernorValShares(c context.Context, req *v1.QueryGovernorValSharesRequest) (*v1.QueryGovernorValSharesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	if req.GovernorAddress == "" {
+		return nil, status.Error(codes.InvalidArgument, "empty governor address")
+	}
+
+	governorAddr, err := types.GovernorAddressFromBech32(req.GovernorAddress)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	var valShares []*v1.GovernorValShares
+	valShares, pageRes, err := query.CollectionPaginate(ctx, q.k.ValidatorSharesByGovernor, req.Pagination, func(_ collections.Pair[types.GovernorAddress, sdk.ValAddress], valShare v1.GovernorValShares) (*v1.GovernorValShares, error) {
+		return &valShare, nil
+	}, query.WithCollectionPaginationPairPrefix[types.GovernorAddress, sdk.ValAddress](governorAddr))
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &v1.QueryGovernorValSharesResponse{ValShares: valShares, Pagination: pageRes}, nil
 }
 
 var _ v1beta1.QueryServer = legacyQueryServer{}

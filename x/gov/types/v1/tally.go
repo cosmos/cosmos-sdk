@@ -3,27 +3,30 @@ package v1
 import (
 	"cosmossdk.io/math"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-// ValidatorGovInfo used for tallying
-type ValidatorGovInfo struct {
-	Address             sdk.ValAddress      // address of the validator operator
-	BondedTokens        math.Int            // Power of a Validator
-	DelegatorShares     math.LegacyDec      // Total outstanding delegator shares
-	DelegatorDeductions math.LegacyDec      // Delegator deductions from validator's delegators voting independently
-	Vote                WeightedVoteOptions // Vote of the validator
+// GovernorGovInfo used for tallying
+type GovernorGovInfo struct {
+	Address             types.GovernorAddress     // address of the governor
+	ValShares           map[string]math.LegacyDec // shares held for each validator
+	ValSharesDeductions map[string]math.LegacyDec // deductions from validator's shares when a delegator votes independently
+	Vote                WeightedVoteOptions       // vote of the governor
 }
 
-// NewValidatorGovInfo creates a ValidatorGovInfo instance
-func NewValidatorGovInfo(address sdk.ValAddress, bondedTokens math.Int, delegatorShares,
-	delegatorDeductions math.LegacyDec, options WeightedVoteOptions,
-) ValidatorGovInfo {
-	return ValidatorGovInfo{
+// NewGovernorGovInfo creates a GovernorGovInfo instance
+func NewGovernorGovInfo(address types.GovernorAddress, valShares []GovernorValShares, options WeightedVoteOptions) GovernorGovInfo {
+	valSharesMap := make(map[string]math.LegacyDec)
+	valSharesDeductionsMap := make(map[string]math.LegacyDec)
+	for _, valShare := range valShares {
+		valSharesMap[valShare.ValidatorAddress] = valShare.Shares
+		valSharesDeductionsMap[valShare.ValidatorAddress] = math.LegacyZeroDec()
+	}
+
+	return GovernorGovInfo{
 		Address:             address,
-		BondedTokens:        bondedTokens,
-		DelegatorShares:     delegatorShares,
-		DelegatorDeductions: delegatorDeductions,
+		ValShares:           valSharesMap,
+		ValSharesDeductions: valSharesDeductionsMap,
 		Vote:                options,
 	}
 }

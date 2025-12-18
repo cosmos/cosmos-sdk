@@ -21,6 +21,10 @@ const (
 	// value would make the throttler too little sensitive to the distance
 	// from the target when decreasing the deposit.
 	MaxDecreaseSensitivityTargetDistanceDepositThrottler = 100
+
+	// DefaultGovernorStatusChangePeriod is the default period that has to pass
+	// before a governor can change their status (e.g. from active to inactive).
+	DefaultGovernorStatusChangePeriod time.Duration = time.Hour * 24 * 28 // 28 days
 )
 
 // MinVotingPeriod is set in stone by the constitution at 21 days, but it can
@@ -70,6 +74,8 @@ var (
 	DefaultBurnDepositNoThreshold                                    = math.LegacyNewDecWithPrec(80, 2)
 	DefaultProposalCancelRatio                                       = math.LegacyMustNewDecFromStr("0.5")
 	DefaultProposalCancelDestAddress                                 = ""
+	DefaultMaxGovernors                                       uint64 = 100
+	DefaultMinGovernorSelfDelegation                                 = math.NewInt(1000_000000)
 )
 
 // Deprecated: NewDepositParams creates a new DepositParams object
@@ -119,6 +125,7 @@ func NewParams(
 	maxConstitutionAmendmentQuorum, minConstitutionAmendmentQuorum string,
 	maxLawQuorum, minLawQuorum string,
 	proposalCancelRatio, proposalCancelDest string,
+	governorStatusChangePeriod time.Duration, minGovernorSelfDelegation string,
 ) Params {
 	return Params{
 		// MinDeposit:                     minDeposit, // Deprecated in favor of dynamic min deposit
@@ -166,6 +173,8 @@ func NewParams(
 			Max: maxLawQuorum,
 			Min: minLawQuorum,
 		},
+		GovernorStatusChangePeriod: &governorStatusChangePeriod,
+		MinGovernorSelfDelegation:  minGovernorSelfDelegation,
 	}
 }
 
@@ -205,6 +214,8 @@ func DefaultParams() Params {
 		DefaultMinLawQuorum.String(),
 		DefaultProposalCancelRatio.String(),
 		DefaultProposalCancelDestAddress,
+		DefaultGovernorStatusChangePeriod,
+		DefaultMinGovernorSelfDelegation.String(),
 	)
 }
 
@@ -490,6 +501,22 @@ func (p Params) ValidateBasic() error {
 		if err != nil {
 			return fmt.Errorf("deposits destination address is invalid: %s", p.ProposalCancelDest)
 		}
+	}
+
+	if p.GovernorStatusChangePeriod == nil {
+		return fmt.Errorf("governor status change period must not be nil: %d", p.GovernorStatusChangePeriod)
+	}
+
+	if p.GovernorStatusChangePeriod.Seconds() <= 0 {
+		return fmt.Errorf("governor status change period must be positive: %d", p.GovernorStatusChangePeriod)
+	}
+
+	minGovernorSelfDelegation, ok := math.NewIntFromString(p.MinGovernorSelfDelegation)
+	if !ok {
+		return fmt.Errorf("invalid minimum governor self delegation: %s", p.MinGovernorSelfDelegation)
+	}
+	if minGovernorSelfDelegation.IsNegative() {
+		return fmt.Errorf("minimum governor self delegation must be positive: %s", minGovernorSelfDelegation)
 	}
 
 	return nil

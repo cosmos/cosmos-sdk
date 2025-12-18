@@ -6,7 +6,9 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"github.com/cosmos/cosmos-sdk/codec/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 // NewGenesisState creates a new genesis state for the governance module
@@ -105,6 +107,43 @@ func ValidateGenesis(data *GenesisState) error {
 		return nil
 	})
 
+	// weed out duplicate governors
+	errGroup.Go(func() error {
+		governorIDs := make(map[string]struct{})
+		for _, g := range data.Governors {
+			if _, err := types.GovernorAddressFromBech32(g.GovernorAddress); err != nil {
+				return fmt.Errorf("invalid governor address: %v", g)
+			}
+			if _, ok := governorIDs[g.GovernorAddress]; ok {
+				return fmt.Errorf("duplicate governor: %v", g)
+			}
+
+			governorIDs[g.GovernorAddress] = struct{}{}
+		}
+
+		return nil
+	})
+
+	// weed out duplicate governance delegations
+	errGroup.Go(func() error {
+		delegatorIDs := make(map[string]struct{})
+		for _, d := range data.GovernanceDelegations {
+			if _, err := sdk.AccAddressFromBech32(d.DelegatorAddress); err != nil {
+				return fmt.Errorf("invalid delegator address: %v", d)
+			}
+			if _, err := types.GovernorAddressFromBech32(d.GovernorAddress); err != nil {
+				return fmt.Errorf("invalid governor address: %v", d)
+			}
+			if _, ok := delegatorIDs[d.DelegatorAddress]; ok {
+				return fmt.Errorf("duplicate governance delegation: %v", d)
+			}
+
+			delegatorIDs[d.DelegatorAddress] = struct{}{}
+		}
+
+		return nil
+	})
+
 	// verify params
 	errGroup.Go(func() error {
 		return data.Params.ValidateBasic()
@@ -113,10 +152,10 @@ func ValidateGenesis(data *GenesisState) error {
 	return errGroup.Wait()
 }
 
-var _ types.UnpackInterfacesMessage = GenesisState{}
+var _ codectypes.UnpackInterfacesMessage = GenesisState{}
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
-func (data GenesisState) UnpackInterfaces(unpacker types.AnyUnpacker) error {
+func (data GenesisState) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
 	for _, p := range data.Proposals {
 		err := p.UnpackInterfaces(unpacker)
 		if err != nil {

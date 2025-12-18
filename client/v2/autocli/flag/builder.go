@@ -27,6 +27,7 @@ const (
 	AddressStringScalarType          = "cosmos.AddressString"
 	ValidatorAddressStringScalarType = "cosmos.ValidatorAddressString"
 	ConsensusAddressStringScalarType = "cosmos.ConsensusAddressString"
+	GovernorAddressStringScalarType  = "cosmos.GovernorAddressString"
 	PubkeyScalarType                 = "cosmos.Pubkey"
 )
 
@@ -69,6 +70,7 @@ func (b *Builder) init() {
 		b.scalarFlagTypes[AddressStringScalarType] = addressStringType{}
 		b.scalarFlagTypes[ValidatorAddressStringScalarType] = validatorAddressStringType{}
 		b.scalarFlagTypes[ConsensusAddressStringScalarType] = consensusAddressStringType{}
+		b.scalarFlagTypes[GovernorAddressStringScalarType] = governorAddressStringType{}
 		b.scalarFlagTypes[PubkeyScalarType] = pubkeyType{}
 	}
 }

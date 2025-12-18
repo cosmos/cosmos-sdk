@@ -15,6 +15,7 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdkkeyring "github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 type addressStringType struct{}
@@ -145,6 +146,53 @@ func (a *consensusAddressValue) Set(s string) error {
 	}
 
 	return nil
+}
+
+type governorAddressStringType struct{}
+
+func (a governorAddressStringType) NewValue(ctx *context.Context, _ *Builder) Value {
+	return &governorAddressValue{ctx: ctx}
+}
+
+func (a governorAddressStringType) DefaultValue() string {
+	return ""
+}
+
+type governorAddressValue struct {
+	ctx *context.Context
+
+	value string
+}
+
+func (a governorAddressValue) Get(protoreflect.Value) (protoreflect.Value, error) {
+	return protoreflect.ValueOfString(a.value), nil
+}
+
+func (a governorAddressValue) String() string {
+	return a.value
+}
+
+// Set implements the flag.Value interface for governorAddressValue.
+func (a *governorAddressValue) Set(s string) error {
+	// we get the keyring on set, as in NewValue the context is the parent context (before RunE)
+	keyring := getKeyringFromCtx(a.ctx)
+	addr, err := keyring.LookupAddressByKeyName(s)
+	if err == nil {
+		a.value = govtypes.GovernorAddress(addr).String()
+		return nil
+	}
+
+	_, err = govtypes.GovernorAddressFromBech32(s)
+	if err != nil {
+		return fmt.Errorf("invalid governor address or key name: %w", err)
+	}
+
+	a.value = s
+	return nil
+}
+
+func (a governorAddressValue) Type() string {
+	return "governor address or key name"
 }
 
 func getKeyringFromCtx(ctx *context.Context) keyring.Keyring {

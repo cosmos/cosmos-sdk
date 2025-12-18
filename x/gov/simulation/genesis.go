@@ -50,6 +50,8 @@ const (
 	MinLawQuorum                                            = "min_law_quorum"
 	MaxLawQuorum                                            = "max_law_quorum"
 	ProposalCancelRate                                      = "proposal_cancel_rate"
+	GovernorStatusChangePeriod                              = "governor_status_change_period"
+	MinGovernorSelfDelegation                               = "min_governor_self_delegation"
 )
 
 // GenDepositParamsDepositPeriod returns randomized DepositParamsDepositPeriod
@@ -167,6 +169,11 @@ func GenBurnDepositNoThreshold(r *rand.Rand) math.LegacyDec {
 // GenProposalCancelRate returns randomized ProposalCancelRate
 func GenProposalCancelRate(r *rand.Rand) math.LegacyDec {
 	return math.LegacyNewDec(int64(simulation.RandIntBetween(r, 0, 99))).Quo(math.LegacyNewDec(100))
+}
+
+// GenMinGovernorSelfDelegation returns a randomized MinGovernorSelfDelegation
+func GenMinGovernorSelfDelegation(r *rand.Rand) math.Int {
+	return math.NewInt(int64(simulation.RandIntBetween(r, 1000, 10000000)))
 }
 
 // RandomizedGenState generates a random GenesisState for gov
@@ -352,6 +359,18 @@ func RandomizedGenState(simState *module.SimulationState) {
 	var proposalCancelRate math.LegacyDec
 	simState.AppParams.GetOrGenerate(ProposalCancelRate, &proposalCancelRate, simState.Rand, func(r *rand.Rand) { proposalCancelRate = GenProposalCancelRate(r) })
 
+	var governorStatusChangePeriod time.Duration
+	simState.AppParams.GetOrGenerate(
+		GovernorStatusChangePeriod, &governorStatusChangePeriod, simState.Rand,
+		func(r *rand.Rand) { governorStatusChangePeriod = GenDepositParamsDepositPeriod(r) },
+	)
+
+	var minGovernorSelfDelegation math.Int
+	simState.AppParams.GetOrGenerate(
+		MinGovernorSelfDelegation, &minGovernorSelfDelegation, simState.Rand,
+		func(r *rand.Rand) { minGovernorSelfDelegation = GenMinGovernorSelfDelegation(r) },
+	)
+
 	govGenesis := v1.NewGenesisState(
 		startingProposalID, startingParticipationEma, startingParticipationEma, startingParticipationEma,
 		v1.NewParams(depositPeriod, votingPeriod, threshold.String(), amendmentsThreshold.String(), lawThreshold.String(),
@@ -365,6 +384,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 			maxConstitutionAmendmentQuorum.String(), minConstitutionAmendmentQuorum.String(),
 			maxLawQuorum.String(), minQuorum.String(),
 			proposalCancelRate.String(), "",
+			governorStatusChangePeriod, minGovernorSelfDelegation.String(),
 		),
 	)
 

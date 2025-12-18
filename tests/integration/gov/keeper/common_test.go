@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"slices"
 	"testing"
 
 	"gotest.tools/v3/assert"
@@ -36,7 +37,12 @@ func getTestProposal() []sdk.Msg {
 }
 
 func createValidators(t *testing.T, f *fixture, powers []int64) ([]sdk.AccAddress, []sdk.ValAddress) {
-	addrs := simtestutil.AddTestAddrsIncremental(f.bankKeeper, f.stakingKeeper, f.ctx, 5, math.NewInt(30000000))
+	balance := math.NewInt(30000000)
+	maxDelegations := f.stakingKeeper.TokensFromConsensusPower(f.ctx, slices.Max(powers))
+	if balance.LT(maxDelegations) {
+		balance = maxDelegations
+	}
+	addrs := simtestutil.AddTestAddrsIncremental(f.bankKeeper, f.stakingKeeper, f.ctx, 5, balance)
 	valAddrs := simtestutil.ConvertAddrsToValAddrs(addrs)
 	pks := simtestutil.CreateTestPubKeys(5)
 
@@ -57,9 +63,12 @@ func createValidators(t *testing.T, f *fixture, powers []int64) ([]sdk.AccAddres
 	f.stakingKeeper.SetNewValidatorByPowerIndex(f.ctx, val2)
 	f.stakingKeeper.SetNewValidatorByPowerIndex(f.ctx, val3)
 
-	_, _ = f.stakingKeeper.Delegate(f.ctx, addrs[0], f.stakingKeeper.TokensFromConsensusPower(f.ctx, powers[0]), stakingtypes.Unbonded, val1, true)
-	_, _ = f.stakingKeeper.Delegate(f.ctx, addrs[1], f.stakingKeeper.TokensFromConsensusPower(f.ctx, powers[1]), stakingtypes.Unbonded, val2, true)
-	_, _ = f.stakingKeeper.Delegate(f.ctx, addrs[2], f.stakingKeeper.TokensFromConsensusPower(f.ctx, powers[2]), stakingtypes.Unbonded, val3, true)
+	_, err = f.stakingKeeper.Delegate(f.ctx, addrs[0], f.stakingKeeper.TokensFromConsensusPower(f.ctx, powers[0]), stakingtypes.Unbonded, val1, true)
+	assert.NilError(t, err)
+	_, err = f.stakingKeeper.Delegate(f.ctx, addrs[1], f.stakingKeeper.TokensFromConsensusPower(f.ctx, powers[1]), stakingtypes.Unbonded, val2, true)
+	assert.NilError(t, err)
+	_, err = f.stakingKeeper.Delegate(f.ctx, addrs[2], f.stakingKeeper.TokensFromConsensusPower(f.ctx, powers[2]), stakingtypes.Unbonded, val3, true)
+	assert.NilError(t, err)
 
 	f.stakingKeeper.EndBlocker(f.ctx)
 

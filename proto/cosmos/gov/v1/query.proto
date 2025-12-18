@@ -3,11 +3,11 @@ syntax = "proto3";
 package cosmos.gov.v1;
 
 import "cosmos/base/query/v1beta1/pagination.proto";
-import "google/api/annotations.proto";
+import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/gov/v1/gov.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
-import "cosmos/base/v1beta1/coin.proto";
+import "google/api/annotations.proto";
 
 option go_package = "github.com/cosmos/cosmos-sdk/x/gov/types/v1";
 
@@ -78,6 +78,31 @@ service Query {
   // ParticipationEMAs queries the state of the proposal participation exponential moving averages.
   rpc ParticipationEMAs(QueryParticipationEMAsRequest) returns (QueryParticipationEMAsResponse) {
     option (google.api.http).get = "/cosmos/gov/v1/participationemas";
+  }
+
+  // Governor queries governor information based on governor address.
+  rpc Governor(QueryGovernorRequest) returns (QueryGovernorResponse) {
+    option (google.api.http).get = "/cosmos/gov/v1/governors/{governor_address}";
+  }
+
+  // Governors queries all governors.
+  rpc Governors(QueryGovernorsRequest) returns (QueryGovernorsResponse) {
+    option (google.api.http).get = "/cosmos/gov/v1/governors";
+  }
+
+  // GovernanceDelegations queries all delegations of a governor.
+  rpc GovernanceDelegations(QueryGovernanceDelegationsRequest) returns (QueryGovernanceDelegationsResponse) {
+    option (google.api.http).get = "/cosmos/gov/v1/governors/{governor_address}/delegations";
+  }
+
+  // GovernanceDelegation queries a delegation
+  rpc GovernanceDelegation(QueryGovernanceDelegationRequest) returns (QueryGovernanceDelegationResponse) {
+    option (google.api.http).get = "/cosmos/gov/v1/delegations/{delegator_address}";
+  }
+
+  // GovernorValShares queries all governor virtual validator shares resulting from all governance delegations.
+  rpc GovernorValShares(QueryGovernorValSharesRequest) returns (QueryGovernorValSharesResponse) {
+    option (google.api.http).get = "/cosmos/gov/v1/vshares/{governor_address}";
   }
 }
 
@@ -276,4 +301,79 @@ message QueryParticipationEMAsResponse {
 
   // law_participation_ema defines the requestedparticipation EMA for law proposals.
   string law_participation_ema = 3 [(cosmos_proto.scalar) = "cosmos.Dec"];
+}
+
+// QueryGovernorRequest is the request type for the Query/Governor RPC method.
+message QueryGovernorRequest {
+  // governor_address defines the address of the governor.
+  string governor_address = 1 [(cosmos_proto.scalar) = "cosmos.GovernorAddressString"];
+}
+
+// QueryGovernorResponse is the response type for the Query/Governor RPC method.
+message QueryGovernorResponse {
+  // governor defines the requested governor.
+  Governor governor = 1;
+}
+
+// QueryGovernorsRequest is the request type for the Query/Governors RPC method.
+message QueryGovernorsRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryGovernorsResponse is the response type for the Query/Governors RPC method.
+message QueryGovernorsResponse {
+  // governors defines the requested governors.
+  repeated Governor governors = 1;
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryGovernanceDelegationsRequest is the request type for the Query/GovernanceDelegations RPC method.
+message QueryGovernanceDelegationsRequest {
+  // governor_address defines the address of the governor.
+  string governor_address = 1 [(cosmos_proto.scalar) = "cosmos.GovernorAddressString"];
+
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryGovernanceDelegationsResponse is the response type for the Query/GovernanceDelegations RPC method.
+message QueryGovernanceDelegationsResponse {
+  // delegations defines the requested delegations.
+  repeated GovernanceDelegation delegations = 1;
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryGovernanceDelegationRequest is the request type for the Query/GovernanceDelegation RPC method.
+message QueryGovernanceDelegationRequest {
+  // delegator_address defines the address of the delegator.
+  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// QueryGovernanceDelegationResponse is the response type for the Query/GovernanceDelegation RPC method.
+message QueryGovernanceDelegationResponse {
+  // governor_address defines the address of the governor.
+  string governor_address = 1;
+}
+
+// QueryGovernorValSharesRequest is the request type for the Query/GovernorValShares RPC method.
+message QueryGovernorValSharesRequest {
+  // governor_address defines the address of the governor.
+  string governor_address = 1 [(cosmos_proto.scalar) = "cosmos.GovernorAddressString"];
+
+  // pagination defines the pagination in the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryGovernorValSharesResponse is the response type for the Query/GovernorValShares RPC method.
+message QueryGovernorValSharesResponse {
+  // val_shares defines the requested validator shares.
+  repeated GovernorValShares val_shares = 1;
+
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

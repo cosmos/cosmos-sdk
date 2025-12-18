@@ -12,39 +12,39 @@ import (
 )
 
 // UpdateParticipationEMA updates the governance participation EMA
-func (k Keeper) UpdateParticipationEMA(ctx context.Context, proposal v1.Proposal, participation math.LegacyDec) {
+func (keeper Keeper) UpdateParticipationEMA(ctx context.Context, proposal v1.Proposal, participation math.LegacyDec) {
 	formula := func(oldValue, newValue math.LegacyDec) math.LegacyDec {
 		return oldValue.Mul(math.LegacyNewDecWithPrec(8, 1)).Add(newValue.Mul(math.LegacyNewDecWithPrec(2, 1)))
 	}
 
-	kinds := k.ProposalKinds(proposal)
+	kinds := keeper.ProposalKinds(proposal)
 	if kinds.HasKindConstitutionAmendment() {
-		current, err := k.ConstitutionAmendmentParticipationEMA.Get(ctx)
+		current, err := keeper.ConstitutionAmendmentParticipationEMA.Get(ctx)
 		if err != nil {
 			panic(err)
 		}
 
-		if err := k.ConstitutionAmendmentParticipationEMA.Set(ctx, formula(current, participation)); err != nil {
+		if err := keeper.ConstitutionAmendmentParticipationEMA.Set(ctx, formula(current, participation)); err != nil {
 			panic(err)
 		}
 	}
 	if kinds.HasKindLaw() {
-		current, err := k.LawParticipationEMA.Get(ctx)
+		current, err := keeper.LawParticipationEMA.Get(ctx)
 		if err != nil {
 			panic(err)
 		}
 
-		if err := k.LawParticipationEMA.Set(ctx, formula(current, participation)); err != nil {
+		if err := keeper.LawParticipationEMA.Set(ctx, formula(current, participation)); err != nil {
 			panic(err)
 		}
 	}
 	if kinds.HasKindAny() {
-		current, err := k.ParticipationEMA.Get(ctx)
+		current, err := keeper.ParticipationEMA.Get(ctx)
 		if err != nil {
 			panic(err)
 		}
 
-		if err := k.ParticipationEMA.Set(ctx, formula(current, participation)); err != nil {
+		if err := keeper.ParticipationEMA.Set(ctx, formula(current, participation)); err != nil {
 			panic(err)
 		}
 	}
@@ -52,13 +52,13 @@ func (k Keeper) UpdateParticipationEMA(ctx context.Context, proposal v1.Proposal
 
 // GetQuorum returns the dynamic quorum for governance proposals calculated
 // based on the participation EMA
-func (k Keeper) GetQuorum(ctx context.Context) math.LegacyDec {
-	params, err := k.Params.Get(ctx)
+func (keeper Keeper) GetQuorum(ctx context.Context) math.LegacyDec {
+	params, err := keeper.Params.Get(ctx)
 	if err != nil {
 		panic(fmt.Errorf("failed to get params: %w", err))
 	}
 
-	participation, err := k.ParticipationEMA.Get(ctx)
+	participation, err := keeper.ParticipationEMA.Get(ctx)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		panic(err)
 	}
@@ -70,13 +70,13 @@ func (k Keeper) GetQuorum(ctx context.Context) math.LegacyDec {
 
 // GetConstitutionAmendmentQuorum returns the dynamic quorum for constitution
 // amendment governance proposals calculated based on the participation EMA
-func (k Keeper) GetConstitutionAmendmentQuorum(ctx context.Context) math.LegacyDec {
-	params, err := k.Params.Get(ctx)
+func (keeper Keeper) GetConstitutionAmendmentQuorum(ctx context.Context) math.LegacyDec {
+	params, err := keeper.Params.Get(ctx)
 	if err != nil {
 		panic(fmt.Errorf("failed to get params: %w", err))
 	}
 
-	participation, err := k.ConstitutionAmendmentParticipationEMA.Get(ctx)
+	participation, err := keeper.ConstitutionAmendmentParticipationEMA.Get(ctx)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		panic(err)
 	}
@@ -88,13 +88,13 @@ func (k Keeper) GetConstitutionAmendmentQuorum(ctx context.Context) math.LegacyD
 
 // GetLawQuorum returns the dynamic quorum for law governance proposals
 // calculated based on the participation EMA
-func (k Keeper) GetLawQuorum(ctx context.Context) math.LegacyDec {
-	params, err := k.Params.Get(ctx)
+func (keeper Keeper) GetLawQuorum(ctx context.Context) math.LegacyDec {
+	params, err := keeper.Params.Get(ctx)
 	if err != nil {
 		panic(fmt.Errorf("failed to get params: %w", err))
 	}
 
-	participation, err := k.LawParticipationEMA.Get(ctx)
+	participation, err := keeper.LawParticipationEMA.Get(ctx)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		panic(err)
 	}

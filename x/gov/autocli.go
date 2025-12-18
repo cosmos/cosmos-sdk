@@ -90,6 +90,71 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "constitution",
 					Short:     "Query the current chain constitution",
 				},
+				{
+					RpcMethod: "GovernorValShares",
+					Use:       "governor-val-shares [governor_address]",
+					Short:     "Query governor virtual validators shares",
+					Long:      "Query details for a governor virtual validators shares by its address",
+					Example:   fmt.Sprintf(`$ %s query gov vshares cosmosgov1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk`, version.AppName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "governor_address"},
+					},
+				},
+				{
+					RpcMethod: "GovernanceDelegations",
+					Use:       "delegations [governor_address]",
+					Short:     "Query all governance delegations for a governor",
+					Example:   fmt.Sprintf(`$ %s query gov delegations cosmosgov1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk`, version.AppName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "governor_address"},
+					},
+				},
+				{
+					RpcMethod: "GovernanceDelegation",
+					Short:     "Query governance delegation for a delegator",
+					Example:   fmt.Sprintf(`$ %s query gov delegation cosmos1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk`, version.AppName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "delegator_address"},
+					},
+				},
+				{
+					RpcMethod: "ParticipationEMAs",
+					Use:       "participation",
+					Short:     "Query the current state of the exponential moving average of the proposal participations",
+					Example:   fmt.Sprintf(`$ %s query gov participation`, version.AppName),
+				},
+				{
+					RpcMethod: "Governor",
+					Use:       "governor [governor_address]",
+					Short:     "Query details of a single governor by its address",
+					Example:   fmt.Sprintf(`$ %s query gov governor cosmosgov1skjwj5whet0lpe65qaq4rpq03hjxlwd9nf39lk`, version.AppName),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "governor_address"},
+					},
+				},
+				{
+					RpcMethod: "Governors",
+					Use:       "governors",
+					Example:   fmt.Sprintf(`$ %s query gov governors`, version.AppName),
+				},
+				{
+					RpcMethod: "MinDeposit",
+					Use:       "min-deposit",
+					Short:     "Query the minimum deposit currently needed for a proposal to enter voting period",
+					Example:   fmt.Sprintf(`$ %s query gov min-deposit`, version.AppName),
+				},
+				{
+					RpcMethod: "MinInitialDeposit",
+					Use:       "min-initial-deposit",
+					Short:     "Query the minimum initial deposit needed for a proposal to enter deposit period",
+					Example:   fmt.Sprintf(`$ %s query gov min-initial-deposit`, version.AppName),
+				},
+				{
+					RpcMethod: "Quorums",
+					Use:       "quorums",
+					Short:     "Query the current state of the dynamic quorums",
+					Example:   fmt.Sprintf(`$ %s query gov quorums`, version.AppName),
+				},
 			},
 			EnhanceCustomCommand: true, // We still have manual commands in gov that we want to keep
 		},

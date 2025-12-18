@@ -23,7 +23,7 @@ var (
 		keyType:       "sdk.ValAddress",
 	}
 
-	// ConsAddressKey follows the same semantics as ConsAddressKey.
+	// ConsAddressKey follows the same semantics as AccAddressKey.
 	ConsAddressKey collcodec.KeyCodec[ConsAddress] = genericAddressKey[ConsAddress]{
 		stringDecoder: ConsAddressFromBech32,
 		keyType:       "sdk.ConsAddress",

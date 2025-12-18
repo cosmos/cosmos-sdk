@@ -399,6 +399,14 @@ message Params {
 
   // Achievable quorum for law proposals
   QuorumRange law_quorum_range = 29 [(cosmos_proto.scalar) = "cosmos.Dec"];
+
+  // Defines the duration of time that need to elapse between governor status changes.
+  google.protobuf.Duration governor_status_change_period = 30 [(gogoproto.stdduration) = true];
+
+  // Defines the minimum amound of bonded tokens, aka the "self-delegation" (because active governors
+  // must have the governance VP from the base account automatically delegated to them), that a governor
+  // must have to be considered active.
+  string min_governor_self_delegation = 31 [(cosmos_proto.scalar) = "cosmos.Int"];
 }
 
 // QuorumRange defines the minimum and maximum achievable quorum.
@@ -408,4 +416,79 @@ message QuorumRange {
 
   // Minimum achievable quorum
   string min = 2 [(cosmos_proto.scalar) = "cosmos.Dec"];
+}
+
+// Governor defines a governor, together with the total amount of delegated
+// validator's bond shares for a set amount of validators. When a delegator
+// delegates a percentage of its x/gov power to a governor, the resulting
+// shares from each delegators delegations in x/staking are added to the
+// governor's total shares.
+message Governor {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // governor_address defines the address of the governor; bech32-encoded.
+  string governor_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // status is the status of the governor (active/inactive).
+  GovernorStatus status = 2;
+  // description defines the description terms for the governor.
+  GovernorDescription description = 3 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+
+  // last_status_change_time is the time when the governor's status was last changed.
+  google.protobuf.Timestamp last_status_change_time = 4 [(gogoproto.stdtime) = true];
+}
+
+// GovernorStatus is the status of a governor.
+enum GovernorStatus {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // UNSPECIFIED defines an invalid governor status.
+  GOVERNOR_STATUS_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "Unspecified"];
+  // ACTIVE defines a governor that is active.
+  GOVERNOR_STATUS_ACTIVE = 1 [(gogoproto.enumvalue_customname) = "Active"];
+  // INACTIVE defines a governor that is inactive.
+  GOVERNOR_STATUS_INACTIVE = 2 [(gogoproto.enumvalue_customname) = "Inactive"];
+}
+
+// Description defines a governor description.
+message GovernorDescription {
+  option (gogoproto.equal) = true;
+
+  // moniker defines a human-readable name for the governor.
+  string moniker = 1;
+  // identity defines an optional identity signature (ex. UPort or Keybase).
+  string identity = 2;
+  // website defines an optional website link.
+  string website = 3;
+  // security_contact defines an optional email for security contact.
+  string security_contact = 4;
+  // details define other optional details.
+  string details = 5;
+}
+
+// GovernorValShares holds the number of virtual shares from the
+// specific validator that a governor can use to vote on proposals.
+message GovernorValShares {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string governor_address  = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+  // shares define the delegation shares available from this validator.
+  string shares = 3 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable)   = false
+  ];
+}
+
+// GovernanceDelegation defines a delegation of governance voting power from a
+// delegator to a governor.
+message GovernanceDelegation {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string governor_address  = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  ;
 }

@@ -11,6 +11,12 @@ const (
 	EventTypeQuorumCheck             = "quorum_check"
 	EventTypeMinDepositChange        = "min_deposit_change"
 	EventTypeMinInitialDepositChange = "min_initial_deposit_change"
+	EventTypeCreateGovernor          = "create_governor"
+	EventTypeEditGovernor            = "edit_governor"
+	EventTypeGovernorChangeStatus    = "governor_change_status"
+	EventTypeDelegate                = "delegate_governor"
+	EventTypeUndelegate              = "undelegate_governor"
+	EventTypeRedelegate              = "redelegate_governor"
 
 	AttributeKeyProposalResult               = "proposal_result"
 	AttributeKeyVoter                        = "voter"
@@ -33,6 +39,13 @@ const (
 	AttributeKeyLastMinDeposit               = "last_min_deposit"              // last min deposit value
 	AttributeKeyNewMinInitialDeposit         = "new_min_initial_deposit"       // new min initial deposit value
 	AttributeKeyLastMinInitialDeposit        = "last_min_initial_deposit"      // last min initial deposit value
+	AttributeKeySrcGovernor                  = "source_governor"
+	AttributeKeyDstGovernor                  = "destination_governor"
+	AttributeKeyDelegator                    = "delegator"
+	AttributeKeyGovernor                     = "governor"
+	AttributeKeyStatus                       = "status"
+	AttributeValueStatusInactive             = "inactive"
+	AttributeValueStatusActive               = "active"
 
 	AttributeKeyProposalType = "proposal_type"
 )

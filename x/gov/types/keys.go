@@ -2,6 +2,7 @@ package types
 
 import (
 	"cosmossdk.io/collections"
+	collcodec "cosmossdk.io/collections/codec"
 )
 
 const (
@@ -34,4 +35,14 @@ var (
 	ParticipationEMAKey                      = collections.NewPrefix(80)
 	ConstitutionAmendmentParticipationEMAKey = collections.NewPrefix(96)
 	LawParticipationEMAKey                   = collections.NewPrefix(112)
+	GovernorsKeyPrefix                       = collections.NewPrefix(128)
+	GovernanceDelegationKeyPrefix            = collections.NewPrefix(129)
+	ValidatorSharesByGovernorKeyPrefix       = collections.NewPrefix(130)
+	GovernanceDelegationsByGovernorKeyPrefix = collections.NewPrefix(131)
+
+	// GovernorAddressKey follows the same semantics as AccAddressKey.
+	GovernorAddressKey collcodec.KeyCodec[GovernorAddress] = governorAddressKey{
+		stringDecoder: GovernorAddressFromBech32,
+		keyType:       "gov.GovernorAddress",
+	}
 )

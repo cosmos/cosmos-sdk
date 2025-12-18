@@ -54,4 +54,8 @@ message GenesisState {
   // If unset or set to 0, the quorum for the next law proposal will be set to
   // the params.LawMinQuorum value.
   string law_participation_ema = 14 [(cosmos_proto.scalar) = "cosmos.Dec"];
+  // governors defines all the governors present at genesis.
+  repeated Governor governors = 15;
+  // governance_delegations defines all the governance delegations present at genesis.
+  repeated GovernanceDelegation governance_delegations = 16;
 }

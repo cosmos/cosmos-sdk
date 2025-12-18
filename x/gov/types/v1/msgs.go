@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	_, _, _, _, _, _, _ sdk.Msg                            = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}, &MsgExecLegacyContent{}, &MsgUpdateParams{}, &MsgCancelProposal{}
-	_, _                codectypes.UnpackInterfacesMessage = &MsgSubmitProposal{}, &MsgExecLegacyContent{}
+	_, _, _, _, _, _, _, _, _, _, _, _, _, _ sdk.Msg                            = &MsgSubmitProposal{}, &MsgDeposit{}, &MsgVote{}, &MsgVoteWeighted{}, &MsgExecLegacyContent{}, &MsgUpdateParams{}, &MsgCancelProposal{}, &MsgProposeConstitutionAmendment{}, &MsgProposeLaw{}, &MsgCreateGovernor{}, &MsgEditGovernor{}, &MsgDelegateGovernor{}, &MsgUndelegateGovernor{}, &MsgUpdateGovernorStatus{}
+	_, _                                     codectypes.UnpackInterfacesMessage = &MsgSubmitProposal{}, &MsgExecLegacyContent{}
 )
 
 // NewMsgSubmitProposal creates a new MsgSubmitProposal.
@@ -130,3 +130,78 @@ func (msg MsgProposeConstitutionAmendment) ValidateBasic() error {
 func (msg MsgProposeConstitutionAmendment) IsProposalKindConstitutionAmendment() {}
 
 func (msg MsgProposeLaw) IsProposalKindLaw() {}
+
+// NewMsgCreateGovernor creates a new MsgCreateGovernor instance
+func NewMsgCreateGovernor(address sdk.AccAddress, description GovernorDescription) *MsgCreateGovernor {
+	return &MsgCreateGovernor{Address: address.String(), Description: description}
+}
+
+// ValidateBasic implements the sdk.Msg interface.
+func (msg MsgCreateGovernor) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.GetAddress()); err != nil {
+		return err
+	}
+
+	if _, err := msg.GetDescription().EnsureLength(); err != nil {
+		return types.ErrInvalidGovernanceDescription.Wrap(err.Error())
+	}
+	return nil
+}
+
+// NewMsgEditGovernor creates a new MsgEditGovernor instance
+func NewMsgEditGovernor(addr sdk.AccAddress, description GovernorDescription) *MsgEditGovernor {
+	return &MsgEditGovernor{Address: addr.String(), Description: description}
+}
+
+// ValidateBasic implements the sdk.Msg interface.
+func (msg MsgEditGovernor) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.GetAddress()); err != nil {
+		return err
+	}
+	return nil
+}
+
+// NewMsgDelegateGovernor creates a new MsgDelegateGovernor instance
+func NewMsgDelegateGovernor(delegator sdk.AccAddress, governor types.GovernorAddress) *MsgDelegateGovernor {
+	return &MsgDelegateGovernor{DelegatorAddress: delegator.String(), GovernorAddress: governor.String()}
+}
+
+// ValidateBasic implements the sdk.Msg interface.
+func (msg MsgDelegateGovernor) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.GetDelegatorAddress()); err != nil {
+		return err
+	}
+	if _, err := types.GovernorAddressFromBech32(msg.GetGovernorAddress()); err != nil {
+		return err
+	}
+	return nil
+}
+
+// NewMsgUndelegateGovernor creates a new MsgUndelegateGovernor instance
+func NewMsgUndelegateGovernor(delegator sdk.AccAddress) *MsgUndelegateGovernor {
+	return &MsgUndelegateGovernor{DelegatorAddress: delegator.String()}
+}
+
+// ValidateBasic implements the sdk.Msg interface.
+func (msg MsgUndelegateGovernor) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.GetDelegatorAddress()); err != nil {
+		return err
+	}
+	return nil
+}
+
+// NewMsgUpdateGovernorStatus creates a new MsgUpdateGovernorStatus instance
+func NewMsgUpdateGovernorStatus(address sdk.AccAddress, status GovernorStatus) *MsgUpdateGovernorStatus {
+	return &MsgUpdateGovernorStatus{Address: address.String(), Status: status}
+}
+
+// ValidateBasic implements the sdk.Msg interface.
+func (msg MsgUpdateGovernorStatus) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.GetAddress()); err != nil {
+		return err
+	}
+	if !msg.GetStatus().IsValid() {
+		return types.ErrInvalidGovernorStatus.Wrap(msg.GetStatus().String())
+	}
+	return nil
+}

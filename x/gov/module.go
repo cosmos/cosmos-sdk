@@ -108,11 +108,6 @@ func (ab AppModuleBasic) GetTxCmd() *cobra.Command {
 	return cli.NewTxCmd(legacyProposalCLIHandlers)
 }
 
-// GetQueryCmd returns the root query command for the gov module.
-func (AppModuleBasic) GetQueryCmd() *cobra.Command {
-	return cli.GetQueryCmd()
-}
-
 func getProposalCLIHandlers(handlers []govclient.ProposalHandler) []*cobra.Command {
 	proposalCLIHandlers := make([]*cobra.Command, 0, len(handlers))
 	for _, proposalHandler := range handlers {

@@ -43,10 +43,10 @@ const (
 	MetricOETime                  = "oe_time"
 	MetricInternalFinalizeTime    = "internal_finalize_time"
 	MetricExecuteWithExecutorTime = "execute_with_executor_time"
-	MetricGetFinalizeStateTime
-	MetricPreBlockTime   = "pre_block_time"
-	MetricBeginBlockTime = "begin_block_time"
-	MetricEndBlockTime   = "end_block_time"
+	MetricGetFinalizeStateTime    = "get_finalize_state_time"
+	MetricPreBlockTime            = "pre_block_time"
+	MetricBeginBlockTime          = "begin_block_time"
+	MetricEndBlockTime            = "end_block_time"
 )
 
 func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {

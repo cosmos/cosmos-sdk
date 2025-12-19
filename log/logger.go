@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"sync/atomic"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -82,7 +83,7 @@ var _ Logger = slogLogger{}
 // verboseModeLogger wraps a slogLogger and adds verbose mode support.
 type verboseModeLogger struct {
 	slogLogger
-	handler *verboseModeHandler
+	handler *zerologHandler
 }
 
 var _ VerboseModeLogger = &verboseModeLogger{}
@@ -98,15 +99,6 @@ func (l *verboseModeLogger) With(keyVals ...any) Logger {
 		handler:    l.handler,
 	}
 }
-
-/*
-	TODO:
-		- explore possibility of zerolog as a handler
-		- check some of the out of the box solutions here: https://github.com/go-slog/awesome-slog?tab=readme-ov-file
-		- probably don't need verboseHandler, just set the Level Variable, unset when not in verbose.
-		- decide on global logger or pass-around logger - has implications for console logging
-		- look into if filtering affects the otel handler. probably don't want to be filtering OTEL logs.
-*/
 
 // NewLogger creates a Logger that exports logs to both console and OpenTelemetry.
 // The name identifies the instrumentation scope (e.g., "cosmos-sdk").
@@ -174,26 +166,32 @@ func NewLogger(name string, opts ...Option) Logger {
 				NoColor:    !cfg.Color,
 			}
 			zLogger := zerolog.New(zConsole).With().Timestamp().Logger()
-			consoleHandler = &zerologHandler{
-				logger: zLogger,
-				level:  cfg.Level,
+
+			// Determine verbose level (use NoLevel sentinel if not configured)
+			verboseLevel := cfg.VerboseLevel
+			if verboseLevel == NoLevel {
+				verboseLevel = cfg.Level // fallback to regular level
+			}
+
+			zHandler := &zerologHandler{
+				logger:       zLogger,
+				regularLevel: cfg.Level,
+				verboseLevel: verboseLevel,
+				filter:       cfg.Filter,
+				verbose:      &atomic.Bool{},
+			}
+			consoleHandler = zHandler
+
+			// If verbose mode is configured, return a VerboseModeLogger
+			if cfg.VerboseLevel != NoLevel {
+				handler = &multiHandler{handlers: []slog.Handler{consoleHandler, otelHandler}}
+				return &verboseModeLogger{
+					slogLogger: slogLogger{log: slog.New(handler)},
+					handler:    zHandler,
+				}
 			}
 		}
 		handler = &multiHandler{handlers: []slog.Handler{consoleHandler, otelHandler}}
-	}
-
-	// If verbose level is configured, use verboseModeHandler for dynamic level/filter switching
-	if cfg.VerboseLevel != NoLevel {
-		vmHandler := newVerboseModeHandler(handler, cfg.Level, cfg.VerboseLevel, cfg.Filter)
-		return &verboseModeLogger{
-			slogLogger: slogLogger{log: slog.New(vmHandler)},
-			handler:    vmHandler,
-		}
-	}
-
-	// Apply filter if configured (non-verbose mode)
-	if cfg.Filter != nil {
-		handler = newFilterHandler(handler, cfg.Filter)
 	}
 
 	return slogLogger{log: slog.New(handler)}
@@ -250,18 +248,54 @@ func (l slogLogger) Impl() any {
 
 // zerologHandler is a slog.Handler that uses zerolog for console output.
 // It properly handles fmt.Stringer types by calling String() before logging.
+// It also supports verbose mode switching and filtering.
 type zerologHandler struct {
-	logger zerolog.Logger
-	level  slog.Level
-	attrs  []slog.Attr
-	groups []string
+	logger       zerolog.Logger
+	regularLevel slog.Level
+	verboseLevel slog.Level
+	filter       FilterFunc
+	module       string       // current module from attrs (for filtering)
+	verbose      *atomic.Bool // shared across all derived handlers
+	attrs        []slog.Attr
+	groups       []string
 }
 
 func (h *zerologHandler) Enabled(_ context.Context, level slog.Level) bool {
-	return level >= h.level
+	if h.verbose != nil && h.verbose.Load() {
+		return level >= h.verboseLevel
+	}
+	return level >= h.regularLevel
 }
 
 func (h *zerologHandler) Handle(_ context.Context, r slog.Record) error {
+	// Check level first
+	if h.verbose != nil && h.verbose.Load() {
+		if r.Level < h.verboseLevel {
+			return nil
+		}
+	} else {
+		if r.Level < h.regularLevel {
+			return nil
+		}
+	}
+
+	// Apply filter only in non-verbose mode
+	if h.filter != nil && (h.verbose == nil || !h.verbose.Load()) {
+		module := h.module
+		if module == "" {
+			r.Attrs(func(attr slog.Attr) bool {
+				if attr.Key == ModuleKey {
+					module = attr.Value.String()
+					return false
+				}
+				return true
+			})
+		}
+		if h.filter(module, LevelToString(r.Level)) {
+			return nil // filtered out
+		}
+	}
+
 	var evt *zerolog.Event
 	switch {
 	case r.Level < slog.LevelInfo:
@@ -287,6 +321,13 @@ func (h *zerologHandler) Handle(_ context.Context, r slog.Record) error {
 
 	evt.Msg(r.Message)
 	return nil
+}
+
+// SetVerboseMode enables or disables verbose mode for this handler and all derived handlers.
+func (h *zerologHandler) SetVerboseMode(enable bool) {
+	if h.verbose != nil {
+		h.verbose.Store(enable)
+	}
 }
 
 func (h *zerologHandler) addAttr(evt *zerolog.Event, attr slog.Attr) *zerolog.Event {
@@ -373,20 +414,36 @@ func (h *zerologHandler) prefixKey(key string) string {
 }
 
 func (h *zerologHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+	// Check if module is being set
+	newModule := h.module
+	for _, attr := range attrs {
+		if attr.Key == ModuleKey {
+			newModule = attr.Value.String()
+			break
+		}
+	}
 	return &zerologHandler{
-		logger: h.logger,
-		level:  h.level,
-		attrs:  append(h.attrs, attrs...),
-		groups: h.groups,
+		logger:       h.logger,
+		regularLevel: h.regularLevel,
+		verboseLevel: h.verboseLevel,
+		filter:       h.filter,
+		module:       newModule,
+		verbose:      h.verbose, // share the same atomic bool
+		attrs:        append(h.attrs, attrs...),
+		groups:       h.groups,
 	}
 }
 
 func (h *zerologHandler) WithGroup(name string) slog.Handler {
 	return &zerologHandler{
-		logger: h.logger,
-		level:  h.level,
-		attrs:  h.attrs,
-		groups: append(h.groups, name),
+		logger:       h.logger,
+		regularLevel: h.regularLevel,
+		verboseLevel: h.verboseLevel,
+		filter:       h.filter,
+		module:       h.module,
+		verbose:      h.verbose, // share the same atomic bool
+		attrs:        h.attrs,
+		groups:       append(h.groups, name),
 	}
 }
 

@@ -38,6 +38,15 @@ const (
 	QueryPathStore  = "store"
 
 	QueryPathBroadcastTx = "/cosmos.tx.v1beta1.Service/BroadcastTx"
+
+	TelemetrySubsystem            = "abci"
+	MetricOETime                  = "oe_time"
+	MetricInternalFinalizeTime    = "internal_finalize_time"
+	MetricExecuteWithExecutorTime = "execute_with_executor_time"
+	MetricGetFinalizeStateTime
+	MetricPreBlockTime   = "pre_block_time"
+	MetricBeginBlockTime = "begin_block_time"
+	MetricEndBlockTime   = "end_block_time"
 )
 
 func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
@@ -780,6 +789,8 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 // only used to handle early cancellation, for anything related to state app.stateManager.GetState(execModeFinalize).Context()
 // must be used.
 func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
+	start := time.Now()
+	defer telemetry.MeasureSince(start, TelemetrySubsystem, MetricInternalFinalizeTime)
 	var events []abci.Event
 
 	if err := app.checkHalt(req.Height, req.Time); err != nil {
@@ -808,11 +819,13 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 	// finalizeBlockState should be set on InitChain or ProcessProposal. If it is
 	// nil, it means we are replaying this block and we need to set the state here
 	// given that during block replay ProcessProposal is not executed by CometBFT.
+	gfsStart := time.Now()
 	finalizeState := app.stateManager.GetState(execModeFinalize)
 	if finalizeState == nil {
 		app.stateManager.SetState(execModeFinalize, app.cms, header, app.logger, app.streamingManager)
 		finalizeState = app.stateManager.GetState(execModeFinalize)
 	}
+	telemetry.MeasureSince(gfsStart, TelemetrySubsystem, MetricGetFinalizeStateTime)
 	ctx := finalizeState.Context().WithContext(goCtx)
 	ctx, span := ctx.StartSpan(tracer, "internalFinalizeBlock")
 	defer span.End()
@@ -842,20 +855,25 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 	gasMeter := app.getBlockGasMeter(finalizeState.Context())
 	finalizeState.SetContext(finalizeState.Context().WithBlockGasMeter(gasMeter))
 
+	// I have no idea why we're updating the CheckState context here?
 	if checkState := app.stateManager.GetState(execModeCheck); checkState != nil {
 		checkState.SetContext(checkState.Context().
 			WithBlockGasMeter(gasMeter).
 			WithHeaderHash(req.Hash))
 	}
 
+	pbStart := time.Now()
 	preblockEvents, err := app.preBlock(req)
+	telemetry.MeasureSince(pbStart, TelemetrySubsystem, MetricPreBlockTime)
 	if err != nil {
 		return nil, err
 	}
 
 	events = append(events, preblockEvents...)
 
+	bbStart := time.Now()
 	beginBlock, err := app.beginBlock(req)
+	telemetry.MeasureSince(bbStart, TelemetrySubsystem, MetricBeginBlockTime)
 	if err != nil {
 		return nil, err
 	}
@@ -883,7 +901,9 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 	//
 	// NOTE: Not all raw transactions may adhere to the sdk.Tx interface, e.g.
 	// vote extensions, so skip those.
+	eweStart := time.Now()
 	txResults, err := app.executeTxsWithExecutor(ctx, finalizeState.MultiStore, req.Txs)
+	telemetry.MeasureSince(eweStart, TelemetrySubsystem, MetricExecuteWithExecutorTime)
 	if err != nil {
 		// usually due to canceled
 		return nil, err
@@ -912,7 +932,9 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 			WithBlockGasUsed(blockGasUsed).
 			WithBlockGasWanted(blockGasWanted),
 	)
+	ebStart := time.Now()
 	endBlock, err := app.endBlock()
+	telemetry.MeasureSince(ebStart, TelemetrySubsystem, MetricEndBlockTime)
 	if err != nil {
 		return nil, err
 	}
@@ -973,7 +995,9 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 		// check if the hash we got is the same as the one we are executing
 		aborted := app.optimisticExec.AbortIfNeeded(req.Hash)
 		// Wait for the OE to finish, regardless of whether it was aborted or not
+		start := time.Now()
 		res, err = app.optimisticExec.WaitResult()
+		telemetry.MeasureSince(start, TelemetrySubsystem, MetricOETime)
 
 		// only return if we are not aborting
 		if !aborted {

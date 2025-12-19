@@ -4,12 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"log/slog"
 	"os"
-	"strings"
 	"time"
 
+	"github.com/rs/zerolog"
 	"go.opentelemetry.io/contrib/bridges/otelslog"
 )
 
@@ -133,6 +132,7 @@ func NewLogger(name string, opts ...Option) Logger {
 	cfg := &Config{
 		Level:        slog.LevelInfo,
 		VerboseLevel: NoLevel, // disabled by default
+		Color:        true,    // colors enabled by default
 	}
 	for _, opt := range opts {
 		opt(cfg)
@@ -163,11 +163,20 @@ func NewLogger(name string, opts ...Option) Logger {
 		if cfg.OutputJSON {
 			consoleHandler = slog.NewJSONHandler(consoleWriter, &slog.HandlerOptions{Level: cfg.Level})
 		} else {
-			consoleHandler = &prettyHandler{
-				out:        consoleWriter,
-				level:      cfg.Level,
-				noColor:    !cfg.Color,
-				timeFormat: cfg.TimeFormat,
+			// Use zerolog for console formatting with proper Stringer support
+			timeFormat := cfg.TimeFormat
+			if timeFormat == "" {
+				timeFormat = time.Kitchen
+			}
+			zConsole := zerolog.ConsoleWriter{
+				Out:        consoleWriter,
+				TimeFormat: timeFormat,
+				NoColor:    !cfg.Color,
+			}
+			zLogger := zerolog.New(zConsole).With().Timestamp().Logger()
+			consoleHandler = &zerologHandler{
+				logger: zLogger,
+				level:  cfg.Level,
 			}
 		}
 		handler = &multiHandler{handlers: []slog.Handler{consoleHandler, otelHandler}}
@@ -239,6 +248,148 @@ func (l slogLogger) Impl() any {
 	return l.log
 }
 
+// zerologHandler is a slog.Handler that uses zerolog for console output.
+// It properly handles fmt.Stringer types by calling String() before logging.
+type zerologHandler struct {
+	logger zerolog.Logger
+	level  slog.Level
+	attrs  []slog.Attr
+	groups []string
+}
+
+func (h *zerologHandler) Enabled(_ context.Context, level slog.Level) bool {
+	return level >= h.level
+}
+
+func (h *zerologHandler) Handle(_ context.Context, r slog.Record) error {
+	var evt *zerolog.Event
+	switch {
+	case r.Level < slog.LevelInfo:
+		evt = h.logger.Debug()
+	case r.Level < slog.LevelWarn:
+		evt = h.logger.Info()
+	case r.Level < slog.LevelError:
+		evt = h.logger.Warn()
+	default:
+		evt = h.logger.Error()
+	}
+
+	// Add pre-set attrs
+	for _, attr := range h.attrs {
+		evt = h.addAttr(evt, attr)
+	}
+
+	// Add record attrs
+	r.Attrs(func(attr slog.Attr) bool {
+		evt = h.addAttr(evt, attr)
+		return true
+	})
+
+	evt.Msg(r.Message)
+	return nil
+}
+
+func (h *zerologHandler) addAttr(evt *zerolog.Event, attr slog.Attr) *zerolog.Event {
+	key := h.prefixKey(attr.Key)
+	val := attr.Value.Resolve()
+
+	switch val.Kind() {
+	case slog.KindString:
+		return evt.Str(key, val.String())
+	case slog.KindInt64:
+		return evt.Int64(key, val.Int64())
+	case slog.KindUint64:
+		return evt.Uint64(key, val.Uint64())
+	case slog.KindFloat64:
+		return evt.Float64(key, val.Float64())
+	case slog.KindBool:
+		return evt.Bool(key, val.Bool())
+	case slog.KindDuration:
+		return evt.Dur(key, val.Duration())
+	case slog.KindTime:
+		return evt.Time(key, val.Time())
+	case slog.KindGroup:
+		// Handle nested groups
+		for _, a := range val.Group() {
+			evt = h.addAttrWithPrefix(evt, a, key+".")
+		}
+		return evt
+	default:
+		// KindAny - check for Stringer first
+		if v := val.Any(); v != nil {
+			if s, ok := v.(fmt.Stringer); ok {
+				return evt.Str(key, s.String())
+			}
+			return evt.Interface(key, v)
+		}
+		return evt
+	}
+}
+
+func (h *zerologHandler) addAttrWithPrefix(evt *zerolog.Event, attr slog.Attr, prefix string) *zerolog.Event {
+	key := prefix + attr.Key
+	val := attr.Value.Resolve()
+
+	switch val.Kind() {
+	case slog.KindString:
+		return evt.Str(key, val.String())
+	case slog.KindInt64:
+		return evt.Int64(key, val.Int64())
+	case slog.KindUint64:
+		return evt.Uint64(key, val.Uint64())
+	case slog.KindFloat64:
+		return evt.Float64(key, val.Float64())
+	case slog.KindBool:
+		return evt.Bool(key, val.Bool())
+	case slog.KindDuration:
+		return evt.Dur(key, val.Duration())
+	case slog.KindTime:
+		return evt.Time(key, val.Time())
+	case slog.KindGroup:
+		for _, a := range val.Group() {
+			evt = h.addAttrWithPrefix(evt, a, key+".")
+		}
+		return evt
+	default:
+		if v := val.Any(); v != nil {
+			if s, ok := v.(fmt.Stringer); ok {
+				return evt.Str(key, s.String())
+			}
+			return evt.Interface(key, v)
+		}
+		return evt
+	}
+}
+
+func (h *zerologHandler) prefixKey(key string) string {
+	if len(h.groups) == 0 {
+		return key
+	}
+	prefix := ""
+	for _, g := range h.groups {
+		prefix += g + "."
+	}
+	return prefix + key
+}
+
+func (h *zerologHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+	return &zerologHandler{
+		logger: h.logger,
+		level:  h.level,
+		attrs:  append(h.attrs, attrs...),
+		groups: h.groups,
+	}
+}
+
+func (h *zerologHandler) WithGroup(name string) slog.Handler {
+	return &zerologHandler{
+		logger: h.logger,
+		level:  h.level,
+		attrs:  h.attrs,
+		groups: append(h.groups, name),
+	}
+}
+
 // multiHandler fans out log records to multiple slog.Handlers.
 // It uses best-effort semantics: all handlers are attempted even if some fail.
 type multiHandler struct {
@@ -280,181 +431,6 @@ func (h *multiHandler) WithGroup(name string) slog.Handler {
 		newHandlers[i] = handler.WithGroup(name)
 	}
 	return &multiHandler{handlers: newHandlers}
-}
-
-// ANSI color codes
-const (
-	colorReset  = "\033[0m"
-	colorRed    = "\033[31m"
-	colorGreen  = "\033[32m"
-	colorYellow = "\033[33m"
-	colorBlue   = "\033[34m"
-	colorCyan   = "\033[36m"
-	colorGray   = "\033[90m"
-)
-
-// prettyHandler is a simple slog.Handler that outputs logs in a human-readable format
-// similar to zerolog's console output.
-type prettyHandler struct {
-	out        io.Writer
-	level      slog.Level
-	attrs      []slog.Attr
-	groups     []string
-	noColor    bool
-	timeFormat string
-}
-
-func (h *prettyHandler) Enabled(_ context.Context, level slog.Level) bool {
-	return level >= h.level
-}
-
-func (h *prettyHandler) Handle(_ context.Context, r slog.Record) error {
-	// Format: 3:04PM INF message key=value key=value module=xxx
-	timeFormat := h.timeFormat
-	if timeFormat == "" {
-		timeFormat = time.Kitchen
-	}
-	timeStr := r.Time.Format(timeFormat)
-	levelStr, levelColor := h.levelToShortAndColor(r.Level)
-
-	// Start with time and level
-	if h.noColor {
-		fmt.Fprintf(h.out, "%s %s %s", timeStr, levelStr, r.Message)
-	} else {
-		fmt.Fprintf(h.out, "%s%s%s %s%s%s %s", colorGray, timeStr, colorReset, levelColor, levelStr, colorReset, r.Message)
-	}
-
-	// Add pre-set attrs (these already have group prefixes applied)
-	for _, attr := range h.attrs {
-		h.writeAttr(attr, "")
-	}
-
-	// Build group prefix for record attrs
-	groupPrefix := h.buildGroupPrefix()
-
-	// Add record attrs (skip complex objects like "impl" that contain nested loggers)
-	r.Attrs(func(attr slog.Attr) bool {
-		// Skip attributes that are likely to be huge internal state objects
-		if attr.Key == "impl" {
-			return true
-		}
-		h.writeAttr(attr, groupPrefix)
-		return true
-	})
-
-	fmt.Fprintln(h.out)
-	return nil
-}
-
-func (h *prettyHandler) buildGroupPrefix() string {
-	if len(h.groups) == 0 {
-		return ""
-	}
-	return strings.Join(h.groups, ".") + "."
-}
-
-func (h *prettyHandler) writeAttr(attr slog.Attr, prefix string) {
-	val := attr.Value.Resolve()
-
-	// Skip empty values
-	if val.Kind() == slog.KindAny && val.Any() == nil {
-		return
-	}
-
-	key := prefix + attr.Key
-
-	// Print key
-	if h.noColor {
-		fmt.Fprintf(h.out, " %s=", key)
-	} else {
-		fmt.Fprintf(h.out, " %s%s=%s", colorCyan, key, colorReset)
-	}
-
-	// For simple types, print value
-	switch val.Kind() {
-	case slog.KindString:
-		fmt.Fprint(h.out, val.String())
-	case slog.KindInt64:
-		fmt.Fprintf(h.out, "%d", val.Int64())
-	case slog.KindUint64:
-		fmt.Fprintf(h.out, "%d", val.Uint64())
-	case slog.KindFloat64:
-		fmt.Fprintf(h.out, "%g", val.Float64())
-	case slog.KindBool:
-		fmt.Fprintf(h.out, "%t", val.Bool())
-	case slog.KindDuration:
-		fmt.Fprint(h.out, val.Duration())
-	case slog.KindTime:
-		fmt.Fprint(h.out, val.Time().Format(time.RFC3339))
-	case slog.KindGroup:
-		// For groups, print nested attrs with the group name as prefix
-		groupPrefix := key + "."
-		for _, a := range val.Group() {
-			h.writeAttr(a, groupPrefix)
-		}
-	default:
-		// For KindAny, check if it implements Stringer or can be formatted
-		if v := val.Any(); v != nil {
-			if s, ok := v.(fmt.Stringer); ok {
-				fmt.Fprint(h.out, s.String())
-			} else {
-				fmt.Fprintf(h.out, "%v", v)
-			}
-		}
-	}
-}
-
-func (h *prettyHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
-	// Apply current group prefix to new attrs
-	groupPrefix := h.buildGroupPrefix()
-	prefixedAttrs := make([]slog.Attr, len(attrs))
-	for i, attr := range attrs {
-		prefixedAttrs[i] = slog.Attr{Key: groupPrefix + attr.Key, Value: attr.Value}
-	}
-	return &prettyHandler{
-		out:        h.out,
-		level:      h.level,
-		attrs:      append(h.attrs, prefixedAttrs...),
-		groups:     h.groups,
-		noColor:    h.noColor,
-		timeFormat: h.timeFormat,
-	}
-}
-
-func (h *prettyHandler) WithGroup(name string) slog.Handler {
-	return &prettyHandler{
-		out:        h.out,
-		level:      h.level,
-		attrs:      h.attrs,
-		groups:     append(h.groups, name),
-		noColor:    h.noColor,
-		timeFormat: h.timeFormat,
-	}
-}
-
-func (h *prettyHandler) levelToShortAndColor(level slog.Level) (string, string) {
-	if h.noColor {
-		switch {
-		case level < slog.LevelInfo:
-			return "DBG", ""
-		case level < slog.LevelWarn:
-			return "INF", ""
-		case level < slog.LevelError:
-			return "WRN", ""
-		default:
-			return "ERR", ""
-		}
-	}
-	switch {
-	case level < slog.LevelInfo:
-		return "DBG", colorBlue
-	case level < slog.LevelWarn:
-		return "INF", colorGreen
-	case level < slog.LevelError:
-		return "WRN", colorYellow
-	default:
-		return "ERR", colorRed
-	}
 }
 
 // NewNopLogger returns a new logger that does nothing.

@@ -15,6 +15,7 @@ This allows meters and traces to use direct references to the underlying instrum
 Create a basic OpenTelemetry configuration file which will send data to the local instance of Grafana LGTM:
 
 ```yaml
+file_format: "1.0-rc.3"
 resource:
   attributes:
     - name: service.name
@@ -24,15 +25,14 @@ tracer_provider:
   processors:
     - batch: # NOTE: you should use batch in production!
         exporter:
-          otlp:
-            protocol: grpc
+          otlp_grpc:
             endpoint: http://localhost:4317
 
 meter_provider:
   readers:
     - pull:
         exporter:
-          prometheus: # pushes directly to prometheus backend. 
+          prometheus/development: # pushes directly to prometheus backend. 
             host: 0.0.0.0
             port: 9464
             # optional: include resource attributes as constant labels
@@ -51,23 +51,19 @@ logger_provider:
   processors:
     - batch:
         exporter:
-          otlp:
-            protocol: grpc
+          otlp_grpc:
             endpoint: http://localhost:4317
 
 
 cosmos_extra:
-  trace_file: ""
-  metrics_file: ""
-  metrics_file_interval: ""
-  logs_file: ""
   instrument_host: true
   instrument_runtime: true
   propagators:
     - tracecontext
 ```
 
-For a full list of configurable options see: https://github.com/open-telemetry/opentelemetry-configuration/blob/main/examples/kitchen-sink.yaml
+For a full list of configurable options see: https://github.com/open-telemetry/opentelemetry-configuration/blob/main/examples/kitchen-sink.yaml.
+NOTE: the go implementation may not support all options, so check the go [otelconf](https://pkg.go.dev/go.opentelemetry.io/contrib/otelconf) documentation carefully to see what is actually supported.
 
 3. set the `OTEL_EXPERIMENTAL_CONFIG_FILE` environment variable to the path of the configuration file:
    `export OTEL_EXPERIMENTAL_CONFIG_FILE=path/to/config.yaml`

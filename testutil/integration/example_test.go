@@ -2,7 +2,6 @@ package integration_test
 
 import (
 	"fmt"
-	"io"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/google/go-cmp/cmp"

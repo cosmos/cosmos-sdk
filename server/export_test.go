@@ -14,7 +14,6 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/rs/zerolog"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
 
@@ -62,13 +61,10 @@ func NewExportSystem(t *testing.T, exporter types.AppExporter) *ExportSystem {
 		genutilcli.InitCmd(module.NewBasicManager(), homeDir),
 	)
 
-	tw := zerolog.NewTestWriter(t)
-	tw.Frame = 5 // Seems to be the magic number to get source location to match logger calls.
-
 	sCtx := server.NewContext(
 		viper.New(),
 		cmtcfg.DefaultConfig(),
-		log.NewCustomLogger(zerolog.New(tw)),
+		log.NewTestLogger(t),
 	)
 	sCtx.Config.SetRoot(homeDir)
 

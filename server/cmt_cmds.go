@@ -367,7 +367,7 @@ func BootstrapStateCmd(appCreator types.AppCreator) *cobra.Command {
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			serverCtx := GetServerContextFromCmd(cmd)
-			logger := log.NewLogger(cmd.OutOrStdout())
+			logger := log.NewLogger("cosmos-sdk", log.WithConsoleWriter(cmd.OutOrStdout()))
 			cfg := serverCtx.Config
 
 			height, err := cmd.Flags().GetInt64("height")

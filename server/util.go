@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net"
 	"os"
 	"os/signal"
@@ -17,7 +18,6 @@ import (
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/rs/zerolog"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -34,6 +34,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -54,7 +55,7 @@ func NewDefaultContext() *Context {
 	return NewContext(
 		viper.New(),
 		cmtcfg.DefaultConfig(),
-		log.NewLogger(os.Stdout),
+		log.NewLogger("cosmos-sdk", log.WithConsoleWriter(os.Stdout)),
 	)
 }
 
@@ -102,6 +103,14 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 	serverCtx, err := InterceptConfigsAndCreateContext(cmd, customAppConfigTemplate, customAppConfig, cmtConfig)
 	if err != nil {
 		return err
+	}
+
+	// Initialize OpenTelemetry before creating the logger so that the OTEL
+	// log provider is available for the slog OTEL handler.
+	homeDir := serverCtx.Viper.GetString(flags.FlagHome)
+	otelFile := filepath.Join(homeDir, "config", telemetry.OtelFileName)
+	if err := telemetry.InitializeOpenTelemetry(otelFile); err != nil {
+		return fmt.Errorf("failed to initialize OpenTelemetry: %w", err)
 	}
 
 	// overwrite default server logger
@@ -169,52 +178,47 @@ func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplat
 // It reads the log level and format from the server context.
 func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 	var opts []log.Option
+
+	// Set console output
+	opts = append(opts, log.WithConsoleWriter(out))
+
+	// Set JSON output if configured
 	if ctx.Viper.GetString(flags.FlagLogFormat) == flags.OutputFormatJSON {
-		opts = append(opts, log.OutputJSONOption())
-	}
-	opts = append(opts,
-		log.ColorOption(!ctx.Viper.GetBool(flags.FlagLogNoColor)),
-		// We use CometBFT flag (cmtcli.TraceFlag) for trace logging.
-		log.TraceOption(ctx.Viper.GetBool(FlagTrace)))
-
-	verboseLogLevelStr := ctx.Viper.GetString(flags.FlagVerboseLogLevel)
-	if verboseLogLevelStr != "" {
-		verboseLogLvl, err := parseVerboseLogLevel(verboseLogLevelStr)
-		if err != nil {
-			return nil, fmt.Errorf("invalid verbose log level: %s: %w", verboseLogLevelStr, err)
-		}
-		opts = append(opts, log.VerboseLevelOption(verboseLogLvl))
+		opts = append(opts, log.WithJSONOutput())
 	}
 
-	// check and set filter level or keys for the logger if any
+	// Disable colors if configured
+	if ctx.Viper.GetBool(flags.FlagLogNoColor) {
+		opts = append(opts, log.WithColor(false))
+	}
+
+	// Parse and set log level
 	logLvlStr := ctx.Viper.GetString(flags.FlagLogLevel)
-	if logLvlStr == "" {
-		return log.NewLogger(out, opts...), nil
+	level, err := parseLogLevel(logLvlStr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid log level %s: %w", logLvlStr, err)
 	}
+	opts = append(opts, log.WithLevel(level))
 
-	logLvl, err := zerolog.ParseLevel(logLvlStr)
-	switch {
-	case err != nil:
-		// If the log level is not a valid zerolog level, then we try to parse it as a key filter.
-		filterFunc, err := log.ParseLogLevel(logLvlStr)
+	// Parse and set verbose log level
+	verboseLvlStr := ctx.Viper.GetString(flags.FlagVerboseLogLevel)
+	if verboseLvlStr != "" {
+		verboseLevel, err := log.ParseLevel(verboseLvlStr)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("invalid verbose log level %s: %w", verboseLvlStr, err)
 		}
-
-		opts = append(opts, log.FilterOption(filterFunc))
-	default:
-		opts = append(opts, log.LevelOption(logLvl))
+		opts = append(opts, log.WithVerboseLevel(verboseLevel))
 	}
 
-	return log.NewLogger(out, opts...), nil
+	return log.NewLogger("cosmos-sdk", opts...), nil
 }
 
-// parseVerboseLogLevel parses the string "none" as zerolog.NoLevel and all other level strings using zerolog.ParseLevel.
-func parseVerboseLogLevel(verboseLogLevelStr string) (zerolog.Level, error) {
-	if verboseLogLevelStr == "none" {
-		return zerolog.NoLevel, nil
+// parseLogLevel parses a log level string, defaulting to info for empty strings.
+func parseLogLevel(levelStr string) (slog.Level, error) {
+	if levelStr == "" {
+		return slog.LevelInfo, nil
 	}
-	return zerolog.ParseLevel(verboseLogLevelStr)
+	return log.ParseLevel(levelStr)
 }
 
 // GetServerContextFromCmd returns a Context from a command or an empty Context

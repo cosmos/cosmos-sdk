@@ -28,7 +28,7 @@ func ExportSnapshotCmd(appCreator servertypes.AppCreator) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			logger := log.NewLogger(cmd.OutOrStdout())
+			logger := log.NewLogger("snapshot", log.WithConsoleWriter(cmd.OutOrStdout()))
 			app := appCreator(logger, db, nil, ctx.Viper)
 
 			if height == 0 {

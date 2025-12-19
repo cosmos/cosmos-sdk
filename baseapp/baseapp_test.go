@@ -72,7 +72,7 @@ func NewBaseAppSuite(t *testing.T, opts ...func(*baseapp.BaseApp)) *BaseAppSuite
 
 	txConfig := authtx.NewTxConfig(cdc, authtx.DefaultSignModes)
 	db := dbm.NewMemDB()
-	logger := log.NewLogger(os.Stdout, log.ColorOption(false))
+	logger := log.NewLogger("baseapp-test", log.WithConsoleWriter(os.Stdout), log.WithColor(false))
 
 	app := baseapp.NewBaseApp(t.Name(), logger, db, txConfig.TxDecoder(), opts...)
 	require.Equal(t, t.Name(), app.Name())

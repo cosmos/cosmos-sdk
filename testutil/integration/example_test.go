@@ -2,7 +2,6 @@ package integration_test
 
 import (
 	"fmt"
-	"io"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/google/go-cmp/cmp"
@@ -124,7 +123,7 @@ func Example_oneModule() {
 	authority := authtypes.NewModuleAddress("gov").String()
 
 	// replace the logger by testing values in a real test case (e.g. log.NewTestLogger(t))
-	logger := log.NewLogger(io.Discard)
+	logger := log.NewNopLogger()
 
 	cms := integration.CreateMultiStore(keys, logger)
 	newCtx := sdk.NewContext(cms, cmtproto.Header{}, true, logger)

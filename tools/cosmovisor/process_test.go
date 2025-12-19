@@ -396,7 +396,7 @@ func TestLaunchProcessWithDownloadsAndPreupgrade(t *testing.T) {
 	)
 
 	buf := newBuffer() // inspect output using buf.String()
-	logger := log.NewLogger(buf).With(log.ModuleKey, "cosmovisor")
+	logger := log.NewLogger("cosmovisor", log.WithConsoleWriter(buf)).With(log.ModuleKey, "cosmovisor")
 	upgradeFilename := cfg.UpgradeInfoFilePath()
 
 	// should run the genesis binary and produce expected output

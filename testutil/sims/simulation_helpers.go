@@ -32,7 +32,7 @@ func SetupSimulation(config simtypes.Config, dirPrefix, dbName string, verbose, 
 
 	var logger log.Logger
 	if verbose {
-		logger = log.NewLogger(os.Stdout)
+		logger = log.NewLogger("simulation", log.WithConsoleWriter(os.Stdout))
 	} else {
 		logger = log.NewNopLogger()
 	}

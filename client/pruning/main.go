@@ -77,7 +77,7 @@ Supported app-db-backend types include 'goleveldb', 'rocksdb', 'pebbledb'.`,
 			// in our test, it's important to close db explicitly for pebbledb to write to disk.
 			defer db.Close()
 
-			logger := log.NewLogger(cmd.OutOrStdout())
+			logger := log.NewLogger("pruning", log.WithConsoleWriter(cmd.OutOrStdout()))
 			app := appCreator(logger, db, nil, vp)
 			cms := app.CommitMultiStore()
 

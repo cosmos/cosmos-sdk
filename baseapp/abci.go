@@ -41,7 +41,7 @@ const (
 )
 
 func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
-	_, span := tracer.Start(context.Background(), "InitChain")
+	ctx, span := tracer.Start(context.Background(), "InitChain")
 	defer span.End()
 
 	if req.ChainId != app.chainID {
@@ -51,7 +51,7 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 	// On a new chain, we consider the init chain block height as 0, even though
 	// req.InitialHeight is 1 by default.
 	initHeader := cmtproto.Header{ChainID: req.ChainId, Time: req.Time}
-	app.logger.Info("InitChain", "initialHeight", req.InitialHeight, "chainID", req.ChainId)
+	app.logger.InfoContext(ctx, "InitChain", "initialHeight", req.InitialHeight, "chainID", req.ChainId)
 
 	// Set the initial height, which will be used to determine if we are proposing
 	// or processing the first block or not.

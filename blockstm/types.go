@@ -8,6 +8,7 @@ const (
 	TelemetrySubsystem = "blockstm"
 	KeyExecutedTxs     = "executed_txs"
 	KeyValidatedTxs    = "validated_txs"
+	KeyDecreaseCount   = "decrease_count"
 )
 
 type (

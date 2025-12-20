@@ -47,6 +47,7 @@ const (
 	MetricPreBlockTime            = "pre_block_time"
 	MetricBeginBlockTime          = "begin_block_time"
 	MetricEndBlockTime            = "end_block_time"
+	MetricOEAborted               = "oe_aborted"
 )
 
 func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
@@ -981,6 +982,9 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 	if app.optimisticExec.Initialized() {
 		// check if the hash we got is the same as the one we are executing
 		aborted := app.optimisticExec.AbortIfNeeded(req.Hash)
+		if aborted {
+			telemetry.IncrCounter(1, TelemetrySubsystem, MetricOEAborted)
+		}
 		// Wait for the OE to finish, regardless of whether it was aborted or not
 		res, err = app.optimisticExec.WaitResult()
 

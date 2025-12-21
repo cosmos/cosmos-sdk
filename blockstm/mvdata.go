@@ -233,4 +233,3 @@ func (item secondaryDataItem[V]) Version() TxnVersion {
 func seekClosestTxn[V any](tree *tree.BTree[secondaryDataItem[V]], txn TxnIndex) (secondaryDataItem[V], bool) {
 	return tree.ReverseSeek(secondaryDataItem[V]{Index: txn - 1})
 }
-

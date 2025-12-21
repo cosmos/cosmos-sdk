@@ -141,7 +141,7 @@ func (coin Coin) Sub(coinB Coin) Coin {
 }
 
 // SafeSub safely subtracts the amounts of two coins. It returns an error if the coins differ
-// in denom or subtraction results in negative coin denom.
+// in denom or subtraction results in negative coin amount.
 func (coin Coin) SafeSub(coinB Coin) (Coin, error) {
 	if coin.Denom != coinB.Denom {
 		return Coin{}, fmt.Errorf("invalid coin denoms: %s, %s", coin.Denom, coinB.Denom)

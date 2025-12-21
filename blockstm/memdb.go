@@ -96,7 +96,7 @@ func (db *GMemDB[V]) Delete(key []byte) {
 }
 
 // OverlayGet returns a value from the btree and true if we found a value.
-// When used as an overlay (e.g. WriteSet), it stores the `nil` value to represent deleted keys,
+// When used as an overlay (e.g. WriteSet), it stores the zero value to represent deleted keys,
 // so we return separate bool value for found status.
 func (db *GMemDB[V]) OverlayGet(key Key) (V, bool) {
 	item, ok := db.BTreeG.Get(memdbItem[V]{key: key})
@@ -107,8 +107,8 @@ func (db *GMemDB[V]) OverlayGet(key Key) (V, bool) {
 	return item.value, true
 }
 
-// OverlaySet sets a value in the btree
-// When used as an overlay (e.g. WriteSet), it stores the `nil` value to represent deleted keys,
+// OverlaySet sets a value in the btree.
+// When used as an overlay (e.g. WriteSet), it stores the zero value to represent deleted keys.
 func (db *GMemDB[V]) OverlaySet(key Key, value V) {
 	db.BTreeG.Set(memdbItem[V]{key: key, value: value})
 }

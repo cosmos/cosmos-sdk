@@ -27,6 +27,14 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 }
 
 func (k msgServer) Send(goCtx context.Context, msg *types.MsgSend) (*types.MsgSendResponse, error) {
+	if msg == nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "nil MsgSend")
+	}
+
+	if err := msg.Amount.Validate(); err != nil {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+	}
+
 	var (
 		from, to []byte
 		err      error

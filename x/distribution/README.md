@@ -595,10 +595,10 @@ The distribution module emits the following events:
 
 The distribution module contains the following parameters:
 
-| Key                 | Type         | Example                    |
-| ------------------- | ------------ | -------------------------- |
-| communitytax        | string (dec) | "0.020000000000000000" [0] |
-| withdrawaddrenabled | bool         | true                       |
+| Key                   | Type         | Example                    |
+| --------------------- | ------------ | -------------------------- |
+| community_tax         | string (dec) | "0.020000000000000000" [0] |
+| withdraw_addr_enabled | bool         | true                       |
 
 * [0] `communitytax` must be positive and cannot exceed 1.00.
 * `baseproposerreward` and `bonusproposerreward` were parameters that are deprecated in v0.47 and are not used.

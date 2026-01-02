@@ -594,6 +594,14 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 		return nil, err
 	}
 
+	// Validate that the bond denom exists on-chain by checking if it has supply.
+	// This prevents governance from setting bond_denom to a non-existent denom,
+	// which would place the chain in an unsafe state.
+	supply := k.bankKeeper.GetSupply(ctx, msg.Params.BondDenom)
+	if supply.IsZero() {
+		return nil, errorsmod.Wrapf(types.ErrInvalidDenom, "bond denom %s does not exist or has zero supply", msg.Params.BondDenom)
+	}
+
 	// store params
 	if err := k.SetParams(ctx, msg.Params); err != nil {
 		return nil, err

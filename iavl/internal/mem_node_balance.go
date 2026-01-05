@@ -228,9 +228,9 @@ func maxUint8(a, b uint8) uint8 {
 // The current node (which must be new and mutable) becomes the right child of the new root.
 // The original left child's right subtree becomes the current node's new left subtree.
 //
-//	  Y (mutable)                copy of X
+//	  P (mutable)                copy of Q
 //	    /  \                      /      \
-//	   X   [Y]      =>          [W]    Y (immutable)     +    orphans: original X
+//	   Q   [Y]      =>          [W]    P (immutable)     +    orphans: original Q
 //	  / \                                /  \
 //	[W] [X]                            [X]  [Y]
 //
@@ -273,9 +273,9 @@ func (node *MemNode) rotateRight(ctx *mutationContext) (*MemNode, error) {
 // The current node (which must be new and mutable) becomes the left child of the new root.
 // The original right child's left subtree becomes the current node's new right subtree.
 //
-//	Y (mutable)                  copy of Z
+//	Q (mutable)                  copy of R
 //	  /  \                        /      \
-//	[X]   Z      =>       Y (immutable)  [Z]     +    orphans: original Z
+//	[X]   R      =>       Q (immutable)  [Z]     +    orphans: original R
 //	     / \                   /  \
 //	   [Y] [Z]               [X]  [Y]
 //

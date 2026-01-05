@@ -4,7 +4,7 @@ This package contains an extensible plugin system for the Cosmos-SDK. The plugin
 
 Although the `go-plugin` is built to work over RPC, it is currently only designed to work over a local network.
 
-## Pre requisites
+## Prerequisites
 
 For an overview of supported features by the `go-plugin` system, please see https://github.com/hashicorp/go-plugin. The `go-plugin` documentation is located [here](https://github.com/hashicorp/go-plugin/tree/master/docs). You can also directly visit any of the links below:
 
@@ -25,6 +25,6 @@ Read the plugin documentation in the [Streaming Plugins](#streaming-plugins) sec
 
 ## Streaming Plugins
 
-List of support streaming plugins
+List of supported streaming plugins
 
 * [ABCI State Streaming Plugin](abci/README.md)

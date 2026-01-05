@@ -9,6 +9,24 @@ const (
 	KeyExecutedTxs     = "executed_txs"
 	KeyValidatedTxs    = "validated_txs"
 	KeyDecreaseCount   = "decrease_count"
+
+	// MVData Metrics
+	KeyMVDataRead  = "mvdata_read"
+	KeyMVDataWrite = "mvdata_write"
+
+	// MVView Metrics
+	KeyMVViewReadWriteSet  = "mvview_read_writeset"
+	KeyMVViewReadMVData    = "mvview_read_mvdata"
+	KeyMVViewReadStorage   = "mvview_read_storage"
+	KeyMVViewWrite         = "mvview_write"
+	KeyMVViewDelete        = "mvview_delete"
+	KeyMVViewApplyWriteSet = "mvview_apply_writeset"
+	KeyMVViewIteratorKeys  = "mvview_iterator_keys_read"
+
+	// Executor/Transaction Metrics
+	KeyTxReadCount        = "tx_read_count"
+	KeyTxWriteCount       = "tx_write_count"
+	KeyTxNewLocationWrite = "tx_new_location_write"
 )
 
 type (
@@ -82,4 +100,5 @@ type MVView interface {
 
 	ApplyWriteSet(TxnVersion) Locations
 	ReadSet() *ReadSet
+	WriteCount() int
 }

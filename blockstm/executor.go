@@ -3,6 +3,9 @@ package blockstm
 import (
 	"context"
 	"fmt"
+	"time"
+
+	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
 // Executor fields are not mutated during execution.
@@ -66,9 +69,22 @@ func (e *Executor) Run() error {
 }
 
 func (e *Executor) TryExecute(version TxnVersion) (TxnVersion, TaskKind) {
+	start := time.Now()
 	e.scheduler.executedTxns.Add(1)
 	view := e.execute(version.Index)
+
+	// Track read and write counts
+	readCount := view.CountReads()
+	writeCount := view.CountWrites()
+	telemetry.IncrCounter(float32(readCount), TelemetrySubsystem, KeyTxReadCount)   //nolint:staticcheck // TODO: switch to OpenTelemetry
+	telemetry.IncrCounter(float32(writeCount), TelemetrySubsystem, KeyTxWriteCount) //nolint:staticcheck // TODO: switch to OpenTelemetry
+
 	wroteNewLocation := e.mvMemory.Record(version, view)
+	if wroteNewLocation {
+		telemetry.IncrCounter(1, TelemetrySubsystem, KeyTxNewLocationWrite) //nolint:staticcheck // TODO: switch to OpenTelemetry
+	}
+
+	telemetry.MeasureSince(start, TelemetrySubsystem, KeyExecutedTxs)
 	return e.scheduler.FinishExecution(version, wroteNewLocation)
 }
 

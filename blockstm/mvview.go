@@ -195,7 +195,7 @@ func (s *GMVMemoryView[V]) iterator(opts IteratorOptions) storetypes.GIterator[V
 
 		// Measure iterator duration and track keys read
 		telemetry.MeasureSince(iterStart, TelemetrySubsystem, KeyMVViewIteratorKeys)
-		telemetry.IncrCounter(float32(len(reads)), TelemetrySubsystem, KeyMVViewIteratorKeys) //nolint:staticcheck // TODO: switch to OpenTelemetry
+		telemetry.IncrCounter(float32(len(reads)), TelemetrySubsystem, KeyMVViewIteratorKeysCnt) //nolint:staticcheck // TODO: switch to OpenTelemetry
 	}
 
 	// three-way merge iterator

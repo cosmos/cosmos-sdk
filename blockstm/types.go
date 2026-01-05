@@ -7,6 +7,7 @@ import (
 const (
 	TelemetrySubsystem = "blockstm"
 	KeyExecutedTxs     = "executed_txs"
+	KeyTryExecuteTime  = "try_execute_time"
 	KeyValidatedTxs    = "validated_txs"
 	KeyDecreaseCount   = "decrease_count"
 
@@ -15,13 +16,14 @@ const (
 	KeyMVDataWrite = "mvdata_write"
 
 	// MVView Metrics
-	KeyMVViewReadWriteSet  = "mvview_read_writeset"
-	KeyMVViewReadMVData    = "mvview_read_mvdata"
-	KeyMVViewReadStorage   = "mvview_read_storage"
-	KeyMVViewWrite         = "mvview_write"
-	KeyMVViewDelete        = "mvview_delete"
-	KeyMVViewApplyWriteSet = "mvview_apply_writeset"
-	KeyMVViewIteratorKeys  = "mvview_iterator_keys_read"
+	KeyMVViewReadWriteSet    = "mvview_read_writeset"
+	KeyMVViewReadMVData      = "mvview_read_mvdata"
+	KeyMVViewReadStorage     = "mvview_read_storage"
+	KeyMVViewWrite           = "mvview_write"
+	KeyMVViewDelete          = "mvview_delete"
+	KeyMVViewApplyWriteSet   = "mvview_apply_writeset"
+	KeyMVViewIteratorKeys    = "mvview_iterator_keys_read"
+	KeyMVViewIteratorKeysCnt = "mvview_iterator_keys_read_count"
 
 	// Executor/Transaction Metrics
 	KeyTxReadCount        = "tx_read_count"

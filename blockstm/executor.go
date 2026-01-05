@@ -84,7 +84,7 @@ func (e *Executor) TryExecute(version TxnVersion) (TxnVersion, TaskKind) {
 		telemetry.IncrCounter(1, TelemetrySubsystem, KeyTxNewLocationWrite) //nolint:staticcheck // TODO: switch to OpenTelemetry
 	}
 
-	telemetry.MeasureSince(start, TelemetrySubsystem, KeyExecutedTxs)
+	telemetry.MeasureSince(start, TelemetrySubsystem, KeyTryExecuteTime)
 	return e.scheduler.FinishExecution(version, wroteNewLocation)
 }
 

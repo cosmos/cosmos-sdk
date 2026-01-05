@@ -2,7 +2,9 @@ package tree
 
 import (
 	"sync/atomic"
+	"time"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/tidwall/btree"
 )
 
@@ -24,10 +26,12 @@ func NewBTree[T any](less func(a, b T) bool, degree int) *BTree[T] {
 }
 
 func (bt *BTree[T]) Get(item T) (result T, ok bool) {
+	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeyGet)
 	return bt.Load().Get(item)
 }
 
 func (bt *BTree[T]) GetOrDefault(item T, fillDefaults func(*T)) T {
+	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeyGetOrDefault)
 	for {
 		t := bt.Load()
 		result, ok := t.Get(item)
@@ -45,6 +49,7 @@ func (bt *BTree[T]) GetOrDefault(item T, fillDefaults func(*T)) T {
 }
 
 func (bt *BTree[T]) Set(item T) (prev T, ok bool) {
+	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeySet)
 	for {
 		t := bt.Load()
 		c := t.Copy()
@@ -57,6 +62,7 @@ func (bt *BTree[T]) Set(item T) (prev T, ok bool) {
 }
 
 func (bt *BTree[T]) Delete(item T) (prev T, ok bool) {
+	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeyDelete)
 	for {
 		t := bt.Load()
 		c := t.Copy()
@@ -69,6 +75,7 @@ func (bt *BTree[T]) Delete(item T) (prev T, ok bool) {
 }
 
 func (bt *BTree[T]) Scan(iter func(item T) bool) {
+	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeyScan)
 	bt.Load().Scan(iter)
 }
 
@@ -82,6 +89,7 @@ func (bt *BTree[T]) Iter() btree.IterG[T] {
 
 // ReverseSeek returns the first item that is less than or equal to the pivot
 func (bt *BTree[T]) ReverseSeek(pivot T) (result T, ok bool) {
+	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeyReverseSeek)
 	bt.Load().Descend(pivot, func(item T) bool {
 		result = item
 		ok = true

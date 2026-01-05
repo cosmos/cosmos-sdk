@@ -106,8 +106,10 @@ func (s *GMVMemoryView[V]) Get(key []byte) V {
 	for {
 		value, version, estimate := s.mvData.Read(key, s.txn)
 		if estimate {
+			estimateStart := time.Now()
 			// read ESTIMATE mark, wait for the blocking txn to finish
 			s.waitFor(version.Index)
+			telemetry.MeasureSince(estimateStart, TelemetrySubsystem, KeyMVViewEstimateWait)
 			continue
 		}
 

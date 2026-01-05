@@ -24,6 +24,7 @@ const (
 	KeyMVViewApplyWriteSet   = "mvview_apply_writeset"
 	KeyMVViewIteratorKeys    = "mvview_iterator_keys_read"
 	KeyMVViewIteratorKeysCnt = "mvview_iterator_keys_read_count"
+	KeyMVViewEstimateWait    = "mvview_estimate_wait"
 
 	// Executor/Transaction Metrics
 	KeyTxReadCount        = "tx_read_count"

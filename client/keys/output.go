@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Use protobuf interface marshaler rather then generic JSON
+// Use protobuf interface marshaler rather than generic JSON
 
 // KeyOutput defines a structure wrapping around an Info object used for output
 // functionality.

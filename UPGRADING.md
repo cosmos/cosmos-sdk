@@ -145,3 +145,18 @@ Additionally, new options have been added. See log/options.go for all usable opt
 By default, the logger will log to the console AND to OpenTelemetry if a logger provider has been set in the optional OpenTelemetry configuration.
 
 For production nodes, we have introduced a new flag, `--log_no_console` to disable the overhead of logging to the console. This is useful in situations where you ONLY want OpenTelemetry log forwarding.
+
+### Log Levels
+
+Levels have been changed to achieve parity with slog. The supported levels are:
+
+- info
+- debug
+- warn
+- error
+
+The following levels are no longer supported:
+
+- trace
+- fatal
+- panic

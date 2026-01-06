@@ -16,7 +16,7 @@ The `cosmossdk.io/log/v2` package provides a structured logging implementation f
 ### Basic Usage
 
 ```go
-import "cosmossdk.io/log/v2/v2"
+import "cosmossdk.io/log/v2"
 
 // Create a logger (fast zerolog path, no OTEL)
 logger := log.NewLogger("my-app")

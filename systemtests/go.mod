@@ -19,7 +19,6 @@ require (
 	cosmossdk.io/core v0.11.3 // indirect
 	cosmossdk.io/depinject v1.2.1 // indirect
 	cosmossdk.io/errors v1.0.2 // indirect
-	cosmossdk.io/log v1.6.1 // indirect
 	cosmossdk.io/log/v2 v2.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
 	cosmossdk.io/store v1.3.0-beta.0 // indirect
@@ -210,6 +209,8 @@ require (
 replace github.com/cosmos/cosmos-sdk => ../
 
 replace cosmossdk.io/log/v2 => ../log
+
+replace cosmossdk.io/store => ../store
 
 // Use fork for blockstm
 replace github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-20250924232609-2c6195d95951

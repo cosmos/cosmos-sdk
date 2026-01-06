@@ -1,10 +1,13 @@
 package log_test
 
 import (
+	"bytes"
+	"fmt"
 	"log/slog"
 	"testing"
 
 	"cosmossdk.io/log"
+	"github.com/rs/zerolog"
 )
 
 func TestParseLogLevel(t *testing.T) {
@@ -127,6 +130,132 @@ func TestLevelToString(t *testing.T) {
 			result := log.LevelToString(tc.level)
 			if result != tc.expected {
 				t.Errorf("expected %s for level %v, got %s", tc.expected, tc.level, result)
+			}
+		})
+	}
+}
+
+func TestVerboseMode(t *testing.T) {
+	logMessages := []struct {
+		level   zerolog.Level
+		module  string
+		message string
+	}{
+		{
+			zerolog.InfoLevel,
+			"foo",
+			"msg 1",
+		},
+		{
+			zerolog.WarnLevel,
+			"foo",
+			"msg 2",
+		},
+		{
+			zerolog.ErrorLevel,
+			"bar",
+			"msg 3",
+		},
+		{
+			zerolog.DebugLevel,
+			"foo",
+			"msg 4",
+		},
+	}
+	tt := []struct {
+		name         string
+		level        slog.Level
+		verboseLevel slog.Level
+		filter       string
+		expected     string
+	}{
+		{
+			name:         "verbose mode simple case",
+			level:        slog.LevelWarn,
+			verboseLevel: slog.LevelDebug,
+			expected: `* WRN msg 2 module=foo
+* ERR msg 3 module=bar
+* ERR Start Verbose Mode
+* INF msg 1 module=foo
+* WRN msg 2 module=foo
+* ERR msg 3 module=bar
+* DBG msg 4 module=foo
+`,
+		},
+		{
+			name:         "verbose mode with filter",
+			level:        slog.LevelWarn,
+			verboseLevel: slog.LevelInfo,
+			filter:       "foo:error",
+			expected: `* ERR msg 3 module=bar
+* ERR Start Verbose Mode
+* INF msg 1 module=foo
+* WRN msg 2 module=foo
+* ERR msg 3 module=bar
+`,
+		},
+		{
+			name:         "no verbose mode",
+			level:        slog.LevelWarn,
+			verboseLevel: log.NoLevel, // meant to be no level
+			expected: `* WRN msg 2 module=foo
+* ERR msg 3 module=bar
+* ERR Start Verbose Mode
+* WRN msg 2 module=foo
+* ERR msg 3 module=bar
+`,
+		},
+		{
+			name:         "no verbose mode with filter",
+			level:        slog.LevelWarn,
+			verboseLevel: log.NoLevel, // meant to be no level
+			filter:       "foo:error",
+			expected: `* ERR msg 3 module=bar
+* ERR Start Verbose Mode
+* ERR msg 3 module=bar
+`,
+		},
+	}
+	for i, tc := range tt {
+		t.Run(fmt.Sprintf("%d: %s", i, tc.name), func(t *testing.T) {
+			out := new(bytes.Buffer)
+			opts := []log.Option{
+				log.WithLevel(tc.level),
+				log.WithVerboseLevel(tc.verboseLevel),
+				log.WithColor(false),
+				log.WithTimeFormat("*"), // disable non-deterministic time format
+			}
+			if tc.filter != "" {
+				filter, err := log.ParseLogLevel(tc.filter)
+				if err != nil {
+					t.Fatalf("failed to parse log level: %v", err)
+				}
+				opts = append(opts, log.WithFilter(filter))
+			}
+			opts = append(opts, log.WithConsoleWriter(out))
+			logger := log.NewLogger("test", opts...)
+			writeMsgs := func() {
+				for _, msg := range logMessages {
+					switch msg.level {
+					case zerolog.InfoLevel:
+						logger.Info(msg.message, log.ModuleKey, msg.module)
+					case zerolog.WarnLevel:
+						logger.Warn(msg.message, log.ModuleKey, msg.module)
+					case zerolog.DebugLevel:
+						logger.Debug(msg.message, log.ModuleKey, msg.module)
+					case zerolog.ErrorLevel:
+						logger.Error(msg.message, log.ModuleKey, msg.module)
+					default:
+						t.Fatalf("unexpected level: %v", msg.level)
+					}
+				}
+			}
+			writeMsgs()
+			logger.Error("Start Verbose Mode")
+			logger.(log.VerboseModeLogger).SetVerboseMode(true)
+			writeMsgs()
+			if tc.expected != out.String() {
+				t.Fatalf("expected:\n%s\ngot:\n%s", tc.expected, out.String())
 			}
 		})
 	}

@@ -280,6 +280,9 @@ func (l *zeroLogWrapper) SetVerboseMode(enable bool) {
 
 // slogToZerologLevel converts slog.Level to zerolog.Level.
 func slogToZerologLevel(level slog.Level) zerolog.Level {
+	if level == NoLevel {
+		return zerolog.NoLevel
+	}
 	switch {
 	case level <= slog.LevelDebug:
 		return zerolog.DebugLevel

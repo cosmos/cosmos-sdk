@@ -125,6 +125,10 @@ func NewLogger(name string, opts ...Option) Logger {
 
 	// If OTEL is disabled, use direct zerolog (fast path)
 	if !otelEnabled {
+		// TODO: currently there is an open issue which is preventing zerolog from being used as a bridge for Otel logging.
+		// see: https://github.com/open-telemetry/opentelemetry-go-contrib/issues/5969
+		// ref: https://github.com/rs/zerolog/issues/493.
+		// ref: https://github.com/open-telemetry/opentelemetry-go-contrib/issues/5405
 		return newZerologLogger(dst, &cfg)
 	}
 

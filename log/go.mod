@@ -1,4 +1,4 @@
-module cosmossdk.io/log
+module cosmossdk.io/log/v2
 
 go 1.24.0
 

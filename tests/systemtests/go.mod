@@ -3,7 +3,7 @@ module cosmossdk.io/tests/systemtests
 go 1.25.5
 
 replace (
-	cosmossdk.io/log => ../../log
+	cosmossdk.io/log/v2 => ../../log
 	// always use latest versions in tests
 	cosmossdk.io/systemtests => ../../systemtests
 	github.com/cosmos/cosmos-sdk => ../..
@@ -24,7 +24,7 @@ require (
 	cosmossdk.io/core v0.11.3 // indirect
 	cosmossdk.io/depinject v1.2.1 // indirect
 	cosmossdk.io/errors v1.0.2 // indirect
-	cosmossdk.io/log v1.6.1 // indirect
+	cosmossdk.io/log/v2 v2.0.0-00010101000000-000000000000 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
 	cosmossdk.io/store v1.3.0-beta.0 // indirect
 	cosmossdk.io/x/tx v0.14.0 // indirect

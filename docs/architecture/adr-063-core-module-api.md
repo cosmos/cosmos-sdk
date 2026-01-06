@@ -168,7 +168,7 @@ by other modules. If there is a client-side need to add events in patch releases
 
 #### Logger
 
-A logger (`cosmossdk.io/log`) must be supplied using `depinject`, and will
+A logger (`cosmossdk.io/log/v2`) must be supplied using `depinject`, and will
 be made available for modules to use via `depinject.In`.
 Modules using it should follow the current pattern in the SDK by adding the module name before using it.
 

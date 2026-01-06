@@ -9,7 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	"cosmossdk.io/tools/cosmovisor"
 	"cosmossdk.io/x/upgrade/plan"
 )

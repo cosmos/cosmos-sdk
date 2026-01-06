@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"testing"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 )
 
 func TestParseLogLevel(t *testing.T) {

@@ -7,7 +7,7 @@ require (
 	cosmossdk.io/core v0.11.3
 	cosmossdk.io/depinject v1.2.1
 	cosmossdk.io/errors v1.0.2
-	cosmossdk.io/log v1.6.1
+	cosmossdk.io/log/v2 v2.0.0-00010101000000-000000000000
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/simapp v0.0.0-20230620040119-e078f1a49e8b
 	cosmossdk.io/store v1.3.0-beta.0
@@ -40,6 +40,7 @@ require (
 	cloud.google.com/go/storage v1.58.0 // indirect
 	cosmossdk.io/client/v2 v2.0.0-beta.11 // indirect
 	cosmossdk.io/collections v1.3.1 // indirect
+	cosmossdk.io/log v1.6.1 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -268,7 +269,7 @@ require (
 
 // Below are the long-lived replace for tests.
 replace (
-	cosmossdk.io/log => ../log
+	cosmossdk.io/log/v2 => ../log
 	// We always want to test against the latest version of the simapp.
 	cosmossdk.io/simapp => ../simapp
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0

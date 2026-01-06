@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 )
 
 func TestLoggerBasic(t *testing.T) {

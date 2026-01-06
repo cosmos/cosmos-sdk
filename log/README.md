@@ -1,6 +1,6 @@
-# Log
+# Log v2
 
-The `cosmossdk.io/log` package provides a structured logging implementation for the Cosmos SDK using [zerolog](https://github.com/rs/zerolog) with optional OpenTelemetry integration.
+The `cosmossdk.io/log/v2/v2` package provides a structured logging implementation for the Cosmos SDK using [zerolog](https://github.com/rs/zerolog) with optional OpenTelemetry integration.
 
 ## Features
 
@@ -16,7 +16,7 @@ The `cosmossdk.io/log` package provides a structured logging implementation for 
 ### Basic Usage
 
 ```go
-import "cosmossdk.io/log"
+import "cosmossdk.io/log/v2/v2"
 
 // Create a logger (fast zerolog path, no OTEL)
 logger := log.NewLogger("my-app")

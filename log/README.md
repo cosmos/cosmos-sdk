@@ -1,14 +1,15 @@
 # Log
 
-The `cosmossdk.io/log` package provides a structured logging implementation for the Cosmos SDK using Go's standard `log/slog` with OpenTelemetry integration.
+The `cosmossdk.io/log` package provides a structured logging implementation for the Cosmos SDK using [zerolog](https://github.com/rs/zerolog) with optional OpenTelemetry integration.
 
 ## Features
 
-- **Dual output**: Logs are sent to both console and OpenTelemetry simultaneously
-- **Pretty console output**: Human-readable colored output powered by [zerolog](https://github.com/rs/zerolog)
-- **OpenTelemetry integration**: Full observability with trace correlation
+- **Fast default path**: Zero-allocation logging via zerolog (OTEL disabled by default)
+- **Pretty console output**: Human-readable colored output
+- **Optional OpenTelemetry**: Enable with `WithOTEL()` for dual output (console + OTEL)
 - **Verbose mode**: Dynamic log level switching for operations like chain upgrades
 - **Module filtering**: Filter logs by module and level
+- **Stack traces**: Optional stack trace logging on errors
 
 ## Usage
 
@@ -17,7 +18,7 @@ The `cosmossdk.io/log` package provides a structured logging implementation for 
 ```go
 import "cosmossdk.io/log"
 
-// Create a logger with default settings (console + OTEL)
+// Create a logger (fast zerolog path, no OTEL)
 logger := log.NewLogger("my-app")
 
 // Log messages
@@ -30,40 +31,49 @@ moduleLogger := logger.With("module", "auth")
 moduleLogger.Info("user authenticated", "user_id", 42)
 ```
 
-### With Context (Trace Correlation)
+### With OpenTelemetry
 
 ```go
+// Enable OTEL for dual output (console + OpenTelemetry)
+logger := log.NewLogger("my-app", log.WithOTEL())
+
 // Use context-aware methods for trace/span correlation
 logger.InfoContext(ctx, "handling request", "path", "/api/v1/users")
 logger.ErrorContext(ctx, "request failed", "error", err)
+
+// OTEL-only (no console output)
+logger := log.NewLogger("my-app", log.WithOTEL(), log.WithoutConsole())
+
+// Custom OTEL provider
+logger := log.NewLogger("my-app", log.WithLoggerProvider(provider))
 ```
 
 ### Configuration Options
 
 ```go
 logger := log.NewLogger("my-app",
-    // Set minimum log level
+    // Set minimum log level (default: slog.LevelInfo)
     log.WithLevel(slog.LevelDebug),
     
     // Enable verbose mode support (for upgrades, etc.)
     log.WithVerboseLevel(slog.LevelDebug),
     
-    // Customize console output
+    // Console formatting
     log.WithColor(true),                    // Enable colored output (default: true)
     log.WithTimeFormat(time.RFC3339),       // Custom time format (default: time.Kitchen)
     log.WithConsoleWriter(os.Stdout),       // Custom output writer (default: os.Stderr)
+    log.WithJSONOutput(),                   // Output JSON instead of pretty text
     
-    // Output JSON instead of pretty text
-    log.WithJSONOutput(),
+    // OpenTelemetry
+    log.WithOTEL(),                         // Enable OTEL forwarding
+    log.WithoutOTEL(),                      // Explicitly disable OTEL
+    log.WithLoggerProvider(provider),       // Custom OTEL provider (implies WithOTEL)
+    log.WithoutConsole(),                   // Disable console (OTEL only)
     
-    // Disable console (OTEL only)
-    log.WithoutConsole(),
-    
-    // Custom OTEL provider
-    log.WithLoggerProvider(provider),
-    
-    // Filter logs by module/level
-    log.WithFilter(filterFunc),
+    // Advanced
+    log.WithFilter(filterFunc),             // Filter logs by module/level
+    log.WithStackTrace(true),               // Enable stack traces on errors
+    log.WithHooks(hook1, hook2),            // Add zerolog hooks
 )
 ```
 
@@ -122,6 +132,27 @@ logger := log.NewNopLogger()
 
 ## Architecture
 
+The package supports two logging paths:
+
+### Default Path (OTEL Disabled)
+
+```
+┌─────────────────────────────────────────────────────┐
+│                  zeroLogWrapper                     │
+│              (fast path, zero allocs)               │
+├─────────────────────────────────────────────────────┤
+│                    zerolog                          │
+│  • Pretty or JSON formatting                        │
+│  • Color support                                    │
+│  • Level filtering                                  │
+│  • Module filtering                                 │
+│  • Verbose mode                                     │
+│  • Stack traces                                     │
+└─────────────────────────────────────────────────────┘
+```
+
+### OTEL Enabled Path
+
 ```
 ┌─────────────────────────────────────────────────────┐
 │                    slog.Logger                      │
@@ -140,9 +171,11 @@ logger := log.NewNopLogger()
 ```
 
 **Key design decisions:**
-- Console output respects level and filter settings
+- OTEL is disabled by default for maximum performance
+- When OTEL is enabled, console output respects level and filter settings
 - OpenTelemetry receives all logs unfiltered (for full observability)
 - Verbose mode only affects console output
+- Context methods (`InfoContext`, etc.) enable trace correlation when OTEL is active
 
 ## Logger Interface
 
@@ -160,7 +193,11 @@ type Logger interface {
     DebugContext(ctx context.Context, msg string, keyVals ...any)
     
     With(keyVals ...any) Logger
-    Impl() any  // Returns underlying *slog.Logger
+    Impl() any  // Returns underlying *zerolog.Logger or *slog.Logger
+}
+
+type VerboseModeLogger interface {
+    Logger
+    SetVerboseMode(bool)
 }
 ```
-

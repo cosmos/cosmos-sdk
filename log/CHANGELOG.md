@@ -22,7 +22,7 @@ Each entry must include the Github issue reference in the following format:
 
 ## [Unreleased]
 
-* [#25701](https://github.com/cosmos/cosmos-sdk/pull/25701) Introduce log v2, enabling OpenTelemetry logging with slog. The logging interface has been updated to accommodate Context logging methods, which allows correlation of logs with traces.
+* [#25701](https://github.com/cosmos/cosmos-sdk/pull/25701) Introduce log v2, enabling OpenTelemetry logging with slog. The logging interface has been updated to accommodate Context logging methods, which allows correlation of logs with traces. To see the impact of these changes, check out the [Upgrade](../UPGRADING.md) document.
 
 ## [v1.6.0](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v1.6.0) - 2025-05-13
 

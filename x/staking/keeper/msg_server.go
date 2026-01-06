@@ -599,7 +599,7 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 	// which would place the chain in an unsafe state.
 	supply := k.bankKeeper.GetSupply(ctx, msg.Params.BondDenom)
 	if supply.IsZero() {
-		return nil, errorsmod.Wrapf(types.ErrInvalidDenom, "bond denom %s does not exist or has zero supply", msg.Params.BondDenom)
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "bond denom %s does not exist or has zero supply", msg.Params.BondDenom)
 	}
 
 	// store params

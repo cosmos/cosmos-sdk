@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"testing"
 
-	"gotest.tools/v3/assert"
+	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
 
@@ -38,7 +38,7 @@ func TestMsgUpdateParams_BondDenomValidation(t *testing.T) {
 			setupFunc: func() {
 				// Mint coins to create supply for "validcoin"
 				mintCoins := sdk.NewCoins(sdk.NewInt64Coin("validcoin", 1000000))
-				assert.NilError(t, testutil.FundModuleAccount(ctx, f.bankKeeper, types.ModuleName, mintCoins))
+				require.NoError(t, testutil.FundModuleAccount(ctx, f.bankKeeper, types.ModuleName, mintCoins))
 			},
 			bondDenom: "validcoin",
 			expectErr: false,
@@ -58,14 +58,14 @@ func TestMsgUpdateParams_BondDenomValidation(t *testing.T) {
 				// The default bond denom "stake" should already have supply from test setup
 				// Just ensure it has supply
 				currentParams, err := f.stakingKeeper.GetParams(ctx)
-				assert.NilError(t, err)
+				require.NoError(t, err)
 				if currentParams.BondDenom == "stake" {
 					// Already has supply from initialization
 					return
 				}
 				// Otherwise mint some
 				mintCoins := sdk.NewCoins(sdk.NewInt64Coin("stake", 1000000))
-				assert.NilError(t, testutil.FundModuleAccount(ctx, f.bankKeeper, types.ModuleName, mintCoins))
+				require.NoError(t, testutil.FundModuleAccount(ctx, f.bankKeeper, types.ModuleName, mintCoins))
 			},
 			bondDenom: "stake",
 			expectErr: false,
@@ -94,16 +94,16 @@ func TestMsgUpdateParams_BondDenomValidation(t *testing.T) {
 
 			// Check expectations
 			if tc.expectErr {
-				assert.Assert(t, err != nil, "expected error but got none")
-				assert.ErrorContains(t, err, tc.errMsg)
-				assert.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
+				require.Error(t, err, "expected error but got none")
+				require.ErrorContains(t, err, tc.errMsg)
+				require.ErrorIs(t, err, sdkerrors.ErrInvalidRequest)
 			} else {
-				assert.NilError(t, err)
+				require.NoError(t, err)
 
 				// Verify params were actually updated
 				updatedParams, err := f.stakingKeeper.GetParams(ctx)
-				assert.NilError(t, err)
-				assert.Equal(t, tc.bondDenom, updatedParams.BondDenom)
+				require.NoError(t, err)
+				require.Equal(t, tc.bondDenom, updatedParams.BondDenom)
 			}
 		})
 	}
@@ -120,9 +120,9 @@ func TestMsgUpdateParams_OtherValidations(t *testing.T) {
 
 	// Ensure default bond denom has supply
 	currentParams, err := f.stakingKeeper.GetParams(ctx)
-	assert.NilError(t, err)
+	require.NoError(t, err)
 	mintCoins := sdk.NewCoins(sdk.NewInt64Coin(currentParams.BondDenom, 1000000))
-	assert.NilError(t, testutil.FundModuleAccount(ctx, f.bankKeeper, types.ModuleName, mintCoins))
+	require.NoError(t, testutil.FundModuleAccount(ctx, f.bankKeeper, types.ModuleName, mintCoins))
 
 	testCases := []struct {
 		name      string
@@ -187,10 +187,10 @@ func TestMsgUpdateParams_OtherValidations(t *testing.T) {
 			_, err := msgServer.UpdateParams(ctx, msg)
 
 			if tc.expectErr {
-				assert.Assert(t, err != nil, "expected error but got none")
-				assert.ErrorContains(t, err, tc.errMsg)
+				require.Error(t, err, "expected error but got none")
+				require.ErrorContains(t, err, tc.errMsg)
 			} else {
-				assert.NilError(t, err)
+				require.NoError(t, err)
 			}
 		})
 	}

@@ -22,8 +22,6 @@ Each entry must include the Github issue reference in the following format:
 
 ## [Unreleased]
 
-* [#25701](https://github.com/cosmos/cosmos-sdk/pull/25701) Introduce log v2, enabling OpenTelemetry logging with slog. The logging interface has been updated to accommodate Context logging methods, which allows correlation of logs with traces.
-
 ## [v1.6.0](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v1.6.0) - 2025-05-13
 
 * [#24720](https://github.com/cosmos/cosmos-sdk/pull/24720) add `VerboseModeLogger` extension interface and `VerboseLevel` configuration option for increasing log verbosity during sensitive operations such as upgrades.
@@ -36,7 +34,7 @@ Each entry must include the Github issue reference in the following format:
 
 * [#22466](https://github.com/cosmos/cosmos-sdk/pull/22466) Disable coloring in testing logger.
 * [#22233](https://github.com/cosmos/cosmos-sdk/pull/22233) Use sonic json library for faster json handling.
-* [#22347](https://github.com/cosmos/cosmos-sdk/pull/22347) Add `cosmossdk.io/log/v2/slog` to allow using a standard library log/slog-backed logger. This required to bump the minimum go version of `cosmossdk.io/log/v2` to 1.21.
+* [#22347](https://github.com/cosmos/cosmos-sdk/pull/22347) Add `cosmossdk.io/log/slog` to allow using a standard library log/slog-backed logger. This required to bump the minimum go version of `cosmossdk.io/log` to 1.21.
 
 ## [v1.4.1](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v1.4.1) - 2024-08-16
 
@@ -77,7 +75,7 @@ Each entry must include the Github issue reference in the following format:
 
 ## [v0.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v0.1.0) - 2023-03-13
 
-* Introducing a standalone SDK logger package (`cosmossdk.io/log/v2`).
+* Introducing a standalone SDK logger package (`cosmossdk.io/log`).
   It replaces CometBFT logger and provides a common interface for all SDK components.
   The default logger (`NewLogger`) is using [zerolog](https://github.com/rs/zerolog),
   but it can be easily replaced with any implementation that implements the `log.Logger` interface.

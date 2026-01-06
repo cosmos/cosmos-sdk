@@ -1,6 +1,6 @@
 # Log v2
 
-The `cosmossdk.io/log/v2/v2` package provides a structured logging implementation for the Cosmos SDK using [zerolog](https://github.com/rs/zerolog) with optional OpenTelemetry integration.
+The `cosmossdk.io/log/v2` package provides a structured logging implementation for the Cosmos SDK using [zerolog](https://github.com/rs/zerolog) with optional OpenTelemetry integration.
 
 ## Features
 

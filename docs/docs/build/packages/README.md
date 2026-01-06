@@ -29,7 +29,7 @@ For more information on SDK tooling, see the [Tooling](https://docs.cosmos.netwo
 
 ## Utilities
 
-* [Log](https://pkg.go.dev/cosmossdk.io/log/v2) - Logging library
+* [Log](https://pkg.go.dev/cosmossdk.io/log) - Logging library
 * [Errors](https://pkg.go.dev/cosmossdk.io/errors) - Error handling library
 * [Math](https://pkg.go.dev/cosmossdk.io/math) - Math library for SDK arithmetic operations
 

@@ -171,7 +171,7 @@ The package supports two logging paths:
 ```
 
 **Key design decisions:**
-- OTEL is disabled by default for maximum performance
+- OTEL is only enabled if an OpenTelemetry configuration is set for telemetry.
 - When OTEL is enabled, console output respects level and filter settings
 - OpenTelemetry receives all logs unfiltered (for full observability)
 - Verbose mode only affects console output

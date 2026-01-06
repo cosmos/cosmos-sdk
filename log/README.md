@@ -6,7 +6,7 @@ The `cosmossdk.io/log` package provides a structured logging implementation for 
 
 - **Fast default path**: Zero-allocation logging via zerolog (OTEL disabled by default)
 - **Pretty console output**: Human-readable colored output
-- **Optional OpenTelemetry**: Enable with `WithOTEL()` for dual output (console + OTEL)
+- **Optional OpenTelemetry**: Enable with `WithOTEL()` for dual output (console + OTEL). This will happen automatically if an OpenTelemetry configuration is set with a logger provider.
 - **Verbose mode**: Dynamic log level switching for operations like chain upgrades
 - **Module filtering**: Filter logs by module and level
 - **Stack traces**: Optional stack trace logging on errors

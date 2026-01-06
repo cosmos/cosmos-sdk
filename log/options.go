@@ -54,7 +54,7 @@ type Config struct {
 	// If nil, the global logger provider is used.
 	LoggerProvider otellog.LoggerProvider
 	// EnableOTEL controls OpenTelemetry log forwarding.
-	// nil = auto-detect based on OTEL environment variables
+	// nil = check LoggerProvider.
 	// true = force enable
 	// false = force disable
 	EnableOTEL *bool

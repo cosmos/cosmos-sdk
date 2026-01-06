@@ -28,6 +28,7 @@ func Execute(rootCmd *cobra.Command, envPrefix, defaultHome string) error {
 	// NOTE: The default logger is only checking for the "json" value, any other value will default to plain text.
 	rootCmd.PersistentFlags().String(flags.FlagLogFormat, "plain", "The logging format (json|plain)")
 	rootCmd.PersistentFlags().Bool(flags.FlagLogNoColor, false, "Disable colored logs")
+	rootCmd.PersistentFlags().Bool(flags.FlagLogNoConsole, false, "Disable console logging (logs only to OTEL if configured)")
 	rootCmd.PersistentFlags().String(flags.FlagVerboseLogLevel, "debug", "The logging level (debug|info|warn|error|disabled) to use when performing operations which require extra verbosity (such as upgrades). When enabled, verbose mode disables any custom log filters.")
 
 	executor := cmtcli.PrepareBaseCmd(rootCmd, envPrefix, defaultHome)

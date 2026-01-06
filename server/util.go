@@ -109,12 +109,13 @@ func InterceptConfigsPreRunHandler(cmd *cobra.Command, customAppConfigTemplate s
 	// log provider is available for the slog OTEL handler.
 	homeDir := serverCtx.Viper.GetString(flags.FlagHome)
 	otelFile := filepath.Join(homeDir, "config", telemetry.OtelFileName)
-	if err := telemetry.InitializeOpenTelemetry(otelFile); err != nil {
+	telemetryInfo, err := telemetry.InitializeOpenTelemetry(otelFile)
+	if err != nil {
 		return fmt.Errorf("failed to initialize OpenTelemetry: %w", err)
 	}
 
 	// overwrite default server logger
-	logger, err := CreateSDKLogger(serverCtx, cmd.OutOrStdout())
+	logger, err := CreateSDKLogger(serverCtx, cmd.OutOrStdout(), telemetryInfo.LoggingEnabled)
 	if err != nil {
 		return err
 	}
@@ -176,7 +177,8 @@ func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplat
 
 // CreateSDKLogger creates the default SDK logger.
 // It reads the log level and format from the server context.
-func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
+// If otelEnabled is true, logs will be forwarded to OpenTelemetry.
+func CreateSDKLogger(ctx *Context, out io.Writer, otelEnabled bool) (log.Logger, error) {
 	var opts []log.Option
 
 	// Set console output
@@ -190,6 +192,11 @@ func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 	// Disable colors if configured
 	if ctx.Viper.GetBool(flags.FlagLogNoColor) {
 		opts = append(opts, log.WithColor(false))
+	}
+
+	// Disable console output if configured (for OTEL-only logging)
+	if ctx.Viper.GetBool(flags.FlagLogNoConsole) {
+		opts = append(opts, log.WithoutConsole())
 	}
 
 	// Parse and set log level
@@ -208,6 +215,11 @@ func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 			return nil, fmt.Errorf("invalid verbose log level %s: %w", verboseLvlStr, err)
 		}
 		opts = append(opts, log.WithVerboseLevel(verboseLevel))
+	}
+
+	// Enable OTEL logging if configured
+	if otelEnabled {
+		opts = append(opts, log.WithOTEL())
 	}
 
 	return log.NewLogger("cosmos-sdk", opts...), nil

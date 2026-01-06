@@ -66,7 +66,7 @@ func TestLoggerLevels(t *testing.T) {
 			logger := log.NewLogger("test",
 				log.WithConsoleWriter(buf),
 				log.WithColor(false),
-				log.WithLevel(-4), // slog.LevelDebug
+				log.WithLevel(slog.LevelDebug),
 			)
 			tc.logFunc(logger)
 			if !strings.Contains(buf.String(), tc.expected) {
@@ -81,8 +81,9 @@ func TestLoggerJSON(t *testing.T) {
 	logger := log.NewLogger("test", log.WithConsoleWriter(buf), log.WithJSONOutput())
 	logger.Info("hello world", "key", "value")
 	output := buf.String()
-	if !strings.Contains(output, `"msg":"hello world"`) {
-		t.Fatalf("expected JSON output with msg field, got: %s", output)
+	// zerolog JSON uses "message" field
+	if !strings.Contains(output, `"message":"hello world"`) {
+		t.Fatalf("expected JSON output with message field, got: %s", output)
 	}
 	if !strings.Contains(output, `"key":"value"`) {
 		t.Fatalf("expected JSON output with key field, got: %s", output)
@@ -101,7 +102,7 @@ func TestFilteredWriter(t *testing.T) {
 	logger := log.NewLogger("test",
 		log.WithConsoleWriter(buf),
 		log.WithColor(false),
-		log.WithLevel(slog.LevelDebug), // Allow debug level through
+		log.WithLevel(slog.LevelDebug),
 		log.WithFilter(filter),
 	)
 
@@ -125,4 +126,18 @@ func TestNopLogger(t *testing.T) {
 	logger.Warn("test")
 	logger.Error("test")
 	logger.With("key", "value").Info("test")
+}
+
+func TestWithoutConsole(t *testing.T) {
+	buf := new(bytes.Buffer)
+	// WithoutConsole should suppress all console output (OTEL disabled path)
+	logger := log.NewLogger("test",
+		log.WithConsoleWriter(buf),
+		log.WithoutConsole(),
+	)
+	logger.Info("this should not appear")
+	logger.Warn("neither should this")
+	if buf.Len() != 0 {
+		t.Errorf("expected no output with WithoutConsole, got: %s", buf.String())
+	}
 }

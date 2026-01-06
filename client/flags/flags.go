@@ -91,6 +91,7 @@ const (
 	FlagVerboseLogLevel = "verbose_log_level"
 	FlagLogFormat       = "log_format"
 	FlagLogNoColor      = "log_no_color"
+	FlagLogNoConsole    = "log_no_console"
 )
 
 // List of supported output formats

@@ -238,7 +238,7 @@ func start(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreato
 	}
 
 	otelFile := filepath.Join(clientCtx.HomeDir, "config", telemetry.OtelFileName)
-	if err := telemetry.InitializeOpenTelemetry(otelFile); err != nil {
+	if _, err := telemetry.InitializeOpenTelemetry(otelFile); err != nil {
 		return fmt.Errorf("failed to initialize OpenTelemetry: %w", err)
 	}
 

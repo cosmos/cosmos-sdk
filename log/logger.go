@@ -2,16 +2,36 @@ package log
 
 import (
 	"context"
+	"encoding"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"sync/atomic"
-	"time"
 
+	"github.com/bytedance/sonic"
+	pkgerrors "github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	zerologpkgerrors "github.com/rs/zerolog/pkgerrors"
 	"go.opentelemetry.io/contrib/bridges/otelslog"
 )
+
+func init() {
+	zerolog.InterfaceMarshalFunc = func(i any) ([]byte, error) {
+		switch v := i.(type) {
+		case json.Marshaler:
+			return sonic.Marshal(i)
+		case encoding.TextMarshaler:
+			return sonic.Marshal(i)
+		case fmt.Stringer:
+			return sonic.Marshal(v.String())
+		default:
+			return sonic.Marshal(i)
+		}
+	}
+}
 
 // ModuleKey defines a module logging key.
 const ModuleKey = "module"
@@ -73,6 +93,260 @@ type VerboseModeLogger interface {
 	SetVerboseMode(bool)
 }
 
+// NewLogger creates a new Logger with the given options.
+//
+// By default, OTEL is disabled and the fast zerolog path is used.
+// Use WithOTEL() to enable OpenTelemetry log forwarding.
+//
+// Example:
+//
+//	// Default: console only (fast path)
+//	logger := log.NewLogger("cosmos-sdk")
+//
+//	// With OTEL enabled
+//	logger := log.NewLogger("cosmos-sdk", log.WithOTEL())
+//
+//	// OTEL-only (no console output)
+//	logger := log.NewLogger("cosmos-sdk", log.WithOTEL(), log.WithoutConsole())
+func NewLogger(name string, opts ...Option) Logger {
+	cfg := defaultConfig
+	for _, opt := range opts {
+		opt(&cfg)
+	}
+
+	// Determine the output destination
+	dst := cfg.ConsoleWriter
+	if dst == nil {
+		dst = os.Stderr
+	}
+
+	// Determine if OTEL should be enabled
+	otelEnabled := isOTELEnabled(&cfg)
+
+	// If OTEL is disabled, use direct zerolog (fast path)
+	if !otelEnabled {
+		return newZerologLogger(dst, &cfg)
+	}
+
+	// OTEL is enabled - use slog-based logger
+	return newSlogLogger(name, dst, &cfg)
+}
+
+// isOTELEnabled determines whether OTEL logging should be enabled.
+func isOTELEnabled(cfg *Config) bool {
+	// If explicitly set via WithOTEL() or WithoutOTEL(), use that
+	if cfg.EnableOTEL != nil {
+		return *cfg.EnableOTEL
+	}
+
+	// If a custom LoggerProvider was provided, enable OTEL
+	if cfg.LoggerProvider != nil {
+		return true
+	}
+
+	// Default: OTEL disabled (fast zerolog path)
+	return false
+}
+
+// newZerologLogger creates a Logger backed by zerolog directly.
+// This is the fast path with zero allocations.
+func newZerologLogger(dst io.Writer, cfg *Config) Logger {
+	// If console is disabled and OTEL is not enabled, there's nowhere to log
+	// Use io.Discard to silently drop all logs
+	if cfg.DisableConsole {
+		dst = io.Discard
+	}
+
+	output := dst
+	if !cfg.OutputJSON {
+		output = zerolog.ConsoleWriter{
+			Out:        dst,
+			NoColor:    !cfg.Color,
+			TimeFormat: cfg.TimeFormat,
+		}
+	}
+
+	var fltWtr *filterWriter
+	if cfg.Filter != nil {
+		fltWtr = &filterWriter{
+			parent: output,
+			filter: cfg.Filter,
+		}
+		output = fltWtr
+	}
+
+	logger := zerolog.New(output)
+
+	if cfg.StackTrace {
+		zerolog.ErrorStackMarshaler = func(err error) interface{} {
+			return zerologpkgerrors.MarshalStack(pkgerrors.WithStack(err))
+		}
+		logger = logger.With().Stack().Logger()
+	}
+
+	if cfg.TimeFormat != "" {
+		logger = logger.With().Timestamp().Logger()
+	}
+
+	// Convert slog.Level to zerolog.Level
+	logger = logger.Level(slogToZerologLevel(cfg.Level))
+	logger = logger.Hook(cfg.Hooks...)
+
+	return &zeroLogWrapper{
+		Logger:       &logger,
+		regularLevel: slogToZerologLevel(cfg.Level),
+		verboseLevel: slogToZerologLevel(cfg.VerboseLevel),
+		filterWriter: fltWtr,
+	}
+}
+
+// zeroLogWrapper wraps zerolog.Logger to implement Logger interface.
+// This is the fast path with zero allocations.
+type zeroLogWrapper struct {
+	*zerolog.Logger
+	regularLevel zerolog.Level
+	verboseLevel zerolog.Level
+	filterWriter *filterWriter
+}
+
+var (
+	_ Logger            = (*zeroLogWrapper)(nil)
+	_ VerboseModeLogger = (*zeroLogWrapper)(nil)
+)
+
+func (l *zeroLogWrapper) Info(msg string, keyVals ...interface{}) {
+	l.Logger.Info().Fields(keyVals).Msg(msg)
+}
+
+func (l *zeroLogWrapper) Warn(msg string, keyVals ...interface{}) {
+	l.Logger.Warn().Fields(keyVals).Msg(msg)
+}
+
+func (l *zeroLogWrapper) Error(msg string, keyVals ...interface{}) {
+	l.Logger.Error().Fields(keyVals).Msg(msg)
+}
+
+func (l *zeroLogWrapper) Debug(msg string, keyVals ...interface{}) {
+	l.Logger.Debug().Fields(keyVals).Msg(msg)
+}
+
+func (l *zeroLogWrapper) InfoContext(_ context.Context, msg string, keyVals ...interface{}) {
+	l.Logger.Info().Fields(keyVals).Msg(msg)
+}
+
+func (l *zeroLogWrapper) WarnContext(_ context.Context, msg string, keyVals ...interface{}) {
+	l.Logger.Warn().Fields(keyVals).Msg(msg)
+}
+
+func (l *zeroLogWrapper) ErrorContext(_ context.Context, msg string, keyVals ...interface{}) {
+	l.Logger.Error().Fields(keyVals).Msg(msg)
+}
+
+func (l *zeroLogWrapper) DebugContext(_ context.Context, msg string, keyVals ...interface{}) {
+	l.Logger.Debug().Fields(keyVals).Msg(msg)
+}
+
+func (l *zeroLogWrapper) With(keyVals ...interface{}) Logger {
+	logger := l.Logger.With().Fields(keyVals).Logger()
+	return &zeroLogWrapper{
+		Logger:       &logger,
+		regularLevel: l.regularLevel,
+		verboseLevel: l.verboseLevel,
+		filterWriter: l.filterWriter,
+	}
+}
+
+func (l *zeroLogWrapper) Impl() interface{} {
+	return l.Logger
+}
+
+func (l *zeroLogWrapper) SetVerboseMode(enable bool) {
+	if enable && l.verboseLevel != zerolog.NoLevel {
+		*l.Logger = l.Level(l.verboseLevel)
+		if l.filterWriter != nil {
+			l.filterWriter.disableFilter = true
+		}
+	} else {
+		*l.Logger = l.Level(l.regularLevel)
+		if l.filterWriter != nil {
+			l.filterWriter.disableFilter = false
+		}
+	}
+}
+
+// slogToZerologLevel converts slog.Level to zerolog.Level.
+func slogToZerologLevel(level slog.Level) zerolog.Level {
+	switch {
+	case level <= slog.LevelDebug:
+		return zerolog.DebugLevel
+	case level <= slog.LevelInfo:
+		return zerolog.InfoLevel
+	case level <= slog.LevelWarn:
+		return zerolog.WarnLevel
+	case level <= slog.LevelError:
+		return zerolog.ErrorLevel
+	default:
+		return zerolog.Disabled
+	}
+}
+
+// newSlogLogger creates a Logger backed by slog with OTEL support.
+// This path has some overhead but enables OpenTelemetry integration.
+func newSlogLogger(name string, dst io.Writer, cfg *Config) Logger {
+	var otelOpts []otelslog.Option
+	if cfg.LoggerProvider != nil {
+		otelOpts = append(otelOpts, otelslog.WithLoggerProvider(cfg.LoggerProvider))
+	}
+	otelHandler := otelslog.NewHandler(name, otelOpts...)
+
+	var handler slog.Handler
+
+	if cfg.DisableConsole {
+		// OTEL-only
+		handler = otelHandler
+	} else {
+		// Console + OTEL
+		var consoleHandler slog.Handler
+		if cfg.OutputJSON {
+			consoleHandler = slog.NewJSONHandler(dst, &slog.HandlerOptions{Level: cfg.Level})
+		} else {
+			// Use zerolog for console formatting with proper Stringer support
+			zConsole := zerolog.ConsoleWriter{
+				Out:        dst,
+				TimeFormat: cfg.TimeFormat,
+				NoColor:    !cfg.Color,
+			}
+			zLogger := zerolog.New(zConsole).With().Timestamp().Logger()
+
+			verboseLevel := cfg.VerboseLevel
+			if verboseLevel == NoLevel {
+				verboseLevel = cfg.Level
+			}
+
+			zHandler := &zerologHandler{
+				logger:       zLogger,
+				regularLevel: cfg.Level,
+				verboseLevel: verboseLevel,
+				filter:       cfg.Filter,
+				verbose:      &atomic.Bool{},
+			}
+			consoleHandler = zHandler
+
+			// Return VerboseModeLogger if verbose level is configured
+			if cfg.VerboseLevel != NoLevel {
+				handler = &multiHandler{handlers: []slog.Handler{consoleHandler, otelHandler}}
+				return &verboseModeLogger{
+					slogLogger: slogLogger{log: slog.New(handler)},
+					handler:    zHandler,
+				}
+			}
+		}
+		handler = &multiHandler{handlers: []slog.Handler{consoleHandler, otelHandler}}
+	}
+
+	return slogLogger{log: slog.New(handler)}
+}
+
 // slogLogger satisfies Logger with logging backed by an instance of *slog.Logger.
 type slogLogger struct {
 	log *slog.Logger
@@ -93,108 +367,10 @@ func (l *verboseModeLogger) SetVerboseMode(enable bool) {
 }
 
 func (l *verboseModeLogger) With(keyVals ...any) Logger {
-	// Return a new verboseModeLogger that shares the same handler
 	return &verboseModeLogger{
 		slogLogger: slogLogger{log: l.log.With(keyVals...)},
 		handler:    l.handler,
 	}
-}
-
-// NewLogger creates a Logger that exports logs to both console and OpenTelemetry.
-// The name identifies the instrumentation scope (e.g., "cosmos-sdk").
-//
-// By default, logs are written to os.Stderr and exported to OpenTelemetry using
-// the global LoggerProvider set by telemetry.InitializeOpenTelemetry().
-//
-// Use WithConsoleWriter to redirect console output to a different writer.
-// Use WithoutConsole to disable console output entirely (OTEL-only).
-// Use WithLoggerProvider to override with a custom OTEL provider.
-//
-// Example:
-//
-//	// Default: console (stderr) + OTEL
-//	logger := log.NewLogger("cosmos-sdk")
-//
-//	// Custom console writer + OTEL
-//	logger := log.NewLogger("cosmos-sdk", log.WithConsoleWriter(os.Stdout))
-//
-//	// OTEL-only (no console output)
-//	logger := log.NewLogger("cosmos-sdk", log.WithoutConsole())
-func NewLogger(name string, opts ...Option) Logger {
-	cfg := &Config{
-		Level:        slog.LevelInfo,
-		VerboseLevel: NoLevel, // disabled by default
-		Color:        true,    // colors enabled by default
-	}
-	for _, opt := range opts {
-		opt(cfg)
-	}
-
-	// Build otelslog options
-	var otelOpts []otelslog.Option
-	if cfg.LoggerProvider != nil {
-		otelOpts = append(otelOpts, otelslog.WithLoggerProvider(cfg.LoggerProvider))
-	}
-
-	otelHandler := otelslog.NewHandler(name, otelOpts...)
-
-	var handler slog.Handler
-
-	// Determine output configuration
-	if cfg.DisableConsole {
-		// OTEL-only
-		handler = otelHandler
-	} else {
-		// Default: console + OTEL
-		consoleWriter := cfg.ConsoleWriter
-		if consoleWriter == nil {
-			consoleWriter = os.Stderr
-		}
-
-		var consoleHandler slog.Handler
-		if cfg.OutputJSON {
-			consoleHandler = slog.NewJSONHandler(consoleWriter, &slog.HandlerOptions{Level: cfg.Level})
-		} else {
-			// Use zerolog for console formatting with proper Stringer support
-			timeFormat := cfg.TimeFormat
-			if timeFormat == "" {
-				timeFormat = time.Kitchen
-			}
-			zConsole := zerolog.ConsoleWriter{
-				Out:        consoleWriter,
-				TimeFormat: timeFormat,
-				NoColor:    !cfg.Color,
-			}
-			zLogger := zerolog.New(zConsole).With().Timestamp().Logger()
-
-			// Determine verbose level (use NoLevel sentinel if not configured)
-			verboseLevel := cfg.VerboseLevel
-			if verboseLevel == NoLevel {
-				verboseLevel = cfg.Level // fallback to regular level
-			}
-
-			zHandler := &zerologHandler{
-				logger:       zLogger,
-				regularLevel: cfg.Level,
-				verboseLevel: verboseLevel,
-				filter:       cfg.Filter,
-				verbose:      &atomic.Bool{},
-			}
-			consoleHandler = zHandler
-
-			// If verbose mode is configured, return a VerboseModeLogger
-			if cfg.VerboseLevel != NoLevel {
-				handler = &multiHandler{handlers: []slog.Handler{consoleHandler, otelHandler}}
-				return &verboseModeLogger{
-					slogLogger: slogLogger{log: slog.New(handler)},
-					handler:    zHandler,
-				}
-			}
-		}
-		handler = &multiHandler{handlers: []slog.Handler{consoleHandler, otelHandler}}
-	}
-
-	return slogLogger{log: slog.New(handler)}
 }
 
 // NewCustomLogger returns a Logger backed by an existing slog.Logger instance.
@@ -241,7 +417,6 @@ func (l slogLogger) With(keyVals ...any) Logger {
 	return slogLogger{log: l.log.With(keyVals...)}
 }
 
-// Impl returns l's underlying [*slog.Logger].
 func (l slogLogger) Impl() any {
 	return l.log
 }
@@ -254,8 +429,8 @@ type zerologHandler struct {
 	regularLevel slog.Level
 	verboseLevel slog.Level
 	filter       FilterFunc
-	module       string       // current module from attrs (for filtering)
-	verbose      *atomic.Bool // shared across all derived handlers
+	module       string
+	verbose      *atomic.Bool
 	attrs        []slog.Attr
 	groups       []string
 }
@@ -292,7 +467,7 @@ func (h *zerologHandler) Handle(_ context.Context, r slog.Record) error {
 			})
 		}
 		if h.filter(module, LevelToString(r.Level)) {
-			return nil // filtered out
+			return nil
 		}
 	}
 
@@ -323,7 +498,6 @@ func (h *zerologHandler) Handle(_ context.Context, r slog.Record) error {
 	return nil
 }
 
-// SetVerboseMode enables or disables verbose mode for this handler and all derived handlers.
 func (h *zerologHandler) SetVerboseMode(enable bool) {
 	if h.verbose != nil {
 		h.verbose.Store(enable)
@@ -350,13 +524,11 @@ func (h *zerologHandler) addAttr(evt *zerolog.Event, attr slog.Attr) *zerolog.Ev
 	case slog.KindTime:
 		return evt.Time(key, val.Time())
 	case slog.KindGroup:
-		// Handle nested groups
 		for _, a := range val.Group() {
 			evt = h.addAttrWithPrefix(evt, a, key+".")
 		}
 		return evt
 	default:
-		// KindAny - check for Stringer first
 		if v := val.Any(); v != nil {
 			if s, ok := v.(fmt.Stringer); ok {
 				return evt.Str(key, s.String())
@@ -414,7 +586,6 @@ func (h *zerologHandler) prefixKey(key string) string {
 }
 
 func (h *zerologHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
-	// Check if module is being set
 	newModule := h.module
 	for _, attr := range attrs {
 		if attr.Key == ModuleKey {
@@ -428,7 +599,7 @@ func (h *zerologHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 		verboseLevel: h.verboseLevel,
 		filter:       h.filter,
 		module:       newModule,
-		verbose:      h.verbose, // share the same atomic bool
+		verbose:      h.verbose,
 		attrs:        append(h.attrs, attrs...),
 		groups:       h.groups,
 	}
@@ -441,14 +612,13 @@ func (h *zerologHandler) WithGroup(name string) slog.Handler {
 		verboseLevel: h.verboseLevel,
 		filter:       h.filter,
 		module:       h.module,
-		verbose:      h.verbose, // share the same atomic bool
+		verbose:      h.verbose,
 		attrs:        h.attrs,
 		groups:       append(h.groups, name),
 	}
 }
 
 // multiHandler fans out log records to multiple slog.Handlers.
-// It uses best-effort semantics: all handlers are attempted even if some fail.
 type multiHandler struct {
 	handlers []slog.Handler
 }
@@ -492,7 +662,6 @@ func (h *multiHandler) WithGroup(name string) slog.Handler {
 
 // NewNopLogger returns a new logger that does nothing.
 func NewNopLogger() Logger {
-	// The custom nopLogger is about 3x faster than a slogLogger with a discard handler.
 	return nopLogger{}
 }
 

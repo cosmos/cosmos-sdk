@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/rs/zerolog"
+
 	"cosmossdk.io/log"
 )
 
@@ -69,20 +71,44 @@ func BenchmarkLoggers(b *testing.B) {
 		checkBuf := new(bytes.Buffer)
 		for _, bc := range benchCases {
 			checkBuf.Reset()
-			logger := log.NewCustomLogger(slog.New(slog.NewJSONHandler(checkBuf, nil)))
+			logger := log.NewLogger("test", log.WithConsoleWriter(checkBuf), log.WithColor(false))
 			logger.Info(message, bc.keyVals...)
 
-			b.Logf("slog logger output for %s: %s", bc.name, checkBuf.String())
+			b.Logf("logger output for %s: %s", bc.name, checkBuf.String())
 		}
 	}
 
-	// The real logger exposed by this package,
-	// writing to an io.Discard writer,
-	// so that real write time is negligible.
-	b.Run("slog", func(b *testing.B) {
+	// Raw zerolog (for comparison with original benchmark) - no timestamp
+	b.Run("raw zerolog", func(b *testing.B) {
 		for _, bc := range benchCases {
 			b.Run(bc.name, func(b *testing.B) {
-				logger := log.NewCustomLogger(slog.New(slog.NewJSONHandler(io.Discard, nil)))
+				logger := log.NewLogger("test", log.WithConsoleWriter(io.Discard), log.WithJSONOutput(), log.WithTimeFormat(""))
+
+				for b.Loop() {
+					logger.Info(message, bc.keyVals...)
+				}
+			})
+		}
+	})
+
+	// JSON output mode (no ConsoleWriter formatting) - fastest path
+	b.Run("zerolog json", func(b *testing.B) {
+		for _, bc := range benchCases {
+			b.Run(bc.name, func(b *testing.B) {
+				logger := log.NewLogger("test", log.WithConsoleWriter(io.Discard), log.WithJSONOutput())
+
+				for b.Loop() {
+					logger.Info(message, bc.keyVals...)
+				}
+			})
+		}
+	})
+
+	// Console output mode (with ConsoleWriter formatting)
+	b.Run("zerolog console", func(b *testing.B) {
+		for _, bc := range benchCases {
+			b.Run(bc.name, func(b *testing.B) {
+				logger := log.NewLogger("test", log.WithConsoleWriter(io.Discard), log.WithColor(false))
 
 				for b.Loop() {
 					logger.Info(message, bc.keyVals...)
@@ -111,21 +137,39 @@ func BenchmarkLoggers_StructuredVsFields(b *testing.B) {
 	errorToLog := errors.New("error")
 	byteSliceToLog := []byte{0xde, 0xad, 0xbe, 0xef}
 
-	b.Run("slog structured", func(b *testing.B) {
-		logger := slog.New(slog.NewJSONHandler(io.Discard, nil))
+	b.Run("zerolog structured", func(b *testing.B) {
+		zl := zerolog.New(io.Discard)
 		for b.Loop() {
-			logger.Info(message, slog.Int64("foo", 100000))
-			logger.Info(message, slog.String("foo", "foo"))
-			logger.Error(message,
-				slog.Int64("foo", 100000),
-				slog.String("bar", "foo"),
-				slog.Any("other", byteSliceToLog),
-				slog.Any("error", errorToLog),
-			)
+			zl.Info().Int64("foo", 100000).Msg(message)
+			zl.Info().Str("foo", "foo").Msg(message)
+			zl.Error().
+				Int64("foo", 100000).
+				Str("bar", "foo").
+				Bytes("other", byteSliceToLog).
+				Err(errorToLog).
+				Msg(message)
 		}
 	})
 
-	b.Run("logger", func(b *testing.B) {
+	b.Run("zerolog json logger", func(b *testing.B) {
+		logger := log.NewLogger("test", log.WithConsoleWriter(io.Discard), log.WithJSONOutput())
+		for b.Loop() {
+			logger.Info(message, "foo", 100000)
+			logger.Info(message, "foo", "foo")
+			logger.Error(message, "foo", 100000, "bar", "foo", "other", byteSliceToLog, "error", errorToLog)
+		}
+	})
+
+	b.Run("zerolog console logger", func(b *testing.B) {
+		logger := log.NewLogger("test", log.WithConsoleWriter(io.Discard), log.WithColor(false))
+		for b.Loop() {
+			logger.Info(message, "foo", 100000)
+			logger.Info(message, "foo", "foo")
+			logger.Error(message, "foo", 100000, "bar", "foo", "other", byteSliceToLog, "error", errorToLog)
+		}
+	})
+
+	b.Run("slog json", func(b *testing.B) {
 		logger := log.NewCustomLogger(slog.New(slog.NewJSONHandler(io.Discard, nil)))
 		for b.Loop() {
 			logger.Info(message, "foo", 100000)

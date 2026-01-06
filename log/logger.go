@@ -121,7 +121,7 @@ func NewLogger(name string, opts ...Option) Logger {
 	}
 
 	// Determine if OTEL should be enabled
-	otelEnabled := isOTELEnabled(&cfg)
+	otelEnabled := isOTELEnabled(cfg)
 
 	// If OTEL is disabled, use direct zerolog (fast path)
 	if !otelEnabled {
@@ -129,15 +129,15 @@ func NewLogger(name string, opts ...Option) Logger {
 		// see: https://github.com/open-telemetry/opentelemetry-go-contrib/issues/5969
 		// ref: https://github.com/rs/zerolog/issues/493.
 		// ref: https://github.com/open-telemetry/opentelemetry-go-contrib/issues/5405
-		return newZerologLogger(dst, &cfg)
+		return newZerologLogger(dst, cfg)
 	}
 
 	// OTEL is enabled - use slog-based logger
-	return newSlogLogger(name, dst, &cfg)
+	return newSlogLogger(name, dst, cfg)
 }
 
 // isOTELEnabled determines whether OTEL logging should be enabled.
-func isOTELEnabled(cfg *Config) bool {
+func isOTELEnabled(cfg Config) bool {
 	// If explicitly set via WithOTEL() or WithoutOTEL(), use that
 	if cfg.EnableOTEL != nil {
 		return *cfg.EnableOTEL
@@ -154,7 +154,7 @@ func isOTELEnabled(cfg *Config) bool {
 
 // newZerologLogger creates a Logger backed by zerolog directly.
 // This is the fast path with zero allocations.
-func newZerologLogger(dst io.Writer, cfg *Config) Logger {
+func newZerologLogger(dst io.Writer, cfg Config) Logger {
 	// If console is disabled and OTEL is not enabled, there's nowhere to log
 	// Use io.Discard to silently drop all logs
 	if cfg.DisableConsole {
@@ -296,7 +296,7 @@ func slogToZerologLevel(level slog.Level) zerolog.Level {
 
 // newSlogLogger creates a Logger backed by slog with OTEL support.
 // This path has some overhead but enables OpenTelemetry integration.
-func newSlogLogger(name string, dst io.Writer, cfg *Config) Logger {
+func newSlogLogger(name string, dst io.Writer, cfg Config) Logger {
 	var otelOpts []otelslog.Option
 	if cfg.LoggerProvider != nil {
 		otelOpts = append(otelOpts, otelslog.WithLoggerProvider(cfg.LoggerProvider))

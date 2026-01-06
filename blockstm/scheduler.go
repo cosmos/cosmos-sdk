@@ -45,7 +45,7 @@ type Scheduler struct {
 
 	// txnIdx to a mutex-protected set of dependent transaction indices
 	txnDependency []TxDependency
-	// txnIdx to a mutex-protected pair (incarnationNumber, status), where status ∈ {READY_TO_EXECUTE, EXECUTING, EXECUTED, ABORTING}.
+	// txnIdx to a mutex-protected pair (incarnationNumber, status), where status ∈ {READY_TO_EXECUTE, EXECUTING, EXECUTED, ABORTING, SUSPENDED}.
 	txnStatus []StatusEntry
 
 	// metrics
@@ -153,7 +153,7 @@ func (s *Scheduler) WaitForDependency(txn, blockingTxn TxnIndex) *Condvar {
 
 	// thread holds 2 locks
 	if ok, _ := s.txnStatus[blockingTxn].IsExecuted(); ok {
-		// dependency resolved before locking in Line 148
+		// dependency resolved before entry.Lock() (https://github.com/cosmos/cosmos-sdk/blob/825fd620889acac4d0fd1bf0f9370651d2ee6610/blockstm/scheduler.go#L152) was acquired
 		entry.Unlock()
 		return nil
 	}

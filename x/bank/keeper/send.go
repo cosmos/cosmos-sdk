@@ -181,9 +181,14 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 			return err
 		}
 
+		updatedAddressStr, err := k.ak.AddressCodec().BytesToString(updatedAddress)
+		if err != nil {
+			return err
+		}
+
 		sending = append(sending, toSend{
 			Address:    updatedAddress,
-			AddressStr: out.Address,
+			AddressStr: updatedAddressStr,
 			Coins:      out.Coins,
 		})
 

@@ -75,3 +75,73 @@ The [README.md](telemetry/README.md) in the `telemetry` package provides more de
 2. node operators who want to configure OpenTelemetry exporters should set the `OTEL_EXPERIMENTAL_CONFIG_FILE` environment variable to the path of a yaml file which follows the OpenTelemetry declarative configuration format specified here: https://pkg.go.dev/go.opentelemetry.io/contrib/otelconf. As long as the `telemetry` package has been imported somewhere (it should already be imported if you are using the SDK), OpenTelemetry will be initialized automatically based on the configuration file.
 
 NOTE: the go implementation of [otelconf](https://pkg.go.dev/go.opentelemetry.io/contrib/otelconf) is still under development and we will update our usage of it as it matures.
+
+## Log v2
+
+The log package has been refactored to support OpenTelemetry tracing correlation. If you have basic usage of the logger, such as getting it from sdk.Context and logging to the console; nothing changes. You are unaffected.
+
+If you implement your own logger, or setup the logger manually, a few things have been changed.
+
+
+### Logger Interface
+
+The interface has 4 new methods:
+
+```go
+    // InfoContext takes a context, message and key/value pairs and logs with level INFO.
+	// The context is used for trace/span correlation when using OpenTelemetry.
+	InfoContext(ctx context.Context, msg string, keyVals ...any)
+
+	// WarnContext takes a context, message and key/value pairs and logs with level WARN.
+	// The context is used for trace/span correlation when using OpenTelemetry.
+	WarnContext(ctx context.Context, msg string, keyVals ...any)
+
+	// ErrorContext takes a context, message and key/value pairs and logs with level ERROR.
+	// The context is used for trace/span correlation when using OpenTelemetry.
+	ErrorContext(ctx context.Context, msg string, keyVals ...any)
+
+	// DebugContext takes a context, message and key/value pairs and logs with level DEBUG.
+	// The context is used for trace/span correlation when using OpenTelemetry.
+	DebugContext(ctx context.Context, msg string, keyVals ...any)
+```
+
+These methods extract the trace ID from the context so that logs are correlated with traces. 
+
+
+### Constructor
+
+If you construct your own logger, the constructor function arguments and option names have changed.
+
+Old constructor: 
+```go
+func NewLogger(dst io.Writer, options ...Option) Logger
+```
+
+New constructor:
+```go
+func NewLogger(name string, opts ...Option) Logger
+```
+
+### Options
+
+All option functions are now prefixed with `With` to make option discovery easier and more clear.
+
+Example:
+
+Before:
+```go
+func FilterOption(filter FilterFunc) Option
+```
+
+After:
+```go
+func WithFilter(filter FilterFunc) Option
+```
+
+Additionally, new options have been added. See log/options.go for all usable options.
+
+### Default Behavior
+
+By default, the logger will log to the console AND to OpenTelemetry if a logger provider has been set in the optional OpenTelemetry configuration.
+
+For production nodes, we have introduced a new flag, `--log_no_console` to disable the overhead of logging to the console. This is useful in situations where you ONLY want OpenTelemetry log forwarding.

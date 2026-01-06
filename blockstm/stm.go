@@ -70,6 +70,7 @@ func ExecuteBlockWithEstimates(
 	telemetry.IncrCounter(float32(scheduler.executedTxns.Load()), TelemetrySubsystem, KeyExecutedTxs)   //nolint:staticcheck // TODO: switch to OpenTelemetry
 	telemetry.IncrCounter(float32(scheduler.validatedTxns.Load()), TelemetrySubsystem, KeyValidatedTxs) //nolint:staticcheck // TODO: switch to OpenTelemetry
 	telemetry.IncrCounter(float32(scheduler.decreaseCnt.Load()), TelemetrySubsystem, KeyDecreaseCount)
+	telemetry.SetGauge(float32(scheduler.executedTxns.Load())/float32(blockSize), TelemetrySubsystem, KeyExecutionRatio)
 
 	// Write the snapshot into the storage
 	mvMemory.WriteSnapshot(storage)

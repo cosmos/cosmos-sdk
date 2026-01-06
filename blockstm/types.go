@@ -10,6 +10,7 @@ const (
 	KeyTryExecuteTime  = "try_execute_time"
 	KeyValidatedTxs    = "validated_txs"
 	KeyDecreaseCount   = "decrease_count"
+	KeyExecutionRatio  = "execution_ratio"
 
 	// MVData Metrics
 	KeyMVDataRead  = "mvdata_read"

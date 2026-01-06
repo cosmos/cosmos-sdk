@@ -30,8 +30,8 @@ var (
 	shutdownFuncs    []func(context.Context) error
 )
 
-// TelemetryInfo contains information about which telemetry features are enabled.
-type TelemetryInfo struct {
+// OtelInfo contains information about which OpenTelemetry features are enabled.
+type OtelInfo struct {
 	TracingEnabled bool
 	MetricsEnabled bool
 	LoggingEnabled bool
@@ -49,7 +49,7 @@ func init() {
 // We assume that the otel configuration file is in `~/.<your_node_home>/config/otel.yaml`.
 // An empty otel.yaml is automatically placed in the directory above in the `appd init` command.
 //
-// Returns TelemetryInfo indicating which telemetry features (tracing, metrics, logging) are enabled.
+// Returns OtelInfo indicating which telemetry features (tracing, metrics, logging) are enabled.
 //
 // Note that a late initialization of the open telemetry SDK causes meters/tracers to utilize a delegate, which incurs
 // an atomic load.
@@ -57,7 +57,7 @@ func init() {
 // If you wish to avoid this overhead entirely, you may set the OTEL_EXPERIMENTAL_CONFIG_FILE environment variable,'
 // and the OpenTelemetry SDK will be instantiated via init.
 // This will eliminate the atomic operation overhead.
-func InitializeOpenTelemetry(filePath string) (TelemetryInfo, error) {
+func InitializeOpenTelemetry(filePath string) (OtelInfo, error) {
 	if openTelemetrySDK != nil {
 		// Already initialized - return current state
 		return getTelemetryInfo(), nil
@@ -68,23 +68,23 @@ func InitializeOpenTelemetry(filePath string) (TelemetryInfo, error) {
 	if _, err := os.Stat(filePath); err != nil {
 		if os.IsNotExist(err) {
 			setNoop()
-			return TelemetryInfo{}, nil
+			return OtelInfo{}, nil
 		}
-		return TelemetryInfo{}, err // return other errors (permission issues, etc.)
+		return OtelInfo{}, err // return other errors (permission issues, etc.)
 	}
 
 	bz, err := os.ReadFile(filePath)
 	if err != nil {
-		return TelemetryInfo{}, fmt.Errorf("failed to read telemetry config file: %w", err)
+		return OtelInfo{}, fmt.Errorf("failed to read telemetry config file: %w", err)
 	}
 	if len(bz) == 0 {
 		setNoop()
-		return TelemetryInfo{}, nil
+		return OtelInfo{}, nil
 	}
 
 	cfg, err := otelconf.ParseYAML(bz)
 	if err != nil {
-		return TelemetryInfo{}, fmt.Errorf("failed to parse telemetry config file: %w", err)
+		return OtelInfo{}, fmt.Errorf("failed to parse telemetry config file: %w", err)
 	}
 
 	opts = append(opts, otelconf.WithOpenTelemetryConfiguration(*cfg))
@@ -98,13 +98,13 @@ func InitializeOpenTelemetry(filePath string) (TelemetryInfo, error) {
 			if extra.InstrumentHost {
 				fmt.Println("Initializing host instrumentation")
 				if err := host.Start(); err != nil {
-					return TelemetryInfo{}, fmt.Errorf("failed to start host instrumentation: %w", err)
+					return OtelInfo{}, fmt.Errorf("failed to start host instrumentation: %w", err)
 				}
 			}
 			if extra.InstrumentRuntime {
 				fmt.Println("Initializing runtime instrumentation")
 				if err := runtime.Start(); err != nil {
-					return TelemetryInfo{}, fmt.Errorf("failed to start runtime instrumentation: %w", err)
+					return OtelInfo{}, fmt.Errorf("failed to start runtime instrumentation: %w", err)
 				}
 			}
 
@@ -118,7 +118,7 @@ func InitializeOpenTelemetry(filePath string) (TelemetryInfo, error) {
 
 	otelSDK, err := otelconf.NewSDK(opts...)
 	if err != nil {
-		return TelemetryInfo{}, fmt.Errorf("failed to initialize telemetry: %w", err)
+		return OtelInfo{}, fmt.Errorf("failed to initialize telemetry: %w", err)
 	}
 	openTelemetrySDK = &otelSDK
 
@@ -132,9 +132,9 @@ func InitializeOpenTelemetry(filePath string) (TelemetryInfo, error) {
 
 // getTelemetryInfo returns info about which telemetry features are enabled
 // by checking if the providers are real implementations (not noop).
-func getTelemetryInfo() TelemetryInfo {
+func getTelemetryInfo() OtelInfo {
 	if openTelemetrySDK == nil {
-		return TelemetryInfo{}
+		return OtelInfo{}
 	}
 
 	// Check if each provider is a real implementation by comparing with noop types
@@ -142,7 +142,7 @@ func getTelemetryInfo() TelemetryInfo {
 	_, metricsIsNoop := openTelemetrySDK.MeterProvider().(*metricnoop.MeterProvider)
 	_, loggingIsNoop := openTelemetrySDK.LoggerProvider().(*lognoop.LoggerProvider)
 
-	return TelemetryInfo{
+	return OtelInfo{
 		TracingEnabled: !tracingIsNoop,
 		MetricsEnabled: !metricsIsNoop,
 		LoggingEnabled: !loggingIsNoop,

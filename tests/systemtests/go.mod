@@ -3,6 +3,7 @@ module cosmossdk.io/tests/systemtests
 go 1.25.5
 
 replace (
+	cosmossdk.io/log => ../../log
 	// always use latest versions in tests
 	cosmossdk.io/systemtests => ../../systemtests
 	github.com/cosmos/cosmos-sdk => ../..
@@ -163,6 +164,7 @@ require (
 	github.com/zondax/ledger-go v1.0.1 // indirect
 	go.etcd.io/bbolt v1.4.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
+	go.opentelemetry.io/contrib/bridges/otelslog v0.14.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.64.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/host v0.64.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.64.0 // indirect

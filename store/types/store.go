@@ -600,4 +600,3 @@ func NewObjectStoreKeys(names ...string) map[string]*ObjectStoreKey {
 
 	return keys
 }
-

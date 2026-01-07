@@ -165,7 +165,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 	// ensure all coins can be sent
 	type toSend struct {
 		AddressStr string
-		Address    []byte
+		AddressBz  []byte
 		Coins      sdk.Coins
 	}
 	sending := make([]toSend, 0)
@@ -176,18 +176,18 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 			return err
 		}
 
-		updatedAddress, err := k.sendRestriction.apply(ctx, inAddress, outAddress, out.Coins)
+		updatedAddressBz, err := k.sendRestriction.apply(ctx, inAddress, outAddress, out.Coins)
 		if err != nil {
 			return err
 		}
 
-		updatedAddressStr, err := k.ak.AddressCodec().BytesToString(updatedAddress)
+		updatedAddressStr, err := k.ak.AddressCodec().BytesToString(updatedAddressBz)
 		if err != nil {
 			return err
 		}
 
 		sending = append(sending, toSend{
-			Address:    updatedAddress,
+			AddressBz:  updatedAddressBz,
 			AddressStr: updatedAddressStr,
 			Coins:      out.Coins,
 		})
@@ -196,10 +196,10 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		//
 		// NOTE: This should ultimately be removed in favor a more flexible approach
 		// such as delegated fee messages.
-		accExists := k.ak.HasAccount(ctx, updatedAddress)
+		accExists := k.ak.HasAccount(ctx, updatedAddressBz)
 		if !accExists {
 			defer telemetry.IncrCounter(1, "new", "account") //nolint:staticcheck // TODO: switch to OpenTelemetry
-			k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, updatedAddress))
+			k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, updatedAddressBz))
 		}
 	}
 
@@ -208,7 +208,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 	}
 
 	for _, out := range sending {
-		if err := k.addCoins(ctx, out.Address, out.Coins); err != nil {
+		if err := k.addCoins(ctx, out.AddressBz, out.Coins); err != nil {
 			return err
 		}
 		sdkCtx.EventManager().EmitEvent(

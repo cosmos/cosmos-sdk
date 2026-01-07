@@ -20,7 +20,7 @@ import (
 
 const SnapshotFileName = "_snapshot"
 
-// LoadArchiveCmd load a portable archive format snapshot into snapshot store
+// LoadArchiveCmd loads a portable archive format snapshot into snapshot store
 func LoadArchiveCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "load <archive-file>",

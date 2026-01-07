@@ -679,8 +679,8 @@ func (k Keeper) SetRedelegation(ctx context.Context, red types.Redelegation) err
 	return store.Set(types.GetREDByValDstIndexKey(delegatorAddress, valSrcAddr, valDestAddr), []byte{})
 }
 
-// SetRedelegationEntry adds an entry to the unbonding delegation at the given
-// addresses. It creates the unbonding delegation if it does not exist.
+// SetRedelegationEntry adds an entry to the redelegation at the given
+// addresses. It creates the redelegation if it does not exist.
 func (k Keeper) SetRedelegationEntry(ctx context.Context,
 	delegatorAddr sdk.AccAddress, validatorSrcAddr,
 	validatorDstAddr sdk.ValAddress, creationHeight int64,

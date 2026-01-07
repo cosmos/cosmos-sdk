@@ -72,9 +72,9 @@ Epochs keeper module provides utility functions to manage epochs.
 
 ```go
   // the first block whose timestamp is after the duration is counted as the end of the epoch
-  AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64)
+  AfterEpochEnd(ctx context.Context, epochIdentifier string, epochNumber int64) error
   // new epoch is next block of epoch end block
-  BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64)
+  BeforeEpochStart(ctx context.Context, epochIdentifier string, epochNumber int64) error
 ```
 
 ### How modules receive hooks
@@ -87,11 +87,12 @@ modules so that they can be modified by governance.
 This is the standard dev UX of this:
 
 ```golang
-func (k MyModuleKeeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
+func (k MyModuleKeeper) AfterEpochEnd(ctx context.Context, epochIdentifier string, epochNumber int64) error {
     params := k.GetParams(ctx)
     if epochIdentifier == params.DistrEpochIdentifier {
     // my logic
   }
+  return nil
 }
 ```
 

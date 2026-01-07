@@ -1046,6 +1046,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 		if err != nil {
 			return nil, errorsmod.Wrapf(err, "failed to execute message; message index: %d", i)
 		}
+		msgSpan.End()
 
 		// create message events
 		msgEvents, err := createEvents(app.cdc, msgResult.GetEvents(), msg, msgsV2[i])

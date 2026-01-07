@@ -148,7 +148,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/slashing/v1be
 
 ### Params
 
-The slashing module stores it's params in state with the prefix of `0x00`,
+The slashing module stores its params in state with the prefix of `0x00`,
 it can be updated with governance or the address with authority.
 
 * Params: `0x00 | ProtocolBuffer(Params)`

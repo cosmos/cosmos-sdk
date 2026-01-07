@@ -432,10 +432,13 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/gov.pr
 This type is used in a temp map when tallying
 
 ```go
-  type ValidatorGovInfo struct {
-    Minus     sdk.Dec
-    Vote      Vote
-  }
+type ValidatorGovInfo struct {
+    Address             sdk.ValAddress      // address of the validator operator
+    BondedTokens        math.Int            // Power of a Validator
+    DelegatorShares     math.LegacyDec      // Total outstanding delegator shares
+    DelegatorDeductions math.LegacyDec      // Delegator deductions from validator's delegators voting independently
+    Vote                WeightedVoteOptions // Vote of the validator
+}
 ```
 
 ## Stores

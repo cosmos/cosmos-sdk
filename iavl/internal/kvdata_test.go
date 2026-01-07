@@ -410,3 +410,29 @@ func TestKVData_BlobStore(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, emptyValue, emptyValueRead)
 }
+
+func TestKVData_SizeLimits(t *testing.T) {
+	writer := openTestKVDataWriter(t)
+
+	// Test key at max size should succeed
+	maxKey := make([]byte, MaxKeySize)
+	_, err := writer.WriteKeyBlob(maxKey)
+	require.NoError(t, err)
+
+	// Test key exceeding max size should fail
+	oversizedKey := make([]byte, MaxKeySize+1)
+	_, err = writer.WriteKeyBlob(oversizedKey)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "key size exceeds maximum")
+
+	// Test value at max size should succeed
+	maxValue := make([]byte, MaxValueSize)
+	_, _, err = writer.WriteKeyValueBlobs([]byte("k"), maxValue)
+	require.NoError(t, err)
+
+	// Test value exceeding max size should fail
+	oversizedValue := make([]byte, MaxValueSize+1)
+	_, _, err = writer.WriteKeyValueBlobs([]byte("k"), oversizedValue)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "value size exceeds maximum")
+}

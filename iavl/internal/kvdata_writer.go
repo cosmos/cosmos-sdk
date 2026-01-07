@@ -166,9 +166,20 @@ func (kvs *KVDataWriter) WriteWALCommit(version uint64) error {
 	return kvs.writeVarUint(version)
 }
 
+const (
+	// MaxKeySize defines the maximum size of a key in bytes.
+	MaxKeySize = 1<<16 - 1 // 65535 bytes
+	// MaxValueSize defines the maximum size of a value in bytes.
+	MaxValueSize = 1<<24 - 1 // 16777215 bytes
+)
+
 // WriteKeyBlob writes a key blob and returns its offset in the file.
 // This should be used for writing keys outside of WAL entries to take advantage of key caching.
 func (kvs *KVDataWriter) WriteKeyBlob(key []byte) (offset uint32, err error) {
+	if len(key) > MaxKeySize {
+		return 0, fmt.Errorf("key size exceeds maximum of %d bytes: %d bytes", MaxKeySize, len(key))
+	}
+
 	if offset, found := kvs.keyCache[unsafeBytesToString(key)]; found {
 		return offset, nil
 	}
@@ -189,6 +200,10 @@ func (kvs *KVDataWriter) WriteKeyValueBlobs(key, value []byte) (keyOffset, value
 	keyOffset, err = kvs.WriteKeyBlob(key)
 	if err != nil {
 		return 0, 0, err
+	}
+
+	if len(value) > MaxValueSize {
+		return 0, 0, fmt.Errorf("value size exceeds maximum of %d bytes: %d bytes", MaxValueSize, len(value))
 	}
 
 	valueOffset, err = kvs.writeBlob(KVEntryValueBlob, value)

@@ -248,7 +248,9 @@ func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccA
 	}
 
 	k.ensureAccountCreated(ctx, toAddr)
-	k.emitSendCoinsEvents(ctx, fromAddr, toAddr, amt)
+	if err := k.emitSendCoinsEvents(ctx, fromAddr, toAddr, amt); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -265,14 +267,23 @@ func (k BaseSendKeeper) ensureAccountCreated(ctx context.Context, toAddr sdk.Acc
 }
 
 // emitSendCoinsEvents emit send coins events.
-func (k BaseSendKeeper) emitSendCoinsEvents(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) {
+func (k BaseSendKeeper) emitSendCoinsEvents(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
 	// bech32 encoding is expensive! Only do it once for fromAddr
-	fromAddrString := fromAddr.String()
+	fromAddrString, err := k.ak.AddressCodec().BytesToString(fromAddr)
+	if err != nil {
+		return err
+	}
+
+	toAddrString, err := k.ak.AddressCodec().BytesToString(toAddr)
+	if err != nil {
+		return err
+	}
+
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	sdkCtx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeTransfer,
-			sdk.NewAttribute(types.AttributeKeyRecipient, toAddr.String()),
+			sdk.NewAttribute(types.AttributeKeyRecipient, toAddrString),
 			sdk.NewAttribute(types.AttributeKeySender, fromAddrString),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
 		),
@@ -281,6 +292,7 @@ func (k BaseSendKeeper) emitSendCoinsEvents(ctx context.Context, fromAddr, toAdd
 			sdk.NewAttribute(types.AttributeKeySender, fromAddrString),
 		),
 	})
+	return nil
 }
 
 // subUnlockedCoins removes the unlocked amt coins of the given account.

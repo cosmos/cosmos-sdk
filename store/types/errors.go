@@ -12,7 +12,7 @@ var (
 	// ErrTxDecode is returned if we cannot parse a transaction
 	ErrTxDecode = errors.Register(StoreCodespace, 3, "tx parse error")
 
-	// ErrUnknownRequest to doc
+	// ErrUnknownRequest is returned for unknown requests
 	ErrUnknownRequest = errors.Register(StoreCodespace, 4, "unknown request")
 
 	// ErrLogic defines an internal logic error, e.g. an invariant or assertion

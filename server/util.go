@@ -41,9 +41,13 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
-// ServerContextKey defines the context key used to retrieve a server.Context from
-// a command's Context.
-const ServerContextKey = sdk.ContextKey("server.context")
+const (
+	// DefaultLoggerName is the name used for the sdk logger.
+	DefaultLoggerName = "cosmos-sdk"
+	// ServerContextKey defines the context key used to retrieve a server.Context from
+	// a command's Context.
+	ServerContextKey = sdk.ContextKey("server.context")
+)
 
 type Context struct {
 	Viper  *viper.Viper
@@ -55,7 +59,7 @@ func NewDefaultContext() *Context {
 	return NewContext(
 		viper.New(),
 		cmtcfg.DefaultConfig(),
-		log.NewLogger("cosmos-sdk", log.WithConsoleWriter(os.Stdout)),
+		log.NewLogger(DefaultLoggerName, log.WithConsoleWriter(os.Stdout)),
 	)
 }
 

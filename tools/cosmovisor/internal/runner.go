@@ -12,8 +12,8 @@ import (
 	"cosmossdk.io/tools/cosmovisor/v2"
 	"cosmossdk.io/tools/cosmovisor/v2/internal/watchers"
 
-	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"cosmossdk.io/x/upgrade/plan"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
 type Runner struct {

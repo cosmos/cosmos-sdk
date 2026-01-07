@@ -8,9 +8,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"cosmossdk.io/tools/cosmovisor/v2"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"cosmossdk.io/tools/cosmovisor/v2"
 )
 
 func NewAddUpgradeCmd() *cobra.Command {

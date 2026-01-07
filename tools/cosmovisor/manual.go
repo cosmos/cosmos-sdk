@@ -6,7 +6,7 @@ import (
 	"os"
 	"sort"
 
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
 // ReadManualUpgrades reads the manual upgrade data.

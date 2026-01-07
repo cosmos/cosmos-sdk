@@ -745,7 +745,7 @@ changes are specified to execute.
 
 The staking validator set is updated during this process by state transitions
 that run at the end of every block. As a part of this process any updated
-validators are also returned back to CometBFT for inclusion in the CometBFT
+validators are also returned to CometBFT for inclusion in the CometBFT
 validator set which is responsible for validating CometBFT messages at the
 consensus layer. Operations are as following:
 

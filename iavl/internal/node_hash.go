@@ -79,7 +79,7 @@ func writeHashBytes(node Node, leftHash, rightHash []byte, w io.Writer) error {
 			return fmt.Errorf("getting key, %w", err)
 		}
 
-		if err := encodeVarintPrefixedBytes(w, key); err != nil {
+		if err := encodeVarintPrefixedBytes(w, key.UnsafeBytes()); err != nil {
 			return fmt.Errorf("writing key, %w", err)
 		}
 
@@ -90,7 +90,7 @@ func writeHashBytes(node Node, leftHash, rightHash []byte, w io.Writer) error {
 
 		// Indirection needed to provide proofs without values.
 		// (e.g. ProofLeafNode.ValueHash)
-		if err := encodeVarintPrefixedBytes(w, shaSum256(value)); err != nil {
+		if err := encodeVarintPrefixedBytes(w, shaSum256(value.UnsafeBytes())); err != nil {
 			return fmt.Errorf("writing value, %w", err)
 		}
 	} else {

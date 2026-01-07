@@ -89,19 +89,10 @@ func queueOperations(queuedOps OperationQueue, queuedTimeOps *[]simulation.Futur
 			continue
 		}
 
-		// TODO: Replace with proper sorted data structure, so don't have the
-		// copy entire slice
-		index := sort.Search(
-			len(*queuedTimeOps),
-			func(i int) bool {
-				return (*queuedTimeOps)[i].BlockTime.After(futureOp.BlockTime)
-			},
-		)
-
-		queue := *queuedTimeOps
-		queue = append(queue, simulation.FutureOperation{})
-		copy(queue[index+1:], queue[index:])
-		queue[index] = futureOp
+		queue := append(*queuedTimeOps, futureOp)
+		sort.Slice(queue, func(i, j int) bool {
+			return queue[i].BlockTime.Before(queue[j].BlockTime)
+		})
 		*queuedTimeOps = queue
 	}
 }

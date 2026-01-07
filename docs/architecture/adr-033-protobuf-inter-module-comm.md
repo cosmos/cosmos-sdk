@@ -20,7 +20,7 @@ service definitions defined in [ADR 021](./adr-021-protobuf-query-encoding.md) a
 
 ## Context
 
-In the current Cosmos SDK documentation on the [Object-Capability Model](../../learn/advanced/10-ocap.md), it is stated that:
+In the current Cosmos SDK documentation on the [Object-Capability Model](../docs/learn/advanced/10-ocap.md), it is stated that:
 
 > We assume that a thriving ecosystem of Cosmos SDK modules that are easy to compose into a blockchain application will contain faulty or malicious modules.
 
@@ -42,7 +42,7 @@ own account. These permissions are actually stored as a `[]string` array on the 
 
 However, these permissions don’t really do much. They control what modules can be referenced in the `MintCoins`,
 `BurnCoins` and `DelegateCoins***` methods, but for one there is no unique object capability token that controls access —
-just a simple string. So the `x/upgrade` module could mint tokens for the `x/staking` module simple by calling
+just a simple string. So the `x/upgrade` module could mint tokens for the `x/staking` module simply by calling
 `MintCoins(“staking”)`. Furthermore, all modules which have access to these keeper methods, also have access to
 `SetBalance` negating any other attempt at OCAPs and breaking even basic object-oriented encapsulation.
 
@@ -94,7 +94,7 @@ evolution.
 the two which checks if one module is authorized to send the specified `Msg` to the other module providing a proper
 object capability system (see below).
 3. The router for inter-module communication gives us a convenient place to handle rollback of transactions,
-enabling atomicy of operations ([currently a problem](https://github.com/cosmos/cosmos-sdk/issues/8030)). Any failure within a module-to-module call would result in a failure of the entire
+enabling atomicity of operations ([currently a problem](https://github.com/cosmos/cosmos-sdk/issues/8030)). Any failure within a module-to-module call would result in a failure of the entire
 transaction
 
 This mechanism has the added benefits of:
@@ -111,7 +111,7 @@ key" corresponding to a module account, where authentication is provided through
 described in more detail below.
 
 Blockchain users (external clients) use their account's private key to sign transactions containing `Msg`s where they are listed as signers (each
-message specifies required signers with `Msg.GetSigner`). The authentication checks is performed by `AnteHandler`.
+message specifies required signers with `Msg.GetSigner`). The authentication check is performed by `AnteHandler`.
 
 Here, we extend this process, by allowing modules to be identified in `Msg.GetSigners`. When a module wants to trigger the execution a `Msg` in another module,
 its `ModuleKey` acts as the sender (through the `ClientConn` interface we describe below) and is set as a sole "signer". It's worth to note
@@ -144,7 +144,7 @@ func NewFooMsgServer(moduleKey RootModuleKey, ...) FooMsgServer {
 }
 
 func (foo *FooMsgServer) Bar(ctx context.Context, req *MsgBarRequest) (*MsgBarResponse, error) {
-  balance, err := foo.bankQuery.Balance(&bank.QueryBalanceRequest{Address: fooMsgServer.moduleKey.Address(), Denom: "foo"})
+  balance, err := foo.bankQuery.Balance(&bank.QueryBalanceRequest{Address: foo.moduleKey.Address(), Denom: "foo"})
 
   ...
 
@@ -270,7 +270,7 @@ introduced in the future. The `ModuleManager` will handle creation of module acc
 Because modules do not get direct access to each other anymore, modules may have unfulfilled dependencies. To make sure
 that module dependencies are resolved at startup, the `Configurator.RequireServer` method should be added. The `ModuleManager`
 will make sure that all dependencies declared with `RequireServer` can be resolved before the app starts. An example
-module `foo` could declare it's dependency on `x/bank` like this:
+module `foo` could declare its dependency on `x/bank` like this:
 
 ```go
 package foo
@@ -331,7 +331,7 @@ ADR.
 
 By default, the inter-module router requires that messages are sent by the first signer returned by `GetSigners`. The
 inter-module router should also accept authorization middleware such as that provided by [ADR 030](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-030-authz-module.md).
-This middleware will allow accounts to otherwise specific module accounts to perform actions on their behalf.
+This middleware will allow accounts to authorize specific module accounts to perform actions on their behalf.
 Authorization middleware should take into account the need to grant certain modules effectively "admin" privileges to
 other modules. This will be addressed in separate ADRs or updates to this ADR.
 
@@ -378,7 +378,7 @@ replacing `Keeper` interfaces altogether.
 
 * an alternative to keepers which can more easily lead to stable inter-module interfaces
 * proper inter-module OCAPs
-* improved module developer DevX, as commented on by several particpants on
+* improved module developer DevX, as commented on by several participants on
     [Architecture Review Call, Dec 3](https://hackmd.io/E0wxxOvRQ5qVmTf6N_k84Q)
 * lays the groundwork for what can be a greatly simplified `app.go`
 * router can be setup to enforce atomic transactions for module-to-module calls

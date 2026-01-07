@@ -51,7 +51,7 @@ func (rtr router) Sealed() bool {
 	return rtr.sealed
 }
 
-// AddRoute adds a governance handler for a given path. It returns the Router
+// AddRoute adds an evidence handler for a given path. It returns the Router
 // so AddRoute calls can be linked. It will panic if the router is sealed.
 func (rtr *router) AddRoute(path string, h Handler) Router {
 	if rtr.sealed {

@@ -13,7 +13,7 @@ import (
 
 const (
 	defaultPage  = 1
-	defaultLimit = 30 // should be consistent with https://github.com/cometbft/cometbft/v2/tree/v0.37.x/rpc/core#pagination
+	defaultLimit = 30 // should be consistent with https://pkg.go.dev/github.com/cometbft/cometbft/rpc/core#Pagination
 )
 
 // Proposer contains metadata of a governance proposal used for querying a
@@ -161,6 +161,7 @@ func QueryVoteByTxQuery(clientCtx client.Context, params v1.QueryVoteParams) ([]
 }
 
 // QueryProposerByTxQuery will query for a proposer of a governance proposal by ID.
+//
 // Deprecated: Should not be used, as not always accurate. It will be removed in v0.51.
 func QueryProposerByTxQuery(clientCtx client.Context, proposalID uint64) (Proposer, error) {
 	q := fmt.Sprintf("%s.%s='%d'", types.EventTypeSubmitProposal, types.AttributeKeyProposalID, proposalID)

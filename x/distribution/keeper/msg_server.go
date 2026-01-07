@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/go-metrics"
 
@@ -64,10 +65,10 @@ func (k msgServer) WithdrawDelegatorReward(ctx context.Context, msg *types.MsgWi
 	defer func() {
 		for _, a := range amount {
 			if a.Amount.IsInt64() {
-				telemetry.SetGaugeWithLabels(
+				telemetry.SetGaugeWithLabels( //nolint:staticcheck // TODO: switch to OpenTelemetry
 					[]string{"tx", "msg", "withdraw_reward"},
 					float32(a.Amount.Int64()),
-					[]metrics.Label{telemetry.NewLabel("denom", a.Denom)},
+					[]metrics.Label{telemetry.NewLabel("denom", a.Denom)}, //nolint:staticcheck // TODO: switch to OpenTelemetry
 				)
 			}
 		}
@@ -90,10 +91,10 @@ func (k msgServer) WithdrawValidatorCommission(ctx context.Context, msg *types.M
 	defer func() {
 		for _, a := range amount {
 			if a.Amount.IsInt64() {
-				telemetry.SetGaugeWithLabels(
+				telemetry.SetGaugeWithLabels( //nolint:staticcheck // TODO: switch to OpenTelemetry
 					[]string{"tx", "msg", "withdraw_commission"},
 					float32(a.Amount.Int64()),
-					[]metrics.Label{telemetry.NewLabel("denom", a.Denom)},
+					[]metrics.Label{telemetry.NewLabel("denom", a.Denom)}, //nolint:staticcheck // TODO: switch to OpenTelemetry
 				)
 			}
 		}
@@ -146,7 +147,7 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 
 func (k msgServer) CommunityPoolSpend(ctx context.Context, msg *types.MsgCommunityPoolSpend) (*types.MsgCommunityPoolSpendResponse, error) {
 	if k.HasExternalCommunityPool() {
-		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "external community pool is enabled -  use the DistributFromCommunityPool method exposed by the external community pool")
+		return nil, errors.Wrapf(sdkerrors.ErrInvalidRequest, "external community pool is enabled - use the DistributeFromCommunityPool method exposed by the external community pool")
 	}
 
 	if err := k.validateAuthority(msg.Authority); err != nil {
@@ -198,7 +199,7 @@ func (k msgServer) DepositValidatorRewardsPool(ctx context.Context, msg *types.M
 	}
 
 	if validator == nil {
-		return nil, errors.Wrapf(types.ErrNoValidatorExists, msg.ValidatorAddress)
+		return nil, errors.Wrapf(types.ErrNoValidatorExists, "%s", msg.ValidatorAddress)
 	}
 
 	// Allocate tokens from the distribution module to the validator, which are
@@ -206,6 +207,36 @@ func (k msgServer) DepositValidatorRewardsPool(ctx context.Context, msg *types.M
 	reward := sdk.NewDecCoinsFromCoins(msg.Amount...)
 	if err = k.AllocateTokensToValidator(ctx, validator, reward); err != nil {
 		return nil, err
+	}
+
+	// make sure the reward pool isn't already full.
+	if !validator.GetTokens().IsZero() {
+		rewards, err := k.GetValidatorCurrentRewards(ctx, valAddr)
+		if err != nil {
+			return nil, err
+		}
+		current := rewards.Rewards
+		historical, err := k.GetValidatorHistoricalRewards(ctx, valAddr, rewards.Period-1)
+		if err != nil {
+			return nil, err
+		}
+		if !historical.CumulativeRewardRatio.IsZero() {
+			rewardRatio := historical.CumulativeRewardRatio
+			var panicErr error
+			func() {
+				defer func() {
+					if r := recover(); r != nil {
+						panicErr = fmt.Errorf("deposit is too large: %v", r)
+					}
+				}()
+				rewardRatio.Add(current...)
+			}()
+
+			// Check if the deferred function caught a panic
+			if panicErr != nil {
+				return nil, fmt.Errorf("unable to deposit coins: %w", panicErr)
+			}
+		}
 	}
 
 	logger := k.Logger(ctx)

@@ -271,7 +271,7 @@ The `evidence` command allows users to list all evidence or evidence by hash.
 Usage:
 
 ```bash
-simd query evidence evidence [flags]
+simd query evidence [flags]
 ```
 
 To query evidence by hash

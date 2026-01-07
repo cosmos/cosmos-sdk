@@ -161,7 +161,7 @@ func sendTx() error {
     // Define two x/bank MsgSend messages:
     // - from addr1 to addr3,
     // - from addr2 to addr3.
-    // This means that the transactions needs two signers: addr1 and addr2.
+    // This means that the transaction needs two signers: addr1 and addr2.
     msg1 := banktypes.NewMsgSend(addr1, addr3, types.NewCoins(types.NewInt64Coin("atom", 12)))
     msg2 := banktypes.NewMsgSend(addr2, addr3, types.NewCoins(types.NewInt64Coin("atom", 34)))
 
@@ -420,10 +420,10 @@ Broadcasting a transaction using the REST endpoint (served by `gRPC-gateway`) ca
 ```bash
 curl -X POST \
     -H "Content-Type: application/json" \
-    -d'{"tx_bytes":"{{txBytes}}","mode":"BROADCAST_MODE_SYNC"}' \
+    -d' {"tx_bytes":"{{txBytes}}","mode":"BROADCAST_MODE_SYNC"}' \
     localhost:1317/cosmos/tx/v1beta1/txs
 ```
 
 ## Using CosmJS (JavaScript & TypeScript)
 
-CosmJS aims to build client libraries in JavaScript that can be embedded in web applications. Please see [https://cosmos.github.io/cosmjs](https://cosmos.github.io/cosmjs) for more information. As of January 2021, CosmJS documentation is still work in progress.
+CosmJS aims to build client libraries in JavaScript that can be embedded in web applications. Please see [https://cosmos.github.io/cosmjs](https://cosmos.github.io/cosmjs) for more information. As of January 2021, CosmJS documentation is still a work in progress.

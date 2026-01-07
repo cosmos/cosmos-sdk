@@ -58,7 +58,7 @@ halt-time = {{ .BaseConfig.HaltTime }}
 # It has no bearing on application state pruning which is determined by the
 # "pruning-*" configurations.
 #
-# Note: CometBFT block pruning is dependant on this parameter in conjunction
+# Note: CometBFT block pruning is dependent on this parameter in conjunction
 # with the unbonding (safety threshold) period, state pruning and state sync
 # snapshot parameters to determine the correct minimum value of
 # ResponseCommit.RetainHeight.
@@ -74,7 +74,7 @@ inter-block-cache = {{ .BaseConfig.InterBlockCache }}
 # ["message.sender", "message.recipient"]
 index-events = [{{ range .BaseConfig.IndexEvents }}{{ printf "%q, " . }}{{end}}]
 
-# IavlCacheSize set the size of the iavl tree cache (in number of nodes).
+# IavlCacheSize sets the size of the iavl tree cache (in number of nodes).
 iavl-cache-size = {{ .BaseConfig.IAVLCacheSize }}
 
 # IAVLDisableFastNode enables or disables the fast node feature of IAVL. 
@@ -90,13 +90,17 @@ app-db-backend = "{{ .BaseConfig.AppDBBackend }}"
 ###                         Telemetry Configuration                         ###
 ###############################################################################
 
+# DEPRECATED: telemetry will be removed in a future release as we migrate to OpenTelemetry.
+# To route the existing metrics to OpenTelemetry, set metrics-sink to 'otel'.
+# It is highly encouraged to begin migrating telemetry data to use native OpenTelemetry.
+# See https://opentelemetry.io/docs/languages/go/getting-started/ to get started.
 [telemetry]
 
 # Prefixed with keys to separate services.
 service-name = "{{ .Telemetry.ServiceName }}"
 
 # Enabled enables the application telemetry functionality. When enabled,
-# an in-memory sink is also enabled by default. Operators may also enabled
+# an in-memory sink is also enabled by default. Operators may also enable
 # other sinks such as Prometheus.
 enabled = {{ .Telemetry.Enabled }}
 
@@ -182,6 +186,13 @@ max-recv-msg-size = "{{ .GRPC.MaxRecvMsgSize }}"
 # The default value is math.MaxInt32.
 max-send-msg-size = "{{ .GRPC.MaxSendMsgSize }}"
 
+# Historical gRPC addresses with block ranges for historical query routing.
+# This should be a JSON string mapping gRPC addresses to block ranges.
+# Format: '{"address1": [start_block, end_block], "address2": [start_block, end_block]}'
+# Example: '{"0.0.0.0:26113": [0, 1000], "0.0.0.0:26114": [1001, 2000]}'
+# Leave empty to disable historical gRPC routing.
+historical-grpc-address-block-range = "{{ printf "{" }}{{ range $k, $v := .GRPC.HistoricalGRPCAddressBlockRange }}\"{{ $v }}\": [{{index $k 0 }}, {{ index $k 1}}]{{ end }}{{ printf "}" }}"
+
 ###############################################################################
 ###                        gRPC Web Configuration                           ###
 ###############################################################################
@@ -239,7 +250,7 @@ stop-node-on-err = {{ .Streaming.ABCI.StopNodeOnErr }}
 ###############################################################################
 
 [mempool]
-# Setting max-txs to 0 will allow for a unbounded amount of transactions in the mempool.
+# Setting max-txs to 0 will allow for an unbounded amount of transactions in the mempool.
 # Setting max_txs to negative 1 (-1) will disable transactions from being inserted into the mempool (no-op mempool).
 # Setting max_txs to a positive number (> 0) will limit the number of transactions in the mempool, by the specified amount.
 #

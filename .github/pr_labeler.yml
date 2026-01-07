@@ -25,8 +25,6 @@
   - x/authz/**/*
 "C:x/bank":
   - x/bank/**/*
-"C:x/circuit":
-  - x/circuit/**/*
 "C:x/consensus":
   - x/consensus/**/*
 "C:x/distribution":
@@ -39,12 +37,8 @@
   - x/genutil/**/*
 "C:x/gov":
   - x/gov/**/*
-"C:x/group":
-  - x/group/**/*
 "C:x/mint":
   - x/mint/**/*
-"C:x/nft":
-  - x/nft/**/*
 "C:x/protocolpool":
   - x/protocolpool/**/*
 "C:x/slashing":

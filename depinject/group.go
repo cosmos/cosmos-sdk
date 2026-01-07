@@ -7,7 +7,7 @@ import (
 	"cosmossdk.io/depinject/internal/graphviz"
 )
 
-// ManyPerContainerType marks a type which automatically gets grouped together. For an ManyPerContainerType T,
+// ManyPerContainerType marks a type which automatically gets grouped together. For a ManyPerContainerType T,
 // T and []T can be declared as output parameters for providers as many times within the container
 // as desired. All of the provided values for T can be retrieved by declaring an
 // []T input parameter.

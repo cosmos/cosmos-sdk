@@ -18,7 +18,7 @@ There are many different ways to secure a server and your node, the described st
 This walkthrough assumes the underlying operating system is Ubuntu. 
 :::
 
-## Sever Setup
+## Server Setup
 
 ### User
 
@@ -40,10 +40,10 @@ Now when logging into the server, the non `root` user can be used.
 
 ### Go
 
-1. Install the [Go](https://go.dev/doc/install) version preconized by the application.
+1. Install the [Go](https://go.dev/doc/install) version recommended by the application.
 
 :::warning
-In the past, validators [have had issues](https://github.com/cosmos/cosmos-sdk/issues/13976) when using different versions of Go. It is recommended that the whole validator set uses the version of Go that is preconized by the application.
+In the past, validators [have had issues](https://github.com/cosmos/cosmos-sdk/issues/13976) when using different versions of Go. It is recommended that the whole validator set uses the version of Go that is recommended by the application.
 :::
 
 ### Firewall
@@ -196,13 +196,13 @@ tmkms softsign import $HOME/tmkms/config/secrets/priv_validator_key.json $HOME/t
 
 At this point, it is necessary to delete the `priv_validator_key.json` from the validator node and the tmkms node. Since the key has been imported into tmkms (above) it is no longer necessary on the nodes. The key can be safely stored offline. 
 
-4. Modifiy the `tmkms.toml`. 
+4. Modify the `tmkms.toml`. 
 
 ```bash
 vim $HOME/tmkms/config/tmkms.toml
 ```
 
-This example shows a configuration that could be used for soft signing. The example has an IP of `123.456.12.345` with a port of `26659` a chain_id of `test-chain-waSDSe`. These are items that most be modified for the usecase of tmkms and the network. 
+This example shows a configuration that could be used for soft signing. The example has an IP of `123.456.12.345` with a port of `26659` a chain_id of `test-chain-waSDSe`. These are items that must be modified for the usecase of tmkms and the network. 
 
 ```toml
 # CometBFT KMS configuration file

@@ -359,8 +359,8 @@ public class NativeSecp256k1 {
     /**
      * libsecp256k1 create ECDH secret - constant time ECDH calculation
      *
-     * @param seckey byte array of secret key used in exponentiaion
-     * @param pubkey byte array of public key used in exponentiaion
+     * @param seckey byte array of secret key used in exponentiation
+     * @param pubkey byte array of public key used in exponentiation
      */
     public static byte[] createECDHSecret(byte[] seckey, byte[] pubkey) throws AssertFailException{
         Preconditions.checkArgument(seckey.length <= 32 && pubkey.length <= 65);

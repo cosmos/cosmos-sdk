@@ -39,8 +39,7 @@ func benchmarkValidateGenesis(b *testing.B, n int) {
 		validators = append(validators, validator)
 	}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		genesisState := types.DefaultGenesisState()
 		genesisState.Validators = validators
 		if err := staking.ValidateGenesis(genesisState); err != nil {

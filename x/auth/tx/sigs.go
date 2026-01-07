@@ -96,7 +96,7 @@ func decodeMultisignatures(bz []byte) ([][]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	// NOTE: it is import to reject multi-signatures that contain unrecognized fields because this is an exploitable
+	// NOTE: it is important to reject multi-signatures that contain unrecognized fields because this is an exploitable
 	// malleability in the protobuf message. Basically an attacker could bloat a MultiSignature message with unknown
 	// fields, thus bloating the transaction and causing it to fail.
 	if len(multisig.XXX_unrecognized) > 0 {

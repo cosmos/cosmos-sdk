@@ -76,7 +76,7 @@ func (m *Coin) GetDenom() string {
 
 // DecCoin defines a token with a denomination and a decimal amount.
 //
-// NOTE: The amount field is an Dec which implements the custom method
+// NOTE: The amount field is a Dec which implements the custom method
 // signatures required by gogoproto.
 type DecCoin struct {
 	Denom  string                      `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`

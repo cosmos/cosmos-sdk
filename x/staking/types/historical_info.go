@@ -3,7 +3,7 @@ package types
 import (
 	"sort"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/core/address"
@@ -28,7 +28,7 @@ func NewHistoricalInfo(header cmtproto.Header, valSet Validators, powerReduction
 	}
 }
 
-// MustUnmarshalHistoricalInfo wll unmarshal historical info and panic on error
+// MustUnmarshalHistoricalInfo will unmarshal historical info and panic on error
 func MustUnmarshalHistoricalInfo(cdc codec.BinaryCodec, value []byte) HistoricalInfo {
 	hi, err := UnmarshalHistoricalInfo(cdc, value)
 	if err != nil {

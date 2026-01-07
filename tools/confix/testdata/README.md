@@ -18,7 +18,7 @@ git checkout release/v0.47.x
 # Install dependencies
 make install
 
-# Confirm you go the version you expected, and generate the file.
+# Confirm you got the version you expected, and generate the file.
 simd version
 simd init test --chain-id test
 

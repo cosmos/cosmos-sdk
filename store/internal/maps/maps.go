@@ -3,9 +3,9 @@ package maps
 import (
 	"encoding/binary"
 
-	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
-	"github.com/cometbft/cometbft/v2/crypto/merkle"
-	"github.com/cometbft/cometbft/v2/crypto/tmhash"
+	"github.com/cometbft/cometbft/crypto/merkle"
+	"github.com/cometbft/cometbft/crypto/tmhash"
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 
 	"cosmossdk.io/store/internal/kv"
 	"cosmossdk.io/store/internal/tree"
@@ -156,7 +156,7 @@ func (kv KVPair) Bytes() []byte {
 	// * 8 bytes to Uvarint encode the length of the value
 	// So preallocate for the worst case, which will in total
 	// be a maximum of 14 bytes wasted, if len(key)=1, len(value)=1,
-	// but that's going to rare.
+	// but that's going to be rare.
 	buf := make([]byte, 8+len(kv.Key)+8+len(kv.Value))
 
 	// Encode the key, prefixed with its length.

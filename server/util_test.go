@@ -10,7 +10,7 @@ import (
 	"strings"
 	"testing"
 
-	cmtcfg "github.com/cometbft/cometbft/v2/config"
+	cmtcfg "github.com/cometbft/cometbft/config"
 	db "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -91,7 +91,7 @@ func TestInterceptConfigsPreRunHandlerCreatesConfigFilesWhenMissing(t *testing.T
 	}
 
 	if !s.Mode().IsRegular() {
-		t.Fatal("appp.toml not created as regular file")
+		t.Fatal("app.toml not created as regular file")
 	}
 
 	if s.Size() == 0 {
@@ -401,7 +401,7 @@ func TestInterceptConfigsPreRunHandlerPrecedenceConfigDefault(t *testing.T) {
 	}
 }
 
-// Ensure that if interceptConfigs encounters any error other than non-existen errors
+// Ensure that if interceptConfigs encounters any error other than non-existent errors
 // that we correctly return the offending error, for example a permission error.
 // See https://github.com/cosmos/cosmos-sdk/issues/7578
 func TestInterceptConfigsWithBadPermissions(t *testing.T) {

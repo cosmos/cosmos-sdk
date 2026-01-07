@@ -23,9 +23,9 @@ import (
 )
 
 const (
-	// Constants defined here are the defaults value for address.
+	// Constants defined here are the default values for address.
 	// You can use the specific values for your project.
-	// Add the follow lines to the `main()` of your server.
+	// Add the following lines to the `main()` of your server.
 	//
 	//	config := sdk.GetConfig()
 	//	config.SetBech32PrefixForAccount(yourBech32PrefixAccAddr, yourBech32PrefixAccPub)
@@ -144,7 +144,7 @@ var (
 // account
 // ----------------------------------------------------------------------------
 
-// AccAddress a wrapper around bytes meant to represent an account address.
+// AccAddress is a wrapper around bytes meant to represent an account address.
 // When marshaled to a string or JSON, it uses Bech32.
 type AccAddress []byte
 
@@ -332,7 +332,7 @@ func (aa AccAddress) Format(s fmt.State, verb rune) {
 // validator operator
 // ----------------------------------------------------------------------------
 
-// ValAddress defines a wrapper around bytes meant to present a validator's
+// ValAddress defines a wrapper around bytes meant to represent a validator's
 // operator. When marshaled to a string or JSON, it uses Bech32.
 type ValAddress []byte
 
@@ -382,7 +382,7 @@ func (va ValAddress) Equals(va2 Address) bool {
 	return bytes.Equal(va.Bytes(), va2.Bytes())
 }
 
-// Empty returns boolean for whether an ValAddress is empty
+// Empty returns boolean for whether a ValAddress is empty
 func (va ValAddress) Empty() bool {
 	return len(va) == 0
 }
@@ -496,7 +496,7 @@ func (va ValAddress) Format(s fmt.State, verb rune) {
 // consensus node
 // ----------------------------------------------------------------------------
 
-// ConsAddress defines a wrapper around bytes meant to present a consensus node.
+// ConsAddress defines a wrapper around bytes meant to represent a consensus node.
 // When marshaled to a string or JSON, it uses Bech32.
 type ConsAddress []byte
 
@@ -534,7 +534,7 @@ func GetConsAddress(pubkey cryptotypes.PubKey) ConsAddress {
 	return ConsAddress(pubkey.Address())
 }
 
-// Equals returns boolean for whether two ConsAddress are Equal
+// Equals returns boolean for whether two ConsAddresses are Equal
 func (ca ConsAddress) Equals(ca2 Address) bool {
 	if ca.Empty() && ca2.Empty() {
 		return true
@@ -543,7 +543,7 @@ func (ca ConsAddress) Equals(ca2 Address) bool {
 	return bytes.Equal(ca.Bytes(), ca2.Bytes())
 }
 
-// Empty returns boolean for whether an ConsAddress is empty
+// Empty returns boolean for whether a ConsAddress is empty
 func (ca ConsAddress) Empty() bool {
 	return len(ca) == 0
 }
@@ -641,7 +641,7 @@ func (ca ConsAddress) String() string {
 }
 
 // Bech32ifyAddressBytes returns a bech32 representation of address bytes.
-// Returns an empty sting if the byte slice is 0-length. Returns an error if the bech32 conversion
+// Returns an empty string if the byte slice is 0-length. Returns an error if the bech32 conversion
 // fails or the prefix is empty.
 func Bech32ifyAddressBytes(prefix string, bs []byte) (string, error) {
 	if len(bs) == 0 {
@@ -654,7 +654,7 @@ func Bech32ifyAddressBytes(prefix string, bs []byte) (string, error) {
 }
 
 // MustBech32ifyAddressBytes returns a bech32 representation of address bytes.
-// Returns an empty sting if the byte slice is 0-length. It panics if the bech32 conversion
+// Returns an empty string if the byte slice is 0-length. It panics if the bech32 conversion
 // fails or the prefix is empty.
 func MustBech32ifyAddressBytes(prefix string, bs []byte) string {
 	s, err := Bech32ifyAddressBytes(prefix, bs)

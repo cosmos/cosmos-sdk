@@ -11,13 +11,13 @@ NOTE: `x/params` is deprecated as of Cosmos SDK v0.53 and will be removed in the
 Package params provides a globally available parameter store.
 
 There are two main types, Keeper and Subspace. Subspace is an isolated namespace for a
-paramstore, where keys are prefixed by preconfigured spacename. Keeper has a
+paramstore, where keys are prefixed by a preconfigured space name. Keeper has a
 permission to access all existing spaces.
 
 Subspace can be used by the individual keepers, which need a private parameter store
 that the other keepers cannot modify. The params Keeper can be used to add a route to `x/gov` router in order to modify any parameter in case a proposal passes.
 
-The following contents explains how to use params module for master and user modules.
+The following sections explain how to use the params module for master and user modules.
 
 ## Contents
 
@@ -76,4 +76,4 @@ Modules often define parameters as a proto message. The generated struct can imp
 * `KeyTable.RegisterParamSet()`: registers all parameters in the struct
 * `Subspace.{Get, Set}ParamSet()`: Get to & Set from the struct
 
-The implementor should be a pointer in order to use `GetParamSet()`.
+The implementer should be a pointer in order to use `GetParamSet()`.

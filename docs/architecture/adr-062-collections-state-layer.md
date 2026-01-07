@@ -11,7 +11,7 @@ PROPOSED - Implemented
 ## Abstract
 
 We propose a simplified module storage layer which leverages golang generics to allow module developers to handle module
-storage in a simple and straightforward manner, whilst offering safety, extensibility and standardisation.
+storage in a simple and straightforward manner, whilst offering safety, extensibility and standardization.
 
 ## Context
 
@@ -33,7 +33,7 @@ This brings in a lot of problems:
 * Key to bytes formats are complex and their definition is error-prone, for example:
     * how do I format time to bytes in such a way that bytes are sorted?
     * how do I ensure when I don't have namespace collisions when dealing with secondary indexes?
-* The lack of standardisation makes life hard for clients, and the problem is exacerbated when it comes to providing proofs for objects present in state. Clients are forced to maintain a list of object paths to gather proofs.
+* The lack of standardization makes life hard for clients, and the problem is exacerbated when it comes to providing proofs for objects present in state. Clients are forced to maintain a list of object paths to gather proofs.
 
 ### Current Solution: ORM
 
@@ -68,13 +68,13 @@ All the collection APIs build on top of the simple `Map` type.
 
 Collections is fully generic, meaning that anything can be used as `Key` and `Value`. It can be a protobuf object or not.
 
-Collections types, in fact, delegate the duty of serialisation of keys and values to a secondary collections API component called `ValueEncoders` and `KeyEncoders`.
+Collections types, in fact, delegate the duty of serialization of keys and values to a secondary collections API component called `ValueEncoders` and `KeyEncoders`.
 
 `ValueEncoders` take care of converting a value to bytes (relevant only for `Map`). And offers a plug and play layer which allows us to change how we encode objects, 
-which is relevant for swapping serialisation frameworks and enhancing performance.
+which is relevant for swapping serialization frameworks and enhancing performance.
 `Collections` already comes in with default `ValueEncoders`, specifically for: protobuf objects, special SDK types (sdk.Int, sdk.Dec).
 
-`KeyEncoders` take care of converting keys to bytes, `collections` already comes in with some default `KeyEncoders` for some privimite golang types
+`KeyEncoders` take care of converting keys to bytes, `collections` already comes in with some default `KeyEncoders` for some primitive golang types
 (uint64, string, time.Time, ...) and some widely used sdk types (sdk.Acc/Val/ConsAddress, sdk.Int/Dec, ...).
 These default implementations also offer safety around proper lexicographic ordering and namespace-collision.
 
@@ -96,10 +96,10 @@ the upgrade to the new storage layer non-state breaking.
 ### Positive
 
 * ADR aimed at removing code from the SDK rather than adding it. Migrating just `x/staking` to collections would yield to a net decrease in LOC (even considering the addition of collections itself).
-* Simplifies and standardises storage layers across modules in the SDK.
+* Simplifies and standardizes storage layers across modules in the SDK.
 * Does not require to have to deal with protobuf.
 * It's pure golang code.
-* Generalisation over `KeyEncoders` and `ValueEncoders` allows us to not tie ourself to the data serialisation framework.
+* Generalization over `KeyEncoders` and `ValueEncoders` allows us to not tie ourself to the data serialization framework.
 * `KeyEncoders` and `ValueEncoders` can be extended to provide schema reflection.
 
 ### Negative

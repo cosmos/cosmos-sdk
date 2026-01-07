@@ -70,7 +70,7 @@ const (
 	snapshotMaxItemSize = int(64e6) // SDK has no key/value size limit, so we set an arbitrary limit
 )
 
-var ErrOptsZeroSnapshotInterval = errors.New("snaphot-interval must not be 0")
+var ErrOptsZeroSnapshotInterval = errors.New("snapshot-interval must not be 0")
 
 // NewManager creates a new manager.
 func NewManager(store *Store, opts types.SnapshotOptions, multistore types.Snapshotter, extensions map[string]types.ExtensionSnapshotter, logger log.Logger) *Manager {
@@ -102,7 +102,7 @@ func (m *Manager) RegisterExtensions(extensions ...types.ExtensionSnapshotter) e
 			return fmt.Errorf("duplicated snapshotter name: %s", name)
 		}
 		if !IsFormatSupported(extension, extension.SnapshotFormat()) {
-			return fmt.Errorf("snapshotter don't support it's own snapshot format: %s %d", name, extension.SnapshotFormat())
+			return fmt.Errorf("snapshotter doesn't support its own snapshot format: %s %d", name, extension.SnapshotFormat())
 		}
 		m.extensions[name] = extension
 	}

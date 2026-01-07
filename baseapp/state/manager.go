@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"sync"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"go.opentelemetry.io/otel"
+	otelattr "go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
@@ -13,6 +16,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+var tracer = otel.Tracer("cosmos-sdk/baseapp")
 
 type Manager struct {
 	// volatile states:
@@ -107,6 +112,13 @@ func (mgr *Manager) SetState(
 		mgr.processProposalState = baseState
 
 	case sdk.ExecModeFinalize:
+		// add tracing span instrumentation here when the context is initialized for the block
+		baseState.ctx, baseState.span = baseState.ctx.StartSpan(tracer, "Block",
+			trace.WithAttributes(
+				otelattr.Int64("height", h.Height),
+				otelattr.Int64("time_unix_nano", h.Time.UnixNano()),
+			),
+		)
 		mgr.finalizeBlockState = baseState
 
 	default:
@@ -129,6 +141,10 @@ func (mgr *Manager) ClearState(mode sdk.ExecMode) {
 		mgr.processProposalState = nil
 
 	case sdk.ExecModeFinalize:
+		// complete tracing span instrumentation here when the context is cleared for the block
+		if mgr.finalizeBlockState != nil {
+			mgr.finalizeBlockState.span.End()
+		}
 		mgr.finalizeBlockState = nil
 
 	default:

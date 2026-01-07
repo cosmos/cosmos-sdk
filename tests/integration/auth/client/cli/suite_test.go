@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/v2/abci/types"
-	rpcclientmock "github.com/cometbft/cometbft/v2/rpc/client/mock"
+	abci "github.com/cometbft/cometbft/abci/types"
+	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/core/address"
@@ -69,7 +69,7 @@ func (s *CLITestSuite) SetupSuite() {
 
 	ctxGen := func() client.Context {
 		bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
-		c := clitestutil.NewMockCometRPC(abci.QueryResponse{
+		c := clitestutil.NewMockCometRPC(abci.ResponseQuery{
 			Value: bz,
 		})
 		return s.baseCtx.WithClient(c)
@@ -1004,7 +1004,7 @@ func (s *CLITestSuite) TestAuxSigner() {
 			true,
 		},
 		{
-			"no error with SIGN_MDOE_DIRECT_AUX mode and generate-only set (ignores generate-only)",
+			"no error with SIGN_MODE_DIRECT_AUX mode and generate-only set (ignores generate-only)",
 			[]string{
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
 				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),
@@ -1012,7 +1012,7 @@ func (s *CLITestSuite) TestAuxSigner() {
 			false,
 		},
 		{
-			"no error with SIGN_MDOE_DIRECT_AUX mode and generate-only, tip flag set",
+			"no error with SIGN_MODE_DIRECT_AUX mode and generate-only, tip flag set",
 			[]string{
 				fmt.Sprintf("--%s=%s", flags.FlagSignMode, flags.SignModeDirectAux),
 				fmt.Sprintf("--%s=true", flags.FlagGenerateOnly),

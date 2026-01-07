@@ -38,7 +38,7 @@ func DenomMetadataKey(denom string) []byte {
 }
 
 // AddressFromBalancesStore returns an account address from a balances prefix
-// store. The key must not contain the perfix BalancesPrefix as the prefix store
+// store. The key must not contain the prefix BalancesPrefix as the prefix store
 // iterator discards the actual prefix.
 func AddressFromBalancesStore(key []byte) sdk.AccAddress {
 	kv.AssertKeyAtLeastLength(key, 1+v1auth.AddrLen)

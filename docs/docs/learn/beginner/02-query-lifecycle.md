@@ -47,7 +47,7 @@ One such tool is [grpcurl](https://github.com/fullstorydev/grpcurl), and a gRPC 
 
 ```bash
 grpcurl \
-    -plaintext                                           # We want results in plain test
+    -plaintext                                           # We want results in plain text
     -import-path ./proto \                               # Import these .proto files
     -proto ./proto/cosmos/staking/v1beta1/query.proto \  # Look into this .proto file for the Query protobuf service
     -d '{"address":"$MY_DELEGATOR"}' \                   # Query arguments
@@ -76,7 +76,7 @@ The first thing that is created in the execution of a CLI command is a `client.C
 * **Codec**: The [encoder/decoder](../advanced/05-encoding.md) used by the application, used to marshal the parameters and query before making the CometBFT RPC request and unmarshal the returned response into a JSON object. The default codec used by the CLI is Protobuf.
 * **Account Decoder**: The account decoder from the [`auth`](../../build/modules/auth/README.md) module, which translates `[]byte`s into accounts.
 * **RPC Client**: The CometBFT RPC Client, or node, to which requests are relayed.
-* **Keyring**: A [Key Manager]../beginner/03-accounts.md#keyring) used to sign transactions and handle other operations with keys.
+* **Keyring**: A [Key Manager](../beginner/03-accounts.md#keyring) used to sign transactions and handle other operations with keys.
 * **Output Writer**: A [Writer](https://pkg.go.dev/io/#Writer) used to output the response.
 * **Configurations**: The flags configured by the user for this command, including `--height`, specifying the height of the blockchain to query, and `--indent`, which indicates to add an indent to the JSON response.
 
@@ -134,7 +134,7 @@ Once a result is received from the querier, `baseapp` begins the process of retu
 
 ## Response
 
-Since `Query()` is an ABCI function, `baseapp` returns the response as an [`abci.QueryResponse`](https://docs.cometbft.com/master/spec/abci/abci.html#query-2) type. The `client.Context` `Query()` routine receives the response and.
+Since `Query()` is an ABCI function, `baseapp` returns the response as an [`abci.ResponseQuery`](https://docs.cometbft.com/master/spec/abci/abci.html#query-2) type. The `client.Context` `Query()` routine receives the response.
 
 ### CLI Response
 

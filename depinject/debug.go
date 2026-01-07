@@ -54,7 +54,7 @@ func FileLogger(filename string) DebugOption {
 }
 
 // Visualizer creates an option which provides a visualizer function which
-// will receive a rendering of the container in the Graphiz DOT format
+// will receive a rendering of the container in the Graphviz DOT format
 // whenever the container finishes building or fails due to an error. The
 // graph is color-coded to aid debugging with black representing success,
 // red representing an error, and gray representing unused types or functions.

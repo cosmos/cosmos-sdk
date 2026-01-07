@@ -107,7 +107,7 @@ func MsgUndelegateFactory(k *keeper.Keeper) simsx.SimMsgFactoryFn[*types.MsgUnde
 		delegator := testData.GetAccount(reporter, delAddr)
 
 		if hasMaxUD := must(k.HasMaxUnbondingDelegationEntries(ctx, delegator.Address, valAddr)); hasMaxUD {
-			reporter.Skipf("max unbodings")
+			reporter.Skipf("max unbondings")
 			return nil, nil
 		}
 

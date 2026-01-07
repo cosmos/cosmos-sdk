@@ -1,5 +1,4 @@
 //go:build !race
-// +build !race
 
 // Disabled -race because the package github.com/manifoldco/promptui@v0.9.0
 // has a data race and this code exposes it, but fixing it would require
@@ -59,7 +58,7 @@ func TestPromptIntegerOverflow(t *testing.T) {
 }
 
 func TestPromptParseInteger(t *testing.T) {
-	// Intentionally sending a value out of the range of
+	// Intentionally sending a value out of the range of int.
 	values := []struct {
 		in   string
 		want int

@@ -22,7 +22,7 @@ import (
 const (
 	OpWeightMsgUnjail = "op_weight_msg_unjail"
 
-	DefaultWeightMsgUnjail = 100
+	DefaultWeightMsgUnjail = 5 // Reduced from 100 since validators are rarely jailed in simulations
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -87,7 +87,8 @@ func SimulateMsgUnjail(
 		}
 
 		if !validator.IsJailed() {
-			// TODO: due to this condition this message is almost, if not always, skipped !
+			// This operation is often skipped because validators are rarely jailed in simulations.
+			// The weight has been reduced to 5 to reflect this reality.
 			return simtypes.NoOpMsg(types.ModuleName, msgType, "validator is not jailed"), nil, nil
 		}
 

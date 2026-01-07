@@ -28,7 +28,7 @@ From the Amino docs:
 
 Amino also aims to have the following goals (not a complete list):
 
-* Binary bytes must be decode-able with a schema.
+* Binary bytes must be decodable with a schema.
 * Schema must be upgradeable.
 * The encoder and decoder logic must be reasonably simple.
 
@@ -65,7 +65,7 @@ will provide two concrete implementations of the `Marshaler` interface: `AminoCo
 * `AminoCodec`: Uses Amino for both binary and JSON encoding.
 * `ProtoCodec`: Uses Protobuf for both binary and JSON encoding.
 
-Modules will use whichever codec that is instantiated in the app. By default, the Cosmos SDK's `simapp`
+Modules will use whichever codec is instantiated in the app. By default, the Cosmos SDK's `simapp`
 instantiates a `ProtoCodec` as the concrete implementation of `Marshaler`, inside the `MakeTestEncodingConfig`
 function. This can be easily overwritten by app developers if they so desire.
 
@@ -136,7 +136,7 @@ to be reimplemented for each chain
 The main counter-argument to using `Any` centers around its additional space
 and possibly performance overhead. The space overhead could be dealt with using
 compression at the persistence layer in the future and the performance impact
-is likely to be small. Thus, not using `Any` is seem as a pre-mature optimization,
+is likely to be small. Thus, not using `Any` is seen as a pre-mature optimization,
 with user experience as the higher order concern.
 
 Note, that given the Cosmos SDK's decision to adopt the `Codec` interfaces described
@@ -144,7 +144,7 @@ above, apps can still choose to use `oneof` to encode state and transactions
 but it is not the recommended approach. If apps do choose to use `oneof`s
 instead of `Any` they will likely lose compatibility with client apps that
 support multiple chains. Thus developers should think carefully about whether
-they care more about what is possibly a pre-mature optimization or end-user
+they care more about what is possibly a premature optimization or end-user
 and client developer UX.
 
 ### Safe usage of `Any`
@@ -169,7 +169,7 @@ type InterfaceRegistry interface {
     //   registry.RegisterInterface("cosmos_sdk.Msg", (*sdk.Msg)(nil))
     RegisterInterface(protoName string, iface interface{})
 
-    // RegisterImplementations registers impls as a concrete implementations of
+    // RegisterImplementations registers impls as concrete implementations of
     // the interface iface
     // Ex:
     //  registry.RegisterImplementations((*sdk.Msg)(nil), &MsgSend{}, &MsgMultiSend{})
@@ -226,7 +226,7 @@ every module that implements it in order to populate the `InterfaceRegistry`.
 
 ### Using `Any` to encode state
 
-The Cosmos SDK will provide support methods `MarshalInterface` and `UnmarshalInterface` to hide a complexity of wrapping interface types into `Any` and allow easy serialization.
+The Cosmos SDK will provide support methods `MarshalInterface` and `UnmarshalInterface` to hide the complexity of wrapping interface types into `Any` and allow easy serialization.
 
 ```go
 import "github.com/cosmos/cosmos-sdk/codec"
@@ -245,7 +245,7 @@ func UnmarshalEvidence(cdc codec.BinaryCodec, bz []byte) (eviexported.Evidence, 
 
 ### Using `Any` in `sdk.Msg`s
 
-A similar concept is to be applied for messages that contain interfaces fields.
+A similar concept is to be applied for messages that contain interface fields.
 For example, we can define `MsgSubmitEvidence` as follows where `Evidence` is
 an interface:
 
@@ -333,7 +333,7 @@ For a more complete comparison to alternative protocols, see [here](https://code
 ### Cap'n Proto
 
 While [Cap’n Proto](https://capnproto.org/) does seem like an advantageous alternative to Protobuf
-due to it's native support for interfaces/generics and built in canonicalization, it does lack the
+due to its native support for interfaces/generics and built-in canonicalization, it does lack the
 rich client ecosystem compared to Protobuf and is a bit less mature.
 
 ### FlatBuffers
@@ -342,7 +342,7 @@ rich client ecosystem compared to Protobuf and is a bit less mature.
 primary difference being that FlatBuffers does not need a parsing/unpacking step to a secondary
 representation before you can access data, often coupled with per-object memory allocation.
 
-However, it would require great efforts into research and full understanding the scope of the migration
+However, it would require great efforts into research and a full understanding the scope of the migration
 and path forward -- which isn't immediately clear. In addition, FlatBuffers aren't designed for
 untrusted inputs.
 

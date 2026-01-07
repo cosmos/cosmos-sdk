@@ -22,7 +22,7 @@ all operating systems.
 The `os` backend relies on operating system-specific defaults to handle key storage
 securely. Typically, an operating system's credential subsystem handles password prompts,
 private keys storage, and user sessions according to the user's password policies. Here
-is a list of the most popular operating systems and their respective passwords manager:
+is a list of the most popular operating systems and their respective password managers:
 
 * macOS: [Keychain](https://support.apple.com/en-gb/guide/keychain-access/welcome/mac)
 * Windows: [Credentials Management API](https://docs.microsoft.com/en-us/windows/win32/secauthn/credentials-management)
@@ -35,7 +35,7 @@ GNU/Linux distributions that use GNOME as the default desktop environment typica
 [Seahorse](https://wiki.gnome.org/Apps/Seahorse). Users of KDE based distributions are
 commonly provided with [KDE Wallet Manager](https://userbase.kde.org/KDE_Wallet_Manager).
 Whilst the former is in fact a `libsecret` convenient frontend, the latter is a `kwallet`
-client. `keyctl` is a secure backend that leverages the Linux's kernel security key management system
+client. `keyctl` is a secure backend that leverages the Linux kernel security key management system
 to store cryptographic keys securely in memory.
 
 `os` is the default option since operating system's default credentials managers are
@@ -91,8 +91,8 @@ one you may want to use specifically to encrypt the password store.
 ### The `kwallet` backend
 
 The `kwallet` backend uses `KDE Wallet Manager`, which comes installed by default on the
-GNU/Linux distributions that ships KDE as default desktop environment. Please refer to
-[KWallet Handbook](https://docs.kde.org/stable5/en/kdeutils/kwallet5/index.html) for more
+GNU/Linux distributions that ship KDE as the default desktop environment. Please refer to
+[KWallet API documentation](https://api.kde.org/frameworks/kwallet/html/index.html) for more
 information.
 
 ### The `keyctl` backend
@@ -117,7 +117,7 @@ The `memory` backend stores keys in memory. The keys are immediately deleted aft
 
 **Provided for testing purposes only. The `memory` backend is not recommended for use in production environments**.
 
-### Setting backend using the env variable 
+### Setting backend using an env variable 
 
 You can set the keyring-backend using env variable: `BINNAME_KEYRING_BACKEND`. For example, if your binary name is `gaia-v5` then set: `export GAIA_V5_KEYRING_BACKEND=pass`
 

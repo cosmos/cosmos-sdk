@@ -57,8 +57,8 @@ func (s *configTestSuite) TestConfig_SetFullFundraiserPath() {
 	config.SetFullFundraiserPath("test/path")
 	s.Require().Equal("test/path", config.GetFullFundraiserPath())
 
-	config.SetFullFundraiserPath("test/poth")
-	s.Require().Equal("test/poth", config.GetFullFundraiserPath())
+	config.SetFullFundraiserPath("test/path")
+	s.Require().Equal("test/path", config.GetFullFundraiserPath())
 
 	config.Seal()
 	s.Require().Panics(func() { config.SetFullFundraiserPath("x/test/path") })

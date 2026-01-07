@@ -32,7 +32,7 @@ import (
 // UpgradeInfoFileName file to store upgrade information
 // use x/upgrade/types.UpgradeInfoFilename instead.
 //
-// Deprecated:will be removed in the future.
+// Deprecated: will be removed in the future.
 const UpgradeInfoFileName string = "upgrade-info.json"
 
 type Keeper struct {
@@ -273,7 +273,7 @@ func (k Keeper) ScheduleUpgrade(ctx context.Context, plan types.Plan) error {
 		return err
 	}
 
-	telemetry.SetGaugeWithLabels([]string{"server", "info"}, 1, []metrics.Label{telemetry.NewLabel("upgrade_height", strconv.FormatInt(plan.Height, 10))})
+	telemetry.SetGaugeWithLabels([]string{"server", "info"}, 1, []metrics.Label{telemetry.NewLabel("upgrade_height", strconv.FormatInt(plan.Height, 10))}) //nolint:staticcheck // TODO: switch to OpenTelemetry
 
 	return nil
 }
@@ -487,7 +487,7 @@ func (k Keeper) ApplyUpgrade(ctx context.Context, plan types.Plan) error {
 		return err
 	}
 
-	// incremement the protocol version and set it in state and baseapp
+	// increment the protocol version and set it in state and baseapp
 	nextProtocolVersion, err := k.getProtocolVersion(ctx)
 	if err != nil {
 		return err
@@ -584,7 +584,7 @@ func (k Keeper) ReadUpgradeInfoFromDisk() (types.Plan, error) {
 	}
 
 	if upgradeInfo.Height > 0 {
-		telemetry.SetGaugeWithLabels([]string{"server", "info"}, 1, []metrics.Label{telemetry.NewLabel("upgrade_height", strconv.FormatInt(upgradeInfo.Height, 10))})
+		telemetry.SetGaugeWithLabels([]string{"server", "info"}, 1, []metrics.Label{telemetry.NewLabel("upgrade_height", strconv.FormatInt(upgradeInfo.Height, 10))}) //nolint:staticcheck // TODO: switch to OpenTelemetry
 	}
 
 	return upgradeInfo, nil

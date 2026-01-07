@@ -15,7 +15,7 @@
 
 > "If you can't explain it simply, you don't understand it well enough." Provide
 > a simplified and layman-accessible explanation of the ADR.
-> A short (~200 word) description of the issue being addressed.
+> A short (~200 words) description of the issue being addressed.
 
 ## Context
 

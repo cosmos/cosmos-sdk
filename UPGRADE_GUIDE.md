@@ -301,7 +301,7 @@ app.EpochsKeeper = epochskeeper.NewKeeper(
 
 Set up hooks for the epochs keeper:
 
-To learn how to write hooks for the epoch keeper, see the [x/epoch README](https://github.com/cosmos/cosmos-sdk/blob/main/x/epochs/README.md)
+To learn how to write hooks for the epoch keeper, see the [x/epochs README](https://github.com/cosmos/cosmos-sdk/blob/main/x/epochs/README.md)
 
 ```go
 app.EpochsKeeper.SetHooks(
@@ -449,7 +449,7 @@ options := ante.HandlerOptions{
     SigVerifyOptions: []ante.SigVerificationDecoratorOption{
         // change below as needed.
         ante.WithUnorderedTxGasCost(ante.DefaultUnorderedTxGasCost),
-        ante.WithMaxUnorderedTxTimeoutDuration(ante.DefaultMaxTimoutDuration),
+        ante.WithMaxUnorderedTxTimeoutDuration(ante.DefaultMaxTimeoutDuration),
     },
 }
 ```

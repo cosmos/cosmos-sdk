@@ -144,7 +144,7 @@ func makeSignBatchCmd() func(cmd *cobra.Command, args []string) error {
 				// append messages
 				msgs = append(msgs, unsignedStdTx.GetMsgs()...)
 			}
-			// set the new appened msgs into builder
+			// set the new appended msgs into builder
 			err := txBuilder.SetMsgs(msgs...)
 			if err != nil {
 				return err

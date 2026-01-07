@@ -18,10 +18,10 @@ import (
 
 // EndBlocker called every block, process inflation, update validator set.
 func EndBlocker(ctx sdk.Context, keeper *keeper.Keeper) error {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyEndBlocker)
+	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyEndBlocker) //nolint:staticcheck // TODO: switch to OpenTelemetry
 
 	logger := ctx.Logger().With("module", "x/"+types.ModuleName)
-	// delete dead proposals from store and returns theirs deposits.
+	// delete dead proposals from store and returns their deposits.
 	// A proposal is dead when it's inactive and didn't get enough deposit on time to get into voting phase.
 	rng := collections.NewPrefixUntilPairRange[time.Time, uint64](ctx.BlockTime())
 	iter, err := keeper.InactiveProposalsQueue.Iterate(ctx, rng)
@@ -287,7 +287,7 @@ func safeExecuteHandler(ctx sdk.Context, msg sdk.Msg, handler baseapp.MsgService
 		}
 	}()
 	res, err = handler(ctx, msg)
-	return
+	return res, err
 }
 
 // failUnsupportedProposal fails a proposal that cannot be processed by gov

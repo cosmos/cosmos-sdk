@@ -32,7 +32,7 @@
 > path and fall into the same pitfalls that we've since matured from. Abandoned ideas are a way to recognize that path 
 > and explain the pitfalls and why they were abandoned.
 
-## Descision
+## Decision
 
 > This section describes alternative designs to the chosen design. This section
 > is important and if an adr does not have any alternatives then it should be

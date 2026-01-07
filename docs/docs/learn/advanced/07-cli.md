@@ -38,7 +38,7 @@ The `main.go` file needs to have a `main()` function that creates a root command
 * **setting configurations** by reading in configuration files (e.g. the Cosmos SDK config file).
 * **adding any flags** to it, such as `--chain-id`.
 * **instantiating the `codec`** by injecting the application codecs. The [`codec`](./05-encoding.md) is used to encode and decode data structures for the application - stores can only persist `[]byte`s so the developer must define a serialization format for their data structures or use the default, Protobuf.
-* **adding subcommand** for all the possible user interactions, including [transaction commands](#transaction-commands) and [query commands](#query-commands).
+* **adding subcommands** for all the possible user interactions, including [transaction commands](#transaction-commands) and [query commands](#query-commands).
 
 The `main()` function finally creates an executor and [execute](https://pkg.go.dev/github.com/spf13/cobra#Command.Execute) the root command. See an example of `main()` function from the `simapp` application:
 
@@ -71,7 +71,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/simapp/simd/cmd/root_v2.go#L47
 
 :::tip
 Use the `EnhanceRootCommand()` from the AutoCLI options to automatically add auto-generated commands from the modules to the root command.
-Additionnally it adds all manually defined modules commands (`tx` and `query`) as well.
+Additionally it adds all manually defined modules commands (`tx` and `query`) as well.
 Read more about [AutoCLI](https://docs.cosmos.network/main/core/autocli) in its dedicated section.
 :::
 
@@ -145,7 +145,7 @@ Read more about [AutoCLI](https://docs.cosmos.network/main/core/autocli) in its 
 
 ## Flags
 
-Flags are used to modify commands; developers can include them in a `flags.go` file with their CLI. Users can explicitly include them in commands or pre-configure them by inside their [`app.toml`](../../user/run-node/01-run-node.md#configuring-the-node-using-apptoml-and-configtoml). Commonly pre-configured flags include the `--node` to connect to and `--chain-id` of the blockchain the user wishes to interact with.
+Flags are used to modify commands; developers can include them in a `flags.go` file with their CLI. Users can explicitly include them in commands or pre-configure them inside their [`app.toml`](../../user/run-node/01-run-node.md#configuring-the-node-using-apptoml-and-configtoml). Commonly pre-configured flags include the `--node` to connect to and `--chain-id` of the blockchain the user wishes to interact with.
 
 A *persistent* flag (as opposed to a *local* flag) added to a command transcends all of its children: subcommands will inherit the configured values for these flags. Additionally, all flags have default values when they are added to commands; some toggle an option off but others are empty values that the user needs to override to create valid commands. A flag can be explicitly marked as *required* so that an error is automatically thrown if the user does not provide a value, but it is also acceptable to handle unexpected missing flags differently.
 
@@ -153,7 +153,7 @@ Flags are added to commands directly (generally in the [module's CLI file](../..
 
 ## Environment variables
 
-Each flag is bound to its respective named environment variable. Then name of the environment variable consist of two parts - capital case `basename` followed by flag name of the flag. `-` must be substituted with `_`. For example flag `--node` for application with basename `GAIA` is bound to `GAIA_NODE`. It allows reducing the amount of flags typed for routine operations. For example instead of:
+Each flag is bound to its respective named environment variable. The name of the environment variable consists of two parts - capital case `basename` followed by flag name of the flag. `-` must be substituted with `_`. For example flag `--node` for application with basename `GAIA` is bound to `GAIA_NODE`. It allows reducing the amount of flags typed for routine operations. For example instead of:
 
 ```shell
 gaia --home=./ --node=<node address> --chain-id="testchain-1" --keyring-backend=test tx ... --from=<key name>

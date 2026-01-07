@@ -51,7 +51,7 @@ Value Renderers describe how values of different Protobuf types should be encode
 
 ### `coins`
 
-* an array of `coin` is display as the concatenation of each `coin` encoded as the specification above, the joined together with the delimiter `", "` (a comma and a space, no quotes around).
+* an array of `coin` is display as the concatenation of each `coin` encoded as the specification above, then joined together with the delimiter `", "` (a comma and a space, no quotes around).
 * the list of coins is ordered by unicode code point of the display denom: `A-Z` < `a-z`. For example, the string `aAbBcC` would be sorted `ABCabc`.
     * if the coins list had 0 items in it then it'll be rendered as `zero`
 
@@ -275,10 +275,10 @@ Examples:
 The number 35 was chosen because it is the longest length where the hashed-and-prefixed representation is longer than the original data directly formatted, using the 3 rules above. More specifically:
 
 * a 35-byte array will have 70 hex characters, plus 17 space characters, resulting in 87 characters.
-* byte arrays starting from length 36 will be be hashed to 32 bytes, which is 64 hex characters plus 15 spaces, and with the `SHA-256=` prefix, it takes 87 characters.
+* byte arrays starting from length 36 will be hashed to 32 bytes, which is 64 hex characters plus 15 spaces, and with the `SHA-256=` prefix, it takes 87 characters.
 Also, secp256k1 public keys have length 33, so their Textual representation is not their hashed value, which we would like to avoid.
 
-Note: Data longer than 35 bytes are not rendered in a way that can be inverted. See ADR-050's [section about invertability](./adr-050-sign-mode-textual.md#invertible-rendering) for a discussion.
+Note: Data longer than 35 bytes are not rendered in a way that can be inverted. See ADR-050's [section about invertibility](./adr-050-sign-mode-textual.md#invertible-rendering) for a discussion.
 
 #### Examples
 
@@ -349,7 +349,7 @@ message MsgSend {
 
 * `cosmos.gov.v1.MsgVote` -> `governance v1 vote`
 
-#### Best Pratices
+#### Best Practices
 
 We recommend to use this option only for `Msg`s whose Protobuf fully qualified name can be hard to understand. As such, the two examples above (`MsgSend` and `MsgVote`) are not good examples to be used with `msg_title`. We still allow `msg_title` for chains who might have `Msg`s with complex or non-obvious names.
 

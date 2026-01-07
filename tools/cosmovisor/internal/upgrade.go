@@ -9,8 +9,8 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/tools/cosmovisor/v2"
 
-	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"cosmossdk.io/x/upgrade/plan"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
 // UpgradeBinary will be called after an upgrade has been confirmed and the process has terminated.

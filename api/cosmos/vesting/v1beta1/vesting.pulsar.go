@@ -3560,7 +3560,7 @@ func (x *ContinuousVestingAccount) GetStartTime() int64 {
 }
 
 // DelayedVestingAccount implements the VestingAccount interface. It vests all
-// coins after a specific time, but non prior. In other words, it keeps them
+// coins after a specific time, but not prior. In other words, it keeps them
 // locked until a specified time.
 type DelayedVestingAccount struct {
 	state         protoimpl.MessageState

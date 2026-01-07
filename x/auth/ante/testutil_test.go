@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/v2/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
@@ -93,7 +93,7 @@ func setupSuite(t *testing.T, isCheckTx, enableUnorderedTxs bool) *AnteTestSuite
 
 	suite.clientCtx = client.Context{}.
 		WithTxConfig(suite.encCfg.TxConfig).
-		WithClient(clitestutil.NewMockCometRPC(abci.QueryResponse{}))
+		WithClient(clitestutil.NewMockCometRPC(abci.ResponseQuery{}))
 
 	anteHandler, err := ante.NewAnteHandler(
 		ante.HandlerOptions{

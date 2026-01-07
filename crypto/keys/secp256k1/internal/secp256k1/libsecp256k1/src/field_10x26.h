@@ -18,7 +18,7 @@ typedef struct {
 #endif
 } secp256k1_fe;
 
-/* Unpacks a constant into a overlapping multi-limbed FE element. */
+/* Unpacks a constant into an overlapping multi-limbed FE element. */
 #define SECP256K1_FE_CONST_INNER(d7, d6, d5, d4, d3, d2, d1, d0) { \
     (d0) & 0x3FFFFFFUL, \
     (((uint32_t)d0) >> 26) | (((uint32_t)(d1) & 0xFFFFFUL) << 6), \

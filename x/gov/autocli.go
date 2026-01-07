@@ -61,7 +61,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod: "Deposit",
-					Use:       "deposit [proposal-id] [depositer-addr]",
+					Use:       "deposit [proposal-id] [depositor-addr]",
 					Short:     "Query details of a deposit",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "proposal_id"},

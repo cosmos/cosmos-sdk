@@ -215,8 +215,8 @@ func (s *decimalTestSuite) TestDecsEqual() {
 	}
 
 	for tcIndex, tc := range tests {
-		s.Require().Equal(tc.eq, math.LegacyDecsEqual(tc.d1s, tc.d2s), "equality of decional arrays is incorrect, tc %d", tcIndex)
-		s.Require().Equal(tc.eq, math.LegacyDecsEqual(tc.d2s, tc.d1s), "equality of decional arrays is incorrect (converse), tc %d", tcIndex)
+		s.Require().Equal(tc.eq, math.LegacyDecsEqual(tc.d1s, tc.d2s), "equality of decimal arrays is incorrect, tc %d", tcIndex)
+		s.Require().Equal(tc.eq, math.LegacyDecsEqual(tc.d2s, tc.d1s), "equality of decimal arrays is incorrect (converse), tc %d", tcIndex)
 	}
 }
 
@@ -227,7 +227,7 @@ func (s *decimalTestSuite) TestArithmetic() {
 		expQuo, expQuoRoundUp, expQuoTruncate math.LegacyDec
 		expAdd, expSub                        math.LegacyDec
 	}{
-		//  d1         d2         MUL    MulTruncate   MulRoundUp    QUO    QUORoundUp QUOTrunctate  ADD         SUB
+		//  d1         d2         MUL    MulTruncate   MulRoundUp    QUO    QUORoundUp QUOTruncate  ADD         SUB
 		{math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0)},
 		{math.LegacyNewDec(1), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(1), math.LegacyNewDec(1)},
 		{math.LegacyNewDec(0), math.LegacyNewDec(1), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(0), math.LegacyNewDec(1), math.LegacyNewDec(-1)},
@@ -1308,12 +1308,12 @@ func TestRoundIntLimits(t *testing.T) {
 func BenchmarkIsInValidRange(b *testing.B) {
 	maxValid, ok := new(big.Int).SetString(maxValidDecNumber, 10)
 	require.True(b, ok)
-	souceMax := math.LegacyNewDecFromBigIntWithPrec(maxValid, 18)
+	sourceMax := math.LegacyNewDecFromBigIntWithPrec(maxValid, 18)
 	b.ResetTimer()
 	specs := map[string]math.LegacyDec{
-		"max":         souceMax,
+		"max":         sourceMax,
 		"greater max": math.LegacyNewDecFromBigIntWithPrec(maxValid, 16),
-		"min":         souceMax.Neg(),
+		"min":         sourceMax.Neg(),
 		"lower min":   math.LegacyNewDecFromBigIntWithPrec(new(big.Int).Neg(maxValid), 16),
 		"zero":        math.LegacyZeroDec(),
 		"one":         math.LegacyOneDec(),

@@ -14,19 +14,19 @@ jobs:
     if: ${{ github.actor == 'dependabot[bot]' }}
     steps:
       - name: Generate Token
-        uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v1
+        uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v1
         id: app-token
         with:
           app-id: "${{ secrets.APP_ID }}"
           private-key: "${{ secrets.APP_PRIVATE_KEY }}"
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           ref: ${{ github.event.pull_request.head.ref }}
           token: "${{ steps.app-token.outputs.token }}"
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
-          go-version: "1.24"
+          go-version: "1.25.5"
           check-latest: true
       - name: Extract updated dependency
         id: deps

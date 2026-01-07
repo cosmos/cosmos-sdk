@@ -27,7 +27,7 @@ To generate the stubs the local client implementation can call, run the followin
 make proto-gen
 ```
 
-For other languages you'll need to [download](https://github.com/cosmos/cosmos-sdk/blob/main/third_party/proto/README.md)
+For other languages you'll need to [download](https://github.com/cosmos/cosmos-sdk/blob/main/proto/README.md)
 the CosmosSDK protos into your project and compile. For language specific compilation instructions visit
 [https://github.com/grpc](https://github.com/grpc) and look in the `examples` folder of your
 language of choice `https://github.com/grpc/grpc-{language}/tree/master/examples` and [https://grpc.io](https://grpc.io)
@@ -35,7 +35,7 @@ for the documentation.
 
 ### gRPC Client and Server
 
-Implementing the ABCIListener gRPC client and server is a simple and straight forward process.
+Implementing the ABCIListener gRPC client and server is a simple and straightforward process.
 
 To create the client and server we create a `ListenerGRPCPlugin` struct that implements the
 `plugin.GRPCPlugin` interface and a `Impl` property that will contain a concrete implementation
@@ -185,7 +185,7 @@ Export a plugin from one of the Go or Python examples.
 export COSMOS_SDK_ABCI="{path to}/cosmos-sdk/store/streaming/abci/examples/file/file"
 ```
 
-where `{path to}` is the parent path to the `cosmos-sdk` repo on you system.
+where `{path to}` is the parent path to the `cosmos-sdk` repo on your system.
 
 Test:
 

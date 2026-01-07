@@ -1,5 +1,4 @@
 //go:build ledger
-// +build ledger
 
 package ledger
 
@@ -77,7 +76,7 @@ func TestPublicKeyUnsafeHDPath(t *testing.T) {
 		require.NoError(t, tmp.ValidateKey())
 		(&tmp).AssertIsPrivKeyInner()
 
-		// in this test we are chekcking if the generated keys are correct.
+		// in this test we are checking if the generated keys are correct.
 		require.Equal(t, expectedAnswers[i], priv.PubKey().String(),
 			"Is your device using test mnemonic: %s ?", testdata.TestMnemonic)
 
@@ -163,7 +162,7 @@ func TestPublicKeyHDPath(t *testing.T) {
 		require.NoError(t, tmp.ValidateKey())
 		(&tmp).AssertIsPrivKeyInner()
 
-		// in this test we are chekcking if the generated keys are correct and stored in a right path.
+		// in this test we are checking if the generated keys are correct and stored in a right path.
 		require.Equal(t,
 			expectedPubKeys[i], priv.PubKey().String(),
 			"Is your device using test mnemonic: %s ?", testdata.TestMnemonic)

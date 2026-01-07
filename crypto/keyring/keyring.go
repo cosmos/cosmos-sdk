@@ -189,7 +189,7 @@ func newKeyringGeneric(
 	case BackendPass:
 		db, err = keyring.Open(newPassBackendKeyringConfig(appName, rootDir, userInput))
 	default:
-		return nil, errorsmod.Wrap(ErrUnknownBacked, backend)
+		return nil, errorsmod.Wrap(ErrUnknownBackend, backend)
 	}
 
 	if err != nil {
@@ -775,7 +775,7 @@ func newRealPrompt(dir string, buf io.Reader) func(string) (string, error) {
 			}
 
 			if pass != reEnteredPass {
-				fmt.Fprintln(os.Stderr, "passphrase do not match")
+				fmt.Fprintln(os.Stderr, "passphrase does not match")
 				continue
 			}
 
@@ -890,7 +890,7 @@ func (ks keystore) writeOfflineKey(name string, pk types.PubKey) (*Record, error
 	return k, ks.writeRecord(k)
 }
 
-// writeMultisigKey investigate where thisf function is called maybe remove it
+// writeMultisigKey investigate where this function is called maybe remove it
 func (ks keystore) writeMultisigKey(name string, pk types.PubKey) (*Record, error) {
 	k, err := NewMultiRecord(name, pk)
 	if err != nil {

@@ -3,7 +3,7 @@ package baseapp
 import (
 	"context"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 )
 
 // ParamStore defines the interface the parameter store used by the BaseApp must

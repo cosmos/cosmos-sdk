@@ -25,7 +25,7 @@ We will be breaking down the steps to create a testnet from mainnet state.
 
 #### Staking
 
-When creating a testnet the important part is migrate the validator set from many validators to one or a few. This allows developers to spin up the chain without needing to replace validator keys. 
+When creating a testnet the important part is to migrate the validator set from many validators to one or a few. This allows developers to spin up the chain without needing to replace validator keys. 
 
 ```go
 	ctx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})

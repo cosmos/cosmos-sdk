@@ -18,7 +18,7 @@ type PostDecorator interface {
 	PostHandle(ctx Context, tx Tx, simulate, success bool, next PostHandler) (newCtx Context, err error)
 }
 
-// ChainAnteDecorators ChainDecorator chains AnteDecorators together with each AnteDecorator
+// ChainAnteDecorators chains AnteDecorators together with each AnteDecorator
 // wrapping over the decorators further along chain and returns a single AnteHandler.
 //
 // NOTE: The first element is outermost decorator, while the last element is innermost

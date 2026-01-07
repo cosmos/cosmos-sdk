@@ -11,7 +11,7 @@
 * Nov 23, 2022: Specify CBOR encoding.
 * Dec 01, 2022: Link to examples in separate JSON file.
 * Dec 06, 2022: Re-ordering of envelope screens.
-* Dec 14, 2022: Mention exceptions for invertability.
+* Dec 14, 2022: Mention exceptions for invertibility.
 * Jan 23, 2023: Switch Screen.Text to Title+Content.
 * Mar 07, 2023: Change SignDoc from array to struct containing array.
 * Mar 20, 2023: Introduce a spec version initialized to 0.
@@ -24,7 +24,7 @@ Spec version: 0.
 
 ## Abstract
 
-This ADR specifies SIGN_MODE_TEXTUAL, a new string-based sign mode that is targetted at signing with hardware devices.
+This ADR specifies SIGN_MODE_TEXTUAL, a new string-based sign mode that is targeted at signing with hardware devices.
 
 ## Context
 
@@ -72,7 +72,7 @@ or needs to be present only for signature integrity (see below).
 We require that the rendering of the transaction be invertible:
 there must be a parsing function such that for every transaction,
 when rendered to the textual representation,
-parsing that representation yeilds a proto message equivalent
+parsing that representation yields a proto message equivalent
 to the original under proto equality.
 
 Note that this inverse function does not need to perform correct
@@ -145,7 +145,7 @@ type SignDocTextual struct {
 ```
 
 We do not plan to use protobuf serialization to form the sequence of bytes
-that will be tranmitted and signed, in order to keep the decoder simple.
+that will be transmitted and signed, in order to keep the decoder simple.
 We will use [CBOR](https://cbor.io) ([RFC 8949](https://www.rfc-editor.org/rfc/rfc8949.html)) instead.
 The encoding is defined by the following CDDL ([RFC 8610](https://www.rfc-editor.org/rfc/rfc8610)):
 
@@ -205,7 +205,7 @@ Memo: <string>                                              // Skipped if no mem
 Fee: <coins>                                                // See value renderers for coins rendering.
 *Fee payer: <string>                                        // Skipped if no fee_payer set.
 *Fee granter: <string>                                      // Skipped if no fee_granter set.
-Tip: <coins>                                                // Skippted if no tip.
+Tip: <coins>                                                // Skipped if no tip.
 Tipper: <string>
 *Gas Limit: <uint64>
 *Timeout Height: <uint64>                                   // Skipped if no timeout_height set.
@@ -226,7 +226,7 @@ Tipper: <string>
 Transaction Body is the `Tx.TxBody.Messages` field, which is an array of `Any`s, where each `Any` packs a `sdk.Msg`. Since `sdk.Msg`s are widely used, they have a slightly different encoding than usual array of `Any`s (Protobuf: `repeated google.protobuf.Any`) described in Annex 1.
 
 ```
-This transaction has <int> message:   // Optional 's' for "message" if there's is >1 sdk.Msgs.
+This transaction has <int> message:   // Optional 's' for "message" if there's  >1 sdk.Msgs.
 // For each Msg, print the following 2 lines:
 Msg (<int>/<int>): <string>           // E.g. Msg (1/2): bank v1beta1 send coins
 <value rendering of Msg struct>
@@ -285,7 +285,7 @@ Moreover, the renderer must provide 2 functions: one for formatting from Protobu
 
 ### Require signing over the `TxBody` and `AuthInfo` raw bytes
 
-Recall that the transaction bytes merklelized on chain are the Protobuf binary serialization of [TxRaw](hhttps://buf.build/cosmos/cosmos-sdk/docs/main:cosmos.tx.v1beta1#cosmos.tx.v1beta1.TxRaw), which contains the `body_bytes` and `auth_info_bytes`. Moreover, the transaction hash is defined as the SHA256 hash of the `TxRaw` bytes. We require that the user signs over these bytes in SIGN_MODE_TEXTUAL, more specifically over the following string:
+Recall that the transaction bytes merkleized on chain are the Protobuf binary serialization of [TxRaw](https://buf.build/cosmos/cosmos-sdk/docs/main:cosmos.tx.v1beta1#cosmos.tx.v1beta1.TxRaw), which contains the `body_bytes` and `auth_info_bytes`. Moreover, the transaction hash is defined as the SHA256 hash of the `TxRaw` bytes. We require that the user signs over these bytes in SIGN_MODE_TEXTUAL, more specifically over the following string:
 
 ```
 *Hash of raw bytes: <HEX(sha256(len(body_bytes) ++ body_bytes ++ len(auth_info_bytes) ++ auth_info_bytes))>
@@ -297,7 +297,7 @@ where:
 * `HEX` is the hexadecimal representation of the bytes, all in capital letters, no `0x` prefix,
 * and `len()` is encoded as a Big-Endian uint64.
 
-This is to prevent transaction hash malleability. The point #1 about invertiblity assures that transaction `body` and `auth_info` values are not malleable, but the transaction hash still might be malleable with point #1 only, because the SIGN_MODE_TEXTUAL strings don't follow the byte ordering defined in `body_bytes` and `auth_info_bytes`. Without this hash, a malicious validator or exchange could intercept a transaction, modify its transaction hash _after_ the user signed it using SIGN_MODE_TEXTUAL (by tweaking the byte ordering inside `body_bytes` or `auth_info_bytes`), and then submit it to Tendermint.
+This is to prevent transaction hash malleability. The point #1 about invertibility assures that transaction `body` and `auth_info` values are not malleable, but the transaction hash still might be malleable with point #1 only, because the SIGN_MODE_TEXTUAL strings don't follow the byte ordering defined in `body_bytes` and `auth_info_bytes`. Without this hash, a malicious validator or exchange could intercept a transaction, modify its transaction hash _after_ the user signed it using SIGN_MODE_TEXTUAL (by tweaking the byte ordering inside `body_bytes` or `auth_info_bytes`), and then submit it to Tendermint.
 
 By including this hash in the SIGN_MODE_TEXTUAL signing payload, we keep the same level of guarantees as [SIGN_MODE_DIRECT](./adr-020-protobuf-transaction-encoding.md).
 
@@ -310,9 +310,9 @@ The current specification is not set in stone, and future iterations are to be e
 1. Updates that require changes of the hardware device embedded application.
 2. Updates that only modify the envelope and the value renderers.
 
-Updates in the 1st category include changes of the `Screen` struct or its corresponding CBOR encoding. This type of updates require a modification of the hardware signer application, to be able to decode and parse the new types. Backwards-compatibility must also be guaranteed, so that the new hardware application works with existing versions of the SDK. These updates require the coordination of multiple parties: SDK developers, hardware application developers (currently: Zondax), and client-side developers (e.g. CosmJS). Furthermore, a new submission of the hardware device application may be necessary, which, dependending on the vendor, can take some time. As such, we recommend to avoid this type of updates as much as possible.
+Updates in the 1st category include changes of the `Screen` struct or its corresponding CBOR encoding. This type of updates require a modification of the hardware signer application, to be able to decode and parse the new types. Backwards-compatibility must also be guaranteed, so that the new hardware application works with existing versions of the SDK. These updates require the coordination of multiple parties: SDK developers, hardware application developers (currently: Zondax), and client-side developers (e.g. CosmJS). Furthermore, a new submission of the hardware device application may be necessary, which, depending on the vendor, can take some time. As such, we recommend to avoid this type of updates as much as possible.
 
-Updates in the 2nd category include changes to any of the value renderers or to the transaction envelope. For example, the ordering of fields in the envelope can be swapped, or the timestamp formatting can be modified. Since SIGN_MODE_TEXTUAL sends `Screen`s to the hardware device, this type of change do not need a hardware wallet application update. They are however state-machine-breaking, and must be documented as such. They require the coordination of SDK developers with client-side developers (e.g. CosmJS), so that the updates are released on both sides close to each other in time.
+Updates in the 2nd category include changes to any of the value renderers or to the transaction envelope. For example, the ordering of fields in the envelope can be swapped, or the timestamp formatting can be modified. Since SIGN_MODE_TEXTUAL sends `Screen`s to the hardware device, this type of change does not need a hardware wallet application update. They are however state-machine-breaking, and must be documented as such. They require the coordination of SDK developers with client-side developers (e.g. CosmJS), so that the updates are released on both sides close to each other in time.
 
 We define a spec version, which is an integer that must be incremented on each update of either category. This spec version will be exposed by the SDK's implementation, and can be communicated to clients. For example, SDK v0.50 might use the spec version 1, and SDK v0.51 might use 2; thanks to this versioning, clients can know how to craft SIGN_MODE_TEXTUAL transactions based on the target SDK version.
 

@@ -1,5 +1,4 @@
 //go:build e2e
-// +build e2e
 
 package server_test
 
@@ -13,7 +12,7 @@ import (
 	"path"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/v2/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
 	"gotest.tools/v3/assert"
@@ -96,7 +95,7 @@ func TestExportCmd_Height(t *testing.T) {
 
 			// Fast forward to block `tc.fastForward`.
 			for i := int64(2); i <= tc.fastForward; i++ {
-				_, err := app.FinalizeBlock(&abci.FinalizeBlockRequest{
+				_, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
 					Height: i,
 				})
 				assert.NilError(t, err)
@@ -185,14 +184,14 @@ func setupApp(t *testing.T, tempDir string) (*simapp.SimApp, context.Context, ge
 	err = genutil.ExportGenesisFile(&appGenesis, serverCtx.Config.GenesisFile())
 	assert.NilError(t, err)
 
-	_, err = app.InitChain(&abci.InitChainRequest{
+	_, err = app.InitChain(&abci.RequestInitChain{
 		Validators:      []abci.ValidatorUpdate{},
 		ConsensusParams: simtestutil.DefaultConsensusParams,
 		AppStateBytes:   appGenesis.AppState,
 	})
 	assert.NilError(t, err)
 
-	_, err = app.FinalizeBlock(&abci.FinalizeBlockRequest{
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: 1,
 	})
 	assert.NilError(t, err)

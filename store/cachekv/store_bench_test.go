@@ -21,7 +21,7 @@ func benchmarkBlankParentIteratorNext(b *testing.B, keysize int) {
 	// Use a singleton for value, to not waste time computing it
 	value := randSlice(defaultValueSizeBz)
 	// Use simple values for keys, pick a random start,
-	// and take next b.N keys sequentially after.]
+	// and take next b.N keys sequentially after.
 	startKey := randSlice(32)
 
 	// Add 1 to avoid issues when b.N = 1

@@ -9158,7 +9158,7 @@ type QueryParamsResponse struct {
 	//
 	// Deprecated: Do not use.
 	TallyParams *TallyParams `protobuf:"bytes,3,opt,name=tally_params,json=tallyParams,proto3" json:"tally_params,omitempty"`
-	// params defines all the paramaters of x/gov module.
+	// params defines all the parameters of x/gov module.
 	Params *Params `protobuf:"bytes,4,opt,name=params,proto3" json:"params,omitempty"`
 }
 

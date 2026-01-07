@@ -9,7 +9,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-	groupv1 "cosmossdk.io/api/cosmos/group/v1"
+	govv1 "cosmossdk.io/api/cosmos/gov/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/x/tx/internal/testpb"
 )
@@ -97,13 +97,10 @@ func TestGetSigners(t *testing.T) {
 		},
 		{
 			name: "MsgSubmitProposal",
-			msg: &groupv1.MsgSubmitProposal{
-				Proposers: []string{
-					hex.EncodeToString([]byte("foo")),
-					hex.EncodeToString([]byte("bar")),
-				},
+			msg: &govv1.MsgSubmitProposal{
+				Proposer: hex.EncodeToString([]byte("foo")),
 			},
-			want: [][]byte{[]byte("foo"), []byte("bar")},
+			want: [][]byte{[]byte("foo")},
 		},
 		{
 			name: "simple",
@@ -288,7 +285,7 @@ func TestDefineCustomGetSigners(t *testing.T) {
 	})
 	context, err = NewContext(options)
 	require.NoError(t, err)
-	require.ErrorContains(t, context.Validate(), "a custom signer function as been defined for message SimpleSigner")
+	require.ErrorContains(t, context.Validate(), "a custom signer function has been defined for message SimpleSigner")
 }
 
 type dummyAddressCodec struct{}

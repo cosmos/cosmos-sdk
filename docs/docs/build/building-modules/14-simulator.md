@@ -71,7 +71,7 @@ If the module does **not** have message handlers or governance proposal handlers
 
 Registering the store decoders is required for the `AppImportExport` simulation. This allows
 for the key-value pairs from the stores to be decoded to their corresponding types.
-In particular, it matches the key to a concrete type and then unmarshalls the value from the `KVPair` to the type provided.
+In particular, it matches the key to a concrete type and then unmarshals the value from the `KVPair` to the type provided.
 
 Modules using [collections](https://github.com/cosmos/cosmos-sdk/blob/main/collections/README.md) can use the `NewStoreDecoderFuncFromCollectionsSchema` function that builds the decoder for you:
 

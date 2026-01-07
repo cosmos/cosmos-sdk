@@ -92,7 +92,7 @@ func (s *KeeperTestSuite) TestUpdateParams() {
 				},
 			},
 			expectErr: true,
-			expErrMsg: "invalid SECK256k1 signature verification cost",
+			expErrMsg: "invalid SECP256k1 signature verification cost",
 		},
 	}
 

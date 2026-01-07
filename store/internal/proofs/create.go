@@ -15,7 +15,7 @@ var (
 )
 
 /*
-CreateMembershipProof will produce a CommitmentProof that the given key (and queries value) exists in the map.
+CreateMembershipProof will produce a CommitmentProof that the given key (and queried value) exists in the map.
 If the key doesn't exist in the tree, this will return an error.
 */
 func CreateMembershipProof(data map[string][]byte, key []byte) (*ics23.CommitmentProof, error) {

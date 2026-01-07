@@ -11,7 +11,7 @@ import (
 // Periods stores all vesting periods passed as part of a PeriodicVestingAccount
 type Periods []Period
 
-// Duration is converts the period Length from seconds to a time.Duration
+// Duration converts the period Length from seconds to a time.Duration
 func (p Period) Duration() time.Duration {
 	return time.Duration(p.Length) * time.Second
 }

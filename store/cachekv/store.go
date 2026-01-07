@@ -10,47 +10,70 @@ import (
 
 	"cosmossdk.io/math"
 	"cosmossdk.io/store/cachekv/internal"
+	"cosmossdk.io/store/internal/btree"
 	"cosmossdk.io/store/internal/conv"
-	"cosmossdk.io/store/internal/kv"
 	"cosmossdk.io/store/tracekv"
 	"cosmossdk.io/store/types"
 )
 
 // cValue represents a cached value.
 // If dirty is true, it indicates the cached value is different from the underlying value.
-type cValue struct {
-	value []byte
+type cValue[V any] struct {
+	value V
 	dirty bool
 }
 
-// Store wraps an in-memory cache around an underlying types.KVStore.
-type Store struct {
-	mtx           sync.Mutex
-	cache         map[string]*cValue
-	unsortedCache map[string]struct{}
-	sortedCache   internal.BTree // always ascending sorted
-	parent        types.KVStore
+type kvPair[V any] struct {
+	Key   []byte
+	Value V
 }
+
+type Store = GStore[[]byte]
 
 var _ types.CacheKVStore = (*Store)(nil)
 
-// NewStore creates a new Store object
 func NewStore(parent types.KVStore) *Store {
-	return &Store{
-		cache:         make(map[string]*cValue),
+	return NewGStore(
+		parent,
+		types.BytesIsZero,
+		types.BytesValueLen,
+	)
+}
+
+// GStore wraps an in-memory cache around an underlying types.KVStore.
+type GStore[V any] struct {
+	mtx           sync.Mutex
+	cache         map[string]*cValue[V]
+	unsortedCache map[string]struct{}
+	sortedCache   btree.BTree[V] // always ascending sorted
+	parent        types.GKVStore[V]
+
+	// isZero is a function that returns true if the value is considered "zero", for []byte and pointers the zero value
+	// is `nil`, the zero value is not allowed to set to a key, and it's returned if the key is not found.
+	isZero func(V) bool
+	// valueLen validates the value before it's set
+	valueLen func(V) int
+}
+
+// NewGStore creates a new Store object
+func NewGStore[V any](parent types.GKVStore[V], isZero func(V) bool, valueLen func(V) int) *GStore[V] {
+	return &GStore[V]{
+		cache:         make(map[string]*cValue[V]),
 		unsortedCache: make(map[string]struct{}),
-		sortedCache:   internal.NewBTree(),
+		sortedCache:   btree.NewBTree[V](),
 		parent:        parent,
+		isZero:        isZero,
+		valueLen:      valueLen,
 	}
 }
 
 // GetStoreType implements Store.
-func (store *Store) GetStoreType() types.StoreType {
+func (store *GStore[V]) GetStoreType() types.StoreType {
 	return store.parent.GetStoreType()
 }
 
 // Get implements types.KVStore.
-func (store *Store) Get(key []byte) (value []byte) {
+func (store *GStore[V]) Get(key []byte) (value V) {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
 
@@ -68,9 +91,9 @@ func (store *Store) Get(key []byte) (value []byte) {
 }
 
 // Set implements types.KVStore.
-func (store *Store) Set(key, value []byte) {
+func (store *GStore[V]) Set(key []byte, value V) {
 	types.AssertValidKey(key)
-	types.AssertValidValue(value)
+	types.AssertValidValueGeneric(value, store.isZero, store.valueLen)
 
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
@@ -78,28 +101,29 @@ func (store *Store) Set(key, value []byte) {
 }
 
 // Has implements types.KVStore.
-func (store *Store) Has(key []byte) bool {
+func (store *GStore[V]) Has(key []byte) bool {
 	value := store.Get(key)
-	return value != nil
+	return !store.isZero(value)
 }
 
 // Delete implements types.KVStore.
-func (store *Store) Delete(key []byte) {
+func (store *GStore[V]) Delete(key []byte) {
 	types.AssertValidKey(key)
+	var zeroValue V
 
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
 
-	store.setCacheValue(key, nil, true)
+	store.setCacheValue(key, zeroValue, true)
 }
 
-func (store *Store) resetCaches() {
+func (store *GStore[V]) resetCaches() {
 	if len(store.cache) > 100_000 {
 		// Cache is too large. We likely did something linear time
 		// (e.g. Epoch block, Genesis block, etc). Free the old caches from memory, and let them get re-allocated.
 		// TODO: In a future CacheKV redesign, such linear workloads should get into a different cache instantiation.
 		// 100_000 is arbitrarily chosen as it solved Osmosis' InitGenesis RAM problem.
-		store.cache = make(map[string]*cValue)
+		store.cache = make(map[string]*cValue[V])
 		store.unsortedCache = make(map[string]struct{})
 	} else {
 		// Clear the cache using the map clearing idiom
@@ -112,22 +136,22 @@ func (store *Store) resetCaches() {
 			delete(store.unsortedCache, key)
 		}
 	}
-	store.sortedCache = internal.NewBTree()
+	store.sortedCache = btree.NewBTree[V]()
 }
 
 // Write implements Cachetypes.KVStore.
-func (store *Store) Write() {
+func (store *GStore[V]) Write() {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
 
 	if len(store.cache) == 0 && len(store.unsortedCache) == 0 {
-		store.sortedCache = internal.NewBTree()
+		store.sortedCache = btree.NewBTree[V]()
 		return
 	}
 
 	type cEntry struct {
 		key string
-		val *cValue
+		val *cValue[V]
 	}
 
 	// We need a copy of all of the keys.
@@ -152,7 +176,7 @@ func (store *Store) Write() {
 		// be sure if the underlying store might do a save with the byteslice or
 		// not. Once we get confirmation that .Delete is guaranteed not to
 		// save the byteslice, then we can assume only a read-only copy is sufficient.
-		if obj.val.value != nil {
+		if !store.isZero(obj.val.value) {
 			// It already exists in the parent, hence update it.
 			store.parent.Set([]byte(obj.key), obj.val.value)
 		} else {
@@ -162,29 +186,33 @@ func (store *Store) Write() {
 }
 
 // CacheWrap implements CacheWrapper.
-func (store *Store) CacheWrap() types.CacheWrap {
-	return NewStore(store)
+func (store *GStore[V]) CacheWrap() types.CacheWrap {
+	return NewGStore(store, store.isZero, store.valueLen)
 }
 
 // CacheWrapWithTrace implements the CacheWrapper interface.
-func (store *Store) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
-	return NewStore(tracekv.NewStore(store, w, tc))
+func (store *GStore[V]) CacheWrapWithTrace(w io.Writer, tc types.TraceContext) types.CacheWrap {
+	// We need to make a type assertion here as the tracekv store requires bytes value types for serialization.
+	if store, ok := any(store).(*GStore[[]byte]); ok {
+		return NewStore(tracekv.NewStore(store, w, tc))
+	}
+	return store.CacheWrap()
 }
 
 //----------------------------------------
 // Iteration
 
 // Iterator implements types.KVStore.
-func (store *Store) Iterator(start, end []byte) types.Iterator {
+func (store *GStore[V]) Iterator(start, end []byte) types.GIterator[V] {
 	return store.iterator(start, end, true)
 }
 
 // ReverseIterator implements types.KVStore.
-func (store *Store) ReverseIterator(start, end []byte) types.Iterator {
+func (store *GStore[V]) ReverseIterator(start, end []byte) types.GIterator[V] {
 	return store.iterator(start, end, false)
 }
 
-func (store *Store) iterator(start, end []byte, ascending bool) types.Iterator {
+func (store *GStore[V]) iterator(start, end []byte, ascending bool) types.GIterator[V] {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
 
@@ -193,7 +221,7 @@ func (store *Store) iterator(start, end []byte, ascending bool) types.Iterator {
 
 	var (
 		err           error
-		parent, cache types.Iterator
+		parent, cache types.GIterator[V]
 	)
 
 	if ascending {
@@ -207,7 +235,7 @@ func (store *Store) iterator(start, end []byte, ascending bool) types.Iterator {
 		panic(err)
 	}
 
-	return internal.NewCacheMergeIterator(parent, cache, ascending)
+	return internal.NewCacheMergeIterator(parent, cache, ascending, store.isZero)
 }
 
 func findStartIndex(strL []string, startQ string) int {
@@ -293,7 +321,7 @@ const (
 const minSortSize = 1024
 
 // dirtyItems constructs a slice of dirty items, to use w/ memIterator.
-func (store *Store) dirtyItems(start, end []byte) {
+func (store *GStore[V]) dirtyItems(start, end []byte) {
 	startStr, endStr := conv.UnsafeBytesToStr(start), conv.UnsafeBytesToStr(end)
 	if end != nil && startStr > endStr {
 		// Nothing to do here.
@@ -301,9 +329,9 @@ func (store *Store) dirtyItems(start, end []byte) {
 	}
 
 	n := len(store.unsortedCache)
-	unsorted := make([]*kv.Pair, 0)
+	unsorted := make([]*kvPair[V], 0)
 	// If the unsortedCache is too big, its costs too much to determine
-	// whats in the subset we are concerned about.
+	// what's in the subset we are concerned about.
 	// If you are interleaving iterator calls with writes, this can easily become an
 	// O(N^2) overhead.
 	// Even without that, too many range checks eventually becomes more expensive
@@ -313,7 +341,7 @@ func (store *Store) dirtyItems(start, end []byte) {
 			// dbm.IsKeyInDomain is nil safe and returns true iff key is greater than start
 			if dbm.IsKeyInDomain(conv.UnsafeStrToBytes(key), start, end) {
 				cacheValue := store.cache[key]
-				unsorted = append(unsorted, &kv.Pair{Key: []byte(key), Value: cacheValue.value})
+				unsorted = append(unsorted, &kvPair[V]{Key: []byte(key), Value: cacheValue.value})
 			}
 		}
 		store.clearUnsortedCacheSubset(unsorted, stateUnsorted)
@@ -356,18 +384,18 @@ func (store *Store) dirtyItems(start, end []byte) {
 		}
 	}
 
-	kvL := make([]*kv.Pair, 0, 1+endIndex-startIndex)
+	kvL := make([]*kvPair[V], 0, 1+endIndex-startIndex)
 	for i := startIndex; i <= endIndex; i++ {
 		key := strL[i]
 		cacheValue := store.cache[key]
-		kvL = append(kvL, &kv.Pair{Key: []byte(key), Value: cacheValue.value})
+		kvL = append(kvL, &kvPair[V]{Key: []byte(key), Value: cacheValue.value})
 	}
 
 	// kvL was already sorted so pass it in as is.
 	store.clearUnsortedCacheSubset(kvL, stateAlreadySorted)
 }
 
-func (store *Store) clearUnsortedCacheSubset(unsorted []*kv.Pair, sortState sortState) {
+func (store *GStore[V]) clearUnsortedCacheSubset(unsorted []*kvPair[V], sortState sortState) {
 	n := len(store.unsortedCache)
 	if len(unsorted) == n { // This pattern allows the Go compiler to emit the map clearing idiom for the entire map.
 		for key := range store.unsortedCache {
@@ -396,9 +424,9 @@ func (store *Store) clearUnsortedCacheSubset(unsorted []*kv.Pair, sortState sort
 
 // setCacheValue is the only entrypoint to mutate store.cache.
 // A `nil` value means a deletion.
-func (store *Store) setCacheValue(key, value []byte, dirty bool) {
+func (store *GStore[V]) setCacheValue(key []byte, value V, dirty bool) {
 	keyStr := conv.UnsafeBytesToStr(key)
-	store.cache[keyStr] = &cValue{
+	store.cache[keyStr] = &cValue[V]{
 		value: value,
 		dirty: dirty,
 	}

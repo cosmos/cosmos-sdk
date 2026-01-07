@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
-	abci "github.com/cometbft/cometbft/v2/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/core/appmodule"
@@ -189,7 +189,7 @@ func TestHandleDoubleSign(t *testing.T) {
 	)
 	val, err := f.stakingKeeper.Validator(ctx, operatorAddr)
 	assert.NilError(t, err)
-	assert.DeepEqual(t, selfDelegation, val.GetBondedTokens())
+	assert.DeepEqual(t, selfDelegation, val.GetValidatorPower())
 
 	assert.NilError(t, f.slashingKeeper.AddPubkey(f.sdkCtx, valpubkey))
 
@@ -204,10 +204,10 @@ func TestHandleDoubleSign(t *testing.T) {
 	assert.NilError(t, err)
 	oldTokens := val.GetTokens()
 
-	nci := NewCometInfo(abci.FinalizeBlockRequest{
+	nci := NewCometInfo(abci.RequestFinalizeBlock{
 		Misbehavior: []abci.Misbehavior{{
 			Validator: abci.Validator{Address: valpubkey.Address(), Power: power},
-			Type:      abci.MISBEHAVIOR_TYPE_DUPLICATE_VOTE,
+			Type:      abci.MisbehaviorType_DUPLICATE_VOTE,
 			Time:      time.Now().UTC(),
 			Height:    1,
 		}},
@@ -282,12 +282,12 @@ func TestHandleDoubleSign_TooOld(t *testing.T) {
 	)
 	val, err := f.stakingKeeper.Validator(ctx, operatorAddr)
 	assert.NilError(t, err)
-	assert.DeepEqual(t, amt, val.GetBondedTokens())
+	assert.DeepEqual(t, amt, val.GetValidatorPower())
 
-	nci := NewCometInfo(abci.FinalizeBlockRequest{
+	nci := NewCometInfo(abci.RequestFinalizeBlock{
 		Misbehavior: []abci.Misbehavior{{
 			Validator: abci.Validator{Address: valpubkey.Address(), Power: power},
-			Type:      abci.MISBEHAVIOR_TYPE_DUPLICATE_VOTE,
+			Type:      abci.MisbehaviorType_DUPLICATE_VOTE,
 			Time:      ctx.BlockTime(),
 			Height:    0,
 		}},
@@ -353,7 +353,7 @@ type CometService struct {
 	Evidence []abci.Misbehavior
 }
 
-func NewCometInfo(bg abci.FinalizeBlockRequest) comet.BlockInfo {
+func NewCometInfo(bg abci.RequestFinalizeBlock) comet.BlockInfo {
 	return CometService{
 		Evidence: bg.Misbehavior,
 	}

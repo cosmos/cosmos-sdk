@@ -32,20 +32,20 @@ type Snapshotter interface {
 	Restore(height uint64, format uint32, protoReader protoio.Reader) (SnapshotItem, error)
 }
 
-// ExtensionPayloadReader read extension payloads,
-// it returns io.EOF when reached either end of stream or the extension boundaries.
+// ExtensionPayloadReader reads extension payloads,
+// it returns io.EOF when it reaches either end of stream or the extension boundaries.
 type ExtensionPayloadReader = func() ([]byte, error)
 
 // ExtensionPayloadWriter is a helper to write extension payloads to underlying stream.
 type ExtensionPayloadWriter = func([]byte) error
 
 // ExtensionSnapshotter is an extension Snapshotter that is appended to the snapshot stream.
-// ExtensionSnapshotter has an unique name and manages it's own internal formats.
+// ExtensionSnapshotter has a unique name and manages its own internal formats.
 type ExtensionSnapshotter interface {
 	// SnapshotName returns the name of snapshotter, it should be unique in the manager.
 	SnapshotName() string
 
-	// SnapshotFormat returns the default format the extension snapshotter use to encode the
+	// SnapshotFormat returns the default format the extension snapshotter uses to encode the
 	// payloads when taking a snapshot.
 	// It's defined within the extension, different from the global format for the whole state-sync snapshot.
 	SnapshotFormat() uint32
@@ -57,6 +57,6 @@ type ExtensionSnapshotter interface {
 	SnapshotExtension(height uint64, payloadWriter ExtensionPayloadWriter) error
 
 	// RestoreExtension restores an extension state snapshot,
-	// the payload reader returns `io.EOF` when reached the extension boundaries.
+	// the payload reader returns `io.EOF` when it reaches the extension boundaries.
 	RestoreExtension(height uint64, format uint32, payloadReader ExtensionPayloadReader) error
 }

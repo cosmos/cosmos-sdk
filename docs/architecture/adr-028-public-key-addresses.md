@@ -21,12 +21,12 @@ address spaces are currently overlapping. We confirmed that it significantly dec
 ### Problem
 
 An attacker can control an input for an address generation function. This leads to a birthday attack, which significantly decreases the security space.
-To overcome this, we need to separate the inputs for different kind of account types:
+To overcome this, we need to separate the inputs for different kinds of account types:
 a security break of one account type shouldn't impact the security of other account types.
 
 ### Initial proposals
 
-One initial proposal was extending the address length and
+One initial proposal was to extend the address length and
 adding prefixes for different types of addresses.
 
 @ethanfrey explained an alternate approach originally used in https://github.com/iov-one/weave:
@@ -38,7 +38,7 @@ adding prefixes for different types of addresses.
 
 And explained how this approach should be sufficiently collision resistant:
 
-> Yeah, AFAIK, 20 bytes should be collision resistance when the preimages are unique and not malleable. A space of 2^160 would expect some collision to be likely around 2^80 elements (birthday paradox). And if you want to find a collision for some existing element in the database, it is still 2^160. 2^80 only is if all these elements are written to state.
+> Yeah, AFAIK, 20 bytes should be collision resistance when the preimages are unique and not malleable. A space of 2^160 would expect some collision to be likely around 2^80 elements (birthday paradox). And if you want to find a collision for some existing element in the database, it is still 2^160. 2^80 only if all these elements are written to state.
 > The good example you brought up was eg. a public key bytes being a valid public key on two algorithms supported by the codec. Meaning if either was broken, you would break accounts even if they were secured with the safer variant. This is only as the issue when no differentiating type info is present in the preimage (before hashing into an address).
 > I would like to hear an argument if the 20 bytes space is an actual issue for security, as I would be happy to increase my address sizes in weave. I just figured cosmos and ethereum and bitcoin all use 20 bytes, it should be good enough. And the arguments above which made me feel it was secure. But I have not done a deeper analysis.
 
@@ -56,7 +56,7 @@ In the issue we discussed various modifications:
 * Choice of the hash function.
 * Move the prefix out of the hash function: `keyTypePrefix + sha256(keybytes)[:20]` [post-hash-prefix-proposal].
 * Use double hashing: `sha256(keyTypePrefix + sha256(keybytes)[:20])`.
-* Increase to keybytes hash slice from 20 byte to 32 or 40 bytes. We concluded that 32 bytes, produced by a good hash functions is future secure.
+* Increase to keybytes hash slice from 20 bytes to 32 or 40 bytes. We concluded that 32 bytes, produced by a good hash functions is future secure.
 
 ### Requirements
 
@@ -97,7 +97,7 @@ As in other parts of the Cosmos SDK, we will use `sha256`.
 
 ### Basic Address
 
-We start with defining a base algorithm for generating addresses which we will call `Hash`. Notably, it's used for accounts represented by a single key pair. For each public key schema we have to have an associated `typ` string, explained in the next section. `hash` is the cryptographic hash function defined in the previous section.
+We start by defining a base algorithm for generating addresses which we will call `Hash`. Notably, it's used for accounts represented by a single key pair. For each public key schema we have to have an associated `typ` string, explained in the next section. `hash` is the cryptographic hash function defined in the previous section.
 
 ```go
 const A_LEN = 32
@@ -179,7 +179,7 @@ We must be able to cryptographically derive one address from another one. The de
 
 ```go
 func Derive(address, derivationKey []byte) []byte {
-	return Hash(addres, derivationKey)
+	return Hash(address, derivationKey)
 }
 ```
 
@@ -198,16 +198,16 @@ groupPolicyAddresses := []byte{1}
 address.Module(moduleName, groupPolicyAddresses, policyID)
 ```
 
-The `address.Module` function is using `address.Hash` with `"module"` as the type argument, and byte representation of the module name concatenated with submodule key. The two last component must be uniquely separated to avoid potential clashes (example: modulename="ab" & submodulekey="bc" will have the same derivation key as modulename="a" & submodulekey="bbc").
+The `address.Module` function is using `address.Hash` with `"module"` as the type argument, and byte representation of the module name concatenated with submodule key. The last two components must be uniquely separated to avoid potential clashes (example: modulename="ab" & submodulekey="bc" will have the same derivation key as modulename="a" & submodulekey="bbc").
 We use a null byte (`'\x00'`) to separate module name from the submodule key. This works, because null byte is not a part of a valid module name. Finally, the sub-submodule accounts are created by applying the `Derive` function recursively.
-We could use `Derive` function also in the first step (rather than concatenating module name with zero byte and the submodule key). We decided to do concatenation to avoid one level of derivation and speed up computation.
+We could use `Derive` function also in the first step (rather than concatenating the module name with a zero byte and the submodule key). We decided to do concatenation to avoid one level of derivation and speed up computation.
 
 For backward compatibility with the existing `authtypes.NewModuleAddress`, we add a special case in `Module` function: when no derivation key is provided, we fallback to the "legacy" implementation. 
 
 ```go
 func Module(moduleName string, derivationKeys ...[]byte) []byte{
 	if len(derivationKeys) == 0 {
-		return authtypes.NewModuleAddress(modulenName)  // legacy case
+		return authtypes.NewModuleAddress(moduleName)  // legacy case
 	}
 	submoduleAddress := Hash("module", []byte(moduleName) + 0 + key)
 	return fold((a, k) => Derive(a, k), subsubKeys, submoduleAddress)
@@ -283,7 +283,7 @@ This ADR is compatible with what was committed and directly supported in the Cos
 
 ## Further Discussions
 
-Some accounts can have a fixed name or may be constructed in other way (eg: modules). We were discussing an idea of an account with a predefined name (eg: `me.regen`), which could be used by institutions.
+Some accounts can have a fixed name or may be constructed in another way (eg: modules). We were discussing an idea of an account with a predefined name (eg: `me.regen`), which could be used by institutions.
 Without going into details, these kinds of addresses are compatible with the hash based addresses described here as long as they don't have the same length.
 More specifically, any special account address must not have a length equal to 20 or 32 bytes.
 
@@ -295,9 +295,9 @@ Alan general observations:
 
 * we don’t need 2-preimage resistance
 * we need 32bytes address space for collision resistance
-* when an attacker can control an input for object with an address then we have a problem with birthday attack
+* when an attacker can control an input for an object with an address then we have a problem with a birthday attack
 * there is an issue with smart-contracts for hashing
-* sha2 mining can be use to breaking address pre-image
+* sha2 mining can be used to break the address pre-image
 
 Hashing algorithm
 
@@ -315,27 +315,27 @@ Algorithm:
 
 Algorithm for complex / composed keys:
 
-* merging tree like addresses with same algorithm are fine
+* merging tree-like addresses with same algorithm are fine
 
-Module addresses: Should module addresses have different size to differentiate it?
+Module addresses: Should module addresses have a different size to differentiate it?
 
-* we will need to set a pre-image prefix for module addresse to keept them in 32-byte space: `hash(hash('module') + module_key)`
+* we will need to set a pre-image prefix for module addresses to keep them in 32-byte space: `hash(hash('module') + module_key)`
 * Aaron observation: we already need to deal with variable length (to not break secp256k1 keys).
 
-Discssion about arithmetic hash function for ZKP
+Discussion about an arithmetic hash function for ZKP
 
-* Posseidon / Rescue
-* Problem: much bigger risk because we don’t know much techniques and history of crypto-analysis of arithmetic constructions. It’s still a new ground and area of active research.
+* Poseidon / Rescue
+* Problem: much bigger risk because we don’t know much techniques and the history of crypto-analysis of arithmetic constructions. It’s still a new ground and area of active research.
 
 Post quantum signature size
 
-* Alan suggestion: Falcon: speed / size ration - very good.
+* Alan suggestion: Falcon: speed / size ratio - very good.
 * Aaron - should we think about it?
-  Alan: based on early extrapolation this thing will get able to break EC cryptography in 2050 . But that’s a lot of uncertainty. But there is magic happening with recurions / linking / simulation and that can speedup the progress.
+  Alan: based on early extrapolation this thing will get able to break EC cryptography in 2050. But that’s a lot of uncertainty. But there is magic happening with recursions / linking / simulation and that can speedup the progress.
 
 Other ideas
 
-* Let’s say we use same key and two different address algorithms for 2 different use cases. Is it still safe to use it? Alan: if we want to hide the public key (which is not our use case), then it’s less secure but there are fixes.
+* Let’s say we use the same key and two different address algorithms for 2 different use cases. Is it still safe to use it? Alan: if we want to hide the public key (which is not our use case), then it’s less secure but there are fixes.
 
 ### References
 

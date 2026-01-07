@@ -87,7 +87,7 @@ func (bva *BaseVestingAccount) TrackDelegation(balance, vestingCoins, amount sdk
 }
 
 // TrackUndelegation tracks an undelegation amount by setting the necessary
-// values by which delegated vesting and delegated vesting need to decrease and
+// values by which delegated vesting and delegated free need to decrease and
 // by which amount the base coins need to increase.
 //
 // NOTE: The undelegation (bond refund) amount may exceed the delegated

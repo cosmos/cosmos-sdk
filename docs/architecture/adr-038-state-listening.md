@@ -7,7 +7,7 @@
 * 10/14/2022:
     * Add `ListenCommit`, flatten the state writes in a block to a single batch.
     * Remove listeners from cache stores, should only listen to `rootmulti.Store`.
-    * Remove `HaltAppOnDeliveryError()`, the errors are propagated by default, the implementations should return nil if don't want to propogate errors.
+    * Remove `HaltAppOnDeliveryError()`, the errors are propagated by default, the implementations should return nil if don't want to propagate errors.
 * 26/05/2023: Update with ABCI 2.0
 
 ## Status
@@ -224,9 +224,9 @@ so that the service can group the state changes with the ABCI requests.
 // ABCIListener is the interface that we're exposing as a streaming service.
 type ABCIListener interface {
 	// ListenFinalizeBlock updates the streaming service with the latest FinalizeBlock messages
-	ListenFinalizeBlock(ctx context.Context, req abci.FinalizeBlockRequest, res abci.FinalizeBlockResponse) error
+	ListenFinalizeBlock(ctx context.Context, req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) error
 	// ListenCommit updates the steaming service with the latest Commit messages and state changes
-	ListenCommit(ctx context.Context, res abci.CommitResponse, changeSet []*StoreKVPair) error
+	ListenCommit(ctx context.Context, res abci.ResponseCommit, changeSet []*StoreKVPair) error
 }
 ```
 
@@ -267,16 +267,16 @@ We will modify the `FinalizeBlock` and `Commit` methods to pass ABCI requests an
 to any streaming service hooks registered with the `BaseApp`.
 
 ```go
-func (app *BaseApp) FinalizeBlock(req abci.FinalizeBlockRequest) abci.FinalizeBlockResponse {
+func (app *BaseApp) FinalizeBlock(req abci.RequestFinalizeBlock) abci.ResponseFinalizeBlock {
 
-    var abciRes abci.FinalizeBlockResponse
+    var abciRes abci.ResponseFinalizeBlock
     defer func() {
         // call the streaming service hook with the FinalizeBlock messages
         for _, abciListener := range app.abciListeners {
             ctx := app.finalizeState.ctx
             blockHeight := ctx.BlockHeight()
             if app.abciListenersAsync {
-                go func(req abci.FinalizeBlockRequest, res abci.FinalizeBlockResponse) {
+                go func(req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) {
                     if err := app.abciListener.FinalizeBlock(blockHeight, req, res); err != nil {
                         app.logger.Error("FinalizeBlock listening hook failed", "height", blockHeight, "err", err)
                     }
@@ -299,11 +299,11 @@ func (app *BaseApp) FinalizeBlock(req abci.FinalizeBlockRequest) abci.FinalizeBl
 ```
 
 ```go
-func (app *BaseApp) Commit() abci.CommitResponse {
+func (app *BaseApp) Commit() abci.ResponseCommit {
 
     ...
 
-    res := abci.CommitResponse{
+    res := abci.ResponseCommit{
         Data:         commitID.Hash,
         RetainHeight: retainHeight,
     }
@@ -314,7 +314,7 @@ func (app *BaseApp) Commit() abci.CommitResponse {
         blockHeight := ctx.BlockHeight()
         changeSet := app.cms.PopStateCache()
         if app.abciListenersAsync {
-            go func(res abci.CommitResponse, changeSet []store.StoreKVPair) {
+            go func(res abci.ResponseCommit, changeSet []store.StoreKVPair) {
                 if err := app.abciListener.ListenCommit(ctx, res, changeSet); err != nil {
                     app.logger.Error("ListenCommit listening hook failed", "height", blockHeight, "err", err)
                 }
@@ -354,7 +354,7 @@ var Handshake = plugin.HandshakeConfig{
     MagicCookieValue: "ef78114d-7bdf-411c-868f-347c99a78345",
 }
 
-// ListenerPlugin is the base struc for all kinds of go-plugin implementations
+// ListenerPlugin is the base struct for all kinds of go-plugin implementations
 // It will be included in interfaces of different Plugins
 type ABCIListenerPlugin struct {
     // GRPCPlugin must still implement the Plugin interface
@@ -433,13 +433,13 @@ type GRPCClient struct {
     client ABCIListenerServiceClient
 }
 
-func (m *GRPCClient) ListenFinalizeBlock(goCtx context.Context, req abci.FinalizeBlockRequest, res abci.FinalizeBlockResponse) error {
+func (m *GRPCClient) ListenFinalizeBlock(goCtx context.Context, req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) error {
     ctx := sdk.UnwrapSDKContext(goCtx)
     _, err := m.client.ListenDeliverTx(ctx, &ListenDeliverTxRequest{BlockHeight: ctx.BlockHeight(), Req: req, Res: res})
     return err
 }
 
-func (m *GRPCClient) ListenCommit(goCtx context.Context, res abci.CommitResponse, changeSet []store.StoreKVPair) error {
+func (m *GRPCClient) ListenCommit(goCtx context.Context, res abci.ResponseCommit, changeSet []store.StoreKVPair) error {
     ctx := sdk.UnwrapSDKContext(goCtx)
     _, err := m.client.ListenCommit(ctx, &ListenCommitRequest{BlockHeight: ctx.BlockHeight(), Res: res, ChangeSet: changeSet})
     return err
@@ -471,11 +471,11 @@ And the pre-compiled Go plugin `Impl`(*this is only used for plugins that are wr
 // ABCIListener is the implementation of the baseapp.ABCIListener interface
 type ABCIListener struct{}
 
-func (m *ABCIListenerPlugin) ListenFinalizeBlock(ctx context.Context, req abci.FinalizeBlockRequest, res abci.FinalizeBlockResponse) error {
+func (m *ABCIListenerPlugin) ListenFinalizeBlock(ctx context.Context, req abci.RequestFinalizeBlock, res abci.ResponseFinalizeBlock) error {
     // send data to external system
 }
 
-func (m *ABCIListenerPlugin) ListenCommit(ctx context.Context, res abci.CommitResponse, changeSet []store.StoreKVPair) error {
+func (m *ABCIListenerPlugin) ListenCommit(ctx context.Context, res abci.ResponseCommit, changeSet []store.StoreKVPair) error {
     // send data to external system
 }
 

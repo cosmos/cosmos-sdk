@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	abci "github.com/cometbft/cometbft/v2/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 	db "github.com/cosmos/cosmos-db"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
@@ -69,7 +69,7 @@ func NewApp(rootDir string, logger log.Logger) (servertypes.ABCI, error) {
 }
 
 // KVStoreHandler is a simple handler that takes KVStoreTx and writes
-// them to the db.
+// it to the db.
 func KVStoreHandler(storeKey storetypes.StoreKey) bam.MsgServiceHandler {
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		dTx, ok := msg.(*KVStoreTx)
@@ -100,21 +100,21 @@ type GenesisJSON struct {
 
 // InitChainer returns a function that can initialize the chain
 // with key/value pairs
-func InitChainer(key storetypes.StoreKey) func(sdk.Context, *abci.InitChainRequest) (*abci.InitChainResponse, error) {
-	return func(ctx sdk.Context, req *abci.InitChainRequest) (*abci.InitChainResponse, error) {
+func InitChainer(key storetypes.StoreKey) func(sdk.Context, *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
+	return func(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
 		stateJSON := req.AppStateBytes
 
 		genesisState := new(GenesisJSON)
 		err := json.Unmarshal(stateJSON, genesisState)
 		if err != nil {
-			return &abci.InitChainResponse{}, err
+			return &abci.ResponseInitChain{}, err
 		}
 
 		for _, val := range genesisState.Values {
 			store := ctx.KVStore(key)
 			store.Set([]byte(val.Key), []byte(val.Value))
 		}
-		return &abci.InitChainResponse{}, nil
+		return &abci.ResponseInitChain{}, nil
 	}
 }
 
@@ -133,13 +133,13 @@ func AppGenState(_ *codec.LegacyAmino, _ genutiltypes.AppGenesis, _ []json.RawMe
     }
   ]
 }`)
-	return
+	return appState, err
 }
 
 // AppGenStateEmpty returns an empty transaction state for mocking.
 func AppGenStateEmpty(_ *codec.LegacyAmino, _ genutiltypes.AppGenesis, _ []json.RawMessage) (appState json.RawMessage, err error) {
 	appState = json.RawMessage(``)
-	return
+	return appState, err
 }
 
 // Manually write the handlers for this custom message

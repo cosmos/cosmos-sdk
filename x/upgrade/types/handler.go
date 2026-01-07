@@ -9,7 +9,7 @@ import (
 // UpgradeHandler specifies the type of function that is called when an upgrade
 // is applied.
 //
-// `fromVM` is a VersionMap of moduleName to fromVersion (unit64), where
+// `fromVM` is a VersionMap of moduleName to fromVersion (uint64), where
 // fromVersion denotes the version from which we should migrate the module, the
 // target version being the module's latest version in the return VersionMap,
 // let's call it `toVM`.

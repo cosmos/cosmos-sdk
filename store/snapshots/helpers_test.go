@@ -63,7 +63,7 @@ func readChunks(chunks <-chan io.ReadCloser) [][]byte {
 	return bodies
 }
 
-// snapshotItems serialize a array of bytes as SnapshotItem_ExtensionPayload, and return the chunks.
+// snapshotItems serialize an array of bytes as SnapshotItem_ExtensionPayload, and return the chunks.
 func snapshotItems(items [][]byte, ext snapshottypes.ExtensionSnapshotter) [][]byte {
 	// copy the same parameters from the code
 	snapshotChunkSize := uint64(10e6)
@@ -344,7 +344,7 @@ func (s *extSnapshotter) RestoreExtension(_ uint64, _ uint32, payloadReader snap
 	return nil
 }
 
-// GetTempDir returns a writable temporary director for the test to use.
+// GetTempDir returns a writable temporary directory for the test to use.
 func GetTempDir(tb testing.TB) string {
 	tb.Helper()
 	// os.MkDir() is used instead of testing.T.TempDir()

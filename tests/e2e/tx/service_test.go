@@ -248,64 +248,64 @@ func (s *E2ETestSuite) TestGetTxEvents_GRPC() {
 		expLen    int
 	}{
 		{
-			"nil request",
-			nil,
-			true,
-			"request cannot be nil",
-			0,
+			name:      "nil request",
+			req:       nil,
+			expErr:    true,
+			expErrMsg: "request cannot be nil",
+			expLen:    0,
 		},
 		{
-			"empty request",
-			&tx.GetTxsEventRequest{},
-			true,
-			"query cannot be empty",
-			0,
+			name:      "empty request",
+			req:       &tx.GetTxsEventRequest{},
+			expErr:    true,
+			expErrMsg: "query cannot be empty",
+			expLen:    0,
 		},
 		{
-			"request with dummy event",
-			&tx.GetTxsEventRequest{Query: "foobar"},
-			true,
-			"failed to search for txs",
-			0,
+			name:      "request with dummy event",
+			req:       &tx.GetTxsEventRequest{Query: "foobar"},
+			expErr:    true,
+			expErrMsg: "failed to search for txs",
+			expLen:    0,
 		},
 		{
-			"request with order-by",
-			&tx.GetTxsEventRequest{
+			name: "request with order-by",
+			req: &tx.GetTxsEventRequest{
 				Query:   bankMsgSendEventAction,
 				OrderBy: tx.OrderBy_ORDER_BY_ASC,
 			},
-			false,
-			"",
-			3,
+			expErr:    false,
+			expErrMsg: "",
+			expLen:    3,
 		},
 		{
-			"without pagination",
-			&tx.GetTxsEventRequest{
+			name: "without pagination",
+			req: &tx.GetTxsEventRequest{
 				Query: bankMsgSendEventAction,
 			},
-			false,
-			"",
-			3,
+			expErr:    false,
+			expErrMsg: "",
+			expLen:    3,
 		},
 		{
-			"with pagination",
-			&tx.GetTxsEventRequest{
+			name: "with pagination",
+			req: &tx.GetTxsEventRequest{
 				Query: bankMsgSendEventAction,
 				Page:  1,
 				Limit: 2,
 			},
-			false,
-			"",
-			2,
+			expErr:    false,
+			expErrMsg: "",
+			expLen:    2,
 		},
 		{
-			"with multi events",
-			&tx.GetTxsEventRequest{
+			name: "with multi events",
+			req: &tx.GetTxsEventRequest{
 				Query: fmt.Sprintf("%s AND message.module='bank'", bankMsgSendEventAction),
 			},
-			false,
-			"",
-			3,
+			expErr:    false,
+			expErrMsg: "",
+			expLen:    3,
 		},
 	}
 	for _, tc := range testCases {
@@ -315,18 +315,18 @@ func (s *E2ETestSuite) TestGetTxEvents_GRPC() {
 			if tc.expErr {
 				s.Require().Error(err)
 				s.Require().Contains(err.Error(), tc.expErrMsg)
-			} else {
-				s.Require().NoError(err)
-				s.Require().GreaterOrEqual(len(grpcRes.Txs), 1)
-				s.Require().Equal("foobar", grpcRes.Txs[0].Body.Memo)
-				s.Require().Equal(tc.expLen, len(grpcRes.Txs))
-
-				// Make sure fields are populated.
-				// ref: https://github.com/cosmos/cosmos-sdk/issues/8680
-				// ref: https://github.com/cosmos/cosmos-sdk/issues/8681
-				s.Require().NotEmpty(grpcRes.TxResponses[0].Timestamp)
-				s.Require().Empty(grpcRes.TxResponses[0].RawLog) // logs are empty if the transactions are successful
+				return
 			}
+			s.Require().NoError(err)
+			s.Require().GreaterOrEqual(len(grpcRes.Txs), 1)
+			s.Require().Equal("foobar", grpcRes.Txs[0].Body.Memo)
+			s.Require().Equal(tc.expLen, len(grpcRes.Txs), fmt.Sprintf("%q", grpcRes.Txs))
+
+			// Make sure fields are populated.
+			// ref: https://github.com/cosmos/cosmos-sdk/issues/8680
+			// ref: https://github.com/cosmos/cosmos-sdk/issues/8681
+			s.Require().NotEmpty(grpcRes.TxResponses[0].Timestamp)
+			s.Require().Empty(grpcRes.TxResponses[0].RawLog) // logs are empty if the transactions are successful
 		})
 	}
 }
@@ -341,52 +341,60 @@ func (s *E2ETestSuite) TestGetTxEvents_GRPCGateway() {
 		expLen    int
 	}{
 		{
-			"empty params",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs", val.APIAddress),
-			true,
-			"query cannot be empty", 0,
+			name:      "empty params",
+			url:       fmt.Sprintf("%s/cosmos/tx/v1beta1/txs", val.APIAddress),
+			expErr:    true,
+			expErrMsg: "query cannot be empty",
+			expLen:    0,
 		},
 		{
-			"without pagination",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s", val.APIAddress, bankMsgSendEventAction),
-			false,
-			"", 3,
+			name:      "without pagination",
+			url:       fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s", val.APIAddress, bankMsgSendEventAction),
+			expErr:    false,
+			expErrMsg: "",
+			expLen:    3,
 		},
 		{
-			"with pagination",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&page=%d&limit=%d", val.APIAddress, bankMsgSendEventAction, 1, 2),
-			false,
-			"", 2,
+			name:      "with pagination",
+			url:       fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&page=%d&limit=%d", val.APIAddress, bankMsgSendEventAction, 1, 2),
+			expErr:    false,
+			expErrMsg: "",
+			expLen:    2,
 		},
 		{
-			"valid request: order by asc",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=ORDER_BY_ASC", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
-			false,
-			"", 3,
+			name:      "valid request: order by asc",
+			url:       fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=ORDER_BY_ASC", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
+			expErr:    false,
+			expErrMsg: "",
+			expLen:    3,
 		},
 		{
-			"valid request: order by desc",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=ORDER_BY_DESC", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
-			false,
-			"", 3,
+			name:      "valid request: order by desc",
+			url:       fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=ORDER_BY_DESC", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
+			expErr:    false,
+			expErrMsg: "",
+			expLen:    3,
 		},
 		{
-			"invalid request: invalid order by",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=invalid_order", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
-			true,
-			"is not a valid tx.OrderBy", 0,
+			name:      "invalid request: invalid order by",
+			url:       fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s&order_by=invalid_order", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
+			expErr:    true,
+			expErrMsg: "is not a valid tx.OrderBy",
+			expLen:    0,
 		},
 		{
-			"expect pass with multiple-events",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
-			false,
-			"", 3,
+			name:      "expect pass with multiple-events",
+			url:       fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s&query=%s", val.APIAddress, bankMsgSendEventAction, "message.module='bank'"),
+			expErr:    false,
+			expErrMsg: "",
+			expLen:    3,
 		},
 		{
-			"expect pass with escape event",
-			fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s", val.APIAddress, "message.action%3D'/cosmos.bank.v1beta1.MsgSend'"),
-			false,
-			"", 3,
+			name:      "expect pass with escape event",
+			url:       fmt.Sprintf("%s/cosmos/tx/v1beta1/txs?query=%s", val.APIAddress, "message.action%3D'/cosmos.bank.v1beta1.MsgSend'"),
+			expErr:    false,
+			expErrMsg: "",
+			expLen:    3,
 		},
 	}
 	for _, tc := range testCases {
@@ -395,15 +403,15 @@ func (s *E2ETestSuite) TestGetTxEvents_GRPCGateway() {
 			s.Require().NoError(err)
 			if tc.expErr {
 				s.Require().Contains(string(res), tc.expErrMsg)
-			} else {
-				var result tx.GetTxsEventResponse
-				err = val.ClientCtx.Codec.UnmarshalJSON(res, &result)
-				s.Require().NoError(err, "failed to unmarshal JSON: %s", res)
-				s.Require().GreaterOrEqual(len(result.Txs), 1)
-				s.Require().Equal("foobar", result.Txs[0].Body.Memo)
-				s.Require().NotZero(result.TxResponses[0].Height)
-				s.Require().Equal(tc.expLen, len(result.Txs))
+				return
 			}
+			var result tx.GetTxsEventResponse
+			err = val.ClientCtx.Codec.UnmarshalJSON(res, &result)
+			s.Require().NoError(err, "failed to unmarshal JSON: %s", res)
+			s.Require().GreaterOrEqual(len(result.Txs), 1)
+			s.Require().Equal("foobar", result.Txs[0].Body.Memo)
+			s.Require().NotZero(result.TxResponses[0].Height)
+			s.Require().Equal(tc.expLen, len(result.Txs), fmt.Sprintf("%q", result.Txs))
 		})
 	}
 }
@@ -1136,6 +1144,7 @@ func (s *E2ETestSuite) mkTxBuilder() client.TxBuilder {
 
 // protoTxProvider is a type which can provide a proto transaction. It is a
 // workaround to get access to the wrapper TxBuilder's method GetProtoTx().
+//
 // Deprecated: It's only used for testing the deprecated Simulate gRPC endpoint
 // using a proto Tx field.
 type protoTxProvider interface {
@@ -1143,6 +1152,7 @@ type protoTxProvider interface {
 }
 
 // txBuilderToProtoTx converts a txBuilder into a proto tx.Tx.
+//
 // Deprecated: It's used for testing the deprecated Simulate gRPC endpoint
 // using a proto Tx field and for testing the TxEncode endpoint.
 func txBuilderToProtoTx(txBuilder client.TxBuilder) (*tx.Tx, error) {

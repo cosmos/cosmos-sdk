@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cometbft/cometbft/v2/p2p"
+	"github.com/cometbft/cometbft/p2p"
 	"github.com/creachadair/tomledit"
 	"github.com/creachadair/tomledit/parser"
 )
@@ -38,7 +38,7 @@ func NewLegacySingleNodeInitializer(
 	}
 }
 
-func (s LegacySingleNode) Initialize() {
+func (s LegacySingleNode) Initialize(xargs ...string) {
 	args := []string{
 		"testnet",
 		"init-files",
@@ -48,6 +48,7 @@ func (s LegacySingleNode) Initialize() {
 		"--keyring-backend=test",
 		"--minimum-gas-prices=" + s.minGasPrice,
 	}
+	args = append(args, xargs...)
 
 	s.log(fmt.Sprintf("+++ %s %s\n", s.execBinary, strings.Join(args, " ")))
 	out, err := RunShellCmd(s.execBinary, args...)
@@ -107,7 +108,7 @@ func InitializerWithBinary(binary string, sut *SystemUnderTest) TestnetInitializ
 	)
 }
 
-func (s SingleHostTestnetCmdInitializer) Initialize() {
+func (s SingleHostTestnetCmdInitializer) Initialize(xargs ...string) {
 	args := []string{
 		"testnet",
 		"init-files",
@@ -119,6 +120,7 @@ func (s SingleHostTestnetCmdInitializer) Initialize() {
 		"--single-host",
 		"--minimum-gas-prices=" + s.minGasPrice,
 	}
+	args = append(args, xargs...)
 
 	s.log(fmt.Sprintf("+++ %s %s\n", s.execBinary, strings.Join(args, " ")))
 	out, err := RunShellCmd(s.execBinary, args...)
@@ -155,7 +157,7 @@ func NewModifyConfigYamlInitializer(exec string, s *SystemUnderTest) *ModifyConf
 	}
 }
 
-func (s ModifyConfigYamlInitializer) Initialize() {
+func (s ModifyConfigYamlInitializer) Initialize(xargs ...string) {
 	// init with legacy testnet command
 	args := []string{
 		"testnet",
@@ -166,6 +168,7 @@ func (s ModifyConfigYamlInitializer) Initialize() {
 		"--keyring-backend=test",
 		"--minimum-gas-prices=" + s.minGasPrice,
 	}
+	args = append(args, xargs...)
 
 	s.log(fmt.Sprintf("+++ %s %s\n", s.execBinary, strings.Join(args, " ")))
 

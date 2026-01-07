@@ -9,9 +9,9 @@ import (
 	"sync"
 	"time"
 
-	cmtrpcserver "github.com/cometbft/cometbft/v2/rpc/jsonrpc/server"
+	cmtrpcserver "github.com/cometbft/cometbft/rpc/jsonrpc/server"
 	gateway "github.com/cosmos/gogogateway"
-	"github.com/golang/protobuf/proto" //nolint:staticcheck // grpc-gateway uses deprecated golang/protobuf
+	"github.com/golang/protobuf/proto" //nolint:staticcheck // needed for compatibility
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -35,7 +35,9 @@ type Server struct {
 	ClientCtx         client.Context
 	GRPCSrv           *grpc.Server
 	logger            log.Logger
-	metrics           *telemetry.Metrics
+
+	//nolint:staticcheck // TODO: switch to OpenTelemetry
+	metrics *telemetry.Metrics
 
 	// Start() is blocking and generally called from a separate goroutine.
 	// Close() can be called asynchronously and access shared memory
@@ -48,7 +50,7 @@ type Server struct {
 // CustomGRPCHeaderMatcher for mapping request headers to
 // GRPC metadata.
 // HTTP headers that start with 'Grpc-Metadata-' are automatically mapped to
-// gRPC metadata after removing prefix 'Grpc-Metadata-'. We can use this
+// gRPC metadata after removing the prefix 'Grpc-Metadata-'. We can use this
 // CustomGRPCHeaderMatcher if headers don't start with `Grpc-Metadata-`
 func CustomGRPCHeaderMatcher(key string) (string, bool) {
 	switch strings.ToLower(key) {
@@ -191,12 +193,14 @@ func (s *Server) Close() error {
 	return s.listener.Close()
 }
 
+// Deprecated: Use OpenTelemetry instead, see the `telemetry` package for more details.
 func (s *Server) SetTelemetry(m *telemetry.Metrics) {
 	s.mtx.Lock()
 	s.registerMetrics(m)
 	s.mtx.Unlock()
 }
 
+//nolint:staticcheck // TODO: switch to OpenTelemetry
 func (s *Server) registerMetrics(m *telemetry.Metrics) {
 	s.metrics = m
 
@@ -227,7 +231,7 @@ func newErrorResponse(code int, err string) errorResponse {
 	return errorResponse{Code: code, Error: err}
 }
 
-// writeErrorResponse prepares and writes a HTTP error
+// writeErrorResponse prepares and writes an HTTP error
 // given a status code and an error message.
 func writeErrorResponse(w http.ResponseWriter, status int, err string) {
 	w.Header().Set("Content-Type", "application/json")

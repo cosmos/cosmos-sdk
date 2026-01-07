@@ -22,7 +22,7 @@ on:
 permissions:
   contents: read
   packages: write
-  sid-token: write
+  id-token: write
 
 env:
   # Use docker.io for Docker Hub if empty
@@ -34,7 +34,7 @@ jobs:
   build:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -71,5 +71,3 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max

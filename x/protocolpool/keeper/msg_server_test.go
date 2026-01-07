@@ -271,7 +271,7 @@ func (suite *KeeperTestSuite) TestCreateContinuousFund() {
 			expErrMsg: "total funds percentage exceeds 100",
 		},
 		{
-			name: "address is bocked",
+			name: "address is blocked",
 			msg: &types.MsgCreateContinuousFund{
 				Authority:  validAuthority,
 				Recipient:  validRecipient.String(),

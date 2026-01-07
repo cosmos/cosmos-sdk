@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	cmtprotocrypto "github.com/cometbft/cometbft/api/cometbft/crypto/v1"
+	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/iavl"
 	ics23 "github.com/cosmos/ics23/go"
@@ -291,7 +291,7 @@ func (st *Store) Import(version int64) (*iavl.Importer, error) {
 	return tree.Import(version)
 }
 
-// Handle gatest the latest height, if height is 0
+// Handle gets the latest height, if height is 0
 func getHeight(tree Tree, req *types.RequestQuery) int64 {
 	height := req.Height
 	if height == 0 {

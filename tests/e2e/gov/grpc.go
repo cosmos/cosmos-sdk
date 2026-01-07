@@ -236,8 +236,8 @@ func (s *E2ETestSuite) TestGetProposalDepositGRPC() {
 			true,
 		},
 		{
-			"get deposit with wrong depositer address",
-			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/deposits/%s", val.APIAddress, "1", "wrongDepositerAddress"),
+			"get deposit with wrong depositor address",
+			fmt.Sprintf("%s/cosmos/gov/v1/proposals/%s/deposits/%s", val.APIAddress, "1", "wrongDepositorAddress"),
 			true,
 		},
 		{

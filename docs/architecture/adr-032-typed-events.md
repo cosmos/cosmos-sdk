@@ -16,13 +16,13 @@ Proposed
 
 ## Abstract
 
-Currently in the Cosmos SDK, events are defined in the handlers for each message as well as `BeginBlock` and `EndBlock`. Each module doesn't have types defined for each event, they are implemented as `map[string]string`. Above all else this makes these events difficult to consume as it requires a great deal of raw string matching and parsing. This proposal focuses on updating the events to use **typed events** defined in each module such that emiting and subscribing to events will be much easier. This workflow comes from the experience of the Akash Network team.
+Currently in the Cosmos SDK, events are defined in the handlers for each message as well as `BeginBlock` and `EndBlock`. Each module doesn't have types defined for each event, they are implemented as `map[string]string`. Above all else this makes these events difficult to consume as it requires a great deal of raw string matching and parsing. This proposal focuses on updating the events to use **typed events** defined in each module such that emitting and subscribing to events will be much easier. This workflow comes from the experience of the Akash Network team.
 
 ## Context
 
-Currently in the Cosmos SDK, events are defined in the handlers for each message, meaning each module doesn't have a cannonical set of types for each event. Above all else this makes these events difficult to consume as it requires a great deal of raw string matching and parsing. This proposal focuses on updating the events to use **typed events** defined in each module such that emiting and subscribing to events will be much easier. This workflow comes from the experience of the Akash Network team.
+Currently in the Cosmos SDK, events are defined in the handlers for each message, meaning each module doesn't have a canonical set of types for each event. Above all else this makes these events difficult to consume as it requires a great deal of raw string matching and parsing. This proposal focuses on updating the events to use **typed events** defined in each module such that emitting and subscribing to events will be much easier. This workflow comes from the experience of the Akash Network team.
 
-[Our platform](http://github.com/ovrclk/akash) requires a number of programatic on chain interactions both on the provider (datacenter - to bid on new orders and listen for leases created) and user (application developer - to send the app manifest to the provider) side. In addition the Akash team is now maintaining the IBC [`relayer`](https://github.com/ovrclk/relayer), another very event driven process. In working on these core pieces of infrastructure, and integrating lessons learned from Kubernetes development, our team has developed a standard method for defining and consuming typed events in Cosmos SDK modules. We have found that it is extremely useful in building this type of event driven application.
+[Our platform](http://github.com/ovrclk/akash) requires a number of programmatic on chain interactions both on the provider (datacenter - to bid on new orders and listen for leases created) and user (application developer - to send the app manifest to the provider) side. In addition the Akash team is now maintaining the IBC [`relayer`](https://github.com/ovrclk/relayer), another very event driven process. In working on these core pieces of infrastructure, and integrating lessons learned from Kubernetes development, our team has developed a standard method for defining and consuming typed events in Cosmos SDK modules. We have found that it is extremely useful in building this type of event driven application.
 
 As the Cosmos SDK gets used more extensively for apps like `peggy`, other peg zones, IBC, DeFi, etc... there will be an exploding demand for event driven applications to support new features desired by users. We propose upstreaming our findings into the Cosmos SDK to enable all Cosmos SDK applications to quickly and easily build event driven apps to aid their core application. Wallets, exchanges, explorers, and defi protocols all stand to benefit from this work.
 
@@ -153,7 +153,7 @@ Users will be able to subscribe using `client.Context.Client.Subscribe` and cons
 
 Akash Network has built a simple [`pubsub`](https://github.com/ovrclk/akash/blob/90d258caeb933b611d575355b8df281208a214f8/pubsub/bus.go#L20). This can be used to subscribe to `abci.Events` and [publish](https://github.com/ovrclk/akash/blob/90d258caeb933b611d575355b8df281208a214f8/events/publish.go#L21) them as typed events.
 
-Please see the below code sample for more detail on this flow looks for clients.
+Please see the below code sample for more detail on how this flow looks for clients.
 
 ## Consequences
 
@@ -294,7 +294,7 @@ func PublishChainTxEvents(ctx context.Context, client cmtclient.EventsClient, bu
                     for _, abciEv := range events {
                         typedEvent, err := sdk.ParseTypedEvent(abciEv)
                         if err != nil {
-                            return er
+                            return err
                         }
                         if err := bus.Publish(typedEvent); err != nil {
                             bus.Close()
@@ -308,7 +308,7 @@ func PublishChainTxEvents(ctx context.Context, client cmtclient.EventsClient, bu
         return err
 	})
 
-    // Exit on error or context cancelation
+    // Exit on error or context cancellation
     return g.Wait()
 }
 ```

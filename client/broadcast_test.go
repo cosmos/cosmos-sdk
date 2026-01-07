@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cometbft/cometbft/v2/crypto/tmhash"
-	"github.com/cometbft/cometbft/v2/mempool"
+	"github.com/cometbft/cometbft/crypto/tmhash"
+	"github.com/cometbft/cometbft/mempool"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -20,7 +20,7 @@ func CreateContextWithErrorAndMode(err error, mode string) Context {
 	}
 }
 
-// Test the correct code is returned when
+// Test the correct code is returned when broadcasting transactions with specific mempool errors
 func TestBroadcastError(t *testing.T) {
 	errors := map[error]uint32{
 		mempool.ErrTxInCache:       sdkerrors.ErrTxInMempoolCache.ABCICode(),

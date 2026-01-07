@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	cmtproto "github.com/cometbft/cometbft/api/cometbft/types/v2"
-	abci "github.com/cometbft/cometbft/v2/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/depinject"
@@ -63,7 +63,7 @@ func TestBeginBlocker(t *testing.T) {
 	)
 	val, err := stakingKeeper.Validator(ctx, addr)
 	require.NoError(t, err)
-	require.Equal(t, amt, val.GetBondedTokens())
+	require.Equal(t, amt, val.GetValidatorPower())
 
 	abciVal := abci.Validator{
 		Address: pk.Address(),

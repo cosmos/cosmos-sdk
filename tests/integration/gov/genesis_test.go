@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/v2/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"gotest.tools/v3/assert"
 
@@ -75,7 +75,7 @@ func TestImportExportQueues(t *testing.T) {
 	ctx := s1.app.NewContext(false)
 	addrs := simtestutil.AddTestAddrs(s1.BankKeeper, s1.StakingKeeper, ctx, 1, valTokens)
 
-	_, err = s1.app.FinalizeBlock(&abci.FinalizeBlockRequest{
+	_, err = s1.app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: s1.app.LastBlockHeight() + 1,
 	})
 	assert.NilError(t, err)
@@ -109,7 +109,7 @@ func TestImportExportQueues(t *testing.T) {
 	distributionGenState := s1.DistrKeeper.ExportGenesis(ctx)
 
 	// export the state and import it into a new app
-	govGenState, _ := gov.ExportGenesis(ctx, s1.GovKeeper)
+	govGenState, _ := keeper.ExportGenesis(ctx, s1.GovKeeper)
 	genesisState := s1.appBuilder.DefaultGenesis()
 
 	genesisState[authtypes.ModuleName] = s1.cdc.MustMarshalJSON(authGenState)
@@ -140,7 +140,7 @@ func TestImportExportQueues(t *testing.T) {
 	assert.NilError(t, err)
 
 	_, err = s2.app.InitChain(
-		&abci.InitChainRequest{
+		&abci.RequestInitChain{
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: simtestutil.DefaultConsensusParams,
 			AppStateBytes:   stateBytes,
@@ -148,12 +148,12 @@ func TestImportExportQueues(t *testing.T) {
 	)
 	assert.NilError(t, err)
 
-	_, err = s2.app.FinalizeBlock(&abci.FinalizeBlockRequest{
+	_, err = s2.app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: s2.app.LastBlockHeight() + 1,
 	})
 	assert.NilError(t, err)
 
-	_, err = s2.app.FinalizeBlock(&abci.FinalizeBlockRequest{
+	_, err = s2.app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height: s2.app.LastBlockHeight() + 1,
 	})
 	assert.NilError(t, err)

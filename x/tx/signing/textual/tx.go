@@ -204,7 +204,7 @@ func (vr txValueRenderer) Parse(ctx context.Context, screens []Screen) (protoref
 	for i := range screens {
 		parsable[i+1].Indent = screens[i].Indent + 1
 
-		// Take same text, except that we weplace:
+		// Take same text, except that we replace:
 		// "This transaction has <N> Message"
 		// with:
 		// "Message: <N> Any"

@@ -14,8 +14,8 @@ import (
 	"syscall"
 	"time"
 
-	cmtcmd "github.com/cometbft/cometbft/v2/cmd/cometbft/commands"
-	cmtcfg "github.com/cometbft/cometbft/v2/config"
+	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
+	cmtcfg "github.com/cometbft/cometbft/config"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cast"
@@ -71,7 +71,7 @@ func bindFlags(basename string, cmd *cobra.Command, v *viper.Viper) (err error) 
 
 	cmd.Flags().VisitAll(func(f *pflag.Flag) {
 		// Environment variables can't have dashes in them, so bind them to their equivalent
-		// keys with underscores, e.g. --favorite-color to STING_FAVORITE_COLOR
+		// keys with underscores, e.g. --favorite-color to STRING_FAVORITE_COLOR
 		err = v.BindEnv(f.Name, fmt.Sprintf("%s_%s", basename, strings.ToUpper(strings.ReplaceAll(f.Name, "-", "_"))))
 		if err != nil {
 			panic(err)
@@ -165,7 +165,7 @@ func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplat
 	return serverCtx, nil
 }
 
-// CreateSDKLogger creates a the default SDK logger.
+// CreateSDKLogger creates the default SDK logger.
 // It reads the log level and format from the server context.
 func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 	var opts []log.Option
@@ -265,8 +265,8 @@ func interceptConfigs(rootViper *viper.Viper, customAppTemplate string, customCo
 		defaultCometCfg := cmtcfg.DefaultConfig()
 		// The SDK is opinionated about those comet values, so we set them here.
 		// We verify first that the user has not changed them for not overriding them.
-		if conf.Consensus.TimeoutCommit == defaultCometCfg.Consensus.TimeoutCommit { // nolint: staticcheck // we are continuing to use this value for backwards compatibility
-			conf.Consensus.TimeoutCommit = 5 * time.Second // nolint: staticcheck // we are continuing to use this value for backwards compatibility
+		if conf.Consensus.TimeoutCommit == defaultCometCfg.Consensus.TimeoutCommit {
+			conf.Consensus.TimeoutCommit = 5 * time.Second
 		}
 		if conf.RPC.PprofListenAddress == defaultCometCfg.RPC.PprofListenAddress {
 			conf.RPC.PprofListenAddress = "localhost:6060"
@@ -504,7 +504,7 @@ func openDB(rootDir string, backendType dbm.BackendType) (dbm.DB, error) {
 
 func openTraceWriter(traceWriterFile string) (w io.WriteCloser, err error) {
 	if traceWriterFile == "" {
-		return
+		return w, err
 	}
 	return os.OpenFile(
 		traceWriterFile,

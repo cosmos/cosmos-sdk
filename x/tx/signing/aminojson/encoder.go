@@ -20,7 +20,7 @@ import (
 //
 //	(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int"
 //
-// In pulsar message they represented as strings, which is the only format this encoder supports.
+// In pulsar message they are represented as strings, which is the only format this encoder supports.
 func cosmosIntEncoder(_ *Encoder, v protoreflect.Value, w io.Writer) error {
 	switch val := v.Interface().(type) {
 	case string:
@@ -72,9 +72,22 @@ func cosmosDecEncoder(_ *Encoder, v protoreflect.Value, w io.Writer) error {
 	}
 }
 
-// nullSliceAsEmptyEncoder replicates the behavior at:
+// NullSliceAsEmptyEncoder replicates the behavior at:
 // https://github.com/cosmos/cosmos-sdk/blob/be9bd7a8c1b41b115d58f4e76ee358e18a52c0af/types/coin.go#L199-L205
-func nullSliceAsEmptyEncoder(enc *Encoder, v protoreflect.Value, w io.Writer) error {
+//
+// This encoder ensures that nil slices are encoded as empty arrays ([]) instead of null.
+// This is useful for maintaining backward compatibility with legacy Amino JSON encoding
+// where nil slices were serialized as empty arrays.
+//
+// Usage example:
+//
+//	encoder := aminojson.NewEncoder(options)
+//	encoder = encoder.DefineFieldEncoding("my_field", aminojson.NullSliceAsEmptyEncoder)
+//
+// Or in protobuf:
+//
+//	repeated MyType field = 1 [(amino.encoding) = "null_slice_as_empty"];
+func NullSliceAsEmptyEncoder(enc *Encoder, v protoreflect.Value, w io.Writer) error {
 	switch list := v.Interface().(type) {
 	case protoreflect.List:
 		if list.Len() == 0 {

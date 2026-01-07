@@ -19,7 +19,7 @@ the use of a time-based, ephemeral sequence.
 
 ## Context
 
-Account sequence values serve to prevent replay attacks and ensure transactions from the same sender are included into blocks and executed
+Account sequence values serve to prevent replay attacks and ensure transactions from the same sender are included in blocks and executed
 in sequential order. Unfortunately, this makes it difficult to reliably send many concurrent transactions from the
 same sender. Victims of such limitations include IBC relayers and crypto exchanges.
 
@@ -40,7 +40,7 @@ will be recorded to state.
 New transactions will be checked against the state to prevent duplicate submissions. To prevent the state from growing indefinitely, we propose the following:
 
 * Define an upper bound for the value of `timeout_timestamp` (i.e. 10 minutes).
-* Add PreBlocker method x/auth that removes state entries with a `timeout_timestamp` earlier than the current block time.
+* Add PreBlocker method to x/auth that removes state entries with a `timeout_timestamp` earlier than the current block time.
 
 ### Transaction Format
 
@@ -49,7 +49,7 @@ message TxBody {
   ...
           
   bool unordered = 4;
-  google.protobuf.Timestamp timeout_timestamp = 5
+  google.protobuf.Timestamp timeout_timestamp = 5;
 }
 ```
 
@@ -300,7 +300,7 @@ The storage of unordered sequences will be facilitated using the Cosmos SDK's KV
 
 The previous iteration of unordered transactions worked by using an ad-hoc state-management system that posed severe 
 risks and a vector for duplicated tx processing. It relied on graceful app closure which would flush the current state
-of the unordered sequence mapping. If the 2/3's of the network crashed, and the graceful closure did not trigger, 
+of the unordered sequence mapping. If 2/3 of the network crashed, and the graceful closure did not trigger, 
 the system would lose track of all sequences in the mapping, allowing those transactions to be replayed. The 
 implementation proposed in the updated version of this ADR solves this by writing directly to the Cosmos KV Store.
 While this is less performant, for the initial implementation, we opted to choose a safer path and postpone performance optimizations until we have more data on real-world impacts and a more battle-tested approach to optimization.
@@ -319,7 +319,7 @@ single-use unordered nonces, instead of deriving nonces from bytes in the transa
 
 * Requires additional storage overhead.
 * Requirement of unique timestamps per transaction causes a small amount of additional overhead for clients. Clients must ensure each transaction's timeout timestamp is different. However, nanosecond differentials suffice.
-* Usage of Cosmos SDK KV store is slower in comparison to using a non-merklized store or ad-hoc methods, and block times may slow down as a result.
+* Usage of Cosmos SDK KV store is slower in comparison to using a non-merkleized store or ad-hoc methods, and block times may slow down as a result.
 
 ## References
 

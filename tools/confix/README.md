@@ -40,7 +40,7 @@ An implementation example can be found in `simapp`.
 The command will be available as `simd config`.
 
 :::tip
-Using confix directly in the application can have less features than using it standalone.
+Using confix directly in the application can have fewer features than using it standalone.
 This is because confix is versioned with the SDK, while `latest` is the standalone version.
 :::
 
@@ -126,7 +126,7 @@ confix diff v0.47 ~/.simapp/config/client.toml --client # gets the diff between 
 
 ### View
 
-View a configuration file, e.g:
+View a configuration file, e.g.:
 
 ```shell
 simd config view client # views the current app client config

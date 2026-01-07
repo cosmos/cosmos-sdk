@@ -23,6 +23,7 @@ import (
 
 // ProtoCodecMarshaler defines an interface for codecs that utilize Protobuf for both
 // binary and JSON encoding.
+//
 // Deprecated: Use Codec instead.
 type ProtoCodecMarshaler interface {
 	Codec

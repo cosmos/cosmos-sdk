@@ -10,7 +10,7 @@ This paper specifies the Staking module of the Cosmos SDK that was first
 described in the [Cosmos Whitepaper](https://cosmos.network/about/whitepaper)
 in June 2016.
 
-The module enables Cosmos SDK-based blockchain to support an advanced
+The module enables Cosmos SDK-based blockchains to support an advanced
 Proof-of-Stake (PoS) system. In this system, holders of the native staking token of
 the chain can become validators and can delegate tokens to validators,
 ultimately determining the effective validator set for the system.
@@ -468,7 +468,7 @@ When a Validator is slashed, the following occurs:
   redelegation began from the validator are slashed by the `slashFactor` percentage of the initialBalance.
 * Each amount slashed from redelegations and unbonding delegations is subtracted from the
   total slash amount.
-* The `remaingSlashAmount` is then slashed from the validator's tokens in the `BondedPool` or
+* The `remainingSlashAmount` is then slashed from the validator's tokens in the `BondedPool` or
   `NonBondedPool` depending on the validator's status. This reduces the total supply of tokens.
 
 In the case of a slash due to any infraction that requires evidence to submitted (for example double-sign), the slash
@@ -837,11 +837,13 @@ following hooks can registered with staking:
     * called when a delegation is created
 * `BeforeDelegationSharesModified(Context, AccAddress, ValAddress) error`
     * called when a delegation's shares are modified
-* `AfterDelegationModified(Context, AccAddress, ValAddress) error`
-    * called when a delegation is created or modified
 * `BeforeDelegationRemoved(Context, AccAddress, ValAddress) error`
     * called when a delegation is removed
-* `AfterUnbondingInitiated(Context, UnbondingID)`
+* `AfterDelegationModified(Context, AccAddress, ValAddress) error`
+    * called when a delegation is created or modified
+* `BeforeValidatorSlashed(Context, ValAddress, math.LegacyDec) error`
+    * called when a validator is about to be slashed
+* `AfterUnbondingInitiated(Context, UnbondingID) error`
     * called when an unbonding operation (validator unbonding, unbonding delegation, redelegation) was initiated
 
 
@@ -2312,7 +2314,7 @@ A user can query the `staking` module using REST endpoints.
 
 #### DelegatorDelegations
 
-The `DelegtaorDelegations` REST endpoint queries all delegations of a given delegator address.
+The `DelegatorDelegations` REST endpoint queries all delegations of a given delegator address.
 
 ```bash
 /cosmos/staking/v1beta1/delegations/{delegatorAddr}

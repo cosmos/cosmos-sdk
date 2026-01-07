@@ -11,7 +11,7 @@ var _ ExtMempool = (*NoOpMempool)(nil)
 // NoOpMempool defines a no-op mempool. Transactions are completely discarded and
 // ignored when BaseApp interacts with the mempool.
 //
-// Note: When this mempool is used, it assumed that an application will rely
+// Note: When this mempool is used, it is assumed that an application will rely
 // on CometBFT's transaction ordering defined in `RequestPrepareProposal`, which
 // is FIFO-ordered by default.
 type NoOpMempool struct{}

@@ -20,7 +20,7 @@ import (
 )
 
 // TestRandomizedGenState tests the normal scenario of applying RandomizedGenState.
-// Abonormal scenarios are not tested here.
+// Abnormal scenarios are not tested here.
 func TestRandomizedGenState(t *testing.T) {
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	cryptocodec.RegisterInterfaces(interfaceRegistry)
@@ -91,7 +91,7 @@ func TestRandomizedGenState1(t *testing.T) {
 				Rand:      r,
 			}, "invalid memory address or nil pointer dereference"},
 		{
-			// panic => reason: numBonded != len(Accnounts)
+			// panic => reason: numBonded != len(Accounts)
 			module.SimulationState{
 				AppParams:    make(simtypes.AppParams),
 				Cdc:          cdc,

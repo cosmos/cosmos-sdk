@@ -3,7 +3,7 @@ package cmtservice
 import (
 	"context"
 
-	abci "github.com/cometbft/cometbft/v2/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc/codes"
@@ -25,7 +25,7 @@ var (
 )
 
 type (
-	abciQueryFn = func(context.Context, *abci.QueryRequest) (*abci.QueryResponse, error)
+	abciQueryFn = func(context.Context, *abci.RequestQuery) (*abci.ResponseQuery, error)
 
 	queryServer struct {
 		clientCtx         client.Context
@@ -87,7 +87,7 @@ func (s queryServer) GetBlockByHeight(ctx context.Context, req *GetBlockByHeight
 	}
 
 	if req.Height > blockHeight {
-		return nil, status.Error(codes.InvalidArgument, "requested block height is bigger then the chain length")
+		return nil, status.Error(codes.InvalidArgument, "requested block height is bigger than the chain length")
 	}
 
 	protoBlockID, protoBlock, err := GetProtoBlock(ctx, s.clientCtx, &req.Height)

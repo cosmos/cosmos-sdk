@@ -41,8 +41,8 @@ func DefaultParams() Params {
 //	BenchmarkSig/secp256k1     4334   277167 ns/op   4128 B/op   79 allocs/op
 //	BenchmarkSig/secp256r1    10000   108769 ns/op   1672 B/op   33 allocs/op
 //
-// Based on the results above secp256k1 is 2.7x is slwer. However we propose to discount it
-// because we are we don't compare the cgo implementation of secp256k1, which is faster.
+// Based on the results above secp256k1 is 2.7x is slower. However we propose to discount it
+// because we don't compare the cgo implementation of secp256k1, which is faster.
 func (p Params) SigVerifyCostSecp256r1() uint64 {
 	return p.SigVerifyCostSecp256k1 / 2
 }
@@ -80,7 +80,7 @@ func validateSigVerifyCostSecp256k1(i any) error {
 	}
 
 	if v == 0 {
-		return fmt.Errorf("invalid SECK256k1 signature verification cost: %d", v)
+		return fmt.Errorf("invalid SECP256k1 signature verification cost: %d", v)
 	}
 
 	return nil

@@ -31,13 +31,13 @@ acting as a delimiter between extensions. As the chunk hashes should be able to 
 a delimiter to mark the end of the snapshot stream.
 
 Besides, we provide `Snapshotter` and `ExtensionSnapshotter` interface for modules to implement snapshotters, which will handle both taking 
-snapshot and the restoration. Each module could have mutiple snapshotters, and for modules with additional state, they should
+snapshot and the restoration. Each module could have multiple snapshotters, and for modules with additional state, they should
 implement `ExtensionSnapshotter` as extension snapshotters. When setting up the application, the snapshot `Manager` should call 
 `RegisterExtensions([]ExtensionSnapshotter…)` to register all the extension snapshotters.
 
 ```protobuf
 // SnapshotItem is an item contained in a rootmulti.Store snapshot.
-// On top of the exsiting SnapshotStoreItem and SnapshotIAVLItem, we add two new options for the item.
+// On top of the existing SnapshotStoreItem and SnapshotIAVLItem, we add two new options for the item.
 message SnapshotItem {
   // item is the specific type of snapshot item.
   oneof item {
@@ -116,7 +116,7 @@ type ExtensionPayloadReader = func() ([]byte, error)
 type ExtensionPayloadWriter = func([]byte) error
 
 // ExtensionSnapshotter is an extension Snapshotter that is appended to the snapshot stream.
-// ExtensionSnapshotter has an unique name and manages it's own internal formats.
+// ExtensionSnapshotter has a unique name and manages its own internal formats.
 type ExtensionSnapshotter interface {
 	// SnapshotName returns the name of snapshotter, it should be unique in the manager.
 	SnapshotName() string
@@ -139,14 +139,14 @@ type ExtensionSnapshotter interface {
 
 ## Consequences
 
-As a result of this implementation, we are able to create snapshots of binary chunk stream for the state that we maintain outside of the IAVL Tree, CosmWasm blobs for example. And new clients are able to fetch sanpshots of state for all modules that have implemented the corresponding interface from peer nodes. 
+As a result of this implementation, we are able to create snapshots of binary chunk stream for the state that we maintain outside of the IAVL Tree, CosmWasm blobs for example. And new clients are able to fetch snapshots of state for all modules that have implemented the corresponding interface from peer nodes. 
 
 
 ### Backwards Compatibility
 
-This ADR introduces new proto message types, add an `extensions` field in snapshot `Manager`, and add new `ExtensionSnapshotter` interface, so this is not backwards compatible if we have extensions.
+This ADR introduces new proto message types, adds an `extensions` field in snapshot `Manager`, and add new `ExtensionSnapshotter` interface, so this is not backwards compatible if we have extensions.
 
-But for applications that does not have the state data outside of the IAVL tree for any module, the snapshot stream is backwards-compatible.
+But for applications that do not have the state data outside of the IAVL tree for any module, the snapshot stream is backwards-compatible.
 
 ### Positive
 

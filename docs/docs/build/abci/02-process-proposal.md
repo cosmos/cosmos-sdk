@@ -7,7 +7,7 @@ default implementation of `PrepareProposal` runs basic validity checks on each
 transaction.
 
 Note, `ProcessProposal` MUST be deterministic. Non-deterministic behaviors will cause apphash mismatches.
-This means if `ProcessProposal` panics or fails and we reject, all honest validator
+This means that if `ProcessProposal` panics or fails and we reject, all honest validator
 processes should reject (i.e., prevote nil). If so, CometBFT will start a new round with a new block proposal and the same cycle will happen with `PrepareProposal`
 and `ProcessProposal` for the new proposal.
 

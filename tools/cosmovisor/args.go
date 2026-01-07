@@ -17,9 +17,8 @@ import (
 	"github.com/spf13/viper"
 
 	"cosmossdk.io/log"
-
-	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"cosmossdk.io/x/upgrade/plan"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
 // environment variable names
@@ -184,7 +183,7 @@ func GetConfigFromFile(filePath string) (*Config, error) {
 		return GetConfigFromEnv(false)
 	}
 
-	// ensure the file exist
+	// ensure the file exists
 	if _, err := os.Stat(filePath); err != nil {
 		return nil, fmt.Errorf("config not found: at %s : %w", filePath, err)
 	}
@@ -518,7 +517,7 @@ func (cfg Config) WriteLastKnownHeight(height uint64) error {
 	return os.WriteFile(filename, []byte(strconv.FormatUint(height, 10)), 0o644)
 }
 
-// BooleanOption checks and validate env option
+// BooleanOption checks and validates env option
 func BooleanOption(name string, defaultVal bool) (bool, error) {
 	p := strings.ToLower(os.Getenv(name))
 	switch p {

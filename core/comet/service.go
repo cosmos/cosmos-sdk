@@ -55,7 +55,7 @@ type CommitInfo interface {
 	Votes() VoteInfos
 }
 
-// VoteInfos is an interface to get specific votes in a efficient way
+// VoteInfos is an interface to get specific votes in an efficient way
 type VoteInfos interface {
 	Len() int
 	Get(int) VoteInfo

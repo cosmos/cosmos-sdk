@@ -16,7 +16,7 @@ While encoding in the Cosmos SDK used to be mainly handled by `go-amino` codec, 
 
 ## Encoding
 
-The Cosmos SDK utilizes two binary wire encoding protocols, [Amino](https://github.com/tendermint/go-amino/) which is an object encoding specification and [Protocol Buffers](https://developers.google.com/protocol-buffers), a subset of Proto3 with an extension for
+The Cosmos SDK utilizes two binary wire encoding protocols: [Amino](https://github.com/tendermint/go-amino/) which is an object encoding specification and [Protocol Buffers](https://developers.google.com/protocol-buffers), a subset of Proto3 with an extension for
 interface support. See the [Proto3 spec](https://developers.google.com/protocol-buffers/docs/proto3)
 for more information on Proto3, which Amino is largely compatible with (but not with Proto2).
 
@@ -38,7 +38,7 @@ is used for business logic in the state-machine where they may convert back-n-fo
 Note, the Amino-based types may slowly be phased-out in the future, so developers
 should take note to use the protobuf message definitions where possible.
 
-In the `codec` package, there exists two core interfaces, `BinaryCodec` and `JSONCodec`,
+In the `codec` package, there exist two core interfaces, `BinaryCodec` and `JSONCodec`,
 where the former encapsulates the current Amino interface except it operates on
 types implementing the latter instead of generic `interface{}` types.
 
@@ -57,7 +57,7 @@ Modules are encouraged to utilize Protobuf encoding for their respective types. 
 
 In addition to [following official Protocol Buffer guidelines](https://developers.google.com/protocol-buffers/docs/proto3#simple), we recommend using these annotations in .proto files when dealing with interfaces:
 
-* use `cosmos_proto.accepts_interface` to annote `Any` fields that accept interfaces
+* use `cosmos_proto.accepts_interface` to annotate `Any` fields that accept interfaces
     * pass the same fully qualified name as `protoName` to `InterfaceRegistry.RegisterInterface`
     * example: `(cosmos_proto.accepts_interface) = "cosmos.gov.v1beta1.Content"` (and not just `Content`)
 * annotate interface implementations with `cosmos_proto.implements_interface`
@@ -257,7 +257,7 @@ without any further customization.
 
 However, if a module type composes an interface, it must wrap it in the `sdk.Any` (from `/types` package) type. To do that, a module-level .proto file must use [`google.protobuf.Any`](https://github.com/protocolbuffers/protobuf/blob/master/src/google/protobuf/any.proto) for respective message type interface types.
 
-For example, in the `x/evidence` module defines an `Evidence` interface, which is used by the `MsgSubmitEvidence`. The structure definition must use `sdk.Any` to wrap the evidence file. In the proto file we define it as follows:
+For example, the `x/evidence` module defines an `Evidence` interface, which is used by the `MsgSubmitEvidence`. The structure definition must use `sdk.Any` to wrap the evidence file. In the proto file we define it as follows:
 
 ```protobuf
 // proto/cosmos/evidence/v1beta1/tx.proto
@@ -268,7 +268,7 @@ message MsgSubmitEvidence {
 }
 ```
 
-The Cosmos SDK `codec.Codec` interface provides support methods `MarshalInterface` and `UnmarshalInterface` to easy encoding of state to `Any`.
+The Cosmos SDK `codec.Codec` interface provides support methods `MarshalInterface` and `UnmarshalInterface` for easy encoding of state to `Any`.
 
 Module should register interfaces using `InterfaceRegistry` which provides a mechanism for registering interfaces: `RegisterInterface(protoName string, iface interface{}, impls ...proto.Message)` and implementations: `RegisterImplementations(iface interface{}, impls ...proto.Message)` that can be safely unpacked from Any, similarly to type registration with Amino:
 

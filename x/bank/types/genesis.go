@@ -112,7 +112,7 @@ func GetGenesisStateFromAppState(cdc codec.JSONCodec, appState map[string]json.R
 // Params.SendEnabled slice is empty, this is a noop.
 //
 // If the main SendEnabled slice already has entries, the Params.SendEnabled
-// entries are added. In case of the same demon in both, preference is given to
+// entries are added. In case of the same denom in both, preference is given to
 // the existing (main GenesisState field) entry.
 func (gs *GenesisState) MigrateSendEnabled() {
 	gs.SendEnabled = gs.GetAllSendEnabled()

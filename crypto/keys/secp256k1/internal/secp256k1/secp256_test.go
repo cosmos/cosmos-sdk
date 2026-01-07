@@ -49,7 +49,7 @@ func randSig() []byte {
 }
 
 // tests for malleability
-// highest bit of signature ECDSA s value must be 0, in the 33th byte
+// highest bit of signature ECDSA s value must be 0, in the 33rd byte
 func compactSigCheck(t *testing.T, sig []byte) {
 	b := int(sig[32])
 	if b < 0 {
@@ -222,9 +222,8 @@ func TestRecoverSanity(t *testing.T) {
 func BenchmarkSign(b *testing.B) {
 	_, seckey := generateKeyPair()
 	msg := csprngEntropy(32)
-	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		Sign(msg, seckey)
 	}
 }
@@ -233,9 +232,8 @@ func BenchmarkRecover(b *testing.B) {
 	msg := csprngEntropy(32)
 	_, seckey := generateKeyPair()
 	sig, _ := Sign(msg, seckey)
-	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		RecoverPubkey(msg, sig)
 	}
 }

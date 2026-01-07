@@ -7,7 +7,7 @@ import (
 	proto "github.com/cosmos/gogoproto/proto"
 )
 
-// Codec defines a interface needed for the store package to marshal data
+// Codec defines an interface needed for the store package to marshal data
 type Codec interface {
 	// Marshal returns binary encoding of v.
 	Marshal(proto.Message) ([]byte, error)

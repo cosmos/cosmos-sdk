@@ -76,14 +76,14 @@ The Cosmos SDK also provides a couple of other sign modes for particular use cas
 
 #### `SIGN_MODE_DIRECT_AUX`
 
-`SIGN_MODE_DIRECT_AUX` is a sign mode released in the Cosmos SDK v0.46 which targets transactions with multiple signers. Whereas `SIGN_MODE_DIRECT` expects each signer to sign over both `TxBody` and `AuthInfo` (which includes all other signers' signer infos, i.e. their account sequence, public key and mode info), `SIGN_MODE_DIRECT_AUX` allows N-1 signers to only sign over `TxBody` and _their own_ signer info. Morever, each auxiliary signer (i.e. a signer using `SIGN_MODE_DIRECT_AUX`) doesn't
+`SIGN_MODE_DIRECT_AUX` is a sign mode released in the Cosmos SDK v0.46 which targets transactions with multiple signers. Whereas `SIGN_MODE_DIRECT` expects each signer to sign over both `TxBody` and `AuthInfo` (which includes all other signers' signer infos, i.e. their account sequence, public key and mode info), `SIGN_MODE_DIRECT_AUX` allows N-1 signers to only sign over `TxBody` and _their own_ signer info. Moreover, each auxiliary signer (i.e. a signer using `SIGN_MODE_DIRECT_AUX`) doesn't
 need to sign over the fees:
 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/tx/v1beta1/tx.proto#L68-L93
 ```
 
-The use case is a multi-signer transaction, where one of the signers is appointed to gather all signatures, broadcast the signature and pay for fees, and the others only care about the transaction body. This generally allows for a better multi-signing UX. If Alice, Bob and Charlie are part of a 3-signer transaction, then Alice and Bob can both use `SIGN_MODE_DIRECT_AUX` to sign over the `TxBody` and their own signer info (no need an additional step to gather other signers' ones, like in `SIGN_MODE_DIRECT`), without specifying a fee in their SignDoc. Charlie can then gather both signatures from Alice and Bob, and
+The use case is a multi-signer transaction, where one of the signers is appointed to gather all signatures, broadcast the signature and pay for fees, and the others only care about the transaction body. This generally allows for a better multi-signing UX. If Alice, Bob and Charlie are part of a 3-signer transaction, then Alice and Bob can both use `SIGN_MODE_DIRECT_AUX` to sign over the `TxBody` and their own signer info (no need for an additional step to gather other signers' ones, like in `SIGN_MODE_DIRECT`), without specifying a fee in their SignDoc. Charlie can then gather both signatures from Alice and Bob, and
 create the final transaction by appending a fee. Note that the fee payer of the transaction (in our case Charlie) must sign over the fees, so must use `SIGN_MODE_DIRECT` or `SIGN_MODE_LEGACY_AMINO_JSON`.
 
 
@@ -99,7 +99,7 @@ If you wish to learn more, please refer to [ADR-050](../../build/architecture/ad
 
 #### Custom Sign modes
 
-There is the opportunity to add your own custom sign mode to the Cosmos-SDK.  While we can not accept the implementation of the sign mode to the repository, we can accept a pull request to add the custom signmode to the SignMode enum located [here](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/tx/signing/v1beta1/signing.proto#L17)
+There is an opportunity to add your own custom sign mode to the Cosmos-SDK.  While we cannot accept the implementation of the sign mode to the repository, we can accept a pull request to add the custom signmode to the SignMode enum located [here](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/tx/signing/v1beta1/signing.proto#L17)
 
 ## Transaction Process
 
@@ -119,7 +119,7 @@ Module `sdk.Msg`s are not to be confused with [ABCI Messages](https://docs.comet
 
 **Messages** (or `sdk.Msg`s) are module-specific objects that trigger state transitions within the scope of the module they belong to. Module developers define the messages for their module by adding methods to the Protobuf [`Msg` service](../../build/building-modules/03-msg-services.md), and also implement the corresponding `MsgServer`.
 
-Each `sdk.Msg`s is related to exactly one Protobuf [`Msg` service](../../build/building-modules/03-msg-services.md) RPC, defined inside each module's `tx.proto` file. A SDK app router automatically maps every `sdk.Msg` to a corresponding RPC. Protobuf generates a `MsgServer` interface for each module `Msg` service, and the module developer needs to implement this interface.
+Each `sdk.Msg`s is related to exactly one Protobuf [`Msg` service](../../build/building-modules/03-msg-services.md) RPC, defined inside each module's `tx.proto` file. An SDK app router automatically maps every `sdk.Msg` to a corresponding RPC. Protobuf generates a `MsgServer` interface for each module `Msg` service, and the module developer needs to implement this interface.
 This design puts more responsibility on module developers, allowing application developers to reuse common functionalities without having to implement state transition logic repetitively.
 
 To learn more about Protobuf `Msg` services and how to implement `MsgServer`, click [here](../../build/building-modules/03-msg-services.md).
@@ -128,7 +128,7 @@ While messages contain the information for state transition logic, a transaction
 
 ### Transaction Generation
 
-The `TxBuilder` interface contains data closely related with the generation of transactions, which an end-user can set to generate the desired transaction:
+The `TxBuilder` interface contains data closely related to the generation of transactions, which an end-user can set to generate the desired transaction:
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/client/tx_config.go#L39-L57
@@ -226,4 +226,4 @@ Senders must use a unique timestamp for each distinct transaction. The differenc
 
 These unique timestamps serve as a one-shot nonce, and their lifespan in state is short-lived.
 Upon transaction inclusion, an entry consisting of timeout timestamp and account address will be recorded to state. 
-Once the block time is passed the timeout timestamp value, the entry will be removed. This ensures that unordered nonces do not indefinitely fill up the chain's storage.
+Once the block time passes the timeout timestamp value, the entry will be removed. This ensures that unordered nonces do not indefinitely fill up the chain's storage.

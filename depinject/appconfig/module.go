@@ -18,7 +18,7 @@ var Register = RegisterModule
 // function. All module initialization should be handled by the provided options.
 //
 // Config is a protobuf message type. It should define the cosmos.app.v1alpha.module
-// option and must explicitly specify go_packageto make debugging easier for users.
+// option and must explicitly specify go_package to make debugging easier for users.
 //
 // If you want to customize an existing module, you need to overwrite by calling
 // RegisterModule again with the same config (proto API type) and new Provide or

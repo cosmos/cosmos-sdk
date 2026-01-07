@@ -52,7 +52,7 @@ func MigrateStore(ctx sdk.Context, storeService corestoretypes.KVStoreService, c
 		return err
 	}
 
-	// Set the default consisitution if it is not set
+	// Set the default constitution if it is not set
 	if ok, err := constitutionCollection.Has(ctx); !ok || err != nil {
 		if err := constitutionCollection.Set(ctx, "This chain has no constitution."); err != nil {
 			return err

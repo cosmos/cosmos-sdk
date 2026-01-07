@@ -12,7 +12,7 @@ ifeq ($(findstring -,$(VERSION)),)  # No "-" means it's just a hash
     VERSION := 0.0.0-$(VERSION_RAW)
 endif
 export VERSION
-export CMTVERSION := $(shell go list -m github.com/cometbft/cometbft/v2 | sed 's:.* ::')
+export CMTVERSION := $(shell go list -m github.com/cometbft/cometbft | sed 's:.* ::')
 export COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
@@ -67,7 +67,7 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=sim \
 		-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 		-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
 		-X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" \
-		-X github.com/cometbft/cometbft/v2/version.TMCoreSemVer=$(CMTVERSION)
+		-X github.com/cometbft/cometbft/version.TMCoreSemVer=$(CMTVERSION)
 
 # DB backend selection
 ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
@@ -134,15 +134,11 @@ cosmovisor:
 confix:
 	$(MAKE) -C tools/confix confix
 
-hubl:
-	$(MAKE) -C tools/hubl hubl
-
 .PHONY: build build-linux-amd64 build-linux-arm64 cosmovisor confix
-
 
 #? mocks: Generate mock file
 mocks: $(MOCKS_DIR)
-	@go install go.uber.org/mock/mockgen@v0.5.0
+	@go install go.uber.org/mock/mockgen@v0.6.0
 	sh ./scripts/mockgen.sh
 .PHONY: mocks
 
@@ -383,7 +379,7 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
-golangci_version=v2.1.6
+golangci_version=v2.7.2
 
 lint-install:
 	@echo "--> Installing golangci-lint $(golangci_version)"
@@ -391,13 +387,12 @@ lint-install:
 
 lint:
 	@echo "--> Running linter on all files"
-	$(MAKE) lint-install
+	@$(MAKE) lint-install
 	@./scripts/go-lint-all.bash --timeout=15m
-
 
 lint-fix:
 	@echo "--> Running linter"
-	$(MAKE) lint-install
+	@$(MAKE) lint-install
 	@./scripts/go-lint-all.bash --fix
 
 .PHONY: lint lint-fix
@@ -431,52 +426,44 @@ proto-lint:
 proto-check-breaking:
 	@$(protoImage) buf breaking --against $(HTTPS_GIT)#branch=main
 
-CMT_VERSION_DIR      = v1.0.1
-CMT_PROTO            = v1
-CMT_URL              = https://raw.githubusercontent.com/cometbft/cometbft/$(CMT_VERSION_DIR)/proto/cometbft
-CMT_CRYPTO_TYPES     = proto/cometbft/crypto/$(CMT_PROTO)
-CMT_ABCI_TYPES       = proto/cometbft/abci/$(CMT_PROTO)
-CMT_TYPES            = proto/cometbft/types/$(CMT_PROTO)
-CMT_VERSION          = proto/cometbft/version/$(CMT_PROTO)
-CMT_LIBS             = proto/cometbft/libs/bits/$(CMT_PROTO)
-CMT_P2P              = proto/cometbft/p2p/$(CMT_PROTO)
+CMT_URL              = https://raw.githubusercontent.com/cometbft/cometbft/v0.38.0/proto/tendermint
 
-proto-update-comet:
-	@echo "Updating Protobuf dependency: downloading cometbft.$(CMT_PROTO) files from CometBFT $(CMT_VERSION_DIR)"
-
-	@mkdir -p $(CMT_ABCI_TYPES)
-	@curl -fsSL $(CMT_URL)/abci/$(CMT_PROTO)/service.proto > $(CMT_ABCI_TYPES)/service.proto
-	@curl -fsSL $(CMT_URL)/abci/$(CMT_PROTO)/types.proto > $(CMT_ABCI_TYPES)/types.proto
-
-	@mkdir -p $(CMT_VERSION)
-	@curl -fsSL $(CMT_URL)/version/$(CMT_PROTO)/types.proto > $(CMT_VERSION)/types.proto
-
-	@mkdir -p $(CMT_TYPES)
-	@curl -fsSL $(CMT_URL)/types/$(CMT_PROTO)/block.proto > $(CMT_TYPES)/block.proto
-	@curl -fsSL $(CMT_URL)/types/$(CMT_PROTO)/canonical.proto > $(CMT_TYPES)/canonical.proto
-	@curl -fsSL $(CMT_URL)/types/$(CMT_PROTO)/events.proto > $(CMT_TYPES)/events.proto
-	@curl -fsSL $(CMT_URL)/types/$(CMT_PROTO)/evidence.proto > $(CMT_TYPES)/evidence.proto
-	@curl -fsSL $(CMT_URL)/types/$(CMT_PROTO)/params.proto > $(CMT_TYPES)/params.proto
-	@curl -fsSL $(CMT_URL)/types/$(CMT_PROTO)/types.proto > $(CMT_TYPES)/types.proto
-	@curl -fsSL $(CMT_URL)/types/$(CMT_PROTO)/validator.proto > $(CMT_TYPES)/validator.proto
-
-	@mkdir -p $(CMT_CRYPTO_TYPES)
-	@curl -fsSL $(CMT_URL)/crypto/$(CMT_PROTO)/keys.proto > $(CMT_CRYPTO_TYPES)/keys.proto
-	@curl -fsSL $(CMT_URL)/crypto/$(CMT_PROTO)/proof.proto > $(CMT_CRYPTO_TYPES)/proof.proto
-
-	@mkdir -p $(CMT_LIBS)
-	@curl -fsSL $(CMT_URL)/libs/bits/$(CMT_PROTO)/types.proto > $(CMT_LIBS)/types.proto
-
-	@mkdir -p $(CMT_P2P)
-	@curl -fsSL $(CMT_URL)/p2p/$(CMT_PROTO)/conn.proto > $(CMT_P2P)/conn.proto
-	@curl -fsSL $(CMT_URL)/p2p/$(CMT_PROTO)/pex.proto > $(CMT_P2P)/pex.proto
-	@curl -fsSL $(CMT_URL)/p2p/$(CMT_PROTO)/types.proto > $(CMT_P2P)/types.proto
+CMT_CRYPTO_TYPES     = proto/tendermint/crypto
+CMT_ABCI_TYPES       = proto/tendermint/abci
+CMT_TYPES            = proto/tendermint/types
+CMT_VERSION          = proto/tendermint/version
+CMT_LIBS             = proto/tendermint/libs/bits
+CMT_P2P              = proto/tendermint/p2p
 
 proto-update-deps:
-	@echo "Updating Protobuf dependencies: running 'buf dep update'"
-	$(DOCKER) run --rm -v $(CURDIR)/proto:/workspace --workdir /workspace $(protoImageName) buf dep update
+	@echo "Updating Protobuf dependencies"
 
-.PHONY: proto-all proto-gen proto-swagger-gen proto-format proto-lint proto-check-breaking proto-update-deps proto-update-comet
+	@mkdir -p $(CMT_ABCI_TYPES)
+	@curl -sSL $(CMT_URL)/abci/types.proto > $(CMT_ABCI_TYPES)/types.proto
+
+	@mkdir -p $(CMT_VERSION)
+	@curl -sSL $(CMT_URL)/version/types.proto > $(CMT_VERSION)/types.proto
+
+	@mkdir -p $(CMT_TYPES)
+	@curl -sSL $(CMT_URL)/types/types.proto > $(CMT_TYPES)/types.proto
+	@curl -sSL $(CMT_URL)/types/evidence.proto > $(CMT_TYPES)/evidence.proto
+	@curl -sSL $(CMT_URL)/types/params.proto > $(CMT_TYPES)/params.proto
+	@curl -sSL $(CMT_URL)/types/validator.proto > $(CMT_TYPES)/validator.proto
+	@curl -sSL $(CMT_URL)/types/block.proto > $(CMT_TYPES)/block.proto
+
+	@mkdir -p $(CMT_CRYPTO_TYPES)
+	@curl -sSL $(CMT_URL)/crypto/proof.proto > $(CMT_CRYPTO_TYPES)/proof.proto
+	@curl -sSL $(CMT_URL)/crypto/keys.proto > $(CMT_CRYPTO_TYPES)/keys.proto
+
+	@mkdir -p $(CMT_LIBS)
+	@curl -sSL $(CMT_URL)/libs/bits/types.proto > $(CMT_LIBS)/types.proto
+
+	@mkdir -p $(CMT_P2P)
+	@curl -sSL $(CMT_URL)/p2p/types.proto > $(CMT_P2P)/types.proto
+
+	$(DOCKER) run --rm -v $(CURDIR)/proto:/workspace --workdir /workspace $(protoImageName) buf mod update
+
+.PHONY: proto-all proto-gen proto-swagger-gen proto-format proto-lint proto-check-breaking proto-update-deps
 
 ###############################################################################
 ###                                Localnet                                 ###

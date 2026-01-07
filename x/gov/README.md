@@ -10,14 +10,14 @@ This paper specifies the Governance module of the Cosmos SDK, which was first
 described in the [Cosmos Whitepaper](https://cosmos.network/about/whitepaper) in
 June 2016.
 
-The module enables Cosmos SDK based blockchain to support an on-chain governance
+The module enables Cosmos SDK-based blockchains to support an on-chain governance
 system. In this system, holders of the native staking token of the chain can vote
 on proposals on a 1 token 1 vote basis. Next is a list of features the module
 currently supports:
 
 * **Proposal submission:** Users can submit proposals with a deposit. Once the
-minimum deposit is reached, the proposal enters voting period. The minimum deposit can be reached by collecting deposits from different users (including proposer) within deposit period.
-* **Vote:** Participants can vote on proposals that reached MinDeposit and entered voting period.
+minimum deposit is reached, the proposal enters the voting period. The minimum deposit can be reached by collecting deposits from different users (including proposer) within the deposit period.
+* **Vote:** Participants can vote on proposals that reached MinDeposit and entered the voting period.
 * **Inheritance and penalties:** Delegators inherit their validator's vote if
 they don't vote themselves.
 * **Claiming deposit:** Users that deposited on proposals can recover their
@@ -66,12 +66,12 @@ staking token of the chain.
 
 *Disclaimer: This is work in progress. Mechanisms are susceptible to change.*
 
-The governance process is divided in a few steps that are outlined below:
+The governance process is divided into a few steps that are outlined below:
 
 * **Proposal submission:** Proposal is submitted to the blockchain with a
   deposit.
-* **Vote:** Once deposit reaches a certain value (`MinDeposit`), proposal is
-  confirmed and vote opens. Bonded Atom holders can then send `TxGovVote`
+* **Vote:** Once the deposit reaches a certain value (`MinDeposit`), the proposal is
+  confirmed and the vote opens. Bonded Atom holders can then send `TxGovVote`
   transactions to vote on the proposal.
 * **Execution** After a period of time, the votes are tallied and depending
   on the result, the messages in the proposal will be executed.
@@ -166,7 +166,7 @@ proposal but accept the result of the vote.
 
 [ADR-037](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-037-gov-split-vote.md) introduces the weighted vote feature which allows a staker to split their votes into several voting options. For example, it could use 70% of its voting power to vote Yes and 30% of its voting power to vote No.
 
-Often times the entity owning that address might not be a single individual. For example, a company might have different stakeholders who want to vote differently, and so it makes sense to allow them to split their voting power. Currently, it is not possible for them to do "passthrough voting" and giving their users voting rights over their tokens. However, with this system, exchanges can poll their users for voting preferences, and then vote on-chain proportionally to the results of the poll.
+Oftentimes the entity owning that address might not be a single individual. For example, a company might have different stakeholders who want to vote differently, and so it makes sense to allow them to split their voting power. Currently, it is not possible for them to do "passthrough voting" and give their users voting rights over their tokens. However, with this system, exchanges can poll their users for voting preferences, and then vote on-chain proportionally to the results of the poll.
 
 To represent weighted vote on chain, we use the following Protobuf message.
 
@@ -284,7 +284,7 @@ There are three parameters that define if the deposit of a proposal should be bu
 
 ### Constitution
 
-`Constitution` is found in the genesis state.  It is a string field intended to be used to descibe the purpose of a particular blockchain, and its expected norms.  A few examples of how the constitution field can be used:
+`Constitution` is found in the genesis state.  It is a string field intended to be used to describe the purpose of a particular blockchain, and its expected norms.  A few examples of how the constitution field can be used:
 
 * define the purpose of the chain, laying a foundation for its future development
 * set expectations for delegators
@@ -299,9 +299,9 @@ Since this is more of a social feature than a technical feature, we'll now get i
     * In the event of an economic emergency, what should validators do?
         * Terra crash of May, 2022, saw validators choose to run a new binary with code that had not been approved by governance, because the governance token had been inflated to nothing.
 * What is the purpose of the chain, specifically?
-    * best example of this is the Cosmos hub, where different founding groups, have different interpertations of the purpose of the network.
+    * best example of this is the Cosmos hub, where different founding groups, have different interpretations of the purpose of the network.
 
-This genesis entry, "constitution" hasn't been designed for existing chains, who should likely just ratify a constitution using their governance system.  Instead, this is for new chains.  It will allow for validators to have a much clearer idea of purpose and the expecations placed on them while operating thier nodes.  Likewise, for community members, the constitution will give them some idea of what to expect from both the "chain team" and the validators, respectively.
+This genesis entry, "constitution" hasn't been designed for existing chains, who should likely just ratify a constitution using their governance system.  Instead, this is for new chains.  It will allow for validators to have a much clearer idea of purpose and the expectations placed on them while operating their nodes.  Likewise, for community members, the constitution will give them some idea of what to expect from both the "chain team" and the validators, respectively.
 
 This constitution is designed to be immutable, and placed only in genesis, though that could change over time by a pull request to the cosmos-sdk that allows for the constitution to be changed by governance.  Communities whishing to make amendments to their original constitution should use the governance mechanism and a "signaling proposal" to do exactly that.
 
@@ -313,7 +313,7 @@ As a chain developer, you decide that you'd like to provide clarity to your key 
 * token holders
 * developers (yourself)
 
-You use the constitution to immutably store some Markdown in genesis, so that when difficult questions come up, the constutituon can provide guidance to the community.
+You use the constitution to immutably store some Markdown in genesis, so that when difficult questions come up, the constitution can provide guidance to the community.
 
 ### Proposals
 
@@ -401,7 +401,7 @@ const (
     VoteAbstain     = 0x4
 )
 
-type ProposalType  string
+type ProposalType string
 
 const (
     ProposalTypePlainText       = "Text"
@@ -686,14 +686,14 @@ The governance module contains the following parameters:
 | voting_period                 | string (time ns) | "172800000000000" (17280s)              |
 | quorum                        | string (dec)     | "0.334000000000000000"                  |
 | threshold                     | string (dec)     | "0.500000000000000000"                  |
-| veto                          | string (dec)     | "0.334000000000000000"                  |
-| expedited_threshold           | string (time ns) | "0.667000000000000000"                  |
-| expedited_voting_period       | string (time ns) | "86400000000000" (8600s)                |
+| veto_threshold                | string (dec)     | "0.334000000000000000"                  |
+| expedited_threshold           | string (dec)     | "0.667000000000000000"                  |
+| expedited_voting_period       | string (time ns) | "86400000000000" (86400s)               |
 | expedited_min_deposit         | array (coins)    | [{"denom":"uatom","amount":"50000000"}] |
-| burn_proposal_deposit_prevote | bool             | false                                    |
+| burn_proposal_deposit_prevote | bool             | false                                   |
 | burn_vote_quorum              | bool             | false                                   |
 | burn_vote_veto                | bool             | true                                    |
-| min_initial_deposit_ratio                | string             | "0.1"                                    |
+| min_initial_deposit_ratio     | string           | "0.1"                                   |
 
 
 **NOTE**: The governance module contains parameters that are objects unlike other
@@ -719,7 +719,7 @@ simd query gov --help
 The `deposit` command allows users to query a deposit for a given proposal from a given depositor.
 
 ```bash
-simd query gov deposit [proposal-id] [depositer-addr] [flags]
+simd query gov deposit [proposal-id] [depositor-addr] [flags]
 ```
 
 Example:
@@ -1092,7 +1092,7 @@ where `proposal.json` contains:
   "messages": [
     {
       "@type": "/cosmos.bank.v1beta1.MsgSend",
-      "from_address": "cosmos1...", // The gov module module address
+      "from_address": "cosmos1...", // The gov module address
       "to_address": "cosmos1...",
       "amount":[{"denom": "stake","amount": "10"}]
     }
@@ -1149,7 +1149,7 @@ simd tx gov submit-legacy-proposal param-change proposal.json --from cosmos1..
 
 #### cancel-proposal
 
-Once proposal is canceled, from the deposits of proposal `deposits * proposal_cancel_ratio` will be burned or sent to `ProposalCancelDest` address , if `ProposalCancelDest` is empty then deposits will be burned. The `remaining deposits` will be sent to depositers.
+Once proposal is canceled, from the deposits of proposal `deposits * proposal_cancel_ratio` will be burned or sent to `ProposalCancelDest` address , if `ProposalCancelDest` is empty then deposits will be burned. The `remaining deposits` will be sent to depositors.
 
 ```bash
 simd tx gov cancel-proposal [proposal-id] [flags]
@@ -2528,11 +2528,11 @@ Example Output:
 
 ## Metadata
 
-The gov module has two locations for metadata where users can provide further context about the on-chain actions they are taking. By default all metadata fields have a 255 character length field where metadata can be stored in json format, either on-chain or off-chain depending on the amount of data required. Here we provide a recommendation for the json structure and where the data should be stored. There are two important factors in making these recommendations. First, that the gov and group modules are consistent with one another, note the number of proposals made by all groups may be quite large. Second, that client applications such as block explorers and governance interfaces have confidence in the consistency of metadata structure accross chains.
+The gov module has two locations for metadata where users can provide further context about the on-chain actions they are taking. By default all metadata fields have a 255 character length field where metadata can be stored in json format, either on-chain or off-chain depending on the amount of data required. Here we provide a recommendation for the json structure and where the data should be stored. There are two important factors in making these recommendations. First, that the gov and group modules are consistent with one another, note the number of proposals made by all groups may be quite large. Second, that client applications such as block explorers and governance interfaces have confidence in the consistency of metadata structure across chains.
 
 ### Proposal
 
-Location: off-chain as json object stored on IPFS (mirrors [group proposal](../group/README.md#metadata))
+Location: off-chain as json object stored on IPFS (mirrors [group proposal](../../contrib/x/group/README.md#metadata))
 
 ```json
 {
@@ -2552,7 +2552,7 @@ In v0.46, the `authors` field is a comma-separated string. Frontends are encoura
 
 ### Vote
 
-Location: on-chain as json within 255 character limit (mirrors [group vote](../group/README.md#metadata))
+Location: on-chain as json within 255 character limit (mirrors [group vote](../../contrib/x/group/README.md#metadata))
 
 ```json
 {

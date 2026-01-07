@@ -72,7 +72,7 @@ The `GetStoreType` is a simple method that returns the type of store, whereas a 
 https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/store/types/store.go#L285-L317
 ```
 
-Branching and cache is used ubiquitously in the Cosmos SDK and required to be implemented on every store type. A storage branch creates an isolated, ephemeral branch of a store that can be passed around and updated without affecting the main underlying store. This is used to trigger temporary state-transitions that may be reverted later should an error occur. Read more about it in [context](./02-context.md#Store-branching)
+Branching and caching are used ubiquitously in the Cosmos SDK and required to be implemented on every store type. A storage branch creates an isolated, ephemeral branch of a store that can be passed around and updated without affecting the main underlying store. This is used to trigger temporary state-transitions that may be reverted later should an error occur. Read more about it in [context](./02-context.md#Store-branching)
 
 ### Commit Store
 
@@ -220,7 +220,7 @@ This is the type used whenever an IAVL Store needs to be branched to create an i
 
 #### `Iterator`
 
-`Store.Iterator()` have to traverse on both cached items and the original items. In `Store.iterator()`, two iterators are generated for each of them, and merged. `memIterator` is essentially a slice of the `KVPairs`, used for cached items. `mergeIterator` is a combination of two iterators, where traverse happens ordered on both iterators.
+`Store.Iterator()` has to traverse on both cached items and the original items. In `Store.iterator()`, two iterators are generated for each of them, and merged. `memIterator` is essentially a slice of the `KVPairs`, used for cached items. `mergeIterator` is a combination of two iterators, where traverse happens ordered on both iterators.
 
 ### `GasKv` Store
 

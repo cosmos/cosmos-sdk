@@ -24,7 +24,7 @@ type Mempool interface {
 	Remove(sdk.Tx) error
 }
 
-// ExtMempool is a extension of Mempool interface introduced in v0.50
+// ExtMempool is an extension of Mempool interface introduced in v0.50
 // for not be breaking in a patch release.
 // In v0.52+, this interface will be merged into Mempool interface.
 type ExtMempool interface {

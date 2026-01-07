@@ -6,8 +6,9 @@ import (
 	"log/slog"
 	"testing"
 
-	"cosmossdk.io/log"
 	"github.com/rs/zerolog"
+
+	"cosmossdk.io/log"
 )
 
 func TestParseLogLevel(t *testing.T) {

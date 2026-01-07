@@ -424,7 +424,7 @@ The message handling can fail if:
 Used with the x/gov module to set create/edit SendEnabled entries.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/bank/v1beta1/tx.proto#L96-L117
+https://github.com/cosmos/cosmos-sdk/blob/v0.54.0-rc.1/proto/cosmos/bank/v1beta1/tx.proto
 ```
 
 The message will fail under the following conditions:

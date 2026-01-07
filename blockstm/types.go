@@ -2,7 +2,24 @@ package blockstm
 
 import (
 	storetypes "cosmossdk.io/store/types"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/metric"
 )
+
+// Metrics
+var (
+	meter = otel.Meter("blockstm")
+
+	executedTxs metric.Int64Counter
+)
+
+func init() {
+	var err error
+	executedTxs, err = meter.Int64Counter("executed_txs")
+	if err != nil {
+		panic(err)
+	}
+}
 
 const (
 	TelemetrySubsystem = "blockstm"

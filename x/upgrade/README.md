@@ -70,7 +70,7 @@ and not defined on a per-module basis. Registering a `Handler` is done via
 type UpgradeHandler func(ctx context.Context, plan Plan, fromVM module.VersionMap) (module.VersionMap, error)
 ```
 
-During each `EndBlock` execution, the `x/upgrade` module checks if there exists a
+During each `PreBlock` execution, the `x/upgrade` module checks if there exists a
 `Plan` that should execute (is scheduled at that height). If so, the corresponding
 `Handler` is executed. If the `Plan` is expected to execute but no `Handler` is registered
 or if the binary was upgraded too early, the node will gracefully panic and exit.
@@ -504,7 +504,7 @@ cosmos.upgrade.v1beta1.Query/CurrentPlan
 Example:
 
 ```bash
-grpcurl -plaintext localhost:9090 cosmos.slashing.v1beta1.Query/CurrentPlan
+grpcurl -plaintext localhost:9090 cosmos.upgrade.v1beta1.Query/CurrentPlan
 ```
 
 Example Output:
@@ -526,7 +526,7 @@ cosmos.upgrade.v1beta1.Query/ModuleVersions
 Example:
 
 ```bash
-grpcurl -plaintext localhost:9090 cosmos.slashing.v1beta1.Query/ModuleVersions
+grpcurl -plaintext localhost:9090 cosmos.upgrade.v1beta1.Query/ModuleVersions
 ```
 
 Example Output:

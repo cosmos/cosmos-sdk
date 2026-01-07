@@ -55,7 +55,7 @@ func (a *PeriodicAllowance) Accept(ctx context.Context, fee sdk.Coins, _ []sdk.M
 // min(PeriodSpendLimit, Basic.SpendLimit) so it is never more than the maximum allowed.
 // It will also update the PeriodReset. If we are within one Period, it will update from the
 // last PeriodReset (eg. if you always do one tx per day, it will always reset the same time)
-// If we are more then one period out (eg. no activity in a week), reset is one Period from the execution of this method
+// If we are more than one period out (eg. no activity in a week), reset is one Period from the execution of this method
 func (a *PeriodicAllowance) tryResetPeriod(blockTime time.Time) {
 	if blockTime.Before(a.PeriodReset) {
 		return
@@ -69,7 +69,7 @@ func (a *PeriodicAllowance) tryResetPeriod(blockTime time.Time) {
 	}
 
 	// If we are within the period, step from expiration (eg. if you always do one tx per day, it will always reset the same time)
-	// If we are more then one period out (eg. no activity in a week), reset is one period from this time
+	// If we are more than one period out (eg. no activity in a week), reset is one period from this time
 	a.PeriodReset = a.PeriodReset.Add(a.Period)
 	if blockTime.After(a.PeriodReset) {
 		a.PeriodReset = blockTime.Add(a.Period)

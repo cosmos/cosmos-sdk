@@ -2,10 +2,26 @@ package log
 
 import (
 	"bytes"
+	"context"
+	"io"
 	"testing"
 
 	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/require"
 )
+
+func TestLoggerCtx(t *testing.T) {
+	logger := newSlogLogger("test", io.Discard, Config{})
+	setVal := "bar"
+	ctx := context.WithValue(context.Background(), "foo", setVal)
+	logger = logger.Ctx(ctx)
+	sLogger, ok := logger.(*verboseModeLogger)
+	require.True(t, ok)
+
+	val, ok := sLogger.ctx.Value("foo").(string)
+	require.True(t, ok)
+	require.Equal(t, setVal, val)
+}
 
 // this test ensures that when the With and WithContext methods are called,
 // that the log wrapper is properly copied with all of its associated options

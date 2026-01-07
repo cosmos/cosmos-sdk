@@ -59,21 +59,9 @@ type Logger interface {
 	// The key of the tuple must be a string.
 	Debug(msg string, keyVals ...any)
 
-	// InfoContext takes a context, message and key/value pairs and logs with level INFO.
-	// The context is used for trace/span correlation when using OpenTelemetry.
-	InfoContext(ctx context.Context, msg string, keyVals ...any)
-
-	// WarnContext takes a context, message and key/value pairs and logs with level WARN.
-	// The context is used for trace/span correlation when using OpenTelemetry.
-	WarnContext(ctx context.Context, msg string, keyVals ...any)
-
-	// ErrorContext takes a context, message and key/value pairs and logs with level ERROR.
-	// The context is used for trace/span correlation when using OpenTelemetry.
-	ErrorContext(ctx context.Context, msg string, keyVals ...any)
-
-	// DebugContext takes a context, message and key/value pairs and logs with level DEBUG.
-	// The context is used for trace/span correlation when using OpenTelemetry.
-	DebugContext(ctx context.Context, msg string, keyVals ...any)
+	// Ctx attaches a context to the logger.
+	// This is useful for correlating logs with a traces.
+	Ctx(ctx context.Context) Logger
 
 	// With returns a new wrapped logger with additional context provided by a set.
 	With(keyVals ...any) Logger
@@ -213,6 +201,10 @@ type zeroLogWrapper struct {
 	filterWriter *filterWriter
 }
 
+func (l *zeroLogWrapper) Ctx(_ context.Context) Logger {
+	return l
+}
+
 var (
 	_ Logger            = (*zeroLogWrapper)(nil)
 	_ VerboseModeLogger = (*zeroLogWrapper)(nil)
@@ -231,22 +223,6 @@ func (l *zeroLogWrapper) Error(msg string, keyVals ...interface{}) {
 }
 
 func (l *zeroLogWrapper) Debug(msg string, keyVals ...interface{}) {
-	l.Logger.Debug().Fields(keyVals).Msg(msg)
-}
-
-func (l *zeroLogWrapper) InfoContext(_ context.Context, msg string, keyVals ...interface{}) {
-	l.Logger.Info().Fields(keyVals).Msg(msg)
-}
-
-func (l *zeroLogWrapper) WarnContext(_ context.Context, msg string, keyVals ...interface{}) {
-	l.Logger.Warn().Fields(keyVals).Msg(msg)
-}
-
-func (l *zeroLogWrapper) ErrorContext(_ context.Context, msg string, keyVals ...interface{}) {
-	l.Logger.Error().Fields(keyVals).Msg(msg)
-}
-
-func (l *zeroLogWrapper) DebugContext(_ context.Context, msg string, keyVals ...interface{}) {
 	l.Logger.Debug().Fields(keyVals).Msg(msg)
 }
 
@@ -357,6 +333,12 @@ func newSlogLogger(name string, dst io.Writer, cfg Config) Logger {
 // slogLogger satisfies Logger with logging backed by an instance of *slog.Logger.
 type slogLogger struct {
 	log *slog.Logger
+	ctx context.Context
+}
+
+func (l slogLogger) Ctx(ctx context.Context) Logger {
+	l.ctx = ctx
+	return l
 }
 
 var _ Logger = slogLogger{}
@@ -367,6 +349,13 @@ type verboseModeLogger struct {
 	handler *zerologHandler
 }
 
+func (l *verboseModeLogger) Ctx(ctx context.Context) Logger {
+	return &verboseModeLogger{
+		slogLogger: slogLogger{log: l.log, ctx: ctx},
+		handler:    l.handler,
+	}
+}
+
 var _ VerboseModeLogger = &verboseModeLogger{}
 
 func (l *verboseModeLogger) SetVerboseMode(enable bool) {
@@ -375,7 +364,7 @@ func (l *verboseModeLogger) SetVerboseMode(enable bool) {
 
 func (l *verboseModeLogger) With(keyVals ...any) Logger {
 	return &verboseModeLogger{
-		slogLogger: slogLogger{log: l.log.With(keyVals...)},
+		slogLogger: slogLogger{log: l.log.With(keyVals...), ctx: l.ctx},
 		handler:    l.handler,
 	}
 }
@@ -389,39 +378,23 @@ func NewCustomLogger(log *slog.Logger) Logger {
 }
 
 func (l slogLogger) Info(msg string, keyVals ...any) {
-	l.log.Info(msg, keyVals...)
+	l.log.InfoContext(l.ctx, msg, keyVals...)
 }
 
 func (l slogLogger) Warn(msg string, keyVals ...any) {
-	l.log.Warn(msg, keyVals...)
+	l.log.WarnContext(l.ctx, msg, keyVals...)
 }
 
 func (l slogLogger) Error(msg string, keyVals ...any) {
-	l.log.Error(msg, keyVals...)
+	l.log.ErrorContext(l.ctx, msg, keyVals...)
 }
 
 func (l slogLogger) Debug(msg string, keyVals ...any) {
-	l.log.Debug(msg, keyVals...)
-}
-
-func (l slogLogger) InfoContext(ctx context.Context, msg string, keyVals ...any) {
-	l.log.InfoContext(ctx, msg, keyVals...)
-}
-
-func (l slogLogger) WarnContext(ctx context.Context, msg string, keyVals ...any) {
-	l.log.WarnContext(ctx, msg, keyVals...)
-}
-
-func (l slogLogger) ErrorContext(ctx context.Context, msg string, keyVals ...any) {
-	l.log.ErrorContext(ctx, msg, keyVals...)
-}
-
-func (l slogLogger) DebugContext(ctx context.Context, msg string, keyVals ...any) {
-	l.log.DebugContext(ctx, msg, keyVals...)
+	l.log.DebugContext(l.ctx, msg, keyVals...)
 }
 
 func (l slogLogger) With(keyVals ...any) Logger {
-	return slogLogger{log: l.log.With(keyVals...)}
+	return slogLogger{log: l.log.With(keyVals...), ctx: l.ctx}
 }
 
 func (l slogLogger) Impl() any {
@@ -675,13 +648,10 @@ func NewNopLogger() Logger {
 // nopLogger is a Logger that does nothing when called.
 type nopLogger struct{}
 
-func (nopLogger) Info(string, ...any)                          {}
-func (nopLogger) Warn(string, ...any)                          {}
-func (nopLogger) Error(string, ...any)                         {}
-func (nopLogger) Debug(string, ...any)                         {}
-func (nopLogger) InfoContext(context.Context, string, ...any)  {}
-func (nopLogger) WarnContext(context.Context, string, ...any)  {}
-func (nopLogger) ErrorContext(context.Context, string, ...any) {}
-func (nopLogger) DebugContext(context.Context, string, ...any) {}
-func (nopLogger) With(...any) Logger                           { return nopLogger{} }
-func (nopLogger) Impl() any                                    { return nopLogger{} }
+func (nopLogger) Info(string, ...any)            {}
+func (nopLogger) Warn(string, ...any)            {}
+func (nopLogger) Error(string, ...any)           {}
+func (nopLogger) Debug(string, ...any)           {}
+func (nopLogger) With(...any) Logger             { return nopLogger{} }
+func (nopLogger) Impl() any                      { return nopLogger{} }
+func (l nopLogger) Ctx(_ context.Context) Logger { return nopLogger{} }

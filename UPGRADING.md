@@ -85,28 +85,16 @@ If you implement your own logger, or setup the logger manually, a few things hav
 
 ### Logger Interface
 
-The interface has 4 new methods:
+The interface has 1 new method:
 
 ```go
-    // InfoContext takes a context, message and key/value pairs and logs with level INFO.
-	// The context is used for trace/span correlation when using OpenTelemetry.
-	InfoContext(ctx context.Context, msg string, keyVals ...any)
-
-	// WarnContext takes a context, message and key/value pairs and logs with level WARN.
-	// The context is used for trace/span correlation when using OpenTelemetry.
-	WarnContext(ctx context.Context, msg string, keyVals ...any)
-
-	// ErrorContext takes a context, message and key/value pairs and logs with level ERROR.
-	// The context is used for trace/span correlation when using OpenTelemetry.
-	ErrorContext(ctx context.Context, msg string, keyVals ...any)
-
-	// DebugContext takes a context, message and key/value pairs and logs with level DEBUG.
-	// The context is used for trace/span correlation when using OpenTelemetry.
-	DebugContext(ctx context.Context, msg string, keyVals ...any)
+type Logger interface {
+	Ctx(context.Context) Logger
+}
 ```
 
-These methods extract the trace ID from the context so that logs are correlated with traces. 
-
+This method attaches a context to the logger, allowing logs to be correlated with OpenTelemetry traces.
+Note that if OpenTelemetry is not used in your application, ZeroLogger will be used, and the Ctx method will be a noop.
 
 ### Constructor
 

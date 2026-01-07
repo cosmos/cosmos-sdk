@@ -161,7 +161,7 @@ func (s *Server) Start(ctx context.Context, cfg config.Config) error {
 	// an error upon failure, which we'll send on the error channel that will be
 	// consumed by the for block below.
 	go func(enableUnsafeCORS bool) {
-		s.logger.InfoContext(ctx, "starting API server...", "address", cfg.API.Address)
+		s.logger.Ctx(ctx).Info("starting API server...", "address", cfg.API.Address)
 
 		if enableUnsafeCORS {
 			allowAllCORS := handlers.CORS(handlers.AllowedHeaders([]string{"Content-Type"}))

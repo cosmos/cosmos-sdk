@@ -38,8 +38,8 @@ moduleLogger.Info("user authenticated", "user_id", 42)
 logger := log.NewLogger("my-app", log.WithOTEL())
 
 // Use context-aware methods for trace/span correlation
-logger.InfoContext(ctx, "handling request", "path", "/api/v1/users")
-logger.ErrorContext(ctx, "request failed", "error", err)
+logger.Ctx(ctx).Info("handling request", "path", "/api/v1/users")
+logger.Ctx(ctx).Error("request failed", "error", err)
 
 // OTEL-only (no console output)
 logger := log.NewLogger("my-app", log.WithOTEL(), log.WithoutConsole())
@@ -186,11 +186,9 @@ type Logger interface {
     Error(msg string, keyVals ...any)
     Debug(msg string, keyVals ...any)
     
-    // Context-aware methods for trace correlation
-    InfoContext(ctx context.Context, msg string, keyVals ...any)
-    WarnContext(ctx context.Context, msg string, keyVals ...any)
-    ErrorContext(ctx context.Context, msg string, keyVals ...any)
-    DebugContext(ctx context.Context, msg string, keyVals ...any)
+	// Ctx returns a logger with an attached context.
+	// This is used for correlating logs with traces.
+    Ctx(ctx context.Context) Logger
     
     With(keyVals ...any) Logger
     Impl() any  // Returns underlying *zerolog.Logger or *slog.Logger

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"log/slog"
 
 	cmtcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/spf13/cobra"
@@ -23,8 +24,7 @@ func Execute(rootCmd *cobra.Command, envPrefix, defaultHome string) error {
 	// getting and setting the client.Context. Ideally, we utilize
 	// https://github.com/spf13/cobra/pull/1118.
 	ctx := CreateExecuteContext(context.Background())
-
-	rootCmd.PersistentFlags().String(flags.FlagLogLevel, "info", "The logging level (debug|info|warn|error|disabled or '*:<level>,<key>:<level>')")
+	rootCmd.PersistentFlags().String(flags.FlagLogLevel, slog.LevelInfo.String(), "The logging level (debug|info|warn|error|disabled or '*:<level>,<key>:<level>')")
 	// NOTE: The default logger is only checking for the "json" value, any other value will default to plain text.
 	rootCmd.PersistentFlags().String(flags.FlagLogFormat, "plain", "The logging format (json|plain)")
 	rootCmd.PersistentFlags().Bool(flags.FlagLogNoColor, false, "Disable colored logs")

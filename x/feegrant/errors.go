@@ -8,7 +8,7 @@ const (
 )
 
 var (
-	// ErrFeeLimitExceeded error if there are not enough allowance to cover the fees
+	// ErrFeeLimitExceeded error if there is not enough allowance to cover the fees
 	ErrFeeLimitExceeded = errors.Register(DefaultCodespace, 2, "fee limit exceeded")
 	// ErrFeeLimitExpired error if the allowance has expired
 	ErrFeeLimitExpired = errors.Register(DefaultCodespace, 3, "fee allowance expired")

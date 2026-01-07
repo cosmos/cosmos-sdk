@@ -217,7 +217,7 @@ message Params {
   //  The ratio representing the proportion of the deposit value that must be paid at proposal submission.
   string min_initial_deposit_ratio = 7 [(cosmos_proto.scalar) = "cosmos.Dec"];
 
-  // The cancel ratio which will not be returned back to the depositors when a proposal is cancelled.
+  // The cancel ratio which will not be returned to the depositors when a proposal is cancelled.
   string proposal_cancel_ratio = 8
       [(cosmos_proto.scalar) = "cosmos.Dec", (cosmos_proto.field_added_in) = "cosmos-sdk 0.50"];
 

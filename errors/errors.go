@@ -124,7 +124,7 @@ func (e Error) Codespace() string {
 	return e.codespace
 }
 
-// Is check if given error instance is of a given kind/type. This involves
+// Is checks if given error instance is of a given kind/type. This involves
 // unwrapping given error using the Cause method if available.
 func (e *Error) Is(err error) bool {
 	// Reflect usage is necessary to correctly compare with
@@ -156,11 +156,11 @@ func (e *Error) Is(err error) bool {
 	}
 }
 
-// Wrap extends this error with an additional information.
+// Wrap extends this error with additional information.
 // It's a handy function to call Wrap with sdk errors.
 func (e *Error) Wrap(desc string) error { return Wrap(e, desc) }
 
-// Wrapf extends this error with an additional information.
+// Wrapf extends this error with additional information.
 // It's a handy function to call Wrapf with sdk errors.
 func (e *Error) Wrapf(desc string, args ...interface{}) error { return Wrapf(e, desc, args...) }
 
@@ -180,7 +180,7 @@ func isNilErr(err error) bool {
 	return reflect.ValueOf(err).IsNil()
 }
 
-// Wrap extends given error with an additional information.
+// Wrap extends given error with additional information.
 //
 // If the wrapped error does not provide ABCICode method (ie. stdlib errors),
 // it will be labeled as internal error.
@@ -205,7 +205,7 @@ func Wrap(err error, description string) error {
 	}
 }
 
-// Wrapf extends given error with an additional information.
+// Wrapf extends given error with additional information.
 //
 // This function works like Wrap function with additional functionality of
 // formatting the input as specified.

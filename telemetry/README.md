@@ -56,8 +56,9 @@ logger_provider:
 
 
 cosmos_extra:
-  instrument_host: true
-  instrument_runtime: true
+  instrument_host: true # enable optional host instrumentation with go.opentelemetry.io/contrib/instrumentation/host
+  instrument_runtime: true # enable optional runtime instrumentation with go.opentelemetry.io/contrib/instrumentation/runtime
+  instrument_disk_io: true # enable optional disk I/O instrumentation using gopsutil 
   propagators:
     - tracecontext
 ```

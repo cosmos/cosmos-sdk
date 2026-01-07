@@ -171,7 +171,7 @@ Oftentimes the entity owning that address might not be a single individual. For 
 To represent weighted vote on chain, we use the following Protobuf message.
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1beta1/gov.proto#L34-L47
+https://github.com/cosmos/cosmos-sdk/blob/v0.54.0-rc.1/proto/cosmos/gov/v1beta1/gov.proto
 ```
 
 ```protobuf reference

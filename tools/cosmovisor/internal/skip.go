@@ -7,7 +7,7 @@ import (
 
 	"cosmossdk.io/tools/cosmovisor/v2"
 
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
 // TODO do we need this functionality or should it be deleted?

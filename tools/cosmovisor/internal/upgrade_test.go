@@ -15,8 +15,9 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/tools/cosmovisor/v2"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+
+	"cosmossdk.io/tools/cosmovisor/v2"
 )
 
 type upgradeTestSuite struct {

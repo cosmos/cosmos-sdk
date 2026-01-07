@@ -7,6 +7,7 @@ import (
 	"runtime"
 
 	"cosmossdk.io/log"
+
 	"cosmossdk.io/tools/cosmovisor/v2"
 
 	"cosmossdk.io/x/upgrade/plan"

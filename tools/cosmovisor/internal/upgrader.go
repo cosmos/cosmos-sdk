@@ -11,9 +11,10 @@ import (
 	"github.com/otiai10/copy"
 
 	"cosmossdk.io/log"
+
 	"cosmossdk.io/tools/cosmovisor/v2"
 
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
 type UpgradeCheckResult struct {

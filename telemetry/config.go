@@ -17,6 +17,8 @@ import (
 	"go.opentelemetry.io/otel/propagation"
 	tracenoop "go.opentelemetry.io/otel/trace/noop"
 	"go.yaml.in/yaml/v3"
+
+	"github.com/cosmos/cosmos-sdk/telemetry/util/diskio"
 )
 
 const (
@@ -96,6 +98,12 @@ func InitializeOpenTelemetry(filePath string) error {
 				fmt.Println("Initializing runtime instrumentation")
 				if err := runtime.Start(); err != nil {
 					return fmt.Errorf("failed to start runtime instrumentation: %w", err)
+				}
+			}
+			if extra.InstrumentDiskIO {
+				fmt.Println("Initializing disk I/O instrumentation")
+				if err := diskio.Start(); err != nil {
+					return fmt.Errorf("failed to start disk I/O instrumentation: %w", err)
 				}
 			}
 
@@ -196,6 +204,10 @@ type cosmosExtra struct {
 	// InstrumentRuntime enables runtime instrumentation that reports Go runtime
 	// metrics such as GC activity, heap usage, and goroutine count.
 	InstrumentRuntime bool `json:"instrument_runtime" yaml:"instrument_runtime" mapstructure:"instrument_runtime"`
+
+	// InstrumentDiskIO enables disk I/O instrumentation that reports disk I/O
+	// metrics such as bytes, operations, and time spent doing I/O.
+	InstrumentDiskIO bool `json:"instrument_disk_io" yaml:"instrument_disk_io" mapstructure:"instrument_disk_io"`
 
 	// Propagators configures additional or alternative TextMapPropagators
 	// (e.g. "tracecontext", "baggage", "b3", "b3multi", "jaeger").

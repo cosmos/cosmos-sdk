@@ -131,7 +131,7 @@ it can be updated with governance or the address with authority.
 * Params: `0x05 | ProtocolBuffer(Params)`
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/bank/v1beta1/bank.proto#L12-L23
+https://github.com/cosmos/cosmos-sdk/blob/v0.54.0-rc.1/proto/cosmos/bank/v1beta1/bank.proto#L12-L22
 ```
 
 ## Keepers

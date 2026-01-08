@@ -408,7 +408,7 @@ type suite struct {
 	GovKeeper          *keeper.Keeper
 	StakingKeeper      *stakingkeeper.Keeper
 	DistributionKeeper dk.Keeper
-	App                *runtime.App
+	App                *runtime.App // nolint:staticcheck // TODO: remove me
 }
 
 // returns context and an app with updated mint keeper

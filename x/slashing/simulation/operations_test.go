@@ -45,7 +45,7 @@ type SimTestSuite struct {
 	r        *rand.Rand
 	accounts []simtypes.Account
 
-	app               *runtime.App
+	app               *runtime.App // nolint:staticcheck // TODO: remove me
 	legacyAmino       *codec.LegacyAmino
 	codec             codec.Codec
 	interfaceRegistry codectypes.InterfaceRegistry

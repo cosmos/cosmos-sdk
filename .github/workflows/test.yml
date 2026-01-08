@@ -18,28 +18,28 @@ jobs:
   split-test-files:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25"
+          go-version: "1.25.5"
           check-latest: true
       - name: Create a file with all core Cosmos SDK pkgs
         run: go list ./... > pkgs.txt
       - name: Split pkgs into 4 files
         run: split -d -n l/4 pkgs.txt pkgs.txt.part.
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: "${{ github.sha }}-00"
           path: ./pkgs.txt.part.00
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: "${{ github.sha }}-01"
           path: ./pkgs.txt.part.01
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: "${{ github.sha }}-02"
           path: ./pkgs.txt.part.02
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: "${{ github.sha }}-03"
           path: ./pkgs.txt.part.03
@@ -52,10 +52,10 @@ jobs:
       matrix:
         part: ["00", "01", "02", "03"]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25"
+          go-version: "1.25.5"
           check-latest: true
           cache: true
           cache-dependency-path: go.sum
@@ -70,14 +70,14 @@ jobs:
             **/go.sum
             **/Makefile
             Makefile
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           name: "${{ github.sha }}-${{ matrix.part }}"
       - name: test & coverage report creation
         if: env.GIT_DIFF
         run: |
           cat pkgs.txt.part.${{ matrix.part }} | xargs go test -mod=readonly -race -timeout 30m -coverprofile=${{ matrix.part }}profile.out -covermode=atomic -tags='ledger test_ledger_mock'
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-${{ matrix.part }}-coverage"
@@ -86,10 +86,10 @@ jobs:
   test-integration:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25"
+          go-version: "1.25.5"
           check-latest: true
           cache: true
           cache-dependency-path: go.sum
@@ -108,7 +108,7 @@ jobs:
         if: env.GIT_DIFF
         run: |
           make test-integration-cov
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-integration-coverage"
@@ -117,10 +117,10 @@ jobs:
   test-e2e:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25"
+          go-version: "1.25.5"
           check-latest: true
           cache: true
           cache-dependency-path: go.sum
@@ -139,7 +139,7 @@ jobs:
         if: env.GIT_DIFF
         run: |
           make test-e2e-cov
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-e2e-coverage"
@@ -149,7 +149,7 @@ jobs:
     runs-on: depot-ubuntu-22.04-4
     needs: [tests, test-integration, test-e2e, test-clientv2, test-core, test-depinject, test-errors, test-math, test-schema, test-collections, test-cosmovisor, test-confix, test-store, test-log, test-x-tx, test-tools-benchmark]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: technote-space/get-diff-action@v6.1.2
         id: git_diff
         with:
@@ -159,97 +159,97 @@ jobs:
             go.sum
             **/go.mod
             **/go.sum
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-00-coverage"
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-01-coverage"
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-02-coverage"
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-03-coverage"
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-integration-coverage"
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-e2e-coverage"
         continue-on-error: true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-clientv2-coverage"
         continue-on-error: true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-core-coverage"
         continue-on-error: true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-depinject-coverage"
         continue-on-error: true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-errors-coverage"
         continue-on-error: true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-math-coverage"
         continue-on-error: true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-schema-coverage"
         continue-on-error: true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-collections-coverage"
         continue-on-error: true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-cosmovisor-coverage"
         continue-on-error: true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-confix-coverage"
         continue-on-error: true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-store-coverage"
         continue-on-error: true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-blockstm-coverage"
         continue-on-error: true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-log-coverage"
         continue-on-error: true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-x-tx-coverage"
         continue-on-error: true
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-tools-benchmark-coverage"
@@ -266,10 +266,10 @@ jobs:
   test-sim-nondeterminism:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25"
+          go-version: "1.25.5"
           check-latest: true
           cache: true
           cache-dependency-path: go.sum
@@ -299,10 +299,10 @@ jobs:
   test-clientv2:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25"
+          go-version: "1.25.5"
           check-latest: true
           cache: true
           cache-dependency-path: client/v2/go.sum
@@ -318,7 +318,7 @@ jobs:
         run: |
           cd client/v2
           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-clientv2-coverage"
@@ -327,10 +327,10 @@ jobs:
   test-core:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25"
+          go-version: "1.25.5"
           check-latest: true
           cache: true
           cache-dependency-path: core/go.sum
@@ -346,7 +346,7 @@ jobs:
         run: |
           cd core
           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-core-coverage"
@@ -355,10 +355,10 @@ jobs:
   test-depinject:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25"
+          go-version: "1.25.5"
           check-latest: false
           cache: true
           cache-dependency-path: depinject/go.sum
@@ -374,7 +374,7 @@ jobs:
         run: |
           cd depinject
           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-depinject-coverage"
@@ -383,10 +383,10 @@ jobs:
   test-errors:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25"
+          go-version: "1.25.5"
           check-latest: true
           cache: true
           cache-dependency-path: errors/go.sum
@@ -402,7 +402,7 @@ jobs:
         run: |
           cd errors
           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-errors-coverage"
@@ -411,10 +411,10 @@ jobs:
   test-math:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25"
+          go-version: "1.25.5"
           check-latest: true
           cache: true
           cache-dependency-path: math/go.sum
@@ -430,7 +430,7 @@ jobs:
         run: |
           cd math
           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-math-coverage"
@@ -439,7 +439,7 @@ jobs:
   test-schema:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-go@v6
         with:
           go-version: "1.12"
@@ -457,7 +457,7 @@ jobs:
         run: |
           cd schema
           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-schema-coverage"
@@ -466,10 +466,10 @@ jobs:
   test-collections:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25"
+          go-version: "1.25.5"
           check-latest: true
           cache: true
           cache-dependency-path: collections/go.sum
@@ -485,7 +485,7 @@ jobs:
         run: |
           cd collections
           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-collections-coverage"
@@ -494,10 +494,10 @@ jobs:
   test-cosmovisor:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25"
+          go-version: "1.25.5"
           check-latest: true
           cache: true
           cache-dependency-path: tools/cosmovisor/go.sum
@@ -513,7 +513,7 @@ jobs:
         run: |
           cd tools/cosmovisor
           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-cosmovisor-coverage"
@@ -522,10 +522,10 @@ jobs:
   test-confix:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25"
+          go-version: "1.25.5"
           check-latest: true
           cache: true
           cache-dependency-path: tools/confix/go.sum
@@ -541,7 +541,7 @@ jobs:
         run: |
           cd tools/confix
           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-confix-coverage"
@@ -550,10 +550,10 @@ jobs:
   test-store:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25"
+          go-version: "1.25.5"
           check-latest: true
           cache: true
           cache-dependency-path: store/go.sum
@@ -570,7 +570,7 @@ jobs:
           cd store
           (cd streaming/abci/examples/file && go build .)
           go test -ldflags "-r /usr/local/lib" -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-store-coverage"
@@ -578,10 +578,10 @@ jobs:
   test-blockstm:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25"
+          go-version: "1.25.5"
           check-latest: true
           cache: true
           cache-dependency-path: store/go.sum
@@ -597,7 +597,7 @@ jobs:
         run: |
           cd blockstm
           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -coverpkg=./,./tree -tags='norace ledger test_ledger_mock' ./...
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-blockstm-coverage"
@@ -606,10 +606,10 @@ jobs:
   test-log:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25"
+          go-version: "1.25.5"
           check-latest: true
           cache: true
           cache-dependency-path: log/go.sum
@@ -625,7 +625,7 @@ jobs:
         run: |
           cd log
           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-log-coverage"
@@ -641,10 +641,10 @@ jobs:
   test-x-tx:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25"
+          go-version: "1.25.5"
           check-latest: true
           cache: true
           cache-dependency-path: x/tx/go.sum
@@ -660,7 +660,7 @@ jobs:
         run: |
           cd x/tx
           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace ledger test_ledger_mock' ./...
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-x-tx-coverage"
@@ -669,10 +669,10 @@ jobs:
   test-tools-benchmark:
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25"
+          go-version: "1.25.5"
           check-latest: true
           cache: true
           cache-dependency-path: tools/benchmark/go.sum
@@ -688,8 +688,9 @@ jobs:
         run: |
           cd tools/benchmark
           go test -mod=readonly -timeout 30m -coverprofile=coverage.out -covermode=atomic -tags='norace' ./...
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: env.GIT_DIFF
         with:
           name: "${{ github.sha }}-tools-benchmark-coverage"
           path: ./tools/benchmark/coverage.out
+

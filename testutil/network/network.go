@@ -239,7 +239,7 @@ func DefaultConfigWithAppConfigWithQueryGasLimit(appConfig depinject.Config, que
 
 		testdata.RegisterQueryServer(app.GRPCQueryRouter(), testdata.QueryImpl{})
 
-		if err := app.Load(true); err != nil {
+		if err := app.Load(true); err != nil { // nolint:staticcheck // TODO: remove me
 			panic(err)
 		}
 
@@ -377,6 +377,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		appCfg.MinGasPrices = cfg.MinGasPrices
 		appCfg.API.Enable = true
 		appCfg.API.Swagger = false
+		//nolint:staticcheck // TODO: switch to OpenTelemetry
 		appCfg.Telemetry.Enabled = false
 
 		ctx := server.NewDefaultContext()

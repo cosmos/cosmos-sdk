@@ -14,4 +14,4 @@ cd store
 go build -o streaming/abci/examples/file/file streaming/abci/examples/file/file.go
 ```
 
-* The plugin will write files to the users home directory `~/`.
+* The plugin will write files to the user's home directory `~/`.

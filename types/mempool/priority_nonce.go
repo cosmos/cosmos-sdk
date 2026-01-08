@@ -257,13 +257,13 @@ func (mp *PriorityNonceMempool[C]) Insert(ctx context.Context, tx sdk.Tx) error 
 			)
 		}
 
-		mp.priorityIndex.Remove(txMeta[C]{
-			nonce:    nonce,
-			sender:   sender,
-			priority: oldScore.priority,
-			weight:   oldScore.weight,
-		})
+		oldKey := txMeta[C]{nonce: nonce, sender: sender, priority: oldScore.priority, weight: oldScore.weight}
+		mp.priorityIndex.Remove(oldKey)
+		mp.senderIndices[sender].Remove(oldKey)
 		mp.priorityCounts[oldScore.priority]--
+		if mp.priorityCounts[oldScore.priority] == 0 {
+			delete(mp.priorityCounts, oldScore.priority)
+		}
 	}
 
 	mp.priorityCounts[priority]++

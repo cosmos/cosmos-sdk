@@ -38,7 +38,7 @@ type SimTestSuite struct {
 	bankKeeper    keeper.Keeper
 	cdc           codec.Codec
 	txConfig      client.TxConfig
-	app           *runtime.App
+	app           *runtime.App // nolint:staticcheck // TODO: remove me
 }
 
 func (suite *SimTestSuite) SetupTest() {

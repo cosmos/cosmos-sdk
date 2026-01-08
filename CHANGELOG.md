@@ -36,6 +36,70 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## UNRELEASED
+
+### Breaking Changes
+
+* [#25090](https://github.com/cosmos/cosmos-sdk/pull/25090) Moved deprecated modules to `./contrib`.  These modules are still available but will no longer be actively maintained or supported in the Cosmos SDK Bug Bounty program.
+    * `x/group`
+    * `x/nft`
+    * `x/circuit`
+    * `x/crisis`
+* (crypto) [#24414](https://github.com/cosmos/cosmos-sdk/pull/24414) Remove sr25519 support, since it was removed in CometBFT v1.x (see: CometBFT [#3646](https://github.com/cometbft/cometbft/pull/3646)).
+* (x/gov) [#25615](https://github.com/cosmos/cosmos-sdk/pull/25615) Decouple `x/gov` from `x/staking` by making `CalculateVoteResultsAndVotingPowerFn` a required parameter to `keeper.NewKeeper` instead of `StakingKeeper`.
+`BondedTokens` has been renamed to `ValidatorPower` and `TotalBondedTokens` has been renamed to `TotalValidatorPower` to allow for multiple validator power representations.
+* (x/gov) [#25617](https://github.com/cosmos/cosmos-sdk/pull/25617) `AfterProposalSubmission` hook now includes proposer address as a parameter.
+* (x/gov) [#25616](https://github.com/cosmos/cosmos-sdk/pull/25616) `DistrKeeper` `x/distribution` is now optional. Genesis validation ensures `distrKeeper` is set if distribution module is used as proposal cancel destination.
+
+### Features
+
+* [#25471](https://github.com/cosmos/cosmos-sdk/pull/25471) Full BLS 12-381 support enabled.
+* [#24872](https://github.com/cosmos/cosmos-sdk/pull/24872) Support BLS 12-381 for cli `init`, `gentx`, `collect-gentx`
+* (crypto) [#24919](https://github.com/cosmos/cosmos-sdk/pull/24919) add `NewPubKeyFromBytes` function to the `secp256r1` package to create `PubKey` from bytes
+* (server) [#24720](https://github.com/cosmos/cosmos-sdk/pull/24720) add `verbose_log_level` flag for configuring the log level when switching to verbose logging mode during sensitive operations (such as chain upgrades).
+* (crypto) [#24861](https://github.com/cosmos/cosmos-sdk/pull/24861) add `PubKeyFromCometTypeAndBytes` helper function to convert from `comet/v2` PubKeys to the `cryptotypes.Pubkey` interface.
+* (abci_utils) [#25008](https://github.com/cosmos/cosmos-sdk/pull/25008) add the ability to assign a custom signer extraction adapter in `DefaultProposalHandler`.
+* (crypto/ledger) [#25435](https://github.com/cosmos/cosmos-sdk/pull/25435) Add SetDERConversion to reset skipDERConversion and App name for ledger.
+* (gRPC) [#25565](https://github.com/cosmos/cosmos-sdk/pull/25565) Support for multi gRPC query clients serve with historical binaries to serve proper historical state.
+* (blockstm) [#25600](https://github.com/cosmos/cosmos-sdk/pull/25600) Allow dynamic retrieval of the coin denomination from multi store at runtime.
+* [#25516](https://github.com/cosmos/cosmos-sdk/pull/25516) Support automatic configuration of OpenTelemetry via [OpenTelemetry declarative configuration](https://pkg.go.dev/go.opentelemetry.io/contrib/otelconf) and add OpenTelemetry instrumentation of `BaseApp`.
+
+### Improvements
+
+* (types) [#25342](https://github.com/cosmos/cosmos-sdk/pull/25342) Undeprecated `EmitEvent` and `EmitEvents` on the `EventManager`.  These functions will continue to be maintained.
+* (types) [#24668](https://github.com/cosmos/cosmos-sdk/pull/24668) Scope the global config to a particular binary so that multiple SDK binaries can be properly run on the same machine.
+* (baseapp) [#24655](https://github.com/cosmos/cosmos-sdk/pull/24655) Add mutex locks for `state` and make `lastCommitInfo` atomic to prevent race conditions between `Commit` and `CreateQueryContext`.
+* (proto) [#24161](https://github.com/cosmos/cosmos-sdk/pull/24161) Remove unnecessary annotations from `x/staking` authz proto.
+* (x/bank) [#24660](https://github.com/cosmos/cosmos-sdk/pull/24660) Improve performance of the `GetAllBalances` and `GetAccountsBalances` keeper methods.
+* (collections) [#25464](https://github.com/cosmos/cosmos-sdk/pull/25464) Add `IterateRaw` method to `Multi` index type to satisfty query `Collection` interface.
+* (x/mint) [#25562](https://github.com/cosmos/cosmos-sdk/pull/25562) Improve and test `x/mint` params validation.
+* (api) [#25613](https://github.com/cosmos/cosmos-sdk/pull/25613) Separated deprecated modules into the contrib directory, distinct from api, to enable and unblock new proto changes without affecting legacy code.
+* (server) [#25632](https://github.com/cosmos/cosmos-sdk/pull/25632) Add missing call to close the app on shutdown.
+* (server) [#25740](https://github.com/cosmos/cosmos-sdk/pull/25740) Add variadic `grpc.DialOption` parameter to `StartGrpcServer` for custom gRPC client connection options.
+
+### Bug Fixes
+
+* (x/staking) [#25649](https://github.com/cosmos/cosmos-sdk/pull/25649) Add missing `defer iterator.Close()` calls in `IterateDelegatorRedelegations` and `GetRedelegations` to prevent resource leaks.
+* (mempool) [#25563](https://github.com/cosmos/cosmos-sdk/pull/25563) Cleanup sender indices in case of tx replacement.
+* (x/epochs) [#25425](https://github.com/cosmos/cosmos-sdk/pull/25425) Fix `InvokeSetHooks` being called with a nil keeper and `AppModule` containing a copy instead of a pointer (hooks set post creating the `AppModule` like with depinject didn't apply because it's a different instance).
+* (client, client/rpc, x/auth/tx) [#24551](https://github.com/cosmos/cosmos-sdk/pull/24551) Handle cancellation properly when supplying context to client methods.
+* (x/authz) [#24638](https://github.com/cosmos/cosmos-sdk/pull/24638) Fixed a minor bug where the grant key was cast as a string and dumped directly into the error message leading to an error string possibly containing invalid UTF-8.
+* (client, client/rpc, x/auth/tx) [#24551](https://github.com/cosmos/cosmos-sdk/pull/24551) Handle cancellation properly when supplying context to client methods.
+* (x/epochs) [#24770](https://github.com/cosmos/cosmos-sdk/pull/24770) Fix register of epoch hooks in `InvokeSetHooks`.
+* (x/epochs) [#25087](https://github.com/cosmos/cosmos-sdk/pull/25087) Remove redundant error check in BeginBlocker.
+* [GHSA-p22h-3m2v-cmgh](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-p22h-3m2v-cmgh) Fix x/distribution can halt when historical rewards overflow.
+* (x/staking) [#25258](https://github.com/cosmos/cosmos-sdk/pull/25258) Add delegator address to redelegate event.
+* (cli) [#25485](https://github.com/cosmos/cosmos-sdk/pull/25485) Avoid failed to convert address field in `withdraw-validator-commission` cmd.
+* (baseapp) [#25642](https://github.com/cosmos/cosmos-sdk/pull/25642) Mark pre-block events for indexing based on local configuration.
+* (x/bank) [#25751)](https://github.com/cosmos/cosmos-sdk/pull/25751) Fix recipient address in events.
+
+### Deprecated
+
+* (x/nft) [#24575](https://github.com/cosmos/cosmos-sdk/pull/24575) Deprecate the `x/nft` module in the Cosmos SDK repository.  This module will not be maintained to the extent that our core modules will and will be kept in a [legacy repo](https://github.com/cosmos/cosmos-legacy).
+* (x/group) [#24571](https://github.com/cosmos/cosmos-sdk/pull/24571) Deprecate the `x/group` module in the Cosmos SDK repository.  This module will not be maintained to the extent that our core modules will and will be kept in a [legacy repo](https://github.com/cosmos/cosmos-legacy).
+* (types) [#24664](https://github.com/cosmos/cosmos-sdk/pull/24664) Deprecate the `Invariant` type in the Cosmos SDK.
+* [#25516](https://github.com/cosmos/cosmos-sdk/pull/25516) Deprecate all existing methods and types in the `telemetry` package, usage of `github.com/hashicorp/go-metrics` and the `telemetry` configuration section. New instrumentation should use the official [OpenTelemetry go API](https://pkg.go.dev/go.opentelemetry.io/otel) and Cosmos SDK appllications can automatically expose OpenTelemetry metrics, traces and logs via [OpenTelemetry declarative configuration](https://pkg.go.dev/go.opentelemetry.io/contrib/otelconf).
+
 ## [v0.53.4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.3) - 2025-07-25
 
 This patch update also includes minor dependency bumps.
@@ -58,55 +122,6 @@ This patch update also includes minor dependency bumps.
 ### Bug Fixes
 
 * (x/epochs) [#24770](https://github.com/cosmos/cosmos-sdk/pull/24770) Fix register of epoch hooks in `InvokeSetHooks`.
-
-## [v0.53.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.0) - 2025-04-29
-
-
-### Breaking Changes
-
-* [#25090](https://github.com/cosmos/cosmos-sdk/pull/25090) Moved deprecated modules to `./contrib`.  These modules are still available but will no longer be actively maintained or supported in the Cosmos SDK Bug Bounty program.
-    * `x/group`
-    * `x/nft`
-    * `x/circuit`
-    * `x/crisis`
-* (crypto) [#24414](https://github.com/cosmos/cosmos-sdk/pull/24414) Remove sr25519 support, since it was removed in CometBFT v1.x (see: CometBFT [#3646](https://github.com/cometbft/cometbft/pull/3646)).
-
-### Features
-
-* [#25471](https://github.com/cosmos/cosmos-sdk/pull/25471) Full BLS 12-381 support enabled.
-* [#24872](https://github.com/cosmos/cosmos-sdk/pull/24872) Support BLS 12-381 for cli `init`, `gentx`, `collect-gentx`
-* (crypto) [#24919](https://github.com/cosmos/cosmos-sdk/pull/24919) add `NewPubKeyFromBytes` function to the `secp256r1` package to create `PubKey` from bytes
-* (server) [#24720](https://github.com/cosmos/cosmos-sdk/pull/24720) add `verbose_log_level` flag for configuring the log level when switching to verbose logging mode during sensitive operations (such as chain upgrades).
-* (crypto) [#24861](https://github.com/cosmos/cosmos-sdk/pull/24861) add `PubKeyFromCometTypeAndBytes` helper function to convert from `comet/v2` PubKeys to the `cryptotypes.Pubkey` interface.
-* (abci_utils) [#25008](https://github.com/cosmos/cosmos-sdk/pull/25008) add the ability to assign a custom signer extraction adapter in `DefaultProposalHandler`.
-* (crypto/ledger) [#25435](https://github.com/cosmos/cosmos-sdk/pull/25435) Add SetDERConversion to reset skipDERConversion and App name for ledger.
-
-### Improvements
-
-* (types) [#25342](https://github.com/cosmos/cosmos-sdk/pull/25342) Undeprecated `EmitEvent` and `EmitEvents` on the `EventManager`.  These functions will continue to be maintained.
-* (types) [#24668](https://github.com/cosmos/cosmos-sdk/pull/24668) Scope the global config to a particular binary so that multiple SDK binaries can be properly run on the same machine.
-* (baseapp) [#24655](https://github.com/cosmos/cosmos-sdk/pull/24655) Add mutex locks for `state` and make `lastCommitInfo` atomic to prevent race conditions between `Commit` and `CreateQueryContext`.
-* (proto) [#24161](https://github.com/cosmos/cosmos-sdk/pull/24161) Remove unnecessary annotations from `x/staking` authz proto.
-* (x/bank) [#24660](https://github.com/cosmos/cosmos-sdk/pull/24660) Improve performance of the `GetAllBalances` and `GetAccountsBalances` keeper methods.
-* (collections) [#25464](https://github.com/cosmos/cosmos-sdk/pull/25464) Add `IterateRaw` method to `Multi` index type to satisfty query `Collection` interface.
-
-### Bug Fixes
-
-* (x/epochs) [#25425](https://github.com/cosmos/cosmos-sdk/pull/25425) Fix `InvokeSetHooks` being called with a nil keeper and `AppModule` containing a copy instead of a pointer (hooks set post creating the `AppModule` like with depinject didn't apply because it's a different instance).
-* (client, client/rpc, x/auth/tx) [#24551](https://github.com/cosmos/cosmos-sdk/pull/24551) Handle cancellation properly when supplying context to client methods.
-* (x/authz) [#24638](https://github.com/cosmos/cosmos-sdk/pull/24638) Fixed a minor bug where the grant key was cast as a string and dumped directly into the error message leading to an error string possibly containing invalid UTF-8.
-* (client, client/rpc, x/auth/tx) [#24551](https://github.com/cosmos/cosmos-sdk/pull/24551) Handle cancellation properly when supplying context to client methods.
-* (x/epochs) [#24770](https://github.com/cosmos/cosmos-sdk/pull/24770) Fix register of epoch hooks in `InvokeSetHooks`.
-* (x/epochs) [#25087](https://github.com/cosmos/cosmos-sdk/pull/25087) Remove redundant error check in BeginBlocker.
-* [GHSA-p22h-3m2v-cmgh](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-p22h-3m2v-cmgh) Fix x/distribution can halt when historical rewards overflow.
-* (x/staking) [#25258](https://github.com/cosmos/cosmos-sdk/pull/25258) Add delegator address to redelegate event.
-* (cli) [#25485](https://github.com/cosmos/cosmos-sdk/pull/25485) Avoid failed to convert address field in `withdraw-validator-commission` cmd.
-
-### Deprecated
-
-* (x/nft) [#24575](https://github.com/cosmos/cosmos-sdk/pull/24575) Deprecate the `x/nft` module in the Cosmos SDK repository.  This module will not be maintained to the extent that our core modules will and will be kept in a [legacy repo](https://github.com/cosmos/cosmos-legacy).
-* (x/group) [#24571](https://github.com/cosmos/cosmos-sdk/pull/24571) Deprecate the `x/group` module in the Cosmos SDK repository.  This module will not be maintained to the extent that our core modules will and will be kept in a [legacy repo](https://github.com/cosmos/cosmos-legacy).
-* (types) [#24664](https://github.com/cosmos/cosmos-sdk/pull/24664) Deprecate the `Invariant` type in the Cosmos SDK.
 
 ## [v0.53.0](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.0) - 2025-04-29
 

@@ -8,8 +8,8 @@ import (
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/header"
-	services2 "github.com/cosmos/cosmos-sdk/app/services"
 
+	services2 "github.com/cosmos/cosmos-sdk/app/services"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )

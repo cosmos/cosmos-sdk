@@ -42,7 +42,7 @@ import (
 type SimTestSuite struct {
 	suite.Suite
 
-	app               *runtime.App
+	app               *runtime.App // nolint:staticcheck // TODO: remove me
 	ctx               sdk.Context
 	feegrantKeeper    keeper.Keeper
 	interfaceRegistry codectypes.InterfaceRegistry

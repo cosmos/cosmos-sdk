@@ -38,7 +38,7 @@ import (
 
 type suite struct {
 	cdc           codec.Codec
-	app           *runtime.App
+	app           *runtime.App // nolint:staticcheck // TODO: remove me
 	AccountKeeper authkeeper.AccountKeeper
 	BankKeeper    bankkeeper.Keeper
 	DistrKeeper   distrkeeper.Keeper
@@ -109,7 +109,7 @@ func TestImportExportQueues(t *testing.T) {
 	distributionGenState := s1.DistrKeeper.ExportGenesis(ctx)
 
 	// export the state and import it into a new app
-	govGenState, _ := gov.ExportGenesis(ctx, s1.GovKeeper)
+	govGenState, _ := keeper.ExportGenesis(ctx, s1.GovKeeper)
 	genesisState := s1.appBuilder.DefaultGenesis()
 
 	genesisState[authtypes.ModuleName] = s1.cdc.MustMarshalJSON(authGenState)

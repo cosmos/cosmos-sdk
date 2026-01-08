@@ -111,7 +111,7 @@ type suite struct {
 	GovKeeper          *keeper.Keeper
 	StakingKeeper      *stakingkeeper.Keeper
 	DistributionKeeper distrkeeper.Keeper
-	App                *runtime.App
+	App                *runtime.App // nolint:staticcheck // TODO: remove me
 }
 
 func createTestSuite(t *testing.T) suite {

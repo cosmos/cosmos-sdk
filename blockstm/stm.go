@@ -67,8 +67,8 @@ func ExecuteBlockWithEstimates(
 		return errors.New("scheduler did not complete")
 	}
 
-	telemetry.SetGauge(float32(scheduler.executedTxns.Load()), TelemetrySubsystem, KeyExecutedTxs)
-	telemetry.SetGauge(float32(scheduler.validatedTxns.Load()), TelemetrySubsystem, KeyValidatedTxs)
+	telemetry.SetGauge(float32(scheduler.executedTxns.Load()), TelemetrySubsystem, KeyExecutedTxs)   //nolint:staticcheck // TODO: switch to OpenTelemetry
+	telemetry.SetGauge(float32(scheduler.validatedTxns.Load()), TelemetrySubsystem, KeyValidatedTxs) //nolint:staticcheck // TODO: switch to OpenTelemetry
 
 	// Write the snapshot into the storage
 	mvMemory.WriteSnapshot(storage)

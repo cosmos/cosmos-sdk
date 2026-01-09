@@ -219,7 +219,7 @@ func (ts *TreeStore) WriteWALCommit(version uint32) error {
 }
 
 func (ts *TreeStore) SaveRoot(ctx context.Context, root *NodePointer, totalLeaves, totalBranches uint32) error {
-	ctx, span := tracer.Start(ctx, "TreeStore.SaveRoot")
+	_, span := tracer.Start(ctx, "TreeStore.SaveRoot")
 	defer span.End()
 	version := ts.stagedVersion
 	ts.logger.Debug("saving root", "version", version)

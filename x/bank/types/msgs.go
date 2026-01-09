@@ -26,8 +26,8 @@ func (msg MsgSend) ValidateBasic() error {
 	}
 
 	if err := msg.Amount.Validate(); err != nil {
-		return err
-	}
+		return sdkerrors.ErrInvalidCoins.Wrap(err.Error())
+	}	
 
 	return nil
 }

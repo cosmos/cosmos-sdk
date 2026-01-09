@@ -1,6 +1,7 @@
 package iavlx
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -9,6 +10,8 @@ import (
 	"time"
 
 	"github.com/tidwall/btree"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type TreeStore struct {
@@ -217,7 +220,13 @@ func (ts *TreeStore) WriteWALCommit(version uint32) error {
 	return ts.currentWriter.WriteWALCommit(version)
 }
 
-func (ts *TreeStore) SaveRoot(root *NodePointer, totalLeaves, totalBranches uint32) error {
+func (ts *TreeStore) SaveRoot(ctx context.Context, root *NodePointer, totalLeaves, totalBranches uint32) error {
+	ctx, span := tracer.Start(ctx, "TreeStore.SaveRoot", trace.WithAttributes(
+		attribute.Int64("totalLeaves", int64(totalLeaves)),
+		attribute.Int64("totalBranches", int64(totalBranches)),
+		attribute.String("root_id", root.id.String()),
+	))
+	defer span.End()
 	version := ts.stagedVersion
 	ts.logger.Debug("saving root", "version", version)
 	err := ts.currentWriter.SaveRoot(root, version, totalLeaves, totalBranches)

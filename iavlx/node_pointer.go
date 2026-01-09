@@ -34,7 +34,7 @@ func (p *NodePointer) Resolve() (Node, error) {
 	start := time.Now()
 	defer func() {
 		latencyMs := float64(time.Since(start)) / float64(time.Millisecond)
-		diskLatency.Record(context.Background(), latencyMs, metric.WithAttributes(
+		nodeReadLatency.Record(context.Background(), latencyMs, metric.WithAttributes(
 			attribute.String("node_id", p.id.String()),
 			attribute.String("file_idx", strconv.Itoa(int(p.fileIdx))),
 		))

@@ -1,14 +1,17 @@
 package iavlx
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log/slog"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	storetypes "cosmossdk.io/store/types"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 type CommitTree struct {
@@ -80,10 +83,12 @@ func (c *CommitTree) WorkingHash() []byte {
 	c.writeMutex.Lock()
 	defer c.writeMutex.Unlock()
 
-	return c.workingHash()
+	return c.workingHash(context.Background())
 }
 
-func (c *CommitTree) workingHash() []byte {
+func (c *CommitTree) workingHash(ctx context.Context) []byte {
+	_, span := tracer.Start(ctx, "CommitTree.WorkingHash")
+	defer span.End()
 	// IMPORTANT: this function assumes the write lock is held
 
 	// if we have no root, return empty hash
@@ -122,6 +127,8 @@ func (c *CommitTree) Commit() storetypes.CommitID {
 }
 
 func (c *CommitTree) commit() (storetypes.CommitID, error) {
+	ctx, span := tracer.Start(context.Background(), "CommitTree.commit")
+	defer span.End()
 	c.writeMutex.Lock()
 	defer c.writeMutex.Unlock()
 
@@ -130,7 +137,7 @@ func (c *CommitTree) commit() (storetypes.CommitID, error) {
 	}
 
 	// compute hash and assign node IDs
-	hash := c.workingHash()
+	hash := c.workingHash(ctx)
 
 	stagedVersion := c.store.stagedVersion
 	if c.writeWal {
@@ -153,7 +160,7 @@ func (c *CommitTree) commit() (storetypes.CommitID, error) {
 		// make sure we have a non-nil commit context
 		commitCtx = &commitContext{}
 	}
-	err := c.store.SaveRoot(c.root, commitCtx.leafNodeIdx, commitCtx.branchNodeIdx)
+	err := c.store.SaveRoot(ctx, c.root, commitCtx.leafNodeIdx, commitCtx.branchNodeIdx)
 	if err != nil {
 		return storetypes.CommitID{}, err
 	}
@@ -171,6 +178,18 @@ func (c *CommitTree) commit() (storetypes.CommitID, error) {
 		Hash:    hash,
 	}
 	c.lastCommitId = commitId
+
+	rootNode, err := c.root.Resolve()
+	if err == nil {
+		span.SetAttributes(
+			attribute.Int64("size", rootNode.Size()),
+			attribute.Int64("height", int64(rootNode.Height())),
+			attribute.Int64("version", int64(rootNode.Version())),
+			attribute.Int64("new_leaves", int64(c.commitCtx.leafNodeIdx)),
+			attribute.Int64("new_branches", int64(c.commitCtx.branchNodeIdx)),
+		)
+	}
+
 	c.commitCtx = nil
 
 	return commitId, nil
@@ -203,6 +222,8 @@ func (c *CommitTree) Get(key []byte) []byte {
 	if c.root == nil {
 		return nil
 	}
+	start := time.Now()
+	defer recordOperationTiming(start, "Get")
 
 	root, err := c.root.Resolve()
 	if err != nil {
@@ -224,6 +245,9 @@ func (c *CommitTree) Has(key []byte) bool {
 func (c *CommitTree) Set(key, value []byte) {
 	storetypes.AssertValidKey(key)
 	storetypes.AssertValidValue(value)
+
+	start := time.Now()
+	defer recordOperationTiming(start, "Set")
 
 	c.writeMutex.Lock()
 	defer c.writeMutex.Unlock()
@@ -254,6 +278,9 @@ func (c *CommitTree) Set(key, value []byte) {
 
 func (c *CommitTree) Delete(key []byte) {
 	storetypes.AssertValidKey(key)
+
+	start := time.Now()
+	defer recordOperationTiming(start, "Delete")
 
 	c.writeMutex.Lock()
 	defer c.writeMutex.Unlock()

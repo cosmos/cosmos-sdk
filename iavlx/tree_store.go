@@ -1,6 +1,7 @@
 package iavlx
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -217,7 +218,9 @@ func (ts *TreeStore) WriteWALCommit(version uint32) error {
 	return ts.currentWriter.WriteWALCommit(version)
 }
 
-func (ts *TreeStore) SaveRoot(root *NodePointer, totalLeaves, totalBranches uint32) error {
+func (ts *TreeStore) SaveRoot(ctx context.Context, root *NodePointer, totalLeaves, totalBranches uint32) error {
+	_, span := tracer.Start(ctx, "TreeStore.SaveRoot")
+	defer span.End()
 	version := ts.stagedVersion
 	ts.logger.Debug("saving root", "version", version)
 	err := ts.currentWriter.SaveRoot(root, version, totalLeaves, totalBranches)

@@ -1,8 +1,10 @@
 package iavlx
 
 import (
+	"context"
 	"fmt"
 	"sync/atomic"
+	"time"
 )
 
 type NodePointer struct {
@@ -21,8 +23,15 @@ func NewNodePointer(memNode *MemNode) *NodePointer {
 func (p *NodePointer) Resolve() (Node, error) {
 	mem := p.mem.Load()
 	if mem != nil {
+		nodeCacheHitCounter.Add(context.Background(), 1)
+
 		return mem, nil
 	}
+	start := time.Now()
+	defer func() {
+		latencyMs := time.Since(start).Milliseconds()
+		nodeReadLatency.Record(context.Background(), latencyMs)
+	}()
 	return p.store.Resolve(p.id, p.fileIdx)
 }
 

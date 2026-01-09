@@ -9,14 +9,46 @@ import (
 	"sync"
 )
 
-func computeAndSetHash(node *MemNode, leftHash, rightHash []byte) ([]byte, error) {
-	h, err := computeHash(node, leftHash, rightHash)
-	if err != nil {
-		return nil, err
+func (node *MemNode) ComputeHash() (UnsafeBytes, error) {
+	if node.hash != nil {
+		return WrapSafeBytes(node.hash), nil
 	}
-	node.hash = h
 
-	return h, nil
+	if node.IsLeaf() {
+		nodeHash, err := computeHash(node, nil, nil)
+		if err != nil {
+			return UnsafeBytes{}, err
+		}
+		node.hash = nodeHash
+		return WrapSafeBytes(nodeHash), nil
+	}
+
+	leftNode, leftPin, err := node.Left().Resolve()
+	defer leftPin.Unpin()
+	if err != nil {
+		return UnsafeBytes{}, fmt.Errorf("resolving left child: %w", err)
+	}
+	leftHash, err := leftNode.ComputeHash()
+	if err != nil {
+		return UnsafeBytes{}, fmt.Errorf("computing left child hash: %w", err)
+	}
+
+	rightNode, rightPin, err := node.Right().Resolve()
+	defer rightPin.Unpin()
+	if err != nil {
+		return UnsafeBytes{}, fmt.Errorf("resolving right child: %w", err)
+	}
+	rightHash, err := rightNode.ComputeHash()
+	if err != nil {
+		return UnsafeBytes{}, fmt.Errorf("computing right child hash: %w", err)
+	}
+
+	nodeHash, err := computeHash(node, leftHash.UnsafeBytes(), rightHash.UnsafeBytes())
+	if err != nil {
+		return UnsafeBytes{}, err
+	}
+	node.hash = nodeHash
+	return WrapSafeBytes(nodeHash), nil
 }
 
 var hasherPool = sync.Pool{
@@ -38,8 +70,6 @@ func computeHash(node Node, leftHash, rightHash []byte) ([]byte, error) {
 	}
 	return hasher.Sum(nil), nil
 }
-
-var emptyHash = sha256.New().Sum(nil)
 
 func shaSum256(bz []byte) []byte {
 	hasher := hasherPool.Get().(hash.Hash)

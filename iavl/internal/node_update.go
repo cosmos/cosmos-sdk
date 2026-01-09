@@ -2,10 +2,10 @@ package internal
 
 import "bytes"
 
-// setRecursive do set operation.
+// SetRecursive do set operation.
 // it always do modification and return new `MemNode`, even if the value is the same.
 // also returns if it's an update or insertion, if update, the tree height and balance is not changed.
-func setRecursive(nodePtr *NodePointer, leafNode *MemNode, ctx *mutationContext) (*NodePointer, bool, error) {
+func SetRecursive(nodePtr *NodePointer, leafNode *MemNode, ctx *MutationContext) (*NodePointer, bool, error) {
 	if nodePtr == nil {
 		return NewNodePointer(leafNode), true, nil
 	}
@@ -55,7 +55,7 @@ func setRecursive(nodePtr *NodePointer, leafNode *MemNode, ctx *mutationContext)
 			err         error
 		)
 		if bytes.Compare(leafNode.key, nodeKey.UnsafeBytes()) == -1 {
-			newChildPtr, updated, err = setRecursive(node.Left(), leafNode, ctx)
+			newChildPtr, updated, err = SetRecursive(node.Left(), leafNode, ctx)
 			if err != nil {
 				return nil, false, err
 			}
@@ -65,7 +65,7 @@ func setRecursive(nodePtr *NodePointer, leafNode *MemNode, ctx *mutationContext)
 			}
 			newNode.left = newChildPtr
 		} else {
-			newChildPtr, updated, err = setRecursive(node.Right(), leafNode, ctx)
+			newChildPtr, updated, err = SetRecursive(node.Right(), leafNode, ctx)
 			if err != nil {
 				return nil, false, err
 			}
@@ -92,13 +92,13 @@ func setRecursive(nodePtr *NodePointer, leafNode *MemNode, ctx *mutationContext)
 	}
 }
 
-// removeRecursive returns:
+// RemoveRecursive returns:
 // - (false, origNode, nil) -> nothing changed in subtree
 // - (true, nil, nil) -> leaf node is removed
 // - (true, new node, newKey) -> subtree changed
 // a previous version returned the value instead of the removed flag, but this is never used and it's just unnecessary copying and disk IO at this point
 // if we ever want to implement a "get and remove" operation, we can add it back then, but there should be bool flag on this function to indicate whether to return the value or not
-func removeRecursive(nodePtr *NodePointer, key []byte, ctx *mutationContext) (removed bool, newNodePtr *NodePointer, newKey []byte, err error) {
+func RemoveRecursive(nodePtr *NodePointer, key []byte, ctx *MutationContext) (removed bool, newNodePtr *NodePointer, newKey []byte, err error) {
 	if nodePtr == nil {
 		return false, nil, nil, nil
 	}
@@ -123,7 +123,7 @@ func removeRecursive(nodePtr *NodePointer, key []byte, ctx *mutationContext) (re
 	}
 
 	if bytes.Compare(key, nodeKey.UnsafeBytes()) == -1 {
-		leftRemoved, newLeft, newKey, err := removeRecursive(node.Left(), key, ctx)
+		leftRemoved, newLeft, newKey, err := RemoveRecursive(node.Left(), key, ctx)
 		if err != nil {
 			return false, nil, nil, err
 		}
@@ -154,7 +154,7 @@ func removeRecursive(nodePtr *NodePointer, key []byte, ctx *mutationContext) (re
 		return true, NewNodePointer(newNode), newKey, nil
 	}
 
-	rightRemoved, newRight, newKey, err := removeRecursive(node.Right(), key, ctx)
+	rightRemoved, newRight, newKey, err := RemoveRecursive(node.Right(), key, ctx)
 	if err != nil {
 		return false, nil, nil, err
 	}
@@ -189,4 +189,9 @@ func removeRecursive(nodePtr *NodePointer, key []byte, ctx *mutationContext) (re
 	}
 
 	return true, NewNodePointer(newNode), nil, nil
+}
+
+type NodeUpdate struct {
+	SetNode   *MemNode
+	DeleteKey []byte
 }

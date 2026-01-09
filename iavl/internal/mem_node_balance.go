@@ -90,7 +90,7 @@ package internal
 //
 // IMPORTANT: This method must only be called on newly created or copied nodes.
 // Code reviewers should check that the node is new or copied by doing a find usages check on this method.
-func (node *MemNode) reBalance(ctx *mutationContext) (*MemNode, error) {
+func (node *MemNode) reBalance(ctx *MutationContext) (*MemNode, error) {
 	balance, err := calcBalance(node)
 	if err != nil {
 		return nil, err
@@ -239,7 +239,7 @@ func maxUint8(a, b uint8) uint8 {
 //
 // IMPORTANT: This method must only be called on newly created or copied nodes.
 // Code reviewers should check that the node is new or copied by doing a find usages check on this method.
-func (node *MemNode) rotateRight(ctx *mutationContext) (*MemNode, error) {
+func (node *MemNode) rotateRight(ctx *MutationContext) (*MemNode, error) {
 	left, leftPin, err := node.left.Resolve()
 	defer leftPin.Unpin()
 	if err != nil {
@@ -284,7 +284,7 @@ func (node *MemNode) rotateRight(ctx *mutationContext) (*MemNode, error) {
 //
 // IMPORTANT: This method must only be called on newly created or copied nodes.
 // Code reviewers should check that the node is new or copied by doing a find usages check on this method.
-func (node *MemNode) rotateLeft(ctx *mutationContext) (*MemNode, error) {
+func (node *MemNode) rotateLeft(ctx *MutationContext) (*MemNode, error) {
 	right, rightPin, err := node.right.Resolve()
 	defer rightPin.Unpin()
 	if err != nil {

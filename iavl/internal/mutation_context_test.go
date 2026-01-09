@@ -32,7 +32,7 @@ func TestMutationContext_AddOrphan(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := newMutationContext(tt.currentVer)
+			ctx := NewMutationContext(tt.currentVer)
 			added := ctx.addOrphan(tt.nodeId)
 			require.Equal(t, tt.expectOrphan, added, "addOrphan return value mismatch")
 			if tt.expectOrphan {
@@ -67,7 +67,7 @@ func TestMutationContext_MutateNode(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := newMutationContext(tt.currentVer)
+			ctx := NewMutationContext(tt.currentVer)
 			mutatedNode, err := ctx.mutateBranch(tt.node)
 			require.NoError(t, err)
 			if tt.expectSame {

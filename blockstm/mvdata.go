@@ -2,10 +2,12 @@ package blockstm
 
 import (
 	"bytes"
+	"time"
 
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/blockstm/tree"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
 const (
@@ -58,6 +60,7 @@ func (d *GMVData[V]) getTreeOrDefault(key Key) *tree.BTree[secondaryDataItem[V]]
 }
 
 func (d *GMVData[V]) Write(key Key, value V, version TxnVersion) {
+	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeyMVDataWrite)
 	tree := d.getTreeOrDefault(key)
 	tree.Set(secondaryDataItem[V]{Index: version.Index, Incarnation: version.Incarnation, Value: value})
 }
@@ -77,6 +80,7 @@ func (d *GMVData[V]) Delete(key Key, txn TxnIndex) {
 // If the key is found but value is an estimate, returns `(nil, BlockingTxn, true)`.
 // If the key is found, returns `(value, version, false)`, `value` can be `nil` which means deleted.
 func (d *GMVData[V]) Read(key Key, txn TxnIndex) (V, TxnVersion, bool) {
+	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, KeyMVDataRead)
 	var zero V
 	if txn == 0 {
 		return zero, InvalidTxnVersion, false

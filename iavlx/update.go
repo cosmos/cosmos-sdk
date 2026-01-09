@@ -24,14 +24,14 @@ type MutationContext struct {
 
 func (ctx *MutationContext) MutateBranch(node Node) (*MemNode, error) {
 	id := node.ID()
-	if id != 0 {
+	if !id.IsEmpty() {
 		ctx.Orphans = append(ctx.Orphans, id)
 	}
 	return node.MutateBranch(ctx.Version)
 }
 
 func (ctx *MutationContext) AddOrphan(id NodeID) {
-	if id != 0 {
+	if !id.IsEmpty() {
 		ctx.Orphans = append(ctx.Orphans, id)
 	}
 }

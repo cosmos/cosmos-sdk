@@ -12,7 +12,7 @@ func init() {
 }
 
 const (
-	SizeLeaf = 48
+	SizeLeaf = 44
 )
 
 type LeafLayout struct {

@@ -395,7 +395,7 @@ func commitTraverse(ctx *commitContext, np *NodePointer, depth uint8) (hash []by
 	var id NodeID
 	if memNode.IsLeaf() {
 		ctx.leafNodeIdx++
-		id = NewNodeID(true, uint64(ctx.version), ctx.leafNodeIdx)
+		id = NewNodeID(true, ctx.version, ctx.leafNodeIdx)
 	} else {
 		// post-order traversal
 		leftHash, err = commitTraverse(ctx, memNode.left, depth+1)
@@ -408,7 +408,7 @@ func commitTraverse(ctx *commitContext, np *NodePointer, depth uint8) (hash []by
 		}
 
 		ctx.branchNodeIdx++
-		id = NewNodeID(false, uint64(ctx.version), ctx.branchNodeIdx)
+		id = NewNodeID(false, ctx.version, ctx.branchNodeIdx)
 	}
 	np.id = id
 	memNode.nodeId = id

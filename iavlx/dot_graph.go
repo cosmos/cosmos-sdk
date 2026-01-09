@@ -120,7 +120,7 @@ func RenderChangesetDotGraph(writer io.Writer, cs *Changeset, orphans map[NodeID
 	}
 
 	numBranches := cs.branchesData.Count()
-	curVersion := uint64(0)
+	curVersion := uint32(0)
 	var lastBranchId NodeID
 	for i := 0; i < numBranches; i++ {
 		branchLayout := cs.branchesData.UnsafeItem(uint32(i))
@@ -130,12 +130,12 @@ func RenderChangesetDotGraph(writer io.Writer, cs *Changeset, orphans map[NodeID
 			if curVersion != 0 {
 				_, err = fmt.Fprintln(writer, "\t}")
 			}
-			fillColor := graphvizFillColors[nodeVersion%uint64(len(graphvizFillColors))]
-			textColor := graphvizTextColors[nodeVersion%uint64(len(graphvizTextColors))]
+			fillColor := graphvizFillColors[nodeVersion%uint32(len(graphvizFillColors))]
+			textColor := graphvizTextColors[nodeVersion%uint32(len(graphvizTextColors))]
 			_, err = fmt.Fprintf(writer, "\tsubgraph cluster_B%d {\n\t\tlabel=\"Version %d\" color=%s style=filled fontcolor=%s node [fontcolor=%s]\n", nodeVersion, nodeVersion, fillColor, textColor, textColor)
 		}
 		curVersion = nodeVersion
-		if lastBranchId != 0 {
+		if lastBranchId.IsEmpty() {
 			_, err = fmt.Fprintf(writer, "\t\t%s -> %s [style=invis];\n", graphvizNodeID(lastBranchId), graphvizNodeID(id))
 		}
 		lastBranchId = id
@@ -190,12 +190,12 @@ func RenderChangesetDotGraph(writer io.Writer, cs *Changeset, orphans map[NodeID
 			if curVersion != 0 {
 				_, err = fmt.Fprintln(writer, "\t}")
 			}
-			fillColor := graphvizFillColors[nodeVersion%uint64(len(graphvizFillColors))]
-			textColor := graphvizTextColors[nodeVersion%uint64(len(graphvizTextColors))]
+			fillColor := graphvizFillColors[nodeVersion%uint32(len(graphvizFillColors))]
+			textColor := graphvizTextColors[nodeVersion%uint32(len(graphvizTextColors))]
 			_, err = fmt.Fprintf(writer, "\tsubgraph cluster_L%d {\n\t\tlabel=\"Version %d\" color=%s fontcolor=%s style=filled node [fontcolor=%s]\n", nodeVersion, nodeVersion, fillColor, textColor, textColor)
 		}
 		curVersion = nodeVersion
-		if lastLeafId != 0 {
+		if lastLeafId.IsEmpty() {
 			_, err = fmt.Fprintf(writer, "\t\t%s -> %s [style=invis];\n", graphvizNodeID(lastLeafId), graphvizNodeID(id))
 		}
 		lastLeafId = id

@@ -170,10 +170,10 @@ func (cs *ChangesetWriter) writeBranch(np *NodePointer, node *MemNode) error {
 
 	// If the child node is in the same changeset, store its 1-based file offset.
 	// fileIdx is already 1-based (set to Count() after append), and 0 means no offset.
-	if leftVersion >= uint64(cs.StartVersion()) {
+	if leftVersion >= cs.StartVersion() {
 		leftOffset = node.left.fileIdx
 	}
-	if rightVersion >= uint64(cs.StartVersion()) {
+	if rightVersion >= cs.StartVersion() {
 		rightOffset = node.right.fileIdx
 	}
 

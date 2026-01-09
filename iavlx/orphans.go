@@ -21,7 +21,8 @@ func NewOrphanWriter(file *os.File) *OrphanWriter {
 func (ow *OrphanWriter) WriteOrphan(version uint32, id NodeID) error {
 	var bz [12]byte
 	binary.LittleEndian.PutUint32(bz[0:4], version)
-	binary.LittleEndian.PutUint64(bz[4:12], uint64(id))
+	binary.LittleEndian.PutUint32(bz[4:8], id.Version())
+	binary.LittleEndian.PutUint32(bz[8:12], uint32(id.flagIndex))
 	_, err := ow.Write(bz[:])
 	return err
 }
@@ -53,7 +54,12 @@ func ReadOrphanMap(file *os.File) (map[NodeID]uint32, error) {
 			return nil, err
 		}
 		version := binary.LittleEndian.Uint32(buf[0:4])
-		id := NodeID(binary.LittleEndian.Uint64(buf[4:12]))
+		nodeVersion := binary.LittleEndian.Uint32(buf[4:8])
+		flagIndex := binary.LittleEndian.Uint32(buf[8:12])
+		id := NodeID{
+			flagIndex: nodeFlagIndex(flagIndex),
+			version:   nodeVersion,
+		}
 		if _, exists := orphanMap[id]; !exists {
 			orphanMap[id] = version
 		}

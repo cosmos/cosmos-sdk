@@ -230,7 +230,7 @@ func (c *CommitTree) Get(key []byte) []byte {
 	}
 	start := time.Now()
 	defer func() {
-		latencyMs := float64(time.Since(start)) / float64(time.Millisecond)
+		latencyMs := time.Since(start).Milliseconds()
 		operationTiming.Record(context.Background(), latencyMs, metric.WithAttributes(
 			attribute.String("op", "get"),
 		))
@@ -259,7 +259,7 @@ func (c *CommitTree) Set(key, value []byte) {
 
 	start := time.Now()
 	defer func() {
-		latencyMs := float64(time.Since(start)) / float64(time.Millisecond)
+		latencyMs := time.Since(start).Milliseconds()
 		operationTiming.Record(context.Background(), latencyMs, metric.WithAttributes(
 			attribute.String("op", "set"),
 		))
@@ -297,7 +297,7 @@ func (c *CommitTree) Delete(key []byte) {
 
 	start := time.Now()
 	defer func() {
-		latencyMs := float64(time.Since(start)) / float64(time.Millisecond)
+		latencyMs := time.Since(start).Milliseconds()
 		operationTiming.Record(context.Background(), latencyMs, metric.WithAttributes(
 			attribute.String("op", "delete"),
 		))

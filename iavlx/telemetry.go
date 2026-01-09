@@ -9,8 +9,8 @@ var (
 	meter = otel.Meter("comsos-sdk/iavlx")
 
 	nodeCacheHitCounter metric.Int64Counter
-	nodeReadLatency     metric.Float64Histogram
-	operationTiming     metric.Float64Histogram
+	nodeReadLatency     metric.Int64Histogram
+	operationTiming     metric.Int64Histogram
 )
 
 func init() {
@@ -19,11 +19,11 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	nodeReadLatency, err = meter.Float64Histogram("node.read_latency")
+	nodeReadLatency, err = meter.Int64Histogram("node.read_latency")
 	if err != nil {
 		panic(err)
 	}
-	operationTiming, err = meter.Float64Histogram("operation.timing")
+	operationTiming, err = meter.Int64Histogram("operation.timing")
 	if err != nil {
 		panic(err)
 	}

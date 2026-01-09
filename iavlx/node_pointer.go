@@ -3,12 +3,8 @@ package iavlx
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"sync/atomic"
 	"time"
-
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/metric"
 )
 
 type NodePointer struct {
@@ -34,10 +30,7 @@ func (p *NodePointer) Resolve() (Node, error) {
 	start := time.Now()
 	defer func() {
 		latencyMs := time.Since(start).Milliseconds()
-		nodeReadLatency.Record(context.Background(), latencyMs, metric.WithAttributes(
-			attribute.String("node_id", p.id.String()),
-			attribute.String("file_idx", strconv.Itoa(int(p.fileIdx))),
-		))
+		nodeReadLatency.Record(context.Background(), latencyMs)
 	}()
 	return p.store.Resolve(p.id, p.fileIdx)
 }

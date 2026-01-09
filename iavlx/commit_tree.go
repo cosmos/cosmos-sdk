@@ -12,7 +12,6 @@ import (
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	storetypes "cosmossdk.io/store/types"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/metric"
 )
 
 type CommitTree struct {
@@ -120,33 +119,16 @@ func (c *CommitTree) workingHash(ctx context.Context) []byte {
 }
 
 func (c *CommitTree) Commit() storetypes.CommitID {
-	ctx, span := tracer.Start(context.Background(), "CommitTree.Commit")
-	defer span.End()
-	commitId, err := c.commit(ctx)
+	commitId, err := c.commit()
 	if err != nil {
 		panic(fmt.Sprintf("failed to commit: %v", err))
 	}
-
-	if c.root != nil {
-		rootNode, err := c.root.Resolve()
-		if err == nil {
-			leafCount := rootNode.Size()
-			branchCount := leafCount - 1
-			if branchCount < 0 {
-				branchCount = 0
-			}
-			span.SetAttributes(
-				attribute.Int64("total_nodes", leafCount+branchCount),
-				attribute.Int64("leaf_count", leafCount),
-				attribute.Int64("branch_count", branchCount),
-			)
-		}
-	}
-
 	return commitId
 }
 
-func (c *CommitTree) commit(ctx context.Context) (storetypes.CommitID, error) {
+func (c *CommitTree) commit() (storetypes.CommitID, error) {
+	ctx, span := tracer.Start(context.Background(), "CommitTree.commit")
+	defer span.End()
 	c.writeMutex.Lock()
 	defer c.writeMutex.Unlock()
 
@@ -196,6 +178,18 @@ func (c *CommitTree) commit(ctx context.Context) (storetypes.CommitID, error) {
 		Hash:    hash,
 	}
 	c.lastCommitId = commitId
+
+	rootNode, err := c.root.Resolve()
+	if err == nil {
+		span.SetAttributes(
+			attribute.Int64("size", rootNode.Size()),
+			attribute.Int64("height", int64(rootNode.Height())),
+			attribute.Int64("version", int64(rootNode.Version())),
+			attribute.Int64("new_leaves", int64(c.commitCtx.leafNodeIdx)),
+			attribute.Int64("new_branches", int64(c.commitCtx.branchNodeIdx)),
+		)
+	}
+
 	c.commitCtx = nil
 
 	return commitId, nil
@@ -229,12 +223,7 @@ func (c *CommitTree) Get(key []byte) []byte {
 		return nil
 	}
 	start := time.Now()
-	defer func() {
-		latencyMs := time.Since(start).Milliseconds()
-		operationTiming.Record(context.Background(), latencyMs, metric.WithAttributes(
-			attribute.String("op", "get"),
-		))
-	}()
+	defer recordOperationTiming(start, "Get")
 
 	root, err := c.root.Resolve()
 	if err != nil {
@@ -258,12 +247,7 @@ func (c *CommitTree) Set(key, value []byte) {
 	storetypes.AssertValidValue(value)
 
 	start := time.Now()
-	defer func() {
-		latencyMs := time.Since(start).Milliseconds()
-		operationTiming.Record(context.Background(), latencyMs, metric.WithAttributes(
-			attribute.String("op", "set"),
-		))
-	}()
+	defer recordOperationTiming(start, "Set")
 
 	c.writeMutex.Lock()
 	defer c.writeMutex.Unlock()
@@ -296,12 +280,7 @@ func (c *CommitTree) Delete(key []byte) {
 	storetypes.AssertValidKey(key)
 
 	start := time.Now()
-	defer func() {
-		latencyMs := time.Since(start).Milliseconds()
-		operationTiming.Record(context.Background(), latencyMs, metric.WithAttributes(
-			attribute.String("op", "delete"),
-		))
-	}()
+	defer recordOperationTiming(start, "Delete")
 
 	c.writeMutex.Lock()
 	defer c.writeMutex.Unlock()

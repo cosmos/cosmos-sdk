@@ -1,7 +1,11 @@
 package iavlx
 
 import (
+	"context"
+	"time"
+
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 )
 
@@ -27,4 +31,8 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func recordOperationTiming(start time.Time, op string) {
+	operationTiming.Record(context.Background(), time.Since(start).Milliseconds(), metric.WithAttributes(attribute.String("op", op)))
 }

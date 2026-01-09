@@ -313,7 +313,7 @@ func (k BaseSendKeeper) subUnlockedCoins(ctx context.Context, addr sdk.AccAddres
 
 		newBalance := balance.Sub(coin)
 
-		if err := k.setBalance(ctx, addr, newBalance); err != nil {
+		if err := k.SetBalance(ctx, addr, newBalance); err != nil {
 			return err
 		}
 	}
@@ -336,7 +336,7 @@ func (k BaseSendKeeper) addCoins(ctx context.Context, addr sdk.AccAddress, amt s
 		balance := k.GetBalance(ctx, addr, coin.Denom)
 		newBalance := balance.Add(coin)
 
-		err := k.setBalance(ctx, addr, newBalance)
+		err := k.SetBalance(ctx, addr, newBalance)
 		if err != nil {
 			return err
 		}
@@ -351,8 +351,8 @@ func (k BaseSendKeeper) addCoins(ctx context.Context, addr sdk.AccAddress, amt s
 	return nil
 }
 
-// setBalance sets the coin balance for an account by address.
-func (k BaseSendKeeper) setBalance(ctx context.Context, addr sdk.AccAddress, balance sdk.Coin) error {
+// SetBalance sets the coin balance for an account by address.
+func (k BaseSendKeeper) SetBalance(ctx context.Context, addr sdk.AccAddress, balance sdk.Coin) error {
 	if !balance.IsValid() {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, balance.String())
 	}

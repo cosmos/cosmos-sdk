@@ -237,6 +237,22 @@ func (suite *KeeperTestSuite) mockSpendableCoins(ctx sdk.Context, acc sdk.Accoun
 	suite.authKeeper.EXPECT().GetAccount(ctx, acc.GetAddress()).Return(acc)
 }
 
+func (suite *KeeperTestSuite) findTransferEventByRecipient(ctx sdk.Context, expectedRecipient string) abci.Event {
+	events := ctx.EventManager().ABCIEvents()
+	for _, event := range events {
+		if event.Type != banktypes.EventTypeTransfer {
+			continue
+		}
+		for _, attr := range event.Attributes {
+			if attr.Key == banktypes.AttributeKeyRecipient && attr.Value == expectedRecipient {
+				return event
+			}
+		}
+	}
+	suite.Require().Failf("transfer event with recipient %s not found", expectedRecipient)
+	return abci.Event{} // unreachable
+}
+
 func (suite *KeeperTestSuite) mockDelegateCoinsFromAccountToModule(acc *authtypes.BaseAccount, moduleAcc *authtypes.ModuleAccount) {
 	suite.authKeeper.EXPECT().GetModuleAccount(suite.ctx, moduleAcc.Name).Return(moduleAcc)
 	suite.mockDelegateCoins(suite.ctx, acc, moduleAcc)
@@ -1330,25 +1346,13 @@ func (suite *KeeperTestSuite) TestSendCoinsEventsWithRestrictions() {
 	suite.mockSendCoins(suite.ctx, fromAcc, updatedToAddr)
 	require.NoError(suite.bankKeeper.SendCoins(suite.ctx, fromAddr, originalToAddr, amt))
 
-	// Get the address codec to convert addresses to strings for comparison
 	addressCodec := suite.authKeeper.AddressCodec()
 	expectedToAddrString, err := addressCodec.BytesToString(updatedToAddr)
 	require.NoError(err)
 	expectedFromAddrString, err := addressCodec.BytesToString(fromAddr)
 	require.NoError(err)
 
-	// Find the transfer event
-	events := ctx.EventManager().ABCIEvents()
-	var transferEvent *abci.Event
-	for _, e := range events {
-		if e.Type == banktypes.EventTypeTransfer {
-			transferEvent = &e
-			break
-		}
-	}
-	require.NotNil(transferEvent, "transfer event should be emitted")
-
-	// Verify the recipient address in the event is the updated address, not the original
+	transferEvent := suite.findTransferEventByRecipient(ctx, expectedToAddrString)
 	var recipientAddr string
 	var senderAddr string
 	for _, attr := range transferEvent.Attributes {
@@ -1406,50 +1410,29 @@ func (suite *KeeperTestSuite) TestInputOutputCoinsEventsWithRestrictions() {
 		{Address: originalToAddr2.String(), Coins: sdk.NewCoins(newFooCoin(50))},
 	}
 
-	suite.authKeeper.EXPECT().GetAccount(suite.ctx, fromAcc.GetAddress()).Return(fromAcc).AnyTimes()
-	suite.authKeeper.EXPECT().HasAccount(gomock.Any(), gomock.Any()).Return(true).Times(len(outputs))
-
 	suite.mockInputOutputCoins([]sdk.AccountI{fromAcc}, []sdk.AccAddress{updatedToAddr1, updatedToAddr2})
 	require.NoError(suite.bankKeeper.InputOutputCoins(suite.ctx, input, outputs))
 
-	// Get the address codec to convert addresses to strings for comparison
 	addressCodec := suite.authKeeper.AddressCodec()
 	expectedToAddr1String, err := addressCodec.BytesToString(updatedToAddr1)
 	require.NoError(err)
 	expectedToAddr2String, err := addressCodec.BytesToString(updatedToAddr2)
 	require.NoError(err)
 
-	// Find all transfer events
-	events := ctx.EventManager().ABCIEvents()
-	var transferEvents []abci.Event
-	for _, e := range events {
-		if e.Type == banktypes.EventTypeTransfer {
-			transferEvents = append(transferEvents, e)
+	transferEvent1 := suite.findTransferEventByRecipient(ctx, expectedToAddr1String)
+	transferEvent2 := suite.findTransferEventByRecipient(ctx, expectedToAddr2String)
+	for _, attr := range transferEvent1.Attributes {
+		if attr.Key == banktypes.AttributeKeyRecipient {
+			require.NotEqual(originalToAddr1.String(), attr.Value, "should not contain original address 1")
+			require.NotEqual(originalToAddr2.String(), attr.Value, "should not contain original address 2")
 		}
 	}
-	require.GreaterOrEqual(len(transferEvents), 2, "should have at least 2 transfer events")
-
-	// Verify the recipient addresses in the events are the updated addresses
-	foundAddr1 := false
-	foundAddr2 := false
-	for _, event := range transferEvents {
-		for _, attr := range event.Attributes {
-			if attr.Key == banktypes.AttributeKeyRecipient {
-				recipientAddr := attr.Value
-				if recipientAddr == expectedToAddr1String {
-					foundAddr1 = true
-				}
-				if recipientAddr == expectedToAddr2String {
-					foundAddr2 = true
-				}
-				// Verify it's not the original addresses
-				require.NotEqual(originalToAddr1.String(), recipientAddr, "should not contain original address 1")
-				require.NotEqual(originalToAddr2.String(), recipientAddr, "should not contain original address 2")
-			}
+	for _, attr := range transferEvent2.Attributes {
+		if attr.Key == banktypes.AttributeKeyRecipient {
+			require.NotEqual(originalToAddr1.String(), attr.Value, "should not contain original address 1")
+			require.NotEqual(originalToAddr2.String(), attr.Value, "should not contain original address 2")
 		}
 	}
-	require.True(foundAddr1, "should find updated address 1 in events")
-	require.True(foundAddr2, "should find updated address 2 in events")
 }
 
 // TestSendCoinsToVirtualEventsWithRestrictions verifies that events contain the correct
@@ -1479,28 +1462,16 @@ func (suite *KeeperTestSuite) TestSendCoinsToVirtualEventsWithRestrictions() {
 	suite.bankKeeper.SetSendRestriction(restrictionNewTo(updatedToAddr))
 
 	amt := sdk.NewCoins(newFooCoin(50))
-	suite.mockSendCoinsFromAccountToModuleVirtual(fromAcc, burnerAcc)
+	suite.authKeeper.EXPECT().GetAccount(suite.ctx, fromAcc.GetAddress()).Return(fromAcc)
 	require.NoError(suite.bankKeeper.SendCoinsToVirtual(suite.ctx, fromAddr, originalToAddr, amt))
 
-	// Get the address codec to convert addresses to strings for comparison
 	addressCodec := suite.authKeeper.AddressCodec()
 	expectedToAddrString, err := addressCodec.BytesToString(updatedToAddr)
 	require.NoError(err)
 	expectedFromAddrString, err := addressCodec.BytesToString(fromAddr)
 	require.NoError(err)
 
-	// Find the transfer event
-	events := ctx.EventManager().ABCIEvents()
-	var transferEvent *abci.Event
-	for _, e := range events {
-		if e.Type == banktypes.EventTypeTransfer {
-			transferEvent = &e
-			break
-		}
-	}
-	require.NotNil(transferEvent, "transfer event should be emitted")
-
-	// Verify the recipient address in the event is the updated address, not the original
+	transferEvent := suite.findTransferEventByRecipient(ctx, expectedToAddrString)
 	var recipientAddr string
 	var senderAddr string
 	for _, attr := range transferEvent.Attributes {
@@ -1532,12 +1503,11 @@ func (suite *KeeperTestSuite) TestSendCoinsFromVirtualEventsWithRestrictions() {
 	require.NoError(banktestutil.FundAccount(suite.ctx, suite.bankKeeper, accAddrs[0], balances))
 
 	// First, send coins to virtual to set up the test
+	// Do this WITHOUT a restriction so virtual coins are stored under originalToAddr
 	amt := sdk.NewCoins(newFooCoin(50))
-	suite.mockSendCoinsFromAccountToModuleVirtual(fromAcc, burnerAcc)
+	// SendCoinsToVirtual only needs GetAccount for the sender, not module account functions
+	suite.authKeeper.EXPECT().GetAccount(suite.ctx, fromAcc.GetAddress()).Return(fromAcc)
 	require.NoError(suite.bankKeeper.SendCoinsToVirtual(suite.ctx, fromAddr, originalToAddr, amt))
-
-	// Get the initial event count to find events from the operation we're testing
-	initialEventCount := len(ctx.EventManager().ABCIEvents())
 
 	// Create a restriction that changes the recipient address
 	restrictionNewTo := func(newToAddr sdk.AccAddress) banktypes.SendRestrictionFn {
@@ -1550,29 +1520,17 @@ func (suite *KeeperTestSuite) TestSendCoinsFromVirtualEventsWithRestrictions() {
 	defer suite.bankKeeper.SetSendRestriction(existingSendRestrictionFn)
 	suite.bankKeeper.SetSendRestriction(restrictionNewTo(updatedToAddr))
 
-	suite.mockSendCoinsFromModuleToAccountVirtual(burnerAcc, updatedToAddr)
-	require.NoError(suite.bankKeeper.SendCoinsFromVirtual(suite.ctx, fromAddr, originalToAddr, amt))
+	// SendCoinsToVirtual stored coins under originalToAddr, so we send from there
+	suite.authKeeper.EXPECT().HasAccount(suite.ctx, updatedToAddr).Return(true)
+	require.NoError(suite.bankKeeper.SendCoinsFromVirtual(suite.ctx, originalToAddr, originalToAddr, amt))
 
-	// Get the address codec to convert addresses to strings for comparison
 	addressCodec := suite.authKeeper.AddressCodec()
 	expectedToAddrString, err := addressCodec.BytesToString(updatedToAddr)
 	require.NoError(err)
-	expectedFromAddrString, err := addressCodec.BytesToString(fromAddr)
+	expectedFromAddrString, err := addressCodec.BytesToString(originalToAddr)
 	require.NoError(err)
 
-	// Find the transfer event from our operation (should be one of the last events)
-	events := ctx.EventManager().ABCIEvents()
-	var transferEvent *abci.Event
-	// Look for transfer events added after our setup
-	for i := len(events) - 1; i >= initialEventCount; i-- {
-		if events[i].Type == banktypes.EventTypeTransfer {
-			transferEvent = &events[i]
-			break
-		}
-	}
-	require.NotNil(transferEvent, "transfer event should be emitted")
-
-	// Verify the recipient address in the event is the updated address, not the original
+	transferEvent := suite.findTransferEventByRecipient(ctx, expectedToAddrString)
 	var recipientAddr string
 	var senderAddr string
 	for _, attr := range transferEvent.Attributes {

@@ -88,7 +88,7 @@ func (c *CommitTree) WorkingHash() []byte {
 }
 
 func (c *CommitTree) workingHash(ctx context.Context) []byte {
-	ctx, span := tracer.Start(ctx, "CommitTree.WorkingHash")
+	_, span := tracer.Start(ctx, "CommitTree.WorkingHash")
 	defer span.End()
 	// IMPORTANT: this function assumes the write lock is held
 

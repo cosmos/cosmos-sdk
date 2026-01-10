@@ -48,7 +48,7 @@ we concatenate a key type with a public key, hash it and take the first 20 bytes
 ### Review and Discussions
 
 In [\#5694](https://github.com/cosmos/cosmos-sdk/issues/5694) we discussed various solutions.
-We agreed that 20 bytes it's not future proof, and extending the address length is the only way to allow addresses of different types, various signature types, etc.
+We agreed that 20 bytes is not future proof, and extending the address length is the only way to allow addresses of different types, various signature types, etc.
 This disqualifies the initial proposal.
 
 In the issue we discussed various modifications:
@@ -307,8 +307,8 @@ Hashing algorithm
 Algorithm:
 
 * Alan recommends to hash the prefix: `address(pub_key) = hash(hash(key_type) + pub_key)[:32]`, main benefits:
-    * we are free to user arbitrary long prefix names
-    * we still don’t risk collisions
+    * we are free to use arbitrary long prefix names
+    * we still don't risk collisions
     * switch tables
 * discussion about penalization -> about adding prefix post hash
 * Aaron asked about post hash prefixes (`address(pub_key) = key_type + hash(pub_key)`) and differences. Alan noted that this approach has longer address space and it’s stronger.

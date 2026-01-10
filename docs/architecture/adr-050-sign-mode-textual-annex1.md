@@ -244,7 +244,7 @@ units in between nonzero units will be shown, e.g. ` 3 days, 0 hours, 0 minutes,
 
 Even longer time units such as months or years are imprecise.
 Weeks are precise, but not commonly used - `91 days` is more immediately
-legible than `13 weeks`.  Although `days` can be problematic,
+legible than `13 weeks`. Although `days` can be problematic,
 e.g. noon to noon on subsequent days can be 23 or 25 hours depending on
 daylight savings transitions, there is significant advantage in using
 strict 24-hour days over using only hours (e.g. `91 days` vs `2184 hours`).

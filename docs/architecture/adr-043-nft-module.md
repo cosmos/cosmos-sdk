@@ -109,7 +109,7 @@ message NFT {
 * `uri_hash` is a hash of the document pointed by uri; _optional_
 * `data` is an app specific data of the NFT. CAN be used by composing modules to specify additional properties of the NFT; _optional_
 
-This ADR doesn't specify values that `data` can take; however, best practices recommend upper-level NFT modules clearly specify their contents.  Although the value of this field doesn't provide the additional context required to manage NFT records, which means that the field can technically be removed from the specification, the field's existence allows basic informational/UI functionality.
+This ADR doesn't specify values that `data` can take; however, best practices recommend upper-level NFT modules clearly specify their contents. Although the value of this field doesn't provide the additional context required to manage NFT records, which means that the field can technically be removed from the specification, the field's existence allows basic informational/UI functionality.
 
 ### `Keeper` Interface
 

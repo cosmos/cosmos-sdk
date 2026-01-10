@@ -34,9 +34,8 @@
 
 ## Decision
 
-> This section describes alternative designs to the chosen design. This section
-> is important and if an adr does not have any alternatives then it should be
-> considered that the ADR was not thought through. 
+> This section describes the chosen design and solution. This section should
+> provide details on how the proposal addresses the problem described in the Background. 
 
 ## Consequences (optional)
 

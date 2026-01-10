@@ -34,7 +34,7 @@ This proposal is specifically about how to consume these events as a client of t
 
 ## Decision
 
-**Step-1**:  Implement additional functionality in the `types` package: `EmitTypedEvent` and `ParseTypedEvent` functions
+**Step-1**: Implement additional functionality in the `types` package: `EmitTypedEvent` and `ParseTypedEvent` functions
 
 ```go
 // types/events.go
@@ -109,7 +109,7 @@ func ParseTypedEvent(event abci.Event) (proto.Message, error) {
 
 Here, the `EmitTypedEvent` is a method on `EventManager` which takes typed event as input and apply json serialization on it. Then it maps the JSON key/value pairs to `event.Attributes` and emits it in form of `sdk.Event`. `Event.Type` will be the type URL of the proto message.
 
-When we subscribe to emitted events on the CometBFT websocket, they are emitted in the form of an `abci.Event`. `ParseTypedEvent` parses the event back to it's original proto message.
+When we subscribe to emitted events on the CometBFT websocket, they are emitted in the form of an `abci.Event`. `ParseTypedEvent` parses the event back to its original proto message.
 
 **Step-2**: Add proto definitions for typed events for msgs in each module:
 
@@ -206,7 +206,7 @@ func SubmitProposalEventHandler(ev proto.Message) (err error) {
 }
 
 // TxEmitter is an example of an event emitter that emits just transaction events. This can and
-// should be implemented somewhere in the Cosmos SDK. The Cosmos SDK can include an EventEmitters for tm.event='Tx'
+// should be implemented somewhere in the Cosmos SDK. The Cosmos SDK can include event emitters for tm.event='Tx'
 // and/or tm.event='NewBlock' (the new block events may contain typed events)
 func TxEmitter(ctx context.Context, cliCtx client.Context, ehs ...EventHandler) (err error) {
     // Instantiate and start CometBFT RPC client

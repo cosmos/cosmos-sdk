@@ -6,7 +6,7 @@
 * 2020-10-12: Updated Draft
 * 2020-11-13: Accepted
 * 2020-05-06: proto API updates, use `sdk.Msg` instead of `sdk.ServiceMsg` (the latter concept was removed from Cosmos SDK)
-* 2022-04-20: Updated the `SendAuthorization` proto docs to clarify the `SpendLimit` is a required field. (Generic authorization can be used with bank msg type url to create limit less bank authorization)
+* 2022-04-20: Updated the `SendAuthorization` proto docs to clarify the `SpendLimit` is a required field. (Generic authorization can be used with bank msg type url to create limitless bank authorization)
 
 ## Status
 
@@ -88,7 +88,7 @@ a `SpendLimit` and updates it down to zero:
 type SendAuthorization struct {
 	// SpendLimit specifies the maximum amount of tokens that can be spent
 	// by this authorization and will be updated as tokens are spent. This field is required. (Generic authorization 
-	// can be used with bank msg type url to create limit less bank authorization).
+	// can be used with bank msg type url to create limitless bank authorization).
 	SpendLimit sdk.Coins
 }
 
@@ -232,7 +232,7 @@ message SendAuthorization {
 message GenericAuthorization {
   option (cosmos_proto.implements_interface) = "Authorization";
 
-  // Msg, identified by it's type URL, to grant unrestricted permissions to execute
+  // Msg, identified by its type URL, to grant unrestricted permissions to execute
   string msg = 1;
 }
 ```
@@ -256,3 +256,4 @@ SDK users
 * Initial Hackatom implementation: https://github.com/cosmos-gaians/cosmos-sdk/tree/hackatom/x/delegation
 * Post-Hackatom spec: https://gist.github.com/aaronc/b60628017352df5983791cad30babe56#delegation-module
 * B-Harvest subkeys spec: https://github.com/cosmos/cosmos-sdk/issues/4480
+

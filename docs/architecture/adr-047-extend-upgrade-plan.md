@@ -148,7 +148,7 @@ We will add the following validation:
 
 1.  If `UpgradeInstructions` are provided:
     1.  There MUST be at least one entry in `artifacts`.
-    1.  All of the `artifacts` MUST have a unique `platform`.
+    1.  All `artifacts` MUST have a unique `platform`.
     1.  For each `Artifact`, if the `url` contains a `checksum` query parameter:
         1. The `checksum` query parameter value MUST be in the format of `{checksum_algo}:{checksum}`.
         1. The `{checksum}` from the query parameter MUST equal the `checksum` provided in the `Artifact`.

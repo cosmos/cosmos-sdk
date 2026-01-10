@@ -39,15 +39,20 @@ const (
 
 	QueryPathBroadcastTx = "/cosmos.tx.v1beta1.Service/BroadcastTx"
 
-	TelemetrySubsystem            = "abci"
-	MetricOETime                  = "oe_time"
-	MetricInternalFinalizeTime    = "internal_finalize_time"
-	MetricExecuteWithExecutorTime = "execute_with_executor_time"
-	MetricGetFinalizeStateTime    = "get_finalize_state_time"
-	MetricPreBlockTime            = "pre_block_time"
-	MetricBeginBlockTime          = "begin_block_time"
-	MetricEndBlockTime            = "end_block_time"
-	MetricOEAborted               = "oe_aborted"
+	TelemetrySubsystem              = "abci"
+	MetricOETime                    = "oe_time"
+	MetricNonOEInternalFinalizeTime = "non_oe_internal_finalize_time"
+	MetricWorkingHashTime           = "working_hash_time"
+	MetricStreamingListenerTime     = "streaming_listener_time"
+	MetricOEAbortIfNeededTime       = "oe_abort_if_needed_time"
+	MetricFinalizeBlockTime         = "finalize_block_time"
+	MetricInternalFinalizeTime      = "internal_finalize_time"
+	MetricExecuteWithExecutorTime   = "execute_with_executor_time"
+	MetricGetFinalizeStateTime      = "get_finalize_state_time"
+	MetricPreBlockTime              = "pre_block_time"
+	MetricBeginBlockTime            = "begin_block_time"
+	MetricEndBlockTime              = "end_block_time"
+	MetricOEAborted                 = "oe_aborted"
 )
 
 func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
@@ -980,7 +985,9 @@ func (app *BaseApp) executeTxsWithExecutor(ctx context.Context, ms storetypes.Mu
 // extensions into the proposal, which should not themselves be executed in cases
 // where they adhere to the sdk.Tx interface.
 func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.ResponseFinalizeBlock, err error) {
+	defer telemetry.MeasureSince(time.Now(), TelemetrySubsystem, MetricFinalizeBlockTime)
 	defer func() {
+		slStart := time.Now()
 		if res == nil {
 			return
 		}
@@ -990,11 +997,14 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 				app.logger.Error("ListenFinalizeBlock listening hook failed", "height", req.Height, "err", err)
 			}
 		}
+		telemetry.MeasureSince(slStart, TelemetrySubsystem, MetricStreamingListenerTime)
 	}()
 
 	if app.optimisticExec.Initialized() {
 		// check if the hash we got is the same as the one we are executing
+		ainTime := time.Now()
 		aborted := app.optimisticExec.AbortIfNeeded(req.Hash)
+		telemetry.MeasureSince(ainTime, TelemetrySubsystem, MetricOEAbortIfNeededTime)
 		if aborted {
 			telemetry.IncrCounter(1, TelemetrySubsystem, MetricOEAborted)
 		}
@@ -1006,7 +1016,9 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 		// only return if we are not aborting
 		if !aborted {
 			if res != nil {
+				whStart := time.Now()
 				res.AppHash = app.workingHash()
+				telemetry.MeasureSince(whStart, TelemetrySubsystem, MetricWorkingHashTime)
 			}
 
 			return res, err
@@ -1018,7 +1030,9 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 	}
 
 	// if no OE is running, just run the block (this is either a block replay or a OE that got aborted)
+	nonOEStart := time.Now()
 	res, err = app.internalFinalizeBlock(context.Background(), req)
+	telemetry.MeasureSince(nonOEStart, TelemetrySubsystem, MetricNonOEInternalFinalizeTime)
 	if res != nil {
 		res.AppHash = app.workingHash()
 	}

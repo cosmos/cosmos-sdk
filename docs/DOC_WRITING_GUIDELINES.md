@@ -8,13 +8,13 @@
 * Don't abuse `code` format when writing in plain English.
 * Follow Google developer documentation [style guide](https://developers.google.com/style).
 * Check the meaning of words in Microsoft's [A-Z word list and term collections](https://docs.microsoft.com/en-us/style-guide/a-z-word-list-term-collections/term-collections/accessibility-terms) (use the search input!).
-* RFC keywords should be used in technical documents (uppercase) and we recommend to use them in user documentation (lowercase). The RFC keywords are: "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and "OPTIONAL. They are to be interpreted as described in [RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119).
+* RFC keywords should be used in technical documents (uppercase) and we recommend to use them in user documentation (lowercase). The RFC keywords are: "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL". They are to be interpreted as described in [RFC 2119](https://datatracker.ietf.org/doc/html/rfc2119).
 
 ### Links
 
 **NOTE:** Strongly consider the existing links - both within this directory and to the website docs - when moving or deleting files.
 
-Relative links should be used nearly everywhere, due to versioning. Note that in case of page reshuffling, you must update all links references.
+Relative links should be used nearly everywhere, due to versioning. Note that in case of page reshuffling, you must update all link references.
 When deleting a link, redirects must be created in `docusaurus.config.js` to preserve the user flow.
 
 ### Code Snippets

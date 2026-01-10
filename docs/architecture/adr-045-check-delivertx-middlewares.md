@@ -22,7 +22,7 @@ A naive solution would be to add post-`Msg` hooks to BaseApp. However, the Cosmo
 
 ## Decision
 
-We decide to transform Baseapp's implementation of ABCI `{Check,Deliver}Tx` and its own `Simulate` methods to use a middleware-based design.
+We decide to transform BaseApp's implementation of ABCI `{Check,Deliver}Tx` and its own `Simulate` methods to use a middleware-based design.
 
 The two following interfaces are the base of the middleware design, and are defined in `types/tx`:
 
@@ -30,7 +30,7 @@ The two following interfaces are the base of the middleware design, and are defi
 type Handler interface {
     CheckTx(ctx context.Context, req Request, checkReq RequestCheckTx) (Response, ResponseCheckTx, error)
     DeliverTx(ctx context.Context, req Request) (Response, error)
-    SimulateTx(ctx context.Context, req Request (Response, error)
+    SimulateTx(ctx context.Context, req Request) (Response, error)
 }
 
 type Middleware func(Handler) Handler
@@ -75,7 +75,7 @@ type BaseApp  struct {
 }
 ```
 
-Baseapp's ABCI `{Check,Deliver}Tx()` and `Simulate()` methods simply call `app.txHandler.{Check,Deliver,Simulate}Tx()` with the relevant arguments. For example, for `DeliverTx`:
+BaseApp's ABCI `{Check,Deliver}Tx()` and `Simulate()` methods simply call `app.txHandler.{Check,Deliver,Simulate}Tx()` with the relevant arguments. For example, for `DeliverTx`:
 
 ```go
 func (app *BaseApp) DeliverTx(req abci.RequestDeliverTx) abci.ResponseDeliverTx {
@@ -147,11 +147,11 @@ func NewMyMiddleware(arg1, arg2) tx.Middleware {
 // Assert myTxHandler is a tx.Handler.
 var _ tx.Handler = myTxHandler{}
 
-func (h myTxHandler) CheckTx(ctx context.Context, req Request, checkReq RequestcheckTx) (Response, ResponseCheckTx, error) {
+func (h myTxHandler) CheckTx(ctx context.Context, req Request, checkReq RequestCheckTx) (Response, ResponseCheckTx, error) {
     // CheckTx specific pre-processing logic
 
     // run the next middleware
-    res, checkRes, err := txh.next.CheckTx(ctx, req, checkReq)
+    res, checkRes, err := h.next.CheckTx(ctx, req, checkReq)
 
     // CheckTx specific post-processing logic
 
@@ -162,7 +162,7 @@ func (h myTxHandler) DeliverTx(ctx context.Context, req Request) (Response, erro
     // DeliverTx specific pre-processing logic
 
     // run the next middleware
-    res, err := txh.next.DeliverTx(ctx, tx, req)
+    res, err := h.next.DeliverTx(ctx, req)
 
     // DeliverTx specific post-processing logic
 
@@ -173,7 +173,7 @@ func (h myTxHandler) SimulateTx(ctx context.Context, req Request) (Response, err
     // SimulateTx specific pre-processing logic
 
     // run the next middleware
-    res, err := txh.next.SimulateTx(ctx, tx, req)
+    res, err := h.next.SimulateTx(ctx, req)
 
     // SimulateTx specific post-processing logic
 

@@ -103,7 +103,7 @@ TODO, needs architecture review. Some topics:
 
 ### Positive
 
-* less pain to tool developers
+* less pain for tool developers
 * more compatibility in the ecosystem
 * ...
 

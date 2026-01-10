@@ -37,7 +37,7 @@ docs/
 └── architecture/
 ```
 
-The files in each sub-folders do not matter and will likely change. What matters is the sectioning:
+The files in each sub-folder do not matter and will likely change. What matters is the sectioning:
 
 * `README`: Landing page of the docs.
 * `intro`: Introductory material. Goal is to have a short explainer of the Cosmos SDK and then channel people to the resource they need. The [Cosmos SDK tutorial](https://github.com/cosmos/sdk-application-tutorial/) will be highlighted, as well as the `godocs`.

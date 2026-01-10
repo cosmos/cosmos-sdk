@@ -36,7 +36,7 @@ Legibility should focus on the common case - it is okay for unusual cases
 to be less legible.
 
 2. The presentation should be invertible if possible without substantial
-sacrifice of legibility.  Any change to the rendered data should result
+sacrifice of legibility. Any change to the rendered data should result
 in a visible change to the presentation. This extends the integrity of the
 signing to user-visible presentation.
 

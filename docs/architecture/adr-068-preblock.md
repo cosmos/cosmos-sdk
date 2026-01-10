@@ -14,8 +14,8 @@ Introduce `PreBlock`, which runs before the begin blocker of other modules, and 
 
 ## Context
 
-When upgrading to sdk 0.47, the storage format for consensus parameters changed, but in the migration block, `ctx.ConsensusParams()` is always `nil`, because it fails to load the old format using new code, it's supposed to be migrated by the `x/upgrade` module first, but unfortunately, the migration happens in `BeginBlocker` handler, which runs after the `ctx` is initialized.
-When we try to solve this, we find the `x/upgrade` module can't modify the context to make the consensus parameters visible for the other modules, the context is passed by value, and sdk team want to keep it that way, that's good for isolation between modules.
+When upgrading to SDK 0.47, the storage format for consensus parameters changed, but in the migration block, `ctx.ConsensusParams()` is always `nil` because it fails to load the old format using new code. It's supposed to be migrated by the `x/upgrade` module first, but unfortunately, the migration happens in `BeginBlocker` handler, which runs after the `ctx` is initialized.
+When we try to solve this, we find the `x/upgrade` module can't modify the context to make the consensus parameters visible for the other modules. The context is passed by value, and the SDK team wants to keep it that way, which is good for isolation between modules.
 
 ## Alternatives
 

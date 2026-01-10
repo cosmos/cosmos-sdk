@@ -77,7 +77,7 @@ will be available to the application during the subsequent `FinalizeBlock` call.
 An example of how a pre-FinalizeBlock hook could look is shown below:
 
 ```go
-app.SetPreBlocker(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) error {
+app.SetPreBlocker(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
     allVEs := []VE{} // store all parsed vote extensions here
     for _, tx := range req.Txs {
         // define a custom function that tries to parse the tx as a vote extension
@@ -94,10 +94,10 @@ app.SetPreBlocker(func(ctx sdk.Context, req *abci.RequestFinalizeBlock) error {
     result := compute(allVEs)
     err := storeVEResult(ctx, result)
     if err != nil {
-        return err
+        return nil, err
     }
 
-    return nil
+    return &sdk.ResponsePreBlock{}, nil
 })
 
 ```

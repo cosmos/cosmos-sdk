@@ -60,7 +60,7 @@ In addition to basic module wiring, set up the upgrade Keeper for the app and th
 keeper's PreBlocker method:
 
 ```go
-func (app *myApp) PreBlocker(ctx sdk.Context, req req.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+func (app *myApp) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
       // For demonstration sake, the app PreBlocker only returns the upgrade module pre-blocker.
       // In a real app, the module manager should call all pre-blockers
       // return app.ModuleManager.PreBlock(ctx, req)

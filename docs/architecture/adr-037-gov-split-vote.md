@@ -16,7 +16,7 @@ This ADR defines a modification to the governance module that would allow a stak
 
 Currently, an address can cast a vote with only one option (Yes/No/Abstain/NoWithVeto) and use their full voting power behind that choice.
 
-However, oftentimes the entity owning that address might not be a single individual.  For example, a company might have different stakeholders who want to vote differently, and so it makes sense to allow them to split their voting power.  Another example use case is exchanges.  Many centralized exchanges often stake a portion of their users' tokens in their custody.  Currently, it is not possible for them to do "passthrough voting" and giving their users voting rights over their tokens.  However, with this system, exchanges can poll their users for voting preferences, and then vote on-chain proportionally to the results of the poll.
+However, oftentimes the entity owning that address might not be a single individual. For example, a company might have different stakeholders who want to vote differently, and so it makes sense to allow them to split their voting power. Another example use case is exchanges. Many centralized exchanges often stake a portion of their users' tokens in their custody. Currently, it is not possible for them to do "passthrough voting" and giving their users voting rights over their tokens. However, with this system, exchanges can poll their users for voting preferences, and then vote on-chain proportionally to the results of the poll.
 
 ## Decision
 
@@ -104,7 +104,7 @@ to maintain backwards compatibility.
 
 ### Negative
 
-* Is more complex than simple voting, and so may be harder to explain to users.  However, this is mostly mitigated because the feature is opt-in.
+* Is more complex than simple voting, and so may be harder to explain to users. However, this is mostly mitigated because the feature is opt-in.
 
 ### Neutral
 

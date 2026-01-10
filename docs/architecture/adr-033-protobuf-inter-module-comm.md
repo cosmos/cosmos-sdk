@@ -51,7 +51,7 @@ just a simple string. So the `x/upgrade` module could mint tokens for the `x/sta
 Based on [ADR-021](./adr-021-protobuf-query-encoding.md) and [ADR-031](./adr-031-msg-service.md), we introduce the
 Inter-Module Communication framework for secure module authorization and OCAPs.
 When implemented, this could also serve as an alternative to the existing paradigm of passing keepers between
-modules. The approach outlined here-in is intended to form the basis of a Cosmos SDK v1.0 that provides the necessary
+modules. The approach outlined herein is intended to form the basis of a Cosmos SDK v1.0 that provides the necessary
 stability and encapsulation guarantees that allow a thriving module ecosystem to emerge.
 
 Of particular note — the decision is to _enable_ this functionality for modules to adopt at their own discretion.
@@ -114,7 +114,7 @@ Blockchain users (external clients) use their account's private key to sign tran
 message specifies required signers with `Msg.GetSigner`). The authentication check is performed by `AnteHandler`.
 
 Here, we extend this process, by allowing modules to be identified in `Msg.GetSigners`. When a module wants to trigger the execution a `Msg` in another module,
-its `ModuleKey` acts as the sender (through the `ClientConn` interface we describe below) and is set as a sole "signer". It's worth to note
+its `ModuleKey` acts as the sender (through the `ClientConn` interface we describe below) and is set as a sole "signer". It is worth noting
 that we don't use any cryptographic signature in this case.
 For example, module `A` could use its `A.ModuleKey` to create `MsgSend` object for `/cosmos.bank.Msg/Send` transaction. `MsgSend` validation
 will assure that the `from` account (`A.ModuleKey` in this case) is the signer.
@@ -137,7 +137,7 @@ func NewFooMsgServer(moduleKey RootModuleKey, ...) FooMsgServer {
 
   return FooMsgServer {
     // ...
-    modouleKey: moduleKey,
+    moduleKey: moduleKey,
     bankQuery: bank.NewQueryClient(moduleKey),
     bankMsg: bank.NewMsgClient(moduleKey),
   }
@@ -148,7 +148,7 @@ func (foo *FooMsgServer) Bar(ctx context.Context, req *MsgBarRequest) (*MsgBarRe
 
   ...
 
-  res, err := foo.bankMsg.Send(ctx, &bank.MsgSendRequest{FromAddress: fooMsgServer.moduleKey.Address(), ...})
+  res, err := foo.bankMsg.Send(ctx, &bank.MsgSendRequest{FromAddress: foo.moduleKey.Address(), ...})
 
   ...
 }
@@ -398,3 +398,4 @@ replacing `Keeper` interfaces altogether.
 * [ADR 028](./adr-028-public-key-addresses.md)
 * [ADR 030 draft](https://github.com/cosmos/cosmos-sdk/pull/7105)
 * [Object-Capability Model](https://docs.network.com/main/core/ocap)
+

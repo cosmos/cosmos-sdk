@@ -148,7 +148,7 @@ func (am AppModule) RegisterServices(cfg Configurator) {
 
 The `RegisterServices` method and the `Configurator` interface are intended to
 evolve to satisfy the use cases discussed in [\#7093](https://github.com/cosmos/cosmos-sdk/issues/7093)
-and [\#7122](https://github.com/cosmos/cosmos-sdk/issues/7421).
+and [\#7122](https://github.com/cosmos/cosmos-sdk/issues/7122).
 
 When `Msg` services are registered, the framework _should_ verify that all `Msg` types
 implement the `sdk.Msg` interface and throw an error during initialization rather

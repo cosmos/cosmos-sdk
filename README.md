@@ -24,7 +24,7 @@
   </a>
 </div>
 
-The Cosmos SDK is a modular, open-source blockchain SDK for building secure, high-performance Layer 1 chains with full customizability used by 200+ chains in production.   Developers can use the Cosmos SDK to easily and quickly spin up custom blockchains that can natively interoperate.
+The Cosmos SDK is a modular, open-source blockchain SDK for building secure, high-performance Layer 1 chains with full customizability used by 200+ chains in production. Developers can use the Cosmos SDK to easily and quickly spin up custom blockchains that can natively interoperate.
 
 The Cosmos SDK is tailored for building secure, sovereign application-specific blockchains. Developers building with the Cosmos SDK can use predefined modules that cover standard blockchain functionality or create custom modules for their specific use case. This composable architecture enables robust customization. The SDK provides abstractions for permissioning, governance, state management, account abstraction, tokenization processes, application logic, and more.
 
@@ -44,7 +44,7 @@ Note: We advise to always use the latest maintained [Go version](https://go.dev/
 
 ## Modules
 
-The Cosmos SDK maintains a set of modules that can be included in your blockchain application.  For more information
+The Cosmos SDK maintains a set of modules that can be included in your blockchain application. For more information
 on modules, see our [introduction doc](./x/README.md).
 
 ## Maintainers

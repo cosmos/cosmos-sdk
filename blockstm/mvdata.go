@@ -42,8 +42,8 @@ func NewGMVData[V any](isZero func(V) bool, valueLen func(V) int) *GMVData[V] {
 	}
 }
 
-// getTree returns `nil` if not found
-func (d *GMVData[V]) getTree(key Key) *SecondaryStore[V] {
+// getStore returns `nil` if not found
+func (d *GMVData[V]) getStore(key Key) *SecondaryStore[V] {
 	outer, _ := d.Get(dataItem[V]{Key: key})
 	return outer.Tree
 }
@@ -82,13 +82,13 @@ func (d *GMVData[V]) Read(key Key, txn TxnIndex) (V, TxnVersion, bool) {
 		return zero, InvalidTxnVersion, false
 	}
 
-	tree := d.getTree(key)
-	if tree == nil {
+	store := d.getStore(key)
+	if store == nil {
 		return zero, InvalidTxnVersion, false
 	}
 
 	// find the closest txn that's less than the given txn
-	idx, item, ok := tree.PreviousValue(txn)
+	idx, item, ok := store.PreviousValue(txn)
 	if !ok {
 		return zero, InvalidTxnVersion, false
 	}

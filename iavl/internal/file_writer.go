@@ -9,6 +9,7 @@ import (
 
 // FileWriter is a buffered writer that tracks the number of bytes written.
 type FileWriter struct {
+	file    *os.File
 	writer  *bufio.Writer
 	written int
 }
@@ -19,6 +20,7 @@ type FileWriter struct {
 func NewFileWriter(file *os.File) *FileWriter {
 	const defaultBufferSize = 512 * 1024 // 512kb
 	return &FileWriter{
+		file:   file,
 		writer: bufio.NewWriterSize(file, defaultBufferSize),
 	}
 }
@@ -34,6 +36,18 @@ func (f *FileWriter) Write(p []byte) (n int, err error) {
 func (f *FileWriter) Flush() error {
 	if err := f.writer.Flush(); err != nil {
 		return fmt.Errorf("failed to flush writer: %w", err)
+	}
+	return nil
+}
+
+func (f *FileWriter) Sync() error {
+	err := f.Flush()
+	if err != nil {
+		return err
+	}
+	err = f.file.Sync()
+	if err != nil {
+		return fmt.Errorf("failed to sync file: %w", err)
 	}
 	return nil
 }

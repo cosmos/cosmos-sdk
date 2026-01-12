@@ -190,8 +190,3 @@ func RemoveRecursive(nodePtr *NodePointer, key []byte, ctx *MutationContext) (re
 
 	return true, NewNodePointer(newNode), nil, nil
 }
-
-type NodeUpdate struct {
-	SetNode   *MemNode
-	DeleteKey []byte
-}

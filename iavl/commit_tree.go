@@ -4,6 +4,8 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"iter"
+	"os"
+	"path/filepath"
 	"sync"
 
 	storetypes "cosmossdk.io/store/types"
@@ -14,14 +16,38 @@ import (
 type CommitTree struct {
 	writeMutex sync.Mutex
 
+	opts Options
+
 	treeStore *internal.TreeStore
 
 	lastCommitId storetypes.CommitID
+
+	walWriter *internal.KVDataWriter
 }
 
 func NewCommitTree(dir string, opts Options) (*CommitTree, error) {
+	err := os.MkdirAll(dir, 0o700)
+	if err != nil {
+		return nil, fmt.Errorf("creating tree directory: %w", err)
+	}
+
+	treeStore := &internal.TreeStore{}
+	var walWriter *internal.KVDataWriter
+	if dir != "" {
+		walFile, err := os.OpenFile(filepath.Join(dir, "wal.dat"), os.O_CREATE|os.O_RDWR|os.O_APPEND, 0o600)
+		if err != nil {
+			return nil, fmt.Errorf("opening WAL file: %w", err)
+		}
+		walWriter = internal.NewKVDataWriter(walFile)
+		err = walWriter.WriteStartWAL(uint64(treeStore.StagedVersion()))
+		if err != nil {
+			return nil, fmt.Errorf("writing WAL start: %w", err)
+		}
+	}
 	return &CommitTree{
-		treeStore: &internal.TreeStore{},
+		opts:      opts,
+		treeStore: treeStore,
+		walWriter: walWriter,
 	}, nil
 }
 
@@ -66,16 +92,39 @@ func (c *CommitTree) Commit(updates iter.Seq[Update]) (storetypes.CommitID, erro
 
 	// TODO pre-allocate a decent sized slice that we reuse and reset across commits
 	// TODO we can also add a function param for the number of updates to pre-allocate
-	var nodeUpdates []internal.NodeUpdate
+	var nodeUpdates []internal.KVUpdate
 	for update := range updates {
 		if update.Delete {
-			nodeUpdates = append(nodeUpdates, internal.NodeUpdate{DeleteKey: update.Key})
+			nodeUpdates = append(nodeUpdates, internal.KVUpdate{DeleteKey: update.Key})
 		} else {
-			nodeUpdates = append(nodeUpdates, internal.NodeUpdate{SetNode: internal.NewLeafNode(update.Key, update.Value, stagedVersion)})
+			nodeUpdates = append(nodeUpdates, internal.KVUpdate{SetNode: internal.NewLeafNode(update.Key, update.Value, stagedVersion)})
 		}
 	}
 
 	// TODO background start writing nodeUpdates to WAL immediately
+	var walDone chan error
+	if c.walWriter != nil {
+		walDone = make(chan error, 1)
+		go func() {
+			defer close(walDone)
+			err := c.walWriter.WriteWALUpdates(nodeUpdates)
+			if err != nil {
+				walDone <- err
+			}
+
+			err = c.walWriter.WriteWALCommit(uint64(stagedVersion))
+			if err != nil {
+				walDone <- err
+			}
+
+			if c.opts.Fsync {
+				err = c.walWriter.Sync()
+				if err != nil {
+					walDone <- err
+				}
+			}
+		}()
+	}
 
 	// start computing hashes for leaf nodes in parallel
 	hashErr := make(chan error, 1)
@@ -179,6 +228,14 @@ func (c *CommitTree) Commit(updates iter.Seq[Update]) (storetypes.CommitID, erro
 	c.lastCommitId = commitId
 	////c.commitCtx = nil
 	//
+
+	if walDone != nil {
+		err := <-walDone
+		if err != nil {
+			return storetypes.CommitID{}, err
+		}
+	}
+
 	return commitId, nil
 }
 

@@ -44,7 +44,7 @@ func (s *StatusEntry) IsExecuted() (incarnation Incarnation, ok bool) {
 	}
 
 	s.Unlock()
-	return
+	return incarnation, ok
 }
 
 func (s *StatusEntry) TrySetExecuting() (incarnation Incarnation, ok bool) {
@@ -57,7 +57,7 @@ func (s *StatusEntry) TrySetExecuting() (incarnation Incarnation, ok bool) {
 	}
 
 	s.Unlock()
-	return
+	return incarnation, ok
 }
 
 func (s *StatusEntry) setStatus(status Status) {
@@ -91,7 +91,7 @@ func (s *StatusEntry) TryValidationAbort(incarnation Incarnation) (ok bool) {
 	}
 
 	s.Unlock()
-	return
+	return ok
 }
 
 func (s *StatusEntry) SetReadyStatus() {

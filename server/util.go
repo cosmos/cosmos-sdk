@@ -27,7 +27,6 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"cosmossdk.io/log"
-
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"

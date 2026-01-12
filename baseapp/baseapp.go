@@ -1,8 +1,6 @@
 package baseapp
 
 // need to import telemetry before anything else for side effects
-import _ "github.com/cosmos/cosmos-sdk/telemetry"
-
 import (
 	"fmt"
 	"maps"
@@ -1044,7 +1042,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 				attribute.Int("msg_index", i),
 			),
 		)
-		msgCtx, msgSpan2 := msgCtx.StartSpan(tracer, fmt.Sprintf("msgHandler.%s", msgTypeUrl))
+		_, msgSpan2 := msgCtx.StartSpan(tracer, fmt.Sprintf("msgHandler.%s", msgTypeUrl))
 		// ADR 031 request type routing
 		msgResult, err := handler(ctx, msg)
 		msgSpan2.End()

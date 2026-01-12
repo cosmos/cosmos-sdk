@@ -33,7 +33,7 @@ func NewCommitTree(dir string, opts Options) (*CommitTree, error) {
 
 	treeStore := &internal.TreeStore{}
 	var walWriter *internal.KVDataWriter
-	if dir != "" {
+	if dir != "" && opts.WriteWAL {
 		walFile, err := os.OpenFile(filepath.Join(dir, "wal.dat"), os.O_CREATE|os.O_RDWR|os.O_APPEND, 0o600)
 		if err != nil {
 			return nil, fmt.Errorf("opening WAL file: %w", err)
@@ -117,7 +117,7 @@ func (c *CommitTree) Commit(updates iter.Seq[Update]) (storetypes.CommitID, erro
 				walDone <- err
 			}
 
-			if c.opts.Fsync {
+			if c.opts.FsyncWAL {
 				err = c.walWriter.Sync()
 				if err != nil {
 					walDone <- err

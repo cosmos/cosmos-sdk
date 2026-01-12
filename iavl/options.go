@@ -1,5 +1,6 @@
 package iavl
 
 type Options struct {
-	Fsync bool `json:"fsync"`
+	FsyncWAL bool `json:"fsync_wal"`
+	WriteWAL bool `json:"write_wal"`
 }

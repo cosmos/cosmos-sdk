@@ -11,5 +11,10 @@ func (ts *TreeStore) StagedVersion() uint32 {
 
 func (ts *TreeStore) SaveRoot(newRoot *NodePointer) error {
 	ts.root = newRoot
+	ts.stagedVersion++
 	return nil
+}
+
+func (ts *TreeStore) Latest() *NodePointer {
+	return ts.root
 }

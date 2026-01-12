@@ -3,6 +3,7 @@ package iavl
 import (
 	"crypto/sha256"
 	"fmt"
+	"iter"
 	"sync"
 
 	storetypes "cosmossdk.io/store/types"
@@ -11,7 +12,6 @@ import (
 )
 
 type CommitTree struct {
-	root       *internal.NodePointer
 	writeMutex sync.Mutex
 
 	treeStore *internal.TreeStore
@@ -20,7 +20,9 @@ type CommitTree struct {
 }
 
 func NewCommitTree(dir string, opts Options) (*CommitTree, error) {
-	return &CommitTree{}, nil
+	return &CommitTree{
+		treeStore: &internal.TreeStore{},
+	}, nil
 }
 
 //	func (c *CommitTree) WorkingHash() ([]byte, error) {
@@ -53,7 +55,7 @@ func workingHash(rootPtr *internal.NodePointer) ([]byte, error) {
 	return hash.SafeCopy(), nil
 }
 
-func (c *CommitTree) Commit(updates []Update) (storetypes.CommitID, error) {
+func (c *CommitTree) Commit(updates iter.Seq[Update]) (storetypes.CommitID, error) {
 	// TODO maybe support writing in batches, but for now let's assume a single batch
 	// because that's actually what happens in the SDK due to cache wrapping and needing all keys in sorted
 	// order before updating the tree
@@ -62,12 +64,14 @@ func (c *CommitTree) Commit(updates []Update) (storetypes.CommitID, error) {
 
 	stagedVersion := c.treeStore.StagedVersion()
 
-	nodeUpdates := make([]internal.NodeUpdate, len(updates))
-	for i, update := range updates {
+	// TODO pre-allocate a decent sized slice that we reuse and reset across commits
+	// TODO we can also add a function param for the number of updates to pre-allocate
+	var nodeUpdates []internal.NodeUpdate
+	for update := range updates {
 		if update.Delete {
-			nodeUpdates[i] = internal.NodeUpdate{DeleteKey: update.Key}
+			nodeUpdates = append(nodeUpdates, internal.NodeUpdate{DeleteKey: update.Key})
 		} else {
-			nodeUpdates[i] = internal.NodeUpdate{SetNode: internal.NewLeafNode(update.Key, update.Value, stagedVersion)}
+			nodeUpdates = append(nodeUpdates, internal.NodeUpdate{SetNode: internal.NewLeafNode(update.Key, update.Value, stagedVersion)})
 		}
 	}
 
@@ -89,7 +93,7 @@ func (c *CommitTree) Commit(updates []Update) (storetypes.CommitID, error) {
 	}()
 
 	// process all the nodeUpdates against the current root to produce a new root
-	root := c.root
+	root := c.treeStore.Latest()
 	mutationCtx := internal.NewMutationContext(stagedVersion)
 	for _, nu := range nodeUpdates {
 		var err error
@@ -163,7 +167,11 @@ func (c *CommitTree) Commit(updates []Update) (storetypes.CommitID, error) {
 	//c.startEvict(c.store.SavedVersion())
 	//
 	//// cache the committed tree as the latest version
-	//c.latest.Store(c.root)
+	err = c.treeStore.SaveRoot(root)
+	if err != nil {
+		return storetypes.CommitID{}, err
+	}
+
 	commitId := storetypes.CommitID{
 		Version: int64(stagedVersion),
 		Hash:    hash,
@@ -172,6 +180,44 @@ func (c *CommitTree) Commit(updates []Update) (storetypes.CommitID, error) {
 	////c.commitCtx = nil
 	//
 	return commitId, nil
+}
+
+func (c *CommitTree) Latest() TreeReader {
+	return &treeReader{root: c.treeStore.Latest()}
+}
+
+type TreeReader interface {
+	Get(key []byte) ([]byte, error)
+	Size() int64
+}
+
+type treeReader struct {
+	root *internal.NodePointer
+}
+
+func (t treeReader) Get(key []byte) ([]byte, error) {
+	root, pin, err := t.root.Resolve()
+	defer pin.Unpin()
+	if err != nil {
+		return nil, err
+	}
+	value, _, err := root.Get(key)
+	if err != nil {
+		return nil, err
+	}
+	return value.SafeCopy(), nil
+}
+
+func (t treeReader) Size() int64 {
+	if t.root == nil {
+		return 0
+	}
+	root, pin, err := t.root.Resolve()
+	defer pin.Unpin()
+	if err != nil {
+		return 0
+	}
+	return root.Size()
 }
 
 //

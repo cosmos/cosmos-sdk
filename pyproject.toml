@@ -1,0 +1,13 @@
+[project]
+name = "cosmos-sdk"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.13"
+dependencies = [
+    "duckdb>=1.4.1",
+    "notebook>=7.4.7",
+    "pandas>=2.3.3",
+    "plotly>=6.4.0",
+    "pydantic>=2.12.3",
+    "pytz>=2025.2",
+]

@@ -25,8 +25,10 @@ require (
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogogateway v1.2.0
 	github.com/cosmos/gogoproto v1.7.2
+	github.com/cosmos/iavl v1.2.6
 	github.com/cosmos/ledger-cosmos-go v1.0.0
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.0
+	github.com/edsrzf/mmap-go v1.0.0
 	github.com/golang/protobuf v1.5.4
 	github.com/google/go-cmp v0.7.0
 	github.com/google/gofuzz v1.2.0
@@ -70,6 +72,7 @@ require (
 	go.uber.org/mock v0.6.0
 	go.yaml.in/yaml/v3 v3.0.4
 	golang.org/x/crypto v0.46.0
+	golang.org/x/exp v0.0.0-20250606033433-dcc06ee1d476
 	golang.org/x/sync v0.19.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20251202230838-ff82c1b0f217
 	google.golang.org/grpc v1.78.0
@@ -134,7 +137,6 @@ require (
 	github.com/cockroachdb/redact v1.1.6 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb // indirect
 	github.com/cometbft/cometbft-db v0.14.1 // indirect
-	github.com/cosmos/iavl v1.2.6 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/danieljoos/wincred v1.2.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
@@ -311,7 +313,6 @@ require (
 	go.uber.org/zap v1.27.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
 	golang.org/x/arch v0.21.0 // indirect
-	golang.org/x/exp v0.0.0-20250606033433-dcc06ee1d476 // indirect
 	golang.org/x/mod v0.30.0 // indirect
 	golang.org/x/net v0.48.0 // indirect
 	golang.org/x/oauth2 v0.34.0 // indirect

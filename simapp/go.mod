@@ -107,6 +107,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/dvsekhvalnov/jose2go v1.8.0 // indirect
 	github.com/ebitengine/purego v0.9.1 // indirect
+	github.com/edsrzf/mmap-go v1.0.0 // indirect
 	github.com/emicklei/dot v1.8.0 // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.35.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.2.1 // indirect

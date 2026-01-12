@@ -48,8 +48,8 @@ func (d *GMVData[V]) getStore(key Key) *SecondaryStore[V] {
 	return outer.Store
 }
 
-// getTreeOrDefault set a new tree atomically if not found.
-func (d *GMVData[V]) getTreeOrDefault(key Key) *SecondaryStore[V] {
+// getStoreOrDefault set a new tree atomically if not found.
+func (d *GMVData[V]) getStoreOrDefault(key Key) *SecondaryStore[V] {
 	return d.GetOrDefault(dataItem[V]{Key: key}, func(item *dataItem[V]) {
 		if item.Store == nil {
 			item.Store = NewSecondaryStore[V]()
@@ -58,18 +58,20 @@ func (d *GMVData[V]) getTreeOrDefault(key Key) *SecondaryStore[V] {
 }
 
 func (d *GMVData[V]) Write(key Key, value V, version TxnVersion) {
-	tree := d.getTreeOrDefault(key)
+	tree := d.getStoreOrDefault(key)
 	tree.Set(version.Index, secondaryDataItem[V]{Incarnation: version.Incarnation, Value: value})
 }
 
 func (d *GMVData[V]) WriteEstimate(key Key, txn TxnIndex) {
-	tree := d.getTreeOrDefault(key)
+	tree := d.getStoreOrDefault(key)
 	tree.Set(txn, secondaryDataItem[V]{Estimate: true})
 }
 
 func (d *GMVData[V]) Delete(key Key, txn TxnIndex) {
-	tree := d.getTreeOrDefault(key)
-	tree.Delete(txn)
+	tree := d.getStore(key)
+	if tree != nil {
+		tree.Delete(txn)
+	}
 }
 
 // Read returns the value and the version of the value that's less than the given txn.

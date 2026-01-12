@@ -130,7 +130,7 @@ func (s *Scheduler) NextVersionToValidate() TxnVersion {
 	IncrAtomic(&s.numActiveTasks)
 	idxToValidate := FetchIncr(&s.validationIdx)
 	if idxToValidate < uint64(s.blockSize) {
-		if ok, incarnation := s.txnStatus[idxToValidate].IsExecuted(); ok {
+		if incarnation, ok := s.txnStatus[idxToValidate].IsExecuted(); ok {
 			return TxnVersion{TxnIndex(idxToValidate), incarnation}
 		}
 	}
@@ -159,7 +159,7 @@ func (s *Scheduler) WaitForDependency(txn, blockingTxn TxnIndex) *Condvar {
 	entry.Lock()
 
 	// thread holds 2 locks
-	if ok, _ := s.txnStatus[blockingTxn].IsExecuted(); ok {
+	if _, ok := s.txnStatus[blockingTxn].IsExecuted(); ok {
 		// dependency resolved before entry.Lock() (https://github.com/cosmos/cosmos-sdk/blob/825fd620889acac4d0fd1bf0f9370651d2ee6610/blockstm/scheduler.go#L152) was acquired
 		entry.Unlock()
 		return nil

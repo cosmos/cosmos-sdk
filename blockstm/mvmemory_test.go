@@ -218,3 +218,66 @@ func TestMVMemoryDelete(t *testing.T) {
 		require.Equal(t, []byte{0}, bankStore.Get(balanceKey))
 	}
 }
+
+func TestMVMemoryIteration(t *testing.T) {
+	stores := map[storetypes.StoreKey]int{StoreKeyAuth: 0}
+	storage := NewMultiMemDB(stores)
+	mv := NewMVMemory(16, stores, storage, nil)
+
+	view := mv.View(0)
+	store := view.GetKVStore(StoreKeyAuth)
+
+	{
+		iter := store.Iterator(nil, nil)
+		kvs := CollectIterator(iter)
+		iter.Close()
+		require.Empty(t, kvs)
+	}
+
+	store.Set([]byte("a"), []byte("1"))
+	store.Set([]byte("b"), []byte("1"))
+	store.Set([]byte("c"), []byte("1"))
+	require.True(t, mv.Record(TxnVersion{0, 0}, view))
+
+	view = mv.View(1)
+	store = view.GetKVStore(StoreKeyAuth)
+
+	{
+		iter := store.Iterator(nil, nil)
+		kvs := CollectIterator(iter)
+		iter.Close()
+		require.Equal(t, []KVPair{
+			{[]byte("a"), []byte("1")},
+			{[]byte("b"), []byte("1")},
+			{[]byte("c"), []byte("1")},
+		}, kvs)
+	}
+
+	store.Set([]byte("b"), []byte("2"))
+	store.Set([]byte("c"), []byte("2"))
+	store.Set([]byte("d"), []byte("2"))
+	require.True(t, mv.Record(TxnVersion{1, 0}, view))
+
+	view = mv.View(2)
+	store = view.GetKVStore(StoreKeyAuth)
+
+	{
+		iter := store.Iterator(nil, nil)
+		kvs := CollectIterator(iter)
+		iter.Close()
+		require.Equal(t, []KVPair{
+			{[]byte("a"), []byte("1")},
+			{[]byte("b"), []byte("2")},
+			{[]byte("c"), []byte("2")},
+			{[]byte("d"), []byte("2")},
+		}, kvs)
+	}
+	store.Set([]byte("c"), []byte("3"))
+	store.Set([]byte("d"), []byte("3"))
+	store.Set([]byte("e"), []byte("3"))
+	require.True(t, mv.Record(TxnVersion{2, 0}, view))
+
+	require.True(t, mv.ValidateReadSet(0))
+	require.True(t, mv.ValidateReadSet(1))
+	require.True(t, mv.ValidateReadSet(2))
+}

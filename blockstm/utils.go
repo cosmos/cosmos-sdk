@@ -75,6 +75,46 @@ func DiffOrderedList(old, new []Key, callback func(Key, bool) bool) {
 	}
 }
 
+// DiffMemDB compares two tree
+// callback arguments: (value, is_new)
+func DiffMemDB[V any](old, new *GMemDB[V], callback func(Key, bool) bool) {
+	oldIter := old.Iterator(nil, nil)
+	defer oldIter.Close()
+
+	newIter := new.Iterator(nil, nil)
+	defer newIter.Close()
+
+	for oldIter.Valid() && newIter.Valid() {
+		switch bytes.Compare(oldIter.Key(), newIter.Key()) {
+		case -1:
+			if !callback(oldIter.Key(), false) {
+				return
+			}
+			oldIter.Next()
+		case 1:
+			if !callback(newIter.Key(), true) {
+				return
+			}
+			newIter.Next()
+		default:
+			oldIter.Next()
+			newIter.Next()
+		}
+	}
+
+	for ; oldIter.Valid(); oldIter.Next() {
+		if !callback(oldIter.Key(), false) {
+			return
+		}
+	}
+
+	for ; newIter.Valid(); newIter.Next() {
+		if !callback(newIter.Key(), true) {
+			return
+		}
+	}
+}
+
 // BytesBeyond returns if a is beyond b in specified iteration order
 func BytesBeyond(a, b []byte, ascending bool) bool {
 	if ascending {

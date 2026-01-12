@@ -2,6 +2,7 @@ package blockstm
 
 import (
 	"bytes"
+	"sync/atomic"
 
 	storetypes "cosmossdk.io/store/types"
 
@@ -13,59 +14,169 @@ const (
 	InnerBTreeDegree = 4
 )
 
+type DataEntry[V any] struct {
+	Incarnation Incarnation
+	Data        *GMemDB[V]
+
+	// mark all the writes in this txn as ESTIMATE
+	Estimate bool
+}
+
 type MVData = GMVData[[]byte]
 
-func NewMVData() *MVData {
-	return NewGMVData(storetypes.BytesIsZero, storetypes.BytesValueLen)
+func NewMVData(blockSize int) *MVData {
+	return NewGMVData(blockSize, storetypes.BytesIsZero, storetypes.BytesValueLen)
 }
 
 type GMVData[V any] struct {
-	tree.BTree[dataItem[V]]
+	// key -> bitmap(txn)
+	tree.BTree[dataItem]
+
 	isZero   func(V) bool
 	valueLen func(V) int
+
+	// txn -> (incarnation, estimate, key -> value)
+	data []atomic.Pointer[DataEntry[V]]
 }
 
-func NewMVStore(key storetypes.StoreKey) MVStore {
+func NewMVStore(key storetypes.StoreKey, blockSize int) MVStore {
 	switch key.(type) {
 	case *storetypes.ObjectStoreKey:
-		return NewGMVData(storetypes.AnyIsZero, storetypes.AnyValueLen)
+		return NewGMVData(blockSize, storetypes.AnyIsZero, storetypes.AnyValueLen)
 	default:
-		return NewGMVData(storetypes.BytesIsZero, storetypes.BytesValueLen)
+		return NewGMVData(blockSize, storetypes.BytesIsZero, storetypes.BytesValueLen)
 	}
 }
 
-func NewGMVData[V any](isZero func(V) bool, valueLen func(V) int) *GMVData[V] {
+func NewGMVData[V any](blockSize int, isZero func(V) bool, valueLen func(V) int) *GMVData[V] {
 	return &GMVData[V]{
-		BTree:    *tree.NewBTree(tree.KeyItemLess[dataItem[V]], OuterBTreeDegree),
+		BTree:    *tree.NewBTree(tree.KeyItemLess[dataItem], OuterBTreeDegree),
 		isZero:   isZero,
 		valueLen: valueLen,
+
+		data: make([]atomic.Pointer[DataEntry[V]], blockSize),
 	}
 }
 
-// getTree returns `nil` if not found
-func (d *GMVData[V]) getTree(key Key) *tree.BTree[secondaryDataItem[V]] {
-	outer, _ := d.Get(dataItem[V]{Key: key})
-	return outer.Tree
+// getStore returns `nil` if not found
+func (d *GMVData[V]) getStore(key Key) *BitmapIndex {
+	outer, _ := d.Get(dataItem{Key: key})
+	return outer.Index
 }
 
 // getTreeOrDefault set a new tree atomically if not found.
-func (d *GMVData[V]) getTreeOrDefault(key Key) *tree.BTree[secondaryDataItem[V]] {
-	return d.GetOrDefault(dataItem[V]{Key: key}, (*dataItem[V]).Init).Tree
+func (d *GMVData[V]) getStoreOrDefault(key Key) *BitmapIndex {
+	return d.GetOrDefault(dataItem{Key: key}, (*dataItem).Init).Index
 }
 
-func (d *GMVData[V]) Write(key Key, value V, version TxnVersion) {
-	tree := d.getTreeOrDefault(key)
-	tree.Set(secondaryDataItem[V]{Index: version.Index, Incarnation: version.Incarnation, Value: value})
+// Consolidate returns wroteNewLocation
+func (d *GMVData[V]) Consolidate(version TxnVersion, writeSet *GMemDB[V]) bool {
+	if writeSet == nil || writeSet.Len() == 0 {
+		// delete old indexes
+		d.ConsolidateEmpty(version.Index)
+		return false
+	}
+
+	prevData := d.data[version.Index].Swap(&DataEntry[V]{
+		Incarnation: version.Incarnation,
+		Data:        writeSet,
+	})
+
+	var wroteNewLocation bool
+	if prevData == nil {
+		writeSet.Scan(func(key Key, _ V) bool {
+			d.Set(key, version.Index)
+			return true
+		})
+		wroteNewLocation = true
+	} else {
+		// diff writeSet to update indexes
+		DiffMemDB(prevData.Data, writeSet, func(key Key, is_new bool) bool {
+			if is_new {
+				// new key, add to index
+				d.Set(key, version.Index)
+				wroteNewLocation = true
+			} else {
+				// deleted key, delete from index
+				d.Delete(key, version.Index)
+			}
+			return true
+		})
+	}
+
+	return wroteNewLocation
 }
 
-func (d *GMVData[V]) WriteEstimate(key Key, txn TxnIndex) {
-	tree := d.getTreeOrDefault(key)
-	tree.Set(secondaryDataItem[V]{Index: txn, Estimate: true})
+func (d *GMVData[V]) ConsolidateEmpty(txn TxnIndex) {
+	old := d.data[txn].Swap(nil)
+	if old != nil {
+		old.Data.Scan(func(key Key, _ V) bool {
+			d.Delete(key, txn)
+			return true
+		})
+	}
 }
 
+func (d *GMVData[V]) ConvertWritesToEstimates(txn TxnIndex) {
+	for {
+		old := d.data[txn].Load()
+		if old == nil {
+			// nothing to mark
+			return
+		}
+		if old.Estimate {
+			return
+		}
+
+		new := *old
+		new.Estimate = true
+		if d.data[txn].CompareAndSwap(old, &new) {
+			break
+		}
+	}
+}
+
+func (d *GMVData[V]) ClearEstimates(txn TxnIndex) {
+	for {
+		old := d.data[txn].Load()
+		if old == nil {
+			// nothing to remove
+			return
+		}
+		if !old.Estimate {
+			return
+		}
+
+		new := *old
+		new.Estimate = false
+		if d.data[txn].CompareAndSwap(old, &new) {
+			break
+		}
+	}
+}
+
+func (d *GMVData[V]) InitWithEstimates(txn TxnIndex, estimates Locations) {
+	for _, key := range estimates {
+		d.Set(key, txn)
+	}
+	d.data[txn].Store(&DataEntry[V]{
+		Estimate: true,
+		Data:     NewWriteSet(d.isZero, d.valueLen),
+	})
+}
+
+// Set add txn to the key's bitmap index.
+func (d *GMVData[V]) Set(key Key, txn TxnIndex) {
+	tree := d.getStoreOrDefault(key)
+	tree.Set(txn)
+}
+
+// Delete removes txn from the key's bitmap index.
 func (d *GMVData[V]) Delete(key Key, txn TxnIndex) {
-	tree := d.getTreeOrDefault(key)
-	tree.Delete(secondaryDataItem[V]{Index: txn})
+	tree := d.getStore(key)
+	if tree != nil {
+		tree.Delete(txn)
+	}
 }
 
 // Read returns the value and the version of the value that's less than the given txn.
@@ -78,25 +189,55 @@ func (d *GMVData[V]) Read(key Key, txn TxnIndex) (V, TxnVersion, bool) {
 		return zero, InvalidTxnVersion, false
 	}
 
-	tree := d.getTree(key)
-	if tree == nil {
+	store := d.getStore(key)
+	if store == nil {
 		return zero, InvalidTxnVersion, false
 	}
 
-	// find the closest txn that's less than the given txn
-	item, ok := seekClosestTxn(tree, txn)
-	if !ok {
+	return d.resolveValue(key, txn, store)
+}
+
+func (d *GMVData[V]) resolveValue(key Key, txn TxnIndex, store *BitmapIndex) (V, TxnVersion, bool) {
+	var zero V
+	if txn == 0 {
 		return zero, InvalidTxnVersion, false
 	}
 
-	return item.Value, item.Version(), item.Estimate
+	for {
+		// find the closest txn that's less than the given txn
+		idx, ok := store.PreviousValue(txn)
+		if !ok {
+			return zero, InvalidTxnVersion, false
+		}
+
+		entry := d.data[idx].Load()
+		if entry == nil {
+			// could happen because we don't synchronize bitmap and data, just try again to find the next closest txn
+			txn = idx
+			continue
+		}
+
+		if entry.Estimate {
+			// ESTIMATE mark
+			return zero, TxnVersion{Index: idx, Incarnation: 0}, true
+		}
+
+		v, ok := entry.Data.OverlayGet(key)
+		if !ok {
+			// could happen because we don't synchronize bitmap and data, just try again to find the next closest txn
+			txn = idx
+			continue
+		}
+
+		return v, TxnVersion{Index: idx, Incarnation: entry.Incarnation}, false
+	}
 }
 
 func (d *GMVData[V]) Iterator(
 	opts IteratorOptions, txn TxnIndex,
 	waitFn func(TxnIndex),
 ) *MVIterator[V] {
-	return NewMVIterator(opts, txn, d.Iter(), waitFn)
+	return NewMVIterator(opts, txn, d.Iter(), waitFn, d.resolveValue)
 }
 
 // ValidateReadSet validates the read descriptors,
@@ -127,7 +268,7 @@ func (d *GMVData[V]) ValidateReadSet(txn TxnIndex, rs *ReadSet) bool {
 // validateIterator validates the iteration descriptor by replaying and compare the recorded reads.
 // returns true if valid.
 func (d *GMVData[V]) validateIterator(desc IteratorDescriptor, txn TxnIndex) bool {
-	it := NewMVIterator(desc.IteratorOptions, txn, d.Iter(), nil)
+	it := NewMVIterator(desc.IteratorOptions, txn, d.Iter(), nil, d.resolveValue)
 	defer it.Close()
 
 	var i int
@@ -167,17 +308,18 @@ func (d *GMVData[V]) Snapshot() (snapshot []GKVPair[V]) {
 }
 
 func (d *GMVData[V]) SnapshotTo(cb func(Key, V) bool) {
-	d.Scan(func(outer dataItem[V]) bool {
-		item, ok := outer.Tree.Max()
+	d.Scan(func(outer dataItem) bool {
+		txn, ok := outer.Index.Max()
 		if !ok {
 			return true
 		}
 
-		if item.Estimate {
+		v, ok := d.data[txn].Load().Data.OverlayGet(outer.Key)
+		if !ok {
 			return true
 		}
 
-		return cb(outer.Key, item.Value)
+		return cb(outer.Key, v)
 	})
 }
 
@@ -199,39 +341,19 @@ type GKVPair[V any] struct {
 }
 type KVPair = GKVPair[[]byte]
 
-type dataItem[V any] struct {
-	Key  Key
-	Tree *tree.BTree[secondaryDataItem[V]]
+type dataItem struct {
+	Key   Key
+	Index *BitmapIndex
 }
 
-func (d *dataItem[V]) Init() {
-	if d.Tree == nil {
-		d.Tree = tree.NewBTree(secondaryLesser[V], InnerBTreeDegree)
+func (d *dataItem) Init() {
+	if d.Index == nil {
+		d.Index = NewBitmapIndex()
 	}
 }
 
-var _ tree.KeyItem = dataItem[[]byte]{}
+var _ tree.KeyItem = dataItem{}
 
-func (item dataItem[V]) GetKey() []byte {
+func (item dataItem) GetKey() []byte {
 	return item.Key
-}
-
-type secondaryDataItem[V any] struct {
-	Index       TxnIndex
-	Incarnation Incarnation
-	Value       V
-	Estimate    bool
-}
-
-func secondaryLesser[V any](a, b secondaryDataItem[V]) bool {
-	return a.Index < b.Index
-}
-
-func (item secondaryDataItem[V]) Version() TxnVersion {
-	return TxnVersion{Index: item.Index, Incarnation: item.Incarnation}
-}
-
-// seekClosestTxn returns the closest txn that's less than the given txn.
-func seekClosestTxn[V any](tree *tree.BTree[secondaryDataItem[V]], txn TxnIndex) (secondaryDataItem[V], bool) {
-	return tree.ReverseSeek(secondaryDataItem[V]{Index: txn - 1})
 }

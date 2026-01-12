@@ -48,7 +48,7 @@ It runs `pre.sh` scripts to get all the docs that are not already in the `docs/d
 It also runs `post.sh` scripts to clean up the docs and remove unnecessary files when quitting.
 
 Note, the command above only builds the docs for the current versions.
-With the drawback that none of the redirections works. So, you'll need to go to /main to see the docs.
+With the drawback that none of the redirects work. So, you'll need to go to /main to see the docs.
 
 To build all the docs (including versioned documentation), run:
 
@@ -60,7 +60,7 @@ make build-docs
 
 When a new major version of the SDK is released, the following steps should be taken:
 
-* On the `release/vX.Y.Z` branch, remove the deploy action (`.github/workflows/build-docs.yml`), for avoiding deploying the docs from the release branches.
+* On the `release/vX.Y.Z` branch, remove the deploy action (`.github/workflows/build-docs.yml`) to avoid deploying the docs from the release branches.
 * On the `release/vX.Y.Z` branch, update `docusaurus.config.js` and set the `lastVersion` to `current`, remove all other versions from the config.
 * Each time a new version is released (on docusaurus), drop support from the oldest versions.
     * If the old version is still running vuepress (v0.45, v0.46), remove its line from `vuepress_versions`

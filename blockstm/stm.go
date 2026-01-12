@@ -38,7 +38,7 @@ func ExecuteBlockWithEstimates(
 	txExecutor TxExecutor,
 ) error {
 	if blockSize > math.MaxUint32 {
-		return fmt.Errorf("block size too large: %d", blockSize)
+		return fmt.Errorf("block size overflows uint32: %d", blockSize)
 	}
 
 	if executors < 0 {

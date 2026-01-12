@@ -8,16 +8,17 @@ import (
 // MemNode represents an in-memory node that has recently been created and may or may not have
 // been serialized to disk yet.
 type MemNode struct {
-	height    uint8
-	version   uint32
-	size      int64
-	key       []byte
-	value     []byte
-	left      *NodePointer
-	right     *NodePointer
-	hash      []byte
-	nodeId    NodeID // ID of this node, 0 if not yet assigned
-	keyOffset uint32
+	height      uint8
+	version     uint32
+	size        int64
+	key         []byte
+	value       []byte
+	left        *NodePointer
+	right       *NodePointer
+	hash        []byte
+	nodeId      NodeID // ID of this node, 0 if not yet assigned
+	keyOffset   uint32
+	valueOffset uint32
 }
 
 // NewLeafNode creates a new leaf MemNode with the given key, value, and version.

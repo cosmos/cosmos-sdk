@@ -1,6 +1,7 @@
 package iavl
 
 import (
+	"context"
 	"crypto/sha256"
 	"fmt"
 	"iter"
@@ -9,6 +10,8 @@ import (
 	"sync"
 
 	storetypes "cosmossdk.io/store/types"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/cosmos/cosmos-sdk/iavl/internal"
 )
@@ -81,18 +84,25 @@ func workingHash(rootPtr *internal.NodePointer) ([]byte, error) {
 	return hash.SafeCopy(), nil
 }
 
-func (c *CommitTree) Commit(updates iter.Seq[Update]) (storetypes.CommitID, error) {
+func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updateCount int) (storetypes.CommitID, error) {
+	stagedVersion := c.treeStore.StagedVersion()
+	ctx, span := internal.Tracer.Start(ctx, "CommitTree.Commit",
+		trace.WithAttributes(
+			attribute.Int64("version", int64(stagedVersion)),
+			attribute.Int("update.count", updateCount),
+		),
+	)
+	defer span.End()
+
 	// TODO maybe support writing in batches, but for now let's assume a single batch
 	// because that's actually what happens in the SDK due to cache wrapping and needing all keys in sorted
 	// order before updating the tree
 	c.writeMutex.Lock()
 	defer c.writeMutex.Unlock()
 
-	stagedVersion := c.treeStore.StagedVersion()
-
 	// TODO pre-allocate a decent sized slice that we reuse and reset across commits
 	// TODO we can also add a function param for the number of updates to pre-allocate
-	var nodeUpdates []internal.KVUpdate
+	nodeUpdates := make([]internal.KVUpdate, 0, updateCount)
 	for update := range updates {
 		if update.Delete {
 			nodeUpdates = append(nodeUpdates, internal.KVUpdate{DeleteKey: update.Key})
@@ -159,10 +169,14 @@ func (c *CommitTree) Commit(updates iter.Seq[Update]) (storetypes.CommitID, erro
 		}
 	}
 
+	span.AddEvent("updates applied")
+
 	// wait for the leaf node hash queue to finish
 	if err := <-hashErr; err != nil {
 		return storetypes.CommitID{}, err
 	}
+
+	span.AddEvent("leaf hashes computed")
 
 	// compute the root hash
 	hash, err := workingHash(root)
@@ -170,52 +184,8 @@ func (c *CommitTree) Commit(updates iter.Seq[Update]) (storetypes.CommitID, erro
 		return storetypes.CommitID{}, err
 	}
 
-	// wait for the WAL write to finish
-	// background queue root to be stored, after that is done eviction can start
+	span.AddEvent("root hash computed")
 
-	//if c.writeWal {
-	//	c.walQueue.Close()
-	//}
-	//
-	// compute hash and assign node IDs
-	//hash, err := c.workingHash()
-	//if err != nil {
-	//	return storetypes.CommitID{}, err
-	//}
-
-	//stagedVersion := c.store.stagedVersion
-	//if c.writeWal {
-	//	// wait for WAL write to complete
-	//	err := <-c.walDone
-	//	if err != nil {
-	//		return storetypes.CommitID{}, err
-	//	}
-	//
-	//	err = c.store.WriteWALCommit(stagedVersion)
-	//	if err != nil {
-	//		return storetypes.CommitID{}, err
-	//	}
-	//
-	//	c.reinitWalProc()
-	//}
-	//
-	//commitCtx := c.commitCtx
-	//if commitCtx == nil {
-	//	// make sure we have a non-nil commit context
-	//	commitCtx = &commitContext{}
-	//}
-	//err := c.store.SaveRoot(c.root, commitCtx.leafNodeIdx, commitCtx.branchNodeIdx)
-	//if err != nil {
-	//	return storetypes.CommitID{}, err
-	//}
-	//
-	//c.store.MarkOrphans(stagedVersion, c.pendingOrphans)
-	//c.pendingOrphans = nil
-	//
-	//// start eviction if needed
-	//c.startEvict(c.store.SavedVersion())
-	//
-	//// cache the committed tree as the latest version
 	err = c.treeStore.SaveRoot(root)
 	if err != nil {
 		return storetypes.CommitID{}, err
@@ -226,14 +196,14 @@ func (c *CommitTree) Commit(updates iter.Seq[Update]) (storetypes.CommitID, erro
 		Hash:    hash,
 	}
 	c.lastCommitId = commitId
-	////c.commitCtx = nil
-	//
 
 	if walDone != nil {
 		err := <-walDone
 		if err != nil {
 			return storetypes.CommitID{}, err
 		}
+
+		span.AddEvent("WAL write completed")
 	}
 
 	return commitId, nil

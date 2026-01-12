@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// verifyAVLInvariants recursively verifies all IAVL tree invariants starting from the given node.
+// verifyIAVLInvariants recursively verifies all IAVL tree invariants starting from the given node.
 //
 // For all nodes, it verifies:
 //   - ID version matches node version (if ID is set)
@@ -22,7 +22,7 @@ import (
 //  3. AVL balance: |left.height - right.height| <= 1
 //  4. Height invariant: height = max(left.height, right.height) + 1
 //  5. Size invariant: size = left.size + right.size
-func verifyAVLInvariants(node Node) error {
+func verifyIAVLInvariants(node Node) error {
 	id := node.ID()
 
 	// Verify ID correctness (if ID is set)
@@ -126,11 +126,11 @@ func verifyAVLInvariants(node Node) error {
 			return fmt.Errorf("branch node %s is unbalanced: balance=%d (left height %d, right height %d)", id, balance, left.Height(), right.Height())
 		}
 
-		if err := verifyAVLInvariants(left); err != nil {
+		if err := verifyIAVLInvariants(left); err != nil {
 			return err
 		}
 
-		if err := verifyAVLInvariants(right); err != nil {
+		if err := verifyIAVLInvariants(right); err != nil {
 			return err
 		}
 	}

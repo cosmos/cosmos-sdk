@@ -23,5 +23,5 @@ func TestKeyTableUnfurlsPointers(t *testing.T) {
 		vfn: validator,
 		ty:  reflect.ValueOf("").Type(),
 	}
-	require.Equal(t, got.ty, want.ty)
+	require.Equal(t, want.ty, got.ty)
 }

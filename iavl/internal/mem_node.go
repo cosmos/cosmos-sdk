@@ -20,8 +20,8 @@ type MemNode struct {
 	keyOffset uint32
 }
 
-// newLeafNode creates a new leaf MemNode with the given key, value, and version.
-func newLeafNode(key, value []byte, version uint32) *MemNode {
+// NewLeafNode creates a new leaf MemNode with the given key, value, and version.
+func NewLeafNode(key, value []byte, version uint32) *MemNode {
 	return &MemNode{
 		height:  0,
 		size:    1,

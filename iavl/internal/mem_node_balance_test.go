@@ -13,7 +13,7 @@ import (
 // These test NodeIDs don't follow the normal NodeID assignment logic, but this
 // approach is more convenient for testing.
 func newTestLeafNode(version, index uint32, key string) *MemNode {
-	node := newLeafNode([]byte(key), []byte("value_"+key), version)
+	node := NewLeafNode([]byte(key), []byte("value_"+key), version)
 	node.nodeId = NewNodeID(true, version, index)
 	return node
 }
@@ -166,7 +166,7 @@ func TestRotateLeft(t *testing.T) {
 	// [X.1.2] [Y.1.4]
 	//
 	// orphans: Z.1.3 (replaced by Z.2.2)
-	ctx := newMutationContext(2)
+	ctx := NewMutationContext(2)
 	newRoot, err := Y.rotateLeft(ctx)
 	require.NoError(t, err)
 	require.Equal(t, "(Z.2.2 (Y.2.1 [X.1.2] [Y.1.4]) [Z.1.5])", printTreeStructure(newRoot))
@@ -194,7 +194,7 @@ func TestRotateRight(t *testing.T) {
 	//         [X.1.4] [Y.1.5]
 	//
 	// orphans: X.1.2 (replaced by X.2.2)
-	ctx := newMutationContext(2)
+	ctx := NewMutationContext(2)
 	newRoot, err := Y.rotateRight(ctx)
 	require.NoError(t, err)
 	require.Equal(t, "(X.2.2 [W.1.3] (Y.2.1 [X.1.4] [Y.1.5]))", printTreeStructure(newRoot))
@@ -388,7 +388,7 @@ func TestNodeRebalance(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			require.Equal(t, tt.beforeRotation, printTreeStructure(tt.root), "tree structure before reBalance")
-			ctx := newMutationContext(2)
+			ctx := NewMutationContext(2)
 			newRoot, err := tt.root.reBalance(ctx)
 			require.NoError(t, err, "reBalance error")
 			require.Equal(t, tt.afterRotation, printTreeStructure(newRoot), "tree structure after reBalance")

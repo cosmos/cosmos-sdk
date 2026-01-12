@@ -2,16 +2,16 @@ package internal
 
 import "fmt"
 
-// mutationContext is a small helper that keeps track of the current version and orphaned nodes.
+// MutationContext is a small helper that keeps track of the current version and orphaned nodes.
 // It is used in all mutation operations such as insertion, deletion, and rebalancing.
-type mutationContext struct {
+type MutationContext struct {
 	version uint32
 	orphans []NodeID
 }
 
-// newMutationContext creates a new mutationContext for the given version.
-func newMutationContext(version uint32) *mutationContext {
-	return &mutationContext{
+// NewMutationContext creates a new MutationContext for the given version.
+func NewMutationContext(version uint32) *MutationContext {
+	return &MutationContext{
 		version: version,
 	}
 }
@@ -24,7 +24,7 @@ func newMutationContext(version uint32) *mutationContext {
 // directly using the IAVL tree structures (instead of a btree wrapper),
 // then we MUST change this code to ALWAYS mutate nodes here,
 // even if they are from the current version.
-func (ctx *mutationContext) mutateBranch(node Node) (*MemNode, error) {
+func (ctx *MutationContext) mutateBranch(node Node) (*MemNode, error) {
 	if ctx.addOrphan(node.ID()) {
 		return node.MutateBranch(ctx.version)
 	}
@@ -40,7 +40,7 @@ func (ctx *mutationContext) mutateBranch(node Node) (*MemNode, error) {
 // Only nodes with a version older than the current mutation version are considered orphans.
 // Nodes with version 0 are uncommitted and don't need orphan tracking since they were never persisted.
 // Returns true if the node was added as an orphan, false otherwise.
-func (ctx *mutationContext) addOrphan(id NodeID) bool {
+func (ctx *MutationContext) addOrphan(id NodeID) bool {
 	version := id.Version()
 	if version > 0 && version < ctx.version {
 		ctx.orphans = append(ctx.orphans, id)

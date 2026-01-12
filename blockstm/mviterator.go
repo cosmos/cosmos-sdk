@@ -75,7 +75,7 @@ func (it *MVIterator[V]) ReadEstimateValue() bool {
 func (it *MVIterator[V]) resolveValue() {
 	inner := &it.BTreeIteratorG
 	for ; inner.Valid(); inner.Next() {
-		idx, v, ok := it.resolveValueInner(inner.Item().Tree)
+		idx, v, ok := it.resolveValueInner(inner.Item().Store)
 		if !ok {
 			// abort the iterator
 			it.Invalidate()

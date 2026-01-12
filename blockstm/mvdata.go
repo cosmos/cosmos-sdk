@@ -45,16 +45,16 @@ func NewGMVData[V any](isZero func(V) bool, valueLen func(V) int) *GMVData[V] {
 // getStore returns `nil` if not found
 func (d *GMVData[V]) getStore(key Key) *SecondaryStore[V] {
 	outer, _ := d.Get(dataItem[V]{Key: key})
-	return outer.Tree
+	return outer.Store
 }
 
 // getTreeOrDefault set a new tree atomically if not found.
 func (d *GMVData[V]) getTreeOrDefault(key Key) *SecondaryStore[V] {
 	return d.GetOrDefault(dataItem[V]{Key: key}, func(item *dataItem[V]) {
-		if item.Tree == nil {
-			item.Tree = NewSecondaryStore[V]()
+		if item.Store == nil {
+			item.Store = NewSecondaryStore[V]()
 		}
-	}).Tree
+	}).Store
 }
 
 func (d *GMVData[V]) Write(key Key, value V, version TxnVersion) {
@@ -172,7 +172,7 @@ func (d *GMVData[V]) Snapshot() (snapshot []GKVPair[V]) {
 
 func (d *GMVData[V]) SnapshotTo(cb func(Key, V) bool) {
 	d.Scan(func(outer dataItem[V]) bool {
-		item, ok := outer.Tree.Max()
+		item, ok := outer.Store.Max()
 		if !ok {
 			return true
 		}
@@ -205,8 +205,8 @@ type GKVPair[V any] struct {
 type KVPair = GKVPair[[]byte]
 
 type dataItem[V any] struct {
-	Key  Key
-	Tree *SecondaryStore[V]
+	Key   Key
+	Store *SecondaryStore[V]
 }
 
 var _ tree.KeyItem = dataItem[[]byte]{}

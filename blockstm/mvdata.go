@@ -43,33 +43,33 @@ func NewGMVData[V any](isZero func(V) bool, valueLen func(V) int) *GMVData[V] {
 }
 
 // getTree returns `nil` if not found
-func (d *GMVData[V]) getTree(key Key) *tree.BTree[secondaryDataItem[V]] {
+func (d *GMVData[V]) getTree(key Key) *SecondaryStore[V] {
 	outer, _ := d.Get(dataItem[V]{Key: key})
 	return outer.Tree
 }
 
 // getTreeOrDefault set a new tree atomically if not found.
-func (d *GMVData[V]) getTreeOrDefault(key Key) *tree.BTree[secondaryDataItem[V]] {
+func (d *GMVData[V]) getTreeOrDefault(key Key) *SecondaryStore[V] {
 	return d.GetOrDefault(dataItem[V]{Key: key}, func(item *dataItem[V]) {
 		if item.Tree == nil {
-			item.Tree = tree.NewBTree(secondaryLesser[V], InnerBTreeDegree)
+			item.Tree = NewSecondaryStore[V]()
 		}
 	}).Tree
 }
 
 func (d *GMVData[V]) Write(key Key, value V, version TxnVersion) {
 	tree := d.getTreeOrDefault(key)
-	tree.Set(secondaryDataItem[V]{Index: version.Index, Incarnation: version.Incarnation, Value: value})
+	tree.Set(version.Index, secondaryDataItem[V]{Incarnation: version.Incarnation, Value: value})
 }
 
 func (d *GMVData[V]) WriteEstimate(key Key, txn TxnIndex) {
 	tree := d.getTreeOrDefault(key)
-	tree.Set(secondaryDataItem[V]{Index: txn, Estimate: true})
+	tree.Set(txn, secondaryDataItem[V]{Estimate: true})
 }
 
 func (d *GMVData[V]) Delete(key Key, txn TxnIndex) {
 	tree := d.getTreeOrDefault(key)
-	tree.Delete(secondaryDataItem[V]{Index: txn})
+	tree.Delete(txn)
 }
 
 // Read returns the value and the version of the value that's less than the given txn.
@@ -88,12 +88,12 @@ func (d *GMVData[V]) Read(key Key, txn TxnIndex) (V, TxnVersion, bool) {
 	}
 
 	// find the closest txn that's less than the given txn
-	item, ok := seekClosestTxn(tree, txn)
+	idx, item, ok := tree.PreviousValue(txn)
 	if !ok {
 		return zero, InvalidTxnVersion, false
 	}
 
-	return item.Value, item.Version(), item.Estimate
+	return item.Value, TxnVersion{idx, item.Incarnation}, item.Estimate
 }
 
 func (d *GMVData[V]) Iterator(
@@ -178,6 +178,7 @@ func (d *GMVData[V]) SnapshotTo(cb func(Key, V) bool) {
 		}
 
 		if item.Estimate {
+			// should not happen, just to keep it complete
 			return true
 		}
 
@@ -205,31 +206,11 @@ type KVPair = GKVPair[[]byte]
 
 type dataItem[V any] struct {
 	Key  Key
-	Tree *tree.BTree[secondaryDataItem[V]]
+	Tree *SecondaryStore[V]
 }
 
 var _ tree.KeyItem = dataItem[[]byte]{}
 
 func (item dataItem[V]) GetKey() []byte {
 	return item.Key
-}
-
-type secondaryDataItem[V any] struct {
-	Index       TxnIndex
-	Incarnation Incarnation
-	Value       V
-	Estimate    bool
-}
-
-func secondaryLesser[V any](a, b secondaryDataItem[V]) bool {
-	return a.Index < b.Index
-}
-
-func (item secondaryDataItem[V]) Version() TxnVersion {
-	return TxnVersion{Index: item.Index, Incarnation: item.Incarnation}
-}
-
-// seekClosestTxn returns the closest txn that's less than the given txn.
-func seekClosestTxn[V any](tree *tree.BTree[secondaryDataItem[V]], txn TxnIndex) (secondaryDataItem[V], bool) {
-	return tree.ReverseSeek(secondaryDataItem[V]{Index: txn - 1})
 }

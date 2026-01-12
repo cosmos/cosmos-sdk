@@ -75,7 +75,7 @@ func (it *MVIterator[V]) ReadEstimateValue() bool {
 func (it *MVIterator[V]) resolveValue() {
 	inner := &it.BTreeIteratorG
 	for ; inner.Valid(); inner.Next() {
-		v, ok := it.resolveValueInner(inner.Item().Tree)
+		idx, v, ok := it.resolveValueInner(inner.Item().Tree)
 		if !ok {
 			// abort the iterator
 			it.Invalidate()
@@ -84,11 +84,12 @@ func (it *MVIterator[V]) resolveValue() {
 			return
 		}
 		if v == nil {
+			// value not found
 			continue
 		}
 
 		it.value = v.Value
-		it.version = v.Version()
+		it.version = TxnVersion{idx, v.Incarnation}
 		if it.Executing() {
 			it.reads = append(it.reads, ReadDescriptor{
 				Key:     inner.Item().Key,
@@ -102,25 +103,25 @@ func (it *MVIterator[V]) resolveValue() {
 // resolveValueInner loop until we find a value that is not an estimate,
 // wait for dependency if gets an ESTIMATE.
 // returns:
-// - (nil, true) if the value is not found
-// - (nil, false) if the value is an estimate and we should fail the validation
-// - (v, true) if the value is found
-func (it *MVIterator[V]) resolveValueInner(tree *tree.BTree[secondaryDataItem[V]]) (*secondaryDataItem[V], bool) {
+// - (0, nil, true) if the value is not found
+// - (0, nil, false) if the value is an estimate and we should fail the validation
+// - (idx, v, true) if the value is found at idx
+func (it *MVIterator[V]) resolveValueInner(tree *SecondaryStore[V]) (TxnIndex, *secondaryDataItem[V], bool) {
 	for {
-		v, ok := seekClosestTxn(tree, it.txn)
+		idx, v, ok := tree.PreviousValue(it.txn)
 		if !ok {
-			return nil, true
+			return 0, nil, true
 		}
 
 		if v.Estimate {
 			if it.Executing() {
-				it.waitFn(v.Index)
+				it.waitFn(idx)
 				continue
 			}
 			// in validation mode, it should fail validation immediately
-			return nil, false
+			return 0, nil, false
 		}
 
-		return &v, true
+		return idx, &v, true
 	}
 }

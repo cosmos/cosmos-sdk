@@ -210,19 +210,18 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 }
 
 func (c *CommitTree) Latest() TreeReader {
-	return &treeReader{root: c.treeStore.Latest()}
+	return TreeReader{root: c.treeStore.Latest()}
 }
 
-type TreeReader interface {
-	Get(key []byte) ([]byte, error)
-	Size() int64
+func (c *CommitTree) Close() error {
+	return nil
 }
 
-type treeReader struct {
+type TreeReader struct {
 	root *internal.NodePointer
 }
 
-func (t treeReader) Get(key []byte) ([]byte, error) {
+func (t TreeReader) Get(key []byte) ([]byte, error) {
 	root, pin, err := t.root.Resolve()
 	defer pin.Unpin()
 	if err != nil {
@@ -235,7 +234,7 @@ func (t treeReader) Get(key []byte) ([]byte, error) {
 	return value.SafeCopy(), nil
 }
 
-func (t treeReader) Size() int64 {
+func (t TreeReader) Size() int64 {
 	if t.root == nil {
 		return 0
 	}
@@ -245,6 +244,14 @@ func (t treeReader) Size() int64 {
 		return 0
 	}
 	return root.Size()
+}
+
+func (t TreeReader) Iterator(start, end []byte) storetypes.Iterator {
+	return internal.NewIterator(start, end, true, t.root)
+}
+
+func (t TreeReader) ReverseIterator(start, end []byte) storetypes.Iterator {
+	return internal.NewIterator(start, end, false, t.root)
 }
 
 //

@@ -923,6 +923,20 @@ func (mr *MockBankKeeperMockRecorder) SetAllSendEnabled(ctx, sendEnableds any) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAllSendEnabled", reflect.TypeOf((*MockBankKeeper)(nil).SetAllSendEnabled), ctx, sendEnableds)
 }
 
+// SetBalance mocks base method.
+func (m *MockBankKeeper) SetBalance(ctx context.Context, addr types0.AccAddress, balance types0.Coin) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetBalance", ctx, addr, balance)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetBalance indicates an expected call of SetBalance.
+func (mr *MockBankKeeperMockRecorder) SetBalance(ctx, addr, balance any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetBalance", reflect.TypeOf((*MockBankKeeper)(nil).SetBalance), ctx, addr, balance)
+}
+
 // SetDenomMetaData mocks base method.
 func (m *MockBankKeeper) SetDenomMetaData(ctx context.Context, denomMetaData types1.Metadata) {
 	m.ctrl.T.Helper()

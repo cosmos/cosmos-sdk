@@ -12,10 +12,10 @@ import (
 // ChangesetFiles encapsulates management of changeset files.
 // This type is shared between the Changeset and ChangesetWriter types.
 type ChangesetFiles struct {
-	dir          string
-	treeDir      string
-	startVersion uint32
-	compactedAt  uint32
+	dir         string
+	treeDir     string
+	startLayer  uint32
+	compactedAt uint32
 
 	kvDataFile   *os.File
 	branchesFile *os.File
@@ -34,7 +34,7 @@ type ChangesetFiles struct {
 // will be created to indicate that the changeset is not yet ready for use.
 // This pending marker file must be removed once the compaction is fully complete by calling MarkReady,
 // otherwise the changeset will be considered incomplete and deleted at the next startup.
-func CreateChangesetFiles(treeDir string, startVersion, compactedAt uint32) (*ChangesetFiles, error) {
+func CreateChangesetFiles(treeDir string, startLayer, compactedAt uint32) (*ChangesetFiles, error) {
 	// ensure absolute path
 	var err error
 	treeDir, err = filepath.Abs(treeDir)
@@ -42,9 +42,9 @@ func CreateChangesetFiles(treeDir string, startVersion, compactedAt uint32) (*Ch
 		return nil, fmt.Errorf("failed to get absolute path for %s: %w", treeDir, err)
 	}
 
-	dirName := fmt.Sprintf("%d", startVersion)
+	dirName := fmt.Sprintf("%d", startLayer)
 	if compactedAt > 0 {
-		dirName = fmt.Sprintf("%d.%d", startVersion, compactedAt)
+		dirName = fmt.Sprintf("%d.%d", startLayer, compactedAt)
 	}
 	dir := filepath.Join(treeDir, dirName)
 
@@ -62,10 +62,10 @@ func CreateChangesetFiles(treeDir string, startVersion, compactedAt uint32) (*Ch
 	}
 
 	cr := &ChangesetFiles{
-		dir:          dir,
-		treeDir:      treeDir,
-		startVersion: startVersion,
-		compactedAt:  compactedAt,
+		dir:         dir,
+		treeDir:     treeDir,
+		startLayer:  startLayer,
+		compactedAt: compactedAt,
 	}
 
 	err = cr.open(writeModeFlags)
@@ -81,7 +81,7 @@ const writeModeFlags = os.O_RDWR | os.O_CREATE | os.O_APPEND
 // All files are opened in readonly mode, except for orphans.dat and info.dat which are opened in read-write mode
 // to track orphan data and statistics.
 func OpenChangesetFiles(dirName string) (*ChangesetFiles, error) {
-	startVersion, compactedAt, valid := ParseChangesetDirName(filepath.Base(dirName))
+	startLayer, compactedAt, valid := ParseChangesetDirName(filepath.Base(dirName))
 	if !valid {
 		return nil, fmt.Errorf("invalid changeset dir name: %s", dirName)
 	}
@@ -94,10 +94,10 @@ func OpenChangesetFiles(dirName string) (*ChangesetFiles, error) {
 	treeDir := filepath.Dir(dir)
 
 	cr := &ChangesetFiles{
-		dir:          dir,
-		treeDir:      treeDir,
-		startVersion: startVersion,
-		compactedAt:  compactedAt,
+		dir:         dir,
+		treeDir:     treeDir,
+		startLayer:  startLayer,
+		compactedAt: compactedAt,
 	}
 
 	err = cr.open(os.O_RDONLY)
@@ -158,7 +158,7 @@ func (cr *ChangesetFiles) open(mode int) error {
 // ParseChangesetDirName parses a changeset directory name and returns the start version and compacted at version.
 // If the directory name is invalid, valid will be false.
 // If a changeset is original and uncompacted, compactedAt will be 0.
-func ParseChangesetDirName(dirName string) (startVersion, compactedAt uint32, valid bool) {
+func ParseChangesetDirName(dirName string) (startLayer, compactedAt uint32, valid bool) {
 	var err error
 	var v uint64
 	// if no dot, it's an original changeset
@@ -179,7 +179,7 @@ func ParseChangesetDirName(dirName string) (startVersion, compactedAt uint32, va
 	if err != nil {
 		return 0, 0, false
 	}
-	startVersion = uint32(v)
+	startLayer = uint32(v)
 
 	v, err = strconv.ParseUint(parts[1], 10, 32)
 	if err != nil {
@@ -187,7 +187,7 @@ func ParseChangesetDirName(dirName string) (startVersion, compactedAt uint32, va
 	}
 	compactedAt = uint32(v)
 
-	return startVersion, compactedAt, true
+	return startLayer, compactedAt, true
 }
 
 // Dir returns the changeset directory path.
@@ -236,9 +236,9 @@ func (cr *ChangesetFiles) RewriteInfo() error {
 	return RewriteChangesetInfo(cr.infoFile, cr.info)
 }
 
-// StartVersion returns the start version of the changeset.
-func (cr *ChangesetFiles) StartVersion() uint32 {
-	return cr.startVersion
+// StartLayer returns the start layer of the changeset.
+func (cr *ChangesetFiles) StartLayer() uint32 {
+	return cr.startLayer
 }
 
 // CompactedAtVersion returns the compacted at version of the changeset.

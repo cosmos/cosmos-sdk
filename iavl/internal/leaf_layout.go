@@ -38,3 +38,7 @@ type LeafLayout struct {
 	// Hash is the hash of this leaf node.
 	Hash [32]byte
 }
+
+func (l LeafLayout) GetNodeID() NodeID {
+	return l.ID
+}

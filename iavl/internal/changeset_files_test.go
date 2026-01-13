@@ -72,7 +72,7 @@ func TestCreateChangesetFiles_Uncompacted(t *testing.T) {
 
 	// Check directory created
 	require.Equal(t, filepath.Join(treeDir, "100"), cf.Dir())
-	require.Equal(t, uint32(100), cf.StartVersion())
+	require.Equal(t, uint32(100), cf.StartLayer())
 	require.Equal(t, uint32(0), cf.CompactedAtVersion())
 
 	// Uncompacted should be ready immediately (no pending marker)
@@ -98,7 +98,7 @@ func TestCreateChangesetFiles_Compacted(t *testing.T) {
 
 	// Check directory name includes compactedAt
 	require.Equal(t, filepath.Join(treeDir, "100.200"), cf.Dir())
-	require.Equal(t, uint32(100), cf.StartVersion())
+	require.Equal(t, uint32(100), cf.StartLayer())
 	require.Equal(t, uint32(200), cf.CompactedAtVersion())
 
 	// Compacted should NOT be ready until MarkReady called
@@ -137,7 +137,7 @@ func TestChangesetFiles_OpenExisting(t *testing.T) {
 	require.NoError(t, err)
 	defer cf2.Close()
 
-	require.Equal(t, uint32(100), cf2.StartVersion())
+	require.Equal(t, uint32(100), cf2.StartLayer())
 	require.Equal(t, uint32(0), cf2.CompactedAtVersion())
 
 	// Info should be persisted

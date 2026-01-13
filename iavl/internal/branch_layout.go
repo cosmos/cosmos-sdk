@@ -62,3 +62,7 @@ type BranchLayout struct {
 	// Hash is the hash of this branch node.
 	Hash [32]byte
 }
+
+func (b BranchLayout) GetNodeID() NodeID {
+	return b.ID
+}

@@ -6,14 +6,14 @@ import (
 )
 
 func init() {
-	if unsafe.Sizeof(Layerinfo{}) != LayerInfoSize {
-		panic(fmt.Sprintf("invalid Layerinfo size: got %d, want %d", unsafe.Sizeof(Layerinfo{}), LayerInfoSize))
+	if unsafe.Sizeof(LayerInfo{}) != LayerInfoSize {
+		panic(fmt.Sprintf("invalid LayerInfo size: got %d, want %d", unsafe.Sizeof(LayerInfo{}), LayerInfoSize))
 	}
 }
 
 const LayerInfoSize = 48
 
-type Layerinfo struct {
+type LayerInfo struct {
 	Leaves   NodeSetInfo
 	Branches NodeSetInfo
 	Layer    uint32

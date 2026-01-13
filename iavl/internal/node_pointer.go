@@ -7,10 +7,10 @@ import (
 
 // NodePointer is a pointer to a Node, which may be either in-memory, on-disk or both.
 type NodePointer struct {
-	mem atomic.Pointer[MemNode]
-	// changeset *Changeset // commented to satisfy linter, will uncomment in a future PR when we wire it up
-	fileIdx uint32 // absolute index in file, 1-based, zero means we don't have an offset
-	id      NodeID
+	mem       atomic.Pointer[MemNode]
+	changeset *Changeset
+	fileIdx   uint32 // absolute index in file, 1-based, zero means we don't have an offset
+	id        NodeID
 }
 
 // NewNodePointer creates a new NodePointer pointing to the given in-memory node.

@@ -26,10 +26,13 @@ func init() {
 // This should give us some heuristics as to what percentage of the changeset is composed of
 // orphans and roughly how long ago they were orphaned.
 type ChangesetInfo struct {
-	// StartVersion is the first version included in the changeset.
+	// StartVersion is the first version with a root in the changeset.
 	StartVersion uint32
-	// EndVersion is the last version included in the changeset.
+	// EndVersion is the last version with a root in the changeset.
 	EndVersion uint32
+
+	StartLayer uint32
+	EndLayer   uint32
 
 	// LeafOrphans is the number of leaf orphan nodes in the changeset.
 	LeafOrphans uint32

@@ -107,10 +107,11 @@ func TestReadFromClientConfig(t *testing.T) {
 	}{
 		{
 			name:    "creates config file when it does not exist",
-			setup:   func(t *testing.T, homeDir string) error { return nil },
+			setup:   func(t *testing.T, homeDir string) error { t.Helper(); return nil },
 			chainID: "test-chain",
 			wantErr: false,
 			validate: func(t *testing.T, ctx client.Context) {
+				t.Helper()
 				require.Equal(t, "test-chain", ctx.ChainID)
 				require.NotNil(t, ctx.Keyring)
 				require.NotNil(t, ctx.Client)
@@ -119,6 +120,7 @@ func TestReadFromClientConfig(t *testing.T) {
 		{
 			name: "reads existing config file",
 			setup: func(t *testing.T, homeDir string) error {
+				t.Helper()
 				configPath := filepath.Join(homeDir, "config")
 				if err := os.MkdirAll(configPath, os.ModePerm); err != nil {
 					return err
@@ -135,6 +137,7 @@ broadcast-mode = "async"
 			chainID: "",
 			wantErr: false,
 			validate: func(t *testing.T, ctx client.Context) {
+				t.Helper()
 				require.Equal(t, "existing-chain", ctx.ChainID)
 				require.Equal(t, "json", ctx.OutputFormat)
 			},
@@ -142,6 +145,7 @@ broadcast-mode = "async"
 		{
 			name: "handles invalid TOML",
 			setup: func(t *testing.T, homeDir string) error {
+				t.Helper()
 				configPath := filepath.Join(homeDir, "config")
 				if err := os.MkdirAll(configPath, os.ModePerm); err != nil {
 					return err
@@ -156,10 +160,11 @@ broadcast-mode = "async"
 		},
 		{
 			name:    "preserves chain ID from context when creating new config",
-			setup:   func(t *testing.T, homeDir string) error { return nil },
+			setup:   func(t *testing.T, homeDir string) error { t.Helper(); return nil },
 			chainID: "preserved-chain",
 			wantErr: false,
 			validate: func(t *testing.T, ctx client.Context) {
+				t.Helper()
 				require.Equal(t, "preserved-chain", ctx.ChainID)
 			},
 		},
@@ -211,6 +216,7 @@ func TestReadDefaultValuesFromDefaultClientConfig(t *testing.T) {
 			chainID: "test-chain",
 			wantErr: false,
 			validate: func(t *testing.T, ctx client.Context, originalHomeDir string) {
+				t.Helper()
 				require.Equal(t, originalHomeDir, ctx.HomeDir, "HomeDir should be restored")
 				require.NotNil(t, ctx.Keyring)
 				require.NotNil(t, ctx.Client)
@@ -221,6 +227,7 @@ func TestReadDefaultValuesFromDefaultClientConfig(t *testing.T) {
 			chainID: "",
 			wantErr: false,
 			validate: func(t *testing.T, ctx client.Context, originalHomeDir string) {
+				t.Helper()
 				require.Equal(t, originalHomeDir, ctx.HomeDir, "HomeDir should be restored even on success")
 			},
 		},

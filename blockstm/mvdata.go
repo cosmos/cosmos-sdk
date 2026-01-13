@@ -50,11 +50,7 @@ func (d *GMVData[V]) getStore(key Key) *SecondaryStore[V] {
 
 // getStoreOrDefault set a new tree atomically if not found.
 func (d *GMVData[V]) getStoreOrDefault(key Key) *SecondaryStore[V] {
-	return d.GetOrDefault(dataItem[V]{Key: key}, func(item *dataItem[V]) {
-		if item.Store == nil {
-			item.Store = NewSecondaryStore[V]()
-		}
-	}).Store
+	return d.GetOrDefault(dataItem[V]{Key: key}, (*dataItem[V]).Init).Store
 }
 
 func (d *GMVData[V]) Write(key Key, value V, version TxnVersion) {
@@ -209,6 +205,12 @@ type KVPair = GKVPair[[]byte]
 type dataItem[V any] struct {
 	Key   Key
 	Store *SecondaryStore[V]
+}
+
+func (d *dataItem[V]) Init() {
+	if d.Tree == nil {
+		d.Tree = tree.NewBTree(secondaryLesser[V], InnerBTreeDegree)
+	}
 }
 
 var _ tree.KeyItem = dataItem[[]byte]{}

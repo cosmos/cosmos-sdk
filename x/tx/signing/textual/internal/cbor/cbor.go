@@ -98,7 +98,7 @@ func (s Text) Encode(w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	_, err = w.Write([]byte(string(s)))
+	_, err = io.WriteString(w, string(s))
 	return err
 }
 

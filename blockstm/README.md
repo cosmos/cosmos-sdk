@@ -3,14 +3,14 @@
 The main API is a simple function call `ExecuteBlock`:
 
 ```golang
-type ExecuteFn func(TxnIndex, MultiStore)
+type TxExecutor func(TxnIndex, MultiStore)
 func ExecuteBlock(
  ctx context.Context,           // context for cancellation
  blockSize int,                 // the number of the transactions to be executed
- stores []storetypes.StoreKey,  // the list of store keys to support
+ stores map[storetypes.StoreKey]int,  // mapping of store keys to indices (used for array access in MVMemory), indices should be sequential starting from 0
  storage MultiStore,            // the parent storage, after all transactions are executed, the whole change sets are written into parent storage at once
  executors int,                 // how many concurrent executors to spawn
- executeFn ExecuteFn,           // callback function to actually execute a transaction with a wrapped `MultiStore`.
+ txExecutor TxExecutor,         // callback function to actually execute a transaction with a wrapped `MultiStore`.
 ) error
 ```
 

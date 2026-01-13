@@ -4,24 +4,17 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"time"
 
 	"go.opentelemetry.io/contrib/instrumentation/host"
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
-	otelconf "go.opentelemetry.io/contrib/otelconf/v0.3.0"
+	"go.opentelemetry.io/contrib/otelconf"
 	"go.opentelemetry.io/contrib/propagators/b3"
 	"go.opentelemetry.io/contrib/propagators/jaeger"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/stdout/stdoutlog"
-	"go.opentelemetry.io/otel/exporters/stdout/stdoutmetric"
-	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	logglobal "go.opentelemetry.io/otel/log/global"
 	lognoop "go.opentelemetry.io/otel/log/noop"
 	metricnoop "go.opentelemetry.io/otel/metric/noop"
 	"go.opentelemetry.io/otel/propagation"
-	logsdk "go.opentelemetry.io/otel/sdk/log"
-	metricsdk "go.opentelemetry.io/otel/sdk/metric"
-	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	tracenoop "go.opentelemetry.io/otel/trace/noop"
 	"go.yaml.in/yaml/v3"
 )
@@ -93,83 +86,6 @@ func InitializeOpenTelemetry(filePath string) error {
 	if err == nil {
 		if extraCfg.CosmosExtra != nil {
 			extra := *extraCfg.CosmosExtra
-			if extra.TraceFile != "" {
-				traceFile, err := os.OpenFile(extra.TraceFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
-				if err != nil {
-					return fmt.Errorf("failed to open trace file: %w", err)
-				}
-				shutdownFuncs = append(shutdownFuncs, func(ctx context.Context) error {
-					if err := traceFile.Close(); err != nil {
-						return fmt.Errorf("failed to close trace file: %w", err)
-					}
-					return nil
-				})
-				exporter, err := stdouttrace.New(
-					stdouttrace.WithWriter(traceFile),
-					// stdouttrace.WithPrettyPrint(),
-				)
-				if err != nil {
-					return fmt.Errorf("failed to create stdout trace exporter: %w", err)
-				}
-				opts = append(opts, otelconf.WithTracerProviderOptions(
-					tracesdk.WithBatcher(exporter),
-				))
-			}
-			if extra.MetricsFile != "" {
-				metricsFile, err := os.OpenFile(extra.MetricsFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
-				if err != nil {
-					return fmt.Errorf("failed to open metrics file: %w", err)
-				}
-				shutdownFuncs = append(shutdownFuncs, func(ctx context.Context) error {
-					if err := metricsFile.Close(); err != nil {
-						return fmt.Errorf("failed to close metrics file: %w", err)
-					}
-					return nil
-				})
-				exporter, err := stdoutmetric.New(
-					stdoutmetric.WithWriter(metricsFile),
-					// stdoutmetric.WithPrettyPrint(),
-				)
-				if err != nil {
-					return fmt.Errorf("failed to create stdout metric exporter: %w", err)
-				}
-
-				// Configure periodic reader with custom interval if specified
-				readerOpts := []metricsdk.PeriodicReaderOption{}
-				if extra.MetricsFileInterval != "" {
-					interval, err := time.ParseDuration(extra.MetricsFileInterval)
-					if err != nil {
-						return fmt.Errorf("failed to parse metrics_file_interval: %w", err)
-					}
-					readerOpts = append(readerOpts, metricsdk.WithInterval(interval))
-				}
-
-				opts = append(opts, otelconf.WithMeterProviderOptions(
-					metricsdk.WithReader(metricsdk.NewPeriodicReader(exporter, readerOpts...)),
-				))
-			}
-			if extra.LogsFile != "" {
-				logsFile, err := os.OpenFile(extra.LogsFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
-				if err != nil {
-					return fmt.Errorf("failed to open logs file: %w", err)
-				}
-				shutdownFuncs = append(shutdownFuncs, func(ctx context.Context) error {
-					if err := logsFile.Close(); err != nil {
-						return fmt.Errorf("failed to close logs file: %w", err)
-					}
-					return nil
-				})
-				exporter, err := stdoutlog.New(
-					stdoutlog.WithWriter(logsFile),
-					// stdoutlog.WithPrettyPrint(),
-				)
-				if err != nil {
-					return fmt.Errorf("failed to create stdout log exporter: %w", err)
-				}
-				opts = append(opts, otelconf.WithLoggerProviderOptions(
-					logsdk.WithProcessor(logsdk.NewBatchProcessor(exporter)),
-				))
-			}
 			if extra.InstrumentHost {
 				fmt.Println("Initializing host instrumentation")
 				if err := host.Start(); err != nil {

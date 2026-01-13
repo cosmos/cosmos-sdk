@@ -147,7 +147,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, _ json.RawMe
 	}
 }
 
-// ExportGenesis is always empty, as InitGenesis does nothing either
+// ExportGenesis is always empty, as there is no sense in serializing future upgrades.
 func (am AppModule) ExportGenesis(_ sdk.Context, cdc codec.JSONCodec) json.RawMessage {
 	return am.DefaultGenesis(cdc)
 }

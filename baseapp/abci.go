@@ -983,6 +983,7 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 		// check if the hash we got is the same as the one we are executing
 		aborted := app.optimisticExec.AbortIfNeeded(req.Hash)
 		if aborted {
+			//nolint:staticcheck // todo: refactor
 			telemetry.IncrCounter(1, TelemetrySubsystem, MetricOEAborted)
 		}
 		// Wait for the OE to finish, regardless of whether it was aborted or not

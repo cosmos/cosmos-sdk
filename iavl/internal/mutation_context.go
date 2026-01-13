@@ -25,21 +25,23 @@ func NewMutationContext(version uint32) *MutationContext {
 // then we MUST change this code to ALWAYS mutate nodes here,
 // even if they are from the current version.
 func (ctx *MutationContext) mutateBranch(node Node) (*MemNode, error) {
-	if ctx.addOrphan(node.ID()) {
-		return node.MutateBranch(ctx.version)
+	if node.Version() == ctx.version {
+		// node is already at the current version; no mutation needed.
+		memNode, ok := node.(*MemNode)
+		if !ok {
+			return nil, fmt.Errorf("expected MemNode, got %T", node)
+		}
+		return memNode, nil
 	}
-	memNode, ok := node.(*MemNode)
-	if !ok {
-		return nil, fmt.Errorf("expected MemNode, got %T", node)
-	}
-	return memNode, nil
+	ctx.addOrphan(node.ID())
+	return node.MutateBranch(ctx.version)
 }
 
 // addOrphan adds the given node's ID to the list of orphaned nodes.
 // This is to be called when a node is deleted without being replaced; use mutateBranch for nodes that are replaced.
 // Only nodes with a version older than the current mutation version are considered orphans.
 // Nodes with version 0 are uncommitted and don't need orphan tracking since they were never persisted.
-// Returns true if the node was added as an orphan, false otherwise.
+// Returns true if the node was a valid orphan, false otherwise.
 func (ctx *MutationContext) addOrphan(id NodeID) bool {
 	version := id.Layer()
 	if version > 0 && version < ctx.version {

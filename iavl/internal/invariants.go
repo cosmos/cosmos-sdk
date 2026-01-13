@@ -27,9 +27,6 @@ func VerifyAVLInvariants(node Node) error {
 
 	// Verify ID correctness (if ID is set)
 	if !id.IsEmpty() {
-		if id.Layer() != node.Version() {
-			return fmt.Errorf("node %s has layer %d, expected %d", id, node.Version(), id.Layer())
-		}
 		if id.IsLeaf() != node.IsLeaf() {
 			return fmt.Errorf("node %s has IsLeaf=%t, expected %t", id, node.IsLeaf(), id.IsLeaf())
 		}

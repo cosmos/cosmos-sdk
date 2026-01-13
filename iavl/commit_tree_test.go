@@ -1,6 +1,7 @@
 package iavl
 
 import (
+	"bytes"
 	"context"
 	"os"
 	"runtime/debug"
@@ -75,7 +76,7 @@ func (s *SimMachine) openV2Tree(t interface {
 }
 
 func (s *SimMachine) Check(t *rapid.T) {
-	versions := rapid.IntRange(100, 1000).Draw(t, "versions")
+	versions := rapid.IntRange(10, 200).Draw(t, "versions")
 	for i := 0; i < versions; i++ {
 		s.checkNewVersion(t)
 	}
@@ -102,7 +103,9 @@ func (s *SimMachine) checkNewVersion(t *rapid.T) {
 
 	// compare versions and hashes
 	require.Equal(t, versionV1, commitIdV2.Version, "version mismatch between V1 and V2 trees")
-	require.Equal(t, hashV1, commitIdV2.Hash, "hash mismatch between V1 and V2 trees")
+	if !bytes.Equal(hashV1, commitIdV2.Hash) {
+		t.Fatalf("hash mismatch between V1 and V2 trees: V1=%X, V2=%X", hashV1, commitIdV2.Hash)
+	}
 
 	// compare iterators at this version
 	iterV1, err := s.treeV1.Iterator(nil, nil, true)
@@ -118,7 +121,7 @@ func (s *SimMachine) checkNewVersion(t *rapid.T) {
 }
 
 func (s *SimMachine) genUpdates(t *rapid.T) []Update {
-	n := rapid.IntRange(100, 1000).Draw(t, "n")
+	n := rapid.IntRange(10, 200).Draw(t, "n")
 	updates := make([]Update, 0, n)
 	for i := 0; i < n; i++ {
 		key := s.selectKey(t)

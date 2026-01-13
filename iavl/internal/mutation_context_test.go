@@ -14,13 +14,13 @@ func TestMutationContext_AddOrphan(t *testing.T) {
 		expectOrphan bool
 	}{
 		{
-			name:         "older version becomes orphan",
+			name:         "older layer becomes orphan",
 			currentVer:   5,
 			nodeId:       NewNodeID(true, 3, 10),
 			expectOrphan: true,
 		},
 		{
-			name:       "same version not orphan",
+			name:       "same layer not orphan",
 			currentVer: 5,
 			nodeId:     NewNodeID(true, 5, 10),
 		},
@@ -75,7 +75,7 @@ func TestMutationContext_MutateNode(t *testing.T) {
 				require.Len(t, ctx.orphans, 0, "expected no orphans")
 			} else {
 				require.NotSame(t, tt.node, mutatedNode, "expected different node instance")
-				require.Equal(t, tt.currentVer, mutatedNode.version, "mutated node version mismatch")
+				require.Equal(t, tt.currentVer, mutatedNode.version, "mutated node layer mismatch")
 				require.Len(t, ctx.orphans, 1, "expected one orphan")
 				require.Equal(t, tt.node.ID(), ctx.orphans[0], "orphaned NodeID mismatch")
 			}

@@ -84,7 +84,7 @@ func TestCreateChangesetFiles_Uncompacted(t *testing.T) {
 	require.NotNil(t, cf.KVDataFile())
 	require.NotNil(t, cf.BranchesFile())
 	require.NotNil(t, cf.LeavesFile())
-	require.NotNil(t, cf.VersionsFile())
+	require.NotNil(t, cf.LayersFile())
 	require.NotNil(t, cf.OrphansFile())
 	require.NotNil(t, cf.Info())
 }
@@ -201,7 +201,7 @@ func TestOpenChangesetFiles_InvalidDir(t *testing.T) {
 	treeDir := t.TempDir()
 
 	// Create a directory with invalid name
-	invalidDir := filepath.Join(treeDir, "not-a-version")
+	invalidDir := filepath.Join(treeDir, "not-a-layer")
 	require.NoError(t, os.MkdirAll(invalidDir, 0o755))
 
 	_, err := OpenChangesetFiles(invalidDir)

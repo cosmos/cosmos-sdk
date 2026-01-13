@@ -3,16 +3,8 @@ package internal
 import "fmt"
 
 // NodeID is a stable identifier for a node in the IAVL tree.
-// A NodeID allows for a 32-bit version and a 31-bit index within that version,
-// with 1 bit used to indicate whether the node is a leaf or branch.
-// A 32-bit version should allow for 136 years of 1-second blocks.
-// If block production significantly speeds up, we can increase the width of the version field in the future.
-// This sort of change can be done without any major on-disk migration because we can simply create a "wide changeset"
-// format that lives alongside the existing "compact" format.
-// Because the cost of migration is low, we have decided to keep things simple and compact for now.
 type NodeID struct {
-	// version is the version of the tree at which this node was created.
-	version uint32
+	layer uint32
 
 	// flagIndex indicates whether this is a branch or leaf node and stores its index in the tree.
 	flagIndex nodeFlagIndex
@@ -25,9 +17,9 @@ type NodeID struct {
 type nodeFlagIndex uint32
 
 // NewNodeID creates a new NodeID.
-func NewNodeID(isLeaf bool, version, index uint32) NodeID {
+func NewNodeID(isLeaf bool, layer, index uint32) NodeID {
 	return NodeID{
-		version:   version,
+		layer:     layer,
 		flagIndex: newNodeFlagIndex(isLeaf, index),
 	}
 }
@@ -39,12 +31,11 @@ func (id NodeID) IsLeaf() bool {
 
 // IsEmpty returns true if the NodeID is the zero value.
 func (id NodeID) IsEmpty() bool {
-	return id.version == 0 && id.flagIndex == 0
+	return id.layer == 0 && id.flagIndex == 0
 }
 
-// Version is the version of the tree at which this node was created.
-func (id NodeID) Version() uint32 {
-	return id.version
+func (id NodeID) Layer() uint32 {
+	return id.layer
 }
 
 // Index returns the index of the node in the tree.
@@ -56,12 +47,12 @@ func (id NodeID) Index() uint32 {
 
 // Equal returns true if the two NodeIDs are equal.
 func (id NodeID) Equal(other NodeID) bool {
-	return id.version == other.version && id.flagIndex == other.flagIndex
+	return id.layer == other.layer && id.flagIndex == other.flagIndex
 }
 
 // String returns a string representation of the NodeID.
 func (id NodeID) String() string {
-	return fmt.Sprintf("NodeID{leaf:%t, version:%d, index:%d}", id.IsLeaf(), id.version, id.flagIndex.Index())
+	return fmt.Sprintf("NodeID{leaf:%t, layer:%d, index:%d}", id.IsLeaf(), id.layer, id.flagIndex.Index())
 }
 
 // NewNodeFlagIndex creates a new nodeFlagIndex.

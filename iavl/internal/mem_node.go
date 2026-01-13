@@ -134,8 +134,8 @@ func (node *MemNode) IsLeaf() bool {
 // String implements the fmt.Stringer interface.
 func (node *MemNode) String() string {
 	if node.IsLeaf() {
-		return fmt.Sprintf("MemNode{key:%x, version:%d, size:%d, value:%x}", node.key, node.version, node.size, node.value)
+		return fmt.Sprintf("MemNode{key:%x, layer:%d, size:%d, value:%x}", node.key, node.version, node.size, node.value)
 	} else {
-		return fmt.Sprintf("MemNode{key:%x, version:%d, size:%d, height:%d, left:%s, right:%s}", node.key, node.version, node.size, node.height, node.left, node.right)
+		return fmt.Sprintf("MemNode{key:%x, layer:%d, size:%d, height:%d, left:%s, right:%s}", node.key, node.version, node.size, node.height, node.left, node.right)
 	}
 }

@@ -20,7 +20,7 @@ type ChangesetFiles struct {
 	kvDataFile   *os.File
 	branchesFile *os.File
 	leavesFile   *os.File
-	versionsFile *os.File
+	layerFiles   *os.File
 	orphansFile  *os.File
 	infoFile     *os.File
 	info         *ChangesetInfo
@@ -129,8 +129,8 @@ func (cr *ChangesetFiles) open(mode int) error {
 		return fmt.Errorf("failed to open branches data file: %w", err)
 	}
 
-	versionsPath := filepath.Join(cr.dir, "versions.dat")
-	cr.versionsFile, err = os.OpenFile(versionsPath, mode, 0o600)
+	layersPath := filepath.Join(cr.dir, "layers.dat")
+	cr.layerFiles, err = os.OpenFile(layersPath, mode, 0o600)
 	if err != nil {
 		return fmt.Errorf("failed to open versions data file: %w", err)
 	}
@@ -215,9 +215,9 @@ func (cr *ChangesetFiles) LeavesFile() *os.File {
 	return cr.leavesFile
 }
 
-// VersionsFile returns the versions.dat file handle.
-func (cr *ChangesetFiles) VersionsFile() *os.File {
-	return cr.versionsFile
+// LayersFile returns the layers.dat file handle.
+func (cr *ChangesetFiles) LayersFile() *os.File {
+	return cr.layerFiles
 }
 
 // OrphansFile returns the orphans.dat file handle.
@@ -288,7 +288,7 @@ func (cr *ChangesetFiles) Close() error {
 		cr.kvDataFile.Close(),
 		cr.branchesFile.Close(),
 		cr.leavesFile.Close(),
-		cr.versionsFile.Close(),
+		cr.layerFiles.Close(),
 		cr.orphansFile.Close(),
 		cr.infoFile.Close(),
 	)
@@ -304,7 +304,7 @@ func (cr *ChangesetFiles) DeleteFiles() error {
 		os.Remove(cr.infoFile.Name()),
 		os.Remove(cr.leavesFile.Name()),
 		os.Remove(cr.branchesFile.Name()),
-		os.Remove(cr.versionsFile.Name()),
+		os.Remove(cr.layerFiles.Name()),
 		os.Remove(cr.orphansFile.Name()),
 		os.Remove(cr.kvDataFile.Name()),
 		cr.MarkReady(), // remove pending marker file if it exists

@@ -17,11 +17,11 @@ func TestNodeID(t *testing.T) {
 		{
 			name: "leaf1_1",
 			leaf: true, version: 1, index: 1,
-			str: "NodeID{leaf:true, version:1, index:1}",
+			str: "NodeID{leaf:true, layer:1, index:1}",
 		},
 		{
 			name: "branch2_3", version: 2, index: 3,
-			str: "NodeID{leaf:false, version:2, index:3}",
+			str: "NodeID{leaf:false, layer:2, index:3}",
 		},
 	}
 	for _, test := range tests {
@@ -29,7 +29,7 @@ func TestNodeID(t *testing.T) {
 			id := NewNodeID(test.leaf, test.version, test.index)
 			require.Equal(t, test.leaf, id.IsLeaf())
 			require.Equal(t, test.index, id.Index())
-			require.Equal(t, test.version, id.Version())
+			require.Equal(t, test.version, id.Layer())
 			require.Equal(t, test.str, id.String())
 		})
 	}
@@ -65,7 +65,7 @@ func TestNodeID_Equal(t *testing.T) {
 			equal: true,
 		},
 		{
-			name:  "different version",
+			name:  "different layer",
 			a:     NewNodeID(true, 1, 1),
 			b:     NewNodeID(true, 2, 1),
 			equal: false,

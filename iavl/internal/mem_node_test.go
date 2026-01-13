@@ -79,7 +79,7 @@ func TestMemNode_String(t *testing.T) {
 				key:     []byte{0xab, 0xcd},
 				value:   []byte{0x12, 0x34},
 			},
-			want: "MemNode{key:abcd, version:1, size:1, value:1234}",
+			want: "MemNode{key:abcd, layer:1, size:1, value:1234}",
 		},
 		{
 			name: "branch node",
@@ -91,7 +91,7 @@ func TestMemNode_String(t *testing.T) {
 				left:    &NodePointer{id: NewNodeID(true, 1, 1)},
 				right:   &NodePointer{id: NewNodeID(true, 1, 2)},
 			},
-			want: "MemNode{key:ff, version:5, size:10, height:2, left:NodePointer{id: NodeID{leaf:true, version:1, index:1}, fileIdx: 0}, right:NodePointer{id: NodeID{leaf:true, version:1, index:2}, fileIdx: 0}}",
+			want: "MemNode{key:ff, layer:5, size:10, height:2, left:NodePointer{id: NodeID{leaf:true, layer:1, index:1}, fileIdx: 0}, right:NodePointer{id: NodeID{leaf:true, layer:1, index:2}, fileIdx: 0}}",
 		},
 	}
 	for _, tt := range tests {

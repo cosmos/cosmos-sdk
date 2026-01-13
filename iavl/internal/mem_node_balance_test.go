@@ -171,7 +171,7 @@ func TestRotateLeft(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "(Z.2.2 (Y.2.1 [X.1.2] [Y.1.4]) [Z.1.5])", printTreeStructure(newRoot))
 	require.Equal(t, []NodeID{NewNodeID(false, 1, 3)}, ctx.orphans)
-	require.NoError(t, verifyAVLInvariants(newRoot))
+	require.NoError(t, VerifyAVLInvariants(newRoot))
 }
 
 func TestRotateRight(t *testing.T) {
@@ -199,7 +199,7 @@ func TestRotateRight(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "(X.2.2 [W.1.3] (Y.2.1 [X.1.4] [Y.1.5]))", printTreeStructure(newRoot))
 	require.Equal(t, []NodeID{NewNodeID(false, 1, 2)}, ctx.orphans)
-	require.NoError(t, verifyAVLInvariants(newRoot))
+	require.NoError(t, VerifyAVLInvariants(newRoot))
 }
 
 func TestNodeRebalance(t *testing.T) {
@@ -392,7 +392,7 @@ func TestNodeRebalance(t *testing.T) {
 			newRoot, err := tt.root.reBalance(ctx)
 			require.NoError(t, err, "reBalance error")
 			require.Equal(t, tt.afterRotation, printTreeStructure(newRoot), "tree structure after reBalance")
-			require.NoError(t, verifyAVLInvariants(newRoot))
+			require.NoError(t, VerifyAVLInvariants(newRoot))
 			// check orphans
 			require.Equal(t, tt.orphans, ctx.orphans, "orphans after reBalance")
 		})
@@ -436,10 +436,10 @@ func printTreeStructure(node *MemNode) string {
 
 		key := node.key
 		if node.IsLeaf() {
-			return fmt.Sprintf("[%s.%d.%d]", key, id.Version(), id.Index())
+			return fmt.Sprintf("[%s.%d.%d]", key, id.Layer(), id.Index())
 		}
 		return fmt.Sprintf("(%s.%d.%d %s %s)",
-			key, id.Version(), id.Index(),
+			key, id.Layer(), id.Index(),
 			doPrintNode(node.left.mem.Load()),
 			doPrintNode(node.right.mem.Load()),
 		)

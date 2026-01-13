@@ -98,7 +98,7 @@ func writeHashBytes(node Node, leftHash, rightHash []byte, w io.Writer) error {
 	}
 	n = binary.PutVarint(buf[:], int64(node.Version()))
 	if _, err := w.Write(buf[0:n]); err != nil {
-		return fmt.Errorf("writing version, %w", err)
+		return fmt.Errorf("writing layer, %w", err)
 	}
 
 	// Key is not written for inner nodes, unlike writeBytes.

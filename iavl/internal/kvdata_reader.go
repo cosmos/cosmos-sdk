@@ -41,7 +41,7 @@ func (kvr *KVDataReader) hasWAL() (ok bool, startVersion uint64, bytesRead int, 
 	}
 	startVersion, bytesRead, err = kvr.readVarint(1)
 	if err != nil {
-		return false, 0, 0, fmt.Errorf("failed to read WAL start version: %w", err)
+		return false, 0, 0, fmt.Errorf("failed to read WAL start layer: %w", err)
 	}
 	return true, startVersion, bytesRead + 1, nil
 }
@@ -193,7 +193,7 @@ func (wr *WALReader) next() (entryType KVEntryType, ok bool, err error) {
 		var bytesRead int
 		wr.Version, bytesRead, err = wr.rdr.readVarint(wr.offset)
 		if err != nil {
-			return 0, false, fmt.Errorf("failed to read WAL commit version at offset %d: %w", wr.offset, err)
+			return 0, false, fmt.Errorf("failed to read WAL commit layer at offset %d: %w", wr.offset, err)
 		}
 		wr.offset += bytesRead
 	case KVEntryKeyBlob:

@@ -208,8 +208,8 @@ type dataItem[V any] struct {
 }
 
 func (d *dataItem[V]) Init() {
-	if d.Tree == nil {
-		d.Tree = tree.NewBTree(secondaryLesser[V], InnerBTreeDegree)
+	if d.Store == nil {
+		d.Store = NewSecondaryStore[V]()
 	}
 }
 

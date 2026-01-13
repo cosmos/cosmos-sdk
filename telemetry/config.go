@@ -3,7 +3,10 @@ package telemetry
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
+
+	"go.opentelemetry.io/contrib/bridges/otelslog"
 
 	"go.opentelemetry.io/contrib/instrumentation/host"
 	"go.opentelemetry.io/contrib/instrumentation/runtime"
@@ -117,6 +120,8 @@ func InitializeOpenTelemetry(filePath string) error {
 	otel.SetTracerProvider(openTelemetrySDK.TracerProvider())
 	otel.SetMeterProvider(openTelemetrySDK.MeterProvider())
 	logglobal.SetLoggerProvider(openTelemetrySDK.LoggerProvider())
+	// set global slog logger to export via OTel
+	slog.SetDefault(otelslog.NewLogger("cosmos-sdk"))
 
 	return nil
 }

@@ -9,6 +9,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
+	log2 "github.com/cosmos/cosmos-sdk/logv2"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -140,9 +141,14 @@ func (k BaseSendKeeper) subVirtualCoins(ctx context.Context, addr sdk.AccAddress
 	return nil
 }
 
+var (
+	slogger = log2.New("x/bank/keeper")
+)
+
 // CreditVirtualAccounts sum up the transient coins and add them to the real account,
 // should be called at end blocker.
 func (k BaseSendKeeper) CreditVirtualAccounts(ctx context.Context) error {
+	slogger.InfoContext(ctx, "CREDIT VIRTUAL ACCOUNTS!!!")
 	// No-op if we're not using the objStore to accumulate to module accounts
 	if k.objStoreKey == nil {
 		return nil

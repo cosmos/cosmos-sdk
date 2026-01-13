@@ -3,6 +3,7 @@ package baseapp
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"sort"
 	"strings"
 	"time"
@@ -800,6 +801,8 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 	ctx := finalizeState.Context().WithContext(goCtx)
 	ctx, span := ctx.StartSpan(tracer, "internalFinalizeBlock")
 	defer span.End()
+
+	slog.InfoContext(ctx, "finalizing block :D")
 
 	// Context is now updated with Header information.
 	finalizeState.SetContext(ctx.

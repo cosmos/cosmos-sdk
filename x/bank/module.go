@@ -10,6 +10,7 @@ import (
 
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
+	"go.opentelemetry.io/contrib/bridges/otelslog"
 
 	modulev1 "cosmossdk.io/api/cosmos/bank/module/v1"
 	"cosmossdk.io/core/address"
@@ -33,6 +34,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+)
+
+var (
+	slogger = otelslog.NewLogger("x/bank/module")
 )
 
 // ConsensusVersion defines the current x/bank module consensus version.
@@ -204,6 +209,7 @@ func (am AppModule) WeightedOperationsX(weights simsx.WeightSource, reg simsx.Re
 }
 
 func (am AppModule) EndBlock(ctx context.Context) error {
+	slogger.Info("end_block from x/bank ya")
 	return am.keeper.CreditVirtualAccounts(ctx)
 }
 

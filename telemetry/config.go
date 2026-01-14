@@ -17,7 +17,6 @@ import (
 	lognoop "go.opentelemetry.io/otel/log/noop"
 	metricnoop "go.opentelemetry.io/otel/metric/noop"
 	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/sdk/log"
 	tracenoop "go.opentelemetry.io/otel/trace/noop"
 	"go.yaml.in/yaml/v3"
 )
@@ -110,7 +109,6 @@ func InitializeOpenTelemetry(filePath string) error {
 		}
 	}
 
-	opts = append(opts, otelconf.WithLoggerProviderOptions(log.WithProcessor(&CustomProcessor{})))
 	otelSDK, err := otelconf.NewSDK(opts...)
 	if err != nil {
 		return fmt.Errorf("failed to initialize telemetry: %w", err)
@@ -222,24 +220,3 @@ func Shutdown(ctx context.Context) error {
 	}
 	return nil
 }
-
-type CustomProcessor struct{}
-
-func (c CustomProcessor) Enabled(ctx context.Context, param log.EnabledParameters) bool {
-	return true
-}
-
-func (c CustomProcessor) OnEmit(ctx context.Context, record *log.Record) error {
-	fmt.Println("OnEmit", record)
-	return nil
-}
-
-func (c CustomProcessor) Shutdown(ctx context.Context) error {
-	return nil
-}
-
-func (c CustomProcessor) ForceFlush(ctx context.Context) error {
-	return nil
-}
-
-var _ log.Processor = &CustomProcessor{}

@@ -58,7 +58,7 @@ type Logger interface {
 	// With returns a new wrapped logger with additional context provided by a set.
 	With(keyVals ...any) Logger
 
-	// WithSpanContext sets the span and trace id's on the logger, allowing for trace correlation.
+	// WithSpanContext sets the span and trace IDs on the logger, allowing for trace correlation.
 	WithSpanContext(context.Context) Logger
 
 	// Impl returns the underlying logger implementation.

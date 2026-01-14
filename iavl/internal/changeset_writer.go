@@ -6,11 +6,12 @@ import (
 )
 
 type ChangesetWriter struct {
-	stagedLayer uint32
+	layer uint32
 
 	files *ChangesetFiles
 
-	kvlog        *KVDataWriter
+	walWriter    *WALWriter
+	kvWriter     *KVDataWriter
 	branchesData *StructWriter[BranchLayout]
 	leavesData   *StructWriter[LeafLayout]
 	layersData   *StructWriter[LayerInfo]
@@ -20,16 +21,22 @@ type ChangesetWriter struct {
 	lastBranchIdx, lastLeafIdx uint32
 }
 
-func NewChangesetWriter(treeDir string, stagedLayer uint32, treeStore *TreeStore) (*ChangesetWriter, error) {
-	files, err := CreateChangesetFiles(treeDir, stagedLayer, 0)
+func NewChangesetWriter(treeDir string, stagedLayer, stagedVersion uint32, treeStore *TreeStore) (*ChangesetWriter, error) {
+	files, err := CreateChangesetFiles(treeDir, stagedVersion, 0, true)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open changeset files: %w", err)
 	}
 
+	walWriter, err := NewWALWriter(files.WALFile(), uint64(stagedVersion))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create WAL currentWriter: %w", err)
+	}
+
 	cs := &ChangesetWriter{
-		stagedLayer:  stagedLayer,
+		layer:        stagedLayer,
 		files:        files,
-		kvlog:        NewKVDataWriter(files.KVDataFile()),
+		walWriter:    walWriter,
+		kvWriter:     NewKVDataWriter(files.KVDataFile()),
 		branchesData: NewStructWriter[BranchLayout](files.BranchesFile()),
 		leavesData:   NewStructWriter[LeafLayout](files.LeavesFile()),
 		layersData:   NewStructWriter[LayerInfo](files.LayersFile()),
@@ -38,9 +45,17 @@ func NewChangesetWriter(treeDir string, stagedLayer uint32, treeStore *TreeStore
 	return cs, nil
 }
 
-func (cs *ChangesetWriter) SaveLayer(root *NodePointer) (layer uint32, err error) {
+func (cs *ChangesetWriter) Changeset() *Changeset {
+	return cs.changeset
+}
+
+func (cs *ChangesetWriter) WALWriter() *WALWriter {
+	return cs.walWriter
+}
+
+func (cs *ChangesetWriter) SaveLayer(layer uint32, root *NodePointer) error {
 	if root == nil {
-		return 0, fmt.Errorf("cannot save nil root node")
+		return fmt.Errorf("cannot save nil root node")
 	}
 
 	cs.lastBranchIdx = 0
@@ -48,10 +63,15 @@ func (cs *ChangesetWriter) SaveLayer(root *NodePointer) (layer uint32, err error
 
 	rootVersion, err := cs.writeNode(root)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
-	layer = cs.stagedLayer
+	if cs.layer != 0 {
+		if layer != cs.layer+1 {
+			return fmt.Errorf("invalid layer %d, expected %d", layer, cs.layer+1)
+		}
+		cs.layer = layer
+	}
 
 	var layerInfo LayerInfo
 	layerInfo.Branches.StartOffset = uint32(cs.branchesData.Count())
@@ -75,7 +95,7 @@ func (cs *ChangesetWriter) SaveLayer(root *NodePointer) (layer uint32, err error
 	// commit version info
 	err = cs.layersData.Append(&layerInfo)
 	if err != nil {
-		return 0, fmt.Errorf("failed to write version info: %w", err)
+		return fmt.Errorf("failed to write version info: %w", err)
 	}
 
 	// Set start version on first successful save
@@ -87,9 +107,7 @@ func (cs *ChangesetWriter) SaveLayer(root *NodePointer) (layer uint32, err error
 	info.EndLayer = layer
 	info.EndVersion = rootVersion
 
-	cs.stagedLayer++
-
-	return layer, nil
+	return nil
 }
 
 func (cs *ChangesetWriter) writeNode(np *NodePointer) (nodeVersion uint32, err error) {
@@ -115,13 +133,20 @@ func (cs *ChangesetWriter) writeBranch(np *NodePointer, node *MemNode) error {
 		return err
 	}
 
-	node.nodeId = NewNodeID(false, cs.stagedLayer, cs.lastBranchIdx+1)
+	node.nodeId = NewNodeID(false, cs.layer, cs.lastBranchIdx+1)
 	cs.lastBranchIdx++
 
-	keyOffset, err := cs.kvlog.WriteKeyBlob(node.key)
-	if err != nil {
-		return fmt.Errorf("failed to write key data: %w", err)
+	keyOffset, found := cs.walWriter.LookupKeyOffset(node.key)
+	var keyInfo BranchKeyInfo
+	if !found {
+		var err error
+		keyOffset, err = cs.kvWriter.WriteKeyBlob(node.key)
+		if err != nil {
+			return fmt.Errorf("failed to write key data: %w", err)
+		}
+		keyInfo = keyInfo.SetIsInKVData(true)
 	}
+	node.keyOffset = keyOffset
 
 	leftVersion := node.left.id.Layer()
 	rightVersion := node.right.id.Layer()
@@ -147,6 +172,7 @@ func (cs *ChangesetWriter) writeBranch(np *NodePointer, node *MemNode) error {
 		LeftOffset:  leftOffset,
 		RightOffset: rightOffset,
 		KeyOffset:   keyOffset,
+		KeyInfo:     keyInfo,
 		// TODO add inline key prefix
 		Height: node.height,
 		Size:   NewUint40(uint64(node.size)),
@@ -166,7 +192,7 @@ func (cs *ChangesetWriter) writeBranch(np *NodePointer, node *MemNode) error {
 }
 
 func (cs *ChangesetWriter) writeLeaf(np *NodePointer, node *MemNode) error {
-	node.nodeId = NewNodeID(true, cs.stagedLayer, cs.lastLeafIdx+1)
+	node.nodeId = NewNodeID(true, cs.layer, cs.lastLeafIdx+1)
 	cs.lastLeafIdx++
 
 	keyOffset := node.keyOffset
@@ -199,7 +225,7 @@ func (cs *ChangesetWriter) writeLeaf(np *NodePointer, node *MemNode) error {
 //	return cs.leavesData.Size() +
 //		cs.branchesData.Size() +
 //		cs.versionsData.Size() +
-//		cs.kvlog.Size()
+//		cs.kvWriter.Size()
 //}
 //
 //func (cs *ChangesetWriter) Seal() (*Changeset, error) {
@@ -215,7 +241,7 @@ func (cs *ChangesetWriter) writeLeaf(np *NodePointer, node *MemNode) error {
 //	cs.leavesData = nil
 //	cs.branchesData = nil
 //	cs.versionsData = nil
-//	cs.kvlog = nil
+//	cs.kvWriter = nil
 //	cs.keyCache = nil
 //	reader := cs.reader
 //	cs.reader = nil
@@ -224,7 +250,7 @@ func (cs *ChangesetWriter) writeLeaf(np *NodePointer, node *MemNode) error {
 //}
 
 func (cs *ChangesetWriter) StartLayer() uint32 {
-	return cs.files.StartLayer()
+	return cs.files.StartVersion()
 }
 
 func (cs *ChangesetWriter) CreatedSharedReader() error {
@@ -244,10 +270,15 @@ func (cs *ChangesetWriter) CreatedSharedReader() error {
 
 func (cs *ChangesetWriter) Flush() error {
 	return errors.Join(
+		// NOTE: we do not flush the WAL here as that is being done elsewhere
 		cs.files.RewriteInfo(),
 		cs.leavesData.Flush(),
 		cs.branchesData.Flush(),
-		cs.kvlog.Flush(),
+		cs.kvWriter.Flush(),
 		cs.layersData.Flush(),
 	)
+}
+
+func (cs *ChangesetWriter) Seal() error {
+
 }

@@ -55,6 +55,8 @@ type BranchLayout struct {
 	// Height is the height of the subtree rooted at this branch node.
 	Height uint8
 
+	KeyInfo BranchKeyInfo
+
 	// NOTE: there are two bytes of padding here that could be used for something else in the future if needed
 	// such as an extra byte to allow for 40-bit key offsets.
 
@@ -67,4 +69,21 @@ type BranchLayout struct {
 
 func (b BranchLayout) GetNodeID() NodeID {
 	return b.ID
+}
+
+type BranchKeyInfo byte
+
+// InKVData returns true if the branch key is stored in the KV data file, false if in WAL.
+// The high bit is set if the key is in KV data.
+func (b BranchKeyInfo) InKVData() bool {
+	return b&0x80 != 0
+}
+
+// SetIsInKVData sets whether the branch key is stored in the KV data file.
+func (b BranchKeyInfo) SetIsInKVData(isInKVData bool) BranchKeyInfo {
+	if isInKVData {
+		return b | 0x80
+	} else {
+		return b &^ 0x80
+	}
 }

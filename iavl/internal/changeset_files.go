@@ -12,11 +12,12 @@ import (
 // ChangesetFiles encapsulates management of changeset files.
 // This type is shared between the Changeset and ChangesetWriter types.
 type ChangesetFiles struct {
-	dir         string
-	treeDir     string
-	startLayer  uint32
-	compactedAt uint32
+	dir          string
+	treeDir      string
+	startVersion uint32
+	compactedAt  uint32
 
+	walFile      *os.File
 	kvDataFile   *os.File
 	branchesFile *os.File
 	leavesFile   *os.File
@@ -34,7 +35,7 @@ type ChangesetFiles struct {
 // will be created to indicate that the changeset is not yet ready for use.
 // This pending marker file must be removed once the compaction is fully complete by calling MarkReady,
 // otherwise the changeset will be considered incomplete and deleted at the next startup.
-func CreateChangesetFiles(treeDir string, startLayer, compactedAt uint32) (*ChangesetFiles, error) {
+func CreateChangesetFiles(treeDir string, startVersion, compactedAt uint32, haveWal bool) (*ChangesetFiles, error) {
 	// ensure absolute path
 	var err error
 	treeDir, err = filepath.Abs(treeDir)
@@ -42,9 +43,9 @@ func CreateChangesetFiles(treeDir string, startLayer, compactedAt uint32) (*Chan
 		return nil, fmt.Errorf("failed to get absolute path for %s: %w", treeDir, err)
 	}
 
-	dirName := fmt.Sprintf("%d", startLayer)
+	dirName := fmt.Sprintf("%d", startVersion)
 	if compactedAt > 0 {
-		dirName = fmt.Sprintf("%d.%d", startLayer, compactedAt)
+		dirName = fmt.Sprintf("%d.%d", startVersion, compactedAt)
 	}
 	dir := filepath.Join(treeDir, dirName)
 
@@ -62,13 +63,13 @@ func CreateChangesetFiles(treeDir string, startLayer, compactedAt uint32) (*Chan
 	}
 
 	cr := &ChangesetFiles{
-		dir:         dir,
-		treeDir:     treeDir,
-		startLayer:  startLayer,
-		compactedAt: compactedAt,
+		dir:          dir,
+		treeDir:      treeDir,
+		startVersion: startVersion,
+		compactedAt:  compactedAt,
 	}
 
-	err = cr.open(writeModeFlags)
+	err = cr.open(writeModeFlags, haveWal)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open changeset files: %w", err)
 	}
@@ -94,13 +95,20 @@ func OpenChangesetFiles(dirName string) (*ChangesetFiles, error) {
 	treeDir := filepath.Dir(dir)
 
 	cr := &ChangesetFiles{
-		dir:         dir,
-		treeDir:     treeDir,
-		startLayer:  startLayer,
-		compactedAt: compactedAt,
+		dir:          dir,
+		treeDir:      treeDir,
+		startVersion: startLayer,
+		compactedAt:  compactedAt,
 	}
 
-	err = cr.open(os.O_RDONLY)
+	haveWal := false
+	walPath := filepath.Join(cr.dir, "wal.log")
+	_, err = os.Stat(walPath)
+	if err == nil {
+		haveWal = true
+	}
+
+	err = cr.open(os.O_RDONLY, haveWal)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open changeset files: %w", err)
 	}
@@ -108,11 +116,19 @@ func OpenChangesetFiles(dirName string) (*ChangesetFiles, error) {
 	return cr, nil
 }
 
-func (cr *ChangesetFiles) open(mode int) error {
+func (cr *ChangesetFiles) open(mode int, haveWal bool) error {
 	var err error
 
-	kvFile := filepath.Join(cr.dir, "kv.dat")
-	cr.kvDataFile, err = os.OpenFile(kvFile, mode, 0o600)
+	if haveWal {
+		walPath := filepath.Join(cr.dir, "wal.log")
+		cr.walFile, err = os.OpenFile(walPath, mode, 0o600)
+		if err != nil {
+			return fmt.Errorf("failed to open WAL data file: %w", err)
+		}
+	}
+
+	kvPath := filepath.Join(cr.dir, "kv.dat")
+	cr.kvDataFile, err = os.OpenFile(kvPath, mode, 0o600)
 	if err != nil {
 		return fmt.Errorf("failed to open KV data file: %w", err)
 	}
@@ -200,6 +216,11 @@ func (cr *ChangesetFiles) TreeDir() string {
 	return cr.treeDir
 }
 
+// WALFile returns the wal.log file handle.
+func (cr *ChangesetFiles) WALFile() *os.File {
+	return cr.walFile
+}
+
 // KVDataFile returns the kv.dat file handle.
 func (cr *ChangesetFiles) KVDataFile() *os.File {
 	return cr.kvDataFile
@@ -236,9 +257,9 @@ func (cr *ChangesetFiles) RewriteInfo() error {
 	return RewriteChangesetInfo(cr.infoFile, cr.info)
 }
 
-// StartLayer returns the start layer of the changeset.
-func (cr *ChangesetFiles) StartLayer() uint32 {
-	return cr.startLayer
+// StartVersion returns the start version of the changeset.
+func (cr *ChangesetFiles) StartVersion() uint32 {
+	return cr.startVersion
 }
 
 // CompactedAtVersion returns the compacted at version of the changeset.
@@ -285,6 +306,7 @@ func (cr *ChangesetFiles) Close() error {
 
 	cr.closed = true
 	err := errors.Join(
+		cr.walFile.Close(),
 		cr.kvDataFile.Close(),
 		cr.branchesFile.Close(),
 		cr.leavesFile.Close(),
@@ -301,6 +323,7 @@ func (cr *ChangesetFiles) Close() error {
 func (cr *ChangesetFiles) DeleteFiles() error {
 	return errors.Join(
 		cr.Close(), // first close all files
+		os.Remove(cr.walFile.Name()),
 		os.Remove(cr.infoFile.Name()),
 		os.Remove(cr.leavesFile.Name()),
 		os.Remove(cr.branchesFile.Name()),

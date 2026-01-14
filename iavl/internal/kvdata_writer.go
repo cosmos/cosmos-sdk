@@ -13,7 +13,10 @@ import (
 type KVDataWriter struct {
 	*FileWriter
 	keyCache map[string]uint32
-	walMode  bool
+}
+
+type WALWriter struct {
+	writer *KVDataWriter
 }
 
 // NewKVDataWriter creates a new KVDataWriter.
@@ -25,35 +28,30 @@ func NewKVDataWriter(file *os.File) *KVDataWriter {
 	}
 }
 
-// IsInWALMode returns true if the writer is in WAL mode.
-// This is set to true after WriteStartWAL is called.
-// If the writer is not in WAL mode, only key-value blobs can be written.
-func (kvs *KVDataWriter) IsInWALMode() bool {
-	return kvs.walMode
+func NewWALWriter(file *os.File, startVersion uint64) (*WALWriter, error) {
+	writer := &WALWriter{
+		writer: NewKVDataWriter(file),
+	}
+	// TODO check that file is empty?
+	err := writer.writeStartWAL(startVersion)
+	if err != nil {
+		return nil, err
+	}
+	return writer, nil
 }
 
-// WriteStartWAL writes a WAL start entry with the given version.
-// This method can ONLY be called on an empty file at the start of creating a KV data file.
-// An error is returned if the file is not empty.
-// This puts the writer into WAL mode.
-func (kvs *KVDataWriter) WriteStartWAL(version uint64) error {
-	if kvs.Size() != 0 {
-		return fmt.Errorf("cannot write WAL start to non-empty file")
-	}
-	kvs.walMode = true
-	err := kvs.writeType(KVEntryWALStart)
+// writeStartWAL writes a WAL start entry with the given version.
+func (kvs *WALWriter) writeStartWAL(version uint64) error {
+	err := kvs.writer.writeType(KVEntryWALStart)
 	if err != nil {
 		return err
 	}
-	return kvs.writeVarUint(version)
+	return kvs.writer.writeVarUint(version)
 }
 
 // WriteWALUpdates writes a batch of WAL updates.
-// This can ONLY be called when the writer is in WAL mode.
-func (kvs *KVDataWriter) WriteWALUpdates(updates []KVUpdate) error {
-	if !kvs.walMode {
-		return fmt.Errorf("cannot write WAL updates when not in WAL mode")
-	}
+// This can ONLY be called when the currentWriter is in WAL mode.
+func (kvs *WALWriter) WriteWALUpdates(updates []KVUpdate) error {
 	for _, update := range updates {
 		deleteKey := update.DeleteKey
 		setNode := update.SetNode
@@ -83,35 +81,31 @@ func (kvs *KVDataWriter) WriteWALUpdates(updates []KVUpdate) error {
 }
 
 // WriteWALSet writes a WAL set entry for the given key and value and returns their offsets in the file.
-// This can ONLY be called when the writer is in WAL mode.
-func (kvs *KVDataWriter) WriteWALSet(key, value []byte) (keyOffset, valueOffset uint32, err error) {
-	if !kvs.walMode {
-		return 0, 0, fmt.Errorf("cannot write WAL set entry when not in WAL mode")
-	}
-	keyOffset, cached := kvs.keyCache[unsafeBytesToString(key)]
+func (kvs *WALWriter) WriteWALSet(key, value []byte) (keyOffset, valueOffset uint32, err error) {
+	keyOffset, cached := kvs.writer.keyCache[unsafeBytesToString(key)]
 	typ := KVEntryWALSet
 	if cached {
 		typ |= KVFlagCachedKey
 	}
-	err = kvs.writeType(typ)
+	err = kvs.writer.writeType(typ)
 	if err != nil {
 		return 0, 0, err
 	}
 
 	if cached {
-		err = kvs.writeLEU32(keyOffset)
+		err = kvs.writer.writeLEU32(keyOffset)
 		if err != nil {
 			return 0, 0, err
 		}
 	} else {
-		keyOffset, err = kvs.writeLenPrefixedBytes(key)
+		keyOffset, err = kvs.writer.writeLenPrefixedBytes(key)
 		if err != nil {
 			return 0, 0, err
 		}
-		kvs.addKeyToCache(key, keyOffset)
+		kvs.writer.addKeyToCache(key, keyOffset)
 	}
 
-	valueOffset, err = kvs.writeLenPrefixedBytes(value)
+	valueOffset, err = kvs.writer.writeLenPrefixedBytes(value)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -120,50 +114,56 @@ func (kvs *KVDataWriter) WriteWALSet(key, value []byte) (keyOffset, valueOffset 
 }
 
 // WriteWALDelete writes a WAL delete entry for the given key.
-// This can ONLY be called when the writer is in WAL mode.
-func (kvs *KVDataWriter) WriteWALDelete(key []byte) error {
-	if !kvs.walMode {
-		return fmt.Errorf("cannot write WAL delete entry when not in WAL mode")
-	}
-	cachedOffset, cached := kvs.keyCache[unsafeBytesToString(key)]
+func (kvs *WALWriter) WriteWALDelete(key []byte) error {
+	cachedOffset, cached := kvs.writer.keyCache[unsafeBytesToString(key)]
 	typ := KVEntryWALDelete
 	if cached {
 		typ |= KVFlagCachedKey
 	}
-	err := kvs.writeType(typ)
+	err := kvs.writer.writeType(typ)
 	if err != nil {
 		return err
 	}
 
 	if cached {
-		err = kvs.writeLEU32(cachedOffset)
+		err = kvs.writer.writeLEU32(cachedOffset)
 		if err != nil {
 			return err
 		}
 	} else {
-		keyOffset, err := kvs.writeLenPrefixedBytes(key)
+		keyOffset, err := kvs.writer.writeLenPrefixedBytes(key)
 		if err != nil {
 			return err
 		}
 
-		kvs.addKeyToCache(key, keyOffset)
+		kvs.writer.addKeyToCache(key, keyOffset)
 	}
 
 	return nil
 }
 
 // WriteWALCommit writes a WAL commit entry for the given version.
-// This can ONLY be called when the writer is in WAL mode.
-func (kvs *KVDataWriter) WriteWALCommit(version uint64) error {
-	if !kvs.walMode {
-		return fmt.Errorf("cannot write WAL commit entry when not in WAL mode")
-	}
-	err := kvs.writeType(KVEntryWALCommit)
+func (kvs *WALWriter) WriteWALCommit(version uint64) error {
+	err := kvs.writer.writeType(KVEntryWALCommit)
 	if err != nil {
 		return err
 	}
 
-	return kvs.writeVarUint(version)
+	return kvs.writer.writeVarUint(version)
+}
+
+func (kvs *WALWriter) Sync() error {
+	return kvs.writer.Sync()
+}
+
+func (kvs *WALWriter) Size() int {
+	return kvs.writer.Size()
+}
+
+// LookupKeyOffset looks up the offset of the given key in the key cache.
+func (kvs *WALWriter) LookupKeyOffset(key []byte) (uint32, bool) {
+	offset, found := kvs.writer.keyCache[unsafeBytesToString(key)]
+	return offset, found
 }
 
 const (

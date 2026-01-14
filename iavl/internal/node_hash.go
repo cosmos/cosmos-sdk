@@ -161,7 +161,7 @@ func writeHashBytes(node Node, leftHash, rightHash []byte, w io.Writer) error {
 	return nil
 }
 
-// encodeVarintPrefixedBytes writes a varint length-prefixed byte slice to the writer,
+// encodeVarintPrefixedBytes writes a varint length-prefixed byte slice to the currentWriter,
 // it's used for hash computation, must be compactible with the official IAVL implementation.
 func encodeVarintPrefixedBytes(w io.Writer, bz []byte) error {
 	var buf [binary.MaxVarintLen64]byte

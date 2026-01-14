@@ -47,19 +47,20 @@ func (node *BranchPersisted) Version() uint32 {
 }
 
 func (node *BranchPersisted) Key() (UnsafeBytes, error) {
-	return readBlob(node.store, node.layout.KeyOffset)
-}
-
-func (node *BranchPersisted) Value() (UnsafeBytes, error) {
-	return UnsafeBytes{}, fmt.Errorf("branch nodes do not have values")
-}
-
-func readBlob(rdr *ChangesetReader, offset uint32) (UnsafeBytes, error) {
-	bz, err := rdr.KVData().UnsafeReadBlob(int(offset))
+	// the key data may be stored either in the WAL OR KV data depending on the key info flag
+	kvData := node.store.WALData()
+	if kvData == nil || node.layout.KeyInfo.InKVData() {
+		kvData = node.store.KVData()
+	}
+	bz, err := kvData.UnsafeReadBlob(int(node.layout.KeyOffset))
 	if err != nil {
 		return UnsafeBytes{}, err
 	}
 	return WrapUnsafeBytes(bz), nil
+}
+
+func (node *BranchPersisted) Value() (UnsafeBytes, error) {
+	return UnsafeBytes{}, fmt.Errorf("branch nodes do not have values")
 }
 
 func (node *BranchPersisted) Hash() UnsafeBytes {

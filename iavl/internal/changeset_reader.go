@@ -10,6 +10,7 @@ type ChangesetReader struct {
 	files     *ChangesetFiles // files is only non-nil if this reader "owns" the changeset files
 	info      *ChangesetInfo  // we reference this so that it can be accessed even in shared changesets
 
+	walReader    *KVDataReader
 	kvDataReader *KVDataReader
 	branchesData *NodeMmap[BranchLayout]
 	leavesData   *NodeMmap[LeafLayout]
@@ -21,6 +22,13 @@ func NewChangesetReader(changeset *Changeset, files *ChangesetFiles, owned bool)
 	cr := &ChangesetReader{changeset: changeset}
 
 	var err error
+
+	if files.WALFile() != nil {
+		cr.walReader, err = NewKVDataReader(files.WALFile())
+		if err != nil {
+			return nil, fmt.Errorf("failed to open WAL data store: %w", err)
+		}
+	}
 
 	cr.kvDataReader, err = NewKVDataReader(files.KVDataFile())
 	if err != nil {
@@ -65,6 +73,10 @@ func NewChangesetReader(changeset *Changeset, files *ChangesetFiles, owned bool)
 //	}
 //	return cs, nil
 //}
+
+func (cr *ChangesetReader) WALData() *KVDataReader {
+	return cr.walReader
+}
 
 func (cr *ChangesetReader) KVData() *KVDataReader {
 	return cr.kvDataReader

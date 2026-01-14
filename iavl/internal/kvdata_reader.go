@@ -23,38 +23,17 @@ func NewKVDataReader(file *os.File) (*KVDataReader, error) {
 	}, nil
 }
 
-// HasWAL checks if the KV data starts with a valid WAL start entry.
-// It returns true and the start version if a valid WAL start entry is found.
-// If not, it returns false and zero.
-func (kvr *KVDataReader) HasWAL() (ok bool, startVersion uint64) {
-	var err error
-	ok, startVersion, _, err = kvr.hasWAL()
-	if err != nil {
-		return false, 0
-	}
-	return ok, startVersion
-}
-
-func (kvr *KVDataReader) hasWAL() (ok bool, startVersion uint64, bytesRead int, err error) {
-	if kvr.Len() == 0 || kvr.At(0) != byte(KVEntryWALStart) {
-		return false, 0, 0, nil
-	}
-	startVersion, bytesRead, err = kvr.readVarint(1)
-	if err != nil {
-		return false, 0, 0, fmt.Errorf("failed to read WAL start layer: %w", err)
-	}
-	return true, startVersion, bytesRead + 1, nil
-}
-
-// ReadWAL returns a WALReader to read WAL entries from the KV data.
-// If the data does not start with a valid WAL start entry, an error is returned.
-func (kvr *KVDataReader) ReadWAL() (*WALReader, error) {
-	haveWal, startVersion, bytesRead, err := kvr.hasWAL()
+func NewWALReader(file *os.File) (*WALReader, error) {
+	kvr, err := NewKVDataReader(file)
 	if err != nil {
 		return nil, err
 	}
-	if !haveWal {
+	if kvr.Len() == 0 || kvr.At(0) != byte(KVEntryWALStart) {
 		return nil, fmt.Errorf("data does not contain a valid WAL start entry")
+	}
+	startVersion, bytesRead, err := kvr.readVarint(1)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read WAL start layer: %w", err)
 	}
 	return &WALReader{
 		rdr:         kvr,

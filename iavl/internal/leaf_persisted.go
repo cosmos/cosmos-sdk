@@ -31,11 +31,25 @@ func (node *LeafPersisted) Version() uint32 {
 }
 
 func (node *LeafPersisted) Key() (UnsafeBytes, error) {
-	return readBlob(node.store, node.layout.KeyOffset)
+	return readLeafBlob(node.store, node.layout.KeyOffset)
 }
 
 func (node *LeafPersisted) Value() (UnsafeBytes, error) {
-	return readBlob(node.store, node.layout.ValueOffset)
+	return readLeafBlob(node.store, node.layout.ValueOffset)
+}
+
+func readLeafBlob(rdr *ChangesetReader, offset uint32) (UnsafeBytes, error) {
+	// leaf data is stored either in the WAL OR KV data depending on whether this is a
+	// compaction changeset or not
+	kvData := rdr.WALData()
+	if kvData == nil {
+		kvData = rdr.KVData()
+	}
+	bz, err := kvData.UnsafeReadBlob(int(offset))
+	if err != nil {
+		return UnsafeBytes{}, err
+	}
+	return WrapUnsafeBytes(bz), nil
 }
 
 func (node *LeafPersisted) Left() *NodePointer {

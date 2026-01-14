@@ -7,7 +7,7 @@ import (
 
 // NodePointer is a pointer to a Node, which may be either in-memory, on-disk or both.
 type NodePointer struct {
-	mem       atomic.Pointer[MemNode]
+	Mem       atomic.Pointer[MemNode]
 	changeset *Changeset
 	fileIdx   uint32 // absolute index in file, 1-based, zero means we don't have an offset
 	id        NodeID
@@ -16,7 +16,7 @@ type NodePointer struct {
 // NewNodePointer creates a new NodePointer pointing to the given in-memory node.
 func NewNodePointer(memNode *MemNode) *NodePointer {
 	n := &NodePointer{}
-	n.mem.Store(memNode)
+	n.Mem.Store(memNode)
 	return n
 }
 
@@ -32,7 +32,7 @@ func NewNodePointer(memNode *MemNode) *NodePointer {
 //	    // handle error
 //	}
 func (p *NodePointer) Resolve() (Node, Pin, error) {
-	mem := p.mem.Load()
+	mem := p.Mem.Load()
 	if mem != nil {
 		return mem, NoopPin{}, nil
 	}

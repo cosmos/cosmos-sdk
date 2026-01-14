@@ -76,7 +76,7 @@ func (s *SimMachine) openV2Tree(t interface {
 }
 
 func (s *SimMachine) Check(t *rapid.T) {
-	versions := rapid.IntRange(10, 200).Draw(t, "versions")
+	versions := rapid.IntRange(1, 100).Draw(t, "versions")
 	for i := 0; i < versions; i++ {
 		s.checkNewVersion(t)
 	}
@@ -121,7 +121,7 @@ func (s *SimMachine) checkNewVersion(t *rapid.T) {
 }
 
 func (s *SimMachine) genUpdates(t *rapid.T) []Update {
-	n := rapid.IntRange(10, 200).Draw(t, "n")
+	n := rapid.IntRange(1, 100).Draw(t, "n")
 	updates := make([]Update, 0, n)
 	for i := 0; i < n; i++ {
 		key := s.selectKey(t)

@@ -93,7 +93,7 @@ func (cs *ChangesetWriter) SaveLayer(root *NodePointer) (layer uint32, err error
 }
 
 func (cs *ChangesetWriter) writeNode(np *NodePointer) (nodeVersion uint32, err error) {
-	memNode := np.mem.Load()
+	memNode := np.Mem.Load()
 	if memNode == nil || !memNode.nodeId.IsEmpty() {
 		return 0, nil // already persisted
 	}

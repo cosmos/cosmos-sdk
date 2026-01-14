@@ -29,10 +29,6 @@ type Node interface {
 	// Hash may or may not have been computed yet.
 	Hash() UnsafeBytes
 
-	// ComputeHash returns the hash of this node.
-	// If the hash has not been computed yet, it computes and caches it.
-	ComputeHash() (UnsafeBytes, error)
-
 	// Height returns the height of the subtree rooted at this node.
 	Height() uint8
 

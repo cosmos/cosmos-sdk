@@ -29,7 +29,7 @@ func newTestBranchNode(version, index uint32, left, right *MemNode) *MemNode {
 		if n.IsLeaf() {
 			return n.key
 		} else {
-			return getSmallestKey(n.left.mem.Load())
+			return getSmallestKey(n.left.Mem.Load())
 		}
 	}
 
@@ -412,8 +412,8 @@ func printTreeStructure(node *MemNode) string {
 			seen[node.nodeId] = true
 		}
 		if !node.IsLeaf() {
-			collectIds(node.left.mem.Load())
-			collectIds(node.right.mem.Load())
+			collectIds(node.left.Mem.Load())
+			collectIds(node.right.Mem.Load())
 		}
 	}
 	collectIds(node)
@@ -440,8 +440,8 @@ func printTreeStructure(node *MemNode) string {
 		}
 		return fmt.Sprintf("(%s.%d.%d %s %s)",
 			key, id.Layer(), id.Index(),
-			doPrintNode(node.left.mem.Load()),
-			doPrintNode(node.right.mem.Load()),
+			doPrintNode(node.left.Mem.Load()),
+			doPrintNode(node.right.Mem.Load()),
 		)
 	}
 	return doPrintNode(node)

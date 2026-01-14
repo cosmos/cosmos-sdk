@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	sizeChangesetInfo = 32
+	sizeChangesetInfo = 40
 )
 
 func init() {

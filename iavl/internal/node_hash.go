@@ -9,46 +9,68 @@ import (
 	"sync"
 )
 
-func (node *MemNode) ComputeHash() (UnsafeBytes, error) {
+func (node *MemNode) ComputeHash(scheduler HashScheduler) ([]byte, error) {
 	if node.hash != nil {
-		return WrapSafeBytes(node.hash), nil
+		return node.hash, nil
 	}
 
 	if node.IsLeaf() {
 		nodeHash, err := computeHash(node, nil, nil)
 		if err != nil {
-			return UnsafeBytes{}, err
+			return nil, err
 		}
 		node.hash = nodeHash
-		return WrapSafeBytes(nodeHash), nil
+		return nodeHash, nil
 	}
 
+	var leftHash, rightHash []byte
+	var err error
 	leftNode, leftPin, err := node.Left().Resolve()
 	defer leftPin.Unpin()
 	if err != nil {
-		return UnsafeBytes{}, fmt.Errorf("resolving left child: %w", err)
-	}
-	leftHash, err := leftNode.ComputeHash()
-	if err != nil {
-		return UnsafeBytes{}, fmt.Errorf("computing left child hash: %w", err)
+		return nil, fmt.Errorf("resolving left child: %w", err)
 	}
 
 	rightNode, rightPin, err := node.Right().Resolve()
 	defer rightPin.Unpin()
 	if err != nil {
-		return UnsafeBytes{}, fmt.Errorf("resolving right child: %w", err)
-	}
-	rightHash, err := rightNode.ComputeHash()
-	if err != nil {
-		return UnsafeBytes{}, fmt.Errorf("computing right child hash: %w", err)
+		return nil, fmt.Errorf("resolving right child: %w", err)
 	}
 
-	nodeHash, err := computeHash(node, leftHash.UnsafeBytes(), rightHash.UnsafeBytes())
+	leftMem, leftIsMem := leftNode.(*MemNode)
+	rightMem, rightIsMem := rightNode.(*MemNode)
+
+	if leftIsMem && rightIsMem {
+		leftHash, rightHash, err = scheduler.ComputeHashes(leftMem, rightMem)
+		if err != nil {
+			return nil, fmt.Errorf("computing child hashes via scheduler: %w", err)
+		}
+	} else {
+		if leftIsMem {
+			leftHash, err = leftMem.ComputeHash(scheduler)
+			if err != nil {
+				return nil, fmt.Errorf("computing left child hash: %w", err)
+			}
+		} else {
+			leftHash = leftNode.Hash().UnsafeBytes()
+		}
+
+		if rightIsMem {
+			rightHash, err = rightMem.ComputeHash(scheduler)
+			if err != nil {
+				return nil, fmt.Errorf("computing right child hash: %w", err)
+			}
+		} else {
+			rightHash = rightNode.Hash().UnsafeBytes()
+		}
+	}
+
+	nodeHash, err := computeHash(node, leftHash, rightHash)
 	if err != nil {
-		return UnsafeBytes{}, err
+		return nil, err
 	}
 	node.hash = nodeHash
-	return WrapSafeBytes(nodeHash), nil
+	return nodeHash, nil
 }
 
 var hasherPool = sync.Pool{

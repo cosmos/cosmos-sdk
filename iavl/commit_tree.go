@@ -7,6 +7,7 @@ import (
 	"iter"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sync"
 
 	storetypes "cosmossdk.io/store/types"
@@ -62,7 +63,7 @@ func NewCommitTree(dir string, opts Options) (*CommitTree, error) {
 //	}
 var emptyHash = sha256.New().Sum(nil)
 
-func workingHash(rootPtr *internal.NodePointer) ([]byte, error) {
+func rootHash(rootPtr *internal.NodePointer) ([]byte, error) {
 	// IMPORTANT: this function assumes the write lock is held
 
 	// if we have no root, return empty hash
@@ -70,26 +71,26 @@ func workingHash(rootPtr *internal.NodePointer) ([]byte, error) {
 		return emptyHash, nil
 	}
 
-	root, pin, err := rootPtr.Resolve()
-	defer pin.Unpin()
-	if err != nil {
-		return nil, fmt.Errorf("resolving root node: %w", err)
+	root := rootPtr.Mem.Load()
+	if root == nil {
+		return nil, fmt.Errorf("root node not in memory")
 	}
 
-	hash, err := root.ComputeHash()
+	scheduler := internal.NewAsyncHashScheduler(int32(runtime.NumCPU()))
+	hash, err := root.ComputeHash(scheduler)
 	if err != nil {
 		return nil, fmt.Errorf("computing root hash: %w", err)
 	}
 
-	return hash.SafeCopy(), nil
+	return hash, nil
 }
 
 func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updateCount int) (storetypes.CommitID, error) {
 	stagedVersion := c.treeStore.StagedVersion()
-	ctx, span := internal.Tracer.Start(ctx, "CommitTree.Commit",
+	ctx, span := internal.Tracer.Start(ctx, "Commit",
 		trace.WithAttributes(
 			attribute.Int64("version", int64(stagedVersion)),
-			attribute.Int("update.count", updateCount),
+			attribute.Int("updateCount", updateCount),
 		),
 	)
 	defer span.End()
@@ -116,6 +117,8 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 	if c.walWriter != nil {
 		walDone = make(chan error, 1)
 		go func() {
+			_, walSpan := internal.Tracer.Start(ctx, "WALWrite")
+			defer walSpan.End()
 			defer close(walDone)
 			err := c.walWriter.WriteWALUpdates(nodeUpdates)
 			if err != nil {
@@ -140,9 +143,11 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 	hashErr := make(chan error, 1)
 	go func() {
 		defer close(hashErr)
+		_, hashLeavesSpan := internal.Tracer.Start(ctx, "LeafHashCompute")
+		defer hashLeavesSpan.End()
 		for _, nu := range nodeUpdates {
 			if setNode := nu.SetNode; setNode != nil {
-				_, err := setNode.ComputeHash()
+				_, err := setNode.ComputeHash(internal.SyncHashScheduler{})
 				if err != nil {
 					hashErr <- err
 					return
@@ -154,6 +159,7 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 	// process all the nodeUpdates against the current root to produce a new root
 	root := c.treeStore.Latest()
 	mutationCtx := internal.NewMutationContext(stagedVersion)
+	_, nodeUpdatesSpan := internal.Tracer.Start(ctx, "ApplyNodeUpdates")
 	for _, nu := range nodeUpdates {
 		var err error
 		if setNode := nu.SetNode; setNode != nil {
@@ -168,23 +174,21 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 			}
 		}
 	}
-
-	span.AddEvent("updates applied")
+	nodeUpdatesSpan.End()
 
 	// wait for the leaf node hash queue to finish
 	if err := <-hashErr; err != nil {
 		return storetypes.CommitID{}, err
 	}
+	span.AddEvent("leaf hash compute returned")
 
-	span.AddEvent("leaf hashes computed")
-
+	_, rootHashSpan := internal.Tracer.Start(ctx, "ComputeRootHash")
 	// compute the root hash
-	hash, err := workingHash(root)
+	hash, err := rootHash(root)
 	if err != nil {
 		return storetypes.CommitID{}, err
 	}
-
-	span.AddEvent("root hash computed")
+	rootHashSpan.End()
 
 	err = c.treeStore.SaveRoot(root)
 	if err != nil {
@@ -203,7 +207,7 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 			return storetypes.CommitID{}, err
 		}
 
-		span.AddEvent("WAL write completed")
+		span.AddEvent("WAL write returned")
 	}
 
 	return commitId, nil

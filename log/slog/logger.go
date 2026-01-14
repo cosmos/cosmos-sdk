@@ -3,6 +3,7 @@
 package slog
 
 import (
+	"context"
 	"log/slog"
 
 	"cosmossdk.io/log"
@@ -42,6 +43,10 @@ func (l Logger) Debug(msg string, keyVals ...any) {
 
 func (l Logger) With(keyVals ...any) log.Logger {
 	return Logger{log: l.log.With(keyVals...)}
+}
+
+func (l Logger) WithSpanContext(ctx context.Context) log.Logger {
+	return l
 }
 
 // Impl returns l's underlying [*slog.Logger].

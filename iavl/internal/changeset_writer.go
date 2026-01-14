@@ -15,7 +15,7 @@ type ChangesetWriter struct {
 	leavesData   *StructWriter[LeafLayout]
 	layersData   *StructWriter[LayerInfo]
 
-	reader *Changeset
+	changeset *Changeset
 
 	lastBranchIdx, lastLeafIdx uint32
 }
@@ -33,7 +33,7 @@ func NewChangesetWriter(treeDir string, stagedLayer uint32, treeStore *TreeStore
 		branchesData: NewStructWriter[BranchLayout](files.BranchesFile()),
 		leavesData:   NewStructWriter[LeafLayout](files.LeavesFile()),
 		layersData:   NewStructWriter[LayerInfo](files.LayersFile()),
-		reader:       NewChangeset(treeStore),
+		changeset:    NewChangeset(treeStore),
 	}
 	return cs, nil
 }
@@ -115,8 +115,8 @@ func (cs *ChangesetWriter) writeBranch(np *NodePointer, node *MemNode) error {
 		return err
 	}
 
+	node.nodeId = NewNodeID(false, cs.stagedLayer, cs.lastBranchIdx+1)
 	cs.lastBranchIdx++
-	node.nodeId = NewNodeID(false, cs.stagedLayer, cs.lastBranchIdx)
 
 	keyOffset, err := cs.kvlog.WriteKeyBlob(node.key)
 	if err != nil {
@@ -139,9 +139,10 @@ func (cs *ChangesetWriter) writeBranch(np *NodePointer, node *MemNode) error {
 	}
 
 	layout := BranchLayout{
-		ID:    np.id,
-		Left:  node.left.id,
-		Right: node.right.id,
+		ID:      np.id,
+		Version: node.version,
+		Left:    node.left.id,
+		Right:   node.right.id,
 		// TODO remove these and overload Left/Right to be offsets when in same changeset
 		LeftOffset:  leftOffset,
 		RightOffset: rightOffset,
@@ -157,13 +158,17 @@ func (cs *ChangesetWriter) writeBranch(np *NodePointer, node *MemNode) error {
 		return fmt.Errorf("failed to write branch node: %w", err)
 	}
 
+	np.id = node.nodeId
 	np.fileIdx = uint32(cs.branchesData.Count())
-	np.changeset = cs.reader
+	np.changeset = cs.changeset
 
 	return nil
 }
 
 func (cs *ChangesetWriter) writeLeaf(np *NodePointer, node *MemNode) error {
+	node.nodeId = NewNodeID(true, cs.stagedLayer, cs.lastLeafIdx+1)
+	cs.lastLeafIdx++
+
 	keyOffset := node.keyOffset
 	if node.keyOffset == 0 || node.valueOffset == 0 {
 		return fmt.Errorf("leaf node missing key or value offset")
@@ -171,6 +176,7 @@ func (cs *ChangesetWriter) writeLeaf(np *NodePointer, node *MemNode) error {
 
 	layout := LeafLayout{
 		ID:        np.id,
+		Version:   node.version,
 		KeyOffset: keyOffset,
 		// TODO add inline key prefix
 		ValueOffset: node.valueOffset,
@@ -183,7 +189,8 @@ func (cs *ChangesetWriter) writeLeaf(np *NodePointer, node *MemNode) error {
 	}
 
 	np.fileIdx = uint32(cs.leavesData.Count())
-	np.changeset = cs.reader
+	np.changeset = cs.changeset
+	np.id = node.nodeId
 
 	return nil
 }
@@ -220,21 +227,19 @@ func (cs *ChangesetWriter) StartLayer() uint32 {
 	return cs.files.StartLayer()
 }
 
-func (cs *ChangesetWriter) CreatedSharedReader() (*Changeset, error) {
+func (cs *ChangesetWriter) CreatedSharedReader() error {
 	err := cs.Flush()
 	if err != nil {
-		return nil, fmt.Errorf("failed to flush data before creating shared reader: %w", err)
+		return fmt.Errorf("failed to flush data before creating shared reader: %w", err)
 	}
 
-	// TODO
-	//err = cs.reader.InitShared(cs.files)
-	//if err != nil {
-	//	return nil, fmt.Errorf("failed to initialize shared changeset reader: %w", err)
-	//}
+	rdr, err := NewChangesetReader(cs.changeset, cs.files, false)
+	if err != nil {
+		return fmt.Errorf("failed to create shared changeset reader: %w", err)
+	}
 
-	reader := cs.reader
-	cs.reader = NewChangeset(reader.treeStore)
-	return reader, nil
+	cs.changeset.SwapActiveReader(rdr)
+	return nil
 }
 
 func (cs *ChangesetWriter) Flush() error {

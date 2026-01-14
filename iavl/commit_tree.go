@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"iter"
 	"os"
-	"path/filepath"
 	"runtime"
 	"sync"
 
@@ -25,8 +24,6 @@ type CommitTree struct {
 	treeStore *internal.TreeStore
 
 	lastCommitId storetypes.CommitID
-
-	walWriter *internal.KVDataWriter
 }
 
 func NewCommitTree(dir string, opts Options) (*CommitTree, error) {
@@ -35,23 +32,13 @@ func NewCommitTree(dir string, opts Options) (*CommitTree, error) {
 		return nil, fmt.Errorf("creating tree directory: %w", err)
 	}
 
-	treeStore := &internal.TreeStore{}
-	var walWriter *internal.KVDataWriter
-	if dir != "" && opts.WriteWAL {
-		walFile, err := os.OpenFile(filepath.Join(dir, "wal.dat"), os.O_CREATE|os.O_RDWR|os.O_APPEND, 0o600)
-		if err != nil {
-			return nil, fmt.Errorf("opening WAL file: %w", err)
-		}
-		walWriter = internal.NewKVDataWriter(walFile)
-		err = walWriter.WriteStartWAL(uint64(treeStore.StagedVersion()))
-		if err != nil {
-			return nil, fmt.Errorf("writing WAL start: %w", err)
-		}
+	treeStore, err := internal.NewTreeStore(dir)
+	if err != nil {
+		return nil, fmt.Errorf("creating tree store: %w", err)
 	}
 	return &CommitTree{
 		opts:      opts,
 		treeStore: treeStore,
-		walWriter: walWriter,
 	}, nil
 }
 
@@ -73,7 +60,12 @@ func rootHash(rootPtr *internal.NodePointer) ([]byte, error) {
 
 	root := rootPtr.Mem.Load()
 	if root == nil {
-		return nil, fmt.Errorf("root node not in memory")
+		rootNode, pin, err := rootPtr.Resolve()
+		defer pin.Unpin()
+		if err != nil {
+			return nil, fmt.Errorf("resolving root node: %w", err)
+		}
+		return rootNode.Hash().SafeCopy(), nil
 	}
 
 	scheduler := internal.NewAsyncHashScheduler(int32(runtime.NumCPU()))
@@ -114,30 +106,13 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 
 	// TODO background start writing nodeUpdates to WAL immediately
 	var walDone chan error
-	if c.walWriter != nil {
-		walDone = make(chan error, 1)
-		go func() {
-			_, walSpan := internal.Tracer.Start(ctx, "WALWrite")
-			defer walSpan.End()
-			defer close(walDone)
-			err := c.walWriter.WriteWALUpdates(nodeUpdates)
-			if err != nil {
-				walDone <- err
-			}
-
-			err = c.walWriter.WriteWALCommit(uint64(stagedVersion))
-			if err != nil {
-				walDone <- err
-			}
-
-			if c.opts.FsyncWAL {
-				err = c.walWriter.Sync()
-				if err != nil {
-					walDone <- err
-				}
-			}
-		}()
-	}
+	walDone = make(chan error, 1)
+	go func() {
+		_, walSpan := internal.Tracer.Start(ctx, "WALWrite")
+		defer walSpan.End()
+		defer close(walDone)
+		walDone <- c.treeStore.WriteWALUpdates(nodeUpdates, true)
+	}()
 
 	// start computing hashes for leaf nodes in parallel
 	hashErr := make(chan error, 1)
@@ -215,6 +190,10 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 
 func (c *CommitTree) Latest() TreeReader {
 	return TreeReader{root: c.treeStore.Latest()}
+}
+
+func (c *CommitTree) ForceToDisk() error {
+	return c.treeStore.ForceToDisk()
 }
 
 func (c *CommitTree) Close() error {

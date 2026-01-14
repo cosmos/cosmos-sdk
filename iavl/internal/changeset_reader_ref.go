@@ -34,15 +34,15 @@ func (p *ChangesetReaderRef) TryPin() (*ChangesetReader, Pin) {
 	return p.rdr, &changesetReaderPin{pinner: p}
 }
 
-//func (p *ChangesetReaderRef) TryDispose() bool {
-//	if p.disposed.Load() {
-//		return true
-//	}
-//	// TODO do we need to check evicted here?
-//	if p.refCount.Load() > 0 {
-//		return false
-//	}
-//	p.disposed.Store(true)
-//	_ = p.rdr.Close()
-//	return true
-//}
+func (p *ChangesetReaderRef) TryDispose() bool {
+	if p.disposed.Load() {
+		return true
+	}
+	// TODO do we need to check evicted here?
+	if p.refCount.Load() > 0 {
+		return false
+	}
+	p.disposed.Store(true)
+	_ = p.rdr.Close()
+	return true
+}

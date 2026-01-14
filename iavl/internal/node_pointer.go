@@ -36,7 +36,13 @@ func (p *NodePointer) Resolve() (Node, Pin, error) {
 	if mem != nil {
 		return mem, NoopPin{}, nil
 	}
-	return nil, NoopPin{}, fmt.Errorf("node not in memory and on-disk loading will be implemented in a future PR")
+	rdr, pin := p.changeset.TryPinReader()
+	if rdr != nil {
+		node, err := rdr.ResolveByIndex(p.id, p.fileIdx)
+		return node, pin, err
+	} else {
+		panic("unable to pin changeset reader")
+	}
 }
 
 // String implements the fmt.Stringer interface.

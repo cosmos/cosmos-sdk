@@ -1,28 +1,32 @@
 package internal
 
-// NOTE: This is a placeholder implementation. We will add the implementation in a future PR.
+import "sync/atomic"
 
 type Changeset struct {
+	readerRef atomic.Pointer[ChangesetReaderRef]
 	treeStore *TreeStore
 }
 
 func NewChangeset(treeStore *TreeStore) *Changeset {
-	return &Changeset{
-		treeStore: treeStore,
-	}
+	return &Changeset{treeStore: treeStore}
 }
 
-//func (cs *Changeset) InitShared(files *ChangesetFiles) error {
-//
-//}
-//
-//func (cs *Changeset) Resolve(id NodeID, fileIdx uint32) (Node, Pin, error) {
-//
-//}
+func (h *Changeset) TryPinReader() (*ChangesetReader, Pin) {
+	pinner := h.readerRef.Load()
+	if pinner == nil {
+		return nil, nil
+	}
+	return pinner.TryPin()
+}
 
-//type ChangesetReader struct {
-//}
-//
-//func (cs *ChangesetReader) Resolve(id NodeID, fileIdx uint32) (Node, error) {
-//	return nil, fmt.Errorf("not implemented")
-//}
+func (h *Changeset) PinCompactedReader(layer uint32) (*ChangesetReader, Pin) {
+	return h.treeStore.GetChangesetForLayer(layer)
+}
+
+func (h *Changeset) SwapActiveReader(newRdr *ChangesetReader) *ChangesetReaderRef {
+	var newPinner *ChangesetReaderRef
+	if newRdr != nil {
+		newPinner = &ChangesetReaderRef{rdr: newRdr}
+	}
+	return h.readerRef.Swap(newPinner)
+}

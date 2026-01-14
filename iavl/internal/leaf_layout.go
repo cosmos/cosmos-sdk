@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	sizeLeaf = 48
+	sizeLeaf = 52
 )
 
 func init() {
@@ -21,6 +21,8 @@ func init() {
 type LeafLayout struct {
 	// ID is the NodeID of this leaf node.
 	ID NodeID
+
+	Version uint32
 
 	// KeyOffset is the offset the key data for this node in the key value data file.
 	// NOTE: that a 32-bit offset means that the key data file can be at most 4GB in size.

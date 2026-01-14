@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	sizeBranch = 76
+	sizeBranch = 80
 )
 
 func init() {
@@ -21,6 +21,8 @@ func init() {
 type BranchLayout struct {
 	// ID is the NodeID of this branch node.
 	ID NodeID
+
+	Version uint32
 
 	// Left is the NodeID of the left child node.
 	Left NodeID

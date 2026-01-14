@@ -1,6 +1,7 @@
 package log
 
 import (
+	"context"
 	"encoding"
 	"encoding/json"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"
+	"go.opentelemetry.io/otel/trace"
 )
 
 func init() {
@@ -55,6 +57,9 @@ type Logger interface {
 
 	// With returns a new wrapped logger with additional context provided by a set.
 	With(keyVals ...any) Logger
+
+	// WithSpanContext sets the span and trace id's on the logger, allowing for trace correlation.
+	WithSpanContext(context.Context) Logger
 
 	// Impl returns the underlying logger implementation.
 	// It is used to access the full functionalities of the underlying logger.
@@ -201,6 +206,30 @@ func (l zeroLogWrapper) WithContext(keyVals ...interface{}) any {
 	return l
 }
 
+// WithSpanContext extracts the span context from ctx, and sets the trace/span id to the logger fields.
+func (l zeroLogWrapper) WithSpanContext(ctx context.Context) Logger {
+	if l.Logger == nil {
+		return l
+	}
+
+	sc := trace.SpanContextFromContext(ctx)
+	if !sc.IsValid() {
+		return l
+	}
+
+	w := l.Logger.With().
+		Str("trace_id", sc.TraceID().String()).
+		Str("span_id", sc.SpanID().String())
+
+	if tf := sc.TraceFlags(); tf != 0 {
+		w = w.Str("trace_flags", tf.String())
+	}
+
+	derived := w.Logger()
+	l.Logger = &derived
+	return l
+}
+
 // Impl returns the underlying zerolog logger.
 // It can be used to use zerolog structured API directly instead of the wrapper.
 func (l zeroLogWrapper) Impl() interface{} {
@@ -235,10 +264,11 @@ func NewNopLogger() Logger {
 // The custom implementation is about 3x faster.
 type nopLogger struct{}
 
-func (nopLogger) Info(string, ...any)    {}
-func (nopLogger) Warn(string, ...any)    {}
-func (nopLogger) Error(string, ...any)   {}
-func (nopLogger) Debug(string, ...any)   {}
-func (nopLogger) With(...any) Logger     { return nopLogger{} }
-func (nopLogger) WithContext(...any) any { return nopLogger{} }
-func (nopLogger) Impl() any              { return nopLogger{} }
+func (nopLogger) Info(string, ...any)                      {}
+func (nopLogger) Warn(string, ...any)                      {}
+func (nopLogger) Error(string, ...any)                     {}
+func (nopLogger) Debug(string, ...any)                     {}
+func (nopLogger) With(...any) Logger                       { return nopLogger{} }
+func (nopLogger) WithContext(...any) any                   { return nopLogger{} }
+func (nopLogger) Impl() any                                { return nopLogger{} }
+func (l nopLogger) WithSpanContext(context.Context) Logger { return nopLogger{} }

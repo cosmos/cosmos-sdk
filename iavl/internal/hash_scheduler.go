@@ -22,6 +22,7 @@ func (a *AsyncHashScheduler) ComputeHashes(left *MemNode, right *MemNode) (leftH
 			leftDone := make(chan error, 1)
 			go func() {
 				defer func() { <-a.semaphore }() // release semaphore
+				var err error                    // don't write to the outer err
 				leftHash, err = left.ComputeHash(a)
 				leftDone <- err
 			}()

@@ -35,7 +35,7 @@ type StatusEntry struct {
 	cond *Condvar
 }
 
-func (s *StatusEntry) IsExecuted() (ok bool, incarnation Incarnation) {
+func (s *StatusEntry) IsExecuted() (incarnation Incarnation, ok bool) {
 	s.Lock()
 
 	if s.status == StatusExecuted {
@@ -44,22 +44,20 @@ func (s *StatusEntry) IsExecuted() (ok bool, incarnation Incarnation) {
 	}
 
 	s.Unlock()
-	return ok, incarnation
+	return incarnation, ok
 }
 
-func (s *StatusEntry) TrySetExecuting() (Incarnation, bool) {
+func (s *StatusEntry) TrySetExecuting() (incarnation Incarnation, ok bool) {
 	s.Lock()
 
 	if s.status == StatusReadyToExecute {
 		s.status = StatusExecuting
-		incarnation := s.incarnation
-
-		s.Unlock()
-		return incarnation, true
+		incarnation = s.incarnation
+		ok = true
 	}
 
 	s.Unlock()
-	return 0, false
+	return incarnation, ok
 }
 
 func (s *StatusEntry) setStatus(status Status) {
@@ -84,18 +82,16 @@ func (s *StatusEntry) SetExecuted() {
 	s.setStatus(StatusExecuted)
 }
 
-func (s *StatusEntry) TryValidationAbort(incarnation Incarnation) bool {
+func (s *StatusEntry) TryValidationAbort(incarnation Incarnation) (ok bool) {
 	s.Lock()
 
 	if s.incarnation == incarnation && s.status == StatusExecuted {
 		s.status = StatusAborting
-
-		s.Unlock()
-		return true
+		ok = true
 	}
 
 	s.Unlock()
-	return false
+	return ok
 }
 
 func (s *StatusEntry) SetReadyStatus() {

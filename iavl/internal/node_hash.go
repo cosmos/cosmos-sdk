@@ -1,12 +1,14 @@
 package internal
 
 import (
-	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
 	"hash"
 	"io"
 	"sync"
+
+	//"crypto/sha256"
+	"github.com/minio/sha256-simd"
 )
 
 func (node *MemNode) ComputeHash(scheduler HashScheduler) ([]byte, error) {

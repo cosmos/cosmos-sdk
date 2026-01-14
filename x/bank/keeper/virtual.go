@@ -148,7 +148,7 @@ var (
 // CreditVirtualAccounts sum up the transient coins and add them to the real account,
 // should be called at end blocker.
 func (k BaseSendKeeper) CreditVirtualAccounts(ctx context.Context) error {
-	slogger.InfoContext(ctx, "CREDIT VIRTUAL ACCOUNTS!!!")
+	slogger.InfoContext(ctx, "CREDIT VIRTUAL ACCOUNTS!!!", "height", sdk.UnwrapSDKContext(ctx).BlockHeight())
 	// No-op if we're not using the objStore to accumulate to module accounts
 	if k.objStoreKey == nil {
 		return nil

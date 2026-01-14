@@ -166,6 +166,7 @@ func (k BaseKeeper) DelegateCoins(ctx context.Context, delegatorAddr, moduleAccA
 	}
 	// emit coin spent event
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx.Logger().Info("hi")
 	sdkCtx.EventManager().EmitEvent(
 		types.NewCoinSpentEvent(delegatorAddr, amt),
 	)

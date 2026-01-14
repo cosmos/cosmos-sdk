@@ -5,7 +5,9 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"time"
 
+	"github.com/lmittmann/tint"
 	"go.opentelemetry.io/contrib/bridges/otelslog"
 )
 
@@ -15,6 +17,7 @@ type config struct {
 	consoleWriter io.Writer
 	consoleJSON   bool
 	consoleOpts   *slog.HandlerOptions
+	tintOpts      *tint.Options
 	otelOpts      otelslog.Option
 }
 
@@ -28,6 +31,19 @@ func WithConsoleJSON(enabled bool) Option {
 
 func WithConsoleHandlerOptions(opts *slog.HandlerOptions) Option {
 	return func(c *config) { c.consoleOpts = opts }
+}
+
+func WithTintOptions(opts *tint.Options) Option {
+	return func(c *config) { c.tintOpts = opts }
+}
+
+func WithNoColor(noColor bool) Option {
+	return func(c *config) {
+		if c.tintOpts == nil {
+			c.tintOpts = &tint.Options{}
+		}
+		c.tintOpts.NoColor = noColor
+	}
 }
 
 func WithOtelHandlerOptions(opts otelslog.Option) Option {
@@ -51,7 +67,20 @@ func New(name string, opts ...Option) *slog.Logger {
 	if cfg.consoleJSON {
 		console = slog.NewJSONHandler(cfg.consoleWriter, cfg.consoleOpts)
 	} else {
-		console = slog.NewTextHandler(cfg.consoleWriter, cfg.consoleOpts)
+		// Use tint for zerolog-style colored console output
+		tintOpts := cfg.tintOpts
+		if tintOpts == nil {
+			tintOpts = &tint.Options{
+				TimeFormat: time.Kitchen,
+			}
+		}
+		// Apply slog.HandlerOptions if provided
+		if cfg.consoleOpts != nil {
+			tintOpts.Level = cfg.consoleOpts.Level
+			tintOpts.AddSource = cfg.consoleOpts.AddSource
+			tintOpts.ReplaceAttr = cfg.consoleOpts.ReplaceAttr
+		}
+		console = tint.NewHandler(cfg.consoleWriter, tintOpts)
 	}
 
 	var otel *otelslog.Handler

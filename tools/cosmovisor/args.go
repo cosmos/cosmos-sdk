@@ -15,7 +15,7 @@ import (
 	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/viper"
 
-	"cosmossdk.io/log/v2"
+	"cosmossdk.io/log"
 	"cosmossdk.io/x/upgrade/plan"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )

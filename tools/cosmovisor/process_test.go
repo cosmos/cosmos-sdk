@@ -14,7 +14,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/log/v2"
+	"cosmossdk.io/log"
 	"cosmossdk.io/tools/cosmovisor"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )

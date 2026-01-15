@@ -22,7 +22,7 @@ Each entry must include the Github issue reference in the following format:
 
 ## [Unreleased]
 
-* []
+* [#25778](https://github.com/cosmos/cosmos-sdk/pull/25778) Introduce log v2, adding contextual methods to Logger for trace correlation.
 
 ## [v1.6.0](https://github.com/cosmos/cosmos-sdk/releases/tag/log/v1.6.0) - 2025-05-13
 

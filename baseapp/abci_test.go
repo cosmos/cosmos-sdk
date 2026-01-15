@@ -2660,3 +2660,22 @@ func TestABCI_Race_Commit_Query(t *testing.T) {
 
 	require.Equal(t, int64(1001), app.GetContextForCheckTx(nil).BlockHeight())
 }
+
+func TestABCI_Commit_WithNilSnapshotManager(t *testing.T) {
+	suite := NewBaseAppSuite(t, baseapp.SetChainID("test-chain-id"))
+	app := suite.baseApp
+
+	require.Nil(t, app.SnapshotManager())
+
+	_, err := app.InitChain(&abci.RequestInitChain{
+		ChainId:         "test-chain-id",
+		ConsensusParams: &cmtproto.ConsensusParams{Block: &cmtproto.BlockParams{MaxGas: 5000000}},
+		InitialHeight:   1,
+	})
+	require.NoError(t, err)
+
+	_, err = app.Commit()
+	require.NoError(t, err)
+
+	require.Equal(t, int64(1), app.LastBlockHeight())
+}

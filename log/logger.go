@@ -237,10 +237,6 @@ func (l zeroLogWrapper) WithContext(keyVals ...interface{}) any {
 
 // withSpanContext extracts the span context from ctx, and returns a zerolog logger with trace/span id fields.
 func (l zeroLogWrapper) withSpanContext(ctx context.Context) *zerolog.Logger {
-	if l.Logger == nil {
-		return l.Logger
-	}
-
 	sc := trace.SpanContextFromContext(ctx)
 	if !sc.IsValid() {
 		return l.Logger

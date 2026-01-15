@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"runtime"
 
 	"golang.org/x/sync/errgroup"
@@ -36,6 +37,10 @@ func ExecuteBlockWithEstimates(
 	estimates []MultiLocations, // txn -> multi-locations
 	txExecutor TxExecutor,
 ) error {
+	if blockSize > math.MaxUint32 {
+		return fmt.Errorf("block size overflows uint32: %d", blockSize)
+	}
+
 	if executors < 0 {
 		return fmt.Errorf("invalid number of executors: %d", executors)
 	}

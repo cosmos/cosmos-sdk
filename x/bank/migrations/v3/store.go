@@ -2,7 +2,7 @@ package v3
 
 import (
 	"cosmossdk.io/core/store"
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 

@@ -6,7 +6,7 @@ require (
 	cosmossdk.io/api v0.9.2
 	cosmossdk.io/core v0.11.3
 	cosmossdk.io/depinject v1.2.1
-	cosmossdk.io/log v1.6.1
+	cosmossdk.io/log/v2 v2.0.0
 	github.com/cespare/xxhash/v2 v2.3.0
 	github.com/cosmos/cosmos-sdk v0.54.0-beta.0
 	github.com/cosmos/gogoproto v1.7.2
@@ -19,6 +19,7 @@ require (
 require (
 	cosmossdk.io/collections v1.3.1 // indirect
 	cosmossdk.io/errors v1.0.2 // indirect
+	cosmossdk.io/log v1.6.1 // indirect
 	cosmossdk.io/math v1.5.3 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
 	cosmossdk.io/store v1.3.0-beta.0 // indirect
@@ -164,6 +165,6 @@ require (
 )
 
 replace (
-	cosmossdk.io/log => ../../log
+	cosmossdk.io/log/v2 => ../../log
 	cosmossdk.io/store => ../../store
 )

@@ -8,7 +8,7 @@ import (
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/depinject/appconfig"
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	gen "cosmossdk.io/tools/benchmark/generator"
 )
 

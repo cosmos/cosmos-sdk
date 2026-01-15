@@ -43,23 +43,32 @@ type Logger interface {
 	// The key of the tuple must be a string.
 	Info(msg string, keyVals ...any)
 
+	// InfoContext is like Info but extracts trace context from ctx for correlation.
+	InfoContext(ctx context.Context, msg string, keyVals ...any)
+
 	// Warn takes a message and a set of key/value pairs and logs with level WARN.
 	// The key of the tuple must be a string.
 	Warn(msg string, keyVals ...any)
+
+	// WarnContext is like Warn but extracts trace context from ctx for correlation.
+	WarnContext(ctx context.Context, msg string, keyVals ...any)
 
 	// Error takes a message and a set of key/value pairs and logs with level ERR.
 	// The key of the tuple must be a string.
 	Error(msg string, keyVals ...any)
 
+	// ErrorContext is like Error but extracts trace context from ctx for correlation.
+	ErrorContext(ctx context.Context, msg string, keyVals ...any)
+
 	// Debug takes a message and a set of key/value pairs and logs with level DEBUG.
 	// The key of the tuple must be a string.
 	Debug(msg string, keyVals ...any)
 
+	// DebugContext is like Debug but extracts trace context from ctx for correlation.
+	DebugContext(ctx context.Context, msg string, keyVals ...any)
+
 	// With returns a new wrapped logger with additional context provided by a set.
 	With(keyVals ...any) Logger
-
-	// WithSpanContext sets the span and trace IDs on the logger, allowing for trace correlation.
-	WithSpanContext(context.Context) Logger
 
 	// Impl returns the underlying logger implementation.
 	// It is used to access the full functionalities of the underlying logger.
@@ -192,6 +201,26 @@ func (l zeroLogWrapper) Debug(msg string, keyVals ...interface{}) {
 	l.Logger.Debug().Fields(keyVals).Msg(msg)
 }
 
+// InfoContext is like Info but extracts trace context from ctx for correlation.
+func (l zeroLogWrapper) InfoContext(ctx context.Context, msg string, keyVals ...interface{}) {
+	l.withSpanContext(ctx).Info().Fields(keyVals).Msg(msg)
+}
+
+// WarnContext is like Warn but extracts trace context from ctx for correlation.
+func (l zeroLogWrapper) WarnContext(ctx context.Context, msg string, keyVals ...interface{}) {
+	l.withSpanContext(ctx).Warn().Fields(keyVals).Msg(msg)
+}
+
+// ErrorContext is like Error but extracts trace context from ctx for correlation.
+func (l zeroLogWrapper) ErrorContext(ctx context.Context, msg string, keyVals ...interface{}) {
+	l.withSpanContext(ctx).Error().Fields(keyVals).Msg(msg)
+}
+
+// DebugContext is like Debug but extracts trace context from ctx for correlation.
+func (l zeroLogWrapper) DebugContext(ctx context.Context, msg string, keyVals ...interface{}) {
+	l.withSpanContext(ctx).Debug().Fields(keyVals).Msg(msg)
+}
+
 // With returns a new wrapped logger with additional context provided by a set.
 func (l zeroLogWrapper) With(keyVals ...interface{}) Logger {
 	logger := l.Logger.With().Fields(keyVals).Logger()
@@ -206,15 +235,15 @@ func (l zeroLogWrapper) WithContext(keyVals ...interface{}) any {
 	return l
 }
 
-// WithSpanContext extracts the span context from ctx, and sets the trace/span id to the logger fields.
-func (l zeroLogWrapper) WithSpanContext(ctx context.Context) Logger {
+// withSpanContext extracts the span context from ctx, and returns a zerolog logger with trace/span id fields.
+func (l zeroLogWrapper) withSpanContext(ctx context.Context) *zerolog.Logger {
 	if l.Logger == nil {
-		return l
+		return l.Logger
 	}
 
 	sc := trace.SpanContextFromContext(ctx)
 	if !sc.IsValid() {
-		return l
+		return l.Logger
 	}
 
 	w := l.Logger.With().
@@ -226,8 +255,7 @@ func (l zeroLogWrapper) WithSpanContext(ctx context.Context) Logger {
 	}
 
 	derived := w.Logger()
-	l.Logger = &derived
-	return l
+	return &derived
 }
 
 // Impl returns the underlying zerolog logger.
@@ -264,11 +292,14 @@ func NewNopLogger() Logger {
 // The custom implementation is about 3x faster.
 type nopLogger struct{}
 
-func (nopLogger) Info(string, ...any)                      {}
-func (nopLogger) Warn(string, ...any)                      {}
-func (nopLogger) Error(string, ...any)                     {}
-func (nopLogger) Debug(string, ...any)                     {}
-func (nopLogger) With(...any) Logger                       { return nopLogger{} }
-func (nopLogger) WithContext(...any) any                   { return nopLogger{} }
-func (nopLogger) Impl() any                                { return nopLogger{} }
-func (l nopLogger) WithSpanContext(context.Context) Logger { return nopLogger{} }
+func (nopLogger) Info(string, ...any)                          {}
+func (nopLogger) InfoContext(context.Context, string, ...any)  {}
+func (nopLogger) Warn(string, ...any)                          {}
+func (nopLogger) WarnContext(context.Context, string, ...any)  {}
+func (nopLogger) Error(string, ...any)                         {}
+func (nopLogger) ErrorContext(context.Context, string, ...any) {}
+func (nopLogger) Debug(string, ...any)                         {}
+func (nopLogger) DebugContext(context.Context, string, ...any) {}
+func (nopLogger) With(...any) Logger                           { return nopLogger{} }
+func (nopLogger) WithContext(...any) any                       { return nopLogger{} }
+func (nopLogger) Impl() any                                    { return nopLogger{} }

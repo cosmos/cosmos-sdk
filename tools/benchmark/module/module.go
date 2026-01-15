@@ -10,7 +10,7 @@ import (
 	modulev1 "cosmossdk.io/api/cosmos/benchmark/module/v1"
 	_ "cosmossdk.io/api/cosmos/benchmark/v1" // for some reason this is required to make msg server registration work
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	"cosmossdk.io/tools/benchmark"
 	"cosmossdk.io/tools/benchmark/client/cli"
 	gen "cosmossdk.io/tools/benchmark/generator"

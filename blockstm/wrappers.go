@@ -31,6 +31,11 @@ func (ms msWrapper) LatestVersion() int64 {
 	panic("implement me")
 }
 
+func (ms msWrapper) EarliestVersion() int64 {
+	// TODO implement me
+	panic("implement me")
+}
+
 func (ms msWrapper) getCacheWrapper(key storetypes.StoreKey) storetypes.CacheWrapper {
 	return ms.GetStore(key)
 }

@@ -38,6 +38,7 @@ require (
 	cosmossdk.io/collections v1.3.1 // indirect
 	cosmossdk.io/errors v1.0.2 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
+	cosmossdk.io/x/feegrant v0.2.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
@@ -265,6 +266,8 @@ require (
 
 // Below are the long-lived replace of the SimApp
 replace (
+	// Use local store module for EarliestVersion implementation
+	cosmossdk.io/store => ../store
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk

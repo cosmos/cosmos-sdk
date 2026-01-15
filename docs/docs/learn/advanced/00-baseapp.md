@@ -327,7 +327,7 @@ to do the following checks:
 `CheckTx` does **not** process `sdk.Msg`s -  they only need to be processed when the canonical state needs to be updated, which happens during `FinalizeBlock`.
 
 Steps 2. and 3. are performed by the [`AnteHandler`](../beginner/04-gas-fees.md#antehandler) in the [`RunTx()`](#runtx-antehandler-and-runmsgs)
-function, which `CheckTx()` calls with the `runTxModeCheck` mode. During each step of `CheckTx()`, a
+function, which `CheckTx()` calls with `execModeCheck` (for `CheckTxType_New`) or `execModeReCheck` (for `CheckTxType_Recheck`). During each step of `CheckTx()`, a
 special [volatile state](#state-updates) called `checkState` is updated. This state is used to keep
 track of the temporary changes triggered by the `CheckTx()` calls of each transaction without modifying
 the [main canonical state](#main-state). For example, when a transaction goes through `CheckTx()`, the
@@ -368,9 +368,9 @@ This allows certain checks like signature verification can be skipped during `Ch
 
 ### RunTx
 
-`RunTx` is called from `CheckTx`/`FinalizeBlock` to handle the transaction, with `execModeCheck` or `execModeFinalize` as parameter to differentiate between the two modes of execution. Note that when `RunTx` receives a transaction, it has already been decoded.
+`RunTx` is called from `CheckTx`/`FinalizeBlock` to handle the transaction, with `execModeCheck` or `execModeFinalize` as parameter to differentiate between the two modes of execution. `RunTx` receives the raw transaction bytes and may additionally receive a decoded `sdk.Tx` to avoid decoding twice; if the decoded tx is nil, `RunTx` decodes it using the app's `txDecoder`.
 
-The first thing `RunTx` does upon being called is to retrieve the `context`'s `CacheMultiStore` by calling the `getContextForTx()` function with the appropriate mode (either `runTxModeCheck` or `execModeFinalize`). This `CacheMultiStore` is a branch of the main store, with cache functionality (for query requests), instantiated during `FinalizeBlock` for transaction execution and during the `Commit` of the previous block for `CheckTx`. After that, two `defer func()` are called for [`gas`](../beginner/04-gas-fees.md) management. They are executed when `runTx` returns and make sure `gas` is actually consumed, and will throw errors, if any.
+The first thing `RunTx` does upon being called is to retrieve the `context`'s `CacheMultiStore` by calling the `getContextForTx()` function with the appropriate mode (e.g. `execModeCheck`, `execModeReCheck`, or `execModeFinalize`). This `CacheMultiStore` is a branch of the main store, with cache functionality (for query requests), instantiated during `FinalizeBlock` for transaction execution and during the `Commit` of the previous block for `CheckTx`. After that, two `defer func()` are called for [`gas`](../beginner/04-gas-fees.md) management. They are executed when `runTx` returns and make sure `gas` is actually consumed, and will throw errors, if any.
 
 After that, `RunTx()` calls `ValidateBasic()`, when available and for backward compatibility, on each `sdk.Msg` in the `Tx`, which runs preliminary _stateless_ validity checks. If any `sdk.Msg` fails to pass `ValidateBasic()`, `RunTx()` returns with an error.
 
@@ -404,9 +404,9 @@ Click [here](../beginner/04-gas-fees.md#antehandler) for more on the `anteHandle
 
 ### RunMsgs
 
-`RunMsgs` is called from `RunTx` with `runTxModeCheck` as parameter to check the existence of a route for each message in the transaction, and with `execModeFinalize` to actually process the `sdk.Msg`s.
+`RunMsgs` is called from `RunTx` to process the `sdk.Msg`s in the `Tx`. `RunTx` checks that a handler exists for each message before running the `AnteHandler`. `RunMsgs` executes message handlers only when `mode` is `execModeFinalize` (or `execModeSimulate`); for `execModeCheck` and `execModeReCheck` it returns without executing messages.
 
-First, it retrieves the `sdk.Msg`'s fully-qualified type name, by checking the `type_url` of the Protobuf `Any` representing the `sdk.Msg`. Then, using the application's [`msgServiceRouter`](#msg-service-router), it checks for the existence of `Msg` service method related to that `type_url`. At this point, if `mode == runTxModeCheck`, `RunMsgs` returns. Otherwise, if `mode == execModeFinalize`, the [`Msg` service](../../build/building-modules/03-msg-services.md) RPC is executed, before `RunMsgs` returns.
+When executing messages, `RunMsgs` retrieves the `sdk.Msg`'s fully-qualified type name (via the `type_url` of the Protobuf `Any` representing the `sdk.Msg`) and routes to the appropriate [`Msg` service](../../build/building-modules/03-msg-services.md) RPC using the application's [`msgServiceRouter`](#msg-service-router).
 
 ### PostHandler
 

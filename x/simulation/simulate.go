@@ -164,7 +164,7 @@ func SimulateFromSeedX(
 		eventStats.Tally,
 		ops,
 		operationQueue,
-		timeOperationQueue,
+		&timeOperationQueue,
 		logWriter,
 		config,
 	)
@@ -217,13 +217,13 @@ func SimulateFromSeedX(
 		)
 
 		numQueuedTimeOpsRan, timeFutureOps := runQueuedTimeOperations(tb,
-			timeOperationQueue, int(blockHeight), blockTime,
+			&timeOperationQueue, int(blockHeight), blockTime,
 			r, app, ctx, accs, logWriter, eventStats.Tally,
 			config.Lean, config.ChainID,
 		)
 
 		futureOps = append(futureOps, timeFutureOps...)
-		queueOperations(operationQueue, timeOperationQueue, futureOps)
+		queueOperations(operationQueue, &timeOperationQueue, futureOps)
 
 		// run standard operations
 		operations := blockSimulator(r, app, ctx, accs, cmtproto.Header{
@@ -297,7 +297,7 @@ type blockSimFn func(
 // parameters being passed every time, to minimize memory overhead.
 func createBlockSimulator(tb testing.TB, printProgress bool, w io.Writer, params Params,
 	event func(route, op, evResult string), ops WeightedOperations,
-	operationQueue OperationQueue, timeOperationQueue []simulation.FutureOperation,
+	operationQueue OperationQueue, timeOperationQueue *[]simulation.FutureOperation,
 	logWriter LogWriter, config simulation.Config,
 ) blockSimFn {
 	tb.Helper()
@@ -409,7 +409,7 @@ func runQueuedOperations(
 	return numOpsRan, allFutureOps
 }
 
-func runQueuedTimeOperations(tb testing.TB, queueOps []simulation.FutureOperation,
+func runQueuedTimeOperations(tb testing.TB, queueOps *[]simulation.FutureOperation,
 	height int, currentTime time.Time, r *rand.Rand,
 	app *baseapp.BaseApp, ctx sdk.Context, accounts []simulation.Account,
 	logWriter LogWriter, event func(route, op, evResult string),
@@ -420,8 +420,8 @@ func runQueuedTimeOperations(tb testing.TB, queueOps []simulation.FutureOperatio
 	allFutureOps = make([]simulation.FutureOperation, 0)
 
 	numOpsRan = 0
-	for len(queueOps) > 0 && currentTime.After(queueOps[0].BlockTime) {
-		opMsg, futureOps, err := queueOps[0].Op(r, app, ctx, accounts, chainID)
+	for len(*queueOps) > 0 && currentTime.After((*queueOps)[0].BlockTime) {
+		opMsg, futureOps, err := (*queueOps)[0].Op(r, app, ctx, accounts, chainID)
 
 		opMsg.LogEvent(event)
 
@@ -438,7 +438,7 @@ func runQueuedTimeOperations(tb testing.TB, queueOps []simulation.FutureOperatio
 			allFutureOps = append(allFutureOps, futureOps...)
 		}
 
-		queueOps = queueOps[1:]
+		*queueOps = (*queueOps)[1:]
 		numOpsRan++
 	}
 

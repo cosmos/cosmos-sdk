@@ -523,7 +523,7 @@ func (k Keeper) IsSkipHeight(height int64) bool {
 	return k.skipUpgradeHeights[height]
 }
 
-// DumpUpgradeInfoToDisk writes upgrade information to UpgradeInfoFileName.
+// DumpUpgradeInfoToDisk writes upgrade information to types.UpgradeInfoFilename.
 func (k Keeper) DumpUpgradeInfoToDisk(height int64, p types.Plan) error {
 	upgradeInfoFilePath, err := k.GetUpgradeInfoPath()
 	if err != nil {

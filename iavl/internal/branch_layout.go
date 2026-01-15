@@ -46,11 +46,10 @@ type BranchLayout struct {
 	RightOffset uint32
 
 	// KeyOffset is the offset the key data for this node in the key value data file.
-	// NOTE: that a 32-bit offset means that the key data file can be at most 4GB in size.
 	// This doesn't limit the size of the overall tree, it just limits the size of individual key/value data files.
 	// If we want to support larger key/value data files in the future, we can change this to a 40-bit offset,
 	// and an additional byte of padding is already reserved below for this purpose.
-	KeyOffset uint32
+	KeyOffset Uint40
 
 	// Height is the height of the subtree rooted at this branch node.
 	Height uint8

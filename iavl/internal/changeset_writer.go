@@ -67,10 +67,9 @@ func (cs *ChangesetWriter) SaveLayer(layer uint32, root *NodePointer) error {
 	}
 
 	if cs.layer != 0 {
-		if layer != cs.layer+1 {
-			return fmt.Errorf("invalid layer %d, expected %d", layer, cs.layer+1)
+		if layer != cs.layer {
+			return fmt.Errorf("invalid layer %d, expected %d", layer, cs.layer)
 		}
-		cs.layer = layer
 	}
 
 	var layerInfo LayerInfo
@@ -106,6 +105,8 @@ func (cs *ChangesetWriter) SaveLayer(layer uint32, root *NodePointer) error {
 	}
 	info.EndLayer = layer
 	info.EndVersion = rootVersion
+
+	cs.layer = layer + 1
 
 	return nil
 }
@@ -196,7 +197,7 @@ func (cs *ChangesetWriter) writeLeaf(np *NodePointer, node *MemNode) error {
 	cs.lastLeafIdx++
 
 	keyOffset := node.keyOffset
-	if node.keyOffset == 0 || node.valueOffset == 0 {
+	if node.keyOffset.IsZero() || node.valueOffset.IsZero() {
 		return fmt.Errorf("leaf node missing key or value offset")
 	}
 
@@ -280,5 +281,6 @@ func (cs *ChangesetWriter) Flush() error {
 }
 
 func (cs *ChangesetWriter) Seal() error {
-
+	// TODO
+	return nil
 }

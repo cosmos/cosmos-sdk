@@ -71,30 +71,31 @@ func (ts *TreeStore) WriteWALUpdates(updates []KVUpdate, fsync bool) error {
 	}
 
 	// TODO if we are at rollover size, create new changeset writer
-	if walWriter.Size() >= ts.opts.ChangesetRolloverSize {
-		ts.checkpointMgr.reqChan <- checkpointReq{
-			newWriter: ts.currentWriter,
-			root:      ts.root,
-		}
-	}
+	//if walWriter.Size() >= ts.opts.ChangesetRolloverSize {
+	//	ts.checkpointMgr.reqChan <- checkpointReq{
+	//		newWriter: ts.currentWriter,
+	//		root:      ts.root,
+	//	}
+	//}
 
 	return nil
 }
 
 func (ts *TreeStore) ForceToDisk() error {
-	//if ts.root == nil || ts.root.Mem.Load() == nil {
-	//	return nil
-	//}
-	//layer, err := ts.currentWriter.SaveLayer(ts.root)
-	//if err != nil {
-	//	return err
-	//}
-	//ts.savedLayer.Store(layer)
-	//err = ts.currentWriter.CreatedSharedReader()
-	//if err != nil {
-	//	return err
-	//}
-	//ts.root.Mem.Store(nil) // flush in-memory node
+	if ts.root == nil || ts.root.Mem.Load() == nil {
+		return nil
+	}
+	layer := ts.savedLayer.Load() + 1
+	err := ts.currentWriter.SaveLayer(layer, ts.root)
+	if err != nil {
+		return err
+	}
+	ts.savedLayer.Store(layer)
+	err = ts.currentWriter.CreatedSharedReader()
+	if err != nil {
+		return err
+	}
+	ts.root.Mem.Store(nil) // flush in-memory node
 	return nil
 }
 
@@ -152,6 +153,7 @@ func (cp *checkpointMgr) proc() error {
 		}
 		cp.lastLayer.Store(layer)
 	}
+	return nil
 }
 
 type checkpointReq struct {

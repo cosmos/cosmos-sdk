@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	sizeLeaf = 52
+	sizeLeaf = 56
 )
 
 func init() {
@@ -31,11 +31,11 @@ type LeafLayout struct {
 	// on-disk compatibility.
 	// Such an upgrade could be made by introducing a "wide changeset" format that lives alongside
 	// this existing "compact" format.
-	KeyOffset uint32
+	KeyOffset Uint40
 
 	// ValueOffset is the offset the value data for this node in the key value data file.
 	// The same size considerations apply here as for KeyOffset.
-	ValueOffset uint32
+	ValueOffset Uint40
 
 	// Hash is the hash of this leaf node.
 	Hash [32]byte

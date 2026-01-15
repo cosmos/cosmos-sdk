@@ -32,7 +32,9 @@ func NewCommitTree(dir string, opts Options) (*CommitTree, error) {
 		return nil, fmt.Errorf("creating tree directory: %w", err)
 	}
 
-	treeStore, err := internal.NewTreeStore(dir)
+	treeStore, err := internal.NewTreeStore(dir, internal.TreeStoreOptions{
+		ChangesetRolloverSize: 2 * 1024 * 1024 * 1024, // 2GB
+	})
 	if err != nil {
 		return nil, fmt.Errorf("creating tree store: %w", err)
 	}

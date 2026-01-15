@@ -3,7 +3,6 @@ package internal
 import (
 	"encoding/binary"
 	"fmt"
-	"math"
 	"os"
 	"unsafe"
 )
@@ -12,7 +11,7 @@ import (
 // and blob storage for keys and values.
 type KVDataWriter struct {
 	*FileWriter
-	keyCache map[string]uint32
+	keyCache map[string]Uint40
 }
 
 type WALWriter struct {
@@ -24,7 +23,7 @@ func NewKVDataWriter(file *os.File) *KVDataWriter {
 	fw := NewFileWriter(file)
 	return &KVDataWriter{
 		FileWriter: fw,
-		keyCache:   make(map[string]uint32),
+		keyCache:   make(map[string]Uint40),
 	}
 }
 
@@ -81,7 +80,7 @@ func (kvs *WALWriter) WriteWALUpdates(updates []KVUpdate) error {
 }
 
 // WriteWALSet writes a WAL set entry for the given key and value and returns their offsets in the file.
-func (kvs *WALWriter) WriteWALSet(key, value []byte) (keyOffset, valueOffset uint32, err error) {
+func (kvs *WALWriter) WriteWALSet(key, value []byte) (keyOffset, valueOffset Uint40, err error) {
 	keyOffset, cached := kvs.writer.keyCache[unsafeBytesToString(key)]
 	typ := KVEntryWALSet
 	if cached {
@@ -89,25 +88,25 @@ func (kvs *WALWriter) WriteWALSet(key, value []byte) (keyOffset, valueOffset uin
 	}
 	err = kvs.writer.writeType(typ)
 	if err != nil {
-		return 0, 0, err
+		return Uint40{}, Uint40{}, err
 	}
 
 	if cached {
-		err = kvs.writer.writeLEU32(keyOffset)
+		err = kvs.writer.writeLEU40(keyOffset)
 		if err != nil {
-			return 0, 0, err
+			return Uint40{}, Uint40{}, err
 		}
 	} else {
 		keyOffset, err = kvs.writer.writeLenPrefixedBytes(key)
 		if err != nil {
-			return 0, 0, err
+			return Uint40{}, Uint40{}, err
 		}
 		kvs.writer.addKeyToCache(key, keyOffset)
 	}
 
 	valueOffset, err = kvs.writer.writeLenPrefixedBytes(value)
 	if err != nil {
-		return 0, 0, err
+		return Uint40{}, Uint40{}, err
 	}
 
 	return keyOffset, valueOffset, nil
@@ -126,7 +125,7 @@ func (kvs *WALWriter) WriteWALDelete(key []byte) error {
 	}
 
 	if cached {
-		err = kvs.writer.writeLEU32(cachedOffset)
+		err = kvs.writer.writeLEU40(cachedOffset)
 		if err != nil {
 			return err
 		}
@@ -161,7 +160,7 @@ func (kvs *WALWriter) Size() int {
 }
 
 // LookupKeyOffset looks up the offset of the given key in the key cache.
-func (kvs *WALWriter) LookupKeyOffset(key []byte) (uint32, bool) {
+func (kvs *WALWriter) LookupKeyOffset(key []byte) (Uint40, bool) {
 	offset, found := kvs.writer.keyCache[unsafeBytesToString(key)]
 	return offset, found
 }
@@ -175,9 +174,9 @@ const (
 
 // WriteKeyBlob writes a key blob and returns its offset in the file.
 // This should be used for writing keys outside of WAL entries to take advantage of key caching.
-func (kvs *KVDataWriter) WriteKeyBlob(key []byte) (offset uint32, err error) {
+func (kvs *KVDataWriter) WriteKeyBlob(key []byte) (offset Uint40, err error) {
 	if len(key) > MaxKeySize {
-		return 0, fmt.Errorf("key size exceeds maximum of %d bytes: %d bytes", MaxKeySize, len(key))
+		return Uint40{}, fmt.Errorf("key size exceeds maximum of %d bytes: %d bytes", MaxKeySize, len(key))
 	}
 
 	if offset, found := kvs.keyCache[unsafeBytesToString(key)]; found {
@@ -186,7 +185,7 @@ func (kvs *KVDataWriter) WriteKeyBlob(key []byte) (offset uint32, err error) {
 
 	offset, err = kvs.writeBlob(KVEntryKeyBlob, key)
 	if err != nil {
-		return 0, err
+		return Uint40{}, err
 	}
 
 	kvs.addKeyToCache(key, offset)
@@ -196,38 +195,38 @@ func (kvs *KVDataWriter) WriteKeyBlob(key []byte) (offset uint32, err error) {
 
 // WriteKeyValueBlobs writes a key blob and a value blob and returns their offsets in the file.
 // This should be used for writing key-value pairs in changesets where the WAL has been dropped.
-func (kvs *KVDataWriter) WriteKeyValueBlobs(key, value []byte) (keyOffset, valueOffset uint32, err error) {
+func (kvs *KVDataWriter) WriteKeyValueBlobs(key, value []byte) (keyOffset, valueOffset Uint40, err error) {
 	keyOffset, err = kvs.WriteKeyBlob(key)
 	if err != nil {
-		return 0, 0, err
+		return Uint40{}, Uint40{}, err
 	}
 
 	if len(value) > MaxValueSize {
-		return 0, 0, fmt.Errorf("value size exceeds maximum of %d bytes: %d bytes", MaxValueSize, len(value))
+		return Uint40{}, Uint40{}, fmt.Errorf("value size exceeds maximum of %d bytes: %d bytes", MaxValueSize, len(value))
 	}
 
 	valueOffset, err = kvs.writeBlob(KVEntryValueBlob, value)
 	if err != nil {
-		return 0, 0, err
+		return Uint40{}, Uint40{}, err
 	}
 
 	return keyOffset, valueOffset, nil
 }
 
-func (kvs *KVDataWriter) writeBlob(blobType KVEntryType, bz []byte) (offset uint32, err error) {
+func (kvs *KVDataWriter) writeBlob(blobType KVEntryType, bz []byte) (offset Uint40, err error) {
 	err = kvs.writeType(blobType)
 	if err != nil {
-		return 0, err
+		return Uint40{}, err
 	}
 	offset, err = kvs.writeLenPrefixedBytes(bz)
 	if err != nil {
-		return 0, err
+		return Uint40{}, err
 	}
 
 	return offset, nil
 }
 
-func (kvs *KVDataWriter) addKeyToCache(key []byte, offset uint32) {
+func (kvs *KVDataWriter) addKeyToCache(key []byte, offset Uint40) {
 	const minCacheKeyLen = 4 // we choose 4 because offsets are uint32 (4 bytes)
 	if len(key) < minCacheKeyLen {
 		// don't cache very small keys
@@ -241,26 +240,26 @@ func (kvs *KVDataWriter) writeType(x KVEntryType) error {
 	return err
 }
 
-func (kvs *KVDataWriter) writeLenPrefixedBytes(bz []byte) (offset uint32, err error) {
+func (kvs *KVDataWriter) writeLenPrefixedBytes(bz []byte) (offset Uint40, err error) {
 	// TODO: should we limit the max size of bz?
 	// for keys we should probably never have anything bigger than 2^16 bytes,
 	// and for values maybe 2^24 bytes?
 	sz := kvs.Size()
-	if sz > math.MaxUint32 {
-		return 0, fmt.Errorf("file size overflows uint32: %d", sz)
+	if sz > MaxUint40 {
+		return Uint40{}, fmt.Errorf("file size overflows uint32: %d", sz)
 	}
-	offset = uint32(sz)
+	offset = NewUint40(uint64(sz))
 
 	lenKey := len(bz)
 	err = kvs.writeVarUint(uint64(lenKey))
 	if err != nil {
-		return 0, err
+		return Uint40{}, err
 	}
 
 	// write bytes
 	_, err = kvs.Write(bz)
 	if err != nil {
-		return 0, err
+		return Uint40{}, err
 	}
 
 	return offset, nil
@@ -273,10 +272,8 @@ func (kvs *KVDataWriter) writeVarUint(x uint64) error {
 	return err
 }
 
-func (kvs *KVDataWriter) writeLEU32(x uint32) error {
-	var buf [4]byte
-	binary.LittleEndian.PutUint32(buf[:], x)
-	_, err := kvs.Write(buf[:])
+func (kvs *KVDataWriter) writeLEU40(x Uint40) error {
+	_, err := kvs.Write(x[:])
 	return err
 }
 

@@ -17,8 +17,8 @@ type MemNode struct {
 	right       *NodePointer
 	hash        []byte
 	nodeId      NodeID // ID of this node, 0 if not yet assigned
-	keyOffset   uint32
-	valueOffset uint32
+	keyOffset   Uint40
+	valueOffset Uint40
 }
 
 // NewLeafNode creates a new leaf MemNode with the given key, value, and version.

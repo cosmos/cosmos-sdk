@@ -52,7 +52,7 @@ func (node *BranchPersisted) Key() (UnsafeBytes, error) {
 	if kvData == nil || node.layout.KeyInfo.InKVData() {
 		kvData = node.store.KVData()
 	}
-	bz, err := kvData.UnsafeReadBlob(int(node.layout.KeyOffset))
+	bz, err := kvData.UnsafeReadBlob(int(node.layout.KeyOffset.ToUint64()))
 	if err != nil {
 		return UnsafeBytes{}, err
 	}

@@ -38,14 +38,14 @@ func (node *LeafPersisted) Value() (UnsafeBytes, error) {
 	return readLeafBlob(node.store, node.layout.ValueOffset)
 }
 
-func readLeafBlob(rdr *ChangesetReader, offset uint32) (UnsafeBytes, error) {
+func readLeafBlob(rdr *ChangesetReader, offset Uint40) (UnsafeBytes, error) {
 	// leaf data is stored either in the WAL OR KV data depending on whether this is a
 	// compaction changeset or not
 	kvData := rdr.WALData()
 	if kvData == nil {
 		kvData = rdr.KVData()
 	}
-	bz, err := kvData.UnsafeReadBlob(int(offset))
+	bz, err := kvData.UnsafeReadBlob(int(offset.ToUint64()))
 	if err != nil {
 		return UnsafeBytes{}, err
 	}

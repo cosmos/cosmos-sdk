@@ -66,7 +66,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.NoError(err)
 
 	app := appBuilder.Build(dbm.NewMemDB(), nil)
-	err = app.Load(true)
+	err = app.Load(true) // nolint:staticcheck // TODO: remove me
 	s.NoError(err)
 
 	valSet, err := sims.CreateRandomValidatorSet()

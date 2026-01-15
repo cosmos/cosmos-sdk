@@ -38,7 +38,7 @@ import (
 
 type suite struct {
 	cdc           codec.Codec
-	app           *runtime.App
+	app           *runtime.App // nolint:staticcheck // TODO: remove me
 	AccountKeeper authkeeper.AccountKeeper
 	BankKeeper    bankkeeper.Keeper
 	DistrKeeper   distrkeeper.Keeper

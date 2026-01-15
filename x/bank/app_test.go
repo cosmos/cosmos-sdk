@@ -99,7 +99,7 @@ type suite struct {
 	BankKeeper         bankkeeper.Keeper
 	AccountKeeper      types.AccountKeeper
 	DistributionKeeper distrkeeper.Keeper
-	App                *runtime.App
+	App                *runtime.App // nolint:staticcheck // TODO: remove me
 }
 
 func createTestSuite(t *testing.T, genesisAccounts []authtypes.GenesisAccount) suite {

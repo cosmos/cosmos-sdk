@@ -16,6 +16,9 @@ import (
 // returned, otherwise, it is assumed custom pruning options are provided.
 func GetPruningOptionsFromFlags(appOpts types.AppOptions) (pruningtypes.PruningOptions, error) {
 	strategy := strings.ToLower(cast.ToString(appOpts.Get(FlagPruning)))
+	if strategy == "" {
+		strategy = pruningtypes.PruningOptionDefault
+	}
 
 	switch strategy {
 	case pruningtypes.PruningOptionDefault, pruningtypes.PruningOptionNothing, pruningtypes.PruningOptionEverything:

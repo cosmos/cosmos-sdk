@@ -7,6 +7,8 @@ import (
 // RootCodespace is the codespace for all errors defined in this package
 const RootCodespace = "sdk"
 
+// Common Root Errors
+
 var (
 	// ErrTxDecode is returned if we cannot parse a transaction
 	ErrTxDecode = errorsmod.Register(RootCodespace, 2, "tx parse error")

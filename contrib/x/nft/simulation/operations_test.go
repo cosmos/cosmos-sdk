@@ -33,7 +33,7 @@ type SimTestSuite struct {
 
 	ctx sdk.Context
 
-	app               *runtime.App
+	app               *runtime.App // nolint:staticcheck // TODO: remove me
 	codec             codec.Codec
 	interfaceRegistry codectypes.InterfaceRegistry
 	txConfig          client.TxConfig

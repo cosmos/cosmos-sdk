@@ -35,7 +35,7 @@ type SimTestSuite struct {
 
 	ctx sdk.Context
 
-	app               *runtime.App
+	app               *runtime.App // nolint:staticcheck // TODO: remove me
 	legacyAmino       *codec.LegacyAmino
 	codec             codec.Codec
 	interfaceRegistry codectypes.InterfaceRegistry

@@ -203,8 +203,6 @@ type HasABCIGenesis interface {
 
 // AppModule is the form for an application module. Most of
 // its functionality has been moved to extension interfaces.
-//
-// Deprecated: use appmodule.AppModule with a combination of extension interfaces instead.
 type AppModule interface {
 	appmodule.AppModule
 

@@ -30,6 +30,7 @@ import (
 	"cosmossdk.io/math/unsafe"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 
+	"github.com/cosmos/cosmos-sdk/app"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -49,7 +50,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import auth as a blank
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import auth tx config as a blank
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -98,7 +98,7 @@ type (
 type TestFixture struct {
 	AppConstructor AppConstructor
 	GenesisState   map[string]json.RawMessage
-	EncodingConfig moduletestutil.TestEncodingConfig
+	EncodingConfig app.EncodingConfig
 }
 
 // Config defines the necessary configuration used to bootstrap and start an
@@ -140,7 +140,7 @@ func DefaultConfig(factory TestFixtureFactory) Config {
 	return Config{
 		Codec:             fixture.EncodingConfig.Codec,
 		TxConfig:          fixture.EncodingConfig.TxConfig,
-		LegacyAmino:       fixture.EncodingConfig.Amino,
+		LegacyAmino:       fixture.EncodingConfig.LegacyAmino,
 		InterfaceRegistry: fixture.EncodingConfig.InterfaceRegistry,
 		AccountRetriever:  authtypes.AccountRetriever{},
 		AppConstructor:    fixture.AppConstructor,
@@ -239,7 +239,7 @@ func DefaultConfigWithAppConfigWithQueryGasLimit(appConfig depinject.Config, que
 
 		testdata.RegisterQueryServer(app.GRPCQueryRouter(), testdata.QueryImpl{})
 
-		if err := app.Load(true); err != nil {
+		if err := app.Load(true); err != nil { // nolint:staticcheck // TODO: remove me
 			panic(err)
 		}
 

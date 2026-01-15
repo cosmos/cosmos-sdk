@@ -46,7 +46,7 @@ type SimTestSuite struct {
 	txConfig      client.TxConfig
 	accounts      []simtypes.Account
 	ctx           sdk.Context
-	app           *runtime.App
+	app           *runtime.App // nolint:staticcheck // TODO: remove me
 	bankKeeper    bankkeeper.Keeper
 	accountKeeper authkeeper.AccountKeeper
 	distrKeeper   distrkeeper.Keeper

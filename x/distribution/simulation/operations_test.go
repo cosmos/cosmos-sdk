@@ -244,7 +244,7 @@ type SimTestSuite struct {
 	suite.Suite
 
 	ctx         sdk.Context
-	app         *runtime.App
+	app         *runtime.App // nolint:staticcheck // TODO: remove me
 	genesisVals []stakingtypes.Validator
 
 	txConfig      client.TxConfig

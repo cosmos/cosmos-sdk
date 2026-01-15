@@ -25,8 +25,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/sjson"
 
-	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdknet "github.com/cosmos/cosmos-sdk/types/net"
 )
 
 var (
@@ -690,7 +690,7 @@ func AllNodes(t *testing.T, s *SystemUnderTest) []Node {
 	ip := "127.0.0.1"
 	if false { // is there still a use case for external ip?
 		var err error
-		ip, err = server.ExternalIP()
+		ip, err = sdknet.ExternalIP()
 		require.NoError(t, err)
 	}
 	for i, out := range outs {

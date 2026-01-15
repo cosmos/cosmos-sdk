@@ -51,7 +51,7 @@ type paginationTestSuite struct {
 	accountKeeper authkeeper.AccountKeeper
 	cdc           codec.Codec
 	interfaceReg  codectypes.InterfaceRegistry
-	app           *runtime.App
+	app           *runtime.App // nolint:staticcheck // TODO: remove me
 }
 
 func TestPaginationTestSuite(t *testing.T) {

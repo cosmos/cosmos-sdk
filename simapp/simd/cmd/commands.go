@@ -1,13 +1,11 @@
 package cmd
 
 import (
-	"errors"
 	"io"
 
 	cmtcfg "github.com/cometbft/cometbft/config"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/simapp"
@@ -194,11 +192,12 @@ func newApp(
 	traceStore io.Writer,
 	appOpts servertypes.AppOptions,
 ) servertypes.Application {
-	baseappOptions := server.DefaultBaseappOptions(appOpts)
 	return simapp.NewSimApp(
-		logger, db, traceStore, true,
+		logger,
+		db,
+		traceStore,
+		true,
 		appOpts,
-		baseappOptions...,
 	)
 }
 
@@ -213,15 +212,6 @@ func appExport(
 	appOpts servertypes.AppOptions,
 	modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
-	viperAppOpts, ok := appOpts.(*viper.Viper)
-	if !ok {
-		return servertypes.ExportedApp{}, errors.New("appOpts is not viper.Viper")
-	}
-
-	// overwrite the FlagInvCheckPeriod
-	viperAppOpts.Set(server.FlagInvCheckPeriod, 1)
-	appOpts = viperAppOpts
-
 	var simApp *simapp.SimApp
 	if height != -1 {
 		simApp = simapp.NewSimApp(logger, db, traceStore, false, appOpts)

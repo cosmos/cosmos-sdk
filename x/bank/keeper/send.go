@@ -420,6 +420,10 @@ func (k BaseSendKeeper) GetBlockedAddresses() map[string]bool {
 	return k.blockedAddrs
 }
 
+func (k *BaseSendKeeper) SetBlockedAddresses(blockedAddrs map[string]bool) {
+	k.blockedAddrs = blockedAddrs
+}
+
 // IsSendEnabledDenom returns the current SendEnabled status of the provided denom.
 func (k BaseSendKeeper) IsSendEnabledDenom(ctx context.Context, denom string) bool {
 	return k.getSendEnabledOrDefault(ctx, denom, k.GetParams(ctx).DefaultSendEnabled)

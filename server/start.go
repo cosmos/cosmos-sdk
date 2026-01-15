@@ -67,7 +67,8 @@ const (
 	FlagInterBlockCache    = "inter-block-cache"
 	FlagUnsafeSkipUpgrades = "unsafe-skip-upgrades"
 	FlagTrace              = "trace"
-	FlagInvCheckPeriod     = "inv-check-period"
+	// Deprecated: will be removed in the next SDK release
+	FlagInvCheckPeriod = "inv-check-period"
 
 	FlagPruning             = "pruning"
 	FlagPruningKeepRecent   = "pruning-keep-recent"

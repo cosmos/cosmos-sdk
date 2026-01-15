@@ -22,8 +22,8 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
-// SetupSimulation creates the config, db (levelDB), temporary directory and logger for the simulation tests.
-// If `skip` is false it skips the current test. `skip` should be set using the `FlagEnabledValue` flag.
+// SetupSimulation creates the DB (using config.DBBackend), temporary directory and logger for simulation tests.
+// If `skip` is false it returns `true` for the "skip" return value without creating any resources.
 // Returns error on an invalid db instantiation or temp dir creation.
 func SetupSimulation(config simtypes.Config, dirPrefix, dbName string, verbose, skip bool) (dbm.DB, string, log.Logger, bool, error) {
 	if !skip {

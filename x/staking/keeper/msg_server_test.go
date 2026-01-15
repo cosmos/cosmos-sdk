@@ -1113,6 +1113,11 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 
 	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
+			// Mock GetSupply for valid params test case
+			if !tc.expErr {
+				s.bankKeeper.EXPECT().GetSupply(gomock.Any(), tc.input.Params.BondDenom).Return(sdk.NewInt64Coin(tc.input.Params.BondDenom, 1000000)).AnyTimes()
+			}
+
 			_, err := msgServer.UpdateParams(ctx, tc.input)
 			if tc.expErr {
 				require.Error(err)

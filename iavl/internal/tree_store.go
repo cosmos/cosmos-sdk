@@ -82,11 +82,17 @@ func (ts *TreeStore) WriteWALUpdates(updates []KVUpdate, fsync bool) error {
 }
 
 func (ts *TreeStore) ForceToDisk() error {
+	// this is only for testing purposes, but we need to make sure the WAL is flushed
+	err := ts.currentWriter.WALWriter().Sync()
+	if err != nil {
+		return err
+	}
+
 	if ts.root == nil || ts.root.Mem.Load() == nil {
 		return nil
 	}
 	layer := ts.savedLayer.Load() + 1
-	err := ts.currentWriter.SaveLayer(layer, ts.root)
+	err = ts.currentWriter.SaveLayer(layer, ts.root)
 	if err != nil {
 		return err
 	}

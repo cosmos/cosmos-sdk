@@ -114,24 +114,50 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 		_, walSpan := internal.Tracer.Start(ctx, "WALWrite")
 		defer walSpan.End()
 		defer close(walDone)
-		walDone <- c.treeStore.WriteWALUpdates(nodeUpdates, c.opts.FsyncWAL)
+		walDone <- c.treeStore.WriteWALUpdates(nodeUpdates, false)
 	}()
 
 	// start computing hashes for leaf nodes in parallel
+	// this is a rather naive algorithm that assumes leaf nodes updates are evenly distributed
+	// if we see consistent latency here we can tune the algorithm
 	hashErr := make(chan error, 1)
 	go func() {
 		defer close(hashErr)
 		_, hashLeavesSpan := internal.Tracer.Start(ctx, "LeafHashCompute")
 		defer hashLeavesSpan.End()
-		for _, nu := range nodeUpdates {
-			if setNode := nu.SetNode; setNode != nil {
-				_, err := setNode.ComputeHash(internal.SyncHashScheduler{})
-				if err != nil {
-					hashErr <- err
-					return
-				}
-			}
+
+		n := len(nodeUpdates)
+		if n == 0 {
+			return
 		}
+
+		// we choose a minimum bucket size to avoid too many goroutines being created for small buckets
+		const minBucketSize = 64
+		numCPUs := runtime.NumCPU()
+		numWorkers := min(numCPUs, max(1, n/minBucketSize))
+		bucketSize := (n + numWorkers - 1) / numWorkers
+
+		var wg sync.WaitGroup
+		for i := 0; i < numWorkers; i++ {
+			start := i * bucketSize
+			end := min(start+bucketSize, n)
+			wg.Add(1)
+			go func(updates []internal.KVUpdate) {
+				defer wg.Done()
+				for _, nu := range updates {
+					if setNode := nu.SetNode; setNode != nil {
+						if _, err := setNode.ComputeHash(internal.SyncHashScheduler{}); err != nil {
+							select {
+							case hashErr <- err:
+							default:
+							}
+							return
+						}
+					}
+				}
+			}(nodeUpdates[start:end])
+		}
+		wg.Wait()
 	}()
 
 	// process all the nodeUpdates against the current root to produce a new root
@@ -204,6 +230,9 @@ func (c *CommitTree) Latest() TreeReader {
 }
 
 func (c *CommitTree) ForceToDisk() error {
+	c.writeMutex.Lock()
+	defer c.writeMutex.Unlock()
+
 	return c.treeStore.ForceToDisk()
 }
 

@@ -206,8 +206,10 @@ require (
 )
 
 replace (
+	cosmossdk.io/api => ../api
 	cosmossdk.io/log/v2 => ../log
 	cosmossdk.io/store => ../store
+	cosmossdk.io/x/tx => ../x/tx
 	github.com/cosmos/cosmos-sdk => ../
 	// Use fork for blockstm
 	github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-20250924232609-2c6195d95951

@@ -11,11 +11,11 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// AdjustNakamotoBonusCoefficient is called to adjust η dynamically for each block.
-// Every 'period' blocks:
+// AdjustNakamotoBonusCoefficient is called to adjust η dynamically at the end of each configured epoch.
+// When triggered:
 // - If avg(high group) >= 3x avg(low group), nb += step
 // - Else nb -= step
-// Clamp nb to [0, 1]. If disabled, force to 0.
+// Clamp nb to [min, max]. If disabled, force to 0.
 //
 // Events emitted:
 //   - EventTypeUpdateNakamotoCoefficient: When η value changes
@@ -29,15 +29,6 @@ func (k Keeper) AdjustNakamotoBonusCoefficient(ctx sdk.Context) error {
 	}
 
 	if !nb.Enabled {
-		return nil
-	}
-
-	period := int64(nb.Period)
-	if period <= 0 {
-		// misconfigured, do nothing
-		return nil
-	}
-	if ctx.BlockHeight()%period != 0 {
 		return nil
 	}
 

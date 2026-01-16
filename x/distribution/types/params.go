@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	// DefaultNakamotoBonusPeriod represents default nakamoto bonus period (in blocks)
-	DefaultNakamotoBonusPeriod = uint64(100_800) // ~7 days at 6s blocks (604,800s / 6s)
+	// DefaultNakamotoBonusPeriodEpochIdentifier represents default nakamoto bonus period epoch identifier
+	DefaultNakamotoBonusPeriodEpochIdentifier = "week"
 )
 
 var (
@@ -23,11 +23,11 @@ func DefaultParams() Params {
 		CommunityTax:        math.LegacyNewDecWithPrec(2, 2), // 2%
 		WithdrawAddrEnabled: true,
 		NakamotoBonus: NakamotoBonus{
-			Enabled:            true,
-			Step:               DefaultNakamotoBonusStep,
-			Period:             DefaultNakamotoBonusPeriod,
-			MinimumCoefficient: DefaultNakamotoBonusMinimumCoefficient,
-			MaximumCoefficient: DefaultNakamotoBonusMaximumCoefficient,
+			Enabled:               true,
+			Step:                  DefaultNakamotoBonusStep,
+			PeriodEpochIdentifier: DefaultNakamotoBonusPeriodEpochIdentifier,
+			MinimumCoefficient:    DefaultNakamotoBonusMinimumCoefficient,
+			MaximumCoefficient:    DefaultNakamotoBonusMaximumCoefficient,
 		},
 	}
 }
@@ -67,8 +67,8 @@ func validateWithdrawAddrEnabled(i interface{}) error {
 }
 
 func validateNakamotoBonus(v NakamotoBonus) error {
-	if v.Period == 0 {
-		return fmt.Errorf("nakamoto bonus period must be greater than zero: %d", v.Period)
+	if v.PeriodEpochIdentifier == "" {
+		return fmt.Errorf("nakamoto bonus period epoch identifier must not be empty")
 	}
 
 	switch {

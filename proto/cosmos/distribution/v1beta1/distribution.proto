@@ -22,7 +22,8 @@ message NakamotoBonus {
     (gogoproto.nullable)   = false
   ];
 
-  uint64 period = 3;
+  // period_epoch_identifier is the identifier of the epoch at which the nakamoto bonus coefficient is adjusted
+  string period_epoch_identifier = 3;
 
   string minimum_coefficient = 4 [
     (cosmos_proto.scalar)  = "cosmos.Dec",

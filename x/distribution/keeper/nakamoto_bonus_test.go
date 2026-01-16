@@ -36,7 +36,7 @@ func createValidators(ctx context.Context, stakingKeeper *distrtestutil.MockStak
 
 func TestAdjustEta_NakamotoDisabled(t *testing.T) {
 	initialEta := math.LegacyNewDecWithPrec(5, 2) // 0.05
-	s := setupTestKeeper(t, initialEta, types.DefaultNakamotoBonusPeriod)
+	s := setupTestKeeper(t, initialEta, 100)
 
 	// Disable the feature
 	p, err := s.distrKeeper.Params.Get(s.ctx)
@@ -74,7 +74,7 @@ func TestAdjustEta_NoInterval(t *testing.T) {
 
 func TestAdjustEta_NotEnoughValidators(t *testing.T) {
 	initialEta := types.DefaultNakamotoBonusStep
-	s := setupTestKeeper(t, initialEta, types.DefaultNakamotoBonusPeriod)
+	s := setupTestKeeper(t, initialEta, 100)
 
 	// Only 2 validators (need at least 3 for grouping)
 	createValidators(s.ctx, s.stakingKeeper, 10, 10)
@@ -89,7 +89,7 @@ func TestAdjustEta_NotEnoughValidators(t *testing.T) {
 
 func TestAdjustEta_Increase(t *testing.T) {
 	initialEta := math.LegacyNewDecWithPrec(5, 2) // Start at 0.05 (above minimum)
-	s := setupTestKeeper(t, initialEta, types.DefaultNakamotoBonusPeriod)
+	s := setupTestKeeper(t, initialEta, 100)
 
 	// highAvg = 100, lowAvg = 10, ratio = 10 >= 3, should increase
 	createValidators(s.ctx, s.stakingKeeper, 100, 100, 10)
@@ -105,7 +105,7 @@ func TestAdjustEta_Increase(t *testing.T) {
 
 func TestAdjustEta_Decrease(t *testing.T) {
 	initialEta := math.LegacyNewDecWithPrec(5, 2) // Start at 0.05 (above minimum)
-	s := setupTestKeeper(t, initialEta, types.DefaultNakamotoBonusPeriod)
+	s := setupTestKeeper(t, initialEta, 100)
 
 	// highAvg = 20, lowAvg = 10, ratio = 2 < 3, should decrease
 	createValidators(s.ctx, s.stakingKeeper, 20, 20, 10)
@@ -122,7 +122,7 @@ func TestAdjustEta_Decrease(t *testing.T) {
 
 func TestAdjustEta_ClampZero(t *testing.T) {
 	initEta := types.DefaultNakamotoBonusMinimumCoefficient // Start at minimum (0.03)
-	s := setupTestKeeper(t, initEta, types.DefaultNakamotoBonusPeriod)
+	s := setupTestKeeper(t, initEta, 100)
 
 	// highAvg = 20, lowAvg = 10, ratio = 2 < 3, would decrease but already at min
 	createValidators(s.ctx, s.stakingKeeper, 20, 20, 10)
@@ -138,7 +138,7 @@ func TestAdjustEta_ClampZero(t *testing.T) {
 
 func TestAdjustEta_ClampOne(t *testing.T) {
 	initEta := types.DefaultNakamotoBonusMaximumCoefficient // Start at maximum (1.0)
-	s := setupTestKeeper(t, initEta, types.DefaultNakamotoBonusPeriod)
+	s := setupTestKeeper(t, initEta, 100)
 
 	// highAvg = 100, lowAvg = 10, ratio = 10 >= 3, would increase but already at max
 	createValidators(s.ctx, s.stakingKeeper, 100, 100, 10)

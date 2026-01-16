@@ -27,6 +27,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/distribution/simulation"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	modulev1 "github.com/cosmos/cosmos-sdk/x/distribution/types/module"
+	epochs "github.com/cosmos/cosmos-sdk/x/epochs/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -235,9 +236,10 @@ type ModuleInputs struct {
 type ModuleOutputs struct {
 	depinject.Out
 
-	DistrKeeper keeper.Keeper
-	Module      appmodule.AppModule
-	Hooks       staking.StakingHooksWrapper
+	DistrKeeper  keeper.Keeper
+	Module       appmodule.AppModule
+	StakingHooks staking.StakingHooksWrapper
+	EpochsHooks  epochs.EpochHooksWrapper
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
@@ -265,8 +267,9 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.StakingKeeper, in.LegacySubspace)
 
 	return ModuleOutputs{
-		DistrKeeper: k,
-		Module:      m,
-		Hooks:       staking.StakingHooksWrapper{StakingHooks: k.Hooks()},
+		DistrKeeper:  k,
+		Module:       m,
+		StakingHooks: staking.StakingHooksWrapper{StakingHooks: k.Hooks()},
+		EpochsHooks:  epochs.EpochHooksWrapper{EpochHooks: k.Hooks()},
 	}
 }

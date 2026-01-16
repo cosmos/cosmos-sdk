@@ -7,22 +7,26 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	epochstypes "github.com/cosmos/cosmos-sdk/x/epochs/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// Wrapper struct
+// Hooks wrapper struct
 type Hooks struct {
 	k Keeper
 }
 
-var _ stakingtypes.StakingHooks = Hooks{}
+var (
+	_ stakingtypes.StakingHooks = Hooks{}
+	_ epochstypes.EpochHooks    = Hooks{}
+)
 
-// Create new distribution hooks
+// Hooks Create new distribution hooks
 func (k Keeper) Hooks() Hooks {
 	return Hooks{k}
 }
 
-// initialize validator distribution record
+// AfterValidatorCreated initialize validator distribution record
 func (h Hooks) AfterValidatorCreated(ctx context.Context, valAddr sdk.ValAddress) error {
 	val, err := h.k.stakingKeeper.Validator(ctx, valAddr)
 	if err != nil {
@@ -121,7 +125,7 @@ func (h Hooks) AfterValidatorRemoved(ctx context.Context, _ sdk.ConsAddress, val
 	return nil
 }
 
-// increment period
+// BeforeDelegationCreated increment period
 func (h Hooks) BeforeDelegationCreated(ctx context.Context, _ sdk.AccAddress, valAddr sdk.ValAddress) error {
 	val, err := h.k.stakingKeeper.Validator(ctx, valAddr)
 	if err != nil {
@@ -132,7 +136,7 @@ func (h Hooks) BeforeDelegationCreated(ctx context.Context, _ sdk.AccAddress, va
 	return err
 }
 
-// withdraw delegation rewards (which also increments period)
+// BeforeDelegationSharesModified withdraw delegation rewards (which also increments period)
 func (h Hooks) BeforeDelegationSharesModified(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
 	val, err := h.k.stakingKeeper.Validator(ctx, valAddr)
 	if err != nil {
@@ -151,12 +155,12 @@ func (h Hooks) BeforeDelegationSharesModified(ctx context.Context, delAddr sdk.A
 	return nil
 }
 
-// create new delegation period record
+// AfterDelegationModified create new delegation period record
 func (h Hooks) AfterDelegationModified(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
 	return h.k.initializeDelegation(ctx, valAddr, delAddr)
 }
 
-// record the slash event
+// BeforeValidatorSlashed record the slash event
 func (h Hooks) BeforeValidatorSlashed(ctx context.Context, valAddr sdk.ValAddress, fraction sdkmath.LegacyDec) error {
 	return h.k.updateValidatorSlashFraction(ctx, valAddr, fraction)
 }
@@ -178,5 +182,29 @@ func (h Hooks) BeforeDelegationRemoved(_ context.Context, _ sdk.AccAddress, _ sd
 }
 
 func (h Hooks) AfterUnbondingInitiated(_ context.Context, _ uint64) error {
+	return nil
+}
+
+// ======================== Epoch Hooks ========================
+
+// AfterEpochEnd is called after an epoch ends.
+// We use this to adjust the Nakamoto bonus coefficient when the configured epoch ends.
+func (h Hooks) AfterEpochEnd(ctx context.Context, epochIdentifier string, _ int64) error {
+	c := sdk.UnwrapSDKContext(ctx)
+	nb, err := h.k.GetNakamotoBonus(c)
+	if err != nil {
+		return err
+	}
+
+	// Only adjust if this is the epoch we're configured to track
+	if nb.PeriodEpochIdentifier == epochIdentifier {
+		return h.k.AdjustNakamotoBonusCoefficient(c)
+	}
+
+	return nil
+}
+
+// BeforeEpochStart is called before an epoch starts (not used for Nakamoto bonus).
+func (h Hooks) BeforeEpochStart(context.Context, string, int64) error {
 	return nil
 }

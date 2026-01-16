@@ -128,9 +128,20 @@ Where:
 - $PR_i$ is the proportional reward pool for block $i$
 - $NB_i$ is the Nakamoto Bonus pool for block $i$ (calculated as $NB_i = R_i \times \eta$)
 - $N_i$ is the total number of validators for block $i$
-- $\eta$ is the Nakamoto bonus coefficient (dynamically adjusted)
+- $\eta$ is the Nakamoto bonus coefficient (dynamically adjusted based on epochs)
 
 The proportional component rewards validators based on their stake, while the fixed component (Nakamoto Bonus) is distributed equally across all validators. This incentivizes delegators to distribute their stake more evenly across validators, improving network decentralization.
+
+### Epoch-Based Coefficient Adjustment
+
+The Nakamoto Bonus coefficient (η) is dynamically adjusted at the end of each configured epoch period, rather than at fixed block heights. This is implemented through the epochs module hooks system:
+
+- The distribution module implements the `AfterEpochEnd` hook from the epochs module
+- When an epoch ends, the hook checks if the epoch identifier matches the configured `period_epoch_identifier` parameter
+- If it matches, the coefficient adjustment logic is triggered
+- By default, the `period_epoch_identifier` is set to "week"
+
+This epoch-based approach provides more flexible time-based adjustment periods and decouples the coefficient changes from specific block heights, making the system more adaptable to varying block times.
 
 
 ### Reference Counting in F1 Fee Distribution
@@ -483,6 +494,29 @@ Note: The validator gets removed only when it has no remaining delegations.
 At that time, all outstanding delegator rewards will have been withdrawn.
 Any remaining rewards are dust amounts.
 
+### Epoch hooks
+
+The distribution module implements epoch hooks to adjust the Nakamoto Bonus coefficient:
+
+#### AfterEpochEnd
+
+* triggered-by: `epochs.AfterEpochEnd`
+
+When an epoch ends, the distribution module's `AfterEpochEnd` hook is called with the epoch identifier and epoch number. The hook:
+
+1. Retrieves the current Nakamoto Bonus parameters
+2. Checks if the ending epoch's identifier matches the configured `period_epoch_identifier`
+3. If it matches, triggers the `AdjustNakamotoBonusCoefficient` function to update η based on current network decentralization metrics
+4. If it doesn't match, the hook returns without making any changes
+
+This ensures the coefficient is only adjusted during the specific epoch periods configured for Nakamoto Bonus adjustments (e.g., weekly epochs), while ignoring other epoch types (e.g., daily or monthly epochs).
+
+#### BeforeEpochStart
+
+* triggered-by: `epochs.BeforeEpochStart`
+
+Currently not used by the distribution module. Returns without taking any action.
+
 ### Validator is slashed
 
 * triggered-by: `staking.Slash`
@@ -530,28 +564,29 @@ The distribution module emits the following events:
 
 #### MsgWithdrawValidatorCommission
 
-| Type       | Attribute Key | Attribute Value               |
-|------------|---------------|-------------------------------|
+| Type                | Attribute Key | Attribute Value               |
+|---------------------|---------------|-------------------------------|
 | withdraw_commission | amount        | {commissionAmount}            |
-| message    | module        | distribution                  |
-| message    | action        | withdraw_validator_commission |
-| message    | sender        | {senderAddress}               |
+| message             | module        | distribution                  |
+| message             | action        | withdraw_validator_commission |
+| message             | sender        | {senderAddress}               |
 
 ## Parameters
 
 The distribution module contains the following parameters:
 
-| Key                                | Type         | Example                    |
-|------------------------------------| ------------ | -------------------------- |
-| communitytax                       | string (dec) | "0.020000000000000000" [0] |
-| withdrawaddrenabled                | bool         | true                       |
-| nakamoto_bonus.enabled             | bool | true |
-| nakamoto_bonus.period              | uint64 | 120000 |
-| nakamoto_bonus.step                | string (dec) | "0.010000000000000000" |
-| nakamoto_bonus.minimum_coefficient | string (dec) | "0.030000000000000000" |
-| nakamoto_bonus.maximum_coefficient | string (dec) | "1.000000000000000000" |
+| Key                                    | Type         | Example                    |
+|----------------------------------------|--------------|----------------------------|
+| communitytax                           | string (dec) | "0.020000000000000000" [0] |
+| withdrawaddrenabled                    | bool         | true                       |
+| nakamoto_bonus.enabled                 | bool         | true                       |
+| nakamoto_bonus.period_epoch_identifier | string       | "week" [1]                 |
+| nakamoto_bonus.step                    | string (dec) | "0.010000000000000000"     |
+| nakamoto_bonus.minimum_coefficient     | string (dec) | "0.030000000000000000"     |
+| nakamoto_bonus.maximum_coefficient     | string (dec) | "1.000000000000000000"     |
 
 * [0] `communitytax` must be positive and cannot exceed 1.00.
+* [1] `period_epoch_identifier` specifies which epoch type triggers coefficient adjustments. Must match an epoch identifier registered in the epochs module (e.g., "day", "week", "month").
 
 :::note
 The reserve pool is the pool of collected funds for use by governance taken via the `CommunityTax`.
@@ -562,6 +597,17 @@ Currently with the Cosmos SDK, tokens collected by the CommunityTax are accounte
 When `nakamoto_bonus.enabled` is set to `false`, the Nakamoto Bonus feature is disabled and all rewards
 are distributed proportionally by stake (the coefficient η is effectively 0). The feature can be re-enabled
 through governance.
+:::
+
+:::note
+The `period_epoch_identifier` parameter determines when the Nakamoto Bonus coefficient is adjusted.
+This identifier must match an epoch registered in the epochs module. Common epoch identifiers include:
+- "day" - adjustments occur daily
+- "week" - adjustments occur weekly (default)
+- "month" - adjustments occur monthly
+
+The epochs module manages the actual timing and triggering of these periods. Changing this parameter
+through governance allows the chain to adjust how frequently the coefficient is recalculated.
 :::
 
 ## Client
@@ -661,9 +707,9 @@ Example Output:
 ```yml
 community_tax: "0.020000000000000000"
 withdraw_addr_enabled: true
-nakamoto_bonus: 
+nakamoto_bonus:
   enabled: true
-  period: 120000 
+  period_epoch_identifier: "week"
   step: "0.010000000000000000"
   minimum_coefficient: "0.030000000000000000"
   maximum_coefficient: "1.000000000000000000"
@@ -854,9 +900,9 @@ Example Output:
     "nakamotoBonus": {
       "enabled": true,
       "step": "10000000000000000",
-      "period": 120000,
-      "minimum_coefficient": "30000000000000000",
-      "maximum_coefficient": "1000000000000000000"
+      "periodEpochIdentifier": "week",
+      "minimumCoefficient": "30000000000000000",
+      "maximumCoefficient": "1000000000000000000"
     }
   }
 }

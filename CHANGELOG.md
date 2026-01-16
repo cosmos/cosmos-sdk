@@ -52,6 +52,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/staking) [#19](https://github.com/atomone-hub/cosmos-sdk/pull/19) Fixed commission rate and max rate parameter
 * (x/epochs) [#33](https://github.com/atomone-hub/cosmos-sdk/pull/33) Add `x/epochs` module.
 * (x/distribution) [#10](https://github.com/atomone-hub/cosmos-sdk/pull/10) ADR-004 (Nakamoto Bonus).
+* (x/distribution) [#44](https://github.com/atomone-hub/cosmos-sdk/pull/44) Use epoch time to the nakamoto bonus period.
 
 ### Improvements
 

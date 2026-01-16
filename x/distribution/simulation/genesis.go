@@ -42,9 +42,11 @@ func GenNakamotoBonusStep(r *rand.Rand) math.LegacyDec {
 	return math.LegacyNewDecWithPrec(1, 2).Add(math.LegacyNewDecWithPrec(int64(r.Intn(10)), 2))
 }
 
-// GenNakamotoBonusPeriod returns a randomized NakamotoBonusPeriod parameter.
-func GenNakamotoBonusPeriod(r *rand.Rand) uint64 {
-	return (r.Uint64() % types.DefaultNakamotoBonusPeriod) + 1
+// GenNakamotoBonusPeriodEpochIdentifier returns a randomized NakamotoBonusPeriodEpochIdentifier parameter.
+func GenNakamotoBonusPeriodEpochIdentifier(r *rand.Rand) string {
+	// Choose randomly between common epoch identifiers
+	identifiers := []string{"day", "week", "month"}
+	return identifiers[r.Intn(len(identifiers))]
 }
 
 // RandomizedGenState generates a random GenesisState for distribution
@@ -61,8 +63,8 @@ func RandomizedGenState(simState *module.SimulationState) {
 	var nakamotoBonusStep math.LegacyDec
 	simState.AppParams.GetOrGenerate(NakamotoBonusStep, &nakamotoBonusStep, simState.Rand, func(r *rand.Rand) { nakamotoBonusStep = GenNakamotoBonusStep(r) })
 
-	var nakamotoBonusPeriod uint64
-	simState.AppParams.GetOrGenerate(NakamotoBonusPeriod, &nakamotoBonusPeriod, simState.Rand, func(r *rand.Rand) { nakamotoBonusPeriod = GenNakamotoBonusPeriod(r) })
+	var nakamotoBonusPeriodEpochIdentifier string
+	simState.AppParams.GetOrGenerate(NakamotoBonusPeriod, &nakamotoBonusPeriodEpochIdentifier, simState.Rand, func(r *rand.Rand) { nakamotoBonusPeriodEpochIdentifier = GenNakamotoBonusPeriodEpochIdentifier(r) })
 
 	var nakamotoBonusMin math.LegacyDec
 	simState.AppParams.GetOrGenerate(NakamotoBonusMin, &nakamotoBonusMin, simState.Rand, func(r *rand.Rand) { nakamotoBonusMin = GenNakamotoBonusStep(r) })
@@ -76,11 +78,11 @@ func RandomizedGenState(simState *module.SimulationState) {
 			CommunityTax:        communityTax,
 			WithdrawAddrEnabled: withdrawEnabled,
 			NakamotoBonus: types.NakamotoBonus{
-				Enabled:            nakamotoBonusEnabled,
-				Step:               nakamotoBonusStep,
-				Period:             nakamotoBonusPeriod,
-				MinimumCoefficient: nakamotoBonusMin,
-				MaximumCoefficient: nakamotoBonusMax,
+				Enabled:               nakamotoBonusEnabled,
+				Step:                  nakamotoBonusStep,
+				PeriodEpochIdentifier: nakamotoBonusPeriodEpochIdentifier,
+				MinimumCoefficient:    nakamotoBonusMin,
+				MaximumCoefficient:    nakamotoBonusMax,
 			},
 		},
 	}

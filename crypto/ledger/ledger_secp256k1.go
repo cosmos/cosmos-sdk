@@ -22,7 +22,7 @@ const AppName = "Cosmos"
 
 type (
 	// discoverLedgerFn defines a Ledger discovery function that returns a
-	// connected device or an error upon failure. Its allows a method to avoid CGO
+	// connected device or an error upon failure. It allows a method to avoid CGO
 	// dependencies when Ledger support is potentially not enabled.
 	discoverLedgerFn func() (SECP256K1, error)
 

@@ -57,7 +57,9 @@ func (k BaseSendKeeper) SendCoinsToVirtual(ctx context.Context, fromAddr, toAddr
 	}
 
 	k.addVirtualCoins(ctx, toAddr, amt)
-	k.emitSendCoinsEvents(ctx, fromAddr, toAddr, amt)
+	if err := k.emitSendCoinsEvents(ctx, fromAddr, toAddr, amt); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -80,7 +82,9 @@ func (k BaseSendKeeper) SendCoinsFromVirtual(ctx context.Context, fromAddr, toAd
 	}
 
 	k.ensureAccountCreated(ctx, toAddr)
-	k.emitSendCoinsEvents(ctx, fromAddr, toAddr, amt)
+	if err := k.emitSendCoinsEvents(ctx, fromAddr, toAddr, amt); err != nil {
+		return err
+	}
 	return nil
 }
 

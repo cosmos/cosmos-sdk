@@ -94,7 +94,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/feegrant/v1be
 
 * `allowance` is either `BasicAllowance` or `PeriodicAllowance`.
 
-* `allowed_messages` is array of messages allowed to execute the given allowance.
+* `allowed_messages` is an array of messages allowed to execute the given allowance.
 
 ### FeeGranter flag
 

@@ -77,6 +77,7 @@ const (
 	FlagIAVLCacheSize       = "iavl-cache-size"
 	FlagDisableIAVLFastNode = "iavl-disable-fastnode"
 	FlagIAVLSyncPruning     = "iavl-sync-pruning"
+	FlagIAVLXOptions        = "iavlx-options"
 	FlagShutdownGrace       = "shutdown-grace"
 
 	// state sync-related flags
@@ -477,6 +478,7 @@ func StartGrpcServer(
 	clientCtx client.Context,
 	svrCtx *Context,
 	app types.Application,
+	opts ...grpc.DialOption,
 ) (*grpc.Server, client.Context, error) {
 	if !config.Enable {
 		// return grpcServer as nil if gRPC is disabled
@@ -498,14 +500,17 @@ func StartGrpcServer(
 	}
 
 	// if gRPC is enabled, configure gRPC client for gRPC gateway
-	grpcClient, err := grpc.NewClient(
-		config.Address,
+	defaultOpts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultCallOptions(
 			grpc.ForceCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry).GRPCCodec()),
 			grpc.MaxCallRecvMsgSize(maxRecvMsgSize),
 			grpc.MaxCallSendMsgSize(maxSendMsgSize),
 		),
+	}
+	grpcClient, err := grpc.NewClient(
+		config.Address,
+		append(defaultOpts, opts...)...,
 	)
 	if err != nil {
 		return nil, clientCtx, err

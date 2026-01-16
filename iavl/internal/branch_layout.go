@@ -97,7 +97,7 @@ func (b BranchKeyInfo) GetKeyPrefixLen() int {
 }
 
 func (b BranchKeyInfo) SetKeyPrefixLen(prefixLen int) BranchKeyInfo {
-	return (b & 0x80) | BranchKeyInfo(prefixLen&0x7F)
+	return (b & 0x80) | BranchKeyInfo(min(prefixLen, 127)&0x7F)
 }
 
 const MaxInlineKeyLen = 127

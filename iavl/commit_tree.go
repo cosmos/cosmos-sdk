@@ -8,6 +8,7 @@ import (
 	"os"
 	"runtime"
 	"sync"
+	"time"
 
 	storetypes "cosmossdk.io/store/types"
 	"go.opentelemetry.io/otel/attribute"
@@ -113,7 +114,7 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 		_, walSpan := internal.Tracer.Start(ctx, "WALWrite")
 		defer walSpan.End()
 		defer close(walDone)
-		walDone <- c.treeStore.WriteWALUpdates(nodeUpdates, true)
+		walDone <- c.treeStore.WriteWALUpdates(nodeUpdates, c.opts.FsyncWAL)
 	}()
 
 	// start computing hashes for leaf nodes in parallel
@@ -153,11 +154,15 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 	}
 	nodeUpdatesSpan.End()
 
+	startWaitForLeafHashes := time.Now()
+
 	// wait for the leaf node hash queue to finish
 	if err := <-hashErr; err != nil {
 		return storetypes.CommitID{}, err
 	}
 	span.AddEvent("leaf hash compute returned")
+
+	internal.LeafHashLatency.Record(ctx, time.Since(startWaitForLeafHashes).Milliseconds())
 
 	_, rootHashSpan := internal.Tracer.Start(ctx, "ComputeRootHash")
 	// compute the root hash
@@ -179,10 +184,14 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 	c.lastCommitId = commitId
 
 	if walDone != nil {
+		startWaitForWAL := time.Now()
+
 		err := <-walDone
 		if err != nil {
 			return storetypes.CommitID{}, err
 		}
+
+		internal.WALWritelLatency.Record(ctx, time.Since(startWaitForWAL).Milliseconds())
 
 		span.AddEvent("WAL write returned")
 	}

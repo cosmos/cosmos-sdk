@@ -1,7 +1,5 @@
 package internal
 
-import "bytes"
-
 type Iterator struct {
 	// domain of iteration, end is exclusive
 	start, end []byte
@@ -77,18 +75,27 @@ func (iter *Iterator) Next() {
 			return
 		}
 
-		key, err := node.Key()
+		startCmp, err := node.CmpKey(iter.start)
 		if err != nil {
 			iter.fail(err)
 			return
 		}
-		startCmp := bytes.Compare(iter.start, key.UnsafeBytes())
-		afterStart := iter.start == nil || startCmp < 0
-		beforeEnd := iter.end == nil || bytes.Compare(key.UnsafeBytes(), iter.end) < 0
+		afterStart := iter.start == nil || startCmp > 0
+		endCmp, err := node.CmpKey(iter.end)
+		if err != nil {
+			iter.fail(err)
+			return
+		}
+		beforeEnd := iter.end == nil || endCmp < 0
 
 		if node.IsLeaf() {
 			startOrAfter := afterStart || startCmp == 0
 			if startOrAfter && beforeEnd {
+				key, err := node.Key()
+				if err != nil {
+					iter.fail(err)
+					return
+				}
 				iter.key = key.SafeCopy()
 				value, err := node.Value()
 				if err != nil {

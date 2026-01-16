@@ -56,6 +56,8 @@ type Node interface {
 	// range queries and determining a key's position even when it doesn't exist.
 	Get(key []byte) (value UnsafeBytes, index int64, err error)
 
+	// TODO add Has since we can optimize it to avoid reading the value
+
 	// MutateBranch creates a mutable copy of this branch node created at the specified version.
 	// Since this is an immutable tree, whenever we need to modify a branch node, we should call this method
 	// to create a mutable copy of it with its version updated.

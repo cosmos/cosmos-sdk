@@ -19,6 +19,122 @@ import (
 	storetypes "cosmossdk.io/store/types"
 )
 
+func TestTree_MembershipProof(t *testing.T) {
+	rapid.Check(t, testTreeMembershipProof)
+}
+
+func testTreeMembershipProof(t *rapid.T) {
+	dir, err := os.MkdirTemp("", "iavlx-membership-test")
+	require.NoError(t, err)
+	defer os.RemoveAll(dir)
+
+	commitTree, err := NewCommitTree(dir, Options{}, sdklog.NewNopLogger())
+	require.NoError(t, err)
+	defer commitTree.Close()
+
+	// Generate a random number of key-value pairs
+	numKeys := rapid.IntRange(1, 200).Draw(t, "numKeys")
+	keys := make([][]byte, 0, numKeys)
+	keySet := make(map[string]bool) // Track keys to avoid duplicates
+
+	for i := range numKeys {
+		// Generate random key and value with varying lengths (non-empty)
+		keyLen := rapid.IntRange(1, 50).Draw(t, fmt.Sprintf("keyLen-%d", i))
+		valueLen := rapid.IntRange(1, 100).Draw(t, fmt.Sprintf("valueLen-%d", i))
+		key := rapid.SliceOfN(rapid.Byte(), keyLen, keyLen).Draw(t, fmt.Sprintf("key-%d", i))
+		value := rapid.SliceOfN(rapid.Byte(), valueLen, valueLen).Draw(t, fmt.Sprintf("value-%d", i))
+
+		// Skip duplicates
+		if keySet[string(key)] {
+			continue
+		}
+		keySet[string(key)] = true
+
+		commitTree.Set(key, value)
+		keys = append(keys, key)
+	}
+
+	// Commit the tree
+	commitTree.Commit()
+	itree, err := commitTree.GetImmutable(1)
+	require.NoError(t, err)
+
+	// Property: For all keys that were inserted, membership proofs should be valid
+	for _, key := range keys {
+		proof, err := itree.GetMembershipProof(key)
+		require.NoError(t, err, "failed to get membership proof for key %X", key)
+
+		ok, err := itree.VerifyMembership(proof, key)
+		require.NoError(t, err, "failed to verify membership for key %X", key)
+		require.True(t, ok, "membership verification failed for key %X", key)
+	}
+}
+
+func TestTree_NonMembershipProof(t *testing.T) {
+	rapid.Check(t, testTreeNonMembershipProof)
+}
+
+func testTreeNonMembershipProof(t *rapid.T) {
+	dir, err := os.MkdirTemp("", "iavlx-nonmembership-test")
+	require.NoError(t, err)
+	defer os.RemoveAll(dir)
+
+	commitTree, err := NewCommitTree(dir, Options{}, sdklog.NewNopLogger())
+	require.NoError(t, err)
+	defer commitTree.Close()
+
+	// Generate a random number of key-value pairs and track them
+	numKeys := rapid.IntRange(1, 200).Draw(t, "numKeys")
+	keySet := make(map[string]bool)
+
+	for i := range numKeys {
+		// Generate random key and value with varying lengths (non-empty values)
+		keyLen := rapid.IntRange(1, 50).Draw(t, fmt.Sprintf("keyLen-%d", i))
+		valueLen := rapid.IntRange(1, 100).Draw(t, fmt.Sprintf("valueLen-%d", i))
+		key := rapid.SliceOfN(rapid.Byte(), keyLen, keyLen).Draw(t, fmt.Sprintf("key-%d", i))
+		value := rapid.SliceOfN(rapid.Byte(), valueLen, valueLen).Draw(t, fmt.Sprintf("value-%d", i))
+
+		keySet[string(key)] = true
+		commitTree.Set(key, value)
+	}
+
+	// Commit the tree
+	commitTree.Commit()
+	itree, err := commitTree.GetImmutable(1)
+	require.NoError(t, err)
+
+	// Property: For keys that are NOT in the tree, non-membership proofs should be valid
+	numNonMembershipTests := rapid.IntRange(1, 100).Draw(t, "numNonMembershipTests")
+	for i := range numNonMembershipTests {
+		// Generate random keys that are not in the keySet
+		var nonExistentKey []byte
+		maxAttempts := 100
+		for attempt := 0; attempt < maxAttempts; attempt++ {
+			keyLen := rapid.IntRange(1, 100).Draw(t, fmt.Sprintf("nonMemberKeyLen-%d-%d", i, attempt))
+			candidate := rapid.SliceOfN(rapid.Byte(), keyLen, keyLen).Draw(t, fmt.Sprintf("nonMemberKey-%d-%d", i, attempt))
+
+			// Check if this key is not in the tree
+			if !keySet[string(candidate)] {
+				nonExistentKey = candidate
+				break
+			}
+		}
+
+		// If we couldn't find a non-existent key after max attempts, skip this iteration
+		if nonExistentKey == nil {
+			continue
+		}
+
+		proof, err := itree.GetNonMembershipProof(nonExistentKey)
+		require.NoError(t, err, "failed to get non-membership proof for key %X", nonExistentKey)
+		require.NotNil(t, proof, "non-membership proof is nil for key %X", nonExistentKey)
+
+		valid, err := itree.VerifyNonMembership(proof, nonExistentKey)
+		require.NoError(t, err, "failed to verify non-membership for key %X", nonExistentKey)
+		require.True(t, valid, "non-membership verification failed for key %X", nonExistentKey)
+	}
+}
+
 // TODO: this test isn't for expected behavior.
 // It should eventually be updated such that having a default ReaderUpdateInterval shouldn't error on old version queries.
 func TestTree_ErrorsOnOldVersion(t *testing.T) {

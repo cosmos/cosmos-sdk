@@ -46,10 +46,25 @@ func (node *BranchPersisted) Version() uint32 {
 	return node.layout.Version
 }
 
+func (node *BranchPersisted) CmpKey(otherKey []byte) (int, error) {
+	prefixLen := node.layout.KeyInfo.GetKeyPrefixLen()
+	prefix := node.layout.InlineKeyPrefix[:]
+	cmp, needFullKey := cmpInlineKeyPrefix(prefix, prefixLen, otherKey)
+	if needFullKey {
+		key, err := node.Key()
+		if err != nil {
+			return 0, err
+		}
+		cmp = bytes.Compare(key.UnsafeBytes(), otherKey)
+		return cmp, nil
+	}
+	return cmp, nil
+}
+
 func (node *BranchPersisted) Key() (UnsafeBytes, error) {
 	// the key data may be stored either in the WAL OR KV data depending on the key info flag
 	kvData := node.store.WALData()
-	if kvData == nil || node.layout.KeyInfo.InKVData() {
+	if kvData == nil || node.layout.KeyInfo.IsInKVData() {
 		kvData = node.store.KVData()
 	}
 	bz, err := kvData.UnsafeReadBlob(int(node.layout.KeyOffset.ToUint64()))
@@ -85,12 +100,12 @@ func (node *BranchPersisted) MutateBranch(version uint32) (*MemNode, error) {
 }
 
 func (node *BranchPersisted) Get(key []byte) (value UnsafeBytes, index int64, err error) {
-	nodeKey, err := node.Key()
+	cmp, err := node.CmpKey(key)
 	if err != nil {
 		return UnsafeBytes{}, 0, err
 	}
 
-	if bytes.Compare(key, nodeKey.UnsafeBytes()) < 0 {
+	if cmp > 0 {
 		leftNode, leftPin, err := node.Left().Resolve()
 		defer leftPin.Unpin()
 		if err != nil {

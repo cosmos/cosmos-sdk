@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	sizeBranch = 80
+	sizeBranch = 88
 )
 
 func init() {
@@ -62,6 +62,9 @@ type BranchLayout struct {
 	// Size is the number of leaf nodes in the subtree rooted at this branch node.
 	Size Uint40
 
+	// InlineKeyPrefix is the first 8 bytes of the key for this branch node, used for fast comparisons.
+	InlineKeyPrefix [8]byte
+
 	// Hash is the hash of this branch node.
 	Hash [32]byte
 }
@@ -72,9 +75,9 @@ func (b BranchLayout) GetNodeID() NodeID {
 
 type BranchKeyInfo byte
 
-// InKVData returns true if the branch key is stored in the KV data file, false if in WAL.
+// IsInKVData returns true if the branch key is stored in the KV data file, false if in WAL.
 // The high bit is set if the key is in KV data.
-func (b BranchKeyInfo) InKVData() bool {
+func (b BranchKeyInfo) IsInKVData() bool {
 	return b&0x80 != 0
 }
 
@@ -85,4 +88,10 @@ func (b BranchKeyInfo) SetIsInKVData(isInKVData bool) BranchKeyInfo {
 	} else {
 		return b &^ 0x80
 	}
+}
+
+// GetKeyPrefixLen returns the size of the branch key prefix stored inline in the branch node.
+// If the size is > 8, the full key must be read from the key value data file.
+func (b BranchKeyInfo) GetKeyPrefixLen() int {
+	return int(b & 0x7F)
 }

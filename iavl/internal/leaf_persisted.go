@@ -30,6 +30,14 @@ func (node *LeafPersisted) Version() uint32 {
 	return uint32(node.layout.Version)
 }
 
+func (node *LeafPersisted) CmpKey(otherKey []byte) (int, error) {
+	key, err := node.Key()
+	if err != nil {
+		return 0, err
+	}
+	return bytes.Compare(key.UnsafeBytes(), otherKey), nil
+}
+
 func (node *LeafPersisted) Key() (UnsafeBytes, error) {
 	return readLeafBlob(node.store, node.layout.KeyOffset)
 }

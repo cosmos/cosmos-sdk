@@ -54,6 +54,10 @@ func (node *MemNode) Version() uint32 {
 	return node.version
 }
 
+func (node *MemNode) CmpKey(otherKey []byte) (int, error) {
+	return bytes.Compare(node.key, otherKey), nil
+}
+
 // Key implements the Node interface.
 func (node *MemNode) Key() (UnsafeBytes, error) {
 	return WrapSafeBytes(node.key), nil

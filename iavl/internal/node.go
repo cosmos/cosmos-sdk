@@ -11,6 +11,16 @@ type Node interface {
 	// IsLeaf indicates whether this node is a leaf node.
 	IsLeaf() bool
 
+	// CmpKey compares the given key with the key of this node.
+	// It returns:
+	//   - a negative integer if this node's key is less than otherKey,
+	//   - zero if they are equal,
+	//   - a positive integer if this node's key is greater than otherKey.
+	// Prefer this method over Key() for comparisons to avoid unnecessary disk reads,
+	// because in many cases we can determine the ordering by just comparing key prefixes stored inline
+	// in branch nodes.
+	CmpKey(otherKey []byte) (int, error)
+
 	// Key returns the key of this node.
 	Key() (UnsafeBytes, error)
 

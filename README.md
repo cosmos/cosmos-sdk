@@ -28,7 +28,7 @@ The Cosmos SDK is a modular, open-source blockchain SDK for building secure, hig
 
 The Cosmos SDK is tailored for building secure, sovereign application-specific blockchains. Developers building with the Cosmos SDK can use predefined modules that cover standard blockchain functionality or create custom modules for their specific use case. This composable architecture enables robust customization. The SDK provides abstractions for permissioning, governance, state management, account abstraction, tokenization processes, application logic, and more.
 
-Cosmos SDK blockchains get interoperability out-of-the-box via a native integration with the [Inter-Blockchain Communication Protocol (IBC)](https://github.com/cosmos/ibc-go). Ibc-go is implemented as a Go module in the Cosmos SDK. 
+Cosmos SDK blockchains get interoperability out-of-the-box via a native integration with the [Inter-Blockchain Communication Protocol (IBC)](https://github.com/cosmos/ibc-go). ibc-go is implemented as a Go module in the Cosmos SDK. 
 
 While the Cosmos SDK is plug-and-play with any consensus engine, we recommend using [CometBFT](https://github.com/cometbft/cometbft) for a fast, battle-tested, high-throughput, configurable BFT state machine. CometBFT is developed as part of the Cosmos Stack and its releases are updated alongside the SDK.
 

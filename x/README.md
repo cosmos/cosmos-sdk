@@ -31,7 +31,7 @@ the core functionality of your blockchain.  They can be thought of as ways to ex
 capabilities of your blockchain or further specialize it.
 
 * [Authz](./authz/README.md) - Authorization for accounts to perform actions on behalf of other accounts.
-* [Epochs](./epochs/README.md) - Registration so SDK modules can have logic to be executed at the timed tickers.
+* [Epochs](./epochs/README.md) - Registration so SDK modules can have logic to be executed on timed tickers.
 * [Feegrant](./feegrant/README.md) - Grant fee allowances for executing transactions.
 * [ProtocolPool](./protocolpool/README.md) - Extended management of community pool functionality.
 
@@ -60,3 +60,4 @@ The CosmWasm module enables smart contracts, learn more by going to their [docum
 ## EVM
 
 Read more about writing smart contracts with solidity at the official [`evm` documentation page](https://evm.cosmos.network/).
+

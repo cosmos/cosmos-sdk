@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	"cosmossdk.io/simapp"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"

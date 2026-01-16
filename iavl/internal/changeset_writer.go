@@ -180,6 +180,18 @@ func (cs *ChangesetWriter) writeBranch(np *NodePointer, node *MemNode) error {
 	}
 	copy(layout.Hash[:], node.hash) // TODO check length
 
+	keyPrefixLen := len(node.key)
+	if keyPrefixLen > MaxInlineKeyLen {
+		keyPrefixLen = MaxInlineKeyLen
+	}
+	layout.KeyInfo = layout.KeyInfo.SetKeyPrefixLen(keyPrefixLen)
+
+	inlineCopyLen := keyPrefixLen
+	if inlineCopyLen > MaxInlineKeyCopyLen {
+		inlineCopyLen = MaxInlineKeyCopyLen
+	}
+	copy(layout.InlineKeyPrefix[:], node.key[:inlineCopyLen])
+
 	err = cs.branchesData.Append(&layout) // TODO check error
 	if err != nil {
 		return fmt.Errorf("failed to write branch node: %w", err)

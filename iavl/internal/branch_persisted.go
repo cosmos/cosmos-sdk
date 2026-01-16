@@ -62,6 +62,10 @@ func (node *BranchPersisted) CmpKey(otherKey []byte) (int, error) {
 }
 
 func (node *BranchPersisted) Key() (UnsafeBytes, error) {
+	prefixLen := node.layout.KeyInfo.GetKeyPrefixLen()
+	if prefixLen <= MaxInlineKeyCopyLen {
+		return WrapUnsafeBytes(node.layout.InlineKeyPrefix[:prefixLen]), nil
+	}
 	// the key data may be stored either in the WAL OR KV data depending on the key info flag
 	kvData := node.store.WALData()
 	if kvData == nil || node.layout.KeyInfo.IsInKVData() {

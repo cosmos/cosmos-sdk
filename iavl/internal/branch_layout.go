@@ -95,3 +95,10 @@ func (b BranchKeyInfo) SetIsInKVData(isInKVData bool) BranchKeyInfo {
 func (b BranchKeyInfo) GetKeyPrefixLen() int {
 	return int(b & 0x7F)
 }
+
+func (b BranchKeyInfo) SetKeyPrefixLen(prefixLen int) BranchKeyInfo {
+	return (b & 0x80) | BranchKeyInfo(prefixLen&0x7F)
+}
+
+const MaxInlineKeyLen = 127
+const MaxInlineKeyCopyLen = 8

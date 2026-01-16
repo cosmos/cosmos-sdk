@@ -16,11 +16,11 @@ func SetRecursive(nodePtr *NodePointer, leafNode *MemNode, ctx *MutationContext)
 		return nil, false, err
 	}
 
-	nodeKey, err := node.Key()
-	if err != nil {
-		return nil, false, err
-	}
 	if node.IsLeaf() {
+		nodeKey, err := node.Key()
+		if err != nil {
+			return nil, false, err
+		}
 		leafNodePtr := NewNodePointer(leafNode)
 		cmp := bytes.Compare(leafNode.key, nodeKey.UnsafeBytes())
 		if cmp == 0 {
@@ -54,7 +54,11 @@ func SetRecursive(nodePtr *NodePointer, leafNode *MemNode, ctx *MutationContext)
 			updated     bool
 			err         error
 		)
-		if bytes.Compare(leafNode.key, nodeKey.UnsafeBytes()) == -1 {
+		cmp, err := node.CmpKey(leafNode.key)
+		if err != nil {
+			return nil, false, err
+		}
+		if cmp == 1 {
 			newChildPtr, updated, err = SetRecursive(node.Left(), leafNode, ctx)
 			if err != nil {
 				return nil, false, err
@@ -109,12 +113,12 @@ func RemoveRecursive(nodePtr *NodePointer, key []byte, ctx *MutationContext) (re
 		return false, nil, nil, err
 	}
 
-	nodeKey, err := node.Key()
-	if err != nil {
-		return false, nil, nil, err
-	}
-
 	if node.IsLeaf() {
+		nodeKey, err := node.Key()
+		if err != nil {
+			return false, nil, nil, err
+		}
+
 		if bytes.Equal(nodeKey.UnsafeBytes(), key) {
 			ctx.addOrphan(nodePtr.id)
 			return true, nil, nil, nil
@@ -122,7 +126,11 @@ func RemoveRecursive(nodePtr *NodePointer, key []byte, ctx *MutationContext) (re
 		return false, nodePtr, nil, nil
 	}
 
-	if bytes.Compare(key, nodeKey.UnsafeBytes()) == -1 {
+	cmp, err := node.CmpKey(key)
+	if err != nil {
+		return false, nil, nil, err
+	}
+	if cmp == 1 {
 		leftRemoved, newLeft, newKey, err := RemoveRecursive(node.Left(), key, ctx)
 		if err != nil {
 			return false, nil, nil, err
@@ -132,6 +140,10 @@ func RemoveRecursive(nodePtr *NodePointer, key []byte, ctx *MutationContext) (re
 			return false, nodePtr, nil, nil
 		}
 
+		nodeKey, err := node.Key()
+		if err != nil {
+			return false, nil, nil, err
+		}
 		if newLeft == nil {
 			ctx.addOrphan(nodePtr.id)
 			return true, node.Right(), nodeKey.SafeCopy(), nil

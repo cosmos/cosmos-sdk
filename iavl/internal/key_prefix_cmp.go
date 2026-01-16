@@ -15,8 +15,8 @@ import "bytes"
 func cmpInlineKeyPrefix(inlinePrefix []byte, inlineLen int, other []byte) (cmp int, needFullKey bool) {
 	// How many bytes of our key are available inline
 	inlineAvail := inlineLen
-	if inlineAvail > 8 {
-		inlineAvail = 8
+	if inlineAvail > MaxInlineKeyCopyLen {
+		inlineAvail = MaxInlineKeyCopyLen
 	}
 
 	// Compare the overlapping portion
@@ -32,7 +32,7 @@ func cmpInlineKeyPrefix(inlinePrefix []byte, inlineLen int, other []byte) (cmp i
 	}
 
 	// First cmpLen bytes are equal, now consider lengths
-	if inlineLen <= 8 {
+	if inlineLen <= MaxInlineKeyCopyLen {
 		// Our complete key is inline
 		if inlineLen < len(other) {
 			return -1, false // our key is shorter
@@ -43,7 +43,7 @@ func cmpInlineKeyPrefix(inlinePrefix []byte, inlineLen int, other []byte) (cmp i
 	}
 
 	// inlineLen > 8: our key extends beyond the inline prefix
-	if len(other) <= 8 {
+	if len(other) <= MaxInlineKeyCopyLen {
 		// Other is fully covered, our key is longer with matching prefix
 		return 1, false
 	}

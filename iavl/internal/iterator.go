@@ -59,6 +59,8 @@ func (iter *Iterator) Value() []byte {
 
 // Next implements dbm.Iterator
 func (iter *Iterator) Next() {
+	// TODO we can do optimizations with CmpKey to avoid loading full keys when possible
+	// TODO we can keep a stack of Node's and Pin's to avoid SafeCopy when not requested by the user
 	if !iter.valid {
 		return
 	}

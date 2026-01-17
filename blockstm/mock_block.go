@@ -18,8 +18,10 @@ var (
 	StoreKeyBank = storetypes.NewKVStoreKey("bank")
 )
 
-type Cache map[string]interface{}
-type Tx func(MultiStore, Cache) error
+type (
+	Cache map[string]interface{}
+	Tx    func(MultiStore, Cache) error
+)
 
 type MockBlock struct {
 	Txs     []Tx

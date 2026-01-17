@@ -78,6 +78,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (server) [#25632](https://github.com/cosmos/cosmos-sdk/pull/25632) Add missing call to close the app on shutdown.
 * (server) [#25740](https://github.com/cosmos/cosmos-sdk/pull/25740) Add variadic `grpc.DialOption` parameter to `StartGrpcServer` for custom gRPC client connection options.
 * (blockstm) [#25765](https://github.com/cosmos/cosmos-sdk/pull/25765) Minor code readability improvement in block-stm.
+* (blockstm) [#](https://github.com/cosmos/cosmos-sdk/pull/) Add pre-state checking in transaction state transition.
 
 ### Bug Fixes
 

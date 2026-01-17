@@ -83,27 +83,27 @@ Iteration over each wrapped store is supported via the embedded `CommitKVStore` 
 
 ### General design
 
-The inter-block cache feature is composed by two components: `CommitKVCacheManager` and `CommitKVCache`.
+The inter-block cache feature is composed of two components: `CommitKVStoreCacheManager` and `CommitKVStoreCache`.
 
-`CommitKVCacheManager` implements the cache manager. It maintains a mapping from a store key to a `KVStore`.
+`CommitKVStoreCacheManager` implements the cache manager. It maintains a mapping from a store key to a `CommitKVStore` cache.
 
 ```go
-type CommitKVStoreCacheManager interface{
+type CommitKVStoreCacheManager struct {
     cacheSize uint
-    caches map[string]CommitKVStore
+    caches    map[string]CommitKVStore
 }
 ```
 
 `CommitKVStoreCache` implements a `KVStore`: a write-through cache that wraps a `CommitKVStore`. This means that deletes and writes always happen to both the cache and the underlying `CommitKVStore`. Reads on the other hand first hit the internal cache. During a cache miss, the read is delegated to the underlying `CommitKVStore` and cached.
 
 ```go
-type CommitKVStoreCache interface{
+type CommitKVStoreCache struct {
     store CommitKVStore
     cache Cache
 }
 ```
 
-To enable inter-block cache on `rootmulti`, one needs to instantiate a `CommitKVCacheManager` and set it by calling `SetInterBlockCache()` before calling one of `LoadLatestVersion()`, `LoadLatestVersionAndUpgrade(...)`, `LoadVersionAndUpgrade(...)` and `LoadVersion(version)`.
+To enable inter-block cache on `rootmulti`, one needs to instantiate a `CommitKVStoreCacheManager` and set it by calling `SetInterBlockCache()` before calling one of `LoadLatestVersion()`, `LoadLatestVersionAndUpgrade(...)`, `LoadVersionAndUpgrade(...)` and `LoadVersion(version)`.
 
 ### API
 

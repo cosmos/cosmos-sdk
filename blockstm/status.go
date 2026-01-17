@@ -53,7 +53,9 @@ func (s *StatusEntry) IsExecuted() (incarnation Incarnation, ok bool) {
 // ExecutedOnce returns true iff the transaction has executed at least once,
 // default to false if the lock cannot be acquired.
 func (s *StatusEntry) ExecutedOnce() bool {
-	s.Lock()
+	if !s.TryLock() {
+		return false
+	}
 
 	ok := s.incarnation > 0 ||
 		s.status == StatusExecuted ||

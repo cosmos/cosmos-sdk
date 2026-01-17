@@ -50,6 +50,22 @@ func (s *StatusEntry) IsExecuted() (incarnation Incarnation, ok bool) {
 	return incarnation, ok
 }
 
+// NeverExecuted returns true iff no incarnation (even the 0-th one) has set the executed status, i.e.
+// iff the execution status is READY_TO_EXECUTE/EXECUTING/SUSPENDED for incarnation 0.
+func (s *StatusEntry) NeverExecuted() bool {
+	if !s.TryLock() {
+		return false
+	}
+
+	ok := s.incarnation == 0 &&
+		(s.status == StatusReadyToExecute ||
+			s.status == StatusSuspended ||
+			s.status == StatusExecuting)
+
+	s.Unlock()
+	return ok
+}
+
 func (s *StatusEntry) TrySetExecuting() (incarnation Incarnation, ok bool) {
 	s.Lock()
 

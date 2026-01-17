@@ -50,17 +50,14 @@ func (s *StatusEntry) IsExecuted() (incarnation Incarnation, ok bool) {
 	return incarnation, ok
 }
 
-// NeverExecuted returns true iff no incarnation (even the 0-th one) has set the executed status, i.e.
-// iff the execution status is READY_TO_EXECUTE/EXECUTING/SUSPENDED for incarnation 0.
-func (s *StatusEntry) NeverExecuted() bool {
-	if !s.TryLock() {
-		return false
-	}
+// ExecutedOnce returns true iff the transaction has executed at least once,
+// default to false if the lock cannot be acquired.
+func (s *StatusEntry) ExecutedOnce() bool {
+	s.Lock()
 
-	ok := s.incarnation == 0 &&
-		(s.status == StatusReadyToExecute ||
-			s.status == StatusSuspended ||
-			s.status == StatusExecuting)
+	ok := s.incarnation > 0 ||
+		s.status == StatusExecuted ||
+		s.status == StatusAborting
 
 	s.Unlock()
 	return ok

@@ -135,7 +135,7 @@ func (s *Scheduler) NextTask() (TxnVersion, TaskKind) {
 	executionIdx := s.executionIdx.Load()
 
 	preferValidate := validationIdx < min(executionIdx, uint64(s.blockSize)) &&
-		!s.txnStatus[validationIdx].NeverExecuted()
+		s.txnStatus[validationIdx].ExecutedOnce()
 
 	if preferValidate {
 		if version, ok := s.TryValidateNextVersion(validationIdx); ok {

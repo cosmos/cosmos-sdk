@@ -66,7 +66,7 @@ Since the code generation library largely depends on your own tech stack, we wil
 
 [grpcurl](https://github.com/fullstorydev/grpcurl) is like `curl` but for gRPC. It is also available as a Go library, but we will use it only as a CLI command for debugging and testing purposes. Follow the instructions in the previous link to install it.
 
-Assuming you have a local node running (either a localnet, or connected to a live network), you should be able to run the following command to list the Protobuf services available (you can replace `localhost:9000` by the gRPC server endpoint of another node, which is configured under the `grpc.address` field inside [`app.toml`](../../user/run-node/01-run-node.md#configuring-the-node-using-apptoml-and-configtoml)):
+Assuming you have a local node running (either a localnet, or connected to a live network), you should be able to run the following command to list the Protobuf services available (you can replace `localhost:9090` by the gRPC server endpoint of another node, which is configured under the `grpc.address` field inside [`app.toml`](../../user/run-node/01-run-node.md#configuring-the-node-using-apptoml-and-configtoml)):
 
 ```bash
 grpcurl -plaintext localhost:9090 list
@@ -92,7 +92,7 @@ grpcurl \
     cosmos.bank.v1beta1.Query/AllBalances
 ```
 
-The list of all available gRPC query endpoints is [coming soon](https://github.com/cosmos/cosmos-sdk/issues/7786).
+An overview of all available gRPC endpoints shipped with the Cosmos SDK is available at [https://buf.build/cosmos/cosmos-sdk](https://buf.build/cosmos/cosmos-sdk).
 
 #### Query for historical state using grpcurl
 
@@ -128,6 +128,7 @@ import (
     "fmt"
 
     "google.golang.org/grpc"
+    "google.golang.org/grpc/credentials/insecure"
 
     "github.com/cosmos/cosmos-sdk/codec"
     sdk "github.com/cosmos/cosmos-sdk/types"
@@ -143,7 +144,7 @@ func queryState() error {
     // Create a connection to the gRPC server.
     grpcConn, err := grpc.Dial(
         "127.0.0.1:9090", // your gRPC server address.
-        grpc.WithInsecure(), // The Cosmos SDK doesn't support any transport security mechanism. 
+        grpc.WithTransportCredentials(insecure.NewCredentials()), // The Cosmos SDK doesn't support any transport security mechanism.
         // This instantiates a general gRPC codec which handles proto bytes. We pass in a nil interface registry
         // if the request/response types contain interface instead of 'nil' you should pass the application specific codec.
 		grpc.WithDefaultCallOptions(grpc.ForceCodec(codec.NewProtoCodec(nil).GRPCCodec())),
@@ -175,7 +176,7 @@ func main() {
 }
 ```
 
-You can replace the query client (here we are using `x/bank`'s) with one generated from any other Protobuf service. The list of all available gRPC query endpoints is [coming soon](https://github.com/cosmos/cosmos-sdk/issues/7786).
+You can replace the query client (here we are using `x/bank`'s) with one generated from any other Protobuf service. An overview of all available gRPC endpoints shipped with the Cosmos SDK is available at [https://buf.build/cosmos/cosmos-sdk](https://buf.build/cosmos/cosmos-sdk).
 
 #### Query for historical state using Go
 
@@ -189,6 +190,7 @@ import (
 	"fmt"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -205,8 +207,8 @@ func queryState() error {
 
 	// Create a connection to the gRPC server.
 	grpcConn, err := grpc.Dial(
-		"127.0.0.1:9090",    // your gRPC server address.
-		grpc.WithInsecure(), // The Cosmos SDK doesn't support any transport security mechanism.
+		"127.0.0.1:9090", // your gRPC server address.
+		grpc.WithTransportCredentials(insecure.NewCredentials()), // The Cosmos SDK doesn't support any transport security mechanism.
 		// This instantiates a general gRPC codec which handles proto bytes. We pass in a nil interface registry
 		// if the request/response types contain interface instead of 'nil' you should pass the application specific codec.
 		grpc.WithDefaultCallOptions(grpc.ForceCodec(codec.NewProtoCodec(nil).GRPCCodec())),

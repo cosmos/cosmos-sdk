@@ -65,7 +65,7 @@ func (s *StatusEntry) TrySetExecuting() (incarnation Incarnation, ok bool) {
 
 // setStatus sets the status to the given status if the current status is preStatus.
 // preStatus invariant must be held by the caller.
-func (s *StatusEntry) setStatus(status Status, preStatus Status) {
+func (s *StatusEntry) setStatus(status, preStatus Status) {
 	s.Lock()
 
 	if s.status != preStatus {

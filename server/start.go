@@ -3,6 +3,7 @@ package server
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -236,6 +237,11 @@ func start(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreato
 		return fmt.Errorf("failed to start telemetry: %w", err)
 	}
 
+	otelFile := filepath.Join(clientCtx.HomeDir, "config", telemetry.OtelFileName)
+	if err := telemetry.InitializeOpenTelemetry(otelFile); err != nil {
+		return fmt.Errorf("failed to initialize OpenTelemetry: %w", err)
+	}
+
 	emitServerInfoMetrics()
 
 	if !withCmt {
@@ -244,6 +250,7 @@ func start(svrCtx *Context, clientCtx client.Context, appCreator types.AppCreato
 	return startInProcess(svrCtx, svrCfg, clientCtx, app, metrics, opts)
 }
 
+//nolint:staticcheck // TODO: switch to OpenTelemetry
 func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx client.Context, app types.Application, metrics *telemetry.Metrics, opts StartCmdOptions) error {
 	addr := svrCtx.Viper.GetString(flagAddress)
 	transport := svrCtx.Viper.GetString(flagTransport)
@@ -304,14 +311,14 @@ func startStandAlone(svrCtx *Context, svrCfg serverconfig.Config, clientCtx clie
 		// so we can gracefully stop the ABCI server.
 		<-ctx.Done()
 		svrCtx.Logger.Info("stopping the ABCI server...")
-		return svr.Stop()
+		return errors.Join(svr.Stop(), app.Close())
 	})
 
 	return g.Wait()
 }
 
 func startInProcess(svrCtx *Context, svrCfg serverconfig.Config, clientCtx client.Context, app types.Application,
-	metrics *telemetry.Metrics, opts StartCmdOptions,
+	metrics *telemetry.Metrics, opts StartCmdOptions, //nolint:staticcheck // TODO: switch to OpenTelemetry
 ) error {
 	cmtCfg := svrCtx.Config
 	gRPCOnly := svrCtx.Viper.GetBool(flagGRPCOnly)
@@ -400,6 +407,7 @@ func startCmtNode(
 	cleanupFn = func() {
 		if tmNode != nil && tmNode.IsRunning() {
 			_ = tmNode.Stop()
+			_ = app.Close()
 		}
 	}
 
@@ -469,6 +477,7 @@ func StartGrpcServer(
 	clientCtx client.Context,
 	svrCtx *Context,
 	app types.Application,
+	opts ...grpc.DialOption,
 ) (*grpc.Server, client.Context, error) {
 	if !config.Enable {
 		// return grpcServer as nil if gRPC is disabled
@@ -490,14 +499,17 @@ func StartGrpcServer(
 	}
 
 	// if gRPC is enabled, configure gRPC client for gRPC gateway
-	grpcClient, err := grpc.NewClient(
-		config.Address,
+	defaultOpts := []grpc.DialOption{
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultCallOptions(
 			grpc.ForceCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry).GRPCCodec()),
 			grpc.MaxCallRecvMsgSize(maxRecvMsgSize),
 			grpc.MaxCallSendMsgSize(maxSendMsgSize),
 		),
+	}
+	grpcClient, err := grpc.NewClient(
+		config.Address,
+		append(defaultOpts, opts...)...,
 	)
 	if err != nil {
 		return nil, clientCtx, err
@@ -530,7 +542,7 @@ func startAPIServer(
 	app types.Application,
 	home string,
 	grpcSrv *grpc.Server,
-	metrics *telemetry.Metrics,
+	metrics *telemetry.Metrics, //nolint:staticcheck // TODO: switch to OpenTelemetry
 ) error {
 	if !svrCfg.API.Enable {
 		return nil
@@ -541,7 +553,9 @@ func startAPIServer(
 	apiSrv := api.New(clientCtx, svrCtx.Logger.With("module", "api-server"), grpcSrv)
 	app.RegisterAPIRoutes(apiSrv, svrCfg.API)
 
+	//nolint:staticcheck // TODO: switch to OpenTelemetry
 	if svrCfg.Telemetry.Enabled {
+		//nolint:staticcheck // TODO: switch to OpenTelemetry
 		apiSrv.SetTelemetry(metrics)
 	}
 
@@ -551,7 +565,9 @@ func startAPIServer(
 	return nil
 }
 
+//nolint:staticcheck // TODO: switch to OpenTelemetry
 func startTelemetry(cfg serverconfig.Config) (*telemetry.Metrics, error) {
+	//nolint:staticcheck // TODO: switch to OpenTelemetry
 	return telemetry.New(cfg.Telemetry)
 }
 
@@ -592,17 +608,17 @@ func emitServerInfoMetrics() {
 
 	versionInfo := version.NewInfo()
 	if len(versionInfo.GoVersion) > 0 {
-		ls = append(ls, telemetry.NewLabel("go", versionInfo.GoVersion))
+		ls = append(ls, telemetry.NewLabel("go", versionInfo.GoVersion)) //nolint:staticcheck // TODO: switch to OpenTelemetry
 	}
 	if len(versionInfo.CosmosSdkVersion) > 0 {
-		ls = append(ls, telemetry.NewLabel("version", versionInfo.CosmosSdkVersion))
+		ls = append(ls, telemetry.NewLabel("version", versionInfo.CosmosSdkVersion)) //nolint:staticcheck // TODO: switch to OpenTelemetry
 	}
 
 	if len(ls) == 0 {
 		return
 	}
 
-	telemetry.SetGaugeWithLabels([]string{"server", "info"}, 1, ls)
+	telemetry.SetGaugeWithLabels([]string{"server", "info"}, 1, ls) //nolint:staticcheck // TODO: switch to OpenTelemetry
 }
 
 func getCtx(svrCtx *Context, block bool) (*errgroup.Group, context.Context) {
@@ -636,6 +652,15 @@ func startApp(svrCtx *Context, appCreator types.AppCreator, opts StartCmdOptions
 
 	cleanupFn = func() {
 		traceCleanupFn()
+
+		// shutdown telemetry with a 5 second timeout
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		if err := telemetry.Shutdown(shutdownCtx); err != nil {
+			svrCtx.Logger.Error("failed to shutdown telemetry", "error", err)
+		}
+
 		if localErr := app.Close(); localErr != nil {
 			svrCtx.Logger.Error(localErr.Error())
 		}
@@ -814,6 +839,15 @@ func testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB, tra
 	ctx.Viper.Set(KeyUserPubKey, userPubKey)
 	testnetApp := testnetAppCreator(ctx.Logger, db, traceWriter, ctx.Viper)
 
+	var success bool
+	defer func() {
+		if !success {
+			if err := testnetApp.Close(); err != nil {
+				ctx.Logger.Error("failed to close testnet app on error", "err", err)
+			}
+		}
+	}()
+
 	// We need to create a temporary proxyApp to get the initial state of the application.
 	// Depending on how the node was stopped, the application height can differ from the blockStore height.
 	// This height difference changes how we go about modifying the state.
@@ -973,7 +1007,8 @@ func testnetify(ctx *Context, testnetAppCreator types.AppCreator, db dbm.DB, tra
 		return nil, err
 	}
 
-	return testnetApp, err
+	success = true
+	return testnetApp, nil
 }
 
 // addStartNodeFlags should be added to any CLI commands that start the network.

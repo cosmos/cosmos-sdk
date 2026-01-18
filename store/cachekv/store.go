@@ -139,7 +139,7 @@ func (store *GStore[V]) resetCaches() {
 	store.sortedCache = btree.NewBTree[V]()
 }
 
-// Write implements Cachetypes.KVStore.
+// Write implements types.CacheKVStore.
 func (store *GStore[V]) Write() {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()

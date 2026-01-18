@@ -8,7 +8,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	storetypes "cosmossdk.io/store/types"
 
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"

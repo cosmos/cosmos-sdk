@@ -191,7 +191,7 @@ updates:
   # Dependencies should be up to date on release branch
   - package-ecosystem: gomod
     directory: "/"
-    target-branch: "release/v0.47.x"
+    target-branch: "release/v0.53.x"
     schedule:
       interval: daily
       time: "03:00"
@@ -210,7 +210,7 @@ updates:
         dependency-type: "all"
     ignore:
       - dependency-name: "github.com/cometbft/cometbft"
-        # cometbft 0.37 is not semver, but we want to only update "patch" versions for 0.37.x
+        # cometbft 0.37 is not semver, but we want to only update "patch" versions for 0.38.x
         update-types:
           ["version-update:semver-major", "version-update:semver-minor"]
 

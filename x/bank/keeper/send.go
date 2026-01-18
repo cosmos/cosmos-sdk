@@ -7,7 +7,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
@@ -165,7 +165,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 	// ensure all coins can be sent
 	type toSend struct {
 		AddressStr string
-		Address    []byte
+		AddressBz  []byte
 		Coins      sdk.Coins
 	}
 	sending := make([]toSend, 0)
@@ -176,14 +176,19 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 			return err
 		}
 
-		outAddress, err = k.sendRestriction.apply(ctx, inAddress, outAddress, out.Coins)
+		updatedAddressBz, err := k.sendRestriction.apply(ctx, inAddress, outAddress, out.Coins)
+		if err != nil {
+			return err
+		}
+
+		updatedAddressStr, err := k.ak.AddressCodec().BytesToString(updatedAddressBz)
 		if err != nil {
 			return err
 		}
 
 		sending = append(sending, toSend{
-			Address:    outAddress,
-			AddressStr: out.Address,
+			AddressBz:  updatedAddressBz,
+			AddressStr: updatedAddressStr,
 			Coins:      out.Coins,
 		})
 
@@ -191,10 +196,10 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		//
 		// NOTE: This should ultimately be removed in favor a more flexible approach
 		// such as delegated fee messages.
-		accExists := k.ak.HasAccount(ctx, outAddress)
+		accExists := k.ak.HasAccount(ctx, updatedAddressBz)
 		if !accExists {
-			defer telemetry.IncrCounter(1, "new", "account")
-			k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, outAddress))
+			defer telemetry.IncrCounter(1, "new", "account") //nolint:staticcheck // TODO: switch to OpenTelemetry
+			k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, updatedAddressBz))
 		}
 	}
 
@@ -203,7 +208,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 	}
 
 	for _, out := range sending {
-		if err := k.addCoins(ctx, out.Address, out.Coins); err != nil {
+		if err := k.addCoins(ctx, out.AddressBz, out.Coins); err != nil {
 			return err
 		}
 		sdkCtx.EventManager().EmitEvent(
@@ -243,7 +248,9 @@ func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccA
 	}
 
 	k.ensureAccountCreated(ctx, toAddr)
-	k.emitSendCoinsEvents(ctx, fromAddr, toAddr, amt)
+	if err := k.emitSendCoinsEvents(ctx, fromAddr, toAddr, amt); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -254,20 +261,29 @@ func (k BaseSendKeeper) ensureAccountCreated(ctx context.Context, toAddr sdk.Acc
 	// such as delegated fee messages.
 	accExists := k.ak.HasAccount(ctx, toAddr)
 	if !accExists {
-		defer telemetry.IncrCounter(1, "new", "account")
+		defer telemetry.IncrCounter(1, "new", "account") //nolint:staticcheck // TODO: switch to OpenTelemetry
 		k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, toAddr))
 	}
 }
 
 // emitSendCoinsEvents emit send coins events.
-func (k BaseSendKeeper) emitSendCoinsEvents(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) {
+func (k BaseSendKeeper) emitSendCoinsEvents(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
 	// bech32 encoding is expensive! Only do it once for fromAddr
-	fromAddrString := fromAddr.String()
+	fromAddrString, err := k.ak.AddressCodec().BytesToString(fromAddr)
+	if err != nil {
+		return err
+	}
+
+	toAddrString, err := k.ak.AddressCodec().BytesToString(toAddr)
+	if err != nil {
+		return err
+	}
+
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	sdkCtx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeTransfer,
-			sdk.NewAttribute(types.AttributeKeyRecipient, toAddr.String()),
+			sdk.NewAttribute(types.AttributeKeyRecipient, toAddrString),
 			sdk.NewAttribute(types.AttributeKeySender, fromAddrString),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
 		),
@@ -276,6 +292,7 @@ func (k BaseSendKeeper) emitSendCoinsEvents(ctx context.Context, fromAddr, toAdd
 			sdk.NewAttribute(types.AttributeKeySender, fromAddrString),
 		),
 	})
+	return nil
 }
 
 // subUnlockedCoins removes the unlocked amt coins of the given account.

@@ -50,11 +50,7 @@ func (d *GMVData[V]) getTree(key Key) *tree.BTree[secondaryDataItem[V]] {
 
 // getTreeOrDefault set a new tree atomically if not found.
 func (d *GMVData[V]) getTreeOrDefault(key Key) *tree.BTree[secondaryDataItem[V]] {
-	return d.GetOrDefault(dataItem[V]{Key: key}, func(item *dataItem[V]) {
-		if item.Tree == nil {
-			item.Tree = tree.NewBTree(secondaryLesser[V], InnerBTreeDegree)
-		}
-	}).Tree
+	return d.GetOrDefault(dataItem[V]{Key: key}, (*dataItem[V]).Init).Tree
 }
 
 func (d *GMVData[V]) Write(key Key, value V, version TxnVersion) {
@@ -73,9 +69,9 @@ func (d *GMVData[V]) Delete(key Key, txn TxnIndex) {
 }
 
 // Read returns the value and the version of the value that's less than the given txn.
-// If the key is not found, returns `(nil, InvalidTxnVersion, false)`.
-// If the key is found but value is an estimate, returns `(nil, BlockingTxn, true)`.
-// If the key is found, returns `(value, version, false)`, `value` can be `nil` which means deleted.
+// If the key is not found, returns `(zero, InvalidTxnVersion, false)`.
+// If the key is found but value is an estimate, returns `(value, version, true)`.
+// If the key is found, returns `(value, version, false)`, `value` can be zero value which means deleted.
 func (d *GMVData[V]) Read(key Key, txn TxnIndex) (V, TxnVersion, bool) {
 	var zero V
 	if txn == 0 {
@@ -87,7 +83,7 @@ func (d *GMVData[V]) Read(key Key, txn TxnIndex) (V, TxnVersion, bool) {
 		return zero, InvalidTxnVersion, false
 	}
 
-	// find the closing txn that's less than the given txn
+	// find the closest txn that's less than the given txn
 	item, ok := seekClosestTxn(tree, txn)
 	if !ok {
 		return zero, InvalidTxnVersion, false
@@ -206,6 +202,12 @@ type KVPair = GKVPair[[]byte]
 type dataItem[V any] struct {
 	Key  Key
 	Tree *tree.BTree[secondaryDataItem[V]]
+}
+
+func (d *dataItem[V]) Init() {
+	if d.Tree == nil {
+		d.Tree = tree.NewBTree(secondaryLesser[V], InnerBTreeDegree)
+	}
 }
 
 var _ tree.KeyItem = dataItem[[]byte]{}

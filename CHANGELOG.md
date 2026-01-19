@@ -80,6 +80,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (blockstm) [#25765](https://github.com/cosmos/cosmos-sdk/pull/25765) Minor code readability improvement in block-stm.
 * (blockstm) [#25786](https://github.com/cosmos/cosmos-sdk/pull/25786) Add pre-state checking in transaction state transition.
 * (blockstm) [#25788](https://github.com/cosmos/cosmos-sdk/pull/25788) Only validate transactions that's executed at lease once.
+* (blockstm) [#](https://github.com/cosmos/cosmos-sdk/pull/) Support rolling commit and simplify done condition checking.
 
 ### Bug Fixes
 

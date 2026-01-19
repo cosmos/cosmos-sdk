@@ -867,7 +867,7 @@ func (d *LegacyDec) MarshalTo(data []byte) (n int, err error) {
 // Unmarshal implements the gogo proto custom type interface.
 func (d *LegacyDec) Unmarshal(data []byte) error {
 	if len(data) == 0 {
-		d = nil
+		*d = LegacyDec{}
 		return nil
 	}
 

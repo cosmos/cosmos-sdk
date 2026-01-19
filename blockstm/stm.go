@@ -59,8 +59,13 @@ func ExecuteBlockWithEstimates(
 	}
 
 	if !scheduler.Done() {
-		if ctx.Err() != nil {
-			// canceled
+		err := ctx.Err()
+		// canceled, wake up all suspended executors to prevent hanging
+		canceled := scheduler.CancelAll()
+		for _, txn := range canceled {
+			mvMemory.ClearEstimates(txn)
+		}
+		if err != nil {
 			return ctx.Err()
 		}
 

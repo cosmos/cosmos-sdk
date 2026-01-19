@@ -115,12 +115,16 @@ func (s *StatusEntry) Suspend(cond *Condvar) {
 
 // TryCancel wakes up a suspended executor if it's suspended.
 // Called during context cancellation to prevent hanging.
-func (s *StatusEntry) TryCancel() {
+// Returns true if the transaction was suspended and is now canceled.
+func (s *StatusEntry) TryCancel() bool {
 	s.Lock()
+	defer s.Unlock()
+
 	if s.status == StatusSuspended && s.cond != nil {
 		s.status = StatusExecuting
 		s.cond.Notify()
 		s.cond = nil
+		return true
 	}
-	s.Unlock()
+	return false
 }

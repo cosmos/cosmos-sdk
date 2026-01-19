@@ -118,6 +118,7 @@ func (s *StatusEntry) Suspend(cond *Condvar) {
 func (s *StatusEntry) TryCancel() {
 	s.Lock()
 	if s.status == StatusSuspended && s.cond != nil {
+		s.status = StatusExecuting
 		s.cond.Notify()
 		s.cond = nil
 	}

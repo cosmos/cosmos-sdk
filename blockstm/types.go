@@ -13,6 +13,7 @@ const (
 type (
 	TxnIndex    int
 	Incarnation uint
+	Wave        uint32
 )
 
 type TxnVersion struct {

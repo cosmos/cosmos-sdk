@@ -112,3 +112,14 @@ func (s *StatusEntry) Suspend(cond *Condvar) {
 
 	s.Unlock()
 }
+
+// TryCancel wakes up a suspended executor if it's suspended.
+// Called during context cancellation to prevent hanging.
+func (s *StatusEntry) TryCancel() {
+	s.Lock()
+	if s.status == StatusSuspended && s.cond != nil {
+		s.cond.Notify()
+		s.cond = nil
+	}
+	s.Unlock()
+}

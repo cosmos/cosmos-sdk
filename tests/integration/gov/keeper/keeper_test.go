@@ -7,7 +7,7 @@ import (
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"

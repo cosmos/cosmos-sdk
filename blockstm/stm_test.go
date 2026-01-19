@@ -133,7 +133,7 @@ func TestSTM(t *testing.T) {
 
 			// check parallel execution matches sequential execution
 			for store := range stores {
-				require.True(t, StoreEqual(crossCheck.GetKVStore(store), storage.GetKVStore(store)))
+				require.True(t, StoreEqual(t, crossCheck.GetKVStore(store), storage.GetKVStore(store)))
 			}
 
 			// check total nonce increased the same amount as the number of transactions
@@ -154,7 +154,7 @@ func TestSTM(t *testing.T) {
 	}
 }
 
-func StoreEqual(a, b storetypes.KVStore) bool {
+func StoreEqual(t *testing.T, a, b storetypes.KVStore) bool {
 	// compare with iterators
 	iter1 := a.Iterator(nil, nil)
 	iter2 := b.Iterator(nil, nil)
@@ -166,9 +166,12 @@ func StoreEqual(a, b storetypes.KVStore) bool {
 			return true
 		}
 		if !iter1.Valid() || !iter2.Valid() {
+			t.Logf("iterators have different lengths")
 			return false
 		}
 		if !bytes.Equal(iter1.Key(), iter2.Key()) || !bytes.Equal(iter1.Value(), iter2.Value()) {
+			t.Logf("iterators differs, key1: %v, value1: %v, key2: %v, value2: %v",
+				iter1.Key(), iter1.Value(), iter2.Key(), iter2.Value())
 			return false
 		}
 		iter1.Next()

@@ -13,9 +13,10 @@ const (
 	StatusExecuted
 	StatusAborting
 	StatusSuspended
+	StatusCommitted
 )
 
-// StatusEntry is a state machine for the status of a transaction, all the transitions are atomic protected by a mutex.
+// ExecutionStatus is a state machine for the status of a transaction, all the transitions are atomic protected by a mutex.
 //
 // ```mermaid
 // stateDiagram-v2
@@ -29,7 +30,7 @@ const (
 //	Suspended --> Executing: Resume()
 //
 // ```
-type StatusEntry struct {
+type ExecutionStatus struct {
 	sync.Mutex
 
 	incarnation Incarnation
@@ -38,8 +39,28 @@ type StatusEntry struct {
 	cond *Condvar
 }
 
-func (s *StatusEntry) IsExecuted() (incarnation Incarnation, ok bool) {
+// If includeCommitted is true (which is when calling from WaitForDependency),
+// then committed transaction is also considered executed (for dependency resolution
+// purposes). If includeCommitted is false (which is when calling from
+// NextVersionToValidate), then we are checking if a transaction may be validated,
+// and a committed (in between) txn does not need to be scheduled for validation -
+// so can return None.
+func (s *ExecutionStatus) IsExecuted(includeCommitted bool) (incarnation Incarnation, ok bool) {
 	s.Lock()
+
+	if s.status == StatusExecuted || (includeCommitted && s.status == StatusCommitted) {
+		ok = true
+		incarnation = s.incarnation
+	}
+
+	s.Unlock()
+	return incarnation, ok
+}
+
+func (s *ExecutionStatus) TryIsExecuted() (incarnation Incarnation, ok bool) {
+	if !s.TryLock() {
+		return 0, false
+	}
 
 	if s.status == StatusExecuted {
 		ok = true
@@ -52,20 +73,21 @@ func (s *StatusEntry) IsExecuted() (incarnation Incarnation, ok bool) {
 
 // ExecutedOnce returns true iff the transaction has executed at least once,
 // default to false if the lock cannot be acquired.
-func (s *StatusEntry) ExecutedOnce() bool {
+func (s *ExecutionStatus) ExecutedOnce() bool {
 	if !s.TryLock() {
 		return false
 	}
 
 	ok := s.incarnation > 0 ||
 		s.status == StatusExecuted ||
-		s.status == StatusAborting
+		s.status == StatusAborting ||
+		s.status == StatusCommitted
 
 	s.Unlock()
 	return ok
 }
 
-func (s *StatusEntry) TrySetExecuting() (incarnation Incarnation, ok bool) {
+func (s *ExecutionStatus) TrySetExecuting() (incarnation Incarnation, ok bool) {
 	s.Lock()
 
 	if s.status == StatusReadyToExecute {
@@ -80,7 +102,7 @@ func (s *StatusEntry) TrySetExecuting() (incarnation Incarnation, ok bool) {
 
 // setStatus sets the status to the given status if the current status is preStatus.
 // preStatus invariant must be held by the caller.
-func (s *StatusEntry) setStatus(status, preStatus Status) {
+func (s *ExecutionStatus) setStatus(status, preStatus Status) {
 	s.Lock()
 
 	if s.status != preStatus {
@@ -92,7 +114,7 @@ func (s *StatusEntry) setStatus(status, preStatus Status) {
 	s.Unlock()
 }
 
-func (s *StatusEntry) Resume() {
+func (s *ExecutionStatus) Resume() {
 	s.Lock()
 
 	// status must be SUSPENDED and cond != nil
@@ -108,12 +130,12 @@ func (s *StatusEntry) Resume() {
 	s.Unlock()
 }
 
-func (s *StatusEntry) SetExecuted() {
+func (s *ExecutionStatus) SetExecuted() {
 	// status must have been EXECUTING
 	s.setStatus(StatusExecuted, StatusExecuting)
 }
 
-func (s *StatusEntry) TryValidationAbort(incarnation Incarnation) (ok bool) {
+func (s *ExecutionStatus) TryValidationAbort(incarnation Incarnation) (ok bool) {
 	s.Lock()
 
 	if s.incarnation == incarnation && s.status == StatusExecuted {
@@ -125,7 +147,7 @@ func (s *StatusEntry) TryValidationAbort(incarnation Incarnation) (ok bool) {
 	return ok
 }
 
-func (s *StatusEntry) SetReadyStatus() {
+func (s *ExecutionStatus) SetReadyStatus() {
 	s.Lock()
 
 	// status must be ABORTING
@@ -140,7 +162,7 @@ func (s *StatusEntry) SetReadyStatus() {
 	s.Unlock()
 }
 
-func (s *StatusEntry) Suspend(cond *Condvar) {
+func (s *ExecutionStatus) Suspend(cond *Condvar) {
 	s.Lock()
 
 	if s.status != StatusExecuting {
@@ -152,4 +174,8 @@ func (s *StatusEntry) Suspend(cond *Condvar) {
 	s.status = StatusSuspended
 
 	s.Unlock()
+}
+
+func (s *ExecutionStatus) SetCommitted() {
+	s.setStatus(StatusCommitted, StatusExecuted)
 }

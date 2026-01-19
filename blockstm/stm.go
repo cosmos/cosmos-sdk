@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"runtime"
 
 	"golang.org/x/sync/errgroup"
@@ -41,6 +42,11 @@ func ExecuteBlockWithEstimates(
 	}
 	if executors == 0 {
 		executors = maxParallelism()
+	}
+
+	// we limit the block size MaxInt32-1 to re-purpose the `0` for pre-state in MVMemory.
+	if blockSize > math.MaxUint32-1 {
+		return fmt.Errorf("block size too large: %d", blockSize)
 	}
 
 	// Create a new scheduler

@@ -2,7 +2,6 @@ package blockstm
 
 import (
 	"fmt"
-	"runtime"
 	"sync"
 	"sync/atomic"
 )
@@ -27,21 +26,35 @@ func (t *TxDependency) Swap(new []TxnIndex) []TxnIndex {
 	return old
 }
 
+// StatusEntry contains both execution and validation status for a transaction
+type StatusEntry struct {
+	execution  ExecutionStatus
+	validation ValidationStatus
+}
+
+type CommitState struct {
+	// next transaction to commit
+	Index TxnIndex
+	// sweeping lower bound on the wave of a validation that must
+	// be successful in order to commit the next transaction.
+	// it's the maximum triggered wave in transactions [0, Index].
+	Wave Wave
+}
+
 // Scheduler implements the scheduler for the block-stm
 // ref: `Algorithm 4 The Scheduler module, variables, utility APIs and next task logic`
 type Scheduler struct {
 	blockSize int
 
 	// An index that tracks the next transaction to try and execute.
-	executionIdx atomic.Uint64
+	executionIdx atomic.Uint32
 	// A similar index for tracking validation.
 	validationIdx atomic.Uint64
-	// Number of times validationIdx or executionIdx was decreased
-	decreaseCnt atomic.Uint64
-	// Number of ongoing validation and execution tasks
-	numActiveTasks atomic.Uint64
 	// Marker for completion
 	doneMarker atomic.Bool
+
+	commitLock  ArmedLock
+	commitState CommitState // commitState is only accessed when acquired commitLock
 
 	// txnIdx to a mutex-protected set of dependent transaction indices
 	txnDependency []TxDependency
@@ -54,71 +67,74 @@ type Scheduler struct {
 }
 
 func NewScheduler(blockSize int) *Scheduler {
-	return &Scheduler{
+	s := &Scheduler{
 		blockSize:     blockSize,
 		txnDependency: make([]TxDependency, blockSize),
 		txnStatus:     make([]StatusEntry, blockSize),
 	}
+	s.commitLock.Init()
+	for i := 0; i < blockSize; i++ {
+		s.txnStatus[i].validation.Init()
+	}
+	return s
 }
 
 func (s *Scheduler) Done() bool {
 	return s.doneMarker.Load()
 }
 
-func (s *Scheduler) DecreaseValidationIdx(target TxnIndex) {
-	StoreMin(&s.validationIdx, uint64(target))
-	s.decreaseCnt.Add(1)
-}
-
-func (s *Scheduler) CheckDone() {
-	observedCnt := s.decreaseCnt.Load()
-	if s.executionIdx.Load() >= uint64(s.blockSize) &&
-		s.validationIdx.Load() >= uint64(s.blockSize) &&
-		s.numActiveTasks.Load() == 0 {
-		if observedCnt == s.decreaseCnt.Load() {
-			s.doneMarker.Store(true)
-		}
+func (s *Scheduler) DecreaseValidationIdx(target TxnIndex) (Wave, bool) {
+	if int(target) == s.blockSize {
+		// DecreaseValidationIdx is called with `txn + 1`, so it can equal blockSize.
+		return 0, false
 	}
-	// avoid busy waiting
-	runtime.Gosched()
+
+	prev, ok := FetchUpdate(&s.validationIdx, func(current uint64) (uint64, bool) {
+		txnIdx, wave := UnpackValidationIdx(current)
+		if txnIdx > target {
+			s.txnStatus[target].validation.SetTriggeredWave(wave + 1)
+			return PackValidationIdx(target, wave+1), true
+		}
+		return current, false
+	})
+	if !ok {
+		return 0, false
+	}
+	_, wave := UnpackValidationIdx(prev)
+	return wave + 1, true
 }
 
 // TryIncarnate tries to incarnate a transaction index to execute.
 // Returns the transaction version if successful, otherwise returns invalid version.
-//
-// Invariant `numActiveTasks`: decreased if an invalid task is returned.
 func (s *Scheduler) TryIncarnate(idx TxnIndex) TxnVersion {
-	if int(idx) < s.blockSize {
-		if incarnation, ok := s.txnStatus[idx].TrySetExecuting(); ok {
+	if idx < TxnIndex(s.blockSize) {
+		if incarnation, ok := s.txnStatus[idx].execution.TrySetExecuting(); ok {
 			return TxnVersion{idx, incarnation}
 		}
 	}
-	DecrAtomic(&s.numActiveTasks)
 	return InvalidTxnVersion
 }
 
 // NextVersionToExecute get the next transaction index to execute,
 // returns invalid version if no task is available
-//
-// Invariant `numActiveTasks`: increased if a valid task is returned.
 func (s *Scheduler) NextVersionToExecute() TxnVersion {
-	if s.executionIdx.Load() >= uint64(s.blockSize) {
-		s.CheckDone()
+	if int(s.executionIdx.Load()) >= s.blockSize {
 		return InvalidTxnVersion
 	}
-	IncrAtomic(&s.numActiveTasks)
 	idxToExecute := s.executionIdx.Add(1) - 1
 	return s.TryIncarnate(TxnIndex(idxToExecute))
 }
 
 // TryValidateNextVersion get the next transaction index to validate,
 // returns invalid version if no task is available.
-func (s *Scheduler) TryValidateNextVersion(idxToValidate uint64) (TxnVersion, bool) {
-	if !s.validationIdx.CompareAndSwap(idxToValidate, idxToValidate+1) {
+func (s *Scheduler) TryValidateNextVersion(idxToValidate TxnIndex, wave Wave) (TxnVersion, bool) {
+	old := PackValidationIdx(idxToValidate, wave)
+	new := PackValidationIdx(idxToValidate+1, wave)
+	if !s.validationIdx.CompareAndSwap(old, new) {
 		return InvalidTxnVersion, false
 	}
 
-	incarnation, ok := s.txnStatus[idxToValidate].IsExecuted()
+	incarnation, ok := s.txnStatus[idxToValidate].execution.IsExecuted(false)
 	if !ok {
 		return InvalidTxnVersion, false
 	}
@@ -128,23 +144,20 @@ func (s *Scheduler) TryValidateNextVersion(idxToValidate uint64) (TxnVersion, bo
 
 // NextTask returns the transaction index and task kind for the next task to execute or validate,
 // returns invalid version if no task is available.
-//
-// Invariant `numActiveTasks`: increased if a valid task is returned.
-func (s *Scheduler) NextTask() (TxnVersion, TaskKind) {
-	validationIdx := s.validationIdx.Load()
-	executionIdx := s.executionIdx.Load()
+func (s *Scheduler) NextTask() (TxnVersion, Wave, TaskKind) {
+	validationIdx, wave := UnpackValidationIdx(s.validationIdx.Load())
+	executionIdx := TxnIndex(s.executionIdx.Load())
 
-	preferValidate := validationIdx < min(executionIdx, uint64(s.blockSize)) &&
-		s.txnStatus[validationIdx].ExecutedOnce()
+	preferValidate := validationIdx < min(executionIdx, TxnIndex(s.blockSize)) &&
+		s.txnStatus[validationIdx].execution.ExecutedOnce()
 
 	if preferValidate {
-		if version, ok := s.TryValidateNextVersion(validationIdx); ok {
-			IncrAtomic(&s.numActiveTasks)
-			return version, TaskKindValidation
+		if version, ok := s.TryValidateNextVersion(validationIdx, wave); ok {
+			return version, wave, TaskKindValidation
 		}
 	}
 
-	return s.NextVersionToExecute(), TaskKindExecution
+	return s.NextVersionToExecute(), 0, TaskKindExecution
 }
 
 func (s *Scheduler) WaitForDependency(txn, blockingTxn TxnIndex) *Condvar {
@@ -153,13 +166,13 @@ func (s *Scheduler) WaitForDependency(txn, blockingTxn TxnIndex) *Condvar {
 	entry.Lock()
 
 	// thread holds 2 locks
-	if _, ok := s.txnStatus[blockingTxn].IsExecuted(); ok {
+	if _, ok := s.txnStatus[blockingTxn].execution.IsExecuted(true); ok {
 		// dependency resolved before entry.Lock() (https://github.com/cosmos/cosmos-sdk/blob/825fd620889acac4d0fd1bf0f9370651d2ee6610/blockstm/scheduler.go#L152) was acquired
 		entry.Unlock()
 		return nil
 	}
 
-	s.txnStatus[txn].Suspend(cond)
+	s.txnStatus[txn].execution.Suspend(cond)
 	entry.dependents = append(entry.dependents, txn)
 	entry.Unlock()
 
@@ -168,46 +181,123 @@ func (s *Scheduler) WaitForDependency(txn, blockingTxn TxnIndex) *Condvar {
 
 func (s *Scheduler) ResumeDependencies(txns []TxnIndex) {
 	for _, txn := range txns {
-		s.txnStatus[txn].Resume()
+		s.txnStatus[txn].execution.Resume()
 	}
 }
 
 // FinishExecution marks an execution task as complete.
-// Invariant `numActiveTasks`: decreased if an invalid task is returned.
-func (s *Scheduler) FinishExecution(version TxnVersion, wroteNewPath bool) (TxnVersion, TaskKind) {
-	s.txnStatus[version.Index].SetExecuted()
+func (s *Scheduler) FinishExecution(version TxnVersion, wroteNewPath bool) (TxnVersion, Wave, TaskKind) {
+	// grab validation status lock before execution status is changed
+	validationStatus := &s.txnStatus[version.Index].validation
+	validationStatus.Lock()
+	defer validationStatus.Unlock()
+
+	s.txnStatus[version.Index].execution.SetExecuted()
 
 	deps := s.txnDependency[version.Index].Swap(nil)
 	s.ResumeDependencies(deps)
-	if s.validationIdx.Load() > uint64(version.Index) { // otherwise index already small enough
-		if !wroteNewPath {
-			// schedule validation for current tx only, don't decrease numActiveTasks
-			return version, TaskKindValidation
+	validationIdx, wave := UnpackValidationIdx(s.validationIdx.Load())
+	if validationIdx > TxnIndex(version.Index) { // otherwise index already small enough
+		if wroteNewPath {
+			// schedule validation wave for higher txns
+			curWave, ok := s.DecreaseValidationIdx(version.Index + 1)
+			if ok {
+				wave = curWave
+			}
 		}
-		// schedule validation for txnIdx and higher txns
-		s.DecreaseValidationIdx(version.Index)
+
+		// schedule specific validation for current tx
+		validationStatus.RequiredWave = wave
+		return version, wave, TaskKindValidation
 	}
-	DecrAtomic(&s.numActiveTasks)
-	return InvalidTxnVersion, 0
+	return InvalidTxnVersion, 0, 0
 }
 
 func (s *Scheduler) TryValidationAbort(version TxnVersion) bool {
-	return s.txnStatus[version.Index].TryValidationAbort(version.Incarnation)
+	return s.txnStatus[version.Index].execution.TryValidationAbort(version.Incarnation)
 }
 
 // FinishValidation marks a validation task as complete.
-// Invariant `numActiveTasks`: decreased if an invalid task is returned.
-func (s *Scheduler) FinishValidation(txn TxnIndex, aborted bool) (TxnVersion, TaskKind) {
+func (s *Scheduler) FinishValidation(txn TxnIndex, wave Wave, aborted bool, valid bool) (TxnVersion, TaskKind) {
 	if aborted {
-		s.txnStatus[txn].SetReadyStatus()
+		s.txnStatus[txn].execution.SetReadyStatus()
 		s.DecreaseValidationIdx(txn + 1)
-		if s.executionIdx.Load() > uint64(txn) {
+		if TxnIndex(s.executionIdx.Load()) > txn {
 			return s.TryIncarnate(txn), TaskKindExecution
 		}
 	}
 
-	DecrAtomic(&s.numActiveTasks)
+	if valid {
+		// process validation wave
+		s.txnStatus[txn].validation.SetValidatedWave(wave)
+		// mark as commitable
+		s.commitLock.Arm()
+	}
+
 	return InvalidTxnVersion, 0
+}
+
+// TryCommit is called with commitLock held, no concurrency.
+func (s *Scheduler) TryCommit() (TxnIndex, Incarnation, bool) {
+	commitIdx := s.commitState.Index
+	if commitIdx == TxnIndex(s.blockSize) {
+		return 0, 0, false
+	}
+
+	validationStatus := &s.txnStatus[commitIdx].validation
+	if !validationStatus.TryLock() {
+		return 0, 0, false
+	}
+	defer validationStatus.Unlock()
+
+	execStatus := &s.txnStatus[commitIdx].execution
+	if !execStatus.TryLock() {
+		return 0, 0, false
+	}
+	defer execStatus.Unlock()
+
+	if execStatus.status != StatusExecuted {
+		// not yet executed
+		return 0, 0, false
+	}
+
+	// update commit wave with triggered wave of this txn
+	s.commitState.Wave = max(s.commitState.Wave, validationStatus.TriggeredWave)
+
+	// check if validated wave is late enough
+	if validationStatus.ValidatedWave < 0 {
+		// not yet validated
+		return 0, 0, false
+	}
+	if Wave(validationStatus.ValidatedWave) < max(s.commitState.Wave, validationStatus.RequiredWave) {
+		// not late enough
+		return 0, 0, false
+	}
+
+	execStatus.status = StatusCommitted
+
+	s.commitState.Index++
+	if s.commitState.Index == TxnIndex(s.blockSize) {
+		s.doneMarker.Store(true)
+	}
+
+	return commitIdx, execStatus.incarnation, true
+}
+
+func (s *Scheduler) ProcessCommits() {
+	// keep processing if there's work to do and we can acquire the lock
+	for s.commitLock.TryLock() {
+		for {
+			_, _, ok := s.TryCommit()
+			if !ok {
+				break
+			}
+
+			// TODO commit handling
+		}
+
+		s.commitLock.Unlock()
+	}
 }
 
 func (s *Scheduler) Stats() string {

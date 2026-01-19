@@ -111,25 +111,19 @@ func (s *Scheduler) NextVersionToExecute() TxnVersion {
 	return s.TryIncarnate(TxnIndex(idxToExecute))
 }
 
-// NextVersionToValidate get the next transaction index to validate,
+// TryValidateNextVersion get the next transaction index to validate,
 // returns invalid version if no task is available.
-//
-// Invariant `numActiveTasks`: increased if a valid task is returned.
-func (s *Scheduler) NextVersionToValidate() TxnVersion {
-	if s.validationIdx.Load() >= uint64(s.blockSize) {
-		s.CheckDone()
-		return InvalidTxnVersion
-	}
-	IncrAtomic(&s.numActiveTasks)
-	idxToValidate := FetchIncr(&s.validationIdx)
-	if idxToValidate < uint64(s.blockSize) {
-		if incarnation, ok := s.txnStatus[idxToValidate].IsExecuted(); ok {
-			return TxnVersion{TxnIndex(idxToValidate), incarnation}
-		}
+func (s *Scheduler) TryValidateNextVersion(idxToValidate uint64) (TxnVersion, bool) {
+	if !s.validationIdx.CompareAndSwap(idxToValidate, idxToValidate+1) {
+		return InvalidTxnVersion, false
 	}
 
-	DecrAtomic(&s.numActiveTasks)
-	return InvalidTxnVersion
+	incarnation, ok := s.txnStatus[idxToValidate].IsExecuted()
+	if !ok {
+		return InvalidTxnVersion, false
+	}
+
+	return TxnVersion{TxnIndex(idxToValidate), incarnation}, true
 }
 
 // NextTask returns the transaction index and task kind for the next task to execute or validate,
@@ -139,11 +133,18 @@ func (s *Scheduler) NextVersionToValidate() TxnVersion {
 func (s *Scheduler) NextTask() (TxnVersion, TaskKind) {
 	validationIdx := s.validationIdx.Load()
 	executionIdx := s.executionIdx.Load()
-	if validationIdx < executionIdx {
-		return s.NextVersionToValidate(), TaskKindValidation
-	} else {
-		return s.NextVersionToExecute(), TaskKindExecution
+
+	preferValidate := validationIdx < min(executionIdx, uint64(s.blockSize)) &&
+		s.txnStatus[validationIdx].ExecutedOnce()
+
+	if preferValidate {
+		if version, ok := s.TryValidateNextVersion(validationIdx); ok {
+			IncrAtomic(&s.numActiveTasks)
+			return version, TaskKindValidation
+		}
 	}
+
+	return s.NextVersionToExecute(), TaskKindExecution
 }
 
 func (s *Scheduler) WaitForDependency(txn, blockingTxn TxnIndex) *Condvar {

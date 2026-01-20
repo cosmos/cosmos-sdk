@@ -44,7 +44,7 @@ jobs:
 
     - name: Setup Go
       if: matrix.language == 'go'
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v6
       with:
         go-version: '1.x'
 

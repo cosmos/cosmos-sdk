@@ -129,7 +129,7 @@ A copy of the cached context is provided to the `AnteHandler`, which performs li
 For example, the [`auth`](https://github.com/cosmos/cosmos-sdk/tree/main/x/auth/spec) module `AnteHandler` checks and increments sequence numbers, checks signatures and account numbers, and deducts fees from the first signer of the transaction - all state changes are made using the `checkState`.
 
 :::warning
-Ante handlers only run on a transaction. If a transaction embed multiple messages (like some x/authz, x/gov transactions for instance), the ante handlers only have awareness of the outer message. Inner messages are mostly directly routed to the [message router](https://docs.cosmos.network/main/learn/advanced/baseapp#msg-service-router) and will skip the chain of ante handlers. Keep that in mind when designing your own ante handler.
+Ante handlers only run on a transaction. If a transaction embeds multiple messages (like some x/authz, x/gov transactions for instance), the ante handlers only have awareness of the outer message. Inner messages are mostly directly routed to the [message router](https://docs.cosmos.network/main/learn/advanced/baseapp#msg-service-router) and will skip the chain of ante handlers. Keep that in mind when designing your own ante handler.
 :::
 
 ### Gas
@@ -246,7 +246,7 @@ Instead of using their `checkState`, full-nodes use `finalizeblock`:
   
 * **`Msg` service:** Protobuf `Msg` service is responsible for executing each message in the `Tx` and causes state transitions to persist in `finalizeBlockState`.
 
-* **PostHandlers:** [`PostHandler`](../advanced/00-baseapp.md#posthandler)s run after the execution of the message. If they fail, the state change of `runMsgs`, as well of `PostHandlers`, are both reverted.
+* **PostHandlers:** [`PostHandler`](../advanced/00-baseapp.md#posthandler)s run after the execution of the message. If they fail, the state change of `runMsgs`, as well as `PostHandlers`, are both reverted.
 
 * **Gas:** While a `Tx` is being delivered, a `GasMeter` is used to keep track of how much
   gas is being used; if execution completes, `GasUsed` is set and returned in the

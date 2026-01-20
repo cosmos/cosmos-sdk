@@ -843,7 +843,7 @@ following hooks can registered with staking:
     * called when a delegation is created or modified
 * `BeforeValidatorSlashed(Context, ValAddress, math.LegacyDec) error`
     * called when a validator is about to be slashed
-* `AfterUnbondingInitiated(Context, UnbondingID) error`
+* `AfterUnbondingInitiated(Context, uint64) error`
     * called when an unbonding operation (validator unbonding, unbonding delegation, redelegation) was initiated
 
 

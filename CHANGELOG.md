@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Breaking Changes
 
+* [#25778](https://github.com/cosmos/cosmos-sdk/pull/25778) Update `log` to log v2.
 * [#25090](https://github.com/cosmos/cosmos-sdk/pull/25090) Moved deprecated modules to `./contrib`.  These modules are still available but will no longer be actively maintained or supported in the Cosmos SDK Bug Bounty program.
     * `x/group`
     * `x/nft`
@@ -76,6 +77,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (api) [#25613](https://github.com/cosmos/cosmos-sdk/pull/25613) Separated deprecated modules into the contrib directory, distinct from api, to enable and unblock new proto changes without affecting legacy code.
 * (server) [#25632](https://github.com/cosmos/cosmos-sdk/pull/25632) Add missing call to close the app on shutdown.
 * (server) [#25740](https://github.com/cosmos/cosmos-sdk/pull/25740) Add variadic `grpc.DialOption` parameter to `StartGrpcServer` for custom gRPC client connection options.
+* (blockstm) [#25765](https://github.com/cosmos/cosmos-sdk/pull/25765) Minor code readability improvement in block-stm.
 
 ### Bug Fixes
 
@@ -91,6 +93,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/staking) [#25258](https://github.com/cosmos/cosmos-sdk/pull/25258) Add delegator address to redelegate event.
 * (cli) [#25485](https://github.com/cosmos/cosmos-sdk/pull/25485) Avoid failed to convert address field in `withdraw-validator-commission` cmd.
 * (baseapp) [#25642](https://github.com/cosmos/cosmos-sdk/pull/25642) Mark pre-block events for indexing based on local configuration.
+* (x/bank) [#25751)](https://github.com/cosmos/cosmos-sdk/pull/25751) Fix recipient address in events.
 
 ### Deprecated
 

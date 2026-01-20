@@ -333,6 +333,11 @@ func (r *statefulUnpacker) UnpackAny(any *Any, iface interface{}) error {
 		return nil
 	}
 
+	// if Value is empty (nil or empty slice), return nil because there's nothing to unmarshal
+	if len(any.Value) == 0 {
+		return nil
+	}
+
 	r.maxCalls.count--
 
 	rv := reflect.ValueOf(iface)

@@ -24,7 +24,7 @@
   </a>
 </div>
 
-The Cosmos SDK is a modular, open-source blockchain SDK for building secure, high-performance Layer 1 chains with full customizability used by 200+ chains in production.   Developers can use the Cosmos SDK to easily and quickly spin up custom blockchains that can natively interoperate.
+The Cosmos SDK is a modular, open-source blockchain SDK for building secure, high-performance Layer 1 chains with full customizability used by 200+ chains in production. Developers can use the Cosmos SDK to easily and quickly spin up custom blockchains that can natively interoperate.
 
 The Cosmos SDK is tailored for building secure, sovereign application-specific blockchains. Developers building with the Cosmos SDK can use predefined modules that cover standard blockchain functionality or create custom modules for their specific use case. This composable architecture enables robust customization. The SDK provides abstractions for permissioning, governance, state management, account abstraction, tokenization processes, application logic, and more.
 
@@ -36,9 +36,9 @@ While the Cosmos SDK is plug-and-play with any consensus engine, we recommend us
 
 ## Quick Start
 
-To learn how the Cosmos SDK works from a high-level perspective, see the Cosmos SDK [High-Level Intro](https://docs.cosmos.network/main/intro/overview).
+To learn how the Cosmos SDK works from a high-level perspective, see the Cosmos SDK [High-Level Intro](https://docs.cosmos.network/sdk/v0.53/learn/intro/overview).
 
-If you want to get started quickly and learn how to build on top of Cosmos SDK, visit [Cosmos SDK Tutorials](https://tutorials.cosmos.network). You can also fork the tutorial's repository to get started building your own Cosmos SDK application.
+If you want to get started quickly and run a blockchain, visit [Cosmos SDK Node Tutorial](https://docs.cosmos.network/sdk/v0.53/tutorials).
 
 Note: We advise to always use the latest maintained [Go version](https://go.dev/dl/) for building Cosmos SDK applications.
 
@@ -55,7 +55,7 @@ Cosmos Labs is a wholly-owned subsidiary of the [Interchain Foundation](https://
 The Cosmos Stack is supported by a robust community of open-source contributors. 
 
 ## History
-The Cosmos SDK was first released in 2019, and the first blockchain to use the SDK in production was the [Cosmos Hub](https://hub.cosmos.network/main). Today, the Cosmos SDK is a popular, battle-tested, open-source framework used by hundreds of chains.
+The Cosmos SDK was first released in 2019, and the first blockchain to use the SDK in production was the [Cosmos Hub](https://docs.cosmos.network/hub/v25). Today, the Cosmos SDK is a popular, battle-tested, open-source framework used by hundreds of chains.
 
 The Cosmos Hub still receives the most up-to-date Cosmos SDK versions. The Cosmos Hub application, `gaia`, has its own [cosmos/gaia repository](https://github.com/cosmos/gaia). 
 
@@ -66,7 +66,8 @@ The issue list of this repo is exclusively for bug reports and feature requests.
 **| Need Help? | Support & Community: [Discord](https://discord.com/invite/interchain) - [Telegram](https://t.me/CosmosOG) - [Talk to an Expert](https://cosmos.network/interest-form) - [Join the #Cosmos-tech Slack Channel](https://forms.gle/A8jawLgB8zuL1FN36) |**
 
 ## Documentation and Resources
-**View the Cosmos SDK documentation: https://docs.cosmos.network/**
+
+Visit the official Cosmos SDK documentation at https://docs.cosmos.network/
 
 ### Cosmos Stack Libraries
 

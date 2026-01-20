@@ -3,9 +3,10 @@
 package slog
 
 import (
+	"context"
 	"log/slog"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 )
 
 var _ log.Logger = Logger{}
@@ -28,16 +29,32 @@ func (l Logger) Info(msg string, keyVals ...any) {
 	l.log.Info(msg, keyVals...)
 }
 
+func (l Logger) InfoContext(ctx context.Context, msg string, keyVals ...any) {
+	l.log.InfoContext(ctx, msg, keyVals...)
+}
+
 func (l Logger) Warn(msg string, keyVals ...any) {
 	l.log.Warn(msg, keyVals...)
+}
+
+func (l Logger) WarnContext(ctx context.Context, msg string, keyVals ...any) {
+	l.log.WarnContext(ctx, msg, keyVals...)
 }
 
 func (l Logger) Error(msg string, keyVals ...any) {
 	l.log.Error(msg, keyVals...)
 }
 
+func (l Logger) ErrorContext(ctx context.Context, msg string, keyVals ...any) {
+	l.log.ErrorContext(ctx, msg, keyVals...)
+}
+
 func (l Logger) Debug(msg string, keyVals ...any) {
 	l.log.Debug(msg, keyVals...)
+}
+
+func (l Logger) DebugContext(ctx context.Context, msg string, keyVals ...any) {
+	l.log.DebugContext(ctx, msg, keyVals...)
 }
 
 func (l Logger) With(keyVals ...any) log.Logger {

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/cosmos/gogoproto/proto"
+	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
@@ -71,4 +72,82 @@ func BenchmarkNewAnyWithCustomTypeURLWithErrorReturned(b *testing.B) {
 		b.Fatal("benchmark didn't run")
 	}
 	sink = (any)(nil)
+}
+
+// TestUnpackAnyWithEmptyValue tests the fix for handling empty any.Value.
+// Before the fix, when any.Value was nil or empty, proto.Unmarshal would succeed
+// (because unmarshaling empty data is valid - it creates an empty message),
+// but then we'd be assigning a nil/empty value which could cause issues.
+// The fix adds a check for empty any.Value before attempting to unmarshal.
+func TestUnpackAnyWithEmptyValue(t *testing.T) {
+	registry := types.NewInterfaceRegistry()
+	registry.RegisterInterface("Animal", (*testdata.Animal)(nil))
+	registry.RegisterImplementations(
+		(*testdata.Animal)(nil),
+		&testdata.Dog{},
+		&testdata.Cat{},
+	)
+
+	t.Run("nil Value returns nil without error", func(t *testing.T) {
+		any := &types.Any{
+			TypeUrl: "/testdata.Dog",
+			Value:   nil,
+		}
+
+		var animal testdata.Animal
+		err := registry.UnpackAny(any, &animal)
+		require.NoError(t, err)
+		require.Nil(t, animal, "animal should be nil when Value is nil")
+	})
+
+	t.Run("empty slice Value returns nil without error", func(t *testing.T) {
+		any := &types.Any{
+			TypeUrl: "/testdata.Dog",
+			Value:   []byte{},
+		}
+
+		var animal testdata.Animal
+		err := registry.UnpackAny(any, &animal)
+		require.NoError(t, err)
+		require.Nil(t, animal, "animal should be nil when Value is empty")
+	})
+
+	t.Run("valid Value unmarshals correctly", func(t *testing.T) {
+		// Create a valid Any with actual data
+		dog := &testdata.Dog{Name: "Rufus"}
+		any, err := types.NewAnyWithValue(dog)
+		require.NoError(t, err)
+		require.NotNil(t, any)
+		require.NotEmpty(t, any.Value, "Value should not be empty for valid message")
+
+		var animal testdata.Animal
+		err = registry.UnpackAny(any, &animal)
+		require.NoError(t, err)
+		require.NotNil(t, animal, "animal should not be nil when Value has valid data")
+		require.Equal(t, dog, animal)
+	})
+
+	t.Run("empty Value with empty TypeUrl returns nil", func(t *testing.T) {
+		any := &types.Any{
+			TypeUrl: "",
+			Value:   []byte{},
+		}
+
+		var animal testdata.Animal
+		err := registry.UnpackAny(any, &animal)
+		require.NoError(t, err)
+		require.Nil(t, animal, "animal should be nil when TypeUrl is empty")
+	})
+
+	t.Run("nil Value with empty TypeUrl returns nil", func(t *testing.T) {
+		any := &types.Any{
+			TypeUrl: "",
+			Value:   nil,
+		}
+
+		var animal testdata.Animal
+		err := registry.UnpackAny(any, &animal)
+		require.NoError(t, err)
+		require.Nil(t, animal, "animal should be nil when TypeUrl is empty")
+	})
 }

@@ -51,8 +51,10 @@ func (ts *TreeStore) SaveRoot(newRoot *NodePointer) error {
 	// if we are at rollover size, create new changeset writer
 	writer := ts.currentWriter
 	if writer.WALWriter().Size() >= ts.opts.ChangesetRolloverSize {
-		ts.checkpointer.Checkpoint(writer, newRoot, version, true)
-		var err error
+		err := ts.checkpointer.Checkpoint(writer, newRoot, version, true)
+		if err != nil {
+			return fmt.Errorf("failed to checkpoint changeset: %w", err)
+		}
 		ts.currentWriter, err = NewChangesetWriter(ts.dir, ts.StagedVersion(), ts)
 		if err != nil {
 			return fmt.Errorf("failed to create new changeset writer: %w", err)

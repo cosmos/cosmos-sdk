@@ -63,13 +63,19 @@ func (cp *Checkpointer) ChangesetByVersion(version uint32) *Changeset {
 	return res
 }
 
-func (cp *Checkpointer) Checkpoint(writer *ChangesetWriter, root *NodePointer, version uint32, seal bool) {
+func (cp *Checkpointer) Checkpoint(writer *ChangesetWriter, root *NodePointer, version uint32, seal bool) error {
+	select {
+	case err := <-cp.doneChan:
+		return err
+	default:
+	}
 	cp.reqChan <- checkpointReq{
 		writer:  writer,
 		root:    root,
 		version: version,
 		seal:    seal,
 	}
+	return nil
 }
 
 func (cp *Checkpointer) proc() error {

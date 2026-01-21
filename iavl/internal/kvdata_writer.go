@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"os"
+	"sync"
 	"unsafe"
 )
 
@@ -11,7 +12,7 @@ import (
 // and blob storage for keys and values.
 type KVDataWriter struct {
 	*FileWriter
-	keyCache map[string]Uint40
+	keyCache sync.Map
 }
 
 type WALWriter struct {
@@ -23,7 +24,6 @@ func NewKVDataWriter(file *os.File) *KVDataWriter {
 	fw := NewFileWriter(file)
 	return &KVDataWriter{
 		FileWriter: fw,
-		keyCache:   make(map[string]Uint40),
 	}
 }
 
@@ -81,10 +81,11 @@ func (kvs *WALWriter) WriteWALUpdates(updates []KVUpdate) error {
 
 // WriteWALSet writes a WAL set entry for the given key and value and returns their offsets in the file.
 func (kvs *WALWriter) WriteWALSet(key, value []byte) (keyOffset, valueOffset Uint40, err error) {
-	keyOffset, cached := kvs.writer.keyCache[unsafeBytesToString(key)]
+	keyOffsetAny, cached := kvs.writer.keyCache.Load(unsafeBytesToString(key))
 	typ := KVEntryWALSet
 	if cached {
 		typ |= KVFlagCachedKey
+		keyOffset = keyOffsetAny.(Uint40)
 	}
 	err = kvs.writer.writeType(typ)
 	if err != nil {
@@ -114,10 +115,12 @@ func (kvs *WALWriter) WriteWALSet(key, value []byte) (keyOffset, valueOffset Uin
 
 // WriteWALDelete writes a WAL delete entry for the given key.
 func (kvs *WALWriter) WriteWALDelete(key []byte) error {
-	cachedOffset, cached := kvs.writer.keyCache[unsafeBytesToString(key)]
+	cachedOffsetAny, cached := kvs.writer.keyCache.Load(unsafeBytesToString(key))
 	typ := KVEntryWALDelete
+	var cachedOffset Uint40
 	if cached {
 		typ |= KVFlagCachedKey
+		cachedOffset = cachedOffsetAny.(Uint40)
 	}
 	err := kvs.writer.writeType(typ)
 	if err != nil {
@@ -161,8 +164,11 @@ func (kvs *WALWriter) Size() int {
 
 // LookupKeyOffset looks up the offset of the given key in the key cache.
 func (kvs *WALWriter) LookupKeyOffset(key []byte) (Uint40, bool) {
-	offset, found := kvs.writer.keyCache[unsafeBytesToString(key)]
-	return offset, found
+	offset, found := kvs.writer.keyCache.Load(unsafeBytesToString(key))
+	if found {
+		return offset.(Uint40), true
+	}
+	return Uint40{}, false
 }
 
 const (
@@ -179,8 +185,8 @@ func (kvs *KVDataWriter) WriteKeyBlob(key []byte) (offset Uint40, err error) {
 		return Uint40{}, fmt.Errorf("key size exceeds maximum of %d bytes: %d bytes", MaxKeySize, len(key))
 	}
 
-	if offset, found := kvs.keyCache[unsafeBytesToString(key)]; found {
-		return offset, nil
+	if offsetAny, found := kvs.keyCache.Load(unsafeBytesToString(key)); found {
+		return offsetAny.(Uint40), nil
 	}
 
 	offset, err = kvs.writeBlob(KVEntryKeyBlob, key)
@@ -232,7 +238,7 @@ func (kvs *KVDataWriter) addKeyToCache(key []byte, offset Uint40) {
 		// don't cache very small keys
 		return
 	}
-	kvs.keyCache[unsafeBytesToString(key)] = offset
+	kvs.keyCache.Store(unsafeBytesToString(key), offset)
 }
 
 func (kvs *KVDataWriter) writeType(x KVEntryType) error {

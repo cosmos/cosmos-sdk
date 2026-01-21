@@ -278,7 +278,7 @@ func (pc *ProtoCodec) MarshalInterfaceJSON(x gogoproto.Message) ([]byte, error) 
 // Example:
 //
 //	var x MyInterface  // must implement proto.Message
-//	err := cdc.UnmarshalInterfaceJSON(&x, bz)
+//	err := cdc.UnmarshalInterfaceJSON(bz, &x)
 func (pc *ProtoCodec) UnmarshalInterfaceJSON(bz []byte, iface any) error {
 	any := &types.Any{}
 	err := pc.UnmarshalJSON(bz, any)

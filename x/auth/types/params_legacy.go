@@ -25,7 +25,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-// ParamSetPairs implements the ParamSet interface and returns all the key/value pairs
+// ParamSetPairs implements the ParamSet interface and returns all the key/value
 // pairs of auth module's parameters.
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{

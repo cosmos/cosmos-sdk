@@ -14,14 +14,13 @@ func NewChangeset(treeStore *TreeStore) *Changeset {
 func (h *Changeset) TryPinReader() (*ChangesetReader, Pin) {
 	pinner := h.readerRef.Load()
 	if pinner == nil {
-		return nil, nil
+		return nil, NoopPin{}
 	}
 	return pinner.TryPin()
 }
 
-func (h *Changeset) PinCompactedReader(layer uint32) (*ChangesetReader, Pin) {
-	panic("not implemented")
-	//return h.treeStore.GetChangesetForLayer(layer)
+func (h *Changeset) TreeStore() *TreeStore {
+	return h.treeStore
 }
 
 func (h *Changeset) SwapActiveReader(newRdr *ChangesetReader) *ChangesetReaderRef {

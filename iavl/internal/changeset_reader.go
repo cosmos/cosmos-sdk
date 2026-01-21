@@ -130,7 +130,7 @@ func (cr *ChangesetReader) getLayerInfo(layer uint32) (*LayerInfo, error) {
 	if layer < startLayer || layer > endLayer {
 		return nil, fmt.Errorf("layer %d out of range for changeset (have %d..%d)", layer, startLayer, endLayer)
 	}
-	return cr.layersInfo.UnsafeItem(layer - info.StartVersion), nil
+	return cr.layersInfo.UnsafeItem(layer - startLayer), nil
 }
 
 func (cr *ChangesetReader) Changeset() *Changeset {
@@ -196,7 +196,29 @@ func (cr *ChangesetReader) Close() error {
 	return errors.Join(errs...)
 }
 
-func (cr *ChangesetReader) ResolveByIndex(id NodeID, idx uint32) (Node, error) {
+func (cr *ChangesetReader) ResolveByID(id NodeID) (Node, error) {
+	if id.IsLeaf() {
+		leafLayout, err := cr.ResolveLeafByID(id)
+		if err != nil {
+			return nil, err
+		}
+		return &LeafPersisted{
+			store:  cr,
+			layout: leafLayout,
+		}, nil
+	} else {
+		branchLayout, err := cr.ResolveBranchByID(id)
+		if err != nil {
+			return nil, err
+		}
+		return &BranchPersisted{
+			store:  cr,
+			layout: branchLayout,
+		}, nil
+	}
+}
+
+func (cr *ChangesetReader) ResolveByFileIndex(id NodeID, idx uint32) (Node, error) {
 	if id.IsLeaf() {
 		leafLayout, err := cr.ResolveLeafByIndex(idx)
 		if err != nil {

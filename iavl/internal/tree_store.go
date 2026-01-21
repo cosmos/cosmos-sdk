@@ -91,6 +91,10 @@ func (ts *TreeStore) WriteWALUpdates(updates []KVUpdate, fsync bool) error {
 	return nil
 }
 
+func (ts *TreeStore) ChangesetForLayer(layer uint32) *Changeset {
+	return ts.checkpointer.ChangesetByLayer(layer)
+}
+
 func (ts *TreeStore) ForceToDisk() error {
 	return fmt.Errorf("ForceToDisk disabled")
 }

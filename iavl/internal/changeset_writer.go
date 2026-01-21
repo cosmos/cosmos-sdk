@@ -69,14 +69,15 @@ func (cs *ChangesetWriter) SaveLayer(layer uint32, root *NodePointer) error {
 		cs.layer = layer
 	}
 
+	var layerInfo LayerInfo
+	layerInfo.Branches.StartOffset = uint32(cs.branchesData.Count())
+	layerInfo.Leaves.StartOffset = uint32(cs.leavesData.Count())
+
 	rootVersion, err := cs.writeNode(root)
 	if err != nil {
 		return err
 	}
 
-	var layerInfo LayerInfo
-	layerInfo.Branches.StartOffset = uint32(cs.branchesData.Count())
-	layerInfo.Leaves.StartOffset = uint32(cs.leavesData.Count())
 	layerInfo.RootID = root.id
 	layerInfo.Layer = layer
 	layerInfo.Version = rootVersion

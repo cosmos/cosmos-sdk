@@ -36,12 +36,26 @@ func (p *NodePointer) Resolve() (Node, Pin, error) {
 	if mem != nil {
 		return mem, NoopPin{}, nil
 	}
-	rdr, pin := p.changeset.TryPinReader()
-	if rdr != nil {
-		node, err := rdr.ResolveByIndex(p.id, p.fileIdx)
-		return node, pin, err
+	if p.fileIdx != 0 {
+		rdr, pin := p.changeset.TryPinReader()
+		if rdr != nil {
+			node, err := rdr.ResolveByFileIndex(p.id, p.fileIdx)
+			return node, pin, err
+		} else {
+			return nil, NoopPin{}, fmt.Errorf("unable to pin ChangesetReader for layer %d, compaction resolution not enabled", p.id.Layer())
+		}
 	} else {
-		panic("unable to pin changeset reader")
+		cs := p.changeset.TreeStore().ChangesetForLayer(p.id.Layer())
+		if cs == nil {
+			return nil, NoopPin{}, fmt.Errorf("unable to find Changeset for layer %d", p.id.Layer())
+		}
+		rdr, pin := cs.TryPinReader()
+		if rdr != nil {
+			node, err := rdr.ResolveByID(p.id)
+			return node, pin, err
+		} else {
+			return nil, NoopPin{}, fmt.Errorf("unable to pin ChangesetReader for layer %d, compaction resolution not enabled", p.id.Layer())
+		}
 	}
 }
 

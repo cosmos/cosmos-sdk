@@ -33,9 +33,19 @@ func NewCommitTree(dir string, opts Options) (*CommitTree, error) {
 		return nil, fmt.Errorf("creating tree directory: %w", err)
 	}
 
+	changesetRolloverSize := opts.ChangesetRolloverSize
+	if changesetRolloverSize == 0 {
+		changesetRolloverSize = 2 * 1024 * 1024 * 1024 // 2GB default
+	}
+	evictDepth := opts.EvictDepth
+	if evictDepth == 0 {
+		evictDepth = 16 // default evict depth 2^16 = 65536 leaf nodes
+	}
 	treeStore, err := internal.NewTreeStore(dir, internal.TreeStoreOptions{
-		ChangesetRolloverSize: 2 * 1024 * 1024 * 1024, // 2GB
+		ChangesetRolloverSize: changesetRolloverSize,
+		EvictDepth:            evictDepth,
 	})
+
 	if err != nil {
 		return nil, fmt.Errorf("creating tree store: %w", err)
 	}

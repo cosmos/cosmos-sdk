@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"os"
+	"runtime/debug"
 	"slices"
 	"testing"
 
@@ -27,11 +28,11 @@ func FuzzIAVLX(f *testing.F) {
 }
 
 func testIAVLXSims(t *rapid.T) {
-	//defer func() {
-	//	if r := recover(); r != nil {
-	//		t.Fatalf("panic recovered: %v\nStack trace:\n%s", r, debug.Stack())
-	//	}
-	//}()
+	defer func() {
+		if r := recover(); r != nil {
+			t.Fatalf("panic recovered: %v\nStack trace:\n%s", r, debug.Stack())
+		}
+	}()
 	// logger := sdklog.NewTestLogger(t)
 	logger := sdklog.NewNopLogger()
 	dbV1 := dbm.NewMemDB()
@@ -67,7 +68,12 @@ func (s *SimMachine) openV2Tree(t interface {
 	sdklog.TestingT
 }) {
 	var err error
-	s.treeV2, err = NewCommitTree(s.dirV2, Options{})
+	s.treeV2, err = NewCommitTree(s.dirV2, Options{
+		// intentionally choose some small sizes to force checkpoint and eviction behavior
+		ChangesetRolloverSize: 4096,
+		EvictDepth:            2,
+		FsyncWAL:              true,
+	})
 	require.NoError(t, err, "failed to create iavlx tree")
 }
 
@@ -116,11 +122,6 @@ func (s *SimMachine) checkNewVersion(t *rapid.T) {
 		defer pin.Unpin()
 		require.NoError(t, err, "failed to resolve latest node pointer in V2 tree")
 		require.NoError(t, internal.VerifyAVLInvariants(latest))
-	}
-
-	forceToDisk := rapid.Float64Range(0, 1).Draw(t, "forceToDisk")
-	if forceToDisk < 0.05 {
-		require.NoError(t, s.treeV2.ForceToDisk(), "failed to force V2 tree to disk")
 	}
 }
 

@@ -2,42 +2,41 @@ package internal
 
 import (
 	"fmt"
-	"sync"
 	"sync/atomic"
-
-	"github.com/tidwall/btree"
 )
 
 type TreeStoreOptions struct {
 	ChangesetRolloverSize int
-	CheckpointInterval    int
+	EvictDepth            uint8
+	//CheckpointInterval    int
 }
 
 type TreeStore struct {
+	dir  string
 	opts TreeStoreOptions
 
-	version    atomic.Uint32
-	savedLayer atomic.Uint32
+	version atomic.Uint32
+	root    atomic.Pointer[NodePointer]
 
 	currentWriter *ChangesetWriter
+	checkpointer  *Checkpointer
 
-	root *NodePointer
-
-	changesetsByVersion *btree.Map[uint32, *Changeset]
-	changesetsLock      sync.RWMutex
-	checkpointMgr       *checkpointMgr
-
-	latestRoots     *btree.Map[uint32, *NodePointer]
-	latestRootsLock sync.RWMutex
+	//latestRoots     *btree.Map[uint32, *NodePointer]
+	//latestRootsLock sync.RWMutex
 }
 
 func NewTreeStore(dir string, opts TreeStoreOptions) (*TreeStore, error) {
-	ts := &TreeStore{opts: opts}
-	writer, err := NewChangesetWriter(dir, 1, 1, ts)
+	ts := &TreeStore{
+		dir:          dir,
+		opts:         opts,
+		checkpointer: NewCheckpointer(BasicEvictor{EvictDepth: opts.EvictDepth}),
+	}
+	writer, err := NewChangesetWriter(dir, 1, ts)
 	if err != nil {
 		return nil, err
 	}
 	ts.currentWriter = writer
+
 	return ts, nil
 }
 
@@ -46,8 +45,20 @@ func (ts *TreeStore) StagedVersion() uint32 {
 }
 
 func (ts *TreeStore) SaveRoot(newRoot *NodePointer) error {
-	ts.root = newRoot
-	ts.version.Add(1)
+	ts.root.Store(newRoot)
+	version := ts.version.Add(1)
+
+	// if we are at rollover size, create new changeset writer
+	writer := ts.currentWriter
+	if writer.WALWriter().Size() >= ts.opts.ChangesetRolloverSize {
+		ts.checkpointer.Checkpoint(writer, newRoot, version, true)
+	}
+	var err error
+	ts.currentWriter, err = NewChangesetWriter(ts.dir, ts.StagedVersion(), ts)
+	if err != nil {
+		return fmt.Errorf("failed to create new changeset writer: %w", err)
+	}
+
 	return nil
 }
 
@@ -58,7 +69,9 @@ func (ts *TreeStore) WriteWALUpdates(updates []KVUpdate, fsync bool) error {
 		return err
 	}
 
-	err = walWriter.WriteWALCommit(uint64(ts.StagedVersion()))
+	version := ts.StagedVersion()
+
+	err = walWriter.WriteWALCommit(uint64(version))
 	if err != nil {
 		return err
 	}
@@ -70,99 +83,17 @@ func (ts *TreeStore) WriteWALUpdates(updates []KVUpdate, fsync bool) error {
 		}
 	}
 
-	// TODO if we are at rollover size, create new changeset writer
-	//if walWriter.Size() >= ts.opts.ChangesetRolloverSize {
-	//	ts.checkpointMgr.reqChan <- checkpointReq{
-	//		newWriter: ts.currentWriter,
-	//		root:      ts.root,
-	//	}
-	//}
-
 	return nil
 }
 
 func (ts *TreeStore) ForceToDisk() error {
-	// this is only for testing purposes, but we need to make sure the WAL is flushed
-	err := ts.currentWriter.WALWriter().Sync()
-	if err != nil {
-		return err
-	}
-
-	if ts.root == nil || ts.root.Mem.Load() == nil {
-		return nil
-	}
-	layer := ts.savedLayer.Load() + 1
-	err = ts.currentWriter.SaveLayer(layer, ts.root)
-	if err != nil {
-		return err
-	}
-	ts.savedLayer.Store(layer)
-	err = ts.currentWriter.CreatedSharedReader()
-	if err != nil {
-		return err
-	}
-	ts.root.Mem.Store(nil) // flush in-memory node
-	return nil
+	return fmt.Errorf("ForceToDisk disabled")
 }
 
 func (ts *TreeStore) Latest() *NodePointer {
-	return ts.root
+	return ts.root.Load()
 }
 
-func (ts *TreeStore) GetChangesetForLayer(layer uint32) (*ChangesetReader, Pin) {
-	panic("not implemented")
-}
-
-type checkpointMgr struct {
-	lastLayer         atomic.Uint32
-	reqChan           chan checkpointReq
-	changesetsByLayer *btree.Map[uint32, *Changeset]
-}
-
-func newCheckpointProc() *checkpointMgr {
-	return &checkpointMgr{
-		reqChan: make(chan checkpointReq),
-	}
-}
-
-func (cp *checkpointMgr) start(doneChan chan error) {
-	go func() {
-		err := cp.proc()
-		doneChan <- err
-	}()
-}
-
-func (cp *checkpointMgr) proc() error {
-	var curWriter *ChangesetWriter
-	for req := range cp.reqChan {
-		layer := cp.lastLayer.Load() + 1
-		if req.newWriter != nil {
-			if curWriter != nil {
-				err := curWriter.Seal()
-				if err != nil {
-					return err
-				}
-			}
-			curWriter = req.newWriter
-			cp.changesetsByLayer.Set(layer, curWriter.Changeset())
-		}
-		if curWriter == nil {
-			return fmt.Errorf("checkpointMgr: no current writer")
-		}
-		err := curWriter.SaveLayer(layer, req.root)
-		if err != nil {
-			return err
-		}
-		err = curWriter.Flush()
-		if err != nil {
-			return err
-		}
-		cp.lastLayer.Store(layer)
-	}
-	return nil
-}
-
-type checkpointReq struct {
-	newWriter *ChangesetWriter
-	root      *NodePointer
+func (ts *TreeStore) Close() error {
+	return ts.checkpointer.Close()
 }

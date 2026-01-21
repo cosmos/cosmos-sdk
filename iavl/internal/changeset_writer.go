@@ -21,7 +21,7 @@ type ChangesetWriter struct {
 	lastBranchIdx, lastLeafIdx uint32
 }
 
-func NewChangesetWriter(treeDir string, stagedLayer, stagedVersion uint32, treeStore *TreeStore) (*ChangesetWriter, error) {
+func NewChangesetWriter(treeDir string, stagedVersion uint32, treeStore *TreeStore) (*ChangesetWriter, error) {
 	files, err := CreateChangesetFiles(treeDir, stagedVersion, 0, true)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open changeset files: %w", err)
@@ -33,7 +33,6 @@ func NewChangesetWriter(treeDir string, stagedLayer, stagedVersion uint32, treeS
 	}
 
 	cs := &ChangesetWriter{
-		layer:        stagedLayer,
 		files:        files,
 		walWriter:    walWriter,
 		kvWriter:     NewKVDataWriter(files.KVDataFile()),
@@ -292,7 +291,26 @@ func (cs *ChangesetWriter) Flush() error {
 	)
 }
 
-func (cs *ChangesetWriter) Seal() error {
-	// TODO
+func (cs *ChangesetWriter) Seal(endVersion uint32) error {
+	cs.files.Info().EndVersion = endVersion
+	err := cs.Flush()
+	if err != nil {
+		return fmt.Errorf("failed to flush changeset data: %w", err)
+	}
+
+	rdr, err := NewChangesetReader(cs.changeset, cs.files, false)
+	if err != nil {
+		return fmt.Errorf("failed to create shared changeset reader: %w", err)
+	}
+
+	cs.changeset.SwapActiveReader(rdr)
+
+	// defensively nil out writers to prevent further use
+	cs.leavesData = nil
+	cs.branchesData = nil
+	cs.layersData = nil
+	cs.kvWriter = nil
+	cs.walWriter = nil
+
 	return nil
 }

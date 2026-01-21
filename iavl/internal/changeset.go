@@ -20,7 +20,8 @@ func (h *Changeset) TryPinReader() (*ChangesetReader, Pin) {
 }
 
 func (h *Changeset) PinCompactedReader(layer uint32) (*ChangesetReader, Pin) {
-	return h.treeStore.GetChangesetForLayer(layer)
+	panic("not implemented")
+	//return h.treeStore.GetChangesetForLayer(layer)
 }
 
 func (h *Changeset) SwapActiveReader(newRdr *ChangesetReader) *ChangesetReaderRef {

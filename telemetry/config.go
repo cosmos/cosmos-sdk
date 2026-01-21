@@ -16,9 +16,8 @@ import (
 	tracenoop "go.opentelemetry.io/otel/trace/noop"
 	"go.yaml.in/yaml/v3"
 
-	"github.com/cosmos/cosmos-sdk/telemetry/registry"
-
 	// Register instruments via init()
+	"github.com/cosmos/cosmos-sdk/telemetry/registry"
 	_ "github.com/cosmos/cosmos-sdk/telemetry/util/diskio"
 	_ "github.com/cosmos/cosmos-sdk/telemetry/util/host"
 	_ "github.com/cosmos/cosmos-sdk/telemetry/util/runtime"

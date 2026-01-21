@@ -96,7 +96,7 @@ func Start(opts ...Option) error {
 			}
 
 			for device, s := range stats {
-				if !isPhysicalDevice(device) {
+				if !c.DisableVirtualDeviceFilter && !isPhysicalDevice(device) {
 					continue
 				}
 				attrDevice := systemconv.DiskIO{}.AttrDevice(device)

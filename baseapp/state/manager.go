@@ -33,7 +33,7 @@ type Manager struct {
 	// previous block's state. This state is never committed. In case of multiple
 	// consensus rounds, the state is always reset to the previous block's state.
 	//
-	// - processProposalState: Used for ProcessProposal, which is set based on the
+	// - processProposalState: Used for ProcessProposal, which is set based on
 	// the previous block's state. This state is never committed. In case of
 	// multiple rounds, the state is always reset to the previous block's state.
 	//

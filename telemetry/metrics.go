@@ -71,7 +71,7 @@ type Config struct {
 	ServiceName string `mapstructure:"service-name"`
 
 	// Enabled enables the application telemetry functionality. When enabled,
-	// an in-memory sink is also enabled by default. Operators may also enabled
+	// an in-memory sink is also enabled by default. Operators may also enable
 	// other sinks such as Prometheus.
 	Enabled bool `mapstructure:"enabled"`
 

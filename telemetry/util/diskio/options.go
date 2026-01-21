@@ -16,6 +16,10 @@ type config struct {
 	// MeterProvider sets the metric.MeterProvider. If nil, the global
 	// Provider will be used.
 	MeterProvider metric.MeterProvider
+
+	// DisableVirtualDeviceFilter when true will include virtual storage devices in metrics.
+	// By default, virtual devices (loopback, RAID, partitions) are filtered out on Linux.
+	DisableVirtualDeviceFilter bool
 }
 
 // Option supports configuring optional settings for disk I/O metrics.
@@ -54,6 +58,18 @@ func (o metricProviderOption) apply(c *config) {
 	if o.MeterProvider != nil {
 		c.MeterProvider = o.MeterProvider
 	}
+}
+
+// WithDisableVirtualDeviceFilter disables the filtering of virtual disks from metrics.
+// By default, virtual devices (loopback, RAID, partitions) are filtered out on Linux.
+func WithDisableVirtualDeviceFilter() Option {
+	return disableVirtualDeviceFilterOption{}
+}
+
+type disableVirtualDeviceFilterOption struct{}
+
+func (o disableVirtualDeviceFilterOption) apply(c *config) {
+	c.DisableVirtualDeviceFilter = true
 }
 
 func newConfig(opts ...Option) config {

@@ -102,7 +102,11 @@ func InitializeOpenTelemetry(filePath string) error {
 			}
 			if extra.InstrumentDiskIO {
 				fmt.Println("Initializing disk I/O instrumentation")
-				if err := diskio.Start(); err != nil {
+				var diskIOOpts []diskio.Option
+				if extra.DisableVirtualDiskIOFilter {
+					diskIOOpts = append(diskIOOpts, diskio.WithDisableVirtualDeviceFilter())
+				}
+				if err := diskio.Start(diskIOOpts...); err != nil {
 					return fmt.Errorf("failed to start disk I/O instrumentation: %w", err)
 				}
 			}
@@ -208,6 +212,10 @@ type cosmosExtra struct {
 	// InstrumentDiskIO enables disk I/O instrumentation that reports disk I/O
 	// metrics such as bytes, operations, and time spent doing I/O.
 	InstrumentDiskIO bool `json:"instrument_disk_io" yaml:"instrument_disk_io" mapstructure:"instrument_disk_io"`
+
+	// DisableVirtualDiskIOFilter disables the filtering of virtual disks from metrics.
+	// By default, virtual devices (loopback, RAID, partitions) are filtered out on Linux.
+	DisableVirtualDiskIOFilter bool `json:"disable_virtual_disk_io_filter" yaml:"disable_virtual_disk_io_filter" mapstructure:"disable_virtual_disk_io_filter"`
 
 	// Propagators configures additional or alternative TextMapPropagators
 	// (e.g. "tracecontext", "baggage", "b3", "b3multi", "jaeger").

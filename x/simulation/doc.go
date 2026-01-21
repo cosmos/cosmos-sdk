@@ -108,7 +108,7 @@ To export the simulation app state (i.e genesis) to a file:
 
 # Params
 
-Params that are provided to simulation from a JSON file are used to used to set
+Params that are provided to simulation from a JSON file are used to set
 both module parameters and simulation parameters. See sim_test.go for the full
 set of parameters that can be provided.
 */

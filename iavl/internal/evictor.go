@@ -41,14 +41,17 @@ func (be BasicEvictor) Evict(root *NodePointer, evictLayer uint32) {
 }
 
 func evictTraverse(np *NodePointer, depth, evictionDepth uint8, evictLayer uint32) (count int) {
-	// TODO check height, and don't traverse if tree is too short
-
 	memNode := np.Mem.Load()
 	if memNode == nil {
 		return 0
 	}
 
-	// Evict nodes at or below the eviction depth
+	if memNode.nodeId.layer == 0 {
+		// node has not been assigned an ID yet, so cannot be evicted
+		return 0
+	}
+
+	// evict nodes at or below the eviction depth
 	if memNode.nodeId.layer <= evictLayer && depth >= evictionDepth {
 		np.Mem.Store(nil)
 		count = 1
@@ -58,7 +61,7 @@ func evictTraverse(np *NodePointer, depth, evictionDepth uint8, evictLayer uint3
 		return count
 	}
 
-	// Continue traversing to find nodes to evict
+	// continue traversing to find nodes to evict
 	count += evictTraverse(memNode.left, depth+1, evictionDepth, evictLayer)
 	count += evictTraverse(memNode.right, depth+1, evictionDepth, evictLayer)
 	return count

@@ -315,11 +315,23 @@ func GetConfig(v *viper.Viper) (Config, error) {
 				return Config{}, fmt.Errorf("invalid block range [%d, %d] for address %s: start block must be <= end block",
 					blockRange[0], blockRange[1], address)
 			}
+			for existingRange, existingAddr := range historicalGRPCAddressBlockRange {
+				if rangesOverlap(existingRange, blockRange) {
+					return Config{}, fmt.Errorf(
+						"historical gRPC block range [%d, %d] for address %s overlaps with existing range [%d, %d] for address %s",
+						blockRange[0], blockRange[1], address, existingRange[0], existingRange[1], existingAddr,
+					)
+				}
+			}
 			historicalGRPCAddressBlockRange[blockRange] = address
 		}
 		conf.GRPC.HistoricalGRPCAddressBlockRange = historicalGRPCAddressBlockRange
 	}
 	return *conf, nil
+}
+
+func rangesOverlap(a, b BlockRange) bool {
+	return !(a[1] < b[0] || a[0] > b[1])
 }
 
 // ValidateBasic returns an error if min-gas-prices field is empty in BaseConfig. Otherwise, it returns nil.

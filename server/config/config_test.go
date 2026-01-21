@@ -382,6 +382,14 @@ func TestGetConfig_HistoricalGRPCAddressBlockRange(t *testing.T) {
 			},
 		},
 		{
+			name: "overlapping ranges",
+			setupViper: func(v *viper.Viper) {
+				v.Set("grpc.historical-grpc-address-block-range", `{"localhost:9091": [0, 1000], "localhost:9092": [900, 1500]}`)
+			},
+			expectError: true,
+			errorMsg:    "overlaps with existing range",
+		},
+		{
 			name: "invalid array length (too few elements)",
 			setupViper: func(v *viper.Viper) {
 				v.Set("grpc.historical-grpc-address-block-range", `{"localhost:9091": [100]}`)

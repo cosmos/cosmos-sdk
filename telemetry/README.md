@@ -56,9 +56,13 @@ logger_provider:
 
 
 cosmos_extra:
-  instrument_host: true # enable optional host instrumentation with go.opentelemetry.io/contrib/instrumentation/host
-  instrument_runtime: true # enable optional runtime instrumentation with go.opentelemetry.io/contrib/instrumentation/runtime
-  instrument_disk_io: true # enable optional disk I/O instrumentation using gopsutil 
+  instruments:
+    host: {} # enable optional host instrumentation with go.opentelemetry.io/contrib/instrumentation/host
+    runtime: {} # enable optional runtime instrumentation with go.opentelemetry.io/contrib/instrumentation/runtime
+    diskio: {} # enable optional disk I/O instrumentation using gopsutil
+    # diskio with options:
+    # diskio:
+    #   disable_virtual_device_filter: true  # include virtual devices (loopback, RAID, partitions) on Linux
   propagators:
     - tracecontext
 ```

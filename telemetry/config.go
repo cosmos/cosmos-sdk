@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	"go.opentelemetry.io/contrib/instrumentation/host"
-	"go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/contrib/otelconf"
 	"go.opentelemetry.io/contrib/propagators/b3"
 	"go.opentelemetry.io/contrib/propagators/jaeger"
@@ -18,7 +16,12 @@ import (
 	tracenoop "go.opentelemetry.io/otel/trace/noop"
 	"go.yaml.in/yaml/v3"
 
-	"github.com/cosmos/cosmos-sdk/telemetry/util/diskio"
+	"github.com/cosmos/cosmos-sdk/telemetry/registry"
+
+	// Register instruments via init()
+	_ "github.com/cosmos/cosmos-sdk/telemetry/util/diskio"
+	_ "github.com/cosmos/cosmos-sdk/telemetry/util/host"
+	_ "github.com/cosmos/cosmos-sdk/telemetry/util/runtime"
 )
 
 const (
@@ -88,26 +91,14 @@ func InitializeOpenTelemetry(filePath string) error {
 	if err == nil {
 		if extraCfg.CosmosExtra != nil {
 			extra := *extraCfg.CosmosExtra
-			if extra.InstrumentHost {
-				fmt.Println("Initializing host instrumentation")
-				if err := host.Start(); err != nil {
-					return fmt.Errorf("failed to start host instrumentation: %w", err)
+			for name, cfg := range extra.Instruments {
+				inst := registry.Get(name)
+				if inst == nil {
+					return fmt.Errorf("unknown instrument: %s", name)
 				}
-			}
-			if extra.InstrumentRuntime {
-				fmt.Println("Initializing runtime instrumentation")
-				if err := runtime.Start(); err != nil {
-					return fmt.Errorf("failed to start runtime instrumentation: %w", err)
-				}
-			}
-			if extra.InstrumentDiskIO {
-				fmt.Println("Initializing disk I/O instrumentation")
-				var diskIOOpts []diskio.Option
-				if extra.DisableVirtualDiskIOFilter {
-					diskIOOpts = append(diskIOOpts, diskio.WithDisableVirtualDeviceFilter())
-				}
-				if err := diskio.Start(diskIOOpts...); err != nil {
-					return fmt.Errorf("failed to start disk I/O instrumentation: %w", err)
+				fmt.Printf("Initializing %s instrumentation\n", name)
+				if err := inst.Start(cfg); err != nil {
+					return fmt.Errorf("failed to start %s instrumentation: %w", name, err)
 				}
 			}
 
@@ -201,21 +192,17 @@ type cosmosExtra struct {
 	// the stdoutlog exporter. If unset, log exporting to file is disabled.
 	LogsFile string `json:"logs_file" yaml:"logs_file" mapstructure:"logs_file"`
 
-	// InstrumentHost enables collection of host-level metrics such as CPU,
-	// memory, and network statistics using the otel host instrumentation.
-	InstrumentHost bool `json:"instrument_host" yaml:"instrument_host" mapstructure:"instrument_host"`
-
-	// InstrumentRuntime enables runtime instrumentation that reports Go runtime
-	// metrics such as GC activity, heap usage, and goroutine count.
-	InstrumentRuntime bool `json:"instrument_runtime" yaml:"instrument_runtime" mapstructure:"instrument_runtime"`
-
-	// InstrumentDiskIO enables disk I/O instrumentation that reports disk I/O
-	// metrics such as bytes, operations, and time spent doing I/O.
-	InstrumentDiskIO bool `json:"instrument_disk_io" yaml:"instrument_disk_io" mapstructure:"instrument_disk_io"`
-
-	// DisableVirtualDiskIOFilter disables the filtering of virtual disks from metrics.
-	// By default, virtual devices (loopback, RAID, partitions) are filtered out on Linux.
-	DisableVirtualDiskIOFilter bool `json:"disable_virtual_disk_io_filter" yaml:"disable_virtual_disk_io_filter" mapstructure:"disable_virtual_disk_io_filter"`
+	// Instruments is a map of instrument names to their optional configuration.
+	// Presence of a key enables the instrument. The value is an optional map of
+	// instrument-specific settings. See each instrument package for available options.
+	//
+	// Example:
+	//   instruments:
+	//     host: {}
+	//     runtime: {}
+	//     diskio:
+	//       disable_virtual_device_filter: true
+	Instruments map[string]map[string]any `json:"instruments" yaml:"instruments" mapstructure:"instruments"`
 
 	// Propagators configures additional or alternative TextMapPropagators
 	// (e.g. "tracecontext", "baggage", "b3", "b3multi", "jaeger").

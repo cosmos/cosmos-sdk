@@ -11,7 +11,32 @@ import (
 	"github.com/shirou/gopsutil/v4/disk"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/semconv/v1.38.0/systemconv"
+
+	"github.com/cosmos/cosmos-sdk/telemetry/registry"
 )
+
+const (
+	// Name is the instrument name used in configuration.
+	Name = "diskio"
+	// OptDisableVirtualDeviceFilter is the option key to disable virtual device filtering.
+	OptDisableVirtualDeviceFilter = "disable_virtual_device_filter"
+)
+
+func init() {
+	registry.Register(instrument{})
+}
+
+type instrument struct{}
+
+func (instrument) Name() string { return Name }
+
+func (instrument) Start(cfg map[string]any) error {
+	var opts []Option
+	if disable, _ := cfg[OptDisableVirtualDeviceFilter].(bool); disable {
+		opts = append(opts, WithDisableVirtualDeviceFilter())
+	}
+	return Start(opts...)
+}
 
 // ScopeName is the instrumentation scope name.
 const ScopeName = "github.com/cosmos/cosmos-sdk/telemetry/util/diskio"

@@ -125,7 +125,7 @@ func NewKeeper(
 	return k
 }
 
-// Hooks gets the hooks for governance *Keeper {
+// Hooks gets the hooks for governance.
 func (k *Keeper) Hooks() types.GovHooks {
 	if k.hooks == nil {
 		// return a no-op implementation if no hooks are set

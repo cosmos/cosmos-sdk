@@ -80,7 +80,7 @@ func (k Keeper) Logger(ctx context.Context) log.Logger {
 	return sdkCtx.Logger().With("module", "x/"+types.ModuleName)
 }
 
-// Hooks gets the hooks for staking *Keeper {
+// Hooks gets the hooks for staking.
 func (k *Keeper) Hooks() types.StakingHooks {
 	if k.hooks == nil {
 		// return a no-op implementation if no hooks are set

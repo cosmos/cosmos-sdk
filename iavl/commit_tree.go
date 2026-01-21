@@ -208,17 +208,6 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 	}
 	rootHashSpan.End()
 
-	err = c.treeStore.SaveRoot(root)
-	if err != nil {
-		return storetypes.CommitID{}, err
-	}
-
-	commitId := storetypes.CommitID{
-		Version: int64(stagedVersion),
-		Hash:    hash,
-	}
-	c.lastCommitId = commitId
-
 	if walDone != nil {
 		startWaitForWAL := time.Now()
 
@@ -231,6 +220,18 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 
 		span.AddEvent("WAL write returned")
 	}
+
+	// save the new root after the WAL is fully written so that all offsets are populated correctly
+	err = c.treeStore.SaveRoot(root)
+	if err != nil {
+		return storetypes.CommitID{}, err
+	}
+
+	commitId := storetypes.CommitID{
+		Version: int64(stagedVersion),
+		Hash:    hash,
+	}
+	c.lastCommitId = commitId
 
 	return commitId, nil
 }

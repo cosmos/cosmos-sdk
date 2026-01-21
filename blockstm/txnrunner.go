@@ -72,7 +72,7 @@ func (e STMRunner) Run(ctx context.Context, ms storetypes.MultiStore, txs [][]by
 		memTxs, estimates = preEstimates(txs, e.workers, authStore, bankStore, e.coinDenom(ms), e.txDecoder)
 	}
 
-	err := ExecuteBlockWithEstimates(
+	if err := ExecuteBlockWithEstimates(
 		ctx,
 		blockSize,
 		index,
@@ -99,18 +99,7 @@ func (e STMRunner) Run(ctx context.Context, ms storetypes.MultiStore, txs [][]by
 				incarnationCache[txn].Store(v)
 			}
 		},
-	)
-
-	// fallback to sequential execution if parallel execution failed with scheduler error
-	if err != nil && err.Error() == "scheduler did not complete" {
-		results = make([]*abci.ExecTxResult, blockSize)
-		for i := range txs {
-			results[i] = deliverTx(txs[i], ms, i, nil)
-		}
-		return results, nil
-	}
-
-	if err != nil {
+	); err != nil {
 		return nil, err
 	}
 

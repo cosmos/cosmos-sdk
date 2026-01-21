@@ -60,15 +60,18 @@ func (cs *ChangesetWriter) SaveLayer(layer uint32, root *NodePointer) error {
 	cs.lastBranchIdx = 0
 	cs.lastLeafIdx = 0
 
-	rootVersion, err := cs.writeNode(root)
-	if err != nil {
-		return err
-	}
-
+	// set or validate layer
 	if cs.layer != 0 {
 		if layer != cs.layer {
 			return fmt.Errorf("invalid layer %d, expected %d", layer, cs.layer)
 		}
+	} else {
+		cs.layer = layer
+	}
+
+	rootVersion, err := cs.writeNode(root)
+	if err != nil {
+		return err
 	}
 
 	var layerInfo LayerInfo
@@ -105,6 +108,7 @@ func (cs *ChangesetWriter) SaveLayer(layer uint32, root *NodePointer) error {
 	info.EndLayer = layer
 	info.EndVersion = rootVersion
 
+	// advance to next layer
 	cs.layer = layer + 1
 
 	return nil
@@ -145,6 +149,8 @@ func (cs *ChangesetWriter) writeBranch(np *NodePointer, node *MemNode) error {
 			return fmt.Errorf("failed to write key data: %w", err)
 		}
 		keyInfo = keyInfo.SetIsInKVData(true)
+	} else {
+		keyInfo = keyInfo.SetIsInKVData(false)
 	}
 	node.keyOffset = keyOffset
 

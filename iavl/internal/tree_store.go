@@ -52,11 +52,11 @@ func (ts *TreeStore) SaveRoot(newRoot *NodePointer) error {
 	writer := ts.currentWriter
 	if writer.WALWriter().Size() >= ts.opts.ChangesetRolloverSize {
 		ts.checkpointer.Checkpoint(writer, newRoot, version, true)
-	}
-	var err error
-	ts.currentWriter, err = NewChangesetWriter(ts.dir, ts.StagedVersion(), ts)
-	if err != nil {
-		return fmt.Errorf("failed to create new changeset writer: %w", err)
+		var err error
+		ts.currentWriter, err = NewChangesetWriter(ts.dir, ts.StagedVersion(), ts)
+		if err != nil {
+			return fmt.Errorf("failed to create new changeset writer: %w", err)
+		}
 	}
 
 	return nil
@@ -78,6 +78,11 @@ func (ts *TreeStore) WriteWALUpdates(updates []KVUpdate, fsync bool) error {
 
 	if fsync {
 		err = walWriter.Sync()
+		if err != nil {
+			return err
+		}
+	} else {
+		err = walWriter.writer.Flush()
 		if err != nil {
 			return err
 		}

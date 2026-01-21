@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"context"
 	"sync"
 	"sync/atomic"
 
@@ -74,6 +75,8 @@ func (cp *Checkpointer) Checkpoint(writer *ChangesetWriter, root *NodePointer, v
 func (cp *Checkpointer) proc() error {
 	var curWriter *ChangesetWriter
 	for req := range cp.reqChan {
+		_, span := Tracer.Start(context.Background(), "SaveCheckpoint")
+
 		layer := cp.savedLayer.Load() + 1
 		if err := req.writer.SaveLayer(layer, req.root); err != nil {
 			return err
@@ -101,6 +104,8 @@ func (cp *Checkpointer) proc() error {
 		if cp.evictor != nil {
 			cp.evictor.Evict(req.root, layer)
 		}
+
+		span.End()
 	}
 	return nil
 }

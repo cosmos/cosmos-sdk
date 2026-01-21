@@ -67,11 +67,13 @@ func (node *BranchPersisted) Key() (UnsafeBytes, error) {
 		return WrapUnsafeBytes(node.layout.InlineKeyPrefix[:prefixLen]), nil
 	}
 	// the key data may be stored either in the WAL OR KV data depending on the key info flag
-	kvData := node.store.WALData()
-	if kvData == nil || node.layout.KeyInfo.IsInKVData() {
-		kvData = node.store.KVData()
+	var kvDataReader *KVDataReader
+	if node.layout.KeyInfo.IsInKVData() {
+		kvDataReader = node.store.KVData()
+	} else {
+		kvDataReader = node.store.WALData()
 	}
-	bz, err := kvData.UnsafeReadBlob(int(node.layout.KeyOffset.ToUint64()))
+	bz, err := kvDataReader.UnsafeReadBlob(int(node.layout.KeyOffset.ToUint64()))
 	if err != nil {
 		return UnsafeBytes{}, err
 	}

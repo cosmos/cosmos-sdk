@@ -1,23 +1,43 @@
 package internal
 
+import (
+	"context"
+
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
+)
+
 type Evictor interface {
-	Evict(root *NodePointer, evictLayer uint32) (count int)
+	Evict(root *NodePointer, evictLayer uint32)
 }
 
 type BasicEvictor struct {
 	EvictDepth uint8
 }
 
-func (be BasicEvictor) Evict(root *NodePointer, evictLayer uint32) (count int) {
-	mem := root.Mem.Load()
-	if mem == nil {
-		return 0
-	}
-	if mem.Height() < be.EvictDepth {
-		// shortcut when tree is too short
-		return 0
-	}
-	return evictTraverse(root, 0, be.EvictDepth, evictLayer)
+func (be BasicEvictor) Evict(root *NodePointer, evictLayer uint32) {
+	go func() {
+		_, span := Tracer.Start(context.Background(), "Evict",
+			trace.WithAttributes(attribute.Int("evictDepth", int(be.EvictDepth))),
+		)
+		defer span.End()
+
+		mem := root.Mem.Load()
+		if mem == nil {
+			return
+		}
+		height := mem.Height()
+		if height < be.EvictDepth {
+			// shortcut when tree is too short
+			return
+		}
+		count := evictTraverse(root, 0, be.EvictDepth, evictLayer)
+
+		span.SetAttributes(
+			attribute.Int("nodesEvicted", count),
+			attribute.Int("treeHeight", int(height)),
+		)
+	}()
 }
 
 func evictTraverse(np *NodePointer, depth, evictionDepth uint8, evictLayer uint32) (count int) {

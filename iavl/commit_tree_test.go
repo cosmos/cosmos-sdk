@@ -103,6 +103,15 @@ func (s *SimMachine) checkNewVersion(t *rapid.T) {
 	commitIdV2, err := s.treeV2.Commit(context.Background(), slices.Values(updates), len(updates))
 	require.NoError(t, err, "failed to commit version in V2 tree")
 
+	// check v2 iavl invariants
+	latestPtr := s.treeV2.treeStore.Latest()
+	if latestPtr != nil {
+		latest, pin, err := latestPtr.Resolve()
+		defer pin.Unpin()
+		require.NoError(t, err, "failed to resolve latest node pointer in V2 tree")
+		require.NoError(t, internal.VerifyAVLInvariants(latest))
+	}
+
 	// compare versions and hashes
 	require.Equal(t, versionV1, commitIdV2.Version, "version mismatch between V1 and V2 trees")
 	if !bytes.Equal(hashV1, commitIdV2.Hash) {
@@ -114,15 +123,6 @@ func (s *SimMachine) checkNewVersion(t *rapid.T) {
 	require.NoError(t, err, "failed to create iterator for V1 tree")
 	iterV2 := s.treeV2.Latest().Iterator(nil, nil)
 	compareIteratorsAtVersion(t, iterV1, iterV2)
-
-	// check v2 iavl invariants
-	latestPtr := s.treeV2.treeStore.Latest()
-	if latestPtr != nil {
-		latest, pin, err := latestPtr.Resolve()
-		defer pin.Unpin()
-		require.NoError(t, err, "failed to resolve latest node pointer in V2 tree")
-		require.NoError(t, internal.VerifyAVLInvariants(latest))
-	}
 }
 
 func (s *SimMachine) genUpdates(t *rapid.T) []Update {

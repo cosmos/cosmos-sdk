@@ -60,10 +60,10 @@ func ExecuteBlockWithEstimates(
 	go func() {
 		select {
 		case <-ctx.Done():
-			canceled := scheduler.CancelAll()
-			for _, txn := range canceled {
-				mvMemory.ClearEstimates(txn)
-			}
+			scheduler.CancelAll(func(i TxnIndex) {
+				// clear estimates before waking up so they don't suspend again
+				mvMemory.ClearEstimates(i)
+			})
 		case <-cancelDone:
 		}
 	}()

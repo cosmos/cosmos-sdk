@@ -214,14 +214,15 @@ func (s *Scheduler) Stats() string {
 		s.executedTxns.Load(), s.validatedTxns.Load())
 }
 
-// CancelAll wakes up all suspended executors and returns the list of canceled transaction indices.
+// CancelAll wakes up all suspended executors.
 // Called during context cancellation to prevent hanging.
-func (s *Scheduler) CancelAll() []TxnIndex {
-	var canceled []TxnIndex
+func (s *Scheduler) CancelAll(preCancel func(i TxnIndex)) {
 	for i := range s.txnStatus {
-		if s.txnStatus[i].TryCancel() {
-			canceled = append(canceled, TxnIndex(i))
-		}
+		s.txnStatus[i].TryCancel(func() {
+			if preCancel != nil {
+				idx := TxnIndex(i)
+				preCancel(idx)
+			}
+		})
 	}
-	return canceled
 }

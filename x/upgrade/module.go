@@ -123,7 +123,8 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	}
 }
 
-// InitGenesis is ignored, no sense in serializing future upgrades
+// InitGenesis sets the initial module version map (if provided). Upgrade plans
+// themselves are not initialized from genesis.
 func (am AppModule) InitGenesis(ctx sdk.Context, _ codec.JSONCodec, _ json.RawMessage) {
 	// set version map automatically if available
 	if versionMap := am.keeper.GetInitVersionMap(); versionMap != nil {

@@ -95,7 +95,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/staking) [#25258](https://github.com/cosmos/cosmos-sdk/pull/25258) Add delegator address to redelegate event.
 * (cli) [#25485](https://github.com/cosmos/cosmos-sdk/pull/25485) Avoid failed to convert address field in `withdraw-validator-commission` cmd.
 * (baseapp) [#25642](https://github.com/cosmos/cosmos-sdk/pull/25642) Mark pre-block events for indexing based on local configuration.
-* (x/bank) [#25751)](https://github.com/cosmos/cosmos-sdk/pull/25751) Fix recipient address in events.
+* (x/bank) [#25751](https://github.com/cosmos/cosmos-sdk/pull/25751) Fix recipient address in events.
+* (server/config) [#25806] (https://github.com/cosmos/cosmos-sdk/pull/25806) fix: add missing commas in historical gRPC config template #25806.
 
 ### Deprecated
 

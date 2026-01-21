@@ -44,6 +44,7 @@ func NewCommitTree(dir string, opts Options) (*CommitTree, error) {
 	treeStore, err := internal.NewTreeStore(dir, internal.TreeStoreOptions{
 		ChangesetRolloverSize: changesetRolloverSize,
 		EvictDepth:            evictDepth,
+		CheckpointInterval:    opts.CheckpointInterval,
 	})
 
 	if err != nil {

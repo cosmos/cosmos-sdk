@@ -52,11 +52,7 @@ func (cs *ChangesetWriter) WALWriter() *WALWriter {
 	return cs.walWriter
 }
 
-func (cs *ChangesetWriter) SaveLayer(layer uint32, root *NodePointer) error {
-	if root == nil {
-		return fmt.Errorf("cannot save nil root node")
-	}
-
+func (cs *ChangesetWriter) SaveLayer(layer, version uint32, root *NodePointer) error {
 	cs.lastBranchIdx = 0
 	cs.lastLeafIdx = 0
 
@@ -73,14 +69,17 @@ func (cs *ChangesetWriter) SaveLayer(layer uint32, root *NodePointer) error {
 	layerInfo.Branches.StartOffset = uint32(cs.branchesData.Count())
 	layerInfo.Leaves.StartOffset = uint32(cs.leavesData.Count())
 
-	rootVersion, err := cs.writeNode(root)
-	if err != nil {
-		return err
+	if root != nil {
+		// it is okay to have a nil root (empty tree)
+		_, err := cs.writeNode(root)
+		if err != nil {
+			return err
+		}
+		layerInfo.RootID = root.id
 	}
 
-	layerInfo.RootID = root.id
 	layerInfo.Layer = layer
-	layerInfo.Version = rootVersion
+	layerInfo.Version = version
 	totalBranches := cs.lastBranchIdx
 	if totalBranches > 0 {
 		layerInfo.Branches.StartIndex = 1
@@ -95,7 +94,7 @@ func (cs *ChangesetWriter) SaveLayer(layer uint32, root *NodePointer) error {
 	}
 
 	// commit version info
-	err = cs.layersData.Append(&layerInfo)
+	err := cs.layersData.Append(&layerInfo)
 	if err != nil {
 		return fmt.Errorf("failed to write version info: %w", err)
 	}
@@ -104,10 +103,9 @@ func (cs *ChangesetWriter) SaveLayer(layer uint32, root *NodePointer) error {
 	info := cs.files.info
 	if info.StartLayer == 0 {
 		info.StartLayer = layer
-		info.StartVersion = rootVersion
 	}
 	info.EndLayer = layer
-	info.EndVersion = rootVersion
+	info.EndVersion = version
 
 	// advance to next layer
 	cs.layer = layer + 1

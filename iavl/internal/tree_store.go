@@ -8,7 +8,7 @@ import (
 type TreeStoreOptions struct {
 	ChangesetRolloverSize int
 	EvictDepth            uint8
-	//CheckpointInterval    int
+	CheckpointInterval    int
 }
 
 type TreeStore struct {
@@ -18,8 +18,9 @@ type TreeStore struct {
 	version atomic.Uint32
 	root    atomic.Pointer[NodePointer]
 
-	currentWriter *ChangesetWriter
-	checkpointer  *Checkpointer
+	currentWriter         *ChangesetWriter
+	checkpointer          *Checkpointer
+	lastCheckpointVersion uint32
 
 	//latestRoots     *btree.Map[uint32, *NodePointer]
 	//latestRootsLock sync.RWMutex
@@ -48,16 +49,24 @@ func (ts *TreeStore) SaveRoot(newRoot *NodePointer) error {
 	ts.root.Store(newRoot)
 	version := ts.version.Add(1)
 
-	// if we are at rollover size, create new changeset writer
 	writer := ts.currentWriter
-	if writer.WALWriter().Size() >= ts.opts.ChangesetRolloverSize {
-		err := ts.checkpointer.Checkpoint(writer, newRoot, version, true)
+	shouldRollover := writer.WALWriter().Size() >= ts.opts.ChangesetRolloverSize
+	checkpointInterval := ts.opts.CheckpointInterval
+	versionsSinceLastCheckpoint := version - ts.lastCheckpointVersion
+	shouldCheckpoint := shouldRollover ||
+		(checkpointInterval > 0 &&
+			versionsSinceLastCheckpoint >= uint32(ts.opts.CheckpointInterval))
+	if shouldCheckpoint {
+		err := ts.checkpointer.Checkpoint(writer, newRoot, version, shouldRollover)
 		if err != nil {
 			return fmt.Errorf("failed to checkpoint changeset: %w", err)
 		}
-		ts.currentWriter, err = NewChangesetWriter(ts.dir, ts.StagedVersion(), ts)
-		if err != nil {
-			return fmt.Errorf("failed to create new changeset writer: %w", err)
+		ts.lastCheckpointVersion = version
+		if shouldRollover {
+			ts.currentWriter, err = NewChangesetWriter(ts.dir, ts.StagedVersion(), ts)
+			if err != nil {
+				return fmt.Errorf("failed to create new changeset writer: %w", err)
+			}
 		}
 	}
 

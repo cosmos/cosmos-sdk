@@ -16,26 +16,32 @@ type BasicEvictor struct {
 }
 
 func (be BasicEvictor) Evict(root *NodePointer, evictLayer uint32) {
+	if root == nil {
+		return
+	}
+	mem := root.Mem.Load()
+	if mem == nil {
+		return
+	}
+	height := mem.Height()
+	if height < be.EvictDepth {
+		// shortcut when tree is too short
+		return
+	}
+
 	go func() {
 		_, span := Tracer.Start(context.Background(), "Evict",
-			trace.WithAttributes(attribute.Int("evictDepth", int(be.EvictDepth))),
+			trace.WithAttributes(
+				attribute.Int("evictDepth", int(be.EvictDepth)),
+				attribute.Int("treeHeight", int(height)),
+			),
 		)
 		defer span.End()
 
-		mem := root.Mem.Load()
-		if mem == nil {
-			return
-		}
-		height := mem.Height()
-		if height < be.EvictDepth {
-			// shortcut when tree is too short
-			return
-		}
 		count := evictTraverse(root, 0, be.EvictDepth, evictLayer)
 
 		span.SetAttributes(
 			attribute.Int("nodesEvicted", count),
-			attribute.Int("treeHeight", int(height)),
 		)
 	}()
 }

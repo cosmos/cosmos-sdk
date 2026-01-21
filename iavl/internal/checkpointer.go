@@ -84,7 +84,7 @@ func (cp *Checkpointer) proc() error {
 		_, span := Tracer.Start(context.Background(), "SaveCheckpoint")
 
 		layer := cp.savedLayer.Load() + 1
-		if err := req.writer.SaveLayer(layer, req.root); err != nil {
+		if err := req.writer.SaveLayer(layer, req.version, req.root); err != nil {
 			return err
 		}
 		if req.seal {

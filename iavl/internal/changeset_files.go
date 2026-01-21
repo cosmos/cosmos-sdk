@@ -73,6 +73,10 @@ func CreateChangesetFiles(treeDir string, startVersion, compactedAt uint32, have
 	if err != nil {
 		return nil, fmt.Errorf("failed to open changeset files: %w", err)
 	}
+
+	// set start version in info file
+	cr.info.StartVersion = startVersion
+
 	return cr, nil
 }
 

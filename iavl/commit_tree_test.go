@@ -73,6 +73,7 @@ func (s *SimMachine) openV2Tree(t interface {
 		ChangesetRolloverSize: 4096,
 		EvictDepth:            2,
 		FsyncWAL:              true,
+		CheckpointInterval:    1,
 	})
 	require.NoError(t, err, "failed to create iavlx tree")
 }

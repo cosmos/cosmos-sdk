@@ -2,6 +2,9 @@ package diskio
 
 import (
 	"context"
+	"os"
+	"path/filepath"
+	"runtime"
 	"sync"
 	"time"
 
@@ -93,6 +96,9 @@ func Start(opts ...Option) error {
 			}
 
 			for device, s := range stats {
+				if !isPhysicalDevice(device) {
+					continue
+				}
 				attrDevice := systemconv.DiskIO{}.AttrDevice(device)
 
 				// system.disk.io (bytes read/written)
@@ -167,4 +173,41 @@ func (c *ioCollector) refresh(ctx context.Context) map[string]disk.IOCountersSta
 	c.lastStats = stats
 	c.lastCollect = now
 	return stats
+}
+
+// isPhysicalDevice determines which devices to report based on the OS.
+// On Linux, it strictly filters out partitions, loopbacks, and software RAID
+// to prevent double counting. On other OS's, it reports everything.
+func isPhysicalDevice(deviceName string) bool {
+	if runtime.GOOS == "linux" {
+		return isPhysicalDeviceLinux(deviceName)
+	}
+	// TODO: maybe add filters for macos? windows?
+
+	return true
+}
+
+// isPhysicalDeviceLinux out loopback and RAID devices, and anything that reports as partition.
+// We filter out loopback and RAID devices as these are virtual storage blocks, and writes to these will
+// incur writes to a physical storage device. By filtering we avoid a double count of write pressure to physical disks.
+func isPhysicalDeviceLinux(deviceName string) bool {
+	// filter out virtual devices. (i.e. loop, md)
+	virtualPath := filepath.Join("/sys/devices/virtual/block", deviceName)
+	_, err := os.Stat(virtualPath)
+	// file exists, its virtual. not physical.
+	if err == nil {
+		return false
+	}
+
+	// check sysfs to distinguish Physical Disks from Partitions.
+	// /sys/class/block/<device>/partition exists ONLY for partitions.
+	sysPath := filepath.Join("/sys/class/block", deviceName, "partition")
+	_, err = os.Stat(sysPath)
+	// file exists, its a partition. not physical.
+	if err == nil {
+		return false
+	}
+
+	// probably a physical disk by this point.
+	return true
 }

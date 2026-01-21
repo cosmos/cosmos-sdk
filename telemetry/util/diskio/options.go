@@ -16,6 +16,10 @@ type config struct {
 	// MeterProvider sets the metric.MeterProvider. If nil, the global
 	// Provider will be used.
 	MeterProvider metric.MeterProvider
+
+	// FilterVirtualDisks when true will filter out virtual storage devices from metrics.
+	// NOTE: CURRENTLY ONLY WORKS ON LINUX.
+	FilterVirtualDisks bool
 }
 
 // Option supports configuring optional settings for disk I/O metrics.
@@ -54,6 +58,18 @@ func (o metricProviderOption) apply(c *config) {
 	if o.MeterProvider != nil {
 		c.MeterProvider = o.MeterProvider
 	}
+}
+
+// WithFilterVirtualDevices enables the filtering of virtual disks from being included in metrics.
+// NOTE: CURRENTLY ONLY WORKS ON LINUX.
+func WithFilterVirtualDevices(enable bool) Option {
+	return filterVritualDevicesOption{enable}
+}
+
+type filterVritualDevicesOption struct{ enable bool }
+
+func (o filterVritualDevicesOption) apply(c *config) {
+	c.FilterVirtualDisks = o.enable
 }
 
 func newConfig(opts ...Option) config {

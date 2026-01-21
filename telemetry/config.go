@@ -102,7 +102,7 @@ func InitializeOpenTelemetry(filePath string) error {
 			}
 			if extra.InstrumentDiskIO {
 				fmt.Println("Initializing disk I/O instrumentation")
-				if err := diskio.Start(); err != nil {
+				if err := diskio.Start(diskio.WithFilterVirtualDevices(extra.FilterVirtualDiskIOMetrics)); err != nil {
 					return fmt.Errorf("failed to start disk I/O instrumentation: %w", err)
 				}
 			}
@@ -208,6 +208,8 @@ type cosmosExtra struct {
 	// InstrumentDiskIO enables disk I/O instrumentation that reports disk I/O
 	// metrics such as bytes, operations, and time spent doing I/O.
 	InstrumentDiskIO bool `json:"instrument_disk_io" yaml:"instrument_disk_io" mapstructure:"instrument_disk_io"`
+
+	FilterVirtualDiskIOMetrics bool `json: "filter_virtual_disk_io_metrics" yaml:"filter_virtual_disk_io_metrics" mapstructure:"filter_virtual_disk_io_metrics"`
 
 	// Propagators configures additional or alternative TextMapPropagators
 	// (e.g. "tracecontext", "baggage", "b3", "b3multi", "jaeger").

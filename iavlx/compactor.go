@@ -320,12 +320,6 @@ func (c *Compactor) Seal() (*Changeset, error) {
 		return nil, fmt.Errorf("failed to initialize sealed changeset: %w", err)
 	}
 
-	// write orphan map
-	if err != nil {
-		return nil, fmt.Errorf("failed to write orphan map during compaction seal: %w", err)
-	}
-
-	return cs, nil
 }
 
 func (c *Compactor) Abort() error {

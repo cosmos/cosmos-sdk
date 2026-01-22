@@ -63,10 +63,10 @@ func (kvr *KVDataReader) readVarint(offset int) (varint uint64, bytesRead int, e
 	return varint, bytesRead, nil
 }
 
-func (kvr *KVDataReader) readLEU32(offset int) (uint32, error) {
-	bz, err := kvr.UnsafeSlice(offset, 4)
+func (kvr *KVDataReader) readLEU40(offset int) (uint64, error) {
+	bz, err := kvr.UnsafeSlice(offset, 5)
 	if err != nil {
 		return 0, err
 	}
-	return binary.LittleEndian.Uint32(bz), nil
+	return uint64(bz[0]) | uint64(bz[1])<<8 | uint64(bz[2])<<16 | uint64(bz[3])<<24 | uint64(bz[4])<<32, nil
 }

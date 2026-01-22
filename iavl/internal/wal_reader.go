@@ -19,27 +19,30 @@ func NewWALReader(file *os.File) (*WALReader, error) {
 	}
 	return &WALReader{
 		rdr:         kvr,
-		offset:      bytesRead,
+		offset:      1 + bytesRead,
 		Version:     startVersion,
-		keyMappings: make(map[int][]byte),
+		keyMappings: make(map[int]UnsafeBytes),
 	}, nil
 }
 
 // WALReader reads WAL entries from a KVDataReader.
 // Call Next() to read the next entry and read the Key, Value and Version fields directly as needed.
 type WALReader struct {
-	rdr         *KVDataReader
-	offset      int
-	keyMappings map[int][]byte
+	rdr            *KVDataReader
+	offset         int
+	setValueOffset int
+	keyMappings    map[int]UnsafeBytes
 
 	// Version is the version of the WAL entries currently being read.
 	Version uint64
 	// Key is the key of the current WAL entry. This is valid for Set and Delete entries.
-	Key []byte
+	// This is an UnsafeBytes pointing into the mmap'd WAL data - copy if needed beyond the reader's lifetime.
+	Key UnsafeBytes
 
 	// Value is the value of the current WAL entry.
 	// This is only valid for Set entries.
-	Value []byte
+	// This is an UnsafeBytes pointing into the mmap'd WAL data - copy if needed beyond the reader's lifetime.
+	Value UnsafeBytes
 }
 
 // Next reads the next WAL entry, skipping over any blob entries.
@@ -63,62 +66,6 @@ func (wr *WALReader) Next() (entryType KVEntryType, ok bool, err error) {
 	}
 }
 
-// RewriteWAL rewrites the WAL entries to the given WALWriter, truncating any entries before the given version.
-func RewriteWAL(writer *WALWriter, walFile *os.File, truncateBeforeVersion uint64) error {
-	wr, err := NewWALReader(walFile)
-	if err != nil {
-		return err
-	}
-
-	startVersion := wr.Version
-	newStartVersion := startVersion
-	if startVersion < truncateBeforeVersion {
-		newStartVersion = truncateBeforeVersion
-	}
-	err = writer.StartVersion(newStartVersion)
-	if err != nil {
-		return err
-	}
-
-	for {
-		entryType, ok, err := wr.next()
-		if err != nil {
-			return err
-		}
-		if !ok {
-			return nil
-		}
-
-		switch entryType {
-		case KVEntryWALStart:
-			// skip start entry
-			continue
-		case KVEntryKeyBlob, KVEntryValueBlob:
-			// skip blob entries
-			continue
-		case KVEntryWALCommit:
-			if wr.Version < truncateBeforeVersion {
-				continue
-			}
-			err = writer.WriteWALCommit(wr.Version)
-			if err != nil {
-				return err
-			}
-		case KVEntryWALDelete:
-			err = writer.WriteWALDelete(wr.Key)
-			if err != nil {
-				return err
-			}
-		case KVEntryWALSet:
-			_, _, err = writer.WriteWALSet(wr.Key, wr.Value)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-}
-
 func (wr *WALReader) next() (entryType KVEntryType, ok bool, err error) {
 	// check for end of data
 	if wr.offset >= wr.rdr.Len() {
@@ -134,6 +81,7 @@ func (wr *WALReader) next() (entryType KVEntryType, ok bool, err error) {
 			return 0, false, err
 		}
 
+		wr.setValueOffset = wr.offset // we save this for remapping when rewriting the WAL
 		err = wr.readValue()
 		if err != nil {
 			return 0, false, err
@@ -144,6 +92,7 @@ func (wr *WALReader) next() (entryType KVEntryType, ok bool, err error) {
 			return 0, false, err
 		}
 
+		wr.setValueOffset = wr.offset // we save this for remapping when rewriting the WAL
 		err = wr.readValue()
 		if err != nil {
 			return 0, false, err
@@ -185,14 +134,14 @@ func (wr *WALReader) next() (entryType KVEntryType, ok bool, err error) {
 }
 
 func (wr *WALReader) readKey() error {
-	var bytesRead int
-	var err error
-	wr.Key, bytesRead, err = wr.rdr.unsafeReadBlob(wr.offset)
+	keyOffset := wr.offset
+	bz, bytesRead, err := wr.rdr.unsafeReadBlob(wr.offset)
 	if err != nil {
 		return fmt.Errorf("failed to read WAL key at offset %d: %w", wr.offset, err)
 	}
-	// cache the key
-	wr.keyMappings[wr.offset] = wr.Key
+	wr.Key = WrapUnsafeBytes(bz)
+	// cache the key by its offset for cached key lookups
+	wr.keyMappings[keyOffset] = wr.Key
 	wr.offset += bytesRead
 	return nil
 }

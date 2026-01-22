@@ -23,20 +23,15 @@ type ChangesetWriter struct {
 }
 
 func NewChangesetWriter(treeDir string, stagedVersion uint32, treeStore *TreeStore) (*ChangesetWriter, error) {
-	files, err := CreateChangesetFiles(treeDir, stagedVersion, 0, true)
+	files, err := CreateChangesetFiles(treeDir, stagedVersion, 0)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open changeset files: %w", err)
 	}
 
-	walWriter, err := NewWALWriter(files.WALFile(), uint64(stagedVersion))
-	if err != nil {
-		return nil, fmt.Errorf("failed to create WAL currentWriter: %w", err)
-	}
-
 	cs := &ChangesetWriter{
 		files:           files,
-		walWriter:       walWriter,
-		kvWriter:        NewKVDataWriter(files.KVDataFile()),
+		walWriter:       NewWALWriter(files.WALFile()),
+		kvWriter:        NewKVDataWriter(files.KVDataFile(), true),
 		branchesData:    NewStructWriter[BranchLayout](files.BranchesFile()),
 		leavesData:      NewStructWriter[LeafLayout](files.LeavesFile()),
 		checkpointsData: NewStructWriter[CheckpointInfo](files.CheckpointsFile()),
@@ -136,17 +131,13 @@ func (cs *ChangesetWriter) writeBranch(np *NodePointer, node *MemNode) error {
 	node.nodeId = NewNodeID(false, cs.checkpoint, cs.lastBranchIdx+1)
 	cs.lastBranchIdx++
 
-	keyOffset, found := cs.walWriter.LookupKeyOffset(node.key)
-	var keyInfo BranchKeyInfo
-	if !found {
+	keyOffset, keyInWal := cs.walWriter.LookupKeyOffset(node.key)
+	if !keyInWal {
 		var err error
 		keyOffset, err = cs.kvWriter.WriteKeyBlob(node.key)
 		if err != nil {
 			return fmt.Errorf("failed to write key data: %w", err)
 		}
-		keyInfo = keyInfo.SetIsInKVData(true)
-	} else {
-		keyInfo = keyInfo.SetIsInKVData(false)
 	}
 	node.keyOffset = keyOffset
 
@@ -174,23 +165,14 @@ func (cs *ChangesetWriter) writeBranch(np *NodePointer, node *MemNode) error {
 		LeftOffset:  leftOffset,
 		RightOffset: rightOffset,
 		KeyOffset:   keyOffset,
-		KeyInfo:     keyInfo,
-		// TODO add inline key prefix
-		Height: node.height,
-		Size:   NewUint40(uint64(node.size)),
+		Height:      node.height,
+		Size:        uint32(node.size),
 	}
 	copy(layout.Hash[:], node.hash) // TODO check length
 
-	keyPrefixLen := len(node.key)
-	if keyPrefixLen > MaxInlineKeyLen {
-		keyPrefixLen = MaxInlineKeyLen
-	}
-	layout.KeyInfo = layout.KeyInfo.SetKeyPrefixLen(keyPrefixLen)
-
-	inlineCopyLen := keyPrefixLen
-	if inlineCopyLen > MaxInlineKeyCopyLen {
-		inlineCopyLen = MaxInlineKeyCopyLen
-	}
+	keyLen := len(node.key)
+	layout.InlineKeyLen = InlineKeyPrefixLen(keyLen)
+	inlineCopyLen := InlineKeyCopyLen(keyLen)
 	copy(layout.InlineKeyPrefix[:], node.key[:inlineCopyLen])
 
 	err = cs.branchesData.Append(&layout) // TODO check error

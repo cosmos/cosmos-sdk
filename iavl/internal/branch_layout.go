@@ -47,20 +47,18 @@ type BranchLayout struct {
 
 	// KeyOffset is the offset the key data for this node in the key value data file.
 	// This doesn't limit the size of the overall tree, it just limits the size of individual key/value data files.
-	// If we want to support larger key/value data files in the future, we can change this to a 40-bit offset,
-	// and an additional byte of padding is already reserved below for this purpose.
-	KeyOffset Uint40
+	KeyOffset KVOffset
 
 	// Height is the height of the subtree rooted at this branch node.
 	Height uint8
 
-	KeyInfo BranchKeyInfo
+	InlineKeyLen uint8
 
 	// NOTE: there are two bytes of padding here that could be used for something else in the future if needed
 	// such as an extra byte to allow for 40-bit key offsets.
 
 	// Size is the number of leaf nodes in the subtree rooted at this branch node.
-	Size Uint40
+	Size uint32
 
 	// InlineKeyPrefix is the first 8 bytes of the key for this branch node, used for fast comparisons.
 	InlineKeyPrefix [8]byte
@@ -73,32 +71,19 @@ func (b BranchLayout) GetNodeID() NodeID {
 	return b.ID
 }
 
-type BranchKeyInfo byte
-
-// IsInKVData returns true if the branch key is stored in the KV data file, false if in WAL.
-// The high bit is set if the key is in KV data.
-func (b BranchKeyInfo) IsInKVData() bool {
-	return b&0x80 != 0
-}
-
-// SetIsInKVData sets whether the branch key is stored in the KV data file.
-func (b BranchKeyInfo) SetIsInKVData(isInKVData bool) BranchKeyInfo {
-	if isInKVData {
-		return b | 0x80
-	} else {
-		return b &^ 0x80
-	}
-}
-
-// GetKeyPrefixLen returns the size of the branch key prefix stored inline in the branch node.
-// If the size is > 8, the full key must be read from the key value data file.
-func (b BranchKeyInfo) GetKeyPrefixLen() int {
-	return int(b & 0x7F)
-}
-
-func (b BranchKeyInfo) SetKeyPrefixLen(prefixLen int) BranchKeyInfo {
-	return (b & 0x80) | BranchKeyInfo(min(prefixLen, 127)&0x7F)
-}
-
-const MaxInlineKeyLen = 127
+const MaxInlineKeyLen = 255
 const MaxInlineKeyCopyLen = 8
+
+func InlineKeyPrefixLen(keyLen int) uint8 {
+	if keyLen > MaxInlineKeyLen {
+		keyLen = MaxInlineKeyLen
+	}
+	return uint8(keyLen)
+}
+
+func InlineKeyCopyLen(keyLen int) int {
+	if keyLen > MaxInlineKeyCopyLen {
+		return MaxInlineKeyCopyLen
+	}
+	return keyLen
+}

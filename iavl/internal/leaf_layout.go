@@ -31,11 +31,11 @@ type LeafLayout struct {
 	// on-disk compatibility.
 	// Such an upgrade could be made by introducing a "wide changeset" format that lives alongside
 	// this existing "compact" format.
-	KeyOffset Uint40
+	KeyOffset KVOffset
 
 	// ValueOffset is the offset the value data for this node in the key value data file.
 	// The same size considerations apply here as for KeyOffset.
-	ValueOffset Uint40
+	ValueOffset KVOffset
 
 	// Hash is the hash of this leaf node.
 	Hash [32]byte

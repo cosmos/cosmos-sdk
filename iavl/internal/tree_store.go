@@ -74,13 +74,18 @@ func (ts *TreeStore) SaveRoot(newRoot *NodePointer) error {
 }
 
 func (ts *TreeStore) WriteWALUpdates(updates []KVUpdate, fsync bool) error {
+	version := ts.StagedVersion()
 	walWriter := ts.currentWriter.WALWriter()
-	err := walWriter.WriteWALUpdates(updates)
+
+	err := walWriter.StartVersion(uint64(version))
 	if err != nil {
 		return err
 	}
 
-	version := ts.StagedVersion()
+	err = walWriter.WriteWALUpdates(updates)
+	if err != nil {
+		return err
+	}
 
 	err = walWriter.WriteWALCommit(uint64(version))
 	if err != nil {

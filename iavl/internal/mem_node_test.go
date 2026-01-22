@@ -24,8 +24,8 @@ func TestMemNode_Getters(t *testing.T) {
 		left:        left,
 		right:       right,
 		nodeId:      nodeId,
-		keyOffset:   NewUint40(100),
-		valueOffset: NewUint40(200),
+		keyOffset:   NewKVOffset(100, false),
+		valueOffset: NewKVOffset(200, false),
 	}
 
 	require.Equal(t, uint8(3), node.Height())

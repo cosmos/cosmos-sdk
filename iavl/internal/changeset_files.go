@@ -35,7 +35,7 @@ type ChangesetFiles struct {
 // will be created to indicate that the changeset is not yet ready for use.
 // This pending marker file must be removed once the compaction is fully complete by calling MarkReady,
 // otherwise the changeset will be considered incomplete and deleted at the next startup.
-func CreateChangesetFiles(treeDir string, startVersion, compactedAt uint32, haveWal bool) (*ChangesetFiles, error) {
+func CreateChangesetFiles(treeDir string, startVersion, compactedAt uint32) (*ChangesetFiles, error) {
 	// ensure absolute path
 	var err error
 	treeDir, err = filepath.Abs(treeDir)
@@ -69,7 +69,7 @@ func CreateChangesetFiles(treeDir string, startVersion, compactedAt uint32, have
 		compactedAt:  compactedAt,
 	}
 
-	err = cr.open(writeModeFlags, haveWal)
+	err = cr.open(writeModeFlags)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open changeset files: %w", err)
 	}
@@ -105,14 +105,7 @@ func OpenChangesetFiles(dirName string) (*ChangesetFiles, error) {
 		compactedAt:  compactedAt,
 	}
 
-	haveWal := false
-	walPath := filepath.Join(cr.dir, "wal.log")
-	_, err = os.Stat(walPath)
-	if err == nil {
-		haveWal = true
-	}
-
-	err = cr.open(os.O_RDONLY, haveWal)
+	err = cr.open(os.O_RDONLY)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open changeset files: %w", err)
 	}
@@ -120,15 +113,13 @@ func OpenChangesetFiles(dirName string) (*ChangesetFiles, error) {
 	return cr, nil
 }
 
-func (cr *ChangesetFiles) open(mode int, haveWal bool) error {
+func (cr *ChangesetFiles) open(mode int) error {
 	var err error
 
-	if haveWal {
-		walPath := filepath.Join(cr.dir, "wal.log")
-		cr.walFile, err = os.OpenFile(walPath, mode, 0o600)
-		if err != nil {
-			return fmt.Errorf("failed to open WAL data file: %w", err)
-		}
+	walPath := filepath.Join(cr.dir, "wal.log")
+	cr.walFile, err = os.OpenFile(walPath, mode, 0o600)
+	if err != nil {
+		return fmt.Errorf("failed to open WAL data file: %w", err)
 	}
 
 	kvPath := filepath.Join(cr.dir, "kv.dat")

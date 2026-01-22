@@ -95,6 +95,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (baseapp) [#25642](https://github.com/cosmos/cosmos-sdk/pull/25642) Mark pre-block events for indexing based on local configuration.
 * (x/bank) [#25751](https://github.com/cosmos/cosmos-sdk/pull/25751) Fix recipient address in events.
 * (server/config) [#25806] (https://github.com/cosmos/cosmos-sdk/pull/25806) fix: add missing commas in historical gRPC config template #25806.
+* (client) [#25811] (https://github.com/cosmos/cosmos-sdk/pull/25811) fix(client): fix file handle leaks in snapshot commands.
 
 ### Deprecated
 

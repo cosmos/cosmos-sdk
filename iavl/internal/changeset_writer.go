@@ -158,10 +158,10 @@ func (cs *ChangesetWriter) writeBranch(np *NodePointer, node *MemNode) error {
 
 	// If the child node is in the same changeset, store its 1-based file offset.
 	// fileIdx is already 1-based (set to Count() after append), and 0 means no offset.
-	if leftCheckpoint >= cs.FirstCheckpoint() {
+	if leftCheckpoint >= cs.StartVersion() {
 		leftOffset = node.left.fileIdx
 	}
-	if rightCheckpoint >= cs.FirstCheckpoint() {
+	if rightCheckpoint >= cs.StartVersion() {
 		rightOffset = node.right.fileIdx
 	}
 
@@ -263,9 +263,9 @@ func (cs *ChangesetWriter) writeLeaf(np *NodePointer, node *MemNode) error {
 //	return reader, nil
 //}
 
-// FirstCheckpoint returns the first checkpoint version in this changeset.
-func (cs *ChangesetWriter) FirstCheckpoint() uint32 {
-	return cs.files.FirstCheckpoint()
+// StartVersion returns the start version of this changeset.
+func (cs *ChangesetWriter) StartVersion() uint32 {
+	return cs.files.StartVersion()
 }
 
 func (cs *ChangesetWriter) CreatedSharedReader() error {

@@ -71,27 +71,35 @@ func (kvs *WALWriter) WriteWALUpdates(updates []KVUpdate) error {
 // WriteWALSet writes a WAL set entry for the given key and value and returns their offsets in the file.
 func (kvs *WALWriter) WriteWALSet(key, value []byte) (keyOffset, valueOffset KVOffset, err error) {
 	keyOffsetAny, cached := kvs.writer.keyCache.Load(unsafeBytesToString(key))
-	typ := KVEntryWALSet
 	if cached {
-		typ |= KVFlagCachedKey
 		keyOffset = keyOffsetAny.(KVOffset)
+	}
+	// Only use cached key flag if it saves space (offset is 5 bytes)
+	useCachedFlag := cached && len(key) >= 5
+	typ := KVEntryWALSet
+	if useCachedFlag {
+		typ |= KVFlagCachedKey
 	}
 	err = kvs.writer.writeType(typ)
 	if err != nil {
 		return KVOffset{}, KVOffset{}, err
 	}
 
-	if cached {
+	if useCachedFlag {
 		err = kvs.writer.writeLEU40(keyOffset)
 		if err != nil {
 			return KVOffset{}, KVOffset{}, err
 		}
 	} else {
-		keyOffset, err = kvs.writer.writeLenPrefixedBytes(key)
+		// Write key inline; for short cached keys this duplicates data but saves WAL space
+		newOffset, err := kvs.writer.writeLenPrefixedBytes(key)
 		if err != nil {
 			return KVOffset{}, KVOffset{}, err
 		}
-		kvs.writer.addKeyToCache(key, keyOffset)
+		if !cached {
+			keyOffset = newOffset
+			kvs.writer.addKeyToCache(key, keyOffset)
+		}
 	}
 
 	valueOffset, err = kvs.writer.writeLenPrefixedBytes(value)
@@ -105,29 +113,35 @@ func (kvs *WALWriter) WriteWALSet(key, value []byte) (keyOffset, valueOffset KVO
 // WriteWALDelete writes a WAL delete entry for the given key.
 func (kvs *WALWriter) WriteWALDelete(key []byte) error {
 	cachedOffsetAny, cached := kvs.writer.keyCache.Load(unsafeBytesToString(key))
-	typ := KVEntryWALDelete
 	var cachedOffset KVOffset
 	if cached {
-		typ |= KVFlagCachedKey
 		cachedOffset = cachedOffsetAny.(KVOffset)
+	}
+	// Only use cached key flag if it saves space (offset is 5 bytes)
+	useCachedFlag := cached && len(key) >= 5
+	typ := KVEntryWALDelete
+	if useCachedFlag {
+		typ |= KVFlagCachedKey
 	}
 	err := kvs.writer.writeType(typ)
 	if err != nil {
 		return err
 	}
 
-	if cached {
+	if useCachedFlag {
 		err = kvs.writer.writeLEU40(cachedOffset)
 		if err != nil {
 			return err
 		}
 	} else {
+		// Write key inline; for short cached keys this duplicates data but saves WAL space
 		keyOffset, err := kvs.writer.writeLenPrefixedBytes(key)
 		if err != nil {
 			return err
 		}
-
-		kvs.writer.addKeyToCache(key, keyOffset)
+		if !cached {
+			kvs.writer.addKeyToCache(key, keyOffset)
+		}
 	}
 
 	return nil

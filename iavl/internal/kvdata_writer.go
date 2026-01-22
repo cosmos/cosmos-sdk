@@ -87,12 +87,11 @@ func (kvs *KVDataWriter) writeBlob(blobType KVEntryType, bz []byte) (offset KVOf
 	return offset, nil
 }
 
+// addKeyToCache caches the key's offset for location tracking.
+// All keys are cached regardless of length so we can always look up their location.
+// Note: When writing WAL entries, only use KVFlagCachedKey for keys >= 5 bytes
+// since the offset reference itself is 5 bytes (no space savings for shorter keys).
 func (kvs *KVDataWriter) addKeyToCache(key []byte, offset KVOffset) {
-	const minCacheKeyLen = 5 // we choose 4 because offsets are uint40 (5 bytes)
-	if len(key) < minCacheKeyLen {
-		// don't cache very small keys
-		return
-	}
 	kvs.keyCache.Store(unsafeBytesToString(key), offset)
 }
 

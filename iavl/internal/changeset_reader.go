@@ -10,11 +10,11 @@ type ChangesetReader struct {
 	files     *ChangesetFiles // files is only non-nil if this reader "owns" the changeset files
 	info      *ChangesetInfo  // we reference this so that it can be accessed even in shared changesets
 
-	walReader    *KVDataReader
-	kvDataReader *KVDataReader
-	branchesData *NodeMmap[BranchLayout]
-	leavesData   *NodeMmap[LeafLayout]
-	layersInfo   *StructMmap[LayerInfo]
+	walReader       *KVDataReader
+	kvDataReader    *KVDataReader
+	branchesData    *NodeMmap[BranchLayout]
+	leavesData      *NodeMmap[LeafLayout]
+	checkpointsInfo *StructMmap[CheckpointInfo]
 	//orphanWriter *OrphanWriter
 }
 
@@ -45,9 +45,9 @@ func NewChangesetReader(changeset *Changeset, files *ChangesetFiles, owned bool)
 		return nil, fmt.Errorf("failed to open branches data file: %w", err)
 	}
 
-	cr.layersInfo, err = NewStructMmap[LayerInfo](files.LayersFile())
+	cr.checkpointsInfo, err = NewStructMmap[CheckpointInfo](files.CheckpointsFile())
 	if err != nil {
-		return nil, fmt.Errorf("failed to open versions data file: %w", err)
+		return nil, fmt.Errorf("failed to open checkpoints data file: %w", err)
 	}
 
 	//cr.orphanWriter = NewOrphanWriter(files.orphansFile)
@@ -104,7 +104,7 @@ func (cr *ChangesetReader) ResolveLeafByID(id NodeID) (*LeafLayout, error) {
 	if !id.IsLeaf() {
 		return nil, fmt.Errorf("node ID %s is not a leaf", id.String())
 	}
-	info, err := cr.getLayerInfo(id.Layer())
+	info, err := cr.getCheckpointInfo(id.Checkpoint())
 	if err != nil {
 		return nil, err
 	}
@@ -116,21 +116,21 @@ func (cr *ChangesetReader) ResolveBranchByID(id NodeID) (*BranchLayout, error) {
 		return nil, fmt.Errorf("node ID %s is not a branch", id.String())
 	}
 
-	info, err := cr.getLayerInfo(id.Layer())
+	info, err := cr.getCheckpointInfo(id.Checkpoint())
 	if err != nil {
 		return nil, err
 	}
 	return cr.branchesData.FindByID(id, &info.Branches)
 }
 
-func (cr *ChangesetReader) getLayerInfo(layer uint32) (*LayerInfo, error) {
+func (cr *ChangesetReader) getCheckpointInfo(checkpoint uint32) (*CheckpointInfo, error) {
 	info := cr.info
-	startLayer := info.StartLayer
-	endLayer := startLayer + uint32(cr.layersInfo.Count()) - 1
-	if layer < startLayer || layer > endLayer {
-		return nil, fmt.Errorf("layer %d out of range for changeset (have %d..%d)", layer, startLayer, endLayer)
+	firstCheckpoint := info.FirstCheckpoint
+	lastCheckpoint := firstCheckpoint + uint32(cr.checkpointsInfo.Count()) - 1
+	if checkpoint < firstCheckpoint || checkpoint > lastCheckpoint {
+		return nil, fmt.Errorf("checkpoint %d out of range for changeset (have %d..%d)", checkpoint, firstCheckpoint, lastCheckpoint)
 	}
-	return cr.layersInfo.UnsafeItem(layer - startLayer), nil
+	return cr.checkpointsInfo.UnsafeItem(checkpoint - firstCheckpoint), nil
 }
 
 func (cr *ChangesetReader) Changeset() *Changeset {
@@ -187,7 +187,7 @@ func (cr *ChangesetReader) Close() error {
 		cr.kvDataReader.Close(),
 		cr.leavesData.Close(),
 		cr.branchesData.Close(),
-		cr.layersInfo.Close(),
+		cr.checkpointsInfo.Close(),
 		//cr.orphanWriter.Flush(),
 	}
 	if cr.files != nil {

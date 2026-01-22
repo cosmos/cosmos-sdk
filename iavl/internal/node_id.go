@@ -4,7 +4,10 @@ import "fmt"
 
 // NodeID is a stable identifier for a node in the IAVL tree.
 type NodeID struct {
-	layer uint32
+	// checkpoint is the version at which this node was checkpointed (persisted to disk).
+	// This is NOT the node's logical creation version, but rather identifies which checkpoint
+	// batch the node belongs to for lookup and eviction purposes.
+	checkpoint uint32
 
 	// flagIndex indicates whether this is a branch or leaf node and stores its index in the tree.
 	flagIndex nodeFlagIndex
@@ -17,10 +20,10 @@ type NodeID struct {
 type nodeFlagIndex uint32
 
 // NewNodeID creates a new NodeID.
-func NewNodeID(isLeaf bool, layer, index uint32) NodeID {
+func NewNodeID(isLeaf bool, checkpoint, index uint32) NodeID {
 	return NodeID{
-		layer:     layer,
-		flagIndex: newNodeFlagIndex(isLeaf, index),
+		checkpoint: checkpoint,
+		flagIndex:  newNodeFlagIndex(isLeaf, index),
 	}
 }
 
@@ -31,11 +34,12 @@ func (id NodeID) IsLeaf() bool {
 
 // IsEmpty returns true if the NodeID is the zero value.
 func (id NodeID) IsEmpty() bool {
-	return id.layer == 0 && id.flagIndex == 0
+	return id.checkpoint == 0 && id.flagIndex == 0
 }
 
-func (id NodeID) Layer() uint32 {
-	return id.layer
+// Checkpoint returns the checkpoint (version) at which this node was persisted.
+func (id NodeID) Checkpoint() uint32 {
+	return id.checkpoint
 }
 
 // Index returns the index of the node in the tree.
@@ -47,12 +51,12 @@ func (id NodeID) Index() uint32 {
 
 // Equal returns true if the two NodeIDs are equal.
 func (id NodeID) Equal(other NodeID) bool {
-	return id.layer == other.layer && id.flagIndex == other.flagIndex
+	return id.checkpoint == other.checkpoint && id.flagIndex == other.flagIndex
 }
 
 // String returns a string representation of the NodeID.
 func (id NodeID) String() string {
-	return fmt.Sprintf("NodeID{leaf:%t, layer:%d, index:%d}", id.IsLeaf(), id.layer, id.flagIndex.Index())
+	return fmt.Sprintf("NodeID{leaf:%t, checkpoint:%d, index:%d}", id.IsLeaf(), id.checkpoint, id.flagIndex.Index())
 }
 
 // NewNodeFlagIndex creates a new nodeFlagIndex.

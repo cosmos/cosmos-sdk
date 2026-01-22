@@ -19,20 +19,22 @@ func init() {
 }
 
 // ChangesetInfo holds metadata about a changeset.
-// This mainly tracks the start and end version of the changeset and also contains statistics about orphans in the
-// changeset so that compaction can be efficiently scheduled.
+// This mainly tracks the WAL version range and checkpoint range of the changeset and also contains statistics
+// about orphans in the changeset so that compaction can be efficiently scheduled.
 // Currently, the orphan statistics track how many total leaf and branch orphans there are as well as the total sum
 // of their orphan versions.
 // This should give us some heuristics as to what percentage of the changeset is composed of
 // orphans and roughly how long ago they were orphaned.
 type ChangesetInfo struct {
-	// StartVersion is the first version with a root in the changeset.
-	StartVersion uint32
-	// EndVersion is the last version with a root in the changeset.
-	EndVersion uint32
+	// WALStartVersion is the first version covered by the WAL in this changeset.
+	WALStartVersion uint32
+	// WALEndVersion is the last version covered by the WAL in this changeset.
+	WALEndVersion uint32
 
-	StartLayer uint32
-	EndLayer   uint32
+	// FirstCheckpoint is the first checkpoint version in this changeset.
+	FirstCheckpoint uint32
+	// LastCheckpoint is the last checkpoint version in this changeset.
+	LastCheckpoint uint32
 
 	// LeafOrphans is the number of leaf orphan nodes in the changeset.
 	LeafOrphans uint32

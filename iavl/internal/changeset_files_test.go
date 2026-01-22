@@ -76,7 +76,7 @@ package internal
 //	require.NotNil(t, cf.KVDataFile())
 //	require.NotNil(t, cf.BranchesFile())
 //	require.NotNil(t, cf.LeavesFile())
-//	require.NotNil(t, cf.LayersFile())
+//	require.NotNil(t, cf.CheckpointsFile())
 //	require.NotNil(t, cf.OrphansFile())
 //	require.NotNil(t, cf.Info())
 //}

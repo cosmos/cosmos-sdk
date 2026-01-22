@@ -436,10 +436,10 @@ func printTreeStructure(node *MemNode) string {
 
 		key := node.key
 		if node.IsLeaf() {
-			return fmt.Sprintf("[%s.%d.%d]", key, id.Layer(), id.Index())
+			return fmt.Sprintf("[%s.%d.%d]", key, id.Checkpoint(), id.Index())
 		}
 		return fmt.Sprintf("(%s.%d.%d %s %s)",
-			key, id.Layer(), id.Index(),
+			key, id.Checkpoint(), id.Index(),
 			doPrintNode(node.left.Mem.Load()),
 			doPrintNode(node.right.Mem.Load()),
 		)

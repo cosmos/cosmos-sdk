@@ -9,22 +9,20 @@ import (
 )
 
 type Checkpointer struct {
-	savedLayer          atomic.Uint32
-	reqChan             chan checkpointReq
-	doneChan            chan error
-	changesetLock       sync.RWMutex
-	changesetsByLayer   *btree.Map[uint32, *Changeset]
-	changesetsByVersion *btree.Map[uint32, *Changeset]
-	evictor             Evictor
+	lastCheckpoint         atomic.Uint32
+	reqChan                chan checkpointReq
+	doneChan               chan error
+	changesetLock          sync.RWMutex
+	changesetsByCheckpoint *btree.Map[uint32, *Changeset]
+	evictor                Evictor
 }
 
 func NewCheckpointer(evictor Evictor) *Checkpointer {
 	cp := &Checkpointer{
-		reqChan:             make(chan checkpointReq, 16),
-		doneChan:            make(chan error, 1),
-		changesetsByLayer:   &btree.Map[uint32, *Changeset]{},
-		changesetsByVersion: &btree.Map[uint32, *Changeset]{},
-		evictor:             evictor,
+		reqChan:                make(chan checkpointReq, 16),
+		doneChan:               make(chan error, 1),
+		changesetsByCheckpoint: &btree.Map[uint32, *Changeset]{},
+		evictor:                evictor,
 	}
 	cp.start()
 	return cp
@@ -37,28 +35,17 @@ func (cp *Checkpointer) start() {
 	}()
 }
 
-func (cp *Checkpointer) ChangesetByLayer(layer uint32) *Changeset {
+// ChangesetByCheckpoint finds the changeset containing the given checkpoint.
+// Since checkpoint == version, this works for both checkpoint and version lookups.
+func (cp *Checkpointer) ChangesetByCheckpoint(checkpoint uint32) *Changeset {
 	cp.changesetLock.RLock()
 	defer cp.changesetLock.RUnlock()
 
 	var res *Changeset
-	// Find the changeset with the highest start version <= the requested layer
-	cp.changesetsByLayer.Descend(layer, func(key uint32, cs *Changeset) bool {
+	// Find the changeset with the highest start checkpoint <= the requested checkpoint
+	cp.changesetsByCheckpoint.Descend(checkpoint, func(key uint32, cs *Changeset) bool {
 		res = cs
-		return false // Take the first (highest) entry <= layer
-	})
-	return res
-}
-
-func (cp *Checkpointer) ChangesetByVersion(version uint32) *Changeset {
-	cp.changesetLock.RLock()
-	defer cp.changesetLock.RUnlock()
-
-	var res *Changeset
-	// Find the changeset with the highest start version <= the requested version
-	cp.changesetsByVersion.Descend(version, func(key uint32, cs *Changeset) bool {
-		res = cs
-		return false // Take the first (highest) entry <= version
+		return false // Take the first (highest) entry <= checkpoint
 	})
 	return res
 }
@@ -83,8 +70,8 @@ func (cp *Checkpointer) proc() error {
 	for req := range cp.reqChan {
 		_, span := Tracer.Start(context.Background(), "SaveCheckpoint")
 
-		layer := cp.savedLayer.Load() + 1
-		if err := req.writer.SaveLayer(layer, req.version, req.root); err != nil {
+		// checkpoint == version
+		if err := req.writer.SaveCheckpoint(req.version, req.root); err != nil {
 			return err
 		}
 		if req.seal {
@@ -96,19 +83,18 @@ func (cp *Checkpointer) proc() error {
 				return err
 			}
 		}
-		// if we have a new writer, update the changeset maps
-		// we only need to store the changeset ONCE per writer for the FIRST layer and version it writes
+		// if we have a new writer, update the changeset map
+		// we only need to store the changeset ONCE per writer for the FIRST checkpoint it writes
 		if req.writer != curWriter { // compare pointers
 			curWriter = req.writer
 			cp.changesetLock.Lock()
-			cp.changesetsByLayer.Set(layer, curWriter.Changeset())
-			cp.changesetsByVersion.Set(req.version, curWriter.Changeset())
+			cp.changesetsByCheckpoint.Set(req.version, curWriter.Changeset())
 			cp.changesetLock.Unlock()
 		}
-		cp.savedLayer.Store(layer)
+		cp.lastCheckpoint.Store(req.version)
 		// notify evictor
 		if cp.evictor != nil {
-			cp.evictor.Evict(req.root, layer)
+			cp.evictor.Evict(req.root, req.version)
 		}
 
 		span.End()

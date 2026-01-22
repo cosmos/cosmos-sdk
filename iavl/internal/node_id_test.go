@@ -8,28 +8,28 @@ import (
 
 func TestNodeID(t *testing.T) {
 	tests := []struct {
-		name    string
-		leaf    bool
-		version uint32
-		index   uint32
-		str     string
+		name       string
+		leaf       bool
+		checkpoint uint32
+		index      uint32
+		str        string
 	}{
 		{
 			name: "leaf1_1",
-			leaf: true, version: 1, index: 1,
-			str: "NodeID{leaf:true, layer:1, index:1}",
+			leaf: true, checkpoint: 1, index: 1,
+			str: "NodeID{leaf:true, checkpoint:1, index:1}",
 		},
 		{
-			name: "branch2_3", version: 2, index: 3,
-			str: "NodeID{leaf:false, layer:2, index:3}",
+			name: "branch2_3", checkpoint: 2, index: 3,
+			str: "NodeID{leaf:false, checkpoint:2, index:3}",
 		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			id := NewNodeID(test.leaf, test.version, test.index)
+			id := NewNodeID(test.leaf, test.checkpoint, test.index)
 			require.Equal(t, test.leaf, id.IsLeaf())
 			require.Equal(t, test.index, id.Index())
-			require.Equal(t, test.version, id.Layer())
+			require.Equal(t, test.checkpoint, id.Checkpoint())
 			require.Equal(t, test.str, id.String())
 		})
 	}
@@ -65,7 +65,7 @@ func TestNodeID_Equal(t *testing.T) {
 			equal: true,
 		},
 		{
-			name:  "different layer",
+			name:  "different checkpoint",
 			a:     NewNodeID(true, 1, 1),
 			b:     NewNodeID(true, 2, 1),
 			equal: false,

@@ -102,8 +102,8 @@ func (ts *TreeStore) WriteWALUpdates(updates []KVUpdate, fsync bool) error {
 	return nil
 }
 
-func (ts *TreeStore) ChangesetForLayer(layer uint32) *Changeset {
-	return ts.checkpointer.ChangesetByLayer(layer)
+func (ts *TreeStore) ChangesetForCheckpoint(checkpoint uint32) *Changeset {
+	return ts.checkpointer.ChangesetByCheckpoint(checkpoint)
 }
 
 func (ts *TreeStore) ForceToDisk() error {

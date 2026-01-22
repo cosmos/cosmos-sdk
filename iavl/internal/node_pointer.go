@@ -42,19 +42,19 @@ func (p *NodePointer) Resolve() (Node, Pin, error) {
 			node, err := rdr.ResolveByFileIndex(p.id, p.fileIdx)
 			return node, pin, err
 		} else {
-			return nil, NoopPin{}, fmt.Errorf("unable to pin ChangesetReader for layer %d, compaction resolution not enabled", p.id.Layer())
+			return nil, NoopPin{}, fmt.Errorf("unable to pin ChangesetReader for checkpoint %d, compaction resolution not enabled", p.id.Checkpoint())
 		}
 	} else {
-		cs := p.changeset.TreeStore().ChangesetForLayer(p.id.Layer())
+		cs := p.changeset.TreeStore().ChangesetForCheckpoint(p.id.Checkpoint())
 		if cs == nil {
-			return nil, NoopPin{}, fmt.Errorf("unable to find Changeset for layer %d", p.id.Layer())
+			return nil, NoopPin{}, fmt.Errorf("unable to find Changeset for checkpoint %d", p.id.Checkpoint())
 		}
 		rdr, pin := cs.TryPinReader()
 		if rdr != nil {
 			node, err := rdr.ResolveByID(p.id)
 			return node, pin, err
 		} else {
-			return nil, NoopPin{}, fmt.Errorf("unable to pin ChangesetReader for layer %d, compaction resolution not enabled", p.id.Layer())
+			return nil, NoopPin{}, fmt.Errorf("unable to pin ChangesetReader for checkpoint %d, compaction resolution not enabled", p.id.Checkpoint())
 		}
 	}
 }

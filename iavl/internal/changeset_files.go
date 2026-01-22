@@ -14,17 +14,17 @@ import (
 type ChangesetFiles struct {
 	dir          string
 	treeDir      string
-	startVersion uint32
+	startVersion uint32 // directory name - could be WAL or checkpoint start depending on compaction
 	compactedAt  uint32
 
-	walFile      *os.File
-	kvDataFile   *os.File
-	branchesFile *os.File
-	leavesFile   *os.File
-	layerFiles   *os.File
-	orphansFile  *os.File
-	infoFile     *os.File
-	info         *ChangesetInfo
+	walFile         *os.File
+	kvDataFile      *os.File
+	branchesFile    *os.File
+	leavesFile      *os.File
+	checkpointsFile *os.File
+	orphansFile     *os.File
+	infoFile        *os.File
+	info            *ChangesetInfo
 
 	closed bool
 }
@@ -74,8 +74,8 @@ func CreateChangesetFiles(treeDir string, startVersion, compactedAt uint32, have
 		return nil, fmt.Errorf("failed to open changeset files: %w", err)
 	}
 
-	// set start version in info file
-	cr.info.StartVersion = startVersion
+	// set WAL start version in info file
+	cr.info.WALStartVersion = startVersion
 
 	return cr, nil
 }
@@ -86,7 +86,7 @@ const writeModeFlags = os.O_RDWR | os.O_CREATE | os.O_APPEND
 // All files are opened in readonly mode, except for orphans.dat and info.dat which are opened in read-write mode
 // to track orphan data and statistics.
 func OpenChangesetFiles(dirName string) (*ChangesetFiles, error) {
-	startLayer, compactedAt, valid := ParseChangesetDirName(filepath.Base(dirName))
+	startVersion, compactedAt, valid := ParseChangesetDirName(filepath.Base(dirName))
 	if !valid {
 		return nil, fmt.Errorf("invalid changeset dir name: %s", dirName)
 	}
@@ -101,7 +101,7 @@ func OpenChangesetFiles(dirName string) (*ChangesetFiles, error) {
 	cr := &ChangesetFiles{
 		dir:          dir,
 		treeDir:      treeDir,
-		startVersion: startLayer,
+		startVersion: startVersion,
 		compactedAt:  compactedAt,
 	}
 
@@ -149,10 +149,10 @@ func (cr *ChangesetFiles) open(mode int, haveWal bool) error {
 		return fmt.Errorf("failed to open branches data file: %w", err)
 	}
 
-	layersPath := filepath.Join(cr.dir, "layers.dat")
-	cr.layerFiles, err = os.OpenFile(layersPath, mode, 0o600)
+	checkpointsPath := filepath.Join(cr.dir, "checkpoints.dat")
+	cr.checkpointsFile, err = os.OpenFile(checkpointsPath, mode, 0o600)
 	if err != nil {
-		return fmt.Errorf("failed to open versions data file: %w", err)
+		return fmt.Errorf("failed to open checkpoints data file: %w", err)
 	}
 
 	orphansPath := filepath.Join(cr.dir, "orphans.dat")
@@ -178,7 +178,7 @@ func (cr *ChangesetFiles) open(mode int, haveWal bool) error {
 // ParseChangesetDirName parses a changeset directory name and returns the start version and compacted at version.
 // If the directory name is invalid, valid will be false.
 // If a changeset is original and uncompacted, compactedAt will be 0.
-func ParseChangesetDirName(dirName string) (startLayer, compactedAt uint32, valid bool) {
+func ParseChangesetDirName(dirName string) (startVersion, compactedAt uint32, valid bool) {
 	var err error
 	var v uint64
 	// if no dot, it's an original changeset
@@ -199,7 +199,7 @@ func ParseChangesetDirName(dirName string) (startLayer, compactedAt uint32, vali
 	if err != nil {
 		return 0, 0, false
 	}
-	startLayer = uint32(v)
+	startVersion = uint32(v)
 
 	v, err = strconv.ParseUint(parts[1], 10, 32)
 	if err != nil {
@@ -207,7 +207,7 @@ func ParseChangesetDirName(dirName string) (startLayer, compactedAt uint32, vali
 	}
 	compactedAt = uint32(v)
 
-	return startLayer, compactedAt, true
+	return startVersion, compactedAt, true
 }
 
 // Dir returns the changeset directory path.
@@ -240,9 +240,9 @@ func (cr *ChangesetFiles) LeavesFile() *os.File {
 	return cr.leavesFile
 }
 
-// LayersFile returns the layers.dat file handle.
-func (cr *ChangesetFiles) LayersFile() *os.File {
-	return cr.layerFiles
+// CheckpointsFile returns the checkpoints.dat file handle.
+func (cr *ChangesetFiles) CheckpointsFile() *os.File {
+	return cr.checkpointsFile
 }
 
 // OrphansFile returns the orphans.dat file handle.
@@ -261,9 +261,15 @@ func (cr *ChangesetFiles) RewriteInfo() error {
 	return RewriteChangesetInfo(cr.infoFile, cr.info)
 }
 
-// StartVersion returns the start version of the changeset.
+// StartVersion returns the start version of the changeset (directory name).
+// This could be WAL start or checkpoint start depending on compaction state.
 func (cr *ChangesetFiles) StartVersion() uint32 {
 	return cr.startVersion
+}
+
+// FirstCheckpoint returns the first checkpoint version in this changeset.
+func (cr *ChangesetFiles) FirstCheckpoint() uint32 {
+	return cr.info.FirstCheckpoint
 }
 
 // CompactedAtVersion returns the compacted at version of the changeset.
@@ -314,7 +320,7 @@ func (cr *ChangesetFiles) Close() error {
 		cr.kvDataFile.Close(),
 		cr.branchesFile.Close(),
 		cr.leavesFile.Close(),
-		cr.layerFiles.Close(),
+		cr.checkpointsFile.Close(),
 		cr.orphansFile.Close(),
 		cr.infoFile.Close(),
 	)
@@ -331,7 +337,7 @@ func (cr *ChangesetFiles) DeleteFiles() error {
 		os.Remove(cr.infoFile.Name()),
 		os.Remove(cr.leavesFile.Name()),
 		os.Remove(cr.branchesFile.Name()),
-		os.Remove(cr.layerFiles.Name()),
+		os.Remove(cr.checkpointsFile.Name()),
 		os.Remove(cr.orphansFile.Name()),
 		os.Remove(cr.kvDataFile.Name()),
 		cr.MarkReady(), // remove pending marker file if it exists

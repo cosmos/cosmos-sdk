@@ -43,8 +43,9 @@ func (ctx *MutationContext) mutateBranch(node Node) (*MemNode, error) {
 // Nodes with version 0 are uncommitted and don't need orphan tracking since they were never persisted.
 // Returns true if the node was a valid orphan, false otherwise.
 func (ctx *MutationContext) addOrphan(id NodeID) bool {
-	version := id.Layer()
-	if version > 0 && version < ctx.version {
+	// checkpoint == version, so this gives us the version at which the node was persisted
+	checkpoint := id.Checkpoint()
+	if checkpoint > 0 && checkpoint < ctx.version {
 		ctx.orphans = append(ctx.orphans, id)
 		return true
 	}

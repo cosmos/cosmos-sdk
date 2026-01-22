@@ -17,8 +17,10 @@ func TestChangesetInfo_RoundTrip(t *testing.T) {
 	defer file.Close()
 
 	original := &ChangesetInfo{
-		StartVersion:             100,
-		EndVersion:               200,
+		WALStartVersion:          100,
+		WALEndVersion:            200,
+		FirstCheckpoint:          100,
+		LastCheckpoint:           200,
 		LeafOrphans:              50,
 		BranchOrphans:            25,
 		LeafOrphanVersionTotal:   5000,
@@ -31,8 +33,10 @@ func TestChangesetInfo_RoundTrip(t *testing.T) {
 	read, err := ReadChangesetInfo(file)
 	require.NoError(t, err)
 
-	require.Equal(t, original.StartVersion, read.StartVersion)
-	require.Equal(t, original.EndVersion, read.EndVersion)
+	require.Equal(t, original.WALStartVersion, read.WALStartVersion)
+	require.Equal(t, original.WALEndVersion, read.WALEndVersion)
+	require.Equal(t, original.FirstCheckpoint, read.FirstCheckpoint)
+	require.Equal(t, original.LastCheckpoint, read.LastCheckpoint)
 	require.Equal(t, original.LeafOrphans, read.LeafOrphans)
 	require.Equal(t, original.BranchOrphans, read.BranchOrphans)
 	require.Equal(t, original.LeafOrphanVersionTotal, read.LeafOrphanVersionTotal)
@@ -48,20 +52,22 @@ func TestChangesetInfo_RewriteOverwrites(t *testing.T) {
 	defer file.Close()
 
 	// Write first version
-	v1 := &ChangesetInfo{StartVersion: 1, EndVersion: 1}
+	v1 := &ChangesetInfo{WALStartVersion: 1, WALEndVersion: 1, FirstCheckpoint: 1, LastCheckpoint: 1}
 	err = RewriteChangesetInfo(file, v1)
 	require.NoError(t, err)
 
 	// Overwrite with second version
-	v2 := &ChangesetInfo{StartVersion: 1, EndVersion: 2}
+	v2 := &ChangesetInfo{WALStartVersion: 1, WALEndVersion: 2, FirstCheckpoint: 1, LastCheckpoint: 2}
 	err = RewriteChangesetInfo(file, v2)
 	require.NoError(t, err)
 
 	// Read should return second version
 	read, err := ReadChangesetInfo(file)
 	require.NoError(t, err)
-	require.Equal(t, uint32(1), read.StartVersion)
-	require.Equal(t, uint32(2), read.EndVersion)
+	require.Equal(t, uint32(1), read.WALStartVersion)
+	require.Equal(t, uint32(2), read.WALEndVersion)
+	require.Equal(t, uint32(1), read.FirstCheckpoint)
+	require.Equal(t, uint32(2), read.LastCheckpoint)
 }
 
 func TestChangesetInfo_ReadEmptyFile(t *testing.T) {

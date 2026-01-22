@@ -6,15 +6,16 @@ import (
 )
 
 type ChangesetWriter struct {
-	layer uint32
+	// checkpoint is the current checkpoint version being written (checkpoint == version)
+	checkpoint uint32
 
 	files *ChangesetFiles
 
-	walWriter    *WALWriter
-	kvWriter     *KVDataWriter
-	branchesData *StructWriter[BranchLayout]
-	leavesData   *StructWriter[LeafLayout]
-	layersData   *StructWriter[LayerInfo]
+	walWriter       *WALWriter
+	kvWriter        *KVDataWriter
+	branchesData    *StructWriter[BranchLayout]
+	leavesData      *StructWriter[LeafLayout]
+	checkpointsData *StructWriter[CheckpointInfo]
 
 	changeset *Changeset
 
@@ -33,13 +34,13 @@ func NewChangesetWriter(treeDir string, stagedVersion uint32, treeStore *TreeSto
 	}
 
 	cs := &ChangesetWriter{
-		files:        files,
-		walWriter:    walWriter,
-		kvWriter:     NewKVDataWriter(files.KVDataFile()),
-		branchesData: NewStructWriter[BranchLayout](files.BranchesFile()),
-		leavesData:   NewStructWriter[LeafLayout](files.LeavesFile()),
-		layersData:   NewStructWriter[LayerInfo](files.LayersFile()),
-		changeset:    NewChangeset(treeStore),
+		files:           files,
+		walWriter:       walWriter,
+		kvWriter:        NewKVDataWriter(files.KVDataFile()),
+		branchesData:    NewStructWriter[BranchLayout](files.BranchesFile()),
+		leavesData:      NewStructWriter[LeafLayout](files.LeavesFile()),
+		checkpointsData: NewStructWriter[CheckpointInfo](files.CheckpointsFile()),
+		changeset:       NewChangeset(treeStore),
 	}
 	return cs, nil
 }
@@ -52,22 +53,23 @@ func (cs *ChangesetWriter) WALWriter() *WALWriter {
 	return cs.walWriter
 }
 
-func (cs *ChangesetWriter) SaveLayer(layer, version uint32, root *NodePointer) error {
+// SaveCheckpoint persists the tree state at the given version.
+// The checkpoint identifier equals the version (checkpoint == version).
+func (cs *ChangesetWriter) SaveCheckpoint(version uint32, root *NodePointer) error {
 	cs.lastBranchIdx = 0
 	cs.lastLeafIdx = 0
 
-	// set or validate layer
-	if cs.layer != 0 {
-		if layer != cs.layer {
-			return fmt.Errorf("invalid layer %d, expected %d", layer, cs.layer)
+	// set or validate checkpoint
+	if cs.checkpoint != 0 {
+		if version <= cs.checkpoint {
+			return fmt.Errorf("invalid checkpoint version %d, must be greater than previous %d", version, cs.checkpoint)
 		}
-	} else {
-		cs.layer = layer
 	}
+	cs.checkpoint = version
 
-	var layerInfo LayerInfo
-	layerInfo.Branches.StartOffset = uint32(cs.branchesData.Count())
-	layerInfo.Leaves.StartOffset = uint32(cs.leavesData.Count())
+	var cpInfo CheckpointInfo
+	cpInfo.Branches.StartOffset = uint32(cs.branchesData.Count())
+	cpInfo.Leaves.StartOffset = uint32(cs.leavesData.Count())
 
 	if root != nil {
 		// it is okay to have a nil root (empty tree)
@@ -75,40 +77,35 @@ func (cs *ChangesetWriter) SaveLayer(layer, version uint32, root *NodePointer) e
 		if err != nil {
 			return err
 		}
-		layerInfo.RootID = root.id
+		cpInfo.RootID = root.id
 	}
 
-	layerInfo.Layer = layer
-	layerInfo.Version = version
+	cpInfo.Version = version
 	totalBranches := cs.lastBranchIdx
 	if totalBranches > 0 {
-		layerInfo.Branches.StartIndex = 1
-		layerInfo.Branches.Count = totalBranches
-		layerInfo.Branches.EndIndex = totalBranches
+		cpInfo.Branches.StartIndex = 1
+		cpInfo.Branches.Count = totalBranches
+		cpInfo.Branches.EndIndex = totalBranches
 	}
 	totalLeaves := cs.lastLeafIdx
 	if totalLeaves > 0 {
-		layerInfo.Leaves.StartIndex = 1
-		layerInfo.Leaves.Count = totalLeaves
-		layerInfo.Leaves.EndIndex = totalLeaves
+		cpInfo.Leaves.StartIndex = 1
+		cpInfo.Leaves.Count = totalLeaves
+		cpInfo.Leaves.EndIndex = totalLeaves
 	}
 
-	// commit version info
-	err := cs.layersData.Append(&layerInfo)
+	// commit checkpoint info
+	err := cs.checkpointsData.Append(&cpInfo)
 	if err != nil {
-		return fmt.Errorf("failed to write version info: %w", err)
+		return fmt.Errorf("failed to write checkpoint info: %w", err)
 	}
 
-	// Set start version on first successful save
+	// Set first checkpoint on first successful save
 	info := cs.files.info
-	if info.StartLayer == 0 {
-		info.StartLayer = layer
+	if info.FirstCheckpoint == 0 {
+		info.FirstCheckpoint = version
 	}
-	info.EndLayer = layer
-	info.EndVersion = version
-
-	// advance to next layer
-	cs.layer = layer + 1
+	info.LastCheckpoint = version
 
 	return nil
 }
@@ -136,7 +133,7 @@ func (cs *ChangesetWriter) writeBranch(np *NodePointer, node *MemNode) error {
 		return err
 	}
 
-	node.nodeId = NewNodeID(false, cs.layer, cs.lastBranchIdx+1)
+	node.nodeId = NewNodeID(false, cs.checkpoint, cs.lastBranchIdx+1)
 	cs.lastBranchIdx++
 
 	keyOffset, found := cs.walWriter.LookupKeyOffset(node.key)
@@ -153,18 +150,18 @@ func (cs *ChangesetWriter) writeBranch(np *NodePointer, node *MemNode) error {
 	}
 	node.keyOffset = keyOffset
 
-	leftVersion := node.left.id.Layer()
-	rightVersion := node.right.id.Layer()
+	leftCheckpoint := node.left.id.Checkpoint()
+	rightCheckpoint := node.right.id.Checkpoint()
 
 	var leftOffset uint32
 	var rightOffset uint32
 
 	// If the child node is in the same changeset, store its 1-based file offset.
 	// fileIdx is already 1-based (set to Count() after append), and 0 means no offset.
-	if leftVersion >= cs.StartLayer() {
+	if leftCheckpoint >= cs.FirstCheckpoint() {
 		leftOffset = node.left.fileIdx
 	}
-	if rightVersion >= cs.StartLayer() {
+	if rightCheckpoint >= cs.FirstCheckpoint() {
 		rightOffset = node.right.fileIdx
 	}
 
@@ -209,7 +206,7 @@ func (cs *ChangesetWriter) writeBranch(np *NodePointer, node *MemNode) error {
 }
 
 func (cs *ChangesetWriter) writeLeaf(np *NodePointer, node *MemNode) error {
-	node.nodeId = NewNodeID(true, cs.layer, cs.lastLeafIdx+1)
+	node.nodeId = NewNodeID(true, cs.checkpoint, cs.lastLeafIdx+1)
 	cs.lastLeafIdx++
 
 	keyOffset := node.keyOffset
@@ -266,8 +263,9 @@ func (cs *ChangesetWriter) writeLeaf(np *NodePointer, node *MemNode) error {
 //	return reader, nil
 //}
 
-func (cs *ChangesetWriter) StartLayer() uint32 {
-	return cs.files.StartVersion()
+// FirstCheckpoint returns the first checkpoint version in this changeset.
+func (cs *ChangesetWriter) FirstCheckpoint() uint32 {
+	return cs.files.FirstCheckpoint()
 }
 
 func (cs *ChangesetWriter) CreatedSharedReader() error {
@@ -292,12 +290,12 @@ func (cs *ChangesetWriter) Flush() error {
 		cs.leavesData.Flush(),
 		cs.branchesData.Flush(),
 		cs.kvWriter.Flush(),
-		cs.layersData.Flush(),
+		cs.checkpointsData.Flush(),
 	)
 }
 
 func (cs *ChangesetWriter) Seal(endVersion uint32) error {
-	cs.files.Info().EndVersion = endVersion
+	cs.files.Info().WALEndVersion = endVersion
 	err := cs.Flush()
 	if err != nil {
 		return fmt.Errorf("failed to flush changeset data: %w", err)
@@ -313,7 +311,7 @@ func (cs *ChangesetWriter) Seal(endVersion uint32) error {
 	// defensively nil out writers to prevent further use
 	cs.leavesData = nil
 	cs.branchesData = nil
-	cs.layersData = nil
+	cs.checkpointsData = nil
 	cs.kvWriter = nil
 	cs.walWriter = nil
 

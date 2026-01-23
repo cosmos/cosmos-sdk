@@ -68,7 +68,7 @@ func (node *BranchPersisted) Key() (UnsafeBytes, error) {
 	}
 	// the key data may be stored either in the WAL OR KV data depending on the key info flag
 	var kvDataReader *KVDataReader
-	if node.layout.KeyOffset.IsKVData() {
+	if node.layout.KeyOffset.IsInKVData() {
 		kvDataReader = node.store.KVData()
 	} else {
 		kvDataReader = node.store.WALData()

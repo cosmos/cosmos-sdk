@@ -49,7 +49,7 @@ func (node *LeafPersisted) Value() (UnsafeBytes, error) {
 func readLeafBlob(rdr *ChangesetReader, offset KVOffset) (UnsafeBytes, error) {
 	// leaf data location is determined by the offset's location flag
 	var data *KVDataReader
-	if offset.IsKVData() {
+	if offset.IsInKVData() {
 		data = rdr.KVData()
 	} else {
 		data = rdr.WALData()

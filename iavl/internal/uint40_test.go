@@ -66,8 +66,8 @@ func TestKVOffset(t *testing.T) {
 			} else {
 				u := NewKVOffset(tt.value, tt.inKVData)
 				require.Equal(t, tt.value, u.Offset())
-				require.Equal(t, !tt.inKVData, u.IsWAL())
-				require.Equal(t, tt.inKVData, u.IsKVData())
+				require.Equal(t, !tt.inKVData, u.IsInWAL())
+				require.Equal(t, tt.inKVData, u.IsInKVData())
 				require.Equal(t, tt.wantStr, u.String())
 			}
 		})

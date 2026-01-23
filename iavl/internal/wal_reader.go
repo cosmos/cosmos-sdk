@@ -147,13 +147,14 @@ func (wr *WALReader) readKey() error {
 }
 
 func (wr *WALReader) readCachedKey() error {
-	cachedKeyOffset, err := wr.rdr.readLEU32(wr.offset)
+	cachedKeyOffset, err := wr.rdr.readLEU40(wr.offset)
 	if err != nil {
 		return fmt.Errorf("failed to read cached key offset at %d: %w", wr.offset, err)
 	}
-	wr.offset += 4
+	wr.offset += 5
 	var ok bool
-	wr.Key, ok = wr.keyMappings[int(cachedKeyOffset)]
+	// The stored offset may have location flag set, mask it off for lookup
+	wr.Key, ok = wr.keyMappings[int(cachedKeyOffset&kvOffsetMask)]
 	if !ok {
 		return fmt.Errorf("cached key not found at offset %d", cachedKeyOffset)
 	}
@@ -161,12 +162,11 @@ func (wr *WALReader) readCachedKey() error {
 }
 
 func (wr *WALReader) readValue() error {
-	var n int
-	var err error
-	wr.Value, n, err = wr.rdr.unsafeReadBlob(wr.offset)
+	bz, n, err := wr.rdr.unsafeReadBlob(wr.offset)
 	if err != nil {
 		return fmt.Errorf("failed to read WAL value at offset %d: %w", wr.offset, err)
 	}
+	wr.Value = WrapUnsafeBytes(bz)
 	wr.offset += n
 	return nil
 }

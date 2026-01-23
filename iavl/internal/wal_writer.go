@@ -12,7 +12,7 @@ type WALWriter struct {
 
 func NewWALWriter(file *os.File) *WALWriter {
 	return &WALWriter{
-		writer: NewKVDataWriter(file, false),
+		writer: NewKVDataWriter(file),
 	}
 }
 
@@ -61,18 +61,19 @@ func (kvs *WALWriter) WriteWALUpdates(updates []KVUpdate) error {
 			if err != nil {
 				return err
 			}
-			setNode.keyOffset = keyOffset
-			setNode.valueOffset = valueOffset
+			// Set offsets directly into node (WAL, so isKVData=false)
+			setNode.keyOffset.Set(keyOffset, false)
+			setNode.valueOffset.Set(valueOffset, false)
 		}
 	}
 	return nil
 }
 
-// WriteWALSet writes a WAL set entry for the given key and value and returns their offsets in the file.
-func (kvs *WALWriter) WriteWALSet(key, value []byte) (keyOffset, valueOffset KVOffset, err error) {
+// WriteWALSet writes a WAL set entry for the given key and value and returns their raw offsets.
+func (kvs *WALWriter) WriteWALSet(key, value []byte) (keyOffset, valueOffset uint64, err error) {
 	keyOffsetAny, cached := kvs.writer.keyCache.Load(unsafeBytesToString(key))
 	if cached {
-		keyOffset = keyOffsetAny.(KVOffset)
+		keyOffset = keyOffsetAny.(uint64)
 	}
 	// Only use cached key flag if it saves space (offset is 5 bytes)
 	useCachedFlag := cached && len(key) >= 5
@@ -82,19 +83,19 @@ func (kvs *WALWriter) WriteWALSet(key, value []byte) (keyOffset, valueOffset KVO
 	}
 	err = kvs.writer.writeType(typ)
 	if err != nil {
-		return KVOffset{}, KVOffset{}, err
+		return 0, 0, err
 	}
 
 	if useCachedFlag {
 		err = kvs.writer.writeLEU40(keyOffset)
 		if err != nil {
-			return KVOffset{}, KVOffset{}, err
+			return 0, 0, err
 		}
 	} else {
 		// Write key inline; for short cached keys this duplicates data but saves WAL space
 		newOffset, err := kvs.writer.writeLenPrefixedBytes(key)
 		if err != nil {
-			return KVOffset{}, KVOffset{}, err
+			return 0, 0, err
 		}
 		if !cached {
 			keyOffset = newOffset
@@ -104,7 +105,7 @@ func (kvs *WALWriter) WriteWALSet(key, value []byte) (keyOffset, valueOffset KVO
 
 	valueOffset, err = kvs.writer.writeLenPrefixedBytes(value)
 	if err != nil {
-		return KVOffset{}, KVOffset{}, err
+		return 0, 0, err
 	}
 
 	return keyOffset, valueOffset, nil
@@ -113,9 +114,9 @@ func (kvs *WALWriter) WriteWALSet(key, value []byte) (keyOffset, valueOffset KVO
 // WriteWALDelete writes a WAL delete entry for the given key.
 func (kvs *WALWriter) WriteWALDelete(key []byte) error {
 	cachedOffsetAny, cached := kvs.writer.keyCache.Load(unsafeBytesToString(key))
-	var cachedOffset KVOffset
+	var cachedOffset uint64
 	if cached {
-		cachedOffset = cachedOffsetAny.(KVOffset)
+		cachedOffset = cachedOffsetAny.(uint64)
 	}
 	// Only use cached key flag if it saves space (offset is 5 bytes)
 	useCachedFlag := cached && len(key) >= 5
@@ -165,11 +166,11 @@ func (kvs *WALWriter) Size() int {
 	return kvs.writer.Size()
 }
 
-// LookupKeyOffset looks up the offset of the given key in the key cache.
-func (kvs *WALWriter) LookupKeyOffset(key []byte) (KVOffset, bool) {
+// LookupKeyOffset looks up the raw offset of the given key in the key cache.
+func (kvs *WALWriter) LookupKeyOffset(key []byte) (uint64, bool) {
 	offset, found := kvs.writer.keyCache.Load(unsafeBytesToString(key))
 	if found {
-		return offset.(KVOffset), true
+		return offset.(uint64), true
 	}
-	return KVOffset{}, false
+	return 0, false
 }

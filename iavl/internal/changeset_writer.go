@@ -139,7 +139,7 @@ func (cs *ChangesetWriter) writeBranch(np *NodePointer, node *MemNode) error {
 			return fmt.Errorf("failed to write key data: %w", err)
 		}
 	}
-	node.keyOffset = keyOffset
+	node.keyOffset.Set(keyOffset, !keyInWal)
 
 	leftCheckpoint := node.left.id.Checkpoint()
 	rightCheckpoint := node.right.id.Checkpoint()
@@ -164,7 +164,7 @@ func (cs *ChangesetWriter) writeBranch(np *NodePointer, node *MemNode) error {
 		// TODO remove these and overload Left/Right to be offsets when in same changeset
 		LeftOffset:  leftOffset,
 		RightOffset: rightOffset,
-		KeyOffset:   keyOffset,
+		KeyOffset:   node.keyOffset,
 		Height:      node.height,
 		Size:        uint32(node.size),
 	}

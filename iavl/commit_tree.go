@@ -25,6 +25,8 @@ type CommitTree struct {
 	treeStore *internal.TreeStore
 
 	lastCommitId storetypes.CommitID
+
+	nodeIDsAssigned chan struct{}
 }
 
 func NewCommitTree(dir string, opts Options) (*CommitTree, error) {
@@ -107,6 +109,8 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 	c.writeMutex.Lock()
 	defer c.writeMutex.Unlock()
 
+	mutationCtx := internal.NewMutationContext(stagedVersion)
+
 	// TODO pre-allocate a decent sized slice that we reuse and reset across commits
 	// TODO we can also add a function param for the number of updates to pre-allocate
 	nodeUpdates := make([]internal.KVUpdate, 0, updateCount)
@@ -114,7 +118,10 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 		if update.Delete {
 			nodeUpdates = append(nodeUpdates, internal.KVUpdate{DeleteKey: update.Key})
 		} else {
-			nodeUpdates = append(nodeUpdates, internal.KVUpdate{SetNode: internal.NewLeafNode(update.Key, update.Value, stagedVersion)})
+			nodeUpdates = append(
+				nodeUpdates,
+				internal.KVUpdate{SetNode: mutationCtx.NewLeafNode(update.Key, update.Value)},
+			)
 		}
 	}
 
@@ -171,9 +178,14 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 		wg.Wait()
 	}()
 
+	// wait for any node IDs assignment from any previous commit to finish
+	if nodeIDsAssigned := c.nodeIDsAssigned; nodeIDsAssigned != nil {
+		<-nodeIDsAssigned
+		c.nodeIDsAssigned = nil
+	}
+
 	// process all the nodeUpdates against the current root to produce a new root
 	root := c.treeStore.Latest()
-	mutationCtx := internal.NewMutationContext(stagedVersion)
 	_, nodeUpdatesSpan := internal.Tracer.Start(ctx, "ApplyNodeUpdates")
 	for _, nu := range nodeUpdates {
 		var err error
@@ -190,6 +202,19 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 		}
 	}
 	nodeUpdatesSpan.End()
+
+	if c.treeStore.ShouldCheckpoint() {
+		// if we need to checkpoint, we must start a goroutine to assign node IDs in the background
+		nodeIDsAssigned := make(chan struct{})
+		c.nodeIDsAssigned = nodeIDsAssigned
+		go func() {
+			defer close(nodeIDsAssigned)
+			_, span := internal.Tracer.Start(ctx, "AssignNodeIDs")
+			defer span.End()
+
+			internal.AssignNodeIDs(root, stagedVersion)
+		}()
+	}
 
 	startWaitForLeafHashes := time.Now()
 
@@ -223,7 +248,7 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 	}
 
 	// save the new root after the WAL is fully written so that all offsets are populated correctly
-	err = c.treeStore.SaveRoot(root)
+	err = c.treeStore.SaveRoot(root, mutationCtx, c.nodeIDsAssigned)
 	if err != nil {
 		return storetypes.CommitID{}, err
 	}

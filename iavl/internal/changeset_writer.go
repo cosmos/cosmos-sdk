@@ -68,7 +68,7 @@ func (cs *ChangesetWriter) SaveCheckpoint(version uint32, root *NodePointer) err
 
 	if root != nil {
 		// it is okay to have a nil root (empty tree)
-		_, err := cs.writeNode(root)
+		err := cs.writeNode(root)
 		if err != nil {
 			return err
 		}
@@ -105,30 +105,29 @@ func (cs *ChangesetWriter) SaveCheckpoint(version uint32, root *NodePointer) err
 	return nil
 }
 
-func (cs *ChangesetWriter) writeNode(np *NodePointer) (nodeVersion uint32, err error) {
+func (cs *ChangesetWriter) writeNode(np *NodePointer) error {
 	memNode := np.Mem.Load()
-	if memNode == nil || !memNode.nodeId.IsEmpty() {
-		return 0, nil // already persisted
+	if memNode == nil || memNode.nodeId.Checkpoint() != cs.checkpoint {
+		return nil // already persisted or nothing to write
 	}
 	if memNode.IsLeaf() {
-		return memNode.version, cs.writeLeaf(np, memNode)
+		return cs.writeLeaf(np, memNode)
 	} else {
-		return memNode.version, cs.writeBranch(np, memNode)
+		return cs.writeBranch(np, memNode)
 	}
 }
 
 func (cs *ChangesetWriter) writeBranch(np *NodePointer, node *MemNode) error {
 	// recursively write children in post-order traversal
-	_, err := cs.writeNode(node.left)
+	err := cs.writeNode(node.left)
 	if err != nil {
 		return err
 	}
-	_, err = cs.writeNode(node.right)
+	err = cs.writeNode(node.right)
 	if err != nil {
 		return err
 	}
 
-	node.nodeId = NewNodeID(false, cs.checkpoint, cs.lastBranchIdx+1)
 	cs.lastBranchIdx++
 
 	keyOffset, keyInWal := cs.walWriter.LookupKeyOffset(node.key)
@@ -180,7 +179,6 @@ func (cs *ChangesetWriter) writeBranch(np *NodePointer, node *MemNode) error {
 		return fmt.Errorf("failed to write branch node: %w", err)
 	}
 
-	np.id = node.nodeId
 	np.fileIdx = uint32(cs.branchesData.Count())
 	np.changeset = cs.changeset
 
@@ -188,7 +186,6 @@ func (cs *ChangesetWriter) writeBranch(np *NodePointer, node *MemNode) error {
 }
 
 func (cs *ChangesetWriter) writeLeaf(np *NodePointer, node *MemNode) error {
-	node.nodeId = NewNodeID(true, cs.checkpoint, cs.lastLeafIdx+1)
 	cs.lastLeafIdx++
 
 	keyOffset := node.keyOffset
@@ -212,7 +209,6 @@ func (cs *ChangesetWriter) writeLeaf(np *NodePointer, node *MemNode) error {
 
 	np.fileIdx = uint32(cs.leavesData.Count())
 	np.changeset = cs.changeset
-	np.id = node.nodeId
 
 	return nil
 }

@@ -24,25 +24,15 @@ func SetRecursive(nodePtr *NodePointer, leafNode *MemNode, ctx *MutationContext)
 		leafNodePtr := NewNodePointer(leafNode)
 		cmp := bytes.Compare(leafNode.key, nodeKey.UnsafeBytes())
 		if cmp == 0 {
-			ctx.addOrphan(nodePtr.id)
+			ctx.addOrphan(nodePtr)
 			return leafNodePtr, true, nil
 		}
-		n := &MemNode{
-			height:  1,
-			size:    2,
-			version: ctx.version,
-		}
+		var n *MemNode
 		switch cmp {
 		case -1:
-			n.left = leafNodePtr
-			n.right = nodePtr
-			n.key = nodeKey.SafeCopy()
-			// n._keyRef = node
+			n = ctx.newBranchNode(leafNodePtr, nodePtr, nodeKey.SafeCopy())
 		case 1:
-			n.left = nodePtr
-			n.right = leafNodePtr
-			n.key = leafNode.key
-			// n._keyRef = leafNode
+			n = ctx.newBranchNode(nodePtr, leafNodePtr, leafNode.key)
 		default:
 			panic("unreachable")
 		}
@@ -120,7 +110,7 @@ func RemoveRecursive(nodePtr *NodePointer, key []byte, ctx *MutationContext) (re
 		}
 
 		if bytes.Equal(nodeKey.UnsafeBytes(), key) {
-			ctx.addOrphan(nodePtr.id)
+			ctx.addOrphan(nodePtr)
 			return true, nil, nil, nil
 		}
 		return false, nodePtr, nil, nil
@@ -145,7 +135,7 @@ func RemoveRecursive(nodePtr *NodePointer, key []byte, ctx *MutationContext) (re
 			return false, nil, nil, err
 		}
 		if newLeft == nil {
-			ctx.addOrphan(nodePtr.id)
+			ctx.addOrphan(nodePtr)
 			return true, node.Right(), nodeKey.SafeCopy(), nil
 		}
 
@@ -176,7 +166,7 @@ func RemoveRecursive(nodePtr *NodePointer, key []byte, ctx *MutationContext) (re
 	}
 
 	if newRight == nil {
-		ctx.addOrphan(nodePtr.id)
+		ctx.addOrphan(nodePtr)
 		return true, node.Left(), nil, nil
 	}
 

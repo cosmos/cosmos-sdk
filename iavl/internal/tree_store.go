@@ -9,18 +9,22 @@ type TreeStoreOptions struct {
 	ChangesetRolloverSize int
 	EvictDepth            uint8
 	CheckpointInterval    int
+	MemoryBudget          int64
 }
 
 type TreeStore struct {
 	dir  string
 	opts TreeStoreOptions
 
-	version atomic.Uint32
-	root    atomic.Pointer[NodePointer]
+	version      atomic.Uint32
+	root         atomic.Pointer[NodePointer]
+	rootMemUsage atomic.Int64
 
 	currentWriter         *ChangesetWriter
 	checkpointer          *Checkpointer
 	lastCheckpointVersion uint32
+	shouldCheckpoint      bool
+	shouldRollover        bool
 
 	//latestRoots     *btree.Map[uint32, *NodePointer]
 	//latestRootsLock sync.RWMutex
@@ -45,30 +49,37 @@ func (ts *TreeStore) StagedVersion() uint32 {
 	return ts.version.Load() + 1
 }
 
-func (ts *TreeStore) SaveRoot(newRoot *NodePointer) error {
+func (ts *TreeStore) SaveRoot(newRoot *NodePointer, mutationCtx *MutationContext, nodeIdsAssigned chan struct{}) error {
 	ts.root.Store(newRoot)
 	version := ts.version.Add(1)
+	ts.rootMemUsage.Add(mutationCtx.memUsage)
 
 	writer := ts.currentWriter
-	shouldRollover := writer.WALWriter().Size() >= ts.opts.ChangesetRolloverSize
-	checkpointInterval := ts.opts.CheckpointInterval
-	versionsSinceLastCheckpoint := version - ts.lastCheckpointVersion
-	shouldCheckpoint := shouldRollover ||
-		(checkpointInterval > 0 &&
-			versionsSinceLastCheckpoint >= uint32(ts.opts.CheckpointInterval))
-	if shouldCheckpoint {
-		err := ts.checkpointer.Checkpoint(writer, newRoot, version, shouldRollover)
+	if ts.shouldCheckpoint {
+		err := ts.checkpointer.Checkpoint(writer, newRoot, version, nodeIdsAssigned, ts.shouldRollover)
 		if err != nil {
 			return fmt.Errorf("failed to checkpoint changeset: %w", err)
 		}
 		ts.lastCheckpointVersion = version
-		if shouldRollover {
+		if ts.shouldRollover {
 			ts.currentWriter, err = NewChangesetWriter(ts.dir, ts.StagedVersion(), ts)
 			if err != nil {
 				return fmt.Errorf("failed to create new changeset writer: %w", err)
 			}
+			ts.shouldRollover = false
 		}
+	} else if ts.shouldRollover {
+		return fmt.Errorf("cannot rollover without checkpointing")
+	} else {
+		ts.shouldRollover = writer.WALWriter().Size() >= ts.opts.ChangesetRolloverSize
 	}
+
+	checkpointInterval := ts.opts.CheckpointInterval
+	nextStagedVersion := version + 1
+	versionsSinceLastCheckpoint := nextStagedVersion - ts.lastCheckpointVersion
+	ts.shouldCheckpoint = ts.shouldRollover ||
+		(checkpointInterval > 0 &&
+			versionsSinceLastCheckpoint >= uint32(ts.opts.CheckpointInterval))
 
 	return nil
 }
@@ -105,6 +116,10 @@ func (ts *TreeStore) WriteWALUpdates(updates []KVUpdate, fsync bool) error {
 	}
 
 	return nil
+}
+
+func (ts *TreeStore) ShouldCheckpoint() bool {
+	return ts.shouldCheckpoint
 }
 
 func (ts *TreeStore) ChangesetForCheckpoint(checkpoint uint32) *Changeset {

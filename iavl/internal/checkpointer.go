@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"sync/atomic"
 
@@ -50,17 +51,22 @@ func (cp *Checkpointer) ChangesetByCheckpoint(checkpoint uint32) *Changeset {
 	return res
 }
 
-func (cp *Checkpointer) Checkpoint(writer *ChangesetWriter, root *NodePointer, version uint32, seal bool) error {
+func (cp *Checkpointer) Checkpoint(writer *ChangesetWriter, root *NodePointer, version uint32, nodeIdsAssigned chan struct{}, seal bool) error {
+	if nodeIdsAssigned == nil {
+		return fmt.Errorf("nodeIdsAssigned channel cannot be nil when checkpointing, that means we haven't assigned IDs yet")
+	}
+
 	select {
 	case err := <-cp.doneChan:
 		return err
 	default:
 	}
 	cp.reqChan <- checkpointReq{
-		writer:  writer,
-		root:    root,
-		version: version,
-		seal:    seal,
+		writer:          writer,
+		root:            root,
+		version:         version,
+		nodeIdsAssigned: nodeIdsAssigned,
+		seal:            seal,
 	}
 	return nil
 }
@@ -69,6 +75,10 @@ func (cp *Checkpointer) proc() error {
 	var curWriter *ChangesetWriter
 	for req := range cp.reqChan {
 		_, span := Tracer.Start(context.Background(), "SaveCheckpoint")
+
+		// wait for node IDs assignment to complete
+		<-req.nodeIdsAssigned
+		span.AddEvent("node IDs assigned, proceeding with checkpoint")
 
 		// checkpoint == version
 		if err := req.writer.SaveCheckpoint(req.version, req.root); err != nil {
@@ -108,8 +118,9 @@ func (cp *Checkpointer) Close() error {
 }
 
 type checkpointReq struct {
-	writer  *ChangesetWriter
-	root    *NodePointer
-	version uint32
-	seal    bool
+	writer          *ChangesetWriter
+	root            *NodePointer
+	version         uint32
+	seal            bool
+	nodeIdsAssigned chan struct{}
 }

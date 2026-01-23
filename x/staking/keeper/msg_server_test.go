@@ -1005,7 +1005,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 			},
 			expErr: false,
 			setup: func() {
-				s.bankKeeper.EXPECT().GetSupply(gomock.Any(), stakingtypes.DefaultParams().BondDenom).Return(sdk.NewInt64Coin(stakingtypes.DefaultParams().BondDenom, 1000000)).AnyTimes()
+				s.bankKeeper.EXPECT().GetSupply(gomock.Any(), stakingtypes.DefaultParams().BondDenom).Return(sdk.NewInt64Coin(stakingtypes.DefaultParams().BondDenom, 1000000))
 			},
 		},
 		{
@@ -1081,7 +1081,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 			expErr:    true,
 			expErrMsg: "does not exist or has zero supply",
 			setup: func() {
-				s.bankKeeper.EXPECT().GetSupply(gomock.Any(), "ghosttoken").Return(sdk.NewInt64Coin("ghosttoken", 0)).AnyTimes()
+				s.bankKeeper.EXPECT().GetSupply(gomock.Any(), "ghosttoken").Return(sdk.NewInt64Coin("ghosttoken", 0))
 			},
 		},
 		{

@@ -53,7 +53,7 @@ func SetRecursive(nodePtr *NodePointer, leafNode *MemNode, ctx *MutationContext)
 			if err != nil {
 				return nil, false, err
 			}
-			newNode, err = ctx.mutateBranch(node)
+			newNode, err = ctx.mutateBranch(node, nodePtr)
 			if err != nil {
 				return nil, false, err
 			}
@@ -63,7 +63,7 @@ func SetRecursive(nodePtr *NodePointer, leafNode *MemNode, ctx *MutationContext)
 			if err != nil {
 				return nil, false, err
 			}
-			newNode, err = ctx.mutateBranch(node)
+			newNode, err = ctx.mutateBranch(node, nodePtr)
 			if err != nil {
 				return nil, false, err
 			}
@@ -139,7 +139,7 @@ func RemoveRecursive(nodePtr *NodePointer, key []byte, ctx *MutationContext) (re
 			return true, node.Right(), nodeKey.SafeCopy(), nil
 		}
 
-		newNode, err := ctx.mutateBranch(node)
+		newNode, err := ctx.mutateBranch(node, nodePtr)
 		if err != nil {
 			return false, nil, nil, err
 		}
@@ -170,7 +170,7 @@ func RemoveRecursive(nodePtr *NodePointer, key []byte, ctx *MutationContext) (re
 		return true, node.Left(), nil, nil
 	}
 
-	newNode, err := ctx.mutateBranch(node)
+	newNode, err := ctx.mutateBranch(node, nodePtr)
 	if err != nil {
 		return false, nil, nil, err
 	}

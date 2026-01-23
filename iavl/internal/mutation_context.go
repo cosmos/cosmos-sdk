@@ -9,7 +9,7 @@ import (
 // It is used in all mutation operations such as insertion, deletion, and rebalancing.
 type MutationContext struct {
 	version  uint32
-	orphans  []NodeID
+	orphans  []*NodePointer
 	memUsage int64
 }
 
@@ -28,7 +28,7 @@ func NewMutationContext(version uint32) *MutationContext {
 // directly using the IAVL tree structures (instead of a btree wrapper),
 // then we MUST change this code to ALWAYS mutate nodes here,
 // even if they are from the current version.
-func (ctx *MutationContext) mutateBranch(node Node) (*MemNode, error) {
+func (ctx *MutationContext) mutateBranch(node Node, nodePtr *NodePointer) (*MemNode, error) {
 	if node.Version() == ctx.version {
 		// node is already at the current version; no mutation needed.
 		memNode, ok := node.(*MemNode)
@@ -37,7 +37,7 @@ func (ctx *MutationContext) mutateBranch(node Node) (*MemNode, error) {
 		}
 		return memNode, nil
 	}
-	ctx.addOrphanId(node.ID())
+	ctx.addOrphan(nodePtr)
 	mem, err := node.MutateBranch(ctx.version)
 	if err != nil {
 		return nil, fmt.Errorf("mutate branch node %s: %w", node.ID(), err)
@@ -46,27 +46,19 @@ func (ctx *MutationContext) mutateBranch(node Node) (*MemNode, error) {
 	return mem, nil
 }
 
-func (ctx *MutationContext) addOrphan(nodePtr *NodePointer) bool {
-	if nodePtr == nil {
-		return false
-	}
-	mem := nodePtr.Mem.Load()
-	if mem != nil {
-		ctx.memUsage -= memNodeOverhead + int64(len(mem.key)) + int64(len(mem.value))
-	}
-	return ctx.addOrphanId(nodePtr.id)
-}
-
 // addOrphan adds the given node's ID to the list of orphaned nodes.
 // This is to be called when a node is deleted without being replaced; use mutateBranch for nodes that are replaced.
 // Only nodes with a version older than the current mutation version are considered orphans.
 // Nodes with version 0 are uncommitted and don't need orphan tracking since they were never persisted.
 // Returns true if the node was a valid orphan, false otherwise.
-func (ctx *MutationContext) addOrphanId(id NodeID) bool {
+func (ctx *MutationContext) addOrphan(nodePtr *NodePointer) bool {
+	if nodePtr == nil {
+		return false
+	}
 	// checkpoint == version, so this gives us the version at which the node was persisted
-	checkpoint := id.Checkpoint()
+	checkpoint := nodePtr.id.Checkpoint()
 	if checkpoint > 0 && checkpoint < ctx.version {
-		ctx.orphans = append(ctx.orphans, id)
+		ctx.orphans = append(ctx.orphans, nodePtr)
 		return true
 	}
 	return false

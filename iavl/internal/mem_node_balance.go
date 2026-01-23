@@ -116,7 +116,7 @@ func (node *MemNode) reBalance(ctx *MutationContext) (*MemNode, error) {
 		}
 
 		// Left-Right (LR) case, needs left rotation on left-child then right rotation on root
-		newLeft, err := ctx.mutateBranch(left)
+		newLeft, err := ctx.mutateBranch(left, node.left)
 		if err != nil {
 			return nil, err
 		}
@@ -145,7 +145,7 @@ func (node *MemNode) reBalance(ctx *MutationContext) (*MemNode, error) {
 		}
 
 		// Right-Left (RL) case, needs right rotation on right-child then left rotation on root
-		newRight, err := ctx.mutateBranch(right)
+		newRight, err := ctx.mutateBranch(right, node.right)
 		if err != nil {
 			return nil, err
 		}
@@ -245,7 +245,7 @@ func (node *MemNode) rotateRight(ctx *MutationContext) (*MemNode, error) {
 	if err != nil {
 		return nil, err
 	}
-	newRoot, err := ctx.mutateBranch(left)
+	newRoot, err := ctx.mutateBranch(left, node.left)
 	if err != nil {
 		return nil, err
 	}
@@ -291,7 +291,7 @@ func (node *MemNode) rotateLeft(ctx *MutationContext) (*MemNode, error) {
 		return nil, err
 	}
 
-	newRoot, err := ctx.mutateBranch(right)
+	newRoot, err := ctx.mutateBranch(right, node.right)
 	if err != nil {
 		return nil, err
 	}

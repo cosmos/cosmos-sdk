@@ -31,7 +31,7 @@ func NewChangesetWriter(treeDir string, stagedVersion uint32, treeStore *TreeSto
 	cs := &ChangesetWriter{
 		files:           files,
 		walWriter:       NewWALWriter(files.WALFile()),
-		kvWriter:        NewKVDataWriter(files.KVDataFile(), true),
+		kvWriter:        NewKVDataWriter(files.KVDataFile()),
 		branchesData:    NewStructWriter[BranchLayout](files.BranchesFile()),
 		leavesData:      NewStructWriter[LeafLayout](files.LeavesFile()),
 		checkpointsData: NewStructWriter[CheckpointInfo](files.CheckpointsFile()),

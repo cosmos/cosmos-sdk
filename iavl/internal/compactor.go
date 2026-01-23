@@ -66,7 +66,7 @@ func NewCompacter(ctx context.Context, reader *ChangesetReader, opts CompactOpti
 		treeStore:      store,
 		files:          newFiles,
 		walWriter:      NewWALWriter(newFiles.WALFile()),
-		kvlogWriter:    NewKVDataWriter(newFiles.KVDataFile(), true),
+		kvlogWriter:    NewKVDataWriter(newFiles.KVDataFile()),
 		leavesWriter:   NewStructWriter[LeafLayout](newFiles.leavesFile),
 		branchesWriter: NewStructWriter[BranchLayout](newFiles.branchesFile),
 		cpInfoWriter:   NewStructWriter[CheckpointInfo](newFiles.checkpointsFile),

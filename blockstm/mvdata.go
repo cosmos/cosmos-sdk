@@ -16,29 +16,31 @@ const (
 type MVData = GMVData[[]byte]
 
 func NewMVData() *MVData {
-	return NewGMVData(storetypes.BytesIsZero, storetypes.BytesValueLen)
+	return NewGMVData(storetypes.BytesIsZero, storetypes.BytesValueLen, bytes.Equal)
 }
 
 type GMVData[V any] struct {
 	tree.BTree[dataItem[V]]
 	isZero   func(V) bool
 	valueLen func(V) int
+	eq       func(V, V) bool
 }
 
 func NewMVStore(key storetypes.StoreKey) MVStore {
 	switch key.(type) {
 	case *storetypes.ObjectStoreKey:
-		return NewGMVData(storetypes.AnyIsZero, storetypes.AnyValueLen)
+		return NewGMVData(storetypes.AnyIsZero, storetypes.AnyValueLen, nil)
 	default:
-		return NewGMVData(storetypes.BytesIsZero, storetypes.BytesValueLen)
+		return NewGMVData(storetypes.BytesIsZero, storetypes.BytesValueLen, bytes.Equal)
 	}
 }
 
-func NewGMVData[V any](isZero func(V) bool, valueLen func(V) int) *GMVData[V] {
+func NewGMVData[V any](isZero func(V) bool, valueLen func(V) int, eq func(V, V) bool) *GMVData[V] {
 	return &GMVData[V]{
 		BTree:    *tree.NewBTree(tree.KeyItemLess[dataItem[V]], OuterBTreeDegree),
 		isZero:   isZero,
 		valueLen: valueLen,
+		eq:       eq,
 	}
 }
 
@@ -53,19 +55,24 @@ func (d *GMVData[V]) getTreeOrDefault(key Key) *tree.BTree[secondaryDataItem[V]]
 	return d.GetOrDefault(dataItem[V]{Key: key}, (*dataItem[V]).Init).Tree
 }
 
+func shiftedIndex(txn TxnIndex) TxnIndex {
+	// Reserve internal index 0 (historical: used for cached pre-state).
+	return txn + 1
+}
+
 func (d *GMVData[V]) Write(key Key, value V, version TxnVersion) {
 	tree := d.getTreeOrDefault(key)
-	tree.Set(secondaryDataItem[V]{Index: version.Index, Incarnation: version.Incarnation, Value: value})
+	tree.Set(secondaryDataItem[V]{Index: shiftedIndex(version.Index), Incarnation: version.Incarnation, Value: value})
 }
 
 func (d *GMVData[V]) WriteEstimate(key Key, txn TxnIndex) {
 	tree := d.getTreeOrDefault(key)
-	tree.Set(secondaryDataItem[V]{Index: txn, Estimate: true})
+	tree.Set(secondaryDataItem[V]{Index: shiftedIndex(txn), Estimate: true})
 }
 
 func (d *GMVData[V]) Delete(key Key, txn TxnIndex) {
 	tree := d.getTreeOrDefault(key)
-	tree.Delete(secondaryDataItem[V]{Index: txn})
+	tree.Delete(secondaryDataItem[V]{Index: shiftedIndex(txn)})
 }
 
 // Read returns the value and the version of the value that's less than the given txn.
@@ -74,19 +81,21 @@ func (d *GMVData[V]) Delete(key Key, txn TxnIndex) {
 // If the key is found, returns `(value, version, false)`, `value` can be zero value which means deleted.
 func (d *GMVData[V]) Read(key Key, txn TxnIndex) (V, TxnVersion, bool) {
 	var zero V
-	if txn == 0 {
-		return zero, InvalidTxnVersion, false
-	}
-
-	tree := d.getTree(key)
-	if tree == nil {
+	inner := d.getTree(key)
+	if inner == nil {
 		return zero, InvalidTxnVersion, false
 	}
 
 	// find the closest txn that's less than the given txn
-	item, ok := seekClosestTxn(tree, txn)
+	item, ok := seekClosestTxn(inner, shiftedIndex(txn))
 	if !ok {
 		return zero, InvalidTxnVersion, false
+	}
+
+	// Internal index 0 represents cached pre-state (storage). Externally, we keep
+	// InvalidTxnVersion semantics for storage reads.
+	if item.Index == 0 {
+		return item.Value, InvalidTxnVersion, item.Estimate
 	}
 
 	return item.Value, item.Version(), item.Estimate
@@ -103,16 +112,38 @@ func (d *GMVData[V]) Iterator(
 // returns true if valid.
 func (d *GMVData[V]) ValidateReadSet(txn TxnIndex, rs *ReadSet) bool {
 	for _, desc := range rs.Reads {
-		_, version, estimate := d.Read(desc.Key, txn)
+		value, version, estimate := d.Read(desc.Key, txn)
 		if estimate {
 			// previously read entry from data, now ESTIMATE
 			return false
 		}
-		if version != desc.Version {
-			// previously read entry from data, now NOT_FOUND,
-			// or read some entry, but not the same version as before
-			return false
+		if version == desc.Version {
+			continue
 		}
+
+		// Validation failed on version comparison.
+		// If the original read was from storage (InvalidTxnVersion), we can re-verify against storage.
+		if !desc.Version.Valid() {
+			// If the current value is also from storage (version is invalid), it matches.
+			if !version.Valid() {
+				continue
+			}
+
+			// Value-Based Validation (Storage vs Versioned):
+			// The current value is a new version. Check if its value matches the cached pre-state.
+			if d.isZero != nil {
+				// Try retrieving the cached pre-state (Index 0) from MVMemory.
+				if inner := d.getTree(desc.Key); inner != nil {
+					if item, ok := inner.Get(secondaryDataItem[V]{Index: 0}); ok {
+						if d.eq != nil && d.eq(value, item.Value) {
+							continue
+						}
+					}
+				}
+			}
+		}
+
+		return false
 	}
 
 	for _, desc := range rs.Iterators {
@@ -228,7 +259,10 @@ func secondaryLesser[V any](a, b secondaryDataItem[V]) bool {
 }
 
 func (item secondaryDataItem[V]) Version() TxnVersion {
-	return TxnVersion{Index: item.Index, Incarnation: item.Incarnation}
+	if item.Index == 0 {
+		return InvalidTxnVersion
+	}
+	return TxnVersion{Index: item.Index - 1, Incarnation: item.Incarnation}
 }
 
 // seekClosestTxn returns the closest txn that's less than the given txn.

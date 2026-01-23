@@ -102,7 +102,14 @@ func (s *GMVMemoryView[V]) Get(key []byte) V {
 		// if not found, record version ⊥ when reading from storage.
 		s.readSet.Reads = append(s.readSet.Reads, ReadDescriptor{key, version})
 		if !version.Valid() {
-			return s.storage.Get(key)
+			storageValue := s.storage.Get(key)
+
+			// Cache the pre-state value in MVMemory (at index 0).
+			// This enables value-based validation to compare against this value directly from memory,
+			// avoiding repeated storage reads during validation.
+			s.mvData.Write(key, storageValue, InvalidTxnVersion)
+
+			return storageValue
 		}
 		return value
 	}

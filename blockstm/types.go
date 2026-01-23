@@ -32,8 +32,16 @@ type ReadDescriptor struct {
 	Key Key
 	// invalid Version means the key is read from storage
 	Version TxnVersion
-}
 
+	// Captured is an optional value snapshot used for ABA-safe validation.
+	// It is only populated for byte stores.
+	Captured []byte
+
+	// Has indicates this is a Has() read descriptor.
+	Has bool
+	// ExistsExpected is meaningful only when Has==true.
+	ExistsExpected bool
+}
 type IteratorOptions struct {
 	// [Start, End) is the range of the iterator
 	Start     Key

@@ -23,7 +23,11 @@ type GMVData[V any] struct {
 	tree.BTree[dataItem[V]]
 	isZero   func(V) bool
 	valueLen func(V) int
-	eq       func(V, V) bool
+	// eq is an optional deterministic equality function for values.
+	// If nil, value-based validation is not supported for this store.
+	eq func(V, V) bool
+	// isBytes indicates if V is []byte.
+	isBytes bool
 }
 
 func NewMVStore(key storetypes.StoreKey) MVStore {
@@ -36,12 +40,17 @@ func NewMVStore(key storetypes.StoreKey) MVStore {
 }
 
 func NewGMVData[V any](isZero func(V) bool, valueLen func(V) int, eq func(V, V) bool) *GMVData[V] {
-	return &GMVData[V]{
+	d := &GMVData[V]{
 		BTree:    *tree.NewBTree(tree.KeyItemLess[dataItem[V]], OuterBTreeDegree),
 		isZero:   isZero,
 		valueLen: valueLen,
 		eq:       eq,
 	}
+	var z V
+	if _, ok := any(z).([]byte); ok {
+		d.isBytes = true
+	}
+	return d
 }
 
 // getTree returns `nil` if not found
@@ -80,25 +89,30 @@ func (d *GMVData[V]) Delete(key Key, txn TxnIndex) {
 // If the key is found but value is an estimate, returns `(value, version, true)`.
 // If the key is found, returns `(value, version, false)`, `value` can be zero value which means deleted.
 func (d *GMVData[V]) Read(key Key, txn TxnIndex) (V, TxnVersion, bool) {
+	v, ver, est, _ := d.readFound(key, txn)
+	return v, ver, est
+}
+
+func (d *GMVData[V]) readFound(key Key, txn TxnIndex) (V, TxnVersion, bool, bool) {
 	var zero V
 	inner := d.getTree(key)
 	if inner == nil {
-		return zero, InvalidTxnVersion, false
+		return zero, InvalidTxnVersion, false, false
 	}
 
 	// find the closest txn that's less than the given txn
 	item, ok := seekClosestTxn(inner, shiftedIndex(txn))
 	if !ok {
-		return zero, InvalidTxnVersion, false
+		return zero, InvalidTxnVersion, false, false
 	}
 
 	// Internal index 0 represents cached pre-state (storage). Externally, we keep
 	// InvalidTxnVersion semantics for storage reads.
 	if item.Index == 0 {
-		return item.Value, InvalidTxnVersion, item.Estimate
+		return item.Value, InvalidTxnVersion, item.Estimate, true
 	}
 
-	return item.Value, item.Version(), item.Estimate
+	return item.Value, item.Version(), item.Estimate, true
 }
 
 func (d *GMVData[V]) Iterator(
@@ -112,6 +126,27 @@ func (d *GMVData[V]) Iterator(
 // returns true if valid.
 func (d *GMVData[V]) ValidateReadSet(txn TxnIndex, rs *ReadSet) bool {
 	for _, desc := range rs.Reads {
+		if desc.Has {
+			value, version, estimate, found := d.readFound(desc.Key, txn)
+			if estimate {
+				return false
+			}
+			var exists bool
+			if version.Valid() {
+				exists = !d.isZero(value)
+			} else {
+				// Should always be cached by Has()/Get() callers.
+				if !found {
+					return false
+				}
+				exists = !d.isZero(value)
+			}
+			if exists != desc.ExistsExpected {
+				return false
+			}
+			continue
+		}
+
 		value, version, estimate := d.Read(desc.Key, txn)
 		if estimate {
 			// previously read entry from data, now ESTIMATE
@@ -129,16 +164,27 @@ func (d *GMVData[V]) ValidateReadSet(txn TxnIndex, rs *ReadSet) bool {
 				continue
 			}
 
-			// Value-Based Validation (Storage vs Versioned):
-			// The current value is a new version. Check if its value matches the cached pre-state.
-			if d.isZero != nil {
-				// Try retrieving the cached pre-state (Index 0) from MVMemory.
+			// Storage vs Versioned:
+			// The current value is a new version. Check if its value matches the cached pre-state (Index 0).
+			if d.eq != nil {
 				if inner := d.getTree(desc.Key); inner != nil {
 					if item, ok := inner.Get(secondaryDataItem[V]{Index: 0}); ok {
-						if d.eq != nil && d.eq(value, item.Value) {
+						if d.eq(value, item.Value) {
 							continue
 						}
 					}
+				}
+			}
+			return false
+		}
+
+		// Versioned vs Versioned:
+		// If we captured the value during execution, we can compare it with the current value.
+		// This handles ABA scenarios where a value is updated but set to the same content.
+		if d.isBytes && desc.Captured != nil {
+			if cur, ok := any(value).([]byte); ok {
+				if bytes.Equal(desc.Captured, cur) {
+					continue
 				}
 			}
 		}

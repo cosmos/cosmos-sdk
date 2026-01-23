@@ -98,9 +98,8 @@ func (s *GMVMemoryView[V]) Get(key []byte) V {
 			continue
 		}
 
-		// record the read version, invalid version is ⊥.
-		// if not found, record version ⊥ when reading from storage.
-		s.readSet.Reads = append(s.readSet.Reads, ReadDescriptor{key, version})
+		kCopy := append([]byte(nil), key...)
+		desc := ReadDescriptor{Key: kCopy, Version: version}
 		if !version.Valid() {
 			storageValue := s.storage.Get(key)
 
@@ -109,14 +108,60 @@ func (s *GMVMemoryView[V]) Get(key []byte) V {
 			// avoiding repeated storage reads during validation.
 			s.mvData.Write(key, storageValue, InvalidTxnVersion)
 
+			s.readSet.Reads = append(s.readSet.Reads, desc)
+
 			return storageValue
 		}
+
+		if b, ok := any(value).([]byte); ok {
+			desc.Captured = append([]byte(nil), b...)
+		}
+		s.readSet.Reads = append(s.readSet.Reads, desc)
 		return value
 	}
 }
 
 func (s *GMVMemoryView[V]) Has(key []byte) bool {
-	return !s.mvData.isZero(s.Get(key))
+	if s.writeSet != nil {
+		if value, found := s.writeSet.OverlayGet(key); found {
+			// value written by this txn
+			// zero value means deleted
+			return !s.mvData.isZero(value)
+		}
+	}
+
+	for {
+		value, version, estimate, found := s.mvData.readFound(key, s.txn)
+		if estimate {
+			// read ESTIMATE mark, wait for the blocking txn to finish
+			s.waitFor(version.Index)
+			continue
+		}
+
+		var exists bool
+		if !version.Valid() {
+			// Ensure pre-state is cached for validation.
+			if !found {
+				exists = s.storage.Has(key)
+				if exists {
+					storageValue := s.storage.Get(key)
+					s.mvData.Write(key, storageValue, InvalidTxnVersion)
+				} else {
+					var zero V
+					s.mvData.Write(key, zero, InvalidTxnVersion)
+				}
+				// Re-read from MVData for a consistent cached view.
+				value, version, _, _ = s.mvData.readFound(key, s.txn)
+			}
+			exists = !s.mvData.isZero(value)
+		} else {
+			exists = !s.mvData.isZero(value)
+		}
+		kCopy := append([]byte(nil), key...)
+		s.readSet.Reads = append(s.readSet.Reads, ReadDescriptor{Key: kCopy, Has: true, ExistsExpected: exists})
+
+		return exists
+	}
 }
 
 func (s *GMVMemoryView[V]) Set(key []byte, value V) {

@@ -1,15 +1,10 @@
-# Cosmos SDK v0.50.14 Release Notes
+# Cosmos SDK v0.50.15 Release Notes
 
 ## 🚀 Highlights
 
-This patch release fixes [GHSA-p22h-3m2v-cmgh](https://github.com/cosmos/cosmos-sdk/security/advisories/GHSA-p22h-3m2v-cmgh).
-It resolves a `x/distribution` module issue that can halt chains when the historical rewards pool overflows.
-Chains using the `x/distribution` module are affected by this issue.
-
-We recommended upgrading to this patch release as soon as possible.
-
-This patch is state-breaking; chains must perform a coordinated upgrade. This patch cannot be applied in a rolling upgrade.
+- Updates CometBFT dependency
+- Fixes an issue with event indexing
 
 ## 📝 Changelog
 
-Check out the [changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.50.14/CHANGELOG.md) for an exhaustive list of changes or [compare changes](https://github.com/cosmos/cosmos-sdk/compare/v0.50.13...v0.50.14) from the last release.
+Check out the [changelog](https://github.com/cosmos/cosmos-sdk/blob/v0.50.15/CHANGELOG.md) for an exhaustive list of changes or [compare changes](https://github.com/cosmos/cosmos-sdk/compare/v0.50.14...v0.50.15) from the last release.

@@ -995,6 +995,7 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 		input     *stakingtypes.MsgUpdateParams
 		expErr    bool
 		expErrMsg string
+		setup     func()
 	}{
 		{
 			name: "valid params",
@@ -1003,6 +1004,9 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 				Params:    stakingtypes.DefaultParams(),
 			},
 			expErr: false,
+			setup: func() {
+				s.bankKeeper.EXPECT().GetSupply(gomock.Any(), stakingtypes.DefaultParams().BondDenom).Return(sdk.NewInt64Coin(stakingtypes.DefaultParams().BondDenom, 1000000)).AnyTimes()
+			},
 		},
 		{
 			name: "invalid authority",
@@ -1076,6 +1080,9 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 			},
 			expErr:    true,
 			expErrMsg: "does not exist or has zero supply",
+			setup: func() {
+				s.bankKeeper.EXPECT().GetSupply(gomock.Any(), "ghosttoken").Return(sdk.NewInt64Coin("ghosttoken", 0)).AnyTimes()
+			},
 		},
 		{
 			name: "max validators must be positive",
@@ -1129,11 +1136,9 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 
 	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
-			// Mock GetSupply based on test case
-			if tc.name == "invalid bond denom - zero supply" {
-				s.bankKeeper.EXPECT().GetSupply(gomock.Any(), tc.input.Params.BondDenom).Return(sdk.NewInt64Coin(tc.input.Params.BondDenom, 0)).AnyTimes()
-			} else if !tc.expErr {
-				s.bankKeeper.EXPECT().GetSupply(gomock.Any(), tc.input.Params.BondDenom).Return(sdk.NewInt64Coin(tc.input.Params.BondDenom, 1000000)).AnyTimes()
+			// Setup mocks if specified
+			if tc.setup != nil {
+				tc.setup()
 			}
 
 			_, err := msgServer.UpdateParams(ctx, tc.input)

@@ -14,6 +14,11 @@ type (
 	TxnIndex    int
 	Incarnation uint
 	Wave        uint32
+
+	// ShiftedTxnIndex shift txn index by 1 to reserve 0 as storage state.
+	// invariant: txn index + 1 < = max uint32
+	// proof: block size is verified in entry api.
+	ShiftedTxnIndex uint32
 )
 
 type TxnVersion struct {
@@ -25,6 +30,16 @@ var InvalidTxnVersion = TxnVersion{-1, 0}
 
 func (v TxnVersion) Valid() bool {
 	return v.Index >= 0
+}
+
+func ToShiftedIndex(t TxnIndex) ShiftedTxnIndex {
+	return ShiftedTxnIndex(t + 1)
+}
+
+// FromShiftedIndex converts ShiftedTxnIndex back to TxnIndex,
+// it returns -1 if the shifted index is for storage.
+func FromShiftedIndex(s ShiftedTxnIndex) TxnIndex {
+	return TxnIndex(s) - 1
 }
 
 type Key []byte

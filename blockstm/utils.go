@@ -58,7 +58,7 @@ func FetchUpdate(a *atomic.Uint64, update func(uint64) (uint64, bool)) (uint64, 
 }
 
 func UnpackValidationIdx(v uint64) (txn TxnIndex, wave Wave) {
-	txn = TxnIndex(uint32(v))
+	txn = TxnIndex(v & TXN_IDX_MASK)
 	wave = Wave(v >> 32)
 	return
 }

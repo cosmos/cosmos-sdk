@@ -55,17 +55,22 @@ func (d *GMVData[V]) getTreeOrDefault(key Key) *tree.BTree[secondaryDataItem[V]]
 
 func (d *GMVData[V]) Write(key Key, value V, version TxnVersion) {
 	tree := d.getTreeOrDefault(key)
-	tree.Set(secondaryDataItem[V]{Index: version.Index, Incarnation: version.Incarnation, Value: value})
+	tree.Set(secondaryDataItem[V]{Index: ToShiftedIndex(version.Index), Incarnation: version.Incarnation, Value: value})
 }
 
 func (d *GMVData[V]) WriteEstimate(key Key, txn TxnIndex) {
 	tree := d.getTreeOrDefault(key)
-	tree.Set(secondaryDataItem[V]{Index: txn, Estimate: true})
+	tree.Set(secondaryDataItem[V]{Index: ToShiftedIndex(txn), Estimate: true})
 }
 
 func (d *GMVData[V]) Delete(key Key, txn TxnIndex) {
 	tree := d.getTreeOrDefault(key)
-	tree.Delete(secondaryDataItem[V]{Index: txn})
+	tree.Delete(secondaryDataItem[V]{Index: ToShiftedIndex(txn)})
+}
+
+func (d *GMVData[V]) CacheStorageValue(key Key, value V) {
+	tree := d.getTreeOrDefault(key)
+	tree.Set(secondaryDataItem[V]{Index: 0, Value: value})
 }
 
 // Read returns the value and the version of the value that's less than the given txn.
@@ -74,7 +79,7 @@ func (d *GMVData[V]) Delete(key Key, txn TxnIndex) {
 // If the key is found, returns `(value, version, false)`, `value` can be zero value which means deleted.
 func (d *GMVData[V]) Read(key Key, txn TxnIndex) (V, TxnVersion, bool) {
 	var zero V
-	if txn == 0 {
+	if txn <= 0 {
 		return zero, InvalidTxnVersion, false
 	}
 
@@ -177,6 +182,11 @@ func (d *GMVData[V]) SnapshotTo(cb func(Key, V) bool) {
 			return true
 		}
 
+		if item.Index == 0 {
+			// storage value
+			return true
+		}
+
 		return cb(outer.Key, item.Value)
 	})
 }
@@ -217,7 +227,7 @@ func (item dataItem[V]) GetKey() []byte {
 }
 
 type secondaryDataItem[V any] struct {
-	Index       TxnIndex
+	Index       ShiftedTxnIndex
 	Incarnation Incarnation
 	Value       V
 	Estimate    bool
@@ -228,10 +238,10 @@ func secondaryLesser[V any](a, b secondaryDataItem[V]) bool {
 }
 
 func (item secondaryDataItem[V]) Version() TxnVersion {
-	return TxnVersion{Index: item.Index, Incarnation: item.Incarnation}
+	return TxnVersion{Index: FromShiftedIndex(item.Index), Incarnation: item.Incarnation}
 }
 
 // seekClosestTxn returns the closest txn that's less than the given txn.
 func seekClosestTxn[V any](tree *tree.BTree[secondaryDataItem[V]], txn TxnIndex) (secondaryDataItem[V], bool) {
-	return tree.ReverseSeek(secondaryDataItem[V]{Index: txn - 1})
+	return tree.ReverseSeek(secondaryDataItem[V]{Index: ToShiftedIndex(txn - 1)})
 }

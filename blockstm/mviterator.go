@@ -114,7 +114,8 @@ func (it *MVIterator[V]) resolveValueInner(tree *tree.BTree[secondaryDataItem[V]
 
 		if v.Estimate {
 			if it.Executing() {
-				it.waitFn(v.Index)
+				// estimate won't be set by storage index.
+				it.waitFn(FromShiftedIndex(v.Index))
 				continue
 			}
 			// in validation mode, it should fail validation immediately

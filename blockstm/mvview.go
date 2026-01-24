@@ -94,15 +94,18 @@ func (s *GMVMemoryView[V]) Get(key []byte) V {
 		value, version, estimate := s.mvData.Read(key, s.txn)
 		if estimate {
 			// read ESTIMATE mark, wait for the blocking txn to finish
+			//
+			// invariant: the txn index must be valid, because storage version won't write ESTIMATE mark
 			s.waitFor(version.Index)
 			continue
 		}
 
-		// record the read version, invalid version is ⊥.
-		// if not found, record version ⊥ when reading from storage.
+		// record the read version, invalid version is -1.
+		// if not found, record version -1 when reading from storage.
 		s.readSet.Reads = append(s.readSet.Reads, ReadDescriptor{key, version})
 		if !version.Valid() {
-			return s.storage.Get(key)
+			value = s.storage.Get(key)
+			s.mvData.CacheStorageValue(key, value)
 		}
 		return value
 	}

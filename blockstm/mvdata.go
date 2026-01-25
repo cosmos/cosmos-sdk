@@ -106,16 +106,16 @@ func (d *GMVData[V]) Iterator(
 
 // ValidateReadSet validates the read descriptors,
 // returns true if valid.
-func (d *GMVData[V]) ValidateReadSet(txn TxnIndex, rs *ReadSet) bool {
+func (d *GMVData[V]) ValidateReadSet(txn TxnIndex, tmp any) bool {
+	rs := tmp.(*ReadSet[V])
 	for _, desc := range rs.Reads {
-		_, version, estimate := d.Read(desc.Key, txn)
+		v, version, estimate := d.Read(desc.Key, txn)
 		if estimate {
 			// previously read entry from data, now ESTIMATE
 			return false
 		}
-		if version != desc.Version {
-			// previously read entry from data, now NOT_FOUND,
-			// or read some entry, but not the same version as before
+
+		if !desc.Validate(v, version) {
 			return false
 		}
 	}
@@ -131,7 +131,7 @@ func (d *GMVData[V]) ValidateReadSet(txn TxnIndex, rs *ReadSet) bool {
 
 // validateIterator validates the iteration descriptor by replaying and compare the recorded reads.
 // returns true if valid.
-func (d *GMVData[V]) validateIterator(desc IteratorDescriptor, txn TxnIndex) bool {
+func (d *GMVData[V]) validateIterator(desc IteratorDescriptor[V], txn TxnIndex) bool {
 	it := NewMVIterator(desc.IteratorOptions, txn, d.Iter(), nil)
 	defer it.Close()
 
@@ -148,7 +148,10 @@ func (d *GMVData[V]) validateIterator(desc IteratorDescriptor, txn TxnIndex) boo
 		}
 
 		read := desc.Reads[i]
-		if read.Version != it.Version() || !bytes.Equal(read.Key, it.Key()) {
+		if !bytes.Equal(read.Key, it.Key()) {
+			return false
+		}
+		if !read.Validate(it.Value(), it.Version()) {
 			return false
 		}
 

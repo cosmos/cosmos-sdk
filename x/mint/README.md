@@ -164,7 +164,7 @@ inflation calculation logic is needed, this can be achieved by defining and
 passing a function that matches `InflationCalculationFn`'s signature.
 
 ```go
-type InflationCalculationFn func(ctx sdk.Context, minter Minter, params Params, bondedRatio math.LegacyDec) math.LegacyDec
+type InflationCalculationFn func(ctx context.Context, minter Minter, params Params, bondedRatio math.LegacyDec) math.LegacyDec
 ```
 
 #### NextInflationRate

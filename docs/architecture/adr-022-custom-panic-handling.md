@@ -26,8 +26,8 @@ It will also make `OutOfGas` case and `default` case one of the middlewares.
 `Default` case wraps recovery object to an error and logs it ([example middleware implementation](#recovery-middleware)).
 
 Our project has a sidecar service running alongside the blockchain node (smart contracts virtual machine). It is
-essential that node <-> sidecar connectivity stays stable for TXs processing. So when the communication breaks we need
-to crash the node and reboot it once the problem is solved. That behaviour makes the node's state machine execution
+essential that node <-> sidecar connectivity stays stable for TXs processing. So when the communication breaks, we need
+to crash the node and reboot it once the problem is solved. That behavior makes the node's state machine execution
 deterministic. As all keeper panics are caught by runTx's `defer()` handler, we have to adjust the BaseApp code
 in order to customize it.
 
@@ -97,7 +97,7 @@ Function receives a `recoveryObj` object and returns:
 * (next `recoveryMiddleware`, `nil`) if object wasn't handled (not a target type) by `RecoveryHandler`;
 * (`nil`, not nil `error`) if input object was handled and other middlewares in the chain should not be executed;
 * (`nil`, `nil`) in case of invalid behavior. Panic recovery might not have been properly handled;
-this can be avoided by always using a `default` as a rightmost middleware in the chain (always returns an `error`');
+this can be avoided by always using a `default` as a rightmost middleware in the chain (always returns an `error`);
 
 `OutOfGas` middleware example:
 
@@ -153,7 +153,7 @@ That way we can create a middleware chain which is executed from left to right, 
 
 ##### BaseApp changes
 
-The `default` middleware chain must exist in a `BaseApp` object. `Baseapp` modifications:
+The `default` middleware chain must exist in a `BaseApp` object. `BaseApp` modifications:
 
 ```go
 type BaseApp struct {

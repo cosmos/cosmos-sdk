@@ -65,6 +65,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (blockstm) [#25600](https://github.com/cosmos/cosmos-sdk/pull/25600) Allow dynamic retrieval of the coin denomination from multi store at runtime.
 * [#25516](https://github.com/cosmos/cosmos-sdk/pull/25516) Support automatic configuration of OpenTelemetry via [OpenTelemetry declarative configuration](https://pkg.go.dev/go.opentelemetry.io/contrib/otelconf) and add OpenTelemetry instrumentation of `BaseApp`.
 * [#25745](https://github.com/cosmos/cosmos-sdk/pull/25745) Add DiskIO telemetry via gopsutil.
+* (collections/codec) [#25614] (https://github.com/cosmos/cosmos-sdk/pull/25827)  Add `TimeValue` (`ValueCodec[time.Time]`) to collections/codec.
 
 ### Improvements
 

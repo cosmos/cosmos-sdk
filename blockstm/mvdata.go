@@ -106,16 +106,20 @@ func (d *GMVData[V]) Iterator(
 
 // ValidateReadSet validates the read descriptors,
 // returns true if valid.
-func (d *GMVData[V]) ValidateReadSet(txn TxnIndex, tmp any) bool {
+func (d *GMVData[V]) ValidateReadSet(txn TxnIndex, tmp any, delayed bool) bool {
 	rs := tmp.(*ReadSet[V])
-	for _, desc := range rs.Reads {
-		v, version, estimate := d.Read(desc.Key, txn)
-		if estimate {
-			// previously read entry from data, now ESTIMATE
-			return false
-		}
 
-		if !desc.Validate(v, version) {
+	if delayed {
+		for _, desc := range rs.DelayedReads {
+			if !d.validateRead(desc, txn) {
+				return false
+			}
+		}
+		return true
+	}
+
+	for _, desc := range rs.Reads {
+		if !d.validateRead(desc, txn) {
 			return false
 		}
 	}
@@ -126,6 +130,19 @@ func (d *GMVData[V]) ValidateReadSet(txn TxnIndex, tmp any) bool {
 		}
 	}
 
+	return true
+}
+
+func (d *GMVData[V]) validateRead(desc ReadDescriptor[V], txn TxnIndex) bool {
+	v, version, estimate := d.Read(desc.Key, txn)
+	if estimate {
+		// previously read entry from data, now ESTIMATE
+		return false
+	}
+
+	if !desc.Validate(v, version) {
+		return false
+	}
 	return true
 }
 

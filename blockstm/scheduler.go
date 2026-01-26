@@ -286,20 +286,12 @@ func (s *Scheduler) TryCommit() (TxnIndex, Incarnation, bool) {
 	return commitIdx, execStatus.incarnation, true
 }
 
-func (s *Scheduler) ProcessCommits() {
-	// keep processing if there's work to do and we can acquire the lock
-	for s.commitLock.TryLock() {
-		for {
-			_, _, ok := s.TryCommit()
-			if !ok {
-				break
-			}
+func (s *Scheduler) CommitTryLock() bool {
+	return s.commitLock.TryLock()
+}
 
-			// TODO commit handling
-		}
-
-		s.commitLock.Unlock()
-	}
+func (s *Scheduler) CommitUnlock() {
+	s.commitLock.Unlock()
 }
 
 func (s *Scheduler) Stats() string {

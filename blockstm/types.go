@@ -111,6 +111,9 @@ type IteratorDescriptor[V any] struct {
 type ReadSet[V any] struct {
 	Reads     []ReadDescriptor[V]
 	Iterators []IteratorDescriptor[V]
+
+	// DelayedReads are validated after tx is committed
+	DelayedReads []ReadDescriptor[V]
 }
 
 type MultiReadSet = map[int]any
@@ -128,7 +131,7 @@ type MultiStore interface {
 type MVStore interface {
 	Delete(Key, TxnIndex)
 	WriteEstimate(Key, TxnIndex)
-	ValidateReadSet(TxnIndex, any) bool
+	ValidateReadSet(TxnIndex, any, bool) bool
 	SnapshotToStore(storetypes.Store)
 }
 

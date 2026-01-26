@@ -102,8 +102,11 @@ func (s *GMVMemoryView[V]) Get(key []byte) V {
 			// Storage read path.
 			storageValue := s.storage.Get(key)
 
-			// Cache pre-state (Index 0) to optimize subsequent value-based validations.
-			s.mvData.Write(key, storageValue, InvalidTxnVersion)
+			// Cache pre-state (Index 0) only when the value is small enough.
+			// For large values we intentionally avoid caching and fall back to version-based behavior.
+			if s.mvData.eq != nil && s.mvData.shouldSnapshotValue(storageValue) {
+				s.mvData.Write(key, storageValue, InvalidTxnVersion)
+			}
 
 			kCopy := append([]byte(nil), key...)
 			s.readSet.Reads = append(s.readSet.Reads, ReadDescriptor{Key: kCopy, Version: InvalidTxnVersion})
@@ -111,12 +114,7 @@ func (s *GMVMemoryView[V]) Get(key []byte) V {
 		}
 
 		kCopy := append([]byte(nil), key...)
-		var captured []byte
-		if s.mvData.isBytes {
-			if b, ok := any(value).([]byte); ok {
-				captured = append([]byte(nil), b...)
-			}
-		}
+		captured := s.mvData.captureBytesIfSmall(value)
 		s.readSet.Reads = append(s.readSet.Reads, ReadDescriptor{Key: kCopy, Version: version, Captured: captured})
 		return value
 	}
@@ -141,20 +139,13 @@ func (s *GMVMemoryView[V]) Has(key []byte) bool {
 
 		var exists bool
 		if !version.Valid() {
-			// Ensure pre-state is cached for validation.
-			if !found {
+			// Storage read path: avoid loading/caching full values.
+			// For large values, caching would be expensive and unnecessary for Has().
+			if found {
+				exists = !s.mvData.isZero(value)
+			} else {
 				exists = s.storage.Has(key)
-				if exists {
-					storageValue := s.storage.Get(key)
-					s.mvData.Write(key, storageValue, InvalidTxnVersion)
-				} else {
-					var zero V
-					s.mvData.Write(key, zero, InvalidTxnVersion)
-				}
-				// Re-read from MVData for a consistent cached view.
-				value, version, _, _ = s.mvData.readFound(key, s.txn)
 			}
-			exists = !s.mvData.isZero(value)
 		} else {
 			exists = !s.mvData.isZero(value)
 		}

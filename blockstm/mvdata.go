@@ -11,6 +11,10 @@ import (
 const (
 	OuterBTreeDegree = 4 // Since we do copy-on-write a lot, smaller degree means smaller allocations
 	InnerBTreeDegree = 4
+
+	// maxValueSnapshotBytes caps value snapshotting (pre-state cache / captured bytes) for validation.
+	// Larger values skip snapshotting and rely on version-based validation.
+	maxValueSnapshotBytes = 16 << 10 // 16KiB
 )
 
 type MVData = GMVData[[]byte]
@@ -28,6 +32,25 @@ type GMVData[V any] struct {
 	eq func(V, V) bool
 	// isBytes indicates if V is []byte.
 	isBytes bool
+}
+
+func (d *GMVData[V]) shouldSnapshotValue(value V) bool {
+	if d.valueLen == nil {
+		return false
+	}
+	sz := d.valueLen(value)
+	return sz >= 0 && sz <= maxValueSnapshotBytes
+}
+
+func (d *GMVData[V]) captureBytesIfSmall(value V) []byte {
+	if !d.isBytes || !d.shouldSnapshotValue(value) {
+		return nil
+	}
+	b, ok := any(value).([]byte)
+	if !ok {
+		return nil
+	}
+	return append([]byte(nil), b...)
 }
 
 func NewMVStore(key storetypes.StoreKey) MVStore {
@@ -139,9 +162,10 @@ func (d *GMVData[V]) ValidateReadSet(txn TxnIndex, rs *ReadSet) bool {
 			if version.Valid() {
 				exists = !d.isZero(value)
 			} else {
-				// Should always be cached by Has()/Get() callers.
+				// Storage-based Has() does not require caching; storage is immutable.
+				// If the key wasn't cached into MVData, trust the recorded ExistsExpected.
 				if !found {
-					return false
+					continue
 				}
 				exists = !d.isZero(value)
 			}

@@ -526,7 +526,7 @@ Each CometBFT `query` comes with a `path`, which is a `string` which denotes wha
 
 * Application-related queries like querying the application's version, which are served via the `handleQueryApp` method.
 * Direct queries to the multistore, which are served by the `handlerQueryStore` method. These direct queries are different from custom queries which go through `app.queryRouter`, and are mainly used by third-party service provider like block explorers.
-* P2P queries, which are served via the `handleQueryP2P` method. These queries return either `app.addrPeerFilter` or `app.ipPeerFilter` that contain the list of peers filtered by address or IP respectively. These lists are first initialized via `options` in `BaseApp`'s [constructor](#constructor).
+* P2P queries, which are served via the `handleQueryP2P` method. These queries return either `app.addrPeerFilter` or `app.idPeerFilter` that contain the list of peers filtered by address or node ID respectively. These lists are first initialized via `options` in `BaseApp`'s [constructor](#constructor).
 
 ### ExtendVote
 

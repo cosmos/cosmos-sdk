@@ -941,9 +941,9 @@ The staking module contains the following parameters:
 | Key               | Type             | Example                |
 |-------------------|------------------|------------------------|
 | UnbondingTime     | string (time ns) | "259200000000000"      |
-| MaxValidators     | uint16           | 100                    |
-| KeyMaxEntries     | uint16           | 7                      |
-| HistoricalEntries | uint16           | 3                      |
+| MaxValidators     | uint32           | 100                    |
+| MaxEntries        | uint32           | 7                      |
+| HistoricalEntries | uint32           | 10000                  |
 | BondDenom         | string           | "stake"                |
 | MinCommissionRate | string           | "0.000000000000000000" |
 

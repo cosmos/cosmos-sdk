@@ -10,7 +10,7 @@ import (
 )
 
 type Checkpointer struct {
-	lastCheckpoint         atomic.Uint32
+	savedCheckpoint        atomic.Uint32
 	reqChan                chan checkpointReq
 	doneChan               chan error
 	changesetLock          sync.RWMutex
@@ -36,6 +36,10 @@ func (cp *Checkpointer) start() {
 	}()
 }
 
+func (cp *Checkpointer) LatestSavedCheckpoint() uint32 {
+	return cp.savedCheckpoint.Load()
+}
+
 // ChangesetByCheckpoint finds the changeset containing the given checkpoint.
 // Since checkpoint == version, this works for both checkpoint and version lookups.
 func (cp *Checkpointer) ChangesetByCheckpoint(checkpoint uint32) *Changeset {
@@ -51,7 +55,7 @@ func (cp *Checkpointer) ChangesetByCheckpoint(checkpoint uint32) *Changeset {
 	return res
 }
 
-func (cp *Checkpointer) Checkpoint(writer *ChangesetWriter, root *NodePointer, version uint32, nodeIdsAssigned chan struct{}, seal bool) error {
+func (cp *Checkpointer) Checkpoint(writer *ChangesetWriter, root *NodePointer, checkpoint, version uint32, nodeIdsAssigned chan struct{}, seal bool) error {
 	if nodeIdsAssigned == nil {
 		return fmt.Errorf("nodeIdsAssigned channel cannot be nil when checkpointing, that means we haven't assigned IDs yet")
 	}
@@ -64,6 +68,7 @@ func (cp *Checkpointer) Checkpoint(writer *ChangesetWriter, root *NodePointer, v
 	cp.reqChan <- checkpointReq{
 		writer:          writer,
 		root:            root,
+		checkpoint:      checkpoint,
 		version:         version,
 		nodeIdsAssigned: nodeIdsAssigned,
 		seal:            seal,
@@ -81,30 +86,31 @@ func (cp *Checkpointer) proc() error {
 		span.AddEvent("node IDs assigned, proceeding with checkpoint")
 
 		// checkpoint == version
-		if err := req.writer.SaveCheckpoint(req.version, req.root); err != nil {
+		checkpoint := req.checkpoint
+		if err := req.writer.SaveCheckpoint(checkpoint, req.version, req.root); err != nil {
+			return err
+		}
+		if err := req.writer.CreateReader(); err != nil {
 			return err
 		}
 		if req.seal {
-			if err := req.writer.Seal(req.version); err != nil {
-				return err
-			}
-		} else {
-			if err := req.writer.CreateReader(); err != nil {
+			if err := req.writer.Seal(); err != nil {
 				return err
 			}
 		}
+
 		// if we have a new writer, update the changeset map
 		// we only need to store the changeset ONCE per writer for the FIRST checkpoint it writes
 		if req.writer != curWriter { // compare pointers
 			curWriter = req.writer
 			cp.changesetLock.Lock()
-			cp.changesetsByCheckpoint.Set(req.version, curWriter.Changeset())
+			cp.changesetsByCheckpoint.Set(checkpoint, curWriter.Changeset())
 			cp.changesetLock.Unlock()
 		}
-		cp.lastCheckpoint.Store(req.version)
+		cp.savedCheckpoint.Store(checkpoint)
 		// notify evictor
 		if cp.evictor != nil {
-			cp.evictor.Evict(req.root, req.version)
+			cp.evictor.Evict(req.root, checkpoint)
 		}
 
 		span.End()
@@ -112,14 +118,27 @@ func (cp *Checkpointer) proc() error {
 	return nil
 }
 
-func (cp *Checkpointer) LoadRoot(version uint32) (*NodePointer, error) {
-	// TODO handle case where WAL replay must span multiple changesets
-	// find the changeset at or before the requested version
-	cs := cp.ChangesetByCheckpoint(version)
-	if cs == nil {
-		return nil, fmt.Errorf("no changeset found for version %d", version)
+// LastCheckpointRoot returns the root node pointer and version of the latest saved checkpoint.
+// If there are no saved checkpoints, (nil, 0, nil) is returned.
+func (cp *Checkpointer) LastCheckpointRoot() (*NodePointer, uint32, error) {
+	checkpoint := cp.LatestSavedCheckpoint()
+	if checkpoint == 0 {
+		return nil, 0, nil
 	}
-	return cs.LoadRoot(version)
+	cs := cp.ChangesetByCheckpoint(checkpoint)
+	if cs == nil {
+		return nil, 0, fmt.Errorf("no changeset found for latest checkpoint %d", checkpoint)
+	}
+	rdr, pin := cs.TryPinReader()
+	defer pin.Unpin()
+	if rdr == nil {
+		return nil, 0, fmt.Errorf("changeset reader is not available for latest checkpoint %d", checkpoint)
+	}
+	cpRoot, version := rdr.LatestCheckpointRoot()
+	if version == 0 {
+		return nil, 0, fmt.Errorf("no checkpoint root found in latest checkpoint %d", checkpoint)
+	}
+	return cpRoot, version, nil
 }
 
 func (cp *Checkpointer) Close() error {
@@ -130,6 +149,7 @@ func (cp *Checkpointer) Close() error {
 type checkpointReq struct {
 	writer          *ChangesetWriter
 	root            *NodePointer
+	checkpoint      uint32
 	version         uint32
 	seal            bool
 	nodeIdsAssigned chan struct{}

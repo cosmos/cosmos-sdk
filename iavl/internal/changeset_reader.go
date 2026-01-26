@@ -6,13 +6,14 @@ import (
 )
 
 type ChangesetReader struct {
-	changeset *Changeset    // we keep a reference to the parent changeset handle
-	info      ChangesetInfo // we copy this here so we are not affected by concurrent writes
+	changeset *Changeset // we keep a reference to the parent changeset handle
 
 	walReader       *KVDataReader
 	kvDataReader    *KVDataReader
 	branchesData    *NodeMmap[BranchLayout]
 	leavesData      *NodeMmap[LeafLayout]
+	firstCheckpoint uint32
+	lastCheckpoint  uint32
 	checkpointsInfo *StructMmap[CheckpointInfo]
 }
 
@@ -49,7 +50,14 @@ func NewChangesetReader(changeset *Changeset) (*ChangesetReader, error) {
 		return nil, fmt.Errorf("failed to open checkpoints data file: %w", err)
 	}
 
-	cr.info = *files.info
+	if cr.checkpointsInfo.Count() > 0 {
+		firstInfo, err := cr.checkpointsInfo.UnsafeItem(0), error(nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read first checkpoint info: %w", err)
+		}
+		cr.firstCheckpoint = firstInfo.Checkpoint
+		cr.lastCheckpoint = cr.firstCheckpoint + uint32(cr.checkpointsInfo.Count()) - 1
+	}
 
 	return cr, nil
 }
@@ -84,7 +92,7 @@ func (cr *ChangesetReader) ResolveLeafByID(id NodeID) (*LeafLayout, error) {
 	if !id.IsLeaf() {
 		return nil, fmt.Errorf("node ID %s is not a leaf", id.String())
 	}
-	info, err := cr.getCheckpointInfo(id.Checkpoint())
+	info, err := cr.GetCheckpointInfo(id.Checkpoint())
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +104,7 @@ func (cr *ChangesetReader) ResolveBranchByID(id NodeID) (*BranchLayout, error) {
 		return nil, fmt.Errorf("node ID %s is not a branch", id.String())
 	}
 
-	info, err := cr.getCheckpointInfo(id.Checkpoint())
+	info, err := cr.GetCheckpointInfo(id.Checkpoint())
 	if err != nil {
 		return nil, err
 	}
@@ -159,14 +167,11 @@ func (cr *ChangesetReader) FindNearestCheckpoint(targetVersion uint32) (checkpoi
 	return foundInfo.Version, rootPtr, nil
 }
 
-func (cr *ChangesetReader) getCheckpointInfo(checkpoint uint32) (*CheckpointInfo, error) {
-	info := cr.info
-	firstCheckpoint := info.FirstCheckpoint
-	lastCheckpoint := firstCheckpoint + uint32(cr.checkpointsInfo.Count()) - 1
-	if checkpoint < firstCheckpoint || checkpoint > lastCheckpoint {
-		return nil, fmt.Errorf("checkpoint %d out of range for changeset (have %d..%d)", checkpoint, firstCheckpoint, lastCheckpoint)
+func (cr *ChangesetReader) GetCheckpointInfo(checkpoint uint32) (*CheckpointInfo, error) {
+	if checkpoint < cr.firstCheckpoint || checkpoint > cr.lastCheckpoint {
+		return nil, fmt.Errorf("checkpoint %d out of range for changeset (have %d..%d)", checkpoint, cr.firstCheckpoint, cr.lastCheckpoint)
 	}
-	return cr.checkpointsInfo.UnsafeItem(checkpoint - firstCheckpoint), nil
+	return cr.checkpointsInfo.UnsafeItem(checkpoint - cr.firstCheckpoint), nil
 }
 
 func (cr *ChangesetReader) Changeset() *Changeset {
@@ -253,6 +258,39 @@ func (cr *ChangesetReader) ResolveByFileIndex(id NodeID, idx uint32) (Node, erro
 			layout: branchLayout,
 		}, nil
 	}
+}
+
+// FirstCheckpoint returns the first checkpoint number in this changeset.
+// If there are no checkpoints, 0 is returned.
+func (cr *ChangesetReader) FirstCheckpoint() uint32 {
+	return cr.firstCheckpoint
+}
+
+func (cr *ChangesetReader) LastCheckpoint() uint32 {
+	return cr.lastCheckpoint
+}
+
+// LatestCheckpointRoot returns the latest checkpoint root NodePointer and its version.
+// If there are no checkpoints with roots, (nil, 0, nil) is returned.
+func (cr *ChangesetReader) LatestCheckpointRoot() (*NodePointer, uint32) {
+	count := cr.checkpointsInfo.Count()
+	if count == 0 {
+		return nil, 0
+	}
+	i := count - 1
+	for ; i >= 0; i-- {
+		info := cr.checkpointsInfo.UnsafeItem(uint32(i))
+		if info.HaveRoot {
+			if info.RootID.IsEmpty() {
+				return nil, info.Version
+			}
+			return &NodePointer{
+				id:        info.RootID,
+				changeset: cr.changeset,
+			}, info.Version
+		}
+	}
+	return nil, 0
 }
 
 //func (cr *Changeset) TotalBytes() int {

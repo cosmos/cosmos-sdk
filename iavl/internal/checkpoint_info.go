@@ -12,15 +12,17 @@ func init() {
 	}
 }
 
-const CheckpointInfoSize = 48
+const CheckpointInfoSize = 60
 
 // CheckpointInfo holds metadata about a single checkpoint (a persisted tree state).
 // The checkpoint is identified by Version, since checkpoint == version.
 type CheckpointInfo struct {
 	Leaves   NodeSetInfo
 	Branches NodeSetInfo
+	// Checkpoint is the identifier of this checkpoint. It is incremented for each checkpoint saved
+	// and shouldn't be expected to align with the Version field.
+	Checkpoint uint32
 	// Version is the tree version at which this checkpoint was taken.
-	// This also serves as the checkpoint identifier.
 	Version uint32
 	// RootID is the NodeID of the root node at this checkpoint.
 	// This will be empty if the tree was empty at this checkpoint or if HaveRoot is false.

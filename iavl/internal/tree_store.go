@@ -1,9 +1,13 @@
 package internal
 
 import (
+	"errors"
 	"fmt"
+	"sync"
 	"sync/atomic"
 	"unsafe"
+
+	"github.com/tidwall/btree"
 )
 
 type TreeStoreOptions struct {
@@ -18,6 +22,7 @@ type TreeStore struct {
 	opts TreeStoreOptions
 
 	version      atomic.Uint32
+	checkpoint   atomic.Uint32
 	root         atomic.Pointer[NodePointer]
 	rootMemUsage atomic.Int64
 
@@ -30,13 +35,17 @@ type TreeStore struct {
 
 	//latestRoots     *btree.Map[uint32, *NodePointer]
 	//latestRootsLock sync.RWMutex
+
+	changesetsByVersion *btree.Map[uint32, *Changeset]
+	changesetsLock      sync.RWMutex
 }
 
 func NewTreeStore(dir string, opts TreeStoreOptions) (*TreeStore, error) {
 	ts := &TreeStore{
-		dir:          dir,
-		opts:         opts,
-		checkpointer: NewCheckpointer(BasicEvictor{EvictDepth: opts.EvictDepth}),
+		dir:                 dir,
+		opts:                opts,
+		checkpointer:        NewCheckpointer(BasicEvictor{EvictDepth: opts.EvictDepth}),
+		changesetsByVersion: &btree.Map[uint32, *Changeset]{},
 	}
 
 	err := ts.load()
@@ -62,6 +71,10 @@ func (ts *TreeStore) initNewWriter() error {
 	if err != nil {
 		return fmt.Errorf("failed to create new changeset writer: %w", err)
 	}
+
+	ts.changesetsLock.Lock()
+	ts.changesetsByVersion.Set(ts.currentWriter.changeset.files.StartVersion(), ts.currentWriter.Changeset())
+	ts.changesetsLock.Unlock()
 	return nil
 }
 
@@ -71,7 +84,8 @@ func (ts *TreeStore) SaveRoot(newRoot *NodePointer, mutationCtx *MutationContext
 
 	writer := ts.currentWriter
 	if ts.shouldCheckpoint {
-		err := ts.checkpointer.Checkpoint(writer, newRoot, version, nodeIdsAssigned, ts.shouldRollover)
+		checkpoint := ts.checkpoint.Add(1)
+		err := ts.checkpointer.Checkpoint(writer, newRoot, checkpoint, version, nodeIdsAssigned, ts.shouldRollover)
 		if err != nil {
 			return fmt.Errorf("failed to checkpoint changeset: %w", err)
 		}
@@ -116,7 +130,7 @@ func (ts *TreeStore) WriteWALUpdates(updates []KVUpdate, fsync bool) error {
 		return err
 	}
 
-	err = walWriter.WriteWALCommit(uint64(version))
+	err = walWriter.WriteWALCommit(uint64(version), ts.ShouldCheckpoint())
 	if err != nil {
 		return err
 	}
@@ -153,7 +167,10 @@ func (ts *TreeStore) Latest() *NodePointer {
 }
 
 func (ts *TreeStore) Close() error {
-	return ts.checkpointer.Close()
+	return errors.Join(
+		ts.currentWriter.Seal(),
+		ts.checkpointer.Close(),
+	)
 }
 
 func (ts *TreeStore) addToDisposalQueue(existing *ChangesetReaderRef) {

@@ -50,18 +50,17 @@ func (cs *ChangesetWriter) WALWriter() *WALWriter {
 }
 
 // SaveCheckpoint persists the tree state at the given version.
-// The checkpoint identifier equals the version (checkpoint == version).
-func (cs *ChangesetWriter) SaveCheckpoint(version uint32, root *NodePointer) error {
+func (cs *ChangesetWriter) SaveCheckpoint(checkpoint, version uint32, root *NodePointer) error {
 	cs.lastBranchIdx = 0
 	cs.lastLeafIdx = 0
 
 	// set or validate checkpoint
 	if cs.checkpoint != 0 {
-		if version <= cs.checkpoint {
+		if checkpoint <= cs.checkpoint {
 			return fmt.Errorf("invalid checkpoint version %d, must be greater than previous %d", version, cs.checkpoint)
 		}
 	}
-	cs.checkpoint = version
+	cs.checkpoint = checkpoint
 
 	var cpInfo CheckpointInfo
 	cpInfo.Branches.StartOffset = uint32(cs.branchesData.Count())
@@ -77,6 +76,7 @@ func (cs *ChangesetWriter) SaveCheckpoint(version uint32, root *NodePointer) err
 	}
 	cpInfo.HaveRoot = true // even if the root is nil we indicate that we have stored it
 
+	cpInfo.Checkpoint = checkpoint
 	cpInfo.Version = version
 	totalBranches := cs.lastBranchIdx
 	if totalBranches > 0 {
@@ -91,18 +91,15 @@ func (cs *ChangesetWriter) SaveCheckpoint(version uint32, root *NodePointer) err
 		cpInfo.Leaves.EndIndex = totalLeaves
 	}
 
+	// file integrity check data
+	cpInfo.KVEndOffset.Set(uint64(cs.kvWriter.Size()), true)
+	cpInfo.SetCRC32()
+
 	// commit checkpoint info
 	err := cs.checkpointsData.Append(&cpInfo)
 	if err != nil {
 		return fmt.Errorf("failed to write checkpoint info: %w", err)
 	}
-
-	// Set first checkpoint on first successful save
-	info := cs.files.info
-	if info.FirstCheckpoint == 0 {
-		info.FirstCheckpoint = version
-	}
-	info.LastCheckpoint = version
 
 	return nil
 }
@@ -268,7 +265,6 @@ func (cs *ChangesetWriter) CreateReader() error {
 func (cs *ChangesetWriter) Flush() error {
 	return errors.Join(
 		// NOTE: we do not flush the WAL here as that is being done elsewhere
-		cs.files.RewriteInfo(),
 		cs.leavesData.Flush(),
 		cs.branchesData.Flush(),
 		cs.kvWriter.Flush(),
@@ -276,13 +272,12 @@ func (cs *ChangesetWriter) Flush() error {
 	)
 }
 
-func (cs *ChangesetWriter) Seal(endVersion uint32) error {
-	err := cs.CreateReader()
+func (cs *ChangesetWriter) Seal() error {
+	err := cs.Flush()
 	if err != nil {
-		return fmt.Errorf("failed to create shared reader before sealing: %w", err)
+		return fmt.Errorf("failed to flush changeset data: %w", err)
 	}
 
-	cs.files.Info().WALEndVersion = endVersion
 	cs.changeset.sealed.Store(true)
 
 	// defensively nil out writers to prevent further use

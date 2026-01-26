@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"sync/atomic"
@@ -49,22 +48,22 @@ func (ch *Changeset) TreeStore() *TreeStore {
 	return ch.treeStore
 }
 
-func (ch *Changeset) LoadRoot(version uint32) (*NodePointer, error) {
-	rdr, pin := ch.TryPinReader()
-	defer pin.Unpin()
-	if rdr == nil {
-		return nil, fmt.Errorf("changeset reader is not available")
-	}
-	cpVersion, cpRoot, err := rdr.FindNearestCheckpoint(version)
-	if err != nil {
-		return nil, fmt.Errorf("failed to find nearest checkpoint for version %d: %w", version, err)
-	}
-	if cpVersion == version {
-		return cpRoot, nil
-	}
-
-	return ReplayWAL(context.Background(), cpRoot, ch.files.WALFile(), cpVersion, version)
-}
+//func (ch *Changeset) LoadRoot(version uint32) (*NodePointer, error) {
+//	rdr, pin := ch.TryPinReader()
+//	defer pin.Unpin()
+//	if rdr == nil {
+//		return nil, fmt.Errorf("changeset reader is not available")
+//	}
+//	cpVersion, cpRoot, err := rdr.FindNearestCheckpoint(version)
+//	if err != nil {
+//		return nil, fmt.Errorf("failed to find nearest checkpoint for version %d: %w", version, err)
+//	}
+//	if cpVersion == version {
+//		return cpRoot, nil
+//	}
+//
+//	return ReplayWAL(context.Background(), cpRoot, ch.files.WALFile(), cpVersion, version)
+//}
 
 func (ch *Changeset) swapActiveReader(newRdr *ChangesetReader) {
 	var newPinner *ChangesetReaderRef

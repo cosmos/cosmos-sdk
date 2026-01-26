@@ -53,22 +53,27 @@ func ReadWAL(file *os.File) iter.Seq2[WALEntry, error] {
 // walReader reads WAL entries from a KVDataReader.
 // Call Next() to read the next entry and read the Key, Value and Version fields directly as needed.
 type walReader struct {
-	rdr         *KVDataReader
-	offset      int
-	version     uint64
-	keyMappings map[int]UnsafeBytes
-	key, value  UnsafeBytes
-	keyOffset   int
-	valueOffset int
+	rdr           *KVDataReader
+	offset        int
+	version       uint64
+	keyMappings   map[int]UnsafeBytes
+	key, value    UnsafeBytes
+	keyOffset     int
+	valueOffset   int
+	lastEntryType WALEntryType
 }
 
 func (wr *walReader) next() (WALEntry, error) {
 	// check for end of data
 	if wr.offset >= wr.rdr.Len() {
+		if wr.lastEntryType != WALEntryCommit {
+			return WALEntry{}, fmt.Errorf("WAL ended unexpectedly at offset %d without a commit entry", wr.offset)
+		}
 		return WALEntry{}, io.EOF
 	}
 
 	entryType := WALEntryType(wr.rdr.At(wr.offset))
+	wr.lastEntryType = entryType
 	wr.offset++
 	switch entryType {
 	case WALEntrySet:

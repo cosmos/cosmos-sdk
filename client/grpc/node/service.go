@@ -6,14 +6,16 @@ import (
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // RegisterNodeService registers the node gRPC service on the provided gRPC router.
-func RegisterNodeService(clientCtx client.Context, server gogogrpc.Server, cfg config.Config) {
-	RegisterServiceServer(server, NewQueryServer(clientCtx, cfg))
+func RegisterNodeService(clientCtx client.Context, server gogogrpc.Server, cfg config.Config, cms storetypes.CommitMultiStore) {
+	RegisterServiceServer(server, NewQueryServer(clientCtx, cfg, cms))
 }
 
 // RegisterGRPCGatewayRoutes mounts the node gRPC service's GRPC-gateway routes
@@ -27,12 +29,14 @@ var _ ServiceServer = queryServer{}
 type queryServer struct {
 	clientCtx client.Context
 	cfg       config.Config
+	cms       storetypes.CommitMultiStore
 }
 
-func NewQueryServer(clientCtx client.Context, cfg config.Config) ServiceServer {
+func NewQueryServer(clientCtx client.Context, cfg config.Config, cms storetypes.CommitMultiStore) ServiceServer {
 	return queryServer{
 		clientCtx: clientCtx,
 		cfg:       cfg,
+		cms:       cms,
 	}
 }
 
@@ -53,13 +57,10 @@ func (s queryServer) Status(ctx context.Context, _ *StatusRequest) (*StatusRespo
 	blockTime := sdkCtx.BlockTime()
 
 	return &StatusResponse{
-		// TODO: Get earliest version from store.
-		//
-		// Ref: ...
-		// EarliestStoreHeight: sdkCtx.MultiStore(),
-		Height:        uint64(sdkCtx.BlockHeight()),
-		Timestamp:     &blockTime,
-		AppHash:       sdkCtx.BlockHeader().AppHash,
-		ValidatorHash: sdkCtx.BlockHeader().NextValidatorsHash,
+		EarliestStoreHeight: uint64(s.cms.EarliestVersion()),
+		Height:              uint64(sdkCtx.BlockHeight()),
+		Timestamp:           &blockTime,
+		AppHash:             sdkCtx.BlockHeader().AppHash,
+		ValidatorHash:       sdkCtx.BlockHeader().NextValidatorsHash,
 	}, nil
 }

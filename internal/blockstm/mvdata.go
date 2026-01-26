@@ -23,7 +23,7 @@ func NewMVData() *MVData {
 }
 
 type GMVData[V any] struct {
-	tree2.BTree[dataItem[V]]
+	index    *mvIndex[V]
 	isZero   func(V) bool
 	valueLen func(V) int
 	// eq enables value-based validation, nil means version-only validation.
@@ -53,6 +53,8 @@ func (d *GMVData[V]) captureBytesIfSmall(value V) []byte {
 func NewMVStore(key storetypes.StoreKey) MVStore {
 	switch key.(type) {
 	case *storetypes.ObjectStoreKey:
+		// Object stores don't necessarily have a deterministic equality relation.
+		// Keep version-based validation by default.
 		return NewGMVData(storetypes.AnyIsZero, storetypes.AnyValueLen, nil)
 	default:
 		return NewGMVData(storetypes.BytesIsZero, storetypes.BytesValueLen, bytes.Equal)
@@ -61,7 +63,7 @@ func NewMVStore(key storetypes.StoreKey) MVStore {
 
 func NewGMVData[V any](isZero func(V) bool, valueLen func(V) int, eq func(V, V) bool) *GMVData[V] {
 	d := &GMVData[V]{
-		BTree:    *tree2.NewBTree(tree2.KeyItemLess[dataItem[V]], OuterBTreeDegree),
+		index:    newMVIndex[V](),
 		isZero:   isZero,
 		valueLen: valueLen,
 		eq:       eq,
@@ -75,13 +77,12 @@ func NewGMVData[V any](isZero func(V) bool, valueLen func(V) int, eq func(V, V) 
 
 // getTree returns `nil` if not found
 func (d *GMVData[V]) getTree(key Key) *tree2.BTree[secondaryDataItem[V]] {
-	outer, _ := d.Get(dataItem[V]{Key: key})
-	return outer.Tree
+	return d.index.get(key)
 }
 
 // getTreeOrDefault set a new tree atomically if not found.
 func (d *GMVData[V]) getTreeOrDefault(key Key) *tree2.BTree[secondaryDataItem[V]] {
-	return d.GetOrDefault(dataItem[V]{Key: key}, (*dataItem[V]).Init).Tree
+	return d.index.getOrCreate(key)
 }
 
 func shiftedIndex(txn TxnIndex) TxnIndex {
@@ -120,14 +121,13 @@ func (d *GMVData[V]) readFound(key Key, txn TxnIndex) (V, TxnVersion, bool, bool
 		return zero, InvalidTxnVersion, false, false
 	}
 
-	// find the closest txn that's less than the given txn
+	// find the closest internal version that's < shiftedIndex(txn)
 	item, ok := seekClosestTxn(inner, shiftedIndex(txn))
 	if !ok {
 		return zero, InvalidTxnVersion, false, false
 	}
 
-	// Internal index 0 represents cached pre-state (storage). Externally, we keep
-	// InvalidTxnVersion semantics for storage reads.
+	// Index 0 corresponds to the pre-state from storage (InvalidTxnVersion).
 	if item.Index == 0 {
 		return item.Value, InvalidTxnVersion, item.Estimate, true
 	}
@@ -139,11 +139,15 @@ func (d *GMVData[V]) Iterator(
 	opts IteratorOptions, txn TxnIndex,
 	waitFn func(TxnIndex),
 ) *MVIterator[V] {
-	return NewMVIterator(opts, txn, d.Iter(), waitFn)
+	keys := d.index.snapshotKeys(opts.Start, opts.End, opts.Ascending)
+	return NewMVIterator(opts, txn, d, keys, waitFn)
 }
 
-// ValidateReadSet validates the read descriptors,
-// returns true if valid.
+// ValidateReadSet validates that the values read during execution are consistent with the current state.
+// It returns true if the read set is valid, false otherwise.
+//
+// Note: This function does not consult storage; callers must ensure any storage reads are cached in MVData
+// at internal index 0 (pre-state) when the read happens.
 func (d *GMVData[V]) ValidateReadSet(txn TxnIndex, rs *ReadSet) bool {
 	for _, desc := range rs.Reads {
 		if desc.Has {
@@ -170,9 +174,10 @@ func (d *GMVData[V]) ValidateReadSet(txn TxnIndex, rs *ReadSet) bool {
 
 		value, version, estimate := d.Read(desc.Key, txn)
 		if estimate {
-			// previously read entry from data, now ESTIMATE
+			// Dependency is still estimated, so this read is invalid.
 			return false
 		}
+		// Fast path: if versions match, the read is valid.
 		if version == desc.Version {
 			continue
 		}
@@ -225,7 +230,8 @@ func (d *GMVData[V]) ValidateReadSet(txn TxnIndex, rs *ReadSet) bool {
 // validateIterator validates the iteration descriptor by replaying and compare the recorded reads.
 // returns true if valid.
 func (d *GMVData[V]) validateIterator(desc IteratorDescriptor, txn TxnIndex) bool {
-	it := NewMVIterator(desc.IteratorOptions, txn, d.Iter(), nil)
+	keys := d.index.snapshotKeys(desc.Start, desc.End, desc.Ascending)
+	it := NewMVIterator(desc.IteratorOptions, txn, d, keys, nil)
 	defer it.Close()
 
 	var i int
@@ -265,18 +271,23 @@ func (d *GMVData[V]) Snapshot() (snapshot []GKVPair[V]) {
 }
 
 func (d *GMVData[V]) SnapshotTo(cb func(Key, V) bool) {
-	d.Scan(func(outer dataItem[V]) bool {
-		item, ok := outer.Tree.Max()
+	keys := d.index.snapshotAllKeys(true)
+	for i := 0; i < len(keys); i++ {
+		inner := d.getTree(keys[i])
+		if inner == nil {
+			continue
+		}
+		item, ok := inner.Max()
 		if !ok {
-			return true
+			continue
 		}
-
 		if item.Estimate {
-			return true
+			continue
 		}
-
-		return cb(outer.Key, item.Value)
-	})
+		if !cb(keys[i], item.Value) {
+			return
+		}
+	}
 }
 
 func (d *GMVData[V]) SnapshotToStore(store storetypes.Store) {

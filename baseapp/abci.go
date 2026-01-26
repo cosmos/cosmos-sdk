@@ -1006,6 +1006,7 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 		aborted := app.optimisticExec.AbortIfNeeded(req.Hash)
 		telemetry.MeasureSince(ainTime, TelemetrySubsystem, MetricOEAbortIfNeededTime)
 		if aborted {
+			//nolint:staticcheck // todo: refactor
 			telemetry.IncrCounter(1, TelemetrySubsystem, MetricOEAborted)
 		}
 		// Wait for the OE to finish, regardless of whether it was aborted or not

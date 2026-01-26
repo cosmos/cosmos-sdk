@@ -379,7 +379,7 @@ benchmark:
 ###                                Linting                                  ###
 ###############################################################################
 
-golangci_version=v2.6.2
+golangci_version=v2.7.2
 
 lint-install:
 	@echo "--> Installing golangci-lint $(golangci_version)"
@@ -492,13 +492,17 @@ localnet-debug: localnet-stop localnet-build-dlv localnet-build-nodes
 
 .PHONY: localnet-start localnet-stop localnet-debug localnet-build-env localnet-build-dlv localnet-build-nodes
 
-test-system: build-v53 build
+build-system-test-current: build
+	mkdir -p ./tests/systemtests/binaries/
+	cp $(BUILDDIR)/simd ./tests/systemtests/binaries/
+
+test-system: build-v53 build-system-test-current
 	mkdir -p ./tests/systemtests/binaries/
 	cp $(BUILDDIR)/simd ./tests/systemtests/binaries/
 	mkdir -p ./tests/systemtests/binaries/v0.53
 	mv $(BUILDDIR)/simdv53 ./tests/systemtests/binaries/v0.53/simd
 	$(MAKE) -C tests/systemtests test
-.PHONY: test-system
+.PHONY: test-system build-system-test-current
 
 # build-v53 checks out the v0.53.x branch, builds the binary, and renames it to simdv53.
 build-v53:

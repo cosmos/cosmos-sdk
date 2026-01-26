@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 )
 
-// DumpArchiveCmd returns a command to dump the snapshot as portable archive format
+// DumpArchiveCmd returns a command to dump the snapshot as a portable archive format
 func DumpArchiveCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "dump <height> <format>",

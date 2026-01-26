@@ -74,7 +74,7 @@ func (cp *Checkpointer) Checkpoint(writer *ChangesetWriter, root *NodePointer, v
 func (cp *Checkpointer) proc() error {
 	var curWriter *ChangesetWriter
 	for req := range cp.reqChan {
-		_, span := Tracer.Start(context.Background(), "SaveCheckpoint")
+		_, span := tracer.Start(context.Background(), "SaveCheckpoint")
 
 		// wait for node IDs assignment to complete
 		<-req.nodeIdsAssigned
@@ -110,6 +110,16 @@ func (cp *Checkpointer) proc() error {
 		span.End()
 	}
 	return nil
+}
+
+func (cp *Checkpointer) LoadRoot(version uint32) (*NodePointer, error) {
+	// TODO handle case where WAL replay must span multiple changesets
+	// find the changeset at or before the requested version
+	cs := cp.ChangesetByCheckpoint(version)
+	if cs == nil {
+		return nil, fmt.Errorf("no changeset found for version %d", version)
+	}
+	return cs.LoadRoot(version)
 }
 
 func (cp *Checkpointer) Close() error {

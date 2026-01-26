@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -9,6 +10,9 @@ import (
 )
 
 func (ts *TreeStore) load() error {
+	ctx, span := tracer.Start(context.Background(), "TreeStore.load")
+	defer span.End()
+
 	// collect a list of all existing subdirectories
 	dirs, err := os.ReadDir(ts.dir)
 	if err != nil {
@@ -40,14 +44,15 @@ func (ts *TreeStore) load() error {
 	for {
 		startVersion, compactionMap, ok := dirMap.PopMin()
 		if !ok {
-			return nil
+			// done
+			break
 		}
 
 		// startVersion should be equal to stagedVersion
 
 		stagedVersion := ts.StagedVersion()
 		if startVersion < stagedVersion {
-			logger.Warn("found undeleted changeset that was already compacted", "startVersion", startVersion, "stagedVersion", stagedVersion)
+			logger.WarnContext(ctx, "found undeleted changeset that was already compacted", "startVersion", startVersion, "stagedVersion", stagedVersion)
 			// TODO delete undeleted compactions
 			continue
 		}
@@ -68,7 +73,7 @@ func (ts *TreeStore) load() error {
 			}
 
 			if !ready {
-				logger.Warn("found incomplete compaction, deleting", "dir", dirName)
+				logger.WarnContext(ctx, "found incomplete compaction, deleting", "dir", dirName)
 				err := os.RemoveAll(dirName)
 				if err != nil {
 					logger.Error("failed to remove incomplete compaction", "dir", dirName, "error", err)
@@ -76,7 +81,7 @@ func (ts *TreeStore) load() error {
 				continue
 			}
 
-			logger.Debug("loading changeset", "startVersion", startVersion, "dir", dirName)
+			logger.DebugContext(ctx, "loading changeset", "startVersion", startVersion, "dir", dirName)
 
 			cs, err := OpenChangeset(ts, dirName)
 			if err != nil {
@@ -112,4 +117,11 @@ func (ts *TreeStore) load() error {
 			break
 		}
 	}
+
+	root, err := ts.checkpointer.LoadRoot(ts.version.Load())
+	if err != nil {
+		return fmt.Errorf("failed to load root after loading changesets: %w", err)
+	}
+	ts.root.Store(root)
+	return nil
 }

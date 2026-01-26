@@ -75,6 +75,7 @@ func (cs *ChangesetWriter) SaveCheckpoint(version uint32, root *NodePointer) err
 		}
 		cpInfo.RootID = root.id
 	}
+	cpInfo.HaveRoot = true // even if the root is nil we indicate that we have stored it
 
 	cpInfo.Version = version
 	totalBranches := cs.lastBranchIdx

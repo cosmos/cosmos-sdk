@@ -30,7 +30,7 @@ func (be BasicEvictor) Evict(root *NodePointer, checkpoint uint32) {
 	}
 
 	go func() {
-		_, span := Tracer.Start(context.Background(), "Evict",
+		_, span := tracer.Start(context.Background(), "Evict",
 			trace.WithAttributes(
 				attribute.Int("evictDepth", int(be.EvictDepth)),
 				attribute.Int("treeHeight", int(height)),

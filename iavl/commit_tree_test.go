@@ -124,6 +124,13 @@ func (s *SimMachine) checkNewVersion(t *rapid.T) {
 	require.NoError(t, err, "failed to create iterator for V1 tree")
 	iterV2 := s.treeV2.Latest().Iterator(nil, nil)
 	compareIteratorsAtVersion(t, iterV1, iterV2)
+
+	// randomly close and reopen the V2 tree to test persistence
+	closeReopen := rapid.Bool().Draw(t, "closeReopen")
+	if closeReopen {
+		require.NoError(t, s.treeV2.Close())
+		s.openV2Tree(t)
+	}
 }
 
 func (s *SimMachine) genUpdates(t *rapid.T) []Update {

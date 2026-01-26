@@ -1,11 +1,23 @@
 package internal
 
 import (
+	"context"
 	"fmt"
 	"os"
+
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
-func ReplayWAL(root *NodePointer, walFile *os.File, rootVersion, targetVersion uint32) (*NodePointer, error) {
+func ReplayWAL(ctx context.Context, root *NodePointer, walFile *os.File, rootVersion, targetVersion uint32) (*NodePointer, error) {
+	_, span := tracer.Start(ctx, "ReplayWAL",
+		trace.WithAttributes(
+			attribute.String("walFile", walFile.Name()),
+			attribute.Int64("from", int64(rootVersion)),
+			attribute.Int64("to", int64(targetVersion))),
+	)
+	defer span.End()
+
 	walReader, err := NewWALReader(walFile)
 	if err != nil {
 		return nil, err

@@ -45,10 +45,7 @@ type Compactor struct {
 }
 
 func NewCompacter(ctx context.Context, reader *ChangesetReader, opts CompactOptions, store *TreeStore) (*Compactor, error) {
-	if reader.files == nil {
-		return nil, fmt.Errorf("changeset has no associated files, cannot compact a shared changeset reader which files set to nil")
-	}
-	files := reader.files
+	files := reader.changeset.files
 	startingVersion := files.StartVersion()
 	lastCompactedAt := files.CompactedAtVersion()
 	if lastCompactedAt >= opts.CompactedAt {
@@ -93,11 +90,11 @@ func (c *Compactor) processChangeset(reader *ChangesetReader) error {
 	branchesData := reader.branchesData
 
 	// flush orphan writer to ensure all orphans are written before reading
-	err := reader.orphanWriter.Flush()
+	err := reader.changeset.orphanWriter.Flush()
 	if err != nil {
 		return fmt.Errorf("failed to flush orphan writer before reading orphan map: %w", err)
 	}
-	orphanMap, err := ReadOrphanLog(reader.files.orphansFile)
+	orphanMap, err := ReadOrphanLog(reader.changeset.files.orphansFile)
 	if err != nil {
 		return fmt.Errorf("failed to read orphan map: %w", err)
 	}

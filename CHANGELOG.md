@@ -99,6 +99,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/bank) [#25751](https://github.com/cosmos/cosmos-sdk/pull/25751) Fix recipient address in events.
 * (server/config) [#25806](https://github.com/cosmos/cosmos-sdk/pull/25806) fix: add missing commas in historical gRPC config template.
 * (client) [#25804](https://github.com/cosmos/cosmos-sdk/pull/25804) Add `GetHeightFromMetadataStrict` API to `grpc` client for better error handling.
+* (x/auth) [#25828](https://github.com/cosmos/cosmos-sdk/pull/25828) Limits pagination at default for values that exceed it.
 
 ### Deprecated
 

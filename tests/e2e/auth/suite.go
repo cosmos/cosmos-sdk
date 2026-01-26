@@ -1201,6 +1201,7 @@ func (s *E2ETestSuite) TestMultisignBatch() {
 	// multisign the file
 	file2 := testutil.WriteToNewTempFile(s.T(), res.String())
 	defer file2.Close()
+	s.Require().NoError(err)
 	res, err = authclitestutil.TxMultiSignBatchExec(val.ClientCtx, filename.Name(), multisigRecord.Name, file1.Name(), file2.Name())
 	s.Require().NoError(err)
 	signedTxs := strings.Split(strings.Trim(res.String(), "\n"), "\n")

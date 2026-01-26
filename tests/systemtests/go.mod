@@ -11,10 +11,16 @@ replace (
 require (
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/systemtests v1.2.1
+<<<<<<< HEAD
 	github.com/cosmos/cosmos-sdk v0.53.0
+=======
+	github.com/cosmos/cosmos-sdk v0.54.0-beta.0
+	github.com/creachadair/tomledit v0.0.29
+>>>>>>> 174b2e936 (feat(grpc): add earliest/latest block height to GetSyncing response (#25648))
 	github.com/stretchr/testify v1.11.1
 	github.com/tidwall/gjson v1.18.0
 	github.com/tidwall/sjson v1.2.5
+	google.golang.org/grpc v1.78.0
 )
 
 require (
@@ -57,8 +63,12 @@ require (
 	github.com/cosmos/iavl v1.2.2 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v1.0.0 // indirect
+<<<<<<< HEAD
 	github.com/creachadair/tomledit v0.0.28 // indirect
 	github.com/danieljoos/wincred v1.2.2 // indirect
+=======
+	github.com/danieljoos/wincred v1.2.3 // indirect
+>>>>>>> 174b2e936 (feat(grpc): add earliest/latest block height to GetSyncing response (#25648))
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.0 // indirect
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
@@ -153,6 +163,7 @@ require (
 	go.uber.org/zap v1.27.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
+<<<<<<< HEAD
 	golang.org/x/arch v0.17.0 // indirect
 	golang.org/x/crypto v0.41.0 // indirect
 	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394 // indirect
@@ -166,6 +177,20 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250818200422-3122310a409c // indirect
 	google.golang.org/grpc v1.75.0 // indirect
 	google.golang.org/protobuf v1.36.10 // indirect
+=======
+	golang.org/x/arch v0.22.0 // indirect
+	golang.org/x/crypto v0.47.0 // indirect
+	golang.org/x/exp v0.0.0-20260112195511-716be5621a96 // indirect
+	golang.org/x/net v0.48.0 // indirect
+	golang.org/x/sync v0.19.0 // indirect
+	golang.org/x/sys v0.40.0 // indirect
+	golang.org/x/term v0.39.0 // indirect
+	golang.org/x/text v0.33.0 // indirect
+	google.golang.org/genproto v0.0.0-20260114163908-3f89685c29c3 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260114163908-3f89685c29c3 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260114163908-3f89685c29c3 // indirect
+	google.golang.org/protobuf v1.36.11 // indirect
+>>>>>>> 174b2e936 (feat(grpc): add earliest/latest block height to GetSyncing response (#25648))
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.5.2 // indirect
 	nhooyr.io/websocket v1.8.6 // indirect

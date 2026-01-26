@@ -367,7 +367,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 				MinSelfDelegation: &lowSelfDel,
 			},
 			expErr:    true,
-			expErrMsg: "minimum self delegation cannot be decrease",
+			expErrMsg: "minimum self delegation cannot be decreased",
 		},
 		{
 			name: "validator self-delegation must be greater than min self delegation",

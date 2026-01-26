@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/depinject"
-	sdklog "cosmossdk.io/log"
+	sdklog "cosmossdk.io/log/v2"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"

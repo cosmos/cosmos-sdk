@@ -75,7 +75,14 @@ func (e *Executor) TryExecute(version TxnVersion) (TxnVersion, TaskKind) {
 func (e *Executor) NeedsReexecution(version TxnVersion) (TxnVersion, TaskKind) {
 	e.scheduler.validatedTxns.Add(1)
 	valid := e.mvMemory.ValidateReadSet(version.Index)
-	aborted := !valid && e.scheduler.TryValidationAbort(version)
+
+	var aborted bool
+	if !valid {
+		// validations on the same transaction can be run concurrently,
+		// but only one executor can abort it.
+		aborted = e.scheduler.TryValidationAbort(version)
+	}
+
 	if aborted {
 		e.mvMemory.ConvertWritesToEstimates(version.Index)
 	}

@@ -11,7 +11,7 @@ import (
 	ics23 "github.com/cosmos/ics23/go"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/internal/kv"
 	"cosmossdk.io/store/metrics"

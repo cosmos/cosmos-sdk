@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/errors"
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store/cachemulti"
 	"cosmossdk.io/store/iavl"
 	sdkmaps "cosmossdk.io/store/internal/maps"

@@ -888,6 +888,9 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 		}
 	}
 
+	mempoolCtx := ctx
+	var commitAnteCache func()
+
 	if app.anteHandler != nil {
 		var (
 			anteCtx sdk.Context
@@ -930,16 +933,31 @@ func (app *BaseApp) runTx(mode execMode, txBytes []byte) (gInfo sdk.GasInfo, res
 			return gInfo, nil, nil, err
 		}
 
-		msCache.Write()
-		anteEvents = events.ToABCIEvents()
+		commitAnteCache = func() {
+			if msCache != nil {
+				msCache.Write()
+			}
+			anteEvents = events.ToABCIEvents()
+		}
+
+		if mode == execModeCheck {
+			mempoolCtx = ctx.WithMultiStore(msCache)
+		} else {
+			commitAnteCache()
+			commitAnteCache = nil
+		}
 	}
 
-	if mode == execModeCheck {
-		err = app.mempool.Insert(ctx, tx)
-		if err != nil {
+	switch mode {
+	case execModeCheck:
+		if err := app.mempool.Insert(mempoolCtx, tx); err != nil {
 			return gInfo, nil, anteEvents, err
 		}
-	} else if mode == execModeFinalize {
+
+		if commitAnteCache != nil {
+			commitAnteCache()
+		}
+	case execModeFinalize:
 		err = app.mempool.Remove(tx)
 		if err != nil && !errors.Is(err, mempool.ErrTxNotFound) {
 			return gInfo, nil, anteEvents,

@@ -155,6 +155,8 @@ func TestSTM(t *testing.T) {
 }
 
 func StoreEqual(t *testing.T, a, b storetypes.KVStore) bool {
+	t.Helper()
+
 	// compare with iterators
 	iter1 := a.Iterator(nil, nil)
 	iter2 := b.Iterator(nil, nil)

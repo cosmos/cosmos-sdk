@@ -139,7 +139,7 @@ func (s *Scheduler) TryValidateNextVersion(idxToValidate TxnIndex, wave Wave) (T
 		return InvalidTxnVersion, false
 	}
 
-	return TxnVersion{TxnIndex(idxToValidate), incarnation}, true
+	return TxnVersion{idxToValidate, incarnation}, true
 }
 
 // NextTask returns the transaction index and task kind for the next task to execute or validate,
@@ -197,7 +197,7 @@ func (s *Scheduler) FinishExecution(version TxnVersion, wroteNewPath bool) (TxnV
 	deps := s.txnDependency[version.Index].Swap(nil)
 	s.ResumeDependencies(deps)
 	validationIdx, wave := UnpackValidationIdx(s.validationIdx.Load())
-	if validationIdx > TxnIndex(version.Index) { // otherwise index already small enough
+	if validationIdx > version.Index { // otherwise index already small enough
 		if wroteNewPath {
 			// schedule validation wave for higher txns
 			curWave, ok := s.DecreaseValidationIdx(version.Index + 1)

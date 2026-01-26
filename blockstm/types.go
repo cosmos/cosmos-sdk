@@ -42,6 +42,7 @@ type ReadDescriptor struct {
 	// ExistsExpected is meaningful only when Has==true.
 	ExistsExpected bool
 }
+
 type IteratorOptions struct {
 	// [Start, End) is the range of the iterator
 	Start     Key

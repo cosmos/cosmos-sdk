@@ -45,7 +45,7 @@ func NewGMVMemoryView[V any](store int, storage storetypes.GKVStore[V], mvData *
 		mvData:    mvData,
 		scheduler: scheduler,
 		txn:       txn,
-		readSet:   new(ReadSet),
+		readSet:   &ReadSet{},
 	}
 }
 
@@ -98,25 +98,26 @@ func (s *GMVMemoryView[V]) Get(key []byte) V {
 			continue
 		}
 
-		kCopy := append([]byte(nil), key...)
-		desc := ReadDescriptor{Key: kCopy, Version: version}
 		if !version.Valid() {
+			// Storage read path.
 			storageValue := s.storage.Get(key)
 
-			// Cache the pre-state value in MVMemory (at index 0).
-			// This enables value-based validation to compare against this value directly from memory,
-			// avoiding repeated storage reads during validation.
+			// Cache pre-state (Index 0) to optimize subsequent value-based validations.
 			s.mvData.Write(key, storageValue, InvalidTxnVersion)
 
-			s.readSet.Reads = append(s.readSet.Reads, desc)
-
+			kCopy := append([]byte(nil), key...)
+			s.readSet.Reads = append(s.readSet.Reads, ReadDescriptor{Key: kCopy, Version: InvalidTxnVersion})
 			return storageValue
 		}
 
-		if b, ok := any(value).([]byte); ok {
-			desc.Captured = append([]byte(nil), b...)
+		kCopy := append([]byte(nil), key...)
+		var captured []byte
+		if s.mvData.isBytes {
+			if b, ok := any(value).([]byte); ok {
+				captured = append([]byte(nil), b...)
+			}
 		}
-		s.readSet.Reads = append(s.readSet.Reads, desc)
+		s.readSet.Reads = append(s.readSet.Reads, ReadDescriptor{Key: kCopy, Version: version, Captured: captured})
 		return value
 	}
 }
@@ -157,6 +158,7 @@ func (s *GMVMemoryView[V]) Has(key []byte) bool {
 		} else {
 			exists = !s.mvData.isZero(value)
 		}
+
 		kCopy := append([]byte(nil), key...)
 		s.readSet.Reads = append(s.readSet.Reads, ReadDescriptor{Key: kCopy, Has: true, ExistsExpected: exists})
 

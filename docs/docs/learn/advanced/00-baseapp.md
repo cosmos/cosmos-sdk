@@ -291,7 +291,7 @@ CometBFT calls it when it receives a proposal and the CometBFT algorithm has not
 
 However, developers must exercise greater caution when using these methods. Incorrectly coding these methods could affect liveness as CometBFT is unable to receive 2/3 valid precommits to finalize a block.
 
-`ProcessProposal` returns a response to the underlying consensus engine of type [`abci.ResponseCheckTx`](https://github.com/cometbft/cometbft/blob/v0.37.x/spec/abci/abci++_methods.md#processproposal). The response contains:
+`ProcessProposal` returns a response to the underlying consensus engine of type [`abci.ResponseProcessProposal`](https://github.com/cometbft/cometbft/blob/v0.37.x/spec/abci/abci++_methods.md#processproposal). The response contains:
 
 *   `Code (uint32)`: Response Code. `0` if successful.
 *   `Data ([]byte)`: Result bytes, if any.

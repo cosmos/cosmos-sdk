@@ -246,12 +246,14 @@ func (s *Scheduler) TryCommit() (TxnIndex, Incarnation, bool) {
 
 	validationStatus := &s.txnStatus[commitIdx].validation
 	if !validationStatus.TryLock() {
+		s.commitLock.Arm()
 		return 0, 0, false
 	}
 	defer validationStatus.Unlock()
 
 	execStatus := &s.txnStatus[commitIdx].execution
 	if !execStatus.TryLock() {
+		s.commitLock.Arm()
 		return 0, 0, false
 	}
 	defer execStatus.Unlock()

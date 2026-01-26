@@ -21,6 +21,7 @@ func BenchmarkBlockSTM(b *testing.B) {
 		stores[key] = i + 2
 	}
 	abasamevalueKeys := abaSameValueKeys(10000)
+	abaBigValue := make([]byte, 64<<10) // 64KiB
 	testCases := []struct {
 		name  string
 		block *MockBlock
@@ -34,6 +35,11 @@ func BenchmarkBlockSTM(b *testing.B) {
 			"aba-samevalue-10000",
 			abaSameValueBlock(abasamevalueKeys),
 			func(storage MultiStore) { prepopulateABASameValue(storage, abasamevalueKeys) },
+		},
+		{
+			"aba-samevalue-bigvalue-10000",
+			abaSameValueBlockWithValue(abasamevalueKeys, abaBigValue),
+			func(storage MultiStore) { prepopulateABASameValueWithValue(storage, abasamevalueKeys, abaBigValue) },
 		},
 	}
 	for _, tc := range testCases {
@@ -143,9 +149,20 @@ func prepopulateABASameValue(storage MultiStore, keys [][]byte) {
 	}
 }
 
+func prepopulateABASameValueWithValue(storage MultiStore, keys [][]byte, value []byte) {
+	kv := storage.GetKVStore(StoreKeyAuth)
+	for _, key := range keys {
+		kv.Set(key, value)
+	}
+}
+
 func abaSameValueBlock(keys [][]byte) *MockBlock {
-	txs := make([]Tx, len(keys))
 	value := []byte{1}
+	return abaSameValueBlockWithValue(keys, value)
+}
+
+func abaSameValueBlockWithValue(keys [][]byte, value []byte) *MockBlock {
+	txs := make([]Tx, len(keys))
 	for i := range keys {
 		idx := i
 		txs[i] = func(store MultiStore) error {

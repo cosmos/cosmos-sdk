@@ -200,11 +200,13 @@ Developers can now build systems with:
 ```go
 func myCustomVotingFunction(
   ctx context.Context,
-  k Keeper,
+  k keeper.Keeper,
   proposal v1.Proposal,
-  validators map[string]v1.ValidatorGovInfo,
-) (totalVoterPower math.LegacyDec, results map[v1.VoteOption]math.LegacyDec, err error) {
+) (totalVoterPower math.LegacyDec, totalValPower math.Int, results map[v1.VoteOption]math.LegacyDec, err error) {
   // ... tally logic
+  // totalVoterPower is the sum of voting power that actually voted
+  // totalValPower is the sum of all active validator power (for quorum calculation)
+  return totalVoterPower, totalValPower, results, nil
 }
 
 govKeeper := govkeeper.NewKeeper(
@@ -212,12 +214,11 @@ govKeeper := govkeeper.NewKeeper(
   runtime.NewKVStoreService(keys[govtypes.StoreKey]),
   app.AccountKeeper,
   app.BankKeeper,
-  app.StakingKeeper,
   app.DistrKeeper,
   app.MsgServiceRouter(),
   govConfig,
   authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-  govkeeper.WithCustomCalculateVoteResultsAndVotingPowerFn(myCustomVotingFunction),
+  myCustomVotingFunction,
 )
 ```
 

@@ -189,16 +189,33 @@ func (cs *ChangesetWriter) writeBranch(np *NodePointer, node *MemNode) error {
 func (cs *ChangesetWriter) writeLeaf(np *NodePointer, node *MemNode) error {
 	cs.lastLeafIdx++
 
+	// key and value offsets can be missing if we replayed from WAL
 	keyOffset := node.keyOffset
-	if node.keyOffset.IsZero() || node.valueOffset.IsZero() {
-		return fmt.Errorf("leaf node missing key or value offset")
+	if node.keyOffset.IsZero() {
+		offset, found := cs.walWriter.LookupKeyOffset(node.key)
+		if found {
+			keyOffset = NewKVOffset(offset, false)
+		} else {
+			offset, err := cs.kvWriter.WriteKeyBlob(node.key)
+			if err != nil {
+				return fmt.Errorf("failed to write key data: %w", err)
+			}
+			keyOffset = NewKVOffset(offset, true)
+		}
+	}
+
+	if node.valueOffset.IsZero() {
+		offset, err := cs.kvWriter.WriteValueBlob(node.value)
+		if err != nil {
+			return fmt.Errorf("failed to write value data: %w", err)
+		}
+		node.valueOffset = NewKVOffset(offset, true)
 	}
 
 	layout := LeafLayout{
-		ID:        np.id,
-		Version:   node.version,
-		KeyOffset: keyOffset,
-		// TODO add inline key prefix
+		ID:          np.id,
+		Version:     node.version,
+		KeyOffset:   keyOffset,
 		ValueOffset: node.valueOffset,
 	}
 	copy(layout.Hash[:], node.hash) // TODO check length

@@ -120,6 +120,14 @@ func (kvs *KVDataWriter) writeLEU40(x uint64) error {
 	return err
 }
 
+func (kvs *KVDataWriter) WriteValueBlob(value []byte) (offset uint64, err error) {
+	if len(value) > MaxValueSize {
+		return 0, fmt.Errorf("value size exceeds maximum of %d bytes: %d bytes", MaxValueSize, len(value))
+	}
+
+	return kvs.writeLenPrefixedBytes(value)
+}
+
 // unsafeBytesToString converts a byte slice to a string without allocation.
 // This should be used with caution and only when the byte slice is not modified.
 // But generally when we are storing a byte slice as a key in a map, this is what we should use.

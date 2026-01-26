@@ -171,6 +171,7 @@ func (ts *TreeStore) Latest() *NodePointer {
 }
 
 func (ts *TreeStore) Close() error {
+	// TODO save a checkpoint before closing if needed
 	errs := []error{
 		ts.currentWriter.Seal(),
 		ts.checkpointer.Close(),

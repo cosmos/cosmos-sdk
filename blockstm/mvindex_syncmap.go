@@ -1,4 +1,4 @@
-//go:build !syncmap
+//go:build syncmap
 
 package blockstm
 
@@ -11,25 +11,19 @@ import (
 	"github.com/cosmos/cosmos-sdk/blockstm/tree"
 )
 
-const mvIndexShards = 64
-
 // minSnapshotKeysCap is the minimum capacity used when building a key snapshot.
 const minSnapshotKeysCap = 1024
 
-type mvIndexEntry[V any] struct {
+// mvIndexSyncMapValue holds the stable key bytes and the per-key version tree.
+type mvIndexSyncMapValue[V any] struct {
 	key  []byte
 	data *tree.BTree[secondaryDataItem[V]]
 }
 
-type mvIndexShard[V any] struct {
-	mu sync.RWMutex
-	m  map[uint64][]mvIndexEntry[V]
-}
-
-// mvIndex is a sharded index from key -> per-key version tree.
-// Keys are copied on first insert to keep them stable.
+// mvIndex is an index from key -> per-key version tree, implemented with sync.Map.
+// Keys are converted to string for map lookup.
 type mvIndex[V any] struct {
-	shards [mvIndexShards]mvIndexShard[V]
+	m sync.Map // map[string]*mvIndexSyncMapValue[V]
 
 	// keySetVersion increments when a new key is added; it invalidates the snapshot cache.
 	keySetVersion atomic.Uint64
@@ -41,49 +35,34 @@ type mvIndex[V any] struct {
 }
 
 func newMVIndex[V any]() *mvIndex[V] {
-	idx := &mvIndex[V]{}
-	for i := range idx.shards {
-		idx.shards[i].m = make(map[uint64][]mvIndexEntry[V])
-	}
-	return idx
+	return &mvIndex[V]{}
 }
 
 func (idx *mvIndex[V]) get(key []byte) *tree.BTree[secondaryDataItem[V]] {
 	if idx == nil {
 		return nil
 	}
-	h := hashKey64(key)
-	sh := &idx.shards[h&uint64(mvIndexShards-1)]
-	sh.mu.RLock()
-	entries := sh.m[h]
-	for _, entry := range entries {
-		if bytes.Equal(entry.key, key) {
-			data := entry.data
-			sh.mu.RUnlock()
-			return data
-		}
+	v, ok := idx.m.Load(string(key))
+	if !ok {
+		return nil
 	}
-	sh.mu.RUnlock()
-	return nil
+	return v.(*mvIndexSyncMapValue[V]).data
 }
 
 func (idx *mvIndex[V]) getOrCreate(key []byte) *tree.BTree[secondaryDataItem[V]] {
-	h := hashKey64(key)
-	sh := &idx.shards[h&uint64(mvIndexShards-1)]
-	sh.mu.Lock()
-	entries := sh.m[h]
-	for _, entry := range entries {
-		if bytes.Equal(entry.key, key) {
-			data := entry.data
-			sh.mu.Unlock()
-			return data
-		}
+	sKey := string(key)
+	if v, ok := idx.m.Load(sKey); ok {
+		return v.(*mvIndexSyncMapValue[V]).data
 	}
 
 	kCopy := append([]byte(nil), key...)
 	data := tree.NewBTree(secondaryLesser[V], InnerBTreeDegree)
-	sh.m[h] = append(entries, mvIndexEntry[V]{key: kCopy, data: data})
-	sh.mu.Unlock()
+	val := &mvIndexSyncMapValue[V]{key: kCopy, data: data}
+
+	actual, loaded := idx.m.LoadOrStore(sKey, val)
+	if loaded {
+		return actual.(*mvIndexSyncMapValue[V]).data
+	}
 	idx.keySetVersion.Add(1)
 	return data
 }
@@ -149,17 +128,12 @@ func (idx *mvIndex[V]) snapshotAllKeysAsc() []Key {
 	if capHint < minSnapshotKeysCap {
 		capHint = minSnapshotKeysCap
 	}
+
 	keys := make([]Key, 0, capHint)
-	for i := range idx.shards {
-		sh := &idx.shards[i]
-		sh.mu.RLock()
-		for _, bucket := range sh.m {
-			for _, entry := range bucket {
-				keys = append(keys, entry.key)
-			}
-		}
-		sh.mu.RUnlock()
-	}
+	idx.m.Range(func(_, v any) bool {
+		keys = append(keys, v.(*mvIndexSyncMapValue[V]).key)
+		return true
+	})
 
 	sort.Slice(keys, func(i, j int) bool {
 		return bytes.Compare(keys[i], keys[j]) < 0
@@ -176,18 +150,4 @@ func reverseCopyKeys(keys []Key) []Key {
 		out[len(keys)-1-i] = k
 	}
 	return out
-}
-
-// hashKey64 computes a 64-bit FNV-1a hash.
-func hashKey64(b []byte) uint64 {
-	const (
-		fnv1a64OffsetBasis = 14695981039346656037
-		fnv1a64Prime       = 1099511628211
-	)
-	h := uint64(fnv1a64OffsetBasis)
-	for _, c := range b {
-		h ^= uint64(c)
-		h *= fnv1a64Prime
-	}
-	return h
 }

@@ -2,15 +2,13 @@ package internal
 
 import (
 	"fmt"
-	"unsafe"
 )
 
 // MutationContext is a small helper that keeps track of the current version and orphaned nodes.
 // It is used in all mutation operations such as insertion, deletion, and rebalancing.
 type MutationContext struct {
-	version  uint32
-	orphans  []*NodePointer
-	memUsage int64
+	version uint32
+	orphans []*NodePointer
 }
 
 // NewMutationContext creates a new MutationContext for the given version.
@@ -42,7 +40,6 @@ func (ctx *MutationContext) mutateBranch(node Node, nodePtr *NodePointer) (*MemN
 	if err != nil {
 		return nil, fmt.Errorf("mutate branch node %s: %w", node.ID(), err)
 	}
-	ctx.memUsage += memNodeOverhead + int64(len(mem.key))
 	return mem, nil
 }
 
@@ -66,7 +63,6 @@ func (ctx *MutationContext) addOrphan(nodePtr *NodePointer) bool {
 
 // NewLeafNode creates a new leaf MemNode with the given key, value, and version.
 func (ctx *MutationContext) NewLeafNode(key, value []byte) *MemNode {
-	ctx.memUsage += memNodeOverhead + int64(len(key)) + int64(len(value))
 	return &MemNode{
 		height:  0,
 		size:    1,
@@ -77,7 +73,6 @@ func (ctx *MutationContext) NewLeafNode(key, value []byte) *MemNode {
 }
 
 func (ctx *MutationContext) newBranchNode(left, right *NodePointer, key []byte) *MemNode {
-	ctx.memUsage += memNodeOverhead + int64(len(key))
 	return &MemNode{
 		height:  1,
 		size:    2,
@@ -87,5 +82,3 @@ func (ctx *MutationContext) newBranchNode(left, right *NodePointer, key []byte) 
 		key:     key,
 	}
 }
-
-const memNodeOverhead = int64(unsafe.Sizeof(MemNode{})) + int64(unsafe.Sizeof(NodePointer{}))*2 + 32 /* hash size */

@@ -6,6 +6,7 @@ import (
 )
 
 var (
+	// TODO these shouldn't be exported from internal package
 	Tracer           = otel.Tracer("iavl")
 	Meter            = otel.Meter("iavl")
 	LeafHashLatency  metric.Int64Histogram

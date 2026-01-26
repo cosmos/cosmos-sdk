@@ -3,6 +3,7 @@ package internal
 import (
 	"fmt"
 	"sync/atomic"
+	"unsafe"
 )
 
 type TreeStoreOptions struct {
@@ -22,6 +23,7 @@ type TreeStore struct {
 
 	currentWriter         *ChangesetWriter
 	checkpointer          *Checkpointer
+	cleanupProc           *cleanupProc
 	lastCheckpointVersion uint32
 	shouldCheckpoint      bool
 	shouldRollover        bool
@@ -52,7 +54,6 @@ func (ts *TreeStore) StagedVersion() uint32 {
 func (ts *TreeStore) SaveRoot(newRoot *NodePointer, mutationCtx *MutationContext, nodeIdsAssigned chan struct{}) error {
 	ts.root.Store(newRoot)
 	version := ts.version.Add(1)
-	ts.rootMemUsage.Add(mutationCtx.memUsage)
 
 	writer := ts.currentWriter
 	if ts.shouldCheckpoint {
@@ -80,6 +81,8 @@ func (ts *TreeStore) SaveRoot(newRoot *NodePointer, mutationCtx *MutationContext
 	ts.shouldCheckpoint = ts.shouldRollover ||
 		(checkpointInterval > 0 &&
 			versionsSinceLastCheckpoint >= uint32(ts.opts.CheckpointInterval))
+
+	ts.cleanupProc.MarkOrphans(mutationCtx.version, mutationCtx.orphans)
 
 	return nil
 }
@@ -137,3 +140,5 @@ func (ts *TreeStore) Latest() *NodePointer {
 func (ts *TreeStore) Close() error {
 	return ts.checkpointer.Close()
 }
+
+const memNodeOverhead = int64(unsafe.Sizeof(MemNode{})) + int64(unsafe.Sizeof(NodePointer{}))*2 + 32 /* hash size */

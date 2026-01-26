@@ -20,6 +20,7 @@ type ChangesetWriter struct {
 	changeset *Changeset
 
 	lastBranchIdx, lastLeafIdx uint32
+	memUsage                   int64
 }
 
 func NewChangesetWriter(treeDir string, stagedVersion uint32, treeStore *TreeStore) (*ChangesetWriter, error) {
@@ -110,6 +111,8 @@ func (cs *ChangesetWriter) writeNode(np *NodePointer) error {
 	if memNode == nil || memNode.nodeId.Checkpoint() != cs.checkpoint {
 		return nil // already persisted or nothing to write
 	}
+	// track memory usage of every node that gets saved to a checkpoint as these are nodes we can evict
+	cs.memUsage += memNodeOverhead + int64(len(memNode.key)) + int64(len(memNode.hash))
 	if memNode.IsLeaf() {
 		return cs.writeLeaf(np, memNode)
 	} else {

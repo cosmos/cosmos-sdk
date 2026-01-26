@@ -3,6 +3,7 @@ package internal
 import (
 	"context"
 	"fmt"
+	"log/slog"
 )
 
 type CompactOptions struct {
@@ -84,180 +85,176 @@ func NewCompacter(ctx context.Context, reader *ChangesetReader, opts CompactOpti
 }
 
 func (c *Compactor) processChangeset(reader *ChangesetReader) error {
-	// rewrite WAL
+	// TODO rewrite WAL
 
-	//// Compute KV offset delta for non-CompactWAL mode
-	//kvOffsetDelta := uint32(0)
-	//if c.kvlogWriter != nil && !c.compactWAL {
-	//	kvOffsetDelta = uint32(c.kvlogWriter.Size())
-	//}
-	//
-	//versionsData := reader.versionsData
-	//numVersions := versionsData.Count()
-	//leavesData := reader.leavesData
-	//branchesData := reader.branchesData
-	//
-	//// flush orphan writer to ensure all orphans are written before reading
-	//err := reader.orphanWriter.Flush()
-	//if err != nil {
-	//	return fmt.Errorf("failed to flush orphan writer before reading orphan map: %w", err)
-	//}
-	//orphanMap, err := ReadOrphanMap(reader.files.orphansFile)
-	//if err != nil {
-	//	return fmt.Errorf("failed to read orphan map: %w", err)
-	//}
-	//
-	//slog.DebugContext(c.ctx, "processing changeset for compaction", "versions", numVersions)
-	//for i := 0; i < numVersions; i++ {
-	//	verInfo := *versionsData.UnsafeItem(uint32(i)) // copy
-	//	newLeafStartIdx := uint32(0)
-	//	newLeafEndIdx := uint32(0)
-	//	leafStartOffset := verInfo.Leaves.StartOffset
-	//	leafCount := verInfo.Leaves.Count
-	//	newLeafStartOffset := uint32(c.leavesWriter.Count())
-	//	newLeafCount := uint32(0)
-	//	// Iterate leaves
-	//	// For each leaf, check if it should be retained
-	//	for j := uint32(0); j < leafCount; j++ {
-	//		leaf := *leavesData.UnsafeItem(leafStartOffset + j) // copy
-	//		id := leaf.Id
-	//		orphanVersion := orphanMap[id]
-	//		retain := orphanVersion == 0 || c.criteria(uint32(id.Version()), orphanVersion)
-	//		if !retain {
-	//			continue
-	//		}
-	//
-	//		if orphanVersion != 0 {
-	//			c.leafOrphanCount++
-	//			c.leafOrphanVersionTotal += uint64(orphanVersion)
-	//		}
-	//
-	//		if newLeafStartIdx == 0 {
-	//			newLeafStartIdx = id.Index()
-	//		}
-	//		newLeafEndIdx = id.Index()
-	//		newLeafCount++
-	//
-	//		if c.compactWAL {
-	//			k, v, err := reader.ReadKV(id, leaf.KeyOffset)
-	//			if err != nil {
-	//				return fmt.Errorf("failed to read KV for leaf %s: %w", id, err)
-	//			}
-	//
-	//			offset, err := c.kvlogWriter.WriteKV(k, v)
-	//			if err != nil {
-	//				return fmt.Errorf("failed to write KV for leaf %s: %w", id, err)
-	//			}
-	//
-	//			leaf.KeyOffset = offset
-	//			c.keyCache[unsafeBytesToString(k)] = offset
-	//		} else {
-	//			// When not compacting WAL, add offset delta
-	//			leaf.KeyOffset += kvOffsetDelta
-	//		}
-	//
-	//		err := c.leavesWriter.Append(&leaf)
-	//		if err != nil {
-	//			return fmt.Errorf("failed to append leaf %s: %w", id, err)
-	//		}
-	//
-	//		c.offsetCache[id] = uint32(c.leavesWriter.Count())
-	//
-	//		if orphanVersion != 0 {
-	//			if err := c.orphanWriter.WriteOrphan(orphanVersion, id); err != nil {
-	//				return fmt.Errorf("failed to write retained orphan leaf %s: %w", id, err)
-	//			}
-	//		}
-	//	}
-	//
-	//	newBranchStartIdx := uint32(0)
-	//	newBranchEndIdx := uint32(0)
-	//	branchStartOffset := verInfo.Branches.StartOffset
-	//	branchCount := verInfo.Branches.Count
-	//	newBranchStartOffset := uint32(c.branchesWriter.Count())
-	//	newBranchCount := uint32(0)
-	//	for j := uint32(0); j < branchCount; j++ {
-	//		branch := *branchesData.UnsafeItem(branchStartOffset + j) // copy
-	//		id := branch.Id
-	//		orphanVersion := orphanMap[id]
-	//		retain := orphanVersion == 0 || c.criteria(uint32(id.Version()), orphanVersion)
-	//		if !retain {
-	//			continue
-	//		}
-	//
-	//		if orphanVersion != 0 {
-	//			c.branchOrphanCount++
-	//			c.branchOrphanVersionTotal += uint64(orphanVersion)
-	//		}
-	//
-	//		if newBranchStartIdx == 0 {
-	//			newBranchStartIdx = id.Index()
-	//		}
-	//		newBranchEndIdx = id.Index()
-	//		newBranchCount++
-	//
-	//		if newLeftOffset, ok := c.offsetCache[branch.Left]; ok {
-	//			branch.LeftOffset = newLeftOffset
-	//		}
-	//		if newRightOffset, ok := c.offsetCache[branch.Right]; ok {
-	//			branch.RightOffset = newRightOffset
-	//		}
-	//
-	//		if c.compactWAL {
-	//			k, err := reader.ReadK(id, branch.KeyOffset)
-	//			if err != nil {
-	//				return fmt.Errorf("failed to read key for branch %s: %w", id, err)
-	//			}
-	//			offset, ok := c.keyCache[unsafeBytesToString(k)]
-	//			if !ok {
-	//				offset, err = c.kvlogWriter.WriteK(k)
-	//			}
-	//			if err != nil {
-	//				return fmt.Errorf("failed to write key for branch %s: %w", id, err)
-	//			}
-	//			branch.KeyOffset = offset
-	//		} else {
-	//			// When not compacting WAL, add offset delta
-	//			branch.KeyOffset += kvOffsetDelta
-	//		}
-	//
-	//		err := c.branchesWriter.Append(&branch)
-	//		if err != nil {
-	//			return fmt.Errorf("failed to append branch %s: %w", id, err)
-	//		}
-	//		c.offsetCache[id] = uint32(c.branchesWriter.Count())
-	//
-	//		if orphanVersion != 0 {
-	//			if err := c.orphanWriter.WriteOrphan(orphanVersion, id); err != nil {
-	//				return fmt.Errorf("failed to write retained orphan leaf %s: %w", id, err)
-	//			}
-	//		}
-	//	}
-	//
-	//	verInfo = VersionInfo{
-	//		Leaves: NodeSetInfo{
-	//			StartIndex:  newLeafStartIdx,
-	//			EndIndex:    newLeafEndIdx,
-	//			StartOffset: newLeafStartOffset,
-	//			Count:       newLeafCount,
-	//		},
-	//		Branches: NodeSetInfo{
-	//			StartIndex:  newBranchStartIdx,
-	//			EndIndex:    newBranchEndIdx,
-	//			StartOffset: newBranchStartOffset,
-	//			Count:       newBranchCount,
-	//		},
-	//		RootID: verInfo.RootID,
-	//	}
-	//
-	//	err := c.cpInfoWriter.Append(&verInfo)
-	//	if err != nil {
-	//		return fmt.Errorf("failed to append version info for version %d: %w", reader.files.info.StartVersion+uint32(i), err)
-	//	}
-	//}
-	//
-	//// Track this changeset as processed
-	//c.processedChangesets = append(c.processedChangesets, reader)
+	cpInfo := reader.checkpointsInfo
+	numCheckpoints := cpInfo.Count()
+	leavesData := reader.leavesData
+	branchesData := reader.branchesData
+
+	// flush orphan writer to ensure all orphans are written before reading
+	err := reader.orphanWriter.Flush()
+	if err != nil {
+		return fmt.Errorf("failed to flush orphan writer before reading orphan map: %w", err)
+	}
+	orphanMap, err := ReadOrphanLog(reader.files.orphansFile)
+	if err != nil {
+		return fmt.Errorf("failed to read orphan map: %w", err)
+	}
+
+	slog.DebugContext(c.ctx, "processing changeset for compaction", "numCheckpoints", numCheckpoints)
+	for i := 0; i < numCheckpoints; i++ {
+		cpInfo := cpInfo.UnsafeItem(uint32(i)) // copy
+		newLeafStartIdx := uint32(0)
+		newLeafEndIdx := uint32(0)
+		leafStartOffset := cpInfo.Leaves.StartOffset
+		leafCount := cpInfo.Leaves.Count
+		newLeafStartOffset := uint32(c.leavesWriter.Count())
+		newLeafCount := uint32(0)
+		// Iterate leaves
+		// For each leaf, check if it should be retained
+		for j := uint32(0); j < leafCount; j++ {
+			leaf := *leavesData.UnsafeItem(leafStartOffset + j) // copy so we don't modify original
+			id := leaf.ID
+			orphanVersion := orphanMap[id]
+			retain := orphanVersion == 0 || c.criteria(leaf.Version, orphanVersion)
+			if !retain {
+				continue
+			}
+
+			if orphanVersion != 0 {
+				c.leafOrphanCount++
+				c.leafOrphanVersionTotal += uint64(orphanVersion)
+			}
+
+			if newLeafStartIdx == 0 {
+				newLeafStartIdx = id.Index()
+			}
+			newLeafEndIdx = id.Index()
+			newLeafCount++
+
+			// TODO lookup new key, value offsets
+			//if c.compactWAL {
+			//	k, v, err := reader.ReadKV(id, leaf.KeyOffset)
+			//	if err != nil {
+			//		return fmt.Errorf("failed to read KV for leaf %s: %w", id, err)
+			//	}
+			//
+			//	offset, err := c.kvlogWriter.WriteKV(k, v)
+			//	if err != nil {
+			//		return fmt.Errorf("failed to write KV for leaf %s: %w", id, err)
+			//	}
+			//
+			//	leaf.KeyOffset = offset
+			//	c.keyCache[unsafeBytesToString(k)] = offset
+			//} else {
+			//	// When not compacting WAL, add offset delta
+			//	leaf.KeyOffset += kvOffsetDelta
+			//}
+
+			err := c.leavesWriter.Append(&leaf)
+			if err != nil {
+				return fmt.Errorf("failed to append leaf %s: %w", id, err)
+			}
+
+			c.offsetCache[id] = uint32(c.leavesWriter.Count())
+
+			if orphanVersion != 0 {
+				if err := c.orphanWriter.WriteOrphan(orphanVersion, id); err != nil {
+					return fmt.Errorf("failed to write retained orphan leaf %s: %w", id, err)
+				}
+			}
+		}
+
+		newBranchStartIdx := uint32(0)
+		newBranchEndIdx := uint32(0)
+		branchStartOffset := cpInfo.Branches.StartOffset
+		branchCount := cpInfo.Branches.Count
+		newBranchStartOffset := uint32(c.branchesWriter.Count())
+		newBranchCount := uint32(0)
+		for j := uint32(0); j < branchCount; j++ {
+			branch := *branchesData.UnsafeItem(branchStartOffset + j) // copy
+			id := branch.ID
+			orphanVersion := orphanMap[id]
+			retain := orphanVersion == 0 || c.criteria(branch.Version, orphanVersion)
+			if !retain {
+				continue
+			}
+
+			if orphanVersion != 0 {
+				c.branchOrphanCount++
+				c.branchOrphanVersionTotal += uint64(orphanVersion)
+			}
+
+			if newBranchStartIdx == 0 {
+				newBranchStartIdx = id.Index()
+			}
+			newBranchEndIdx = id.Index()
+			newBranchCount++
+
+			if newLeftOffset, ok := c.offsetCache[branch.Left]; ok {
+				branch.LeftOffset = newLeftOffset
+			}
+			if newRightOffset, ok := c.offsetCache[branch.Right]; ok {
+				branch.RightOffset = newRightOffset
+			}
+
+			// TODO lookup new key offset
+			//if c.compactWAL {
+			//	k, err := reader.ReadK(id, branch.KeyOffset)
+			//	if err != nil {
+			//		return fmt.Errorf("failed to read key for branch %s: %w", id, err)
+			//	}
+			//	offset, ok := c.keyCache[unsafeBytesToString(k)]
+			//	if !ok {
+			//		offset, err = c.kvlogWriter.WriteK(k)
+			//	}
+			//	if err != nil {
+			//		return fmt.Errorf("failed to write key for branch %s: %w", id, err)
+			//	}
+			//	branch.KeyOffset = offset
+			//} else {
+			//	// When not compacting WAL, add offset delta
+			//	branch.KeyOffset += kvOffsetDelta
+			//}
+
+			err := c.branchesWriter.Append(&branch)
+			if err != nil {
+				return fmt.Errorf("failed to append branch %s: %w", id, err)
+			}
+			c.offsetCache[id] = uint32(c.branchesWriter.Count())
+
+			if orphanVersion != 0 {
+				if err := c.orphanWriter.WriteOrphan(orphanVersion, id); err != nil {
+					return fmt.Errorf("failed to write retained orphan leaf %s: %w", id, err)
+				}
+			}
+		}
+
+		cpInfo = &CheckpointInfo{
+			Leaves: NodeSetInfo{
+				StartIndex:  newLeafStartIdx,
+				EndIndex:    newLeafEndIdx,
+				StartOffset: newLeafStartOffset,
+				Count:       newLeafCount,
+			},
+			Branches: NodeSetInfo{
+				StartIndex:  newBranchStartIdx,
+				EndIndex:    newBranchEndIdx,
+				StartOffset: newBranchStartOffset,
+				Count:       newBranchCount,
+			},
+			RootID: cpInfo.RootID,
+		}
+
+		err := c.cpInfoWriter.Append(cpInfo)
+		if err != nil {
+			return fmt.Errorf("failed to append checkpoint info for checkpoint %d: %w", cpInfo.Version, err)
+		}
+	}
+
+	// Track this changeset as processed
+	c.processedChangesets = append(c.processedChangesets, reader.Changeset())
 
 	return nil
 }

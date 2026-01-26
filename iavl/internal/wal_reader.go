@@ -2,141 +2,199 @@ package internal
 
 import (
 	"fmt"
+	"io"
+	"iter"
 	"os"
 )
 
-func NewWALReader(file *os.File) (*WALReader, error) {
+func ReadWAL(file *os.File) iter.Seq2[WALEntry, error] {
 	kvr, err := NewKVDataReader(file)
 	if err != nil {
-		return nil, err
+		return func(yield func(WALEntry, error) bool) {
+			yield(WALEntry{}, fmt.Errorf("failed to open WAL data store: %w", err))
+		}
 	}
 	if kvr.Len() == 0 || kvr.At(0) != byte(WALEntryStart) {
-		return nil, fmt.Errorf("data does not contain a valid WAL start entry")
+		return func(yield func(WALEntry, error) bool) {
+			yield(WALEntry{}, fmt.Errorf("data does not contain a valid WAL start entry"))
+		}
 	}
 	startVersion, bytesRead, err := kvr.readVarint(1)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read WAL start layer: %w", err)
+		return func(yield func(WALEntry, error) bool) {
+			yield(WALEntry{}, fmt.Errorf("failed to read WAL start layer: %w", err))
+		}
 	}
-	return &WALReader{
+	rdr := &walReader{
 		rdr:         kvr,
 		offset:      1 + bytesRead,
-		Version:     startVersion,
+		version:     startVersion,
 		keyMappings: make(map[int]UnsafeBytes),
-	}, nil
-}
-
-// WALReader reads WAL entries from a KVDataReader.
-// Call Next() to read the next entry and read the Key, Value and Version fields directly as needed.
-type WALReader struct {
-	rdr            *KVDataReader
-	offset         int
-	setValueOffset int
-	keyMappings    map[int]UnsafeBytes
-
-	// Version is the version of the WAL entries currently being read.
-	Version uint64
-	// Key is the key of the current WAL entry. This is valid for Set and Delete entries.
-	// This is an UnsafeBytes pointing into the mmap'd WAL data - copy if needed beyond the reader's lifetime.
-	Key UnsafeBytes
-
-	// Value is the value of the current WAL entry.
-	// This is only valid for Set entries.
-	// This is an UnsafeBytes pointing into the mmap'd WAL data - copy if needed beyond the reader's lifetime.
-	Value UnsafeBytes
-}
-
-// Next reads the next WAL entry, skipping over any blob entries.
-// It returns the entry type, a boolean indicating if an entry was read and an error if any.
-// If no more entries are available, ok will be false.
-// It should only be expected that Set, Delete and Commit entries are returned.
-func (wr *WALReader) Next() (entryType WALEntryType, ok bool, err error) {
-	// check for end of data
-	if wr.offset >= wr.rdr.Len() {
-		return 0, false, nil
 	}
 
-	entryType = WALEntryType(wr.rdr.At(wr.offset))
+	return func(yield func(WALEntry, error) bool) {
+		for {
+			entry, err := rdr.next()
+			if err != nil {
+				if err == io.EOF {
+					return
+				} else {
+					yield(WALEntry{}, err)
+					return
+				}
+			}
+			if !yield(entry, nil) {
+				return
+			}
+		}
+	}
+}
+
+// walReader reads WAL entries from a KVDataReader.
+// Call Next() to read the next entry and read the Key, Value and Version fields directly as needed.
+type walReader struct {
+	rdr         *KVDataReader
+	offset      int
+	version     uint64
+	keyMappings map[int]UnsafeBytes
+	key, value  UnsafeBytes
+	keyOffset   int
+	valueOffset int
+}
+
+func (wr *walReader) next() (WALEntry, error) {
+	// check for end of data
+	if wr.offset >= wr.rdr.Len() {
+		return WALEntry{}, io.EOF
+	}
+
+	entryType := WALEntryType(wr.rdr.At(wr.offset))
 	wr.offset++
 	switch entryType {
 	case WALEntrySet:
 		err := wr.readKey()
 		if err != nil {
-			return 0, false, err
+			return WALEntry{}, err
 		}
 
-		wr.setValueOffset = wr.offset // we save this for remapping when rewriting the WAL
 		err = wr.readValue()
 		if err != nil {
-			return 0, false, err
+			return WALEntry{}, err
 		}
+
+		return WALEntry{
+			Op:          WALOpSet,
+			Version:     wr.version,
+			Key:         wr.key,
+			Value:       wr.value,
+			KeyOffset:   wr.keyOffset,
+			ValueOffset: wr.valueOffset,
+		}, nil
 	case WALEntrySet | WALFlagCachedKey:
 		err := wr.readCachedKey()
 		if err != nil {
-			return 0, false, err
+			return WALEntry{}, err
 		}
 
-		wr.setValueOffset = wr.offset // we save this for remapping when rewriting the WAL
 		err = wr.readValue()
 		if err != nil {
-			return 0, false, err
+			return WALEntry{}, err
 		}
+		return WALEntry{
+			Op:          WALOpSet,
+			Version:     wr.version,
+			Key:         wr.key,
+			Value:       wr.value,
+			KeyOffset:   wr.keyOffset,
+			ValueOffset: wr.valueOffset,
+		}, nil
 	case WALEntryDelete:
 		err := wr.readKey()
 		if err != nil {
-			return 0, false, err
+			return WALEntry{}, err
 		}
+
+		return WALEntry{
+			Op:        WALOpDelete,
+			Version:   wr.version,
+			Key:       wr.key,
+			KeyOffset: wr.keyOffset,
+		}, nil
 	case WALEntryDelete | WALFlagCachedKey:
 		err := wr.readCachedKey()
 		if err != nil {
-			return 0, false, err
+			return WALEntry{}, err
 		}
-	case WALEntryCommit:
+
+		return WALEntry{
+			Op:        WALOpDelete,
+			Version:   wr.version,
+			Key:       wr.key,
+			KeyOffset: wr.keyOffset,
+		}, nil
+	case WALEntryCommit, WALEntryCommit | WALFlagCheckpoint:
+		checkpoint := false
+		if entryType&WALFlagCheckpoint != 0 {
+			checkpoint = true
+		}
 		var bytesRead int
-		wr.Version, bytesRead, err = wr.rdr.readVarint(wr.offset)
+		var err error
+		version, bytesRead, err := wr.rdr.readVarint(wr.offset)
 		if err != nil {
-			return 0, false, fmt.Errorf("failed to read WAL commit layer at offset %d: %w", wr.offset, err)
+			err = fmt.Errorf("failed to read WAL commit layer at offset %d: %w", wr.offset, err)
+			return WALEntry{}, err
 		}
 		wr.offset += bytesRead
+		if version != wr.version {
+			return WALEntry{}, fmt.Errorf("WAL commit version %d does not match current version %d at offset %d", version, wr.version, wr.offset-bytesRead)
+		}
+		wr.version++ // increment version for next entries
+
+		return WALEntry{
+			Op:         WALOpCommit,
+			Version:    version, // version being committed
+			Checkpoint: checkpoint,
+		}, nil
 	default:
-		return 0, false, fmt.Errorf("invalid KV entry type %d at offset %d", entryType, wr.offset-1)
+		return WALEntry{}, fmt.Errorf("invalid KV entry type %d at offset %d", entryType, wr.offset-1)
 	}
-	return entryType, true, nil
 }
 
-func (wr *WALReader) readKey() error {
-	keyOffset := wr.offset
+func (wr *walReader) readKey() error {
+	wr.keyOffset = wr.offset
 	bz, bytesRead, err := wr.rdr.unsafeReadBlob(wr.offset)
 	if err != nil {
 		return fmt.Errorf("failed to read WAL key at offset %d: %w", wr.offset, err)
 	}
-	wr.Key = WrapUnsafeBytes(bz)
+	wr.key = WrapUnsafeBytes(bz)
 	// cache the key by its offset for cached key lookups
-	wr.keyMappings[keyOffset] = wr.Key
+	wr.keyMappings[wr.keyOffset] = wr.key
 	wr.offset += bytesRead
 	return nil
 }
 
-func (wr *WALReader) readCachedKey() error {
+func (wr *walReader) readCachedKey() error {
 	cachedKeyOffset, err := wr.rdr.readLEU40(wr.offset)
 	if err != nil {
 		return fmt.Errorf("failed to read cached key offset at %d: %w", wr.offset, err)
 	}
+	wr.keyOffset = int(cachedKeyOffset)
 	wr.offset += 5
 	var ok bool
-	// The stored offset may have location flag set, mask it off for lookup
-	wr.Key, ok = wr.keyMappings[int(cachedKeyOffset&kvOffsetMask)]
+	wr.key, ok = wr.keyMappings[int(cachedKeyOffset)]
 	if !ok {
 		return fmt.Errorf("cached key not found at offset %d", cachedKeyOffset)
 	}
 	return nil
 }
 
-func (wr *WALReader) readValue() error {
+func (wr *walReader) readValue() error {
 	bz, n, err := wr.rdr.unsafeReadBlob(wr.offset)
 	if err != nil {
 		return fmt.Errorf("failed to read WAL value at offset %d: %w", wr.offset, err)
 	}
-	wr.Value = WrapUnsafeBytes(bz)
+	wr.valueOffset = wr.offset
+	wr.value = WrapUnsafeBytes(bz)
 	wr.offset += n
 	return nil
 }

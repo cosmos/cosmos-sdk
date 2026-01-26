@@ -149,8 +149,12 @@ func (kvs *WALWriter) WriteWALDelete(key []byte) error {
 }
 
 // WriteWALCommit writes a WAL commit entry for the given version.
-func (kvs *WALWriter) WriteWALCommit(version uint64) error {
-	err := kvs.writeType(WALEntryCommit)
+func (kvs *WALWriter) WriteWALCommit(version uint64, checkpoint bool) error {
+	typ := WALEntryCommit
+	if checkpoint {
+		typ |= WALFlagCheckpoint
+	}
+	err := kvs.writeType(typ)
 	if err != nil {
 		return err
 	}

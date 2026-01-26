@@ -83,14 +83,15 @@ func (ch *Changeset) MarkOrphan(version uint32, nodeId NodeID) error {
 		return fmt.Errorf("failed to write orphan node: %w", err)
 	}
 
-	info := ch.files.info
-	if nodeId.IsLeaf() {
-		info.LeafOrphans++
-		info.LeafOrphanVersionTotal += uint64(version)
-	} else {
-		info.BranchOrphans++
-		info.BranchOrphanVersionTotal += uint64(version)
-	}
+	// TODO track orphan stats
+	//info := ch.files.info
+	//if nodeId.IsLeaf() {
+	//	info.LeafOrphans++
+	//	info.LeafOrphanVersionTotal += uint64(version)
+	//} else {
+	//	info.BranchOrphans++
+	//	info.BranchOrphanVersionTotal += uint64(version)
+	//}
 
 	return nil
 }

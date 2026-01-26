@@ -15,6 +15,7 @@ type ChangesetFiles struct {
 	dir          string
 	treeDir      string
 	startVersion uint32 // directory name - could be WAL or checkpoint start depending on compaction
+	endVersion   uint32 // 0 if original changeset
 	compactedAt  uint32
 
 	walFile         *os.File
@@ -23,18 +24,15 @@ type ChangesetFiles struct {
 	leavesFile      *os.File
 	checkpointsFile *os.File
 	orphansFile     *os.File
-	infoFile        *os.File
-	info            *ChangesetInfo
+	// TODO orphan metadata
 
 	closed bool
 }
 
 // CreateChangesetFiles creates a new changeset directory and files that are ready to be written to.
 // If compactedAt is 0, the changeset is considered original and uncompacted.
-// If compactedAt is greater than 0, the changeset is considered compacted and a pending marker file
-// will be created to indicate that the changeset is not yet ready for use.
-// This pending marker file must be removed once the compaction is fully complete by calling MarkReady,
-// otherwise the changeset will be considered incomplete and deleted at the next startup.
+// If compactedAt is greater than 0, the changeset is considered compacted and will be suffixed with -tmp
+// until MarkReady is called.
 func CreateChangesetFiles(treeDir string, startVersion, compactedAt uint32) (*ChangesetFiles, error) {
 	// ensure absolute path
 	var err error
@@ -45,21 +43,13 @@ func CreateChangesetFiles(treeDir string, startVersion, compactedAt uint32) (*Ch
 
 	dirName := fmt.Sprintf("%d", startVersion)
 	if compactedAt > 0 {
-		dirName = fmt.Sprintf("%d.%d", startVersion, compactedAt)
+		dirName = fmt.Sprintf("%d.%d-tmp", startVersion, compactedAt)
 	}
 	dir := filepath.Join(treeDir, dirName)
 
 	err = os.MkdirAll(dir, 0o755)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create changeset dir: %w", err)
-	}
-
-	// create pending marker file for compacted changesets
-	if compactedAt > 0 {
-		err := os.WriteFile(pendingFilename(dir), []byte{}, 0o600)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create pending marker file for compacted changeset: %w", err)
-		}
 	}
 
 	cr := &ChangesetFiles{
@@ -74,9 +64,6 @@ func CreateChangesetFiles(treeDir string, startVersion, compactedAt uint32) (*Ch
 		return nil, fmt.Errorf("failed to open changeset files: %w", err)
 	}
 
-	// set WAL start version in info file
-	cr.info.WALStartVersion = startVersion
-
 	return cr, nil
 }
 
@@ -86,7 +73,7 @@ const writeModeFlags = os.O_RDWR | os.O_CREATE | os.O_APPEND
 // All files are opened in readonly mode, except for orphans.dat and info.dat which are opened in read-write mode
 // to track orphan data and statistics.
 func OpenChangesetFiles(dirName string) (*ChangesetFiles, error) {
-	startVersion, compactedAt, valid := ParseChangesetDirName(filepath.Base(dirName))
+	startVersion, endVersion, compactedAt, valid := ParseChangesetDirName(filepath.Base(dirName))
 	if !valid {
 		return nil, fmt.Errorf("invalid changeset dir name: %s", dirName)
 	}
@@ -102,6 +89,7 @@ func OpenChangesetFiles(dirName string) (*ChangesetFiles, error) {
 		dir:          dir,
 		treeDir:      treeDir,
 		startVersion: startVersion,
+		endVersion:   endVersion,
 		compactedAt:  compactedAt,
 	}
 
@@ -152,53 +140,53 @@ func (cr *ChangesetFiles) open(mode int) error {
 		return fmt.Errorf("failed to open orphans data file: %w", err)
 	}
 
-	infoPath := filepath.Join(cr.dir, "info.dat")
-	cr.infoFile, err = os.OpenFile(infoPath, os.O_RDWR|os.O_CREATE, 0o600) // info file uses random access, not append
-	if err != nil {
-		return fmt.Errorf("failed to open changeset info file: %w", err)
-	}
-
-	cr.info, err = ReadChangesetInfo(cr.infoFile)
-	if err != nil {
-		return fmt.Errorf("failed to read changeset info: %w", err)
-	}
-
 	return nil
 }
 
 // ParseChangesetDirName parses a changeset directory name and returns the start version and compacted at version.
 // If the directory name is invalid, valid will be false.
-// If a changeset is original and uncompacted, compactedAt will be 0.
-func ParseChangesetDirName(dirName string) (startVersion, compactedAt uint32, valid bool) {
+// If a changeset is original and uncompacted, endVersion and compactedAt will be 0.
+func ParseChangesetDirName(dirName string) (startVersion, endVersion, compactedAt uint32, valid bool) {
 	var err error
 	var v uint64
 	// if no dot, it's an original changeset
 	if !strings.Contains(dirName, ".") {
 		v, err = strconv.ParseUint(dirName, 10, 32)
 		if err != nil {
-			return 0, 0, false
+			return 0, 0, 0, false
 		}
-		return uint32(v), 0, true
+		return uint32(v), 0, 0, true
 	}
 
 	parts := strings.Split(dirName, ".")
 	if len(parts) != 2 {
-		return 0, 0, false
+		return 0, 0, 0, false
 	}
 
-	v, err = strconv.ParseUint(parts[0], 10, 32)
+	spanParts := strings.Split(parts[1], "-")
+	if len(spanParts) != 2 {
+		return 0, 0, 0, false
+	}
+
+	v, err = strconv.ParseUint(spanParts[0], 10, 32)
 	if err != nil {
-		return 0, 0, false
+		return 0, 0, 0, false
 	}
 	startVersion = uint32(v)
 
+	v, err = strconv.ParseUint(spanParts[1], 10, 32)
+	if err != nil {
+		return 0, 0, 0, false
+	}
+	endVersion = uint32(v)
+
 	v, err = strconv.ParseUint(parts[1], 10, 32)
 	if err != nil {
-		return 0, 0, false
+		return 0, 0, 0, false
 	}
 	compactedAt = uint32(v)
 
-	return startVersion, compactedAt, true
+	return startVersion, endVersion, compactedAt, true
 }
 
 // Dir returns the changeset directory path.
@@ -241,26 +229,10 @@ func (cr *ChangesetFiles) OrphansFile() *os.File {
 	return cr.orphansFile
 }
 
-// Info returns the changeset info struct.
-// This struct is writeable and changes will be persisted to disk when RewriteInfo is called.
-func (cr *ChangesetFiles) Info() *ChangesetInfo {
-	return cr.info
-}
-
-// RewriteInfo rewrites the changeset info file with the current info struct.
-func (cr *ChangesetFiles) RewriteInfo() error {
-	return RewriteChangesetInfo(cr.infoFile, cr.info)
-}
-
 // StartVersion returns the start version of the changeset (directory name).
 // This could be WAL start or checkpoint start depending on compaction state.
 func (cr *ChangesetFiles) StartVersion() uint32 {
 	return cr.startVersion
-}
-
-// FirstCheckpoint returns the first checkpoint version in this changeset.
-func (cr *ChangesetFiles) FirstCheckpoint() uint32 {
-	return cr.info.FirstCheckpoint
 }
 
 // CompactedAtVersion returns the compacted at version of the changeset.
@@ -269,34 +241,12 @@ func (cr *ChangesetFiles) CompactedAtVersion() uint32 {
 	return cr.compactedAt
 }
 
-func pendingFilename(dir string) string {
-	return filepath.Join(dir, "pending")
-}
-
-// IsChangesetReady checks if the changeset is ready to be used.
-// A changeset is considered ready if the pending marker file does not exist.
-// This is used by startup code only to detect whether a changeset compaction was interrupted before it could complete.
-func IsChangesetReady(dir string) (bool, error) {
-	pendingPath := pendingFilename(dir)
-	_, err := os.Stat(pendingPath)
-	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return true, nil
-		}
-		return false, fmt.Errorf("failed to stat pending marker file: %w", err)
-	}
-	return false, nil
-}
-
-// MarkReady marks the changeset as ready by removing the pending marker file.
+// MarkReady marks the changeset as ready by removing the -tmp suffix.
 // This is only necessary for compacted changesets.
 func (cr *ChangesetFiles) MarkReady() error {
-	pendingPath := pendingFilename(cr.dir)
-	err := os.Remove(pendingPath)
-	if err != nil && !errors.Is(err, os.ErrNotExist) {
-		return fmt.Errorf("failed to remove pending marker file: %w", err)
-	}
-	return nil
+	tmpDir := cr.dir
+	finalDir := strings.TrimSuffix(tmpDir, "-tmp")
+	return os.Rename(tmpDir, finalDir)
 }
 
 // Close closes all changeset files.
@@ -313,9 +263,7 @@ func (cr *ChangesetFiles) Close() error {
 		cr.leavesFile.Close(),
 		cr.checkpointsFile.Close(),
 		cr.orphansFile.Close(),
-		cr.infoFile.Close(),
 	)
-	cr.info = nil
 	return err
 }
 
@@ -325,7 +273,6 @@ func (cr *ChangesetFiles) DeleteFiles() error {
 	return errors.Join(
 		cr.Close(), // first close all files
 		os.Remove(cr.walFile.Name()),
-		os.Remove(cr.infoFile.Name()),
 		os.Remove(cr.leavesFile.Name()),
 		os.Remove(cr.branchesFile.Name()),
 		os.Remove(cr.checkpointsFile.Name()),

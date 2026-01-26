@@ -161,7 +161,7 @@ package internal
 //	require.True(t, hasWal)
 //	require.Equal(t, uint64(42), startVersion)
 //
-//	// Verify via WALReader
+//	// Verify via walReader
 //	wr, err := r.ReadWAL()
 //	require.NoError(t, err)
 //	require.Equal(t, uint64(42), wr.Version)

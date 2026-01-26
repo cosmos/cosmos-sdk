@@ -118,7 +118,13 @@ func (ts *TreeStore) load() error {
 		}
 	}
 
-	root, err := ts.checkpointer.LoadRoot(ts.version.Load())
+	version := ts.version.Load()
+	if version == 0 {
+		// empty tree store
+		return nil
+	}
+
+	root, err := ts.checkpointer.LoadRoot(version)
 	if err != nil {
 		return fmt.Errorf("failed to load root after loading changesets: %w", err)
 	}

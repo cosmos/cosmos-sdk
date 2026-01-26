@@ -29,4 +29,7 @@ const (
 	// WALFlagCachedKey indicates that the key for this entry is cached and should be referenced by
 	// a 32-bit little-endian offset instead of being stored inline.
 	WALFlagCachedKey WALEntryType = 0x80
+
+	// WALFlagCheckpoint modifies a commit entry to indicate that a checkpoint should have been saved for this commit.
+	WALFlagCheckpoint WALEntryType = 0x40
 )

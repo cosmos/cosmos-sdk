@@ -96,7 +96,8 @@ func (ts *TreeStore) SaveRoot(newRoot *NodePointer, mutationCtx *MutationContext
 		(checkpointInterval > 0 &&
 			versionsSinceLastCheckpoint >= uint32(ts.opts.CheckpointInterval))
 
-	ts.cleanupProc.MarkOrphans(mutationCtx.version, mutationCtx.orphans)
+	// TODO cleanup orphans
+	//ts.cleanupProc.MarkOrphans(mutationCtx.version, mutationCtx.orphans)
 
 	return nil
 }

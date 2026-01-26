@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	"hash/crc32"
 	"unsafe"
 )
 
@@ -27,7 +28,9 @@ type CheckpointInfo struct {
 	// a previous changeset.
 	RootID NodeID
 	// HaveRoot indicates whether the root node is stored in this changeset.
-	HaveRoot bool
+	HaveRoot    bool
+	KVEndOffset KVOffset // used to sanity check the length of the kv.dat file at this checkpoint
+	CRC32       uint32   // checksum of the checkpoint info record for data integrity verification
 }
 
 type NodeSetInfo struct {
@@ -35,4 +38,17 @@ type NodeSetInfo struct {
 	Count       uint32
 	StartIndex  uint32
 	EndIndex    uint32
+}
+
+func (cp *CheckpointInfo) ComputeCRC32() uint32 {
+	data := unsafe.Slice((*byte)(unsafe.Pointer(cp)), CheckpointInfoSize)
+	return crc32.ChecksumIEEE(data[:CheckpointInfoSize-4]) // exclude CRC32 field itself
+}
+
+func (cp *CheckpointInfo) SetCRC32() {
+	cp.CRC32 = cp.ComputeCRC32()
+}
+
+func (cp *CheckpointInfo) VerifyCRC32() bool {
+	return cp.CRC32 == cp.ComputeCRC32()
 }

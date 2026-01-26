@@ -18,49 +18,40 @@ func ReplayWAL(ctx context.Context, root *NodePointer, walFile *os.File, rootVer
 	)
 	defer span.End()
 
-	walReader, err := NewWALReader(walFile)
-	if err != nil {
-		return nil, err
-	}
-
 	// TODO we can have mutation contexts which don't collect orphans and that don't copy transient nodes for faster replay
-	for {
-		entryType, ok, err := walReader.Next()
+	stagedVersion := rootVersion + 1
+	for entry, err := range ReadWAL(walFile) {
 		if err != nil {
-			return nil, err
-		}
-		if !ok {
-			if rootVersion != targetVersion {
-				return nil, fmt.Errorf("WAL ended before reaching target version %d (current %d)", targetVersion, rootVersion)
-			}
-			return root, nil
+			return nil, fmt.Errorf("failed to read WAL: %w", err)
 		}
 
-		if walReader.Version < uint64(rootVersion+1) {
+		if entry.Version < uint64(stagedVersion) {
 			continue
 		}
 
-		switch entryType {
-		case WALEntryStart:
-			// skip start entry
-		case WALEntryCommit:
-			if walReader.Version != uint64(rootVersion+1) {
-				return nil, fmt.Errorf("WAL commit version %d does not match expected version %d", walReader.Version, rootVersion+1)
+		switch entry.Op {
+		case WALOpCommit:
+			if entry.Version != uint64(stagedVersion) {
+				return nil, fmt.Errorf("WAL commit version %d does not match expected version %d", entry.Version, stagedVersion)
 			}
-			rootVersion = uint32(walReader.Version)
-		case WALEntrySet:
+			stagedVersion++
+		case WALOpSet:
 			ctx := NewMutationContext(rootVersion + 1)
-			leafNode := ctx.NewLeafNode(walReader.Key.SafeCopy(), walReader.Value.SafeCopy())
+			leafNode := ctx.NewLeafNode(entry.Key.SafeCopy(), entry.Value.SafeCopy())
 			root, _, err = SetRecursive(root, leafNode, ctx)
 			if err != nil {
-				return nil, fmt.Errorf("failed to apply WAL set at version %d: %w", walReader.Version, err)
+				return nil, fmt.Errorf("failed to apply WAL set at version %d: %w", entry.Version, err)
 			}
-		case WALEntryDelete:
+		case WALOpDelete:
 			ctx := NewMutationContext(rootVersion + 1)
-			_, root, _, err = RemoveRecursive(root, walReader.Key.SafeCopy(), ctx)
+			_, root, _, err = RemoveRecursive(root, entry.Key.SafeCopy(), ctx)
 			if err != nil {
-				return nil, fmt.Errorf("failed to apply WAL delete at version %d: %w", walReader.Version, err)
+				return nil, fmt.Errorf("failed to apply WAL delete at version %d: %w", entry.Version, err)
 			}
 		}
 	}
+	if stagedVersion-1 != targetVersion {
+		return nil, fmt.Errorf("WAL replay ended at version %d, expected target version %d", stagedVersion-1, targetVersion)
+	}
+	return root, nil
 }

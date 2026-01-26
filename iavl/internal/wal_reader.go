@@ -66,10 +66,13 @@ type walReader struct {
 func (wr *walReader) next() (WALEntry, error) {
 	// check for end of data
 	if wr.offset >= wr.rdr.Len() {
-		if wr.lastEntryType != WALEntryCommit {
-			return WALEntry{}, fmt.Errorf("WAL ended unexpectedly at offset %d without a commit entry", wr.offset)
+		// WAL must end with a commit entry
+		switch wr.lastEntryType {
+		case WALEntryCommit, WALEntryCommit | WALFlagCheckpoint:
+			return WALEntry{}, io.EOF
+		default:
+			return WALEntry{}, fmt.Errorf("WAL ended unexpectedly at offset %d without a commit entry, last entry type %d", wr.offset, wr.lastEntryType)
 		}
-		return WALEntry{}, io.EOF
 	}
 
 	entryType := WALEntryType(wr.rdr.At(wr.offset))

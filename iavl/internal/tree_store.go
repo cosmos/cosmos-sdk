@@ -65,6 +65,10 @@ func (ts *TreeStore) StagedVersion() uint32 {
 	return ts.version.Load() + 1
 }
 
+func (ts *TreeStore) StagedCheckpoint() uint32 {
+	return ts.checkpoint.Load() + 1
+}
+
 func (ts *TreeStore) initNewWriter() error {
 	var err error
 	ts.currentWriter, err = NewChangesetWriter(ts.dir, ts.StagedVersion(), ts)
@@ -167,10 +171,15 @@ func (ts *TreeStore) Latest() *NodePointer {
 }
 
 func (ts *TreeStore) Close() error {
-	return errors.Join(
+	errs := []error{
 		ts.currentWriter.Seal(),
 		ts.checkpointer.Close(),
-	)
+	}
+	ts.changesetsByVersion.Ascend(0, func(version uint32, cs *Changeset) bool {
+		errs = append(errs, cs.files.Close())
+		return true
+	})
+	return errors.Join(errs...)
 }
 
 func (ts *TreeStore) addToDisposalQueue(existing *ChangesetReaderRef) {

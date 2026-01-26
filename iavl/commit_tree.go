@@ -212,7 +212,7 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 			_, span := tracer.Start(ctx, "AssignNodeIDs")
 			defer span.End()
 
-			internal.AssignNodeIDs(root, stagedVersion)
+			internal.AssignNodeIDs(root, c.treeStore.StagedCheckpoint())
 		}()
 	}
 
@@ -234,18 +234,16 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 	}
 	rootHashSpan.End()
 
-	if walDone != nil {
-		startWaitForWAL := time.Now()
+	// wait for the WAL write to finish
+	startWaitForWAL := time.Now()
 
-		err := <-walDone
-		if err != nil {
-			return storetypes.CommitID{}, err
-		}
-
-		walWriteLatency.Record(ctx, time.Since(startWaitForWAL).Milliseconds())
-
-		span.AddEvent("WAL write returned")
+	err = <-walDone
+	if err != nil {
+		return storetypes.CommitID{}, err
 	}
+
+	walWriteLatency.Record(ctx, time.Since(startWaitForWAL).Milliseconds())
+	span.AddEvent("WAL write returned")
 
 	// save the new root after the WAL is fully written so that all offsets are populated correctly
 	err = c.treeStore.SaveRoot(root, mutationCtx, c.nodeIDsAssigned)
@@ -274,7 +272,7 @@ func (c *CommitTree) ForceToDisk() error {
 }
 
 func (c *CommitTree) Close() error {
-	return nil
+	return c.treeStore.Close()
 }
 
 type TreeReader struct {

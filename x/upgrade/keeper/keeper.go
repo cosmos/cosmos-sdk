@@ -50,10 +50,11 @@ type Keeper struct {
 
 // NewKeeper constructs an upgrade Keeper which requires the following arguments:
 // skipUpgradeHeights - map of heights to skip an upgrade
-// storeKey - a store key with which to access upgrade's store
+// storeService - a store service with which to access upgrade's store
 // cdc - the app-wide binary codec
 // homePath - root directory of the application's config
 // vs - the interface implemented by baseapp which allows setting baseapp's protocol version field
+// authority - the address capable of executing upgrade proposals
 func NewKeeper(skipUpgradeHeights map[int64]bool, storeService corestore.KVStoreService, cdc codec.BinaryCodec, homePath string, vs xp.ProtocolVersionSetter, authority string) *Keeper {
 	k := &Keeper{
 		homePath:           homePath,

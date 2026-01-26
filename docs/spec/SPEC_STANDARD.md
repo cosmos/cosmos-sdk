@@ -45,7 +45,7 @@ The section may have any or all of the following subsections, as appropriate to 
 * *API* - A detailed description of the feature's API.
 * *Technical Details* - All technical details including syntax, diagrams, semantics, protocols, data structures, algorithms, and pseudocode as appropriate. The technical specification should be detailed enough such that separate correct implementations of the specification without knowledge of each other are compatible.
 * *Backwards Compatibility* - A discussion of compatibility (or lack thereof) with previous feature or protocol versions.
-* *Known Issues* - A list of known issues. This subsection is specially important for specifications of already in-use features.
+* *Known Issues* - A list of known issues. This subsection is especially important for specifications of already in-use features.
 * *Example Implementation* - A concrete example implementation or description of an expected implementation to serve as the primary reference for implementers.
 
 ### History

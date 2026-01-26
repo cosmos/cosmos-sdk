@@ -21,7 +21,7 @@ func ReplayWAL(ctx context.Context, root *NodePointer, walFile *os.File, rootVer
 	)
 	defer span.End()
 
-	if rootVersion == targetVersion {
+	if targetVersion != 0 && rootVersion == targetVersion {
 		// early exit if no replay is needed
 		return root, 0, nil
 	}

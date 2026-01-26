@@ -218,7 +218,7 @@ govKeeper := govkeeper.NewKeeper(
   app.MsgServiceRouter(),
   govConfig,
   authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-  myCustomVotingFunction,
+  govkeeper.NewDefaultCalculateVoteResultsAndVotingPower(app.StakingKeeper),
 )
 ```
 

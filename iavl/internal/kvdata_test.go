@@ -169,7 +169,7 @@ package internal
 //	entryType, ok, err := wr.Next()
 //	require.NoError(t, err)
 //	require.True(t, ok)
-//	require.Equal(t, KVEntryWALSet, entryType)
+//	require.Equal(t, WALEntrySet, entryType)
 //	require.Equal(t, []byte("key"), wr.Key)
 //	require.Equal(t, []byte("value"), wr.Value)
 //
@@ -177,7 +177,7 @@ package internal
 //	entryType, ok, err = wr.Next()
 //	require.NoError(t, err)
 //	require.True(t, ok)
-//	require.Equal(t, KVEntryWALSet, entryType)
+//	require.Equal(t, WALEntrySet, entryType)
 //	require.Equal(t, []byte("longerKey"), wr.Key)
 //	require.Equal(t, []byte("longerValue"), wr.Value)
 //
@@ -185,21 +185,21 @@ package internal
 //	entryType, ok, err = wr.Next()
 //	require.NoError(t, err)
 //	require.True(t, ok)
-//	require.Equal(t, KVEntryWALDelete, entryType)
+//	require.Equal(t, WALEntryDelete, entryType)
 //	require.Equal(t, []byte("oldKey"), wr.Key)
 //
 //	// Entry 4: WAL Commit
 //	entryType, ok, err = wr.Next()
 //	require.NoError(t, err)
 //	require.True(t, ok)
-//	require.Equal(t, KVEntryWALCommit, entryType)
+//	require.Equal(t, WALEntryCommit, entryType)
 //	require.Equal(t, uint64(42), wr.Version)
 //
 //	// Entry 5: WAL Set short key again (not cached)
 //	entryType, ok, err = wr.Next()
 //	require.NoError(t, err)
 //	require.True(t, ok)
-//	require.Equal(t, KVEntryWALSet, entryType)
+//	require.Equal(t, WALEntrySet, entryType)
 //	require.Equal(t, []byte("key"), wr.Key)
 //	require.Equal(t, []byte("value2"), wr.Value)
 //
@@ -207,20 +207,20 @@ package internal
 //	entryType, ok, err = wr.Next()
 //	require.NoError(t, err)
 //	require.True(t, ok)
-//	require.Equal(t, KVEntryWALSet|KVFlagCachedKey, entryType)
+//	require.Equal(t, WALEntrySet|WALFlagCachedKey, entryType)
 //	require.Equal(t, []byte("longerKey"), wr.Key)
 //	require.Equal(t, []byte("longerValue2"), wr.Value)
 //
 //	// Entry 7-10: WAL Updates
 //	for i, expected := range []struct {
-//		entryType KVEntryType
+//		entryType WALEntryType
 //		key       []byte
 //		value     []byte
 //	}{
-//		{KVEntryWALSet, memKey1, memValue1},
-//		{KVEntryWALDelete | KVFlagCachedKey, oldKey, nil},
-//		{KVEntryWALSet | KVFlagCachedKey, longerKey, memValue2},
-//		{KVEntryWALSet | KVFlagCachedKey, oldKey, reinsertedValue},
+//		{WALEntrySet, memKey1, memValue1},
+//		{WALEntryDelete | WALFlagCachedKey, oldKey, nil},
+//		{WALEntrySet | WALFlagCachedKey, longerKey, memValue2},
+//		{WALEntrySet | WALFlagCachedKey, oldKey, reinsertedValue},
 //	} {
 //		entryType, ok, err = wr.Next()
 //		require.NoError(t, err, "WAL Update entry %d", i)
@@ -235,27 +235,27 @@ package internal
 //	entryType, ok, err = wr.Next()
 //	require.NoError(t, err)
 //	require.True(t, ok)
-//	require.Equal(t, KVEntryWALCommit, entryType)
+//	require.Equal(t, WALEntryCommit, entryType)
 //	require.Equal(t, uint64(43), wr.Version)
 //	// Entry 12: WAL Commit (empty)
 //	entryType, ok, err = wr.Next()
 //	require.NoError(t, err)
 //	require.True(t, ok)
-//	require.Equal(t, KVEntryWALCommit, entryType)
+//	require.Equal(t, WALEntryCommit, entryType)
 //	require.Equal(t, uint64(44), wr.Version)
 //
 //	// Entry 13: WAL Delete with empty key
 //	entryType, ok, err = wr.Next()
 //	require.NoError(t, err)
 //	require.True(t, ok)
-//	require.Equal(t, KVEntryWALDelete, entryType)
+//	require.Equal(t, WALEntryDelete, entryType)
 //	require.Equal(t, emptyKey, wr.Key)
 //
 //	// Entry 14: WAL Set with empty key and empty value
 //	entryType, ok, err = wr.Next()
 //	require.NoError(t, err)
 //	require.True(t, ok)
-//	require.Equal(t, KVEntryWALSet, entryType)
+//	require.Equal(t, WALEntrySet, entryType)
 //	require.Equal(t, emptyKey, wr.Key)
 //	require.Equal(t, emptyValue, wr.Value)
 //
@@ -263,7 +263,7 @@ package internal
 //	entryType, ok, err = wr.Next()
 //	require.NoError(t, err)
 //	require.True(t, ok)
-//	require.Equal(t, KVEntryWALCommit, entryType)
+//	require.Equal(t, WALEntryCommit, entryType)
 //	require.Equal(t, uint64(45), wr.Version)
 //
 //	// No more entries

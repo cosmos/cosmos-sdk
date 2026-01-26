@@ -25,7 +25,7 @@ func RewriteWAL(writer *WALWriter, walFile *os.File, truncateBeforeVersion uint6
 
 	valueOffsetRemapping = make(map[uint64]uint64)
 	for {
-		entryType, ok, err := wr.next()
+		entryType, ok, err := wr.Next()
 		if err != nil {
 			return nil, err
 		}
@@ -38,23 +38,20 @@ func RewriteWAL(writer *WALWriter, walFile *os.File, truncateBeforeVersion uint6
 		}
 
 		switch entryType {
-		case KVEntryWALStart:
+		case WALEntryStart:
 			// skip start entry
 			continue
-		case KVEntryKeyBlob, KVEntryValueBlob:
-			// skip blob entries
-			continue
-		case KVEntryWALCommit:
+		case WALEntryCommit:
 			err = writer.WriteWALCommit(wr.Version)
 			if err != nil {
 				return nil, err
 			}
-		case KVEntryWALDelete:
+		case WALEntryDelete:
 			err = writer.WriteWALDelete(wr.Key.UnsafeBytes())
 			if err != nil {
 				return nil, err
 			}
-		case KVEntryWALSet:
+		case WALEntrySet:
 			oldValueOffset := uint64(wr.setValueOffset)
 			_, newValueOffset, err := writer.WriteWALSet(wr.Key.UnsafeBytes(), wr.Value.UnsafeBytes())
 			if err != nil {

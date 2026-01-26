@@ -43,7 +43,7 @@ func (kvs *KVDataWriter) WriteKeyBlob(key []byte) (offset uint64, err error) {
 		return offsetAny.(uint64), nil
 	}
 
-	offset, err = kvs.writeBlob(KVEntryKeyBlob, key)
+	offset, err = kvs.writeLenPrefixedBytes(key)
 	if err != nil {
 		return 0, err
 	}
@@ -66,7 +66,7 @@ func (kvs *KVDataWriter) WriteKeyValueBlobs(key, value []byte) (keyOffset, value
 		return 0, 0, fmt.Errorf("value size exceeds maximum of %d bytes: %d bytes", MaxValueSize, len(value))
 	}
 
-	valueOffset, err = kvs.writeBlob(KVEntryValueBlob, value)
+	valueOffset, err = kvs.writeLenPrefixedBytes(value)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -74,25 +74,12 @@ func (kvs *KVDataWriter) WriteKeyValueBlobs(key, value []byte) (keyOffset, value
 	return keyOffset, valueOffset, nil
 }
 
-func (kvs *KVDataWriter) writeBlob(blobType KVEntryType, bz []byte) (offset uint64, err error) {
-	err = kvs.writeType(blobType)
-	if err != nil {
-		return 0, err
-	}
-	return kvs.writeLenPrefixedBytes(bz)
-}
-
 // addKeyToCache caches the key's raw offset for location tracking.
 // All keys are cached regardless of length so we can always look up their location.
-// Note: When writing WAL entries, only use KVFlagCachedKey for keys >= 5 bytes
+// Note: When writing WAL entries, only use WALFlagCachedKey for keys >= 5 bytes
 // since the offset reference itself is 5 bytes (no space savings for shorter keys).
 func (kvs *KVDataWriter) addKeyToCache(key []byte, offset uint64) {
 	kvs.keyCache.Store(unsafeBytesToString(key), offset)
-}
-
-func (kvs *KVDataWriter) writeType(x KVEntryType) error {
-	_, err := kvs.Write([]byte{byte(x)})
-	return err
 }
 
 func (kvs *KVDataWriter) writeLenPrefixedBytes(bz []byte) (offset uint64, err error) {

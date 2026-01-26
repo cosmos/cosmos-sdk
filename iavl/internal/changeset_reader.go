@@ -6,23 +6,22 @@ import (
 )
 
 type ChangesetReader struct {
-	changeset *Changeset      // we keep a reference to the parent changeset handle
-	files     *ChangesetFiles // files is only non-nil if this reader "owns" the changeset files
-	info      *ChangesetInfo  // we reference this so that it can be accessed even in shared changesets
+	changeset *Changeset     // we keep a reference to the parent changeset handle
+	info      *ChangesetInfo // we reference this so that it can be accessed even in shared changesets
 
 	walReader       *KVDataReader
 	kvDataReader    *KVDataReader
 	branchesData    *NodeMmap[BranchLayout]
 	leavesData      *NodeMmap[LeafLayout]
 	checkpointsInfo *StructMmap[CheckpointInfo]
-	orphanWriter    *OrphanWriter
 }
 
-func NewChangesetReader(changeset *Changeset, files *ChangesetFiles, owned bool) (*ChangesetReader, error) {
+func NewChangesetReader(changeset *Changeset) (*ChangesetReader, error) {
 	cr := &ChangesetReader{changeset: changeset}
 
 	var err error
 
+	files := changeset.files
 	if files.WALFile() != nil {
 		cr.walReader, err = NewKVDataReader(files.WALFile())
 		if err != nil {
@@ -50,29 +49,10 @@ func NewChangesetReader(changeset *Changeset, files *ChangesetFiles, owned bool)
 		return nil, fmt.Errorf("failed to open checkpoints data file: %w", err)
 	}
 
-	cr.orphanWriter = NewOrphanWriter(files.orphansFile)
-
 	cr.info = files.info
-
-	if owned {
-		cr.files = files
-	}
 
 	return cr, nil
 }
-
-//func OpenChangeset(dir string) (*ChangesetReader, error) {
-//	files, err := OpenChangesetFiles(dir)
-//	if err != nil {
-//		return nil, fmt.Errorf("failed to open changeset files: %w", err)
-//	}
-//	cs := &ChangesetReader{}
-//	err = cs.InitOwned(files)
-//	if err != nil {
-//		return nil, fmt.Errorf("failed to initialize changeset: %w", err)
-//	}
-//	return cs, nil
-//}
 
 func (cr *ChangesetReader) WALData() *KVDataReader {
 	return cr.walReader
@@ -139,24 +119,6 @@ func (cr *ChangesetReader) Changeset() *Changeset {
 
 //var ErrDisposed = errors.New("changeset disposed")
 
-func (cr *ChangesetReader) MarkOrphan(version uint32, nodeId NodeID) error {
-	err := cr.orphanWriter.WriteOrphan(version, nodeId)
-	if err != nil {
-		return fmt.Errorf("failed to write orphan node: %w", err)
-	}
-
-	info := cr.info
-	if nodeId.IsLeaf() {
-		info.LeafOrphans++
-		info.LeafOrphanVersionTotal += uint64(version)
-	} else {
-		info.BranchOrphans++
-		info.BranchOrphanVersionTotal += uint64(version)
-	}
-
-	return nil
-}
-
 //
 //func (cr *Changeset) ReadyToCompact(orphanPercentTarget float64, orphanAgeTarget uint32) bool {
 //	info := cr.info
@@ -189,10 +151,6 @@ func (cr *ChangesetReader) Close() error {
 		cr.leavesData.Close(),
 		cr.branchesData.Close(),
 		cr.checkpointsInfo.Close(),
-		//cr.orphanWriter.Flush(),
-	}
-	if cr.files != nil {
-		errs = append(errs, cr.files.Close())
 	}
 	return errors.Join(errs...)
 }

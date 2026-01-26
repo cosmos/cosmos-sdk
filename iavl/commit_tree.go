@@ -95,7 +95,7 @@ func rootHash(rootPtr *internal.NodePointer) ([]byte, error) {
 
 func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updateCount int) (storetypes.CommitID, error) {
 	stagedVersion := c.treeStore.StagedVersion()
-	ctx, span := internal.Tracer.Start(ctx, "Commit",
+	ctx, span := tracer.Start(ctx, "Commit",
 		trace.WithAttributes(
 			attribute.Int64("version", int64(stagedVersion)),
 			attribute.Int("updateCount", updateCount),
@@ -129,7 +129,7 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 	var walDone chan error
 	walDone = make(chan error, 1)
 	go func() {
-		_, walSpan := internal.Tracer.Start(ctx, "WALWrite")
+		_, walSpan := tracer.Start(ctx, "WALWrite")
 		defer walSpan.End()
 		defer close(walDone)
 		walDone <- c.treeStore.WriteWALUpdates(nodeUpdates, c.opts.FsyncWAL)
@@ -141,7 +141,7 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 	hashErr := make(chan error, 1)
 	go func() {
 		defer close(hashErr)
-		_, hashLeavesSpan := internal.Tracer.Start(ctx, "LeafHashCompute")
+		_, hashLeavesSpan := tracer.Start(ctx, "LeafHashCompute")
 		defer hashLeavesSpan.End()
 
 		n := len(nodeUpdates)
@@ -186,7 +186,7 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 
 	// process all the nodeUpdates against the current root to produce a new root
 	root := c.treeStore.Latest()
-	_, nodeUpdatesSpan := internal.Tracer.Start(ctx, "ApplyNodeUpdates")
+	_, nodeUpdatesSpan := tracer.Start(ctx, "ApplyNodeUpdates")
 	for _, nu := range nodeUpdates {
 		var err error
 		if setNode := nu.SetNode; setNode != nil {
@@ -209,7 +209,7 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 		c.nodeIDsAssigned = nodeIDsAssigned
 		go func() {
 			defer close(nodeIDsAssigned)
-			_, span := internal.Tracer.Start(ctx, "AssignNodeIDs")
+			_, span := tracer.Start(ctx, "AssignNodeIDs")
 			defer span.End()
 
 			internal.AssignNodeIDs(root, stagedVersion)
@@ -224,9 +224,9 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 	}
 	span.AddEvent("leaf hash compute returned")
 
-	internal.LeafHashLatency.Record(ctx, time.Since(startWaitForLeafHashes).Milliseconds())
+	leafHashLatency.Record(ctx, time.Since(startWaitForLeafHashes).Milliseconds())
 
-	_, rootHashSpan := internal.Tracer.Start(ctx, "ComputeRootHash")
+	_, rootHashSpan := tracer.Start(ctx, "ComputeRootHash")
 	// compute the root hash
 	hash, err := rootHash(root)
 	if err != nil {
@@ -242,7 +242,7 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 			return storetypes.CommitID{}, err
 		}
 
-		internal.WALWritelLatency.Record(ctx, time.Since(startWaitForWAL).Milliseconds())
+		walWriteLatency.Record(ctx, time.Since(startWaitForWAL).Milliseconds())
 
 		span.AddEvent("WAL write returned")
 	}

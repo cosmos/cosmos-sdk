@@ -30,7 +30,7 @@ func (kvs *WALWriter) StartVersion(version uint64) error {
 
 // writeStartWAL writes a WAL start entry with the given version.
 func (kvs *WALWriter) writeStartWAL(version uint64) error {
-	err := kvs.writer.writeType(KVEntryWALStart)
+	err := kvs.writer.writeType(WALEntryStart)
 	if err != nil {
 		return err
 	}
@@ -77,9 +77,9 @@ func (kvs *WALWriter) WriteWALSet(key, value []byte) (keyOffset, valueOffset uin
 	}
 	// Only use cached key flag if it saves space (offset is 5 bytes)
 	useCachedFlag := cached && len(key) >= 5
-	typ := KVEntryWALSet
+	typ := WALEntrySet
 	if useCachedFlag {
-		typ |= KVFlagCachedKey
+		typ |= WALFlagCachedKey
 	}
 	err = kvs.writer.writeType(typ)
 	if err != nil {
@@ -120,9 +120,9 @@ func (kvs *WALWriter) WriteWALDelete(key []byte) error {
 	}
 	// Only use cached key flag if it saves space (offset is 5 bytes)
 	useCachedFlag := cached && len(key) >= 5
-	typ := KVEntryWALDelete
+	typ := WALEntryDelete
 	if useCachedFlag {
-		typ |= KVFlagCachedKey
+		typ |= WALFlagCachedKey
 	}
 	err := kvs.writer.writeType(typ)
 	if err != nil {
@@ -150,7 +150,7 @@ func (kvs *WALWriter) WriteWALDelete(key []byte) error {
 
 // WriteWALCommit writes a WAL commit entry for the given version.
 func (kvs *WALWriter) WriteWALCommit(version uint64) error {
-	err := kvs.writer.writeType(KVEntryWALCommit)
+	err := kvs.writer.writeType(WALEntryCommit)
 	if err != nil {
 		return err
 	}
@@ -173,4 +173,9 @@ func (kvs *WALWriter) LookupKeyOffset(key []byte) (uint64, bool) {
 		return offset.(uint64), true
 	}
 	return 0, false
+}
+
+func (kvs *WALWriter) writeType(x WALEntryType) error {
+	_, err := kvs.writer.Write([]byte{byte(x)})
+	return err
 }

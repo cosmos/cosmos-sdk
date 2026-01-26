@@ -36,7 +36,7 @@ func NewChangesetWriter(treeDir string, stagedVersion uint32, treeStore *TreeSto
 		branchesData:    NewStructWriter[BranchLayout](files.BranchesFile()),
 		leavesData:      NewStructWriter[LeafLayout](files.LeavesFile()),
 		checkpointsData: NewStructWriter[CheckpointInfo](files.CheckpointsFile()),
-		changeset:       NewChangeset(treeStore),
+		changeset:       NewChangeset(treeStore, files),
 	}
 	return cs, nil
 }
@@ -249,18 +249,18 @@ func (cs *ChangesetWriter) StartVersion() uint32 {
 	return cs.files.StartVersion()
 }
 
-func (cs *ChangesetWriter) CreatedSharedReader() error {
+func (cs *ChangesetWriter) CreateReader() error {
 	err := cs.Flush()
 	if err != nil {
 		return fmt.Errorf("failed to flush data before creating shared reader: %w", err)
 	}
 
-	rdr, err := NewChangesetReader(cs.changeset, cs.files, false)
+	rdr, err := NewChangesetReader(cs.changeset)
 	if err != nil {
 		return fmt.Errorf("failed to create shared changeset reader: %w", err)
 	}
 
-	cs.changeset.SwapActiveReader(rdr)
+	cs.changeset.swapActiveReader(rdr)
 	return nil
 }
 
@@ -276,18 +276,13 @@ func (cs *ChangesetWriter) Flush() error {
 }
 
 func (cs *ChangesetWriter) Seal(endVersion uint32) error {
+	err := cs.CreateReader()
+	if err != nil {
+		return fmt.Errorf("failed to create shared reader before sealing: %w", err)
+	}
+
 	cs.files.Info().WALEndVersion = endVersion
-	err := cs.Flush()
-	if err != nil {
-		return fmt.Errorf("failed to flush changeset data: %w", err)
-	}
-
-	rdr, err := NewChangesetReader(cs.changeset, cs.files, false)
-	if err != nil {
-		return fmt.Errorf("failed to create shared changeset reader: %w", err)
-	}
-
-	cs.changeset.SwapActiveReader(rdr)
+	cs.changeset.sealed.Store(true)
 
 	// defensively nil out writers to prevent further use
 	cs.leavesData = nil

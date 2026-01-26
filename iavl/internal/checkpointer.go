@@ -89,7 +89,7 @@ func (cp *Checkpointer) proc() error {
 				return err
 			}
 		} else {
-			if err := req.writer.CreatedSharedReader(); err != nil {
+			if err := req.writer.CreateReader(); err != nil {
 				return err
 			}
 		}

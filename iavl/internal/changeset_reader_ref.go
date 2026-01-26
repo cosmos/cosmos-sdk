@@ -23,6 +23,7 @@ func (p *changesetReaderPin) Unpin() {
 
 func (p *ChangesetReaderRef) Evict() {
 	p.evicted.Store(true)
+	p.rdr.changeset.treeStore.addToDisposalQueue(p)
 }
 
 func (p *ChangesetReaderRef) TryPin() (*ChangesetReader, Pin) {

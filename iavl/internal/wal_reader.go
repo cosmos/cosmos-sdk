@@ -10,7 +10,7 @@ func NewWALReader(file *os.File) (*WALReader, error) {
 	if err != nil {
 		return nil, err
 	}
-	if kvr.Len() == 0 || kvr.At(0) != byte(KVEntryWALStart) {
+	if kvr.Len() == 0 || kvr.At(0) != byte(WALEntryStart) {
 		return nil, fmt.Errorf("data does not contain a valid WAL start entry")
 	}
 	startVersion, bytesRead, err := kvr.readVarint(1)
@@ -49,33 +49,16 @@ type WALReader struct {
 // It returns the entry type, a boolean indicating if an entry was read and an error if any.
 // If no more entries are available, ok will be false.
 // It should only be expected that Set, Delete and Commit entries are returned.
-func (wr *WALReader) Next() (entryType KVEntryType, ok bool, err error) {
-	for {
-		entryType, ok, err = wr.next()
-		if !ok || err != nil {
-			return entryType, ok, err
-		}
-
-		// skip over all blob entries, otherwise return
-		switch entryType {
-		case KVEntryKeyBlob, KVEntryValueBlob:
-			continue
-		default:
-			return entryType, ok, err
-		}
-	}
-}
-
-func (wr *WALReader) next() (entryType KVEntryType, ok bool, err error) {
+func (wr *WALReader) Next() (entryType WALEntryType, ok bool, err error) {
 	// check for end of data
 	if wr.offset >= wr.rdr.Len() {
 		return 0, false, nil
 	}
 
-	entryType = KVEntryType(wr.rdr.At(wr.offset))
+	entryType = WALEntryType(wr.rdr.At(wr.offset))
 	wr.offset++
 	switch entryType {
-	case KVEntryWALSet:
+	case WALEntrySet:
 		err := wr.readKey()
 		if err != nil {
 			return 0, false, err
@@ -86,7 +69,7 @@ func (wr *WALReader) next() (entryType KVEntryType, ok bool, err error) {
 		if err != nil {
 			return 0, false, err
 		}
-	case KVEntryWALSet | KVFlagCachedKey:
+	case WALEntrySet | WALFlagCachedKey:
 		err := wr.readCachedKey()
 		if err != nil {
 			return 0, false, err
@@ -97,35 +80,22 @@ func (wr *WALReader) next() (entryType KVEntryType, ok bool, err error) {
 		if err != nil {
 			return 0, false, err
 		}
-	case KVEntryWALDelete:
+	case WALEntryDelete:
 		err := wr.readKey()
 		if err != nil {
 			return 0, false, err
 		}
-	case KVEntryWALDelete | KVFlagCachedKey:
+	case WALEntryDelete | WALFlagCachedKey:
 		err := wr.readCachedKey()
 		if err != nil {
 			return 0, false, err
 		}
-	case KVEntryWALCommit:
+	case WALEntryCommit:
 		var bytesRead int
 		wr.Version, bytesRead, err = wr.rdr.readVarint(wr.offset)
 		if err != nil {
 			return 0, false, fmt.Errorf("failed to read WAL commit layer at offset %d: %w", wr.offset, err)
 		}
-		wr.offset += bytesRead
-	case KVEntryKeyBlob:
-		err = wr.readKey()
-		if err != nil {
-			return 0, false, fmt.Errorf("failed to read key blob at offset %d: %w", wr.offset, err)
-		}
-	case KVEntryValueBlob:
-		var bytesRead int
-		_, bytesRead, err = wr.rdr.unsafeReadBlob(wr.offset)
-		if err != nil {
-			return 0, false, fmt.Errorf("failed to read blob at offset %d: %w", wr.offset, err)
-		}
-
 		wr.offset += bytesRead
 	default:
 		return 0, false, fmt.Errorf("invalid KV entry type %d at offset %d", entryType, wr.offset-1)

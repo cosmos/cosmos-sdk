@@ -38,17 +38,31 @@ func NewTreeStore(dir string, opts TreeStoreOptions) (*TreeStore, error) {
 		opts:         opts,
 		checkpointer: NewCheckpointer(BasicEvictor{EvictDepth: opts.EvictDepth}),
 	}
-	writer, err := NewChangesetWriter(dir, 1, ts)
+
+	err := ts.load()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load tree store: %w", err)
+	}
+
+	err = ts.initNewWriter()
 	if err != nil {
 		return nil, err
 	}
-	ts.currentWriter = writer
 
 	return ts, nil
 }
 
 func (ts *TreeStore) StagedVersion() uint32 {
 	return ts.version.Load() + 1
+}
+
+func (ts *TreeStore) initNewWriter() error {
+	var err error
+	ts.currentWriter, err = NewChangesetWriter(ts.dir, ts.StagedVersion(), ts)
+	if err != nil {
+		return fmt.Errorf("failed to create new changeset writer: %w", err)
+	}
+	return nil
 }
 
 func (ts *TreeStore) SaveRoot(newRoot *NodePointer, mutationCtx *MutationContext, nodeIdsAssigned chan struct{}) error {
@@ -63,9 +77,9 @@ func (ts *TreeStore) SaveRoot(newRoot *NodePointer, mutationCtx *MutationContext
 		}
 		ts.lastCheckpointVersion = version
 		if ts.shouldRollover {
-			ts.currentWriter, err = NewChangesetWriter(ts.dir, ts.StagedVersion(), ts)
+			err = ts.initNewWriter()
 			if err != nil {
-				return fmt.Errorf("failed to create new changeset writer: %w", err)
+				return fmt.Errorf("failed to create new changeset writer after rollover: %w", err)
 			}
 			ts.shouldRollover = false
 		}
@@ -139,6 +153,10 @@ func (ts *TreeStore) Latest() *NodePointer {
 
 func (ts *TreeStore) Close() error {
 	return ts.checkpointer.Close()
+}
+
+func (ts *TreeStore) addToDisposalQueue(existing *ChangesetReaderRef) {
+	// TODO
 }
 
 const memNodeOverhead = int64(unsafe.Sizeof(MemNode{})) + int64(unsafe.Sizeof(NodePointer{}))*2 + 32 /* hash size */

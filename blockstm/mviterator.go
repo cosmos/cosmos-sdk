@@ -18,7 +18,7 @@ type MVIterator[V any] struct {
 	newKeys func() keyCursor[V]
 
 	curKey  Key
-	curTree *tree.BTree[secondaryDataItem[V]]
+	curTree *tree.SmallBTree[secondaryDataItem[V]]
 
 	// cache current found value and version
 	value   V
@@ -106,7 +106,7 @@ func (it *MVIterator[V]) Close() error {
 	return nil
 }
 
-func (it *MVIterator[V]) treeForCurrentKey() *tree.BTree[secondaryDataItem[V]] {
+func (it *MVIterator[V]) treeForCurrentKey() *tree.SmallBTree[secondaryDataItem[V]] {
 	if it.keys == nil || !it.keys.Valid() {
 		it.curKey = nil
 		it.curTree = nil
@@ -174,7 +174,7 @@ func (it *MVIterator[V]) resolveValue() {
 // - (nil, true) if the value is not found
 // - (nil, false) if the value is an estimate and we should fail the validation
 // - (v, true) if the value is found
-func (it *MVIterator[V]) resolveValueInner(tree *tree.BTree[secondaryDataItem[V]]) (*secondaryDataItem[V], bool, bool, TxnIndex) {
+func (it *MVIterator[V]) resolveValueInner(tree *tree.SmallBTree[secondaryDataItem[V]]) (*secondaryDataItem[V], bool, bool, TxnIndex) {
 	if tree == nil {
 		return nil, true, false, 0
 	}

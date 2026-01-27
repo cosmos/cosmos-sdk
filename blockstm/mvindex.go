@@ -15,7 +15,7 @@ const minSnapshotKeysCap = 1024
 
 type mvIndexEntry[V any] struct {
 	key  []byte
-	data *tree.BTree[secondaryDataItem[V]]
+	data *tree.SmallBTree[secondaryDataItem[V]]
 }
 
 // mvIndexKeyEntry is stored in the ordered key-set so iterators can retrieve
@@ -25,7 +25,7 @@ type mvIndexEntry[V any] struct {
 // but the underlying *tree.BTree is still mutated by writers.
 type mvIndexKeyEntry[V any] struct {
 	Key  Key
-	Tree *tree.BTree[secondaryDataItem[V]]
+	Tree *tree.SmallBTree[secondaryDataItem[V]]
 }
 
 type mvIndexShard[V any] struct {
@@ -62,7 +62,7 @@ func newMVIndex[V any]() *mvIndex[V] {
 	return idx
 }
 
-func (idx *mvIndex[V]) get(key []byte) *tree.BTree[secondaryDataItem[V]] {
+func (idx *mvIndex[V]) get(key []byte) *tree.SmallBTree[secondaryDataItem[V]] {
 	if idx == nil {
 		return nil
 	}
@@ -81,7 +81,7 @@ func (idx *mvIndex[V]) get(key []byte) *tree.BTree[secondaryDataItem[V]] {
 	return nil
 }
 
-func (idx *mvIndex[V]) getOrCreate(key []byte) *tree.BTree[secondaryDataItem[V]] {
+func (idx *mvIndex[V]) getOrCreate(key []byte) *tree.SmallBTree[secondaryDataItem[V]] {
 	h := hashKey64(key)
 	sh := &idx.shards[h&uint64(mvIndexShards-1)]
 	sh.mu.Lock()
@@ -97,7 +97,7 @@ func (idx *mvIndex[V]) getOrCreate(key []byte) *tree.BTree[secondaryDataItem[V]]
 	// Avoid an extra allocation by reusing the provided key slice.
 	// Callers must treat keys as immutable once written.
 	kCopy := key
-	data := tree.NewBTree(secondaryLesser[V], InnerBTreeDegree)
+	data := tree.NewSmallBTree(secondaryLesser[V], InnerBTreeDegree)
 	sh.m[h] = append(entries, mvIndexEntry[V]{key: kCopy, data: data})
 	sh.mu.Unlock()
 	idx.keys.Set(mvIndexKeyEntry[V]{Key: kCopy, Tree: data})

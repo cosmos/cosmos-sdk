@@ -230,6 +230,7 @@ This patch update also includes minor dependency bumps.
 ### Improvements
 
 * (server) [#21941](https://github.com/cosmos/cosmos-sdk/pull/21941) Regenerate addrbook.json for in place testnet.
+* (types) [#25832](https://github.com/cosmos/cosmos-sdk/pull/25832) Cache default config scope key in `GetConfig` to avoid repeated kernel calls and improve hot‑path performance.
 
 ### Bug Fixes
 

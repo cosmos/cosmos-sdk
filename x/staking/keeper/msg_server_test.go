@@ -339,7 +339,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 				MinSelfDelegation: &newSelfDel,
 			},
 			expErr:    true,
-			expErrMsg: "validator does not exist",
+			expErrMsg: stakingtypes.ErrNoValidatorFound.Error(),
 		},
 		{
 			name: "change commission rate in <24hrs",
@@ -353,7 +353,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 				MinSelfDelegation: &newSelfDel,
 			},
 			expErr:    true,
-			expErrMsg: "commission cannot be changed more than once in 24h",
+			expErrMsg: stakingtypes.ErrCommissionUpdateTime.Error(),
 		},
 		{
 			name: "minimum self delegation cannot decrease",
@@ -367,7 +367,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 				MinSelfDelegation: &lowSelfDel,
 			},
 			expErr:    true,
-			expErrMsg: "minimum self delegation cannot be decreased",
+			expErrMsg: stakingtypes.ErrMinSelfDelegationDecreased.Error(),
 		},
 		{
 			name: "validator self-delegation must be greater than min self delegation",
@@ -381,7 +381,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 				MinSelfDelegation: &highSelfDel,
 			},
 			expErr:    true,
-			expErrMsg: "validator's self delegation must be greater than their minimum self delegation",
+			expErrMsg: stakingtypes.ErrSelfDelegationBelowMinimum.Error(),
 		},
 		{
 			name: "valid msg",

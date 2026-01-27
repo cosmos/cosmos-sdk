@@ -22,6 +22,7 @@ func BenchmarkBlockSTM(b *testing.B) {
 	}
 	abasamevalueKeys := abaSameValueKeys(10000)
 	abaBigValue := make([]byte, 64<<10) // 64KiB
+	iterateAccounts := 100
 	testCases := []struct {
 		name  string
 		block *MockBlock
@@ -30,7 +31,13 @@ func BenchmarkBlockSTM(b *testing.B) {
 		{"random-10000/100", testBlock(10000, 100), nil},
 		{"no-conflict-10000", noConflictBlock(10000), nil},
 		{"worst-case-10000", worstCaseBlock(10000), nil},
-		{"iterate-10000/100", iterateBlock(10000, 100), nil},
+		{"iterate-10000/100", iterateBlock(10000, iterateAccounts), nil},
+		{
+			"iterate-10000/100-prepop",
+			iterateBlock(10000, iterateAccounts),
+			func(storage MultiStore) { prepopulateIterateAccounts(storage, iterateAccounts) },
+		},
+		{"iterate-newkeys-2000", iterateNewKeysBlock(2000), nil},
 		{
 			"aba-samevalue-10000",
 			abaSameValueBlock(abasamevalueKeys),
@@ -82,6 +89,38 @@ func BenchmarkBlockSTM(b *testing.B) {
 			})
 		}
 	}
+}
+
+func prepopulateIterateAccounts(storage MultiStore, accounts int) {
+	auth := storage.GetKVStore(StoreKeyAuth)
+	bank := storage.GetKVStore(StoreKeyBank)
+	zero := make([]byte, 8)
+	for i := 0; i < accounts; i++ {
+		acc := accountName(int64(i))
+		auth.Set([]byte("nonce"+acc), zero)
+		bank.Set([]byte("balance"+acc), zero)
+	}
+}
+
+// iterateNewKeysBlock stresses unordered index iteration costs by inserting a new key in each
+// transaction and immediately iterating the store, forcing frequent key snapshot rebuilds.
+func iterateNewKeysBlock(size int) *MockBlock {
+	txs := make([]Tx, size)
+	for i := 0; i < size; i++ {
+		idx := i
+		txs[i] = func(store MultiStore) error {
+			kv := store.GetKVStore(StoreKeyAuth)
+			kv.Set([]byte(fmt.Sprintf("iter-newkeys/%08d", idx)), []byte{1})
+
+			it := kv.Iterator(nil, nil)
+			defer it.Close()
+			for j := 0; it.Valid() && j < 10; j++ {
+				it.Next()
+			}
+			return nil
+		}
+	}
+	return NewMockBlock(txs)
 }
 
 // executeBlockForBench is a benchmark-only variant of ExecuteBlockWithEstimates that

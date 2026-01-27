@@ -320,6 +320,7 @@ func (c *Compactor) Seal() (*Changeset, error) {
 		return nil, fmt.Errorf("failed to initialize sealed changeset: %w", err)
 	}
 
+	return cs, nil
 }
 
 func (c *Compactor) Abort() error {

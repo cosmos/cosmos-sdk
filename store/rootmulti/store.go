@@ -1291,7 +1291,12 @@ func flushLatestVersion(batch dbm.Batch, version int64) {
 
 func (rs *Store) StartCommit(ctx context.Context, store types.MultiStore, header cmtproto.Header) types.CommitFinalizer {
 	rs.SetCommitHeader(header)
-	return &commitFinalizer{}
+	return &commitFinalizer{
+		ctx:        ctx,
+		rs:         rs,
+		cacheStore: store,
+		header:     header,
+	}
 }
 
 type commitFinalizer struct {

@@ -331,7 +331,7 @@ func GetConfig(v *viper.Viper) (Config, error) {
 }
 
 func rangesOverlap(a, b BlockRange) bool {
-	return !(a[1] < b[0] || a[0] > b[1])
+	return a[1] >= b[0] && a[0] <= b[1]
 }
 
 // ValidateBasic returns an error if min-gas-prices field is empty in BaseConfig. Otherwise, it returns nil.

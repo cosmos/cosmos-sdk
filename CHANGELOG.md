@@ -98,6 +98,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (cli) [#25485](https://github.com/cosmos/cosmos-sdk/pull/25485) Avoid failed to convert address field in `withdraw-validator-commission` cmd.
 * (baseapp) [#25642](https://github.com/cosmos/cosmos-sdk/pull/25642) Mark pre-block events for indexing based on local configuration.
 * (x/bank) [#25751](https://github.com/cosmos/cosmos-sdk/pull/25751) Fix recipient address in events.
+* (client) [#25811] (https://github.com/cosmos/cosmos-sdk/pull/25811) fix(client): fix file handle leaks in snapshot commands.
 * (server/config) [#25806](https://github.com/cosmos/cosmos-sdk/pull/25806) fix: add missing commas in historical gRPC config template.
 * (client) [#25804](https://github.com/cosmos/cosmos-sdk/pull/25804) Add `GetHeightFromMetadataStrict` API to `grpc` client for better error handling.
 * (x/staking) [#25829](https://github.com/cosmos/cosmos-sdk/pull/25829) Validates case-sensitivity on authz grands in x/staking.

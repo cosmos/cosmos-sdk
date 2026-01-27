@@ -308,7 +308,7 @@ func (vr txValueRenderer) Parse(ctx context.Context, screens []Screen) (protoref
 // annotation `cosmos.msg.v1.signer`, instead of the sdk.Msg#GetSigners method.
 func getSigners(body *txv1beta1.TxBody, authInfo *txv1beta1.AuthInfo) ([]string, error) {
 	var signers []string
-	seen := map[string]bool{}
+	seen := map[string]struct{}{}
 
 	for _, msgAny := range body.Messages {
 		m, err := anypb.UnmarshalNew(msgAny, proto.UnmarshalOptions{})
@@ -325,18 +325,18 @@ func getSigners(body *txv1beta1.TxBody, authInfo *txv1beta1.AuthInfo) ([]string,
 		for _, fieldName := range signerFields {
 			fd := m.ProtoReflect().Descriptor().Fields().ByName(protoreflect.Name(fieldName))
 			addr := m.ProtoReflect().Get(fd).String()
-			if !seen[addr] {
+			if _, ok := seen[addr]; !ok {
 				signers = append(signers, addr)
-				seen[addr] = true
+				seen[addr] = struct{}{}
 			}
 		}
 	}
 
 	// ensure any specified fee payer is included in the required signers (at the end)
 	feePayer := authInfo.Fee.Payer
-	if feePayer != "" && !seen[feePayer] {
+	if _, ok := seen[feePayer]; feePayer != "" && !ok {
 		signers = append(signers, feePayer)
-		seen[feePayer] = true
+		seen[feePayer] = struct{}{}
 	}
 
 	return signers, nil

@@ -64,3 +64,15 @@ func (bt *BTree[T]) ReverseSeek(pivot T) (result T, ok bool) {
 	})
 	return result, ok
 }
+
+func (bt *BTree[T]) Ascend(pivot T, iter func(item T) bool) {
+	bt.t.Ascend(pivot, iter)
+}
+
+func (bt *BTree[T]) Descend(pivot T, iter func(item T) bool) {
+	bt.t.Descend(pivot, iter)
+}
+
+func (bt *BTree[T]) Copy() *BTree[T] {
+	return &BTree[T]{t: bt.t.Copy()}
+}

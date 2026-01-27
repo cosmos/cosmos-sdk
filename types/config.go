@@ -29,29 +29,41 @@ type Config struct {
 }
 
 var (
-	configRegistry = make(map[string]*Config)
-	registryMutex  sync.Mutex
+	configRegistry       = make(map[string]*Config)
+	registryMutex        sync.Mutex
+	defaultConfigKey     string
+	defaultConfigKeyOnce sync.Once
 )
 
+// getDefaultConfigKey computes the default config scope identifier once per process.
+// It avoids repeated kernel calls in hot paths by caching "hostname|binary|pid".
+func getDefaultConfigKey() string {
+	defaultConfigKeyOnce.Do(func() {
+		exe, errExec := os.Executable()
+		host, errHost := os.Hostname()
+		pid := os.Getpid()
+
+		if errExec != nil {
+			exe = "unknown-exe"
+		}
+		if errHost != nil {
+			host = "unknown-host"
+		}
+
+		defaultConfigKey = fmt.Sprintf("%s|%s|%d", host, exe, pid)
+	})
+
+	return defaultConfigKey
+}
+
 // getConfigKey returns a unique config scope identifier.
-// It uses ENV override, or defaults to "hostname|binary|pid".
+// It uses ENV override, or defaults to a cached "hostname|binary|pid".
 func getConfigKey() string {
 	if id := os.Getenv(EnvConfigScope); id != "" {
 		return id
 	}
 
-	exe, errExec := os.Executable()
-	host, errHost := os.Hostname()
-	pid := os.Getpid()
-
-	if errExec != nil {
-		exe = "unknown-exe"
-	}
-	if errHost != nil {
-		host = "unknown-host"
-	}
-
-	return fmt.Sprintf("%s|%s|%d", host, exe, pid)
+	return getDefaultConfigKey()
 }
 
 // NewConfig returns a new Config with default values.

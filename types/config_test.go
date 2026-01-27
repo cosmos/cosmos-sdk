@@ -100,3 +100,12 @@ func (s *configTestSuite) TestConfig_ScopeKeyFormat() {
 	key := getConfigKey()
 	s.Require().True(strings.Count(key, "|") == 2, "scope key should have 2 pipe separators")
 }
+
+func (s *configTestSuite) TestConfig_DefaultKeyCachedAcrossCalls() {
+	// Ensure that default (non-env) key does not change across multiple calls.
+	// We cannot easily inspect kernel calls here, but we can validate stability.
+	key1 := getDefaultConfigKey()
+	key2 := getDefaultConfigKey()
+
+	s.Require().Equal(key1, key2, "default config key should be cached and stable across calls")
+}

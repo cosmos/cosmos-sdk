@@ -55,7 +55,9 @@ func (s queryServer) GetSyncing(ctx context.Context, _ *GetSyncingRequest) (*Get
 	}
 
 	return &GetSyncingResponse{
-		Syncing: status.SyncInfo.CatchingUp,
+		Syncing:             status.SyncInfo.CatchingUp,
+		EarliestBlockHeight: status.SyncInfo.EarliestBlockHeight,
+		LatestBlockHeight:   status.SyncInfo.LatestBlockHeight,
 	}, nil
 }
 

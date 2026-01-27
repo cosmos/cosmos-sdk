@@ -54,16 +54,30 @@ func ExecuteBlockWithEstimates(
 		e := NewExecutor(ctx, scheduler, txExecutor, mvMemory, i)
 		wg.Go(e.Run)
 	}
-	if err := wg.Wait(); err != nil {
+
+	// wake up suspended executors when context is canceled to prevent hanging
+	cancelDone := make(chan struct{})
+	go func() {
+		select {
+		case <-ctx.Done():
+			scheduler.CancelAll(func(i TxnIndex) {
+				// clear estimates before waking up so they don't suspend again
+				mvMemory.ClearEstimates(i)
+			})
+		case <-cancelDone:
+		}
+	}()
+
+	err := wg.Wait()
+	close(cancelDone)
+	if err != nil {
 		return err
 	}
 
 	if !scheduler.Done() {
 		if ctx.Err() != nil {
-			// canceled
 			return ctx.Err()
 		}
-
 		return errors.New("scheduler did not complete")
 	}
 

@@ -67,14 +67,19 @@ func (s *StatusEntry) setStatus(status Status) {
 }
 
 func (s *StatusEntry) Resume() {
-	// status must be SUSPENDED and cond != nil
+	// Resume is normally called for a txn that is currently suspended.
+	// With cancellation, a suspended txn may already have been woken and had its
+	// condition cleared; in that case this becomes a no-op.
 	s.Lock()
+	defer s.Unlock()
+
+	if s.status != StatusSuspended || s.cond == nil {
+		return
+	}
 
 	s.status = StatusExecuting
 	s.cond.Notify()
 	s.cond = nil
-
-	s.Unlock()
 }
 
 func (s *StatusEntry) SetExecuted() {
@@ -111,4 +116,23 @@ func (s *StatusEntry) Suspend(cond *Condvar) {
 	s.status = StatusSuspended
 
 	s.Unlock()
+}
+
+// TryCancel wakes up a suspended executor if it's suspended.
+// Called during context cancellation to prevent hanging.
+func (s *StatusEntry) TryCancel(preCancel func()) {
+	s.Lock()
+	defer s.Unlock()
+
+	if s.status == StatusSuspended {
+		if preCancel != nil {
+			preCancel()
+		}
+
+		if s.cond != nil {
+			s.status = StatusExecuting
+			s.cond.Notify()
+			s.cond = nil
+		}
+	}
 }

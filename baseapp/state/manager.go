@@ -11,6 +11,7 @@ import (
 
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/log"
+
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/config"
@@ -78,7 +79,7 @@ func (mgr *Manager) GetState(mode sdk.ExecMode) *State {
 // multi-store branch, and provided header.
 func (mgr *Manager) SetState(
 	mode sdk.ExecMode,
-	unbranchedStore storetypes.CommitMultiStore,
+	unbranchedStore storetypes.CommitMultiStore2,
 	h cmtproto.Header,
 	logger log.Logger,
 	streamingManager storetypes.StreamingManager,

@@ -1,7 +1,11 @@
 package baseapp
 
 // need to import telemetry before anything else for side effects
-import _ "github.com/cosmos/cosmos-sdk/telemetry"
+import (
+	"cosmossdk.io/store"
+	storemetrics "cosmossdk.io/store/metrics"
+	_ "github.com/cosmos/cosmos-sdk/telemetry"
+)
 
 import (
 	"fmt"
@@ -25,8 +29,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
-	"cosmossdk.io/store"
-	storemetrics "cosmossdk.io/store/metrics"
+
 	"cosmossdk.io/store/snapshots"
 	storetypes "cosmossdk.io/store/types"
 
@@ -49,7 +52,7 @@ type (
 	// loading a datastore written with an older version of the software. In
 	// particular, if a module changed the substore key name (or removed a substore)
 	// between two versions of the software.
-	StoreLoader func(ms storetypes.CommitMultiStore) error
+	StoreLoader func(ms storetypes.CommitMultiStore2) error
 )
 
 const (
@@ -89,13 +92,14 @@ type BaseApp struct {
 	// initialized on creation
 	mu                sync.Mutex // mu protects the fields below.
 	logger            log.Logger
-	name              string                      // application name from abci.BlockInfo
-	db                dbm.DB                      // common DB backend
-	cms               storetypes.CommitMultiStore // Main (uncached) state
-	qms               storetypes.MultiStore       // Optional alternative multistore for querying only.
-	storeLoader       StoreLoader                 // function to handle store loading, may be overridden with SetStoreLoader()
-	grpcQueryRouter   *GRPCQueryRouter            // router for redirecting gRPC query calls
-	msgServiceRouter  *MsgServiceRouter           // router for redirecting Msg service messages
+	name              string                       // application name from abci.BlockInfo
+	db                dbm.DB                       // common DB backend
+	cms               storetypes.CommitMultiStore2 // Main (uncached) state
+	committer         storetypes.CommitFinalizer
+	qms               storetypes.MultiStore // Optional alternative multistore for querying only.
+	storeLoader       StoreLoader           // function to handle store loading, may be overridden with SetStoreLoader()
+	grpcQueryRouter   *GRPCQueryRouter      // router for redirecting gRPC query calls
+	msgServiceRouter  *MsgServiceRouter     // router for redirecting Msg service messages
 	interfaceRegistry codectypes.InterfaceRegistry
 	txDecoder         sdk.TxDecoder // unmarshal []byte into sdk.Tx
 	txEncoder         sdk.TxEncoder // marshal sdk.Tx into []byte
@@ -198,9 +202,10 @@ func NewBaseApp(
 	name string, logger log.Logger, db dbm.DB, txDecoder sdk.TxDecoder, options ...func(*BaseApp),
 ) *BaseApp {
 	app := &BaseApp{
-		logger:           logger.With(log.ModuleKey, "baseapp"),
-		name:             name,
-		db:               db,
+		logger: logger.With(log.ModuleKey, "baseapp"),
+		name:   name,
+		db:     db,
+		// TODO
 		cms:              store.NewCommitMultiStore(db, logger, storemetrics.NewNoOpMetrics()), // by default, we use a no-op metric gather in store
 		storeLoader:      DefaultStoreLoader,
 		grpcQueryRouter:  NewGRPCQueryRouter(),
@@ -380,14 +385,14 @@ func (app *BaseApp) LoadLatestVersion() error {
 }
 
 // DefaultStoreLoader will be used by default and loads the latest version
-func DefaultStoreLoader(ms storetypes.CommitMultiStore) error {
+func DefaultStoreLoader(ms storetypes.CommitMultiStore2) error {
 	return ms.LoadLatestVersion()
 }
 
 // CommitMultiStore returns the root multi-store.
 // App constructor can use this to access the `cms`.
 // UNSAFE: must not be used during the abci life cycle.
-func (app *BaseApp) CommitMultiStore() storetypes.CommitMultiStore {
+func (app *BaseApp) CommitMultiStore() storetypes.CommitMultiStore2 {
 	return app.cms
 }
 

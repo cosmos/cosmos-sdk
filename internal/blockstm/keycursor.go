@@ -12,7 +12,7 @@ type keyCursor[V any] interface {
 	Valid() bool
 	Key() Key
 	// Tree returns the per-key version tree, when available.
-	Tree() *tree.BTree[secondaryDataItem[V]]
+	Tree() *tree.SmallBTree[secondaryDataItem[V]]
 	Next()
 	// Seek positions the cursor on the given key (if present).
 	Seek(Key) bool
@@ -23,7 +23,7 @@ type noopKeyCursor[V any] struct{}
 
 func (noopKeyCursor[V]) Valid() bool { return false }
 func (noopKeyCursor[V]) Key() Key    { return nil }
-func (noopKeyCursor[V]) Tree() *tree.BTree[secondaryDataItem[V]] {
+func (noopKeyCursor[V]) Tree() *tree.SmallBTree[secondaryDataItem[V]] {
 	return nil
 }
 func (noopKeyCursor[V]) Next()         {}
@@ -98,7 +98,7 @@ func (c *btreeKeyCursor[V]) Key() Key {
 	return c.iter.Item().Key
 }
 
-func (c *btreeKeyCursor[V]) Tree() *tree.BTree[secondaryDataItem[V]] {
+func (c *btreeKeyCursor[V]) Tree() *tree.SmallBTree[secondaryDataItem[V]] {
 	return c.iter.Item().Tree
 }
 

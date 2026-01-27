@@ -76,12 +76,12 @@ func NewGMVData[V any](isZero func(V) bool, valueLen func(V) int, eq func(V, V) 
 }
 
 // getTree returns `nil` if not found
-func (d *GMVData[V]) getTree(key Key) *tree2.BTree[secondaryDataItem[V]] {
+func (d *GMVData[V]) getTree(key Key) *tree2.SmallBTree[secondaryDataItem[V]] {
 	return d.index.get(key)
 }
 
 // getTreeOrDefault set a new tree atomically if not found.
-func (d *GMVData[V]) getTreeOrDefault(key Key) *tree2.BTree[secondaryDataItem[V]] {
+func (d *GMVData[V]) getTreeOrDefault(key Key) *tree2.SmallBTree[secondaryDataItem[V]] {
 	return d.index.getOrCreate(key)
 }
 
@@ -316,12 +316,12 @@ type KVPair = GKVPair[[]byte]
 
 type dataItem[V any] struct {
 	Key  Key
-	Tree *tree2.BTree[secondaryDataItem[V]]
+	Tree *tree2.SmallBTree[secondaryDataItem[V]]
 }
 
 func (d *dataItem[V]) Init() {
 	if d.Tree == nil {
-		d.Tree = tree2.NewBTree(secondaryLesser[V], InnerBTreeDegree)
+		d.Tree = tree2.NewSmallBTree(secondaryLesser[V], InnerBTreeDegree)
 	}
 }
 
@@ -350,6 +350,6 @@ func (item secondaryDataItem[V]) Version() TxnVersion {
 }
 
 // seekClosestTxn returns the closest txn that's less than the given txn.
-func seekClosestTxn[V any](tree *tree2.BTree[secondaryDataItem[V]], txn TxnIndex) (secondaryDataItem[V], bool) {
+func seekClosestTxn[V any](tree *tree2.SmallBTree[secondaryDataItem[V]], txn TxnIndex) (secondaryDataItem[V], bool) {
 	return tree.ReverseSeek(secondaryDataItem[V]{Index: txn - 1})
 }

@@ -6,8 +6,12 @@ import (
 )
 
 type WALWriter struct {
-	writer       *KVDataWriter
-	startVersion uint64
+	writer            *KVDataWriter
+	startVersion      uint64
+	lastVersionOffset uint64
+	// currentUpdates holds the current batch of updates that have just been written,
+	// in case we need to roll back
+	currentUpdates []KVUpdate
 }
 
 func NewWALWriter(file *os.File) *WALWriter {
@@ -15,11 +19,23 @@ func NewWALWriter(file *os.File) *WALWriter {
 		writer: NewKVDataWriter(file),
 	}
 }
+func (kvs *WALWriter) WriteWALVersion(version uint64, updates []KVUpdate, checkpoint bool) error {
+	kvs.lastVersionOffset = uint64(kvs.writer.Size())
+	kvs.currentUpdates = updates
 
-// StartVersion should be called before writing any WAL entries for each version.
-// This may or may not result in a WAL start entry being written, depending on whether
-// this is the first version in the WAL or not.
-func (kvs *WALWriter) StartVersion(version uint64) error {
+	if err := kvs.writeStartVersion(version); err != nil {
+		return err
+	}
+
+	if err := kvs.writeWALUpdates(updates); err != nil {
+		return err
+	}
+
+	return kvs.writeWALCommit(version, checkpoint)
+}
+
+// writeStartVersion writes a WAL start entry if the start version is not already set.
+func (kvs *WALWriter) writeStartVersion(version uint64) error {
 	if kvs.startVersion != 0 {
 		// start version already set
 		return nil
@@ -39,7 +55,7 @@ func (kvs *WALWriter) writeStartWAL(version uint64) error {
 
 // WriteWALUpdates writes a batch of WAL updates.
 // This can ONLY be called when the currentWriter is in WAL mode.
-func (kvs *WALWriter) WriteWALUpdates(updates []KVUpdate) error {
+func (kvs *WALWriter) writeWALUpdates(updates []KVUpdate) error {
 	for _, update := range updates {
 		deleteKey := update.DeleteKey
 		setNode := update.SetNode
@@ -52,12 +68,12 @@ func (kvs *WALWriter) WriteWALUpdates(updates []KVUpdate) error {
 		}
 
 		if deleteKey != nil {
-			err := kvs.WriteWALDelete(deleteKey)
+			err := kvs.writeWALDelete(deleteKey)
 			if err != nil {
 				return err
 			}
 		} else { // setNode != nil
-			keyOffset, valueOffset, err := kvs.WriteWALSet(setNode.key, setNode.value)
+			keyOffset, valueOffset, err := kvs.writeWALSet(setNode.key, setNode.value)
 			if err != nil {
 				return err
 			}
@@ -70,7 +86,7 @@ func (kvs *WALWriter) WriteWALUpdates(updates []KVUpdate) error {
 }
 
 // WriteWALSet writes a WAL set entry for the given key and value and returns their raw offsets.
-func (kvs *WALWriter) WriteWALSet(key, value []byte) (keyOffset, valueOffset uint64, err error) {
+func (kvs *WALWriter) writeWALSet(key, value []byte) (keyOffset, valueOffset uint64, err error) {
 	keyOffsetAny, cached := kvs.writer.keyCache.Load(unsafeBytesToString(key))
 	if cached {
 		keyOffset = keyOffsetAny.(uint64)
@@ -112,7 +128,7 @@ func (kvs *WALWriter) WriteWALSet(key, value []byte) (keyOffset, valueOffset uin
 }
 
 // WriteWALDelete writes a WAL delete entry for the given key.
-func (kvs *WALWriter) WriteWALDelete(key []byte) error {
+func (kvs *WALWriter) writeWALDelete(key []byte) error {
 	cachedOffsetAny, cached := kvs.writer.keyCache.Load(unsafeBytesToString(key))
 	var cachedOffset uint64
 	if cached {
@@ -149,7 +165,7 @@ func (kvs *WALWriter) WriteWALDelete(key []byte) error {
 }
 
 // WriteWALCommit writes a WAL commit entry for the given version.
-func (kvs *WALWriter) WriteWALCommit(version uint64, checkpoint bool) error {
+func (kvs *WALWriter) writeWALCommit(version uint64, checkpoint bool) error {
 	typ := WALEntryCommit
 	if checkpoint {
 		typ |= WALFlagCheckpoint
@@ -160,6 +176,51 @@ func (kvs *WALWriter) WriteWALCommit(version uint64, checkpoint bool) error {
 	}
 
 	return kvs.writer.writeVarUint(version)
+}
+
+func (kvs *WALWriter) Rollback() error {
+	currentSize := uint64(kvs.writer.Size())
+	if kvs.lastVersionOffset >= currentSize {
+		return fmt.Errorf("cannot rollback WAL writer: last version offset %d is not less than current size %d", kvs.lastVersionOffset, kvs.writer.Size())
+	}
+
+	// remove keys from the cache that were added in the current batch
+	for _, update := range kvs.currentUpdates {
+		var key []byte
+		if update.SetNode != nil {
+			key = update.SetNode.key
+		} else {
+			key = update.DeleteKey
+		}
+
+		if offset, found := kvs.writer.keyCache.Load(unsafeBytesToString(key)); found {
+			if offset.(uint64) >= kvs.lastVersionOffset {
+				kvs.writer.keyCache.Delete(unsafeBytesToString(key))
+			}
+		}
+	}
+	kvs.currentUpdates = nil
+
+	// truncate the file back to the last version offset
+	err := kvs.writer.file.Truncate(int64(kvs.lastVersionOffset))
+	if err != nil {
+		return fmt.Errorf("failed to truncate WAL file during rollback: %w", err)
+	}
+	_, err = kvs.writer.file.Seek(int64(kvs.lastVersionOffset), 0)
+	if err != nil {
+		return fmt.Errorf("failed to seek WAL file during rollback: %w", err)
+	}
+
+	// reset the writer
+	kvs.writer.FileWriter = NewFileWriter(kvs.writer.file)
+	kvs.writer.written = int(kvs.lastVersionOffset)
+
+	if kvs.lastVersionOffset == 0 {
+		// revert start version
+		kvs.startVersion = 0
+	}
+
+	return nil
 }
 
 func (kvs *WALWriter) Sync() error {

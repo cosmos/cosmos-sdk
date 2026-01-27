@@ -124,17 +124,7 @@ func (ts *TreeStore) WriteWALUpdates(updates []KVUpdate, fsync bool) error {
 	version := ts.StagedVersion()
 	walWriter := ts.currentWriter.WALWriter()
 
-	err := walWriter.StartVersion(uint64(version))
-	if err != nil {
-		return err
-	}
-
-	err = walWriter.WriteWALUpdates(updates)
-	if err != nil {
-		return err
-	}
-
-	err = walWriter.WriteWALCommit(uint64(version), ts.ShouldCheckpoint())
+	err := walWriter.WriteWALVersion(uint64(version), updates, ts.ShouldCheckpoint())
 	if err != nil {
 		return err
 	}

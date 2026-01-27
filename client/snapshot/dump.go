@@ -88,10 +88,10 @@ func DumpArchiveCmd() *cobra.Command {
 				if err != nil {
 					return fmt.Errorf("failed to open chunk file %s: %w", path, err)
 				}
+				defer file.Close()
 
 				st, err := file.Stat()
 				if err != nil {
-					file.Close()
 					return fmt.Errorf("failed to stat chunk file %s: %w", path, err)
 				}
 
@@ -100,16 +100,11 @@ func DumpArchiveCmd() *cobra.Command {
 					Mode: 0o644,
 					Size: st.Size(),
 				}); err != nil {
-					file.Close()
 					return fmt.Errorf("failed to write chunk header to tar: %w", err)
 				}
 
 				if _, err := io.Copy(tarWriter, file); err != nil {
-					file.Close()
 					return fmt.Errorf("failed to write chunk to tar: %w", err)
-				}
-				if err := file.Close(); err != nil {
-					return fmt.Errorf("failed to close chunk file: %w", err)
 				}
 			}
 

@@ -45,7 +45,8 @@ type btreeKeyCursor[V any] struct {
 
 func newBTreeKeyCursor[V any](keys interface {
 	Iter() btree.IterG[mvIndexKeyEntry[V]]
-}, start, end []byte, ascending bool) *btreeKeyCursor[V] {
+}, start, end []byte, ascending bool,
+) *btreeKeyCursor[V] {
 	if keys == nil {
 		return &btreeKeyCursor[V]{start: start, end: end, ascending: ascending, valid: false}
 	}

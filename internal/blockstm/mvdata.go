@@ -139,8 +139,11 @@ func (d *GMVData[V]) Iterator(
 	opts IteratorOptions, txn TxnIndex,
 	waitFn func(TxnIndex),
 ) *MVIterator[V] {
-	keys := d.index.snapshotKeys(opts.Start, opts.End, opts.Ascending)
-	return NewMVIterator(opts, txn, d, keys, waitFn)
+	newKeys := func() keyCursor[V] {
+		return d.index.cursorKeys(opts.Start, opts.End, opts.Ascending)
+	}
+	cursor := newKeys()
+	return NewMVIterator(opts, txn, d, cursor, newKeys, waitFn)
 }
 
 // ValidateReadSet validates that the values read during execution are consistent with the current state.
@@ -230,8 +233,11 @@ func (d *GMVData[V]) ValidateReadSet(txn TxnIndex, rs *ReadSet) bool {
 // validateIterator validates the iteration descriptor by replaying and compare the recorded reads.
 // returns true if valid.
 func (d *GMVData[V]) validateIterator(desc IteratorDescriptor, txn TxnIndex) bool {
-	keys := d.index.snapshotKeys(desc.Start, desc.End, desc.Ascending)
-	it := NewMVIterator(desc.IteratorOptions, txn, d, keys, nil)
+	newKeys := func() keyCursor[V] {
+		return d.index.cursorKeys(desc.Start, desc.End, desc.Ascending)
+	}
+	cursor := newKeys()
+	it := NewMVIterator(desc.IteratorOptions, txn, d, cursor, newKeys, nil)
 	defer it.Close()
 
 	var i int

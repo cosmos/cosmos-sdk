@@ -2,7 +2,6 @@ package blockstm
 
 import (
 	"bytes"
-	"sort"
 	"sync"
 	"sync/atomic"
 
@@ -19,15 +18,29 @@ type mvIndexEntry[V any] struct {
 	data *tree2.BTree[secondaryDataItem[V]]
 }
 
+// mvIndexKeyEntry is stored in the ordered key-set so iterators can retrieve
+// the per-key version tree without an additional hash lookup.
+//
+// Note: Tree is immutable w.r.t. the pointer itself (created once per key),
+// but the underlying *tree.BTree is still mutated by writers.
+type mvIndexKeyEntry[V any] struct {
+	Key  Key
+	Tree *tree2.BTree[secondaryDataItem[V]]
+}
+
 type mvIndexShard[V any] struct {
 	mu sync.RWMutex
 	m  map[uint64][]mvIndexEntry[V]
 }
 
 // mvIndex is a sharded index from key -> per-key version tree.
-// Keys are copied on first insert to keep them stable.
 type mvIndex[V any] struct {
 	shards [mvIndexShards]mvIndexShard[V]
+	// keys is an ordered set of per-key metadata.
+	//
+	// Storing mvIndexKeyEntry by value avoids an extra allocation per key.
+	// Iterators can fetch the per-key version tree without an additional hash lookup.
+	keys *tree2.COWBTree[mvIndexKeyEntry[V]]
 
 	// keySetVersion increments when a new key is added; it invalidates the snapshot cache.
 	keySetVersion atomic.Uint64
@@ -43,6 +56,9 @@ func newMVIndex[V any]() *mvIndex[V] {
 	for i := range idx.shards {
 		idx.shards[i].m = make(map[uint64][]mvIndexEntry[V])
 	}
+	idx.keys = tree2.NewCOWBTree(func(a, b mvIndexKeyEntry[V]) bool {
+		return bytes.Compare(a.Key, b.Key) < 0
+	}, OuterBTreeDegree)
 	return idx
 }
 
@@ -78,41 +94,23 @@ func (idx *mvIndex[V]) getOrCreate(key []byte) *tree2.BTree[secondaryDataItem[V]
 		}
 	}
 
-	kCopy := append([]byte(nil), key...)
+	// Avoid an extra allocation by reusing the provided key slice.
+	// Callers must treat keys as immutable once written.
+	kCopy := key
 	data := tree2.NewBTree(secondaryLesser[V], InnerBTreeDegree)
 	sh.m[h] = append(entries, mvIndexEntry[V]{key: kCopy, data: data})
 	sh.mu.Unlock()
+	idx.keys.Set(mvIndexKeyEntry[V]{Key: kCopy, Tree: data})
 	idx.keySetVersion.Add(1)
 	return data
 }
 
-func (idx *mvIndex[V]) snapshotKeys(start, end []byte, ascending bool) []Key {
+func (idx *mvIndex[V]) cursorKeys(start, end []byte, ascending bool) keyCursor[V] {
 	if idx == nil {
-		return nil
+		return noopKeyCursor[V]{}
 	}
-
-	keysAsc := idx.snapshotAllKeysAsc()
-	if len(keysAsc) == 0 {
-		return nil
-	}
-
-	lo := 0
-	if start != nil {
-		lo = sort.Search(len(keysAsc), func(i int) bool { return bytes.Compare(keysAsc[i], start) >= 0 })
-	}
-	hi := len(keysAsc)
-	if end != nil {
-		hi = sort.Search(len(keysAsc), func(i int) bool { return bytes.Compare(keysAsc[i], end) >= 0 })
-	}
-	if lo > hi {
-		return nil
-	}
-
-	view := keysAsc[lo:hi]
-	if ascending {
-		return view
-	}
-	return reverseCopyKeys(view)
+	// The key-set iterator runs on an immutable snapshot and does not block writers.
+	return newBTreeKeyCursor(idx.keys, start, end, ascending)
 }
 
 func (idx *mvIndex[V]) snapshotAllKeys(ascending bool) []Key {
@@ -148,19 +146,9 @@ func (idx *mvIndex[V]) snapshotAllKeysAsc() []Key {
 		capHint = minSnapshotKeysCap
 	}
 	keys := make([]Key, 0, capHint)
-	for i := range idx.shards {
-		sh := &idx.shards[i]
-		sh.mu.RLock()
-		for _, bucket := range sh.m {
-			for _, entry := range bucket {
-				keys = append(keys, entry.key)
-			}
-		}
-		sh.mu.RUnlock()
-	}
-
-	sort.Slice(keys, func(i, j int) bool {
-		return bytes.Compare(keys[i], keys[j]) < 0
+	idx.keys.Scan(func(item mvIndexKeyEntry[V]) bool {
+		keys = append(keys, item.Key)
+		return true
 	})
 
 	idx.cacheAllKeysAsc = keys

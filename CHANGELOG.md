@@ -81,6 +81,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (server) [#25632](https://github.com/cosmos/cosmos-sdk/pull/25632) Add missing call to close the app on shutdown.
 * (server) [#25740](https://github.com/cosmos/cosmos-sdk/pull/25740) Add variadic `grpc.DialOption` parameter to `StartGrpcServer` for custom gRPC client connection options.
 * (blockstm) [#25765](https://github.com/cosmos/cosmos-sdk/pull/25765) Minor code readability improvement in block-stm.
+* (types) [#25832](https://github.com/cosmos/cosmos-sdk/pull/25832) Cache default config scope key in `GetConfig` to avoid repeated kernel calls and improve hot‑path performance.
 
 ### Bug Fixes
 
@@ -230,7 +231,6 @@ This patch update also includes minor dependency bumps.
 ### Improvements
 
 * (server) [#21941](https://github.com/cosmos/cosmos-sdk/pull/21941) Regenerate addrbook.json for in place testnet.
-* (types) [#25832](https://github.com/cosmos/cosmos-sdk/pull/25832) Cache default config scope key in `GetConfig` to avoid repeated kernel calls and improve hot‑path performance.
 
 ### Bug Fixes
 

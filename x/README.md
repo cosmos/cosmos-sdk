@@ -65,7 +65,7 @@ Read more about writing smart contracts with solidity at the official [`evm` doc
 
 In addition to these core and supplementary modules, the Cosmos SDK maintains enterprise-grade modules in the `enterprise/` directory.
 
-**Enterprise modules may use different licenses than the core SDK modules.** Please review the LICENSE file in each enterprise module directory before use.
+**Enterprise modules use different licenses than the Apache 2.0 core SDK modules.** Please review the LICENSE file in each enterprise module directory before use.
 
 ### Available Enterprise Modules
 

@@ -2,9 +2,9 @@
 
 Enterprise modules are production-ready extensions to the Cosmos SDK maintained for specialized blockchain use cases. These modules are designed for permissioned networks, consortium chains, and enterprise deployments that require features beyond traditional public blockchain architectures.
 
-## Important: Licensing
+## Licensing
 
-**Enterprise modules may use different licenses than the core Cosmos SDK.** While the core Cosmos SDK is licensed under Apache-2.0, enterprise modules may have different licensing terms. Always review the LICENSE file in each enterprise module directory before using it in your project.
+**Enterprise modules use different licenses than the Apache 2.0 core Cosmos SDK modules.** While the core Cosmos SDK is licensed under Apache-2.0, enterprise modules may have different licensing terms. Always review the LICENSE file in each enterprise module directory before using it in your project.
 
 | Module | License | Use Case |
 |--------|---------|----------|
@@ -43,13 +43,6 @@ A Cosmos SDK module that implements a Proof of Authority (PoA) consensus mechani
 
 Enterprise modules are designed to integrate seamlessly with the core Cosmos SDK modules. They follow the same architectural patterns and can be included in your blockchain application alongside core modules.
 
-### Module Dependencies
-
-Enterprise modules typically depend on and integrate with:
-- **Auth** - Account management and authentication
-- **Bank** - Token transfers and balance management
-- **Governance** - Proposal submission and voting
-- **Distribution** - Fee distribution mechanisms
 
 ### Adding Enterprise Modules to Your Chain
 

@@ -335,16 +335,5 @@ x/poa/
 
 This module is licensed under the **Source Available Evaluation License** for non-commercial evaluation, testing, and educational purposes only. Commercial use requires a separate license.
 
-**License Comparison:**
-- **Main Cosmos SDK License**: [Apache-2.0](../../LICENSE) - Permissive open-source license
 - **PoA Module License**: [Source Available Evaluation License](./LICENSE) - Evaluation/testing only
 
-**Permitted Uses (Under This License):**
-- Internal evaluation and testing in non-production environments
-- Participation in Cosmos Labs bug bounty programs
-- Non-commercial teaching and educational activities in accredited academic programs
-
-**Prohibited Uses (Requires Commercial License):**
-- Production deployments
-- Providing services to third parties
-- Any commercial applications

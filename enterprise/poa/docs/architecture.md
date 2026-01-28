@@ -37,9 +37,9 @@ The PoA module plugs into the Cosmos SDK as a replacement for the standard staki
 
 **Key Integration Points:**
 
-1. **Replaces x/staking**: PoA provides validator management without token delegation or bonding
-2. **Integrates with x/gov**: Custom governance hooks ensure only active validators can participate and tally function override allocates vote weight to validator power ([details](#governance))
-3. **Uses x/auth & x/bank**: Standard account and token management for fee distribution ([details](#fee-distribution))
+1. **Replaces [x/staking](../../../x/staking/README.md)**: PoA provides validator management without token delegation or bonding
+2. **Integrates with [x/gov](../../../x/gov/README.md)**: Custom governance hooks ensure only active validators can participate and tally function override allocates vote weight to validator power ([details](#governance))
+3. **Uses [x/auth](../../../x/auth/README.md) & [x/bank](../../../x/bank/README.md)**: Standard account and token management for fee distribution ([details](#fee-distribution))
 4. **ABCI Lifecycle**: Implements `EndBlocker` to communicate validator updates to CometBFT ([details](#abci-integration))
 
 ### Architectural Decisions
@@ -53,14 +53,14 @@ Unlike proof-of-stake where validators are determined by token weight, PoA uses 
 
 **Custom Fee Distribution**
 
-Rather than using the standard x/distribution module, PoA implements its own fee mechanism:
+Rather than using the standard [x/distribution](../../../x/distribution/README.md) module, PoA implements its own fee mechanism:
 - Fees allocated proportionally to validator power (not delegated stake)
 - Validators withdraw fees on-demand
 - See [Fee Distribution](#fee-distribution) for complete details
 
 **Governance Without Staking**
 
-Standard SDK governance uses bonded tokens for voting weight. PoA replaces this with validator power:
+Standard SDK [governance](../../../x/gov/README.md) uses bonded tokens for voting weight. PoA replaces this with validator power:
 - Only active validators (power > 0) can submit, deposit, or vote on proposals
 - Voting weight determined by validator power, not token holdings
 - Prevents non-validator governance participation

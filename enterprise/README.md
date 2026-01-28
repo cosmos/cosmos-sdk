@@ -10,7 +10,7 @@ Enterprise modules are production-ready extensions to the Cosmos SDK maintained 
 |--------|---------|----------|
 | [PoA](./poa) | Source Available Evaluation License | Non-commercial evaluation, testing, educational purposes |
 
-For commercial licensing inquiries, contact [legal@cosmoslabs.io](mailto:legal@cosmoslabs.io).
+For commercial licensing inquiries, contact [institutions@cosmoslabs.io](mailto:institutions@cosmoslabs.io).
 
 ## Available Enterprise Modules
 
@@ -67,7 +67,7 @@ For technical questions about enterprise modules:
 - Join the [Cosmos Discord](https://discord.com/invite/interchain)
 
 For licensing questions:
-- Email [legal@cosmoslabs.io](mailto:legal@cosmoslabs.io)
+- Email [institutions@cosmoslabs.io](mailto:institutions@cosmoslabs.io)
 
 ## Contributing
 

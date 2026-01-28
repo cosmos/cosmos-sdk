@@ -112,6 +112,8 @@ func (keeper Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, met
 		return v1.Proposal{}, err
 	}
 
+	keeper.UpdateMinInitialDeposit(ctx, false)
+
 	// called right after a proposal is submitted
 	err = keeper.Hooks().AfterProposalSubmission(ctx, proposalID)
 	if err != nil {
@@ -265,6 +267,8 @@ func (keeper Keeper) ActivateVotingPeriod(ctx context.Context, proposal v1.Propo
 	if err != nil {
 		return err
 	}
+
+	keeper.UpdateMinDeposit(ctx, false)
 
 	// Add proposal to quorum check queue
 	quorumTimeoutTime := proposal.VotingStartTime.Add(*params.QuorumTimeout)

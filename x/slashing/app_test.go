@@ -57,7 +57,6 @@ func TestSlashingMsgs(t *testing.T) {
 	app, err := sims.SetupWithConfiguration(
 		depinject.Configs(
 			configurator.NewAppConfig(
-				configurator.ParamsModule(),
 				configurator.AuthModule(),
 				configurator.StakingModule(),
 				configurator.SlashingModule(),

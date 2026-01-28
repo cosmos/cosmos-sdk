@@ -131,6 +131,10 @@ func (s *Server) Start(ctx context.Context, cfg config.Config) error {
 
 	// configure grpc-web server
 	if cfg.GRPC.Enable && cfg.GRPCWeb.Enable {
+		if s.GRPCSrv == nil {
+			return fmt.Errorf("gRPC server is required for gRPC-Web but was not provided")
+		}
+
 		var options []grpcweb.Option
 		if cfg.API.EnableUnsafeCORS {
 			options = append(options,
@@ -203,6 +207,10 @@ func (s *Server) SetTelemetry(m *telemetry.Metrics) {
 //nolint:staticcheck // TODO: switch to OpenTelemetry
 func (s *Server) registerMetrics(m *telemetry.Metrics) {
 	s.metrics = m
+
+	if m == nil {
+		return
+	}
 
 	metricsHandler := func(w http.ResponseWriter, r *http.Request) {
 		format := strings.TrimSpace(r.FormValue("format"))

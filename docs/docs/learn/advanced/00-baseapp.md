@@ -264,7 +264,7 @@ Note that, unlike `CheckTx()`, `PrepareProposal` process `sdk.Msg`s, so it can d
 
 It's important to note that `PrepareProposal` complements the `ProcessProposal` method which is executed after this method. The combination of these two methods means that it is possible to guarantee that no invalid transactions are ever committed. Furthermore, such a setup can give rise to other interesting use cases such as Oracles, threshold decryption and more.
 
-`PrepareProposal` returns a response to the underlying consensus engine of type [`abci.ResponseCheckTx`](https://github.com/cometbft/cometbft/blob/v0.37.x/spec/abci/abci++_methods.md#processproposal). The response contains:
+`PrepareProposal` returns a response to the underlying consensus engine of type [`abci.ResponsePrepareProposal`](https://github.com/cometbft/cometbft/blob/v0.37.x/spec/abci/abci++_methods.md#processproposal). The response contains:
 
 *   `Code (uint32)`: Response Code. `0` if successful.
 *   `Data ([]byte)`: Result bytes, if any.
@@ -291,7 +291,7 @@ CometBFT calls it when it receives a proposal and the CometBFT algorithm has not
 
 However, developers must exercise greater caution when using these methods. Incorrectly coding these methods could affect liveness as CometBFT is unable to receive 2/3 valid precommits to finalize a block.
 
-`ProcessProposal` returns a response to the underlying consensus engine of type [`abci.ResponseCheckTx`](https://github.com/cometbft/cometbft/blob/v0.37.x/spec/abci/abci++_methods.md#processproposal). The response contains:
+`ProcessProposal` returns a response to the underlying consensus engine of type [`abci.ResponseProcessProposal`](https://github.com/cometbft/cometbft/blob/v0.37.x/spec/abci/abci++_methods.md#processproposal). The response contains:
 
 *   `Code (uint32)`: Response Code. `0` if successful.
 *   `Data ([]byte)`: Result bytes, if any.

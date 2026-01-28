@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	grpcmiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
@@ -70,11 +71,6 @@ func (app *BaseApp) RegisterGRPCServerWithSkipCheckHeader(server gogogrpc.Server
 			height = sdkCtx.BlockHeight() // If height was not set in the request, set it to the latest
 		}
 
-		md = metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(height, 10))
-		if err = grpc.SetHeader(grpcCtx, md); err != nil {
-			app.logger.Error("failed to set gRPC header", "err", err)
-		}
-
 		app.logger.Debug("gRPC query received", "type", fmt.Sprintf("%#v", req))
 
 		// Catch an OutOfGasPanic caused in the query handlers
@@ -93,7 +89,29 @@ func (app *BaseApp) RegisterGRPCServerWithSkipCheckHeader(server gogogrpc.Server
 		// we do this because grpc context has values injected into it that are necessary to retain for systems
 		// such as OpenTelemetry.
 		sdkCtx = sdkCtx.WithContext(grpcCtx)
-		return handler(sdkCtx, req)
+
+		// Set block height as a response header before the handler runs.
+		blockHeightMD := metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(height, 10))
+		setHeaderErr := grpc.SetHeader(sdkCtx, blockHeightMD)
+		if setHeaderErr != nil {
+			// If headers were already sent, setting headers has no effect.
+			if strings.Contains(setHeaderErr.Error(), "SendHeader called multiple times") {
+				app.logger.Debug("failed to set gRPC header (already sent)", "err", setHeaderErr)
+			} else {
+				app.logger.Error("failed to set gRPC header", "err", setHeaderErr)
+			}
+		}
+
+		resp, err = handler(sdkCtx, req)
+
+		// If headers were already sent, attach block height as a trailer.
+		if setHeaderErr != nil {
+			if trailerErr := grpc.SetTrailer(grpcCtx, blockHeightMD); trailerErr != nil {
+				app.logger.Debug("failed to set gRPC trailer", "setErr", setHeaderErr, "trailerErr", trailerErr)
+			}
+		}
+
+		return resp, err
 	}
 
 	// Loop through all services and methods, add the interceptor, and register

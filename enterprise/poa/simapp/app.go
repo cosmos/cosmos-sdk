@@ -28,7 +28,6 @@ import (
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log/v2"
-	"cosmossdk.io/simapp/params"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/tx/signing"
 
@@ -39,6 +38,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/enterprise/poa/simapp/params"
 	"github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa"
 	poakeeper "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/keeper"
 	poatypes "github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"

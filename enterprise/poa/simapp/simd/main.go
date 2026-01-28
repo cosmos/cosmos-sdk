@@ -19,9 +19,9 @@ import (
 	"os"
 
 	clientv2helpers "cosmossdk.io/client/v2/helpers"
-	"cosmossdk.io/simapp"
-	"cosmossdk.io/simapp/simd/cmd"
 
+	"github.com/cosmos/cosmos-sdk/enterprise/poa/simapp"
+	"github.com/cosmos/cosmos-sdk/enterprise/poa/simapp/simd/cmd"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 )
 

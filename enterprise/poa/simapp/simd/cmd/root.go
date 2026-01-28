@@ -21,12 +21,12 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/log/v2"
-	"cosmossdk.io/simapp"
-	"cosmossdk.io/simapp/params"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
+	"github.com/cosmos/cosmos-sdk/enterprise/poa/simapp"
+	"github.com/cosmos/cosmos-sdk/enterprise/poa/simapp/params"
 	"github.com/cosmos/cosmos-sdk/server"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"

@@ -1,4 +1,4 @@
-module cosmossdk.io/simapp
+module github.com/cosmos/cosmos-sdk/enterprise/poa/simapp
 
 go 1.25.5
 

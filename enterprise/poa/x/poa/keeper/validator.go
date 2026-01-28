@@ -18,15 +18,15 @@ import (
 	"errors"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/crypto/codec"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"cosmossdk.io/collections"
 	sdkerrors "cosmossdk.io/errors"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/enterprise/poa/x/poa/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // UpdateValidator updates a single validator's power and metadata.

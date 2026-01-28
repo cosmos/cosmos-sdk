@@ -52,3 +52,33 @@ jobs:
         run: GOARCH=${{ matrix.go-arch }} make cosmovisor
       - name: Build Confix
         run: GOARCH=${{ matrix.go-arch }} make confix
+
+  build-poa:
+    runs-on: depot-ubuntu-22.04-4
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.25.5"
+          check-latest: true
+          cache: true
+          cache-dependency-path: enterprise/poa/go.sum
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: git_diff
+        with:
+          PATTERNS: |
+            enterprise/poa/**/*.go
+            enterprise/poa/go.mod
+            enterprise/poa/go.sum
+            enterprise/poa/Makefile
+      - name: Build POA
+        if: env.GIT_DIFF
+        run: |
+          cd enterprise/poa
+          make build
+      - name: Upload build artifact
+        if: env.GIT_DIFF
+        uses: actions/upload-artifact@v4
+        with:
+          name: poa-simd
+          path: enterprise/poa/build/simd

@@ -147,7 +147,7 @@ jobs:
 
   repo-analysis:
     runs-on: depot-ubuntu-22.04-4
-    needs: [tests, test-integration, test-e2e, test-clientv2, test-core, test-depinject, test-errors, test-math, test-schema, test-collections, test-cosmovisor, test-confix, test-store, test-log, test-x-tx, test-tools-benchmark]
+    needs: [tests, test-integration, test-e2e, test-clientv2, test-core, test-depinject, test-errors, test-math, test-schema, test-collections, test-cosmovisor, test-confix, test-store, test-log, test-x-tx, test-tools-benchmark, test-poa]
     steps:
       - uses: actions/checkout@v6
       - uses: technote-space/get-diff-action@v6.1.2
@@ -254,11 +254,16 @@ jobs:
         with:
           name: "${{ github.sha }}-tools-benchmark-coverage"
         continue-on-error: true
+      - uses: actions/download-artifact@v7
+        if: env.GIT_DIFF
+        with:
+          name: "${{ github.sha }}-poa-coverage"
+        continue-on-error: true
       - name: Upload coverage to Codecov
         if: env.GIT_DIFF
         uses: codecov/codecov-action@v5
         with:
-          files: ./00profile.out,./01profile.out,./02profile.out,./03profile.out,./integration-profile.out,./e2e-profile.out,./client/v2/coverage.out,./core/coverage.out,./depinject/coverage.out,./errors/coverage.out,./math/coverage.out,./schema/coverage.out,./collections/coverage.out,./tools/cosmovisor/coverage.out,./tools/confix/coverage.out,./store/coverage.out,./log/coverage.out,./x/tx/coverage.out,./tools/benchmark/coverage.out,./blockstm/coverage.out
+          files: ./00profile.out,./01profile.out,./02profile.out,./03profile.out,./integration-profile.out,./e2e-profile.out,./client/v2/coverage.out,./core/coverage.out,./depinject/coverage.out,./errors/coverage.out,./math/coverage.out,./schema/coverage.out,./collections/coverage.out,./tools/cosmovisor/coverage.out,./tools/confix/coverage.out,./store/coverage.out,./log/coverage.out,./x/tx/coverage.out,./tools/benchmark/coverage.out,./blockstm/coverage.out,./enterprise/poa/coverage.out
           fail_ci_if_error: false
           verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -694,3 +699,57 @@ jobs:
           name: "${{ github.sha }}-tools-benchmark-coverage"
           path: ./tools/benchmark/coverage.out
 
+  #############################
+  ### Enterprise POA Module ###
+  #############################
+
+  test-poa:
+    runs-on: depot-ubuntu-22.04-4
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.25.5"
+          check-latest: true
+          cache: true
+          cache-dependency-path: enterprise/poa/go.sum
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: git_diff
+        with:
+          PATTERNS: |
+            enterprise/poa/**/*.go
+            enterprise/poa/go.mod
+            enterprise/poa/go.sum
+      - name: tests
+        if: env.GIT_DIFF
+        run: |
+          cd enterprise/poa
+          go test -v -race -coverprofile=coverage.out -timeout 30m ./...
+      - uses: actions/upload-artifact@v6
+        if: env.GIT_DIFF
+        with:
+          name: "${{ github.sha }}-poa-coverage"
+          path: ./enterprise/poa/coverage.out
+
+  test-poa-system:
+    runs-on: depot-ubuntu-22.04-4
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.25.5"
+          check-latest: true
+          cache: true
+          cache-dependency-path: enterprise/poa/go.sum
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: git_diff
+        with:
+          PATTERNS: |
+            enterprise/poa/**/*.go
+            enterprise/poa/go.mod
+            enterprise/poa/go.sum
+      - name: system tests
+        if: env.GIT_DIFF
+        run: |
+          cd enterprise/poa
+          make test-system

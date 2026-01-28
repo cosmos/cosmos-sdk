@@ -1,0 +1,60 @@
+// IMPORTANT LICENSE NOTICE
+//
+// SPDX-License-Identifier: CosmosLabs-Evaluation-Only
+//
+// This file is NOT licensed under the Apache License 2.0.
+//
+// Licensed under the Cosmos Labs Source Available Evaluation License, which forbids:
+// - commercial use,
+// - production use, and
+// - redistribution.
+//
+// See ./enterprise/poa/LICENSE for full terms.
+// Copyright (c) 2026 Cosmos Labs US Inc.
+
+syntax = "proto3";
+
+package cosmos.poa.v1;
+
+import "amino/amino.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "gogoproto/gogo.proto";
+import "google/protobuf/any.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/enterprise/poa/types";
+
+message Validator {
+  google.protobuf.Any pub_key                         = 1;
+  int64               power                           = 2;
+  ValidatorMetadata   metadata                        = 3;
+  repeated cosmos.base.v1beta1.DecCoin allocated_fees = 4 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"
+  ];
+}
+
+message ValidatorMetadata {
+  string moniker          = 3;
+  string description      = 4;
+  string operator_address = 5;
+}
+
+message Params {
+  string admin = 1;
+}
+
+// ValidatorAllocatedFees represents fees for a validator operator.
+// This type may represent allocated or unallocated fees.
+message ValidatorFees {
+  repeated cosmos.base.v1beta1.DecCoin fees = 1 [
+    (gogoproto.nullable)     = false,
+    (amino.dont_omitempty)   = true,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"
+  ];
+}
+
+message GenesisState {
+  Params             params     = 1 [(gogoproto.nullable) = false];
+  repeated Validator validators = 2 [(gogoproto.nullable) = false];
+}

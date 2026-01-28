@@ -1,0 +1,93 @@
+// IMPORTANT LICENSE NOTICE
+//
+// SPDX-License-Identifier: CosmosLabs-Evaluation-Only
+//
+// This file is NOT licensed under the Apache License 2.0.
+//
+// Licensed under the Cosmos Labs Source Available Evaluation License, which forbids:
+// - commercial use,
+// - production use, and
+// - redistribution.
+//
+// See ./enterprise/poa/LICENSE for full terms.
+// Copyright (c) 2026 Cosmos Labs US Inc.
+
+syntax = "proto3";
+
+package cosmos.poa.v1;
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/poa/v1/poa.proto";
+import "cosmos/query/v1/query.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+
+option go_package = "github.com/cosmos/cosmos-sdk/enterprise/poa/types";
+
+service Query {
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/cosmos/poa/v1/params";
+  }
+
+  rpc Validator(QueryValidatorRequest) returns (QueryValidatorResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/cosmos/poa/v1/validator/{address}";
+  }
+
+  rpc Validators(QueryValidatorsRequest) returns (QueryValidatorsResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/cosmos/poa/v1/validators";
+  }
+
+  rpc WithdrawableFees(QueryWithdrawableFeesRequest) returns (QueryWithdrawableFeesResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/cosmos/poa/v1/allocated_fees/{operator_address}";
+  }
+
+  rpc TotalPower(QueryTotalPowerRequest) returns (QueryTotalPowerResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
+    option (google.api.http).get               = "/cosmos/poa/v1/total_power";
+  }
+}
+
+message QueryParamsRequest {}
+
+message QueryParamsResponse {
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryValidatorRequest {
+  // Address can be either a consensus address (consvaloper...) or operator address (cosmos...)
+  string address = 1;
+}
+
+message QueryValidatorResponse {
+  Validator validator = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryValidatorsRequest {
+  // pagination defines an optional pagination for the request.
+  // reverse is always fixed to TRUE to return validators in descending order by power.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryValidatorsResponse {
+  repeated Validator validators = 1 [(gogoproto.nullable) = false];
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryWithdrawableFeesRequest {
+  string operator_address = 1;
+}
+
+message QueryWithdrawableFeesResponse {
+  ValidatorFees fees = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryTotalPowerRequest {}
+
+message QueryTotalPowerResponse {
+  int64 total_power = 1;
+}

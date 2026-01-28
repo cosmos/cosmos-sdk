@@ -47,6 +47,10 @@ Note: We advise to always use the latest maintained [Go version](https://go.dev/
 The Cosmos SDK maintains a set of modules that can be included in your blockchain application.  For more information
 on modules, see our [introduction doc](./x/README.md).
 
+## Enterprise Modules
+
+In addition to the core SDK modules, we maintain enterprise-grade modules designed for specialized use cases such as permissioned networks and consortium chains. These modules are located in the `enterprise/` directory and may have different licensing terms than the core SDK.
+
 ## Maintainers
 [Cosmos Labs](https://cosmoslabs.io/) maintains the core components of the stack: Cosmos SDK, CometBFT, IBC, Cosmos EVM, and various developer tools and frameworks. The detailed maintenance policy can be found [here](https://github.com/cosmos/security/blob/main/POLICY.md). In addition to developing and maintaining the Cosmos Stack, Cosmos Labs provides advisory and engineering services for blockchain solutions. [Get in touch with Cosmos Labs](https://www.cosmoslabs.io/contact).
 

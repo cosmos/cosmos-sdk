@@ -15,7 +15,7 @@ go_license_header() {
     echo "// - production use, and"
     echo "// - redistribution."
     echo "//"
-    echo "// See ./enterprise/poa/LICENSE for full terms."
+    echo "// See https://github.com/cosmos/cosmos-sdk/blob/main/enterprise/poa/LICENSE for full terms."
     echo "// Copyright (c) 2026 Cosmos Labs US Inc."
     echo ""
 }

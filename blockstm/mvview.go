@@ -23,7 +23,7 @@ type GMVMemoryView[V any] struct {
 	store     int
 
 	txn      TxnIndex
-	readSet  *ReadSet
+	readSet  *ReadSet[V]
 	writeSet *GMemDB[V]
 }
 
@@ -45,7 +45,7 @@ func NewGMVMemoryView[V any](store int, storage storetypes.GKVStore[V], mvData *
 		mvData:    mvData,
 		scheduler: scheduler,
 		txn:       txn,
-		readSet:   new(ReadSet),
+		readSet:   new(ReadSet[V]),
 	}
 }
 
@@ -77,7 +77,7 @@ func (s *GMVMemoryView[V]) ApplyWriteSet(version TxnVersion) Locations {
 	return newLocations
 }
 
-func (s *GMVMemoryView[V]) ReadSet() *ReadSet {
+func (s *GMVMemoryView[V]) ReadSet() any {
 	return s.readSet
 }
 
@@ -94,22 +94,59 @@ func (s *GMVMemoryView[V]) Get(key []byte) V {
 		value, version, estimate := s.mvData.Read(key, s.txn)
 		if estimate {
 			// read ESTIMATE mark, wait for the blocking txn to finish
+			//
+			// invariant: the txn index must be valid, because storage version won't write ESTIMATE mark
 			s.waitFor(version.Index)
 			continue
 		}
 
-		// record the read version, invalid version is ⊥.
-		// if not found, record version ⊥ when reading from storage.
-		s.readSet.Reads = append(s.readSet.Reads, ReadDescriptor{key, version})
+		// record the read version, invalid version is -1.
+		// if not found, record version -1 when reading from storage.
+		s.readSet.Reads = append(s.readSet.Reads, NewReadDescriptor[V](key, version))
 		if !version.Valid() {
-			return s.storage.Get(key)
+			value = s.storage.Get(key)
+			s.mvData.CacheStorageValue(key, value)
 		}
 		return value
 	}
 }
 
+func (s *GMVMemoryView[V]) GetWithPredicate(key []byte, predicate Predicate[V]) bool {
+	if s.writeSet != nil {
+		if value, found := s.writeSet.OverlayGet(key); found {
+			// value written by this txn
+			// zero value means deleted
+			return predicate(value)
+		}
+	}
+
+	for {
+		value, version, estimate := s.mvData.Read(key, s.txn)
+		if estimate {
+			// TODO special handle predicate case with ESTIMATE mark
+
+			// read ESTIMATE mark, wait for the blocking txn to finish
+			//
+			// invariant: the txn index must be valid, because storage version won't write ESTIMATE mark
+			s.waitFor(version.Index)
+			continue
+		}
+
+		if !version.Valid() {
+			value = s.storage.Get(key)
+			s.mvData.CacheStorageValue(key, value)
+		}
+
+		observed := predicate(value)
+		s.readSet.Reads = append(s.readSet.Reads, NewReadDescriptorWithPredicate[V](key, version, predicate, observed))
+		return observed
+	}
+}
+
 func (s *GMVMemoryView[V]) Has(key []byte) bool {
-	return !s.mvData.isZero(s.Get(key))
+	return s.GetWithPredicate(key, func(v V) bool {
+		return !s.mvData.isZero(v)
+	})
 }
 
 func (s *GMVMemoryView[V]) Set(key []byte, value V) {
@@ -168,7 +205,7 @@ func (s *GMVMemoryView[V]) iterator(opts IteratorOptions) storetypes.GIterator[V
 			}
 		}
 
-		s.readSet.Iterators = append(s.readSet.Iterators, IteratorDescriptor{
+		s.readSet.Iterators = append(s.readSet.Iterators, IteratorDescriptor[V]{
 			IteratorOptions: opts,
 			Stop:            stopKey,
 			Reads:           reads,

@@ -14,6 +14,8 @@ func ExecuteBlock(
 ) error
 ```
 
+Broken internal invariants will cause panics.
+
 The main deviations from the paper are:
 
 ### Optimisation

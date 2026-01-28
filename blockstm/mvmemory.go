@@ -110,10 +110,18 @@ func (mv *MVMemory) ConvertWritesToEstimates(txn TxnIndex) {
 }
 
 func (mv *MVMemory) ValidateReadSet(txn TxnIndex) bool {
+	return mv.validateReadSet(txn, false)
+}
+
+func (mv *MVMemory) ValidateDelayedReadSet(txn TxnIndex) bool {
+	return mv.validateReadSet(txn, true)
+}
+
+func (mv *MVMemory) validateReadSet(txn TxnIndex, delayed bool) bool {
 	// Invariant: at least one `Record` call has been made for `txn`
 	rs := *mv.lastReadSet[txn].Load()
 	for store, readSet := range rs {
-		if !mv.data[store].ValidateReadSet(txn, readSet) {
+		if !mv.data[store].ValidateReadSet(txn, readSet, delayed) {
 			return false
 		}
 	}

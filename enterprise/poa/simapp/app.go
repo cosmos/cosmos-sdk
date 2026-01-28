@@ -27,7 +27,7 @@ import (
 	"cosmossdk.io/client/v2/autocli"
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	"cosmossdk.io/simapp/params"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/tx/signing"

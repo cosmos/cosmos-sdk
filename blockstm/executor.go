@@ -38,7 +38,10 @@ func NewExecutor(
 //   - `TryExecute` and `NeedsReexecution` don't change it if it returns a new valid task to run,
 //     otherwise it decreases it.
 func (e *Executor) Run() error {
-	var kind TaskKind
+	var (
+		kind TaskKind
+		wave Wave // invariant: wave must be set if kind is TaskKindValidation
+	)
 	version := InvalidTxnVersion
 	for !e.scheduler.Done() {
 		if !version.Valid() {
@@ -49,15 +52,17 @@ func (e *Executor) Run() error {
 			default:
 			}
 
-			version, kind = e.scheduler.NextTask()
+			e.ProcessCommits()
+
+			version, wave, kind = e.scheduler.NextTask()
 			continue
 		}
 
 		switch kind {
 		case TaskKindExecution:
-			version, kind = e.TryExecute(version)
+			version, wave, kind = e.TryExecute(version)
 		case TaskKindValidation:
-			version, kind = e.NeedsReexecution(version)
+			version, kind = e.NeedsReexecution(version, wave)
 		default:
 			return fmt.Errorf("unknown task kind %v", kind)
 		}
@@ -65,14 +70,14 @@ func (e *Executor) Run() error {
 	return nil
 }
 
-func (e *Executor) TryExecute(version TxnVersion) (TxnVersion, TaskKind) {
+func (e *Executor) TryExecute(version TxnVersion) (TxnVersion, Wave, TaskKind) {
 	e.scheduler.executedTxns.Add(1)
 	view := e.execute(version.Index)
 	wroteNewLocation := e.mvMemory.Record(version, view)
 	return e.scheduler.FinishExecution(version, wroteNewLocation)
 }
 
-func (e *Executor) NeedsReexecution(version TxnVersion) (TxnVersion, TaskKind) {
+func (e *Executor) NeedsReexecution(version TxnVersion, wave Wave) (TxnVersion, TaskKind) {
 	e.scheduler.validatedTxns.Add(1)
 	valid := e.mvMemory.ValidateReadSet(version.Index)
 
@@ -86,11 +91,38 @@ func (e *Executor) NeedsReexecution(version TxnVersion) (TxnVersion, TaskKind) {
 	if aborted {
 		e.mvMemory.ConvertWritesToEstimates(version.Index)
 	}
-	return e.scheduler.FinishValidation(version.Index, aborted)
+	return e.scheduler.FinishValidation(version.Index, wave, aborted, valid)
 }
 
 func (e *Executor) execute(txn TxnIndex) *MultiMVMemoryView {
 	view := e.mvMemory.View(txn)
 	e.txExecutor(txn, view)
 	return view
+}
+
+func (e *Executor) ProcessCommits() {
+	// keep processing if there's work to do and we can acquire the lock
+	for e.scheduler.CommitTryLock() {
+		for {
+			txn, incarnation, ok := e.scheduler.TryCommit()
+			if !ok {
+				break
+			}
+
+			// validate delayed read descriptors
+			valid := e.mvMemory.ValidateDelayedReadSet(txn)
+			if !valid {
+				// re-execute the tx immediately
+				version := TxnVersion{txn, incarnation + 1}
+				view := e.execute(txn)
+				e.mvMemory.Record(version, view)
+
+				e.scheduler.DecreaseValidationIdx(txn + 1)
+			}
+
+			// TODO materialize deltas
+		}
+
+		e.scheduler.CommitUnlock()
+	}
 }

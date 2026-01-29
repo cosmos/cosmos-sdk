@@ -6,6 +6,8 @@ import (
 	"sync/atomic"
 )
 
+const TXN_IDX_MASK = uint64(1<<32 - 1)
+
 type ErrReadError struct {
 	BlockingTxn TxnIndex
 }
@@ -40,6 +42,29 @@ func IncrAtomic(a *atomic.Uint64) {
 // FetchIncr increases the atomic value by 1 and returns the old value
 func FetchIncr(a *atomic.Uint64) uint64 {
 	return a.Add(1) - 1
+}
+
+func FetchUpdate(a *atomic.Uint64, update func(uint64) (uint64, bool)) (uint64, bool) {
+	for {
+		old := a.Load()
+		new, ok := update(old)
+		if !ok {
+			return old, false
+		}
+		if a.CompareAndSwap(old, new) {
+			return old, true
+		}
+	}
+}
+
+func UnpackValidationIdx(v uint64) (TxnIndex, Wave) {
+	txn := TxnIndex(v & TXN_IDX_MASK)
+	wave := Wave(v >> 32)
+	return txn, wave
+}
+
+func PackValidationIdx(txn TxnIndex, wave Wave) uint64 {
+	return uint64(txn) | (uint64(wave) << 32)
 }
 
 // DiffOrderedList compares two ordered lists

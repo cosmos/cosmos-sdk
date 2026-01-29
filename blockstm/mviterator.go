@@ -18,7 +18,7 @@ type MVIterator[V any] struct {
 	version TxnVersion
 
 	// record the observed reads during iteration during execution
-	reads []ReadDescriptor
+	reads []ReadDescriptor[V]
 	// blocking call to wait for dependent transaction to finish, `nil` in validation mode
 	waitFn func(TxnIndex)
 	// signal the validation to fail
@@ -63,7 +63,7 @@ func (it *MVIterator[V]) Version() TxnVersion {
 	return it.version
 }
 
-func (it *MVIterator[V]) Reads() []ReadDescriptor {
+func (it *MVIterator[V]) Reads() []ReadDescriptor[V] {
 	return it.reads
 }
 
@@ -90,10 +90,10 @@ func (it *MVIterator[V]) resolveValue() {
 		it.value = v.Value
 		it.version = v.Version()
 		if it.Executing() {
-			it.reads = append(it.reads, ReadDescriptor{
-				Key:     inner.Item().Key,
-				Version: it.version,
-			})
+			it.reads = append(it.reads, NewReadDescriptor[V](
+				inner.Item().Key,
+				it.version,
+			))
 		}
 		return
 	}
@@ -114,7 +114,8 @@ func (it *MVIterator[V]) resolveValueInner(tree *tree.BTree[secondaryDataItem[V]
 
 		if v.Estimate {
 			if it.Executing() {
-				it.waitFn(v.Index)
+				// estimate won't be set by storage index.
+				it.waitFn(FromShiftedIndex(v.Index))
 				continue
 			}
 			// in validation mode, it should fail validation immediately

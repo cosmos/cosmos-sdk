@@ -143,7 +143,7 @@ A user can query the `x/auth/tx` module using gRPC endpoints.
 
 #### `TxDecode`
 
-The `TxDecode` endpoint allows to decode a transaction.
+The `TxDecode` endpoint allows decoding a transaction.
 
 ```shell
 cosmos.tx.v1beta1.Service/TxDecode
@@ -179,7 +179,7 @@ Example Output:
 
 #### `TxEncode`
 
-The `TxEncode` endpoint allows to encode a transaction.
+The `TxEncode` endpoint allows encoding a transaction.
 
 ```shell
 cosmos.tx.v1beta1.Service/TxEncode
@@ -215,7 +215,7 @@ Example Output:
 
 #### `TxDecodeAmino`
 
-The `TxDecode` endpoint allows to decode an amino transaction.
+The `TxDecodeAmino` endpoint allows decoding an amino transaction.
 
 ```shell
 cosmos.tx.v1beta1.Service/TxDecodeAmino
@@ -240,7 +240,7 @@ Example Output:
 
 #### `TxEncodeAmino`
 
-The `TxEncodeAmino` endpoint allows to encode an amino transaction.
+The `TxEncodeAmino` endpoint allows encoding an amino transaction.
 
 ```shell
 cosmos.tx.v1beta1.Service/TxEncodeAmino
@@ -262,3 +262,4 @@ Example Output:
   "amino_binary": "KCgWqQpvqKNhmgotY29zbW9zMXRzeno3cDJ6Z2Q3dnZrYWh5ZnJlNHduNXh5dTgwcnB0ZzZ2OWg1Ei1jb3Ntb3MxdHN6ejdwMnpnZDd2dmthaHlmcmU0d241eHl1ODBycHRnNnY5aDUaCwoFc3Rha2USAjEwEhEKCwoFc3Rha2USAjEwEMCaDCIGZm9vYmFy"
 }
 ```
+

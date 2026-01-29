@@ -5,6 +5,8 @@ import (
 	"runtime"
 	"sync"
 	"sync/atomic"
+
+	"golang.org/x/sys/cpu"
 )
 
 type TaskKind int
@@ -32,10 +34,15 @@ func (t *TxDependency) Swap(new []TxnIndex) []TxnIndex {
 type Scheduler struct {
 	blockSize int
 
+	_ cpu.CacheLinePad
+
 	// An index that tracks the next transaction to try and execute.
 	executionIdx atomic.Uint64
 	// A similar index for tracking validation.
 	validationIdx atomic.Uint64
+
+	_ cpu.CacheLinePad
+
 	// Number of times validationIdx or executionIdx was decreased
 	decreaseCnt atomic.Uint64
 	// Number of ongoing validation and execution tasks

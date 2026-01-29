@@ -49,7 +49,7 @@ func init() {
 // Note that a late initialization of the open telemetry SDK causes meters/tracers to utilize a delegate, which incurs
 // an atomic load.
 // In our benchmarks, we saw only a few nanoseconds incurred from this atomic operation.
-// If you wish to avoid this overhead entirely, you may set the OTEL_EXPERIMENTAL_CONFIG_FILE environment variable,'
+// If you wish to avoid this overhead entirely, you may set the OTEL_EXPERIMENTAL_CONFIG_FILE environment variable,
 // and the OpenTelemetry SDK will be instantiated via init.
 // This will eliminate the atomic operation overhead.
 func InitializeOpenTelemetry(filePath string) error {

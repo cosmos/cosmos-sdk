@@ -48,14 +48,14 @@ func ReplayWAL(ctx context.Context, root *NodePointer, walFile *os.File, rootVer
 			}
 			stagedVersion++
 		case WALOpSet:
-			ctx := NewMutationContext(stagedVersion)
+			ctx := NewMutationContext(stagedVersion, 0)
 			leafNode := ctx.NewLeafNode(entry.Key.SafeCopy(), entry.Value.SafeCopy())
 			root, _, err = SetRecursive(root, leafNode, ctx)
 			if err != nil {
 				return nil, 0, fmt.Errorf("failed to apply WAL set at version %d: %w", entry.Version, err)
 			}
 		case WALOpDelete:
-			ctx := NewMutationContext(stagedVersion)
+			ctx := NewMutationContext(stagedVersion, 0)
 			_, root, _, err = RemoveRecursive(root, entry.Key.SafeCopy(), ctx)
 			if err != nil {
 				return nil, 0, fmt.Errorf("failed to apply WAL delete at version %d: %w", entry.Version, err)

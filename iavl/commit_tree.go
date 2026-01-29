@@ -8,11 +8,13 @@ import (
 	"os"
 	"runtime"
 	"sync"
+	"sync/atomic"
 	"time"
 
-	storetypes "cosmossdk.io/store/types"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
+
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/iavl/internal"
 )
@@ -93,6 +95,19 @@ func rootHash(rootPtr *internal.NodePointer) ([]byte, error) {
 	return hash, nil
 }
 
+type committer struct {
+	*CommitTree
+	rollback  atomic.Bool
+	finalize  atomic.Bool
+	commitId  storetypes.CommitID
+	hashReady chan struct{}
+	finalized chan struct{}
+}
+
+//func (c *committer) commit(ctx context.Context, updates iter.Seq[Update], updateCount int) (storetypes.CommitID, error) {
+//
+//}
+
 func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updateCount int) (storetypes.CommitID, error) {
 	stagedVersion := c.treeStore.StagedVersion()
 	ctx, span := tracer.Start(ctx, "Commit",
@@ -103,16 +118,12 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 	)
 	defer span.End()
 
-	// TODO maybe support writing in batches, but for now let's assume a single batch
-	// because that's actually what happens in the SDK due to cache wrapping and needing all keys in sorted
-	// order before updating the tree
 	c.writeMutex.Lock()
 	defer c.writeMutex.Unlock()
 
-	mutationCtx := internal.NewMutationContext(stagedVersion)
+	mutationCtx := internal.NewMutationContext(stagedVersion, stagedVersion)
 
 	// TODO pre-allocate a decent sized slice that we reuse and reset across commits
-	// TODO we can also add a function param for the number of updates to pre-allocate
 	nodeUpdates := make([]internal.KVUpdate, 0, updateCount)
 	for update := range updates {
 		if update.Delete {
@@ -125,7 +136,7 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 		}
 	}
 
-	// TODO background start writing nodeUpdates to WAL immediately
+	// background start writing nodeUpdates to WAL immediately
 	var walDone chan error
 	walDone = make(chan error, 1)
 	go func() {

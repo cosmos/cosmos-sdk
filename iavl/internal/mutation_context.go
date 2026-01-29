@@ -7,14 +7,19 @@ import (
 // MutationContext is a small helper that keeps track of the current version and orphaned nodes.
 // It is used in all mutation operations such as insertion, deletion, and rebalancing.
 type MutationContext struct {
-	version uint32
-	orphans []*NodePointer
+	version    uint32
+	cowVersion uint32
+	orphans    []*NodePointer
 }
 
 // NewMutationContext creates a new MutationContext for the given version.
-func NewMutationContext(version uint32) *MutationContext {
+// The cowVersion indicates the version below which copy-on-write should occur.
+// Any nodes with version less than cowVersion will be copied when mutated,
+// while nodes with version greater than or equal to cowVersion will be reused as-is.
+func NewMutationContext(version, cowVersion uint32) *MutationContext {
 	return &MutationContext{
-		version: version,
+		version:    version,
+		cowVersion: cowVersion,
 	}
 }
 
@@ -22,13 +27,9 @@ func NewMutationContext(version uint32) *MutationContext {
 // and tracks the existing node as an orphan.
 // If the node's ID is from the current version or is empty (meaning it hasn't been persisted yet),
 // the node is returned as-is without mutation or orphan tracking.
-// NOTE: if we do decide to implement nested cache wrapper functionality
-// directly using the IAVL tree structures (instead of a btree wrapper),
-// then we MUST change this code to ALWAYS mutate nodes here,
-// even if they are from the current version.
 func (ctx *MutationContext) mutateBranch(node Node, nodePtr *NodePointer) (*MemNode, error) {
-	if node.Version() == ctx.version {
-		// node is already at the current version; no mutation needed.
+	if node.Version() >= ctx.cowVersion {
+		// node is not shared, return as-is
 		memNode, ok := node.(*MemNode)
 		if !ok {
 			return nil, fmt.Errorf("expected MemNode, got %T", node)
@@ -52,9 +53,8 @@ func (ctx *MutationContext) addOrphan(nodePtr *NodePointer) bool {
 	if nodePtr == nil {
 		return false
 	}
-	// checkpoint == version, so this gives us the version at which the node was persisted
-	checkpoint := nodePtr.id.Checkpoint()
-	if checkpoint > 0 && checkpoint < ctx.version {
+	// we only track orphans for nodes with a valid checkpoint
+	if nodePtr.id.Checkpoint() > 0 {
 		ctx.orphans = append(ctx.orphans, nodePtr)
 		return true
 	}

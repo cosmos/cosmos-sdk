@@ -304,7 +304,7 @@ Since this is more of a social feature than a technical feature, we'll now get i
 
 This genesis entry, "constitution" hasn't been designed for existing chains, who should likely just ratify a constitution using their governance system.  Instead, this is for new chains.  It will allow for validators to have a much clearer idea of purpose and the expectations placed on them while operating their nodes.  Likewise, for community members, the constitution will give them some idea of what to expect from both the "chain team" and the validators, respectively.
 
-This constitution is designed to be immutable, and placed only in genesis, though that could change over time by a pull request to the cosmos-sdk that allows for the constitution to be changed by governance.  Communities whishing to make amendments to their original constitution should use the governance mechanism and a "signaling proposal" to do exactly that.
+This constitution is designed to be immutable, and placed only in genesis, though that could change over time by a pull request to the cosmos-sdk that allows for the constitution to be changed by governance. Communities wishing to make amendments to their original constitution should use the governance mechanism and a "signaling proposal" to do exactly that.
 
 **Ideal use scenario for a cosmos chain constitution**
 

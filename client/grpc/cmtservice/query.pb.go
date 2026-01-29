@@ -12,9 +12,9 @@ import (
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
-	any "github.com/cosmos/gogoproto/types/any"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
+	any "github.com/cosmos/gogoproto/types/any"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -1581,6 +1581,7 @@ func _Service_ABCIQuery_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+var Service_serviceDesc = _Service_serviceDesc
 var _Service_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "cosmos.base.tendermint.v1beta1.Service",
 	HandlerType: (*ServiceServer)(nil),

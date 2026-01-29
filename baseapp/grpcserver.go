@@ -20,6 +20,35 @@ import (
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 )
 
+type grpcMetadataSetter func(ctx context.Context, md metadata.MD) error
+
+func (app *BaseApp) withGRPCBlockHeight(
+	headerCtx context.Context,
+	trailerCtx context.Context,
+	height int64,
+	setHeader grpcMetadataSetter,
+	setTrailer grpcMetadataSetter,
+	run func() (any, error),
+) (any, error) {
+	blockHeightMD := metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(height, 10))
+	setHeaderErr := setHeader(headerCtx, blockHeightMD)
+	if setHeaderErr != nil {
+		// Non-fatal: headers may already be sent; fall back to a trailer.
+		app.logger.Debug("failed to set gRPC header", "err", setHeaderErr)
+	}
+
+	resp, err := run()
+
+	// If headers were already sent, attach block height as a trailer.
+	if setHeaderErr != nil {
+		if trailerErr := setTrailer(trailerCtx, blockHeightMD); trailerErr != nil {
+			app.logger.Debug("failed to set gRPC trailer", "setErr", setHeaderErr, "trailerErr", trailerErr)
+		}
+	}
+
+	return resp, err
+}
+
 // RegisterGRPCServer registers gRPC services directly with the gRPC server.
 func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
 	app.RegisterGRPCServerWithSkipCheckHeader(server, false)
@@ -70,11 +99,6 @@ func (app *BaseApp) RegisterGRPCServerWithSkipCheckHeader(server gogogrpc.Server
 			height = sdkCtx.BlockHeight() // If height was not set in the request, set it to the latest
 		}
 
-		md = metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(height, 10))
-		if err = grpc.SetHeader(grpcCtx, md); err != nil {
-			app.logger.Error("failed to set gRPC header", "err", err)
-		}
-
 		app.logger.Debug("gRPC query received", "type", fmt.Sprintf("%#v", req))
 
 		// Catch an OutOfGasPanic caused in the query handlers
@@ -93,7 +117,17 @@ func (app *BaseApp) RegisterGRPCServerWithSkipCheckHeader(server gogogrpc.Server
 		// we do this because grpc context has values injected into it that are necessary to retain for systems
 		// such as OpenTelemetry.
 		sdkCtx = sdkCtx.WithContext(grpcCtx)
-		return handler(sdkCtx, req)
+
+		resp, err = app.withGRPCBlockHeight(
+			sdkCtx,
+			grpcCtx,
+			height,
+			grpc.SetHeader,
+			grpc.SetTrailer,
+			func() (any, error) { return handler(sdkCtx, req) },
+		)
+
+		return resp, err
 	}
 
 	// Loop through all services and methods, add the interceptor, and register

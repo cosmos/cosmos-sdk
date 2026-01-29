@@ -48,7 +48,7 @@ For data access we propose 2 additional KV buckets (implemented as namespaces fo
 2. B2: `hash(key) → key`: a reverse index to get a key from an SMT path. Internally the SMT will store `(key, value)` as `prefix || hash(key) || hash(value)`. So, we can get an object value by composing `hash(key) → B2 → B1`.
 3. We could use more buckets to optimize the app usage if needed.
 
-We propose to use a KV database for both `SS` and `SC`. The store interface will allow to use the same physical DB backend for both `SS` and `SC` as well two separate DBs. The latter option allows for the separation of `SS` and `SC` into different hardware units, providing support for more complex setup scenarios and improving overall performance: one can use different backends (eg RocksDB and Badger) as well as independently tuning the underlying DB configuration.
+We propose to use a KV database for both `SS` and `SC`. The store interface will allow using either the same physical DB backend for both `SS` and `SC`, or two separate DBs. The latter option allows for the separation of `SS` and `SC` into different hardware units, providing support for more complex setup scenarios and improving overall performance: one can use different backends (e.g. RocksDB and Badger) as well as independently tuning the underlying DB configuration.
 
 ### Requirements
 
@@ -92,7 +92,7 @@ A new database snapshot will be created in every `EndBlocker` and identified by 
 NOTE: `Commit` must be called exactly once per block. Otherwise we risk going out of sync for the version number and block height.
 NOTE: For the Cosmos SDK storage, we may consider splitting that interface into `Committer` and `PruningCommitter` - only the multiroot should implement `PruningCommitter` (cache and prefix store don't need pruning).
 
-Number of historical versions for `abci.RequestQuery` and state sync snapshots is part of a node configuration, not a chain configuration (configuration implied by the blockchain consensus). A configuration should allow to specify number of past blocks and number of past blocks modulo some number (eg: 100 past blocks and one snapshot every 100 blocks for past 2000 blocks). Archival nodes can keep all past versions.
+Number of historical versions for `abci.RequestQuery` and state sync snapshots is part of a node configuration, not a chain configuration (configuration implied by the blockchain consensus). A configuration should allow specifying the number of past blocks and the number of past blocks modulo some number (e.g. 100 past blocks and one snapshot every 100 blocks for past 2000 blocks). Archival nodes can keep all past versions.
 
 Pruning old snapshots is effectively done by a database. Whenever we update a record in `SC`, SMT won't update nodes - instead it creates new nodes on the update path, without removing the old one. Since we are snapshotting each block, we need to change that mechanism to immediately remove orphaned nodes from the database. This is a safe operation - snapshots will keep track of the records and make it available when accessing past versions.
 
@@ -165,7 +165,7 @@ type RootStoreConfig struct {
 <!-- TODO: Review whether these types can be further reduced or simplified -->
 <!-- TODO: RootStorePersistentCache type -->
 
-In contrast to `MultiStore`, `RootStore` doesn't allow to dynamically mount sub-stores or provide an arbitrary backing DB for individual sub-stores.
+In contrast to `MultiStore`, `RootStore` doesn't allow dynamically mounting sub-stores or providing an arbitrary backing DB for individual sub-stores.
 
 NOTE: modules will be able to use a special commitment and their own DBs. For example: a module which will use ZK proofs for state can store and commit this proof in the `RootStore` (usually as a single record) and manage the specialized store privately or using the `SC` low level interface.
 

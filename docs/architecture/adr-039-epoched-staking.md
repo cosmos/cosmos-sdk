@@ -104,7 +104,7 @@ As an initial implementation, this can be implemented as a linear search over al
 
 **Step-3**: Adjust gas
 
-Currently gas represents the cost of executing a transaction when its done immediately. (Merging together costs of p2p overhead, state access overhead, and computational overhead) However, now a transaction can cause computation in a future block, namely at the epoch boundary.
+Currently gas represents the cost of executing a transaction when it's done immediately. (Merging together costs of p2p overhead, state access overhead, and computational overhead) However, now a transaction can cause computation in a future block, namely at the epoch boundary.
 
 To handle this, we should initially include parameters for estimating the amount of future computation (denominated in gas), and add that as a flat charge needed for the message.
 We leave it out of scope for how to weight future computation versus current computation in gas pricing, and have it set such that they are weighted equally for now.

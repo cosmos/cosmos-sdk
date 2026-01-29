@@ -89,7 +89,7 @@ func BenchmarkOneBankSendTxPerBlock(b *testing.B) {
 
 	height := int64(2)
 
-	// Run this with a profiler, so its easy to distinguish what time comes from
+	// Run this with a profiler, so it's easy to distinguish what time comes from
 	// Committing, and what time comes from Check/Deliver Tx.
 	for i := 0; b.Loop(); i++ {
 		_, _, err := baseApp.SimCheck(txEncoder, txs[i])
@@ -146,7 +146,7 @@ func BenchmarkOneBankMultiSendTxPerBlock(b *testing.B) {
 
 	height := int64(2)
 
-	// Run this with a profiler, so its easy to distinguish what time comes from
+	// Run this with a profiler, so it's easy to distinguish what time comes from
 	// Committing, and what time comes from Check/Deliver Tx.
 	for i := 0; b.Loop(); i++ {
 		_, _, err := baseApp.SimCheck(txEncoder, txs[i])

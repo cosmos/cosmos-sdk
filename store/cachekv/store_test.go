@@ -76,7 +76,7 @@ func TestCacheKVStoreNested(t *testing.T) {
 	mem := dbadapter.Store{DB: dbm.NewMemDB()}
 	st := cachekv.NewStore(mem)
 
-	// set. check its there on st and not on mem.
+	// set. check it's there on st and not on mem.
 	st.Set(keyFmt(1), valFmt(1))
 	require.Empty(t, mem.Get(keyFmt(1)))
 	require.Equal(t, valFmt(1), st.Get(keyFmt(1)))
@@ -85,13 +85,13 @@ func TestCacheKVStoreNested(t *testing.T) {
 	st2 := cachekv.NewStore(st)
 	require.Equal(t, valFmt(1), st2.Get(keyFmt(1)))
 
-	// update the value on st2, check it only effects st2
+	// update the value on st2, check it only affects st2
 	st2.Set(keyFmt(1), valFmt(3))
 	require.Equal(t, []byte(nil), mem.Get(keyFmt(1)))
 	require.Equal(t, valFmt(1), st.Get(keyFmt(1)))
 	require.Equal(t, valFmt(3), st2.Get(keyFmt(1)))
 
-	// st2 writes to its parent, st. doesn't effect mem
+	// st2 writes to its parent, st. doesn't affect mem
 	st2.Write()
 	require.Equal(t, []byte(nil), mem.Get(keyFmt(1)))
 	require.Equal(t, valFmt(3), st.Get(keyFmt(1)))
@@ -222,19 +222,19 @@ func TestCacheKVMergeIteratorBasics(t *testing.T) {
 	st.Delete(k)
 	assertIterateDomain(t, st, 0)
 
-	// now set it and assert its there
+	// now set it and assert it's there
 	st.Set(k, v)
 	assertIterateDomain(t, st, 1)
 
-	// write it and assert its there
+	// write it and assert it's there
 	st.Write()
 	assertIterateDomain(t, st, 1)
 
-	// remove it in cache and assert its not
+	// remove it in cache and assert it's not
 	st.Delete(k)
 	assertIterateDomain(t, st, 0)
 
-	// write the delete and assert its not there
+	// write the delete and assert it's not there
 	st.Write()
 	assertIterateDomain(t, st, 0)
 
@@ -248,15 +248,15 @@ func TestCacheKVMergeIteratorBasics(t *testing.T) {
 	st.Write()
 	assertIterateDomain(t, st, 2)
 
-	// remove one in cache and assert its not
+	// remove one in cache and assert it's not
 	st.Delete(k1)
 	assertIterateDomain(t, st, 1)
 
-	// write the delete and assert its not there
+	// write the delete and assert it's not there
 	st.Write()
 	assertIterateDomain(t, st, 1)
 
-	// delete the other key in cache and asserts its empty
+	// delete the other key in cache and asserts it's empty
 	st.Delete(k)
 	assertIterateDomain(t, st, 0)
 }

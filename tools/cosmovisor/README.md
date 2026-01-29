@@ -186,9 +186,9 @@ When the upgrade mechanism is triggered, `cosmovisor` will:
 
 ### Adding Upgrade Binary
 
-`cosmovisor` has an `add-upgrade` command that allows to easily link a binary to an upgrade. It creates a new folder in `cosmovisor/upgrades/<name>` and copies the provided executable file to `cosmovisor/upgrades/<name>/bin/<DAEMON_NAME>`.
+`cosmovisor` has an `add-upgrade` command that allows you to easily link a binary to an upgrade. It creates a new folder in `cosmovisor/upgrades/<name>` and copies the provided executable file to `cosmovisor/upgrades/<name>/bin/<DAEMON_NAME>`.
 
-Using the `--upgrade-height` flag allows to specify at which height the binary should be switched, without going via a governance proposal.
+Using the `--upgrade-height` flag allows you to specify at which height the binary should be switched, without going via a governance proposal.
 This enables support for an emergency coordinated upgrades where the binary must be switched at a specific height, but there is no time to go through a governance proposal.
 
 :::warning

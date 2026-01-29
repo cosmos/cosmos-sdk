@@ -92,7 +92,7 @@ In case of any error in updating the file, no output is written.`,
 
 	cmd.Flags().BoolVar(&FlagStdOut, "stdout", false, "print the updated config to stdout")
 	cmd.Flags().BoolVar(&FlagVerbose, "verbose", false, "log changes to stderr")
-	cmd.Flags().BoolVar(&FlagSkipValidate, "skip-validate", false, "skip configuration validation (allows to migrate unknown configurations)")
+	cmd.Flags().BoolVar(&FlagSkipValidate, "skip-validate", false, "skip configuration validation (allows migrating unknown configurations)")
 	cmd.Flags().Bool(confix.ClientConfigType, false, "migrate client.toml instead of app.toml")
 
 	return cmd

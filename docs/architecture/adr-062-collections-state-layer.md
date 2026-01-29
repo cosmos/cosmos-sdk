@@ -62,7 +62,7 @@ Collections implements four different storage handlers types:
 * `KeySet`: which acts as a `Set` and only retains keys and no object (usecase: allow-lists).
 * `Item`: which always contains only one object (usecase: Params)
 * `Sequence`: which implements a simple always increasing number (usecase: Nonces)
-* `IndexedMap`: builds on top of `Map` and `KeySet` and allows to create relationships with `Objects` and `Objects` secondary keys.
+* `IndexedMap`: builds on top of `Map` and `KeySet` and allows creating relationships with `Objects` and `Objects` secondary keys.
 
 All the collection APIs build on top of the simple `Map` type.
 

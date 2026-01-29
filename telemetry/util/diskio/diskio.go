@@ -219,7 +219,7 @@ func isPhysicalDeviceLinux(deviceName string) bool {
 	// filter out virtual devices. (i.e. loop, md)
 	virtualPath := filepath.Join("/sys/devices/virtual/block", deviceName)
 	_, err := os.Stat(virtualPath)
-	// file exists, its virtual. not physical.
+	// file exists, it's virtual, not physical.
 	if err == nil {
 		return false
 	}
@@ -228,7 +228,7 @@ func isPhysicalDeviceLinux(deviceName string) bool {
 	// /sys/class/block/<device>/partition exists ONLY for partitions.
 	sysPath := filepath.Join("/sys/class/block", deviceName, "partition")
 	_, err = os.Stat(sysPath)
-	// file exists, its a partition. not physical.
+	// file exists, it's a partition, not physical.
 	if err == nil {
 		return false
 	}

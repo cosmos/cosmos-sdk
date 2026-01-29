@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"strings"
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	grpcmiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
@@ -20,6 +19,35 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 )
+
+type grpcMetadataSetter func(ctx context.Context, md metadata.MD) error
+
+func (app *BaseApp) withGRPCBlockHeight(
+	headerCtx context.Context,
+	trailerCtx context.Context,
+	height int64,
+	setHeader grpcMetadataSetter,
+	setTrailer grpcMetadataSetter,
+	run func() (any, error),
+) (any, error) {
+	blockHeightMD := metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(height, 10))
+	setHeaderErr := setHeader(headerCtx, blockHeightMD)
+	if setHeaderErr != nil {
+		// Non-fatal: headers may already be sent; fall back to a trailer.
+		app.logger.Debug("failed to set gRPC header", "err", setHeaderErr)
+	}
+
+	resp, err := run()
+
+	// If headers were already sent, attach block height as a trailer.
+	if setHeaderErr != nil {
+		if trailerErr := setTrailer(trailerCtx, blockHeightMD); trailerErr != nil {
+			app.logger.Debug("failed to set gRPC trailer", "setErr", setHeaderErr, "trailerErr", trailerErr)
+		}
+	}
+
+	return resp, err
+}
 
 // RegisterGRPCServer registers gRPC services directly with the gRPC server.
 func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
@@ -90,26 +118,14 @@ func (app *BaseApp) RegisterGRPCServerWithSkipCheckHeader(server gogogrpc.Server
 		// such as OpenTelemetry.
 		sdkCtx = sdkCtx.WithContext(grpcCtx)
 
-		// Set block height as a response header before the handler runs.
-		blockHeightMD := metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(height, 10))
-		setHeaderErr := grpc.SetHeader(sdkCtx, blockHeightMD)
-		if setHeaderErr != nil {
-			// If headers were already sent, setting headers has no effect.
-			if strings.Contains(setHeaderErr.Error(), "SendHeader called multiple times") {
-				app.logger.Debug("failed to set gRPC header (already sent)", "err", setHeaderErr)
-			} else {
-				app.logger.Error("failed to set gRPC header", "err", setHeaderErr)
-			}
-		}
-
-		resp, err = handler(sdkCtx, req)
-
-		// If headers were already sent, attach block height as a trailer.
-		if setHeaderErr != nil {
-			if trailerErr := grpc.SetTrailer(grpcCtx, blockHeightMD); trailerErr != nil {
-				app.logger.Debug("failed to set gRPC trailer", "setErr", setHeaderErr, "trailerErr", trailerErr)
-			}
-		}
+		resp, err = app.withGRPCBlockHeight(
+			sdkCtx,
+			grpcCtx,
+			height,
+			grpc.SetHeader,
+			grpc.SetTrailer,
+			func() (any, error) { return handler(sdkCtx, req) },
+		)
 
 		return resp, err
 	}

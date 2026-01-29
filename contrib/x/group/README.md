@@ -246,7 +246,7 @@ The second `0x1` corresponds to the ORM `sequenceStorageKey`.
 
 #### groupByAdminIndex
 
-`groupByAdminIndex` allows to retrieve groups by admin address:
+`groupByAdminIndex` allows retrieving groups by admin address:
 `0x2 | len([]byte(group.Admin)) | []byte(group.Admin) | BigEndian(GroupId) -> []byte()`.
 
 ### Group Member Table
@@ -258,12 +258,12 @@ The `groupMemberTable` is a primary key table and its `PrimaryKey` is given by
 
 #### groupMemberByGroupIndex
 
-`groupMemberByGroupIndex` allows to retrieve group members by group id:
+`groupMemberByGroupIndex` allows retrieving group members by group id:
 `0x11 | BigEndian(GroupId) | PrimaryKey -> []byte()`.
 
 #### groupMemberByMemberIndex
 
-`groupMemberByMemberIndex` allows to retrieve group members by member address:
+`groupMemberByMemberIndex` allows retrieving group members by member address:
 `0x12 | len([]byte(member.Address)) | []byte(member.Address) | PrimaryKey -> []byte()`.
 
 ### Group Policy Table
@@ -282,12 +282,12 @@ The second `0x1` corresponds to the ORM `sequenceStorageKey`.
 
 #### groupPolicyByGroupIndex
 
-`groupPolicyByGroupIndex` allows to retrieve group policies by group id:
+`groupPolicyByGroupIndex` allows retrieving group policies by group id:
 `0x22 | BigEndian(GroupId) | PrimaryKey -> []byte()`.
 
 #### groupPolicyByAdminIndex
 
-`groupPolicyByAdminIndex` allows to retrieve group policies by admin address:
+`groupPolicyByAdminIndex` allows retrieving group policies by admin address:
 `0x23 | len([]byte(Address)) | []byte(Address) | PrimaryKey -> []byte()`.
 
 ### Proposal Table
@@ -302,12 +302,12 @@ The second `0x1` corresponds to the ORM `sequenceStorageKey`.
 
 #### proposalByGroupPolicyIndex
 
-`proposalByGroupPolicyIndex` allows to retrieve proposals by group policy account address:
+`proposalByGroupPolicyIndex` allows retrieving proposals by group policy account address:
 `0x32 | len([]byte(account.Address)) | []byte(account.Address) | BigEndian(ProposalId) -> []byte()`.
 
 #### ProposalsByVotingPeriodEndIndex
 
-`proposalsByVotingPeriodEndIndex` allows to retrieve proposals sorted by chronological `voting_period_end`:
+`proposalsByVotingPeriodEndIndex` allows retrieving proposals sorted by chronological `voting_period_end`:
 `0x33 | sdk.FormatTimeBytes(proposal.VotingPeriodEnd) | BigEndian(ProposalId) -> []byte()`.
 
 This index is used when tallying the proposal votes at the end of the voting period, and for pruning proposals at `VotingPeriodEnd + MaxExecutionPeriod`.
@@ -321,12 +321,12 @@ The `voteTable` is a primary key table and its `PrimaryKey` is given by
 
 #### voteByProposalIndex
 
-`voteByProposalIndex` allows to retrieve votes by proposal id:
+`voteByProposalIndex` allows retrieving votes by proposal id:
 `0x41 | BigEndian(ProposalId) | PrimaryKey -> []byte()`.
 
 #### voteByVoterIndex
 
-`voteByVoterIndex` allows to retrieve votes by voter address:
+`voteByVoterIndex` allows retrieving votes by voter address:
 `0x42 | len([]byte(voter.Address)) | []byte(voter.Address) | PrimaryKey -> []byte()`.
 
 ## Msg Service

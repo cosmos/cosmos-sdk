@@ -125,7 +125,7 @@ func (m *IndexedMap[PrimaryKey, Value, Idx]) Get(ctx context.Context, pk Primary
 	return m.m.Get(ctx, pk)
 }
 
-// Iterate allows to iterate over the objects given a Ranger of the primary key.
+// Iterate allows iterating over the objects given a Ranger of the primary key.
 func (m *IndexedMap[PrimaryKey, Value, Idx]) Iterate(ctx context.Context, ranger Ranger[PrimaryKey]) (Iterator[PrimaryKey, Value], error) {
 	return m.m.Iterate(ctx, ranger)
 }

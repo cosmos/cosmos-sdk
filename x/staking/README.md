@@ -413,7 +413,6 @@ Delegation may be called.
 * update the validator with removed the delegator shares and associated coins
 * if the validator state is `Bonded`, transfer the `Coins` worth of the unbonded
   shares from the `BondedPool` to the `NotBondedPool` `ModuleAccount`
-* remove the validator if it is unbonded and there are no more delegation shares.
 * remove the validator if it is unbonded and there are no more delegation shares
 * get a unique `unbondingId` and map it to the `UnbondingDelegationEntry` in `UnbondingDelegationByUnbondingId`
 * call the `AfterUnbondingInitiated(unbondingId)` hook

@@ -770,26 +770,6 @@ pagination:
   total: "0"
 ```
 
-##### param
-
-The `param` command allows users to query a given parameter for the `gov` module.
-
-```bash
-simd query gov param [param-type] [flags]
-```
-
-Example:
-
-```bash
-simd query gov param voting
-```
-
-Example Output:
-
-```bash
-voting_period: "172800000000000"
-```
-
 ##### params
 
 The `params` command allows users to query all parameters for the `gov` module.

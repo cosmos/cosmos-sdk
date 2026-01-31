@@ -144,7 +144,12 @@ func (cms Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.Cac
 // CacheMultiStore implements MultiStore, returns a new CacheMultiStore from the
 // underlying CacheMultiStore.
 func (cms Store) CacheMultiStore() types.CacheMultiStore {
-	return NewFromParent(cms.getCacheWrapper, cms.traceWriter, cms.traceContext)
+	var tc types.TraceContext
+	if cms.traceContext != nil {
+		tc = make(types.TraceContext)
+		maps.Copy(tc, cms.traceContext)
+	}
+	return NewFromParent(cms.getCacheWrapper, cms.traceWriter, tc)
 }
 
 // CacheMultiStoreWithVersion implements the MultiStore interface. It will panic

@@ -31,7 +31,8 @@ func ExecTestCLICmd(clientCtx client.Context, cmd *cobra.Command, extraArgs []st
 }
 
 func MsgSendExec(clientCtx client.Context, from, to, amount fmt.Stringer, ac address.Codec, extraArgs ...string) (testutil.BufferWriter, error) {
-	args := []string{from.String(), to.String(), amount.String()}
+	args := make([]string, 3, 3+len(extraArgs))
+	args[0], args[1], args[2] = from.String(), to.String(), amount.String()
 	args = append(args, extraArgs...)
 
 	return ExecTestCLICmd(clientCtx, cli.NewSendTxCmd(ac), args)

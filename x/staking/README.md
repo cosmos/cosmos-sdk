@@ -167,9 +167,12 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/staking/v1bet
 ### Delegation
 
 Delegations are identified by combining `DelegatorAddr` (the address of the delegator)
-with the `ValidatorAddr` Delegators are indexed in the store as follows:
+with the `ValidatorAddr`. Delegators are indexed in the store as follows:
 
 * Delegation: `0x31 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValidatorAddrLen (1 byte) | ValidatorAddr -> ProtocolBuffer(delegation)`
+* DelegationByValIndex: `0x71 | ValidatorAddrLen (1 byte) | ValidatorAddr | DelegatorAddrLen (1 byte) | DelegatorAddr -> nil`
+
+`DelegationByValIndex` is an additional index that enables lookups for all delegations to a given validator.
 
 Stake holders may delegate coins to validators; under this circumstance their
 funds are held in a `Delegation` data structure. It is owned by one

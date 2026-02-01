@@ -691,13 +691,16 @@ The governance module contains the following parameters:
 | quorum                        | string (dec)     | "0.334000000000000000"                  |
 | threshold                     | string (dec)     | "0.500000000000000000"                  |
 | veto_threshold                | string (dec)     | "0.334000000000000000"                  |
-| expedited_threshold           | string (dec)     | "0.667000000000000000"                  |
+| min_initial_deposit_ratio     | string (dec)     | "0.000000000000000000"                  |
+| proposal_cancel_ratio         | string (dec)     | "0.500000000000000000"                  |
+| proposal_cancel_dest          | string           | "" (empty = burn)                       |
 | expedited_voting_period       | string (time ns) | "86400000000000" (86400s)               |
+| expedited_threshold           | string (dec)     | "0.667000000000000000"                  |
 | expedited_min_deposit         | array (coins)    | [{"denom":"uatom","amount":"50000000"}] |
-| burn_proposal_deposit_prevote | bool             | false                                   |
 | burn_vote_quorum              | bool             | false                                   |
+| burn_proposal_deposit_prevote | bool             | false                                   |
 | burn_vote_veto                | bool             | true                                    |
-| min_initial_deposit_ratio     | string           | "0.1"                                   |
+| min_deposit_ratio             | string (dec)     | "0.010000000000000000"                  |
 
 
 **NOTE**: The governance module contains parameters that are objects unlike other

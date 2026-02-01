@@ -46,7 +46,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/feegrant/fees.go#L9-L32
 
 ### Fee Allowance types
 
-There are two types of fee allowances present at the moment:
+There are three types of fee allowances present at the moment:
 
 * `BasicAllowance`
 * `PeriodicAllowance`

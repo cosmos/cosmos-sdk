@@ -16,13 +16,12 @@ import (
 	address "cosmossdk.io/core/address"
 	math "cosmossdk.io/math"
 	types "cosmossdk.io/store/types"
-	gomock "go.uber.org/mock/gomock"
-
 	types0 "github.com/cosmos/cosmos-sdk/types"
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	keeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	types1 "github.com/cosmos/cosmos-sdk/x/bank/types"
 	types2 "github.com/cosmos/cosmos-sdk/x/staking/types"
+	gomock "go.uber.org/mock/gomock"
 )
 
 // MockAccountKeeper is a mock of AccountKeeper interface.
@@ -924,20 +923,6 @@ func (mr *MockBankKeeperMockRecorder) SetAllSendEnabled(ctx, sendEnableds any) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetAllSendEnabled", reflect.TypeOf((*MockBankKeeper)(nil).SetAllSendEnabled), ctx, sendEnableds)
 }
 
-// SetBalance mocks base method.
-func (m *MockBankKeeper) SetBalance(ctx context.Context, addr types0.AccAddress, balance types0.Coin) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SetBalance", ctx, addr, balance)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// SetBalance indicates an expected call of SetBalance.
-func (mr *MockBankKeeperMockRecorder) SetBalance(ctx, addr, balance any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetBalance", reflect.TypeOf((*MockBankKeeper)(nil).SetBalance), ctx, addr, balance)
-}
-
 // SetDenomMetaData mocks base method.
 func (m *MockBankKeeper) SetDenomMetaData(ctx context.Context, denomMetaData types1.Metadata) {
 	m.ctrl.T.Helper()
@@ -1062,6 +1047,20 @@ func (m *MockBankKeeper) TotalSupply(arg0 context.Context, arg1 *types1.QueryTot
 func (mr *MockBankKeeperMockRecorder) TotalSupply(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TotalSupply", reflect.TypeOf((*MockBankKeeper)(nil).TotalSupply), arg0, arg1)
+}
+
+// UncheckedSetBalance mocks base method.
+func (m *MockBankKeeper) UncheckedSetBalance(ctx context.Context, addr types0.AccAddress, balance types0.Coin) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UncheckedSetBalance", ctx, addr, balance)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UncheckedSetBalance indicates an expected call of UncheckedSetBalance.
+func (mr *MockBankKeeperMockRecorder) UncheckedSetBalance(ctx, addr, balance any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UncheckedSetBalance", reflect.TypeOf((*MockBankKeeper)(nil).UncheckedSetBalance), ctx, addr, balance)
 }
 
 // UndelegateCoins mocks base method.

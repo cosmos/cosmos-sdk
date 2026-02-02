@@ -330,7 +330,7 @@ func (k BaseSendKeeper) subUnlockedCoins(ctx context.Context, addr sdk.AccAddres
 
 		newBalance := balance.Sub(coin)
 
-		if err := k.SetBalance(ctx, addr, newBalance); err != nil {
+		if err := k.UncheckedSetBalance(ctx, addr, newBalance); err != nil {
 			return err
 		}
 	}
@@ -353,7 +353,7 @@ func (k BaseSendKeeper) addCoins(ctx context.Context, addr sdk.AccAddress, amt s
 		balance := k.GetBalance(ctx, addr, coin.Denom)
 		newBalance := balance.Add(coin)
 
-		err := k.SetBalance(ctx, addr, newBalance)
+		err := k.UncheckedSetBalance(ctx, addr, newBalance)
 		if err != nil {
 			return err
 		}
@@ -368,8 +368,10 @@ func (k BaseSendKeeper) addCoins(ctx context.Context, addr sdk.AccAddress, amt s
 	return nil
 }
 
-// SetBalance sets the coin balance for an account by address.
-func (k BaseSendKeeper) SetBalance(ctx context.Context, addr sdk.AccAddress, balance sdk.Coin) error {
+// UncheckedSetBalance sets the coin balance for an account by address.
+// Warning: This method does not check invariants around locked balances, does not update supply properly,
+// and does not emit send events! It is only inteded for use as part of a low level library for managing balances.
+func (k BaseSendKeeper) UncheckedSetBalance(ctx context.Context, addr sdk.AccAddress, balance sdk.Coin) error {
 	if !balance.IsValid() {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, balance.String())
 	}

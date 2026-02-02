@@ -2,6 +2,7 @@ package iavl
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"iter"
@@ -123,19 +124,28 @@ func (db *multiTreeFinalizer) commit(ctx context.Context) error {
 	if err := db.prepareCommit(ctx); err != nil {
 		// rollback
 
-		var errGroup errgroup.Group // here we don't need context cancellation, because we've already cancelled!
+		// do not use an errGroup here since context.Canceled is expected!
+		var wg sync.WaitGroup
+		var rbErr atomic.Value
 		for _, finalizer := range db.finalizers {
 			finalizer := finalizer
-			errGroup.Go(func() error {
-				return finalizer.Rollback()
-			})
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				// TODO check for errors in rollback that aren't context.Canceled
+				err := finalizer.Rollback()
+				if err != nil && !errors.Is(err, context.Canceled) {
+					rbErr.Store(err)
+				}
+			}()
 		}
 
-		if rbErr := errGroup.Wait(); rbErr != nil {
-			return fmt.Errorf("commit failed: %v; rollback also failed: %v", err, rbErr)
+		wg.Wait()
+		if err := rbErr.Load(); err != nil {
+			return fmt.Errorf("rollback failed: %w", err.(error))
 		}
 
-		return fmt.Errorf("commit rolled back: %w", err)
+		return fmt.Errorf("successful rollback: %w; cause: %v", context.Canceled, err)
 	}
 
 	var errGroup errgroup.Group
@@ -278,7 +288,6 @@ func saveCommitInfo(dir string, version uint64, commitInfo *storetypes.CommitInf
 	}
 
 	// TODO fsync?
-	err = os.WriteFile(commitInfoPath, bz, 0o600)
 	latestVersionPath := filepath.Join(commitInfoDir, latestFilename)
 	err = os.WriteFile(latestVersionPath, []byte(fmt.Sprintf("%d", version)), 0o600)
 	if err != nil {
@@ -538,7 +547,6 @@ func (db *CommitMultiTree) Close() error {
 				return err
 			}
 		}
-		return nil
 	}
 	return nil
 }

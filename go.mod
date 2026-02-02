@@ -1,4 +1,4 @@
-go 1.25.5
+go 1.25.6
 
 module github.com/cosmos/cosmos-sdk
 
@@ -49,7 +49,7 @@ require (
 	github.com/prometheus/client_golang v1.23.2
 	github.com/prometheus/common v0.67.5
 	github.com/rs/zerolog v1.34.0
-	github.com/shirou/gopsutil/v4 v4.25.12
+	github.com/shirou/gopsutil/v4 v4.26.1
 	github.com/spf13/cast v1.10.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10

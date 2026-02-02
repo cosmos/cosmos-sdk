@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=https://json.schemastore.org/buf.json
+version: v2
+modules:
+  - path: proto
+    name: buf.build/cosmos/poa
+deps:
+  - buf.build/cosmos/cosmos-proto
+  - buf.build/cosmos/cosmos-sdk
+  - buf.build/cosmos/gogo-proto
+  - buf.build/googleapis/googleapis
+  - buf.build/protocolbuffers/wellknowntypes
+lint:
+  except:
+    - SERVICE_SUFFIX
+    - RPC_REQUEST_STANDARD_NAME
+    - RPC_RESPONSE_STANDARD_NAME

@@ -29,7 +29,7 @@ type CommitTree struct {
 
 	lastCommitId storetypes.CommitID
 
-	nodeIDsAssigned chan struct{}
+	lastNodeIDsAssigned chan struct{}
 }
 
 func NewCommitTree(dir string, opts Options) (*CommitTree, error) {
@@ -69,7 +69,7 @@ func NewCommitTree(dir string, opts Options) (*CommitTree, error) {
 //	}
 var emptyHash = sha256.New().Sum(nil)
 
-func rootHash(rootPtr *internal.NodePointer) ([]byte, error) {
+func rootHash(ctx context.Context, rootPtr *internal.NodePointer) ([]byte, error) {
 	// IMPORTANT: this function assumes the write lock is held
 
 	// if we have no root, return empty hash
@@ -87,7 +87,7 @@ func rootHash(rootPtr *internal.NodePointer) ([]byte, error) {
 		return rootNode.Hash().SafeCopy(), nil
 	}
 
-	scheduler := internal.NewAsyncHashScheduler(int32(runtime.NumCPU()))
+	scheduler := internal.NewAsyncHashScheduler(ctx, int32(runtime.NumCPU()))
 	hash, err := root.ComputeHash(scheduler)
 	if err != nil {
 		return nil, fmt.Errorf("computing root hash: %w", err)
@@ -136,7 +136,7 @@ func (c *committer) commit(ctx context.Context, updates iter.Seq[Update], update
 	)
 	defer span.End()
 
-	root, mutationCtx, err := c.prepareCommit(ctx, updates, updateCount)
+	prepareRes, err := c.prepareCommit(ctx, updates, updateCount)
 	if err != nil {
 		rbErr := c.treeStore.RollbackWAL()
 		if !errors.Is(rbErr, context.Canceled) {
@@ -146,7 +146,12 @@ func (c *committer) commit(ctx context.Context, updates iter.Seq[Update], update
 	}
 
 	// save the new root after the WAL is fully written so that all offsets are populated correctly
-	err = c.treeStore.SaveRoot(root, mutationCtx, c.nodeIDsAssigned)
+	c.lastNodeIDsAssigned = prepareRes.nodeIdsAssigned
+	err = c.treeStore.SaveRoot(
+		prepareRes.root,
+		prepareRes.mutationCtx,
+		prepareRes.nodeIdsAssigned,
+	)
 	if err != nil {
 		return err
 	}
@@ -159,7 +164,13 @@ func (c *committer) commit(ctx context.Context, updates iter.Seq[Update], update
 	return nil
 }
 
-func (c *committer) prepareCommit(ctx context.Context, updates iter.Seq[Update], updateCount int) (*internal.NodePointer, *internal.MutationContext, error) {
+type prepareCommitResult struct {
+	root            *internal.NodePointer
+	mutationCtx     *internal.MutationContext
+	nodeIdsAssigned chan struct{}
+}
+
+func (c *committer) prepareCommit(ctx context.Context, updates iter.Seq[Update], updateCount int) (*prepareCommitResult, error) {
 	ctx, span := tracer.Start(ctx, "PrepareCommit")
 	defer span.End()
 
@@ -192,9 +203,9 @@ func (c *committer) prepareCommit(ctx context.Context, updates iter.Seq[Update],
 	// start computing hashes for leaf nodes in parallel
 	// this is a rather naive algorithm that assumes leaf nodes updates are evenly distributed
 	// if we see consistent latency here we can tune the algorithm
-	hashErr := make(chan error, 1)
+	leafHashErr := make(chan error, 1)
 	go func() {
-		defer close(hashErr)
+		defer close(leafHashErr)
 		_, hashLeavesSpan := tracer.Start(ctx, "LeafHashCompute")
 		defer hashLeavesSpan.End()
 
@@ -216,11 +227,14 @@ func (c *committer) prepareCommit(ctx context.Context, updates iter.Seq[Update],
 			wg.Add(1)
 			go func(updates []internal.KVUpdate) {
 				defer wg.Done()
+				if ctx.Err() != nil {
+					return
+				}
 				for _, nu := range updates {
 					if setNode := nu.SetNode; setNode != nil {
 						if _, err := setNode.ComputeHash(internal.SyncHashScheduler{}); err != nil {
 							select {
-							case hashErr <- err:
+							case leafHashErr <- err:
 							default:
 							}
 							return
@@ -233,9 +247,13 @@ func (c *committer) prepareCommit(ctx context.Context, updates iter.Seq[Update],
 	}()
 
 	// wait for any node IDs assignment from any previous commit to finish
-	if nodeIDsAssigned := c.nodeIDsAssigned; nodeIDsAssigned != nil {
-		<-nodeIDsAssigned
-		c.nodeIDsAssigned = nil
+	if nodeIDsAssigned := c.lastNodeIDsAssigned; nodeIDsAssigned != nil {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-nodeIDsAssigned:
+		}
+		c.lastNodeIDsAssigned = nil
 	}
 
 	// process all the nodeUpdates against the current root to produce a new root
@@ -243,27 +261,27 @@ func (c *committer) prepareCommit(ctx context.Context, updates iter.Seq[Update],
 	_, nodeUpdatesSpan := tracer.Start(ctx, "ApplyNodeUpdates")
 	for _, nu := range nodeUpdates {
 		if err := ctx.Err(); err != nil {
-			return nil, nil, err
+			return nil, err
 		}
 		var err error
 		if setNode := nu.SetNode; setNode != nil {
 			root, _, err = internal.SetRecursive(root, setNode, mutationCtx)
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
 		} else {
 			_, root, _, err = internal.RemoveRecursive(root, nu.DeleteKey, mutationCtx)
 			if err != nil {
-				return nil, nil, err
+				return nil, err
 			}
 		}
 	}
 	nodeUpdatesSpan.End()
 
+	var nodeIDsAssigned chan struct{}
 	if c.treeStore.ShouldCheckpoint() {
 		// if we need to checkpoint, we must start a goroutine to assign node IDs in the background
-		nodeIDsAssigned := make(chan struct{})
-		c.nodeIDsAssigned = nodeIDsAssigned
+		nodeIDsAssigned = make(chan struct{})
 		go func() {
 			defer close(nodeIDsAssigned)
 			_, span := tracer.Start(ctx, "AssignNodeIDs")
@@ -276,18 +294,23 @@ func (c *committer) prepareCommit(ctx context.Context, updates iter.Seq[Update],
 	startWaitForLeafHashes := time.Now()
 
 	// wait for the leaf node hash queue to finish
-	if err := <-hashErr; err != nil {
-		return nil, nil, err
+	select {
+	case err := <-leafHashErr:
+		if err != nil {
+			return nil, err
+		}
+	case <-ctx.Done():
+		return nil, ctx.Err()
 	}
 	span.AddEvent("leaf hash compute returned")
 
 	leafHashLatency.Record(ctx, time.Since(startWaitForLeafHashes).Milliseconds())
 
-	_, rootHashSpan := tracer.Start(ctx, "ComputeRootHash")
+	ctx, rootHashSpan := tracer.Start(ctx, "ComputeRootHash")
 	// compute the root hash
-	hash, err := rootHash(root)
+	hash, err := rootHash(ctx, root)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	// notify that the root hash is ready
 	c.workingHash = hash
@@ -299,7 +322,7 @@ func (c *committer) prepareCommit(ctx context.Context, updates iter.Seq[Update],
 
 	err = <-walDone
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	walWriteLatency.Record(ctx, time.Since(startWaitForWAL).Milliseconds())
@@ -307,7 +330,11 @@ func (c *committer) prepareCommit(ctx context.Context, updates iter.Seq[Update],
 
 	<-c.finalizeOrRollback
 
-	return root, mutationCtx, ctx.Err()
+	return &prepareCommitResult{
+		root:            root,
+		mutationCtx:     mutationCtx,
+		nodeIdsAssigned: nodeIDsAssigned,
+	}, ctx.Err()
 }
 
 func (c *committer) WorkingHash() ([]byte, error) {

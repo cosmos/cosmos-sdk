@@ -1,20 +1,27 @@
 package internal
 
+import "context"
+
 type HashScheduler interface {
 	ComputeHashes(*MemNode, *MemNode) ([]byte, []byte, error)
 }
 
 type AsyncHashScheduler struct {
 	semaphore chan struct{}
+	ctx       context.Context
 }
 
-func NewAsyncHashScheduler(maxConcurrency int32) *AsyncHashScheduler {
+func NewAsyncHashScheduler(ctx context.Context, maxConcurrency int32) *AsyncHashScheduler {
 	return &AsyncHashScheduler{
+		ctx:       ctx,
 		semaphore: make(chan struct{}, maxConcurrency),
 	}
 }
 
 func (a *AsyncHashScheduler) ComputeHashes(left *MemNode, right *MemNode) (leftHash []byte, rightHash []byte, err error) {
+	if err := a.ctx.Err(); err != nil {
+		return nil, nil, err
+	}
 	if left.Height() >= 4 && right.Height() >= 4 {
 		select {
 		case a.semaphore <- struct{}{}:

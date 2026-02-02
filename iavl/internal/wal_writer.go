@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 )
@@ -26,10 +27,11 @@ func (kvs *WALWriter) WriteWALVersion(ctx context.Context, version uint64, updat
 	kvs.currentUpdates = updates
 
 	if err := kvs.doWriteWALVersion(ctx, version, updates, checkpoint); err != nil {
-		if rbErr := kvs.Rollback(); rbErr != nil {
+		rbErr := kvs.Rollback()
+		if !errors.Is(rbErr, context.Canceled) {
 			return fmt.Errorf("failed to write WAL version: %w; rollback also failed: %v", err, rbErr)
 		}
-		return err
+		return fmt.Errorf("rolled back WAL write: %w; due to: %v", rbErr, err)
 	}
 	return nil
 }
@@ -198,8 +200,8 @@ func (kvs *WALWriter) writeWALCommit(version uint64, checkpoint bool) error {
 func (kvs *WALWriter) Rollback() error {
 	currentSize := uint64(kvs.writer.Size())
 	if kvs.lastVersionOffset == currentSize {
-		// nothing to roll back
-		return nil
+		// nothing to roll back, context.Canceled indicates a successful rollback with no changes
+		return context.Canceled
 	}
 	if kvs.lastVersionOffset > currentSize {
 		return fmt.Errorf("cannot rollback WAL writer: last version offset %d is not less than current size %d", kvs.lastVersionOffset, kvs.writer.Size())

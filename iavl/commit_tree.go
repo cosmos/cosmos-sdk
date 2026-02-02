@@ -3,6 +3,7 @@ package iavl
 import (
 	"context"
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"iter"
 	"os"
@@ -137,7 +138,11 @@ func (c *committer) commit(ctx context.Context, updates iter.Seq[Update], update
 
 	root, mutationCtx, err := c.prepareCommit(ctx, updates, updateCount)
 	if err != nil {
-		return c.treeStore.RollbackWAL()
+		rbErr := c.treeStore.RollbackWAL()
+		if !errors.Is(rbErr, context.Canceled) {
+			return fmt.Errorf("commit failed: %w; rollback failed: %v", err, rbErr)
+		}
+		return fmt.Errorf("successful rollback: %w; rollback cause %v", rbErr, err)
 	}
 
 	// save the new root after the WAL is fully written so that all offsets are populated correctly
@@ -306,7 +311,10 @@ func (c *committer) prepareCommit(ctx context.Context, updates iter.Seq[Update],
 }
 
 func (c *committer) WorkingHash() ([]byte, error) {
-	<-c.hashReady
+	select {
+	case <-c.hashReady:
+	case <-c.done:
+	}
 	err := c.err.Load()
 	if err != nil {
 		return nil, err.(error)
@@ -321,9 +329,9 @@ func (c *committer) Rollback() error {
 	err := c.err.Load()
 	if err != nil {
 		// we expect an error if we rolled back successfully
-		return nil
+		return err.(error)
 	}
-	return fmt.Errorf("commit succeeded, cannot rollback")
+	return nil
 }
 
 func (c *committer) FinalizeCommit() (storetypes.CommitID, error) {

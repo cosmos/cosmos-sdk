@@ -24,19 +24,19 @@ import "google/protobuf/any.proto";
 option go_package = "github.com/cosmos/cosmos-sdk/enterprise/poa/types";
 
 message Validator {
-  google.protobuf.Any pub_key                         = 1;
-  int64               power                           = 2;
-  ValidatorMetadata   metadata                        = 3;
+  google.protobuf.Any pub_key = 1;
+  int64 power = 2;
+  ValidatorMetadata metadata = 3;
   repeated cosmos.base.v1beta1.DecCoin allocated_fees = 4 [
-    (gogoproto.nullable)     = false,
-    (amino.dont_omitempty)   = true,
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"
   ];
 }
 
 message ValidatorMetadata {
-  string moniker          = 3;
-  string description      = 4;
+  string moniker = 3;
+  string description = 4;
   string operator_address = 5;
 }
 
@@ -48,13 +48,13 @@ message Params {
 // This type may represent allocated or unallocated fees.
 message ValidatorFees {
   repeated cosmos.base.v1beta1.DecCoin fees = 1 [
-    (gogoproto.nullable)     = false,
-    (amino.dont_omitempty)   = true,
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true,
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"
   ];
 }
 
 message GenesisState {
-  Params             params     = 1 [(gogoproto.nullable) = false];
+  Params params = 1 [(gogoproto.nullable) = false];
   repeated Validator validators = 2 [(gogoproto.nullable) = false];
 }

@@ -36,7 +36,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
-## UNRELEASED
+## [v0.53.5](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.5) - 2025-12-12
 
 This patch introduces a state machine breaking change in `x/feegrant`. Revoking a grant previously attempted to delete expiration entries under the wrong store key (`prefix|grantee|granter` instead of `prefix|granter|grantee`), leaving stale queues behind. Chains must execute a software upgrade to this release so future revocations clean up the queue correctly; no additional migration scripts or manual sweeping of existing queues are required.
 

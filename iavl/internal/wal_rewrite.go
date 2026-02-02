@@ -28,7 +28,7 @@ func RewriteWAL(writer *WALWriter, walFile *os.File, truncateBeforeVersion uint6
 		}
 		if startVersion == 0 {
 			startVersion = entry.Version
-			err = writer.StartVersion(startVersion)
+			err = writer.writeStartVersion(startVersion)
 			if err != nil {
 				return nil, err
 			}
@@ -36,21 +36,21 @@ func RewriteWAL(writer *WALWriter, walFile *os.File, truncateBeforeVersion uint6
 
 		switch entry.Op {
 		case WALOpCommit:
-			err = writer.WriteWALCommit(entry.Version, entry.Checkpoint)
+			err = writer.writeWALCommit(entry.Version, entry.Checkpoint)
 			if err != nil {
 				return nil, err
 			}
 		case WALOpSet:
 			oldKeyOffset := uint64(entry.KeyOffset)
 			oldValueOffset := uint64(entry.ValueOffset)
-			newKeyOffset, newValueOffset, err := writer.WriteWALSet(entry.Key.UnsafeBytes(), entry.Value.UnsafeBytes())
+			newKeyOffset, newValueOffset, err := writer.writeWALSet(entry.Key.UnsafeBytes(), entry.Value.UnsafeBytes())
 			if err != nil {
 				return nil, err
 			}
 			info.KeyOffsetRemapping[oldKeyOffset] = newKeyOffset
 			info.ValueOffsetRemapping[oldValueOffset] = newValueOffset
 		case WALOpDelete:
-			err := writer.WriteWALDelete(entry.Key.UnsafeBytes())
+			err := writer.writeWALDelete(entry.Key.UnsafeBytes())
 			if err != nil {
 				return nil, err
 			}

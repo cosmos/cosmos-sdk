@@ -321,9 +321,24 @@ type CommitMultiStore2 interface {
 }
 
 type CommitFinalizer interface {
+	// WorkingHash returns the hash of the state but does not force commit finalization.
 	WorkingHash() ([]byte, error)
-	Rollback() error
+	// FinalizeCommit finalizes the in-progress commit and persists the stores to disk.
+	// It returns the CommitID of the newly committed version.
+	// Either FinalizeCommit or Rollback must be called, but not both.
 	FinalizeCommit() (CommitID, error)
+	// Rollback aborts the in-progress commit and leaves the stores in the previous state.
+	// The caller should expect that a successful Rollback will return context.Canceled or an error wrapping it.
+	// Use errors.Is to check:
+	//    err := committer.Rollback()
+	//    if errors.Is(err, context.Canceled) {
+	//     // rollback was successful
+	//   }
+	// A non-nil error or anything else generally means the rollback could not be performed.
+	// Either FinalizeCommit or Rollback must be called, but not both.
+	// If the commit cannot be rolled back (which would only be the case if FinalizeCommit had been called first),
+	// an error is returned.
+	Rollback() error
 }
 
 //---------subsp-------------------------------

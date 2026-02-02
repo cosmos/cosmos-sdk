@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sync"
@@ -120,12 +121,16 @@ func (ts *TreeStore) SaveRoot(newRoot *NodePointer, mutationCtx *MutationContext
 	return nil
 }
 
-func (ts *TreeStore) WriteWALUpdates(updates []KVUpdate, fsync bool) error {
+func (ts *TreeStore) WriteWALUpdates(ctx context.Context, updates []KVUpdate, fsync bool) error {
 	version := ts.StagedVersion()
 	walWriter := ts.currentWriter.WALWriter()
 
-	err := walWriter.WriteWALVersion(uint64(version), updates, ts.ShouldCheckpoint())
+	err := walWriter.WriteWALVersion(ctx, uint64(version), updates, ts.ShouldCheckpoint())
 	if err != nil {
+		return err
+	}
+
+	if err := ctx.Err(); err != nil {
 		return err
 	}
 
@@ -144,16 +149,16 @@ func (ts *TreeStore) WriteWALUpdates(updates []KVUpdate, fsync bool) error {
 	return nil
 }
 
+func (ts *TreeStore) RollbackWAL() error {
+	return ts.currentWriter.WALWriter().Rollback()
+}
+
 func (ts *TreeStore) ShouldCheckpoint() bool {
 	return ts.shouldCheckpoint
 }
 
 func (ts *TreeStore) ChangesetForCheckpoint(checkpoint uint32) *Changeset {
 	return ts.checkpointer.ChangesetByCheckpoint(checkpoint)
-}
-
-func (ts *TreeStore) ForceToDisk() error {
-	return fmt.Errorf("ForceToDisk disabled")
 }
 
 func (ts *TreeStore) Latest() *NodePointer {

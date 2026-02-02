@@ -97,18 +97,35 @@ func rootHash(rootPtr *internal.NodePointer) ([]byte, error) {
 
 type committer struct {
 	*CommitTree
-	rollback  atomic.Bool
-	finalize  atomic.Bool
-	commitId  storetypes.CommitID
-	hashReady chan struct{}
-	finalized chan struct{}
+	cancel             context.CancelFunc
+	finalizeOrRollback chan struct{}
+	hashReady          chan struct{}
+	done               chan struct{}
+	err                atomic.Value
+	workingHash        []byte
 }
 
-//func (c *committer) commit(ctx context.Context, updates iter.Seq[Update], updateCount int) (storetypes.CommitID, error) {
-//
-//}
+func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updateCount int) storetypes.CommitFinalizer {
+	cancelCtx, cancel := context.WithCancel(ctx)
+	committer := &committer{
+		CommitTree:         c,
+		cancel:             cancel,
+		finalizeOrRollback: make(chan struct{}),
+		hashReady:          make(chan struct{}),
+		done:               make(chan struct{}),
+	}
+	go func() {
+		err := committer.commit(cancelCtx, updates, updateCount)
+		committer.err.Store(err)
+		close(committer.done)
+	}()
+	return committer
+}
 
-func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updateCount int) (storetypes.CommitID, error) {
+func (c *committer) commit(ctx context.Context, updates iter.Seq[Update], updateCount int) error {
+	c.writeMutex.Lock()
+	defer c.writeMutex.Unlock()
+
 	stagedVersion := c.treeStore.StagedVersion()
 	ctx, span := tracer.Start(ctx, "Commit",
 		trace.WithAttributes(
@@ -118,9 +135,30 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 	)
 	defer span.End()
 
-	c.writeMutex.Lock()
-	defer c.writeMutex.Unlock()
+	root, mutationCtx, err := c.prepareCommit(ctx, updates, updateCount)
+	if err != nil {
+		return c.treeStore.RollbackWAL()
+	}
 
+	// save the new root after the WAL is fully written so that all offsets are populated correctly
+	err = c.treeStore.SaveRoot(root, mutationCtx, c.nodeIDsAssigned)
+	if err != nil {
+		return err
+	}
+
+	commitId := storetypes.CommitID{
+		Version: int64(stagedVersion),
+		Hash:    c.workingHash,
+	}
+	c.lastCommitId = commitId
+	return nil
+}
+
+func (c *committer) prepareCommit(ctx context.Context, updates iter.Seq[Update], updateCount int) (*internal.NodePointer, *internal.MutationContext, error) {
+	ctx, span := tracer.Start(ctx, "PrepareCommit")
+	defer span.End()
+
+	stagedVersion := c.treeStore.StagedVersion()
 	mutationCtx := internal.NewMutationContext(stagedVersion, stagedVersion)
 
 	// TODO pre-allocate a decent sized slice that we reuse and reset across commits
@@ -143,7 +181,7 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 		_, walSpan := tracer.Start(ctx, "WALWrite")
 		defer walSpan.End()
 		defer close(walDone)
-		walDone <- c.treeStore.WriteWALUpdates(nodeUpdates, c.opts.FsyncWAL)
+		walDone <- c.treeStore.WriteWALUpdates(ctx, nodeUpdates, c.opts.FsyncWAL)
 	}()
 
 	// start computing hashes for leaf nodes in parallel
@@ -199,16 +237,19 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 	root := c.treeStore.Latest()
 	_, nodeUpdatesSpan := tracer.Start(ctx, "ApplyNodeUpdates")
 	for _, nu := range nodeUpdates {
+		if err := ctx.Err(); err != nil {
+			return nil, nil, err
+		}
 		var err error
 		if setNode := nu.SetNode; setNode != nil {
 			root, _, err = internal.SetRecursive(root, setNode, mutationCtx)
 			if err != nil {
-				return storetypes.CommitID{}, err
+				return nil, nil, err
 			}
 		} else {
 			_, root, _, err = internal.RemoveRecursive(root, nu.DeleteKey, mutationCtx)
 			if err != nil {
-				return storetypes.CommitID{}, err
+				return nil, nil, err
 			}
 		}
 	}
@@ -231,7 +272,7 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 
 	// wait for the leaf node hash queue to finish
 	if err := <-hashErr; err != nil {
-		return storetypes.CommitID{}, err
+		return nil, nil, err
 	}
 	span.AddEvent("leaf hash compute returned")
 
@@ -241,8 +282,11 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 	// compute the root hash
 	hash, err := rootHash(root)
 	if err != nil {
-		return storetypes.CommitID{}, err
+		return nil, nil, err
 	}
+	// notify that the root hash is ready
+	c.workingHash = hash
+	close(c.hashReady)
 	rootHashSpan.End()
 
 	// wait for the WAL write to finish
@@ -250,36 +294,51 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 
 	err = <-walDone
 	if err != nil {
-		return storetypes.CommitID{}, err
+		return nil, nil, err
 	}
 
 	walWriteLatency.Record(ctx, time.Since(startWaitForWAL).Milliseconds())
 	span.AddEvent("WAL write returned")
 
-	// save the new root after the WAL is fully written so that all offsets are populated correctly
-	err = c.treeStore.SaveRoot(root, mutationCtx, c.nodeIDsAssigned)
+	<-c.finalizeOrRollback
+
+	return root, mutationCtx, ctx.Err()
+}
+
+func (c *committer) WorkingHash() ([]byte, error) {
+	<-c.hashReady
+	err := c.err.Load()
 	if err != nil {
-		return storetypes.CommitID{}, err
+		return nil, err.(error)
 	}
+	return c.workingHash, nil
+}
 
-	commitId := storetypes.CommitID{
-		Version: int64(stagedVersion),
-		Hash:    hash,
+func (c *committer) Rollback() error {
+	c.cancel()
+	close(c.finalizeOrRollback)
+	<-c.done
+	err := c.err.Load()
+	if err != nil {
+		// we expect an error if we rolled back successfully
+		return nil
 	}
-	c.lastCommitId = commitId
+	return fmt.Errorf("commit succeeded, cannot rollback")
+}
 
-	return commitId, nil
+func (c *committer) FinalizeCommit() (storetypes.CommitID, error) {
+	close(c.finalizeOrRollback)
+	<-c.done
+	err := c.err.Load()
+	if err != nil {
+		return storetypes.CommitID{}, err.(error)
+	}
+	// only return the lastCommitId after successful commit
+	return c.lastCommitId, nil
 }
 
 func (c *CommitTree) Latest() TreeReader {
 	return TreeReader{root: c.treeStore.Latest()}
-}
-
-func (c *CommitTree) ForceToDisk() error {
-	c.writeMutex.Lock()
-	defer c.writeMutex.Unlock()
-
-	return c.treeStore.ForceToDisk()
 }
 
 func (c *CommitTree) Close() error {

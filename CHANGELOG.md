@@ -40,6 +40,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Breaking Changes
 
+* (x/staking) [#25724](https://github.com/cosmos/cosmos-sdk/issues/25724) Validate `BondDenom` in `MsgUpdateParams` to prevent setting non-existent or zero-supply denoms.
 * [#25778](https://github.com/cosmos/cosmos-sdk/pull/25778) Update `log` to log v2.
 * [#25090](https://github.com/cosmos/cosmos-sdk/pull/25090) Moved deprecated modules to `./contrib`.  These modules are still available but will no longer be actively maintained or supported in the Cosmos SDK Bug Bounty program.
     * `x/group`
@@ -65,6 +66,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (blockstm) [#25600](https://github.com/cosmos/cosmos-sdk/pull/25600) Allow dynamic retrieval of the coin denomination from multi store at runtime.
 * [#25516](https://github.com/cosmos/cosmos-sdk/pull/25516) Support automatic configuration of OpenTelemetry via [OpenTelemetry declarative configuration](https://pkg.go.dev/go.opentelemetry.io/contrib/otelconf) and add OpenTelemetry instrumentation of `BaseApp`.
 * [#25745](https://github.com/cosmos/cosmos-sdk/pull/25745) Add DiskIO telemetry via gopsutil.
+* (grpc) [#25648](https://github.com/cosmos/cosmos-sdk/pull/25648) Add `earliest_block_height` and `latest_block_height` fields to `GetSyncingResponse`.
+* (enterprise/poa) [#25838](https://github.com/cosmos/cosmos-sdk/pull/25838) Add the `poa` module under the `enterprise` directory.
 
 ### Improvements
 
@@ -79,9 +82,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (server) [#25632](https://github.com/cosmos/cosmos-sdk/pull/25632) Add missing call to close the app on shutdown.
 * (server) [#25740](https://github.com/cosmos/cosmos-sdk/pull/25740) Add variadic `grpc.DialOption` parameter to `StartGrpcServer` for custom gRPC client connection options.
 * (blockstm) [#25765](https://github.com/cosmos/cosmos-sdk/pull/25765) Minor code readability improvement in block-stm.
+* (server/config) [#25807](https://github.com/cosmos/cosmos-sdk/pull/25807) fix(server): reject overlapping historical gRPC block ranges.
 
 ### Bug Fixes
 
+* (types/query) [#25665](https://github.com/cosmos/cosmos-sdk/issues/25665) Fix pagination offset when querying a collection with predicate function.
 * (x/staking) [#25649](https://github.com/cosmos/cosmos-sdk/pull/25649) Add missing `defer iterator.Close()` calls in `IterateDelegatorRedelegations` and `GetRedelegations` to prevent resource leaks.
 * (mempool) [#25563](https://github.com/cosmos/cosmos-sdk/pull/25563) Cleanup sender indices in case of tx replacement.
 * (x/epochs) [#25425](https://github.com/cosmos/cosmos-sdk/pull/25425) Fix `InvokeSetHooks` being called with a nil keeper and `AppModule` containing a copy instead of a pointer (hooks set post creating the `AppModule` like with depinject didn't apply because it's a different instance).
@@ -95,8 +100,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (cli) [#25485](https://github.com/cosmos/cosmos-sdk/pull/25485) Avoid failed to convert address field in `withdraw-validator-commission` cmd.
 * (baseapp) [#25642](https://github.com/cosmos/cosmos-sdk/pull/25642) Mark pre-block events for indexing based on local configuration.
 * (x/bank) [#25751](https://github.com/cosmos/cosmos-sdk/pull/25751) Fix recipient address in events.
+* (client) [#25811] (https://github.com/cosmos/cosmos-sdk/pull/25811) fix(client): fix file handle leaks in snapshot commands.
 * (server/config) [#25806](https://github.com/cosmos/cosmos-sdk/pull/25806) fix: add missing commas in historical gRPC config template.
 * (client) [#25804](https://github.com/cosmos/cosmos-sdk/pull/25804) Add `GetHeightFromMetadataStrict` API to `grpc` client for better error handling.
+* (x/staking) [#25829](https://github.com/cosmos/cosmos-sdk/pull/25829) Validates case-sensitivity on authz grands in x/staking.
+
 
 ### Deprecated
 

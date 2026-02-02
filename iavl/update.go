@@ -1,6 +1,6 @@
 package iavl
 
-type Update = struct {
+type KVUpdate = struct {
 	Key, Value []byte
 	Delete     bool
 }

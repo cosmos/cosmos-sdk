@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	io "io"
 	"iter"
 	"os"
 	"runtime"
@@ -16,12 +17,13 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/iavl/internal/cachekv"
 
 	"github.com/cosmos/cosmos-sdk/iavl/internal"
 )
 
 type CommitTree struct {
-	writeMutex sync.Mutex
+	commitMutex sync.Mutex
 
 	opts Options
 
@@ -61,12 +63,6 @@ func NewCommitTree(dir string, opts Options) (*CommitTree, error) {
 	}, nil
 }
 
-//	func (c *CommitTree) WorkingHash() ([]byte, error) {
-//		c.writeMutex.Lock()
-//		defer c.writeMutex.Unlock()
-//
-//		return c.workingHash()
-//	}
 var emptyHash = sha256.New().Sum(nil)
 
 func rootHash(ctx context.Context, rootPtr *internal.NodePointer) ([]byte, error) {
@@ -103,10 +99,10 @@ type committer struct {
 	hashReady          chan struct{}
 	done               chan struct{}
 	err                atomic.Value
-	workingHash        []byte
+	workingHash        storetypes.CommitID
 }
 
-func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updateCount int) storetypes.CommitFinalizer {
+func (c *CommitTree) StartCommit(ctx context.Context, updates iter.Seq[KVUpdate], updateCount int) storetypes.CommitFinalizer {
 	cancelCtx, cancel := context.WithCancel(ctx)
 	committer := &committer{
 		CommitTree:         c,
@@ -123,12 +119,12 @@ func (c *CommitTree) Commit(ctx context.Context, updates iter.Seq[Update], updat
 	return committer
 }
 
-func (c *committer) commit(ctx context.Context, updates iter.Seq[Update], updateCount int) error {
-	c.writeMutex.Lock()
-	defer c.writeMutex.Unlock()
+func (c *committer) commit(ctx context.Context, updates iter.Seq[KVUpdate], updateCount int) error {
+	c.commitMutex.Lock()
+	defer c.commitMutex.Unlock()
 
 	stagedVersion := c.treeStore.StagedVersion()
-	ctx, span := tracer.Start(ctx, "Commit",
+	ctx, span := tracer.Start(ctx, "CommitTree.Commit",
 		trace.WithAttributes(
 			attribute.Int64("version", int64(stagedVersion)),
 			attribute.Int("updateCount", updateCount),
@@ -156,11 +152,7 @@ func (c *committer) commit(ctx context.Context, updates iter.Seq[Update], update
 		return err
 	}
 
-	commitId := storetypes.CommitID{
-		Version: int64(stagedVersion),
-		Hash:    c.workingHash,
-	}
-	c.lastCommitId = commitId
+	c.lastCommitId = c.workingHash
 	return nil
 }
 
@@ -170,7 +162,7 @@ type prepareCommitResult struct {
 	nodeIdsAssigned chan struct{}
 }
 
-func (c *committer) prepareCommit(ctx context.Context, updates iter.Seq[Update], updateCount int) (*prepareCommitResult, error) {
+func (c *committer) prepareCommit(ctx context.Context, updates iter.Seq[KVUpdate], updateCount int) (*prepareCommitResult, error) {
 	ctx, span := tracer.Start(ctx, "PrepareCommit")
 	defer span.End()
 
@@ -313,7 +305,10 @@ func (c *committer) prepareCommit(ctx context.Context, updates iter.Seq[Update],
 		return nil, err
 	}
 	// notify that the root hash is ready
-	c.workingHash = hash
+	c.workingHash = storetypes.CommitID{
+		Hash:    hash,
+		Version: int64(stagedVersion),
+	}
 	close(c.hashReady)
 	rootHashSpan.End()
 
@@ -337,14 +332,14 @@ func (c *committer) prepareCommit(ctx context.Context, updates iter.Seq[Update],
 	}, ctx.Err()
 }
 
-func (c *committer) WorkingHash() ([]byte, error) {
+func (c *committer) WorkingHash() (storetypes.CommitID, error) {
 	select {
 	case <-c.hashReady:
 	case <-c.done:
 	}
 	err := c.err.Load()
 	if err != nil {
-		return nil, err.(error)
+		return storetypes.CommitID{}, err.(error)
 	}
 	return c.workingHash, nil
 }
@@ -372,321 +367,20 @@ func (c *committer) FinalizeCommit() (storetypes.CommitID, error) {
 	return c.lastCommitId, nil
 }
 
-func (c *CommitTree) Latest() TreeReader {
-	return TreeReader{root: c.treeStore.Latest()}
+func (c *CommitTree) Latest() internal.TreeReader {
+	return internal.NewTreeReader(c.treeStore.Latest())
+}
+
+func (c *CommitTree) CacheWrap() storetypes.CacheWrap {
+	return cachekv.NewStore(internal.KVStoreWrapper{TreeReader: c.Latest()})
+}
+
+func (c *CommitTree) CacheWrapWithTrace(io.Writer, storetypes.TraceContext) storetypes.CacheWrap {
+	return c.CacheWrap()
 }
 
 func (c *CommitTree) Close() error {
 	return c.treeStore.Close()
 }
 
-type TreeReader struct {
-	root *internal.NodePointer
-}
-
-func (t TreeReader) Get(key []byte) ([]byte, error) {
-	root, pin, err := t.root.Resolve()
-	defer pin.Unpin()
-	if err != nil {
-		return nil, err
-	}
-	value, _, err := root.Get(key)
-	if err != nil {
-		return nil, err
-	}
-	return value.SafeCopy(), nil
-}
-
-func (t TreeReader) Size() int64 {
-	if t.root == nil {
-		return 0
-	}
-	root, pin, err := t.root.Resolve()
-	defer pin.Unpin()
-	if err != nil {
-		return 0
-	}
-	return root.Size()
-}
-
-func (t TreeReader) Iterator(start, end []byte) storetypes.Iterator {
-	return internal.NewIterator(start, end, true, t.root)
-}
-
-func (t TreeReader) ReverseIterator(start, end []byte) storetypes.Iterator {
-	return internal.NewIterator(start, end, false, t.root)
-}
-
-//
-//func (c *CommitTree) LastCommitID() storetypes.CommitID {
-//	return c.lastCommitId
-//}
-//
-//func (c *CommitTree) SetPruning(pruningtypes.PruningOptions) {}
-//
-//func (c *CommitTree) GetPruning() pruningtypes.PruningOptions {
-//	return pruningtypes.NewPruningOptions(pruningtypes.PruningDefault)
-//}
-//
-//func (c *CommitTree) GetStoreType() storetypes.StoreType {
-//	return storetypes.StoreTypeIAVL
-//}
-//
-//func (c *CommitTree) CacheWrap() storetypes.CacheWrap {
-//	return NewCacheTree(c)
-//}
-//
-//func (c *CommitTree) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) storetypes.CacheWrap {
-//	// TODO support tracing
-//	return c.CacheWrap()
-//}
-//
-//func (c *CommitTree) Get(key []byte) []byte {
-//	if c.root == nil {
-//		return nil
-//	}
-//
-//	root, err := c.root.Resolve()
-//	if err != nil {
-//		panic(err)
-//	}
-//
-//	value, _, err := root.Get(key)
-//	if err != nil {
-//		panic(err)
-//	}
-//
-//	return value
-//}
-//
-//func (c *CommitTree) Has(key []byte) bool {
-//	return c.Get(key) != nil
-//}
-//
-//func (c *CommitTree) Set(key, value []byte) {
-//	storetypes.AssertValidKey(key)
-//	storetypes.AssertValidValue(value)
-//
-//	c.writeMutex.Lock()
-//	defer c.writeMutex.Unlock()
-//
-//	stagedVersion := c.store.stagedVersion
-//	leafNode := &MemNode{
-//		height:  0,
-//		size:    1,
-//		version: stagedVersion,
-//		key:     key,
-//		value:   value,
-//	}
-//
-//	if c.writeWal {
-//		// start writing this to the WAL asynchronously before we even mutate the tree
-//		c.walQueue.Send([]KVUpdate{{SetNode: leafNode}})
-//	}
-//
-//	ctx := &MutationContext{Version: stagedVersion}
-//	newRoot, _, err := setRecursive(c.root, leafNode, ctx)
-//	if err != nil {
-//		panic(err)
-//	}
-//
-//	c.root = newRoot
-//	c.pendingOrphans = append(c.pendingOrphans, ctx.Orphans)
-//}
-//
-//func (c *CommitTree) Delete(key []byte) {
-//	storetypes.AssertValidKey(key)
-//
-//	c.writeMutex.Lock()
-//	defer c.writeMutex.Unlock()
-//
-//	if c.writeWal {
-//		// start writing this to the WAL asynchronously before we even mutate the tree
-//		c.walQueue.Send([]KVUpdate{{DeleteKey: key}})
-//	}
-//
-//	ctx := &MutationContext{Version: c.store.stagedVersion}
-//	_, newRoot, _, err := removeRecursive(c.root, key, ctx)
-//	if err != nil {
-//		panic(err)
-//	}
-//	c.root = newRoot
-//	c.pendingOrphans = append(c.pendingOrphans, ctx.Orphans)
-//}
-//
-//func (c *CommitTree) Iterator(start, end []byte) storetypes.Iterator {
-//	return NewIterator(start, end, true, c.root, c.zeroCopy)
-//}
-//
-//func (c *CommitTree) ReverseIterator(start, end []byte) storetypes.Iterator {
-//	return NewIterator(start, end, false, c.root, c.zeroCopy)
-//}
-//
-//func (c *CommitTree) reinitWalProc() {
-//	if !c.writeWal {
-//		return
-//	}
-//
-//	walQueue := NewNonBlockingQueue[[]KVUpdate]()
-//	walDone := make(chan error, 1)
-//	c.walQueue = walQueue
-//	c.walDone = walDone
-//
-//	go func() {
-//		for {
-//			batch := walQueue.Receive()
-//			if batch == nil {
-//				close(walDone)
-//				return
-//			}
-//			for _, updates := range batch {
-//				err := c.store.WriteWALUpdates(updates)
-//				if err != nil {
-//					walDone <- err
-//					return
-//				}
-//			}
-//		}
-//	}()
-//}
-//
-//func (c *CommitTree) startEvict(evictVersion uint32) {
-//	if c.evictorRunning.Load() {
-//		// eviction in progress
-//		return
-//	}
-//
-//	if evictVersion <= c.lastEvictVersion {
-//		// no new version to evict
-//		return
-//	}
-//
-//	latest := c.latest.Load()
-//	if latest == nil {
-//		// nothing to evict
-//		return
-//	}
-//
-//	c.logger.Debug("start eviction", "version", evictVersion, "depth", c.evictionDepth)
-//	c.evictorRunning.Store(true)
-//	go func() {
-//		evictedCount := evictTraverse(latest, 0, c.evictionDepth, evictVersion)
-//		c.logger.Debug("eviction completed", "version", evictVersion, "lastEvict", c.lastEvictVersion, "evictedNodes", evictedCount)
-//		c.lastEvictVersion = evictVersion
-//		c.evictorRunning.Store(false)
-//	}()
-//}
-//
-//func (c *CommitTree) GetImmutable(version int64) (storetypes.KVStore, error) {
-//	var rootPtr *NodePointer
-//	if version == c.lastCommitId.Version {
-//		rootPtr = c.root
-//	} else {
-//		var err error
-//		rootPtr, err = c.store.ResolveRoot(uint32(version))
-//		if err != nil {
-//			return nil, err
-//		}
-//	}
-//	return NewImmutableTree(rootPtr), nil
-//}
-//
-//func (c *CommitTree) ResolveRoot(version uint32) (*NodePointer, error) {
-//	if version == 0 {
-//		version = c.store.stagedVersion - 1
-//	}
-//	return c.store.ResolveRoot(version)
-//}
-//
-//func (c *CommitTree) Version() uint32 {
-//	return c.store.stagedVersion - 1
-//}
-//
-//func (c *CommitTree) Close() error {
-//	if c.walQueue != nil {
-//		c.walQueue.Close()
-//		// TODO do we need to wait for WAL done??
-//	}
-//	return c.store.Close()
-//}
-//
-//type commitContext struct {
-//	version       uint32
-//	savedVersion  uint32
-//	branchNodeIdx uint32
-//	leafNodeIdx   uint32
-//}
-//
-//// commitTraverse performs a post-order traversal of the tree to compute hashes and assign node IDs.
-//// if it is run multiple times and the tree has been mutated before being committed, node IDs will be reassigned.
-//func commitTraverse(ctx *commitContext, np *NodePointer, depth uint8) (hash []byte, err error) {
-//	memNode := np.mem.Load()
-//	if memNode == nil {
-//		node, err := np.Resolve()
-//		if err != nil {
-//			return nil, err
-//		}
-//		return node.Hash(), nil
-//	}
-//
-//	if memNode.version != ctx.version {
-//		return memNode.hash, nil
-//	}
-//
-//	var leftHash, rightHash []byte
-//	var id NodeID
-//	if memNode.IsLeaf() {
-//		ctx.leafNodeIdx++
-//		id = NewNodeID(true, ctx.version, ctx.leafNodeIdx)
-//	} else {
-//		// post-order traversal
-//		leftHash, err = commitTraverse(ctx, memNode.left, depth+1)
-//		if err != nil {
-//			return nil, err
-//		}
-//		rightHash, err = commitTraverse(ctx, memNode.right, depth+1)
-//		if err != nil {
-//			return nil, err
-//		}
-//
-//		ctx.branchNodeIdx++
-//		id = NewNodeID(false, ctx.version, ctx.branchNodeIdx)
-//	}
-//	np.id = id
-//	memNode.nodeId = id
-//
-//	if memNode.hash != nil {
-//		// hash previously computed node
-//		return memNode.hash, nil
-//	}
-//
-//	return computeAndSetHash(memNode, leftHash, rightHash)
-//}
-//
-//func evictTraverse(np *NodePointer, depth, evictionDepth uint8, evictVersion uint32) (count int) {
-//	// TODO check height, and don't traverse if tree is too short
-//
-//	memNode := np.mem.Load()
-//	if memNode == nil {
-//		return 0
-//	}
-//
-//	// Evict nodes at or below the eviction depth
-//	if memNode.version <= evictVersion && depth >= evictionDepth {
-//		np.mem.Store(nil)
-//		count = 1
-//	}
-//
-//	if memNode.IsLeaf() {
-//		return count
-//	}
-//
-//	// Continue traversing to find nodes to evict
-//	count += evictTraverse(memNode.left, depth+1, evictionDepth, evictVersion)
-//	count += evictTraverse(memNode.right, depth+1, evictionDepth, evictVersion)
-//	return count
-//}
-//
-//var (
-//	_ storetypes.CommitStore = &CommitTree{}
-//)
+var _ storetypes.CacheWrapper = (*CommitTree)(nil)

@@ -233,7 +233,7 @@ type CommitMultiStore2 interface {
 	// each stored is loaded at a specific version (height).
 	CacheMultiStoreWithVersion(version int64) (MultiStore, error)
 
-	StartCommit(context.Context, MultiStore, cmtproto.Header) CommitFinalizer
+	StartCommit(context.Context, MultiStore, cmtproto.Header) (CommitFinalizer, error)
 
 	LastCommitID() CommitID
 
@@ -322,7 +322,7 @@ type CommitMultiStore2 interface {
 
 type CommitFinalizer interface {
 	// WorkingHash returns the hash of the state but does not force commit finalization.
-	WorkingHash() ([]byte, error)
+	WorkingHash() (CommitID, error)
 	// FinalizeCommit finalizes the in-progress commit and persists the stores to disk.
 	// It returns the CommitID of the newly committed version.
 	// Either FinalizeCommit or Rollback must be called, but not both.

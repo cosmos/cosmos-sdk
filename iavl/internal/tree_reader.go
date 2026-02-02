@@ -8,6 +8,10 @@ type TreeReader struct {
 	root *NodePointer
 }
 
+func NewTreeReader(root *NodePointer) TreeReader {
+	return TreeReader{root: root}
+}
+
 func (t TreeReader) Has(key []byte) (bool, error) {
 	root, pin, err := t.root.Resolve()
 	defer pin.Unpin()

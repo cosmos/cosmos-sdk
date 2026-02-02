@@ -2,36 +2,37 @@ package cachekv
 
 import (
 	io "io"
+	"iter"
 	"sync"
 
 	storetypes "cosmossdk.io/store/types"
 )
 
-type CacheKVStore struct {
+type Store struct {
 	mtx    sync.Mutex // TODO do we really need a mutex or could this be part of the caller contract?
 	parent storetypes.KVStore
 	dirty  bool
 	cache  BTree
 }
 
-func NewCacheKVStore(parent storetypes.KVStore) *CacheKVStore {
-	return &CacheKVStore{parent: parent, cache: NewBTree()}
+func NewStore(parent storetypes.KVStore) *Store {
+	return &Store{parent: parent, cache: NewBTree()}
 }
 
-func (store *CacheKVStore) GetStoreType() storetypes.StoreType {
+func (store *Store) GetStoreType() storetypes.StoreType {
 	return storetypes.StoreTypeIAVL
 }
 
-func (store *CacheKVStore) CacheWrap() storetypes.CacheWrap {
-	return NewCacheKVStore(store)
+func (store *Store) CacheWrap() storetypes.CacheWrap {
+	return NewStore(store)
 }
 
-func (store *CacheKVStore) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) storetypes.CacheWrap {
+func (store *Store) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) storetypes.CacheWrap {
 	// TODO implement tracing
-	return NewCacheKVStore(store)
+	return NewStore(store)
 }
 
-func (store *CacheKVStore) Get(key []byte) (value []byte) {
+func (store *Store) Get(key []byte) (value []byte) {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
 
@@ -46,12 +47,12 @@ func (store *CacheKVStore) Get(key []byte) (value []byte) {
 	return value
 }
 
-func (store *CacheKVStore) Has(key []byte) bool {
+func (store *Store) Has(key []byte) bool {
 	value := store.Get(key)
 	return value != nil
 }
 
-func (store *CacheKVStore) Set(key, value []byte) {
+func (store *Store) Set(key, value []byte) {
 	storetypes.AssertValidKey(key)
 	storetypes.AssertValidValue(value)
 
@@ -61,7 +62,7 @@ func (store *CacheKVStore) Set(key, value []byte) {
 	store.dirty = true
 }
 
-func (store *CacheKVStore) Delete(key []byte) {
+func (store *Store) Delete(key []byte) {
 	storetypes.AssertValidKey(key)
 
 	store.mtx.Lock()
@@ -71,15 +72,40 @@ func (store *CacheKVStore) Delete(key []byte) {
 	store.dirty = true
 }
 
-func (store *CacheKVStore) Iterator(start, end []byte) storetypes.Iterator {
+func (store *Store) Iterator(start, end []byte) storetypes.Iterator {
 	return store.iterator(start, end, true)
 }
 
-func (store *CacheKVStore) ReverseIterator(start, end []byte) storetypes.Iterator {
+func (store *Store) ReverseIterator(start, end []byte) storetypes.Iterator {
 	return store.iterator(start, end, false)
 }
 
-func (store *CacheKVStore) Write() {
+type KVUpdate = struct {
+	Key, Value []byte
+	Delete     bool
+}
+
+func (store *Store) Updates() iter.Seq[KVUpdate] {
+	return func(yield func(KVUpdate) bool) {
+		store.mtx.Lock()
+		defer store.mtx.Unlock()
+
+		store.cache.Scan(func(key, value []byte, dirty bool) bool {
+			if !dirty {
+				return true
+			}
+
+			update := KVUpdate{
+				Key:    key,
+				Value:  value,
+				Delete: value == nil,
+			}
+			return yield(update)
+		})
+	}
+}
+
+func (store *Store) Write() {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
 
@@ -110,7 +136,7 @@ func (store *CacheKVStore) Write() {
 	store.dirty = false
 }
 
-func (store *CacheKVStore) iterator(start, end []byte, ascending bool) storetypes.Iterator {
+func (store *Store) iterator(start, end []byte, ascending bool) storetypes.Iterator {
 	store.mtx.Lock()
 	defer store.mtx.Unlock()
 

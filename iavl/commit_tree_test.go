@@ -101,7 +101,7 @@ func (s *SimMachine) checkNewVersion(t *rapid.T) {
 	require.NoError(t, err, "failed to save version in V1 tree")
 
 	// apply updates to v2 tree
-	commitIdV2, err := s.treeV2.Commit(context.Background(), slices.Values(updates), len(updates))
+	commitIdV2, err := s.treeV2.StartCommit(context.Background(), slices.Values(updates), len(updates))
 	require.NoError(t, err, "failed to commit version in V2 tree")
 
 	// check v2 iavl invariants
@@ -133,17 +133,17 @@ func (s *SimMachine) checkNewVersion(t *rapid.T) {
 	}
 }
 
-func (s *SimMachine) genUpdates(t *rapid.T) []Update {
+func (s *SimMachine) genUpdates(t *rapid.T) []KVUpdate {
 	n := rapid.IntRange(1, 100).Draw(t, "n")
-	updates := make([]Update, 0, n)
+	updates := make([]KVUpdate, 0, n)
 	for i := 0; i < n; i++ {
 		key := s.selectKey(t)
 		isDelete := rapid.Bool().Draw(t, "isDelete")
 		if isDelete {
-			updates = append(updates, Update{Key: key, Delete: true})
+			updates = append(updates, KVUpdate{Key: key, Delete: true})
 		} else {
 			value := rapid.SliceOfN(rapid.Byte(), 0, 5000).Draw(t, "value")
-			updates = append(updates, Update{Key: key, Value: value})
+			updates = append(updates, KVUpdate{Key: key, Value: value})
 		}
 	}
 	return updates

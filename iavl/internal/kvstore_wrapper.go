@@ -16,12 +16,12 @@ func (r KVStoreWrapper) GetStoreType() storetypes.StoreType {
 }
 
 func (r KVStoreWrapper) CacheWrap() storetypes.CacheWrap {
-	return cachekv.NewCacheKVStore(r)
+	return cachekv.NewStore(r)
 }
 
 func (r KVStoreWrapper) CacheWrapWithTrace(io.Writer, storetypes.TraceContext) storetypes.CacheWrap {
 	logger.Warn("CacheWrapWithTrace called on KVStoreWrapper: tracing not implemented")
-	return cachekv.NewCacheKVStore(r)
+	return cachekv.NewStore(r)
 }
 
 func (r KVStoreWrapper) Get(key []byte) []byte {

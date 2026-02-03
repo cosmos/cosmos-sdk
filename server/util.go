@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log/slog"
 	"net"
 	"os"
 	"os/signal"
@@ -32,10 +31,10 @@ import (
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/iavl"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/iavlx"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -588,19 +587,18 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		baseapp.SetQueryGasLimit(cast.ToUint64(appOpts.Get(FlagQueryGasLimit))),
 		func(bapp *baseapp.BaseApp) {
 			fmt.Println("Loading IAVLX as the commit multi-store...")
-			opts := &iavlx.Options{}
+			var opts iavl.Options
 			optsJson, ok := appOpts.Get(FlagIAVLXOptions).(string)
 			if ok && optsJson != "" {
-				err := json.Unmarshal([]byte(optsJson), opts)
+				err := json.Unmarshal([]byte(optsJson), &opts)
 				if err != nil {
 					panic(fmt.Errorf("failed to unmarshal iavlx options: %w", err))
 				}
 			}
 
-			db, err := iavlx.LoadDB(
+			db, err := iavl.LoadDB(
 				filepath.Join(homeDir, "data", "iavlx"),
 				opts,
-				slog.Default(),
 			)
 			if err != nil {
 				panic(fmt.Errorf("failed to load iavlx db: %w", err))

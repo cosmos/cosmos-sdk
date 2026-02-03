@@ -134,6 +134,16 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 		}
 	}
 
+	committer, err := app.cms.StartCommit(context.Background(), finalizeState.MultiStore, finalizeState.Context().BlockHeader())
+	if err != nil {
+		return nil, fmt.Errorf("failed to start commit during InitChain: %w", err)
+	}
+	app.committer = committer
+	err = committer.SignalFinalize()
+	if err != nil {
+		return nil, fmt.Errorf("failed to finalize commit during InitChain: %w", err)
+	}
+
 	// NOTE: We don't commit, but FinalizeBlock for block InitialHeight starts from
 	// this FinalizeBlockState.
 	return &abci.ResponseInitChain{

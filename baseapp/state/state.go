@@ -11,7 +11,7 @@ import (
 )
 
 type State struct {
-	MultiStore storetypes.MultiStore
+	MultiStore storetypes.CacheMultiStore
 
 	mtx sync.RWMutex
 	ctx sdk.Context
@@ -19,11 +19,17 @@ type State struct {
 	span trace.Span
 }
 
-func NewState(ctx sdk.Context, ms storetypes.MultiStore) *State {
+func NewState(ctx sdk.Context, ms storetypes.CacheMultiStore) *State {
 	return &State{
 		MultiStore: ms,
 		ctx:        ctx,
 	}
+}
+
+// CacheMultiStore calls and returns a CacheMultiStore on the state's underlying
+// CacheMultiStore.
+func (st *State) CacheMultiStore() storetypes.CacheMultiStore {
+	return st.MultiStore.CacheMultiStore()
 }
 
 // SetContext updates the state's context to the context provided.

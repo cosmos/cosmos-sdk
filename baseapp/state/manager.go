@@ -79,7 +79,7 @@ func (mgr *Manager) GetState(mode sdk.ExecMode) *State {
 // multi-store branch, and provided header.
 func (mgr *Manager) SetState(
 	mode sdk.ExecMode,
-	unbranchedStore storetypes.CommitMultiStore2,
+	unbranchedStore storetypes.CommitMultiStore,
 	h cmtproto.Header,
 	logger log.Logger,
 	streamingManager storetypes.StreamingManager,

@@ -264,14 +264,15 @@ require (
 // replace (
 // 	<temporary replace>
 // )
-replace cosmossdk.io/api => github.com/yihuang/cosmos-sdk/api v0.1.0-alpha1.0.20251127061539-64b8e21eb752
 
 // Below are the long-lived replace for tests.
 replace (
+	cosmossdk.io/api => ../api
 	cosmossdk.io/log/v2 => ../log
 	// We always want to test against the latest version of the simapp.
 	cosmossdk.io/simapp => ../simapp
 	cosmossdk.io/store => ../store
+	cosmossdk.io/x/tx => ../x/tx
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// We always want to test against the latest version of the SDK.
 	github.com/cosmos/cosmos-sdk => ../.

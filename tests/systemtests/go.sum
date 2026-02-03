@@ -12,8 +12,6 @@ cosmossdk.io/math v1.5.3 h1:WH6tu6Z3AUCeHbeOSHg2mt9rnoiUWVWaQ2t6Gkll96U=
 cosmossdk.io/math v1.5.3/go.mod h1:uqcZv7vexnhMFJF+6zh9EWdm/+Ylyln34IvPnBauPCQ=
 cosmossdk.io/schema v1.1.0 h1:mmpuz3dzouCoyjjcMcA/xHBEmMChN+EHh8EHxHRHhzE=
 cosmossdk.io/schema v1.1.0/go.mod h1:Gb7pqO+tpR+jLW5qDcNOSv0KtppYs7881kfzakguhhI=
-cosmossdk.io/x/tx v0.14.0 h1:hB3O25kIcyDW/7kMTLMaO8Ripj3yqs5imceVd6c/heA=
-cosmossdk.io/x/tx v0.14.0/go.mod h1:Tn30rSRA1PRfdGB3Yz55W4Sn6EIutr9xtMKSHij+9PM=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 filippo.io/edwards25519 v1.1.0 h1:FNf4tywRC1HmFuKW5xopWpigGjJKiJSV0Cqo0cJWDaA=
 filippo.io/edwards25519 v1.1.0/go.mod h1:BxyFTGdWcka3PhytdK4V28tE5sGfRvvvRV7EaN4VDT4=
@@ -722,8 +720,6 @@ github.com/ugorji/go/codec v1.1.7/go.mod h1:Ax+UKWsSmolVDwsd+7N3ZtXu+yMGCf907BLY
 github.com/urfave/cli v1.20.0/go.mod h1:70zkFmudgCuE/ngEzBv17Jvp/497gISqfk5gWijbERA=
 github.com/urfave/cli v1.22.1/go.mod h1:Gos4lmkARVdJ6EkW0WaNv/tZAAMe9V7XWyB60NtXRu0=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
-github.com/yihuang/cosmos-sdk/api v0.1.0-alpha1.0.20251127061539-64b8e21eb752 h1:mSep9jJOFmq5We3lAo24AdoD19TNixPxrWSu88ASe2k=
-github.com/yihuang/cosmos-sdk/api v0.1.0-alpha1.0.20251127061539-64b8e21eb752/go.mod h1:CWt31nVohvoPMTlPv+mMNCtC0a7BqRdESjCsstHcTkU=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yusufpapurcu/wmi v1.2.4 h1:zFUKzehAFReQwLys1b/iSMl+JQGSCSjtVqQn9bBrPo0=

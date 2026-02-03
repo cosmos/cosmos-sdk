@@ -1075,7 +1075,7 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 		}
 	}
 
-	_, err := app.committer.WaitFinalize()
+	_, err := app.committer.Finalize()
 	if err != nil {
 		return nil, fmt.Errorf("failed to finalize commit: %w", err)
 	}

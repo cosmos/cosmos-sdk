@@ -97,7 +97,9 @@ func (db *CommitMultiTree) StartCommit(ctx context.Context, store storetypes.Mul
 	}
 	go func() {
 		err := finalizer.commit(ctx)
-		finalizer.err.Store(err)
+		if err != nil {
+			finalizer.err.Store(err)
+		}
 		close(finalizer.done)
 	}()
 	return finalizer, nil
@@ -112,6 +114,7 @@ type multiTreeFinalizer struct {
 	workingCommitId    storetypes.CommitID
 	done               chan struct{}
 	hashReady          chan struct{}
+	finalizeOnce       sync.Once
 	finalizeOrRollback chan struct{}
 	err                atomic.Value
 }
@@ -159,11 +162,7 @@ func (db *multiTreeFinalizer) commit(ctx context.Context) error {
 	for _, finalizer := range db.finalizers {
 		finalizer := finalizer
 		errGroup.Go(func() error {
-			err := finalizer.SignalFinalize()
-			if err != nil {
-				return err
-			}
-			_, err = finalizer.WaitFinalize()
+			_, err := finalizer.Finalize()
 			return err
 		})
 	}
@@ -182,7 +181,7 @@ func (db *multiTreeFinalizer) commit(ctx context.Context) error {
 }
 
 func (db *multiTreeFinalizer) prepareCommit(ctx context.Context) error {
-	hashErrGroup, ctx := errgroup.WithContext(ctx)
+	var hashErrGroup errgroup.Group
 	for i, finalizer := range db.finalizers {
 		finalizer := finalizer
 		hashErrGroup.Go(func() error {
@@ -222,11 +221,17 @@ func (db *multiTreeFinalizer) WorkingHash() (storetypes.CommitID, error) {
 }
 
 func (db *multiTreeFinalizer) SignalFinalize() error {
-	close(db.finalizeOrRollback)
+	db.finalizeOnce.Do(func() {
+		close(db.finalizeOrRollback)
+	})
 	return nil
 }
 
-func (db *multiTreeFinalizer) WaitFinalize() (storetypes.CommitID, error) {
+func (db *multiTreeFinalizer) Finalize() (storetypes.CommitID, error) {
+	if err := db.SignalFinalize(); err != nil {
+		return storetypes.CommitID{}, err
+	}
+
 	<-db.done
 	err := db.err.Load()
 	if err != nil {
@@ -260,7 +265,7 @@ func (f *fauxCommitStoreFinalizer) SignalFinalize() error {
 	return nil
 }
 
-func (f *fauxCommitStoreFinalizer) WaitFinalize() (storetypes.CommitID, error) {
+func (f *fauxCommitStoreFinalizer) Finalize() (storetypes.CommitID, error) {
 	if f.cacheWrap != nil {
 		f.cacheWrap.Write()
 	}

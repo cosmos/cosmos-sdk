@@ -72,7 +72,6 @@ func (s *SimMachine) openV2Tree(t interface {
 		// intentionally choose some small sizes to force checkpoint and eviction behavior
 		ChangesetRolloverSize: 4096,
 		EvictDepth:            2,
-		FsyncWAL:              true,
 		CheckpointInterval:    1,
 	})
 	require.NoError(t, err, "failed to create iavlx tree")
@@ -101,8 +100,9 @@ func (s *SimMachine) checkNewVersion(t *rapid.T) {
 	require.NoError(t, err, "failed to save version in V1 tree")
 
 	// apply updates to v2 tree
-	commitIdV2, err := s.treeV2.StartCommit(context.Background(), slices.Values(updates), len(updates))
-	require.NoError(t, err, "failed to commit version in V2 tree")
+	committer := s.treeV2.StartCommit(context.Background(), slices.Values(updates), len(updates))
+	commitIdV2, err := committer.Finalize()
+	require.NoError(t, err, "failed to finalize commit in V2 tree")
 
 	// check v2 iavl invariants
 	latestPtr := s.treeV2.treeStore.Latest()

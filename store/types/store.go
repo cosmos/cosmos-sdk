@@ -325,13 +325,14 @@ type CommitFinalizer interface {
 	// WorkingHash returns the hash of the state but does not force commit finalization.
 	WorkingHash() (CommitID, error)
 	// SignalFinalize signals that the commit should be finalized.
-	// Calls to SignalFinalize should be followed by WaitFinalize.
+	// Calls to SignalFinalize should be followed by Finalize.
+	// Calling SignalFinalize multiple times is idempotent.
 	// Either SignalFinalize and WaitFinalize or Rollback must be called, but not both.
 	SignalFinalize() error
-	// WaitFinalize waits for the commit to be finalized and returns the CommitID.
-	// Calls to WaitFinalize should be preceded by SignalFinalize.
+	// Finalize waits for the commit to be finalized and returns the CommitID.
+	// Calls to Finalize may be preceded by a call to SignalFinalize.
 	// Either SignalFinalize and WaitFinalize or Rollback must be called, but not both.
-	WaitFinalize() (CommitID, error)
+	Finalize() (CommitID, error)
 	// Rollback aborts the in-progress commit and leaves the stores in the previous state.
 	// The caller should expect that a successful Rollback will return context.Canceled or an error wrapping it.
 	// Use errors.Is to check:

@@ -26,11 +26,13 @@ func (p *ChangesetReaderRef) Evict() {
 	p.rdr.changeset.treeStore.addToDisposalQueue(p)
 }
 
+// TryPin attempts to pin the ChangesetReader.
+// If it is evicted, it returns (nil, NoopPin{}).
 func (p *ChangesetReaderRef) TryPin() (*ChangesetReader, Pin) {
 	p.refCount.Add(1)
 	if p.evicted.Load() {
 		p.refCount.Add(-1)
-		return nil, nil
+		return nil, NoopPin{}
 	}
 	return p.rdr, &changesetReaderPin{pinner: p}
 }

@@ -42,6 +42,8 @@ func (f *FileWriter) Flush() error {
 }
 
 func (f *FileWriter) Sync() error {
+	// TODO consider fsyncing the directory as well for extra durability guarantees when the file is newly created
+
 	err := f.Flush()
 	if err != nil {
 		return err

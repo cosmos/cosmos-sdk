@@ -95,6 +95,7 @@ func rootHash(ctx context.Context, rootPtr *internal.NodePointer) ([]byte, error
 type committer struct {
 	*CommitTree
 	cancel             context.CancelFunc
+	finalizeOnce       sync.Once
 	finalizeOrRollback chan struct{}
 	hashReady          chan struct{}
 	done               chan struct{}
@@ -113,7 +114,9 @@ func (c *CommitTree) StartCommit(ctx context.Context, updates iter.Seq[KVUpdate]
 	}
 	go func() {
 		err := committer.commit(cancelCtx, updates, updateCount)
-		committer.err.Store(err)
+		if err != nil {
+			committer.err.Store(err)
+		}
 		close(committer.done)
 	}()
 	return committer
@@ -357,11 +360,17 @@ func (c *committer) Rollback() error {
 }
 
 func (c *committer) SignalFinalize() error {
-	close(c.finalizeOrRollback)
+	c.finalizeOnce.Do(func() {
+		close(c.finalizeOrRollback)
+	})
 	return nil
 }
 
-func (c *committer) WaitFinalize() (storetypes.CommitID, error) {
+func (c *committer) Finalize() (storetypes.CommitID, error) {
+	if err := c.SignalFinalize(); err != nil {
+		return storetypes.CommitID{}, err
+	}
+
 	<-c.done
 	err := c.err.Load()
 	if err != nil {

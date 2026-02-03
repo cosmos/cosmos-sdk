@@ -28,18 +28,20 @@ type CheckpointInfo struct {
 	// This will be empty if the tree was empty at this checkpoint or if HaveRoot is false.
 	// If HaveRoot is false, the root node is not stored in this changeset and must be obtained by replaying the WAL over
 	// a previous changeset.
-	RootID NodeID
-	// HaveRoot indicates whether the root node is stored in this changeset.
-	HaveRoot    bool
+	RootID      NodeID
 	KVEndOffset KVOffset // used to sanity check the length of the kv.dat file at this checkpoint
 	CRC32       uint32   // checksum of the checkpoint info record for data integrity verification
 }
 
 type NodeSetInfo struct {
+	// StartOffset is the starting offset (in number of nodes) of this node set in the corresponding data file.
 	StartOffset uint32
-	Count       uint32
-	StartIndex  uint32
-	EndIndex    uint32
+	// Count is the total number of retained nodes in this node set.
+	Count uint32
+	// StartIndex is the 1-based indexe of the first retained node in this node set.
+	StartIndex uint32
+	// EndIndex is the 1-based index of the last retained node in this node set.
+	EndIndex uint32
 }
 
 func (cp *CheckpointInfo) ComputeCRC32() uint32 {

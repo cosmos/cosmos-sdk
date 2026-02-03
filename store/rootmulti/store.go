@@ -1332,7 +1332,7 @@ func (c *commitFinalizer) Rollback() error {
 	return fmt.Errorf("rollback not supported")
 }
 
-func (c *commitFinalizer) WaitFinalize() (types.CommitID, error) {
+func (c *commitFinalizer) Finalize() (types.CommitID, error) {
 	if c.hash.Hash == nil {
 		if _, err := c.WorkingHash(); err != nil {
 			return types.CommitID{}, err

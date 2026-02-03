@@ -112,59 +112,60 @@ func (cr *ChangesetReader) ResolveBranchByID(id NodeID) (*BranchLayout, error) {
 }
 
 func (cr *ChangesetReader) FindNearestCheckpoint(targetVersion uint32) (checkpointVersion uint32, cpRoot *NodePointer, err error) {
-	count := cr.checkpointsInfo.Count()
-	if count == 0 {
-		return 0, nil, fmt.Errorf("no checkpoints found in changeset")
-	}
-
-	// binary search for nearest checkpoint <= targetVersion with HaveRoot = true
-	low := 0
-	high := count - 1
-	resultIdx := -1
-
-	for low <= high {
-		mid := (low + high) / 2
-		midInfo := cr.checkpointsInfo.UnsafeItem(uint32(mid))
-
-		if midInfo.Version <= targetVersion {
-			// This checkpoint is a candidate, but only if HaveRoot is true
-			if midInfo.HaveRoot {
-				resultIdx = mid
-			}
-			// Continue searching right for a potentially better (higher version) match
-			low = mid + 1
-		} else {
-			high = mid - 1
-		}
-	}
-
-	// If binary search didn't find a valid checkpoint (because HaveRoot was false),
-	// scan backwards from the best position to find one with HaveRoot = true
-	if resultIdx == -1 {
-		// Start from the highest index that was <= targetVersion
-		for i := high; i >= 0; i-- {
-			info := cr.checkpointsInfo.UnsafeItem(uint32(i))
-			if info.Version <= targetVersion && info.HaveRoot {
-				resultIdx = i
-				break
-			}
-		}
-	}
-
-	if resultIdx == -1 {
-		return 0, nil, fmt.Errorf("no valid checkpoint found <= version %d", targetVersion)
-	}
-
-	foundInfo := cr.checkpointsInfo.UnsafeItem(uint32(resultIdx))
-	var rootPtr *NodePointer
-	if !foundInfo.RootID.IsEmpty() {
-		rootPtr = &NodePointer{
-			id:        foundInfo.RootID,
-			changeset: cr.changeset,
-		}
-	}
-
-	return foundInfo.Version, rootPtr, nil
+	//count := cr.checkpointsInfo.Count()
+	//if count == 0 {
+	//	return 0, nil, fmt.Errorf("no checkpoints found in changeset")
+	//}
+	//
+	//// binary search for nearest checkpoint <= targetVersion with HaveRoot = true
+	//low := 0
+	//high := count - 1
+	//resultIdx := -1
+	//
+	//for low <= high {
+	//	mid := (low + high) / 2
+	//	midInfo := cr.checkpointsInfo.UnsafeItem(uint32(mid))
+	//
+	//	if midInfo.Version <= targetVersion {
+	//		// This checkpoint is a candidate, but only if HaveRoot is true
+	//		if midInfo.HaveRoot {
+	//			resultIdx = mid
+	//		}
+	//		// Continue searching right for a potentially better (higher version) match
+	//		low = mid + 1
+	//	} else {
+	//		high = mid - 1
+	//	}
+	//}
+	//
+	//// If binary search didn't find a valid checkpoint (because HaveRoot was false),
+	//// scan backwards from the best position to find one with HaveRoot = true
+	//if resultIdx == -1 {
+	//	// Start from the highest index that was <= targetVersion
+	//	for i := high; i >= 0; i-- {
+	//		info := cr.checkpointsInfo.UnsafeItem(uint32(i))
+	//		if info.Version <= targetVersion && info.HaveRoot {
+	//			resultIdx = i
+	//			break
+	//		}
+	//	}
+	//}
+	//
+	//if resultIdx == -1 {
+	//	return 0, nil, fmt.Errorf("no valid checkpoint found <= version %d", targetVersion)
+	//}
+	//
+	//foundInfo := cr.checkpointsInfo.UnsafeItem(uint32(resultIdx))
+	//var rootPtr *NodePointer
+	//if !foundInfo.RootID.IsEmpty() {
+	//	rootPtr = &NodePointer{
+	//		id:        foundInfo.RootID,
+	//		changeset: cr.changeset,
+	//	}
+	//}
+	//
+	//return foundInfo.Version, rootPtr, nil
+	panic("not implemented")
 }
 
 func (cr *ChangesetReader) GetCheckpointInfo(checkpoint uint32) (*CheckpointInfo, error) {
@@ -271,7 +272,8 @@ func (cr *ChangesetReader) LastCheckpoint() uint32 {
 }
 
 // LatestCheckpointRoot returns the latest checkpoint root NodePointer and its version.
-// If there are no checkpoints with roots, (nil, 0, nil) is returned.
+// If there are no checkpoints with roots, (nil, 0) is returned.
+// If the latest checkpoint has an empty tree, (nil, version) is returned.
 func (cr *ChangesetReader) LatestCheckpointRoot() (*NodePointer, uint32) {
 	count := cr.checkpointsInfo.Count()
 	if count == 0 {
@@ -280,15 +282,31 @@ func (cr *ChangesetReader) LatestCheckpointRoot() (*NodePointer, uint32) {
 	i := count - 1
 	for ; i >= 0; i-- {
 		info := cr.checkpointsInfo.UnsafeItem(uint32(i))
-		if info.HaveRoot {
-			if info.RootID.IsEmpty() {
-				return nil, info.Version
-			}
-			return &NodePointer{
-				id:        info.RootID,
-				changeset: cr.changeset,
-			}, info.Version
+		rootID := info.RootID
+		if rootID.IsEmpty() {
+			// if root is empty, we have an empty tree at this checkpoint
+			return nil, info.Version
 		}
+		if rootID.Checkpoint() != info.Checkpoint {
+			// if root ID checkpoint does not match, skip because this root is actually in a different checkpoint - we have a checkpoint with no changes
+			continue
+		}
+		// check if the root was retained in this changeset, if it was compacted, maybe not
+		var nodeSetInfo *NodeSetInfo
+		if rootID.IsLeaf() {
+			nodeSetInfo = &info.Leaves
+		} else {
+			nodeSetInfo = &info.Branches
+		}
+		idx := rootID.Index()
+		if idx < nodeSetInfo.StartIndex || idx > nodeSetInfo.EndIndex {
+			// root node was compacted away
+			continue
+		}
+		return &NodePointer{
+			id:        info.RootID,
+			changeset: cr.changeset,
+		}, info.Version
 	}
 	return nil, 0
 }

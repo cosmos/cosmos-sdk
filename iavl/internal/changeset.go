@@ -36,12 +36,22 @@ func OpenChangeset(treeStore *TreeStore, dir string) (*Changeset, error) {
 	return cs, nil
 }
 
+// TryPinReader attempts to pin the active ChangesetReader.
+// If this Changeset was just compacted, it may return (nil, NoopPin{}).
 func (ch *Changeset) TryPinReader() (*ChangesetReader, Pin) {
-	pinner := ch.readerRef.Load()
-	if pinner == nil {
-		return nil, NoopPin{}
+	for {
+		pinner := ch.readerRef.Load()
+		if pinner == nil {
+			// changeset was compacted, no active reader
+			return nil, NoopPin{}
+		}
+		rdr, pin := pinner.TryPin()
+		if rdr == nil {
+			// evicted, we probably have a new reader now, try again
+			continue
+		}
+		return rdr, pin
 	}
-	return pinner.TryPin()
 }
 
 func (ch *Changeset) TreeStore() *TreeStore {

@@ -1,11 +1,13 @@
 package iavl
 
 import (
-	"log/slog"
+	"context"
 	"testing"
 
-	store "cosmossdk.io/store/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
+
+	store "cosmossdk.io/store/types"
 )
 
 func TestCommitMultiTree_Reload(t *testing.T) {
@@ -15,7 +17,7 @@ func TestCommitMultiTree_Reload(t *testing.T) {
 	testStoreKey := store.NewKVStoreKey("test")
 	loadDb := func() {
 		var err error
-		db, err = LoadDB(dir, &Options{}, slog.Default())
+		db, err = LoadDB(dir, Options{})
 		require.NoError(t, err)
 		db.MountStoreWithDB(testStoreKey, store.StoreTypeIAVL, nil)
 		require.NoError(t, db.LoadLatestVersion())
@@ -23,21 +25,30 @@ func TestCommitMultiTree_Reload(t *testing.T) {
 
 	// open db & create some data
 	loadDb()
-	testStore := db.GetCommitKVStore(testStoreKey)
+	cacheMs := db.CacheMultiStore()
+	testStore := cacheMs.GetKVStore(testStoreKey)
 	testStore.Set([]byte("key1"), []byte("value1"))
 	testStore.Set([]byte("key2"), []byte("value2"))
-	commitId := db.Commit()
+	committer, err := db.StartCommit(context.Background(), cacheMs, cmtproto.Header{})
+	require.NoError(t, err)
+	commitId, err := committer.Finalize()
+	require.NoError(t, err)
 
 	// reload the DB
 	require.NoError(t, db.Close())
 	loadDb()
 
 	// verify data is still there
-	testStore = db.GetCommitKVStore(testStoreKey)
+	cacheMs = db.CacheMultiStore()
+	testStore = cacheMs.GetKVStore(testStoreKey)
 	val1 := testStore.Get([]byte("key1"))
 	require.Equal(t, []byte("value1"), val1)
 	val2 := testStore.Get([]byte("key2"))
 	require.Equal(t, []byte("value2"), val2)
+	committer, err = db.StartCommit(context.Background(), cacheMs, cmtproto.Header{})
+	require.NoError(t, err)
+	commitId, err = committer.Finalize()
+	require.NoError(t, err)
 
 	// verify commit ID is the same
 	require.Equal(t, commitId, db.LastCommitID())

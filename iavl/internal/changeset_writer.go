@@ -74,7 +74,6 @@ func (cs *ChangesetWriter) SaveCheckpoint(checkpoint, version uint32, root *Node
 		}
 		cpInfo.RootID = root.id
 	}
-	cpInfo.HaveRoot = true // even if the root is nil we indicate that we have stored it
 
 	cpInfo.Checkpoint = checkpoint
 	cpInfo.Version = version

@@ -745,8 +745,8 @@ go.opentelemetry.io/auto/sdk v1.2.1 h1:jXsnJ4Lmnqd11kwkBV2LgLoFMZKizbCi5fNZ/ipaZ
 go.opentelemetry.io/auto/sdk v1.2.1/go.mod h1:KRTj+aOaElaLi+wW1kO/DZRXwkF4C5xPbEe3ZiIhN7Y=
 go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.65.0 h1:XmiuHzgJt067+a6kwyAzkhXooYVv3/TOw9cM2VfJgUM=
 go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.65.0/go.mod h1:KDgtbWKTQs4bM+VPUr6WlL9m/WXcmkCcBlIzqxPGzmI=
-go.opentelemetry.io/contrib/instrumentation/host v0.64.0 h1:/o7fG3CXOlVK8fUzK+p8CyHU9Opha3IL4DZR3UXGZ1w=
-go.opentelemetry.io/contrib/instrumentation/host v0.64.0/go.mod h1:FZCEkjALSoiJZXW9hT6XenNMBn1ay1N4jrKIZEYR/0o=
+go.opentelemetry.io/contrib/instrumentation/host v0.65.0 h1:cR4LpCn/2xDNdW3saBLrGJW7vWmrYlHYIhfuklhrlUc=
+go.opentelemetry.io/contrib/instrumentation/host v0.65.0/go.mod h1:laAqufqDgLYaaewUBpolv8GePmhIVqIeHyudbmi9KYk=
 go.opentelemetry.io/contrib/instrumentation/runtime v0.64.0 h1:/+/+UjlXjFcdDlXxKL1PouzX8Z2Vl0OxolRKeBEgYDw=
 go.opentelemetry.io/contrib/instrumentation/runtime v0.64.0/go.mod h1:Ldm/PDuzY2DP7IypudopCR3OCOW42NJlN9+mNEroevo=
 go.opentelemetry.io/contrib/otelconf v0.19.0 h1:vJ5vf9S8aW4x4Xb+72QbgxCaRQ7gNLro/ccfKPByP6c=

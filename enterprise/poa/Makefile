@@ -2,8 +2,8 @@
 ###                                Protobuf                                 ###
 ###############################################################################
 
-BUF_VERSION=1.59
-BUILDER_VERSION=0.17.1
+BUF_VERSION=1.64
+BUILDER_VERSION=0.18.0
 
 .PHONY: proto-all proto-format proto-gen proto-lint
 

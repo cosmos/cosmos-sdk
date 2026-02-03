@@ -31,8 +31,8 @@ require (
 
 require (
 	github.com/bytedance/gopkg v0.1.3 // indirect
-	go.opentelemetry.io/otel v1.39.0 // indirect
-	go.opentelemetry.io/otel/trace v1.39.0 // indirect
+	go.opentelemetry.io/otel v1.40.0 // indirect
+	go.opentelemetry.io/otel/trace v1.40.0 // indirect
 )
 
 require (

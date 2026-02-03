@@ -331,9 +331,10 @@ func (coins Coins) Add(coinsB ...Coin) Coins {
 // denomination and addition only occurs when the denominations match, otherwise
 // the coin is simply added to the sum assuming it's not zero.
 // The function panics if `coins` or  `coinsB` are not sorted (ascending).
-func (coins Coins) safeAdd(coinsB Coins) (coalesced Coins) {
-	// probably the best way will be to make Coins and interface and hide the structure
-	// definition (type alias)
+func (coins Coins) safeAdd(coinsB Coins) Coins {
+	// Use a two-pointer merge algorithm for O(n) complexity.
+	// Both inputs must be sorted by denomination (ascending), but may contain
+	// duplicate denominations that need to be coalesced.
 	if !coins.isSorted() {
 		panic("Coins (self) must be sorted")
 	}
@@ -341,27 +342,93 @@ func (coins Coins) safeAdd(coinsB Coins) (coalesced Coins) {
 		panic("Wrong argument: coins must be sorted")
 	}
 
-	uniqCoins := make(map[string]Coins, len(coins)+len(coinsB))
-	// Traverse all the coins for each of the coins and coinsB.
-	for _, cL := range []Coins{coins, coinsB} {
-		for _, c := range cL {
-			uniqCoins[c.Denom] = append(uniqCoins[c.Denom], c)
-		}
-	}
+	sum := ([]Coin)(nil)
+	indexA, indexB := 0, 0
+	lenA, lenB := len(coins), len(coinsB)
 
-	for denom, cL := range uniqCoins { //#nosec
-		comboCoin := Coin{Denom: denom, Amount: math.NewInt(0)}
-		for _, c := range cL {
-			comboCoin = comboCoin.Add(c)
+	for {
+		if indexA == lenA {
+			if indexB == lenB {
+				// return empty coins if both sets are empty
+				if sum == nil {
+					return Coins{}
+				}
+				return sum
+			}
+			// return set B (coalescing duplicates and excluding zero coins) if set A is empty
+			return appendCoalesced(sum, coinsB[indexB:])
+		} else if indexB == lenB {
+			// return set A (coalescing duplicates and excluding zero coins) if set B is empty
+			return appendCoalesced(sum, coins[indexA:])
 		}
-		if !comboCoin.IsZero() {
-			coalesced = append(coalesced, comboCoin)
+
+		coinA, coinB := coins[indexA], coinsB[indexB]
+
+		switch strings.Compare(coinA.Denom, coinB.Denom) {
+		case -1: // coin A denom < coin B denom
+			// Coalesce all consecutive coins with the same denom from A
+			res := coinA
+			indexA++
+			for indexA < lenA && coins[indexA].Denom == res.Denom {
+				res = res.Add(coins[indexA])
+				indexA++
+			}
+			if !res.IsZero() {
+				sum = append(sum, res)
+			}
+
+		case 0: // coin A denom == coin B denom
+			// Coalesce all consecutive coins with the same denom from both A and B
+			res := coinA.Add(coinB)
+			denom := coinA.Denom
+			indexA++
+			indexB++
+			for indexA < lenA && coins[indexA].Denom == denom {
+				res = res.Add(coins[indexA])
+				indexA++
+			}
+			for indexB < lenB && coinsB[indexB].Denom == denom {
+				res = res.Add(coinsB[indexB])
+				indexB++
+			}
+			if !res.IsZero() {
+				sum = append(sum, res)
+			}
+
+		case 1: // coin A denom > coin B denom
+			// Coalesce all consecutive coins with the same denom from B
+			res := coinB
+			indexB++
+			for indexB < lenB && coinsB[indexB].Denom == res.Denom {
+				res = res.Add(coinsB[indexB])
+				indexB++
+			}
+			if !res.IsZero() {
+				sum = append(sum, res)
+			}
 		}
 	}
-	if coalesced == nil {
+}
+
+// appendCoalesced appends coins to sum, coalescing consecutive coins with the same denom.
+// Returns Coins{} instead of nil if the result is empty.
+func appendCoalesced(sum, coins Coins) Coins {
+	for i := 0; i < len(coins); {
+		coin := coins[i]
+		i++
+		// Coalesce consecutive coins with the same denom
+		for i < len(coins) && coins[i].Denom == coin.Denom {
+			coin = coin.Add(coins[i])
+			i++
+		}
+		if !coin.IsZero() {
+			sum = append(sum, coin)
+		}
+	}
+	if sum == nil {
 		return Coins{}
 	}
-	return coalesced.Sort()
+	return sum
 }
 
 // DenomsSubsetOf returns true if receiver's denom set

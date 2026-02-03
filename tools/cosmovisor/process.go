@@ -44,6 +44,69 @@ func NewLauncher(logger log.Logger, cfg *Config) (Launcher, error) {
 	return Launcher{logger: logger, cfg: cfg, fw: fw}, nil
 }
 
+// checkPendingUpgrade checks if there's a pending upgrade that should be applied
+// before starting the daemon. This handles the case where the node restarted after
+// an upgrade height was reached but before cosmovisor could switch to the new binary.
+func (l Launcher) checkPendingUpgrade() error {
+	// Read upgrade-info.json from data directory (written by the chain)
+	upgradeInfoPath := l.cfg.UpgradeInfoFilePath()
+	upgradeInfoFile, err := os.ReadFile(upgradeInfoPath)
+	if os.IsNotExist(err) {
+		// No pending upgrade
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("error reading upgrade-info.json: %w", err)
+	}
+
+	var pendingUpgrade upgradetypes.Plan
+	if err = json.Unmarshal(upgradeInfoFile, &pendingUpgrade); err != nil {
+		return fmt.Errorf("error parsing upgrade-info.json: %w", err)
+	}
+
+	if pendingUpgrade.Name == "" {
+		// No valid upgrade info
+		return nil
+	}
+
+	// Get the current upgrade (from the symlink)
+	currentUpgrade, _ := l.cfg.UpgradeInfo()
+
+	// Normalize names for comparison (unless recase is disabled)
+	pendingName := pendingUpgrade.Name
+	currentName := currentUpgrade.Name
+	if !l.cfg.DisableRecase {
+		pendingName = strings.ToLower(pendingName)
+		currentName = strings.ToLower(currentName)
+	}
+
+	if pendingName == currentName {
+		// Already on the correct binary
+		return nil
+	}
+
+	// Check if the upgrade binary exists
+	upgradeBin := l.cfg.UpgradeBin(pendingUpgrade.Name)
+	if err := plan.EnsureBinary(upgradeBin); err != nil {
+		l.logger.Info("pending upgrade binary not found, skipping pre-startup switch",
+			"upgrade", pendingUpgrade.Name,
+			"expected_binary", upgradeBin)
+		return nil
+	}
+
+	// Switch to the upgrade binary
+	l.logger.Info("detected pending upgrade on startup, switching binary",
+		"from", currentUpgrade.Name,
+		"to", pendingUpgrade.Name)
+
+	if err := l.cfg.SetCurrentUpgrade(pendingUpgrade); err != nil {
+		return fmt.Errorf("failed to switch to upgrade binary: %w", err)
+	}
+
+	l.logger.Info("successfully switched to upgrade binary", "upgrade", pendingUpgrade.Name)
+	return nil
+}
+
 // loadBatchUpgradeFile loads the batch upgrade file into memory, sorted by
 // their upgrade heights
 func loadBatchUpgradeFile(cfg *Config) ([]upgradetypes.Plan, error) {
@@ -186,6 +249,14 @@ pollLoop:
 // exits (either when it dies, or *after* a successful upgrade.) and the upgrade is finished.
 // Returns true if the upgrade request was detected and the upgrade process started.
 func (l Launcher) Run(args []string, stdin io.Reader, stdout, stderr io.Writer) (bool, error) {
+	// Check for pending upgrade before starting the daemon.
+	// This handles the case where the node restarted after an upgrade height was reached
+	// but before cosmovisor could switch to the new binary.
+	if err := l.checkPendingUpgrade(); err != nil {
+		l.logger.Error("failed to check for pending upgrade", "error", err)
+		// Continue anyway - don't block startup for this check
+	}
+
 	bin, err := l.cfg.CurrentBin()
 	if err != nil {
 		return false, fmt.Errorf("error creating symlink to genesis: %w", err)

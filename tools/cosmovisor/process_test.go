@@ -465,6 +465,64 @@ func TestLaunchProcessWithDownloadsAndPreupgrade(t *testing.T) {
 	require.Equal(t, rPath, currentBin)
 }
 
+// TestPendingUpgradeOnStartup tests that cosmovisor detects and applies a pending upgrade
+// before starting the daemon. This simulates the case where a node restarts after an
+// upgrade height was reached but before cosmovisor could switch to the new binary.
+func TestPendingUpgradeOnStartup(t *testing.T) {
+	// Use the validate testdata which has genesis and chain2 binaries
+	cfg := prepareConfig(
+		t,
+		fmt.Sprintf("%s/%s", workDir, "testdata/validate"),
+		cosmovisor.Config{
+			Name:             "dummyd",
+			PollInterval:     15,
+			UnsafeSkipBackup: true,
+		},
+	)
+
+	// Verify we start on genesis
+	currentBin, err := cfg.CurrentBin()
+	require.NoError(t, err)
+	rPath, err := filepath.EvalSymlinks(cfg.GenesisBin())
+	require.NoError(t, err)
+	require.Equal(t, rPath, currentBin)
+
+	// Now simulate the scenario: write upgrade-info.json to data directory
+	// as if the chain had reached the upgrade height
+	dataDir := filepath.Join(cfg.Home, "data")
+	err = os.MkdirAll(dataDir, 0o755)
+	require.NoError(t, err)
+
+	upgradeInfoPath := cfg.UpgradeInfoFilePath()
+	upgradeInfoJSON := `{"name":"chain2","height":100,"info":"test upgrade"}`
+	err = os.WriteFile(upgradeInfoPath, []byte(upgradeInfoJSON), 0o600)
+	require.NoError(t, err)
+
+	// Create a new launcher - this should detect the pending upgrade
+	logger := log.NewTestLogger(t).With(log.ModuleKey, "cosmovisor")
+	launcher, err := cosmovisor.NewLauncher(logger, cfg)
+	require.NoError(t, err)
+
+	// Run with a quick-exit binary (chain2 exits after printing)
+	stdin, _ := os.Open(os.DevNull)
+	stdout, stderr := newBuffer(), newBuffer()
+	args := []string{"test", "args"}
+
+	// The Run() should detect the pending upgrade and switch to chain2 before starting
+	_, err = launcher.Run(args, stdin, stdout, stderr)
+	require.NoError(t, err)
+
+	// Verify we're now on chain2
+	currentBin, err = cfg.CurrentBin()
+	require.NoError(t, err)
+	rPath, err = filepath.EvalSymlinks(cfg.UpgradeBin("chain2"))
+	require.NoError(t, err)
+	require.Equal(t, rPath, currentBin)
+
+	// Verify the output is from chain2, not genesis
+	require.Contains(t, stdout.String(), "Chain 2")
+}
+
 // TestSkipUpgrade tests heights that are identified to be skipped and returns whether the upgrade height matches the skip heights
 func TestSkipUpgrade(t *testing.T) {
 	cases := []struct {

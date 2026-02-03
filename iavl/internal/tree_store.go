@@ -9,6 +9,8 @@ import (
 	"unsafe"
 
 	"github.com/tidwall/btree"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type TreeStoreOptions struct {
@@ -163,6 +165,96 @@ func (ts *TreeStore) ChangesetForCheckpoint(checkpoint uint32) *Changeset {
 
 func (ts *TreeStore) Latest() *NodePointer {
 	return ts.root.Load()
+}
+
+func (ts *TreeStore) RootAtVersion(targetVersion uint32) (*NodePointer, error) {
+	ctx, span := tracer.Start(context.Background(),
+		"TreeStore.RootAtVersion",
+		trace.WithAttributes(attribute.Int64("targetVersion", int64(targetVersion))),
+	)
+	defer span.End()
+
+	// TODO add caching of latest roots
+	// find the latest checkpoint root that is <= targetVersion
+	root, curVersion, err := ts.checkpointForVersion(targetVersion)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find checkpoint for version %d: %w", targetVersion, err)
+	}
+
+	if curVersion == targetVersion {
+		return root, nil
+	}
+
+	// then ascend through each changeset and replay the WAL until we reach the desired version
+	for {
+		changeset := ts.changesetForVersion(curVersion + 1)
+		if changeset == nil {
+			return nil, fmt.Errorf("no changeset found for version %d", curVersion+1)
+		}
+
+		prevVersion := curVersion
+		root, curVersion, err = ReplayWAL(ctx, root, changeset.files.WALFile(), curVersion, targetVersion)
+		if err != nil {
+			return nil, fmt.Errorf("failed to replay WAL for version %d: %w", targetVersion, err)
+		}
+		if curVersion == targetVersion {
+			return root, nil
+		}
+		// sanity check to make sure we made progress
+		if curVersion <= prevVersion {
+			return nil, fmt.Errorf("replay did not advance version from %d", curVersion)
+		}
+	}
+}
+
+func (ts *TreeStore) checkpointForVersion(version uint32) (cpRoot *NodePointer, cpVersion uint32, err error) {
+	retries := 0
+	const maxRetries = 5
+	for {
+		changeset := ts.changesetForVersion(version)
+		if changeset == nil {
+			return nil, 0, fmt.Errorf("no changeset found for version %d", version)
+		}
+		rdr, pin := changeset.TryPinReader()
+		if rdr == nil {
+			pin.Unpin()
+
+			// we probably have hit a changeset eviction during compaction, try again but avoid looping forever
+			retries++
+			if retries >= maxRetries {
+				return nil, 0, fmt.Errorf("changeset reader is not available for version %d after %d retries", version, retries)
+			}
+
+			continue // try again
+		}
+
+		cpRoot, cpVersion := rdr.CheckpointForVersion(version)
+		pin.Unpin()
+
+		if cpVersion != 0 {
+			return cpRoot, cpVersion, nil
+		}
+
+		startVersion := changeset.Files().StartVersion()
+		if startVersion <= 1 {
+			// we're at the beginning of history, return empty tree
+			return nil, 0, nil
+		}
+		// try an earlier changeset
+		version = startVersion - 1
+	}
+}
+
+func (ts *TreeStore) changesetForVersion(version uint32) *Changeset {
+	ts.changesetsLock.RLock()
+	defer ts.changesetsLock.RUnlock()
+
+	var res *Changeset
+	ts.changesetsByVersion.Descend(version, func(_ uint32, cs *Changeset) bool {
+		res = cs
+		return false // Take the first (highest) entry <= version
+	})
+	return res
 }
 
 func (ts *TreeStore) Close() error {

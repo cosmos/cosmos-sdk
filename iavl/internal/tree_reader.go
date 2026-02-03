@@ -1,7 +1,10 @@
 package internal
 
 import (
+	"io"
+
 	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/iavl/internal/cachekv"
 )
 
 type TreeReader struct {
@@ -12,7 +15,7 @@ func NewTreeReader(root *NodePointer) TreeReader {
 	return TreeReader{root: root}
 }
 
-func (t TreeReader) Has(key []byte) (bool, error) {
+func (t TreeReader) HasErr(key []byte) (bool, error) {
 	root, pin, err := t.root.Resolve()
 	defer pin.Unpin()
 	if err != nil {
@@ -26,7 +29,7 @@ func (t TreeReader) Has(key []byte) (bool, error) {
 	return value.UnsafeBytes() != nil, nil
 }
 
-func (t TreeReader) Get(key []byte) ([]byte, error) {
+func (t TreeReader) GetErr(key []byte) ([]byte, error) {
 	root, pin, err := t.root.Resolve()
 	defer pin.Unpin()
 	if err != nil {
@@ -58,3 +61,42 @@ func (t TreeReader) Iterator(start, end []byte) storetypes.Iterator {
 func (t TreeReader) ReverseIterator(start, end []byte) storetypes.Iterator {
 	return NewIterator(start, end, false, t.root)
 }
+
+func (t TreeReader) GetStoreType() storetypes.StoreType {
+	return storetypes.StoreTypeIAVL
+}
+
+func (t TreeReader) CacheWrap() storetypes.CacheWrap {
+	return cachekv.NewStore(t)
+}
+
+func (t TreeReader) CacheWrapWithTrace(io.Writer, storetypes.TraceContext) storetypes.CacheWrap {
+	logger.Warn("CacheWrapWithTrace called on KVStoreWrapper: tracing not implemented")
+	return cachekv.NewStore(t)
+}
+
+func (t TreeReader) Get(key []byte) []byte {
+	value, err := t.GetErr(key)
+	if err != nil {
+		panic(err)
+	}
+	return value
+}
+
+func (t TreeReader) Has(key []byte) bool {
+	found, err := t.HasErr(key)
+	if err != nil {
+		panic(err)
+	}
+	return found
+}
+
+func (t TreeReader) Set([]byte, []byte) {
+	panic("readonly store: cannot set value")
+}
+
+func (t TreeReader) Delete([]byte) {
+	panic("readonly store: cannot delete")
+}
+
+var _ storetypes.KVStore = TreeReader{}

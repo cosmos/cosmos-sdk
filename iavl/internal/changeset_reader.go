@@ -111,63 +111,6 @@ func (cr *ChangesetReader) ResolveBranchByID(id NodeID) (*BranchLayout, error) {
 	return cr.branchesData.FindByID(id, &info.Branches)
 }
 
-func (cr *ChangesetReader) FindNearestCheckpoint(targetVersion uint32) (checkpointVersion uint32, cpRoot *NodePointer, err error) {
-	//count := cr.checkpointsInfo.Count()
-	//if count == 0 {
-	//	return 0, nil, fmt.Errorf("no checkpoints found in changeset")
-	//}
-	//
-	//// binary search for nearest checkpoint <= targetVersion with HaveRoot = true
-	//low := 0
-	//high := count - 1
-	//resultIdx := -1
-	//
-	//for low <= high {
-	//	mid := (low + high) / 2
-	//	midInfo := cr.checkpointsInfo.UnsafeItem(uint32(mid))
-	//
-	//	if midInfo.Version <= targetVersion {
-	//		// This checkpoint is a candidate, but only if HaveRoot is true
-	//		if midInfo.HaveRoot {
-	//			resultIdx = mid
-	//		}
-	//		// Continue searching right for a potentially better (higher version) match
-	//		low = mid + 1
-	//	} else {
-	//		high = mid - 1
-	//	}
-	//}
-	//
-	//// If binary search didn't find a valid checkpoint (because HaveRoot was false),
-	//// scan backwards from the best position to find one with HaveRoot = true
-	//if resultIdx == -1 {
-	//	// Start from the highest index that was <= targetVersion
-	//	for i := high; i >= 0; i-- {
-	//		info := cr.checkpointsInfo.UnsafeItem(uint32(i))
-	//		if info.Version <= targetVersion && info.HaveRoot {
-	//			resultIdx = i
-	//			break
-	//		}
-	//	}
-	//}
-	//
-	//if resultIdx == -1 {
-	//	return 0, nil, fmt.Errorf("no valid checkpoint found <= version %d", targetVersion)
-	//}
-	//
-	//foundInfo := cr.checkpointsInfo.UnsafeItem(uint32(resultIdx))
-	//var rootPtr *NodePointer
-	//if !foundInfo.RootID.IsEmpty() {
-	//	rootPtr = &NodePointer{
-	//		id:        foundInfo.RootID,
-	//		changeset: cr.changeset,
-	//	}
-	//}
-	//
-	//return foundInfo.Version, rootPtr, nil
-	panic("not implemented")
-}
-
 func (cr *ChangesetReader) GetCheckpointInfo(checkpoint uint32) (*CheckpointInfo, error) {
 	if checkpoint < cr.firstCheckpoint || checkpoint > cr.lastCheckpoint {
 		return nil, fmt.Errorf("checkpoint %d out of range for changeset (have %d..%d)", checkpoint, cr.firstCheckpoint, cr.lastCheckpoint)
@@ -178,34 +121,6 @@ func (cr *ChangesetReader) GetCheckpointInfo(checkpoint uint32) (*CheckpointInfo
 func (cr *ChangesetReader) Changeset() *Changeset {
 	return cr.changeset
 }
-
-//var ErrDisposed = errors.New("changeset disposed")
-
-//
-//func (cr *Changeset) ReadyToCompact(orphanPercentTarget float64, orphanAgeTarget uint32) bool {
-//	info := cr.info
-//	leafOrphanCount := info.LeafOrphans
-//	if leafOrphanCount > 0 {
-//		leafOrphanPercent := float64(leafOrphanCount) / float64(cr.leavesData.Count())
-//		leafOrphanAge := uint32(info.LeafOrphanVersionTotal / uint64(info.LeafOrphans))
-//
-//		if leafOrphanPercent >= orphanPercentTarget && leafOrphanAge <= orphanAgeTarget {
-//			return true
-//		}
-//	}
-//
-//	branchOrphanCount := info.BranchOrphans
-//	if branchOrphanCount > 0 {
-//		branchOrphanPercent := float64(branchOrphanCount) / float64(cr.branchesData.Count())
-//		branchOrphanAge := uint32(info.BranchOrphanVersionTotal / uint64(info.BranchOrphans))
-//		if branchOrphanPercent >= orphanPercentTarget && branchOrphanAge <= orphanAgeTarget {
-//			return true
-//		}
-//	}
-//
-//	return false
-//}
-//
 
 func (cr *ChangesetReader) Close() error {
 	errs := []error{
@@ -279,7 +194,18 @@ func (cr *ChangesetReader) LatestCheckpointRoot() (*NodePointer, uint32) {
 	if count == 0 {
 		return nil, 0
 	}
-	i := count - 1
+	return cr.LatestValidCheckpoint(cr.lastCheckpoint)
+}
+
+// LatestValidCheckpoint finds the latest checkpoint <= targetCheckpoint that has a root.
+// If found, it returns the root NodePointer and the checkpoint version.
+// If no such checkpoint exists, (nil, 0) is returned.
+// If the checkpoint has an empty tree, (nil, version) is returned.
+func (cr *ChangesetReader) LatestValidCheckpoint(targetCheckpoint uint32) (*NodePointer, uint32) {
+	if targetCheckpoint < cr.firstCheckpoint || targetCheckpoint > cr.lastCheckpoint {
+		return nil, 0
+	}
+	i := int(targetCheckpoint - cr.firstCheckpoint)
 	for ; i >= 0; i-- {
 		info := cr.checkpointsInfo.UnsafeItem(uint32(i))
 		rootID := info.RootID
@@ -309,6 +235,43 @@ func (cr *ChangesetReader) LatestCheckpointRoot() (*NodePointer, uint32) {
 		}, info.Version
 	}
 	return nil, 0
+}
+
+// CheckpointForVersion finds the nearest checkpoint <= targetVersion that has a root.
+// If found, it returns the root NodePointer and the checkpoint version.
+// If no such checkpoint exists, (nil, 0) is returned.
+// If the checkpoint has an empty tree, (nil, version) is returned.
+func (cr *ChangesetReader) CheckpointForVersion(targetVersion uint32) (cpRoot *NodePointer, checkpointVersion uint32) {
+	count := cr.checkpointsInfo.Count()
+	if count == 0 {
+		return nil, 0
+	}
+
+	// binary search for nearest checkpoint <= targetVersion
+	low := 0
+	high := count - 1
+	resultCheckpoint := uint32(0)
+
+	for low <= high {
+		mid := (low + high) / 2
+		midInfo := cr.checkpointsInfo.UnsafeItem(uint32(mid))
+
+		if midInfo.Version <= targetVersion {
+			// this checkpoint is a candidate, let's see if we can find a higher one, search right
+			resultCheckpoint = midInfo.Checkpoint
+			low = mid + 1
+		} else {
+			// this checkpoint is too high, search left
+			high = mid - 1
+		}
+	}
+
+	if resultCheckpoint == 0 {
+		// no checkpoint found <= targetVersion
+		return nil, 0
+	}
+
+	return cr.LatestValidCheckpoint(resultCheckpoint)
 }
 
 //func (cr *Changeset) TotalBytes() int {
@@ -342,3 +305,31 @@ func (cr *ChangesetReader) LatestCheckpointRoot() (*NodePointer, uint32) {
 //		store: cr,
 //	}, nil
 //}
+
+//var ErrDisposed = errors.New("changeset disposed")
+
+//
+//func (cr *Changeset) ReadyToCompact(orphanPercentTarget float64, orphanAgeTarget uint32) bool {
+//	info := cr.info
+//	leafOrphanCount := info.LeafOrphans
+//	if leafOrphanCount > 0 {
+//		leafOrphanPercent := float64(leafOrphanCount) / float64(cr.leavesData.Count())
+//		leafOrphanAge := uint32(info.LeafOrphanVersionTotal / uint64(info.LeafOrphans))
+//
+//		if leafOrphanPercent >= orphanPercentTarget && leafOrphanAge <= orphanAgeTarget {
+//			return true
+//		}
+//	}
+//
+//	branchOrphanCount := info.BranchOrphans
+//	if branchOrphanCount > 0 {
+//		branchOrphanPercent := float64(branchOrphanCount) / float64(cr.branchesData.Count())
+//		branchOrphanAge := uint32(info.BranchOrphanVersionTotal / uint64(info.BranchOrphans))
+//		if branchOrphanPercent >= orphanPercentTarget && branchOrphanAge <= orphanAgeTarget {
+//			return true
+//		}
+//	}
+//
+//	return false
+//}
+//

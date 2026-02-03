@@ -115,3 +115,7 @@ func (ch *Changeset) Close() error {
 		ch.files.Close(),
 	)
 }
+
+func (ch *Changeset) Files() *ChangesetFiles {
+	return ch.files
+}

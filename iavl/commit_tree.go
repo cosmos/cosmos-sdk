@@ -17,8 +17,6 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	storetypes "cosmossdk.io/store/types"
-	"github.com/cosmos/cosmos-sdk/iavl/internal/cachekv"
-
 	"github.com/cosmos/cosmos-sdk/iavl/internal"
 )
 
@@ -384,12 +382,20 @@ func (c *CommitTree) Latest() internal.TreeReader {
 	return internal.NewTreeReader(c.treeStore.Latest())
 }
 
-func (c *CommitTree) CacheWrap() storetypes.CacheWrap {
-	return cachekv.NewStore(internal.KVStoreWrapper{TreeReader: c.Latest()})
+func (c *CommitTree) GetVersion(version int64) (internal.TreeReader, error) {
+	root, err := c.treeStore.RootAtVersion(uint32(version))
+	if err != nil {
+		return internal.TreeReader{}, err
+	}
+	return internal.NewTreeReader(root), nil
 }
 
-func (c *CommitTree) CacheWrapWithTrace(io.Writer, storetypes.TraceContext) storetypes.CacheWrap {
-	return c.CacheWrap()
+func (c *CommitTree) CacheWrap() storetypes.CacheWrap {
+	return c.Latest().CacheWrap()
+}
+
+func (c *CommitTree) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) storetypes.CacheWrap {
+	return c.Latest().CacheWrapWithTrace(w, tc)
 }
 
 func (c *CommitTree) Close() error {

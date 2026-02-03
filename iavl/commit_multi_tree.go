@@ -394,7 +394,7 @@ func loadCommitInfo(dir string, version uint64) (*storetypes.CommitInfo, error) 
 	return commitInfo, nil
 }
 
-func (db *CommitMultiTree) SetPruning(options pruningtypes.PruningOptions) {
+func (db *CommitMultiTree) SetPruning(pruningtypes.PruningOptions) {
 	logger.Warn("SetPruning is not implemented for CommitMultiTree")
 }
 
@@ -406,32 +406,32 @@ func (db *CommitMultiTree) GetStoreType() storetypes.StoreType {
 	return storetypes.StoreTypeMulti
 }
 
-func (db *CommitMultiTree) GetStore(key storetypes.StoreKey) storetypes.Store {
+func (db *CommitMultiTree) GetStore(storetypes.StoreKey) storetypes.Store {
 	panic("cannot call GetStore on uncached CommitMultiTree directly; use CacheMultiStore first")
 }
 
-func (db *CommitMultiTree) GetKVStore(key storetypes.StoreKey) storetypes.KVStore {
+func (db *CommitMultiTree) GetKVStore(storetypes.StoreKey) storetypes.KVStore {
 	panic("cannot call GetKVStore on uncached CommitMultiTree directly; use CacheMultiStore first")
 }
 
 // GetObjKVStore returns a mounted ObjKVStore for a given StoreKey.
-func (db *CommitMultiTree) GetObjKVStore(key storetypes.StoreKey) storetypes.ObjKVStore {
+func (db *CommitMultiTree) GetObjKVStore(storetypes.StoreKey) storetypes.ObjKVStore {
 	panic("cannot call GetObjKVStore on uncached CommitMultiTree directly; use CacheMultiStore first")
 }
 
-func (db *CommitMultiTree) GetCommitStore(key storetypes.StoreKey) storetypes.CommitStore {
+func (db *CommitMultiTree) GetCommitStore(storetypes.StoreKey) storetypes.CommitStore {
 	panic("cannot call GetCommitStore on uncached CommitMultiTree directly; use CacheMultiStore first")
 }
 
-func (db *CommitMultiTree) GetCommitKVStore(key storetypes.StoreKey) storetypes.CommitKVStore {
+func (db *CommitMultiTree) GetCommitKVStore(storetypes.StoreKey) storetypes.CommitKVStore {
 	panic("cannot call GetCommitKVStore on uncached CommitMultiTree directly; use CacheMultiStore first")
 }
 
-func (db *CommitMultiTree) SetTracer(w io.Writer) storetypes.MultiStore {
+func (db *CommitMultiTree) SetTracer(io.Writer) storetypes.MultiStore {
 	panic("SetTracer is not implemented for CommitMultiTree")
 }
 
-func (db *CommitMultiTree) SetTracingContext(traceContext storetypes.TraceContext) storetypes.MultiStore {
+func (db *CommitMultiTree) SetTracingContext(storetypes.TraceContext) storetypes.MultiStore {
 	panic("SetTracingContext is not implemented for CommitMultiTree")
 }
 
@@ -625,8 +625,35 @@ func (db *CommitMultiTree) CacheMultiStore() storetypes.CacheMultiStore {
 }
 
 func (db *CommitMultiTree) CacheMultiStoreWithVersion(version int64) (storetypes.CacheMultiStore, error) {
-	//TODO implement me
-	panic("implement me")
+	if version == 0 {
+		// use latest version
+		return db.CacheMultiStore(), nil
+	}
+
+	mt := internal.NewMultiTree(version, func(key storetypes.StoreKey) storetypes.CacheWrap {
+		idx, ok := db.treesByKey[key]
+		if !ok {
+			panic(fmt.Sprintf("store with key %s not mounted", key.Name()))
+		}
+		tree := db.trees[idx]
+		switch tree := tree.(type) {
+		case *CommitTree:
+			// it's not really ideal to panic here, but the MultiTree interface doesn't allow for error returns
+			// alternatively we can check out all historical roots aggressively, but that may be unnecessary when
+			// historical queries will often touch a single store
+			// a better approach may be to keep some global tracking of historical roots in the CommitMultiTree itself
+			// by pruning old commit_info files when pruning is implemented
+			t, err := tree.GetVersion(version)
+			if err != nil {
+				panic(fmt.Sprintf("failed to get version %d for store %s: %v", version, key.Name(), err))
+			}
+			return t.CacheWrap()
+		default:
+			return tree.CacheWrap()
+		}
+	})
+
+	return mt, nil
 }
 
 var _ storetypes.CommitMultiStore2 = &CommitMultiTree{}

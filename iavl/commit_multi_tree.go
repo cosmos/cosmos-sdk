@@ -43,16 +43,6 @@ type CommitMultiTree struct {
 	lastCommitInfo *storetypes.CommitInfo
 }
 
-func (db *CommitMultiTree) SetTracer(w io.Writer) storetypes.MultiStore {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (db *CommitMultiTree) SetTracingContext(traceContext storetypes.TraceContext) storetypes.MultiStore {
-	//TODO implement me
-	panic("implement me")
-}
-
 func (db *CommitMultiTree) StartCommit(ctx context.Context, store storetypes.MultiStore, header cmtproto.Header) (storetypes.CommitFinalizer, error) {
 	// TODO add mutex if needed
 	multiTree, ok := store.(*internal.MultiTree)
@@ -299,10 +289,8 @@ func (db *CommitMultiTree) LastCommitID() storetypes.CommitID {
 }
 
 const commitInfoSubPath = "commit_info"
-const latestFilename = "latest"
 
-// saveCommitInfo saves the CommitInfo for a given version to a <version>.ci file,
-// and updates the latest.version file to point to the latest version.
+// saveCommitInfo saves the CommitInfo for a given version to a <version>.ci file.
 func saveCommitInfo(dir string, version uint64, commitInfo *storetypes.CommitInfo) error {
 	commitInfoDir := filepath.Join(dir, commitInfoSubPath)
 	commitInfoPath := filepath.Join(commitInfoDir, fmt.Sprintf("%d", version))
@@ -310,24 +298,36 @@ func saveCommitInfo(dir string, version uint64, commitInfo *storetypes.CommitInf
 	if err != nil {
 		return fmt.Errorf("failed to marshal commit info for version %d: %w", version, err)
 	}
-	// TODO fsync?
-	err = os.WriteFile(commitInfoPath, bz, 0o600)
+
+	file, err := os.OpenFile(commitInfoPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600)
 	if err != nil {
+		return fmt.Errorf("failed to open commit info file for version %d: %w", version, err)
+	}
+
+	_, err = file.Write(bz)
+	if err != nil {
+		_ = file.Close()
 		return fmt.Errorf("failed to write commit info file for version %d: %w", version, err)
 	}
 
-	// TODO fsync?
-	latestVersionPath := filepath.Join(commitInfoDir, latestFilename)
-	err = os.WriteFile(latestVersionPath, []byte(fmt.Sprintf("%d", version)), 0o600)
+	err = file.Sync()
 	if err != nil {
-		return fmt.Errorf("failed to write latest version file: %w", err)
+		_ = file.Close()
+		return fmt.Errorf("failed to sync commit info file for version %d: %w", version, err)
 	}
+
+	err = file.Close()
+	if err != nil {
+		return fmt.Errorf("failed to close commit info file for version %d: %w", version, err)
+	}
+
+	// TODO consider fsyncing the directory as well for extra durability guarantees
 
 	return nil
 }
 
-// loadLatestCommitInfo loads the latest.version file to determine the latest version,
-// and then loads the <version>.ci file to get the CommitInfo for that version.
+// loadLatestCommitInfo loads the highest version number commit info file from the commit_info directory
+// if any exist, returning the version and CommitInfo.
 func loadLatestCommitInfo(dir string) (uint64, *storetypes.CommitInfo, error) {
 	commitInfoDir := filepath.Join(dir, commitInfoSubPath)
 	err := os.MkdirAll(commitInfoDir, 0o700)
@@ -335,27 +335,36 @@ func loadLatestCommitInfo(dir string) (uint64, *storetypes.CommitInfo, error) {
 		return 0, nil, fmt.Errorf("failed to create commit info dir: %w", err)
 	}
 
-	latestVersionPath := filepath.Join(commitInfoDir, latestFilename)
-	if _, err := os.Stat(latestVersionPath); os.IsNotExist(err) {
+	entries, err := os.ReadDir(commitInfoDir)
+	if err != nil {
+		return 0, nil, fmt.Errorf("failed to read commit info dir: %w", err)
+	}
+
+	// find the latest version by looking for the highest numbered file
+	var latestVersion uint64
+	for _, entry := range entries {
+		var version uint64
+		_, err := fmt.Sscanf(entry.Name(), "%d", &version)
+		if err != nil {
+			// skip non-numeric files
+			continue
+		}
+		if version > latestVersion {
+			latestVersion = version
+		}
+	}
+
+	if latestVersion == 0 {
+		// no versions found, no commit info to load
 		return 0, nil, nil
 	}
 
-	bz, err := os.ReadFile(latestVersionPath)
+	commitInfo, err := loadCommitInfo(dir, latestVersion)
 	if err != nil {
-		return 0, nil, fmt.Errorf("failed to read latest version file: %w", err)
-	}
-	var version uint64
-	_, err = fmt.Sscanf(string(bz), "%d", &version)
-	if err != nil {
-		return 0, nil, fmt.Errorf("failed to parse latest version: %w", err)
+		return 0, nil, fmt.Errorf("failed to load commit info for version %d: %w", latestVersion, err)
 	}
 
-	commitInfo, err := loadCommitInfo(dir, version)
-	if err != nil {
-		return 0, nil, fmt.Errorf("failed to load commit info for version %d: %w", version, err)
-	}
-
-	return version, commitInfo, nil
+	return latestVersion, commitInfo, nil
 }
 
 func loadCommitInfo(dir string, version uint64) (*storetypes.CommitInfo, error) {
@@ -412,6 +421,15 @@ func (db *CommitMultiTree) GetCommitStore(key storetypes.StoreKey) storetypes.Co
 func (db *CommitMultiTree) GetCommitKVStore(key storetypes.StoreKey) storetypes.CommitKVStore {
 	panic("cannot call GetCommitKVStore on uncached CommitMultiTree directly; use CacheMultiStore first")
 }
+
+func (db *CommitMultiTree) SetTracer(w io.Writer) storetypes.MultiStore {
+	panic("SetTracer is not implemented for CommitMultiTree")
+}
+
+func (db *CommitMultiTree) SetTracingContext(traceContext storetypes.TraceContext) storetypes.MultiStore {
+	panic("SetTracingContext is not implemented for CommitMultiTree")
+}
+
 func (db *CommitMultiTree) TracingEnabled() bool {
 	return false
 }
@@ -470,7 +488,7 @@ func (db *CommitMultiTree) LoadLatestVersion() error {
 	return nil
 }
 
-func (db *CommitMultiTree) loadStore(key storetypes.StoreKey, typ storetypes.StoreType) (storetypes.CommitStore, error) {
+func (db *CommitMultiTree) loadStore(key storetypes.StoreKey, typ storetypes.StoreType) (storetypes.CacheWrapper, error) {
 	switch typ {
 	case storetypes.StoreTypeIAVL, storetypes.StoreTypeDB:
 		dir := filepath.Join(db.dir, "stores", fmt.Sprintf(key.Name(), ".iavl"))
@@ -480,8 +498,7 @@ func (db *CommitMultiTree) loadStore(key storetypes.StoreKey, typ storetypes.Sto
 				return nil, fmt.Errorf("failed to create store dir %s: %w", dir, err)
 			}
 		}
-		panic("TODO: implement IAVL/DB store loading")
-		//return NewCommitTree(dir, db.opts, db.logger.With("store", key.Name()))
+		return NewCommitTree(dir, db.opts)
 	case storetypes.StoreTypeTransient:
 		_, ok := key.(*storetypes.TransientStoreKey)
 		if !ok {

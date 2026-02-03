@@ -37,11 +37,20 @@ type CommitMultiTree struct {
 	storeTypes []storetypes.StoreType      // store types by tree index
 	treesByKey map[storetypes.StoreKey]int // index of the trees by name
 
-	commitMutex       sync.Mutex
-	version           uint64
-	lastCommitId      storetypes.CommitID
-	workingCommitInfo *storetypes.CommitInfo
-	workingHash       []byte
+	commitMutex    sync.Mutex
+	version        uint64
+	lastCommitId   storetypes.CommitID
+	lastCommitInfo *storetypes.CommitInfo
+}
+
+func (db *CommitMultiTree) SetTracer(w io.Writer) storetypes.MultiStore {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (db *CommitMultiTree) SetTracingContext(traceContext storetypes.TraceContext) storetypes.MultiStore {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (db *CommitMultiTree) StartCommit(ctx context.Context, store storetypes.MultiStore, header cmtproto.Header) (storetypes.CommitFinalizer, error) {
@@ -50,8 +59,17 @@ func (db *CommitMultiTree) StartCommit(ctx context.Context, store storetypes.Mul
 	if !ok {
 		return nil, fmt.Errorf("expected MultiTree, got %T", store)
 	}
+
+	if multiTree.LatestVersion() != int64(db.version) {
+		return nil, fmt.Errorf("store version mismatch: expected %d, got %d", db.version, multiTree.LatestVersion())
+	}
+
 	storeInfos := make([]storetypes.StoreInfo, len(db.trees))
 	finalizers := make([]storetypes.CommitFinalizer, len(db.trees))
+	commitInfo := &storetypes.CommitInfo{
+		StoreInfos: storeInfos,
+		Timestamp:  header.Time,
+	}
 	for i, treeKey := range db.treeKeys {
 		storeInfos[i].Name = treeKey.Name()
 		cachedStore := multiTree.GetCacheWrapIfExists(treeKey)
@@ -82,7 +100,7 @@ func (db *CommitMultiTree) StartCommit(ctx context.Context, store storetypes.Mul
 		ctx:                ctx,
 		cancel:             cancel,
 		finalizers:         finalizers,
-		storeInfos:         storeInfos,
+		workingCommitInfo:  commitInfo,
 		done:               make(chan struct{}),
 		hashReady:          make(chan struct{}),
 		finalizeOrRollback: make(chan struct{}),
@@ -100,7 +118,6 @@ type multiTreeFinalizer struct {
 	ctx                context.Context
 	cancel             context.CancelFunc
 	finalizers         []storetypes.CommitFinalizer
-	storeInfos         []storetypes.StoreInfo
 	workingCommitInfo  *storetypes.CommitInfo
 	workingCommitId    storetypes.CommitID
 	done               chan struct{}
@@ -152,7 +169,11 @@ func (db *multiTreeFinalizer) commit(ctx context.Context) error {
 	for _, finalizer := range db.finalizers {
 		finalizer := finalizer
 		errGroup.Go(func() error {
-			_, err := finalizer.FinalizeCommit()
+			err := finalizer.SignalFinalize()
+			if err != nil {
+				return err
+			}
+			_, err = finalizer.WaitFinalize()
 			return err
 		})
 	}
@@ -165,6 +186,7 @@ func (db *multiTreeFinalizer) commit(ctx context.Context) error {
 		return fmt.Errorf("failed to save commit info for version %d: %v", db.stagedVersion(), err)
 	}
 	db.lastCommitId = db.workingCommitId
+	db.lastCommitInfo = db.workingCommitInfo
 	db.version++
 	return nil
 }
@@ -178,7 +200,7 @@ func (db *multiTreeFinalizer) prepareCommit(ctx context.Context) error {
 			if err != nil {
 				return err
 			}
-			db.storeInfos[i].CommitId = hash
+			db.workingCommitInfo.StoreInfos[i].CommitId = hash
 			return nil
 		})
 	}
@@ -186,12 +208,9 @@ func (db *multiTreeFinalizer) prepareCommit(ctx context.Context) error {
 		return err
 	}
 
-	commitInfo := &storetypes.CommitInfo{}
-	commitInfo.StoreInfos = db.storeInfos
-	db.workingCommitInfo = commitInfo
 	db.workingCommitId = storetypes.CommitID{
 		Version: int64(db.stagedVersion()),
-		Hash:    commitInfo.Hash(),
+		Hash:    db.workingCommitInfo.Hash(),
 	}
 	close(db.hashReady)
 
@@ -212,8 +231,12 @@ func (db *multiTreeFinalizer) WorkingHash() (storetypes.CommitID, error) {
 	return db.workingCommitId, nil
 }
 
-func (db *multiTreeFinalizer) FinalizeCommit() (storetypes.CommitID, error) {
+func (db *multiTreeFinalizer) SignalFinalize() error {
 	close(db.finalizeOrRollback)
+	return nil
+}
+
+func (db *multiTreeFinalizer) WaitFinalize() (storetypes.CommitID, error) {
 	<-db.done
 	err := db.err.Load()
 	if err != nil {
@@ -243,7 +266,11 @@ func (f *fauxCommitStoreFinalizer) WorkingHash() (storetypes.CommitID, error) {
 	return storetypes.CommitID{}, nil
 }
 
-func (f *fauxCommitStoreFinalizer) FinalizeCommit() (storetypes.CommitID, error) {
+func (f *fauxCommitStoreFinalizer) SignalFinalize() error {
+	return nil
+}
+
+func (f *fauxCommitStoreFinalizer) WaitFinalize() (storetypes.CommitID, error) {
 	if f.cacheWrap != nil {
 		f.cacheWrap.Write()
 	}
@@ -256,13 +283,15 @@ func (f *fauxCommitStoreFinalizer) Rollback() error {
 }
 
 func (db *CommitMultiTree) GetCommitInfo(ver int64) (*storetypes.CommitInfo, error) {
-	//TODO implement me
-	panic("implement me")
+	return loadCommitInfo(db.dir, uint64(ver))
 }
 
-// GetObjKVStore returns a mounted ObjKVStore for a given StoreKey.
-func (db *CommitMultiTree) GetObjKVStore(key storetypes.StoreKey) storetypes.ObjKVStore {
-	panic("cannot call GetObjKVStore on uncached CommitMultiTree directly; use CacheMultiStore first")
+func (db *CommitMultiTree) Commit() storetypes.CommitID {
+	panic("cannot call Commit on uncached CommitMultiTree directly; use StartCommit")
+}
+
+func (db *CommitMultiTree) WorkingHash() []byte {
+	panic("cannot call WorkingHash on uncached CommitMultiTree directly; use StartCommit")
 }
 
 func (db *CommitMultiTree) LastCommitID() storetypes.CommitID {
@@ -320,19 +349,35 @@ func loadLatestCommitInfo(dir string) (uint64, *storetypes.CommitInfo, error) {
 	if err != nil {
 		return 0, nil, fmt.Errorf("failed to parse latest version: %w", err)
 	}
-	commitInfoPath := filepath.Join(commitInfoDir, fmt.Sprintf("%d", version))
-	bz, err = os.ReadFile(commitInfoPath)
+
+	commitInfo, err := loadCommitInfo(dir, version)
 	if err != nil {
-		return 0, nil, fmt.Errorf("failed to read commit info file for version %d: %w", version, err)
+		return 0, nil, fmt.Errorf("failed to load commit info for version %d: %w", version, err)
+	}
+
+	return version, commitInfo, nil
+}
+
+func loadCommitInfo(dir string, version uint64) (*storetypes.CommitInfo, error) {
+	commitInfoDir := filepath.Join(dir, commitInfoSubPath)
+	err := os.MkdirAll(commitInfoDir, 0o700)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create commit info dir: %w", err)
+	}
+
+	commitInfoPath := filepath.Join(commitInfoDir, fmt.Sprintf("%d", version))
+	bz, err := os.ReadFile(commitInfoPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read commit info file for version %d: %w", version, err)
 	}
 
 	commitInfo := &storetypes.CommitInfo{}
 	err = proto.Unmarshal(bz, commitInfo)
 	if err != nil {
-		return 0, nil, fmt.Errorf("failed to unmarshal commit info for version %d: %w", version, err)
+		return nil, fmt.Errorf("failed to unmarshal commit info for version %d: %w", version, err)
 	}
 
-	return version, commitInfo, nil
+	return commitInfo, nil
 }
 
 func (db *CommitMultiTree) SetPruning(options pruningtypes.PruningOptions) {
@@ -347,14 +392,6 @@ func (db *CommitMultiTree) GetStoreType() storetypes.StoreType {
 	return storetypes.StoreTypeMulti
 }
 
-func (db *CommitMultiTree) CacheMultiStore() storetypes.MultiStore {
-	panic("TODO")
-}
-
-func (db *CommitMultiTree) CacheMultiStoreWithVersion(version int64) (storetypes.MultiStore, error) {
-	panic("TODO")
-}
-
 func (db *CommitMultiTree) GetStore(key storetypes.StoreKey) storetypes.Store {
 	panic("cannot call GetStore on uncached CommitMultiTree directly; use CacheMultiStore first")
 }
@@ -363,16 +400,20 @@ func (db *CommitMultiTree) GetKVStore(key storetypes.StoreKey) storetypes.KVStor
 	panic("cannot call GetKVStore on uncached CommitMultiTree directly; use CacheMultiStore first")
 }
 
+// GetObjKVStore returns a mounted ObjKVStore for a given StoreKey.
+func (db *CommitMultiTree) GetObjKVStore(key storetypes.StoreKey) storetypes.ObjKVStore {
+	panic("cannot call GetObjKVStore on uncached CommitMultiTree directly; use CacheMultiStore first")
+}
+
+func (db *CommitMultiTree) GetCommitStore(key storetypes.StoreKey) storetypes.CommitStore {
+	panic("cannot call GetCommitStore on uncached CommitMultiTree directly; use CacheMultiStore first")
+}
+
+func (db *CommitMultiTree) GetCommitKVStore(key storetypes.StoreKey) storetypes.CommitKVStore {
+	panic("cannot call GetCommitKVStore on uncached CommitMultiTree directly; use CacheMultiStore first")
+}
 func (db *CommitMultiTree) TracingEnabled() bool {
 	return false
-}
-
-func (db *CommitMultiTree) SetTracer(w io.Writer) {
-	panic("SetTracer is not implemented for CommitMultiTree")
-}
-
-func (db *CommitMultiTree) SetTracingContext(context storetypes.TraceContext) {
-	panic("SetTracingContext is not implemented for CommitMultiTree")
 }
 
 func (db *CommitMultiTree) Snapshot(height uint64, protoWriter protoio.Writer) error {
@@ -401,14 +442,6 @@ func (db *CommitMultiTree) MountStoreWithDB(key storetypes.StoreKey, typ storety
 	db.storeTypes = append(db.storeTypes, typ)
 }
 
-func (db *CommitMultiTree) GetCommitStore(key storetypes.StoreKey) storetypes.CommitStore {
-	panic("cannot call GetCommitStore on uncached CommitMultiTree directly; use CacheMultiStore first")
-}
-
-func (db *CommitMultiTree) GetCommitKVStore(key storetypes.StoreKey) storetypes.CommitKVStore {
-	panic("cannot call GetCommitKVStore on uncached CommitMultiTree directly; use CacheMultiStore first")
-}
-
 func (db *CommitMultiTree) LoadLatestVersion() error {
 	for i, key := range db.treeKeys {
 		storeType := db.storeTypes[i]
@@ -431,6 +464,7 @@ func (db *CommitMultiTree) LoadLatestVersion() error {
 			Version: int64(version),
 			Hash:    ci.Hash(),
 		}
+		db.lastCommitInfo = ci
 	}
 
 	return nil
@@ -491,14 +525,11 @@ func (db *CommitMultiTree) SetInitialVersion(version int64) error {
 	return fmt.Errorf("SetInitialVersion has not been implemented yet")
 }
 
-func (db *CommitMultiTree) SetIAVLCacheSize(size int) {
-}
+func (db *CommitMultiTree) SetIAVLCacheSize(size int) {}
 
-func (db *CommitMultiTree) SetIAVLDisableFastNode(disable bool) {
-}
+func (db *CommitMultiTree) SetIAVLDisableFastNode(disable bool) {}
 
-func (db *CommitMultiTree) SetIAVLSyncPruning(sync bool) {
-}
+func (db *CommitMultiTree) SetIAVLSyncPruning(sync bool) {}
 
 func (db *CommitMultiTree) RollbackToVersion(version int64) error {
 	return fmt.Errorf("RollbackToVersion has not been implemented yet")
@@ -549,6 +580,31 @@ func (db *CommitMultiTree) Close() error {
 		}
 	}
 	return nil
+}
+
+func (db *CommitMultiTree) CacheWrap() storetypes.CacheWrap {
+	return db.CacheMultiStore()
+}
+
+func (db *CommitMultiTree) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) storetypes.CacheWrap {
+	logger.Warn("CacheWrapWithTrace is not implemented for CommitMultiTree; falling back to CacheWrap")
+	return db.CacheWrap()
+}
+
+func (db *CommitMultiTree) CacheMultiStore() storetypes.CacheMultiStore {
+	return internal.NewMultiTree(int64(db.version), func(key storetypes.StoreKey) storetypes.CacheWrap {
+		idx, ok := db.treesByKey[key]
+		if !ok {
+			panic(fmt.Sprintf("store with key %s not mounted", key.Name()))
+		}
+		tree := db.trees[idx]
+		return tree.CacheWrap()
+	})
+}
+
+func (db *CommitMultiTree) CacheMultiStoreWithVersion(version int64) (storetypes.CacheMultiStore, error) {
+	//TODO implement me
+	panic("implement me")
 }
 
 var _ storetypes.CommitMultiStore2 = &CommitMultiTree{}

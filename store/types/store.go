@@ -228,105 +228,110 @@ type CommitMultiStore interface {
 }
 
 type CommitMultiStore2 interface {
-	CacheMultiStore() MultiStore
-	// CacheMultiStoreWithVersion branches the underlying MultiStore where
-	// each stored is loaded at a specific version (height).
-	CacheMultiStoreWithVersion(version int64) (MultiStore, error)
-
+	CommitMultiStore
 	StartCommit(context.Context, MultiStore, cmtproto.Header) (CommitFinalizer, error)
-
-	LastCommitID() CommitID
-
-	snapshottypes.Snapshotter
-
-	// Mount a store of type using the given db.
-	// If db == nil, the new store will use the CommitMultiStore db.
-	MountStoreWithDB(key StoreKey, typ StoreType, db dbm.DB)
-
-	// Load the latest persisted version. Called once after all calls to
-	// Mount*Store() are complete.
-	LoadLatestVersion() error
-
-	// LoadLatestVersionAndUpgrade will load the latest version, but also
-	// rename/delete/create sub-store keys, before registering all the keys
-	// in order to handle breaking formats in migrations
-	LoadLatestVersionAndUpgrade(upgrades *StoreUpgrades) error
-
-	// LoadVersionAndUpgrade will load the named version, but also
-	// rename/delete/create sub-store keys, before registering all the keys
-	// in order to handle breaking formats in migrations
-	LoadVersionAndUpgrade(ver int64, upgrades *StoreUpgrades) error
-
-	// Load a specific persisted version. When you load an old version, or when
-	// the last commit attempt didn't complete, the next commit after loading
-	// must be idempotent (return the same commit id). Otherwise the behavior is
-	// undefined.
-	LoadVersion(ver int64) error
-
-	// Set an inter-block (persistent) cache that maintains a mapping from
-	// StoreKeys to CommitKVStores.
-	SetInterBlockCache(MultiStorePersistentCache)
-
-	// SetInitialVersion sets the initial version of the IAVL tree. It is used when
-	// starting a new chain at an arbitrary height.
-	SetInitialVersion(version int64) error
-
-	// SetIAVLCacheSize sets the cache size of the IAVL tree.
-	SetIAVLCacheSize(size int)
-
-	// SetIAVLDisableFastNode enables/disables fastnode feature on iavl.
-	SetIAVLDisableFastNode(disable bool)
-
-	// SetIAVLSyncPruning set sync/async pruning on iavl.
-	// It is not recommended to use this option.
-	// It is here to enable the prune command to force this to true, allowing the command to wait
-	// for the pruning to finish before returning.
-	SetIAVLSyncPruning(sync bool)
-
-	// RollbackToVersion rollback the db to specific version(height).
-	RollbackToVersion(version int64) error
-
-	// ListeningEnabled returns if listening is enabled for the KVStore belonging the provided StoreKey
-	ListeningEnabled(key StoreKey) bool
-
-	// AddListeners adds a listener for the KVStore belonging to the provided StoreKey
-	AddListeners(keys []StoreKey)
-
-	// PopStateCache returns the accumulated state change messages from the CommitMultiStore
-	PopStateCache() []*StoreKVPair
-
-	// SetMetrics sets the metrics for the KVStore
-	SetMetrics(metrics metrics.StoreMetrics)
-
-	// TracingEnabled returns if tracing is enabled for the MultiStore.
-	TracingEnabled() bool
-
-	// SetTracer sets the tracer for the MultiStore that the underlying
-	// stores will utilize to trace operations. The modified MultiStore is
-	// returned.
-	SetTracer(w io.Writer)
-
-	// SetTracingContext sets the tracing context for a MultiStore. It is
-	// implied that the caller should update the context when necessary between
-	// tracing operations. The modified MultiStore is returned.
-	SetTracingContext(TraceContext)
-
-	// LatestVersion returns the latest version in the store
-	LatestVersion() int64
-
-	SetPruning(pruningtypes.PruningOptions)
-	GetPruning() pruningtypes.PruningOptions
-
 	GetCommitInfo(ver int64) (*CommitInfo, error)
+	//
+	//CacheMultiStore() MultiStore
+	//// CacheMultiStoreWithVersion branches the underlying MultiStore where
+	//// each stored is loaded at a specific version (height).
+	//CacheMultiStoreWithVersion(version int64) (MultiStore, error)
+	//
+	//LastCommitID() CommitID
+	//
+	//snapshottypes.Snapshotter
+	//
+	//// Mount a store of type using the given db.
+	//// If db == nil, the new store will use the CommitMultiStore db.
+	//MountStoreWithDB(key StoreKey, typ StoreType, db dbm.DB)
+	//
+	//// Load the latest persisted version. Called once after all calls to
+	//// Mount*Store() are complete.
+	//LoadLatestVersion() error
+	//
+	//// LoadLatestVersionAndUpgrade will load the latest version, but also
+	//// rename/delete/create sub-store keys, before registering all the keys
+	//// in order to handle breaking formats in migrations
+	//LoadLatestVersionAndUpgrade(upgrades *StoreUpgrades) error
+	//
+	//// LoadVersionAndUpgrade will load the named version, but also
+	//// rename/delete/create sub-store keys, before registering all the keys
+	//// in order to handle breaking formats in migrations
+	//LoadVersionAndUpgrade(ver int64, upgrades *StoreUpgrades) error
+	//
+	//// Load a specific persisted version. When you load an old version, or when
+	//// the last commit attempt didn't complete, the next commit after loading
+	//// must be idempotent (return the same commit id). Otherwise the behavior is
+	//// undefined.
+	//LoadVersion(ver int64) error
+	//
+	//// Set an inter-block (persistent) cache that maintains a mapping from
+	//// StoreKeys to CommitKVStores.
+	//SetInterBlockCache(MultiStorePersistentCache)
+	//
+	//// SetInitialVersion sets the initial version of the IAVL tree. It is used when
+	//// starting a new chain at an arbitrary height.
+	//SetInitialVersion(version int64) error
+	//
+	//// SetIAVLCacheSize sets the cache size of the IAVL tree.
+	//SetIAVLCacheSize(size int)
+	//
+	//// SetIAVLDisableFastNode enables/disables fastnode feature on iavl.
+	//SetIAVLDisableFastNode(disable bool)
+	//
+	//// SetIAVLSyncPruning set sync/async pruning on iavl.
+	//// It is not recommended to use this option.
+	//// It is here to enable the prune command to force this to true, allowing the command to wait
+	//// for the pruning to finish before returning.
+	//SetIAVLSyncPruning(sync bool)
+	//
+	//// RollbackToVersion rollback the db to specific version(height).
+	//RollbackToVersion(version int64) error
+	//
+	//// ListeningEnabled returns if listening is enabled for the KVStore belonging the provided StoreKey
+	//ListeningEnabled(key StoreKey) bool
+	//
+	//// AddListeners adds a listener for the KVStore belonging to the provided StoreKey
+	//AddListeners(keys []StoreKey)
+	//
+	//// PopStateCache returns the accumulated state change messages from the CommitMultiStore
+	//PopStateCache() []*StoreKVPair
+	//
+	//// SetMetrics sets the metrics for the KVStore
+	//SetMetrics(metrics metrics.StoreMetrics)
+	//
+	//// TracingEnabled returns if tracing is enabled for the MultiStore.
+	//TracingEnabled() bool
+	//
+	//// SetTracer sets the tracer for the MultiStore that the underlying
+	//// stores will utilize to trace operations. The modified MultiStore is
+	//// returned.
+	//SetTracer(w io.Writer)
+	//
+	//// SetTracingContext sets the tracing context for a MultiStore. It is
+	//// implied that the caller should update the context when necessary between
+	//// tracing operations. The modified MultiStore is returned.
+	//SetTracingContext(TraceContext)
+	//
+	//// LatestVersion returns the latest version in the store
+	//LatestVersion() int64
+	//
+	//SetPruning(pruningtypes.PruningOptions)
+	//GetPruning() pruningtypes.PruningOptions
+	//
 }
 
 type CommitFinalizer interface {
 	// WorkingHash returns the hash of the state but does not force commit finalization.
 	WorkingHash() (CommitID, error)
-	// FinalizeCommit finalizes the in-progress commit and persists the stores to disk.
-	// It returns the CommitID of the newly committed version.
-	// Either FinalizeCommit or Rollback must be called, but not both.
-	FinalizeCommit() (CommitID, error)
+	// SignalFinalize signals that the commit should be finalized.
+	// Calls to SignalFinalize should be followed by WaitFinalize.
+	// Either SignalFinalize and WaitFinalize or Rollback must be called, but not both.
+	SignalFinalize() error
+	// WaitFinalize waits for the commit to be finalized and returns the CommitID.
+	// Calls to WaitFinalize should be preceded by SignalFinalize.
+	// Either SignalFinalize and WaitFinalize or Rollback must be called, but not both.
+	WaitFinalize() (CommitID, error)
 	// Rollback aborts the in-progress commit and leaves the stores in the previous state.
 	// The caller should expect that a successful Rollback will return context.Canceled or an error wrapping it.
 	// Use errors.Is to check:

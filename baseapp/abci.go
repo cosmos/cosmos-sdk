@@ -913,7 +913,11 @@ func (app *BaseApp) internalFinalizeBlock(cancelCtx context.Context, req *abci.R
 	cp := app.GetConsensusParams(finalizeState.Context())
 
 	// if we haven't aborted thus far, start commiting the state, we can always rollback later
-	app.committer = app.cms.StartCommit(cancelCtx, finalizeState.MultiStore, header)
+	committer, err := app.cms.StartCommit(cancelCtx, finalizeState.MultiStore, header)
+	if err != nil {
+		return nil, fmt.Errorf("failed to start commit: %w", err)
+	}
+	app.committer = committer
 
 	return &abci.ResponseFinalizeBlock{
 		Events:                events,
@@ -964,25 +968,47 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 
 		// only return if we are not aborting
 		if !aborted {
+			// only check errors here because if we abort we don't care about the error
 			if err != nil {
 				return nil, err
 			}
-			res.AppHash, err = app.workingHash()
-			return res, err
+			if app.committer != nil {
+				return app.finishFinalizeBlock(res)
+			}
+		} else {
+			// if it was aborted, we need to reset the state
+			app.stateManager.ClearState(execModeFinalize)
+			app.optimisticExec.Reset()
+			// rollback the committer if it was started
+			if app.committer != nil {
+				err := app.committer.Rollback()
+				if err != nil && !errors.Is(err, context.Canceled) {
+					return nil, fmt.Errorf("failed to rollback committer: %w", err)
+				}
+			}
 		}
-
-		// if it was aborted, we need to reset the state
-		app.stateManager.ClearState(execModeFinalize)
-		app.optimisticExec.Reset()
 	}
 
 	// if no OE is running, just run the block (this is either a block replay or a OE that got aborted)
 	res, err = app.internalFinalizeBlock(context.Background(), req)
-	if res != nil {
-		res.AppHash, err = app.workingHash()
+	if err != nil {
+		return nil, err
 	}
 
-	return res, err
+	return app.finishFinalizeBlock(res)
+}
+
+func (app *BaseApp) finishFinalizeBlock(res *abci.ResponseFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
+	hash, err := app.committer.WorkingHash()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get working hash: %w", err)
+	}
+	res.AppHash = hash.Hash
+	err = app.committer.SignalFinalize()
+	if err != nil {
+		return nil, fmt.Errorf("failed to signal finalize: %w", err)
+	}
+	return res, nil
 }
 
 // checkHalt checks if height or time exceeds halt-height or halt-time respectively.
@@ -1023,7 +1049,7 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 		app.abciHandlers.Precommiter(finalizeState.Context())
 	}
 
-	_, err := app.committer.FinalizeCommit()
+	_, err := app.committer.WaitFinalize()
 	if err != nil {
 		return nil, fmt.Errorf("failed to finalize commit: %w", err)
 	}
@@ -1064,34 +1090,6 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 	blockCounter.Add(ctx, 1)
 
 	return resp, nil
-}
-
-// workingHash gets the apphash that will be finalized in commit.
-// These writes will be persisted to the root multi-store (app.cms) and flushed to
-// disk in the Commit phase. This means when the ABCI client requests Commit(), the application
-// state transitions will be flushed to disk and as a result, but we already have
-// an application Merkle root.
-func (app *BaseApp) workingHash() ([]byte, error) {
-	// Write the FinalizeBlock state into branched storage and commit the MultiStore.
-	// The write to the FinalizeBlock state writes all state transitions to the root
-	// MultiStore (app.cms) so when Commit() is called it persists those values.
-	if app.committer != nil {
-		hash, err := app.committer.WorkingHash()
-		if err != nil {
-			if !errors.Is(err, context.Canceled) {
-				return nil, fmt.Errorf("failed to get working hash: %w", err)
-			}
-			app.committer = nil
-		} else {
-			return hash, nil
-		}
-	}
-
-	finalizeState := app.stateManager.GetState(execModeFinalize)
-	app.committer = app.cms.StartCommit(context.Background(), finalizeState.MultiStore, finalizeState.Context().BlockHeader())
-
-	// Get the hash of all writes in order to return the apphash to the comet in finalizeBlock.
-	return app.committer.WorkingHash()
 }
 
 func handleQueryApp(app *BaseApp, path []string, req *abci.RequestQuery) *abci.ResponseQuery {

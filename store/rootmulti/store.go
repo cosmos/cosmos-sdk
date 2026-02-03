@@ -380,18 +380,21 @@ func (rs *Store) SetInterBlockCache(c types.MultiStorePersistentCache) {
 
 // SetTracer sets the tracer for the MultiStore that the underlying
 // stores will utilize to trace operations. A MultiStore is returned.
-func (rs *Store) SetTracer(w io.Writer) {
+func (rs *Store) SetTracer(w io.Writer) types.MultiStore {
 	rs.traceWriter = w
+	return rs
 }
 
 // SetTracingContext updates the tracing context for the MultiStore by merging
 // the given context with the existing context by key. Any existing keys will
 // be overwritten. It is implied that the caller should update the context when
 // necessary between tracing operations. It returns a modified MultiStore.
-func (rs *Store) SetTracingContext(tc types.TraceContext) {
+func (rs *Store) SetTracingContext(tc types.TraceContext) types.MultiStore {
 	rs.traceContextMutex.Lock()
 	defer rs.traceContextMutex.Unlock()
 	rs.traceContext = rs.traceContext.Merge(tc)
+
+	return rs
 }
 
 func (rs *Store) getTracingContext() types.TraceContext {
@@ -576,7 +579,7 @@ func (rs *Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.Cac
 
 // CacheMultiStore creates ephemeral branch of the multi-store and returns a CacheMultiStore.
 // It implements the MultiStore interface.
-func (rs *Store) CacheMultiStore() types.MultiStore {
+func (rs *Store) CacheMultiStore() types.CacheMultiStore {
 	stores := make(map[types.StoreKey]types.CacheWrapper)
 	for k, v := range rs.stores {
 		store := types.CacheWrapper(v)
@@ -596,7 +599,7 @@ func (rs *Store) CacheMultiStore() types.MultiStore {
 // attempts to load stores at a given version (height). An error is returned if
 // any store cannot be loaded. This should only be used for querying and
 // iterating at past heights.
-func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.MultiStore, error) {
+func (rs *Store) CacheMultiStoreWithVersion(version int64) (types.CacheMultiStore, error) {
 	cachedStores := make(map[types.StoreKey]types.CacheWrapper)
 	var commitInfo *types.CommitInfo
 	storeInfos := map[string]bool{}
@@ -1289,14 +1292,14 @@ func flushLatestVersion(batch dbm.Batch, version int64) {
 	}
 }
 
-func (rs *Store) StartCommit(ctx context.Context, store types.MultiStore, header cmtproto.Header) types.CommitFinalizer {
+func (rs *Store) StartCommit(ctx context.Context, store types.MultiStore, header cmtproto.Header) (types.CommitFinalizer, error) {
 	rs.SetCommitHeader(header)
 	return &commitFinalizer{
 		ctx:        ctx,
 		rs:         rs,
 		cacheStore: store,
 		header:     header,
-	}
+	}, nil
 }
 
 type commitFinalizer struct {
@@ -1304,20 +1307,24 @@ type commitFinalizer struct {
 	rs         *Store
 	cacheStore types.MultiStore
 	header     cmtproto.Header
-	hash       []byte
+	hash       types.CommitID
 }
 
-func (c *commitFinalizer) WorkingHash() ([]byte, error) {
+func (c *commitFinalizer) SignalFinalize() error {
+	return nil
+}
+
+func (c *commitFinalizer) WorkingHash() (types.CommitID, error) {
 	if err := c.ctx.Err(); err != nil {
 		// context cancelled or timed out
-		return nil, err
+		return types.CommitID{}, err
 	}
-	if c.hash != nil {
+	if c.hash.Hash != nil {
 		return c.hash, nil
 	}
 	// write the cache store to get the working hash
 	c.cacheStore.(types.CacheMultiStore).Write()
-	c.hash = c.rs.WorkingHash()
+	c.hash.Hash = c.rs.WorkingHash()
 	return c.hash, nil
 }
 
@@ -1325,8 +1332,8 @@ func (c *commitFinalizer) Rollback() error {
 	return fmt.Errorf("rollback not supported")
 }
 
-func (c *commitFinalizer) FinalizeCommit() (types.CommitID, error) {
-	if c.hash == nil {
+func (c *commitFinalizer) WaitFinalize() (types.CommitID, error) {
+	if c.hash.Hash == nil {
 		if _, err := c.WorkingHash(); err != nil {
 			return types.CommitID{}, err
 		}

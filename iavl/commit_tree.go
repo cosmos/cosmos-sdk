@@ -356,8 +356,12 @@ func (c *committer) Rollback() error {
 	return nil
 }
 
-func (c *committer) FinalizeCommit() (storetypes.CommitID, error) {
+func (c *committer) SignalFinalize() error {
 	close(c.finalizeOrRollback)
+	return nil
+}
+
+func (c *committer) WaitFinalize() (storetypes.CommitID, error) {
 	<-c.done
 	err := c.err.Load()
 	if err != nil {

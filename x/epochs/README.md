@@ -64,9 +64,28 @@ The `epochs` module emits the following events:
 
 ## Keepers
 
-### Keeper functions
+### Keeper Functions
 
-Epochs keeper module provides utility functions to manage epochs.
+The epochs keeper provides the following functions to manage epochs:
+
+```go
+// GetEpochInfo returns epoch info by identifier.
+func (k *Keeper) GetEpochInfo(ctx sdk.Context, identifier string) (types.EpochInfo, error)
+
+// AddEpochInfo adds a new epoch info. Will return an error if the epoch fails validation,
+// or re-uses an existing identifier. This method also sets the start time if left unset,
+// and sets the epoch start height.
+func (k *Keeper) AddEpochInfo(ctx sdk.Context, epoch types.EpochInfo) error
+
+// AllEpochInfos iterate through epochs to return all epochs info.
+func (k *Keeper) AllEpochInfos(ctx sdk.Context) ([]types.EpochInfo, error)
+
+// NumBlocksSinceEpochStart returns the number of blocks since the epoch started.
+// If the epoch started on block N, then calling this during block N (after BeforeEpochStart)
+// would return 0. Calling it any point in block N+1 (assuming the epoch doesn't increment)
+// would return 1.
+func (k *Keeper) NumBlocksSinceEpochStart(ctx sdk.Context, identifier string) (int64, error)
+```
 
 ## Hooks
 

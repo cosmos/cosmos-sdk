@@ -780,6 +780,10 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 		))
 	}
 
+	// NOTE: Header populated here is intentionally partial; it omits Version, LastBlockID,
+	// LastCommitHash, DataHash, ValidatorsHash, ConsensusHash, LastResultsHash, and EvidenceHash.
+	// As a result, the HistoricalInfo headers stored by x/staking are unreliable and cannot reproduce
+	// the correct Header hash. Please use req.Hash instead.
 	header := cmtproto.Header{
 		ChainID:            app.chainID,
 		Height:             req.Height,

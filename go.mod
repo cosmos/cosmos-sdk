@@ -59,8 +59,8 @@ require (
 	github.com/test-go/testify v1.1.4
 	github.com/tidwall/btree v1.8.1
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.65.0
-	go.opentelemetry.io/contrib/instrumentation/host v0.64.0
-	go.opentelemetry.io/contrib/instrumentation/runtime v0.64.0
+	go.opentelemetry.io/contrib/instrumentation/host v0.65.0
+	go.opentelemetry.io/contrib/instrumentation/runtime v0.65.0
 	go.opentelemetry.io/contrib/otelconf v0.19.0
 	go.opentelemetry.io/contrib/propagators/b3 v1.40.0
 	go.opentelemetry.io/contrib/propagators/jaeger v1.39.0

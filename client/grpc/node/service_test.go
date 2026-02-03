@@ -15,7 +15,7 @@ func TestServiceServer_Config(t *testing.T) {
 	defaultCfg.PruningKeepRecent = "2000"
 	defaultCfg.PruningInterval = "10"
 	defaultCfg.HaltHeight = 100
-	svr := NewQueryServer(client.Context{}, *defaultCfg, nil)
+	svr := NewQueryServer(client.Context{}, *defaultCfg)
 	ctx := sdk.Context{}.WithMinGasPrices(sdk.NewDecCoins(sdk.NewInt64DecCoin("stake", 15)))
 
 	resp, err := svr.Config(ctx, &ConfigRequest{})

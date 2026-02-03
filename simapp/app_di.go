@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log/slog"
 	"os"
 	"path/filepath"
 
@@ -22,7 +21,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/iavlx"
+	"github.com/cosmos/cosmos-sdk/iavl"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
@@ -110,14 +109,14 @@ func NewSimApp(
 	iavlxOpts, useIavlx := os.LookupEnv("IAVLX")
 	if useIavlx && iavlxOpts != "" {
 		fmt.Println("Setting up IAVLX as the underlying commit multi-store")
-		var opts iavlx.Options
+		var opts iavl.Options
 		err := json.Unmarshal([]byte(iavlxOpts), &opts)
 		if err != nil {
 			panic(err)
 		}
 		baseAppOptions = append(baseAppOptions, func(bApp *baseapp.BaseApp) {
 			dir := filepath.Join(appOpts.Get(flags.FlagHome).(string), "data", "iavlx")
-			db, err := iavlx.LoadDB(dir, &opts, slog.Default())
+			db, err := iavl.LoadDB(dir, opts)
 			if err != nil {
 				panic(err)
 			}

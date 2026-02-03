@@ -104,36 +104,39 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 			}))
 	}()
 
+	var res *abci.ResponseInitChain
 	if app.abciHandlers.InitChainer == nil {
-		return &abci.ResponseInitChain{}, nil
-	}
+		res = &abci.ResponseInitChain{}
+	} else {
+		// add block gas meter for any genesis transactions (allow infinite gas)
+		finalizeState.SetContext(finalizeState.Context().WithBlockGasMeter(storetypes.NewInfiniteGasMeter()))
 
-	// add block gas meter for any genesis transactions (allow infinite gas)
-	finalizeState.SetContext(finalizeState.Context().WithBlockGasMeter(storetypes.NewInfiniteGasMeter()))
-
-	res, err := app.abciHandlers.InitChainer(finalizeState.Context(), req)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(req.Validators) > 0 {
-		if len(req.Validators) != len(res.Validators) {
-			return nil, fmt.Errorf(
-				"len(RequestInitChain.Validators) != len(GenesisValidators) (%d != %d)",
-				len(req.Validators), len(res.Validators),
-			)
+		var err error
+		res, err = app.abciHandlers.InitChainer(finalizeState.Context(), req)
+		if err != nil {
+			return nil, err
 		}
 
-		sort.Sort(abci.ValidatorUpdates(req.Validators))
-		sort.Sort(abci.ValidatorUpdates(res.Validators))
+		if len(req.Validators) > 0 {
+			if len(req.Validators) != len(res.Validators) {
+				return nil, fmt.Errorf(
+					"len(RequestInitChain.Validators) != len(GenesisValidators) (%d != %d)",
+					len(req.Validators), len(res.Validators),
+				)
+			}
 
-		for i := range res.Validators {
-			if !proto.Equal(&res.Validators[i], &req.Validators[i]) {
-				return nil, fmt.Errorf("genesisValidators[%d] != req.Validators[%d] ", i, i)
+			sort.Sort(abci.ValidatorUpdates(req.Validators))
+			sort.Sort(abci.ValidatorUpdates(res.Validators))
+
+			for i := range res.Validators {
+				if !proto.Equal(&res.Validators[i], &req.Validators[i]) {
+					return nil, fmt.Errorf("genesisValidators[%d] != req.Validators[%d] ", i, i)
+				}
 			}
 		}
 	}
 
+	// start the committer for the finalize state
 	committer, err := app.cms.StartCommit(context.Background(), finalizeState.MultiStore, finalizeState.Context().BlockHeader())
 	if err != nil {
 		return nil, fmt.Errorf("failed to start commit during InitChain: %w", err)
@@ -141,7 +144,7 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 	app.committer = committer
 	err = committer.SignalFinalize()
 	if err != nil {
-		return nil, fmt.Errorf("failed to finalize commit during InitChain: %w", err)
+		return nil, fmt.Errorf("failed to signal finalize during InitChain: %w", err)
 	}
 
 	// NOTE: We don't commit, but FinalizeBlock for block InitialHeight starts from
@@ -1057,6 +1060,19 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 
 	if app.abciHandlers.Precommiter != nil {
 		app.abciHandlers.Precommiter(finalizeState.Context())
+	}
+
+	if app.committer == nil {
+		// during InitChain we must initialize the committer here
+		committer, err := app.cms.StartCommit(context.Background(), finalizeState.MultiStore, header)
+		if err != nil {
+			return nil, fmt.Errorf("failed to start commit: %w", err)
+		}
+		app.committer = committer
+		err = app.committer.SignalFinalize()
+		if err != nil {
+			return nil, fmt.Errorf("failed to signal finalize: %w", err)
+		}
 	}
 
 	_, err := app.committer.WaitFinalize()

@@ -86,6 +86,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (server) [#25740](https://github.com/cosmos/cosmos-sdk/pull/25740) Add variadic `grpc.DialOption` parameter to `StartGrpcServer` for custom gRPC client connection options.
 * (blockstm) [#25765](https://github.com/cosmos/cosmos-sdk/pull/25765) Minor code readability improvement in block-stm.
 * (server/config) [#25807](https://github.com/cosmos/cosmos-sdk/pull/25807) fix(server): reject overlapping historical gRPC block ranges.
+* [#25857](https://github.com/cosmos/cosmos-sdk/pull/25857) Reduce scope of mutex in `PriorityNonceMempool.Remove`.
 
 ### Bug Fixes
 

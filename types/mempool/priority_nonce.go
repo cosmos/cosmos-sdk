@@ -479,8 +479,14 @@ func (mp *PriorityNonceMempool[C]) Remove(tx sdk.Tx) error {
 
 	mp.priorityIndex.Remove(tk)
 	senderTxs.Remove(tk)
+	if senderTxs.Len() == 0 {
+		delete(mp.senderIndices, sender)
+	}
 	delete(mp.scores, scoreKey)
 	mp.priorityCounts[score.priority]--
+	if mp.priorityCounts[score.priority] == 0 {
+		delete(mp.priorityCounts, score.priority)
+	}
 
 	return nil
 }

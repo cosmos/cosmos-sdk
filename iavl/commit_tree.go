@@ -189,7 +189,7 @@ func (c *committer) prepareCommit(ctx context.Context, updates iter.Seq[KVUpdate
 		_, walSpan := tracer.Start(ctx, "WALWrite")
 		defer walSpan.End()
 		defer close(walDone)
-		walDone <- c.treeStore.WriteWALUpdates(ctx, nodeUpdates, c.opts.FsyncWAL)
+		walDone <- c.treeStore.WriteWALUpdates(ctx, nodeUpdates, !c.opts.DisableWALFsync)
 	}()
 
 	// start computing hashes for leaf nodes in parallel

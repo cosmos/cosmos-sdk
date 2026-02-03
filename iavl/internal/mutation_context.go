@@ -29,12 +29,13 @@ func NewMutationContext(version, cowVersion uint32) *MutationContext {
 // the node is returned as-is without mutation or orphan tracking.
 func (ctx *MutationContext) mutateBranch(node Node, nodePtr *NodePointer) (*MemNode, error) {
 	if node.Version() >= ctx.cowVersion {
-		// node is not shared, return as-is
 		memNode, ok := node.(*MemNode)
-		if !ok {
-			return nil, fmt.Errorf("expected MemNode, got %T", node)
+		if ok {
+			// node is not shared, can mutate in place but must update version and clear hash
+			memNode.version = ctx.version
+			memNode.hash = nil
+			return memNode, nil
 		}
-		return memNode, nil
 	}
 	ctx.addOrphan(nodePtr)
 	mem, err := node.MutateBranch(ctx.version)

@@ -118,27 +118,27 @@ func (cp *Checkpointer) proc() error {
 	return nil
 }
 
-// LastCheckpointRoot returns the root node pointer and version of the latest saved checkpoint.
+// LatestCheckpointRoot returns the root node pointer and version of the latest saved checkpoint.
 // If there are no saved checkpoints, (nil, 0, nil) is returned.
-func (cp *Checkpointer) LastCheckpointRoot() (*NodePointer, uint32, error) {
-	checkpoint := cp.LatestSavedCheckpoint()
-	if checkpoint == 0 {
-		return nil, 0, nil
-	}
-	cs := cp.ChangesetByCheckpoint(checkpoint)
-	if cs == nil {
-		return nil, 0, fmt.Errorf("no changeset found for latest checkpoint %d", checkpoint)
-	}
-	rdr, pin := cs.TryPinReader()
-	defer pin.Unpin()
-	if rdr == nil {
-		return nil, 0, fmt.Errorf("changeset reader is not available for latest checkpoint %d", checkpoint)
-	}
-	cpRoot, version := rdr.LatestCheckpointRoot()
-	if version == 0 {
-		return nil, 0, fmt.Errorf("no checkpoint root found in latest checkpoint %d", checkpoint)
-	}
-	return cpRoot, version, nil
+func (cp *Checkpointer) LatestCheckpointRoot() (root *NodePointer, version uint32, err error) {
+	cp.changesetLock.RLock()
+	defer cp.changesetLock.RUnlock()
+	cp.changesetsByCheckpoint.Descend(cp.LatestSavedCheckpoint(), func(checkpoint uint32, cs *Changeset) bool {
+		rdr, pin := cs.TryPinReader()
+		defer pin.Unpin()
+		if rdr == nil {
+			err = fmt.Errorf("changeset reader is not available for latest checkpoint %d", checkpoint)
+			return false
+		}
+		root, version = rdr.LatestCheckpointRoot()
+		if version != 0 {
+			// found a valid checkpoint root
+			return false
+		}
+		// continue searching for an earlier checkpoint with a root
+		return true
+	})
+	return
 }
 
 func (cp *Checkpointer) Close() error {

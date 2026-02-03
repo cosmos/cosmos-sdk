@@ -98,7 +98,7 @@ func (ts *TreeStore) load() error {
 	}
 
 	// get the changeset with the last checkpoint
-	root, version, err := ts.checkpointer.LastCheckpointRoot()
+	root, version, err := ts.checkpointer.LatestCheckpointRoot()
 	if err != nil {
 		return fmt.Errorf("failed to load root after loading changesets: %w", err)
 	}

@@ -118,6 +118,8 @@ func (c *CommitTree) StartCommit(ctx context.Context, updates iter.Seq[KVUpdate]
 	return committer
 }
 
+var rolledbackErr = errors.New("commit rolled back")
+
 func (c *committer) commit(ctx context.Context, updates iter.Seq[KVUpdate], updateCount int) error {
 	c.commitMutex.Lock()
 	defer c.commitMutex.Unlock()
@@ -134,10 +136,10 @@ func (c *committer) commit(ctx context.Context, updates iter.Seq[KVUpdate], upda
 	prepareRes, err := c.prepareCommit(ctx, updates, updateCount)
 	if err != nil {
 		rbErr := c.treeStore.RollbackWAL()
-		if !errors.Is(rbErr, context.Canceled) {
+		if rbErr != nil {
 			return fmt.Errorf("commit failed: %w; rollback failed: %v", err, rbErr)
 		}
-		return fmt.Errorf("successful rollback: %w; rollback cause %v", rbErr, err)
+		return fmt.Errorf("%w; root cause %v", rolledbackErr, err)
 	}
 
 	// assign node IDs if needed
@@ -311,7 +313,7 @@ func (c *committer) prepareCommit(ctx context.Context, updates iter.Seq[KVUpdate
 	}, ctx.Err()
 }
 
-func (c *committer) WorkingHash() (storetypes.CommitID, error) {
+func (c *committer) PrepareFinalize() (storetypes.CommitID, error) {
 	select {
 	case <-c.hashReady:
 	case <-c.done:
@@ -328,9 +330,12 @@ func (c *committer) Rollback() error {
 	close(c.finalizeOrRollback)
 	<-c.done
 	err := c.err.Load()
-	if err != nil {
+	if err == nil {
 		// we expect an error if we rolled back successfully
-		return err.(error)
+		return fmt.Errorf("rollback failed, commit succeeded")
+	}
+	if !errors.Is(err.(error), rolledbackErr) {
+		return fmt.Errorf("rollback failed: %w", err.(error))
 	}
 	return nil
 }

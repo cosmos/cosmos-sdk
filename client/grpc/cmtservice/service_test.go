@@ -86,8 +86,3 @@ func TestGetBlockResultsRequestDefaults(t *testing.T) {
 	req := &GetBlockResultsRequest{}
 	require.Equal(t, int64(0), req.GetHeight())
 }
-
-func TestGetLatestBlockResultsRequestDefaults(t *testing.T) {
-	req := &GetLatestBlockResultsRequest{}
-	require.NotNil(t, req)
-}

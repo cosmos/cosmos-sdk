@@ -107,6 +107,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (server/config) [#25806](https://github.com/cosmos/cosmos-sdk/pull/25806) fix: add missing commas in historical gRPC config template.
 * (client) [#25804](https://github.com/cosmos/cosmos-sdk/pull/25804) Add `GetHeightFromMetadataStrict` API to `grpc` client for better error handling.
 * (x/staking) [#25829](https://github.com/cosmos/cosmos-sdk/pull/25829) Validates case-sensitivity on authz grands in x/staking.
+* (mempool) [#25869](https://github.com/cosmos/cosmos-sdk/pull/25869) fix(mempool): add thread safety to NextSenderTx.
 
 
 ### Deprecated

@@ -257,13 +257,13 @@ func (mp *PriorityNonceMempool[C]) Insert(ctx context.Context, tx sdk.Tx) error 
 			)
 		}
 
-		mp.priorityIndex.Remove(txMeta[C]{
-			nonce:    nonce,
-			sender:   sender,
-			priority: oldScore.priority,
-			weight:   oldScore.weight,
-		})
+		oldKey := txMeta[C]{nonce: nonce, sender: sender, priority: oldScore.priority, weight: oldScore.weight}
+		mp.priorityIndex.Remove(oldKey)
+		mp.senderIndices[sender].Remove(oldKey)
 		mp.priorityCounts[oldScore.priority]--
+		if mp.priorityCounts[oldScore.priority] == 0 {
+			delete(mp.priorityCounts, oldScore.priority)
+		}
 	}
 
 	mp.priorityCounts[priority]++
@@ -448,8 +448,6 @@ func (mp *PriorityNonceMempool[C]) CountTx() int {
 // Remove removes a transaction from the mempool in O(log n) time, returning an
 // error if unsuccessful.
 func (mp *PriorityNonceMempool[C]) Remove(tx sdk.Tx) error {
-	mp.mtx.Lock()
-	defer mp.mtx.Unlock()
 	sigs, err := mp.cfg.SignerExtractor.GetSigners(tx)
 	if err != nil {
 		return err
@@ -464,6 +462,9 @@ func (mp *PriorityNonceMempool[C]) Remove(tx sdk.Tx) error {
 	if err != nil {
 		return err
 	}
+
+	mp.mtx.Lock()
+	defer mp.mtx.Unlock()
 
 	scoreKey := txMeta[C]{nonce: nonce, sender: sender}
 	score, ok := mp.scores[scoreKey]

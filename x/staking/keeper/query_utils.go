@@ -74,13 +74,12 @@ func (k Keeper) GetAllDelegatorDelegations(ctx context.Context, delegator sdk.Ac
 	}
 	defer iterator.Close()
 
-	for i := 0; iterator.Valid(); iterator.Next() {
+	for ; iterator.Valid(); iterator.Next() {
 		delegation, err := types.UnmarshalDelegation(k.cdc, iterator.Value())
 		if err != nil {
 			return nil, err
 		}
 		delegations = append(delegations, delegation)
-		_ = i
 	}
 
 	return delegations, nil
@@ -99,13 +98,12 @@ func (k Keeper) GetAllUnbondingDelegations(ctx context.Context, delegator sdk.Ac
 	}
 	defer iterator.Close()
 
-	for i := 0; iterator.Valid(); iterator.Next() {
+	for ; iterator.Valid(); iterator.Next() {
 		unbondingDelegation, err := types.UnmarshalUBD(k.cdc, iterator.Value())
 		if err != nil {
 			return nil, err
 		}
 		unbondingDelegations = append(unbondingDelegations, unbondingDelegation)
-		_ = i
 	}
 
 	return unbondingDelegations, nil

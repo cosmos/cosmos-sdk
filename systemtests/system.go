@@ -47,7 +47,7 @@ var (
 )
 
 type TestnetInitializer interface {
-	Initialize()
+	Initialize(xargs ...string)
 }
 
 // SystemUnderTest blockchain provisioning
@@ -139,12 +139,12 @@ func (s *SystemUnderTest) CommitTimeout() time.Duration {
 	return time.Duration((int64(s.blockTime) * 90) / 100) // leave 10% for all other operations
 }
 
-func (s *SystemUnderTest) SetupChain() {
+func (s *SystemUnderTest) SetupChain(initArgs ...string) {
 	s.Logf("Setup chain: %s\n", s.outputDir)
 	if err := os.RemoveAll(filepath.Join(WorkDir, s.outputDir)); err != nil {
 		panic(err.Error())
 	}
-	s.testnetInitializer.Initialize()
+	s.testnetInitializer.Initialize(initArgs...)
 	s.nodesCount = s.initialNodesCount
 
 	// modify genesis with system test defaults

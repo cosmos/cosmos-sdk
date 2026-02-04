@@ -17,9 +17,12 @@ import (
 // options stores the Ledger Options that can be used to customize Ledger usage
 var options Options
 
+// AppName defines the Ledger app used for signing. Cosmos SDK uses the Cosmos app
+const AppName = "Cosmos"
+
 type (
 	// discoverLedgerFn defines a Ledger discovery function that returns a
-	// connected device or an error upon failure. Its allows a method to avoid CGO
+	// connected device or an error upon failure. It allows a method to avoid CGO
 	// dependencies when Ledger support is potentially not enabled.
 	discoverLedgerFn func() (SECP256K1, error)
 
@@ -66,7 +69,7 @@ func initOptionsDefault() {
 	options.createPubkey = func(key []byte) types.PubKey {
 		return &secp256k1.PubKey{Key: key}
 	}
-	options.appName = "Cosmos"
+	options.appName = AppName
 	options.skipDERConversion = false
 }
 
@@ -88,6 +91,51 @@ func SetAppName(appName string) {
 // SetSkipDERConversion sets the DER Conversion requirement to true (false by default)
 func SetSkipDERConversion() {
 	options.skipDERConversion = true
+}
+
+// SetDERConversion configures whether DER signature conversion should be enabled.
+// When enabled (true), signatures returned from the Ledger device are converted
+// from DER format to BER format, which is the standard behavior for Cosmos SDK chains.
+// When disabled (false), raw signatures are used without conversion, which is
+// typically required for Ethereum/EVM-compatible chains.
+//
+// Parameters:
+//   - enabled: true to enable DER conversion (Cosmos chains), false to disable (Ethereum chains)
+//
+// Example usage for different coin types in a key management CLI:
+//
+//	switch coinType {
+//	case 60:
+//	    // Ethereum/EVM chains - disable DER conversion for raw signatures
+//	    cosmosLedger.SetDiscoverLedger(func() (cosmosLedger.SECP256K1, error) {
+//	        return evmkeyring.LedgerDerivation()
+//	    })
+//	    cosmosLedger.SetCreatePubkey(func(key []byte) cryptotypes.PubKey {
+//	        return evmkeyring.CreatePubkey(key)
+//	    })
+//	    cosmosLedger.SetAppName(evmkeyring.AppName)
+//	    cosmosLedger.SetDERConversion(false) // Disable DER conversion for Ethereum
+//	case 118:
+//	    // Cosmos SDK chains - enable DER conversion for signature compatibility
+//	    cosmosLedger.SetDiscoverLedger(func() (cosmosLedger.SECP256K1, error) {
+//	        device, err := ledger.FindLedgerCosmosUserApp()
+//	        if err != nil {
+//	            return nil, err
+//	        }
+//	        return device, nil
+//	    })
+//	    cosmosLedger.SetCreatePubkey(func(key []byte) cryptotypes.PubKey {
+//	        return &secp256k1.PubKey{Key: key}
+//	    })
+//	    cosmosLedger.SetAppName(cosmosLedger.AppName)
+//	    cosmosLedger.SetDERConversion(true) // Enable DER conversion for Cosmos
+//	default:
+//	    return fmt.Errorf(
+//	        "unsupported coin type %d for Ledger. Supported coin types: 60 (Ethereum app), 118 (Cosmos app)", coinType,
+//	    )
+//	}
+func SetDERConversion(enabled bool) {
+	options.skipDERConversion = !enabled
 }
 
 // NewPrivKeySecp256k1Unsafe will generate a new key and store the public key for later use.

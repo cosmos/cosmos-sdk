@@ -98,7 +98,7 @@ exercises [HandleEquivocationEvidence](https://github.com/cosmos/cosmos-sdk/blob
 keeper.
 
 Example 3 - Integration suite app configurations may also be specified via golang (not
-YAML as above) [statically](https://github.com/cosmos/cosmos-sdk/blob/main/x/nft/testutil/app_config.go) or [dynamically](https://github.com/cosmos/cosmos-sdk/blob/8c23f6f957d1c0bedd314806d1ac65bea59b084c/tests/integration/bank/keeper/keeper_test.go#L129-L134).
+YAML as above) [statically](https://github.com/cosmos/cosmos-sdk/blob/main/contrib/x/nft/testutil/app_config.go) or [dynamically](https://github.com/cosmos/cosmos-sdk/blob/8c23f6f957d1c0bedd314806d1ac65bea59b084c/tests/integration/bank/keeper/keeper_test.go#L129-L134).
 
 #### Limitations
 

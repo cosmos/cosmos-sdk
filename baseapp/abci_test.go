@@ -27,7 +27,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
@@ -374,6 +374,82 @@ func TestABCI_ExtendVote(t *testing.T) {
 	vres, err = app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 201, Hash: []byte("thehash"), VoteExtension: []byte("12345678")})
 	require.NoError(t, err)
 	require.Equal(t, abci.ResponseVerifyVoteExtension_REJECT, vres.Status)
+}
+
+// TestABCI_ExtendVote_PanicRecovery tests that when ExtendVoteHandler panics,
+// the panic is recovered and the error contains the panic message.
+func TestABCI_ExtendVote_PanicRecovery(t *testing.T) {
+	name := t.Name()
+	db := dbm.NewMemDB()
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
+
+	panicMsg := "test panic message for ExtendVote"
+	app.SetExtendVoteHandler(func(ctx sdk.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
+		panic(panicMsg)
+	})
+
+	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
+	})
+
+	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+	_, err := app.InitChain(
+		&abci.RequestInitChain{
+			InitialHeight: 1,
+			ConsensusParams: &cmtproto.ConsensusParams{
+				Abci: &cmtproto.ABCIParams{
+					VoteExtensionsEnableHeight: 1,
+				},
+			},
+		},
+	)
+	require.NoError(t, err)
+
+	// Call ExtendVote which should panic and recover
+	_, err = app.ExtendVote(context.Background(), &abci.RequestExtendVote{Height: 1, Hash: []byte("thehash")})
+
+	// The error should contain the panic message
+	require.Error(t, err)
+	require.Contains(t, err.Error(), panicMsg)
+	require.Contains(t, err.Error(), "recovered application panic in ExtendVote")
+}
+
+// TestABCI_VerifyVoteExtension_PanicRecovery tests that when VerifyVoteExtensionHandler panics,
+// the panic is recovered and the error contains the panic message.
+func TestABCI_VerifyVoteExtension_PanicRecovery(t *testing.T) {
+	name := t.Name()
+	db := dbm.NewMemDB()
+	app := baseapp.NewBaseApp(name, log.NewTestLogger(t), db, nil)
+
+	panicMsg := "test panic message for VerifyVoteExtension"
+	app.SetExtendVoteHandler(func(ctx sdk.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
+		return &abci.ResponseExtendVote{VoteExtension: []byte("extension")}, nil
+	})
+
+	app.SetVerifyVoteExtensionHandler(func(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+		panic(panicMsg)
+	})
+
+	app.SetParamStore(&paramStore{db: dbm.NewMemDB()})
+	_, err := app.InitChain(
+		&abci.RequestInitChain{
+			InitialHeight: 1,
+			ConsensusParams: &cmtproto.ConsensusParams{
+				Abci: &cmtproto.ABCIParams{
+					VoteExtensionsEnableHeight: 1,
+				},
+			},
+		},
+	)
+	require.NoError(t, err)
+
+	// Call VerifyVoteExtension which should panic and recover
+	_, err = app.VerifyVoteExtension(&abci.RequestVerifyVoteExtension{Height: 1, Hash: []byte("thehash"), VoteExtension: []byte("extension")})
+
+	// The error should contain the panic message
+	require.Error(t, err)
+	require.Contains(t, err.Error(), panicMsg)
+	require.Contains(t, err.Error(), "recovered application panic in VerifyVoteExtension")
 }
 
 // TestABCI_OnlyVerifyVoteExtension makes sure we can call VerifyVoteExtension
@@ -750,7 +826,7 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 			newCtx = ctx.WithGasMeter(storetypes.NewGasMeter(gasConsumed))
-			return
+			return newCtx, err
 		})
 	}
 	suite := NewBaseAppSuite(t, anteOpt)
@@ -810,7 +886,7 @@ func TestABCI_Query_SimulateTx(t *testing.T) {
 func TestABCI_InvalidTransaction(t *testing.T) {
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
-			return
+			return newCtx, err
 		})
 	}
 
@@ -1048,7 +1124,7 @@ func TestABCI_MaxBlockGasLimits(t *testing.T) {
 			count, _ := parseTxMemo(t, tx)
 			newCtx.GasMeter().ConsumeGas(uint64(count), "counter-ante")
 
-			return
+			return newCtx, err
 		})
 	}
 
@@ -1149,7 +1225,7 @@ func TestABCI_GasConsumptionBadTx(t *testing.T) {
 				return newCtx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "ante handler failure")
 			}
 
-			return
+			return newCtx, err
 		})
 	}
 
@@ -1188,7 +1264,7 @@ func TestABCI_Query(t *testing.T) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 			store := ctx.KVStore(capKey1)
 			store.Set(key, value)
-			return
+			return newCtx, err
 		})
 	}
 

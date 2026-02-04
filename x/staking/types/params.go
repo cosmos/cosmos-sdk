@@ -72,10 +72,10 @@ func MustUnmarshalParams(cdc *codec.LegacyAmino, value []byte) Params {
 func UnmarshalParams(cdc *codec.LegacyAmino, value []byte) (params Params, err error) {
 	err = cdc.Unmarshal(value, &params)
 	if err != nil {
-		return
+		return params, err
 	}
 
-	return
+	return params, err
 }
 
 // Validate validates a set of Params

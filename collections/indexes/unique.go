@@ -98,7 +98,7 @@ func (i *Unique[ReferenceKey, PrimaryKey, Value]) Walk(
 func (i *Unique[ReferenceKey, PrimaryKey, Value]) IterateRaw(ctx context.Context, start, end []byte, order collections.Order) (u UniqueIterator[ReferenceKey, PrimaryKey], err error) {
 	iter, err := i.refKeys.IterateRaw(ctx, start, end, order)
 	if err != nil {
-		return
+		return u, err
 	}
 	return (UniqueIterator[ReferenceKey, PrimaryKey])(iter), nil
 }

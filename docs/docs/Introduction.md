@@ -32,6 +32,6 @@ Check out the docs for the various parts of the Cosmos stack.
 
 ## Help & Support
 
-* [**GitHub Discussions**](https://github.com/orgs/cosmos/discussions) - Ask questions and discuss SDK development on GitHub.
+* [**GitHub Discussions**](https://github.com/cosmos/cosmos-sdk/discussions) - Ask questions and discuss SDK development on GitHub.
 * [**Discord**](https://discord.gg/cosmosnetwork) - Chat with Cosmos developers on Discord.
 * [**Found an issue?**](https://github.com/cosmos/cosmos-sdk/edit/main/docs/README.md) - Help us improve this page by suggesting edits on GitHub.

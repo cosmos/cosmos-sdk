@@ -11,7 +11,7 @@ import (
 	cmtt "github.com/cometbft/cometbft/proto/tendermint/types"
 	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	cmt "github.com/cometbft/cometbft/types"
-	"github.com/golang/protobuf/proto" //nolint:staticcheck // grpc-gateway uses deprecated golang/protobuf
+	"github.com/golang/protobuf/proto" //nolint:staticcheck // needed for testing
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 

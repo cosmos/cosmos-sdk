@@ -529,7 +529,7 @@ func (s *CLITestSuite) msgSubmitLegacyProposal(clientCtx client.Context, from, t
 
 	args = append(args, extraArgs...)
 
-	cmd := govcli.NewCmdSubmitLegacyProposal()
+	cmd := govcli.NewCmdSubmitLegacyProposal() //nolint:staticcheck // needed for legacy testing
 
 	out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 	s.Require().NoError(err)

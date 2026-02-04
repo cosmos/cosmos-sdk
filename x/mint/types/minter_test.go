@@ -82,7 +82,7 @@ func TestBlockProvision(t *testing.T) {
 		expProvisions := sdk.NewCoin(params.MintDenom,
 			math.NewInt(tc.expProvisions))
 
-		require.True(t, expProvisions.IsEqual(provisions),
+		require.True(t, expProvisions.Equal(provisions),
 			"test: %v\n\tExp: %v\n\tGot: %v\n",
 			i, tc.expProvisions, provisions)
 	}
@@ -104,7 +104,7 @@ func BenchmarkBlockProvision(b *testing.B) {
 	minter.AnnualProvisions = math.LegacyNewDec(r1.Int63n(1000000))
 
 	// run the BlockProvision function b.N times
-	for n := 0; n < b.N; n++ {
+	for b.Loop() {
 		minter.BlockProvision(params)
 	}
 }
@@ -118,7 +118,7 @@ func BenchmarkNextInflation(b *testing.B) {
 	bondedRatio := math.LegacyNewDecWithPrec(1, 1)
 
 	// run the NextInflationRate function b.N times
-	for n := 0; n < b.N; n++ {
+	for b.Loop() {
 		minter.NextInflationRate(params, bondedRatio)
 	}
 }
@@ -132,7 +132,7 @@ func BenchmarkNextAnnualProvisions(b *testing.B) {
 	totalSupply := math.NewInt(100000000000000)
 
 	// run the NextAnnualProvisions function b.N times
-	for n := 0; n < b.N; n++ {
+	for b.Loop() {
 		minter.NextAnnualProvisions(params, totalSupply)
 	}
 }

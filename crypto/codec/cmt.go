@@ -7,7 +7,7 @@ import (
 
 	"cosmossdk.io/errors"
 
-	// bls12_381 "github.com/cosmos/cosmos-sdk/crypto/keys/bls12_381"
+	bls12_381 "github.com/cosmos/cosmos-sdk/crypto/keys/bls12_381"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -26,10 +26,10 @@ func FromCmtProtoPublicKey(protoPk cmtprotocrypto.PublicKey) (cryptotypes.PubKey
 			Key: protoPk.Secp256K1,
 		}, nil
 		// TODO: readd once comet has this
-	// case *cmtprotocrypto.PublicKey_Bls12381:
-	//	return &bls12_381.PubKey{
-	//		Key: protoPk.Bls12381,
-	//	}, nil
+	case *cmtprotocrypto.PublicKey_Bls12381:
+		return &bls12_381.PubKey{
+			Key: protoPk.Bls12381,
+		}, nil
 	default:
 		return nil, errors.Wrapf(sdkerrors.ErrInvalidType, "cannot convert %v from Tendermint public key", protoPk)
 	}
@@ -51,12 +51,12 @@ func ToCmtProtoPublicKey(pk cryptotypes.PubKey) (cmtprotocrypto.PublicKey, error
 			},
 		}, nil
 		// TODO: readd once comet has this
-	// case *bls12_381.PubKey:
-	//	return cmtprotocrypto.PublicKey{
-	//		Sum: &cmtprotocrypto.PublicKey_Bls12381{
-	//			Bls12381: pk.Key,
-	//		},
-	//	}, nil
+	case *bls12_381.PubKey:
+		return cmtprotocrypto.PublicKey{
+			Sum: &cmtprotocrypto.PublicKey_Bls12381{
+				Bls12381: pk.Key,
+			},
+		}, nil
 	default:
 		return cmtprotocrypto.PublicKey{}, errors.Wrapf(sdkerrors.ErrInvalidType, "cannot convert %v to Tendermint public key", pk)
 	}

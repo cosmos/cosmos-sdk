@@ -7,6 +7,7 @@ on:
     branches:
       - main
       - release/v0.53.x
+      - feat/krakatoa
 
 permissions:
   contents: read
@@ -21,13 +22,13 @@ jobs:
     outputs:
       git_diff: ${{ steps.git_diff.outputs.diff }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-tags: true
 
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25"
+          go-version: "1.25.6"
           check-latest: true
           cache: true
           cache-dependency-path: |
@@ -54,7 +55,7 @@ jobs:
     if: needs.setup.outputs.git_diff
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Run system tests
         run: |
@@ -63,7 +64,7 @@ jobs:
 
       - name: Upload system test logs if failed
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: system-test-logs
           path: ./tests/systemtests/testnet/*.out
@@ -73,7 +74,7 @@ jobs:
     if: needs.setup.outputs.git_diff
     runs-on: depot-ubuntu-22.04-4
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Run legacy system tests
         run: |
@@ -82,7 +83,30 @@ jobs:
 
       - name: Upload legacy system test logs if failed
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: legacy-system-test-logs
           path: ./tests/systemtests/testnet/*.out
+
+  test-poa-system:
+    runs-on: depot-ubuntu-22.04-4
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.25.6"
+          check-latest: true
+          cache: true
+          cache-dependency-path: enterprise/poa/go.sum
+      - uses: technote-space/get-diff-action@v6.1.2
+        id: git_diff
+        with:
+          PATTERNS: |
+            enterprise/poa/**/*.go
+            enterprise/poa/go.mod
+            enterprise/poa/go.sum
+      - name: system tests
+        if: env.GIT_DIFF
+        run: |
+          cd enterprise/poa
+          make test-system

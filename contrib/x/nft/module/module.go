@@ -7,7 +7,6 @@ import (
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 
-	modulev1 "cosmossdk.io/api/cosmos/nft/module/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/store"
@@ -17,6 +16,7 @@ import (
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	modulev1 "github.com/cosmos/cosmos-sdk/contrib/api/nft/module/v1"
 	"github.com/cosmos/cosmos-sdk/contrib/x/nft"
 	"github.com/cosmos/cosmos-sdk/contrib/x/nft/keeper"
 	simulation2 "github.com/cosmos/cosmos-sdk/contrib/x/nft/simulation"

@@ -50,8 +50,8 @@ func BenchmarkApplyAndReturnValidatorSetUpdates(b *testing.B) {
 		require.NoError(b, keeper.SetLastValidatorPower(ctx, valAddrs[i], validator.ConsensusPower(sdk.DefaultPowerReduction)))
 	}
 	ctx, _ = testEnv.ctx.CacheContext()
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+
+	for b.Loop() {
 		_, _ = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	}
 }

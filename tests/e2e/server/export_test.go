@@ -1,5 +1,4 @@
 //go:build e2e
-// +build e2e
 
 package server_test
 
@@ -18,7 +17,7 @@ import (
 	"github.com/spf13/cobra"
 	"gotest.tools/v3/assert"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	"cosmossdk.io/simapp"
 
 	"github.com/cosmos/cosmos-sdk/client"

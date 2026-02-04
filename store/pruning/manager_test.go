@@ -1,6 +1,7 @@
 package pruning
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"testing"
@@ -10,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store/mock"
 	"cosmossdk.io/store/pruning/types"
 )
@@ -453,4 +454,55 @@ func TestLoadSnapshotHeights_PruneNothing(t *testing.T) {
 	manager.SetOptions(types.NewPruningOptions(types.PruningNothing))
 
 	require.Nil(t, manager.LoadSnapshotHeights(db.NewMemDB()))
+}
+
+func TestInt64SliceToBytes(t *testing.T) {
+	tests := []struct {
+		name   string
+		input  []int64
+		expect []byte
+	}{
+		{
+			name:   "empty slice",
+			input:  []int64{},
+			expect: []byte{},
+		},
+		{
+			name:  "single value",
+			input: []int64{1},
+			expect: func() []byte {
+				b := make([]byte, 8)
+				binary.BigEndian.PutUint64(b, 1)
+				return b
+			}(),
+		},
+		{
+			name:  "multiple values",
+			input: []int64{1, 2},
+			expect: func() []byte {
+				b := make([]byte, 16)
+				binary.BigEndian.PutUint64(b[0:], 1)
+				binary.BigEndian.PutUint64(b[8:], 2)
+				return b
+			}(),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := int64SliceToBytes(tt.input...)
+			require.Equal(t, tt.expect, got, "bytes mismatch")
+		})
+	}
+}
+
+func BenchmarkInt64SliceToBytes(b *testing.B) {
+	data := make([]int64, 1024)
+	for i := range data {
+		data[i] = int64(i)
+	}
+
+	for b.Loop() {
+		_ = int64SliceToBytes(data...)
+	}
 }

@@ -161,12 +161,12 @@ func NewIntFromBigIntMut(i *big.Int) Int {
 func NewIntFromString(s string) (res Int, ok bool) {
 	i, ok := newIntegerFromString(s)
 	if !ok {
-		return
+		return res, ok
 	}
 	// Check overflow
 	if bigIntOverflows(i) {
 		ok = false
-		return
+		return res, ok
 	}
 	return Int{i}, true
 }

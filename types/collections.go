@@ -39,6 +39,7 @@ var (
 	LegacyDecValue collcodec.ValueCodec[math.LegacyDec] = legacyDecValueCodec{}
 
 	// TimeKey represents a collections.KeyCodec to work with time.Time
+	//
 	// Deprecated: exists only for state compatibility reasons, should not
 	// be used for new storage keys using time. Please use the time KeyCodec
 	// provided in the collections package.
@@ -83,10 +84,10 @@ func (a genericAddressKey[T]) EncodeJSON(value T) ([]byte, error) {
 func (a genericAddressKey[T]) DecodeJSON(b []byte) (v T, err error) {
 	s, err := collections.StringKey.DecodeJSON(b)
 	if err != nil {
-		return
+		return v, err
 	}
 	v, err = a.stringDecoder(s)
-	return
+	return v, err
 }
 
 func (a genericAddressKey[T]) Stringify(key T) string {

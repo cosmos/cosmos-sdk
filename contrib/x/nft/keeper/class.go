@@ -63,7 +63,7 @@ func (k Keeper) GetClasses(ctx context.Context) (classes []*nft.Class) {
 		k.cdc.MustUnmarshal(iterator.Value(), &class)
 		classes = append(classes, &class)
 	}
-	return
+	return classes
 }
 
 // HasClass determines whether the specified classID exist

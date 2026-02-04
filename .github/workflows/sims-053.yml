@@ -17,12 +17,12 @@ jobs:
     runs-on: depot-ubuntu-22.04-4
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           ref: "release/v0.53.x"
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25"
+          go-version: "1.25.6"
           check-latest: true
       - run: make build
 
@@ -34,11 +34,11 @@ jobs:
     steps:
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25"
+          go-version: "1.25.6"
           check-latest: true
       - name: Install runsim
         run: go install github.com/cosmos/tools/cmd/runsim@v1.0.0
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary
@@ -48,14 +48,14 @@ jobs:
     needs: [build, install-runsim]
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           ref: "release/v0.53.x"
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25"
+          go-version: "1.25.6"
           check-latest: true
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary
@@ -67,14 +67,14 @@ jobs:
     runs-on: depot-ubuntu-22.04-4
     needs: [build, install-runsim]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           ref: "release/v0.53.x"
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25"
+          go-version: "1.25.6"
           check-latest: true
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary
@@ -86,14 +86,14 @@ jobs:
     runs-on: depot-ubuntu-22.04-4
     needs: [build, install-runsim]
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           ref: "release/v0.53.x"
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25"
+          go-version: "1.25.6"
           check-latest: true
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: ~/go/bin
           key: ${{ runner.os }}-go-runsim-binary

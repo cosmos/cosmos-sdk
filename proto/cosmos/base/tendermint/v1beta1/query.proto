@@ -65,7 +65,7 @@ service Service {
   }
 
   // GetLatestBlockResults returns the block results for the latest block.
-  rpc GetLatestBlockResults(GetLatestBlockResultsRequest) returns (GetBlockResultsResponse) {
+  rpc GetLatestBlockResults(GetLatestBlockResultsRequest) returns (GetLatestBlockResultsResponse) {
     option (cosmos_proto.method_added_in) = "cosmos-sdk 0.53";
     option (google.api.http).get          = "/cosmos/base/tendermint/v1beta1/block_results/latest";
   }
@@ -231,9 +231,30 @@ message GetBlockResultsRequest {
 // GetLatestBlockResultsRequest is the request type for the Query/GetLatestBlockResults RPC method.
 message GetLatestBlockResultsRequest {}
 
-// GetBlockResultsResponse is the response type for the Query/GetBlockResults and
-// Query/GetLatestBlockResults RPC methods.
+// GetBlockResultsResponse is the response type for the Query/GetBlockResults RPC method.
 message GetBlockResultsResponse {
+  // height is the block height.
+  int64 height = 1;
+
+  // txs_results contains the results of each transaction execution.
+  repeated .tendermint.abci.ExecTxResult txs_results = 2;
+
+  // finalize_block_events contains consensus-level events emitted during block
+  // finalization, including slashing, jailing, and validator set updates.
+  repeated .tendermint.abci.Event finalize_block_events = 3;
+
+  // validator_updates contains the validator updates for this block.
+  repeated .tendermint.abci.ValidatorUpdate validator_updates = 4;
+
+  // consensus_param_updates contains any consensus parameter updates for this block.
+  .tendermint.types.ConsensusParams consensus_param_updates = 5;
+
+  // app_hash is the app hash after processing this block.
+  bytes app_hash = 6;
+}
+
+// GetLatestBlockResultsResponse is the response type for the Query/GetLatestBlockResults RPC method.
+message GetLatestBlockResultsResponse {
   // height is the block height.
   int64 height = 1;
 

@@ -19,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 	qtypes "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
+
 	_ "github.com/cosmos/cosmos-sdk/x/distribution"
 	_ "github.com/cosmos/cosmos-sdk/x/gov"
 )
@@ -450,9 +451,8 @@ func (s *E2ETestSuite) TestBlockResultsContainsFinalizeBlockEvents() {
 	res, err := s.queryClient.GetLatestBlockResults(context.Background(), &cmtservice.GetLatestBlockResultsRequest{})
 	s.Require().NoError(err)
 	s.Require().Greater(res.Height, int64(1))
-	
+
 	// FinalizeBlockEvents should contain mint/distribution events from BeginBlock
 	// At minimum, blocks should have some events from minting/distribution
 	s.Require().NotNil(res.FinalizeBlockEvents, "expected finalize_block_events to be present")
 }
-

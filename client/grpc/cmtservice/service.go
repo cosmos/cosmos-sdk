@@ -270,8 +270,8 @@ func (s queryServer) GetBlockResults(ctx context.Context, req *GetBlockResultsRe
 }
 
 // GetLatestBlockResults implements ServiceServer.GetLatestBlockResults
-func (s queryServer) GetLatestBlockResults(ctx context.Context, _ *GetLatestBlockResultsRequest) (*GetBlockResultsResponse, error) {
-	return getBlockResultsResponse(ctx, s.clientCtx, nil)
+func (s queryServer) GetLatestBlockResults(ctx context.Context, _ *GetLatestBlockResultsRequest) (*GetLatestBlockResultsResponse, error) {
+	return getLatestBlockResultsResponse(ctx, s.clientCtx)
 }
 
 func getBlockResultsResponse(ctx context.Context, clientCtx client.Context, height *int64) (*GetBlockResultsResponse, error) {
@@ -293,6 +293,34 @@ func getBlockResultsResponse(ctx context.Context, clientCtx client.Context, heig
 	}
 
 	return &GetBlockResultsResponse{
+		Height:                results.Height,
+		TxsResults:            results.TxsResults,
+		FinalizeBlockEvents:   events,
+		ValidatorUpdates:      valUpdates,
+		ConsensusParamUpdates: results.ConsensusParamUpdates,
+		AppHash:               results.AppHash,
+	}, nil
+}
+
+func getLatestBlockResultsResponse(ctx context.Context, clientCtx client.Context) (*GetLatestBlockResultsResponse, error) {
+	results, err := getBlockResults(ctx, clientCtx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert FinalizeBlockEvents from []Event to []*Event
+	events := make([]*abci.Event, len(results.FinalizeBlockEvents))
+	for i := range results.FinalizeBlockEvents {
+		events[i] = &results.FinalizeBlockEvents[i]
+	}
+
+	// Convert ValidatorUpdates from []ValidatorUpdate to []*ValidatorUpdate
+	valUpdates := make([]*abci.ValidatorUpdate, len(results.ValidatorUpdates))
+	for i := range results.ValidatorUpdates {
+		valUpdates[i] = &results.ValidatorUpdates[i]
+	}
+
+	return &GetLatestBlockResultsResponse{
 		Height:                results.Height,
 		TxsResults:            results.TxsResults,
 		FinalizeBlockEvents:   events,

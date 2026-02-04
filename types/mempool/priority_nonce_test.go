@@ -839,6 +839,44 @@ func TestPriorityNonceMempool_NextSenderTx(t *testing.T) {
 	require.Equal(t, txs[0], tx)
 }
 
+func TestPriorityNonceMempool_CleanupOnRemove(t *testing.T) {
+	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 3)
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
+	sa := accounts[0].Address
+	sb := accounts[1].Address
+	sc := accounts[2].Address
+
+	mp := mempool.DefaultPriorityMempool()
+
+	txs := []testTx{
+		{priority: 10, nonce: 1, address: sa},
+		{priority: 10, nonce: 2, address: sa},
+		{priority: 20, nonce: 1, address: sb},
+		{priority: 30, nonce: 1, address: sc},
+	}
+
+	for _, tx := range txs {
+		c := ctx.WithPriority(tx.priority)
+		require.NoError(t, mp.Insert(c, tx))
+	}
+
+	require.Equal(t, 4, mp.CountTx())
+
+	require.NoError(t, mp.Remove(txs[0]))
+	require.NoError(t, mp.Remove(txs[1]))
+
+	require.NotPanics(t, func() {
+		require.Nil(t, mp.NextSenderTx(sa.String()))
+	})
+
+	require.NoError(t, mp.Remove(txs[2]))
+
+	require.NoError(t, mp.Remove(txs[3]))
+
+	require.Equal(t, 0, mp.CountTx())
+	require.NoError(t, mempool.IsEmpty[int64](mp))
+}
+
 func TestNextSenderTx_TxLimit(t *testing.T) {
 	accounts := simtypes.RandomAccounts(rand.New(rand.NewSource(0)), 2)
 	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())

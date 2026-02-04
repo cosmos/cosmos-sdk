@@ -1,5 +1,6 @@
 # yaml-language-server: $schema=https://json.schemastore.org/buf.gen.json
 version: v1
+
 managed:
   enabled: true
   go_package_prefix:
@@ -10,10 +11,12 @@ managed:
       - buf.build/googleapis/googleapis
     override:
       buf.build/cosmos/cosmos-sdk: cosmossdk.io/api
+
 plugins:
   - name: go-pulsar
-    out: ../../../api
+    out: ../api
     opt: paths=source_relative
+
   - name: go-grpc
-    out: ../../../api
+    out: ../api
     opt: paths=source_relative

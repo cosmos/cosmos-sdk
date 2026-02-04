@@ -1,7 +1,9 @@
 package iavl
 
 import (
+	"bytes"
 	"context"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"io"
@@ -131,8 +133,14 @@ func (db *multiTreeFinalizer) commit(ctx context.Context) error {
 	)
 	defer span.End()
 
+	// start writing commit info in background
+	commitInfoSynced := make(chan error, 1)
+	go func() {
+		db.writeCommitInfo(commitInfoSynced)
+	}()
+
 	if err := db.prepareCommit(ctx); err != nil {
-		// rollback
+		db.startRollback()
 
 		// do not use an errGroup here since, we want to rollback everything even if some rollbacks fail
 		var wg sync.WaitGroup
@@ -166,14 +174,138 @@ func (db *multiTreeFinalizer) commit(ctx context.Context) error {
 		return fmt.Errorf("finalizing commit failed: %w", err)
 	}
 
-	err := saveCommitInfo(db.dir, db.stagedVersion(), db.workingCommitInfo)
-	if err != nil {
-		return fmt.Errorf("failed to save commit info for version %d: %v", db.stagedVersion(), err)
+	// wait for commit info to be written
+	if err := <-commitInfoSynced; err != nil {
+		return fmt.Errorf("writing commit info failed: %w", err)
 	}
+
 	db.lastCommitId = db.workingCommitId
 	db.lastCommitInfo = db.workingCommitInfo
 	db.version++
 	return nil
+}
+
+func (db *multiTreeFinalizer) writeCommitInfo(headerDone chan error) {
+	// in order to not block on fsync until AFTER we have computed all hashes, which SHOULD be the slowest operation (WAL writing should complete before that)
+	// we write and fsync the first part of the commit info (store names) as soon as we know finalization will happen,
+	// and then append hashes at the end once they are ready, without fsyncing again since they aren't needed for durability
+
+	file, err := db.writeCommitInfoHeader()
+	headerDone <- err
+	close(headerDone)
+	if err != nil {
+		return
+	}
+
+	// wait for hashes to be ready
+	<-db.hashReady
+
+	info := db.workingCommitInfo
+
+	var scratchBuf [binary.MaxVarintLen64]byte
+
+	// append each store hash to the file
+	for _, storeInfo := range info.StoreInfos {
+		// length-prefixed hash
+		hashLen := uint64(len(storeInfo.CommitId.Hash))
+		n := binary.PutUvarint(scratchBuf[:], hashLen)
+		_, err := file.Write(scratchBuf[:n])
+		if err != nil {
+			logger.Error("failed to write commit info store info hash length", "error", err)
+			return
+		}
+
+		_, err = file.Write(storeInfo.CommitId.Hash)
+		if err != nil {
+			logger.Error("failed to write commit info store info hash", "error", err)
+			return
+		}
+	}
+
+	err = file.Close()
+	if err != nil {
+		logger.Error("failed to close commit info file after writing hashes", "error", err)
+		return
+	}
+}
+
+func (db *multiTreeFinalizer) writeCommitInfoHeader() (*os.File, error) {
+	var headerBuf bytes.Buffer
+	// write version as litte-endian uint32
+	stagedVersion := db.stagedVersion()
+	var scratchBuf [binary.MaxVarintLen64]byte
+	binary.LittleEndian.PutUint32(scratchBuf[:4], uint32(stagedVersion))
+	_, err := headerBuf.Write(scratchBuf[:4])
+	if err != nil {
+		return nil, fmt.Errorf("failed to write commit info version: %w", err)
+	}
+
+	info := db.workingCommitInfo
+
+	// write timestamp as unix nano int64
+	binary.LittleEndian.PutUint64(scratchBuf[:8], uint64(info.Timestamp.UnixNano()))
+	_, err = headerBuf.Write(scratchBuf[:8])
+	if err != nil {
+		return nil, fmt.Errorf("failed to write commit info timestamp: %w", err)
+	}
+
+	// write the number of store infos as little-endian uint32
+	binary.LittleEndian.PutUint32(scratchBuf[:4], uint32(len(info.StoreInfos)))
+	_, err = headerBuf.Write(scratchBuf[:4])
+	if err != nil {
+		return nil, fmt.Errorf("failed to write commit info store info count: %w", err)
+	}
+
+	// write each store name as a length-prefixed string
+	for _, storeInfo := range info.StoreInfos {
+		// varint length prefix
+		nameLen := uint64(len(storeInfo.Name))
+		n := binary.PutUvarint(scratchBuf[:], nameLen)
+		_, err := headerBuf.Write(scratchBuf[:n])
+		if err != nil {
+			return nil, fmt.Errorf("failed to write commit info store info name length: %w", err)
+		}
+		_, err = headerBuf.Write([]byte(storeInfo.Name))
+		if err != nil {
+			return nil, fmt.Errorf("failed to write commit info store info name: %w", err)
+		}
+	}
+
+	// wait for finalization signal
+	<-db.finalizeOrRollback
+	if db.ctx.Err() != nil {
+		return nil, db.ctx.Err() // do not write commit info if rolling back
+	}
+
+	// write the header to disk
+	commitInfoDir := filepath.Join(db.dir, commitInfoSubPath)
+	err = os.MkdirAll(commitInfoDir, 0o700)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create commit info dir: %w", err)
+	}
+
+	commitInfoPath := filepath.Join(commitInfoDir, fmt.Sprintf("%d", stagedVersion))
+	file, err := os.OpenFile(commitInfoPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open commit info file for version %d: %w", stagedVersion, err)
+	}
+
+	_, err = file.Write(headerBuf.Bytes())
+	if err != nil {
+		_ = file.Close()
+		return nil, fmt.Errorf("failed to write commit info header for version %d: %w", stagedVersion, err)
+	}
+
+	// fsync the file to ensure durability of store names
+	err = file.Sync()
+	if err != nil {
+		_ = file.Close()
+		return nil, fmt.Errorf("failed to sync commit info file for version %d: %w", stagedVersion, err)
+	}
+
+	// TODO optionally fsync the directory as well for extra durability guarantees
+
+	return file, nil
 }
 
 func (db *multiTreeFinalizer) prepareCommit(ctx context.Context) error {
@@ -237,8 +369,7 @@ func (db *multiTreeFinalizer) Finalize() (storetypes.CommitID, error) {
 }
 
 func (db *multiTreeFinalizer) Rollback() error {
-	db.cancel()
-	close(db.finalizeOrRollback)
+	db.startRollback()
 	<-db.done
 	err := db.err.Load()
 	if err == nil {
@@ -248,6 +379,14 @@ func (db *multiTreeFinalizer) Rollback() error {
 		return fmt.Errorf("rollback failed: %w", err.(error))
 	}
 	return nil
+}
+
+func (db *multiTreeFinalizer) startRollback() {
+	// we must propagate cancellation to any background operations
+	db.cancel()
+	db.finalizeOnce.Do(func() {
+		close(db.finalizeOrRollback)
+	})
 }
 
 type fauxCommitStoreFinalizer struct {
@@ -292,42 +431,6 @@ func (db *CommitMultiTree) LastCommitID() storetypes.CommitID {
 }
 
 const commitInfoSubPath = "commit_info"
-
-// saveCommitInfo saves the CommitInfo for a given version to a <version>.ci file.
-func saveCommitInfo(dir string, version uint64, commitInfo *storetypes.CommitInfo) error {
-	commitInfoDir := filepath.Join(dir, commitInfoSubPath)
-	commitInfoPath := filepath.Join(commitInfoDir, fmt.Sprintf("%d", version))
-	bz, err := proto.Marshal(commitInfo)
-	if err != nil {
-		return fmt.Errorf("failed to marshal commit info for version %d: %w", version, err)
-	}
-
-	file, err := os.OpenFile(commitInfoPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600)
-	if err != nil {
-		return fmt.Errorf("failed to open commit info file for version %d: %w", version, err)
-	}
-
-	_, err = file.Write(bz)
-	if err != nil {
-		_ = file.Close()
-		return fmt.Errorf("failed to write commit info file for version %d: %w", version, err)
-	}
-
-	err = file.Sync()
-	if err != nil {
-		_ = file.Close()
-		return fmt.Errorf("failed to sync commit info file for version %d: %w", version, err)
-	}
-
-	err = file.Close()
-	if err != nil {
-		return fmt.Errorf("failed to close commit info file for version %d: %w", version, err)
-	}
-
-	// TODO consider fsyncing the directory as well for extra durability guarantees
-
-	return nil
-}
 
 // loadLatestCommitInfo loads the highest version number commit info file from the commit_info directory
 // if any exist, returning the version and CommitInfo.

@@ -1012,15 +1012,15 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 }
 
 func (app *BaseApp) finishFinalizeBlock(res *abci.ResponseFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
+	err := app.committer.SignalFinalize()
+	if err != nil {
+		return nil, fmt.Errorf("failed to signal finalize: %w", err)
+	}
 	hash, err := app.committer.PrepareFinalize()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get working hash: %w", err)
 	}
 	res.AppHash = hash.Hash
-	err = app.committer.SignalFinalize()
-	if err != nil {
-		return nil, fmt.Errorf("failed to signal finalize: %w", err)
-	}
 	return res, nil
 }
 

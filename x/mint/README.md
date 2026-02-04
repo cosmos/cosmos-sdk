@@ -217,7 +217,9 @@ BlockProvision(params Params) sdk.Coin {
 ## Parameters
 
 The minting module contains the following parameters:
-Note: `0` indicates unlimited supply for MaxSupply param
+Note: `0` indicates unlimited supply for the `MaxSupply` parameter.
+
+For legacy Amino JSON compatibility, `max_supply` is encoded even when it is `"0"`.
 
 | Key                 | Type             | Example                |
 |---------------------|------------------|------------------------|

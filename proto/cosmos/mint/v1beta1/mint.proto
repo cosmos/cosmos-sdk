@@ -59,10 +59,13 @@ message Params {
   ];
   // expected blocks per year
   uint64 blocks_per_year = 6;
-  // maximum supply for the token
+  // maximum supply for the token.
+  //
+  // A value of "0" indicates an unlimited (infinite) maximum supply.
   string max_supply = 7 [
     (cosmos_proto.scalar)  = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
-    (gogoproto.nullable)   = false
+    (gogoproto.nullable)   = false,
+    (amino.dont_omitempty) = true
   ];
 }

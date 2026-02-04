@@ -41,6 +41,7 @@ type TreeStore struct {
 
 	changesetsByVersion *btree.Map[uint32, *Changeset]
 	changesetsLock      sync.RWMutex
+	lastNodeIDsAssigned chan struct{}
 }
 
 func NewTreeStore(dir string, opts TreeStoreOptions) (*TreeStore, error) {
@@ -68,10 +69,6 @@ func (ts *TreeStore) StagedVersion() uint32 {
 	return ts.version.Load() + 1
 }
 
-func (ts *TreeStore) StagedCheckpoint() uint32 {
-	return ts.checkpoint.Load() + 1
-}
-
 func (ts *TreeStore) initNewWriter() error {
 	var err error
 	ts.currentWriter, err = NewChangesetWriter(ts.dir, ts.StagedVersion(), ts)
@@ -85,14 +82,36 @@ func (ts *TreeStore) initNewWriter() error {
 	return nil
 }
 
-func (ts *TreeStore) SaveRoot(newRoot *NodePointer, mutationCtx *MutationContext, nodeIdsAssigned chan struct{}) error {
+func (ts *TreeStore) GetRootForUpdate(ctx context.Context) (*NodePointer, error) {
+	if nodeIDsAssigned := ts.lastNodeIDsAssigned; nodeIDsAssigned != nil {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-nodeIDsAssigned:
+			ts.lastNodeIDsAssigned = nil
+		}
+	}
+	return ts.root.Load(), nil
+}
+
+func (ts *TreeStore) SaveRoot(ctx context.Context, newRoot *NodePointer, mutationCtx *MutationContext) error {
 	ts.root.Store(newRoot)
 	version := ts.version.Add(1)
 
 	writer := ts.currentWriter
 	if ts.shouldCheckpoint {
 		checkpoint := ts.checkpoint.Add(1)
-		err := ts.checkpointer.Checkpoint(writer, newRoot, checkpoint, version, nodeIdsAssigned, ts.shouldRollover)
+		nodeIDsAssigned := make(chan struct{})
+		go func() {
+			defer close(nodeIDsAssigned)
+			_, span := tracer.Start(ctx, "AssignNodeIDs")
+			defer span.End()
+
+			AssignNodeIDs(newRoot, checkpoint)
+		}()
+		ts.lastNodeIDsAssigned = nodeIDsAssigned
+
+		err := ts.checkpointer.Checkpoint(writer, newRoot, checkpoint, version, nodeIDsAssigned, ts.shouldRollover)
 		if err != nil {
 			return fmt.Errorf("failed to checkpoint changeset: %w", err)
 		}

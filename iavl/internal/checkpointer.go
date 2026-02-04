@@ -85,7 +85,6 @@ func (cp *Checkpointer) proc() error {
 		<-req.nodeIdsAssigned
 		span.AddEvent("node IDs assigned, proceeding with checkpoint")
 
-		// checkpoint == version
 		checkpoint := req.checkpoint
 		if err := req.writer.SaveCheckpoint(checkpoint, req.version, req.root); err != nil {
 			return err

@@ -56,8 +56,8 @@ func (cs *ChangesetWriter) SaveCheckpoint(checkpoint, version uint32, root *Node
 
 	// set or validate checkpoint
 	if cs.checkpoint != 0 {
-		if checkpoint <= cs.checkpoint {
-			return fmt.Errorf("invalid checkpoint version %d, must be greater than previous %d", version, cs.checkpoint)
+		if checkpoint != cs.checkpoint+1 {
+			return fmt.Errorf("invalid checkpoint %d, must be one greater than previous %d", checkpoint, cs.checkpoint)
 		}
 	}
 	cs.checkpoint = checkpoint
@@ -106,6 +106,9 @@ func (cs *ChangesetWriter) SaveCheckpoint(checkpoint, version uint32, root *Node
 func (cs *ChangesetWriter) writeNode(np *NodePointer) error {
 	memNode := np.Mem.Load()
 	if memNode == nil || memNode.nodeId.Checkpoint() != cs.checkpoint {
+		if np.changeset == nil {
+			return fmt.Errorf("fatal logic error: trying to save checkpoint %d, but node %v from a different checkpoint is present and has no changeset", cs.checkpoint, np.id)
+		}
 		return nil // already persisted or nothing to write
 	}
 	// track memory usage of every node that gets saved to a checkpoint as these are nodes we can evict

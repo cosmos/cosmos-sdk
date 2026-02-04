@@ -28,8 +28,6 @@ type CommitTree struct {
 	treeStore *internal.TreeStore
 
 	lastCommitId storetypes.CommitID
-
-	lastNodeIDsAssigned chan struct{}
 }
 
 func NewCommitTree(dir string, opts Options) (*CommitTree, error) {
@@ -144,25 +142,11 @@ func (c *committer) commit(ctx context.Context, updates iter.Seq[KVUpdate], upda
 
 	// assign node IDs if needed
 	root := prepareRes.root
-	var nodeIDsAssigned chan struct{}
-	if c.treeStore.ShouldCheckpoint() {
-		// if we need to checkpoint, we must start a goroutine to assign node IDs in the background
-		nodeIDsAssigned = make(chan struct{})
-		go func() {
-			defer close(nodeIDsAssigned)
-			_, span := tracer.Start(ctx, "AssignNodeIDs")
-			defer span.End()
-
-			internal.AssignNodeIDs(root, c.treeStore.StagedCheckpoint())
-		}()
-		c.lastNodeIDsAssigned = nodeIDsAssigned
-	}
-
 	// save the new root after the WAL is fully written so that all offsets are populated correctly
 	err = c.treeStore.SaveRoot(
+		ctx,
 		root,
 		prepareRes.mutationCtx,
-		nodeIDsAssigned,
 	)
 	if err != nil {
 		return err
@@ -253,18 +237,12 @@ func (c *committer) prepareCommit(ctx context.Context, updates iter.Seq[KVUpdate
 		wg.Wait()
 	}()
 
-	// wait for any node IDs assignment from any previous commit to finish
-	if nodeIDsAssigned := c.lastNodeIDsAssigned; nodeIDsAssigned != nil {
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		case <-nodeIDsAssigned:
-		}
-		c.lastNodeIDsAssigned = nil
+	// process all the nodeUpdates against the current root to produce a new root
+	root, err := c.treeStore.GetRootForUpdate(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("tree store not ready for update: %w", err)
 	}
 
-	// process all the nodeUpdates against the current root to produce a new root
-	root := c.treeStore.Latest()
 	_, nodeUpdatesSpan := tracer.Start(ctx, "ApplyNodeUpdates")
 	for _, nu := range nodeUpdates {
 		if err := ctx.Err(); err != nil {

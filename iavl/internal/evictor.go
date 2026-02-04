@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"fmt"
 
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -46,19 +47,22 @@ func (be BasicEvictor) Evict(root *NodePointer, checkpoint uint32) {
 	}()
 }
 
-func evictTraverse(np *NodePointer, depth, evictionDepth uint8, checkpoint uint32) (count int) {
+func evictTraverse(np *NodePointer, depth, evictionDepth uint8, evictCheckpoint uint32) (count int) {
 	memNode := np.Mem.Load()
 	if memNode == nil {
 		return 0
 	}
 
-	if memNode.nodeId.checkpoint == 0 {
-		// node has not been assigned an ID yet, so cannot be evicted
-		return 0
+	nodeCheckpoint := memNode.nodeId.checkpoint
+	if nodeCheckpoint == 0 || nodeCheckpoint > evictCheckpoint {
+		panic(fmt.Sprintf("fatal logic error: evictTraverse reached node %s with invalid checkpoint %d (evictCheckpoint %d)", memNode.nodeId.String(), nodeCheckpoint, evictCheckpoint))
 	}
 
 	// evict nodes at or below the eviction depth
-	if memNode.nodeId.checkpoint <= checkpoint && depth >= evictionDepth {
+	if depth >= evictionDepth {
+		if np.changeset == nil {
+			panic(fmt.Sprintf("fatal logic error: nnot evict node %s at checkpoint %d without changeset", memNode.nodeId.String(), nodeCheckpoint))
+		}
 		np.Mem.Store(nil)
 		count = 1
 	}
@@ -68,7 +72,7 @@ func evictTraverse(np *NodePointer, depth, evictionDepth uint8, checkpoint uint3
 	}
 
 	// continue traversing to find nodes to evict
-	count += evictTraverse(memNode.left, depth+1, evictionDepth, checkpoint)
-	count += evictTraverse(memNode.right, depth+1, evictionDepth, checkpoint)
+	count += evictTraverse(memNode.left, depth+1, evictionDepth, evictCheckpoint)
+	count += evictTraverse(memNode.right, depth+1, evictionDepth, evictCheckpoint)
 	return count
 }

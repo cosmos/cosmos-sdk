@@ -6,11 +6,14 @@ import (
 	"fmt"
 	"sync"
 	"sync/atomic"
+	"time"
 	"unsafe"
 
 	"github.com/tidwall/btree"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/jellydator/ttlcache/v3"
 )
 
 type TreeStoreOptions struct {
@@ -36,12 +39,11 @@ type TreeStore struct {
 	shouldCheckpoint      bool
 	shouldRollover        bool
 
-	//latestRoots     *btree.Map[uint32, *NodePointer]
-	//latestRootsLock sync.RWMutex
-
 	changesetsByVersion *btree.Map[uint32, *Changeset]
 	changesetsLock      sync.RWMutex
 	lastNodeIDsAssigned chan struct{}
+
+	rootByVersionCache *ttlcache.Cache[uint32, *NodePointer]
 }
 
 func NewTreeStore(dir string, opts TreeStoreOptions) (*TreeStore, error) {
@@ -50,7 +52,15 @@ func NewTreeStore(dir string, opts TreeStoreOptions) (*TreeStore, error) {
 		opts:                opts,
 		checkpointer:        NewCheckpointer(BasicEvictor{EvictDepth: opts.EvictDepth}),
 		changesetsByVersion: &btree.Map[uint32, *Changeset]{},
+		rootByVersionCache: ttlcache.New[uint32, *NodePointer](
+			// cache up to 10 recent roots by version
+			ttlcache.WithCapacity[uint32, *NodePointer](10),
+			// default ttl of 5 seconds
+			ttlcache.WithTTL[uint32, *NodePointer](5*time.Second),
+		),
 	}
+	// start automatic cache cleanup
+	ts.rootByVersionCache.Start()
 
 	err := ts.load()
 	if err != nil {
@@ -96,7 +106,13 @@ func (ts *TreeStore) GetRootForUpdate(ctx context.Context) (*NodePointer, error)
 
 func (ts *TreeStore) SaveRoot(ctx context.Context, newRoot *NodePointer, mutationCtx *MutationContext) error {
 	ts.root.Store(newRoot)
+	if mutationCtx.version != ts.StagedVersion() {
+		return fmt.Errorf("mutation context version %d does not match staged version %d", mutationCtx.version, ts.StagedVersion())
+	}
 	version := ts.version.Add(1)
+
+	// save root to cache
+	ts.rootByVersionCache.Set(version, newRoot, ttlcache.DefaultTTL)
 
 	writer := ts.currentWriter
 	if ts.shouldCheckpoint {
@@ -193,7 +209,23 @@ func (ts *TreeStore) RootAtVersion(targetVersion uint32) (*NodePointer, error) {
 	)
 	defer span.End()
 
-	// TODO add caching of latest roots
+	// check cache first
+	if item := ts.rootByVersionCache.Get(targetVersion); item != nil {
+		return item.Value(), nil
+	}
+
+	root, err := ts.loadRootAtVersion(ctx, targetVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	// save to cache
+	ts.rootByVersionCache.Set(targetVersion, root, ttlcache.DefaultTTL)
+
+	return root, nil
+}
+
+func (ts *TreeStore) loadRootAtVersion(ctx context.Context, targetVersion uint32) (*NodePointer, error) {
 	// find the latest checkpoint root that is <= targetVersion
 	root, curVersion, err := ts.checkpointForVersion(targetVersion)
 	if err != nil {
@@ -286,6 +318,7 @@ func (ts *TreeStore) Close() error {
 		errs = append(errs, cs.files.Close())
 		return true
 	})
+	ts.rootByVersionCache.Stop() // stop automatic cache cleanup
 	return errors.Join(errs...)
 }
 

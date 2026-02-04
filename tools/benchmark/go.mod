@@ -1,6 +1,6 @@
 module cosmossdk.io/tools/benchmark
 
-go 1.25.0
+go 1.25.5
 
 require (
 	cosmossdk.io/api v0.9.2

@@ -1,6 +1,6 @@
 module cosmossdk.io/store
 
-go 1.24.0
+go 1.25.5
 
 replace (
 	cosmossdk.io/log/v2 => ../log

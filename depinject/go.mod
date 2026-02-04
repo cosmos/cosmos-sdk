@@ -1,6 +1,6 @@
 module cosmossdk.io/depinject
 
-go 1.23.2
+go 1.25.5
 
 require (
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5

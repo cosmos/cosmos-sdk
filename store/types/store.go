@@ -322,25 +322,21 @@ type CommitMultiStore2 interface {
 }
 
 type CommitFinalizer interface {
-	// WorkingHash returns the hash of the state but does not force commit finalization.
-	WorkingHash() (CommitID, error)
 	// SignalFinalize signals that the commit should be finalized.
 	// Calls to SignalFinalize should be followed by Finalize.
 	// Calling SignalFinalize multiple times is idempotent.
 	// Either SignalFinalize and WaitFinalize or Rollback must be called, but not both.
 	SignalFinalize() error
+	// PrepareFinalize may signal finalization and waits until the hash is ready.
+	// Calls to PrepareFinalize may be preceded by a call to SignalFinalize and should be followed by a call to Finalize.
+	// Some implementations may be able to roll back after PrepareFinalize, but this is not guaranteed,
+	// so callers should assume finalization has been signaled and that only Finalize can be called after PrepareFinalize.
+	PrepareFinalize() (CommitID, error)
 	// Finalize waits for the commit to be finalized and returns the CommitID.
 	// Calls to Finalize may be preceded by a call to SignalFinalize.
 	// Either SignalFinalize and WaitFinalize or Rollback must be called, but not both.
 	Finalize() (CommitID, error)
 	// Rollback aborts the in-progress commit and leaves the stores in the previous state.
-	// The caller should expect that a successful Rollback will return context.Canceled or an error wrapping it.
-	// Use errors.Is to check:
-	//    err := committer.Rollback()
-	//    if errors.Is(err, context.Canceled) {
-	//     // rollback was successful
-	//   }
-	// A non-nil error or anything else generally means the rollback could not be performed.
 	// Either FinalizeCommit or Rollback must be called, but not both.
 	// If the commit cannot be rolled back (which would only be the case if FinalizeCommit had been called first),
 	// an error is returned.

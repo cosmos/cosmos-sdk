@@ -91,9 +91,9 @@ func (s *SimMachine) checkNewVersion(t *rapid.T) {
 		tempUpdates := s.genUpdates(t)
 		committer := s.treeV2.StartCommit(context.Background(), slices.Values(tempUpdates), len(tempUpdates))
 		// get the hash so we actually wait a bit before aborting
-		_, err := committer.WorkingHash()
+		_, err := committer.PrepareFinalize()
 		require.NoError(t, err)
-		require.ErrorIs(t, committer.Rollback(), context.Canceled)
+		require.NoError(t, committer.Rollback())
 	}
 
 	updates := s.genUpdates(t)

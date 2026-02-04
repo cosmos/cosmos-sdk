@@ -134,28 +134,24 @@ func (db *multiTreeFinalizer) commit(ctx context.Context) error {
 	if err := db.prepareCommit(ctx); err != nil {
 		// rollback
 
-		// do not use an errGroup here since context.Canceled is expected!
+		// do not use an errGroup here since, we want to rollback everything even if some rollbacks fail
 		var wg sync.WaitGroup
-		var rbErr atomic.Value
-		for _, finalizer := range db.finalizers {
-			finalizer := finalizer
+		errs := make([]error, len(db.finalizers))
+		for i, finalizer := range db.finalizers {
+			i, finalizer := i, finalizer
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				// TODO check for errors in rollback that aren't context.Canceled
-				err := finalizer.Rollback()
-				if err != nil && !errors.Is(err, context.Canceled) {
-					rbErr.Store(err)
-				}
+				errs[i] = finalizer.Rollback()
 			}()
 		}
 
 		wg.Wait()
-		if err := rbErr.Load(); err != nil {
+		if err := errors.Join(errs...); err != nil {
 			return fmt.Errorf("rollback failed: %w", err.(error))
 		}
 
-		return fmt.Errorf("successful rollback: %w; cause: %v", context.Canceled, err)
+		return fmt.Errorf("%w; cause: %v", rolledbackErr, err)
 	}
 
 	var errGroup errgroup.Group
@@ -185,7 +181,7 @@ func (db *multiTreeFinalizer) prepareCommit(ctx context.Context) error {
 	for i, finalizer := range db.finalizers {
 		finalizer := finalizer
 		hashErrGroup.Go(func() error {
-			hash, err := finalizer.WorkingHash()
+			hash, err := finalizer.PrepareFinalize()
 			if err != nil {
 				return err
 			}
@@ -208,7 +204,7 @@ func (db *multiTreeFinalizer) prepareCommit(ctx context.Context) error {
 	return ctx.Err()
 }
 
-func (db *multiTreeFinalizer) WorkingHash() (storetypes.CommitID, error) {
+func (db *multiTreeFinalizer) PrepareFinalize() (storetypes.CommitID, error) {
 	select {
 	case <-db.hashReady:
 	case <-db.done:
@@ -245,11 +241,13 @@ func (db *multiTreeFinalizer) Rollback() error {
 	close(db.finalizeOrRollback)
 	<-db.done
 	err := db.err.Load()
-	if err != nil {
-		// we expect an error if we rolled back successfully
-		return err.(error)
+	if err == nil {
+		return fmt.Errorf("rollback failed, commit succeeded")
 	}
-	return fmt.Errorf("expected error on rollback, got nil")
+	if !errors.Is(err.(error), rolledbackErr) {
+		return fmt.Errorf("rollback failed: %w", err.(error))
+	}
+	return nil
 }
 
 type fauxCommitStoreFinalizer struct {
@@ -257,7 +255,7 @@ type fauxCommitStoreFinalizer struct {
 	cacheWrap storetypes.CacheWrap
 }
 
-func (f *fauxCommitStoreFinalizer) WorkingHash() (storetypes.CommitID, error) {
+func (f *fauxCommitStoreFinalizer) PrepareFinalize() (storetypes.CommitID, error) {
 	return storetypes.CommitID{}, nil
 }
 
@@ -286,7 +284,7 @@ func (db *CommitMultiTree) Commit() storetypes.CommitID {
 }
 
 func (db *CommitMultiTree) WorkingHash() []byte {
-	panic("cannot call WorkingHash on uncached CommitMultiTree directly; use StartCommit")
+	panic("cannot call PrepareFinalize on uncached CommitMultiTree directly; use StartCommit")
 }
 
 func (db *CommitMultiTree) LastCommitID() storetypes.CommitID {

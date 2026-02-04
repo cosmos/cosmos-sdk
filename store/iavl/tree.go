@@ -94,5 +94,5 @@ func (it *immutableTree) LoadVersionForOverwriting(targetVersion int64) error {
 }
 
 func (it *immutableTree) WorkingHash() []byte {
-	panic("cannot call 'WorkingHash' on an immutable IAVL tree")
+	panic("cannot call 'PrepareFinalize' on an immutable IAVL tree")
 }

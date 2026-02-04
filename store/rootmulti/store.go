@@ -1314,7 +1314,7 @@ func (c *commitFinalizer) SignalFinalize() error {
 	return nil
 }
 
-func (c *commitFinalizer) WorkingHash() (types.CommitID, error) {
+func (c *commitFinalizer) PrepareFinalize() (types.CommitID, error) {
 	if err := c.ctx.Err(); err != nil {
 		// context cancelled or timed out
 		return types.CommitID{}, err
@@ -1329,12 +1329,13 @@ func (c *commitFinalizer) WorkingHash() (types.CommitID, error) {
 }
 
 func (c *commitFinalizer) Rollback() error {
-	return fmt.Errorf("rollback not supported")
+	// nothing to do as we only start commiting when PrepareFinalize() or Finalize() is called
+	return nil
 }
 
 func (c *commitFinalizer) Finalize() (types.CommitID, error) {
 	if c.hash.Hash == nil {
-		if _, err := c.WorkingHash(); err != nil {
+		if _, err := c.PrepareFinalize(); err != nil {
 			return types.CommitID{}, err
 		}
 	}

@@ -2,7 +2,6 @@ package internal
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 )
@@ -22,16 +21,18 @@ func NewWALWriter(file *os.File) *WALWriter {
 	}
 }
 
+var WALWriteAbortedErr = fmt.Errorf("WAL write aborted and rolled back")
+
 func (kvs *WALWriter) WriteWALVersion(ctx context.Context, version uint64, updates []KVUpdate, checkpoint bool) error {
 	kvs.lastVersionOffset = uint64(kvs.writer.Size())
 	kvs.currentUpdates = updates
 
 	if err := kvs.doWriteWALVersion(ctx, version, updates, checkpoint); err != nil {
 		rbErr := kvs.Rollback()
-		if !errors.Is(rbErr, context.Canceled) {
+		if rbErr != nil {
 			return fmt.Errorf("failed to write WAL version: %w; rollback also failed: %v", err, rbErr)
 		}
-		return fmt.Errorf("rolled back WAL write: %w; due to: %v", rbErr, err)
+		return fmt.Errorf("%w; due to: %v", WALWriteAbortedErr, err)
 	}
 	return nil
 }
@@ -196,12 +197,11 @@ func (kvs *WALWriter) writeWALCommit(version uint64, checkpoint bool) error {
 }
 
 // Rollback rolls back the WAL writer to the state before the last WriteWALVersion call.
-// A successful rollback returns context.Canceled to indicate that the WAL write operation was canceled and rolled back.
 func (kvs *WALWriter) Rollback() error {
 	currentSize := uint64(kvs.writer.Size())
 	if kvs.lastVersionOffset == currentSize {
-		// nothing to roll back, context.Canceled indicates a successful rollback with no changes
-		return context.Canceled
+		// nothing to roll back
+		return nil
 	}
 	if kvs.lastVersionOffset > currentSize {
 		return fmt.Errorf("cannot rollback WAL writer: last version offset %d is not less than current size %d", kvs.lastVersionOffset, kvs.writer.Size())
@@ -243,7 +243,7 @@ func (kvs *WALWriter) Rollback() error {
 		kvs.startVersion = 0
 	}
 
-	return context.Canceled
+	return nil
 }
 
 func (kvs *WALWriter) Sync() error {

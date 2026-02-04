@@ -46,7 +46,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/feegrant/fees.go#L9-L32
 
 ### Fee Allowance types
 
-There are two types of fee allowances present at the moment:
+There are three types of fee allowances present at the moment:
 
 * `BasicAllowance`
 * `PeriodicAllowance`
@@ -255,18 +255,18 @@ grantee: cosmos1..
 granter: cosmos1..
 ```
 
-##### grants
+##### grants-by-grantee
 
-The `grants` command allows users to query all grants for a given grantee.
+The `grants-by-grantee` command allows users to query all grants for a given grantee.
 
 ```shell
-simd query feegrant grants [grantee] [flags]
+simd query feegrant grants-by-grantee [grantee] [flags]
 ```
 
 Example:
 
 ```shell
-simd query feegrant grants cosmos1..
+simd query feegrant grants-by-grantee cosmos1..
 ```
 
 Example Output:

@@ -142,12 +142,27 @@ func (c *committer) commit(ctx context.Context, updates iter.Seq[KVUpdate], upda
 		return fmt.Errorf("successful rollback: %w; rollback cause %v", rbErr, err)
 	}
 
+	// assign node IDs if needed
+	root := prepareRes.root
+	var nodeIDsAssigned chan struct{}
+	if c.treeStore.ShouldCheckpoint() {
+		// if we need to checkpoint, we must start a goroutine to assign node IDs in the background
+		nodeIDsAssigned = make(chan struct{})
+		go func() {
+			defer close(nodeIDsAssigned)
+			_, span := tracer.Start(ctx, "AssignNodeIDs")
+			defer span.End()
+
+			internal.AssignNodeIDs(root, c.treeStore.StagedCheckpoint())
+		}()
+		c.lastNodeIDsAssigned = nodeIDsAssigned
+	}
+
 	// save the new root after the WAL is fully written so that all offsets are populated correctly
-	c.lastNodeIDsAssigned = prepareRes.nodeIdsAssigned
 	err = c.treeStore.SaveRoot(
-		prepareRes.root,
+		root,
 		prepareRes.mutationCtx,
-		prepareRes.nodeIdsAssigned,
+		nodeIDsAssigned,
 	)
 	if err != nil {
 		return err
@@ -158,9 +173,8 @@ func (c *committer) commit(ctx context.Context, updates iter.Seq[KVUpdate], upda
 }
 
 type prepareCommitResult struct {
-	root            *internal.NodePointer
-	mutationCtx     *internal.MutationContext
-	nodeIdsAssigned chan struct{}
+	root        *internal.NodePointer
+	mutationCtx *internal.MutationContext
 }
 
 func (c *committer) prepareCommit(ctx context.Context, updates iter.Seq[KVUpdate], updateCount int) (*prepareCommitResult, error) {
@@ -271,19 +285,6 @@ func (c *committer) prepareCommit(ctx context.Context, updates iter.Seq[KVUpdate
 	}
 	nodeUpdatesSpan.End()
 
-	var nodeIDsAssigned chan struct{}
-	if c.treeStore.ShouldCheckpoint() {
-		// if we need to checkpoint, we must start a goroutine to assign node IDs in the background
-		nodeIDsAssigned = make(chan struct{})
-		go func() {
-			defer close(nodeIDsAssigned)
-			_, span := tracer.Start(ctx, "AssignNodeIDs")
-			defer span.End()
-
-			internal.AssignNodeIDs(root, c.treeStore.StagedCheckpoint())
-		}()
-	}
-
 	startWaitForLeafHashes := time.Now()
 
 	// wait for the leaf node hash queue to finish
@@ -327,9 +328,8 @@ func (c *committer) prepareCommit(ctx context.Context, updates iter.Seq[KVUpdate
 	<-c.finalizeOrRollback
 
 	return &prepareCommitResult{
-		root:            root,
-		mutationCtx:     mutationCtx,
-		nodeIdsAssigned: nodeIDsAssigned,
+		root:        root,
+		mutationCtx: mutationCtx,
 	}, ctx.Err()
 }
 

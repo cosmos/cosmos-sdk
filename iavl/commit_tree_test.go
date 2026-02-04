@@ -85,6 +85,17 @@ func (s *SimMachine) Check(t *rapid.T) {
 }
 
 func (s *SimMachine) checkNewVersion(t *rapid.T) {
+	// randomly generate some updates that we'll revert to test rollback capability
+	testRollback := rapid.Bool().Draw(t, "testRollback")
+	if testRollback {
+		tempUpdates := s.genUpdates(t)
+		committer := s.treeV2.StartCommit(context.Background(), slices.Values(tempUpdates), len(tempUpdates))
+		// get the hash so we actually wait a bit before aborting
+		_, err := committer.WorkingHash()
+		require.NoError(t, err)
+		require.ErrorIs(t, committer.Rollback(), context.Canceled)
+	}
+
 	updates := s.genUpdates(t)
 	// apply updates to v1 tree
 	for _, update := range updates {

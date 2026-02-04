@@ -325,7 +325,7 @@ type CommitFinalizer interface {
 	// SignalFinalize signals that the commit should be finalized.
 	// Calls to SignalFinalize should be followed by Finalize.
 	// Calling SignalFinalize multiple times is idempotent.
-	// Either SignalFinalize and WaitFinalize or Rollback must be called, but not both.
+	// Either SignalFinalize and Finalize or Rollback must be called, but not both.
 	SignalFinalize() error
 	// PrepareFinalize may signal finalization and waits until the hash is ready.
 	// Calls to PrepareFinalize may be preceded by a call to SignalFinalize and should be followed by a call to Finalize.
@@ -334,11 +334,11 @@ type CommitFinalizer interface {
 	PrepareFinalize() (CommitID, error)
 	// Finalize waits for the commit to be finalized and returns the CommitID.
 	// Calls to Finalize may be preceded by a call to SignalFinalize.
-	// Either SignalFinalize and WaitFinalize or Rollback must be called, but not both.
+	// Either SignalFinalize and Finalize or Rollback must be called, but not both.
 	Finalize() (CommitID, error)
 	// Rollback aborts the in-progress commit and leaves the stores in the previous state.
-	// Either FinalizeCommit or Rollback must be called, but not both.
-	// If the commit cannot be rolled back (which would only be the case if FinalizeCommit had been called first),
+	// Either Finalize or Rollback must be called, but not both.
+	// If the commit cannot be rolled back (which would only be the case if Finalize had been called first),
 	// an error is returned.
 	Rollback() error
 }

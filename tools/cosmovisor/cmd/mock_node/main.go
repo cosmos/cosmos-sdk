@@ -20,8 +20,8 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/tools/cosmovisor/v2/internal/watchers"
 
-	"github.com/cosmos/cosmos-sdk/server"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
+	
 )
 
 func main() {

@@ -60,7 +60,7 @@ func NewTreeStore(dir string, opts TreeStoreOptions) (*TreeStore, error) {
 		),
 	}
 	// start automatic cache cleanup
-	ts.rootByVersionCache.Start()
+	go ts.rootByVersionCache.Start()
 
 	err := ts.load()
 	if err != nil {

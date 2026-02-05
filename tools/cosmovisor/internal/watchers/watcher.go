@@ -14,6 +14,12 @@ type Watcher[T any] interface {
 }
 
 // ErrorHandler is an interface for handling errors and warnings in watchers.
+// This abstraction decouples watchers from logging policy decisions. Watchers report
+// issues without deciding severity, while the handler determines the appropriate action
+// (e.g., the default implementation downgrades errors to warnings since file watching
+// errors are typically non-fatal and shouldn't alarm operators).
+// But rather than hardcoding this behavior at the call site, this abstraction allows for
+// an easy way to swap this out in the future.
 type ErrorHandler interface {
 	// Error handles an error as an error.
 	Error(msg string, err error)

@@ -22,7 +22,5 @@ option go_package = "github.com/cosmos/cosmos-sdk/enterprise/poa/types";
 
 // Module is the config object of the poa module.
 message Module {
-  option (cosmos.app.v1alpha1.module) = {
-    go_import: "github.com/cosmos/cosmos-sdk/enterprise/poa"
-  };
+  option (cosmos.app.v1alpha1.module) = {go_import: "github.com/cosmos/cosmos-sdk/enterprise/poa"};
 }

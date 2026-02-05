@@ -56,18 +56,18 @@ service Service {
     option (google.api.http).get          = "/cosmos/base/tendermint/v1beta1/abci_query";
   }
 
-  // GetBlockResults queries block results for given height.
+  // GetLatestBlockResults returns the block results for the latest block.
   // Block results contain finalize_block_events which include consensus-level
   // events like slashing, jailing, and validator set updates.
-  rpc GetBlockResults(GetBlockResultsRequest) returns (GetBlockResultsResponse) {
-    option (cosmos_proto.method_added_in) = "cosmos-sdk 0.53";
-    option (google.api.http).get          = "/cosmos/base/tendermint/v1beta1/block_results/{height}";
-  }
-
-  // GetLatestBlockResults returns the block results for the latest block.
   rpc GetLatestBlockResults(GetLatestBlockResultsRequest) returns (GetLatestBlockResultsResponse) {
     option (cosmos_proto.method_added_in) = "cosmos-sdk 0.53";
     option (google.api.http).get          = "/cosmos/base/tendermint/v1beta1/block_results/latest";
+  }
+
+  // GetBlockResults queries block results for given height.
+  rpc GetBlockResults(GetBlockResultsRequest) returns (GetBlockResultsResponse) {
+    option (cosmos_proto.method_added_in) = "cosmos-sdk 0.53";
+    option (google.api.http).get          = "/cosmos/base/tendermint/v1beta1/block_results/{height}";
   }
 }
 

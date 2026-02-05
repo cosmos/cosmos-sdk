@@ -21,14 +21,14 @@ import (
 )
 
 func TestCommitTreeSims(t *testing.T) {
-	rapid.Check(t, testIAVLXSims)
+	rapid.Check(t, testCommitTreeSims)
 }
 
 func FuzzCommitTreeSims(f *testing.F) {
-	f.Fuzz(rapid.MakeFuzz(testIAVLXSims))
+	f.Fuzz(rapid.MakeFuzz(testCommitTreeSims))
 }
 
-func testIAVLXSims(t *rapid.T) {
+func testCommitTreeSims(t *rapid.T) {
 	defer func() {
 		if r := recover(); r != nil {
 			// "overrun" happens when fuzz input is too short for rapid to generate all needed values
@@ -47,7 +47,7 @@ func testIAVLXSims(t *rapid.T) {
 	tempDir, err := os.MkdirTemp("", "iavlx")
 	require.NoError(t, err, "failed to create temp directory")
 	defer os.RemoveAll(tempDir)
-	simMachine := &SimMachine{
+	simMachine := &SimCommitTree{
 		treeV1:       treeV1,
 		treeV2:       nil,
 		dirV2:        tempDir,
@@ -61,7 +61,7 @@ func testIAVLXSims(t *rapid.T) {
 	require.NoError(t, simMachine.treeV2.Close(), "failed to close iavlx tree")
 }
 
-type SimMachine struct {
+type SimCommitTree struct {
 	treeV1 *iavl1.MutableTree
 	treeV2 *CommitTree
 	dirV2  string
@@ -69,7 +69,7 @@ type SimMachine struct {
 	existingKeys map[string][]byte
 }
 
-func (s *SimMachine) openV2Tree(t interface {
+func (s *SimCommitTree) openV2Tree(t interface {
 	require.TestingT
 	sdklog.TestingT
 }) {
@@ -83,14 +83,14 @@ func (s *SimMachine) openV2Tree(t interface {
 	require.NoError(t, err, "failed to create iavlx tree")
 }
 
-func (s *SimMachine) Check(t *rapid.T) {
+func (s *SimCommitTree) Check(t *rapid.T) {
 	versions := rapid.IntRange(1, 100).Draw(t, "versions")
 	for i := 0; i < versions; i++ {
 		s.checkNewVersion(t)
 	}
 }
 
-func (s *SimMachine) checkNewVersion(t *rapid.T) {
+func (s *SimCommitTree) checkNewVersion(t *rapid.T) {
 	// randomly generate some updates that we'll revert to test rollback capability
 	testRollback := rapid.Bool().Draw(t, "testRollback")
 	if testRollback {
@@ -147,9 +147,18 @@ func (s *SimMachine) checkNewVersion(t *rapid.T) {
 		require.NoError(t, s.treeV2.Close())
 		s.openV2Tree(t)
 	}
+
+	// update existing keys
+	for _, update := range updates {
+		if update.Delete {
+			delete(s.existingKeys, string(update.Key))
+		} else {
+			s.existingKeys[string(update.Key)] = update.Value
+		}
+	}
 }
 
-func (s *SimMachine) genUpdates(t *rapid.T) []KVUpdate {
+func (s *SimCommitTree) genUpdates(t *rapid.T) []KVUpdate {
 	n := rapid.IntRange(1, 100).Draw(t, "n")
 	updates := make([]KVUpdate, 0, n)
 	for i := 0; i < n; i++ {
@@ -165,7 +174,7 @@ func (s *SimMachine) genUpdates(t *rapid.T) []KVUpdate {
 	return updates
 }
 
-func (s *SimMachine) selectKey(t *rapid.T) []byte {
+func (s *SimCommitTree) selectKey(t *rapid.T) []byte {
 	if len(s.existingKeys) > 0 && rapid.Bool().Draw(t, "existingKey") {
 		return []byte(rapid.SampledFrom(maps.Keys(s.existingKeys)).Draw(t, "key"))
 	} else {

@@ -116,7 +116,7 @@ func NewSimApp(
 		}
 		baseAppOptions = append(baseAppOptions, func(bApp *baseapp.BaseApp) {
 			dir := filepath.Join(appOpts.Get(flags.FlagHome).(string), "data", "iavlx")
-			db, err := iavl.LoadDB(dir, opts)
+			db, err := iavl.LoadCommitMultiTree(dir, opts)
 			if err != nil {
 				panic(err)
 			}

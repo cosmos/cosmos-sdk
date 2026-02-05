@@ -205,7 +205,7 @@ func NewBaseApp(
 		logger: logger.With(log.ModuleKey, "baseapp"),
 		name:   name,
 		db:     db,
-		// TODO
+		// TODO the multistore never gets closed!!!
 		cms:              store.NewCommitMultiStore(db, logger, storemetrics.NewNoOpMetrics()), // by default, we use a no-op metric gather in store
 		storeLoader:      DefaultStoreLoader,
 		grpcQueryRouter:  NewGRPCQueryRouter(),

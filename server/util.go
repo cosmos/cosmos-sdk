@@ -596,7 +596,7 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 				}
 			}
 
-			db, err := iavl.LoadDB(
+			db, err := iavl.LoadCommitMultiTree(
 				filepath.Join(homeDir, "data", "iavlx"),
 				opts,
 			)

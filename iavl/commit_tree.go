@@ -88,7 +88,7 @@ func rootHash(ctx context.Context, rootPtr *internal.NodePointer) ([]byte, error
 	return hash, nil
 }
 
-type committer struct {
+type commitTreeFinalizer struct {
 	*CommitTree
 	cancel             context.CancelFunc
 	finalizeOnce       sync.Once
@@ -101,7 +101,7 @@ type committer struct {
 
 func (c *CommitTree) StartCommit(ctx context.Context, updates iter.Seq[KVUpdate], updateCount int) storetypes.CommitFinalizer {
 	cancelCtx, cancel := context.WithCancel(ctx)
-	committer := &committer{
+	committer := &commitTreeFinalizer{
 		CommitTree:         c,
 		cancel:             cancel,
 		finalizeOrRollback: make(chan struct{}),
@@ -120,7 +120,7 @@ func (c *CommitTree) StartCommit(ctx context.Context, updates iter.Seq[KVUpdate]
 
 var rolledbackErr = errors.New("commit rolled back")
 
-func (c *committer) commit(ctx context.Context, updates iter.Seq[KVUpdate], updateCount int) error {
+func (c *commitTreeFinalizer) commit(ctx context.Context, updates iter.Seq[KVUpdate], updateCount int) error {
 	c.commitMutex.Lock()
 	defer c.commitMutex.Unlock()
 
@@ -163,7 +163,7 @@ type prepareCommitResult struct {
 	mutationCtx *internal.MutationContext
 }
 
-func (c *committer) prepareCommit(ctx context.Context, updates iter.Seq[KVUpdate], updateCount int) (*prepareCommitResult, error) {
+func (c *commitTreeFinalizer) prepareCommit(ctx context.Context, updates iter.Seq[KVUpdate], updateCount int) (*prepareCommitResult, error) {
 	ctx, span := tracer.Start(ctx, "PrepareCommit")
 	defer span.End()
 
@@ -313,7 +313,7 @@ func (c *committer) prepareCommit(ctx context.Context, updates iter.Seq[KVUpdate
 	}, ctx.Err()
 }
 
-func (c *committer) WaitForHash() (storetypes.CommitID, error) {
+func (c *commitTreeFinalizer) WaitForHash() (storetypes.CommitID, error) {
 	select {
 	case <-c.hashReady:
 	case <-c.done:
@@ -325,14 +325,14 @@ func (c *committer) WaitForHash() (storetypes.CommitID, error) {
 	return c.workingHash, nil
 }
 
-func (c *committer) PrepareFinalize() (storetypes.CommitID, error) {
+func (c *commitTreeFinalizer) PrepareFinalize() (storetypes.CommitID, error) {
 	if err := c.SignalFinalize(); err != nil {
 		return storetypes.CommitID{}, err
 	}
 	return c.WaitForHash()
 }
 
-func (c *committer) Rollback() error {
+func (c *commitTreeFinalizer) Rollback() error {
 	c.cancel()
 	c.finalizeOnce.Do(func() {
 		close(c.finalizeOrRollback)
@@ -349,14 +349,14 @@ func (c *committer) Rollback() error {
 	return nil
 }
 
-func (c *committer) SignalFinalize() error {
+func (c *commitTreeFinalizer) SignalFinalize() error {
 	c.finalizeOnce.Do(func() {
 		close(c.finalizeOrRollback)
 	})
 	return nil
 }
 
-func (c *committer) Finalize() (storetypes.CommitID, error) {
+func (c *commitTreeFinalizer) Finalize() (storetypes.CommitID, error) {
 	if err := c.SignalFinalize(); err != nil {
 		return storetypes.CommitID{}, err
 	}

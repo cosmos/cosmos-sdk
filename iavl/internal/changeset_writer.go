@@ -38,6 +38,12 @@ func NewChangesetWriter(treeDir string, stagedVersion uint32, treeStore *TreeSto
 		checkpointsData: NewStructWriter[CheckpointInfo](files.CheckpointsFile()),
 		changeset:       NewChangeset(treeStore, files),
 	}
+	// Create an initial reader so the changeset is immediately readable (with zero entries).
+	// This avoids a race where the changeset is in the version map but has no reader
+	// because the async checkpointer hasn't called CreateReader() yet.
+	if err := cs.CreateReader(); err != nil {
+		return nil, fmt.Errorf("failed to create initial changeset reader: %w", err)
+	}
 	return cs, nil
 }
 

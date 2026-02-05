@@ -78,8 +78,6 @@ type Context struct {
 	incarnationCache map[string]any // incarnationCache is shared between multiple incarnations of the same transaction, it must only cache stateless computation results that only depends on tx body and block level information that don't change during block execution, like the result of tx signature verification.
 	// sum the gas wanted by all the transactions in the current block, only accessible by end blocker
 	blockGasWanted uint64
-	// earliestStoreHeight is the earliest height available in the store
-	earliestStoreHeight int64
 }
 
 // Proposed rename, not done to avoid API breakage
@@ -116,7 +114,6 @@ func (c Context) TxCount() int                                  { return c.txCou
 func (c Context) BlockGasUsed() uint64                          { return c.blockGasUsed }
 func (c Context) IncarnationCache() map[string]any              { return c.incarnationCache }
 func (c Context) BlockGasWanted() uint64                        { return c.blockGasWanted }
-func (c Context) EarliestStoreHeight() int64                     { return c.earliestStoreHeight }
 
 // BlockHeader returns the header by value.
 func (c Context) BlockHeader() cmtproto.Header {
@@ -365,11 +362,6 @@ func (c Context) WithBlockGasUsed(gasUsed uint64) Context {
 
 func (c Context) WithBlockGasWanted(gasWanted uint64) Context {
 	c.blockGasWanted = gasWanted
-	return c
-}
-
-func (c Context) WithEarliestStoreHeight(height int64) Context {
-	c.earliestStoreHeight = height
 	return c
 }
 

@@ -475,5 +475,8 @@ func (app *SimApp) RegisterTendermintService(clientCtx client.Context) {
 }
 
 func (app *SimApp) RegisterNodeService(clientCtx client.Context, cfg config.Config) {
-	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter(), cfg)
+	earliestHeightFn := func() int64 {
+		return app.CommitMultiStore().EarliestVersion()
+	}
+	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter(), cfg, earliestHeightFn)
 }

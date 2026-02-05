@@ -36,11 +36,9 @@ func (w *PollWatcher[T]) Start(ctx context.Context) {
 				return
 			case <-ticker.C:
 				x, err := w.checker()
-				if err != nil {
-					if !os.IsNotExist(err) {
-						w.errorHandler.Error("failed to check for updates", err)
-					}
-				} else {
+				if err != nil && !os.IsNotExist(err) {
+					w.errorHandler.Error("failed to check for updates", err)
+				} else if err == nil {
 					// to make PollWatcher generic on any type T (including []byte), we use reflect.DeepEqual and the default zero value of T
 					var zero T
 					if !reflect.DeepEqual(x, zero) {

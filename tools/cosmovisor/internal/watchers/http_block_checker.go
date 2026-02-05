@@ -11,6 +11,9 @@ import (
 	"cosmossdk.io/log"
 )
 
+// blockEndpoints lists the RPC endpoints to try for getting the latest block height
+var blockEndpoints = []string{"/v1/block", "/block"}
+
 func NewHTTPRPCBLockChecker(baseUrl string, logger log.Logger) HeightChecker {
 	return &httpRPCBlockChecker{
 		baseUrl: baseUrl,
@@ -29,23 +32,18 @@ func (j *httpRPCBlockChecker) GetLatestBlockHeight() (uint64, error) {
 		return j.getLatestBlockHeight(j.subUrl)
 	}
 
-	height, err1 := j.getLatestBlockHeight("/v1/block")
-	if err1 == nil {
-		j.logger.Info("Successfully resolved latest block height from /v1/block", "url", j.baseUrl+"/v1/block")
-		// If we successfully got the height from /v1/block, we can cache the subUrl
-		j.subUrl = "/v1/block"
-		return height, nil
+	var errs []error
+	for _, endpoint := range blockEndpoints {
+		height, err := j.getLatestBlockHeight(endpoint)
+		if err == nil {
+			j.logger.Info("Successfully resolved latest block height", "url", j.baseUrl+endpoint)
+			j.subUrl = endpoint
+			return height, nil
+		}
+		errs = append(errs, err)
 	}
 
-	height, err2 := j.getLatestBlockHeight("/block")
-	if err2 == nil {
-		j.logger.Info("Successfully resolved latest block height from /block", "url", j.baseUrl+"/block")
-		// If we successfully got the height from /block, we can cache the subUrl
-		j.subUrl = "/block"
-		return height, nil
-	}
-
-	return 0, fmt.Errorf("failed to get latest block height from both /block and /v1/block RPC endpoints: %w", errors.Join(err1, err2))
+	return 0, fmt.Errorf("failed to get latest block height from RPC endpoints %v: %w", blockEndpoints, errors.Join(errs...))
 }
 
 func (j *httpRPCBlockChecker) getLatestBlockHeight(subUrl string) (uint64, error) {

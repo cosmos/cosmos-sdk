@@ -471,10 +471,7 @@ func (cfg *Config) CurrentBinaryUpgradeInfo() (*upgradetypes.Plan, error) {
 // CurrentBinaryUpgradeName returns the upgrade info for the current active binary, if any.
 func (cfg *Config) CurrentBinaryUpgradeName() string {
 	upgradeInfo, err := cfg.CurrentBinaryUpgradeInfo()
-	if err != nil {
-		return ""
-	}
-	if upgradeInfo == nil {
+	if err != nil || upgradeInfo == nil {
 		return ""
 	}
 	return upgradeInfo.Name

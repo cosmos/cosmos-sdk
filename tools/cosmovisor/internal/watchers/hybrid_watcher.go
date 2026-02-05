@@ -7,7 +7,6 @@ import (
 
 type HybridWatcher struct {
 	outChan chan []byte
-	errChan chan error
 }
 
 var _ Watcher[[]byte] = &HybridWatcher{}
@@ -15,11 +14,9 @@ var _ Watcher[[]byte] = &HybridWatcher{}
 func NewHybridWatcher(ctx context.Context, errorHandler ErrorHandler, dirWatcher *FSNotifyWatcher, filename string, backupPollInterval time.Duration) *HybridWatcher {
 	pollWatcher := NewFilePollWatcher(ctx, errorHandler, filename, backupPollInterval)
 	outChan := make(chan []byte, 1)
-	errChan := make(chan error, 1)
 
 	go func() {
 		defer close(outChan)
-		defer close(errChan)
 		for {
 			select {
 			case <-ctx.Done():
@@ -42,14 +39,9 @@ func NewHybridWatcher(ctx context.Context, errorHandler ErrorHandler, dirWatcher
 
 	return &HybridWatcher{
 		outChan: outChan,
-		errChan: errChan,
 	}
 }
 
 func (h HybridWatcher) Updated() <-chan []byte {
 	return h.outChan
-}
-
-func (h HybridWatcher) Errors() <-chan error {
-	return h.errChan
 }

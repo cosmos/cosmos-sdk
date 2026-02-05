@@ -643,10 +643,15 @@ func (db *CommitMultiTree) LoadLatestVersion() error {
 		return bytes.Compare([]byte(a.key.Name()), []byte(b.key.Name()))
 	})
 
+	version, ci, err := loadLatestCommitInfo(db.dir)
+	if err != nil {
+		return fmt.Errorf("failed to load latest commit info: %w", err)
+	}
+
 	for i, si := range db.stores {
 		key := si.key
 		storeType := si.typ
-		store, err := db.loadStore(si.key, storeType)
+		store, err := db.loadStore(si.key, storeType, version)
 		if err != nil {
 			return fmt.Errorf("failed to load store %s: %w", key.Name(), err)
 		}
@@ -657,11 +662,6 @@ func (db *CommitMultiTree) LoadLatestVersion() error {
 		} else {
 			db.otherStores = append(db.otherStores, si)
 		}
-	}
-
-	version, ci, err := loadLatestCommitInfo(db.dir)
-	if err != nil {
-		return fmt.Errorf("failed to load latest commit info: %w", err)
 	}
 
 	db.version = version
@@ -677,7 +677,7 @@ func (db *CommitMultiTree) LoadLatestVersion() error {
 	return nil
 }
 
-func (db *CommitMultiTree) loadStore(key storetypes.StoreKey, typ storetypes.StoreType) (storetypes.CacheWrapper, error) {
+func (db *CommitMultiTree) loadStore(key storetypes.StoreKey, typ storetypes.StoreType, expectedVersion uint64) (storetypes.CacheWrapper, error) {
 	switch typ {
 	case storetypes.StoreTypeIAVL, storetypes.StoreTypeDB:
 		dir := filepath.Join(db.dir, "stores", fmt.Sprintf(key.Name(), ".iavl"))
@@ -687,7 +687,14 @@ func (db *CommitMultiTree) loadStore(key storetypes.StoreKey, typ storetypes.Sto
 				return nil, fmt.Errorf("failed to create store dir %s: %w", dir, err)
 			}
 		}
-		return NewCommitTree(dir, db.opts)
+		ct, err := NewCommitTree(dir, db.opts)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load CommitTree for store %s: %w", key.Name(), err)
+		}
+		if uint64(ct.LatestVersion()) != expectedVersion {
+			return nil, fmt.Errorf("store %s version mismatch: expected %d, got %d", key.Name(), expectedVersion, ct.LatestVersion())
+		}
+		return ct, nil
 	case storetypes.StoreTypeTransient:
 		_, ok := key.(*storetypes.TransientStoreKey)
 		if !ok {

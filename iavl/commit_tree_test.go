@@ -78,7 +78,7 @@ func (s *SimCommitTree) openV2Tree(t interface {
 		// intentionally choose some small sizes to force checkpoint and eviction behavior
 		ChangesetRolloverSize: 4096,
 		EvictDepth:            2,
-		CheckpointInterval:    1,
+		CheckpointInterval:    2,
 	})
 	require.NoError(t, err, "failed to create iavlx tree")
 }

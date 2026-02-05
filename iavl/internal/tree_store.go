@@ -202,6 +202,10 @@ func (ts *TreeStore) Latest() *NodePointer {
 	return ts.root.Load()
 }
 
+func (ts *TreeStore) LatestVersion() uint32 {
+	return ts.version.Load()
+}
+
 func (ts *TreeStore) RootAtVersion(targetVersion uint32) (*NodePointer, error) {
 	ctx, span := tracer.Start(context.Background(),
 		"TreeStore.RootAtVersion",

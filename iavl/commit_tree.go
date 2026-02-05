@@ -374,6 +374,10 @@ func (c *CommitTree) Latest() internal.TreeReader {
 	return internal.NewTreeReader(c.treeStore.Latest())
 }
 
+func (c *CommitTree) LatestVersion() uint32 {
+	return c.treeStore.LatestVersion()
+}
+
 func (c *CommitTree) GetVersion(version int64) (internal.TreeReader, error) {
 	root, err := c.treeStore.RootAtVersion(uint32(version))
 	if err != nil {

@@ -44,10 +44,22 @@ func NewCommitTree(dir string, opts Options) (*CommitTree, error) {
 	if evictDepth == 0 {
 		evictDepth = 16 // default evict depth 2^16 = 65536 leaf nodes
 	}
+	var rootCacheSize uint64 = 5 // default to caching 5 roots
+	if opts.RootCacheSize > 0 {
+		rootCacheSize = uint64(opts.RootCacheSize)
+	} else if opts.RootCacheSize < 0 {
+		rootCacheSize = 0
+	}
+	var rootCacheExpiry = 5 * time.Second // default to 5 seconds
+	if opts.RootCacheExpiry > 0 {
+		rootCacheExpiry = time.Duration(opts.RootCacheExpiry) * time.Millisecond
+	}
 	treeStore, err := internal.NewTreeStore(dir, internal.TreeStoreOptions{
 		ChangesetRolloverSize: changesetRolloverSize,
 		EvictDepth:            evictDepth,
 		CheckpointInterval:    opts.CheckpointInterval,
+		RootCacheSize:         rootCacheSize,
+		RootCacheExpiry:       rootCacheExpiry,
 	})
 
 	if err != nil {

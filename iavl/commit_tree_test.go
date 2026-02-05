@@ -78,6 +78,9 @@ func (s *SimCommitTree) openV2Tree(t interface {
 		ChangesetRolloverSize: 4096,
 		EvictDepth:            2,
 		CheckpointInterval:    2,
+		// disable caches to simplify testing
+		RootCacheSize:   -1,
+		RootCacheExpiry: -1,
 	})
 	require.NoError(t, err, "failed to create iavlx tree")
 }
@@ -145,6 +148,20 @@ func (s *SimCommitTree) checkNewVersion(t *rapid.T) {
 	if closeReopen {
 		require.NoError(t, s.treeV2.Close())
 		s.openV2Tree(t)
+	}
+
+	// randomly check historical state
+	checkHistory := rapid.Bool().Draw(t, "checkHistory")
+	if checkHistory && versionV1 > 1 {
+		historyVersion := int64(rapid.IntRange(1, int(versionV1-1)).Draw(t, "historyVersion"))
+		treeV1, err := s.treeV1.GetImmutable(historyVersion)
+		require.NoError(t, err)
+		treeV2, err := s.treeV2.GetVersion(historyVersion)
+		require.NoError(t, err)
+		histIterV1, err := treeV1.Iterator(nil, nil, true)
+		require.NoError(t, err, "failed to create historical iterator for V1 tree")
+		histIterV2 := treeV2.Iterator(nil, nil)
+		compareIteratorsAtVersion(t, histIterV1, histIterV2)
 	}
 }
 

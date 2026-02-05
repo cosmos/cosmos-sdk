@@ -21,6 +21,8 @@ type TreeStoreOptions struct {
 	EvictDepth            uint8
 	CheckpointInterval    int
 	MemoryBudget          int64
+	RootCacheSize         uint64
+	RootCacheExpiry       time.Duration
 }
 
 type TreeStore struct {
@@ -54,9 +56,9 @@ func NewTreeStore(dir string, opts TreeStoreOptions) (*TreeStore, error) {
 		changesetsByVersion: &btree.Map[uint32, *Changeset]{},
 		rootByVersionCache: ttlcache.New[uint32, *NodePointer](
 			// cache up to 10 recent roots by version
-			ttlcache.WithCapacity[uint32, *NodePointer](10),
+			ttlcache.WithCapacity[uint32, *NodePointer](opts.RootCacheSize),
 			// default ttl of 5 seconds
-			ttlcache.WithTTL[uint32, *NodePointer](5*time.Second),
+			ttlcache.WithTTL[uint32, *NodePointer](opts.RootCacheExpiry),
 		),
 	}
 	// start automatic cache cleanup

@@ -18,10 +18,11 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/log"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
+
 	"cosmossdk.io/tools/cosmovisor/v2/internal/watchers"
 
-	upgradetypes "cosmossdk.io/x/upgrade/types"
-	
+	"github.com/cosmos/cosmos-sdk/server"
 )
 
 func main() {

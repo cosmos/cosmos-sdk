@@ -104,6 +104,29 @@ func (s *upgradeTestSuite) TestCurrentAlwaysSymlinkToDirectory() {
 	s.assertCurrentLink(cfg, filepath.Join("upgrades", "chain2"))
 }
 
+func (s *upgradeTestSuite) TestUpgradeInfoRoundtrip() {
+	cfg := prepareConfig(
+		s.T(),
+		fmt.Sprintf("%s/%s", workDir, "testdata/validate"),
+		cosmovisor.Config{
+			Name: "dummyd",
+		},
+	)
+
+	// Write upgrade info using SetCurrentUpgrade (uses jsonpb.Marshal)
+	expectedPlan := upgradetypes.Plan{Name: "chain2", Height: 100, Info: "test info"}
+	err := cfg.SetCurrentUpgrade(expectedPlan)
+	s.Require().NoError(err)
+
+	// Read it back using CurrentBinaryUpgradeInfo (uses jsonpb.Unmarshal)
+	info, err := cfg.CurrentBinaryUpgradeInfo()
+	s.Require().NoError(err)
+	s.Require().NotNil(info)
+	s.Require().Equal(expectedPlan.Name, info.Name)
+	s.Require().Equal(expectedPlan.Height, info.Height)
+	s.Require().Equal(expectedPlan.Info, info.Info)
+}
+
 func (s *upgradeTestSuite) assertCurrentLink(cfg *cosmovisor.Config, target string) {
 	link := filepath.Join(cfg.Root(), "current")
 

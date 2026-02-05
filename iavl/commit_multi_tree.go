@@ -337,6 +337,9 @@ func (db *multiTreeFinalizer) prepareCommit(ctx context.Context) error {
 }
 
 func (db *multiTreeFinalizer) PrepareFinalize() (storetypes.CommitID, error) {
+	if err := db.SignalFinalize(); err != nil {
+		return storetypes.CommitID{}, err
+	}
 	select {
 	case <-db.hashReady:
 	case <-db.done:

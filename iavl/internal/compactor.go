@@ -3,21 +3,19 @@ package internal
 import (
 	"context"
 	"fmt"
-	"log/slog"
 )
 
 type CompactOptions struct {
-	RetainCriteria RetainCriteria
-	CompactedAt    uint32 // version at which compaction is done
-	//// CheckpointWALStart is the version after which
-	//CheckpointWALStart uint32
+	RetainCriteria  RetainCriteria
+	CompactedAt     uint32 // version at which compaction is done
 	WALStartVersion uint32
 }
 
 type RetainCriteria func(createVersion, orphanVersion uint32) bool
 
 type Compactor struct {
-	criteria RetainCriteria
+	criteria        RetainCriteria
+	walStartVersion uint32
 
 	processedChangesets []*Changeset
 	treeStore           *TreeStore
@@ -59,17 +57,18 @@ func NewCompacter(ctx context.Context, reader *ChangesetReader, opts CompactOpti
 	}
 
 	c := &Compactor{
-		ctx:            ctx,
-		criteria:       opts.RetainCriteria,
-		treeStore:      store,
-		files:          newFiles,
-		walWriter:      NewWALWriter(newFiles.WALFile()),
-		kvlogWriter:    NewKVDataWriter(newFiles.KVDataFile()),
-		leavesWriter:   NewStructWriter[LeafLayout](newFiles.leavesFile),
-		branchesWriter: NewStructWriter[BranchLayout](newFiles.branchesFile),
-		cpInfoWriter:   NewStructWriter[CheckpointInfo](newFiles.checkpointsFile),
-		orphanWriter:   NewOrphanWriter(newFiles.orphansFile),
-		offsetCache:    make(map[NodeID]uint32),
+		ctx:             ctx,
+		criteria:        opts.RetainCriteria,
+		walStartVersion: opts.WALStartVersion,
+		treeStore:       store,
+		files:           newFiles,
+		walWriter:       NewWALWriter(newFiles.WALFile()),
+		kvlogWriter:     NewKVDataWriter(newFiles.KVDataFile()),
+		leavesWriter:    NewStructWriter[LeafLayout](newFiles.leavesFile),
+		branchesWriter:  NewStructWriter[BranchLayout](newFiles.branchesFile),
+		cpInfoWriter:    NewStructWriter[CheckpointInfo](newFiles.checkpointsFile),
+		orphanWriter:    NewOrphanWriter(newFiles.orphansFile),
+		offsetCache:     make(map[NodeID]uint32),
 	}
 
 	// Process first changeset immediately
@@ -83,6 +82,10 @@ func NewCompacter(ctx context.Context, reader *ChangesetReader, opts CompactOpti
 
 func (c *Compactor) processChangeset(reader *ChangesetReader) error {
 	// TODO rewrite WAL
+	_, err := RewriteWAL(c.walWriter, reader.changeset.files.WALFile(), uint64(c.walStartVersion))
+	if err != nil {
+		return fmt.Errorf("failed to rewrite WAL during compaction: %w", err)
+	}
 
 	cpInfo := reader.checkpointsInfo
 	numCheckpoints := cpInfo.Count()
@@ -90,7 +93,7 @@ func (c *Compactor) processChangeset(reader *ChangesetReader) error {
 	branchesData := reader.branchesData
 
 	// flush orphan writer to ensure all orphans are written before reading
-	err := reader.changeset.orphanWriter.Flush()
+	err = reader.changeset.orphanWriter.Flush()
 	if err != nil {
 		return fmt.Errorf("failed to flush orphan writer before reading orphan map: %w", err)
 	}
@@ -99,7 +102,7 @@ func (c *Compactor) processChangeset(reader *ChangesetReader) error {
 		return fmt.Errorf("failed to read orphan map: %w", err)
 	}
 
-	slog.DebugContext(c.ctx, "processing changeset for compaction", "numCheckpoints", numCheckpoints)
+	logger.DebugContext(c.ctx, "processing changeset for compaction", "numCheckpoints", numCheckpoints)
 	for i := 0; i < numCheckpoints; i++ {
 		cpInfo := cpInfo.UnsafeItem(uint32(i)) // copy
 		newLeafStartIdx := uint32(0)
@@ -111,7 +114,8 @@ func (c *Compactor) processChangeset(reader *ChangesetReader) error {
 		// Iterate leaves
 		// For each leaf, check if it should be retained
 		for j := uint32(0); j < leafCount; j++ {
-			leaf := *leavesData.UnsafeItem(leafStartOffset + j) // copy so we don't modify original
+			existingLeaf := LeafPersisted{store: reader, layout: leavesData.UnsafeItem(leafStartOffset + j)}
+			leaf := *existingLeaf.layout // copy so we don't modify original
 			id := leaf.ID
 			orphanVersion := orphanMap[id]
 			retain := orphanVersion == 0 || c.criteria(leaf.Version, orphanVersion)
@@ -130,12 +134,19 @@ func (c *Compactor) processChangeset(reader *ChangesetReader) error {
 			newLeafEndIdx = id.Index()
 			newLeafCount++
 
-			// TODO lookup new key, value offsets
-			//if c.compactWAL {
-			//	k, v, err := reader.ReadKV(id, leaf.KeyOffset)
+			//var keyOffset
+			//keyOffset, ok := walRewriteInfo.KeyOffsetRemapping[uint64(leaf.KeyOffset)]
+			//if !ok {
+			//	key, err := existingLeaf.Key()
 			//	if err != nil {
-			//		return fmt.Errorf("failed to read KV for leaf %s: %w", id, err)
+			//		return fmt.Errorf("failed to read key for leaf %s: %w", id, err)
 			//	}
+			//	c.kvlogWriter.WriteKeyBlob(key.UnsafeBytes())
+			//}
+			//k, v, err := reader.ReadKV(id, leaf.KeyOffset)
+			//if err != nil {
+			//	return fmt.Errorf("failed to read KV for leaf %s: %w", id, err)
+			//}
 			//
 			//	offset, err := c.kvlogWriter.WriteKV(k, v)
 			//	if err != nil {

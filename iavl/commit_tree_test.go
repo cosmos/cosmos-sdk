@@ -7,6 +7,7 @@ import (
 	"runtime/debug"
 	"slices"
 	"testing"
+	"time"
 
 	corestore "cosmossdk.io/core/store"
 	sdklog "cosmossdk.io/log"
@@ -30,6 +31,11 @@ func FuzzIAVLX(f *testing.F) {
 func testIAVLXSims(t *rapid.T) {
 	defer func() {
 		if r := recover(); r != nil {
+			// "overrun" happens when fuzz input is too short for rapid to generate all needed values
+			// This is expected with Go's native fuzzing - just ignore these cases
+			if r == "overrun" {
+				return
+			}
 			t.Fatalf("panic recovered: %v\nStack trace:\n%s", r, debug.Stack())
 		}
 	}()
@@ -90,9 +96,8 @@ func (s *SimMachine) checkNewVersion(t *rapid.T) {
 	if testRollback {
 		tempUpdates := s.genUpdates(t)
 		committer := s.treeV2.StartCommit(context.Background(), slices.Values(tempUpdates), len(tempUpdates))
-		// get the hash so we actually wait a bit before aborting
-		_, err := committer.PrepareFinalize()
-		require.NoError(t, err)
+		// wait a little bit of time before rolling back
+		time.Sleep(5 * time.Millisecond)
 		require.NoError(t, committer.Rollback())
 	}
 

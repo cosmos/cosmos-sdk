@@ -314,6 +314,9 @@ func (c *committer) prepareCommit(ctx context.Context, updates iter.Seq[KVUpdate
 }
 
 func (c *committer) PrepareFinalize() (storetypes.CommitID, error) {
+	if err := c.SignalFinalize(); err != nil {
+		return storetypes.CommitID{}, err
+	}
 	select {
 	case <-c.hashReady:
 	case <-c.done:
@@ -327,7 +330,9 @@ func (c *committer) PrepareFinalize() (storetypes.CommitID, error) {
 
 func (c *committer) Rollback() error {
 	c.cancel()
-	close(c.finalizeOrRollback)
+	c.finalizeOnce.Do(func() {
+		close(c.finalizeOrRollback)
+	})
 	<-c.done
 	err := c.err.Load()
 	if err == nil {

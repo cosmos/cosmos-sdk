@@ -1371,8 +1371,7 @@ func (bapp *BaseApp) CreateQueryContextWithCheckHeader(height int64, prove, chec
 		WithMinGasPrices(bapp.gasConfig.MinGasPrices).
 		WithGasMeter(storetypes.NewGasMeter(bapp.gasConfig.QueryGasLimit)).
 		WithBlockHeader(*header).
-		WithBlockHeight(height).
-		WithEarliestStoreHeight(bapp.cms.EarliestVersion())
+		WithBlockHeight(height)
 
 	if !isLatest {
 		rms, ok := bapp.cms.(*rootmulti.Store)

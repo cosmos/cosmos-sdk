@@ -172,14 +172,16 @@ func (c *commitTreeFinalizer) prepareCommit(ctx context.Context, updates iter.Se
 
 	// TODO pre-allocate a decent sized slice that we reuse and reset across commits
 	nodeUpdates := make([]internal.KVUpdate, 0, updateCount)
-	for update := range updates {
-		if update.Delete {
-			nodeUpdates = append(nodeUpdates, internal.KVUpdate{DeleteKey: update.Key})
-		} else {
-			nodeUpdates = append(
-				nodeUpdates,
-				internal.KVUpdate{SetNode: mutationCtx.NewLeafNode(update.Key, update.Value)},
-			)
+	if updates != nil { // updates can be nil for empty commits
+		for update := range updates {
+			if update.Delete {
+				nodeUpdates = append(nodeUpdates, internal.KVUpdate{DeleteKey: update.Key})
+			} else {
+				nodeUpdates = append(
+					nodeUpdates,
+					internal.KVUpdate{SetNode: mutationCtx.NewLeafNode(update.Key, update.Value)},
+				)
+			}
 		}
 	}
 

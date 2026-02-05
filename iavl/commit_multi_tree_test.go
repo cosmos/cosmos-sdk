@@ -121,6 +121,9 @@ func (sim *SimCommitMultiTree) openV2Tree(t *rapid.T) {
 		ChangesetRolloverSize: 4096,
 		EvictDepth:            2,
 		CheckpointInterval:    2,
+		// use only a small cache for testing
+		RootCacheSize:   2,
+		RootCacheExpiry: 5, // 5 milliseconds
 	})
 	require.NoError(t, err, "failed to create iavlx commit multi tree")
 	sim.mountStores(sim.mtV2)
@@ -195,6 +198,26 @@ func (sim *SimCommitMultiTree) checkNewVersion(t *rapid.T) {
 	if closeReopen {
 		require.NoError(t, sim.mtV2.Close())
 		sim.openV2Tree(t)
+	}
+
+	// optionally check history by reopening old versions
+	checkHistory := rapid.Bool().Draw(t, "checkHistory")
+	if checkHistory && commitId1.Version > 1 {
+		historyVersion := rapid.IntRange(1, int(commitId1.Version-1)).Draw(t, "historyVersion")
+
+		historyMs1, err := sim.mtV1.CacheMultiStoreWithVersion(int64(historyVersion))
+		require.NoError(t, err, "failed to load historical version from V1 store")
+		historyMs2, err := sim.mtV2.CacheMultiStoreWithVersion(int64(historyVersion))
+		require.NoError(t, err, "failed to load historical version from V2 store")
+
+		// compare contents of kv trees only
+		for _, storeKey := range sim.kvStoreKeys {
+			kvStore1 := historyMs1.GetKVStore(storeKey)
+			kvStore2 := historyMs2.GetKVStore(storeKey)
+			iterV1 := kvStore1.Iterator(nil, nil)
+			iterV2 := kvStore2.Iterator(nil, nil)
+			compareIteratorsAtVersion(t, iterV1, iterV2)
+		}
 	}
 }
 

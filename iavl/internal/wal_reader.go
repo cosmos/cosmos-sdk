@@ -14,7 +14,11 @@ func ReadWAL(file *os.File) iter.Seq2[WALEntry, error] {
 			yield(WALEntry{}, fmt.Errorf("failed to open WAL data store: %w", err))
 		}
 	}
-	if kvr.Len() == 0 || kvr.At(0) != byte(WALEntryStart) {
+	if kvr.Len() == 0 {
+		// empty WAL file — no entries to replay
+		return func(yield func(WALEntry, error) bool) {}
+	}
+	if kvr.At(0) != byte(WALEntryStart) {
 		return func(yield func(WALEntry, error) bool) {
 			yield(WALEntry{}, fmt.Errorf("data does not contain a valid WAL start entry"))
 		}

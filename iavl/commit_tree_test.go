@@ -3,6 +3,7 @@ package iavl
 import (
 	"bytes"
 	"context"
+	"math/rand/v2"
 	"os"
 	"runtime/debug"
 	"slices"
@@ -14,7 +15,6 @@ import (
 	iavl1 "github.com/cosmos/iavl"
 	dbm "github.com/cosmos/iavl/db"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/exp/maps"
 	"pgregory.net/rapid"
 
 	"github.com/cosmos/cosmos-sdk/iavl/internal"
@@ -48,10 +48,10 @@ func testCommitTreeSims(t *rapid.T) {
 	require.NoError(t, err, "failed to create temp directory")
 	defer os.RemoveAll(tempDir)
 	simMachine := &SimCommitTree{
-		treeV1:       treeV1,
-		treeV2:       nil,
-		dirV2:        tempDir,
-		existingKeys: map[string][]byte{},
+		treeV1: treeV1,
+		treeV2: nil,
+		dirV2:  tempDir,
+		keyGen: newKeyGen(t),
 	}
 	simMachine.openV2Tree(t)
 
@@ -65,8 +65,7 @@ type SimCommitTree struct {
 	treeV1 *iavl1.MutableTree
 	treeV2 *CommitTree
 	dirV2  string
-	// existingKeys keeps track of keys that have been set in the tree or deleted. Deleted keys are retained as nil values.
-	existingKeys map[string][]byte
+	keyGen *keyGen
 }
 
 func (s *SimCommitTree) openV2Tree(t interface {
@@ -94,14 +93,14 @@ func (s *SimCommitTree) checkNewVersion(t *rapid.T) {
 	// randomly generate some updates that we'll revert to test rollback capability
 	testRollback := rapid.Bool().Draw(t, "testRollback")
 	if testRollback {
-		tempUpdates := s.genUpdates(t)
+		tempUpdates := s.genUpdates(t, true)
 		committer := s.treeV2.StartCommit(context.Background(), slices.Values(tempUpdates), len(tempUpdates))
 		// wait a little bit of time before rolling back
 		time.Sleep(5 * time.Millisecond)
 		require.NoError(t, committer.Rollback())
 	}
 
-	updates := s.genUpdates(t)
+	updates := s.genUpdates(t, false)
 	// apply updates to v1 tree
 	for _, update := range updates {
 		if update.Delete {
@@ -147,23 +146,20 @@ func (s *SimCommitTree) checkNewVersion(t *rapid.T) {
 		require.NoError(t, s.treeV2.Close())
 		s.openV2Tree(t)
 	}
-
-	// update existing keys
-	for _, update := range updates {
-		if update.Delete {
-			delete(s.existingKeys, string(update.Key))
-		} else {
-			s.existingKeys[string(update.Key)] = update.Value
-		}
-	}
 }
 
-func (s *SimCommitTree) genUpdates(t *rapid.T) []KVUpdate {
+func (s *SimCommitTree) genUpdates(t *rapid.T, forRollback bool) []KVUpdate {
 	n := rapid.IntRange(1, 100).Draw(t, "n")
 	updates := make([]KVUpdate, 0, n)
 	for i := 0; i < n; i++ {
-		key := s.selectKey(t)
-		isDelete := rapid.Bool().Draw(t, "isDelete")
+		var key []byte
+		var isDelete bool
+		if forRollback {
+			key = rapid.SliceOfN(rapid.Byte(), 1, 500).Draw(t, "rollbackKey")
+			isDelete = rapid.Bool().Draw(t, "rollbackIsDelete")
+		} else {
+			key, isDelete = s.keyGen.genOp(t)
+		}
 		if isDelete {
 			updates = append(updates, KVUpdate{Key: key, Delete: true})
 		} else {
@@ -172,14 +168,6 @@ func (s *SimCommitTree) genUpdates(t *rapid.T) []KVUpdate {
 		}
 	}
 	return updates
-}
-
-func (s *SimCommitTree) selectKey(t *rapid.T) []byte {
-	if len(s.existingKeys) > 0 && rapid.Bool().Draw(t, "existingKey") {
-		return []byte(rapid.SampledFrom(maps.Keys(s.existingKeys)).Draw(t, "key"))
-	} else {
-		return rapid.SliceOfN(rapid.Byte(), 1, 500).Draw(t, "key")
-	}
 }
 
 func compareIteratorsAtVersion(t *rapid.T, iterV1, iterV2 corestore.Iterator) {
@@ -206,4 +194,59 @@ func compareIteratorsAtVersion(t *rapid.T, iterV1, iterV2 corestore.Iterator) {
 		iterV1.Next()
 		iterV2.Next()
 	}
+}
+
+// keyGen tracks key generation state per store using index-based deterministic key generation.
+// Keys are generated from (index, seed) so no map iteration is needed, making tests fully reproducible.
+type keyGen struct {
+	insertIndex uint64 // next index for new key insertion
+	deleteIndex uint64 // next index for sequential deletion (keys below this are deleted)
+	seed        uint64
+}
+
+func newKeyGen(t *rapid.T) *keyGen {
+	seed := rapid.Uint64().Draw(t, "keyGenSeed")
+	return &keyGen{
+		insertIndex: 0,
+		deleteIndex: 0,
+		seed:        seed,
+	}
+}
+
+func (gen *keyGen) genOp(t *rapid.T) (key []byte, isDelete bool) {
+	hasExisting := gen.insertIndex > gen.deleteIndex
+
+	if hasExisting {
+		// 0=insert, 1=update existing, 2=delete existing
+		op := rapid.IntRange(0, 2).Draw(t, "op")
+		switch op {
+		case 0: // insert new key
+			key = genKey(gen.insertIndex, gen.seed)
+			gen.insertIndex++
+		case 1: // update existing key
+			idx := uint64(rapid.IntRange(int(gen.deleteIndex), int(gen.insertIndex-1)).Draw(t, "keyIdx"))
+			key = genKey(idx, gen.seed)
+		case 2: // delete (sequential from bottom)
+			key = genKey(gen.deleteIndex, gen.seed)
+			gen.deleteIndex++
+			isDelete = true
+		}
+	} else {
+		// no existing keys, must insert
+		key = genKey(gen.insertIndex, gen.seed)
+		gen.insertIndex++
+	}
+
+	return key, isDelete
+}
+
+// genKey deterministically generates a key from an index and seed.
+func genKey(index, seed uint64) []byte {
+	rng := rand.New(rand.NewPCG(index, seed))
+	length := rng.IntN(500) + 1
+	key := make([]byte, length)
+	for i := range key {
+		key[i] = byte(rng.IntN(256))
+	}
+	return key
 }

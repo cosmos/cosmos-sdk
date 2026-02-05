@@ -401,7 +401,7 @@ lint-fix:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-protoVer=0.17.1
+protoVer=0.18.0
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 
@@ -498,6 +498,7 @@ test-system: build-v53 build
 	mkdir -p ./tests/systemtests/binaries/v0.53
 	mv $(BUILDDIR)/simdv53 ./tests/systemtests/binaries/v0.53/simd
 	$(MAKE) -C tests/systemtests test
+	$(MAKE) -C enterprise/poa/ test-system
 .PHONY: test-system
 
 # build-v53 checks out the v0.53.x branch, builds the binary, and renames it to simdv53.

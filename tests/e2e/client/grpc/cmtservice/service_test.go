@@ -19,7 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types"
 	qtypes "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/version"
-
 	_ "github.com/cosmos/cosmos-sdk/x/distribution"
 	_ "github.com/cosmos/cosmos-sdk/x/gov"
 )
@@ -378,7 +377,7 @@ func (s *E2ETestSuite) TestQueryLatestBlockResults() {
 	// REST endpoint
 	restRes, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/block_results/latest", val.APIAddress))
 	s.Require().NoError(err)
-	var blockResultsRes cmtservice.GetBlockResultsResponse
+	var blockResultsRes cmtservice.GetLatestBlockResultsResponse
 	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(restRes, &blockResultsRes))
 	s.Require().Greater(blockResultsRes.Height, int64(0))
 }
@@ -423,7 +422,6 @@ func (s *E2ETestSuite) TestBlockResults_GRPCGateway() {
 		{"invalid height 0", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/block_results/%d", vals[0].APIAddress, 0), true, "height must be greater than 0"},
 		{"invalid negative height", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/block_results/%d", vals[0].APIAddress, -1), true, "height must be greater than 0"},
 		{"future height", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/block_results/%d", vals[0].APIAddress, 999999999), true, "bigger than the chain length"},
-		{"latest", fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/block_results/latest", vals[0].APIAddress), false, ""},
 	}
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
@@ -440,6 +438,17 @@ func (s *E2ETestSuite) TestBlockResults_GRPCGateway() {
 			}
 		})
 	}
+}
+
+func (s *E2ETestSuite) TestLatestBlockResults_GRPCGateway() {
+	vals := s.network.Validators
+	res, err := testutil.GetRequest(fmt.Sprintf("%s/cosmos/base/tendermint/v1beta1/block_results/latest", vals[0].APIAddress))
+	s.Require().NoError(err)
+	var result cmtservice.GetLatestBlockResultsResponse
+	err = vals[0].ClientCtx.Codec.UnmarshalJSON(res, &result)
+	s.Require().NoError(err)
+	s.Require().Greater(result.Height, int64(0))
+	s.Require().NotNil(result.AppHash)
 }
 
 func (s *E2ETestSuite) TestBlockResultsContainsFinalizeBlockEvents() {

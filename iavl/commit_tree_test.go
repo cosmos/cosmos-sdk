@@ -149,7 +149,7 @@ func (s *SimCommitTree) checkNewVersion(t *rapid.T) {
 }
 
 func (s *SimCommitTree) genUpdates(t *rapid.T, forRollback bool) []KVUpdate {
-	n := rapid.IntRange(1, 100).Draw(t, "n")
+	n := rapid.IntRange(0, 100).Draw(t, "n")
 	updates := make([]KVUpdate, 0, n)
 	for i := 0; i < n; i++ {
 		var key []byte

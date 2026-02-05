@@ -147,7 +147,7 @@ func (sim *SimCommitMultiTree) checkNewVersion(t *rapid.T) {
 	testRollback := rapid.Bool().Draw(t, "testRollback")
 	if testRollback {
 		cacheMs2 := sim.mtV2.CacheMultiStore()
-		numUpdates := rapid.IntRange(1, 200).Draw(t, "numRollbackUpdates")
+		numUpdates := rapid.IntRange(0, 200).Draw(t, "numRollbackUpdates")
 		for i := 0; i < numUpdates; i++ {
 			j := rapid.IntRange(0, len(sim.storeKeys)-1).Draw(t, "storeKey")
 			storeKey := sim.storeKeys[j]
@@ -199,7 +199,7 @@ func (sim *SimCommitMultiTree) checkNewVersion(t *rapid.T) {
 }
 
 func (sim *SimCommitMultiTree) applyVersionUpdates(t *rapid.T, cacheMs1, cacheMs2 store.MultiStore) {
-	n := rapid.IntRange(1, 200).Draw(t, "numUpdates")
+	n := rapid.IntRange(0, 200).Draw(t, "numUpdates")
 	for i := 0; i < n; i++ {
 		j := rapid.IntRange(0, len(sim.storeKeys)-1).Draw(t, "storeKey")
 		storeKey := sim.storeKeys[j]

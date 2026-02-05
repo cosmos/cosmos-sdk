@@ -54,7 +54,6 @@ func (ts *TreeStore) load() error {
 	}
 
 	// load changesets in order
-	var lastChangesetWithACheckpoint uint32
 	for {
 		startVersion, compactionMap, ok := dirMap.PopMin()
 		if !ok {
@@ -83,14 +82,20 @@ func (ts *TreeStore) load() error {
 		}
 		firstCheckpoint := rdr.FirstCheckpoint()
 		if firstCheckpoint != 0 {
-			lastChangesetWithACheckpoint = startVersion
 			if firstCheckpoint <= ts.checkpointer.savedCheckpoint.Load() {
 				return fmt.Errorf("found duplicate or out-of-order checkpoint %d in changeset starting at version %d", firstCheckpoint, startVersion)
 			}
 			ts.checkpointer.changesetsByCheckpoint.Set(firstCheckpoint, cs)
 			lastCheckpoint := rdr.LastCheckpoint()
+			// save last checkpoint
 			ts.checkpointer.savedCheckpoint.Store(lastCheckpoint)
 			ts.checkpoint.Store(lastCheckpoint)
+			// save last checkpoint version
+			info, err := rdr.GetCheckpointInfo(lastCheckpoint)
+			if err != nil {
+				return fmt.Errorf("failed to get checkpoint info for checkpoint %d in changeset starting at version %d: %w", lastCheckpoint, startVersion, err)
+			}
+			ts.lastCheckpointVersion = info.Version
 		}
 		pin.Unpin()
 
@@ -102,9 +107,15 @@ func (ts *TreeStore) load() error {
 	if err != nil {
 		return fmt.Errorf("failed to load root after loading changesets: %w", err)
 	}
-	ts.lastCheckpointVersion = version
 
-	ts.changesetsByVersion.Ascend(lastChangesetWithACheckpoint, func(_ uint32, cs *Changeset) bool {
+	// find the changeset to start replaying from
+	replayFrom := ts.changesetForVersion(version + 1)
+	var replayFromVersion uint32 // default to 0
+	if replayFrom != nil {
+		replayFromVersion = replayFrom.Files().StartVersion()
+	}
+
+	ts.changesetsByVersion.Ascend(replayFromVersion, func(_ uint32, cs *Changeset) bool {
 		root, version, err = ReplayWAL(ctx, root, cs.files.WALFile(), version, 0)
 		if err != nil {
 			return false

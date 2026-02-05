@@ -12,11 +12,11 @@ import (
 	"path/filepath"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
-	"github.com/cosmos/gogoproto/proto"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
@@ -57,7 +57,7 @@ func (db *CommitMultiTree) StartCommit(ctx context.Context, store storetypes.Mul
 	}
 
 	storeInfos := make([]storetypes.StoreInfo, len(db.trees))
-	finalizers := make([]storetypes.CommitFinalizer, len(db.trees))
+	finalizers := make([]asyncCommitFinalizer, len(db.trees))
 	commitInfo := &storetypes.CommitInfo{
 		StoreInfos: storeInfos,
 		Timestamp:  header.Time,
@@ -76,7 +76,7 @@ func (db *CommitMultiTree) StartCommit(ctx context.Context, store storetypes.Mul
 				}
 				updates = cacheKv.Updates()
 			}
-			finalizers[i] = commitStore.StartCommit(ctx, updates, 0)
+			finalizers[i] = commitStore.StartCommit(ctx, updates, 0).(asyncCommitFinalizer)
 		case *mem.Store, *transient.Store, *transient.ObjStore:
 			finalizers[i] = &fauxCommitStoreFinalizer{
 				committer: commitStore.(storetypes.Committer),
@@ -111,7 +111,7 @@ type multiTreeFinalizer struct {
 	*CommitMultiTree
 	ctx                context.Context
 	cancel             context.CancelFunc
-	finalizers         []storetypes.CommitFinalizer
+	finalizers         []asyncCommitFinalizer
 	workingCommitInfo  *storetypes.CommitInfo
 	workingCommitId    storetypes.CommitID
 	done               chan struct{}
@@ -308,14 +308,22 @@ func (db *multiTreeFinalizer) writeCommitInfoHeader() (*os.File, error) {
 	return file, nil
 }
 
+type asyncCommitFinalizer interface {
+	storetypes.CommitFinalizer
+	WaitForHash() (storetypes.CommitID, error)
+}
+
 func (db *multiTreeFinalizer) prepareCommit(ctx context.Context) error {
 	var hashErrGroup errgroup.Group
 	for i, finalizer := range db.finalizers {
 		finalizer := finalizer
 		hashErrGroup.Go(func() error {
-			hash, err := finalizer.PrepareFinalize()
+			hash, err := finalizer.WaitForHash()
 			if err != nil {
 				return err
+			}
+			if hash.Version != int64(db.stagedVersion()) {
+				return fmt.Errorf("store %s returned mismatched version in commit ID: expected %d, got %d", db.treeKeys[i].Name(), db.stagedVersion(), hash.Version)
 			}
 			db.workingCommitInfo.StoreInfos[i].CommitId = hash
 			return nil
@@ -395,6 +403,10 @@ func (db *multiTreeFinalizer) startRollback() {
 type fauxCommitStoreFinalizer struct {
 	committer storetypes.Committer
 	cacheWrap storetypes.CacheWrap
+}
+
+func (f *fauxCommitStoreFinalizer) WaitForHash() (storetypes.CommitID, error) {
+	return storetypes.CommitID{}, nil
 }
 
 func (f *fauxCommitStoreFinalizer) PrepareFinalize() (storetypes.CommitID, error) {
@@ -489,10 +501,73 @@ func loadCommitInfo(dir string, version uint64) (*storetypes.CommitInfo, error) 
 		return nil, fmt.Errorf("failed to read commit info file for version %d: %w", version, err)
 	}
 
-	commitInfo := &storetypes.CommitInfo{}
-	err = proto.Unmarshal(bz, commitInfo)
+	rdr := bytes.NewReader(bz)
+
+	// read version
+	var storedVersion uint32
+	err = binary.Read(rdr, binary.LittleEndian, &storedVersion)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal commit info for version %d: %w", version, err)
+		return nil, fmt.Errorf("failed to read commit info version for version %d: %w", version, err)
+	}
+	if uint64(storedVersion) != version {
+		return nil, fmt.Errorf("commit info version mismatch: expected %d, got %d", version, storedVersion)
+	}
+
+	// read timestamp
+	var timestampNano uint64
+	err = binary.Read(rdr, binary.LittleEndian, &timestampNano)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read commit info timestamp for version %d: %w", version, err)
+	}
+
+	// read store count
+	var storeCount uint32
+	err = binary.Read(rdr, binary.LittleEndian, &storeCount)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read commit info store count for version %d: %w", version, err)
+	}
+
+	commitInfo := &storetypes.CommitInfo{
+		StoreInfos: make([]storetypes.StoreInfo, storeCount),
+		Timestamp:  time.Unix(0, int64(timestampNano)),
+		Version:    int64(version),
+	}
+
+	// read each store info
+	for i := uint32(0); i < storeCount; i++ {
+		// read name length
+		nameLen, err := binary.ReadUvarint(rdr)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read commit info store info name length for version %d: %w", version, err)
+		}
+		nameBytes := make([]byte, nameLen)
+		_, err = io.ReadFull(rdr, nameBytes)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read commit info store info name for version %d: %w", version, err)
+		}
+		commitInfo.StoreInfos[i].Name = string(nameBytes)
+	}
+
+	// TODO handle cases where we have no hashes (pre-hash commit infos), for now we just error
+
+	// read each store hash
+	for i := uint32(0); i < storeCount; i++ {
+		// read hash length
+		hashLen, err := binary.ReadUvarint(rdr)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read commit info store info hash length for version %d: %w", version, err)
+		}
+
+		hashBytes := make([]byte, hashLen)
+		_, err = io.ReadFull(rdr, hashBytes)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read commit info store info hash for version %d: %w", version, err)
+		}
+
+		commitInfo.StoreInfos[i].CommitId = storetypes.CommitID{
+			Version: int64(version),
+			Hash:    hashBytes,
+		}
 	}
 
 	return commitInfo, nil

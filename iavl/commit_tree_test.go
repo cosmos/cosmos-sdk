@@ -20,11 +20,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/iavl/internal"
 )
 
-func TestIAVLXSims(t *testing.T) {
+func TestCommitTreeSims(t *testing.T) {
 	rapid.Check(t, testIAVLXSims)
 }
 
-func FuzzIAVLX(f *testing.F) {
+func FuzzCommitTreeSims(f *testing.F) {
 	f.Fuzz(rapid.MakeFuzz(testIAVLXSims))
 }
 

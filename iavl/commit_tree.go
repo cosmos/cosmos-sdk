@@ -313,10 +313,7 @@ func (c *committer) prepareCommit(ctx context.Context, updates iter.Seq[KVUpdate
 	}, ctx.Err()
 }
 
-func (c *committer) PrepareFinalize() (storetypes.CommitID, error) {
-	if err := c.SignalFinalize(); err != nil {
-		return storetypes.CommitID{}, err
-	}
+func (c *committer) WaitForHash() (storetypes.CommitID, error) {
 	select {
 	case <-c.hashReady:
 	case <-c.done:
@@ -326,6 +323,13 @@ func (c *committer) PrepareFinalize() (storetypes.CommitID, error) {
 		return storetypes.CommitID{}, err.(error)
 	}
 	return c.workingHash, nil
+}
+
+func (c *committer) PrepareFinalize() (storetypes.CommitID, error) {
+	if err := c.SignalFinalize(); err != nil {
+		return storetypes.CommitID{}, err
+	}
+	return c.WaitForHash()
 }
 
 func (c *committer) Rollback() error {

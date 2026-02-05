@@ -9644,6 +9644,62 @@ paths:
           type: string
       tags:
         - Query
+  /cosmos/distribution/v1beta1/delegators/{delegatorAddress}/starting_info/{validatorAddress}:
+    get:
+      summary: DelegatorStartingInfo queries the starting info for a delegator.
+      operationId: DelegatorStartingInfo
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              startingInfo:
+                description: starting_info defines the starting info of a delegator.
+                type: object
+                properties:
+                  previousPeriod:
+                    type: string
+                    format: uint64
+                  stake:
+                    type: string
+                  height:
+                    type: string
+                    format: uint64
+            description: |-
+              QueryDelegatorStartingInfoResponse is the response type for the
+              Query/DelegatorStartingInfo RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: delegatorAddress
+          description: delegator_address defines the delegator address to query for.
+          in: path
+          required: true
+          type: string
+        - name: validatorAddress
+          description: validator_address defines the validator address to query for.
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
   /cosmos/distribution/v1beta1/delegators/{delegatorAddress}/validators:
     get:
       summary: DelegatorValidators queries the validators of a delegator.
@@ -9928,6 +9984,165 @@ paths:
           in: path
           required: true
           type: string
+      tags:
+        - Query
+  /cosmos/distribution/v1beta1/validators/{validatorAddress}/current_rewards:
+    get:
+      summary: ValidatorCurrentRewards queries current rewards for a validator.
+      operationId: ValidatorCurrentRewards
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              rewards:
+                description: rewards defines the current rewards of a validator.
+                type: object
+                properties:
+                  rewards:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        DecCoin defines a token with a denomination and a
+                        decimal amount.
+
+
+                        NOTE: The amount field is a Dec which implements the
+                        custom method
+
+                        signatures required by gogoproto.
+                  period:
+                    type: string
+                    format: uint64
+            description: |-
+              QueryValidatorCurrentRewardsResponse is the response type for the
+              Query/ValidatorCurrentRewards RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: validatorAddress
+          description: validator_address defines the validator address to query for.
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /cosmos/distribution/v1beta1/validators/{validatorAddress}/historical_rewards/{period}:
+    get:
+      summary: >-
+        ValidatorHistoricalRewards queries historical rewards for a validator at
+        a specific period.
+      operationId: ValidatorHistoricalRewards
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              rewards:
+                description: rewards defines the historical rewards of a validator.
+                type: object
+                properties:
+                  cumulativeRewardRatio:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        DecCoin defines a token with a denomination and a
+                        decimal amount.
+
+
+                        NOTE: The amount field is a Dec which implements the
+                        custom method
+
+                        signatures required by gogoproto.
+                  referenceCount:
+                    type: integer
+                    format: int64
+                title: >-
+                  ValidatorHistoricalRewards represents historical rewards for a
+                  validator.
+
+                  Height is implicit within the store key.
+
+                  Cumulative reward ratio is the sum from the zeroeth period
+
+                  until this period of rewards / tokens, per the spec.
+
+                  The reference count indicates the number of objects
+
+                  which might need to reference this historical entry at any
+                  point.
+
+                  ReferenceCount =
+                     number of outstanding delegations which ended the associated period (and
+                     might need to read that record)
+                   + number of slashes which ended the associated period (and might need to
+                   read that record)
+                   + one per validator for the zeroeth period, set on initialization
+            description: >-
+              QueryValidatorHistoricalRewardsResponse is the response type for
+              the
+
+              Query/ValidatorHistoricalRewards RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: validatorAddress
+          description: validator_address defines the validator address to query for.
+          in: path
+          required: true
+          type: string
+        - name: period
+          description: period defines the period to query historical rewards for.
+          in: path
+          required: true
+          type: string
+          format: uint64
       tags:
         - Query
   /cosmos/distribution/v1beta1/validators/{validatorAddress}/outstanding_rewards:
@@ -37983,6 +38198,33 @@ definitions:
     description: |-
       DelegationDelegatorReward represents the properties
       of a delegator's delegation reward.
+  cosmos.distribution.v1beta1.DelegatorStartingInfo:
+    type: object
+    properties:
+      previousPeriod:
+        type: string
+        format: uint64
+      stake:
+        type: string
+      height:
+        type: string
+        format: uint64
+    description: >-
+      DelegatorStartingInfo represents the starting info for a delegator reward
+
+      period. It tracks the previous validator period, the delegation's amount
+      of
+
+      staking token, and the creation height (to check later on if any slashes
+      have
+
+      occurred). NOTE: Even though validators are slashed to whole staking
+      tokens,
+
+      the delegators within the validator may be left with less than a full
+      token,
+
+      thus sdk.Dec is used.
   cosmos.distribution.v1beta1.Params:
     type: object
     properties:
@@ -38099,6 +38341,24 @@ definitions:
     description: |-
       QueryDelegationTotalRewardsResponse is the response type for the
       Query/DelegationTotalRewards RPC method.
+  cosmos.distribution.v1beta1.QueryDelegatorStartingInfoResponse:
+    type: object
+    properties:
+      startingInfo:
+        description: starting_info defines the starting info of a delegator.
+        type: object
+        properties:
+          previousPeriod:
+            type: string
+            format: uint64
+          stake:
+            type: string
+          height:
+            type: string
+            format: uint64
+    description: |-
+      QueryDelegatorStartingInfoResponse is the response type for the
+      Query/DelegatorStartingInfo RPC method.
   cosmos.distribution.v1beta1.QueryDelegatorValidatorsResponse:
     type: object
     properties:
@@ -38173,6 +38433,37 @@ definitions:
     title: |-
       QueryValidatorCommissionResponse is the response type for the
       Query/ValidatorCommission RPC method
+  cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsResponse:
+    type: object
+    properties:
+      rewards:
+        description: rewards defines the current rewards of a validator.
+        type: object
+        properties:
+          rewards:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                DecCoin defines a token with a denomination and a decimal
+                amount.
+
+
+                NOTE: The amount field is a Dec which implements the custom
+                method
+
+                signatures required by gogoproto.
+          period:
+            type: string
+            format: uint64
+    description: |-
+      QueryValidatorCurrentRewardsResponse is the response type for the
+      Query/ValidatorCurrentRewards RPC method.
   cosmos.distribution.v1beta1.QueryValidatorDistributionInfoResponse:
     type: object
     properties:
@@ -38212,6 +38503,57 @@ definitions:
     description: >-
       QueryValidatorDistributionInfoResponse is the response type for the
       Query/ValidatorDistributionInfo RPC method.
+  cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsResponse:
+    type: object
+    properties:
+      rewards:
+        description: rewards defines the historical rewards of a validator.
+        type: object
+        properties:
+          cumulativeRewardRatio:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                DecCoin defines a token with a denomination and a decimal
+                amount.
+
+
+                NOTE: The amount field is a Dec which implements the custom
+                method
+
+                signatures required by gogoproto.
+          referenceCount:
+            type: integer
+            format: int64
+        title: >-
+          ValidatorHistoricalRewards represents historical rewards for a
+          validator.
+
+          Height is implicit within the store key.
+
+          Cumulative reward ratio is the sum from the zeroeth period
+
+          until this period of rewards / tokens, per the spec.
+
+          The reference count indicates the number of objects
+
+          which might need to reference this historical entry at any point.
+
+          ReferenceCount =
+             number of outstanding delegations which ended the associated period (and
+             might need to read that record)
+           + number of slashes which ended the associated period (and might need to
+           read that record)
+           + one per validator for the zeroeth period, set on initialization
+    description: |-
+      QueryValidatorHistoricalRewardsResponse is the response type for the
+      Query/ValidatorHistoricalRewards RPC method.
   cosmos.distribution.v1beta1.QueryValidatorOutstandingRewardsResponse:
     type: object
     properties:
@@ -38305,6 +38647,63 @@ definitions:
     description: |-
       ValidatorAccumulatedCommission represents accumulated commission
       for a validator kept as a running counter, can be withdrawn at any time.
+  cosmos.distribution.v1beta1.ValidatorCurrentRewards:
+    type: object
+    properties:
+      rewards:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            DecCoin defines a token with a denomination and a decimal amount.
+
+            NOTE: The amount field is a Dec which implements the custom method
+            signatures required by gogoproto.
+      period:
+        type: string
+        format: uint64
+    description: |-
+      ValidatorCurrentRewards represents current rewards and current
+      period for a validator kept as a running counter and incremented
+      each block as long as the validator's tokens remain constant.
+  cosmos.distribution.v1beta1.ValidatorHistoricalRewards:
+    type: object
+    properties:
+      cumulativeRewardRatio:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            DecCoin defines a token with a denomination and a decimal amount.
+
+            NOTE: The amount field is a Dec which implements the custom method
+            signatures required by gogoproto.
+      referenceCount:
+        type: integer
+        format: int64
+    title: |-
+      ValidatorHistoricalRewards represents historical rewards for a validator.
+      Height is implicit within the store key.
+      Cumulative reward ratio is the sum from the zeroeth period
+      until this period of rewards / tokens, per the spec.
+      The reference count indicates the number of objects
+      which might need to reference this historical entry at any point.
+      ReferenceCount =
+         number of outstanding delegations which ended the associated period (and
+         might need to read that record)
+       + number of slashes which ended the associated period (and might need to
+       read that record)
+       + one per validator for the zeroeth period, set on initialization
   cosmos.distribution.v1beta1.ValidatorOutstandingRewards:
     type: object
     properties:

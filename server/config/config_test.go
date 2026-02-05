@@ -382,6 +382,14 @@ func TestGetConfig_HistoricalGRPCAddressBlockRange(t *testing.T) {
 			},
 		},
 		{
+			name: "overlapping ranges",
+			setupViper: func(v *viper.Viper) {
+				v.Set("grpc.historical-grpc-address-block-range", `{"localhost:9091": [0, 1000], "localhost:9092": [900, 1500]}`)
+			},
+			expectError: true,
+			errorMsg:    "overlaps with existing range",
+		},
+		{
 			name: "invalid array length (too few elements)",
 			setupViper: func(v *viper.Viper) {
 				v.Set("grpc.historical-grpc-address-block-range", `{"localhost:9091": [100]}`)
@@ -500,5 +508,19 @@ func TestConfigTemplate_HistoricalGRPCAddressBlockRange(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func Test_rangesOverlap(t *testing.T) {
+	tests := []struct {
+		a, b   BlockRange
+		expect bool
+	}{
+		{BlockRange{0, 10}, BlockRange{11, 20}, false},
+		{BlockRange{0, 10}, BlockRange{5, 15}, true},
+		{BlockRange{0, 10}, BlockRange{10, 20}, true},
+	}
+	for _, tt := range tests {
+		require.Equal(t, tt.expect, rangesOverlap(tt.a, tt.b))
 	}
 }

@@ -100,7 +100,7 @@ Otherwise, ensure the otel.yaml file in the node's config directory is filled ou
 
 IMPORTANT: Make sure Shutdown() is called when the application is shutting down.
 
-Tests can use the TestingInit function at startup to accomplish this.
+Tests can use the TestingMain function at startup to accomplish this.
 
 If these steps are followed, developers can follow the official golang otel conventions
 of declaring package-level tracer and meter instances using otel.Tracer() and otel.Meter().

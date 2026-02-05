@@ -1,0 +1,57 @@
+**SOURCE AVAILABLE EVALUATION LICENSE**
+
+Copyright © 2026 Cosmos Labs US Inc. — All rights reserved.
+
+This license agreement ("License") is made between you (“you”) and Cosmos Labs US Inc. ("Cosmos Labs"), each a “Party” and together the “Parties”. By using or accessing the repository(ies) and any work, software, application, source code, object code, documentation and any other documents in the repositories which is made available by Cosmos Labs (each together, a “Repository”) in any manner, you agree to the terms of this License.
+
+1. **Grant of License**
+
+Subject to the terms of this Agreement, Cosmos Labs grants you a time-limited, worldwide, revocable, non-exclusive, non-transferable, non-sublicensable license to access, review, compile, modify, and use the Repositories as provided by Cosmos Labs solely for (i) internal evaluation and testing in a non-production, internal sandbox or test environment (ii) participating in a Cosmos Labs bug bounty program; and (iii) use for non-commercial teaching and instructional activities conducted as part of accredited academic programmes, subject in all cases to the conditions set out in paragraph 2 below.
+
+This license is granted solely for non-commercial and non-production purposes.
+
+Cosmos Labs may modify the terms of this License at any time, at its sole discretion. Such modified terms of this License will come into effect immediately upon their publication, unless decided otherwise by Cosmos Labs (Effective Date). By continuing to use or access the Repositories after the Effective Date, you agree to the modified terms of this License. It is your responsibility to check this License regularly for any modifications. We last modified this License on 02-03-2026.
+
+2. **Restrictions**
+
+You will not, directly or indirectly:
+
+1. deploy or use the Repositories or any derivative works in any production environment;
+2. use the Repositories to provide services to third parties or for any commercial purpose;
+3. distribute, disclose, or make the Repositories available to any party, including your employees, contractors, advisors or affiliates, without providing them with a copy of this License (or indicating where to find it) and citing Cosmos Labs as the owner;
+4. remove or alter any proprietary notices contained in the Repos;
+5. use, reproduce, make available, distribute, publish, copy, modify, merge and combine the Repositories or resulting programs or products (a) in any manner that infringes, misappropriates, or otherwise violates any third-party rights, or (b) in any manner that violates any applicable law
+
+Any modifications or derivative works you create are deemed part of the Repositories and are subject to the same restrictions under this Agreement.
+
+All rights not expressly granted are reserved by Cosmos Labs.
+
+3. **Third Party / Open Source Software**
+
+The Repositories may contain third-party software or other components (including free and open source software) which are subject to the license terms of the respective third-party licensors. Your dealings or correspondence with third parties and your use of or interaction with any open-source components are solely between you and the third party. Cosmos Labs does not control or endorse, and makes no representations or warranties regarding, any open-source components, and your access to and use of such open-source components are at your own risk. You may modify or replace these open-source components; provided that you comply with the terms of this License, any applicable licensing terms governing use of the open-source components, and applicable laws. Cosmos Labs is not obligated to provide any updates, maintenance, warranty, technical or other support, or services for the resultant modified Repos.
+
+4. **No Support Obligation**
+
+Cosmos Labs has no obligation to provide support, maintenance, updates, bug fixes, documentation, training, or other services with respect to the Repos. Comprehensive support is provided as a core part of the Enterprise License \- please contact Cosmos Labs for more details.
+
+5. **Intellectual Property & Confidentiality**
+
+You acknowledge and agree that Cosmos Labs owns all legal right, title and interest in and to the Repositories and all registered and unregistered intellectual property rights subsisting therein, unless otherwise notified to you. 
+
+6. **Limitation of Liability**
+
+THE REPO IS PROVIDED “AS IS” AND “AS AVAILABLE”, WITHOUT WARRANTY OF ANY KIND. TO THE MAXIMUM EXTENT PERMITTED BY LAW, COSMOS LABS DISCLAIMS ALL WARRANTIES, WHETHER EXPRESS, IMPLIED, STATUTORY, OR OTHERWISE, INCLUDING WITHOUT LIMITATION ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, OR THAT THE Repositories WILL BE ERROR-FREE OR UNINTERRUPTED AND ALL LIABILITY OF ANY KIND OTHER THAN THAT WHICH CANNOT LEGALLY BE EXCLUDED.
+
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT WILL COSMOS LABS BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR EXEMPLARY DAMAGES ARISING OUT OF OR IN CONNECTION WITH THIS AGREEMENT OR THE USE OF THE REPOS, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+7. **Enterprise License**
+
+If your use of the Repo does not comply with the conditions set out in this License, you are required to obtain an Enterprise License from Cosmos Labs, or you must cease using the Repo immediately and will be considered to be in breach.
+
+Cosmos Labs’ Enterprise License permits full and unlimited commercial use and also includes comprehensive support, maintenance, security upgrades and access to our engineering team for any queries you may have, and is made available subject to an annual license fee. 
+
+To obtain a copy of the Commercial Use License, reach out to [legal@cosmoslabs.io](mailto:legal@cosmoslabs.io). 
+
+8. **Governing Law**
+
+This License will be governed by and construed in accordance with the laws of the State of Delaware. The courts located in Delaware will have exclusive jurisdiction over any disputes arising from or relating to this License.

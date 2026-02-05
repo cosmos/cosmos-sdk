@@ -22,7 +22,7 @@ type EventManagerI interface {
 	EmitTypedEvents(tevs ...proto.Message) error
 	EmitEvent(event Event)
 	EmitEvents(events Events)
-	SetEvents(events Events)
+	OverrideEvents(events Events)
 }
 
 // ----------------------------------------------------------------------------
@@ -53,7 +53,10 @@ func (em *EventManager) EmitEvents(events Events) {
 	em.events = em.events.AppendEvents(events)
 }
 
-func (em *EventManager) SetEvents(events Events) {
+// OverrideEvents removes all previous events and sets a
+// completely new series of Event objects. Should only be used
+// in cases where existing events should be modified.
+func (em *EventManager) OverrideEvents(events Events) {
 	em.events = events
 }
 

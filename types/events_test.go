@@ -98,7 +98,7 @@ func (s *eventsTestSuite) TestSetEvents() {
 
 	s.Require().Len(em.Events(), 2)
 
-	em.SetEvents(events)
+	em.OverrideEvents(events)
 	s.Require().Len(em.Events(), 1)
 }
 

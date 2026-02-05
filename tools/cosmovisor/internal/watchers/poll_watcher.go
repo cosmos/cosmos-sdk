@@ -39,7 +39,10 @@ func (w *PollWatcher[T]) Start(ctx context.Context) {
 				if err != nil && !os.IsNotExist(err) {
 					w.errorHandler.Error("failed to check for updates", err)
 				} else if err == nil {
-					// to make PollWatcher generic on any type T (including []byte), we use reflect.DeepEqual and the default zero value of T
+					// Defensive check: filter out zero-valued results (e.g., nil pointers, nil slices).
+					// This handles cases where a checker returns a zero value without an error to indicate
+					// "no data available". Current file-based checkers don't hit this path, but it protects
+					// against future checkers that might use this pattern.
 					var zero T
 					if !reflect.DeepEqual(x, zero) {
 						w.outChan <- x

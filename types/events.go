@@ -22,6 +22,7 @@ type EventManagerI interface {
 	EmitTypedEvents(tevs ...proto.Message) error
 	EmitEvent(event Event)
 	EmitEvents(events Events)
+	SetEvents(events Events)
 }
 
 // ----------------------------------------------------------------------------
@@ -50,6 +51,10 @@ func (em *EventManager) EmitEvent(event Event) {
 // EmitEvents stores a series of Event objects.
 func (em *EventManager) EmitEvents(events Events) {
 	em.events = em.events.AppendEvents(events)
+}
+
+func (em *EventManager) SetEvents(events Events) {
+	em.events = events
 }
 
 // ABCIEvents returns all stored Event objects as abci.Event objects.

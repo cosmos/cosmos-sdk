@@ -47,7 +47,7 @@ func (k BaseKeeper) InitGenesis(ctx context.Context, genState *types.GenesisStat
 	}
 
 	for _, supply := range totalSupply {
-		k.setSupply(ctx, supply)
+		k.SetSupply(ctx, supply)
 	}
 
 	for _, meta := range genState.DenomMetadata {

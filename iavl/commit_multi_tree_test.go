@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"testing"
+	"time"
 
 	sdklog "cosmossdk.io/log"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -142,6 +143,34 @@ func (sim *SimCommitMultiTree) Check(t *rapid.T) {
 }
 
 func (sim *SimCommitMultiTree) checkNewVersion(t *rapid.T) {
+	// randomly generate some updates that we'll revert to test rollback capability
+	testRollback := rapid.Bool().Draw(t, "testRollback")
+	if testRollback {
+		cacheMs2 := sim.mtV2.CacheMultiStore()
+		numUpdates := rapid.IntRange(1, 200).Draw(t, "numRollbackUpdates")
+		for i := 0; i < numUpdates; i++ {
+			j := rapid.IntRange(0, len(sim.storeKeys)-1).Draw(t, "storeKey")
+			storeKey := sim.storeKeys[j]
+			st := cacheMs2.GetKVStore(storeKey)
+			// don't use the key gen here since we don't want to affect the main state!
+			isDelete := rapid.Bool().Draw(t, "isDelete")
+			key := rapid.SliceOfN(rapid.Byte(), 1, 100).Draw(t, "key")
+			if isDelete {
+				st.Delete(key)
+			} else {
+				value := rapid.SliceOfN(rapid.Byte(), 1, 1000).Draw(t, "value")
+				st.Set(key, value)
+			}
+		}
+		committer, err := sim.mtV2.StartCommit(context.Background(), cacheMs2, cmtproto.Header{})
+		require.NoError(t, err)
+		// wait a little bit of time before rolling back
+		// to increase chance of overlapping with other async operations
+		// inside the commit multi tree
+		time.Sleep(5 * time.Millisecond)
+		require.NoError(t, committer.Rollback())
+	}
+
 	cacheMs1 := sim.mtV1.CacheMultiStore()
 	cacheMs2 := sim.mtV2.CacheMultiStore()
 

@@ -55,7 +55,7 @@ func FuzzCoinsAdd(f *testing.F) {
 		coinsA := make(Coins, lenA)
 		for i := range coinsA {
 			coinsA[i] = Coin{
-				Denom:  denoms[int(i)%len(denoms)],
+				Denom:  denoms[i%len(denoms)],
 				Amount: math.NewInt(int64(i + 1)),
 			}
 		}
@@ -64,7 +64,7 @@ func FuzzCoinsAdd(f *testing.F) {
 		coinsB := make(Coins, lenB)
 		for i := range coinsB {
 			coinsB[i] = Coin{
-				Denom:  denoms[int(i)%len(denoms)],
+				Denom:  denoms[i%len(denoms)],
 				Amount: math.NewInt(int64(i + 1)),
 			}
 		}

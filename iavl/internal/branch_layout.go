@@ -47,18 +47,15 @@ type BranchLayout struct {
 
 	// KeyOffset is the offset the key data for this node in the key value data file.
 	// This doesn't limit the size of the overall tree, it just limits the size of individual key/value data files.
-	KeyOffset KVOffset
+	KeyOffset Uint40
 
 	// Height is the height of the subtree rooted at this branch node.
 	Height uint8
 
-	InlineKeyLen uint8
-
-	// NOTE: there are two bytes of padding here that could be used for something else in the future if needed
-	// such as an extra byte to allow for 40-bit key offsets.
+	flags uint8
 
 	// Size is the number of leaf nodes in the subtree rooted at this branch node.
-	Size uint32
+	Size Uint40
 
 	// InlineKeyPrefix is the first 8 bytes of the key for this branch node, used for fast comparisons.
 	InlineKeyPrefix [8]byte
@@ -71,19 +68,41 @@ func (b BranchLayout) GetNodeID() NodeID {
 	return b.ID
 }
 
-const MaxInlineKeyLen = 255
-const MaxInlineKeyCopyLen = 8
+func (b BranchLayout) KeyInKVData() bool {
+	return b.flags&branchFlagKeyInKVData != 0
+}
 
-func InlineKeyPrefixLen(keyLen int) uint8 {
+func (b *BranchLayout) SetKeyInKVData(inKVData bool) {
+	if inKVData {
+		b.flags |= branchFlagKeyInKVData
+	} else {
+		b.flags &^= branchFlagKeyInKVData
+	}
+}
+
+func (b *BranchLayout) SetInlineKeyPrefixLen(keyLen int) {
 	if keyLen > MaxInlineKeyLen {
 		keyLen = MaxInlineKeyLen
 	}
-	return uint8(keyLen)
+	b.flags = (b.flags & ^branchInlineKeyLenMask) | // clear existing len and keep other flags
+		(uint8(keyLen) & branchInlineKeyLenMask) // mask and set new len
 }
 
-func InlineKeyCopyLen(keyLen int) int {
+func (b BranchLayout) InlineKeyPrefixLen() uint8 {
+	return b.flags & branchInlineKeyLenMask
+}
+
+func (b BranchLayout) InlineKeyCopyLen() int {
+	keyLen := b.InlineKeyPrefixLen()
 	if keyLen > MaxInlineKeyCopyLen {
 		return MaxInlineKeyCopyLen
 	}
-	return keyLen
+	return int(keyLen)
 }
+
+const MaxInlineKeyLen = 31
+const MaxInlineKeyCopyLen = 8
+const (
+	branchFlagKeyInKVData  uint8 = 0x80
+	branchInlineKeyLenMask uint8 = 0x1F
+)

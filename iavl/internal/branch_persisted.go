@@ -39,7 +39,7 @@ func (node *BranchPersisted) IsLeaf() bool {
 }
 
 func (node *BranchPersisted) Size() int64 {
-	return int64(node.layout.Size)
+	return int64(node.layout.Size.ToUint64())
 }
 
 func (node *BranchPersisted) Version() uint32 {
@@ -47,7 +47,7 @@ func (node *BranchPersisted) Version() uint32 {
 }
 
 func (node *BranchPersisted) CmpKey(otherKey []byte) (int, error) {
-	prefixLen := node.layout.InlineKeyLen
+	prefixLen := node.layout.InlineKeyPrefixLen()
 	prefix := node.layout.InlineKeyPrefix[:]
 	cmp, needFullKey := cmpInlineKeyPrefix(prefix, int(prefixLen), otherKey)
 	if needFullKey {
@@ -62,18 +62,18 @@ func (node *BranchPersisted) CmpKey(otherKey []byte) (int, error) {
 }
 
 func (node *BranchPersisted) Key() (UnsafeBytes, error) {
-	prefixLen := node.layout.InlineKeyLen
+	prefixLen := node.layout.InlineKeyPrefixLen()
 	if prefixLen <= MaxInlineKeyCopyLen {
 		return WrapUnsafeBytes(node.layout.InlineKeyPrefix[:prefixLen]), nil
 	}
 	// the key data may be stored either in the WAL OR KV data depending on the key info flag
 	var kvDataReader *KVDataReader
-	if node.layout.KeyOffset.IsInKVData() {
+	if node.layout.KeyInKVData() {
 		kvDataReader = node.store.KVData()
 	} else {
 		kvDataReader = node.store.WALData()
 	}
-	bz, err := kvDataReader.UnsafeReadBlob(int(node.layout.KeyOffset.Offset()))
+	bz, err := kvDataReader.UnsafeReadBlob(int(node.layout.KeyOffset.ToUint64()))
 	if err != nil {
 		return UnsafeBytes{}, err
 	}

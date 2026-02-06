@@ -95,9 +95,8 @@ func (kvs *WALWriter) writeWALUpdates(ctx context.Context, updates []KVUpdate) e
 			if err != nil {
 				return err
 			}
-			// Set offsets directly into node (WAL, so isKVData=false)
-			setNode.keyOffset.Set(keyOffset, false)
-			setNode.valueOffset.Set(valueOffset, false)
+			setNode.walKeyOffset = keyOffset
+			setNode.walValueOffset = valueOffset
 		}
 	}
 	return nil

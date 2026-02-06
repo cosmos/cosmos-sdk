@@ -104,12 +104,12 @@ package internal
 //		},
 //	})
 //	require.NoError(t, err)
-//	require.NotZero(t, memNode1.keyOffset)
-//	require.NotZero(t, memNode1.valueOffset)
-//	require.NotZero(t, memNode2.keyOffset)
-//	require.NotZero(t, memNode2.valueOffset)
+//	require.NotZero(t, memNode1.walKeyOffset)
+//	require.NotZero(t, memNode1.walValueOffset)
+//	require.NotZero(t, memNode2.walKeyOffset)
+//	require.NotZero(t, memNode2.walValueOffset)
 //	// memNode2 should use cached key offset
-//	require.Equal(t, longKeyOffset, memNode2.keyOffset)
+//	require.Equal(t, longKeyOffset, memNode2.walKeyOffset)
 //
 //	require.NoError(t, writer.WriteWALCommit(43))
 //
@@ -150,8 +150,8 @@ package internal
 //		{SetNode: emptyMemNode},
 //	})
 //	require.NoError(t, err)
-//	require.NotZero(t, emptyMemNode.keyOffset)
-//	require.NotZero(t, emptyMemNode.valueOffset)
+//	require.NotZero(t, emptyMemNode.walKeyOffset)
+//	require.NotZero(t, emptyMemNode.walValueOffset)
 //	require.NoError(t, writer.WriteWALCommit(45))
 //
 //	// open reader
@@ -303,29 +303,29 @@ package internal
 //	require.NoError(t, err)
 //	require.Equal(t, shortValue, shortValueRead2)
 //	// also check all memNode offsets
-//	memKey1Read, err := r.UnsafeReadBlob(int(memNode1.keyOffset))
+//	memKey1Read, err := r.UnsafeReadBlob(int(memNode1.walKeyOffset))
 //	require.NoError(t, err)
 //	require.Equal(t, memKey1, memKey1Read)
-//	memValue1Read, err := r.UnsafeReadBlob(int(memNode1.valueOffset))
+//	memValue1Read, err := r.UnsafeReadBlob(int(memNode1.walValueOffset))
 //	require.NoError(t, err)
 //	require.Equal(t, memValue1, memValue1Read)
-//	memKey2Read, err := r.UnsafeReadBlob(int(memNode2.keyOffset))
+//	memKey2Read, err := r.UnsafeReadBlob(int(memNode2.walKeyOffset))
 //	require.NoError(t, err)
 //	require.Equal(t, longerKey, memKey2Read)
-//	memValue2Read, err := r.UnsafeReadBlob(int(memNode2.valueOffset))
+//	memValue2Read, err := r.UnsafeReadBlob(int(memNode2.walValueOffset))
 //	require.NoError(t, err)
 //	require.Equal(t, memValue2, memValue2Read)
-//	memKey3Read, err := r.UnsafeReadBlob(int(memNode3.keyOffset))
+//	memKey3Read, err := r.UnsafeReadBlob(int(memNode3.walKeyOffset))
 //	require.NoError(t, err)
 //	require.Equal(t, oldKey, memKey3Read)
-//	memValue3Read, err := r.UnsafeReadBlob(int(memNode3.valueOffset))
+//	memValue3Read, err := r.UnsafeReadBlob(int(memNode3.walValueOffset))
 //	require.NoError(t, err)
 //	require.Equal(t, reinsertedValue, memValue3Read)
 //	// check empty memNode offsets
-//	emptyKeyRead, err := r.UnsafeReadBlob(int(emptyMemNode.keyOffset))
+//	emptyKeyRead, err := r.UnsafeReadBlob(int(emptyMemNode.walKeyOffset))
 //	require.NoError(t, err)
 //	require.Equal(t, emptyKey, emptyKeyRead)
-//	emptyValueRead, err := r.UnsafeReadBlob(int(emptyMemNode.valueOffset))
+//	emptyValueRead, err := r.UnsafeReadBlob(int(emptyMemNode.walValueOffset))
 //	require.NoError(t, err)
 //	require.Equal(t, emptyValue, emptyValueRead)
 //}

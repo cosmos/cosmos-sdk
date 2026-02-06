@@ -25,17 +25,12 @@ type LeafLayout struct {
 	Version uint32
 
 	// KeyOffset is the offset the key data for this node in the key value data file.
-	// NOTE: that a 32-bit offset means that the key data file can be at most 4GB in size.
-	// If we want to support larger key/value data files in the future, we can change this to a 40-bit offset.
-	// However, this would require growing the size of this struct which would break
-	// on-disk compatibility.
-	// Such an upgrade could be made by introducing a "wide changeset" format that lives alongside
-	// this existing "compact" format.
-	KeyOffset KVOffset
+	KeyOffset Uint40
 
 	// ValueOffset is the offset the value data for this node in the key value data file.
-	// The same size considerations apply here as for KeyOffset.
-	ValueOffset KVOffset
+	ValueOffset Uint40
+
+	flags uint8
 
 	// Hash is the hash of this leaf node.
 	Hash [32]byte
@@ -43,4 +38,33 @@ type LeafLayout struct {
 
 func (l LeafLayout) GetNodeID() NodeID {
 	return l.ID
+}
+
+const (
+	leafFlagKeyInKVData   = 0x01
+	leafFlagValueInKVData = 0x02
+)
+
+func (l LeafLayout) KeyInKVData() bool {
+	return l.flags&leafFlagKeyInKVData != 0
+}
+
+func (l LeafLayout) ValueInKVData() bool {
+	return l.flags&leafFlagValueInKVData != 0
+}
+
+func (l *LeafLayout) SetKeyInKVData(inKVData bool) {
+	if inKVData {
+		l.flags |= leafFlagKeyInKVData
+	} else {
+		l.flags &^= leafFlagKeyInKVData
+	}
+}
+
+func (l *LeafLayout) SetValueInKVData(inKVData bool) {
+	if inKVData {
+		l.flags |= leafFlagValueInKVData
+	} else {
+		l.flags &^= leafFlagValueInKVData
+	}
 }

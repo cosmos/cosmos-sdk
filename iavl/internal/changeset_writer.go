@@ -97,7 +97,7 @@ func (cs *ChangesetWriter) SaveCheckpoint(checkpoint, version uint32, root *Node
 	}
 
 	// file integrity check data
-	cpInfo.KVEndOffset.Set(uint64(cs.kvWriter.Size()), true)
+	cpInfo.KVEndOffset = uint64(cs.kvWriter.Size())
 	cpInfo.SetCRC32()
 
 	// commit checkpoint info
@@ -147,7 +147,6 @@ func (cs *ChangesetWriter) writeBranch(np *NodePointer, node *MemNode) error {
 			return fmt.Errorf("failed to write key data: %w", err)
 		}
 	}
-	node.keyOffset.Set(keyOffset, !keyInWal)
 
 	leftCheckpoint := node.left.id.Checkpoint()
 	rightCheckpoint := node.right.id.Checkpoint()
@@ -172,15 +171,16 @@ func (cs *ChangesetWriter) writeBranch(np *NodePointer, node *MemNode) error {
 		// TODO remove these and overload Left/Right to be offsets when in same changeset
 		LeftOffset:  leftOffset,
 		RightOffset: rightOffset,
-		KeyOffset:   node.keyOffset,
+		KeyOffset:   NewUint40(keyOffset),
 		Height:      node.height,
-		Size:        uint32(node.size),
+		Size:        NewUint40(uint64(node.size)),
 	}
 	copy(layout.Hash[:], node.hash) // TODO check length
+	layout.SetKeyInKVData(!keyInWal)
 
 	keyLen := len(node.key)
-	layout.InlineKeyLen = InlineKeyPrefixLen(keyLen)
-	inlineCopyLen := InlineKeyCopyLen(keyLen)
+	layout.SetInlineKeyPrefixLen(keyLen)
+	inlineCopyLen := layout.InlineKeyCopyLen()
 	copy(layout.InlineKeyPrefix[:], node.key[:inlineCopyLen])
 
 	err = cs.branchesData.Append(&layout) // TODO check error
@@ -198,35 +198,43 @@ func (cs *ChangesetWriter) writeLeaf(np *NodePointer, node *MemNode) error {
 	cs.lastLeafIdx++
 
 	// key and value offsets can be missing if we replayed from WAL
-	keyOffset := node.keyOffset
-	if node.keyOffset.IsZero() {
+	keyOffset := node.walKeyOffset
+	var keyInKvData bool
+	if keyOffset == 0 {
 		offset, found := cs.walWriter.LookupKeyOffset(node.key)
 		if found {
-			keyOffset = NewKVOffset(offset, false)
+			keyOffset = offset
 		} else {
 			offset, err := cs.kvWriter.WriteKeyBlob(node.key)
 			if err != nil {
 				return fmt.Errorf("failed to write key data: %w", err)
 			}
-			keyOffset = NewKVOffset(offset, true)
+			keyOffset = offset
+			keyInKvData = true
 		}
 	}
 
-	if node.valueOffset.IsZero() {
+	valueOffset := node.walValueOffset
+	var valueInKvData bool
+	if valueOffset == 0 {
 		offset, err := cs.kvWriter.WriteValueBlob(node.value)
 		if err != nil {
 			return fmt.Errorf("failed to write value data: %w", err)
 		}
-		node.valueOffset = NewKVOffset(offset, true)
+		valueOffset = offset
+		valueInKvData = true
+
 	}
 
 	layout := LeafLayout{
 		ID:          np.id,
 		Version:     node.version,
-		KeyOffset:   keyOffset,
-		ValueOffset: node.valueOffset,
+		KeyOffset:   NewUint40(keyOffset),
+		ValueOffset: NewUint40(valueOffset),
 	}
 	copy(layout.Hash[:], node.hash) // TODO check length
+	layout.SetKeyInKVData(keyInKvData)
+	layout.SetValueInKVData(valueInKvData)
 
 	err := cs.leavesData.Append(&layout)
 	if err != nil {

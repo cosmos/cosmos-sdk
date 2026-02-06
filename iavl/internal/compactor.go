@@ -134,8 +134,8 @@ func (c *Compactor) processChangeset(reader *ChangesetReader) error {
 			newLeafEndIdx = id.Index()
 			newLeafCount++
 
-			//var keyOffset
-			//keyOffset, ok := walRewriteInfo.KeyOffsetRemapping[uint64(leaf.KeyOffset)]
+			//var walKeyOffset
+			//walKeyOffset, ok := walRewriteInfo.KeyOffsetRemapping[uint64(leaf.KeyOffset)]
 			//if !ok {
 			//	key, err := existingLeaf.Key()
 			//	if err != nil {

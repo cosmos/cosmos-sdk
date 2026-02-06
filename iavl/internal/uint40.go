@@ -2,66 +2,35 @@ package internal
 
 import "fmt"
 
-// KVOffset is a 39-bit unsigned integer stored in 5 bytes with little-endian encoding,
-// with a high-bit flag to indicate whether the data is in the WAL or KV data file.
-// Bit 39 (high bit of byte 4) is the location flag: 0 = WAL file (default), 1 = KV data file.
-// Bits 0-38 are the offset within that file.
-type KVOffset [5]byte
+// Uint40 is a 40-bit unsigned integer stored in 5 bytes with little-endian encoding.
+type Uint40 [5]byte
 
-const (
-	// MaxKVOffset is the maximum offset value (39 bits = 512GB).
-	MaxKVOffset = 1<<39 - 1
-	// kvOffsetKVFlag is the bit flag indicating the offset points to KV data file (not WAL).
-	kvOffsetKVFlag = 1 << 39
-	// kvOffsetMask masks off the location flag to get the raw offset.
-	kvOffsetMask = MaxKVOffset
-)
+const MaxUint40 = 1<<40 - 1
 
-// NewKVOffset creates a new KVOffset with the given offset and location.
-// If inKVData is true, the offset points to the KV data file; otherwise it points to the WAL.
-func NewKVOffset(v uint64, inKVData bool) KVOffset {
-	var u KVOffset
-	u.Set(v, inKVData)
-	return u
-}
-
-// Set sets the KVOffset in place with the given offset and location.
-// If inKVData is true, the offset points to the KV data file; otherwise it points to the WAL.
-func (u *KVOffset) Set(v uint64, inKVData bool) {
-	if v > MaxKVOffset {
-		panic(fmt.Sprintf("value %d overflows KVOffset (max %d)", v, MaxKVOffset))
+// NewUint40 creates a new Uint40 from a uint64.
+func NewUint40(v uint64) Uint40 {
+	if v>>40 != 0 {
+		panic(fmt.Sprintf("value %d overflows Uint40", v))
 	}
-	if inKVData {
-		v |= kvOffsetKVFlag
-	}
+	var u Uint40
 	u[0] = byte(v)
 	u[1] = byte(v >> 8)
 	u[2] = byte(v >> 16)
 	u[3] = byte(v >> 24)
 	u[4] = byte(v >> 32)
+	return u
 }
 
-// IsZero returns true if the offset is zero (and not a WAL offset).
-func (u *KVOffset) IsZero() bool {
+func (u Uint40) IsZero() bool {
 	return u[0] == 0 && u[1] == 0 && u[2] == 0 && u[3] == 0 && u[4] == 0
 }
 
-// IsInWAL returns true if this offset points to data in the WAL file (flag=0).
-func (u *KVOffset) IsInWAL() bool {
-	return u[4]&0x80 == 0
-}
-
-// IsInKVData returns true if this offset points to data in the KV data file (flag=1).
-func (u *KVOffset) IsInKVData() bool {
-	return u[4]&0x80 != 0
-}
-
-// Offset returns the raw offset value without the location flag.
-func (u *KVOffset) Offset() uint64 {
-	return u.toUint64Raw() & kvOffsetMask
-}
-
-// toUint64Raw converts the KVOffset to a uint64 including the WAL flag.
-func (u *KVOffset) toUint64Raw() uint64 {
+// ToUint64 converts the Uint40 to a uint64.
+func (u Uint40) ToUint64() uint64 {
 	return uint64(u[0]) | uint64(u[1])<<8 | uint64(u[2])<<16 | uint64(u[3])<<24 | uint64(u[4])<<32
+}
+
+// String implements fmt.Stringer.
+func (u Uint40) String() string {
+	return fmt.Sprintf("%d", u.ToUint64())
 }

@@ -12,7 +12,7 @@ func init() {
 	}
 }
 
-const CheckpointInfoSize = 60
+const CheckpointInfoSize = 64
 
 // CheckpointInfo holds metadata about a single checkpoint (a persisted tree state).
 // The checkpoint is identified by Version, since checkpoint == version.
@@ -29,8 +29,8 @@ type CheckpointInfo struct {
 	// If HaveRoot is false, the root node is not stored in this changeset and must be obtained by replaying the WAL over
 	// a previous changeset.
 	RootID      NodeID
-	KVEndOffset KVOffset // used to sanity check the length of the kv.dat file at this checkpoint
-	CRC32       uint32   // checksum of the checkpoint info record for data integrity verification
+	KVEndOffset uint64 // used to sanity check the length of the kv.dat file at this checkpoint
+	CRC32       uint32 // checksum of the checkpoint info record for data integrity verification
 }
 
 type NodeSetInfo struct {

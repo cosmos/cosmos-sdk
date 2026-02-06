@@ -84,8 +84,8 @@ func (kvs *KVDataWriter) addKeyToCache(key []byte, offset uint64) {
 
 func (kvs *KVDataWriter) writeLenPrefixedBytes(bz []byte) (offset uint64, err error) {
 	sz := kvs.Size()
-	if sz > MaxKVOffset {
-		return 0, fmt.Errorf("file size overflows KVOffset max (%d): %d", MaxKVOffset, sz)
+	if sz > MaxUint40 {
+		return 0, fmt.Errorf("file size overflows KVOffset max (%d): %d", MaxUint40, sz)
 	}
 	offset = uint64(sz)
 

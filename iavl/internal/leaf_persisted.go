@@ -27,7 +27,7 @@ func (node *LeafPersisted) Size() int64 {
 }
 
 func (node *LeafPersisted) Version() uint32 {
-	return uint32(node.layout.Version)
+	return node.layout.Version
 }
 
 func (node *LeafPersisted) CmpKey(otherKey []byte) (int, error) {
@@ -39,22 +39,22 @@ func (node *LeafPersisted) CmpKey(otherKey []byte) (int, error) {
 }
 
 func (node *LeafPersisted) Key() (UnsafeBytes, error) {
-	return readLeafBlob(node.store, node.layout.KeyOffset)
+	return readLeafBlob(node.store, node.layout.KeyOffset, node.layout.KeyInKVData())
 }
 
 func (node *LeafPersisted) Value() (UnsafeBytes, error) {
-	return readLeafBlob(node.store, node.layout.ValueOffset)
+	return readLeafBlob(node.store, node.layout.ValueOffset, node.layout.ValueInKVData())
 }
 
-func readLeafBlob(rdr *ChangesetReader, offset KVOffset) (UnsafeBytes, error) {
+func readLeafBlob(rdr *ChangesetReader, offset Uint40, inKvData bool) (UnsafeBytes, error) {
 	// leaf data location is determined by the offset's location flag
 	var data *KVDataReader
-	if offset.IsInKVData() {
+	if inKvData {
 		data = rdr.KVData()
 	} else {
 		data = rdr.WALData()
 	}
-	bz, err := data.UnsafeReadBlob(int(offset.Offset()))
+	bz, err := data.UnsafeReadBlob(int(offset.ToUint64()))
 	if err != nil {
 		return UnsafeBytes{}, err
 	}

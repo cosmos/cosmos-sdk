@@ -85,6 +85,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (server) [#25740](https://github.com/cosmos/cosmos-sdk/pull/25740) Add variadic `grpc.DialOption` parameter to `StartGrpcServer` for custom gRPC client connection options.
 * (blockstm) [#25765](https://github.com/cosmos/cosmos-sdk/pull/25765) Minor code readability improvement in block-stm.
 * (server/config) [#25807](https://github.com/cosmos/cosmos-sdk/pull/25807) fix(server): reject overlapping historical gRPC block ranges.
+* [#25857](https://github.com/cosmos/cosmos-sdk/pull/25857) Reduce scope of mutex in `PriorityNonceMempool.Remove`.
+* (baseapp) [#25862](https://github.com/cosmos/cosmos-sdk/pull/25862) Skip running validateBasic for rechecking txs. (Backport of https://github.com/cosmos/cosmos-sdk/pull/20208).
 
 ### Bug Fixes
 
@@ -106,8 +108,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (client) [#25811] (https://github.com/cosmos/cosmos-sdk/pull/25811) fix(client): fix file handle leaks in snapshot commands.
 * (server/config) [#25806](https://github.com/cosmos/cosmos-sdk/pull/25806) fix: add missing commas in historical gRPC config template.
 * (client) [#25804](https://github.com/cosmos/cosmos-sdk/pull/25804) Add `GetHeightFromMetadataStrict` API to `grpc` client for better error handling.
+* (x/auth) [#25828](https://github.com/cosmos/cosmos-sdk/pull/25828) Limits pagination at default for values that exceed it.
 * (x/staking) [#25829](https://github.com/cosmos/cosmos-sdk/pull/25829) Validates case-sensitivity on authz grands in x/staking.
-
 
 ### Deprecated
 

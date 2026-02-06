@@ -70,6 +70,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (grpc) [#25648](https://github.com/cosmos/cosmos-sdk/pull/25648) Add `earliest_block_height` and `latest_block_height` fields to `GetSyncingResponse`.
 * (collections/codec) [#25614] (https://github.com/cosmos/cosmos-sdk/pull/25827)  Add `TimeValue` (`ValueCodec[time.Time]`) to collections/codec.
 * (enterprise/poa) [#25838](https://github.com/cosmos/cosmos-sdk/pull/25838) Add the `poa` module under the `enterprise` directory.
+* (events) [#25877](https://github.com/cosmos/cosmos-sdk/pull/25877) Add OverrideEvents to EventManagerI.
 
 ### Improvements
 

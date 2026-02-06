@@ -107,14 +107,15 @@ func (ts *TreeStore) GetRootForUpdate(ctx context.Context) (*NodePointer, error)
 }
 
 func (ts *TreeStore) SaveRoot(ctx context.Context, newRoot *NodePointer, mutationCtx *MutationContext) error {
-	ts.root.Store(newRoot)
+	// sanity check
 	if mutationCtx.version != ts.StagedVersion() {
 		return fmt.Errorf("mutation context version %d does not match staged version %d", mutationCtx.version, ts.StagedVersion())
 	}
+	// save last root to cache
+	ts.rootByVersionCache.Set(ts.version.Load(), ts.root.Load(), ttlcache.DefaultTTL)
+	// store new root and increment version
+	ts.root.Store(newRoot)
 	version := ts.version.Add(1)
-
-	// save root to cache
-	ts.rootByVersionCache.Set(version, newRoot, ttlcache.DefaultTTL)
 
 	writer := ts.currentWriter
 	if ts.shouldCheckpoint {

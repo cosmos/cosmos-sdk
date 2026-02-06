@@ -805,7 +805,11 @@ func (db *CommitMultiTree) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceCo
 }
 
 func (db *CommitMultiTree) CacheMultiStore() storetypes.CacheMultiStore {
-	return internal.NewMultiTree(int64(db.version), func(key storetypes.StoreKey) storetypes.CacheWrap {
+	// TODO we need to make sure each cached tree has the correct version!!
+	// as is they will always get the latest version no matter how long the CacheMultiStore lives
+	// which is incorrect if this outlives a commit and violates concurrency safety
+	version := int64(db.version)
+	return internal.NewMultiTree(version, func(key storetypes.StoreKey) storetypes.CacheWrap {
 		idx, ok := db.storesByKey[key]
 		if !ok {
 			panic(fmt.Sprintf("store with key %s not mounted", key.Name()))

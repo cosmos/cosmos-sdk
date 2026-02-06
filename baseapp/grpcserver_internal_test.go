@@ -33,7 +33,7 @@ func (l *countingLogger) DebugContext(_ context.Context, msg string, _ ...any) {
 func (l *countingLogger) With(_ ...any) log.Logger                             { return l }
 func (l *countingLogger) Impl() any                                            { return nil }
 
-func TestWithGRPCBlockHeight_HeaderOk_NoTrailer(t *testing.T) {
+func TestSetGRPCBlockHeightHeaderOrTrailer_HeaderOk_NoTrailer(t *testing.T) {
 	logger := &countingLogger{}
 	app := NewBaseApp(t.Name(), logger, dbm.NewMemDB(), nil)
 
@@ -47,7 +47,7 @@ func TestWithGRPCBlockHeight_HeaderOk_NoTrailer(t *testing.T) {
 		return nil
 	}
 
-	resp, err := app.withGRPCBlockHeight(context.Background(), context.Background(), 10, setHeader, setTrailer, func() (any, error) {
+	resp, err := app.setGRPCBlockHeightHeaderOrTrailer(context.Background(), context.Background(), 10, setHeader, setTrailer, func() (any, error) {
 		return "ok", nil
 	})
 	require.NoError(t, err)
@@ -56,7 +56,7 @@ func TestWithGRPCBlockHeight_HeaderOk_NoTrailer(t *testing.T) {
 	require.Equal(t, 0, logger.debugCount)
 }
 
-func TestWithGRPCBlockHeight_HeaderFails_TrailerFallback(t *testing.T) {
+func TestSetGRPCBlockHeightHeaderOrTrailer_HeaderFails_TrailerFallback(t *testing.T) {
 	logger := &countingLogger{}
 	app := NewBaseApp(t.Name(), logger, dbm.NewMemDB(), nil)
 
@@ -68,7 +68,7 @@ func TestWithGRPCBlockHeight_HeaderFails_TrailerFallback(t *testing.T) {
 		return nil
 	}
 
-	resp, err := app.withGRPCBlockHeight(context.Background(), context.Background(), 12, setHeader, setTrailer, func() (any, error) {
+	resp, err := app.setGRPCBlockHeightHeaderOrTrailer(context.Background(), context.Background(), 12, setHeader, setTrailer, func() (any, error) {
 		return 123, nil
 	})
 	require.NoError(t, err)

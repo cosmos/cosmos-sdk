@@ -22,7 +22,7 @@ import (
 
 type grpcMetadataSetter func(ctx context.Context, md metadata.MD) error
 
-func (app *BaseApp) withGRPCBlockHeight(
+func (app *BaseApp) setGRPCBlockHeightHeaderOrTrailer(
 	headerCtx context.Context,
 	trailerCtx context.Context,
 	height int64,
@@ -118,7 +118,7 @@ func (app *BaseApp) RegisterGRPCServerWithSkipCheckHeader(server gogogrpc.Server
 		// such as OpenTelemetry.
 		sdkCtx = sdkCtx.WithContext(grpcCtx)
 
-		resp, err = app.withGRPCBlockHeight(
+		resp, err = app.setGRPCBlockHeightHeaderOrTrailer(
 			sdkCtx,
 			grpcCtx,
 			height,

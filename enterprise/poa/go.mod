@@ -1,6 +1,6 @@
 module github.com/cosmos/cosmos-sdk/enterprise/poa
 
-go 1.25.6
+go 1.25.7
 
 require (
 	cosmossdk.io/api v0.9.2

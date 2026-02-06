@@ -70,6 +70,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (grpc) [#25648](https://github.com/cosmos/cosmos-sdk/pull/25648) Add `earliest_block_height` and `latest_block_height` fields to `GetSyncingResponse`.
 * (collections/codec) [#25614] (https://github.com/cosmos/cosmos-sdk/pull/25827)  Add `TimeValue` (`ValueCodec[time.Time]`) to collections/codec.
 * (enterprise/poa) [#25838](https://github.com/cosmos/cosmos-sdk/pull/25838) Add the `poa` module under the `enterprise` directory.
+* (grpc) [#25850](https://github.com/cosmos/cosmos-sdk/pull/25850) Add `GetBlockResults` and `GetLatestBlockResults` gRPC endpoints to expose CometBFT block results including `finalize_block_events`.
 * (events) [#25877](https://github.com/cosmos/cosmos-sdk/pull/25877) Add OverrideEvents to EventManagerI.
 
 ### Improvements
@@ -87,9 +88,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (blockstm) [#25765](https://github.com/cosmos/cosmos-sdk/pull/25765) Minor code readability improvement in block-stm.
 * (server/config) [#25807](https://github.com/cosmos/cosmos-sdk/pull/25807) fix(server): reject overlapping historical gRPC block ranges.
 * [#25857](https://github.com/cosmos/cosmos-sdk/pull/25857) Reduce scope of mutex in `PriorityNonceMempool.Remove`.
+* (baseapp) [#25862](https://github.com/cosmos/cosmos-sdk/pull/25862) Skip running validateBasic for rechecking txs. (Backport of https://github.com/cosmos/cosmos-sdk/pull/20208).
 
 ### Bug Fixes
 
+* (grpc) [#25647](https://github.com/cosmos/cosmos-sdk/pull/25647) Return actual `earliest_store_height` in `node.Status` gRPC endpoint instead of hardcoded `0`.
 * (types/query) [#25665](https://github.com/cosmos/cosmos-sdk/issues/25665) Fix pagination offset when querying a collection with predicate function.
 * (x/staking) [#25649](https://github.com/cosmos/cosmos-sdk/pull/25649) Add missing `defer iterator.Close()` calls in `IterateDelegatorRedelegations` and `GetRedelegations` to prevent resource leaks.
 * (mempool) [#25563](https://github.com/cosmos/cosmos-sdk/pull/25563) Cleanup sender indices in case of tx replacement.

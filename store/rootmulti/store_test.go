@@ -1169,3 +1169,77 @@ func TestCommitStores(t *testing.T) {
 		})
 	}
 }
+
+func TestEarliestVersion(t *testing.T) {
+	db := dbm.NewMemDB()
+	ms := newMultiStoreWithMounts(db, pruningtypes.NewPruningOptions(pruningtypes.PruningNothing))
+	require.NoError(t, ms.LoadLatestVersion())
+
+	// Initially, earliest version should be 1 (default for unpruned chains)
+	require.Equal(t, int64(1), ms.EarliestVersion())
+
+	// Commit some versions
+	for i := 0; i < 5; i++ {
+		ms.Commit()
+	}
+
+	// Earliest version should still be 1
+	require.Equal(t, int64(1), ms.EarliestVersion())
+	require.Equal(t, int64(5), ms.LatestVersion())
+}
+
+func TestEarliestVersionWithPruning(t *testing.T) {
+	db := dbm.NewMemDB()
+	// keepRecent=2, interval=1 means prune aggressively
+	ms := newMultiStoreWithMounts(db, pruningtypes.NewCustomPruningOptions(2, 1))
+	require.NoError(t, ms.LoadLatestVersion())
+
+	// Initially, earliest version should be 1
+	require.Equal(t, int64(1), ms.EarliestVersion())
+
+	// Commit enough versions to trigger pruning
+	for i := 0; i < 10; i++ {
+		ms.Commit()
+	}
+
+	// Wait for async pruning to complete and check earliest version is updated
+	checkEarliest := func() bool {
+		return ms.EarliestVersion() > 1
+	}
+	require.Eventually(t, checkEarliest, 1*time.Second, 10*time.Millisecond,
+		"expected earliest version to be updated after pruning")
+
+	// Earliest version should now be greater than 1 (pruned heights + 1)
+	earliest := ms.EarliestVersion()
+	require.Greater(t, earliest, int64(1), "earliest version should be updated after pruning")
+
+	// Latest should still be 10
+	require.Equal(t, int64(10), ms.LatestVersion())
+}
+
+func TestEarliestVersionPersistence(t *testing.T) {
+	db := dbm.NewMemDB()
+	ms := newMultiStoreWithMounts(db, pruningtypes.NewCustomPruningOptions(2, 1))
+	require.NoError(t, ms.LoadLatestVersion())
+
+	// Commit and prune
+	for i := 0; i < 10; i++ {
+		ms.Commit()
+	}
+
+	// Wait for pruning
+	checkEarliest := func() bool {
+		return ms.EarliestVersion() > 1
+	}
+	require.Eventually(t, checkEarliest, 1*time.Second, 10*time.Millisecond)
+
+	earliestBeforeRestart := ms.EarliestVersion()
+
+	// "Restart" by creating new store with same db
+	ms2 := newMultiStoreWithMounts(db, pruningtypes.NewCustomPruningOptions(2, 1))
+	require.NoError(t, ms2.LoadLatestVersion())
+
+	// Earliest version should be persisted and restored
+	require.Equal(t, earliestBeforeRestart, ms2.EarliestVersion(),
+		"earliest version should persist across restarts")
+}

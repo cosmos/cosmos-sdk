@@ -482,7 +482,7 @@ func (app *BaseApp) setTrace(trace bool) {
 }
 
 func (app *BaseApp) setIndexEvents(ie []string) {
-	app.indexEvents = make(map[string]struct{})
+	app.indexEvents = make(map[string]struct{}, len(ie))
 
 	for _, e := range ie {
 		app.indexEvents[e] = struct{}{}
@@ -869,8 +869,13 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 	}
 
 	msgs := tx.GetMsgs()
-	if err := validateBasicTxMsgs(msgs); err != nil {
-		return sdk.GasInfo{}, nil, nil, err
+
+	// run validate basic if mode != recheck.
+	// as validate basic is stateless, it is guaranteed to pass recheck, given that its passed checkTx.
+	if mode != execModeReCheck {
+		if err := validateBasicTxMsgs(msgs); err != nil {
+			return sdk.GasInfo{}, nil, nil, err
+		}
 	}
 
 	for _, msg := range msgs {
@@ -1010,7 +1015,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 	defer span.End()
 
 	events := sdk.EmptyEvents()
-	var msgResponses []*codectypes.Any
+	msgResponses := make([]*codectypes.Any, 0, len(msgs))
 
 	// NOTE: GasWanted is determined by the AnteHandler and GasUsed by the GasMeter.
 	for i, msg := range msgs {

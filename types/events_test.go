@@ -88,7 +88,7 @@ func (s *eventsTestSuite) TestEventManager() {
 	s.Require().Equal(em.Events(), events.AppendEvent(event))
 }
 
-func (s *eventsTestSuite) TestSetEvents() {
+func (s *eventsTestSuite) TestOverrideEvents() {
 	em := sdk.NewEventManager()
 	event := sdk.NewEvent("reward", sdk.NewAttribute("x", "y"))
 	events := sdk.Events{sdk.NewEvent("transfer", sdk.NewAttribute("sender", "foo"))}

@@ -8,8 +8,12 @@ $mockgen_cmd -source=types/module/module.go -package mock -destination testutil/
 $mockgen_cmd -source=types/module/mock_appmodule_test.go -package mock -destination testutil/mock/types_mock_appmodule.go
 $mockgen_cmd -source=types/invariant.go -package mock -destination testutil/mock/types_invariant.go
 $mockgen_cmd -package mock -destination testutil/mock/grpc_server.go github.com/cosmos/gogoproto/grpc Server
+<<<<<<< HEAD
 $mockgen_cmd -package mock -destination testutil/mock/logger.go cosmossdk.io/log Logger
 $mockgen_cmd -source=x/nft/expected_keepers.go -package testutil -destination x/nft/testutil/expected_keepers_mocks.go
+=======
+$mockgen_cmd -package mock -destination testutil/mock/logger.go cosmossdk.io/log/v2 Logger
+>>>>>>> 3067281a7 (feat(grpc): expose block_results through gRPC (#25850))
 $mockgen_cmd -source=x/feegrant/expected_keepers.go -package testutil -destination x/feegrant/testutil/expected_keepers_mocks.go
 $mockgen_cmd -source=x/mint/types/expected_keepers.go -package testutil -destination x/mint/testutil/expected_keepers_mocks.go
 $mockgen_cmd -source=x/params/proposal_handler_test.go -package testutil -destination x/params/testutil/staking_keeper_mock.go

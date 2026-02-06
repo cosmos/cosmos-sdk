@@ -36,7 +36,45 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+<<<<<<< HEAD
 ## [v0.53.6](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.6) - 2026-02-10
+=======
+## UNRELEASED
+
+### Breaking Changes
+
+* (x/staking) [#25724](https://github.com/cosmos/cosmos-sdk/issues/25724) Validate `BondDenom` in `MsgUpdateParams` to prevent setting non-existent or zero-supply denoms.
+* [#25778](https://github.com/cosmos/cosmos-sdk/pull/25778) Update `log` to log v2.
+* [#25090](https://github.com/cosmos/cosmos-sdk/pull/25090) Moved deprecated modules to `./contrib`.  These modules are still available but will no longer be actively maintained or supported in the Cosmos SDK Bug Bounty program.
+    * `x/group`
+    * `x/nft`
+    * `x/circuit`
+    * `x/crisis`
+* (crypto) [#24414](https://github.com/cosmos/cosmos-sdk/pull/24414) Remove sr25519 support, since it was removed in CometBFT v1.x (see: CometBFT [#3646](https://github.com/cometbft/cometbft/pull/3646)).
+* (x/gov) [#25615](https://github.com/cosmos/cosmos-sdk/pull/25615) Decouple `x/gov` from `x/staking` by making `CalculateVoteResultsAndVotingPowerFn` a required parameter to `keeper.NewKeeper` instead of `StakingKeeper`.
+`BondedTokens` has been renamed to `ValidatorPower` and `TotalBondedTokens` has been renamed to `TotalValidatorPower` to allow for multiple validator power representations.
+* (x/gov) [#25617](https://github.com/cosmos/cosmos-sdk/pull/25617) `AfterProposalSubmission` hook now includes proposer address as a parameter.
+* (x/gov) [#25616](https://github.com/cosmos/cosmos-sdk/pull/25616) `DistrKeeper` `x/distribution` is now optional. Genesis validation ensures `distrKeeper` is set if distribution module is used as proposal cancel destination.
+
+### Features
+
+* [#25471](https://github.com/cosmos/cosmos-sdk/pull/25471) Full BLS 12-381 support enabled.
+* [#24872](https://github.com/cosmos/cosmos-sdk/pull/24872) Support BLS 12-381 for cli `init`, `gentx`, `collect-gentx`
+* (crypto) [#24919](https://github.com/cosmos/cosmos-sdk/pull/24919) add `NewPubKeyFromBytes` function to the `secp256r1` package to create `PubKey` from bytes
+* (server) [#24720](https://github.com/cosmos/cosmos-sdk/pull/24720) add `verbose_log_level` flag for configuring the log level when switching to verbose logging mode during sensitive operations (such as chain upgrades).
+* (crypto) [#24861](https://github.com/cosmos/cosmos-sdk/pull/24861) add `PubKeyFromCometTypeAndBytes` helper function to convert from `comet/v2` PubKeys to the `cryptotypes.Pubkey` interface.
+* (abci_utils) [#25008](https://github.com/cosmos/cosmos-sdk/pull/25008) add the ability to assign a custom signer extraction adapter in `DefaultProposalHandler`.
+* (crypto/ledger) [#25435](https://github.com/cosmos/cosmos-sdk/pull/25435) Add SetDERConversion to reset skipDERConversion and App name for ledger.
+* (gRPC) [#25565](https://github.com/cosmos/cosmos-sdk/pull/25565) Support for multi gRPC query clients serve with historical binaries to serve proper historical state.
+* (blockstm) [#25600](https://github.com/cosmos/cosmos-sdk/pull/25600) Allow dynamic retrieval of the coin denomination from multi store at runtime.
+* (x/distribution) [#25650](https://github.com/cosmos/cosmos-sdk/pull/25650) Add new gRPC query endpoints and CLI commands for `DelegatorStartingInfo`, `ValidatorHistoricalRewards`, and `ValidatorCurrentRewards`.
+* [#25516](https://github.com/cosmos/cosmos-sdk/pull/25516) Support automatic configuration of OpenTelemetry via [OpenTelemetry declarative configuration](https://pkg.go.dev/go.opentelemetry.io/contrib/otelconf) and add OpenTelemetry instrumentation of `BaseApp`.
+* [#25745](https://github.com/cosmos/cosmos-sdk/pull/25745) Add DiskIO telemetry via gopsutil.
+* (grpc) [#25648](https://github.com/cosmos/cosmos-sdk/pull/25648) Add `earliest_block_height` and `latest_block_height` fields to `GetSyncingResponse`.
+* (collections/codec) [#25614] (https://github.com/cosmos/cosmos-sdk/pull/25827)  Add `TimeValue` (`ValueCodec[time.Time]`) to collections/codec.
+* (enterprise/poa) [#25838](https://github.com/cosmos/cosmos-sdk/pull/25838) Add the `poa` module under the `enterprise` directory.
+* (grpc) [#25850](https://github.com/cosmos/cosmos-sdk/pull/25850) Add `GetBlockResults` and `GetLatestBlockResults` gRPC endpoints to expose CometBFT block results including `finalize_block_events`.
+>>>>>>> 3067281a7 (feat(grpc): expose block_results through gRPC (#25850))
 
 ### Improvements
 

@@ -1,9 +1,16 @@
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
+<<<<<<< HEAD:x/feegrant/go.sum
 cosmossdk.io/api v0.9.2 h1:9i9ptOBdmoIEVEVWLtYYHjxZonlF/aOVODLFaxpmNtg=
 cosmossdk.io/api v0.9.2/go.mod h1:CWt31nVohvoPMTlPv+mMNCtC0a7BqRdESjCsstHcTkU=
 cosmossdk.io/collections v1.2.1 h1:mAlNMs5vJwkda4TA+k5q/43p24RVAQ/qyDrjANu3BXE=
 cosmossdk.io/collections v1.2.1/go.mod h1:PSsEJ/fqny0VPsHLFT6gXDj/2C1tBOTS9eByK0+PBFU=
+=======
+cosmossdk.io/client/v2 v2.0.0-beta.11 h1:iHbjDw/NuNz2OVaPmx0iE9eu2HrbX+WAv2u9guRcd6o=
+cosmossdk.io/client/v2 v2.0.0-beta.11/go.mod h1:ZmmxMUpALO2r1aG6fNOonE7f8I1g/WsafJgVAeQ0ffs=
+cosmossdk.io/collections v1.3.1 h1:09e+DUId2brWsNOQ4nrk+bprVmMUaDH9xvtZkeqIjVw=
+cosmossdk.io/collections v1.3.1/go.mod h1:ynvkP0r5ruAjbmedE+vQ07MT6OtJ0ZIDKrtJHK7Q/4c=
+>>>>>>> 3067281a7 (feat(grpc): expose block_results through gRPC (#25850)):enterprise/poa/simapp/go.sum
 cosmossdk.io/core v0.11.3 h1:mei+MVDJOwIjIniaKelE3jPDqShCc/F4LkNNHh+4yfo=
 cosmossdk.io/core v0.11.3/go.mod h1:9rL4RE1uDt5AJ4Tg55sYyHWXA16VmpHgbe0PbJc6N2Y=
 cosmossdk.io/depinject v1.2.1 h1:eD6FxkIjlVaNZT+dXTQuwQTKZrFZ4UrfCq1RKgzyhMw=
@@ -16,10 +23,15 @@ cosmossdk.io/math v1.5.3 h1:WH6tu6Z3AUCeHbeOSHg2mt9rnoiUWVWaQ2t6Gkll96U=
 cosmossdk.io/math v1.5.3/go.mod h1:uqcZv7vexnhMFJF+6zh9EWdm/+Ylyln34IvPnBauPCQ=
 cosmossdk.io/schema v1.1.0 h1:mmpuz3dzouCoyjjcMcA/xHBEmMChN+EHh8EHxHRHhzE=
 cosmossdk.io/schema v1.1.0/go.mod h1:Gb7pqO+tpR+jLW5qDcNOSv0KtppYs7881kfzakguhhI=
+<<<<<<< HEAD:x/feegrant/go.sum
 cosmossdk.io/store v1.1.2 h1:3HOZG8+CuThREKv6cn3WSohAc6yccxO3hLzwK6rBC7o=
 cosmossdk.io/store v1.1.2/go.mod h1:60rAGzTHevGm592kFhiUVkNC9w7gooSEn5iUBPzHQ6A=
 cosmossdk.io/x/tx v0.14.0 h1:hB3O25kIcyDW/7kMTLMaO8Ripj3yqs5imceVd6c/heA=
 cosmossdk.io/x/tx v0.14.0/go.mod h1:Tn30rSRA1PRfdGB3Yz55W4Sn6EIutr9xtMKSHij+9PM=
+=======
+cosmossdk.io/tools/confix v0.1.2 h1:2hoM1oFCNisd0ltSAAZw2i4ponARPmlhuNu3yy0VwI4=
+cosmossdk.io/tools/confix v0.1.2/go.mod h1:7XfcbK9sC/KNgVGxgLM0BrFbVcR/+6Dg7MFfpx7duYo=
+>>>>>>> 3067281a7 (feat(grpc): expose block_results through gRPC (#25850)):enterprise/poa/simapp/go.sum
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 filippo.io/edwards25519 v1.1.0 h1:FNf4tywRC1HmFuKW5xopWpigGjJKiJSV0Cqo0cJWDaA=
 filippo.io/edwards25519 v1.1.0/go.mod h1:BxyFTGdWcka3PhytdK4V28tE5sGfRvvvRV7EaN4VDT4=

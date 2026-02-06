@@ -225,7 +225,9 @@ func (a *App) RegisterTendermintService(clientCtx client.Context) {
 
 // RegisterNodeService registers the node gRPC service on the app gRPC router.
 func (a *App) RegisterNodeService(clientCtx client.Context, cfg config.Config) {
-	nodeservice.RegisterNodeService(clientCtx, a.GRPCQueryRouter(), cfg)
+	nodeservice.RegisterNodeService(clientCtx, a.GRPCQueryRouter(), cfg, func() int64 {
+		return a.CommitMultiStore().EarliestVersion()
+	})
 }
 
 // Configurator returns the app's configurator.

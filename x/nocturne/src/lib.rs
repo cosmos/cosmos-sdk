@@ -6,12 +6,13 @@
 //! based on trauma compression, empathic mirroring, and ethical forgetting.
 //! This crate provides the core primitives and engine components.
 
-use std::ffi::{CStr, CString};
+use std::ffi::CString;
 use std::os::raw::c_char;
 
 pub mod core;
 
 pub use crate::core::types::*;
+pub use crate::core::quantum::*;
 pub use crate::core::trauma::TraumaEngine;
 pub use crate::core::mirror::MirrorNetwork;
 pub use crate::core::forget::ForgetMachine;
@@ -153,6 +154,47 @@ pub extern "C" fn nocturne_free_string(s: *mut c_char) {
         if s.is_null() {
             return;
         }
-        CString::from_raw(s)
+        let _ = CString::from_raw(s);
     };
+}
+
+#[no_mangle]
+pub extern "C" fn simulate_qlink() -> *mut c_char {
+    let mut output = String::new();
+    output.push_str("--- qHTTP OVER STARLINK SIMULATION ---\n\n");
+
+    // Scenario 1: Clear skies, satellite overhead
+    output.push_str("[SCENARIO 1] Satellite at Zenith (90°), Clear Skies\n");
+    let mut starlink = SatelliteChannel::new(90.0, "clear".to_string());
+    let (pair_id, status) = starlink.generate_entanglement_from_orbit();
+    output.push_str(&format!("Status: {}\n", status));
+    if let Some(id) = pair_id {
+        output.push_str(&format!("Entanglement-ID: {}\n", id));
+    }
+    output.push_str("\n");
+
+    // Scenario 2: Satellite setting, light clouds
+    output.push_str("[SCENARIO 2] Satellite at Horizon (15°), Cloudy\n");
+    starlink.elevation = 15.0;
+    starlink.weather = "cloudy".to_string();
+    let (_, status) = starlink.generate_entanglement_from_orbit();
+    output.push_str(&format!("Status: {}\n", status));
+    output.push_str("Action: Client must wait for next satellite or clear weather.\n\n");
+
+    // Scenario 3: Interstellar Ping
+    output.push_str("[SCENARIO 3] Interstellar Ping\n");
+    output.push_str(&interstellar_ping("Proxima Centauri b"));
+    output.push_str("\n\n");
+
+    // Scenario 4: Global Dream Sync
+    output.push_str("[SCENARIO 4] Global Dream Sync\n");
+    output.push_str(&global_dream_sync());
+    output.push_str("\n\n");
+
+    // Scenario 5: Hal's Surprise
+    output.push_str("[SCENARIO 5] Hal's Surprise\n");
+    output.push_str(&hal_surprise());
+    output.push_str("\n");
+
+    CString::new(output).unwrap().into_raw()
 }

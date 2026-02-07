@@ -23,3 +23,5 @@
 char *hello_nocturne(void);
 
 void nocturne_free_string(char *s);
+
+char *simulate_qlink(void);

@@ -14,6 +14,13 @@ func HelloNocturne() string {
 	return goStr
 }
 
+func SimulateQLink() string {
+	cStr := C.simulate_qlink()
+	goStr := C.GoString(cStr)
+	C.nocturne_free_string(cStr)
+	return goStr
+}
+
 func Example() {
 	fmt.Println(HelloNocturne())
 }

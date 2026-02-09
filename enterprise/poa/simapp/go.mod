@@ -1,6 +1,6 @@
 module github.com/cosmos/cosmos-sdk/enterprise/poa/simapp
 
-go 1.25.6
+go 1.25.7
 
 require (
 	cosmossdk.io/api v0.9.2
@@ -223,8 +223,11 @@ replace github.com/cosmos/cosmos-sdk/enterprise/poa => ..
 
 // Below are the long-lived replace of the SimApp
 replace (
+	// TODO: remove api and x/tx replaces once published versions include GetBlockResults proto definitions
+	cosmossdk.io/api => ../../../api
 	cosmossdk.io/log/v2 => ../../../log
 	cosmossdk.io/store => ../../../store
+	cosmossdk.io/x/tx => ../../../x/tx
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk

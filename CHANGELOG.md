@@ -42,8 +42,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (crypto/ledger) [#25435](https://github.com/cosmos/cosmos-sdk/pull/25435) Add SetDERConversion to reset skipDERConversion and App name for ledger.
 * (gRPC) [#25565](https://github.com/cosmos/cosmos-sdk/pull/25565) Support for multi gRPC query clients serve with historical binaries to serve proper historical state.
-<<<<<<< HEAD
-=======
 * (blockstm) [#25600](https://github.com/cosmos/cosmos-sdk/pull/25600) Allow dynamic retrieval of the coin denomination from multi store at runtime.
 * (x/distribution) [#25650](https://github.com/cosmos/cosmos-sdk/pull/25650) Add new gRPC query endpoints and CLI commands for `DelegatorStartingInfo`, `ValidatorHistoricalRewards`, and `ValidatorCurrentRewards`.
 * [#25516](https://github.com/cosmos/cosmos-sdk/pull/25516) Support automatic configuration of OpenTelemetry via [OpenTelemetry declarative configuration](https://pkg.go.dev/go.opentelemetry.io/contrib/otelconf) and add OpenTelemetry instrumentation of `BaseApp`.
@@ -52,8 +50,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (collections/codec) [#25614] (https://github.com/cosmos/cosmos-sdk/pull/25827)  Add `TimeValue` (`ValueCodec[time.Time]`) to collections/codec.
 * (enterprise/poa) [#25838](https://github.com/cosmos/cosmos-sdk/pull/25838) Add the `poa` module under the `enterprise` directory.
 * (grpc) [#25850](https://github.com/cosmos/cosmos-sdk/pull/25850) Add `GetBlockResults` and `GetLatestBlockResults` gRPC endpoints to expose CometBFT block results including `finalize_block_events`.
-* (events) [#25877](https://github.com/cosmos/cosmos-sdk/pull/25877) Add `OverrideEvents` to `EventManagerI`.
->>>>>>> 8c2f6934d (feat!: Override Events in EventManager (#25877))
+* (events) [#25881](https://github.com/cosmos/cosmos-sdk/pull/25881) Add `OverrideEvents` to `EventManagerI`.
 
 ### Improvements
 

@@ -597,11 +597,13 @@ func (db *CommitMultiTree) GetCommitKVStore(storetypes.StoreKey) storetypes.Comm
 }
 
 func (db *CommitMultiTree) SetTracer(io.Writer) storetypes.MultiStore {
-	panic("SetTracer is not implemented for CommitMultiTree")
+	logger.Warn("SetTracer is not implemented for CommitMultiTree")
+	return db
 }
 
 func (db *CommitMultiTree) SetTracingContext(storetypes.TraceContext) storetypes.MultiStore {
-	panic("SetTracingContext is not implemented for CommitMultiTree")
+	logger.Warn("SetTracingContext is not implemented for CommitMultiTree")
+	return db
 }
 
 func (db *CommitMultiTree) TracingEnabled() bool {

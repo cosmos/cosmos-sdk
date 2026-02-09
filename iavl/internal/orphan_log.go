@@ -10,6 +10,8 @@ import (
 
 type OrphanWriter struct {
 	*FileWriter
+	curVersion    uint32
+	curCheckpoint uint32
 }
 
 func NewOrphanWriter(file *os.File) *OrphanWriter {

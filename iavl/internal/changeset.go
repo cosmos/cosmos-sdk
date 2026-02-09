@@ -7,10 +7,11 @@ import (
 )
 
 type Changeset struct {
+	files        *ChangesetFiles
 	treeStore    *TreeStore
 	readerRef    atomic.Pointer[ChangesetReaderRef]
 	sealed       atomic.Bool
-	files        *ChangesetFiles
+	compacted    atomic.Pointer[Changeset]
 	orphanWriter *OrphanWriter
 }
 
@@ -28,20 +29,22 @@ func OpenChangeset(treeStore *TreeStore, dir string) (*Changeset, error) {
 		return nil, fmt.Errorf("failed to open changeset files: %w", err)
 	}
 	cs := NewChangeset(treeStore, files)
-	cr, err := NewChangesetReader(cs)
+	err = cs.OpenNewReader()
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize changeset reader: %w", err)
+		return nil, err
 	}
-	cs.readerRef.Store(&ChangesetReaderRef{rdr: cr})
 	return cs, nil
 }
 
 // TryPinReader attempts to pin the active ChangesetReader.
-// If this Changeset was just compacted, it may return (nil, NoopPin{}).
 func (ch *Changeset) TryPinReader() (*ChangesetReader, Pin) {
 	for {
 		pinner := ch.readerRef.Load()
 		if pinner == nil {
+			if compacted := ch.compacted.Load(); compacted != nil {
+				// changeset was compacted, try the new one
+				return compacted.TryPinReader()
+			}
 			// changeset was compacted, no active reader
 			return nil, NoopPin{}
 		}
@@ -75,7 +78,12 @@ func (ch *Changeset) TreeStore() *TreeStore {
 //	return ReplayWAL(context.Background(), cpRoot, ch.files.WALFile(), cpVersion, version)
 //}
 
-func (ch *Changeset) swapActiveReader(newRdr *ChangesetReader) {
+func (ch *Changeset) OpenNewReader() error {
+	newRdr, err := NewChangesetReader(ch)
+	if err != nil {
+		return fmt.Errorf("failed to create new changeset reader: %w", err)
+	}
+
 	var newPinner *ChangesetReaderRef
 	if newRdr != nil {
 		newPinner = &ChangesetReaderRef{rdr: newRdr}
@@ -84,6 +92,7 @@ func (ch *Changeset) swapActiveReader(newRdr *ChangesetReader) {
 	if existing != nil {
 		existing.Evict()
 	}
+	return nil
 }
 
 func (ch *Changeset) MarkOrphan(version uint32, nodeId NodeID) error {
@@ -103,6 +112,15 @@ func (ch *Changeset) MarkOrphan(version uint32, nodeId NodeID) error {
 	//}
 
 	return nil
+}
+
+func (ch *Changeset) MarkCompacted(compacted *Changeset) {
+	ch.compacted.Store(compacted)
+	// evict our reader since we won't be needed anymore
+	existing := ch.readerRef.Swap(nil)
+	if existing != nil {
+		existing.Evict()
+	}
 }
 
 func (ch *Changeset) Close() error {

@@ -266,8 +266,6 @@ func (ts *TreeStore) loadRootAtVersion(ctx context.Context, targetVersion uint32
 }
 
 func (ts *TreeStore) checkpointForVersion(version uint32) (cpRoot *NodePointer, cpVersion uint32, err error) {
-	retries := 0
-	const maxRetries = 5
 	for {
 		changeset := ts.changesetForVersion(version)
 		if changeset == nil {
@@ -276,17 +274,10 @@ func (ts *TreeStore) checkpointForVersion(version uint32) (cpRoot *NodePointer, 
 		rdr, pin := changeset.TryPinReader()
 		if rdr == nil {
 			pin.Unpin()
-
-			// we probably have hit a changeset eviction during compaction, try again but avoid looping forever
-			retries++
-			if retries >= maxRetries {
-				return nil, 0, fmt.Errorf("changeset reader is not available for version %d after %d retries", version, retries)
-			}
-
-			continue // try again
+			return nil, 0, fmt.Errorf("changeset reader is not available for version %d", version)
 		}
 
-		cpRoot, cpVersion := rdr.CheckpointForVersion(version)
+		cpRoot, cpVersion = rdr.CheckpointForVersion(version)
 		pin.Unpin()
 
 		if cpVersion != 0 {

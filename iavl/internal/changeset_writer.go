@@ -286,13 +286,7 @@ func (cs *ChangesetWriter) CreateReader() error {
 		return fmt.Errorf("failed to flush data before creating shared reader: %w", err)
 	}
 
-	rdr, err := NewChangesetReader(cs.changeset)
-	if err != nil {
-		return fmt.Errorf("failed to create shared changeset reader: %w", err)
-	}
-
-	cs.changeset.swapActiveReader(rdr)
-	return nil
+	return cs.changeset.OpenNewReader()
 }
 
 func (cs *ChangesetWriter) Flush() error {

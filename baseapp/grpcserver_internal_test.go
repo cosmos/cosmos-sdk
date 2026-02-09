@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	"cosmossdk.io/log/v2"
+
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 )
 

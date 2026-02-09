@@ -22,6 +22,7 @@ type EventManagerI interface {
 	EmitTypedEvents(tevs ...proto.Message) error
 	EmitEvent(event Event)
 	EmitEvents(events Events)
+	OverrideEvents(events Events)
 }
 
 // ----------------------------------------------------------------------------
@@ -54,6 +55,13 @@ func (em *EventManager) EmitEvent(event Event) {
 // Deprecated: Use EmitTypedEvents
 func (em *EventManager) EmitEvents(events Events) {
 	em.events = em.events.AppendEvents(events)
+}
+
+// OverrideEvents removes all previous events and sets a
+// completely new series of Event objects. Should only be used
+// in cases where existing events should be modified.
+func (em *EventManager) OverrideEvents(events Events) {
+	em.events = events
 }
 
 // ABCIEvents returns all stored Event objects as abci.Event objects.

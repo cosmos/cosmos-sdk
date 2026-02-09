@@ -90,9 +90,12 @@ func (e STMRunner) Run(ctx context.Context, ms storetypes.MultiStore, txs [][]by
 			}
 
 			var memTx []byte
-			if memTxs != nil {
+			if memTxs != nil && memTxs[txn] != nil {
 				memTx = memTxs[txn]
+			} else {
+				memTx = txs[txn]
 			}
+			
 			results[txn] = deliverTx(memTx, msWrapper{ms}, int(txn), cache)
 
 			if v != nil {

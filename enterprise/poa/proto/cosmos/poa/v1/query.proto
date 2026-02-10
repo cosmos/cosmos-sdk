@@ -27,27 +27,27 @@ option go_package = "github.com/cosmos/cosmos-sdk/enterprise/poa/types";
 service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
-    option (google.api.http).get = "/cosmos/poa/v1/params";
+    option (google.api.http).get               = "/cosmos/poa/v1/params";
   }
 
   rpc Validator(QueryValidatorRequest) returns (QueryValidatorResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
-    option (google.api.http).get = "/cosmos/poa/v1/validator/{address}";
+    option (google.api.http).get               = "/cosmos/poa/v1/validator/{address}";
   }
 
   rpc Validators(QueryValidatorsRequest) returns (QueryValidatorsResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
-    option (google.api.http).get = "/cosmos/poa/v1/validators";
+    option (google.api.http).get               = "/cosmos/poa/v1/validators";
   }
 
   rpc WithdrawableFees(QueryWithdrawableFeesRequest) returns (QueryWithdrawableFeesResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
-    option (google.api.http).get = "/cosmos/poa/v1/allocated_fees/{operator_address}";
+    option (google.api.http).get               = "/cosmos/poa/v1/allocated_fees/{operator_address}";
   }
 
   rpc TotalPower(QueryTotalPowerRequest) returns (QueryTotalPowerResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
-    option (google.api.http).get = "/cosmos/poa/v1/total_power";
+    option (google.api.http).get               = "/cosmos/poa/v1/total_power";
   }
 }
 

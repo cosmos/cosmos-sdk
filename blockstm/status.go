@@ -1,6 +1,9 @@
 package blockstm
 
-import "sync"
+import (
+	"fmt"
+	"sync"
+)
 
 type Status uint
 
@@ -60,8 +63,16 @@ func (s *StatusEntry) TrySetExecuting() (incarnation Incarnation, ok bool) {
 	return incarnation, ok
 }
 
-func (s *StatusEntry) setStatus(status Status) {
+// setStatus sets the status to the given status if the current status is preStatus.
+// preStatus invariant must be held by the caller.
+func (s *StatusEntry) setStatus(status, preStatus Status) {
 	s.Lock()
+
+	if s.status != preStatus {
+		s.Unlock()
+		panic(fmt.Sprintf("invalid status transition: %v -> %v, current: %v", preStatus, status, s.status))
+	}
+
 	s.status = status
 	s.Unlock()
 }
@@ -77,6 +88,12 @@ func (s *StatusEntry) Resume() {
 		return
 	}
 
+	// status must be SUSPENDED and cond != nil
+	if s.status != StatusSuspended || s.cond == nil {
+		s.Unlock()
+		panic(fmt.Sprintf("invalid resume: status=%v", s.status))
+	}
+
 	s.status = StatusExecuting
 	s.cond.Notify()
 	s.cond = nil
@@ -84,7 +101,7 @@ func (s *StatusEntry) Resume() {
 
 func (s *StatusEntry) SetExecuted() {
 	// status must have been EXECUTING
-	s.setStatus(StatusExecuted)
+	s.setStatus(StatusExecuted, StatusExecuting)
 }
 
 func (s *StatusEntry) TryValidationAbort(incarnation Incarnation) (ok bool) {
@@ -102,8 +119,13 @@ func (s *StatusEntry) TryValidationAbort(incarnation Incarnation) (ok bool) {
 func (s *StatusEntry) SetReadyStatus() {
 	s.Lock()
 
-	s.incarnation++
 	// status must be ABORTING
+	if s.status != StatusAborting {
+		s.Unlock()
+		panic(fmt.Sprintf("invalid status transition: %v -> %v, current: %v", StatusAborting, StatusReadyToExecute, s.status))
+	}
+
+	s.incarnation++
 	s.status = StatusReadyToExecute
 
 	s.Unlock()
@@ -111,6 +133,11 @@ func (s *StatusEntry) SetReadyStatus() {
 
 func (s *StatusEntry) Suspend(cond *Condvar) {
 	s.Lock()
+
+	if s.status != StatusExecuting {
+		s.Unlock()
+		panic(fmt.Sprintf("invalid suspend: status=%v", s.status))
+	}
 
 	s.cond = cond
 	s.status = StatusSuspended

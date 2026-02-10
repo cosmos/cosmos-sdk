@@ -48,7 +48,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/auth) [#25871](https://github.com/cosmos/cosmos-sdk/pull/25871) Limits pagination at default for values that exceed it.
 * (events) [#25881](https://github.com/cosmos/cosmos-sdk/pull/25881) Add `OverrideEvents` to `EventManagerI`.
 
-
 ## [v0.53.5](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.5) - 2025-12-12
 
 ### Features

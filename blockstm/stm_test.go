@@ -89,7 +89,7 @@ func worstCaseBlock(size int) *MockBlock {
 	return NewMockBlock(txs)
 }
 
-func determisticBlock() *MockBlock {
+func deterministicBlock() *MockBlock {
 	return NewMockBlock([]Tx{
 		NoopTx(0, "account0"),
 		NoopTx(1, "account1"),

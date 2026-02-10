@@ -95,17 +95,17 @@ func (cp *CompactorProc) compactOne(ctx context.Context, cs *Changeset, opts Com
 		if err != nil {
 			return fmt.Errorf("failed to add changeset starting at version %d to compactor: %w", cs.Files().StartVersion(), err)
 		}
-
-		// TODO check if we want to roll over the compactor after a certain size
-		if cp.curCompactor.TotalBytes() > compactionRolloverSize {
-			_, err := cp.curCompactor.Seal()
-			if err != nil {
-				return fmt.Errorf("failed to seal compactor after reaching rollover size: %w", err)
-			}
-			cp.curCompactor = nil
-
-		}
 	}
+
+	if cp.curCompactor.TotalBytes() > compactionRolloverSize {
+		_, err := cp.curCompactor.Seal()
+		if err != nil {
+			return fmt.Errorf("failed to seal compactor after reaching rollover size: %w", err)
+		}
+		cp.curCompactor = nil
+
+	}
+
 	return nil
 }
 

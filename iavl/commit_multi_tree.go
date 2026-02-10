@@ -869,6 +869,7 @@ func (db *CommitMultiTree) pruneIfNeeded() {
 		return
 	}
 	db.pruningActive.Store(true)
+	db.lastPruneVersion = db.version
 	go func() {
 		ctx, span := tracer.Start(context.Background(), "CommitMultiTree.Prune")
 		defer span.End()
@@ -881,7 +882,7 @@ func (db *CommitMultiTree) pruneIfNeeded() {
 			)
 			ct, ok := si.store.(*CommitTree)
 			if !ok {
-				logger.Error("expected CommitTree store, got %T", si.store)
+				logger.Error(fmt.Sprintf("store %s is not a CommitTree, cannot prune", si.key.Name()))
 				continue
 			}
 			err := ct.Prune(ctx, db.pruningOptions)

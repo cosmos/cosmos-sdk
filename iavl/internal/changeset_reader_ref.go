@@ -3,10 +3,11 @@ package internal
 import "sync/atomic"
 
 type ChangesetReaderRef struct {
-	rdr      *ChangesetReader
-	refCount atomic.Int32
-	evicted  atomic.Bool
-	disposed atomic.Bool
+	rdr       *ChangesetReader
+	refCount  atomic.Int32
+	evicted   atomic.Bool
+	disposed  atomic.Bool
+	changeset *Changeset
 }
 
 type changesetReaderPin struct {
@@ -46,5 +47,6 @@ func (p *ChangesetReaderRef) TryDispose() (bool, error) {
 		return false, nil
 	}
 	p.disposed.Store(true)
+	p.changeset.activeReaderCount.Add(-1)
 	return true, p.rdr.Close()
 }

@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"errors"
 	"fmt"
 	"sync/atomic"
 )
@@ -17,10 +16,14 @@ type Changeset struct {
 }
 
 func NewChangeset(treeStore *TreeStore, files *ChangesetFiles) (*Changeset, error) {
+	return NewChangesetWithOrphanWriter(treeStore, files, NewOrphanWriter(files.OrphansFile()))
+}
+
+func NewChangesetWithOrphanWriter(treeStore *TreeStore, files *ChangesetFiles, orphanWriter *OrphanWriter) (*Changeset, error) {
 	cs := &Changeset{
 		treeStore:    treeStore,
 		files:        files,
-		orphanWriter: NewOrphanWriter(files.OrphansFile()),
+		orphanWriter: orphanWriter,
 	}
 	err := cs.OpenNewReader()
 	if err != nil {
@@ -87,7 +90,7 @@ func (ch *Changeset) OpenNewReader() error {
 
 	var newPinner *ChangesetReaderRef
 	if newRdr != nil {
-		newPinner = &ChangesetReaderRef{rdr: newRdr}
+		newPinner = &ChangesetReaderRef{rdr: newRdr, changeset: ch}
 	}
 	existing := ch.readerRef.Swap(newPinner)
 	if existing != nil {
@@ -116,14 +119,6 @@ func (ch *Changeset) MarkOrphan(version uint32, nodeId NodeID) error {
 	return nil
 }
 
-func (ch *Changeset) MarkCompacting() {
-	ch.compacting.Store(true)
-}
-
-func (ch *Changeset) IsCompacting() bool {
-	return ch.compacting.Load()
-}
-
 func (ch *Changeset) MarkCompacted(compacted *Changeset) {
 	ch.compacted.Store(compacted)
 	// evict our reader since we won't be needed anymore
@@ -140,10 +135,12 @@ func (ch *Changeset) Close() error {
 	if readerRef != nil {
 		readerRef.Evict()
 	}
-	return errors.Join(
-		ch.orphanWriter.Flush(), // TODO sync
-		ch.files.Close(),
-	)
+	if ch.orphanWriter != nil {
+		if err := ch.orphanWriter.Flush(); err != nil {
+			return fmt.Errorf("failed to flush orphan writer: %w", err)
+		}
+	}
+	return ch.files.Close()
 }
 
 func (ch *Changeset) Files() *ChangesetFiles {

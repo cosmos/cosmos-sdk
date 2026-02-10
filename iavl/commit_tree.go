@@ -418,8 +418,6 @@ func (c *CommitTree) Close() error {
 }
 
 func (c *CommitTree) Prune(ctx context.Context, options pruningtypes.PruningOptions) error {
-	ctx, span := tracer.Start(context.Background(), "CommitTree.Prune")
-	defer span.End()
 	cp := internal.NewCompactorProc(c.treeStore, internal.PruneOptions{
 		KeepRecent: uint32(options.KeepRecent),
 	})

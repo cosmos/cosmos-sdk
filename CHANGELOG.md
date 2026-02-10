@@ -36,6 +36,18 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## [v0.53.6](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.6) - 2026-02-10
+
+### Improvements
+
+* (deps) [#25710](https://github.com/cosmos/cosmos-sdk/pull/25710) Bump github.com/cosmos/ledger-cosmos-go from 0.16.0 to 1.0.0
+* (deps) [#25820](https://github.com/cosmos/cosmos-sdk/pull/25820) Bump github.com/cometbft/cometbft from 0.80.20 to 0.38.21
+
+### Bug Fixes
+
+* (x/auth) [#25871](https://github.com/cosmos/cosmos-sdk/pull/25871) Limits pagination at default for values that exceed it.
+* (events) [#25881](https://github.com/cosmos/cosmos-sdk/pull/25881) Add `OverrideEvents` to `EventManagerI`.
+
 ## [v0.53.5](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.5) - 2025-12-12
 
 ### Features
@@ -43,14 +55,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (crypto/ledger) [#25435](https://github.com/cosmos/cosmos-sdk/pull/25435) Add SetDERConversion to reset skipDERConversion and App name for ledger.
 * (gRPC) [#25565](https://github.com/cosmos/cosmos-sdk/pull/25565) Support for multi gRPC query clients serve with historical binaries to serve proper historical state.
 * (blockstm) [#25600](https://github.com/cosmos/cosmos-sdk/pull/25600) Allow dynamic retrieval of the coin denomination from multi store at runtime.
-* (x/distribution) [#25650](https://github.com/cosmos/cosmos-sdk/pull/25650) Add new gRPC query endpoints and CLI commands for `DelegatorStartingInfo`, `ValidatorHistoricalRewards`, and `ValidatorCurrentRewards`.
 * [#25516](https://github.com/cosmos/cosmos-sdk/pull/25516) Support automatic configuration of OpenTelemetry via [OpenTelemetry declarative configuration](https://pkg.go.dev/go.opentelemetry.io/contrib/otelconf) and add OpenTelemetry instrumentation of `BaseApp`.
-* [#25745](https://github.com/cosmos/cosmos-sdk/pull/25745) Add DiskIO telemetry via gopsutil.
-* (grpc) [#25648](https://github.com/cosmos/cosmos-sdk/pull/25648) Add `earliest_block_height` and `latest_block_height` fields to `GetSyncingResponse`.
-* (collections/codec) [#25614] (https://github.com/cosmos/cosmos-sdk/pull/25827)  Add `TimeValue` (`ValueCodec[time.Time]`) to collections/codec.
-* (enterprise/poa) [#25838](https://github.com/cosmos/cosmos-sdk/pull/25838) Add the `poa` module under the `enterprise` directory.
-* (grpc) [#25850](https://github.com/cosmos/cosmos-sdk/pull/25850) Add `GetBlockResults` and `GetLatestBlockResults` gRPC endpoints to expose CometBFT block results including `finalize_block_events`.
-* (events) [#25881](https://github.com/cosmos/cosmos-sdk/pull/25881) Add `OverrideEvents` to `EventManagerI`.
 
 ### Improvements
 
@@ -61,12 +66,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * (cli) [#25485](https://github.com/cosmos/cosmos-sdk/pull/25485) Avoid failed to convert address field in `withdraw-validator-commission` cmd.
 * (baseapp) [#25642](https://github.com/cosmos/cosmos-sdk/pull/25642) Mark pre-block events for indexing based on local configuration.
-* (x/bank) [#25751](https://github.com/cosmos/cosmos-sdk/pull/25751) Fix recipient address in events.
-* (client) [#25811] (https://github.com/cosmos/cosmos-sdk/pull/25811) fix(client): fix file handle leaks in snapshot commands.
-* (server/config) [#25806](https://github.com/cosmos/cosmos-sdk/pull/25806) fix: add missing commas in historical gRPC config template.
-* (client) [#25804](https://github.com/cosmos/cosmos-sdk/pull/25804) Add `GetHeightFromMetadataStrict` API to `grpc` client for better error handling.
-* (x/auth) [#25871](https://github.com/cosmos/cosmos-sdk/pull/25871) Limits pagination at default for values that exceed it.
-* (x/staking) [#25829](https://github.com/cosmos/cosmos-sdk/pull/25829) Validates case-sensitivity on authz grands in x/staking.
 
 ### Deprecated
 

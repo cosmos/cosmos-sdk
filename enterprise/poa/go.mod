@@ -3,7 +3,7 @@ module github.com/cosmos/cosmos-sdk/enterprise/poa
 go 1.25.7
 
 require (
-	cosmossdk.io/api v0.9.2
+	cosmossdk.io/api v1.0.0-rc.2
 	cosmossdk.io/collections v1.3.1
 	cosmossdk.io/core v0.11.3
 	cosmossdk.io/depinject v1.2.1
@@ -207,6 +207,7 @@ require (
 // Below are the long-lived replace of the SimApp
 replace (
 	cosmossdk.io/store => ../../store
+	cosmossdk.io/x/tx => ../../x/tx
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// Simapp always use the latest version of the cosmos-sdk

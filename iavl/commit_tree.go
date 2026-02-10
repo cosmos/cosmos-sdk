@@ -16,6 +16,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
+	pruningtypes "cosmossdk.io/store/pruning/types"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/iavl/internal"
 )
@@ -414,6 +415,15 @@ func (c *CommitTree) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext)
 
 func (c *CommitTree) Close() error {
 	return c.treeStore.Close()
+}
+
+func (c *CommitTree) Prune(ctx context.Context, options pruningtypes.PruningOptions) error {
+	ctx, span := tracer.Start(context.Background(), "CommitTree.Prune")
+	defer span.End()
+	cp := internal.NewCompactorProc(c.treeStore, internal.PruneOptions{
+		KeepRecent: uint32(options.KeepRecent),
+	})
+	return cp.StartCompactionRun(ctx)
 }
 
 var _ storetypes.CacheWrapper = (*CommitTree)(nil)

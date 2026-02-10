@@ -38,8 +38,9 @@ type Compactor struct {
 }
 
 type pendingCompactionEntry struct {
-	orig           *Changeset
-	orphanRewriter *OrphanRewriter
+	orig                *Changeset
+	orphanRewriter      *OrphanRewriter
+	origStartCheckpoint uint32
 }
 
 func NewCompactor(ctx context.Context, reader *ChangesetReader, opts CompactOptions, store *TreeStore) (*Compactor, error) {
@@ -240,17 +241,15 @@ func (c *Compactor) AddChangeset(reader *ChangesetReader) error {
 
 	// track this changeset as processed
 	c.processedChangesets = append(c.processedChangesets, pendingCompactionEntry{
-		orig:           reader.Changeset(),
-		orphanRewriter: orphanRewriter,
+		orig:                reader.Changeset(),
+		orphanRewriter:      orphanRewriter,
+		origStartCheckpoint: reader.FirstCheckpoint(),
 	})
 
 	return nil
 }
 
 func (c *Compactor) Seal() (*Changeset, error) {
-	c.treeStore.LockOrphanProc()
-	defer c.treeStore.UnlockOrphanProc()
-
 	if len(c.processedChangesets) == 0 {
 		return nil, fmt.Errorf("no changesets processed")
 	}
@@ -266,10 +265,46 @@ func (c *Compactor) Seal() (*Changeset, error) {
 		return nil, fmt.Errorf("failed to flush data during compaction seal: %w", err)
 	}
 
+	cs, err := c.switchoverChangesets()
+	if err != nil {
+		return nil, fmt.Errorf("failed to clean up orphans during compaction seal: %w", err)
+	}
+
+	// update the tree store with the new compacted changeset
+	c.treeStore.changesetsLock.Lock()
+	// clear the old changesets that were compacted
+	for _, cs := range c.processedChangesets {
+		c.treeStore.changesetsByVersion.Delete(cs.orig.Files().StartVersion())
+	}
+	// set the new compacted changeset
+	c.treeStore.changesetsByVersion.Set(cs.Files().StartVersion(), cs)
+	c.treeStore.changesetsLock.Unlock()
+
+	// update the checkpoint resolver with the new compacted changeset
+	newRdr, newPin := cs.TryPinReader()
+	checkpointer := c.treeStore.checkpointer
+	checkpointer.changesetLock.Lock()
+	// clear the old changesets that were compacted
+	for _, cs := range c.processedChangesets {
+		firstCheckpoint := cs.origStartCheckpoint
+		if firstCheckpoint != 0 {
+			checkpointer.changesetsByCheckpoint.Delete(firstCheckpoint)
+		}
+	}
+	checkpointer.changesetsByCheckpoint.Set(newRdr.FirstCheckpoint(), cs)
+	checkpointer.changesetLock.Unlock()
+	newPin.Unpin()
+
+	return cs, nil
+}
+
+func (c *Compactor) switchoverChangesets() (*Changeset, error) {
+	c.treeStore.LockOrphanProc()
+	defer c.treeStore.UnlockOrphanProc()
+
 	for _, entry := range c.processedChangesets {
 		err := entry.orphanRewriter.FinishRewrite(c.orphanWriter)
 		if err != nil {
-			c.treeStore.UnlockOrphanProc()
 			return nil, fmt.Errorf("failed to finish orphan rewrite for a processed changeset during compaction seal: %w", err)
 		}
 	}
@@ -305,10 +340,10 @@ func (c *Compactor) Seal() (*Changeset, error) {
 //	})
 //}
 //
-//func (c *Compactor) TotalBytes() int {
-//	total := c.leavesWriter.Size() + c.branchesWriter.Size() + c.cpInfoWriter.Size()
-//	if c.kvlogWriter != nil {
-//		total += c.kvlogWriter.Size()
-//	}
-//	return total
-//}
+
+func (c *Compactor) TotalBytes() int {
+	total := c.leavesWriter.Size() + c.branchesWriter.Size() + c.cpInfoWriter.Size()
+	total += c.kvlogWriter.Size()
+	total += c.walWriter.Size()
+	return total
+}

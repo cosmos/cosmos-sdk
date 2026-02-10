@@ -62,7 +62,7 @@ func (or *OrphanRewriter) FinishRewrite(compactedOrphanWriter *OrphanWriter) err
 		entry, err := or.rdr.Next()
 		if err != nil {
 			if err == io.EOF {
-				return nil
+				return or.rdr.Close()
 			}
 			return err
 		}

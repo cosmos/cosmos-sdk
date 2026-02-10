@@ -5,20 +5,20 @@ import (
 	"fmt"
 )
 
-type compactorProc struct {
+type CompactorProc struct {
 	treeStore    *TreeStore
 	curCompactor *Compactor
 	options      PruneOptions
 }
 
-func newCompactorProc(treeStore *TreeStore, options PruneOptions) *compactorProc {
-	return &compactorProc{
+func NewCompactorProc(treeStore *TreeStore, options PruneOptions) *CompactorProc {
+	return &CompactorProc{
 		treeStore: treeStore,
 		options:   options,
 	}
 }
 
-func (cp *compactorProc) StartCompactionRun(ctx context.Context) error {
+func (cp *CompactorProc) StartCompactionRun(ctx context.Context) error {
 	// collect current entries
 	toProcess := make([]*Changeset, 0, cp.treeStore.changesetsByVersion.Len())
 	cp.treeStore.changesetsLock.RLock()
@@ -44,10 +44,12 @@ func (cp *compactorProc) StartCompactionRun(ctx context.Context) error {
 
 	oldestRetainedCheckpoint := uint32(0)
 	walRetainVersion := uint32(0)
-	if info != nil {
-		oldestRetainedCheckpoint = info.Checkpoint
-		walRetainVersion = info.Version
+	if info == nil {
+		// if there is no checkpoint for the oldest retained version, so nothing to do
+		return nil
 	}
+	oldestRetainedCheckpoint = info.Checkpoint
+	walRetainVersion = info.Version
 
 	cpOpts := CompactOptions{
 		RetainCriteria: func(createCheckpoint, orphanVersion uint32) bool {
@@ -65,10 +67,17 @@ func (cp *compactorProc) StartCompactionRun(ctx context.Context) error {
 		}
 	}
 
+	if cp.curCompactor != nil {
+		_, err := cp.curCompactor.Seal()
+		if err != nil {
+			return fmt.Errorf("failed to seal compactor after processing all changesets: %w", err)
+		}
+	}
+
 	return nil
 }
 
-func (cp *compactorProc) compactOne(ctx context.Context, cs *Changeset, opts CompactOptions) error {
+func (cp *CompactorProc) compactOne(ctx context.Context, cs *Changeset, opts CompactOptions) error {
 	rdr, pin := cs.TryPinReader()
 	defer pin.Unpin()
 	if rdr == nil {
@@ -88,6 +97,16 @@ func (cp *compactorProc) compactOne(ctx context.Context, cs *Changeset, opts Com
 		}
 
 		// TODO check if we want to roll over the compactor after a certain size
+		if cp.curCompactor.TotalBytes() > compactionRolloverSize {
+			_, err := cp.curCompactor.Seal()
+			if err != nil {
+				return fmt.Errorf("failed to seal compactor after reaching rollover size: %w", err)
+			}
+			cp.curCompactor = nil
+
+		}
 	}
 	return nil
 }
+
+const compactionRolloverSize = 4 * 1024 * 1024 * 1024 // 4GB

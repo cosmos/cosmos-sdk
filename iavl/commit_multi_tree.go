@@ -44,6 +44,10 @@ type CommitMultiTree struct {
 	version        uint64
 	lastCommitId   storetypes.CommitID
 	lastCommitInfo *storetypes.CommitInfo
+
+	pruningActive    atomic.Bool
+	pruningOptions   pruningtypes.PruningOptions
+	lastPruneVersion uint64
 }
 
 type storeData struct {
@@ -107,6 +111,7 @@ func (db *CommitMultiTree) StartCommit(ctx context.Context, store storetypes.Mul
 			finalizer.err.Store(err)
 		}
 		close(finalizer.done)
+		db.pruneIfNeeded() // start background pruning when needed
 	}()
 	return finalizer, nil
 }
@@ -563,12 +568,12 @@ func loadCommitInfo(dir string, version uint64) (*storetypes.CommitInfo, error) 
 	return commitInfo, nil
 }
 
-func (db *CommitMultiTree) SetPruning(pruningtypes.PruningOptions) {
-	logger.Warn("SetPruning is not implemented for CommitMultiTree")
+func (db *CommitMultiTree) SetPruning(opts pruningtypes.PruningOptions) {
+	db.pruningOptions = opts
 }
 
 func (db *CommitMultiTree) GetPruning() pruningtypes.PruningOptions {
-	return pruningtypes.NewPruningOptions(pruningtypes.PruningDefault)
+	return db.pruningOptions
 }
 
 func (db *CommitMultiTree) GetStoreType() storetypes.StoreType {
@@ -851,6 +856,42 @@ func (db *CommitMultiTree) CacheMultiStoreWithVersion(version int64) (storetypes
 	})
 
 	return mt, nil
+}
+
+func (db *CommitMultiTree) pruneIfNeeded() {
+	if db.pruningActive.Load() {
+		// already pruning, skip
+		return
+	}
+	intervalSinceLastPrune := db.version - db.lastPruneVersion
+	if db.pruningOptions.Interval > intervalSinceLastPrune {
+		// not time to prune yet
+		return
+	}
+	db.pruningActive.Store(true)
+	go func() {
+		ctx, span := tracer.Start(context.Background(), "CommitMultiTree.Prune")
+		defer span.End()
+		defer db.pruningActive.Store(false)
+		for _, si := range db.iavlStores {
+			ctx, span := tracer.Start(ctx, "PruneStore",
+				trace.WithAttributes(
+					attribute.String("store", si.key.Name()),
+				),
+			)
+			ct, ok := si.store.(*CommitTree)
+			if !ok {
+				logger.Error("expected CommitTree store, got %T", si.store)
+				continue
+			}
+			err := ct.Prune(ctx, db.pruningOptions)
+			if err != nil {
+				logger.Error("failed to prune store %s: %v", si.key.Name(), err)
+				continue
+			}
+			span.End()
+		}
+	}()
 }
 
 var _ storetypes.CommitMultiStore2 = &CommitMultiTree{}

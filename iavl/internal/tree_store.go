@@ -336,4 +336,8 @@ func (ts *TreeStore) addToDisposalQueue(existing *ChangesetReaderRef) {
 	// TODO
 }
 
+func (ts *TreeStore) addToDeletionQueue(ch *Changeset) {
+	// TODO
+}
+
 const memNodeOverhead = int64(unsafe.Sizeof(MemNode{})) + int64(unsafe.Sizeof(NodePointer{}))*2 + 32 /* hash size */

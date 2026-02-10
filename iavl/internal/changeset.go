@@ -7,13 +7,13 @@ import (
 )
 
 type Changeset struct {
-	files        *ChangesetFiles
-	treeStore    *TreeStore
-	readerRef    atomic.Pointer[ChangesetReaderRef]
-	sealed       atomic.Bool
-	compacting   atomic.Bool
-	compacted    atomic.Pointer[Changeset]
-	orphanWriter *OrphanWriter
+	files             *ChangesetFiles
+	treeStore         *TreeStore
+	readerRef         atomic.Pointer[ChangesetReaderRef]
+	activeReaderCount atomic.Int32
+	sealed            atomic.Bool
+	compacted         atomic.Pointer[Changeset]
+	orphanWriter      *OrphanWriter
 }
 
 func NewChangeset(treeStore *TreeStore, files *ChangesetFiles) (*Changeset, error) {
@@ -93,6 +93,7 @@ func (ch *Changeset) OpenNewReader() error {
 	if existing != nil {
 		existing.Evict()
 	}
+	ch.activeReaderCount.Add(1)
 	return nil
 }
 
@@ -131,6 +132,7 @@ func (ch *Changeset) MarkCompacted(compacted *Changeset) {
 		existing.Evict()
 	}
 	ch.orphanWriter = nil
+	ch.treeStore.addToDeletionQueue(ch)
 }
 
 func (ch *Changeset) Close() error {
@@ -153,4 +155,16 @@ func (ch *Changeset) OrphanWriter() *OrphanWriter {
 		return ch.compacted.Load().OrphanWriter()
 	}
 	return ch.orphanWriter
+}
+
+func (ch *Changeset) TryDelete() (bool, error) {
+	if ch.compacted.Load() == nil {
+		// not compacted yet
+		return false, nil
+	}
+	if ch.activeReaderCount.Load() > 0 {
+		// readers still active, can't delete yet
+		return false, nil
+	}
+	return true, ch.files.DeleteFiles()
 }

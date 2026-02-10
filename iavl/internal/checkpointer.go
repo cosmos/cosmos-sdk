@@ -16,16 +16,19 @@ type Checkpointer struct {
 	changesetLock          sync.RWMutex
 	changesetsByCheckpoint *btree.Map[uint32, *Changeset]
 	evictor                Evictor
+	orphanProc             *OrphanProcessor
 }
 
 func NewCheckpointer(evictor Evictor) *Checkpointer {
 	cp := &Checkpointer{
-		reqChan:                make(chan checkpointReq, 16),
+		reqChan:                make(chan checkpointReq, 32),
 		doneChan:               make(chan error, 1),
 		changesetsByCheckpoint: &btree.Map[uint32, *Changeset]{},
 		evictor:                evictor,
 	}
+	cp.orphanProc = newOrphanProc(cp)
 	cp.start()
+	cp.orphanProc.Start()
 	return cp
 }
 
@@ -55,7 +58,19 @@ func (cp *Checkpointer) ChangesetByCheckpoint(checkpoint uint32) *Changeset {
 	return res
 }
 
-func (cp *Checkpointer) Checkpoint(writer *ChangesetWriter, root *NodePointer, checkpoint, version uint32, nodeIdsAssigned chan struct{}, seal bool) error {
+func (cp *Checkpointer) QueueOrphans(mutationCtx *MutationContext) error {
+	select {
+	case err := <-cp.doneChan:
+		return err
+	default:
+	}
+	cp.reqChan <- checkpointReq{
+		mutationCtx: mutationCtx,
+	}
+	return nil
+}
+
+func (cp *Checkpointer) Checkpoint(mutationCtx *MutationContext, writer *ChangesetWriter, root *NodePointer, checkpoint uint32, nodeIdsAssigned chan struct{}, seal bool) error {
 	if nodeIdsAssigned == nil {
 		return fmt.Errorf("nodeIdsAssigned channel cannot be nil when checkpointing, that means we haven't assigned IDs yet")
 	}
@@ -66,10 +81,10 @@ func (cp *Checkpointer) Checkpoint(writer *ChangesetWriter, root *NodePointer, c
 	default:
 	}
 	cp.reqChan <- checkpointReq{
+		mutationCtx:     mutationCtx,
 		writer:          writer,
 		root:            root,
 		checkpoint:      checkpoint,
-		version:         version,
 		nodeIdsAssigned: nodeIdsAssigned,
 		seal:            seal,
 	}
@@ -79,6 +94,18 @@ func (cp *Checkpointer) Checkpoint(writer *ChangesetWriter, root *NodePointer, c
 func (cp *Checkpointer) proc() error {
 	var curWriter *ChangesetWriter
 	for req := range cp.reqChan {
+		// send orphans to orphan processor
+		err := cp.orphanProc.AddOrphans(req.mutationCtx)
+		if err != nil {
+			return fmt.Errorf("failed to add orphans to orphan processor: %w", err)
+		}
+
+		// TODO instrument any channel send delays here
+		// if we don't have a writer we're not saving any checkpoints, just doing orphan processing, so skip the checkpoint saving logic
+		if req.writer == nil {
+			continue
+		}
+
 		_, span := tracer.Start(context.Background(), "SaveCheckpoint")
 
 		// wait for node IDs assignment to complete
@@ -86,7 +113,7 @@ func (cp *Checkpointer) proc() error {
 		span.AddEvent("node IDs assigned, proceeding with checkpoint")
 
 		checkpoint := req.checkpoint
-		if err := req.writer.SaveCheckpoint(checkpoint, req.version, req.root); err != nil {
+		if err := req.writer.SaveCheckpoint(checkpoint, req.mutationCtx.version, req.root); err != nil {
 			return err
 		}
 		if err := req.writer.CreateReader(); err != nil {
@@ -147,9 +174,9 @@ func (cp *Checkpointer) Close() error {
 
 type checkpointReq struct {
 	writer          *ChangesetWriter
+	mutationCtx     *MutationContext
 	root            *NodePointer
 	checkpoint      uint32
-	version         uint32
 	seal            bool
 	nodeIdsAssigned chan struct{}
 }

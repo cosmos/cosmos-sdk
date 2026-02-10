@@ -11,16 +11,22 @@ type Changeset struct {
 	treeStore    *TreeStore
 	readerRef    atomic.Pointer[ChangesetReaderRef]
 	sealed       atomic.Bool
+	compacting   atomic.Bool
 	compacted    atomic.Pointer[Changeset]
 	orphanWriter *OrphanWriter
 }
 
-func NewChangeset(treeStore *TreeStore, files *ChangesetFiles) *Changeset {
-	return &Changeset{
+func NewChangeset(treeStore *TreeStore, files *ChangesetFiles) (*Changeset, error) {
+	cs := &Changeset{
 		treeStore:    treeStore,
 		files:        files,
 		orphanWriter: NewOrphanWriter(files.OrphansFile()),
 	}
+	err := cs.OpenNewReader()
+	if err != nil {
+		return nil, fmt.Errorf("failed to open changeset reader: %w", err)
+	}
+	return cs, nil
 }
 
 func OpenChangeset(treeStore *TreeStore, dir string) (*Changeset, error) {
@@ -28,12 +34,7 @@ func OpenChangeset(treeStore *TreeStore, dir string) (*Changeset, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open changeset files: %w", err)
 	}
-	cs := NewChangeset(treeStore, files)
-	err = cs.OpenNewReader()
-	if err != nil {
-		return nil, err
-	}
-	return cs, nil
+	return NewChangeset(treeStore, files)
 }
 
 // TryPinReader attempts to pin the active ChangesetReader.
@@ -114,6 +115,14 @@ func (ch *Changeset) MarkOrphan(version uint32, nodeId NodeID) error {
 	return nil
 }
 
+func (ch *Changeset) MarkCompacting() {
+	ch.compacting.Store(true)
+}
+
+func (ch *Changeset) IsCompacting() bool {
+	return ch.compacting.Load()
+}
+
 func (ch *Changeset) MarkCompacted(compacted *Changeset) {
 	ch.compacted.Store(compacted)
 	// evict our reader since we won't be needed anymore
@@ -121,6 +130,7 @@ func (ch *Changeset) MarkCompacted(compacted *Changeset) {
 	if existing != nil {
 		existing.Evict()
 	}
+	ch.orphanWriter = nil
 }
 
 func (ch *Changeset) Close() error {
@@ -136,4 +146,11 @@ func (ch *Changeset) Close() error {
 
 func (ch *Changeset) Files() *ChangesetFiles {
 	return ch.files
+}
+
+func (ch *Changeset) OrphanWriter() *OrphanWriter {
+	if ch.orphanWriter == nil {
+		return ch.compacted.Load().OrphanWriter()
+	}
+	return ch.orphanWriter
 }

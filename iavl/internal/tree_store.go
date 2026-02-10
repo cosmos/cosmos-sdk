@@ -130,7 +130,7 @@ func (ts *TreeStore) SaveRoot(ctx context.Context, newRoot *NodePointer, mutatio
 		}()
 		ts.lastNodeIDsAssigned = nodeIDsAssigned
 
-		err := ts.checkpointer.Checkpoint(writer, newRoot, checkpoint, version, nodeIDsAssigned, ts.shouldRollover)
+		err := ts.checkpointer.Checkpoint(mutationCtx, writer, newRoot, checkpoint, nodeIDsAssigned, ts.shouldRollover)
 		if err != nil {
 			return fmt.Errorf("failed to checkpoint changeset: %w", err)
 		}
@@ -146,6 +146,11 @@ func (ts *TreeStore) SaveRoot(ctx context.Context, newRoot *NodePointer, mutatio
 		return fmt.Errorf("cannot rollover without checkpointing")
 	} else {
 		ts.shouldRollover = writer.WALWriter().Size() >= ts.opts.ChangesetRolloverSize
+		// just mark orphans
+		err := ts.checkpointer.QueueOrphans(mutationCtx)
+		if err != nil {
+			return fmt.Errorf("failed to mark orphans for changeset: %w", err)
+		}
 	}
 
 	checkpointInterval := ts.opts.CheckpointInterval
@@ -154,9 +159,6 @@ func (ts *TreeStore) SaveRoot(ctx context.Context, newRoot *NodePointer, mutatio
 	ts.shouldCheckpoint = ts.shouldRollover ||
 		(checkpointInterval > 0 &&
 			versionsSinceLastCheckpoint >= uint32(ts.opts.CheckpointInterval))
-
-	// TODO cleanup orphans
-	//ts.cleanupProc.MarkOrphans(mutationCtx.version, mutationCtx.orphans)
 
 	return nil
 }
@@ -304,6 +306,14 @@ func (ts *TreeStore) changesetForVersion(version uint32) *Changeset {
 		return false // Take the first (highest) entry <= version
 	})
 	return res
+}
+
+func (ts *TreeStore) LockOrphanProc() {
+	ts.checkpointer.orphanProc.Lock()
+}
+
+func (ts *TreeStore) UnlockOrphanProc() {
+	ts.checkpointer.orphanProc.Unlock()
 }
 
 func (ts *TreeStore) Close() error {

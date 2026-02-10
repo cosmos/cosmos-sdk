@@ -3,12 +3,12 @@ module github.com/cosmos/cosmos-sdk/enterprise/poa
 go 1.25.7
 
 require (
-	cosmossdk.io/api v1.0.0-rc.2
+	cosmossdk.io/api v1.0.0
 	cosmossdk.io/collections v1.3.1
 	cosmossdk.io/core v0.11.3
 	cosmossdk.io/depinject v1.2.1
 	cosmossdk.io/errors v1.0.2
-	cosmossdk.io/log/v2 v2.0.0-rc.0
+	cosmossdk.io/log/v2 v2.0.0
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/store v1.3.0-beta.0
 	github.com/cometbft/cometbft v0.39.0-beta.2

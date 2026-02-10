@@ -122,7 +122,7 @@ func TestSTM(t *testing.T) {
 		},
 		{
 			name:      "determisticBlock(),5",
-			blk:       determisticBlock(),
+			blk:       deterministicBlock(),
 			executors: 5,
 		},
 		{

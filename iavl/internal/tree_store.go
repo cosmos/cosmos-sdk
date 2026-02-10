@@ -236,18 +236,20 @@ func (ts *TreeStore) RootAtVersion(targetVersion uint32) (*NodePointer, error) {
 
 func (ts *TreeStore) loadRootAtVersion(ctx context.Context, targetVersion uint32) (*NodePointer, error) {
 	// find the latest checkpoint root that is <= targetVersion
-	root, curVersion, err := ts.checkpointForVersion(targetVersion)
+	res, err := ts.checkpointForVersion(targetVersion)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find checkpoint for version %d: %w", targetVersion, err)
 	}
 
-	if curVersion == targetVersion {
-		return root, nil
+	if res.Version == targetVersion {
+		return res.Root, nil
 	}
 
 	// then ascend through each changeset and replay the WAL until we reach the desired version
+	curVersion := res.Version
+	root := res.Root
 	for {
-		changeset := ts.changesetForVersion(curVersion + 1)
+		changeset := ts.changesetForVersion(res.Version + 1)
 		if changeset == nil {
 			return nil, fmt.Errorf("no changeset found for version %d", curVersion+1)
 		}
@@ -267,29 +269,29 @@ func (ts *TreeStore) loadRootAtVersion(ctx context.Context, targetVersion uint32
 	}
 }
 
-func (ts *TreeStore) checkpointForVersion(version uint32) (cpRoot *NodePointer, cpVersion uint32, err error) {
+func (ts *TreeStore) checkpointForVersion(version uint32) (info *CheckpointResolveInfo, err error) {
 	for {
 		changeset := ts.changesetForVersion(version)
 		if changeset == nil {
-			return nil, 0, fmt.Errorf("no changeset found for version %d", version)
+			return nil, fmt.Errorf("no changeset found for version %d", version)
 		}
 		rdr, pin := changeset.TryPinReader()
 		if rdr == nil {
 			pin.Unpin()
-			return nil, 0, fmt.Errorf("changeset reader is not available for version %d", version)
+			return nil, fmt.Errorf("changeset reader is not available for version %d", version)
 		}
 
-		cpRoot, cpVersion = rdr.CheckpointForVersion(version)
+		res := rdr.CheckpointForVersion(version)
 		pin.Unpin()
 
-		if cpVersion != 0 {
-			return cpRoot, cpVersion, nil
+		if res != nil {
+			return res, nil
 		}
 
 		startVersion := changeset.Files().StartVersion()
 		if startVersion <= 1 {
 			// we're at the beginning of history, return empty tree
-			return nil, 0, nil
+			return nil, nil
 		}
 		// try an earlier changeset
 		version = startVersion - 1

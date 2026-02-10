@@ -24,7 +24,7 @@ require (
 require (
 	cosmossdk.io/collections v1.3.1 // indirect
 	cosmossdk.io/errors v1.0.2 // indirect
-	cosmossdk.io/log/v2 v2.0.0 // indirect
+	cosmossdk.io/log/v2 v2.0.0-rc.0 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
 	cosmossdk.io/store v1.3.0-beta.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -210,7 +210,6 @@ require (
 // 	<temporary replace>
 // )
 replace (
-	cosmossdk.io/log/v2 => ../../log
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/tx => ../../x/tx
 	github.com/cosmos/cosmos-sdk => ../../.

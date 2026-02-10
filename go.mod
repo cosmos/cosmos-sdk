@@ -8,7 +8,7 @@ require (
 	cosmossdk.io/core v0.11.3
 	cosmossdk.io/depinject v1.2.1
 	cosmossdk.io/errors v1.0.2
-	cosmossdk.io/log/v2 v2.0.0
+	cosmossdk.io/log/v2 v2.0.0-rc.0
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/store v1.3.0-beta.0
 	cosmossdk.io/x/tx v0.14.0
@@ -271,7 +271,6 @@ require (
 
 // Below are the long-lived replace of the Cosmos SDK
 replace (
-	cosmossdk.io/log/v2 => ./log
 	cosmossdk.io/store => ./store
 	cosmossdk.io/x/tx => ./x/tx
 	// use cosmos fork of keyring

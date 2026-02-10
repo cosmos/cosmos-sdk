@@ -1,7 +1,7 @@
 package cosmovisor
 
 import (
-	"encoding/json"
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/viper"
 
@@ -34,6 +35,7 @@ const (
 	EnvInterval                 = "DAEMON_POLL_INTERVAL"
 	EnvPreupgradeMaxRetries     = "DAEMON_PREUPGRADE_MAX_RETRIES"
 	EnvGRPCAddress              = "DAEMON_GRPC_ADDRESS"
+	EnvRPCAddress               = "DAEMON_RPC_ADDRESS"
 	EnvDisableLogs              = "COSMOVISOR_DISABLE_LOGS"
 	EnvColorLogs                = "COSMOVISOR_COLOR_LOGS"
 	EnvTimeFormatLogs           = "COSMOVISOR_TIMEFORMAT_LOGS"
@@ -64,15 +66,18 @@ type Config struct {
 	UnsafeSkipBackup         bool          `toml:"unsafe_skip_backup" mapstructure:"unsafe_skip_backup" default:"false"`
 	DataBackupPath           string        `toml:"daemon_data_backup_dir" mapstructure:"daemon_data_backup_dir"`
 	PreUpgradeMaxRetries     int           `toml:"daemon_preupgrade_max_retries" mapstructure:"daemon_preupgrade_max_retries" default:"0"`
+	RPCAddress               string        `toml:"daemon_rpc_address" mapstructure:"daemon_rpc_address" default:"http://localhost:26657"`
 	GRPCAddress              string        `toml:"daemon_grpc_address" mapstructure:"daemon_grpc_address"`
 	DisableLogs              bool          `toml:"cosmovisor_disable_logs" mapstructure:"cosmovisor_disable_logs" default:"false"`
 	ColorLogs                bool          `toml:"cosmovisor_color_logs" mapstructure:"cosmovisor_color_logs" default:"true"`
 	TimeFormatLogs           string        `toml:"cosmovisor_timeformat_logs" mapstructure:"cosmovisor_timeformat_logs" default:"kitchen"`
 	CustomPreUpgrade         string        `toml:"cosmovisor_custom_preupgrade" mapstructure:"cosmovisor_custom_preupgrade" default:""`
 	DisableRecase            bool          `toml:"cosmovisor_disable_recase" mapstructure:"cosmovisor_disable_recase" default:"false"`
-
-	// currently running upgrade
-	currentUpgrade upgradetypes.Plan
+	// MaxRestartRetries is the maximum number of times
+	// to restart the binary after spurious shutdowns,
+	// (those not due to valid upgrades or halt heights changes).
+	// A value of 0 means no limit.
+	MaxRestartRetries int `toml:"max_restart_retries" mapstructure:"max_restart_retries" default:"5"`
 }
 
 // Root returns the root directory where all info lives
@@ -106,9 +111,14 @@ func (cfg *Config) BaseUpgradeDir() string {
 	return filepath.Join(cfg.Root(), upgradesDir)
 }
 
+// UpgradeInfoDir is the directory where upgrade-info.json is expected to be created by `x/upgrade/keeper`.
+func (cfg *Config) UpgradeInfoDir() string {
+	return filepath.Join(cfg.Home, "data")
+}
+
 // UpgradeInfoFilePath is the expected upgrade-info filename created by `x/upgrade/keeper`.
 func (cfg *Config) UpgradeInfoFilePath() string {
-	return filepath.Join(cfg.Home, "data", upgradetypes.UpgradeInfoFilename)
+	return filepath.Join(cfg.UpgradeInfoDir(), upgradetypes.UpgradeInfoFilename)
 }
 
 // UpgradeInfoBatchFilePath is the same as UpgradeInfoFilePath but with a batch suffix.
@@ -173,7 +183,7 @@ func GetConfigFromFile(filePath string) (*Config, error) {
 		return GetConfigFromEnv(false)
 	}
 
-	// ensure the file exists
+	// ensure the file exist
 	if _, err := os.Stat(filePath); err != nil {
 		return nil, fmt.Errorf("config not found: at %s : %w", filePath, err)
 	}
@@ -296,6 +306,11 @@ func GetConfigFromEnv(skipValidate bool) (*Config, error) {
 		cfg.GRPCAddress = "localhost:9090"
 	}
 
+	cfg.RPCAddress = os.Getenv(EnvRPCAddress)
+	if cfg.RPCAddress == "" {
+		cfg.RPCAddress = "http://localhost:26657"
+	}
+
 	if !skipValidate {
 		errs = append(errs, cfg.validate()...)
 		if len(errs) > 0 {
@@ -407,7 +422,6 @@ func (cfg *Config) SetCurrentUpgrade(u upgradetypes.Plan) (rerr error) {
 		return fmt.Errorf("creating current symlink: %w", err)
 	}
 
-	cfg.currentUpgrade = u
 	f, err := os.Create(filepath.Join(cfg.Root(), upgrade, upgradetypes.UpgradeInfoFilename))
 	if err != nil {
 		return err
@@ -419,42 +433,88 @@ func (cfg *Config) SetCurrentUpgrade(u upgradetypes.Plan) (rerr error) {
 		}
 	}()
 
-	bz, err := json.Marshal(u)
+	out, err := (&jsonpb.Marshaler{}).MarshalToString(&u)
 	if err != nil {
 		return err
 	}
-	_, err = f.Write(bz)
+	_, err = f.Write([]byte(out))
 	return err
 }
 
-// UpgradeInfo returns the current upgrade info
-func (cfg *Config) UpgradeInfo() (upgradetypes.Plan, error) {
-	if cfg.currentUpgrade.Name != "" {
-		return cfg.currentUpgrade, nil
-	}
-
-	filename := filepath.Join(cfg.Root(), currentLink, upgradetypes.UpgradeInfoFilename)
+// PendingUpgradeInfo returns pending upgrade info written by x/upgrade.
+func (cfg *Config) PendingUpgradeInfo() (*upgradetypes.Plan, error) {
+	filename := cfg.UpgradeInfoFilePath()
 	_, err := os.Lstat(filename)
-	var u upgradetypes.Plan
 	var bz []byte
 	if err != nil { // no current directory
-		goto returnError
+		return nil, fmt.Errorf("failed to read %q: %w", filename, err)
 	}
 	if bz, err = os.ReadFile(filename); err != nil {
-		goto returnError
+		return nil, fmt.Errorf("failed to read %q: %w", filename, err)
 	}
-	if err = json.Unmarshal(bz, &u); err != nil {
-		goto returnError
-	}
-	cfg.currentUpgrade = u
-	return cfg.currentUpgrade, nil
-
-returnError:
-	cfg.currentUpgrade.Name = "_"
-	return cfg.currentUpgrade, fmt.Errorf("failed to read %q: %w", filename, err)
+	return cfg.ParseUpgradeInfo(bz)
 }
 
-// BooleanOption checks and validates env option
+// CurrentBinaryUpgradeInfo returns the upgrade info for the current active binary, if any.
+func (cfg *Config) CurrentBinaryUpgradeInfo() (*upgradetypes.Plan, error) {
+	filename := filepath.Join(cfg.Root(), currentLink, upgradetypes.UpgradeInfoFilename)
+	bz, err := os.ReadFile(filename)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to read %q: %w", filename, err)
+	}
+	return cfg.ParseUpgradeInfo(bz)
+}
+
+// CurrentBinaryUpgradeName returns the upgrade info for the current active binary, if any.
+func (cfg *Config) CurrentBinaryUpgradeName() string {
+	upgradeInfo, err := cfg.CurrentBinaryUpgradeInfo()
+	if err != nil || upgradeInfo == nil {
+		return ""
+	}
+	return upgradeInfo.Name
+}
+
+// ParseUpgradeInfo parses the upgrade info from the given byte slice.
+func (cfg *Config) ParseUpgradeInfo(bz []byte) (*upgradetypes.Plan, error) {
+	var upgradePlan upgradetypes.Plan
+	if err := jsonpb.Unmarshal(bytes.NewReader(bz), &upgradePlan); err != nil {
+		return nil, fmt.Errorf("error unmarshalling upgrade info: %w", err)
+	}
+	if err := upgradePlan.ValidateBasic(); err != nil {
+		return nil, fmt.Errorf("upgrade info failed validation upgrade info: %w", err)
+	}
+	if !cfg.DisableRecase {
+		upgradePlan.Name = strings.ToLower(upgradePlan.Name)
+	}
+	return &upgradePlan, nil
+}
+
+const LastKnownHeightFile = ".last_known_height"
+
+func (cfg Config) ReadLastKnownHeight() uint64 {
+	filename := filepath.Join(cfg.UpgradeInfoDir(), LastKnownHeightFile)
+	bz, err := os.ReadFile(filename)
+	if err != nil {
+		return 0
+	}
+
+	h, err := strconv.ParseUint(string(bz), 10, 64)
+	if err != nil {
+		return 0
+	}
+
+	return h
+}
+
+func (cfg Config) WriteLastKnownHeight(height uint64) error {
+	filename := filepath.Join(cfg.UpgradeInfoDir(), LastKnownHeightFile)
+	return os.WriteFile(filename, []byte(strconv.FormatUint(height, 10)), 0o644)
+}
+
+// BooleanOption checks and validate env option
 func BooleanOption(name string, defaultVal bool) (bool, error) {
 	p := strings.ToLower(os.Getenv(name))
 	switch p {
@@ -574,7 +634,7 @@ func (cfg Config) DetailString() string {
 	var sb strings.Builder
 	sb.WriteString("Configurable Values:\n")
 	for _, kv := range configEntries {
-		fmt.Fprintf(&sb, "  %s: %s\n", kv.name, kv.value)
+		_, _ = fmt.Fprintf(&sb, "  %s: %s\n", kv.name, kv.value)
 	}
 	sb.WriteString("Derived Values:\n")
 	dnl := 0
@@ -585,7 +645,7 @@ func (cfg Config) DetailString() string {
 	}
 	dFmt := fmt.Sprintf("  %%%ds: %%s\n", dnl)
 	for _, kv := range derivedEntries {
-		fmt.Fprintf(&sb, dFmt, kv.name, kv.value)
+		_, _ = fmt.Fprintf(&sb, dFmt, kv.name, kv.value)
 	}
 	return sb.String()
 }
@@ -613,7 +673,9 @@ func (cfg Config) Export() (string, error) {
 	// convert the time value to its format option
 	cfg.TimeFormatLogs = ValueToTimeFormatOption(cfg.TimeFormatLogs)
 
-	defer file.Close()
+	defer func(file *os.File) {
+		_ = file.Close()
+	}(file)
 
 	// write the configuration to the file
 	err = toml.NewEncoder(file).Encode(cfg)

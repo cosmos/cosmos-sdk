@@ -10,8 +10,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/tools/cosmovisor"
 	"cosmossdk.io/x/upgrade/plan"
+
+	"cosmossdk.io/tools/cosmovisor/v2"
 )
 
 func NewInitCmd() *cobra.Command {
@@ -19,7 +20,9 @@ func NewInitCmd() *cobra.Command {
 		Use:   "init <path to executable>",
 		Short: "Initialize a cosmovisor daemon home directory.",
 		Long: `Initialize a cosmovisor daemon home directory with the provided executable.
-Configuration file is initialized at the default path (<-home->/cosmovisor/config.toml).`,
+Configuration file is initialized at the default path (<-home->/cosmovisor/config.toml).
+
+The DAEMON_HOME and DAEMON_NAME environment variables must be set for this command to work.`,
 		Args:         cobra.ExactArgs(1),
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {

@@ -1,6 +1,6 @@
 //go:build darwin || linux
 
-package cosmovisor_test
+package internal
 
 import (
 	"fmt"
@@ -15,8 +15,9 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/log"
-	"cosmossdk.io/tools/cosmovisor"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+
+	"cosmossdk.io/tools/cosmovisor/v2"
 )
 
 type upgradeTestSuite struct {
@@ -103,6 +104,29 @@ func (s *upgradeTestSuite) TestCurrentAlwaysSymlinkToDirectory() {
 	s.assertCurrentLink(cfg, filepath.Join("upgrades", "chain2"))
 }
 
+func (s *upgradeTestSuite) TestUpgradeInfoRoundtrip() {
+	cfg := prepareConfig(
+		s.T(),
+		fmt.Sprintf("%s/%s", workDir, "testdata/validate"),
+		cosmovisor.Config{
+			Name: "dummyd",
+		},
+	)
+
+	// Write upgrade info using SetCurrentUpgrade (uses jsonpb.Marshal)
+	expectedPlan := upgradetypes.Plan{Name: "chain2", Height: 100, Info: "test info"}
+	err := cfg.SetCurrentUpgrade(expectedPlan)
+	s.Require().NoError(err)
+
+	// Read it back using CurrentBinaryUpgradeInfo (uses jsonpb.Unmarshal)
+	info, err := cfg.CurrentBinaryUpgradeInfo()
+	s.Require().NoError(err)
+	s.Require().NotNil(info)
+	s.Require().Equal(expectedPlan.Name, info.Name)
+	s.Require().Equal(expectedPlan.Height, info.Height)
+	s.Require().Equal(expectedPlan.Info, info.Info)
+}
+
 func (s *upgradeTestSuite) assertCurrentLink(cfg *cosmovisor.Config, target string) {
 	link := filepath.Join(cfg.Root(), "current")
 
@@ -140,7 +164,7 @@ func (s *upgradeTestSuite) TestUpgradeBinaryNoDownloadUrl() {
 	// do upgrade ignores bad files
 	for _, name := range []string{"missing", "nobin"} {
 		info := upgradetypes.Plan{Name: name}
-		err = cosmovisor.UpgradeBinary(logger, cfg, info)
+		err = UpgradeBinary(logger, cfg, info)
 		s.Require().Error(err, name)
 		currentBin, err := cfg.CurrentBin()
 		s.Require().NoError(err)
@@ -155,7 +179,7 @@ func (s *upgradeTestSuite) TestUpgradeBinaryNoDownloadUrl() {
 	for _, upgrade := range []string{"chain2", "chain3"} {
 		// now set it to a valid upgrade and make sure CurrentBin is now set properly
 		info := upgradetypes.Plan{Name: upgrade}
-		err = cosmovisor.UpgradeBinary(logger, cfg, info)
+		err = UpgradeBinary(logger, cfg, info)
 		s.Require().NoError(err)
 		// we should see current point to the new upgrade dir
 		upgradeBin := cfg.UpgradeBin(upgrade)
@@ -227,10 +251,10 @@ func (s *upgradeTestSuite) TestUpgradeBinary() {
 
 			plan := upgradetypes.Plan{
 				Name: "amazonas",
-				Info: fmt.Sprintf(`{"binaries":{"%s": "%s"}}`, cosmovisor.OSArch(), url),
+				Info: fmt.Sprintf(`{"binaries":{"%s": "%s"}}`, OSArch(), url),
 			}
 
-			err = cosmovisor.UpgradeBinary(logger, cfg, plan)
+			err = UpgradeBinary(logger, cfg, plan)
 			if !tc.canDownload {
 				s.Require().Error(err)
 			} else {
@@ -249,7 +273,7 @@ func (s *upgradeTestSuite) TestOsArch() {
 		"darwin/arm64",
 	}
 
-	s.Require().True(slices.Contains(hosts, cosmovisor.OSArch()))
+	s.Require().True(slices.Contains(hosts, OSArch()))
 }
 
 // copyTestData will make a tempdir and then

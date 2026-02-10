@@ -1,6 +1,7 @@
 package cosmovisor
 
 import (
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -12,65 +13,65 @@ import (
 func TestParseUpgradeInfoFile(t *testing.T) {
 	cases := []struct {
 		filename      string
-		expectUpgrade upgradetypes.Plan
+		expectUpgrade *upgradetypes.Plan
 		disableRecase bool
 		expectErr     string
 	}{
 		{
 			filename:      "f1-good.json",
 			disableRecase: false,
-			expectUpgrade: upgradetypes.Plan{Name: "upgrade1", Info: "some info", Height: 123},
+			expectUpgrade: &upgradetypes.Plan{Name: "upgrade1", Info: "some info", Height: 123},
 		},
 		{
 			filename:      "f2-normalized-name.json",
 			disableRecase: false,
-			expectUpgrade: upgradetypes.Plan{Name: "upgrade2", Info: "some info", Height: 125},
+			expectUpgrade: &upgradetypes.Plan{Name: "upgrade2", Info: "some info", Height: 125},
 		},
 		{
 			filename:      "f2-normalized-name.json",
 			disableRecase: true,
-			expectUpgrade: upgradetypes.Plan{Name: "Upgrade2", Info: "some info", Height: 125},
+			expectUpgrade: &upgradetypes.Plan{Name: "Upgrade2", Info: "some info", Height: 125},
 		},
 		{
 			filename:      "f2-bad-type.json",
 			disableRecase: false,
-			expectUpgrade: upgradetypes.Plan{},
-			expectErr:     "cannot unmarshal number into Go struct",
+			expectUpgrade: nil,
+			expectErr:     "cannot unmarshal number into Go value",
 		},
 		{
 			filename:      "f2-bad-type-2.json",
 			disableRecase: false,
-			expectUpgrade: upgradetypes.Plan{},
-			expectErr:     "height must be greater than 0: invalid request",
+			expectUpgrade: nil,
+			expectErr:     `unknown field "heigh"`,
 		},
 		{
 			filename:      "f3-empty.json",
 			disableRecase: false,
-			expectUpgrade: upgradetypes.Plan{},
-			expectErr:     "empty upgrade-info.json in",
+			expectUpgrade: nil,
+			expectErr:     "EOF",
 		},
 		{
 			filename:      "f4-empty-obj.json",
 			disableRecase: false,
-			expectUpgrade: upgradetypes.Plan{},
-			expectErr:     "invalid upgrade-info.json content: name cannot be empty",
+			expectUpgrade: nil,
+			expectErr:     "name cannot be empty",
 		},
 		{
 			filename:      "f5-partial-obj-1.json",
 			disableRecase: false,
-			expectUpgrade: upgradetypes.Plan{},
+			expectUpgrade: nil,
 			expectErr:     "height must be greater than 0",
 		},
 		{
 			filename:      "f5-partial-obj-2.json",
 			disableRecase: false,
-			expectUpgrade: upgradetypes.Plan{},
+			expectUpgrade: nil,
 			expectErr:     "name cannot be empty: invalid request",
 		},
 		{
 			filename:      "non-existent.json",
 			disableRecase: false,
-			expectUpgrade: upgradetypes.Plan{},
+			expectUpgrade: nil,
 			expectErr:     "no such file or directory",
 		},
 	}
@@ -89,4 +90,15 @@ func TestParseUpgradeInfoFile(t *testing.T) {
 			}
 		})
 	}
+}
+
+func parseUpgradeInfoFile(filename string, disableRecase bool) (*upgradetypes.Plan, error) {
+	cfg := &Config{
+		DisableRecase: disableRecase,
+	}
+	bz, err := os.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+	return cfg.ParseUpgradeInfo(bz)
 }

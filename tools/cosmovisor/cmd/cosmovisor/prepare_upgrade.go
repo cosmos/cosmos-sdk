@@ -12,9 +12,10 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"cosmossdk.io/tools/cosmovisor"
 	"cosmossdk.io/x/upgrade/plan"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+
+	"cosmossdk.io/tools/cosmovisor/v2/internal"
 )
 
 func NewPrepareUpgradeCmd() *cobra.Command {
@@ -33,14 +34,9 @@ gRPC must be enabled on the node for this command to work.`,
 }
 
 func prepareUpgradeHandler(cmd *cobra.Command, _ []string) error {
-	configPath, err := cmd.Flags().GetString(cosmovisor.FlagCosmovisorConfig)
+	cfg, err := getConfigFromCmd(cmd)
 	if err != nil {
-		return fmt.Errorf("failed to get config flag: %w", err)
-	}
-
-	cfg, err := cosmovisor.GetConfigFromFile(configPath)
-	if err != nil {
-		return fmt.Errorf("failed to get config: %w", err)
+		return err
 	}
 
 	logger := cfg.Logger(cmd.OutOrStdout())
@@ -65,7 +61,7 @@ func prepareUpgradeHandler(cmd *cobra.Command, _ []string) error {
 		return fmt.Errorf("failed to parse upgrade info: %w", err)
 	}
 
-	binaryURL, err := cosmovisor.GetBinaryURL(upgradeInfoParsed.Binaries)
+	binaryURL, err := internal.GetBinaryURL(upgradeInfoParsed.Binaries)
 	if err != nil {
 		return fmt.Errorf("binary URL not found in upgrade plan. Cannot prepare for upgrade: %w", err)
 	}

@@ -1,9 +1,11 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
-	"cosmossdk.io/tools/cosmovisor"
+	"cosmossdk.io/tools/cosmovisor/v2"
 )
 
 var configCmd = &cobra.Command{
@@ -13,7 +15,7 @@ var configCmd = &cobra.Command{
 otherwise it will display the config from the environment variables.`,
 	SilenceUsage: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cfg, err := cosmovisor.GetConfigFromFile(cmd.Flag(cosmovisor.FlagCosmovisorConfig).Value.String())
+		cfg, err := getConfigFromCmd(cmd)
 		if err != nil {
 			return err
 		}
@@ -21,4 +23,18 @@ otherwise it will display the config from the environment variables.`,
 		cmd.Print(cfg.DetailString())
 		return nil
 	},
+}
+
+// getConfigFromCmd retrieves the cosmovisor configuration from the command flags.
+func getConfigFromCmd(cmd *cobra.Command) (*cosmovisor.Config, error) {
+	configPath, err := cmd.Flags().GetString(cosmovisor.FlagCosmovisorConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get config flag: %w", err)
+	}
+
+	cfg, err := cosmovisor.GetConfigFromFile(configPath)
+	if err != nil {
+		return nil, err
+	}
+	return cfg, nil
 }

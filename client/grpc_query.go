@@ -75,23 +75,38 @@ var fallBackCodec = codec.NewProtoCodec(types.NewInterfaceRegistry())
 
 // GetHeightFromMetadata extracts the block height from gRPC metadata in the context.
 // Returns 0 if no valid height is found.
+//
+// Deprecated: This function silently ignores parse errors and negative heights for backward compatibility.
+// Use GetHeightFromMetadataStrict for stricter error handling.
 func GetHeightFromMetadata(grpcCtx gocontext.Context) int64 {
+	height, _ := GetHeightFromMetadataStrict(grpcCtx)
+	return height
+}
+
+// GetHeightFromMetadataStrict extracts the block height from gRPC metadata in the context.
+// Returns an error if the height header is present but invalid (parse error or negative).
+// Returns 0 with no error if no height header is present.
+func GetHeightFromMetadataStrict(grpcCtx gocontext.Context) (int64, error) {
 	md, ok := metadata.FromOutgoingContext(grpcCtx)
 	if !ok {
-		return 0
+		return 0, nil
 	}
 	heights := md.Get(grpctypes.GRPCBlockHeightHeader)
 	if len(heights) == 0 {
-		return 0
+		return 0, nil
 	}
 	height, err := strconv.ParseInt(heights[0], 10, 64)
 	if err != nil {
-		return 0
+		return 0, errorsmod.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"invalid height header %q: %v", grpctypes.GRPCBlockHeightHeader, err)
 	}
 	if height < 0 {
-		return 0
+		return 0, errorsmod.Wrapf(
+			sdkerrors.ErrInvalidRequest,
+			"height (%d) from %q must be >= 0", height, grpctypes.GRPCBlockHeightHeader)
 	}
-	return height
+	return height, nil
 }
 
 // Invoke implements the grpc ClientConn.Invoke method
@@ -102,7 +117,11 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply a
 	// 2-2. or we are querying for state, in which case we call ABCI's Query if grpc client not set.
 
 	// In both cases, we don't allow empty request args (it will panic unexpectedly).
-	if reflect.ValueOf(req).IsNil() {
+	if req == nil {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "request cannot be nil")
+	}
+	reqVal := reflect.ValueOf(req)
+	if reqVal.Kind() == reflect.Ptr && reqVal.IsNil() {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "request cannot be nil")
 	}
 
@@ -110,7 +129,7 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply a
 	if reqProto, ok := req.(*tx.BroadcastTxRequest); ok {
 		res, ok := reply.(*tx.BroadcastTxResponse)
 		if !ok {
-			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "expected %T, got %T", (*tx.BroadcastTxResponse)(nil), req)
+			return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "expected %T, got %T", (*tx.BroadcastTxResponse)(nil), reply)
 		}
 
 		broadcastRes, err := TxServiceBroadcast(grpcCtx, ctx, reqProto)
@@ -119,7 +138,7 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply a
 		}
 		*res = *broadcastRes
 
-		return err
+		return nil
 	}
 
 	if ctx.GRPCClient != nil {
@@ -128,7 +147,10 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply a
 		if ctx.GRPCConnProvider != nil {
 			height := ctx.Height
 			if height <= 0 {
-				height = GetHeightFromMetadata(grpcCtx)
+				height, err = GetHeightFromMetadataStrict(grpcCtx)
+				if err != nil {
+					return err
+				}
 			}
 
 			grpcConn = ctx.GRPCConnProvider.GetGRPCConn(height)
@@ -143,11 +165,9 @@ func (ctx Context) Invoke(grpcCtx gocontext.Context, method string, req, reply a
 	}
 
 	// parse height header
-	height := GetHeightFromMetadata(grpcCtx)
-	if height < 0 {
-		return errorsmod.Wrapf(
-			sdkerrors.ErrInvalidRequest,
-			"client.Context.Invoke: height (%d) from %q must be >= 0", height, grpctypes.GRPCBlockHeightHeader)
+	height, err := GetHeightFromMetadataStrict(grpcCtx)
+	if err != nil {
+		return err
 	}
 
 	if height > 0 {

@@ -18,8 +18,11 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod: "CurrentEpoch",
-					Use:       "current-epoch",
+					Use:       "current-epoch [identifier]",
 					Short:     "Query current epoch by specified identifier",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "identifier"},
+					},
 				},
 			},
 		},

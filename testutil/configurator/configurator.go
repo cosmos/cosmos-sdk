@@ -22,7 +22,7 @@ import (
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
 
-	circuitmodulev1 "github.com/cosmos/cosmos-sdk/contrib/api/crisis/module/v1"
+	circuitmodulev1 "github.com/cosmos/cosmos-sdk/contrib/api/circuit/module/v1"
 	groupmodulev1 "github.com/cosmos/cosmos-sdk/contrib/api/group/module/v1"
 	nftmodulev1 "github.com/cosmos/cosmos-sdk/contrib/api/nft/module/v1"
 	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"

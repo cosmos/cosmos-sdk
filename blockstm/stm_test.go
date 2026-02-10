@@ -176,7 +176,6 @@ func TestSTM(t *testing.T) {
 					continue
 				}
 				total += binary.BigEndian.Uint64(it.Value())
-				continue
 			}
 			require.Equal(t, uint64(tc.blk.Size()), total)
 		})

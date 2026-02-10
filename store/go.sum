@@ -1,8 +1,8 @@
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 cosmossdk.io/errors v1.0.2 h1:wcYiJz08HThbWxd/L4jObeLaLySopyyuUFB5w4AGpCo=
 cosmossdk.io/errors v1.0.2/go.mod h1:0rjgiHkftRYPj//3DrD6y8hcm40HcPv/dR4R/4efr0k=
-cosmossdk.io/log/v2 v2.0.0-rc.0 h1:RZzRW1xXF4kPwpzc6NWyC0JvzwpAVlPkBNzzMHXd9xo=
-cosmossdk.io/log/v2 v2.0.0-rc.0/go.mod h1:5M85ZeMaktD25eyfZBJcW/BgT+YUlKXZ9518XxIucmY=
+cosmossdk.io/log/v2 v2.0.0 h1:CfCrAx6hewmR/0C0M507jkQ5eK9xnaEsNkafTynoS64=
+cosmossdk.io/log/v2 v2.0.0/go.mod h1:5M85ZeMaktD25eyfZBJcW/BgT+YUlKXZ9518XxIucmY=
 cosmossdk.io/math v1.5.3 h1:WH6tu6Z3AUCeHbeOSHg2mt9rnoiUWVWaQ2t6Gkll96U=
 cosmossdk.io/math v1.5.3/go.mod h1:uqcZv7vexnhMFJF+6zh9EWdm/+Ylyln34IvPnBauPCQ=
 github.com/DataDog/datadog-go v3.2.0+incompatible/go.mod h1:LButxg5PwREeZtORoXG3tL4fMGNddJ+vMq1mwgfaqoQ=

@@ -47,7 +47,7 @@ func TestDefaultRunner_Run_Success(t *testing.T) {
 	}
 
 	executionCount := atomic.Int32{}
-	deliverTx := func(tx []byte, ms storetypes.MultiStore, txIndex int, cache map[string]any) *abci.ExecTxResult {
+	deliverTx := func(tx []byte, memTx sdk.Tx, ms storetypes.MultiStore, txIndex int, cache map[string]any) *abci.ExecTxResult {
 		executionCount.Add(1)
 		return &abci.ExecTxResult{
 			Code: 0,
@@ -73,7 +73,7 @@ func TestDefaultRunner_Run_EmptyTxs(t *testing.T) {
 	decoder := mockTxDecoder
 	runner := NewDefaultRunner(decoder)
 
-	deliverTx := func(tx []byte, ms storetypes.MultiStore, txIndex int, cache map[string]any) *abci.ExecTxResult {
+	deliverTx := func(tx []byte, memTx sdk.Tx, ms storetypes.MultiStore, txIndex int, cache map[string]any) *abci.ExecTxResult {
 		t.Fatal("deliverTx should not be called for empty txs")
 		return nil
 	}
@@ -97,7 +97,7 @@ func TestDefaultRunner_Run_InvalidTx(t *testing.T) {
 	}
 
 	validTxCount := atomic.Int32{}
-	deliverTx := func(tx []byte, ms storetypes.MultiStore, txIndex int, cache map[string]any) *abci.ExecTxResult {
+	deliverTx := func(tx []byte, memTx sdk.Tx, ms storetypes.MultiStore, txIndex int, cache map[string]any) *abci.ExecTxResult {
 		validTxCount.Add(1)
 		return &abci.ExecTxResult{Code: 0}
 	}
@@ -129,7 +129,7 @@ func TestDefaultRunner_Run_ContextCancellation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	executionCount := atomic.Int32{}
-	deliverTx := func(tx []byte, ms storetypes.MultiStore, txIndex int, cache map[string]any) *abci.ExecTxResult {
+	deliverTx := func(tx []byte, memTx sdk.Tx, ms storetypes.MultiStore, txIndex int, cache map[string]any) *abci.ExecTxResult {
 		count := executionCount.Add(1)
 		// Cancel after second transaction
 		if count == 2 {
@@ -154,7 +154,7 @@ func TestDefaultRunner_Run_MultiStoreIsNil(t *testing.T) {
 
 	txs := [][]byte{{0x01}}
 
-	deliverTx := func(tx []byte, ms storetypes.MultiStore, txIndex int, cache map[string]any) *abci.ExecTxResult {
+	deliverTx := func(tx []byte, memTx sdk.Tx, ms storetypes.MultiStore, txIndex int, cache map[string]any) *abci.ExecTxResult {
 		require.Nil(t, ms, "multistore should be nil for DefaultRunner")
 		require.Nil(t, cache, "cache should be nil for DefaultRunner")
 		return &abci.ExecTxResult{Code: 0}

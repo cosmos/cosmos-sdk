@@ -6,6 +6,8 @@ import (
 	"sync/atomic"
 )
 
+// Changeset represents the WAL log and saved checkpoints for a given range of versions in a tree.
+// It manages the lifecycle of the changeset files and readers, and tracks when it has been compacted into a new changeset.
 type Changeset struct {
 	files             *ChangesetFiles
 	treeStore         *TreeStore
@@ -16,15 +18,12 @@ type Changeset struct {
 	orphanWriter      *OrphanWriter
 }
 
+// NewChangeset creates a new Changeset with the given TreeStore and ChangesetFiles.
 func NewChangeset(treeStore *TreeStore, files *ChangesetFiles) (*Changeset, error) {
-	return NewChangesetWithOrphanWriter(treeStore, files, NewOrphanWriter(files.OrphansFile()))
-}
-
-func NewChangesetWithOrphanWriter(treeStore *TreeStore, files *ChangesetFiles, orphanWriter *OrphanWriter) (*Changeset, error) {
 	cs := &Changeset{
 		treeStore:    treeStore,
 		files:        files,
-		orphanWriter: orphanWriter,
+		orphanWriter: NewOrphanWriter(files.OrphansFile()),
 	}
 	err := cs.OpenNewReader()
 	if err != nil {
@@ -33,6 +32,7 @@ func NewChangesetWithOrphanWriter(treeStore *TreeStore, files *ChangesetFiles, o
 	return cs, nil
 }
 
+// OpenChangeset opens existing changeset files in the given directory.
 func OpenChangeset(treeStore *TreeStore, dir string) (*Changeset, error) {
 	files, err := OpenChangesetFiles(dir)
 	if err != nil {
@@ -41,7 +41,10 @@ func OpenChangeset(treeStore *TreeStore, dir string) (*Changeset, error) {
 	return NewChangeset(treeStore, files)
 }
 
-// TryPinReader attempts to pin the active ChangesetReader.
+// TryPinReader attempts to pin the active ChangesetReader for this changeset,
+// or for the changeset that this changeset was compacted into.
+// This method will always return a valid pin which should be unpinned,
+// but a nil reader may be returned in the case where the changeset has been closed.
 func (ch *Changeset) TryPinReader() (*ChangesetReader, Pin) {
 	for {
 		pinner := ch.readerRef.Load()
@@ -50,7 +53,6 @@ func (ch *Changeset) TryPinReader() (*ChangesetReader, Pin) {
 				// changeset was compacted, try the new one
 				return compacted.TryPinReader()
 			}
-			// changeset was compacted, no active reader
 			return nil, NoopPin{}
 		}
 		rdr, pin := pinner.TryPin()
@@ -96,7 +98,7 @@ func (ch *Changeset) MarkCompacted(compacted *Changeset) {
 }
 
 func (ch *Changeset) Close() error {
-	readerRef := ch.readerRef.Load()
+	readerRef := ch.readerRef.Swap(nil)
 	if readerRef != nil {
 		readerRef.Evict()
 	}

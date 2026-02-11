@@ -29,6 +29,8 @@ type Compactor struct {
 	kvlogWriter    *KVDataWriter
 	orphanWriter   *OrphanWriter
 
+	endVersion uint32
+
 	// offsetCache holds the updated 1-based offsets of nodes affected by compacting.
 	// these are then used to update BranchLayout's left and right offsets.
 	offsetCache map[NodeID]uint32
@@ -94,6 +96,12 @@ func (c *Compactor) doAddChangeset(reader *ChangesetReader) error {
 	walRewriteInfo, err := RewriteWAL(c.walWriter, reader.changeset.files.WALFile(), uint64(c.walStartVersion))
 	if err != nil {
 		return fmt.Errorf("failed to rewrite WAL during compaction: %w", err)
+	}
+
+	c.endVersion = reader.Changeset().Files().EndVersion() // this will only be non-zero in already compacted changesets
+	if c.endVersion == 0 {
+		// in original changesets, we get the end version from WAL rewrite
+		c.endVersion = uint32(walRewriteInfo.EndVersion)
 	}
 
 	cpInfo := reader.checkpointsInfo
@@ -260,18 +268,6 @@ func (c *Compactor) doAddChangeset(reader *ChangesetReader) error {
 }
 
 func (c *Compactor) Seal() (*Changeset, error) {
-	cs, err := c.doSeal()
-	if err != nil {
-		abortErr := c.Abort()
-		if abortErr != nil {
-			return nil, fmt.Errorf("failed to seal compactor: %v; additionally failed to abort compactor during cleanup: %w", err, abortErr)
-		}
-		return nil, fmt.Errorf("failed to seal compactor: %w", err)
-	}
-	return cs, nil
-}
-
-func (c *Compactor) doSeal() (*Changeset, error) {
 	if len(c.processedChangesets) == 0 {
 		return nil, fmt.Errorf("no changesets processed")
 	}
@@ -284,7 +280,12 @@ func (c *Compactor) doSeal() (*Changeset, error) {
 		c.walWriter.Sync(),
 	}
 	if err := errors.Join(errs...); err != nil {
-		return nil, fmt.Errorf("failed to flush data during compaction seal: %w", err)
+		// if this fails we abort
+		errAbort := c.Abort()
+		if errAbort != nil {
+			return nil, fmt.Errorf("failed to flush data during compaction seal: %v; additionally failed to abort compactor during cleanup: %w", err, errAbort)
+		}
+		return nil, fmt.Errorf("failed to flush data during compaction seal: %w, aborted compaction", err)
 	}
 
 	cs, err := c.switchoverChangesets()
@@ -292,15 +293,8 @@ func (c *Compactor) doSeal() (*Changeset, error) {
 		return nil, fmt.Errorf("failed to clean up orphans during compaction seal: %w", err)
 	}
 
-	err = c.updateChangesetVersionEntries(cs)
-	if err != nil {
-		return nil, fmt.Errorf("failed to update tree store changeset entries during compaction seal: %w", err)
-	}
-
-	err = c.updateChangesetCheckpointEntries(cs)
-	if err != nil {
-		return nil, fmt.Errorf("failed to update tree store checkpoint entries during compaction seal: %w", err)
-	}
+	c.updateChangesetVersionEntries(cs)
+	c.updateChangesetCheckpointEntries(cs)
 
 	return cs, nil
 }
@@ -309,6 +303,27 @@ func (c *Compactor) switchoverChangesets() (*Changeset, error) {
 	c.treeStore.LockOrphanProc()
 	defer c.treeStore.UnlockOrphanProc()
 
+	cs, err := c.finalize()
+	if err != nil {
+		// if we error at this point, we abort and cleanup, past this point there can be no aborting
+		errAbort := c.Abort()
+		if errAbort != nil {
+			return nil, fmt.Errorf("failed to finalize changeset during compaction seal: %v; additionally failed to abort compactor during cleanup: %w", err, errAbort)
+		}
+		return nil, fmt.Errorf("failed to finalize changeset during compaction seal: %w, but aborted successfully", err)
+	}
+
+	// IMPORTANT: an abort CANNOT happen past this point, otherwise we can lose both the original and compacted changesets and cause data loss!
+	// this operation does not error, but critically it marks the original changesets for deletion!
+	// this operation MUST happen while we are holding the orphan proc lock to prevent orphans from going to the old changesets now that we've switched over
+	for _, entry := range c.processedChangesets {
+		entry.orig.MarkCompacted(cs)
+	}
+
+	return cs, nil
+}
+
+func (c *Compactor) finalize() (*Changeset, error) {
 	for _, entry := range c.processedChangesets {
 		err := entry.orphanRewriter.FinishRewrite(c.orphanWriter)
 		if err != nil {
@@ -320,23 +335,20 @@ func (c *Compactor) switchoverChangesets() (*Changeset, error) {
 		return nil, fmt.Errorf("failed to flush orphan data during compaction seal: %w", err)
 	}
 
-	cs, err := NewChangesetWithOrphanWriter(c.treeStore, c.files, c.orphanWriter)
+	finalDir, err := c.files.MarkReadyAndClose(c.endVersion)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create new changeset for compacted data during compaction seal: %w", err)
-	}
-
-	if err := c.files.MarkReady(); err != nil {
 		return nil, fmt.Errorf("failed to mark changeset as ready during compaction seal: %w", err)
 	}
 
-	for _, entry := range c.processedChangesets {
-		entry.orig.MarkCompacted(cs)
+	cs, err := OpenChangeset(c.treeStore, finalDir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create new changeset for compacted data during compaction seal: %w", err)
 	}
 
 	return cs, nil
 }
 
-func (c *Compactor) updateChangesetVersionEntries(newCs *Changeset) error {
+func (c *Compactor) updateChangesetVersionEntries(newCs *Changeset) {
 	c.treeStore.changesetsLock.Lock()
 	defer c.treeStore.changesetsLock.Unlock()
 	// clear the old changesets that were compacted
@@ -345,10 +357,9 @@ func (c *Compactor) updateChangesetVersionEntries(newCs *Changeset) error {
 	}
 	// set the new compacted changeset
 	c.treeStore.changesetsByVersion.Set(newCs.Files().StartVersion(), newCs)
-	return nil
 }
 
-func (c *Compactor) updateChangesetCheckpointEntries(newCs *Changeset) error {
+func (c *Compactor) updateChangesetCheckpointEntries(newCs *Changeset) {
 	newRdr, pin := newCs.TryPinReader()
 	defer pin.Unpin()
 	checkpointer := c.treeStore.checkpointer
@@ -363,7 +374,6 @@ func (c *Compactor) updateChangesetCheckpointEntries(newCs *Changeset) error {
 		}
 	}
 	checkpointer.changesetsByCheckpoint.Set(newRdr.FirstCheckpoint(), newCs)
-	return nil
 }
 
 func (c *Compactor) Abort() error {

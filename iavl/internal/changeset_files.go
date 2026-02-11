@@ -14,7 +14,7 @@ import (
 type ChangesetFiles struct {
 	dir          string
 	treeDir      string
-	startVersion uint32 // directory name - could be WAL or checkpoint start depending on compaction
+	startVersion uint32
 	endVersion   uint32 // 0 if original changeset
 	compactedAt  uint32
 
@@ -24,7 +24,6 @@ type ChangesetFiles struct {
 	leavesFile      *os.File
 	checkpointsFile *os.File
 	orphansFile     *os.File
-	// TODO orphan metadata
 
 	closed bool
 }
@@ -143,7 +142,8 @@ func (cr *ChangesetFiles) open(mode int) error {
 	return nil
 }
 
-// ParseChangesetDirName parses a changeset directory name and returns the start version and compacted at version.
+// ParseChangesetDirName parses a changeset directory name and returns the start version,
+// and end version plus compacted at version (if these are available).
 // If the directory name is invalid, valid will be false.
 // If a changeset is original and uncompacted, endVersion and compactedAt will be 0.
 func ParseChangesetDirName(dirName string) (startVersion, endVersion, compactedAt uint32, valid bool) {
@@ -163,7 +163,7 @@ func ParseChangesetDirName(dirName string) (startVersion, endVersion, compactedA
 		return 0, 0, 0, false
 	}
 
-	spanParts := strings.Split(parts[1], "-")
+	spanParts := strings.Split(parts[0], "-")
 	if len(spanParts) != 2 {
 		return 0, 0, 0, false
 	}
@@ -241,12 +241,30 @@ func (cr *ChangesetFiles) CompactedAtVersion() uint32 {
 	return cr.compactedAt
 }
 
-// MarkReady marks the changeset as ready by removing the -tmp suffix.
-// This is only necessary for compacted changesets.
-func (cr *ChangesetFiles) MarkReady() error {
+// EndVersion returns the end version of the changeset if it is known, or 0.
+// For original changesets, this will always return 0.
+// For sealed, compacted changesets, this will return the accurate end version of the changeset.
+func (cr *ChangesetFiles) EndVersion() uint32 {
+	return cr.endVersion
+}
+
+func (cr *ChangesetFiles) MarkReadyAndClose(endVersion uint32) (finalDir string, err error) {
 	tmpDir := cr.dir
-	finalDir := strings.TrimSuffix(tmpDir, "-tmp")
-	return os.Rename(tmpDir, finalDir)
+	if !strings.HasSuffix(tmpDir, "-tmp") {
+		return "", fmt.Errorf("cannot mark changeset as ready: directory name does not have -tmp suffix: %s", tmpDir)
+	}
+	finalDir = filepath.Join(cr.treeDir, fmt.Sprintf("%d-%d.%d", cr.startVersion, endVersion, cr.compactedAt))
+	err = os.Rename(tmpDir, finalDir)
+	if err != nil {
+		return "", fmt.Errorf("failed to rename changeset directory from %s to %s: %w", tmpDir, finalDir, err)
+	}
+	err = cr.Close()
+	if err != nil {
+		return "", fmt.Errorf("failed to close changeset files: %w", err)
+	}
+	cr.dir = finalDir
+	cr.endVersion = endVersion
+	return finalDir, nil
 }
 
 // Close closes all changeset files.
@@ -271,14 +289,7 @@ func (cr *ChangesetFiles) Close() error {
 // If the files were not already closed, they will be closed first.
 func (cr *ChangesetFiles) DeleteFiles() error {
 	return errors.Join(
-		cr.Close(), // first close all files
-		os.Remove(cr.walFile.Name()),
-		os.Remove(cr.leavesFile.Name()),
-		os.Remove(cr.branchesFile.Name()),
-		os.Remove(cr.checkpointsFile.Name()),
-		os.Remove(cr.orphansFile.Name()),
-		os.Remove(cr.kvDataFile.Name()),
-		cr.MarkReady(), // remove pending marker file if it exists
-		os.Remove(cr.dir),
+		cr.Close(),           // first close all files
+		os.RemoveAll(cr.dir), // then delete the directory and all files within it
 	)
 }

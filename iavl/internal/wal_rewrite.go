@@ -8,6 +8,7 @@ import (
 type WALRewriteInfo struct {
 	KeyOffsetRemapping   map[uint64]uint64
 	ValueOffsetRemapping map[uint64]uint64
+	EndVersion           uint64
 }
 
 // RewriteWAL rewrites the WAL entries to the given WALWriter, truncating any entries before the given version.
@@ -33,6 +34,7 @@ func RewriteWAL(writer *WALWriter, walFile *os.File, truncateBeforeVersion uint6
 				return nil, err
 			}
 		}
+		info.EndVersion = entry.Version // always keep track of the last version we see
 
 		switch entry.Op {
 		case WALOpCommit:

@@ -119,8 +119,8 @@ func initFixture(tb testing.TB) *fixture {
 		bankKeeper,
 	)
 
-	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts, nil)
-	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper, nil)
+	authModule := auth.NewAppModule(cdc, accountKeeper, authsims.RandomGenesisAccounts)
+	bankModule := bank.NewAppModule(cdc, bankKeeper, accountKeeper)
 	poaModule := poa.NewAppModule(cdc, poaKeeper)
 
 	adminAddr := sdk.AccAddress(ed25519.GenPrivKey().PubKey().Address())

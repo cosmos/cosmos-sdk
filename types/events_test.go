@@ -88,6 +88,20 @@ func (s *eventsTestSuite) TestEventManager() {
 	s.Require().Equal(em.Events(), events.AppendEvent(event))
 }
 
+func (s *eventsTestSuite) TestOverrideEvents() {
+	em := sdk.NewEventManager()
+	event := sdk.NewEvent("reward", sdk.NewAttribute("x", "y"))
+	events := sdk.Events{sdk.NewEvent("transfer", sdk.NewAttribute("sender", "foo"))}
+
+	em.EmitEvents(events)
+	em.EmitEvent(event)
+
+	s.Require().Len(em.Events(), 2)
+
+	em.OverrideEvents(events)
+	s.Require().Len(em.Events(), 1)
+}
+
 func (s *eventsTestSuite) TestEmitTypedEvent() {
 	s.Run("deterministic key-value order", func() {
 		for range 10 {

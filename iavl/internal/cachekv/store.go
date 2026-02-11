@@ -3,7 +3,6 @@ package cachekv
 import (
 	"io"
 	"iter"
-	"sync/atomic"
 	"unsafe"
 
 	"github.com/tidwall/btree"
@@ -20,7 +19,7 @@ import (
 type Store struct {
 	parent   storetypes.KVStore
 	writeMap btree.Map[string, []byte]
-	dirty    atomic.Bool
+	dirty    bool
 }
 
 func NewStore(parent storetypes.KVStore) *Store {
@@ -43,7 +42,7 @@ func (store *Store) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) 
 func (store *Store) Get(key []byte) (value []byte) {
 	storetypes.AssertValidKey(key)
 
-	if !store.dirty.Load() {
+	if !store.dirty {
 		return store.parent.Get(key)
 	}
 
@@ -58,7 +57,7 @@ func (store *Store) Get(key []byte) (value []byte) {
 func (store *Store) Has(key []byte) bool {
 	storetypes.AssertValidKey(key)
 
-	if !store.dirty.Load() {
+	if !store.dirty {
 		return store.parent.Has(key)
 	}
 
@@ -78,7 +77,7 @@ func (store *Store) Set(key, value []byte) {
 	storetypes.AssertValidKey(key)
 	storetypes.AssertValidValue(value)
 
-	store.dirty.Store(true)
+	store.dirty = true
 
 	store.writeMap.Set(string(key), value)
 }
@@ -86,7 +85,7 @@ func (store *Store) Set(key, value []byte) {
 func (store *Store) Delete(key []byte) {
 	storetypes.AssertValidKey(key)
 
-	store.dirty.Store(true)
+	store.dirty = true
 
 	store.writeMap.Set(string(key), nil)
 }
@@ -105,7 +104,7 @@ type KVUpdate = struct {
 }
 
 func (store *Store) Updates() iter.Seq[KVUpdate] {
-	if !store.dirty.Load() {
+	if !store.dirty {
 		return func(yield func(KVUpdate) bool) {}
 	}
 
@@ -122,7 +121,7 @@ func (store *Store) Updates() iter.Seq[KVUpdate] {
 }
 
 func (store *Store) Write() {
-	if !store.dirty.Load() {
+	if !store.dirty {
 		return
 	}
 
@@ -139,7 +138,7 @@ func (store *Store) Write() {
 }
 
 func (store *Store) iterator(start, end []byte, ascending bool) storetypes.Iterator {
-	if !store.dirty.Load() {
+	if !store.dirty {
 		if ascending {
 			return store.parent.Iterator(start, end)
 		} else {

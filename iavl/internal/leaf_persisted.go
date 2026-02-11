@@ -112,8 +112,7 @@ func (node *LeafPersisted) Has(key []byte) (exists bool, index int64, err error)
 }
 
 func (node *LeafPersisted) String() string {
-	// TODO implement me
-	panic("implement me")
+	return fmt.Sprintf("LeafPersisted{ID: %d, Version: %d}", node.ID(), node.Version())
 }
 
 var _ Node = (*LeafPersisted)(nil)

@@ -168,8 +168,7 @@ func (node *BranchPersisted) Has(key []byte) (exists bool, index int64, err erro
 }
 
 func (node *BranchPersisted) String() string {
-	// TODO implement me
-	panic("implement me")
+	return fmt.Sprintf("BranchPersisted{ID: %d, Version: %d, Height: %d, Size: %d}", node.ID(), node.Version(), node.Height(), node.Size())
 }
 
 var _ Node = (*BranchPersisted)(nil)

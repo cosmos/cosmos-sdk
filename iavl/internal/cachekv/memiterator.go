@@ -15,7 +15,7 @@ var _ types.Iterator = (*memIterator)(nil)
 // if value is nil, means it was deleted.
 // Implements Iterator.
 type memIterator struct {
-	iter btree.IterG[item]
+	iter btree.MapIter[string, []byte]
 
 	start     []byte
 	end       []byte
@@ -23,18 +23,21 @@ type memIterator struct {
 	valid     bool
 }
 
-func newMemIterator(start, end []byte, items BTree, ascending bool) *memIterator {
-	iter := items.tree.Iter()
+func newMemIterator(start, end []byte, items *btree.Map[string, []byte], ascending bool) *memIterator {
+	items = items.Copy() // copy the btree to avoid concurrent modification issues, this should be O(1) due to copy-on-write semantics of the btree
+	iter := items.Iter()
 	var valid bool
 	if ascending {
 		if start != nil {
-			valid = iter.Seek(newItem(start, nil, false))
+			// we use unsafeBytesToString here because we are doing a lookup, we are not modifying the key, and we want to avoid unnecessary allocations
+			valid = iter.Seek(unsafeBytesToString(start))
 		} else {
 			valid = iter.First()
 		}
 	} else {
 		if end != nil {
-			valid = iter.Seek(newItem(end, nil, false))
+			// we use unsafeBytesToString here because we are doing a lookup
+			valid = iter.Seek(unsafeBytesToString(end))
 			if !valid {
 				valid = iter.Last()
 			} else {
@@ -66,7 +69,6 @@ func (mi *memIterator) Domain() (start, end []byte) {
 }
 
 func (mi *memIterator) Close() error {
-	mi.iter.Release()
 	return nil
 }
 
@@ -106,11 +108,11 @@ func (mi *memIterator) keyInRange(key []byte) bool {
 }
 
 func (mi *memIterator) Key() []byte {
-	return mi.iter.Item().key
+	return []byte(mi.iter.Key()) // this introduces a small amount of allocation and copying, but is safer
 }
 
 func (mi *memIterator) Value() []byte {
-	return mi.iter.Item().value
+	return mi.iter.Value()
 }
 
 func (mi *memIterator) assertValid() {

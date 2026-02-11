@@ -342,15 +342,19 @@ type CommitFinalizer interface {
 // GBasicKVStore is a simple interface to get/set data
 type GBasicKVStore[V any] interface {
 	// Get returns nil if key doesn't exist. Panics on nil key.
+	// It is safe to call Get from multiple go routines as long as there are no concurrent writes.
 	Get(key []byte) V
 
 	// Has checks if a key exists. Panics on nil key.
+	// It is safe to call Has from multiple go routines as long as there are no concurrent writes.
 	Has(key []byte) bool
 
 	// Set sets the key. Panics on nil key or value.
+	// Concurrent writes are not allowed and may cause undefined behavior.
 	Set(key []byte, value V)
 
 	// Delete deletes the key. Panics on nil key.
+	// Concurrent writes are not allowed and may cause undefined behavior.
 	Delete(key []byte)
 }
 
@@ -365,13 +369,15 @@ type GKVStore[V any] interface {
 	// To iterate over entire domain, use store.Iterator(nil, nil)
 	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
 	// Exceptionally allowed for cachekv.Store, safe to write in the modules.
+	// It is safe to call Iterator from multiple go routines as long as there are no concurrent writes.
 	Iterator(start, end []byte) GIterator[V]
 
-	// Iterator over a domain of keys in descending order. End is exclusive.
+	// ReverseIterator over a domain of keys in descending order. End is exclusive.
 	// Start must be less than end, or the Iterator is invalid.
 	// Iterator must be closed by caller.
 	// CONTRACT: No writes may happen within a domain while an iterator exists over it.
 	// Exceptionally allowed for cachekv.Store, safe to write in the modules.
+	// It is safe to call ReverseIterator from multiple go routines as long as there are no concurrent writes.
 	ReverseIterator(start, end []byte) GIterator[V]
 }
 

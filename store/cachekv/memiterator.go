@@ -5,17 +5,13 @@ import (
 	"errors"
 
 	"github.com/tidwall/btree"
-
-	"cosmossdk.io/store/types"
 )
-
-var _ types.Iterator = (*memIterator)(nil)
 
 // memIterator iterates over iterKVCache items.
 // if value is nil, means it was deleted.
 // Implements Iterator.
-type memIterator struct {
-	iter btree.MapIter[string, []byte]
+type memIterator[V any] struct {
+	iter btree.MapIter[string, V]
 
 	start     []byte
 	end       []byte
@@ -23,7 +19,7 @@ type memIterator struct {
 	valid     bool
 }
 
-func newMemIterator(start, end []byte, items *btree.Map[string, []byte], ascending bool) *memIterator {
+func newMemIterator[V any](start, end []byte, items *btree.Map[string, V], ascending bool) *memIterator[V] {
 	items = items.Copy() // copy the btree to avoid concurrent modification issues, this should be O(1) due to copy-on-write semantics of the btree
 	iter := items.Iter()
 	var valid bool
@@ -49,7 +45,7 @@ func newMemIterator(start, end []byte, items *btree.Map[string, []byte], ascendi
 		}
 	}
 
-	mi := &memIterator{
+	mi := &memIterator[V]{
 		iter:      iter,
 		start:     start,
 		end:       end,
@@ -64,26 +60,26 @@ func newMemIterator(start, end []byte, items *btree.Map[string, []byte], ascendi
 	return mi
 }
 
-func (mi *memIterator) Domain() (start, end []byte) {
+func (mi *memIterator[V]) Domain() (start, end []byte) {
 	return mi.start, mi.end
 }
 
-func (mi *memIterator) Close() error {
+func (mi *memIterator[V]) Close() error {
 	return nil
 }
 
-func (mi *memIterator) Error() error {
+func (mi *memIterator[V]) Error() error {
 	if !mi.Valid() {
 		return errors.New("invalid memIterator")
 	}
 	return nil
 }
 
-func (mi *memIterator) Valid() bool {
+func (mi *memIterator[V]) Valid() bool {
 	return mi.valid
 }
 
-func (mi *memIterator) Next() {
+func (mi *memIterator[V]) Next() {
 	mi.assertValid()
 
 	if mi.ascending {
@@ -97,7 +93,7 @@ func (mi *memIterator) Next() {
 	}
 }
 
-func (mi *memIterator) keyInRange(key []byte) bool {
+func (mi *memIterator[V]) keyInRange(key []byte) bool {
 	if mi.ascending && mi.end != nil && bytes.Compare(key, mi.end) >= 0 {
 		return false
 	}
@@ -107,15 +103,15 @@ func (mi *memIterator) keyInRange(key []byte) bool {
 	return true
 }
 
-func (mi *memIterator) Key() []byte {
+func (mi *memIterator[V]) Key() []byte {
 	return []byte(mi.iter.Key()) // this introduces a small amount of allocation and copying, but is safer
 }
 
-func (mi *memIterator) Value() []byte {
+func (mi *memIterator[V]) Value() V {
 	return mi.iter.Value()
 }
 
-func (mi *memIterator) assertValid() {
+func (mi *memIterator[V]) assertValid() {
 	if err := mi.Error(); err != nil {
 		panic(err)
 	}

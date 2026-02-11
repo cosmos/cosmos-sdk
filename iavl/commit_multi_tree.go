@@ -22,6 +22,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
 
+	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/mem"
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
@@ -29,7 +30,6 @@ import (
 	"cosmossdk.io/store/transient"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/iavl/internal"
-	"github.com/cosmos/cosmos-sdk/iavl/internal/cachekv"
 )
 
 type CommitMultiTree struct {
@@ -77,14 +77,15 @@ func (db *CommitMultiTree) StartCommit(ctx context.Context, store storetypes.Mul
 		commitStore := si.store.(*CommitTree)
 		cachedStore := multiTree.GetCacheWrapIfExists(si.key)
 		var updates iter.Seq[KVUpdate]
+		var updateCount int
 		if cachedStore != nil {
-			cacheKv, ok := cachedStore.(*cachekv.Store)
+			cacheKv, ok := cachedStore.(cachekv.Store)
 			if !ok {
 				return nil, fmt.Errorf("expected cachekv.Store, got %T", cachedStore)
 			}
-			updates = cacheKv.Updates()
+			updates, updateCount = cacheKv.Updates()
 		}
-		finalizer := commitStore.StartCommit(ctx, updates, 0)
+		finalizer := commitStore.StartCommit(ctx, updates, updateCount)
 		iavlFinalizer, ok := finalizer.(*commitTreeFinalizer)
 		if !ok {
 			return nil, fmt.Errorf("expected iavl commitTreeFinalizer, got %T", finalizer)

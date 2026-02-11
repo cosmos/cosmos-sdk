@@ -97,5 +97,5 @@ func TestCacheWrap(t *testing.T) {
 	store := iavlstore.UnsafeNewStore(tree)
 
 	cacheWrapper := mngr.GetStoreCache(sKey, store).CacheWrap()
-	require.IsType(t, &cachekv.Store{}, cacheWrapper)
+	require.IsType(t, &cachekv.GStore{}, cacheWrapper)
 }

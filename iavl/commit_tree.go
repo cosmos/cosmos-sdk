@@ -5,7 +5,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
-	io "io"
+	"io"
 	"iter"
 	"os"
 	"runtime"

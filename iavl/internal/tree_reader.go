@@ -3,8 +3,8 @@ package internal
 import (
 	"io"
 
+	"cosmossdk.io/store/cachekv"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/cosmos/cosmos-sdk/iavl/internal/cachekv"
 )
 
 type TreeReader struct {

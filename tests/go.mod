@@ -3,7 +3,7 @@ module github.com/cosmos/cosmos-sdk/tests
 go 1.25.7
 
 require (
-	cosmossdk.io/api v0.9.2
+	cosmossdk.io/api v1.0.0
 	cosmossdk.io/core v0.11.3
 	cosmossdk.io/depinject v1.2.1
 	cosmossdk.io/errors v1.0.2
@@ -270,10 +270,12 @@ require (
 
 // Below are the long-lived replace for tests.
 replace (
+	cosmossdk.io/api => ../api
 	cosmossdk.io/log/v2 => ../log
 	// We always want to test against the latest version of the simapp.
 	cosmossdk.io/simapp => ../simapp
 	cosmossdk.io/store => ../store
+	cosmossdk.io/x/tx => ../x/tx
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// We always want to test against the latest version of the SDK.
 	github.com/cosmos/cosmos-sdk => ../.

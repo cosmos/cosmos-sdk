@@ -2,10 +2,7 @@ module cosmossdk.io/store
 
 go 1.24.0
 
-replace (
-	cosmossdk.io/log/v2 => ../log
-	github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-20250924232609-2c6195d95951
-)
+replace github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-20250924232609-2c6195d95951
 
 require (
 	cosmossdk.io/errors v1.0.2

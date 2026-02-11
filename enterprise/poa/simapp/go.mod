@@ -3,7 +3,7 @@ module github.com/cosmos/cosmos-sdk/enterprise/poa/simapp
 go 1.25.7
 
 require (
-	cosmossdk.io/api v0.9.2
+	cosmossdk.io/api v1.0.0
 	cosmossdk.io/client/v2 v2.0.0-beta.11
 	cosmossdk.io/core v0.11.3
 	cosmossdk.io/log/v2 v2.0.0
@@ -225,7 +225,6 @@ replace github.com/cosmos/cosmos-sdk/enterprise/poa => ..
 replace (
 	// TODO: remove api and x/tx replaces once published versions include GetBlockResults proto definitions
 	cosmossdk.io/api => ../../../api
-	cosmossdk.io/log/v2 => ../../../log
 	cosmossdk.io/store => ../../../store
 	cosmossdk.io/x/tx => ../../../x/tx
 	// use cosmos fork of keyring

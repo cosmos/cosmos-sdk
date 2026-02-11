@@ -3,7 +3,7 @@ module cosmossdk.io/client/v2
 go 1.25.7
 
 require (
-	cosmossdk.io/api v0.9.2
+	cosmossdk.io/api v1.0.0
 	cosmossdk.io/core v0.11.3
 	cosmossdk.io/depinject v1.2.1
 	cosmossdk.io/math v1.5.3
@@ -210,8 +210,8 @@ require (
 // 	<temporary replace>
 // )
 replace (
-	cosmossdk.io/log/v2 => ../../log
 	cosmossdk.io/store => ../../store
+	cosmossdk.io/x/tx => ../../x/tx
 	github.com/cosmos/cosmos-sdk => ../../.
 	github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-20250924232609-2c6195d95951
 )

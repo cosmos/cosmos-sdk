@@ -285,13 +285,13 @@ func (UnimplementedQueryServer) CommunityPool(context.Context, *QueryCommunityPo
 	return nil, status.Error(codes.Unimplemented, "method CommunityPool not implemented")
 }
 func (UnimplementedQueryServer) ValidatorHistoricalRewards(context.Context, *QueryValidatorHistoricalRewardsRequest) (*QueryValidatorHistoricalRewardsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ValidatorHistoricalRewards not implemented")
+	return nil, status.Error(codes.Unimplemented, "method ValidatorHistoricalRewards not implemented")
 }
 func (UnimplementedQueryServer) ValidatorCurrentRewards(context.Context, *QueryValidatorCurrentRewardsRequest) (*QueryValidatorCurrentRewardsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ValidatorCurrentRewards not implemented")
+	return nil, status.Error(codes.Unimplemented, "method ValidatorCurrentRewards not implemented")
 }
 func (UnimplementedQueryServer) DelegatorStartingInfo(context.Context, *QueryDelegatorStartingInfoRequest) (*QueryDelegatorStartingInfoResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DelegatorStartingInfo not implemented")
+	return nil, status.Error(codes.Unimplemented, "method DelegatorStartingInfo not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 func (UnimplementedQueryServer) testEmbeddedByValue()               {}

@@ -3,7 +3,7 @@ module cosmossdk.io/simapp
 go 1.25.7
 
 require (
-	cosmossdk.io/api v0.9.2
+	cosmossdk.io/api v1.0.0
 	cosmossdk.io/client/v2 v2.0.0-beta.11
 	cosmossdk.io/core v0.11.3
 	cosmossdk.io/depinject v1.2.1
@@ -269,7 +269,6 @@ require (
 // Below are the long-lived replace of the SimApp
 replace (
 	cosmossdk.io/api => ../api
-	cosmossdk.io/log/v2 => ../log
 	cosmossdk.io/store => ../store
 	cosmossdk.io/x/tx => ../x/tx
 	// use cosmos fork of keyring

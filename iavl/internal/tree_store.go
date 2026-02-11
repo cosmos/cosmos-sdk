@@ -252,7 +252,7 @@ func (ts *TreeStore) loadRootAtVersion(ctx context.Context, targetVersion uint32
 	curVersion := res.Version
 	root := res.Root
 	for {
-		changeset := ts.changesetForVersion(res.Version + 1)
+		changeset := ts.changesetForVersion(curVersion + 1)
 		if changeset == nil {
 			return nil, fmt.Errorf("no changeset found for version %d", curVersion+1)
 		}
@@ -293,8 +293,9 @@ func (ts *TreeStore) checkpointForVersion(version uint32) (info *CheckpointResol
 
 		startVersion := changeset.Files().StartVersion()
 		if startVersion <= 1 {
-			// we're at the beginning of history, return empty tree
-			return nil, nil
+			// we're at the beginning of history, return empty tree at version 0
+			// so the caller can replay the WAL from the start
+			return &CheckpointResolveInfo{}, nil
 		}
 		// try an earlier changeset
 		version = startVersion - 1

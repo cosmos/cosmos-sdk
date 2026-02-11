@@ -50,14 +50,12 @@ func (cp *CompactorProc) StartCompactionRun(ctx context.Context) error {
 		return fmt.Errorf("failed to determine checkpoint for version %d: %w", oldestRetainedVersion, err)
 	}
 
-	oldestRetainedCheckpoint := uint32(0)
-	walRetainVersion := uint32(0)
-	if info == nil {
-		// if there is no checkpoint for the oldest retained version, so nothing to do
+	if info.Checkpoint == 0 {
+		// no checkpoint found for the oldest retained version, nothing to compact
 		return nil
 	}
-	oldestRetainedCheckpoint = info.Checkpoint
-	walRetainVersion = info.Version
+	oldestRetainedCheckpoint := info.Checkpoint
+	walRetainVersion := info.Version
 
 	cpOpts := CompactOptions{
 		RetainCriteria: func(createCheckpoint, orphanVersion uint32) bool {

@@ -43,7 +43,7 @@ func (t *MultiTree) getCacheWrap(key storetypes.StoreKey) storetypes.CacheWrap {
 	if ok {
 		return store
 	}
-	store = t.initCacheWrapFromParent(key).CacheWrap()
+	store = t.initCacheWrapFromParent(key)
 	t.trees[key] = store
 	return store
 }
@@ -76,7 +76,9 @@ func (t *MultiTree) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) 
 
 func (t *MultiTree) CacheMultiStore() storetypes.CacheMultiStore {
 	// create a nested MultiTree, which in turn creates CacheWraps for each store
-	return NewMultiTree(t.latestVersion, t.getCacheWrap)
+	return NewMultiTree(t.latestVersion, func(key storetypes.StoreKey) storetypes.CacheWrap {
+		return t.getCacheWrap(key).CacheWrap()
+	})
 }
 
 func (t *MultiTree) CacheMultiStoreWithVersion(int64) (storetypes.CacheMultiStore, error) {

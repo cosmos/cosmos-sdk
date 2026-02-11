@@ -81,7 +81,7 @@ func (db *CommitMultiTree) StartCommit(ctx context.Context, store storetypes.Mul
 		if cachedStore != nil {
 			cacheKv, ok := cachedStore.(cachekv.Store)
 			if !ok {
-				return nil, fmt.Errorf("expected cachekv.Store, got %T", cachedStore)
+				return nil, fmt.Errorf("expected %T, got %T", cachekv.Store{}, cachedStore)
 			}
 			updates, updateCount = cacheKv.Updates()
 		}

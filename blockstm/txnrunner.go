@@ -65,7 +65,7 @@ func (e STMRunner) Run(ctx context.Context, ms storetypes.MultiStore, txs [][]by
 
 	var (
 		estimates []MultiLocations
-		memTxs    [][]byte
+		memTxs    []sdk.Tx
 	)
 
 	if e.estimate {
@@ -89,11 +89,11 @@ func (e STMRunner) Run(ctx context.Context, ms storetypes.MultiStore, txs [][]by
 				cache = *v
 			}
 
-			var memTx []byte
+			var memTx sdk.Tx
 			if memTxs != nil {
 				memTx = memTxs[txn]
 			}
-			results[txn] = deliverTx(memTx, msWrapper{ms}, int(txn), cache)
+			results[txn] = deliverTx(txs[txn], memTx, msWrapper{ms}, int(txn), cache)
 
 			if v != nil {
 				incarnationCache[txn].Store(v)
@@ -108,8 +108,8 @@ func (e STMRunner) Run(ctx context.Context, ms storetypes.MultiStore, txs [][]by
 
 // preEstimates returns a static estimation of the written keys for each transaction.
 // NOTE: make sure it sync with the latest sdk logic when sdk upgrade.
-func preEstimates(txs [][]byte, workers, authStore, bankStore int, coinDenom string, txDecoder sdk.TxDecoder) ([][]byte, []MultiLocations) {
-	memTxs := make([][]byte, len(txs))
+func preEstimates(txs [][]byte, workers, authStore, bankStore int, coinDenom string, txDecoder sdk.TxDecoder) ([]sdk.Tx, []MultiLocations) {
+	memTxs := make([]sdk.Tx, len(txs))
 	estimates := make([]MultiLocations, len(txs))
 
 	job := func(start, end int) {
@@ -119,7 +119,7 @@ func preEstimates(txs [][]byte, workers, authStore, bankStore int, coinDenom str
 			if err != nil {
 				continue
 			}
-			memTxs[i] = rawTx
+			memTxs[i] = tx
 
 			feeTx, ok := tx.(sdk.FeeTx)
 			if !ok {

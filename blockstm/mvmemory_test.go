@@ -57,7 +57,7 @@ func TestMVMemoryRecord(t *testing.T) {
 		resultCh <- struct{}{}
 	}()
 
-	// meke sure the goroutine runs first to suspend
+	// let the goroutine to run and wait for it to block on tx 2
 	time.Sleep(100 * time.Millisecond)
 
 	{

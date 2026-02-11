@@ -98,8 +98,10 @@ func (r ResponsePreBlock) IsConsensusParamsChanged() bool {
 
 type RunTx = func(txBytes []byte, tx Tx) (gInfo GasInfo, result *Result, anteEvents []abci.Event, err error)
 
-// DeliverTxFunc is the function called for each transaction in order to produce a single ExecTxResult
-type DeliverTxFunc func(tx []byte, ms storetypes.MultiStore, txIndex int, incarnationCache map[string]any) *abci.ExecTxResult
+// DeliverTxFunc is the function called for each transaction in order to produce a single ExecTxResult.
+// `memTx` is an optional in-memory representation of the transaction, which can be used to avoid decoding the
+// transaction.
+type DeliverTxFunc func(tx []byte, memTx Tx, ms storetypes.MultiStore, txIndex int, incarnationCache map[string]any) *abci.ExecTxResult
 
 // TxRunner defines an interface for types which can be used to execute the DeliverTxFunc.
 // It should return an array of *abci.ExecTxResult corresponding to the result of executing each transaction

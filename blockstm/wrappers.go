@@ -17,18 +17,16 @@ type msWrapper struct {
 }
 
 func (ms msWrapper) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) storetypes.CacheWrap {
-	// TODO implement me
-	panic("implement me")
+	cms := cachemulti.NewFromParent(ms.getCacheWrapper, w, tc)
+	return cms.CacheWrap()
 }
 
 func (ms msWrapper) CacheMultiStoreWithVersion(version int64) (storetypes.CacheMultiStore, error) {
-	// TODO implement me
-	panic("implement me")
+	panic("cannot branch cached multi-store with a version")
 }
 
 func (ms msWrapper) LatestVersion() int64 {
-	// TODO implement me
-	panic("implement me")
+	panic("cannot get latest version from branch cached multi-store")
 }
 
 func (ms msWrapper) getCacheWrapper(key storetypes.StoreKey) storetypes.CacheWrapper {

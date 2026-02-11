@@ -119,6 +119,16 @@ func (node *MemNode) Get(key []byte) (value UnsafeBytes, index int64, err error)
 	return value, index, nil
 }
 
+func (node *MemNode) Has(key []byte) (exists bool, index int64, err error) {
+	// for MemNode.Has, we can simply call MemNode.Get because value is in memory and there is no disk read overhead
+	var value UnsafeBytes
+	value, index, err = node.Get(key)
+	if err != nil {
+		return false, 0, err
+	}
+	return !value.IsNil(), index, nil
+}
+
 // IsLeaf implements the Node interface.
 func (node *MemNode) IsLeaf() bool {
 	return node.height == 0

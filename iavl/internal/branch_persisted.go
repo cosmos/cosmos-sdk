@@ -136,6 +136,37 @@ func (node *BranchPersisted) Get(key []byte) (value UnsafeBytes, index int64, er
 	return value, index, nil
 }
 
+func (node *BranchPersisted) Has(key []byte) (exists bool, index int64, err error) {
+	cmp, err := node.CmpKey(key)
+	if err != nil {
+		return false, 0, err
+	}
+
+	if cmp > 0 {
+		leftNode, leftPin, err := node.Left().Resolve()
+		defer leftPin.Unpin()
+		if err != nil {
+			return false, 0, err
+		}
+
+		return leftNode.Has(key)
+	}
+
+	rightNode, rightPin, err := node.Right().Resolve()
+	defer rightPin.Unpin()
+	if err != nil {
+		return false, 0, err
+	}
+
+	exists, index, err = rightNode.Has(key)
+	if err != nil {
+		return false, 0, err
+	}
+
+	index += node.Size() - rightNode.Size()
+	return exists, index, nil
+}
+
 func (node *BranchPersisted) String() string {
 	// TODO implement me
 	panic("implement me")

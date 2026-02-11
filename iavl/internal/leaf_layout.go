@@ -45,14 +45,17 @@ const (
 	leafFlagValueInKVData = 0x02
 )
 
+// KeyInKVData returns true if the key for this leaf node is stored in kv.dat, false if it's stored in wal.log.
 func (l LeafLayout) KeyInKVData() bool {
 	return l.flags&leafFlagKeyInKVData != 0
 }
 
+// ValueInKVData returns true if the value for this leaf node is stored in kv.dat, false if it's stored in wal.log.
 func (l LeafLayout) ValueInKVData() bool {
 	return l.flags&leafFlagValueInKVData != 0
 }
 
+// SetKeyInKVData sets whether the key for this leaf node is stored in kv.dat or wal.log.
 func (l *LeafLayout) SetKeyInKVData(inKVData bool) {
 	if inKVData {
 		l.flags |= leafFlagKeyInKVData
@@ -61,6 +64,7 @@ func (l *LeafLayout) SetKeyInKVData(inKVData bool) {
 	}
 }
 
+// SetValueInKVData sets whether the value for this leaf node is stored in kv.dat or wal.log.
 func (l *LeafLayout) SetValueInKVData(inKVData bool) {
 	if inKVData {
 		l.flags |= leafFlagValueInKVData

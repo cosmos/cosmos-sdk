@@ -68,10 +68,12 @@ func (b BranchLayout) GetNodeID() NodeID {
 	return b.ID
 }
 
+// KeyInKVData returns true if the key for this branch node is stored in kv.dat, false if it's stored in wal.log.
 func (b BranchLayout) KeyInKVData() bool {
 	return b.flags&branchFlagKeyInKVData != 0
 }
 
+// SetKeyInKVData sets whether the key for this branch node is stored in kv.dat or wal.log.
 func (b *BranchLayout) SetKeyInKVData(inKVData bool) {
 	if inKVData {
 		b.flags |= branchFlagKeyInKVData
@@ -80,6 +82,10 @@ func (b *BranchLayout) SetKeyInKVData(inKVData bool) {
 	}
 }
 
+// SetInlineKeyPrefixLen sets the length of the inline key prefix for this branch node.
+// The actual length of the inline key prefix is min(keyLen, MaxInlineKeyCopyLen) since we only store the first 8 bytes of the key.
+// But we can store a length of up to 31 inline in the flags to indicate the actual key length for comparison purposes,
+// since some keys may be shorter than 8 bytes and we want to be able to distinguish them.
 func (b *BranchLayout) SetInlineKeyPrefixLen(keyLen int) {
 	if keyLen > MaxInlineKeyLen {
 		keyLen = MaxInlineKeyLen
@@ -88,10 +94,14 @@ func (b *BranchLayout) SetInlineKeyPrefixLen(keyLen int) {
 		(uint8(keyLen) & branchInlineKeyLenMask) // mask and set new len
 }
 
+// InlineKeyPrefixLen returns the length of the inline key prefix for this branch node,
+// which is stored in the lower 5 bits of the flags.
 func (b BranchLayout) InlineKeyPrefixLen() uint8 {
 	return b.flags & branchInlineKeyLenMask
 }
 
+// InlineKeyCopyLen returns the number of bytes of the key that are actually stored in the InlineKeyPrefix field,
+// which is the min of the actual key length and MaxInlineKeyCopyLen (8 bytes).
 func (b BranchLayout) InlineKeyCopyLen() int {
 	keyLen := b.InlineKeyPrefixLen()
 	if keyLen > MaxInlineKeyCopyLen {
@@ -100,8 +110,12 @@ func (b BranchLayout) InlineKeyCopyLen() int {
 	return int(keyLen)
 }
 
+// MaxInlineKeyLen is the maximum key length that can be indicated as inline in the flags (5 bits for length).
 const MaxInlineKeyLen = 31
+
+// MaxInlineKeyCopyLen is the maximum number of bytes of the key that are actually stored in the InlineKeyPrefix field.
 const MaxInlineKeyCopyLen = 8
+
 const (
 	branchFlagKeyInKVData  uint8 = 0x80
 	branchInlineKeyLenMask uint8 = 0x1F

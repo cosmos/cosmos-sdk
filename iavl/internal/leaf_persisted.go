@@ -96,6 +96,21 @@ func (node *LeafPersisted) Get(key []byte) (value UnsafeBytes, index int64, err 
 	}
 }
 
+func (node *LeafPersisted) Has(key []byte) (exists bool, index int64, err error) {
+	nodeKey, err := node.Key()
+	if err != nil {
+		return false, 0, err
+	}
+	switch bytes.Compare(nodeKey.UnsafeBytes(), key) {
+	case -1:
+		return false, 1, nil
+	case 1:
+		return false, 0, nil
+	default:
+		return true, 0, nil
+	}
+}
+
 func (node *LeafPersisted) String() string {
 	// TODO implement me
 	panic("implement me")

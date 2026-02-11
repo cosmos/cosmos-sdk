@@ -863,6 +863,10 @@ func (db *CommitMultiTree) pruneIfNeeded() {
 		// already pruning, skip
 		return
 	}
+	if db.pruningOptions.Interval == 0 {
+		// pruning disabled
+		return
+	}
 	intervalSinceLastPrune := db.version - db.lastPruneVersion
 	if db.pruningOptions.Interval > intervalSinceLastPrune {
 		// not time to prune yet

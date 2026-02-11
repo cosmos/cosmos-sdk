@@ -38,7 +38,14 @@ func OpenChangeset(treeStore *TreeStore, dir string) (*Changeset, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to open changeset files: %w", err)
 	}
-	return NewChangeset(treeStore, files)
+	cs, err := NewChangeset(treeStore, files)
+	if err != nil {
+		return nil, err
+	}
+	// mark as sealed since this is an existing changeset that won't be written to anymore
+	// otherwise the compactor will skip it
+	cs.sealed.Store(true)
+	return cs, nil
 }
 
 // TryPinReader attempts to pin the active ChangesetReader for this changeset,

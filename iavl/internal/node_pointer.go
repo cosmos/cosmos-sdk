@@ -54,7 +54,7 @@ func (p *NodePointer) Resolve() (Node, Pin, error) {
 			node, err := rdr.ResolveByID(p.id)
 			return node, pin, err
 		} else {
-			return nil, NoopPin{}, fmt.Errorf("unable to pin ChangesetReader for checkpoint %d, compaction resolution not enabled", p.id.Checkpoint())
+			return nil, NoopPin{}, fmt.Errorf("unable to pin ChangesetReader for checkpoint %d, likely it has been closed and can't be reopened", p.id.Checkpoint())
 		}
 	}
 }

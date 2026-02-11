@@ -23,11 +23,10 @@ func NewChangesetReader(changeset *Changeset) (*ChangesetReader, error) {
 	var err error
 
 	files := changeset.files
-	if files.WALFile() != nil {
-		cr.walReader, err = NewKVDataReader(files.WALFile())
-		if err != nil {
-			return nil, fmt.Errorf("failed to open WAL data store: %w", err)
-		}
+
+	cr.walReader, err = NewKVDataReader(files.WALFile())
+	if err != nil {
+		return nil, fmt.Errorf("failed to open WAL data store: %w", err)
 	}
 
 	cr.kvDataReader, err = NewKVDataReader(files.KVDataFile())
@@ -51,10 +50,7 @@ func NewChangesetReader(changeset *Changeset) (*ChangesetReader, error) {
 	}
 
 	if cr.checkpointsInfo.Count() > 0 {
-		firstInfo, err := cr.checkpointsInfo.UnsafeItem(0), error(nil)
-		if err != nil {
-			return nil, fmt.Errorf("failed to read first checkpoint info: %w", err)
-		}
+		firstInfo := cr.checkpointsInfo.UnsafeItem(0)
 		cr.firstCheckpoint = firstInfo.Checkpoint
 		cr.lastCheckpoint = cr.firstCheckpoint + uint32(cr.checkpointsInfo.Count()) - 1
 	}
@@ -68,6 +64,10 @@ func (cr *ChangesetReader) WALData() *KVDataReader {
 
 func (cr *ChangesetReader) KVData() *KVDataReader {
 	return cr.kvDataReader
+}
+
+func (cr *ChangesetReader) Changeset() *Changeset {
+	return cr.changeset
 }
 
 func (cr *ChangesetReader) ResolveLeafByIndex(fileIdx uint32) (*LeafLayout, error) {
@@ -116,20 +116,6 @@ func (cr *ChangesetReader) GetCheckpointInfo(checkpoint uint32) (*CheckpointInfo
 		return nil, fmt.Errorf("checkpoint %d out of range for changeset (have %d..%d)", checkpoint, cr.firstCheckpoint, cr.lastCheckpoint)
 	}
 	return cr.checkpointsInfo.UnsafeItem(checkpoint - cr.firstCheckpoint), nil
-}
-
-func (cr *ChangesetReader) Changeset() *Changeset {
-	return cr.changeset
-}
-
-func (cr *ChangesetReader) Close() error {
-	errs := []error{
-		cr.kvDataReader.Close(),
-		cr.leavesData.Close(),
-		cr.branchesData.Close(),
-		cr.checkpointsInfo.Close(),
-	}
-	return errors.Join(errs...)
 }
 
 func (cr *ChangesetReader) ResolveByID(id NodeID) (Node, error) {
@@ -186,21 +172,35 @@ func (cr *ChangesetReader) LastCheckpoint() uint32 {
 	return cr.lastCheckpoint
 }
 
-// LatestCheckpointRoot returns the latest checkpoint root NodePointer and its version.
-// If there are no checkpoints with roots, (nil, 0) is returned.
-// If the latest checkpoint has an empty tree, (nil, version) is returned.
-func (cr *ChangesetReader) LatestCheckpointRoot() (CheckpointResolveInfo, bool) {
+// CheckpointRootInfo contains the resolved root NodePointer for a checkpoint along with the checkpoint's version and number.
+// If we could not resolve a checkpoint at all, Version will be zero.
+// If we resolved a checkpoint with an empty tree, Root will be nil but Version will be set to the checkpoint version.
+// Checkpoint should be non-zero whenever Version is non-zero.
+type CheckpointRootInfo struct {
+	Root       *NodePointer
+	Version    uint32
+	Checkpoint uint32
+}
+
+// LatestCheckpointRoot returns the latest checkpoint root in the changeset if one is available.
+// If there is no available checkpoint, CheckpointRootInfo.Version will be zero.
+func (cr *ChangesetReader) LatestCheckpointRoot() CheckpointRootInfo {
 	count := cr.checkpointsInfo.Count()
 	if count == 0 {
-		return CheckpointResolveInfo{}, false
+		return CheckpointRootInfo{}
 	}
 	return cr.LatestValidCheckpoint(cr.lastCheckpoint)
 }
 
 // LatestValidCheckpoint finds the latest checkpoint <= targetCheckpoint that has a root.
-func (cr *ChangesetReader) LatestValidCheckpoint(targetCheckpoint uint32) (CheckpointResolveInfo, bool) {
+// A valid checkpoint is considered to be one that has a root retained in the changeset,
+// where the root ID's checkpoint corresponds to the actual checkpoint.
+// If for example we have checkpoint 100, but its root ID has checkpoint number 99,
+// we actually need to navigate to checkpoint 99 to confirm that the root was retained.
+// If there is no available checkpoint, CheckpointRootInfo.Version will be zero.
+func (cr *ChangesetReader) LatestValidCheckpoint(targetCheckpoint uint32) CheckpointRootInfo {
 	if targetCheckpoint < cr.firstCheckpoint || targetCheckpoint > cr.lastCheckpoint {
-		return CheckpointResolveInfo{}, false
+		return CheckpointRootInfo{}
 	}
 	i := int(targetCheckpoint - cr.firstCheckpoint)
 	for ; i >= 0; i-- {
@@ -208,47 +208,59 @@ func (cr *ChangesetReader) LatestValidCheckpoint(targetCheckpoint uint32) (Check
 		rootID := info.RootID
 		if rootID.IsEmpty() {
 			// if root is empty, we have an empty tree at this checkpoint
-			return CheckpointResolveInfo{
+			return CheckpointRootInfo{
 				Version:    info.Version,
 				Checkpoint: info.Checkpoint,
-			}, true
+			}
 		}
-		if rootID.Checkpoint() != info.Checkpoint {
-			// if root ID checkpoint does not match, skip because this root is actually in a different checkpoint - we have a checkpoint with no changes
-			continue
+
+		// check if the root was retained in this changeset by looking at the bounds
+		// of the checkpoint where the root was actually created
+		rootCheckpoint := rootID.Checkpoint()
+		sourceInfo := info
+		if rootCheckpoint != info.Checkpoint {
+			// root is from a different checkpoint (no tree changes at this checkpoint),
+			// look up bounds from the root's source checkpoint
+			if rootCheckpoint >= cr.firstCheckpoint {
+				sourceInfo = cr.checkpointsInfo.UnsafeItem(rootCheckpoint - cr.firstCheckpoint)
+			} else {
+				// root's source checkpoint is not in this changeset (compacted away entirely)
+				// we likely don't have any valid checkpoint roots in this changeset,
+				// but we'll keep looking at earlier checkpoints just in case
+				continue
+			}
 		}
-		// check if the root was retained in this changeset, if it was compacted, maybe not
+
 		var nodeSetInfo *NodeSetInfo
 		if rootID.IsLeaf() {
-			nodeSetInfo = &info.Leaves
+			nodeSetInfo = &sourceInfo.Leaves
 		} else {
-			nodeSetInfo = &info.Branches
+			nodeSetInfo = &sourceInfo.Branches
 		}
 		idx := rootID.Index()
 		if idx < nodeSetInfo.StartIndex || idx > nodeSetInfo.EndIndex {
 			// root node was compacted away
+			// keep looking for an earlier checkpoint with a root that was retained
 			continue
 		}
-		return CheckpointResolveInfo{
+		return CheckpointRootInfo{
 			Root: &NodePointer{
 				id:        rootID,
 				changeset: cr.changeset,
 			},
 			Version:    info.Version,
 			Checkpoint: info.Checkpoint,
-		}, true
+		}
 	}
-	return CheckpointResolveInfo{}, false
+	return CheckpointRootInfo{}
 }
 
 // CheckpointForVersion finds the nearest checkpoint <= targetVersion that has a root.
-// If found, it returns the root NodePointer, the checkpoint version and checkpoint number.
-// If no such checkpoint exists, nil is returned.
-// If the checkpoint has an empty tree, a checkpointResolveInfo with nil root and the checkpoint version and number is returned.
-func (cr *ChangesetReader) CheckpointForVersion(targetVersion uint32) (CheckpointResolveInfo, bool) {
+// If there is no available checkpoint in this changeset, CheckpointRootInfo.Version will be zero.
+func (cr *ChangesetReader) CheckpointForVersion(targetVersion uint32) CheckpointRootInfo {
 	count := cr.checkpointsInfo.Count()
 	if count == 0 {
-		return CheckpointResolveInfo{}, false
+		return CheckpointRootInfo{}
 	}
 
 	// binary search for nearest checkpoint <= targetVersion
@@ -272,68 +284,27 @@ func (cr *ChangesetReader) CheckpointForVersion(targetVersion uint32) (Checkpoin
 
 	if resultCheckpoint == 0 {
 		// no checkpoint found <= targetVersion
-		return CheckpointResolveInfo{}, false
+		return CheckpointRootInfo{}
 	}
 
 	return cr.LatestValidCheckpoint(resultCheckpoint)
 }
 
-//func (cr *Changeset) TotalBytes() int {
-//	return cr.leavesData.TotalBytes() +
-//		cr.branchesData.TotalBytes() +
-//		cr.kvLog.TotalBytes() +
-//		cr.versionsData.TotalBytes()
-//}
-//
-//func (cr *Changeset) HasOrphans() bool {
-//	info := cr.info
-//	return info.LeafOrphans > 0 || info.BranchOrphans > 0
-//}
-//
-//func (cr *Changeset) ResolveRoot(version uint32) (*NodePointer, error) {
-//	startVersion := cr.info.StartVersion
-//	endVersion := startVersion + uint32(cr.versionsData.Count()) - 1
-//	if version < startVersion || version > endVersion {
-//		return nil, fmt.Errorf("version %d out of range for changeset (have %d..%d)", version, startVersion, endVersion)
-//	}
-//	vi, err := cr.getVersionInfo(version)
-//	if err != nil {
-//		return nil, err
-//	}
-//	if vi.RootID == 0 {
-//		// empty tree
-//		return nil, nil
-//	}
-//	return &NodePointer{
-//		id:    vi.RootID,
-//		store: cr,
-//	}, nil
-//}
+func (cr *ChangesetReader) TotalBytes() int {
+	return cr.leavesData.TotalBytes() +
+		cr.branchesData.TotalBytes() +
+		cr.checkpointsInfo.TotalBytes() +
+		cr.kvDataReader.Len() +
+		cr.walReader.Len()
+}
 
-//var ErrDisposed = errors.New("changeset disposed")
-
-//
-//func (cr *Changeset) ReadyToCompact(orphanPercentTarget float64, orphanAgeTarget uint32) bool {
-//	info := cr.info
-//	leafOrphanCount := info.LeafOrphans
-//	if leafOrphanCount > 0 {
-//		leafOrphanPercent := float64(leafOrphanCount) / float64(cr.leavesData.Count())
-//		leafOrphanAge := uint32(info.LeafOrphanVersionTotal / uint64(info.LeafOrphans))
-//
-//		if leafOrphanPercent >= orphanPercentTarget && leafOrphanAge <= orphanAgeTarget {
-//			return true
-//		}
-//	}
-//
-//	branchOrphanCount := info.BranchOrphans
-//	if branchOrphanCount > 0 {
-//		branchOrphanPercent := float64(branchOrphanCount) / float64(cr.branchesData.Count())
-//		branchOrphanAge := uint32(info.BranchOrphanVersionTotal / uint64(info.BranchOrphans))
-//		if branchOrphanPercent >= orphanPercentTarget && branchOrphanAge <= orphanAgeTarget {
-//			return true
-//		}
-//	}
-//
-//	return false
-//}
-//
+func (cr *ChangesetReader) Close() error {
+	errs := []error{
+		cr.leavesData.Close(),
+		cr.branchesData.Close(),
+		cr.checkpointsInfo.Close(),
+		cr.kvDataReader.Close(),
+		cr.walReader.Close(),
+	}
+	return errors.Join(errs...)
+}

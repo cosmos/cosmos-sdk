@@ -235,6 +235,17 @@ func (c *Compactor) doAddChangeset(reader *ChangesetReader) error {
 			c.offsetCache[id] = uint32(c.branchesWriter.Count())
 		}
 
+		if newBranchCount == 0 && newLeafCount == 0 && c.cpInfoWriter.Count() == 0 {
+			// This checkpoint is now empty and since we haven't written any checkpoints yet,
+			// so we can skip writing this checkpoint info, essentially pruning it entirely from the compacted changeset.
+			// For now, if we have saved any existing checkpoints, we continue to
+			// write empty checkpoints so that checkpoint lookup is always O(1) (based on offset from first checkpoint).
+			// In the future we could consider optimizations to skip writing empty checkpoints and do binary search
+			// if we end up with lots of empty checkpoints after compaction.
+			// Likely the storage overhead is minimal, and we don't need to optimize this.
+			continue
+		}
+
 		cpInfo = &CheckpointInfo{
 			Leaves: NodeSetInfo{
 				StartIndex:  newLeafStartIdx,

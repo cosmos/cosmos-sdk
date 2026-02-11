@@ -145,8 +145,8 @@ func (cp *Checkpointer) proc() error {
 }
 
 // LatestCheckpointRoot returns the root node pointer and version of the latest saved checkpoint.
-// If there are no saved checkpoints, a zero-value CheckpointResolveInfo is returned.
-func (cp *Checkpointer) LatestCheckpointRoot() (res CheckpointResolveInfo, err error) {
+// If there are no saved checkpoints, a zero-value CheckpointRootInfo is returned.
+func (cp *Checkpointer) LatestCheckpointRoot() (res CheckpointRootInfo, err error) {
 	cp.changesetLock.RLock()
 	defer cp.changesetLock.RUnlock()
 	cp.changesetsByCheckpoint.Descend(cp.LatestSavedCheckpoint(), func(checkpoint uint32, cs *Changeset) bool {
@@ -156,12 +156,12 @@ func (cp *Checkpointer) LatestCheckpointRoot() (res CheckpointResolveInfo, err e
 			err = fmt.Errorf("changeset reader is not available for latest checkpoint %d", checkpoint)
 			return false
 		}
-		var found bool
-		res, found = rdr.LatestCheckpointRoot()
-		if found {
+		res = rdr.LatestCheckpointRoot()
+		if res.Version != 0 {
+			// we found a checkpoint with a valid root, stop iterating and return it
 			return false
 		}
-		// continue searching for an earlier checkpoint with a root
+		// continue earlier checkpoints for a valid root
 		return true
 	})
 	return
@@ -179,10 +179,4 @@ type checkpointReq struct {
 	checkpoint      uint32
 	seal            bool
 	nodeIdsAssigned chan struct{}
-}
-
-type CheckpointResolveInfo struct {
-	Root       *NodePointer
-	Version    uint32
-	Checkpoint uint32
 }

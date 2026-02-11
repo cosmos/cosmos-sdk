@@ -57,7 +57,6 @@ type storeData struct {
 }
 
 func (db *CommitMultiTree) StartCommit(ctx context.Context, store storetypes.MultiStore, header cmtproto.Header) (storetypes.CommitFinalizer, error) {
-	// TODO add mutex if needed
 	multiTree, ok := store.(*internal.MultiTree)
 	if !ok {
 		return nil, fmt.Errorf("expected MultiTree, got %T", store)
@@ -874,6 +873,9 @@ func (db *CommitMultiTree) pruneIfNeeded() {
 		ctx, span := tracer.Start(context.Background(), "CommitMultiTree.Prune")
 		defer span.End()
 		defer db.pruningActive.Store(false)
+
+		// TODO delete old commit infos
+
 		for _, si := range db.iavlStores {
 			ctx, span := tracer.Start(ctx, "PruneStore",
 				trace.WithAttributes(

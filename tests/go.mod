@@ -11,7 +11,6 @@ require (
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/simapp v0.0.0-20230620040119-e078f1a49e8b
 	cosmossdk.io/store v1.3.0-beta.0
-	cosmossdk.io/x/tx v0.14.0
 	github.com/cometbft/cometbft v0.39.0-beta.2
 	github.com/cosmos/cosmos-db v1.1.3
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
@@ -264,18 +263,16 @@ require (
 
 // Here are the short-lived replace from the SimApp
 // Replace here are pending PRs, or version to be tagged
-// replace (
-// 	<temporary replace>
-// )
+replace (
+	cosmossdk.io/client/v2 => ../client/v2
+	cosmossdk.io/store => ../store
+)
 
 // Below are the long-lived replace for tests.
 replace (
-	cosmossdk.io/api => ../api
-	cosmossdk.io/log/v2 => ../log
 	// We always want to test against the latest version of the simapp.
 	cosmossdk.io/simapp => ../simapp
-	cosmossdk.io/store => ../store
-	cosmossdk.io/x/tx => ../x/tx
+
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// We always want to test against the latest version of the SDK.
 	github.com/cosmos/cosmos-sdk => ../.

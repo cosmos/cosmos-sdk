@@ -60,33 +60,3 @@ func (ow *OrphanWriter) WriteOrphan(version uint32, id NodeID) error {
 	}
 	return nil
 }
-
-/*func ReadOrphanLog(file *os.File) (map[NodeID]uint32, error) {
-	file2, err := os.Open(file.Name())
-	if err != nil {
-		return nil, fmt.Errorf("failed to open orphan file for reading: %w", err)
-	}
-	orphanMap := make(map[NodeID]uint32)
-	rdr := bufio.NewReader(file2)
-	var buf [12]byte
-	for {
-		_, err := rdr.Read(buf[:])
-		if err != nil {
-			if err == io.EOF {
-				return orphanMap, nil
-			}
-			return nil, err
-		}
-		version := binary.LittleEndian.Uint32(buf[0:4])
-		nodeCheckpoint := binary.LittleEndian.Uint32(buf[4:8])
-		flagIndex := binary.LittleEndian.Uint32(buf[8:12])
-		id := NodeID{
-			flagIndex:  nodeFlagIndex(flagIndex),
-			checkpoint: nodeCheckpoint,
-		}
-		if _, exists := orphanMap[id]; !exists {
-			orphanMap[id] = version
-		}
-	}
-}
-*/

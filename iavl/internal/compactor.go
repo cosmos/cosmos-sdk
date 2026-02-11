@@ -21,14 +21,13 @@ type Compactor struct {
 	processedChangesets []pendingCompactionEntry
 	treeStore           *TreeStore
 
-	originalKvLogPath string
-	files             *ChangesetFiles
-	leavesWriter      *StructWriter[LeafLayout]
-	branchesWriter    *StructWriter[BranchLayout]
-	cpInfoWriter      *StructWriter[CheckpointInfo]
-	walWriter         *WALWriter
-	kvlogWriter       *KVDataWriter
-	orphanWriter      *OrphanWriter
+	files          *ChangesetFiles
+	leavesWriter   *StructWriter[LeafLayout]
+	branchesWriter *StructWriter[BranchLayout]
+	cpInfoWriter   *StructWriter[CheckpointInfo]
+	walWriter      *WALWriter
+	kvlogWriter    *KVDataWriter
+	orphanWriter   *OrphanWriter
 
 	// offsetCache holds the updated 1-based offsets of nodes affected by compacting.
 	// these are then used to update BranchLayout's left and right offsets.
@@ -79,8 +78,19 @@ func NewCompactor(ctx context.Context, reader *ChangesetReader, opts CompactOpti
 
 	return c, nil
 }
-
 func (c *Compactor) AddChangeset(reader *ChangesetReader) error {
+	err := c.doAddChangeset(reader)
+	if err != nil {
+		abortErr := c.Abort()
+		if abortErr != nil {
+			return fmt.Errorf("failed to add changeset to compactor: %v; additionally failed to abort compactor during cleanup: %w", err, abortErr)
+		}
+		return fmt.Errorf("failed to add changeset to compactor: %w", err)
+	}
+	return nil
+}
+
+func (c *Compactor) doAddChangeset(reader *ChangesetReader) error {
 	walRewriteInfo, err := RewriteWAL(c.walWriter, reader.changeset.files.WALFile(), uint64(c.walStartVersion))
 	if err != nil {
 		return fmt.Errorf("failed to rewrite WAL during compaction: %w", err)
@@ -250,6 +260,18 @@ func (c *Compactor) AddChangeset(reader *ChangesetReader) error {
 }
 
 func (c *Compactor) Seal() (*Changeset, error) {
+	cs, err := c.doSeal()
+	if err != nil {
+		abortErr := c.Abort()
+		if abortErr != nil {
+			return nil, fmt.Errorf("failed to seal compactor: %v; additionally failed to abort compactor during cleanup: %w", err, abortErr)
+		}
+		return nil, fmt.Errorf("failed to seal compactor: %w", err)
+	}
+	return cs, nil
+}
+
+func (c *Compactor) doSeal() (*Changeset, error) {
 	if len(c.processedChangesets) == 0 {
 		return nil, fmt.Errorf("no changesets processed")
 	}
@@ -344,17 +366,13 @@ func (c *Compactor) updateChangesetCheckpointEntries(newCs *Changeset) error {
 	return nil
 }
 
-//
-//func (c *Compactor) Abort() error {
-//	err := c.files.Close()
-//	if err != nil {
-//		return fmt.Errorf("failed to close compactor files during cleanup: %w", err)
-//	}
-//	return c.files.DeleteFiles(ChangesetDeleteArgs{
-//		SaveKVLogPath: c.originalKvLogPath,
-//	})
-//}
-//
+func (c *Compactor) Abort() error {
+	err := c.files.Close()
+	if err != nil {
+		return fmt.Errorf("failed to close compactor files during cleanup: %w", err)
+	}
+	return c.files.DeleteFiles()
+}
 
 func (c *Compactor) TotalBytes() int {
 	total := c.leavesWriter.Size() + c.branchesWriter.Size() + c.cpInfoWriter.Size()

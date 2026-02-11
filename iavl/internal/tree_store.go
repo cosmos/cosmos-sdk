@@ -60,9 +60,12 @@ func NewTreeStore(dir string, opts TreeStoreOptions) (*TreeStore, error) {
 			// default ttl of 5 seconds
 			ttlcache.WithTTL[uint32, *NodePointer](opts.RootCacheExpiry),
 		),
+		cleanupProc: newCleanupProc(),
 	}
 	// start automatic cache cleanup
 	go ts.rootByVersionCache.Start()
+	// start cleanup proc
+	ts.cleanupProc.Start(context.Background())
 
 	err := ts.load()
 	if err != nil {
@@ -323,9 +326,10 @@ func (ts *TreeStore) Close() error {
 	errs := []error{
 		ts.checkpointer.Close(),
 		ts.currentWriter.Seal(),
+		ts.cleanupProc.Close(),
 	}
 	ts.changesetsByVersion.Ascend(0, func(version uint32, cs *Changeset) bool {
-		errs = append(errs, cs.files.Close())
+		errs = append(errs, cs.Close())
 		return true
 	})
 	ts.rootByVersionCache.Stop() // stop automatic cache cleanup
@@ -333,11 +337,11 @@ func (ts *TreeStore) Close() error {
 }
 
 func (ts *TreeStore) addToDisposalQueue(existing *ChangesetReaderRef) {
-	// TODO
+	ts.cleanupProc.AddDisposal(existing)
 }
 
 func (ts *TreeStore) addToDeletionQueue(ch *Changeset) {
-	// TODO
+	ts.cleanupProc.AddDeletion(ch)
 }
 
 const memNodeOverhead = int64(unsafe.Sizeof(MemNode{})) + int64(unsafe.Sizeof(NodePointer{}))*2 + 32 /* hash size */

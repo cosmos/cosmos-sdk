@@ -29,22 +29,27 @@ func NewChangesetWriter(treeDir string, stagedVersion uint32, treeStore *TreeSto
 		return nil, fmt.Errorf("failed to open changeset files: %w", err)
 	}
 
-	cs := &ChangesetWriter{
+	cs, err := NewChangeset(treeStore, files)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create changeset: %w", err)
+	}
+
+	cw := &ChangesetWriter{
 		files:           files,
 		walWriter:       NewWALWriter(files.WALFile()),
 		kvWriter:        NewKVDataWriter(files.KVDataFile()),
 		branchesData:    NewStructWriter[BranchLayout](files.BranchesFile()),
 		leavesData:      NewStructWriter[LeafLayout](files.LeavesFile()),
 		checkpointsData: NewStructWriter[CheckpointInfo](files.CheckpointsFile()),
-		changeset:       NewChangeset(treeStore, files),
+		changeset:       cs,
 	}
 	// Create an initial reader so the changeset is immediately readable (with zero entries).
 	// This avoids a race where the changeset is in the version map but has no reader
 	// because the async checkpointer hasn't called CreateReader() yet.
-	if err := cs.CreateReader(); err != nil {
+	if err := cw.CreateReader(); err != nil {
 		return nil, fmt.Errorf("failed to create initial changeset reader: %w", err)
 	}
-	return cs, nil
+	return cw, nil
 }
 
 func (cs *ChangesetWriter) Changeset() *Changeset {

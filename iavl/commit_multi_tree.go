@@ -887,7 +887,7 @@ func (db *CommitMultiTree) pruneIfNeeded() {
 			}
 			err := ct.Prune(ctx, db.pruningOptions)
 			if err != nil {
-				logger.Error("failed to prune store %s: %v", si.key.Name(), err)
+				logger.Error(fmt.Sprintf("failed to prune store %s: %v", si.key.Name(), err))
 				continue
 			}
 			span.End()

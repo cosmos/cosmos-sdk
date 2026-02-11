@@ -3,6 +3,9 @@ package internal
 import (
 	"context"
 	"fmt"
+
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type CompactorProc struct {
@@ -19,11 +22,16 @@ func NewCompactorProc(treeStore *TreeStore, options PruneOptions) *CompactorProc
 }
 
 func (cp *CompactorProc) StartCompactionRun(ctx context.Context) error {
+	ctx, span := tracer.Start(ctx, "CompactorProc.StartCompactionRun")
+	defer span.End()
+
 	// collect current entries
 	toProcess := make([]*Changeset, 0, cp.treeStore.changesetsByVersion.Len())
 	cp.treeStore.changesetsLock.RLock()
 	cp.treeStore.changesetsByVersion.Ascend(0, func(_ uint32, cs *Changeset) bool {
-		toProcess = append(toProcess, cs)
+		if cs.sealed.Load() {
+			toProcess = append(toProcess, cs)
+		}
 		return true
 	})
 	cp.treeStore.changesetsLock.RUnlock()
@@ -78,6 +86,13 @@ func (cp *CompactorProc) StartCompactionRun(ctx context.Context) error {
 }
 
 func (cp *CompactorProc) compactOne(ctx context.Context, cs *Changeset, opts CompactOptions) error {
+	ctx, span := tracer.Start(ctx, "CompactorProc.compactOne",
+		trace.WithAttributes(
+			attribute.String("changesetDir", cs.Files().Dir()),
+		),
+	)
+	defer span.End()
+
 	rdr, pin := cs.TryPinReader()
 	defer pin.Unpin()
 	if rdr == nil {
@@ -97,7 +112,7 @@ func (cp *CompactorProc) compactOne(ctx context.Context, cs *Changeset, opts Com
 		}
 	}
 
-	if cp.curCompactor.TotalBytes() > compactionRolloverSize {
+	if cp.curCompactor.TotalBytes() > cp.options.CompactionRolloverSize {
 		_, err := cp.curCompactor.Seal()
 		if err != nil {
 			return fmt.Errorf("failed to seal compactor after reaching rollover size: %w", err)
@@ -108,5 +123,3 @@ func (cp *CompactorProc) compactOne(ctx context.Context, cs *Changeset, opts Com
 
 	return nil
 }
-
-const compactionRolloverSize = 4 * 1024 * 1024 * 1024 // 4GB

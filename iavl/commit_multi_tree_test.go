@@ -13,6 +13,7 @@ import (
 	"pgregory.net/rapid"
 
 	storemetrics "cosmossdk.io/store/metrics"
+	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/rootmulti"
 	store "cosmossdk.io/store/types"
 )
@@ -62,10 +63,24 @@ func TestCommitMultiTree_Reload(t *testing.T) {
 }
 
 func TestCommitMultiTreeSims(t *testing.T) {
-	rapid.Check(t, testCommitMultiTreeSims)
+	rapid.Check(t, func(t *rapid.T) {
+		testCommitMultiTreeSims(t, Options{
+			// intentionally choose some small sizes to force checkpoint and eviction behavior
+			ChangesetRolloverSize:  4096,
+			CompactionRolloverSize: 4096,
+			EvictDepth:             2,
+			CheckpointInterval:     2,
+			// use only a small cache for testing
+			RootCacheSize:   2,
+			RootCacheExpiry: 5, // 5 milliseconds
+		}, pruningtypes.PruningOptions{
+			KeepRecent: 5,
+			Interval:   2,
+		})
+	})
 }
 
-func testCommitMultiTreeSims(t *rapid.T) {
+func testCommitMultiTreeSims(t *rapid.T, opts Options, pruningOpts pruningtypes.PruningOptions) {
 	logger := sdklog.NewNopLogger()
 	dbV1 := dbm.NewMemDB()
 	mtV1 := rootmulti.NewStore(dbV1, logger, storemetrics.NewNoOpMetrics())
@@ -75,13 +90,15 @@ func testCommitMultiTreeSims(t *rapid.T) {
 	defer os.RemoveAll(tempDir)
 
 	sim := &SimCommitMultiTree{
-		mtV1:       mtV1,
-		dirV2:      tempDir,
-		kv1:        store.NewKVStoreKey("kv1"),
-		kv2:        store.NewKVStoreKey("kv2"),
-		kv3:        store.NewKVStoreKey("kv3"),
-		mem1:       store.NewMemoryStoreKey("mem1"),
-		transient1: store.NewTransientStoreKey("transient1"),
+		mtV1:        mtV1,
+		dirV2:       tempDir,
+		kv1:         store.NewKVStoreKey("kv1"),
+		kv2:         store.NewKVStoreKey("kv2"),
+		kv3:         store.NewKVStoreKey("kv3"),
+		mem1:        store.NewMemoryStoreKey("mem1"),
+		transient1:  store.NewTransientStoreKey("transient1"),
+		opts:        opts,
+		pruningOpts: pruningOpts,
 	}
 	sim.storeKeys = []store.StoreKey{sim.kv1, sim.kv2, sim.kv3, sim.mem1, sim.transient1}
 	sim.kvStoreKeys = []store.StoreKey{sim.kv1, sim.kv2, sim.kv3}
@@ -112,19 +129,14 @@ type SimCommitMultiTree struct {
 	storeKeys     []store.StoreKey
 	kvStoreKeys   []store.StoreKey
 	keyGens       []*keyGen
+	opts          Options
+	pruningOpts   pruningtypes.PruningOptions
 }
 
 func (sim *SimCommitMultiTree) openV2Tree(t *rapid.T) {
 	var err error
-	sim.mtV2, err = LoadCommitMultiTree(sim.dirV2, Options{
-		// intentionally choose some small sizes to force checkpoint and eviction behavior
-		ChangesetRolloverSize: 4096,
-		EvictDepth:            2,
-		CheckpointInterval:    2,
-		// use only a small cache for testing
-		RootCacheSize:   2,
-		RootCacheExpiry: 5, // 5 milliseconds
-	})
+	sim.mtV2, err = LoadCommitMultiTree(sim.dirV2, sim.opts)
+	sim.mtV2.SetPruning(sim.pruningOpts)
 	require.NoError(t, err, "failed to create iavlx commit multi tree")
 	sim.mountStores(sim.mtV2)
 	require.NoError(t, sim.mtV2.LoadLatestVersion())
@@ -203,7 +215,13 @@ func (sim *SimCommitMultiTree) checkNewVersion(t *rapid.T) {
 	// optionally check history by reopening old versions
 	checkHistory := rapid.Bool().Draw(t, "checkHistory")
 	if checkHistory && commitId1.Version > 1 {
-		historyVersion := rapid.IntRange(1, int(commitId1.Version-1)).Draw(t, "historyVersion")
+		latestVersion := int(commitId1.Version - 1)
+		oldestVersion := 1
+		keepWindow := latestVersion - int(sim.pruningOpts.KeepRecent)
+		if keepWindow > oldestVersion {
+			oldestVersion = keepWindow
+		}
+		historyVersion := rapid.IntRange(oldestVersion, latestVersion).Draw(t, "historyVersion")
 
 		historyMs1, err := sim.mtV1.CacheMultiStoreWithVersion(int64(historyVersion))
 		require.NoError(t, err, "failed to load historical version from V1 store")

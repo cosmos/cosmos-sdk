@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"context"
 	"fmt"
 	"sync/atomic"
 )
@@ -65,23 +66,6 @@ func (ch *Changeset) TreeStore() *TreeStore {
 	return ch.treeStore
 }
 
-//func (ch *Changeset) LoadRoot(version uint32) (*NodePointer, error) {
-//	rdr, pin := ch.TryPinReader()
-//	defer pin.Unpin()
-//	if rdr == nil {
-//		return nil, fmt.Errorf("changeset reader is not available")
-//	}
-//	cpVersion, cpRoot, err := rdr.FindNearestCheckpoint(version)
-//	if err != nil {
-//		return nil, fmt.Errorf("failed to find nearest checkpoint for version %d: %w", version, err)
-//	}
-//	if cpVersion == version {
-//		return cpRoot, nil
-//	}
-//
-//	return ReplayWAL(context.Background(), cpRoot, ch.files.WALFile(), cpVersion, version)
-//}
-
 func (ch *Changeset) OpenNewReader() error {
 	newRdr, err := NewChangesetReader(ch)
 	if err != nil {
@@ -97,25 +81,6 @@ func (ch *Changeset) OpenNewReader() error {
 		existing.Evict()
 	}
 	ch.activeReaderCount.Add(1)
-	return nil
-}
-
-func (ch *Changeset) MarkOrphan(version uint32, nodeId NodeID) error {
-	err := ch.orphanWriter.WriteOrphan(version, nodeId)
-	if err != nil {
-		return fmt.Errorf("failed to write orphan node: %w", err)
-	}
-
-	// TODO track orphan stats
-	//info := ch.files.info
-	//if nodeId.IsLeaf() {
-	//	info.LeafOrphans++
-	//	info.LeafOrphanVersionTotal += uint64(version)
-	//} else {
-	//	info.BranchOrphans++
-	//	info.BranchOrphanVersionTotal += uint64(version)
-	//}
-
 	return nil
 }
 
@@ -154,7 +119,7 @@ func (ch *Changeset) OrphanWriter() *OrphanWriter {
 	return ch.orphanWriter
 }
 
-func (ch *Changeset) TryDelete() (bool, error) {
+func (ch *Changeset) TryDelete(ctx context.Context) (bool, error) {
 	if ch.compacted.Load() == nil {
 		// not compacted yet
 		return false, nil
@@ -163,5 +128,6 @@ func (ch *Changeset) TryDelete() (bool, error) {
 		// readers still active, can't delete yet
 		return false, nil
 	}
+	logger.InfoContext(ctx, "deleting changeset", "dir", ch.files.Dir())
 	return true, ch.files.DeleteFiles()
 }

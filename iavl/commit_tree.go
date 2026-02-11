@@ -418,8 +418,13 @@ func (c *CommitTree) Close() error {
 }
 
 func (c *CommitTree) Prune(ctx context.Context, options pruningtypes.PruningOptions) error {
+	compactionRolloverSize := c.opts.CompactionRolloverSize
+	if compactionRolloverSize == 0 {
+		compactionRolloverSize = 4 * 1024 * 1024 * 1024 // 4GB default
+	}
 	cp := internal.NewCompactorProc(c.treeStore, internal.PruneOptions{
-		KeepRecent: uint32(options.KeepRecent),
+		KeepRecent:             uint32(options.KeepRecent),
+		CompactionRolloverSize: compactionRolloverSize,
 	})
 	return cp.StartCompactionRun(ctx)
 }

@@ -457,7 +457,7 @@ func TestSTMRunner_Integration(t *testing.T) {
 		if txIndex < blk.Size() {
 			// Convert multistore wrapper to MultiStore for block execution
 			if wrapper, ok := mstore.(msWrapper); ok {
-				blk.ExecuteTx(TxnIndex(txIndex), wrapper.MultiStore)
+				blk.ExecuteTx(TxnIndex(txIndex), wrapper.MultiStore, cache)
 			}
 		}
 		return &abci.ExecTxResult{Code: 0}

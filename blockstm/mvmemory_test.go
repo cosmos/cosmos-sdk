@@ -16,8 +16,6 @@ func TestMVMemoryRecord(t *testing.T) {
 
 	var views []*MultiMVMemoryView
 	for i := TxnIndex(0); i < 3; i++ {
-		scheduler.txnStatus[i].TrySetExecuting()
-
 		view := mv.View(i)
 		store := view.GetKVStore(StoreKeyAuth)
 
@@ -45,6 +43,9 @@ func TestMVMemoryRecord(t *testing.T) {
 
 	resultCh := make(chan struct{}, 1)
 	go func() {
+		// set correct status for the Suspend call
+		scheduler.TryIncarnate(3)
+
 		view := mv.View(3)
 		store := view.GetKVStore(StoreKeyAuth)
 		// will wait for tx 2

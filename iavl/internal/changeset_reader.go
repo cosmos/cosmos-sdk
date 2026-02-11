@@ -189,18 +189,18 @@ func (cr *ChangesetReader) LastCheckpoint() uint32 {
 // LatestCheckpointRoot returns the latest checkpoint root NodePointer and its version.
 // If there are no checkpoints with roots, (nil, 0) is returned.
 // If the latest checkpoint has an empty tree, (nil, version) is returned.
-func (cr *ChangesetReader) LatestCheckpointRoot() *CheckpointResolveInfo {
+func (cr *ChangesetReader) LatestCheckpointRoot() (CheckpointResolveInfo, bool) {
 	count := cr.checkpointsInfo.Count()
 	if count == 0 {
-		return nil
+		return CheckpointResolveInfo{}, false
 	}
 	return cr.LatestValidCheckpoint(cr.lastCheckpoint)
 }
 
 // LatestValidCheckpoint finds the latest checkpoint <= targetCheckpoint that has a root.
-func (cr *ChangesetReader) LatestValidCheckpoint(targetCheckpoint uint32) *CheckpointResolveInfo {
+func (cr *ChangesetReader) LatestValidCheckpoint(targetCheckpoint uint32) (CheckpointResolveInfo, bool) {
 	if targetCheckpoint < cr.firstCheckpoint || targetCheckpoint > cr.lastCheckpoint {
-		return nil
+		return CheckpointResolveInfo{}, false
 	}
 	i := int(targetCheckpoint - cr.firstCheckpoint)
 	for ; i >= 0; i-- {
@@ -208,11 +208,10 @@ func (cr *ChangesetReader) LatestValidCheckpoint(targetCheckpoint uint32) *Check
 		rootID := info.RootID
 		if rootID.IsEmpty() {
 			// if root is empty, we have an empty tree at this checkpoint
-			return &CheckpointResolveInfo{
-				Root:       nil,
+			return CheckpointResolveInfo{
 				Version:    info.Version,
 				Checkpoint: info.Checkpoint,
-			}
+			}, true
 		}
 		if rootID.Checkpoint() != info.Checkpoint {
 			// if root ID checkpoint does not match, skip because this root is actually in a different checkpoint - we have a checkpoint with no changes
@@ -230,26 +229,26 @@ func (cr *ChangesetReader) LatestValidCheckpoint(targetCheckpoint uint32) *Check
 			// root node was compacted away
 			continue
 		}
-		return &CheckpointResolveInfo{
+		return CheckpointResolveInfo{
 			Root: &NodePointer{
 				id:        rootID,
 				changeset: cr.changeset,
 			},
 			Version:    info.Version,
 			Checkpoint: info.Checkpoint,
-		}
+		}, true
 	}
-	return nil
+	return CheckpointResolveInfo{}, false
 }
 
 // CheckpointForVersion finds the nearest checkpoint <= targetVersion that has a root.
 // If found, it returns the root NodePointer, the checkpoint version and checkpoint number.
 // If no such checkpoint exists, nil is returned.
 // If the checkpoint has an empty tree, a checkpointResolveInfo with nil root and the checkpoint version and number is returned.
-func (cr *ChangesetReader) CheckpointForVersion(targetVersion uint32) *CheckpointResolveInfo {
+func (cr *ChangesetReader) CheckpointForVersion(targetVersion uint32) (CheckpointResolveInfo, bool) {
 	count := cr.checkpointsInfo.Count()
 	if count == 0 {
-		return nil
+		return CheckpointResolveInfo{}, false
 	}
 
 	// binary search for nearest checkpoint <= targetVersion
@@ -273,7 +272,7 @@ func (cr *ChangesetReader) CheckpointForVersion(targetVersion uint32) *Checkpoin
 
 	if resultCheckpoint == 0 {
 		// no checkpoint found <= targetVersion
-		return nil
+		return CheckpointResolveInfo{}, false
 	}
 
 	return cr.LatestValidCheckpoint(resultCheckpoint)

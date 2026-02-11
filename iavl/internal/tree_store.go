@@ -272,30 +272,30 @@ func (ts *TreeStore) loadRootAtVersion(ctx context.Context, targetVersion uint32
 	}
 }
 
-func (ts *TreeStore) checkpointForVersion(version uint32) (info *CheckpointResolveInfo, err error) {
+func (ts *TreeStore) checkpointForVersion(version uint32) (CheckpointResolveInfo, error) {
 	for {
 		changeset := ts.changesetForVersion(version)
 		if changeset == nil {
-			return nil, fmt.Errorf("no changeset found for version %d", version)
+			return CheckpointResolveInfo{}, fmt.Errorf("no changeset found for version %d", version)
 		}
 		rdr, pin := changeset.TryPinReader()
 		if rdr == nil {
 			pin.Unpin()
-			return nil, fmt.Errorf("changeset reader is not available for version %d", version)
+			return CheckpointResolveInfo{}, fmt.Errorf("changeset reader is not available for version %d", version)
 		}
 
-		res := rdr.CheckpointForVersion(version)
+		res, found := rdr.CheckpointForVersion(version)
 		pin.Unpin()
 
-		if res != nil {
+		if found {
 			return res, nil
 		}
 
 		startVersion := changeset.Files().StartVersion()
 		if startVersion <= 1 {
-			// we're at the beginning of history, return empty tree at version 0
+			// beginning of history, return zero value (empty tree at version 0)
 			// so the caller can replay the WAL from the start
-			return &CheckpointResolveInfo{}, nil
+			return CheckpointResolveInfo{}, nil
 		}
 		// try an earlier changeset
 		version = startVersion - 1

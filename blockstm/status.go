@@ -50,6 +50,21 @@ func (s *StatusEntry) IsExecuted() (incarnation Incarnation, ok bool) {
 	return incarnation, ok
 }
 
+// ExecutedOnce returns true iff the transaction has executed at least once,
+// default to false if the lock cannot be acquired.
+func (s *StatusEntry) ExecutedOnce() bool {
+	if !s.TryLock() {
+		return false
+	}
+
+	ok := s.incarnation > 0 ||
+		s.status == StatusExecuted ||
+		s.status == StatusAborting
+
+	s.Unlock()
+	return ok
+}
+
 func (s *StatusEntry) TrySetExecuting() (incarnation Incarnation, ok bool) {
 	s.Lock()
 
@@ -86,6 +101,12 @@ func (s *StatusEntry) Resume() {
 
 	if s.status != StatusSuspended || s.cond == nil {
 		return
+	}
+
+	// status must be SUSPENDED and cond != nil
+	if s.status != StatusSuspended || s.cond == nil {
+		s.Unlock()
+		panic(fmt.Sprintf("invalid resume: status=%v", s.status))
 	}
 
 	// status must be SUSPENDED and cond != nil

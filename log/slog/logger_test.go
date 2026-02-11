@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	stdslog "log/slog"
+	"strings"
 	"testing"
 
 	"cosmossdk.io/log/v2/slog"
@@ -12,7 +13,8 @@ import (
 func TestSlog(t *testing.T) {
 	var buf bytes.Buffer
 	h := stdslog.NewJSONHandler(&buf, &stdslog.HandlerOptions{
-		Level: stdslog.LevelDebug,
+		Level:     stdslog.LevelDebug,
+		AddSource: true,
 	})
 	logger := slog.NewCustomLogger(stdslog.New(h))
 
@@ -34,6 +36,11 @@ func TestSlog(t *testing.T) {
 		Num:   1,
 	}); want != line {
 		t.Fatalf("unexpected log record: want %v, got %v", want, line)
+	}
+
+	// make sure source info points to this function
+	if strings.Contains(buf.String(), "TestSlog") == false {
+		t.Fatalf("wrong source info in log record: %s", buf.String())
 	}
 
 	buf.Reset()

@@ -100,6 +100,14 @@ func (ts *TreeStore) load() error {
 		pin.Unpin()
 
 		// TODO remove older undeleted changesets after compaction
+		// remove older undeleted changesets after compaction
+		if compactionMap.Len() > 0 {
+			// TODO delete all changesets in compactionMap
+		}
+		endVersion := cs.Files().EndVersion()
+		if endVersion > 0 { // only true when we have a compacted changeset, otherwise endVersion is 0
+			// TODO delete everything in dirMap with startVersion <= endVersion, since those changesets have been compacted into this one
+		}
 	}
 
 	// get the changeset with the last checkpoint

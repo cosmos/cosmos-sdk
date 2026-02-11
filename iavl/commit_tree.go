@@ -212,6 +212,21 @@ func (c *commitTreeFinalizer) prepareCommit(ctx context.Context, updates iter.Se
 		walDone <- c.treeStore.WriteWALUpdates(ctx, nodeUpdates, !c.opts.DisableWALFsync)
 	}()
 
+	// Always wait for the WAL goroutine before returning. Without this, commit() calls
+	// RollbackWAL() while the WAL goroutine is still running — the old goroutine's late
+	// auto-rollback can destroy data written by the next successful commit.
+	// sync.Once gives us a single drain point: the happy path drains + records latency,
+	// the deferred call is a no-op (or drains on early error exits).
+	var walOnce sync.Once
+	var walErr error
+	waitForWAL := func() error {
+		walOnce.Do(func() {
+			walErr = <-walDone
+		})
+		return walErr
+	}
+	defer func() { _ = waitForWAL() }() // make sure we always wait for the WAL goroutine before returning, even on early error exits
+
 	// start computing hashes for leaf nodes in parallel
 	// this is a rather naive algorithm that assumes leaf nodes updates are evenly distributed
 	// if we see consistent latency here we can tune the algorithm
@@ -316,8 +331,7 @@ func (c *commitTreeFinalizer) prepareCommit(ctx context.Context, updates iter.Se
 	// wait for the WAL write to finish
 	startWaitForWAL := time.Now()
 
-	err = <-walDone
-	if err != nil {
+	if err := waitForWAL(); err != nil {
 		return nil, err
 	}
 

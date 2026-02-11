@@ -259,7 +259,9 @@ func (c *Compactor) doAddChangeset(reader *ChangesetReader) error {
 				StartOffset: newBranchStartOffset,
 				Count:       newBranchCount,
 			},
-			RootID: cpInfo.RootID,
+			Checkpoint: cpInfo.Checkpoint,
+			Version:    cpInfo.Version,
+			RootID:     cpInfo.RootID,
 		}
 
 		err := c.cpInfoWriter.Append(cpInfo)

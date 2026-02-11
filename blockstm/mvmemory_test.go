@@ -2,6 +2,7 @@ package blockstm
 
 import (
 	"testing"
+	"time"
 
 	"github.com/test-go/testify/require"
 
@@ -44,6 +45,8 @@ func TestMVMemoryRecord(t *testing.T) {
 
 	resultCh := make(chan struct{}, 1)
 	go func() {
+		scheduler.TryIncarnate(3)
+
 		view := mv.View(3)
 		store := view.GetKVStore(StoreKeyAuth)
 		// will wait for tx 2
@@ -53,6 +56,9 @@ func TestMVMemoryRecord(t *testing.T) {
 		require.True(t, mv.ValidateReadSet(3))
 		resultCh <- struct{}{}
 	}()
+
+	// let the goroutine to run and wait for it to block on tx 2
+	time.Sleep(100 * time.Millisecond)
 
 	{
 		data := mv.GetMVStore(0).(*MVData)

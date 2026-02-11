@@ -2,6 +2,7 @@ package blockstm
 
 import (
 	"testing"
+	"time"
 
 	"github.com/test-go/testify/require"
 
@@ -55,6 +56,9 @@ func TestMVMemoryRecord(t *testing.T) {
 		require.True(t, mv.ValidateReadSet(3))
 		resultCh <- struct{}{}
 	}()
+
+	// meke sure the goroutine runs first to suspend
+	time.Sleep(100 * time.Millisecond)
 
 	{
 		data := mv.GetMVStore(0).(*MVData)

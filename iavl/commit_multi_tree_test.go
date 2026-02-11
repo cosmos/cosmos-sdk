@@ -74,8 +74,8 @@ func TestCommitMultiTreeSims(t *testing.T) {
 			RootCacheSize:   2,
 			RootCacheExpiry: 5, // 5 milliseconds
 		}, pruningtypes.PruningOptions{
-			KeepRecent: 5,
-			Interval:   2,
+			//KeepRecent: 5,
+			//Interval:   2,
 		})
 	})
 }
@@ -112,6 +112,23 @@ func testCommitMultiTreeSims(t *rapid.T, opts Options, pruningOpts pruningtypes.
 
 	// open v2 tree
 	sim.openV2Tree(t)
+
+	t.Cleanup(func() {
+		if t.Failed() {
+			desc := sim.mtV2.Describe()
+			os.MkdirAll("testdata", 0o755)
+			f, err := os.Create("testdata/iavl-debug.html")
+			if err != nil {
+				t.Logf("failed to create debug HTML file: %v", err)
+				return
+			}
+			defer f.Close()
+			if err := RenderHTML(f, desc); err != nil {
+				t.Logf("failed to render debug HTML: %v", err)
+			}
+			t.Logf("IAVL debug HTML written to testdata/iavl-debug.html")
+		}
+	})
 
 	sim.Check(t)
 

@@ -346,4 +346,36 @@ func (ts *TreeStore) addToDeletionQueue(ch *Changeset) {
 	ts.cleanupProc.AddDeletion(ch)
 }
 
+func (ts *TreeStore) Describe() TreeDescription {
+	ts.changesetsLock.RLock()
+	defer ts.changesetsLock.RUnlock()
+
+	changesetDescs := make([]ChangesetDescription, 0, ts.changesetsByVersion.Len())
+	ts.changesetsByVersion.Ascend(0, func(version uint32, cs *Changeset) bool {
+		rdr, pin := cs.TryPinReader()
+		defer pin.Unpin()
+		if rdr != nil {
+			changesetDescs = append(changesetDescs, rdr.Describe())
+		} else {
+			changesetDescs = append(changesetDescs, ChangesetDescription{
+				StartVersion: version,
+				Incomplete:   true,
+			})
+		}
+		return true
+	})
+
+	desc := TreeDescription{
+		Version:                 ts.LatestVersion(),
+		LatestCheckpointVersion: ts.lastCheckpointVersion,
+		LatestCheckpoint:        ts.checkpoint.Load(),
+		LatestSavedCheckpoint:   ts.checkpointer.LatestSavedCheckpoint(),
+		Changesets:              changesetDescs,
+	}
+	if root := ts.Latest(); root != nil {
+		desc.RootID = root.id
+	}
+	return desc
+}
+
 const memNodeOverhead = int64(unsafe.Sizeof(MemNode{})) + int64(unsafe.Sizeof(NodePointer{}))*2 + 32 /* hash size */

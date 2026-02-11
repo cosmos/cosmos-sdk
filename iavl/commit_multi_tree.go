@@ -898,4 +898,20 @@ func (db *CommitMultiTree) pruneIfNeeded() {
 	}()
 }
 
+func (db *CommitMultiTree) Describe() MultiTreeDescription {
+	descriptions := make(map[string]internal.TreeDescription)
+	for _, si := range db.iavlStores {
+		ct, ok := si.store.(*CommitTree)
+		if !ok {
+			continue
+		}
+		descriptions[si.key.Name()] = ct.treeStore.Describe()
+	}
+	return MultiTreeDescription{
+		Version:          db.version,
+		Trees:            descriptions,
+		LastPruneVersion: db.lastPruneVersion,
+	}
+}
+
 var _ storetypes.CommitMultiStore2 = &CommitMultiTree{}

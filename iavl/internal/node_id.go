@@ -56,7 +56,40 @@ func (id NodeID) Equal(other NodeID) bool {
 
 // String returns a string representation of the NodeID.
 func (id NodeID) String() string {
-	return fmt.Sprintf("NodeID{leaf:%t, checkpoint:%d, index:%d}", id.IsLeaf(), id.checkpoint, id.flagIndex.Index())
+	if id.IsEmpty() {
+		return ""
+	}
+	prefix := 'B'
+	if id.IsLeaf() {
+		prefix = 'L'
+	}
+	return fmt.Sprintf("%c:%d:%d", prefix, id.checkpoint, id.flagIndex.Index())
+}
+
+func (id NodeID) MarshalText() ([]byte, error) {
+	return []byte(id.String()), nil
+}
+
+func (id *NodeID) UnmarshalText(b []byte) error {
+	if len(b) == 0 {
+		*id = NodeID{}
+		return nil
+	}
+	var prefix rune
+	var checkpoint, index uint32
+	_, err := fmt.Sscanf(string(b), "%c:%d:%d", &prefix, &checkpoint, &index)
+	if err != nil {
+		return fmt.Errorf("invalid NodeID: %q: %w", b, err)
+	}
+	switch prefix {
+	case 'B':
+		*id = NewNodeID(false, checkpoint, index)
+	case 'L':
+		*id = NewNodeID(true, checkpoint, index)
+	default:
+		return fmt.Errorf("invalid NodeID prefix: %c", prefix)
+	}
+	return nil
 }
 
 // NewNodeFlagIndex creates a new nodeFlagIndex.

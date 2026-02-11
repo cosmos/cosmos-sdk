@@ -44,6 +44,29 @@ func TestExecuteBlock_CancelWakesSuspendedExecutors(t *testing.T) {
 	require.True(t, errors.Is(err, context.Canceled))
 }
 
+func TestSchedulerCancelAllCallsPreCancelForAllTxns(t *testing.T) {
+	total := 3
+	s := NewScheduler(total)
+	cond := NewCondvar()
+	_, ok := s.txnStatus[1].TrySetExecuting()
+	require.True(t, ok)
+	s.txnStatus[1].Suspend(cond)
+
+	called := 0
+	s.CancelAll(func(i TxnIndex) {
+		called++
+	})
+	require.Equal(t, total, called)
+
+	// suspended txn should be woken
+	require.True(t, cond.notified)
+
+	s.txnStatus[1].Lock()
+	defer s.txnStatus[1].Unlock()
+	require.Equal(t, StatusExecuting, s.txnStatus[1].status)
+	require.Nil(t, s.txnStatus[1].cond)
+}
+
 func accountName(i int64) string {
 	return fmt.Sprintf("account%05d", i)
 }

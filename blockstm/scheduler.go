@@ -214,3 +214,16 @@ func (s *Scheduler) Stats() string {
 	return fmt.Sprintf("executed: %d, validated: %d",
 		s.executedTxns.Load(), s.validatedTxns.Load())
 }
+
+// CancelAll wakes up all suspended executors.
+// Called during context cancellation to prevent hanging.
+func (s *Scheduler) CancelAll(preCancel func(i TxnIndex)) {
+	for i := range s.txnStatus {
+		s.txnStatus[i].TryCancel(func() {
+			if preCancel != nil {
+				idx := TxnIndex(i)
+				preCancel(idx)
+			}
+		})
+	}
+}

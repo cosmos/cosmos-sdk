@@ -199,11 +199,11 @@ func (d *GMVData[V]) Read(key Key, txn TxnIndex) (V, TxnVersion, bool) {
 
 func (d *GMVData[V]) resolveValue(key Key, txn TxnIndex, store *BitmapIndex) (V, TxnVersion, bool) {
 	var zero V
-	if txn == 0 {
-		return zero, InvalidTxnVersion, false
-	}
-
 	for {
+		if txn == 0 {
+			return zero, InvalidTxnVersion, false
+		}
+
 		// find the closest txn that's less than the given txn
 		idx, ok := store.PreviousValue(txn)
 		if !ok {

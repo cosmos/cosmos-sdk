@@ -885,6 +885,9 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 		}
 	}
 
+	mempoolCtx := ctx
+	var commitAnteCache func()
+
 	if app.anteHandler != nil {
 		var (
 			anteCtx sdk.Context
@@ -929,15 +932,29 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 			return gInfo, nil, nil, err
 		}
 
-		msCache.Write()
-		anteEvents = events.ToABCIEvents()
+		commitAnteCache = func() {
+			if msCache != nil {
+				msCache.Write()
+			}
+			anteEvents = events.ToABCIEvents()
+		}
+
+		if mode == execModeCheck {
+			mempoolCtx = ctx.WithMultiStore(msCache)
+		} else {
+			commitAnteCache()
+			commitAnteCache = nil
+		}
 	}
 
 	switch mode {
 	case execModeCheck:
-		err = app.mempool.Insert(ctx, tx)
-		if err != nil {
+		if err := app.mempool.Insert(mempoolCtx, tx); err != nil {
 			return gInfo, nil, anteEvents, err
+		}
+
+		if commitAnteCache != nil {
+			commitAnteCache()
 		}
 	case execModeFinalize:
 		err = app.mempool.Remove(tx)

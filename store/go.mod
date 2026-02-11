@@ -2,10 +2,7 @@ module cosmossdk.io/store
 
 go 1.24.0
 
-replace (
-	cosmossdk.io/log/v2 => ../log
-	github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-20250924232609-2c6195d95951
-)
+replace github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-20250924232609-2c6195d95951
 
 require (
 	cosmossdk.io/errors v1.0.2
@@ -31,8 +28,8 @@ require (
 
 require (
 	github.com/bytedance/gopkg v0.1.3 // indirect
-	go.opentelemetry.io/otel v1.39.0 // indirect
-	go.opentelemetry.io/otel/trace v1.39.0 // indirect
+	go.opentelemetry.io/otel v1.40.0 // indirect
+	go.opentelemetry.io/otel/trace v1.40.0 // indirect
 )
 
 require (

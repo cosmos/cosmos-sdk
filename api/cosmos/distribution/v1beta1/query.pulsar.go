@@ -9423,6 +9423,2683 @@ func (x *fastReflection_QueryCommunityPoolResponse) ProtoMethods() *protoiface.M
 	}
 }
 
+var (
+	md_QueryValidatorHistoricalRewardsRequest                   protoreflect.MessageDescriptor
+	fd_QueryValidatorHistoricalRewardsRequest_validator_address protoreflect.FieldDescriptor
+	fd_QueryValidatorHistoricalRewardsRequest_period            protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_distribution_v1beta1_query_proto_init()
+	md_QueryValidatorHistoricalRewardsRequest = File_cosmos_distribution_v1beta1_query_proto.Messages().ByName("QueryValidatorHistoricalRewardsRequest")
+	fd_QueryValidatorHistoricalRewardsRequest_validator_address = md_QueryValidatorHistoricalRewardsRequest.Fields().ByName("validator_address")
+	fd_QueryValidatorHistoricalRewardsRequest_period = md_QueryValidatorHistoricalRewardsRequest.Fields().ByName("period")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryValidatorHistoricalRewardsRequest)(nil)
+
+type fastReflection_QueryValidatorHistoricalRewardsRequest QueryValidatorHistoricalRewardsRequest
+
+func (x *QueryValidatorHistoricalRewardsRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryValidatorHistoricalRewardsRequest)(x)
+}
+
+func (x *QueryValidatorHistoricalRewardsRequest) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_distribution_v1beta1_query_proto_msgTypes[20]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryValidatorHistoricalRewardsRequest_messageType fastReflection_QueryValidatorHistoricalRewardsRequest_messageType
+var _ protoreflect.MessageType = fastReflection_QueryValidatorHistoricalRewardsRequest_messageType{}
+
+type fastReflection_QueryValidatorHistoricalRewardsRequest_messageType struct{}
+
+func (x fastReflection_QueryValidatorHistoricalRewardsRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryValidatorHistoricalRewardsRequest)(nil)
+}
+func (x fastReflection_QueryValidatorHistoricalRewardsRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryValidatorHistoricalRewardsRequest)
+}
+func (x fastReflection_QueryValidatorHistoricalRewardsRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryValidatorHistoricalRewardsRequest
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryValidatorHistoricalRewardsRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryValidatorHistoricalRewardsRequest
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryValidatorHistoricalRewardsRequest) Type() protoreflect.MessageType {
+	return _fastReflection_QueryValidatorHistoricalRewardsRequest_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryValidatorHistoricalRewardsRequest) New() protoreflect.Message {
+	return new(fastReflection_QueryValidatorHistoricalRewardsRequest)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryValidatorHistoricalRewardsRequest) Interface() protoreflect.ProtoMessage {
+	return (*QueryValidatorHistoricalRewardsRequest)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryValidatorHistoricalRewardsRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.ValidatorAddress != "" {
+		value := protoreflect.ValueOfString(x.ValidatorAddress)
+		if !f(fd_QueryValidatorHistoricalRewardsRequest_validator_address, value) {
+			return
+		}
+	}
+	if x.Period != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Period)
+		if !f(fd_QueryValidatorHistoricalRewardsRequest_period, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryValidatorHistoricalRewardsRequest) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsRequest.validator_address":
+		return x.ValidatorAddress != ""
+	case "cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsRequest.period":
+		return x.Period != uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryValidatorHistoricalRewardsRequest) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsRequest.validator_address":
+		x.ValidatorAddress = ""
+	case "cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsRequest.period":
+		x.Period = uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryValidatorHistoricalRewardsRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsRequest.validator_address":
+		value := x.ValidatorAddress
+		return protoreflect.ValueOfString(value)
+	case "cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsRequest.period":
+		value := x.Period
+		return protoreflect.ValueOfUint64(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsRequest does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryValidatorHistoricalRewardsRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsRequest.validator_address":
+		x.ValidatorAddress = value.Interface().(string)
+	case "cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsRequest.period":
+		x.Period = value.Uint()
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryValidatorHistoricalRewardsRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsRequest.validator_address":
+		panic(fmt.Errorf("field validator_address of message cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsRequest is not mutable"))
+	case "cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsRequest.period":
+		panic(fmt.Errorf("field period of message cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsRequest is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryValidatorHistoricalRewardsRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsRequest.validator_address":
+		return protoreflect.ValueOfString("")
+	case "cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsRequest.period":
+		return protoreflect.ValueOfUint64(uint64(0))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryValidatorHistoricalRewardsRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsRequest", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryValidatorHistoricalRewardsRequest) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryValidatorHistoricalRewardsRequest) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryValidatorHistoricalRewardsRequest) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryValidatorHistoricalRewardsRequest) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryValidatorHistoricalRewardsRequest)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.ValidatorAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.Period != 0 {
+			n += 1 + runtime.Sov(uint64(x.Period))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryValidatorHistoricalRewardsRequest)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Period != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Period))
+			i--
+			dAtA[i] = 0x10
+		}
+		if len(x.ValidatorAddress) > 0 {
+			i -= len(x.ValidatorAddress)
+			copy(dAtA[i:], x.ValidatorAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ValidatorAddress)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryValidatorHistoricalRewardsRequest)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryValidatorHistoricalRewardsRequest: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryValidatorHistoricalRewardsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ValidatorAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ValidatorAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Period", wireType)
+				}
+				x.Period = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Period |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_QueryValidatorHistoricalRewardsResponse         protoreflect.MessageDescriptor
+	fd_QueryValidatorHistoricalRewardsResponse_rewards protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_distribution_v1beta1_query_proto_init()
+	md_QueryValidatorHistoricalRewardsResponse = File_cosmos_distribution_v1beta1_query_proto.Messages().ByName("QueryValidatorHistoricalRewardsResponse")
+	fd_QueryValidatorHistoricalRewardsResponse_rewards = md_QueryValidatorHistoricalRewardsResponse.Fields().ByName("rewards")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryValidatorHistoricalRewardsResponse)(nil)
+
+type fastReflection_QueryValidatorHistoricalRewardsResponse QueryValidatorHistoricalRewardsResponse
+
+func (x *QueryValidatorHistoricalRewardsResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryValidatorHistoricalRewardsResponse)(x)
+}
+
+func (x *QueryValidatorHistoricalRewardsResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_distribution_v1beta1_query_proto_msgTypes[21]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryValidatorHistoricalRewardsResponse_messageType fastReflection_QueryValidatorHistoricalRewardsResponse_messageType
+var _ protoreflect.MessageType = fastReflection_QueryValidatorHistoricalRewardsResponse_messageType{}
+
+type fastReflection_QueryValidatorHistoricalRewardsResponse_messageType struct{}
+
+func (x fastReflection_QueryValidatorHistoricalRewardsResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryValidatorHistoricalRewardsResponse)(nil)
+}
+func (x fastReflection_QueryValidatorHistoricalRewardsResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryValidatorHistoricalRewardsResponse)
+}
+func (x fastReflection_QueryValidatorHistoricalRewardsResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryValidatorHistoricalRewardsResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryValidatorHistoricalRewardsResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryValidatorHistoricalRewardsResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryValidatorHistoricalRewardsResponse) Type() protoreflect.MessageType {
+	return _fastReflection_QueryValidatorHistoricalRewardsResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryValidatorHistoricalRewardsResponse) New() protoreflect.Message {
+	return new(fastReflection_QueryValidatorHistoricalRewardsResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryValidatorHistoricalRewardsResponse) Interface() protoreflect.ProtoMessage {
+	return (*QueryValidatorHistoricalRewardsResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryValidatorHistoricalRewardsResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Rewards != nil {
+		value := protoreflect.ValueOfMessage(x.Rewards.ProtoReflect())
+		if !f(fd_QueryValidatorHistoricalRewardsResponse_rewards, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryValidatorHistoricalRewardsResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsResponse.rewards":
+		return x.Rewards != nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryValidatorHistoricalRewardsResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsResponse.rewards":
+		x.Rewards = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryValidatorHistoricalRewardsResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsResponse.rewards":
+		value := x.Rewards
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryValidatorHistoricalRewardsResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsResponse.rewards":
+		x.Rewards = value.Message().Interface().(*ValidatorHistoricalRewards)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryValidatorHistoricalRewardsResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsResponse.rewards":
+		if x.Rewards == nil {
+			x.Rewards = new(ValidatorHistoricalRewards)
+		}
+		return protoreflect.ValueOfMessage(x.Rewards.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryValidatorHistoricalRewardsResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsResponse.rewards":
+		m := new(ValidatorHistoricalRewards)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryValidatorHistoricalRewardsResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryValidatorHistoricalRewardsResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryValidatorHistoricalRewardsResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryValidatorHistoricalRewardsResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryValidatorHistoricalRewardsResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryValidatorHistoricalRewardsResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Rewards != nil {
+			l = options.Size(x.Rewards)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryValidatorHistoricalRewardsResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Rewards != nil {
+			encoded, err := options.Marshal(x.Rewards)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryValidatorHistoricalRewardsResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryValidatorHistoricalRewardsResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryValidatorHistoricalRewardsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Rewards", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Rewards == nil {
+					x.Rewards = &ValidatorHistoricalRewards{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Rewards); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_QueryValidatorCurrentRewardsRequest                   protoreflect.MessageDescriptor
+	fd_QueryValidatorCurrentRewardsRequest_validator_address protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_distribution_v1beta1_query_proto_init()
+	md_QueryValidatorCurrentRewardsRequest = File_cosmos_distribution_v1beta1_query_proto.Messages().ByName("QueryValidatorCurrentRewardsRequest")
+	fd_QueryValidatorCurrentRewardsRequest_validator_address = md_QueryValidatorCurrentRewardsRequest.Fields().ByName("validator_address")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryValidatorCurrentRewardsRequest)(nil)
+
+type fastReflection_QueryValidatorCurrentRewardsRequest QueryValidatorCurrentRewardsRequest
+
+func (x *QueryValidatorCurrentRewardsRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryValidatorCurrentRewardsRequest)(x)
+}
+
+func (x *QueryValidatorCurrentRewardsRequest) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_distribution_v1beta1_query_proto_msgTypes[22]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryValidatorCurrentRewardsRequest_messageType fastReflection_QueryValidatorCurrentRewardsRequest_messageType
+var _ protoreflect.MessageType = fastReflection_QueryValidatorCurrentRewardsRequest_messageType{}
+
+type fastReflection_QueryValidatorCurrentRewardsRequest_messageType struct{}
+
+func (x fastReflection_QueryValidatorCurrentRewardsRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryValidatorCurrentRewardsRequest)(nil)
+}
+func (x fastReflection_QueryValidatorCurrentRewardsRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryValidatorCurrentRewardsRequest)
+}
+func (x fastReflection_QueryValidatorCurrentRewardsRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryValidatorCurrentRewardsRequest
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryValidatorCurrentRewardsRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryValidatorCurrentRewardsRequest
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryValidatorCurrentRewardsRequest) Type() protoreflect.MessageType {
+	return _fastReflection_QueryValidatorCurrentRewardsRequest_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryValidatorCurrentRewardsRequest) New() protoreflect.Message {
+	return new(fastReflection_QueryValidatorCurrentRewardsRequest)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryValidatorCurrentRewardsRequest) Interface() protoreflect.ProtoMessage {
+	return (*QueryValidatorCurrentRewardsRequest)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryValidatorCurrentRewardsRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.ValidatorAddress != "" {
+		value := protoreflect.ValueOfString(x.ValidatorAddress)
+		if !f(fd_QueryValidatorCurrentRewardsRequest_validator_address, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryValidatorCurrentRewardsRequest) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsRequest.validator_address":
+		return x.ValidatorAddress != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryValidatorCurrentRewardsRequest) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsRequest.validator_address":
+		x.ValidatorAddress = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryValidatorCurrentRewardsRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsRequest.validator_address":
+		value := x.ValidatorAddress
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsRequest does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryValidatorCurrentRewardsRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsRequest.validator_address":
+		x.ValidatorAddress = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryValidatorCurrentRewardsRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsRequest.validator_address":
+		panic(fmt.Errorf("field validator_address of message cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsRequest is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryValidatorCurrentRewardsRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsRequest.validator_address":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryValidatorCurrentRewardsRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsRequest", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryValidatorCurrentRewardsRequest) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryValidatorCurrentRewardsRequest) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryValidatorCurrentRewardsRequest) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryValidatorCurrentRewardsRequest) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryValidatorCurrentRewardsRequest)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.ValidatorAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryValidatorCurrentRewardsRequest)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.ValidatorAddress) > 0 {
+			i -= len(x.ValidatorAddress)
+			copy(dAtA[i:], x.ValidatorAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ValidatorAddress)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryValidatorCurrentRewardsRequest)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryValidatorCurrentRewardsRequest: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryValidatorCurrentRewardsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ValidatorAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ValidatorAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_QueryValidatorCurrentRewardsResponse         protoreflect.MessageDescriptor
+	fd_QueryValidatorCurrentRewardsResponse_rewards protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_distribution_v1beta1_query_proto_init()
+	md_QueryValidatorCurrentRewardsResponse = File_cosmos_distribution_v1beta1_query_proto.Messages().ByName("QueryValidatorCurrentRewardsResponse")
+	fd_QueryValidatorCurrentRewardsResponse_rewards = md_QueryValidatorCurrentRewardsResponse.Fields().ByName("rewards")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryValidatorCurrentRewardsResponse)(nil)
+
+type fastReflection_QueryValidatorCurrentRewardsResponse QueryValidatorCurrentRewardsResponse
+
+func (x *QueryValidatorCurrentRewardsResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryValidatorCurrentRewardsResponse)(x)
+}
+
+func (x *QueryValidatorCurrentRewardsResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_distribution_v1beta1_query_proto_msgTypes[23]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryValidatorCurrentRewardsResponse_messageType fastReflection_QueryValidatorCurrentRewardsResponse_messageType
+var _ protoreflect.MessageType = fastReflection_QueryValidatorCurrentRewardsResponse_messageType{}
+
+type fastReflection_QueryValidatorCurrentRewardsResponse_messageType struct{}
+
+func (x fastReflection_QueryValidatorCurrentRewardsResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryValidatorCurrentRewardsResponse)(nil)
+}
+func (x fastReflection_QueryValidatorCurrentRewardsResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryValidatorCurrentRewardsResponse)
+}
+func (x fastReflection_QueryValidatorCurrentRewardsResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryValidatorCurrentRewardsResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryValidatorCurrentRewardsResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryValidatorCurrentRewardsResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryValidatorCurrentRewardsResponse) Type() protoreflect.MessageType {
+	return _fastReflection_QueryValidatorCurrentRewardsResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryValidatorCurrentRewardsResponse) New() protoreflect.Message {
+	return new(fastReflection_QueryValidatorCurrentRewardsResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryValidatorCurrentRewardsResponse) Interface() protoreflect.ProtoMessage {
+	return (*QueryValidatorCurrentRewardsResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryValidatorCurrentRewardsResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Rewards != nil {
+		value := protoreflect.ValueOfMessage(x.Rewards.ProtoReflect())
+		if !f(fd_QueryValidatorCurrentRewardsResponse_rewards, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryValidatorCurrentRewardsResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsResponse.rewards":
+		return x.Rewards != nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryValidatorCurrentRewardsResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsResponse.rewards":
+		x.Rewards = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryValidatorCurrentRewardsResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsResponse.rewards":
+		value := x.Rewards
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryValidatorCurrentRewardsResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsResponse.rewards":
+		x.Rewards = value.Message().Interface().(*ValidatorCurrentRewards)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryValidatorCurrentRewardsResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsResponse.rewards":
+		if x.Rewards == nil {
+			x.Rewards = new(ValidatorCurrentRewards)
+		}
+		return protoreflect.ValueOfMessage(x.Rewards.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryValidatorCurrentRewardsResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsResponse.rewards":
+		m := new(ValidatorCurrentRewards)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryValidatorCurrentRewardsResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryValidatorCurrentRewardsResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryValidatorCurrentRewardsResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryValidatorCurrentRewardsResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryValidatorCurrentRewardsResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryValidatorCurrentRewardsResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Rewards != nil {
+			l = options.Size(x.Rewards)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryValidatorCurrentRewardsResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Rewards != nil {
+			encoded, err := options.Marshal(x.Rewards)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryValidatorCurrentRewardsResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryValidatorCurrentRewardsResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryValidatorCurrentRewardsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Rewards", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Rewards == nil {
+					x.Rewards = &ValidatorCurrentRewards{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Rewards); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_QueryDelegatorStartingInfoRequest                   protoreflect.MessageDescriptor
+	fd_QueryDelegatorStartingInfoRequest_delegator_address protoreflect.FieldDescriptor
+	fd_QueryDelegatorStartingInfoRequest_validator_address protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_distribution_v1beta1_query_proto_init()
+	md_QueryDelegatorStartingInfoRequest = File_cosmos_distribution_v1beta1_query_proto.Messages().ByName("QueryDelegatorStartingInfoRequest")
+	fd_QueryDelegatorStartingInfoRequest_delegator_address = md_QueryDelegatorStartingInfoRequest.Fields().ByName("delegator_address")
+	fd_QueryDelegatorStartingInfoRequest_validator_address = md_QueryDelegatorStartingInfoRequest.Fields().ByName("validator_address")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryDelegatorStartingInfoRequest)(nil)
+
+type fastReflection_QueryDelegatorStartingInfoRequest QueryDelegatorStartingInfoRequest
+
+func (x *QueryDelegatorStartingInfoRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryDelegatorStartingInfoRequest)(x)
+}
+
+func (x *QueryDelegatorStartingInfoRequest) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_distribution_v1beta1_query_proto_msgTypes[24]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryDelegatorStartingInfoRequest_messageType fastReflection_QueryDelegatorStartingInfoRequest_messageType
+var _ protoreflect.MessageType = fastReflection_QueryDelegatorStartingInfoRequest_messageType{}
+
+type fastReflection_QueryDelegatorStartingInfoRequest_messageType struct{}
+
+func (x fastReflection_QueryDelegatorStartingInfoRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryDelegatorStartingInfoRequest)(nil)
+}
+func (x fastReflection_QueryDelegatorStartingInfoRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryDelegatorStartingInfoRequest)
+}
+func (x fastReflection_QueryDelegatorStartingInfoRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryDelegatorStartingInfoRequest
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryDelegatorStartingInfoRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryDelegatorStartingInfoRequest
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryDelegatorStartingInfoRequest) Type() protoreflect.MessageType {
+	return _fastReflection_QueryDelegatorStartingInfoRequest_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryDelegatorStartingInfoRequest) New() protoreflect.Message {
+	return new(fastReflection_QueryDelegatorStartingInfoRequest)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryDelegatorStartingInfoRequest) Interface() protoreflect.ProtoMessage {
+	return (*QueryDelegatorStartingInfoRequest)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryDelegatorStartingInfoRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.DelegatorAddress != "" {
+		value := protoreflect.ValueOfString(x.DelegatorAddress)
+		if !f(fd_QueryDelegatorStartingInfoRequest_delegator_address, value) {
+			return
+		}
+	}
+	if x.ValidatorAddress != "" {
+		value := protoreflect.ValueOfString(x.ValidatorAddress)
+		if !f(fd_QueryDelegatorStartingInfoRequest_validator_address, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryDelegatorStartingInfoRequest) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.distribution.v1beta1.QueryDelegatorStartingInfoRequest.delegator_address":
+		return x.DelegatorAddress != ""
+	case "cosmos.distribution.v1beta1.QueryDelegatorStartingInfoRequest.validator_address":
+		return x.ValidatorAddress != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryDelegatorStartingInfoRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryDelegatorStartingInfoRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryDelegatorStartingInfoRequest) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.distribution.v1beta1.QueryDelegatorStartingInfoRequest.delegator_address":
+		x.DelegatorAddress = ""
+	case "cosmos.distribution.v1beta1.QueryDelegatorStartingInfoRequest.validator_address":
+		x.ValidatorAddress = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryDelegatorStartingInfoRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryDelegatorStartingInfoRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryDelegatorStartingInfoRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.distribution.v1beta1.QueryDelegatorStartingInfoRequest.delegator_address":
+		value := x.DelegatorAddress
+		return protoreflect.ValueOfString(value)
+	case "cosmos.distribution.v1beta1.QueryDelegatorStartingInfoRequest.validator_address":
+		value := x.ValidatorAddress
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryDelegatorStartingInfoRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryDelegatorStartingInfoRequest does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryDelegatorStartingInfoRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.distribution.v1beta1.QueryDelegatorStartingInfoRequest.delegator_address":
+		x.DelegatorAddress = value.Interface().(string)
+	case "cosmos.distribution.v1beta1.QueryDelegatorStartingInfoRequest.validator_address":
+		x.ValidatorAddress = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryDelegatorStartingInfoRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryDelegatorStartingInfoRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryDelegatorStartingInfoRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.distribution.v1beta1.QueryDelegatorStartingInfoRequest.delegator_address":
+		panic(fmt.Errorf("field delegator_address of message cosmos.distribution.v1beta1.QueryDelegatorStartingInfoRequest is not mutable"))
+	case "cosmos.distribution.v1beta1.QueryDelegatorStartingInfoRequest.validator_address":
+		panic(fmt.Errorf("field validator_address of message cosmos.distribution.v1beta1.QueryDelegatorStartingInfoRequest is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryDelegatorStartingInfoRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryDelegatorStartingInfoRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryDelegatorStartingInfoRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.distribution.v1beta1.QueryDelegatorStartingInfoRequest.delegator_address":
+		return protoreflect.ValueOfString("")
+	case "cosmos.distribution.v1beta1.QueryDelegatorStartingInfoRequest.validator_address":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryDelegatorStartingInfoRequest"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryDelegatorStartingInfoRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryDelegatorStartingInfoRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.distribution.v1beta1.QueryDelegatorStartingInfoRequest", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryDelegatorStartingInfoRequest) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryDelegatorStartingInfoRequest) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryDelegatorStartingInfoRequest) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryDelegatorStartingInfoRequest) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryDelegatorStartingInfoRequest)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.DelegatorAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.ValidatorAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryDelegatorStartingInfoRequest)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.ValidatorAddress) > 0 {
+			i -= len(x.ValidatorAddress)
+			copy(dAtA[i:], x.ValidatorAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ValidatorAddress)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.DelegatorAddress) > 0 {
+			i -= len(x.DelegatorAddress)
+			copy(dAtA[i:], x.DelegatorAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.DelegatorAddress)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryDelegatorStartingInfoRequest)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryDelegatorStartingInfoRequest: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryDelegatorStartingInfoRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field DelegatorAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.DelegatorAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ValidatorAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ValidatorAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_QueryDelegatorStartingInfoResponse               protoreflect.MessageDescriptor
+	fd_QueryDelegatorStartingInfoResponse_starting_info protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_cosmos_distribution_v1beta1_query_proto_init()
+	md_QueryDelegatorStartingInfoResponse = File_cosmos_distribution_v1beta1_query_proto.Messages().ByName("QueryDelegatorStartingInfoResponse")
+	fd_QueryDelegatorStartingInfoResponse_starting_info = md_QueryDelegatorStartingInfoResponse.Fields().ByName("starting_info")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryDelegatorStartingInfoResponse)(nil)
+
+type fastReflection_QueryDelegatorStartingInfoResponse QueryDelegatorStartingInfoResponse
+
+func (x *QueryDelegatorStartingInfoResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryDelegatorStartingInfoResponse)(x)
+}
+
+func (x *QueryDelegatorStartingInfoResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_cosmos_distribution_v1beta1_query_proto_msgTypes[25]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryDelegatorStartingInfoResponse_messageType fastReflection_QueryDelegatorStartingInfoResponse_messageType
+var _ protoreflect.MessageType = fastReflection_QueryDelegatorStartingInfoResponse_messageType{}
+
+type fastReflection_QueryDelegatorStartingInfoResponse_messageType struct{}
+
+func (x fastReflection_QueryDelegatorStartingInfoResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryDelegatorStartingInfoResponse)(nil)
+}
+func (x fastReflection_QueryDelegatorStartingInfoResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryDelegatorStartingInfoResponse)
+}
+func (x fastReflection_QueryDelegatorStartingInfoResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryDelegatorStartingInfoResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryDelegatorStartingInfoResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryDelegatorStartingInfoResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryDelegatorStartingInfoResponse) Type() protoreflect.MessageType {
+	return _fastReflection_QueryDelegatorStartingInfoResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryDelegatorStartingInfoResponse) New() protoreflect.Message {
+	return new(fastReflection_QueryDelegatorStartingInfoResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryDelegatorStartingInfoResponse) Interface() protoreflect.ProtoMessage {
+	return (*QueryDelegatorStartingInfoResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryDelegatorStartingInfoResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.StartingInfo != nil {
+		value := protoreflect.ValueOfMessage(x.StartingInfo.ProtoReflect())
+		if !f(fd_QueryDelegatorStartingInfoResponse_starting_info, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryDelegatorStartingInfoResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "cosmos.distribution.v1beta1.QueryDelegatorStartingInfoResponse.starting_info":
+		return x.StartingInfo != nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryDelegatorStartingInfoResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryDelegatorStartingInfoResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryDelegatorStartingInfoResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "cosmos.distribution.v1beta1.QueryDelegatorStartingInfoResponse.starting_info":
+		x.StartingInfo = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryDelegatorStartingInfoResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryDelegatorStartingInfoResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryDelegatorStartingInfoResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "cosmos.distribution.v1beta1.QueryDelegatorStartingInfoResponse.starting_info":
+		value := x.StartingInfo
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryDelegatorStartingInfoResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryDelegatorStartingInfoResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryDelegatorStartingInfoResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "cosmos.distribution.v1beta1.QueryDelegatorStartingInfoResponse.starting_info":
+		x.StartingInfo = value.Message().Interface().(*DelegatorStartingInfo)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryDelegatorStartingInfoResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryDelegatorStartingInfoResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryDelegatorStartingInfoResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.distribution.v1beta1.QueryDelegatorStartingInfoResponse.starting_info":
+		if x.StartingInfo == nil {
+			x.StartingInfo = new(DelegatorStartingInfo)
+		}
+		return protoreflect.ValueOfMessage(x.StartingInfo.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryDelegatorStartingInfoResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryDelegatorStartingInfoResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryDelegatorStartingInfoResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "cosmos.distribution.v1beta1.QueryDelegatorStartingInfoResponse.starting_info":
+		m := new(DelegatorStartingInfo)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: cosmos.distribution.v1beta1.QueryDelegatorStartingInfoResponse"))
+		}
+		panic(fmt.Errorf("message cosmos.distribution.v1beta1.QueryDelegatorStartingInfoResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryDelegatorStartingInfoResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in cosmos.distribution.v1beta1.QueryDelegatorStartingInfoResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryDelegatorStartingInfoResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryDelegatorStartingInfoResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryDelegatorStartingInfoResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryDelegatorStartingInfoResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryDelegatorStartingInfoResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.StartingInfo != nil {
+			l = options.Size(x.StartingInfo)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryDelegatorStartingInfoResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.StartingInfo != nil {
+			encoded, err := options.Marshal(x.StartingInfo)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryDelegatorStartingInfoResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryDelegatorStartingInfoResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryDelegatorStartingInfoResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field StartingInfo", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.StartingInfo == nil {
+					x.StartingInfo = &DelegatorStartingInfo{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.StartingInfo); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -10243,6 +12920,252 @@ func (x *QueryCommunityPoolResponse) GetPool() []*v1beta1.DecCoin {
 	return nil
 }
 
+// QueryValidatorHistoricalRewardsRequest is the request type for the
+// Query/ValidatorHistoricalRewards RPC method.
+type QueryValidatorHistoricalRewardsRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// validator_address defines the validator address to query for.
+	ValidatorAddress string `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
+	// period defines the period to query historical rewards for.
+	Period uint64 `protobuf:"varint,2,opt,name=period,proto3" json:"period,omitempty"`
+}
+
+func (x *QueryValidatorHistoricalRewardsRequest) Reset() {
+	*x = QueryValidatorHistoricalRewardsRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_distribution_v1beta1_query_proto_msgTypes[20]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryValidatorHistoricalRewardsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryValidatorHistoricalRewardsRequest) ProtoMessage() {}
+
+// Deprecated: Use QueryValidatorHistoricalRewardsRequest.ProtoReflect.Descriptor instead.
+func (*QueryValidatorHistoricalRewardsRequest) Descriptor() ([]byte, []int) {
+	return file_cosmos_distribution_v1beta1_query_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *QueryValidatorHistoricalRewardsRequest) GetValidatorAddress() string {
+	if x != nil {
+		return x.ValidatorAddress
+	}
+	return ""
+}
+
+func (x *QueryValidatorHistoricalRewardsRequest) GetPeriod() uint64 {
+	if x != nil {
+		return x.Period
+	}
+	return 0
+}
+
+// QueryValidatorHistoricalRewardsResponse is the response type for the
+// Query/ValidatorHistoricalRewards RPC method.
+type QueryValidatorHistoricalRewardsResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// rewards defines the historical rewards of a validator.
+	Rewards *ValidatorHistoricalRewards `protobuf:"bytes,1,opt,name=rewards,proto3" json:"rewards,omitempty"`
+}
+
+func (x *QueryValidatorHistoricalRewardsResponse) Reset() {
+	*x = QueryValidatorHistoricalRewardsResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_distribution_v1beta1_query_proto_msgTypes[21]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryValidatorHistoricalRewardsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryValidatorHistoricalRewardsResponse) ProtoMessage() {}
+
+// Deprecated: Use QueryValidatorHistoricalRewardsResponse.ProtoReflect.Descriptor instead.
+func (*QueryValidatorHistoricalRewardsResponse) Descriptor() ([]byte, []int) {
+	return file_cosmos_distribution_v1beta1_query_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *QueryValidatorHistoricalRewardsResponse) GetRewards() *ValidatorHistoricalRewards {
+	if x != nil {
+		return x.Rewards
+	}
+	return nil
+}
+
+// QueryValidatorCurrentRewardsRequest is the request type for the
+// Query/ValidatorCurrentRewards RPC method.
+type QueryValidatorCurrentRewardsRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// validator_address defines the validator address to query for.
+	ValidatorAddress string `protobuf:"bytes,1,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
+}
+
+func (x *QueryValidatorCurrentRewardsRequest) Reset() {
+	*x = QueryValidatorCurrentRewardsRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_distribution_v1beta1_query_proto_msgTypes[22]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryValidatorCurrentRewardsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryValidatorCurrentRewardsRequest) ProtoMessage() {}
+
+// Deprecated: Use QueryValidatorCurrentRewardsRequest.ProtoReflect.Descriptor instead.
+func (*QueryValidatorCurrentRewardsRequest) Descriptor() ([]byte, []int) {
+	return file_cosmos_distribution_v1beta1_query_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *QueryValidatorCurrentRewardsRequest) GetValidatorAddress() string {
+	if x != nil {
+		return x.ValidatorAddress
+	}
+	return ""
+}
+
+// QueryValidatorCurrentRewardsResponse is the response type for the
+// Query/ValidatorCurrentRewards RPC method.
+type QueryValidatorCurrentRewardsResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// rewards defines the current rewards of a validator.
+	Rewards *ValidatorCurrentRewards `protobuf:"bytes,1,opt,name=rewards,proto3" json:"rewards,omitempty"`
+}
+
+func (x *QueryValidatorCurrentRewardsResponse) Reset() {
+	*x = QueryValidatorCurrentRewardsResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_distribution_v1beta1_query_proto_msgTypes[23]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryValidatorCurrentRewardsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryValidatorCurrentRewardsResponse) ProtoMessage() {}
+
+// Deprecated: Use QueryValidatorCurrentRewardsResponse.ProtoReflect.Descriptor instead.
+func (*QueryValidatorCurrentRewardsResponse) Descriptor() ([]byte, []int) {
+	return file_cosmos_distribution_v1beta1_query_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *QueryValidatorCurrentRewardsResponse) GetRewards() *ValidatorCurrentRewards {
+	if x != nil {
+		return x.Rewards
+	}
+	return nil
+}
+
+// QueryDelegatorStartingInfoRequest is the request type for the
+// Query/DelegatorStartingInfo RPC method.
+type QueryDelegatorStartingInfoRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// delegator_address defines the delegator address to query for.
+	DelegatorAddress string `protobuf:"bytes,1,opt,name=delegator_address,json=delegatorAddress,proto3" json:"delegator_address,omitempty"`
+	// validator_address defines the validator address to query for.
+	ValidatorAddress string `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
+}
+
+func (x *QueryDelegatorStartingInfoRequest) Reset() {
+	*x = QueryDelegatorStartingInfoRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_distribution_v1beta1_query_proto_msgTypes[24]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryDelegatorStartingInfoRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryDelegatorStartingInfoRequest) ProtoMessage() {}
+
+// Deprecated: Use QueryDelegatorStartingInfoRequest.ProtoReflect.Descriptor instead.
+func (*QueryDelegatorStartingInfoRequest) Descriptor() ([]byte, []int) {
+	return file_cosmos_distribution_v1beta1_query_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *QueryDelegatorStartingInfoRequest) GetDelegatorAddress() string {
+	if x != nil {
+		return x.DelegatorAddress
+	}
+	return ""
+}
+
+func (x *QueryDelegatorStartingInfoRequest) GetValidatorAddress() string {
+	if x != nil {
+		return x.ValidatorAddress
+	}
+	return ""
+}
+
+// QueryDelegatorStartingInfoResponse is the response type for the
+// Query/DelegatorStartingInfo RPC method.
+type QueryDelegatorStartingInfoResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// starting_info defines the starting info of a delegator.
+	StartingInfo *DelegatorStartingInfo `protobuf:"bytes,1,opt,name=starting_info,json=startingInfo,proto3" json:"starting_info,omitempty"`
+}
+
+func (x *QueryDelegatorStartingInfoResponse) Reset() {
+	*x = QueryDelegatorStartingInfoResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cosmos_distribution_v1beta1_query_proto_msgTypes[25]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryDelegatorStartingInfoResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryDelegatorStartingInfoResponse) ProtoMessage() {}
+
+// Deprecated: Use QueryDelegatorStartingInfoResponse.ProtoReflect.Descriptor instead.
+func (*QueryDelegatorStartingInfoResponse) Descriptor() ([]byte, []int) {
+	return file_cosmos_distribution_v1beta1_query_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *QueryDelegatorStartingInfoResponse) GetStartingInfo() *DelegatorStartingInfo {
+	if x != nil {
+		return x.StartingInfo
+	}
+	return nil
+}
+
 var File_cosmos_distribution_v1beta1_query_proto protoreflect.FileDescriptor
 
 var file_cosmos_distribution_v1beta1_query_proto_rawDesc = []byte{
@@ -10445,7 +13368,61 @@ var file_cosmos_distribution_v1beta1_query_proto_rawDesc = []byte{
 	0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
 	0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x74, 0x79, 0x70,
 	0x65, 0x73, 0x2e, 0x44, 0x65, 0x63, 0x43, 0x6f, 0x69, 0x6e, 0x73, 0xa8, 0xe7, 0xb0, 0x2a, 0x01,
-	0x52, 0x04, 0x70, 0x6f, 0x6f, 0x6c, 0x32, 0xc4, 0x11, 0x0a, 0x05, 0x51, 0x75, 0x65, 0x72, 0x79,
+	0x52, 0x04, 0x70, 0x6f, 0x6f, 0x6c, 0x22, 0x90, 0x01, 0x0a, 0x26, 0x51, 0x75, 0x65, 0x72, 0x79,
+	0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x48, 0x69, 0x73, 0x74, 0x6f, 0x72, 0x69,
+	0x63, 0x61, 0x6c, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x12, 0x4e, 0x0a, 0x11, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x61,
+	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x21, 0xd2, 0xb4,
+	0x2d, 0x1d, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74,
+	0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52,
+	0x10, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x12, 0x16, 0x0a, 0x06, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x04, 0x52, 0x06, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x22, 0x87, 0x01, 0x0a, 0x27, 0x51, 0x75,
+	0x65, 0x72, 0x79, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x48, 0x69, 0x73, 0x74,
+	0x6f, 0x72, 0x69, 0x63, 0x61, 0x6c, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x5c, 0x0a, 0x07, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x37, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x64, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x76, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0x2e, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x48, 0x69,
+	0x73, 0x74, 0x6f, 0x72, 0x69, 0x63, 0x61, 0x6c, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x42,
+	0x09, 0xc8, 0xde, 0x1f, 0x00, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x07, 0x72, 0x65, 0x77, 0x61,
+	0x72, 0x64, 0x73, 0x22, 0x75, 0x0a, 0x23, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x61, 0x6c, 0x69,
+	0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x52, 0x65, 0x77, 0x61,
+	0x72, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x4e, 0x0a, 0x11, 0x76, 0x61,
+	0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x21, 0xd2, 0xb4, 0x2d, 0x1d, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x10, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61,
+	0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0x81, 0x01, 0x0a, 0x24, 0x51,
+	0x75, 0x65, 0x72, 0x79, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x75, 0x72,
+	0x72, 0x65, 0x6e, 0x74, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x59, 0x0a, 0x07, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x34, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x64, 0x69,
+	0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x2e, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x75, 0x72, 0x72,
+	0x65, 0x6e, 0x74, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x42, 0x09, 0xc8, 0xde, 0x1f, 0x00,
+	0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x07, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x22, 0xba,
+	0x01, 0x0a, 0x21, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f,
+	0x72, 0x53, 0x74, 0x61, 0x72, 0x74, 0x69, 0x6e, 0x67, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x12, 0x45, 0x0a, 0x11, 0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f,
+	0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42,
+	0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x10, 0x64, 0x65, 0x6c, 0x65, 0x67,
+	0x61, 0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x4e, 0x0a, 0x11, 0x76,
+	0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x21, 0xd2, 0xb4, 0x2d, 0x1d, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x10, 0x76, 0x61, 0x6c, 0x69, 0x64,
+	0x61, 0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0x88, 0x01, 0x0a, 0x22,
+	0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x74,
+	0x61, 0x72, 0x74, 0x69, 0x6e, 0x67, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x12, 0x62, 0x0a, 0x0d, 0x73, 0x74, 0x61, 0x72, 0x74, 0x69, 0x6e, 0x67, 0x5f, 0x69,
+	0x6e, 0x66, 0x6f, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x32, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x64, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x2e,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f,
+	0x72, 0x53, 0x74, 0x61, 0x72, 0x74, 0x69, 0x6e, 0x67, 0x49, 0x6e, 0x66, 0x6f, 0x42, 0x09, 0xc8,
+	0xde, 0x1f, 0x00, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x0c, 0x73, 0x74, 0x61, 0x72, 0x74, 0x69,
+	0x6e, 0x67, 0x49, 0x6e, 0x66, 0x6f, 0x32, 0xc7, 0x17, 0x0a, 0x05, 0x51, 0x75, 0x65, 0x72, 0x79,
 	0x12, 0x98, 0x01, 0x0a, 0x06, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x2f, 0x2e, 0x63, 0x6f,
 	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x64, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f,
 	0x6e, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50,
@@ -10585,24 +13562,72 @@ var file_cosmos_distribution_v1beta1_query_proto_rawDesc = []byte{
 	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x33, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x2d,
 	0x12, 0x2b, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x64, 0x69, 0x73, 0x74, 0x72, 0x69,
 	0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x63,
-	0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74, 0x79, 0x5f, 0x70, 0x6f, 0x6f, 0x6c, 0x42, 0xfd, 0x01,
-	0x0a, 0x1f, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x64, 0x69, 0x73,
-	0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x42, 0x0a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a,
-	0x40, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x61, 0x70,
-	0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x64, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62,
-	0x75, 0x74, 0x69, 0x6f, 0x6e, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x3b, 0x64, 0x69,
-	0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0xa2, 0x02, 0x03, 0x43, 0x44, 0x58, 0xaa, 0x02, 0x1b, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x44, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x56, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0xca, 0x02, 0x1b, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x44,
-	0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x5c, 0x56, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0xe2, 0x02, 0x27, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c, 0x44, 0x69, 0x73,
-	0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x5c, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x1d,
-	0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x44, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75,
-	0x74, 0x69, 0x6f, 0x6e, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x62, 0x06, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6f, 0x6d, 0x6d, 0x75, 0x6e, 0x69, 0x74, 0x79, 0x5f, 0x70, 0x6f, 0x6f, 0x6c, 0x12, 0x88, 0x02,
+	0x0a, 0x1a, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x48, 0x69, 0x73, 0x74, 0x6f,
+	0x72, 0x69, 0x63, 0x61, 0x6c, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x12, 0x43, 0x2e, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x64, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69,
+	0x6f, 0x6e, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79,
+	0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x48, 0x69, 0x73, 0x74, 0x6f, 0x72, 0x69,
+	0x63, 0x61, 0x6c, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x1a, 0x44, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x64, 0x69, 0x73, 0x74, 0x72,
+	0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
+	0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x48, 0x69,
+	0x73, 0x74, 0x6f, 0x72, 0x69, 0x63, 0x61, 0x6c, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x5f, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x59, 0x12,
+	0x57, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x64, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62,
+	0x75, 0x74, 0x69, 0x6f, 0x6e, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x76, 0x61,
+	0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x2f, 0x7b, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61,
+	0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x7d, 0x2f, 0x68, 0x69, 0x73,
+	0x74, 0x6f, 0x72, 0x69, 0x63, 0x61, 0x6c, 0x5f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x2f,
+	0x7b, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x7d, 0x12, 0xf3, 0x01, 0x0a, 0x17, 0x56, 0x61, 0x6c,
+	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x52, 0x65, 0x77,
+	0x61, 0x72, 0x64, 0x73, 0x12, 0x40, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x64, 0x69,
+	0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f,
+	0x72, 0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x41, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x64, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x76, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61,
+	0x74, 0x6f, 0x72, 0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64,
+	0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x53, 0x82, 0xd3, 0xe4, 0x93, 0x02,
+	0x4d, 0x12, 0x4b, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x64, 0x69, 0x73, 0x74, 0x72,
+	0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f,
+	0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x2f, 0x7b, 0x76, 0x61, 0x6c, 0x69,
+	0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x7d, 0x2f, 0x63,
+	0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x5f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x12, 0xff,
+	0x01, 0x0a, 0x15, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x74, 0x61, 0x72,
+	0x74, 0x69, 0x6e, 0x67, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x3e, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x64, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6c, 0x65,
+	0x67, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x74, 0x61, 0x72, 0x74, 0x69, 0x6e, 0x67, 0x49, 0x6e, 0x66,
+	0x6f, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x3f, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x64, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x65, 0x6c, 0x65,
+	0x67, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x74, 0x61, 0x72, 0x74, 0x69, 0x6e, 0x67, 0x49, 0x6e, 0x66,
+	0x6f, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x65, 0x82, 0xd3, 0xe4, 0x93, 0x02,
+	0x5f, 0x12, 0x5d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x64, 0x69, 0x73, 0x74, 0x72,
+	0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f,
+	0x64, 0x65, 0x6c, 0x65, 0x67, 0x61, 0x74, 0x6f, 0x72, 0x73, 0x2f, 0x7b, 0x64, 0x65, 0x6c, 0x65,
+	0x67, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x7d, 0x2f, 0x73,
+	0x74, 0x61, 0x72, 0x74, 0x69, 0x6e, 0x67, 0x5f, 0x69, 0x6e, 0x66, 0x6f, 0x2f, 0x7b, 0x76, 0x61,
+	0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x7d,
+	0x42, 0xfd, 0x01, 0x0a, 0x1f, 0x63, 0x6f, 0x6d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x64, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x76, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0x42, 0x0a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x72, 0x6f, 0x74, 0x6f,
+	0x50, 0x01, 0x5a, 0x40, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f,
+	0x2f, 0x61, 0x70, 0x69, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x64, 0x69, 0x73, 0x74,
+	0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0x3b, 0x64, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x76, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0xa2, 0x02, 0x03, 0x43, 0x44, 0x58, 0xaa, 0x02, 0x1b, 0x43, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x44, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e,
+	0x2e, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xca, 0x02, 0x1b, 0x43, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x5c, 0x44, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x5c, 0x56,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0xe2, 0x02, 0x27, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5c,
+	0x44, 0x69, 0x73, 0x74, 0x72, 0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x5c, 0x56, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
+	0xea, 0x02, 0x1d, 0x43, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x3a, 0x3a, 0x44, 0x69, 0x73, 0x74, 0x72,
+	0x69, 0x62, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -10617,7 +13642,7 @@ func file_cosmos_distribution_v1beta1_query_proto_rawDescGZIP() []byte {
 	return file_cosmos_distribution_v1beta1_query_proto_rawDescData
 }
 
-var file_cosmos_distribution_v1beta1_query_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
+var file_cosmos_distribution_v1beta1_query_proto_msgTypes = make([]protoimpl.MessageInfo, 26)
 var file_cosmos_distribution_v1beta1_query_proto_goTypes = []interface{}{
 	(*QueryParamsRequest)(nil),                       // 0: cosmos.distribution.v1beta1.QueryParamsRequest
 	(*QueryParamsResponse)(nil),                      // 1: cosmos.distribution.v1beta1.QueryParamsResponse
@@ -10639,53 +13664,71 @@ var file_cosmos_distribution_v1beta1_query_proto_goTypes = []interface{}{
 	(*QueryDelegatorWithdrawAddressResponse)(nil),    // 17: cosmos.distribution.v1beta1.QueryDelegatorWithdrawAddressResponse
 	(*QueryCommunityPoolRequest)(nil),                // 18: cosmos.distribution.v1beta1.QueryCommunityPoolRequest
 	(*QueryCommunityPoolResponse)(nil),               // 19: cosmos.distribution.v1beta1.QueryCommunityPoolResponse
-	(*Params)(nil),                                   // 20: cosmos.distribution.v1beta1.Params
-	(*v1beta1.DecCoin)(nil),                          // 21: cosmos.base.v1beta1.DecCoin
-	(*ValidatorOutstandingRewards)(nil),              // 22: cosmos.distribution.v1beta1.ValidatorOutstandingRewards
-	(*ValidatorAccumulatedCommission)(nil),           // 23: cosmos.distribution.v1beta1.ValidatorAccumulatedCommission
-	(*v1beta11.PageRequest)(nil),                     // 24: cosmos.base.query.v1beta1.PageRequest
-	(*ValidatorSlashEvent)(nil),                      // 25: cosmos.distribution.v1beta1.ValidatorSlashEvent
-	(*v1beta11.PageResponse)(nil),                    // 26: cosmos.base.query.v1beta1.PageResponse
-	(*DelegationDelegatorReward)(nil),                // 27: cosmos.distribution.v1beta1.DelegationDelegatorReward
+	(*QueryValidatorHistoricalRewardsRequest)(nil),   // 20: cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsRequest
+	(*QueryValidatorHistoricalRewardsResponse)(nil),  // 21: cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsResponse
+	(*QueryValidatorCurrentRewardsRequest)(nil),      // 22: cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsRequest
+	(*QueryValidatorCurrentRewardsResponse)(nil),     // 23: cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsResponse
+	(*QueryDelegatorStartingInfoRequest)(nil),        // 24: cosmos.distribution.v1beta1.QueryDelegatorStartingInfoRequest
+	(*QueryDelegatorStartingInfoResponse)(nil),       // 25: cosmos.distribution.v1beta1.QueryDelegatorStartingInfoResponse
+	(*Params)(nil),                         // 26: cosmos.distribution.v1beta1.Params
+	(*v1beta1.DecCoin)(nil),                // 27: cosmos.base.v1beta1.DecCoin
+	(*ValidatorOutstandingRewards)(nil),    // 28: cosmos.distribution.v1beta1.ValidatorOutstandingRewards
+	(*ValidatorAccumulatedCommission)(nil), // 29: cosmos.distribution.v1beta1.ValidatorAccumulatedCommission
+	(*v1beta11.PageRequest)(nil),           // 30: cosmos.base.query.v1beta1.PageRequest
+	(*ValidatorSlashEvent)(nil),            // 31: cosmos.distribution.v1beta1.ValidatorSlashEvent
+	(*v1beta11.PageResponse)(nil),          // 32: cosmos.base.query.v1beta1.PageResponse
+	(*DelegationDelegatorReward)(nil),      // 33: cosmos.distribution.v1beta1.DelegationDelegatorReward
+	(*ValidatorHistoricalRewards)(nil),     // 34: cosmos.distribution.v1beta1.ValidatorHistoricalRewards
+	(*ValidatorCurrentRewards)(nil),        // 35: cosmos.distribution.v1beta1.ValidatorCurrentRewards
+	(*DelegatorStartingInfo)(nil),          // 36: cosmos.distribution.v1beta1.DelegatorStartingInfo
 }
 var file_cosmos_distribution_v1beta1_query_proto_depIdxs = []int32{
-	20, // 0: cosmos.distribution.v1beta1.QueryParamsResponse.params:type_name -> cosmos.distribution.v1beta1.Params
-	21, // 1: cosmos.distribution.v1beta1.QueryValidatorDistributionInfoResponse.self_bond_rewards:type_name -> cosmos.base.v1beta1.DecCoin
-	21, // 2: cosmos.distribution.v1beta1.QueryValidatorDistributionInfoResponse.commission:type_name -> cosmos.base.v1beta1.DecCoin
-	22, // 3: cosmos.distribution.v1beta1.QueryValidatorOutstandingRewardsResponse.rewards:type_name -> cosmos.distribution.v1beta1.ValidatorOutstandingRewards
-	23, // 4: cosmos.distribution.v1beta1.QueryValidatorCommissionResponse.commission:type_name -> cosmos.distribution.v1beta1.ValidatorAccumulatedCommission
-	24, // 5: cosmos.distribution.v1beta1.QueryValidatorSlashesRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
-	25, // 6: cosmos.distribution.v1beta1.QueryValidatorSlashesResponse.slashes:type_name -> cosmos.distribution.v1beta1.ValidatorSlashEvent
-	26, // 7: cosmos.distribution.v1beta1.QueryValidatorSlashesResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
-	21, // 8: cosmos.distribution.v1beta1.QueryDelegationRewardsResponse.rewards:type_name -> cosmos.base.v1beta1.DecCoin
-	27, // 9: cosmos.distribution.v1beta1.QueryDelegationTotalRewardsResponse.rewards:type_name -> cosmos.distribution.v1beta1.DelegationDelegatorReward
-	21, // 10: cosmos.distribution.v1beta1.QueryDelegationTotalRewardsResponse.total:type_name -> cosmos.base.v1beta1.DecCoin
-	21, // 11: cosmos.distribution.v1beta1.QueryCommunityPoolResponse.pool:type_name -> cosmos.base.v1beta1.DecCoin
-	0,  // 12: cosmos.distribution.v1beta1.Query.Params:input_type -> cosmos.distribution.v1beta1.QueryParamsRequest
-	2,  // 13: cosmos.distribution.v1beta1.Query.ValidatorDistributionInfo:input_type -> cosmos.distribution.v1beta1.QueryValidatorDistributionInfoRequest
-	4,  // 14: cosmos.distribution.v1beta1.Query.ValidatorOutstandingRewards:input_type -> cosmos.distribution.v1beta1.QueryValidatorOutstandingRewardsRequest
-	6,  // 15: cosmos.distribution.v1beta1.Query.ValidatorCommission:input_type -> cosmos.distribution.v1beta1.QueryValidatorCommissionRequest
-	8,  // 16: cosmos.distribution.v1beta1.Query.ValidatorSlashes:input_type -> cosmos.distribution.v1beta1.QueryValidatorSlashesRequest
-	10, // 17: cosmos.distribution.v1beta1.Query.DelegationRewards:input_type -> cosmos.distribution.v1beta1.QueryDelegationRewardsRequest
-	12, // 18: cosmos.distribution.v1beta1.Query.DelegationTotalRewards:input_type -> cosmos.distribution.v1beta1.QueryDelegationTotalRewardsRequest
-	14, // 19: cosmos.distribution.v1beta1.Query.DelegatorValidators:input_type -> cosmos.distribution.v1beta1.QueryDelegatorValidatorsRequest
-	16, // 20: cosmos.distribution.v1beta1.Query.DelegatorWithdrawAddress:input_type -> cosmos.distribution.v1beta1.QueryDelegatorWithdrawAddressRequest
-	18, // 21: cosmos.distribution.v1beta1.Query.CommunityPool:input_type -> cosmos.distribution.v1beta1.QueryCommunityPoolRequest
-	1,  // 22: cosmos.distribution.v1beta1.Query.Params:output_type -> cosmos.distribution.v1beta1.QueryParamsResponse
-	3,  // 23: cosmos.distribution.v1beta1.Query.ValidatorDistributionInfo:output_type -> cosmos.distribution.v1beta1.QueryValidatorDistributionInfoResponse
-	5,  // 24: cosmos.distribution.v1beta1.Query.ValidatorOutstandingRewards:output_type -> cosmos.distribution.v1beta1.QueryValidatorOutstandingRewardsResponse
-	7,  // 25: cosmos.distribution.v1beta1.Query.ValidatorCommission:output_type -> cosmos.distribution.v1beta1.QueryValidatorCommissionResponse
-	9,  // 26: cosmos.distribution.v1beta1.Query.ValidatorSlashes:output_type -> cosmos.distribution.v1beta1.QueryValidatorSlashesResponse
-	11, // 27: cosmos.distribution.v1beta1.Query.DelegationRewards:output_type -> cosmos.distribution.v1beta1.QueryDelegationRewardsResponse
-	13, // 28: cosmos.distribution.v1beta1.Query.DelegationTotalRewards:output_type -> cosmos.distribution.v1beta1.QueryDelegationTotalRewardsResponse
-	15, // 29: cosmos.distribution.v1beta1.Query.DelegatorValidators:output_type -> cosmos.distribution.v1beta1.QueryDelegatorValidatorsResponse
-	17, // 30: cosmos.distribution.v1beta1.Query.DelegatorWithdrawAddress:output_type -> cosmos.distribution.v1beta1.QueryDelegatorWithdrawAddressResponse
-	19, // 31: cosmos.distribution.v1beta1.Query.CommunityPool:output_type -> cosmos.distribution.v1beta1.QueryCommunityPoolResponse
-	22, // [22:32] is the sub-list for method output_type
-	12, // [12:22] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+	26, // 0: cosmos.distribution.v1beta1.QueryParamsResponse.params:type_name -> cosmos.distribution.v1beta1.Params
+	27, // 1: cosmos.distribution.v1beta1.QueryValidatorDistributionInfoResponse.self_bond_rewards:type_name -> cosmos.base.v1beta1.DecCoin
+	27, // 2: cosmos.distribution.v1beta1.QueryValidatorDistributionInfoResponse.commission:type_name -> cosmos.base.v1beta1.DecCoin
+	28, // 3: cosmos.distribution.v1beta1.QueryValidatorOutstandingRewardsResponse.rewards:type_name -> cosmos.distribution.v1beta1.ValidatorOutstandingRewards
+	29, // 4: cosmos.distribution.v1beta1.QueryValidatorCommissionResponse.commission:type_name -> cosmos.distribution.v1beta1.ValidatorAccumulatedCommission
+	30, // 5: cosmos.distribution.v1beta1.QueryValidatorSlashesRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	31, // 6: cosmos.distribution.v1beta1.QueryValidatorSlashesResponse.slashes:type_name -> cosmos.distribution.v1beta1.ValidatorSlashEvent
+	32, // 7: cosmos.distribution.v1beta1.QueryValidatorSlashesResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	27, // 8: cosmos.distribution.v1beta1.QueryDelegationRewardsResponse.rewards:type_name -> cosmos.base.v1beta1.DecCoin
+	33, // 9: cosmos.distribution.v1beta1.QueryDelegationTotalRewardsResponse.rewards:type_name -> cosmos.distribution.v1beta1.DelegationDelegatorReward
+	27, // 10: cosmos.distribution.v1beta1.QueryDelegationTotalRewardsResponse.total:type_name -> cosmos.base.v1beta1.DecCoin
+	27, // 11: cosmos.distribution.v1beta1.QueryCommunityPoolResponse.pool:type_name -> cosmos.base.v1beta1.DecCoin
+	34, // 12: cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsResponse.rewards:type_name -> cosmos.distribution.v1beta1.ValidatorHistoricalRewards
+	35, // 13: cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsResponse.rewards:type_name -> cosmos.distribution.v1beta1.ValidatorCurrentRewards
+	36, // 14: cosmos.distribution.v1beta1.QueryDelegatorStartingInfoResponse.starting_info:type_name -> cosmos.distribution.v1beta1.DelegatorStartingInfo
+	0,  // 15: cosmos.distribution.v1beta1.Query.Params:input_type -> cosmos.distribution.v1beta1.QueryParamsRequest
+	2,  // 16: cosmos.distribution.v1beta1.Query.ValidatorDistributionInfo:input_type -> cosmos.distribution.v1beta1.QueryValidatorDistributionInfoRequest
+	4,  // 17: cosmos.distribution.v1beta1.Query.ValidatorOutstandingRewards:input_type -> cosmos.distribution.v1beta1.QueryValidatorOutstandingRewardsRequest
+	6,  // 18: cosmos.distribution.v1beta1.Query.ValidatorCommission:input_type -> cosmos.distribution.v1beta1.QueryValidatorCommissionRequest
+	8,  // 19: cosmos.distribution.v1beta1.Query.ValidatorSlashes:input_type -> cosmos.distribution.v1beta1.QueryValidatorSlashesRequest
+	10, // 20: cosmos.distribution.v1beta1.Query.DelegationRewards:input_type -> cosmos.distribution.v1beta1.QueryDelegationRewardsRequest
+	12, // 21: cosmos.distribution.v1beta1.Query.DelegationTotalRewards:input_type -> cosmos.distribution.v1beta1.QueryDelegationTotalRewardsRequest
+	14, // 22: cosmos.distribution.v1beta1.Query.DelegatorValidators:input_type -> cosmos.distribution.v1beta1.QueryDelegatorValidatorsRequest
+	16, // 23: cosmos.distribution.v1beta1.Query.DelegatorWithdrawAddress:input_type -> cosmos.distribution.v1beta1.QueryDelegatorWithdrawAddressRequest
+	18, // 24: cosmos.distribution.v1beta1.Query.CommunityPool:input_type -> cosmos.distribution.v1beta1.QueryCommunityPoolRequest
+	20, // 25: cosmos.distribution.v1beta1.Query.ValidatorHistoricalRewards:input_type -> cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsRequest
+	22, // 26: cosmos.distribution.v1beta1.Query.ValidatorCurrentRewards:input_type -> cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsRequest
+	24, // 27: cosmos.distribution.v1beta1.Query.DelegatorStartingInfo:input_type -> cosmos.distribution.v1beta1.QueryDelegatorStartingInfoRequest
+	1,  // 28: cosmos.distribution.v1beta1.Query.Params:output_type -> cosmos.distribution.v1beta1.QueryParamsResponse
+	3,  // 29: cosmos.distribution.v1beta1.Query.ValidatorDistributionInfo:output_type -> cosmos.distribution.v1beta1.QueryValidatorDistributionInfoResponse
+	5,  // 30: cosmos.distribution.v1beta1.Query.ValidatorOutstandingRewards:output_type -> cosmos.distribution.v1beta1.QueryValidatorOutstandingRewardsResponse
+	7,  // 31: cosmos.distribution.v1beta1.Query.ValidatorCommission:output_type -> cosmos.distribution.v1beta1.QueryValidatorCommissionResponse
+	9,  // 32: cosmos.distribution.v1beta1.Query.ValidatorSlashes:output_type -> cosmos.distribution.v1beta1.QueryValidatorSlashesResponse
+	11, // 33: cosmos.distribution.v1beta1.Query.DelegationRewards:output_type -> cosmos.distribution.v1beta1.QueryDelegationRewardsResponse
+	13, // 34: cosmos.distribution.v1beta1.Query.DelegationTotalRewards:output_type -> cosmos.distribution.v1beta1.QueryDelegationTotalRewardsResponse
+	15, // 35: cosmos.distribution.v1beta1.Query.DelegatorValidators:output_type -> cosmos.distribution.v1beta1.QueryDelegatorValidatorsResponse
+	17, // 36: cosmos.distribution.v1beta1.Query.DelegatorWithdrawAddress:output_type -> cosmos.distribution.v1beta1.QueryDelegatorWithdrawAddressResponse
+	19, // 37: cosmos.distribution.v1beta1.Query.CommunityPool:output_type -> cosmos.distribution.v1beta1.QueryCommunityPoolResponse
+	21, // 38: cosmos.distribution.v1beta1.Query.ValidatorHistoricalRewards:output_type -> cosmos.distribution.v1beta1.QueryValidatorHistoricalRewardsResponse
+	23, // 39: cosmos.distribution.v1beta1.Query.ValidatorCurrentRewards:output_type -> cosmos.distribution.v1beta1.QueryValidatorCurrentRewardsResponse
+	25, // 40: cosmos.distribution.v1beta1.Query.DelegatorStartingInfo:output_type -> cosmos.distribution.v1beta1.QueryDelegatorStartingInfoResponse
+	28, // [28:41] is the sub-list for method output_type
+	15, // [15:28] is the sub-list for method input_type
+	15, // [15:15] is the sub-list for extension type_name
+	15, // [15:15] is the sub-list for extension extendee
+	0,  // [0:15] is the sub-list for field type_name
 }
 
 func init() { file_cosmos_distribution_v1beta1_query_proto_init() }
@@ -10935,6 +13978,78 @@ func file_cosmos_distribution_v1beta1_query_proto_init() {
 				return nil
 			}
 		}
+		file_cosmos_distribution_v1beta1_query_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryValidatorHistoricalRewardsRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_distribution_v1beta1_query_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryValidatorHistoricalRewardsResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_distribution_v1beta1_query_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryValidatorCurrentRewardsRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_distribution_v1beta1_query_proto_msgTypes[23].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryValidatorCurrentRewardsResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_distribution_v1beta1_query_proto_msgTypes[24].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryDelegatorStartingInfoRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cosmos_distribution_v1beta1_query_proto_msgTypes[25].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryDelegatorStartingInfoResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -10942,7 +14057,7 @@ func file_cosmos_distribution_v1beta1_query_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cosmos_distribution_v1beta1_query_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   20,
+			NumMessages:   26,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

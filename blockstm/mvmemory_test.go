@@ -102,6 +102,7 @@ func TestMVMemoryRecord(t *testing.T) {
 		require.False(t, wroteNewLocation)
 		require.True(t, mv.ValidateReadSet(2))
 
+		scheduler.TryIncarnate(version.Index)
 		scheduler.FinishExecution(version, wroteNewLocation)
 
 		// wait for dependency to finish

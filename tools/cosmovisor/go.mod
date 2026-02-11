@@ -3,7 +3,7 @@ module cosmossdk.io/tools/cosmovisor
 go 1.25.7
 
 require (
-	cosmossdk.io/log/v2 v2.0.0-rc.0
+	cosmossdk.io/log/v2 v2.0.0
 	github.com/cometbft/cometbft v0.39.0-beta.2
 	github.com/cometbft/cometbft-db v0.14.1
 	github.com/cosmos/cosmos-sdk v0.54.0-beta.0
@@ -25,7 +25,7 @@ require (
 	cloud.google.com/go/iam v1.5.3 // indirect
 	cloud.google.com/go/monitoring v1.24.2 // indirect
 	cloud.google.com/go/storage v1.58.0 // indirect
-	cosmossdk.io/api v1.0.0-rc.2 // indirect
+	cosmossdk.io/api v1.0.0 // indirect
 	cosmossdk.io/collections v1.3.1 // indirect
 	cosmossdk.io/core v0.11.3 // indirect
 	cosmossdk.io/depinject v1.2.1 // indirect

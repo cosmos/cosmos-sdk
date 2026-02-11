@@ -6,7 +6,7 @@ replace github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-2025092423260
 
 require (
 	cosmossdk.io/errors v1.0.2
-	cosmossdk.io/log/v2 v2.0.0-rc.0
+	cosmossdk.io/log/v2 v2.0.0
 	cosmossdk.io/math v1.5.3
 	github.com/cometbft/cometbft v0.39.0-beta.2
 	github.com/cosmos/cosmos-db v1.1.3

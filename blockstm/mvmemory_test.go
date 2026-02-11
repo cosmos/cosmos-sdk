@@ -16,8 +16,9 @@ func TestMVMemoryRecord(t *testing.T) {
 
 	var views []*MultiMVMemoryView
 	for i := TxnIndex(0); i < 3; i++ {
-		version := TxnVersion{i, 0}
-		view := mv.View(version.Index)
+		scheduler.txnStatus[i].TrySetExecuting()
+
+		view := mv.View(i)
 		store := view.GetKVStore(StoreKeyAuth)
 
 		_ = store.Get([]byte("a"))

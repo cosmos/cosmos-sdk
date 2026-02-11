@@ -42,39 +42,6 @@ func FetchIncr(a *atomic.Uint64) uint64 {
 	return a.Add(1) - 1
 }
 
-// DiffOrderedList compares two ordered lists
-// callback arguments: (value, is_new)
-func DiffOrderedList(old, new []Key, callback func(Key, bool) bool) {
-	i, j := 0, 0
-	for i < len(old) && j < len(new) {
-		switch bytes.Compare(old[i], new[j]) {
-		case -1:
-			if !callback(old[i], false) {
-				return
-			}
-			i++
-		case 1:
-			if !callback(new[j], true) {
-				return
-			}
-			j++
-		default:
-			i++
-			j++
-		}
-	}
-	for ; i < len(old); i++ {
-		if !callback(old[i], false) {
-			return
-		}
-	}
-	for ; j < len(new); j++ {
-		if !callback(new[j], true) {
-			return
-		}
-	}
-}
-
 // DiffMemDB compares two tree
 // callback arguments: (value, is_new)
 func DiffMemDB[V any](old, new *GMemDB[V], callback func(Key, bool) bool) {

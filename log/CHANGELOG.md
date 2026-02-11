@@ -20,7 +20,7 @@ Each entry must include the Github issue reference in the following format:
 
 # Changelog
 
-## [Unreleased]
+## [v2.0.1](https://github.com/cosmos/cosmos-sdk/releases/tag/log%2Fv2.0.1) - 2026-02-11
 
 * [#25894](https://github.com/cosmos/cosmos-sdk/pull/25894) Fix `slog.Logger` wrapper so that the correct source/line information is tracked.
 

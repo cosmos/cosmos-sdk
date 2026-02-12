@@ -25,6 +25,11 @@ const (
 	viewBranches
 )
 
+type orphanCounts struct {
+	leaves   int
+	branches int
+}
+
 type model struct {
 	view          view
 	width, height int
@@ -37,6 +42,8 @@ type model struct {
 	selectedCheckpoint uint32
 
 	checkpoints []internal.CheckpointInfo
+	orphanMap   map[internal.NodeID]uint32 // NodeID → OrphanedVersion
+	orphanStats map[uint32]orphanCounts    // checkpoint → {leaf orphan count, branch orphan count}
 }
 
 var tableStyles table.Styles
@@ -62,7 +69,7 @@ func initialModel(dir string) model {
 
 func (m *model) tableHeight() int {
 	if m.height > 0 {
-		return m.height - 4
+		return m.height - 8
 	}
 	return 20
 }
@@ -166,36 +173,60 @@ func (m *model) buildChangesetsTable() {
 }
 
 func (m *model) buildCheckpointsTable(cps []internal.CheckpointInfo) {
+	var totalLeaves, totalBranches, totalLeafOrph, totalBranchOrph int
 	rows := make([]table.Row, len(cps))
 	for i := range cps {
 		cp := &cps[i]
+		lc := int(cp.Leaves.Count)
+		bc := int(cp.Branches.Count)
+		oc := m.orphanStats[cp.Checkpoint]
+		totalLeaves += lc
+		totalBranches += bc
+		totalLeafOrph += oc.leaves
+		totalBranchOrph += oc.branches
 		rows[i] = table.Row{
 			strconv.FormatUint(uint64(cp.Checkpoint), 10),
 			strconv.FormatUint(uint64(cp.Version), 10),
 			cp.RootID.String(),
-			fmt.Sprintf("%d (offset %d, %d-%d)", cp.Leaves.Count, cp.Leaves.StartOffset, cp.Leaves.StartIndex, cp.Leaves.EndIndex),
-			fmt.Sprintf("%d (offset %d, %d-%d)", cp.Branches.Count, cp.Branches.StartOffset, cp.Branches.StartIndex, cp.Branches.EndIndex),
+			strconv.Itoa(lc),
+			strconv.Itoa(bc),
+			strconv.Itoa(oc.leaves),
+			strconv.Itoa(oc.branches),
 		}
 	}
+	rows = append(rows, table.Row{
+		"TOTAL", "-", "-",
+		strconv.Itoa(totalLeaves),
+		strconv.Itoa(totalBranches),
+		strconv.Itoa(totalLeafOrph),
+		strconv.Itoa(totalBranchOrph),
+	})
 	m.table = newTable([]table.Column{
 		{Title: "Checkpoint", Width: 10},
 		{Title: "Version", Width: 10},
 		{Title: "Root", Width: 20},
-		{Title: "Leaves", Width: 25},
-		{Title: "Branches", Width: 25},
+		{Title: "Leaves", Width: 8},
+		{Title: "Branches", Width: 10},
+		{Title: "LeafOrph", Width: 10},
+		{Title: "BranchOrph", Width: 10},
 	}, rows, m.tableHeight())
 }
 
-func (m *model) buildLeavesTable(leaves []internal.LeafLayout) {
+func (m *model) buildLeavesTable(leaves []internal.LeafLayout, orphanMap map[internal.NodeID]uint32) {
 	rows := make([]table.Row, len(leaves))
 	for i := range leaves {
 		l := &leaves[i]
+		orphStr := "-"
+		if v, ok := orphanMap[l.ID]; ok && v != 0 {
+			orphStr = strconv.FormatUint(uint64(v), 10)
+		}
 		rows[i] = table.Row{
 			l.ID.String(),
 			strconv.FormatUint(uint64(l.Version), 10),
 			l.KeyOffset.String(),
 			l.ValueOffset.String(),
 			hex.EncodeToString(l.Hash[:8]),
+			orphStr,
 		}
 	}
 	m.table = newTable([]table.Column{
@@ -204,13 +235,18 @@ func (m *model) buildLeavesTable(leaves []internal.LeafLayout) {
 		{Title: "KeyOff", Width: 14},
 		{Title: "ValOff", Width: 14},
 		{Title: "Hash", Width: 18},
+		{Title: "Orphaned", Width: 10},
 	}, rows, m.tableHeight())
 }
 
-func (m *model) buildBranchesTable(branches []internal.BranchLayout) {
+func (m *model) buildBranchesTable(branches []internal.BranchLayout, orphanMap map[internal.NodeID]uint32) {
 	rows := make([]table.Row, len(branches))
 	for i := range branches {
 		b := &branches[i]
+		orphStr := "-"
+		if v, ok := orphanMap[b.ID]; ok && v != 0 {
+			orphStr = strconv.FormatUint(uint64(v), 10)
+		}
 		rows[i] = table.Row{
 			b.ID.String(),
 			strconv.FormatUint(uint64(b.Version), 10),
@@ -219,6 +255,7 @@ func (m *model) buildBranchesTable(branches []internal.BranchLayout) {
 			b.Left.String(),
 			b.Right.String(),
 			hex.EncodeToString(b.Hash[:8]),
+			orphStr,
 		}
 	}
 	m.table = newTable([]table.Column{
@@ -229,6 +266,7 @@ func (m *model) buildBranchesTable(branches []internal.BranchLayout) {
 		{Title: "Left", Width: 16},
 		{Title: "Right", Width: 16},
 		{Title: "Hash", Width: 18},
+		{Title: "Orphaned", Width: 10},
 	}, rows, m.tableHeight())
 }
 
@@ -251,10 +289,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c":
 			return m, tea.Quit
-		case "q", "esc":
+		case "q":
+			return m, tea.Quit
+		case "esc":
 			switch m.view {
-			case viewTrees:
-				return m, tea.Quit
 			case viewChangesets:
 				m.view = viewTrees
 				m.err = ""
@@ -293,6 +331,19 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return m, nil
 				}
 				m.checkpoints = cps
+				orphans, _ := loadOrphans(m.dir, m.selectedTree, m.selectedChangeset)
+				m.orphanMap = make(map[internal.NodeID]uint32, len(orphans))
+				m.orphanStats = make(map[uint32]orphanCounts)
+				for _, o := range orphans {
+					m.orphanMap[o.NodeID] = o.OrphanedVersion
+					c := m.orphanStats[o.NodeID.Checkpoint()]
+					if o.NodeID.IsLeaf() {
+						c.leaves++
+					} else {
+						c.branches++
+					}
+					m.orphanStats[o.NodeID.Checkpoint()] = c
+				}
 				m.buildCheckpointsTable(cps)
 				return m, nil
 			}
@@ -315,7 +366,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				m.view = viewLeaves
 				m.err = ""
-				m.buildLeavesTable(leaves)
+				m.buildLeavesTable(leaves, m.orphanMap)
 				return m, nil
 			}
 		case "b":
@@ -337,7 +388,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				m.view = viewBranches
 				m.err = ""
-				m.buildBranchesTable(branches)
+				m.buildBranchesTable(branches, m.orphanMap)
 				return m, nil
 			}
 		}
@@ -353,28 +404,39 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
-	titleStyle := lipgloss.NewStyle().Bold(true).Padding(0, 1)
+	boxStyle := lipgloss.NewStyle().
+		Border(lipgloss.NormalBorder()).
+		BorderForeground(lipgloss.Color("240"))
 
-	var title string
+	var titleText string
+	var footerText string
 	switch m.view {
 	case viewTrees:
-		title = titleStyle.Render("IAVL Trees: " + m.dir)
+		titleText = "IAVL Trees: " + m.dir
+		footerText = "enter: select  q: quit"
 	case viewChangesets:
-		title = titleStyle.Render("Changesets: " + m.selectedTree)
+		titleText = "Changesets: " + m.selectedTree
+		footerText = "enter: checkpoints  esc: back  q: quit"
 	case viewCheckpoints:
-		title = titleStyle.Render(fmt.Sprintf("Checkpoints: %s / %s", m.selectedTree, m.selectedChangeset))
+		titleText = fmt.Sprintf("Checkpoints: %s / %s", m.selectedTree, m.selectedChangeset)
+		footerText = "l: leaves  b: branches  esc: back  q: quit"
 	case viewLeaves:
-		title = titleStyle.Render(fmt.Sprintf("Leaves: %s / %s / checkpoint %d", m.selectedTree, m.selectedChangeset, m.selectedCheckpoint))
+		titleText = fmt.Sprintf("Leaves: %s / %s / checkpoint %d", m.selectedTree, m.selectedChangeset, m.selectedCheckpoint)
+		footerText = "esc: back  q: quit"
 	case viewBranches:
-		title = titleStyle.Render(fmt.Sprintf("Branches: %s / %s / checkpoint %d", m.selectedTree, m.selectedChangeset, m.selectedCheckpoint))
+		titleText = fmt.Sprintf("Branches: %s / %s / checkpoint %d", m.selectedTree, m.selectedChangeset, m.selectedCheckpoint)
+		footerText = "esc: back  q: quit"
 	}
+
+	title := boxStyle.Render(titleText)
+	footer := boxStyle.Render(footerText)
 
 	if m.err != "" {
 		errStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Padding(0, 1)
-		return title + "\n" + errStyle.Render("Error: "+m.err) + "\n"
+		return title + "\n" + errStyle.Render("Error: "+m.err) + "\n" + footer
 	}
 
-	return title + "\n" + m.table.View() + "\n"
+	return title + "\n" + m.table.View() + "\n" + footer
 }
 
 func humanSize(b int64) string {

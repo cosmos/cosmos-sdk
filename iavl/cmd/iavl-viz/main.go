@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -87,6 +88,33 @@ func loadBranches(dir, tree, cs string, offset, count uint32) ([]internal.Branch
 	defer mmap.Close()
 
 	return copyMmap(mmap.StructMmap, offset, count), nil
+}
+
+func loadOrphans(dir, tree, cs string) ([]internal.OrphanLogEntry, error) {
+	f, err := os.Open(filepath.Join(changesetPath(dir, tree, cs), "orphans.dat"))
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	rdr, err := internal.ReadOrphanLog(f)
+	if err != nil {
+		return nil, err
+	}
+	defer rdr.Close()
+
+	var entries []internal.OrphanLogEntry
+	for {
+		entry, err := rdr.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, err
+		}
+		entries = append(entries, entry)
+	}
+	return entries, nil
 }
 
 func main() {

@@ -1,6 +1,9 @@
 package internal
 
-import "bytes"
+import (
+	"bytes"
+	"fmt"
+)
 
 // SetRecursive do set operation.
 // it always do modification and return new `MemNode`, even if the value is the same.
@@ -19,7 +22,7 @@ func SetRecursive(nodePtr *NodePointer, leafNode *MemNode, ctx *MutationContext)
 	if node.IsLeaf() {
 		nodeKey, err := node.Key()
 		if err != nil {
-			return nil, false, err
+			return nil, false, fmt.Errorf("failed to get key of leaf node: %w", err)
 		}
 		leafNodePtr := NewNodePointer(leafNode)
 		cmp := bytes.Compare(leafNode.key, nodeKey.UnsafeBytes())
@@ -106,7 +109,7 @@ func RemoveRecursive(nodePtr *NodePointer, key []byte, ctx *MutationContext) (re
 	if node.IsLeaf() {
 		nodeKey, err := node.Key()
 		if err != nil {
-			return false, nil, nil, err
+			return false, nil, nil, fmt.Errorf("failed to get key of leaf node: %w", err)
 		}
 
 		if bytes.Equal(nodeKey.UnsafeBytes(), key) {

@@ -156,12 +156,12 @@ func (c *Compactor) doAddChangeset(reader *ChangesetReader) error {
 			leaf.SetKeyInKVData(keyInKVData)
 
 			//  remap value offset
-			valOffset, valInWAL, err := c.remapBlob(leaf.ValueInKVData(), leaf.ValueOffset.ToUint64(), walRewriteInfo, false, &existingLeaf)
+			valOffset, valInKVData, err := c.remapBlob(leaf.ValueInKVData(), leaf.ValueOffset.ToUint64(), walRewriteInfo, false, &existingLeaf)
 			if err != nil {
 				return fmt.Errorf("failed to remap value blob for leaf %s: %w", id, err)
 			}
 			leaf.ValueOffset = NewUint40(valOffset)
-			leaf.SetValueInKVData(!valInWAL)
+			leaf.SetValueInKVData(valInKVData)
 
 			err = c.leavesWriter.Append(&leaf)
 			if err != nil {
@@ -200,12 +200,12 @@ func (c *Compactor) doAddChangeset(reader *ChangesetReader) error {
 			}
 
 			// remap key offset
-			keyOffset, keyInWAL, err := c.remapBlob(branch.KeyInKVData(), branch.KeyOffset.ToUint64(), walRewriteInfo, true, &existingBranch)
+			keyOffset, keyInKVData, err := c.remapBlob(branch.KeyInKVData(), branch.KeyOffset.ToUint64(), walRewriteInfo, true, &existingBranch)
 			if err != nil {
 				return fmt.Errorf("failed to remap key blob for branch %s: %w", id, err)
 			}
 			branch.KeyOffset = NewUint40(keyOffset)
-			branch.SetKeyInKVData(!keyInWAL)
+			branch.SetKeyInKVData(keyInKVData)
 
 			err = c.branchesWriter.Append(&branch)
 			if err != nil {

@@ -146,6 +146,28 @@ func (d *GMVData[V]) Iterator(
 // returns true if valid.
 func (d *GMVData[V]) ValidateReadSet(txn TxnIndex, rs *ReadSet) bool {
 	for _, desc := range rs.Reads {
+		if desc.Has {
+			value, version, estimate, found := d.readFound(desc.Key, txn)
+			if estimate {
+				return false
+			}
+			var exists bool
+			if version.Valid() {
+				exists = !d.isZero(value)
+			} else {
+				// Storage-based Has() does not require caching; storage is immutable.
+				// If the key wasn't cached into MVData, trust the recorded ExistsExpected.
+				if !found {
+					continue
+				}
+				exists = !d.isZero(value)
+			}
+			if exists != desc.ExistsExpected {
+				return false
+			}
+			continue
+		}
+
 		value, version, estimate := d.Read(desc.Key, txn)
 		if estimate {
 			// previously read entry from data, now ESTIMATE

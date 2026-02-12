@@ -109,3 +109,50 @@ func TestSnapshot(t *testing.T) {
 	require.Nil(t, storage.Get([]byte("d")))
 	require.Equal(t, 2, storage.Len())
 }
+
+func TestValueBasedValidationAcceptsSameValueDifferentVersion(t *testing.T) {
+	data := NewMVData()
+
+	// Txn 3 reads "v" from Txn 1.
+	rs := &ReadSet{
+		Reads: []ReadDescriptor{{Key: []byte("k"), Version: TxnVersion{Index: 1, Incarnation: 1}, Captured: []byte("v")}},
+	}
+
+	// Both Txn 1 and Txn 2 write "v". Closest dependency for Txn 3 becomes Txn 2.
+	data.Write([]byte("k"), []byte("v"), TxnVersion{Index: 1, Incarnation: 1})
+	data.Write([]byte("k"), []byte("v"), TxnVersion{Index: 2, Incarnation: 1})
+
+	// Validates: Version mismatch (exp 1, got 2) ignored matching value.
+	require.True(t, data.ValidateReadSet(3, rs))
+
+	// Invalidates: Value mismatch.
+	rs.Reads[0].Captured = []byte("other")
+	require.False(t, data.ValidateReadSet(3, rs))
+}
+
+func TestHasValidation(t *testing.T) {
+	data := NewMVData()
+
+	// Txn 1 writes "k".
+	data.Write([]byte("k"), []byte("v"), TxnVersion{Index: 1, Incarnation: 0})
+
+	// Txn 3 checks Has("k") == true.
+	rs := &ReadSet{
+		Reads: []ReadDescriptor{{Key: []byte("k"), Has: true, ExistsExpected: true}},
+	}
+
+	// Validates: "k" exists (from Txn 1).
+	require.True(t, data.ValidateReadSet(3, rs))
+
+	// Txn 2 also writes "k". Txn 3 now depends on Txn 2.
+	data.Write([]byte("k"), []byte("v2"), TxnVersion{Index: 2, Incarnation: 0})
+
+	// Validates: "k" still exists (from Txn 2), even if version changed.
+	require.True(t, data.ValidateReadSet(3, rs))
+
+	// Txn 2 deletes "k".
+	data.Write([]byte("k"), nil, TxnVersion{Index: 2, Incarnation: 1})
+
+	// Invalidates: "k" does not exist anymore.
+	require.False(t, data.ValidateReadSet(3, rs))
+}

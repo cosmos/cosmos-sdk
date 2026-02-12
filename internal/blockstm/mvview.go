@@ -103,15 +103,14 @@ func (s *GMVMemoryView[V]) Get(key []byte) V {
 		if !version.Valid() {
 			storageValue := s.storage.Get(key)
 
+			// Cache pre-state (Index 0) only when the value is small enough.
+			// For large values we intentionally avoid caching and fall back to version-based behavior.
+			if s.mvData.eq != nil && s.mvData.shouldSnapshotValue(storageValue) {
+				s.mvData.Write(key, storageValue, InvalidTxnVersion)
+			}
+
 			kCopy := append([]byte(nil), key...)
-			captured := s.mvData.captureBytesIfSmall(storageValue)
-			s.readSet.Reads = append(s.readSet.Reads, ReadDescriptor{Key: kCopy, Version: InvalidTxnVersion, Captured: captured})
-
-			// Cache the pre-state value in MVMemory (at index 0).
-			// This enables value-based validation to compare against this value directly from memory,
-			// avoiding repeated storage reads during validation.
-			s.mvData.Write(key, storageValue, InvalidTxnVersion)
-
+			s.readSet.Reads = append(s.readSet.Reads, ReadDescriptor{Key: kCopy, Version: InvalidTxnVersion})
 			return storageValue
 		}
 
@@ -123,7 +122,41 @@ func (s *GMVMemoryView[V]) Get(key []byte) V {
 }
 
 func (s *GMVMemoryView[V]) Has(key []byte) bool {
-	return !s.mvData.isZero(s.Get(key))
+	if s.writeSet != nil {
+		if value, found := s.writeSet.OverlayGet(key); found {
+			// value written by this txn
+			// zero value means deleted
+			return !s.mvData.isZero(value)
+		}
+	}
+
+	for {
+		value, version, estimate, found := s.mvData.readFound(key, s.txn)
+		if estimate {
+			// read ESTIMATE mark, wait for the blocking txn to finish
+			s.waitFor(version.Index)
+			continue
+		}
+
+		var exists bool
+		if !version.Valid() {
+			// Storage read path: avoid loading/caching full values.
+			// For large values, caching would be expensive and unnecessary for Has().
+			if found {
+				exists = !s.mvData.isZero(value)
+			} else {
+				exists = s.storage.Has(key)
+				return exists
+			}
+		} else {
+			exists = !s.mvData.isZero(value)
+		}
+
+		kCopy := append([]byte(nil), key...)
+		s.readSet.Reads = append(s.readSet.Reads, ReadDescriptor{Key: kCopy, Has: true, ExistsExpected: exists})
+
+		return exists
+	}
 }
 
 func (s *GMVMemoryView[V]) Set(key []byte, value V) {

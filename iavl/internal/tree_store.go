@@ -42,7 +42,7 @@ type TreeStore struct {
 	shouldCheckpoint      bool
 	shouldRollover        bool
 
-	changesetsByVersion *btree.Map[uint32, *Changeset]
+	changesetsByVersion btree.Map[uint32, *Changeset]
 	changesetsLock      sync.RWMutex
 	lastNodeIDsAssigned chan struct{}
 
@@ -51,10 +51,9 @@ type TreeStore struct {
 
 func NewTreeStore(dir string, opts TreeStoreOptions) (*TreeStore, error) {
 	ts := &TreeStore{
-		dir:                 dir,
-		opts:                opts,
-		checkpointer:        NewCheckpointer(NewBasicEvictor(opts.LeafEvictDepth, opts.BranchEvictDepth)),
-		changesetsByVersion: &btree.Map[uint32, *Changeset]{},
+		dir:          dir,
+		opts:         opts,
+		checkpointer: NewCheckpointer(NewBasicEvictor(opts.LeafEvictDepth, opts.BranchEvictDepth)),
 		rootByVersionCache: ttlcache.New[uint32, *NodePointer](
 			// cache up to 10 recent roots by version
 			ttlcache.WithCapacity[uint32, *NodePointer](opts.RootCacheSize),
@@ -216,6 +215,11 @@ func (ts *TreeStore) LatestVersion() uint32 {
 }
 
 func (ts *TreeStore) RootAtVersion(targetVersion uint32) (*NodePointer, error) {
+	if targetVersion == 0 || targetVersion == ts.LatestVersion() {
+		// fast path to latest version
+		// TODO there is a tiny race condition where latest version could advance right after the check, is this a problem?
+		return ts.Latest(), nil
+	}
 	ctx, span := tracer.Start(context.Background(),
 		"TreeStore.RootAtVersion",
 		trace.WithAttributes(attribute.Int64("targetVersion", int64(targetVersion))),

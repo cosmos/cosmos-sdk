@@ -9,14 +9,14 @@ import (
 )
 
 type MultiTree struct {
-	latestVersion           int64
+	latestCommitInfo        *storetypes.CommitInfo
 	trees                   map[storetypes.StoreKey]storetypes.CacheWrap // index of the trees by name
 	initCacheWrapFromParent func(storetypes.StoreKey) storetypes.CacheWrap
 }
 
-func NewMultiTree(version int64, initCacheWrapFromParent func(key storetypes.StoreKey) storetypes.CacheWrap) *MultiTree {
+func NewMultiTree(commitInfo *storetypes.CommitInfo, initCacheWrapFromParent func(key storetypes.StoreKey) storetypes.CacheWrap) *MultiTree {
 	return &MultiTree{
-		latestVersion:           version,
+		latestCommitInfo:        commitInfo,
 		trees:                   map[storetypes.StoreKey]storetypes.CacheWrap{},
 		initCacheWrapFromParent: initCacheWrapFromParent,
 	}
@@ -76,7 +76,7 @@ func (t *MultiTree) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) 
 
 func (t *MultiTree) CacheMultiStore() storetypes.CacheMultiStore {
 	// create a nested MultiTree, which in turn creates CacheWraps for each store
-	return NewMultiTree(t.latestVersion, func(key storetypes.StoreKey) storetypes.CacheWrap {
+	return NewMultiTree(t.latestCommitInfo, func(key storetypes.StoreKey) storetypes.CacheWrap {
 		return t.getCacheWrap(key).CacheWrap()
 	})
 }
@@ -118,7 +118,13 @@ func (t *MultiTree) SetTracingContext(context storetypes.TraceContext) storetype
 }
 
 func (t *MultiTree) LatestVersion() int64 {
-	return t.latestVersion
+	return t.latestCommitInfo.Version
+}
+
+func (t *MultiTree) Query(query *storetypes.RequestQuery) (*storetypes.ResponseQuery, error) {
+	//TODO implement proof logic here
+	panic("implement me")
 }
 
 var _ storetypes.MultiStore = &MultiTree{}
+var _ storetypes.Queryable = &MultiTree{}

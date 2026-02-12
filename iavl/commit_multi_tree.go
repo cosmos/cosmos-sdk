@@ -824,18 +824,7 @@ func (db *CommitMultiTree) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceCo
 }
 
 func (db *CommitMultiTree) CacheMultiStore() storetypes.CacheMultiStore {
-	// TODO we need to make sure each cached tree has the correct version!!
-	// as is they will always get the latest version no matter how long the CacheMultiStore lives
-	// which is incorrect if this outlives a commit and violates concurrency safety
-	version := int64(db.version)
-	return internal.NewMultiTree(version, func(key storetypes.StoreKey) storetypes.CacheWrap {
-		idx, ok := db.storesByKey[key]
-		if !ok {
-			panic(fmt.Sprintf("store with key %s not mounted", key.Name()))
-		}
-		tree := db.stores[idx].store
-		return tree.CacheWrap()
-	})
+	return db.cacheMultiStore(db.lastCommitInfo)
 }
 
 func (db *CommitMultiTree) CacheMultiStoreWithVersion(version int64) (storetypes.CacheMultiStore, error) {
@@ -843,12 +832,17 @@ func (db *CommitMultiTree) CacheMultiStoreWithVersion(version int64) (storetypes
 		// use latest version
 		return db.CacheMultiStore(), nil
 	}
-	_, err := loadCommitInfo(db.dir, uint64(version))
+	ci, err := loadCommitInfo(db.dir, uint64(version))
 	if err != nil {
 		return nil, fmt.Errorf("version %d is not available: %w", version, err)
 	}
 
-	mt := internal.NewMultiTree(version, func(key storetypes.StoreKey) storetypes.CacheWrap {
+	return db.cacheMultiStore(ci), nil
+}
+
+func (db *CommitMultiTree) cacheMultiStore(commitInfo *storetypes.CommitInfo) storetypes.CacheMultiStore {
+	version := commitInfo.Version
+	return internal.NewMultiTree(commitInfo, func(key storetypes.StoreKey) storetypes.CacheWrap {
 		idx, ok := db.storesByKey[key]
 		if !ok {
 			panic(fmt.Sprintf("store with key %s not mounted", key.Name()))
@@ -870,8 +864,6 @@ func (db *CommitMultiTree) CacheMultiStoreWithVersion(version int64) (storetypes
 			return tree.CacheWrap()
 		}
 	})
-
-	return mt, nil
 }
 
 func (db *CommitMultiTree) pruneIfNeeded() {

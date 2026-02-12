@@ -126,6 +126,18 @@ func (m *model) buildTreesTable() {
 	}, rows, m.tableHeight())
 }
 
+func fileCountAndSize(path string, structSize int64) string {
+	info, err := os.Stat(path)
+	if err != nil {
+		return "-"
+	}
+	size := info.Size()
+	if structSize > 0 {
+		return fmt.Sprintf("%d (%s)", size/structSize, humanSize(size))
+	}
+	return humanSize(size)
+}
+
 func (m *model) buildChangesetsTable() {
 	treeDir := filepath.Join(m.dir, "stores", m.selectedTree+".iavl")
 	entries, err := os.ReadDir(treeDir)
@@ -142,17 +154,7 @@ func (m *model) buildChangesetsTable() {
 		if !valid {
 			continue
 		}
-		var size int64
 		csPath := filepath.Join(treeDir, e.Name())
-		_ = filepath.WalkDir(csPath, func(_ string, d fs.DirEntry, err error) error {
-			if err != nil || d.IsDir() {
-				return nil
-			}
-			if info, err := d.Info(); err == nil {
-				size += info.Size()
-			}
-			return nil
-		})
 		endStr := "-"
 		if end > 0 {
 			endStr = strconv.FormatUint(uint64(end), 10)
@@ -161,14 +163,30 @@ func (m *model) buildChangesetsTable() {
 		if compacted > 0 {
 			compStr = strconv.FormatUint(uint64(compacted), 10)
 		}
-		rows = append(rows, table.Row{e.Name(), strconv.FormatUint(uint64(start), 10), endStr, compStr, humanSize(size)})
+		rows = append(rows, table.Row{
+			e.Name(),
+			strconv.FormatUint(uint64(start), 10),
+			endStr,
+			compStr,
+			fileCountAndSize(filepath.Join(csPath, "kv.dat"), 0),
+			fileCountAndSize(filepath.Join(csPath, "wal.log"), 0),
+			fileCountAndSize(filepath.Join(csPath, "leaves.dat"), internal.SizeLeaf),
+			fileCountAndSize(filepath.Join(csPath, "branches.dat"), internal.SizeBranch),
+			fileCountAndSize(filepath.Join(csPath, "checkpoints.dat"), internal.CheckpointInfoSize),
+			fileCountAndSize(filepath.Join(csPath, "orphans.dat"), 0),
+		})
 	}
 	m.table = newTable([]table.Column{
 		{Title: "Dir", Width: 20},
 		{Title: "Start", Width: 10},
 		{Title: "End", Width: 10},
 		{Title: "Compacted", Width: 10},
-		{Title: "Size", Width: 12},
+		{Title: "kv.dat", Width: 10},
+		{Title: "wal.log", Width: 10},
+		{Title: "Leaves", Width: 14},
+		{Title: "Branches", Width: 14},
+		{Title: "Checkpts", Width: 14},
+		{Title: "orphans.dat", Width: 12},
 	}, rows, m.tableHeight())
 }
 
@@ -184,6 +202,10 @@ func (m *model) buildCheckpointsTable(cps []internal.CheckpointInfo) {
 		totalBranches += bc
 		totalLeafOrph += oc.leaves
 		totalBranchOrph += oc.branches
+		orphPct := "-"
+		if total := lc + bc; total > 0 {
+			orphPct = fmt.Sprintf("%.1f%%", float64(oc.leaves+oc.branches)*100.0/float64(total))
+		}
 		rows[i] = table.Row{
 			strconv.FormatUint(uint64(cp.Checkpoint), 10),
 			strconv.FormatUint(uint64(cp.Version), 10),
@@ -192,7 +214,12 @@ func (m *model) buildCheckpointsTable(cps []internal.CheckpointInfo) {
 			strconv.Itoa(bc),
 			strconv.Itoa(oc.leaves),
 			strconv.Itoa(oc.branches),
+			orphPct,
 		}
+	}
+	totalOrphPct := "-"
+	if total := totalLeaves + totalBranches; total > 0 {
+		totalOrphPct = fmt.Sprintf("%.1f%%", float64(totalLeafOrph+totalBranchOrph)*100.0/float64(total))
 	}
 	rows = append(rows, table.Row{
 		"TOTAL", "-", "-",
@@ -200,6 +227,7 @@ func (m *model) buildCheckpointsTable(cps []internal.CheckpointInfo) {
 		strconv.Itoa(totalBranches),
 		strconv.Itoa(totalLeafOrph),
 		strconv.Itoa(totalBranchOrph),
+		totalOrphPct,
 	})
 	m.table = newTable([]table.Column{
 		{Title: "Checkpoint", Width: 10},
@@ -207,8 +235,9 @@ func (m *model) buildCheckpointsTable(cps []internal.CheckpointInfo) {
 		{Title: "Root", Width: 20},
 		{Title: "Leaves", Width: 8},
 		{Title: "Branches", Width: 10},
-		{Title: "LeafOrph", Width: 10},
-		{Title: "BranchOrph", Width: 10},
+		{Title: "LeafOrphans", Width: 15},
+		{Title: "BranchOrphans", Width: 15},
+		{Title: "Orphan %", Width: 10},
 	}, rows, m.tableHeight())
 }
 
@@ -225,8 +254,8 @@ func (m *model) buildLeavesTable(leaves []internal.LeafLayout, orphanMap map[int
 			strconv.FormatUint(uint64(l.Version), 10),
 			l.KeyOffset.String(),
 			l.ValueOffset.String(),
-			hex.EncodeToString(l.Hash[:8]),
 			orphStr,
+			hex.EncodeToString(l.Hash[:]),
 		}
 	}
 	m.table = newTable([]table.Column{
@@ -234,8 +263,8 @@ func (m *model) buildLeavesTable(leaves []internal.LeafLayout, orphanMap map[int
 		{Title: "Version", Width: 10},
 		{Title: "KeyOff", Width: 14},
 		{Title: "ValOff", Width: 14},
-		{Title: "Hash", Width: 18},
 		{Title: "Orphaned", Width: 10},
+		{Title: "Hash", Width: 66},
 	}, rows, m.tableHeight())
 }
 
@@ -254,8 +283,8 @@ func (m *model) buildBranchesTable(branches []internal.BranchLayout, orphanMap m
 			b.Size.String(),
 			b.Left.String(),
 			b.Right.String(),
-			hex.EncodeToString(b.Hash[:8]),
 			orphStr,
+			hex.EncodeToString(b.Hash[:]),
 		}
 	}
 	m.table = newTable([]table.Column{
@@ -265,8 +294,8 @@ func (m *model) buildBranchesTable(branches []internal.BranchLayout, orphanMap m
 		{Title: "Size", Width: 12},
 		{Title: "Left", Width: 16},
 		{Title: "Right", Width: 16},
-		{Title: "Hash", Width: 18},
 		{Title: "Orphaned", Width: 10},
+		{Title: "Hash", Width: 66},
 	}, rows, m.tableHeight())
 }
 

@@ -16,6 +16,9 @@ package secp256k1
 #  define HAVE___INT128
 #  define USE_FIELD_5X52
 #  define USE_SCALAR_4X64
+#  if defined(__x86_64__)
+#    define USE_ASM_X86_64
+#  endif
 #else
 #  define USE_FIELD_10X26
 #  define USE_SCALAR_8X32

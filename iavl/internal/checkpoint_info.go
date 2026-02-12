@@ -15,7 +15,6 @@ func init() {
 const CheckpointInfoSize = 64
 
 // CheckpointInfo holds metadata about a single checkpoint (a persisted tree state).
-// The checkpoint is identified by Version, since checkpoint == version.
 type CheckpointInfo struct {
 	Leaves   NodeSetInfo `json:"leaves"`
 	Branches NodeSetInfo `json:"branches"`

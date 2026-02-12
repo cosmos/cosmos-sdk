@@ -21,12 +21,11 @@ func (t TreeReader) HasErr(key []byte) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	// TODO optimized Has without getting the value
-	value, _, err := root.Get(key)
-	if err != nil {
-		return false, err
+	if root == nil {
+		return false, nil
 	}
-	return value.UnsafeBytes() != nil, nil
+	has, _, err := root.Has(key)
+	return has, err
 }
 
 func (t TreeReader) GetErr(key []byte) ([]byte, error) {
@@ -34,6 +33,9 @@ func (t TreeReader) GetErr(key []byte) ([]byte, error) {
 	defer pin.Unpin()
 	if err != nil {
 		return nil, err
+	}
+	if root == nil {
+		return nil, nil
 	}
 	value, _, err := root.Get(key)
 	if err != nil {

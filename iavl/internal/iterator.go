@@ -42,7 +42,7 @@ func (iter *Iterator) Valid() bool {
 
 // Error implements dbm.Iterator
 func (iter *Iterator) Error() error {
-	return nil
+	return iter.err
 }
 
 // Key implements dbm.Iterator
@@ -69,6 +69,7 @@ func (iter *Iterator) Next() {
 		iter.stack = iter.stack[:len(iter.stack)-1]
 
 		node, pin, err := nodePtr.Resolve()
+		// TODO this defer is done in a for loop which isn't really correct, but it is also somewhat harmless, we could fix in the future
 		defer pin.Unpin()
 		if err != nil {
 			iter.fail(err)

@@ -26,22 +26,26 @@ func (a *AsyncHashScheduler) ComputeHashes(left *MemNode, right *MemNode) (leftH
 		select {
 		case a.semaphore <- struct{}{}:
 			// acquired semaphore, proceed with async computation
-			leftDone := make(chan error, 1)
+			type hashResult struct {
+				hash []byte
+				err  error
+			}
+			leftDone := make(chan hashResult, 1)
 			go func() {
 				defer func() { <-a.semaphore }() // release semaphore
-				var err error                    // don't write to the outer err
-				leftHash, err = left.ComputeHash(a)
-				leftDone <- err
+				h, err := left.ComputeHash(a)
+				leftDone <- hashResult{h, err}
 			}()
 			rightHash, err = right.ComputeHash(a)
 			if err != nil {
+				<-leftDone // wait for goroutine to finish before returning
 				return nil, nil, err
 			}
-			err = <-leftDone
-			if err != nil {
-				return nil, nil, err
+			lr := <-leftDone
+			if lr.err != nil {
+				return nil, nil, lr.err
 			}
-			return leftHash, rightHash, nil
+			return lr.hash, rightHash, nil
 		default:
 			return computeHashsSync(left, right, a)
 		}

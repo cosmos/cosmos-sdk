@@ -691,7 +691,7 @@ func (db *CommitMultiTree) LoadLatestVersion() error {
 func (db *CommitMultiTree) loadStore(key storetypes.StoreKey, typ storetypes.StoreType, expectedVersion uint64) (storetypes.CacheWrapper, error) {
 	switch typ {
 	case storetypes.StoreTypeIAVL, storetypes.StoreTypeDB:
-		dir := filepath.Join(db.dir, "stores", fmt.Sprintf(key.Name(), ".iavl"))
+		dir := filepath.Join(db.dir, "stores", fmt.Sprintf("%s.iavl", key.Name()))
 		if _, err := os.Stat(dir); os.IsNotExist(err) {
 			err := os.MkdirAll(dir, 0o755)
 			if err != nil {

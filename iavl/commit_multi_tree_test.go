@@ -2,7 +2,9 @@ package iavl
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -63,12 +65,16 @@ func TestCommitMultiTree_Reload(t *testing.T) {
 }
 
 func TestCommitMultiTreeSims(t *testing.T) {
+	os.RemoveAll("testdata/iavl-data")
+	var iterCount atomic.Int32
 	rapid.Check(t, func(t *rapid.T) {
-		testCommitMultiTreeSims(t, Options{
+		iter := int(iterCount.Add(1) - 1) // 0-based, matches rapid's "panic after N tests"
+		testCommitMultiTreeSims(t, iter, Options{
 			// intentionally choose some small sizes to force checkpoint and eviction behavior
 			ChangesetRolloverSize:  4096,
 			CompactionRolloverSize: 4096,
-			EvictDepth:             2,
+			BranchEvictDepth:       2,
+			LeafEvictDepth:         2,
 			CheckpointInterval:     2,
 			// use only a small cache for testing
 			RootCacheSize:   2,
@@ -80,18 +86,25 @@ func TestCommitMultiTreeSims(t *testing.T) {
 	})
 }
 
-func testCommitMultiTreeSims(t *rapid.T, opts Options, pruningOpts pruningtypes.PruningOptions) {
+func testCommitMultiTreeSims(t *rapid.T, iter int, opts Options, pruningOpts pruningtypes.PruningOptions) {
 	logger := sdklog.NewNopLogger()
 	dbV1 := dbm.NewMemDB()
 	mtV1 := rootmulti.NewStore(dbV1, logger, storemetrics.NewNoOpMetrics())
 
-	tempDir, err := os.MkdirTemp("", "iavlx-mt")
-	require.NoError(t, err, "failed to create temp directory")
-	defer os.RemoveAll(tempDir)
+	dataDir := fmt.Sprintf("testdata/iavl-data/run-%d", iter)
+	require.NoError(t, os.MkdirAll(dataDir, 0o755), "failed to create data directory")
+	testPassed := false
+	defer func() {
+		if testPassed {
+			os.RemoveAll(dataDir)
+		} else {
+			t.Logf("keeping iavl data dir for debugging: %s", dataDir)
+		}
+	}()
 
 	sim := &SimCommitMultiTree{
 		mtV1:        mtV1,
-		dirV2:       tempDir,
+		dirV2:       dataDir,
 		kv1:         store.NewKVStoreKey("kv1"),
 		kv2:         store.NewKVStoreKey("kv2"),
 		kv3:         store.NewKVStoreKey("kv3"),
@@ -113,22 +126,33 @@ func testCommitMultiTreeSims(t *rapid.T, opts Options, pruningOpts pruningtypes.
 	// open v2 tree
 	sim.openV2Tree(t)
 
+	//defer func() {
+	//	if r := recover(); r != nil {
+	//		t.Fatalf("panic recovered: %v\nStack trace:\n%s", r, debug.Stack())
+	//	}
+	//}()
+
+	t.Cleanup(func() {
+		// generate debug HTML file for test inspection
+		//if t.Failed() {
+		desc := sim.mtV2.Describe()
+		os.MkdirAll("testdata", 0o755)
+		f, err := os.Create(fmt.Sprintf("testdata/iavl-debug-run-%d.html", iter))
+		if err != nil {
+			t.Logf("failed to create debug HTML file: %v", err)
+			return
+		}
+		defer f.Close()
+		if err := RenderHTML(f, desc); err != nil {
+			t.Logf("failed to render debug HTML: %v", err)
+		}
+		//}
+
+		require.NoError(t, sim.mtV2.Close(), "failed to close iavlx commit multi tree")
+	})
+
 	sim.Check(t)
-
-	// generate debug HTML file for test inspection
-	desc := sim.mtV2.Describe()
-	os.MkdirAll("testdata", 0o755)
-	f, err := os.Create("testdata/iavl-debug.html")
-	if err != nil {
-		t.Logf("failed to create debug HTML file: %v", err)
-		return
-	}
-	defer f.Close()
-	if err := RenderHTML(f, desc); err != nil {
-		t.Logf("failed to render debug HTML: %v", err)
-	}
-
-	require.NoError(t, sim.mtV2.Close(), "failed to close iavlx commit multi tree")
+	testPassed = true
 }
 
 type SimCommitMultiTree struct {

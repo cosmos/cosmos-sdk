@@ -65,5 +65,5 @@ func (nf *NodeMmap[T]) FindByID(id NodeID, info *NodeSetInfo) (*T, error) {
 			highIdx = midIdx - 1
 		}
 	}
-	return nil, fmt.Errorf("node ID %s not found", id.String())
+	return nil, fmt.Errorf("node ID %s not found; start %d, end %d, count %d", id.String(), info.StartIndex, info.EndIndex, info.Count)
 }

@@ -869,7 +869,10 @@ func (k Keeper) Exec(goCtx context.Context, msg *group.MsgExec) (*group.MsgExecR
 			return nil, err
 		}
 
-		decisionPolicy := policyInfo.DecisionPolicy.GetCachedValue().(group.DecisionPolicy)
+		decisionPolicy, err := policyInfo.GetDecisionPolicy()
+		if err != nil {
+			return nil, errorsmod.Wrap(err, "decision policy")
+		}
 		if results, err := k.doExecuteMsgs(cacheCtx, k.router, proposal, addr, decisionPolicy); err != nil {
 			proposal.ExecutorResult = group.PROPOSAL_EXECUTOR_RESULT_FAILURE
 			logs = fmt.Sprintf("proposal execution failed on proposal %d, because of error %s", proposal.Id, err.Error())
@@ -1106,8 +1109,11 @@ func (k Keeper) validateDecisionPolicies(ctx sdk.Context, g group.GroupInfo) err
 			return err
 		}
 
-		err = groupPolicy.DecisionPolicy.GetCachedValue().(group.DecisionPolicy).Validate(g, k.config)
+		decisionPolicy, err := groupPolicy.GetDecisionPolicy()
 		if err != nil {
+			return errorsmod.Wrap(err, "decision policy")
+		}
+		if err := decisionPolicy.Validate(g, k.config); err != nil {
 			return err
 		}
 	}

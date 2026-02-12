@@ -145,7 +145,7 @@ func (cs *ChangesetWriter) writeBranch(np *NodePointer, node *MemNode) error {
 	keyOffset, keyInWal := cs.walWriter.LookupKeyOffset(node.key)
 	if !keyInWal {
 		var err error
-		keyOffset, err = cs.kvWriter.WriteKeyBlob(node.key)
+		keyOffset, err = cs.kvWriter.WriteKeyBlob(WrapSafeBytes(node.key))
 		if err != nil {
 			return fmt.Errorf("failed to write key data: %w", err)
 		}
@@ -209,7 +209,7 @@ func (cs *ChangesetWriter) writeLeaf(np *NodePointer, node *MemNode) error {
 		if found {
 			keyOffset = offset
 		} else {
-			offset, err := cs.kvWriter.WriteKeyBlob(node.key)
+			offset, err := cs.kvWriter.WriteKeyBlob(WrapSafeBytes(node.key))
 			if err != nil {
 				return fmt.Errorf("failed to write key data: %w", err)
 			}
@@ -221,7 +221,7 @@ func (cs *ChangesetWriter) writeLeaf(np *NodePointer, node *MemNode) error {
 	valueOffset := node.walValueOffset
 	var valueInKvData bool
 	if valueOffset == 0 {
-		offset, err := cs.kvWriter.WriteValueBlob(node.value)
+		offset, err := cs.kvWriter.WriteValueBlob(WrapSafeBytes(node.value))
 		if err != nil {
 			return fmt.Errorf("failed to write value data: %w", err)
 		}

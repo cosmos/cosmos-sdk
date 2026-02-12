@@ -287,9 +287,9 @@ func (c *Compactor) remapBlob(origIsInKVData bool, origOffset uint64, walRewrite
 			return 0, false, fmt.Errorf("failed to read original blob during remap: %w", err)
 		}
 		if isKey {
-			newOffset, err = c.kvlogWriter.WriteKeyBlob(blob.UnsafeBytes())
+			newOffset, err = c.kvlogWriter.WriteKeyBlob(blob)
 		} else {
-			newOffset, err = c.kvlogWriter.WriteValueBlob(blob.UnsafeBytes())
+			newOffset, err = c.kvlogWriter.WriteValueBlob(blob)
 		}
 		if err != nil {
 			return 0, false, fmt.Errorf("failed to write blob to new kv log during remap: %w", err)

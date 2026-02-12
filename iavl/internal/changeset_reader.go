@@ -113,7 +113,7 @@ func (cr *ChangesetReader) ResolveBranchByID(id NodeID) (*BranchLayout, error) {
 
 func (cr *ChangesetReader) GetCheckpointInfo(checkpoint uint32) (*CheckpointInfo, error) {
 	if checkpoint < cr.firstCheckpoint || checkpoint > cr.lastCheckpoint {
-		return nil, fmt.Errorf("checkpoint %d out of range for changeset (have %d..%d)", checkpoint, cr.firstCheckpoint, cr.lastCheckpoint)
+		return nil, fmt.Errorf("checkpoint %d out of range for changeset %s (have %d..%d)", checkpoint, cr.changeset.Files().Dir(), cr.firstCheckpoint, cr.lastCheckpoint)
 	}
 	return cr.checkpointsInfo.UnsafeItem(checkpoint - cr.firstCheckpoint), nil
 }

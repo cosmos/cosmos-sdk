@@ -16,15 +16,18 @@ func ReadWAL(file *os.File) iter.Seq2[WALEntry, error] {
 	}
 	if kvr.Len() == 0 {
 		// empty WAL file — no entries to replay
+		kvr.Close()
 		return func(yield func(WALEntry, error) bool) {}
 	}
 	if kvr.At(0) != byte(WALEntryStart) {
+		kvr.Close()
 		return func(yield func(WALEntry, error) bool) {
 			yield(WALEntry{}, fmt.Errorf("data does not contain a valid WAL start entry"))
 		}
 	}
 	startVersion, bytesRead, err := kvr.readVarint(1)
 	if err != nil {
+		kvr.Close()
 		return func(yield func(WALEntry, error) bool) {
 			yield(WALEntry{}, fmt.Errorf("failed to read WAL start layer: %w", err))
 		}
@@ -37,6 +40,7 @@ func ReadWAL(file *os.File) iter.Seq2[WALEntry, error] {
 	}
 
 	return func(yield func(WALEntry, error) bool) {
+		defer kvr.Close()
 		for {
 			entry, err := rdr.next()
 			if err != nil {

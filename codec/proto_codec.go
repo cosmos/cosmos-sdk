@@ -16,9 +16,8 @@ import (
 	"google.golang.org/protobuf/types/dynamicpb"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	"cosmossdk.io/x/tx/signing/aminojson"
-
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/x/tx/signing/aminojson"
 )
 
 // ProtoCodecMarshaler defines an interface for codecs that utilize Protobuf for both

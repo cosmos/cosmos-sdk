@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"sync/atomic"
@@ -169,7 +170,10 @@ func (cp *Checkpointer) LatestCheckpointRoot() (res CheckpointRootInfo, err erro
 
 func (cp *Checkpointer) Close() error {
 	close(cp.reqChan)
-	return <-cp.doneChan
+	err := <-cp.doneChan
+	// close orphan proc after checkpointer proc finishes, since the
+	// checkpointer proc sends to the orphan proc's channel
+	return errors.Join(err, cp.orphanProc.Close())
 }
 
 type checkpointReq struct {

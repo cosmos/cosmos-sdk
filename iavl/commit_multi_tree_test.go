@@ -74,8 +74,8 @@ func TestCommitMultiTreeSims(t *testing.T) {
 			RootCacheSize:   2,
 			RootCacheExpiry: 5, // 5 milliseconds
 		}, pruningtypes.PruningOptions{
-			//KeepRecent: 5,
-			//Interval:   2,
+			KeepRecent: 5,
+			Interval:   2,
 		})
 	})
 }

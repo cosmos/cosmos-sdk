@@ -67,6 +67,10 @@ func (cp *CompactorProc) StartCompactionRun(ctx context.Context) error {
 	}
 
 	for _, cs := range toProcess {
+		if ctx.Err() != nil {
+			// context cancelled, stop processing further changesets
+			break
+		}
 		err := cp.compactOne(ctx, cs, cpOpts)
 		if err != nil {
 			return fmt.Errorf("failed to compact changeset starting at version %d: %w", cs.Files().StartVersion(), err)

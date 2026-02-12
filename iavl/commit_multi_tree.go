@@ -45,7 +45,9 @@ type CommitMultiTree struct {
 	lastCommitId   storetypes.CommitID
 	lastCommitInfo *storetypes.CommitInfo
 
+	cancelPruning    context.CancelFunc
 	pruningActive    atomic.Bool
+	pruningDone      chan struct{}
 	pruningOptions   pruningtypes.PruningOptions
 	lastPruneVersion uint64
 }
@@ -681,6 +683,8 @@ func (db *CommitMultiTree) LoadLatestVersion() error {
 		db.lastCommitInfo = ci
 	}
 
+	//db.startDebugServer()
+
 	return nil
 }
 
@@ -791,13 +795,21 @@ func (db *CommitMultiTree) LatestVersion() int64 {
 }
 
 func (db *CommitMultiTree) Close() error {
+	if db.cancelPruning != nil {
+		db.cancelPruning()
+	}
+	if db.pruningDone != nil {
+		// wait for any ongoing pruning to finish before closing stores
+		<-db.pruningDone
+	}
+	var errGroup errgroup.Group
 	for _, si := range db.stores {
 		if closer, ok := si.store.(io.Closer); ok {
-			err := closer.Close()
-			if err != nil {
-				return err
-			}
+			errGroup.Go(closer.Close)
 		}
+	}
+	if err := errGroup.Wait(); err != nil {
+		return fmt.Errorf("failed to close stores: %w", err)
 	}
 	return nil
 }
@@ -874,10 +886,14 @@ func (db *CommitMultiTree) pruneIfNeeded() {
 	}
 	db.pruningActive.Store(true)
 	db.lastPruneVersion = db.version
+	db.pruningDone = make(chan struct{})
+	ctx, cancel := context.WithCancel(context.Background())
+	db.cancelPruning = cancel
 	go func() {
-		ctx, span := tracer.Start(context.Background(), "CommitMultiTree.Prune")
+		ctx, span := tracer.Start(ctx, "CommitMultiTree.Prune")
 		defer span.End()
 		defer db.pruningActive.Store(false)
+		defer close(db.pruningDone)
 
 		// TODO delete old commit infos
 

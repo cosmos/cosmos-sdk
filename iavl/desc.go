@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"net"
+	"net/http"
 
 	"github.com/cosmos/cosmos-sdk/iavl/internal"
 )
@@ -20,6 +22,27 @@ type CheckpointInfo = internal.CheckpointInfo
 
 func RenderHTML(w io.Writer, desc MultiTreeDescription) error {
 	return descTemplate.Execute(w, desc)
+}
+
+// TODO: add a config flag to enable/disable the debug server instead of starting by default
+func (db *CommitMultiTree) startDebugServer() {
+	ln, err := net.Listen("tcp", "127.0.0.1:63789")
+	if err != nil {
+		logger.Error("failed to start IAVL debug server", "error", err)
+		return
+	}
+	fmt.Printf("IAVL debug server started at http://%s\n", ln.Addr().String())
+	logger.Info("IAVL debug server started", "addr", "http://"+ln.Addr().String())
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		desc := db.Describe()
+		if err := RenderHTML(w, desc); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	})
+	go http.Serve(ln, mux)
 }
 
 func formatBytes(b int) string {
@@ -94,7 +117,6 @@ var descTemplate = template.Must(template.New("desc").Funcs(template.FuncMap{
   <table>
     <tr>
       <th>Versions</th>
-      <th>Status</th>
       <th class="num">Leaves</th>
       <th class="num">Branches</th>
       <th class="num">WAL</th>
@@ -106,11 +128,9 @@ var descTemplate = template.Must(template.New("desc").Funcs(template.FuncMap{
     <tr>
       <td>
         {{.StartVersion}}{{if .EndVersion}}&ndash;{{.EndVersion}}{{end}}
-      </td>
-      <td>
-        {{if .Incomplete}}<span class="tag tag-incomplete">incomplete</span>
-        {{else if .CompactedAt}}<span class="tag tag-compacted">compacted @{{.CompactedAt}}</span>
-        {{else}}<span class="dim">&mdash;</span>{{end}}
+        {{if .Incomplete}} <span class="tag tag-incomplete">incomplete</span>
+        {{else if .CompactedAt}} <span class="tag tag-compacted">compacted @{{.CompactedAt}}</span>
+        {{end}}
       </td>
       <td class="num">{{if .Incomplete}}<span class="dim">&mdash;</span>{{else}}{{.TotalLeaves}}{{end}}</td>
       <td class="num">{{if .Incomplete}}<span class="dim">&mdash;</span>{{else}}{{.TotalBranches}}{{end}}</td>

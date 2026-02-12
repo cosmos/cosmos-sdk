@@ -99,14 +99,33 @@ func (ts *TreeStore) load() error {
 		}
 		pin.Unpin()
 
-		// TODO remove older undeleted changesets after compaction
-		// remove older undeleted changesets after compaction
-		if compactionMap.Len() > 0 {
-			// TODO delete all changesets in compactionMap
-		}
+		// delete superseded compaction directories for the same start version
+		compactionMap.Ascend(0, func(_ uint32, dir string) bool {
+			logger.WarnContext(ctx, "deleting superseded changeset dir", "dir", dir)
+			if err := os.RemoveAll(dir); err != nil {
+				logger.ErrorContext(ctx, "failed to delete superseded changeset dir", "dir", dir, "error", err)
+			}
+			return true
+		})
+
+		// delete old changesets that have been compacted into this one
 		endVersion := cs.Files().EndVersion()
-		if endVersion > 0 { // only true when we have a compacted changeset, otherwise endVersion is 0
-			// TODO delete everything in dirMap with startVersion <= endVersion, since those changesets have been compacted into this one
+		if endVersion > 0 {
+			for {
+				nextStart, compactionMap, ok := dirMap.Min()
+				if !ok || nextStart > endVersion {
+					break
+				}
+				// delete all dirs for this start version (original + any older compactions)
+				compactionMap.Ascend(0, func(_ uint32, dir string) bool {
+					logger.WarnContext(ctx, "deleting compacted changeset dir", "dir", dir)
+					if err := os.RemoveAll(dir); err != nil {
+						logger.ErrorContext(ctx, "failed to delete compacted changeset dir", "dir", dir, "error", err)
+					}
+					return true
+				})
+				dirMap.Delete(nextStart)
+			}
 		}
 	}
 

@@ -194,9 +194,13 @@ func (c *Compactor) doAddChangeset(reader *ChangesetReader) error {
 
 			if newLeftOffset, ok := c.offsetCache[branch.Left]; ok {
 				branch.LeftOffset = newLeftOffset
+			} else {
+				branch.LeftOffset = 0
 			}
 			if newRightOffset, ok := c.offsetCache[branch.Right]; ok {
 				branch.RightOffset = newRightOffset
+			} else {
+				branch.RightOffset = 0
 			}
 
 			// remap key offset

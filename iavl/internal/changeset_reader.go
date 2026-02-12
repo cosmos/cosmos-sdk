@@ -310,6 +310,7 @@ func (cr *ChangesetReader) Describe() ChangesetDescription {
 		CompactedAt:   cr.changeset.Files().CompactedAtVersion(),
 		TotalLeaves:   cr.leavesData.Count(),
 		TotalBranches: cr.branchesData.Count(),
+		TotalBytes:    cr.TotalBytes(),
 		KVLogSize:     cr.kvDataReader.Len(),
 		WALSize:       cr.walReader.Len(),
 		Checkpoints:   checkpoints,

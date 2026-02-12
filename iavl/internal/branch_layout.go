@@ -6,8 +6,7 @@ import (
 )
 
 const (
-	sizeBranch       = 88
-	BranchLayoutSize = sizeBranch
+	sizeBranch = 88
 )
 
 func init() {

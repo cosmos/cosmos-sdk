@@ -365,11 +365,16 @@ func (ts *TreeStore) Describe() TreeDescription {
 		return true
 	})
 
+	totalBytes := 0
+	for _, cs := range changesetDescs {
+		totalBytes += cs.TotalBytes
+	}
 	desc := TreeDescription{
 		Version:                 ts.LatestVersion(),
 		LatestCheckpointVersion: ts.lastCheckpointVersion,
 		LatestCheckpoint:        ts.checkpoint.Load(),
 		LatestSavedCheckpoint:   ts.checkpointer.LatestSavedCheckpoint(),
+		TotalBytes:              totalBytes,
 		Changesets:              changesetDescs,
 	}
 	if root := ts.Latest(); root != nil {

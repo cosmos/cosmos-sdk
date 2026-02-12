@@ -76,17 +76,9 @@ func rootRetained(cp CheckpointInfo) bool {
 	return idx >= nsi.StartIndex && idx <= nsi.EndIndex
 }
 
-func totalBytes(cs ChangesetDescription) int {
-	return cs.WALSize + cs.KVLogSize +
-		cs.TotalLeaves*int(internal.LeafLayoutSize) +
-		cs.TotalBranches*int(internal.BranchLayoutSize) +
-		len(cs.Checkpoints)*int(internal.CheckpointInfoSize)
-}
-
 var descTemplate = template.Must(template.New("desc").Funcs(template.FuncMap{
 	"formatBytes":  formatBytes,
 	"rootRetained": rootRetained,
-	"totalBytes":   totalBytes,
 }).Parse(`<!DOCTYPE html>
 <html>
 <head>
@@ -136,7 +128,8 @@ var descTemplate = template.Must(template.New("desc").Funcs(template.FuncMap{
       version <span>{{$tree.Version}}</span> &middot;
       root <span>{{$tree.RootID}}</span> &middot;
       checkpoint <span>{{$tree.LatestCheckpoint}}</span> (saved: <span>{{$tree.LatestSavedCheckpoint}}</span>) &middot;
-      checkpoint version <span>{{$tree.LatestCheckpointVersion}}</span>
+      checkpoint version <span>{{$tree.LatestCheckpointVersion}}</span> &middot;
+      size <span>{{formatBytes $tree.TotalBytes}}</span>
     </span>
   </div>
 
@@ -155,7 +148,7 @@ var descTemplate = template.Must(template.New("desc").Funcs(template.FuncMap{
     <tr>
       <td>
         {{.StartVersion}}{{if .EndVersion}}&ndash;{{.EndVersion}}{{end}}
-        {{if .Incomplete}} <span class="tag tag-incomplete">incomplete</span>
+        {{if .Incomplete}} <span class="tag tag-incomplete">closed</span>
         {{else if .CompactedAt}} <span class="tag tag-compacted">compacted @{{.CompactedAt}}</span>
         {{end}}
       </td>
@@ -163,7 +156,7 @@ var descTemplate = template.Must(template.New("desc").Funcs(template.FuncMap{
       <td class="num">{{if .Incomplete}}<span class="dim">&mdash;</span>{{else}}{{.TotalBranches}}{{end}}</td>
       <td class="num">{{if .Incomplete}}<span class="dim">&mdash;</span>{{else}}{{formatBytes .WALSize}}{{end}}</td>
       <td class="num">{{if .Incomplete}}<span class="dim">&mdash;</span>{{else}}{{formatBytes .KVLogSize}}{{end}}</td>
-      <td class="num">{{if .Incomplete}}<span class="dim">&mdash;</span>{{else}}{{formatBytes (totalBytes .)}}{{end}}</td>
+      <td class="num">{{if .Incomplete}}<span class="dim">&mdash;</span>{{else}}{{formatBytes .TotalBytes}}{{end}}</td>
       <td class="num">
         {{if .Incomplete}}<span class="dim">&mdash;</span>
         {{else if not .Checkpoints}}0

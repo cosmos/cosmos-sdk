@@ -25,6 +25,7 @@ const (
 	viewBranches
 	viewOrphans
 	viewWALAnalysis
+	viewWALEntries
 )
 
 type orphanCounts struct {
@@ -43,12 +44,14 @@ type model struct {
 	selectedChangeset  string
 	selectedCheckpoint uint32
 
-	checkpoints []internal.CheckpointInfo
-	orphans     []internal.OrphanLogEntry
-	orphanMap   map[internal.NodeID]uint32 // NodeID → OrphanedVersion
-	orphanStats map[uint32]orphanCounts    // checkpoint → {leaf orphan count, branch orphan count}
-	walAnalysis []walVersionInfo
-	walTotal    walVersionInfo
+	checkpoints        []internal.CheckpointInfo
+	orphans            []internal.OrphanLogEntry
+	orphanMap          map[internal.NodeID]uint32 // NodeID → OrphanedVersion
+	orphanStats        map[uint32]orphanCounts    // checkpoint → {leaf orphan count, branch orphan count}
+	walAnalysis        []walVersionInfo
+	walTotal           walVersionInfo
+	selectedWALVersion uint64
+	walSize            string
 }
 
 var tableStyles table.Styles
@@ -342,34 +345,55 @@ func (m *model) buildWALAnalysisTable(info []walVersionInfo, total walVersionInf
 		v := &info[i]
 		rows = append(rows, table.Row{
 			strconv.FormatUint(v.version, 10),
-			strconv.Itoa(v.offset),
 			strconv.Itoa(v.sets),
 			strconv.Itoa(v.deletes),
 			formatStat(&v.keyStats, (*runningStats).avg),
 			formatStat(&v.keyStats, (*runningStats).stddev),
 			formatStat(&v.valStats, (*runningStats).avg),
 			formatStat(&v.valStats, (*runningStats).stddev),
+			strconv.Itoa(v.offset),
 		})
 	}
 	rows = append(rows, table.Row{
 		"TOTAL",
-		"-",
 		strconv.Itoa(total.sets),
 		strconv.Itoa(total.deletes),
 		formatStat(&total.keyStats, (*runningStats).avg),
 		formatStat(&total.keyStats, (*runningStats).stddev),
 		formatStat(&total.valStats, (*runningStats).avg),
 		formatStat(&total.valStats, (*runningStats).stddev),
+		"-",
 	})
 	m.table = newTable([]table.Column{
 		{Title: "Version", Width: 10},
-		{Title: "Offset", Width: 10},
 		{Title: "Sets", Width: 8},
 		{Title: "Deletes", Width: 8},
 		{Title: "Avg Key", Width: 10},
 		{Title: "Key StdDev", Width: 10},
 		{Title: "Avg Val", Width: 10},
 		{Title: "Val StdDev", Width: 10},
+		{Title: "Offset", Width: 10},
+	}, rows, m.tableHeight())
+}
+
+func (m *model) buildWALEntriesTable(entries []walEntry) {
+	rows := make([]table.Row, len(entries))
+	for i := range entries {
+		e := &entries[i]
+		del := "no"
+		if e.delete {
+			del = "yes"
+		}
+		rows[i] = table.Row{
+			hex.EncodeToString(e.key),
+			hex.EncodeToString(e.value),
+			del,
+		}
+	}
+	m.table = newTable([]table.Column{
+		{Title: "Key", Width: 50},
+		{Title: "Value", Width: 50},
+		{Title: "Delete", Width: 8},
 	}, rows, m.tableHeight())
 }
 
@@ -410,6 +434,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.view = viewChangesets
 				m.err = ""
 				m.buildChangesetsTable()
+				return m, nil
+			case viewWALEntries:
+				m.view = viewWALAnalysis
+				m.err = ""
+				m.buildWALAnalysisTable(m.walAnalysis, m.walTotal)
 				return m, nil
 			case viewLeaves, viewBranches, viewOrphans:
 				m.view = viewCheckpoints
@@ -454,6 +483,21 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.orphanStats[o.NodeID.Checkpoint()] = c
 				}
 				m.buildCheckpointsTable(cps)
+				return m, nil
+			case viewWALAnalysis:
+				if row[0] == "TOTAL" {
+					return m, nil
+				}
+				ver, _ := strconv.ParseUint(row[0], 10, 64)
+				for _, info := range m.walAnalysis {
+					if info.version == ver {
+						m.selectedWALVersion = ver
+						m.view = viewWALEntries
+						m.err = ""
+						m.buildWALEntriesTable(info.entries)
+						return m, nil
+					}
+				}
 				return m, nil
 			}
 		case "l":
@@ -521,6 +565,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				m.walAnalysis = info
 				m.walTotal = total
+				m.walSize = walFileSize(m.dir, m.selectedTree, m.selectedChangeset)
 				m.view = viewWALAnalysis
 				m.err = ""
 				m.buildWALAnalysisTable(info, total)
@@ -565,7 +610,10 @@ func (m model) View() string {
 		titleText = fmt.Sprintf("Orphans: %s / %s (%d total)", m.selectedTree, m.selectedChangeset, len(m.orphans))
 		footerText = "esc: back  q: quit"
 	case viewWALAnalysis:
-		titleText = fmt.Sprintf("WAL Analysis: %s / %s", m.selectedTree, m.selectedChangeset)
+		titleText = fmt.Sprintf("WAL Analysis: %s / %s (wal.log: %s)", m.selectedTree, m.selectedChangeset, m.walSize)
+		footerText = "enter: entries  esc: back  q: quit"
+	case viewWALEntries:
+		titleText = fmt.Sprintf("WAL Entries: %s / %s / version %d", m.selectedTree, m.selectedChangeset, m.selectedWALVersion)
 		footerText = "esc: back  q: quit"
 	}
 

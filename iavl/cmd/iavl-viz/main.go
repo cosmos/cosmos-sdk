@@ -38,6 +38,12 @@ func (s *runningStats) stddev() float64 {
 	return 0
 }
 
+type walEntry struct {
+	key    []byte
+	value  []byte
+	delete bool
+}
+
 type walVersionInfo struct {
 	version  uint64
 	offset   int
@@ -45,6 +51,7 @@ type walVersionInfo struct {
 	deletes  int
 	keyStats runningStats
 	valStats runningStats
+	entries  []walEntry
 }
 
 func scanTrees(dir string) ([]string, error) {
@@ -206,12 +213,14 @@ func loadWALAnalysis(dir, tree, cs string) ([]walVersionInfo, walVersionInfo, er
 			cur.valStats.add(valLen)
 			total.keyStats.add(keyLen)
 			total.valStats.add(valLen)
+			cur.entries = append(cur.entries, walEntry{key: entry.Key.SafeCopy(), value: entry.Value.SafeCopy(), delete: false})
 		case internal.WALOpDelete:
 			cur.deletes++
 			total.deletes++
 			keyLen := float64(len(entry.Key.UnsafeBytes()))
 			cur.keyStats.add(keyLen)
 			total.keyStats.add(keyLen)
+			cur.entries = append(cur.entries, walEntry{key: entry.Key.SafeCopy(), value: nil, delete: true})
 		case internal.WALOpCommit:
 			results = append(results, cur)
 			cur = walVersionInfo{}
@@ -224,6 +233,14 @@ func loadWALAnalysis(dir, tree, cs string) ([]walVersionInfo, walVersionInfo, er
 	}
 
 	return results, total, nil
+}
+
+func walFileSize(dir, tree, cs string) string {
+	info, err := os.Stat(filepath.Join(changesetPath(dir, tree, cs), "wal.log"))
+	if err != nil {
+		return "?"
+	}
+	return humanSize(info.Size())
 }
 
 func main() {

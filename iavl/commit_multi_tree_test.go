@@ -115,6 +115,19 @@ func testCommitMultiTreeSims(t *rapid.T, opts Options, pruningOpts pruningtypes.
 
 	sim.Check(t)
 
+	//// generate debug HTML file for test inspection
+	//desc := sim.mtV2.Describe()
+	//os.MkdirAll("testdata", 0o755)
+	//f, err := os.Create("testdata/iavl-debug.html")
+	//if err != nil {
+	//	t.Logf("failed to create debug HTML file: %v", err)
+	//	return
+	//}
+	//defer f.Close()
+	//if err := RenderHTML(f, desc); err != nil {
+	//	t.Logf("failed to render debug HTML: %v", err)
+	//}
+
 	require.NoError(t, sim.mtV2.Close(), "failed to close iavlx commit multi tree")
 }
 
@@ -123,20 +136,21 @@ type SimCommitMultiTree struct {
 	mtV2  *CommitMultiTree
 	dirV2 string
 
-	kv1, kv2, kv3 *store.KVStoreKey
-	mem1          *store.MemoryStoreKey
-	transient1    *store.TransientStoreKey
-	storeKeys     []store.StoreKey
-	kvStoreKeys   []store.StoreKey
-	keyGens       []*keyGen
-	opts          Options
-	pruningOpts   pruningtypes.PruningOptions
+	kv1, kv2, kv3    *store.KVStoreKey
+	mem1             *store.MemoryStoreKey
+	transient1       *store.TransientStoreKey
+	storeKeys        []store.StoreKey
+	kvStoreKeys      []store.StoreKey
+	keyGens          []*keyGen
+	opts             Options
+	pruningOpts      pruningtypes.PruningOptions
+	lastPruneVersion int64
 }
 
 func (sim *SimCommitMultiTree) openV2Tree(t *rapid.T) {
 	var err error
 	sim.mtV2, err = LoadCommitMultiTree(sim.dirV2, sim.opts)
-	sim.mtV2.SetPruning(sim.pruningOpts)
+	// we explicitly do not set pruning options here because we run pruning synchronously in the test when needed for determinism
 	require.NoError(t, err, "failed to create iavlx commit multi tree")
 	sim.mountStores(sim.mtV2)
 	require.NoError(t, sim.mtV2.LoadLatestVersion())
@@ -205,6 +219,15 @@ func (sim *SimCommitMultiTree) checkNewVersion(t *rapid.T) {
 	require.Equal(t, commitId1.Version, commitId2.Version, "committed versions do not match")
 	require.Equal(t, commitId1.Hash, commitId2.Hash, "commit hashes do not match")
 
+	// prune manually for determism in testing instead of relying on the async pruner
+	if sim.pruningOpts.Interval != 0 && commitId1.Version-sim.lastPruneVersion >= int64(sim.pruningOpts.Interval) {
+		if commitId1.Version > int64(sim.pruningOpts.KeepRecent)+1 {
+			retainVersion := commitId1.Version - int64(sim.pruningOpts.KeepRecent)
+			sim.lastPruneVersion = commitId1.Version
+			sim.mtV2.pruneNow(context.Background(), uint64(retainVersion))
+		}
+	}
+
 	// randomly close and reopen the V2 tree to test persistence
 	closeReopen := rapid.Bool().Draw(t, "closeReopen")
 	if closeReopen {
@@ -215,7 +238,7 @@ func (sim *SimCommitMultiTree) checkNewVersion(t *rapid.T) {
 	// optionally check history by reopening old versions
 	checkHistory := rapid.Bool().Draw(t, "checkHistory")
 	if checkHistory && commitId1.Version > 1 {
-		latestVersion := int(commitId1.Version - 1)
+		latestVersion := int(commitId1.Version)
 		oldestVersion := 1
 		keepWindow := latestVersion - int(sim.pruningOpts.KeepRecent)
 		if keepWindow > oldestVersion {

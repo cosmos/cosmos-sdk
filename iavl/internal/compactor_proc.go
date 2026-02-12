@@ -14,14 +14,19 @@ type CompactorProc struct {
 	options      PruneOptions
 }
 
-func NewCompactorProc(treeStore *TreeStore, options PruneOptions) *CompactorProc {
+func RunCompactor(ctx context.Context, treeStore *TreeStore, options PruneOptions) error {
+	cp := newCompactorProc(treeStore, options)
+	return cp.startCompactionRun(ctx)
+}
+
+func newCompactorProc(treeStore *TreeStore, options PruneOptions) *CompactorProc {
 	return &CompactorProc{
 		treeStore: treeStore,
 		options:   options,
 	}
 }
 
-func (cp *CompactorProc) StartCompactionRun(ctx context.Context) error {
+func (cp *CompactorProc) startCompactionRun(ctx context.Context) error {
 	ctx, span := tracer.Start(ctx, "CompactorProc.StartCompactionRun")
 	defer span.End()
 
@@ -36,18 +41,10 @@ func (cp *CompactorProc) StartCompactionRun(ctx context.Context) error {
 	})
 	cp.treeStore.changesetsLock.RUnlock()
 
-	// first calculate the oldest version to be retained
-	latestVersion := cp.treeStore.LatestVersion()
-	if cp.options.KeepRecent >= latestVersion {
-		// nothing to compact
-		return nil
-	}
-	oldestRetainedVersion := latestVersion - cp.options.KeepRecent
-
 	// then calculate the first compaction to be retained
-	info, err := cp.treeStore.checkpointForVersion(oldestRetainedVersion)
+	info, err := cp.treeStore.checkpointForVersion(cp.options.RetainVersion)
 	if err != nil {
-		return fmt.Errorf("failed to determine checkpoint for version %d: %w", oldestRetainedVersion, err)
+		return fmt.Errorf("failed to determine checkpoint for version %d: %w", cp.options.RetainVersion, err)
 	}
 
 	if info.Checkpoint == 0 {
@@ -62,7 +59,7 @@ func (cp *CompactorProc) StartCompactionRun(ctx context.Context) error {
 			// retain if the node was orphaned at or after the oldest retained checkpoint
 			return orphanVersion >= oldestRetainedCheckpoint
 		},
-		CompactedAt:     latestVersion,
+		CompactedAt:     cp.treeStore.LatestVersion(),
 		WALStartVersion: walRetainVersion,
 	}
 

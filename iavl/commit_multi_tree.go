@@ -843,6 +843,10 @@ func (db *CommitMultiTree) CacheMultiStoreWithVersion(version int64) (storetypes
 		// use latest version
 		return db.CacheMultiStore(), nil
 	}
+	_, err := loadCommitInfo(db.dir, uint64(version))
+	if err != nil {
+		return nil, fmt.Errorf("version %d is not available: %w", version, err)
+	}
 
 	mt := internal.NewMultiTree(version, func(key storetypes.StoreKey) storetypes.CacheWrap {
 		idx, ok := db.storesByKey[key]
@@ -884,38 +888,79 @@ func (db *CommitMultiTree) pruneIfNeeded() {
 		// not time to prune yet
 		return
 	}
+	retainVersion := uint64(0)
+	if db.version > db.pruningOptions.KeepRecent+1 {
+		retainVersion = db.version - db.pruningOptions.KeepRecent
+	}
+	if retainVersion <= 1 {
+		// nothing to prune yet
+		return
+	}
+
 	db.pruningActive.Store(true)
 	db.lastPruneVersion = db.version
 	db.pruningDone = make(chan struct{})
 	ctx, cancel := context.WithCancel(context.Background())
 	db.cancelPruning = cancel
 	go func() {
-		ctx, span := tracer.Start(ctx, "CommitMultiTree.Prune")
-		defer span.End()
 		defer db.pruningActive.Store(false)
 		defer close(db.pruningDone)
-
-		// TODO delete old commit infos
-
-		for _, si := range db.iavlStores {
-			ctx, span := tracer.Start(ctx, "PruneStore",
-				trace.WithAttributes(
-					attribute.String("store", si.key.Name()),
-				),
-			)
-			ct, ok := si.store.(*CommitTree)
-			if !ok {
-				logger.Error(fmt.Sprintf("store %s is not a CommitTree, cannot prune", si.key.Name()))
-				continue
-			}
-			err := ct.Prune(ctx, db.pruningOptions)
-			if err != nil {
-				logger.Error(fmt.Sprintf("failed to prune store %s: %v", si.key.Name(), err))
-				continue
-			}
-			span.End()
-		}
+		db.pruneNow(ctx, retainVersion)
 	}()
+}
+
+// pruneNow prunes old versions of the IAVL trees according to the pruning options, keeping the most recent `keepRecent` versions and pruning the rest.
+// This function is only intended to be called from pruneIfNeeded or by tests.
+func (db *CommitMultiTree) pruneNow(ctx context.Context, retainVersion uint64) {
+	ctx, span := tracer.Start(ctx, "CommitMultiTree.Prune")
+	defer span.End()
+
+	err := deleteOldCommitInfos(db.dir, retainVersion)
+	if err != nil {
+		logger.Error(fmt.Sprintf("failed to delete old commit info files: %v", err))
+	}
+
+	for _, si := range db.iavlStores {
+		ctx, span := tracer.Start(ctx, "PruneStore",
+			trace.WithAttributes(
+				attribute.String("store", si.key.Name()),
+			),
+		)
+		ct, ok := si.store.(*CommitTree)
+		if !ok {
+			logger.Error(fmt.Sprintf("store %s is not a CommitTree, cannot prune", si.key.Name()))
+			continue
+		}
+		err := ct.Prune(ctx, uint32(retainVersion))
+		if err != nil {
+			logger.Error(fmt.Sprintf("failed to prune store %s: %v", si.key.Name(), err))
+			continue
+		}
+		span.End()
+	}
+}
+
+func deleteOldCommitInfos(dir string, retainVersion uint64) error {
+	commitInfoDir := filepath.Join(dir, commitInfoSubPath)
+	entries, err := os.ReadDir(commitInfoDir)
+	if err != nil {
+		return fmt.Errorf("failed to read commit info dir: %w", err)
+	}
+
+	for _, entry := range entries {
+		var version uint64
+		_, err := fmt.Sscanf(entry.Name(), "%d", &version)
+		if err != nil {
+			// skip non-numeric files
+		}
+		if version < retainVersion {
+			err := os.Remove(filepath.Join(commitInfoDir, entry.Name()))
+			if err != nil {
+				return fmt.Errorf("failed to delete old commit info file %s: %w", entry.Name(), err)
+			}
+		}
+	}
+	return nil
 }
 
 func (db *CommitMultiTree) Describe() MultiTreeDescription {

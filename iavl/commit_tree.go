@@ -16,7 +16,6 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
-	pruningtypes "cosmossdk.io/store/pruning/types"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/iavl/internal"
 )
@@ -431,16 +430,15 @@ func (c *CommitTree) Close() error {
 	return c.treeStore.Close()
 }
 
-func (c *CommitTree) Prune(ctx context.Context, options pruningtypes.PruningOptions) error {
+func (c *CommitTree) Prune(ctx context.Context, retainVersion uint32) error {
 	compactionRolloverSize := c.opts.CompactionRolloverSize
 	if compactionRolloverSize == 0 {
 		compactionRolloverSize = 4 * 1024 * 1024 * 1024 // 4GB default
 	}
-	cp := internal.NewCompactorProc(c.treeStore, internal.PruneOptions{
-		KeepRecent:             uint32(options.KeepRecent),
+	return internal.RunCompactor(ctx, c.treeStore, internal.PruneOptions{
+		RetainVersion:          retainVersion,
 		CompactionRolloverSize: compactionRolloverSize,
 	})
-	return cp.StartCompactionRun(ctx)
 }
 
 var _ storetypes.CacheWrapper = (*CommitTree)(nil)

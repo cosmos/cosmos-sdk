@@ -28,7 +28,6 @@ func ReplayWAL(ctx context.Context, root *NodePointer, walFile *os.File, rootVer
 		return root, targetVersion, nil
 	}
 
-	// TODO we can have mutation contexts which don't collect orphans and that don't copy transient nodes for faster replay
 	stagedVersion := rootVersion + 1
 	for entry, err := range ReadWAL(walFile) {
 		if err != nil {
@@ -42,7 +41,10 @@ func ReplayWAL(ctx context.Context, root *NodePointer, walFile *os.File, rootVer
 		switch entry.Op {
 		case WALOpCommit:
 			if entry.Version != uint64(stagedVersion) {
-				return nil, 0, fmt.Errorf("WAL commit version %d does not match expected version %d", entry.Version, stagedVersion)
+				if entry.Version < uint64(stagedVersion) {
+					return nil, 0, fmt.Errorf("version %d is no longer available (WAL starts at version %d); it may have been pruned", stagedVersion, entry.Version)
+				}
+				return nil, 0, fmt.Errorf("WAL commit version %d does not match expected staged version %d, WAL is corrupted", entry.Version, stagedVersion)
 			}
 			if entry.Version == uint64(targetVersion) {
 				// reached target version
@@ -50,14 +52,14 @@ func ReplayWAL(ctx context.Context, root *NodePointer, walFile *os.File, rootVer
 			}
 			stagedVersion++
 		case WALOpSet:
-			ctx := NewMutationContext(stagedVersion, 0)
+			ctx := NewMutationContext(stagedVersion, 0) // all nodes can be mutated
 			leafNode := ctx.NewLeafNode(entry.Key.SafeCopy(), entry.Value.SafeCopy())
 			root, _, err = SetRecursive(root, leafNode, ctx)
 			if err != nil {
 				return nil, 0, fmt.Errorf("failed to apply WAL set at version %d: %w", entry.Version, err)
 			}
 		case WALOpDelete:
-			ctx := NewMutationContext(stagedVersion, 0)
+			ctx := NewMutationContext(stagedVersion, 0) // all nodes can be mutated
 			_, root, _, err = RemoveRecursive(root, entry.Key.SafeCopy(), ctx)
 			if err != nil {
 				return nil, 0, fmt.Errorf("failed to apply WAL delete at version %d: %w", entry.Version, err)

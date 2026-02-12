@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/x/tx/signing/textual/internal/cbor"
+	"github.com/cosmos/cosmos-sdk/x/tx/signing/textual/internal/cbor"
 )
 
 var (

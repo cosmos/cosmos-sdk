@@ -6,9 +6,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	txsigning "cosmossdk.io/x/tx/signing"
-	"cosmossdk.io/x/tx/signing/aminojson"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -18,6 +15,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/cosmos/cosmos-sdk/x/auth/signing"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	txsigning "github.com/cosmos/cosmos-sdk/x/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/tx/signing/aminojson"
 )
 
 var (

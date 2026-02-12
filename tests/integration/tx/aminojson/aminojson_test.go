@@ -33,8 +33,6 @@ import (
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	vestingapi "cosmossdk.io/api/cosmos/vesting/v1beta1"
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/tx/signing/aminojson"
-	signing_testutil "cosmossdk.io/x/tx/signing/testutil"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	groupmodule "github.com/cosmos/cosmos-sdk/contrib/x/group/module"
@@ -73,6 +71,8 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/x/tx/signing/aminojson"
+	signing_testutil "github.com/cosmos/cosmos-sdk/x/tx/signing/testutil"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 )
 

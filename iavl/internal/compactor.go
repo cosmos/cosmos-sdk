@@ -258,8 +258,8 @@ func (c *Compactor) doAddChangeset(reader *ChangesetReader) error {
 	return nil
 }
 
-func (c *Compactor) remapBlob(origIsInKVData bool, origOffset uint64, walRewriteInfo *WALRewriteInfo, isKey bool, node Node) (newOffset uint64, isInKVData bool, err error) {
-	newInKVData := origIsInKVData
+func (c *Compactor) remapBlob(origIsInKVData bool, origOffset uint64, walRewriteInfo *WALRewriteInfo, isKey bool, node Node) (newOffset uint64, newInKVData bool, err error) {
+	newInKVData = origIsInKVData
 	if !origIsInKVData {
 		// try to find it in the wal
 		var isInWAL bool

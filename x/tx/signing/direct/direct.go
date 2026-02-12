@@ -7,7 +7,8 @@ import (
 
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-	"cosmossdk.io/x/tx/signing"
+
+	"github.com/cosmos/cosmos-sdk/x/tx/signing"
 )
 
 var (

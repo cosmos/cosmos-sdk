@@ -36,6 +36,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 # Changelog
 
+## Unreleased
+
+### Improvements
+* (grpc) [#25648](https://github.com/cosmos/cosmos-sdk/pull/25648) Add `earliest_block_height` and `latest_block_height` fields to `GetSyncingResponse`.
+
 ## [v0.53.6](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.6) - 2026-02-10
 
 ### Improvements
@@ -56,11 +61,6 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (gRPC) [#25565](https://github.com/cosmos/cosmos-sdk/pull/25565) Support for multi gRPC query clients serve with historical binaries to serve proper historical state.
 * (blockstm) [#25600](https://github.com/cosmos/cosmos-sdk/pull/25600) Allow dynamic retrieval of the coin denomination from multi store at runtime.
 * [#25516](https://github.com/cosmos/cosmos-sdk/pull/25516) Support automatic configuration of OpenTelemetry via [OpenTelemetry declarative configuration](https://pkg.go.dev/go.opentelemetry.io/contrib/otelconf) and add OpenTelemetry instrumentation of `BaseApp`.
-<<<<<<< HEAD
-=======
-* [#25745](https://github.com/cosmos/cosmos-sdk/pull/25745) Add DiskIO telemetry via gopsutil.
-* (grpc) [#25648](https://github.com/cosmos/cosmos-sdk/pull/25648) Add `earliest_block_height` and `latest_block_height` fields to `GetSyncingResponse`.
->>>>>>> 174b2e936 (feat(grpc): add earliest/latest block height to GetSyncing response (#25648))
 
 ### Improvements
 

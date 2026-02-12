@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,72 +11,82 @@ import (
 	"github.com/cosmos/cosmos-sdk/iavl/internal"
 )
 
-type changesetEntry struct {
-	dirName   string
-	start     uint32
-	end       uint32
-	compacted uint32
-	size      int64
-}
-
-type treeEntry struct {
-	name       string
-	path       string
-	changesets []changesetEntry
-	totalSize  int64
-}
-
-func scanIAVLDirs(dir string) ([]treeEntry, error) {
-	dir = filepath.Join(dir, "stores") // stores/ dir contains the iavl tree dirs
-	entries, err := os.ReadDir(dir)
+func scanTrees(dir string) ([]string, error) {
+	storesDir := filepath.Join(dir, "stores")
+	entries, err := os.ReadDir(storesDir)
 	if err != nil {
 		return nil, err
 	}
-	var trees []treeEntry
+	var names []string
 	for _, e := range entries {
-		if !e.IsDir() || !strings.HasSuffix(e.Name(), ".iavl") {
-			continue
+		if e.IsDir() && strings.HasSuffix(e.Name(), ".iavl") {
+			names = append(names, strings.TrimSuffix(e.Name(), ".iavl"))
 		}
-		treePath := filepath.Join(dir, e.Name())
-		te := treeEntry{
-			name: strings.TrimSuffix(e.Name(), ".iavl"),
-			path: treePath,
-		}
-
-		subEntries, err := os.ReadDir(treePath)
-		if err != nil {
-			continue
-		}
-		for _, se := range subEntries {
-			if !se.IsDir() {
-				continue
-			}
-			start, end, compacted, valid := internal.ParseChangesetDirName(se.Name())
-			if !valid {
-				continue
-			}
-			ce := changesetEntry{
-				dirName:   se.Name(),
-				start:     start,
-				end:       end,
-				compacted: compacted,
-			}
-			csPath := filepath.Join(treePath, se.Name())
-			_ = filepath.WalkDir(csPath, func(_ string, d fs.DirEntry, err error) error {
-				if err != nil || d.IsDir() {
-					return nil
-				}
-				if info, err := d.Info(); err == nil {
-					ce.size += info.Size()
-				}
-				return nil
-			})
-			te.totalSize += ce.size
-			te.changesets = append(te.changesets, ce)
-		}
-		trees = append(trees, te)
 	}
-	return trees, nil
+	return names, nil
+}
+
+func copyMmap[T any](mmap *internal.StructMmap[T], offset, count uint32) []T {
+	if count == 0 {
+		count = uint32(mmap.Count())
+	}
+	out := make([]T, count)
+	for i := range out {
+		out[i] = *mmap.UnsafeItem(offset + uint32(i))
+	}
+	return out
+}
+
+func changesetPath(dir, tree, cs string) string {
+	return filepath.Join(dir, "stores", tree+".iavl", cs)
+}
+
+func loadCheckpoints(dir, tree, cs string) ([]internal.CheckpointInfo, error) {
+	f, err := os.Open(filepath.Join(changesetPath(dir, tree, cs), "checkpoints.dat"))
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	mmap, err := internal.NewStructMmap[internal.CheckpointInfo](f)
+	if err != nil {
+		return nil, err
+	}
+	defer mmap.Close()
+
+	return copyMmap(mmap, 0, 0), nil
+}
+
+func loadLeaves(dir, tree, cs string, offset, count uint32) ([]internal.LeafLayout, error) {
+	f, err := os.Open(filepath.Join(changesetPath(dir, tree, cs), "leaves.dat"))
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	mmap, err := internal.NewNodeReader[internal.LeafLayout](f)
+	if err != nil {
+		return nil, err
+	}
+	defer mmap.Close()
+
+	return copyMmap(mmap.StructMmap, offset, count), nil
+}
+
+func loadBranches(dir, tree, cs string, offset, count uint32) ([]internal.BranchLayout, error) {
+	f, err := os.Open(filepath.Join(changesetPath(dir, tree, cs), "branches.dat"))
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	mmap, err := internal.NewNodeReader[internal.BranchLayout](f)
+	if err != nil {
+		return nil, err
+	}
+	defer mmap.Close()
+
+	return copyMmap(mmap.StructMmap, offset, count), nil
 }
 
 func main() {
@@ -86,13 +95,7 @@ func main() {
 		dir = os.Args[1]
 	}
 
-	trees, err := scanIAVLDirs(dir)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error scanning directory: %v\n", err)
-		os.Exit(1)
-	}
-
-	p := tea.NewProgram(initialModel(dir, trees), tea.WithAltScreen())
+	p := tea.NewProgram(initialModel(dir), tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)

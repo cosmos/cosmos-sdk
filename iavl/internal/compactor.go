@@ -235,14 +235,12 @@ func (c *Compactor) doAddChangeset(reader *ChangesetReader) error {
 			c.offsetCache[id] = uint32(c.branchesWriter.Count())
 		}
 
-		if newBranchCount == 0 && newLeafCount == 0 && c.cpInfoWriter.Count() == 0 {
-			// This checkpoint is now empty and since we haven't written any checkpoints yet,
-			// so we can skip writing this checkpoint info, essentially pruning it entirely from the compacted changeset.
-			// For now, if we have saved any existing checkpoints, we continue to
-			// write empty checkpoints so that checkpoint lookup is always O(1) (based on offset from first checkpoint).
-			// In the future we could consider optimizations to skip writing empty checkpoints and do binary search
-			// if we end up with lots of empty checkpoints after compaction.
-			// Likely the storage overhead is minimal, and we don't need to optimize this.
+		if newBranchCount == 0 && newLeafCount == 0 && c.cpInfoWriter.Count() == 0 && !cpInfo.RootID.IsEmpty() {
+			// This checkpoint's root was pruned during compaction and this is the first checkpoint.
+			// Skip it since the root node no longer exists in the compacted data and we can't
+			// reconstruct the tree state from it.
+			// If the root is empty (tree had no data), we retain the checkpoint as it's
+			// a valid WAL replay starting point.
 			continue
 		}
 

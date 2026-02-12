@@ -119,7 +119,9 @@ type commitTreeFinalizer struct {
 	workingHash        storetypes.CommitID
 }
 
-func (c *CommitTree) StartCommit(ctx context.Context, updates iter.Seq[KVUpdate], updateCount int) storetypes.CommitFinalizer {
+// StartCommit starts a commit with the given updates and returns a CommitFinalizer.
+// In the sequence of updates a nil value indicates a deletion because nil values are not allowed in IAVL.
+func (c *CommitTree) StartCommit(ctx context.Context, updates iter.Seq2[[]byte, []byte], updateCount int) storetypes.CommitFinalizer {
 	cancelCtx, cancel := context.WithCancel(ctx)
 	committer := &commitTreeFinalizer{
 		CommitTree:         c,
@@ -140,7 +142,7 @@ func (c *CommitTree) StartCommit(ctx context.Context, updates iter.Seq[KVUpdate]
 
 var rolledbackErr = errors.New("commit rolled back")
 
-func (c *commitTreeFinalizer) commit(ctx context.Context, updates iter.Seq[KVUpdate], updateCount int) error {
+func (c *commitTreeFinalizer) commit(ctx context.Context, updates iter.Seq2[[]byte, []byte], updateCount int) error {
 	c.commitMutex.Lock()
 	defer c.commitMutex.Unlock()
 
@@ -183,7 +185,7 @@ type prepareCommitResult struct {
 	mutationCtx *internal.MutationContext
 }
 
-func (c *commitTreeFinalizer) prepareCommit(ctx context.Context, updates iter.Seq[KVUpdate], updateCount int) (*prepareCommitResult, error) {
+func (c *commitTreeFinalizer) prepareCommit(ctx context.Context, updates iter.Seq2[[]byte, []byte], updateCount int) (*prepareCommitResult, error) {
 	ctx, span := tracer.Start(ctx, "PrepareCommit")
 	defer span.End()
 
@@ -193,13 +195,13 @@ func (c *commitTreeFinalizer) prepareCommit(ctx context.Context, updates iter.Se
 	// TODO pre-allocate a decent sized slice that we reuse and reset across commits
 	nodeUpdates := make([]internal.KVUpdate, 0, updateCount)
 	if updates != nil { // updates can be nil for empty commits
-		for update := range updates {
-			if update.Delete {
-				nodeUpdates = append(nodeUpdates, internal.KVUpdate{DeleteKey: update.Key})
+		for key, value := range updates {
+			if value == nil {
+				nodeUpdates = append(nodeUpdates, internal.KVUpdate{DeleteKey: value})
 			} else {
 				nodeUpdates = append(
 					nodeUpdates,
-					internal.KVUpdate{SetNode: mutationCtx.NewLeafNode(update.Key, update.Value)},
+					internal.KVUpdate{SetNode: mutationCtx.NewLeafNode(key, value)},
 				)
 			}
 		}

@@ -30,21 +30,17 @@ type GStore[V any] struct {
 	valueLen func(V) int
 }
 
-type Store struct {
-	*GStore[[]byte]
-}
+type Store = GStore[[]byte]
 
 func NewGStore[V any](parent types.GKVStore[V], isZero func(V) bool, valueLen func(V) int) *GStore[V] {
 	return &GStore[V]{parent: parent, isZero: isZero, valueLen: valueLen}
 }
 
-func NewStore(parent types.KVStore) Store {
-	return Store{
-		GStore: NewGStore[[]byte](
-			parent,
-			types.BytesIsZero,
-			types.BytesValueLen),
-	}
+func NewStore(parent types.KVStore) *Store {
+	return NewGStore[[]byte](
+		parent,
+		types.BytesIsZero,
+		types.BytesValueLen)
 }
 
 func (store *GStore[V]) GetStoreType() types.StoreType {
@@ -123,28 +119,20 @@ func (store *GStore[V]) ReverseIterator(start, end []byte) types.GIterator[V] {
 	return store.iterator(start, end, false)
 }
 
-type KVUpdate = struct {
-	Key, Value []byte
-	Delete     bool
-}
-
 // Updates returns the cached updates to be applied to the underlying commitment store.
+// The zero value for V is used to indicate deletions.
 // This should be preferred over calling Write against the underlying commitment store
 // because it allows for better performance.
 // Actually calling Write when this is the first cache layer on top of iavl will result in a panic.
-func (store Store) Updates() (updates iter.Seq[KVUpdate], count int) {
+func (store *GStore[V]) Updates() (updates iter.Seq2[[]byte, V], count int) {
 	if !store.dirty {
-		return func(yield func(KVUpdate) bool) {}, 0
+		return func(yield func([]byte, V) bool) {}, 0
 	}
 
-	return func(yield func(KVUpdate) bool) {
-		store.writeMap.Scan(func(key string, value []byte) bool {
-			update := KVUpdate{
-				Key:    []byte(key), // this introduces a small amount of allocation and copying, but is safer
-				Value:  value,
-				Delete: value == nil,
-			}
-			return yield(update)
+	return func(yield func([]byte, V) bool) {
+		store.writeMap.Scan(func(key string, value V) bool {
+			// casting to []byte introduces a small amount of allocation and copying, but is safer
+			return yield([]byte(key), value)
 		})
 	}, store.writeMap.Len()
 }

@@ -525,3 +525,323 @@ func (s *TestSuite) TestTallyProposalsAtVPEnd_GroupMemberLeaving() {
 	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx))
 	s.NotPanics(func() { _ = module2.EndBlocker(ctx, s.groupKeeper) })
 }
+
+// TestTallyProposalsAtVPEnd_RejectWhenGroupMembersUpdatedAfterSubmit tests the attack
+// scenario: admin updates group members after proposal submit (e.g. removes opposing
+// voters). At voting period end, tally must reject the proposal due to group version
+// mismatch rather than recalculating with the new member set and reversing the outcome.
+func (s *TestSuite) TestTallyProposalsAtVPEnd_RejectWhenGroupMembersUpdatedAfterSubmit() {
+	addrs := s.addrs
+	addr1 := addrs[0]
+	addr2 := addrs[1]
+	addr3 := addrs[2]
+	votingPeriod := 4 * time.Minute
+	minExecutionPeriod := votingPeriod + group.DefaultConfig().MaxExecutionPeriod
+
+	// Group: 3 members, total weight 3. Threshold 2 (need 2 YES to pass).
+	groupMsg := &group.MsgCreateGroupWithPolicy{
+		Admin: addr1.String(),
+		Members: []group.MemberRequest{
+			{Address: addr1.String(), Weight: "1"},
+			{Address: addr2.String(), Weight: "1"},
+			{Address: addr3.String(), Weight: "1"},
+		},
+	}
+	policy := group.NewThresholdDecisionPolicy(
+		"2",
+		votingPeriod,
+		minExecutionPeriod,
+	)
+	s.Require().NoError(groupMsg.SetDecisionPolicy(policy))
+
+	s.setNextAccount()
+	groupRes, err := s.groupKeeper.CreateGroupWithPolicy(s.ctx, groupMsg)
+	s.Require().NoError(err)
+	accountAddr := groupRes.GetGroupPolicyAddress()
+
+	proposalRes, err := s.groupKeeper.SubmitProposal(s.ctx, &group.MsgSubmitProposal{
+		GroupPolicyAddress: accountAddr,
+		Proposers:          []string{addr1.String()},
+		Messages:           nil,
+	})
+	s.Require().NoError(err)
+
+	// Vote: addr1 YES, addr2 NO, addr3 NO → 1 YES, 2 NO → would reject (threshold 2 not met).
+	_, err = s.groupKeeper.Vote(s.ctx, &group.MsgVote{
+		ProposalId: proposalRes.ProposalId,
+		Voter:      addr1.String(),
+		Option:     group.VOTE_OPTION_YES,
+	})
+	s.Require().NoError(err)
+	_, err = s.groupKeeper.Vote(s.ctx, &group.MsgVote{
+		ProposalId: proposalRes.ProposalId,
+		Voter:      addr2.String(),
+		Option:     group.VOTE_OPTION_NO,
+	})
+	s.Require().NoError(err)
+	_, err = s.groupKeeper.Vote(s.ctx, &group.MsgVote{
+		ProposalId: proposalRes.ProposalId,
+		Voter:      addr3.String(),
+		Option:     group.VOTE_OPTION_NO,
+	})
+	s.Require().NoError(err)
+
+	// Attack: admin removes addr2 and addr3 (opposing voters). Group version increments.
+	// At tally we must reject due to version mismatch, not recalculate with new member set.
+	_, err = s.groupKeeper.UpdateGroupMembers(s.ctx, &group.MsgUpdateGroupMembers{
+		GroupId: groupRes.GroupId,
+		Admin:   addr1.String(),
+		MemberUpdates: []group.MemberRequest{
+			{Address: addr2.String(), Weight: "0"},
+			{Address: addr3.String(), Weight: "0"},
+		},
+	})
+	s.Require().NoError(err)
+
+	ctx := s.sdkCtx.WithBlockTime(s.sdkCtx.BlockTime().Add(votingPeriod + 1))
+	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx))
+
+	resp, err := s.groupKeeper.Proposal(ctx, &group.QueryProposalRequest{ProposalId: proposalRes.ProposalId})
+	s.Require().NoError(err)
+	s.Require().Equal(group.PROPOSAL_STATUS_REJECTED, resp.Proposal.Status,
+		"proposal must be rejected due to group version mismatch, not tallied with new member set")
+
+	votesResp, err := s.groupKeeper.VotesByProposal(ctx, &group.QueryVotesByProposalRequest{ProposalId: proposalRes.ProposalId})
+	s.Require().NoError(err)
+	s.Require().Empty(votesResp.Votes, "votes must be pruned when proposal is rejected for version mismatch")
+}
+
+// TestTallyProposalsAtVPEnd_RejectWhenGroupPolicyUpdatedAfterSubmit ensures that
+// when the group policy is updated after a proposal is submitted, active proposals
+// are aborted (existing behavior). At voting period end they are pruned. The
+// version check in doTallyAndUpdate would also reject if we ever tallied without
+// aborting; the policy-update path aborts first so the proposal never reaches
+// tally with a version mismatch.
+func (s *TestSuite) TestTallyProposalsAtVPEnd_RejectWhenGroupPolicyUpdatedAfterSubmit() {
+	addrs := s.addrs
+	addr1 := addrs[0]
+	addr2 := addrs[1]
+	votingPeriod := 4 * time.Minute
+	minExecutionPeriod := votingPeriod + group.DefaultConfig().MaxExecutionPeriod
+
+	groupMsg := &group.MsgCreateGroupWithPolicy{
+		Admin: addr1.String(),
+		Members: []group.MemberRequest{
+			{Address: addr1.String(), Weight: "1"},
+			{Address: addr2.String(), Weight: "1"},
+		},
+	}
+	policy := group.NewThresholdDecisionPolicy("1", votingPeriod, minExecutionPeriod)
+	s.Require().NoError(groupMsg.SetDecisionPolicy(policy))
+
+	s.setNextAccount()
+	groupRes, err := s.groupKeeper.CreateGroupWithPolicy(s.ctx, groupMsg)
+	s.Require().NoError(err)
+	accountAddr := groupRes.GetGroupPolicyAddress()
+
+	proposalRes, err := s.groupKeeper.SubmitProposal(s.ctx, &group.MsgSubmitProposal{
+		GroupPolicyAddress: accountAddr,
+		Proposers:          []string{addr1.String()},
+		Messages:           nil,
+	})
+	s.Require().NoError(err)
+
+	_, err = s.groupKeeper.Vote(s.ctx, &group.MsgVote{
+		ProposalId: proposalRes.ProposalId,
+		Voter:      addr1.String(),
+		Option:     group.VOTE_OPTION_YES,
+	})
+	s.Require().NoError(err)
+
+	// Update group policy metadata: this aborts all SUBMITTED proposals on this policy.
+	_, err = s.groupKeeper.UpdateGroupPolicyMetadata(s.ctx, &group.MsgUpdateGroupPolicyMetadata{
+		Admin:              addr1.String(),
+		GroupPolicyAddress: accountAddr,
+		Metadata:           "updated",
+	})
+	s.Require().NoError(err)
+
+	// Proposal must now be ABORTED (not tallied with new policy version).
+	resp, err := s.groupKeeper.Proposal(s.ctx, &group.QueryProposalRequest{ProposalId: proposalRes.ProposalId})
+	s.Require().NoError(err)
+	s.Require().Equal(group.PROPOSAL_STATUS_ABORTED, resp.Proposal.Status,
+		"proposal must be aborted when group policy is updated")
+
+	ctx := s.sdkCtx.WithBlockTime(s.sdkCtx.BlockTime().Add(votingPeriod + 1))
+	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx))
+
+	// At VP end, ABORTED proposals are pruned (removed from state).
+	_, err = s.groupKeeper.Proposal(ctx, &group.QueryProposalRequest{ProposalId: proposalRes.ProposalId})
+	s.Require().Error(err)
+	s.Require().Contains(err.Error(), "not found")
+}
+
+// TestTallyProposalsAtVPEnd_RejectWhenGroupMetadataUpdatedAfterSubmit ensures that
+// updating group metadata (which increments group version) after submit causes
+// the proposal to be rejected at tally.
+func (s *TestSuite) TestTallyProposalsAtVPEnd_RejectWhenGroupMetadataUpdatedAfterSubmit() {
+	addrs := s.addrs
+	addr1 := addrs[0]
+	addr2 := addrs[1]
+	votingPeriod := 4 * time.Minute
+	minExecutionPeriod := votingPeriod + group.DefaultConfig().MaxExecutionPeriod
+
+	groupMsg := &group.MsgCreateGroupWithPolicy{
+		Admin: addr1.String(),
+		Members: []group.MemberRequest{
+			{Address: addr1.String(), Weight: "1"},
+			{Address: addr2.String(), Weight: "1"},
+		},
+	}
+	policy := group.NewThresholdDecisionPolicy("1", votingPeriod, minExecutionPeriod)
+	s.Require().NoError(groupMsg.SetDecisionPolicy(policy))
+
+	s.setNextAccount()
+	groupRes, err := s.groupKeeper.CreateGroupWithPolicy(s.ctx, groupMsg)
+	s.Require().NoError(err)
+	accountAddr := groupRes.GetGroupPolicyAddress()
+
+	proposalRes, err := s.groupKeeper.SubmitProposal(s.ctx, &group.MsgSubmitProposal{
+		GroupPolicyAddress: accountAddr,
+		Proposers:          []string{addr1.String()},
+		Messages:           nil,
+	})
+	s.Require().NoError(err)
+
+	_, err = s.groupKeeper.Vote(s.ctx, &group.MsgVote{
+		ProposalId: proposalRes.ProposalId,
+		Voter:      addr1.String(),
+		Option:     group.VOTE_OPTION_YES,
+	})
+	s.Require().NoError(err)
+
+	_, err = s.groupKeeper.UpdateGroupMetadata(s.ctx, &group.MsgUpdateGroupMetadata{
+		GroupId:  groupRes.GroupId,
+		Admin:    addr1.String(),
+		Metadata: "updated",
+	})
+	s.Require().NoError(err)
+
+	ctx := s.sdkCtx.WithBlockTime(s.sdkCtx.BlockTime().Add(votingPeriod + 1))
+	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx))
+
+	resp, err := s.groupKeeper.Proposal(ctx, &group.QueryProposalRequest{ProposalId: proposalRes.ProposalId})
+	s.Require().NoError(err)
+	s.Require().Equal(group.PROPOSAL_STATUS_REJECTED, resp.Proposal.Status)
+}
+
+// TestExec_RejectWhenGroupUpdatedBeforeTally ensures that when Exec is called on a
+// proposal that is still SUBMITTED (voting period not ended), and the group or
+// policy was updated after submit, the internal tally rejects due to version
+// mismatch and the proposal is marked REJECTED.
+func (s *TestSuite) TestExec_RejectWhenGroupUpdatedBeforeTally() {
+	addrs := s.addrs
+	addr1 := addrs[0]
+	addr2 := addrs[1]
+	votingPeriod := 1 * time.Hour
+	minExecutionPeriod := 5 * time.Second
+
+	groupMsg := &group.MsgCreateGroupWithPolicy{
+		Admin: addr1.String(),
+		Members: []group.MemberRequest{
+			{Address: addr1.String(), Weight: "1"},
+			{Address: addr2.String(), Weight: "1"},
+		},
+	}
+	policy := group.NewThresholdDecisionPolicy("1", votingPeriod, minExecutionPeriod)
+	s.Require().NoError(groupMsg.SetDecisionPolicy(policy))
+
+	s.setNextAccount()
+	groupRes, err := s.groupKeeper.CreateGroupWithPolicy(s.ctx, groupMsg)
+	s.Require().NoError(err)
+	accountAddr := groupRes.GetGroupPolicyAddress()
+
+	proposalRes, err := s.groupKeeper.SubmitProposal(s.ctx, &group.MsgSubmitProposal{
+		GroupPolicyAddress: accountAddr,
+		Proposers:          []string{addr1.String()},
+		Messages:           nil,
+	})
+	s.Require().NoError(err)
+
+	_, err = s.groupKeeper.Vote(s.ctx, &group.MsgVote{
+		ProposalId: proposalRes.ProposalId,
+		Voter:      addr1.String(),
+		Option:     group.VOTE_OPTION_YES,
+	})
+	s.Require().NoError(err)
+
+	// Update group so version increments; proposal still has GroupVersion 1.
+	_, err = s.groupKeeper.UpdateGroupMetadata(s.ctx, &group.MsgUpdateGroupMetadata{
+		GroupId:  groupRes.GroupId,
+		Admin:    addr1.String(),
+		Metadata: "updated",
+	})
+	s.Require().NoError(err)
+
+	// Exec will trigger tally (proposal still SUBMITTED). Tally should reject due to version mismatch.
+	_, err = s.groupKeeper.Exec(s.ctx, &group.MsgExec{
+		ProposalId: proposalRes.ProposalId,
+		Executor:   addr1.String(),
+	})
+	s.Require().NoError(err)
+
+	resp, err := s.groupKeeper.Proposal(s.ctx, &group.QueryProposalRequest{ProposalId: proposalRes.ProposalId})
+	s.Require().NoError(err)
+	s.Require().Equal(group.PROPOSAL_STATUS_REJECTED, resp.Proposal.Status,
+		"proposal must be rejected when Exec triggers tally with group version mismatch")
+}
+
+// TestTallyProposalsAtVPEnd_AcceptWhenNoUpdate verifies the happy path: no group or
+// policy update after submit, so at voting period end the proposal is tallied
+// normally and can be accepted.
+func (s *TestSuite) TestTallyProposalsAtVPEnd_AcceptWhenNoUpdate() {
+	addrs := s.addrs
+	addr1 := addrs[0]
+	addr2 := addrs[1]
+	votingPeriod := 4 * time.Minute
+	minExecutionPeriod := votingPeriod + group.DefaultConfig().MaxExecutionPeriod
+
+	groupMsg := &group.MsgCreateGroupWithPolicy{
+		Admin: addr1.String(),
+		Members: []group.MemberRequest{
+			{Address: addr1.String(), Weight: "1"},
+			{Address: addr2.String(), Weight: "1"},
+		},
+	}
+	policy := group.NewThresholdDecisionPolicy("1", votingPeriod, minExecutionPeriod)
+	s.Require().NoError(groupMsg.SetDecisionPolicy(policy))
+
+	s.setNextAccount()
+	groupRes, err := s.groupKeeper.CreateGroupWithPolicy(s.ctx, groupMsg)
+	s.Require().NoError(err)
+	accountAddr := groupRes.GetGroupPolicyAddress()
+
+	proposalRes, err := s.groupKeeper.SubmitProposal(s.ctx, &group.MsgSubmitProposal{
+		GroupPolicyAddress: accountAddr,
+		Proposers:          []string{addr1.String()},
+		Messages:           nil,
+	})
+	s.Require().NoError(err)
+
+	_, err = s.groupKeeper.Vote(s.ctx, &group.MsgVote{
+		ProposalId: proposalRes.ProposalId,
+		Voter:      addr1.String(),
+		Option:     group.VOTE_OPTION_YES,
+	})
+	s.Require().NoError(err)
+	_, err = s.groupKeeper.Vote(s.ctx, &group.MsgVote{
+		ProposalId: proposalRes.ProposalId,
+		Voter:      addr2.String(),
+		Option:     group.VOTE_OPTION_YES,
+	})
+	s.Require().NoError(err)
+
+	// No update to group or policy; advance time and tally.
+	ctx := s.sdkCtx.WithBlockTime(s.sdkCtx.BlockTime().Add(votingPeriod + 1))
+	s.Require().NoError(s.groupKeeper.TallyProposalsAtVPEnd(ctx))
+
+	resp, err := s.groupKeeper.Proposal(ctx, &group.QueryProposalRequest{ProposalId: proposalRes.ProposalId})
+	s.Require().NoError(err)
+	s.Require().Equal(group.PROPOSAL_STATUS_ACCEPTED, resp.Proposal.Status,
+		"proposal must be accepted when versions match and tally passes")
+}

@@ -788,12 +788,7 @@ func (k Keeper) doTallyAndUpdate(ctx sdk.Context, proposal *group.Proposal, grou
 		return err
 	}
 
-	var result group.DecisionPolicyResult
-	tallyResult, err := k.Tally(ctx, *proposal, policyInfo.GroupId)
-	if err == nil {
-		result, err = policy.Allow(tallyResult, groupInfo.TotalWeight)
-	}
-	if err != nil {
+	rejectFailedTallyWithError := func(ctx sdk.Context, proposal *group.Proposal, msg string) error {
 		if err := k.pruneVotes(ctx, proposal.Id); err != nil {
 			return err
 		}
@@ -801,8 +796,25 @@ func (k Keeper) doTallyAndUpdate(ctx sdk.Context, proposal *group.Proposal, grou
 		return ctx.EventManager().EmitTypedEvents(
 			&group.EventTallyError{
 				ProposalId:   proposal.Id,
-				ErrorMessage: err.Error(),
+				ErrorMessage: msg,
 			})
+	}
+
+	if proposal.GroupVersion != groupInfo.Version {
+		return rejectFailedTallyWithError(ctx, proposal, fmt.Sprintf("mismatched versions: proposal group version %d != %d group info version", proposal.GroupVersion, groupInfo.Version))
+	}
+
+	if proposal.GroupPolicyVersion != policyInfo.Version {
+		return rejectFailedTallyWithError(ctx, proposal, fmt.Sprintf("mismatched versions: proposal group policy version %d != %d policy info version", proposal.GroupPolicyVersion, policyInfo.Version))
+	}
+
+	var result group.DecisionPolicyResult
+	tallyResult, err := k.Tally(ctx, *proposal, policyInfo.GroupId)
+	if err == nil {
+		result, err = policy.Allow(tallyResult, groupInfo.TotalWeight)
+	}
+	if err != nil {
+		return rejectFailedTallyWithError(ctx, proposal, err.Error())
 	}
 
 	// If the result was final (i.e. enough votes to pass) or if the voting
@@ -1010,6 +1022,8 @@ type (
 
 // doUpdateGroupPolicy first makes sure that the group policy admin initiated the group policy update,
 // before performing the group policy update and emitting an event.
+//
+// Any active proposals on the group policy will be aborted if this is called.
 func (k Keeper) doUpdateGroupPolicy(ctx sdk.Context, reqGroupPolicy, reqAdmin string, action groupPolicyActionFn, note string) error {
 	groupPolicyAddr, err := k.accKeeper.AddressCodec().StringToBytes(reqGroupPolicy)
 	if err != nil {
@@ -1048,6 +1062,8 @@ func (k Keeper) doUpdateGroupPolicy(ctx sdk.Context, reqGroupPolicy, reqAdmin st
 
 // doUpdateGroup first makes sure that the group admin initiated the group update,
 // before performing the group update and emitting an event.
+//
+// Any active proposals on the group will be aborted if this is called.
 func (k Keeper) doUpdateGroup(ctx sdk.Context, groupID uint64, reqGroupAdmin string, action actionFn, errNote string) error {
 	groupInfo, err := k.getGroupInfo(ctx, groupID)
 	if err != nil {

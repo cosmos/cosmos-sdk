@@ -23,6 +23,8 @@ import (
 	moduletestutil "github.com/cosmos/cosmos-sdk/types/module/testutil"
 )
 
+func ptr[T any](v T) *T { return &v }
+
 func TestDoTallyAndUpdate(t *testing.T) {
 	var (
 		myAddr      = sdk.AccAddress(bytes.Repeat([]byte{0x01}, 20))
@@ -46,11 +48,15 @@ func TestDoTallyAndUpdate(t *testing.T) {
 		option  group.VoteOption
 	}
 	specs := map[string]struct {
-		votes           []memberVote
-		policy          group.DecisionPolicy
-		expStatus       group.ProposalStatus
-		expVotesCleared bool
-		expEvents       func(proposalID uint64) sdk.Events
+		votes                      []memberVote
+		policy                     group.DecisionPolicy
+		expStatus                  group.ProposalStatus
+		expVotesCleared            bool
+		expEvents                  func(proposalID uint64) sdk.Events
+		proposalGroupVersion       *uint64 // if set, proposal.GroupVersion (version at submit time)
+		proposalGroupPolicyVersion *uint64
+		groupVersion               *uint64 // if set, current group info version at tally time
+		policyVersion              *uint64 // if set, current policy version at tally time
 	}{
 		"proposal accepted": {
 			votes: []memberVote{
@@ -115,6 +121,58 @@ func TestDoTallyAndUpdate(t *testing.T) {
 				}
 			},
 		},
+		// Version mismatch tests: proposal was created against an older group/policy version;
+		// after group or policy was updated, tally must reject to prevent outcome manipulation.
+		"group version mismatch - proposal rejected and votes pruned": {
+			votes: []memberVote{
+				{address: myAddr.String(), option: group.VOTE_OPTION_YES, weight: "2"},
+				{address: myOtherAddr.String(), option: group.VOTE_OPTION_NO, weight: "1"},
+			},
+			policy: mockDecisionPolicy{
+				AllowFn: func(tallyResult group.TallyResult, totalPower string) (group.DecisionPolicyResult, error) {
+					return group.DecisionPolicyResult{Allow: true, Final: true}, nil
+				},
+			},
+			expStatus:                  group.PROPOSAL_STATUS_REJECTED,
+			expVotesCleared:            true,
+			proposalGroupVersion:       ptr(uint64(1)),
+			proposalGroupPolicyVersion: ptr(uint64(1)),
+			groupVersion:               ptr(uint64(2)), // group was updated after proposal submit
+			policyVersion:              ptr(uint64(1)),
+			expEvents: func(proposalID uint64) sdk.Events {
+				return sdk.Events{
+					sdk.NewEvent("cosmos.group.v1.EventTallyError",
+						sdk.Attribute{Key: "error_message", Value: `"mismatched versions: proposal group version 1 != 2 group info version"`},
+						sdk.Attribute{Key: "proposal_id", Value: fmt.Sprintf(`"%d"`, proposalID)},
+					),
+				}
+			},
+		},
+		"group policy version mismatch - proposal rejected and votes pruned": {
+			votes: []memberVote{
+				{address: myAddr.String(), option: group.VOTE_OPTION_YES, weight: "2"},
+				{address: myOtherAddr.String(), option: group.VOTE_OPTION_NO, weight: "1"},
+			},
+			policy: mockDecisionPolicy{
+				AllowFn: func(tallyResult group.TallyResult, totalPower string) (group.DecisionPolicyResult, error) {
+					return group.DecisionPolicyResult{Allow: true, Final: true}, nil
+				},
+			},
+			expStatus:                  group.PROPOSAL_STATUS_REJECTED,
+			expVotesCleared:            true,
+			proposalGroupVersion:       ptr(uint64(1)),
+			proposalGroupPolicyVersion: ptr(uint64(1)),
+			groupVersion:               ptr(uint64(1)),
+			policyVersion:              ptr(uint64(2)), // policy was updated after proposal submit
+			expEvents: func(proposalID uint64) sdk.Events {
+				return sdk.Events{
+					sdk.NewEvent("cosmos.group.v1.EventTallyError",
+						sdk.Attribute{Key: "error_message", Value: `"mismatched versions: proposal group policy version 1 != 2 policy info version"`},
+						sdk.Attribute{Key: "proposal_id", Value: fmt.Sprintf(`"%d"`, proposalID)},
+					),
+				}
+			},
+		},
 	}
 	var (
 		groupID    uint64
@@ -145,14 +203,26 @@ func TestDoTallyAndUpdate(t *testing.T) {
 			myGroupInfo := group.GroupInfo{
 				TotalWeight: totalWeight.String(),
 			}
+			if spec.groupVersion != nil {
+				myGroupInfo.Version = *spec.groupVersion
+			}
 			myPolicy := group.GroupPolicyInfo{GroupId: groupID}
 			err = myPolicy.SetDecisionPolicy(spec.policy)
 			require.NoError(t, err)
+			if spec.policyVersion != nil {
+				myPolicy.Version = *spec.policyVersion
+			}
 
 			myProposal := &group.Proposal{
 				Id:              proposalId,
 				Status:          group.PROPOSAL_STATUS_SUBMITTED,
 				VotingPeriodEnd: ctx.BlockTime().Add(time.Hour),
+			}
+			if spec.proposalGroupVersion != nil {
+				myProposal.GroupVersion = *spec.proposalGroupVersion
+			}
+			if spec.proposalGroupPolicyVersion != nil {
+				myProposal.GroupPolicyVersion = *spec.proposalGroupPolicyVersion
 			}
 
 			// when
@@ -162,7 +232,7 @@ func TestDoTallyAndUpdate(t *testing.T) {
 			assert.Equal(t, spec.expStatus, myProposal.Status)
 			require.Equal(t, spec.expEvents(proposalId), em.Events())
 			// and persistent state updated
-			persistedVotes, err := groupKeeper.votesByProposal(ctx, groupID)
+			persistedVotes, err := groupKeeper.votesByProposal(ctx, proposalId)
 			require.NoError(t, err)
 			if spec.expVotesCleared {
 				assert.Empty(t, persistedVotes)

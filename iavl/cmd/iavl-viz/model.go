@@ -6,7 +6,9 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
@@ -52,6 +54,7 @@ type model struct {
 	walTotal           walVersionInfo
 	selectedWALVersion uint64
 	walSize            string
+	sizeBreakdown      string
 }
 
 var tableStyles table.Styles
@@ -152,6 +155,64 @@ func fmtCountAndSize(size, structSize int64) string {
 	return humanSize(size)
 }
 
+type sizeEntry struct {
+	label string
+	size  int64
+}
+
+func renderSizeBreakdown(sizes []sizeEntry) string {
+	var total int64
+	for _, e := range sizes {
+		total += e.size
+	}
+	if total == 0 {
+		return ""
+	}
+
+	sort.Slice(sizes, func(i, j int) bool {
+		return sizes[i].size > sizes[j].size
+	})
+
+	const barWidth = 30
+	barStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("39"))
+	dimStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("242"))
+
+	var b strings.Builder
+	b.WriteString(dimStyle.Render(fmt.Sprintf("  Size Breakdown (%s total)", humanSize(total))))
+	b.WriteByte('\n')
+
+	for _, e := range sizes {
+		if e.size == 0 {
+			continue
+		}
+		pct := float64(e.size) * 100.0 / float64(total)
+		filled := float64(barWidth) * float64(e.size) / float64(total)
+		fullBlocks := int(filled)
+		frac := filled - float64(fullBlocks)
+
+		bar := strings.Repeat("█", fullBlocks)
+		if frac > 0.0625 {
+			fractional := []rune{'▏', '▎', '▍', '▌', '▋', '▊', '▉'}
+			idx := int(frac * 8)
+			if idx > 6 {
+				idx = 6
+			}
+			bar += string(fractional[idx])
+		}
+		if bar == "" {
+			bar = "▏"
+		}
+
+		b.WriteString(fmt.Sprintf("  %-12s %s %5.1f%%  %s\n",
+			e.label,
+			barStyle.Render(fmt.Sprintf("%-*s", barWidth, bar)),
+			pct,
+			humanSize(e.size),
+		))
+	}
+	return b.String()
+}
+
 func (m *model) buildChangesetsTable() {
 	treeDir := filepath.Join(m.dir, "stores", m.selectedTree+".iavl")
 	entries, err := os.ReadDir(treeDir)
@@ -225,7 +286,7 @@ func (m *model) buildChangesetsTable() {
 
 	// Append TOTAL row.
 	rows = append(rows, table.Row{
-		"TOTAL", "-", "-", "-", "-",
+		"━━ TOTAL ━━", "━━", "━━", "━━", "━━",
 		fmtCountAndSize(total.kvSize, 0),
 		fmtCountAndSize(total.walSize, 0),
 		fmtCountAndSize(total.leafSize, internal.SizeLeaf),
@@ -233,6 +294,25 @@ func (m *model) buildChangesetsTable() {
 		fmtCountAndSize(total.cpSize, internal.CheckpointInfoSize),
 		fmtCountAndSize(total.orphanSize, 0),
 	})
+
+	// Build size breakdown bar chart.
+	breakdown := []sizeEntry{
+		{"kv.dat", total.kvSize},
+		{"wal.log", total.walSize},
+		{"leaves.dat", total.leafSize},
+		{"branches", total.branchSize},
+		{"checkpts", total.cpSize},
+		{"orphans.dat", total.orphanSize},
+	}
+	m.sizeBreakdown = renderSizeBreakdown(breakdown)
+
+	height := m.tableHeight()
+	if m.sizeBreakdown != "" {
+		height -= strings.Count(m.sizeBreakdown, "\n") + 1
+		if height < 5 {
+			height = 5
+		}
+	}
 
 	m.table = newTable([]table.Column{
 		{Title: "Dir", Width: 20},
@@ -246,7 +326,7 @@ func (m *model) buildChangesetsTable() {
 		{Title: "Branches", Width: 14},
 		{Title: "Checkpts", Width: 14},
 		{Title: "orphans.dat", Width: 12},
-	}, rows, m.tableHeight())
+	}, rows, height)
 }
 
 func (m *model) buildCheckpointsTable(cps []internal.CheckpointInfo) {
@@ -281,7 +361,7 @@ func (m *model) buildCheckpointsTable(cps []internal.CheckpointInfo) {
 		totalOrphPct = fmt.Sprintf("%.1f%%", float64(totalLeafOrph+totalBranchOrph)*100.0/float64(total))
 	}
 	rows = append(rows, table.Row{
-		"TOTAL", "-", "-",
+		"━━ TOTAL", "━━", "━━",
 		strconv.Itoa(totalLeaves),
 		strconv.Itoa(totalBranches),
 		strconv.Itoa(totalLeafOrph),
@@ -404,14 +484,14 @@ func (m *model) buildWALAnalysisTable(info []walVersionInfo, total walVersionInf
 		})
 	}
 	rows = append(rows, table.Row{
-		"TOTAL",
+		"━━ TOTAL",
 		strconv.Itoa(total.sets),
 		strconv.Itoa(total.deletes),
 		formatStat(&total.keyStats, (*runningStats).avg),
 		formatStat(&total.keyStats, (*runningStats).stddev),
 		formatStat(&total.valStats, (*runningStats).avg),
 		formatStat(&total.valStats, (*runningStats).stddev),
-		"-",
+		"━━",
 	})
 	m.table = newTable([]table.Column{
 		{Title: "Version", Width: 10},
@@ -508,7 +588,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.buildChangesetsTable()
 				return m, nil
 			case viewChangesets:
-				if row[0] == "TOTAL" {
+				if strings.HasPrefix(row[0], "━━") {
 					return m, nil
 				}
 				m.selectedChangeset = row[0]
@@ -537,7 +617,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.buildCheckpointsTable(cps)
 				return m, nil
 			case viewWALAnalysis:
-				if row[0] == "TOTAL" {
+				if strings.HasPrefix(row[0], "━━") {
 					return m, nil
 				}
 				ver, _ := strconv.ParseUint(row[0], 10, 64)
@@ -606,7 +686,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "w":
 			if m.view == viewChangesets {
 				row := m.table.SelectedRow()
-				if row == nil || row[0] == "TOTAL" {
+				if row == nil || strings.HasPrefix(row[0], "━━") {
 					return m, nil
 				}
 				m.selectedChangeset = row[0]
@@ -677,7 +757,12 @@ func (m model) View() string {
 		return title + "\n" + errStyle.Render("Error: "+m.err) + "\n" + footer
 	}
 
-	return title + "\n" + m.table.View() + "\n" + footer
+	extra := ""
+	if m.view == viewChangesets && m.sizeBreakdown != "" {
+		extra = m.sizeBreakdown
+	}
+
+	return title + "\n" + m.table.View() + "\n" + extra + footer
 }
 
 func humanSize(b int64) string {

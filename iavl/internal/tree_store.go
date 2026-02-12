@@ -18,7 +18,8 @@ import (
 
 type TreeStoreOptions struct {
 	ChangesetRolloverSize int
-	EvictDepth            uint8
+	LeafEvictDepth        uint8
+	BranchEvictDepth      uint8
 	CheckpointInterval    int
 	MemoryBudget          int64
 	RootCacheSize         uint64
@@ -52,7 +53,7 @@ func NewTreeStore(dir string, opts TreeStoreOptions) (*TreeStore, error) {
 	ts := &TreeStore{
 		dir:                 dir,
 		opts:                opts,
-		checkpointer:        NewCheckpointer(BasicEvictor{EvictDepth: opts.EvictDepth}),
+		checkpointer:        NewCheckpointer(NewBasicEvictor(opts.LeafEvictDepth, opts.BranchEvictDepth)),
 		changesetsByVersion: &btree.Map[uint32, *Changeset]{},
 		rootByVersionCache: ttlcache.New[uint32, *NodePointer](
 			// cache up to 10 recent roots by version

@@ -13,7 +13,18 @@ type Evictor interface {
 }
 
 type BasicEvictor struct {
-	EvictDepth uint8
+	leafEvictDepth   uint8
+	branchEvictDepth uint8
+}
+
+func NewBasicEvictor(leafEvictDepth, branchEvictDepth uint8) BasicEvictor {
+	if branchEvictDepth < leafEvictDepth {
+		branchEvictDepth = leafEvictDepth
+	}
+	return BasicEvictor{
+		leafEvictDepth:   leafEvictDepth,
+		branchEvictDepth: branchEvictDepth,
+	}
 }
 
 func (be BasicEvictor) Evict(root *NodePointer, checkpoint uint32) {
@@ -25,7 +36,12 @@ func (be BasicEvictor) Evict(root *NodePointer, checkpoint uint32) {
 		return
 	}
 	height := mem.Height()
-	if height < be.EvictDepth {
+	// use the smaller of the two depths for the shortcut check
+	minDepth := be.leafEvictDepth
+	if be.branchEvictDepth < minDepth {
+		minDepth = be.branchEvictDepth
+	}
+	if height < minDepth {
 		// shortcut when tree is too short
 		return
 	}
@@ -33,13 +49,14 @@ func (be BasicEvictor) Evict(root *NodePointer, checkpoint uint32) {
 	go func() {
 		_, span := tracer.Start(context.Background(), "Evict",
 			trace.WithAttributes(
-				attribute.Int("evictDepth", int(be.EvictDepth)),
+				attribute.Int("leafEvictDepth", int(be.leafEvictDepth)),
+				attribute.Int("branchEvictDepth", int(be.branchEvictDepth)),
 				attribute.Int("treeHeight", int(height)),
 			),
 		)
 		defer span.End()
 
-		count := evictTraverse(root, 0, be.EvictDepth, checkpoint)
+		count := evictTraverse(root, 0, be.leafEvictDepth, be.branchEvictDepth, checkpoint)
 
 		span.SetAttributes(
 			attribute.Int("nodesEvicted", count),
@@ -47,7 +64,7 @@ func (be BasicEvictor) Evict(root *NodePointer, checkpoint uint32) {
 	}()
 }
 
-func evictTraverse(np *NodePointer, depth, evictionDepth uint8, evictCheckpoint uint32) (count int) {
+func evictTraverse(np *NodePointer, depth, leafEvictDepth, branchEvictDepth uint8, evictCheckpoint uint32) (count int) {
 	memNode := np.Mem.Load()
 	if memNode == nil {
 		return 0
@@ -58,21 +75,27 @@ func evictTraverse(np *NodePointer, depth, evictionDepth uint8, evictCheckpoint 
 		panic(fmt.Sprintf("fatal logic error: evictTraverse reached node %s with invalid checkpoint %d (evictCheckpoint %d)", memNode.nodeId.String(), nodeCheckpoint, evictCheckpoint))
 	}
 
-	// evict nodes at or below the eviction depth
-	if depth >= evictionDepth {
+	isLeaf := memNode.IsLeaf()
+	evictDepth := branchEvictDepth
+	if isLeaf {
+		evictDepth = leafEvictDepth
+	}
+
+	// evict nodes at or beyond the eviction depth
+	if depth >= evictDepth {
 		if np.changeset == nil {
-			panic(fmt.Sprintf("fatal logic error: nnot evict node %s at checkpoint %d without changeset", memNode.nodeId.String(), nodeCheckpoint))
+			panic(fmt.Sprintf("fatal logic error: cannot evict node %s at checkpoint %d without changeset", memNode.nodeId.String(), nodeCheckpoint))
 		}
 		np.Mem.Store(nil)
 		count = 1
 	}
 
-	if memNode.IsLeaf() {
+	if isLeaf {
 		return count
 	}
 
 	// continue traversing to find nodes to evict
-	count += evictTraverse(memNode.left, depth+1, evictionDepth, evictCheckpoint)
-	count += evictTraverse(memNode.right, depth+1, evictionDepth, evictCheckpoint)
+	count += evictTraverse(memNode.left, depth+1, leafEvictDepth, branchEvictDepth, evictCheckpoint)
+	count += evictTraverse(memNode.right, depth+1, leafEvictDepth, branchEvictDepth, evictCheckpoint)
 	return count
 }

@@ -40,9 +40,13 @@ func NewCommitTree(dir string, opts Options) (*CommitTree, error) {
 	if changesetRolloverSize == 0 {
 		changesetRolloverSize = 2 * 1024 * 1024 * 1024 // 2GB default
 	}
-	evictDepth := opts.EvictDepth
-	if evictDepth == 0 {
-		evictDepth = 20 // with default evict depth 2^20 = 1M nodes are kept in memory
+	leafEvictDepth := opts.LeafEvictDepth
+	if leafEvictDepth == 0 {
+		leafEvictDepth = 20 // with default evict depth 2^20 = 1M leaf nodes are kept in memory
+	}
+	branchEvictDepth := opts.BranchEvictDepth
+	if branchEvictDepth == 0 {
+		branchEvictDepth = 24
 	}
 	var rootCacheSize uint64 = 5 // default to caching 5 roots
 	if opts.RootCacheSize > 0 {
@@ -60,7 +64,8 @@ func NewCommitTree(dir string, opts Options) (*CommitTree, error) {
 	}
 	treeStore, err := internal.NewTreeStore(dir, internal.TreeStoreOptions{
 		ChangesetRolloverSize: changesetRolloverSize,
-		EvictDepth:            evictDepth,
+		LeafEvictDepth:        leafEvictDepth,
+		BranchEvictDepth:      branchEvictDepth,
 		CheckpointInterval:    checkpointInterval,
 		RootCacheSize:         rootCacheSize,
 		RootCacheExpiry:       rootCacheExpiry,

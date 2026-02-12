@@ -23,6 +23,7 @@ const (
 	viewCheckpoints
 	viewLeaves
 	viewBranches
+	viewOrphans
 )
 
 type orphanCounts struct {
@@ -42,6 +43,7 @@ type model struct {
 	selectedCheckpoint uint32
 
 	checkpoints []internal.CheckpointInfo
+	orphans     []internal.OrphanLogEntry
 	orphanMap   map[internal.NodeID]uint32 // NodeID → OrphanedVersion
 	orphanStats map[uint32]orphanCounts    // checkpoint → {leaf orphan count, branch orphan count}
 }
@@ -299,6 +301,29 @@ func (m *model) buildBranchesTable(branches []internal.BranchLayout, orphanMap m
 	}, rows, m.tableHeight())
 }
 
+func (m *model) buildOrphansTable(orphans []internal.OrphanLogEntry) {
+	rows := make([]table.Row, len(orphans))
+	for i := range orphans {
+		o := &orphans[i]
+		nodeType := "branch"
+		if o.NodeID.IsLeaf() {
+			nodeType = "leaf"
+		}
+		rows[i] = table.Row{
+			o.NodeID.String(),
+			nodeType,
+			strconv.FormatUint(uint64(o.NodeID.Checkpoint()), 10),
+			strconv.FormatUint(uint64(o.OrphanedVersion), 10),
+		}
+	}
+	m.table = newTable([]table.Column{
+		{Title: "NodeID", Width: 16},
+		{Title: "Type", Width: 8},
+		{Title: "Checkpoint", Width: 12},
+		{Title: "OrphanedVer", Width: 12},
+	}, rows, m.tableHeight())
+}
+
 func (m *model) findCheckpoint(cp uint32) *internal.CheckpointInfo {
 	for i := range m.checkpoints {
 		if m.checkpoints[i].Checkpoint == cp {
@@ -332,7 +357,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.err = ""
 				m.buildChangesetsTable()
 				return m, nil
-			case viewLeaves, viewBranches:
+			case viewLeaves, viewBranches, viewOrphans:
 				m.view = viewCheckpoints
 				m.err = ""
 				m.buildCheckpointsTable(m.checkpoints)
@@ -361,6 +386,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				m.checkpoints = cps
 				orphans, _ := loadOrphans(m.dir, m.selectedTree, m.selectedChangeset)
+				m.orphans = orphans
 				m.orphanMap = make(map[internal.NodeID]uint32, len(orphans))
 				m.orphanStats = make(map[uint32]orphanCounts)
 				for _, o := range orphans {
@@ -420,6 +446,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.buildBranchesTable(branches, m.orphanMap)
 				return m, nil
 			}
+		case "o":
+			if m.view == viewCheckpoints {
+				m.view = viewOrphans
+				m.err = ""
+				m.buildOrphansTable(m.orphans)
+				return m, nil
+			}
 		}
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
@@ -448,12 +481,15 @@ func (m model) View() string {
 		footerText = "enter: checkpoints  esc: back  q: quit"
 	case viewCheckpoints:
 		titleText = fmt.Sprintf("Checkpoints: %s / %s", m.selectedTree, m.selectedChangeset)
-		footerText = "l: leaves  b: branches  esc: back  q: quit"
+		footerText = "l: leaves  b: branches  o: orphans  esc: back  q: quit"
 	case viewLeaves:
 		titleText = fmt.Sprintf("Leaves: %s / %s / checkpoint %d", m.selectedTree, m.selectedChangeset, m.selectedCheckpoint)
 		footerText = "esc: back  q: quit"
 	case viewBranches:
 		titleText = fmt.Sprintf("Branches: %s / %s / checkpoint %d", m.selectedTree, m.selectedChangeset, m.selectedCheckpoint)
+		footerText = "esc: back  q: quit"
+	case viewOrphans:
+		titleText = fmt.Sprintf("Orphans: %s / %s (%d total)", m.selectedTree, m.selectedChangeset, len(m.orphans))
 		footerText = "esc: back  q: quit"
 	}
 

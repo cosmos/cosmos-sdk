@@ -17,10 +17,10 @@ service MsgGogoOnly {
 message MsgRequestGogoOnly {
   option (cosmos.msg.v1.signer) = "an_address";
 
-  string                                str        = 3;
-  cosmos.base.v1beta1.Coin              a_coin     = 18 [(gogoproto.nullable) = false];
-  string                                an_address = 19 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  string a_validator_address        = 33 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+  string                   str                 = 3;
+  cosmos.base.v1beta1.Coin a_coin              = 18 [(gogoproto.nullable) = false];
+  string                   an_address          = 19 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string                   a_validator_address = 33 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
 }
 
 message MsgResponseGoGoOnly {

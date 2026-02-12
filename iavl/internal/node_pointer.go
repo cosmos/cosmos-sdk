@@ -34,7 +34,7 @@ func NewNodePointer(memNode *MemNode) *NodePointer {
 func (p *NodePointer) Resolve() (Node, Pin, error) {
 	mem := p.Mem.Load()
 	if mem != nil {
-		return mem, NoopPin{}, nil
+		return mem, Pin{}, nil
 	}
 	if p.fileIdx != 0 {
 		rdr, pin := p.changeset.TryPinUncompactedReader()
@@ -44,26 +44,26 @@ func (p *NodePointer) Resolve() (Node, Pin, error) {
 		} else {
 			compacted := p.changeset.Compacted()
 			if compacted == nil {
-				return nil, NoopPin{}, fmt.Errorf("unable to pin ChangesetReader for checkpoint %d, no compaction found", p.id.Checkpoint())
+				return nil, Pin{}, fmt.Errorf("unable to pin ChangesetReader for checkpoint %d, no compaction found", p.id.Checkpoint())
 			}
 			rdr, pin := compacted.TryPinReader()
 			if rdr != nil {
 				node, err := rdr.ResolveByID(p.id)
 				return node, pin, err
 			}
-			return nil, NoopPin{}, fmt.Errorf("unable to pin ChangesetReader for checkpoint %d, likely it has been closed and can't be reopened", p.id.Checkpoint())
+			return nil, Pin{}, fmt.Errorf("unable to pin ChangesetReader for checkpoint %d, likely it has been closed and can't be reopened", p.id.Checkpoint())
 		}
 	} else {
 		cs := p.changeset.TreeStore().ChangesetForCheckpoint(p.id.Checkpoint())
 		if cs == nil {
-			return nil, NoopPin{}, fmt.Errorf("unable to find Changeset for checkpoint %d", p.id.Checkpoint())
+			return nil, Pin{}, fmt.Errorf("unable to find Changeset for checkpoint %d", p.id.Checkpoint())
 		}
 		rdr, pin := cs.TryPinReader()
 		if rdr != nil {
 			node, err := rdr.ResolveByID(p.id)
 			return node, pin, err
 		} else {
-			return nil, NoopPin{}, fmt.Errorf("unable to pin ChangesetReader for checkpoint %d, likely it has been closed and can't be reopened", p.id.Checkpoint())
+			return nil, Pin{}, fmt.Errorf("unable to pin ChangesetReader for checkpoint %d, likely it has been closed and can't be reopened", p.id.Checkpoint())
 		}
 	}
 }

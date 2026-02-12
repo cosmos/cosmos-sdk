@@ -10,32 +10,20 @@ type ChangesetReaderRef struct {
 	changeset *Changeset
 }
 
-type changesetReaderPin struct {
-	pinner *ChangesetReaderRef
-}
-
-func (p *changesetReaderPin) Unpin() {
-	if p.pinner == nil {
-		return
-	}
-	p.pinner.refCount.Add(-1)
-	p.pinner = nil
-}
-
 func (p *ChangesetReaderRef) Evict() {
 	p.evicted.Store(true)
 	p.rdr.changeset.treeStore.addToDisposalQueue(p)
 }
 
 // TryPin attempts to pin the ChangesetReader.
-// If it is evicted, it returns (nil, NoopPin{}).
+// If it is evicted, it returns (nil, Pin{}).
 func (p *ChangesetReaderRef) TryPin() (*ChangesetReader, Pin) {
 	p.refCount.Add(1)
 	if p.evicted.Load() {
 		p.refCount.Add(-1)
-		return nil, NoopPin{}
+		return nil, Pin{}
 	}
-	return p.rdr, &changesetReaderPin{pinner: p}
+	return p.rdr, newPin(p)
 }
 
 func (p *ChangesetReaderRef) TryDispose() (bool, error) {

@@ -61,14 +61,14 @@ func (ch *Changeset) TryPinReader() (*ChangesetReader, Pin) {
 		// changeset was compacted, try the new one
 		return compacted.TryPinReader()
 	}
-	return nil, NoopPin{}
+	return nil, Pin{}
 }
 
 func (ch *Changeset) TryPinUncompactedReader() (*ChangesetReader, Pin) {
 	for {
 		pinner := ch.readerRef.Load()
 		if pinner == nil {
-			return nil, NoopPin{}
+			return nil, Pin{}
 		}
 		rdr, pin := pinner.TryPin()
 		if rdr == nil {

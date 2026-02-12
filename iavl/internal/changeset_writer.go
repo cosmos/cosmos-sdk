@@ -6,8 +6,10 @@ import (
 )
 
 type ChangesetWriter struct {
-	// checkpoint is the current checkpoint version being written (checkpoint == version)
+	// checkpoint is the current checkpoint number being written
 	checkpoint uint32
+	// startCheckpoint is the first checkpoint number written by this changeset
+	startCheckpoint uint32
 
 	files *ChangesetFiles
 
@@ -64,6 +66,8 @@ func (cs *ChangesetWriter) SaveCheckpoint(checkpoint, version uint32, root *Node
 		if checkpoint != cs.checkpoint+1 {
 			return fmt.Errorf("invalid checkpoint %d, must be one greater than previous %d", checkpoint, cs.checkpoint)
 		}
+	} else {
+		cs.startCheckpoint = checkpoint
 	}
 	cs.checkpoint = checkpoint
 
@@ -155,10 +159,11 @@ func (cs *ChangesetWriter) writeBranch(np *NodePointer, node *MemNode) error {
 
 	// If the child node is in the same changeset, store its 1-based file offset.
 	// fileIdx is already 1-based (set to Count() after append), and 0 means no offset.
-	if leftCheckpoint >= cs.StartVersion() {
+	// Compare checkpoint-to-checkpoint (NOT checkpoint-to-version, they are different number spaces).
+	if leftCheckpoint >= cs.startCheckpoint {
 		leftOffset = node.left.fileIdx
 	}
-	if rightCheckpoint >= cs.StartVersion() {
+	if rightCheckpoint >= cs.startCheckpoint {
 		rightOffset = node.right.fileIdx
 	}
 

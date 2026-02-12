@@ -45,7 +45,6 @@ func (cp *Checkpointer) LatestSavedCheckpoint() uint32 {
 }
 
 // ChangesetByCheckpoint finds the changeset containing the given checkpoint.
-// Since checkpoint == version, this works for both checkpoint and version lookups.
 func (cp *Checkpointer) ChangesetByCheckpoint(checkpoint uint32) *Changeset {
 	cp.changesetLock.RLock()
 	defer cp.changesetLock.RUnlock()

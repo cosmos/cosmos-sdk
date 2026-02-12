@@ -2,7 +2,7 @@ package internal
 
 // AssignNodeIDs assigns unique NodeIDs to all nodes in the tree rooted at root.
 // Leaf nodes receive IDs first in in-order traversal, followed by branch nodes in post-order traversal.
-// The checkpoint parameter specifies the checkpoint (version) at which these nodes are being assigned IDs.
+// The checkpoint parameter specifies the checkpoint number at which these nodes are being assigned IDs.
 // This function must complete before any code that must read IDs can run.
 func AssignNodeIDs(root *NodePointer, checkpoint uint32) {
 	ctx := &nodeIdContext{}

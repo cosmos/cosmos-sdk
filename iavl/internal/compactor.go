@@ -15,7 +15,7 @@ type CompactOptions struct {
 type RetainCriteria func(createCheckpoint, orphanVersion uint32) bool
 
 type Compactor struct {
-	criteria        RetainCriteria
+	shouldRetain    RetainCriteria
 	walStartVersion uint32
 
 	processedChangesets []pendingCompactionEntry
@@ -60,7 +60,7 @@ func NewCompactor(ctx context.Context, reader *ChangesetReader, opts CompactOpti
 
 	c := &Compactor{
 		ctx:             ctx,
-		criteria:        opts.RetainCriteria,
+		shouldRetain:    opts.RetainCriteria,
 		walStartVersion: opts.WALStartVersion,
 		treeStore:       store,
 		files:           newFiles,
@@ -114,7 +114,7 @@ func (c *Compactor) doAddChangeset(reader *ChangesetReader) error {
 		return fmt.Errorf("failed to create orphan rewriter: %w", err)
 	}
 	c.treeStore.LockOrphanProc()
-	deleteMap, err := orphanRewriter.Preprocess(c.criteria, c.orphanWriter)
+	deleteMap, err := orphanRewriter.Preprocess(c.shouldRetain, c.orphanWriter)
 	if err != nil {
 		c.treeStore.UnlockOrphanProc()
 		return fmt.Errorf("failed to preprocess orphans for compaction: %w", err)

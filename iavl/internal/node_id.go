@@ -37,7 +37,8 @@ func (id NodeID) IsEmpty() bool {
 	return id.checkpoint == 0 && id.flagIndex == 0
 }
 
-// Checkpoint returns the checkpoint (version) at which this node was persisted.
+// Checkpoint returns the checkpoint number at which this node was persisted.
+// Note: checkpoint numbers and version numbers are separate counters and are NOT the same.
 func (id NodeID) Checkpoint() uint32 {
 	return id.checkpoint
 }

@@ -824,7 +824,7 @@ func (db *CommitMultiTree) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceCo
 }
 
 func (db *CommitMultiTree) CacheMultiStore() storetypes.CacheMultiStore {
-	return db.cacheMultiStore(db.lastCommitInfo)
+	return db.cacheMultiStore(int64(db.version), db.lastCommitInfo)
 }
 
 func (db *CommitMultiTree) CacheMultiStoreWithVersion(version int64) (storetypes.CacheMultiStore, error) {
@@ -837,12 +837,11 @@ func (db *CommitMultiTree) CacheMultiStoreWithVersion(version int64) (storetypes
 		return nil, fmt.Errorf("version %d is not available: %w", version, err)
 	}
 
-	return db.cacheMultiStore(ci), nil
+	return db.cacheMultiStore(version, ci), nil
 }
 
-func (db *CommitMultiTree) cacheMultiStore(commitInfo *storetypes.CommitInfo) storetypes.CacheMultiStore {
-	version := commitInfo.Version
-	return internal.NewMultiTree(commitInfo, func(key storetypes.StoreKey) storetypes.CacheWrap {
+func (db *CommitMultiTree) cacheMultiStore(version int64, commitInfo *storetypes.CommitInfo) storetypes.CacheMultiStore {
+	return internal.NewMultiTree(version, commitInfo, func(key storetypes.StoreKey) storetypes.CacheWrap {
 		idx, ok := db.storesByKey[key]
 		if !ok {
 			panic(fmt.Sprintf("store with key %s not mounted", key.Name()))

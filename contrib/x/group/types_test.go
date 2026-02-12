@@ -261,6 +261,47 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 			},
 			false,
 		},
+		{
+			"zero total weight - proposal does not auto-pass",
+			&group.PercentageDecisionPolicy{
+				Percentage: "0.5",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * 100,
+				},
+			},
+			&group.TallyResult{
+				YesCount:        "0",
+				NoCount:         "0",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
+			},
+			"0",
+			time.Second * 50,
+			group.DecisionPolicyResult{
+				Allow: false,
+				Final: true,
+			},
+			false,
+		},
+		{
+			"negative total power - error",
+			&group.PercentageDecisionPolicy{
+				Percentage: "0.5",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * 100,
+				},
+			},
+			&group.TallyResult{
+				YesCount:        "0",
+				NoCount:         "0",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
+			},
+			"-1",
+			time.Second * 50,
+			group.DecisionPolicyResult{},
+			true,
+		},
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -394,6 +435,69 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 				Final: false,
 			},
 			false,
+		},
+		{
+			"zero total weight - proposal does not auto-pass",
+			&group.ThresholdDecisionPolicy{
+				Threshold: "1",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * 100,
+				},
+			},
+			&group.TallyResult{
+				YesCount:        "0",
+				NoCount:         "0",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
+			},
+			"0",
+			time.Second * 50,
+			group.DecisionPolicyResult{
+				Allow: false,
+				Final: true,
+			},
+			false,
+		},
+		{
+			"zero total weight with yes votes - still reject",
+			&group.ThresholdDecisionPolicy{
+				Threshold: "1",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * 100,
+				},
+			},
+			&group.TallyResult{
+				YesCount:        "1",
+				NoCount:         "0",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
+			},
+			"0",
+			time.Second * 50,
+			group.DecisionPolicyResult{
+				Allow: false,
+				Final: true,
+			},
+			false,
+		},
+		{
+			"negative total power - error",
+			&group.ThresholdDecisionPolicy{
+				Threshold: "1",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod: time.Second * 100,
+				},
+			},
+			&group.TallyResult{
+				YesCount:        "0",
+				NoCount:         "0",
+				AbstainCount:    "0",
+				NoWithVetoCount: "0",
+			},
+			"-1",
+			time.Second * 50,
+			group.DecisionPolicyResult{},
+			true,
 		},
 	}
 	for _, tc := range testCases {

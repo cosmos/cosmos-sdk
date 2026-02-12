@@ -115,6 +115,16 @@ func TestDoTallyAndUpdate(t *testing.T) {
 				}
 			},
 		},
+		"zero total weight - proposal rejected": {
+			votes: []memberVote{
+				{address: myAddr.String(), option: group.VOTE_OPTION_YES, weight: "1"},
+				{address: myOtherAddr.String(), option: group.VOTE_OPTION_YES, weight: "1"},
+			},
+			policy:          group.NewThresholdDecisionPolicy("1", time.Second, 0),
+			expStatus:       group.PROPOSAL_STATUS_REJECTED,
+			expVotesCleared: true,
+			expEvents:       noEventsFn,
+		},
 	}
 	var (
 		groupID    uint64

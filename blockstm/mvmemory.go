@@ -109,6 +109,15 @@ func (mv *MVMemory) ConvertWritesToEstimates(txn TxnIndex) {
 	}
 }
 
+// ClearEstimates removes estimate marks for canceled transactions.
+func (mv *MVMemory) ClearEstimates(txn TxnIndex) {
+	for i, locations := range mv.readLastWrittenLocations(txn) {
+		for _, key := range locations {
+			mv.data[i].Delete(key, txn)
+		}
+	}
+}
+
 func (mv *MVMemory) ValidateReadSet(txn TxnIndex) bool {
 	// Invariant: at least one `Record` call has been made for `txn`
 	rs := *mv.lastReadSet[txn].Load()

@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"math"
+
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,7 +18,7 @@ func (suite *KeeperTestSuite) TestExportGenesis() {
 	expectedBalances, expTotalSupply := suite.getTestBalancesAndSupply()
 
 	// Adding genesis supply to the expTotalSupply
-	genesisSupply, _, err := suite.bankKeeper.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{Limit: query.PaginationMaxLimit})
+	genesisSupply, _, err := suite.bankKeeper.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{Limit: math.MaxUint64})
 	suite.Require().NoError(err)
 	expTotalSupply = expTotalSupply.Add(genesisSupply...)
 
@@ -85,7 +87,7 @@ func (suite *KeeperTestSuite) TestTotalSupply() {
 	}
 	totalSupply := sdk.NewCoins(sdk.NewCoin("foocoin", sdkmath.NewInt(11)), sdk.NewCoin("barcoin", sdkmath.NewInt(21)))
 
-	genesisSupply, _, err := suite.bankKeeper.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{Limit: query.PaginationMaxLimit})
+	genesisSupply, _, err := suite.bankKeeper.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{Limit: math.MaxUint64})
 	suite.Require().NoError(err)
 
 	testcases := []struct {
@@ -118,7 +120,7 @@ func (suite *KeeperTestSuite) TestTotalSupply() {
 				suite.PanicsWithError(tc.expPanicMsg, func() { suite.bankKeeper.InitGenesis(suite.ctx, tc.genesis) })
 			} else {
 				suite.bankKeeper.InitGenesis(suite.ctx, tc.genesis)
-				totalSupply, _, err := suite.bankKeeper.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{Limit: query.PaginationMaxLimit})
+				totalSupply, _, err := suite.bankKeeper.GetPaginatedTotalSupply(suite.ctx, &query.PageRequest{Limit: math.MaxUint64})
 				suite.Require().NoError(err)
 
 				// adding genesis supply to expected supply

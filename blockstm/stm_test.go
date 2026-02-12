@@ -4,14 +4,45 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"math/rand"
 	"testing"
+	"time"
 
-	"github.com/test-go/testify/require"
+	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"
 )
+
+func TestExecuteBlock_CancelWakesSuspendedExecutors(t *testing.T) {
+	stores := map[storetypes.StoreKey]int{StoreKeyAuth: 0}
+	storage := NewMultiMemDB(stores)
+
+	// Mark key "k" as ESTIMATE for txn 0.
+	estimates := make([]MultiLocations, 2)
+	estimates[0] = MultiLocations{0: Locations{Key([]byte("k"))}}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go func() {
+		time.Sleep(20 * time.Millisecond)
+		cancel()
+	}()
+
+	err := ExecuteBlockWithEstimates(ctx, 2, stores, storage, 2, estimates,
+		func(txn TxnIndex, store MultiStore) {
+			if txn == 0 {
+				time.Sleep(250 * time.Millisecond)
+				return
+			}
+			// Txn 1 suspends on ESTIMATE.
+			store.GetKVStore(StoreKeyAuth).Get([]byte("k"))
+		},
+	)
+	require.True(t, errors.Is(err, context.Canceled))
+}
 
 func accountName(i int64) string {
 	return fmt.Sprintf("account%05d", i)
@@ -58,7 +89,7 @@ func worstCaseBlock(size int) *MockBlock {
 	return NewMockBlock(txs)
 }
 
-func determisticBlock() *MockBlock {
+func deterministicBlock() *MockBlock {
 	return NewMockBlock([]Tx{
 		NoopTx(0, "account0"),
 		NoopTx(1, "account1"),
@@ -91,7 +122,7 @@ func TestSTM(t *testing.T) {
 		},
 		{
 			name:      "determisticBlock(),5",
-			blk:       determisticBlock(),
+			blk:       deterministicBlock(),
 			executors: 5,
 		},
 		{
@@ -120,7 +151,9 @@ func TestSTM(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			storage := NewMultiMemDB(stores)
 			require.NoError(t,
-				ExecuteBlock(context.Background(), tc.blk.Size(), stores, storage, tc.executors, tc.blk.ExecuteTx),
+				ExecuteBlock(context.Background(), tc.blk.Size(), stores, storage, tc.executors, func(txn TxnIndex, store MultiStore) {
+					tc.blk.ExecuteTx(txn, store, nil)
+				}),
 			)
 			for _, err := range tc.blk.Results {
 				require.NoError(t, err)
@@ -145,7 +178,6 @@ func TestSTM(t *testing.T) {
 					continue
 				}
 				total += binary.BigEndian.Uint64(it.Value())
-				continue
 			}
 			require.Equal(t, uint64(tc.blk.Size()), total)
 		})

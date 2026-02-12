@@ -6,6 +6,7 @@ import (
 	"math"
 	"math/rand"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -875,6 +876,63 @@ func TestPriorityNonceMempool_CleanupOnRemove(t *testing.T) {
 
 	require.Equal(t, 0, mp.CountTx())
 	require.NoError(t, mempool.IsEmpty[int64](mp))
+}
+
+func TestNextSenderTx_ConcurrentAccess(t *testing.T) {
+	ctx := sdk.NewContext(nil, cmtproto.Header{}, false, log.NewNopLogger())
+	account := simtypes.RandomAccounts(rand.New(rand.NewSource(2)), 1)[0].Address
+	mp := mempool.DefaultPriorityMempool()
+
+	const iterations = 1000
+
+	var (
+		wg       sync.WaitGroup
+		panicVal atomic.Value
+		stopCh   = make(chan struct{})
+	)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for i := 0; i < iterations; i++ {
+			tx := testTx{
+				id:       i,
+				priority: int64(i%5 + 1),
+				nonce:    uint64(i + 1),
+				address:  account,
+			}
+			if err := mp.Insert(ctx.WithPriority(tx.priority), tx); err != nil {
+				panic(err)
+			}
+		}
+		close(stopCh)
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case <-stopCh:
+				return
+			default:
+				func() {
+					defer func() {
+						if r := recover(); r != nil {
+							panicVal.Store(r)
+						}
+					}()
+					_ = mp.NextSenderTx(account.String())
+				}()
+			}
+		}
+	}()
+
+	wg.Wait()
+
+	if v := panicVal.Load(); v != nil {
+		t.Fatalf("NextSenderTx panicked under concurrent access: %v", v)
+	}
 }
 
 func TestNextSenderTx_TxLimit(t *testing.T) {

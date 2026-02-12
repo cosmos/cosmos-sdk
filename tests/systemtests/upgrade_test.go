@@ -35,7 +35,9 @@ func TestChainUpgrade(t *testing.T) {
 
 	legacyBinary := systest.WorkDir + "/binaries/v0.53/simd"
 	systest.Sut.SetExecBinary(legacyBinary)
+	systest.Sut.SetTestnetInitializer(systest.InitializerWithBinary(legacyBinary, systest.Sut))
 	systest.Sut.SetupChain()
+	require.False(t, gjson.Get(systest.Sut.ReadGenesisJSON(t), "app_state.mint.params.max_supply").Exists())
 
 	votingPeriod := 5 * time.Second // enough time to vote
 	systest.Sut.ModifyGenesisJSON(t, systest.SetGovVotingPeriod(t, votingPeriod))
@@ -83,6 +85,12 @@ func TestChainUpgrade(t *testing.T) {
 	systest.Sut.StartChain(t)
 
 	require.True(t, upgradeHeight+1 <= systest.Sut.CurrentHeight())
+	cli = systest.NewCLIWrapper(t, systest.Sut, systest.Verbose)
+	mintParamsRaw := cli.CustomQuery("q", "mint", "params")
+	require.True(t,
+		gjson.Get(mintParamsRaw, "params.max_supply").Exists() || gjson.Get(mintParamsRaw, "params.maxSupply").Exists(),
+		mintParamsRaw,
+	)
 
 	regex, err := regexp.Compile("DBG this is a debug level message to test that verbose logging mode has properly been enabled during a chain upgrade")
 	require.NoError(t, err)

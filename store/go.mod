@@ -2,14 +2,11 @@ module cosmossdk.io/store
 
 go 1.24.0
 
-replace (
-	cosmossdk.io/log/v2 => ../log
-	github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-20250924232609-2c6195d95951
-)
+replace github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-20250924232609-2c6195d95951
 
 require (
 	cosmossdk.io/errors v1.0.2
-	cosmossdk.io/log/v2 v2.0.0
+	cosmossdk.io/log/v2 v2.0.1
 	cosmossdk.io/math v1.5.3
 	github.com/cometbft/cometbft v0.39.0-beta.2
 	github.com/cosmos/cosmos-db v1.1.3
@@ -30,14 +27,9 @@ require (
 )
 
 require (
-	github.com/bytedance/gopkg v0.1.3 // indirect
-	go.opentelemetry.io/otel v1.40.0 // indirect
-	go.opentelemetry.io/otel/trace v1.40.0 // indirect
-)
-
-require (
 	github.com/DataDog/zstd v1.5.7 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/bytedance/gopkg v0.1.3 // indirect
 	github.com/bytedance/sonic v1.15.0 // indirect
 	github.com/bytedance/sonic/loader v0.5.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -85,6 +77,8 @@ require (
 	github.com/supranational/blst v0.3.16 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
+	go.opentelemetry.io/otel v1.40.0 // indirect
+	go.opentelemetry.io/otel/trace v1.40.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
 	golang.org/x/arch v0.22.0 // indirect
 	golang.org/x/crypto v0.46.0 // indirect

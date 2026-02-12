@@ -125,10 +125,4 @@ func (t *MultiTree) LatestVersion() int64 {
 	return t.latestVersion
 }
 
-func (t *MultiTree) Query(query *storetypes.RequestQuery) (*storetypes.ResponseQuery, error) {
-	//TODO implement proof logic here
-	panic("implement me")
-}
-
 var _ storetypes.MultiStore = &MultiTree{}
-var _ storetypes.Queryable = &MultiTree{}

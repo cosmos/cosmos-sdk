@@ -106,4 +106,6 @@ func (t TreeReader) Version() uint32 {
 	return t.version
 }
 
+// TODO add proof logic here
+
 var _ storetypes.KVStore = TreeReader{}

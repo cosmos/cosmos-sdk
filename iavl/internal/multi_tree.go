@@ -12,10 +12,14 @@ type MultiTree struct {
 	latestCommitInfo        *storetypes.CommitInfo
 	trees                   map[storetypes.StoreKey]storetypes.CacheWrap // index of the trees by name
 	initCacheWrapFromParent func(storetypes.StoreKey) storetypes.CacheWrap
+	latestVersion           int64
 }
 
-func NewMultiTree(commitInfo *storetypes.CommitInfo, initCacheWrapFromParent func(key storetypes.StoreKey) storetypes.CacheWrap) *MultiTree {
+// NewMultiTree creates a new MultiTree from the given CommitInfo, which contains the version and store info for each store.
+// CommitInfo will be nil if this is the first version of the MultiTree, in which case the version will be set to 0 and the store info will be empty.
+func NewMultiTree(version int64, commitInfo *storetypes.CommitInfo, initCacheWrapFromParent func(key storetypes.StoreKey) storetypes.CacheWrap) *MultiTree {
 	return &MultiTree{
+		latestVersion:           version,
 		latestCommitInfo:        commitInfo,
 		trees:                   map[storetypes.StoreKey]storetypes.CacheWrap{},
 		initCacheWrapFromParent: initCacheWrapFromParent,
@@ -76,7 +80,7 @@ func (t *MultiTree) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) 
 
 func (t *MultiTree) CacheMultiStore() storetypes.CacheMultiStore {
 	// create a nested MultiTree, which in turn creates CacheWraps for each store
-	return NewMultiTree(t.latestCommitInfo, func(key storetypes.StoreKey) storetypes.CacheWrap {
+	return NewMultiTree(t.latestVersion, t.latestCommitInfo, func(key storetypes.StoreKey) storetypes.CacheWrap {
 		return t.getCacheWrap(key).CacheWrap()
 	})
 }
@@ -118,7 +122,7 @@ func (t *MultiTree) SetTracingContext(context storetypes.TraceContext) storetype
 }
 
 func (t *MultiTree) LatestVersion() int64 {
-	return t.latestCommitInfo.Version
+	return t.latestVersion
 }
 
 func (t *MultiTree) Query(query *storetypes.RequestQuery) (*storetypes.ResponseQuery, error) {

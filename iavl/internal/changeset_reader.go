@@ -312,7 +312,6 @@ func (cr *ChangesetReader) Describe() ChangesetDescription {
 		TotalBranches: cr.branchesData.Count(),
 		KVLogSize:     cr.kvDataReader.Len(),
 		WALSize:       cr.walReader.Len(),
-		TotalBytes:    cr.TotalBytes(),
 		Checkpoints:   checkpoints,
 	}
 }

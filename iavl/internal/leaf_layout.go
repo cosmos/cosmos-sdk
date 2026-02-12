@@ -6,7 +6,8 @@ import (
 )
 
 const (
-	sizeLeaf = 56
+	sizeLeaf       = 56
+	LeafLayoutSize = sizeLeaf
 )
 
 func init() {

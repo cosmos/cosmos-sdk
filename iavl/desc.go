@@ -58,13 +58,40 @@ func formatBytes(b int) string {
 	}
 }
 
+func rootRetained(cp CheckpointInfo) bool {
+	rootID := cp.RootID
+	if rootID.IsEmpty() {
+		return true // empty tree is trivially "retained"
+	}
+	if rootID.Checkpoint() != cp.Checkpoint {
+		return false // root is from a different checkpoint, can't confirm locally
+	}
+	var nsi internal.NodeSetInfo
+	if rootID.IsLeaf() {
+		nsi = cp.Leaves
+	} else {
+		nsi = cp.Branches
+	}
+	idx := rootID.Index()
+	return idx >= nsi.StartIndex && idx <= nsi.EndIndex
+}
+
+func totalBytes(cs ChangesetDescription) int {
+	return cs.WALSize + cs.KVLogSize +
+		cs.TotalLeaves*int(internal.LeafLayoutSize) +
+		cs.TotalBranches*int(internal.BranchLayoutSize) +
+		len(cs.Checkpoints)*int(internal.CheckpointInfoSize)
+}
+
 var descTemplate = template.Must(template.New("desc").Funcs(template.FuncMap{
-	"formatBytes": formatBytes,
+	"formatBytes":  formatBytes,
+	"rootRetained": rootRetained,
+	"totalBytes":   totalBytes,
 }).Parse(`<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8">
-<title>IAVL Tree Description</title>
+<title>IAVL Tree Inspector</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: ui-monospace, "Cascadia Code", Menlo, monospace; font-size: 13px; background: #0d1117; color: #c9d1d9; padding: 20px; }
@@ -95,7 +122,7 @@ var descTemplate = template.Must(template.New("desc").Funcs(template.FuncMap{
 </style>
 </head>
 <body>
-<h1>IAVL Tree Description</h1>
+<h1>IAVL Tree Inspector</h1>
 <div class="meta">
   Version: <span>{{.Version}}</span> &middot;
   Last Prune Version: <span>{{.LastPruneVersion}}</span>
@@ -136,7 +163,7 @@ var descTemplate = template.Must(template.New("desc").Funcs(template.FuncMap{
       <td class="num">{{if .Incomplete}}<span class="dim">&mdash;</span>{{else}}{{.TotalBranches}}{{end}}</td>
       <td class="num">{{if .Incomplete}}<span class="dim">&mdash;</span>{{else}}{{formatBytes .WALSize}}{{end}}</td>
       <td class="num">{{if .Incomplete}}<span class="dim">&mdash;</span>{{else}}{{formatBytes .KVLogSize}}{{end}}</td>
-      <td class="num">{{if .Incomplete}}<span class="dim">&mdash;</span>{{else}}{{formatBytes .TotalBytes}}{{end}}</td>
+      <td class="num">{{if .Incomplete}}<span class="dim">&mdash;</span>{{else}}{{formatBytes (totalBytes .)}}{{end}}</td>
       <td class="num">
         {{if .Incomplete}}<span class="dim">&mdash;</span>
         {{else if not .Checkpoints}}0
@@ -155,7 +182,7 @@ var descTemplate = template.Must(template.New("desc").Funcs(template.FuncMap{
             <tr>
               <td>{{.Checkpoint}}</td>
               <td>{{.Version}}</td>
-              <td>{{if .RootID.IsEmpty}}<span class="empty">empty</span>{{else}}{{.RootID}}{{end}}</td>
+              <td>{{if .RootID.IsEmpty}}<span class="empty">empty</span>{{else}}{{.RootID}} {{if rootRetained .}}&#x2705;{{else}}&#x274C;{{end}}{{end}}</td>
               <td class="num">{{.Leaves.Count}}</td>
               <td class="num">{{.Branches.Count}}</td>
             </tr>

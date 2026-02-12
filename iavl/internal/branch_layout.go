@@ -6,13 +6,13 @@ import (
 )
 
 const (
-	sizeBranch = 88
+	SizeBranch = 88
 )
 
 func init() {
 	// Verify the size of BranchLayout is what we expect it to be at runtime.
-	if unsafe.Sizeof(BranchLayout{}) != sizeBranch {
-		panic(fmt.Sprintf("invalid BranchLayout size: got %d, want %d", unsafe.Sizeof(BranchLayout{}), sizeBranch))
+	if unsafe.Sizeof(BranchLayout{}) != SizeBranch {
+		panic(fmt.Sprintf("invalid BranchLayout size: got %d, want %d", unsafe.Sizeof(BranchLayout{}), SizeBranch))
 	}
 }
 

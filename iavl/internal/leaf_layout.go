@@ -6,13 +6,13 @@ import (
 )
 
 const (
-	sizeLeaf = 56
+	SizeLeaf = 56
 )
 
 func init() {
 	// Verify the size of LeafLayout is what we expect it to be at runtime.
-	if unsafe.Sizeof(LeafLayout{}) != sizeLeaf {
-		panic(fmt.Sprintf("invalid LeafLayout size: got %d, want %d", unsafe.Sizeof(LeafLayout{}), sizeLeaf))
+	if unsafe.Sizeof(LeafLayout{}) != SizeLeaf {
+		panic(fmt.Sprintf("invalid LeafLayout size: got %d, want %d", unsafe.Sizeof(LeafLayout{}), SizeLeaf))
 	}
 }
 

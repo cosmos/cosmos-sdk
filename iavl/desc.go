@@ -1,6 +1,7 @@
 package iavl
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"io"
@@ -76,9 +77,34 @@ func rootRetained(cp CheckpointInfo) bool {
 	return idx >= nsi.StartIndex && idx <= nsi.EndIndex
 }
 
+func nodeCount(count any, structSize int) string {
+	var n int
+	switch v := count.(type) {
+	case int:
+		n = v
+	case uint32:
+		n = int(v)
+	default:
+		return fmt.Sprintf("%v", count)
+	}
+	return fmt.Sprintf("%d (%s)", n, formatBytes(n*structSize))
+}
+
+func toJSON(v any) template.JS {
+	b, err := json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		return "{}"
+	}
+	return template.JS(b)
+}
+
 var descTemplate = template.Must(template.New("desc").Funcs(template.FuncMap{
 	"formatBytes":  formatBytes,
 	"rootRetained": rootRetained,
+	"nodeCount":    nodeCount,
+	"toJSON":       toJSON,
+	"sizeLeaf":     func() int { return int(internal.SizeLeaf) },
+	"sizeBranch":   func() int { return int(internal.SizeBranch) },
 }).Parse(`<!DOCTYPE html>
 <html>
 <head>
@@ -152,8 +178,8 @@ var descTemplate = template.Must(template.New("desc").Funcs(template.FuncMap{
         {{else if .CompactedAt}} <span class="tag tag-compacted">compacted @{{.CompactedAt}}</span>
         {{end}}
       </td>
-      <td class="num">{{if .Incomplete}}<span class="dim">&mdash;</span>{{else}}{{.TotalLeaves}}{{end}}</td>
-      <td class="num">{{if .Incomplete}}<span class="dim">&mdash;</span>{{else}}{{.TotalBranches}}{{end}}</td>
+      <td class="num">{{if .Incomplete}}<span class="dim">&mdash;</span>{{else}}{{nodeCount .TotalLeaves (sizeLeaf)}}{{end}}</td>
+      <td class="num">{{if .Incomplete}}<span class="dim">&mdash;</span>{{else}}{{nodeCount .TotalBranches (sizeBranch)}}{{end}}</td>
       <td class="num">{{if .Incomplete}}<span class="dim">&mdash;</span>{{else}}{{formatBytes .WALSize}}{{end}}</td>
       <td class="num">{{if .Incomplete}}<span class="dim">&mdash;</span>{{else}}{{formatBytes .KVLogSize}}{{end}}</td>
       <td class="num">{{if .Incomplete}}<span class="dim">&mdash;</span>{{else}}{{formatBytes .TotalBytes}}{{end}}</td>
@@ -169,15 +195,19 @@ var descTemplate = template.Must(template.New("desc").Funcs(template.FuncMap{
               <th>Version</th>
               <th>Root</th>
               <th class="num">Leaves</th>
+              <th>Leaf Idx</th>
               <th class="num">Branches</th>
+              <th>Branch Idx</th>
             </tr>
             {{range .Checkpoints}}
             <tr>
               <td>{{.Checkpoint}}</td>
               <td>{{.Version}}</td>
               <td>{{if .RootID.IsEmpty}}<span class="empty">empty</span>{{else}}{{.RootID}} {{if rootRetained .}}&#x2705;{{else}}&#x274C;{{end}}{{end}}</td>
-              <td class="num">{{.Leaves.Count}}</td>
-              <td class="num">{{.Branches.Count}}</td>
+              <td class="num">{{nodeCount .Leaves.Count (sizeLeaf)}}</td>
+              <td>{{.Leaves.StartIndex}}..{{.Leaves.EndIndex}}</td>
+              <td class="num">{{nodeCount .Branches.Count (sizeBranch)}}</td>
+              <td>{{.Branches.StartIndex}}..{{.Branches.EndIndex}}</td>
             </tr>
             {{end}}
           </table>
@@ -193,6 +223,7 @@ var descTemplate = template.Must(template.New("desc").Funcs(template.FuncMap{
 </div>
 {{end}}
 
+<script type="application/json" id="raw-data">{{toJSON .}}</script>
 </body>
 </html>
 `))

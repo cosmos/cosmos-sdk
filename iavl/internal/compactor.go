@@ -235,13 +235,14 @@ func (c *Compactor) doAddChangeset(reader *ChangesetReader) error {
 			c.offsetCache[id] = uint32(c.branchesWriter.Count())
 		}
 
-		if newBranchCount == 0 && newLeafCount == 0 && c.cpInfoWriter.Count() == 0 && !cpInfo.RootID.IsEmpty() {
-			// This checkpoint's root was pruned during compaction and this is the first checkpoint.
-			// Skip it since the root node no longer exists in the compacted data and we can't
-			// reconstruct the tree state from it.
-			// If the root is empty (tree had no data), we retain the checkpoint as it's
-			// a valid WAL replay starting point.
-			continue
+		if newBranchCount == 0 && newLeafCount == 0 && c.cpInfoWriter.Count() == 0 {
+			// This is the first checkpoint in the compacted output and it has no nodes.
+			// Skip it if the checkpoint is unreachable because WAL entries before
+			// walStartVersion were truncated. To replay from checkpoint version V,
+			// we need WAL entries starting at V+1.
+			if cpInfo.Version+1 < c.walStartVersion {
+				continue
+			}
 		}
 
 		cpInfo = &CheckpointInfo{

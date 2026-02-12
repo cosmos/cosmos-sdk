@@ -38,6 +38,14 @@ func (s *runningStats) stddev() float64 {
 	return 0
 }
 
+type changesetInfo struct {
+	name                                     string
+	start, end, compacted                    uint32
+	walStart                                 string
+	kvSize, walSize                          int64
+	leafSize, branchSize, cpSize, orphanSize int64
+}
+
 type walEntry struct {
 	key    []byte
 	value  []byte

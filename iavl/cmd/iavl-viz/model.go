@@ -134,12 +134,18 @@ func (m *model) buildTreesTable() {
 	}, rows, m.tableHeight())
 }
 
-func fileCountAndSize(path string, structSize int64) string {
+func statSize(path string) int64 {
 	info, err := os.Stat(path)
 	if err != nil {
+		return 0
+	}
+	return info.Size()
+}
+
+func fmtCountAndSize(size, structSize int64) string {
+	if size == 0 {
 		return "-"
 	}
-	size := info.Size()
 	if structSize > 0 {
 		return fmt.Sprintf("%d (%s)", size/structSize, humanSize(size))
 	}
@@ -153,7 +159,9 @@ func (m *model) buildChangesetsTable() {
 		m.err = err.Error()
 		return
 	}
-	var rows []table.Row
+
+	// First pass: collect info for each changeset.
+	var infos []changesetInfo
 	for _, e := range entries {
 		if !e.IsDir() {
 			continue
@@ -163,28 +171,69 @@ func (m *model) buildChangesetsTable() {
 			continue
 		}
 		csPath := filepath.Join(treeDir, e.Name())
-		endStr := "-"
-		if end > 0 {
-			endStr = strconv.FormatUint(uint64(end), 10)
-		}
-		compStr := "-"
-		if compacted > 0 {
-			compStr = strconv.FormatUint(uint64(compacted), 10)
-		}
-		rows = append(rows, table.Row{
-			e.Name(),
-			strconv.FormatUint(uint64(start), 10),
-			endStr,
-			compStr,
-			loadWALStartVersion(m.dir, m.selectedTree, e.Name()),
-			fileCountAndSize(filepath.Join(csPath, "kv.dat"), 0),
-			fileCountAndSize(filepath.Join(csPath, "wal.log"), 0),
-			fileCountAndSize(filepath.Join(csPath, "leaves.dat"), internal.SizeLeaf),
-			fileCountAndSize(filepath.Join(csPath, "branches.dat"), internal.SizeBranch),
-			fileCountAndSize(filepath.Join(csPath, "checkpoints.dat"), internal.CheckpointInfoSize),
-			fileCountAndSize(filepath.Join(csPath, "orphans.dat"), 0),
+		infos = append(infos, changesetInfo{
+			name:       e.Name(),
+			start:      start,
+			end:        end,
+			compacted:  compacted,
+			walStart:   loadWALStartVersion(m.dir, m.selectedTree, e.Name()),
+			kvSize:     statSize(filepath.Join(csPath, "kv.dat")),
+			walSize:    statSize(filepath.Join(csPath, "wal.log")),
+			leafSize:   statSize(filepath.Join(csPath, "leaves.dat")),
+			branchSize: statSize(filepath.Join(csPath, "branches.dat")),
+			cpSize:     statSize(filepath.Join(csPath, "checkpoints.dat")),
+			orphanSize: statSize(filepath.Join(csPath, "orphans.dat")),
 		})
 	}
+
+	// Compute totals.
+	var total changesetInfo
+	for _, info := range infos {
+		total.kvSize += info.kvSize
+		total.walSize += info.walSize
+		total.leafSize += info.leafSize
+		total.branchSize += info.branchSize
+		total.cpSize += info.cpSize
+		total.orphanSize += info.orphanSize
+	}
+
+	// Build rows.
+	rows := make([]table.Row, 0, len(infos)+1)
+	for _, info := range infos {
+		endStr := "-"
+		if info.end > 0 {
+			endStr = strconv.FormatUint(uint64(info.end), 10)
+		}
+		compStr := "-"
+		if info.compacted > 0 {
+			compStr = strconv.FormatUint(uint64(info.compacted), 10)
+		}
+		rows = append(rows, table.Row{
+			info.name,
+			strconv.FormatUint(uint64(info.start), 10),
+			endStr,
+			compStr,
+			info.walStart,
+			fmtCountAndSize(info.kvSize, 0),
+			fmtCountAndSize(info.walSize, 0),
+			fmtCountAndSize(info.leafSize, internal.SizeLeaf),
+			fmtCountAndSize(info.branchSize, internal.SizeBranch),
+			fmtCountAndSize(info.cpSize, internal.CheckpointInfoSize),
+			fmtCountAndSize(info.orphanSize, 0),
+		})
+	}
+
+	// Append TOTAL row.
+	rows = append(rows, table.Row{
+		"TOTAL", "-", "-", "-", "-",
+		fmtCountAndSize(total.kvSize, 0),
+		fmtCountAndSize(total.walSize, 0),
+		fmtCountAndSize(total.leafSize, internal.SizeLeaf),
+		fmtCountAndSize(total.branchSize, internal.SizeBranch),
+		fmtCountAndSize(total.cpSize, internal.CheckpointInfoSize),
+		fmtCountAndSize(total.orphanSize, 0),
+	})
+
 	m.table = newTable([]table.Column{
 		{Title: "Dir", Width: 20},
 		{Title: "Start", Width: 10},
@@ -459,6 +508,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.buildChangesetsTable()
 				return m, nil
 			case viewChangesets:
+				if row[0] == "TOTAL" {
+					return m, nil
+				}
 				m.selectedChangeset = row[0]
 				m.view = viewCheckpoints
 				m.err = ""
@@ -554,7 +606,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "w":
 			if m.view == viewChangesets {
 				row := m.table.SelectedRow()
-				if row == nil {
+				if row == nil || row[0] == "TOTAL" {
 					return m, nil
 				}
 				m.selectedChangeset = row[0]

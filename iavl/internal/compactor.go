@@ -148,36 +148,22 @@ func (c *Compactor) doAddChangeset(reader *ChangesetReader) error {
 			newLeafCount++
 
 			// remap key offset
-			keyOffset, keyInWAL := walRewriteInfo.KeyOffsetRemapping[leaf.KeyOffset.ToUint64()]
-			if !keyInWAL {
-				key, err := existingLeaf.Key()
-				if err != nil {
-					return fmt.Errorf("failed to read key for leaf %s: %w", id, err)
-				}
-				keyOffset, err = c.kvlogWriter.WriteKeyBlob(key.UnsafeBytes())
-				if err != nil {
-					return fmt.Errorf("failed to write key blob for leaf %s: %w", id, err)
-				}
+			keyOffset, keyInKVData, err := c.remapBlob(leaf.KeyInKVData(), leaf.KeyOffset.ToUint64(), walRewriteInfo, true, &existingLeaf)
+			if err != nil {
+				return fmt.Errorf("failed to remap key blob for leaf %s: %w", id, err)
 			}
 			leaf.KeyOffset = NewUint40(keyOffset)
-			leaf.SetKeyInKVData(!keyInWAL)
+			leaf.SetKeyInKVData(keyInKVData)
 
 			//  remap value offset
-			valOffset, valInWAL := walRewriteInfo.ValueOffsetRemapping[leaf.ValueOffset.ToUint64()]
-			if !valInWAL {
-				val, err := existingLeaf.Value()
-				if err != nil {
-					return fmt.Errorf("failed to read value for leaf %s: %w", id, err)
-				}
-				valOffset, err = c.kvlogWriter.WriteValueBlob(val.UnsafeBytes())
-				if err != nil {
-					return fmt.Errorf("failed to write value blob for leaf %s: %w", id, err)
-				}
+			valOffset, valInWAL, err := c.remapBlob(leaf.ValueInKVData(), leaf.ValueOffset.ToUint64(), walRewriteInfo, false, &existingLeaf)
+			if err != nil {
+				return fmt.Errorf("failed to remap value blob for leaf %s: %w", id, err)
 			}
 			leaf.ValueOffset = NewUint40(valOffset)
 			leaf.SetValueInKVData(!valInWAL)
 
-			err := c.leavesWriter.Append(&leaf)
+			err = c.leavesWriter.Append(&leaf)
 			if err != nil {
 				return fmt.Errorf("failed to append leaf %s: %w", id, err)
 			}
@@ -214,21 +200,14 @@ func (c *Compactor) doAddChangeset(reader *ChangesetReader) error {
 			}
 
 			// remap key offset
-			keyOffset, keyInWAL := walRewriteInfo.KeyOffsetRemapping[branch.KeyOffset.ToUint64()]
-			if !keyInWAL {
-				key, err := existingBranch.Key()
-				if err != nil {
-					return fmt.Errorf("failed to read key for branch %s: %w", id, err)
-				}
-				keyOffset, err = c.kvlogWriter.WriteKeyBlob(key.UnsafeBytes())
-				if err != nil {
-					return fmt.Errorf("failed to write key blob for branch %s: %w", id, err)
-				}
+			keyOffset, keyInWAL, err := c.remapBlob(branch.KeyInKVData(), branch.KeyOffset.ToUint64(), walRewriteInfo, true, &existingBranch)
+			if err != nil {
+				return fmt.Errorf("failed to remap key blob for branch %s: %w", id, err)
 			}
 			branch.KeyOffset = NewUint40(keyOffset)
 			branch.SetKeyInKVData(!keyInWAL)
 
-			err := c.branchesWriter.Append(&branch)
+			err = c.branchesWriter.Append(&branch)
 			if err != nil {
 				return fmt.Errorf("failed to append branch %s: %w", id, err)
 			}
@@ -277,6 +256,42 @@ func (c *Compactor) doAddChangeset(reader *ChangesetReader) error {
 	})
 
 	return nil
+}
+
+func (c *Compactor) remapBlob(origIsInKVData bool, origOffset uint64, walRewriteInfo *WALRewriteInfo, isKey bool, node Node) (newOffset uint64, isInKVData bool, err error) {
+	newInKVData := origIsInKVData
+	if !origIsInKVData {
+		// try to find it in the wal
+		var isInWAL bool
+		if isKey {
+			newOffset, isInWAL = walRewriteInfo.KeyOffsetRemapping[origOffset]
+		} else {
+			newOffset, isInWAL = walRewriteInfo.ValueOffsetRemapping[origOffset]
+		}
+		newInKVData = !isInWAL
+	}
+	if newInKVData {
+		// if it's not in the wal, we need to read the original value and write it to the new kv log
+		var blob UnsafeBytes
+		var err error
+		if isKey {
+			blob, err = node.Key()
+		} else {
+			blob, err = node.Value()
+		}
+		if err != nil {
+			return 0, false, fmt.Errorf("failed to read original blob during remap: %w", err)
+		}
+		if isKey {
+			newOffset, err = c.kvlogWriter.WriteKeyBlob(blob.UnsafeBytes())
+		} else {
+			newOffset, err = c.kvlogWriter.WriteValueBlob(blob.UnsafeBytes())
+		}
+		if err != nil {
+			return 0, false, fmt.Errorf("failed to write blob to new kv log during remap: %w", err)
+		}
+	}
+	return newOffset, newInKVData, nil
 }
 
 func (c *Compactor) Seal() (*Changeset, error) {

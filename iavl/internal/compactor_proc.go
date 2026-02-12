@@ -51,15 +51,16 @@ func (cp *CompactorProc) startCompactionRun(ctx context.Context) error {
 		// no checkpoint found for the oldest retained version, nothing to compact
 		return nil
 	}
-	walRetainVersion := info.Version
+	retainVersion := info.Version
 
 	cpOpts := CompactOptions{
 		RetainCriteria: func(createCheckpoint, orphanVersion uint32) bool {
 			// retain if the node was orphaned at or after the version of the oldest retained checkpoint
-			return orphanVersion >= walRetainVersion
+			return orphanVersion >= retainVersion
 		},
-		CompactedAt:     cp.treeStore.LatestVersion(),
-		WALStartVersion: walRetainVersion,
+		CompactedAt: cp.treeStore.LatestVersion(),
+		// we start the WAL after the oldest retained checkpoint version
+		WALStartVersion: retainVersion + 1,
 	}
 
 	for _, cs := range toProcess {

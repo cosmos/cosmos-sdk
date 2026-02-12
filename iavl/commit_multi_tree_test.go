@@ -219,10 +219,11 @@ func (sim *SimCommitMultiTree) checkNewVersion(t *rapid.T) {
 	require.Equal(t, commitId1.Version, commitId2.Version, "committed versions do not match")
 	require.Equal(t, commitId1.Hash, commitId2.Hash, "commit hashes do not match")
 
-	// prune manually for determism in testing instead of relying on the async pruner
+	// prune manually for determinism in testing instead of relying on the async pruner
 	if sim.pruningOpts.Interval != 0 && commitId1.Version-sim.lastPruneVersion >= int64(sim.pruningOpts.Interval) {
 		if commitId1.Version > int64(sim.pruningOpts.KeepRecent)+1 {
 			retainVersion := commitId1.Version - int64(sim.pruningOpts.KeepRecent)
+			t.Logf("pruning at version %d, retainVersion=%d", commitId1.Version, retainVersion)
 			sim.lastPruneVersion = commitId1.Version
 			sim.mtV2.pruneNow(context.Background(), uint64(retainVersion))
 		}
@@ -257,6 +258,7 @@ func (sim *SimCommitMultiTree) checkNewVersion(t *rapid.T) {
 			kvStore2 := historyMs2.GetKVStore(storeKey)
 			iterV1 := kvStore1.Iterator(nil, nil)
 			iterV2 := kvStore2.Iterator(nil, nil)
+			t.Logf("comparing store %s at version %d", storeKey.Name(), historyVersion)
 			compareIteratorsAtVersion(t, iterV1, iterV2)
 		}
 	}

@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"errors"
 	"fmt"
 	"io"
 )
@@ -34,7 +35,7 @@ func (or *OrphanRewriter) Preprocess(retainCriteria RetainCriteria, compactedOrp
 	for {
 		entry, err := or.rdr.Next()
 		if err != nil {
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				return toDelete, nil
 			}
 			return nil, err
@@ -61,7 +62,7 @@ func (or *OrphanRewriter) FinishRewrite(compactedOrphanWriter *OrphanWriter) err
 	for {
 		entry, err := or.rdr.Next()
 		if err != nil {
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				return or.rdr.Close()
 			}
 			return err

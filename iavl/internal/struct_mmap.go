@@ -3,6 +3,7 @@ package internal
 import (
 	"fmt"
 	"os"
+	"sort"
 	"unsafe"
 )
 
@@ -47,6 +48,16 @@ func (df *StructMmap[T]) UnsafeItem(i uint32) *T {
 
 func (df *StructMmap[T]) Count() int {
 	return len(df.items)
+}
+
+// BinarySearch finds the smallest index i in [0, Count()) at which f(item) is true,
+// assuming that f(item) is false for some prefix of the items and then true for the remainder.
+// Returns Count() if no such index exists.
+// This is a thin wrapper around sort.Search operating on the mmap'd items.
+func (df *StructMmap[T]) BinarySearch(f func(*T) bool) int {
+	return sort.Search(len(df.items), func(i int) bool {
+		return f(&df.items[i])
+	})
 }
 
 func (df *StructMmap[T]) TotalBytes() int {

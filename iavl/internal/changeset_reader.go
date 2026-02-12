@@ -8,13 +8,14 @@ import (
 type ChangesetReader struct {
 	changeset *Changeset // we keep a reference to the parent changeset handle
 
-	walReader       *KVDataReader
-	kvDataReader    *KVDataReader
-	branchesData    *NodeMmap[BranchLayout]
-	leavesData      *NodeMmap[LeafLayout]
-	firstCheckpoint uint32
-	lastCheckpoint  uint32
-	checkpointsInfo *StructMmap[CheckpointInfo]
+	walReader             *KVDataReader
+	kvDataReader          *KVDataReader
+	branchesData          *NodeMmap[BranchLayout]
+	leavesData            *NodeMmap[LeafLayout]
+	firstCheckpoint       uint32
+	lastCheckpoint        uint32
+	checkpointsContiguous bool // true if checkpoint numbers are contiguous (no gaps from compaction)
+	checkpointsInfo       *StructMmap[CheckpointInfo]
 }
 
 func NewChangesetReader(changeset *Changeset) (*ChangesetReader, error) {
@@ -50,9 +51,12 @@ func NewChangesetReader(changeset *Changeset) (*ChangesetReader, error) {
 	}
 
 	if cr.checkpointsInfo.Count() > 0 {
+		count := uint32(cr.checkpointsInfo.Count())
 		firstInfo := cr.checkpointsInfo.UnsafeItem(0)
 		cr.firstCheckpoint = firstInfo.Checkpoint
-		cr.lastCheckpoint = cr.firstCheckpoint + uint32(cr.checkpointsInfo.Count()) - 1
+		lastInfo := cr.checkpointsInfo.UnsafeItem(count - 1)
+		cr.lastCheckpoint = lastInfo.Checkpoint
+		cr.checkpointsContiguous = cr.lastCheckpoint-cr.firstCheckpoint+1 == count
 	}
 
 	return cr, nil
@@ -113,9 +117,29 @@ func (cr *ChangesetReader) ResolveBranchByID(id NodeID) (*BranchLayout, error) {
 
 func (cr *ChangesetReader) GetCheckpointInfo(checkpoint uint32) (*CheckpointInfo, error) {
 	if checkpoint < cr.firstCheckpoint || checkpoint > cr.lastCheckpoint {
-		return nil, fmt.Errorf("checkpoint %d out of range for changeset %s (have %d..%d)", checkpoint, cr.changeset.Files().Dir(), cr.firstCheckpoint, cr.lastCheckpoint)
+		return nil, fmt.Errorf("checkpoint %d out of range for changeset %s (have %d..%d)",
+			checkpoint, cr.changeset.Files().Dir(), cr.firstCheckpoint, cr.lastCheckpoint)
 	}
-	return cr.checkpointsInfo.UnsafeItem(checkpoint - cr.firstCheckpoint), nil
+	if cr.checkpointsContiguous {
+		item := cr.checkpointsInfo.UnsafeItem(checkpoint - cr.firstCheckpoint)
+		if item.Checkpoint != checkpoint {
+			return nil, fmt.Errorf("checkpoint data corruption in changeset %s: expected checkpoint %d at index %d, got %d",
+				cr.changeset.Files().Dir(), checkpoint, checkpoint-cr.firstCheckpoint, item.Checkpoint)
+		}
+		return item, nil
+	}
+	// non-contiguous: binary search by checkpoint number
+	idx := cr.checkpointsInfo.BinarySearch(func(c *CheckpointInfo) bool {
+		return c.Checkpoint >= checkpoint
+	})
+	if idx < cr.checkpointsInfo.Count() {
+		item := cr.checkpointsInfo.UnsafeItem(uint32(idx))
+		if item.Checkpoint == checkpoint {
+			return item, nil
+		}
+	}
+	return nil, fmt.Errorf("checkpoint %d not found in changeset %s (have %d..%d, likely pruned during compaction)",
+		checkpoint, cr.changeset.Files().Dir(), cr.firstCheckpoint, cr.lastCheckpoint)
 }
 
 func (cr *ChangesetReader) ResolveByID(id NodeID) (Node, error) {
@@ -189,21 +213,18 @@ func (cr *ChangesetReader) LatestCheckpointRoot() CheckpointRootInfo {
 	if count == 0 {
 		return CheckpointRootInfo{}
 	}
-	return cr.LatestValidCheckpoint(cr.lastCheckpoint)
+	return cr.latestValidCheckpoint(count - 1)
 }
 
-// LatestValidCheckpoint finds the latest checkpoint <= targetCheckpoint that has a root.
+// latestValidCheckpoint finds the latest checkpoint at or before startIdx that has a root.
+// startIdx is a 0-based index into the checkpoints info array.
 // A valid checkpoint is considered to be one that has a root retained in the changeset,
 // where the root ID's checkpoint corresponds to the actual checkpoint.
 // If for example we have checkpoint 100, but its root ID has checkpoint number 99,
 // we actually need to navigate to checkpoint 99 to confirm that the root was retained.
 // If there is no available checkpoint, CheckpointRootInfo.Version will be zero.
-func (cr *ChangesetReader) LatestValidCheckpoint(targetCheckpoint uint32) CheckpointRootInfo {
-	if targetCheckpoint < cr.firstCheckpoint || targetCheckpoint > cr.lastCheckpoint {
-		return CheckpointRootInfo{}
-	}
-	i := int(targetCheckpoint - cr.firstCheckpoint)
-	for ; i >= 0; i-- {
+func (cr *ChangesetReader) latestValidCheckpoint(startIdx int) CheckpointRootInfo {
+	for i := startIdx; i >= 0; i-- {
 		info := cr.checkpointsInfo.UnsafeItem(uint32(i))
 		rootID := info.RootID
 		if rootID.IsEmpty() {
@@ -221,12 +242,11 @@ func (cr *ChangesetReader) LatestValidCheckpoint(targetCheckpoint uint32) Checkp
 		if rootCheckpoint != info.Checkpoint {
 			// root is from a different checkpoint (no tree changes at this checkpoint),
 			// look up bounds from the root's source checkpoint
-			if rootCheckpoint >= cr.firstCheckpoint {
-				sourceInfo = cr.checkpointsInfo.UnsafeItem(rootCheckpoint - cr.firstCheckpoint)
-			} else {
-				// root's source checkpoint is not in this changeset (compacted away entirely)
-				// we likely don't have any valid checkpoint roots in this changeset,
-				// but we'll keep looking at earlier checkpoints just in case
+			var err error
+			sourceInfo, err = cr.GetCheckpointInfo(rootCheckpoint)
+			if err != nil {
+				// root's source checkpoint is not in this changeset (compacted away or pruned)
+				// keep looking at earlier checkpoints just in case
 				continue
 			}
 		}
@@ -263,31 +283,18 @@ func (cr *ChangesetReader) CheckpointForVersion(targetVersion uint32) Checkpoint
 		return CheckpointRootInfo{}
 	}
 
-	// binary search for nearest checkpoint <= targetVersion
-	low := 0
-	high := count - 1
-	resultCheckpoint := uint32(0)
+	// binary search for the first checkpoint with version > targetVersion,
+	// then step back one to get the floor (last checkpoint with version <= targetVersion)
+	floorIdx := cr.checkpointsInfo.BinarySearch(func(c *CheckpointInfo) bool {
+		return c.Version > targetVersion
+	}) - 1
 
-	for low <= high {
-		mid := (low + high) / 2
-		midInfo := cr.checkpointsInfo.UnsafeItem(uint32(mid))
-
-		if midInfo.Version <= targetVersion {
-			// this checkpoint is a candidate, let's see if we can find a higher one, search right
-			resultCheckpoint = midInfo.Checkpoint
-			low = mid + 1
-		} else {
-			// this checkpoint is too high, search left
-			high = mid - 1
-		}
-	}
-
-	if resultCheckpoint == 0 {
-		// no checkpoint found <= targetVersion
+	if floorIdx < 0 {
+		// no checkpoint found with version <= targetVersion
 		return CheckpointRootInfo{}
 	}
 
-	return cr.LatestValidCheckpoint(resultCheckpoint)
+	return cr.latestValidCheckpoint(floorIdx)
 }
 
 func (cr *ChangesetReader) TotalBytes() int {

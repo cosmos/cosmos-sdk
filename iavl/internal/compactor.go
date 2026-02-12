@@ -218,12 +218,15 @@ func (c *Compactor) doAddChangeset(reader *ChangesetReader) error {
 			c.offsetCache[id] = uint32(c.branchesWriter.Count())
 		}
 
-		if newBranchCount == 0 && newLeafCount == 0 && c.cpInfoWriter.Count() == 0 {
-			// This is the first checkpoint in the compacted output and it has no nodes.
-			// Skip it if the checkpoint is unreachable because WAL entries before
-			// walStartVersion were truncated. To replay from checkpoint version V,
-			// we need WAL entries starting at V+1.
-			if cpInfo.Version+1 < c.walStartVersion {
+		checkpointHasNoNodes := newBranchCount == 0 && newLeafCount == 0
+		if checkpointHasNoNodes {
+			// we attempt to delete checkpoint infos that have no nodes
+			rootIsEmpty := cpInfo.RootID.IsEmpty()
+			inRetainRange := cpInfo.Version+1 >= c.walStartVersion
+			// we need to keep empty checkpoints with empty roots (empty trees)
+			// if they occur right before the WAL start version or in the replay range
+			// so that we can replay the WAL starting at that empty tree
+			if !(rootIsEmpty && inRetainRange) {
 				continue
 			}
 		}

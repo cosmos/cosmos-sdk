@@ -61,6 +61,10 @@ func (k Keeper) CreateGroup(goCtx context.Context, msg *group.MsgCreateGroup) (*
 		}
 	}
 
+	if err := k.assertGroupNotEmpty(totalWeight); err != nil {
+		return nil, err
+	}
+
 	// Create a new group in the groupTable.
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	groupInfo := &group.GroupInfo{
@@ -202,8 +206,8 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, msg *group.MsgUpdateGr
 			}
 		}
 		// ensure that group has one or more members
-		if totalWeight.IsZero() {
-			return errorsmod.Wrap(errors.ErrInvalid, "group must not be empty")
+		if err := k.assertGroupNotEmpty(totalWeight); err != nil {
+			return err
 		}
 		// Update group in the groupTable.
 		g.TotalWeight = totalWeight.String()
@@ -961,6 +965,10 @@ func (k Keeper) LeaveGroup(goCtx context.Context, msg *group.MsgLeaveGroup) (*gr
 		return nil, err
 	}
 
+	if err := k.assertGroupNotEmpty(updatedWeight); err != nil {
+		return nil, err
+	}
+
 	// delete group member in the groupMemberTable.
 	if err := k.groupMemberTable.Delete(ctx.KVStore(k.key), gm); err != nil {
 		return nil, errorsmod.Wrap(err, "group member")
@@ -1158,6 +1166,15 @@ func (k Keeper) validateMembers(members []group.MemberRequest) error {
 			return errorsmod.Wrap(err, "weight must be non negative")
 		}
 		index[member.Address] = struct{}{}
+	}
+	return nil
+}
+
+// assertGroupNotEmpty returns ErrInvalid if the group's total weight would be zero.
+// Used by UpdateGroupMembers and LeaveGroup to ensure a group always has at least one member.
+func (k Keeper) assertGroupNotEmpty(totalWeight math.Dec) error {
+	if totalWeight.IsZero() {
+		return errorsmod.Wrap(errors.ErrInvalid, "group must not be empty")
 	}
 	return nil
 }

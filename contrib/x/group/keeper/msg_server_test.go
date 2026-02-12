@@ -146,6 +146,14 @@ func (s *TestSuite) TestCreateGroup() {
 			expErr:    true,
 			expErrMsg: "expected a positive decimal",
 		},
+		"empty members - group must not be empty": {
+			req: &group.MsgCreateGroup{
+				Admin:   addr1.String(),
+				Members: []group.MemberRequest{},
+			},
+			expErr:    true,
+			expErrMsg: "group must not be empty",
+		},
 		"invalid member weight - Inf": {
 			req: &group.MsgCreateGroup{
 				Admin: addr1.String(),
@@ -979,7 +987,7 @@ func (s *TestSuite) TestCreateGroupPolicy() {
 	s.setNextAccount()
 	groupRes, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
 		Admin:   addr1.String(),
-		Members: nil,
+		Members: []group.MemberRequest{{Address: addr1.String(), Weight: "1"}},
 	})
 	s.Require().NoError(err)
 	myGroupID := groupRes.GroupId
@@ -1515,7 +1523,7 @@ func (s *TestSuite) TestGroupPoliciesByAdminOrGroup() {
 
 	groupRes, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
 		Admin:   admin.String(),
-		Members: nil,
+		Members: []group.MemberRequest{{Address: admin.String(), Weight: "1"}},
 	})
 	s.Require().NoError(err)
 	myGroupID := groupRes.GroupId
@@ -3056,6 +3064,15 @@ func (s *TestSuite) TestLeaveGroup() {
 	s.setNextAccount()
 
 	_, groupID3 := s.createGroupAndGroupPolicy(admin3, members, policy)
+
+	// groupID4: 2 members for "non-final member leaving succeeds" test
+	members = []group.MemberRequest{
+		{Address: member1.String(), Weight: "1", Metadata: "metadata"},
+		{Address: member2.String(), Weight: "2", Metadata: "metadata"},
+	}
+	s.setNextAccount()
+	_, groupID4 := s.createGroupAndGroupPolicy(admin1, members, policy)
+
 	testCases := []struct {
 		name           string
 		req            *group.MsgLeaveGroup
@@ -3098,14 +3115,14 @@ func (s *TestSuite) TestLeaveGroup() {
 			math.NewDecFromInt64(0),
 		},
 		{
-			"valid testcase: decision policy is not present (and group total weight can be 0)",
+			"last member leaving fails - group must not be empty",
 			&group.MsgLeaveGroup{
 				GroupId: groupID2,
 				Address: member1.String(),
 			},
-			false,
-			"",
-			0,
+			true,
+			"group must not be empty",
+			1,
 			math.NewDecFromInt64(1),
 		},
 		{
@@ -3134,6 +3151,17 @@ func (s *TestSuite) TestLeaveGroup() {
 			"valid request: can leave group (percentage decision policy)",
 			&group.MsgLeaveGroup{
 				GroupId: groupID3,
+				Address: member2.String(),
+			},
+			false,
+			"",
+			1,
+			math.NewDecFromInt64(2),
+		},
+		{
+			"non-final member leaving succeeds",
+			&group.MsgLeaveGroup{
+				GroupId: groupID4,
 				Address: member2.String(),
 			},
 			false,

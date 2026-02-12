@@ -372,6 +372,9 @@ func (s *TestSuite) createGroupAndGroupPolicy(
 	members []group.MemberRequest,
 	policy group.DecisionPolicy,
 ) (policyAddr string, groupID uint64) {
+	if len(members) == 0 {
+		members = []group.MemberRequest{{Address: admin.String(), Weight: "1"}}
+	}
 	groupRes, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
 		Admin:   admin.String(),
 		Members: members,

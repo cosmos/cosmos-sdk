@@ -7,7 +7,106 @@ import (
 	"github.com/stretchr/testify/require"
 
 	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+func TestGroupInfoValidateBasic(t *testing.T) {
+	accAddr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+
+	testCases := []struct {
+		name    string
+		group   group.GroupInfo
+		expErr  bool
+		expMsgs []string
+	}{
+		{
+			"valid",
+			group.GroupInfo{
+				Id:          1,
+				Admin:       accAddr.String(),
+				Metadata:    "metadata",
+				Version:     1,
+				TotalWeight: "1",
+			},
+			false,
+			nil,
+		},
+		{
+			"empty group id",
+			group.GroupInfo{
+				Id:          0,
+				Admin:       accAddr.String(),
+				Metadata:    "metadata",
+				Version:     1,
+				TotalWeight: "1",
+			},
+			true,
+			[]string{"group's GroupId", "value is empty"},
+		},
+		{
+			"invalid admin",
+			group.GroupInfo{
+				Id:          1,
+				Admin:       "invalid",
+				Metadata:    "metadata",
+				Version:     1,
+				TotalWeight: "1",
+			},
+			true,
+			[]string{"admin"},
+		},
+		{
+			"invalid total weight - negative",
+			group.GroupInfo{
+				Id:          1,
+				Admin:       accAddr.String(),
+				Metadata:    "metadata",
+				Version:     1,
+				TotalWeight: "-1",
+			},
+			true,
+			[]string{"total weight"},
+		},
+		{
+			"zero total weight - group must not be empty",
+			group.GroupInfo{
+				Id:          1,
+				Admin:       accAddr.String(),
+				Metadata:    "metadata",
+				Version:     1,
+				TotalWeight: "0",
+			},
+			true,
+			[]string{"group must not be empty", "invalid"},
+		},
+		{
+			"empty version",
+			group.GroupInfo{
+				Id:          1,
+				Admin:       accAddr.String(),
+				Metadata:    "metadata",
+				Version:     0,
+				TotalWeight: "1",
+			},
+			true,
+			[]string{"version", "value is empty"},
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.group.ValidateBasic()
+			if tc.expErr {
+				require.Error(t, err)
+				for _, msg := range tc.expMsgs {
+					require.Contains(t, err.Error(), msg)
+				}
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
 
 func TestThresholdDecisionPolicyValidate(t *testing.T) {
 	g := group.GroupInfo{

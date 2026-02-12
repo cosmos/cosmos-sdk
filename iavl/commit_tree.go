@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
-	"io"
 	"iter"
 	"os"
 	"runtime"
@@ -407,35 +406,28 @@ func (c *commitTreeFinalizer) Finalize() (storetypes.CommitID, error) {
 	return c.lastCommitId, nil
 }
 
-func (c *CommitTree) Latest() internal.TreeReader {
-	return internal.NewTreeReader(c.treeStore.Latest())
-}
-
 func (c *CommitTree) LatestVersion() uint32 {
 	return c.treeStore.LatestVersion()
 }
 
-func (c *CommitTree) GetVersion(version int64) (internal.TreeReader, error) {
-	root, err := c.treeStore.RootAtVersion(uint32(version))
+func (c *CommitTree) Latest() internal.TreeReader {
+	version, root := c.treeStore.Latest()
+	return internal.NewTreeReader(version, root)
+}
+
+func (c *CommitTree) GetVersion(version uint32) (internal.TreeReader, error) {
+	root, err := c.treeStore.RootAtVersion(version)
 	if err != nil {
 		return internal.TreeReader{}, err
 	}
-	return internal.NewTreeReader(root), nil
-}
-
-func (c *CommitTree) CacheWrap() storetypes.CacheWrap {
-	return c.Latest().CacheWrap()
-}
-
-func (c *CommitTree) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) storetypes.CacheWrap {
-	return c.Latest().CacheWrapWithTrace(w, tc)
+	return internal.NewTreeReader(version, root), nil
 }
 
 func (c *CommitTree) Close() error {
 	return c.treeStore.Close()
 }
 
-func (c *CommitTree) Prune(ctx context.Context, retainVersion uint32) error {
+func (c *CommitTree) prune(ctx context.Context, retainVersion uint32) error {
 	compactionRolloverSize := c.opts.CompactionRolloverSize
 	if compactionRolloverSize == 0 {
 		compactionRolloverSize = 4 * 1024 * 1024 * 1024 // 4GB default
@@ -445,5 +437,3 @@ func (c *CommitTree) Prune(ctx context.Context, retainVersion uint32) error {
 		CompactionRolloverSize: compactionRolloverSize,
 	})
 }
-
-var _ storetypes.CacheWrapper = (*CommitTree)(nil)

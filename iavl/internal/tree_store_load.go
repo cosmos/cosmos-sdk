@@ -89,7 +89,7 @@ func (ts *TreeStore) load() error {
 			lastCheckpoint := rdr.LastCheckpoint()
 			// save last checkpoint
 			ts.checkpointer.savedCheckpoint.Store(lastCheckpoint)
-			ts.checkpoint.Store(lastCheckpoint)
+			ts.lastCheckpoint.Store(lastCheckpoint)
 			// save last checkpoint version
 			info, err := rdr.GetCheckpointInfo(lastCheckpoint)
 			if err != nil {
@@ -156,8 +156,10 @@ func (ts *TreeStore) load() error {
 		return fmt.Errorf("failed to replay WAL after loading changesets: %w", err)
 	}
 
-	ts.root.Store(root)
-	ts.version.Store(version)
+	ts.root.Store(&versionedRoot{
+		root:    root,
+		version: version,
+	})
 
 	return nil
 }

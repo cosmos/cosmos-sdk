@@ -8,11 +8,12 @@ import (
 )
 
 type TreeReader struct {
-	root *NodePointer
+	version uint32
+	root    *NodePointer
 }
 
-func NewTreeReader(root *NodePointer) TreeReader {
-	return TreeReader{root: root}
+func NewTreeReader(version uint32, root *NodePointer) TreeReader {
+	return TreeReader{version: version, root: root}
 }
 
 func (t TreeReader) HasErr(key []byte) (bool, error) {
@@ -99,6 +100,10 @@ func (t TreeReader) Set([]byte, []byte) {
 
 func (t TreeReader) Delete([]byte) {
 	panic("readonly store: cannot delete")
+}
+
+func (t TreeReader) Version() uint32 {
+	return t.version
 }
 
 var _ storetypes.KVStore = TreeReader{}

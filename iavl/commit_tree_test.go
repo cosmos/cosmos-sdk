@@ -124,7 +124,7 @@ func (s *SimCommitTree) checkNewVersion(t *rapid.T) {
 	require.NoError(t, err, "failed to finalize commit in V2 tree")
 
 	// check v2 iavl invariants
-	latestPtr := s.treeV2.treeStore.Latest()
+	_, latestPtr := s.treeV2.treeStore.Latest()
 	if latestPtr != nil {
 		latest, pin, err := latestPtr.Resolve()
 		defer pin.Unpin()
@@ -157,7 +157,7 @@ func (s *SimCommitTree) checkNewVersion(t *rapid.T) {
 		historyVersion := int64(rapid.IntRange(1, int(versionV1-1)).Draw(t, "historyVersion"))
 		treeV1, err := s.treeV1.GetImmutable(historyVersion)
 		require.NoError(t, err)
-		treeV2, err := s.treeV2.GetVersion(historyVersion)
+		treeV2, err := s.treeV2.GetVersion(uint32(historyVersion))
 		require.NoError(t, err)
 		histIterV1, err := treeV1.Iterator(nil, nil, true)
 		require.NoError(t, err, "failed to create historical iterator for V1 tree")

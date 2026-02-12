@@ -55,7 +55,7 @@ type CommitMultiTree struct {
 type storeData struct {
 	key   storetypes.StoreKey
 	typ   storetypes.StoreType
-	store storetypes.CacheWrapper
+	store any
 }
 
 func (db *CommitMultiTree) StartCommit(ctx context.Context, store storetypes.MultiStore, header cmtproto.Header) (storetypes.CommitFinalizer, error) {
@@ -688,7 +688,7 @@ func (db *CommitMultiTree) LoadLatestVersion() error {
 	return nil
 }
 
-func (db *CommitMultiTree) loadStore(key storetypes.StoreKey, typ storetypes.StoreType, expectedVersion uint64) (storetypes.CacheWrapper, error) {
+func (db *CommitMultiTree) loadStore(key storetypes.StoreKey, typ storetypes.StoreType, expectedVersion uint64) (any, error) {
 	switch typ {
 	case storetypes.StoreTypeIAVL, storetypes.StoreTypeDB:
 		dir := filepath.Join(db.dir, "stores", fmt.Sprintf("%s.iavl", key.Name()))
@@ -854,13 +854,15 @@ func (db *CommitMultiTree) cacheMultiStore(version int64, commitInfo *storetypes
 			// historical queries will often touch a single store
 			// a better approach may be to keep some global tracking of historical roots in the CommitMultiTree itself
 			// by pruning old commit_info files when pruning is implemented
-			t, err := tree.GetVersion(version)
+			t, err := tree.GetVersion(uint32(version))
 			if err != nil {
 				panic(fmt.Sprintf("failed to get version %d for store %s: %v", version, key.Name(), err))
 			}
 			return t.CacheWrap()
-		default:
+		case storetypes.CacheWrapper:
 			return tree.CacheWrap()
+		default:
+			panic(fmt.Sprintf("store %s of type %T does not support caching", key.Name(), tree))
 		}
 	})
 }
@@ -922,7 +924,7 @@ func (db *CommitMultiTree) pruneNow(ctx context.Context, retainVersion uint64) {
 			logger.Error(fmt.Sprintf("store %s is not a CommitTree, cannot prune", si.key.Name()))
 			continue
 		}
-		err := ct.Prune(ctx, uint32(retainVersion))
+		err := ct.prune(ctx, uint32(retainVersion))
 		if err != nil {
 			logger.Error(fmt.Sprintf("failed to prune store %s: %v", si.key.Name(), err))
 			continue

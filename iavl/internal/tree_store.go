@@ -30,10 +30,9 @@ type TreeStore struct {
 	dir  string
 	opts TreeStoreOptions
 
-	version      atomic.Uint32
-	checkpoint   atomic.Uint32
-	root         atomic.Pointer[NodePointer]
-	rootMemUsage atomic.Int64
+	root           atomic.Pointer[versionedRoot]
+	lastCheckpoint atomic.Uint32
+	rootMemUsage   atomic.Int64
 
 	currentWriter         *ChangesetWriter
 	checkpointer          *Checkpointer
@@ -47,6 +46,11 @@ type TreeStore struct {
 	lastNodeIDsAssigned chan struct{}
 
 	rootByVersionCache *ttlcache.Cache[uint32, *NodePointer]
+}
+
+type versionedRoot struct {
+	version uint32
+	root    *NodePointer
 }
 
 func NewTreeStore(dir string, opts TreeStoreOptions) (*TreeStore, error) {
@@ -81,7 +85,7 @@ func NewTreeStore(dir string, opts TreeStoreOptions) (*TreeStore, error) {
 }
 
 func (ts *TreeStore) StagedVersion() uint32 {
-	return ts.version.Load() + 1
+	return ts.root.Load().version + 1
 }
 
 func (ts *TreeStore) initNewWriter() error {
@@ -106,23 +110,31 @@ func (ts *TreeStore) GetRootForUpdate(ctx context.Context) (*NodePointer, error)
 			ts.lastNodeIDsAssigned = nil
 		}
 	}
-	return ts.root.Load(), nil
+	return ts.root.Load().root, nil
 }
 
 func (ts *TreeStore) SaveRoot(ctx context.Context, newRoot *NodePointer, mutationCtx *MutationContext) error {
 	// sanity check
-	if mutationCtx.version != ts.StagedVersion() {
-		return fmt.Errorf("mutation context version %d does not match staged version %d", mutationCtx.version, ts.StagedVersion())
+	lastRoot := ts.root.Load()
+	stagedVersion := lastRoot.version + 1
+	newVersion := mutationCtx.version
+	if newVersion != stagedVersion {
+		return fmt.Errorf("mutation context version %d does not match staged version %d", newVersion, stagedVersion)
 	}
 	// save last root to cache
-	ts.rootByVersionCache.Set(ts.version.Load(), ts.root.Load(), ttlcache.DefaultTTL)
+	ts.rootByVersionCache.Set(lastRoot.version, lastRoot.root, ttlcache.DefaultTTL)
 	// store new root and increment version
-	ts.root.Store(newRoot)
-	version := ts.version.Add(1)
+	swapped := ts.root.CompareAndSwap(lastRoot, &versionedRoot{
+		version: newVersion,
+		root:    newRoot,
+	})
+	if !swapped {
+		return fmt.Errorf("concurrent root update detected, fatal concurrency error! expected version %d", stagedVersion)
+	}
 
 	writer := ts.currentWriter
 	if ts.shouldCheckpoint {
-		checkpoint := ts.checkpoint.Add(1)
+		checkpoint := ts.lastCheckpoint.Add(1)
 		nodeIDsAssigned := make(chan struct{})
 		go func() {
 			defer close(nodeIDsAssigned)
@@ -137,7 +149,7 @@ func (ts *TreeStore) SaveRoot(ctx context.Context, newRoot *NodePointer, mutatio
 		if err != nil {
 			return fmt.Errorf("failed to checkpoint changeset: %w", err)
 		}
-		ts.lastCheckpointVersion = version
+		ts.lastCheckpointVersion = newVersion
 		if ts.shouldRollover {
 			err = ts.initNewWriter()
 			if err != nil {
@@ -157,7 +169,7 @@ func (ts *TreeStore) SaveRoot(ctx context.Context, newRoot *NodePointer, mutatio
 	}
 
 	checkpointInterval := ts.opts.CheckpointInterval
-	nextStagedVersion := version + 1
+	nextStagedVersion := newVersion + 1
 	versionsSinceLastCheckpoint := nextStagedVersion - ts.lastCheckpointVersion
 	ts.shouldCheckpoint = ts.shouldRollover ||
 		(checkpointInterval > 0 &&
@@ -206,20 +218,26 @@ func (ts *TreeStore) ChangesetForCheckpoint(checkpoint uint32) *Changeset {
 	return ts.checkpointer.ChangesetByCheckpoint(checkpoint)
 }
 
-func (ts *TreeStore) Latest() *NodePointer {
-	return ts.root.Load()
+func (ts *TreeStore) Latest() (uint32, *NodePointer) {
+	latest := ts.root.Load()
+	return latest.version, latest.root
 }
 
 func (ts *TreeStore) LatestVersion() uint32 {
-	return ts.version.Load()
+	return ts.root.Load().version
 }
 
 func (ts *TreeStore) RootAtVersion(targetVersion uint32) (*NodePointer, error) {
-	if targetVersion == 0 || targetVersion == ts.LatestVersion() {
-		// fast path to latest version
-		// TODO there is a tiny race condition where latest version could advance right after the check, is this a problem?
-		return ts.Latest(), nil
+	latest := ts.root.Load()
+	if latest == nil && targetVersion == 0 {
+		// empty tree at version 0
+		return nil, nil
 	}
+	if latest != nil && targetVersion == latest.version {
+		// fast path for latest version
+		return latest.root, nil
+	}
+
 	ctx, span := tracer.Start(context.Background(),
 		"TreeStore.RootAtVersion",
 		trace.WithAttributes(attribute.Int64("targetVersion", int64(targetVersion))),
@@ -374,15 +392,16 @@ func (ts *TreeStore) Describe() TreeDescription {
 	for _, cs := range changesetDescs {
 		totalBytes += cs.TotalBytes
 	}
+	version, root := ts.Latest()
 	desc := TreeDescription{
-		Version:                 ts.LatestVersion(),
+		Version:                 version,
 		LatestCheckpointVersion: ts.lastCheckpointVersion,
-		LatestCheckpoint:        ts.checkpoint.Load(),
+		LatestCheckpoint:        ts.lastCheckpoint.Load(),
 		LatestSavedCheckpoint:   ts.checkpointer.LatestSavedCheckpoint(),
 		TotalBytes:              totalBytes,
 		Changesets:              changesetDescs,
 	}
-	if root := ts.Latest(); root != nil {
+	if root != nil {
 		desc.RootID = root.id
 	}
 	return desc

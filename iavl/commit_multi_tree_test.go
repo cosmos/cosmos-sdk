@@ -115,18 +115,18 @@ func testCommitMultiTreeSims(t *rapid.T, opts Options, pruningOpts pruningtypes.
 
 	sim.Check(t)
 
-	//// generate debug HTML file for test inspection
-	//desc := sim.mtV2.Describe()
-	//os.MkdirAll("testdata", 0o755)
-	//f, err := os.Create("testdata/iavl-debug.html")
-	//if err != nil {
-	//	t.Logf("failed to create debug HTML file: %v", err)
-	//	return
-	//}
-	//defer f.Close()
-	//if err := RenderHTML(f, desc); err != nil {
-	//	t.Logf("failed to render debug HTML: %v", err)
-	//}
+	// generate debug HTML file for test inspection
+	desc := sim.mtV2.Describe()
+	os.MkdirAll("testdata", 0o755)
+	f, err := os.Create("testdata/iavl-debug.html")
+	if err != nil {
+		t.Logf("failed to create debug HTML file: %v", err)
+		return
+	}
+	defer f.Close()
+	if err := RenderHTML(f, desc); err != nil {
+		t.Logf("failed to render debug HTML: %v", err)
+	}
 
 	require.NoError(t, sim.mtV2.Close(), "failed to close iavlx commit multi tree")
 }
@@ -284,7 +284,6 @@ func (sim *SimCommitMultiTree) applyVersionUpdates(t *rapid.T, cacheMs1, cacheMs
 		}
 	}
 
-	// compare contents of kv trees only
 	for _, storeKey := range sim.kvStoreKeys {
 		kvStore1 := cacheMs1.GetKVStore(storeKey)
 		kvStore2 := cacheMs2.GetKVStore(storeKey)

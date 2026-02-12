@@ -37,12 +37,21 @@ func (p *NodePointer) Resolve() (Node, Pin, error) {
 		return mem, NoopPin{}, nil
 	}
 	if p.fileIdx != 0 {
-		rdr, pin := p.changeset.TryPinReader()
+		rdr, pin := p.changeset.TryPinUncompactedReader()
 		if rdr != nil {
 			node, err := rdr.ResolveByFileIndex(p.id, p.fileIdx)
 			return node, pin, err
 		} else {
-			return nil, NoopPin{}, fmt.Errorf("unable to pin ChangesetReader for checkpoint %d, compaction resolution not enabled", p.id.Checkpoint())
+			compacted := p.changeset.Compacted()
+			if compacted == nil {
+				return nil, NoopPin{}, fmt.Errorf("unable to pin ChangesetReader for checkpoint %d, no compaction found", p.id.Checkpoint())
+			}
+			rdr, pin := compacted.TryPinReader()
+			if rdr != nil {
+				node, err := rdr.ResolveByID(p.id)
+				return node, pin, err
+			}
+			return nil, NoopPin{}, fmt.Errorf("unable to pin ChangesetReader for checkpoint %d, likely it has been closed and can't be reopened", p.id.Checkpoint())
 		}
 	} else {
 		cs := p.changeset.TreeStore().ChangesetForCheckpoint(p.id.Checkpoint())

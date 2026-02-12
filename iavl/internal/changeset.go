@@ -53,13 +53,21 @@ func OpenChangeset(treeStore *TreeStore, dir string) (*Changeset, error) {
 // This method will always return a valid pin which should be unpinned,
 // but a nil reader may be returned in the case where the changeset has been closed.
 func (ch *Changeset) TryPinReader() (*ChangesetReader, Pin) {
+	rdr, pin := ch.TryPinUncompactedReader()
+	if rdr != nil {
+		return rdr, pin
+	}
+	if compacted := ch.compacted.Load(); compacted != nil {
+		// changeset was compacted, try the new one
+		return compacted.TryPinReader()
+	}
+	return nil, NoopPin{}
+}
+
+func (ch *Changeset) TryPinUncompactedReader() (*ChangesetReader, Pin) {
 	for {
 		pinner := ch.readerRef.Load()
 		if pinner == nil {
-			if compacted := ch.compacted.Load(); compacted != nil {
-				// changeset was compacted, try the new one
-				return compacted.TryPinReader()
-			}
 			return nil, NoopPin{}
 		}
 		rdr, pin := pinner.TryPin()
@@ -73,6 +81,10 @@ func (ch *Changeset) TryPinReader() (*ChangesetReader, Pin) {
 
 func (ch *Changeset) TreeStore() *TreeStore {
 	return ch.treeStore
+}
+
+func (ch *Changeset) Compacted() *Changeset {
+	return ch.compacted.Load()
 }
 
 func (ch *Changeset) OpenNewReader() error {

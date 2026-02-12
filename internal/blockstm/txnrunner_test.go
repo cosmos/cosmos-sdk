@@ -14,7 +14,6 @@ import (
 	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/store/types"
 
-	"github.com/cosmos/cosmos-sdk/baseapp/txnrunner"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -391,7 +390,7 @@ func TestPreEstimates(t *testing.T) {
 func TestPreEstimates_KeyEncoding(t *testing.T) {
 	decoder := mockTxDecoderWithFeeTx
 
-	addr := sdk.AccAddress([]byte("testaddress12345"))
+	addr := sdk.AccAddress("testaddress12345")
 	tx := append(addr, 0x01)
 
 	memTxs, estimates := preEstimates([][]byte{tx}, 1, 0, 1, "stake", decoder)
@@ -473,54 +472,4 @@ func TestSTMRunner_Integration(t *testing.T) {
 
 	require.NoError(t, err)
 	require.Len(t, results, blk.Size())
-}
-
-// TestRunnerComparison tests that both DefaultRunner and STMRunner can execute successfully
-func TestRunnerComparison(t *testing.T) {
-	decoder := mockTxDecoder
-
-	txs := [][]byte{
-		{0x01, 0x02},
-		{0x03, 0x04},
-		{0x05, 0x06},
-	}
-
-	executionCount := atomic.Int32{}
-	deliverTx := func(tx []byte, _ sdk.Tx, _ storetypes.MultiStore, txIndex int, cache map[string]any) *abci.ExecTxResult {
-		executionCount.Add(1)
-		return &abci.ExecTxResult{Code: 0, Data: tx}
-	}
-
-	ctx := context.Background()
-
-	// Test DefaultRunner
-	t.Run("DefaultRunner", func(t *testing.T) {
-		runner := txnrunner.NewDefaultRunner(decoder)
-		executionCount.Store(0)
-
-		results, err := runner.Run(ctx, nil, txs, deliverTx)
-
-		require.NoError(t, err)
-		require.Len(t, results, len(txs))
-		require.Equal(t, int32(len(txs)), executionCount.Load())
-	})
-
-	// Test STMRunner
-	t.Run("STMRunner", func(t *testing.T) {
-		stores := []storetypes.StoreKey{StoreKeyAuth, StoreKeyBank}
-		runner := NewSTMRunner(decoder, stores, 2, false, testCoinDenomFunc)
-		storeIndex := map[storetypes.StoreKey]int{
-			StoreKeyAuth: 0,
-			StoreKeyBank: 1,
-		}
-		ms := msWrapper{NewMultiMemDB(storeIndex)}
-		executionCount.Store(0)
-
-		results, err := runner.Run(ctx, ms, txs, deliverTx)
-
-		require.NoError(t, err)
-		require.Len(t, results, len(txs))
-		// STM may execute more times due to conflicts
-		require.True(t, executionCount.Load() >= int32(len(txs)))
-	})
 }

@@ -257,4 +257,6 @@ replace (
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/upgrade => ../../x/upgrade
 	github.com/cosmos/cosmos-sdk => ../..
+	// BlockSTM requires patches to the btree package
+	github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-20250924232609-2c6195d95951
 )

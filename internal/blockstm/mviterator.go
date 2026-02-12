@@ -5,12 +5,12 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
-	"github.com/cosmos/cosmos-sdk/blockstm/tree"
+	tree2 "github.com/cosmos/cosmos-sdk/internal/blockstm/tree"
 )
 
 // MVIterator is an iterator for a multi-versioned store.
 type MVIterator[V any] struct {
-	tree.BTreeIteratorG[dataItem[V]]
+	tree2.BTreeIteratorG[dataItem[V]]
 	txn TxnIndex
 
 	// cache current found value and version
@@ -32,7 +32,7 @@ func NewMVIterator[V any](
 	waitFn func(TxnIndex),
 ) *MVIterator[V] {
 	it := &MVIterator[V]{
-		BTreeIteratorG: *tree.NewBTreeIteratorG(
+		BTreeIteratorG: *tree2.NewBTreeIteratorG(
 			dataItem[V]{Key: opts.Start},
 			dataItem[V]{Key: opts.End},
 			iter,
@@ -105,7 +105,7 @@ func (it *MVIterator[V]) resolveValue() {
 // - (nil, true) if the value is not found
 // - (nil, false) if the value is an estimate and we should fail the validation
 // - (v, true) if the value is found
-func (it *MVIterator[V]) resolveValueInner(tree *tree.BTree[secondaryDataItem[V]]) (*secondaryDataItem[V], bool) {
+func (it *MVIterator[V]) resolveValueInner(tree *tree2.BTree[secondaryDataItem[V]]) (*secondaryDataItem[V], bool) {
 	for {
 		v, ok := seekClosestTxn(tree, it.txn)
 		if !ok {

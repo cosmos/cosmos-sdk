@@ -2,15 +2,16 @@
 package modulev1
 
 import (
-	_ "cosmossdk.io/api/cosmos/app/v1alpha1"
 	fmt "fmt"
+	io "io"
+	reflect "reflect"
+	sync "sync"
+
+	_ "cosmossdk.io/api/cosmos/app/v1alpha1"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	io "io"
-	reflect "reflect"
-	sync "sync"
 )
 
 var _ protoreflect.List = (*_Module_2_list)(nil)
@@ -1258,7 +1259,7 @@ type Module struct {
 	ModuleAccountPermissions []*ModuleAccountPermission `protobuf:"bytes,2,rep,name=module_account_permissions,json=moduleAccountPermissions,proto3" json:"module_account_permissions,omitempty"`
 	// authority defines the custom module authority. If not set, defaults to the governance module.
 	Authority string `protobuf:"bytes,3,opt,name=authority,proto3" json:"authority,omitempty"`
-	// enable_unordered_transactions determines whether unordered transactions should be processed or not.
+	// enable_unordered_transactions determines whether unordered transactions should be supported or not.
 	// When true, unordered transactions will be validated and processed.
 	// When false, unordered transactions will be rejected.
 	EnableUnorderedTransactions bool `protobuf:"varint,4,opt,name=enable_unordered_transactions,json=enableUnorderedTransactions,proto3" json:"enable_unordered_transactions,omitempty"`

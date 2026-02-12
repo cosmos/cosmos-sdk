@@ -8,12 +8,7 @@ require (
 	cosmossdk.io/core v0.11.3
 	cosmossdk.io/depinject v1.2.1
 	cosmossdk.io/errors v1.0.2
-<<<<<<< HEAD
 	cosmossdk.io/log v1.6.1
-=======
-	cosmossdk.io/log v1.3.1
-	cosmossdk.io/log/v2 v2.0.0
->>>>>>> 174b2e936 (feat(grpc): add earliest/latest block height to GetSyncing response (#25648))
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/store v1.1.2
 	cosmossdk.io/x/tx v0.14.0

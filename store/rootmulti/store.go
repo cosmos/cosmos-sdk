@@ -1194,10 +1194,6 @@ func GetLatestVersion(db dbm.DB) int64 {
 	return latestVersion
 }
 
-<<<<<<< HEAD
-// Commits each store and returns a new commitInfo.
-func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore, removalMap map[types.StoreKey]bool) *types.CommitInfo {
-=======
 // GetEarliestVersion returns the earliest version stored in the database.
 // Returns 1 if no earliest version has been explicitly set (unpruned chain).
 func GetEarliestVersion(db dbm.DB) int64 {
@@ -1228,9 +1224,8 @@ func flushEarliestVersion(batch dbm.Batch, version int64) {
 	}
 }
 
-// commitStores commits each store and returns a new commitInfo.
-func commitStores(version int64, storeMap map[types.StoreKey]types.CommitStore, removalMap map[types.StoreKey]bool) *types.CommitInfo {
->>>>>>> ae80efbfd (fix(grpc): return actual earliest_store_height in node.Status endpoint (#25647))
+// Commits each store and returns a new commitInfo.
+func commitStores(version int64, storeMap map[types.StoreKey]types.CommitKVStore, removalMap map[types.StoreKey]bool) *types.CommitInfo {
 	storeInfos := make([]types.StoreInfo, 0, len(storeMap))
 	storeKeys := keysFromStoreKeyMap(storeMap)
 

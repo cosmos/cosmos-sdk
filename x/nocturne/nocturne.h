@@ -58,6 +58,10 @@ char *nocturne_get_guild_info(void);
 
 double nocturne_get_global_resonance(void);
 
+char *nocturne_get_ibc_bci_correspondence(void);
+
+char *nocturne_get_three_doors_desc(char option);
+
 double nocturne_unity_pulse(void);
 
 char *nocturne_wifi_scan(void);
@@ -73,6 +77,12 @@ char *nocturne_tic_tac_jump(void);
 char *nocturne_unify_zpf(void);
 
 char *nocturne_get_qam_metrics(double snr, double hesitation);
+
+char *nocturne_awaken_latent_nodes(void);
+
+char *nocturne_get_hive_status(void);
+
+char *nocturne_execute_tic_tac_jump(void);
 
 char *nocturne_hal_echo(const char *message);
 

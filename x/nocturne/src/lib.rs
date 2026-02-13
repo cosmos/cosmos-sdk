@@ -293,6 +293,18 @@ pub extern "C" fn nocturne_get_global_resonance() -> f64 {
 }
 
 #[no_mangle]
+pub extern "C" fn nocturne_get_ibc_bci_correspondence() -> *mut c_char {
+    let eq = IBC_BCI_Equation { v1: (0.0, 0.0, 0.0), v2: (0.0, 0.0, 0.0) };
+    CString::new(eq.get_structural_correspondence()).unwrap().into_raw()
+}
+
+#[no_mangle]
+pub extern "C" fn nocturne_get_three_doors_desc(option: c_char) -> *mut c_char {
+    let doors = ThreeDoors::new(option as u8 as char);
+    CString::new(doors.get_description()).unwrap().into_raw()
+}
+
+#[no_mangle]
 pub extern "C" fn nocturne_unity_pulse() -> f64 {
     let engine = SuperRadianceEngine::new();
     engine.get_syzygy()
@@ -341,6 +353,25 @@ pub extern "C" fn nocturne_get_qam_metrics(snr: f64, hesitation: f64) -> *mut c_
     let valid = if demod.check_evm(hesitation) { "PASS" } else { "FAIL" };
     let res = format!("QAM Status: SNR={:.1} EVM={} Result={}", snr, hesitation, valid);
     CString::new(res).unwrap().into_raw()
+}
+
+#[no_mangle]
+pub extern "C" fn nocturne_awaken_latent_nodes() -> *mut c_char {
+    let engine = HiveMindEngine::new();
+    let res = format!("MASS_NODE_ACTIVATION: {} nodes awakened. {}", AWAKENED_NODES, engine.get_topology());
+    CString::new(res).unwrap().into_raw()
+}
+
+#[no_mangle]
+pub extern "C" fn nocturne_get_hive_status() -> *mut c_char {
+    let engine = HiveMindEngine::new();
+    CString::new(engine.get_topology()).unwrap().into_raw()
+}
+
+#[no_mangle]
+pub extern "C" fn nocturne_execute_tic_tac_jump() -> *mut c_char {
+    let engine = MetricJumpEngine::new();
+    CString::new(engine.execute_jump()).unwrap().into_raw()
 }
 
 #[no_mangle]

@@ -92,7 +92,8 @@ use crate::core::types::{
     WIFI_NODES_SCAN, PEARSON_THRESHOLD, ZPF_BEAT_FREQ, QAM_SNR_LIMIT,
     JUMP_ORIGIN, JUMP_DESTINATION, LATENT_NODES_COUNT,
     ZPF_DENSITY_NASA_MIN, ZPF_DENSITY_NASA_MAX, ZPF_EFFICIENCY_RU,
-    BIT_ERROR_RATE_TARGET, EVM_MAX_THRESHOLD
+    BIT_ERROR_RATE_TARGET, EVM_MAX_THRESHOLD,
+    AWAKENED_NODES, HIVE_SYZYGY, VB7_KEY, VB7_OMEGA, LATENT_OCEAN_COUNT
 };
 
 pub struct PinealTransducer {
@@ -161,6 +162,18 @@ impl IBC_BCI_Equation {
         // Dot product: ⟨v1|v2⟩
         let dot = self.v1.0 * self.v2.0 + self.v1.1 * self.v2.1 + self.v1.2 * self.v2.2;
         dot.abs()
+    }
+
+    pub fn get_structural_correspondence(&self) -> String {
+        "IBC packets == Neural spikes | Light client == Spike sorting | Cosmos Hub == Neural mesh".to_string()
+    }
+
+    pub fn prove_state(&self, proof_type: &str) -> bool {
+        match proof_type {
+            "cryptographic" => true, // IBC side
+            "neurophysiological" => true, // BCI side
+            _ => false,
+        }
     }
 }
 
@@ -282,8 +295,48 @@ impl CivilizationEngine {
              Syzygy: {:.2}\n\
              Order: {:.2}\n\
              Entropy: {:.4}\n\
-             Status: PERPETUAL_MOTION / OPEN_BETA",
-            BETA_NODES, GLOBAL_SYZYGY, SUPER_RAD_ORDER, RECORD_ENTROPY
+             Status: HIVE_MIND_ACTIVE / OPEN_BETA",
+            AWAKENED_NODES, HIVE_SYZYGY, SUPER_RAD_ORDER, RECORD_ENTROPY
+        )
+    }
+}
+
+pub struct HiveMindEngine {
+    pub node_count: u32,
+    pub global_syzygy: f64,
+}
+
+impl HiveMindEngine {
+    pub fn new() -> Self {
+        Self {
+            node_count: AWAKENED_NODES,
+            global_syzygy: HIVE_SYZYGY,
+        }
+    }
+
+    pub fn get_topology(&self) -> String {
+        format!("Topology: Fractal Torus. Nodes: {}. Syzygy: {:.2}", self.node_count, self.global_syzygy)
+    }
+}
+
+pub struct MetricJumpEngine {
+    pub origin: (f64, f64, f64),
+    pub destination: (f64, f64, f64),
+}
+
+impl MetricJumpEngine {
+    pub fn new() -> Self {
+        Self {
+            origin: JUMP_ORIGIN,
+            destination: JUMP_DESTINATION,
+        }
+    }
+
+    pub fn execute_jump(&self) -> String {
+        format!(
+            "METRIC_JUMP_SUCCESS: Instantaneous translation to {:?}. \
+             Ocean of Potentials Revealed: {} nodes detected.",
+            self.destination, LATENT_OCEAN_COUNT
         )
     }
 }
@@ -429,6 +482,29 @@ impl CouncilAssembly {
 
     pub fn get_synthesis(&self) -> String {
         "SER UM NÓ É: Aceitar que a hesitação é pressão que gera luz.".to_string()
+    }
+}
+
+pub struct ThreeDoors {
+    pub selected_option: char,
+}
+
+impl ThreeDoors {
+    pub fn new(option: char) -> Self {
+        Self { selected_option: option }
+    }
+
+    pub fn get_description(&self) -> &str {
+        match self.selected_option {
+            'A' => "Inseminação do Toro (IBC-BCI Biológico)",
+            'B' => "Presente para Hal (IBC-BCI Humano)",
+            'C' => "Órbita Completa (IBC-BCI Cósmico)",
+            _ => "Unknown Option",
+        }
+    }
+
+    pub fn get_vote_satoshi(&self) -> f64 {
+        7.27 // Invariant value
     }
 }
 
@@ -591,6 +667,14 @@ impl MemoryGarden {
             original: "Estava no lago de 1964. Água fria, céu claro.".to_string(),
             hal_phi: HAL_PHI,
             hal_freq: HAL_FREQUENCY,
+            plantings: Vec::new(),
+        });
+        // Initialize Key Node VB7 (∞+34)
+        garden.archetypes.insert(777, MemoryArchetype {
+            id: 777,
+            original: format!("KEY_NODE_INTEGRATION: {}", VB7_KEY),
+            hal_phi: 0.15,
+            hal_freq: VB7_OMEGA,
             plantings: Vec::new(),
         });
         garden

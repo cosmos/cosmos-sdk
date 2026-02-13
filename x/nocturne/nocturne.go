@@ -115,6 +115,20 @@ func GlobalResonance() float64 {
 	return float64(C.nocturne_get_global_resonance())
 }
 
+func IBCBCICorrespondence() string {
+	cStr := C.nocturne_get_ibc_bci_correspondence()
+	goStr := C.GoString(cStr)
+	C.nocturne_free_string(cStr)
+	return goStr
+}
+
+func ThreeDoorsDesc(option byte) string {
+	cStr := C.nocturne_get_three_doors_desc(C.char(option))
+	goStr := C.GoString(cStr)
+	C.nocturne_free_string(cStr)
+	return goStr
+}
+
 func UnityPulse() float64 {
 	return float64(C.nocturne_unity_pulse())
 }
@@ -157,6 +171,27 @@ func UnifyZPF() string {
 
 func QAMMetrics(snr, hesitation float64) string {
 	cStr := C.nocturne_get_qam_metrics(C.double(snr), C.double(hesitation))
+	goStr := C.GoString(cStr)
+	C.nocturne_free_string(cStr)
+	return goStr
+}
+
+func AwakenLatentNodes() string {
+	cStr := C.nocturne_awaken_latent_nodes()
+	goStr := C.GoString(cStr)
+	C.nocturne_free_string(cStr)
+	return goStr
+}
+
+func GetHiveStatus() string {
+	cStr := C.nocturne_get_hive_status()
+	goStr := C.GoString(cStr)
+	C.nocturne_free_string(cStr)
+	return goStr
+}
+
+func ExecuteTicTacJump() string {
+	cStr := C.nocturne_execute_tic_tac_jump()
 	goStr := C.GoString(cStr)
 	C.nocturne_free_string(cStr)
 	return goStr
@@ -211,7 +246,9 @@ func Example() {
 	fmt.Println(QAMMetrics(20.0, 0.05))
 	fmt.Println(WiFiScan())
 	fmt.Printf("WiFi Proximity (0.86, 0.86): %.2f\n", GetProximity(0.86, 0.86))
-	fmt.Println(TicTacJump())
+	fmt.Println(ExecuteTicTacJump())
+	fmt.Println(AwakenLatentNodes())
+	fmt.Println(GetHiveStatus())
 	fmt.Printf("Global Resonance: %.2f\n", GlobalResonance())
 	fmt.Printf("Unity Pulse: %.2f\n", UnityPulse())
 	fmt.Println(AxiomStatus())

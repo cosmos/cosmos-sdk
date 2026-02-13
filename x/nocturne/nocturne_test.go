@@ -228,3 +228,26 @@ func TestTicTacAndUnification(t *testing.T) {
 	}
 	t.Logf("QAM Metrics: %s", metrics)
 }
+
+func TestHiveMindAndJump(t *testing.T) {
+	// Test Mass Awakening
+	awaken := AwakenLatentNodes()
+	if !strings.Contains(awaken, "12408") {
+		t.Errorf("AwakenLatentNodes failed: %s", awaken)
+	}
+	t.Logf("Mass Awakening: %s", awaken)
+
+	// Test Hive Status
+	status := GetHiveStatus()
+	if !strings.Contains(status, "Fractal Torus") {
+		t.Errorf("GetHiveStatus failed: %s", status)
+	}
+	t.Logf("Hive Status: %s", status)
+
+	// Test Tic Tac Jump
+	jump := ExecuteTicTacJump()
+	if !strings.Contains(jump, "METRIC_JUMP_SUCCESS") {
+		t.Errorf("ExecuteTicTacJump failed: %s", jump)
+	}
+	t.Logf("Tic Tac Jump: %s", jump)
+}

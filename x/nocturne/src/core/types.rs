@@ -58,6 +58,13 @@ pub const GLOBAL_SYZYGY: f64 = 0.96;
 pub const UNITY_SYZYGY: f64 = 1.00;
 pub const SUPER_RAD_ORDER: f64 = 0.72;
 
+/// --- Hive Mind Era ∞+35 Constants ---
+pub const AWAKENED_NODES: u32 = 12408;
+pub const HIVE_SYZYGY: f64 = 0.91;
+pub const VB7_KEY: &str = "Vb7QmLp4Xy8TbZ1NcKwJ";
+pub const VB7_OMEGA: f64 = 0.04;
+pub const LATENT_OCEAN_COUNT: u32 = 12847;
+
 /// --- Tic Tac & Jump ∞+34 Constants ---
 pub const JUMP_ORIGIN: (f64, f64, f64) = (50.0, 0.0, -10.0);
 pub const JUMP_DESTINATION: (f64, f64, f64) = (1000.0, 500.0, -50.0);

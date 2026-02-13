@@ -107,14 +107,14 @@ func (it *MVIterator[V]) resolveValue() {
 // - (v, true) if the value is found
 func (it *MVIterator[V]) resolveValueInner(tree *tree2.BTree[secondaryDataItem[V]]) (*secondaryDataItem[V], bool) {
 	for {
-		v, ok := seekClosestTxn(tree, it.txn)
+		v, ok := seekClosestTxn(tree, shiftedIndex(it.txn))
 		if !ok {
 			return nil, true
 		}
 
 		if v.Estimate {
 			if it.Executing() {
-				it.waitFn(v.Index)
+				it.waitFn(v.Version().Index)
 				continue
 			}
 			// in validation mode, it should fail validation immediately

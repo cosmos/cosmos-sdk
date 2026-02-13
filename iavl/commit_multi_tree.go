@@ -545,20 +545,22 @@ func loadCommitInfo(dir string, version uint64) (*storetypes.CommitInfo, error) 
 		commitInfo.StoreInfos[i].Name = string(nameBytes)
 	}
 
-	// TODO handle cases where we have no hashes (pre-hash commit infos), for now we just error
-
-	// read each store hash
+	// Hashes are appended after the header without an additional fsync, so they may be
+	// missing or incomplete if the process crashed or the write hasn't completed yet.
+	// This is expected — the header is the durable part, hashes are best-effort.
+	// If hashes are missing, we return the commit info with empty commit IDs.
 	for i := uint32(0); i < storeCount; i++ {
-		// read hash length
 		hashLen, err := binary.ReadUvarint(rdr)
 		if err != nil {
-			return nil, fmt.Errorf("failed to read commit info store info hash length for version %d: %w", version, err)
+			// no more hash data available — return commit info without hashes
+			return commitInfo, nil
 		}
 
 		hashBytes := make([]byte, hashLen)
 		_, err = io.ReadFull(rdr, hashBytes)
 		if err != nil {
-			return nil, fmt.Errorf("failed to read commit info store info hash for version %d: %w", version, err)
+			// partial hash data — return what we have so far
+			return commitInfo, nil
 		}
 
 		commitInfo.StoreInfos[i].CommitId = storetypes.CommitID{

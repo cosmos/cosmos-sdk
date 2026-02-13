@@ -78,7 +78,7 @@ func (db *CommitMultiTree) StartCommit(ctx context.Context, store storetypes.Mul
 	for i, si := range db.iavlStores {
 		commitStore := si.store.(*CommitTree)
 		cachedStore := multiTree.GetCacheWrapIfExists(si.key)
-		var updates iter.Seq2[[]byte, []byte]
+		var updates iter.Seq[KVUpdate]
 		var updateCount int
 		if cachedStore != nil {
 			cacheKv, ok := cachedStore.(*cachekv.Store)

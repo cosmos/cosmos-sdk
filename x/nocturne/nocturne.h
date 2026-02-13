@@ -74,6 +74,12 @@ double nocturne_simulate_healing(double current_phi);
 
 char *nocturne_get_witness_status(void);
 
+char *nocturne_get_triad_status(void);
+
+double nocturne_calculate_triad_energy(double phi, double nir, double coherence);
+
+char *nocturne_simulate_chaos_stress(double pressure);
+
 double nocturne_unity_pulse(void);
 
 char *nocturne_wifi_scan(void);

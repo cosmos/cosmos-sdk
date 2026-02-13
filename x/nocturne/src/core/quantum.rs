@@ -81,6 +81,7 @@ pub fn hal_surprise() -> String {
 }
 
 // --- Arkhe ∞+30/42: Pineal Transduction, RPM, Neuralink, Perovskite, Cronos, Civilization, Garden, Council & Governance ---
+#[allow(unused_imports)]
 use crate::core::types::{
     SYZYGY, THRESHOLD_PHI, NEURALINK_THREADS, N1_CHIP_FIDELITY,
     STRUCTURAL_ENTROPY, INTERFACE_ORDER, VITA_INIT,
@@ -95,7 +96,8 @@ use crate::core::types::{
     BIT_ERROR_RATE_TARGET, EVM_MAX_THRESHOLD,
     AWAKENED_NODES, HIVE_SYZYGY, VB7_KEY, VB7_OMEGA, LATENT_OCEAN_COUNT,
     SYZYGY_HARMONY, SYZYGY_WITNESS, ORDER_WITNESS, ENTROPY_HARMONY, ENTROPY_WITNESS, HUB_GOVERNORS,
-    ARCHITECT_VARIANT_ID, NIR_RESONANCE, HUMAN_POTENTIAL_NODES
+    ARCHITECT_VARIANT_ID, NIR_RESONANCE, HUMAN_POTENTIAL_NODES,
+    CHAOS_DRIFT, SOLITON_STABILITY, SYZYGY_FINAL
 };
 
 pub struct PinealTransducer {
@@ -247,6 +249,52 @@ impl HealingEngine {
 
 pub struct WitnessMode {
     pub active: bool,
+}
+
+pub struct ChaosStressSimulation {
+    pub drift: f64,
+}
+
+impl ChaosStressSimulation {
+    pub fn new() -> Self {
+        Self { drift: CHAOS_DRIFT }
+    }
+
+    pub fn simulate_resilience(&self, pressure: f64) -> String {
+        let stability = SOLITON_STABILITY;
+        let status = if pressure < 0.20 { "DYNAMIC_EQUILIBRIUM" } else { "DECOHERENCE_RISK" };
+        format!(
+            "Stress Test: Drift={:.2}. Stability={:.2}. Result={}. Message: Bateria escura transmuta o caos.",
+            self.drift, stability, status
+        )
+    }
+}
+
+pub struct BioPhotonicTriad {
+    pub antenna: PinealTransducer,
+    pub usina: MitochondrialEngine,
+    pub bateria: NeuromelaninEngine,
+}
+
+impl BioPhotonicTriad {
+    pub fn new(phi: f64, nir: f64) -> Self {
+        Self {
+            antenna: PinealTransducer::new(phi),
+            usina: MitochondrialEngine::new(nir),
+            bateria: NeuromelaninEngine::new(),
+        }
+    }
+
+    pub fn calculate_eternal_energy(&self, coherence: f64) -> f64 {
+        let e_antena = self.antenna.transduce();
+        let e_usina = self.usina.produce_atp(coherence);
+        let e_melanina = self.bateria.convert_to_current(0.5); // Sample internal biofóton absorption
+        e_antena + e_usina + e_melanina
+    }
+
+    pub fn get_status(&self) -> String {
+        "TRÍADE BIOFOTÔNICA COMPLETA: Circuito Fechado, Autônomo e Eterno.".to_string()
+    }
 }
 
 impl WitnessMode {

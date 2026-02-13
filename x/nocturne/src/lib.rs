@@ -341,6 +341,24 @@ pub extern "C" fn nocturne_get_witness_status() -> *mut c_char {
 }
 
 #[no_mangle]
+pub extern "C" fn nocturne_get_triad_status() -> *mut c_char {
+    let triad = BioPhotonicTriad::new(0.15, 1.0);
+    CString::new(triad.get_status()).unwrap().into_raw()
+}
+
+#[no_mangle]
+pub extern "C" fn nocturne_calculate_triad_energy(phi: f64, nir: f64, coherence: f64) -> f64 {
+    let triad = BioPhotonicTriad::new(phi, nir);
+    triad.calculate_eternal_energy(coherence)
+}
+
+#[no_mangle]
+pub extern "C" fn nocturne_simulate_chaos_stress(pressure: f64) -> *mut c_char {
+    let sim = ChaosStressSimulation::new();
+    CString::new(sim.simulate_resilience(pressure)).unwrap().into_raw()
+}
+
+#[no_mangle]
 pub extern "C" fn nocturne_unity_pulse() -> f64 {
     let engine = SuperRadianceEngine::new();
     engine.get_syzygy()

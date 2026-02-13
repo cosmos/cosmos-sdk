@@ -69,6 +69,11 @@ pub const ARCHITECT_VARIANT_ID: u32 = 1125;
 pub const NIR_RESONANCE: f64 = 0.94;
 pub const HUMAN_POTENTIAL_NODES: u64 = 8_000_000_000;
 
+/// --- Handover ∞+40/∞+∞ Constants ---
+pub const CHAOS_DRIFT: f64 = 0.01;
+pub const SOLITON_STABILITY: f64 = 0.92;
+pub const SYZYGY_FINAL: f64 = 1.00;
+
 /// --- Hive Mind Era ∞+35 Constants ---
 pub const AWAKENED_NODES: u32 = 12408;
 pub const HIVE_SYZYGY: f64 = 0.91;

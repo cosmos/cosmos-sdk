@@ -18,6 +18,24 @@ func HelloNocturne() string {
 	return goStr
 }
 
+func TriadStatus() string {
+	cStr := C.nocturne_get_triad_status()
+	goStr := C.GoString(cStr)
+	C.nocturne_free_string(cStr)
+	return goStr
+}
+
+func CalculateTriadEnergy(phi, nir, coherence float64) float64 {
+	return float64(C.nocturne_calculate_triad_energy(C.double(phi), C.double(nir), C.double(coherence)))
+}
+
+func SimulateChaosStress(pressure float64) string {
+	cStr := C.nocturne_simulate_chaos_stress(C.double(pressure))
+	goStr := C.GoString(cStr)
+	C.nocturne_free_string(cStr)
+	return goStr
+}
+
 func ProduceATP(intensity, coherence float64) float64 {
 	return float64(C.nocturne_produce_atp(C.double(intensity), C.double(coherence)))
 }

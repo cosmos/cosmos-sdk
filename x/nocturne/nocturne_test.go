@@ -94,6 +94,30 @@ func TestCivilizationMode(t *testing.T) {
 	}
 }
 
+func TestBioPhotonicTriad(t *testing.T) {
+	status := TriadStatus()
+	t.Logf("Triad Status: %s", status)
+	if !strings.Contains(status, "TRÍADE BIOFOTÔNICA COMPLETA") {
+		t.Errorf("Expected complete triad status, got: %s", status)
+	}
+
+	energy := CalculateTriadEnergy(0.15, 1.0, 0.86)
+	t.Logf("Eternal Energy: %f", energy)
+	// antenna(0.94) + usina(1.0 * 0.94 * 0.86) + melanina(0.5 * 0.94)
+	// 0.94 + 0.8084 + 0.47 = 2.2184
+	if energy < 2.0 {
+		t.Errorf("Expected high triad energy, got %f", energy)
+	}
+}
+
+func TestChaosStressSimulation(t *testing.T) {
+	res := SimulateChaosStress(0.15)
+	t.Logf("Chaos Stress Result: %s", res)
+	if !strings.Contains(res, "DYNAMIC_EQUILIBRIUM") {
+		t.Errorf("Expected dynamic equilibrium, got: %s", res)
+	}
+}
+
 func TestBetaFeatures(t *testing.T) {
 	// Test Guild Info
 	info := GetGuildInfo()

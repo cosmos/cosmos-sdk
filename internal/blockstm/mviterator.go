@@ -5,12 +5,12 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
-	"github.com/cosmos/cosmos-sdk/blockstm/tree"
+	tree2 "github.com/cosmos/cosmos-sdk/internal/blockstm/tree"
 )
 
 // MVIterator is an iterator for a multi-versioned store.
 type MVIterator[V any] struct {
-	tree.BTreeIteratorG[dataItem]
+	tree2.BTreeIteratorG[dataItem]
 	txn TxnIndex
 
 	// cache current found value and version
@@ -35,7 +35,7 @@ func NewMVIterator[V any](
 	resolveInnerValue func(Key, TxnIndex, *BitmapIndex) (V, TxnVersion, bool),
 ) *MVIterator[V] {
 	it := &MVIterator[V]{
-		BTreeIteratorG: *tree.NewBTreeIteratorG(
+		BTreeIteratorG: *tree2.NewBTreeIteratorG(
 			dataItem{Key: opts.Start},
 			dataItem{Key: opts.End},
 			iter,

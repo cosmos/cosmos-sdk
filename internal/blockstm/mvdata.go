@@ -6,7 +6,7 @@ import (
 
 	storetypes "cosmossdk.io/store/types"
 
-	"github.com/cosmos/cosmos-sdk/blockstm/tree"
+	tree2 "github.com/cosmos/cosmos-sdk/internal/blockstm/tree"
 )
 
 const (
@@ -30,7 +30,7 @@ func NewMVData(blockSize int) *MVData {
 
 type GMVData[V any] struct {
 	// key -> bitmap(txn)
-	tree.BTree[dataItem]
+	tree2.BTree[dataItem]
 
 	isZero   func(V) bool
 	valueLen func(V) int
@@ -50,7 +50,7 @@ func NewMVStore(key storetypes.StoreKey, blockSize int) MVStore {
 
 func NewGMVData[V any](blockSize int, isZero func(V) bool, valueLen func(V) int) *GMVData[V] {
 	return &GMVData[V]{
-		BTree:    *tree.NewBTree(tree.KeyItemLess[dataItem], OuterBTreeDegree),
+		BTree:    *tree2.NewBTree(tree2.KeyItemLess[dataItem], OuterBTreeDegree),
 		isZero:   isZero,
 		valueLen: valueLen,
 
@@ -352,7 +352,7 @@ func (d *dataItem) Init() {
 	}
 }
 
-var _ tree.KeyItem = dataItem{}
+var _ tree2.KeyItem = dataItem{}
 
 func (item dataItem) GetKey() []byte {
 	return item.Key

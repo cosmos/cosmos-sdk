@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/test-go/testify/require"
+	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"
 )
@@ -89,7 +89,7 @@ func worstCaseBlock(size int) *MockBlock {
 	return NewMockBlock(txs)
 }
 
-func determisticBlock() *MockBlock {
+func deterministicBlock() *MockBlock {
 	return NewMockBlock([]Tx{
 		NoopTx(0, "account0"),
 		NoopTx(1, "account1"),
@@ -122,7 +122,7 @@ func TestSTM(t *testing.T) {
 		},
 		{
 			name:      "determisticBlock(),5",
-			blk:       determisticBlock(),
+			blk:       deterministicBlock(),
 			executors: 5,
 		},
 		{
@@ -178,7 +178,6 @@ func TestSTM(t *testing.T) {
 					continue
 				}
 				total += binary.BigEndian.Uint64(it.Value())
-				continue
 			}
 			require.Equal(t, uint64(tc.blk.Size()), total)
 		})

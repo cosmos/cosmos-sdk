@@ -9,7 +9,7 @@ import (
 	"cosmossdk.io/store/tracekv"
 	storetypes "cosmossdk.io/store/types"
 
-	"github.com/cosmos/cosmos-sdk/blockstm/tree"
+	tree2 "github.com/cosmos/cosmos-sdk/internal/blockstm/tree"
 )
 
 type (
@@ -45,7 +45,7 @@ func NewGMemDB[V any](
 	valueLen func(V) int,
 ) *GMemDB[V] {
 	return &GMemDB[V]{
-		BTreeG:   *btree.NewBTreeG[memdbItem[V]](tree.KeyItemLess),
+		BTreeG:   *btree.NewBTreeG[memdbItem[V]](tree2.KeyItemLess),
 		isZero:   isZero,
 		valueLen: valueLen,
 	}
@@ -58,7 +58,7 @@ func NewWriteSet[V any](
 	valueLen func(V) int,
 ) *GMemDB[V] {
 	return &GMemDB[V]{
-		BTreeG: *btree.NewBTreeGOptions[memdbItem[V]](tree.KeyItemLess, btree.Options{
+		BTreeG: *btree.NewBTreeGOptions[memdbItem[V]](tree2.KeyItemLess, btree.Options{
 			NoLocks: true,
 		}),
 		isZero:   isZero,
@@ -146,13 +146,13 @@ func (db *GMemDB[V]) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext)
 // MemDBIterator wraps a generic BTreeIteratorG over a memdbItem.
 // It is used as an iterator over a GMemDB implementation.
 type MemDBIterator[V any] struct {
-	tree.BTreeIteratorG[memdbItem[V]]
+	tree2.BTreeIteratorG[memdbItem[V]]
 }
 
 var _ storetypes.Iterator = (*MemDBIterator[[]byte])(nil)
 
 func NewMemDBIterator[V any](start, end Key, iter btree.IterG[memdbItem[V]], ascending bool) *MemDBIterator[V] {
-	return &MemDBIterator[V]{*tree.NewBTreeIteratorG(
+	return &MemDBIterator[V]{*tree2.NewBTreeIteratorG(
 		memdbItem[V]{key: start},
 		memdbItem[V]{key: end},
 		iter,
@@ -162,7 +162,7 @@ func NewMemDBIterator[V any](start, end Key, iter btree.IterG[memdbItem[V]], asc
 
 // NewNoopIterator constructs a storetypes.GIterator with an invalidated wrapped iterator.
 func NewNoopIterator[V any](start, end Key, ascending bool) storetypes.GIterator[V] {
-	return &MemDBIterator[V]{tree.NewNoopBTreeIteratorG[memdbItem[V]](
+	return &MemDBIterator[V]{tree2.NewNoopBTreeIteratorG[memdbItem[V]](
 		start,
 		end,
 		ascending,
@@ -179,7 +179,7 @@ type memdbItem[V any] struct {
 	value V
 }
 
-var _ tree.KeyItem = memdbItem[[]byte]{}
+var _ tree2.KeyItem = memdbItem[[]byte]{}
 
 func (item memdbItem[V]) GetKey() []byte {
 	return item.key

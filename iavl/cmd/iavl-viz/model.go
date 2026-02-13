@@ -28,6 +28,7 @@ const (
 	viewOrphans
 	viewWALAnalysis
 	viewWALEntries
+	viewCommitInfo
 )
 
 type orphanCounts struct {
@@ -55,6 +56,7 @@ type model struct {
 	selectedWALVersion uint64
 	walSize            string
 	sizeBreakdown      string
+	commitInfos        []commitInfoResult
 }
 
 var tableStyles table.Styles
@@ -526,6 +528,32 @@ func (m *model) buildWALEntriesTable(entries []walEntry) {
 	}, rows, m.tableHeight())
 }
 
+func (m *model) buildCommitInfoTable() {
+	rows := make([]table.Row, len(m.commitInfos))
+	for i, ci := range m.commitInfos {
+		if ci.err != nil {
+			rows[i] = table.Row{ci.version, "-", "-", ci.err.Error()}
+		} else {
+			var storeNames []string
+			for _, si := range ci.info.StoreInfos {
+				storeNames = append(storeNames, si.Name)
+			}
+			rows[i] = table.Row{
+				strconv.FormatInt(ci.info.Version, 10),
+				hex.EncodeToString(ci.info.Hash()),
+				strings.Join(storeNames, ", "),
+				"-",
+			}
+		}
+	}
+	m.table = newTable([]table.Column{
+		{Title: "Version", Width: 10},
+		{Title: "Hash", Width: 66},
+		{Title: "Stores", Width: 50},
+		{Title: "Error", Width: 30},
+	}, rows, m.tableHeight())
+}
+
 func (m *model) findCheckpoint(cp uint32) *internal.CheckpointInfo {
 	for i := range m.checkpoints {
 		if m.checkpoints[i].Checkpoint == cp {
@@ -549,6 +577,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		case "esc":
 			switch m.view {
+			case viewCommitInfo:
+				m.view = viewTrees
+				m.err = ""
+				m.buildTreesTable()
+				return m, nil
 			case viewChangesets:
 				m.view = viewTrees
 				m.err = ""
@@ -703,6 +736,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.buildWALAnalysisTable(info, total)
 				return m, nil
 			}
+		case "c":
+			if m.view == viewTrees {
+				m.commitInfos = loadAllCommitInfos(m.dir)
+				m.view = viewCommitInfo
+				m.err = ""
+				m.buildCommitInfoTable()
+				return m, nil
+			}
 		}
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
@@ -725,7 +766,7 @@ func (m model) View() string {
 	switch m.view {
 	case viewTrees:
 		titleText = "IAVL Trees: " + m.dir
-		footerText = "enter: select  q: quit"
+		footerText = "enter: select  c: commit info  q: quit"
 	case viewChangesets:
 		titleText = "Changesets: " + m.selectedTree
 		footerText = "enter: checkpoints  w: wal analysis  esc: back  q: quit"
@@ -746,6 +787,9 @@ func (m model) View() string {
 		footerText = "enter: entries  esc: back  q: quit"
 	case viewWALEntries:
 		titleText = fmt.Sprintf("WAL Entries: %s / %s / version %d", m.selectedTree, m.selectedChangeset, m.selectedWALVersion)
+		footerText = "esc: back  q: quit"
+	case viewCommitInfo:
+		titleText = "Commit Info: " + m.dir
 		footerText = "esc: back  q: quit"
 	}
 

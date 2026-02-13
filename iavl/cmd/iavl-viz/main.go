@@ -1,15 +1,21 @@
 package main
 
 import (
+	"bytes"
+	"encoding/binary"
 	"fmt"
 	"io"
 	"math"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/iavl/internal"
 )
@@ -249,6 +255,97 @@ func walFileSize(dir, tree, cs string) string {
 		return "?"
 	}
 	return humanSize(info.Size())
+}
+
+type commitInfoResult struct {
+	version string                 // filename (always available)
+	info    *storetypes.CommitInfo // nil on parse error
+	err     error                  // non-nil on parse error
+}
+
+func loadAllCommitInfos(dir string) []commitInfoResult {
+	ciDir := filepath.Join(dir, "commit_info")
+	entries, err := os.ReadDir(ciDir)
+	if err != nil {
+		return nil
+	}
+	var results []commitInfoResult
+	for _, e := range entries {
+		if e.IsDir() {
+			continue
+		}
+		path := filepath.Join(ciDir, e.Name())
+		info, err := parseCommitInfoFile(path)
+		results = append(results, commitInfoResult{
+			version: e.Name(),
+			info:    info,
+			err:     err,
+		})
+	}
+	slices.SortFunc(results, func(a, b commitInfoResult) int {
+		ai, _ := strconv.Atoi(a.version)
+		bi, _ := strconv.Atoi(b.version)
+		return ai - bi
+	})
+	return results
+}
+
+func parseCommitInfoFile(path string) (*storetypes.CommitInfo, error) {
+	bz, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	rdr := bytes.NewReader(bz)
+
+	var version uint32
+	if err := binary.Read(rdr, binary.LittleEndian, &version); err != nil {
+		return nil, fmt.Errorf("reading version: %w", err)
+	}
+
+	var timestampNano uint64
+	if err := binary.Read(rdr, binary.LittleEndian, &timestampNano); err != nil {
+		return nil, fmt.Errorf("reading timestamp: %w", err)
+	}
+
+	var storeCount uint32
+	if err := binary.Read(rdr, binary.LittleEndian, &storeCount); err != nil {
+		return nil, fmt.Errorf("reading store count: %w", err)
+	}
+
+	ci := &storetypes.CommitInfo{
+		Version:    int64(version),
+		Timestamp:  time.Unix(0, int64(timestampNano)),
+		StoreInfos: make([]storetypes.StoreInfo, storeCount),
+	}
+
+	for i := uint32(0); i < storeCount; i++ {
+		nameLen, err := binary.ReadUvarint(rdr)
+		if err != nil {
+			return nil, fmt.Errorf("reading store name length: %w", err)
+		}
+		nameBytes := make([]byte, nameLen)
+		if _, err := io.ReadFull(rdr, nameBytes); err != nil {
+			return nil, fmt.Errorf("reading store name: %w", err)
+		}
+		ci.StoreInfos[i].Name = string(nameBytes)
+	}
+
+	for i := uint32(0); i < storeCount; i++ {
+		hashLen, err := binary.ReadUvarint(rdr)
+		if err != nil {
+			return nil, fmt.Errorf("reading store hash length: %w", err)
+		}
+		hashBytes := make([]byte, hashLen)
+		if _, err := io.ReadFull(rdr, hashBytes); err != nil {
+			return nil, fmt.Errorf("reading store hash: %w", err)
+		}
+		ci.StoreInfos[i].CommitId = storetypes.CommitID{
+			Version: int64(version),
+			Hash:    hashBytes,
+		}
+	}
+
+	return ci, nil
 }
 
 func main() {

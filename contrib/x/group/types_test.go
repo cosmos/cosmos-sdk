@@ -32,6 +32,66 @@ func TestGroupPolicyInfoGetDecisionPolicy_MalformedPolicy(t *testing.T) {
 	require.True(t, sdkerrors.ErrInvalidType.Is(err), "expected ErrInvalidType, got %v", err)
 }
 
+func TestThresholdDecisionPolicyValidateBasic_VotingPeriodBoundaries(t *testing.T) {
+	testCases := []struct {
+		name         string
+		votingPeriod time.Duration
+		expErr       bool
+	}{
+		{"zero duration - reject", 0, true},
+		{"negative duration - reject", -time.Second, true},
+		{"positive duration - accept", time.Second, false},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			policy := group.ThresholdDecisionPolicy{
+				Threshold: "5",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod:       tc.votingPeriod,
+					MinExecutionPeriod: time.Hour,
+				},
+			}
+			err := policy.ValidateBasic()
+			if tc.expErr {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), "voting period must be positive")
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestPercentageDecisionPolicyValidateBasic_VotingPeriodBoundaries(t *testing.T) {
+	testCases := []struct {
+		name         string
+		votingPeriod time.Duration
+		expErr       bool
+	}{
+		{"zero duration - reject", 0, true},
+		{"negative duration - reject", -time.Second, true},
+		{"positive duration - accept", time.Second, false},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			policy := group.PercentageDecisionPolicy{
+				Percentage: "0.5",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod:       tc.votingPeriod,
+					MinExecutionPeriod: time.Hour,
+				},
+			}
+			err := policy.ValidateBasic()
+			if tc.expErr {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), "voting period must be positive")
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
 func TestThresholdDecisionPolicyValidate(t *testing.T) {
 	g := group.GroupInfo{
 		TotalWeight: "10",

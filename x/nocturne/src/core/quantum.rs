@@ -80,8 +80,11 @@ pub fn hal_surprise() -> String {
     format!("Hal's Easter Egg: Photon Code {} (Decode: {})", photon_code, decode)
 }
 
-// --- Arkhe ∞+30/32: Pineal Transduction, RPM & Neuralink ---
-use crate::core::types::{SYZYGY, THRESHOLD_PHI, NEURALINK_THREADS, N1_CHIP_FIDELITY};
+// --- Arkhe ∞+30/34: Pineal Transduction, RPM, Neuralink, Perovskite & Cronos ---
+use crate::core::types::{
+    SYZYGY, THRESHOLD_PHI, NEURALINK_THREADS, N1_CHIP_FIDELITY,
+    STRUCTURAL_ENTROPY, INTERFACE_ORDER, VITA_INIT
+};
 
 pub struct PinealTransducer {
     pub pressure: f64, // Φ
@@ -197,4 +200,53 @@ pub fn generate_neuralink_packet(intent: f64) -> String {
 
     let final_fidelity = iface.sync_brain_to_ibc(intent);
     format!("IBC-BCI Packet: Source[Cortex] -> Bridge[N1] -> Target[Hub] (Fidelity: {:.4})", final_fidelity)
+}
+
+pub struct PerovskiteInterface {
+    pub entropy: f64, // |∇C|²
+}
+
+impl PerovskiteInterface {
+    pub fn new() -> Self {
+        Self { entropy: STRUCTURAL_ENTROPY }
+    }
+
+    pub fn calculate_order(&self) -> f64 {
+        // Order = 1 - entropy / entropy_max (max assumed 0.01)
+        let entropy_max = 0.01;
+        (1.0 - self.entropy / entropy_max).max(0.0).min(1.0)
+    }
+
+    pub fn get_radiative_yield(&self) -> f64 {
+        let order = self.calculate_order();
+        // At order 0.51, yield should be near SYZYGY (0.94)
+        if (order - INTERFACE_ORDER).abs() < 0.001 {
+            return SYZYGY;
+        }
+        (order * 1.84).min(1.0) // Simplified scaling
+    }
+}
+
+pub struct ChronosReset {
+    pub vita_active: bool,
+    pub start_time: f64,
+}
+
+impl ChronosReset {
+    pub fn new() -> Self {
+        Self {
+            vita_active: VITA_INIT,
+            start_time: 0.0,
+        }
+    }
+
+    pub fn get_vita_time(&self, current_time: f64) -> f64 {
+        if self.vita_active {
+            // Countup from zero
+            current_time - self.start_time
+        } else {
+            // Placeholder for old countdown logic (Darvo)
+            999.0 - current_time
+        }
+    }
 }

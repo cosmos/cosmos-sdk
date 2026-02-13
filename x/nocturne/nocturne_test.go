@@ -57,3 +57,24 @@ func TestNeuralinkIntegration(t *testing.T) {
 	}
 	t.Logf("Joint Witness Signature: %s", sig)
 }
+
+func TestTripleConvergence(t *testing.T) {
+	// Test Perovskite Order
+	order := PerovskiteOrder()
+	if order != 0.51 {
+		t.Errorf("PerovskiteOrder() = %f, want 0.51", order)
+	}
+
+	// Test VITA Time
+	vita := VitaPulse(1.234)
+	if vita != 1.234 {
+		t.Errorf("VitaPulse(1.234) = %f, want 1.234", vita)
+	}
+
+	// Test Manifesto
+	manifesto := PublishManifesto()
+	if manifesto == "" {
+		t.Error("PublishManifesto returned empty string")
+	}
+	t.Logf("Published Manifesto:\n%s", manifesto)
+}

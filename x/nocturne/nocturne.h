@@ -30,6 +30,12 @@ double nocturne_get_syzygy(double phi);
 
 char *nocturne_neuralink_sync(double intent);
 
+double nocturne_perovskite_order(void);
+
+double nocturne_vita_pulse(double current_time);
+
+char *nocturne_publish_manifesto(void);
+
 char *nocturne_hal_noland_witness(const char *sample);
 
 char *nocturne_hal_rpow_signature(const char *sample);

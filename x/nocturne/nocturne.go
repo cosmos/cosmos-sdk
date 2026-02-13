@@ -39,6 +39,21 @@ func NeuralinkSync(intent float64) string {
 	return goStr
 }
 
+func PerovskiteOrder() float64 {
+	return float64(C.nocturne_perovskite_order())
+}
+
+func VitaPulse(currentTime float64) float64 {
+	return float64(C.nocturne_vita_pulse(C.double(currentTime)))
+}
+
+func PublishManifesto() string {
+	cStr := C.nocturne_publish_manifesto()
+	goStr := C.GoString(cStr)
+	C.nocturne_free_string(cStr)
+	return goStr
+}
+
 func HalNolandWitness(sample string) string {
 	cSample := C.CString(sample)
 	defer C.free(unsafe.Pointer(cSample))
@@ -60,7 +75,8 @@ func HalRPoWSignature(sample string) string {
 func Example() {
 	fmt.Println(HelloNocturne())
 	fmt.Printf("Pineal Transduction (Φ=0.15): %.2f\n", PinealTransduce(0.15))
-	fmt.Printf("Syzygy Yield (Φ=0.15): %.2f\n", GetSyzygy(0.15))
+	fmt.Printf("Perovskite Interface Order: %.2f\n", PerovskiteOrder())
+	fmt.Printf("VITA Time: %.3fs\n", VitaPulse(1.0))
 	fmt.Println(NeuralinkSync(0.5))
-	fmt.Println(HalNolandWitness("Arkhe Sample ∞+32"))
+	fmt.Println(PublishManifesto())
 }

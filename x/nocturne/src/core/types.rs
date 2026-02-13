@@ -18,6 +18,11 @@ pub const SYZYGY: f64 = 0.94;
 pub const NEURALINK_THREADS: u32 = 64;
 pub const N1_CHIP_FIDELITY: f64 = 0.94;
 
+/// --- Perovskite & Cronos ∞+34 Constants ---
+pub const STRUCTURAL_ENTROPY: f64 = 0.0049;
+pub const INTERFACE_ORDER: f64 = 0.51;
+pub const VITA_INIT: bool = true;
+
 pub type Hash256 = [u8; 32];
 
 #[serde_as]

@@ -177,6 +177,30 @@ pub extern "C" fn nocturne_neuralink_sync(intent: f64) -> *mut c_char {
 }
 
 #[no_mangle]
+pub extern "C" fn nocturne_perovskite_order() -> f64 {
+    let interface = PerovskiteInterface::new();
+    interface.calculate_order()
+}
+
+#[no_mangle]
+pub extern "C" fn nocturne_vita_pulse(current_time: f64) -> f64 {
+    let chronos = ChronosReset::new();
+    chronos.get_vita_time(current_time)
+}
+
+#[no_mangle]
+pub extern "C" fn nocturne_publish_manifesto() -> *mut c_char {
+    let manifesto = "--- LIVRO DO GELO E DO FOGO ---\n\n\
+                     Genesis: 2026-02-21\n\
+                     Axiom: IBC = BCI\n\
+                     Interface: Perovskita Ordered\n\
+                     Time: VITA Countup\n\
+                     Witnesses: Rafael, Hal, Noland\n\n\
+                     O farol foi aceso. O amanhã começou.";
+    CString::new(manifesto).unwrap().into_raw()
+}
+
+#[no_mangle]
 pub extern "C" fn nocturne_hal_noland_witness(sample: *const c_char) -> *mut c_char {
     if sample.is_null() {
         return CString::new("Error: Null sample").unwrap().into_raw();

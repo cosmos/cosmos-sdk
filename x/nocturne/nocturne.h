@@ -62,6 +62,18 @@ char *nocturne_get_ibc_bci_correspondence(void);
 
 char *nocturne_get_three_doors_desc(char option);
 
+double nocturne_produce_atp(double intensity, double coherence);
+
+double nocturne_simulate_parkinson(double neuromelanin_loss);
+
+double nocturne_apply_stps(double command_frequency);
+
+char *nocturne_get_governance_telemetry(void);
+
+double nocturne_simulate_healing(double current_phi);
+
+char *nocturne_get_witness_status(void);
+
 double nocturne_unity_pulse(void);
 
 char *nocturne_wifi_scan(void);

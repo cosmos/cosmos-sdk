@@ -18,6 +18,36 @@ func HelloNocturne() string {
 	return goStr
 }
 
+func ProduceATP(intensity, coherence float64) float64 {
+	return float64(C.nocturne_produce_atp(C.double(intensity), C.double(coherence)))
+}
+
+func SimulateParkinson(loss float64) float64 {
+	return float64(C.nocturne_simulate_parkinson(C.double(loss)))
+}
+
+func ApplySTPS(freq float64) float64 {
+	return float64(C.nocturne_apply_stps(C.double(freq)))
+}
+
+func GovernanceTelemetry() string {
+	cStr := C.nocturne_get_governance_telemetry()
+	goStr := C.GoString(cStr)
+	C.nocturne_free_string(cStr)
+	return goStr
+}
+
+func SimulateHealing(phi float64) float64 {
+	return float64(C.nocturne_simulate_healing(C.double(phi)))
+}
+
+func WitnessStatus() string {
+	cStr := C.nocturne_get_witness_status()
+	goStr := C.GoString(cStr)
+	C.nocturne_free_string(cStr)
+	return goStr
+}
+
 func SimulateQLink() string {
 	cStr := C.simulate_qlink()
 	goStr := C.GoString(cStr)

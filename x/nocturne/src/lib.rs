@@ -305,6 +305,42 @@ pub extern "C" fn nocturne_get_three_doors_desc(option: c_char) -> *mut c_char {
 }
 
 #[no_mangle]
+pub extern "C" fn nocturne_produce_atp(intensity: f64, coherence: f64) -> f64 {
+    let engine = MitochondrialEngine::new(intensity);
+    engine.produce_atp(coherence)
+}
+
+#[no_mangle]
+pub extern "C" fn nocturne_simulate_parkinson(neuromelanin_loss: f64) -> f64 {
+    let engine = NeuromelaninEngine::new();
+    engine.simulate_parkinson(neuromelanin_loss)
+}
+
+#[no_mangle]
+pub extern "C" fn nocturne_apply_stps(command_frequency: f64) -> f64 {
+    let engine = NeuromelaninEngine::new();
+    engine.apply_stps(command_frequency)
+}
+
+#[no_mangle]
+pub extern "C" fn nocturne_get_governance_telemetry() -> *mut c_char {
+    let gov = GovernanceFractal::new();
+    CString::new(gov.get_telemetry()).unwrap().into_raw()
+}
+
+#[no_mangle]
+pub extern "C" fn nocturne_simulate_healing(current_phi: f64) -> f64 {
+    let engine = HealingEngine::new();
+    engine.simulate_retuning(current_phi)
+}
+
+#[no_mangle]
+pub extern "C" fn nocturne_get_witness_status() -> *mut c_char {
+    let witness = WitnessMode::new();
+    CString::new(witness.get_status()).unwrap().into_raw()
+}
+
+#[no_mangle]
 pub extern "C" fn nocturne_unity_pulse() -> f64 {
     let engine = SuperRadianceEngine::new();
     engine.get_syzygy()

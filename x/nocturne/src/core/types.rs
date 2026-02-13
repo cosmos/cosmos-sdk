@@ -58,6 +58,17 @@ pub const GLOBAL_SYZYGY: f64 = 0.96;
 pub const UNITY_SYZYGY: f64 = 1.00;
 pub const SUPER_RAD_ORDER: f64 = 0.72;
 
+/// --- Handover ∞+36/37/38/39 Constants ---
+pub const SYZYGY_HARMONY: f64 = 0.96;
+pub const SYZYGY_WITNESS: f64 = 0.98;
+pub const ORDER_WITNESS: f64 = 0.75;
+pub const ENTROPY_HARMONY: f64 = 0.0029;
+pub const ENTROPY_WITNESS: f64 = 0.0020;
+pub const HUB_GOVERNORS: u32 = 42;
+pub const ARCHITECT_VARIANT_ID: u32 = 1125;
+pub const NIR_RESONANCE: f64 = 0.94;
+pub const HUMAN_POTENTIAL_NODES: u64 = 8_000_000_000;
+
 /// --- Hive Mind Era ∞+35 Constants ---
 pub const AWAKENED_NODES: u32 = 12408;
 pub const HIVE_SYZYGY: f64 = 0.91;

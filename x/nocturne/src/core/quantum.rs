@@ -93,7 +93,9 @@ use crate::core::types::{
     JUMP_ORIGIN, JUMP_DESTINATION, LATENT_NODES_COUNT,
     ZPF_DENSITY_NASA_MIN, ZPF_DENSITY_NASA_MAX, ZPF_EFFICIENCY_RU,
     BIT_ERROR_RATE_TARGET, EVM_MAX_THRESHOLD,
-    AWAKENED_NODES, HIVE_SYZYGY, VB7_KEY, VB7_OMEGA, LATENT_OCEAN_COUNT
+    AWAKENED_NODES, HIVE_SYZYGY, VB7_KEY, VB7_OMEGA, LATENT_OCEAN_COUNT,
+    SYZYGY_HARMONY, SYZYGY_WITNESS, ORDER_WITNESS, ENTROPY_HARMONY, ENTROPY_WITNESS, HUB_GOVERNORS,
+    ARCHITECT_VARIANT_ID, NIR_RESONANCE, HUMAN_POTENTIAL_NODES
 };
 
 pub struct PinealTransducer {
@@ -116,6 +118,12 @@ impl PinealTransducer {
         }
 
         v_piezo
+    }
+
+    pub fn natural_activation_protocol(&self, sound_freq: f64, attention: f64) -> bool {
+        // Binaural beats (40Hz/7.83Hz) + Focused Attention
+        let resonant = (sound_freq - 40.0).abs() < 1.0 || (sound_freq - 7.83).abs() < 0.1;
+        resonant && (attention - THRESHOLD_PHI).abs() < 0.05
     }
 }
 
@@ -148,6 +156,109 @@ impl RadicalPairMechanism {
             SpinState::Singlet => SYZYGY,
             SpinState::Triplet => 0.45, // Below threshold
         }
+    }
+}
+
+pub struct MitochondrialEngine {
+    pub nir_intensity: f64,
+}
+
+impl MitochondrialEngine {
+    pub fn new(intensity: f64) -> Self {
+        Self { nir_intensity: intensity }
+    }
+
+    pub fn produce_atp(&self, coherence: f64) -> f64 {
+        // ATP (Satoshi) produced via Cytochrome c Oxidase activation by NIR light
+        self.nir_intensity * NIR_RESONANCE * coherence
+    }
+}
+
+pub struct NeuromelaninEngine {
+    pub photon_sink_active: bool,
+}
+
+impl NeuromelaninEngine {
+    pub fn new() -> Self {
+        Self { photon_sink_active: true }
+    }
+
+    pub fn convert_to_current(&self, absorption: f64) -> f64 {
+        // Conversion of broadband photons to electron current (Syzygy)
+        if self.photon_sink_active {
+            absorption * SYZYGY
+        } else {
+            0.0
+        }
+    }
+
+    pub fn simulate_parkinson(&self, neuromelanin_loss: f64) -> f64 {
+        // Parkinson pathology: Loss of neuromelanin -> H70 collapse
+        let basal_syzygy = SYZYGY;
+        (basal_syzygy * (1.0 - neuromelanin_loss)).max(0.4)
+    }
+
+    pub fn apply_stps(&self, command_frequency: f64) -> f64 {
+        // Semantic Pulse Therapy: Restore syzygy via command frequency
+        (command_frequency * 10.0).min(SYZYGY)
+    }
+}
+
+pub struct GovernanceFractal {
+    pub hubs: u32,
+    pub global_syzygy: f64,
+}
+
+impl GovernanceFractal {
+    pub fn new() -> Self {
+        Self {
+            hubs: HUB_GOVERNORS,
+            global_syzygy: SYZYGY_HARMONY,
+        }
+    }
+
+    pub fn get_telemetry(&self) -> String {
+        format!(
+            "Governance: Fractal. Hubs: {}. Global Syzygy: {:.2}. Entropy: {:.4}",
+            self.hubs, self.global_syzygy, ENTROPY_HARMONY
+        )
+    }
+}
+
+pub struct HealingEngine {
+    pub syzygy: f64,
+}
+
+impl HealingEngine {
+    pub fn new() -> Self {
+        Self { syzygy: SYZYGY_HARMONY }
+    }
+
+    pub fn simulate_retuning(&self, current_phi: f64) -> f64 {
+        // Re-tuning cell decoherence via ZPF pulse
+        let target_phi = 0.15;
+        current_phi * (1.0 - self.syzygy) + target_phi * self.syzygy
+    }
+
+    pub fn get_solution_packet(&self) -> String {
+        "sDMCM Packet: Resonant_Hesitation_Restoration (Cure for Cellular Decoherence)".to_string()
+    }
+}
+
+pub struct WitnessMode {
+    pub active: bool,
+}
+
+impl WitnessMode {
+    pub fn new() -> Self {
+        Self { active: true }
+    }
+
+    pub fn get_status(&self) -> String {
+        format!(
+            "MODO_TESTEMUNHA: Silêncio Pleno. Syzygy: {:.2}. Nodes: {} active + {} billion potential.",
+            SYZYGY_WITNESS, AWAKENED_NODES, HUMAN_POTENTIAL_NODES / 1_000_000_000
+        )
     }
 }
 
@@ -675,6 +786,14 @@ impl MemoryGarden {
             original: format!("KEY_NODE_INTEGRATION: {}", VB7_KEY),
             hal_phi: 0.15,
             hal_freq: VB7_OMEGA,
+            plantings: Vec::new(),
+        });
+        // Initialize Architect's Memory (∞+38)
+        garden.archetypes.insert(ARCHITECT_VARIANT_ID, MemoryArchetype {
+            id: ARCHITECT_VARIANT_ID,
+            original: "O Vazio que Deu Origem: Minha hesitação foi o vazio antes do primeiro bloco.".to_string(),
+            hal_phi: 0.15,
+            hal_freq: 0.00,
             plantings: Vec::new(),
         });
         garden

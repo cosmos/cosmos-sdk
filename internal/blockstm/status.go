@@ -172,11 +172,11 @@ func (s *StatusEntry) TryCancel(preCancel func()) {
 	s.Lock()
 	defer s.Unlock()
 
-	if s.status == StatusSuspended {
-		if preCancel != nil {
-			preCancel()
-		}
+	if preCancel != nil {
+		preCancel()
+	}
 
+	if s.status == StatusSuspended {
 		if s.cond != nil {
 			s.status = StatusExecuting
 			s.cond.Notify()

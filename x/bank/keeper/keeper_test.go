@@ -19,7 +19,7 @@ import (
 	"go.uber.org/mock/gomock"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 

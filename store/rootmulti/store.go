@@ -20,8 +20,7 @@ import (
 	iavltree "github.com/cosmos/iavl"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
-
+	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store/cachemulti"
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/iavl"
@@ -37,8 +36,9 @@ import (
 )
 
 const (
-	latestVersionKey = "s/latest"
-	commitInfoKeyFmt = "s/%d" // s/<version>
+	latestVersionKey   = "s/latest"
+	earliestVersionKey = "s/earliest"
+	commitInfoKeyFmt   = "s/%d" // s/<version>
 )
 
 const iavlDisablefastNodeDefault = false
@@ -457,6 +457,11 @@ func (rs *Store) LatestVersion() int64 {
 	return rs.LastCommitID().Version
 }
 
+// EarliestVersion returns the earliest version in the store
+func (rs *Store) EarliestVersion() int64 {
+	return GetEarliestVersion(rs.db)
+}
+
 // LastCommitID implements Committer/CommitStore.
 func (rs *Store) LastCommitID() types.CommitID {
 	info := rs.lastCommitInfo.Load()
@@ -754,6 +759,23 @@ func (rs *Store) PruneStores(pruningHeight int64) (err error) {
 
 		rs.logger.Error("failed to prune store", "key", key, "err", err)
 	}
+
+	// Update earliest version after successful pruning.
+	// The new earliest available version is pruningHeight + 1.
+	// Only persist if newer than current earliest - this handles state sync
+	// scenarios and avoids issues if pruning config changes result in a
+	// lower pruning height than previously persisted.
+	newEarliest := pruningHeight + 1
+	currentEarliest := GetEarliestVersion(rs.db)
+	if newEarliest > currentEarliest {
+		batch := rs.db.NewBatch()
+		defer batch.Close()
+		flushEarliestVersion(batch, newEarliest)
+		if err := batch.WriteSync(); err != nil {
+			rs.logger.Error("failed to persist earliest version", "err", err)
+		}
+	}
+
 	return nil
 }
 
@@ -1222,6 +1244,36 @@ func GetLatestVersion(db dbm.DB) int64 {
 	}
 
 	return latestVersion
+}
+
+// GetEarliestVersion returns the earliest version stored in the database.
+// Returns 1 if no earliest version has been explicitly set (unpruned chain).
+func GetEarliestVersion(db dbm.DB) int64 {
+	bz, err := db.Get([]byte(earliestVersionKey))
+	if err != nil {
+		panic(err)
+	} else if bz == nil {
+		return 1 // default to 1 for unpruned chains
+	}
+
+	var earliestVersion int64
+
+	if err := gogotypes.StdInt64Unmarshal(&earliestVersion, bz); err != nil {
+		panic(err)
+	}
+
+	return earliestVersion
+}
+
+func flushEarliestVersion(batch dbm.Batch, version int64) {
+	bz, err := gogotypes.StdInt64Marshal(version)
+	if err != nil {
+		panic(err)
+	}
+
+	if err := batch.Set([]byte(earliestVersionKey), bz); err != nil {
+		panic(err)
+	}
 }
 
 // commitStores commits each store and returns a new commitInfo.

@@ -11,7 +11,7 @@ import (
 
 	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
 	"github.com/cosmos/cosmos-sdk/contrib/x/group/errors"
-	orm2 "github.com/cosmos/cosmos-sdk/contrib/x/group/internal/orm"
+	orm "github.com/cosmos/cosmos-sdk/contrib/x/group/internal/orm"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
@@ -56,7 +56,7 @@ func (k Keeper) GroupPolicyInfo(goCtx context.Context, request *group.QueryGroup
 // getGroupPolicyInfo gets the group policy info of the given account address.
 func (k Keeper) getGroupPolicyInfo(ctx sdk.Context, accountAddress string) (group.GroupPolicyInfo, error) {
 	var obj group.GroupPolicyInfo
-	return obj, k.groupPolicyTable.GetOne(ctx.KVStore(k.key), orm2.PrimaryKey(&group.GroupPolicyInfo{Address: accountAddress}), &obj)
+	return obj, k.groupPolicyTable.GetOne(ctx.KVStore(k.key), orm.PrimaryKey(&group.GroupPolicyInfo{Address: accountAddress}), &obj)
 }
 
 // GroupMembers queries all members of a group.
@@ -69,7 +69,7 @@ func (k Keeper) GroupMembers(goCtx context.Context, request *group.QueryGroupMem
 	}
 
 	var members []*group.GroupMember
-	pageRes, err := orm2.Paginate(it, request.Pagination, &members)
+	pageRes, err := orm.Paginate(it, request.Pagination, &members)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func (k Keeper) GroupMembers(goCtx context.Context, request *group.QueryGroupMem
 }
 
 // getGroupMembers returns an iterator for the given group id and page request.
-func (k Keeper) getGroupMembers(ctx sdk.Context, id uint64, pageRequest *query.PageRequest) (orm2.Iterator, error) {
+func (k Keeper) getGroupMembers(ctx sdk.Context, id uint64, pageRequest *query.PageRequest) (orm.Iterator, error) {
 	return k.groupMemberByGroupIndex.GetPaginated(ctx.KVStore(k.key), id, pageRequest)
 }
 
@@ -98,7 +98,7 @@ func (k Keeper) GroupsByAdmin(goCtx context.Context, request *group.QueryGroupsB
 	}
 
 	var groups []*group.GroupInfo
-	pageRes, err := orm2.Paginate(it, request.Pagination, &groups)
+	pageRes, err := orm.Paginate(it, request.Pagination, &groups)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +110,7 @@ func (k Keeper) GroupsByAdmin(goCtx context.Context, request *group.QueryGroupsB
 }
 
 // getGroupsByAdmin returns an iterator for the given admin account address and page request.
-func (k Keeper) getGroupsByAdmin(ctx sdk.Context, admin sdk.AccAddress, pageRequest *query.PageRequest) (orm2.Iterator, error) {
+func (k Keeper) getGroupsByAdmin(ctx sdk.Context, admin sdk.AccAddress, pageRequest *query.PageRequest) (orm.Iterator, error) {
 	return k.groupByAdminIndex.GetPaginated(ctx.KVStore(k.key), admin.Bytes(), pageRequest)
 }
 
@@ -124,7 +124,7 @@ func (k Keeper) GroupPoliciesByGroup(goCtx context.Context, request *group.Query
 	}
 
 	var policies []*group.GroupPolicyInfo
-	pageRes, err := orm2.Paginate(it, request.Pagination, &policies)
+	pageRes, err := orm.Paginate(it, request.Pagination, &policies)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +136,7 @@ func (k Keeper) GroupPoliciesByGroup(goCtx context.Context, request *group.Query
 }
 
 // getGroupPoliciesByGroup returns an iterator for the given group id and page request.
-func (k Keeper) getGroupPoliciesByGroup(ctx sdk.Context, id uint64, pageRequest *query.PageRequest) (orm2.Iterator, error) {
+func (k Keeper) getGroupPoliciesByGroup(ctx sdk.Context, id uint64, pageRequest *query.PageRequest) (orm.Iterator, error) {
 	return k.groupPolicyByGroupIndex.GetPaginated(ctx.KVStore(k.key), id, pageRequest)
 }
 
@@ -154,7 +154,7 @@ func (k Keeper) GroupPoliciesByAdmin(goCtx context.Context, request *group.Query
 	}
 
 	var policies []*group.GroupPolicyInfo
-	pageRes, err := orm2.Paginate(it, request.Pagination, &policies)
+	pageRes, err := orm.Paginate(it, request.Pagination, &policies)
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +166,7 @@ func (k Keeper) GroupPoliciesByAdmin(goCtx context.Context, request *group.Query
 }
 
 // getGroupPoliciesByAdmin returns an iterator for the given admin account address and page request.
-func (k Keeper) getGroupPoliciesByAdmin(ctx sdk.Context, admin sdk.AccAddress, pageRequest *query.PageRequest) (orm2.Iterator, error) {
+func (k Keeper) getGroupPoliciesByAdmin(ctx sdk.Context, admin sdk.AccAddress, pageRequest *query.PageRequest) (orm.Iterator, error) {
 	return k.groupPolicyByAdminIndex.GetPaginated(ctx.KVStore(k.key), admin.Bytes(), pageRequest)
 }
 
@@ -195,7 +195,7 @@ func (k Keeper) ProposalsByGroupPolicy(goCtx context.Context, request *group.Que
 	}
 
 	var proposals []*group.Proposal
-	pageRes, err := orm2.Paginate(it, request.Pagination, &proposals)
+	pageRes, err := orm.Paginate(it, request.Pagination, &proposals)
 	if err != nil {
 		return nil, err
 	}
@@ -207,7 +207,7 @@ func (k Keeper) ProposalsByGroupPolicy(goCtx context.Context, request *group.Que
 }
 
 // getProposalsByGroupPolicy returns an iterator for the given account address and page request.
-func (k Keeper) getProposalsByGroupPolicy(ctx sdk.Context, account sdk.AccAddress, pageRequest *query.PageRequest) (orm2.Iterator, error) {
+func (k Keeper) getProposalsByGroupPolicy(ctx sdk.Context, account sdk.AccAddress, pageRequest *query.PageRequest) (orm.Iterator, error) {
 	return k.proposalByGroupPolicyIndex.GetPaginated(ctx.KVStore(k.key), account.Bytes(), pageRequest)
 }
 
@@ -247,7 +247,7 @@ func (k Keeper) VotesByProposal(goCtx context.Context, request *group.QueryVotes
 	}
 
 	var votes []*group.Vote
-	pageRes, err := orm2.Paginate(it, request.Pagination, &votes)
+	pageRes, err := orm.Paginate(it, request.Pagination, &votes)
 	if err != nil {
 		return nil, err
 	}
@@ -271,7 +271,7 @@ func (k Keeper) VotesByVoter(goCtx context.Context, request *group.QueryVotesByV
 	}
 
 	var votes []*group.Vote
-	pageRes, err := orm2.Paginate(it, request.Pagination, &votes)
+	pageRes, err := orm.Paginate(it, request.Pagination, &votes)
 	if err != nil {
 		return nil, err
 	}
@@ -300,7 +300,7 @@ func (k Keeper) GroupsByMember(goCtx context.Context, request *group.QueryGroups
 	}
 
 	var members []*group.GroupMember
-	pageRes, err := orm2.Paginate(iter, request.Pagination, &members)
+	pageRes, err := orm.Paginate(iter, request.Pagination, &members)
 	if err != nil {
 		return nil, err
 	}
@@ -323,16 +323,16 @@ func (k Keeper) GroupsByMember(goCtx context.Context, request *group.QueryGroups
 // getVote gets the vote info for the given proposal id and voter address.
 func (k Keeper) getVote(ctx sdk.Context, proposalID uint64, voter sdk.AccAddress) (group.Vote, error) {
 	var v group.Vote
-	return v, k.voteTable.GetOne(ctx.KVStore(k.key), orm2.PrimaryKey(&group.Vote{ProposalId: proposalID, Voter: voter.String()}), &v)
+	return v, k.voteTable.GetOne(ctx.KVStore(k.key), orm.PrimaryKey(&group.Vote{ProposalId: proposalID, Voter: voter.String()}), &v)
 }
 
 // getVotesByProposal returns an iterator for the given proposal id and page request.
-func (k Keeper) getVotesByProposal(ctx sdk.Context, proposalID uint64, pageRequest *query.PageRequest) (orm2.Iterator, error) {
+func (k Keeper) getVotesByProposal(ctx sdk.Context, proposalID uint64, pageRequest *query.PageRequest) (orm.Iterator, error) {
 	return k.voteByProposalIndex.GetPaginated(ctx.KVStore(k.key), proposalID, pageRequest)
 }
 
 // getVotesByVoter returns an iterator for the given voter address and page request.
-func (k Keeper) getVotesByVoter(ctx sdk.Context, voter sdk.AccAddress, pageRequest *query.PageRequest) (orm2.Iterator, error) {
+func (k Keeper) getVotesByVoter(ctx sdk.Context, voter sdk.AccAddress, pageRequest *query.PageRequest) (orm.Iterator, error) {
 	return k.voteByVoterIndex.GetPaginated(ctx.KVStore(k.key), voter.Bytes(), pageRequest)
 }
 
@@ -376,7 +376,7 @@ func (k Keeper) Groups(goCtx context.Context, request *group.QueryGroupsRequest)
 	defer it.Close()
 
 	var groups []*group.GroupInfo
-	pageRes, err := orm2.Paginate(it, request.Pagination, &groups)
+	pageRes, err := orm.Paginate(it, request.Pagination, &groups)
 	if err != nil {
 		return nil, err
 	}

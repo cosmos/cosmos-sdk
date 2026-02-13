@@ -7,7 +7,7 @@ import (
 
 	"cosmossdk.io/collections"
 	corestoretypes "cosmossdk.io/core/store"
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -125,7 +125,7 @@ func NewKeeper(
 	return k
 }
 
-// Hooks gets the hooks for governance *Keeper {
+// Hooks gets the hooks for governance.
 func (k *Keeper) Hooks() types.GovHooks {
 	if k.hooks == nil {
 		// return a no-op implementation if no hooks are set

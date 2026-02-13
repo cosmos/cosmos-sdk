@@ -497,7 +497,7 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 	defer span.End()
 	resp, err = app.abciHandlers.PrepareProposalHandler(ctx, req)
 	if err != nil {
-		app.logger.Error("failed to prepare proposal", "height", req.Height, "time", req.Time, "err", err)
+		app.logger.ErrorContext(ctx, "failed to prepare proposal", "height", req.Height, "time", req.Time, "err", err)
 		return &abci.ResponsePrepareProposal{Txs: req.Txs}, nil
 	}
 
@@ -680,7 +680,7 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 	// add a deferred recover handler in case extendVote panics
 	defer func() {
 		if r := recover(); r != nil {
-			app.logger.Error(
+			app.logger.ErrorContext(ctx,
 				"panic recovered in ExtendVote",
 				"height", req.Height,
 				"hash", fmt.Sprintf("%X", req.Hash),
@@ -692,7 +692,7 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 
 	resp, err = app.abciHandlers.ExtendVoteHandler(ctx, req)
 	if err != nil {
-		app.logger.Error("failed to extend vote", "height", req.Height, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
+		app.logger.ErrorContext(ctx, "failed to extend vote", "height", req.Height, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
 		return &abci.ResponseExtendVote{VoteExtension: []byte{}}, nil
 	}
 
@@ -740,7 +740,7 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 	// add a deferred recover handler in case verifyVoteExt panics
 	defer func() {
 		if r := recover(); r != nil {
-			app.logger.Error(
+			app.logger.ErrorContext(ctx,
 				"panic recovered in VerifyVoteExtension",
 				"height", req.Height,
 				"hash", fmt.Sprintf("%X", req.Hash),
@@ -765,7 +765,7 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 
 	resp, err = app.abciHandlers.VerifyVoteExtensionHandler(ctx, req)
 	if err != nil {
-		app.logger.Error("failed to verify vote extension", "height", req.Height, "err", err)
+		app.logger.ErrorContext(ctx, "failed to verify vote extension", "height", req.Height, "err", err)
 		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
 	}
 
@@ -793,6 +793,10 @@ func (app *BaseApp) internalFinalizeBlock(cancelCtx context.Context, req *abci.R
 		))
 	}
 
+	// NOTE: Header populated here is intentionally partial; it omits Version, LastBlockID,
+	// LastCommitHash, DataHash, ValidatorsHash, ConsensusHash, LastResultsHash, and EvidenceHash.
+	// As a result, the HistoricalInfo headers stored by x/staking are unreliable and cannot reproduce
+	// the correct Header hash. Please use req.Hash instead.
 	header := cmtproto.Header{
 		ChainID:            app.chainID,
 		Height:             req.Height,
@@ -1093,7 +1097,7 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 
 		for _, abciListener := range abciListeners {
 			if err := abciListener.ListenCommit(ctx, *resp, changeSet); err != nil {
-				app.logger.Error("Commit listening hook failed", "height", blockHeight, "err", err)
+				app.logger.ErrorContext(ctx, "Commit listening hook failed", "height", blockHeight, "err", err)
 			}
 		}
 	}

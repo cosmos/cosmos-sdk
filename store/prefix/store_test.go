@@ -8,7 +8,7 @@ import (
 	tiavl "github.com/cosmos/iavl"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/gaskv"

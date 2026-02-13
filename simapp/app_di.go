@@ -13,7 +13,7 @@ import (
 
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"

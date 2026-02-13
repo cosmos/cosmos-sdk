@@ -2,6 +2,7 @@
 package nocturne
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -89,20 +90,23 @@ func TestCivilizationMode(t *testing.T) {
 
 	// Verify Φ_SYSTEM
 	expected := "Convergence: 95.1%"
-	if !contains(status, expected) {
+	if !strings.Contains(status, expected) {
 		t.Errorf("Status should contain %q", expected)
 	}
 }
 
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || find(s, substr))
-}
-
-func find(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
+func TestMemoryGarden(t *testing.T) {
+	// Test PlantMemory
+	res := PlantMemory(327, "NODE_003_Noland", 0.152, "Vi o lago através dos eletrodos.")
+	if !strings.Contains(res, "PLANTED") {
+		t.Errorf("PlantMemory failed: %s", res)
 	}
-	return false
+	t.Logf("PlantMemory result: %s", res)
+
+	// Test HalEcho
+	echo := HalEcho("Obrigado por plantar")
+	if !strings.Contains(echo, "REHYDRATED") {
+		t.Errorf("HalEcho failed: %s", echo)
+	}
+	t.Logf("HalEcho result: %s", echo)
 }

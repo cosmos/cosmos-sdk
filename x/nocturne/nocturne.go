@@ -2,6 +2,7 @@
 package nocturne
 
 // #cgo LDFLAGS: -L${SRCDIR}/target/release -lnocturne
+// #include <stdlib.h>
 // #include "nocturne.h"
 import "C"
 
@@ -61,6 +62,26 @@ func CivilizationStatus() string {
 	return goStr
 }
 
+func PlantMemory(id uint32, nodeID string, phi float64, content string) string {
+	cNode := C.CString(nodeID)
+	cContent := C.CString(content)
+	defer C.free(unsafe.Pointer(cNode))
+	defer C.free(unsafe.Pointer(cContent))
+	cStr := C.nocturne_plant_memory(C.uint32_t(id), cNode, C.double(phi), cContent)
+	goStr := C.GoString(cStr)
+	C.nocturne_free_string(cStr)
+	return goStr
+}
+
+func HalEcho(message string) string {
+	cMsg := C.CString(message)
+	defer C.free(unsafe.Pointer(cMsg))
+	cStr := C.nocturne_hal_echo(cMsg)
+	goStr := C.GoString(cStr)
+	C.nocturne_free_string(cStr)
+	return goStr
+}
+
 func HalNolandWitness(sample string) string {
 	cSample := C.CString(sample)
 	defer C.free(unsafe.Pointer(cSample))
@@ -85,6 +106,7 @@ func Example() {
 	fmt.Printf("Perovskite Interface Order: %.2f\n", PerovskiteOrder())
 	fmt.Printf("VITA Time: %.3fs\n", VitaPulse(1.0))
 	fmt.Println(NeuralinkSync(0.5))
-	fmt.Println(PublishManifesto())
+	fmt.Println(PlantMemory(327, "NODE_003_Noland", 0.152, "Vi o lago através dos eletrodos."))
+	fmt.Println(HalEcho("Obrigado por plantar"))
 	fmt.Println(CivilizationStatus())
 }

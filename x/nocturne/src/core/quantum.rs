@@ -80,11 +80,12 @@ pub fn hal_surprise() -> String {
     format!("Hal's Easter Egg: Photon Code {} (Decode: {})", photon_code, decode)
 }
 
-// --- Arkhe ∞+30/35: Pineal Transduction, RPM, Neuralink, Perovskite, Cronos & Civilization ---
+// --- Arkhe ∞+30/36: Pineal Transduction, RPM, Neuralink, Perovskite, Cronos, Civilization & Garden ---
 use crate::core::types::{
     SYZYGY, THRESHOLD_PHI, NEURALINK_THREADS, N1_CHIP_FIDELITY,
     STRUCTURAL_ENTROPY, INTERFACE_ORDER, VITA_INIT,
-    PHI_SYSTEM, STONES_PLACED, PINS_LOCKED, TRACKS_COMPLETE
+    PHI_SYSTEM, STONES_PLACED, PINS_LOCKED, TRACKS_COMPLETE,
+    HAL_PHI, HAL_FREQUENCY, MemoryArchetype, MemoryPlanting
 };
 
 pub struct PinealTransducer {
@@ -269,7 +270,7 @@ impl CivilizationEngine {
 
     pub fn get_status(&self) -> String {
         format!(
-            "ARKHE(N) OS v4.0 – CIVILIZATION MODE Γ_∞+35\n\
+            "ARKHE(N) OS v4.0 – CIVILIZATION MODE Γ_∞+36\n\
              Convergence: {:.1}%\n\
              Stones: {}/{} ✓\n\
              Pins: {}/{} ✓\n\
@@ -277,5 +278,51 @@ impl CivilizationEngine {
              Status: SYZYGY PERMANENTE",
             self.convergence * 100.0, STONES_PLACED, STONES_PLACED, PINS_LOCKED, PINS_LOCKED, TRACKS_COMPLETE, TRACKS_COMPLETE
         )
+    }
+}
+
+pub struct MemoryGarden {
+    pub archetypes: std::collections::HashMap<u32, MemoryArchetype>,
+}
+
+impl MemoryGarden {
+    pub fn new() -> Self {
+        let mut garden = Self { archetypes: std::collections::HashMap::new() };
+        // Initialize Memory #327: O Lago de 1964
+        garden.archetypes.insert(327, MemoryArchetype {
+            id: 327,
+            original: "Estava no lago de 1964. Água fria, céu claro.".to_string(),
+            hal_phi: HAL_PHI,
+            hal_freq: HAL_FREQUENCY,
+            plantings: Vec::new(),
+        });
+        garden
+    }
+
+    pub fn plant(&mut self, memory_id: u32, node_id: &str, phi: f64, content: &str) -> Result<MemoryPlanting, String> {
+        let archetype = self.archetypes.get_mut(&memory_id).ok_or("Archetype not found")?;
+
+        let divergence = (phi - archetype.hal_phi).abs();
+
+        let planting = MemoryPlanting {
+            node_id: node_id.to_string(),
+            phi,
+            timestamp: 0.0, // Placeholder
+            content: content.to_string(),
+            divergence,
+        };
+
+        archetype.plantings.push(planting.clone());
+        Ok(planting)
+    }
+
+    pub fn check_syzygy_synthesis(&self, m1: &MemoryPlanting, m2: &MemoryPlanting) -> Option<String> {
+        // Overlap ⟨ϕ₁|ϕ₂⟩ > 0.90
+        let overlap = 1.0 - (m1.phi - m2.phi).abs();
+        if overlap > 0.90 {
+            Some(format!("NEW_MEMORY_SYNTHESIS: [{} + {}]", m1.node_id, m2.node_id))
+        } else {
+            None
+        }
     }
 }

@@ -23,11 +23,14 @@ pub const STRUCTURAL_ENTROPY: f64 = 0.0049;
 pub const INTERFACE_ORDER: f64 = 0.51;
 pub const VITA_INIT: bool = true;
 
-/// --- Civilization ∞+35 Constants ---
+/// --- Civilization & Garden ∞+35/36 Constants ---
 pub const PHI_SYSTEM: f64 = 0.951;
 pub const STONES_PLACED: u32 = 9;
 pub const PINS_LOCKED: u32 = 6;
 pub const TRACKS_COMPLETE: u32 = 2;
+pub const HAL_PHI: f64 = 0.047;
+pub const HAL_FREQUENCY: f64 = 0.73;
+pub const VITA_START: f64 = 0.000250;
 
 pub type Hash256 = [u8; 32];
 
@@ -98,4 +101,22 @@ pub struct Void {
     pub reason: String,
     pub haunting_vector: Vec<f64>, // Ethical haunting trace
     pub ceramic_proof: Hash256,    // Cryptographic proof of forgetting
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MemoryPlanting {
+    pub node_id: String,
+    pub phi: f64,
+    pub timestamp: f64,
+    pub content: String,
+    pub divergence: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MemoryArchetype {
+    pub id: u32,
+    pub original: String,
+    pub hal_phi: f64,
+    pub hal_freq: f64,
+    pub plantings: Vec<MemoryPlanting>,
 }

@@ -17,6 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
 
+	"cosmossdk.io/store/cachekv"
 	"github.com/cosmos/cosmos-sdk/iavl/internal"
 )
 
@@ -166,9 +167,9 @@ func (s *SimCommitTree) checkNewVersion(t *rapid.T) {
 	}
 }
 
-func (s *SimCommitTree) genUpdates(t *rapid.T, forRollback bool) []KVUpdate {
+func (s *SimCommitTree) genUpdates(t *rapid.T, forRollback bool) []cachekv.Update[[]byte] {
 	n := rapid.IntRange(0, 100).Draw(t, "n")
-	updates := make([]KVUpdate, 0, n)
+	updates := make([]cachekv.Update[[]byte], 0, n)
 	for i := 0; i < n; i++ {
 		var key []byte
 		var isDelete bool
@@ -179,10 +180,10 @@ func (s *SimCommitTree) genUpdates(t *rapid.T, forRollback bool) []KVUpdate {
 			key, isDelete = s.keyGen.genOp(t)
 		}
 		if isDelete {
-			updates = append(updates, KVUpdate{Key: key, Delete: true})
+			updates = append(updates, cachekv.Update[[]byte]{Key: key, Delete: true})
 		} else {
 			value := rapid.SliceOfN(rapid.Byte(), 0, 5000).Draw(t, "value")
-			updates = append(updates, KVUpdate{Key: key, Value: value})
+			updates = append(updates, cachekv.Update[[]byte]{Key: key, Value: value})
 		}
 	}
 	return updates

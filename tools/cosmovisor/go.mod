@@ -33,7 +33,6 @@ require (
 	cosmossdk.io/math v1.5.3 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
 	cosmossdk.io/store v1.3.0-beta.0 // indirect
-	cosmossdk.io/x/tx v0.14.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
@@ -256,7 +255,8 @@ require (
 
 replace (
 	cosmossdk.io/store => ../../store
-	cosmossdk.io/x/tx => ../../x/tx
 	cosmossdk.io/x/upgrade => ../../x/upgrade
 	github.com/cosmos/cosmos-sdk => ../..
+	// BlockSTM requires patches to the btree package
+	github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-20250924232609-2c6195d95951
 )

@@ -12,8 +12,6 @@ import (
 
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	sdkmath "cosmossdk.io/math"
-	txsigning "cosmossdk.io/x/tx/signing"
-	"cosmossdk.io/x/tx/signing/aminojson"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -22,6 +20,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	txsigning "github.com/cosmos/cosmos-sdk/x/tx/signing"
+	"github.com/cosmos/cosmos-sdk/x/tx/signing/aminojson"
 )
 
 func TestMsgGrantGetAuthorization(t *testing.T) {

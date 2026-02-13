@@ -146,6 +146,42 @@ func TestMVMemoryRecord(t *testing.T) {
 	}
 }
 
+func TestMVMemoryValidateReadSet_ABASameValueDifferentIncarnation(t *testing.T) {
+	stores := map[storetypes.StoreKey]int{StoreKeyAuth: 0}
+	storage := NewMultiMemDB(stores)
+	scheduler := NewScheduler(4)
+	mv := NewMVMemory(4, stores, storage, scheduler)
+
+	// tx 0 writes a=1
+	{
+		view0 := mv.View(0)
+		store := view0.GetKVStore(StoreKeyAuth)
+		store.Set([]byte("a"), []byte("1"))
+		_ = mv.Record(TxnVersion{0, 0}, view0)
+	}
+
+	// tx 1 reads a from MVData (versioned read)
+	{
+		view1 := mv.View(1)
+		store := view1.GetKVStore(StoreKeyAuth)
+		got := store.Get([]byte("a"))
+		require.Equal(t, []byte("1"), got)
+		_ = mv.Record(TxnVersion{1, 0}, view1)
+		require.True(t, mv.ValidateReadSet(1))
+	}
+
+	// re-execute tx 0 with a new incarnation but the same value (ABA)
+	{
+		view0 := mv.View(0)
+		store := view0.GetKVStore(StoreKeyAuth)
+		store.Set([]byte("a"), []byte("1"))
+		_ = mv.Record(TxnVersion{0, 1}, view0)
+	}
+
+	// txn 1's read-set should still validate because the value content is unchanged.
+	require.True(t, mv.ValidateReadSet(1))
+}
+
 func TestMVMemoryDelete(t *testing.T) {
 	nonceKey, balanceKey := []byte("nonce"), []byte("balance")
 

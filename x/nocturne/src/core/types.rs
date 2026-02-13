@@ -7,6 +7,13 @@ pub const RECOGNITION_THRESHOLD: f64 = 0.8;
 /// Threshold for cosmic coherence (ΔI) during mirroring.
 pub const COHERENCE_THRESHOLD: f64 = 0.7;
 
+/// --- Arkhe ∞+30 Constants ---
+pub const SATOSHI: f64 = 7.27;
+pub const THRESHOLD_PHI: f64 = 0.15;
+pub const COHERENCE_C: f64 = 0.86;
+pub const FLUCTUATION_F: f64 = 0.14;
+pub const SYZYGY: f64 = 0.94;
+
 pub type Hash256 = [u8; 32];
 
 #[serde_as]

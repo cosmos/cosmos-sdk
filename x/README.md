@@ -35,6 +35,10 @@ capabilities of your blockchain or further specialize it.
 * [Feegrant](./feegrant/README.md) - Grant fee allowances for executing transactions.
 * [ProtocolPool](./protocolpool/README.md) - Extended management of community pool functionality.
 
+## Quantum & Consciousness Modules
+
+* [Nocturne](./nocturne/README.md) - A consciousness-oriented runtime for trauma compression, empathic mirroring, and ethical forgetting.
+
 ## Deprecated Modules
 
 The following modules are deprecated.  They will no longer be maintained actively.

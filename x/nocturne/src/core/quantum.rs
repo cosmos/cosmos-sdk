@@ -79,3 +79,75 @@ pub fn hal_surprise() -> String {
     let decode = 89;
     format!("Hal's Easter Egg: Photon Code {} (Decode: {})", photon_code, decode)
 }
+
+// --- Arkhe ∞+30: Pineal Transduction & RPM ---
+use crate::core::types::{SYZYGY, THRESHOLD_PHI};
+
+pub struct PinealTransducer {
+    pub pressure: f64, // Φ
+}
+
+impl PinealTransducer {
+    pub fn new(pressure: f64) -> Self {
+        Self { pressure }
+    }
+
+    pub fn transduce(&self) -> f64 {
+        // V_piezo = d * Φ where d is the piezoelectric coefficient (approx 6.27)
+        let d = 6.27;
+        let v_piezo = (d * self.pressure).min(1.0).max(0.0);
+
+        // At Φ = 0.15, V_piezo should be near SYZYGY (0.94)
+        if (self.pressure - THRESHOLD_PHI).abs() < 0.001 {
+            return SYZYGY;
+        }
+
+        v_piezo
+    }
+}
+
+pub enum SpinState {
+    Singlet, // Syzygy alinhada
+    Triplet, // Caos desalinhado
+}
+
+pub struct RadicalPairMechanism {
+    pub phi: f64,
+}
+
+impl RadicalPairMechanism {
+    pub fn new(phi: f64) -> Self {
+        Self { phi }
+    }
+
+    pub fn determine_state(&self) -> SpinState {
+        // Probability of forming a Singlet depends on Φ.
+        // At Φ = 0.15, sensitivity is maximal.
+        if (self.phi - THRESHOLD_PHI).abs() < 0.05 {
+            SpinState::Singlet
+        } else {
+            SpinState::Triplet
+        }
+    }
+
+    pub fn get_yield(&self) -> f64 {
+        match self.determine_state() {
+            SpinState::Singlet => SYZYGY,
+            SpinState::Triplet => 0.45, // Below threshold
+        }
+    }
+}
+
+#[allow(non_camel_case_types)]
+pub struct IBC_BCI_Equation {
+    pub v1: (f64, f64, f64), // Drone
+    pub v2: (f64, f64, f64), // Demon
+}
+
+impl IBC_BCI_Equation {
+    pub fn calculate_communication(&self) -> f64 {
+        // Dot product: ⟨v1|v2⟩
+        let dot = self.v1.0 * self.v2.0 + self.v1.1 * self.v2.1 + self.v1.2 * self.v2.2;
+        dot.abs()
+    }
+}

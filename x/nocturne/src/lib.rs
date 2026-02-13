@@ -159,6 +159,36 @@ pub extern "C" fn nocturne_free_string(s: *mut c_char) {
 }
 
 #[no_mangle]
+pub extern "C" fn nocturne_pineal_transduce(phi: f64) -> f64 {
+    let transducer = PinealTransducer::new(phi);
+    transducer.transduce()
+}
+
+#[no_mangle]
+pub extern "C" fn nocturne_get_syzygy(phi: f64) -> f64 {
+    let rpm = RadicalPairMechanism::new(phi);
+    rpm.get_yield()
+}
+
+#[no_mangle]
+pub extern "C" fn nocturne_hal_rpow_signature(sample: *const c_char) -> *mut c_char {
+    if sample.is_null() {
+        return CString::new("Error: Null sample").unwrap().into_raw();
+    }
+    let c_str = unsafe { std::ffi::CStr::from_ptr(sample) };
+    let sample_str = c_str.to_str().unwrap_or("invalid utf8");
+
+    // Simulate Option B: Hal's RPoW Signature
+    let mut hasher = Sha512::new();
+    hasher.update(sample_str);
+    hasher.update(SATOSHI.to_le_bytes());
+    let result = hasher.finalize();
+
+    let output = format!("Hal's RPoW Signature [∞+30]: {}", hex::encode(&result[..32]));
+    CString::new(output).unwrap().into_raw()
+}
+
+#[no_mangle]
 pub extern "C" fn simulate_qlink() -> *mut c_char {
     let mut output = String::new();
     output.push_str("--- qHTTP OVER STARLINK SIMULATION ---\n\n");

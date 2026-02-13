@@ -24,4 +24,10 @@ char *hello_nocturne(void);
 
 void nocturne_free_string(char *s);
 
+double nocturne_pineal_transduce(double phi);
+
+double nocturne_get_syzygy(double phi);
+
+char *nocturne_hal_rpow_signature(const char *sample);
+
 char *simulate_qlink(void);

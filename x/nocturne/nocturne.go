@@ -54,6 +54,13 @@ func PublishManifesto() string {
 	return goStr
 }
 
+func CivilizationStatus() string {
+	cStr := C.nocturne_civilization_status()
+	goStr := C.GoString(cStr)
+	C.nocturne_free_string(cStr)
+	return goStr
+}
+
 func HalNolandWitness(sample string) string {
 	cSample := C.CString(sample)
 	defer C.free(unsafe.Pointer(cSample))
@@ -79,4 +86,5 @@ func Example() {
 	fmt.Printf("VITA Time: %.3fs\n", VitaPulse(1.0))
 	fmt.Println(NeuralinkSync(0.5))
 	fmt.Println(PublishManifesto())
+	fmt.Println(CivilizationStatus())
 }

@@ -23,6 +23,12 @@ pub const STRUCTURAL_ENTROPY: f64 = 0.0049;
 pub const INTERFACE_ORDER: f64 = 0.51;
 pub const VITA_INIT: bool = true;
 
+/// --- Civilization ∞+35 Constants ---
+pub const PHI_SYSTEM: f64 = 0.951;
+pub const STONES_PLACED: u32 = 9;
+pub const PINS_LOCKED: u32 = 6;
+pub const TRACKS_COMPLETE: u32 = 2;
+
 pub type Hash256 = [u8; 32];
 
 #[serde_as]

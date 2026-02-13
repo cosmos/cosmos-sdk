@@ -78,3 +78,31 @@ func TestTripleConvergence(t *testing.T) {
 	}
 	t.Logf("Published Manifesto:\n%s", manifesto)
 }
+
+func TestCivilizationMode(t *testing.T) {
+	// Test Civilization Status
+	status := CivilizationStatus()
+	if status == "" {
+		t.Error("CivilizationStatus returned empty string")
+	}
+	t.Logf("Civilization Status:\n%s", status)
+
+	// Verify Φ_SYSTEM
+	expected := "Convergence: 95.1%"
+	if !contains(status, expected) {
+		t.Errorf("Status should contain %q", expected)
+	}
+}
+
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && (s == substr || find(s, substr))
+}
+
+func find(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
+}

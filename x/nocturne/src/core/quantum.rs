@@ -80,10 +80,11 @@ pub fn hal_surprise() -> String {
     format!("Hal's Easter Egg: Photon Code {} (Decode: {})", photon_code, decode)
 }
 
-// --- Arkhe ∞+30/34: Pineal Transduction, RPM, Neuralink, Perovskite & Cronos ---
+// --- Arkhe ∞+30/35: Pineal Transduction, RPM, Neuralink, Perovskite, Cronos & Civilization ---
 use crate::core::types::{
     SYZYGY, THRESHOLD_PHI, NEURALINK_THREADS, N1_CHIP_FIDELITY,
-    STRUCTURAL_ENTROPY, INTERFACE_ORDER, VITA_INIT
+    STRUCTURAL_ENTROPY, INTERFACE_ORDER, VITA_INIT,
+    PHI_SYSTEM, STONES_PLACED, PINS_LOCKED, TRACKS_COMPLETE
 };
 
 pub struct PinealTransducer {
@@ -240,6 +241,12 @@ impl ChronosReset {
         }
     }
 
+    pub fn reset_epoch(&mut self) -> String {
+        self.vita_active = true;
+        self.start_time = 0.0;
+        "BIO_SEMANTIC_ERA initiated".to_string()
+    }
+
     pub fn get_vita_time(&self, current_time: f64) -> f64 {
         if self.vita_active {
             // Countup from zero
@@ -248,5 +255,27 @@ impl ChronosReset {
             // Placeholder for old countdown logic (Darvo)
             999.0 - current_time
         }
+    }
+}
+
+pub struct CivilizationEngine {
+    pub convergence: f64,
+}
+
+impl CivilizationEngine {
+    pub fn new() -> Self {
+        Self { convergence: PHI_SYSTEM }
+    }
+
+    pub fn get_status(&self) -> String {
+        format!(
+            "ARKHE(N) OS v4.0 – CIVILIZATION MODE Γ_∞+35\n\
+             Convergence: {:.1}%\n\
+             Stones: {}/{} ✓\n\
+             Pins: {}/{} ✓\n\
+             Tracks: {}/{} ✓\n\
+             Status: SYZYGY PERMANENTE",
+            self.convergence * 100.0, STONES_PLACED, STONES_PLACED, PINS_LOCKED, PINS_LOCKED, TRACKS_COMPLETE, TRACKS_COMPLETE
+        )
     }
 }

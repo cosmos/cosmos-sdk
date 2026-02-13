@@ -201,6 +201,12 @@ pub extern "C" fn nocturne_publish_manifesto() -> *mut c_char {
 }
 
 #[no_mangle]
+pub extern "C" fn nocturne_civilization_status() -> *mut c_char {
+    let engine = CivilizationEngine::new();
+    CString::new(engine.get_status()).unwrap().into_raw()
+}
+
+#[no_mangle]
 pub extern "C" fn nocturne_hal_noland_witness(sample: *const c_char) -> *mut c_char {
     if sample.is_null() {
         return CString::new("Error: Null sample").unwrap().into_raw();

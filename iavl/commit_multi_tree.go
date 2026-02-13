@@ -52,6 +52,11 @@ type CommitMultiTree struct {
 	lastPruneVersion uint64
 }
 
+func (db *CommitMultiTree) EarliestVersion() int64 {
+	//TODO implement me
+	return 0
+}
+
 type storeData struct {
 	key   storetypes.StoreKey
 	typ   storetypes.StoreType

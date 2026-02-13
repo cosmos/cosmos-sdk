@@ -15,6 +15,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
+	"cosmossdk.io/store/cachekv"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/iavl/internal"
 )
@@ -119,7 +120,7 @@ type commitTreeFinalizer struct {
 	workingHash        storetypes.CommitID
 }
 
-func (c *CommitTree) StartCommit(ctx context.Context, updates iter.Seq[KVUpdate], updateCount int) storetypes.CommitFinalizer {
+func (c *CommitTree) StartCommit(ctx context.Context, updates iter.Seq[cachekv.Update[[]byte]], updateCount int) storetypes.CommitFinalizer {
 	cancelCtx, cancel := context.WithCancel(ctx)
 	committer := &commitTreeFinalizer{
 		CommitTree:         c,
@@ -140,7 +141,7 @@ func (c *CommitTree) StartCommit(ctx context.Context, updates iter.Seq[KVUpdate]
 
 var rolledbackErr = errors.New("commit rolled back")
 
-func (c *commitTreeFinalizer) commit(ctx context.Context, updates iter.Seq[KVUpdate], updateCount int) error {
+func (c *commitTreeFinalizer) commit(ctx context.Context, updates iter.Seq[cachekv.Update[[]byte]], updateCount int) error {
 	c.commitMutex.Lock()
 	defer c.commitMutex.Unlock()
 
@@ -183,7 +184,7 @@ type prepareCommitResult struct {
 	mutationCtx *internal.MutationContext
 }
 
-func (c *commitTreeFinalizer) prepareCommit(ctx context.Context, updates iter.Seq[KVUpdate], updateCount int) (*prepareCommitResult, error) {
+func (c *commitTreeFinalizer) prepareCommit(ctx context.Context, updates iter.Seq[cachekv.Update[[]byte]], updateCount int) (*prepareCommitResult, error) {
 	ctx, span := tracer.Start(ctx, "PrepareCommit")
 	defer span.End()
 

@@ -156,6 +156,15 @@ func (st *Store) LastCommitID() types.CommitID {
 	}
 }
 
+// PausePruning implements CommitKVStore interface.
+func (st *Store) PausePruning(pause bool) {
+	if pause {
+		st.tree.SetCommitting()
+	} else {
+		st.tree.UnsetCommitting()
+	}
+}
+
 // SetPruning panics as pruning options should be provided at initialization
 // since IAVl accepts pruning options directly.
 func (st *Store) SetPruning(_ pruningtypes.PruningOptions) {

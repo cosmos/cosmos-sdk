@@ -31,6 +31,14 @@ type Committer interface {
 	GetPruning() pruningtypes.PruningOptions
 }
 
+type PausablePruner interface {
+	// PausePruning let the pruning handler know that the store is being committed
+	// or not, so the handler can decide to prune or not the store.
+	//
+	// NOTE: PausePruning(true) should be called before Commit() and PausePruning(false)
+	PausePruning(bool)
+}
+
 // CommitStore is an interface for Commit and Store capabilities.
 type CommitStore interface {
 	Committer

@@ -2,7 +2,6 @@ package types
 
 import (
 	"errors"
-	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -31,7 +30,7 @@ func (p Params) Validate() error {
 	if len(p.SendEnabled) > 0 {
 		return errors.New("use of send_enabled in params is no longer supported")
 	}
-	return validateIsBool(p.DefaultSendEnabled)
+	return nil
 }
 
 // Validate gets any errors with this SendEnabled entry.
@@ -46,13 +45,4 @@ func NewSendEnabled(denom string, sendEnabled bool) *SendEnabled {
 		Denom:   denom,
 		Enabled: sendEnabled,
 	}
-}
-
-// validateIsBool is used by the x/params module to validate that a thing is a bool.
-func validateIsBool(i any) error {
-	_, ok := i.(bool)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-	return nil
 }

@@ -21,29 +21,15 @@ func (p Params) ValidateBasic() error {
 	return validateCommunityTax(p.CommunityTax)
 }
 
-func validateCommunityTax(i any) error {
-	v, ok := i.(math.LegacyDec)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	if v.IsNil() {
+func validateCommunityTax(tax math.LegacyDec) error {
+	if tax.IsNil() {
 		return fmt.Errorf("community tax must be not nil")
 	}
-	if v.IsNegative() {
-		return fmt.Errorf("community tax must be positive: %s", v)
+	if tax.IsNegative() {
+		return fmt.Errorf("community tax must be positive: %s", tax)
 	}
-	if v.GT(math.LegacyOneDec()) {
-		return fmt.Errorf("community tax too large: %s", v)
-	}
-
-	return nil
-}
-
-func validateWithdrawAddrEnabled(i any) error {
-	_, ok := i.(bool)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
+	if tax.GT(math.LegacyOneDec()) {
+		return fmt.Errorf("community tax too large: %s", tax)
 	}
 
 	return nil

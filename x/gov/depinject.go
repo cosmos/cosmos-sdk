@@ -17,16 +17,15 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 func init() {
 	appmodule.Register(
 		&modulev1.Module{},
-		appmodule.Provide(ProvideModule, ProvideKeyTable),
-		appmodule.Invoke(InvokeAddRoutes, InvokeSetHooks))
+		appmodule.Provide(ProvideModule),
+		appmodule.Invoke(InvokeAddRoutes, InvokeSetHooks),
+	)
 }
 
 type ModuleInputs struct {
@@ -45,9 +44,6 @@ type ModuleInputs struct {
 
 	// StakingKeeper is required if CalculateVoteResultsAndVotingPowerFn is not provided
 	StakingKeeper govtypes.StakingKeeper `optional:"true"`
-
-	// LegacySubspace is used solely for migration of x/params managed parameters
-	LegacySubspace govtypes.ParamSubspace `optional:"true"`
 }
 
 type ModuleOutputs struct {
@@ -90,14 +86,10 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority.String(),
 		tallyFn,
 	)
-	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper, in.LegacySubspace)
+	m := NewAppModule(in.Cdc, k, in.AccountKeeper, in.BankKeeper)
 	hr := v1beta1.HandlerRoute{Handler: v1beta1.ProposalHandler, RouteKey: govtypes.RouterKey}
 
 	return ModuleOutputs{Module: m, Keeper: k, HandlerRoute: hr}
-}
-
-func ProvideKeyTable() paramtypes.KeyTable {
-	return v1.ParamKeyTable() //nolint:staticcheck // we still need this for upgrades
 }
 
 func InvokeAddRoutes(keeper *keeper.Keeper, routes []v1beta1.HandlerRoute) {

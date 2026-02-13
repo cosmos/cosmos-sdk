@@ -7,6 +7,17 @@ import (
 	"unsafe"
 )
 
+const (
+	sizeChangesetInfo = 32
+)
+
+func init() {
+	// Verify the size of ChangesetInfo is what we expect it to be at runtime.
+	if unsafe.Sizeof(ChangesetInfo{}) != sizeChangesetInfo {
+		panic(fmt.Sprintf("invalid ChangesetInfo size: got %d, want %d", unsafe.Sizeof(ChangesetInfo{}), sizeChangesetInfo))
+	}
+}
+
 // ChangesetInfo holds metadata about a changeset.
 // This mainly tracks the start and end version of the changeset and also contains statistics about orphans in the
 // changeset so that compaction can be efficiently scheduled.
@@ -34,7 +45,7 @@ type ChangesetInfo struct {
 // RewriteChangesetInfo rewrites the info file with the given changeset info.
 // This method is okay to call the first time the file is created as well.
 func RewriteChangesetInfo(file *os.File, info *ChangesetInfo) error {
-	data := unsafe.Slice((*byte)(unsafe.Pointer(info)), int(unsafe.Sizeof(*info)))
+	data := unsafe.Slice((*byte)(unsafe.Pointer(info)), sizeChangesetInfo)
 	if _, err := file.WriteAt(data, 0); err != nil {
 		return fmt.Errorf("failed to write changeset info: %w", err)
 	}
@@ -45,8 +56,7 @@ func RewriteChangesetInfo(file *os.File, info *ChangesetInfo) error {
 // ReadChangesetInfo reads changeset info from a file. It returns an empty default struct if file is empty.
 func ReadChangesetInfo(file *os.File) (*ChangesetInfo, error) {
 	var info ChangesetInfo
-	size := int(unsafe.Sizeof(info))
-	data := unsafe.Slice((*byte)(unsafe.Pointer(&info)), size)
+	data := unsafe.Slice((*byte)(unsafe.Pointer(&info)), sizeChangesetInfo)
 
 	n, err := file.ReadAt(data, 0)
 	if err == io.EOF && n == 0 {
@@ -55,8 +65,8 @@ func ReadChangesetInfo(file *os.File) (*ChangesetInfo, error) {
 	if err != nil && err != io.EOF {
 		return nil, fmt.Errorf("failed to read changeset info: %w", err)
 	}
-	if n != size {
-		return nil, fmt.Errorf("info file has unexpected size: %d, expected %d", n, size)
+	if n != sizeChangesetInfo {
+		return nil, fmt.Errorf("info file has unexpected size: %d, expected %d", n, sizeChangesetInfo)
 	}
 
 	return &info, nil

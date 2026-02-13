@@ -9,9 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	systest "cosmossdk.io/systemtests"
-
 	"github.com/cosmos/cosmos-sdk/testutil"
+	systest "github.com/cosmos/cosmos-sdk/testutil/systemtests"
 )
 
 func TestUnorderedTXDuplicate(t *testing.T) {

@@ -626,9 +626,9 @@ func (k Keeper) SubmitProposal(goCtx context.Context, msg *group.MsgSubmitPropos
 		return nil, err
 	}
 
-	// Try to execute proposal immediately
+	// Try to execute proposal immediately. Autovote occurs only when exec is EXEC_TRY.
 	if msg.Exec == group.Exec_EXEC_TRY {
-		// Consider proposers as Yes votes
+		// Proposers are automatically counted as Yes votes
 		for _, proposer := range msg.Proposers {
 			ctx.GasMeter().ConsumeGas(gasCostPerIteration, "vote on proposal")
 			_, err = k.Vote(ctx, &group.MsgVote{

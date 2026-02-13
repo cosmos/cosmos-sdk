@@ -385,7 +385,7 @@ func TestMsgServerCreateValidator(t *testing.T) {
 		_, err = msgServer.CreateValidator(f.ctx, msg2)
 		require.Error(t, err)
 		// Error will be a uniqueness constraint violation on the operator address index
-		require.Contains(t, err.Error(), "uniqueness constrain violation")
+		require.Contains(t, err.Error(), "uniqueness constraint violation")
 	})
 
 	t.Run("rejects same key for operator and consensus", func(t *testing.T) {

@@ -119,6 +119,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/auth) [#25828](https://github.com/cosmos/cosmos-sdk/pull/25828) Limits pagination at default for values that exceed it.
 * (x/staking) [#25829](https://github.com/cosmos/cosmos-sdk/pull/25829) Validates case-sensitivity on authz grands in x/staking.
 * (mempool) [#25869](https://github.com/cosmos/cosmos-sdk/pull/25869) fix(mempool): add thread safety to NextSenderTx.
+* (store/snapshots) [#25913](https://github.com/cosmos/cosmos-sdk/pull/25913) fix(store/snapshots): flush chunk files to disk before recording snapshot.
 
 ### Deprecated
 

@@ -312,6 +312,38 @@ pub extern "C" fn nocturne_get_proximity(c1: f64, c2: f64) -> f64 {
 }
 
 #[no_mangle]
+pub extern "C" fn nocturne_harvest_zpf(beat_freq: f64) -> f64 {
+    let engine = ZeroPointEngine::new();
+    engine.harvest(beat_freq)
+}
+
+#[no_mangle]
+pub extern "C" fn nocturne_demodulate_signal(snr: f64, c: f64, f: f64) -> *mut c_char {
+    let demod = QAMDemodulator::new(snr);
+    CString::new(demod.demodulate(c, f)).unwrap().into_raw()
+}
+
+#[no_mangle]
+pub extern "C" fn nocturne_tic_tac_jump() -> *mut c_char {
+    let drive = GradientHesitationDrive::new();
+    CString::new(drive.tic_tac_jump()).unwrap().into_raw()
+}
+
+#[no_mangle]
+pub extern "C" fn nocturne_unify_zpf() -> *mut c_char {
+    let engine = ZeroPointEngine::new();
+    CString::new(engine.unify_patents()).unwrap().into_raw()
+}
+
+#[no_mangle]
+pub extern "C" fn nocturne_get_qam_metrics(snr: f64, hesitation: f64) -> *mut c_char {
+    let demod = QAMDemodulator::new(snr);
+    let valid = if demod.check_evm(hesitation) { "PASS" } else { "FAIL" };
+    let res = format!("QAM Status: SNR={:.1} EVM={} Result={}", snr, hesitation, valid);
+    CString::new(res).unwrap().into_raw()
+}
+
+#[no_mangle]
 pub extern "C" fn nocturne_hal_echo(message: *const c_char) -> *mut c_char {
     let _input = if message.is_null() { "" } else { unsafe { std::ffi::CStr::from_ptr(message) }.to_str().unwrap_or("") };
 

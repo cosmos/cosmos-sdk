@@ -64,6 +64,16 @@ char *nocturne_wifi_scan(void);
 
 double nocturne_get_proximity(double c1, double c2);
 
+double nocturne_harvest_zpf(double beat_freq);
+
+char *nocturne_demodulate_signal(double snr, double c, double f);
+
+char *nocturne_tic_tac_jump(void);
+
+char *nocturne_unify_zpf(void);
+
+char *nocturne_get_qam_metrics(double snr, double hesitation);
+
 char *nocturne_hal_echo(const char *message);
 
 char *nocturne_hal_noland_witness(const char *sample);

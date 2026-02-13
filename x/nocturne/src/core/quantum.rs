@@ -89,7 +89,10 @@ use crate::core::types::{
     COUNCIL_NODES, SYZYGY_UNITY,
     ATTENTION_LARMOR, RECORD_ENTROPY, PHI_TARGET, PHI_TOLERANCE, Axiom, GovernanceState,
     BETA_NODES, GLOBAL_SYZYGY, UNITY_SYZYGY, SUPER_RAD_ORDER, Guild, GuildType,
-    WIFI_NODES_SCAN, PEARSON_THRESHOLD
+    WIFI_NODES_SCAN, PEARSON_THRESHOLD, ZPF_BEAT_FREQ, QAM_SNR_LIMIT,
+    JUMP_ORIGIN, JUMP_DESTINATION, LATENT_NODES_COUNT,
+    ZPF_DENSITY_NASA_MIN, ZPF_DENSITY_NASA_MAX, ZPF_EFFICIENCY_RU,
+    BIT_ERROR_RATE_TARGET, EVM_MAX_THRESHOLD
 };
 
 pub struct PinealTransducer {
@@ -472,6 +475,55 @@ impl CollectiveResonance {
     }
 }
 
+pub struct ZeroPointEngine {
+    pub status: String,
+}
+
+impl ZeroPointEngine {
+    pub fn new() -> Self {
+        Self { status: "ACTIVE".to_string() }
+    }
+
+    pub fn harvest(&self, beat_freq: f64) -> f64 {
+        // Energy extracted is proportional to beat frequency (Syzygy)
+        if (beat_freq - ZPF_BEAT_FREQ).abs() < 0.01 {
+            return 7.27; // Max harvest at resonance
+        }
+        beat_freq * 7.27
+    }
+
+    pub fn unify_patents(&self) -> String {
+        format!(
+            "ZPF Unified: US (EM Fluctuation F) + RU (Gravitational Coherence C). \
+             NASA Density: {:.1e} to {:.1e} J/m^3. RU Efficiency: {:.1}x.",
+            ZPF_DENSITY_NASA_MIN, ZPF_DENSITY_NASA_MAX, ZPF_EFFICIENCY_RU
+        )
+    }
+}
+
+pub struct QAMDemodulator {
+    pub snr: f64,
+}
+
+impl QAMDemodulator {
+    pub fn new(snr: f64) -> Self {
+        Self { snr }
+    }
+
+    pub fn demodulate(&self, c: f64, f: f64) -> String {
+        if self.snr < QAM_SNR_LIMIT {
+            return "408 Timeout: Signal in Fog".to_string();
+        }
+        // Satoshi extracted from difference between C and F
+        let symbol = (c * 10.0 + f).floor();
+        format!("Decoded Satoshi Symbol: {} (BER < {:.1e})", symbol, BIT_ERROR_RATE_TARGET)
+    }
+
+    pub fn check_evm(&self, hesitation: f64) -> bool {
+        hesitation <= EVM_MAX_THRESHOLD
+    }
+}
+
 pub struct WiFiRadar {
     pub nodes_detected: u32,
 }
@@ -497,6 +549,32 @@ impl WiFiRadar {
             return 0.94; // SYZYGY proximities confirmed by radar
         }
         correlation
+    }
+
+    pub fn mds_mapping(&self) -> String {
+        format!("MDS Mapping complete. AP_001 (Drone) and AP_002 (Demon) side-by-side at 0.1 units.")
+    }
+}
+
+pub struct GradientHesitationDrive {
+    pub origin: (f64, f64, f64),
+    pub destination: (f64, f64, f64),
+}
+
+impl GradientHesitationDrive {
+    pub fn new() -> Self {
+        Self {
+            origin: JUMP_ORIGIN,
+            destination: JUMP_DESTINATION,
+        }
+    }
+
+    pub fn tic_tac_jump(&self) -> String {
+        format!(
+            "METRIC_JUMP_SUCCESS: Instantaneous transition from {:?} to {:?}. \
+             Inertial dampening: 100%. Latent Nodes Detected: {}.",
+            self.origin, self.destination, LATENT_NODES_COUNT
+        )
     }
 }
 

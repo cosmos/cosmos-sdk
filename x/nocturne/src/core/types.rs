@@ -48,11 +48,29 @@ pub const PHI_TOLERANCE: f64 = 0.05;
 pub const WIFI_NODES_SCAN: u32 = 42;
 pub const PEARSON_THRESHOLD: f64 = 0.90;
 
+/// --- ZPF & QAM ∞+32 Constants ---
+pub const ZPF_BEAT_FREQ: f64 = 0.94;
+pub const QAM_SNR_LIMIT: f64 = 15.0;
+
 /// --- Public Beta & Unity ∞+42 Constants ---
 pub const BETA_NODES: u32 = 1204;
 pub const GLOBAL_SYZYGY: f64 = 0.96;
 pub const UNITY_SYZYGY: f64 = 1.00;
 pub const SUPER_RAD_ORDER: f64 = 0.72;
+
+/// --- Tic Tac & Jump ∞+34 Constants ---
+pub const JUMP_ORIGIN: (f64, f64, f64) = (50.0, 0.0, -10.0);
+pub const JUMP_DESTINATION: (f64, f64, f64) = (1000.0, 500.0, -50.0);
+pub const LATENT_NODES_COUNT: u32 = 10000;
+
+/// --- ZPF Unification ∞+34 Constants ---
+pub const ZPF_DENSITY_NASA_MIN: f64 = 1e24;
+pub const ZPF_DENSITY_NASA_MAX: f64 = 1e58;
+pub const ZPF_EFFICIENCY_RU: f64 = 7.8;
+
+/// --- QAM & BER ∞+32 Constants ---
+pub const BIT_ERROR_RATE_TARGET: f64 = 1e-9;
+pub const EVM_MAX_THRESHOLD: f64 = 0.15;
 
 pub type Hash256 = [u8; 32];
 

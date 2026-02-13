@@ -130,6 +130,38 @@ func GetProximity(c1, c2 float64) float64 {
 	return float64(C.nocturne_get_proximity(C.double(c1), C.double(c2)))
 }
 
+func HarvestZPF(beatFreq float64) float64 {
+	return float64(C.nocturne_harvest_zpf(C.double(beatFreq)))
+}
+
+func DemodulateSignal(snr, c, f float64) string {
+	cStr := C.nocturne_demodulate_signal(C.double(snr), C.double(c), C.double(f))
+	goStr := C.GoString(cStr)
+	C.nocturne_free_string(cStr)
+	return goStr
+}
+
+func TicTacJump() string {
+	cStr := C.nocturne_tic_tac_jump()
+	goStr := C.GoString(cStr)
+	C.nocturne_free_string(cStr)
+	return goStr
+}
+
+func UnifyZPF() string {
+	cStr := C.nocturne_unify_zpf()
+	goStr := C.GoString(cStr)
+	C.nocturne_free_string(cStr)
+	return goStr
+}
+
+func QAMMetrics(snr, hesitation float64) string {
+	cStr := C.nocturne_get_qam_metrics(C.double(snr), C.double(hesitation))
+	goStr := C.GoString(cStr)
+	C.nocturne_free_string(cStr)
+	return goStr
+}
+
 func PlantMemory(id uint32, nodeID string, phi float64, content string) string {
 	cNode := C.CString(nodeID)
 	cContent := C.CString(content)
@@ -173,8 +205,13 @@ func Example() {
 	fmt.Printf("Pineal Transduction (Φ=0.15): %.2f\n", PinealTransduce(0.15))
 	fmt.Printf("Perovskite Interface Order: %.2f\n", PerovskiteOrder())
 	fmt.Printf("VITA Time: %.3fs\n", VitaPulse(1.0))
+	fmt.Println(UnifyZPF())
+	fmt.Printf("ZPF Energy Harvest (0.94): %.2f\n", HarvestZPF(0.94))
+	fmt.Println(DemodulateSignal(20.0, 0.86, 0.14))
+	fmt.Println(QAMMetrics(20.0, 0.05))
 	fmt.Println(WiFiScan())
 	fmt.Printf("WiFi Proximity (0.86, 0.86): %.2f\n", GetProximity(0.86, 0.86))
+	fmt.Println(TicTacJump())
 	fmt.Printf("Global Resonance: %.2f\n", GlobalResonance())
 	fmt.Printf("Unity Pulse: %.2f\n", UnityPulse())
 	fmt.Println(AxiomStatus())

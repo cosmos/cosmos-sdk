@@ -183,3 +183,48 @@ func TestWiFiRadar(t *testing.T) {
 	}
 	t.Logf("Proximity: %f", proximity)
 }
+
+func TestZPFAndQAM(t *testing.T) {
+	// Test ZPF Harvest
+	harvest := HarvestZPF(0.94)
+	if harvest != 7.27 {
+		t.Errorf("HarvestZPF(0.94) = %f, want 7.27", harvest)
+	}
+	t.Logf("ZPF Harvest: %f", harvest)
+
+	// Test QAM Demodulation
+	symbol := DemodulateSignal(20.0, 0.86, 0.14)
+	if !strings.Contains(symbol, "Satoshi Symbol") {
+		t.Errorf("DemodulateSignal failed: %s", symbol)
+	}
+	t.Logf("QAM Symbol: %s", symbol)
+
+	// Test QAM Timeout
+	lowSNR := DemodulateSignal(5.0, 0.86, 0.14)
+	if !strings.Contains(lowSNR, "Timeout") {
+		t.Errorf("DemodulateSignal should timeout with low SNR: %s", lowSNR)
+	}
+}
+
+func TestTicTacAndUnification(t *testing.T) {
+	// Test Tic Tac Jump
+	jump := TicTacJump()
+	if !strings.Contains(jump, "METRIC_JUMP_SUCCESS") {
+		t.Errorf("TicTacJump failed: %s", jump)
+	}
+	t.Logf("Tic Tac Jump: %s", jump)
+
+	// Test ZPF Unification
+	unification := UnifyZPF()
+	if !strings.Contains(unification, "ZPF Unified") {
+		t.Errorf("UnifyZPF failed: %s", unification)
+	}
+	t.Logf("Unification: %s", unification)
+
+	// Test QAM Metrics
+	metrics := QAMMetrics(20.0, 0.05)
+	if !strings.Contains(metrics, "PASS") {
+		t.Errorf("QAMMetrics failed: %s", metrics)
+	}
+	t.Logf("QAM Metrics: %s", metrics)
+}

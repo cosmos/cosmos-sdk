@@ -31,7 +31,7 @@ the core functionality of your blockchain.  They can be thought of as ways to ex
 capabilities of your blockchain or further specialize it.
 
 * [Authz](./authz/README.md) - Authorization for accounts to perform actions on behalf of other accounts.
-* [Epochs](./epochs/README.md) - Registration so SDK modules can have logic to be executed at the timed tickers.
+* [Epochs](./epochs/README.md) - Registration so SDK modules can have logic to be executed on timed tickers.
 * [Feegrant](./feegrant/README.md) - Grant fee allowances for executing transactions.
 * [ProtocolPool](./protocolpool/README.md) - Extended management of community pool functionality.
 
@@ -64,3 +64,16 @@ The CosmWasm module enables smart contracts, learn more by going to their [docum
 ## EVM
 
 Read more about writing smart contracts with solidity at the official [`evm` documentation page](https://evm.cosmos.network/).
+
+## Enterprise Modules
+
+In addition to these core and supplementary modules, the Cosmos SDK maintains enterprise-grade modules in the `enterprise/` directory.
+
+**Enterprise modules use different licenses than the Apache 2.0 core SDK modules.** Please review the LICENSE file in each enterprise module directory before use.
+
+### Available Enterprise Modules
+
+* [PoA (Proof of Authority)](../enterprise/poa/README.md) - Admin-controlled validator set for permissioned networks with governance integration.
+
+For complete information about enterprise modules, licensing, and documentation, see the [Enterprise Modules documentation](../enterprise/README.md).
+

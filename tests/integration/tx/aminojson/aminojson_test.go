@@ -33,8 +33,6 @@ import (
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	vestingapi "cosmossdk.io/api/cosmos/vesting/v1beta1"
 	"cosmossdk.io/math"
-	"cosmossdk.io/x/tx/signing/aminojson"
-	signing_testutil "cosmossdk.io/x/tx/signing/testutil"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	groupmodule "github.com/cosmos/cosmos-sdk/contrib/x/group/module"
@@ -74,6 +72,8 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/cosmos-sdk/x/tx/signing/aminojson"
+	signing_testutil "github.com/cosmos/cosmos-sdk/x/tx/signing/testutil"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 )
 
@@ -162,7 +162,7 @@ func TestAminoJSON_Equivalence(t *testing.T) {
 				signBz, err := handler.GetSignBytes(context.Background(), signerData, txData)
 				require.NoError(t, err)
 
-				legacyHandler := tx.NewSignModeLegacyAminoJSONHandler()
+				legacyHandler := tx.NewSignModeLegacyAminoJSONHandler() //nolint:staticcheck // needed for legacy testing
 				txBuilder := encCfg.TxConfig.NewTxBuilder()
 				require.NoError(t, txBuilder.SetMsgs([]types.Msg{tt.Gogo}...))
 				txBuilder.SetMemo(handlerOptions.Memo)
@@ -457,7 +457,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			require.Equal(t, string(gogoBytes), string(newGogoBytes))
 
 			// test amino json signer handler equivalence
-			msg, ok := tc.gogo.(legacytx.LegacyMsg)
+			msg, ok := tc.gogo.(legacytx.LegacyMsg) //nolint:staticcheck // needed for legacy testing
 			if !ok {
 				// not signable
 				return
@@ -482,7 +482,7 @@ func TestAminoJSON_LegacyParity(t *testing.T) {
 			signBz, err := handler.GetSignBytes(context.Background(), signerData, txData)
 			require.NoError(t, err)
 
-			legacyHandler := tx.NewSignModeLegacyAminoJSONHandler()
+			legacyHandler := tx.NewSignModeLegacyAminoJSONHandler() //nolint:staticcheck // needed for legacy testing
 			txBuilder := encCfg.TxConfig.NewTxBuilder()
 			require.NoError(t, txBuilder.SetMsgs([]types.Msg{msg}...))
 			txBuilder.SetMemo(handlerOptions.Memo)

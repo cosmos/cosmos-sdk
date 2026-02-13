@@ -9,7 +9,7 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -22,8 +22,8 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
-// SetupSimulation creates the config, db (levelDB), temporary directory and logger for the simulation tests.
-// If `skip` is false it skips the current test. `skip` should be set using the `FlagEnabledValue` flag.
+// SetupSimulation creates the DB (using config.DBBackend), temporary directory and logger for simulation tests.
+// If `skip` is false it returns `true` for the "skip" return value without creating any resources.
 // Returns error on an invalid db instantiation or temp dir creation.
 func SetupSimulation(config simtypes.Config, dirPrefix, dbName string, verbose, skip bool) (dbm.DB, string, log.Logger, bool, error) {
 	if !skip {
@@ -52,6 +52,7 @@ func SetupSimulation(config simtypes.Config, dirPrefix, dbName string, verbose, 
 
 // SimulationOperations retrieves the simulation params from the provided file path
 // and returns all the modules weighted operations
+//
 // Deprecated: use BuildSimulationOperations with TxConfig
 func SimulationOperations(app runtime.AppI, cdc codec.JSONCodec, config simtypes.Config) []simtypes.WeightedOperation {
 	return BuildSimulationOperations(app, cdc, config, moduletestutil.MakeTestTxConfig())

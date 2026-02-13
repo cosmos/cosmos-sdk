@@ -54,7 +54,7 @@ CommunityPoolSpend can be called by the module authority (default governance mod
 ### CreateContinuousFund
 
 CreateContinuousFund is a message used to initiate a continuous fund for a specific recipient. The proposed percentage of funds will be distributed only on withdraw request for the recipient. The fund distribution continues until expiry time is reached or continuous fund request is canceled.
-NOTE:  This feature is designed to work with the SDK's default bond denom. 
+NOTE:  This feature is designed to work with the SDK's default bond denom.
 
 ```protobuf
   // CreateContinuousFund defines a method to distribute a percentage of funds to an address continuously.
@@ -71,6 +71,32 @@ CancelContinuousFund is a message used to cancel an existing continuous fund pro
 ```protobuf
   // CancelContinuousFund defines a method for cancelling continuous fund.
   rpc CancelContinuousFund(MsgCancelContinuousFund) returns (MsgCancelContinuousFundResponse);
+```
+
+## Keepers
+
+### Keeper Functions
+
+The `x/protocolpool` keeper provides the following functions for managing the community pool:
+
+```go
+// GetCommunityPool gets the community pool balance.
+func (k Keeper) GetCommunityPool(ctx sdk.Context) (sdk.Coins, error)
+
+// FundCommunityPool allows an account to directly fund the community pool.
+func (k Keeper) FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
+
+// DistributeFromCommunityPool distributes funds from the protocolpool module account
+// to a receiver address.
+func (k Keeper) DistributeFromCommunityPool(ctx sdk.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error
+
+// DistributeFunds distributes funds from the ProtocolPoolEscrow account.
+// For each continuous fund, it distributes according to percentage, removes expired funds,
+// and sends remaining funds to the community pool. Called in BeginBlocker.
+func (k Keeper) DistributeFunds(ctx sdk.Context) error
+
+// GetAllContinuousFunds returns all continuous funds in the store.
+func (k Keeper) GetAllContinuousFunds(ctx sdk.Context) ([]types.ContinuousFund, error)
 ```
 
 ## Messages
@@ -91,7 +117,7 @@ https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/proto/cosmos/protocolp
 
 ```go
 func (k Keeper) FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error {
-	return k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, amount)
+ return k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, amount)
 }
 ```
 
@@ -110,7 +136,7 @@ The message will fail under the following conditions:
 
 ```go
 func (k Keeper) DistributeFromCommunityPool(ctx context.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error {
-	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiveAddr, amount)
+ return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiveAddr, amount)
 }
 ```
 
@@ -138,7 +164,7 @@ https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/x/protocolpool/keeper/
 
 ### MsgCancelContinuousFund
 
-This message is used to cancel an existing continuous fund proposal for a specific recipient. Once canceled, the continuous fund will no longer distribute funds at each begin block, and the state object will be removed. 
+This message is used to cancel an existing continuous fund proposal for a specific recipient. Once canceled, the continuous fund will no longer distribute funds at each begin block, and the state object will be removed.
 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/x/protocolpool/proto/cosmos/protocolpool/v1/tx.proto#L136-L161

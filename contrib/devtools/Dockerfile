@@ -2,8 +2,8 @@
 # docker build --pull --rm -f "contrib/devtools/Dockerfile" -t cosmossdk-proto:latest "contrib/devtools"
 # docker run --rm -v $(pwd):/workspace --workdir /workspace cosmossdk-proto sh ./scripts/protocgen.sh
 
-FROM bufbuild/buf:1.54.0 AS builder
-FROM golang:1.24-alpine
+FROM bufbuild/buf:1.64 AS builder
+FROM golang:1.25-alpine
 
 RUN apk add --no-cache \
   nodejs \
@@ -21,9 +21,9 @@ ARG UID=1000
 RUN adduser -u $UID -s /bin/sh $UNAME -D
 USER $UNAME
 
-ENV GOLANG_PROTOBUF_VERSION=1.36.6 \
+ENV GOLANG_PROTOBUF_VERSION=1.36.11 \
   GRPC_GATEWAY_VERSION=1.16.0 \
-  GRPC_GATEWAY_PROTOC_GEN_OPENAPIV2_VERSION=2.26.3
+  GRPC_GATEWAY_PROTOC_GEN_OPENAPIV2_VERSION=2.27.8
 
 RUN go install github.com/cosmos/cosmos-proto/cmd/protoc-gen-go-pulsar@latest && \
   go install google.golang.org/protobuf/cmd/protoc-gen-go@v${GOLANG_PROTOBUF_VERSION} && \

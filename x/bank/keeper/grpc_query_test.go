@@ -72,7 +72,7 @@ func (suite *KeeperTestSuite) TestQueryBalance() {
 			types.NewQueryBalanceRequest(addr, barDenom),
 			"",
 			func(res *types.QueryBalanceResponse) {
-				suite.True(res.Balance.IsEqual(newBarCoin(30)))
+				suite.True(res.Balance.Equal(newBarCoin(30)))
 			},
 		},
 	}

@@ -7,22 +7,27 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 
 	"cosmossdk.io/depinject"
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/x/auth/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -135,4 +140,244 @@ func (s *IntegrationTestSuite) TestGRPCQuery() {
 
 func TestIntegrationTestSuite(t *testing.T) {
 	suite.Run(t, new(IntegrationTestSuite))
+}
+
+func (s *IntegrationTestSuite) TestGetGRPCConnWithContext() {
+	defaultConn, err := grpc.NewClient("localhost:9090",
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	s.Require().NoError(err)
+	defer defaultConn.Close()
+
+	historicalConn, err := grpc.NewClient("localhost:9091",
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	s.Require().NoError(err)
+	defer historicalConn.Close()
+
+	historicalConns := config.HistoricalGRPCConnections{
+		config.BlockRange{100, 500}: historicalConn,
+	}
+	provider := client.NewGRPCConnProvider(defaultConn, historicalConns)
+	testCases := []struct {
+		name         string
+		height       int64
+		setupCtx     func() client.Context
+		expectedConn *grpc.ClientConn
+	}{
+		{
+			name:   "context with GRPCConnProvider and historical height",
+			height: 300,
+			setupCtx: func() client.Context {
+				return client.Context{}.
+					WithCodec(s.cdc).
+					WithGRPCClient(defaultConn).
+					WithGRPCConnProvider(provider).
+					WithHeight(300)
+			},
+			expectedConn: historicalConn,
+		},
+		{
+			name:   "context with GRPCConnProvider and latest height",
+			height: 0,
+			setupCtx: func() client.Context {
+				return client.Context{}.
+					WithCodec(s.cdc).
+					WithGRPCClient(defaultConn).
+					WithGRPCConnProvider(provider).
+					WithHeight(0)
+			},
+			expectedConn: defaultConn,
+		},
+		{
+			name:   "context without GRPCConnProvider",
+			height: 300,
+			setupCtx: func() client.Context {
+				return client.Context{}.
+					WithCodec(s.cdc).
+					WithGRPCClient(defaultConn).
+					WithHeight(300)
+			},
+			expectedConn: defaultConn,
+		},
+		{
+			name:   "context with nil historical connections map",
+			height: 100,
+			setupCtx: func() client.Context {
+				nilProvider := client.NewGRPCConnProvider(defaultConn, nil)
+				return client.Context{}.
+					WithCodec(s.cdc).
+					WithGRPCClient(defaultConn).
+					WithGRPCConnProvider(nilProvider).
+					WithHeight(100)
+			},
+			expectedConn: defaultConn,
+		},
+		{
+			name:   "context with empty historical connections map",
+			height: 100,
+			setupCtx: func() client.Context {
+				emptyProvider := client.NewGRPCConnProvider(defaultConn, config.HistoricalGRPCConnections{})
+				return client.Context{}.
+					WithCodec(s.cdc).
+					WithGRPCClient(defaultConn).
+					WithGRPCConnProvider(emptyProvider).
+					WithHeight(100)
+			},
+			expectedConn: defaultConn,
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			ctx := tc.setupCtx()
+			var actualConn *grpc.ClientConn
+			if ctx.GRPCConnProvider != nil {
+				actualConn = ctx.GRPCConnProvider.GetGRPCConn(ctx.Height)
+			} else {
+				actualConn = ctx.GRPCClient
+			}
+			s.Require().Equal(tc.expectedConn, actualConn)
+		})
+	}
+}
+
+func TestGetHeightFromMetadata(t *testing.T) {
+	tests := []struct {
+		name           string
+		setupContext   func() context.Context
+		expectedHeight int64
+	}{
+		{
+			name: "valid height in metadata",
+			setupContext: func() context.Context {
+				md := metadata.Pairs(grpctypes.GRPCBlockHeightHeader, "12345")
+				return metadata.NewOutgoingContext(context.Background(), md)
+			},
+			expectedHeight: 12345,
+		},
+		{
+			name: "zero height in metadata",
+			setupContext: func() context.Context {
+				md := metadata.Pairs(grpctypes.GRPCBlockHeightHeader, "0")
+				return metadata.NewOutgoingContext(context.Background(), md)
+			},
+			expectedHeight: 0,
+		},
+		{
+			name: "negative height returns zero",
+			setupContext: func() context.Context {
+				md := metadata.Pairs(grpctypes.GRPCBlockHeightHeader, "-100")
+				return metadata.NewOutgoingContext(context.Background(), md)
+			},
+			expectedHeight: 0,
+		},
+		{
+			name:           "no metadata returns zero",
+			setupContext:   context.Background,
+			expectedHeight: 0,
+		},
+		{
+			name: "empty height header returns zero",
+			setupContext: func() context.Context {
+				md := metadata.New(map[string]string{})
+				return metadata.NewOutgoingContext(context.Background(), md)
+			},
+			expectedHeight: 0,
+		},
+		{
+			name: "invalid height string returns zero",
+			setupContext: func() context.Context {
+				md := metadata.Pairs(grpctypes.GRPCBlockHeightHeader, "not-a-number")
+				return metadata.NewOutgoingContext(context.Background(), md)
+			},
+			expectedHeight: 0,
+		},
+		{
+			name: "multiple height values uses first",
+			setupContext: func() context.Context {
+				md := metadata.Pairs(
+					grpctypes.GRPCBlockHeightHeader, "100",
+					grpctypes.GRPCBlockHeightHeader, "200",
+				)
+				return metadata.NewOutgoingContext(context.Background(), md)
+			},
+			expectedHeight: 100,
+		},
+		{
+			name: "very large height",
+			setupContext: func() context.Context {
+				md := metadata.Pairs(grpctypes.GRPCBlockHeightHeader, "9223372036854775807") // max int64
+				return metadata.NewOutgoingContext(context.Background(), md)
+			},
+			expectedHeight: 9223372036854775807,
+		},
+		{
+			name: "height exceeding int64 returns zero",
+			setupContext: func() context.Context {
+				md := metadata.Pairs(grpctypes.GRPCBlockHeightHeader, "9223372036854775808") // max int64 + 1
+				return metadata.NewOutgoingContext(context.Background(), md)
+			},
+			expectedHeight: 0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := tt.setupContext()
+			height := client.GetHeightFromMetadata(ctx)
+			require.Equal(t, tt.expectedHeight, height)
+		})
+	}
+}
+
+func TestGetHeightFromMetadataStrict(t *testing.T) {
+	tests := []struct {
+		name           string
+		setupContext   func() context.Context
+		expectedHeight int64
+		expectError    bool
+	}{
+		{
+			name: "valid height",
+			setupContext: func() context.Context {
+				md := metadata.Pairs(grpctypes.GRPCBlockHeightHeader, "123")
+				return metadata.NewOutgoingContext(context.Background(), md)
+			},
+			expectedHeight: 123,
+		},
+		{
+			name:         "no metadata",
+			setupContext: context.Background,
+		},
+		{
+			name: "negative height errors",
+			setupContext: func() context.Context {
+				md := metadata.Pairs(grpctypes.GRPCBlockHeightHeader, "-10")
+				return metadata.NewOutgoingContext(context.Background(), md)
+			},
+			expectError: true,
+		},
+		{
+			name: "invalid height errors",
+			setupContext: func() context.Context {
+				md := metadata.Pairs(grpctypes.GRPCBlockHeightHeader, "foo")
+				return metadata.NewOutgoingContext(context.Background(), md)
+			},
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := tt.setupContext()
+			height, err := client.GetHeightFromMetadataStrict(ctx)
+			if tt.expectError {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			require.Equal(t, tt.expectedHeight, height)
+		})
+	}
 }

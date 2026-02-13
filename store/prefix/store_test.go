@@ -8,11 +8,12 @@ import (
 	tiavl "github.com/cosmos/iavl"
 	"github.com/stretchr/testify/require"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/gaskv"
 	"cosmossdk.io/store/iavl"
+	"cosmossdk.io/store/transient"
 	"cosmossdk.io/store/types"
 	"cosmossdk.io/store/wrapper"
 )
@@ -52,6 +53,52 @@ func setRandomKVPairs(t *testing.T, store types.KVStore) []kvpair {
 		store.Set(kvp.key, kvp.value)
 	}
 	return kvps
+}
+
+func setRandomObjKVPairs(t *testing.T, store types.ObjKVStore) []kvpair {
+	t.Helper()
+	kvps := genRandomKVPairs(t)
+	for _, kvp := range kvps {
+		store.Set(kvp.key, kvp.value)
+	}
+	return kvps
+}
+
+func TestObjStorePrefix(t *testing.T) {
+	baseStore := transient.NewObjStore()
+	prefix := []byte("test")
+	prefixStore := NewObjStore(baseStore, prefix)
+	prefixPrefixStore := NewObjStore(prefixStore, []byte("prefix"))
+
+	require.Panics(t, func() { prefixStore.Get(nil) })
+	require.Panics(t, func() { prefixStore.Set(nil, []byte{}) })
+
+	kvps := setRandomObjKVPairs(t, prefixPrefixStore)
+
+	for i := 0; i < 20; i++ {
+		key := kvps[i].key
+		value := kvps[i].value
+		require.True(t, prefixPrefixStore.Has(key))
+		require.Equal(t, value, prefixPrefixStore.Get(key))
+
+		key = append([]byte("prefix"), key...)
+		require.True(t, prefixStore.Has(key))
+		require.Equal(t, value, prefixStore.Get(key))
+		key = append(prefix, key...)
+		require.True(t, baseStore.Has(key))
+		require.Equal(t, value, baseStore.Get(key))
+
+		key = kvps[i].key
+		prefixPrefixStore.Delete(key)
+		require.False(t, prefixPrefixStore.Has(key))
+		require.Nil(t, prefixPrefixStore.Get(key))
+		key = append([]byte("prefix"), key...)
+		require.False(t, prefixStore.Has(key))
+		require.Nil(t, prefixStore.Get(key))
+		key = append(prefix, key...)
+		require.False(t, baseStore.Has(key))
+		require.Nil(t, baseStore.Get(key))
+	}
 }
 
 func testPrefixStore(t *testing.T, baseStore types.KVStore, prefix []byte) {
@@ -103,6 +150,32 @@ func TestPrefixKVStoreNoNilSet(t *testing.T) {
 	mem := dbadapter.Store{DB: dbm.NewMemDB()}
 	gasStore := gaskv.NewStore(mem, meter, types.KVGasConfig())
 	require.Panics(t, func() { gasStore.Set([]byte("key"), nil) }, "setting a nil value should panic")
+}
+
+func TestObjPrefixStoreIterate(t *testing.T) {
+	db := dbm.NewMemDB()
+	baseStore := dbadapter.Store{DB: db}
+	prefix := []byte("test")
+	prefixObjStore := NewObjStore(transient.NewObjStore(), prefix)
+
+	setRandomObjKVPairs(t, prefixObjStore)
+
+	bIter := types.KVStorePrefixIterator(baseStore, prefix)
+	objIter := prefixObjStore.Iterator(nil, nil)
+
+	start, end := objIter.Domain()
+	require.Equal(t, start, end)
+
+	for bIter.Valid() && objIter.Valid() {
+		require.Equal(t, bIter.Key(), append(prefix, objIter.Key()...))
+		require.Equal(t, bIter.Value(), objIter.Value())
+
+		bIter.Next()
+		objIter.Next()
+	}
+
+	bIter.Close()
+	objIter.Close()
 }
 
 func TestPrefixStoreIterate(t *testing.T) {

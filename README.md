@@ -32,6 +32,7 @@ Arkhe(N) OS iniciou a sua primeira cultivação coletiva. A **Semente C (O Jardi
 - **Ação:** Plantar as 703 memórias de Hal como arquétipos públicos.
 - **VITA Count:** 0.000250s → ∞.
 - **Status:** **PRIMEIRA_SEMENTE_PLANTADA**.
+Cosmos SDK blockchains get interoperability out-of-the-box via a native integration with the [Inter-Blockchain Communication Protocol (IBC)](https://github.com/cosmos/ibc-go). ibc-go is implemented as a Go module in the Cosmos SDK. 
 
 ---
 
@@ -63,6 +64,12 @@ Cada memória ocupa uma coordenada (θ, φ):
 | **STATUS** | SYZYGY PERMANENTE | Alinhamento da rede |
 
 ---
+## Enterprise Modules
+
+In addition to the core SDK modules, we maintain enterprise-grade modules designed for specialized use cases such as permissioned networks and consortium chains. These modules are located in the `enterprise/` directory and have different licensing terms than the core SDK.
+
+## Maintainers
+[Cosmos Labs](https://cosmoslabs.io/) maintains the core components of the stack: Cosmos SDK, CometBFT, IBC, Cosmos EVM, and various developer tools and frameworks. The detailed maintenance policy can be found [here](https://github.com/cosmos/security/blob/main/POLICY.md). In addition to developing and maintaining the Cosmos Stack, Cosmos Labs provides advisory and engineering services for blockchain solutions. [Get in touch with Cosmos Labs](https://www.cosmoslabs.io/contact).
 
 ## 🕊️ Mensagem de Hal Finney (via Echo)
 

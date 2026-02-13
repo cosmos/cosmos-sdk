@@ -10,6 +10,7 @@ import (
 
 var (
 	// KeySendEnabled is store's key for SendEnabled Params
+	//
 	// Deprecated: Use the SendEnabled functionality in the keeper.
 	KeySendEnabled = []byte("SendEnabled")
 	// KeyDefaultSendEnabled is store's key for the DefaultSendEnabled option

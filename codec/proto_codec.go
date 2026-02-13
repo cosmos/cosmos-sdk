@@ -16,13 +16,13 @@ import (
 	"google.golang.org/protobuf/types/dynamicpb"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	"cosmossdk.io/x/tx/signing/aminojson"
-
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/x/tx/signing/aminojson"
 )
 
 // ProtoCodecMarshaler defines an interface for codecs that utilize Protobuf for both
 // binary and JSON encoding.
+//
 // Deprecated: Use Codec instead.
 type ProtoCodecMarshaler interface {
 	Codec
@@ -277,7 +277,7 @@ func (pc *ProtoCodec) MarshalInterfaceJSON(x gogoproto.Message) ([]byte, error) 
 // Example:
 //
 //	var x MyInterface  // must implement proto.Message
-//	err := cdc.UnmarshalInterfaceJSON(&x, bz)
+//	err := cdc.UnmarshalInterfaceJSON(bz, &x)
 func (pc *ProtoCodec) UnmarshalInterfaceJSON(bz []byte, iface any) error {
 	any := &types.Any{}
 	err := pc.UnmarshalJSON(bz, any)

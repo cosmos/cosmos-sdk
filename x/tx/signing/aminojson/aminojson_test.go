@@ -13,8 +13,9 @@ import (
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-	"cosmossdk.io/x/tx/signing/aminojson"
-	"cosmossdk.io/x/tx/signing/testutil"
+
+	"github.com/cosmos/cosmos-sdk/x/tx/signing/aminojson"
+	"github.com/cosmos/cosmos-sdk/x/tx/signing/testutil"
 )
 
 func TestAminoJsonSignMode(t *testing.T) {
@@ -233,4 +234,91 @@ func TestNewSignModeHandler(t *testing.T) {
 		Encoder:      &aj,
 	})
 	require.NotNil(t, handler)
+}
+
+func TestNullSliceAsEmptyEncoder(t *testing.T) {
+	encoder := aminojson.NewEncoder(aminojson.EncoderOptions{})
+
+	testCases := []struct {
+		name        string
+		amount      []*basev1beta1.Coin
+		wantJSON    string
+		description string
+	}{
+		{
+			name:        "empty slice encodes as empty array",
+			amount:      []*basev1beta1.Coin{},
+			wantJSON:    `[]`,
+			description: "Empty slice should be encoded as [] not null",
+		},
+		{
+			name:        "nil slice encodes as empty array",
+			amount:      nil,
+			wantJSON:    `[]`,
+			description: "Nil slice should be encoded as [] not null",
+		},
+		{
+			name: "non-empty slice encodes normally",
+			amount: []*basev1beta1.Coin{
+				{Denom: "uatom", Amount: "1000"},
+				{Denom: "stake", Amount: "500"},
+			},
+			wantJSON:    "", // Will check content instead of exact match
+			description: "Non-empty slice should encode normally",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			fee := &txv1beta1.Fee{
+				Amount: tc.amount,
+			}
+
+			// Test that the encoder works with legacy_coins (which uses NullSliceAsEmptyEncoder)
+			bz, err := encoder.Marshal(fee)
+			require.NoError(t, err)
+
+			var result map[string]interface{}
+			require.NoError(t, json.Unmarshal(bz, &result))
+
+			amountJSON, err := json.Marshal(result["amount"])
+			require.NoError(t, err)
+			if tc.wantJSON == "" {
+				// For non-empty slices, just verify it's a valid array with expected content
+				require.Contains(t, string(amountJSON), "uatom")
+				require.Contains(t, string(amountJSON), "stake")
+				require.Contains(t, string(amountJSON), "1000")
+				require.Contains(t, string(amountJSON), "500")
+			} else {
+				require.Equal(t, tc.wantJSON, string(amountJSON), tc.description)
+			}
+		})
+	}
+}
+
+func TestNullSliceAsEmptyEncoderDirect(t *testing.T) {
+	encoder := aminojson.NewEncoder(aminojson.EncoderOptions{})
+
+	// Test direct usage of NullSliceAsEmptyEncoder with a custom field encoding
+	customEncoder := encoder.DefineFieldEncoding("test_field", aminojson.NullSliceAsEmptyEncoder)
+	require.NotNil(t, customEncoder)
+
+	// Create a Fee message with an empty list (Fee uses legacy_coins which uses NullSliceAsEmptyEncoder)
+	fee := &txv1beta1.Fee{
+		Amount: []*basev1beta1.Coin{}, // empty slice
+	}
+
+	// Marshal using the encoder
+	bz, err := encoder.Marshal(fee)
+	require.NoError(t, err)
+
+	var result map[string]interface{}
+	require.NoError(t, json.Unmarshal(bz, &result))
+
+	// Verify that amount field exists and is an empty array (not null)
+	amount, ok := result["amount"]
+	require.True(t, ok, "amount field should exist")
+	amountJSON, err := json.Marshal(amount)
+	require.NoError(t, err)
+	require.Equal(t, `[]`, string(amountJSON), "empty slice should be encoded as [] not null")
 }

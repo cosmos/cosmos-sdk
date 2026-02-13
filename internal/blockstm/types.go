@@ -32,6 +32,11 @@ type ReadDescriptor struct {
 	Key Key
 	// invalid Version means the key is read from storage
 	Version TxnVersion
+
+	// Captured is an optional snapshot of the value observed during execution.
+	// If set (byte stores only), validation may compare it with the current value
+	// to allow ABA-safe revalidation even if the version changes.
+	Captured []byte
 }
 
 type IteratorOptions struct {

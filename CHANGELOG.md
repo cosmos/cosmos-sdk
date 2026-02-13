@@ -73,6 +73,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (enterprise/poa) [#25838](https://github.com/cosmos/cosmos-sdk/pull/25838) Add the `poa` module under the `enterprise` directory.
 * (grpc) [#25850](https://github.com/cosmos/cosmos-sdk/pull/25850) Add `GetBlockResults` and `GetLatestBlockResults` gRPC endpoints to expose CometBFT block results including `finalize_block_events`.
 * (events) [#25877](https://github.com/cosmos/cosmos-sdk/pull/25877) Add `OverrideEvents` to `EventManagerI`.
+* (blockstm) [#25777](https://github.com/cosmos/cosmos-sdk/issues/25777) Cache pre-state in MVMemory to support value-based validation.
 
 ### Improvements
 

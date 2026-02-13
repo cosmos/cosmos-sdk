@@ -7,7 +7,7 @@ import (
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/log/v2"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -106,18 +106,16 @@ func initFixture(tb testing.TB) *fixture {
 	router := baseapp.NewMsgServiceRouter()
 	router.SetInterfaceRegistry(cdc.InterfaceRegistry())
 
-	tallyFn := keeper.NewDefaultCalculateVoteResultsAndVotingPower(stakingKeeper)
-
 	govKeeper := keeper.NewKeeper(
 		cdc,
 		runtime.NewKVStoreService(keys[types.StoreKey]),
 		accountKeeper,
 		bankKeeper,
+		stakingKeeper,
 		distrKeeper,
 		router,
 		types.DefaultConfig(),
 		authority.String(),
-		tallyFn,
 	)
 	err := govKeeper.ProposalID.Set(newCtx, 1)
 	assert.NilError(tb, err)

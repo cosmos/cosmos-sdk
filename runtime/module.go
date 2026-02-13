@@ -21,8 +21,9 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -31,7 +32,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/std"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
-	"github.com/cosmos/cosmos-sdk/x/tx/signing"
 )
 
 type appModule struct {
@@ -68,7 +68,6 @@ func init() {
 			ProvideKVStoreKey,
 			ProvideTransientStoreKey,
 			ProvideMemoryStoreKey,
-			ProvideObjectStoreKey,
 			ProvideGenesisTxHandler,
 			ProvideKVStoreService,
 			ProvideMemoryStoreService,
@@ -235,12 +234,6 @@ func ProvideMemoryStoreKey(config *runtimev1alpha1.Module, key depinject.ModuleK
 	}
 
 	storeKey := storetypes.NewMemoryStoreKey(fmt.Sprintf("memory:%s", key.Name()))
-	registerStoreKey(app, storeKey)
-	return storeKey
-}
-
-func ProvideObjectStoreKey(key depinject.ModuleKey, app *AppBuilder) *storetypes.ObjectStoreKey {
-	storeKey := storetypes.NewObjectStoreKey(fmt.Sprintf("object:%s", key.Name()))
 	registerStoreKey(app, storeKey)
 	return storeKey
 }

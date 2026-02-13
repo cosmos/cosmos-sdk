@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
-	"github.com/golang/protobuf/proto" //nolint:staticcheck // needed for testing
+	"github.com/golang/protobuf/proto" //nolint:staticcheck // keep for compat
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -170,11 +170,6 @@ func (s txServer) GetBlockWithTxs(ctx context.Context, req *txtypes.GetBlockWith
 		limit = req.Pagination.Limit
 	} else {
 		offset = 0
-		limit = query.DefaultLimit
-	}
-
-	// if the custom limit is greater than the default limit, adjust it back down
-	if limit > query.DefaultLimit {
 		limit = query.DefaultLimit
 	}
 

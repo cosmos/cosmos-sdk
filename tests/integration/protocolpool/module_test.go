@@ -6,7 +6,7 @@ import (
 	"gotest.tools/v3/assert"
 
 	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
+	"cosmossdk.io/log"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"

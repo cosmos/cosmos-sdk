@@ -55,9 +55,7 @@ func (s queryServer) GetSyncing(ctx context.Context, _ *GetSyncingRequest) (*Get
 	}
 
 	return &GetSyncingResponse{
-		Syncing:             status.SyncInfo.CatchingUp,
-		EarliestBlockHeight: status.SyncInfo.EarliestBlockHeight,
-		LatestBlockHeight:   status.SyncInfo.LatestBlockHeight,
+		Syncing: status.SyncInfo.CatchingUp,
 	}, nil
 }
 
@@ -89,7 +87,7 @@ func (s queryServer) GetBlockByHeight(ctx context.Context, req *GetBlockByHeight
 	}
 
 	if req.Height > blockHeight {
-		return nil, status.Error(codes.InvalidArgument, "requested block height is bigger than the chain length")
+		return nil, status.Error(codes.InvalidArgument, "requested block height is bigger then the chain length")
 	}
 
 	protoBlockID, protoBlock, err := GetProtoBlock(ctx, s.clientCtx, &req.Height)
@@ -253,81 +251,6 @@ func (s queryServer) ABCIQuery(ctx context.Context, req *ABCIQueryRequest) (*ABC
 		return nil, err
 	}
 	return FromABCIResponseQuery(res), nil
-}
-
-// GetBlockResults implements ServiceServer.GetBlockResults
-func (s queryServer) GetBlockResults(ctx context.Context, req *GetBlockResultsRequest) (*GetBlockResultsResponse, error) {
-	blockHeight, err := getBlockHeight(ctx, s.clientCtx)
-	if err != nil {
-		return nil, err
-	}
-
-	if req.Height > blockHeight {
-		return nil, status.Error(codes.InvalidArgument, "requested block height is bigger than the chain length")
-	}
-
-	return getBlockResultsResponse(ctx, s.clientCtx, &req.Height)
-}
-
-// GetLatestBlockResults implements ServiceServer.GetLatestBlockResults
-func (s queryServer) GetLatestBlockResults(ctx context.Context, _ *GetLatestBlockResultsRequest) (*GetLatestBlockResultsResponse, error) {
-	return getLatestBlockResultsResponse(ctx, s.clientCtx)
-}
-
-func getBlockResultsResponse(ctx context.Context, clientCtx client.Context, height *int64) (*GetBlockResultsResponse, error) {
-	results, err := getBlockResults(ctx, clientCtx, height)
-	if err != nil {
-		return nil, err
-	}
-
-	// Convert FinalizeBlockEvents from []Event to []*Event
-	events := make([]*abci.Event, len(results.FinalizeBlockEvents))
-	for i := range results.FinalizeBlockEvents {
-		events[i] = &results.FinalizeBlockEvents[i]
-	}
-
-	// Convert ValidatorUpdates from []ValidatorUpdate to []*ValidatorUpdate
-	valUpdates := make([]*abci.ValidatorUpdate, len(results.ValidatorUpdates))
-	for i := range results.ValidatorUpdates {
-		valUpdates[i] = &results.ValidatorUpdates[i]
-	}
-
-	return &GetBlockResultsResponse{
-		Height:                results.Height,
-		TxsResults:            results.TxsResults,
-		FinalizeBlockEvents:   events,
-		ValidatorUpdates:      valUpdates,
-		ConsensusParamUpdates: results.ConsensusParamUpdates,
-		AppHash:               results.AppHash,
-	}, nil
-}
-
-func getLatestBlockResultsResponse(ctx context.Context, clientCtx client.Context) (*GetLatestBlockResultsResponse, error) {
-	results, err := getBlockResults(ctx, clientCtx, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	// Convert FinalizeBlockEvents from []Event to []*Event
-	events := make([]*abci.Event, len(results.FinalizeBlockEvents))
-	for i := range results.FinalizeBlockEvents {
-		events[i] = &results.FinalizeBlockEvents[i]
-	}
-
-	// Convert ValidatorUpdates from []ValidatorUpdate to []*ValidatorUpdate
-	valUpdates := make([]*abci.ValidatorUpdate, len(results.ValidatorUpdates))
-	for i := range results.ValidatorUpdates {
-		valUpdates[i] = &results.ValidatorUpdates[i]
-	}
-
-	return &GetLatestBlockResultsResponse{
-		Height:                results.Height,
-		TxsResults:            results.TxsResults,
-		FinalizeBlockEvents:   events,
-		ValidatorUpdates:      valUpdates,
-		ConsensusParamUpdates: results.ConsensusParamUpdates,
-		AppHash:               results.AppHash,
-	}, nil
 }
 
 // RegisterTendermintService registers the CometBFT queries on the gRPC router.

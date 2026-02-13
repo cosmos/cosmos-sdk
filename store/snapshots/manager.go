@@ -13,7 +13,7 @@ import (
 	"sync"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log/v2"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
 )
@@ -102,7 +102,7 @@ func (m *Manager) RegisterExtensions(extensions ...types.ExtensionSnapshotter) e
 			return fmt.Errorf("duplicated snapshotter name: %s", name)
 		}
 		if !IsFormatSupported(extension, extension.SnapshotFormat()) {
-			return fmt.Errorf("snapshotter doesn't support its own snapshot format: %s %d", name, extension.SnapshotFormat())
+			return fmt.Errorf("snapshotter don't support it's own snapshot format: %s %d", name, extension.SnapshotFormat())
 		}
 		m.extensions[name] = extension
 	}

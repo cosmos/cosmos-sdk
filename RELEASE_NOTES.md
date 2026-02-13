@@ -1,6 +1,6 @@
 # Cosmos SDK v0.53.0 Release Notes
 
-💬 [**Release Discussion**](https://github.com/cosmos/cosmos-sdk/discussions/58)
+💬 [**Release Discussion**](https://github.com/orgs/cosmos/discussions/58)
 
 ## 🚀 Highlights
 

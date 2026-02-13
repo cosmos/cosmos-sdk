@@ -15,7 +15,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 	"google.golang.org/protobuf/types/descriptorpb"
 
-	"cosmossdk.io/log/v2"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
 	bam "github.com/cosmos/cosmos-sdk/baseapp"

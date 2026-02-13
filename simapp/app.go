@@ -18,8 +18,9 @@ import (
 	"cosmossdk.io/client/v2/autocli"
 	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/log/v2"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/tx/signing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -93,7 +94,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/cosmos/cosmos-sdk/x/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -114,8 +114,7 @@ var (
 		stakingtypes.NotBondedPoolName:              {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:                         {authtypes.Burner},
 		protocolpooltypes.ModuleName:                nil,
-		protocolpooltypes.ProtocolPoolEscrowAccount: nil,
-	}
+		protocolpooltypes.ProtocolPoolEscrowAccount: nil}
 )
 
 var (
@@ -151,7 +150,7 @@ type SimApp struct {
 	// supplementary keepers
 	FeeGrantKeeper     feegrantkeeper.Keeper
 	AuthzKeeper        authzkeeper.Keeper
-	EpochsKeeper       *epochskeeper.Keeper
+	EpochsKeeper       epochskeeper.Keeper
 	ProtocolPoolKeeper protocolpoolkeeper.Keeper
 
 	// the module manager
@@ -420,11 +419,12 @@ func NewSimApp(
 		runtime.NewKVStoreService(keys[govtypes.StoreKey]),
 		app.AccountKeeper,
 		app.BankKeeper,
+		app.StakingKeeper,
 		app.DistrKeeper,
 		app.MsgServiceRouter(),
 		govConfig,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		govkeeper.NewDefaultCalculateVoteResultsAndVotingPower(app.StakingKeeper),
+		// govkeeper.WithCustomCalculateVoteResultsAndVotingPowerFn(...), // Add if you want to use a custom vote calculation function.
 	)
 
 	// Set legacy router for backwards compatibility with gov v1beta1
@@ -448,12 +448,10 @@ func NewSimApp(
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	app.EvidenceKeeper = *evidenceKeeper
 
-	epochsKeeper := epochskeeper.NewKeeper(
+	app.EpochsKeeper = epochskeeper.NewKeeper(
 		runtime.NewKVStoreService(keys[epochstypes.StoreKey]),
 		appCodec,
 	)
-
-	app.EpochsKeeper = &epochsKeeper
 
 	app.EpochsKeeper.SetHooks(
 		epochstypes.NewMultiEpochHooks(
@@ -523,7 +521,6 @@ func NewSimApp(
 		epochstypes.ModuleName,
 	)
 	app.ModuleManager.SetOrderEndBlockers(
-		banktypes.ModuleName,
 		govtypes.ModuleName,
 		stakingtypes.ModuleName,
 		genutiltypes.ModuleName,
@@ -828,9 +825,7 @@ func (app *SimApp) RegisterTendermintService(clientCtx client.Context) {
 }
 
 func (app *SimApp) RegisterNodeService(clientCtx client.Context, cfg config.Config) {
-	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter(), cfg, func() int64 {
-		return app.CommitMultiStore().EarliestVersion()
-	})
+	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter(), cfg)
 }
 
 // GetMaccPerms returns a copy of the module account permissions

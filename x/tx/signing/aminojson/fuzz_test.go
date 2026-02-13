@@ -10,8 +10,7 @@ import (
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
-
-	"github.com/cosmos/cosmos-sdk/x/tx/signing/testutil"
+	"cosmossdk.io/x/tx/signing/testutil"
 )
 
 func FuzzSignModeGetSignBytes(f *testing.F) {

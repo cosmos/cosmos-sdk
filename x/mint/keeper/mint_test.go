@@ -87,9 +87,7 @@ func (s *MintFnTestSuite) TestDefaultMintFn_Success() {
 	s.Require().NoError(err)
 	expectedInflation := types.DefaultInflationCalculationFn(context.TODO(), minter, types.DefaultParams(), bondedRatio)
 
-	totalSupply := math.NewInt(1_000_000_000)
 	// Set bank keeper expectations for minting and fee collection.
-	s.bankKeeper.EXPECT().GetSupply(s.ctx, "stake").Return(sdk.NewCoin("stake", totalSupply)).Times(1)
 	s.bankKeeper.EXPECT().MintCoins(s.ctx, types.ModuleName, expectedCoins).Return(nil).Times(1)
 	s.bankKeeper.EXPECT().SendCoinsFromModuleToModule(s.ctx, types.ModuleName, authtypes.FeeCollectorName, expectedCoins).Return(nil).Times(1)
 

@@ -9,10 +9,9 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-	govv1 "cosmossdk.io/api/cosmos/gov/v1"
+	groupv1 "cosmossdk.io/api/cosmos/group/v1"
 	"cosmossdk.io/core/address"
-
-	"github.com/cosmos/cosmos-sdk/x/tx/internal/testpb"
+	"cosmossdk.io/x/tx/internal/testpb"
 )
 
 var deeplyNestedRepeatedSigner = &testpb.DeeplyNestedRepeatedSigner{
@@ -98,10 +97,13 @@ func TestGetSigners(t *testing.T) {
 		},
 		{
 			name: "MsgSubmitProposal",
-			msg: &govv1.MsgSubmitProposal{
-				Proposer: hex.EncodeToString([]byte("foo")),
+			msg: &groupv1.MsgSubmitProposal{
+				Proposers: []string{
+					hex.EncodeToString([]byte("foo")),
+					hex.EncodeToString([]byte("bar")),
+				},
 			},
-			want: [][]byte{[]byte("foo")},
+			want: [][]byte{[]byte("foo"), []byte("bar")},
 		},
 		{
 			name: "simple",

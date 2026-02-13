@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
-	orm "github.com/cosmos/cosmos-sdk/contrib/x/group/internal/orm"
+	orm2 "github.com/cosmos/cosmos-sdk/contrib/x/group/internal/orm"
 	groupkeeper "github.com/cosmos/cosmos-sdk/contrib/x/group/keeper"
 	"github.com/cosmos/cosmos-sdk/contrib/x/group/migrations/v2"
 	groupmodule "github.com/cosmos/cosmos-sdk/contrib/x/group/module"
@@ -53,22 +53,22 @@ func TestMigrate(t *testing.T) {
 	}
 }
 
-func createGroupPolicies(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Codec, policies []sdk.AccAddress) (orm.PrimaryKeyTable, orm.Sequence, error) {
-	groupPolicyTable, err := orm.NewPrimaryKeyTable([2]byte{groupkeeper.GroupPolicyTablePrefix}, &group.GroupPolicyInfo{}, cdc)
+func createGroupPolicies(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.Codec, policies []sdk.AccAddress) (orm2.PrimaryKeyTable, orm2.Sequence, error) {
+	groupPolicyTable, err := orm2.NewPrimaryKeyTable([2]byte{groupkeeper.GroupPolicyTablePrefix}, &group.GroupPolicyInfo{}, cdc)
 	if err != nil {
 		panic(err.Error())
 	}
 
-	groupPolicySeq := orm.NewSequence(v2.GroupPolicyTableSeqPrefix)
+	groupPolicySeq := orm2.NewSequence(v2.GroupPolicyTableSeqPrefix)
 
 	for _, policyAddr := range policies {
 		groupPolicyInfo, err := group.NewGroupPolicyInfo(policyAddr, 1, authorityAddr, "", 1, group.NewPercentageDecisionPolicy("1", 1, 1), ctx.BlockTime())
 		if err != nil {
-			return orm.PrimaryKeyTable{}, orm.Sequence{}, err
+			return orm2.PrimaryKeyTable{}, orm2.Sequence{}, err
 		}
 
 		if err := groupPolicyTable.Create(ctx.KVStore(storeKey), &groupPolicyInfo); err != nil {
-			return orm.PrimaryKeyTable{}, orm.Sequence{}, err
+			return orm2.PrimaryKeyTable{}, orm2.Sequence{}, err
 		}
 
 		groupPolicySeq.NextVal(ctx.KVStore(storeKey))

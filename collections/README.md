@@ -43,7 +43,8 @@ package collections
 
 import (
     "cosmossdk.io/collections"
-    "cosmossdk.io/core/store"
+    storetypes "cosmossdk.io/store/types"
+    sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var AllowListPrefix = collections.NewPrefix(0)
@@ -53,8 +54,8 @@ type Keeper struct {
 	AllowList collections.KeySet[string]
 }
 
-func NewKeeper(storeService store.KVStoreService) Keeper {
-	sb := collections.NewSchemaBuilder(storeService)
+func NewKeeper(storeKey *storetypes.KVStoreKey) Keeper {
+	sb := collections.NewSchemaBuilder(sdk.OpenKVStore(storeKey))
 
 	return Keeper{
 		AllowList: collections.NewKeySet(sb, AllowListPrefix, "allow_list", collections.StringKey),
@@ -121,7 +122,7 @@ var (
 
 #### Rules
 
-``collections.NewPrefix`` accepts either `uint8`, `string` or `[]bytes` it's good practice to use an always increasing `uint8` for disk space efficiency.
+``collections.NewPrefix`` accepts either `uint8`, `string` or `[]bytes` it's good practice to use an always increasing `uint8`for disk space efficiency.
 
 A collection **MUST NOT** share the same prefix as another collection in the same module, and a collection prefix **MUST NEVER** start with the same prefix as another, examples:
 
@@ -167,7 +168,8 @@ package collections
 
 import (
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/store"
+	storetypes "cosmossdk.io/store/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var IDsPrefix = collections.NewPrefix(0)
@@ -177,8 +179,8 @@ type Keeper struct {
 	IDs   collections.Map[string, uint64]
 }
 
-func NewKeeper(storeService store.KVStoreService) Keeper {
-	sb := collections.NewSchemaBuilder(storeService)
+func NewKeeper(storeKey *storetypes.KVStoreKey) Keeper {
+	sb := collections.NewSchemaBuilder(sdk.OpenKVStore(storeKey))
 
 	return Keeper{
 		IDs: collections.NewMap(sb, IDsPrefix, "ids", collections.StringKey, collections.Uint64Value),
@@ -203,7 +205,7 @@ package collections
 
 import (
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/store"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -216,8 +218,8 @@ type Keeper struct {
 	Accounts   collections.Map[sdk.AccAddress, authtypes.BaseAccount]
 }
 
-func NewKeeper(storeService store.KVStoreService, cdc codec.BinaryCodec) Keeper {
-	sb := collections.NewSchemaBuilder(storeService)
+func NewKeeper(storeKey *storetypes.KVStoreKey, cdc codec.BinaryCodec) Keeper {
+	sb := collections.NewSchemaBuilder(sdk.OpenKVStore(storeKey))
 	return Keeper{
 		Accounts: collections.NewMap(sb, AccountsPrefix, "accounts",
 			sdk.AccAddressKey, codec.CollValue[authtypes.BaseAccount](cdc)),
@@ -251,7 +253,7 @@ package collections
 
 import (
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/store"
+	storetypes "cosmossdk.io/store/types"
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -265,8 +267,8 @@ type Keeper struct {
 	Accounts   collections.Map[sdk.AccAddress, authtypes.BaseAccount]
 }
 
-func NewKeeper(storeService store.KVStoreService, cdc codec.BinaryCodec) Keeper {
-	sb := collections.NewSchemaBuilder(storeService)
+func NewKeeper(storeKey *storetypes.KVStoreKey, cdc codec.BinaryCodec) Keeper {
+	sb := collections.NewSchemaBuilder(sdk.OpenKVStore(storeKey))
 	return Keeper{
 		Accounts: collections.NewMap(sb, AccountsPrefix, "accounts",
 			sdk.AccAddressKey, codec.CollValue[authtypes.BaseAccount](cdc)),
@@ -350,7 +352,7 @@ package collections
 
 import (
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/store"
+	storetypes "cosmossdk.io/store/types"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -362,8 +364,8 @@ type Keeper struct {
 	ValidatorsSet collections.KeySet[sdk.ValAddress]
 }
 
-func NewKeeper(storeService store.KVStoreService) Keeper {
-	sb := collections.NewSchemaBuilder(storeService)
+func NewKeeper(storeKey *storetypes.KVStoreKey) Keeper {
+	sb := collections.NewSchemaBuilder(sdk.OpenKVStore(storeKey))
 	return Keeper{
 		ValidatorsSet: collections.NewKeySet(sb, ValidatorsSetPrefix, "validators_set", sdk.ValAddressKey),
 	}
@@ -395,7 +397,7 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, validator sdk.ValAddress) error
 }
 ```
 
-The first difference we notice is that `KeySet` needs us to specify only one type parameter: the key (`sdk.ValAddress` in this case).
+The first difference we notice is that `KeySet` needs use to specify only one type parameter: the key (`sdk.ValAddress` in this case).
 The second difference we notice is that `KeySet` in its `NewKeySet` function does not require
 us to specify a `ValueCodec` but only a `KeyCodec`. This is because a `KeySet` only saves keys and not values.
 
@@ -433,7 +435,7 @@ package collections
 
 import (
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/store"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "cosmossdk.io/x/staking/types"
@@ -446,8 +448,8 @@ type Keeper struct {
 	Params collections.Item[stakingtypes.Params]
 }
 
-func NewKeeper(storeService store.KVStoreService, cdc codec.BinaryCodec) Keeper {
-	sb := collections.NewSchemaBuilder(storeService)
+func NewKeeper(storeKey *storetypes.KVStoreKey, cdc codec.BinaryCodec) Keeper {
+	sb := collections.NewSchemaBuilder(sdk.OpenKVStore(storeKey))
 	return Keeper{
 		Params: collections.NewItem(sb, ParamsPrefix, "params", codec.CollValue[stakingtypes.Params](cdc)),
 	}
@@ -503,7 +505,7 @@ package collections
 
 import (
 	"cosmossdk.io/collections"
-	"cosmossdk.io/core/store"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -516,8 +518,8 @@ type Keeper struct {
 	Accounts collections.Map[uint64, authtypes.BaseAccount]
 }
 
-func NewKeeper(storeService store.KVStoreService, cdc codec.BinaryCodec) Keeper {
-	sb := collections.NewSchemaBuilder(storeService)
+func NewKeeper(storeKey *storetypes.KVStoreKey, cdc codec.BinaryCodec) Keeper {
+	sb := collections.NewSchemaBuilder(sdk.OpenKVStore(storeKey))
 	return Keeper{
 		Accounts: collections.NewMap(sb, AccountsPrefix, "accounts", collections.Uint64Key, codec.CollValue[authtypes.BaseAccount](cdc)),
 	}
@@ -603,7 +605,7 @@ we specified in the range.
 Then we use again the `Values` method of the `Iterator` to collect all the results.
 
 `collections.Range` also offers a `Prefix` API which is not applicable to all keys types,
-for example uint64 cannot be prefixed because it is of constant size, but a `string` key
+for example uint64 cannot be prefix because it is of constant size, but a `string` key
 can be prefixed.
 
 #### IterateAccounts
@@ -646,7 +648,7 @@ Let's see now how we can work with composite keys using collections.
 
 ### Example
 
-In our example we will showcase how we can use collections when we are dealing with balances, similar to bank,
+In our example we will show-case how we can use collections when we are dealing with balances, similar to bank,
 a balance is a mapping between `(address, denom) => math.Int` the composite key in our case is `(address, denom)`.
 
 ## Instantiation of a composite key collection
@@ -657,7 +659,7 @@ package collections
 import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
-	"cosmossdk.io/core/store"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -669,8 +671,8 @@ type Keeper struct {
 	Balances collections.Map[collections.Pair[sdk.AccAddress, string], math.Int]
 }
 
-func NewKeeper(storeService store.KVStoreService) Keeper {
-	sb := collections.NewSchemaBuilder(storeService)
+func NewKeeper(storeKey *storetypes.KVStoreKey) Keeper {
+	sb := collections.NewSchemaBuilder(sdk.OpenKVStore(storeKey))
 	return Keeper{
 		Balances: collections.NewMap(
 			sb, BalancesPrefix, "balances",
@@ -712,8 +714,8 @@ type Keeper struct {
 	Balances collections.Map[collections.Pair[sdk.AccAddress, string], math.Int]
 }
 
-func NewKeeper(storeService store.KVStoreService) Keeper {
-	sb := collections.NewSchemaBuilder(storeService)
+func NewKeeper(storeKey *storetypes.KVStoreKey) Keeper {
+	sb := collections.NewSchemaBuilder(sdk.OpenKVStore(storeKey))
 	return Keeper{
 		Balances: collections.NewMap(
 			sb, BalancesPrefix, "balances",
@@ -899,8 +901,8 @@ type Keeper struct {
 	Accounts *collections.IndexedMap[sdk.AccAddress, authtypes.BaseAccount, AccountsIndexes]
 }
 
-func NewKeeper(storeService store.KVStoreService, cdc codec.BinaryCodec) Keeper {
-	sb := collections.NewSchemaBuilder(storeService)
+func NewKeeper(storeKey *storetypes.KVStoreKey, cdc codec.BinaryCodec) Keeper {
+	sb := collections.NewSchemaBuilder(sdk.OpenKVStore(storeKey))
 	return Keeper{
 		Accounts: collections.NewIndexedMap(
 			sb, AccountsPrefix, "accounts",
@@ -925,7 +927,7 @@ package docs
 import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
-	"cosmossdk.io/core/store"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -960,8 +962,8 @@ type Keeper struct {
 	Accounts *collections.IndexedMap[sdk.AccAddress, authtypes.BaseAccount, AccountsIndexes]
 }
 
-func NewKeeper(storeService store.KVStoreService, cdc codec.BinaryCodec) Keeper {
-	sb := collections.NewSchemaBuilder(storeService)
+func NewKeeper(storeKey *storetypes.KVStoreKey, cdc codec.BinaryCodec) Keeper {
+	sb := collections.NewSchemaBuilder(sdk.OpenKVStore(storeKey))
 	return Keeper{
 		Accounts: collections.NewIndexedMap(
 			sb, AccountsPrefix, "accounts",
@@ -984,7 +986,7 @@ package docs
 import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
-	"cosmossdk.io/core/store"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -1019,8 +1021,8 @@ type Keeper struct {
 	Accounts *collections.IndexedMap[sdk.AccAddress, authtypes.BaseAccount, AccountsIndexes]
 }
 
-func NewKeeper(storeService store.KVStoreService, cdc codec.BinaryCodec) Keeper {
-	sb := collections.NewSchemaBuilder(storeService)
+func NewKeeper(storeKey *storetypes.KVStoreKey, cdc codec.BinaryCodec) Keeper {
+	sb := collections.NewSchemaBuilder(sdk.OpenKVStore(storeKey))
 	return Keeper{
 		Accounts: collections.NewIndexedMap(
 			sb, AccountsPrefix, "accounts",
@@ -1092,7 +1094,7 @@ package example
 
 import (
     "cosmossdk.io/collections"
-    "cosmossdk.io/core/store"
+    storetypes "cosmossdk.io/store/types"
     "github.com/cosmos/cosmos-sdk/codec"
     sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -1105,8 +1107,8 @@ type Keeper struct {
     Accounts *collections.Map[sdk.AccAddress, sdk.AccountI]
 }
 
-func NewKeeper(cdc codec.BinaryCodec, storeService store.KVStoreService) Keeper {
-    sb := collections.NewSchemaBuilder(storeService)
+func NewKeeper(cdc codec.BinaryCodec, storeKey *storetypes.KVStoreKey) Keeper {
+    sb := collections.NewSchemaBuilder(sdk.OpenKVStore(storeKey))
     return Keeper{
         Accounts: collections.NewMap(
             sb, AccountsPrefix, "accounts",
@@ -1141,7 +1143,8 @@ import (
  "context"
 
  "cosmossdk.io/collections"
- "cosmossdk.io/core/store"
+ storetypes "cosmossdk.io/store/types"
+ "github.com/cosmos/cosmos-sdk/codec"
 )
 
 type AccAddress = string
@@ -1153,8 +1156,8 @@ type Keeper struct {
  Redelegations collections.KeySet[collections.Triple[AccAddress, ValAddress, ValAddress]]
 }
 
-func NewKeeper(storeService store.KVStoreService) Keeper {
- sb := collections.NewSchemaBuilder(storeService)
+func NewKeeper(storeKey *storetypes.KVStoreKey) Keeper {
+ sb := collections.NewSchemaBuilder(sdk.OpenKVStore(storeKey))
  return Keeper{
   Redelegations: collections.NewKeySet(sb, collections.NewPrefix(0), "redelegations", collections.TripleKeyCodec(collections.StringKey, collections.StringKey, collections.StringKey)
  }

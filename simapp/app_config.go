@@ -109,7 +109,6 @@ var (
 					epochstypes.ModuleName,
 				},
 				EndBlockers: []string{
-					banktypes.ModuleName,
 					govtypes.ModuleName,
 					stakingtypes.ModuleName,
 					feegrant.ModuleName,

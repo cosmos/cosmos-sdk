@@ -82,7 +82,7 @@ func TestBlockProvision(t *testing.T) {
 		expProvisions := sdk.NewCoin(params.MintDenom,
 			math.NewInt(tc.expProvisions))
 
-		require.True(t, expProvisions.Equal(provisions),
+		require.True(t, expProvisions.IsEqual(provisions),
 			"test: %v\n\tExp: %v\n\tGot: %v\n",
 			i, tc.expProvisions, provisions)
 	}

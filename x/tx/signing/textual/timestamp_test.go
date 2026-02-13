@@ -13,7 +13,7 @@ import (
 	dur "google.golang.org/protobuf/types/known/durationpb"
 	tspb "google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/cosmos/cosmos-sdk/x/tx/signing/textual"
+	"cosmossdk.io/x/tx/signing/textual"
 )
 
 // timestampJSONTest is the type of test cases in the testdata file.

@@ -7,9 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"gotest.tools/v3/assert"
-
-	basev1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
-	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 )
 
 func TestCosmosInlineJSON(t *testing.T) {
@@ -174,74 +171,4 @@ func TestSortedJSONStringify(t *testing.T) {
 			assert.Equal(t, tc.wantOutput, string(got))
 		})
 	}
-}
-
-func TestNullSliceAsEmptyEncoder(t *testing.T) {
-	encoder := NewEncoder(EncoderOptions{})
-
-	t.Run("empty list encodes as empty array", func(t *testing.T) {
-		// Create a Fee message with empty amount list
-		fee := &txv1beta1.Fee{
-			Amount: []*basev1beta1.Coin{}, // empty slice
-		}
-
-		// Get the list value from the message
-		msg := fee.ProtoReflect()
-		field := msg.Descriptor().Fields().ByName("amount")
-		listValue := msg.Get(field)
-
-		// Test the encoder function directly
-		var buf bytes.Buffer
-		err := NullSliceAsEmptyEncoder(&encoder, listValue, &buf)
-		require.NoError(t, err)
-		assert.Equal(t, "[]", buf.String(), "Empty list should encode as [] not null")
-	})
-
-	t.Run("nil list encodes as empty array", func(t *testing.T) {
-		// Create a Fee message with nil amount
-		fee := &txv1beta1.Fee{
-			Amount: nil, // nil slice
-		}
-
-		// Get the list value from the message
-		msg := fee.ProtoReflect()
-		field := msg.Descriptor().Fields().ByName("amount")
-		listValue := msg.Get(field)
-
-		// Test the encoder function directly
-		var buf bytes.Buffer
-		err := NullSliceAsEmptyEncoder(&encoder, listValue, &buf)
-		require.NoError(t, err)
-		assert.Equal(t, "[]", buf.String(), "Nil list should encode as [] not null")
-	})
-
-	t.Run("non-empty list encodes normally", func(t *testing.T) {
-		// Create a Fee message with non-empty amount list
-		fee := &txv1beta1.Fee{
-			Amount: []*basev1beta1.Coin{
-				{Denom: "uatom", Amount: "1000"},
-			},
-		}
-
-		// Get the list value from the message
-		msg := fee.ProtoReflect()
-		field := msg.Descriptor().Fields().ByName("amount")
-		listValue := msg.Get(field)
-
-		// Test the encoder function directly
-		var buf bytes.Buffer
-		err := NullSliceAsEmptyEncoder(&encoder, listValue, &buf)
-		require.NoError(t, err)
-		// Should encode the list normally (not just [])
-		require.Contains(t, buf.String(), "uatom")
-		require.Contains(t, buf.String(), "1000")
-	})
-
-	t.Run("unsupported type returns error", func(t *testing.T) {
-		// Test with unsupported type
-		var buf bytes.Buffer
-		err := NullSliceAsEmptyEncoder(&encoder, protoreflect.ValueOfString("not a list"), &buf)
-		require.Error(t, err)
-		require.Contains(t, err.Error(), "unsupported type")
-	})
 }

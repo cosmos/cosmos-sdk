@@ -35,16 +35,11 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [#24090](https://github.com/cosmos/cosmos-sdk/pull/24090) Running the `prune` command now disables async pruning.
 
-### Features
-
-* [#25470](https://github.com/cosmos/cosmos-sdk/pull/25470) Adds object KV stores and refactors the base store to be generic across the value parameter.
-
 ## v1.1.1 (September 06, 2024)
 
 ### Improvements
 
 * [#21574](https://github.com/cosmos/cosmos-sdk/pull/21574) Upgrade IVL to IAVL 1.2.0.
-
 
 ## v1.1.0 (March 20, 2024)
 

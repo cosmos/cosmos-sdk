@@ -10,7 +10,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
-	"cosmossdk.io/log/v2"
+	"cosmossdk.io/log"
 )
 
 // FinalizeBlockFunc is the function that is called by the OE to finalize the

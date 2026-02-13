@@ -287,7 +287,7 @@ func (k Keeper) SlashUnbondingDelegation(ctx context.Context, unbondingDelegatio
 
 // SlashRedelegation slashes a redelegation and update the pool
 // return the amount that would have been slashed assuming
-// the redelegation had enough stake to slash
+// the unbonding delegation had enough stake to slash
 // (the amount actually slashed may be less if there's
 // insufficient stake remaining)
 // NOTE this is only slashing for prior infractions from the source validator

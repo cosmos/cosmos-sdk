@@ -19,7 +19,6 @@ import (
 
 // LegacyMsg defines the old interface a message must fulfill,
 // containing Amino signing method.
-//
 // Deprecated: Please use `Msg` instead.
 type LegacyMsg interface {
 	sdk.Msg
@@ -60,7 +59,6 @@ func mustSortJSON(bz []byte) []byte {
 }
 
 // StdSignBytes returns the bytes to sign for a transaction.
-//
 // Deprecated: Please use x/tx/signing/aminojson instead.
 func StdSignBytes(chainID string, accnum, sequence, timeout uint64, fee StdFee, msgs []sdk.Msg, memo string) []byte {
 	if RegressionTestingAminoCodec == nil {

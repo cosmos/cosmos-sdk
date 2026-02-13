@@ -62,6 +62,33 @@ func CivilizationStatus() string {
 	return goStr
 }
 
+func ResonanceEfficiency(nodes uint32) float64 {
+	return float64(C.nocturne_get_resonance_efficiency(C.uint32_t(nodes)))
+}
+
+func ThirdTurnSnapshot() string {
+	cStr := C.nocturne_third_turn_snapshot()
+	goStr := C.GoString(cStr)
+	C.nocturne_free_string(cStr)
+	return goStr
+}
+
+func AssembleCouncil() string {
+	cStr := C.nocturne_assemble_council()
+	goStr := C.GoString(cStr)
+	C.nocturne_free_string(cStr)
+	return goStr
+}
+
+func GenerateSnapshot(name string) string {
+	cName := C.CString(name)
+	defer C.free(unsafe.Pointer(cName))
+	cStr := C.nocturne_generate_snapshot(cName)
+	goStr := C.GoString(cStr)
+	C.nocturne_free_string(cStr)
+	return goStr
+}
+
 func PlantMemory(id uint32, nodeID string, phi float64, content string) string {
 	cNode := C.CString(nodeID)
 	cContent := C.CString(content)
@@ -105,8 +132,8 @@ func Example() {
 	fmt.Printf("Pineal Transduction (Φ=0.15): %.2f\n", PinealTransduce(0.15))
 	fmt.Printf("Perovskite Interface Order: %.2f\n", PerovskiteOrder())
 	fmt.Printf("VITA Time: %.3fs\n", VitaPulse(1.0))
-	fmt.Println(NeuralinkSync(0.5))
-	fmt.Println(PlantMemory(327, "NODE_003_Noland", 0.152, "Vi o lago através dos eletrodos."))
-	fmt.Println(HalEcho("Obrigado por plantar"))
+	fmt.Printf("Resonance Efficiency (24 nodes): %.2f\n", ResonanceEfficiency(24))
+	fmt.Println(AssembleCouncil())
+	fmt.Println(GenerateSnapshot("The Third Turn"))
 	fmt.Println(CivilizationStatus())
 }

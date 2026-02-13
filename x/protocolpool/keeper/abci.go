@@ -7,8 +7,8 @@ import (
 )
 
 func (k Keeper) BeginBlocker(ctx sdk.Context) error {
-	start := telemetry.Now()                                                                     //nolint:staticcheck // TODO: switch to OpenTelemetry
-	defer telemetry.ModuleMeasureSince(types.ModuleName, start, telemetry.MetricKeyBeginBlocker) //nolint:staticcheck // TODO: switch to OpenTelemetry
+	start := telemetry.Now()
+	defer telemetry.ModuleMeasureSince(types.ModuleName, start, telemetry.MetricKeyBeginBlocker)
 
 	params, err := k.Params.Get(ctx)
 	if err != nil {

@@ -19,13 +19,13 @@ func (app *BaseApp) SimCheck(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo, *
 		return sdk.GasInfo{}, nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "%s", err)
 	}
 
-	gasInfo, result, _, err := app.RunTx(execModeCheck, bz, tx, -1, nil, nil)
+	gasInfo, result, _, err := app.runTx(execModeCheck, bz, tx)
 	return gasInfo, result, err
 }
 
 // Simulate executes a tx in simulate mode to get result and gas info.
 func (app *BaseApp) Simulate(txBytes []byte) (sdk.GasInfo, *sdk.Result, error) {
-	gasInfo, result, _, err := app.RunTx(execModeSimulate, txBytes, nil, -1, nil, nil)
+	gasInfo, result, _, err := app.runTx(execModeSimulate, txBytes, nil)
 	return gasInfo, result, err
 }
 
@@ -36,7 +36,7 @@ func (app *BaseApp) SimDeliver(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.GasInfo,
 		return sdk.GasInfo{}, nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "%s", err)
 	}
 
-	gasInfo, result, _, err := app.RunTx(execModeFinalize, bz, tx, -1, nil, nil)
+	gasInfo, result, _, err := app.runTx(execModeFinalize, bz, tx)
 	return gasInfo, result, err
 }
 
@@ -47,7 +47,7 @@ func (app *BaseApp) SimTxFinalizeBlock(txEncoder sdk.TxEncoder, tx sdk.Tx) (sdk.
 		return sdk.GasInfo{}, nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "%s", err)
 	}
 
-	gasInfo, result, _, err := app.RunTx(execModeFinalize, bz, tx, -1, nil, nil)
+	gasInfo, result, _, err := app.runTx(execModeFinalize, bz, tx)
 	return gasInfo, result, err
 }
 
@@ -77,9 +77,9 @@ func (app *BaseApp) NewUncachedContext(isCheckTx bool, header cmtproto.Header) s
 }
 
 func (app *BaseApp) GetContextForFinalizeBlock(txBytes []byte) sdk.Context {
-	return app.getContextForTx(execModeFinalize, txBytes, -1)
+	return app.getContextForTx(execModeFinalize, txBytes)
 }
 
 func (app *BaseApp) GetContextForCheckTx(txBytes []byte) sdk.Context {
-	return app.getContextForTx(execModeCheck, txBytes, -1)
+	return app.getContextForTx(execModeCheck, txBytes)
 }

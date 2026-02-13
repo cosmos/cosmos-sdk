@@ -23,12 +23,12 @@ When defining a Protobuf `Query` service, a `QueryServer` interface is generated
 
 ```go
 type QueryServer interface {
-	Balance(context.Context, *types.QueryBalanceRequest) (*types.QueryBalanceResponse, error)
-	AllBalances(context.Context, *types.QueryAllBalancesRequest) (*types.QueryAllBalancesResponse, error)
+	QueryBalance(context.Context, *QueryBalanceParams) (*types.Coin, error)
+	QueryAllBalances(context.Context, *QueryAllBalancesParams) (*QueryAllBalancesResponse, error)
 }
 ```
 
-These custom queries methods should be implemented by a module's keeper, typically in `./keeper/grpc_query.go`. The first parameter of these methods is a generic `context.Context`. Therefore, the Cosmos SDK provides a function `sdk.UnwrapSDKContext` to retrieve the `sdk.Context` from the provided
+These custom queries methods should be implemented by a module's keeper, typically in `./keeper/grpc_query.go`. The first parameter of these methods is a generic `context.Context`. Therefore, the Cosmos SDK provides a function `sdk.UnwrapSDKContext` to retrieve the `context.Context` from the provided
 `context.Context`.
 
 Here's an example implementation for the bank module:

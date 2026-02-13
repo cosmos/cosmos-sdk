@@ -13,9 +13,8 @@ import (
 	"google.golang.org/protobuf/testing/protocmp"
 
 	bankv1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-
-	"github.com/cosmos/cosmos-sdk/x/tx/internal/testpb"
-	"github.com/cosmos/cosmos-sdk/x/tx/signing/textual"
+	"cosmossdk.io/x/tx/internal/testpb"
+	"cosmossdk.io/x/tx/signing/textual"
 )
 
 func EmptyCoinMetadataQuerier(ctx context.Context, denom string) (*bankv1beta1.Metadata, error) {

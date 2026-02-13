@@ -43,7 +43,6 @@ ignore:
   - "client/docs/**"         # Client documentation
   - "**/*.md"                # Markdown files
   - "**/mock*.go"            # Mock files
-  - "**/mock/**"             # Mock directories
   - "**/*.pb.gateway.go"     # Gateway files
 
 # How to handle multiple coverage reports

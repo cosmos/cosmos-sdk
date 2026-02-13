@@ -136,6 +136,35 @@
       }
     },
     {
+      "url": "./tmp-swagger-gen/cosmos/nft/v1beta1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "NftParams",
+          "Balance": "NftBalance"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/cosmos/group/v1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "GroupParams",
+          "Proposal": "GroupProposal",
+          "TallyResult": "GroupTallyResult"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/cosmos/circuit/v1/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Accounts": "CircuitAccounts",
+          "Account": "CircuitAccount",
+          "Params": "CircuitParams"
+        }
+      }
+    },
+    {
       "url": "./tmp-swagger-gen/cosmos/consensus/v1/query.swagger.json",
       "operationIds": {
         "rename": {

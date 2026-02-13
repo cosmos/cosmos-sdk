@@ -11,7 +11,7 @@ import (
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/errors"
-	"cosmossdk.io/log/v2"
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"

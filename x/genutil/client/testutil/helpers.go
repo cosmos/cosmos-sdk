@@ -7,7 +7,7 @@ import (
 	cmtcfg "github.com/cometbft/cometbft/config"
 	"github.com/spf13/viper"
 
-	"cosmossdk.io/log/v2"
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

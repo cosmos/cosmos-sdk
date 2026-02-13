@@ -17,7 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
 )
 
-// flags for feegrant module
+// flag for feegrant module
 const (
 	FlagExpiration  = "expiration"
 	FlagPeriod      = "period"

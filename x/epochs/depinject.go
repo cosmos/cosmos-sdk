@@ -39,14 +39,14 @@ type ModuleInputs struct {
 type ModuleOutputs struct {
 	depinject.Out
 
-	EpochKeeper *keeper.Keeper
+	EpochKeeper keeper.Keeper
 	Module      appmodule.AppModule
 }
 
 func ProvideModule(in ModuleInputs) ModuleOutputs {
 	k := keeper.NewKeeper(in.StoreService, in.Cdc)
-	m := NewAppModule(&k)
-	return ModuleOutputs{EpochKeeper: m.keeper, Module: m}
+	m := NewAppModule(k)
+	return ModuleOutputs{EpochKeeper: k, Module: m}
 }
 
 func InvokeSetHooks(keeper *keeper.Keeper, hooks map[string]types.EpochHooksWrapper) error {

@@ -122,19 +122,8 @@ https://github.com/cosmos/cosmos-sdk/blob/e8f28bf5db18b8d6b7e0d94b542ce4cf48fed9
 
 Encoding instructs the amino json marshaler how to encode certain fields that may differ from the standard encoding behaviour. The most common example of this is how `repeated cosmos.base.v1beta1.Coin` is encoded when using the amino json encoding format. The `legacy_coins` option tells the json marshaler [how to encode a null slice](https://github.com/cosmos/cosmos-sdk/blob/e8f28bf5db18b8d6b7e0d94b542ce4cf48fed9d6/x/tx/signing/aminojson/json_marshal.go#L65) of `cosmos.base.v1beta1.Coin`.
 
-For a more generic option that works with any slice type, you can use `null_slice_as_empty`, which ensures that nil slices are encoded as empty arrays (`[]`) instead of `null`. This is useful for maintaining backward compatibility with legacy Amino JSON encoding where nil slices were serialized as empty arrays.
-
-Alternatively, you can use the exported `NullSliceAsEmptyEncoder` function directly in your code:
-
-```go
-encoder := aminojson.NewEncoder(options)
-encoder = encoder.DefineFieldEncoding("my_field", aminojson.NullSliceAsEmptyEncoder)
-```
-
 ```proto
 (amino.encoding)         = "legacy_coins",
-// or for a more generic option:
-(amino.encoding)         = "null_slice_as_empty",
 ```
 
 ```proto reference

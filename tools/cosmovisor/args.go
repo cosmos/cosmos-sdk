@@ -15,10 +15,9 @@ import (
 	"github.com/pelletier/go-toml/v2"
 	"github.com/spf13/viper"
 
-	"cosmossdk.io/log/v2"
-
-	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"cosmossdk.io/log"
+	"cosmossdk.io/x/upgrade/plan"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
 // environment variable names

@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"cosmossdk.io/core/address"
-	"cosmossdk.io/log/v2"
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"

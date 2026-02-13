@@ -17,9 +17,8 @@ import (
 	signingv1beta1 "cosmossdk.io/api/cosmos/tx/signing/v1beta1"
 	txv1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	"cosmossdk.io/core/address"
-
-	"github.com/cosmos/cosmos-sdk/x/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/tx/signing/directaux"
+	"cosmossdk.io/x/tx/signing"
+	"cosmossdk.io/x/tx/signing/directaux"
 )
 
 func TestDirectAuxHandler(t *testing.T) {

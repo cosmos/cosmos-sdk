@@ -16,10 +16,10 @@ This document describes the default strategies to handle gas and fees within a C
 
 ## Introduction to `Gas` and `Fees`
 
-In the Cosmos SDK, `gas` is a special unit that is used to track the consumption of resources during execution. `gas` is typically consumed whenever reads and writes are made to the store, but it can also be consumed if expensive computation needs to be done. It serves two main purposes:
+In the Cosmos SDK, `gas` is a special unit that is used to track the consumption of resources during execution. `gas` is typically consumed whenever read and writes are made to the store, but it can also be consumed if expensive computation needs to be done. It serves two main purposes:
 
 * Make sure blocks are not consuming too many resources and are finalized. This is implemented by default in the Cosmos SDK via the [block gas meter](#block-gas-meter).
-* Prevent spam and abuse by end-users. To this end, `gas` consumed during [`message`](../../build/building-modules/02-messages-and-queries.md#messages) execution is typically priced, resulting in a `fee` (`fees = gas * gas-prices`). `fees` generally have to be paid by the sender of the `message`. Note that the Cosmos SDK does not enforce `gas` pricing by default, as there may be other ways to prevent spam (e.g. bandwidth schemes). Still, most applications implement `fee` mechanisms to prevent spam by using the [`AnteHandler`](#antehandler).
+* Prevent spam and abuse from end-user. To this end, `gas` consumed during [`message`](../../build/building-modules/02-messages-and-queries.md#messages) execution is typically priced, resulting in a `fee` (`fees = gas * gas-prices`). `fees` generally have to be paid by the sender of the `message`. Note that the Cosmos SDK does not enforce `gas` pricing by default, as there may be other ways to prevent spam (e.g. bandwidth schemes). Still, most applications implement `fee` mechanisms to prevent spam by using the [`AnteHandler`](#antehandler).
 
 ## Gas Meter
 
@@ -98,4 +98,4 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.53.0-rc.2/proto/cosmos/tx/v1beta1/t
 * Verify that the sender of the transaction has enough funds to cover for the `fees`. When the end-user generates a transaction, they must indicate 2 of the 3 following parameters (the third one being implicit): `fees`, `gas` and `gas-prices`. This signals how much they are willing to pay for nodes to execute their transaction. The provided `gas` value is stored in a parameter called `GasWanted` for later use.
 * Set `newCtx.GasMeter` to 0, with a limit of `GasWanted`. **This step is crucial**, as it not only makes sure the transaction cannot consume infinite gas, but also that `ctx.GasMeter` is reset in-between each transaction (`ctx` is set to `newCtx` after `anteHandler` is run, and the `anteHandler` is run each time a transaction executes).
 
-As explained above, the `anteHandler` returns a maximum limit of `gas` the transaction can consume during execution called `GasWanted`. The actual amount consumed in the end is denominated `GasUsed`, and we must therefore have `GasUsed <= GasWanted`. Both `GasWanted` and `GasUsed` are relayed to the underlying consensus engine when [`FinalizeBlock`](../advanced/00-baseapp.md#finalizeblock) returns.
+As explained above, the `anteHandler` returns a maximum limit of `gas` the transaction can consume during execution called `GasWanted`. The actual amount consumed in the end is denominated `GasUsed`, and we must therefore have `GasUsed =< GasWanted`. Both `GasWanted` and `GasUsed` are relayed to the underlying consensus engine when [`FinalizeBlock`](../advanced/00-baseapp.md#finalizeblock) returns.

@@ -128,10 +128,13 @@ func collFilteredPaginateNoKey[K, V any, C Collection[K, V], T any](
 		return nil, nil, err
 	}
 	defer iterator.Close()
+	// we advance the iter equal to the provided offset
+	if !advanceIter(iterator, offset) {
+		return nil, nil, collections.ErrInvalidIterator
+	}
 
 	var (
 		count   uint64
-		skipped uint64
 		nextKey []byte
 		results []T
 	)
@@ -146,11 +149,6 @@ func collFilteredPaginateNoKey[K, V any, C Collection[K, V], T any](
 			}
 			// if no predicate function is specified then we just include the result
 			if predicateFunc == nil {
-				if skipped < offset {
-					skipped++
-					continue
-				}
-
 				transformed, err := transformFunc(kv.Key, kv.Value)
 				if err != nil {
 					return nil, nil, err
@@ -165,12 +163,6 @@ func collFilteredPaginateNoKey[K, V any, C Collection[K, V], T any](
 					return nil, nil, err
 				}
 				if include {
-					// Item matches filter - check if we need to skip it for offset
-					if skipped < offset {
-						skipped++
-						continue
-					}
-
 					transformed, err := transformFunc(kv.Key, kv.Value)
 					if err != nil {
 						return nil, nil, err
@@ -230,6 +222,20 @@ func collFilteredPaginateNoKey[K, V any, C Collection[K, V], T any](
 		resp.Total = count + offset
 	}
 	return results, resp, nil
+}
+
+func advanceIter[I interface {
+	Next()
+	Valid() bool
+}](iter I, offset uint64,
+) bool {
+	for i := uint64(0); i < offset; i++ {
+		if !iter.Valid() {
+			return false
+		}
+		iter.Next()
+	}
+	return true
 }
 
 // collFilteredPaginateByKey paginates a collection when a starting key

@@ -14,7 +14,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/golang/protobuf/proto" //nolint:staticcheck // needed for testing
+	"github.com/golang/protobuf/proto" //nolint:staticcheck // keep for compat
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc/codes"

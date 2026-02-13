@@ -114,7 +114,7 @@ func (k Keeper) SubmitProposal(ctx context.Context, messages []sdk.Msg, metadata
 	}
 
 	// called right after a proposal is submitted
-	err = k.Hooks().AfterProposalSubmission(ctx, proposalID, proposer)
+	err = k.Hooks().AfterProposalSubmission(ctx, proposalID)
 	if err != nil {
 		return v1.Proposal{}, err
 	}

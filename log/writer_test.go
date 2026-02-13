@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"cosmossdk.io/log/v2"
+	"cosmossdk.io/log"
 )
 
 func TestFilteredWriter(t *testing.T) {

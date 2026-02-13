@@ -5,6 +5,10 @@ import (
 	"io"
 	"maps"
 
+	dbm "github.com/cosmos/cosmos-db"
+
+	"cosmossdk.io/store/cachekv"
+	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/tracekv"
 	"cosmossdk.io/store/types"
 )
@@ -21,11 +25,12 @@ const storeNameCtxKey = "store_name"
 // NOTE: a Store (and MultiStores in general) should never expose the
 // keys for the substores.
 type Store struct {
+	db     types.CacheKVStore
 	stores map[types.StoreKey]types.CacheWrap
+	keys   map[string]types.StoreKey
 
 	traceWriter  io.Writer
 	traceContext types.TraceContext
-	parentStore  func(types.StoreKey) types.CacheWrapper
 }
 
 var _ types.CacheMultiStore = Store{}
@@ -34,17 +39,26 @@ var _ types.CacheMultiStore = Store{}
 // CacheWrapper objects and a KVStore as the database. Each CacheWrapper store
 // is a branched store.
 func NewFromKVStore(
-	stores map[types.StoreKey]types.CacheWrapper,
-	traceWriter io.Writer, traceContext types.TraceContext,
+	store types.KVStore, stores map[types.StoreKey]types.CacheWrapper,
+	keys map[string]types.StoreKey, traceWriter io.Writer, traceContext types.TraceContext,
 ) Store {
 	cms := Store{
+		db:           cachekv.NewStore(store),
 		stores:       make(map[types.StoreKey]types.CacheWrap, len(stores)),
+		keys:         keys,
 		traceWriter:  traceWriter,
 		traceContext: traceContext,
 	}
 
 	for key, store := range stores {
-		cms.initStore(key, store)
+		if cms.TracingEnabled() {
+			tctx := cms.traceContext.Clone().Merge(types.TraceContext{
+				storeNameCtxKey: key.Name(),
+			})
+
+			store = tracekv.NewStore(store.(types.KVStore), cms.traceWriter, tctx)
+		}
+		cms.stores[key] = cachekv.NewStore(store.(types.KVStore))
 	}
 
 	return cms
@@ -53,39 +67,19 @@ func NewFromKVStore(
 // NewStore creates a new Store object from a mapping of store keys to
 // CacheWrapper objects. Each CacheWrapper store is a branched store.
 func NewStore(
-	stores map[types.StoreKey]types.CacheWrapper,
+	db dbm.DB, stores map[types.StoreKey]types.CacheWrapper, keys map[string]types.StoreKey,
 	traceWriter io.Writer, traceContext types.TraceContext,
 ) Store {
-	return NewFromKVStore(stores, traceWriter, traceContext)
+	return NewFromKVStore(dbadapter.Store{DB: db}, stores, keys, traceWriter, traceContext)
 }
 
-// NewFromParent constructs a cache multistore with a parent store lazily,
-// the parent is usually another cache multistore or the block-stm multiversion store.
-func NewFromParent(
-	parentStore func(types.StoreKey) types.CacheWrapper,
-	traceWriter io.Writer, traceContext types.TraceContext,
-) Store {
-	return Store{
-		stores:       make(map[types.StoreKey]types.CacheWrap),
-		traceWriter:  traceWriter,
-		traceContext: traceContext,
-		parentStore:  parentStore,
+func newCacheMultiStoreFromCMS(cms Store) Store {
+	stores := make(map[types.StoreKey]types.CacheWrapper)
+	for k, v := range cms.stores {
+		stores[k] = v
 	}
-}
 
-func (cms Store) initStore(key types.StoreKey, store types.CacheWrapper) types.CacheWrap {
-	if cms.TracingEnabled() {
-		// only support tracing on KVStore.
-		if kvstore, ok := store.(types.KVStore); ok {
-			tctx := cms.traceContext.Clone().Merge(types.TraceContext{
-				storeNameCtxKey: key.Name(),
-			})
-			store = tracekv.NewStore(kvstore, cms.traceWriter, tctx)
-		}
-	}
-	cache := store.CacheWrap()
-	cms.stores[key] = cache
-	return cache
+	return NewFromKVStore(cms.db, stores, nil, cms.traceWriter, cms.traceContext)
 }
 
 // SetTracer sets the tracer for the MultiStore that the underlying
@@ -126,6 +120,7 @@ func (cms Store) GetStoreType() types.StoreType {
 
 // Write calls Write on each underlying store.
 func (cms Store) Write() {
+	cms.db.Write()
 	for _, store := range cms.stores {
 		store.Write()
 	}
@@ -144,7 +139,7 @@ func (cms Store) CacheWrapWithTrace(_ io.Writer, _ types.TraceContext) types.Cac
 // CacheMultiStore implements MultiStore, returns a new CacheMultiStore from the
 // underlying CacheMultiStore.
 func (cms Store) CacheMultiStore() types.CacheMultiStore {
-	return NewFromParent(cms.getCacheWrapper, cms.traceWriter, cms.traceContext)
+	return newCacheMultiStoreFromCMS(cms)
 }
 
 // CacheMultiStoreWithVersion implements the MultiStore interface. It will panic
@@ -156,41 +151,20 @@ func (cms Store) CacheMultiStoreWithVersion(_ int64) (types.CacheMultiStore, err
 	panic("cannot branch cached multi-store with a version")
 }
 
-func (cms Store) getCacheWrapper(key types.StoreKey) types.CacheWrapper {
-	store, ok := cms.stores[key]
-	if !ok && cms.parentStore != nil {
-		// load on demand
-		store = cms.initStore(key, cms.parentStore(key))
-	}
-	if key == nil || store == nil {
-		panic(fmt.Sprintf("kv store with key %v has not been registered in stores", key))
-	}
-	return store
-}
-
 // GetStore returns an underlying Store by key.
 func (cms Store) GetStore(key types.StoreKey) types.Store {
-	store, ok := cms.getCacheWrapper(key).(types.Store)
-	if !ok {
-		panic(fmt.Sprintf("store with key %v is not Store", key))
+	s := cms.stores[key]
+	if key == nil || s == nil {
+		panic(fmt.Sprintf("kv store with key %v has not been registered in stores", key))
 	}
-	return store
+	return s.(types.Store)
 }
 
 // GetKVStore returns an underlying KVStore by key.
 func (cms Store) GetKVStore(key types.StoreKey) types.KVStore {
-	store, ok := cms.getCacheWrapper(key).(types.KVStore)
-	if !ok {
-		panic(fmt.Sprintf("store with key %v is not KVStore", key))
+	store := cms.stores[key]
+	if key == nil || store == nil {
+		panic(fmt.Sprintf("kv store with key %v has not been registered in stores", key))
 	}
-	return store
-}
-
-// GetObjKVStore returns an underlying KVStore by key.
-func (cms Store) GetObjKVStore(key types.StoreKey) types.ObjKVStore {
-	store, ok := cms.getCacheWrapper(key).(types.ObjKVStore)
-	if !ok {
-		panic(fmt.Sprintf("store with key %v is not ObjKVStore", key))
-	}
-	return store
+	return store.(types.KVStore)
 }

@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	sdkmath "cosmossdk.io/math"
-
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -42,34 +40,18 @@ func DefaultMintFn(ic types.InflationCalculationFn) MintFn {
 			return err
 		}
 
-		// update minter's inflation and annual provisions
 		minter.Inflation = ic(ctx, minter, params, bondedRatio)
 		minter.AnnualProvisions = minter.NextAnnualProvisions(params, totalStakingSupply)
 		if err = k.Minter.Set(ctx, minter); err != nil {
 			return err
 		}
 
-		// calculate minted coins
+		// mint coins, update supply
 		mintedCoin := minter.BlockProvision(params)
-
-		maxSupply := params.MaxSupply
-		totalSupply := k.bankKeeper.GetSupply(ctx, params.MintDenom).Amount // fetch total supply from the bank module
-
-		// if maxSupply is not infinite, and minted coins exceeds maxSupply, adjust minted coins to be the diff
-		if !maxSupply.IsZero() && totalSupply.Add(mintedCoin.Amount).GT(maxSupply) {
-			// calculate the difference between maxSupply and totalSupply
-			diff := maxSupply.Sub(totalSupply)
-			if diff.Sign() == -1 {
-				// mint nothing if total supply already exceeds max supply
-				diff = sdkmath.ZeroInt()
-			}
-			// mint the difference
-			mintedCoin.Amount = diff
-		}
-
-		// mint coins, will skip zero coin automatically
 		mintedCoins := sdk.NewCoins(mintedCoin)
-		if err := k.MintCoins(ctx, mintedCoins); err != nil {
+
+		err = k.MintCoins(ctx, mintedCoins)
+		if err != nil {
 			return err
 		}
 
@@ -80,7 +62,7 @@ func DefaultMintFn(ic types.InflationCalculationFn) MintFn {
 		}
 
 		if mintedCoin.Amount.IsInt64() {
-			defer telemetry.ModuleSetGauge(types.ModuleName, float32(mintedCoin.Amount.Int64()), "minted_tokens") //nolint:staticcheck // TODO: switch to OpenTelemetry
+			defer telemetry.ModuleSetGauge(types.ModuleName, float32(mintedCoin.Amount.Int64()), "minted_tokens")
 		}
 
 		ctx.EventManager().EmitEvent(

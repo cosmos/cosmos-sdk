@@ -1,11 +1,11 @@
 package std
 
 import (
-	"github.com/cosmos/cosmos-sdk/x/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/tx/signing/aminojson"
-	"github.com/cosmos/cosmos-sdk/x/tx/signing/direct"
-	"github.com/cosmos/cosmos-sdk/x/tx/signing/directaux"
-	"github.com/cosmos/cosmos-sdk/x/tx/signing/textual"
+	"cosmossdk.io/x/tx/signing"
+	"cosmossdk.io/x/tx/signing/aminojson"
+	"cosmossdk.io/x/tx/signing/direct"
+	"cosmossdk.io/x/tx/signing/directaux"
+	"cosmossdk.io/x/tx/signing/textual"
 )
 
 // SignModeOptions are options for configuring the standard sign mode handler map.

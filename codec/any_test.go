@@ -126,7 +126,7 @@ func TestMarshalProtoInterfacePubKey(t *testing.T) {
 	require.True(pk3.Equals(pk))
 
 	// ** Check unmarshal using JSONCodec **
-	// Unpacking won't work straightforward as Any type
+	// Unpacking won't work straightforward s Any type
 	// Any can't implement UnpackInterfacesMessage interface. So Any is not
 	// automatically unpacked and we won't get a value.
 	var pkAny codectypes.Any

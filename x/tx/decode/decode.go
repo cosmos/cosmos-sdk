@@ -8,8 +8,7 @@ import (
 
 	v1beta1 "cosmossdk.io/api/cosmos/tx/v1beta1"
 	errorsmod "cosmossdk.io/errors"
-
-	"github.com/cosmos/cosmos-sdk/x/tx/signing"
+	"cosmossdk.io/x/tx/signing"
 )
 
 // DecodedTx contains the decoded transaction, its signers, and other flags.

@@ -46,7 +46,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/x/feegrant/fees.go#L9-L32
 
 ### Fee Allowance types
 
-There are three types of fee allowances present at the moment:
+There are two types of fee allowances present at the moment:
 
 * `BasicAllowance`
 * `PeriodicAllowance`
@@ -94,7 +94,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/feegrant/v1be
 
 * `allowance` is either `BasicAllowance` or `PeriodicAllowance`.
 
-* `allowed_messages` is an array of messages allowed to execute the given allowance.
+* `allowed_messages` is array of messages allowed to execute the given allowance.
 
 ### FeeGranter flag
 
@@ -255,18 +255,18 @@ grantee: cosmos1..
 granter: cosmos1..
 ```
 
-##### grants-by-grantee
+##### grants
 
-The `grants-by-grantee` command allows users to query all grants for a given grantee.
+The `grants` command allows users to query all grants for a given grantee.
 
 ```shell
-simd query feegrant grants-by-grantee [grantee] [flags]
+simd query feegrant grants [grantee] [flags]
 ```
 
 Example:
 
 ```shell
-simd query feegrant grants-by-grantee cosmos1..
+simd query feegrant grants cosmos1..
 ```
 
 Example Output:

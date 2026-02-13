@@ -124,11 +124,6 @@ func SetOptimisticExecution(opts ...func(*oe.OptimisticExecution)) func(*BaseApp
 	}
 }
 
-// SetBlockSTMTxRunner sets the block stm tx runner for the BaseApp for parallel execution.
-func (app *BaseApp) SetBlockSTMTxRunner(txRunner sdk.TxRunner) {
-	app.txRunner = txRunner
-}
-
 // DisableBlockGasMeter disables the block gas meter.
 func DisableBlockGasMeter() func(*BaseApp) {
 	return func(app *BaseApp) { app.SetDisableBlockGasMeter(true) }

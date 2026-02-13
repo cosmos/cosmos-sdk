@@ -10,7 +10,6 @@ const (
 )
 
 // NewSoftwareUpgradeProposal creates a new SoftwareUpgradeProposal instance.
-//
 // Deprecated: this proposal is considered legacy and is deprecated in favor of
 // Msg-based gov proposals. See MsgSoftwareUpgrade.
 func NewSoftwareUpgradeProposal(title, description string, plan Plan) gov.Content {

@@ -16,10 +16,9 @@ import (
 	_ "cosmossdk.io/api/cosmos/crypto/multisig"
 	_ "cosmossdk.io/api/cosmos/crypto/secp256k1"
 	_ "cosmossdk.io/api/cosmos/gov/v1"
-
-	"github.com/cosmos/cosmos-sdk/x/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/tx/signing/textual"
-	"github.com/cosmos/cosmos-sdk/x/tx/signing/textual/internal/textualpb"
+	"cosmossdk.io/x/tx/signing"
+	"cosmossdk.io/x/tx/signing/textual"
+	"cosmossdk.io/x/tx/signing/textual/internal/textualpb"
 )
 
 type e2eJSONTest struct {

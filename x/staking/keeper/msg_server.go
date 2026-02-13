@@ -284,11 +284,11 @@ func (k msgServer) Delegate(ctx context.Context, msg *types.MsgDelegate) (*types
 
 	if msg.Amount.Amount.IsInt64() {
 		defer func() {
-			telemetry.IncrCounter(1, types.ModuleName, "delegate") //nolint:staticcheck // TODO: switch to OpenTelemetry
-			telemetry.SetGaugeWithLabels(                          //nolint:staticcheck // TODO: switch to OpenTelemetry
+			telemetry.IncrCounter(1, types.ModuleName, "delegate")
+			telemetry.SetGaugeWithLabels(
 				[]string{"tx", "msg", sdk.MsgTypeURL(msg)},
 				float32(msg.Amount.Amount.Int64()),
-				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)}, //nolint:staticcheck // TODO: switch to OpenTelemetry
+				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
 			)
 		}()
 	}
@@ -358,11 +358,11 @@ func (k msgServer) BeginRedelegate(ctx context.Context, msg *types.MsgBeginRedel
 
 	if msg.Amount.Amount.IsInt64() {
 		defer func() {
-			telemetry.IncrCounter(1, types.ModuleName, "redelegate") //nolint:staticcheck // TODO: switch to OpenTelemetry
-			telemetry.SetGaugeWithLabels(                            //nolint:staticcheck // TODO: switch to OpenTelemetry
+			telemetry.IncrCounter(1, types.ModuleName, "redelegate")
+			telemetry.SetGaugeWithLabels(
 				[]string{"tx", "msg", sdk.MsgTypeURL(msg)},
 				float32(msg.Amount.Amount.Int64()),
-				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)}, //nolint:staticcheck // TODO: switch to OpenTelemetry
+				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
 			)
 		}()
 	}
@@ -430,11 +430,11 @@ func (k msgServer) Undelegate(ctx context.Context, msg *types.MsgUndelegate) (*t
 
 	if msg.Amount.Amount.IsInt64() {
 		defer func() {
-			telemetry.IncrCounter(1, types.ModuleName, "undelegate") //nolint:staticcheck // TODO: switch to OpenTelemetry
-			telemetry.SetGaugeWithLabels(                            //nolint:staticcheck // TODO: switch to OpenTelemetry
+			telemetry.IncrCounter(1, types.ModuleName, "undelegate")
+			telemetry.SetGaugeWithLabels(
 				[]string{"tx", "msg", sdk.MsgTypeURL(msg)},
 				float32(msg.Amount.Amount.Int64()),
-				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)}, //nolint:staticcheck // TODO: switch to OpenTelemetry
+				[]metrics.Label{telemetry.NewLabel("denom", msg.Amount.Denom)},
 			)
 		}()
 	}
@@ -592,14 +592,6 @@ func (k msgServer) UpdateParams(ctx context.Context, msg *types.MsgUpdateParams)
 
 	if err := msg.Params.Validate(); err != nil {
 		return nil, err
-	}
-
-	// Validate that the bond denom exists on-chain by checking if it has supply.
-	// This prevents governance from setting bond_denom to a non-existent denom,
-	// which would place the chain in an unsafe state.
-	supply := k.bankKeeper.GetSupply(ctx, msg.Params.BondDenom)
-	if supply.IsZero() {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "bond denom %s does not exist or has zero supply", msg.Params.BondDenom)
 	}
 
 	// store params

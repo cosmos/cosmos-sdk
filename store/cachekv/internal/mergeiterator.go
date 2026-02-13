@@ -14,24 +14,21 @@ import (
 // cache shadows (overrides) the parent.
 //
 // TODO: Optimize by memoizing.
-type cacheMergeIterator[V any] struct {
-	parent    types.GIterator[V]
-	cache     types.GIterator[V]
+type cacheMergeIterator struct {
+	parent    types.Iterator
+	cache     types.Iterator
 	ascending bool
 
 	valid bool
-
-	isZero func(V) bool
 }
 
-var _ types.Iterator = (*cacheMergeIterator[[]byte])(nil)
+var _ types.Iterator = (*cacheMergeIterator)(nil)
 
-func NewCacheMergeIterator[V any](parent, cache types.GIterator[V], ascending bool, isZero func(V) bool) types.GIterator[V] {
-	iter := &cacheMergeIterator[V]{
+func NewCacheMergeIterator(parent, cache types.Iterator, ascending bool) types.Iterator {
+	iter := &cacheMergeIterator{
 		parent:    parent,
 		cache:     cache,
 		ascending: ascending,
-		isZero:    isZero,
 	}
 
 	iter.valid = iter.skipUntilExistsOrInvalid()
@@ -40,17 +37,17 @@ func NewCacheMergeIterator[V any](parent, cache types.GIterator[V], ascending bo
 
 // Domain implements Iterator.
 // Returns parent domain because cache and parent domains are the same.
-func (iter *cacheMergeIterator[V]) Domain() (start, end []byte) {
+func (iter *cacheMergeIterator) Domain() (start, end []byte) {
 	return iter.parent.Domain()
 }
 
 // Valid implements Iterator.
-func (iter *cacheMergeIterator[V]) Valid() bool {
+func (iter *cacheMergeIterator) Valid() bool {
 	return iter.valid
 }
 
 // Next implements Iterator
-func (iter *cacheMergeIterator[V]) Next() {
+func (iter *cacheMergeIterator) Next() {
 	iter.assertValid()
 
 	switch {
@@ -77,7 +74,7 @@ func (iter *cacheMergeIterator[V]) Next() {
 }
 
 // Key implements Iterator
-func (iter *cacheMergeIterator[V]) Key() []byte {
+func (iter *cacheMergeIterator) Key() []byte {
 	iter.assertValid()
 
 	// If parent is invalid, get the cache key.
@@ -107,7 +104,7 @@ func (iter *cacheMergeIterator[V]) Key() []byte {
 }
 
 // Value implements Iterator
-func (iter *cacheMergeIterator[V]) Value() V {
+func (iter *cacheMergeIterator) Value() []byte {
 	iter.assertValid()
 
 	// If parent is invalid, get the cache value.
@@ -137,7 +134,7 @@ func (iter *cacheMergeIterator[V]) Value() V {
 }
 
 // Close implements Iterator
-func (iter *cacheMergeIterator[V]) Close() error {
+func (iter *cacheMergeIterator) Close() error {
 	err1 := iter.cache.Close()
 	if err := iter.parent.Close(); err != nil {
 		return err
@@ -148,7 +145,7 @@ func (iter *cacheMergeIterator[V]) Close() error {
 
 // Error returns an error if the cacheMergeIterator is invalid defined by the
 // Valid method.
-func (iter *cacheMergeIterator[V]) Error() error {
+func (iter *cacheMergeIterator) Error() error {
 	if !iter.Valid() {
 		return errors.New("invalid cacheMergeIterator")
 	}
@@ -158,14 +155,14 @@ func (iter *cacheMergeIterator[V]) Error() error {
 
 // assertValid checks if not valid, panics.
 // NOTE: May have side-effect of iterating over cache.
-func (iter *cacheMergeIterator[V]) assertValid() {
+func (iter *cacheMergeIterator) assertValid() {
 	if err := iter.Error(); err != nil {
 		panic(err)
 	}
 }
 
 // compare is like bytes.Compare but opposite if not ascending.
-func (iter *cacheMergeIterator[V]) compare(a, b []byte) int {
+func (iter *cacheMergeIterator) compare(a, b []byte) int {
 	if iter.ascending {
 		return bytes.Compare(a, b)
 	}
@@ -178,9 +175,9 @@ func (iter *cacheMergeIterator[V]) compare(a, b []byte) int {
 // If the current cache item is not a delete item, does nothing.
 // If `until` is nil, there is no limit, and cache may end up invalid.
 // CONTRACT: cache is valid.
-func (iter *cacheMergeIterator[V]) skipCacheDeletes(until []byte) {
+func (iter *cacheMergeIterator) skipCacheDeletes(until []byte) {
 	for iter.cache.Valid() &&
-		iter.isZero(iter.cache.Value()) &&
+		iter.cache.Value() == nil &&
 		(until == nil || iter.compare(iter.cache.Key(), until) < 0) {
 		iter.cache.Next()
 	}
@@ -189,7 +186,7 @@ func (iter *cacheMergeIterator[V]) skipCacheDeletes(until []byte) {
 // skipUntilExistsOrInvalid fast forwards cache (or parent+cache in case of deleted items) until current
 // item exists, or until iterator becomes invalid.
 // Returns whether the iterator is valid.
-func (iter *cacheMergeIterator[V]) skipUntilExistsOrInvalid() bool {
+func (iter *cacheMergeIterator) skipUntilExistsOrInvalid() bool {
 	for {
 		// If parent is invalid, fast-forward cache.
 		if !iter.parent.Valid() {
@@ -214,7 +211,7 @@ func (iter *cacheMergeIterator[V]) skipUntilExistsOrInvalid() bool {
 		case 0: // parent == cache.
 			// Skip over if cache item is a delete.
 			valueC := iter.cache.Value()
-			if iter.isZero(valueC) {
+			if valueC == nil {
 				iter.parent.Next()
 				iter.cache.Next()
 
@@ -226,7 +223,7 @@ func (iter *cacheMergeIterator[V]) skipUntilExistsOrInvalid() bool {
 		case 1: // cache < parent
 			// Skip over if cache item is a delete.
 			valueC := iter.cache.Value()
-			if iter.isZero(valueC) {
+			if valueC == nil {
 				iter.skipCacheDeletes(keyP)
 				continue
 			}

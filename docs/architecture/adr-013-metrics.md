@@ -10,13 +10,13 @@ Proposed
 
 ## Context
 
-Telemetry is paramount to debugging and understanding what the application is doing and how it is
+Telemetry is paramount into debugging and understanding what the application is doing and how it is
 performing. We aim to expose metrics from modules and other core parts of the Cosmos SDK.
 
 In addition, we should aim to support multiple configurable sinks that an operator may choose from.
 By default, when telemetry is enabled, the application should track and expose metrics that are
 stored in-memory. The operator may choose to enable additional sinks, where we support only
-[Prometheus](https://prometheus.io/) for now, as it's battle-tested, simple to set up, open source,
+[Prometheus](https://prometheus.io/) for now, as it's battle-tested, simple to setup, open source,
 and is rich with ecosystem tooling.
 
 We must also aim to integrate metrics into the Cosmos SDK in the most seamless way possible such that
@@ -41,7 +41,7 @@ We will add an additional configuration block to `app.toml` that defines telemet
 service-name = {{ .Telemetry.ServiceName }}
 
 # Enabled enables the application telemetry functionality. When enabled,
-# an in-memory sink is also enabled by default. Operators may also enable
+# an in-memory sink is also enabled by default. Operators may also enabled
 # other sinks such as Prometheus.
 enabled = {{ .Telemetry.Enabled }}
 

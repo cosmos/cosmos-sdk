@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/x/tx/signing/aminojson/internal/testpb"
+	"cosmossdk.io/x/tx/signing/aminojson/internal/testpb"
 )
 
 func Test_getMessageAminoName(t *testing.T) {

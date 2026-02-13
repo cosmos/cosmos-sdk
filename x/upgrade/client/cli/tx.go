@@ -58,7 +58,7 @@ func NewCmdSubmitUpgradeProposal(ac addresscodec.Codec) *cobra.Command {
 				return err
 			}
 
-			proposal, err := cli.ReadGovPropCmdFlags(clientCtx.GetFromAddress().String(), cmd.Flags())
+			proposal, err := cli.ReadGovPropFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -145,7 +145,7 @@ func NewCmdSubmitCancelUpgradeProposal(ac addresscodec.Codec) *cobra.Command {
 				return err
 			}
 
-			proposal, err := cli.ReadGovPropCmdFlags(clientCtx.GetFromAddress().String(), cmd.Flags())
+			proposal, err := cli.ReadGovPropFlags(clientCtx, cmd.Flags())
 			if err != nil {
 				return err
 			}

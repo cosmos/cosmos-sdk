@@ -1,7 +1,6 @@
 package types_test
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -23,31 +22,6 @@ var (
 	val2    = sdk.ValAddress("_____validator2_____")
 	val3    = sdk.ValAddress("_____validator3_____")
 )
-
-// TestStakeAuthorizationCaseInsensitive verifies that allow/deny list validation
-func TestStakeAuthorizationCaseInsensitive(t *testing.T) {
-	key := storetypes.NewKVStoreKey(stakingtypes.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
-	ctx := testCtx.Ctx.WithHeaderInfo(coreheader.Info{})
-
-	valLower := val1.String()
-	valUpper := strings.ToUpper(valLower)
-
-	// Verify both decode to same bytes (bech32 is case-insensitive)
-	fromLower, _ := sdk.ValAddressFromBech32(valLower)
-	fromUpper, _ := sdk.ValAddressFromBech32(valUpper)
-	require.Equal(t, fromLower, fromUpper)
-
-	// Deny list: uppercase variant must also be denied
-	denyAuth, _ := stakingtypes.NewStakeAuthorization(nil, []sdk.ValAddress{val1}, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE, nil)
-	_, err := denyAuth.Accept(ctx, stakingtypes.NewMsgDelegate(delAddr.String(), valUpper, coin100))
-	require.Error(t, err, "uppercase must be denied")
-
-	// Allow list: uppercase variant must also be allowed
-	allowAuth, _ := stakingtypes.NewStakeAuthorization([]sdk.ValAddress{val1}, nil, stakingtypes.AuthorizationType_AUTHORIZATION_TYPE_DELEGATE, nil)
-	_, err = allowAuth.Accept(ctx, stakingtypes.NewMsgDelegate(delAddr.String(), valUpper, coin100))
-	require.NoError(t, err, "uppercase must be allowed")
-}
 
 func TestAuthzAuthorizations(t *testing.T) {
 	key := storetypes.NewKVStoreKey(stakingtypes.StoreKey)

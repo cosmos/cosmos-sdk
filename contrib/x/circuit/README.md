@@ -53,9 +53,9 @@ const (
     LEVEL_SUPER_ADMIN
 )
 
-type Permissions struct {
-	Level Permissions_Level
-	LimitTypeUrls []string // if full permission, LimitTypeUrls can be empty
+type Access struct {
+	level int32
+	msgs []string // if full permission, msgs can be empty
 }
 ```
 

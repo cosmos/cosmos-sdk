@@ -23,7 +23,7 @@ Server and client-side operations are executed on the host machine.
 
 ### Test strategy
 
-System tests cover the full stack via CLI and a running (multi-node) network. They are more expensive (in terms of time/cpu) 
+System tests cover the full stack via cli and a running (multi node) network. They are more expensive (in terms of time/ cpu)
 to run compared to unit or integration tests. 
 Therefore, we focus on the **critical path** and do not cover every condition.
 
@@ -37,7 +37,7 @@ Read the [GETTING_STARTED](../systemtests/GETTING_STARTED.md) guide to get start
 go test -tags system_test -count=1 -v . --run TestStakeUnstake  -verbose
 ```
 
-Test CLI parameters
+Test cli parameters
 
 * `-verbose` verbose output
 * `-wait-time` duration - time to wait for chain events (default 30s)

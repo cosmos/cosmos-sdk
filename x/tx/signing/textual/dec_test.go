@@ -12,8 +12,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"cosmossdk.io/math"
-
-	"github.com/cosmos/cosmos-sdk/x/tx/signing/textual"
+	"cosmossdk.io/x/tx/signing/textual"
 )
 
 func TestDecJSONTestcases(t *testing.T) {

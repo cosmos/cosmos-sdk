@@ -104,7 +104,7 @@ func PubkeyCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "pubkey [pubkey]",
 		Short: "Decode a pubkey from proto JSON",
-		Long: fmt.Sprintf(`Decode a pubkey from proto JSON and display its address.
+		Long: fmt.Sprintf(`Decode a pubkey from proto JSON and display it's address.
 
 Example:
 $ %s debug pubkey '{"@type":"/cosmos.crypto.secp256k1.PubKey","key":"AurroA7jvfPd1AadmmOvWM2rJSwipXfRf8yD6pLbA2DJ"}'
@@ -178,7 +178,7 @@ func getPubKeyFromRawString(pkstr, keytype string) (cryptotypes.PubKey, error) {
 func PubkeyRawCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "pubkey-raw [pubkey] -t [{ed25519, secp256k1}]",
-		Short: "Decode an ED25519 or secp256k1 pubkey from hex, base64, or bech32",
+		Short: "Decode a ED25519 or secp256k1 pubkey from hex, base64, or bech32",
 		Long:  "Decode a pubkey from hex, base64, or bech32.",
 		Example: fmt.Sprintf(`
 %s debug pubkey-raw 8FCA9D6D1F80947FD5E9A05309259746F5F72541121766D5F921339DD061174A

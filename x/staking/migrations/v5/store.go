@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"cosmossdk.io/log/v2"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 

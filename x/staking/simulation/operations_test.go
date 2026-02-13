@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/depinject"
-	sdklog "cosmossdk.io/log/v2"
+	sdklog "cosmossdk.io/log"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"

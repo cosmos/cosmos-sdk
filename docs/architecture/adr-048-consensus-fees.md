@@ -14,7 +14,7 @@ This ADR describes a flexible mechanism to maintain a consensus level gas prices
 
 ## Context
 
-Currently, each validator configures its own `minimal-gas-prices` in `app.yaml`. But setting a proper minimal gas price is critical to protect network from DoS attack, and it's hard for all the validators to pick a sensible value, so we propose to maintain a gas price in consensus level.
+Currently, each validator configures it's own `minimal-gas-prices` in `app.yaml`. But setting a proper minimal gas price is critical to protect network from dos attack, and it's hard for all the validators to pick a sensible value, so we propose to maintain a gas price in consensus level.
 
 Since tendermint 0.34.20 has supported mempool prioritization, we can take advantage of that to implement more sophisticated gas fee system.
 

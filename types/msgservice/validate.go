@@ -9,8 +9,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	msg "cosmossdk.io/api/cosmos/msg/v1"
-
-	"github.com/cosmos/cosmos-sdk/x/tx/signing"
+	"cosmossdk.io/x/tx/signing"
 )
 
 // ValidateProtoAnnotations validates that the proto annotations are correct.

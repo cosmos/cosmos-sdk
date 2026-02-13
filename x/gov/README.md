@@ -10,14 +10,14 @@ This paper specifies the Governance module of the Cosmos SDK, which was first
 described in the [Cosmos Whitepaper](https://cosmos.network/about/whitepaper) in
 June 2016.
 
-The module enables Cosmos SDK-based blockchains to support an on-chain governance
+The module enables Cosmos SDK based blockchain to support an on-chain governance
 system. In this system, holders of the native staking token of the chain can vote
 on proposals on a 1 token 1 vote basis. Next is a list of features the module
 currently supports:
 
 * **Proposal submission:** Users can submit proposals with a deposit. Once the
-minimum deposit is reached, the proposal enters the voting period. The minimum deposit can be reached by collecting deposits from different users (including proposer) within the deposit period.
-* **Vote:** Participants can vote on proposals that reached MinDeposit and entered the voting period.
+minimum deposit is reached, the proposal enters voting period. The minimum deposit can be reached by collecting deposits from different users (including proposer) within deposit period.
+* **Vote:** Participants can vote on proposals that reached MinDeposit and entered voting period.
 * **Inheritance and penalties:** Delegators inherit their validator's vote if
 they don't vote themselves.
 * **Claiming deposit:** Users that deposited on proposals can recover their
@@ -66,12 +66,12 @@ staking token of the chain.
 
 *Disclaimer: This is work in progress. Mechanisms are susceptible to change.*
 
-The governance process is divided into a few steps that are outlined below:
+The governance process is divided in a few steps that are outlined below:
 
 * **Proposal submission:** Proposal is submitted to the blockchain with a
   deposit.
-* **Vote:** Once the deposit reaches a certain value (`MinDeposit`), the proposal is
-  confirmed and the vote opens. Bonded Atom holders can then send `TxGovVote`
+* **Vote:** Once deposit reaches a certain value (`MinDeposit`), proposal is
+  confirmed and vote opens. Bonded Atom holders can then send `TxGovVote`
   transactions to vote on the proposal.
 * **Execution** After a period of time, the votes are tallied and depending
   on the result, the messages in the proposal will be executed.
@@ -166,7 +166,7 @@ proposal but accept the result of the vote.
 
 [ADR-037](https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-037-gov-split-vote.md) introduces the weighted vote feature which allows a staker to split their votes into several voting options. For example, it could use 70% of its voting power to vote Yes and 30% of its voting power to vote No.
 
-Oftentimes the entity owning that address might not be a single individual. For example, a company might have different stakeholders who want to vote differently, and so it makes sense to allow them to split their voting power. Currently, it is not possible for them to do "passthrough voting" and give their users voting rights over their tokens. However, with this system, exchanges can poll their users for voting preferences, and then vote on-chain proportionally to the results of the poll.
+Often times the entity owning that address might not be a single individual. For example, a company might have different stakeholders who want to vote differently, and so it makes sense to allow them to split their voting power. Currently, it is not possible for them to do "passthrough voting" and giving their users voting rights over their tokens. However, with this system, exchanges can poll their users for voting preferences, and then vote on-chain proportionally to the results of the poll.
 
 To represent weighted vote on chain, we use the following Protobuf message.
 
@@ -200,13 +200,11 @@ Developers can now build systems with:
 ```go
 func myCustomVotingFunction(
   ctx context.Context,
-  k keeper.Keeper,
+  k Keeper,
   proposal v1.Proposal,
-) (totalVoterPower math.LegacyDec, totalValPower math.Int, results map[v1.VoteOption]math.LegacyDec, err error) {
+  validators map[string]v1.ValidatorGovInfo,
+) (totalVoterPower math.LegacyDec, results map[v1.VoteOption]math.LegacyDec, err error) {
   // ... tally logic
-  // totalVoterPower is the sum of voting power that actually voted
-  // totalValPower is the sum of all active validator power (for quorum calculation)
-  return totalVoterPower, totalValPower, results, nil
 }
 
 govKeeper := govkeeper.NewKeeper(
@@ -214,11 +212,12 @@ govKeeper := govkeeper.NewKeeper(
   runtime.NewKVStoreService(keys[govtypes.StoreKey]),
   app.AccountKeeper,
   app.BankKeeper,
+  app.StakingKeeper,
   app.DistrKeeper,
   app.MsgServiceRouter(),
   govConfig,
   authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-  govkeeper.NewDefaultCalculateVoteResultsAndVotingPower(app.StakingKeeper),
+  govkeeper.WithCustomCalculateVoteResultsAndVotingPowerFn(myCustomVotingFunction),
 )
 ```
 
@@ -433,13 +432,10 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/gov/v1/gov.pr
 This type is used in a temp map when tallying
 
 ```go
-type ValidatorGovInfo struct {
-    Address             sdk.ValAddress      // address of the validator operator
-    BondedTokens        math.Int            // Power of a Validator
-    DelegatorShares     math.LegacyDec      // Total outstanding delegator shares
-    DelegatorDeductions math.LegacyDec      // Delegator deductions from validator's delegators voting independently
-    Vote                WeightedVoteOptions // Vote of the validator
-}
+  type ValidatorGovInfo struct {
+    Minus     sdk.Dec
+    Vote      Vote
+  }
 ```
 
 ## Stores
@@ -690,17 +686,14 @@ The governance module contains the following parameters:
 | voting_period                 | string (time ns) | "172800000000000" (17280s)              |
 | quorum                        | string (dec)     | "0.334000000000000000"                  |
 | threshold                     | string (dec)     | "0.500000000000000000"                  |
-| veto_threshold                | string (dec)     | "0.334000000000000000"                  |
-| min_initial_deposit_ratio     | string (dec)     | "0.000000000000000000"                  |
-| proposal_cancel_ratio         | string (dec)     | "0.500000000000000000"                  |
-| proposal_cancel_dest          | string           | "" (empty = burn)                       |
-| expedited_voting_period       | string (time ns) | "86400000000000" (86400s)               |
-| expedited_threshold           | string (dec)     | "0.667000000000000000"                  |
+| veto                          | string (dec)     | "0.334000000000000000"                  |
+| expedited_threshold           | string (time ns) | "0.667000000000000000"                  |
+| expedited_voting_period       | string (time ns) | "86400000000000" (8600s)                |
 | expedited_min_deposit         | array (coins)    | [{"denom":"uatom","amount":"50000000"}] |
+| burn_proposal_deposit_prevote | bool             | false                                    |
 | burn_vote_quorum              | bool             | false                                   |
-| burn_proposal_deposit_prevote | bool             | false                                   |
 | burn_vote_veto                | bool             | true                                    |
-| min_deposit_ratio             | string (dec)     | "0.010000000000000000"                  |
+| min_initial_deposit_ratio                | string             | "0.1"                                    |
 
 
 **NOTE**: The governance module contains parameters that are objects unlike other
@@ -771,6 +764,26 @@ deposits:
 pagination:
   next_key: null
   total: "0"
+```
+
+##### param
+
+The `param` command allows users to query a given parameter for the `gov` module.
+
+```bash
+simd query gov param [param-type] [flags]
+```
+
+Example:
+
+```bash
+simd query gov param voting
+```
+
+Example Output:
+
+```bash
+voting_period: "172800000000000"
 ```
 
 ##### params

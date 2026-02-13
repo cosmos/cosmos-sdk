@@ -3,8 +3,8 @@ package aminojson_test
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/x/tx/signing/aminojson"
-	"github.com/cosmos/cosmos-sdk/x/tx/signing/aminojson/internal/testpb"
+	"cosmossdk.io/x/tx/signing/aminojson"
+	"cosmossdk.io/x/tx/signing/aminojson/internal/testpb"
 )
 
 var sink any

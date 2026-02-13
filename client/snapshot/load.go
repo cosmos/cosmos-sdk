@@ -20,7 +20,7 @@ import (
 
 const SnapshotFileName = "_snapshot"
 
-// LoadArchiveCmd loads a portable archive format snapshot into snapshot store
+// LoadArchiveCmd load a portable archive format snapshot into snapshot store
 func LoadArchiveCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "load <archive-file>",
@@ -38,12 +38,10 @@ func LoadArchiveCmd() *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("failed to open archive file: %w", err)
 			}
-			defer fp.Close()
 			reader, err := gzip.NewReader(fp)
 			if err != nil {
 				return fmt.Errorf("failed to create gzip reader: %w", err)
 			}
-			defer reader.Close()
 
 			var snapshot snapshottypes.Snapshot
 			tr := tar.NewReader(reader)

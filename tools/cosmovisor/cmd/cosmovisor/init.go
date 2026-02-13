@@ -9,10 +9,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"cosmossdk.io/log/v2"
+	"cosmossdk.io/log"
 	"cosmossdk.io/tools/cosmovisor"
-
-	"github.com/cosmos/cosmos-sdk/x/upgrade/plan"
+	"cosmossdk.io/x/upgrade/plan"
 )
 
 func NewInitCmd() *cobra.Command {

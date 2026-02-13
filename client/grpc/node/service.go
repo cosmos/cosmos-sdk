@@ -12,8 +12,8 @@ import (
 )
 
 // RegisterNodeService registers the node gRPC service on the provided gRPC router.
-func RegisterNodeService(clientCtx client.Context, server gogogrpc.Server, cfg config.Config, earliestStoreHeightFn func() int64) {
-	RegisterServiceServer(server, NewQueryServer(clientCtx, cfg, earliestStoreHeightFn))
+func RegisterNodeService(clientCtx client.Context, server gogogrpc.Server, cfg config.Config) {
+	RegisterServiceServer(server, NewQueryServer(clientCtx, cfg))
 }
 
 // RegisterGRPCGatewayRoutes mounts the node gRPC service's GRPC-gateway routes
@@ -25,16 +25,14 @@ func RegisterGRPCGatewayRoutes(clientConn gogogrpc.ClientConn, mux *runtime.Serv
 var _ ServiceServer = queryServer{}
 
 type queryServer struct {
-	clientCtx             client.Context
-	cfg                   config.Config
-	earliestStoreHeightFn func() int64
+	clientCtx client.Context
+	cfg       config.Config
 }
 
-func NewQueryServer(clientCtx client.Context, cfg config.Config, earliestStoreHeightFn func() int64) ServiceServer {
+func NewQueryServer(clientCtx client.Context, cfg config.Config) ServiceServer {
 	return queryServer{
-		clientCtx:             clientCtx,
-		cfg:                   cfg,
-		earliestStoreHeightFn: earliestStoreHeightFn,
+		clientCtx: clientCtx,
+		cfg:       cfg,
 	}
 }
 
@@ -55,10 +53,13 @@ func (s queryServer) Status(ctx context.Context, _ *StatusRequest) (*StatusRespo
 	blockTime := sdkCtx.BlockTime()
 
 	return &StatusResponse{
-		EarliestStoreHeight: uint64(s.earliestStoreHeightFn()),
-		Height:              uint64(sdkCtx.BlockHeight()),
-		Timestamp:           &blockTime,
-		AppHash:             sdkCtx.BlockHeader().AppHash,
-		ValidatorHash:       sdkCtx.BlockHeader().NextValidatorsHash,
+		// TODO: Get earliest version from store.
+		//
+		// Ref: ...
+		// EarliestStoreHeight: sdkCtx.MultiStore(),
+		Height:        uint64(sdkCtx.BlockHeight()),
+		Timestamp:     &blockTime,
+		AppHash:       sdkCtx.BlockHeader().AppHash,
+		ValidatorHash: sdkCtx.BlockHeader().NextValidatorsHash,
 	}, nil
 }

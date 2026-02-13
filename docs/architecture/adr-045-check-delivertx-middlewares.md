@@ -30,7 +30,7 @@ The two following interfaces are the base of the middleware design, and are defi
 type Handler interface {
     CheckTx(ctx context.Context, req Request, checkReq RequestCheckTx) (Response, ResponseCheckTx, error)
     DeliverTx(ctx context.Context, req Request) (Response, error)
-    SimulateTx(ctx context.Context, req Request) (Response, error)
+    SimulateTx(ctx context.Context, req Request (Response, error)
 }
 
 type Middleware func(Handler) Handler

@@ -109,7 +109,6 @@ func (coin Coin) IsLTE(other Coin) bool {
 }
 
 // IsEqual returns true if the two sets of Coins have the same value
-//
 // Deprecated: Use Coin.Equal instead.
 func (coin Coin) IsEqual(other Coin) bool {
 	return coin.Equal(other)
@@ -141,7 +140,7 @@ func (coin Coin) Sub(coinB Coin) Coin {
 }
 
 // SafeSub safely subtracts the amounts of two coins. It returns an error if the coins differ
-// in denom or subtraction results in negative coin amount.
+// in denom or subtraction results in negative coin denom.
 func (coin Coin) SafeSub(coinB Coin) (Coin, error) {
 	if coin.Denom != coinB.Denom {
 		return Coin{}, fmt.Errorf("invalid coin denoms: %s, %s", coin.Denom, coinB.Denom)
@@ -701,7 +700,6 @@ func (coins Coins) AmountOf(denom string) math.Int {
 
 // AmountOfNoDenomValidation returns the amount of a denom from coins
 // without validating the denomination.
-//
 // Deprecated: use AmountOf
 func (coins Coins) AmountOfNoDenomValidation(denom string) math.Int {
 	return coins.AmountOf(denom)

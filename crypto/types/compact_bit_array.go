@@ -83,7 +83,7 @@ func (bA *CompactBitArray) SetIndex(i int, v bool) bool {
 }
 
 // NumTrueBitsBefore returns the number of bits set to true before the
-// given index. e.g. if bA = _XX__XX, NumTrueBitsBefore(4) = 2, since
+// given index. e.g. if bA = _XX__XX, NumOfTrueBitsBefore(4) = 2, since
 // there are two bits set to true before index 4.
 func (bA *CompactBitArray) NumTrueBitsBefore(index int) int {
 	onesCount := 0

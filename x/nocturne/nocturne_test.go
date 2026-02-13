@@ -88,11 +88,26 @@ func TestCivilizationMode(t *testing.T) {
 	}
 	t.Logf("Civilization Status:\n%s", status)
 
-	// Verify Φ_SYSTEM
-	expected := "Convergence: 95.1%"
-	if !strings.Contains(status, expected) {
-		t.Errorf("Status should contain %q", expected)
+	// Verify v4.0 and Council state
+	if !strings.Contains(status, "v4.0") || !strings.Contains(status, "CONSELHO") {
+		t.Error("Status should reflect v4.0 and Council state")
 	}
+}
+
+func TestCouncilAndSnapshot(t *testing.T) {
+	// Test Assemble Council
+	council := AssembleCouncil()
+	if !strings.Contains(council, "assembled") {
+		t.Errorf("AssembleCouncil failed: %s", council)
+	}
+	t.Logf("Council: %s", council)
+
+	// Test Generate Snapshot
+	snapshot := GenerateSnapshot("The Third Turn")
+	if !strings.Contains(snapshot, "Executing") || !strings.Contains(snapshot, "7.27") {
+		t.Errorf("GenerateSnapshot failed: %s", snapshot)
+	}
+	t.Logf("Snapshot result: %s", snapshot)
 }
 
 func TestMemoryGarden(t *testing.T) {

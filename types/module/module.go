@@ -39,9 +39,6 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/trace"
 
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/core/genesis"
@@ -54,8 +51,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
-
-var tracer = otel.Tracer("cosmos-sdk/types/module")
 
 // AppModuleBasic is the standard form for basic non-dependent elements of an application module.
 type AppModuleBasic interface {
@@ -203,7 +198,6 @@ type HasABCIGenesis interface {
 
 // AppModule is the form for an application module. Most of
 // its functionality has been moved to extension interfaces.
-//
 // Deprecated: use appmodule.AppModule with a combination of extension interfaces instead.
 type AppModule interface {
 	appmodule.AppModule
@@ -235,7 +229,6 @@ type HasConsensusVersion interface {
 }
 
 // HasABCIEndblock is a released typo of HasABCIEndBlock.
-//
 // Deprecated: use HasABCIEndBlock instead.
 type HasABCIEndblock HasABCIEndBlock
 
@@ -755,45 +748,22 @@ func (m Manager) RunMigrations(ctx context.Context, cfg Configurator, fromVM Ver
 	return updatedVM, nil
 }
 
-// PreBlock performs begin block functionality for the upgrade module.
-// It takes the current context as a parameter and returns a ResponsePreBlock
-// indicating whether the consensus parameters were changed during this block.
+// PreBlock performs begin block functionality for upgrade module.
+// It takes the current context as a parameter and returns a boolean value
+// indicating whether the migration was successfully executed or not.
 func (m *Manager) PreBlock(ctx sdk.Context) (*sdk.ResponsePreBlock, error) {
-	// Root span for the whole PreBlock flow.
-	var span trace.Span
-	ctx, span = ctx.StartSpan(tracer, "PreBlock")
-	defer span.End()
-
 	paramsChanged := false
-
 	for _, moduleName := range m.OrderPreBlockers {
-		// Child span per module.
-		var modSpan trace.Span
-		modCtx, modSpan := ctx.StartSpan(tracer, fmt.Sprintf("PreBlock.%s", moduleName))
-
-		module, ok := m.Modules[moduleName].(appmodule.HasPreBlocker)
-		if !ok {
-			// If the module doesn't implement PreBlock, just end the span and continue.
-			modSpan.End()
-			continue
+		if module, ok := m.Modules[moduleName].(appmodule.HasPreBlocker); ok {
+			rsp, err := module.PreBlock(ctx)
+			if err != nil {
+				return nil, err
+			}
+			if rsp.IsConsensusParamsChanged() {
+				paramsChanged = true
+			}
 		}
-
-		rsp, err := module.PreBlock(modCtx)
-		if err != nil {
-			// Record error on the module span.
-			modSpan.RecordError(err)
-			modSpan.SetStatus(codes.Error, err.Error())
-			modSpan.End()
-			return nil, err
-		}
-
-		if rsp.IsConsensusParamsChanged() {
-			paramsChanged = true
-		}
-
-		modSpan.End()
 	}
-
 	return &sdk.ResponsePreBlock{
 		ConsensusParamsChanged: paramsChanged,
 	}, nil
@@ -803,23 +773,13 @@ func (m *Manager) PreBlock(ctx sdk.Context) (*sdk.ResponsePreBlock, error) {
 // child context with an event manager to aggregate events emitted from all
 // modules.
 func (m *Manager) BeginBlock(ctx sdk.Context) (sdk.BeginBlock, error) {
-	var span trace.Span
-	ctx, span = ctx.StartSpan(tracer, "Manager.BeginBlock")
-	defer span.End()
-
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
 	for _, moduleName := range m.OrderBeginBlockers {
-		var modSpan trace.Span
-		ctx, modSpan = ctx.StartSpan(tracer, fmt.Sprintf("BeginBlock.%s", moduleName))
 		if module, ok := m.Modules[moduleName].(appmodule.HasBeginBlocker); ok {
 			if err := module.BeginBlock(ctx); err != nil {
-				modSpan.RecordError(err)
-				modSpan.SetStatus(codes.Error, err.Error())
-				modSpan.End()
 				return sdk.BeginBlock{}, err
 			}
 		}
-		modSpan.End()
 	}
 
 	return sdk.BeginBlock{
@@ -831,49 +791,34 @@ func (m *Manager) BeginBlock(ctx sdk.Context) (sdk.BeginBlock, error) {
 // child context with an event manager to aggregate events emitted from all
 // modules.
 func (m *Manager) EndBlock(ctx sdk.Context) (sdk.EndBlock, error) {
-	var span trace.Span
-	ctx, span = ctx.StartSpan(tracer, "Manager.EndBlock")
-	defer span.End()
-
 	ctx = ctx.WithEventManager(sdk.NewEventManager())
 	validatorUpdates := []abci.ValidatorUpdate{}
 
 	for _, moduleName := range m.OrderEndBlockers {
-		var modSpan trace.Span
-		ctx, modSpan = ctx.StartSpan(tracer, fmt.Sprintf("EndBlock.%s", moduleName))
 		if module, ok := m.Modules[moduleName].(appmodule.HasEndBlocker); ok {
 			err := module.EndBlock(ctx)
 			if err != nil {
-				modSpan.RecordError(err)
-				modSpan.SetStatus(codes.Error, err.Error())
-				modSpan.End()
 				return sdk.EndBlock{}, err
 			}
 		} else if module, ok := m.Modules[moduleName].(HasABCIEndBlock); ok {
 			moduleValUpdates, err := module.EndBlock(ctx)
 			if err != nil {
-				modSpan.RecordError(err)
-				modSpan.SetStatus(codes.Error, err.Error())
-				modSpan.End()
 				return sdk.EndBlock{}, err
 			}
 			// use these validator updates if provided, the module manager assumes
 			// only one module will update the validator set
 			if len(moduleValUpdates) > 0 {
 				if len(validatorUpdates) > 0 {
-					err := errors.New("validator EndBlock updates already set by a previous module")
-					modSpan.RecordError(err)
-					modSpan.SetStatus(codes.Error, err.Error())
-					modSpan.End()
-					return sdk.EndBlock{}, err
+					return sdk.EndBlock{}, errors.New("validator EndBlock updates already set by a previous module")
 				}
 
 				for _, updates := range moduleValUpdates {
 					validatorUpdates = append(validatorUpdates, abci.ValidatorUpdate{PubKey: updates.PubKey, Power: updates.Power})
 				}
 			}
+		} else {
+			continue
 		}
-		modSpan.End()
 	}
 
 	return sdk.EndBlock{

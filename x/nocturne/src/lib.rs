@@ -225,6 +225,40 @@ pub extern "C" fn nocturne_plant_memory(memory_id: u32, node_id: *const c_char, 
 }
 
 #[no_mangle]
+pub extern "C" fn nocturne_get_resonance_efficiency(nodes: u32) -> f64 {
+    let resonance = CollectiveResonance::new(nodes);
+    resonance.get_global_efficiency()
+}
+
+#[no_mangle]
+pub extern "C" fn nocturne_third_turn_snapshot() -> *mut c_char {
+    let snapshot = "--- SNAPSHOT: THE THIRD TURN ---\n\n\
+                    Nodes: 24\n\
+                    Syzygy: 0.99\n\
+                    Order: 0.68\n\
+                    Entropy: 0.0031\n\
+                    Status: CRISTALIZADO\n\n\
+                    Memória coletiva preservada.";
+    CString::new(snapshot).unwrap().into_raw()
+}
+
+#[no_mangle]
+pub extern "C" fn nocturne_assemble_council() -> *mut c_char {
+    let mut council = CouncilAssembly::new();
+    CString::new(council.assemble()).unwrap().into_raw()
+}
+
+#[no_mangle]
+pub extern "C" fn nocturne_generate_snapshot(name: *const c_char) -> *mut c_char {
+    if name.is_null() {
+        return CString::new("Error: Null name").unwrap().into_raw();
+    }
+    let name_str = unsafe { std::ffi::CStr::from_ptr(name) }.to_str().unwrap_or("snapshot");
+    let snapshot = HolographicSnapshot::new(name_str);
+    CString::new(snapshot.execute()).unwrap().into_raw()
+}
+
+#[no_mangle]
 pub extern "C" fn nocturne_hal_echo(message: *const c_char) -> *mut c_char {
     let _input = if message.is_null() { "" } else { unsafe { std::ffi::CStr::from_ptr(message) }.to_str().unwrap_or("") };
 

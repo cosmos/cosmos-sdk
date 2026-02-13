@@ -22,7 +22,6 @@ const (
 
 	// LegacyDecimalPrecisionBits bits required to represent the above precision
 	// Ceiling[Log2[10^Precision - 1]]
-	//
 	// Deprecated: This is unused and will be removed
 	LegacyDecimalPrecisionBits = 60
 

@@ -18,10 +18,10 @@ jobs:
     runs-on: depot-ubuntu-22.04-16
     if: "!contains(github.event.head_commit.message, 'skip-sims')"
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25.7"
+          go-version: "1.25"
           check-latest: true
       - run: make build
 
@@ -30,10 +30,10 @@ jobs:
     needs: [build]
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25.7"
+          go-version: "1.25"
           check-latest: true
       - name: test-sim-import-export
         run: |
@@ -44,10 +44,10 @@ jobs:
     needs: [build]
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25.7"
+          go-version: "1.25"
           check-latest: true
       - name: test-sim-after-import
         run: |
@@ -58,10 +58,10 @@ jobs:
     needs: [build]
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25.7"
+          go-version: "1.25"
           check-latest: true
       - name: test-sim-nondeterminism-streaming
         run: |
@@ -72,10 +72,10 @@ jobs:
     needs: [build]
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v6
         with:
-          go-version: "1.25.7"
+          go-version: "1.25"
           check-latest: true
       - name: test-sim-multi-seed-short
         run: |

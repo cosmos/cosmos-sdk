@@ -142,7 +142,7 @@ func (m *QueryValidatorsResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// QueryValidatorRequest is request type for the Query/Validator RPC method
+// QueryValidatorRequest is response type for the Query/Validator RPC method
 type QueryValidatorRequest struct {
 	// validator_addr defines the validator address to query for.
 	ValidatorAddr string `protobuf:"bytes,1,opt,name=validator_addr,json=validatorAddr,proto3" json:"validator_addr,omitempty"`

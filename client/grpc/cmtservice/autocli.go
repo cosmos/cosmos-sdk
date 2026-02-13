@@ -46,17 +46,6 @@ var CometBFTAutoCLIDescriptor = &autocliv1.ServiceCommandDescriptor{
 			RpcMethod: "ABCIQuery",
 			Skip:      true,
 		},
-		{
-			RpcMethod: "GetLatestBlockResults",
-			Use:       "block-results-latest",
-			Short:     "Query for the latest block results",
-		},
-		{
-			RpcMethod:      "GetBlockResults",
-			Use:            "block-results [height]",
-			Short:          "Query for block results by height",
-			PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "height"}},
-		},
 	},
 }
 

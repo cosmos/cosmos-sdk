@@ -8,7 +8,7 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/assert"
 
-	"cosmossdk.io/log/v2"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
@@ -73,21 +73,6 @@ func DefaultContextWithDB(tb testing.TB, key, tkey storetypes.StoreKey) TestCont
 	cms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
 	cms.MountStoreWithDB(tkey, storetypes.StoreTypeTransient, db)
-	err := cms.LoadLatestVersion()
-	assert.NoError(tb, err)
-
-	ctx := sdk.NewContext(cms, cmtproto.Header{Time: time.Now()}, false, log.NewNopLogger())
-
-	return TestContext{ctx, db, cms}
-}
-
-func DefaultContextWithObjectStore(tb testing.TB, key, tkey, okey storetypes.StoreKey) TestContext {
-	tb.Helper()
-	db := dbm.NewMemDB()
-	cms := store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
-	cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
-	cms.MountStoreWithDB(tkey, storetypes.StoreTypeTransient, db)
-	cms.MountStoreWithDB(okey, storetypes.StoreTypeObject, db)
 	err := cms.LoadLatestVersion()
 	assert.NoError(tb, err)
 

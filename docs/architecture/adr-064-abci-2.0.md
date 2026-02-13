@@ -286,7 +286,7 @@ decision based on the vote extensions.
 > nor the vote extension verification mechanism described above is required for
 > applications to implement. In other words, a proposer is not required to verify
 > and propagate vote extensions along with their signatures nor are proposers
-> required to verify those signatures. An application can implement its own
+> required to verify those signatures. An application can implement it's own
 > PKI mechanism and use that to sign and verify vote extensions.
 
 #### Vote Extension Persistence

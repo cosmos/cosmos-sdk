@@ -22,6 +22,6 @@ export PRELAUNCH_GENESIS_URL=https://raw.githubusercontent.com/cosmos/mainnet/ma
 export GENTXS_DIR=~/go/src/github.com/cosmos/mainnet/$CHAIN_ID/gentxs
 ```
 
-Though this script is handy for verifying the gentxs locally, it is advised to use GitHub Action to validate gentxs.
+Though this script is handy for verifying the gentxs locally, it is advised to use Github Action to validate gentxs.
 An example can be found here:
 https://github.com/regen-network/mainnet/blob/0bcd387671b9574e893289e39c08a1643cac7d62/.github/workflows/validate-gentx.yml

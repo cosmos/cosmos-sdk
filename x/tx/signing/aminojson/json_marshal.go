@@ -13,7 +13,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/reflect/protoregistry"
 
-	"github.com/cosmos/cosmos-sdk/x/tx/signing"
+	"cosmossdk.io/x/tx/signing"
 )
 
 const cosmosDecType = "cosmos.Dec"
@@ -82,9 +82,8 @@ func NewEncoder(options EncoderOptions) Encoder {
 			"threshold_string": thresholdStringEncoder,
 		},
 		aminoFieldEncoders: map[string]FieldEncoder{
-			"legacy_coins":        NullSliceAsEmptyEncoder,
-			"null_slice_as_empty": NullSliceAsEmptyEncoder,
-			"inline_json":         cosmosInlineJSON,
+			"legacy_coins": nullSliceAsEmptyEncoder,
+			"inline_json":  cosmosInlineJSON,
 		},
 		protoTypeEncoders: map[string]MessageEncoder{
 			"google.protobuf.Timestamp": marshalTimestamp,

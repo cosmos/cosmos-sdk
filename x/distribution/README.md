@@ -185,45 +185,35 @@ Validator distribution information for the relevant validator is updated each ti
 2. any delegator withdraws from a validator, or
 3. the validator withdraws its commission.
 
-3цThe following state is stored per validator:
-
-* ValidatorOutstandingRewards: `0x02 | ValOperatorAddrLen (1 byte) | ValOperatorAddr -> ProtocolBuffer(ValidatorOutstandingRewards)`
-* ValidatorCurrentRewards: `0x06 | ValOperatorAddrLen (1 byte) | ValOperatorAddr -> ProtocolBuffer(ValidatorCurrentRewards)`
-* ValidatorAccumulatedCommission: `0x07 | ValOperatorAddrLen (1 byte) | ValOperatorAddr -> ProtocolBuffer(ValidatorAccumulatedCommission)`
+* ValidatorDistInfo: `0x02 | ValOperatorAddrLen (1 byte) | ValOperatorAddr -> ProtocolBuffer(validatorDistribution)`
 
 ```go
-type ValidatorCurrentRewards struct {
-    Rewards sdk.DecCoins
-    Period  uint64
-}
-
-type ValidatorAccumulatedCommission struct {
-    Commission sdk.DecCoins
+type ValidatorDistInfo struct {
+    OperatorAddress     sdk.AccAddress
+    SelfBondRewards     sdkmath.DecCoins
+    ValidatorCommission types.ValidatorAccumulatedCommission
 }
 ```
 
 ### Delegation Distribution
 
-Each delegation distribution needs to track the starting info for calculating rewards.
-The `DelegatorStartingInfo` tracks the previous validator period, the delegation's amount
-of staking token, and the creation height (to check later on if any slashes have occurred).
+Each delegation distribution only needs to record the height at which it last
+withdrew fees. Because a delegation must withdraw fees each time it's
+properties change (aka bonded tokens etc.) its properties will remain constant
+and the delegator's _accumulation_ factor can be calculated passively knowing
+only the height of the last withdrawal and its current properties.
 
-NOTE: Even though validators are slashed to whole staking tokens, the delegators within 
-the validator may be left with less than a full token, thus `sdk.Dec` is used.
-
-* DelegatorStartingInfo: `0x04 | ValOperatorAddrLen (1 byte) | ValOperatorAddr | AccAddrLen (1 byte) | AccAddr -> ProtocolBuffer(DelegatorStartingInfo)`
+* DelegationDistInfo: `0x02 | DelegatorAddrLen (1 byte) | DelegatorAddr | ValOperatorAddrLen (1 byte) | ValOperatorAddr -> ProtocolBuffer(delegatorDist)`
 
 ```go
-type DelegatorStartingInfo struct {
-    PreviousPeriod uint64       // period at which the delegation was created
-    Stake          math.LegacyDec // amount of staking token delegated
-    Height         uint64       // height at which delegation was created
+type DelegationDistInfo struct {
+    WithdrawalHeight int64    // last time this delegation withdrew rewards
 }
 ```
 
 ### Params
 
-The distribution module stores its params in state with the prefix of `0x09`,
+The distribution module stores it's params in state with the prefix of `0x09`,
 it can be updated with governance or the address with authority.
 
 * Params: `0x09 | ProtocolBuffer(Params)`
@@ -605,10 +595,10 @@ The distribution module emits the following events:
 
 The distribution module contains the following parameters:
 
-| Key                   | Type         | Example                    |
-| --------------------- | ------------ | -------------------------- |
-| community_tax         | string (dec) | "0.020000000000000000" [0] |
-| withdraw_addr_enabled | bool         | true                       |
+| Key                 | Type         | Example                    |
+| ------------------- | ------------ | -------------------------- |
+| communitytax        | string (dec) | "0.020000000000000000" [0] |
+| withdrawaddrenabled | bool         | true                       |
 
 * [0] `communitytax` must be positive and cannot exceed 1.00.
 * `baseproposerreward` and `bonusproposerreward` were parameters that are deprecated in v0.47 and are not used.

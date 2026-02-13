@@ -73,32 +73,6 @@ CancelContinuousFund is a message used to cancel an existing continuous fund pro
   rpc CancelContinuousFund(MsgCancelContinuousFund) returns (MsgCancelContinuousFundResponse);
 ```
 
-## Keepers
-
-### Keeper Functions
-
-The `x/protocolpool` keeper provides the following functions for managing the community pool:
-
-```go
-// GetCommunityPool gets the community pool balance.
-func (k Keeper) GetCommunityPool(ctx sdk.Context) (sdk.Coins, error)
-
-// FundCommunityPool allows an account to directly fund the community pool.
-func (k Keeper) FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.AccAddress) error
-
-// DistributeFromCommunityPool distributes funds from the protocolpool module account
-// to a receiver address.
-func (k Keeper) DistributeFromCommunityPool(ctx sdk.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error
-
-// DistributeFunds distributes funds from the ProtocolPoolEscrow account.
-// For each continuous fund, it distributes according to percentage, removes expired funds,
-// and sends remaining funds to the community pool. Called in BeginBlocker.
-func (k Keeper) DistributeFunds(ctx sdk.Context) error
-
-// GetAllContinuousFunds returns all continuous funds in the store.
-func (k Keeper) GetAllContinuousFunds(ctx sdk.Context) ([]types.ContinuousFund, error)
-```
-
 ## Messages
 
 ### MsgFundCommunityPool
@@ -117,7 +91,7 @@ https://github.com/cosmos/cosmos-sdk/blob/release/v0.53.x/proto/cosmos/protocolp
 
 ```go
 func (k Keeper) FundCommunityPool(ctx context.Context, amount sdk.Coins, sender sdk.AccAddress) error {
- return k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, amount)
+	return k.bankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, amount)
 }
 ```
 
@@ -136,7 +110,7 @@ The message will fail under the following conditions:
 
 ```go
 func (k Keeper) DistributeFromCommunityPool(ctx context.Context, amount sdk.Coins, receiveAddr sdk.AccAddress) error {
- return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiveAddr, amount)
+	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, receiveAddr, amount)
 }
 ```
 

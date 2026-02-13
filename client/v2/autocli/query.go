@@ -15,9 +15,9 @@ import (
 	"cosmossdk.io/client/v2/internal/flags"
 	"cosmossdk.io/client/v2/internal/util"
 	"cosmossdk.io/math"
+	"cosmossdk.io/x/tx/signing/aminojson"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/tx/signing/aminojson"
 )
 
 // BuildQueryCommand builds the query commands for all the provided modules. If a custom command is provided for a

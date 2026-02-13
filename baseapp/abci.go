@@ -11,8 +11,6 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/gogoproto/proto"
-	otelattr "go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc/codes"
 	grpcstatus "google.golang.org/grpc/status"
 
@@ -23,7 +21,6 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/state"
-	"github.com/cosmos/cosmos-sdk/baseapp/txnrunner"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -41,9 +38,6 @@ const (
 )
 
 func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
-	_, span := tracer.Start(context.Background(), "InitChain")
-	defer span.End()
-
 	if req.ChainId != app.chainID {
 		return nil, fmt.Errorf("invalid chain-id on InitChain; expected: %s, got: %s", app.chainID, req.ChainId)
 	}
@@ -157,12 +151,7 @@ func (app *BaseApp) Info(_ *abci.RequestInfo) (*abci.ResponseInfo, error) {
 
 // Query implements the ABCI interface. It delegates to CommitMultiStore if it
 // implements Queryable.
-func (app *BaseApp) Query(ctx context.Context, req *abci.RequestQuery) (resp *abci.ResponseQuery, err error) {
-	ctx, span := tracer.Start(ctx, "Query",
-		trace.WithAttributes(otelattr.String("path", req.Path)),
-	)
-	defer span.End()
-
+func (app *BaseApp) Query(_ context.Context, req *abci.RequestQuery) (resp *abci.ResponseQuery, err error) {
 	// add panic recovery for all queries
 	//
 	// Ref: https://github.com/cosmos/cosmos-sdk/pull/8039
@@ -177,11 +166,8 @@ func (app *BaseApp) Query(ctx context.Context, req *abci.RequestQuery) (resp *ab
 		req.Height = app.LastBlockHeight()
 	}
 
-	//nolint:staticcheck // TODO: switch to OpenTelemetry
 	telemetry.IncrCounter(1, "query", "count")
-	//nolint:staticcheck // TODO: switch to OpenTelemetry
 	telemetry.IncrCounter(1, "query", req.Path)
-	//nolint:staticcheck // TODO: switch to OpenTelemetry
 	defer telemetry.MeasureSince(telemetry.Now(), req.Path)
 
 	if req.Path == QueryPathBroadcastTx {
@@ -191,7 +177,7 @@ func (app *BaseApp) Query(ctx context.Context, req *abci.RequestQuery) (resp *ab
 	// handle gRPC routes first rather than calling splitPath because '/' characters
 	// are used as part of gRPC paths
 	if grpcHandler := app.grpcQueryRouter.Route(req.Path); grpcHandler != nil {
-		return app.handleQueryGRPC(ctx, grpcHandler, req), nil
+		return app.handleQueryGRPC(grpcHandler, req), nil
 	}
 
 	path := SplitABCIQueryPath(req.Path)
@@ -355,9 +341,6 @@ func (app *BaseApp) ApplySnapshotChunk(req *abci.RequestApplySnapshotChunk) (*ab
 // will contain relevant error information. Regardless of tx execution outcome,
 // the ResponseCheckTx will contain the relevant gas execution context.
 func (app *BaseApp) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, error) {
-	_, span := tracer.Start(context.Background(), "CheckTx", trace.WithAttributes(otelattr.String("ExecMode", req.Type.String())))
-	defer span.End()
-
 	var mode sdk.ExecMode
 
 	switch req.Type {
@@ -372,7 +355,7 @@ func (app *BaseApp) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, er
 	}
 
 	if app.abciHandlers.CheckTxHandler == nil {
-		gasInfo, result, anteEvents, err := app.RunTx(mode, req.Tx, nil, -1, nil, nil)
+		gasInfo, result, anteEvents, err := app.runTx(mode, req.Tx, nil)
 		if err != nil {
 			return sdkerrors.ResponseCheckTxWithEvents(err, gasInfo.GasWanted, gasInfo.GasUsed, anteEvents, app.trace), nil
 		}
@@ -388,7 +371,7 @@ func (app *BaseApp) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, er
 
 	// Create wrapper to avoid users overriding the execution mode
 	runTx := func(txBytes []byte, tx sdk.Tx) (gInfo sdk.GasInfo, result *sdk.Result, anteEvents []abci.Event, err error) {
-		return app.RunTx(mode, txBytes, tx, -1, nil, nil)
+		return app.runTx(mode, txBytes, tx)
 	}
 
 	return app.abciHandlers.CheckTxHandler(runTx, req)
@@ -411,14 +394,6 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 	if app.abciHandlers.PrepareProposalHandler == nil {
 		return nil, errors.New("PrepareProposal handler not set")
 	}
-
-	// Abort any running OE so it cannot overlap with `PrepareProposal`. This could happen if optimistic
-	// `internalFinalizeBlock` from previous round takes a long time, but consensus has moved on to next round.
-	// Overlap is undesirable, since `internalFinalizeBlock` and `PrepareProoposal` could share access to
-	// in-memory structs depending on application implementation.
-	// No-op if OE is not enabled.
-	// Similar call to Abort() is done in `ProcessProposal`.
-	app.optimisticExec.Abort()
 
 	// Always reset state given that PrepareProposal can timeout and be called
 	// again in a subsequent round.
@@ -470,21 +445,9 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 		}
 	}()
 
-	ctx := prepareProposalState.Context()
-	ctx, span := ctx.StartSpan(
-		tracer,
-		"PrepareProposal",
-		trace.WithAttributes(
-			otelattr.Int64("height", req.Height),
-			otelattr.String("timestamp", req.Time.String()),
-			otelattr.Int("num_txs", len(req.Txs)),
-			otelattr.String("proposer", sdk.ValAddress(req.ProposerAddress).String()),
-		),
-	)
-	defer span.End()
-	resp, err = app.abciHandlers.PrepareProposalHandler(ctx, req)
+	resp, err = app.abciHandlers.PrepareProposalHandler(prepareProposalState.Context(), req)
 	if err != nil {
-		app.logger.ErrorContext(ctx, "failed to prepare proposal", "height", req.Height, "time", req.Time, "err", err)
+		app.logger.Error("failed to prepare proposal", "height", req.Height, "time", req.Time, "err", err)
 		return &abci.ResponsePrepareProposal{Txs: req.Txs}, nil
 	}
 
@@ -541,20 +504,7 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 	}
 
 	processProposalState := app.stateManager.GetState(execModeProcessProposal)
-	ctx := processProposalState.Context()
-	ctx, span := ctx.StartSpan(
-		tracer,
-		"ProcessProposal",
-		trace.WithAttributes(
-			otelattr.Int64("height", req.Height),
-			otelattr.String("timestamp", req.Time.String()),
-			otelattr.String("proposer", sdk.ValAddress(req.ProposerAddress).String()),
-			otelattr.Int("num_txs", len(req.Txs)),
-			otelattr.String("hash", fmt.Sprintf("%X", req.Hash)),
-		),
-	)
-	defer span.End()
-	processProposalState.SetContext(app.getContextForProposal(ctx, req.Height).
+	processProposalState.SetContext(app.getContextForProposal(processProposalState.Context(), req.Height).
 		WithVoteInfos(req.ProposedLastCommit.Votes). // this is a set of votes that are not finalized yet, wait for commit
 		WithBlockHeight(req.Height).
 		WithBlockTime(req.Time).
@@ -636,9 +586,6 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 		return nil, errors.New("application ExtendVote handler not set")
 	}
 
-	ctx, span := ctx.StartSpan(tracer, "ExtendVote")
-	defer span.End()
-
 	// If vote extensions are not enabled, as a safety precaution, we return an
 	// error.
 	cp := app.GetConsensusParams(ctx)
@@ -667,11 +614,11 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 	// add a deferred recover handler in case extendVote panics
 	defer func() {
 		if r := recover(); r != nil {
-			app.logger.ErrorContext(ctx,
+			app.logger.Error(
 				"panic recovered in ExtendVote",
 				"height", req.Height,
 				"hash", fmt.Sprintf("%X", req.Hash),
-				"panic", r,
+				"panic", err,
 			)
 			err = fmt.Errorf("recovered application panic in ExtendVote: %v", r)
 		}
@@ -679,7 +626,7 @@ func (app *BaseApp) ExtendVote(_ context.Context, req *abci.RequestExtendVote) (
 
 	resp, err = app.abciHandlers.ExtendVoteHandler(ctx, req)
 	if err != nil {
-		app.logger.ErrorContext(ctx, "failed to extend vote", "height", req.Height, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
+		app.logger.Error("failed to extend vote", "height", req.Height, "hash", fmt.Sprintf("%X", req.Hash), "err", err)
 		return &abci.ResponseExtendVote{VoteExtension: []byte{}}, nil
 	}
 
@@ -710,9 +657,6 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 		ctx = sdk.NewContext(ms, emptyHeader, false, app.logger).WithStreamingManager(app.streamingManager)
 	}
 
-	ctx, span := ctx.StartSpan(tracer, "VerifyVoteExtension")
-	defer span.End()
-
 	// If vote extensions are not enabled, as a safety precaution, we return an
 	// error.
 	cp := app.GetConsensusParams(ctx)
@@ -727,7 +671,7 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 	// add a deferred recover handler in case verifyVoteExt panics
 	defer func() {
 		if r := recover(); r != nil {
-			app.logger.ErrorContext(ctx,
+			app.logger.Error(
 				"panic recovered in VerifyVoteExtension",
 				"height", req.Height,
 				"hash", fmt.Sprintf("%X", req.Hash),
@@ -752,7 +696,7 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 
 	resp, err = app.abciHandlers.VerifyVoteExtensionHandler(ctx, req)
 	if err != nil {
-		app.logger.ErrorContext(ctx, "failed to verify vote extension", "height", req.Height, "err", err)
+		app.logger.Error("failed to verify vote extension", "height", req.Height, "err", err)
 		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
 	}
 
@@ -763,7 +707,7 @@ func (app *BaseApp) VerifyVoteExtension(req *abci.RequestVerifyVoteExtension) (r
 // Execution flow or by the FinalizeBlock ABCI method. The context received is
 // only used to handle early cancellation, for anything related to state app.stateManager.GetState(execModeFinalize).Context()
 // must be used.
-func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
+func (app *BaseApp) internalFinalizeBlock(ctx context.Context, req *abci.RequestFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
 	var events []abci.Event
 
 	if err := app.checkHalt(req.Height, req.Time); err != nil {
@@ -780,10 +724,6 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 		))
 	}
 
-	// NOTE: Header populated here is intentionally partial; it omits Version, LastBlockID,
-	// LastCommitHash, DataHash, ValidatorsHash, ConsensusHash, LastResultsHash, and EvidenceHash.
-	// As a result, the HistoricalInfo headers stored by x/staking are unreliable and cannot reproduce
-	// the correct Header hash. Please use req.Hash instead.
 	header := cmtproto.Header{
 		ChainID:            app.chainID,
 		Height:             req.Height,
@@ -801,12 +741,9 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 		app.stateManager.SetState(execModeFinalize, app.cms, header, app.logger, app.streamingManager)
 		finalizeState = app.stateManager.GetState(execModeFinalize)
 	}
-	ctx := finalizeState.Context().WithContext(goCtx)
-	ctx, span := ctx.StartSpan(tracer, "internalFinalizeBlock")
-	defer span.End()
 
 	// Context is now updated with Header information.
-	finalizeState.SetContext(ctx.
+	finalizeState.SetContext(finalizeState.Context().
 		WithBlockHeader(header).
 		WithHeaderHash(req.Hash).
 		WithHeaderInfo(coreheader.Info{
@@ -861,46 +798,48 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 
 	// Reset the gas meter so that the AnteHandlers aren't required to
 	gasMeter = app.getBlockGasMeter(finalizeState.Context())
-	finalizeState.SetContext(
-		finalizeState.Context().
-			WithBlockGasMeter(gasMeter).
-			WithTxCount(len(req.Txs)))
+	finalizeState.SetContext(finalizeState.Context().WithBlockGasMeter(gasMeter))
 
 	// Iterate over all raw transactions in the proposal and attempt to execute
 	// them, gathering the execution results.
 	//
 	// NOTE: Not all raw transactions may adhere to the sdk.Tx interface, e.g.
 	// vote extensions, so skip those.
-	txResults, err := app.executeTxsWithExecutor(ctx, finalizeState.MultiStore, req.Txs)
-	if err != nil {
-		// usually due to canceled
-		return nil, err
+	txResults := make([]*abci.ExecTxResult, 0, len(req.Txs))
+	for _, rawTx := range req.Txs {
+		var response *abci.ExecTxResult
+
+		if _, err := app.txDecoder(rawTx); err == nil {
+			response = app.deliverTx(rawTx)
+		} else {
+			// In the case where a transaction included in a block proposal is malformed,
+			// we still want to return a default response to comet. This is because comet
+			// expects a response for each transaction included in a block proposal.
+			response = sdkerrors.ResponseExecTxResultWithEvents(
+				sdkerrors.ErrTxDecode,
+				0,
+				0,
+				nil,
+				false,
+			)
+		}
+
+		// check after every tx if we should abort
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			// continue
+		}
+
+		txResults = append(txResults, response)
 	}
 
 	if finalizeState.MultiStore.TracingEnabled() {
 		finalizeState.MultiStore = finalizeState.MultiStore.SetTracingContext(nil).(storetypes.CacheMultiStore)
 	}
 
-	var (
-		blockGasUsed   uint64
-		blockGasWanted uint64
-	)
-	for _, res := range txResults {
-		// GasUsed should not be -1 but just in case
-		if res.GasUsed > 0 {
-			blockGasUsed += uint64(res.GasUsed)
-		}
-		// GasWanted could be -1 if the tx is invalid
-		if res.GasWanted > 0 {
-			blockGasWanted += uint64(res.GasWanted)
-		}
-	}
-	finalizeState.SetContext(
-		finalizeState.Context().
-			WithBlockGasUsed(blockGasUsed).
-			WithBlockGasWanted(blockGasWanted),
-	)
-	endBlock, err := app.endBlock()
+	endBlock, err := app.endBlock(finalizeState.Context())
 	if err != nil {
 		return nil, err
 	}
@@ -922,16 +861,6 @@ func (app *BaseApp) internalFinalizeBlock(goCtx context.Context, req *abci.Reque
 		ValidatorUpdates:      endBlock.ValidatorUpdates,
 		ConsensusParamUpdates: &cp,
 	}, nil
-}
-
-func (app *BaseApp) executeTxsWithExecutor(ctx context.Context, ms storetypes.MultiStore, txs [][]byte) ([]*abci.ExecTxResult, error) {
-	if app.txRunner == nil {
-		app.txRunner = txnrunner.NewDefaultRunner(
-			app.txDecoder,
-		)
-	}
-
-	return app.txRunner.Run(ctx, ms, txs, app.deliverTx)
 }
 
 // FinalizeBlock will execute the block proposal provided by RequestFinalizeBlock.
@@ -1013,11 +942,7 @@ func (app *BaseApp) checkHalt(height int64, time time.Time) error {
 // height.
 func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 	finalizeState := app.stateManager.GetState(execModeFinalize)
-	ctx := finalizeState.Context()
-	ctx, span := ctx.StartSpan(tracer, "Commit")
-	defer span.End()
-
-	header := ctx.BlockHeader()
+	header := finalizeState.Context().BlockHeader()
 	retainHeight := app.GetBlockRetentionHeight(header.Height)
 
 	if app.abciHandlers.Precommiter != nil {
@@ -1043,7 +968,7 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 
 		for _, abciListener := range abciListeners {
 			if err := abciListener.ListenCommit(ctx, *resp, changeSet); err != nil {
-				app.logger.ErrorContext(ctx, "Commit listening hook failed", "height", blockHeight, "err", err)
+				app.logger.Error("Commit listening hook failed", "height", blockHeight, "err", err)
 			}
 		}
 	}
@@ -1062,8 +987,6 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 
 	// The SnapshotIfApplicable method will create the snapshot by starting the goroutine
 	app.snapshotManager.SnapshotIfApplicable(header.Height)
-
-	blockCounter.Add(ctx, 1)
 
 	return resp, nil
 }
@@ -1234,14 +1157,11 @@ func (app *BaseApp) getContextForProposal(ctx sdk.Context, height int64) sdk.Con
 	return ctx
 }
 
-func (app *BaseApp) handleQueryGRPC(goCtx context.Context, handler GRPCQueryHandler, req *abci.RequestQuery) *abci.ResponseQuery {
+func (app *BaseApp) handleQueryGRPC(handler GRPCQueryHandler, req *abci.RequestQuery) *abci.ResponseQuery {
 	ctx, err := app.CreateQueryContext(req.Height, req.Prove)
 	if err != nil {
 		return sdkerrors.QueryResult(err, app.trace)
 	}
-
-	// add base context for tracing
-	ctx = ctx.WithContext(goCtx)
 
 	resp, err := handler(ctx, req)
 	if err != nil {

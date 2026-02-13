@@ -40,6 +40,14 @@ char *nocturne_civilization_status(void);
 
 char *nocturne_plant_memory(uint32_t memory_id, const char *node_id, double phi, const char *content);
 
+double nocturne_get_resonance_efficiency(uint32_t nodes);
+
+char *nocturne_third_turn_snapshot(void);
+
+char *nocturne_assemble_council(void);
+
+char *nocturne_generate_snapshot(const char *name);
+
 char *nocturne_hal_echo(const char *message);
 
 char *nocturne_hal_noland_witness(const char *sample);

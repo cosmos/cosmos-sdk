@@ -148,7 +148,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/slashing/v1be
 
 ### Params
 
-The slashing module stores its params in state with the prefix of `0x00`,
+The slashing module stores it's params in state with the prefix of `0x00`,
 it can be updated with governance or the address with authority.
 
 * Params: `0x00 | ProtocolBuffer(Params)`
@@ -562,7 +562,7 @@ slash_fraction_downtime: "0.010000000000000000"
 The `signing-info` command allows users to query signing-info of the validator using consensus public key.
 
 ```shell
-simd query slashing signing-info [validator-conspub/address] [flags]
+simd query slashing signing-infos [flags]
 ```
 
 Example:

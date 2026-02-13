@@ -5,11 +5,9 @@ import (
 	"fmt"
 	"net"
 
-	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 
-	"cosmossdk.io/log/v2"
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -24,13 +22,6 @@ import (
 // NewGRPCServer returns a correctly configured and initialized gRPC server.
 // Note, the caller is responsible for starting the server. See StartGRPCServer.
 func NewGRPCServer(clientCtx client.Context, app types.Application, cfg config.GRPCConfig) (*grpc.Server, error) {
-	srv, _, err := NewGRPCServerAndContext(clientCtx, app, cfg, log.NewNopLogger())
-	return srv, err
-}
-
-// NewGRPCServerAndContext returns a correctly configured and initialized gRPC server
-// along with an updated client context that may include historical gRPC connections.
-func NewGRPCServerAndContext(clientCtx client.Context, app types.Application, cfg config.GRPCConfig, logger log.Logger) (*grpc.Server, client.Context, error) {
 	maxSendMsgSize := cfg.MaxSendMsgSize
 	if maxSendMsgSize == 0 {
 		maxSendMsgSize = config.DefaultGRPCMaxSendMsgSize
@@ -41,26 +32,10 @@ func NewGRPCServerAndContext(clientCtx client.Context, app types.Application, cf
 		maxRecvMsgSize = config.DefaultGRPCMaxRecvMsgSize
 	}
 
-	// Setup historical gRPC connections if configured
-	if len(cfg.HistoricalGRPCAddressBlockRange) > 0 {
-		updatedCtx, err := setupHistoricalGRPCConnections(
-			clientCtx,
-			cfg.HistoricalGRPCAddressBlockRange,
-			maxRecvMsgSize,
-			maxSendMsgSize,
-			logger,
-		)
-		if err != nil {
-			return nil, clientCtx, fmt.Errorf("failed to setup historical gRPC connections: %w", err)
-		}
-		clientCtx = updatedCtx
-	}
-
 	grpcSrv := grpc.NewServer(
 		grpc.ForceServerCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry).GRPCCodec()),
 		grpc.MaxSendMsgSize(maxSendMsgSize),
 		grpc.MaxRecvMsgSize(maxRecvMsgSize),
-		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 	)
 
 	app.RegisterGRPCServerWithSkipCheckHeader(grpcSrv, cfg.SkipCheckHeader)
@@ -83,55 +58,14 @@ func NewGRPCServerAndContext(clientCtx client.Context, app types.Application, cf
 		InterfaceRegistry: clientCtx.InterfaceRegistry,
 	})
 	if err != nil {
-		return nil, clientCtx, fmt.Errorf("failed to register reflection service: %w", err)
+		return nil, fmt.Errorf("failed to register reflection service: %w", err)
 	}
 
 	// Reflection allows external clients to see what services and methods
 	// the gRPC server exposes.
 	gogoreflection.Register(grpcSrv)
 
-	return grpcSrv, clientCtx, nil
-}
-
-// setupHistoricalGRPCConnections creates historical gRPC connections based on the configuration.
-func setupHistoricalGRPCConnections(
-	clientCtx client.Context,
-	historicalAddresses map[config.BlockRange]string,
-	maxRecvMsgSize, maxSendMsgSize int,
-	logger log.Logger,
-) (client.Context, error) {
-	if len(historicalAddresses) == 0 {
-		return clientCtx, nil
-	}
-
-	historicalConns := make(config.HistoricalGRPCConnections)
-	for blockRange, address := range historicalAddresses {
-		conn, err := grpc.NewClient(
-			address,
-			grpc.WithTransportCredentials(insecure.NewCredentials()),
-			grpc.WithDefaultCallOptions(
-				grpc.ForceCodec(codec.NewProtoCodec(clientCtx.InterfaceRegistry).GRPCCodec()),
-				grpc.MaxCallRecvMsgSize(maxRecvMsgSize),
-				grpc.MaxCallSendMsgSize(maxSendMsgSize),
-			),
-		)
-		if err != nil {
-			return clientCtx, fmt.Errorf("failed to create historical gRPC connection for %s: %w", address, err)
-		}
-		historicalConns[blockRange] = conn
-	}
-
-	// Get the default connection from the clientCtx
-	defaultConn := clientCtx.GRPCClient
-	if defaultConn == nil {
-		return clientCtx, fmt.Errorf("default gRPC client not set in clientCtx")
-	}
-
-	provider := client.NewGRPCConnProvider(defaultConn, historicalConns)
-	clientCtx = clientCtx.WithGRPCConnProvider(provider)
-
-	logger.Info("historical gRPC connections configured", "count", len(historicalConns))
-	return clientCtx, nil
+	return grpcSrv, nil
 }
 
 // StartGRPCServer starts the provided gRPC server on the address specified in cfg.

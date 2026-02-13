@@ -8,7 +8,7 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"cosmossdk.io/log/v2"
+	"cosmossdk.io/log"
 )
 
 func inner() error {

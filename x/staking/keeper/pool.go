@@ -75,8 +75,8 @@ func (k Keeper) burnNotBondedTokens(ctx context.Context, amt math.Int) error {
 	return k.bankKeeper.BurnCoins(ctx, types.NotBondedPoolName, coins)
 }
 
-// TotalValidatorPower total validator power based on the bonded supply for the staking implementation
-func (k Keeper) TotalValidatorPower(ctx context.Context) (math.Int, error) {
+// TotalBondedTokens total staking tokens supply which is bonded
+func (k Keeper) TotalBondedTokens(ctx context.Context) (math.Int, error) {
 	bondedPool := k.GetBondedPool(ctx)
 	bondDenom, err := k.BondDenom(ctx)
 	if err != nil {
@@ -102,7 +102,7 @@ func (k Keeper) BondedRatio(ctx context.Context) (math.LegacyDec, error) {
 	}
 
 	if stakeSupply.IsPositive() {
-		totalBonded, err := k.TotalValidatorPower(ctx)
+		totalBonded, err := k.TotalBondedTokens(ctx)
 		if err != nil {
 			return math.LegacyZeroDec(), err
 		}

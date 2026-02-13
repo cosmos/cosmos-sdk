@@ -75,7 +75,7 @@ The Cosmos SDK supports the following digital key schemes for creating digital s
 * `secp256r1`, as implemented in the [Cosmos SDK's `crypto/keys/secp256r1` package](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/crypto/keys/secp256r1/pubkey.go).
 * `tm-ed25519`, as implemented in the [Cosmos SDK `crypto/keys/ed25519` package](https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/crypto/keys/ed25519/ed25519.go). This scheme is supported only for the consensus validation.
 
-|              | Address length in bytes | Public key length in bytes | Used for transaction authentication | Used for consensus (CometBFT) |
+|              | Address length in bytes | Public key length in bytes | Used for transaction authentication | Used for consensus (cometbft) |
 | :----------: | :---------------------: | :------------------------: | :---------------------------------: | :-----------------------------: |
 | `secp256k1`  |           20            |             33             |                 yes                 |               no                |
 | `secp256r1`  |           32            |             33             |                 yes                 |               no                |
@@ -152,7 +152,7 @@ The default implementation of `Keyring` comes from the third-party [`99designs/k
 
 A few notes on the `Keyring` methods:
 
-* `Sign(uid string, msg []byte, signMode signing.SignMode) ([]byte, types.PubKey, error)` strictly deals with the signature of the `msg` bytes. You must prepare and encode the transaction into a canonical `[]byte` form. Because protobuf is not deterministic, it has been decided in [ADR-020](../../build/architecture/adr-020-protobuf-transaction-encoding.md) that the canonical `payload` to sign is the `SignDoc` struct, deterministically encoded using [ADR-027](../../build/architecture/adr-027-deterministic-protobuf-serialization.md). The `signMode` parameter controls which signing mode is used (for example `SIGN_MODE_TEXTUAL` or `SIGN_MODE_LEGACY_AMINO_JSON`) and therefore how the `msg` bytes are produced. Note that signature verification is not implemented in the Cosmos SDK by default, it is deferred to the [`anteHandler`](../advanced/00-baseapp.md#antehandler).
+* `Sign(uid string, msg []byte) ([]byte, types.PubKey, error)` strictly deals with the signature of the `msg` bytes. You must prepare and encode the transaction into a canonical `[]byte` form. Because protobuf is not deterministic, it has been decided in [ADR-020](../../build/architecture/adr-020-protobuf-transaction-encoding.md) that the canonical `payload` to sign is the `SignDoc` struct, deterministically encoded using [ADR-027](../../build/architecture/adr-027-deterministic-protobuf-serialization.md). Note that signature verification is not implemented in the Cosmos SDK by default, it is deferred to the [`anteHandler`](../advanced/00-baseapp.md#antehandler).
 
 ```protobuf reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/tx/v1beta1/tx.proto#L50-L67
@@ -167,7 +167,7 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/proto/cosmos/tx/v1beta1/tx.pro
 
 ### Create New Key Type
 
-To create a new key type for use in the keyring, the `keyring.SignatureAlgo` interface must be fulfilled.
+To create a new key type for using in keyring, `keyring.SignatureAlgo` interface must be fulfilled.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/crypto/keyring/signing_algorithms.go#L11-L16
@@ -194,7 +194,7 @@ First a new function to create a private key from a secret number is needed in t
 ```go
 // cosmos-sdk/crypto/keys/secp256r1/privkey.go
 
-// NewPrivKeyFromSecret creates a private key derived from the secret number
+// NewPrivKeyFromSecret creates a private key derived for the secret number
 // represented in big-endian. The `secret` must be a valid ECDSA field element.
 func NewPrivKeyFromSecret(secret []byte) (*PrivKey, error) {
 	var d = new(big.Int).SetBytes(secret)

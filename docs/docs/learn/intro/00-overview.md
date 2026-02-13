@@ -7,13 +7,13 @@ sidebar_position: 1
 The [Cosmos SDK](https://github.com/cosmos/cosmos-sdk) is an open-source toolkit for building multi-asset public Proof-of-Stake (PoS) <df value="blockchain">blockchains</df>, like the Cosmos Hub, as well as permissioned Proof-of-Authority (PoA) blockchains. Blockchains built with the Cosmos SDK are generally referred to as **application-specific blockchains**.
 
 The goal of the Cosmos SDK is to allow developers to easily create custom blockchains from scratch that can natively interoperate with other blockchains. 
-We further this modular approach by allowing developers to plug and play with different consensus engines. This can range from the [CometBFT](https://github.com/cometbft/cometbft) or [Rollkit](https://rollkit.dev/). 
+We further this modular approach by allowing developers to plug and play with different consensus engines this can range from the [CometBFT](https://github.com/cometbft/cometbft) or [Rollkit](https://rollkit.dev/).
 
 SDK-based blockchains have the choice to use the predefined modules or to build their own modules. What this means is that developers can build a blockchain that is tailored to their specific use case, without having to worry about the low-level details of building a blockchain from scratch. Predefined modules include staking, governance, and token issuance, among others.
 
 What's more, the Cosmos SDK is a capabilities-based system that allows developers to better reason about the security of interactions between modules. For a deeper look at capabilities, jump to [Object-Capability Model](../advanced/10-ocap.md).
 
-How you can look at this is if we imagine that the SDK is like a LEGO kit. You can choose to build the basic house from the instructions or you can choose to modify your house and add more floors, more doors, more windows. The choice is yours.
+How you can look at this is if we imagine that the SDK is like a lego kit. You can choose to build the basic house from the instructions or you can choose to modify your house and add more floors, more doors, more windows. The choice is yours.
 
 ## What are Application-Specific Blockchains
 

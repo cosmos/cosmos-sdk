@@ -65,7 +65,7 @@ Since there is no extra field in NFT to indicate the owner of nft, an additional
 
 TotalSupply is responsible for tracking the number of all nfts under a certain class. Mint operation is performed under the changed class, supply increases by one, burn operation, and supply decreases by one.
 
-* ClassTotalSupply: `0x05 | classID |-> totalSupply`
+* OwnerKey: `0x05 | classID |-> totalSupply`
 
 ## Messages
 
@@ -84,7 +84,7 @@ The message handling should fail if:
 
 * provided `ClassID` does not exist.
 * provided `Id` does not exist.
-* provided `Sender` is not the owner of nft.
+* provided `Sender` does not the owner of nft.
 
 ## Events
 

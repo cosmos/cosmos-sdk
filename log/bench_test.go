@@ -9,7 +9,7 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"cosmossdk.io/log/v2"
+	"cosmossdk.io/log"
 )
 
 const message = "test message"

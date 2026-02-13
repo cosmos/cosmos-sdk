@@ -5,7 +5,7 @@ package slog
 import (
 	"log/slog"
 
-	"cosmossdk.io/log/v2"
+	"cosmossdk.io/log"
 )
 
 var _ log.Logger = Logger{}
@@ -13,8 +13,7 @@ var _ log.Logger = Logger{}
 // Logger satisfies [log.Logger] with logging backed by
 // an instance of [*slog.Logger].
 type Logger struct {
-	// we MUST embed slog, otherwise source info will be wrong and always refer to this file, not the caller's file
-	*slog.Logger
+	log *slog.Logger
 }
 
 // NewCustomLogger returns a Logger backed by an existing slog.Logger instance.
@@ -22,14 +21,30 @@ type Logger struct {
 // therefore it is the caller's responsibility to configure message filtering,
 // level filtering, output format, and so on.
 func NewCustomLogger(log *slog.Logger) Logger {
-	return Logger{Logger: log}
+	return Logger{log: log}
+}
+
+func (l Logger) Info(msg string, keyVals ...any) {
+	l.log.Info(msg, keyVals...)
+}
+
+func (l Logger) Warn(msg string, keyVals ...any) {
+	l.log.Warn(msg, keyVals...)
+}
+
+func (l Logger) Error(msg string, keyVals ...any) {
+	l.log.Error(msg, keyVals...)
+}
+
+func (l Logger) Debug(msg string, keyVals ...any) {
+	l.log.Debug(msg, keyVals...)
 }
 
 func (l Logger) With(keyVals ...any) log.Logger {
-	return Logger{Logger: l.Logger.With(keyVals...)}
+	return Logger{log: l.log.With(keyVals...)}
 }
 
 // Impl returns l's underlying [*slog.Logger].
 func (l Logger) Impl() any {
-	return l.Logger
+	return l.log
 }

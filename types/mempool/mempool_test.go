@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	protov2 "google.golang.org/protobuf/proto"
 
-	"cosmossdk.io/log/v2"
+	"cosmossdk.io/log"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"

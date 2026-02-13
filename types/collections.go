@@ -39,7 +39,6 @@ var (
 	LegacyDecValue collcodec.ValueCodec[math.LegacyDec] = legacyDecValueCodec{}
 
 	// TimeKey represents a collections.KeyCodec to work with time.Time
-	//
 	// Deprecated: exists only for state compatibility reasons, should not
 	// be used for new storage keys using time. Please use the time KeyCodec
 	// provided in the collections package.

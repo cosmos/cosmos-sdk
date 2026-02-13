@@ -19,7 +19,7 @@ var (
 	ErrCommissionChangeRateGTMaxRate   = errors.Register(ModuleName, 14, "commission change rate cannot be more than the max rate")
 	ErrCommissionGTMaxChangeRate       = errors.Register(ModuleName, 15, "commission cannot be changed more than max change rate")
 	ErrSelfDelegationBelowMinimum      = errors.Register(ModuleName, 16, "validator's self delegation must be greater than their minimum self delegation")
-	ErrMinSelfDelegationDecreased      = errors.Register(ModuleName, 17, "minimum self delegation cannot be decreased")
+	ErrMinSelfDelegationDecreased      = errors.Register(ModuleName, 17, "minimum self delegation cannot be decrease")
 	ErrEmptyDelegatorAddr              = errors.Register(ModuleName, 18, "empty delegator address")
 	ErrNoDelegation                    = errors.Register(ModuleName, 19, "no delegation for (address, validator) tuple")
 	ErrBadDelegatorAddr                = errors.Register(ModuleName, 20, "delegator does not exist with address")

@@ -339,7 +339,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 				MinSelfDelegation: &newSelfDel,
 			},
 			expErr:    true,
-			expErrMsg: stakingtypes.ErrNoValidatorFound.Error(),
+			expErrMsg: "validator does not exist",
 		},
 		{
 			name: "change commission rate in <24hrs",
@@ -353,7 +353,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 				MinSelfDelegation: &newSelfDel,
 			},
 			expErr:    true,
-			expErrMsg: stakingtypes.ErrCommissionUpdateTime.Error(),
+			expErrMsg: "commission cannot be changed more than once in 24h",
 		},
 		{
 			name: "minimum self delegation cannot decrease",
@@ -367,7 +367,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 				MinSelfDelegation: &lowSelfDel,
 			},
 			expErr:    true,
-			expErrMsg: stakingtypes.ErrMinSelfDelegationDecreased.Error(),
+			expErrMsg: "minimum self delegation cannot be decrease",
 		},
 		{
 			name: "validator self-delegation must be greater than min self delegation",
@@ -381,7 +381,7 @@ func (s *KeeperTestSuite) TestMsgEditValidator() {
 				MinSelfDelegation: &highSelfDel,
 			},
 			expErr:    true,
-			expErrMsg: stakingtypes.ErrSelfDelegationBelowMinimum.Error(),
+			expErrMsg: "validator's self delegation must be greater than their minimum self delegation",
 		},
 		{
 			name: "valid msg",
@@ -995,7 +995,6 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 		input     *stakingtypes.MsgUpdateParams
 		expErr    bool
 		expErrMsg string
-		setup     func()
 	}{
 		{
 			name: "valid params",
@@ -1004,9 +1003,6 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 				Params:    stakingtypes.DefaultParams(),
 			},
 			expErr: false,
-			setup: func() {
-				s.bankKeeper.EXPECT().GetSupply(gomock.Any(), stakingtypes.DefaultParams().BondDenom).Return(sdk.NewInt64Coin(stakingtypes.DefaultParams().BondDenom, 1000000))
-			},
 		},
 		{
 			name: "invalid authority",
@@ -1066,25 +1062,6 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 			expErrMsg: "bond denom cannot be blank",
 		},
 		{
-			name: "invalid bond denom - zero supply",
-			input: &stakingtypes.MsgUpdateParams{
-				Authority: keeper.GetAuthority(),
-				Params: stakingtypes.Params{
-					MinCommissionRate: stakingtypes.DefaultMinCommissionRate,
-					UnbondingTime:     stakingtypes.DefaultUnbondingTime,
-					MaxValidators:     stakingtypes.DefaultMaxValidators,
-					MaxEntries:        stakingtypes.DefaultMaxEntries,
-					HistoricalEntries: stakingtypes.DefaultHistoricalEntries,
-					BondDenom:         "ghosttoken",
-				},
-			},
-			expErr:    true,
-			expErrMsg: "does not exist or has zero supply",
-			setup: func() {
-				s.bankKeeper.EXPECT().GetSupply(gomock.Any(), "ghosttoken").Return(sdk.NewInt64Coin("ghosttoken", 0))
-			},
-		},
-		{
 			name: "max validators must be positive",
 			input: &stakingtypes.MsgUpdateParams{
 				Authority: keeper.GetAuthority(),
@@ -1136,11 +1113,6 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 
 	for _, tc := range testCases {
 		s.T().Run(tc.name, func(t *testing.T) {
-			// Setup mocks if specified
-			if tc.setup != nil {
-				tc.setup()
-			}
-
 			_, err := msgServer.UpdateParams(ctx, tc.input)
 			if tc.expErr {
 				require.Error(err)

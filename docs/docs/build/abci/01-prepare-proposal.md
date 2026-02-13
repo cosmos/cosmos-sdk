@@ -26,7 +26,7 @@ The Cosmos SDK defines the `DefaultProposalHandler` type, which provides applica
 `PrepareProposal` and `ProcessProposal` handlers. If you decide to implement your
 own `PrepareProposal` handler, you must ensure that the transactions
 selected DO NOT exceed the maximum block gas (if set) and the maximum bytes provided
-by `req.MaxTxBytes`.
+by `req.MaxBytes`.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/blob/v0.53.0/baseapp/abci_utils.go

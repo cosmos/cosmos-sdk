@@ -7,9 +7,8 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log/v2"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
-	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -61,7 +60,6 @@ type BaseSendKeeper struct {
 	ak           types.AccountKeeper
 	storeService store.KVStoreService
 	logger       log.Logger
-	objStoreKey  storetypes.StoreKey
 
 	// list of addresses that are restricted from receiving transactions
 	blockedAddrs map[string]bool
@@ -165,7 +163,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 	// ensure all coins can be sent
 	type toSend struct {
 		AddressStr string
-		AddressBz  []byte
+		Address    []byte
 		Coins      sdk.Coins
 	}
 	sending := make([]toSend, 0)
@@ -176,19 +174,14 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 			return err
 		}
 
-		updatedAddressBz, err := k.sendRestriction.apply(ctx, inAddress, outAddress, out.Coins)
-		if err != nil {
-			return err
-		}
-
-		updatedAddressStr, err := k.ak.AddressCodec().BytesToString(updatedAddressBz)
+		outAddress, err = k.sendRestriction.apply(ctx, inAddress, outAddress, out.Coins)
 		if err != nil {
 			return err
 		}
 
 		sending = append(sending, toSend{
-			AddressBz:  updatedAddressBz,
-			AddressStr: updatedAddressStr,
+			Address:    outAddress,
+			AddressStr: out.Address,
 			Coins:      out.Coins,
 		})
 
@@ -196,10 +189,10 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 		//
 		// NOTE: This should ultimately be removed in favor a more flexible approach
 		// such as delegated fee messages.
-		accExists := k.ak.HasAccount(ctx, updatedAddressBz)
+		accExists := k.ak.HasAccount(ctx, outAddress)
 		if !accExists {
-			defer telemetry.IncrCounter(1, "new", "account") //nolint:staticcheck // TODO: switch to OpenTelemetry
-			k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, updatedAddressBz))
+			defer telemetry.IncrCounter(1, "new", "account")
+			k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, outAddress))
 		}
 	}
 
@@ -208,7 +201,7 @@ func (k BaseSendKeeper) InputOutputCoins(ctx context.Context, input types.Input,
 	}
 
 	for _, out := range sending {
-		if err := k.addCoins(ctx, out.AddressBz, out.Coins); err != nil {
+		if err := k.addCoins(ctx, out.Address, out.Coins); err != nil {
 			return err
 		}
 		sdkCtx.EventManager().EmitEvent(
@@ -247,43 +240,23 @@ func (k BaseSendKeeper) SendCoins(ctx context.Context, fromAddr, toAddr sdk.AccA
 		return err
 	}
 
-	k.ensureAccountCreated(ctx, toAddr)
-	if err := k.emitSendCoinsEvents(ctx, fromAddr, toAddr, amt); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (k BaseSendKeeper) ensureAccountCreated(ctx context.Context, toAddr sdk.AccAddress) {
 	// Create account if recipient does not exist.
 	//
 	// NOTE: This should ultimately be removed in favor a more flexible approach
 	// such as delegated fee messages.
 	accExists := k.ak.HasAccount(ctx, toAddr)
 	if !accExists {
-		defer telemetry.IncrCounter(1, "new", "account") //nolint:staticcheck // TODO: switch to OpenTelemetry
+		defer telemetry.IncrCounter(1, "new", "account")
 		k.ak.SetAccount(ctx, k.ak.NewAccountWithAddress(ctx, toAddr))
 	}
-}
 
-// emitSendCoinsEvents emit send coins events.
-func (k BaseSendKeeper) emitSendCoinsEvents(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) error {
 	// bech32 encoding is expensive! Only do it once for fromAddr
-	fromAddrString, err := k.ak.AddressCodec().BytesToString(fromAddr)
-	if err != nil {
-		return err
-	}
-
-	toAddrString, err := k.ak.AddressCodec().BytesToString(toAddr)
-	if err != nil {
-		return err
-	}
-
+	fromAddrString := fromAddr.String()
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	sdkCtx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeTransfer,
-			sdk.NewAttribute(types.AttributeKeyRecipient, toAddrString),
+			sdk.NewAttribute(types.AttributeKeyRecipient, toAddr.String()),
 			sdk.NewAttribute(types.AttributeKeySender, fromAddrString),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
 		),
@@ -292,6 +265,7 @@ func (k BaseSendKeeper) emitSendCoinsEvents(ctx context.Context, fromAddr, toAdd
 			sdk.NewAttribute(types.AttributeKeySender, fromAddrString),
 		),
 	})
+
 	return nil
 }
 

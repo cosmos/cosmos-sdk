@@ -114,10 +114,6 @@ func (ms multiStore) GetKVStore(key storetypes.StoreKey) storetypes.KVStore {
 	return ms.kv[key]
 }
 
-func (ms multiStore) GetObjKVStore(storetypes.StoreKey) storetypes.ObjKVStore {
-	panic("not implemented")
-}
-
 func (ms multiStore) GetStore(key storetypes.StoreKey) storetypes.Store {
 	panic("not implemented")
 }
@@ -172,10 +168,6 @@ func (ms multiStore) LatestVersion() int64 {
 	panic("not implemented")
 }
 
-func (ms multiStore) EarliestVersion() int64 {
-	panic("not implemented")
-}
-
 func (ms multiStore) WorkingHash() []byte {
 	panic("not implemented")
 }
@@ -190,7 +182,7 @@ func (kv kvStore) CacheWrap() storetypes.CacheWrap {
 	panic("not implemented")
 }
 
-func (kv kvStore) CacheWrapWithTrace(_ io.Writer, _ storetypes.TraceContext) storetypes.CacheWrap {
+func (kv kvStore) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) storetypes.CacheWrap {
 	panic("not implemented")
 }
 

@@ -3,16 +3,17 @@ package tx
 import (
 	"fmt"
 
+	txsigning "cosmossdk.io/x/tx/signing"
+	"cosmossdk.io/x/tx/signing/aminojson"
+	"cosmossdk.io/x/tx/signing/direct"
+	"cosmossdk.io/x/tx/signing/directaux"
+	"cosmossdk.io/x/tx/signing/textual"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
 	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
-	txsigning "github.com/cosmos/cosmos-sdk/x/tx/signing"
-	"github.com/cosmos/cosmos-sdk/x/tx/signing/aminojson"
-	"github.com/cosmos/cosmos-sdk/x/tx/signing/direct"
-	"github.com/cosmos/cosmos-sdk/x/tx/signing/directaux"
-	"github.com/cosmos/cosmos-sdk/x/tx/signing/textual"
 )
 
 type config struct {

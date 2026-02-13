@@ -10,7 +10,7 @@ import (
 	runtimev1alpha1 "cosmossdk.io/api/cosmos/app/runtime/v1alpha1"
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	"cosmossdk.io/core/appmodule"
-	"cosmossdk.io/log/v2"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -62,7 +62,7 @@ type App struct {
 // RegisterModules registers the provided modules with the module manager and
 // the basic module manager. This is the primary hook for integrating with
 // modules which are not registered using the app config.
-func (a *App) RegisterModules(modules ...module.AppModule) error { //nolint:staticcheck // needed for legacy compatibility
+func (a *App) RegisterModules(modules ...module.AppModule) error {
 	for _, appModule := range modules {
 		name := appModule.Name()
 		if _, ok := a.ModuleManager.Modules[name]; ok {
@@ -225,9 +225,7 @@ func (a *App) RegisterTendermintService(clientCtx client.Context) {
 
 // RegisterNodeService registers the node gRPC service on the app gRPC router.
 func (a *App) RegisterNodeService(clientCtx client.Context, cfg config.Config) {
-	nodeservice.RegisterNodeService(clientCtx, a.GRPCQueryRouter(), cfg, func() int64 {
-		return a.CommitMultiStore().EarliestVersion()
-	})
+	nodeservice.RegisterNodeService(clientCtx, a.GRPCQueryRouter(), cfg)
 }
 
 // Configurator returns the app's configurator.

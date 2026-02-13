@@ -148,7 +148,7 @@ message QueryValidatorsResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QueryValidatorRequest is request type for the Query/Validator RPC method
+// QueryValidatorRequest is response type for the Query/Validator RPC method
 message QueryValidatorRequest {
   // validator_addr defines the validator address to query for.
   string validator_addr = 1 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];

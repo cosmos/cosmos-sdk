@@ -19,7 +19,7 @@ import (
 
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/log/v2"
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"

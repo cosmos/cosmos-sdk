@@ -8,10 +8,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/proto"
 
+	"cosmossdk.io/x/tx/signing/aminojson"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	gogopb "github.com/cosmos/cosmos-sdk/tests/integration/tx/internal/gogo/testpb"
 	pulsarpb "github.com/cosmos/cosmos-sdk/tests/integration/tx/internal/pulsar/testpb"
-	"github.com/cosmos/cosmos-sdk/x/tx/signing/aminojson"
 )
 
 func TestRepeatedFields(t *testing.T) {

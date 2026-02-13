@@ -152,7 +152,7 @@ more complex structures, apart from just string messages, and still be able to
 know exactly what they are signing (opposed to signing a bunch of arbitrary bytes).
 
 Thus, in the future, the Cosmos signing message specification will be expected
-to expand upon its canonical JSON structure to include such functionality.
+to expand upon it's canonical JSON structure to include such functionality.
 
 ## API
 

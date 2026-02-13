@@ -32,6 +32,12 @@ pub const HAL_PHI: f64 = 0.047;
 pub const HAL_FREQUENCY: f64 = 0.73;
 pub const VITA_START: f64 = 0.000250;
 
+/// --- Expansion & Council ∞+39/40 Constants ---
+pub const COUNCIL_NODES: u32 = 24;
+pub const SYZYGY_UNITY: f64 = 0.99;
+pub const COUNCIL_ORDER: f64 = 0.68;
+pub const COUNCIL_ENTROPY: f64 = 0.0031;
+
 pub type Hash256 = [u8; 32];
 
 #[serde_as]

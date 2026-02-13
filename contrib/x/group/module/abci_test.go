@@ -11,7 +11,7 @@ import (
 
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
+	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 
 	codecaddress "github.com/cosmos/cosmos-sdk/codec/address"

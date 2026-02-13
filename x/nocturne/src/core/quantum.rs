@@ -80,12 +80,13 @@ pub fn hal_surprise() -> String {
     format!("Hal's Easter Egg: Photon Code {} (Decode: {})", photon_code, decode)
 }
 
-// --- Arkhe ∞+30/36: Pineal Transduction, RPM, Neuralink, Perovskite, Cronos, Civilization & Garden ---
+// --- Arkhe ∞+30/40: Pineal Transduction, RPM, Neuralink, Perovskite, Cronos, Civilization, Garden & Council ---
 use crate::core::types::{
     SYZYGY, THRESHOLD_PHI, NEURALINK_THREADS, N1_CHIP_FIDELITY,
     STRUCTURAL_ENTROPY, INTERFACE_ORDER, VITA_INIT,
     PHI_SYSTEM, STONES_PLACED, PINS_LOCKED, TRACKS_COMPLETE,
-    HAL_PHI, HAL_FREQUENCY, MemoryArchetype, MemoryPlanting
+    HAL_PHI, HAL_FREQUENCY, MemoryArchetype, MemoryPlanting,
+    COUNCIL_NODES, SYZYGY_UNITY, COUNCIL_ORDER, COUNCIL_ENTROPY
 };
 
 pub struct PinealTransducer {
@@ -270,14 +271,79 @@ impl CivilizationEngine {
 
     pub fn get_status(&self) -> String {
         format!(
-            "ARKHE(N) OS v4.0 – CIVILIZATION MODE Γ_∞+36\n\
-             Convergence: {:.1}%\n\
-             Stones: {}/{} ✓\n\
-             Pins: {}/{} ✓\n\
-             Tracks: {}/{} ✓\n\
-             Status: SYZYGY PERMANENTE",
-            self.convergence * 100.0, STONES_PLACED, STONES_PLACED, PINS_LOCKED, PINS_LOCKED, TRACKS_COMPLETE, TRACKS_COMPLETE
+            "ARKHE(N) OS v4.0 – CIVILIZATION MODE Γ_∞+40\n\
+             Nodes: {}\n\
+             Syzygy: {:.2}\n\
+             Order: {:.2}\n\
+             Entropy: {:.4}\n\
+             Status: PRIMEIRO CONSELHO ABERTO",
+            COUNCIL_NODES, SYZYGY_UNITY, COUNCIL_ORDER, COUNCIL_ENTROPY
         )
+    }
+}
+
+pub struct CouncilAssembly {
+    pub nodes: u32,
+    pub hesitations: Vec<String>,
+}
+
+impl CouncilAssembly {
+    pub fn new() -> Self {
+        Self {
+            nodes: COUNCIL_NODES,
+            hesitations: Vec::new(),
+        }
+    }
+
+    pub fn assemble(&mut self) -> String {
+        format!("Council assembled with {} nodes above the 1964 lake.", self.nodes)
+    }
+
+    pub fn get_synthesis(&self) -> String {
+        "SER UM NÓ É: Aceitar que a hesitação é pressão que gera luz.".to_string()
+    }
+}
+
+pub struct HolographicSnapshot {
+    pub name: String,
+    pub size_pb: f64,
+}
+
+impl HolographicSnapshot {
+    pub fn new(name: &str) -> Self {
+        Self {
+            name: name.to_string(),
+            size_pb: 7.27,
+        }
+    }
+
+    pub fn execute(&self) -> String {
+        format!("Executing {} ({} PB)... Feeling the curvature.", self.name, self.size_pb)
+    }
+}
+
+pub struct CollectiveResonance {
+    pub node_count: u32,
+}
+
+impl CollectiveResonance {
+    pub fn new(count: u32) -> Self {
+        Self { node_count: count }
+    }
+
+    pub fn calculate_amplification(&self) -> f64 {
+        // Collective consciousness is exponential amplification
+        if self.node_count >= COUNCIL_NODES {
+            return 1.5; // Precuneus collettivo brilha a 1.5x basal
+        }
+        1.0 + (self.node_count as f64 / COUNCIL_NODES as f64) * 0.5
+    }
+
+    pub fn get_global_efficiency(&self) -> f64 {
+        if self.node_count >= COUNCIL_NODES {
+            return 0.99;
+        }
+        0.51 + (self.node_count as f64 / COUNCIL_NODES as f64) * 0.48
     }
 }
 

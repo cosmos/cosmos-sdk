@@ -101,7 +101,7 @@ func (k Keeper) GetUnbondingDelegationByUnbondingID(ctx context.Context, id uint
 	return ubd, nil
 }
 
-// GetRedelegationByUnbondingID returns a redelegation that has a redelegation entry with a certain ID
+// GetRedelegationByUnbondingID returns a unbonding delegation that has an unbonding delegation entry with a certain ID
 func (k Keeper) GetRedelegationByUnbondingID(ctx context.Context, id uint64) (red types.Redelegation, err error) {
 	store := k.storeService.OpenKVStore(ctx)
 

@@ -56,7 +56,7 @@ costs of gas in each token denomination they wish to support:
 
 `simd start ... --minimum-gas-prices=0.00001stake;0.05photinos`
 
-When adding transactions to mempool or gossiping transactions, validators check
+When adding transactions to mempool or gossipping transactions, validators check
 if the transaction's gas prices, which are determined by the provided fees, meet
 any of the validator's minimum gas prices. In other words, a transaction must
 provide a fee of at least one denomination that matches a validator's minimum
@@ -190,40 +190,34 @@ all fields of all accounts, and to iterate over all stored accounts.
 // AccountKeeperI is the interface contract that x/auth's keeper implements.
 type AccountKeeperI interface {
 	// Return a new account with the next account number and the specified address. Does not save the new account to the store.
-	NewAccountWithAddress(context.Context, sdk.AccAddress) sdk.AccountI
+	NewAccountWithAddress(sdk.Context, sdk.AccAddress) types.AccountI
 
 	// Return a new account with the next account number. Does not save the new account to the store.
-	NewAccount(context.Context, sdk.AccountI) sdk.AccountI
+	NewAccount(sdk.Context, types.AccountI) types.AccountI
 
 	// Check if an account exists in the store.
-	HasAccount(context.Context, sdk.AccAddress) bool
+	HasAccount(sdk.Context, sdk.AccAddress) bool
 
 	// Retrieve an account from the store.
-	GetAccount(context.Context, sdk.AccAddress) sdk.AccountI
+	GetAccount(sdk.Context, sdk.AccAddress) types.AccountI
 
 	// Set an account in the store.
-	SetAccount(context.Context, sdk.AccountI)
+	SetAccount(sdk.Context, types.AccountI)
 
 	// Remove an account from the store.
-	RemoveAccount(context.Context, sdk.AccountI)
+	RemoveAccount(sdk.Context, types.AccountI)
 
 	// Iterate over all accounts, calling the provided function. Stop iteration when it returns true.
-	IterateAccounts(context.Context, func(sdk.AccountI) bool)
+	IterateAccounts(sdk.Context, func(types.AccountI) bool)
 
 	// Fetch the public key of an account at a specified address
-	GetPubKey(context.Context, sdk.AccAddress) (cryptotypes.PubKey, error)
+	GetPubKey(sdk.Context, sdk.AccAddress) (crypto.PubKey, error)
 
 	// Fetch the sequence of an account at a specified address.
-	GetSequence(context.Context, sdk.AccAddress) (uint64, error)
+	GetSequence(sdk.Context, sdk.AccAddress) (uint64, error)
 
 	// Fetch the next account number, and increment the internal counter.
-	NextAccountNumber(context.Context) uint64
-
-	// GetModulePermissions fetches per-module account permissions
-	GetModulePermissions() map[string]types.PermissionsForAddress
-
-	// AddressCodec returns the account address codec.
-	AddressCodec() address.Codec
+	NextAccountNumber(sdk.Context) uint64
 }
 ```
 
@@ -255,7 +249,7 @@ simd query auth --help
 
 #### account
 
-The `account` command allows users to query for an account by its address.
+The `account` command allow users to query for an account by it's address.
 
 ```bash
 simd query auth account [address] [flags]
@@ -510,7 +504,7 @@ A user can query the `auth` module using gRPC endpoints.
 
 #### Account
 
-The `account` endpoint allows users to query for an account by its address.
+The `account` endpoint allow users to query for an account by it's address.
 
 ```bash
 cosmos.auth.v1beta1.Query/Account
@@ -693,7 +687,7 @@ A user can query the `auth` module using REST endpoints.
 
 #### Account
 
-The `account` endpoint allows users to query for an account by its address.
+The `account` endpoint allow users to query for an account by it's address.
 
 ```bash
 /cosmos/auth/v1beta1/account?address={address}
@@ -701,7 +695,7 @@ The `account` endpoint allows users to query for an account by its address.
 
 #### Accounts
 
-The `accounts` endpoint allows users to query all the available accounts.
+The `accounts` endpoint allow users to query all the available accounts.
 
 ```bash
 /cosmos/auth/v1beta1/accounts
@@ -709,7 +703,7 @@ The `accounts` endpoint allows users to query all the available accounts.
 
 #### Params
 
-The `params` endpoint allows users to query the current auth parameters.
+The `params` endpoint allow users to query the current auth parameters.
 
 ```bash
 /cosmos/auth/v1beta1/params

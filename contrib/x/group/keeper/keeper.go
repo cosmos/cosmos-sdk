@@ -6,14 +6,14 @@ import (
 
 	"cosmossdk.io/core/address"
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log/v2"
+	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/contrib/x/group"
 	"github.com/cosmos/cosmos-sdk/contrib/x/group/errors"
-	orm "github.com/cosmos/cosmos-sdk/contrib/x/group/internal/orm"
+	orm2 "github.com/cosmos/cosmos-sdk/contrib/x/group/internal/orm"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -57,29 +57,29 @@ type Keeper struct {
 	accKeeper group.AccountKeeper
 
 	// Group Table
-	groupTable        orm.AutoUInt64Table
-	groupByAdminIndex orm.Index
+	groupTable        orm2.AutoUInt64Table
+	groupByAdminIndex orm2.Index
 
 	// Group Member Table
-	groupMemberTable         orm.PrimaryKeyTable
-	groupMemberByGroupIndex  orm.Index
-	groupMemberByMemberIndex orm.Index
+	groupMemberTable         orm2.PrimaryKeyTable
+	groupMemberByGroupIndex  orm2.Index
+	groupMemberByMemberIndex orm2.Index
 
 	// Group Policy Table
-	groupPolicySeq          orm.Sequence
-	groupPolicyTable        orm.PrimaryKeyTable
-	groupPolicyByGroupIndex orm.Index
-	groupPolicyByAdminIndex orm.Index
+	groupPolicySeq          orm2.Sequence
+	groupPolicyTable        orm2.PrimaryKeyTable
+	groupPolicyByGroupIndex orm2.Index
+	groupPolicyByAdminIndex orm2.Index
 
 	// Proposal Table
-	proposalTable              orm.AutoUInt64Table
-	proposalByGroupPolicyIndex orm.Index
-	proposalsByVotingPeriodEnd orm.Index
+	proposalTable              orm2.AutoUInt64Table
+	proposalByGroupPolicyIndex orm2.Index
+	proposalsByVotingPeriodEnd orm2.Index
 
 	// Vote Table
-	voteTable           orm.PrimaryKeyTable
-	voteByProposalIndex orm.Index
-	voteByVoterIndex    orm.Index
+	voteTable           orm2.PrimaryKeyTable
+	voteByProposalIndex orm2.Index
+	voteByVoterIndex    orm2.Index
 
 	router baseapp.MessageRouter
 
@@ -97,11 +97,11 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.Mes
 		cdc:       cdc,
 	}
 
-	groupTable, err := orm.NewAutoUInt64Table([2]byte{GroupTablePrefix}, GroupTableSeqPrefix, &group.GroupInfo{}, cdc)
+	groupTable, err := orm2.NewAutoUInt64Table([2]byte{GroupTablePrefix}, GroupTableSeqPrefix, &group.GroupInfo{}, cdc)
 	if err != nil {
 		panic(err.Error())
 	}
-	k.groupByAdminIndex, err = orm.NewIndex(groupTable, GroupByAdminIndexPrefix, func(val any) ([]any, error) {
+	k.groupByAdminIndex, err = orm2.NewIndex(groupTable, GroupByAdminIndexPrefix, func(val any) ([]any, error) {
 		addr, err := accKeeper.AddressCodec().StringToBytes(val.(*group.GroupInfo).Admin)
 		if err != nil {
 			return nil, err
@@ -114,18 +114,18 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.Mes
 	k.groupTable = *groupTable
 
 	// Group Member Table
-	groupMemberTable, err := orm.NewPrimaryKeyTable([2]byte{GroupMemberTablePrefix}, &group.GroupMember{}, cdc)
+	groupMemberTable, err := orm2.NewPrimaryKeyTable([2]byte{GroupMemberTablePrefix}, &group.GroupMember{}, cdc)
 	if err != nil {
 		panic(err.Error())
 	}
-	k.groupMemberByGroupIndex, err = orm.NewIndex(groupMemberTable, GroupMemberByGroupIndexPrefix, func(val any) ([]any, error) {
+	k.groupMemberByGroupIndex, err = orm2.NewIndex(groupMemberTable, GroupMemberByGroupIndexPrefix, func(val any) ([]any, error) {
 		group := val.(*group.GroupMember).GroupId
 		return []any{group}, nil
 	}, group.GroupMember{}.GroupId)
 	if err != nil {
 		panic(err.Error())
 	}
-	k.groupMemberByMemberIndex, err = orm.NewIndex(groupMemberTable, GroupMemberByMemberIndexPrefix, func(val any) ([]any, error) {
+	k.groupMemberByMemberIndex, err = orm2.NewIndex(groupMemberTable, GroupMemberByMemberIndexPrefix, func(val any) ([]any, error) {
 		memberAddr := val.(*group.GroupMember).Member.Address
 		addr, err := accKeeper.AddressCodec().StringToBytes(memberAddr)
 		if err != nil {
@@ -139,18 +139,18 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.Mes
 	k.groupMemberTable = *groupMemberTable
 
 	// Group Policy Table
-	k.groupPolicySeq = orm.NewSequence(GroupPolicyTableSeqPrefix)
-	groupPolicyTable, err := orm.NewPrimaryKeyTable([2]byte{GroupPolicyTablePrefix}, &group.GroupPolicyInfo{}, cdc)
+	k.groupPolicySeq = orm2.NewSequence(GroupPolicyTableSeqPrefix)
+	groupPolicyTable, err := orm2.NewPrimaryKeyTable([2]byte{GroupPolicyTablePrefix}, &group.GroupPolicyInfo{}, cdc)
 	if err != nil {
 		panic(err.Error())
 	}
-	k.groupPolicyByGroupIndex, err = orm.NewIndex(groupPolicyTable, GroupPolicyByGroupIndexPrefix, func(value any) ([]any, error) {
+	k.groupPolicyByGroupIndex, err = orm2.NewIndex(groupPolicyTable, GroupPolicyByGroupIndexPrefix, func(value any) ([]any, error) {
 		return []any{value.(*group.GroupPolicyInfo).GroupId}, nil
 	}, group.GroupPolicyInfo{}.GroupId)
 	if err != nil {
 		panic(err.Error())
 	}
-	k.groupPolicyByAdminIndex, err = orm.NewIndex(groupPolicyTable, GroupPolicyByAdminIndexPrefix, func(value any) ([]any, error) {
+	k.groupPolicyByAdminIndex, err = orm2.NewIndex(groupPolicyTable, GroupPolicyByAdminIndexPrefix, func(value any) ([]any, error) {
 		admin := value.(*group.GroupPolicyInfo).Admin
 		addr, err := accKeeper.AddressCodec().StringToBytes(admin)
 		if err != nil {
@@ -164,11 +164,11 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.Mes
 	k.groupPolicyTable = *groupPolicyTable
 
 	// Proposal Table
-	proposalTable, err := orm.NewAutoUInt64Table([2]byte{ProposalTablePrefix}, ProposalTableSeqPrefix, &group.Proposal{}, cdc)
+	proposalTable, err := orm2.NewAutoUInt64Table([2]byte{ProposalTablePrefix}, ProposalTableSeqPrefix, &group.Proposal{}, cdc)
 	if err != nil {
 		panic(err.Error())
 	}
-	k.proposalByGroupPolicyIndex, err = orm.NewIndex(proposalTable, ProposalByGroupPolicyIndexPrefix, func(value any) ([]any, error) {
+	k.proposalByGroupPolicyIndex, err = orm2.NewIndex(proposalTable, ProposalByGroupPolicyIndexPrefix, func(value any) ([]any, error) {
 		account := value.(*group.Proposal).GroupPolicyAddress
 		addr, err := accKeeper.AddressCodec().StringToBytes(account)
 		if err != nil {
@@ -179,7 +179,7 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.Mes
 	if err != nil {
 		panic(err.Error())
 	}
-	k.proposalsByVotingPeriodEnd, err = orm.NewIndex(proposalTable, ProposalsByVotingPeriodEndPrefix, func(value any) ([]any, error) {
+	k.proposalsByVotingPeriodEnd, err = orm2.NewIndex(proposalTable, ProposalsByVotingPeriodEndPrefix, func(value any) ([]any, error) {
 		votingPeriodEnd := value.(*group.Proposal).VotingPeriodEnd
 		return []any{sdk.FormatTimeBytes(votingPeriodEnd)}, nil
 	}, []byte{})
@@ -189,17 +189,17 @@ func NewKeeper(storeKey storetypes.StoreKey, cdc codec.Codec, router baseapp.Mes
 	k.proposalTable = *proposalTable
 
 	// Vote Table
-	voteTable, err := orm.NewPrimaryKeyTable([2]byte{VoteTablePrefix}, &group.Vote{}, cdc)
+	voteTable, err := orm2.NewPrimaryKeyTable([2]byte{VoteTablePrefix}, &group.Vote{}, cdc)
 	if err != nil {
 		panic(err.Error())
 	}
-	k.voteByProposalIndex, err = orm.NewIndex(voteTable, VoteByProposalIndexPrefix, func(value any) ([]any, error) {
+	k.voteByProposalIndex, err = orm2.NewIndex(voteTable, VoteByProposalIndexPrefix, func(value any) ([]any, error) {
 		return []any{value.(*group.Vote).ProposalId}, nil
 	}, group.Vote{}.ProposalId)
 	if err != nil {
 		panic(err.Error())
 	}
-	k.voteByVoterIndex, err = orm.NewIndex(voteTable, VoteByVoterIndexPrefix, func(value any) ([]any, error) {
+	k.voteByVoterIndex, err = orm2.NewIndex(voteTable, VoteByVoterIndexPrefix, func(value any) ([]any, error) {
 		addr, err := accKeeper.AddressCodec().StringToBytes(value.(*group.Vote).Voter)
 		if err != nil {
 			return nil, err

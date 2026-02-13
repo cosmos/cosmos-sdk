@@ -5,7 +5,7 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 
-	"cosmossdk.io/log/v2"
+	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/gaskv"
 	"cosmossdk.io/store/metrics"
@@ -26,8 +26,8 @@ func NewMockContext() *MockContext {
 }
 
 func (m MockContext) KVStore(key storetypes.StoreKey) storetypes.KVStore {
-	if s := m.store.GetCommitStore(key); s != nil {
-		return s.(storetypes.KVStore)
+	if s := m.store.GetCommitKVStore(key); s != nil {
+		return s
 	}
 	m.store.MountStoreWithDB(key, storetypes.StoreTypeIAVL, m.db)
 	if err := m.store.LoadLatestVersion(); err != nil {

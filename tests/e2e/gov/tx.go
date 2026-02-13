@@ -260,7 +260,7 @@ func (s *E2ETestSuite) TestNewCmdSubmitLegacyProposal() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			cmd := cli.NewCmdSubmitLegacyProposal() //nolint:staticcheck // needed for legacy testing
+			cmd := cli.NewCmdSubmitLegacyProposal()
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)

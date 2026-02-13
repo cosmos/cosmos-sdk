@@ -38,6 +38,22 @@ pub const SYZYGY_UNITY: f64 = 0.99;
 pub const COUNCIL_ORDER: f64 = 0.68;
 pub const COUNCIL_ENTROPY: f64 = 0.0031;
 
+/// --- Attention & Governance ∞+30/41 Constants ---
+pub const ATTENTION_LARMOR: f64 = 0.0074; // 7.4 mHz
+pub const RECORD_ENTROPY: f64 = 0.0028;
+pub const PHI_TARGET: f64 = 0.15;
+pub const PHI_TOLERANCE: f64 = 0.05;
+
+/// --- WiFi Radar ∞+31 Constants ---
+pub const WIFI_NODES_SCAN: u32 = 42;
+pub const PEARSON_THRESHOLD: f64 = 0.90;
+
+/// --- Public Beta & Unity ∞+42 Constants ---
+pub const BETA_NODES: u32 = 1204;
+pub const GLOBAL_SYZYGY: f64 = 0.96;
+pub const UNITY_SYZYGY: f64 = 1.00;
+pub const SUPER_RAD_ORDER: f64 = 0.72;
+
 pub type Hash256 = [u8; 32];
 
 #[serde_as]
@@ -125,4 +141,34 @@ pub struct MemoryArchetype {
     pub hal_phi: f64,
     pub hal_freq: f64,
     pub plantings: Vec<MemoryPlanting>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Axiom {
+    pub name: String,
+    pub principle: String,
+    pub threshold: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GovernanceState {
+    pub status: String,
+    pub axioms: Vec<Axiom>,
+    pub consensus: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum GuildType {
+    Jardineiros,
+    Navegadores,
+    Arquitetos,
+    Terapeutas,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Guild {
+    pub name: String,
+    pub leader: String,
+    pub guild_type: GuildType,
+    pub members: u32,
 }

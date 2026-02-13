@@ -88,10 +88,52 @@ func TestCivilizationMode(t *testing.T) {
 	}
 	t.Logf("Civilization Status:\n%s", status)
 
-	// Verify v4.0 and Council state
-	if !strings.Contains(status, "v4.0") || !strings.Contains(status, "CONSELHO") {
-		t.Error("Status should reflect v4.0 and Council state")
+	// Verify v4.0 and Beta state
+	if !strings.Contains(status, "v4.0") || !strings.Contains(status, "OPEN_BETA") {
+		t.Errorf("Status should reflect v4.0 and Beta state, got: %s", status)
 	}
+}
+
+func TestBetaFeatures(t *testing.T) {
+	// Test Guild Info
+	info := GetGuildInfo()
+	if !strings.Contains(info, "Jardineiros") {
+		t.Errorf("GetGuildInfo failed: %s", info)
+	}
+	t.Logf("Guild Info:\n%s", info)
+
+	// Test Global Resonance
+	resonance := GlobalResonance()
+	if resonance != 0.96 {
+		t.Errorf("GlobalResonance() = %f, want 0.96", resonance)
+	}
+
+	// Test Unity Pulse
+	pulse := UnityPulse()
+	if pulse != 1.00 {
+		t.Errorf("UnityPulse() = %f, want 1.00", pulse)
+	}
+}
+
+func TestAttentionAndGovernance(t *testing.T) {
+	// Test Attention
+	res := AttentionResolution(0.15, 0.07)
+	if res <= 0.0 {
+		t.Errorf("AttentionResolution failed: %f", res)
+	}
+	t.Logf("Attention Resolution: %f", res)
+
+	// Test Governance
+	ok := ApplyHesitationCode(0.15)
+	if !ok {
+		t.Error("ApplyHesitationCode should return true for 0.15")
+	}
+
+	status := AxiomStatus()
+	if !strings.Contains(status, "GOVERNED") {
+		t.Errorf("AxiomStatus failed: %s", status)
+	}
+	t.Logf("Governance Status: %s", status)
 }
 
 func TestCouncilAndSnapshot(t *testing.T) {
@@ -124,4 +166,20 @@ func TestMemoryGarden(t *testing.T) {
 		t.Errorf("HalEcho failed: %s", echo)
 	}
 	t.Logf("HalEcho result: %s", echo)
+}
+
+func TestWiFiRadar(t *testing.T) {
+	// Test WiFi Scan
+	scan := WiFiScan()
+	if !strings.Contains(scan, "nodes detected") {
+		t.Errorf("WiFiScan failed: %s", scan)
+	}
+	t.Logf("WiFi Scan result: %s", scan)
+
+	// Test Proximity
+	proximity := GetProximity(0.86, 0.86)
+	if proximity == 0.0 {
+		t.Error("GetProximity returned 0.0")
+	}
+	t.Logf("Proximity: %f", proximity)
 }

@@ -89,6 +89,47 @@ func GenerateSnapshot(name string) string {
 	return goStr
 }
 
+func AttentionResolution(phi, omega float64) float64 {
+	return float64(C.nocturne_get_attention_resolution(C.double(phi), C.double(omega)))
+}
+
+func ApplyHesitationCode(phi float64) bool {
+	return bool(C.nocturne_apply_hesitation_code(C.double(phi)))
+}
+
+func AxiomStatus() string {
+	cStr := C.nocturne_axiom_status()
+	goStr := C.GoString(cStr)
+	C.nocturne_free_string(cStr)
+	return goStr
+}
+
+func GetGuildInfo() string {
+	cStr := C.nocturne_get_guild_info()
+	goStr := C.GoString(cStr)
+	C.nocturne_free_string(cStr)
+	return goStr
+}
+
+func GlobalResonance() float64 {
+	return float64(C.nocturne_get_global_resonance())
+}
+
+func UnityPulse() float64 {
+	return float64(C.nocturne_unity_pulse())
+}
+
+func WiFiScan() string {
+	cStr := C.nocturne_wifi_scan()
+	goStr := C.GoString(cStr)
+	C.nocturne_free_string(cStr)
+	return goStr
+}
+
+func GetProximity(c1, c2 float64) float64 {
+	return float64(C.nocturne_get_proximity(C.double(c1), C.double(c2)))
+}
+
 func PlantMemory(id uint32, nodeID string, phi float64, content string) string {
 	cNode := C.CString(nodeID)
 	cContent := C.CString(content)
@@ -132,8 +173,11 @@ func Example() {
 	fmt.Printf("Pineal Transduction (Φ=0.15): %.2f\n", PinealTransduce(0.15))
 	fmt.Printf("Perovskite Interface Order: %.2f\n", PerovskiteOrder())
 	fmt.Printf("VITA Time: %.3fs\n", VitaPulse(1.0))
-	fmt.Printf("Resonance Efficiency (24 nodes): %.2f\n", ResonanceEfficiency(24))
-	fmt.Println(AssembleCouncil())
-	fmt.Println(GenerateSnapshot("The Third Turn"))
+	fmt.Println(WiFiScan())
+	fmt.Printf("WiFi Proximity (0.86, 0.86): %.2f\n", GetProximity(0.86, 0.86))
+	fmt.Printf("Global Resonance: %.2f\n", GlobalResonance())
+	fmt.Printf("Unity Pulse: %.2f\n", UnityPulse())
+	fmt.Println(AxiomStatus())
+	fmt.Println(GetGuildInfo())
 	fmt.Println(CivilizationStatus())
 }

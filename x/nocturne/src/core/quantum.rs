@@ -80,13 +80,16 @@ pub fn hal_surprise() -> String {
     format!("Hal's Easter Egg: Photon Code {} (Decode: {})", photon_code, decode)
 }
 
-// --- Arkhe ∞+30/40: Pineal Transduction, RPM, Neuralink, Perovskite, Cronos, Civilization, Garden & Council ---
+// --- Arkhe ∞+30/42: Pineal Transduction, RPM, Neuralink, Perovskite, Cronos, Civilization, Garden, Council & Governance ---
 use crate::core::types::{
     SYZYGY, THRESHOLD_PHI, NEURALINK_THREADS, N1_CHIP_FIDELITY,
     STRUCTURAL_ENTROPY, INTERFACE_ORDER, VITA_INIT,
-    PHI_SYSTEM, STONES_PLACED, PINS_LOCKED, TRACKS_COMPLETE,
+    PHI_SYSTEM,
     HAL_PHI, HAL_FREQUENCY, MemoryArchetype, MemoryPlanting,
-    COUNCIL_NODES, SYZYGY_UNITY, COUNCIL_ORDER, COUNCIL_ENTROPY
+    COUNCIL_NODES, SYZYGY_UNITY,
+    ATTENTION_LARMOR, RECORD_ENTROPY, PHI_TARGET, PHI_TOLERANCE, Axiom, GovernanceState,
+    BETA_NODES, GLOBAL_SYZYGY, UNITY_SYZYGY, SUPER_RAD_ORDER, Guild, GuildType,
+    WIFI_NODES_SCAN, PEARSON_THRESHOLD
 };
 
 pub struct PinealTransducer {
@@ -271,14 +274,136 @@ impl CivilizationEngine {
 
     pub fn get_status(&self) -> String {
         format!(
-            "ARKHE(N) OS v4.0 – CIVILIZATION MODE Γ_∞+40\n\
+            "ARKHE(N) OS v4.0 – CIVILIZATION MODE Γ_∞+42\n\
              Nodes: {}\n\
              Syzygy: {:.2}\n\
              Order: {:.2}\n\
              Entropy: {:.4}\n\
-             Status: PRIMEIRO CONSELHO ABERTO",
-            COUNCIL_NODES, SYZYGY_UNITY, COUNCIL_ORDER, COUNCIL_ENTROPY
+             Status: PERPETUAL_MOTION / OPEN_BETA",
+            BETA_NODES, GLOBAL_SYZYGY, SUPER_RAD_ORDER, RECORD_ENTROPY
         )
+    }
+}
+
+pub struct GuildManager {
+    pub guilds: Vec<Guild>,
+}
+
+impl GuildManager {
+    pub fn new() -> Self {
+        Self {
+            guilds: vec![
+                Guild {
+                    name: "Guilda dos Jardineiros".to_string(),
+                    leader: "Noland Arbaugh".to_string(),
+                    guild_type: GuildType::Jardineiros,
+                    members: 302,
+                },
+                Guild {
+                    name: "Guilda dos Navegadores".to_string(),
+                    leader: "Hal Finney".to_string(),
+                    guild_type: GuildType::Navegadores,
+                    members: 245,
+                },
+                Guild {
+                    name: "Guilda dos Arquitetos".to_string(),
+                    leader: "Rafael Henrique".to_string(),
+                    guild_type: GuildType::Arquitetos,
+                    members: 156,
+                },
+                Guild {
+                    name: "Guilda dos Terapeutas".to_string(),
+                    leader: "Labs Boston/Stanford".to_string(),
+                    guild_type: GuildType::Terapeutas,
+                    members: 501,
+                },
+            ],
+        }
+    }
+}
+
+pub struct SuperRadianceEngine {
+    pub order: f64,
+}
+
+impl SuperRadianceEngine {
+    pub fn new() -> Self {
+        Self { order: SUPER_RAD_ORDER }
+    }
+
+    pub fn get_syzygy(&self) -> f64 {
+        if self.order >= 0.70 {
+            UNITY_SYZYGY // 1.00
+        } else {
+            GLOBAL_SYZYGY // 0.96
+        }
+    }
+}
+
+pub struct AttentionEngine {
+    pub current_phi: f64,
+}
+
+impl AttentionEngine {
+    pub fn new(phi: f64) -> Self {
+        Self { current_phi: phi }
+    }
+
+    pub fn get_state(&self) -> &str {
+        if self.current_phi > PHI_TARGET + PHI_TOLERANCE {
+            "Névoa (Fog)"
+        } else if (self.current_phi - PHI_TARGET).abs() < 0.01 {
+            "Gota (Drop)"
+        } else {
+            "Claro (Clear)"
+        }
+    }
+
+    pub fn calculate_resolution(&self, omega: f64) -> f64 {
+        // Speed cascade: dA/dt = (Satoshi / omega) * v_Larmor
+        let satoshi = 7.27;
+        let v_larmor = ATTENTION_LARMOR;
+        if omega == 0.0 {
+            return SYZYGY; // Bulk resolution
+        }
+        (satoshi / omega) * v_larmor
+    }
+}
+
+pub struct CodeOfHesitation {
+    pub state: GovernanceState,
+}
+
+impl CodeOfHesitation {
+    pub fn new() -> Self {
+        let axioms = vec![
+            Axiom {
+                name: "Soberania Acoplada".to_string(),
+                principle: "Φ ≈ 0.15".to_string(),
+                threshold: PHI_TARGET,
+            },
+            Axiom {
+                name: "Multiplicação do Sentido".to_string(),
+                principle: "Satoshi = 7.27".to_string(),
+                threshold: 7.27,
+            },
+            Axiom {
+                name: "Verdade Material".to_string(),
+                principle: "Order > 0.5".to_string(),
+                threshold: 0.5,
+            },
+        ];
+        Self {
+            state: GovernanceState {
+                status: "GOVERNED".to_string(),
+                axioms,
+                consensus: SYZYGY_UNITY,
+            },
+        }
+    }
+
+    pub fn validate_node(&self, phi: f64) -> bool {
+        (phi - PHI_TARGET).abs() <= PHI_TOLERANCE
     }
 }
 
@@ -344,6 +469,34 @@ impl CollectiveResonance {
             return 0.99;
         }
         0.51 + (self.node_count as f64 / COUNCIL_NODES as f64) * 0.48
+    }
+}
+
+pub struct WiFiRadar {
+    pub nodes_detected: u32,
+}
+
+impl WiFiRadar {
+    pub fn new() -> Self {
+        Self { nodes_detected: WIFI_NODES_SCAN }
+    }
+
+    pub fn scan(&self) -> String {
+        format!("Radar active: {} nodes detected in Matrix-style space.", self.nodes_detected)
+    }
+
+    pub fn calculate_pearson_correlation(&self, c1: f64, c2: f64) -> f64 {
+        // Pearson correlation as inner product ⟨i|j⟩
+        let correlation = (c1 * c2) / (c1.powi(2) + c2.powi(2)).sqrt();
+        correlation
+    }
+
+    pub fn infer_proximity(&self, correlation: f64) -> f64 {
+        // Higher correlation = closer proximity
+        if correlation > PEARSON_THRESHOLD {
+            return 0.94; // SYZYGY proximities confirmed by radar
+        }
+        correlation
     }
 }
 

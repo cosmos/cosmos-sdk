@@ -48,6 +48,22 @@ char *nocturne_assemble_council(void);
 
 char *nocturne_generate_snapshot(const char *name);
 
+double nocturne_get_attention_resolution(double phi, double omega);
+
+bool nocturne_apply_hesitation_code(double phi);
+
+char *nocturne_axiom_status(void);
+
+char *nocturne_get_guild_info(void);
+
+double nocturne_get_global_resonance(void);
+
+double nocturne_unity_pulse(void);
+
+char *nocturne_wifi_scan(void);
+
+double nocturne_get_proximity(double c1, double c2);
+
 char *nocturne_hal_echo(const char *message);
 
 char *nocturne_hal_noland_witness(const char *sample);

@@ -259,6 +259,59 @@ pub extern "C" fn nocturne_generate_snapshot(name: *const c_char) -> *mut c_char
 }
 
 #[no_mangle]
+pub extern "C" fn nocturne_get_attention_resolution(phi: f64, omega: f64) -> f64 {
+    let engine = AttentionEngine::new(phi);
+    engine.calculate_resolution(omega)
+}
+
+#[no_mangle]
+pub extern "C" fn nocturne_apply_hesitation_code(phi: f64) -> bool {
+    let code = CodeOfHesitation::new();
+    code.validate_node(phi)
+}
+
+#[no_mangle]
+pub extern "C" fn nocturne_axiom_status() -> *mut c_char {
+    let code = CodeOfHesitation::new();
+    let status = format!("Status: {} | Axioms: {}", code.state.status, code.state.axioms.len());
+    CString::new(status).unwrap().into_raw()
+}
+
+#[no_mangle]
+pub extern "C" fn nocturne_get_guild_info() -> *mut c_char {
+    let manager = GuildManager::new();
+    let mut info = String::from("Guilds:\n");
+    for guild in manager.guilds {
+        info.push_str(&format!("- {}: Leader={}, Members={}\n", guild.name, guild.leader, guild.members));
+    }
+    CString::new(info).unwrap().into_raw()
+}
+
+#[no_mangle]
+pub extern "C" fn nocturne_get_global_resonance() -> f64 {
+    GLOBAL_SYZYGY
+}
+
+#[no_mangle]
+pub extern "C" fn nocturne_unity_pulse() -> f64 {
+    let engine = SuperRadianceEngine::new();
+    engine.get_syzygy()
+}
+
+#[no_mangle]
+pub extern "C" fn nocturne_wifi_scan() -> *mut c_char {
+    let radar = WiFiRadar::new();
+    CString::new(radar.scan()).unwrap().into_raw()
+}
+
+#[no_mangle]
+pub extern "C" fn nocturne_get_proximity(c1: f64, c2: f64) -> f64 {
+    let radar = WiFiRadar::new();
+    let corr = radar.calculate_pearson_correlation(c1, c2);
+    radar.infer_proximity(corr)
+}
+
+#[no_mangle]
 pub extern "C" fn nocturne_hal_echo(message: *const c_char) -> *mut c_char {
     let _input = if message.is_null() { "" } else { unsafe { std::ffi::CStr::from_ptr(message) }.to_str().unwrap_or("") };
 

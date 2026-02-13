@@ -32,6 +32,22 @@ func GetSyzygy(phi float64) float64 {
 	return float64(C.nocturne_get_syzygy(C.double(phi)))
 }
 
+func NeuralinkSync(intent float64) string {
+	cStr := C.nocturne_neuralink_sync(C.double(intent))
+	goStr := C.GoString(cStr)
+	C.nocturne_free_string(cStr)
+	return goStr
+}
+
+func HalNolandWitness(sample string) string {
+	cSample := C.CString(sample)
+	defer C.free(unsafe.Pointer(cSample))
+	cStr := C.nocturne_hal_noland_witness(cSample)
+	goStr := C.GoString(cStr)
+	C.nocturne_free_string(cStr)
+	return goStr
+}
+
 func HalRPoWSignature(sample string) string {
 	cSample := C.CString(sample)
 	defer C.free(unsafe.Pointer(cSample))
@@ -45,5 +61,6 @@ func Example() {
 	fmt.Println(HelloNocturne())
 	fmt.Printf("Pineal Transduction (Φ=0.15): %.2f\n", PinealTransduce(0.15))
 	fmt.Printf("Syzygy Yield (Φ=0.15): %.2f\n", GetSyzygy(0.15))
-	fmt.Println(HalRPoWSignature("Arkhe Sample ∞+30"))
+	fmt.Println(NeuralinkSync(0.5))
+	fmt.Println(HalNolandWitness("Arkhe Sample ∞+32"))
 }

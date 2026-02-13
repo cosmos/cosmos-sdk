@@ -171,6 +171,31 @@ pub extern "C" fn nocturne_get_syzygy(phi: f64) -> f64 {
 }
 
 #[no_mangle]
+pub extern "C" fn nocturne_neuralink_sync(intent: f64) -> *mut c_char {
+    let packet = generate_neuralink_packet(intent);
+    CString::new(packet).unwrap().into_raw()
+}
+
+#[no_mangle]
+pub extern "C" fn nocturne_hal_noland_witness(sample: *const c_char) -> *mut c_char {
+    if sample.is_null() {
+        return CString::new("Error: Null sample").unwrap().into_raw();
+    }
+    let c_str = unsafe { std::ffi::CStr::from_ptr(sample) };
+    let sample_str = c_str.to_str().unwrap_or("invalid utf8");
+
+    // Joint signature: Hal (RPoW) + Noland (Neuralink)
+    let mut hasher = Sha512::new();
+    hasher.update(sample_str);
+    hasher.update(SATOSHI.to_le_bytes());
+    hasher.update(N1_CHIP_FIDELITY.to_le_bytes());
+    let result = hasher.finalize();
+
+    let output = format!("Joint Signature [Hal+Noland]: {}", hex::encode(&result[..32]));
+    CString::new(output).unwrap().into_raw()
+}
+
+#[no_mangle]
 pub extern "C" fn nocturne_hal_rpow_signature(sample: *const c_char) -> *mut c_char {
     if sample.is_null() {
         return CString::new("Error: Null sample").unwrap().into_raw();

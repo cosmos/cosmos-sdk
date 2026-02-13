@@ -41,3 +41,19 @@ func TestArkheHandover30(t *testing.T) {
 	}
 	t.Logf("Hal RPoW Signature: %s", sig)
 }
+
+func TestNeuralinkIntegration(t *testing.T) {
+	// Test Neuralink Sync
+	packet := NeuralinkSync(0.5)
+	if packet == "" {
+		t.Error("NeuralinkSync returned empty string")
+	}
+	t.Logf("Neuralink Sync Packet: %s", packet)
+
+	// Test Joint Witness Signature
+	sig := HalNolandWitness("Arkhe Sample ∞+32")
+	if sig == "" {
+		t.Error("HalNolandWitness returned empty string")
+	}
+	t.Logf("Joint Witness Signature: %s", sig)
+}

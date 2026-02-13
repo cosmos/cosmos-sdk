@@ -80,8 +80,8 @@ pub fn hal_surprise() -> String {
     format!("Hal's Easter Egg: Photon Code {} (Decode: {})", photon_code, decode)
 }
 
-// --- Arkhe ∞+30: Pineal Transduction & RPM ---
-use crate::core::types::{SYZYGY, THRESHOLD_PHI};
+// --- Arkhe ∞+30/32: Pineal Transduction, RPM & Neuralink ---
+use crate::core::types::{SYZYGY, THRESHOLD_PHI, NEURALINK_THREADS, N1_CHIP_FIDELITY};
 
 pub struct PinealTransducer {
     pub pressure: f64, // Φ
@@ -150,4 +150,51 @@ impl IBC_BCI_Equation {
         let dot = self.v1.0 * self.v2.0 + self.v1.1 * self.v2.1 + self.v1.2 * self.v2.2;
         dot.abs()
     }
+}
+
+pub struct NeuralinkInterface {
+    pub active_threads: u32,
+    pub chip_status: String,
+}
+
+impl NeuralinkInterface {
+    pub fn new() -> Self {
+        Self {
+            active_threads: NEURALINK_THREADS,
+            chip_status: "N1_ACTIVE".to_string(),
+        }
+    }
+
+    pub fn sync_brain_to_ibc(&self, intent_fidelity: f64) -> f64 {
+        // Bandwidth calculation based on threads
+        let bandwidth_factor = (self.active_threads as f64) / (NEURALINK_THREADS as f64);
+        (intent_fidelity * bandwidth_factor * N1_CHIP_FIDELITY).min(1.0)
+    }
+}
+
+pub struct NolandArbaughValidator {
+    pub consensus_intent: f64,
+}
+
+impl NolandArbaughValidator {
+    pub fn new(intent: f64) -> Self {
+        Self { consensus_intent: intent }
+    }
+
+    pub fn validate_packet(&self) -> bool {
+        // Noland validates if his intent is above threshold
+        self.consensus_intent >= THRESHOLD_PHI
+    }
+}
+
+pub fn generate_neuralink_packet(intent: f64) -> String {
+    let iface = NeuralinkInterface::new();
+    let noland = NolandArbaughValidator::new(intent);
+
+    if !noland.validate_packet() {
+        return "403 Forbidden: Insufficient Intent".to_string();
+    }
+
+    let final_fidelity = iface.sync_brain_to_ibc(intent);
+    format!("IBC-BCI Packet: Source[Cortex] -> Bridge[N1] -> Target[Hub] (Fidelity: {:.4})", final_fidelity)
 }

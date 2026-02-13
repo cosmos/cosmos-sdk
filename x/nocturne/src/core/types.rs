@@ -14,6 +14,10 @@ pub const COHERENCE_C: f64 = 0.86;
 pub const FLUCTUATION_F: f64 = 0.14;
 pub const SYZYGY: f64 = 0.94;
 
+/// --- Neuralink ∞+32 Constants ---
+pub const NEURALINK_THREADS: u32 = 64;
+pub const N1_CHIP_FIDELITY: f64 = 0.94;
+
 pub type Hash256 = [u8; 32];
 
 #[serde_as]

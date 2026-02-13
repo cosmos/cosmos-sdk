@@ -31,6 +31,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v1.4.0](https://github.com/cosmos/cosmos-sdk/releases/tag/collections%2Fv1.4.0)
+
+* Bump minor dependencies and update minimum `go` version to `1.24`.
+
 ## [v1.3.1](https://github.com/cosmos/cosmos-sdk/releases/tag/collections%2Fv1.3.1)
 
 * Prep for Cosmos SDK v0.54.0

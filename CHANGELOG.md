@@ -77,6 +77,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* (types) [#25860](https://github.com/cosmos/cosmos-sdk/pull/25860) Optimize `Coins.safeAdd` using two-pointer merge algorithm for O(n) complexity instead of map-based O(n log n).
 * (types) [#25342](https://github.com/cosmos/cosmos-sdk/pull/25342) Undeprecated `EmitEvent` and `EmitEvents` on the `EventManager`.  These functions will continue to be maintained.
 * (types) [#24668](https://github.com/cosmos/cosmos-sdk/pull/24668) Scope the global config to a particular binary so that multiple SDK binaries can be properly run on the same machine.
 * (baseapp) [#24655](https://github.com/cosmos/cosmos-sdk/pull/24655) Add mutex locks for `state` and make `lastCommitInfo` atomic to prevent race conditions between `Commit` and `CreateQueryContext`.

@@ -36,44 +36,11 @@ func NewCommitTree(dir string, opts Options) (*CommitTree, error) {
 		return nil, fmt.Errorf("creating tree directory: %w", err)
 	}
 
-	changesetRolloverSize := opts.ChangesetRolloverSize
-	if changesetRolloverSize == 0 {
-		changesetRolloverSize = 2 * 1024 * 1024 * 1024 // 2GB default
-	}
-	leafEvictDepth := opts.LeafEvictDepth
-	if leafEvictDepth == 0 {
-		leafEvictDepth = 20 // with default evict depth 2^20 = 1M leaf nodes are kept in memory
-	}
-	branchEvictDepth := opts.BranchEvictDepth
-	if branchEvictDepth == 0 {
-		branchEvictDepth = 24
-	}
-	var rootCacheSize uint64 = 5 // default to caching 5 roots
-	if opts.RootCacheSize > 0 {
-		rootCacheSize = uint64(opts.RootCacheSize)
-	} else if opts.RootCacheSize < 0 {
-		rootCacheSize = 0
-	}
-	var rootCacheExpiry = 5 * time.Second // default to 5 seconds
-	if opts.RootCacheExpiry > 0 {
-		rootCacheExpiry = time.Duration(opts.RootCacheExpiry) * time.Millisecond
-	}
-	checkpointInterval := opts.CheckpointInterval
-	if checkpointInterval == 0 {
-		checkpointInterval = 1000 // default to checkpoint every 1000 versions
-	}
-	treeStore, err := internal.NewTreeStore(dir, internal.TreeStoreOptions{
-		ChangesetRolloverSize: changesetRolloverSize,
-		LeafEvictDepth:        leafEvictDepth,
-		BranchEvictDepth:      branchEvictDepth,
-		CheckpointInterval:    checkpointInterval,
-		RootCacheSize:         rootCacheSize,
-		RootCacheExpiry:       rootCacheExpiry,
-	})
-
+	treeStore, err := internal.NewTreeStore(dir, opts.toTreeStoreOptions())
 	if err != nil {
 		return nil, fmt.Errorf("creating tree store: %w", err)
 	}
+
 	return &CommitTree{
 		opts:      opts,
 		treeStore: treeStore,

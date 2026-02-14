@@ -6,31 +6,30 @@ const ViewsPreAllocate = 4
 
 // MultiMVMemoryView don't need to be thread-safe, there's a dedicated instance for each tx execution.
 type MultiMVMemoryView struct {
-	stores    map[storetypes.StoreKey]int
-	views     map[storetypes.StoreKey]MVView
-	newMVView func(storetypes.StoreKey, TxnIndex) MVView
-	txn       TxnIndex
+	mv     *MVMemory
+	stores map[storetypes.StoreKey]int
+	views  map[storetypes.StoreKey]MVView
+	txn    TxnIndex
 }
 
 var _ MultiStore = (*MultiMVMemoryView)(nil)
 
 func NewMultiMVMemoryView(
-	stores map[storetypes.StoreKey]int,
-	newMVView func(storetypes.StoreKey, TxnIndex) MVView,
+	mv *MVMemory,
 	txn TxnIndex,
 ) *MultiMVMemoryView {
 	return &MultiMVMemoryView{
-		stores:    stores,
-		views:     make(map[storetypes.StoreKey]MVView, ViewsPreAllocate),
-		newMVView: newMVView,
-		txn:       txn,
+		stores: mv.stores,
+		views:  make(map[storetypes.StoreKey]MVView, ViewsPreAllocate),
+		txn:    txn,
+		mv:     mv,
 	}
 }
 
 func (mv *MultiMVMemoryView) getViewOrInit(name storetypes.StoreKey) MVView {
 	view, ok := mv.views[name]
 	if !ok {
-		view = mv.newMVView(name, mv.txn)
+		view = mv.mv.newMVView(name, mv.txn)
 		mv.views[name] = view
 	}
 	return view
@@ -56,10 +55,19 @@ func (mv *MultiMVMemoryView) ReadSet() *MultiReadSet {
 	return &rs
 }
 
-func (mv *MultiMVMemoryView) ApplyWriteSet(version TxnVersion) MultiLocations {
-	newLocations := make(MultiLocations, len(mv.views))
-	for key, view := range mv.views {
-		newLocations[mv.stores[key]] = view.ApplyWriteSet(version)
+func (mv *MultiMVMemoryView) ApplyWriteSet(version TxnVersion) bool {
+	var wroteNewLocation bool
+	for _, view := range mv.views {
+		if view.ApplyWriteSet(version) {
+			wroteNewLocation = true
+		}
 	}
-	return newLocations
+
+	// handle un-touched stores
+	for name, i := range mv.stores {
+		if _, ok := mv.views[name]; !ok {
+			mv.mv.GetMVStore(i).ConsolidateEmpty(version.Index)
+		}
+	}
+	return wroteNewLocation
 }

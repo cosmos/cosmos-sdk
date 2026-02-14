@@ -94,6 +94,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (baseapp) [#25862](https://github.com/cosmos/cosmos-sdk/pull/25862) Skip running validateBasic for rechecking txs. (Backport of https://github.com/cosmos/cosmos-sdk/pull/20208).
 * (blockstm) [25883](https://github.com/cosmos/cosmos-sdk/pull/25883) Re-use decoded tx object in pre-estimates.
 * (blockstm) [#25788](https://github.com/cosmos/cosmos-sdk/pull/25788) Only validate transactions that's executed at lease once.
+* (blockstm) [#25767](https://github.com/cosmos/cosmos-sdk/pull/25767) Optimize block-stm MVMemory with bitmap index.
 
 ### Bug Fixes
 

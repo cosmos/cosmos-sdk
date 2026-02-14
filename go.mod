@@ -12,6 +12,7 @@ require (
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/store v1.3.0-beta.0
 	github.com/99designs/keyring v1.2.1
+	github.com/RoaringBitmap/roaring/v2 v2.14.4
 	github.com/bgentry/speakeasy v0.2.0
 	github.com/bits-and-blooms/bitset v1.24.4
 	github.com/chzyer/readline v1.5.1
@@ -195,6 +196,7 @@ require (
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/minio/highwayhash v1.0.3 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
+	github.com/mschoch/smat v0.2.0 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20251114093237-2ab5a27a1729 // indirect

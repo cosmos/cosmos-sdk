@@ -51,7 +51,7 @@ func NewGMVMemoryView[V any](store int, storage storetypes.GKVStore[V], mvData *
 
 func (s *GMVMemoryView[V]) init() {
 	if s.writeSet == nil {
-		s.writeSet = NewGMemDBNonConcurrent(s.mvData.isZero, s.mvData.valueLen)
+		s.writeSet = NewWriteSet(s.mvData.isZero, s.mvData.valueLen)
 	}
 }
 
@@ -62,19 +62,8 @@ func (s *GMVMemoryView[V]) waitFor(txn TxnIndex) {
 	}
 }
 
-func (s *GMVMemoryView[V]) ApplyWriteSet(version TxnVersion) Locations {
-	if s.writeSet == nil || s.writeSet.Len() == 0 {
-		return nil
-	}
-
-	newLocations := make([]Key, 0, s.writeSet.Len())
-	s.writeSet.Scan(func(key Key, value V) bool {
-		s.mvData.Write(key, value, version)
-		newLocations = append(newLocations, key)
-		return true
-	})
-
-	return newLocations
+func (s *GMVMemoryView[V]) ApplyWriteSet(version TxnVersion) bool {
+	return s.mvData.Consolidate(version, s.writeSet)
 }
 
 func (s *GMVMemoryView[V]) ReadSet() *ReadSet {

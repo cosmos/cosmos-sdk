@@ -2,9 +2,13 @@ package internal
 
 import (
 	"cmp"
+	"context"
 	"fmt"
 	"slices"
 	"sync"
+
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type OrphanProcessor struct {
@@ -57,6 +61,14 @@ func (op *OrphanProcessor) proc() error {
 }
 
 func (op *OrphanProcessor) procOne(mutationCtx *MutationContext) error {
+	_, span := tracer.Start(context.Background(),
+		"OrphanProcessor.procOne",
+		trace.WithAttributes(
+			attribute.Int64("version", int64(mutationCtx.version)),
+			attribute.Int("numOrphans", len(mutationCtx.orphans)),
+		),
+	)
+	defer span.End()
 	orphans := mutationCtx.orphans
 	// sort orphans so that orphan logs are compact and in a deterministic order (sorted by checkpoint, then by flag index)
 	slices.SortFunc(orphans, func(a, b *NodePointer) int {

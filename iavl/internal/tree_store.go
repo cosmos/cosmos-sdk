@@ -122,7 +122,9 @@ func (ts *TreeStore) SaveRoot(ctx context.Context, newRoot *NodePointer, mutatio
 		return fmt.Errorf("mutation context version %d does not match staged version %d", newVersion, stagedVersion)
 	}
 	// save last root to cache
-	ts.rootByVersionCache.Set(lastRoot.version, lastRoot.root, ttlcache.DefaultTTL)
+	if ts.opts.RootCacheSize > 0 {
+		ts.rootByVersionCache.Set(lastRoot.version, lastRoot.root, ttlcache.DefaultTTL)
+	}
 	// store new root and increment version
 	swapped := ts.root.CompareAndSwap(lastRoot, &versionedRoot{
 		version: newVersion,
@@ -245,8 +247,10 @@ func (ts *TreeStore) RootAtVersion(targetVersion uint32) (*NodePointer, error) {
 	defer span.End()
 
 	// check cache first
-	if item := ts.rootByVersionCache.Get(targetVersion); item != nil {
-		return item.Value(), nil
+	if ts.opts.RootCacheSize > 0 {
+		if item := ts.rootByVersionCache.Get(targetVersion); item != nil {
+			return item.Value(), nil
+		}
 	}
 
 	root, err := ts.loadRootAtVersion(ctx, targetVersion)
@@ -255,7 +259,9 @@ func (ts *TreeStore) RootAtVersion(targetVersion uint32) (*NodePointer, error) {
 	}
 
 	// save to cache
-	ts.rootByVersionCache.Set(targetVersion, root, ttlcache.DefaultTTL)
+	if ts.opts.RootCacheSize > 0 {
+		ts.rootByVersionCache.Set(targetVersion, root, ttlcache.DefaultTTL)
+	}
 
 	return root, nil
 }

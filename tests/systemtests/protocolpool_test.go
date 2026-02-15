@@ -15,9 +15,9 @@ import (
 	"github.com/tidwall/sjson"
 
 	"cosmossdk.io/math"
-	"cosmossdk.io/systemtests"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/testutil/systemtests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 )

@@ -8,9 +8,108 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
+
+func TestGroupInfoValidateBasic(t *testing.T) {
+	accAddr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+
+	testCases := []struct {
+		name    string
+		group   group.GroupInfo
+		expErr  bool
+		expMsgs []string
+	}{
+		{
+			"valid",
+			group.GroupInfo{
+				Id:          1,
+				Admin:       accAddr.String(),
+				Metadata:    "metadata",
+				Version:     1,
+				TotalWeight: "1",
+			},
+			false,
+			nil,
+		},
+		{
+			"empty group id",
+			group.GroupInfo{
+				Id:          0,
+				Admin:       accAddr.String(),
+				Metadata:    "metadata",
+				Version:     1,
+				TotalWeight: "1",
+			},
+			true,
+			[]string{"group's GroupId", "value is empty"},
+		},
+		{
+			"invalid admin",
+			group.GroupInfo{
+				Id:          1,
+				Admin:       "invalid",
+				Metadata:    "metadata",
+				Version:     1,
+				TotalWeight: "1",
+			},
+			true,
+			[]string{"admin"},
+		},
+		{
+			"invalid total weight - negative",
+			group.GroupInfo{
+				Id:          1,
+				Admin:       accAddr.String(),
+				Metadata:    "metadata",
+				Version:     1,
+				TotalWeight: "-1",
+			},
+			true,
+			[]string{"total weight"},
+		},
+		{
+			"zero total weight - group must not be empty",
+			group.GroupInfo{
+				Id:          1,
+				Admin:       accAddr.String(),
+				Metadata:    "metadata",
+				Version:     1,
+				TotalWeight: "0",
+			},
+			true,
+			[]string{"group must not be empty", "invalid"},
+		},
+		{
+			"empty version",
+			group.GroupInfo{
+				Id:          1,
+				Admin:       accAddr.String(),
+				Metadata:    "metadata",
+				Version:     0,
+				TotalWeight: "1",
+			},
+			true,
+			[]string{"version", "value is empty"},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.group.ValidateBasic()
+			if tc.expErr {
+				require.Error(t, err)
+				for _, msg := range tc.expMsgs {
+					require.Contains(t, err.Error(), msg)
+				}
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
 
 func TestGroupPolicyInfoGetDecisionPolicy_MalformedPolicy(t *testing.T) {
 	// Simulate malformed policy unpacking: DecisionPolicy Any contains wrong type.
@@ -206,10 +305,7 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 			},
 			"3",
 			time.Second * 50,
-			group.DecisionPolicyResult{
-				Allow: true,
-				Final: true,
-			},
+			group.DecisionPolicyResult{Allow: true, Final: true},
 			false,
 		},
 		{
@@ -228,10 +324,7 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 			},
 			"4",
 			time.Second * 50,
-			group.DecisionPolicyResult{
-				Allow: true,
-				Final: true,
-			},
+			group.DecisionPolicyResult{Allow: true, Final: true},
 			false,
 		},
 		{
@@ -250,10 +343,7 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 			},
 			"3",
 			time.Second * 50,
-			group.DecisionPolicyResult{
-				Allow: false,
-				Final: false,
-			},
+			group.DecisionPolicyResult{Allow: false, Final: false},
 			false,
 		},
 		{
@@ -272,10 +362,7 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 			},
 			"3",
 			time.Second * 50,
-			group.DecisionPolicyResult{
-				Allow: false,
-				Final: true,
-			},
+			group.DecisionPolicyResult{Allow: false, Final: true},
 			false,
 		},
 		{
@@ -294,10 +381,7 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 			},
 			"4",
 			time.Second * 50,
-			group.DecisionPolicyResult{
-				Allow: false,
-				Final: false,
-			},
+			group.DecisionPolicyResult{Allow: false, Final: false},
 			false,
 		},
 		{
@@ -316,10 +400,7 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 			},
 			"3",
 			time.Second * 50,
-			group.DecisionPolicyResult{
-				Allow: false,
-				Final: false,
-			},
+			group.DecisionPolicyResult{Allow: false, Final: false},
 			false,
 		},
 		{
@@ -338,13 +419,11 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 			},
 			"0",
 			time.Second * 50,
-			group.DecisionPolicyResult{
-				Allow: false,
-				Final: true,
-			},
+			group.DecisionPolicyResult{Allow: false, Final: true},
 			false,
 		},
 	}
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			policyResult, err := tc.policy.Allow(*tc.tally, tc.totalPower)
@@ -384,10 +463,7 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 			},
 			"3",
 			time.Second * 50,
-			group.DecisionPolicyResult{
-				Allow: true,
-				Final: true,
-			},
+			group.DecisionPolicyResult{Allow: true, Final: true},
 			false,
 		},
 		{
@@ -406,10 +482,7 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 			},
 			"3",
 			time.Second * 50,
-			group.DecisionPolicyResult{
-				Allow: false,
-				Final: false,
-			},
+			group.DecisionPolicyResult{Allow: false, Final: false},
 			false,
 		},
 		{
@@ -428,10 +501,7 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 			},
 			"3",
 			time.Second * 50,
-			group.DecisionPolicyResult{
-				Allow: true,
-				Final: true,
-			},
+			group.DecisionPolicyResult{Allow: true, Final: true},
 			false,
 		},
 		{
@@ -450,10 +520,7 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 			},
 			"3",
 			time.Second * 50,
-			group.DecisionPolicyResult{
-				Allow: false,
-				Final: true,
-			},
+			group.DecisionPolicyResult{Allow: false, Final: true},
 			false,
 		},
 		{
@@ -472,13 +539,11 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 			},
 			"3",
 			time.Second * 50,
-			group.DecisionPolicyResult{
-				Allow: false,
-				Final: false,
-			},
+			group.DecisionPolicyResult{Allow: false, Final: false},
 			false,
 		},
 	}
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			policyResult, err := tc.policy.Allow(*tc.tally, tc.totalPower)

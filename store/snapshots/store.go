@@ -318,11 +318,12 @@ func (s *Store) saveChunk(chunkBody io.ReadCloser, index uint32, snapshot *types
 		return errors.Wrapf(err, "failed to sync snapshot chunk file %d", index)
 	}
 
-	if err := chunkFile.Close(); err != nil {
-		return errors.Wrapf(err, "failed to close snapshot chunk file %d", index)
-	}
-	// mark as already closed so deferred handler does not run again
+	cerr := chunkFile.Close()
+	// mark as already closed so deferred handler does not run again, even on error
 	chunkFile = nil
+	if cerr != nil {
+		return errors.Wrapf(cerr, "failed to close snapshot chunk file %d", index)
+	}
 
 	snapshot.Metadata.ChunkHashes = append(snapshot.Metadata.ChunkHashes, chunkHasher.Sum(nil))
 	return nil

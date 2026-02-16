@@ -46,10 +46,8 @@ func CreateChangesetFiles(treeDir string, startVersion, compactedAt uint32) (*Ch
 	}
 	dir := filepath.Join(treeDir, dirName)
 
-	if err := os.Mkdir(dir, 0o755); err != nil {
-		if errors.Is(err, os.ErrExist) {
-			return nil, fmt.Errorf("changeset dir %s already exists; remove it before creating a new changeset", dir)
-		}
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		// TODO consider erroring if the directory already exists, but for now this could happen if we closed right after rolling over and it would just be an empty dir and not a bug
 		return nil, fmt.Errorf("failed to create changeset dir: %w", err)
 	}
 

@@ -14,18 +14,23 @@ type FileWriter struct {
 	written int
 }
 
-// NewFileWriter creates a new FileWriter.
-// Currently, it uses a buffer size of 512kb.
-// If we want to make that configurable, we can add a constructor with a buffer size parameter in the future.
+// NewFileWriter creates a new FileWriter with the default buffer size of 512kb
+// and initializes the written byte count based on the current file size.
 func NewFileWriter(file *os.File) *FileWriter {
 	const defaultBufferSize = 512 * 1024 // 512kb
+	return NewFileWriterSize(file, defaultBufferSize)
+}
+
+// NewFileWriterSize creates a new FileWriter with the specified buffer size
+// and initializes the written byte count based on the current file size.
+func NewFileWriterSize(file *os.File, size int) *FileWriter {
 	var written int
 	if info, err := file.Stat(); err == nil {
 		written = int(info.Size())
 	}
 	return &FileWriter{
 		file:    file,
-		writer:  bufio.NewWriterSize(file, defaultBufferSize),
+		writer:  bufio.NewWriterSize(file, size),
 		written: written,
 	}
 }

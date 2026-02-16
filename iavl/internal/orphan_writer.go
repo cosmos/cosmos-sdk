@@ -12,8 +12,9 @@ type OrphanWriter struct {
 }
 
 func NewOrphanWriter(file *os.File) *OrphanWriter {
+	const bufSize = 4 * 1024 // 4kb
 	return &OrphanWriter{
-		FileWriter: NewFileWriter(file),
+		FileWriter: NewFileWriterSize(file, bufSize),
 	}
 }
 

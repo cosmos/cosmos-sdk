@@ -203,7 +203,6 @@ A successful proposal execution will have its `ExecutorResult` marked as
 after execution. On the other hand, a failed proposal execution will be marked
 as `PROPOSAL_EXECUTOR_RESULT_FAILURE`. Such a proposal can be re-executed
 multiple times, until it expires `MaxExecutionPeriod` after the voting period ends.
-end.
 
 ### Pruning
 

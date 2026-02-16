@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -101,6 +102,83 @@ func TestGroupInfoValidateBasic(t *testing.T) {
 				for _, msg := range tc.expMsgs {
 					require.Contains(t, err.Error(), msg)
 				}
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+)
+
+func TestGroupPolicyInfoGetDecisionPolicy_MalformedPolicy(t *testing.T) {
+	// Simulate malformed policy unpacking: DecisionPolicy Any contains wrong type.
+	// GetDecisionPolicy should return ErrInvalidType instead of panicking.
+	coin := sdk.NewInt64Coin("stake", 1)
+	wrongAny, err := codectypes.NewAnyWithValue(&coin)
+	require.NoError(t, err)
+
+	policyInfo := group.GroupPolicyInfo{
+		Address:        "cosmos1abc123",
+		GroupId:        1,
+		Admin:          "cosmos1admin",
+		Version:        1,
+		DecisionPolicy: wrongAny,
+	}
+
+	_, err = policyInfo.GetDecisionPolicy()
+	require.Error(t, err)
+	require.True(t, sdkerrors.ErrInvalidType.Is(err), "expected ErrInvalidType, got %v", err)
+}
+
+func TestThresholdDecisionPolicyValidateBasic_VotingPeriodBoundaries(t *testing.T) {
+	testCases := []struct {
+		name         string
+		votingPeriod time.Duration
+		expErr       bool
+	}{
+		{"zero duration - reject", 0, true},
+		{"negative duration - reject", -time.Second, true},
+		{"positive duration - accept", time.Second, false},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			policy := group.ThresholdDecisionPolicy{
+				Threshold: "5",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod:       tc.votingPeriod,
+					MinExecutionPeriod: time.Hour,
+				},
+			}
+			err := policy.ValidateBasic()
+			if tc.expErr {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), "voting period must be positive")
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestPercentageDecisionPolicyValidateBasic_VotingPeriodBoundaries(t *testing.T) {
+	testCases := []struct {
+		name         string
+		votingPeriod time.Duration
+		expErr       bool
+	}{
+		{"zero duration - reject", 0, true},
+		{"negative duration - reject", -time.Second, true},
+		{"positive duration - accept", time.Second, false},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			policy := group.PercentageDecisionPolicy{
+				Percentage: "0.5",
+				Windows: &group.DecisionPolicyWindows{
+					VotingPeriod:       tc.votingPeriod,
+					MinExecutionPeriod: time.Hour,
+				},
+			}
+			err := policy.ValidateBasic()
+			if tc.expErr {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), "voting period must be positive")
 			} else {
 				require.NoError(t, err)
 			}

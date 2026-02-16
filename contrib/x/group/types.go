@@ -71,8 +71,8 @@ func (p ThresholdDecisionPolicy) ValidateBasic() error {
 		return errorsmod.Wrap(err, "threshold")
 	}
 
-	if p.Windows == nil || p.Windows.VotingPeriod == 0 {
-		return errorsmod.Wrap(errors.ErrInvalid, "voting period cannot be zero")
+	if p.Windows == nil || p.Windows.VotingPeriod <= 0 {
+		return errorsmod.Wrap(errors.ErrInvalid, "voting period must be positive")
 	}
 
 	return nil
@@ -180,8 +180,8 @@ func (p PercentageDecisionPolicy) ValidateBasic() error {
 		return errorsmod.Wrap(errors.ErrInvalid, "percentage must be > 0 and <= 1")
 	}
 
-	if p.Windows == nil || p.Windows.VotingPeriod == 0 {
-		return errorsmod.Wrap(errors.ErrInvalid, "voting period cannot be 0")
+	if p.Windows == nil || p.Windows.VotingPeriod <= 0 {
+		return errorsmod.Wrap(errors.ErrInvalid, "voting period must be positive")
 	}
 
 	return nil

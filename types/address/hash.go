@@ -53,7 +53,7 @@ func Compose(typ string, subAddresses []Addressable) ([]byte, error) {
 		totalLen += len(as[i])
 	}
 
-	sort.Slice(as, func(i, j int) bool { return bytes.Compare(as[i], as[j]) <= 0 })
+	sort.Slice(as, func(i, j int) bool { return bytes.Compare(as[i], as[j]) < 0 })
 	key := make([]byte, totalLen)
 	offset := 0
 	for i := range as {

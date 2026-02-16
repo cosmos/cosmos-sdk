@@ -142,7 +142,11 @@ func (m ReversePairIterator[K2, K1]) PrimaryKey() (pair collections.Pair[K1, K2]
 
 // PrimaryKeys returns all the primary keys contained in the iterator.
 func (m ReversePairIterator[K2, K1]) PrimaryKeys() (pairs []collections.Pair[K1, K2], err error) {
-	defer m.Close()
+	defer func() {
+		if cerr := m.Close(); cerr != nil && err == nil {
+			err = cerr
+		}
+	}()
 	for ; m.Valid(); m.Next() {
 		pair, err := m.PrimaryKey()
 		if err != nil {
@@ -150,7 +154,7 @@ func (m ReversePairIterator[K2, K1]) PrimaryKeys() (pairs []collections.Pair[K1,
 		}
 		pairs = append(pairs, pair)
 	}
-	return pairs, err
+	return pairs, nil
 }
 
 func (m ReversePairIterator[K2, K1]) FullKey() (p collections.Pair[K2, K1], err error) {

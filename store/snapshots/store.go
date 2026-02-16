@@ -288,12 +288,26 @@ func (s *Store) Save(
 // saveChunk saves the given chunkBody with the given index to its appropriate path on disk.
 // The hash of the chunk is appended to the snapshot's metadata,
 // and the overall snapshot hash is updated with the chunk content too.
-func (s *Store) saveChunk(chunkBody io.ReadCloser, index uint32, snapshot *types.Snapshot, chunkHasher, snapshotHasher hash.Hash) error {
+func (s *Store) saveChunk(chunkBody io.ReadCloser, index uint32, snapshot *types.Snapshot, chunkHasher, snapshotHasher hash.Hash) (err error) {
+	defer func() {
+		if cerr := chunkBody.Close(); cerr != nil && err == nil {
+			err = errors.Wrapf(cerr, "failed to close snapshot chunk body %d", index)
+		}
+	}()
+
 	path := s.PathChunk(snapshot.Height, snapshot.Format, index)
 	chunkFile, err := os.Create(path)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create snapshot chunk file %q", path)
 	}
+	defer func() {
+		if chunkFile == nil {
+			return
+		}
+		if cerr := chunkFile.Close(); cerr != nil && err == nil {
+			err = errors.Wrapf(cerr, "failed to close snapshot chunk file %d", index)
+		}
+	}()
 
 	chunkHasher.Reset()
 	if _, err := io.Copy(io.MultiWriter(chunkFile, chunkHasher, snapshotHasher), chunkBody); err != nil {
@@ -307,10 +321,8 @@ func (s *Store) saveChunk(chunkBody io.ReadCloser, index uint32, snapshot *types
 	if err := chunkFile.Close(); err != nil {
 		return errors.Wrapf(err, "failed to close snapshot chunk file %d", index)
 	}
-
-	if err := chunkBody.Close(); err != nil {
-		return errors.Wrapf(err, "failed to close snapshot chunk body %d", index)
-	}
+	// mark as already closed so deferred handler does not run again
+	chunkFile = nil
 
 	snapshot.Metadata.ChunkHashes = append(snapshot.Metadata.ChunkHashes, chunkHasher.Sum(nil))
 	return nil

@@ -66,7 +66,7 @@ func (k msgServer) GrantAllowance(goCtx context.Context, msg *feegrant.MsgGrantA
 
 // RevokeAllowance revokes a fee allowance between a granter and grantee.
 func (k msgServer) RevokeAllowance(goCtx context.Context, msg *feegrant.MsgRevokeAllowance) (*feegrant.MsgRevokeAllowanceResponse, error) {
-	if msg.Grantee == msg.Granter {
+	if strings.EqualFold(msg.Grantee, msg.Granter) {
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "addresses must be different")
 	}
 

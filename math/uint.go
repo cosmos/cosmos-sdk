@@ -97,35 +97,101 @@ func (u Uint) LT(u2 Uint) bool { return lt(u.i, u2.i) }
 func (u Uint) LTE(u2 Uint) bool { return !u.GT(u2) }
 
 // Add adds Uint from another
-func (u Uint) Add(u2 Uint) Uint { return NewUintFromBigInt(new(big.Int).Add(u.i, u2.i)) }
+func (u Uint) Add(u2 Uint) Uint {
+	res, err := u.SafeAdd(u2)
+	if err != nil {
+		panic(err)
+	}
+	return res
+}
+
+// SafeAdd adds two Uints and returns an error if the result overflows 256 bits.
+func (u Uint) SafeAdd(u2 Uint) (Uint, error) {
+	res := new(big.Int).Add(u.i, u2.i)
+	if err := UintOverflow(res); err != nil {
+		return Uint{}, fmt.Errorf("unsigned integer overflow: %w", err)
+	}
+	return Uint{res}, nil
+}
 
 // AddUint64 convert uint64 and add it to Uint
 func (u Uint) AddUint64(u2 uint64) Uint { return u.Add(NewUint(u2)) }
 
-// Sub adds Uint from another
-func (u Uint) Sub(u2 Uint) Uint { return NewUintFromBigInt(new(big.Int).Sub(u.i, u2.i)) }
+// Sub subtracts u2 from u. Panics on underflow.
+func (u Uint) Sub(u2 Uint) Uint {
+	res, err := u.SafeSub(u2)
+	if err != nil {
+		panic(err)
+	}
+	return res
+}
 
-// SubUint64 adds Uint from another
+// SafeSub subtracts u2 from u and returns an error if the result is negative (underflow).
+func (u Uint) SafeSub(u2 Uint) (Uint, error) {
+	res := new(big.Int).Sub(u.i, u2.i)
+	if res.Sign() < 0 {
+		return Uint{}, errors.New("unsigned integer underflow")
+	}
+	return Uint{res}, nil
+}
+
+// SubUint64 subtracts a uint64 from Uint
 func (u Uint) SubUint64(u2 uint64) Uint { return u.Sub(NewUint(u2)) }
 
 // Mul multiplies two Uints
 func (u Uint) Mul(u2 Uint) (res Uint) {
-	return NewUintFromBigInt(new(big.Int).Mul(u.i, u2.i))
+	r, err := u.SafeMul(u2)
+	if err != nil {
+		panic(err)
+	}
+	return r
 }
 
-// MulUint64 multiplies two Uints
+// SafeMul multiplies two Uints and returns an error if the result overflows 256 bits.
+func (u Uint) SafeMul(u2 Uint) (Uint, error) {
+	res := new(big.Int).Mul(u.i, u2.i)
+	if err := UintOverflow(res); err != nil {
+		return Uint{}, fmt.Errorf("unsigned integer overflow: %w", err)
+	}
+	return Uint{res}, nil
+}
+
+// MulUint64 multiplies Uint with uint64
 func (u Uint) MulUint64(u2 uint64) (res Uint) { return u.Mul(NewUint(u2)) }
 
-// Quo divides Uint with Uint
-func (u Uint) Quo(u2 Uint) (res Uint) { return NewUintFromBigInt(div(u.i, u2.i)) }
+// Quo divides Uint with Uint. Panics on division by zero.
+func (u Uint) Quo(u2 Uint) (res Uint) {
+	r, err := u.SafeQuo(u2)
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
+// SafeQuo divides Uint by u2 and returns an error if u2 is zero.
+func (u Uint) SafeQuo(u2 Uint) (Uint, error) {
+	if u2.IsZero() {
+		return Uint{}, errors.New("unsigned integer division by zero")
+	}
+	return Uint{div(u.i, u2.i)}, nil
+}
 
 // Mod returns remainder after dividing with Uint
 // Panics if u2 is zero
 func (u Uint) Mod(u2 Uint) Uint {
-	if u2.IsZero() {
-		panic("division-by-zero")
+	r, err := u.SafeMod(u2)
+	if err != nil {
+		panic(err)
 	}
-	return Uint{mod(u.i, u2.i)}
+	return r
+}
+
+// SafeMod returns the remainder of dividing u by u2, and returns an error if u2 is zero.
+func (u Uint) SafeMod(u2 Uint) (Uint, error) {
+	if u2.IsZero() {
+		return Uint{}, errors.New("unsigned integer division by zero")
+	}
+	return Uint{mod(u.i, u2.i)}, nil
 }
 
 // Incr increments the Uint by one.

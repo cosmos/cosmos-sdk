@@ -10,6 +10,7 @@ import (
 	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 func TestGroupInfoValidateBasic(t *testing.T) {
@@ -94,6 +95,7 @@ func TestGroupInfoValidateBasic(t *testing.T) {
 			[]string{"version", "value is empty"},
 		},
 	}
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.group.ValidateBasic()
@@ -102,9 +104,12 @@ func TestGroupInfoValidateBasic(t *testing.T) {
 				for _, msg := range tc.expMsgs {
 					require.Contains(t, err.Error(), msg)
 				}
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
 
 func TestGroupPolicyInfoGetDecisionPolicy_MalformedPolicy(t *testing.T) {
 	// Simulate malformed policy unpacking: DecisionPolicy Any contains wrong type.
@@ -300,10 +305,7 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 			},
 			"3",
 			time.Second * 50,
-			group.DecisionPolicyResult{
-				Allow: true,
-				Final: true,
-			},
+			group.DecisionPolicyResult{Allow: true, Final: true},
 			false,
 		},
 		{
@@ -322,10 +324,7 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 			},
 			"4",
 			time.Second * 50,
-			group.DecisionPolicyResult{
-				Allow: true,
-				Final: true,
-			},
+			group.DecisionPolicyResult{Allow: true, Final: true},
 			false,
 		},
 		{
@@ -344,10 +343,7 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 			},
 			"3",
 			time.Second * 50,
-			group.DecisionPolicyResult{
-				Allow: false,
-				Final: false,
-			},
+			group.DecisionPolicyResult{Allow: false, Final: false},
 			false,
 		},
 		{
@@ -366,10 +362,7 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 			},
 			"3",
 			time.Second * 50,
-			group.DecisionPolicyResult{
-				Allow: false,
-				Final: true,
-			},
+			group.DecisionPolicyResult{Allow: false, Final: true},
 			false,
 		},
 		{
@@ -388,10 +381,7 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 			},
 			"4",
 			time.Second * 50,
-			group.DecisionPolicyResult{
-				Allow: false,
-				Final: false,
-			},
+			group.DecisionPolicyResult{Allow: false, Final: false},
 			false,
 		},
 		{
@@ -410,10 +400,7 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 			},
 			"3",
 			time.Second * 50,
-			group.DecisionPolicyResult{
-				Allow: false,
-				Final: false,
-			},
+			group.DecisionPolicyResult{Allow: false, Final: false},
 			false,
 		},
 		{
@@ -432,13 +419,11 @@ func TestPercentageDecisionPolicyAllow(t *testing.T) {
 			},
 			"0",
 			time.Second * 50,
-			group.DecisionPolicyResult{
-				Allow: false,
-				Final: true,
-			},
+			group.DecisionPolicyResult{Allow: false, Final: true},
 			false,
 		},
 	}
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			policyResult, err := tc.policy.Allow(*tc.tally, tc.totalPower)
@@ -478,10 +463,7 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 			},
 			"3",
 			time.Second * 50,
-			group.DecisionPolicyResult{
-				Allow: true,
-				Final: true,
-			},
+			group.DecisionPolicyResult{Allow: true, Final: true},
 			false,
 		},
 		{
@@ -500,10 +482,7 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 			},
 			"3",
 			time.Second * 50,
-			group.DecisionPolicyResult{
-				Allow: false,
-				Final: false,
-			},
+			group.DecisionPolicyResult{Allow: false, Final: false},
 			false,
 		},
 		{
@@ -522,10 +501,7 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 			},
 			"3",
 			time.Second * 50,
-			group.DecisionPolicyResult{
-				Allow: true,
-				Final: true,
-			},
+			group.DecisionPolicyResult{Allow: true, Final: true},
 			false,
 		},
 		{
@@ -544,10 +520,7 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 			},
 			"3",
 			time.Second * 50,
-			group.DecisionPolicyResult{
-				Allow: false,
-				Final: true,
-			},
+			group.DecisionPolicyResult{Allow: false, Final: true},
 			false,
 		},
 		{
@@ -566,13 +539,11 @@ func TestThresholdDecisionPolicyAllow(t *testing.T) {
 			},
 			"3",
 			time.Second * 50,
-			group.DecisionPolicyResult{
-				Allow: false,
-				Final: false,
-			},
+			group.DecisionPolicyResult{Allow: false, Final: false},
 			false,
 		},
 	}
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			policyResult, err := tc.policy.Allow(*tc.tally, tc.totalPower)

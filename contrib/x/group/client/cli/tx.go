@@ -653,7 +653,7 @@ metadata example:
 		},
 	}
 
-	cmd.Flags().String(FlagExec, "", "Set to 1 or 'try' to try to execute proposal immediately after creation (proposers signatures are considered as Yes votes)")
+	cmd.Flags().String(FlagExec, "", "Set to 1 or 'try' to try to execute proposal immediately after creation (when exec is EXEC_TRY, proposers are automatically counted as Yes votes)")
 	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd

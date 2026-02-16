@@ -288,7 +288,7 @@ message MsgSubmitProposal {
   string group_policy_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
   // proposers are the account addresses of the proposers.
-  // Proposers signatures will be counted as yes votes.
+  // When exec is EXEC_TRY, proposers are automatically counted as Yes votes.
   repeated string proposers = 2;
 
   // metadata is any arbitrary metadata attached to the proposal.
@@ -299,7 +299,7 @@ message MsgSubmitProposal {
 
   // exec defines the mode of execution of the proposal,
   // whether it should be executed immediately on creation or not.
-  // If so, proposers signatures are considered as Yes votes.
+  // When exec is EXEC_TRY, proposers are automatically counted as Yes votes.
   Exec exec = 5;
 
   // title is the title of the proposal.

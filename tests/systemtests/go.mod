@@ -2,15 +2,11 @@ module cosmossdk.io/tests/systemtests
 
 go 1.25.7
 
-replace (
-	// always use latest versions in tests
-	cosmossdk.io/systemtests => ../../systemtests
-	github.com/cosmos/cosmos-sdk => ../..
-)
+// always use latest versions in tests
+replace github.com/cosmos/cosmos-sdk => ../..
 
 require (
 	cosmossdk.io/math v1.5.3
-	cosmossdk.io/systemtests v1.2.1
 	github.com/cosmos/cosmos-sdk v0.54.0-beta.0
 	github.com/creachadair/tomledit v0.0.29
 	github.com/stretchr/testify v1.11.1

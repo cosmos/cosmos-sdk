@@ -6,8 +6,31 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
+
+func TestGroupPolicyInfoGetDecisionPolicy_MalformedPolicy(t *testing.T) {
+	// Simulate malformed policy unpacking: DecisionPolicy Any contains wrong type.
+	// GetDecisionPolicy should return ErrInvalidType instead of panicking.
+	coin := sdk.NewInt64Coin("stake", 1)
+	wrongAny, err := codectypes.NewAnyWithValue(&coin)
+	require.NoError(t, err)
+
+	policyInfo := group.GroupPolicyInfo{
+		Address:        "cosmos1abc123",
+		GroupId:        1,
+		Admin:          "cosmos1admin",
+		Version:        1,
+		DecisionPolicy: wrongAny,
+	}
+
+	_, err = policyInfo.GetDecisionPolicy()
+	require.Error(t, err)
+	require.True(t, sdkerrors.ErrInvalidType.Is(err), "expected ErrInvalidType, got %v", err)
+}
 
 func TestThresholdDecisionPolicyValidateBasic_VotingPeriodBoundaries(t *testing.T) {
 	testCases := []struct {

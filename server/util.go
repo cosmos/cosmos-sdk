@@ -14,6 +14,7 @@ import (
 	"syscall"
 	"time"
 
+	"cosmossdk.io/log/v2/slog"
 	cmtcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	cmtcfg "github.com/cometbft/cometbft/config"
 	dbm "github.com/cosmos/cosmos-db"
@@ -25,6 +26,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"cosmossdk.io/log/v2"
+
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
@@ -38,6 +40,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/version"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+
+	"go.opentelemetry.io/contrib/bridges/otelslog"
 )
 
 // ServerContextKey defines the context key used to retrieve a server.Context from
@@ -165,9 +169,15 @@ func InterceptConfigsAndCreateContext(cmd *cobra.Command, customAppConfigTemplat
 	return serverCtx, nil
 }
 
+const useOtelLogging = "USE_OTEL_LOGGING"
+
 // CreateSDKLogger creates the default SDK logger.
 // It reads the log level and format from the server context.
 func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
+	if v, useOtel := os.LookupEnv(useOtelLogging); useOtel && v == "true" {
+		return slog.NewCustomLogger(otelslog.NewLogger("")), nil
+	}
+
 	var opts []log.Option
 	if ctx.Viper.GetString(flags.FlagLogFormat) == flags.OutputFormatJSON {
 		opts = append(opts, log.OutputJSONOption())

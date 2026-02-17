@@ -72,8 +72,9 @@ NOTE: the go implementation may not support all options, so check the go [otelco
 
 3. set the `OTEL_EXPERIMENTAL_CONFIG_FILE` environment variable to the path of the configuration file:
    `export OTEL_EXPERIMENTAL_CONFIG_FILE=path/to/config.yaml`
-4. start your application or tests
-5. view the data in Grafana LGTM at http://localhost:3000/. The Drilldown views are suggested for getting started.
+4. if you would like logs sent to OpenTelemetry, set `USE_OTEL_LOGGING=true` in the environment as well.
+5. start your application or tests
+6. view the data in Grafana LGTM at http://localhost:3000/. The Drilldown views are suggested for getting started.
 
 ## Node Home OpenTelemetry file
 
@@ -108,3 +109,11 @@ NOTE: it is important to thread context.Context properly for spans and metrics t
 correlated correctly.
 When using the SDK's context type, spans must be started with Context.StartSpan to
 get an SDK context which has the span set correctly.
+
+## Logging
+
+Note that by default the Cosmos SDK server does not send logs to OpenTelemetry even
+if OpenTelemetry declarative configuration is used. To send logs to OpenTelemetry, the
+`USE_OTEL_LOGGING` environment variable must be set to `true`.
+When `USE_OTEL_LOGGING` is set to `true`, all SDK log messages will be sent to OpenTelemetry and no log messages will be sent to the default console output.
+When `USE_OTEL_LOGGING` is not configured or set to some other value, the SDK will use the default logger and no log messages will be sent to OpenTelemetry.

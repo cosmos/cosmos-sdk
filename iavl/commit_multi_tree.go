@@ -119,6 +119,12 @@ func (db *CommitMultiTree) StartCommit(ctx context.Context, store storetypes.Mul
 		finalizeOrRollback: make(chan struct{}),
 	}
 	go func() {
+		// Prevent context leak: WithCancel registers a child in the parent context's tree,
+		// and that registration is only cleaned up when cancel() is called.
+		// Safe here because all ctx.Err() checks are inside commit(), which has already
+		// returned by the time this defer fires. On rollback, cancel() is called first;
+		// calling it again here is a no-op.
+		defer cancel()
 		err := finalizer.commit(ctx, span)
 		if err != nil {
 			finalizer.err.Store(err)

@@ -102,6 +102,12 @@ func (c *CommitTree) StartCommit(ctx context.Context, updates iter.Seq[cachekv.U
 		done:               make(chan struct{}),
 	}
 	go func() {
+		// Prevent context leak: WithCancel registers a child in the parent context's tree,
+		// and that registration is only cleaned up when cancel() is called.
+		// Safe here because all ctx.Err() checks are inside commit(), which has already
+		// returned by the time this defer fires. On rollback, cancel() is called first;
+		// calling it again here is a no-op.
+		defer cancel()
 		err := committer.commit(cancelCtx, updates, updateCount)
 		if err != nil {
 			committer.err.Store(err)

@@ -20,17 +20,22 @@ import (
 	"github.com/cosmos/cosmos-sdk/iavl/internal"
 )
 
+type CommitTreeOptions struct {
+	Options
+	TreeName string
+}
+
 type CommitTree struct {
 	commitMutex sync.Mutex
 
-	opts Options
+	opts CommitTreeOptions
 
 	treeStore *internal.TreeStore
 
 	lastCommitId storetypes.CommitID
 }
 
-func NewCommitTree(dir string, opts Options) (*CommitTree, error) {
+func NewCommitTree(dir string, opts CommitTreeOptions) (*CommitTree, error) {
 	err := os.MkdirAll(dir, 0o700)
 	if err != nil {
 		return nil, fmt.Errorf("creating tree directory: %w", err)
@@ -115,6 +120,7 @@ func (c *commitTreeFinalizer) commit(ctx context.Context, updates iter.Seq[cache
 	stagedVersion := c.treeStore.StagedVersion()
 	ctx, span := tracer.Start(ctx, "CommitTree.Commit",
 		trace.WithAttributes(
+			attribute.String("treeName", c.opts.TreeName),
 			attribute.Int64("version", int64(stagedVersion)),
 			attribute.Int("updateCount", updateCount),
 		),
@@ -143,6 +149,17 @@ func (c *commitTreeFinalizer) commit(ctx context.Context, updates iter.Seq[cache
 	}
 
 	c.lastCommitId = c.workingHash
+
+	if root != nil {
+		if mem := root.Mem.Load(); mem != nil {
+			// instrument tree size, height and orphan count
+			span.SetAttributes(
+				attribute.Int64("size", mem.Size()),
+				attribute.Int64("height", int64(mem.Height())),
+			)
+		}
+	}
+
 	return nil
 }
 

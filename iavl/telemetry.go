@@ -7,7 +7,6 @@ import (
 )
 
 var (
-	// TODO these shouldn't be exported from internal package
 	tracer          = otel.Tracer("iavl")
 	meter           = otel.Meter("iavl")
 	logger          = otelslog.NewLogger("iavl")

@@ -64,6 +64,12 @@ type storeData struct {
 }
 
 func (db *CommitMultiTree) StartCommit(ctx context.Context, store storetypes.MultiStore, header cmtproto.Header) (storetypes.CommitFinalizer, error) {
+	ctx, span := tracer.Start(ctx, "CommitMultiTree.commit",
+		trace.WithAttributes(
+			attribute.Int64("version", int64(db.stagedVersion())),
+		),
+	)
+
 	multiTree, ok := store.(*internal.MultiTree)
 	if !ok {
 		return nil, fmt.Errorf("expected MultiTree, got %T", store)
@@ -113,7 +119,7 @@ func (db *CommitMultiTree) StartCommit(ctx context.Context, store storetypes.Mul
 		finalizeOrRollback: make(chan struct{}),
 	}
 	go func() {
-		err := finalizer.commit(ctx)
+		err := finalizer.commit(ctx, span)
 		if err != nil {
 			finalizer.err.Store(err)
 		}
@@ -138,17 +144,13 @@ type multiTreeFinalizer struct {
 	err                atomic.Value
 }
 
-func (db *multiTreeFinalizer) commit(ctx context.Context) error {
+func (db *multiTreeFinalizer) commit(ctx context.Context, span trace.Span) error {
+	// we pass the span from StartCommit into here and finish it here so that all sub-tree commits
+	// are nested under this span
+	defer span.End()
+
 	db.commitMutex.Lock()
 	defer db.commitMutex.Unlock()
-
-	stagedVersion := db.stagedVersion()
-	ctx, span := tracer.Start(ctx, "CommitMultiTree.Commit",
-		trace.WithAttributes(
-			attribute.Int64("version", int64(stagedVersion)),
-		),
-	)
-	defer span.End()
 
 	// start writing commit info in background
 	commitInfoSynced := make(chan error, 1)
@@ -705,7 +707,10 @@ func (db *CommitMultiTree) loadStore(key storetypes.StoreKey, typ storetypes.Sto
 				return nil, fmt.Errorf("failed to create store dir %s: %w", dir, err)
 			}
 		}
-		ct, err := NewCommitTree(dir, db.opts)
+		ct, err := NewCommitTree(dir, CommitTreeOptions{
+			Options:  db.opts,
+			TreeName: key.Name(),
+		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to load CommitTree for store %s: %w", key.Name(), err)
 		}

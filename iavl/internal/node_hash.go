@@ -8,8 +8,7 @@ import (
 	"sync"
 
 	"crypto/sha256"
-	// TODO consider using sha256-simd for better performance,
-	// benchmark first - previous tests showed no improvement, but may depend on hardware
+	// TODO consider using sha256-simd for better performance, but benchmark first - previous tests showed no improvement, but may depend on hardware
 	// "github.com/minio/sha256-simd"
 )
 

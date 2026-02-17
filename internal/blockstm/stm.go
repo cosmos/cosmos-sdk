@@ -36,8 +36,31 @@ func ExecuteBlockWithEstimates(
 	estimates []MultiLocations, // txn -> multi-locations
 	txExecutor TxExecutor,
 ) error {
+	_, _, err := executeBlockWithEstimatesImpl(
+		ctx,
+		blockSize,
+		stores,
+		storage,
+		executors,
+		estimates,
+		txExecutor,
+		true,
+	)
+	return err
+}
+
+func executeBlockWithEstimatesImpl(
+	ctx context.Context,
+	blockSize int,
+	stores map[storetypes.StoreKey]int,
+	storage MultiStore,
+	executors int,
+	estimates []MultiLocations, // txn -> multi-locations
+	txExecutor TxExecutor,
+	emitTelemetry bool,
+) (executed, validated uint64, err error) {
 	if executors < 0 {
-		return fmt.Errorf("invalid number of executors: %d", executors)
+		return 0, 0, fmt.Errorf("invalid number of executors: %d", executors)
 	}
 	if executors == 0 {
 		executors = maxParallelism()
@@ -68,25 +91,30 @@ func ExecuteBlockWithEstimates(
 		}
 	}()
 
-	err := wg.Wait()
+	err = wg.Wait()
 	close(cancelDone)
 	if err != nil {
-		return err
+		return 0, 0, err
 	}
 
 	if !scheduler.Done() {
 		if ctx.Err() != nil {
-			return ctx.Err()
+			return 0, 0, ctx.Err()
 		}
-		return errors.New("scheduler did not complete")
+		return 0, 0, errors.New("scheduler did not complete")
 	}
 
-	telemetry.SetGauge(float32(scheduler.executedTxns.Load()), TelemetrySubsystem, KeyExecutedTxs)   //nolint:staticcheck // TODO: switch to OpenTelemetry
-	telemetry.SetGauge(float32(scheduler.validatedTxns.Load()), TelemetrySubsystem, KeyValidatedTxs) //nolint:staticcheck // TODO: switch to OpenTelemetry
+	executed = uint64(scheduler.executedTxns.Load())
+	validated = uint64(scheduler.validatedTxns.Load())
+
+	if emitTelemetry {
+		telemetry.SetGauge(float32(executed), TelemetrySubsystem, KeyExecutedTxs)   //nolint:staticcheck // TODO: switch to OpenTelemetry
+		telemetry.SetGauge(float32(validated), TelemetrySubsystem, KeyValidatedTxs) //nolint:staticcheck // TODO: switch to OpenTelemetry
+	}
 
 	// Write the snapshot into the storage
 	mvMemory.WriteSnapshot(storage)
-	return nil
+	return executed, validated, nil
 }
 
 func maxParallelism() int {

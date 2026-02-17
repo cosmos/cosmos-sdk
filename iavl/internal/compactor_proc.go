@@ -111,7 +111,7 @@ func (cp *CompactorProc) compactOne(ctx context.Context, cs *Changeset, opts Com
 		}
 	}
 
-	if cp.curCompactor.TotalBytes() > cp.options.CompactionRolloverSize {
+	if int64(cp.curCompactor.TotalBytes()) > cp.options.CompactionRolloverSize {
 		_, err := cp.curCompactor.Seal()
 		if err != nil {
 			return fmt.Errorf("failed to seal compactor after reaching rollover size: %w", err)

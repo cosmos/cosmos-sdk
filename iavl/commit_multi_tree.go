@@ -796,9 +796,10 @@ func (db *CommitMultiTree) SetMetrics(metrics metrics.StoreMetrics) {
 
 func LoadCommitMultiTree(path string, opts Options) (*CommitMultiTree, error) {
 	db := &CommitMultiTree{
-		dir:         path,
-		opts:        opts,
-		storesByKey: make(map[storetypes.StoreKey]int),
+		dir:            path,
+		opts:           opts,
+		storesByKey:    make(map[storetypes.StoreKey]int),
+		pruningOptions: pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
 	}
 	return db, nil
 }

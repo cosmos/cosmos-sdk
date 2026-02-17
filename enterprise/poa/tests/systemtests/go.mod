@@ -3,7 +3,6 @@ module github.com/cosmos/cosmos-sdk/enterprise/poa/tests/systemtests
 go 1.25.7
 
 require (
-	cosmossdk.io/systemtests v1.4.0
 	github.com/cosmos/cosmos-sdk v0.54.0-rc.1.0.20251127205138-44ca1c39b279
 	github.com/stretchr/testify v1.11.1
 	github.com/tidwall/gjson v1.18.0
@@ -12,10 +11,10 @@ require (
 
 require (
 	cosmossdk.io/api v1.0.0 // indirect
-	cosmossdk.io/collections v1.3.1 // indirect
+	cosmossdk.io/collections v1.4.0 // indirect
 	cosmossdk.io/core v1.1.0 // indirect
 	cosmossdk.io/depinject v1.2.1 // indirect
-	cosmossdk.io/errors v1.0.2 // indirect
+	cosmossdk.io/errors v1.1.0 // indirect
 	cosmossdk.io/log/v2 v2.0.1 // indirect
 	cosmossdk.io/math v1.5.3 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect

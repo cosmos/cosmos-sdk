@@ -5,7 +5,7 @@ go 1.24.0
 replace github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-20250924232609-2c6195d95951
 
 require (
-	cosmossdk.io/errors v1.0.2
+	cosmossdk.io/errors v1.1.0
 	cosmossdk.io/log/v2 v2.0.1
 	cosmossdk.io/math v1.5.3
 	github.com/cometbft/cometbft v0.39.0-beta.2
@@ -84,7 +84,7 @@ require (
 	golang.org/x/crypto v0.46.0 // indirect
 	golang.org/x/exp v0.0.0-20260112195511-716be5621a96 // indirect
 	golang.org/x/net v0.48.0 // indirect; indirectg
-	golang.org/x/sys v0.39.0 // indirect
+	golang.org/x/sys v0.41.0 // indirect
 	golang.org/x/text v0.32.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260114163908-3f89685c29c3 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

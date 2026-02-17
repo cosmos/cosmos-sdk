@@ -22,9 +22,9 @@ require (
 )
 
 require (
-	cosmossdk.io/collections v1.3.1 // indirect
+	cosmossdk.io/collections v1.4.0 // indirect
 	cosmossdk.io/depinject v1.2.1 // indirect
-	cosmossdk.io/errors v1.0.2 // indirect
+	cosmossdk.io/errors v1.1.0 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -56,8 +56,8 @@ require (
 	github.com/cosmos/iavl v1.2.6 // indirect
 	github.com/cosmos/ics23/go v0.11.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v1.0.0 // indirect
-	github.com/creachadair/atomicfile v0.3.1 // indirect
-	github.com/creachadair/tomledit v0.0.24 // indirect
+	github.com/creachadair/atomicfile v0.3.8 // indirect
+	github.com/creachadair/tomledit v0.0.29 // indirect
 	github.com/danieljoos/wincred v1.2.3 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.0 // indirect

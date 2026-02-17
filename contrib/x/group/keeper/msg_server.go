@@ -61,6 +61,10 @@ func (k Keeper) CreateGroup(goCtx context.Context, msg *group.MsgCreateGroup) (*
 		}
 	}
 
+	if err := k.assertGroupNotEmpty(totalWeight); err != nil {
+		return nil, err
+	}
+
 	// Create a new group in the groupTable.
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	groupInfo := &group.GroupInfo{
@@ -202,8 +206,8 @@ func (k Keeper) UpdateGroupMembers(goCtx context.Context, msg *group.MsgUpdateGr
 			}
 		}
 		// ensure that group has one or more members
-		if totalWeight.IsZero() {
-			return errorsmod.Wrap(errors.ErrInvalid, "group must not be empty")
+		if err := k.assertGroupNotEmpty(totalWeight); err != nil {
+			return err
 		}
 		// Update group in the groupTable.
 		g.TotalWeight = totalWeight.String()
@@ -869,7 +873,10 @@ func (k Keeper) Exec(goCtx context.Context, msg *group.MsgExec) (*group.MsgExecR
 			return nil, err
 		}
 
-		decisionPolicy := policyInfo.DecisionPolicy.GetCachedValue().(group.DecisionPolicy)
+		decisionPolicy, err := policyInfo.GetDecisionPolicy()
+		if err != nil {
+			return nil, errorsmod.Wrap(err, "decision policy")
+		}
 		if results, err := k.doExecuteMsgs(cacheCtx, k.router, proposal, addr, decisionPolicy); err != nil {
 			proposal.ExecutorResult = group.PROPOSAL_EXECUTOR_RESULT_FAILURE
 			logs = fmt.Sprintf("proposal execution failed on proposal %d, because of error %s", proposal.Id, err.Error())
@@ -958,6 +965,10 @@ func (k Keeper) LeaveGroup(goCtx context.Context, msg *group.MsgLeaveGroup) (*gr
 
 	updatedWeight, err := math.SubNonNegative(groupWeight, memberWeight)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := k.assertGroupNotEmpty(updatedWeight); err != nil {
 		return nil, err
 	}
 
@@ -1106,8 +1117,11 @@ func (k Keeper) validateDecisionPolicies(ctx sdk.Context, g group.GroupInfo) err
 			return err
 		}
 
-		err = groupPolicy.DecisionPolicy.GetCachedValue().(group.DecisionPolicy).Validate(g, k.config)
+		decisionPolicy, err := groupPolicy.GetDecisionPolicy()
 		if err != nil {
+			return errorsmod.Wrap(err, "decision policy")
+		}
+		if err := decisionPolicy.Validate(g, k.config); err != nil {
 			return err
 		}
 	}
@@ -1158,6 +1172,15 @@ func (k Keeper) validateMembers(members []group.MemberRequest) error {
 			return errorsmod.Wrap(err, "weight must be non negative")
 		}
 		index[member.Address] = struct{}{}
+	}
+	return nil
+}
+
+// assertGroupNotEmpty returns ErrInvalid if the group's total weight would be zero.
+// Used by UpdateGroupMembers and LeaveGroup to ensure a group always has at least one member.
+func (k Keeper) assertGroupNotEmpty(totalWeight math.Dec) error {
+	if totalWeight.IsZero() {
+		return errorsmod.Wrap(errors.ErrInvalid, "group must not be empty")
 	}
 	return nil
 }

@@ -202,8 +202,7 @@ A successful proposal execution will have its `ExecutorResult` marked as
 `PROPOSAL_EXECUTOR_RESULT_SUCCESS`. The proposal will be automatically pruned
 after execution. On the other hand, a failed proposal execution will be marked
 as `PROPOSAL_EXECUTOR_RESULT_FAILURE`. Such a proposal can be re-executed
-multiple times, until it expires after `MaxExecutionPeriod` after voting period
-end.
+multiple times, until it expires `MaxExecutionPeriod` after the voting period ends.
 
 ### Pruning
 

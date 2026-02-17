@@ -17,11 +17,10 @@ import (
 )
 
 type TreeStoreOptions struct {
-	ChangesetRolloverSize int
+	ChangesetRolloverSize int64
 	LeafEvictDepth        uint8
 	BranchEvictDepth      uint8
 	CheckpointInterval    int
-	MemoryBudget          int64
 	RootCacheSize         uint64
 	RootCacheExpiry       time.Duration
 }
@@ -59,9 +58,7 @@ func NewTreeStore(dir string, opts TreeStoreOptions) (*TreeStore, error) {
 		opts:         opts,
 		checkpointer: NewCheckpointer(NewBasicEvictor(opts.LeafEvictDepth, opts.BranchEvictDepth)),
 		rootByVersionCache: ttlcache.New[uint32, *NodePointer](
-			// cache up to 10 recent roots by version
 			ttlcache.WithCapacity[uint32, *NodePointer](opts.RootCacheSize),
-			// default ttl of 5 seconds
 			ttlcache.WithTTL[uint32, *NodePointer](opts.RootCacheExpiry),
 		),
 		cleanupProc: newCleanupProc(),
@@ -162,7 +159,7 @@ func (ts *TreeStore) SaveRoot(ctx context.Context, newRoot *NodePointer, mutatio
 	} else if ts.shouldRollover {
 		return fmt.Errorf("cannot rollover without checkpointing")
 	} else {
-		ts.shouldRollover = writer.WALWriter().Size() >= ts.opts.ChangesetRolloverSize
+		ts.shouldRollover = writer.WALWriter().Size() >= int(ts.opts.ChangesetRolloverSize)
 		// just mark orphans
 		err := ts.checkpointer.QueueOrphans(mutationCtx)
 		if err != nil {

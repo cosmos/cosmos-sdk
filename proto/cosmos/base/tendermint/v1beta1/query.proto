@@ -6,6 +6,8 @@ import "google/protobuf/any.proto";
 import "google/api/annotations.proto";
 import "tendermint/p2p/types.proto";
 import "tendermint/types/types.proto";
+import "tendermint/types/params.proto";
+import "tendermint/abci/types.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/tendermint/v1beta1/types.proto";
 import "cosmos_proto/cosmos.proto";
@@ -52,6 +54,20 @@ service Service {
   rpc ABCIQuery(ABCIQueryRequest) returns (ABCIQueryResponse) {
     option (cosmos_proto.method_added_in) = "cosmos-sdk 0.46";
     option (google.api.http).get          = "/cosmos/base/tendermint/v1beta1/abci_query";
+  }
+
+  // GetLatestBlockResults returns the block results for the latest block.
+  // Block results contain finalize_block_events which include consensus-level
+  // events like slashing, jailing, and validator set updates.
+  rpc GetLatestBlockResults(GetLatestBlockResultsRequest) returns (GetLatestBlockResultsResponse) {
+    option (cosmos_proto.method_added_in) = "cosmos-sdk 0.53";
+    option (google.api.http).get          = "/cosmos/base/tendermint/v1beta1/block_results/latest";
+  }
+
+  // GetBlockResults queries block results for given height.
+  rpc GetBlockResults(GetBlockResultsRequest) returns (GetBlockResultsResponse) {
+    option (cosmos_proto.method_added_in) = "cosmos-sdk 0.53";
+    option (google.api.http).get          = "/cosmos/base/tendermint/v1beta1/block_results/{height}";
   }
 }
 
@@ -126,6 +142,10 @@ message GetSyncingRequest {}
 // GetSyncingResponse is the response type for the Query/GetSyncing RPC method.
 message GetSyncingResponse {
   bool syncing = 1;
+  // earliest_block_height is the earliest block height available on this node.
+  int64 earliest_block_height = 2;
+  // latest_block_height is the latest block height available on this node.
+  int64 latest_block_height = 3;
 }
 
 // GetNodeInfoRequest is the request type for the Query/GetNodeInfo RPC method.
@@ -201,4 +221,56 @@ message ProofOp {
 // Note: This type is a duplicate of the ProofOps proto type defined in Tendermint.
 message ProofOps {
   repeated ProofOp ops = 1 [(gogoproto.nullable) = false, (amino.dont_omitempty) = true];
+}
+
+// GetBlockResultsRequest is the request type for the Query/GetBlockResults RPC method.
+message GetBlockResultsRequest {
+  int64 height = 1;
+}
+
+// GetLatestBlockResultsRequest is the request type for the Query/GetLatestBlockResults RPC method.
+message GetLatestBlockResultsRequest {}
+
+// GetBlockResultsResponse is the response type for the Query/GetBlockResults RPC method.
+message GetBlockResultsResponse {
+  // height is the block height.
+  int64 height = 1;
+
+  // txs_results contains the results of each transaction execution.
+  repeated .tendermint.abci.ExecTxResult txs_results = 2;
+
+  // finalize_block_events contains consensus-level events emitted during block
+  // finalization, including slashing, jailing, and validator set updates.
+  repeated .tendermint.abci.Event finalize_block_events = 3;
+
+  // validator_updates contains the validator updates for this block.
+  repeated .tendermint.abci.ValidatorUpdate validator_updates = 4;
+
+  // consensus_param_updates contains any consensus parameter updates for this block.
+  .tendermint.types.ConsensusParams consensus_param_updates = 5;
+
+  // app_hash is the app hash after processing this block.
+  bytes app_hash = 6;
+}
+
+// GetLatestBlockResultsResponse is the response type for the Query/GetLatestBlockResults RPC method.
+message GetLatestBlockResultsResponse {
+  // height is the block height.
+  int64 height = 1;
+
+  // txs_results contains the results of each transaction execution.
+  repeated .tendermint.abci.ExecTxResult txs_results = 2;
+
+  // finalize_block_events contains consensus-level events emitted during block
+  // finalization, including slashing, jailing, and validator set updates.
+  repeated .tendermint.abci.Event finalize_block_events = 3;
+
+  // validator_updates contains the validator updates for this block.
+  repeated .tendermint.abci.ValidatorUpdate validator_updates = 4;
+
+  // consensus_param_updates contains any consensus parameter updates for this block.
+  .tendermint.types.ConsensusParams consensus_param_updates = 5;
+
+  // app_hash is the app hash after processing this block.
+  bytes app_hash = 6;
 }

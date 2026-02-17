@@ -13788,7 +13788,7 @@ func (x *QueryValidatorsResponse) GetPagination() *v1beta1.PageResponse {
 	return nil
 }
 
-// QueryValidatorRequest is response type for the Query/Validator RPC method
+// QueryValidatorRequest is request type for the Query/Validator RPC method
 type QueryValidatorRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

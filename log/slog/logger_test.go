@@ -6,7 +6,7 @@ import (
 	stdslog "log/slog"
 	"testing"
 
-	"cosmossdk.io/log/slog"
+	"cosmossdk.io/log/v2/slog"
 )
 
 func TestSlog(t *testing.T) {

@@ -61,3 +61,15 @@ The CosmWasm module enables smart contracts, learn more by going to their [docum
 
 Read more about writing smart contracts with solidity at the official [`evm` documentation page](https://evm.cosmos.network/).
 
+## Enterprise Modules
+
+In addition to these core and supplementary modules, the Cosmos SDK maintains enterprise-grade modules in the `enterprise/` directory.
+
+**Enterprise modules use different licenses than the Apache 2.0 core SDK modules.** Please review the LICENSE file in each enterprise module directory before use.
+
+### Available Enterprise Modules
+
+* [PoA (Proof of Authority)](../enterprise/poa/README.md) - Admin-controlled validator set for permissioned networks with governance integration.
+
+For complete information about enterprise modules, licensing, and documentation, see the [Enterprise Modules documentation](../enterprise/README.md).
+

@@ -6,11 +6,11 @@ sidebar_position: 1
 
 :::note Pre-requisite Readings
 
-* [Depinject Documentation](../packages/01-depinject.md)
+* [Depinject Documentation](../building-apps/01-app-go-di.md)
 
 :::
 
-[`depinject`](../packages/01-depinject.md) is used to wire any module in `app.go`.
+[`depinject`](../building-apps/01-app-go-di.md) is used to wire any module in `app.go`.
 All core modules are already configured to support dependency injection.
 
 To work with `depinject` a module must define its configuration and requirements so that `depinject` can provide the right dependencies.

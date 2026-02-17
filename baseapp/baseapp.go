@@ -22,7 +22,7 @@ import (
 	protov2 "google.golang.org/protobuf/proto"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store"
 	storemetrics "cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/snapshots"
@@ -483,7 +483,7 @@ func (app *BaseApp) setTrace(trace bool) {
 }
 
 func (app *BaseApp) setIndexEvents(ie []string) {
-	app.indexEvents = make(map[string]struct{})
+	app.indexEvents = make(map[string]struct{}, len(ie))
 
 	for _, e := range ie {
 		app.indexEvents[e] = struct{}{}
@@ -831,7 +831,7 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 		if r := recover(); r != nil {
 			recoveryMW := newOutOfGasRecoveryMiddleware(gasWanted, ctx, app.runTxRecoveryMiddleware)
 			err, result = processRecovery(r, recoveryMW), nil
-			ctx.Logger().Error("panic recovered in runTx", "err", err)
+			ctx.Logger().ErrorContext(ctx, "panic recovered in runTx", "err", err)
 		}
 
 		gInfo = sdk.GasInfo{GasWanted: gasWanted, GasUsed: ctx.GasMeter().GasConsumed()}
@@ -870,8 +870,13 @@ func (app *BaseApp) RunTx(mode sdk.ExecMode, txBytes []byte, tx sdk.Tx, txIndex 
 	}
 
 	msgs := tx.GetMsgs()
-	if err := validateBasicTxMsgs(msgs); err != nil {
-		return sdk.GasInfo{}, nil, nil, err
+
+	// run validate basic if mode != recheck.
+	// as validate basic is stateless, it is guaranteed to pass recheck, given that its passed checkTx.
+	if mode != execModeReCheck {
+		if err := validateBasicTxMsgs(msgs); err != nil {
+			return sdk.GasInfo{}, nil, nil, err
+		}
 	}
 
 	for _, msg := range msgs {
@@ -1019,7 +1024,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 	defer span.End()
 
 	events := sdk.EmptyEvents()
-	var msgResponses []*codectypes.Any
+	msgResponses := make([]*codectypes.Any, 0, len(msgs))
 
 	// NOTE: GasWanted is determined by the AnteHandler and GasUsed by the GasMeter.
 	for i, msg := range msgs {
@@ -1027,26 +1032,21 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 			break
 		}
 
-		msgCtx := ctx.WithMsgIndex(i)
+		ctx = ctx.WithMsgIndex(i)
 
 		handler := app.msgServiceRouter.Handler(msg)
 		if handler == nil {
 			return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "no message handler found for %T", msg)
 		}
 
-		msgTypeUrl := sdk.MsgTypeURL(msg)
-		// we create two spans here for easy visualization in trace logs, this can be removed later if deemed unnecessary
-		msgCtx, msgSpan := msgCtx.StartSpan(tracer, "msgHandler",
+		ctx, msgSpan := ctx.StartSpan(tracer, "msgHandler",
 			trace.WithAttributes(
-				attribute.String("msg_type", msgTypeUrl),
+				attribute.String("msg_type", sdk.MsgTypeURL(msg)),
 				attribute.Int("msg_index", i),
 			),
 		)
-		_, msgSpan2 := msgCtx.StartSpan(tracer, fmt.Sprintf("msgHandler.%s", msgTypeUrl))
 		// ADR 031 request type routing
 		msgResult, err := handler(ctx, msg)
-		msgSpan2.End()
-		msgSpan.End()
 		if err != nil {
 			return nil, errorsmod.Wrapf(err, "failed to execute message; message index: %d", i)
 		}

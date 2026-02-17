@@ -97,8 +97,8 @@ func (s *GMVMemoryView[V]) Get(key []byte) V {
 	if s.writeSet != nil {
 		if value, found := s.writeSet.OverlayGet(key); found {
 			// value written by this txn
-			// nil value means deleted
 			telemetry.MeasureSince(start, TelemetrySubsystem, KeyMVViewReadWriteSet)
+			// zero value means deleted
 			return value
 		}
 	}

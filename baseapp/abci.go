@@ -136,19 +136,9 @@ func (app *BaseApp) InitChain(req *abci.RequestInitChain) (*abci.ResponseInitCha
 		}
 	}
 
-	// start the committer for the finalize state
-	committer, err := app.cms.StartCommit(context.Background(), finalizeState.MultiStore, finalizeState.Context().BlockHeader())
-	if err != nil {
-		return nil, fmt.Errorf("failed to start commit during InitChain: %w", err)
-	}
-	app.committer = committer
-	err = committer.SignalFinalize()
-	if err != nil {
-		return nil, fmt.Errorf("failed to signal finalize during InitChain: %w", err)
-	}
-
-	// NOTE: We don't commit, but FinalizeBlock for block InitialHeight starts from
-	// this FinalizeBlockState.
+	// NOTE: We don't commit during InitChain. The genesis state is preserved in
+	// the FinalizeBlockState and will be committed together with block 1's changes
+	// when the first Commit() is called after FinalizeBlock(height=1).
 	return &abci.ResponseInitChain{
 		ConsensusParams: res.ConsensusParams,
 		Validators:      res.Validators,

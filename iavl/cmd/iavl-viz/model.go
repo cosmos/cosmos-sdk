@@ -852,7 +852,7 @@ func (m model) renderInfoPanel() string {
 	var pairs []string
 	for i, col := range m.columns {
 		if i < len(row) {
-			pairs = append(pairs, dimStyle.Render(col.Title+":")+"\u00a0"+row[i])
+			pairs = append(pairs, dimStyle.Render(col.Title+":")+" "+row[i])
 		}
 	}
 
@@ -880,7 +880,8 @@ func (m model) renderInfoPanel() string {
 		lines = append(lines, line)
 	}
 
-	return strings.Join(lines, "\n") + "\n"
+	rule := dimStyle.Render(strings.Repeat("─", width))
+	return rule + "\n" + strings.Join(lines, "\n") + "\n"
 }
 
 func humanSize(b int64) string {

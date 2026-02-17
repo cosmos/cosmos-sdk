@@ -9,6 +9,7 @@ Enterprise modules are production-ready extensions to the Cosmos SDK maintained 
 | Module | License | Use Case |
 |--------|---------|----------|
 | [PoA](./poa) | Source Available Evaluation License | Non-commercial evaluation, testing, educational purposes |
+| [Group](./group) | Source Available Evaluation License | On-chain multisig accounts and group-based governance |
 
 For commercial licensing inquiries, contact [institutions@cosmoslabs.io](mailto:institutions@cosmoslabs.io).
 
@@ -38,6 +39,27 @@ A Cosmos SDK module that implements a Proof of Authority (PoA) consensus mechani
 - [Usage Examples](./poa/README.md#usage)
 - [Configuration](./poa/README.md#configuration)
 - [Development](./poa/README.md#development)
+
+### [Group](./group/README.md)
+
+**License**: [Source Available Evaluation License](./group/LICENSE)
+
+A Cosmos SDK module that allows the creation and management of on-chain multisig accounts and enables voting for message execution based on configurable decision policies.
+
+**Key Features:**
+- Groups and group policies with configurable decision policies
+- Proposal submission and voting
+- Threshold and percentage-based decision policies
+- Integration with x/auth and x/bank
+
+**Documentation:**
+- [README](./group/README.md) - Overview and quick start
+- [API Reference](./group/docs/api.md) - gRPC queries and transactions
+- [Architecture](./group/docs/architecture.md) - System design and module interactions
+
+**Quick Links:**
+- [Build & Test](./group/README.md#quick-start)
+- [Module Structure](./group/README.md#module-structure)
 
 ## Integration with Core SDK
 

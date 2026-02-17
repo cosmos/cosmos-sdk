@@ -24,8 +24,8 @@ func TestMemNode_Getters(t *testing.T) {
 		left:           left,
 		right:          right,
 		nodeId:         nodeId,
-		walKeyOffset:   NewKVOffset(100, false),
-		walValueOffset: NewKVOffset(200, false),
+		walKeyOffset:   100,
+		walValueOffset: 200,
 	}
 
 	require.Equal(t, uint8(3), node.Height())
@@ -91,7 +91,7 @@ func TestMemNode_String(t *testing.T) {
 				left:    &NodePointer{id: NewNodeID(true, 1, 1)},
 				right:   &NodePointer{id: NewNodeID(true, 1, 2)},
 			},
-			want: "MemNode{key:ff, layer:5, size:10, height:2, left:NodePointer{id: NodeID{leaf:true, layer:1, index:1}, fileIdx: 0}, right:NodePointer{id: NodeID{leaf:true, layer:1, index:2}, fileIdx: 0}}",
+			want: "MemNode{key:ff, layer:5, size:10, height:2, left:NodePointer{id: L:1:1, fileIdx: 0}, right:NodePointer{id: L:1:2, fileIdx: 0}}",
 		},
 	}
 	for _, tt := range tests {

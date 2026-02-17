@@ -97,7 +97,7 @@ test-system: build
 ###                                 Linting                                 ###
 ###############################################################################
 golangci_lint_cmd=golangci-lint
-golangci_version=v2.8.0
+golangci_version=v2.9.0
 
 #? lint: Run latest golangci-lint linter
 lint:

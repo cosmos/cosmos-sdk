@@ -23,7 +23,7 @@ import (
 	"cosmossdk.io/depinject"
 
 	circuitmodulev1 "github.com/cosmos/cosmos-sdk/contrib/api/cosmos/circuit/module/v1"
-	groupmodulev1 "github.com/cosmos/cosmos-sdk/contrib/api/cosmos/group/module/v1"
+	groupmodulev1 "github.com/cosmos/cosmos-sdk/enterprise/group/api/cosmos/group/module/v1"
 	nftmodulev1 "github.com/cosmos/cosmos-sdk/contrib/api/cosmos/nft/module/v1"
 	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )

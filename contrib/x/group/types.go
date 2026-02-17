@@ -307,8 +307,12 @@ func (g GroupInfo) ValidateBasic() error {
 		return errorsmod.Wrap(err, "admin")
 	}
 
-	if _, err := math.NewNonNegativeDecFromString(g.TotalWeight); err != nil {
+	totalWeight, err := math.NewNonNegativeDecFromString(g.TotalWeight)
+	if err != nil {
 		return errorsmod.Wrap(err, "total weight")
+	}
+	if totalWeight.IsZero() {
+		return errorsmod.Wrap(errors.ErrInvalid, "group must not be empty")
 	}
 	if g.Version == 0 {
 		return errorsmod.Wrap(errors.ErrEmpty, "version")

@@ -24,6 +24,7 @@ func RewriteWAL(writer *WALWriter, walFile *os.File, truncateBeforeVersion uint6
 		if err != nil {
 			return nil, err
 		}
+		info.EndVersion = entry.Version // always keep track of the last version we see
 		if entry.Version < truncateBeforeVersion {
 			continue
 		}
@@ -34,7 +35,6 @@ func RewriteWAL(writer *WALWriter, walFile *os.File, truncateBeforeVersion uint6
 				return nil, err
 			}
 		}
-		info.EndVersion = entry.Version // always keep track of the last version we see
 
 		switch entry.Op {
 		case WALOpCommit:

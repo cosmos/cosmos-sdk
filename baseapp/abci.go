@@ -432,6 +432,13 @@ func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abc
 	// No-op if OE is not enabled.
 	// Similar call to Abort() is done in `ProcessProposal`.
 	app.optimisticExec.Abort()
+	// If OE had already reached StartCommit, the committer holds a mutex and is blocked
+	// waiting for finalization. We must rollback to release the mutex before any new commit
+	// can proceed.
+	if app.committer != nil {
+		_ = app.committer.Rollback()
+		app.committer = nil
+	}
 
 	// Always reset state given that PrepareProposal can timeout and be called
 	// again in a subsequent round.
@@ -550,6 +557,11 @@ func (app *BaseApp) ProcessProposal(req *abci.RequestProcessProposal) (resp *abc
 	if req.Height > app.initialHeight {
 		// abort any running OE
 		app.optimisticExec.Abort()
+		// If OE had already reached StartCommit, rollback to release the commit mutex.
+		if app.committer != nil {
+			_ = app.committer.Rollback()
+			app.committer = nil
+		}
 		app.stateManager.SetState(execModeFinalize, app.cms, header, app.logger, app.streamingManager)
 	}
 
@@ -1002,6 +1014,7 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 				if err != nil {
 					return nil, fmt.Errorf("failed to rollback committer: %w", err)
 				}
+				app.committer = nil
 			}
 		}
 	}

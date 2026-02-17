@@ -17,6 +17,9 @@ func NewTreeReader(version uint32, root *NodePointer) TreeReader {
 }
 
 func (t TreeReader) HasErr(key []byte) (bool, error) {
+	if t.root == nil {
+		return false, nil
+	}
 	root, pin, err := t.root.Resolve()
 	defer pin.Unpin()
 	if err != nil {
@@ -30,6 +33,9 @@ func (t TreeReader) HasErr(key []byte) (bool, error) {
 }
 
 func (t TreeReader) GetErr(key []byte) ([]byte, error) {
+	if t.root == nil {
+		return nil, nil
+	}
 	root, pin, err := t.root.Resolve()
 	defer pin.Unpin()
 	if err != nil {

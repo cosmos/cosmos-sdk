@@ -1,6 +1,8 @@
 package internal
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // NodeID is a stable identifier for a node in the IAVL tree.
 type NodeID struct {
@@ -37,6 +39,29 @@ func (id NodeID) IsEmpty() bool {
 	return id.checkpoint == 0 && id.flagIndex == 0
 }
 
+// NewEmptyTreeNodeID creates a new NodeID representing an empty tree at the given checkpoint.
+// It is important to distinguish an empty tree from the absence of any information
+// about a tree in checkpoints.
+// A checkpoint which represents a valid empty tree should use this type of NodeID.
+// A checkpoint which simply has no root information at all should use the zero-value NodeID,
+// which will be treated as "no information about the tree" rather than "the tree is empty".
+func NewEmptyTreeNodeID(checkpoint uint32) NodeID {
+	if checkpoint == 0 {
+		panic("NewEmptyTreeNodeID: checkpoint must be non-zero")
+	}
+	return NodeID{
+		checkpoint: checkpoint,
+		flagIndex:  0,
+	}
+}
+
+// IsEmptyTree returns true if this NodeID represents an empty tree.
+// Note that an empty tree is different from a zero-value NodeID,
+// which represents the absence of any information about the tree.
+func (id NodeID) IsEmptyTree() bool {
+	return id.checkpoint != 0 && id.flagIndex == 0
+}
+
 // Checkpoint returns the checkpoint number at which this node was persisted.
 // Note: checkpoint numbers and version numbers are separate counters and are NOT the same.
 func (id NodeID) Checkpoint() uint32 {
@@ -60,6 +85,9 @@ func (id NodeID) String() string {
 	if id.IsEmpty() {
 		return ""
 	}
+	if id.IsEmptyTree() {
+		return fmt.Sprintf("empty:%d", id.checkpoint)
+	}
 	prefix := 'B'
 	if id.IsLeaf() {
 		prefix = 'L'
@@ -76,9 +104,15 @@ func (id *NodeID) UnmarshalText(b []byte) error {
 		*id = NodeID{}
 		return nil
 	}
+	s := string(b)
+	var checkpoint uint32
+	if _, err := fmt.Sscanf(s, "empty:%d", &checkpoint); err == nil {
+		*id = NewEmptyTreeNodeID(checkpoint)
+		return nil
+	}
 	var prefix rune
-	var checkpoint, index uint32
-	_, err := fmt.Sscanf(string(b), "%c:%d:%d", &prefix, &checkpoint, &index)
+	var index uint32
+	_, err := fmt.Sscanf(s, "%c:%d:%d", &prefix, &checkpoint, &index)
 	if err != nil {
 		return fmt.Errorf("invalid NodeID: %q: %w", b, err)
 	}

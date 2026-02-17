@@ -17,11 +17,11 @@ func TestNodeID(t *testing.T) {
 		{
 			name: "leaf1_1",
 			leaf: true, checkpoint: 1, index: 1,
-			str: "NodeID{leaf:true, checkpoint:1, index:1}",
+			str: "L:1:1",
 		},
 		{
 			name: "branch2_3", checkpoint: 2, index: 3,
-			str: "NodeID{leaf:false, checkpoint:2, index:3}",
+			str: "B:2:3",
 		},
 	}
 	for _, test := range tests {
@@ -38,6 +38,33 @@ func TestNodeID(t *testing.T) {
 func TestNodeID_IsEmpty(t *testing.T) {
 	require.True(t, NodeID{}.IsEmpty())
 	require.False(t, NewNodeID(true, 1, 1).IsEmpty())
+	require.False(t, NewEmptyTreeNodeID(5).IsEmpty())
+}
+
+func TestNodeID_EmptyTree(t *testing.T) {
+	// NewEmptyTreeNodeID creates a sentinel distinct from the zero value
+	et := NewEmptyTreeNodeID(5)
+	require.True(t, et.IsEmptyTree())
+	require.False(t, et.IsEmpty())
+	require.Equal(t, uint32(5), et.Checkpoint())
+
+	// Zero value is not an empty tree
+	require.False(t, NodeID{}.IsEmptyTree())
+
+	// Regular nodes are not empty trees
+	require.False(t, NewNodeID(true, 1, 1).IsEmptyTree())
+	require.False(t, NewNodeID(false, 1, 1).IsEmptyTree())
+
+	// checkpoint 0 panics
+	require.Panics(t, func() { NewEmptyTreeNodeID(0) })
+
+	// String round-trip via MarshalText/UnmarshalText
+	require.Equal(t, "empty:5", et.String())
+	txt, err := et.MarshalText()
+	require.NoError(t, err)
+	var parsed NodeID
+	require.NoError(t, parsed.UnmarshalText(txt))
+	require.True(t, et.Equal(parsed))
 }
 
 func TestNodeID_Equal(t *testing.T) {

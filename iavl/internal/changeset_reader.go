@@ -227,12 +227,14 @@ func (cr *ChangesetReader) latestValidCheckpoint(startIdx int) CheckpointRootInf
 	for i := startIdx; i >= 0; i-- {
 		info := cr.checkpointsInfo.UnsafeItem(uint32(i))
 		rootID := info.RootID
-		if rootID.IsEmpty() {
-			// if root is empty, we have an empty tree at this checkpoint
+		if rootID.IsEmptyTree() {
 			return CheckpointRootInfo{
 				Version:    info.Version,
 				Checkpoint: info.Checkpoint,
 			}
+		} else if rootID.IsEmpty() {
+			// no information about the root, keep looking for an earlier checkpoint with root information
+			continue
 		}
 
 		// check if the root was retained in this changeset by looking at the bounds

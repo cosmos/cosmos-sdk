@@ -221,12 +221,12 @@ func (c *Compactor) doAddChangeset(reader *ChangesetReader) error {
 		checkpointHasNoNodes := newBranchCount == 0 && newLeafCount == 0
 		if checkpointHasNoNodes {
 			// we attempt to delete checkpoint infos that have no nodes
-			rootIsEmpty := cpInfo.RootID.IsEmpty()
+			emptyTree := cpInfo.RootID.IsEmptyTree()
 			inRetainRange := cpInfo.Version+1 >= c.walStartVersion
-			// we need to keep empty checkpoints with empty roots (empty trees)
+			// we need to keep empty checkpoints representing empty trees
 			// if they occur right before the WAL start version or in the replay range
 			// so that we can replay the WAL starting at that empty tree
-			if !(rootIsEmpty && inRetainRange) {
+			if !(emptyTree && inRetainRange) {
 				continue
 			}
 		}

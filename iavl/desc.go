@@ -61,8 +61,8 @@ func formatBytes(b int) string {
 
 func rootRetained(cp CheckpointInfo) bool {
 	rootID := cp.RootID
-	if rootID.IsEmpty() {
-		return true // empty tree is trivially "retained"
+	if rootID.IsEmpty() || rootID.IsEmptyTree() {
+		return true // empty or unknown root is trivially "retained"
 	}
 	if rootID.Checkpoint() != cp.Checkpoint {
 		return false // root is from a different checkpoint, can't confirm locally

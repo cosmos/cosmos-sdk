@@ -82,6 +82,10 @@ func (cs *ChangesetWriter) SaveCheckpoint(checkpoint, version uint32, root *Node
 			return err
 		}
 		cpInfo.RootID = root.id
+	} else {
+		// we use a special sentinel RootID to indicate an empty tree,
+		// which is different from a zero-value NodeID which indicates no information about the root at all
+		cpInfo.RootID = NewEmptyTreeNodeID(checkpoint)
 	}
 
 	cpInfo.Checkpoint = checkpoint

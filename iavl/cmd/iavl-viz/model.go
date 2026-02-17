@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -40,6 +41,7 @@ type model struct {
 	view          view
 	width, height int
 	table         table.Model
+	columns       []table.Column // current table columns (for info view)
 	err           string
 
 	dir                string
@@ -82,9 +84,9 @@ func initialModel(dir string) model {
 
 func (m *model) tableHeight() int {
 	if m.height > 0 {
-		return m.height - 8
+		return m.height - 12
 	}
-	return 20
+	return 16
 }
 
 func newTable(columns []table.Column, rows []table.Row, height int) table.Model {
@@ -132,11 +134,13 @@ func (m *model) buildTreesTable() {
 		}
 		rows[i] = table.Row{name, strconv.Itoa(csCount), humanSize(totalSize)}
 	}
-	m.table = newTable([]table.Column{
+	cols := []table.Column{
 		{Title: "Name", Width: 30},
 		{Title: "Changesets", Width: 12},
 		{Title: "Size", Width: 12},
-	}, rows, m.tableHeight())
+	}
+	m.columns = cols
+	m.table = newTable(cols, rows, m.tableHeight())
 }
 
 func statSize(path string) int64 {
@@ -260,6 +264,17 @@ func (m *model) buildChangesetsTable() {
 		total.orphanSize += info.orphanSize
 	}
 
+	// Sort by start version.
+	slices.SortFunc(infos, func(a, b changesetInfo) int {
+		if a.start < b.start {
+			return -1
+		}
+		if a.start > b.start {
+			return 1
+		}
+		return 0
+	})
+
 	// Build rows.
 	rows := make([]table.Row, 0, len(infos)+1)
 	for _, info := range infos {
@@ -316,19 +331,21 @@ func (m *model) buildChangesetsTable() {
 		}
 	}
 
-	m.table = newTable([]table.Column{
+	cols := []table.Column{
 		{Title: "Dir", Width: 20},
 		{Title: "Start", Width: 10},
 		{Title: "End", Width: 10},
 		{Title: "Compacted", Width: 10},
 		{Title: "WAL Start", Width: 10},
-		{Title: "kv.dat", Width: 10},
-		{Title: "wal.log", Width: 10},
-		{Title: "Leaves", Width: 14},
-		{Title: "Branches", Width: 14},
+		{Title: "kv.dat", Width: 8},
+		{Title: "wal.log", Width: 8},
+		{Title: "Leaves", Width: 18},
+		{Title: "Branches", Width: 18},
 		{Title: "Checkpts", Width: 14},
 		{Title: "orphans.dat", Width: 12},
-	}, rows, height)
+	}
+	m.columns = cols
+	m.table = newTable(cols, rows, height)
 }
 
 func (m *model) buildCheckpointsTable(cps []internal.CheckpointInfo) {
@@ -370,7 +387,7 @@ func (m *model) buildCheckpointsTable(cps []internal.CheckpointInfo) {
 		strconv.Itoa(totalBranchOrph),
 		totalOrphPct,
 	})
-	m.table = newTable([]table.Column{
+	cols := []table.Column{
 		{Title: "Checkpoint", Width: 10},
 		{Title: "Version", Width: 10},
 		{Title: "Root", Width: 20},
@@ -379,7 +396,9 @@ func (m *model) buildCheckpointsTable(cps []internal.CheckpointInfo) {
 		{Title: "LeafOrphans", Width: 15},
 		{Title: "BranchOrphans", Width: 15},
 		{Title: "Orphan %", Width: 10},
-	}, rows, m.tableHeight())
+	}
+	m.columns = cols
+	m.table = newTable(cols, rows, m.tableHeight())
 }
 
 func (m *model) buildLeavesTable(leaves []internal.LeafLayout, orphanMap map[internal.NodeID]uint32) {
@@ -399,14 +418,16 @@ func (m *model) buildLeavesTable(leaves []internal.LeafLayout, orphanMap map[int
 			hex.EncodeToString(l.Hash[:]),
 		}
 	}
-	m.table = newTable([]table.Column{
+	cols := []table.Column{
 		{Title: "ID", Width: 16},
 		{Title: "Version", Width: 10},
 		{Title: "KeyOff", Width: 14},
 		{Title: "ValOff", Width: 14},
 		{Title: "Orphaned", Width: 10},
 		{Title: "Hash", Width: 66},
-	}, rows, m.tableHeight())
+	}
+	m.columns = cols
+	m.table = newTable(cols, rows, m.tableHeight())
 }
 
 func (m *model) buildBranchesTable(branches []internal.BranchLayout, orphanMap map[internal.NodeID]uint32) {
@@ -428,7 +449,7 @@ func (m *model) buildBranchesTable(branches []internal.BranchLayout, orphanMap m
 			hex.EncodeToString(b.Hash[:]),
 		}
 	}
-	m.table = newTable([]table.Column{
+	cols := []table.Column{
 		{Title: "ID", Width: 16},
 		{Title: "Version", Width: 10},
 		{Title: "Height", Width: 8},
@@ -437,7 +458,9 @@ func (m *model) buildBranchesTable(branches []internal.BranchLayout, orphanMap m
 		{Title: "Right", Width: 16},
 		{Title: "Orphaned", Width: 10},
 		{Title: "Hash", Width: 66},
-	}, rows, m.tableHeight())
+	}
+	m.columns = cols
+	m.table = newTable(cols, rows, m.tableHeight())
 }
 
 func (m *model) buildOrphansTable(orphans []internal.OrphanLogEntry) {
@@ -455,12 +478,14 @@ func (m *model) buildOrphansTable(orphans []internal.OrphanLogEntry) {
 			strconv.FormatUint(uint64(o.OrphanedVersion), 10),
 		}
 	}
-	m.table = newTable([]table.Column{
+	cols := []table.Column{
 		{Title: "NodeID", Width: 16},
 		{Title: "Type", Width: 8},
 		{Title: "Checkpoint", Width: 12},
 		{Title: "OrphanedVer", Width: 12},
-	}, rows, m.tableHeight())
+	}
+	m.columns = cols
+	m.table = newTable(cols, rows, m.tableHeight())
 }
 
 func formatStat(s *runningStats, f func(*runningStats) float64) string {
@@ -495,7 +520,7 @@ func (m *model) buildWALAnalysisTable(info []walVersionInfo, total walVersionInf
 		formatStat(&total.valStats, (*runningStats).stddev),
 		"━━",
 	})
-	m.table = newTable([]table.Column{
+	cols := []table.Column{
 		{Title: "Version", Width: 10},
 		{Title: "Sets", Width: 8},
 		{Title: "Deletes", Width: 8},
@@ -504,7 +529,9 @@ func (m *model) buildWALAnalysisTable(info []walVersionInfo, total walVersionInf
 		{Title: "Avg Val", Width: 10},
 		{Title: "Val StdDev", Width: 10},
 		{Title: "Offset", Width: 10},
-	}, rows, m.tableHeight())
+	}
+	m.columns = cols
+	m.table = newTable(cols, rows, m.tableHeight())
 }
 
 func (m *model) buildWALEntriesTable(entries []walEntry) {
@@ -521,11 +548,13 @@ func (m *model) buildWALEntriesTable(entries []walEntry) {
 			del,
 		}
 	}
-	m.table = newTable([]table.Column{
+	cols := []table.Column{
 		{Title: "Key", Width: 50},
 		{Title: "Value", Width: 50},
 		{Title: "Delete", Width: 8},
-	}, rows, m.tableHeight())
+	}
+	m.columns = cols
+	m.table = newTable(cols, rows, m.tableHeight())
 }
 
 func (m *model) buildCommitInfoTable() {
@@ -546,12 +575,14 @@ func (m *model) buildCommitInfoTable() {
 			}
 		}
 	}
-	m.table = newTable([]table.Column{
+	cols := []table.Column{
 		{Title: "Version", Width: 10},
 		{Title: "Hash", Width: 66},
 		{Title: "Stores", Width: 50},
 		{Title: "Error", Width: 30},
-	}, rows, m.tableHeight())
+	}
+	m.columns = cols
+	m.table = newTable(cols, rows, m.tableHeight())
 }
 
 func (m *model) findCheckpoint(cp uint32) *internal.CheckpointInfo {
@@ -806,7 +837,50 @@ func (m model) View() string {
 		extra = m.sizeBreakdown
 	}
 
-	return title + "\n" + m.table.View() + "\n" + extra + footer
+	infoPanel := m.renderInfoPanel()
+
+	return title + "\n" + m.table.View() + "\n" + extra + infoPanel + footer
+}
+
+func (m model) renderInfoPanel() string {
+	row := m.table.SelectedRow()
+	if row == nil || len(m.columns) == 0 {
+		return ""
+	}
+
+	dimStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("242"))
+	var pairs []string
+	for i, col := range m.columns {
+		if i < len(row) {
+			pairs = append(pairs, dimStyle.Render(col.Title+":")+"\u00a0"+row[i])
+		}
+	}
+
+	// Wrap pairs into lines that fit within terminal width.
+	width := m.width
+	if width <= 0 {
+		width = 120
+	}
+	sep := "  "
+	var lines []string
+	var line string
+	for _, p := range pairs {
+		candidate := p
+		if line != "" {
+			candidate = line + sep + p
+		}
+		if line != "" && lipgloss.Width(candidate) > width {
+			lines = append(lines, line)
+			line = p
+		} else {
+			line = candidate
+		}
+	}
+	if line != "" {
+		lines = append(lines, line)
+	}
+
+	return strings.Join(lines, "\n") + "\n"
 }
 
 func humanSize(b int64) string {

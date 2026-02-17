@@ -109,6 +109,11 @@ func (c *Compactor) doAddChangeset(reader *ChangesetReader) error {
 	leavesData := reader.leavesData
 	branchesData := reader.branchesData
 
+	// TODO the deleteMap from the orphan rewriter contains the exact number of nodes that will be pruned
+	// so we could use this to implement threshold based pruning and only prune based on whether we
+	// are pruning enough orphans
+	// in that case this orphan pre-processing logic should happen before anything else and
+	// be a condition on whether we add this changeset or not
 	orphanRewriter, err := NewOrphanRewriter(reader.changeset.orphanWriter)
 	if err != nil {
 		return fmt.Errorf("failed to create orphan rewriter: %w", err)

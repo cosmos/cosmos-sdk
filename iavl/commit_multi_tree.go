@@ -45,11 +45,10 @@ type CommitMultiTree struct {
 	lastCommitId   storetypes.CommitID
 	lastCommitInfo *storetypes.CommitInfo
 
-	cancelPruning    context.CancelFunc
-	pruningActive    atomic.Bool
-	pruningDone      chan struct{}
-	pruningOptions   pruningtypes.PruningOptions
-	lastPruneVersion uint64
+	cancelPruning  context.CancelFunc
+	pruningActive  atomic.Bool
+	pruningDone    chan struct{}
+	pruningOptions pruningtypes.PruningOptions
 }
 
 func (db *CommitMultiTree) EarliestVersion() int64 {
@@ -886,29 +885,27 @@ func (db *CommitMultiTree) cacheMultiStore(version int64, commitInfo *storetypes
 }
 
 func (db *CommitMultiTree) pruneIfNeeded() {
-	if db.pruningOptions.Interval == 0 {
-		// pruning disabled
+	if db.pruningOptions.Strategy == pruningtypes.PruningNothing || db.pruningOptions.Interval == 0 {
 		return
 	}
-	intervalSinceLastPrune := db.version - db.lastPruneVersion
-	if db.pruningOptions.Interval > intervalSinceLastPrune {
-		// not time to prune yet
+	if db.version%db.pruningOptions.Interval != 0 {
 		return
 	}
-	retainVersion := uint64(0)
-	if db.version > db.pruningOptions.KeepRecent+1 {
-		retainVersion = db.version - db.pruningOptions.KeepRecent
-	}
-	if retainVersion <= 1 {
-		// nothing to prune yet
+
+	// TODO: add snapshot awareness — when state sync snapshots are enabled, retainVersion
+	// must not go below the oldest in-flight or most recent completed snapshot height.
+	// See store/pruningmanager.go GetPruningHeight for reference.
+
+	// Keep current version + KeepRecent previous versions
+	if db.version <= db.pruningOptions.KeepRecent+1 {
 		return
 	}
+	retainVersion := db.version - db.pruningOptions.KeepRecent
 
 	if !db.pruningActive.CompareAndSwap(false, true) {
 		// another prune started since we checked, skip
 		return
 	}
-	db.lastPruneVersion = db.version
 	db.pruningDone = make(chan struct{})
 	ctx, cancel := context.WithCancel(context.Background())
 	db.cancelPruning = cancel
@@ -983,9 +980,8 @@ func (db *CommitMultiTree) Describe() MultiTreeDescription {
 		descriptions[si.key.Name()] = ct.treeStore.Describe()
 	}
 	return MultiTreeDescription{
-		Version:          db.version,
-		Trees:            descriptions,
-		LastPruneVersion: db.lastPruneVersion,
+		Version: db.version,
+		Trees:   descriptions,
 	}
 }
 

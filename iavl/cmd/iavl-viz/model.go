@@ -325,7 +325,7 @@ func (m *model) buildChangesetsTable() {
 
 	height := m.tableHeight()
 	if m.sizeBreakdown != "" {
-		height -= strings.Count(m.sizeBreakdown, "\n") + 1
+		height -= strings.Count(m.sizeBreakdown, "\n")
 		if height < 5 {
 			height = 5
 		}

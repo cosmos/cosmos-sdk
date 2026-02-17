@@ -880,10 +880,6 @@ func (db *CommitMultiTree) cacheMultiStore(version int64, commitInfo *storetypes
 }
 
 func (db *CommitMultiTree) pruneIfNeeded() {
-	if db.pruningActive.Load() {
-		// already pruning, skip
-		return
-	}
 	if db.pruningOptions.Interval == 0 {
 		// pruning disabled
 		return
@@ -902,7 +898,10 @@ func (db *CommitMultiTree) pruneIfNeeded() {
 		return
 	}
 
-	db.pruningActive.Store(true)
+	if !db.pruningActive.CompareAndSwap(false, true) {
+		// another prune started since we checked, skip
+		return
+	}
 	db.lastPruneVersion = db.version
 	db.pruningDone = make(chan struct{})
 	ctx, cancel := context.WithCancel(context.Background())
@@ -956,7 +955,7 @@ func deleteOldCommitInfos(dir string, retainVersion uint64) error {
 		var version uint64
 		_, err := fmt.Sscanf(entry.Name(), "%d", &version)
 		if err != nil {
-			// skip non-numeric files
+			continue
 		}
 		if version < retainVersion {
 			err := os.Remove(filepath.Join(commitInfoDir, entry.Name()))

@@ -173,6 +173,10 @@ const useOtelLogging = "USE_OTEL_LOGGING"
 
 // CreateSDKLogger creates the default SDK logger.
 // It reads the log level and format from the server context.
+// If the environment variable "USE_OTEL_LOGGING" is set to "true",
+// all log messages are sent to OpenTelemetry instead and logging
+// must be configured properly there. In that case no log messages
+// will be sent to the default logger output at all.
 func CreateSDKLogger(ctx *Context, out io.Writer) (log.Logger, error) {
 	if v, useOtel := os.LookupEnv(useOtelLogging); useOtel && v == "true" {
 		return slog.NewCustomLogger(otelslog.NewLogger("")), nil

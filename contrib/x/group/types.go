@@ -93,6 +93,9 @@ func (p ThresholdDecisionPolicy) Allow(tallyResult TallyResult, totalPower strin
 	if err != nil {
 		return DecisionPolicyResult{}, errorsmod.Wrap(err, "total power")
 	}
+	if totalPowerDec.IsZero() {
+		return DecisionPolicyResult{Allow: false, Final: true}, nil
+	}
 
 	// the real threshold of the policy is `min(threshold,total_weight)`. If
 	// the group member weights changes (member leaving, member weight update)

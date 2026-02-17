@@ -97,7 +97,7 @@ func TestNewSTMRunner(t *testing.T) {
 	require.Equal(t, stores, runner.stores)
 	require.Equal(t, workers, runner.workers)
 	require.Equal(t, estimate, runner.estimate)
-	require.Equal(t, TestCoinDenom, runner.coinDenom)
+	require.Equal(t, TestCoinDenom, runner.coinDenom(nil))
 }
 
 // TestSTMRunner_Run_EmptyBlock tests STMRunner with empty block
@@ -162,6 +162,7 @@ func TestSTMRunner_Run_WithEstimation(t *testing.T) {
 	decoder := mockTxDecoderWithFeeTx
 	stores := []storetypes.StoreKey{StoreKeyAuth, StoreKeyBank}
 	runner := NewSTMRunner(decoder, stores, 2, true, testCoinDenomFunc)
+
 	ctx := context.Background()
 	storeIndex := map[storetypes.StoreKey]int{
 		StoreKeyAuth: 0,

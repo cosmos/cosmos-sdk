@@ -32,6 +32,7 @@ govKeeper := keeper.NewKeeper(
 
 **After:**
 
+
 ```go
 govKeeper := keeper.NewKeeper(
     cdc,
@@ -85,4 +86,5 @@ NOTE: the go implementation of [otelconf](https://pkg.go.dev/go.opentelemetry.io
 
 The log package has been bumped to v2 as new methods have been added to support tracer correlation with logs. Logs can be scraped with OpenTelemetry's [FileLog Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/filelogreceiver).
 You may have to make additional changes to your log backend to properly extract the trace_id, span_id, and trace_flags from the logs.
->>>>>>> origin/main
+For applications using depinject, the governance module now accepts an optional `CalculateVoteResultsAndVotingPowerFn`. If not provided, it will use the `StakingKeeper` (also optional) to create the default function.
+>>>>>>> parent of 8448784ada (chore: Revert breaking changes on main for Krakatoa (#25621))

@@ -84,9 +84,9 @@ func initialModel(dir string) model {
 
 func (m *model) tableHeight() int {
 	if m.height > 0 {
-		return m.height - 12
+		return m.height - 10
 	}
-	return 16
+	return 18
 }
 
 func newTable(columns []table.Column, rows []table.Row, height int) table.Model {
@@ -849,39 +849,31 @@ func (m model) renderInfoPanel() string {
 	}
 
 	dimStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("242"))
-	var pairs []string
-	for i, col := range m.columns {
-		if i < len(row) {
-			pairs = append(pairs, dimStyle.Render(col.Title+":")+" "+row[i])
-		}
-	}
-
-	// Wrap pairs into lines that fit within terminal width.
 	width := m.width
 	if width <= 0 {
 		width = 120
 	}
+
+	// Build a single truncated line: "Col: val  Col: val  ..."
 	sep := "  "
-	var lines []string
 	var line string
-	for _, p := range pairs {
-		candidate := p
+	for i, col := range m.columns {
+		if i >= len(row) {
+			break
+		}
+		pair := dimStyle.Render(col.Title+":") + " " + row[i]
+		candidate := pair
 		if line != "" {
-			candidate = line + sep + p
+			candidate = line + sep + pair
 		}
-		if line != "" && lipgloss.Width(candidate) > width {
-			lines = append(lines, line)
-			line = p
-		} else {
-			line = candidate
+		if lipgloss.Width(candidate) > width {
+			break
 		}
-	}
-	if line != "" {
-		lines = append(lines, line)
+		line = candidate
 	}
 
 	rule := dimStyle.Render(strings.Repeat("─", width))
-	return rule + "\n" + strings.Join(lines, "\n") + "\n"
+	return rule + "\n" + line + "\n"
 }
 
 func humanSize(b int64) string {

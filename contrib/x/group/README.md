@@ -193,7 +193,7 @@ group members) can execute proposals that have been accepted, and execution fees
 paid by the proposal executor.
 It's also possible to try to execute a proposal immediately on creation or on
 new votes using the `Exec` field of `Msg/SubmitProposal` and `Msg/Vote` requests.
-In the former case, proposers signatures are considered as yes votes.
+For `Msg/SubmitProposal`, when exec is EXEC_TRY, proposers are automatically counted as Yes votes.
 In these cases, if the proposal can't be executed (i.e. it didn't pass the
 decision policy's rules), it will still be opened for new votes and
 could be tallied and executed later on.
@@ -202,8 +202,7 @@ A successful proposal execution will have its `ExecutorResult` marked as
 `PROPOSAL_EXECUTOR_RESULT_SUCCESS`. The proposal will be automatically pruned
 after execution. On the other hand, a failed proposal execution will be marked
 as `PROPOSAL_EXECUTOR_RESULT_FAILURE`. Such a proposal can be re-executed
-multiple times, until it expires after `MaxExecutionPeriod` after voting period
-end.
+multiple times, until it expires `MaxExecutionPeriod` after the voting period ends.
 
 ### Pruning
 
@@ -448,7 +447,7 @@ It's expected to fail if:
 ### Msg/SubmitProposal
 
 A new proposal can be created with the `MsgSubmitProposal`, which has a group policy account address, a list of proposers addresses, a list of messages to execute if the proposal is accepted and some optional metadata.
-An optional `Exec` value can be provided to try to execute the proposal immediately after proposal creation. Proposers signatures are considered as yes votes in this case.
+An optional `Exec` value can be provided to try to execute the proposal immediately after proposal creation. When exec is EXEC_TRY, proposers are automatically counted as Yes votes.
 
 ```go reference
 https://github.com/cosmos/cosmos-sdk/tree/release/v0.50.x/proto/cosmos/group/v1/tx.proto#L281-L315

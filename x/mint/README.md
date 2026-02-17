@@ -140,16 +140,20 @@ https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/mint/v1beta1/
 
 The mint module stores its params in state with the prefix of `0x01`,
 it can be updated with governance or the address with authority.
+**Note:** With the latest update, the addition of the `MaxSupply` parameter allows controlling the maximum supply of tokens minted by the module. 
+A value of `0` indicates an unlimited supply.
 
 * Params: `mint/params -> legacy_amino(params)`
 
 ```protobuf reference
-https://github.com/cosmos/cosmos-sdk/blob/v0.47.0-rc1/proto/cosmos/mint/v1beta1/mint.proto#L26-L59
+https://github.com/cosmos/cosmos-sdk/blob/7068d0da52d954430054768b2c56aff44666933b/x/mint/proto/cosmos/mint/v1beta1/mint.proto#L26-L68
 ```
 
 ## Begin-Block
 
 Minting parameters are recalculated and inflation paid at the beginning of each block.
+
+The minting logic in the `BeginBlocker` function provides an optional feature for controlling token minting based on the maximum allowable supply (MaxSupply). This feature allows users to adjust the minting process according to their specific requirements and use cases. However, it's important to note that the MaxSupply parameter is independent of the minting process and assumes that any adjustments to the total supply, including burning tokens, are handled by external modules.
 
 ### Inflation rate calculation
 
@@ -213,15 +217,19 @@ BlockProvision(params Params) sdk.Coin {
 ## Parameters
 
 The minting module contains the following parameters:
+Note: `0` indicates unlimited supply for the `MaxSupply` parameter.
 
-| Key                 | Type            | Example                |
-|---------------------|-----------------|------------------------|
-| MintDenom           | string          | "uatom"                |
-| InflationRateChange | string (dec)    | "0.130000000000000000" |
-| InflationMax        | string (dec)    | "0.200000000000000000" |
-| InflationMin        | string (dec)    | "0.070000000000000000" |
-| GoalBonded          | string (dec)    | "0.670000000000000000" |
-| BlocksPerYear       | string (uint64) | "6311520"              |
+For legacy Amino JSON compatibility, `max_supply` is encoded even when it is `"0"`.
+
+| Key                 | Type             | Example                |
+|---------------------|------------------|------------------------|
+| MintDenom           | string           | "uatom"                |
+| InflationRateChange | string (dec)     | "0.130000000000000000" |
+| InflationMax        | string (dec)     | "0.200000000000000000" |
+| InflationMin        | string (dec)     | "0.070000000000000000" |
+| GoalBonded          | string (dec)     | "0.670000000000000000" |
+| BlocksPerYear       | string (uint64)  | "6311520"              |
+| MaxSupply           | string (math.Int)| "0"                    |
 
 
 ## Events
@@ -309,6 +317,7 @@ inflation_max: "0.200000000000000000"
 inflation_min: "0.070000000000000000"
 inflation_rate_change: "0.130000000000000000"
 mint_denom: stake
+max_supply: "0"
 ```
 
 ### gRPC
@@ -383,7 +392,8 @@ Example Output:
     "inflationMax": "200000000000000000",
     "inflationMin": "70000000000000000",
     "goalBonded": "670000000000000000",
-    "blocksPerYear": "6311520"
+    "blocksPerYear": "6311520",
+    "maxSupply": "0",
   }
 }
 ```
@@ -454,7 +464,8 @@ Example Output:
     "inflationMax": "200000000000000000",
     "inflationMin": "70000000000000000",
     "goalBonded": "670000000000000000",
-    "blocksPerYear": "6311520"
+    "blocksPerYear": "6311520",
+    "maxSupply": "0",
   }
 }
 ```

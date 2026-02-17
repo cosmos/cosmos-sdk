@@ -1514,14 +1514,14 @@ func TestAltKeyring_KeyByAddress(t *testing.T) {
 		name        string
 		backend     string
 		uid         string
-		getAddres   func(*Record) (sdk.AccAddress, error)
+		getAddress  func(*Record) (sdk.AccAddress, error)
 		expectedErr error
 	}{
 		{
 			name:    "correct get",
 			backend: BackendTest,
 			uid:     "okTest",
-			getAddres: func(k *Record) (sdk.AccAddress, error) {
+			getAddress: func(k *Record) (sdk.AccAddress, error) {
 				return k.GetAddress()
 			},
 			expectedErr: nil,
@@ -1530,7 +1530,7 @@ func TestAltKeyring_KeyByAddress(t *testing.T) {
 			name:    "not found key",
 			backend: BackendTest,
 			uid:     "notFoundUid",
-			getAddres: func(k *Record) (sdk.AccAddress, error) {
+			getAddress: func(k *Record) (sdk.AccAddress, error) {
 				return nil, nil
 			},
 			expectedErr: sdkerrors.ErrKeyNotFound,
@@ -1543,7 +1543,7 @@ func TestAltKeyring_KeyByAddress(t *testing.T) {
 
 			mnemonic, _, err := kr.NewMnemonic(tt.uid, English, sdk.FullFundraiserPath, DefaultBIP39Passphrase, hd.Secp256k1)
 			require.NoError(t, err)
-			addr, err := tt.getAddres(mnemonic)
+			addr, err := tt.getAddress(mnemonic)
 			require.NoError(t, err)
 
 			key, err := kr.KeyByAddress(addr)
@@ -1629,14 +1629,14 @@ func TestAltKeyring_DeleteByAddress(t *testing.T) {
 		name        string
 		backend     string
 		uid         string
-		getAddres   func(*Record) (sdk.AccAddress, error)
+		getAddress  func(*Record) (sdk.AccAddress, error)
 		expectedErr error
 	}{
 		{
 			name:    "correct delete",
 			backend: BackendTest,
 			uid:     "okTest",
-			getAddres: func(k *Record) (sdk.AccAddress, error) {
+			getAddress: func(k *Record) (sdk.AccAddress, error) {
 				return k.GetAddress()
 			},
 			expectedErr: nil,
@@ -1645,7 +1645,7 @@ func TestAltKeyring_DeleteByAddress(t *testing.T) {
 			name:    "not found",
 			backend: BackendTest,
 			uid:     "notFoundUid",
-			getAddres: func(k *Record) (sdk.AccAddress, error) {
+			getAddress: func(k *Record) (sdk.AccAddress, error) {
 				return nil, nil
 			},
 			expectedErr: sdkerrors.ErrKeyNotFound,
@@ -1654,7 +1654,7 @@ func TestAltKeyring_DeleteByAddress(t *testing.T) {
 			name:    "in memory correct delete",
 			backend: BackendMemory,
 			uid:     "inMemory",
-			getAddres: func(k *Record) (sdk.AccAddress, error) {
+			getAddress: func(k *Record) (sdk.AccAddress, error) {
 				return k.GetAddress()
 			},
 			expectedErr: nil,
@@ -1663,7 +1663,7 @@ func TestAltKeyring_DeleteByAddress(t *testing.T) {
 			name:    "in memory not found",
 			backend: BackendMemory,
 			uid:     "inMemoryNotFoundUid",
-			getAddres: func(k *Record) (sdk.AccAddress, error) {
+			getAddress: func(k *Record) (sdk.AccAddress, error) {
 				return nil, nil
 			},
 			expectedErr: sdkerrors.ErrKeyNotFound,
@@ -1676,7 +1676,7 @@ func TestAltKeyring_DeleteByAddress(t *testing.T) {
 
 			mnemonic, _, err := kr.NewMnemonic(tt.uid, English, sdk.FullFundraiserPath, DefaultBIP39Passphrase, hd.Secp256k1)
 			require.NoError(t, err)
-			addr, err := tt.getAddres(mnemonic)
+			addr, err := tt.getAddress(mnemonic)
 			require.NoError(t, err)
 
 			err = kr.DeleteByAddress(addr)

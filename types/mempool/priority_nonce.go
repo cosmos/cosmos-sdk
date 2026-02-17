@@ -183,12 +183,17 @@ func DefaultPriorityMempool() *PriorityNonceMempool[int64] {
 // i.e. the next valid transaction for the sender. If no such transaction exists,
 // nil will be returned.
 func (mp *PriorityNonceMempool[C]) NextSenderTx(sender string) sdk.Tx {
+	mp.mtx.Lock()
+	defer mp.mtx.Unlock()
 	senderIndex, ok := mp.senderIndices[sender]
 	if !ok {
 		return nil
 	}
 
 	cursor := senderIndex.Front()
+	if cursor == nil {
+		return nil
+	}
 	return cursor.Value.(sdk.Tx)
 }
 

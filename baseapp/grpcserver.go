@@ -20,24 +20,11 @@ import (
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 )
 
-// RegisterGRPCServer registers gRPC services directly with the gRPC server.
-func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
-	app.RegisterGRPCServerWithSkipCheckHeader(server, false)
-}
-
-// RegisterGRPCServerWithSkipCheckHeader registers gRPC services with the specified gRPC server
-// and bypass check header flag. During the commit phase, gRPC queries may be processed before the block header
-// is fully updated, causing header checks to fail erroneously. Skipping the header check in these cases prevents
-// false negatives and ensures more robust query handling.  While bypassing the header check is generally preferred to avoid false
-// negatives during the commit phase, there are niche scenarios where someone might want to enable it.
-// For instance, if an application requires strict validation to ensure that the query context exactly
-// reflects the expected block header (for consistency or security reasons), then enabling header checks
-// could be beneficial. However, this strictness comes at the cost of potentially more frequent errors
-// when queries occur during the commit phase.
-func (app *BaseApp) RegisterGRPCServerWithSkipCheckHeader(server gogogrpc.Server, skipCheckHeader bool) {
-	// Define an interceptor for all gRPC queries: this interceptor will create
-	// a new sdk.Context, and pass it into the query handler.
-	interceptor := func(grpcCtx context.Context, req any, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
+// grpcQueryInterceptor builds the unary interceptor for gRPC queries.
+// It creates the query sdk.Context and returns the block height as a response header (or trailer
+// if headers were already sent). If skipCheckHeader is true, header checks are bypassed.
+func (app *BaseApp) grpcQueryInterceptor(skipCheckHeader bool) grpc.UnaryServerInterceptor {
+	return func(grpcCtx context.Context, req any, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
 		// If there's some metadata in the context, retrieve it.
 		md, ok := metadata.FromIncomingContext(grpcCtx)
 		if !ok {
@@ -70,11 +57,6 @@ func (app *BaseApp) RegisterGRPCServerWithSkipCheckHeader(server gogogrpc.Server
 			height = sdkCtx.BlockHeight() // If height was not set in the request, set it to the latest
 		}
 
-		md = metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(height, 10))
-		if err = grpc.SetHeader(grpcCtx, md); err != nil {
-			app.logger.Error("failed to set gRPC header", "err", err)
-		}
-
 		app.logger.Debug("gRPC query received", "type", fmt.Sprintf("%#v", req))
 
 		// Catch an OutOfGasPanic caused in the query handlers
@@ -93,8 +75,43 @@ func (app *BaseApp) RegisterGRPCServerWithSkipCheckHeader(server gogogrpc.Server
 		// we do this because grpc context has values injected into it that are necessary to retain for systems
 		// such as OpenTelemetry.
 		sdkCtx = sdkCtx.WithContext(grpcCtx)
-		return handler(sdkCtx, req)
+
+		blockHeightMD := metadata.Pairs(grpctypes.GRPCBlockHeightHeader, strconv.FormatInt(height, 10))
+		setHeaderErr := grpc.SetHeader(sdkCtx, blockHeightMD)
+		if setHeaderErr != nil {
+			// Non-fatal: headers may already be sent; fall back to a trailer.
+			app.logger.Debug("failed to set gRPC header", "err", setHeaderErr)
+		}
+
+		resp, err = handler(sdkCtx, req)
+
+		// If headers were already sent, attach block height as a trailer.
+		if setHeaderErr != nil {
+			if trailerErr := grpc.SetTrailer(grpcCtx, blockHeightMD); trailerErr != nil {
+				app.logger.Debug("failed to set gRPC trailer", "setErr", setHeaderErr, "trailerErr", trailerErr)
+			}
+		}
+
+		return resp, err
 	}
+}
+
+// RegisterGRPCServer registers gRPC services directly with the gRPC server.
+func (app *BaseApp) RegisterGRPCServer(server gogogrpc.Server) {
+	app.RegisterGRPCServerWithSkipCheckHeader(server, false)
+}
+
+// RegisterGRPCServerWithSkipCheckHeader registers gRPC services with the specified gRPC server
+// and bypass check header flag. During the commit phase, gRPC queries may be processed before the block header
+// is fully updated, causing header checks to fail erroneously. Skipping the header check in these cases prevents
+// false negatives and ensures more robust query handling.  While bypassing the header check is generally preferred to avoid false
+// negatives during the commit phase, there are niche scenarios where someone might want to enable it.
+// For instance, if an application requires strict validation to ensure that the query context exactly
+// reflects the expected block header (for consistency or security reasons), then enabling header checks
+// could be beneficial. However, this strictness comes at the cost of potentially more frequent errors
+// when queries occur during the commit phase.
+func (app *BaseApp) RegisterGRPCServerWithSkipCheckHeader(server gogogrpc.Server, skipCheckHeader bool) {
+	interceptor := app.grpcQueryInterceptor(skipCheckHeader)
 
 	// Loop through all services and methods, add the interceptor, and register
 	// the service.

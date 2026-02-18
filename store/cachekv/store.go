@@ -17,7 +17,7 @@ import (
 // as that responsibility should be shifted to the base layer.
 // Also, there is no mutex and the caller contract is the following:
 // - concurrent writes (calls to Set/Delete) are not allowed and may cause undefined behavior
-// - concurrent reads (calls to Get/Has/Iterator) are allowed, as long as there are no concurrent writes
+// - concurrent reads (calls to Get/Has/Iterator) are allowed, as long as there are no writes at all at the same time
 type GStore[V any] struct {
 	parent   types.GKVStore[V]
 	writeMap btree.Map[string, V]

@@ -1035,4 +1035,4 @@ func (db *CommitMultiTree) Describe() MultiTreeDescription {
 	}
 }
 
-var _ storetypes.CommitMultiStore2 = &CommitMultiTree{}
+var _ storetypes.CommitMultiStore = &CommitMultiTree{}

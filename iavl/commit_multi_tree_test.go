@@ -180,7 +180,7 @@ func (sim *SimCommitMultiTree) openV2Tree(t *rapid.T) {
 	require.NoError(t, sim.mtV2.LoadLatestVersion())
 }
 
-func (sim *SimCommitMultiTree) mountStores(st store.CommitMultiStore2) {
+func (sim *SimCommitMultiTree) mountStores(st store.CommitMultiStore) {
 	st.MountStoreWithDB(sim.kv1, store.StoreTypeIAVL, nil)
 	st.MountStoreWithDB(sim.kv2, store.StoreTypeIAVL, nil)
 	st.MountStoreWithDB(sim.kv3, store.StoreTypeIAVL, nil)

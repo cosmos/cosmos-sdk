@@ -19,12 +19,11 @@ import (
 	"time"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	group "github.com/cosmos/cosmos-sdk/enterprise/group/x/group"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	group "github.com/cosmos/cosmos-sdk/enterprise/group/x/group"
 )
 
 const (

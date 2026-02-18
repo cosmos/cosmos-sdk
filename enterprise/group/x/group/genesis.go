@@ -17,10 +17,10 @@ package group
 import (
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
-	errorsmod "cosmossdk.io/errors"
 )
 
 // NewGenesisState creates a new genesis state with default values.

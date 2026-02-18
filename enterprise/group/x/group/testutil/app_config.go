@@ -15,6 +15,11 @@
 package testutil
 
 import (
+	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
+	"cosmossdk.io/depinject/appconfig"
+
+	groupmodulev1 "github.com/cosmos/cosmos-sdk/enterprise/group/api/cosmos/group/module/v1"
+	_ "github.com/cosmos/cosmos-sdk/enterprise/group/x/group/module"
 	"github.com/cosmos/cosmos-sdk/testutil/configurator"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"           // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config" // import as blank for app wiring
@@ -25,9 +30,16 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/mint"           // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/params"         // import as blank for app wiring
 	_ "github.com/cosmos/cosmos-sdk/x/staking"        // import as blank for app wiring
-
-	_ "github.com/cosmos/cosmos-sdk/enterprise/group/x/group/module"
 )
+
+func groupModule() configurator.ModuleOption {
+	return func(config *configurator.Config) {
+		config.ModuleConfigs["group"] = &appv1alpha1.ModuleConfig{
+			Name:   "group",
+			Config: appconfig.WrapAny(&groupmodulev1.Module{}),
+		}
+	}
+}
 
 var AppConfig = configurator.NewAppConfig(
 	configurator.AuthModule(),
@@ -37,5 +49,5 @@ var AppConfig = configurator.NewAppConfig(
 	configurator.ConsensusModule(),
 	configurator.ParamsModule(),
 	configurator.GenutilModule(),
-	configurator.GroupModule(),
+	groupModule(),
 )

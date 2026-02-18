@@ -18,16 +18,16 @@ import (
 	"fmt"
 	"time"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	proto "github.com/cosmos/gogoproto/proto"
 
 	errorsmod "cosmossdk.io/errors"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group/errors"
 	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group/internal/math"
 	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group/internal/orm"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // DecisionPolicyResult is the result of whether a proposal passes or not a

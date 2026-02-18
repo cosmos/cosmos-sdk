@@ -244,10 +244,10 @@ func initTestnetFiles(
 	appConfig := srvconfig.DefaultConfig()
 	appConfig.MinGasPrices = args.minGasPrices
 	appConfig.API.Enable = true
-	appConfig.Telemetry.Enabled = true                                        //nolint:staticcheck
-	appConfig.Telemetry.PrometheusRetentionTime = 60                          //nolint:staticcheck
-	appConfig.Telemetry.EnableHostnameLabel = false                           //nolint:staticcheck
-	appConfig.Telemetry.GlobalLabels = [][]string{{"chain_id", args.chainID}} //nolint:staticcheck
+	appConfig.Telemetry.Enabled = true                                        //nolint:staticcheck // TODO: move to new config
+	appConfig.Telemetry.PrometheusRetentionTime = 60                          //nolint:staticcheck // TODO: move to new config
+	appConfig.Telemetry.EnableHostnameLabel = false                           //nolint:staticcheck // TODO: move to new config
+	appConfig.Telemetry.GlobalLabels = [][]string{{"chain_id", args.chainID}} //nolint:staticcheck // TODO: move to new config
 
 	var (
 		genAccounts []authtypes.GenesisAccount

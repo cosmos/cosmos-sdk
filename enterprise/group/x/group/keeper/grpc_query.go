@@ -18,8 +18,6 @@ import (
 	"context"
 	"math"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/query"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -28,6 +26,8 @@ import (
 	group "github.com/cosmos/cosmos-sdk/enterprise/group/x/group"
 	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group/errors"
 	orm "github.com/cosmos/cosmos-sdk/enterprise/group/x/group/internal/orm"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 var _ group.QueryServer = Keeper{}

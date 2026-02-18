@@ -23,23 +23,23 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	rpcclientmock "github.com/cometbft/cometbft/rpc/client/mock"
+	"github.com/stretchr/testify/suite"
+
+	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group"
+	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group/client/cli"
+	groupmodule "github.com/cosmos/cosmos-sdk/enterprise/group/x/group/module"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	testutilmod "github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/stretchr/testify/suite"
-
-	sdkmath "cosmossdk.io/math"
-
-	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group"
-	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group/client/cli"
-	groupmodule "github.com/cosmos/cosmos-sdk/enterprise/group/x/group/module"
 )
 
 var validMetadata = "metadata"

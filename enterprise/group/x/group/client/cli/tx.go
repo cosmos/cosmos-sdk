@@ -20,16 +20,16 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/client/tx"
-	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/core/address"
 
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 	group "github.com/cosmos/cosmos-sdk/enterprise/group/x/group"
 	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group/internal/math"
+	"github.com/cosmos/cosmos-sdk/version"
 )
 
 const (

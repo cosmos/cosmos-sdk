@@ -21,8 +21,18 @@ import (
 	"time"
 
 	cmttime "github.com/cometbft/cometbft/types/time"
+	"github.com/stretchr/testify/suite"
+	"go.uber.org/mock/gomock"
+
+	"cosmossdk.io/log/v2"
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	group "github.com/cosmos/cosmos-sdk/enterprise/group/x/group"
+	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group/keeper"
+	module2 "github.com/cosmos/cosmos-sdk/enterprise/group/x/group/module"
+	grouptestutil "github.com/cosmos/cosmos-sdk/enterprise/group/x/group/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,16 +41,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/stretchr/testify/suite"
-	"go.uber.org/mock/gomock"
-
-	"cosmossdk.io/log/v2"
-	storetypes "cosmossdk.io/store/types"
-
-	group "github.com/cosmos/cosmos-sdk/enterprise/group/x/group"
-	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group/keeper"
-	module2 "github.com/cosmos/cosmos-sdk/enterprise/group/x/group/module"
-	grouptestutil "github.com/cosmos/cosmos-sdk/enterprise/group/x/group/testutil"
 )
 
 const minExecutionPeriod = 5 * time.Second

@@ -20,9 +20,8 @@ import (
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	group "github.com/cosmos/cosmos-sdk/enterprise/group/x/group"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // parseDecisionPolicy reads and parses the decision policy.

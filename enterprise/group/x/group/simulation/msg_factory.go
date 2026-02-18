@@ -21,11 +21,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/testutil/simsx"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	group "github.com/cosmos/cosmos-sdk/enterprise/group/x/group"
 	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group/keeper"
+	"github.com/cosmos/cosmos-sdk/testutil/simsx"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func MsgCreateGroupFactory() simsx.SimMsgFactoryFn[*group.MsgCreateGroup] {

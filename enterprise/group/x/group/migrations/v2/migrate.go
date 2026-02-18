@@ -18,14 +18,13 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	storetypes "cosmossdk.io/store/types"
 
 	group "github.com/cosmos/cosmos-sdk/enterprise/group/x/group"
 	orm "github.com/cosmos/cosmos-sdk/enterprise/group/x/group/internal/orm"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 const (

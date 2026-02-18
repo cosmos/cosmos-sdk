@@ -19,10 +19,9 @@ package testutil
 import (
 	context "context"
 
+	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group"
 )
 
 // AccountKeeper extends `AccountKeeper` from expected_keepers.

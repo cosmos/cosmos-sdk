@@ -22,9 +22,6 @@ import (
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
 
-	circuitmodulev1 "github.com/cosmos/cosmos-sdk/contrib/api/cosmos/circuit/module/v1"
-	groupmodulev1 "github.com/cosmos/cosmos-sdk/enterprise/group/api/cosmos/group/module/v1"
-	nftmodulev1 "github.com/cosmos/cosmos-sdk/contrib/api/cosmos/nft/module/v1"
 	protocolpooltypes "github.com/cosmos/cosmos-sdk/x/protocolpool/types"
 )
 
@@ -56,12 +53,9 @@ func defaultConfig() *Config {
 			"genutil",
 			"authz",
 			"feegrant",
-			"nft",
-			"group",
 			"params",
 			"consensus",
 			"vesting",
-			"circuit",
 			"protocolpool",
 		},
 		EndBlockersOrder: []string{
@@ -76,13 +70,10 @@ func defaultConfig() *Config {
 			"evidence",
 			"authz",
 			"feegrant",
-			"nft",
-			"group",
 			"params",
 			"consensus",
 			"upgrade",
 			"vesting",
-			"circuit",
 			"protocolpool",
 		},
 		InitGenesisOrder: []string{
@@ -97,13 +88,10 @@ func defaultConfig() *Config {
 			"evidence",
 			"authz",
 			"feegrant",
-			"nft",
-			"group",
 			"params",
 			"consensus",
 			"upgrade",
 			"vesting",
-			"circuit",
 			"protocolpool",
 		},
 		setInitGenesis: true,
@@ -286,33 +274,6 @@ func AuthzModule() ModuleOption {
 		config.ModuleConfigs["authz"] = &appv1alpha1.ModuleConfig{
 			Name:   "authz",
 			Config: appconfig.WrapAny(&authzmodulev1.Module{}),
-		}
-	}
-}
-
-func GroupModule() ModuleOption {
-	return func(config *Config) {
-		config.ModuleConfigs["group"] = &appv1alpha1.ModuleConfig{
-			Name:   "group",
-			Config: appconfig.WrapAny(&groupmodulev1.Module{}),
-		}
-	}
-}
-
-func NFTModule() ModuleOption {
-	return func(config *Config) {
-		config.ModuleConfigs["nft"] = &appv1alpha1.ModuleConfig{
-			Name:   "nft",
-			Config: appconfig.WrapAny(&nftmodulev1.Module{}),
-		}
-	}
-}
-
-func CircuitModule() ModuleOption {
-	return func(config *Config) {
-		config.ModuleConfigs["circuit"] = &appv1alpha1.ModuleConfig{
-			Name:   "circuit",
-			Config: appconfig.WrapAny(&circuitmodulev1.Module{}),
 		}
 	}
 }

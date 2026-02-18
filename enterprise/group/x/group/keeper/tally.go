@@ -15,14 +15,13 @@
 package keeper
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
 	errorsmod "cosmossdk.io/errors"
 
 	group "github.com/cosmos/cosmos-sdk/enterprise/group/x/group"
 	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group/errors"
 	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group/internal/orm"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // Tally is a function that tallies a proposal by iterating through its votes,

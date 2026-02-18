@@ -19,14 +19,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	sdkclient "github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
-	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/testutil/simsx"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	gwruntime "github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
@@ -35,11 +27,19 @@ import (
 	"cosmossdk.io/depinject"
 	store "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	sdkclient "github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	modulev1 "github.com/cosmos/cosmos-sdk/enterprise/group/api/cosmos/group/module/v1"
 	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group"
 	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group/client/cli"
 	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group/keeper"
 	simulation2 "github.com/cosmos/cosmos-sdk/enterprise/group/x/group/simulation"
+	"github.com/cosmos/cosmos-sdk/testutil/simsx"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 // ConsensusVersion defines the current x/group module consensus version.

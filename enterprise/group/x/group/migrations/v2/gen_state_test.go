@@ -18,11 +18,11 @@ import (
 	"encoding/binary"
 	"testing"
 
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group"
 	v3 "github.com/cosmos/cosmos-sdk/enterprise/group/x/group/migrations/v2"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestMigrateGenState(t *testing.T) {

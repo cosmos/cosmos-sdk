@@ -17,8 +17,17 @@ package v2_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
+	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
+	group "github.com/cosmos/cosmos-sdk/enterprise/group/x/group"
+	orm "github.com/cosmos/cosmos-sdk/enterprise/group/x/group/internal/orm"
+	groupkeeper "github.com/cosmos/cosmos-sdk/enterprise/group/x/group/keeper"
+	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group/migrations/v2"
+	groupmodule "github.com/cosmos/cosmos-sdk/enterprise/group/x/group/module"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,15 +35,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/stretchr/testify/require"
-
-	storetypes "cosmossdk.io/store/types"
-
-	group "github.com/cosmos/cosmos-sdk/enterprise/group/x/group"
-	orm "github.com/cosmos/cosmos-sdk/enterprise/group/x/group/internal/orm"
-	groupkeeper "github.com/cosmos/cosmos-sdk/enterprise/group/x/group/keeper"
-	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group/migrations/v2"
-	groupmodule "github.com/cosmos/cosmos-sdk/enterprise/group/x/group/module"
 )
 
 var (

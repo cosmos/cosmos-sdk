@@ -15,8 +15,9 @@
 package orm
 
 import (
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"pgregory.net/rapid"
+
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 )
 
 // genTableModel generates a new table model. At the moment it doesn't

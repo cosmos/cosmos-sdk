@@ -17,8 +17,6 @@ package orm
 import (
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/testutil/testdata"
-	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
@@ -26,6 +24,8 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group/errors"
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 func TestPaginationProperty(t *testing.T) {

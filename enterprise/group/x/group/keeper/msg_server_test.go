@@ -23,18 +23,18 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	"go.uber.org/mock/gomock"
+
 	"github.com/cosmos/cosmos-sdk/codec/address"
+	group "github.com/cosmos/cosmos-sdk/enterprise/group/x/group"
+	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group/internal/math"
+	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group/keeper"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"go.uber.org/mock/gomock"
-
-	group "github.com/cosmos/cosmos-sdk/enterprise/group/x/group"
-	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group/internal/math"
-	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group/keeper"
 )
 
 var EventProposalPruned = "cosmos.group.v1.EventProposalPruned"

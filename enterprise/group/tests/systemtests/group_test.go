@@ -441,7 +441,7 @@ func TestSubmitProposalVoteAndExec(t *testing.T) {
 			"metadata":             "",
 			"title":                "Send 10 stake",
 			"summary":              "Proposal to send 10 stake to recipient",
-			"proposers":             []string{member1Addr},
+			"proposers":            []string{member1Addr},
 		}
 		proposalBz, _ := json.Marshal(proposal)
 		proposalFile := systemtests.StoreTempFile(t, proposalBz)

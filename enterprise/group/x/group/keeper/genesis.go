@@ -18,12 +18,12 @@ import (
 	"encoding/json"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/types"
 
 	"cosmossdk.io/errors"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	group "github.com/cosmos/cosmos-sdk/enterprise/group/x/group"
+	"github.com/cosmos/cosmos-sdk/types"
 )
 
 // InitGenesis initializes the group module's genesis state.

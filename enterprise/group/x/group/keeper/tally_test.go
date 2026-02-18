@@ -18,10 +18,9 @@ import (
 	"context"
 	"time"
 
+	group "github.com/cosmos/cosmos-sdk/enterprise/group/x/group"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	group "github.com/cosmos/cosmos-sdk/enterprise/group/x/group"
 )
 
 func (s *TestSuite) TestTally() {

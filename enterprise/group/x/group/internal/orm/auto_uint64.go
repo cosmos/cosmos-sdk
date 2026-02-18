@@ -15,11 +15,12 @@
 package orm
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/gogoproto/proto"
 
 	"cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 var (

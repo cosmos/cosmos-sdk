@@ -20,9 +20,19 @@ import (
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cosmos/gogoproto/proto"
+	"github.com/stretchr/testify/suite"
+
+	"cosmossdk.io/depinject"
+	"cosmossdk.io/log/v2"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	group "github.com/cosmos/cosmos-sdk/enterprise/group/x/group"
+	groupkeeper "github.com/cosmos/cosmos-sdk/enterprise/group/x/group/keeper"
+	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group/simulation"
+	grouptestutil "github.com/cosmos/cosmos-sdk/enterprise/group/x/group/testutil"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,16 +41,6 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/gogoproto/proto"
-	"github.com/stretchr/testify/suite"
-
-	"cosmossdk.io/depinject"
-	"cosmossdk.io/log/v2"
-
-	group "github.com/cosmos/cosmos-sdk/enterprise/group/x/group"
-	groupkeeper "github.com/cosmos/cosmos-sdk/enterprise/group/x/group/keeper"
-	"github.com/cosmos/cosmos-sdk/enterprise/group/x/group/simulation"
-	grouptestutil "github.com/cosmos/cosmos-sdk/enterprise/group/x/group/testutil"
 )
 
 type SimTestSuite struct {

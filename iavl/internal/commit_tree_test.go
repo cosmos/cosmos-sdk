@@ -1,4 +1,4 @@
-package iavl
+package internal
 
 import (
 	"bytes"
@@ -18,7 +18,6 @@ import (
 	"pgregory.net/rapid"
 
 	"cosmossdk.io/store/cachekv"
-	"github.com/cosmos/cosmos-sdk/iavl/internal"
 )
 
 func TestCommitTreeSims(t *testing.T) {
@@ -130,7 +129,7 @@ func (s *SimCommitTree) checkNewVersion(t *rapid.T) {
 		latest, pin, err := latestPtr.Resolve()
 		defer pin.Unpin()
 		require.NoError(t, err, "failed to resolve latest node pointer in V2 tree")
-		require.NoError(t, internal.VerifyAVLInvariants(latest))
+		require.NoError(t, VerifyAVLInvariants(latest))
 	}
 
 	// compare versions and hashes

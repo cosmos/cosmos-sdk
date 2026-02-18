@@ -299,6 +299,11 @@ func (cr *ChangesetReader) CheckpointForVersion(targetVersion uint32) Checkpoint
 	return cr.latestValidCheckpoint(floorIdx)
 }
 
+// Verify verifies the last
+func (cr *ChangesetReader) Verify() error {
+	return nil
+}
+
 func (cr *ChangesetReader) TotalBytes() int {
 	return cr.leavesData.TotalBytes() +
 		cr.branchesData.TotalBytes() +

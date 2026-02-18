@@ -1,4 +1,4 @@
-package iavl
+package internal
 
 import (
 	"bytes"
@@ -29,7 +29,6 @@ import (
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	"cosmossdk.io/store/transient"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/cosmos/cosmos-sdk/iavl/internal"
 )
 
 type commitData struct {
@@ -72,7 +71,7 @@ func (db *CommitMultiTree) StartCommit(ctx context.Context, store storetypes.Mul
 		),
 	)
 
-	multiTree, ok := store.(*internal.MultiTree)
+	multiTree, ok := store.(*MultiTree)
 	if !ok {
 		return nil, fmt.Errorf("expected MultiTree, got %T", store)
 	}
@@ -142,7 +141,7 @@ type multiTreeFinalizer struct {
 	*CommitMultiTree
 	ctx                context.Context
 	cancel             context.CancelFunc
-	cacheMs            *internal.MultiTree
+	cacheMs            *MultiTree
 	finalizers         []*commitTreeFinalizer
 	workingCommitInfo  *storetypes.CommitInfo
 	workingCommitId    storetypes.CommitID
@@ -748,7 +747,7 @@ func (db *CommitMultiTree) loadStore(key storetypes.StoreKey, typ storetypes.Sto
 				return nil, fmt.Errorf("failed to create store dir %s: %w", dir, err)
 			}
 		}
-		ct, err := NewCommitTree(dir, CommitTreeOptions{
+		ct, err := NewCommitTree(dir, TreeOptions{
 			Options:         db.opts,
 			TreeName:        key.Name(),
 			ExpectedVersion: uint32(expectedVersion),
@@ -904,7 +903,7 @@ func (db *CommitMultiTree) CacheMultiStoreWithVersion(version int64) (storetypes
 }
 
 func (db *CommitMultiTree) cacheMultiStore(version int64, commitInfo *storetypes.CommitInfo) storetypes.CacheMultiStore {
-	return internal.NewMultiTree(version, commitInfo, func(key storetypes.StoreKey) storetypes.CacheWrap {
+	return NewMultiTree(version, commitInfo, func(key storetypes.StoreKey) storetypes.CacheWrap {
 		idx, ok := db.storesByKey[key]
 		if !ok {
 			panic(fmt.Sprintf("store with key %s not mounted", key.Name()))
@@ -1021,7 +1020,7 @@ func deleteOldCommitInfos(dir string, retainVersion uint64) error {
 }
 
 func (db *CommitMultiTree) Describe() MultiTreeDescription {
-	descriptions := make(map[string]internal.TreeDescription)
+	descriptions := make(map[string]TreeDescription)
 	for _, si := range db.iavlStores {
 		ct, ok := si.store.(*CommitTree)
 		if !ok {

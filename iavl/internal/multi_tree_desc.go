@@ -1,4 +1,4 @@
-package iavl
+package internal
 
 import (
 	"encoding/json"
@@ -7,19 +7,13 @@ import (
 	"io"
 	"net"
 	"net/http"
-
-	"github.com/cosmos/cosmos-sdk/iavl/internal"
 )
 
 type MultiTreeDescription struct {
-	Version          uint64                              `json:"version"`
-	Trees            map[string]internal.TreeDescription `json:"tree_descriptions"`
-	LastPruneVersion uint64                              `json:"last_prune_version"`
+	Version          uint64                     `json:"version"`
+	Trees            map[string]TreeDescription `json:"tree_descriptions"`
+	LastPruneVersion uint64                     `json:"last_prune_version"`
 }
-
-type TreeDescription = internal.TreeDescription
-type ChangesetDescription = internal.ChangesetDescription
-type CheckpointInfo = internal.CheckpointInfo
 
 func RenderHTML(w io.Writer, desc MultiTreeDescription) error {
 	return descTemplate.Execute(w, desc)
@@ -67,7 +61,7 @@ func rootRetained(cp CheckpointInfo) bool {
 	if rootID.Checkpoint() != cp.Checkpoint {
 		return false // root is from a different checkpoint, can't confirm locally
 	}
-	var nsi internal.NodeSetInfo
+	var nsi NodeSetInfo
 	if rootID.IsLeaf() {
 		nsi = cp.Leaves
 	} else {
@@ -103,8 +97,8 @@ var descTemplate = template.Must(template.New("desc").Funcs(template.FuncMap{
 	"rootRetained": rootRetained,
 	"nodeCount":    nodeCount,
 	"toJSON":       toJSON,
-	"sizeLeaf":     func() int { return int(internal.SizeLeaf) },
-	"sizeBranch":   func() int { return int(internal.SizeBranch) },
+	"sizeLeaf":     func() int { return int(SizeLeaf) },
+	"sizeBranch":   func() int { return int(SizeBranch) },
 }).Parse(`<!DOCTYPE html>
 <html>
 <head>

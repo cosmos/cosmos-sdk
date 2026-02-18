@@ -114,14 +114,16 @@ func NewSimApp(
 		if err != nil {
 			panic(err)
 		}
-		baseAppOptions = append(baseAppOptions, func(bApp *baseapp.BaseApp) {
+		// Prepend so that SetCMS runs before other options (e.g. SetPruning)
+		// that configure the committed multi-store.
+		baseAppOptions = append([]func(*baseapp.BaseApp){func(bApp *baseapp.BaseApp) {
 			dir := filepath.Join(appOpts.Get(flags.FlagHome).(string), "data", "iavlx")
 			db, err := iavl.LoadCommitMultiTree(dir, opts)
 			if err != nil {
 				panic(err)
 			}
 			bApp.SetCMS(db)
-		})
+		}}, baseAppOptions...)
 	} else {
 		fmt.Println("Using iavl/v1")
 	}

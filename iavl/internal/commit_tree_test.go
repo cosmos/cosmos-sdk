@@ -73,15 +73,15 @@ func (s *SimCommitTree) openV2Tree(t interface {
 	sdklog.TestingT
 }) {
 	var err error
-	s.treeV2, err = NewCommitTree(s.dirV2, CommitTreeOptions{Options: Options{
+	s.treeV2, err = NewCommitTree(s.dirV2, TreeOptions{Options: Options{
 		// intentionally choose some small sizes to force checkpoint and eviction behavior
 		ChangesetRolloverSize: 4096,
 		BranchEvictDepth:      2,
 		LeafEvictDepth:        2,
 		CheckpointInterval:    2,
 		// disable caches to simplify testing
-		RootCacheSize:   -1,
-		RootCacheExpiry: -1,
+		RootCacheSize:   0,
+		RootCacheExpiry: 0,
 	}})
 	require.NoError(t, err, "failed to create iavlx tree")
 }

@@ -147,7 +147,7 @@ func preEstimates(
 			}
 			feePayer := sdk.AccAddress(feeTx.FeePayer())
 
-			estimate := make(MultiLocations, 2)
+			var estimate MultiLocations
 
 			if authStore >= 0 {
 				// account key
@@ -169,6 +169,9 @@ func preEstimates(
 							}
 						}
 					}
+					if estimate == nil {
+						estimate = make(MultiLocations, 2)
+					}
 					estimate[authStore] = authEstimate
 				}
 			}
@@ -181,11 +184,14 @@ func preEstimates(
 					collections.Join(feePayer, coinDenom),
 				)
 				if err == nil {
+					if estimate == nil {
+						estimate = make(MultiLocations, 2)
+					}
 					estimate[bankStore] = Locations{balanceKey}
 				}
 			}
 
-			if len(estimate) > 0 {
+			if estimate != nil {
 				estimates[i] = estimate
 			}
 		}

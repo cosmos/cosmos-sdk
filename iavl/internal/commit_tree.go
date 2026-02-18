@@ -12,6 +12,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"cosmossdk.io/log/v2"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
@@ -29,13 +30,13 @@ type CommitTree struct {
 	lastCommitId storetypes.CommitID
 }
 
-func NewCommitTree(dir string, opts TreeOptions) (*CommitTree, error) {
+func NewCommitTree(dir string, opts TreeOptions, logger log.Logger) (*CommitTree, error) {
 	err := os.MkdirAll(dir, 0o700)
 	if err != nil {
 		return nil, fmt.Errorf("creating tree directory: %w", err)
 	}
 
-	treeStore, err := NewTreeStore(dir, opts)
+	treeStore, err := NewTreeStore(dir, opts, logger)
 	if err != nil {
 		return nil, fmt.Errorf("creating tree store: %w", err)
 	}

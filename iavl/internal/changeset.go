@@ -154,7 +154,7 @@ func (ch *Changeset) TryDelete(ctx context.Context) (bool, error) {
 		// readers still active, can't delete yet
 		return false, nil
 	}
-	logger.InfoContext(ctx, "deleting changeset", "dir", ch.files.Dir())
+	ch.treeStore.logger.InfoContext(ctx, "deleting changeset", "dir", ch.files.Dir())
 	return true, ch.files.DeleteFiles()
 }
 
@@ -172,7 +172,7 @@ func (ch *Changeset) VerifyAndFix(autoRepair bool) error {
 			return fmt.Errorf("changeset verification failed and autoRepair is disabled, cannot fix: %w", err)
 		}
 
-		logger.Warn("changeset verification failed, attempting to fix if possible", "dir", ch.files.Dir(), "error", err)
+		ch.treeStore.logger.Warn("changeset verification failed, attempting to fix if possible", "dir", ch.files.Dir(), "error", err)
 
 		// rollback checkpoints.dat
 		cpCount := cr.checkpointsInfo.Count()

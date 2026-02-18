@@ -12,6 +12,7 @@ import (
 
 	corestore "cosmossdk.io/core/store"
 	sdklog "cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	iavl1 "github.com/cosmos/iavl"
 	dbm "github.com/cosmos/iavl/db"
 	"github.com/stretchr/testify/require"
@@ -83,7 +84,7 @@ func (s *SimCommitTree) openV2Tree(t interface {
 		RootCacheSize: 0,
 		// we should never have any checkpoint errors during testing!
 		DisableAutoRepair: true,
-	}})
+	}}, log.NewTestLogger(t))
 	require.NoError(t, err, "failed to create iavlx tree")
 }
 

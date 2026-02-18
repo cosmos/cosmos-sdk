@@ -15,6 +15,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"cosmossdk.io/log/v2"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
@@ -52,6 +53,7 @@ type CommitMultiTree struct {
 	pruningActive  atomic.Bool
 	pruningDone    chan struct{}
 	pruningOptions pruningtypes.PruningOptions
+	logger         log.Logger
 }
 
 func (db *CommitMultiTree) EarliestVersion() int64 {
@@ -262,20 +264,20 @@ func (db *multiTreeFinalizer) writeCommitInfo(headerDone chan error) {
 		n := binary.PutUvarint(scratchBuf[:], hashLen)
 		_, err := file.Write(scratchBuf[:n])
 		if err != nil {
-			logger.Error("failed to write commit info store info hash length", "error", err)
+			db.logger.Error("failed to write commit info store info hash length", "error", err)
 			return
 		}
 
 		_, err = file.Write(storeInfo.CommitId.Hash)
 		if err != nil {
-			logger.Error("failed to write commit info store info hash", "error", err)
+			db.logger.Error("failed to write commit info store info hash", "error", err)
 			return
 		}
 	}
 
 	err = file.Close()
 	if err != nil {
-		logger.Error("failed to close commit info file after writing hashes", "error", err)
+		db.logger.Error("failed to close commit info file after writing hashes", "error", err)
 		return
 	}
 }
@@ -649,12 +651,12 @@ func (db *CommitMultiTree) GetCommitKVStore(storetypes.StoreKey) storetypes.Comm
 }
 
 func (db *CommitMultiTree) SetTracer(io.Writer) storetypes.MultiStore {
-	logger.Warn("SetTracer is not implemented for CommitMultiTree")
+	db.logger.Warn("SetTracer is not implemented for CommitMultiTree")
 	return db
 }
 
 func (db *CommitMultiTree) SetTracingContext(storetypes.TraceContext) storetypes.MultiStore {
-	logger.Warn("SetTracingContext is not implemented for CommitMultiTree")
+	db.logger.Warn("SetTracingContext is not implemented for CommitMultiTree")
 	return db
 }
 
@@ -667,11 +669,11 @@ func (db *CommitMultiTree) Snapshot(height uint64, protoWriter protoio.Writer) e
 }
 
 func (db *CommitMultiTree) PruneSnapshotHeight(height int64) {
-	logger.Warn("PruneSnapshotHeight is not implemented for CommitMultiTree")
+	db.logger.Warn("PruneSnapshotHeight is not implemented for CommitMultiTree")
 }
 
 func (db *CommitMultiTree) SetSnapshotInterval(snapshotInterval uint64) {
-	logger.Warn("SetSnapshotInterval is not implemented for CommitMultiTree")
+	db.logger.Warn("SetSnapshotInterval is not implemented for CommitMultiTree")
 }
 
 func (db *CommitMultiTree) Restore(height uint64, format uint32, protoReader protoio.Reader) (snapshottypes.SnapshotItem, error) {
@@ -751,7 +753,7 @@ func (db *CommitMultiTree) loadStore(key storetypes.StoreKey, typ storetypes.Sto
 			Options:         db.opts,
 			TreeName:        key.Name(),
 			ExpectedVersion: uint32(expectedVersion),
-		})
+		}, db.logger.With("store", key.Name()))
 		if err != nil {
 			return nil, fmt.Errorf("failed to load CommitTree for store %s: %w", key.Name(), err)
 		}
@@ -795,7 +797,7 @@ func (db *CommitMultiTree) LoadVersion(ver int64) error {
 }
 
 func (db *CommitMultiTree) SetInterBlockCache(cache storetypes.MultiStorePersistentCache) {
-	logger.Warn("SetInterBlockCache is not implemented for CommitMultiTree")
+	db.logger.Warn("SetInterBlockCache is not implemented for CommitMultiTree")
 }
 
 func (db *CommitMultiTree) SetInitialVersion(version int64) error {
@@ -813,12 +815,12 @@ func (db *CommitMultiTree) RollbackToVersion(version int64) error {
 }
 
 func (db *CommitMultiTree) ListeningEnabled(key storetypes.StoreKey) bool {
-	logger.Warn("ListeningEnabled is not implemented for CommitMultiTree")
+	db.logger.Warn("ListeningEnabled is not implemented for CommitMultiTree")
 	return false
 }
 
 func (db *CommitMultiTree) AddListeners(keys []storetypes.StoreKey) {
-	logger.Warn("AddListeners is not implemented for CommitMultiTree")
+	db.logger.Warn("AddListeners is not implemented for CommitMultiTree")
 }
 
 func (db *CommitMultiTree) PopStateCache() []*storetypes.StoreKVPair {
@@ -827,15 +829,16 @@ func (db *CommitMultiTree) PopStateCache() []*storetypes.StoreKVPair {
 }
 
 func (db *CommitMultiTree) SetMetrics(metrics metrics.StoreMetrics) {
-	logger.Warn("SetMetrics is not implemented for CommitMultiTree")
+	db.logger.Warn("SetMetrics is not implemented for CommitMultiTree")
 }
 
-func LoadCommitMultiTree(path string, opts Options) (*CommitMultiTree, error) {
+func LoadCommitMultiTree(path string, opts Options, logger log.Logger) (*CommitMultiTree, error) {
 	db := &CommitMultiTree{
 		dir:            path,
 		opts:           opts,
 		storesByKey:    make(map[storetypes.StoreKey]int),
 		pruningOptions: pruningtypes.NewPruningOptions(pruningtypes.PruningNothing),
+		logger:         logger,
 	}
 	return db, nil
 }
@@ -877,7 +880,7 @@ func (db *CommitMultiTree) CacheWrap() storetypes.CacheWrap {
 }
 
 func (db *CommitMultiTree) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) storetypes.CacheWrap {
-	logger.Warn("CacheWrapWithTrace is not implemented for CommitMultiTree; falling back to CacheWrap")
+	db.logger.Warn("CacheWrapWithTrace is not implemented for CommitMultiTree; falling back to CacheWrap")
 	return db.CacheWrap()
 }
 
@@ -973,7 +976,7 @@ func (db *CommitMultiTree) pruneNow(ctx context.Context, retainVersion uint64) {
 
 	err := deleteOldCommitInfos(db.dir, retainVersion)
 	if err != nil {
-		logger.Error(fmt.Sprintf("failed to delete old commit info files: %v", err))
+		db.logger.Error(fmt.Sprintf("failed to delete old commit info files: %v", err))
 	}
 
 	for _, si := range db.iavlStores {
@@ -984,12 +987,12 @@ func (db *CommitMultiTree) pruneNow(ctx context.Context, retainVersion uint64) {
 		)
 		ct, ok := si.store.(*CommitTree)
 		if !ok {
-			logger.Error(fmt.Sprintf("store %s is not a CommitTree, cannot prune", si.key.Name()))
+			db.logger.Error(fmt.Sprintf("store %s is not a CommitTree, cannot prune", si.key.Name()))
 			continue
 		}
 		err := ct.prune(ctx, uint32(retainVersion))
 		if err != nil {
-			logger.Error(fmt.Sprintf("failed to prune store %s: %v", si.key.Name(), err))
+			db.logger.Error(fmt.Sprintf("failed to prune store %s: %v", si.key.Name(), err))
 			continue
 		}
 		span.End()

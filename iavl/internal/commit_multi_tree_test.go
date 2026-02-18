@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	sdklog "cosmossdk.io/log/v2"
+	"cosmossdk.io/log/v2"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
@@ -27,7 +27,7 @@ func TestCommitMultiTree_Reload(t *testing.T) {
 	testStoreKey := store.NewKVStoreKey("test")
 	loadDb := func() {
 		var err error
-		db, err = LoadCommitMultiTree(dir, Options{})
+		db, err = LoadCommitMultiTree(dir, Options{}, log.NewTestLogger(t))
 		require.NoError(t, err)
 		db.MountStoreWithDB(testStoreKey, store.StoreTypeIAVL, nil)
 		require.NoError(t, db.LoadLatestVersion())
@@ -89,9 +89,8 @@ func TestCommitMultiTreeSims(t *testing.T) {
 }
 
 func testCommitMultiTreeSims(t *rapid.T, iter int, opts Options, pruningOpts pruningtypes.PruningOptions) {
-	logger := sdklog.NewNopLogger()
 	dbV1 := dbm.NewMemDB()
-	mtV1 := rootmulti.NewStore(dbV1, logger, storemetrics.NewNoOpMetrics())
+	mtV1 := rootmulti.NewStore(dbV1, log.NewNopLogger(), storemetrics.NewNoOpMetrics())
 
 	dataDir := fmt.Sprintf("testdata/iavl-data/run-%d", iter)
 	require.NoError(t, os.MkdirAll(dataDir, 0o755), "failed to create data directory")
@@ -175,7 +174,7 @@ type SimCommitMultiTree struct {
 
 func (sim *SimCommitMultiTree) openV2Tree(t *rapid.T) {
 	var err error
-	sim.mtV2, err = LoadCommitMultiTree(sim.dirV2, sim.opts)
+	sim.mtV2, err = LoadCommitMultiTree(sim.dirV2, sim.opts, log.NewTestLogger(t))
 	// we explicitly do not set pruning options here because we run pruning synchronously in the test when needed for determinism
 	require.NoError(t, err, "failed to create iavlx commit multi tree")
 	sim.mountStores(sim.mtV2)

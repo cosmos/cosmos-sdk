@@ -445,3 +445,108 @@ func TestQueryGroups(t *testing.T) {
 		})
 	}
 }
+
+func TestQueryGroupMembersWithPagination(t *testing.T) {
+	fixture := initKeeper(t)
+
+	testCases := []struct {
+		name         string
+		req          group.QueryGroupMembersRequest
+		expLen       int
+		itemsPerPage uint64
+	}{
+		{
+			name:         "valid group, limit 1",
+			req:          group.QueryGroupMembersRequest{GroupId: 1, Pagination: &query.PageRequest{Limit: 1}},
+			expLen:       1,
+			itemsPerPage: 1,
+		},
+		{
+			name:         "valid group, limit 10",
+			req:          group.QueryGroupMembersRequest{GroupId: 1, Pagination: &query.PageRequest{Limit: 10}},
+			expLen:       2,
+			itemsPerPage: 10,
+		},
+		{
+			name:   "valid group, no pagination",
+			req:    group.QueryGroupMembersRequest{GroupId: 1},
+			expLen: 2,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			resp, err := fixture.queryClient.GroupMembers(fixture.ctx, &tc.req)
+			require.NoError(t, err)
+			require.Len(t, resp.Members, tc.expLen)
+		})
+	}
+}
+
+func TestQueryGroupPoliciesByGroupWithPagination(t *testing.T) {
+	fixture := initKeeper(t)
+
+	testCases := []struct {
+		name   string
+		req    group.QueryGroupPoliciesByGroupRequest
+		expLen int
+	}{
+		{
+			name:   "valid group, limit 1",
+			req:    group.QueryGroupPoliciesByGroupRequest{GroupId: 1, Pagination: &query.PageRequest{Limit: 1}},
+			expLen: 1,
+		},
+		{
+			name:   "valid group, no pagination",
+			req:    group.QueryGroupPoliciesByGroupRequest{GroupId: 1},
+			expLen: 1,
+		},
+		{
+			name:   "unexisting group",
+			req:    group.QueryGroupPoliciesByGroupRequest{GroupId: 99},
+			expLen: 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			resp, err := fixture.keeper.GroupPoliciesByGroup(fixture.ctx, &tc.req)
+			require.NoError(t, err)
+			require.Len(t, resp.GroupPolicies, tc.expLen)
+		})
+	}
+}
+
+func TestQueryGroupsByAdminWithPagination(t *testing.T) {
+	fixture := initKeeper(t)
+
+	testCases := []struct {
+		name   string
+		req    group.QueryGroupsByAdminRequest
+		expLen int
+	}{
+		{
+			name:   "valid admin, limit 1",
+			req:    group.QueryGroupsByAdminRequest{Admin: fixture.addrs[0].String(), Pagination: &query.PageRequest{Limit: 1}},
+			expLen: 1,
+		},
+		{
+			name:   "valid admin, no pagination",
+			req:    group.QueryGroupsByAdminRequest{Admin: fixture.addrs[0].String()},
+			expLen: 1,
+		},
+		{
+			name:   "admin with no groups",
+			req:    group.QueryGroupsByAdminRequest{Admin: fixture.addrs[5].String()},
+			expLen: 0,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			resp, err := fixture.queryClient.GroupsByAdmin(fixture.ctx, &tc.req)
+			require.NoError(t, err)
+			require.Len(t, resp.Groups, tc.expLen)
+		})
+	}
+}

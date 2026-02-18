@@ -1395,3 +1395,130 @@ func (s *CLITestSuite) TestTxWithdrawProposal() {
 		})
 	}
 }
+
+func (s *CLITestSuite) TestTxLeaveGroup() {
+	accounts := testutil.CreateKeyringAccounts(s.T(), s.kr, 2)
+
+	cmd := cli.MsgLeaveGroupCmd()
+	cmd.SetOut(io.Discard)
+
+	ctx := svrcmd.CreateExecuteContext(context.Background())
+	cmd.SetContext(ctx)
+	s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))
+
+	// Create a group with 2 members so one can leave (group must have at least 1 member)
+	validMembers := fmt.Sprintf(`{"members": [{
+		"address": "%s",
+		"weight": "1",
+		"metadata": "%s"
+	}, {
+		"address": "%s",
+		"weight": "1",
+		"metadata": "%s"
+	}]}`, accounts[0].Address.String(), validMetadata, accounts[1].Address.String(), validMetadata)
+	validMembersFile := testutil.WriteToNewTempFile(s.T(), validMembers)
+
+	_, err := clitestutil.ExecTestCLICmd(s.baseCtx, cli.MsgCreateGroupCmd(),
+		append(
+			[]string{
+				accounts[0].Address.String(),
+				validMetadata,
+				validMembersFile.Name(),
+			},
+			s.commonFlags...,
+		),
+	)
+	s.Require().NoError(err)
+
+	// SetupSuite creates group 1; this creates group 2
+	groupID := "2"
+
+	testCases := []struct {
+		name         string
+		ctxGen       func() client.Context
+		args         []string
+		expCmdOutput string
+		expectErrMsg string
+	}{
+		{
+			"correct data - member leaves group",
+			func() client.Context {
+				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
+				c := clitestutil.NewMockCometRPC(abci.ResponseQuery{
+					Value: bz,
+				})
+				return s.baseCtx.WithClient(c)
+			},
+			append(
+				[]string{
+					accounts[1].Address.String(),
+					groupID,
+				},
+				s.commonFlags...,
+			),
+			fmt.Sprintf("%s %s", accounts[1].Address.String(), groupID),
+			"",
+		},
+		{
+			"group id invalid",
+			func() client.Context {
+				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
+				c := clitestutil.NewMockCometRPC(abci.ResponseQuery{
+					Value: bz,
+				})
+				return s.baseCtx.WithClient(c)
+			},
+			append(
+				[]string{
+					accounts[1].Address.String(),
+					"0",
+				},
+				s.commonFlags...,
+			),
+			fmt.Sprintf("%s %s", accounts[1].Address.String(), "0"),
+			"group id cannot be 0",
+		},
+		{
+			"invalid member address",
+			func() client.Context {
+				bz, _ := s.encCfg.Codec.Marshal(&sdk.TxResponse{})
+				c := clitestutil.NewMockCometRPC(abci.ResponseQuery{
+					Value: bz,
+				})
+				return s.baseCtx.WithClient(c)
+			},
+			append(
+				[]string{
+					"invalidaddr",
+					groupID,
+				},
+				s.commonFlags...,
+			),
+			fmt.Sprintf("%s %s", "invalidaddr", groupID),
+			"key not found",
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			ctx := svrcmd.CreateExecuteContext(context.Background())
+			cmd.SetContext(ctx)
+			cmd.SetArgs(tc.args)
+			s.Require().NoError(client.SetCmdClientContextHandler(s.baseCtx, cmd))
+
+			if len(tc.args) != 0 {
+				s.Require().Contains(fmt.Sprint(cmd), tc.expCmdOutput)
+			}
+
+			out, err := clitestutil.ExecTestCLICmd(s.baseCtx, cmd, tc.args)
+			if tc.expectErrMsg != "" {
+				s.Require().Error(err)
+				s.Require().Contains(out.String(), tc.expectErrMsg)
+			} else {
+				s.Require().NoError(err)
+				msg := &sdk.TxResponse{}
+				s.Require().NoError(s.baseCtx.Codec.UnmarshalJSON(out.Bytes(), msg), out.String())
+			}
+		})
+	}
+}

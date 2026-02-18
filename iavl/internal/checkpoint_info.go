@@ -47,7 +47,7 @@ type NodeSetInfo struct {
 
 func (cp *CheckpointInfo) ComputeCRC32() uint32 {
 	data := unsafe.Slice((*byte)(unsafe.Pointer(cp)), CheckpointInfoSize)
-	return crc32.ChecksumIEEE(data[:CheckpointInfoSize-4]) // exclude CRC32 field itself
+	return crc32.ChecksumIEEE(data[:CheckpointInfoSize-8]) // exclude CRC32 field and padding
 }
 
 func (cp *CheckpointInfo) SetCRC32() {

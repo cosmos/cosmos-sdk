@@ -67,7 +67,7 @@ func (ts *TreeStore) load() error {
 
 		logger.DebugContext(ctx, "loading changeset", "startVersion", startVersion, "dir", dirName)
 
-		cs, err := OpenChangeset(ts, dirName)
+		cs, err := OpenChangeset(ts, dirName, !ts.opts.DisableAutoRepair)
 		if err != nil {
 			return fmt.Errorf("failed to open changeset in %s: %w", dirName, err)
 		}
@@ -137,7 +137,7 @@ func (ts *TreeStore) load() error {
 
 	root := cpInfo.Root
 	version := cpInfo.Version
-	if version > ts.opts.ExpectedVersion {
+	if ts.opts.ExpectedVersion != 0 && version > ts.opts.ExpectedVersion {
 		return fmt.Errorf("latest checkpoint version %d is greater than expected version %d, this indicates data corruptions", version, ts.opts.ExpectedVersion)
 	}
 

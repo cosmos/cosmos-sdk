@@ -27,17 +27,19 @@ func ReplayWALForStartup(ctx context.Context, root *NodePointer, walFile *os.Fil
 		if entry.Version <= uint64(rootVersion) {
 			continue
 		}
-		if entry.Version == uint64(expectedVersion)+1 {
-			// we will need to rollback these entries but this isn't an error quite yet
-			if rollbackOffset == 0 {
-				rollbackOffset = entry.Offset
+		if expectedVersion != 0 {
+			if entry.Version == uint64(expectedVersion)+1 {
+				// we will need to rollback these entries but this isn't an error quite yet
+				if rollbackOffset == 0 {
+					rollbackOffset = entry.Offset
+				}
+				continue
 			}
-			continue
-		}
-		if entry.Version > uint64(expectedVersion)+1 {
-			// this means we've gone more than 1 version beyond the expected version
-			// this is an unrecoverable error (some unexpected data corruption)
-			return nil, 0, fmt.Errorf("WAL commit version %d is more than 1 version beyond expected version %d, WAL is corrupted", entry.Version, expectedVersion)
+			if entry.Version > uint64(expectedVersion)+1 {
+				// this means we've gone more than 1 version beyond the expected version
+				// this is an unrecoverable error (some unexpected data corruption)
+				return nil, 0, fmt.Errorf("WAL commit version %d is more than 1 version beyond expected version %d, WAL is corrupted", entry.Version, expectedVersion)
+			}
 		}
 
 		root, err = applyWalEntry(entry, root, rootVersion)

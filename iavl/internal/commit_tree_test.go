@@ -80,8 +80,9 @@ func (s *SimCommitTree) openV2Tree(t interface {
 		LeafEvictDepth:        2,
 		CheckpointInterval:    2,
 		// disable caches to simplify testing
-		RootCacheSize:   0,
-		RootCacheExpiry: 0,
+		RootCacheSize: 0,
+		// we should never have any checkpoint errors during testing!
+		DisableAutoRepair: true,
 	}})
 	require.NoError(t, err, "failed to create iavlx tree")
 }

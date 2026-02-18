@@ -33,7 +33,7 @@ func NewChangeset(treeStore *TreeStore, files *ChangesetFiles) (*Changeset, erro
 }
 
 // OpenChangeset opens existing changeset files in the given directory.
-func OpenChangeset(treeStore *TreeStore, dir string) (*Changeset, error) {
+func OpenChangeset(treeStore *TreeStore, dir string, autoRepair bool) (*Changeset, error) {
 	files, err := OpenChangesetFiles(dir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open changeset files: %w", err)
@@ -46,7 +46,7 @@ func OpenChangeset(treeStore *TreeStore, dir string) (*Changeset, error) {
 	// otherwise the compactor will skip it
 	cs.sealed.Store(true)
 	// TODO if this verification check ends up being expensive we can instead verify only the last changeset when loading the tree store, but it shouldn't be a problem to do this for every changeset
-	err = cs.VerifyAndFix() // attempt to fix any issues with the changeset before we start using it
+	err = cs.VerifyAndFix(autoRepair) // attempt to fix any issues with the changeset before we start using it
 	if err != nil {
 		return nil, fmt.Errorf("failed to verify and fix changeset: %w", err)
 	}
@@ -159,7 +159,7 @@ func (ch *Changeset) TryDelete(ctx context.Context) (bool, error) {
 }
 
 // VerifyAndFix performs integrity checks on the changeset data and attempts to fix any issues that it can.
-func (ch *Changeset) VerifyAndFix() error {
+func (ch *Changeset) VerifyAndFix(autoRepair bool) error {
 	cr, pin := ch.TryPinUncompactedReader()
 	defer pin.Unpin()
 	if cr == nil {
@@ -168,6 +168,10 @@ func (ch *Changeset) VerifyAndFix() error {
 
 	err := cr.Verify()
 	if err != nil {
+		if !autoRepair {
+			return fmt.Errorf("changeset verification failed and autoRepair is disabled, cannot fix: %w", err)
+		}
+
 		logger.Warn("changeset verification failed, attempting to fix if possible", "dir", ch.files.Dir(), "error", err)
 
 		// rollback checkpoints.dat

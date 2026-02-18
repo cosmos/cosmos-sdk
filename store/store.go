@@ -10,7 +10,7 @@ import (
 	"cosmossdk.io/store/types"
 )
 
-func NewCommitMultiStore(db dbm.DB, logger log.Logger, metricGatherer metrics.StoreMetrics) types.CommitMultiStore {
+func NewCommitMultiStore(db dbm.DB, logger log.Logger, metricGatherer metrics.StoreMetrics) types.CommitMultiStore2 {
 	return rootmulti.NewStore(db, logger, metricGatherer)
 }
 

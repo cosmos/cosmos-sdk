@@ -54,7 +54,7 @@ type (
 		RegisterNodeService(client.Context, config.Config)
 
 		// CommitMultiStore returns the multistore instance
-		CommitMultiStore() storetypes.CommitMultiStore
+		CommitMultiStore() storetypes.CommitMultiStore2
 
 		// SnapshotManager returns the snapshot manager
 		SnapshotManager() *snapshots.Manager

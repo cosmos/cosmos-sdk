@@ -9,7 +9,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"cosmossdk.io/store/rootmulti"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -58,10 +57,7 @@ func getModuleHashesAtHeight(svrCtx *Context, appCreator types.AppCreator, heigh
 		return nil, fmt.Errorf("error opening DB, make sure daemon is not running when calling this query: %w", err)
 	}
 	app := appCreator(svrCtx.Logger, db, nil, svrCtx.Viper)
-	rms, ok := app.CommitMultiStore().(*rootmulti.Store)
-	if !ok {
-		return nil, fmt.Errorf("expected rootmulti.Store, got %T", app.CommitMultiStore())
-	}
+	rms := app.CommitMultiStore()
 
 	commitInfoForHeight, err := rms.GetCommitInfo(height)
 	if err != nil {

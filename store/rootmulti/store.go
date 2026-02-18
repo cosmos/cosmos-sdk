@@ -1,6 +1,7 @@
 package rootmulti
 
 import (
+	"context"
 	"crypto/sha256"
 	"errors"
 	"fmt"
@@ -85,7 +86,7 @@ type Store struct {
 }
 
 var (
-	_ types.CommitMultiStore          = (*Store)(nil)
+	_ types.CommitMultiStore2         = (*Store)(nil)
 	_ types.Queryable                 = (*Store)(nil)
 	_ snapshottypes.SnapshotAnnouncer = (*Store)(nil)
 )
@@ -1341,4 +1342,54 @@ func flushLatestVersion(batch dbm.Batch, version int64) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (rs *Store) StartCommit(ctx context.Context, store types.MultiStore, header cmtproto.Header) (types.CommitFinalizer, error) {
+	rs.SetCommitHeader(header)
+	return &commitFinalizer{
+		ctx:        ctx,
+		rs:         rs,
+		cacheStore: store,
+		header:     header,
+	}, nil
+}
+
+type commitFinalizer struct {
+	ctx        context.Context
+	rs         *Store
+	cacheStore types.MultiStore
+	header     cmtproto.Header
+	hash       types.CommitID
+}
+
+func (c *commitFinalizer) SignalFinalize() error {
+	return nil
+}
+
+func (c *commitFinalizer) PrepareFinalize() (types.CommitID, error) {
+	if err := c.ctx.Err(); err != nil {
+		// context cancelled or timed out
+		return types.CommitID{}, err
+	}
+	if c.hash.Hash != nil {
+		return c.hash, nil
+	}
+	// write the cache store to get the working hash
+	c.cacheStore.(types.CacheMultiStore).Write()
+	c.hash.Hash = c.rs.WorkingHash()
+	return c.hash, nil
+}
+
+func (c *commitFinalizer) Rollback() error {
+	// nothing to do as we only start commiting when PrepareFinalize() or Finalize() is called
+	return nil
+}
+
+func (c *commitFinalizer) Finalize() (types.CommitID, error) {
+	if c.hash.Hash == nil {
+		if _, err := c.PrepareFinalize(); err != nil {
+			return types.CommitID{}, err
+		}
+	}
+	return c.rs.Commit(), nil
 }

@@ -72,8 +72,8 @@ func (app *BaseApp) NewContext(isCheckTx bool) sdk.Context {
 	return app.NewContextLegacy(isCheckTx, cmtproto.Header{})
 }
 
-func (app *BaseApp) NewUncachedContext(isCheckTx bool, header cmtproto.Header) sdk.Context {
-	return sdk.NewContext(app.cms, header, isCheckTx, app.logger)
+func (app *BaseApp) NewCachedContext(isCheckTx bool, header cmtproto.Header) sdk.Context {
+	return sdk.NewContext(app.cms.CacheMultiStore(), header, isCheckTx, app.logger)
 }
 
 func (app *BaseApp) GetContextForFinalizeBlock(txBytes []byte) sdk.Context {

@@ -517,8 +517,8 @@ func TestCacheWraps(t *testing.T) {
 	store := dbadapter.Store{DB: db}
 
 	cacheWrapper := store.CacheWrap()
-	require.IsType(t, &cachekv.Store{}, cacheWrapper)
+	require.IsType(t, &cachekv.GStore{}, cacheWrapper)
 
 	cacheWrappedWithTrace := store.CacheWrapWithTrace(nil, nil)
-	require.IsType(t, &cachekv.Store{}, cacheWrappedWithTrace)
+	require.IsType(t, &cachekv.GStore{}, cacheWrappedWithTrace)
 }

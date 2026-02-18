@@ -7,16 +7,16 @@ import (
 
 // NodePointer is a pointer to a Node, which may be either in-memory, on-disk or both.
 type NodePointer struct {
-	mem atomic.Pointer[MemNode]
-	// changeset *Changeset // commented to satisfy linter, will uncomment in a future PR when we wire it up
-	fileIdx uint32 // absolute index in file, 1-based, zero means we don't have an offset
-	id      NodeID
+	Mem       atomic.Pointer[MemNode]
+	changeset *Changeset
+	fileIdx   uint32 // absolute index in file, 1-based, zero means we don't have an offset
+	id        NodeID
 }
 
 // NewNodePointer creates a new NodePointer pointing to the given in-memory node.
 func NewNodePointer(memNode *MemNode) *NodePointer {
 	n := &NodePointer{}
-	n.mem.Store(memNode)
+	n.Mem.Store(memNode)
 	return n
 }
 
@@ -32,11 +32,40 @@ func NewNodePointer(memNode *MemNode) *NodePointer {
 //	    // handle error
 //	}
 func (p *NodePointer) Resolve() (Node, Pin, error) {
-	mem := p.mem.Load()
+	mem := p.Mem.Load()
 	if mem != nil {
-		return mem, NoopPin{}, nil
+		return mem, Pin{}, nil
 	}
-	return nil, NoopPin{}, fmt.Errorf("node not in memory and on-disk loading will be implemented in a future PR")
+	if p.fileIdx != 0 {
+		rdr, pin := p.changeset.TryPinUncompactedReader()
+		if rdr != nil {
+			node, err := rdr.ResolveByFileIndex(p.id, p.fileIdx)
+			return node, pin, err
+		} else {
+			compacted := p.changeset.Compacted()
+			if compacted == nil {
+				return nil, Pin{}, fmt.Errorf("unable to pin ChangesetReader for checkpoint %d, no compaction found", p.id.Checkpoint())
+			}
+			rdr, pin := compacted.TryPinReader()
+			if rdr != nil {
+				node, err := rdr.ResolveByID(p.id)
+				return node, pin, err
+			}
+			return nil, Pin{}, fmt.Errorf("unable to pin ChangesetReader for checkpoint %d, likely it has been closed and can't be reopened", p.id.Checkpoint())
+		}
+	} else {
+		cs := p.changeset.TreeStore().ChangesetForCheckpoint(p.id.Checkpoint())
+		if cs == nil {
+			return nil, Pin{}, fmt.Errorf("unable to find Changeset for checkpoint %d", p.id.Checkpoint())
+		}
+		rdr, pin := cs.TryPinReader()
+		if rdr != nil {
+			node, err := rdr.ResolveByID(p.id)
+			return node, pin, err
+		} else {
+			return nil, Pin{}, fmt.Errorf("unable to pin ChangesetReader for checkpoint %d, likely it has been closed and can't be reopened", p.id.Checkpoint())
+		}
+	}
 }
 
 // String implements the fmt.Stringer interface.

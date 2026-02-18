@@ -14,7 +14,7 @@ import (
 
 type MockContext struct {
 	db    *dbm.MemDB
-	store storetypes.CommitMultiStore
+	store storetypes.CommitMultiStore2
 }
 
 func NewMockContext() *MockContext {

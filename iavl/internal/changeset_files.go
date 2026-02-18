@@ -15,25 +15,23 @@ type ChangesetFiles struct {
 	dir          string
 	treeDir      string
 	startVersion uint32
+	endVersion   uint32 // 0 if original changeset
 	compactedAt  uint32
 
-	kvDataFile   *os.File
-	branchesFile *os.File
-	leavesFile   *os.File
-	versionsFile *os.File
-	orphansFile  *os.File
-	infoFile     *os.File
-	info         *ChangesetInfo
+	walFile         *os.File
+	kvDataFile      *os.File
+	branchesFile    *os.File
+	leavesFile      *os.File
+	checkpointsFile *os.File
+	orphansFile     *os.File
 
 	closed bool
 }
 
 // CreateChangesetFiles creates a new changeset directory and files that are ready to be written to.
 // If compactedAt is 0, the changeset is considered original and uncompacted.
-// If compactedAt is greater than 0, the changeset is considered compacted and a pending marker file
-// will be created to indicate that the changeset is not yet ready for use.
-// This pending marker file must be removed once the compaction is fully complete by calling MarkReady,
-// otherwise the changeset will be considered incomplete and deleted at the next startup.
+// If compactedAt is greater than 0, the changeset is considered compacted and will be suffixed with -tmp
+// until MarkReady is called.
 func CreateChangesetFiles(treeDir string, startVersion, compactedAt uint32) (*ChangesetFiles, error) {
 	// ensure absolute path
 	var err error
@@ -44,23 +42,13 @@ func CreateChangesetFiles(treeDir string, startVersion, compactedAt uint32) (*Ch
 
 	dirName := fmt.Sprintf("%d", startVersion)
 	if compactedAt > 0 {
-		dirName = fmt.Sprintf("%d.%d", startVersion, compactedAt)
+		dirName = fmt.Sprintf("%d.%d-tmp", startVersion, compactedAt)
 	}
 	dir := filepath.Join(treeDir, dirName)
 
-	if err := os.Mkdir(dir, 0o755); err != nil {
-		if errors.Is(err, os.ErrExist) {
-			return nil, fmt.Errorf("changeset dir %s already exists; remove it before creating a new changeset", dir)
-		}
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		// TODO consider erroring if the directory already exists, but for now this could happen if we closed right after rolling over and it would just be an empty dir and not a bug
 		return nil, fmt.Errorf("failed to create changeset dir: %w", err)
-	}
-
-	// create pending marker file for compacted changesets
-	if compactedAt > 0 {
-		err := os.WriteFile(pendingFilename(dir), []byte{}, 0o600)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create pending marker file for compacted changeset: %w", err)
-		}
 	}
 
 	cr := &ChangesetFiles{
@@ -74,6 +62,7 @@ func CreateChangesetFiles(treeDir string, startVersion, compactedAt uint32) (*Ch
 	if err != nil {
 		return nil, fmt.Errorf("failed to open changeset files: %w", err)
 	}
+
 	return cr, nil
 }
 
@@ -83,7 +72,7 @@ const writeModeFlags = os.O_RDWR | os.O_CREATE | os.O_APPEND
 // All files are opened in readonly mode, except for orphans.dat and info.dat which are opened in read-write mode
 // to track orphan data and statistics.
 func OpenChangesetFiles(dirName string) (*ChangesetFiles, error) {
-	startVersion, compactedAt, valid := ParseChangesetDirName(filepath.Base(dirName))
+	startVersion, endVersion, compactedAt, valid := ParseChangesetDirName(filepath.Base(dirName))
 	if !valid {
 		return nil, fmt.Errorf("invalid changeset dir name: %s", dirName)
 	}
@@ -99,6 +88,7 @@ func OpenChangesetFiles(dirName string) (*ChangesetFiles, error) {
 		dir:          dir,
 		treeDir:      treeDir,
 		startVersion: startVersion,
+		endVersion:   endVersion,
 		compactedAt:  compactedAt,
 	}
 
@@ -113,8 +103,14 @@ func OpenChangesetFiles(dirName string) (*ChangesetFiles, error) {
 func (cr *ChangesetFiles) open(mode int) error {
 	var err error
 
-	kvFile := filepath.Join(cr.dir, "kv.dat")
-	cr.kvDataFile, err = os.OpenFile(kvFile, mode, 0o600)
+	walPath := filepath.Join(cr.dir, "wal.log")
+	cr.walFile, err = os.OpenFile(walPath, mode, 0o600)
+	if err != nil {
+		return fmt.Errorf("failed to open WAL data file: %w", err)
+	}
+
+	kvPath := filepath.Join(cr.dir, "kv.dat")
+	cr.kvDataFile, err = os.OpenFile(kvPath, mode, 0o600)
 	if err != nil {
 		return fmt.Errorf("failed to open KV data file: %w", err)
 	}
@@ -131,10 +127,10 @@ func (cr *ChangesetFiles) open(mode int) error {
 		return fmt.Errorf("failed to open branches data file: %w", err)
 	}
 
-	versionsPath := filepath.Join(cr.dir, "versions.dat")
-	cr.versionsFile, err = os.OpenFile(versionsPath, mode, 0o600)
+	checkpointsPath := filepath.Join(cr.dir, "checkpoints.dat")
+	cr.checkpointsFile, err = os.OpenFile(checkpointsPath, mode, 0o600)
 	if err != nil {
-		return fmt.Errorf("failed to open versions data file: %w", err)
+		return fmt.Errorf("failed to open checkpoints data file: %w", err)
 	}
 
 	orphansPath := filepath.Join(cr.dir, "orphans.dat")
@@ -143,53 +139,54 @@ func (cr *ChangesetFiles) open(mode int) error {
 		return fmt.Errorf("failed to open orphans data file: %w", err)
 	}
 
-	infoPath := filepath.Join(cr.dir, "info.dat")
-	cr.infoFile, err = os.OpenFile(infoPath, os.O_RDWR|os.O_CREATE, 0o600) // info file uses random access, not append
-	if err != nil {
-		return fmt.Errorf("failed to open changeset info file: %w", err)
-	}
-
-	cr.info, err = ReadChangesetInfo(cr.infoFile)
-	if err != nil {
-		return fmt.Errorf("failed to read changeset info: %w", err)
-	}
-
 	return nil
 }
 
-// ParseChangesetDirName parses a changeset directory name and returns the start version and compacted at version.
+// ParseChangesetDirName parses a changeset directory name and returns the start version,
+// and end version plus compacted at version (if these are available).
 // If the directory name is invalid, valid will be false.
-// If a changeset is original and uncompacted, compactedAt will be 0.
-func ParseChangesetDirName(dirName string) (startVersion, compactedAt uint32, valid bool) {
+// If a changeset is original and uncompacted, endVersion and compactedAt will be 0.
+func ParseChangesetDirName(dirName string) (startVersion, endVersion, compactedAt uint32, valid bool) {
 	var err error
 	var v uint64
 	// if no dot, it's an original changeset
 	if !strings.Contains(dirName, ".") {
 		v, err = strconv.ParseUint(dirName, 10, 32)
 		if err != nil {
-			return 0, 0, false
+			return 0, 0, 0, false
 		}
-		return uint32(v), 0, true
+		return uint32(v), 0, 0, true
 	}
 
 	parts := strings.Split(dirName, ".")
 	if len(parts) != 2 {
-		return 0, 0, false
+		return 0, 0, 0, false
 	}
 
-	v, err = strconv.ParseUint(parts[0], 10, 32)
+	spanParts := strings.Split(parts[0], "-")
+	if len(spanParts) != 2 {
+		return 0, 0, 0, false
+	}
+
+	v, err = strconv.ParseUint(spanParts[0], 10, 32)
 	if err != nil {
-		return 0, 0, false
+		return 0, 0, 0, false
 	}
 	startVersion = uint32(v)
 
+	v, err = strconv.ParseUint(spanParts[1], 10, 32)
+	if err != nil {
+		return 0, 0, 0, false
+	}
+	endVersion = uint32(v)
+
 	v, err = strconv.ParseUint(parts[1], 10, 32)
 	if err != nil {
-		return 0, 0, false
+		return 0, 0, 0, false
 	}
 	compactedAt = uint32(v)
 
-	return startVersion, compactedAt, true
+	return startVersion, endVersion, compactedAt, true
 }
 
 // Dir returns the changeset directory path.
@@ -200,6 +197,11 @@ func (cr *ChangesetFiles) Dir() string {
 // TreeDir returns the parent tree directory path.
 func (cr *ChangesetFiles) TreeDir() string {
 	return cr.treeDir
+}
+
+// WALFile returns the wal.log file handle.
+func (cr *ChangesetFiles) WALFile() *os.File {
+	return cr.walFile
 }
 
 // KVDataFile returns the kv.dat file handle.
@@ -217,9 +219,9 @@ func (cr *ChangesetFiles) LeavesFile() *os.File {
 	return cr.leavesFile
 }
 
-// VersionsFile returns the versions.dat file handle.
-func (cr *ChangesetFiles) VersionsFile() *os.File {
-	return cr.versionsFile
+// CheckpointsFile returns the checkpoints.dat file handle.
+func (cr *ChangesetFiles) CheckpointsFile() *os.File {
+	return cr.checkpointsFile
 }
 
 // OrphansFile returns the orphans.dat file handle.
@@ -227,18 +229,8 @@ func (cr *ChangesetFiles) OrphansFile() *os.File {
 	return cr.orphansFile
 }
 
-// Info returns the changeset info struct.
-// This struct is writeable and changes will be persisted to disk when RewriteInfo is called.
-func (cr *ChangesetFiles) Info() *ChangesetInfo {
-	return cr.info
-}
-
-// RewriteInfo rewrites the changeset info file with the current info struct.
-func (cr *ChangesetFiles) RewriteInfo() error {
-	return RewriteChangesetInfo(cr.infoFile, cr.info)
-}
-
-// StartVersion returns the start version of the changeset.
+// StartVersion returns the start version of the changeset (directory name).
+// This could be WAL start or checkpoint start depending on compaction state.
 func (cr *ChangesetFiles) StartVersion() uint32 {
 	return cr.startVersion
 }
@@ -249,34 +241,30 @@ func (cr *ChangesetFiles) CompactedAtVersion() uint32 {
 	return cr.compactedAt
 }
 
-func pendingFilename(dir string) string {
-	return filepath.Join(dir, "pending")
+// EndVersion returns the end version of the changeset if it is known, or 0.
+// For original changesets, this will always return 0.
+// For sealed, compacted changesets, this will return the accurate end version of the changeset.
+func (cr *ChangesetFiles) EndVersion() uint32 {
+	return cr.endVersion
 }
 
-// IsChangesetReady checks if the changeset is ready to be used.
-// A changeset is considered ready if the pending marker file does not exist.
-// This is used by startup code only to detect whether a changeset compaction was interrupted before it could complete.
-func IsChangesetReady(dir string) (bool, error) {
-	pendingPath := pendingFilename(dir)
-	_, err := os.Stat(pendingPath)
+func (cr *ChangesetFiles) MarkReadyAndClose(endVersion uint32) (finalDir string, err error) {
+	tmpDir := cr.dir
+	if !strings.HasSuffix(tmpDir, "-tmp") {
+		return "", fmt.Errorf("cannot mark changeset as ready: directory name does not have -tmp suffix: %s", tmpDir)
+	}
+	finalDir = filepath.Join(cr.treeDir, fmt.Sprintf("%d-%d.%d", cr.startVersion, endVersion, cr.compactedAt))
+	err = os.Rename(tmpDir, finalDir)
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return true, nil
-		}
-		return false, fmt.Errorf("failed to stat pending marker file: %w", err)
+		return "", fmt.Errorf("failed to rename changeset directory from %s to %s: %w", tmpDir, finalDir, err)
 	}
-	return false, nil
-}
-
-// MarkReady marks the changeset as ready by removing the pending marker file.
-// This is only necessary for compacted changesets.
-func (cr *ChangesetFiles) MarkReady() error {
-	pendingPath := pendingFilename(cr.dir)
-	err := os.Remove(pendingPath)
-	if err != nil && !errors.Is(err, os.ErrNotExist) {
-		return fmt.Errorf("failed to remove pending marker file: %w", err)
+	err = cr.Close()
+	if err != nil {
+		return "", fmt.Errorf("failed to close changeset files: %w", err)
 	}
-	return nil
+	cr.dir = finalDir
+	cr.endVersion = endVersion
+	return finalDir, nil
 }
 
 // Close closes all changeset files.
@@ -287,14 +275,13 @@ func (cr *ChangesetFiles) Close() error {
 
 	cr.closed = true
 	err := errors.Join(
+		cr.walFile.Close(),
 		cr.kvDataFile.Close(),
 		cr.branchesFile.Close(),
 		cr.leavesFile.Close(),
-		cr.versionsFile.Close(),
+		cr.checkpointsFile.Close(),
 		cr.orphansFile.Close(),
-		cr.infoFile.Close(),
 	)
-	cr.info = nil
 	return err
 }
 
@@ -302,14 +289,7 @@ func (cr *ChangesetFiles) Close() error {
 // If the files were not already closed, they will be closed first.
 func (cr *ChangesetFiles) DeleteFiles() error {
 	return errors.Join(
-		cr.Close(), // first close all files
-		os.Remove(cr.infoFile.Name()),
-		os.Remove(cr.leavesFile.Name()),
-		os.Remove(cr.branchesFile.Name()),
-		os.Remove(cr.versionsFile.Name()),
-		os.Remove(cr.orphansFile.Name()),
-		os.Remove(cr.kvDataFile.Name()),
-		cr.MarkReady(), // remove pending marker file if it exists
-		os.Remove(cr.dir),
+		cr.Close(),           // first close all files
+		os.RemoveAll(cr.dir), // then delete the directory and all files within it
 	)
 }

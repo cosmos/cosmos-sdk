@@ -78,7 +78,7 @@ func TestCommitMultiTreeSims(t *testing.T) {
 			CheckpointInterval:     2,
 			// use only a small cache for testing
 			RootCacheSize:   2,
-			RootCacheExpiry: 5, // 5 milliseconds
+			RootCacheExpiry: 5 * time.Millisecond,
 		}, pruningtypes.PruningOptions{
 			KeepRecent: 5,
 			Interval:   2,

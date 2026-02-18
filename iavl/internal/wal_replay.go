@@ -53,17 +53,9 @@ func ReplayWALForStartup(ctx context.Context, root *NodePointer, walFile *os.Fil
 	if rollbackOffset > 0 {
 		logger.WarnContext(ctx, "WAL contains entries beyond expected version, rolling back to expected version", "walFile", walFile.Name(), "expectedVersion", expectedVersion, "rollbackOffset", rollbackOffset)
 		// must rollback if we saw extra entries past the expected version
-		f, err := os.OpenFile(walFile.Name(), os.O_WRONLY, 0)
+		err := RollbackFileToOffset(walFile, int64(rollbackOffset))
 		if err != nil {
-			return nil, 0, fmt.Errorf("failed to open WAL file for rollback: %w", err)
-		}
-		err = f.Truncate(int64(rollbackOffset))
-		if err != nil {
-			return nil, 0, fmt.Errorf("failed to truncate WAL file to offset %d: %w", rollbackOffset, err)
-		}
-		err = f.Close()
-		if err != nil {
-			return nil, 0, fmt.Errorf("failed to close WAL file after rollback: %w", err)
+			return nil, 0, fmt.Errorf("failed to rollback WAL file to offset %d: %w", rollbackOffset, err)
 		}
 	}
 

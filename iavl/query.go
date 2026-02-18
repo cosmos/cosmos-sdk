@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/store/kv"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	ics23 "github.com/cosmos/ics23/go"
 	"google.golang.org/protobuf/encoding/protowire"
@@ -68,18 +69,26 @@ func (c *CommitTree) Query(req *storetypes.RequestQuery) (_ *storetypes.Response
 		res.Key = subspace
 
 		iterator := storetypes.KVStorePrefixIterator(tree, subspace)
-		pairs := make([]kvPair, 0)
+		pairs := kv.Pairs{
+			Pairs: make([]kv.Pair, 0),
+		}
 		for ; iterator.Valid(); iterator.Next() {
-			pairs = append(pairs, kvPair{
-				key:   bytes.Clone(iterator.Key()),
-				value: bytes.Clone(iterator.Value()),
+			pairs.Pairs = append(pairs.Pairs, kv.Pair{
+				Key:   bytes.Clone(iterator.Key()),
+				Value: bytes.Clone(iterator.Value()),
 			})
 		}
 		if err := iterator.Close(); err != nil {
 			return &storetypes.ResponseQuery{}, fmt.Errorf("failed to close iterator: %w", err)
 		}
 
-		res.Value = marshalLegacyKVPairs(pairs)
+		bz, err := pairs.Marshal()
+		if err != nil {
+			panic(fmt.Errorf("failed to marshal KV pairs: %w", err))
+		}
+
+		res.Value = bz
+
 		return res, nil
 
 	default:

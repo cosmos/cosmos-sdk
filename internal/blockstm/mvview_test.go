@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/test-go/testify/require"
+	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"
 )

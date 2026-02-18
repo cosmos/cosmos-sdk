@@ -32,6 +32,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/iavl/internal"
 )
 
+type commitData struct {
+	commitInfo *storetypes.CommitInfo
+	commitId   storetypes.CommitID
+}
+
 type CommitMultiTree struct {
 	dir         string
 	opts        Options
@@ -40,10 +45,9 @@ type CommitMultiTree struct {
 	otherStores []*storeData                // subset of stores that are not IAVL
 	storesByKey map[storetypes.StoreKey]int // index of the stores by name
 
-	commitMutex    sync.Mutex
-	version        uint64
-	lastCommitId   storetypes.CommitID
-	lastCommitInfo *storetypes.CommitInfo
+	commitMutex     sync.Mutex
+	commitData      atomic.Pointer[commitData]
+	earliestVersion atomic.Int64
 
 	cancelPruning  context.CancelFunc
 	pruningActive  atomic.Bool
@@ -52,8 +56,7 @@ type CommitMultiTree struct {
 }
 
 func (db *CommitMultiTree) EarliestVersion() int64 {
-	//TODO implement me
-	return 0
+	return db.earliestVersion.Load()
 }
 
 type storeData struct {
@@ -74,8 +77,9 @@ func (db *CommitMultiTree) StartCommit(ctx context.Context, store storetypes.Mul
 		return nil, fmt.Errorf("expected MultiTree, got %T", store)
 	}
 
-	if multiTree.LatestVersion() != int64(db.version) {
-		return nil, fmt.Errorf("store version mismatch: expected %d, got %d", db.version, multiTree.LatestVersion())
+	latestVersion := db.LatestVersion()
+	if multiTree.LatestVersion() != latestVersion {
+		return nil, fmt.Errorf("store version mismatch: expected %d, got %d", latestVersion, multiTree.LatestVersion())
 	}
 
 	numIavlStores := len(db.iavlStores)
@@ -222,9 +226,14 @@ func (db *multiTreeFinalizer) commit(ctx context.Context, span trace.Span) error
 		return fmt.Errorf("writing commit info failed: %w", err)
 	}
 
-	db.lastCommitId = db.workingCommitId
-	db.lastCommitInfo = db.workingCommitInfo
-	db.version++
+	version := db.workingCommitId.Version
+	db.commitData.Store(&commitData{
+		commitId:   db.workingCommitId,
+		commitInfo: db.workingCommitInfo,
+	})
+	if db.earliestVersion.Load() == 0 {
+		db.earliestVersion.Store(version)
+	}
 	return nil
 }
 
@@ -439,7 +448,7 @@ func (db *multiTreeFinalizer) startRollback() {
 }
 
 func (db *CommitMultiTree) GetCommitInfo(ver int64) (*storetypes.CommitInfo, error) {
-	return loadCommitInfo(db.dir, uint64(ver))
+	return loadCommitInfo(db.dir, ver)
 }
 
 func (db *CommitMultiTree) Commit() storetypes.CommitID {
@@ -451,29 +460,33 @@ func (db *CommitMultiTree) WorkingHash() []byte {
 }
 
 func (db *CommitMultiTree) LastCommitID() storetypes.CommitID {
-	return db.lastCommitId
+	cd := db.commitData.Load()
+	if cd == nil {
+		return storetypes.CommitID{}
+	}
+	return cd.commitId
 }
 
 const commitInfoSubPath = "commit_info"
 
 // loadLatestCommitInfo loads the highest version number commit info file from the commit_info directory
 // if any exist, returning the version and CommitInfo.
-func loadLatestCommitInfo(dir string) (uint64, *storetypes.CommitInfo, error) {
+func loadLatestCommitInfo(dir string) (ci *storetypes.CommitInfo, earliestVersion int64, err error) {
 	commitInfoDir := filepath.Join(dir, commitInfoSubPath)
-	err := os.MkdirAll(commitInfoDir, 0o700)
+	err = os.MkdirAll(commitInfoDir, 0o700)
 	if err != nil {
-		return 0, nil, fmt.Errorf("failed to create commit info dir: %w", err)
+		return nil, 0, fmt.Errorf("failed to create commit info dir: %w", err)
 	}
 
 	entries, err := os.ReadDir(commitInfoDir)
 	if err != nil {
-		return 0, nil, fmt.Errorf("failed to read commit info dir: %w", err)
+		return nil, 0, fmt.Errorf("failed to read commit info dir: %w", err)
 	}
 
 	// find the latest version by looking for the highest numbered file
-	var latestVersion uint64
+	var latestVersion int64
 	for _, entry := range entries {
-		var version uint64
+		var version int64
 		_, err := fmt.Sscanf(entry.Name(), "%d", &version)
 		if err != nil {
 			// skip non-numeric files
@@ -482,22 +495,29 @@ func loadLatestCommitInfo(dir string) (uint64, *storetypes.CommitInfo, error) {
 		if version > latestVersion {
 			latestVersion = version
 		}
+		if version < earliestVersion || earliestVersion == 0 {
+			earliestVersion = version
+		}
 	}
 
 	if latestVersion == 0 {
 		// no versions found, no commit info to load
-		return 0, nil, nil
+		return nil, 0, nil
 	}
 
 	commitInfo, err := loadCommitInfo(dir, latestVersion)
 	if err != nil {
-		return 0, nil, fmt.Errorf("failed to load commit info for version %d: %w", latestVersion, err)
+		return nil, 0, fmt.Errorf("failed to load commit info for version %d: %w", latestVersion, err)
 	}
 
-	return latestVersion, commitInfo, nil
+	if commitInfo.Version != int64(latestVersion) {
+		return nil, 0, fmt.Errorf("commit info version mismatch: expected %d, got %d", latestVersion, commitInfo.Version)
+	}
+
+	return commitInfo, earliestVersion, nil
 }
 
-func loadCommitInfo(dir string, version uint64) (*storetypes.CommitInfo, error) {
+func loadCommitInfo(dir string, version int64) (*storetypes.CommitInfo, error) {
 	commitInfoDir := filepath.Join(dir, commitInfoSubPath)
 	err := os.MkdirAll(commitInfoDir, 0o700)
 	if err != nil {
@@ -518,7 +538,7 @@ func loadCommitInfo(dir string, version uint64) (*storetypes.CommitInfo, error) 
 	if err != nil {
 		return nil, fmt.Errorf("failed to read commit info version for version %d: %w", version, err)
 	}
-	if uint64(storedVersion) != version {
+	if int64(storedVersion) != version {
 		return nil, fmt.Errorf("commit info version mismatch: expected %d, got %d", version, storedVersion)
 	}
 
@@ -539,7 +559,7 @@ func loadCommitInfo(dir string, version uint64) (*storetypes.CommitInfo, error) 
 	commitInfo := &storetypes.CommitInfo{
 		StoreInfos: make([]storetypes.StoreInfo, storeCount),
 		Timestamp:  time.Unix(0, int64(timestampNano)),
-		Version:    int64(version),
+		Version:    version,
 	}
 
 	// read each store info
@@ -666,15 +686,29 @@ func (db *CommitMultiTree) LoadLatestVersion() error {
 		return bytes.Compare([]byte(a.key.Name()), []byte(b.key.Name()))
 	})
 
-	version, ci, err := loadLatestCommitInfo(db.dir)
+	ci, earliestVersion, err := loadLatestCommitInfo(db.dir)
 	if err != nil {
 		return fmt.Errorf("failed to load latest commit info: %w", err)
+	}
+
+	var version int64
+	if ci != nil {
+		// should be nil on initial creation
+		version = ci.Version
+		db.commitData.Store(&commitData{
+			commitId: storetypes.CommitID{
+				Version: version,
+				Hash:    ci.Hash(),
+			},
+			commitInfo: ci,
+		})
+		db.earliestVersion.Store(earliestVersion)
 	}
 
 	for i, si := range db.stores {
 		key := si.key
 		storeType := si.typ
-		store, err := db.loadStore(si.key, storeType, version)
+		store, err := db.loadStore(si.key, storeType, uint64(version))
 		if err != nil {
 			return fmt.Errorf("failed to load store %s: %w", key.Name(), err)
 		}
@@ -685,16 +719,6 @@ func (db *CommitMultiTree) LoadLatestVersion() error {
 		} else {
 			db.otherStores = append(db.otherStores, si)
 		}
-	}
-
-	db.version = version
-	if ci != nil {
-		// should be nil on initial creation
-		db.lastCommitId = storetypes.CommitID{
-			Version: int64(version),
-			Hash:    ci.Hash(),
-		}
-		db.lastCommitInfo = ci
 	}
 
 	//db.startDebugServer()
@@ -804,12 +828,16 @@ func LoadCommitMultiTree(path string, opts Options) (*CommitMultiTree, error) {
 	return db, nil
 }
 
-func (db *CommitMultiTree) stagedVersion() uint64 {
-	return db.version + 1
+func (db *CommitMultiTree) stagedVersion() int64 {
+	return db.LatestVersion() + 1
 }
 
 func (db *CommitMultiTree) LatestVersion() int64 {
-	return int64(db.version)
+	cd := db.commitData.Load()
+	if cd == nil {
+		return 0
+	}
+	return cd.commitId.Version
 }
 
 func (db *CommitMultiTree) Close() error {
@@ -842,7 +870,11 @@ func (db *CommitMultiTree) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceCo
 }
 
 func (db *CommitMultiTree) CacheMultiStore() storetypes.CacheMultiStore {
-	return db.cacheMultiStore(int64(db.version), db.lastCommitInfo)
+	cd := db.commitData.Load()
+	if cd == nil {
+		return db.cacheMultiStore(0, nil)
+	}
+	return db.cacheMultiStore(cd.commitId.Version, cd.commitInfo)
 }
 
 func (db *CommitMultiTree) CacheMultiStoreWithVersion(version int64) (storetypes.CacheMultiStore, error) {
@@ -850,7 +882,7 @@ func (db *CommitMultiTree) CacheMultiStoreWithVersion(version int64) (storetypes
 		// use latest version
 		return db.CacheMultiStore(), nil
 	}
-	ci, err := loadCommitInfo(db.dir, uint64(version))
+	ci, err := loadCommitInfo(db.dir, version)
 	if err != nil {
 		return nil, fmt.Errorf("version %d is not available: %w", version, err)
 	}
@@ -889,7 +921,9 @@ func (db *CommitMultiTree) pruneIfNeeded() {
 	if db.pruningOptions.Strategy == pruningtypes.PruningNothing || db.pruningOptions.Interval == 0 {
 		return
 	}
-	if db.version%db.pruningOptions.Interval != 0 {
+
+	version := uint64(db.LatestVersion())
+	if version%db.pruningOptions.Interval != 0 {
 		return
 	}
 
@@ -898,10 +932,10 @@ func (db *CommitMultiTree) pruneIfNeeded() {
 	// See store/pruningmanager.go GetPruningHeight for reference.
 
 	// Keep current version + KeepRecent previous versions
-	if db.version <= db.pruningOptions.KeepRecent+1 {
+	if version <= db.pruningOptions.KeepRecent+1 {
 		return
 	}
-	retainVersion := db.version - db.pruningOptions.KeepRecent
+	retainVersion := version - db.pruningOptions.KeepRecent
 
 	if !db.pruningActive.CompareAndSwap(false, true) {
 		// another prune started since we checked, skip
@@ -922,6 +956,8 @@ func (db *CommitMultiTree) pruneIfNeeded() {
 func (db *CommitMultiTree) pruneNow(ctx context.Context, retainVersion uint64) {
 	ctx, span := tracer.Start(ctx, "CommitMultiTree.Prune")
 	defer span.End()
+
+	db.earliestVersion.Store(int64(retainVersion))
 
 	err := deleteOldCommitInfos(db.dir, retainVersion)
 	if err != nil {
@@ -981,7 +1017,7 @@ func (db *CommitMultiTree) Describe() MultiTreeDescription {
 		descriptions[si.key.Name()] = ct.treeStore.Describe()
 	}
 	return MultiTreeDescription{
-		Version: db.version,
+		Version: uint64(db.LatestVersion()),
 		Trees:   descriptions,
 	}
 }

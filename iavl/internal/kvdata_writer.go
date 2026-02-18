@@ -3,167 +3,25 @@ package internal
 import (
 	"encoding/binary"
 	"fmt"
-	"math"
 	"os"
+	"sync"
 	"unsafe"
 )
 
-// KVDataWriter writes data to the key-value data file which can serve as a write-ahead log (WAL)
-// and blob storage for keys and values.
+// KVDataWriter writes data to a key-value data file which can be either
+// a WAL file or a KV data blob file.
 type KVDataWriter struct {
 	*FileWriter
-	keyCache map[string]uint32
-	walMode  bool
+	keyCache sync.Map // map[string]uint64 - raw offsets without location flag
 }
 
 // NewKVDataWriter creates a new KVDataWriter.
+// If isKVData is true, offsets will point to KV data file; otherwise they point to WAL.
 func NewKVDataWriter(file *os.File) *KVDataWriter {
 	fw := NewFileWriter(file)
 	return &KVDataWriter{
 		FileWriter: fw,
-		keyCache:   make(map[string]uint32),
 	}
-}
-
-// IsInWALMode returns true if the writer is in WAL mode.
-// This is set to true after WriteStartWAL is called.
-// If the writer is not in WAL mode, only key-value blobs can be written.
-func (kvs *KVDataWriter) IsInWALMode() bool {
-	return kvs.walMode
-}
-
-// WriteStartWAL writes a WAL start entry with the given version.
-// This method can ONLY be called on an empty file at the start of creating a KV data file.
-// An error is returned if the file is not empty.
-// This puts the writer into WAL mode.
-func (kvs *KVDataWriter) WriteStartWAL(version uint64) error {
-	if kvs.Size() != 0 {
-		return fmt.Errorf("cannot write WAL start to non-empty file")
-	}
-	kvs.walMode = true
-	err := kvs.writeType(KVEntryWALStart)
-	if err != nil {
-		return err
-	}
-	return kvs.writeVarUint(version)
-}
-
-// WriteWALUpdates writes a batch of WAL updates.
-// This can ONLY be called when the writer is in WAL mode.
-func (kvs *KVDataWriter) WriteWALUpdates(updates []KVUpdate) error {
-	if !kvs.walMode {
-		return fmt.Errorf("cannot write WAL updates when not in WAL mode")
-	}
-	for _, update := range updates {
-		deleteKey := update.DeleteKey
-		setNode := update.SetNode
-		if deleteKey != nil && setNode != nil {
-			return fmt.Errorf("invalid update: both SetNode and DeleteKey are set")
-		}
-
-		if deleteKey == nil && setNode == nil {
-			return fmt.Errorf("invalid update: neither SetNode nor DeleteKey is set")
-		}
-
-		if deleteKey != nil {
-			err := kvs.WriteWALDelete(deleteKey)
-			if err != nil {
-				return err
-			}
-		} else { // setNode != nil
-			keyOffset, valueOffset, err := kvs.WriteWALSet(setNode.key, setNode.value)
-			if err != nil {
-				return err
-			}
-			setNode.keyOffset = keyOffset
-			setNode.valueOffset = valueOffset
-		}
-	}
-	return nil
-}
-
-// WriteWALSet writes a WAL set entry for the given key and value and returns their offsets in the file.
-// This can ONLY be called when the writer is in WAL mode.
-func (kvs *KVDataWriter) WriteWALSet(key, value []byte) (keyOffset, valueOffset uint32, err error) {
-	if !kvs.walMode {
-		return 0, 0, fmt.Errorf("cannot write WAL set entry when not in WAL mode")
-	}
-	keyOffset, cached := kvs.keyCache[unsafeBytesToString(key)]
-	typ := KVEntryWALSet
-	if cached {
-		typ |= KVFlagCachedKey
-	}
-	err = kvs.writeType(typ)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	if cached {
-		err = kvs.writeLEU32(keyOffset)
-		if err != nil {
-			return 0, 0, err
-		}
-	} else {
-		keyOffset, err = kvs.writeLenPrefixedBytes(key)
-		if err != nil {
-			return 0, 0, err
-		}
-		kvs.addKeyToCache(key, keyOffset)
-	}
-
-	valueOffset, err = kvs.writeLenPrefixedBytes(value)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	return keyOffset, valueOffset, nil
-}
-
-// WriteWALDelete writes a WAL delete entry for the given key.
-// This can ONLY be called when the writer is in WAL mode.
-func (kvs *KVDataWriter) WriteWALDelete(key []byte) error {
-	if !kvs.walMode {
-		return fmt.Errorf("cannot write WAL delete entry when not in WAL mode")
-	}
-	cachedOffset, cached := kvs.keyCache[unsafeBytesToString(key)]
-	typ := KVEntryWALDelete
-	if cached {
-		typ |= KVFlagCachedKey
-	}
-	err := kvs.writeType(typ)
-	if err != nil {
-		return err
-	}
-
-	if cached {
-		err = kvs.writeLEU32(cachedOffset)
-		if err != nil {
-			return err
-		}
-	} else {
-		keyOffset, err := kvs.writeLenPrefixedBytes(key)
-		if err != nil {
-			return err
-		}
-
-		kvs.addKeyToCache(key, keyOffset)
-	}
-
-	return nil
-}
-
-// WriteWALCommit writes a WAL commit entry for the given version.
-// This can ONLY be called when the writer is in WAL mode.
-func (kvs *KVDataWriter) WriteWALCommit(version uint64) error {
-	if !kvs.walMode {
-		return fmt.Errorf("cannot write WAL commit entry when not in WAL mode")
-	}
-	err := kvs.writeType(KVEntryWALCommit)
-	if err != nil {
-		return err
-	}
-
-	return kvs.writeVarUint(version)
 }
 
 const (
@@ -173,18 +31,23 @@ const (
 	MaxValueSize = 1<<24 - 1 // 16777215 bytes
 )
 
-// WriteKeyBlob writes a key blob and returns its offset in the file.
+// WriteKeyBlob writes a key blob and returns its raw offset in the file.
 // This should be used for writing keys outside of WAL entries to take advantage of key caching.
-func (kvs *KVDataWriter) WriteKeyBlob(key []byte) (offset uint32, err error) {
-	if len(key) > MaxKeySize {
-		return 0, fmt.Errorf("key size exceeds maximum of %d bytes: %d bytes", MaxKeySize, len(key))
+// Use IsKVData() to determine the location flag when constructing a KVOffset.
+func (kvs *KVDataWriter) WriteKeyBlob(key UnsafeBytes) (offset uint64, err error) {
+	unsafeKey := key.UnsafeBytes()
+	keyLen := len(unsafeKey)
+	if keyLen > MaxKeySize {
+		return 0, fmt.Errorf("key size exceeds maximum of %d bytes: %d bytes", MaxKeySize, keyLen)
 	}
 
-	if offset, found := kvs.keyCache[unsafeBytesToString(key)]; found {
-		return offset, nil
+	// lookup using unsafe conversion is okay
+	if offsetAny, found := kvs.keyCache.Load(unsafeBytesToString(unsafeKey)); found {
+		return offsetAny.(uint64), nil
 	}
 
-	offset, err = kvs.writeBlob(KVEntryKeyBlob, key)
+	// writing with unsafe bytes is okay, since it gets copied to output anyway
+	offset, err = kvs.writeLenPrefixedBytes(unsafeKey)
 	if err != nil {
 		return 0, err
 	}
@@ -194,19 +57,22 @@ func (kvs *KVDataWriter) WriteKeyBlob(key []byte) (offset uint32, err error) {
 	return offset, nil
 }
 
-// WriteKeyValueBlobs writes a key blob and a value blob and returns their offsets in the file.
+// WriteKeyValueBlobs writes a key blob and a value blob and returns their raw offsets in the file.
 // This should be used for writing key-value pairs in changesets where the WAL has been dropped.
-func (kvs *KVDataWriter) WriteKeyValueBlobs(key, value []byte) (keyOffset, valueOffset uint32, err error) {
+// Use IsKVData() to determine the location flag when constructing KVOffsets.
+func (kvs *KVDataWriter) WriteKeyValueBlobs(key, value UnsafeBytes) (keyOffset, valueOffset uint64, err error) {
 	keyOffset, err = kvs.WriteKeyBlob(key)
 	if err != nil {
 		return 0, 0, err
 	}
 
-	if len(value) > MaxValueSize {
-		return 0, 0, fmt.Errorf("value size exceeds maximum of %d bytes: %d bytes", MaxValueSize, len(value))
+	unsafeValue := value.UnsafeBytes()
+	valueLen := len(unsafeValue)
+	if valueLen > MaxValueSize {
+		return 0, 0, fmt.Errorf("value size exceeds maximum of %d bytes: %d bytes", MaxValueSize, valueLen)
 	}
 
-	valueOffset, err = kvs.writeBlob(KVEntryValueBlob, value)
+	valueOffset, err = kvs.writeLenPrefixedBytes(unsafeValue)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -214,50 +80,27 @@ func (kvs *KVDataWriter) WriteKeyValueBlobs(key, value []byte) (keyOffset, value
 	return keyOffset, valueOffset, nil
 }
 
-func (kvs *KVDataWriter) writeBlob(blobType KVEntryType, bz []byte) (offset uint32, err error) {
-	err = kvs.writeType(blobType)
-	if err != nil {
-		return 0, err
-	}
-	offset, err = kvs.writeLenPrefixedBytes(bz)
-	if err != nil {
-		return 0, err
-	}
-
-	return offset, nil
+// addKeyToCache caches the key's raw offset for location tracking.
+// All keys are cached regardless of length so we can always look up their location.
+// Note: When writing WAL entries, only use WALFlagCachedKey for keys >= 5 bytes
+// since the offset reference itself is 5 bytes (no space savings for shorter keys).
+func (kvs *KVDataWriter) addKeyToCache(key UnsafeBytes, offset uint64) {
+	// we must have a safe copy when we put the key into the cache!
+	kvs.keyCache.Store(unsafeBytesToString(key.SafeCopy()), offset)
 }
 
-func (kvs *KVDataWriter) addKeyToCache(key []byte, offset uint32) {
-	const minCacheKeyLen = 4 // we choose 4 because offsets are uint32 (4 bytes)
-	if len(key) < minCacheKeyLen {
-		// don't cache very small keys
-		return
-	}
-	kvs.keyCache[unsafeBytesToString(key)] = offset
-}
-
-func (kvs *KVDataWriter) writeType(x KVEntryType) error {
-	_, err := kvs.Write([]byte{byte(x)})
-	return err
-}
-
-func (kvs *KVDataWriter) writeLenPrefixedBytes(bz []byte) (offset uint32, err error) {
-	// TODO: should we limit the max size of bz?
-	// for keys we should probably never have anything bigger than 2^16 bytes,
-	// and for values maybe 2^24 bytes?
+func (kvs *KVDataWriter) writeLenPrefixedBytes(bz []byte) (offset uint64, err error) {
 	sz := kvs.Size()
-	if sz > math.MaxUint32 {
-		return 0, fmt.Errorf("file size overflows uint32: %d", sz)
+	if sz > MaxUint40 {
+		return 0, fmt.Errorf("file size overflows KVOffset max (%d): %d", MaxUint40, sz)
 	}
-	offset = uint32(sz)
+	offset = uint64(sz)
 
-	lenKey := len(bz)
-	err = kvs.writeVarUint(uint64(lenKey))
+	err = kvs.writeVarUint(uint64(len(bz)))
 	if err != nil {
 		return 0, err
 	}
 
-	// write bytes
 	_, err = kvs.Write(bz)
 	if err != nil {
 		return 0, err
@@ -273,11 +116,25 @@ func (kvs *KVDataWriter) writeVarUint(x uint64) error {
 	return err
 }
 
-func (kvs *KVDataWriter) writeLEU32(x uint32) error {
-	var buf [4]byte
-	binary.LittleEndian.PutUint32(buf[:], x)
+func (kvs *KVDataWriter) writeLEU40(x uint64) error {
+	var buf [5]byte
+	buf[0] = byte(x)
+	buf[1] = byte(x >> 8)
+	buf[2] = byte(x >> 16)
+	buf[3] = byte(x >> 24)
+	buf[4] = byte(x >> 32)
 	_, err := kvs.Write(buf[:])
 	return err
+}
+
+func (kvs *KVDataWriter) WriteValueBlob(value UnsafeBytes) (offset uint64, err error) {
+	unsafeValue := value.UnsafeBytes()
+	valueLen := len(unsafeValue)
+	if valueLen > MaxValueSize {
+		return 0, fmt.Errorf("value size exceeds maximum of %d bytes: %d bytes", MaxValueSize, valueLen)
+	}
+
+	return kvs.writeLenPrefixedBytes(unsafeValue)
 }
 
 // unsafeBytesToString converts a byte slice to a string without allocation.

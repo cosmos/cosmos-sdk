@@ -74,11 +74,13 @@ func (opts Options) toInternalOpts() internal.Options {
 		checkpointInterval = 100 // default to checkpoint every 100 versions
 	}
 	return internal.Options{
-		ChangesetRolloverSize: changesetRolloverSize,
-		LeafEvictDepth:        leafEvictDepth,
-		BranchEvictDepth:      branchEvictDepth,
-		CheckpointInterval:    checkpointInterval,
-		RootCacheSize:         rootCacheSize,
-		RootCacheExpiry:       rootCacheExpiry,
+		ChangesetRolloverSize:  changesetRolloverSize,
+		LeafEvictDepth:         leafEvictDepth,
+		BranchEvictDepth:       branchEvictDepth,
+		CheckpointInterval:     checkpointInterval,
+		RootCacheSize:          rootCacheSize,
+		RootCacheExpiry:        rootCacheExpiry,
+		DisableWALFsync:        opts.DisableWALFsync,
+		CompactionRolloverSize: opts.CompactionRolloverSize,
 	}
 }

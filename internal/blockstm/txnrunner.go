@@ -18,6 +18,8 @@ var _ sdk.TxRunner = STMRunner{}
 
 var (
 	// Keep these prefixes in sync with x/auth and x/bank collection keys.
+	// authAccountNumberSeqPrefix and bankBalancesStoreKeyPrefix are both
+	// NewPrefix(2) intentionally — they reference different stores (acc vs bank).
 	authAccountStorePrefix     = collections.NewPrefix(1)
 	authAccountNumberSeqPrefix = collections.NewPrefix(2)
 	bankBalancesStoreKeyPrefix = collections.NewPrefix(2)
@@ -164,7 +166,8 @@ func preEstimates(
 						authStoreMu.Unlock()
 						if !hasAccount {
 							authEstimate = append(authEstimate, globalAccountNumberKey)
-							if bytes.Compare(authEstimate[0], authEstimate[1]) > 0 {
+							// Sort so MVMemory sees deterministic key ordering.
+					if bytes.Compare(authEstimate[0], authEstimate[1]) > 0 {
 								authEstimate[0], authEstimate[1] = authEstimate[1], authEstimate[0]
 							}
 						}

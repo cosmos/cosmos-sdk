@@ -72,7 +72,7 @@ func accountCreationFinalSeq(authStore storetypes.KVStore) uint64 {
 }
 
 func accountCreationMissingUniqueNumbers(authStore storetypes.KVStore, total int) []uint64 {
-	missing := make([]uint64, 0)
+	var missing []uint64
 	for n := uint64(0); n < uint64(total); n++ {
 		if !authStore.Has(accountCreationUniqueKey(n)) {
 			missing = append(missing, n)

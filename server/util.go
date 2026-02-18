@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -25,10 +26,12 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"cosmossdk.io/log/v2"
+
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/iavl"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -567,6 +570,7 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 	}
 
 	return []func(*baseapp.BaseApp){
+		enableIavx(appOpts, homeDir), // this MUST come before pruning options are set!
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(FlagMinGasPrices))),
 		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(FlagHaltHeight))),
@@ -582,29 +586,33 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 		defaultMempool,
 		baseapp.SetChainID(chainID),
 		baseapp.SetQueryGasLimit(cast.ToUint64(appOpts.Get(FlagQueryGasLimit))),
-		//func(bapp *baseapp.BaseApp) {
-		//	var opts iavl.Options
-		//	optsJson, ok := appOpts.Get(FlagIAVLXOptions).(string)
-		//	if !ok || optsJson == "" {
-		//		fmt.Println("Using iavl/v1")
-		//		return
-		//	}
-		//
-		//	err := json.Unmarshal([]byte(optsJson), &opts)
-		//	if err != nil {
-		//		panic(fmt.Errorf("failed to unmarshal iavlx options: %w", err))
-		//	}
-		//
-		//	db, err := iavl.LoadCommitMultiTree(
-		//		filepath.Join(homeDir, "data", "iavlx"),
-		//		opts,
-		//	)
-		//	if err != nil {
-		//		panic(fmt.Errorf("failed to load iavlx db: %w", err))
-		//	}
-		//	fmt.Println("Setting up IAVLX as the underlying commit multi-store")
-		//	bapp.SetCMS(db)
-		//},
+	}
+}
+
+func enableIavx(appOpts types.AppOptions, homeDir string) func(*baseapp.BaseApp) {
+	return func(bapp *baseapp.BaseApp) {
+		var opts iavl.Options
+		optsJson, ok := appOpts.Get(FlagIAVLXOptions).(string)
+		if !ok || optsJson == "" {
+			fmt.Println("Using iavl/v1")
+			return
+		}
+
+		err := json.Unmarshal([]byte(optsJson), &opts)
+		if err != nil {
+			panic(fmt.Errorf("failed to unmarshal iavlx options: %w", err))
+		}
+
+		db, err := iavl.LoadCommitMultiTree(
+			filepath.Join(homeDir, "data", "iavlx"),
+			opts,
+			bapp.Logger(),
+		)
+		if err != nil {
+			panic(fmt.Errorf("failed to load iavlx db: %w", err))
+		}
+		fmt.Println("Setting up IAVLX as the underlying commit multi-store")
+		bapp.SetCMS(db)
 	}
 }
 

@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -319,18 +320,6 @@ func (db *multiTreeFinalizer) writeCommitInfoHeader() (*os.File, error) {
 		return nil, db.ctx.Err() // do not write commit info if rolling back
 	}
 
-	// wait for all trees to complete their WAL writes so we only commit when all children have committed
-	var wg errgroup.Group
-	for _, finalizer := range db.finalizers {
-		finalizer := finalizer
-		wg.Go(func() error {
-			return finalizer.WaitForWAL()
-		})
-	}
-	if err := wg.Wait(); err != nil {
-		return nil, fmt.Errorf("failed when waiting for WAL completion: %w", err)
-	}
-
 	// write the header to disk
 	commitInfoDir := filepath.Join(db.dir, commitInfoSubPath)
 	err = os.MkdirAll(commitInfoDir, 0o700)
@@ -338,8 +327,9 @@ func (db *multiTreeFinalizer) writeCommitInfoHeader() (*os.File, error) {
 		return nil, fmt.Errorf("failed to create commit info dir: %w", err)
 	}
 
+	pendingPath := filepath.Join(commitInfoDir, fmt.Sprintf(".pending.%d", stagedVersion))
 	commitInfoPath := filepath.Join(commitInfoDir, fmt.Sprintf("%d", stagedVersion))
-	file, err := os.OpenFile(commitInfoPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600)
+	file, err := os.OpenFile(pendingPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open commit info file for version %d: %w", stagedVersion, err)
 	}
@@ -355,6 +345,35 @@ func (db *multiTreeFinalizer) writeCommitInfoHeader() (*os.File, error) {
 	if err != nil {
 		_ = file.Close()
 		return nil, fmt.Errorf("failed to sync commit info file for version %d: %w", stagedVersion, err)
+	}
+
+	// wait for all trees to complete their WAL writes before renaming so we only commit when all children have committed
+	var wg errgroup.Group
+	for _, finalizer := range db.finalizers {
+		finalizer := finalizer
+		wg.Go(func() error {
+			return finalizer.WaitForWAL()
+		})
+	}
+	if err := wg.Wait(); err != nil {
+		_ = file.Close()
+		_ = os.Remove(pendingPath)
+		return nil, fmt.Errorf("failed when waiting for WAL completion: %w", err)
+	}
+
+	// wait for the hash to complete as well, so that we only commit when we know we're basically done
+	select {
+	case <-db.hashReady:
+	case <-db.ctx.Done():
+		_ = file.Close()
+		_ = os.Remove(pendingPath)
+		return nil, db.ctx.Err()
+	}
+
+	err = os.Rename(pendingPath, commitInfoPath)
+	if err != nil {
+		_ = file.Close()
+		return nil, fmt.Errorf("failed to rename commit info file for version %d: %w", stagedVersion, err)
 	}
 
 	// TODO optionally fsync the directory as well for extra durability guarantees
@@ -389,7 +408,7 @@ func (db *multiTreeFinalizer) prepareCommit(ctx context.Context) error {
 	}
 
 	db.workingCommitId = storetypes.CommitID{
-		Version: int64(db.stagedVersion()),
+		Version: db.stagedVersion(),
 		Hash:    db.workingCommitInfo.Hash(),
 	}
 	close(db.hashReady)
@@ -505,6 +524,12 @@ func loadLatestCommitInfo(dir string) (ci *storetypes.CommitInfo, earliestVersio
 	// find the latest version by looking for the highest numbered file
 	var latestVersion int64
 	for _, entry := range entries {
+		// clean up incomplete pending commit info files from interrupted commits
+		if strings.HasPrefix(entry.Name(), ".pending.") {
+			_ = os.Remove(filepath.Join(commitInfoDir, entry.Name()))
+			continue
+		}
+
 		var version int64
 		_, err := fmt.Sscanf(entry.Name(), "%d", &version)
 		if err != nil {

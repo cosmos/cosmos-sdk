@@ -312,11 +312,9 @@ func (c *commitTreeFinalizer) prepareCommit(ctx context.Context, updates iter.Se
 
 	// wait for the WAL write to finish
 	startWaitForWAL := time.Now()
-
 	if err := c.WaitForWAL(); err != nil {
 		return nil, err
 	}
-
 	walWriteLatency.Record(ctx, time.Since(startWaitForWAL).Milliseconds())
 	span.AddEvent("WAL write returned")
 
@@ -414,12 +412,8 @@ func (c *CommitTree) Close() error {
 }
 
 func (c *CommitTree) prune(ctx context.Context, retainVersion uint32) error {
-	compactionRolloverSize := c.opts.CompactionRolloverSize
-	if compactionRolloverSize == 0 {
-		compactionRolloverSize = 4 * 1024 * 1024 * 1024 // 4GB default
-	}
 	return RunCompactor(ctx, c.treeStore, PruneOptions{
 		RetainVersion:          retainVersion,
-		CompactionRolloverSize: compactionRolloverSize,
+		CompactionRolloverSize: c.opts.CompactionRolloverSize,
 	})
 }

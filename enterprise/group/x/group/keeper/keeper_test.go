@@ -353,8 +353,15 @@ func submitProposal(
 	ctx context.Context, s *TestSuite, msgs []sdk.Msg,
 	proposers []string,
 ) uint64 {
+	return submitProposalWithPolicy(ctx, s, s.groupPolicyAddr.String(), msgs, proposers)
+}
+
+func submitProposalWithPolicy(
+	ctx context.Context, s *TestSuite, policyAddr string, msgs []sdk.Msg,
+	proposers []string,
+) uint64 {
 	proposalReq := &group.MsgSubmitProposal{
-		GroupPolicyAddress: s.groupPolicyAddr.String(),
+		GroupPolicyAddress: policyAddr,
 		Proposers:          proposers,
 	}
 	err := proposalReq.SetMsgs(msgs)
@@ -369,8 +376,15 @@ func submitProposalAndVote(
 	ctx context.Context, s *TestSuite, msgs []sdk.Msg,
 	proposers []string, voteOption group.VoteOption,
 ) uint64 {
+	return submitProposalAndVoteWithPolicy(ctx, s, s.groupPolicyAddr.String(), msgs, proposers, voteOption)
+}
+
+func submitProposalAndVoteWithPolicy(
+	ctx context.Context, s *TestSuite, policyAddr string, msgs []sdk.Msg,
+	proposers []string, voteOption group.VoteOption,
+) uint64 {
 	s.Require().Greater(len(proposers), 0)
-	myProposalID := submitProposal(ctx, s, msgs, proposers)
+	myProposalID := submitProposalWithPolicy(ctx, s, policyAddr, msgs, proposers)
 
 	_, err := s.groupKeeper.Vote(ctx, &group.MsgVote{
 		ProposalId: myProposalID,

@@ -105,17 +105,19 @@ func (s *TestSuite) TestCreateGroup() {
 	}
 
 	specs := map[string]struct {
-		req       *group.MsgCreateGroup
-		expErr    bool
-		expErrMsg string
-		expGroups []*group.GroupInfo
+		req                    *group.MsgCreateGroup
+		expErr                 bool
+		expErrMsg              string
+		expGroups              []*group.GroupInfo
+		skipGroupsByAdminCheck bool // when true, skip groups-by-admin assertion (for specs that run in random order)
 	}{
 		"all good": {
 			req: &group.MsgCreateGroup{
 				Admin:   addr1.String(),
 				Members: members,
 			},
-			expGroups: expGroups,
+			expGroups:              expGroups,
+			skipGroupsByAdminCheck: true, // map iteration order is non-deterministic
 		},
 		"group metadata too long": {
 			req: &group.MsgCreateGroup{
@@ -190,6 +192,61 @@ func (s *TestSuite) TestCreateGroup() {
 			expErr:    true,
 			expErrMsg: "expected a finite decimal",
 		},
+		"duplicate member addresses": {
+			req: &group.MsgCreateGroup{
+				Admin: addr1.String(),
+				Members: []group.MemberRequest{
+					{Address: addr5.String(), Weight: "1"},
+					{Address: addr5.String(), Weight: "2"},
+				},
+			},
+			expErr:    true,
+			expErrMsg: "duplicate",
+		},
+		"negative member weight": {
+			req: &group.MsgCreateGroup{
+				Admin: addr1.String(),
+				Members: []group.MemberRequest{{
+					Address: addr3.String(),
+					Weight:  "-1",
+				}},
+			},
+			expErr:    true,
+			expErrMsg: "expected a non-negative decimal",
+		},
+		"empty weight string": {
+			req: &group.MsgCreateGroup{
+				Admin: addr1.String(),
+				Members: []group.MemberRequest{{
+					Address: addr3.String(),
+					Weight:  "",
+				}},
+			},
+			expErr:    true,
+			expErrMsg: "invalid",
+		},
+		"fractional weights - valid": {
+			req: &group.MsgCreateGroup{
+				Admin: addr1.String(),
+				Members: []group.MemberRequest{
+					{Address: addr5.String(), Weight: "0.5"},
+					{Address: addr6.String(), Weight: "1.5"},
+				},
+			},
+			expGroups:              nil,
+			skipGroupsByAdminCheck: true,
+		},
+		"single member group": {
+			req: &group.MsgCreateGroup{
+				Admin: addr1.String(),
+				Members: []group.MemberRequest{{
+					Address: addr5.String(),
+					Weight:  "1",
+				}},
+			},
+			expGroups:              nil,
+			skipGroupsByAdminCheck: true,
+		},
 	}
 
 	var seq uint32 = 1
@@ -223,35 +280,46 @@ func (s *TestSuite) TestCreateGroup() {
 			membersRes, err := s.groupKeeper.GroupMembers(s.ctx, &group.QueryGroupMembersRequest{GroupId: id})
 			s.Require().NoError(err)
 			loadedMembers := membersRes.Members
-			s.Require().Equal(len(members), len(loadedMembers))
+			expectedMembers := spec.req.Members
+			s.Require().Equal(len(expectedMembers), len(loadedMembers))
 			// we reorder members by address to be able to compare them
-			sort.Slice(members, func(i, j int) bool {
-				addri, err := sdk.AccAddressFromBech32(members[i].Address)
+			sort.Slice(expectedMembers, func(i, j int) bool {
+				addri, err := sdk.AccAddressFromBech32(expectedMembers[i].Address)
 				s.Require().NoError(err)
-				addrj, err := sdk.AccAddressFromBech32(members[j].Address)
+				addrj, err := sdk.AccAddressFromBech32(expectedMembers[j].Address)
 				s.Require().NoError(err)
 				return bytes.Compare(addri, addrj) < 0
 			})
 			for i := range loadedMembers {
-				s.Assert().Equal(members[i].Metadata, loadedMembers[i].Member.Metadata)
-				s.Assert().Equal(members[i].Address, loadedMembers[i].Member.Address)
-				s.Assert().Equal(members[i].Weight, loadedMembers[i].Member.Weight)
+				s.Assert().Equal(expectedMembers[i].Metadata, loadedMembers[i].Member.Metadata)
+				s.Assert().Equal(expectedMembers[i].Address, loadedMembers[i].Member.Address)
+				s.Assert().Equal(expectedMembers[i].Weight, loadedMembers[i].Member.Weight)
 				s.Assert().Equal(blockTime, loadedMembers[i].Member.AddedAt)
 				s.Assert().Equal(id, loadedMembers[i].GroupId)
 			}
 
-			// query groups by admin
+			// query groups by admin - verify our created group exists (map iteration order is non-deterministic)
 			groupsRes, err := s.groupKeeper.GroupsByAdmin(s.ctx, &group.QueryGroupsByAdminRequest{Admin: addr1.String()})
 			s.Require().NoError(err)
 			loadedGroups := groupsRes.Groups
-			s.Require().Equal(len(spec.expGroups), len(loadedGroups))
-			for i := range loadedGroups {
-				s.Assert().Equal(spec.expGroups[i].Metadata, loadedGroups[i].Metadata)
-				s.Assert().Equal(spec.expGroups[i].Admin, loadedGroups[i].Admin)
-				s.Assert().Equal(spec.expGroups[i].TotalWeight, loadedGroups[i].TotalWeight)
-				s.Assert().Equal(spec.expGroups[i].Id, loadedGroups[i].Id)
-				s.Assert().Equal(spec.expGroups[i].Version, loadedGroups[i].Version)
-				s.Assert().Equal(spec.expGroups[i].CreatedAt, loadedGroups[i].CreatedAt)
+			var found bool
+			for _, g := range loadedGroups {
+				if g.Id == id {
+					found = true
+					s.Assert().Equal(spec.req.Admin, g.Admin)
+					s.Assert().Equal(loadedGroupRes.Info.TotalWeight, g.TotalWeight)
+					s.Assert().Equal(uint64(1), g.Version)
+					break
+				}
+			}
+			s.Require().True(found, "created group should appear in groups-by-admin")
+			if !spec.skipGroupsByAdminCheck && spec.expGroups != nil {
+				s.Require().Equal(len(spec.expGroups), len(loadedGroups))
+				sort.Slice(loadedGroups, func(i, j int) bool { return loadedGroups[i].Id < loadedGroups[j].Id })
+				for i := range spec.expGroups {
+					s.Assert().Equal(spec.expGroups[i].TotalWeight, loadedGroups[i].TotalWeight)
+					s.Assert().Equal(spec.expGroups[i].Id, loadedGroups[i].Id)
+				}
 			}
 		})
 	}
@@ -530,6 +598,24 @@ func (s *TestSuite) TestUpdateGroupMembers() {
 			},
 			expErr:    true,
 			expErrMsg: "group must not be empty",
+		},
+		"negative weight in update": {
+			req: &group.MsgUpdateGroupMembers{
+				GroupId:       groupID,
+				Admin:         myAdmin,
+				MemberUpdates: []group.MemberRequest{{Address: member1, Weight: "-1"}},
+			},
+			expErr:    true,
+			expErrMsg: "expected a non-negative decimal",
+		},
+		"invalid weight string in update": {
+			req: &group.MsgUpdateGroupMembers{
+				GroupId:       groupID,
+				Admin:         myAdmin,
+				MemberUpdates: []group.MemberRequest{{Address: member1, Weight: "not-a-number"}},
+			},
+			expErr:    true,
+			expErrMsg: "invalid",
 		},
 	}
 	for msg, spec := range specs {
@@ -919,6 +1005,37 @@ func (s *TestSuite) TestCreateGroupWithPolicy() {
 				0,
 			),
 			expErr: false,
+		},
+		"empty members - group must not be empty": {
+			req: &group.MsgCreateGroupWithPolicy{
+				Admin:              addr1.String(),
+				Members:            []group.MemberRequest{},
+				GroupPolicyAsAdmin: false,
+			},
+			policy: group.NewThresholdDecisionPolicy(
+				"1",
+				time.Second,
+				0,
+			),
+			expErr:    true,
+			expErrMsg: "group must not be empty",
+		},
+		"duplicate member addresses": {
+			req: &group.MsgCreateGroupWithPolicy{
+				Admin: addr1.String(),
+				Members: []group.MemberRequest{
+					{Address: addr5.String(), Weight: "1"},
+					{Address: addr5.String(), Weight: "2"},
+				},
+				GroupPolicyAsAdmin: false,
+			},
+			policy: group.NewThresholdDecisionPolicy(
+				"1",
+				time.Second,
+				0,
+			),
+			expErr:    true,
+			expErrMsg: "duplicate",
 		},
 	}
 
@@ -3439,6 +3556,179 @@ func (s *TestSuite) TestExecProposalsWhenMemberLeavesOrIsUpdated() {
 			s.Require().NoError(err)
 		})
 	}
+}
+
+// TestGroupEdgeCasesWeightsAndOperations exercises edge cases: empty groups,
+// fractional weights, single-member groups, and operations on non-existent groups.
+// Also verifies tally and voting behavior for these outlier scenarios.
+func (s *TestSuite) TestGroupEdgeCasesWeightsAndOperations() {
+	addrs := s.addrs
+	addr1 := addrs[0]
+	addr2 := addrs[1]
+	addr3 := addrs[2]
+
+	s.Run("single member group - update to remove only member fails", func() {
+		s.setNextAccount()
+		groupRes, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
+			Admin:   addr1.String(),
+			Members: []group.MemberRequest{{Address: addr2.String(), Weight: "1"}},
+		})
+		s.Require().NoError(err)
+		groupID := groupRes.GroupId
+
+		_, err = s.groupKeeper.UpdateGroupMembers(s.ctx, &group.MsgUpdateGroupMembers{
+			GroupId:       groupID,
+			Admin:         addr1.String(),
+			MemberUpdates: []group.MemberRequest{{Address: addr2.String(), Weight: "0"}},
+		})
+		s.Require().Error(err)
+		s.Require().Contains(err.Error(), "group must not be empty")
+	})
+
+	s.Run("group with small fractional weights - creates successfully", func() {
+		s.setNextAccount()
+		groupRes, err := s.groupKeeper.CreateGroup(s.ctx, &group.MsgCreateGroup{
+			Admin: addr1.String(),
+			Members: []group.MemberRequest{
+				{Address: addr2.String(), Weight: "0.000000000000000001"},
+				{Address: addr3.String(), Weight: "0.000000000000000001"},
+			},
+		})
+		s.Require().NoError(err)
+		s.Require().NotZero(groupRes.GroupId)
+
+		info, err := s.groupKeeper.GroupInfo(s.ctx, &group.QueryGroupInfoRequest{GroupId: groupRes.GroupId})
+		s.Require().NoError(err)
+		s.Require().Equal("0.000000000000000002", info.Info.TotalWeight)
+	})
+
+	s.Run("group policy for non-existent group fails", func() {
+		policy := group.NewThresholdDecisionPolicy("1", time.Second, 0)
+		req := &group.MsgCreateGroupPolicy{
+			Admin:   addr1.String(),
+			GroupId: 99999,
+		}
+		s.Require().NoError(req.SetDecisionPolicy(policy))
+		s.setNextAccount()
+
+		_, err := s.groupKeeper.CreateGroupPolicy(s.ctx, req)
+		s.Require().Error(err)
+		s.Require().Contains(err.Error(), "not found")
+	})
+
+	s.Run("update group members for non-existent group fails", func() {
+		_, err := s.groupKeeper.UpdateGroupMembers(s.ctx, &group.MsgUpdateGroupMembers{
+			GroupId:       88888,
+			Admin:         addr1.String(),
+			MemberUpdates: []group.MemberRequest{{Address: addr2.String(), Weight: "1"}},
+		})
+		s.Require().Error(err)
+		s.Require().Contains(err.Error(), "not found")
+	})
+
+	s.Run("update group admin for non-existent group fails", func() {
+		_, err := s.groupKeeper.UpdateGroupAdmin(s.ctx, &group.MsgUpdateGroupAdmin{
+			GroupId:  77777,
+			Admin:    addr1.String(),
+			NewAdmin: addr2.String(),
+		})
+		s.Require().Error(err)
+		s.Require().Contains(err.Error(), "not found")
+	})
+
+	// Tally and voting for outlier group configurations
+	s.Run("single member group - vote and tally work", func() {
+		policy := group.NewThresholdDecisionPolicy("1", time.Second, 0)
+		s.setNextAccount()
+		policyAddr, _ := s.createGroupAndGroupPolicy(addr1, []group.MemberRequest{{Address: addr2.String(), Weight: "1"}}, policy)
+		s.Require().NotEmpty(policyAddr)
+
+		msgSend := &banktypes.MsgSend{
+			FromAddress: policyAddr,
+			ToAddress:   addr2.String(),
+			Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
+		}
+		sdkCtx, _ := s.sdkCtx.CacheContext()
+		proposalID := submitProposalAndVoteWithPolicy(sdkCtx, s, policyAddr, []sdk.Msg{msgSend}, []string{addr2.String()}, group.VOTE_OPTION_YES)
+
+		res, err := s.groupKeeper.TallyResult(sdkCtx, &group.QueryTallyResultRequest{ProposalId: proposalID})
+		s.Require().NoError(err)
+		s.Require().Equal("1", res.Tally.YesCount)
+	})
+
+	s.Run("group with fractional weights - vote and tally work", func() {
+		policy := group.NewThresholdDecisionPolicy("1", time.Second, 0)
+		s.setNextAccount()
+		policyAddr, _ := s.createGroupAndGroupPolicy(addr1, []group.MemberRequest{
+			{Address: addr2.String(), Weight: "0.5"},
+			{Address: addr3.String(), Weight: "1.5"},
+		}, policy)
+		s.Require().NotEmpty(policyAddr)
+
+		msgSend := &banktypes.MsgSend{
+			FromAddress: policyAddr,
+			ToAddress:   addr2.String(),
+			Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
+		}
+		sdkCtx, _ := s.sdkCtx.CacheContext()
+		proposalID := submitProposalAndVoteWithPolicy(sdkCtx, s, policyAddr, []sdk.Msg{msgSend}, []string{addr2.String()}, group.VOTE_OPTION_YES)
+
+		res, err := s.groupKeeper.TallyResult(sdkCtx, &group.QueryTallyResultRequest{ProposalId: proposalID})
+		s.Require().NoError(err)
+		s.Require().Equal("0.5", res.Tally.YesCount)
+	})
+
+	s.Run("group with threshold above total weight - partial vote does not pass", func() {
+		// Threshold 10, total weight 2. One member (weight 1) votes yes. Real threshold = min(10,2)=2, so 1 < 2, rejected.
+		policy := group.NewThresholdDecisionPolicy("10", time.Second, 0)
+		s.setNextAccount()
+		policyAddr, _ := s.createGroupAndGroupPolicy(addr1, []group.MemberRequest{
+			{Address: addr2.String(), Weight: "1"},
+			{Address: addr3.String(), Weight: "1"},
+		}, policy)
+		s.Require().NotEmpty(policyAddr)
+
+		msgSend := &banktypes.MsgSend{
+			FromAddress: policyAddr,
+			ToAddress:   addr2.String(),
+			Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
+		}
+		sdkCtx, _ := s.sdkCtx.CacheContext()
+		proposalID := submitProposalAndVoteWithPolicy(sdkCtx, s, policyAddr, []sdk.Msg{msgSend}, []string{addr2.String()}, group.VOTE_OPTION_YES)
+
+		res, err := s.groupKeeper.TallyResult(sdkCtx, &group.QueryTallyResultRequest{ProposalId: proposalID})
+		s.Require().NoError(err)
+		s.Require().Equal("1", res.Tally.YesCount)
+		s.Require().Equal("0", res.Tally.NoCount)
+		// Proposal would be rejected at VP end (1 < min(10,2)=2)
+	})
+
+	s.Run("group with threshold above total weight - unanimous vote passes", func() {
+		// Threshold 10, total weight 2. Both vote yes. Real threshold = 2, yesCount = 2, passes.
+		policy := group.NewThresholdDecisionPolicy("10", time.Second, 0)
+		s.setNextAccount()
+		policyAddr, _ := s.createGroupAndGroupPolicy(addr1, []group.MemberRequest{
+			{Address: addr2.String(), Weight: "1"},
+			{Address: addr3.String(), Weight: "1"},
+		}, policy)
+		s.Require().NotEmpty(policyAddr)
+
+		msgSend := &banktypes.MsgSend{
+			FromAddress: policyAddr,
+			ToAddress:   addr2.String(),
+			Amount:      sdk.Coins{sdk.NewInt64Coin("test", 100)},
+		}
+		sdkCtx, _ := s.sdkCtx.CacheContext()
+		proposalID := submitProposalWithPolicy(sdkCtx, s, policyAddr, []sdk.Msg{msgSend}, []string{addr2.String()})
+		_, err := s.groupKeeper.Vote(sdkCtx, &group.MsgVote{ProposalId: proposalID, Voter: addr2.String(), Option: group.VOTE_OPTION_YES})
+		s.Require().NoError(err)
+		_, err = s.groupKeeper.Vote(sdkCtx, &group.MsgVote{ProposalId: proposalID, Voter: addr3.String(), Option: group.VOTE_OPTION_YES})
+		s.Require().NoError(err)
+
+		res, err := s.groupKeeper.TallyResult(sdkCtx, &group.QueryTallyResultRequest{ProposalId: proposalID})
+		s.Require().NoError(err)
+		s.Require().Equal("2", res.Tally.YesCount)
+	})
 }
 
 func eventTypeFound(events []abci.Event, eventType string) bool {

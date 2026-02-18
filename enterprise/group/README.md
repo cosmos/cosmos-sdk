@@ -39,6 +39,9 @@ make test
 
 # Run linter
 make lint
+
+# Run fuzz tests (types-level, coverage-guided)
+make test-fuzz
 ```
 
 ## Module Structure
@@ -53,8 +56,8 @@ enterprise/group/
 │   ├── module/
 │   ├── internal/
 │   └── migrations/
-├── simapp/                   # Test application (TODO)
-└── tests/systemtests/        # System tests (TODO)
+├── simapp/                   # Test application with group module
+└── tests/systemtests/        # Black-box system tests
 ```
 
 ## Documentation

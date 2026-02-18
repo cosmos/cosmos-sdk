@@ -161,6 +161,7 @@ type CommitMultiStore interface {
 	Committer
 	MultiStore
 	snapshottypes.Snapshotter
+	io.Closer
 
 	StartCommit(context.Context, MultiStore, cmtproto.Header) (CommitFinalizer, error)
 	GetCommitInfo(ver int64) (*CommitInfo, error)

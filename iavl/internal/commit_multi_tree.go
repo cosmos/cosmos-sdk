@@ -162,12 +162,6 @@ func (db *multiTreeFinalizer) commit(ctx context.Context, span trace.Span) error
 	db.commitMutex.Lock()
 	defer db.commitMutex.Unlock()
 
-	// start writing commit info in background
-	commitInfoSynced := make(chan error, 1)
-	go func() {
-		db.writeCommitInfo(commitInfoSynced)
-	}()
-
 	if err := db.prepareCommit(ctx); err != nil {
 		db.startRollback()
 
@@ -189,12 +183,6 @@ func (db *multiTreeFinalizer) commit(ctx context.Context, span trace.Span) error
 		}
 
 		return fmt.Errorf("%w; cause: %v", rolledbackErr, err)
-	}
-
-	// wait for commit info to be written before we start finalizing stores,
-	// otherwise checkpointing may start, and commit is not atomic
-	if err := <-commitInfoSynced; err != nil {
-		return fmt.Errorf("writing commit info failed: %w", err)
 	}
 
 	var errGroup errgroup.Group
@@ -375,6 +363,12 @@ func (db *multiTreeFinalizer) writeCommitInfoHeader() (*os.File, error) {
 }
 
 func (db *multiTreeFinalizer) prepareCommit(ctx context.Context) error {
+	// start writing commit info in background
+	commitInfoSynced := make(chan error, 1)
+	go func() {
+		db.writeCommitInfo(commitInfoSynced)
+	}()
+
 	var hashErrGroup errgroup.Group
 	for i, finalizer := range db.finalizers {
 		finalizer := finalizer
@@ -402,7 +396,18 @@ func (db *multiTreeFinalizer) prepareCommit(ctx context.Context) error {
 
 	<-db.finalizeOrRollback
 
-	return ctx.Err()
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+
+	// wait for commit info to be written before we start finalizing stores,
+	// otherwise checkpointing may start, and commit is not atomic
+	if err := <-commitInfoSynced; err != nil {
+		return fmt.Errorf("writing commit info failed: %w", err)
+	}
+
+	// we are past the rollback point so we don't return ctx.Err()
+	return nil
 }
 
 func (db *multiTreeFinalizer) PrepareFinalize() (storetypes.CommitID, error) {

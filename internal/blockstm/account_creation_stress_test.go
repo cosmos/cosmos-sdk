@@ -35,6 +35,8 @@ func runAccountCreationStressCase(
 	useEstimates bool,
 	recoverPanics bool,
 ) {
+	t.Helper()
+
 	stores := map[storetypes.StoreKey]int{StoreKeyAuth: 0}
 
 	for iter := 0; iter < iterations; iter++ {

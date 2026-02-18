@@ -21,7 +21,7 @@ require (
 	github.com/chzyer/readline v1.5.1
 	github.com/cockroachdb/apd/v2 v2.0.2
 	github.com/cockroachdb/errors v1.12.0
-	github.com/cometbft/cometbft v0.39.0-beta.2
+	github.com/cometbft/cometbft v0.39.0-beta.2.0.20260217150107-284338bcd3d9
 	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/btree v1.0.0
 	github.com/cosmos/cosmos-db v1.1.3
@@ -70,7 +70,6 @@ require (
 	github.com/tidwall/btree v1.8.1
 	github.com/tidwall/gjson v1.18.0
 	github.com/tidwall/sjson v1.2.5
-	go.opentelemetry.io/contrib/bridges/otelslog v0.15.0
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.65.0
 	go.opentelemetry.io/contrib/instrumentation/host v0.65.0
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.65.0

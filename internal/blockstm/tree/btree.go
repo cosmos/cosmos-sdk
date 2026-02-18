@@ -3,7 +3,7 @@ package tree
 import (
 	"sync/atomic"
 
-	"github.com/tidwall/btree"
+	"github.com/cosmos/btree"
 )
 
 // BTree wraps an atomic pointer to an unsafe btree.BTreeG

@@ -965,7 +965,7 @@ type MsgSubmitProposal struct {
 	// group_policy_address is the account address of group policy.
 	GroupPolicyAddress string `protobuf:"bytes,1,opt,name=group_policy_address,json=groupPolicyAddress,proto3" json:"group_policy_address,omitempty"`
 	// proposers are the account addresses of the proposers.
-	// Proposers signatures will be counted as yes votes.
+	// When exec is EXEC_TRY, proposers are automatically counted as Yes votes.
 	Proposers []string `protobuf:"bytes,2,rep,name=proposers,proto3" json:"proposers,omitempty"`
 	// metadata is any arbitrary metadata attached to the proposal.
 	Metadata string `protobuf:"bytes,3,opt,name=metadata,proto3" json:"metadata,omitempty"`
@@ -973,7 +973,7 @@ type MsgSubmitProposal struct {
 	Messages []*any.Any `protobuf:"bytes,4,rep,name=messages,proto3" json:"messages,omitempty"`
 	// exec defines the mode of execution of the proposal,
 	// whether it should be executed immediately on creation or not.
-	// If so, proposers signatures are considered as Yes votes.
+	// When exec is EXEC_TRY, proposers are automatically counted as Yes votes.
 	Exec Exec `protobuf:"varint,5,opt,name=exec,proto3,enum=cosmos.group.v1.Exec" json:"exec,omitempty"`
 	// title is the title of the proposal.
 	Title string `protobuf:"bytes,6,opt,name=title,proto3" json:"title,omitempty"`

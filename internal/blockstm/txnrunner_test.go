@@ -1,6 +1,7 @@
 package blockstm
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"sync/atomic"
@@ -66,6 +67,10 @@ func (m *mockFeeTx) GetFee() sdk.Coins {
 
 func (m *mockFeeTx) GetGas() uint64 {
 	return 0
+}
+
+func (m *mockFeeTx) FeeGranter() []byte {
+	return nil
 }
 
 func mockTxDecoderWithFeeTx(txBytes []byte) (sdk.Tx, error) {
@@ -294,7 +299,7 @@ func TestSTMRunner_Run_ContextCancellation(t *testing.T) {
 func TestPreEstimates(t *testing.T) {
 	t.Run("empty transactions", func(t *testing.T) {
 		decoder := mockTxDecoderWithFeeTx
-		memTxs, estimates := preEstimates([][]byte{}, 2, 0, 1, "stake", decoder)
+		memTxs, estimates := preEstimates([][]byte{}, 2, 0, 1, "stake", decoder, nil)
 
 		require.Empty(t, memTxs)
 		require.Empty(t, estimates)
@@ -312,7 +317,7 @@ func TestPreEstimates(t *testing.T) {
 			append(addr2, 0x02),
 		}
 
-		memTxs, estimates := preEstimates(txs, 2, 0, 1, "stake", decoder)
+		memTxs, estimates := preEstimates(txs, 2, 0, 1, "stake", decoder, nil)
 
 		require.Len(t, memTxs, len(txs))
 		require.Len(t, estimates, len(txs))
@@ -336,7 +341,7 @@ func TestPreEstimates(t *testing.T) {
 			{0x01, 0x02}, // valid
 		}
 
-		memTxs, estimates := preEstimates(txs, 2, 0, 1, "stake", decoder)
+		memTxs, estimates := preEstimates(txs, 2, 0, 1, "stake", decoder, nil)
 
 		require.Len(t, memTxs, len(txs))
 		require.Len(t, estimates, len(txs))
@@ -359,7 +364,7 @@ func TestPreEstimates(t *testing.T) {
 			txs[i] = append(addr, byte(i))
 		}
 
-		memTxs, estimates := preEstimates(txs, 4, 0, 1, "stake", decoder)
+		memTxs, estimates := preEstimates(txs, 4, 0, 1, "stake", decoder, nil)
 
 		require.Len(t, memTxs, len(txs))
 		require.Len(t, estimates, len(txs))
@@ -374,7 +379,7 @@ func TestPreEstimates(t *testing.T) {
 			{0x03, 0x04},
 		}
 
-		memTxs, estimates := preEstimates(txs, 2, 0, 1, "stake", decoder)
+		memTxs, estimates := preEstimates(txs, 2, 0, 1, "stake", decoder, nil)
 
 		require.Len(t, memTxs, len(txs))
 		require.Len(t, estimates, len(txs))
@@ -384,16 +389,66 @@ func TestPreEstimates(t *testing.T) {
 			require.Nil(t, estimate)
 		}
 	})
+
+	t.Run("missing fee payer includes global account number estimate", func(t *testing.T) {
+		decoder := mockTxDecoderWithFeeTx
+		addr := sdk.AccAddress(bytes.Repeat([]byte{0x11}, 20))
+		tx := append(addr, 0x01)
+
+		authState := NewMemDB()
+		memTxs, estimates := preEstimates([][]byte{tx}, 1, 0, 1, "stake", decoder, authState)
+
+		require.Len(t, memTxs, 1)
+		require.Len(t, estimates, 1)
+		require.NotNil(t, estimates[0])
+
+		expectedAccKey, err := collections.EncodeKeyWithPrefix(
+			collections.NewPrefix(1),
+			sdk.AccAddressKey,
+			addr,
+		)
+		require.NoError(t, err)
+
+		authEstimate := estimates[0][0]
+		require.Contains(t, authEstimate, Key(expectedAccKey))
+		require.Contains(t, authEstimate, Key(authAccountNumberSeqPrefix.Bytes()))
+	})
+
+	t.Run("existing fee payer excludes global account number estimate", func(t *testing.T) {
+		decoder := mockTxDecoderWithFeeTx
+		addr := sdk.AccAddress(bytes.Repeat([]byte{0x22}, 20))
+		tx := append(addr, 0x02)
+
+		expectedAccKey, err := collections.EncodeKeyWithPrefix(
+			collections.NewPrefix(1),
+			sdk.AccAddressKey,
+			addr,
+		)
+		require.NoError(t, err)
+
+		authState := NewMemDB()
+		authState.Set(expectedAccKey, []byte{1})
+
+		memTxs, estimates := preEstimates([][]byte{tx}, 1, 0, 1, "stake", decoder, authState)
+
+		require.Len(t, memTxs, 1)
+		require.Len(t, estimates, 1)
+		require.NotNil(t, estimates[0])
+
+		authEstimate := estimates[0][0]
+		require.Contains(t, authEstimate, Key(expectedAccKey))
+		require.NotContains(t, authEstimate, Key(authAccountNumberSeqPrefix.Bytes()))
+	})
 }
 
 // TestPreEstimates_KeyEncoding tests that account and balance keys are correctly encoded
 func TestPreEstimates_KeyEncoding(t *testing.T) {
 	decoder := mockTxDecoderWithFeeTx
 
-	addr := sdk.AccAddress("testaddress12345")
+	addr := sdk.AccAddress(bytes.Repeat([]byte{0x33}, 20))
 	tx := append(addr, 0x01)
 
-	memTxs, estimates := preEstimates([][]byte{tx}, 1, 0, 1, "stake", decoder)
+	memTxs, estimates := preEstimates([][]byte{tx}, 1, 0, 1, "stake", decoder, nil)
 
 	require.Len(t, memTxs, 1)
 	require.Len(t, estimates, 1)
@@ -410,7 +465,7 @@ func TestPreEstimates_KeyEncoding(t *testing.T) {
 			addr,
 		)
 		require.NoError(t, err)
-		require.Contains(t, authEstimate, expectedAccKey)
+		require.Contains(t, authEstimate, Key(expectedAccKey))
 
 		// Verify balance key encoding
 		bankEstimate := estimates[0][1]
@@ -422,7 +477,7 @@ func TestPreEstimates_KeyEncoding(t *testing.T) {
 			collections.Join(addr, "stake"),
 		)
 		require.NoError(t, err)
-		require.Contains(t, bankEstimate, expectedBalanceKey)
+		require.Contains(t, bankEstimate, Key(expectedBalanceKey))
 	}
 }
 

@@ -1,6 +1,7 @@
 package blockstm
 
 import (
+	"bytes"
 	"context"
 	"sync"
 	"sync/atomic"
@@ -14,6 +15,13 @@ import (
 )
 
 var _ sdk.TxRunner = STMRunner{}
+
+var (
+	// Keep these prefixes in sync with x/auth and x/bank collection keys.
+	authAccountStorePrefix     = collections.NewPrefix(1)
+	authAccountNumberSeqPrefix = collections.NewPrefix(2)
+	bankBalancesStoreKeyPrefix = collections.NewPrefix(2)
+)
 
 func NewSTMRunner(
 	txDecoder sdk.TxDecoder,
@@ -40,7 +48,7 @@ type STMRunner struct {
 }
 
 func (e STMRunner) Run(ctx context.Context, ms storetypes.MultiStore, txs [][]byte, deliverTx sdk.DeliverTxFunc) ([]*abci.ExecTxResult, error) {
-	var authStore, bankStore int
+	authStore, bankStore := -1, -1
 	index := make(map[storetypes.StoreKey]int, len(e.stores))
 	for i, k := range e.stores {
 		switch k.Name() {
@@ -69,7 +77,11 @@ func (e STMRunner) Run(ctx context.Context, ms storetypes.MultiStore, txs [][]by
 	)
 
 	if e.estimate {
-		memTxs, estimates = preEstimates(txs, e.workers, authStore, bankStore, e.coinDenom(ms), e.txDecoder)
+		var authKVStore storetypes.KVStore
+		if authStore >= 0 {
+			authKVStore = ms.GetKVStore(e.stores[authStore])
+		}
+		memTxs, estimates = preEstimates(txs, e.workers, authStore, bankStore, e.coinDenom(ms), e.txDecoder, authKVStore)
 	}
 
 	if err := ExecuteBlockWithEstimates(
@@ -108,9 +120,17 @@ func (e STMRunner) Run(ctx context.Context, ms storetypes.MultiStore, txs [][]by
 
 // preEstimates returns a static estimation of the written keys for each transaction.
 // NOTE: make sure it sync with the latest sdk logic when sdk upgrade.
-func preEstimates(txs [][]byte, workers, authStore, bankStore int, coinDenom string, txDecoder sdk.TxDecoder) ([]sdk.Tx, []MultiLocations) {
+func preEstimates(
+	txs [][]byte,
+	workers, authStore, bankStore int,
+	coinDenom string,
+	txDecoder sdk.TxDecoder,
+	authKVStore storetypes.KVStore,
+) ([]sdk.Tx, []MultiLocations) {
 	memTxs := make([]sdk.Tx, len(txs))
 	estimates := make([]MultiLocations, len(txs))
+	var authStoreMu sync.Mutex
+	globalAccountNumberKey := authAccountNumberSeqPrefix.Bytes()
 
 	job := func(start, end int) {
 		for i := start; i < end; i++ {
@@ -127,29 +147,46 @@ func preEstimates(txs [][]byte, workers, authStore, bankStore int, coinDenom str
 			}
 			feePayer := sdk.AccAddress(feeTx.FeePayer())
 
-			// account key
-			accKey, err := collections.EncodeKeyWithPrefix(
-				collections.NewPrefix(1),
-				sdk.AccAddressKey,
-				feePayer,
-			)
-			if err != nil {
-				continue
+			estimate := make(MultiLocations, 2)
+
+			if authStore >= 0 {
+				// account key
+				accKey, err := collections.EncodeKeyWithPrefix(
+					authAccountStorePrefix,
+					sdk.AccAddressKey,
+					feePayer,
+				)
+				if err == nil {
+					authEstimate := Locations{accKey}
+					if authKVStore != nil {
+						authStoreMu.Lock()
+						hasAccount := authKVStore.Has(accKey)
+						authStoreMu.Unlock()
+						if !hasAccount {
+							authEstimate = append(authEstimate, globalAccountNumberKey)
+							if bytes.Compare(authEstimate[0], authEstimate[1]) > 0 {
+								authEstimate[0], authEstimate[1] = authEstimate[1], authEstimate[0]
+							}
+						}
+					}
+					estimate[authStore] = authEstimate
+				}
 			}
 
-			// balance key
-			balanceKey, err := collections.EncodeKeyWithPrefix(
-				collections.NewPrefix(2),
-				collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey),
-				collections.Join(feePayer, coinDenom),
-			)
-			if err != nil {
-				continue
+			if bankStore >= 0 {
+				// balance key
+				balanceKey, err := collections.EncodeKeyWithPrefix(
+					bankBalancesStoreKeyPrefix,
+					collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey),
+					collections.Join(feePayer, coinDenom),
+				)
+				if err == nil {
+					estimate[bankStore] = Locations{balanceKey}
+				}
 			}
 
-			estimates[i] = MultiLocations{
-				authStore: {accKey},
-				bankStore: {balanceKey},
+			if len(estimate) > 0 {
+				estimates[i] = estimate
 			}
 		}
 	}

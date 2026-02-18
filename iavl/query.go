@@ -6,10 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"cosmossdk.io/store/kv"
+	"cosmossdk.io/store/types/kv"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	ics23 "github.com/cosmos/ics23/go"
-	"google.golang.org/protobuf/encoding/protowire"
 
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
@@ -127,28 +126,6 @@ func iavlProofOps(tree *internal.TreeReader, key []byte, exists bool) (*cmtproto
 
 	op := storetypes.NewIavlCommitmentOp(key, commitmentProof)
 	return &cmtprotocrypto.ProofOps{Ops: []cmtprotocrypto.ProofOp{op.ProofOp()}}, nil
-}
-
-type kvPair struct {
-	key   []byte
-	value []byte
-}
-
-// marshalLegacyKVPairs emits the same wire format as cosmos.store.internal.kv.v1beta1.Pairs.
-func marshalLegacyKVPairs(pairs []kvPair) []byte {
-	var out []byte
-	for _, pair := range pairs {
-		var pairMsg []byte
-		pairMsg = protowire.AppendTag(pairMsg, 1, protowire.BytesType)
-		pairMsg = protowire.AppendBytes(pairMsg, pair.key)
-		pairMsg = protowire.AppendTag(pairMsg, 2, protowire.BytesType)
-		pairMsg = protowire.AppendBytes(pairMsg, pair.value)
-
-		out = protowire.AppendTag(out, 1, protowire.BytesType)
-		out = protowire.AppendBytes(out, pairMsg)
-	}
-
-	return out
 }
 
 var _ storetypes.Queryable = (*CommitTree)(nil)

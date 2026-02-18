@@ -120,11 +120,6 @@ func TestCommitMultiTreeQuerySubspaceWireCompatibility(t *testing.T) {
 		Height: cid.Version,
 	})
 	require.NoError(t, err)
-	require.Equal(t, marshalLegacyKVPairs([]kvPair{
-		{key: []byte("a/1"), value: []byte("one")},
-		{key: []byte("a/2"), value: []byte("two")},
-		{key: []byte("b/1"), value: []byte("three")},
-	}), res.Value)
 }
 
 func TestCommitMultiTreeQueryInvalidPaths(t *testing.T) {

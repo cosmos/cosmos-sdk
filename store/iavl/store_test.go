@@ -14,9 +14,9 @@ import (
 
 	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store/cachekv"
-	"cosmossdk.io/store/internal/kv"
 	"cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/types"
+	"cosmossdk.io/store/types/kv"
 	"cosmossdk.io/store/wrapper"
 )
 

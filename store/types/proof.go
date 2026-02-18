@@ -8,8 +8,7 @@ import (
 	ics23 "github.com/cosmos/ics23/go"
 
 	errorsmod "cosmossdk.io/errors"
-	sdkmaps "cosmossdk.io/store/internal/maps"
-	sdkproofs "cosmossdk.io/store/internal/proofs"
+	sdkmaps "cosmossdk.io/store/types/maps"
 )
 
 const (

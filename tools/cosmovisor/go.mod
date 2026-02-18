@@ -26,7 +26,7 @@ require (
 	cloud.google.com/go/monitoring v1.24.3 // indirect
 	cloud.google.com/go/storage v1.60.0 // indirect
 	cosmossdk.io/api v1.0.0 // indirect
-	cosmossdk.io/collections v1.3.1 // indirect
+	cosmossdk.io/collections v1.4.0 // indirect
 	cosmossdk.io/core v1.1.0 // indirect
 	cosmossdk.io/depinject v1.2.1 // indirect
 	cosmossdk.io/errors v1.1.0 // indirect
@@ -79,6 +79,7 @@ require (
 	github.com/cockroachdb/redact v1.1.6 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
+	github.com/cosmos/btree v1.0.0 // indirect
 	github.com/cosmos/cosmos-db v1.1.3 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
@@ -257,6 +258,4 @@ replace (
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/upgrade => ../../x/upgrade
 	github.com/cosmos/cosmos-sdk => ../..
-	// BlockSTM requires patches to the btree package
-	github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-20250924232609-2c6195d95951
 )

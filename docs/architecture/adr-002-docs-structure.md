@@ -75,7 +75,7 @@ Accepted
 ### Neutral
 
 * We need to move a bunch of deprecated stuff to `/_attic` folder.
-* We need to integrate content in `docs/sdk/docs/core` in `concepts`.
+* We need to integrate content from `docs/sdk/docs/core` into `concepts`.
 * We need to move all the content that currently lives in `docs` and does not fit in new structure (like `lotion`, intro material, whitepaper) to the website repository.
 * Update `DOCS_README.md`
 

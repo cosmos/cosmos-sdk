@@ -389,7 +389,7 @@ func (db *multiTreeFinalizer) prepareCommit(ctx context.Context) error {
 	}
 
 	db.workingCommitId = storetypes.CommitID{
-		Version: int64(db.stagedVersion()),
+		Version: db.stagedVersion(),
 		Hash:    db.workingCommitInfo.Hash(),
 	}
 	close(db.hashReady)

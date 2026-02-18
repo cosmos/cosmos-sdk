@@ -73,6 +73,10 @@ func (opts Options) toInternalOpts() internal.Options {
 	if checkpointInterval == 0 {
 		checkpointInterval = 100 // default to checkpoint every 100 versions
 	}
+	compactionRolloverSize := opts.CompactionRolloverSize
+	if compactionRolloverSize == 0 {
+		compactionRolloverSize = 4 * 1024 * 1024 * 1024 // 4GB default
+	}
 	return internal.Options{
 		ChangesetRolloverSize:  changesetRolloverSize,
 		LeafEvictDepth:         leafEvictDepth,
@@ -80,7 +84,7 @@ func (opts Options) toInternalOpts() internal.Options {
 		CheckpointInterval:     checkpointInterval,
 		RootCacheSize:          rootCacheSize,
 		RootCacheExpiry:        rootCacheExpiry,
+		CompactionRolloverSize: compactionRolloverSize,
 		DisableWALFsync:        opts.DisableWALFsync,
-		CompactionRolloverSize: opts.CompactionRolloverSize,
 	}
 }

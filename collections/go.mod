@@ -4,11 +4,11 @@ go 1.24.0
 
 require (
 	cosmossdk.io/schema v1.1.0
+	github.com/cosmos/btree v1.0.0
 	github.com/cosmos/cosmos-db v1.1.3
 	github.com/cosmos/gogoproto v1.7.2
 	github.com/google/go-cmp v0.7.0
 	github.com/stretchr/testify v1.11.1
-	github.com/tidwall/btree v1.8.1
 	google.golang.org/protobuf v1.36.11
 	pgregory.net/rapid v1.2.0
 )

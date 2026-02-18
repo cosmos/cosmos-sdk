@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	"github.com/tidwall/btree"
+	"github.com/cosmos/btree"
 )
 
 // BTree wraps an atomic pointer to an unsafe btree.BTreeG

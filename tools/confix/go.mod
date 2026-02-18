@@ -47,6 +47,7 @@ require (
 	github.com/cometbft/cometbft v0.39.0-beta.2 // indirect
 	github.com/cometbft/cometbft-db v0.14.1 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
+	github.com/cosmos/btree v1.0.0 // indirect
 	github.com/cosmos/cosmos-db v1.1.3 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
@@ -274,7 +275,4 @@ require (
 replace github.com/cosmos/cosmos-sdk => ../../
 
 replace cosmossdk.io/store => ../../store
-
-replace github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-20250924232609-2c6195d95951
-
 replace github.com/cometbft/cometbft => github.com/cometbft/cometbft v0.39.0-beta.2.0.20251126123012-df4eef0f2a40

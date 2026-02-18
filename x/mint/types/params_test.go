@@ -32,9 +32,38 @@ func TestNewParams_Validate(t *testing.T) {
 				sdkmath.LegacyMustNewDecFromStr("0.07"),
 				sdkmath.LegacyMustNewDecFromStr("0.67"),
 				uint64(60*60*8766/5),
+				sdkmath.ZeroInt(),
 			),
 			wantErr:     false,
 			errContains: "",
+		},
+		{
+			name: "max supply positive",
+			params: NewParams(
+				"uatom",
+				sdkmath.LegacyMustNewDecFromStr("0.13"),
+				sdkmath.LegacyMustNewDecFromStr("0.20"),
+				sdkmath.LegacyMustNewDecFromStr("0.07"),
+				sdkmath.LegacyMustNewDecFromStr("0.67"),
+				uint64(60*60*8766/5),
+				sdkmath.NewInt(123),
+			),
+			wantErr:     false,
+			errContains: "",
+		},
+		{
+			name: "max supply negative",
+			params: NewParams(
+				"uatom",
+				sdkmath.LegacyMustNewDecFromStr("0.13"),
+				sdkmath.LegacyMustNewDecFromStr("0.20"),
+				sdkmath.LegacyMustNewDecFromStr("0.07"),
+				sdkmath.LegacyMustNewDecFromStr("0.67"),
+				uint64(60*60*8766/5),
+				sdkmath.NewInt(-1),
+			),
+			wantErr:     true,
+			errContains: "max supply must be positive",
 		},
 		{
 			name: "max < min inflation",
@@ -45,6 +74,7 @@ func TestNewParams_Validate(t *testing.T) {
 				sdkmath.LegacyMustNewDecFromStr("0.06"),
 				sdkmath.LegacyMustNewDecFromStr("0.67"),
 				1,
+				sdkmath.ZeroInt(),
 			),
 			wantErr:     true,
 			errContains: "must be greater than or equal to min inflation",
@@ -58,6 +88,7 @@ func TestNewParams_Validate(t *testing.T) {
 				sdkmath.LegacyMustNewDecFromStr("0.07"),
 				sdkmath.LegacyMustNewDecFromStr("0.67"),
 				1,
+				sdkmath.ZeroInt(),
 			),
 			wantErr:     true,
 			errContains: "",
@@ -71,6 +102,7 @@ func TestNewParams_Validate(t *testing.T) {
 				sdkmath.LegacyMustNewDecFromStr("0.07"),
 				sdkmath.LegacyMustNewDecFromStr("1.01"),
 				1,
+				sdkmath.ZeroInt(),
 			),
 			wantErr:     true,
 			errContains: "",
@@ -84,6 +116,7 @@ func TestNewParams_Validate(t *testing.T) {
 				sdkmath.LegacyMustNewDecFromStr("0.07"),
 				sdkmath.LegacyMustNewDecFromStr("0.67"),
 				0,
+				sdkmath.ZeroInt(),
 			),
 			wantErr:     true,
 			errContains: "",
@@ -302,6 +335,38 @@ func TestValidateBlocksPerYear(t *testing.T) {
 			t.Parallel()
 
 			err := validateBlocksPerYear(tt.val)
+			if tt.wantErr {
+				require.Error(t, err)
+				if tt.errContains != "" {
+					require.ErrorContains(t, err, tt.errContains)
+				}
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestValidateMaxSupply(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name        string
+		val         any
+		wantErr     bool
+		errContains string
+	}{
+		{name: "non-int type", val: "123", wantErr: true, errContains: "invalid parameter type"},
+		{name: "zero ok (infinite)", val: sdkmath.ZeroInt(), wantErr: false, errContains: ""},
+		{name: "positive ok", val: sdkmath.NewInt(1), wantErr: false, errContains: ""},
+		{name: "negative", val: sdkmath.NewInt(-1), wantErr: true, errContains: "max supply must be positive"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			err := validateMaxSupply(tt.val)
 			if tt.wantErr {
 				require.Error(t, err)
 				if tt.errContains != "" {

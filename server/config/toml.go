@@ -191,7 +191,7 @@ max-send-msg-size = "{{ .GRPC.MaxSendMsgSize }}"
 # Format: '{"address1": [start_block, end_block], "address2": [start_block, end_block]}'
 # Example: '{"0.0.0.0:26113": [0, 1000], "0.0.0.0:26114": [1001, 2000]}'
 # Leave empty to disable historical gRPC routing.
-historical-grpc-address-block-range = "{{ printf "{" }}{{ range $k, $v := .GRPC.HistoricalGRPCAddressBlockRange }}\"{{ $v }}\": [{{index $k 0 }}, {{ index $k 1}}]{{ end }}{{ printf "}" }}"
+historical-grpc-address-block-range = "{{ printf "{" }}{{$first := true}}{{ range $k, $v := .GRPC.HistoricalGRPCAddressBlockRange }}{{if $first}}{{$first = false}}{{else}}, {{end}}\"{{ $v }}\": [{{index $k 0 }}, {{ index $k 1}}]{{ end }}{{ printf "}" }}"
 
 ###############################################################################
 ###                        gRPC Web Configuration                           ###

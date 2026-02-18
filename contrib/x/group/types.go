@@ -71,8 +71,8 @@ func (p ThresholdDecisionPolicy) ValidateBasic() error {
 		return errorsmod.Wrap(err, "threshold")
 	}
 
-	if p.Windows == nil || p.Windows.VotingPeriod == 0 {
-		return errorsmod.Wrap(errors.ErrInvalid, "voting period cannot be zero")
+	if p.Windows == nil || p.Windows.VotingPeriod <= 0 {
+		return errorsmod.Wrap(errors.ErrInvalid, "voting period must be positive")
 	}
 
 	return nil
@@ -92,6 +92,9 @@ func (p ThresholdDecisionPolicy) Allow(tallyResult TallyResult, totalPower strin
 	totalPowerDec, err := math.NewNonNegativeDecFromString(totalPower)
 	if err != nil {
 		return DecisionPolicyResult{}, errorsmod.Wrap(err, "total power")
+	}
+	if totalPowerDec.IsZero() {
+		return DecisionPolicyResult{Allow: false, Final: true}, nil
 	}
 
 	// the real threshold of the policy is `min(threshold,total_weight)`. If
@@ -180,8 +183,8 @@ func (p PercentageDecisionPolicy) ValidateBasic() error {
 		return errorsmod.Wrap(errors.ErrInvalid, "percentage must be > 0 and <= 1")
 	}
 
-	if p.Windows == nil || p.Windows.VotingPeriod == 0 {
-		return errorsmod.Wrap(errors.ErrInvalid, "voting period cannot be 0")
+	if p.Windows == nil || p.Windows.VotingPeriod <= 0 {
+		return errorsmod.Wrap(errors.ErrInvalid, "voting period must be positive")
 	}
 
 	return nil
@@ -307,8 +310,12 @@ func (g GroupInfo) ValidateBasic() error {
 		return errorsmod.Wrap(err, "admin")
 	}
 
-	if _, err := math.NewNonNegativeDecFromString(g.TotalWeight); err != nil {
+	totalWeight, err := math.NewNonNegativeDecFromString(g.TotalWeight)
+	if err != nil {
 		return errorsmod.Wrap(err, "total weight")
+	}
+	if totalWeight.IsZero() {
+		return errorsmod.Wrap(errors.ErrInvalid, "group must not be empty")
 	}
 	if g.Version == 0 {
 		return errorsmod.Wrap(errors.ErrEmpty, "version")

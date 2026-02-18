@@ -10,7 +10,7 @@ import (
 
 	"cosmossdk.io/core/comet"
 	"cosmossdk.io/core/header"
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store/gaskv"
 	storetypes "cosmossdk.io/store/types"
 )
@@ -58,7 +58,7 @@ type Context struct {
 	execMode             ExecMode
 	minGasPrice          DecCoins
 	consParams           cmtproto.ConsensusParams
-	eventManager         EventManagerI
+	eventManager         *EventManager
 	priority             int64 // The tx priority, only relevant in CheckTx
 	kvGasConfig          storetypes.GasConfig
 	transientKVGasConfig storetypes.GasConfig
@@ -101,7 +101,7 @@ func (c Context) IsReCheckTx() bool                             { return c.reche
 func (c Context) IsSigverifyTx() bool                           { return c.sigverifyTx }
 func (c Context) ExecMode() ExecMode                            { return c.execMode }
 func (c Context) MinGasPrices() DecCoins                        { return c.minGasPrice }
-func (c Context) EventManager() EventManagerI                   { return c.eventManager }
+func (c Context) EventManager() *EventManager                   { return c.eventManager }
 func (c Context) Priority() int64                               { return c.priority }
 func (c Context) KVGasConfig() storetypes.GasConfig             { return c.kvGasConfig }
 func (c Context) TransientKVGasConfig() storetypes.GasConfig    { return c.transientKVGasConfig }
@@ -309,7 +309,7 @@ func (c Context) WithConsensusParams(params cmtproto.ConsensusParams) Context {
 }
 
 // WithEventManager returns a Context with an updated event manager
-func (c Context) WithEventManager(em EventManagerI) Context {
+func (c Context) WithEventManager(em *EventManager) Context {
 	c.eventManager = em
 	return c
 }

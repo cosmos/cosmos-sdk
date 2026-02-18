@@ -75,3 +75,8 @@ The [README.md](telemetry/README.md) in the `telemetry` package provides more de
 2. node operators who want to configure OpenTelemetry exporters should set the `OTEL_EXPERIMENTAL_CONFIG_FILE` environment variable to the path of a yaml file which follows the OpenTelemetry declarative configuration format specified here: https://pkg.go.dev/go.opentelemetry.io/contrib/otelconf. As long as the `telemetry` package has been imported somewhere (it should already be imported if you are using the SDK), OpenTelemetry will be initialized automatically based on the configuration file.
 
 NOTE: the go implementation of [otelconf](https://pkg.go.dev/go.opentelemetry.io/contrib/otelconf) is still under development and we will update our usage of it as it matures.
+
+## Log v2
+
+The log package has been bumped to v2 as new methods have been added to support tracer correlation with logs. Logs can be scraped with OpenTelemetry's [FileLog Receiver](https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/filelogreceiver).
+You may have to make additional changes to your log backend to properly extract the trace_id, span_id, and trace_flags from the logs.

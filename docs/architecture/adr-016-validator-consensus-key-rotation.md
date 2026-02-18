@@ -38,7 +38,7 @@ Also, it should be noted that this ADR includes only the simplest form of consen
     * parameters can be decided by governance and stored in genesis file.
 * key rotation fee
     * a validator should pay `KeyRotationFee` to rotate the consensus key which is calculated as below
-    * `KeyRotationFee` = (max(`VotingPowerPercentage` *100, 1)* `InitialKeyRotationFee`) * 2^(number of rotations in `ConsPubKeyRotationHistory` in recent unbonding period)
+    * `KeyRotationFee` = (max(`VotingPowerPercentage` *100, 1)* `InitialKeyRotationFee`) * 2^(number of rotations in `ConsPubKeyRotationHistory` during a recent unbonding period)
 * evidence module
     * evidence module can search corresponding consensus key for any height from slashing keeper so that it can decide which consensus key is supposed to be used for the given height.
 * abci.ValidatorUpdate

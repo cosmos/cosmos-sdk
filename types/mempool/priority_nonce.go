@@ -183,12 +183,17 @@ func DefaultPriorityMempool() *PriorityNonceMempool[int64] {
 // i.e. the next valid transaction for the sender. If no such transaction exists,
 // nil will be returned.
 func (mp *PriorityNonceMempool[C]) NextSenderTx(sender string) sdk.Tx {
+	mp.mtx.Lock()
+	defer mp.mtx.Unlock()
 	senderIndex, ok := mp.senderIndices[sender]
 	if !ok {
 		return nil
 	}
 
 	cursor := senderIndex.Front()
+	if cursor == nil {
+		return nil
+	}
 	return cursor.Value.(sdk.Tx)
 }
 
@@ -448,8 +453,6 @@ func (mp *PriorityNonceMempool[C]) CountTx() int {
 // Remove removes a transaction from the mempool in O(log n) time, returning an
 // error if unsuccessful.
 func (mp *PriorityNonceMempool[C]) Remove(tx sdk.Tx) error {
-	mp.mtx.Lock()
-	defer mp.mtx.Unlock()
 	sigs, err := mp.cfg.SignerExtractor.GetSigners(tx)
 	if err != nil {
 		return err
@@ -464,6 +467,9 @@ func (mp *PriorityNonceMempool[C]) Remove(tx sdk.Tx) error {
 	if err != nil {
 		return err
 	}
+
+	mp.mtx.Lock()
+	defer mp.mtx.Unlock()
 
 	scoreKey := txMeta[C]{nonce: nonce, sender: sender}
 	score, ok := mp.scores[scoreKey]

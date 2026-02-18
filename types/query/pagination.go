@@ -2,7 +2,6 @@ package query
 
 import (
 	"fmt"
-	"math"
 
 	db "github.com/cosmos/cosmos-db"
 	"google.golang.org/grpc/codes"
@@ -16,12 +15,9 @@ import (
 const DefaultPage = 1
 
 // DefaultLimit is the default `limit` for queries
-// if the `limit` is not supplied, paginate will use `DefaultLimit`
+// if the `limit` is not supplied or exceeds the maximum
+// allowed value, paginate will use `DefaultLimit`
 const DefaultLimit = 100
-
-// PaginationMaxLimit is the maximum limit the paginate function can handle
-// which equals the maximum value that can be stored in uint64
-var PaginationMaxLimit uint64 = math.MaxUint64
 
 // ParsePagination validates PageRequest and returns page number & limit.
 func ParsePagination(pageReq *PageRequest) (page, limit int, err error) {

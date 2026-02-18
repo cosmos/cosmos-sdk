@@ -30,6 +30,10 @@ func (ms multiStore) GetCommitInfo(ver int64) (*storetypes.CommitInfo, error) {
 	panic("implement me")
 }
 
+func (ms multiStore) Close() error {
+	return nil
+}
+
 func (ms multiStore) CacheMultiStore() storetypes.CacheMultiStore {
 	panic("not implemented")
 }

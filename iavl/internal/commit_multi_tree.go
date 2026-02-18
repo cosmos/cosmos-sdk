@@ -191,6 +191,12 @@ func (db *multiTreeFinalizer) commit(ctx context.Context, span trace.Span) error
 		return fmt.Errorf("%w; cause: %v", rolledbackErr, err)
 	}
 
+	// wait for commit info to be written before we start finalizing stores,
+	// otherwise checkpointing may start, and commit is not atomic
+	if err := <-commitInfoSynced; err != nil {
+		return fmt.Errorf("writing commit info failed: %w", err)
+	}
+
 	var errGroup errgroup.Group
 	// finalize IAVL stores
 	for _, finalizer := range db.finalizers {
@@ -220,11 +226,6 @@ func (db *multiTreeFinalizer) commit(ctx context.Context, span trace.Span) error
 	// wait for all stores to finalize
 	if err := errGroup.Wait(); err != nil {
 		return fmt.Errorf("finalizing commit failed: %w", err)
-	}
-
-	// wait for commit info to be written
-	if err := <-commitInfoSynced; err != nil {
-		return fmt.Errorf("writing commit info failed: %w", err)
 	}
 
 	version := db.workingCommitId.Version

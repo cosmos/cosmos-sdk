@@ -77,6 +77,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* [#25955](https://github.com/cosmos/cosmos-sdk/pull/25955) Use cosmos/btree directly instead of replacing it in go.mods
 * (types) [#25342](https://github.com/cosmos/cosmos-sdk/pull/25342) Undeprecated `EmitEvent` and `EmitEvents` on the `EventManager`.  These functions will continue to be maintained.
 * (types) [#24668](https://github.com/cosmos/cosmos-sdk/pull/24668) Scope the global config to a particular binary so that multiple SDK binaries can be properly run on the same machine.
 * (baseapp) [#24655](https://github.com/cosmos/cosmos-sdk/pull/24655) Add mutex locks for `state` and make `lastCommitInfo` atomic to prevent race conditions between `Commit` and `CreateQueryContext`.
@@ -120,6 +121,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/auth) [#25828](https://github.com/cosmos/cosmos-sdk/pull/25828) Limits pagination at default for values that exceed it.
 * (x/staking) [#25829](https://github.com/cosmos/cosmos-sdk/pull/25829) Validates case-sensitivity on authz grands in x/staking.
 * (mempool) [#25869](https://github.com/cosmos/cosmos-sdk/pull/25869) fix(mempool): add thread safety to NextSenderTx.
+* (x/group) [#25922](https://github.com/cosmos/cosmos-sdk/pull/25922) Add zero-total-weight check for ThresholdDecisionPolicy
+* (x/group) [#25917](https://github.com/cosmos/cosmos-sdk/pull/25917) Prevent creation of zero-weight groups.
 * (x/group) [#25919](https://github.com/cosmos/cosmos-sdk/pull/25919) add safer type assertions to group `DecisionPolicy` getter calls.
 * (x/group) [#25920](https://github.com/cosmos/cosmos-sdk/pull/25920) Expand voting period check to verify period is positive instead of nonzero.
 * (store/iavl) [#25914](https://github.com/cosmos/cosmos-sdk/pull/25914) fix(store/iavl): use versioned store for /subspace historical queries.

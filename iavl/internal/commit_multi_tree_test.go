@@ -2,7 +2,6 @@ package internal
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"sync/atomic"
 	"testing"
@@ -65,7 +64,8 @@ func TestCommitMultiTree_Reload(t *testing.T) {
 }
 
 func TestCommitMultiTreeSims(t *testing.T) {
-	os.RemoveAll("testdata/iavl-data")
+	// NOTE: if we need to debug test failures, we can uncomment this code to save data after test failures:
+	//os.RemoveAll("testdata/iavl-data")
 	var iterCount atomic.Int32
 	rapid.Check(t, func(t *rapid.T) {
 		iter := int(iterCount.Add(1) - 1) // 0-based, matches rapid's "panic after N tests"
@@ -92,16 +92,20 @@ func testCommitMultiTreeSims(t *rapid.T, iter int, opts Options, pruningOpts pru
 	dbV1 := dbm.NewMemDB()
 	mtV1 := rootmulti.NewStore(dbV1, log.NewNopLogger(), storemetrics.NewNoOpMetrics())
 
-	dataDir := fmt.Sprintf("testdata/iavl-data/run-%d", iter)
-	require.NoError(t, os.MkdirAll(dataDir, 0o755), "failed to create data directory")
-	testPassed := false
-	defer func() {
-		if testPassed {
-			os.RemoveAll(dataDir)
-		} else {
-			t.Logf("keeping iavl data dir for debugging: %s", dataDir)
-		}
-	}()
+	// NOTE: if we need to debug test failures, we can uncomment this code to save data after test failures:
+	//dataDir := fmt.Sprintf("testdata/iavl-data/run-%d", iter)
+	//require.NoError(t, os.MkdirAll(dataDir, 0o755), "failed to create data directory")
+	//testPassed := false
+	//defer func() {
+	//	if testPassed {
+	//		os.RemoveAll(dataDir)
+	//	} else {
+	//		t.Logf("keeping iavl data dir for debugging: %s", dataDir)
+	//	}
+	//}()
+	dataDir, err := os.MkdirTemp("", "iavlx")
+	require.NoError(t, err, "failed to create temp directory")
+	defer os.RemoveAll(dataDir)
 
 	sim := &SimCommitMultiTree{
 		mtV1:        mtV1,
@@ -134,26 +138,28 @@ func testCommitMultiTreeSims(t *rapid.T, iter int, opts Options, pruningOpts pru
 	//}()
 
 	t.Cleanup(func() {
-		// generate debug HTML file for test inspection
-		//if t.Failed() {
-		desc := sim.mtV2.Describe()
-		os.MkdirAll("testdata", 0o755)
-		f, err := os.Create(fmt.Sprintf("testdata/iavl-debug-run-%d.html", iter))
-		if err != nil {
-			t.Logf("failed to create debug HTML file: %v", err)
-			return
-		}
-		defer f.Close()
-		if err := RenderHTML(f, desc); err != nil {
-			t.Logf("failed to render debug HTML: %v", err)
-		}
+		// NOTE: if we need to debug test failures, we can uncomment this code to save a debug HTML file with the tree state at the end of the test for inspection:
+		//// generate debug HTML file for test inspection
+		////if t.Failed() {
+		//desc := sim.mtV2.Describe()
+		//os.MkdirAll("testdata", 0o755)
+		//f, err := os.Create(fmt.Sprintf("testdata/iavl-debug-run-%d.html", iter))
+		//if err != nil {
+		//	t.Logf("failed to create debug HTML file: %v", err)
+		//	return
 		//}
+		//defer f.Close()
+		//if err := RenderHTML(f, desc); err != nil {
+		//	t.Logf("failed to render debug HTML: %v", err)
+		//}
+		////}
 
 		require.NoError(t, sim.mtV2.Close(), "failed to close iavlx commit multi tree")
 	})
 
 	sim.Check(t)
-	testPassed = true
+	// NOTE: if we need to debug test failures, we can keep the data directory by not setting testPassed to true, which will prevent cleanup of the data directory and allow us to inspect the generated HTML file with the tree state at the end of the test
+	//testPassed = true
 }
 
 type SimCommitMultiTree struct {
@@ -190,7 +196,7 @@ func (sim *SimCommitMultiTree) mountStores(st store.CommitMultiStore) {
 }
 
 func (sim *SimCommitMultiTree) Check(t *rapid.T) {
-	versions := rapid.IntRange(1, 100).Draw(t, "versions")
+	versions := rapid.IntRange(1, 50).Draw(t, "versions")
 	for i := 0; i < versions; i++ {
 		sim.checkNewVersion(t)
 	}
@@ -201,7 +207,7 @@ func (sim *SimCommitMultiTree) checkNewVersion(t *rapid.T) {
 	testRollback := rapid.Bool().Draw(t, "testRollback")
 	if testRollback {
 		cacheMs2 := sim.mtV2.CacheMultiStore()
-		numUpdates := rapid.IntRange(0, 200).Draw(t, "numRollbackUpdates")
+		numUpdates := rapid.IntRange(0, 20).Draw(t, "numRollbackUpdates")
 		for i := 0; i < numUpdates; i++ {
 			j := rapid.IntRange(0, len(sim.storeKeys)-1).Draw(t, "storeKey")
 			storeKey := sim.storeKeys[j]

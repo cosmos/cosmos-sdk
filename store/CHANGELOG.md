@@ -29,6 +29,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 * [#20425](https://github.com/cosmos/cosmos-sdk/pull/20425) Fix nil pointer panic when querying historical state where a new store does not exist.
 
+### Improvements 
+
+* [#25924](https://github.com/cosmos/cosmos-sdk/pull/25924) Remove read cache and locks from cacheKV store.
+
 ## v1.1.2 (March 31, 2025)
 
 ### Bug Fixes

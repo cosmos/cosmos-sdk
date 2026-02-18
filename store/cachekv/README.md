@@ -12,7 +12,7 @@ delegated to this wrapper which might actually introduce multiple nested cache l
 
 ## No Mutex
 
-Also, the previous implementation had a mutex lock which prevented any concurrent reads.
+The previous implementation had a mutex lock which prevented any concurrent reads.
 In this implementation, there is no lock.
 Concurrent reads should be totally safe as long as there are no concurrent writes, and as long
 as the underlying KV-store implementation is safe for concurrent reads.

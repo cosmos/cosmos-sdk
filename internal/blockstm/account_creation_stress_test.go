@@ -12,13 +12,6 @@ import (
 	storetypes "cosmossdk.io/store/types"
 )
 
-func requireBlockSTMStress(t *testing.T) {
-	t.Helper()
-	if os.Getenv("BLOCKSTM_STRESS") != "1" {
-		t.Skip("set BLOCKSTM_STRESS=1 to run stress account-creation repro tests")
-	}
-}
-
 func blockSTMStressIterations(defaultIterations int) int {
 	if raw := os.Getenv("BLOCKSTM_STRESS_ITERS"); raw != "" {
 		if v, err := strconv.Atoi(raw); err == nil && v > 0 {
@@ -32,7 +25,6 @@ func runAccountCreationStressCase(
 	t *testing.T,
 	numTxns, workers, iterations int,
 	opts accountCreationOpts,
-	useEstimates bool,
 	recoverPanics bool,
 ) {
 	t.Helper()
@@ -59,21 +51,15 @@ func runAccountCreationStressCase(
 		}
 
 		var err error
-		if useEstimates {
-			estimates := make([]MultiLocations, numTxns)
-			for i := 0; i < numTxns; i++ {
-				estimates[i] = MultiLocations{
-					0: Locations{Key(accountCreationSeqKey)},
-				}
+		estimates := make([]MultiLocations, numTxns)
+		for i := 0; i < numTxns; i++ {
+			estimates[i] = MultiLocations{
+				0: Locations{Key(accountCreationSeqKey)},
 			}
-			err = ExecuteBlockWithEstimates(
-				context.Background(), blk.Size(), stores, storage, workers, estimates, execTx,
-			)
-		} else {
-			err = ExecuteBlock(
-				context.Background(), blk.Size(), stores, storage, workers, execTx,
-			)
 		}
+		err = ExecuteBlockWithEstimates(
+			context.Background(), blk.Size(), stores, storage, workers, estimates, execTx,
+		)
 
 		require.NoError(t, err, "iteration %d: ExecuteBlock failed", iter)
 
@@ -112,7 +98,6 @@ func runAccountCreationStressCase(
 }
 
 func TestAccountCreationParallelRace(t *testing.T) {
-	requireBlockSTMStress(t)
 	runAccountCreationStressCase(
 		t,
 		100,
@@ -120,38 +105,32 @@ func TestAccountCreationParallelRace(t *testing.T) {
 		blockSTMStressIterations(100),
 		accountCreationOpts{},
 		false,
-		false,
 	)
 }
 
 func TestAccountCreationParallel_WithEstimates(t *testing.T) {
-	requireBlockSTMStress(t)
 	runAccountCreationStressCase(
 		t,
 		50,
 		10,
 		blockSTMStressIterations(20),
 		accountCreationOpts{},
-		true,
 		false,
 	)
 }
 
 func TestAccountCreationParallel_DivergentPanicRecovery(t *testing.T) {
-	requireBlockSTMStress(t)
 	runAccountCreationStressCase(
 		t,
 		50,
 		10,
 		blockSTMStressIterations(20),
 		accountCreationOpts{panicOnConflict: true},
-		false,
 		true,
 	)
 }
 
 func TestAccountCreationParallel_CacheWrap(t *testing.T) {
-	requireBlockSTMStress(t)
 	runAccountCreationStressCase(
 		t,
 		100,
@@ -159,19 +138,16 @@ func TestAccountCreationParallel_CacheWrap(t *testing.T) {
 		blockSTMStressIterations(100),
 		accountCreationOpts{cacheWrap: true},
 		false,
-		false,
 	)
 }
 
 func TestAccountCreationParallel_CacheWrap_PanicPath(t *testing.T) {
-	requireBlockSTMStress(t)
 	runAccountCreationStressCase(
 		t,
 		100,
 		10,
 		blockSTMStressIterations(50),
 		accountCreationOpts{cacheWrap: true, panicOnConflict: true},
-		false,
 		true,
 	)
 }

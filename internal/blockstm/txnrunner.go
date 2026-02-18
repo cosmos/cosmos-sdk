@@ -1,14 +1,12 @@
 package blockstm
 
 import (
-	"bytes"
 	"context"
 	"sync"
 	"sync/atomic"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
-	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,26 +14,11 @@ import (
 
 var _ sdk.TxRunner = STMRunner{}
 
-var (
-	// Keep these prefixes in sync with x/auth and x/bank collection keys.
-	// authAccountNumberSeqPrefix and bankBalancesStoreKeyPrefix are both
-	// NewPrefix(2) intentionally — they reference different stores (acc vs bank).
-	authAccountStorePrefix     = collections.NewPrefix(1)
-	authAccountNumberSeqPrefix = collections.NewPrefix(2)
-	bankBalancesStoreKeyPrefix = collections.NewPrefix(2)
-)
-
-func NewSTMRunner(
-	txDecoder sdk.TxDecoder,
-	stores []storetypes.StoreKey,
-	workers int, estimate bool,
-	coinDenom func(storetypes.MultiStore) string,
-) *STMRunner {
+func NewSTMRunner(txDecoder sdk.TxDecoder, stores []storetypes.StoreKey, workers int, coinDenom func(storetypes.MultiStore) string) *STMRunner {
 	return &STMRunner{
 		txDecoder: txDecoder,
 		stores:    stores,
 		workers:   workers,
-		estimate:  estimate,
 		coinDenom: coinDenom,
 	}
 }
@@ -45,7 +28,6 @@ type STMRunner struct {
 	txDecoder sdk.TxDecoder
 	stores    []storetypes.StoreKey
 	workers   int
-	estimate  bool
 	coinDenom func(storetypes.MultiStore) string
 }
 
@@ -78,13 +60,11 @@ func (e STMRunner) Run(ctx context.Context, ms storetypes.MultiStore, txs [][]by
 		memTxs    []sdk.Tx
 	)
 
-	if e.estimate {
-		var authKVStore storetypes.KVStore
-		if authStore >= 0 {
-			authKVStore = ms.GetKVStore(e.stores[authStore])
-		}
-		memTxs, estimates = preEstimates(txs, e.workers, authStore, bankStore, e.coinDenom(ms), e.txDecoder, authKVStore)
+	var authKVStore storetypes.KVStore
+	if authStore >= 0 {
+		authKVStore = ms.GetKVStore(e.stores[authStore])
 	}
+	memTxs, estimates = preEstimates(txs, e.workers, authStore, bankStore, e.coinDenom(ms), e.txDecoder, authKVStore)
 
 	if err := ExecuteBlockWithEstimates(
 		ctx,
@@ -131,8 +111,6 @@ func preEstimates(
 ) ([]sdk.Tx, []MultiLocations) {
 	memTxs := make([]sdk.Tx, len(txs))
 	estimates := make([]MultiLocations, len(txs))
-	var authStoreMu sync.Mutex
-	globalAccountNumberKey := authAccountNumberSeqPrefix.Bytes()
 
 	job := func(start, end int) {
 		for i := start; i < end; i++ {
@@ -143,57 +121,29 @@ func preEstimates(
 			}
 			memTxs[i] = tx
 
-			feeTx, ok := tx.(sdk.FeeTx)
-			if !ok {
-				continue
-			}
-			feePayer := sdk.AccAddress(feeTx.FeePayer())
-
 			var estimate MultiLocations
-
+			// Construct x/auth estimates
 			if authStore >= 0 {
-				// account key
-				accKey, err := collections.EncodeKeyWithPrefix(
-					authAccountStorePrefix,
-					sdk.AccAddressKey,
-					feePayer,
-				)
-				if err == nil {
-					authEstimate := Locations{accKey}
-					if authKVStore != nil {
-						authStoreMu.Lock()
-						hasAccount := authKVStore.Has(accKey)
-						authStoreMu.Unlock()
-						if !hasAccount {
-							authEstimate = append(authEstimate, globalAccountNumberKey)
-							// Sort so MVMemory sees deterministic key ordering.
-					if bytes.Compare(authEstimate[0], authEstimate[1]) > 0 {
-								authEstimate[0], authEstimate[1] = authEstimate[1], authEstimate[0]
-							}
-						}
-					}
-					if estimate == nil {
-						estimate = make(MultiLocations, 2)
-					}
-					estimate[authStore] = authEstimate
+				est, ok := EstimateAuth(tx, authKVStore)
+				if !ok || est == nil {
+					break
 				}
+				if estimate == nil {
+					estimate = make(MultiLocations, 2)
+				}
+				estimate[authStore] = est
 			}
-
+			// Construct x/bank estimates
 			if bankStore >= 0 {
-				// balance key
-				balanceKey, err := collections.EncodeKeyWithPrefix(
-					bankBalancesStoreKeyPrefix,
-					collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey),
-					collections.Join(feePayer, coinDenom),
-				)
-				if err == nil {
+				est, ok := EstimateBank(tx, coinDenom)
+				if ok || est == nil {
 					if estimate == nil {
 						estimate = make(MultiLocations, 2)
 					}
-					estimate[bankStore] = Locations{balanceKey}
+					estimate[bankStore] = est
 				}
 			}
-
+			// Set estimates if any exist
 			if estimate != nil {
 				estimates[i] = estimate
 			}

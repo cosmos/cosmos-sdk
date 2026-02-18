@@ -3,23 +3,12 @@ package blockstm
 import (
 	"context"
 	"fmt"
-	"os"
-	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
 	storetypes "cosmossdk.io/store/types"
 )
-
-func blockSTMStressIterations(defaultIterations int) int {
-	if raw := os.Getenv("BLOCKSTM_STRESS_ITERS"); raw != "" {
-		if v, err := strconv.Atoi(raw); err == nil && v > 0 {
-			return v
-		}
-	}
-	return defaultIterations
-}
 
 func runAccountCreationStressCase(
 	t *testing.T,
@@ -102,7 +91,7 @@ func TestAccountCreationParallelRace(t *testing.T) {
 		t,
 		100,
 		10,
-		blockSTMStressIterations(100),
+		100,
 		accountCreationOpts{},
 		false,
 	)
@@ -113,7 +102,7 @@ func TestAccountCreationParallel_WithEstimates(t *testing.T) {
 		t,
 		50,
 		10,
-		blockSTMStressIterations(20),
+		20,
 		accountCreationOpts{},
 		false,
 	)
@@ -124,7 +113,7 @@ func TestAccountCreationParallel_DivergentPanicRecovery(t *testing.T) {
 		t,
 		50,
 		10,
-		blockSTMStressIterations(20),
+		20,
 		accountCreationOpts{panicOnConflict: true},
 		true,
 	)
@@ -135,7 +124,7 @@ func TestAccountCreationParallel_CacheWrap(t *testing.T) {
 		t,
 		100,
 		10,
-		blockSTMStressIterations(100),
+		100,
 		accountCreationOpts{cacheWrap: true},
 		false,
 	)
@@ -146,7 +135,7 @@ func TestAccountCreationParallel_CacheWrap_PanicPath(t *testing.T) {
 		t,
 		100,
 		10,
-		blockSTMStressIterations(50),
+		50,
 		accountCreationOpts{cacheWrap: true, panicOnConflict: true},
 		true,
 	)

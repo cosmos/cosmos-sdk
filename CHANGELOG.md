@@ -54,6 +54,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/gov) [#25617](https://github.com/cosmos/cosmos-sdk/pull/25617) `AfterProposalSubmission` hook now includes proposer address as a parameter.
 * (x/gov) [#25616](https://github.com/cosmos/cosmos-sdk/pull/25616) `DistrKeeper` `x/distribution` is now optional. Genesis validation ensures `distrKeeper` is set if distribution module is used as proposal cancel destination.
 * (systemtests) [#25930]https://github.com/cosmos/cosmos-sdk/pull/25930) Move `systemtests` into `testutil` and no longer under its own `go.mod`.
+* (ABCI) [#25969](https://github.com/cosmos/cosmos-sdk/pull/25969) Add support for new ABCI methods, `InsertTx` and `ReapTxs`.
 
 ### Features
 

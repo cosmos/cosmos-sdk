@@ -45,6 +45,7 @@ func OpenChangeset(treeStore *TreeStore, dir string) (*Changeset, error) {
 	// mark as sealed since this is an existing changeset that won't be written to anymore
 	// otherwise the compactor will skip it
 	cs.sealed.Store(true)
+	// TODO integrity check - make sure checkpoint info lines up with sizes of branches, leaves and kv data files
 	return cs, nil
 }
 

@@ -122,6 +122,8 @@ func NewSimApp(
 			}
 			bApp.SetCMS(db)
 		})
+	} else {
+		fmt.Println("Using iavl/v1")
 	}
 	var (
 		app        = &SimApp{}

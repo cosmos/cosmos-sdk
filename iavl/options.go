@@ -46,7 +46,7 @@ type Options struct {
 	RootCacheExpiry int64 `json:"root_cache_expiry"`
 }
 
-func (opts *Options) toTreeStoreOptions() internal.TreeStoreOptions {
+func (opts CommitTreeOptions) toTreeStoreOptions() internal.TreeStoreOptions {
 	changesetRolloverSize := opts.ChangesetRolloverSize
 	if changesetRolloverSize == 0 {
 		changesetRolloverSize = 2 * 1024 * 1024 * 1024 // 2GB default
@@ -80,5 +80,6 @@ func (opts *Options) toTreeStoreOptions() internal.TreeStoreOptions {
 		CheckpointInterval:    checkpointInterval,
 		RootCacheSize:         rootCacheSize,
 		RootCacheExpiry:       rootCacheExpiry,
+		ExpectedVersion:       opts.ExpectedVersion,
 	}
 }

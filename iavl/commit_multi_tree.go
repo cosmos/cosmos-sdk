@@ -329,6 +329,18 @@ func (db *multiTreeFinalizer) writeCommitInfoHeader() (*os.File, error) {
 		return nil, db.ctx.Err() // do not write commit info if rolling back
 	}
 
+	// wait for all trees to complete their WAL writes so we only commit when all children have committed
+	var wg errgroup.Group
+	for _, finalizer := range db.finalizers {
+		finalizer := finalizer
+		wg.Go(func() error {
+			return finalizer.WaitForWAL()
+		})
+	}
+	if err := wg.Wait(); err != nil {
+		return nil, fmt.Errorf("failed when waiting for WAL completion: %w", err)
+	}
+
 	// write the header to disk
 	commitInfoDir := filepath.Join(db.dir, commitInfoSubPath)
 	err = os.MkdirAll(commitInfoDir, 0o700)
@@ -737,8 +749,9 @@ func (db *CommitMultiTree) loadStore(key storetypes.StoreKey, typ storetypes.Sto
 			}
 		}
 		ct, err := NewCommitTree(dir, CommitTreeOptions{
-			Options:  db.opts,
-			TreeName: key.Name(),
+			Options:         db.opts,
+			TreeName:        key.Name(),
+			ExpectedVersion: uint32(expectedVersion),
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to load CommitTree for store %s: %w", key.Name(), err)

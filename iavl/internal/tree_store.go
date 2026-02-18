@@ -23,6 +23,7 @@ type TreeStoreOptions struct {
 	CheckpointInterval    int
 	RootCacheSize         uint64
 	RootCacheExpiry       time.Duration
+	ExpectedVersion       uint32
 }
 
 type TreeStore struct {
@@ -284,7 +285,7 @@ func (ts *TreeStore) loadRootAtVersion(ctx context.Context, targetVersion uint32
 		}
 
 		prevVersion := curVersion
-		root, curVersion, err = ReplayWAL(ctx, root, changeset.files.WALFile(), curVersion, targetVersion)
+		root, curVersion, err = ReplayWALForQuery(ctx, root, changeset.files.WALFile(), curVersion, targetVersion)
 		if err != nil {
 			return nil, fmt.Errorf("failed to replay WAL for version %d: %w", targetVersion, err)
 		}

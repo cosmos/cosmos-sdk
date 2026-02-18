@@ -137,6 +137,9 @@ func (ts *TreeStore) load() error {
 
 	root := cpInfo.Root
 	version := cpInfo.Version
+	if version > ts.opts.ExpectedVersion {
+		return fmt.Errorf("latest checkpoint version %d is greater than expected version %d, this indicates data corruptions", version, ts.opts.ExpectedVersion)
+	}
 
 	// find the changeset to start replaying from
 	replayFrom := ts.changesetForVersion(version + 1)
@@ -146,7 +149,7 @@ func (ts *TreeStore) load() error {
 	}
 
 	ts.changesetsByVersion.Ascend(replayFromVersion, func(_ uint32, cs *Changeset) bool {
-		root, version, err = ReplayWAL(ctx, root, cs.files.WALFile(), version, 0)
+		root, version, err = ReplayWALForStartup(ctx, root, cs.files.WALFile(), version, ts.opts.ExpectedVersion)
 		if err != nil {
 			return false
 		}

@@ -47,6 +47,7 @@ require (
 	github.com/cometbft/cometbft v0.39.0-beta.2.0.20251020144122-cd33e1fff685 // indirect
 	github.com/cometbft/cometbft-db v0.14.3 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
+	github.com/cosmos/btree v1.0.0 // indirect
 	github.com/cosmos/cosmos-db v1.1.3 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
@@ -210,8 +211,4 @@ require (
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
 
-replace (
-	cosmossdk.io/store => ../../store
-	// Use fork for blockstm
-	github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-20250924232609-2c6195d95951
-)
+replace cosmossdk.io/store => ../../store

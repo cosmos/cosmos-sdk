@@ -119,20 +119,34 @@ func (store *GStore[V]) ReverseIterator(start, end []byte) types.GIterator[V] {
 	return store.iterator(start, end, false)
 }
 
+// Update is a type used to represent a pending update to the underlying store in the cache,
+// it can be either a set or a delete depending on the Delete field.
+// This is defined as a type alias so that other code can use the same struct without a direct import.
+type Update[V any] = struct {
+	// Key is the key to be updated.
+	Key []byte
+	// Value is the value to be set. It is ignored if Delete is true, but should be set to the zero value of V.
+	Value V
+	// Delete indicates whether this update is a deletion.
+	Delete bool
+}
+
 // Updates returns the cached updates to be applied to the underlying commitment store.
-// The zero value for V is used to indicate deletions.
 // This should be preferred over calling Write against the underlying commitment store
 // because it allows for better performance.
 // Actually calling Write when this is the first cache layer on top of iavl will result in a panic.
-func (store *GStore[V]) Updates() (updates iter.Seq2[[]byte, V], count int) {
+func (store *GStore[V]) Updates() (updates iter.Seq[Update[V]], count int) {
 	if !store.dirty {
-		return func(yield func([]byte, V) bool) {}, 0
+		return func(yield func(Update[V]) bool) {}, 0
 	}
 
-	return func(yield func([]byte, V) bool) {
+	return func(yield func(Update[V]) bool) {
 		store.writeMap.Scan(func(key string, value V) bool {
-			// casting to []byte introduces a small amount of allocation and copying, but is safer
-			return yield([]byte(key), value)
+			return yield(Update[V]{
+				Key:    []byte(key), // casting to []byte introduces a small amount of allocation and copying, but is safer
+				Value:  value,
+				Delete: store.isZero(value),
+			})
 		})
 	}, store.writeMap.Len()
 }

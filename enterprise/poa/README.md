@@ -2,6 +2,8 @@
 
 > **Part of Cosmos SDK Enterprise Modules** | [Enterprise Modules](../README.md)
 >
+> **Full Documentation**: [docs.cosmos.network/enterprise/components/poa/overview](https://docs.cosmos.network/enterprise/components/poa/overview)
+>
 > **License Notice**: This module uses the [Source Available Evaluation License](./LICENSE), different from the core SDK's Apache-2.0 license. See the [License](#license) section for details.
 
 A Cosmos SDK module that implements a Proof of Authority (PoA) consensus mechanism, allowing a designated admin to manage a permissioned validator set and integrate with governance for validator-only participation.

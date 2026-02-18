@@ -302,12 +302,21 @@ func (cr *Changeset) ReadyToCompact(orphanPercentTarget float64, orphanAgeTarget
 }
 
 func (cr *Changeset) Close() error {
-	errs := []error{
-		cr.kvLog.Close(),
-		cr.leavesData.Close(),
-		cr.branchesData.Close(),
-		cr.versionsData.Close(),
-		cr.orphanWriter.Flush(),
+	var errs []error
+	if cr.kvLog != nil {
+		errs = append(errs, cr.kvLog.Close())
+	}
+	if cr.leavesData != nil {
+		errs = append(errs, cr.leavesData.Close())
+	}
+	if cr.branchesData != nil {
+		errs = append(errs, cr.branchesData.Close())
+	}
+	if cr.versionsData != nil {
+		errs = append(errs, cr.versionsData.Close())
+	}
+	if cr.orphanWriter != nil {
+		errs = append(errs, cr.orphanWriter.Flush())
 	}
 	if cr.files != nil {
 		errs = append(errs, cr.files.Close())
@@ -338,6 +347,9 @@ func (cr *Changeset) TryDispose() bool {
 			cr.branchesData = nil
 			cr.leavesData = nil
 			cr.kvLog = nil
+			// Old node pointers may still reference evicted changesets after disposal.
+			// Clearing orphanWriter releases the 512KB bufio buffer per disposed reader.
+			cr.orphanWriter = nil
 			// DO NOT set treeStore to nil, as deposed changesets should still forward calls to the main tree store
 			// DO NOT set files to nil, as we might need to delete them later
 			return true

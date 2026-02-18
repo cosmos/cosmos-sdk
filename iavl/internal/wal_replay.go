@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"os"
 
+	"cosmossdk.io/log/v2"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )
 
-func ReplayWALForStartup(ctx context.Context, root *NodePointer, walFile *os.File, rootVersion, expectedVersion uint32) (*NodePointer, uint32, error) {
+func ReplayWALForStartup(ctx context.Context, root *NodePointer, walFile *os.File, rootVersion, expectedVersion uint32, logger log.Logger, autoRepair bool) (*NodePointer, uint32, error) {
 	_, span := tracer.Start(ctx, "ReplayWALForStartup",
 		trace.WithAttributes(
 			attribute.String("walFile", walFile.Name()),
@@ -53,6 +54,10 @@ func ReplayWALForStartup(ctx context.Context, root *NodePointer, walFile *os.Fil
 	}
 
 	if rollbackOffset > 0 {
+		if !autoRepair {
+			return nil, 0, fmt.Errorf("WAL contains entries beyond expected version %d, auto repair disabled", expectedVersion)
+		}
+
 		logger.WarnContext(ctx, "WAL contains entries beyond expected version, rolling back to expected version", "walFile", walFile.Name(), "expectedVersion", expectedVersion, "rollbackOffset", rollbackOffset)
 		// must rollback if we saw extra entries past the expected version
 		err := RollbackFileToOffset(walFile, int64(rollbackOffset))

@@ -23,11 +23,11 @@ func RenderHTML(w io.Writer, desc MultiTreeDescription) error {
 func (db *CommitMultiTree) startDebugServer() {
 	ln, err := net.Listen("tcp", "127.0.0.1:63789")
 	if err != nil {
-		logger.Error("failed to start IAVL debug server", "error", err)
+		db.logger.Error("failed to start IAVL debug server", "error", err)
 		return
 	}
 	fmt.Printf("IAVL debug server started at http://%s\n", ln.Addr().String())
-	logger.Info("IAVL debug server started", "addr", "http://"+ln.Addr().String())
+	db.logger.Info("IAVL debug server started", "addr", "http://"+ln.Addr().String())
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

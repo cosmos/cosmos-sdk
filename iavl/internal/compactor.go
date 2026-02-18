@@ -126,7 +126,7 @@ func (c *Compactor) doAddChangeset(reader *ChangesetReader) error {
 	}
 	c.treeStore.UnlockOrphanProc()
 
-	logger.DebugContext(c.ctx, "processing changeset for compaction", "numCheckpoints", numCheckpoints)
+	c.treeStore.logger.DebugContext(c.ctx, "processing changeset for compaction", "numCheckpoints", numCheckpoints)
 	for i := 0; i < numCheckpoints; i++ {
 		cpInfo := cpInfo.UnsafeItem(uint32(i)) // copy
 		newLeafStartIdx := uint32(0)

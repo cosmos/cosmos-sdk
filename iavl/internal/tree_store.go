@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 	"unsafe"
 
+	"cosmossdk.io/log/v2"
 	"github.com/tidwall/btree"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -16,8 +17,9 @@ import (
 )
 
 type TreeStore struct {
-	dir  string
-	opts TreeOptions
+	dir    string
+	opts   TreeOptions
+	logger log.Logger
 
 	root           atomic.Pointer[versionedRoot]
 	lastCheckpoint atomic.Uint32
@@ -42,16 +44,17 @@ type versionedRoot struct {
 	root    *NodePointer
 }
 
-func NewTreeStore(dir string, opts TreeOptions) (*TreeStore, error) {
+func NewTreeStore(dir string, opts TreeOptions, logger log.Logger) (*TreeStore, error) {
 	ts := &TreeStore{
 		dir:          dir,
 		opts:         opts,
+		logger:       logger,
 		checkpointer: NewCheckpointer(NewBasicEvictor(opts.LeafEvictDepth, opts.BranchEvictDepth)),
 		rootByVersionCache: ttlcache.New[uint32, *NodePointer](
 			ttlcache.WithCapacity[uint32, *NodePointer](opts.RootCacheSize),
 			ttlcache.WithTTL[uint32, *NodePointer](opts.RootCacheExpiry),
 		),
-		cleanupProc: newCleanupProc(),
+		cleanupProc: newCleanupProc(logger),
 	}
 	// start automatic cache cleanup
 	go ts.rootByVersionCache.Start()

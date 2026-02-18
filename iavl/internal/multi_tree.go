@@ -74,7 +74,7 @@ func (t *MultiTree) CacheWrap() storetypes.CacheWrap {
 }
 
 func (t *MultiTree) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) storetypes.CacheWrap {
-	logger.Warn("CacheWrapWithTrace called on MultiTree: tracing not implemented")
+	// TODO implement me
 	return t.CacheWrap()
 }
 

@@ -364,9 +364,14 @@ func (m *model) buildCheckpointsTable(cps []internal.CheckpointInfo) {
 		if total := lc + bc; total > 0 {
 			orphPct = fmt.Sprintf("%.1f%%", float64(oc.leaves+oc.branches)*100.0/float64(total))
 		}
+		crcOk := "x"
+		if cp.VerifyCRC32() {
+			crcOk = "✓"
+		}
 		rows[i] = table.Row{
 			strconv.FormatUint(uint64(cp.Checkpoint), 10),
 			strconv.FormatUint(uint64(cp.Version), 10),
+			crcOk,
 			cp.RootID.String(),
 			strconv.Itoa(lc),
 			strconv.Itoa(bc),
@@ -380,7 +385,7 @@ func (m *model) buildCheckpointsTable(cps []internal.CheckpointInfo) {
 		totalOrphPct = fmt.Sprintf("%.1f%%", float64(totalLeafOrph+totalBranchOrph)*100.0/float64(total))
 	}
 	rows = append(rows, table.Row{
-		"━━ TOTAL", "━━", "━━",
+		"━━ TOTAL", "━━", "━━", "━━",
 		strconv.Itoa(totalLeaves),
 		strconv.Itoa(totalBranches),
 		strconv.Itoa(totalLeafOrph),
@@ -390,6 +395,7 @@ func (m *model) buildCheckpointsTable(cps []internal.CheckpointInfo) {
 	cols := []table.Column{
 		{Title: "Checkpoint", Width: 10},
 		{Title: "Version", Width: 10},
+		{Title: "CRC", Width: 5},
 		{Title: "Root", Width: 20},
 		{Title: "Leaves", Width: 8},
 		{Title: "Branches", Width: 10},

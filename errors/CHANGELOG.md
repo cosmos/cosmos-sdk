@@ -31,6 +31,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ## [Unreleased]
 
+## [v1.1.0](https://github.com/cosmos/cosmos-sdk/releases/tag/errors%2Fv1.1.0)
+
+* Bump minor dependencies and update minimum `go` version to `1.24`.
+
 ### Changes
  
 * [#24568](https://github.com/cosmos/cosmos-sdk/pull/24568) Registering the same error code twice will no longer panic - a warning error will be logged to `stderr`.

@@ -51,7 +51,7 @@ Other than the methods related directly to `GenesisState`, module developers are
 
 The `InitGenesis` method is executed during [`InitChain`](../../learn/advanced/00-baseapp.md#initchain) when the application is first started. Given a `GenesisState`, it initializes the subset of the state managed by the module by using the module's [`keeper`](./06-keeper.md) setter function on each parameter within the `GenesisState`.
 
-The [module manager](./01-module-manager.md#manager) of the application is responsible for calling the `InitGenesis` method of each of the application's modules in order. This order is set by the application developer via the manager's `SetOrderGenesisMethod`, which is called in the [application's constructor function](../../learn/beginner/00-app-anatomy.md#constructor-function).
+The [module manager](./01-module-manager.md#manager) of the application is responsible for calling the `InitGenesis` method of each of the application's modules in order. This order is set by the application developer via the manager's `SetOrderInitGenesis` method, which is called in the [application's constructor function](../../learn/beginner/00-app-anatomy.md#constructor-function).
 
 See an example of `InitGenesis` from the `auth` module:
 

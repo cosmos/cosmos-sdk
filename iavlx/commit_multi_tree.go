@@ -36,6 +36,12 @@ type CommitMultiTree struct {
 	workingHash       []byte
 }
 
+func (db *CommitMultiTree) EarliestVersion() int64 {
+	// CommitMultiTree does not support pruning, so the earliest version is always 1
+	// (matching rootmulti's default behavior for unpruned chains).
+	return 1
+}
+
 // GetObjKVStore returns a mounted ObjKVStore for a given StoreKey.
 func (db *CommitMultiTree) GetObjKVStore(key storetypes.StoreKey) storetypes.ObjKVStore {
 	treeIdx, ok := db.treesByKey[key]
@@ -152,8 +158,10 @@ func (db *CommitMultiTree) Commit() storetypes.CommitID {
 	return commitId
 }
 
-const commitInfoSubPath = "commit_info"
-const latestFilename = "latest"
+const (
+	commitInfoSubPath = "commit_info"
+	latestFilename    = "latest"
+)
 
 // saveCommitInfo saves the CommitInfo for a given version to a <version>.ci file,
 // and updates the latest.version file to point to the latest version.

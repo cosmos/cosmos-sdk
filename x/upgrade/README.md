@@ -43,9 +43,11 @@ automatically upgrade to.
 
 ```go
 type Plan struct {
-  Name   string
-  Height int64
-  Info   string
+  Name                string
+  Time                time.Time // Deprecated
+  Height              int64
+  Info                string
+  UpgradedClientState *any.Any  // Deprecated
 }
 ```
 

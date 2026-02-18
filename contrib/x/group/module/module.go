@@ -17,7 +17,7 @@ import (
 	sdkclient "github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	modulev1 "github.com/cosmos/cosmos-sdk/contrib/api/group/module/v1"
+	modulev1 "github.com/cosmos/cosmos-sdk/contrib/api/cosmos/group/module/v1"
 	"github.com/cosmos/cosmos-sdk/contrib/x/group"
 	"github.com/cosmos/cosmos-sdk/contrib/x/group/client/cli"
 	"github.com/cosmos/cosmos-sdk/contrib/x/group/keeper"

@@ -26,7 +26,7 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
@@ -589,7 +589,10 @@ func DefaultBaseappOptions(appOpts types.AppOptions) []func(*baseapp.BaseApp) {
 			fmt.Println("Loading IAVLX as the commit multi-store...")
 			opts := &iavlx.Options{}
 			optsJson, ok := appOpts.Get(FlagIAVLXOptions).(string)
-			if ok && optsJson != "" {
+			if !ok {
+				return
+			}
+			if optsJson != "" {
 				err := json.Unmarshal([]byte(optsJson), opts)
 				if err != nil {
 					panic(fmt.Errorf("failed to unmarshal iavlx options: %w", err))

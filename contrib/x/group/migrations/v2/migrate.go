@@ -7,7 +7,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 
 	group "github.com/cosmos/cosmos-sdk/contrib/x/group"
-	orm2 "github.com/cosmos/cosmos-sdk/contrib/x/group/internal/orm"
+	orm "github.com/cosmos/cosmos-sdk/contrib/x/group/internal/orm"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -26,8 +26,8 @@ func Migrate(
 	ctx sdk.Context,
 	storeKey storetypes.StoreKey,
 	accountKeeper group.AccountKeeper,
-	groupPolicySeq orm2.Sequence,
-	groupPolicyTable orm2.PrimaryKeyTable,
+	groupPolicySeq orm.Sequence,
+	groupPolicyTable orm.PrimaryKeyTable,
 ) error {
 	store := ctx.KVStore(storeKey)
 	curAccVal := groupPolicySeq.CurVal(store)

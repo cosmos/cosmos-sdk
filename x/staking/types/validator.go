@@ -504,8 +504,8 @@ func (v Validator) GetConsAddr() ([]byte, error) {
 	return pk.Address().Bytes(), nil
 }
 
-func (v Validator) GetTokens() math.Int       { return v.Tokens }
-func (v Validator) GetBondedTokens() math.Int { return v.BondedTokens() }
+func (v Validator) GetTokens() math.Int         { return v.Tokens }
+func (v Validator) GetValidatorPower() math.Int { return v.BondedTokens() }
 func (v Validator) GetConsensusPower(r math.Int) int64 {
 	return v.ConsensusPower(r)
 }

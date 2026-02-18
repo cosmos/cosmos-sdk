@@ -37,8 +37,9 @@ type CommitMultiTree struct {
 }
 
 func (db *CommitMultiTree) EarliestVersion() int64 {
-	// TODO implement me
-	return 0
+	// CommitMultiTree does not support pruning, so the earliest version is always 1
+	// (matching rootmulti's default behavior for unpruned chains).
+	return 1
 }
 
 // GetObjKVStore returns a mounted ObjKVStore for a given StoreKey.

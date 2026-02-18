@@ -51,7 +51,7 @@ type (
 	// loading a datastore written with an older version of the software. In
 	// particular, if a module changed the substore key name (or removed a substore)
 	// between two versions of the software.
-	StoreLoader func(ms storetypes.CommitMultiStore2) error
+	StoreLoader func(ms storetypes.CommitMultiStore) error
 )
 
 const (
@@ -91,9 +91,9 @@ type BaseApp struct {
 	// initialized on creation
 	mu                sync.Mutex // mu protects the fields below.
 	logger            log.Logger
-	name              string                       // application name from abci.BlockInfo
-	db                dbm.DB                       // common DB backend
-	cms               storetypes.CommitMultiStore2 // Main (uncached) state
+	name              string                      // application name from abci.BlockInfo
+	db                dbm.DB                      // common DB backend
+	cms               storetypes.CommitMultiStore // Main (uncached) state
 	committer         storetypes.CommitFinalizer
 	qms               storetypes.MultiStore // Optional alternative multistore for querying only.
 	storeLoader       StoreLoader           // function to handle store loading, may be overridden with SetStoreLoader()
@@ -384,14 +384,14 @@ func (app *BaseApp) LoadLatestVersion() error {
 }
 
 // DefaultStoreLoader will be used by default and loads the latest version
-func DefaultStoreLoader(ms storetypes.CommitMultiStore2) error {
+func DefaultStoreLoader(ms storetypes.CommitMultiStore) error {
 	return ms.LoadLatestVersion()
 }
 
 // CommitMultiStore returns the root multi-store.
 // App constructor can use this to access the `cms`.
 // UNSAFE: must not be used during the abci life cycle.
-func (app *BaseApp) CommitMultiStore() storetypes.CommitMultiStore2 {
+func (app *BaseApp) CommitMultiStore() storetypes.CommitMultiStore {
 	return app.cms
 }
 

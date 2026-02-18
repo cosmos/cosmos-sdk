@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"sync"
 	"sync/atomic"
-	"time"
 	"unsafe"
 
 	"github.com/tidwall/btree"
@@ -16,18 +15,9 @@ import (
 	"github.com/jellydator/ttlcache/v3"
 )
 
-type TreeStoreOptions struct {
-	ChangesetRolloverSize int64
-	LeafEvictDepth        uint8
-	BranchEvictDepth      uint8
-	CheckpointInterval    int
-	RootCacheSize         uint64
-	RootCacheExpiry       time.Duration
-}
-
 type TreeStore struct {
 	dir  string
-	opts TreeStoreOptions
+	opts TreeOptions
 
 	root           atomic.Pointer[versionedRoot]
 	lastCheckpoint atomic.Uint32
@@ -52,7 +42,7 @@ type versionedRoot struct {
 	root    *NodePointer
 }
 
-func NewTreeStore(dir string, opts TreeStoreOptions) (*TreeStore, error) {
+func NewTreeStore(dir string, opts TreeOptions) (*TreeStore, error) {
 	ts := &TreeStore{
 		dir:          dir,
 		opts:         opts,
@@ -284,7 +274,7 @@ func (ts *TreeStore) loadRootAtVersion(ctx context.Context, targetVersion uint32
 		}
 
 		prevVersion := curVersion
-		root, curVersion, err = ReplayWAL(ctx, root, changeset.files.WALFile(), curVersion, targetVersion)
+		root, curVersion, err = ReplayWALForQuery(ctx, root, changeset.files.WALFile(), curVersion, targetVersion)
 		if err != nil {
 			return nil, fmt.Errorf("failed to replay WAL for version %d: %w", targetVersion, err)
 		}

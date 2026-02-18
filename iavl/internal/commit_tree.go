@@ -1,4 +1,4 @@
-package iavl
+package internal
 
 import (
 	"context"
@@ -17,31 +17,25 @@ import (
 
 	"cosmossdk.io/store/cachekv"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/cosmos/cosmos-sdk/iavl/internal"
 )
-
-type CommitTreeOptions struct {
-	Options
-	TreeName string
-}
 
 type CommitTree struct {
 	commitMutex sync.Mutex
 
-	opts CommitTreeOptions
+	opts TreeOptions
 
-	treeStore *internal.TreeStore
+	treeStore *TreeStore
 
 	lastCommitId storetypes.CommitID
 }
 
-func NewCommitTree(dir string, opts CommitTreeOptions) (*CommitTree, error) {
+func NewCommitTree(dir string, opts TreeOptions) (*CommitTree, error) {
 	err := os.MkdirAll(dir, 0o700)
 	if err != nil {
 		return nil, fmt.Errorf("creating tree directory: %w", err)
 	}
 
-	treeStore, err := internal.NewTreeStore(dir, opts.toTreeStoreOptions())
+	treeStore, err := NewTreeStore(dir, opts)
 	if err != nil {
 		return nil, fmt.Errorf("creating tree store: %w", err)
 	}
@@ -54,7 +48,7 @@ func NewCommitTree(dir string, opts CommitTreeOptions) (*CommitTree, error) {
 
 var emptyHash = sha256.New().Sum(nil)
 
-func rootHash(ctx context.Context, rootPtr *internal.NodePointer) ([]byte, error) {
+func rootHash(ctx context.Context, rootPtr *NodePointer) ([]byte, error) {
 	// IMPORTANT: this function assumes the write lock is held
 
 	// if we have no root, return empty hash
@@ -72,7 +66,7 @@ func rootHash(ctx context.Context, rootPtr *internal.NodePointer) ([]byte, error
 		return rootNode.Hash().SafeCopy(), nil
 	}
 
-	scheduler := internal.NewAsyncHashScheduler(ctx, int32(runtime.NumCPU()))
+	scheduler := NewAsyncHashScheduler(ctx, int32(runtime.NumCPU()))
 	hash, err := root.ComputeHash(scheduler)
 	if err != nil {
 		return nil, fmt.Errorf("computing root hash: %w", err)
@@ -90,6 +84,9 @@ type commitTreeFinalizer struct {
 	done               chan struct{}
 	err                atomic.Value
 	workingHash        storetypes.CommitID
+	walDone            chan error
+	walOnce            sync.Once
+	walErr             error
 }
 
 func (c *CommitTree) StartCommit(ctx context.Context, updates iter.Seq[cachekv.Update[[]byte]], updateCount int) storetypes.CommitFinalizer {
@@ -100,6 +97,7 @@ func (c *CommitTree) StartCommit(ctx context.Context, updates iter.Seq[cachekv.U
 		finalizeOrRollback: make(chan struct{}),
 		hashReady:          make(chan struct{}),
 		done:               make(chan struct{}),
+		walDone:            make(chan error, 1),
 	}
 	go func() {
 		// Prevent context leak: WithCancel registers a child in the parent context's tree,
@@ -170,8 +168,8 @@ func (c *commitTreeFinalizer) commit(ctx context.Context, updates iter.Seq[cache
 }
 
 type prepareCommitResult struct {
-	root        *internal.NodePointer
-	mutationCtx *internal.MutationContext
+	root        *NodePointer
+	mutationCtx *MutationContext
 }
 
 func (c *commitTreeFinalizer) prepareCommit(ctx context.Context, updates iter.Seq[cachekv.Update[[]byte]], updateCount int) (*prepareCommitResult, error) {
@@ -179,47 +177,36 @@ func (c *commitTreeFinalizer) prepareCommit(ctx context.Context, updates iter.Se
 	defer span.End()
 
 	stagedVersion := c.treeStore.StagedVersion()
-	mutationCtx := internal.NewMutationContext(stagedVersion, stagedVersion)
+	mutationCtx := NewMutationContext(stagedVersion, stagedVersion)
 
 	// TODO pre-allocate a decent sized slice that we reuse and reset across commits
-	nodeUpdates := make([]internal.KVUpdate, 0, updateCount)
+	nodeUpdates := make([]KVUpdate, 0, updateCount)
 	if updates != nil { // updates can be nil for empty commits
 		for update := range updates {
 			if update.Delete {
-				nodeUpdates = append(nodeUpdates, internal.KVUpdate{DeleteKey: update.Key})
+				nodeUpdates = append(nodeUpdates, KVUpdate{DeleteKey: update.Key})
 			} else {
 				nodeUpdates = append(
 					nodeUpdates,
-					internal.KVUpdate{SetNode: mutationCtx.NewLeafNode(update.Key, update.Value)},
+					KVUpdate{SetNode: mutationCtx.NewLeafNode(update.Key, update.Value)},
 				)
 			}
 		}
 	}
 
 	// background start writing nodeUpdates to WAL immediately
-	var walDone chan error
-	walDone = make(chan error, 1)
 	go func() {
 		_, walSpan := tracer.Start(ctx, "WALWrite")
 		defer walSpan.End()
-		defer close(walDone)
-		walDone <- c.treeStore.WriteWALUpdates(ctx, nodeUpdates, !c.opts.DisableWALFsync)
+		defer close(c.walDone)
+		c.walDone <- c.treeStore.WriteWALUpdates(ctx, nodeUpdates, !c.opts.DisableWALFsync)
 	}()
-
 	// Always wait for the WAL goroutine before returning. Without this, commit() calls
 	// RollbackWAL() while the WAL goroutine is still running — the old goroutine's late
 	// auto-rollback can destroy data written by the next successful commit.
 	// sync.Once gives us a single drain point: the happy path drains + records latency,
 	// the deferred call is a no-op (or drains on early error exits).
-	var walOnce sync.Once
-	var walErr error
-	waitForWAL := func() error {
-		walOnce.Do(func() {
-			walErr = <-walDone
-		})
-		return walErr
-	}
-	defer func() { _ = waitForWAL() }() // make sure we always wait for the WAL goroutine before returning, even on early error exits
+	defer func() { _ = c.WaitForWAL() }()
 
 	// start computing hashes for leaf nodes in parallel
 	// this is a rather naive algorithm that assumes leaf nodes updates are evenly distributed
@@ -246,14 +233,14 @@ func (c *commitTreeFinalizer) prepareCommit(ctx context.Context, updates iter.Se
 			start := i * bucketSize
 			end := min(start+bucketSize, n)
 			wg.Add(1)
-			go func(updates []internal.KVUpdate) {
+			go func(updates []KVUpdate) {
 				defer wg.Done()
 				if ctx.Err() != nil {
 					return
 				}
 				for _, nu := range updates {
 					if setNode := nu.SetNode; setNode != nil {
-						if _, err := setNode.ComputeHash(internal.SyncHashScheduler{}); err != nil {
+						if _, err := setNode.ComputeHash(SyncHashScheduler{}); err != nil {
 							select {
 							case leafHashErr <- err:
 							default:
@@ -280,12 +267,12 @@ func (c *commitTreeFinalizer) prepareCommit(ctx context.Context, updates iter.Se
 		}
 		var err error
 		if setNode := nu.SetNode; setNode != nil {
-			root, _, err = internal.SetRecursive(root, setNode, mutationCtx)
+			root, _, err = SetRecursive(root, setNode, mutationCtx)
 			if err != nil {
 				return nil, err
 			}
 		} else {
-			_, root, _, err = internal.RemoveRecursive(root, nu.DeleteKey, mutationCtx)
+			_, root, _, err = RemoveRecursive(root, nu.DeleteKey, mutationCtx)
 			if err != nil {
 				return nil, err
 			}
@@ -325,7 +312,7 @@ func (c *commitTreeFinalizer) prepareCommit(ctx context.Context, updates iter.Se
 	// wait for the WAL write to finish
 	startWaitForWAL := time.Now()
 
-	if err := waitForWAL(); err != nil {
+	if err := c.WaitForWAL(); err != nil {
 		return nil, err
 	}
 
@@ -350,6 +337,13 @@ func (c *commitTreeFinalizer) WaitForHash() (storetypes.CommitID, error) {
 		return storetypes.CommitID{}, err.(error)
 	}
 	return c.workingHash, nil
+}
+
+func (c *commitTreeFinalizer) WaitForWAL() error {
+	c.walOnce.Do(func() {
+		c.walErr = <-c.walDone
+	})
+	return c.walErr
 }
 
 func (c *commitTreeFinalizer) PrepareFinalize() (storetypes.CommitID, error) {
@@ -401,17 +395,17 @@ func (c *CommitTree) LatestVersion() uint32 {
 	return c.treeStore.LatestVersion()
 }
 
-func (c *CommitTree) Latest() internal.TreeReader {
+func (c *CommitTree) Latest() TreeReader {
 	version, root := c.treeStore.Latest()
-	return internal.NewTreeReader(version, root)
+	return NewTreeReader(version, root)
 }
 
-func (c *CommitTree) GetVersion(version uint32) (internal.TreeReader, error) {
+func (c *CommitTree) GetVersion(version uint32) (TreeReader, error) {
 	root, err := c.treeStore.RootAtVersion(version)
 	if err != nil {
-		return internal.TreeReader{}, err
+		return TreeReader{}, err
 	}
-	return internal.NewTreeReader(version, root), nil
+	return NewTreeReader(version, root), nil
 }
 
 func (c *CommitTree) Close() error {
@@ -423,7 +417,7 @@ func (c *CommitTree) prune(ctx context.Context, retainVersion uint32) error {
 	if compactionRolloverSize == 0 {
 		compactionRolloverSize = 4 * 1024 * 1024 * 1024 // 4GB default
 	}
-	return internal.RunCompactor(ctx, c.treeStore, internal.PruneOptions{
+	return RunCompactor(ctx, c.treeStore, PruneOptions{
 		RetainVersion:          retainVersion,
 		CompactionRolloverSize: compactionRolloverSize,
 	})

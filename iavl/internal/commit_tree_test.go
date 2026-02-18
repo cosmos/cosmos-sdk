@@ -1,4 +1,4 @@
-package iavl
+package internal
 
 import (
 	"bytes"
@@ -18,7 +18,6 @@ import (
 	"pgregory.net/rapid"
 
 	"cosmossdk.io/store/cachekv"
-	"github.com/cosmos/cosmos-sdk/iavl/internal"
 )
 
 func TestCommitTreeSims(t *testing.T) {
@@ -74,15 +73,16 @@ func (s *SimCommitTree) openV2Tree(t interface {
 	sdklog.TestingT
 }) {
 	var err error
-	s.treeV2, err = NewCommitTree(s.dirV2, CommitTreeOptions{Options: Options{
+	s.treeV2, err = NewCommitTree(s.dirV2, TreeOptions{Options: Options{
 		// intentionally choose some small sizes to force checkpoint and eviction behavior
 		ChangesetRolloverSize: 4096,
 		BranchEvictDepth:      2,
 		LeafEvictDepth:        2,
 		CheckpointInterval:    2,
 		// disable caches to simplify testing
-		RootCacheSize:   -1,
-		RootCacheExpiry: -1,
+		RootCacheSize: 0,
+		// we should never have any checkpoint errors during testing!
+		DisableAutoRepair: true,
 	}})
 	require.NoError(t, err, "failed to create iavlx tree")
 }
@@ -130,7 +130,7 @@ func (s *SimCommitTree) checkNewVersion(t *rapid.T) {
 		latest, pin, err := latestPtr.Resolve()
 		defer pin.Unpin()
 		require.NoError(t, err, "failed to resolve latest node pointer in V2 tree")
-		require.NoError(t, internal.VerifyAVLInvariants(latest))
+		require.NoError(t, VerifyAVLInvariants(latest))
 	}
 
 	// compare versions and hashes

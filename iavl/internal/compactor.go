@@ -379,7 +379,7 @@ func (c *Compactor) finalize() (*Changeset, error) {
 		return nil, fmt.Errorf("failed to mark changeset as ready during compaction seal: %w", err)
 	}
 
-	cs, err := OpenChangeset(c.treeStore, finalDir)
+	cs, err := OpenChangeset(c.treeStore, finalDir, false)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create new changeset for compacted data during compaction seal: %w", err)
 	}

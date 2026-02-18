@@ -299,6 +299,36 @@ func (cr *ChangesetReader) CheckpointForVersion(targetVersion uint32) Checkpoint
 	return cr.latestValidCheckpoint(floorIdx)
 }
 
+func (cr *ChangesetReader) Verify() error {
+	n := cr.checkpointsInfo.Count()
+	if n == 0 {
+		// no checkpoints, nothing to verify
+		return nil
+	}
+
+	lastInfo := cr.checkpointsInfo.UnsafeItem(uint32(n - 1))
+	if !lastInfo.VerifyCRC32() {
+		return fmt.Errorf("changeset checkpoint info failed CRC32 check during verification: checkpoint %d, expected CRC32 %08x, actual CRC32 %08x",
+			lastInfo.Checkpoint, lastInfo.CRC32, lastInfo.ComputeCRC32())
+	}
+	// check leaves size
+	expectedLeafCount := lastInfo.Leaves.StartOffset + lastInfo.Leaves.Count
+	if expectedLeafCount > uint32(cr.leavesData.Count()) {
+		return fmt.Errorf("changeset leaves data count mismatch during verification: expected %d, actual %d", expectedLeafCount, cr.leavesData.Count())
+	}
+	// check branches size
+	expectedBranchCount := lastInfo.Branches.StartOffset + lastInfo.Branches.Count
+	if expectedBranchCount > uint32(cr.branchesData.Count()) {
+		return fmt.Errorf("changeset branches data count mismatch during verification: expected %d, actual %d", expectedBranchCount, cr.branchesData.Count())
+	}
+	// check kv.dat size
+	expectedKVDataSize := lastInfo.KVEndOffset
+	if expectedKVDataSize > uint64(cr.kvDataReader.Len()) {
+		return fmt.Errorf("changeset KV data size mismatch during verification: expected at least %d bytes, actual %d bytes", expectedKVDataSize, cr.kvDataReader.Len())
+	}
+	return nil
+}
+
 func (cr *ChangesetReader) TotalBytes() int {
 	return cr.leavesData.TotalBytes() +
 		cr.branchesData.TotalBytes() +

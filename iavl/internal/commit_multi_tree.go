@@ -1,4 +1,4 @@
-package iavl
+package internal
 
 import (
 	"bytes"
@@ -29,7 +29,6 @@ import (
 	snapshottypes "cosmossdk.io/store/snapshots/types"
 	"cosmossdk.io/store/transient"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/cosmos/cosmos-sdk/iavl/internal"
 )
 
 type commitData struct {
@@ -72,7 +71,7 @@ func (db *CommitMultiTree) StartCommit(ctx context.Context, store storetypes.Mul
 		),
 	)
 
-	multiTree, ok := store.(*internal.MultiTree)
+	multiTree, ok := store.(*MultiTree)
 	if !ok {
 		return nil, fmt.Errorf("expected MultiTree, got %T", store)
 	}
@@ -142,7 +141,7 @@ type multiTreeFinalizer struct {
 	*CommitMultiTree
 	ctx                context.Context
 	cancel             context.CancelFunc
-	cacheMs            *internal.MultiTree
+	cacheMs            *MultiTree
 	finalizers         []*commitTreeFinalizer
 	workingCommitInfo  *storetypes.CommitInfo
 	workingCommitId    storetypes.CommitID
@@ -327,6 +326,18 @@ func (db *multiTreeFinalizer) writeCommitInfoHeader() (*os.File, error) {
 	<-db.finalizeOrRollback
 	if db.ctx.Err() != nil {
 		return nil, db.ctx.Err() // do not write commit info if rolling back
+	}
+
+	// wait for all trees to complete their WAL writes so we only commit when all children have committed
+	var wg errgroup.Group
+	for _, finalizer := range db.finalizers {
+		finalizer := finalizer
+		wg.Go(func() error {
+			return finalizer.WaitForWAL()
+		})
+	}
+	if err := wg.Wait(); err != nil {
+		return nil, fmt.Errorf("failed when waiting for WAL completion: %w", err)
 	}
 
 	// write the header to disk
@@ -736,9 +747,10 @@ func (db *CommitMultiTree) loadStore(key storetypes.StoreKey, typ storetypes.Sto
 				return nil, fmt.Errorf("failed to create store dir %s: %w", dir, err)
 			}
 		}
-		ct, err := NewCommitTree(dir, CommitTreeOptions{
-			Options:  db.opts,
-			TreeName: key.Name(),
+		ct, err := NewCommitTree(dir, TreeOptions{
+			Options:         db.opts,
+			TreeName:        key.Name(),
+			ExpectedVersion: uint32(expectedVersion),
 		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to load CommitTree for store %s: %w", key.Name(), err)
@@ -891,7 +903,7 @@ func (db *CommitMultiTree) CacheMultiStoreWithVersion(version int64) (storetypes
 }
 
 func (db *CommitMultiTree) cacheMultiStore(version int64, commitInfo *storetypes.CommitInfo) storetypes.CacheMultiStore {
-	return internal.NewMultiTree(version, commitInfo, func(key storetypes.StoreKey) storetypes.CacheWrap {
+	return NewMultiTree(version, commitInfo, func(key storetypes.StoreKey) storetypes.CacheWrap {
 		idx, ok := db.storesByKey[key]
 		if !ok {
 			panic(fmt.Sprintf("store with key %s not mounted", key.Name()))
@@ -1008,7 +1020,7 @@ func deleteOldCommitInfos(dir string, retainVersion uint64) error {
 }
 
 func (db *CommitMultiTree) Describe() MultiTreeDescription {
-	descriptions := make(map[string]internal.TreeDescription)
+	descriptions := make(map[string]TreeDescription)
 	for _, si := range db.iavlStores {
 		ct, ok := si.store.(*CommitTree)
 		if !ok {
@@ -1022,4 +1034,4 @@ func (db *CommitMultiTree) Describe() MultiTreeDescription {
 	}
 }
 
-var _ storetypes.CommitMultiStore2 = &CommitMultiTree{}
+var _ storetypes.CommitMultiStore = &CommitMultiTree{}

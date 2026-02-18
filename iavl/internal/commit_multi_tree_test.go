@@ -1,4 +1,4 @@
-package iavl
+package internal
 
 import (
 	"context"
@@ -78,7 +78,9 @@ func TestCommitMultiTreeSims(t *testing.T) {
 			CheckpointInterval:     2,
 			// use only a small cache for testing
 			RootCacheSize:   2,
-			RootCacheExpiry: 5, // 5 milliseconds
+			RootCacheExpiry: 5 * time.Millisecond,
+			// we should never have any checkpoint errors during testing!
+			DisableAutoRepair: true,
 		}, pruningtypes.PruningOptions{
 			KeepRecent: 5,
 			Interval:   2,
@@ -180,7 +182,7 @@ func (sim *SimCommitMultiTree) openV2Tree(t *rapid.T) {
 	require.NoError(t, sim.mtV2.LoadLatestVersion())
 }
 
-func (sim *SimCommitMultiTree) mountStores(st store.CommitMultiStore2) {
+func (sim *SimCommitMultiTree) mountStores(st store.CommitMultiStore) {
 	st.MountStoreWithDB(sim.kv1, store.StoreTypeIAVL, nil)
 	st.MountStoreWithDB(sim.kv2, store.StoreTypeIAVL, nil)
 	st.MountStoreWithDB(sim.kv3, store.StoreTypeIAVL, nil)

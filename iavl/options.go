@@ -46,7 +46,7 @@ type Options struct {
 	RootCacheExpiry int64 `json:"root_cache_expiry"`
 }
 
-func (opts *Options) toTreeStoreOptions() internal.TreeStoreOptions {
+func (opts Options) toInternalOpts() internal.Options {
 	changesetRolloverSize := opts.ChangesetRolloverSize
 	if changesetRolloverSize == 0 {
 		changesetRolloverSize = 2 * 1024 * 1024 * 1024 // 2GB default
@@ -73,12 +73,14 @@ func (opts *Options) toTreeStoreOptions() internal.TreeStoreOptions {
 	if checkpointInterval == 0 {
 		checkpointInterval = 100 // default to checkpoint every 100 versions
 	}
-	return internal.TreeStoreOptions{
-		ChangesetRolloverSize: changesetRolloverSize,
-		LeafEvictDepth:        leafEvictDepth,
-		BranchEvictDepth:      branchEvictDepth,
-		CheckpointInterval:    checkpointInterval,
-		RootCacheSize:         rootCacheSize,
-		RootCacheExpiry:       rootCacheExpiry,
+	return internal.Options{
+		ChangesetRolloverSize:  changesetRolloverSize,
+		LeafEvictDepth:         leafEvictDepth,
+		BranchEvictDepth:       branchEvictDepth,
+		CheckpointInterval:     checkpointInterval,
+		RootCacheSize:          rootCacheSize,
+		RootCacheExpiry:        rootCacheExpiry,
+		DisableWALFsync:        opts.DisableWALFsync,
+		CompactionRolloverSize: opts.CompactionRolloverSize,
 	}
 }

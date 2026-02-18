@@ -86,7 +86,7 @@ type Store struct {
 }
 
 var (
-	_ types.CommitMultiStore2         = (*Store)(nil)
+	_ types.CommitMultiStore          = (*Store)(nil)
 	_ types.Queryable                 = (*Store)(nil)
 	_ snapshottypes.SnapshotAnnouncer = (*Store)(nil)
 )

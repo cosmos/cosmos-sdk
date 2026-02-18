@@ -172,7 +172,7 @@ func (app *BaseApp) SetDB(db dbm.DB) {
 	app.db = db
 }
 
-func (app *BaseApp) SetCMS(cms storetypes.CommitMultiStore2) {
+func (app *BaseApp) SetCMS(cms storetypes.CommitMultiStore) {
 	if app.sealed {
 		panic("SetCMS() on sealed BaseApp")
 	}

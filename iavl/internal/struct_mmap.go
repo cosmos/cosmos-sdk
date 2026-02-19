@@ -42,7 +42,7 @@ func NewStructMmap[T any](file *os.File) (*StructMmap[T], error) {
 	return df, nil
 }
 
-func (df *StructMmap[T]) UnsafeItem(i uint32) *T {
+func (df *StructMmap[T]) UnsafeItem(i int) *T {
 	return &df.items[i]
 }
 

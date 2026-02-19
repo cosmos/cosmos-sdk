@@ -1,76 +1,83 @@
 package internal
 
 import (
-	"errors"
 	"fmt"
-	"io"
 )
 
 type OrphanRewriter struct {
-	existingWriter *OrphanWriter
-	rdr            *OrphanLogReader
+	existingWriter *StructWriter[OrphanEntry]
+	lastCount      int
 }
 
-func NewOrphanRewriter(existingWriter *OrphanWriter) (*OrphanRewriter, error) {
-	rdr, err := ReadOrphanLog(existingWriter.file)
-	if err != nil {
-		return nil, err
-	}
-
+func NewOrphanRewriter(existingWriter *StructWriter[OrphanEntry]) (*OrphanRewriter, error) {
 	return &OrphanRewriter{
 		existingWriter: existingWriter,
-		rdr:            rdr,
 	}, nil
 }
 
 // Preprocess reads the existing orphan log and writes a compacted version to the new orphan log file.
 // It returns a map of NodeIDs to their orphaned versions for nodes that should be deleted
 // according to the provided retainCriteria function.
-func (or *OrphanRewriter) Preprocess(retainCriteria RetainCriteria, compactedOrphanWriter *OrphanWriter) (toDelete map[NodeID]uint32, err error) {
+func (or *OrphanRewriter) Preprocess(retainCriteria RetainCriteria, compactedOrphanWriter *StructWriter[OrphanEntry]) (toDelete map[NodeID]uint32, err error) {
+	rdr, err := NewStructMmap[OrphanEntry](or.existingWriter.file)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if err := rdr.Close(); err != nil {
+			fmt.Printf("failed to close orphan rewriter reader: %v\n", err)
+		}
+	}()
+
 	toDelete = make(map[NodeID]uint32)
 	err = or.existingWriter.Flush()
 	if err != nil {
 		return nil, fmt.Errorf("failed to flush existing orphan writer: %w", err)
 	}
-	for {
-		entry, err := or.rdr.Next()
-		if err != nil {
-			if errors.Is(err, io.EOF) {
-				return toDelete, nil
-			}
-			return nil, err
-		}
+	n := rdr.Count()
+	for i := 0; i < n; i++ {
+		entry := rdr.UnsafeItem(i)
 		if retainCriteria(entry.NodeID.Checkpoint(), entry.OrphanedVersion) {
 			// this node should be retained, so write it to the new orphan log
-			if err := compactedOrphanWriter.WriteOrphan(entry.OrphanedVersion, entry.NodeID); err != nil {
+			if err := compactedOrphanWriter.Append(entry); err != nil {
 				return nil, err
 			}
 		} else {
 			toDelete[entry.NodeID] = entry.OrphanedVersion
 		}
 	}
+
+	or.lastCount = n
+
+	return toDelete, nil
 }
 
-func (or *OrphanRewriter) FinishRewrite(compactedOrphanWriter *OrphanWriter) error {
+func (or *OrphanRewriter) FinishRewrite(compactedOrphanWriter *StructWriter[OrphanEntry]) error {
 	err := or.existingWriter.Flush()
 	if err != nil {
 		return fmt.Errorf("failed to flush existing orphan writer: %w", err)
 	}
 
-	or.rdr.resume()
-
-	for {
-		entry, err := or.rdr.Next()
-		if err != nil {
-			if errors.Is(err, io.EOF) {
-				return or.rdr.Close()
-			}
-			return err
+	// open new reader with new mmap
+	rdr, err := NewStructMmap[OrphanEntry](or.existingWriter.file)
+	if err != nil {
+		return fmt.Errorf("failed to open new mmap for orphan rewriter: %w", err)
+	}
+	defer func() {
+		if err := rdr.Close(); err != nil {
+			fmt.Printf("failed to close orphan rewriter reader: %v\n", err)
 		}
+	}()
 
-		err = compactedOrphanWriter.WriteOrphan(entry.OrphanedVersion, entry.NodeID)
+	newCount := rdr.Count()
+
+	for i := or.lastCount; i < newCount; i++ {
+		entry := rdr.UnsafeItem(i)
+		err = compactedOrphanWriter.Append(entry)
 		if err != nil {
 			return err
 		}
 	}
+
+	return nil
 }

@@ -89,7 +89,7 @@ func copyMmap[T any](mmap *internal.StructMmap[T], offset, count uint32) []T {
 	}
 	out := make([]T, count)
 	for i := range out {
-		out[i] = *mmap.UnsafeItem(offset + uint32(i))
+		out[i] = *mmap.UnsafeItem(int(offset) + i)
 	}
 	return out
 }
@@ -146,29 +146,24 @@ func loadBranches(dir, tree, cs string, offset, count uint32) ([]internal.Branch
 	return copyMmap(mmap.StructMmap, offset, count), nil
 }
 
-func loadOrphans(dir, tree, cs string) ([]internal.OrphanLogEntry, error) {
+func loadOrphans(dir, tree, cs string) ([]internal.OrphanEntry, error) {
 	f, err := os.Open(filepath.Join(changesetPath(dir, tree, cs), "orphans.dat"))
 	if err != nil {
 		return nil, err
 	}
 	defer f.Close()
 
-	rdr, err := internal.ReadOrphanLog(f)
+	rdr, err := internal.NewStructMmap[internal.OrphanEntry](f)
 	if err != nil {
 		return nil, err
 	}
 	defer rdr.Close()
 
-	var entries []internal.OrphanLogEntry
-	for {
-		entry, err := rdr.Next()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return nil, err
-		}
-		entries = append(entries, entry)
+	var entries []internal.OrphanEntry
+	n := rdr.Count()
+	for i := 0; i < n; i++ {
+		entry := rdr.UnsafeItem(i)
+		entries = append(entries, *entry)
 	}
 	return entries, nil
 }

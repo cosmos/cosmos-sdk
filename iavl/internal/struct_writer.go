@@ -19,6 +19,15 @@ func NewStructWriter[T any](file *os.File) *StructWriter[T] {
 	}
 }
 
+func NewStructWriterSize[T any](file *os.File, bufSize int) *StructWriter[T] {
+	fw := NewFileWriterSize(file, bufSize)
+
+	return &StructWriter[T]{
+		size:       int(unsafe.Sizeof(*new(T))),
+		FileWriter: fw,
+	}
+}
+
 func (sw *StructWriter[T]) Append(x *T) error {
 	_, err := sw.Write(unsafe.Slice((*byte)(unsafe.Pointer(x)), sw.size))
 	return err

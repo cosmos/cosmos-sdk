@@ -15,15 +15,16 @@ type Changeset struct {
 	activeReaderCount atomic.Int32
 	sealed            atomic.Bool
 	compacted         atomic.Pointer[Changeset]
-	orphanWriter      *OrphanWriter
+	orphanWriter      *StructWriter[OrphanEntry]
 }
 
 // NewChangeset creates a new Changeset with the given TreeStore and ChangesetFiles.
 func NewChangeset(treeStore *TreeStore, files *ChangesetFiles) (*Changeset, error) {
+	const orphanWriterBufSize = 4 * 1024 // 4kb
 	cs := &Changeset{
 		treeStore:    treeStore,
 		files:        files,
-		orphanWriter: NewOrphanWriter(files.OrphansFile()),
+		orphanWriter: NewStructWriterSize[OrphanEntry](files.OrphansFile(), orphanWriterBufSize),
 	}
 	err := cs.OpenNewReader()
 	if err != nil {
@@ -138,7 +139,7 @@ func (ch *Changeset) Files() *ChangesetFiles {
 	return ch.files
 }
 
-func (ch *Changeset) OrphanWriter() *OrphanWriter {
+func (ch *Changeset) OrphanWriter() *StructWriter[OrphanEntry] {
 	if ch.orphanWriter == nil {
 		return ch.compacted.Load().OrphanWriter()
 	}

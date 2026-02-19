@@ -175,54 +175,63 @@ func (ch *Changeset) VerifyAndFix(autoRepair bool) error {
 
 		ch.treeStore.logger.Warn("changeset verification failed, attempting to fix if possible", "dir", ch.files.Dir(), "error", err)
 
-		// rollback checkpoints.dat
-		cpCount := cr.checkpointsInfo.Count()
-		if cpCount == 0 {
-			return fmt.Errorf("expected at least 1 checkpoint in failed changeset verification, found 0")
-		}
-		newCpCount := cpCount - 1
-		newLastCheckpointOffset := newCpCount * CheckpointInfoSize
-		err := RollbackFileToOffset(ch.files.CheckpointsFile(), int64(newLastCheckpointOffset))
-		if err != nil {
-			return fmt.Errorf("failed to truncate checkpoint info file during changeset verification: %w", err)
-		}
-
-		var newBranchesOffset, newLeavesOffset, newKVDataoffset int64
-		if newCpCount > 0 {
-			// if we have another checkpoint, use it
-			// otherwise everything goes to zero
-			lastGoodInfo := cr.checkpointsInfo.UnsafeItem(newCpCount - 1)
-			if !lastGoodInfo.VerifyCRC32() {
-				return fmt.Errorf("trying to roll back to previous checkpoint info but it also has invalid CRC32, cannot fix changeset: %s",
-					ch.files.Dir())
-			}
-
-			newBranchesOffset = int64((lastGoodInfo.Branches.StartOffset + lastGoodInfo.Branches.Count) * SizeBranch)
-			newLeavesOffset = int64((lastGoodInfo.Leaves.StartOffset + lastGoodInfo.Leaves.Count) * SizeLeaf)
-			newKVDataoffset = int64(lastGoodInfo.KVEndOffset)
-		}
-
-		// rollback files
-		err = RollbackFileToOffset(ch.files.BranchesFile(), newBranchesOffset)
-		if err != nil {
-			return fmt.Errorf("failed to truncate branches file during changeset verification: %w", err)
-		}
-
-		err = RollbackFileToOffset(ch.files.LeavesFile(), newLeavesOffset)
-		if err != nil {
-			return fmt.Errorf("failed to truncate leaves file during changeset verification: %w", err)
-		}
-
-		err = RollbackFileToOffset(ch.files.KVDataFile(), newKVDataoffset)
-		if err != nil {
-			return fmt.Errorf("failed to truncate kv data file during changeset verification: %w", err)
-		}
-
-		// open a new reader to update our in-memory state to reflect the rolled back files
-		err = ch.OpenNewReader()
-		if err != nil {
-			return fmt.Errorf("failed to open new reader after fixing changeset: %w", err)
+		if err := ch.RollbackLastCheckpoint(cr); err != nil {
+			return fmt.Errorf("failed to rollback last checkpoint during changeset verification: %w", err)
 		}
 	}
+	return nil
+}
+
+// RollbackLastCheckpoint rolls back the most recent checkpoint in this changeset,
+// truncating checkpoints.dat, branches.dat, leaves.dat, and kv.dat to the previous checkpoint's offsets.
+// The caller must provide a pinned ChangesetReader for the current state.
+func (ch *Changeset) RollbackLastCheckpoint(cr *ChangesetReader) error {
+	cpCount := cr.checkpointsInfo.Count()
+	if cpCount == 0 {
+		return fmt.Errorf("no checkpoints to roll back in changeset: %s", ch.files.Dir())
+	}
+	newCpCount := cpCount - 1
+	newLastCheckpointOffset := newCpCount * CheckpointInfoSize
+	err := RollbackFileToOffset(ch.files.CheckpointsFile(), int64(newLastCheckpointOffset))
+	if err != nil {
+		return fmt.Errorf("failed to truncate checkpoint info file: %w", err)
+	}
+
+	var newBranchesOffset, newLeavesOffset, newKVDataOffset int64
+	if newCpCount > 0 {
+		// if we have another checkpoint, use its offsets
+		// otherwise everything goes to zero
+		lastGoodInfo := cr.checkpointsInfo.UnsafeItem(newCpCount - 1)
+		if !lastGoodInfo.VerifyCRC32() {
+			return fmt.Errorf("previous checkpoint also has invalid CRC32, cannot fix changeset: %s",
+				ch.files.Dir())
+		}
+
+		newBranchesOffset = int64((lastGoodInfo.Branches.StartOffset + lastGoodInfo.Branches.Count) * SizeBranch)
+		newLeavesOffset = int64((lastGoodInfo.Leaves.StartOffset + lastGoodInfo.Leaves.Count) * SizeLeaf)
+		newKVDataOffset = int64(lastGoodInfo.KVEndOffset)
+	}
+
+	err = RollbackFileToOffset(ch.files.BranchesFile(), newBranchesOffset)
+	if err != nil {
+		return fmt.Errorf("failed to truncate branches file: %w", err)
+	}
+
+	err = RollbackFileToOffset(ch.files.LeavesFile(), newLeavesOffset)
+	if err != nil {
+		return fmt.Errorf("failed to truncate leaves file: %w", err)
+	}
+
+	err = RollbackFileToOffset(ch.files.KVDataFile(), newKVDataOffset)
+	if err != nil {
+		return fmt.Errorf("failed to truncate kv data file: %w", err)
+	}
+
+	// open a new reader to update our in-memory state to reflect the rolled back files
+	err = ch.OpenNewReader()
+	if err != nil {
+		return fmt.Errorf("failed to open new reader after rollback: %w", err)
+	}
+
 	return nil
 }

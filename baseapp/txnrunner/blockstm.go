@@ -17,8 +17,7 @@ func NewSTMRunner(
 	txDecoder sdk.TxDecoder,
 	stores []storetypes.StoreKey,
 	workers int,
-	estimate bool,
 	coinDenom func(storetypes.MultiStore) string,
 ) *STMRunner {
-	return blockstm.NewSTMRunner(txDecoder, stores, workers, estimate, coinDenom)
+	return blockstm.NewSTMRunner(txDecoder, stores, workers, coinDenom)
 }

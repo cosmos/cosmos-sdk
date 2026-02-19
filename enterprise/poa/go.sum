@@ -128,8 +128,8 @@ github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb/go.mod h1:
 github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd/go.mod h1:sE/e/2PUdi/liOCUjSTXgM1o87ZssimdTWN964YiIeI=
 github.com/cometbft/cometbft v0.39.0-beta.2.0.20260217150107-284338bcd3d9 h1:uwrXxDzues8W0d0s/aU5SMdvEMpdk0j/QGWB5ILTy0g=
 github.com/cometbft/cometbft v0.39.0-beta.2.0.20260217150107-284338bcd3d9/go.mod h1:lm15xdcSZuW0urDfvKTSXrBV3GuP8eTRFwtd3aP3YLw=
-github.com/cometbft/cometbft-db v1.0.4 h1:cezb8yx/ZWcF124wqUtAFjAuDksS1y1yXedvtprUFxs=
-github.com/cometbft/cometbft-db v1.0.4/go.mod h1:M+BtHAGU2XLrpUxo3Nn1nOCcnVCiLM9yx5OuT0u5SCA=
+github.com/cometbft/cometbft-db v0.14.3 h1:foX2zuH/L6feyUSLDWg9YRLvt9w8iWVo883wGcyhdQk=
+github.com/cometbft/cometbft-db v0.14.3/go.mod h1:5CcpGc+0fgZh8ecKa38MwDHfmRAGiRgQg6bGNs1HA/g=
 github.com/containerd/continuity v0.3.0 h1:nisirsYROK15TAMVukJOUyGJjz4BNQJBVsNvAXZJ/eg=
 github.com/containerd/continuity v0.3.0/go.mod h1:wJEAIwKOm/pBZuBd0JmeTvnLquTB1Ag8espWhkykbPM=
 github.com/coreos/go-semver v0.2.0/go.mod h1:nnelYz7RCh+5ahJtPPxZlU+153eP4D4r3EedlOD2RNk=

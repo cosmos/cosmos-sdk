@@ -11,10 +11,9 @@ import (
 
 	dbm "github.com/cosmos/cosmos-db"
 
+	clienthelpers "cosmossdk.io/client/v2/helpers"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log/v2"
-
-	clienthelpers "cosmossdk.io/client/v2/helpers"
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"

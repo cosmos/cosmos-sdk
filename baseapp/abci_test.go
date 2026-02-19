@@ -21,12 +21,13 @@ import (
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
-	iavlx "github.com/cosmos/cosmos-sdk/iavl"
 	protoio "github.com/cosmos/gogoproto/io"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
+
+	iavlx "github.com/cosmos/cosmos-sdk/iavl"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
@@ -560,12 +561,14 @@ func TestABCI_GRPCQuery(t *testing.T) {
 func TestABCI_QueryProof(t *testing.T) {
 	key, value := []byte("hello"), []byte("goodbye")
 
-	var cms *iavlx.CommitMultiTree
 	setCMSOpt := func(bapp *baseapp.BaseApp) {
 		var err error
-		cms, err = iavlx.LoadCommitMultiTree(t.TempDir(), iavlx.Options{})
+		cms, err := iavlx.LoadCommitMultiTree(t.TempDir(), iavlx.Options{}, log.NewTestLogger(t))
 		require.NoError(t, err)
 		bapp.SetCMS(cms)
+		t.Cleanup(func() {
+			_ = cms.Close()
+		})
 	}
 	anteOpt := func(bapp *baseapp.BaseApp) {
 		bapp.SetAnteHandler(func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
@@ -575,11 +578,6 @@ func TestABCI_QueryProof(t *testing.T) {
 	}
 
 	suite := NewBaseAppSuite(t, setCMSOpt, anteOpt)
-	t.Cleanup(func() {
-		if cms != nil {
-			_ = cms.Close()
-		}
-	})
 
 	baseapptestutil.RegisterCounterServer(suite.baseApp.MsgServiceRouter(), CounterServerImplGasMeterOnly{})
 	_, err := suite.baseApp.InitChain(&abci.RequestInitChain{

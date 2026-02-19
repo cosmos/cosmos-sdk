@@ -563,7 +563,7 @@ func TestABCI_QueryProof(t *testing.T) {
 
 	setCMSOpt := func(bapp *baseapp.BaseApp) {
 		var err error
-		cms, err := iavlx.LoadCommitMultiTree(t.TempDir(), iavlx.Options{}, log.NewTestLogger(t))
+		cms, err := iavlx.LoadCommitMultiTree(t.TempDir(), iavlx.Options{}, log.NewNopLogger())
 		require.NoError(t, err)
 		bapp.SetCMS(cms)
 		t.Cleanup(func() {

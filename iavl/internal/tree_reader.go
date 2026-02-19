@@ -50,7 +50,7 @@ func (t TreeReader) GetErr(key []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return value.UnsafeBytes(), nil
+	return value.SafeCopy(), nil
 }
 
 func (t TreeReader) Size() int64 {

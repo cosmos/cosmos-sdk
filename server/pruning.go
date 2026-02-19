@@ -17,6 +17,8 @@ import (
 func GetPruningOptionsFromFlags(appOpts types.AppOptions) (pruningtypes.PruningOptions, error) {
 	strategy := strings.ToLower(cast.ToString(appOpts.Get(FlagPruning)))
 
+	fmt.Println("GetPruningOptionsFromFlags: ", strategy)
+
 	switch strategy {
 	case pruningtypes.PruningOptionDefault, pruningtypes.PruningOptionNothing, pruningtypes.PruningOptionEverything:
 		return pruningtypes.NewPruningOptionsFromString(strategy), nil

@@ -411,6 +411,8 @@ func (app *BaseApp) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, er
 // Ref: https://github.com/cosmos/cosmos-sdk/blob/main/docs/architecture/adr-060-abci-1.0.md
 // Ref: https://github.com/cometbft/cometbft/blob/main/spec/abci/abci%2B%2B_basic_concepts.md
 func (app *BaseApp) PrepareProposal(req *abci.RequestPrepareProposal) (resp *abci.ResponsePrepareProposal, err error) {
+	app.logger.Info("PrepareProposal START", "height", req.Height)
+	defer func() { app.logger.Info("PrepareProposal END", "height", req.Height) }()
 	if app.abciHandlers.PrepareProposalHandler == nil {
 		return nil, errors.New("PrepareProposal handler not set")
 	}
@@ -931,7 +933,7 @@ func (app *BaseApp) internalFinalizeBlock(cancelCtx context.Context, req *abci.R
 	events = append(events, endBlock.Events...)
 	cp := app.GetConsensusParams(finalizeState.Context())
 
-	// if we haven't aborted thus far, start commiting the state, we can always rollback later
+	// if we haven't aborted thus far, start committing the state, we can always rollback later
 	committer, err := app.cms.StartCommit(cancelCtx, finalizeState.MultiStore, header)
 	if err != nil {
 		return nil, fmt.Errorf("failed to start commit: %w", err)
@@ -1019,10 +1021,6 @@ func (app *BaseApp) FinalizeBlock(req *abci.RequestFinalizeBlock) (res *abci.Res
 }
 
 func (app *BaseApp) finishFinalizeBlock(res *abci.ResponseFinalizeBlock) (*abci.ResponseFinalizeBlock, error) {
-	err := app.committer.SignalFinalize()
-	if err != nil {
-		return nil, fmt.Errorf("failed to signal finalize: %w", err)
-	}
 	hash, err := app.committer.PrepareFinalize()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get working hash: %w", err)
@@ -1069,24 +1067,22 @@ func (app *BaseApp) Commit() (*abci.ResponseCommit, error) {
 		app.abciHandlers.Precommiter(finalizeState.Context())
 	}
 
-	if app.committer == nil {
+	committer := app.committer
+	app.committer = nil
+
+	if committer == nil {
 		// during InitChain we must initialize the committer here
-		committer, err := app.cms.StartCommit(context.Background(), finalizeState.MultiStore, header)
+		var err error
+		committer, err = app.cms.StartCommit(context.Background(), finalizeState.MultiStore, header)
 		if err != nil {
 			return nil, fmt.Errorf("failed to start commit: %w", err)
 		}
-		app.committer = committer
-		err = app.committer.SignalFinalize()
-		if err != nil {
-			return nil, fmt.Errorf("failed to signal finalize: %w", err)
-		}
 	}
 
-	_, err := app.committer.Finalize()
+	_, err := committer.Finalize()
 	if err != nil {
 		return nil, fmt.Errorf("failed to finalize commit: %w", err)
 	}
-	app.committer = nil
 
 	resp := &abci.ResponseCommit{
 		RetainHeight: retainHeight,

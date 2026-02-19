@@ -415,23 +415,23 @@ package internal
 //	writer := openTestKVDataWriter(t)
 //
 //	// Test key at max size should succeed
-//	maxKey := make([]byte, MaxKeySize)
+//	maxKey := make([]byte, MaxKeyLength)
 //	_, err := writer.WriteKeyBlob(maxKey)
 //	require.NoError(t, err)
 //
 //	// Test key exceeding max size should fail
-//	oversizedKey := make([]byte, MaxKeySize+1)
+//	oversizedKey := make([]byte, MaxKeyLength+1)
 //	_, err = writer.WriteKeyBlob(oversizedKey)
 //	require.Error(t, err)
 //	require.Contains(t, err.Error(), "key size exceeds maximum")
 //
 //	// Test value at max size should succeed
-//	maxValue := make([]byte, MaxValueSize)
+//	maxValue := make([]byte, MaxValueLength)
 //	_, _, err = writer.WriteKeyValueBlobs([]byte("k"), maxValue)
 //	require.NoError(t, err)
 //
 //	// Test value exceeding max size should fail
-//	oversizedValue := make([]byte, MaxValueSize+1)
+//	oversizedValue := make([]byte, MaxValueLength+1)
 //	_, _, err = writer.WriteKeyValueBlobs([]byte("k"), oversizedValue)
 //	require.Error(t, err)
 //	require.Contains(t, err.Error(), "value size exceeds maximum")

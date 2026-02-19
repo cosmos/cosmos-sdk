@@ -25,10 +25,10 @@ func NewKVDataWriter(file *os.File) *KVDataWriter {
 }
 
 const (
-	// MaxKeySize defines the maximum size of a key in bytes.
-	MaxKeySize = 1<<16 - 1 // 65535 bytes
-	// MaxValueSize defines the maximum size of a value in bytes.
-	MaxValueSize = 1<<24 - 1 // 16777215 bytes
+	// MaxKeyLength is 128K - 1
+	MaxKeyLength = (1 << 17) - 1
+	// MaxValueLength is 2G - 1
+	MaxValueLength = (1 << 31) - 1
 )
 
 // WriteKeyBlob writes a key blob and returns its raw offset in the file.
@@ -37,8 +37,11 @@ const (
 func (kvs *KVDataWriter) WriteKeyBlob(key UnsafeBytes) (offset uint64, err error) {
 	unsafeKey := key.UnsafeBytes()
 	keyLen := len(unsafeKey)
-	if keyLen > MaxKeySize {
-		return 0, fmt.Errorf("key size exceeds maximum of %d bytes: %d bytes", MaxKeySize, keyLen)
+	if keyLen == 0 {
+		return 0, fmt.Errorf("key cannot be empty")
+	}
+	if keyLen > MaxKeyLength {
+		return 0, fmt.Errorf("key size exceeds maximum of %d bytes: %d bytes", MaxKeyLength, keyLen)
 	}
 
 	// lookup using unsafe conversion is okay
@@ -67,9 +70,12 @@ func (kvs *KVDataWriter) WriteKeyValueBlobs(key, value UnsafeBytes) (keyOffset, 
 	}
 
 	unsafeValue := value.UnsafeBytes()
+	if unsafeValue == nil {
+		return 0, 0, fmt.Errorf("value cannot be nil")
+	}
 	valueLen := len(unsafeValue)
-	if valueLen > MaxValueSize {
-		return 0, 0, fmt.Errorf("value size exceeds maximum of %d bytes: %d bytes", MaxValueSize, valueLen)
+	if valueLen > MaxValueLength {
+		return 0, 0, fmt.Errorf("value size exceeds maximum of %d bytes: %d bytes", MaxValueLength, valueLen)
 	}
 
 	valueOffset, err = kvs.writeLenPrefixedBytes(unsafeValue)
@@ -130,8 +136,8 @@ func (kvs *KVDataWriter) writeLEU40(x uint64) error {
 func (kvs *KVDataWriter) WriteValueBlob(value UnsafeBytes) (offset uint64, err error) {
 	unsafeValue := value.UnsafeBytes()
 	valueLen := len(unsafeValue)
-	if valueLen > MaxValueSize {
-		return 0, fmt.Errorf("value size exceeds maximum of %d bytes: %d bytes", MaxValueSize, valueLen)
+	if valueLen > MaxValueLength {
+		return 0, fmt.Errorf("value size exceeds maximum of %d bytes: %d bytes", MaxValueLength, valueLen)
 	}
 
 	return kvs.writeLenPrefixedBytes(unsafeValue)

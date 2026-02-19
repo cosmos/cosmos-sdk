@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/log/v2"
+
 	"cosmossdk.io/store/snapshots"
 	storetypes "cosmossdk.io/store/types"
 
@@ -54,7 +55,7 @@ type (
 		RegisterNodeService(client.Context, config.Config)
 
 		// CommitMultiStore returns the multistore instance
-		CommitMultiStore() storetypes.CommitMultiStore2
+		CommitMultiStore() storetypes.CommitMultiStore
 
 		// SnapshotManager returns the snapshot manager
 		SnapshotManager() *snapshots.Manager

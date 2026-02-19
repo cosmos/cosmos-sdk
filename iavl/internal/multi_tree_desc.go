@@ -1,4 +1,4 @@
-package iavl
+package internal
 
 import (
 	"encoding/json"
@@ -7,19 +7,13 @@ import (
 	"io"
 	"net"
 	"net/http"
-
-	"github.com/cosmos/cosmos-sdk/iavl/internal"
 )
 
 type MultiTreeDescription struct {
-	Version          uint64                              `json:"version"`
-	Trees            map[string]internal.TreeDescription `json:"tree_descriptions"`
-	LastPruneVersion uint64                              `json:"last_prune_version"`
+	Version          uint64                     `json:"version"`
+	Trees            map[string]TreeDescription `json:"tree_descriptions"`
+	LastPruneVersion uint64                     `json:"last_prune_version"`
 }
-
-type TreeDescription = internal.TreeDescription
-type ChangesetDescription = internal.ChangesetDescription
-type CheckpointInfo = internal.CheckpointInfo
 
 func RenderHTML(w io.Writer, desc MultiTreeDescription) error {
 	return descTemplate.Execute(w, desc)
@@ -29,11 +23,11 @@ func RenderHTML(w io.Writer, desc MultiTreeDescription) error {
 func (db *CommitMultiTree) startDebugServer() {
 	ln, err := net.Listen("tcp", "127.0.0.1:63789")
 	if err != nil {
-		logger.Error("failed to start IAVL debug server", "error", err)
+		db.logger.Error("failed to start IAVL debug server", "error", err)
 		return
 	}
 	fmt.Printf("IAVL debug server started at http://%s\n", ln.Addr().String())
-	logger.Info("IAVL debug server started", "addr", "http://"+ln.Addr().String())
+	db.logger.Info("IAVL debug server started", "addr", "http://"+ln.Addr().String())
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -67,7 +61,7 @@ func rootRetained(cp CheckpointInfo) bool {
 	if rootID.Checkpoint() != cp.Checkpoint {
 		return false // root is from a different checkpoint, can't confirm locally
 	}
-	var nsi internal.NodeSetInfo
+	var nsi NodeSetInfo
 	if rootID.IsLeaf() {
 		nsi = cp.Leaves
 	} else {
@@ -103,8 +97,8 @@ var descTemplate = template.Must(template.New("desc").Funcs(template.FuncMap{
 	"rootRetained": rootRetained,
 	"nodeCount":    nodeCount,
 	"toJSON":       toJSON,
-	"sizeLeaf":     func() int { return int(internal.SizeLeaf) },
-	"sizeBranch":   func() int { return int(internal.SizeBranch) },
+	"sizeLeaf":     func() int { return int(SizeLeaf) },
+	"sizeBranch":   func() int { return int(SizeBranch) },
 }).Parse(`<!DOCTYPE html>
 <html>
 <head>

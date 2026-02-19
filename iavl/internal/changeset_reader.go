@@ -51,12 +51,12 @@ func NewChangesetReader(changeset *Changeset) (*ChangesetReader, error) {
 	}
 
 	if cr.checkpointsInfo.Count() > 0 {
-		count := uint32(cr.checkpointsInfo.Count())
+		count := cr.checkpointsInfo.Count()
 		firstInfo := cr.checkpointsInfo.UnsafeItem(0)
 		cr.firstCheckpoint = firstInfo.Checkpoint
 		lastInfo := cr.checkpointsInfo.UnsafeItem(count - 1)
 		cr.lastCheckpoint = lastInfo.Checkpoint
-		cr.checkpointsContiguous = cr.lastCheckpoint-cr.firstCheckpoint+1 == count
+		cr.checkpointsContiguous = int(cr.lastCheckpoint-cr.firstCheckpoint+1) == count
 	}
 
 	return cr, nil
@@ -80,7 +80,7 @@ func (cr *ChangesetReader) ResolveLeafByIndex(fileIdx uint32) (*LeafLayout, erro
 	}
 
 	fileIdx-- // convert to 0-based index
-	return cr.leavesData.UnsafeItem(fileIdx), nil
+	return cr.leavesData.UnsafeItem(int(fileIdx)), nil
 }
 
 func (cr *ChangesetReader) ResolveBranchByIndex(fileIdx uint32) (*BranchLayout, error) {
@@ -89,7 +89,7 @@ func (cr *ChangesetReader) ResolveBranchByIndex(fileIdx uint32) (*BranchLayout, 
 	}
 
 	fileIdx-- // convert to 0-based index
-	return cr.branchesData.UnsafeItem(fileIdx), nil
+	return cr.branchesData.UnsafeItem(int(fileIdx)), nil
 }
 
 func (cr *ChangesetReader) ResolveLeafByID(id NodeID) (*LeafLayout, error) {
@@ -121,7 +121,7 @@ func (cr *ChangesetReader) GetCheckpointInfo(checkpoint uint32) (*CheckpointInfo
 			checkpoint, cr.changeset.Files().Dir(), cr.firstCheckpoint, cr.lastCheckpoint)
 	}
 	if cr.checkpointsContiguous {
-		item := cr.checkpointsInfo.UnsafeItem(checkpoint - cr.firstCheckpoint)
+		item := cr.checkpointsInfo.UnsafeItem(int(checkpoint - cr.firstCheckpoint))
 		if item.Checkpoint != checkpoint {
 			return nil, fmt.Errorf("checkpoint data corruption in changeset %s: expected checkpoint %d at index %d, got %d",
 				cr.changeset.Files().Dir(), checkpoint, checkpoint-cr.firstCheckpoint, item.Checkpoint)
@@ -133,7 +133,7 @@ func (cr *ChangesetReader) GetCheckpointInfo(checkpoint uint32) (*CheckpointInfo
 		return c.Checkpoint >= checkpoint
 	})
 	if idx < cr.checkpointsInfo.Count() {
-		item := cr.checkpointsInfo.UnsafeItem(uint32(idx))
+		item := cr.checkpointsInfo.UnsafeItem(idx)
 		if item.Checkpoint == checkpoint {
 			return item, nil
 		}
@@ -225,7 +225,7 @@ func (cr *ChangesetReader) LatestCheckpointRoot() CheckpointRootInfo {
 // If there is no available checkpoint, CheckpointRootInfo.Version will be zero.
 func (cr *ChangesetReader) latestValidCheckpoint(startIdx int) CheckpointRootInfo {
 	for i := startIdx; i >= 0; i-- {
-		info := cr.checkpointsInfo.UnsafeItem(uint32(i))
+		info := cr.checkpointsInfo.UnsafeItem(i)
 		rootID := info.RootID
 		if rootID.IsEmptyTree() {
 			return CheckpointRootInfo{
@@ -299,6 +299,36 @@ func (cr *ChangesetReader) CheckpointForVersion(targetVersion uint32) Checkpoint
 	return cr.latestValidCheckpoint(floorIdx)
 }
 
+func (cr *ChangesetReader) Verify() error {
+	n := cr.checkpointsInfo.Count()
+	if n == 0 {
+		// no checkpoints, nothing to verify
+		return nil
+	}
+
+	lastInfo := cr.checkpointsInfo.UnsafeItem(n - 1)
+	if !lastInfo.VerifyCRC32() {
+		return fmt.Errorf("changeset checkpoint info failed CRC32 check during verification: checkpoint %d, expected CRC32 %08x, actual CRC32 %08x",
+			lastInfo.Checkpoint, lastInfo.CRC32, lastInfo.ComputeCRC32())
+	}
+	// check leaves size
+	expectedLeafCount := lastInfo.Leaves.StartOffset + lastInfo.Leaves.Count
+	if expectedLeafCount > uint32(cr.leavesData.Count()) {
+		return fmt.Errorf("changeset leaves data count mismatch during verification: expected %d, actual %d", expectedLeafCount, cr.leavesData.Count())
+	}
+	// check branches size
+	expectedBranchCount := lastInfo.Branches.StartOffset + lastInfo.Branches.Count
+	if expectedBranchCount > uint32(cr.branchesData.Count()) {
+		return fmt.Errorf("changeset branches data count mismatch during verification: expected %d, actual %d", expectedBranchCount, cr.branchesData.Count())
+	}
+	// check kv.dat size
+	expectedKVDataSize := lastInfo.KVEndOffset
+	if expectedKVDataSize > uint64(cr.kvDataReader.Len()) {
+		return fmt.Errorf("changeset KV data size mismatch during verification: expected at least %d bytes, actual %d bytes", expectedKVDataSize, cr.kvDataReader.Len())
+	}
+	return nil
+}
+
 func (cr *ChangesetReader) TotalBytes() int {
 	return cr.leavesData.TotalBytes() +
 		cr.branchesData.TotalBytes() +
@@ -310,7 +340,7 @@ func (cr *ChangesetReader) TotalBytes() int {
 func (cr *ChangesetReader) Describe() ChangesetDescription {
 	checkpoints := make([]CheckpointInfo, 0, cr.checkpointsInfo.Count())
 	for i := 0; i < cr.checkpointsInfo.Count(); i++ {
-		info := cr.checkpointsInfo.UnsafeItem(uint32(i))
+		info := cr.checkpointsInfo.UnsafeItem(i)
 		checkpoints = append(checkpoints, *info) // copy
 	}
 	return ChangesetDescription{

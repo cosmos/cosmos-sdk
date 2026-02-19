@@ -32,10 +32,10 @@ func (ts *TreeStore) load() error {
 		// delete -tmp dirs
 		if strings.HasSuffix(dirName, "-tmp") {
 			dir := filepath.Join(ts.dir, dirName)
-			logger.WarnContext(ctx, "found incomplete changeset dir, deleting", "dir", dir)
+			ts.logger.WarnContext(ctx, "found incomplete changeset dir, deleting", "dir", dir)
 			err := os.RemoveAll(dir)
 			if err != nil {
-				logger.ErrorContext(ctx, "failed to remove incomplete changeset dir", "dir", dir, "error", err)
+				ts.logger.ErrorContext(ctx, "failed to remove incomplete changeset dir", "dir", dir, "error", err)
 			}
 			continue
 		}
@@ -65,9 +65,9 @@ func (ts *TreeStore) load() error {
 			return fmt.Errorf("internal error: no changeset entries for start version %d", startVersion)
 		}
 
-		logger.DebugContext(ctx, "loading changeset", "startVersion", startVersion, "dir", dirName)
+		ts.logger.DebugContext(ctx, "loading changeset", "startVersion", startVersion, "dir", dirName)
 
-		cs, err := OpenChangeset(ts, dirName)
+		cs, err := OpenChangeset(ts, dirName, !ts.opts.DisableAutoRepair)
 		if err != nil {
 			return fmt.Errorf("failed to open changeset in %s: %w", dirName, err)
 		}
@@ -101,9 +101,9 @@ func (ts *TreeStore) load() error {
 
 		// delete superseded compaction directories for the same start version
 		compactionMap.Ascend(0, func(_ uint32, dir string) bool {
-			logger.WarnContext(ctx, "deleting superseded changeset dir", "dir", dir)
+			ts.logger.WarnContext(ctx, "deleting superseded changeset dir", "dir", dir)
 			if err := os.RemoveAll(dir); err != nil {
-				logger.ErrorContext(ctx, "failed to delete superseded changeset dir", "dir", dir, "error", err)
+				ts.logger.ErrorContext(ctx, "failed to delete superseded changeset dir", "dir", dir, "error", err)
 			}
 			return true
 		})
@@ -118,9 +118,9 @@ func (ts *TreeStore) load() error {
 				}
 				// delete all dirs for this start version (original + any older compactions)
 				compactionMap.Ascend(0, func(_ uint32, dir string) bool {
-					logger.WarnContext(ctx, "deleting compacted changeset dir", "dir", dir)
+					ts.logger.WarnContext(ctx, "deleting compacted changeset dir", "dir", dir)
 					if err := os.RemoveAll(dir); err != nil {
-						logger.ErrorContext(ctx, "failed to delete compacted changeset dir", "dir", dir, "error", err)
+						ts.logger.ErrorContext(ctx, "failed to delete compacted changeset dir", "dir", dir, "error", err)
 					}
 					return true
 				})
@@ -137,6 +137,9 @@ func (ts *TreeStore) load() error {
 
 	root := cpInfo.Root
 	version := cpInfo.Version
+	if ts.opts.ExpectedVersion != 0 && version > ts.opts.ExpectedVersion {
+		return fmt.Errorf("latest checkpoint version %d is greater than expected version %d, this indicates data corruptions", version, ts.opts.ExpectedVersion)
+	}
 
 	// find the changeset to start replaying from
 	replayFrom := ts.changesetForVersion(version + 1)
@@ -146,7 +149,7 @@ func (ts *TreeStore) load() error {
 	}
 
 	ts.changesetsByVersion.Ascend(replayFromVersion, func(_ uint32, cs *Changeset) bool {
-		root, version, err = ReplayWAL(ctx, root, cs.files.WALFile(), version, 0)
+		root, version, err = ReplayWALForStartup(ctx, root, cs.files.WALFile(), version, ts.opts.ExpectedVersion, ts.logger, !ts.opts.DisableAutoRepair)
 		if err != nil {
 			return false
 		}

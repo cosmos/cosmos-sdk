@@ -2,12 +2,6 @@ package baseapp
 
 // need to import telemetry before anything else for side effects
 import (
-	"cosmossdk.io/store"
-	storemetrics "cosmossdk.io/store/metrics"
-	_ "github.com/cosmos/cosmos-sdk/telemetry"
-)
-
-import (
 	"fmt"
 	"maps"
 	"math"
@@ -15,31 +9,44 @@ import (
 	"strconv"
 	"sync"
 
+	"cosmossdk.io/store"
+	storemetrics "cosmossdk.io/store/metrics"
 	"github.com/cockroachdb/errors"
+
+	_ "github.com/cosmos/cosmos-sdk/telemetry"
+
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/tmhash"
+
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
+
 	protov2 "google.golang.org/protobuf/proto"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store/snapshots"
+
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/config"
 	"github.com/cosmos/cosmos-sdk/baseapp/oe"
 	"github.com/cosmos/cosmos-sdk/baseapp/state"
 	"github.com/cosmos/cosmos-sdk/codec"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
@@ -51,7 +58,7 @@ type (
 	// loading a datastore written with an older version of the software. In
 	// particular, if a module changed the substore key name (or removed a substore)
 	// between two versions of the software.
-	StoreLoader func(ms storetypes.CommitMultiStore2) error
+	StoreLoader func(ms storetypes.CommitMultiStore) error
 )
 
 const (
@@ -91,9 +98,9 @@ type BaseApp struct {
 	// initialized on creation
 	mu                sync.Mutex // mu protects the fields below.
 	logger            log.Logger
-	name              string                       // application name from abci.BlockInfo
-	db                dbm.DB                       // common DB backend
-	cms               storetypes.CommitMultiStore2 // Main (uncached) state
+	name              string                      // application name from abci.BlockInfo
+	db                dbm.DB                      // common DB backend
+	cms               storetypes.CommitMultiStore // Main (uncached) state
 	committer         storetypes.CommitFinalizer
 	qms               storetypes.MultiStore // Optional alternative multistore for querying only.
 	storeLoader       StoreLoader           // function to handle store loading, may be overridden with SetStoreLoader()
@@ -384,14 +391,14 @@ func (app *BaseApp) LoadLatestVersion() error {
 }
 
 // DefaultStoreLoader will be used by default and loads the latest version
-func DefaultStoreLoader(ms storetypes.CommitMultiStore2) error {
+func DefaultStoreLoader(ms storetypes.CommitMultiStore) error {
 	return ms.LoadLatestVersion()
 }
 
 // CommitMultiStore returns the root multi-store.
 // App constructor can use this to access the `cms`.
 // UNSAFE: must not be used during the abci life cycle.
-func (app *BaseApp) CommitMultiStore() storetypes.CommitMultiStore2 {
+func (app *BaseApp) CommitMultiStore() storetypes.CommitMultiStore {
 	return app.cms
 }
 

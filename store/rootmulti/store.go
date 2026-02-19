@@ -21,6 +21,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
+
 	"cosmossdk.io/store/cachemulti"
 	"cosmossdk.io/store/dbadapter"
 	"cosmossdk.io/store/iavl"
@@ -86,7 +87,7 @@ type Store struct {
 }
 
 var (
-	_ types.CommitMultiStore2         = (*Store)(nil)
+	_ types.CommitMultiStore          = (*Store)(nil)
 	_ types.Queryable                 = (*Store)(nil)
 	_ snapshottypes.SnapshotAnnouncer = (*Store)(nil)
 )
@@ -1352,6 +1353,10 @@ func (rs *Store) StartCommit(ctx context.Context, store types.MultiStore, header
 		cacheStore: store,
 		header:     header,
 	}, nil
+}
+
+func (rs *Store) Close() error {
+	return nil
 }
 
 type commitFinalizer struct {

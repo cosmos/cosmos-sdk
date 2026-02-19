@@ -82,7 +82,7 @@ func (t TreeReader) CacheWrap() storetypes.CacheWrap {
 }
 
 func (t TreeReader) CacheWrapWithTrace(io.Writer, storetypes.TraceContext) storetypes.CacheWrap {
-	logger.Warn("CacheWrapWithTrace called on KVStoreWrapper: tracing not implemented")
+	// TODO implement me
 	return cachekv.NewStore(t)
 }
 

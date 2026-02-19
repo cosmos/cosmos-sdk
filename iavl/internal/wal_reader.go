@@ -42,7 +42,10 @@ func ReadWAL(file *os.File) iter.Seq2[WALEntry, error] {
 	return func(yield func(WALEntry, error) bool) {
 		defer kvr.Close()
 		for {
+			// capture offset at the start of the entry for error reporting and rollbacks
+			offset := rdr.offset
 			entry, err := rdr.next()
+			entry.Offset = offset
 			if err != nil {
 				if err == io.EOF {
 					return

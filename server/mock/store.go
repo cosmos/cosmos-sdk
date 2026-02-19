@@ -1,8 +1,10 @@
 package mock
 
 import (
+	"context"
 	"io"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 
@@ -16,6 +18,20 @@ var _ storetypes.MultiStore = multiStore{}
 
 type multiStore struct {
 	kv map[storetypes.StoreKey]kvStore
+}
+
+func (ms multiStore) StartCommit(ctx context.Context, store storetypes.MultiStore, header cmtproto.Header) (storetypes.CommitFinalizer, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (ms multiStore) GetCommitInfo(ver int64) (*storetypes.CommitInfo, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (ms multiStore) Close() error {
+	return nil
 }
 
 func (ms multiStore) CacheMultiStore() storetypes.CacheMultiStore {

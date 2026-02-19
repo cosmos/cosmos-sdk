@@ -9,8 +9,9 @@ import (
 )
 
 type MultiTree struct {
-	latestCommitInfo        *storetypes.CommitInfo
-	trees                   map[storetypes.StoreKey]storetypes.CacheWrap // index of the trees by name
+	latestCommitInfo *storetypes.CommitInfo
+	// for now we use sync.Map but this is only needed by block STM for the root store layer - we should find a fix that doesn't force sync.Map on every layer
+	trees                   sync.Map // index of the trees by name
 	initCacheWrapFromParent func(storetypes.StoreKey) storetypes.CacheWrap
 	latestVersion           int64
 }
@@ -21,7 +22,6 @@ func NewMultiTree(version int64, commitInfo *storetypes.CommitInfo, initCacheWra
 	return &MultiTree{
 		latestVersion:           version,
 		latestCommitInfo:        commitInfo,
-		trees:                   map[storetypes.StoreKey]storetypes.CacheWrap{},
 		initCacheWrapFromParent: initCacheWrapFromParent,
 	}
 }
@@ -35,33 +35,33 @@ func (t *MultiTree) GetObjKVStore(key storetypes.StoreKey) storetypes.ObjKVStore
 }
 
 func (t *MultiTree) GetCacheWrapIfExists(key storetypes.StoreKey) storetypes.CacheWrap {
-	store, ok := t.trees[key]
+	store, ok := t.trees.Load(key)
 	if ok {
-		return store
+		return store.(storetypes.CacheWrap)
 	}
 	return nil
 }
 
 func (t *MultiTree) getCacheWrap(key storetypes.StoreKey) storetypes.CacheWrap {
-	store, ok := t.trees[key]
+	store, ok := t.trees.Load(key)
 	if ok {
-		return store
+		return store.(storetypes.CacheWrap)
 	}
-	store = t.initCacheWrapFromParent(key)
-	t.trees[key] = store
-	return store
+	newStore := t.initCacheWrapFromParent(key)
+	t.trees.Store(key, newStore)
+	return newStore
 }
 
 func (t *MultiTree) Write() {
 	var wg sync.WaitGroup
-	for _, tree := range t.trees {
-		// TODO check if trees are dirty before spinning off a goroutine
+	t.trees.Range(func(key, value any) bool {
 		wg.Add(1)
 		go func(t storetypes.CacheWrap) {
 			defer wg.Done()
 			t.Write()
-		}(tree)
-	}
+		}(value.(storetypes.CacheWrap))
+		return true
+	})
 	wg.Wait()
 }
 
@@ -74,7 +74,7 @@ func (t *MultiTree) CacheWrap() storetypes.CacheWrap {
 }
 
 func (t *MultiTree) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) storetypes.CacheWrap {
-	logger.Warn("CacheWrapWithTrace called on MultiTree: tracing not implemented")
+	// TODO implement me
 	return t.CacheWrap()
 }
 

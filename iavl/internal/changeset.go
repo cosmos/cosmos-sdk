@@ -15,15 +15,16 @@ type Changeset struct {
 	activeReaderCount atomic.Int32
 	sealed            atomic.Bool
 	compacted         atomic.Pointer[Changeset]
-	orphanWriter      *OrphanWriter
+	orphanWriter      *StructWriter[OrphanEntry]
 }
 
 // NewChangeset creates a new Changeset with the given TreeStore and ChangesetFiles.
 func NewChangeset(treeStore *TreeStore, files *ChangesetFiles) (*Changeset, error) {
+	const orphanWriterBufSize = 4 * 1024 // 4kb
 	cs := &Changeset{
 		treeStore:    treeStore,
 		files:        files,
-		orphanWriter: NewOrphanWriter(files.OrphansFile()),
+		orphanWriter: NewStructWriterSize[OrphanEntry](files.OrphansFile(), orphanWriterBufSize),
 	}
 	err := cs.OpenNewReader()
 	if err != nil {
@@ -33,7 +34,7 @@ func NewChangeset(treeStore *TreeStore, files *ChangesetFiles) (*Changeset, erro
 }
 
 // OpenChangeset opens existing changeset files in the given directory.
-func OpenChangeset(treeStore *TreeStore, dir string) (*Changeset, error) {
+func OpenChangeset(treeStore *TreeStore, dir string, autoRepair bool) (*Changeset, error) {
 	files, err := OpenChangesetFiles(dir)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open changeset files: %w", err)
@@ -45,6 +46,11 @@ func OpenChangeset(treeStore *TreeStore, dir string) (*Changeset, error) {
 	// mark as sealed since this is an existing changeset that won't be written to anymore
 	// otherwise the compactor will skip it
 	cs.sealed.Store(true)
+	// TODO if this verification check ends up being expensive we can instead verify only the last changeset when loading the tree store, but it shouldn't be a problem to do this for every changeset
+	err = cs.VerifyAndFix(autoRepair) // attempt to fix any issues with the changeset before we start using it
+	if err != nil {
+		return nil, fmt.Errorf("failed to verify and fix changeset: %w", err)
+	}
 	return cs, nil
 }
 
@@ -133,7 +139,7 @@ func (ch *Changeset) Files() *ChangesetFiles {
 	return ch.files
 }
 
-func (ch *Changeset) OrphanWriter() *OrphanWriter {
+func (ch *Changeset) OrphanWriter() *StructWriter[OrphanEntry] {
 	if ch.orphanWriter == nil {
 		return ch.compacted.Load().OrphanWriter()
 	}
@@ -149,6 +155,74 @@ func (ch *Changeset) TryDelete(ctx context.Context) (bool, error) {
 		// readers still active, can't delete yet
 		return false, nil
 	}
-	logger.InfoContext(ctx, "deleting changeset", "dir", ch.files.Dir())
+	ch.treeStore.logger.InfoContext(ctx, "deleting changeset", "dir", ch.files.Dir())
 	return true, ch.files.DeleteFiles()
+}
+
+// VerifyAndFix performs integrity checks on the changeset data and attempts to fix any issues that it can.
+func (ch *Changeset) VerifyAndFix(autoRepair bool) error {
+	cr, pin := ch.TryPinUncompactedReader()
+	defer pin.Unpin()
+	if cr == nil {
+		return fmt.Errorf("changeset reader is not available for verification")
+	}
+
+	err := cr.Verify()
+	if err != nil {
+		if !autoRepair {
+			return fmt.Errorf("changeset verification failed and autoRepair is disabled, cannot fix: %w", err)
+		}
+
+		ch.treeStore.logger.Warn("changeset verification failed, attempting to fix if possible", "dir", ch.files.Dir(), "error", err)
+
+		// rollback checkpoints.dat
+		cpCount := cr.checkpointsInfo.Count()
+		if cpCount == 0 {
+			return fmt.Errorf("expected at least 1 checkpoint in failed changeset verification, found 0")
+		}
+		newCpCount := cpCount - 1
+		newLastCheckpointOffset := newCpCount * CheckpointInfoSize
+		err := RollbackFileToOffset(ch.files.CheckpointsFile(), int64(newLastCheckpointOffset))
+		if err != nil {
+			return fmt.Errorf("failed to truncate checkpoint info file during changeset verification: %w", err)
+		}
+
+		var newBranchesOffset, newLeavesOffset, newKVDataoffset int64
+		if newCpCount > 0 {
+			// if we have another checkpoint, use it
+			// otherwise everything goes to zero
+			lastGoodInfo := cr.checkpointsInfo.UnsafeItem(uint32(newCpCount - 1))
+			if !lastGoodInfo.VerifyCRC32() {
+				return fmt.Errorf("trying to roll back to previous checkpoint info but it also has invalid CRC32, cannot fix changeset: %s",
+					ch.files.Dir())
+			}
+
+			newBranchesOffset = int64((lastGoodInfo.Branches.StartOffset + lastGoodInfo.Branches.Count) * SizeBranch)
+			newLeavesOffset = int64((lastGoodInfo.Leaves.StartOffset + lastGoodInfo.Leaves.Count) * SizeLeaf)
+			newKVDataoffset = int64(lastGoodInfo.KVEndOffset)
+		}
+
+		// rollback files
+		err = RollbackFileToOffset(ch.files.BranchesFile(), newBranchesOffset)
+		if err != nil {
+			return fmt.Errorf("failed to truncate branches file during changeset verification: %w", err)
+		}
+
+		err = RollbackFileToOffset(ch.files.LeavesFile(), newLeavesOffset)
+		if err != nil {
+			return fmt.Errorf("failed to truncate leaves file during changeset verification: %w", err)
+		}
+
+		err = RollbackFileToOffset(ch.files.KVDataFile(), newKVDataoffset)
+		if err != nil {
+			return fmt.Errorf("failed to truncate kv data file during changeset verification: %w", err)
+		}
+
+		// open a new reader to update our in-memory state to reflect the rolled back files
+		err = ch.OpenNewReader()
+		if err != nil {
+			return fmt.Errorf("failed to open new reader after fixing changeset: %w", err)
+		}
+	}
+	return nil
 }

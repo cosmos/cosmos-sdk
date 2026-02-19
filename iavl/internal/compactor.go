@@ -27,7 +27,7 @@ type Compactor struct {
 	cpInfoWriter   *StructWriter[CheckpointInfo]
 	walWriter      *WALWriter
 	kvlogWriter    *KVDataWriter
-	orphanWriter   *OrphanWriter
+	orphanWriter   *StructWriter[OrphanEntry]
 
 	endVersion uint32
 
@@ -70,7 +70,7 @@ func NewCompactor(ctx context.Context, reader *ChangesetReader, opts CompactOpti
 		branchesWriter:  NewStructWriter[BranchLayout](newFiles.branchesFile),
 		cpInfoWriter:    NewStructWriter[CheckpointInfo](newFiles.checkpointsFile),
 		offsetCache:     make(map[NodeID]uint32),
-		orphanWriter:    NewOrphanWriter(newFiles.OrphansFile()),
+		orphanWriter:    NewStructWriter[OrphanEntry](newFiles.orphansFile),
 	}
 
 	err = c.AddChangeset(reader)
@@ -126,9 +126,9 @@ func (c *Compactor) doAddChangeset(reader *ChangesetReader) error {
 	}
 	c.treeStore.UnlockOrphanProc()
 
-	logger.DebugContext(c.ctx, "processing changeset for compaction", "numCheckpoints", numCheckpoints)
+	c.treeStore.logger.DebugContext(c.ctx, "processing changeset for compaction", "numCheckpoints", numCheckpoints)
 	for i := 0; i < numCheckpoints; i++ {
-		cpInfo := cpInfo.UnsafeItem(uint32(i)) // copy
+		cpInfo := cpInfo.UnsafeItem(i) // copy
 		newLeafStartIdx := uint32(0)
 		newLeafEndIdx := uint32(0)
 		leafStartOffset := cpInfo.Leaves.StartOffset
@@ -138,7 +138,7 @@ func (c *Compactor) doAddChangeset(reader *ChangesetReader) error {
 		// Iterate leaves
 		// For each leaf, check if it should be retained
 		for j := uint32(0); j < leafCount; j++ {
-			existingLeaf := LeafPersisted{store: reader, layout: leavesData.UnsafeItem(leafStartOffset + j)}
+			existingLeaf := LeafPersisted{store: reader, layout: leavesData.UnsafeItem(int(leafStartOffset + j))}
 			leaf := *existingLeaf.layout // copy so we don't modify original
 			id := leaf.ID
 			_, toDelete := deleteMap[id]
@@ -183,7 +183,7 @@ func (c *Compactor) doAddChangeset(reader *ChangesetReader) error {
 		newBranchStartOffset := uint32(c.branchesWriter.Count())
 		newBranchCount := uint32(0)
 		for j := uint32(0); j < branchCount; j++ {
-			existingBranch := BranchPersisted{store: reader, layout: branchesData.UnsafeItem(branchStartOffset + j)}
+			existingBranch := BranchPersisted{store: reader, layout: branchesData.UnsafeItem(int(branchStartOffset + j))}
 			branch := *existingBranch.layout // copy so we don't modify original
 			id := branch.ID
 			_, toDelete := deleteMap[id]
@@ -249,10 +249,12 @@ func (c *Compactor) doAddChangeset(reader *ChangesetReader) error {
 				StartOffset: newBranchStartOffset,
 				Count:       newBranchCount,
 			},
-			Checkpoint: cpInfo.Checkpoint,
-			Version:    cpInfo.Version,
-			RootID:     cpInfo.RootID,
+			Checkpoint:  cpInfo.Checkpoint,
+			Version:     cpInfo.Version,
+			RootID:      cpInfo.RootID,
+			KVEndOffset: uint64(c.kvlogWriter.Size()),
 		}
+		cpInfo.SetCRC32()
 
 		err := c.cpInfoWriter.Append(cpInfo)
 		if err != nil {
@@ -379,7 +381,7 @@ func (c *Compactor) finalize() (*Changeset, error) {
 		return nil, fmt.Errorf("failed to mark changeset as ready during compaction seal: %w", err)
 	}
 
-	cs, err := OpenChangeset(c.treeStore, finalDir)
+	cs, err := OpenChangeset(c.treeStore, finalDir, false)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create new changeset for compacted data during compaction seal: %w", err)
 	}

@@ -191,7 +191,7 @@ func (ch *Changeset) VerifyAndFix(autoRepair bool) error {
 		if newCpCount > 0 {
 			// if we have another checkpoint, use it
 			// otherwise everything goes to zero
-			lastGoodInfo := cr.checkpointsInfo.UnsafeItem(uint32(newCpCount - 1))
+			lastGoodInfo := cr.checkpointsInfo.UnsafeItem(newCpCount - 1)
 			if !lastGoodInfo.VerifyCRC32() {
 				return fmt.Errorf("trying to roll back to previous checkpoint info but it also has invalid CRC32, cannot fix changeset: %s",
 					ch.files.Dir())

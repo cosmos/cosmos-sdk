@@ -9,7 +9,6 @@ import (
 )
 
 type MultiTree struct {
-	latestCommitInfo *storetypes.CommitInfo
 	// for now we use sync.Map but this is only needed by block STM for the root store layer - we should find a fix that doesn't force sync.Map on every layer
 	trees                   sync.Map // index of the trees by name
 	initCacheWrapFromParent func(storetypes.StoreKey) storetypes.CacheWrap
@@ -18,10 +17,9 @@ type MultiTree struct {
 
 // NewMultiTree creates a new MultiTree from the given CommitInfo, which contains the version and store info for each store.
 // CommitInfo will be nil if this is the first version of the MultiTree, in which case the version will be set to 0 and the store info will be empty.
-func NewMultiTree(version int64, commitInfo *storetypes.CommitInfo, initCacheWrapFromParent func(key storetypes.StoreKey) storetypes.CacheWrap) *MultiTree {
+func NewMultiTree(version int64, initCacheWrapFromParent func(key storetypes.StoreKey) storetypes.CacheWrap) *MultiTree {
 	return &MultiTree{
 		latestVersion:           version,
-		latestCommitInfo:        commitInfo,
 		initCacheWrapFromParent: initCacheWrapFromParent,
 	}
 }
@@ -80,7 +78,7 @@ func (t *MultiTree) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceContext) 
 
 func (t *MultiTree) CacheMultiStore() storetypes.CacheMultiStore {
 	// create a nested MultiTree, which in turn creates CacheWraps for each store
-	return NewMultiTree(t.latestVersion, t.latestCommitInfo, func(key storetypes.StoreKey) storetypes.CacheWrap {
+	return NewMultiTree(t.latestVersion, func(key storetypes.StoreKey) storetypes.CacheWrap {
 		return t.getCacheWrap(key).CacheWrap()
 	})
 }

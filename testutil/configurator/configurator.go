@@ -36,9 +36,10 @@ type Config struct {
 }
 
 func defaultConfig() *Config {
-	return &Config{
+	cfg := &Config{
 		ModuleConfigs: make(map[string]*appv1alpha1.ModuleConfig),
 		PreBlockersOrder: []string{
+			"auth",
 			"upgrade",
 		},
 		BeginBlockersOrder: []string{
@@ -57,6 +58,8 @@ func defaultConfig() *Config {
 			"consensus",
 			"vesting",
 			"protocolpool",
+			"nft",
+			"group",
 		},
 		EndBlockersOrder: []string{
 			"gov",
@@ -75,6 +78,9 @@ func defaultConfig() *Config {
 			"upgrade",
 			"vesting",
 			"protocolpool",
+			"protocolpool",
+			"nft",
+			"group",
 		},
 		InitGenesisOrder: []string{
 			"auth",
@@ -93,9 +99,14 @@ func defaultConfig() *Config {
 			"upgrade",
 			"vesting",
 			"protocolpool",
+			"protocolpool",
+			"nft",
+			"group",
 		},
 		setInitGenesis: true,
 	}
+
+	return cfg
 }
 
 type ModuleOption func(config *Config)

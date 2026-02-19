@@ -19,15 +19,11 @@ func NewOrphanRewriter(existingWriter *StructWriter[OrphanEntry]) (*OrphanRewrit
 // It returns a map of NodeIDs to their orphaned versions for nodes that should be deleted
 // according to the provided retainCriteria function.
 func (or *OrphanRewriter) Preprocess(retainCriteria RetainCriteria, compactedOrphanWriter *StructWriter[OrphanEntry]) (toDelete map[NodeID]uint32, err error) {
-	rdr, err := NewStructMmap[OrphanEntry](or.existingWriter.file)
+	rdr, err := or.openReader()
 	if err != nil {
 		return nil, err
 	}
-	defer func() {
-		if err := rdr.Close(); err != nil {
-			fmt.Printf("failed to close orphan rewriter reader: %v\n", err)
-		}
-	}()
+	defer rdr.Close()
 
 	toDelete = make(map[NodeID]uint32)
 	err = or.existingWriter.Flush()
@@ -53,21 +49,11 @@ func (or *OrphanRewriter) Preprocess(retainCriteria RetainCriteria, compactedOrp
 }
 
 func (or *OrphanRewriter) FinishRewrite(compactedOrphanWriter *StructWriter[OrphanEntry]) error {
-	err := or.existingWriter.Flush()
+	rdr, err := or.openReader()
 	if err != nil {
-		return fmt.Errorf("failed to flush existing orphan writer: %w", err)
+		return err
 	}
-
-	// open new reader with new mmap
-	rdr, err := NewStructMmap[OrphanEntry](or.existingWriter.file)
-	if err != nil {
-		return fmt.Errorf("failed to open new mmap for orphan rewriter: %w", err)
-	}
-	defer func() {
-		if err := rdr.Close(); err != nil {
-			fmt.Printf("failed to close orphan rewriter reader: %v\n", err)
-		}
-	}()
+	defer rdr.Close()
 
 	newCount := rdr.Count()
 
@@ -80,4 +66,12 @@ func (or *OrphanRewriter) FinishRewrite(compactedOrphanWriter *StructWriter[Orph
 	}
 
 	return nil
+}
+
+func (or *OrphanRewriter) openReader() (*StructMmap[OrphanEntry], error) {
+	err := or.existingWriter.Flush()
+	if err != nil {
+		return nil, fmt.Errorf("failed to flush existing orphan writer: %w", err)
+	}
+	return NewStructMmap[OrphanEntry](or.existingWriter.file)
 }

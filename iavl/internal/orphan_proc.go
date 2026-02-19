@@ -1,10 +1,8 @@
 package internal
 
 import (
-	"cmp"
 	"context"
 	"fmt"
-	"slices"
 	"sync"
 
 	"go.opentelemetry.io/otel/attribute"
@@ -70,16 +68,7 @@ func (op *OrphanProcessor) procOne(mutationCtx *MutationContext) error {
 	)
 	defer span.End()
 	orphans := mutationCtx.orphans
-	// sort orphans so that orphan logs are compact and in a deterministic order (sorted by checkpoint, then by flag index)
-	slices.SortFunc(orphans, func(a, b *NodePointer) int {
-		idA := a.id
-		idB := b.id
-		c := cmp.Compare(idA.Checkpoint(), idB.Checkpoint())
-		if c != 0 {
-			return c
-		}
-		return cmp.Compare(idA.flagIndex, idB.flagIndex)
-	})
+
 	// acquire mutex to ensure we don't interfere with any compaction rewriting
 	op.mtx.Lock()
 	defer op.mtx.Unlock()

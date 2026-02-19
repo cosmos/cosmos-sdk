@@ -39,7 +39,6 @@ func OpenChangeset(treeStore *TreeStore, dir string, autoRepair bool) (*Changese
 	if err != nil {
 		return nil, fmt.Errorf("failed to open changeset files: %w", err)
 	}
-
 	cs, err := NewChangeset(treeStore, files)
 	if err != nil {
 		return nil, err

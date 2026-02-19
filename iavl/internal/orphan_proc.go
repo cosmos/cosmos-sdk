@@ -94,7 +94,7 @@ func (op *OrphanProcessor) procOne(mutationCtx *MutationContext) error {
 			}
 			curCheckpoint = checkpoint
 		}
-		err := curChangeset.OrphanWriter().WriteOrphan(mutationCtx.version, orphan.id)
+		err := curChangeset.OrphanWriter().Append(&OrphanEntry{OrphanedVersion: mutationCtx.version, NodeID: orphan.id})
 		if err != nil {
 			return fmt.Errorf("orphan writer failed to write orphan node %s for version %d: %w", orphan.id, mutationCtx.version, err)
 		}

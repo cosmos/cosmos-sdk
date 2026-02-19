@@ -50,7 +50,7 @@ type model struct {
 	selectedCheckpoint uint32
 
 	checkpoints        []internal.CheckpointInfo
-	orphans            []internal.OrphanLogEntry
+	orphans            []internal.OrphanEntry
 	orphanMap          map[internal.NodeID]uint32 // NodeID → OrphanedVersion
 	orphanStats        map[uint32]orphanCounts    // checkpoint → {leaf orphan count, branch orphan count}
 	walAnalysis        []walVersionInfo
@@ -469,7 +469,7 @@ func (m *model) buildBranchesTable(branches []internal.BranchLayout, orphanMap m
 	m.table = newTable(cols, rows, m.tableHeight())
 }
 
-func (m *model) buildOrphansTable(orphans []internal.OrphanLogEntry) {
+func (m *model) buildOrphansTable(orphans []internal.OrphanEntry) {
 	rows := make([]table.Row, len(orphans))
 	for i := range orphans {
 		o := &orphans[i]

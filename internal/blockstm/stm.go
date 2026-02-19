@@ -13,20 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
-func ExecuteBlock(
-	ctx context.Context,
-	blockSize int,
-	stores map[storetypes.StoreKey]int,
-	storage MultiStore,
-	executors int,
-	txExecutor TxExecutor,
-) error {
-	return ExecuteBlockWithEstimates(
-		ctx, blockSize, stores, storage, executors,
-		nil, txExecutor,
-	)
-}
-
 func ExecuteBlockWithEstimates(
 	ctx context.Context,
 	blockSize int,

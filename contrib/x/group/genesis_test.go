@@ -165,6 +165,21 @@ func TestGenesisStateValidate(t *testing.T) {
 			true,
 		},
 		{
+			"group with zero total weight - group must not be empty",
+			GenesisState{
+				Groups: []*GroupInfo{
+					{
+						Id:          1,
+						Admin:       accAddr.String(),
+						Metadata:    "1",
+						Version:     1,
+						TotalWeight: "0",
+					},
+				},
+			},
+			true,
+		},
+		{
 			"invalid group policy address",
 			GenesisState{
 				Groups: []*GroupInfo{

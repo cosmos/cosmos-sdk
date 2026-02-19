@@ -5,7 +5,7 @@ package systemtests
 import (
 	"testing"
 
-	"cosmossdk.io/systemtests"
+	"github.com/cosmos/cosmos-sdk/testutil/systemtests"
 )
 
 func TestMain(m *testing.M) {

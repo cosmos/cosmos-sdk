@@ -11,8 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tidwall/gjson"
 
-	systest "cosmossdk.io/systemtests"
-
+	systest "github.com/cosmos/cosmos-sdk/testutil/systemtests"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 )

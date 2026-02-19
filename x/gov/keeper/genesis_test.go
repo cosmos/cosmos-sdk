@@ -10,7 +10,7 @@ import (
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
-func (suite *KeeperTestSuite) TestImportExportQueues_ErrorUnconsistentState() {
+func (suite *KeeperTestSuite) TestImportExportQueues_ErrorInconsistentState() {
 	suite.reset()
 	suite.acctKeeper.EXPECT().SetModuleAccount(suite.ctx, gomock.Any()).AnyTimes()
 	suite.Require().Panics(func() {

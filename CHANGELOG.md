@@ -53,6 +53,8 @@ Ref: https://keepachangelog.com/en/1.0.0/
 `BondedTokens` has been renamed to `ValidatorPower` and `TotalBondedTokens` has been renamed to `TotalValidatorPower` to allow for multiple validator power representations.
 * (x/gov) [#25617](https://github.com/cosmos/cosmos-sdk/pull/25617) `AfterProposalSubmission` hook now includes proposer address as a parameter.
 * (x/gov) [#25616](https://github.com/cosmos/cosmos-sdk/pull/25616) `DistrKeeper` `x/distribution` is now optional. Genesis validation ensures `distrKeeper` is set if distribution module is used as proposal cancel destination.
+* (systemtests) [#25930]https://github.com/cosmos/cosmos-sdk/pull/25930) Move `systemtests` into `testutil` and no longer under its own `go.mod`.
+* (ABCI) [#25969](https://github.com/cosmos/cosmos-sdk/pull/25969) Add support for new ABCI methods, `InsertTx` and `ReapTxs`.
 
 ### Features
 
@@ -76,6 +78,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 
 ### Improvements
 
+* [#25955](https://github.com/cosmos/cosmos-sdk/pull/25955) Use cosmos/btree directly instead of replacing it in go.mods
 * (types) [#25342](https://github.com/cosmos/cosmos-sdk/pull/25342) Undeprecated `EmitEvent` and `EmitEvents` on the `EventManager`.  These functions will continue to be maintained.
 * (types) [#24668](https://github.com/cosmos/cosmos-sdk/pull/24668) Scope the global config to a particular binary so that multiple SDK binaries can be properly run on the same machine.
 * (baseapp) [#24655](https://github.com/cosmos/cosmos-sdk/pull/24655) Add mutex locks for `state` and make `lastCommitInfo` atomic to prevent race conditions between `Commit` and `CreateQueryContext`.
@@ -120,7 +123,10 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/staking) [#25829](https://github.com/cosmos/cosmos-sdk/pull/25829) Validates case-sensitivity on authz grands in x/staking.
 * (mempool) [#25869](https://github.com/cosmos/cosmos-sdk/pull/25869) fix(mempool): add thread safety to NextSenderTx.
 * (blockstm) [#25912](https://github.com/cosmos/cosmos-sdk/pull/25912) Remove `SigVerificationDecorator` signature incarnation cache causing state divergence under blockstm.
-
+* (x/group) [#25922](https://github.com/cosmos/cosmos-sdk/pull/25922) Add zero-total-weight check for ThresholdDecisionPolicy
+* (x/group) [#25917](https://github.com/cosmos/cosmos-sdk/pull/25917) Prevent creation of zero-weight groups.
+* (x/group) [#25919](https://github.com/cosmos/cosmos-sdk/pull/25919) add safer type assertions to group `DecisionPolicy` getter calls.
+* (x/group) [#25920](https://github.com/cosmos/cosmos-sdk/pull/25920) Expand voting period check to verify period is positive instead of nonzero.
 
 ### Deprecated
 
@@ -128,6 +134,7 @@ Ref: https://keepachangelog.com/en/1.0.0/
 * (x/group) [#24571](https://github.com/cosmos/cosmos-sdk/pull/24571) Deprecate the `x/group` module in the Cosmos SDK repository.  This module will not be maintained to the extent that our core modules will and will be kept in a [legacy repo](https://github.com/cosmos/cosmos-legacy).
 * (types) [#24664](https://github.com/cosmos/cosmos-sdk/pull/24664) Deprecate the `Invariant` type in the Cosmos SDK.
 * [#25516](https://github.com/cosmos/cosmos-sdk/pull/25516) Deprecate all existing methods and types in the `telemetry` package, usage of `github.com/hashicorp/go-metrics` and the `telemetry` configuration section. New instrumentation should use the official [OpenTelemetry go API](https://pkg.go.dev/go.opentelemetry.io/otel) and Cosmos SDK appllications can automatically expose OpenTelemetry metrics, traces and logs via [OpenTelemetry declarative configuration](https://pkg.go.dev/go.opentelemetry.io/contrib/otelconf).
+* [#25948](https://github.com/cosmos/cosmos-sdk/pull/25948) Change default `app.go` code to not use `depinject` as we are phasing it out.
 
 ## [v0.53.4](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.53.3) - 2025-07-25
 

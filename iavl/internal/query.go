@@ -1,4 +1,4 @@
-package iavl
+package internal
 
 import (
 	"bytes"
@@ -12,8 +12,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	storetypes "cosmossdk.io/store/types"
-
-	"github.com/cosmos/cosmos-sdk/iavl/internal"
 )
 
 // Query handles query paths for a single IAVL-backed store.
@@ -21,7 +19,7 @@ func (c *CommitTree) Query(req *storetypes.RequestQuery) (_ *storetypes.Response
 	start := time.Now()
 	defer func() {
 		if err != nil {
-			proofLatency.Record(context.Background(), time.Since(start).Milliseconds())
+			queryLatency.Record(context.Background(), time.Since(start).Milliseconds())
 		}
 	}()
 
@@ -109,7 +107,7 @@ func (c *CommitTree) queryHeight(reqHeight int64) (int64, error) {
 	return reqHeight, nil
 }
 
-func iavlProofOps(tree *internal.TreeReader, key []byte, exists bool) (*cmtprotocrypto.ProofOps, error) {
+func iavlProofOps(tree *TreeReader, key []byte, exists bool) (*cmtprotocrypto.ProofOps, error) {
 	var (
 		commitmentProof *ics23.CommitmentProof
 		err             error

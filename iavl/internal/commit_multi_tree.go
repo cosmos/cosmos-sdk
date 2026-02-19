@@ -739,11 +739,6 @@ func (db *CommitMultiTree) LoadLatestVersion() error {
 		return bytes.Compare([]byte(a.key.Name()), []byte(b.key.Name()))
 	})
 
-	fmt.Println("===PRUNING OPTIONS===")
-	fmt.Printf("KeepRecent: %x\n", db.pruningOptions.KeepRecent)
-	fmt.Printf("Interval: %x\n", db.pruningOptions.Interval)
-	fmt.Printf("Strategy: %x\n", db.pruningOptions.Strategy)
-
 	ci, earliestVersion, err := loadLatestCommitInfo(db.dir)
 	if err != nil {
 		return fmt.Errorf("failed to load latest commit info: %w", err)
@@ -984,16 +979,12 @@ func (db *CommitMultiTree) cacheMultiStore(version int64) storetypes.CacheMultiS
 }
 
 func (db *CommitMultiTree) pruneIfNeeded() {
-	fmt.Println("pruneIfNeeded!")
-
 	if db.pruningOptions.Strategy == pruningtypes.PruningNothing || db.pruningOptions.Interval == 0 {
-		fmt.Println("pruneIfNeeded returned early, STRATEGY!")
 		return
 	}
 
 	version := uint64(db.LatestVersion())
 	if version%db.pruningOptions.Interval != 0 {
-		fmt.Println("pruneIfNeeded returned early, INTERVAL!")
 		return
 	}
 
@@ -1033,8 +1024,6 @@ func (db *CommitMultiTree) pruneNow(ctx context.Context, retainVersion uint64) {
 	defer span.End()
 
 	db.earliestVersion.Store(int64(retainVersion))
-
-	fmt.Println("pruneNow called!")
 
 	err := deleteOldCommitInfos(db.dir, retainVersion)
 	if err != nil {

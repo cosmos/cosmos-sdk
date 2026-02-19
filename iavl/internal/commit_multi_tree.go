@@ -325,7 +325,10 @@ func (db *multiTreeFinalizer) writeCommitInfoHeader() (*os.File, error) {
 	}
 
 	// wait for finalization signal
-	<-db.finalizeOrRollback
+	select {
+	case <-db.finalizeOrRollback:
+	case <-db.ctx.Done():
+	}
 	if db.ctx.Err() != nil {
 		return nil, db.ctx.Err() // do not write commit info if rolling back
 	}
@@ -416,7 +419,10 @@ func (db *multiTreeFinalizer) prepareCommit(ctx context.Context) error {
 	}
 	close(db.hashReady)
 
-	<-db.finalizeOrRollback
+	select {
+	case <-db.finalizeOrRollback:
+	case <-ctx.Done():
+	}
 
 	if err := ctx.Err(); err != nil {
 		return err

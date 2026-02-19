@@ -95,7 +95,7 @@ func TestCommitMultiTreeQueryKeyAndProof(t *testing.T) {
 	require.Contains(t, err.Error(), "proof is unexpectedly empty")
 }
 
-func TestCommitMultiTreeQuerySubspaceWireCompatibility(t *testing.T) {
+func TestCommitMultiTreeQuerySubspaceCompat(t *testing.T) {
 	mt, key := setupQueryableMultiTree(t)
 	updates := []testKV{
 		{key: []byte("a/1"), value: []byte("one")},

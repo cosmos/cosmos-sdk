@@ -116,14 +116,13 @@ func (t TreeReader) Version() uint32 {
 
 var _ storetypes.KVStore = TreeReader{}
 
-// PROOF LOGIC
-
-func (tree *TreeReader) GetMembershipProof(key []byte) (*ics23.CommitmentProof, error) {
-	if tree.root == nil {
+// GetMembershipProof will produce a CommitmentProof that the given key exists in the iavl tree.
+func (t TreeReader) GetMembershipProof(key []byte) (*ics23.CommitmentProof, error) {
+	if t.root == nil {
 		return nil, errors.New("cannot create membership proof with nil root")
 	}
 
-	root, pin, err := tree.root.Resolve()
+	root, pin, err := t.root.Resolve()
 	defer pin.Unpin()
 	if err != nil {
 		return nil, err
@@ -143,11 +142,9 @@ func (tree *TreeReader) GetMembershipProof(key []byte) (*ics23.CommitmentProof, 
 	return proof, nil
 }
 
-/*
-GetNonMembershipProof will produce a CommitmentProof that the given key doesn't exist in the iavl tree.
-If the key exists in the tree, this will return an error.
-*/
-func (t *TreeReader) GetNonMembershipProof(key []byte) (*ics23.CommitmentProof, error) {
+// GetNonMembershipProof will produce a CommitmentProof that the given key doesn't exist in the iavl tree.
+// If the key exists in the tree, this will return an error.
+func (t TreeReader) GetNonMembershipProof(key []byte) (*ics23.CommitmentProof, error) {
 	if t.root == nil {
 		return nil, errors.New("cannot create non-membership proof with nil root")
 	}
@@ -216,7 +213,7 @@ func (t *TreeReader) GetNonMembershipProof(key []byte) (*ics23.CommitmentProof, 
 }
 
 // VerifyMembership returns true iff proof is an ExistenceProof for the given key.
-func (t *TreeReader) VerifyMembership(proof *ics23.CommitmentProof, key []byte) (bool, error) {
+func (t TreeReader) VerifyMembership(proof *ics23.CommitmentProof, key []byte) (bool, error) {
 	if t.root == nil {
 		return false, errors.New("cannot verify membership with nil root")
 	}
@@ -240,7 +237,7 @@ func (t *TreeReader) VerifyMembership(proof *ics23.CommitmentProof, key []byte) 
 }
 
 // VerifyNonMembership returns true iff proof is a NonExistenceProof for the given key.
-func (t *TreeReader) VerifyNonMembership(proof *ics23.CommitmentProof, key []byte) (bool, error) {
+func (t TreeReader) VerifyNonMembership(proof *ics23.CommitmentProof, key []byte) (bool, error) {
 	if t.root == nil {
 		return false, errors.New("cannot verify non-membership with nil root")
 	}

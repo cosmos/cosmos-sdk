@@ -241,8 +241,17 @@ func (db *multiTreeFinalizer) writeCommitInfo(headerDone chan error) {
 		return
 	}
 
-	// wait for hashes to be ready
-	<-db.hashReady
+	// Wait for hashes to be ready. The ctx.Done case prevents a goroutine leak:
+	// if SignalFinalize() was called before hashes completed and hash computation
+	// then fails, hashReady is never closed and this goroutine would block forever.
+	// At this point the durable state is already settled (committed or rolled back),
+	// so we just clean up and exit.
+	select {
+	case <-db.hashReady:
+	case <-db.ctx.Done():
+		_ = file.Close()
+		return
+	}
 
 	info := db.workingCommitInfo
 
@@ -362,22 +371,15 @@ func (db *multiTreeFinalizer) writeCommitInfoHeader() (*os.File, error) {
 		return nil, fmt.Errorf("failed when waiting for WAL completion: %w", err)
 	}
 
-	// wait for the hash to complete as well, so that we only commit when we know we're basically done
-	select {
-	case <-db.hashReady:
-	case <-db.ctx.Done():
-		_ = file.Close()
-		_ = os.Remove(pendingPath)
-		return nil, db.ctx.Err()
-	}
-
 	err = os.Rename(pendingPath, commitInfoPath)
 	if err != nil {
 		_ = file.Close()
 		return nil, fmt.Errorf("failed to rename commit info file for version %d: %w", stagedVersion, err)
 	}
 
-	// TODO optionally fsync the directory as well for extra durability guarantees
+	// Note: we intentionally skip fsyncing the parent directory after rename.
+	// If power is lost before the directory metadata is durable, the checkpoint
+	// rollback mechanism in tree_store_load.go handles recovery.
 
 	return file, nil
 }
@@ -919,9 +921,9 @@ func (db *CommitMultiTree) CacheWrapWithTrace(w io.Writer, tc storetypes.TraceCo
 func (db *CommitMultiTree) CacheMultiStore() storetypes.CacheMultiStore {
 	cd := db.commitData.Load()
 	if cd == nil {
-		return db.cacheMultiStore(0, nil)
+		return db.cacheMultiStore(0)
 	}
-	return db.cacheMultiStore(cd.commitId.Version, cd.commitInfo)
+	return db.cacheMultiStore(cd.commitId.Version)
 }
 
 func (db *CommitMultiTree) CacheMultiStoreWithVersion(version int64) (storetypes.CacheMultiStore, error) {
@@ -929,16 +931,17 @@ func (db *CommitMultiTree) CacheMultiStoreWithVersion(version int64) (storetypes
 		// use latest version
 		return db.CacheMultiStore(), nil
 	}
-	ci, err := loadCommitInfo(db.dir, version)
+	// check if we actually have CommitInfo for this version - basically fail fast when we don't
+	_, err := loadCommitInfo(db.dir, version)
 	if err != nil {
 		return nil, fmt.Errorf("version %d is not available: %w", version, err)
 	}
 
-	return db.cacheMultiStore(version, ci), nil
+	return db.cacheMultiStore(version), nil
 }
 
-func (db *CommitMultiTree) cacheMultiStore(version int64, commitInfo *storetypes.CommitInfo) storetypes.CacheMultiStore {
-	return NewMultiTree(version, commitInfo, func(key storetypes.StoreKey) storetypes.CacheWrap {
+func (db *CommitMultiTree) cacheMultiStore(version int64) storetypes.CacheMultiStore {
+	return NewMultiTree(version, func(key storetypes.StoreKey) storetypes.CacheWrap {
 		idx, ok := db.storesByKey[key]
 		if !ok {
 			panic(fmt.Sprintf("store with key %s not mounted", key.Name()))

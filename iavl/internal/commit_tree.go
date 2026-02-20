@@ -13,16 +13,16 @@ import (
 	"sync/atomic"
 	"time"
 
-	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log/v2"
-	"cosmossdk.io/store/types/kv"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	ics23 "github.com/cosmos/ics23/go"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
+	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store/cachekv"
 	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/store/types/kv"
 )
 
 type CommitTree struct {
@@ -141,9 +141,9 @@ func (c *commitTreeFinalizer) commit(ctx context.Context, updates iter.Seq[cache
 	if err != nil {
 		rbErr := c.treeStore.RollbackWAL()
 		if rbErr != nil {
-			return fmt.Errorf("commit failed: %w; rollback failed: %v", err, rbErr)
+			return fmt.Errorf("commit failed: %w; rollback failed: %w", err, rbErr)
 		}
-		return fmt.Errorf("%w; root cause %v", rolledbackErr, err)
+		return fmt.Errorf("%w; root cause %w", rolledbackErr, err)
 	}
 
 	// assign node IDs if needed
@@ -201,12 +201,14 @@ func (c *commitTreeFinalizer) prepareCommit(ctx context.Context, updates iter.Se
 	}
 
 	// background start writing nodeUpdates to WAL immediately
-	go func() {
+	// pass ctx as a parameter to avoid a data race: the main goroutine reassigns ctx later
+	// (e.g. in tracer.Start) while this goroutine may still be reading it
+	go func(ctx context.Context) {
 		_, walSpan := tracer.Start(ctx, "WALWrite")
 		defer walSpan.End()
 		defer close(c.walDone)
 		c.walDone <- c.treeStore.WriteWALUpdates(ctx, nodeUpdates, !c.opts.DisableWALFsync)
-	}()
+	}(ctx)
 	// Always wait for the WAL goroutine before returning. Without this, commit() calls
 	// RollbackWAL() while the WAL goroutine is still running — the old goroutine's late
 	// auto-rollback can destroy data written by the next successful commit.

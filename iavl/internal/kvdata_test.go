@@ -1,12 +1,12 @@
 package internal
 
-//import (
+// import (
 //	"testing"
 //
 //	"github.com/stretchr/testify/require"
 //)
 
-//type kvDataWriterHelper struct {
+// type kvDataWriterHelper struct {
 //	files *ChangesetFiles
 //	*KVDataWriter
 //}

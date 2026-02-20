@@ -138,24 +138,7 @@ func (ts *TreeStore) load() error {
 	root := cpInfo.Root
 	version := cpInfo.Version
 	if ts.opts.ExpectedVersion != 0 && version > ts.opts.ExpectedVersion {
-		if ts.opts.DisableAutoRepair || version != ts.opts.ExpectedVersion+1 {
-			return fmt.Errorf("latest checkpoint version %d is greater than expected version %d, this indicates data corruption", version, ts.opts.ExpectedVersion)
-		}
-
-		// Checkpoint is exactly 1 version ahead of expected — this can happen if
-		// the commit info directory entry wasn't durable but the checkpoint data was.
-		// Roll back the last checkpoint and continue with WAL replay.
-		ts.logger.WarnContext(ctx, "latest checkpoint is 1 version ahead of expected, rolling back",
-			"checkpointVersion", version, "expectedVersion", ts.opts.ExpectedVersion)
-
-		cpInfo, err := ts.rollbackLastCheckpoint()
-		if err != nil {
-			return fmt.Errorf("failed to roll back last checkpoint: %w", err)
-		}
-
-		// refresh root and version after rollback
-		root = cpInfo.Root
-		version = cpInfo.Version
+		return fmt.Errorf("latest checkpoint version %d is greater than expected version %d, this indicates data corruption", version, ts.opts.ExpectedVersion)
 	}
 
 	// find the changeset to start replaying from

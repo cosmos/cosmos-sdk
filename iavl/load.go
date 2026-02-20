@@ -2,8 +2,8 @@ package iavl
 
 import (
 	"cosmossdk.io/log/v2"
-
 	storetypes "cosmossdk.io/store/types"
+
 	"github.com/cosmos/cosmos-sdk/iavl/internal"
 )
 

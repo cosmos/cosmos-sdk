@@ -8,12 +8,12 @@ import (
 	"sync/atomic"
 	"unsafe"
 
-	"cosmossdk.io/log/v2"
+	"github.com/jellydator/ttlcache/v3"
 	"github.com/tidwall/btree"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/jellydator/ttlcache/v3"
+	"cosmossdk.io/log/v2"
 )
 
 type TreeStore struct {

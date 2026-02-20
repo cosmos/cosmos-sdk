@@ -161,6 +161,15 @@ func fmtCountAndSize(size, structSize int64) string {
 	return humanSize(size)
 }
 
+func fmtOrphanPct(orphanSize, leafSize, branchSize int64) string {
+	orphanCount := orphanSize / internal.SizeOrphanEntry
+	nodeCount := leafSize/internal.SizeLeaf + branchSize/internal.SizeBranch
+	if nodeCount == 0 {
+		return "-"
+	}
+	return fmt.Sprintf("%.1f%%", float64(orphanCount)/float64(nodeCount)*100)
+}
+
 type sizeEntry struct {
 	label string
 	size  int64
@@ -297,7 +306,8 @@ func (m *model) buildChangesetsTable() {
 			fmtCountAndSize(info.leafSize, internal.SizeLeaf),
 			fmtCountAndSize(info.branchSize, internal.SizeBranch),
 			fmtCountAndSize(info.cpSize, internal.CheckpointInfoSize),
-			fmtCountAndSize(info.orphanSize, 0),
+			fmtCountAndSize(info.orphanSize, internal.SizeOrphanEntry),
+			fmtOrphanPct(info.orphanSize, info.leafSize, info.branchSize),
 		})
 	}
 
@@ -309,7 +319,8 @@ func (m *model) buildChangesetsTable() {
 		fmtCountAndSize(total.leafSize, internal.SizeLeaf),
 		fmtCountAndSize(total.branchSize, internal.SizeBranch),
 		fmtCountAndSize(total.cpSize, internal.CheckpointInfoSize),
-		fmtCountAndSize(total.orphanSize, 0),
+		fmtCountAndSize(total.orphanSize, internal.SizeOrphanEntry),
+		fmtOrphanPct(total.orphanSize, total.leafSize, total.branchSize),
 	})
 
 	// Build size breakdown bar chart.
@@ -342,7 +353,8 @@ func (m *model) buildChangesetsTable() {
 		{Title: "Leaves", Width: 18},
 		{Title: "Branches", Width: 18},
 		{Title: "Checkpts", Width: 14},
-		{Title: "orphans.dat", Width: 12},
+		{Title: "Orphans", Width: 18},
+		{Title: "Orphan %", Width: 10},
 	}
 	m.columns = cols
 	m.table = newTable(cols, rows, height)

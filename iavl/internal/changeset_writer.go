@@ -255,7 +255,7 @@ func (cs *ChangesetWriter) writeLeaf(np *NodePointer, node *MemNode) error {
 	return nil
 }
 
-//func (cs *ChangesetWriter) TotalBytes() int {
+// func (cs *ChangesetWriter) TotalBytes() int {
 //	return cs.leavesData.Size() +
 //		cs.branchesData.Size() +
 //		cs.versionsData.Size() +

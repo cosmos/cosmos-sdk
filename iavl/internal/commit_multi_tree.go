@@ -380,9 +380,20 @@ func (db *multiTreeFinalizer) writeCommitInfoHeader() (*os.File, error) {
 		return nil, fmt.Errorf("failed to rename commit info file for version %d: %w", stagedVersion, err)
 	}
 
-	// Note: we intentionally skip fsyncing the parent directory after rename.
-	// If power is lost before the directory metadata is durable, the checkpoint
-	// rollback mechanism in tree_store_load.go handles recovery.
+	// fsync the parent directory to ensure the rename is durable.
+	// This runs while per-tree hash computation is still in progress,
+	// so it adds no latency to the critical path.
+	parentDir, err := os.Open(commitInfoDir)
+	if err != nil {
+		_ = file.Close()
+		return nil, fmt.Errorf("failed to open commit info dir for fsync: %w", err)
+	}
+	if err := parentDir.Sync(); err != nil {
+		_ = parentDir.Close()
+		_ = file.Close()
+		return nil, fmt.Errorf("failed to fsync commit info dir: %w", err)
+	}
+	_ = parentDir.Close()
 
 	return file, nil
 }

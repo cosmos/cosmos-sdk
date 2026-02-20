@@ -1181,6 +1181,7 @@ func validateCommitInfoHash(commitInfo *storetypes.CommitInfo, storeName string)
 			continue
 		}
 
+		// TODO: we can actually recover here, but we'd need to recompute the hashes in the tree.
 		if len(storeInfo.CommitId.Hash) == 0 {
 			return errorsmod.Wrapf(storetypes.ErrInvalidRequest, "proof store hash is missing for store %s at height %d", storeName, commitInfo.Version)
 		}

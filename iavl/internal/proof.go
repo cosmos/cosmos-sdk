@@ -18,6 +18,33 @@ type proofInnerNode struct {
 
 type leafPath []proofInnerNode
 
+func createExistenceProof(root Node, key []byte) (*ics23.ExistenceProof, error) {
+	path := new(leafPath)
+	leafVersion := root.Version()
+
+	leaf, err := pathToLeaf(root, key, uint64(leafVersion), path)
+	if err != nil {
+		return nil, err
+	}
+	leafVersion = leaf.Version()
+
+	leafKey, err := leaf.Key()
+	if err != nil {
+		return nil, err
+	}
+
+	leafValue, err := leaf.Value()
+	if err != nil {
+		return nil, err
+	}
+	return &ics23.ExistenceProof{
+		Key:   leafKey.SafeCopy(),
+		Value: leafValue.SafeCopy(),
+		Leaf:  convertLeafOp(int64(leafVersion)),
+		Path:  convertInnerOps(*path),
+	}, nil
+}
+
 // nextIndex returns the index that would be assigned to the key.
 // This method assumes the key does not exist.
 // Callers are expected to check that t.Has(key) == false.
@@ -64,33 +91,6 @@ func nextIndex(node Node, key []byte) (int64, error) {
 	return index, nil
 }
 
-func createExistenceProof(root Node, key []byte) (*ics23.ExistenceProof, error) {
-	path := new(leafPath)
-	leafVersion := root.Version()
-
-	leaf, err := pathToLeaf(root, key, uint64(leafVersion), path)
-	if err != nil {
-		return nil, err
-	}
-	leafVersion = leaf.Version()
-
-	leafKey, err := leaf.Key()
-	if err != nil {
-		return nil, err
-	}
-
-	leafValue, err := leaf.Value()
-	if err != nil {
-		return nil, err
-	}
-	return &ics23.ExistenceProof{
-		Key:   leafKey.SafeCopy(),
-		Value: leafValue.SafeCopy(),
-		Leaf:  convertLeafOp(int64(leafVersion)),
-		Path:  convertInnerOps(*path),
-	}, nil
-}
-
 func getByIndex(node Node, index int64) (Node, error) {
 	if node == nil {
 		return nil, nil
@@ -119,6 +119,7 @@ func getByIndex(node Node, index int64) (Node, error) {
 
 	return getByIndex(rightNode, index-leftNode.Size())
 }
+
 func convertLeafOp(version int64) *ics23.LeafOp {
 	var varintBuf [binary.MaxVarintLen64]byte
 	// this is adapted from iavl/proof.go:proofLeafNode.Hash()

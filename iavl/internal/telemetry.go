@@ -10,6 +10,7 @@ var (
 	meter           = otel.Meter("iavl")
 	leafHashLatency metric.Int64Histogram
 	walWriteLatency metric.Int64Histogram
+	queryLatency    metric.Int64Histogram
 )
 
 func init() {
@@ -29,5 +30,13 @@ func init() {
 	)
 	if err != nil {
 		panic("failed to create iavl_wal_write_latency_ms histogram: " + err.Error())
+	}
+
+	queryLatency, err = meter.Int64Histogram("iavl_query_latency_ms",
+		metric.WithDescription("The amount of time we spent in the query method"),
+		metric.WithUnit("ms"),
+	)
+	if err != nil {
+		panic("failed to create iavl_query_latency_ms histogram: " + err.Error())
 	}
 }

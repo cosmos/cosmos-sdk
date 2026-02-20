@@ -285,6 +285,24 @@ func local_request_Service_ABCIQuery_0(ctx context.Context, marshaler runtime.Ma
 
 }
 
+func request_Service_GetLatestBlockResults_0(ctx context.Context, marshaler runtime.Marshaler, client ServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetLatestBlockResultsRequest
+	var metadata runtime.ServerMetadata
+
+	msg, err := client.GetLatestBlockResults(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Service_GetLatestBlockResults_0(ctx context.Context, marshaler runtime.Marshaler, server ServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq GetLatestBlockResultsRequest
+	var metadata runtime.ServerMetadata
+
+	msg, err := server.GetLatestBlockResults(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 func request_Service_GetBlockResults_0(ctx context.Context, marshaler runtime.Marshaler, client ServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq GetBlockResultsRequest
 	var metadata runtime.ServerMetadata
@@ -335,24 +353,6 @@ func local_request_Service_GetBlockResults_0(ctx context.Context, marshaler runt
 	}
 
 	msg, err := server.GetBlockResults(ctx, &protoReq)
-	return msg, metadata, err
-
-}
-
-func request_Service_GetLatestBlockResults_0(ctx context.Context, marshaler runtime.Marshaler, client ServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq GetLatestBlockResultsRequest
-	var metadata runtime.ServerMetadata
-
-	msg, err := client.GetLatestBlockResults(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
-	return msg, metadata, err
-
-}
-
-func local_request_Service_GetLatestBlockResults_0(ctx context.Context, marshaler runtime.Marshaler, server ServiceServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq GetLatestBlockResultsRequest
-	var metadata runtime.ServerMetadata
-
-	msg, err := server.GetLatestBlockResults(ctx, &protoReq)
 	return msg, metadata, err
 
 }
@@ -809,9 +809,9 @@ var (
 
 	pattern_Service_ABCIQuery_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"cosmos", "base", "tendermint", "v1beta1", "abci_query"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Service_GetBlockResults_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"cosmos", "base", "tendermint", "v1beta1", "block_results", "height"}, "", runtime.AssumeColonVerbOpt(false)))
-
 	pattern_Service_GetLatestBlockResults_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 2, 5}, []string{"cosmos", "base", "tendermint", "v1beta1", "block_results", "latest"}, "", runtime.AssumeColonVerbOpt(false)))
+
+	pattern_Service_GetBlockResults_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"cosmos", "base", "tendermint", "v1beta1", "block_results", "height"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (
@@ -829,7 +829,7 @@ var (
 
 	forward_Service_ABCIQuery_0 = runtime.ForwardResponseMessage
 
-	forward_Service_GetBlockResults_0 = runtime.ForwardResponseMessage
-
 	forward_Service_GetLatestBlockResults_0 = runtime.ForwardResponseMessage
+
+	forward_Service_GetBlockResults_0 = runtime.ForwardResponseMessage
 )

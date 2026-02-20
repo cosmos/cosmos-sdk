@@ -5,7 +5,7 @@ import (
 
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 
-	"cosmossdk.io/store/internal/maps"
+	"cosmossdk.io/store/types/maps"
 )
 
 // GetHash returns the GetHash from the CommitID.

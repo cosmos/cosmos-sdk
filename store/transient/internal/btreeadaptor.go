@@ -4,8 +4,8 @@ import (
 	"io"
 
 	"cosmossdk.io/store/cachekv"
-	"cosmossdk.io/store/internal/btree"
 	"cosmossdk.io/store/types"
+	"cosmossdk.io/store/types/btree"
 )
 
 var _ types.KVStore = (*BTreeStore[[]byte])(nil)

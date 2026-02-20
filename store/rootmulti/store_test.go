@@ -17,11 +17,11 @@ import (
 	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store/cachemulti"
 	"cosmossdk.io/store/iavl"
-	sdkmaps "cosmossdk.io/store/internal/maps"
 	"cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
 	"cosmossdk.io/store/transient"
 	"cosmossdk.io/store/types"
+	sdkmaps "cosmossdk.io/store/types/maps"
 )
 
 func TestStoreType(t *testing.T) {

@@ -51,6 +51,7 @@ type CommitMultiTree struct {
 	commitData      atomic.Pointer[commitData]
 	earliestVersion atomic.Int64
 
+	pruningMu      sync.Mutex
 	cancelPruning  context.CancelFunc
 	pruningActive  atomic.Bool
 	pruningDone    chan struct{}
@@ -325,7 +326,10 @@ func (db *multiTreeFinalizer) writeCommitInfoHeader() (*os.File, error) {
 	}
 
 	// wait for finalization signal
-	<-db.finalizeOrRollback
+	select {
+	case <-db.finalizeOrRollback:
+	case <-db.ctx.Done():
+	}
 	if db.ctx.Err() != nil {
 		return nil, db.ctx.Err() // do not write commit info if rolling back
 	}
@@ -416,7 +420,10 @@ func (db *multiTreeFinalizer) prepareCommit(ctx context.Context) error {
 	}
 	close(db.hashReady)
 
-	<-db.finalizeOrRollback
+	select {
+	case <-db.finalizeOrRollback:
+	case <-ctx.Done():
+	}
 
 	if err := ctx.Err(); err != nil {
 		return err
@@ -890,12 +897,17 @@ func (db *CommitMultiTree) LatestVersion() int64 {
 }
 
 func (db *CommitMultiTree) Close() error {
-	if db.cancelPruning != nil {
-		db.cancelPruning()
+	db.pruningMu.Lock()
+	cancel := db.cancelPruning
+	done := db.pruningDone
+	db.pruningMu.Unlock()
+
+	if cancel != nil {
+		cancel()
 	}
-	if db.pruningDone != nil {
+	if done != nil {
 		// wait for any ongoing pruning to finish before closing stores
-		<-db.pruningDone
+		<-done
 	}
 	var errGroup errgroup.Group
 	for _, si := range db.stores {
@@ -991,12 +1003,17 @@ func (db *CommitMultiTree) pruneIfNeeded() {
 		// another prune started since we checked, skip
 		return
 	}
-	db.pruningDone = make(chan struct{})
+	done := make(chan struct{})
 	ctx, cancel := context.WithCancel(context.Background())
+
+	db.pruningMu.Lock()
+	db.pruningDone = done
 	db.cancelPruning = cancel
+	db.pruningMu.Unlock()
+
 	go func() {
 		defer db.pruningActive.Store(false)
-		defer close(db.pruningDone)
+		defer close(done)
 		db.pruneNow(ctx, retainVersion)
 	}()
 }

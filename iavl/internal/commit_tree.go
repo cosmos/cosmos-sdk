@@ -323,7 +323,10 @@ func (c *commitTreeFinalizer) prepareCommit(ctx context.Context, updates iter.Se
 	walWriteLatency.Record(ctx, time.Since(startWaitForWAL).Milliseconds())
 	span.AddEvent("WAL write returned")
 
-	<-c.finalizeOrRollback
+	select {
+	case <-c.finalizeOrRollback:
+	case <-ctx.Done():
+	}
 
 	return &prepareCommitResult{
 		root:        root,

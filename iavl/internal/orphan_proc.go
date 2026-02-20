@@ -11,15 +11,23 @@ import (
 
 type OrphanProcessor struct {
 	checkpointer *Checkpointer
-	newOrphans   chan *MutationContext
-	mtx          sync.Mutex
-	errChan      chan error
+
+	// queueMu protects the queue slice; AddOrphans appends under this lock
+	// so it never blocks on procOne/compaction.
+	queueMu sync.Mutex
+	queue   []*MutationContext
+	notify  chan struct{} // capacity-1 signal that new work is available
+
+	// mtx is held during procOne and by compaction (Lock/Unlock) to
+	// prevent orphan writes from interfering with changeset rewriting.
+	mtx     sync.Mutex
+	errChan chan error
 }
 
 func newOrphanProc(checkpointer *Checkpointer) *OrphanProcessor {
 	return &OrphanProcessor{
 		checkpointer: checkpointer,
-		newOrphans:   make(chan *MutationContext, 32),
+		notify:       make(chan struct{}, 1),
 		errChan:      make(chan error, 1),
 	}
 }
@@ -31,13 +39,25 @@ func (op *OrphanProcessor) Start() {
 	}()
 }
 
+// AddOrphans enqueues orphan work without blocking on the orphan processor's
+// processing lock. This prevents the commit path from stalling when compaction
+// holds the processor lock.
 func (op *OrphanProcessor) AddOrphans(mutationCtx *MutationContext) error {
 	select {
 	case err := <-op.errChan:
 		return err
-	case op.newOrphans <- mutationCtx:
-		return nil
+	default:
 	}
+	op.queueMu.Lock()
+	op.queue = append(op.queue, mutationCtx)
+	op.queueMu.Unlock()
+	// non-blocking signal; if a signal is already pending, the processor
+	// will drain the full queue when it wakes up
+	select {
+	case op.notify <- struct{}{}:
+	default:
+	}
+	return nil
 }
 
 func (op *OrphanProcessor) Lock() {
@@ -49,9 +69,31 @@ func (op *OrphanProcessor) Unlock() {
 }
 
 func (op *OrphanProcessor) proc() error {
-	for mutationCtx := range op.newOrphans {
-		err := op.procOne(mutationCtx)
-		if err != nil {
+	for range op.notify {
+		for {
+			op.queueMu.Lock()
+			if len(op.queue) == 0 {
+				op.queueMu.Unlock()
+				break
+			}
+			queue := op.queue
+			op.queue = nil
+			op.queueMu.Unlock()
+
+			for _, item := range queue {
+				if err := op.procOne(item); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	// drain any items remaining after Close signaled
+	op.queueMu.Lock()
+	remaining := op.queue
+	op.queue = nil
+	op.queueMu.Unlock()
+	for _, item := range remaining {
+		if err := op.procOne(item); err != nil {
 			return err
 		}
 	}
@@ -94,6 +136,6 @@ func (op *OrphanProcessor) procOne(mutationCtx *MutationContext) error {
 }
 
 func (op *OrphanProcessor) Close() error {
-	close(op.newOrphans)
+	close(op.notify)
 	return <-op.errChan
 }

@@ -2,12 +2,6 @@ package baseapp
 
 // need to import telemetry before anything else for side effects
 import (
-	"cosmossdk.io/store"
-	storemetrics "cosmossdk.io/store/metrics"
-	_ "github.com/cosmos/cosmos-sdk/telemetry"
-)
-
-import (
 	"fmt"
 	"maps"
 	"math"
@@ -15,31 +9,44 @@ import (
 	"strconv"
 	"sync"
 
+	"cosmossdk.io/store"
+	storemetrics "cosmossdk.io/store/metrics"
 	"github.com/cockroachdb/errors"
+
+	_ "github.com/cosmos/cosmos-sdk/telemetry"
+
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/tmhash"
+
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
+
 	protov2 "google.golang.org/protobuf/proto"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store/snapshots"
+
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/config"
 	"github.com/cosmos/cosmos-sdk/baseapp/oe"
 	"github.com/cosmos/cosmos-sdk/baseapp/state"
 	"github.com/cosmos/cosmos-sdk/codec"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
@@ -1032,7 +1039,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 			break
 		}
 
-		msgCtx := ctx.WithMsgIndex(i)
+		ctx = ctx.WithMsgIndex(i)
 
 		handler := app.msgServiceRouter.Handler(msg)
 		if handler == nil {
@@ -1041,16 +1048,14 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 
 		msgTypeUrl := sdk.MsgTypeURL(msg)
 		// we create two spans here for easy visualization in trace logs, this can be removed later if deemed unnecessary
-		msgCtx, msgSpan := msgCtx.StartSpan(tracer, "msgHandler",
+		ctx, msgSpan := ctx.StartSpan(tracer, "msgHandler",
 			trace.WithAttributes(
 				attribute.String("msg_type", msgTypeUrl),
 				attribute.Int("msg_index", i),
 			),
 		)
-		msgCtx, msgSpan2 := msgCtx.StartSpan(tracer, fmt.Sprintf("msgHandler.%s", msgTypeUrl))
 		// ADR 031 request type routing
 		msgResult, err := handler(ctx, msg)
-		msgSpan2.End()
 		msgSpan.End()
 		if err != nil {
 			return nil, errorsmod.Wrapf(err, "failed to execute message; message index: %d", i)

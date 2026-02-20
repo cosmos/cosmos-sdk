@@ -310,15 +310,18 @@ func (db *multiTreeFinalizer) writeCommitInfoHeader() (*os.File, error) {
 	}
 
 	// write each store name as a length-prefixed string
-	for _, storeInfo := range info.StoreInfos {
+	// use index-based access to read only Name, avoiding a full StoreInfo copy
+	// that would race with concurrent CommitId writes from hash workers
+	for i := range info.StoreInfos {
 		// varint length prefix
-		nameLen := uint64(len(storeInfo.Name))
+		name := info.StoreInfos[i].Name
+		nameLen := uint64(len(name))
 		n := binary.PutUvarint(scratchBuf[:], nameLen)
 		_, err := headerBuf.Write(scratchBuf[:n])
 		if err != nil {
 			return nil, fmt.Errorf("failed to write commit info store info name length: %w", err)
 		}
-		_, err = headerBuf.Write([]byte(storeInfo.Name))
+		_, err = headerBuf.Write([]byte(name))
 		if err != nil {
 			return nil, fmt.Errorf("failed to write commit info store info name: %w", err)
 		}

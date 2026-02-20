@@ -196,12 +196,14 @@ func (c *commitTreeFinalizer) prepareCommit(ctx context.Context, updates iter.Se
 	}
 
 	// background start writing nodeUpdates to WAL immediately
-	go func() {
+	// pass ctx as a parameter to avoid a data race: the main goroutine reassigns ctx later
+	// (e.g. in tracer.Start) while this goroutine may still be reading it
+	go func(ctx context.Context) {
 		_, walSpan := tracer.Start(ctx, "WALWrite")
 		defer walSpan.End()
 		defer close(c.walDone)
 		c.walDone <- c.treeStore.WriteWALUpdates(ctx, nodeUpdates, !c.opts.DisableWALFsync)
-	}()
+	}(ctx)
 	// Always wait for the WAL goroutine before returning. Without this, commit() calls
 	// RollbackWAL() while the WAL goroutine is still running — the old goroutine's late
 	// auto-rollback can destroy data written by the next successful commit.

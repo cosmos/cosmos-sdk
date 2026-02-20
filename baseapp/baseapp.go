@@ -2,12 +2,6 @@ package baseapp
 
 // need to import telemetry before anything else for side effects
 import (
-	"cosmossdk.io/store"
-	storemetrics "cosmossdk.io/store/metrics"
-	_ "github.com/cosmos/cosmos-sdk/telemetry"
-)
-
-import (
 	"fmt"
 	"maps"
 	"math"
@@ -29,6 +23,8 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
+	"cosmossdk.io/store"
+	storemetrics "cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/snapshots"
 	storetypes "cosmossdk.io/store/types"
 
@@ -39,6 +35,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	_ "github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
@@ -1038,7 +1035,7 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 			break
 		}
 
-		msgCtx := ctx.WithMsgIndex(i)
+		ctx = ctx.WithMsgIndex(i)
 
 		handler := app.msgServiceRouter.Handler(msg)
 		if handler == nil {
@@ -1047,16 +1044,14 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, msgsV2 []protov2.Me
 
 		msgTypeUrl := sdk.MsgTypeURL(msg)
 		// we create two spans here for easy visualization in trace logs, this can be removed later if deemed unnecessary
-		msgCtx, msgSpan := msgCtx.StartSpan(tracer, "msgHandler",
+		ctx, msgSpan := ctx.StartSpan(tracer, "msgHandler",
 			trace.WithAttributes(
 				attribute.String("msg_type", msgTypeUrl),
 				attribute.Int("msg_index", i),
 			),
 		)
-		msgCtx, msgSpan2 := msgCtx.StartSpan(tracer, fmt.Sprintf("msgHandler.%s", msgTypeUrl))
 		// ADR 031 request type routing
 		msgResult, err := handler(ctx, msg)
-		msgSpan2.End()
 		msgSpan.End()
 		if err != nil {
 			return nil, errorsmod.Wrapf(err, "failed to execute message; message index: %d", i)

@@ -10,14 +10,14 @@ import (
 	"testing"
 	"time"
 
-	corestore "cosmossdk.io/core/store"
-	sdklog "cosmossdk.io/log"
-	"cosmossdk.io/log/v2"
 	iavl1 "github.com/cosmos/iavl"
 	dbm "github.com/cosmos/iavl/db"
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
 
+	corestore "cosmossdk.io/core/store"
+	sdklog "cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store/cachekv"
 )
 
@@ -72,7 +72,8 @@ type SimCommitTree struct {
 func (s *SimCommitTree) openV2Tree(t interface {
 	require.TestingT
 	sdklog.TestingT
-}) {
+},
+) {
 	var err error
 	s.treeV2, err = NewCommitTree(s.dirV2, TreeOptions{Options: Options{
 		// intentionally choose some small sizes to force checkpoint and eviction behavior
@@ -125,8 +126,9 @@ func (s *SimCommitTree) checkNewVersion(t *rapid.T) {
 	commitIdV2, err := committer.Finalize()
 	require.NoError(t, err, "failed to finalize commit in V2 tree")
 
-	// check v2 iavl invariants
-	_, latestPtr := s.treeV2.treeStore.Latest()
+	// check v2 iavl invariants (GetRootForUpdate waits for background node ID assignment)
+	latestPtr, err := s.treeV2.treeStore.GetRootForUpdate(context.Background())
+	require.NoError(t, err, "failed to get root for invariant check in V2 tree")
 	if latestPtr != nil {
 		latest, pin, err := latestPtr.Resolve()
 		defer pin.Unpin()

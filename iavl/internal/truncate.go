@@ -11,7 +11,7 @@ func RollbackFileToOffset(f *os.File, offset int64) error {
 	if err != nil {
 		return fmt.Errorf("failed to open file %s for rollback: %w", filename, err)
 	}
-	err = f2.Truncate(int64(offset))
+	err = f2.Truncate(offset)
 	if err != nil {
 		return fmt.Errorf("failed to truncate file %s to offset %d: %w", filename, offset, err)
 	}

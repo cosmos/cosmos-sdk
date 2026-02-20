@@ -16,13 +16,14 @@ import (
 	"sync/atomic"
 	"time"
 
-	"cosmossdk.io/log/v2"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	protoio "github.com/cosmos/gogoproto/io"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 	"golang.org/x/sync/errgroup"
+
+	"cosmossdk.io/log/v2"
 
 	"cosmossdk.io/store/cachekv"
 	"cosmossdk.io/store/mem"
@@ -171,7 +172,6 @@ func (db *multiTreeFinalizer) commit(ctx context.Context, span trace.Span) error
 		var wg sync.WaitGroup
 		errs := make([]error, len(db.finalizers))
 		for i, finalizer := range db.finalizers {
-			i, finalizer := i, finalizer
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
@@ -190,7 +190,6 @@ func (db *multiTreeFinalizer) commit(ctx context.Context, span trace.Span) error
 	var errGroup errgroup.Group
 	// finalize IAVL stores
 	for _, finalizer := range db.finalizers {
-		finalizer := finalizer
 		errGroup.Go(func() error {
 			_, err := finalizer.Finalize()
 			return err
@@ -198,7 +197,6 @@ func (db *multiTreeFinalizer) commit(ctx context.Context, span trace.Span) error
 	}
 	// commit non-IAVL stores
 	for _, si := range db.otherStores {
-		si := si
 		errGroup.Go(func() error {
 			cachedStore := db.cacheMs.GetCacheWrapIfExists(si.key)
 			if cachedStore == nil {
@@ -310,15 +308,18 @@ func (db *multiTreeFinalizer) writeCommitInfoHeader() (*os.File, error) {
 	}
 
 	// write each store name as a length-prefixed string
-	for _, storeInfo := range info.StoreInfos {
+	// use index-based access to read only Name, avoiding a full StoreInfo copy
+	// that would race with concurrent CommitId writes from hash workers
+	for i := range info.StoreInfos {
 		// varint length prefix
-		nameLen := uint64(len(storeInfo.Name))
+		name := info.StoreInfos[i].Name
+		nameLen := uint64(len(name))
 		n := binary.PutUvarint(scratchBuf[:], nameLen)
 		_, err := headerBuf.Write(scratchBuf[:n])
 		if err != nil {
 			return nil, fmt.Errorf("failed to write commit info store info name length: %w", err)
 		}
-		_, err = headerBuf.Write([]byte(storeInfo.Name))
+		_, err = headerBuf.Write([]byte(name))
 		if err != nil {
 			return nil, fmt.Errorf("failed to write commit info store info name: %w", err)
 		}
@@ -363,7 +364,6 @@ func (db *multiTreeFinalizer) writeCommitInfoHeader() (*os.File, error) {
 	// wait for all trees to complete their WAL writes before renaming so we only commit when all children have committed
 	var wg errgroup.Group
 	for _, finalizer := range db.finalizers {
-		finalizer := finalizer
 		wg.Go(func() error {
 			return finalizer.WaitForWAL()
 		})
@@ -380,9 +380,20 @@ func (db *multiTreeFinalizer) writeCommitInfoHeader() (*os.File, error) {
 		return nil, fmt.Errorf("failed to rename commit info file for version %d: %w", stagedVersion, err)
 	}
 
-	// Note: we intentionally skip fsyncing the parent directory after rename.
-	// If power is lost before the directory metadata is durable, the checkpoint
-	// rollback mechanism in tree_store_load.go handles recovery.
+	// fsync the parent directory to ensure the rename is durable.
+	// This runs while per-tree hash computation is still in progress,
+	// so it adds no latency to the critical path.
+	parentDir, err := os.Open(commitInfoDir)
+	if err != nil {
+		_ = file.Close()
+		return nil, fmt.Errorf("failed to open commit info dir for fsync: %w", err)
+	}
+	if err := parentDir.Sync(); err != nil {
+		_ = parentDir.Close()
+		_ = file.Close()
+		return nil, fmt.Errorf("failed to fsync commit info dir: %w", err)
+	}
+	_ = parentDir.Close()
 
 	return file, nil
 }
@@ -396,7 +407,6 @@ func (db *multiTreeFinalizer) prepareCommit(ctx context.Context) error {
 
 	var hashErrGroup errgroup.Group
 	for i, finalizer := range db.finalizers {
-		finalizer := finalizer
 		hashErrGroup.Go(func() error {
 			hash, err := finalizer.WaitForHash()
 			if err != nil {
@@ -563,7 +573,7 @@ func loadLatestCommitInfo(dir string) (ci *storetypes.CommitInfo, earliestVersio
 		return nil, 0, fmt.Errorf("failed to load commit info for version %d: %w", latestVersion, err)
 	}
 
-	if commitInfo.Version != int64(latestVersion) {
+	if commitInfo.Version != latestVersion {
 		return nil, 0, fmt.Errorf("commit info version mismatch: expected %d, got %d", latestVersion, commitInfo.Version)
 	}
 
@@ -649,7 +659,7 @@ func loadCommitInfo(dir string, version int64) (*storetypes.CommitInfo, error) {
 		}
 
 		commitInfo.StoreInfos[i].CommitId = storetypes.CommitID{
-			Version: int64(version),
+			Version: version,
 			Hash:    hashBytes,
 		}
 	}
@@ -774,7 +784,7 @@ func (db *CommitMultiTree) LoadLatestVersion() error {
 		}
 	}
 
-	//db.startDebugServer()
+	// db.startDebugServer()
 
 	return nil
 }

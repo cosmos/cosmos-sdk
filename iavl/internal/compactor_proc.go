@@ -65,7 +65,7 @@ func (cp *CompactorProc) startCompactionRun(ctx context.Context) error {
 
 	for _, cs := range toProcess {
 		if ctx.Err() != nil {
-			// context cancelled, stop processing further changesets
+			// context canceled, stop processing further changesets
 			break
 		}
 		err := cp.compactOne(ctx, cs, cpOpts)

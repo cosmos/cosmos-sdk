@@ -80,12 +80,13 @@ func NewCompactor(ctx context.Context, reader *ChangesetReader, opts CompactOpti
 
 	return c, nil
 }
+
 func (c *Compactor) AddChangeset(reader *ChangesetReader) error {
 	err := c.doAddChangeset(reader)
 	if err != nil {
 		abortErr := c.Abort()
 		if abortErr != nil {
-			return fmt.Errorf("failed to add changeset to compactor: %v; additionally failed to abort compactor during cleanup: %w", err, abortErr)
+			return fmt.Errorf("failed to add changeset to compactor: %w; additionally failed to abort compactor during cleanup: %w", err, abortErr)
 		}
 		return fmt.Errorf("failed to add changeset to compactor: %w", err)
 	}
@@ -226,12 +227,12 @@ func (c *Compactor) doAddChangeset(reader *ChangesetReader) error {
 		checkpointHasNoNodes := newBranchCount == 0 && newLeafCount == 0
 		if checkpointHasNoNodes {
 			// we attempt to delete checkpoint infos that have no nodes
-			emptyTree := cpInfo.RootID.IsEmptyTree()
 			inRetainRange := cpInfo.Version+1 >= c.walStartVersion
-			// we need to keep empty checkpoints representing empty trees
-			// if they occur right before the WAL start version or in the replay range
-			// so that we can replay the WAL starting at that empty tree
-			if !(emptyTree && inRetainRange) {
+			// we need to keep checkpoints in the retain range even if they're empty
+			// either they represent an empty tree or they point to some earlier
+			// tree root which was retained
+			// we need to preserve this for WAL replay from this checkpoint
+			if !inRetainRange {
 				continue
 			}
 		}
@@ -324,7 +325,7 @@ func (c *Compactor) Seal() (*Changeset, error) {
 		// if this fails we abort
 		errAbort := c.Abort()
 		if errAbort != nil {
-			return nil, fmt.Errorf("failed to flush data during compaction seal: %v; additionally failed to abort compactor during cleanup: %w", err, errAbort)
+			return nil, fmt.Errorf("failed to flush data during compaction seal: %w; additionally failed to abort compactor during cleanup: %w", err, errAbort)
 		}
 		return nil, fmt.Errorf("failed to flush data during compaction seal: %w, aborted compaction", err)
 	}
@@ -349,7 +350,7 @@ func (c *Compactor) switchoverChangesets() (*Changeset, error) {
 		// if we error at this point, we abort and cleanup, past this point there can be no aborting
 		errAbort := c.Abort()
 		if errAbort != nil {
-			return nil, fmt.Errorf("failed to finalize changeset during compaction seal: %v; additionally failed to abort compactor during cleanup: %w", err, errAbort)
+			return nil, fmt.Errorf("failed to finalize changeset during compaction seal: %w; additionally failed to abort compactor during cleanup: %w", err, errAbort)
 		}
 		return nil, fmt.Errorf("failed to finalize changeset during compaction seal: %w, but aborted successfully", err)
 	}

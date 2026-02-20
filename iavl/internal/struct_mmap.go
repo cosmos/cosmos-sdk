@@ -14,6 +14,10 @@ type StructMmap[T any] struct {
 }
 
 func NewStructMmap[T any](file *os.File) (*StructMmap[T], error) {
+	return NewStructMmapDebug[T](file, false)
+}
+
+func NewStructMmapDebug[T any](file *os.File, debugBadBuffers bool) (*StructMmap[T], error) {
 	mmap, err := NewMmap(file)
 	if err != nil {
 		return nil, err
@@ -34,12 +38,20 @@ func NewStructMmap[T any](file *os.File) (*StructMmap[T], error) {
 
 	size := df.size
 	if len(buf)%size != 0 {
-		return nil, fmt.Errorf("input buffer size is not a multiple of struct size: %d %% %d != 0", len(buf), size)
+		if debugBadBuffers {
+			// update the buffer to be a multiple of the struct size, so that we can still read the valid items and ignore the trailing bytes
+			buf = buf[:len(buf)-len(buf)%size]
+			p = unsafe.Pointer(unsafe.SliceData(buf))
+			// set an error to indicate that the buffer was not a multiple of the struct size, but we are ignoring the trailing bytes
+			err = fmt.Errorf("input buffer size is not a multiple of struct size: %d %% %d != 0, ignoring trailing bytes", len(mmap.handle), size)
+		} else {
+			return nil, fmt.Errorf("input buffer size is not a multiple of struct size: %d %% %d != 0", len(buf), size)
+		}
 	}
 	data := unsafe.Slice((*T)(p), len(buf)/size)
 	df.items = data
 
-	return df, nil
+	return df, err
 }
 
 func (df *StructMmap[T]) UnsafeItem(i int) *T {

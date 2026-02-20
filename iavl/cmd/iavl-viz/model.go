@@ -273,8 +273,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return m, nil
 				}
 				m.checkpoints = cps
-				orphans, _ := loadOrphans(m.dir, m.selectedTree, m.selectedChangeset)
+				orphans, orphanErr := loadOrphans(m.dir, m.selectedTree, m.selectedChangeset)
 				m.orphans = orphans
+				if orphanErr != nil {
+					m.err = orphanErr.Error()
+				}
 				m.orphanMap = make(map[internal.NodeID]uint32, len(orphans))
 				m.orphanStats = make(map[uint32]orphanCounts)
 				for _, o := range orphans {
@@ -363,13 +366,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 				m.selectedChangeset = row[0]
 				orphans, err := loadOrphans(m.dir, m.selectedTree, m.selectedChangeset)
-				if err != nil {
+				if orphans == nil && err != nil {
 					m.err = err.Error()
 					return m, nil
 				}
 				m.orphans = orphans
 				m.view = viewChangesetOrphans
-				m.err = ""
+				if err != nil {
+					m.err = err.Error()
+				} else {
+					m.err = ""
+				}
 				m.buildOrphansTable(m.orphans)
 				return m, nil
 			}
@@ -456,9 +463,15 @@ func (m model) View() string {
 	title := boxStyle.Render(titleText)
 	footer := boxStyle.Render(footerText)
 
+	errBanner := ""
 	if m.err != "" {
 		errStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Padding(0, 1)
-		return title + "\n" + errStyle.Render("Error: "+m.err) + "\n" + footer
+		// For orphan views, show warning above the table instead of replacing it
+		if (m.view == viewChangesetOrphans || m.view == viewCheckpointOrphans) && len(m.orphans) > 0 {
+			errBanner = errStyle.Render("Warning: "+m.err) + "\n"
+		} else {
+			return title + "\n" + errStyle.Render("Error: "+m.err) + "\n" + footer
+		}
 	}
 
 	extra := ""
@@ -468,7 +481,7 @@ func (m model) View() string {
 
 	infoPanel := m.renderInfoPanel()
 
-	return title + "\n" + m.table.View() + "\n" + extra + infoPanel + footer
+	return title + "\n" + errBanner + m.table.View() + "\n" + extra + infoPanel + footer
 }
 
 func (m model) renderInfoPanel() string {

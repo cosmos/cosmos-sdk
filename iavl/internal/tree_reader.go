@@ -117,6 +117,7 @@ func (t TreeReader) Version() uint32 {
 var _ storetypes.KVStore = TreeReader{}
 
 // GetMembershipProof will produce a CommitmentProof that the given key exists in the iavl tree.
+// If the key does NOT exist in the tree, this will return an error.
 func (t TreeReader) GetMembershipProof(key []byte) (*ics23.CommitmentProof, error) {
 	if t.root == nil {
 		return nil, errors.New("cannot create membership proof with nil root")

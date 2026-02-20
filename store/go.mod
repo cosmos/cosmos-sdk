@@ -18,6 +18,7 @@ require (
 	github.com/hashicorp/go-plugin v1.7.0
 	github.com/hashicorp/golang-lru v1.0.2
 	github.com/stretchr/testify v1.11.1
+	github.com/tidwall/btree v1.8.1
 	go.uber.org/mock v0.6.0
 	google.golang.org/grpc v1.79.1
 	google.golang.org/protobuf v1.36.11

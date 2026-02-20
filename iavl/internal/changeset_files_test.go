@@ -1,6 +1,6 @@
 package internal
 
-//func TestParseChangesetDirName(t *testing.T) {
+// func TestParseChangesetDirName(t *testing.T) {
 //	tests := []struct {
 //		name            string
 //		dirName         string

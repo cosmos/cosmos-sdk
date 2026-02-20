@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"os"
 
-	"cosmossdk.io/log/v2"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
+
+	"cosmossdk.io/log/v2"
 )
 
 func ReplayWALForStartup(ctx context.Context, root *NodePointer, walFile *os.File, rootVersion, expectedVersion uint32, logger log.Logger, autoRepair bool) (*NodePointer, uint32, error) {
@@ -109,6 +110,7 @@ func ReplayWALForQuery(ctx context.Context, root *NodePointer, walFile *os.File,
 	// finished replaying WAL
 	return root, rootVersion, nil
 }
+
 func applyWalEntry(entry WALEntry, root *NodePointer, version uint32) (newRoot *NodePointer, err error) {
 	stagedVersion := version + 1
 	switch entry.Op {

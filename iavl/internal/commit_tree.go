@@ -12,9 +12,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"cosmossdk.io/log/v2"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
+
+	"cosmossdk.io/log/v2"
 
 	"cosmossdk.io/store/cachekv"
 	storetypes "cosmossdk.io/store/types"
@@ -136,9 +137,9 @@ func (c *commitTreeFinalizer) commit(ctx context.Context, updates iter.Seq[cache
 	if err != nil {
 		rbErr := c.treeStore.RollbackWAL()
 		if rbErr != nil {
-			return fmt.Errorf("commit failed: %w; rollback failed: %v", err, rbErr)
+			return fmt.Errorf("commit failed: %w; rollback failed: %w", err, rbErr)
 		}
-		return fmt.Errorf("%w; root cause %v", rolledbackErr, err)
+		return fmt.Errorf("%w; root cause %w", rolledbackErr, err)
 	}
 
 	// assign node IDs if needed

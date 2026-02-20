@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"iter"
@@ -47,7 +48,7 @@ func ReadWAL(file *os.File) iter.Seq2[WALEntry, error] {
 			entry, err := rdr.next()
 			entry.Offset = offset
 			if err != nil {
-				if err == io.EOF {
+				if errors.Is(err, io.EOF) {
 					return
 				} else {
 					yield(WALEntry{}, err)

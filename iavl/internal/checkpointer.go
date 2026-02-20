@@ -164,7 +164,7 @@ func (cp *Checkpointer) LatestCheckpointRoot() (res CheckpointRootInfo, err erro
 		// continue earlier checkpoints for a valid root
 		return true
 	})
-	return
+	return res, err
 }
 
 func (cp *Checkpointer) Close() error {

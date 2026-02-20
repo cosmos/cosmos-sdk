@@ -10,14 +10,14 @@ import (
 	"testing"
 	"time"
 
-	corestore "cosmossdk.io/core/store"
-	sdklog "cosmossdk.io/log"
-	"cosmossdk.io/log/v2"
 	iavl1 "github.com/cosmos/iavl"
 	dbm "github.com/cosmos/iavl/db"
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
 
+	corestore "cosmossdk.io/core/store"
+	sdklog "cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	"cosmossdk.io/store/cachekv"
 )
 
@@ -72,7 +72,8 @@ type SimCommitTree struct {
 func (s *SimCommitTree) openV2Tree(t interface {
 	require.TestingT
 	sdklog.TestingT
-}) {
+},
+) {
 	var err error
 	s.treeV2, err = NewCommitTree(s.dirV2, TreeOptions{Options: Options{
 		// intentionally choose some small sizes to force checkpoint and eviction behavior

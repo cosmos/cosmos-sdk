@@ -9,44 +9,34 @@ import (
 	"strconv"
 	"sync"
 
-	"cosmossdk.io/store"
-	storemetrics "cosmossdk.io/store/metrics"
 	"github.com/cockroachdb/errors"
-
-	_ "github.com/cosmos/cosmos-sdk/telemetry"
-
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/tmhash"
-
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
-
 	protov2 "google.golang.org/protobuf/proto"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
+	"cosmossdk.io/store"
+	storemetrics "cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/snapshots"
-
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp/config"
 	"github.com/cosmos/cosmos-sdk/baseapp/oe"
 	"github.com/cosmos/cosmos-sdk/baseapp/state"
 	"github.com/cosmos/cosmos-sdk/codec"
-
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
-
+	_ "github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/mempool"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"

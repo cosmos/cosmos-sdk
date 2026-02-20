@@ -30,9 +30,9 @@ func (kvs *WALWriter) WriteWALVersion(ctx context.Context, version uint64, updat
 	if err := kvs.doWriteWALVersion(ctx, version, updates, checkpoint); err != nil {
 		rbErr := kvs.Rollback()
 		if rbErr != nil {
-			return fmt.Errorf("failed to write WAL version: %w; rollback also failed: %v", err, rbErr)
+			return fmt.Errorf("failed to write WAL version: %w; rollback also failed: %w", err, rbErr)
 		}
-		return fmt.Errorf("%w; due to: %v", WALWriteAbortedErr, err)
+		return fmt.Errorf("%w; due to: %w", WALWriteAbortedErr, err)
 	}
 	return nil
 }

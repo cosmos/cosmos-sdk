@@ -18,7 +18,7 @@ func NewAsyncHashScheduler(ctx context.Context, maxConcurrency int32) *AsyncHash
 	}
 }
 
-func (a *AsyncHashScheduler) ComputeHashes(left *MemNode, right *MemNode) (leftHash []byte, rightHash []byte, err error) {
+func (a *AsyncHashScheduler) ComputeHashes(left, right *MemNode) (leftHash, rightHash []byte, err error) {
 	if err := a.ctx.Err(); err != nil {
 		return nil, nil, err
 	}
@@ -54,7 +54,7 @@ func (a *AsyncHashScheduler) ComputeHashes(left *MemNode, right *MemNode) (leftH
 	}
 }
 
-func computeHashsSync(left *MemNode, right *MemNode, scheduler HashScheduler) (leftHash []byte, rightHash []byte, err error) {
+func computeHashsSync(left, right *MemNode, scheduler HashScheduler) (leftHash, rightHash []byte, err error) {
 	leftHash, err = left.ComputeHash(scheduler)
 	if err != nil {
 		return nil, nil, err
@@ -71,7 +71,7 @@ var _ HashScheduler = (*AsyncHashScheduler)(nil)
 
 type SyncHashScheduler struct{}
 
-func (s SyncHashScheduler) ComputeHashes(node *MemNode, node2 *MemNode) ([]byte, []byte, error) {
+func (s SyncHashScheduler) ComputeHashes(node, node2 *MemNode) ([]byte, []byte, error) {
 	return computeHashsSync(node, node2, s)
 }
 

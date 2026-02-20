@@ -7,11 +7,12 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/log/v2"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
+
+	"cosmossdk.io/log/v2"
 
 	storemetrics "cosmossdk.io/store/metrics"
 	pruningtypes "cosmossdk.io/store/pruning/types"
@@ -65,7 +66,7 @@ func TestCommitMultiTree_Reload(t *testing.T) {
 
 func TestCommitMultiTreeSims(t *testing.T) {
 	// NOTE: if we need to debug test failures, we can uncomment this code to save data after test failures:
-	//os.RemoveAll("testdata/iavl-data")
+	// os.RemoveAll("testdata/iavl-data")
 	var iterCount atomic.Int32
 	rapid.Check(t, func(t *rapid.T) {
 		iter := int(iterCount.Add(1) - 1) // 0-based, matches rapid's "panic after N tests"
@@ -93,7 +94,7 @@ func testCommitMultiTreeSims(t *rapid.T, iter int, opts Options, pruningOpts pru
 	mtV1 := rootmulti.NewStore(dbV1, log.NewNopLogger(), storemetrics.NewNoOpMetrics())
 
 	// NOTE: if we need to debug test failures, we can uncomment this code to save data after test failures:
-	//dataDir := fmt.Sprintf("testdata/iavl-data/run-%d", iter)
+	// dataDir := fmt.Sprintf("testdata/iavl-data/run-%d", iter)
 	//require.NoError(t, os.MkdirAll(dataDir, 0o755), "failed to create data directory")
 	//testPassed := false
 	//defer func() {
@@ -131,7 +132,7 @@ func testCommitMultiTreeSims(t *rapid.T, iter int, opts Options, pruningOpts pru
 	// open v2 tree
 	sim.openV2Tree(t)
 
-	//defer func() {
+	// defer func() {
 	//	if r := recover(); r != nil {
 	//		t.Fatalf("panic recovered: %v\nStack trace:\n%s", r, debug.Stack())
 	//	}
@@ -141,7 +142,7 @@ func testCommitMultiTreeSims(t *rapid.T, iter int, opts Options, pruningOpts pru
 		// NOTE: if we need to debug test failures, we can uncomment this code to save a debug HTML file with the tree state at the end of the test for inspection:
 		//// generate debug HTML file for test inspection
 		////if t.Failed() {
-		//desc := sim.mtV2.Describe()
+		// desc := sim.mtV2.Describe()
 		//os.MkdirAll("testdata", 0o755)
 		//f, err := os.Create(fmt.Sprintf("testdata/iavl-debug-run-%d.html", iter))
 		//if err != nil {
@@ -159,7 +160,7 @@ func testCommitMultiTreeSims(t *rapid.T, iter int, opts Options, pruningOpts pru
 
 	sim.Check(t)
 	// NOTE: if we need to debug test failures, we can keep the data directory by not setting testPassed to true, which will prevent cleanup of the data directory and allow us to inspect the generated HTML file with the tree state at the end of the test
-	//testPassed = true
+	// testPassed = true
 }
 
 type SimCommitMultiTree struct {

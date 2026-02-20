@@ -65,7 +65,7 @@ func (opts Options) toInternalOpts() internal.Options {
 	} else if opts.RootCacheSize < 0 {
 		rootCacheSize = 0
 	}
-	var rootCacheExpiry = 1 * time.Second // default to 1 second
+	rootCacheExpiry := 1 * time.Second // default to 1 second
 	if opts.RootCacheExpiry > 0 {
 		rootCacheExpiry = time.Duration(opts.RootCacheExpiry) * time.Millisecond
 	}

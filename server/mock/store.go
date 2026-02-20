@@ -21,12 +21,12 @@ type multiStore struct {
 }
 
 func (ms multiStore) StartCommit(ctx context.Context, store storetypes.MultiStore, header cmtproto.Header) (storetypes.CommitFinalizer, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 
 func (ms multiStore) GetCommitInfo(ver int64) (*storetypes.CommitInfo, error) {
-	//TODO implement me
+	// TODO implement me
 	panic("implement me")
 }
 

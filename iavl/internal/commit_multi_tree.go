@@ -181,14 +181,10 @@ func (db *multiTreeFinalizer) commit(ctx context.Context, span trace.Span) error
 
 		wg.Wait()
 		if err := errors.Join(errs...); err != nil {
-			return fmt.Errorf("rollback failed: %w", func() error {
-				var target error
-				_ = errors.As(err, &target)
-				return target
-			}())
+			return fmt.Errorf("rollback failed: %w", err.(error))
 		}
 
-		return fmt.Errorf("%w; cause: %w", rolledbackErr, err)
+		return fmt.Errorf("%w; cause: %v", rolledbackErr, err)
 	}
 
 	var errGroup errgroup.Group

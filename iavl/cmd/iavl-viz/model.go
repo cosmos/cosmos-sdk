@@ -48,6 +48,7 @@ type model struct {
 
 	checkpoints        []internal.CheckpointInfo
 	orphans            []internal.OrphanEntry
+	orphanErr          string                     // non-fatal orphan load warning
 	orphanMap          map[internal.NodeID]uint32 // NodeID → OrphanedVersion
 	orphanStats        map[uint32]orphanCounts    // checkpoint → {leaf orphan count, branch orphan count}
 	walAnalysis        []walVersionInfo
@@ -276,7 +277,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				orphans, orphanErr := loadOrphans(m.dir, m.selectedTree, m.selectedChangeset)
 				m.orphans = orphans
 				if orphanErr != nil {
-					m.err = orphanErr.Error()
+					m.orphanErr = orphanErr.Error()
+				} else {
+					m.orphanErr = ""
 				}
 				m.orphanMap = make(map[internal.NodeID]uint32, len(orphans))
 				m.orphanStats = make(map[uint32]orphanCounts)
@@ -355,7 +358,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "o":
 			if m.view == viewCheckpoints {
 				m.view = viewCheckpointOrphans
-				m.err = ""
+				m.err = m.orphanErr
 				m.buildOrphansTable(m.orphans)
 				return m, nil
 			}
@@ -371,12 +374,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return m, nil
 				}
 				m.orphans = orphans
-				m.view = viewChangesetOrphans
 				if err != nil {
-					m.err = err.Error()
+					m.orphanErr = err.Error()
 				} else {
-					m.err = ""
+					m.orphanErr = ""
 				}
+				m.view = viewChangesetOrphans
+				m.err = m.orphanErr
 				m.buildOrphansTable(m.orphans)
 				return m, nil
 			}

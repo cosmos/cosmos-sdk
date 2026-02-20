@@ -125,8 +125,9 @@ func (s *SimCommitTree) checkNewVersion(t *rapid.T) {
 	commitIdV2, err := committer.Finalize()
 	require.NoError(t, err, "failed to finalize commit in V2 tree")
 
-	// check v2 iavl invariants
-	_, latestPtr := s.treeV2.treeStore.Latest()
+	// check v2 iavl invariants (GetRootForUpdate waits for background node ID assignment)
+	latestPtr, err := s.treeV2.treeStore.GetRootForUpdate(context.Background())
+	require.NoError(t, err, "failed to get root for invariant check in V2 tree")
 	if latestPtr != nil {
 		latest, pin, err := latestPtr.Resolve()
 		defer pin.Unpin()

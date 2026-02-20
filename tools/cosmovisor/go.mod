@@ -4,7 +4,7 @@ go 1.25.7
 
 require (
 	cosmossdk.io/log/v2 v2.0.1
-	github.com/cometbft/cometbft v0.39.0-beta.2
+	github.com/cometbft/cometbft v0.39.0-beta.2.0.20260219154603-da56c5f931bf
 	github.com/cometbft/cometbft-db v0.14.1
 	github.com/cosmos/cosmos-sdk v0.54.0-beta.0
 	github.com/fsnotify/fsnotify v1.9.0
@@ -33,7 +33,7 @@ require (
 	cosmossdk.io/math v1.5.3 // indirect
 	cosmossdk.io/schema v1.1.0 // indirect
 	cosmossdk.io/store v1.3.0-beta.0 // indirect
-	filippo.io/edwards25519 v1.1.0 // indirect
+	filippo.io/edwards25519 v1.1.1 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.2 // indirect
 	github.com/DataDog/datadog-go v4.8.3+incompatible // indirect
@@ -79,6 +79,7 @@ require (
 	github.com/cockroachdb/redact v1.1.6 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
+	github.com/cosmos/btree v1.0.0 // indirect
 	github.com/cosmos/cosmos-db v1.1.3 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
@@ -257,6 +258,4 @@ replace (
 	cosmossdk.io/store => ../../store
 	cosmossdk.io/x/upgrade => ../../x/upgrade
 	github.com/cosmos/cosmos-sdk => ../..
-	// BlockSTM requires patches to the btree package
-	github.com/tidwall/btree => github.com/cosmos/btree v0.0.0-20250924232609-2c6195d95951
 )

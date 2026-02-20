@@ -69,7 +69,6 @@ require (
 	github.com/tidwall/btree v1.8.1
 	github.com/tidwall/gjson v1.18.0
 	github.com/tidwall/sjson v1.2.5
-	go.opentelemetry.io/contrib/bridges/otelslog v0.15.0
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.65.0
 	go.opentelemetry.io/contrib/instrumentation/host v0.65.0
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.65.0
@@ -83,7 +82,6 @@ require (
 	go.uber.org/mock v0.6.0
 	go.yaml.in/yaml/v3 v3.0.4
 	golang.org/x/crypto v0.48.0
-	golang.org/x/exp v0.0.0-20260112195511-716be5621a96
 	golang.org/x/sync v0.19.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20260209200024-4cfbd4190f57
 	google.golang.org/grpc v1.79.1
@@ -280,6 +278,7 @@ require (
 	go.uber.org/zap v1.27.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
 	golang.org/x/arch v0.24.0 // indirect
+	golang.org/x/exp v0.0.0-20260112195511-716be5621a96 // indirect
 	golang.org/x/net v0.50.0 // indirect
 	golang.org/x/oauth2 v0.35.0 // indirect
 	golang.org/x/sys v0.41.0 // indirect

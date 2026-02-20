@@ -26,8 +26,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 
-	iavlx "github.com/cosmos/cosmos-sdk/iavl"
-
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
 	pruningtypes "cosmossdk.io/store/pruning/types"
@@ -39,6 +37,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	baseapptestutil "github.com/cosmos/cosmos-sdk/baseapp/testutil"
 	"github.com/cosmos/cosmos-sdk/baseapp/testutil/mock"
+	iavlx "github.com/cosmos/cosmos-sdk/iavl"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"

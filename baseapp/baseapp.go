@@ -9,19 +9,15 @@ import (
 	"strconv"
 	"sync"
 
-	"cosmossdk.io/store"
-	storemetrics "cosmossdk.io/store/metrics"
 	"github.com/cockroachdb/errors"
-
-	_ "github.com/cosmos/cosmos-sdk/telemetry"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/tmhash"
-
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
+
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
@@ -31,6 +27,8 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log/v2"
+	"cosmossdk.io/store"
+	storemetrics "cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/snapshots"
 
 	storetypes "cosmossdk.io/store/types"

@@ -4935,6 +4935,918 @@ paths:
           type: boolean
       tags:
         - Service
+  /cosmos/base/tendermint/v1beta1/block_results/latest:
+    get:
+      summary: >-
+        GetLatestBlockResults returns the block results for the latest block.
+
+        Block results contain finalize_block_events which include
+        consensus-level
+
+        events like slashing, jailing, and validator set updates.
+      operationId: GetLatestBlockResults
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              height:
+                type: string
+                format: int64
+                description: height is the block height.
+              txsResults:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    code:
+                      type: integer
+                      format: int64
+                    data:
+                      type: string
+                      format: byte
+                    log:
+                      type: string
+                      title: nondeterministic
+                    info:
+                      type: string
+                      title: nondeterministic
+                    gas_wanted:
+                      type: string
+                      format: int64
+                    gas_used:
+                      type: string
+                      format: int64
+                    events:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          type:
+                            type: string
+                          attributes:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                key:
+                                  type: string
+                                value:
+                                  type: string
+                                index:
+                                  type: boolean
+                                  title: nondeterministic
+                              description: >-
+                                EventAttribute is a single key-value pair,
+                                associated with an event.
+                        description: >-
+                          Event allows application developers to attach
+                          additional information to
+
+                          ResponseFinalizeBlock and ResponseCheckTx.
+
+                          Later, transactions may be queried using these events.
+                      title: nondeterministic
+                    codespace:
+                      type: string
+                  description: >-
+                    ExecTxResult contains results of executing one individual
+                    transaction.
+
+
+                    * Its structure is equivalent to #ResponseDeliverTx which
+                    will be deprecated/deleted
+                description: >-
+                  txs_results contains the results of each transaction
+                  execution.
+              finalizeBlockEvents:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                    attributes:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          key:
+                            type: string
+                          value:
+                            type: string
+                          index:
+                            type: boolean
+                            title: nondeterministic
+                        description: >-
+                          EventAttribute is a single key-value pair, associated
+                          with an event.
+                  description: >-
+                    Event allows application developers to attach additional
+                    information to
+
+                    ResponseFinalizeBlock and ResponseCheckTx.
+
+                    Later, transactions may be queried using these events.
+                description: >-
+                  finalize_block_events contains consensus-level events emitted
+                  during block
+
+                  finalization, including slashing, jailing, and validator set
+                  updates.
+              validatorUpdates:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    pubKey:
+                      type: object
+                      properties:
+                        ed25519:
+                          type: string
+                          format: byte
+                        secp256k1:
+                          type: string
+                          format: byte
+                      title: >-
+                        PublicKey defines the keys available for use with
+                        Validators
+                    power:
+                      type: string
+                      format: int64
+                description: >-
+                  validator_updates contains the validator updates for this
+                  block.
+              consensusParamUpdates:
+                description: >-
+                  consensus_param_updates contains any consensus parameter
+                  updates for this block.
+                type: object
+                properties:
+                  block:
+                    type: object
+                    properties:
+                      maxBytes:
+                        type: string
+                        format: int64
+                        title: |-
+                          Max block size, in bytes.
+                          Note: must be greater than 0
+                      maxGas:
+                        type: string
+                        format: int64
+                        title: |-
+                          Max gas per block.
+                          Note: must be greater or equal to -1
+                    description: BlockParams contains limits on the block size.
+                  evidence:
+                    type: object
+                    properties:
+                      maxAgeNumBlocks:
+                        type: string
+                        format: int64
+                        description: >-
+                          Max age of evidence, in blocks.
+
+
+                          The basic formula for calculating this is:
+                          MaxAgeDuration / {average block
+
+                          time}.
+                      maxAgeDuration:
+                        type: string
+                        description: >-
+                          Max age of evidence, in time.
+
+
+                          It should correspond with an app's "unbonding period"
+                          or other similar
+
+                          mechanism for handling [Nothing-At-Stake
+
+                          attacks](https://github.com/ethereum/wiki/wiki/Proof-of-Stake-FAQ#what-is-the-nothing-at-stake-problem-and-how-can-it-be-fixed).
+                      maxBytes:
+                        type: string
+                        format: int64
+                        title: >-
+                          This sets the maximum size of total evidence in bytes
+                          that can be committed in a single block.
+
+                          and should fall comfortably under the max block bytes.
+
+                          Default is 1048576 or 1MB
+                    description: >-
+                      EvidenceParams determine how we handle evidence of
+                      malfeasance.
+                  validator:
+                    type: object
+                    properties:
+                      pubKeyTypes:
+                        type: array
+                        items:
+                          type: string
+                    description: >-
+                      ValidatorParams restrict the public key types validators
+                      can use.
+
+                      NOTE: uses ABCI pubkey naming, not Amino names.
+                  version:
+                    type: object
+                    properties:
+                      app:
+                        type: string
+                        format: uint64
+                    description: VersionParams contains the ABCI application version.
+                  abci:
+                    type: object
+                    properties:
+                      voteExtensionsEnableHeight:
+                        type: string
+                        format: int64
+                        description: >-
+                          vote_extensions_enable_height configures the first
+                          height during which
+
+                          vote extensions will be enabled. During this specified
+                          height, and for all
+
+                          subsequent heights, precommit messages that do not
+                          contain valid extension data
+
+                          will be considered invalid. Prior to this height, vote
+                          extensions will not
+
+                          be used or accepted by validators on the network.
+
+
+                          Once enabled, vote extensions will be created by the
+                          application in ExtendVote,
+
+                          passed to the application for validation in
+                          VerifyVoteExtension and given
+
+                          to the application to use when proposing a block
+                          during PrepareProposal.
+                    description: >-
+                      ABCIParams configure functionality specific to the
+                      Application Blockchain Interface.
+              appHash:
+                type: string
+                format: byte
+                description: app_hash is the app hash after processing this block.
+            description: >-
+              GetLatestBlockResultsResponse is the response type for the
+              Query/GetLatestBlockResults RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com. As of May 2023, there are no widely
+                        used type server
+
+                        implementations and no plans to implement one.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
+                  additionalProperties: {}
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+                        // or ...
+                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
+                          foo = any.unpack(Foo.getDefaultInstance());
+                        }
+
+                     Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                     Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := anypb.New(foo)
+                         if err != nil {
+                           ...
+                         }
+                         ...
+                         foo := &pb.Foo{}
+                         if err := any.UnmarshalTo(foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+                    JSON
+
+                    ====
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
+      tags:
+        - Service
+  /cosmos/base/tendermint/v1beta1/block_results/{height}:
+    get:
+      summary: GetBlockResults queries block results for given height.
+      operationId: GetBlockResults
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              height:
+                type: string
+                format: int64
+                description: height is the block height.
+              txsResults:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    code:
+                      type: integer
+                      format: int64
+                    data:
+                      type: string
+                      format: byte
+                    log:
+                      type: string
+                      title: nondeterministic
+                    info:
+                      type: string
+                      title: nondeterministic
+                    gas_wanted:
+                      type: string
+                      format: int64
+                    gas_used:
+                      type: string
+                      format: int64
+                    events:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          type:
+                            type: string
+                          attributes:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                key:
+                                  type: string
+                                value:
+                                  type: string
+                                index:
+                                  type: boolean
+                                  title: nondeterministic
+                              description: >-
+                                EventAttribute is a single key-value pair,
+                                associated with an event.
+                        description: >-
+                          Event allows application developers to attach
+                          additional information to
+
+                          ResponseFinalizeBlock and ResponseCheckTx.
+
+                          Later, transactions may be queried using these events.
+                      title: nondeterministic
+                    codespace:
+                      type: string
+                  description: >-
+                    ExecTxResult contains results of executing one individual
+                    transaction.
+
+
+                    * Its structure is equivalent to #ResponseDeliverTx which
+                    will be deprecated/deleted
+                description: >-
+                  txs_results contains the results of each transaction
+                  execution.
+              finalizeBlockEvents:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type:
+                      type: string
+                    attributes:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          key:
+                            type: string
+                          value:
+                            type: string
+                          index:
+                            type: boolean
+                            title: nondeterministic
+                        description: >-
+                          EventAttribute is a single key-value pair, associated
+                          with an event.
+                  description: >-
+                    Event allows application developers to attach additional
+                    information to
+
+                    ResponseFinalizeBlock and ResponseCheckTx.
+
+                    Later, transactions may be queried using these events.
+                description: >-
+                  finalize_block_events contains consensus-level events emitted
+                  during block
+
+                  finalization, including slashing, jailing, and validator set
+                  updates.
+              validatorUpdates:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    pubKey:
+                      type: object
+                      properties:
+                        ed25519:
+                          type: string
+                          format: byte
+                        secp256k1:
+                          type: string
+                          format: byte
+                      title: >-
+                        PublicKey defines the keys available for use with
+                        Validators
+                    power:
+                      type: string
+                      format: int64
+                description: >-
+                  validator_updates contains the validator updates for this
+                  block.
+              consensusParamUpdates:
+                description: >-
+                  consensus_param_updates contains any consensus parameter
+                  updates for this block.
+                type: object
+                properties:
+                  block:
+                    type: object
+                    properties:
+                      maxBytes:
+                        type: string
+                        format: int64
+                        title: |-
+                          Max block size, in bytes.
+                          Note: must be greater than 0
+                      maxGas:
+                        type: string
+                        format: int64
+                        title: |-
+                          Max gas per block.
+                          Note: must be greater or equal to -1
+                    description: BlockParams contains limits on the block size.
+                  evidence:
+                    type: object
+                    properties:
+                      maxAgeNumBlocks:
+                        type: string
+                        format: int64
+                        description: >-
+                          Max age of evidence, in blocks.
+
+
+                          The basic formula for calculating this is:
+                          MaxAgeDuration / {average block
+
+                          time}.
+                      maxAgeDuration:
+                        type: string
+                        description: >-
+                          Max age of evidence, in time.
+
+
+                          It should correspond with an app's "unbonding period"
+                          or other similar
+
+                          mechanism for handling [Nothing-At-Stake
+
+                          attacks](https://github.com/ethereum/wiki/wiki/Proof-of-Stake-FAQ#what-is-the-nothing-at-stake-problem-and-how-can-it-be-fixed).
+                      maxBytes:
+                        type: string
+                        format: int64
+                        title: >-
+                          This sets the maximum size of total evidence in bytes
+                          that can be committed in a single block.
+
+                          and should fall comfortably under the max block bytes.
+
+                          Default is 1048576 or 1MB
+                    description: >-
+                      EvidenceParams determine how we handle evidence of
+                      malfeasance.
+                  validator:
+                    type: object
+                    properties:
+                      pubKeyTypes:
+                        type: array
+                        items:
+                          type: string
+                    description: >-
+                      ValidatorParams restrict the public key types validators
+                      can use.
+
+                      NOTE: uses ABCI pubkey naming, not Amino names.
+                  version:
+                    type: object
+                    properties:
+                      app:
+                        type: string
+                        format: uint64
+                    description: VersionParams contains the ABCI application version.
+                  abci:
+                    type: object
+                    properties:
+                      voteExtensionsEnableHeight:
+                        type: string
+                        format: int64
+                        description: >-
+                          vote_extensions_enable_height configures the first
+                          height during which
+
+                          vote extensions will be enabled. During this specified
+                          height, and for all
+
+                          subsequent heights, precommit messages that do not
+                          contain valid extension data
+
+                          will be considered invalid. Prior to this height, vote
+                          extensions will not
+
+                          be used or accepted by validators on the network.
+
+
+                          Once enabled, vote extensions will be created by the
+                          application in ExtendVote,
+
+                          passed to the application for validation in
+                          VerifyVoteExtension and given
+
+                          to the application to use when proposing a block
+                          during PrepareProposal.
+                    description: >-
+                      ABCIParams configure functionality specific to the
+                      Application Blockchain Interface.
+              appHash:
+                type: string
+                format: byte
+                description: app_hash is the app hash after processing this block.
+            description: >-
+              GetBlockResultsResponse is the response type for the
+              Query/GetBlockResults RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                      description: >-
+                        A URL/resource name that uniquely identifies the type of
+                        the serialized
+
+                        protocol buffer message. This string must contain at
+                        least
+
+                        one "/" character. The last segment of the URL's path
+                        must represent
+
+                        the fully qualified name of the type (as in
+
+                        `path/google.protobuf.Duration`). The name should be in
+                        a canonical form
+
+                        (e.g., leading "." is not accepted).
+
+
+                        In practice, teams usually precompile into the binary
+                        all types that they
+
+                        expect it to use in the context of Any. However, for
+                        URLs which use the
+
+                        scheme `http`, `https`, or no scheme, one can optionally
+                        set up a type
+
+                        server that maps type URLs to message definitions as
+                        follows:
+
+
+                        * If no scheme is provided, `https` is assumed.
+
+                        * An HTTP GET on the URL must yield a
+                        [google.protobuf.Type][]
+                          value in binary format, or produce an error.
+                        * Applications are allowed to cache lookup results based
+                        on the
+                          URL, or have them precompiled into a binary to avoid any
+                          lookup. Therefore, binary compatibility needs to be preserved
+                          on changes to types. (Use versioned type names to manage
+                          breaking changes.)
+
+                        Note: this functionality is not currently available in
+                        the official
+
+                        protobuf release, and it is not used for type URLs
+                        beginning with
+
+                        type.googleapis.com. As of May 2023, there are no widely
+                        used type server
+
+                        implementations and no plans to implement one.
+
+
+                        Schemes other than `http`, `https` (or the empty scheme)
+                        might be
+
+                        used with implementation specific semantics.
+                  additionalProperties: {}
+                  description: >-
+                    `Any` contains an arbitrary serialized protocol buffer
+                    message along with a
+
+                    URL that describes the type of the serialized message.
+
+
+                    Protobuf library provides support to pack/unpack Any values
+                    in the form
+
+                    of utility functions or additional generated methods of the
+                    Any type.
+
+
+                    Example 1: Pack and unpack a message in C++.
+
+                        Foo foo = ...;
+                        Any any;
+                        any.PackFrom(foo);
+                        ...
+                        if (any.UnpackTo(&foo)) {
+                          ...
+                        }
+
+                    Example 2: Pack and unpack a message in Java.
+
+                        Foo foo = ...;
+                        Any any = Any.pack(foo);
+                        ...
+                        if (any.is(Foo.class)) {
+                          foo = any.unpack(Foo.class);
+                        }
+                        // or ...
+                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
+                          foo = any.unpack(Foo.getDefaultInstance());
+                        }
+
+                     Example 3: Pack and unpack a message in Python.
+
+                        foo = Foo(...)
+                        any = Any()
+                        any.Pack(foo)
+                        ...
+                        if any.Is(Foo.DESCRIPTOR):
+                          any.Unpack(foo)
+                          ...
+
+                     Example 4: Pack and unpack a message in Go
+
+                         foo := &pb.Foo{...}
+                         any, err := anypb.New(foo)
+                         if err != nil {
+                           ...
+                         }
+                         ...
+                         foo := &pb.Foo{}
+                         if err := any.UnmarshalTo(foo); err != nil {
+                           ...
+                         }
+
+                    The pack methods provided by protobuf library will by
+                    default use
+
+                    'type.googleapis.com/full.type.name' as the type URL and the
+                    unpack
+
+                    methods only use the fully qualified type name after the
+                    last '/'
+
+                    in the type URL, for example "foo.bar.com/x/y.z" will yield
+                    type
+
+                    name "y.z".
+
+
+                    JSON
+
+                    ====
+
+                    The JSON representation of an `Any` value uses the regular
+
+                    representation of the deserialized, embedded message, with
+                    an
+
+                    additional field `@type` which contains the type URL.
+                    Example:
+
+                        package google.profile;
+                        message Person {
+                          string first_name = 1;
+                          string last_name = 2;
+                        }
+
+                        {
+                          "@type": "type.googleapis.com/google.profile.Person",
+                          "firstName": <string>,
+                          "lastName": <string>
+                        }
+
+                    If the embedded message type is well-known and has a custom
+                    JSON
+
+                    representation, that representation will be embedded adding
+                    a field
+
+                    `value` which holds the custom JSON in addition to the
+                    `@type`
+
+                    field. Example (for message [google.protobuf.Duration][]):
+
+                        {
+                          "@type": "type.googleapis.com/google.protobuf.Duration",
+                          "value": "1.212s"
+                        }
+      parameters:
+        - name: height
+          in: path
+          required: true
+          type: string
+          format: int64
+      tags:
+        - Service
   /cosmos/base/tendermint/v1beta1/blocks/latest:
     get:
       summary: GetLatestBlock returns the latest block.
@@ -8187,6 +9099,18 @@ paths:
             properties:
               syncing:
                 type: boolean
+              earliestBlockHeight:
+                type: string
+                format: int64
+                description: >-
+                  earliest_block_height is the earliest block height available
+                  on this node.
+              latestBlockHeight:
+                type: string
+                format: int64
+                description: >-
+                  latest_block_height is the latest block height available on
+                  this node.
             description: >-
               GetSyncingResponse is the response type for the Query/GetSyncing
               RPC method.
@@ -16888,6 +17812,14 @@ paths:
                     type: string
                     format: uint64
                     title: expected blocks per year
+                  maxSupply:
+                    type: string
+                    description: >-
+                      maximum supply for the token.
+
+
+                      A value of "0" indicates an unlimited (infinite) maximum
+                      supply.
             description: >-
               QueryParamsResponse is the response type for the Query/Params RPC
               method.
@@ -33286,6 +34218,245 @@ definitions:
     description: >-
       GetBlockByHeightResponse is the response type for the
       Query/GetBlockByHeight RPC method.
+  cosmos.base.tendermint.v1beta1.GetBlockResultsResponse:
+    type: object
+    properties:
+      height:
+        type: string
+        format: int64
+        description: height is the block height.
+      txsResults:
+        type: array
+        items:
+          type: object
+          properties:
+            code:
+              type: integer
+              format: int64
+            data:
+              type: string
+              format: byte
+            log:
+              type: string
+              title: nondeterministic
+            info:
+              type: string
+              title: nondeterministic
+            gas_wanted:
+              type: string
+              format: int64
+            gas_used:
+              type: string
+              format: int64
+            events:
+              type: array
+              items:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  attributes:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        key:
+                          type: string
+                        value:
+                          type: string
+                        index:
+                          type: boolean
+                          title: nondeterministic
+                      description: >-
+                        EventAttribute is a single key-value pair, associated
+                        with an event.
+                description: >-
+                  Event allows application developers to attach additional
+                  information to
+
+                  ResponseFinalizeBlock and ResponseCheckTx.
+
+                  Later, transactions may be queried using these events.
+              title: nondeterministic
+            codespace:
+              type: string
+          description: >-
+            ExecTxResult contains results of executing one individual
+            transaction.
+
+
+            * Its structure is equivalent to #ResponseDeliverTx which will be
+            deprecated/deleted
+        description: txs_results contains the results of each transaction execution.
+      finalizeBlockEvents:
+        type: array
+        items:
+          type: object
+          properties:
+            type:
+              type: string
+            attributes:
+              type: array
+              items:
+                type: object
+                properties:
+                  key:
+                    type: string
+                  value:
+                    type: string
+                  index:
+                    type: boolean
+                    title: nondeterministic
+                description: >-
+                  EventAttribute is a single key-value pair, associated with an
+                  event.
+          description: >-
+            Event allows application developers to attach additional information
+            to
+
+            ResponseFinalizeBlock and ResponseCheckTx.
+
+            Later, transactions may be queried using these events.
+        description: >-
+          finalize_block_events contains consensus-level events emitted during
+          block
+
+          finalization, including slashing, jailing, and validator set updates.
+      validatorUpdates:
+        type: array
+        items:
+          type: object
+          properties:
+            pubKey:
+              type: object
+              properties:
+                ed25519:
+                  type: string
+                  format: byte
+                secp256k1:
+                  type: string
+                  format: byte
+              title: PublicKey defines the keys available for use with Validators
+            power:
+              type: string
+              format: int64
+        description: validator_updates contains the validator updates for this block.
+      consensusParamUpdates:
+        description: >-
+          consensus_param_updates contains any consensus parameter updates for
+          this block.
+        type: object
+        properties:
+          block:
+            type: object
+            properties:
+              maxBytes:
+                type: string
+                format: int64
+                title: |-
+                  Max block size, in bytes.
+                  Note: must be greater than 0
+              maxGas:
+                type: string
+                format: int64
+                title: |-
+                  Max gas per block.
+                  Note: must be greater or equal to -1
+            description: BlockParams contains limits on the block size.
+          evidence:
+            type: object
+            properties:
+              maxAgeNumBlocks:
+                type: string
+                format: int64
+                description: >-
+                  Max age of evidence, in blocks.
+
+
+                  The basic formula for calculating this is: MaxAgeDuration /
+                  {average block
+
+                  time}.
+              maxAgeDuration:
+                type: string
+                description: >-
+                  Max age of evidence, in time.
+
+
+                  It should correspond with an app's "unbonding period" or other
+                  similar
+
+                  mechanism for handling [Nothing-At-Stake
+
+                  attacks](https://github.com/ethereum/wiki/wiki/Proof-of-Stake-FAQ#what-is-the-nothing-at-stake-problem-and-how-can-it-be-fixed).
+              maxBytes:
+                type: string
+                format: int64
+                title: >-
+                  This sets the maximum size of total evidence in bytes that can
+                  be committed in a single block.
+
+                  and should fall comfortably under the max block bytes.
+
+                  Default is 1048576 or 1MB
+            description: EvidenceParams determine how we handle evidence of malfeasance.
+          validator:
+            type: object
+            properties:
+              pubKeyTypes:
+                type: array
+                items:
+                  type: string
+            description: |-
+              ValidatorParams restrict the public key types validators can use.
+              NOTE: uses ABCI pubkey naming, not Amino names.
+          version:
+            type: object
+            properties:
+              app:
+                type: string
+                format: uint64
+            description: VersionParams contains the ABCI application version.
+          abci:
+            type: object
+            properties:
+              voteExtensionsEnableHeight:
+                type: string
+                format: int64
+                description: >-
+                  vote_extensions_enable_height configures the first height
+                  during which
+
+                  vote extensions will be enabled. During this specified height,
+                  and for all
+
+                  subsequent heights, precommit messages that do not contain
+                  valid extension data
+
+                  will be considered invalid. Prior to this height, vote
+                  extensions will not
+
+                  be used or accepted by validators on the network.
+
+
+                  Once enabled, vote extensions will be created by the
+                  application in ExtendVote,
+
+                  passed to the application for validation in
+                  VerifyVoteExtension and given
+
+                  to the application to use when proposing a block during
+                  PrepareProposal.
+            description: >-
+              ABCIParams configure functionality specific to the Application
+              Blockchain Interface.
+      appHash:
+        type: string
+        format: byte
+        description: app_hash is the app hash after processing this block.
+    description: >-
+      GetBlockResultsResponse is the response type for the Query/GetBlockResults
+      RPC method.
   cosmos.base.tendermint.v1beta1.GetLatestBlockResponse:
     type: object
     properties:
@@ -34540,6 +35711,245 @@ definitions:
     description: >-
       GetLatestBlockResponse is the response type for the Query/GetLatestBlock
       RPC method.
+  cosmos.base.tendermint.v1beta1.GetLatestBlockResultsResponse:
+    type: object
+    properties:
+      height:
+        type: string
+        format: int64
+        description: height is the block height.
+      txsResults:
+        type: array
+        items:
+          type: object
+          properties:
+            code:
+              type: integer
+              format: int64
+            data:
+              type: string
+              format: byte
+            log:
+              type: string
+              title: nondeterministic
+            info:
+              type: string
+              title: nondeterministic
+            gas_wanted:
+              type: string
+              format: int64
+            gas_used:
+              type: string
+              format: int64
+            events:
+              type: array
+              items:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  attributes:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        key:
+                          type: string
+                        value:
+                          type: string
+                        index:
+                          type: boolean
+                          title: nondeterministic
+                      description: >-
+                        EventAttribute is a single key-value pair, associated
+                        with an event.
+                description: >-
+                  Event allows application developers to attach additional
+                  information to
+
+                  ResponseFinalizeBlock and ResponseCheckTx.
+
+                  Later, transactions may be queried using these events.
+              title: nondeterministic
+            codespace:
+              type: string
+          description: >-
+            ExecTxResult contains results of executing one individual
+            transaction.
+
+
+            * Its structure is equivalent to #ResponseDeliverTx which will be
+            deprecated/deleted
+        description: txs_results contains the results of each transaction execution.
+      finalizeBlockEvents:
+        type: array
+        items:
+          type: object
+          properties:
+            type:
+              type: string
+            attributes:
+              type: array
+              items:
+                type: object
+                properties:
+                  key:
+                    type: string
+                  value:
+                    type: string
+                  index:
+                    type: boolean
+                    title: nondeterministic
+                description: >-
+                  EventAttribute is a single key-value pair, associated with an
+                  event.
+          description: >-
+            Event allows application developers to attach additional information
+            to
+
+            ResponseFinalizeBlock and ResponseCheckTx.
+
+            Later, transactions may be queried using these events.
+        description: >-
+          finalize_block_events contains consensus-level events emitted during
+          block
+
+          finalization, including slashing, jailing, and validator set updates.
+      validatorUpdates:
+        type: array
+        items:
+          type: object
+          properties:
+            pubKey:
+              type: object
+              properties:
+                ed25519:
+                  type: string
+                  format: byte
+                secp256k1:
+                  type: string
+                  format: byte
+              title: PublicKey defines the keys available for use with Validators
+            power:
+              type: string
+              format: int64
+        description: validator_updates contains the validator updates for this block.
+      consensusParamUpdates:
+        description: >-
+          consensus_param_updates contains any consensus parameter updates for
+          this block.
+        type: object
+        properties:
+          block:
+            type: object
+            properties:
+              maxBytes:
+                type: string
+                format: int64
+                title: |-
+                  Max block size, in bytes.
+                  Note: must be greater than 0
+              maxGas:
+                type: string
+                format: int64
+                title: |-
+                  Max gas per block.
+                  Note: must be greater or equal to -1
+            description: BlockParams contains limits on the block size.
+          evidence:
+            type: object
+            properties:
+              maxAgeNumBlocks:
+                type: string
+                format: int64
+                description: >-
+                  Max age of evidence, in blocks.
+
+
+                  The basic formula for calculating this is: MaxAgeDuration /
+                  {average block
+
+                  time}.
+              maxAgeDuration:
+                type: string
+                description: >-
+                  Max age of evidence, in time.
+
+
+                  It should correspond with an app's "unbonding period" or other
+                  similar
+
+                  mechanism for handling [Nothing-At-Stake
+
+                  attacks](https://github.com/ethereum/wiki/wiki/Proof-of-Stake-FAQ#what-is-the-nothing-at-stake-problem-and-how-can-it-be-fixed).
+              maxBytes:
+                type: string
+                format: int64
+                title: >-
+                  This sets the maximum size of total evidence in bytes that can
+                  be committed in a single block.
+
+                  and should fall comfortably under the max block bytes.
+
+                  Default is 1048576 or 1MB
+            description: EvidenceParams determine how we handle evidence of malfeasance.
+          validator:
+            type: object
+            properties:
+              pubKeyTypes:
+                type: array
+                items:
+                  type: string
+            description: |-
+              ValidatorParams restrict the public key types validators can use.
+              NOTE: uses ABCI pubkey naming, not Amino names.
+          version:
+            type: object
+            properties:
+              app:
+                type: string
+                format: uint64
+            description: VersionParams contains the ABCI application version.
+          abci:
+            type: object
+            properties:
+              voteExtensionsEnableHeight:
+                type: string
+                format: int64
+                description: >-
+                  vote_extensions_enable_height configures the first height
+                  during which
+
+                  vote extensions will be enabled. During this specified height,
+                  and for all
+
+                  subsequent heights, precommit messages that do not contain
+                  valid extension data
+
+                  will be considered invalid. Prior to this height, vote
+                  extensions will not
+
+                  be used or accepted by validators on the network.
+
+
+                  Once enabled, vote extensions will be created by the
+                  application in ExtendVote,
+
+                  passed to the application for validation in
+                  VerifyVoteExtension and given
+
+                  to the application to use when proposing a block during
+                  PrepareProposal.
+            description: >-
+              ABCIParams configure functionality specific to the Application
+              Blockchain Interface.
+      appHash:
+        type: string
+        format: byte
+        description: app_hash is the app hash after processing this block.
+    description: >-
+      GetLatestBlockResultsResponse is the response type for the
+      Query/GetLatestBlockResults RPC method.
   cosmos.base.tendermint.v1beta1.GetLatestValidatorSetResponse:
     type: object
     properties:
@@ -34834,6 +36244,16 @@ definitions:
     properties:
       syncing:
         type: boolean
+      earliestBlockHeight:
+        type: string
+        format: int64
+        description: >-
+          earliest_block_height is the earliest block height available on this
+          node.
+      latestBlockHeight:
+        type: string
+        format: int64
+        description: latest_block_height is the latest block height available on this node.
     description: >-
       GetSyncingResponse is the response type for the Query/GetSyncing RPC
       method.
@@ -35425,6 +36845,114 @@ definitions:
       cosmosSdkVersion:
         type: string
     description: VersionInfo is the type for the GetNodeInfoResponse message.
+  tendermint.abci.Event:
+    type: object
+    properties:
+      type:
+        type: string
+      attributes:
+        type: array
+        items:
+          type: object
+          properties:
+            key:
+              type: string
+            value:
+              type: string
+            index:
+              type: boolean
+              title: nondeterministic
+          description: EventAttribute is a single key-value pair, associated with an event.
+    description: |-
+      Event allows application developers to attach additional information to
+      ResponseFinalizeBlock and ResponseCheckTx.
+      Later, transactions may be queried using these events.
+  tendermint.abci.EventAttribute:
+    type: object
+    properties:
+      key:
+        type: string
+      value:
+        type: string
+      index:
+        type: boolean
+        title: nondeterministic
+    description: EventAttribute is a single key-value pair, associated with an event.
+  tendermint.abci.ExecTxResult:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int64
+      data:
+        type: string
+        format: byte
+      log:
+        type: string
+        title: nondeterministic
+      info:
+        type: string
+        title: nondeterministic
+      gas_wanted:
+        type: string
+        format: int64
+      gas_used:
+        type: string
+        format: int64
+      events:
+        type: array
+        items:
+          type: object
+          properties:
+            type:
+              type: string
+            attributes:
+              type: array
+              items:
+                type: object
+                properties:
+                  key:
+                    type: string
+                  value:
+                    type: string
+                  index:
+                    type: boolean
+                    title: nondeterministic
+                description: >-
+                  EventAttribute is a single key-value pair, associated with an
+                  event.
+          description: >-
+            Event allows application developers to attach additional information
+            to
+
+            ResponseFinalizeBlock and ResponseCheckTx.
+
+            Later, transactions may be queried using these events.
+        title: nondeterministic
+      codespace:
+        type: string
+    description: >-
+      ExecTxResult contains results of executing one individual transaction.
+
+
+      * Its structure is equivalent to #ResponseDeliverTx which will be
+      deprecated/deleted
+  tendermint.abci.ValidatorUpdate:
+    type: object
+    properties:
+      pubKey:
+        type: object
+        properties:
+          ed25519:
+            type: string
+            format: byte
+          secp256k1:
+            type: string
+            format: byte
+        title: PublicKey defines the keys available for use with Validators
+      power:
+        type: string
+        format: int64
   tendermint.crypto.PublicKey:
     type: object
     properties:
@@ -35489,6 +37017,38 @@ definitions:
       app:
         type: string
         format: uint64
+  tendermint.types.ABCIParams:
+    type: object
+    properties:
+      voteExtensionsEnableHeight:
+        type: string
+        format: int64
+        description: >-
+          vote_extensions_enable_height configures the first height during which
+
+          vote extensions will be enabled. During this specified height, and for
+          all
+
+          subsequent heights, precommit messages that do not contain valid
+          extension data
+
+          will be considered invalid. Prior to this height, vote extensions will
+          not
+
+          be used or accepted by validators on the network.
+
+
+          Once enabled, vote extensions will be created by the application in
+          ExtendVote,
+
+          passed to the application for validation in VerifyVoteExtension and
+          given
+
+          to the application to use when proposing a block during
+          PrepareProposal.
+    description: >-
+      ABCIParams configure functionality specific to the Application Blockchain
+      Interface.
   tendermint.types.Block:
     type: object
     properties:
@@ -36124,6 +37684,22 @@ definitions:
        - BLOCK_ID_FLAG_COMMIT: voted for the block that received the majority
        - BLOCK_ID_FLAG_NIL: voted for nil
     title: BlockIdFlag indicates which BlockID the signature is for
+  tendermint.types.BlockParams:
+    type: object
+    properties:
+      maxBytes:
+        type: string
+        format: int64
+        title: |-
+          Max block size, in bytes.
+          Note: must be greater than 0
+      maxGas:
+        type: string
+        format: int64
+        title: |-
+          Max gas per block.
+          Note: must be greater or equal to -1
+    description: BlockParams contains limits on the block size.
   tendermint.types.Commit:
     type: object
     properties:
@@ -36209,6 +37785,115 @@ definitions:
         type: string
         format: byte
     description: CommitSig is a part of the Vote included in a Commit.
+  tendermint.types.ConsensusParams:
+    type: object
+    properties:
+      block:
+        type: object
+        properties:
+          maxBytes:
+            type: string
+            format: int64
+            title: |-
+              Max block size, in bytes.
+              Note: must be greater than 0
+          maxGas:
+            type: string
+            format: int64
+            title: |-
+              Max gas per block.
+              Note: must be greater or equal to -1
+        description: BlockParams contains limits on the block size.
+      evidence:
+        type: object
+        properties:
+          maxAgeNumBlocks:
+            type: string
+            format: int64
+            description: >-
+              Max age of evidence, in blocks.
+
+
+              The basic formula for calculating this is: MaxAgeDuration /
+              {average block
+
+              time}.
+          maxAgeDuration:
+            type: string
+            description: >-
+              Max age of evidence, in time.
+
+
+              It should correspond with an app's "unbonding period" or other
+              similar
+
+              mechanism for handling [Nothing-At-Stake
+
+              attacks](https://github.com/ethereum/wiki/wiki/Proof-of-Stake-FAQ#what-is-the-nothing-at-stake-problem-and-how-can-it-be-fixed).
+          maxBytes:
+            type: string
+            format: int64
+            title: >-
+              This sets the maximum size of total evidence in bytes that can be
+              committed in a single block.
+
+              and should fall comfortably under the max block bytes.
+
+              Default is 1048576 or 1MB
+        description: EvidenceParams determine how we handle evidence of malfeasance.
+      validator:
+        type: object
+        properties:
+          pubKeyTypes:
+            type: array
+            items:
+              type: string
+        description: |-
+          ValidatorParams restrict the public key types validators can use.
+          NOTE: uses ABCI pubkey naming, not Amino names.
+      version:
+        type: object
+        properties:
+          app:
+            type: string
+            format: uint64
+        description: VersionParams contains the ABCI application version.
+      abci:
+        type: object
+        properties:
+          voteExtensionsEnableHeight:
+            type: string
+            format: int64
+            description: >-
+              vote_extensions_enable_height configures the first height during
+              which
+
+              vote extensions will be enabled. During this specified height, and
+              for all
+
+              subsequent heights, precommit messages that do not contain valid
+              extension data
+
+              will be considered invalid. Prior to this height, vote extensions
+              will not
+
+              be used or accepted by validators on the network.
+
+
+              Once enabled, vote extensions will be created by the application
+              in ExtendVote,
+
+              passed to the application for validation in VerifyVoteExtension
+              and given
+
+              to the application to use when proposing a block during
+              PrepareProposal.
+        description: >-
+          ABCIParams configure functionality specific to the Application
+          Blockchain Interface.
+    description: |-
+      ConsensusParams contains consensus critical parameters that determine the
+      validity of blocks.
   tendermint.types.Data:
     type: object
     properties:
@@ -37255,6 +38940,42 @@ definitions:
               description: >-
                 LightClientAttackEvidence contains evidence of a set of
                 validators attempting to mislead a light client.
+  tendermint.types.EvidenceParams:
+    type: object
+    properties:
+      maxAgeNumBlocks:
+        type: string
+        format: int64
+        description: >-
+          Max age of evidence, in blocks.
+
+
+          The basic formula for calculating this is: MaxAgeDuration / {average
+          block
+
+          time}.
+      maxAgeDuration:
+        type: string
+        description: >-
+          Max age of evidence, in time.
+
+
+          It should correspond with an app's "unbonding period" or other similar
+
+          mechanism for handling [Nothing-At-Stake
+
+          attacks](https://github.com/ethereum/wiki/wiki/Proof-of-Stake-FAQ#what-is-the-nothing-at-stake-problem-and-how-can-it-be-fixed).
+      maxBytes:
+        type: string
+        format: int64
+        title: >-
+          This sets the maximum size of total evidence in bytes that can be
+          committed in a single block.
+
+          and should fall comfortably under the max block bytes.
+
+          Default is 1048576 or 1MB
+    description: EvidenceParams determine how we handle evidence of malfeasance.
   tendermint.types.Header:
     type: object
     properties:
@@ -37985,6 +39706,16 @@ definitions:
       proposerPriority:
         type: string
         format: int64
+  tendermint.types.ValidatorParams:
+    type: object
+    properties:
+      pubKeyTypes:
+        type: array
+        items:
+          type: string
+    description: |-
+      ValidatorParams restrict the public key types validators can use.
+      NOTE: uses ABCI pubkey naming, not Amino names.
   tendermint.types.ValidatorSet:
     type: object
     properties:
@@ -38037,6 +39768,13 @@ definitions:
       totalVotingPower:
         type: string
         format: int64
+  tendermint.types.VersionParams:
+    type: object
+    properties:
+      app:
+        type: string
+        format: uint64
+    description: VersionParams contains the ABCI application version.
   tendermint.types.Vote:
     type: object
     properties:
@@ -41571,6 +43309,12 @@ definitions:
         type: string
         format: uint64
         title: expected blocks per year
+      maxSupply:
+        type: string
+        description: |-
+          maximum supply for the token.
+
+          A value of "0" indicates an unlimited (infinite) maximum supply.
     description: Params defines the parameters for the x/mint module.
   cosmos.mint.v1beta1.QueryAnnualProvisionsResponse:
     type: object
@@ -41618,6 +43362,12 @@ definitions:
             type: string
             format: uint64
             title: expected blocks per year
+          maxSupply:
+            type: string
+            description: |-
+              maximum supply for the token.
+
+              A value of "0" indicates an unlimited (infinite) maximum supply.
     description: QueryParamsResponse is the response type for the Query/Params RPC method.
   cosmos.params.v1beta1.ParamChange:
     type: object
@@ -48691,39 +50441,6 @@ definitions:
     description: |-
       TxEncodeResponse is the response type for the
       Service.TxEncode method.
-  tendermint.abci.Event:
-    type: object
-    properties:
-      type:
-        type: string
-      attributes:
-        type: array
-        items:
-          type: object
-          properties:
-            key:
-              type: string
-            value:
-              type: string
-            index:
-              type: boolean
-              title: nondeterministic
-          description: EventAttribute is a single key-value pair, associated with an event.
-    description: |-
-      Event allows application developers to attach additional information to
-      ResponseFinalizeBlock and ResponseCheckTx.
-      Later, transactions may be queried using these events.
-  tendermint.abci.EventAttribute:
-    type: object
-    properties:
-      key:
-        type: string
-      value:
-        type: string
-      index:
-        type: boolean
-        title: nondeterministic
-    description: EventAttribute is a single key-value pair, associated with an event.
   cosmos.upgrade.v1beta1.ModuleVersion:
     type: object
     properties:
@@ -50522,216 +52239,6 @@ definitions:
     description: >-
       QueryParamsResponse defines the response type for querying x/consensus
       parameters.
-  tendermint.types.ABCIParams:
-    type: object
-    properties:
-      voteExtensionsEnableHeight:
-        type: string
-        format: int64
-        description: >-
-          vote_extensions_enable_height configures the first height during which
-
-          vote extensions will be enabled. During this specified height, and for
-          all
-
-          subsequent heights, precommit messages that do not contain valid
-          extension data
-
-          will be considered invalid. Prior to this height, vote extensions will
-          not
-
-          be used or accepted by validators on the network.
-
-
-          Once enabled, vote extensions will be created by the application in
-          ExtendVote,
-
-          passed to the application for validation in VerifyVoteExtension and
-          given
-
-          to the application to use when proposing a block during
-          PrepareProposal.
-    description: >-
-      ABCIParams configure functionality specific to the Application Blockchain
-      Interface.
-  tendermint.types.BlockParams:
-    type: object
-    properties:
-      maxBytes:
-        type: string
-        format: int64
-        title: |-
-          Max block size, in bytes.
-          Note: must be greater than 0
-      maxGas:
-        type: string
-        format: int64
-        title: |-
-          Max gas per block.
-          Note: must be greater or equal to -1
-    description: BlockParams contains limits on the block size.
-  tendermint.types.ConsensusParams:
-    type: object
-    properties:
-      block:
-        type: object
-        properties:
-          maxBytes:
-            type: string
-            format: int64
-            title: |-
-              Max block size, in bytes.
-              Note: must be greater than 0
-          maxGas:
-            type: string
-            format: int64
-            title: |-
-              Max gas per block.
-              Note: must be greater or equal to -1
-        description: BlockParams contains limits on the block size.
-      evidence:
-        type: object
-        properties:
-          maxAgeNumBlocks:
-            type: string
-            format: int64
-            description: >-
-              Max age of evidence, in blocks.
-
-
-              The basic formula for calculating this is: MaxAgeDuration /
-              {average block
-
-              time}.
-          maxAgeDuration:
-            type: string
-            description: >-
-              Max age of evidence, in time.
-
-
-              It should correspond with an app's "unbonding period" or other
-              similar
-
-              mechanism for handling [Nothing-At-Stake
-
-              attacks](https://github.com/ethereum/wiki/wiki/Proof-of-Stake-FAQ#what-is-the-nothing-at-stake-problem-and-how-can-it-be-fixed).
-          maxBytes:
-            type: string
-            format: int64
-            title: >-
-              This sets the maximum size of total evidence in bytes that can be
-              committed in a single block.
-
-              and should fall comfortably under the max block bytes.
-
-              Default is 1048576 or 1MB
-        description: EvidenceParams determine how we handle evidence of malfeasance.
-      validator:
-        type: object
-        properties:
-          pubKeyTypes:
-            type: array
-            items:
-              type: string
-        description: |-
-          ValidatorParams restrict the public key types validators can use.
-          NOTE: uses ABCI pubkey naming, not Amino names.
-      version:
-        type: object
-        properties:
-          app:
-            type: string
-            format: uint64
-        description: VersionParams contains the ABCI application version.
-      abci:
-        type: object
-        properties:
-          voteExtensionsEnableHeight:
-            type: string
-            format: int64
-            description: >-
-              vote_extensions_enable_height configures the first height during
-              which
-
-              vote extensions will be enabled. During this specified height, and
-              for all
-
-              subsequent heights, precommit messages that do not contain valid
-              extension data
-
-              will be considered invalid. Prior to this height, vote extensions
-              will not
-
-              be used or accepted by validators on the network.
-
-
-              Once enabled, vote extensions will be created by the application
-              in ExtendVote,
-
-              passed to the application for validation in VerifyVoteExtension
-              and given
-
-              to the application to use when proposing a block during
-              PrepareProposal.
-        description: >-
-          ABCIParams configure functionality specific to the Application
-          Blockchain Interface.
-    description: |-
-      ConsensusParams contains consensus critical parameters that determine the
-      validity of blocks.
-  tendermint.types.EvidenceParams:
-    type: object
-    properties:
-      maxAgeNumBlocks:
-        type: string
-        format: int64
-        description: >-
-          Max age of evidence, in blocks.
-
-
-          The basic formula for calculating this is: MaxAgeDuration / {average
-          block
-
-          time}.
-      maxAgeDuration:
-        type: string
-        description: >-
-          Max age of evidence, in time.
-
-
-          It should correspond with an app's "unbonding period" or other similar
-
-          mechanism for handling [Nothing-At-Stake
-
-          attacks](https://github.com/ethereum/wiki/wiki/Proof-of-Stake-FAQ#what-is-the-nothing-at-stake-problem-and-how-can-it-be-fixed).
-      maxBytes:
-        type: string
-        format: int64
-        title: >-
-          This sets the maximum size of total evidence in bytes that can be
-          committed in a single block.
-
-          and should fall comfortably under the max block bytes.
-
-          Default is 1048576 or 1MB
-    description: EvidenceParams determine how we handle evidence of malfeasance.
-  tendermint.types.ValidatorParams:
-    type: object
-    properties:
-      pubKeyTypes:
-        type: array
-        items:
-          type: string
-    description: |-
-      ValidatorParams restrict the public key types validators can use.
-      NOTE: uses ABCI pubkey naming, not Amino names.
-  tendermint.types.VersionParams:
-    type: object
-    properties:
-      app:
-        type: string
-        format: uint64
-    description: VersionParams contains the ABCI application version.
   cosmos.app.v1alpha1.Config:
     type: object
     properties:

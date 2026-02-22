@@ -54,19 +54,27 @@ func newGlobalKeyMap() globalKeyMap {
 
 // combinedKeyMap merges view-specific keys with global keys for the help footer.
 type combinedKeyMap struct {
-	view   help.KeyMap
-	global globalKeyMap
+	view     help.KeyMap
+	global   globalKeyMap
+	showBack bool
 }
 
 func (c combinedKeyMap) ShortHelp() []key.Binding {
 	bindings := c.view.ShortHelp()
-	bindings = append(bindings, c.global.Back, c.global.Quit)
+	if c.showBack {
+		bindings = append(bindings, c.global.Back)
+	}
+	bindings = append(bindings, c.global.Quit)
 	return bindings
 }
 
 func (c combinedKeyMap) FullHelp() [][]key.Binding {
 	groups := c.view.FullHelp()
-	groups = append(groups, []key.Binding{c.global.Back, c.global.Quit})
+	global := []key.Binding{c.global.Quit}
+	if c.showBack {
+		global = append([]key.Binding{c.global.Back}, global...)
+	}
+	groups = append(groups, global)
 	return groups
 }
 
@@ -146,7 +154,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		case key.Matches(msg, m.keys.Back):
 			if len(m.stack) <= 1 {
-				return m, tea.Quit
+				return m, nil
 			}
 			m.stack = m.stack[:len(m.stack)-1]
 			m.err = ""
@@ -177,7 +185,7 @@ func (m model) View() string {
 
 	top := m.stack[len(m.stack)-1]
 	title := boxStyle.Render(top.Title())
-	footer := boxStyle.Render(m.help.View(combinedKeyMap{view: top.KeyMap(), global: m.keys}))
+	footer := boxStyle.Render(m.help.View(combinedKeyMap{view: top.KeyMap(), global: m.keys, showBack: len(m.stack) > 1}))
 
 	if m.err != "" {
 		errStyle := lipgloss.NewStyle().Foreground(lipgloss.Color("196")).Padding(0, 1)
